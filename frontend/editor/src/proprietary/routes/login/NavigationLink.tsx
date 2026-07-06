@@ -4,6 +4,7 @@ interface NavigationLinkProps {
   text: string;
   isDisabled?: boolean;
 }
+
 export default function NavigationLink({
   onClick,
   text,

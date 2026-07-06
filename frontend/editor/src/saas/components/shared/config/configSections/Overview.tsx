@@ -30,9 +30,11 @@ import { ProfilePictureCropper } from "@app/components/shared/config/ProfilePict
 import { updateProfilePictureMetadata } from "@app/services/avatarSyncService";
 import { deleteCurrentAccount } from "@app/services/accountDeletion";
 import { alert as showToast } from "@app/components/toast";
+
 interface OverviewProps {
   onLogoutClick: () => void;
 }
+
 const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
   const { t } = useTranslation();
   const {
@@ -44,7 +46,9 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
     refreshProfilePicture,
     refreshProfilePictureMetadata,
   } = useAuth();
+
   const PROFILE_BUCKET = "profile-pictures";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [upgradeError, setUpgradeError] = useState<string | null>(null);
@@ -57,15 +61,19 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [confirmEmail, setConfirmEmail] = useState("");
+
   const isAnonymous = Boolean(user && isUserAnonymous(user));
   const isOAuthPicture = profilePictureMetadata?.source === "oauth";
   const provider = profilePictureMetadata?.provider;
+
   const profilePath = user ? `${user.id}/avatar` : null;
   const profileInitial = user?.email?.trim()?.charAt(0)?.toUpperCase() || "U";
+
   const handleProfileUpload = async (file: File | null) => {
     if (!file || !user || !profilePath) {
       return;
     }
+
     if (file.size > 2 * 1024 * 1024) {
       setProfileError(
         t(
@@ -75,15 +83,18 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
       );
       return;
     }
+
     // Open cropper instead of uploading directly
     setProfileError(null);
     setCropperFile(file);
     setCropperOpen(true);
   };
+
   const handleCropComplete = async (croppedBlob: Blob) => {
     if (!user || !profilePath) {
       return;
     }
+
     // Validate cropped size (2MB limit)
     if (croppedBlob.size > 2 * 1024 * 1024) {
       setProfileError(
@@ -96,8 +107,10 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
       setCropperFile(null);
       return;
     }
+
     setProfileUploading(true);
     setProfileError(null);
+
     const { error } = await supabase.storage
       .from(PROFILE_BUCKET)
       .upload(profilePath, croppedBlob, {
@@ -105,6 +118,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
         cacheControl: "3600",
         contentType: "image/png",
       });
+
     if (error) {
       setProfileError(error.message || "Failed to upload profile picture");
     } else {
@@ -116,19 +130,24 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
       await refreshProfilePictureMetadata();
       await refreshProfilePicture();
     }
+
     setProfileUploading(false);
     setCropperOpen(false);
     setCropperFile(null);
   };
+
   const handleProfileRemove = async () => {
     if (!user || !profilePath) {
       return;
     }
+
     setProfileUploading(true);
     setProfileError(null);
+
     const { error } = await supabase.storage
       .from(PROFILE_BUCKET)
       .remove([profilePath]);
+
     if (error) {
       setProfileError(error.message || "Failed to remove profile picture");
     } else {
@@ -140,20 +159,25 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
       await refreshProfilePictureMetadata();
       await refreshProfilePicture();
     }
+
     setProfileUploading(false);
   };
+
   const handleUseCustomPicture = async () => {
     if (!user) {
       return;
     }
+
     setProfileUploading(true);
     setProfileError(null);
+
     try {
       // Update metadata to allow manual uploads
       await updateProfilePictureMetadata(user.id, {
         source: "upload",
         provider: null,
       });
+
       await refreshProfilePictureMetadata();
       setSuccess(
         t(
@@ -161,6 +185,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
           "Switched to custom picture. You can now upload your own.",
         ),
       );
+
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(null), 3000);
     } catch (error: unknown) {
@@ -173,22 +198,29 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
       setProfileUploading(false);
     }
   };
+
   const handleEmailUpgrade = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!email.trim()) {
       setUpgradeError("Email is required");
       return;
     }
+
     try {
       setIsLoading(true);
       setUpgradeError(null);
       setSuccess(null);
+
       // First, upgrade the account in Supabase
       await linkEmailIdentity(email.trim(), password || undefined);
+
       // Synchronize with backend database (using "email" as auth method for email/password)
       await synchronizeUserUpgrade("email");
+
       // Refresh the session to reflect changes
       await refreshSession();
+
       setSuccess(
         "Account upgraded successfully! You can now sign in with your email.",
       );
@@ -202,6 +234,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
       setIsLoading(false);
     }
   };
+
   const handleOAuthUpgrade = async (
     provider: "github" | "google" | "apple" | "azure",
   ) => {
@@ -209,13 +242,16 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
       setIsLoading(true);
       setUpgradeError(null);
       setSuccess(null);
+
       // Store provider info for post-redirect handling
       sessionStorage.setItem("pendingUpgrade", "true");
       sessionStorage.setItem("upgradeProvider", provider);
+
       // Redirect back to homepage after OAuth completes
       // The UseSession hook will handle the pendingUpgrade synchronization
       const redirectUrl = absoluteWithBasePath("/auth/callback?next=/");
       const result = await linkOAuthIdentity(provider, redirectUrl);
+
       if (result.data?.url) {
         window.location.href = result.data.url;
       }
@@ -230,6 +266,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
       sessionStorage.removeItem("upgradeProvider");
     }
   };
+
   const handleDeleteAccount = async () => {
     if (isAnonymous) return;
     try {
@@ -261,10 +298,12 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
       setIsDeletingAccount(false);
     }
   };
+
   const closeDeleteModal = () => {
     setDeleteModalOpen(false);
     setConfirmEmail("");
   };
+
   return (
     <div
       style={{
@@ -275,6 +314,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
       }}
     >
       <LoadingOverlay visible={isLoading || isDeletingAccount} />
+
       <div>
         <div
           style={{
@@ -328,7 +368,9 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
           </DSButton>
         </div>
       </div>
+
       <Divider />
+
       <div>
         <h3
           style={{
@@ -351,16 +393,19 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
             "Upload an image to personalize your account.",
           )}
         </p>
+
         {profileError && (
           <Alert color="red" mb="md">
             {profileError}
           </Alert>
         )}
+
         {success && (
           <Alert color="green" mb="md">
             {success}
           </Alert>
         )}
+
         {isOAuthPicture ? (
           <Group align="center" gap="md">
             <Avatar
@@ -445,6 +490,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
           </Group>
         )}
       </div>
+
       <ProfilePictureCropper
         file={cropperFile}
         opened={cropperOpen}
@@ -454,7 +500,9 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
         }}
         onCropComplete={handleCropComplete}
       />
+
       {isAnonymous && <Divider />}
+
       {isAnonymous && (
         <div>
           <div>
@@ -480,16 +528,19 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
               )}
             </p>
           </div>
+
           {upgradeError && (
             <Alert color="red" mb="md">
               {upgradeError}
             </Alert>
           )}
+
           {success && (
             <Alert color="green" mb="md">
               {success}
             </Alert>
           )}
+
           <div style={{ marginBottom: "1rem" }}>
             <Text size="sm" fw={500} mb="xs" c="var(--mantine-color-dimmed)">
               {t(
@@ -532,6 +583,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
                 ))}
             </div>
           </div>
+
           <div>
             <Text size="sm" fw={500} mb="xs" c="var(--mantine-color-dimmed)">
               {t(
@@ -577,6 +629,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
           </div>
         </div>
       )}
+
       {/* Delete Account Section */}
       {!isAnonymous && (
         <div
@@ -597,6 +650,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
           </DSButton>
         </div>
       )}
+
       {/* Delete Account Confirmation Modal */}
       <Modal
         opened={deleteModalOpen}
@@ -660,4 +714,5 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
     </div>
   );
 };
+
 export default Overview;

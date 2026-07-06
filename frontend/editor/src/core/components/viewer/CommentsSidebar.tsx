@@ -36,19 +36,23 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useAnnotation as useAnnotationContext } from "@app/contexts/AnnotationContext";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { compareEntriesByVisualOrder } from "@app/components/viewer/commentsSidebarOrder";
+
 const SIDEBAR_WIDTH = "18rem";
+
 /** PDF subtypes that are inherently standalone comment annotations (not linked to other annotations). */
 const STANDALONE_COMMENT_SUBTYPES = new Set([
   PdfAnnotationSubtype.TEXT,
   PdfAnnotationSubtype.FREETEXT,
   PdfAnnotationSubtype.CARET,
 ]);
+
 function isStandaloneCommentType(type: number | undefined): boolean {
   return (
     type !== undefined &&
     STANDALONE_COMMENT_SUBTYPES.has(type as PdfAnnotationSubtype)
   );
 }
+
 const ANNOTATE_PANEL_ID = "annotate" as const;
 const TEXT_COMMENT_TOOL_ID = "textComment" as const;
 
@@ -94,11 +98,13 @@ function formatCommentDate(obj: PdfAnnotationObject): string {
     minute: "2-digit",
   });
 }
+
 interface CommentsSidebarProps {
   documentId: string;
   visible: boolean;
   rightOffset: string;
 }
+
 function getCommentDisplayContent(entry: {
   annotation: { object: Pick<PdfAnnotationObject, "contents"> };
   replies: Array<{ object: Pick<PdfAnnotationObject, "contents"> }>;
@@ -110,6 +116,7 @@ function getCommentDisplayContent(entry: {
     return String(firstReply).trim();
   return "";
 }
+
 /** Placeholder authors we never show; use current user's name from context instead. */
 const PLACEHOLDER_AUTHORS = new Set(["Guest", "Digital Signature", ""]);
 function getAuthorName(
@@ -120,6 +127,7 @@ function getAuthorName(
   if (PLACEHOLDER_AUTHORS.has(stored)) return currentDisplayName || "Guest";
   return stored;
 }
+
 /** Replies store an explicit author; only allow edit when it matches the current comment author name. */
 function isReplyAuthoredByCurrentUser(
   obj: Pick<PdfAnnotationObject, "author">,
@@ -138,6 +146,7 @@ function isReplyAuthoredByCurrentUser(
   if (!resolvedMine) return false;
   return resolvedStored === resolvedMine;
 }
+
 // Map toolId → LocalIcon icon name (matches AnnotationPanel icon definitions)
 const TOOL_ICON_MAP: Record<string, string> = {
   highlight: "highlight",
@@ -159,6 +168,7 @@ const TOOL_ICON_MAP: Record<string, string> = {
   insertText: "add-comment",
   replaceText: "find-replace",
 };
+
 // Type-based fallback icon when no toolId is present
 function getIconByType(type: number | undefined): string {
   if (type === 1) return "comment";
@@ -283,6 +293,7 @@ function AnnotationTypeIcon({ ann }: { ann: PdfAnnotationObject }) {
     />
   );
 }
+
 export function CommentsSidebar({
   documentId,
   visible,
@@ -318,6 +329,7 @@ export function CommentsSidebar({
   const [editingMainKey, setEditingMainKey] = useState<string | null>(null);
   /** Which reply is in edit mode (same key shape as replyEditDrafts). */
   const [editingReplyKey, setEditingReplyKey] = useState<string | null>(null);
+
   // React to request to focus or highlight a comment card (e.g. from "Add comment" / "View comment" in selection menu)
   useEffect(() => {
     if (
@@ -364,6 +376,7 @@ export function CommentsSidebar({
     documentId,
     clearHighlightCommentRequest,
   ]);
+
   const handleLocateAnnotation = useCallback(
     (pageIndex: number, ann: PdfAnnotationObject) => {
       scrollActions?.scrollToPage(pageIndex + 1, "smooth");
@@ -427,6 +440,7 @@ export function CommentsSidebar({
       return {};
     }
   }, [state]);
+
   // Derive the set of selected annotation IDs from EmbedPDF's selection state.
   // state is AnnotationDocumentState — selectedUids are keys in byUid, and may equal id.
   const selectedAnnotationIds = useMemo(() => {
@@ -440,6 +454,7 @@ export function CommentsSidebar({
     }
     return ids;
   }, [state]);
+
   const pageNumbers = useMemo(
     () =>
       Object.keys(byPage)
@@ -451,6 +466,7 @@ export function CommentsSidebar({
     () => pageNumbers.reduce((sum, p) => sum + (byPage[p]?.length ?? 0), 0),
     [pageNumbers, byPage],
   );
+
   const handleContentsChange = useCallback(
     (pageIndex: number, annotationId: string, value: string) => {
       setDraftContents((prev) => ({
@@ -462,6 +478,7 @@ export function CommentsSidebar({
     },
     [provides],
   );
+
   const [deleteModal, setDeleteModal] = useState<{
     pageIndex: number;
     id: string;
@@ -479,6 +496,7 @@ export function CommentsSidebar({
     },
     [provides],
   );
+
   const handleRemoveFromSidebar = useCallback(() => {
     if (!deleteModal || !provides?.updateAnnotation) return;
     const { pageIndex, id, ann } = deleteModal;
@@ -488,6 +506,7 @@ export function CommentsSidebar({
     provides.updateAnnotation(pageIndex, id, getRemoveCommentPatch(ann));
     setDeleteModal(null);
   }, [deleteModal, provides]);
+
   const handleDeleteAnnotation = useCallback(() => {
     if (!deleteModal) return;
     provides?.deleteAnnotation?.(deleteModal.pageIndex, deleteModal.id);
@@ -576,6 +595,7 @@ export function CommentsSidebar({
     },
     [provides, displayName],
   );
+
   const handleSendReply = useCallback(
     (pageIndex: number, parentId: string, parentRect: any) => {
       const key = `${pageIndex}_${parentId}_reply`;
@@ -600,6 +620,7 @@ export function CommentsSidebar({
     },
     [provides, replyDrafts, displayName],
   );
+
   const handleSaveReplyEdit = useCallback(
     (editKey: string, pageIndex: number, replyId: string, value: string) => {
       const trimmed = value.trim();
@@ -617,6 +638,7 @@ export function CommentsSidebar({
     },
     [provides, displayName],
   );
+
   const handleAddComment = useCallback(() => {
     // Keep the sidebar open this time - the button morphs into a
     // "Click on a page... cancel" hint so the user can see exactly
@@ -647,6 +669,7 @@ export function CommentsSidebar({
   }, [visible, isPlacingComment, handleCancelPlacingComment]);
 
   if (!visible) return null;
+
   return (
     <Box
       ref={scrollViewportRef}
@@ -1270,6 +1293,7 @@ export function CommentsSidebar({
           )}
         </Stack>
       </ScrollArea>
+
       <Modal
         opened={!!deleteModal}
         onClose={() => setDeleteModal(null)}

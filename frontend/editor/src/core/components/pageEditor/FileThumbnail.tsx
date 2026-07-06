@@ -18,6 +18,7 @@ import {
   draggable,
   dropTargetForElements,
 } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+
 import styles from "@app/components/pageEditor/PageEditor.module.css";
 import { useFileContext } from "@app/contexts/FileContext";
 import { FileId } from "@app/types/file";
@@ -25,6 +26,7 @@ import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
+
 interface FileItem {
   id: FileId;
   name: string;
@@ -33,6 +35,7 @@ interface FileItem {
   size: number;
   modifiedAt?: number | string | Date;
 }
+
 interface FileThumbnailProps {
   file: FileItem;
   index: number;
@@ -52,6 +55,7 @@ interface FileThumbnailProps {
   toolMode?: boolean;
   isSupported?: boolean;
 }
+
 const FileThumbnail = ({
   file,
   index,
@@ -68,6 +72,7 @@ const FileThumbnail = ({
   const icons = useFileActionIcons();
   const DownloadOutlinedIcon = icons.download;
   const { pinFile, unpinFile, isFilePinned, activeFiles } = useFileContext();
+
   // ---- Drag state ----
   const [isDragging, setIsDragging] = useState(false);
   const dragElementRef = useRef<HTMLDivElement | null>(null);
@@ -75,17 +80,20 @@ const FileThumbnail = ({
     undefined,
   );
   const [showActions, setShowActions] = useState(false);
+
   // Resolve the actual File object for pin/unpin operations
   const actualFile = useMemo(() => {
     return activeFiles.find((f) => f.fileId === file.id);
   }, [activeFiles, file.id]);
   const isPinned = actualFile ? isFilePinned(actualFile) : false;
+
   const downloadSelectedFile = useCallback(() => {
     // Prefer parent-provided handler if available
     if (typeof onDownloadFile === "function") {
       onDownloadFile(file.id);
       return;
     }
+
     // Fallback: attempt to download using the File object if provided
     const maybeFile = (file as unknown as { file?: File }).file;
     if (maybeFile instanceof File) {
@@ -96,17 +104,22 @@ const FileThumbnail = ({
       });
       return;
     }
+
     // If we can't find a way to download, surface a status message
     onSetStatus?.(terminology.downloadUnavailable);
   }, [file, onDownloadFile, onSetStatus, t]);
   const handleRef = useRef<HTMLSpanElement | null>(null);
+
   // ---- Selection ----
   const isSelected = selectedFiles.includes(file.id);
+
   // ---- Drag & drop wiring ----
   const fileElementRef = useCallback(
     (element: HTMLDivElement | null) => {
       if (!element) return;
+
       dragElementRef.current = element;
+
       const dragCleanup = draggable({
         element,
         getInitialData: () => ({
@@ -122,6 +135,7 @@ const FileThumbnail = ({
           setIsDragging(false);
         },
       });
+
       const dropCleanup = dropTargetForElements({
         element,
         getData: () => ({
@@ -141,6 +155,7 @@ const FileThumbnail = ({
           }
         },
       });
+
       return () => {
         dragCleanup();
         dropCleanup();
@@ -148,6 +163,7 @@ const FileThumbnail = ({
     },
     [file.id, file.name, selectedFiles, onReorderFiles],
   );
+
   // Update dropdown width on resize
   useEffect(() => {
     const update = () => {
@@ -158,25 +174,30 @@ const FileThumbnail = ({
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
   }, []);
+
   // Close the actions dropdown when hovering outside this file card (and its dropdown)
   useEffect(() => {
     if (!showActions) return;
+
     const isInsideCard = (target: EventTarget | null) => {
       const container = dragElementRef.current;
       if (!container) return false;
       return target instanceof Node && container.contains(target);
     };
+
     const handleMouseMove = (e: MouseEvent) => {
       if (!isInsideCard(e.target)) {
         setShowActions(false);
       }
     };
+
     const handleTouchStart = (e: TouchEvent) => {
       // On touch devices, close if the touch target is outside the card
       if (!isInsideCard(e.target)) {
         setShowActions(false);
       }
     };
+
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("touchstart", handleTouchStart, {
       passive: true,
@@ -186,11 +207,13 @@ const FileThumbnail = ({
       document.removeEventListener("touchstart", handleTouchStart);
     };
   }, [showActions]);
+
   // ---- Card interactions ----
   const handleCardClick = () => {
     if (!isSupported) return;
     onToggleFile(file.id);
   };
+
   return (
     <div
       ref={fileElementRef}
@@ -226,6 +249,7 @@ const FileThumbnail = ({
             </div>
           )}
         </div>
+
         {/* Centered index */}
         <div
           className={styles.headerIndex}
@@ -233,6 +257,7 @@ const FileThumbnail = ({
         >
           {index + 1}
         </div>
+
         {/* Kebab menu */}
         <ActionIcon
           aria-label={t("moreOptions", "More options")}
@@ -246,6 +271,7 @@ const FileThumbnail = ({
           <MoreVertIcon fontSize="small" />
         </ActionIcon>
       </div>
+
       {/* Actions overlay */}
       {showActions && (
         <div
@@ -310,6 +336,7 @@ const FileThumbnail = ({
           </Button>
         </div>
       )}
+
       {/* File content area */}
       <div className="file-container w-[90%] h-[80%] relative">
         {/* Stacked file effect - multiple shadows to simulate pages */}
@@ -355,12 +382,14 @@ const FileThumbnail = ({
             </PrivateContent>
           )}
         </div>
+
         {/* Pin indicator (bottom-left) */}
         {isPinned && (
           <span className={styles.pinIndicator} aria-hidden>
             <PushPinIcon fontSize="small" />
           </span>
         )}
+
         {/* Drag handle (span wrapper so we can attach a ref reliably) */}
         <span ref={handleRef} className={styles.dragHandle} aria-hidden>
           <DragIndicatorIcon fontSize="small" />
@@ -369,4 +398,5 @@ const FileThumbnail = ({
     </div>
   );
 };
+
 export default React.memo(FileThumbnail);

@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import { SPLIT_METHODS } from "@app/constants/splitConstants";
 import { SplitParameters } from "@app/hooks/tools/split/useSplitParameters";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
+
 export interface SplitSettingsProps {
   parameters: SplitParameters;
   onParameterChange: <K extends keyof SplitParameters>(
@@ -19,12 +20,14 @@ export interface SplitSettingsProps {
   ) => void;
   disabled?: boolean;
 }
+
 const SplitSettings = ({
   parameters,
   onParameterChange,
   disabled = false,
 }: SplitSettingsProps) => {
   const { t } = useTranslation();
+
   const renderByPagesForm = () => (
     <TextInput
       label={t("split.splitPages", "Pages")}
@@ -34,6 +37,7 @@ const SplitSettings = ({
       disabled={disabled}
     />
   );
+
   const renderBySectionsForm = () => (
     <Stack gap="sm">
       <TextInput
@@ -132,8 +136,10 @@ const SplitSettings = ({
       />
     </Stack>
   );
+
   const renderSplitValueForm = () => {
     let label, placeholder;
+
     switch (parameters.method) {
       case SPLIT_METHODS.BY_SIZE:
         label = t("split.value.fileSize.label", "File Size");
@@ -154,6 +160,7 @@ const SplitSettings = ({
           "e.g. 10MB or 5 pages",
         );
     }
+
     return (
       <TextInput
         label={label}
@@ -164,6 +171,7 @@ const SplitSettings = ({
       />
     );
   };
+
   const renderByChaptersForm = () => (
     <Stack gap="sm">
       <TextInput
@@ -194,6 +202,7 @@ const SplitSettings = ({
       />
     </Stack>
   );
+
   const renderByPageDividerForm = () => (
     <Stack gap="sm">
       <Anchor
@@ -208,6 +217,7 @@ const SplitSettings = ({
           "Download 'Auto Splitter Divider (with instructions).pdf'",
         )}
       </Anchor>
+
       <Checkbox
         label={t(
           "autoSplitPDF.duplexMode",
@@ -221,6 +231,7 @@ const SplitSettings = ({
       />
     </Stack>
   );
+
   const renderByPosterForm = () => (
     <Stack gap="sm">
       <Select
@@ -283,6 +294,7 @@ const SplitSettings = ({
       />
     </Stack>
   );
+
   // Don't render anything if no method is selected
   if (!parameters.method) {
     return (
@@ -296,6 +308,7 @@ const SplitSettings = ({
       </Stack>
     );
   }
+
   return (
     <Stack gap="md">
       {/* Method-Specific Form */}
@@ -314,4 +327,5 @@ const SplitSettings = ({
     </Stack>
   );
 };
+
 export default SplitSettings;

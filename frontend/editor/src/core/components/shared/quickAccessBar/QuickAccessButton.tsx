@@ -1,6 +1,7 @@
 import React from "react";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import FitText from "@app/components/shared/FitText";
+
 interface QuickAccessButtonProps {
   icon: React.ReactNode;
   label: string;
@@ -18,6 +19,7 @@ interface QuickAccessButtonProps {
   dataTour?: string;
   disabled?: boolean;
 }
+
 const QuickAccessButton: React.FC<QuickAccessButtonProps> = ({
   icon,
   label,
@@ -42,6 +44,7 @@ const QuickAccessButton: React.FC<QuickAccessButtonProps> = ({
   const textColor =
     color ||
     (isActive ? "var(--icon-tools-color)" : "var(--icon-inactive-color)");
+
   const actionIconProps =
     component === "a" && href
       ? {
@@ -54,6 +57,7 @@ const QuickAccessButton: React.FC<QuickAccessButtonProps> = ({
           onClick,
           "aria-label": ariaLabel,
         };
+
   return (
     <div className="flex flex-col items-center gap-1" data-tour={dataTour}>
       <ActionIcon
@@ -92,4 +96,5 @@ const QuickAccessButton: React.FC<QuickAccessButtonProps> = ({
     </div>
   );
 };
+
 export default QuickAccessButton;

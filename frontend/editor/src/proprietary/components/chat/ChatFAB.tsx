@@ -31,6 +31,7 @@ import {
   defaultPanelPos,
 } from "@app/components/chat/chatFabLayout";
 import "@app/components/chat/ChatFAB.css";
+
 // Raise Mantine popup z-index so Menu/Popover portals appear above the FAB overlay.
 const FAB_PANEL_THEME = createTheme({
   components: {
@@ -39,6 +40,7 @@ const FAB_PANEL_THEME = createTheme({
     }),
   },
 });
+
 export function ChatFAB() {
   const { t } = useTranslation();
   // Intentionally separate from useChat().isOpen — the FAB tracks its own
@@ -49,11 +51,13 @@ export function ChatFAB() {
   // Desktop sources this from the SaaS backend (cloud kill switch); web reads it
   // from the local app-config. Either way the AI engine drives FAB visibility.
   const enabled = useAiEngineEnabled();
+
   // Scope the panel's nested MantineProvider to this ref; unscoped it writes
   // its color scheme onto <html> and overrides the whole app's theme.
   const panelThemeRootRef = useRef<HTMLDivElement>(null);
   const { colorScheme } = useMantineColorScheme();
   const panelColorScheme = colorScheme === "dark" ? "dark" : "light";
+
   // Detect loading → done transition. If the FAB is closed when the agent
   // finishes, show the tick badge until the user opens the panel.
   const isOpenRef = useRef(isOpen);
@@ -68,6 +72,7 @@ export function ChatFAB() {
       setHasUnviewedResult(true);
     }
   }, [isLoading]);
+
   const overlayRef = useRef<HTMLDivElement>(null);
   // Separate bounds element inset by FAB_GAP_PX — react-rnd enforces this
   // during both drag and resize, keeping the panel off the overlay edges.
@@ -83,8 +88,10 @@ export function ChatFAB() {
   });
   const [isAnimatingReset, setIsAnimatingReset] = useState(false);
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Anchored = at default home; re-homes on overlay resize. Drag/resize breaks anchor; double-click restores it.
   const [isAnchored, setIsAnchored] = useState(true);
+
   // Mirror the latest position/size/anchor into refs so the ResizeObserver below —
   // set up once — always reads current values without re-subscribing on every drag/resize.
   const rndPosRef = useRef(rndPos);
@@ -93,11 +100,13 @@ export function ChatFAB() {
   rndSizeRef.current = rndSize;
   const isAnchoredRef = useRef(isAnchored);
   isAnchoredRef.current = isAnchored;
+
   const getDefaultPos = () => {
     const el = overlayRef.current;
     if (!el) return null;
     return defaultPanelPos(el.offsetWidth, el.offsetHeight);
   };
+
   useLayoutEffect(() => {
     // The overlay only mounts once the AI engine is enabled (config can load
     // after first render), so re-measure when that flips true rather than only
@@ -128,6 +137,7 @@ export function ChatFAB() {
     observer.observe(el);
     return () => observer.disconnect();
   }, [enabled]);
+
   // Clear the reset timer on unmount to avoid state updates on dead components.
   // Also ensure body user-select is restored if we unmount mid-resize.
   useEffect(() => {
@@ -137,6 +147,7 @@ export function ChatFAB() {
       document.body.style.removeProperty("-webkit-user-select");
     };
   }, []);
+
   const cancelResetAnimation = () => {
     if (resetTimerRef.current !== null) {
       clearTimeout(resetTimerRef.current);
@@ -144,6 +155,7 @@ export function ChatFAB() {
     }
     setIsAnimatingReset(false);
   };
+
   const handleHeaderDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
     if (target.closest(".chat-panel__header") && !target.closest("button")) {
@@ -161,7 +173,9 @@ export function ChatFAB() {
       }, RESET_MS + 60);
     }
   };
+
   if (!enabled) return null;
+
   return (
     <div
       ref={overlayRef}
@@ -188,6 +202,7 @@ export function ChatFAB() {
         loading={isLoading}
         showTick={hasUnviewedResult && !isLoading}
       />
+
       {/* Draggable / resizable panel */}
       {rndPos !== null && boundsEl !== null && (
         <Rnd

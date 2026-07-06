@@ -22,6 +22,7 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 // ---------------------------------------------------------------------------
 // Inline SVG icons (thin-stroke, modern)
 // ---------------------------------------------------------------------------
+
 const TrashIcon: React.FC<{ size?: number }> = ({ size = 13 }) => (
   <svg
     width={size}
@@ -39,6 +40,7 @@ const TrashIcon: React.FC<{ size?: number }> = ({ size = 13 }) => (
     />
   </svg>
 );
+
 const ExternalLinkIcon: React.FC<{ size?: number }> = ({ size = 12 }) => (
   <svg
     width={size}
@@ -56,6 +58,7 @@ const ExternalLinkIcon: React.FC<{ size?: number }> = ({ size = 12 }) => (
     />
   </svg>
 );
+
 const PageIcon: React.FC<{ size?: number }> = ({ size = 12 }) => (
   <svg
     width={size}
@@ -80,9 +83,11 @@ const PageIcon: React.FC<{ size?: number }> = ({ size = 12 }) => (
     />
   </svg>
 );
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
 function truncateUrl(url: string, maxLen = 32): string {
   try {
     const u = new URL(url);
@@ -94,8 +99,10 @@ function truncateUrl(url: string, maxLen = 32): string {
     return url.length > maxLen ? url.slice(0, maxLen) + "\u2026" : url;
   }
 }
+
 function getLinkLabel(annotationLink: PdfLinkAnnoObject): string {
   if (!annotationLink.target) return "Open Link";
+
   if (annotationLink.target.type === "action") {
     const action = annotationLink.target.action;
     if (action.type === PdfActionType.URI) return truncateUrl(action.uri);
@@ -106,8 +113,10 @@ function getLinkLabel(annotationLink: PdfLinkAnnoObject): string {
   } else if (annotationLink.target.type === "destination") {
     return `Page ${annotationLink.target.destination.pageIndex + 1}`;
   }
+
   return "Open Link";
 }
+
 function isInternalLink(annotationLink: PdfLinkAnnoObject): boolean {
   if (!annotationLink.target) return false;
   if (annotationLink.target.type === "destination") return true;
@@ -117,9 +126,11 @@ function isInternalLink(annotationLink: PdfLinkAnnoObject): boolean {
   }
   return false;
 }
+
 // ---------------------------------------------------------------------------
 // LinkToolbar
 // ---------------------------------------------------------------------------
+
 interface LinkToolbarProps {
   annotationLink: PdfLinkAnnoObject;
   toolbarRef: React.Ref<HTMLDivElement>;
@@ -131,25 +142,32 @@ interface LinkToolbarProps {
   onMouseEnter: () => void;
   onMouseLeave: () => void;
 }
+
 const TOOLBAR_HEIGHT = 32;
 const TOOLBAR_GAP = 8;
 const TOOLBAR_EDGE_MARGIN = 4;
 const TOOLBAR_LEAVE_DELAY = 120;
+
 interface ToolbarPlacement {
   linkId: string;
   left: number;
   top: number;
   flipped: boolean;
 }
+
 function clampToolbarCenter(centerX: number, toolbarWidth: number): number {
   if (toolbarWidth <= 0 || typeof window === "undefined") return centerX;
+
   const minCenter = TOOLBAR_EDGE_MARGIN + toolbarWidth / 2;
   const maxCenter = window.innerWidth - TOOLBAR_EDGE_MARGIN - toolbarWidth / 2;
+
   if (minCenter > maxCenter) return window.innerWidth / 2;
   return Math.min(Math.max(centerX, minCenter), maxCenter);
 }
+
 function isRectOutsideViewport(rect: DOMRect): boolean {
   if (typeof window === "undefined") return false;
+
   return (
     rect.bottom < 0 ||
     rect.top > window.innerHeight ||
@@ -157,6 +175,7 @@ function isRectOutsideViewport(rect: DOMRect): boolean {
     rect.left > window.innerWidth
   );
 }
+
 const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
   ({
     annotationLink,
@@ -172,6 +191,7 @@ const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
     const { t } = useTranslation();
     const internal = isInternalLink(annotationLink);
     const label = getLinkLabel(annotationLink);
+
     return (
       <div
         ref={toolbarRef}
@@ -200,6 +220,7 @@ const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
           <TrashIcon />
         </ActionIcon>
         <span className="pdf-link-toolbar-sep" />
+
         {/* Navigate / Open */}
         <Button
           variant="tertiary"
@@ -218,14 +239,18 @@ const LinkToolbar: React.FC<LinkToolbarProps> = React.memo(
     );
   },
 );
+
 LinkToolbar.displayName = "LinkToolbar";
+
 // ---------------------------------------------------------------------------
 // LinkLayer
 // ---------------------------------------------------------------------------
+
 interface LinkLayerProps {
   documentId: string;
   pageIndex: number;
 }
+
 export const LinkLayer: React.FC<LinkLayerProps> = ({
   documentId,
   pageIndex,
@@ -233,12 +258,14 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
   const { provides: scroll } = useScroll(documentId);
   const { state, provides: scope } = useAnnotation(documentId);
   const documentState = useDocumentState(documentId);
+
   const [hoveredLinkId, setHoveredLinkId] = useState<string | null>(null);
   const [toolbarPlacement, setToolbarPlacement] =
     useState<ToolbarPlacement | null>(null);
   const leaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const linkElementRefs = useRef<Map<string, HTMLAnchorElement>>(new Map());
   const toolbarElementRef = useRef<HTMLDivElement | null>(null);
+
   // Extract link annotations for this page from EmbedPDF annotation state
   const linkAnnotations = useMemo<PdfLinkAnnoObject[]>(() => {
     if (!state) return [];
@@ -262,6 +289,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
     }
     return result;
   }, [state, pageIndex]);
+
   // EmbedPDF scale factor (annotation rects are in PDF points at scale 1)
   const scale = documentState?.scale ?? 1;
   // The portal position is measured from DOM, so this key realigns it when the page transform changes.
@@ -270,24 +298,29 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
     documentState?.document?.pages?.[pageIndex]?.rotation ?? 0,
     documentState?.rotation ?? 0,
   ].join(":");
+
   const updateToolbarPlacement = useCallback((linkId: string | null) => {
     if (!linkId) {
       setToolbarPlacement(null);
       return;
     }
+
     const linkElement = linkElementRefs.current.get(linkId);
     if (!linkElement) {
       setHoveredLinkId(null);
       setToolbarPlacement(null);
       return;
     }
+
     if (typeof window === "undefined") return;
+
     const rect = linkElement.getBoundingClientRect();
     if (isRectOutsideViewport(rect)) {
       setHoveredLinkId(null);
       setToolbarPlacement(null);
       return;
     }
+
     const toolbarWidth = toolbarElementRef.current?.offsetWidth ?? 0;
     const verticalSpace = TOOLBAR_HEIGHT + TOOLBAR_GAP + TOOLBAR_EDGE_MARGIN;
     const fitsAbove = rect.top >= verticalSpace;
@@ -297,6 +330,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
     const top = flipped
       ? rect.bottom + TOOLBAR_GAP
       : Math.max(TOOLBAR_EDGE_MARGIN, rect.top - TOOLBAR_HEIGHT - TOOLBAR_GAP);
+
     setToolbarPlacement({
       linkId,
       left: clampToolbarCenter(centerX, toolbarWidth),
@@ -304,12 +338,14 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
       flipped,
     });
   }, []);
+
   const clearLeaveTimer = useCallback(() => {
     if (leaveTimerRef.current) {
       clearTimeout(leaveTimerRef.current);
       leaveTimerRef.current = null;
     }
   }, []);
+
   const startLeaveTimer = useCallback(() => {
     clearLeaveTimer();
     leaveTimerRef.current = setTimeout(() => {
@@ -317,6 +353,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
       setToolbarPlacement(null);
     }, TOOLBAR_LEAVE_DELAY);
   }, [clearLeaveTimer]);
+
   const handleLinkMouseEnter = useCallback(
     (id: string) => {
       clearLeaveTimer();
@@ -325,15 +362,19 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
     },
     [clearLeaveTimer, updateToolbarPlacement],
   );
+
   const handleLinkMouseLeave = useCallback(() => {
     startLeaveTimer();
   }, [startLeaveTimer]);
+
   const handleToolbarMouseEnter = useCallback(() => {
     clearLeaveTimer();
   }, [clearLeaveTimer]);
+
   const handleToolbarMouseLeave = useCallback(() => {
     startLeaveTimer();
   }, [startLeaveTimer]);
+
   const handleNavigate = useCallback(
     (annotationLink: PdfLinkAnnoObject) => {
       if (!annotationLink.target) {
@@ -341,6 +382,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
         setToolbarPlacement(null);
         return;
       }
+
       if (annotationLink.target.type === "destination" && scroll) {
         scroll.scrollToPage({
           pageNumber: annotationLink.target.destination.pageIndex + 1,
@@ -375,11 +417,13 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
           }
         }
       }
+
       setHoveredLinkId(null);
       setToolbarPlacement(null);
     },
     [scroll],
   );
+
   const handleDelete = useCallback(
     (annotationLink: PdfLinkAnnoObject) => {
       setHoveredLinkId(null);
@@ -389,19 +433,26 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
     },
     [scope, pageIndex],
   );
+
   useEffect(() => () => clearLeaveTimer(), [clearLeaveTimer]);
+
   useEffect(() => {
     if (!hoveredLinkId) {
       setToolbarPlacement(null);
       return;
     }
+
     updateToolbarPlacement(hoveredLinkId);
+
     if (typeof window === "undefined") return;
+
     const handleViewportChange = () => {
       updateToolbarPlacement(hoveredLinkId);
     };
+
     window.addEventListener("scroll", handleViewportChange, true);
     window.addEventListener("resize", handleViewportChange);
+
     return () => {
       window.removeEventListener("scroll", handleViewportChange, true);
       window.removeEventListener("resize", handleViewportChange);
@@ -412,6 +463,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
     toolbarPositionKey,
     updateToolbarPlacement,
   ]);
+
   useLayoutEffect(() => {
     if (!hoveredLinkId || toolbarPlacement?.linkId !== hoveredLinkId) return;
     updateToolbarPlacement(hoveredLinkId);
@@ -421,11 +473,14 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
     toolbarPositionKey,
     updateToolbarPlacement,
   ]);
+
   const hoveredAnnotationLink = useMemo(
     () => linkAnnotations.find((link) => link.id === hoveredLinkId) ?? null,
     [linkAnnotations, hoveredLinkId],
   );
+
   if (linkAnnotations.length === 0) return null;
+
   const toolbarPortal =
     hoveredAnnotationLink &&
     toolbarPlacement?.linkId === hoveredAnnotationLink.id &&
@@ -445,6 +500,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
           document.body,
         )
       : null;
+
   return (
     <>
       <div
@@ -457,6 +513,7 @@ export const LinkLayer: React.FC<LinkLayerProps> = ({
           const top = annotationLink.rect.origin.y * scale;
           const width = annotationLink.rect.size.width * scale;
           const height = annotationLink.rect.size.height * scale;
+
           return (
             <a
               key={annotationLink.id}

@@ -4,11 +4,13 @@ import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import DeleteIcon from "@mui/icons-material/Delete";
+
 interface UploadSignatureImageProps {
   signature: string | null;
   onChange: (signature: string | null) => void;
   disabled?: boolean;
 }
+
 export const UploadSignatureImage: React.FC<UploadSignatureImageProps> = ({
   signature,
   onChange,
@@ -17,9 +19,11 @@ export const UploadSignatureImage: React.FC<UploadSignatureImageProps> = ({
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
     // Validate file type
     if (!file.type.startsWith("image/")) {
       setError(
@@ -30,6 +34,7 @@ export const UploadSignatureImage: React.FC<UploadSignatureImageProps> = ({
       );
       return;
     }
+
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       setError(
@@ -40,7 +45,9 @@ export const UploadSignatureImage: React.FC<UploadSignatureImageProps> = ({
       );
       return;
     }
+
     setError(null);
+
     // Convert to base64
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -49,9 +56,11 @@ export const UploadSignatureImage: React.FC<UploadSignatureImageProps> = ({
     };
     reader.readAsDataURL(file);
   };
+
   const handleUploadClick = () => {
     fileInputRef.current?.click();
   };
+
   const handleClear = () => {
     onChange(null);
     setError(null);
@@ -59,6 +68,7 @@ export const UploadSignatureImage: React.FC<UploadSignatureImageProps> = ({
       fileInputRef.current.value = "";
     }
   };
+
   return (
     <Stack gap="sm">
       <Text size="sm" c="dimmed">
@@ -67,6 +77,7 @@ export const UploadSignatureImage: React.FC<UploadSignatureImageProps> = ({
           "Upload your signature image",
         )}
       </Text>
+
       {signature ? (
         <Stack gap="sm">
           <div
@@ -88,6 +99,7 @@ export const UploadSignatureImage: React.FC<UploadSignatureImageProps> = ({
               style={{ maxHeight: "150px", maxWidth: "100%" }}
             />
           </div>
+
           <Button
             variant="secondary"
             accent="danger"
@@ -110,11 +122,13 @@ export const UploadSignatureImage: React.FC<UploadSignatureImageProps> = ({
           {t("certSign.collab.signRequest.selectFile", "Select Image File")}
         </Button>
       )}
+
       {error && (
         <Text size="xs" c="red">
           {error}
         </Text>
       )}
+
       <input
         ref={fileInputRef}
         type="file"

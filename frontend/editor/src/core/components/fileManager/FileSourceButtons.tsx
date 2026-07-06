@@ -12,9 +12,11 @@ import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import MobileUploadModal from "@app/components/shared/MobileUploadModal";
 import { GoogleDriveIcon } from "@app/components/shared/CloudStorageIcons";
+
 interface FileSourceButtonsProps {
   horizontal?: boolean;
 }
+
 const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
   horizontal = false,
 }) => {
@@ -35,6 +37,7 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
   const { config } = useAppConfig();
   const isMobile = useIsMobile();
   const isMobileUploadEnabled = config?.enableMobileScanner && !isMobile;
+
   const handleGoogleDriveClick = async () => {
     try {
       const files = await openGoogleDrivePicker({ multiple: true });
@@ -45,17 +48,21 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
       console.error("Failed to pick files from Google Drive:", error);
     }
   };
+
   const handleMobileUploadClick = () => {
     setMobileUploadModalOpen(true);
   };
+
   const handleFilesReceivedFromMobile = (files: File[]) => {
     if (files.length > 0) {
       onNewFilesSelect(files);
     }
   };
+
   // Determine visibility of Google Drive button
   const shouldHideGoogleDrive =
     !isGoogleDriveEnabled && config?.hideDisabledToolsGoogleDrive;
+
   // Determine visibility of Mobile QR Scanner button
   const shouldHideMobileQR =
     !isMobileUploadEnabled && config?.hideDisabledToolsMobileQRScanner;
@@ -75,6 +82,7 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
       >
         {t("fileManager.recent", "Recent")}
       </Button>
+
       <Button
         variant="tertiary"
         accent="neutral"
@@ -86,6 +94,7 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
       >
         {horizontal ? terminology.upload : terminology.uploadFiles}
       </Button>
+
       {!shouldHideGoogleDrive && (
         <Button
           variant="tertiary"
@@ -110,6 +119,7 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
             : t("fileManager.googleDrive", "Google Drive")}
         </Button>
       )}
+
       {!shouldHideMobileQR && (
         <Button
           variant="tertiary"
@@ -136,6 +146,7 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
       )}
     </>
   );
+
   if (horizontal) {
     return (
       <>
@@ -150,6 +161,7 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
       </>
     );
   }
+
   return (
     <>
       <Stack gap="xs" style={{ height: "100%" }}>
@@ -173,4 +185,5 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
     </>
   );
 };
+
 export default FileSourceButtons;

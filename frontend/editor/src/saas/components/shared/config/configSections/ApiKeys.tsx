@@ -8,12 +8,14 @@ import SkeletonLoader from "@app/components/shared/SkeletonLoader";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@app/auth/UseSession";
 import { isUserAnonymous } from "@app/auth/supabase";
+
 export default function ApiKeys() {
   const [copied, setCopied] = useState<string | null>(null);
   const [showRefreshModal, setShowRefreshModal] = useState(false);
   const { t } = useTranslation();
   const { user } = useAuth();
   const isAnonymous = Boolean(user && isUserAnonymous(user));
+
   const {
     apiKey,
     isLoading: apiKeyLoading,
@@ -22,6 +24,7 @@ export default function ApiKeys() {
     error: apiKeyError,
     refetch,
   } = useApiKey();
+
   const copy = async (text: string, tag: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -32,6 +35,7 @@ export default function ApiKeys() {
       console.error(e);
     }
   };
+
   const refreshKeys = async () => {
     try {
       await refresh();
@@ -39,11 +43,13 @@ export default function ApiKeys() {
       setShowRefreshModal(false);
     }
   };
+
   const goToAccount = () => {
     window.dispatchEvent(
       new CustomEvent("appConfig:navigate", { detail: { key: "overview" } }),
     );
   };
+
   return (
     <Stack gap={20} p={0}>
       {!isAnonymous && apiKeyError && (
@@ -62,6 +68,7 @@ export default function ApiKeys() {
           </Anchor>
         </Text>
       )}
+
       {isAnonymous ? (
         <Paper
           radius="md"
@@ -125,6 +132,7 @@ export default function ApiKeys() {
           disabled={isRefreshing}
         />
       )}
+
       <RefreshModal
         opened={showRefreshModal}
         onClose={() => setShowRefreshModal(false)}

@@ -5,6 +5,7 @@ import { Button as DSButton } from "@app/ui/Button";
 import { FilePicker } from "@app/ui/FilePicker";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { BookmarkNode } from "@app/utils/editTableOfContents";
+
 interface EditTableOfContentsSettingsProps {
   bookmarks: BookmarkNode[];
   replaceExisting: boolean;
@@ -22,6 +23,7 @@ interface EditTableOfContentsSettingsProps {
   disabled?: boolean;
   selectedFileName?: string;
 }
+
 export default function EditTableOfContentsSettings({
   bookmarks,
   replaceExisting,
@@ -40,6 +42,7 @@ export default function EditTableOfContentsSettings({
   selectedFileName,
 }: EditTableOfContentsSettingsProps) {
   const { t } = useTranslation();
+
   const infoLines = useMemo(
     () => [
       t(
@@ -57,6 +60,7 @@ export default function EditTableOfContentsSettings({
     ],
     [t],
   );
+
   return (
     <Stack gap="md">
       <Stack gap="xs">
@@ -74,6 +78,7 @@ export default function EditTableOfContentsSettings({
               )}
         </Text>
       </Stack>
+
       <Stack gap="sm">
         <DSButton
           variant="secondary"
@@ -142,6 +147,7 @@ export default function EditTableOfContentsSettings({
           </DSButton>
         </Tooltip>
       </Stack>
+
       {loadError && (
         <Alert
           color="red"
@@ -151,12 +157,15 @@ export default function EditTableOfContentsSettings({
           {loadError}
         </Alert>
       )}
+
       <Divider />
+
       <Stack gap="xs">
         <Text size="sm" fw={500}>
           {t("editTableOfContents.actions.export", "Export bookmarks")}
         </Text>
       </Stack>
+
       <Stack gap="sm">
         <DSButton
           variant="secondary"
@@ -192,7 +201,9 @@ export default function EditTableOfContentsSettings({
           </DSButton>
         </Tooltip>
       </Stack>
+
       <Divider />
+
       <Switch
         checked={replaceExisting}
         onChange={(event) =>
@@ -208,6 +219,7 @@ export default function EditTableOfContentsSettings({
         )}
         disabled={disabled}
       />
+
       <Stack gap="xs">
         {infoLines.map((line, index) => (
           <Text key={index} size="sm" c="dimmed">

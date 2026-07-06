@@ -11,6 +11,7 @@ import {
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import { ColorPicker } from "@app/components/annotation/shared/ColorPicker";
+
 interface TextInputWithFontProps {
   text: string;
   onTextChange: (text: string) => void;
@@ -31,6 +32,7 @@ interface TextInputWithFontProps {
   colorLabel?: string;
   onAnyChange?: () => void;
 }
+
 export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
   text,
   onTextChange,
@@ -56,14 +58,17 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
   const fontSizeCombobox = useCombobox();
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [colorInput, setColorInput] = useState(textColor);
+
   // Sync font size input with prop changes
   useEffect(() => {
     setFontSizeInput(fontSize.toString());
   }, [fontSize]);
+
   // Sync color input with prop changes
   useEffect(() => {
     setColorInput(textColor);
   }, [textColor]);
+
   const fontOptions = [
     { value: "Helvetica", label: "Helvetica" },
     { value: "Times-Roman", label: "Times" },
@@ -71,6 +76,7 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
     { value: "Arial", label: "Arial" },
     { value: "Georgia", label: "Georgia" },
   ];
+
   const fontSizeOptions = [
     "8",
     "12",
@@ -95,10 +101,12 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
     "192",
     "200",
   ];
+
   // Validate hex color
   const isValidHexColor = (color: string): boolean => {
     return /^#[0-9A-Fa-f]{6}$/.test(color);
   };
+
   return (
     <Stack gap="sm">
       <TextInput
@@ -112,6 +120,7 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
         disabled={disabled}
         required
       />
+
       {/* Font Selection */}
       <Select
         label={fontLabel}
@@ -125,6 +134,7 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
         searchable
         allowDeselect={false}
       />
+
       {/* Font Size and Color */}
       <Group grow>
         <Combobox
@@ -147,12 +157,14 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
               onChange={(event) => {
                 const value = event.currentTarget.value;
                 setFontSizeInput(value);
+
                 // Parse and validate the typed value in real-time
                 const size = parseInt(value);
                 if (!isNaN(size) && size >= 8 && size <= 200) {
                   onFontSizeChange(size);
                   onAnyChange?.();
                 }
+
                 fontSizeCombobox.openDropdown();
                 fontSizeCombobox.updateSelectedOptionIndex();
               }}
@@ -171,6 +183,7 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
               disabled={disabled}
             />
           </Combobox.Target>
+
           <Combobox.Dropdown>
             <Combobox.Options>
               {fontSizeOptions.map((size) => (
@@ -181,6 +194,7 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
             </Combobox.Options>
           </Combobox.Dropdown>
         </Combobox>
+
         {/* Text Color Picker */}
         {onTextColorChange && (
           <Box>
@@ -192,6 +206,7 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
               onChange={(e) => {
                 const value = e.currentTarget.value;
                 setColorInput(value);
+
                 // Update color if valid hex
                 if (isValidHexColor(value)) {
                   onTextColorChange(value);
@@ -222,6 +237,7 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
           </Box>
         )}
       </Group>
+
       {/* Color Picker Modal */}
       {onTextColorChange && (
         <ColorPicker
@@ -234,6 +250,7 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
           }}
         />
       )}
+
       {/* Text Alignment */}
       {onTextAlignChange && (
         <SegmentedControl<"left" | "center" | "right">

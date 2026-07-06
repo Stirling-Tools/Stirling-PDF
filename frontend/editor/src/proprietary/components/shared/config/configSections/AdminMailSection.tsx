@@ -22,6 +22,7 @@ import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStic
 import EditableSecretField from "@app/components/shared/EditableSecretField";
 import apiClient from "@app/services/apiClient";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
+
 interface MailSettingsData {
   enabled?: boolean;
   enableInvites?: boolean;
@@ -32,11 +33,14 @@ interface MailSettingsData {
   password?: string;
   from?: string;
 }
+
 interface ApiResponseWithPending<T> {
   _pending?: Partial<T>;
 }
+
 type MailApiResponse = MailSettingsData &
   ApiResponseWithPending<MailSettingsData>;
+
 export default function AdminMailSection() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -47,6 +51,7 @@ export default function AdminMailSection() {
     closeRestartModal,
     restartServer,
   } = useRestartServer();
+
   const {
     settings,
     setSettings,
@@ -72,13 +77,16 @@ export default function AdminMailSection() {
       };
     },
   });
+
   useEffect(() => {
     fetchSettings();
   }, []);
+
   const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(
     settings,
     loading,
   );
+
   const handleSave = async () => {
     try {
       markSaved();
@@ -92,10 +100,12 @@ export default function AdminMailSection() {
       });
     }
   };
+
   const handleDiscard = useCallback(() => {
     const original = resetToSnapshot();
     setSettings(original);
   }, [resetToSnapshot, setSettings]);
+
   if (loading) {
     return (
       <Stack align="center" justify="center" h={200}>
@@ -103,6 +113,7 @@ export default function AdminMailSection() {
       </Stack>
     );
   }
+
   return (
     <div className="settings-section-container">
       <Stack gap="lg" className="settings-section-content">
@@ -117,6 +128,7 @@ export default function AdminMailSection() {
             )}
           </Text>
         </div>
+
         <Paper withBorder p="md" radius="md">
           <Stack gap="md">
             <Group justify="space-between" align="flex-start" wrap="nowrap">
@@ -141,6 +153,7 @@ export default function AdminMailSection() {
                 <PendingBadge show={isFieldPending("enabled")} />
               </Group>
             </Group>
+
             <Group justify="space-between" align="flex-start" wrap="nowrap">
               <div>
                 <Text fw={500} size="sm">
@@ -190,6 +203,7 @@ export default function AdminMailSection() {
                 <PendingBadge show={isFieldPending("enableInvites")} />
               </Group>
             </Group>
+
             <div>
               <TextInput
                 label={
@@ -211,6 +225,7 @@ export default function AdminMailSection() {
                 placeholder="smtp.example.com"
               />
             </div>
+
             <div>
               <NumberInput
                 label={
@@ -233,6 +248,7 @@ export default function AdminMailSection() {
                 max={65535}
               />
             </div>
+
             <div>
               <TextInput
                 label={
@@ -253,6 +269,7 @@ export default function AdminMailSection() {
                 }
               />
             </div>
+
             <div>
               <Group gap="xs" align="center" mb={4}>
                 <span style={{ fontWeight: 500, fontSize: "0.875rem" }}>
@@ -275,6 +292,7 @@ export default function AdminMailSection() {
                 )}
               />
             </div>
+
             <div>
               <TextInput
                 label={
@@ -299,6 +317,7 @@ export default function AdminMailSection() {
           </Stack>
         </Paper>
       </Stack>
+
       <SettingsStickyFooter
         isDirty={isDirty}
         saving={saving}
@@ -306,6 +325,7 @@ export default function AdminMailSection() {
         onSave={handleSave}
         onDiscard={handleDiscard}
       />
+
       {/* Restart Confirmation Modal */}
       <RestartConfirmationModal
         opened={restartModalOpened}

@@ -23,6 +23,7 @@ import {
   useNavigationState,
 } from "@app/contexts/NavigationContext";
 import type { PdfInfoReportData } from "@app/types/getPdfInfo";
+
 const CHAPTERS = [
   {
     id: "summary",
@@ -76,6 +77,7 @@ const CHAPTERS = [
     fallback: "Per Page Info",
   },
 ];
+
 const GetPdfInfo = (props: BaseToolProps) => {
   const { t } = useTranslation();
   const { actions: navigationActions } = useNavigationActions();
@@ -86,19 +88,23 @@ const GetPdfInfo = (props: BaseToolProps) => {
     setCustomWorkbenchViewData,
     clearCustomWorkbenchViewData,
   } = useToolWorkflow();
+
   const REPORT_VIEW_ID = "getPdfInfoReport";
   const REPORT_WORKBENCH_ID = "custom:getPdfInfoReport" as const;
   const reportIcon = useMemo(() => <PictureAsPdfIcon fontSize="small" />, []);
+
   const base = useBaseTool(
     "getPdfInfo",
     useGetPdfInfoParameters,
     useGetPdfInfoOperation,
     props,
   );
+
   const operation = base.operation as GetPdfInfoOperationHook;
   const hasResults = operation.results.length > 0;
   const showResultsStep =
     hasResults || base.operation.isLoading || !!base.operation.errorMessage;
+
   useEffect(() => {
     registerCustomWorkbenchView({
       id: REPORT_VIEW_ID,
@@ -107,6 +113,7 @@ const GetPdfInfo = (props: BaseToolProps) => {
       icon: reportIcon,
       component: GetPdfInfoReportView,
     });
+
     return () => {
       clearCustomWorkbenchViewData(REPORT_VIEW_ID);
       unregisterCustomWorkbenchView(REPORT_VIEW_ID);
@@ -118,6 +125,7 @@ const GetPdfInfo = (props: BaseToolProps) => {
     t,
     unregisterCustomWorkbenchView,
   ]);
+
   const reportData = useMemo<PdfInfoReportData | null>(() => {
     if (operation.results.length === 0) return null;
     const generatedAt = operation.results[0].summaryGeneratedAt ?? Date.now();
@@ -126,6 +134,7 @@ const GetPdfInfo = (props: BaseToolProps) => {
       entries: operation.results,
     };
   }, [operation.results]);
+
   const lastReportGeneratedAtRef = useRef<number | null>(null);
   useEffect(() => {
     if (reportData) {
@@ -154,6 +163,7 @@ const GetPdfInfo = (props: BaseToolProps) => {
     reportData,
     setCustomWorkbenchViewData,
   ]);
+
   return createToolFlow({
     files: {
       selectedFiles: base.selectedFiles,
@@ -226,7 +236,9 @@ const GetPdfInfo = (props: BaseToolProps) => {
     },
   });
 };
+
 const GetPdfInfoTool = GetPdfInfo as ToolComponent;
 GetPdfInfoTool.tool = () => useGetPdfInfoOperation;
 GetPdfInfoTool.getDefaultParameters = () => ({ ...defaultParameters });
+
 export default GetPdfInfoTool;

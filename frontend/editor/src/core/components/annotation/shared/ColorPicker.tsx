@@ -21,6 +21,7 @@ interface ColorPickerProps {
   showOpacity?: boolean;
   opacityLabel?: string;
 }
+
 export const ColorPicker: React.FC<ColorPickerProps> = ({
   isOpen,
   onClose,
@@ -36,6 +37,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
   const resolvedTitle = title ?? t("colorPicker.title", "Choose colour");
   const resolvedOpacityLabel =
     opacityLabel ?? t("annotation.opacity", "Opacity");
+
   return (
     <Modal
       opened={isOpen}
@@ -87,11 +89,13 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
     </Modal>
   );
 };
+
 interface ColorSwatchButtonProps {
   color: string;
   onClick: () => void;
   size?: number;
 }
+
 export const ColorSwatchButton: React.FC<ColorSwatchButtonProps> = ({
   color,
   onClick,

@@ -23,6 +23,7 @@ import {
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { CloudBadge } from "@app/components/shared/CloudBadge";
 import { useWillUseCloud } from "@app/hooks/useWillUseCloud";
+
 interface ToolButtonProps {
   id: ToolId;
   tool: ToolRegistryEntry;
@@ -37,6 +38,7 @@ interface ToolButtonProps {
   onUnavailableClick?: () => void;
   badgeCount?: number;
 }
+
 const ToolButton: React.FC<ToolButtonProps> = ({
   id,
   tool,
@@ -73,11 +75,13 @@ const ToolButton: React.FC<ToolButtonProps> = ({
   const binding = hotkeys[id];
   const { getToolNavigation } = useToolNavigation();
   const fav = isFavorite(id as ToolId);
+
   // Check if this tool will route to SaaS backend (desktop only)
   const rawEndpoint = tool.operationConfig?.endpoint;
   const endpointString =
     typeof rawEndpoint === "string" ? rawEndpoint : undefined;
   const usesCloud = useWillUseCloud(endpointString);
+
   const handleClick = (id: ToolId) => {
     if (isUnavailable) {
       onUnavailableClick?.();
@@ -91,14 +95,17 @@ const ToolButton: React.FC<ToolButtonProps> = ({
     // Normal tool selection
     onSelect(id);
   };
+
   // Get navigation props for URL support (only if navigation is not disabled)
   const navProps =
     !isUnavailable && !tool.link && !disableNavigation
       ? getToolNavigation(id, tool)
       : null;
+
   const { key: disabledKey, fallback: disabledFallback } =
     getDisabledLabel(disabledReason);
   const disabledMessage = t(disabledKey, disabledFallback);
+
   const tooltipContent = visuallyUnavailable ? (
     <span>
       <strong>{disabledMessage}</strong> {tool.description}
@@ -215,12 +222,15 @@ const ToolButton: React.FC<ToolButtonProps> = ({
       )}
     </div>
   );
+
   const handleExternalClick = (e: React.MouseEvent) => {
     handleUnlessSpecialClick(e, () => handleClick(id));
   };
+
   const selectedBg = isSelected
     ? { backgroundColor: "var(--tool-button-selected-bg)" }
     : {};
+
   const buttonElement = navProps ? (
     // For internal tools with URLs, render Button as an anchor for proper link behavior
     <Button
@@ -289,6 +299,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
       {buttonContent}
     </Button>
   );
+
   const star =
     hasStars && !visuallyUnavailable ? (
       <FavoriteStar
@@ -298,6 +309,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
         size="xs"
       />
     ) : null;
+
   return (
     <div className="tool-button-container">
       {star}
@@ -312,4 +324,5 @@ const ToolButton: React.FC<ToolButtonProps> = ({
     </div>
   );
 };
+
 export default memo(ToolButton);

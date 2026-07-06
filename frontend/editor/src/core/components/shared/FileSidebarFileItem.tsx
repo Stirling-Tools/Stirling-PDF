@@ -17,16 +17,19 @@ import { getFileDocVariant } from "@app/components/shared/filePreview/getFileTyp
 import { useLazyThumbnail } from "@app/hooks/useLazyThumbnail";
 import { IMAGE_EXTENSIONS } from "@app/utils/fileUtils";
 import "@app/components/shared/FileSidebarFileItem.css";
+
 export function getFileExtension(name: string): string {
   const parts = name.split(".");
   return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : "";
 }
+
 export type DateGroup =
   | "today"
   | "yesterday"
   | "thisWeek"
   | "thisMonth"
   | "older";
+
 export const DATE_GROUP_ORDER: DateGroup[] = [
   "today",
   "yesterday",
@@ -34,6 +37,7 @@ export const DATE_GROUP_ORDER: DateGroup[] = [
   "thisMonth",
   "older",
 ];
+
 export function getDateGroup(lastModified: number | undefined): DateGroup {
   if (!lastModified) return "older";
   const now = new Date();
@@ -55,6 +59,7 @@ export function getDateGroup(lastModified: number | undefined): DateGroup {
   if (daysAgo < 30) return "thisMonth";
   return "older";
 }
+
 export function formatFileDate(lastModifiedTs: number): string {
   const lastModified = lastModifiedTs ? new Date(lastModifiedTs) : new Date();
   const now = new Date();
@@ -66,6 +71,7 @@ export function formatFileDate(lastModifiedTs: number): string {
     lastModified.getMonth(),
     lastModified.getDate(),
   );
+
   if (fileDay.getTime() === today.getTime()) {
     return lastModified
       .toLocaleTimeString("en-US", {
@@ -88,6 +94,7 @@ export function formatFileDate(lastModifiedTs: number): string {
     day: "numeric",
   });
 }
+
 function CheckIcon({
   className,
   style,
@@ -112,16 +119,19 @@ function CheckIcon({
     </svg>
   );
 }
+
 function getSidebarFileIcon(ext: string): React.ReactElement {
   const cls = "file-sidebar-file-icon file-sidebar-file-icon-hover-hide";
   return <FileDocIcon className={cls} variant={getFileDocVariant(ext)} />;
 }
+
 /** A Watched Folder this file currently belongs to, used for the membership dots. */
 export interface FileItemFolderRef {
   id: string;
   name: string;
   accentColor: string;
 }
+
 /** A policy that has run on this file, used for the activity badges. */
 export interface FileItemPolicyRef {
   id: string;
@@ -132,6 +142,7 @@ export interface FileItemPolicyRef {
    *  it doesn't replay on every reload of an already-enforced file. */
   recent: boolean;
 }
+
 export interface FileItemProps {
   fileId: FileId;
   name: string;
@@ -165,8 +176,10 @@ export interface FileItemProps {
   /** Whether this file has more than one version (drives the menu item). */
   hasVersionHistory?: boolean;
 }
+
 const MAX_VISIBLE_FOLDER_TAGS = 2;
 const MAX_VISIBLE_POLICY_BADGES = 3;
+
 export function FileItem({
   fileId,
   name,
@@ -194,8 +207,10 @@ export function FileItem({
   const ext = getFileExtension(name);
   const dateLabel = lastModified ? formatFileDate(lastModified) : "";
   const typeLabel = ext ? ext.toUpperCase() : "File";
+
   const visibleFolders = folders.slice(0, MAX_VISIBLE_FOLDER_TAGS);
   const overflowFolders = folders.slice(MAX_VISIBLE_FOLDER_TAGS);
+
   // Only use raster thumbnails for PDFs and images — everything else uses scalable SVG icons
   const useRasterThumb = ext === "pdf" || IMAGE_EXTENSIONS.has(ext);
   const resolvedThumbnail = useLazyThumbnail(
@@ -203,14 +218,19 @@ export function FileItem({
     size ?? 0,
     useRasterThumb ? thumbnailUrl : undefined,
   );
+
   const itemRef = useRef<HTMLDivElement>(null);
   const [hoverRect, setHoverRect] = useState<DOMRect | null>(null);
+
   const handleMouseEnter = useCallback(() => {
     setHoverRect(itemRef.current?.getBoundingClientRect() ?? null);
   }, []);
+
   const handleMouseLeave = useCallback(() => setHoverRect(null), []);
+
   // A just-applied policy (recent run) drives the one-off row glow.
   const recentPolicy = policies.find((p) => p.recent);
+
   // Reactive: tooltip appears as soon as both hover rect and thumbnail are ready
   const thumbPos =
     hoverRect && resolvedThumbnail
@@ -219,6 +239,7 @@ export function FileItem({
           left: hoverRect.right + 10,
         }
       : null;
+
   return (
     <>
       <div
@@ -441,6 +462,7 @@ export function FileItem({
           </Menu>
         )}
       </div>
+
       {useRasterThumb &&
         thumbPos &&
         resolvedThumbnail &&

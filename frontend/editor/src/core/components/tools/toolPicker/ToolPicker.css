@@ -90,7 +90,8 @@
 
 .tool-button-star {
   position: absolute;
-  top: 0.35rem;
+  top: 50%;
+  transform: translateY(-50%);
   right: 0.35rem;
   opacity: 0;
   transition: opacity 0.2s ease;

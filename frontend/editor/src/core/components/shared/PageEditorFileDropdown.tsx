@@ -9,7 +9,9 @@ import { getFileColorWithOpacity } from "@app/components/pageEditor/fileColors";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { useFileItemDragDrop } from "@app/components/shared/pageEditor/useFileItemDragDrop";
+
 import { FileId } from "@app/types/file";
+
 // Local interface for PageEditor file display
 interface PageEditorFile {
   fileId: FileId;
@@ -17,6 +19,7 @@ interface PageEditorFile {
   versionNumber?: number;
   isSelected: boolean;
 }
+
 interface FileMenuItemProps {
   file: PageEditorFile;
   index: number;
@@ -24,6 +27,7 @@ interface FileMenuItemProps {
   onToggleSelection: (fileId: FileId) => void;
   onReorder: (fromIndex: number, toIndex: number) => void;
 }
+
 const FileMenuItem: React.FC<FileMenuItemProps> = ({
   file,
   index,
@@ -45,9 +49,11 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
     index,
     onReorder,
   });
+
   const itemName = file?.name || "Untitled";
   const fileColorBorder = getFileColorWithOpacity(colorIndex, 1);
   const fileColorBorderHover = getFileColorWithOpacity(colorIndex, 1.0);
+
   return (
     <div
       style={{
@@ -142,6 +148,7 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
     </div>
   );
 };
+
 interface PageEditorFileDropdownProps {
   files: PageEditorFile[];
   onToggleSelection: (fileId: FileId) => void;
@@ -152,6 +159,7 @@ interface PageEditorFileDropdownProps {
   selectedCount: number;
   totalCount: number;
 }
+
 export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
   files,
   onToggleSelection,
@@ -163,6 +171,7 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
   totalCount,
 }) => {
   const { openFilesModal } = useFilesModalContext();
+
   return (
     <Menu trigger="click" position="bottom" width="40rem">
       <Menu.Target>
@@ -198,6 +207,7 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
       >
         {files.map((file, index) => {
           const colorIndex = fileColorMap.get(file.fileId as string) ?? 0;
+
           return (
             <FileMenuItem
               key={file.fileId}
@@ -209,6 +219,7 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
             />
           );
         })}
+
         {/* Add File Button */}
         <div
           onClick={(e) => {

@@ -10,12 +10,14 @@ import DrawIcon from "@mui/icons-material/Draw";
 import TextFieldsIcon from "@mui/icons-material/TextFields";
 import ImageIcon from "@mui/icons-material/Image";
 import CloseIcon from "@mui/icons-material/Close";
+
 interface SelectSignatureModalProps {
   opened: boolean;
   onClose: () => void;
   onSignatureSelected: (signature: SavedSignature) => void;
   onCreateNew: (type: "canvas" | "text" | "image") => void;
 }
+
 export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
   opened,
   onClose,
@@ -24,9 +26,11 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const { savedSignatures, removeSignature } = useSavedSignatures();
+
   const sortedSavedSignatures = [...savedSignatures].sort(
     (a, b) => (b.updatedAt ?? b.createdAt) - (a.updatedAt ?? a.createdAt),
   );
+
   const renderSignaturePreview = (sig: SavedSignature) => {
     if (sig.type === "text") {
       return (
@@ -60,6 +64,7 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
         </Box>
       );
     }
+
     return (
       <Box
         style={{
@@ -91,6 +96,7 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
       </Box>
     );
   };
+
   return (
     <Modal
       opened={opened}
@@ -152,6 +158,7 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
             </Stack>
           </>
         )}
+
         <Text
           size="sm"
           fw={600}
@@ -162,6 +169,7 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
             "Create New Signature",
           )}
         </Text>
+
         <Group grow>
           <Button
             variant="secondary"

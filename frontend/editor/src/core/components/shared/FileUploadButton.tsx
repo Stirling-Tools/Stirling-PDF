@@ -37,6 +37,7 @@ interface FileUploadButtonProps {
   variant?: ButtonVariant | LegacyVariant;
   fullWidth?: boolean;
 }
+
 const FileUploadButton = ({
   file,
   onChange,
@@ -48,7 +49,9 @@ const FileUploadButton = ({
 }: FileUploadButtonProps) => {
   const { t } = useTranslation();
   const resetRef = useRef<() => void>(null);
+
   const defaultPlaceholder = t("chooseFile", "Choose File");
+
   return (
     <FilePicker
       resetRef={resetRef}
@@ -62,4 +65,5 @@ const FileUploadButton = ({
     </FilePicker>
   );
 };
+
 export default FileUploadButton;

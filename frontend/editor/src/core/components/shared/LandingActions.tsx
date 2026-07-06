@@ -8,12 +8,14 @@ import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useIsMobile } from "@app/hooks/useIsMobile";
+
 type LandingActionsProps = {
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   onUploadClick: () => void;
   onMobileUploadClick: () => void;
   onFileSelect: (event: React.ChangeEvent<HTMLInputElement>) => void;
 };
+
 export function LandingActions({
   fileInputRef,
   onUploadClick,
@@ -25,6 +27,7 @@ export function LandingActions({
   const icons = useFileActionIcons();
   const { config } = useAppConfig();
   const isMobile = useIsMobile();
+
   return (
     <>
       <Group gap="sm" justify="center" wrap="wrap" mb="xs">
@@ -45,6 +48,7 @@ export function LandingActions({
         >
           {terminology.uploadFromComputer}
         </Button>
+
         <Button
           variant="secondary"
           className="landing-btn-secondary"
@@ -63,6 +67,7 @@ export function LandingActions({
         >
           {terminology.addFiles}
         </Button>
+
         {config?.enableMobileScanner && !isMobile && (
           <Tooltip label={terminology.mobileUpload} position="bottom">
             <ActionIcon

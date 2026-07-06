@@ -10,6 +10,7 @@ import PauseCircleOutlineIcon from "@mui/icons-material/PauseCircleOutlined";
 import { WatchedFolder } from "@app/types/watchedFolders";
 import { FolderRunStatus } from "@app/hooks/useFolderRunStatuses";
 import { iconMap } from "@app/components/tools/automate/iconMap";
+
 interface WatchedFolderCardProps {
   folder: WatchedFolder;
   isActive: boolean;
@@ -19,6 +20,7 @@ interface WatchedFolderCardProps {
   onDelete: (e: React.MouseEvent) => void;
   onFileDrop?: (fileIds: string[]) => void;
 }
+
 export function WatchedFolderCard({
   folder,
   isActive,
@@ -33,6 +35,7 @@ export function WatchedFolderCard({
   const [isDragOver, setIsDragOver] = useState(false);
   const IconComponent =
     iconMap[folder.icon as keyof typeof iconMap] || iconMap.FolderIcon;
+
   const handleDragOver = (e: React.DragEvent) => {
     const types = e.dataTransfer.types;
     if (
@@ -44,7 +47,9 @@ export function WatchedFolderCard({
     e.dataTransfer.dropEffect = "copy";
     setIsDragOver(true);
   };
+
   const handleDragLeave = () => setIsDragOver(false);
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
@@ -61,6 +66,7 @@ export function WatchedFolderCard({
     const fileId = e.dataTransfer.getData("watchedFolderFileId");
     if (fileId && onFileDrop) onFileDrop([fileId]);
   };
+
   return (
     <Box
       className="tool-button-container"

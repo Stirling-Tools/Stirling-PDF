@@ -6,10 +6,12 @@ import { useTranslation } from "react-i18next";
 import StorageIcon from "@mui/icons-material/Storage";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
+
 import { StirlingFileStub } from "@app/types/fileContext";
 import { getFileSize, getFileDate } from "@app/utils/fileUtils";
 import { useFileThumbnail } from "@app/hooks/useFileThumbnail";
 import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
+
 interface FileCardProps {
   file: File;
   fileStub?: StirlingFileStub;
@@ -21,6 +23,7 @@ interface FileCardProps {
   onSelect?: () => void;
   isSupported?: boolean; // Whether the file format is supported by the current tool
 }
+
 const FileCard = ({
   file,
   fileStub,
@@ -39,8 +42,10 @@ const FileCard = ({
     isGenerating,
   } = useFileThumbnail(fileStub);
   const [isHovered, setIsHovered] = useState(false);
+
   const isPdf = file.type === "application/pdf";
   const isHydrating = isPdf && !isEncrypted && !thumb && !isGenerating;
+
   return (
     <Card
       shadow="xs"
@@ -143,9 +148,11 @@ const FileCard = ({
             iconSize="3rem"
           />
         </Box>
+
         <Text fw={500} size="sm" lineClamp={1} ta="center">
           {file.name}
         </Text>
+
         <Group gap="xs" justify="center">
           <Badge color="red" variant="light" size="sm">
             {getFileSize(file)}
@@ -169,6 +176,7 @@ const FileCard = ({
             </Badge>
           )}
         </Group>
+
         <Button
           accent="danger"
           size="sm"
@@ -185,4 +193,5 @@ const FileCard = ({
     </Card>
   );
 };
+
 export default FileCard;

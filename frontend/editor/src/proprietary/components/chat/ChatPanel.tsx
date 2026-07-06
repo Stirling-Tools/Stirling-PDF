@@ -45,9 +45,12 @@ import { StirlingLogoOutline } from "@app/components/agents/StirlingLogoOutline"
 import { PanelHeader } from "@app/ui/PanelHeader";
 import { ChatQuickActions } from "@app/components/chat/ChatQuickActions";
 import "@app/components/chat/ChatPanel.css";
+
 type TranslateFn = TFunction;
+
 /** Resolver mapping a tool endpoint path to its translated display name. */
 type ToolNameResolver = (endpoint: string) => string | null;
+
 /**
  * Look up a tool's translated name from the tool catalog. The catalog's {@code operationConfig}
  * exposes the full API endpoint path for each tool, so we key the lookup on the exact path that
@@ -66,8 +69,10 @@ function useToolNameResolver(): ToolNameResolver {
     return (endpoint: string) => nameByEndpoint.get(endpoint) ?? null;
   }, [allTools]);
 }
+
 /** Resolver mapping a tool endpoint path to its registry icon ReactNode. */
 type ToolIconResolver = (endpoint: string) => ReactNode | null;
+
 /**
  * Look up a tool's icon ReactNode from the tool catalog, keyed by API endpoint path.
  * Returns null when the endpoint is not found (use a generic fallback icon in that case).
@@ -85,6 +90,7 @@ function useToolIconResolver(): ToolIconResolver {
     return (endpoint: string) => iconByEndpoint.get(endpoint) ?? null;
   }, [allTools]);
 }
+
 function formatProgress(
   progress: AiWorkflowProgress,
   t: TranslateFn,
@@ -117,6 +123,7 @@ function formatProgress(
   }
   return t(`chat.progress.${progress.phase}`);
 }
+
 function formatEngineProgress(
   detail: AnyEngineProgressDetail | undefined,
   t: TranslateFn,
@@ -140,6 +147,7 @@ function formatEngineProgress(
       return t("chat.progress.whole_doc_read_done");
   }
 }
+
 /**
  * Phase-specific icon for a progress step: the tool's registry icon while a
  * tool runs, or a generic glyph for the read/extract/think phases. Used for the
@@ -165,6 +173,7 @@ function progressStepIcon(
   }
   return <CloudOutlinedIcon sx={{ fontSize: 17 }} />;
 }
+
 /**
  * Live progress indicator shown while the AI is working. One step at a time:
  * our animated logo on the left, the current step's label shimmering in the
@@ -187,6 +196,7 @@ function ProgressLogDisplay({
   const label = current
     ? formatProgress(current, t, resolveToolName)
     : t("chat.progress.thinking");
+
   return (
     <div className="chat-progress-live">
       <span className="chat-progress-live__logo">
@@ -201,10 +211,12 @@ function ProgressLogDisplay({
     </div>
   );
 }
+
 function formatDuration(ms: number, t: TranslateFn): string {
   const totalSeconds = Math.max(1, Math.round(ms / 1000));
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
+
   if (minutes === 0) {
     return t("chat.progress.ranForSeconds", { count: totalSeconds });
   }
@@ -213,6 +225,7 @@ function formatDuration(ms: number, t: TranslateFn): string {
   }
   return t("chat.progress.ranForMinutesSeconds", { minutes, seconds });
 }
+
 /**
  * Collapsed "Ran for X seconds" control above each completed assistant turn.
  * Expands to a numbered list of just the tools that actually ran — generic
@@ -234,9 +247,11 @@ function CompletedProgressLogDropdown({
 }) {
   const [expanded, setExpanded] = useState(false);
   const label = formatDuration(durationMs, t);
+
   const toolSteps = progressLog.filter(
     (step) => step.phase === AiWorkflowPhase.EXECUTING_TOOL && step.tool,
   );
+
   // A purely conversational turn (no tools): just show the duration, nothing
   // to expand.
   if (toolSteps.length === 0) {
@@ -248,6 +263,7 @@ function CompletedProgressLogDropdown({
       </div>
     );
   }
+
   return (
     <div className="chat-completed-log">
       <Button
@@ -289,6 +305,7 @@ function CompletedProgressLogDropdown({
     </div>
   );
 }
+
 function ChatMessageBubble({
   role,
   content,
@@ -309,12 +326,14 @@ function ChatMessageBubble({
   t: TranslateFn;
 }) {
   const [copied, setCopied] = useState(false);
+
   function handleCopy() {
     void navigator.clipboard.writeText(content).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     });
   }
+
   const actions = (
     <div className="chat-message-actions">
       <ActionIcon
@@ -332,6 +351,7 @@ function ChatMessageBubble({
       </span>
     </div>
   );
+
   if (role === ChatRole.USER) {
     return (
       <div className="chat-message chat-message-user">
@@ -346,6 +366,7 @@ function ChatMessageBubble({
       </div>
     );
   }
+
   return (
     <div className="chat-message chat-message-assistant">
       <div className="chat-bubble-assistant">
@@ -366,12 +387,14 @@ function ChatMessageBubble({
     </div>
   );
 }
+
 export interface ChatPanelProps {
   /** Called when the user closes the chat to return to the tool list. */
   onBack: () => void;
   /** Accessible label for the close button. */
   backLabel: string;
 }
+
 export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
   const { t } = useTranslation();
   const { messages, isLoading, progressLog, sendMessage, clearChat } =
@@ -384,6 +407,7 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
   // Tracks whether the user manually scrolled away from the bottom.
   // A ref (not state) so scroll events don't cause re-renders.
   const userScrolledUp = useRef(false);
+
   // Jump to the bottom on first render so existing conversations open at the
   // most recent message rather than the top.
   useEffect(() => {
@@ -392,6 +416,7 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
       if (el) el.scrollTop = el.scrollHeight;
     });
   }, []);
+
   // Attach a passive scroll listener to track whether the user has scrolled
   // away from the bottom (breaks auto-scroll) or returned to it (re-latches).
   useEffect(() => {
@@ -404,6 +429,7 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
     el.addEventListener("scroll", onScroll, { passive: true });
     return () => el.removeEventListener("scroll", onScroll);
   }, []);
+
   // Scroll to the bottom when messages arrive or live progress steps update,
   // unless the user has scrolled up (they're reading history).
   // Scrolling back to the bottom resets the ref, so the next update re-latches.
@@ -420,26 +446,31 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
       });
     }
   }, [messages, progressLog]);
+
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
+
   const handleSend = (override?: string) => {
     const text = (override ?? input).trim();
     if (!text || isLoading) return;
     setInput("");
     sendMessage(text);
   };
+
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
   };
+
   const showQuickActions = messages.length === 0 && !isLoading;
   const disclaimerText = t(
     "chat.input.disclaimer",
     "AI can make mistakes. Be sure to verify the output before sharing.",
   );
+
   return (
     <Box className="chat-panel chat-panel--embedded">
       <PanelHeader
@@ -471,6 +502,7 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
           <span>{disclaimerText}</span>
         </div>
       )}
+
       <ScrollArea className="chat-panel-messages" viewportRef={scrollRef}>
         <Stack
           gap="sm"
@@ -503,12 +535,14 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
           )}
         </Stack>
       </ScrollArea>
+
       {showQuickActions && (
         <ChatQuickActions
           heading={t("chat.quickActions.heading", "Get started")}
           onAction={(text) => handleSend(text)}
         />
       )}
+
       {!showQuickActions && (
         <div className="chat-panel-disclaimer chat-panel-disclaimer--inline">
           <InfoOutlinedIcon
@@ -518,6 +552,7 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
           <span>{disclaimerText}</span>
         </div>
       )}
+
       <div className="chat-panel-input">
         <ActionIcon
           className="chat-panel-input__send"

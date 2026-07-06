@@ -18,6 +18,7 @@ interface FavoriteStarProps {
   className?: string;
   size?: FavoriteStarSize;
 }
+
 const FavoriteStar: React.FC<FavoriteStarProps> = ({
   isFavorite,
   onToggle,
@@ -25,6 +26,7 @@ const FavoriteStar: React.FC<FavoriteStarProps> = ({
   size = "sm",
 }) => {
   const { t } = useTranslation();
+
   return (
     <ActionIcon
       as="span"
@@ -62,4 +64,5 @@ const FavoriteStar: React.FC<FavoriteStarProps> = ({
     </ActionIcon>
   );
 };
+
 export default FavoriteStar;

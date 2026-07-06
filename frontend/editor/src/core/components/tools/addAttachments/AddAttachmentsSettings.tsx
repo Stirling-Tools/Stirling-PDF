@@ -17,12 +17,14 @@ interface AddAttachmentsSettingsProps {
   ) => void;
   disabled?: boolean;
 }
+
 const AddAttachmentsSettings = ({
   parameters,
   onParameterChange,
   disabled = false,
 }: AddAttachmentsSettingsProps) => {
   const { t } = useTranslation();
+
   return (
     <Stack gap="md">
       <Stack gap="xs">
@@ -56,6 +58,7 @@ const AddAttachmentsSettings = ({
             : t("AddAttachmentsRequest.placeholder", "Choose files...")}
         </DSButton>
       </Stack>
+
       {parameters.attachments?.length > 0 && (
         <Stack gap="xs">
           <Text size="sm" fw={500}>
@@ -133,6 +136,7 @@ const AddAttachmentsSettings = ({
           </ScrollArea.Autosize>
         </Stack>
       )}
+
       {/* PDF/A-3b conversion option with informative tooltip */}
       <Group gap="xs" align="flex-start">
         <Checkbox
@@ -187,4 +191,5 @@ const AddAttachmentsSettings = ({
     </Stack>
   );
 };
+
 export default AddAttachmentsSettings;

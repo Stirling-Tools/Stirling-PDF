@@ -29,6 +29,7 @@ import type {
   WidgetCoordinates,
   ButtonAction,
 } from "@app/tools/formFill/types";
+
 /**
  * Execute PDF JavaScript in a minimally sandboxed context.
  *
@@ -68,6 +69,7 @@ function executePdfJs(
     "import",
     "require",
   ];
+
   const lowerJs = js.toLowerCase();
   for (const word of forbidden) {
     if (lowerJs.includes(word)) {
@@ -79,6 +81,7 @@ function executePdfJs(
       return;
     }
   }
+
   // 2. Mock Acrobat API
   const doOpenUrl = (url: string) => {
     try {
@@ -90,6 +93,7 @@ function executePdfJs(
       /* invalid URL — ignore */
     }
   };
+
   const app = {
     print: (_params?: unknown) => handlers.print(),
     alert: (msg: unknown) => {
@@ -114,6 +118,7 @@ function executePdfJs(
     // Prevent prototype walking
     __proto__: null,
   };
+
   const doc = {
     print: (_params?: unknown) => handlers.print(),
     save: (_params?: unknown) => handlers.save(),
@@ -133,6 +138,7 @@ function executePdfJs(
     numPages: 1,
     dirty: false,
   };
+
   // Stub event object — used by field calculation/validation scripts
   const event = {
     value: "",
@@ -142,6 +148,7 @@ function executePdfJs(
     willCommit: false,
     target: null as null,
   };
+
   try {
     // Pass doc, app, event as both `this` AND named parameters so scripts that
     // reference them as free variables (not just via `this`) work correctly.
@@ -157,6 +164,7 @@ function executePdfJs(
     );
   }
 }
+
 interface WidgetInputProps {
   field: FormField;
   widget: WidgetCoordinates;
@@ -168,6 +176,7 @@ interface WidgetInputProps {
   onChange: (fieldName: string, value: string) => void;
   onButtonClick: (field: FormField, action?: ButtonAction | null) => void;
 }
+
 /**
  * WidgetInput subscribes to its own field value via useSyncExternalStore,
  * so it only re-renders when its specific value changes — not when ANY
@@ -186,12 +195,14 @@ function WidgetInputInner({
 }: WidgetInputProps) {
   // Per-field value subscription — only this widget re-renders when its value changes
   const value = useFieldValue(field.name);
+
   // Coordinates are in visual CSS space (top-left origin).
   // Multiply by per-axis scale to get rendered pixel coordinates.
   const left = widget.x * scaleX;
   const top = widget.y * scaleY;
   const width = widget.width * scaleX;
   const height = widget.height * scaleY;
+
   const borderColor = error
     ? "#f44336"
     : isActive
@@ -202,6 +213,7 @@ function WidgetInputInner({
     : isActive
       ? "#E3F2FD"
       : "#FFFFFF"; // Blue 50 (Opaque) : White (Opaque)
+
   const commonStyle: React.CSSProperties = {
     position: "absolute",
     left,
@@ -223,6 +235,7 @@ function WidgetInputInner({
     display: "flex",
     alignItems: field.multiline ? "stretch" : "center",
   };
+
   const stopPropagation = (e: React.SyntheticEvent) => {
     e.stopPropagation();
     // Also stop immediate propagation to native listeners to block non-React subscribers
@@ -230,6 +243,7 @@ function WidgetInputInner({
       e.nativeEvent.stopImmediatePropagation?.();
     }
   };
+
   const commonProps = {
     style: commonStyle,
     onPointerDown: stopPropagation,
@@ -245,6 +259,7 @@ function WidgetInputInner({
     onSelect: stopPropagation,
     onContextMenu: stopPropagation,
   };
+
   const captureStopProps = {
     onPointerDownCapture: stopPropagation,
     onPointerUpCapture: stopPropagation,
@@ -255,11 +270,13 @@ function WidgetInputInner({
     onKeyUpCapture: stopPropagation,
     onKeyPressCapture: stopPropagation,
   };
+
   const fontSize = widget.fontSize
     ? widget.fontSize * scaleY
     : field.multiline
       ? Math.max(6, Math.min(height * 0.6, 14))
       : Math.max(6, height * 0.65);
+
   const inputBaseStyle: React.CSSProperties = {
     width: "100%",
     height: "100%",
@@ -275,7 +292,9 @@ function WidgetInputInner({
     boxSizing: "border-box",
     lineHeight: "normal",
   };
+
   const handleFocus = () => onFocus(field.name);
+
   switch (field.type) {
     case "text":
       return (
@@ -314,6 +333,7 @@ function WidgetInputInner({
           )}
         </div>
       );
+
     case "checkbox": {
       // Checkbox is checked when value is anything other than 'Off' or empty
       const isChecked = !!value && value !== "Off";
@@ -371,9 +391,11 @@ function WidgetInputInner({
         </div>
       );
     }
+
     case "combobox":
     case "listbox": {
       const inputId = `${field.name}_${widget.pageIndex}_${widget.x}_${widget.y}`;
+
       // For multi-select, value should be an array
       // We store as comma-separated string, so parse it
       const selectValue = field.multiSelect
@@ -381,6 +403,7 @@ function WidgetInputInner({
           ? value.split(",").map((v) => v.trim())
           : []
         : value;
+
       const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         if (field.multiSelect) {
           // For multi-select, join selected options with comma
@@ -393,6 +416,7 @@ function WidgetInputInner({
           onChange(field.name, e.target.value);
         }
       };
+
       return (
         <div {...commonProps} title={error || field.tooltip || field.label}>
           <select
@@ -425,6 +449,7 @@ function WidgetInputInner({
         </div>
       );
     }
+
     case "radio": {
       // Identify this widget by its index within the field's widgets array.
       // This avoids issues with duplicate exportValues (e.g., all "Yes").
@@ -477,17 +502,20 @@ function WidgetInputInner({
         </div>
       );
     }
+
     case "signature":
       // Signature fields are handled entirely by SignatureFieldOverlay (bitmap canvas).
       // Rendering a placeholder here creates a visible grey overlay on top of the
       // signature appearance, so we skip it entirely.
       return null;
+
     case "button": {
       // Transparent hit-target only — visual appearance is rendered by ButtonAppearanceOverlay
       // (which paints the PDF's native /AP bitmap onto a canvas behind this div).
       const buttonLabel =
         field.buttonLabel || field.value || field.label || "Button";
       const isClickable = !field.readOnly;
+
       let actionHint = "";
       if (field.buttonAction) {
         switch (field.buttonAction.type) {
@@ -511,6 +539,7 @@ function WidgetInputInner({
       const titleText =
         field.tooltip ||
         (actionHint ? `${buttonLabel} (${actionHint})` : buttonLabel);
+
       return (
         <div
           {...commonProps}
@@ -540,6 +569,7 @@ function WidgetInputInner({
         />
       );
     }
+
     default:
       return (
         <div {...commonProps} title={field.tooltip || field.label}>
@@ -556,7 +586,9 @@ function WidgetInputInner({
       );
   }
 }
+
 const WidgetInput = memo(WidgetInputInner);
+
 interface FormFieldOverlayProps {
   documentId: string;
   pageIndex: number;
@@ -565,6 +597,7 @@ interface FormFieldOverlayProps {
   /** File identity — if provided, overlay only renders when context fields match this file */
   fileId?: string | null;
 }
+
 export function FormFieldOverlay({
   documentId,
   pageIndex,
@@ -576,9 +609,11 @@ export function FormFieldOverlay({
     useFormFill();
   const { activeFieldName, validationErrors } = state;
   const { printActions, scrollActions, exportActions } = useViewer();
+
   // Get scale from EmbedPDF document state — same pattern as LinkLayer
   // NOTE: All hooks must be called unconditionally (before any early returns)
   const documentState = useDocumentState(documentId);
+
   const { scaleX, scaleY } = useMemo(() => {
     const pdfPage = documentState?.document?.pages?.[pageIndex];
     if (!pdfPage || !pdfPage.size || !pageWidth || !pageHeight) {
@@ -591,6 +626,7 @@ export function FormFieldOverlay({
       }
       return { scaleX: s, scaleY: s };
     }
+
     const sx = pageWidth / pdfPage.size.width;
     const sy = pageHeight / pdfPage.size.height;
     if (pageIndex === 0) {
@@ -609,18 +645,22 @@ export function FormFieldOverlay({
     // pageWidth/pageHeight from Scroller = pdfPage.size * documentScale
     return { scaleX: sx, scaleY: sy };
   }, [documentState, pageIndex, pageWidth, pageHeight]);
+
   const pageFields = useMemo(
     () => fieldsByPage.get(pageIndex) || [],
     [fieldsByPage, pageIndex],
   );
+
   const handleFocus = useCallback(
     (fieldName: string) => setActiveField(fieldName),
     [setActiveField],
   );
+
   const handleChange = useCallback(
     (fieldName: string, value: string) => setValue(fieldName, value),
     [setValue],
   );
+
   const handleButtonClick = useCallback(
     (field: FormField, action?: ButtonAction | null) => {
       const doOpenUrl = (url: string) => {
@@ -639,6 +679,7 @@ export function FormFieldOverlay({
       const doSave = () => {
         exportActions.saveAsCopy();
       };
+
       if (!action) {
         // Action extraction failed — fall back to label matching as a last resort
         const label = (field.buttonLabel || field.label || "").toLowerCase();
@@ -647,6 +688,7 @@ export function FormFieldOverlay({
         else if (/reset|clear/.test(label)) doResetForm();
         return;
       }
+
       switch (action.type) {
         case "named":
           switch (action.namedAction) {
@@ -692,6 +734,7 @@ export function FormFieldOverlay({
     },
     [printActions, scrollActions, exportActions, state.fields, setValue],
   );
+
   // Guard: don't render fields from a previous document.
   // If fileId is provided and doesn't match what the context fetched for, render nothing.
   if (fileId != null && forFileId != null && fileId !== forFileId) {
@@ -701,7 +744,9 @@ export function FormFieldOverlay({
   if (fileId != null && forFileId == null && state.fields.length > 0) {
     return null;
   }
+
   if (pageFields.length === 0) return null;
+
   return (
     <div
       style={{
@@ -741,4 +786,5 @@ export function FormFieldOverlay({
     </div>
   );
 }
+
 export default FormFieldOverlay;

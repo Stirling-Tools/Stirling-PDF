@@ -22,11 +22,13 @@ import {
 } from "@app/constants/convertConstants";
 import { ENDPOINTS as SPLIT_ENDPOINTS } from "@app/constants/splitConstants";
 import type { ToolId } from "@app/types/toolId";
+
 const BANNER_BG = "var(--mantine-color-gray-1)";
 const BANNER_BORDER = "var(--mantine-color-gray-3)";
 const BANNER_TEXT = "var(--mantine-color-gray-7)";
 const BANNER_ICON = "var(--mantine-color-gray-5)";
 const BANNER_LINK = "var(--mantine-color-gray-6)";
+
 /** Maps split endpoint → [i18n key, English fallback] for the method name */
 const SPLIT_ENDPOINT_I18N: Record<string, [string, string]> = {
   "split-pages": ["split.methods.byPages.name", "Pages"],
@@ -36,6 +38,7 @@ const SPLIT_ENDPOINT_I18N: Record<string, [string, string]> = {
   "auto-split-pdf": ["split.methods.byPageDivider.name", "Page Divider"],
   "split-for-poster-print": ["split.methods.byPoster.name", "Printable Chunks"],
 };
+
 /**
  * Desktop-only banner shown when the user is in self-hosted mode and the
  * configured Stirling-PDF server is unreachable.
@@ -58,6 +61,7 @@ export function SelfHostedOfflineBanner() {
   const [localBackendReady, setLocalBackendReady] = useState(
     () => !!tauriBackendService.getBackendUrl(),
   );
+
   // Load connection mode and keep it live via subscription
   useEffect(() => {
     void connectionModeService.getCurrentMode().then(setConnectionMode);
@@ -65,6 +69,7 @@ export function SelfHostedOfflineBanner() {
       setConnectionMode(config.mode),
     );
   }, []);
+
   // Subscribe to self-hosted server status changes
   useEffect(() => {
     const unsub = selfHostedServerMonitor.subscribe((state) => {
@@ -74,17 +79,21 @@ export function SelfHostedOfflineBanner() {
     });
     return unsub;
   }, []);
+
   // React to local backend port being discovered
   useEffect(() => {
     return tauriBackendService.subscribeToStatus(() => {
       setLocalBackendReady(!!tauriBackendService.getBackendUrl());
     });
   }, []);
+
   // Re-use the toolAvailability already computed by useToolManagement —
   // tools with reason 'selfHostedOffline' are the ones unavailable locally.
   const { toolAvailability, toolRegistry } = useToolWorkflow();
+
   // Re-use conversion availability already computed by useConversionCloudStatus.
   const { availability: conversionAvailability } = useConversionCloudStatus();
+
   const [splitAvailability, setSplitAvailability] = useState<
     Record<string, boolean>
   >({});
@@ -114,6 +123,7 @@ export function SelfHostedOfflineBanner() {
       setSplitAvailability(map);
     });
   }, [serverState.status]);
+
   const allUnavailableNames = useMemo(() => {
     // Top-level tools unavailable in self-hosted offline mode
     const toolNames = (Object.keys(toolAvailability) as ToolId[])
@@ -124,9 +134,11 @@ export function SelfHostedOfflineBanner() {
       )
       .map((id) => toolRegistry[id]?.name ?? id)
       .filter(Boolean);
+
     // Use translated tool names from the registry as prefixes
     const convertPrefix = toolRegistry["convert" as ToolId]?.name ?? "Convert";
     const splitPrefix = toolRegistry["split" as ToolId]?.name ?? "Split";
+
     // Conversion types unavailable locally — deduplicated by endpoint
     const unavailableEndpoints = new Set<string>();
     for (const [key, available] of Object.entries(conversionAvailability)) {
@@ -145,6 +157,7 @@ export function SelfHostedOfflineBanner() {
         return `${convertPrefix}: ${suffix}`;
       })
       .filter(Boolean);
+
     // Split methods unavailable locally
     const unavailableSplitNames = Object.entries(splitAvailability)
       .filter(([, available]) => !available)
@@ -154,6 +167,7 @@ export function SelfHostedOfflineBanner() {
         return `${splitPrefix}: ${suffix}`;
       })
       .filter(Boolean);
+
     return [...toolNames, ...conversionNames, ...unavailableSplitNames].sort();
   }, [
     toolAvailability,
@@ -162,12 +176,15 @@ export function SelfHostedOfflineBanner() {
     splitAvailability,
     t,
   ]);
+
   // Only show when in self-hosted mode, server confirmed offline, and not dismissed
   const show =
     !dismissed &&
     connectionMode === "selfhosted" &&
     serverState.status === "offline";
+
   if (!show) return null;
+
   const messageText = localBackendReady
     ? t(
         "selfHosted.offline.messageWithFallback",
@@ -177,6 +194,7 @@ export function SelfHostedOfflineBanner() {
         "selfHosted.offline.messageNoFallback",
         "Tools are unavailable until your server comes back online.",
       );
+
   return (
     <Paper
       radius={0}
