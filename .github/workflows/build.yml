@@ -202,6 +202,9 @@ jobs:
       contents: read
     uses: ./.github/workflows/coverage-aggregate.yml
     secrets: inherit
+    with:
+      frontend-validation-result: ${{ needs.frontend-validation.result }}
+      playwright-e2e-live-result: ${{ needs.playwright-e2e-live.result }}
 
   # Single status check that branch protection should mark as required.
   # Succeeds when every upstream job is either `success` or `skipped` (path-

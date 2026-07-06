@@ -1,5 +1,5 @@
 /**
- * Editor cloud adapter over the shared {@code @shared/billing} spend-cap control:
+ * Editor cloud adapter over the shared {@code @app/billing} spend-cap control:
  * supplies the i18n copy (the shared control is copy-agnostic) and the editor's
  * {@code scc-*} styling. The public API (controlled {@code capUsd}/{@code
  * onChange}, optional {@code onSave}/{@code saveLabel}, {@code note}) is
@@ -11,7 +11,7 @@ import { useTranslation } from "react-i18next";
 import {
   DEFAULT_CAP_PRESETS,
   SpendCapControl as SharedSpendCapControl,
-} from "@shared/billing";
+} from "@app/billing";
 // eslint-disable-next-line no-restricted-imports
 import "./SpendCapControl.css";
 
