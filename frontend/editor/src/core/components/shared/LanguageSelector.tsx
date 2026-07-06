@@ -86,6 +86,15 @@ const LanguageItem: React.FC<LanguageItemProps> = ({
           justifyContent: "flex-start",
           position: "relative",
           overflow: "hidden",
+          fontWeight: isSelected ? 600 : 400,
+          backgroundColor: isSelected
+            ? "light-dark(var(--mantine-color-blue-1), var(--mantine-color-blue-8))"
+            : undefined,
+          color: disabled
+            ? "var(--text-muted)"
+            : isSelected
+              ? "light-dark(var(--mantine-color-blue-9), var(--mantine-color-blue-3))"
+              : "var(--text-primary)",
         }}
       >
         {label}

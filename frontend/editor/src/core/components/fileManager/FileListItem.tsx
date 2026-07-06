@@ -324,6 +324,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
             <Menu.Target>
               <ActionIcon
                 variant="tertiary"
+                accent="neutral"
                 size="md"
                 onClick={(e) => e.stopPropagation()}
                 aria-label={t("fileManager.moreOptions", "More options")}

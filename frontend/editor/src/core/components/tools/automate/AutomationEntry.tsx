@@ -211,6 +211,7 @@ export default function AutomationEntry({
             <SharedButton
               leftSection={<MoreVertIcon style={{ fontSize: 20 }} />}
               variant="tertiary"
+              accent="neutral"
               size="md"
               aria-label={t(
                 "automate.entryMenu.label",
