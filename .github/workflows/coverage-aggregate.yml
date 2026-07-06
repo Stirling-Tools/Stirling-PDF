@@ -62,7 +62,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
         with:
-          gradle-version: 9.6.0
+          gradle-version: 9.6.1
           cache-disabled: true
 
       - name: Set up Python
