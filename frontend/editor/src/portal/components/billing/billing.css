@@ -122,6 +122,47 @@
   gap: 0.75rem;
 }
 
+/* Widen the checkout modal past the ~1000px iframe threshold where Stripe
+   Embedded Checkout flips from its single-column ("mobile") layout to the
+   two-column desktop one — matching the SaaS Plan page's UpgradeModal (1100px
+   cap → ~1056px iframe). Two-class selector so it beats .sui-modal--xl's
+   max-width regardless of stylesheet order. width:100% still shrinks it on
+   narrow viewports, where Stripe falls back to single column on its own. */
+.sui-modal.portal-billing__checkout-modal {
+  max-width: 1100px;
+}
+
+/* Post-checkout activation state, shown inside the checkout modal while the
+   subscription webhook lands (and the "almost there" fallback if it lags). */
+.portal-billing__checkout-finalizing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+  padding: 2.5rem 1.5rem;
+}
+
+.portal-billing__checkout-status-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+  margin: 0.25rem 0 0;
+}
+
+.portal-billing__checkout-status-body {
+  font-size: 0.9375rem;
+  color: var(--color-text-2);
+  margin: 0;
+  max-width: 32rem;
+}
+
+.portal-billing__checkout-status-hint {
+  font-size: 0.8125rem;
+  color: var(--color-text-3);
+  margin: 0;
+}
+
 .portal-billing__error {
   color: var(--color-red, #b91c1c);
   font-size: 0.875rem;
