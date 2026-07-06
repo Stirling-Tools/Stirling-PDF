@@ -224,6 +224,7 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
           {dismissible && (
             <ActionIcon
               variant="tertiary"
+              accent="neutral"
               size="sm"
               onClick={handleDismiss}
               aria-label={t("infoBanner.dismiss", "Dismiss")}

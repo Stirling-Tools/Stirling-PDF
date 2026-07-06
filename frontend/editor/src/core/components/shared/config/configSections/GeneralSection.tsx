@@ -365,6 +365,11 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                 {updateSummary && (
                   <Button
                     size="sm"
+                    accent={
+                      updateSummary.max_priority === "urgent"
+                        ? "danger"
+                        : "default"
+                    }
                     onClick={() => setUpdateModalOpened(true)}
                     leftSection={
                       <LocalIcon

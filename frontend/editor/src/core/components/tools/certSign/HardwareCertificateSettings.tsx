@@ -285,6 +285,7 @@ const HardwareCertificateSettings = ({
         <div style={{ display: "flex", gap: "4px" }}>
           <Button
             variant={isWindowsStore ? "primary" : "secondary"}
+            accent={isWindowsStore ? "success" : "default"}
             onClick={() => selectKind("WINDOWS_STORE")}
             disabled={disabled || loading}
             style={{
@@ -300,6 +301,7 @@ const HardwareCertificateSettings = ({
           </Button>
           <Button
             variant={!isWindowsStore ? "primary" : "secondary"}
+            accent={!isWindowsStore ? "success" : "default"}
             onClick={() => selectKind("PKCS11")}
             disabled={disabled || loading}
             style={{
