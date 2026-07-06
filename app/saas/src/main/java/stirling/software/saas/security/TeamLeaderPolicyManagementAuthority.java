@@ -29,4 +29,9 @@ public class TeamLeaderPolicyManagementAuthority implements PolicyManagementAuth
     public Long currentUserTeamId() {
         return teamSecurity.currentUserTeamId();
     }
+
+    @Override
+    public Long currentUserId() {
+        return teamSecurity.currentUserId();
+    }
 }

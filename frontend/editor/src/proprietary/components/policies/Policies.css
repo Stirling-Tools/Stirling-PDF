@@ -178,30 +178,8 @@
   }
 }
 
-/* Overall "N processing · X/Y done" summary under the section header. */
-.pol-processing-summary {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1_5);
-  margin: 0 var(--space-1_5) var(--space-1);
-  padding: var(--space-1) var(--space-2);
-  font-size: 0.75rem;
-  color: var(--color-text-2, var(--color-text-3));
-  background: var(--color-bg-hover);
-  border-radius: var(--radius-lg);
-}
-.pol-processing-spinner {
-  width: 0.75rem;
-  height: 0.75rem;
-  flex-shrink: 0;
-  border-radius: 999px;
-  border: 2px solid color-mix(in srgb, var(--color-blue) 20%, transparent);
-  border-top-color: var(--color-blue);
-  animation: pol-ring-spin 0.7s linear infinite;
-}
 @media (prefers-reduced-motion: reduce) {
-  .pol-row-ring,
-  .pol-processing-spinner {
+  .pol-row-ring {
     animation-duration: 2s;
   }
 }

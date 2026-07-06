@@ -55,14 +55,14 @@ tasks:
       - editor/src/core/data/ogImageMap.json
       - editor/public/og-metadata.json
 
-  prepare:classifier-categories:
+  prepare:classifier-labels:
     internal: true
     run: when_changed
-    desc: "Regenerate the engine classifier categories JSON from the TS source of truth"
+    desc: "Regenerate the engine classifier labels JSON from the TS source of truth"
     cmds:
-      - npx tsx editor/scripts/generate-classification-taxonomy.mts
+      - npx tsx editor/scripts/generate-classification-labels.mts
     sources:
-      - editor/src/proprietary/data/classificationTaxonomy.ts
+      - editor/src/proprietary/data/classificationLabels.ts
 
   prepare:
     desc: "Set up dev environment"
@@ -74,7 +74,7 @@ tasks:
         vars: { MODE: '{{.MODE}}' }
       - prepare:icons
       - prepare:og
-      - prepare:classifier-categories
+      - prepare:classifier-labels
 
   # ============================================================
   # Development
@@ -411,15 +411,15 @@ tasks:
     cmds:
       - node editor/scripts/generate-og-metadata.mjs --check
 
-  classifier-categories:
-    desc: "Regenerate the engine classifier categories JSON from the TS source"
+  classifier-labels:
+    desc: "Regenerate the engine classifier labels JSON from the TS source"
     cmds:
-      - npx tsx editor/scripts/generate-classification-taxonomy.mts
+      - npx tsx editor/scripts/generate-classification-labels.mts
 
-  classifier-categories:check:
-    desc: "Fail if the committed classifier categories JSON is out of date"
+  classifier-labels:check:
+    desc: "Fail if the committed classifier labels JSON is out of date"
     cmds:
-      - npx tsx editor/scripts/generate-classification-taxonomy.mts --check
+      - npx tsx editor/scripts/generate-classification-labels.mts --check
 
   check:all:
     desc: "Full CI quality gate"
@@ -427,7 +427,7 @@ tasks:
       # Runs first, before prepare regenerates: guards the committed og-metadata.json /
       # ogImageMap.json that the Cloudflare Pages (plain `vite build`) deploy relies on.
       - task: og:check
-      - task: classifier-categories:check
+      - task: classifier-labels:check
       - task: typecheck:all
       - task: lint
       - task: format:check

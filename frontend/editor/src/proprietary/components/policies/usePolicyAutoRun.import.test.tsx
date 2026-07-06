@@ -169,9 +169,12 @@ describe("auto-run import: new-version output delivery", () => {
     expect(mocks.consumeFiles).not.toHaveBeenCalled();
   });
 
-  it("adopts a server-only run, dating it from the server's createdAt (not now)", async () => {
-    // A run the client never recorded (true orphan): reconcile adopts it from the server. With no
-    // local input link it delivers as a new file, and its age comes from the server, not Date.now().
+  it("adopts a server-only run for visibility, without delivering its outputs", async () => {
+    // A run the client never recorded (true orphan): reconcile adopts it from the server for the
+    // activity feed, dated from the server's createdAt (not Date.now()). It is adopted already
+    // `imported` — with no local input link a delivery would add its output as a NEW workspace
+    // file, and since cap-evicted runs are re-adopted on every refresh, that meant phantom
+    // duplicates opening onto the workbench after each reload.
     mocks.listPolicyRuns.mockResolvedValue([
       {
         runId: "srv-1",
@@ -191,7 +194,8 @@ describe("auto-run import: new-version output delivery", () => {
     });
 
     expect(getRun("srv-1")?.startedAt).toBe(1000);
-    expect(mocks.addFiles).toHaveBeenCalled();
+    expect(mocks.addFiles).not.toHaveBeenCalled();
+    expect(mocks.downloadPolicyOutput).not.toHaveBeenCalled();
     expect(mocks.persistVersionedOutputs).not.toHaveBeenCalled();
   });
 });

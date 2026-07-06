@@ -175,9 +175,9 @@ export interface FileItemProps {
   onVersionHistory?: (fileId: FileId) => void;
   /** Whether this file has more than one version (drives the menu item). */
   hasVersionHistory?: boolean;
-  /** When set (SaaS grouped sidebar), the meta line shows "{category} • {date}"
-   *  instead of "{date} · {type}". */
-  categoryLabel?: string;
+  /** When set (SaaS grouped sidebar), the meta line shows "{label} • {date}"
+   *  instead of "{date} · {type}" — the file's first classification label. */
+  primaryLabel?: string;
 }
 
 const MAX_VISIBLE_FOLDER_TAGS = 2;
@@ -209,7 +209,7 @@ export const FileItem = memo(function FileItem({
   isUploadedToCloud = false,
   onVersionHistory,
   hasVersionHistory = false,
-  categoryLabel,
+  primaryLabel,
 }: FileItemProps) {
   const { t } = useTranslation();
   const ext = getFileExtension(name);
@@ -308,10 +308,10 @@ export const FileItem = memo(function FileItem({
           </span>
           <span className="file-sidebar-file-meta-row">
             <span className="file-sidebar-file-meta">
-              {categoryLabel ? (
+              {primaryLabel ? (
                 <>
-                  {categoryLabel}
-                  {categoryLabel && dateLabel ? " • " : ""}
+                  {primaryLabel}
+                  {primaryLabel && dateLabel ? " • " : ""}
                   {dateLabel}
                 </>
               ) : (

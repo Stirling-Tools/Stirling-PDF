@@ -6,19 +6,16 @@ from unittest.mock import AsyncMock
 import pytest
 
 from stirling.agents.document_classifier import (
-    DEFAULT_TAXONOMY,
-    UNKNOWN_LABEL,
-    UNKNOWN_MAX_CONFIDENCE,
+    DEFAULT_LABELS,
+    MAX_ASSIGNED_LABELS,
     DocumentClassifierAgent,
     _ClassifierOutput,
-    render_taxonomy,
+    render_labels,
     select_window,
-    validate_against_taxonomy,
+    validate_labels,
 )
 from stirling.contracts import (
-    ClassificationTaxonomy,
     ClassifyDocumentRequest,
-    DocumentCategory,
     DocumentClassificationResponse,
     PageText,
 )
@@ -52,98 +49,86 @@ def test_select_window_zero_returns_all() -> None:
     assert select_window(pages, window=0) == pages
 
 
-# ── validate_against_taxonomy ────────────────────────────────────────────────
+# ── validate_labels ──────────────────────────────────────────────────────────
 
 
-def test_valid_classification_is_preserved() -> None:
-    output = _ClassifierOutput(category="contract", doc_type="nda", type_confidence=0.95, tags=["legal", "signed"])
-    result = validate_against_taxonomy(output, DEFAULT_TAXONOMY)
+def test_valid_labels_are_preserved_in_order() -> None:
+    output = _ClassifierOutput(labels=["Invoice", "Receipt"])
+    result = validate_labels(output, ["Invoice", "Receipt", "Purchase order"])
     assert isinstance(result, DocumentClassificationResponse)
-    assert result.category == "contract"
-    assert result.doc_type == "nda"
-    assert result.type_confidence == 0.95
-    assert result.tags == ["legal", "signed"]
+    assert result.labels == ["Invoice", "Receipt"]
 
 
-def test_off_list_category_collapses_to_unknown_with_capped_confidence() -> None:
-    output = _ClassifierOutput(category="spaceship", doc_type="warp_core", type_confidence=0.99)
-    result = validate_against_taxonomy(output, DEFAULT_TAXONOMY)
-    assert result.category == UNKNOWN_LABEL
-    assert result.doc_type == UNKNOWN_LABEL
-    assert result.type_confidence == UNKNOWN_MAX_CONFIDENCE
+def test_off_list_labels_are_dropped() -> None:
+    output = _ClassifierOutput(labels=["Invoice", "Warp core", "Receipt"])
+    result = validate_labels(output, ["Invoice", "Receipt"])
+    assert result.labels == ["Invoice", "Receipt"]
 
 
-def test_off_list_type_keeps_category_but_unknown_type() -> None:
-    output = _ClassifierOutput(category="contract", doc_type="invoice", type_confidence=0.9)
-    result = validate_against_taxonomy(output, DEFAULT_TAXONOMY)
-    assert result.category == "contract"
-    assert result.doc_type == UNKNOWN_LABEL
-    assert result.type_confidence == UNKNOWN_MAX_CONFIDENCE
+def test_matching_is_case_insensitive_and_returns_canonical_casing() -> None:
+    output = _ClassifierOutput(labels=["invoice", " CREDIT NOTE "])
+    result = validate_labels(output, ["Invoice", "Credit note"])
+    assert result.labels == ["Invoice", "Credit note"]
 
 
-def test_type_from_a_different_category_is_not_a_child() -> None:
-    # "lab_result" is a valid type, but only under medical_record, not contract.
-    output = _ClassifierOutput(category="contract", doc_type="lab_result", type_confidence=0.8)
-    result = validate_against_taxonomy(output, DEFAULT_TAXONOMY)
-    assert result.category == "contract"
-    assert result.doc_type == UNKNOWN_LABEL
+def test_duplicates_collapse_to_first_occurrence() -> None:
+    output = _ClassifierOutput(labels=["Invoice", "invoice", "Receipt", "INVOICE"])
+    result = validate_labels(output, ["Invoice", "Receipt"])
+    assert result.labels == ["Invoice", "Receipt"]
 
 
-def test_matching_is_case_insensitive_and_returns_canonical_ids() -> None:
-    output = _ClassifierOutput(category="Contract", doc_type="NDA", type_confidence=0.7, tags=["LEGAL"])
-    result = validate_against_taxonomy(output, DEFAULT_TAXONOMY)
-    assert result.category == "contract"
-    assert result.doc_type == "nda"
-    assert result.tags == ["legal"]
+def test_result_is_capped_at_max_assigned_labels() -> None:
+    allowed = [f"Label {n}" for n in range(10)]
+    output = _ClassifierOutput(labels=allowed)
+    result = validate_labels(output, allowed)
+    assert result.labels == allowed[:MAX_ASSIGNED_LABELS]
 
 
-def test_unknown_tags_dropped_and_deduplicated_in_order() -> None:
-    output = _ClassifierOutput(
-        category="invoice",
-        doc_type="invoice",
-        type_confidence=0.9,
-        tags=["finance", "made-up", "finance", "legal"],
-    )
-    result = validate_against_taxonomy(output, DEFAULT_TAXONOMY)
-    assert result.tags == ["finance", "legal"]
+def test_empty_answer_is_valid() -> None:
+    result = validate_labels(_ClassifierOutput(labels=[]), ["Invoice"])
+    assert result.labels == []
 
 
-def test_low_confidence_is_not_raised_when_collapsing() -> None:
-    output = _ClassifierOutput(category="nope", doc_type="nope", type_confidence=0.05)
-    result = validate_against_taxonomy(output, DEFAULT_TAXONOMY)
-    assert result.type_confidence == 0.05  # min(0.05, 0.2)
+def test_entirely_off_list_answer_yields_empty_result() -> None:
+    output = _ClassifierOutput(labels=["Spaceship", "Boarding pass"])
+    result = validate_labels(output, ["Invoice", "Receipt"])
+    assert result.labels == []
 
 
-# ── render_taxonomy ──────────────────────────────────────────────────────────
+# ── render_labels ────────────────────────────────────────────────────────────
 
 
-def test_render_taxonomy_lists_ids_and_tags() -> None:
-    rendered = render_taxonomy(DEFAULT_TAXONOMY)
-    assert "contract" in rendered
-    assert "nda" in rendered
-    assert "finance" in rendered
+def test_render_labels_lists_the_vocabulary() -> None:
+    rendered = render_labels(["Invoice", "Receipt"])
+    assert "Invoice" in rendered
+    assert "Receipt" in rendered
 
 
-def test_render_taxonomy_handles_category_without_types() -> None:
-    taxonomy = ClassificationTaxonomy(
-        categories=[DocumentCategory(id="memo", label="Memo", doc_types=[])],
-        tags=[],
-    )
-    rendered = render_taxonomy(taxonomy)
-    assert "(none)" in rendered
+def test_render_labels_handles_empty_vocabulary() -> None:
+    assert "(none)" in render_labels([])
+
+
+# ── DEFAULT_LABELS ───────────────────────────────────────────────────────────
+
+
+def test_default_labels_load_from_generated_json() -> None:
+    assert DEFAULT_LABELS
+    assert all(isinstance(label, str) and label for label in DEFAULT_LABELS)
 
 
 # ── DocumentClassifierAgent (inline page text) ───────────────────────────────
 
 
+def _stub_model_answer(agent: DocumentClassifierAgent, labels: list[str]) -> AsyncMock:
+    mock = AsyncMock(return_value=SimpleNamespace(output=_ClassifierOutput(labels=labels)))
+    agent._agent.run = mock
+    return mock
+
+
 @pytest.mark.anyio
-async def test_classify_validates_model_output_against_default_taxonomy(runtime: AppRuntime) -> None:
+async def test_classify_falls_back_to_default_labels_when_omitted(runtime: AppRuntime) -> None:
     agent = DocumentClassifierAgent(runtime)
-    agent._agent.run = AsyncMock(
-        return_value=SimpleNamespace(
-            output=_ClassifierOutput(category="invoice", doc_type="invoice", type_confidence=0.97, tags=["finance"])
-        )
-    )
+    run_mock = _stub_model_answer(agent, ["Invoice", "Boarding pass to Mars"])
 
     result = await agent.classify(
         ClassifyDocumentRequest(
@@ -153,25 +138,38 @@ async def test_classify_validates_model_output_against_default_taxonomy(runtime:
     )
 
     assert isinstance(result, DocumentClassificationResponse)
-    assert result.category == "invoice"
-    assert result.doc_type == "invoice"
-    assert result.tags == ["finance"]
+    assert result.labels == ["Invoice"]
+    assert run_mock.await_args is not None
+    prompt = run_mock.await_args.args[0]
+    assert DEFAULT_LABELS[0] in prompt
 
 
 @pytest.mark.anyio
-async def test_classify_collapses_off_list_model_answer(runtime: AppRuntime) -> None:
+async def test_classify_treats_empty_label_list_as_fallback(runtime: AppRuntime) -> None:
     agent = DocumentClassifierAgent(runtime)
-    agent._agent.run = AsyncMock(
-        return_value=SimpleNamespace(
-            output=_ClassifierOutput(category="boarding_pass", doc_type="seat", type_confidence=0.9)
+    _stub_model_answer(agent, ["Invoice"])
+
+    result = await agent.classify(ClassifyDocumentRequest(file_name="a.pdf", pages=[], labels=[]))
+
+    assert result.labels == ["Invoice"]  # matched against DEFAULT_LABELS, not the empty list
+
+
+@pytest.mark.anyio
+async def test_classify_respects_request_supplied_vocabulary(runtime: AppRuntime) -> None:
+    agent = DocumentClassifierAgent(runtime)
+    run_mock = _stub_model_answer(agent, ["board minutes", "Invoice"])
+
+    result = await agent.classify(
+        ClassifyDocumentRequest(
+            file_name="minutes.pdf",
+            pages=[PageText(page_number=1, text="Minutes of the board meeting")],
+            labels=["Board minutes", "Agenda"],
         )
     )
 
-    result = await agent.classify(
-        ClassifyDocumentRequest(file_name="weird.pdf", pages=[PageText(page_number=1, text="Some text")])
-    )
-
-    assert isinstance(result, DocumentClassificationResponse)
-    assert result.category == UNKNOWN_LABEL
-    assert result.doc_type == UNKNOWN_LABEL
-    assert result.type_confidence == UNKNOWN_MAX_CONFIDENCE
+    # "Invoice" is off this request's vocabulary even though the default knows it.
+    assert result.labels == ["Board minutes"]
+    assert run_mock.await_args is not None
+    prompt = run_mock.await_args.args[0]
+    assert "Board minutes" in prompt
+    assert "Agenda" in prompt

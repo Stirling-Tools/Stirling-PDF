@@ -27,14 +27,7 @@ class StubClassifierAgent:
 @pytest.fixture
 def classification_client() -> Iterator[TestClient]:
     app.dependency_overrides[get_document_classifier_agent] = lambda: StubClassifierAgent(
-        DocumentClassificationResponse(
-            category="contract",
-            category_label="Contract",
-            doc_type="nda",
-            doc_type_label="Non-disclosure agreement",
-            type_confidence=0.96,
-            tags=["legal", "signed"],
-        )
+        DocumentClassificationResponse(labels=["Non-disclosure agreement", "Contract"])
     )
     try:
         yield TestClient(app)
@@ -42,19 +35,21 @@ def classification_client() -> Iterator[TestClient]:
         app.dependency_overrides.pop(get_document_classifier_agent, None)
 
 
-def test_classify_returns_camel_cased_result(classification_client: TestClient) -> None:
+def test_classify_returns_assigned_labels(classification_client: TestClient) -> None:
     response = classification_client.post(
         "/api/v1/documents/classify",
         json={"fileName": "nda.pdf", "pages": [{"pageNumber": 1, "text": "Mutual NDA between A and B."}]},
     )
     assert response.status_code == 200
-    body = response.json()
-    assert body["category"] == "contract"
-    assert body["categoryLabel"] == "Contract"
-    assert body["docType"] == "nda"
-    assert body["docTypeLabel"] == "Non-disclosure agreement"
-    assert body["typeConfidence"] == 0.96
-    assert body["tags"] == ["legal", "signed"]
+    assert response.json() == {"labels": ["Non-disclosure agreement", "Contract"]}
+
+
+def test_classify_accepts_allowed_labels_on_the_request(classification_client: TestClient) -> None:
+    response = classification_client.post(
+        "/api/v1/documents/classify",
+        json={"fileName": "nda.pdf", "pages": [], "labels": ["Contract", "Invoice"]},
+    )
+    assert response.status_code == 200
 
 
 def test_classify_accepts_empty_pages(classification_client: TestClient) -> None:

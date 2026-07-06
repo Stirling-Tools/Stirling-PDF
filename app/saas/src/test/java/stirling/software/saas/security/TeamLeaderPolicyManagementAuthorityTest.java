@@ -37,4 +37,10 @@ class TeamLeaderPolicyManagementAuthorityTest {
         when(teamSecurity.currentUserTeamId()).thenReturn(9L);
         assertEquals(9L, authority().currentUserTeamId());
     }
+
+    @Test
+    void currentUserIdDelegatesToTeamSecurity() {
+        when(teamSecurity.currentUserId()).thenReturn(11L);
+        assertEquals(11L, authority().currentUserId());
+    }
 }

@@ -39,7 +39,7 @@ import type {
 import { dispatchPaygLimitReached } from "@app/services/usageLimitBridge";
 import type { FileId } from "@app/types/file";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
-import { readClassificationCategoryFromFile } from "@app/services/fileClassification";
+import { readClassificationLabelsFromFile } from "@app/services/fileClassification";
 import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
 import type { PoliciesByCategory } from "@app/types/policies";
 import { usePolicies } from "@app/hooks/usePolicies";
@@ -416,8 +416,9 @@ interface ImportContext {
 /**
  * Pull the caller's server-side runs and fold them into the local store. For a run we already
  * track, patch its status/outputs (preserving local import progress + attribution); for one we
- * don't, adopt it so the poll/import effects pick it up. Server-excluded ad-hoc runs and runs we
- * can't map to a configured category are skipped.
+ * don't, adopt it for feed visibility (polled if still live, but never auto-imported — see the
+ * `imported` note below). Server-excluded ad-hoc runs and runs we can't map to a configured
+ * category are skipped.
  */
 function applyOutputName(
   inputFileName: string,
@@ -466,10 +467,8 @@ async function reconcileServerRuns(
     addReconciledRun({
       runId: view.runId,
       categoryId,
-      // No local input link: a run rediscovered purely from the server (never recorded by this
-      // client) can't be tied back to a workspace/storage file, so its output is delivered as a
-      // new file rather than a version, and it isn't retried. The recorded-run path (real fileId)
-      // covers the common refresh case; this only bites true orphans (storage wipe / other device).
+      // No local input link: a run rediscovered purely from the server was never recorded by
+      // this client, so it can't be tied back to a workspace/storage file (and isn't retried).
       fileId: "",
       fileName: view.outputs[0]?.fileName ?? "",
       fileSize: 0,
@@ -479,6 +478,12 @@ async function reconcileServerRuns(
       status: view.status,
       outputs: view.outputs,
       error: view.error,
+      // Adopted for activity-feed visibility ONLY — never for output delivery. Without this,
+      // any completed run evicted from the capped local store gets re-adopted here on every
+      // refresh and re-delivered as a NEW workspace file (no fileId → no parent to version):
+      // phantom duplicates keep opening onto the workbench, and the adoption/eviction cycle
+      // never converges. Runs this client recorded (real fileId) still deliver normally.
+      imported: true,
       // Use the server's creation time, not now, so a rediscovered run shows its real age.
       startedAt: view.createdAt,
     });
@@ -598,18 +603,18 @@ async function importOutputs(
         undefined)
       : undefined;
 
-  // Resolve each output's classification and put it ON the stub, so it rides
-  // through consume/persist to BOTH the workspace and storage — and every later
-  // version inherits it (createChildStub + the CONSUME_FILES reducer). This is the
-  // fix for files flashing into "Other" then "dripping" back when a 2nd policy or a
-  // tool runs: the category is a first-class stub field, never re-derived from the
-  // PDF at group time. Prefer the input's carried-forward category (cheap) and only
-  // read the freshly-tagged file when there's none to inherit (the classification
+  // Resolve each output's classification labels and put them ON the stub, so
+  // they ride through consume/persist to BOTH the workspace and storage — and
+  // every later version inherits them (createChildStub + the CONSUME_FILES
+  // reducer). This keeps files in their label groups instead of flashing into
+  // "Other" and waiting on a PDF re-read when a 2nd policy or a tool runs.
+  // Prefer the input's carried-forward labels (cheap) and only read the
+  // freshly-labelled file when there's nothing to inherit (the classification
   // origin) — so a 60-file batch doesn't re-read every downstream output.
-  const parentCategory = parentStub?.classificationCategory;
-  const resolveCategory = async (file: File) =>
-    parentCategory ??
-    (await readClassificationCategoryFromFile(file)) ??
+  const parentLabels = parentStub?.classificationLabels;
+  const resolveLabels = async (file: File) =>
+    (parentLabels && parentLabels.length > 0 ? parentLabels : undefined) ??
+    (await readClassificationLabelsFromFile(file)) ??
     undefined;
 
   if (parentStub) {
@@ -629,16 +634,16 @@ async function importOutputs(
     const lineage = Array.from(
       new Set([run.fileId as FileId, ...(parentStub.sourceFileIds ?? [])]),
     );
-    // Stamp the resolved category onto each output stub (createChildStub already
-    // inherited the parent's; this also captures the classification origin, where
-    // the parent had none but the tagged file does).
+    // Stamp the resolved labels onto each output stub (createChildStub already
+    // inherited the parent's; this also captures the classification origin,
+    // where the parent had none but the labelled file does).
     const categorized = await Promise.all(
       stubs.map(async (s, i) => {
-        const category = await resolveCategory(files[i]);
+        const labels = await resolveLabels(files[i]);
         return {
           ...s,
           sourceFileIds: lineage,
-          ...(category ? { classificationCategory: category } : {}),
+          ...(labels ? { classificationLabels: labels } : {}),
         };
       }),
     );
@@ -673,23 +678,23 @@ async function importOutputs(
     // file the auto-run would otherwise re-enforce indefinitely.
     for (const f of added) markHandled(f.fileId as string);
     deliveredIds = added.map((f) => f.fileId as string);
-    // A new-file output has no parent to inherit from — stamp its category onto
-    // both the workspace stub and storage so it lands in the right group at once.
-    let stampedCategory = false;
+    // A new-file output has no parent to inherit from — stamp its labels onto
+    // both the workspace stub and storage so it lands in the right groups at once.
+    let stampedLabels = false;
     await Promise.all(
       added.map(async (f, i) => {
-        const category = await resolveCategory(files[i]);
-        if (!category) return;
+        const labels = await resolveLabels(files[i]);
+        if (!labels) return;
         ctx.updateStirlingFileStub(f.fileId, {
-          classificationCategory: category,
+          classificationLabels: labels,
         });
         const ok = await fileStorage.updateFileMetadata(f.fileId, {
-          classificationCategory: category,
+          classificationLabels: labels,
         });
-        if (ok) stampedCategory = true;
+        if (ok) stampedLabels = true;
       }),
     );
-    if (stampedCategory) ctx.bumpRevision();
+    if (stampedLabels) ctx.bumpRevision();
   }
   const importedFileIds = [...done, ...fetched.map((f) => f.fileId)];
   const imported = run.outputs.every((out) =>

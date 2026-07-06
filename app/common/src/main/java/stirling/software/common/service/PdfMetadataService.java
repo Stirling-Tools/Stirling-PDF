@@ -18,9 +18,7 @@ import stirling.software.common.model.PdfMetadata;
 @Service
 public class PdfMetadataService {
 
-    /**
-     * ({@code {category, docType, typeConfidence, tags}}). Written by the classify-and-tag tool.
-     */
+    /** ({@code {labels}}). Written by the classify-and-label tool. */
     public static final String CLASSIFICATION_KEY = "StirlingPDFClassification";
 
     private final ApplicationProperties applicationProperties;

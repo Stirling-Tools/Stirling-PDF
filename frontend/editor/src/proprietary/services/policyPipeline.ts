@@ -108,7 +108,7 @@ export interface PolicyRunView {
  */
 const POLICY_OPERATION_ENDPOINTS: Record<string, string> = {
   // Document classification — dispatched only by the Classification policy.
-  classify: "/api/v1/ai/tools/classify-and-tag",
+  classify: "/api/v1/ai/tools/classify-and-label",
 };
 
 /** Resolve a frontend operation id to its backend tool endpoint path. */

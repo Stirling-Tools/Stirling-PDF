@@ -30,10 +30,21 @@ export interface FileSidebarGroup {
 
 /**
  * Return the groups to render, or `null` for a flat list. Core = flat.
- * Implemented as a hook so overrides may read app state (taxonomy, config).
+ * Implemented as a hook so overrides may read app state (labels, config).
  */
 export function useFileSidebarGroups(
   _stubs: StirlingFileStub[],
 ): FileSidebarGroup[] | null {
+  return null;
+}
+
+/**
+ * Header control for customizing the grouping (rendered next to the Files
+ * section's buttons). Core has no grouping, so no control; the SaaS override
+ * renders a group picker here.
+ */
+export function FileSidebarGroupControls(_props: {
+  stubs: StirlingFileStub[];
+}) {
   return null;
 }

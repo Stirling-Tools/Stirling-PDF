@@ -36,7 +36,7 @@ import {
 } from "@app/components/policies/PolicyWorkflowStep";
 import { PolicyToolConfigStep } from "@app/components/policies/PolicyToolConfigStep";
 import { getPolicyToolChain } from "@app/components/policies/policyToolChains";
-import { ClassificationTaxonomySection } from "@app/components/policies/ClassificationTaxonomySection";
+import { ClassificationLabelsSection } from "@app/components/policies/ClassificationLabelsSection";
 
 // Sources are always "editor" for this release, so the Sources step is dropped
 // from the flow (its panel code is kept below for when other sources return).
@@ -382,11 +382,11 @@ export function PolicySetupWizard({
               />
             </>
           )}
-          {/* The Classification policy owns the editable, team-shared taxonomy
-              (categories → sub-categories → tags) the classifier runs against.
-              Kept on the first step alongside the tool so it's not buried. */}
+          {/* The Classification policy owns the editable label sets (team-shared
+              + personal) the classifier picks from. Kept on the first step
+              alongside the tool so it's not buried. */}
           {category.id === "classification" && (
-            <ClassificationTaxonomySection canConfigure={canConfigure} />
+            <ClassificationLabelsSection canConfigure={canConfigure} />
           )}
         </div>
 

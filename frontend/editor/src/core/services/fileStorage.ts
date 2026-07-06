@@ -9,7 +9,6 @@ import { FolderId } from "@app/types/folder";
 import {
   StirlingFile,
   StirlingFileStub,
-  StubFileClassification,
   createStirlingFile,
 } from "@app/types/fileContext";
 import {
@@ -30,10 +29,10 @@ export interface StoredStirlingFileRecord extends BaseFileMetadata {
   thumbnail?: string;
   thumbnailStoredAt?: number; // Epoch ms - sliding 30-day TTL
   url?: string; // For compatibility with existing components
-  // Cached classification (category + sub-category + tags) — mirrors the stub
-  // field so the sidebar can group by category without re-reading PDF bytes and
-  // it survives versioning. See StirlingFileStub / StubFileClassification.
-  classificationCategory?: StubFileClassification;
+  // Cached classification labels — mirrors the stub field so the sidebar can
+  // group by label without re-reading PDF bytes, and it survives versioning.
+  // See StirlingFileStub.classificationLabels.
+  classificationLabels?: string[];
 }
 
 export interface StorageStats {
@@ -155,7 +154,7 @@ class FileStorageService {
       folderId: stub.folderId ?? null,
 
       // Cached classification category, if already known (preserved across re-stores).
-      classificationCategory: stub.classificationCategory,
+      classificationLabels: stub.classificationLabels,
     };
 
     return new Promise((resolve, reject) => {
@@ -281,7 +280,7 @@ class FileStorageService {
           sourceFileIds: record.sourceFileIds,
           folderId: record.folderId ?? null,
           createdAt: record.createdAt || Date.now(),
-          classificationCategory: record.classificationCategory,
+          classificationLabels: record.classificationLabels,
         };
 
         resolve(stub);
@@ -341,7 +340,7 @@ class FileStorageService {
               sourceFileIds: record.sourceFileIds,
               folderId: record.folderId ?? null,
               createdAt: record.createdAt || Date.now(),
-              classificationCategory: record.classificationCategory,
+              classificationLabels: record.classificationLabels,
             });
           }
           cursor.continue();
@@ -433,7 +432,7 @@ class FileStorageService {
               sourceFileIds: record.sourceFileIds,
               folderId: record.folderId ?? null,
               createdAt: record.createdAt || Date.now(),
-              classificationCategory: record.classificationCategory,
+              classificationLabels: record.classificationLabels,
             });
           }
           cursor.continue();

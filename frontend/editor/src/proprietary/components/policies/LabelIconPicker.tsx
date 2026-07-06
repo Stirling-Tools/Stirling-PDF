@@ -1,8 +1,8 @@
 /**
- * Small popover picker for a taxonomy category's icon: a trigger button showing
- * the current icon, opening a grid of the curated {@link CATEGORY_ICON_OPTIONS}.
- * Icons render via {@link LocalIcon} (Material Symbols). No search yet — the
- * palette is small enough to scan.
+ * Small popover picker for a classification label's icon: a trigger button
+ * showing the current icon, opening a grid of the curated
+ * {@link LABEL_ICON_OPTIONS}. Icons render via {@link LocalIcon} (Material
+ * Symbols). No search yet — the palette is small enough to scan.
  */
 
 import { useState } from "react";
@@ -10,23 +10,20 @@ import { useTranslation } from "react-i18next";
 import { Popover, SimpleGrid, Tooltip } from "@mantine/core";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
-import {
-  CATEGORY_ICON_OPTIONS,
-  DEFAULT_CATEGORY_ICON,
-} from "@app/data/categoryIcons";
+import { LABEL_ICON_OPTIONS, DEFAULT_LABEL_ICON } from "@app/data/labelIcons";
 
-interface CategoryIconPickerProps {
+interface LabelIconPickerProps {
   /** Current icon key, or undefined to show the default placeholder. */
   value?: string;
   onChange: (icon: string) => void;
   ariaLabel: string;
 }
 
-export function CategoryIconPicker({
+export function LabelIconPicker({
   value,
   onChange,
   ariaLabel,
-}: CategoryIconPickerProps) {
+}: LabelIconPickerProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
@@ -44,17 +41,17 @@ export function CategoryIconPicker({
       <Popover.Target>
         <button
           type="button"
-          className="tax-icon-pick"
+          className="labels-icon-pick"
           onClick={() => setOpen((o) => !o)}
           aria-label={ariaLabel}
           aria-haspopup="true"
         >
-          <LocalIcon icon={value || DEFAULT_CATEGORY_ICON} width="1.15rem" />
+          <LocalIcon icon={value || DEFAULT_LABEL_ICON} width="1.15rem" />
         </button>
       </Popover.Target>
-      <Popover.Dropdown p="xs">
-        <SimpleGrid cols={8} spacing={4} verticalSpacing={4}>
-          {CATEGORY_ICON_OPTIONS.map((option) => (
+      <Popover.Dropdown p="xs" style={{ maxHeight: 280, overflowY: "auto" }}>
+        <SimpleGrid cols={10} spacing={4} verticalSpacing={4}>
+          {LABEL_ICON_OPTIONS.map((option) => (
             <Tooltip
               key={option.icon}
               label={option.label}
@@ -63,13 +60,13 @@ export function CategoryIconPicker({
             >
               <button
                 type="button"
-                className={`tax-icon-option${option.icon === value ? " is-selected" : ""}`}
+                className={`labels-icon-option${option.icon === value ? " is-selected" : ""}`}
                 onClick={() => {
                   onChange(option.icon);
                   setOpen(false);
                 }}
                 aria-label={t(
-                  "policies.taxonomy.pickIcon",
+                  "policies.labels.pickIcon",
                   "Use {{label}} icon",
                   {
                     label: option.label,

@@ -1,10 +1,11 @@
 /**
- * Full-screen ("fat") editor for the classification taxonomy — the roomy view the
- * sidebar's Expand button opens. Hosts the {@link TaxonomyEditor} table plus an
- * Import/Export toolbar and a footer holding the destructive actions (reset /
- * start-from-scratch) and the Save/Cancel buttons. Editing is staged: nothing is
- * persisted until Save, which stays disabled until the draft actually changes.
- * The draft is owned by the caller so the sidebar summary reflects saved changes.
+ * Full-screen ("fat") editor for the team's classification labels — the roomy
+ * view the settings summary's Edit button opens. Hosts the {@link LabelsEditor}
+ * chip grid plus an Import/Export toolbar and a footer holding the destructive
+ * actions (reset / start-from-scratch) and the Save/Cancel buttons. Editing is
+ * staged: nothing is persisted until Save, which stays disabled until the draft
+ * actually changes. The draft is owned by the caller so the settings summary
+ * reflects saved changes.
  */
 
 import { useRef } from "react";
@@ -17,29 +18,29 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { Modal } from "@shared/components/Modal";
 import { Button } from "@shared/components/Button";
 import { Banner } from "@shared/components/Banner";
-import { TaxonomyEditor } from "@app/components/policies/TaxonomyEditor";
-import type { ClassificationTaxonomy } from "@app/data/classificationTaxonomy";
+import { LabelsEditor } from "@app/components/policies/LabelsEditor";
+import type { ClassificationLabel } from "@app/data/classificationLabels";
 
-interface TaxonomyEditorModalProps {
+interface LabelsEditorModalProps {
   open: boolean;
   onClose: () => void;
-  draft: ClassificationTaxonomy;
-  onDraftChange: (next: ClassificationTaxonomy) => void;
+  draft: ClassificationLabel[];
+  onDraftChange: (next: ClassificationLabel[]) => void;
   onImportFile: (file: File) => void;
   onExport: () => void;
   /** Stage the built-in default into the draft. */
   onReset: () => void;
-  /** Stage an empty taxonomy into the draft (build from scratch). */
+  /** Stage an empty list into the draft (build from scratch). */
   onClear: () => void;
   onSave: () => void;
   dirty: boolean;
   saving: boolean;
   readOnly: boolean;
-  /** Save/reset (server) or import (file) failure to surface, if any. */
+  /** Save (server) or import (file) failure to surface, if any. */
   error: string | null;
 }
 
-export function TaxonomyEditorModal({
+export function LabelsEditorModal({
   open,
   onClose,
   draft,
@@ -53,7 +54,7 @@ export function TaxonomyEditorModal({
   saving,
   readOnly,
   error,
-}: TaxonomyEditorModalProps) {
+}: LabelsEditorModalProps) {
   const { t } = useTranslation();
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -69,15 +70,15 @@ export function TaxonomyEditorModal({
       open={open}
       onClose={onClose}
       width="xl"
-      className="tax-modal"
-      title={t("policies.taxonomy.modalTitle", "Classification taxonomy")}
+      className="labels-modal"
+      title={t("policies.labels.modalTitle", "Classification labels")}
       subtitle={t(
-        "policies.taxonomy.modalSubtitle",
-        "Shared with your whole team. Categories, their sub-categories, and tags the classifier uses.",
+        "policies.labels.modalSubtitle",
+        "Shared with your whole team. The classifier picks the labels that fit each document.",
       )}
       footer={
-        <div className="tax-footer">
-          <div className="tax-footer-left">
+        <div className="labels-footer">
+          <div className="labels-footer-left">
             {!readOnly && (
               <>
                 <Button
@@ -90,10 +91,7 @@ export function TaxonomyEditorModal({
                   onClick={onClear}
                   disabled={saving}
                 >
-                  {t(
-                    "policies.taxonomy.startFromScratch",
-                    "Start from scratch",
-                  )}
+                  {t("policies.labels.startFromScratch", "Start from scratch")}
                 </Button>
                 <Button
                   variant="ghost"
@@ -103,12 +101,12 @@ export function TaxonomyEditorModal({
                   onClick={onReset}
                   disabled={saving}
                 >
-                  {t("policies.taxonomy.resetToDefault", "Reset to default")}
+                  {t("policies.labels.resetToDefault", "Reset to default")}
                 </Button>
               </>
             )}
           </div>
-          <div className="tax-footer-right">
+          <div className="labels-footer-right">
             <Button variant="ghost" size="sm" onClick={onClose}>
               {readOnly ? t("close", "Close") : t("cancel", "Cancel")}
             </Button>
@@ -120,15 +118,15 @@ export function TaxonomyEditorModal({
                 disabled={!dirty || saving}
               >
                 {saving
-                  ? t("policies.taxonomy.saving", "Saving…")
-                  : t("policies.taxonomy.saveForTeam", "Save for team")}
+                  ? t("policies.labels.saving", "Saving…")
+                  : t("policies.labels.saveForTeam", "Save for team")}
               </Button>
             )}
           </div>
         </div>
       }
     >
-      <div className="tax-modal-body">
+      <div className="labels-modal-body">
         {error && (
           <Banner
             tone="danger"
@@ -137,14 +135,14 @@ export function TaxonomyEditorModal({
           />
         )}
         {!readOnly && (
-          <div className="tax-toolbar">
+          <div className="labels-toolbar">
             <Button
               variant="outline"
               size="sm"
               leadingIcon={<FileUploadOutlinedIcon sx={{ fontSize: "1rem" }} />}
               onClick={() => fileInput.current?.click()}
             >
-              {t("policies.taxonomy.import", "Import JSON")}
+              {t("policies.labels.import", "Import JSON")}
             </Button>
             <Button
               variant="outline"
@@ -154,7 +152,7 @@ export function TaxonomyEditorModal({
               }
               onClick={onExport}
             >
-              {t("policies.taxonomy.export", "Export JSON")}
+              {t("policies.labels.export", "Export JSON")}
             </Button>
             <input
               ref={fileInput}
@@ -165,7 +163,7 @@ export function TaxonomyEditorModal({
             />
           </div>
         )}
-        <TaxonomyEditor
+        <LabelsEditor
           value={draft}
           onChange={onDraftChange}
           readOnly={readOnly}

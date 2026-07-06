@@ -41,7 +41,10 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import type { FileId } from "@app/types/file";
 import { FileItem } from "@app/components/shared/FileSidebarFileItem";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
-import { useFileSidebarGroups } from "@app/components/shared/fileSidebarGrouping";
+import {
+  FileSidebarGroupControls,
+  useFileSidebarGroups,
+} from "@app/components/shared/fileSidebarGrouping";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerModal";
@@ -304,8 +307,22 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         );
 
       const allStubs = [...stubs, ...pendingStubs];
+      // A version swap (policy delivery / tool output) briefly leaves BOTH the
+      // old leaf (still flagged leaf in IDB) and its replacement (workbench,
+      // not yet flushed) in the merged list. Two stubs for one document break
+      // the row list — rows key by lineage, and colliding keys corrupt React's
+      // reconciliation (phantom extra rows, rows surviving a group collapse).
+      // A superseded stub is exactly one another stub names as its parent.
+      const superseded = new Set(
+        allStubs.map((s) => s.parentFileId as string | undefined),
+      );
+      const currentStubs = allStubs.filter(
+        (s) => !superseded.has(s.id as string),
+      );
       setAllFileStubs(
-        allStubs.sort((a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0)),
+        currentStubs.sort(
+          (a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0),
+        ),
       );
       setStubsLoaded(true);
     }, [indexedDB, state.files.ids, state.files.byId]);
@@ -756,7 +773,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             isWatchedFoldersActive ? undefined : handleVersionHistory
           }
           hasVersionHistory={(stub.versionNumber ?? 1) > 1}
-          categoryLabel={stub.classificationCategory?.label}
+          primaryLabel={stub.classificationLabels?.[0]}
         />
       );
     };
@@ -1107,6 +1124,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   <span className="file-sidebar-section-label">
                     {t("fileSidebar.files", "Files")}
                   </span>
+                  <FileSidebarGroupControls stubs={filteredFileStubs} />
                   <button
                     className="file-sidebar-section-btn file-sidebar-section-btn-external"
                     onClick={() => navigate("/files")}

@@ -38,4 +38,13 @@ public class AdminPolicyManagementAuthority implements PolicyManagementAuthority
                 .map(Team::getId)
                 .orElse(null);
     }
+
+    @Override
+    public Long currentUserId() {
+        String username = userService.getCurrentUsername();
+        if (username == null) {
+            return null;
+        }
+        return userService.findByUsername(username).map(User::getId).orElse(null);
+    }
 }

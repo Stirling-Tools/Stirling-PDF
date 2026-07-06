@@ -2,8 +2,11 @@ package stirling.software.proprietary.controller.api;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -31,7 +34,9 @@ import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
-import stirling.software.proprietary.classification.store.TaxonomyStore;
+import stirling.software.proprietary.classification.model.ClassificationLabel;
+import stirling.software.proprietary.classification.store.ClassificationLabelStore;
+import stirling.software.proprietary.classification.store.UserLabelsEntity;
 import stirling.software.proprietary.model.api.ai.AiPageText;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.service.AiEngineClient;
@@ -45,17 +50,17 @@ import tools.jackson.databind.node.ObjectNode;
  * Dispatchable tool that classifies a PDF and writes the result into its metadata.
  *
  * <p>Runs as a Classification-policy pipeline step: it reads a bounded page window, asks the AI
- * engine to classify the document, and stores the engine's JSON answer — minus the transport-only
- * {@code outcome} field — in the custom Info-dictionary key {@link
- * PdfMetadataService#CLASSIFICATION_KEY}. Returns the tagged PDF. Not intended for direct client
- * use.
+ * engine to classify the document against the caller's allowed label names (the merged team and
+ * personal sets), and stores the engine's JSON answer — minus the transport-only {@code outcome}
+ * field — in the custom Info-dictionary key {@link PdfMetadataService#CLASSIFICATION_KEY}. Returns
+ * the labelled PDF. Not intended for direct client use.
  */
 @Slf4j
 @Hidden
 @RestController
 @RequestMapping("/api/v1/ai/tools")
 @Tag(name = "AI Tools", description = "Dispatchable AI-backed tools.")
-public class ClassifyTagController {
+public class ClassifyLabelController {
 
     /** Pages read from each end of the document — mirrors the engine's window. */
     private static final int WINDOW_PAGES = 2;
@@ -73,13 +78,13 @@ public class ClassifyTagController {
     /**
      * Present only when the policy subsystem is enabled ({@code policies.enabled}); the store and
      * team authority are gated on it. Null otherwise, in which case classification falls back to
-     * the engine's built-in default taxonomy.
+     * the engine's built-in default label vocabulary.
      */
-    private final TaxonomyStore taxonomyStore;
+    private final ClassificationLabelStore labelStore;
 
     private final PolicyManagementAuthority policyManagementAuthority;
 
-    public ClassifyTagController(
+    public ClassifyLabelController(
             CustomPDFDocumentFactory pdfDocumentFactory,
             TempFileManager tempFileManager,
             PdfContentExtractor pdfContentExtractor,
@@ -87,7 +92,7 @@ public class ClassifyTagController {
             AiEngineClient aiEngineClient,
             ObjectMapper objectMapper,
             @Autowired(required = false) UserServiceInterface userService,
-            @Autowired(required = false) TaxonomyStore taxonomyStore,
+            @Autowired(required = false) ClassificationLabelStore labelStore,
             @Autowired(required = false) PolicyManagementAuthority policyManagementAuthority) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.tempFileManager = tempFileManager;
@@ -96,19 +101,19 @@ public class ClassifyTagController {
         this.aiEngineClient = aiEngineClient;
         this.objectMapper = objectMapper;
         this.userService = userService;
-        this.taxonomyStore = taxonomyStore;
+        this.labelStore = labelStore;
         this.policyManagementAuthority = policyManagementAuthority;
     }
 
-    @PostMapping(value = "/classify-and-tag", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/classify-and-label", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
-            summary = "Classify a PDF and tag its metadata",
+            summary = "Classify a PDF and label its metadata",
             description =
                     "Reads the first two and last two pages, classifies the document via the AI"
                             + " engine, and stores the result in the StirlingPDFClassification"
                             + " metadata field. Dispatched by the Classification policy; not"
                             + " intended for direct client use.")
-    public ResponseEntity<Resource> classifyAndTag(
+    public ResponseEntity<Resource> classifyAndLabel(
             @RequestParam("fileInput") MultipartFile fileInput) throws IOException {
         try (PDDocument document = pdfDocumentFactory.load(fileInput, true)) {
             String fileName = safeFileName(fileInput.getOriginalFilename());
@@ -116,13 +121,13 @@ public class ClassifyTagController {
             List<AiPageText> pages = extractWindow(document);
             String requestBody =
                     objectMapper.writeValueAsString(
-                            new ClassifyEngineRequest(fileName, pages, resolveTaxonomyOverride()));
+                            new ClassifyEngineRequest(fileName, pages, resolveAllowedLabelNames()));
 
             String userId = userService != null ? userService.getCurrentUsername() : null;
             String responseJson = aiEngineClient.post(CLASSIFY_ENDPOINT, requestBody, userId);
 
             pdfMetadataService.setClassificationMetadata(document, toMetadataValue(responseJson));
-            log.debug("[classify-and-tag] tagged {} ({} window pages)", fileName, pages.size());
+            log.debug("[classify-and-label] labelled {} ({} window pages)", fileName, pages.size());
 
             return WebResponseUtils.pdfDocToWebResponse(document, fileName, tempFileManager);
         }
@@ -166,28 +171,49 @@ public class ClassifyTagController {
     }
 
     /**
-     * Resolve the caller's team taxonomy and return it in the engine's shape to classify against;
-     * {@code null} falls back to the engine's generated default. The stored taxonomy is already in
-     * the engine's camelCase shape ({@code categories}/{@code docTypes}/{@code tags}), so it is
-     * passed through verbatim. Returns null when the policy subsystem is disabled (no store), when
-     * the team has no stored taxonomy, or when the team can't be resolved.
+     * The allowed label names for the caller: the team set merged with the caller's personal
+     * additive set, de-duplicated case-insensitively (team first; first-seen casing wins). Only the
+     * names go to the engine — icons are presentational. Returns {@code null} — falling back to the
+     * engine's built-in default vocabulary — when the policy subsystem is disabled (no store) or
+     * neither scope has any stored labels.
      */
-    private JsonNode resolveTaxonomyOverride() {
-        if (taxonomyStore == null) {
+    private List<String> resolveAllowedLabelNames() {
+        if (labelStore == null) {
             return null;
         }
         Long teamId =
                 policyManagementAuthority == null
                         ? null
                         : policyManagementAuthority.currentUserTeamId();
-        return taxonomyStore
+        Long userId =
+                policyManagementAuthority == null
+                        ? null
+                        : policyManagementAuthority.currentUserId();
+
+        Map<String, String> namesByLowerCase = new LinkedHashMap<>();
+        labelStore
                 .findByTeam(teamId)
-                .map(taxonomy -> (JsonNode) objectMapper.valueToTree(taxonomy))
-                .orElse(null);
+                .ifPresent(labels -> collectNames(labels.labels(), namesByLowerCase));
+        // A null user id maps onto the sentinel personal set (the login-disabled local operator,
+        // mirroring how the store keys the unteamed team set); nobody else can have written it.
+        labelStore
+                .findByUser(userId == null ? UserLabelsEntity.NO_USER : userId)
+                .ifPresent(labels -> collectNames(labels.labels(), namesByLowerCase));
+
+        return namesByLowerCase.isEmpty() ? null : List.copyOf(namesByLowerCase.values());
+    }
+
+    private static void collectNames(List<ClassificationLabel> labels, Map<String, String> into) {
+        for (ClassificationLabel label : labels) {
+            if (label.name() == null || label.name().isBlank()) {
+                continue;
+            }
+            into.putIfAbsent(label.name().toLowerCase(Locale.ROOT), label.name());
+        }
     }
 
     /** Request body for the engine's {@code /api/v1/documents/classify} endpoint. */
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private record ClassifyEngineRequest(
-            String fileName, List<AiPageText> pages, JsonNode taxonomy) {}
+            String fileName, List<AiPageText> pages, List<String> labels) {}
 }

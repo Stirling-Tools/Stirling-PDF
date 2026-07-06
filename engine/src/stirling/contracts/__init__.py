@@ -37,12 +37,9 @@ from .contradiction import (
     ContradictionSeverity,
 )
 from .document_classifier import (
-    ClassificationTaxonomy,
     ClassifyDocumentRequest,
     ClassifyDocumentResponse,
-    DocumentCategory,
     DocumentClassificationResponse,
-    DocumentType,
 )
 from .documents import (
     DeleteDocumentResponse,
@@ -137,7 +134,6 @@ __all__ = [
     "AiToolAgentStep",
     "ArtifactKind",
     "CannotContinueExecutionAction",
-    "ClassificationTaxonomy",
     "ClassifyDocumentRequest",
     "ClassifyDocumentResponse",
     "Claim",
@@ -150,11 +146,9 @@ __all__ = [
     "DeleteDocumentResponse",
     "PurgeOwnerResponse",
     "Discrepancy",
-    "DocumentCategory",
     "DocumentClassificationResponse",
     "DocumentMeta",
     "DocumentSections",
-    "DocumentType",
     "DiscrepancyKind",
     "EditCannotDoResponse",
     "EditClarificationRequest",

@@ -16,7 +16,7 @@ async def classify_document(
     request: ClassifyDocumentRequest,
     agent: Annotated[DocumentClassifierAgent, Depends(get_document_classifier_agent)],
 ) -> ClassifyDocumentResponse:
-    """Classify a document from its supplied page text against the default taxonomy.
+    """Classify a document from its supplied page text against the allowed labels.
 
     The caller sends the bounded page window inline, so no per-user document
     storage is touched here — the request is self-contained.

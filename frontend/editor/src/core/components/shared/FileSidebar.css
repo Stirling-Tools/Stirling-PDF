@@ -362,10 +362,18 @@
 /* Smaller, tighter icon column in grouped rows (colour left as-is for now). */
 .file-sidebar-group-items .file-sidebar-file-icon-wrapper,
 .file-sidebar-group-items .file-sidebar-file-check,
-.file-sidebar-group-items .file-sidebar-file-checkbox-hover,
-.file-sidebar-group-items .file-sidebar-file-spinner {
+.file-sidebar-group-items .file-sidebar-file-checkbox-hover {
   width: 16px;
   height: 16px;
+}
+
+/* The processing spinner keeps the file icons' visual size (16px reads too
+   timid for a motion cue) — it overflows the icon column slightly, centered
+   via negative margin so the row layout doesn't shift. */
+.file-sidebar-group-items .file-sidebar-file-spinner {
+  width: 20px;
+  height: 20px;
+  margin: -2px;
 }
 
 /* Row actions take NO width at rest, so the name uses the full row before

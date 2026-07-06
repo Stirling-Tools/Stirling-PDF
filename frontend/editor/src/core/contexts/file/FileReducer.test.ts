@@ -172,14 +172,12 @@ describe("fileContextReducer — silent CONSUME_FILES (background enforcement)",
     expect(next.files.byId["gone2" as FileId]).toBeUndefined();
   });
 
-  it("carries classificationCategory forward from input to output", () => {
-    // A classified file "a" is edited by a tool → "b" (which carries no category
-    // of its own). The output must inherit the category so it stays in its group
+  it("carries classificationLabels forward from input to output", () => {
+    // A labelled file "a" is edited by a tool → "b" (which carries no labels of
+    // its own). The output must inherit them so it stays in its label groups
     // instead of dropping to "Other" and waiting on a PDF re-read.
     const start = stateWith([
-      stub("a", {
-        classificationCategory: { id: "invoice", label: "Invoice" },
-      }),
+      stub("a", { classificationLabels: ["Invoice", "Receipt"] }),
     ]);
     const next = fileContextReducer(start, {
       type: "CONSUME_FILES",
@@ -188,33 +186,27 @@ describe("fileContextReducer — silent CONSUME_FILES (background enforcement)",
         outputStirlingFileStubs: [stub("b")],
       },
     });
-    expect(next.files.byId["b" as FileId].classificationCategory).toEqual({
-      id: "invoice",
-      label: "Invoice",
-    });
+    expect(next.files.byId["b" as FileId].classificationLabels).toEqual([
+      "Invoice",
+      "Receipt",
+    ]);
   });
 
-  it("an output's own classificationCategory wins over the input's", () => {
-    // A re-classify produces an output that already carries a (fresher) category.
-    const start = stateWith([
-      stub("a", {
-        classificationCategory: { id: "invoice", label: "Invoice" },
-      }),
-    ]);
+  it("an output's own classificationLabels win over the input's", () => {
+    // A re-classify produces an output that already carries (fresher) labels.
+    const start = stateWith([stub("a", { classificationLabels: ["Invoice"] })]);
     const next = fileContextReducer(start, {
       type: "CONSUME_FILES",
       payload: {
         inputFileIds: ["a" as FileId],
         outputStirlingFileStubs: [
-          stub("b", {
-            classificationCategory: { id: "contract", label: "Contract" },
-          }),
+          stub("b", { classificationLabels: ["Contract"] }),
         ],
       },
     });
-    expect(next.files.byId["b" as FileId].classificationCategory?.id).toBe(
-      "contract",
-    );
+    expect(next.files.byId["b" as FileId].classificationLabels).toEqual([
+      "Contract",
+    ]);
   });
 
   it("non-silent CONSUME_FILES still moves the output to the front (unchanged)", () => {

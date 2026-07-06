@@ -29,8 +29,8 @@ import {
   DetailField,
 } from "@app/components/filesPage/VersionTimeline";
 
-/** Custom PDF Info-dictionary key the classify-and-tag tool writes (must match
- *  the backend's PdfMetadataService.CLASSIFICATION_KEY). */
+/** Custom PDF Info-dictionary key the classify-and-label tool writes (must
+ *  match the backend's PdfMetadataService.CLASSIFICATION_KEY). */
 const CLASSIFICATION_KEY = "StirlingPDFClassification";
 
 /** Reading classification means loading the file's bytes through PDF.js, so cap
@@ -38,55 +38,21 @@ const CLASSIFICATION_KEY = "StirlingPDFClassification";
  *  multi-GB file into memory just to surface a metadata tag. */
 const MAX_CLASSIFICATION_READ_BYTES = 25 * 1024 * 1024;
 
-interface DocumentClassification {
-  category: string;
-  categoryLabel: string;
-  docType: string;
-  docTypeLabel: string;
-  typeConfidence?: number;
-  tags: string[];
-}
-
-/** Parse the classification JSON stored in PDF metadata; null if absent/invalid. */
-function parseClassification(value: string): DocumentClassification | null {
+/** Parse the classification labels JSON stored in PDF metadata
+ *  (`{"labels": ["Contract", "NDA"]}`); null if absent/empty/invalid. */
+function parseClassificationLabels(value: string): string[] | null {
   try {
     const raw = JSON.parse(value) as Record<string, unknown>;
-    const category = typeof raw.category === "string" ? raw.category : "";
-    const docType = typeof raw.docType === "string" ? raw.docType : "";
-    if (!category && !docType) return null;
-    // The classifier stores the human label alongside the id; older files
-    // predate it, so fall back to prettifying the id.
-    const categoryLabel =
-      typeof raw.categoryLabel === "string" && raw.categoryLabel
-        ? raw.categoryLabel
-        : prettyLabel(category);
-    const docTypeLabel =
-      typeof raw.docTypeLabel === "string" && raw.docTypeLabel
-        ? raw.docTypeLabel
-        : prettyLabel(docType);
-    return {
-      category,
-      categoryLabel,
-      docType,
-      docTypeLabel,
-      typeConfidence:
-        typeof raw.typeConfidence === "number" ? raw.typeConfidence : undefined,
-      tags: Array.isArray(raw.tags)
-        ? raw.tags.filter((tag): tag is string => typeof tag === "string")
-        : [],
-    };
+    const labels = Array.isArray(raw.labels)
+      ? raw.labels.filter(
+          (label): label is string =>
+            typeof label === "string" && label.trim().length > 0,
+        )
+      : [];
+    return labels.length > 0 ? labels : null;
   } catch {
     return null;
   }
-}
-
-/** "lab_result" / "lab-result" → "Lab result" — fallback for pre-label files. */
-function prettyLabel(id: string): string {
-  return id
-    .split(/[_\-\s]+/)
-    .filter(Boolean)
-    .map((word) => word[0].toUpperCase() + word.slice(1))
-    .join(" ");
 }
 
 interface FileDetailsPanelProps {
@@ -139,8 +105,7 @@ export function FileDetailsPanel({
   // Version journey is collapsed by default so the panel stays short.
   const [versionsOpen, setVersionsOpen] = useState(false);
   // Document classification read from PDF metadata, plus its (collapsed) section.
-  const [classification, setClassification] =
-    useState<DocumentClassification | null>(null);
+  const [classification, setClassification] = useState<string[] | null>(null);
   const [classificationOpen, setClassificationOpen] = useState(false);
   // Version chain for the selected file; empty for v1 or multi-select.
   const [versionChain, setVersionChain] = useState<StirlingFileStub[]>([]);
@@ -167,11 +132,16 @@ export function FileDetailsPanel({
     };
   }, [singleFileForChain]);
 
-  // Read the classification the policy wrote into PDF metadata
+  // Show the file's classification labels: the stub's cached copy when present
+  // (free — no byte load), else read the PDF metadata the policy wrote.
   useEffect(() => {
     setClassification(null);
     const stub = singleFileForChain;
     if (!stub) return;
+    if (stub.classificationLabels && stub.classificationLabels.length > 0) {
+      setClassification(stub.classificationLabels);
+      return;
+    }
     if (stub.type && !stub.type.toLowerCase().includes("pdf")) return;
     if (stub.size > MAX_CLASSIFICATION_READ_BYTES) return;
     let cancelled = false;
@@ -185,7 +155,7 @@ export function FileDetailsPanel({
           (item) => item.key === CLASSIFICATION_KEY,
         );
         if (!entry) return;
-        const parsed = parseClassification(entry.value);
+        const parsed = parseClassificationLabels(entry.value);
         if (parsed && !cancelled) setClassification(parsed);
       } catch (err) {
         console.error("Failed to read classification metadata", err);
@@ -345,53 +315,31 @@ export function FileDetailsPanel({
                 </button>
                 {classificationOpen && (
                   <div className="files-page-details-fieldlist">
-                    {classification.category && (
-                      <DetailField
-                        label={t("filesPage.field.category", "Category")}
-                        value={classification.categoryLabel}
-                      />
-                    )}
-                    {classification.docType && (
-                      <DetailField
-                        label={t("filesPage.field.type", "Type")}
-                        value={classification.docTypeLabel}
-                      />
-                    )}
-                    {classification.typeConfidence != null && (
-                      <DetailField
-                        label={t("filesPage.field.confidence", "Confidence")}
-                        value={`${Math.round(
-                          classification.typeConfidence * 100,
-                        )}%`}
-                      />
-                    )}
-                    {classification.tags.length > 0 && (
-                      <div className="files-page-details-field">
-                        <span className="files-page-details-field-label">
-                          {t("filesPage.field.tags", "Tags")}
-                        </span>
-                        <span
-                          className="files-page-details-field-value"
-                          style={{
-                            display: "flex",
-                            flexWrap: "wrap",
-                            gap: "0.25rem",
-                            justifyContent: "flex-end",
-                          }}
-                        >
-                          {classification.tags.map((tag) => (
-                            <Badge
-                              key={tag}
-                              size="xs"
-                              variant="light"
-                              color="orange"
-                            >
-                              {tag}
-                            </Badge>
-                          ))}
-                        </span>
-                      </div>
-                    )}
+                    <div className="files-page-details-field">
+                      <span className="files-page-details-field-label">
+                        {t("filesPage.field.labels", "Labels")}
+                      </span>
+                      <span
+                        className="files-page-details-field-value"
+                        style={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: "0.25rem",
+                          justifyContent: "flex-end",
+                        }}
+                      >
+                        {classification.map((label) => (
+                          <Badge
+                            key={label}
+                            size="xs"
+                            variant="light"
+                            color="orange"
+                          >
+                            {label}
+                          </Badge>
+                        ))}
+                      </span>
+                    </div>
                   </div>
                 )}
               </>

@@ -368,7 +368,7 @@ export function fileContextReducer(
       // whatever those inputs themselves derived from. Accumulating the closure
       // (rather than just the immediate inputs) means a policy badge still
       // resolves after an intermediate edit has been consumed and removed —
-      // e.g. redact → edit → split still tags each split part. Captured before
+      // e.g. redact → edit → split still marks each split part. Captured before
       // the inputs are swapped out below.
       const sourceFileIds = Array.from(
         new Set(
@@ -379,36 +379,35 @@ export function fileContextReducer(
         ),
       );
 
-      // Carry the document's classification forward across the edit: any tool that
-      // versions/derives a classified file keeps it in its category instead of
-      // dropping it to "Other" and waiting on a PDF re-read. Inherited from the
-      // first input that has one; an output that already carries its own (e.g. a
-      // fresh classify result) keeps it.
-      const inheritedClassification = inputFileIds
-        .map((id) => state.files.byId[id]?.classificationCategory)
-        .find(Boolean);
+      // Carry the document's classification labels forward across the edit: any
+      // tool that versions/derives a classified file keeps it in its label
+      // groups instead of dropping to "Other" and waiting on a PDF re-read.
+      // Inherited from the first input that has any; an output that already
+      // carries its own (e.g. a fresh classify result) keeps them.
+      const inheritedLabels = inputFileIds
+        .map((id) => state.files.byId[id]?.classificationLabels)
+        .find((labels) => labels && labels.length > 0);
 
       // Mark every consume output as tool-produced (the single chokepoint for
       // both versioned edits and independent artifacts like convert/split/merge)
       // and stamp its provenance. Tag here, not in processFileSwap, so
       // UNDO_CONSUME (which restores the original inputs through the same helper)
       // doesn't mislabel real uploads.
-      const taggedOutputs = outputStirlingFileStubs.map((stub) => ({
+      const provenancedOutputs = outputStirlingFileStubs.map((stub) => ({
         ...stub,
         derivedFromTool: true,
         sourceFileIds,
-        classificationCategory:
-          stub.classificationCategory ?? inheritedClassification,
+        classificationLabels: stub.classificationLabels ?? inheritedLabels,
       }));
 
       // Silent (background enforcement): replace inputs in their existing grid
       // slot without auto-selecting or moving the outputs to the front, so a
       // finished policy run doesn't yank the file to the top or open it.
       if (silent) {
-        return processFileSwapInPlace(state, inputFileIds, taggedOutputs);
+        return processFileSwapInPlace(state, inputFileIds, provenancedOutputs);
       }
 
-      return processFileSwap(state, inputFileIds, taggedOutputs);
+      return processFileSwap(state, inputFileIds, provenancedOutputs);
     }
 
     case "UNDO_CONSUME_FILES": {

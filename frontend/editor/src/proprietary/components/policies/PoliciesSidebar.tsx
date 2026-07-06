@@ -168,18 +168,6 @@ export function PoliciesSection({
       );
     }
   };
-  const overall = useMemo(() => {
-    let running = 0;
-    let completed = 0;
-    let total = 0;
-    for (const p of progress.values()) {
-      running += p.running;
-      completed += p.completed;
-      total += p.total;
-    }
-    return { running, completed, total };
-  }, [progress]);
-
   // Persist the expand/collapse state across refreshes.
   const [expanded, setExpanded] = useState(() => {
     try {
@@ -275,27 +263,6 @@ export function PoliciesSection({
           </Menu.Dropdown>
         </Menu>
       </div>
-
-      {overall.running > 0 && (
-        <div
-          className="pol-processing-summary"
-          role="status"
-          aria-live="polite"
-        >
-          <span className="pol-processing-spinner" aria-hidden="true" />
-          <span>
-            {t(
-              "policies.sidebar.processingSummary",
-              "{{running}} processing · {{completed}}/{{total}} done",
-              {
-                running: overall.running,
-                completed: overall.completed,
-                total: overall.total,
-              },
-            )}
-          </span>
-        </div>
-      )}
 
       {retryableRuns.length > 0 && !guestBlocked && (
         <button

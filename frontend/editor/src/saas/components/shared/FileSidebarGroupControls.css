@@ -1,0 +1,93 @@
+/* Group-picker modal: family sections with toggleable member-label chips. */
+
+.fsg-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.fsg-family {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fsg-family-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  color: var(--text-primary, inherit);
+}
+
+.fsg-chevron {
+  font-size: 1.1rem !important;
+  color: var(--text-muted, rgba(128, 128, 128, 0.9));
+  /* Pull the chevron flush left so headers align with the search field. */
+  margin-left: -4px;
+}
+
+.fsg-family-name {
+  flex: 1;
+}
+
+.fsg-custom-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.fsg-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  /* Indent past the chevron + checkbox so hierarchy reads at a glance. */
+  padding-left: 46px;
+}
+
+.fsg-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  font-size: 12px;
+  border: 1px solid var(--border-subtle, rgba(128, 128, 128, 0.35));
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted, inherit);
+  cursor: pointer;
+}
+
+.fsg-chip:hover {
+  background: var(--hover-bg, rgba(128, 128, 128, 0.12));
+}
+
+.fsg-chip.is-on {
+  border-color: var(--color-primary, #4f46e5);
+  color: var(--color-primary, #4f46e5);
+  background: color-mix(
+    in srgb,
+    var(--color-primary, #4f46e5) 10%,
+    transparent
+  );
+}
+
+.fsg-count {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted, rgba(128, 128, 128, 0.9));
+}
+
+.fsg-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 8px;
+}

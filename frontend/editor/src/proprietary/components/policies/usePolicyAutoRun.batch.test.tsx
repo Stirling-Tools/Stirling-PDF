@@ -103,7 +103,7 @@ vi.mock("@app/services/fileStubHelpers", () => ({
   createStirlingFilesAndStubs: mocks.createStirlingFilesAndStubs,
 }));
 vi.mock("@app/services/fileClassification", () => ({
-  readClassificationCategoryFromFile: vi.fn().mockResolvedValue(null),
+  readClassificationLabelsFromFile: vi.fn().mockResolvedValue(null),
 }));
 
 import { usePolicyAutoRun } from "@app/components/policies/usePolicyAutoRun";
