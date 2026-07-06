@@ -2,7 +2,7 @@ import {
   type ToolApiParams,
   type ToolApiRequest,
   type ToolEndpoint,
-} from "@app/generated/toolApiTypes";
+} from "@app/types/toolApiTypes";
 
 export type { ToolApiParams, ToolApiRequest, ToolEndpoint };
 

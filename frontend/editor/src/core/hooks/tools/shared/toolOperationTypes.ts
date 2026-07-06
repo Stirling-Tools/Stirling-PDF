@@ -3,7 +3,7 @@ import { StirlingFile } from "@app/types/fileContext";
 import type { ResponseHandler } from "@app/utils/toolResponseProcessor";
 import { ToolId } from "@app/types/toolId";
 import type { ProcessingProgress } from "@app/hooks/tools/shared/useToolState";
-import type { ToolApiRequest } from "@app/generated/toolApiTypes";
+import type { ToolApiRequest } from "@app/types/toolApiTypes";
 
 export type { ProcessingProgress, ResponseHandler };
 

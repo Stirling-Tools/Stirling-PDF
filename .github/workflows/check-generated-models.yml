@@ -2,7 +2,7 @@ name: Check generated models
 
 # Verifies the committed generated API models are still in sync with the Java
 # OpenAPI spec: the frontend tool API types
-# (frontend/editor/src/core/generated/toolApiTypes.ts) and the engine tool
+# (frontend/editor/src/core/types/toolApiTypes.ts) and the engine tool
 # models (engine/src/stirling/models/tool_models.py). Regenerates both with the
 # single top-level `task tool-models` and fails if either committed file is
 # out of date. Called from build.yml when the backend Java, frontend, or engine
@@ -68,7 +68,7 @@ jobs:
         continue-on-error: true
         run: |
           git diff --exit-code \
-            frontend/editor/src/core/generated/toolApiTypes.ts \
+            frontend/editor/src/core/types/toolApiTypes.ts \
             engine/src/stirling/models/tool_models.py
 
       - name: Comment on generated models check failure
@@ -84,7 +84,7 @@ jobs:
               marker,
               '### Generated Models Check Failed',
               '',
-              'The generated `frontend/editor/src/core/generated/toolApiTypes.ts` and/or `engine/src/stirling/models/tool_models.py` are out of date with the Java OpenAPI spec and will need to be regenerated before they can be merged in.',
+              'The generated `frontend/editor/src/core/types/toolApiTypes.ts` and/or `engine/src/stirling/models/tool_models.py` are out of date with the Java OpenAPI spec and will need to be regenerated before they can be merged in.',
               '',
               'Run `task tool-models` to regenerate both, then commit the updated files.',
             ].join('\n');
