@@ -2,6 +2,7 @@ package stirling.software.proprietary.accountlink;
 
 import java.io.IOException;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
@@ -23,7 +24,9 @@ import lombok.extern.slf4j.Slf4j;
  * <p>The portal (served from this same origin, admin authenticated by the existing self-hosted
  * security chain) calls these. {@code POST /link} relays the admin's Supabase JWT to the SaaS
  * backend, which mints + returns a device credential we store locally. {@code GET /status} backs
- * the portal's link card.
+ * the portal's link card; {@code GET /usage} exposes locally-accrued unsynced usage the portal adds
+ * to SaaS-synced spend; {@code POST /sync-now} forces an immediate usage sync (ops "reconcile now"
+ * / test aid).
  *
  * <p>Admin-only, {@code @Profile("!saas")}, gated behind {@code
  * stirling.billing.account-link.enabled} — off → bean absent → 404.
@@ -38,9 +41,17 @@ import lombok.extern.slf4j.Slf4j;
 public class AccountLinkController {
 
     private final AccountLinkService service;
+    private final LocalUsageService localUsageService;
+    // Present only when metering is on (its own flag); absent → /sync-now reports 409.
+    private final ObjectProvider<UsageSyncService> syncServiceProvider;
 
-    public AccountLinkController(AccountLinkService service) {
+    public AccountLinkController(
+            AccountLinkService service,
+            LocalUsageService localUsageService,
+            ObjectProvider<UsageSyncService> syncServiceProvider) {
         this.service = service;
+        this.localUsageService = localUsageService;
+        this.syncServiceProvider = syncServiceProvider;
     }
 
     /** {@code supabaseJwt} is the admin's short-lived token the portal already holds. */
@@ -83,6 +94,31 @@ public class AccountLinkController {
     @PostMapping("/unlink")
     public ResponseEntity<Void> unlink() {
         service.unlink();
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Locally accrued usage not yet reported to SaaS — the portal adds it to the SaaS-synced spend
+     * so "current usage" includes work done since the last daily sync.
+     */
+    @GetMapping("/usage")
+    public ResponseEntity<LocalUsageService.LocalUsage> usage() {
+        return ResponseEntity.ok(localUsageService.currentPeriodUnsynced());
+    }
+
+    /**
+     * Forces an immediate usage sync to SaaS — the same work the daily scheduler does. An admin
+     * "reconcile now" action (and a test aid so you don't wait on the scheduler). Idempotent:
+     * re-reports the current cumulative, so a repeat trigger bills nothing. {@code 204} once run;
+     * {@code 409} when metering is off (the sync bean is absent).
+     */
+    @PostMapping("/sync-now")
+    public ResponseEntity<Void> syncNow() {
+        UsageSyncService sync = syncServiceProvider.getIfAvailable();
+        if (sync == null) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+        sync.syncNow();
         return ResponseEntity.noContent().build();
     }
 }
