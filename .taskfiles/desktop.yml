@@ -141,7 +141,7 @@ tasks:
     env:
       REQUIRED_JAVA: "{{.REQUIRED_JAVA}}"
     cmds:
-      - node scripts/verify-bundled-jre.mjs src-tauri/runtime/jre/release
+      - node scripts/verify-bundled-jre.mjs
 
   jlink:cacheremove:
     desc: "Remove cached backend JARs before a clean desktop rebuild"

@@ -14,11 +14,7 @@ import { resolve } from "node:path";
 import { readFileSync } from "node:fs";
 
 const required = Number(process.env.REQUIRED_JAVA ?? "25");
-const releasePath = process.argv[2] ?? "runtime/jre/release";
-const expectedReleasePath = resolve(
-  process.cwd(),
-  "src-tauri/runtime/jre/release",
-);
+const releasePath = resolve(process.cwd(), "src-tauri/runtime/jre/release");
 
 function rebuildRuntime(reason) {
   console.warn(
@@ -51,20 +47,16 @@ function rebuildRuntime(reason) {
   }
 }
 
-function readReleaseFile(path) {
-  if (resolve(process.cwd(), path) !== expectedReleasePath) {
-    throw new Error(`Refusing to read unexpected release file path: ${path}`);
-  }
-
-  return readFileSync(path, "utf8");
+function readReleaseFile() {
+  return readFileSync(releasePath, "utf8");
 }
 
-function readReleaseOrFail(path) {
+function readReleaseOrFail() {
   try {
-    return readReleaseFile(path);
+    return readReleaseFile();
   } catch (err) {
     console.error(
-      `FATAL: cannot read bundled JRE release file at "${path}" after rebuilding: ${err.message}.`,
+      `FATAL: cannot read bundled JRE release file at "${releasePath}" after rebuilding: ${err.message}.`,
     );
     process.exit(1);
   }
@@ -79,13 +71,13 @@ function parseMajor(raw) {
 
 let raw;
 try {
-  raw = readReleaseFile(releasePath);
+  raw = readReleaseFile();
 } catch (err) {
   console.error(
     `WARN: cannot read bundled JRE release file at "${releasePath}": ${err.message}.`,
   );
   rebuildRuntime("Bundled runtime is missing.");
-  raw = readReleaseOrFail(releasePath);
+  raw = readReleaseOrFail();
 }
 
 let major = parseMajor(raw);
@@ -95,7 +87,7 @@ if (!major || major < required) {
   rebuildRuntime(
     `Bundled runtime/jre is Java ${major || "unknown"} but the app JAR requires Java ${required}.`,
   );
-  raw = readReleaseOrFail(releasePath);
+  raw = readReleaseOrFail();
   major = parseMajor(raw);
 }
 
