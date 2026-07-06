@@ -120,7 +120,8 @@ class OwnershipServiceTest {
     void enabledResourceUseDelegatesToTheAcl() {
         TestResource r = new TestResource(1L);
         User user = user(7);
-        when(accessService.canUseResource(any(), any(), any(), any(), any())).thenReturn(true);
+        when(accessService.canUseResource(any(), any(), any(), any(), any(), any()))
+                .thenReturn(true);
 
         assertThat(ownership.canUse(TYPE, r, user)).isTrue();
     }

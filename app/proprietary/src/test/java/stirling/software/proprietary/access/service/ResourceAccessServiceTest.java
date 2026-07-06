@@ -47,7 +47,7 @@ class ResourceAccessServiceTest {
     void adminMayUseEvenWithExplicitOnlyAndNoGrants() {
         assertThat(
                         service.canUseResource(
-                                TYPE, RID, null, DefaultAccessPolicy.EXPLICIT_ONLY, admin(1)))
+                                TYPE, RID, null, null, DefaultAccessPolicy.EXPLICIT_ONLY, admin(1)))
                 .isTrue();
     }
 
@@ -55,13 +55,13 @@ class ResourceAccessServiceTest {
     void ownerMayUseEvenWithExplicitOnly() {
         assertThat(
                         service.canUseResource(
-                                TYPE, RID, 5L, DefaultAccessPolicy.EXPLICIT_ONLY, user(5)))
+                                TYPE, RID, 5L, null, DefaultAccessPolicy.EXPLICIT_ONLY, user(5)))
                 .isTrue();
     }
 
     @Test
     void nullUserIsAlwaysDenied() {
-        assertThat(service.canUseResource(TYPE, RID, 5L, DefaultAccessPolicy.ORG_ALL, null))
+        assertThat(service.canUseResource(TYPE, RID, 5L, null, DefaultAccessPolicy.ORG_ALL, null))
                 .isFalse();
         assertThat(service.canManageResource(TYPE, RID, 5L, null)).isFalse();
     }
@@ -73,7 +73,7 @@ class ResourceAccessServiceTest {
         stubGrants(grant(PrincipalType.USER, 5L, AccessPermission.USE));
         assertThat(
                         service.canUseResource(
-                                TYPE, RID, null, DefaultAccessPolicy.EXPLICIT_ONLY, user(5)))
+                                TYPE, RID, null, null, DefaultAccessPolicy.EXPLICIT_ONLY, user(5)))
                 .isTrue();
     }
 
@@ -84,6 +84,7 @@ class ResourceAccessServiceTest {
                         service.canUseResource(
                                 TYPE,
                                 RID,
+                                null,
                                 null,
                                 DefaultAccessPolicy.EXPLICIT_ONLY,
                                 userInTeam(5, 7)))
@@ -98,6 +99,7 @@ class ResourceAccessServiceTest {
                                 TYPE,
                                 RID,
                                 null,
+                                null,
                                 DefaultAccessPolicy.EXPLICIT_ONLY,
                                 userInTeam(5, 99)))
                 .isFalse();
@@ -108,7 +110,7 @@ class ResourceAccessServiceTest {
         stubGrants(grant(PrincipalType.USER, 5L, AccessPermission.MANAGE));
         assertThat(
                         service.canUseResource(
-                                TYPE, RID, null, DefaultAccessPolicy.EXPLICIT_ONLY, user(5)))
+                                TYPE, RID, null, null, DefaultAccessPolicy.EXPLICIT_ONLY, user(5)))
                 .isTrue();
     }
 
@@ -129,7 +131,9 @@ class ResourceAccessServiceTest {
     @Test
     void orgAllDefaultAllowsAnyUser() {
         stubGrants();
-        assertThat(service.canUseResource(TYPE, RID, null, DefaultAccessPolicy.ORG_ALL, user(5)))
+        assertThat(
+                        service.canUseResource(
+                                TYPE, RID, null, null, DefaultAccessPolicy.ORG_ALL, user(5)))
                 .isTrue();
     }
 
@@ -138,7 +142,7 @@ class ResourceAccessServiceTest {
         stubGrants();
         assertThat(
                         service.canUseResource(
-                                TYPE, RID, null, DefaultAccessPolicy.EXPLICIT_ONLY, user(5)))
+                                TYPE, RID, null, null, DefaultAccessPolicy.EXPLICIT_ONLY, user(5)))
                 .isFalse();
     }
 
@@ -149,7 +153,12 @@ class ResourceAccessServiceTest {
         when(teamLeadLookup.isAnyTeamLeader(leader)).thenReturn(true);
         assertThat(
                         service.canUseResource(
-                                TYPE, RID, null, DefaultAccessPolicy.ADMINS_AND_TEAM_LEADS, leader))
+                                TYPE,
+                                RID,
+                                null,
+                                null,
+                                DefaultAccessPolicy.ADMINS_AND_TEAM_LEADS,
+                                leader))
                 .isTrue();
 
         stubGrants();
@@ -158,8 +167,40 @@ class ResourceAccessServiceTest {
                                 TYPE,
                                 RID,
                                 null,
+                                null,
                                 DefaultAccessPolicy.ADMINS_AND_TEAM_LEADS,
                                 user(6)))
+                .isFalse();
+    }
+
+    @Test
+    void teamLeadDefaultOnTeamResourceAdmitsOnlyThatTeamsLead() {
+        // Team-owned resource: only a lead OF THE OWNING TEAM qualifies — a lead of some
+        // other team must not cross the boundary.
+        stubGrants();
+        User owningTeamLead = user(5);
+        when(teamLeadLookup.isLeaderOfTeam(owningTeamLead, 7L)).thenReturn(true);
+        assertThat(
+                        service.canUseResource(
+                                TYPE,
+                                RID,
+                                null,
+                                7L,
+                                DefaultAccessPolicy.ADMINS_AND_TEAM_LEADS,
+                                owningTeamLead))
+                .isTrue();
+
+        stubGrants();
+        User foreignTeamLead = user(6);
+        when(teamLeadLookup.isLeaderOfTeam(foreignTeamLead, 7L)).thenReturn(false);
+        assertThat(
+                        service.canUseResource(
+                                TYPE,
+                                RID,
+                                null,
+                                7L,
+                                DefaultAccessPolicy.ADMINS_AND_TEAM_LEADS,
+                                foreignTeamLead))
                 .isFalse();
     }
 

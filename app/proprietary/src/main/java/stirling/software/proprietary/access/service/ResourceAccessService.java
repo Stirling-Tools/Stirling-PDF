@@ -37,7 +37,8 @@ public class ResourceAccessService {
 
     /** Whether the user may use the portal / processor. */
     public boolean canAccessPortal(User user) {
-        return canUseResource(ResourceType.PORTAL, "", null, portalDefaultPolicy, user);
+        // Server-wide resource: no owning team, so the team-lead default admits any lead.
+        return canUseResource(ResourceType.PORTAL, "", null, null, portalDefaultPolicy, user);
     }
 
     /** Whether the user may use a resource, falling back to its default policy. */
@@ -45,6 +46,7 @@ public class ResourceAccessService {
             ResourceType type,
             String resourceId,
             Long ownerUserId,
+            Long ownerTeamId,
             DefaultAccessPolicy defaultPolicy,
             User user) {
         if (user == null) {
@@ -56,7 +58,7 @@ public class ResourceAccessService {
         if (hasGrant(type, normalize(resourceId), user, AccessPermission.USE)) {
             return true;
         }
-        return matchesDefault(defaultPolicy, user);
+        return matchesDefault(defaultPolicy, ownerTeamId, user);
     }
 
     /** Whether the user may manage (edit/delete/share) a resource. No default-policy fallback. */
@@ -161,14 +163,19 @@ public class ResourceAccessService {
         return held == AccessPermission.MANAGE;
     }
 
-    private boolean matchesDefault(DefaultAccessPolicy policy, User user) {
+    private boolean matchesDefault(DefaultAccessPolicy policy, Long ownerTeamId, User user) {
         if (policy == null) {
             return false;
         }
         return switch (policy) {
             case ORG_ALL -> true;
-            // Admins already pass above; only team leads here.
-            case ADMINS_AND_TEAM_LEADS -> teamLeadLookup.isAnyTeamLeader(user);
+            // Admins already pass above. For a team-owned resource only a lead OF THAT team
+            // qualifies — "any team leader" would let team A's lead use team B's resource. A
+            // resource with no owning team (portal / server-scoped) admits any team lead.
+            case ADMINS_AND_TEAM_LEADS ->
+                    ownerTeamId == null
+                            ? teamLeadLookup.isAnyTeamLeader(user)
+                            : teamLeadLookup.isLeaderOfTeam(user, ownerTeamId);
             case EXPLICIT_ONLY -> false;
         };
     }

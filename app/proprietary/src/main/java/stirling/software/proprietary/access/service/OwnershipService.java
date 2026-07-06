@@ -37,6 +37,7 @@ public class OwnershipService {
                 type,
                 String.valueOf(resource.getId()),
                 resource.getOwnerUserId(),
+                resource.getOwnerTeamId(),
                 resource.getDefaultAccess(),
                 user);
     }
