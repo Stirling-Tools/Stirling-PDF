@@ -107,7 +107,7 @@ class KeyLength(IntEnum):
 
 
 class AddPasswordParams(ApiModel):
-    key_length: KeyLength = Field(..., description="The length of the encryption key")
+    key_length: KeyLength = Field(KeyLength.integer_256, description="The length of the encryption key")
     owner_password: SecretStr | None = Field(
         None,
         description="The owner password to be added to the PDF file (Restricts what can be done with the document once it is opened)",

@@ -65,7 +65,7 @@ export interface AddPasswordRequest {
   /**
    * The length of the encryption key
    */
-  keyLength: 40 | 128 | 256;
+  keyLength?: 40 | 128 | 256;
   /**
    * The owner password to be added to the PDF file (Restricts what can be done with the document once it is opened)
    */

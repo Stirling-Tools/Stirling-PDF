@@ -25,6 +25,7 @@ export const addPasswordToApiParams = (
 ): AddPasswordApiParams => ({
   password: parameters.password,
   ownerPassword: parameters.ownerPassword,
+  // The UI stores keyLength as a number; narrow it to the model's allowed sizes.
   keyLength: parameters.keyLength as AddPasswordApiParams["keyLength"],
   preventAssembly: parameters.permissions.preventAssembly ?? false,
   preventExtractContent: parameters.permissions.preventExtractContent ?? false,

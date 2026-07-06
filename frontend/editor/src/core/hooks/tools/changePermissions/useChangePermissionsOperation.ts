@@ -19,33 +19,22 @@ import {
 const ENDPOINT = "/api/v1/security/add-password" satisfies ToolEndpoint;
 type AddPasswordApiParams = ToolApiParams[typeof ENDPOINT];
 
-// Retained for backwards compatibility with existing callers.
-export const getFormData = (parameters: ChangePermissionsParameters) => {
-  if (!parameters) return [];
-  return Object.entries(parameters).map(([key, value]) => [
-    key,
-    (value ?? false).toString(),
-  ]) as string[][];
-};
-
 // Convert the tool's UI parameters into the add-password request body. Only the
-// prevent* permission flags are sent; keyLength/password are intentionally
-// omitted to preserve the existing wire behaviour, so the result is cast to the
-// shared request model.
+// prevent* permission flags are sent; password and keyLength are optional on the
+// model and left unset, so the endpoint changes permissions without encrypting.
 export const changePermissionsToApiParams = (
   parameters: ChangePermissionsParameters,
-): AddPasswordApiParams =>
-  ({
-    preventAssembly: parameters.preventAssembly ?? false,
-    preventExtractContent: parameters.preventExtractContent ?? false,
-    preventExtractForAccessibility:
-      parameters.preventExtractForAccessibility ?? false,
-    preventFillInForm: parameters.preventFillInForm ?? false,
-    preventModify: parameters.preventModify ?? false,
-    preventModifyAnnotations: parameters.preventModifyAnnotations ?? false,
-    preventPrinting: parameters.preventPrinting ?? false,
-    preventPrintingFaithful: parameters.preventPrintingFaithful ?? false,
-  }) as AddPasswordApiParams;
+): AddPasswordApiParams => ({
+  preventAssembly: parameters.preventAssembly ?? false,
+  preventExtractContent: parameters.preventExtractContent ?? false,
+  preventExtractForAccessibility:
+    parameters.preventExtractForAccessibility ?? false,
+  preventFillInForm: parameters.preventFillInForm ?? false,
+  preventModify: parameters.preventModify ?? false,
+  preventModifyAnnotations: parameters.preventModifyAnnotations ?? false,
+  preventPrinting: parameters.preventPrinting ?? false,
+  preventPrintingFaithful: parameters.preventPrintingFaithful ?? false,
+});
 
 // Reconstruct the tool's UI parameters from an add-password request body, so a
 // stored or AI-authored step can be re-rendered in the settings UI.
