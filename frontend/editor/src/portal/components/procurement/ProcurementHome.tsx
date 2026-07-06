@@ -27,9 +27,13 @@ import {
   TrialManageModal,
 } from "@portal/components/procurement/ProcurementExtras";
 import { ProcurementModal } from "@portal/components/procurement/ProcurementModal";
+import {
+  LiveStageCard,
+  PaymentStageCard,
+  QuoteMilestoneCard,
+} from "@portal/components/procurement/ProcurementStages";
 import { QuoteBuilder } from "@portal/components/procurement/QuoteBuilder";
 import { StageStepper } from "@portal/components/procurement/StageStepper";
-import { money } from "@portal/components/procurement/format";
 import "@portal/views/Procurement.css";
 
 /**
@@ -225,69 +229,14 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
             )}
 
             {!editing && isIssued && stage === "quote" && latest && (
-              <Card padding="loose">
-                <span className="portal-proc__eyebrow">
-                  {t("portal.procurement.milestone.eyebrow", {
-                    number: latest.quoteNumber,
-                  })}
-                </span>
-                <h3 className="portal-proc__builder-title">
-                  {t("portal.procurement.milestone.title")}
-                </h3>
-                {latest.config.businessName && (
-                  <p className="portal-proc__milestone-for">
-                    {t("portal.procurement.milestone.preparedFor", {
-                      company: latest.config.businessName,
-                    })}
-                  </p>
-                )}
-                <p className="portal-proc__subtitle">
-                  {t("portal.procurement.milestone.description")}
-                </p>
-                <ul className="portal-qb__lines portal-proc__milestone-lines">
-                  {latest.lineItems.map((li) => (
-                    <li key={li.key} data-kind={li.kind}>
-                      <span>{li.label}</span>
-                      <span>
-                        {li.kind === "INCLUDED"
-                          ? t("portal.procurement.builder.included")
-                          : money(li.amountMinor, latest.currency)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-                <div className="portal-proc__milestone-totals">
-                  <span className="portal-proc__milestone-annual">
-                    {money(latest.annualNetMinor, latest.currency)}
-                    <small>{t("portal.procurement.milestone.perYear")}</small>
-                  </span>
-                  <span className="portal-proc__milestone-tcv">
-                    {t("portal.procurement.milestone.tcv", {
-                      value: money(latest.tcvMinor, latest.currency),
-                    })}
-                  </span>
-                </div>
-                <div className="portal-proc__payment-actions">
-                  <Button
-                    variant="gradient"
-                    accent="purple"
-                    loading={busy}
-                    onClick={onAcceptQuote}
-                  >
-                    {t("portal.procurement.milestone.accept")}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    loading={downloading}
-                    onClick={onDownloadPdf}
-                  >
-                    {t("portal.procurement.milestone.download")}
-                  </Button>
-                  <Button variant="ghost" onClick={() => setEditing(true)}>
-                    {t("portal.procurement.milestone.edit")}
-                  </Button>
-                </div>
-              </Card>
+              <QuoteMilestoneCard
+                quote={latest}
+                busy={busy}
+                downloading={downloading}
+                onAccept={onAcceptQuote}
+                onDownload={onDownloadPdf}
+                onEdit={() => setEditing(true)}
+              />
             )}
 
             {!editing && stage === "security" && latest && (
@@ -299,63 +248,15 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
             )}
 
             {!editing && stage === "procurement" && latest && (
-              <Card padding="loose">
-                <h3 className="portal-proc__builder-title">
-                  {t("portal.procurement.payment.title")}
-                </h3>
-                <p className="portal-proc__subtitle">
-                  {t("portal.procurement.payment.description")}
-                </p>
-                {(latest.invoiceUrl || invoicePdf) && (
-                  <div className="portal-proc__payment-actions">
-                    {latest.invoiceUrl && (
-                      <Button
-                        variant="gradient"
-                        accent="purple"
-                        onClick={() =>
-                          window.open(latest.invoiceUrl!, "_blank", "noopener")
-                        }
-                      >
-                        {t("portal.procurement.payment.viewInvoice")}
-                      </Button>
-                    )}
-                    {invoicePdf && (
-                      <Button
-                        variant="outline"
-                        onClick={() =>
-                          window.open(invoicePdf, "_blank", "noopener")
-                        }
-                      >
-                        {t("portal.procurement.payment.downloadInvoice")}
-                      </Button>
-                    )}
-                  </div>
-                )}
-                <div className="portal-proc__reset">
-                  <button
-                    type="button"
-                    onClick={() => run(goLive)}
-                    disabled={busy}
-                  >
-                    {t("portal.procurement.payment.simulate")}
-                  </button>
-                </div>
-              </Card>
+              <PaymentStageCard
+                invoiceUrl={latest.invoiceUrl}
+                invoicePdf={invoicePdf}
+                busy={busy}
+                onSimulate={() => run(goLive)}
+              />
             )}
 
-            {!editing && stage === "active" && (
-              <Card padding="loose">
-                <span className="portal-proc__eyebrow">
-                  {t("portal.procurement.live.eyebrow")}
-                </span>
-                <h3 className="portal-proc__builder-title">
-                  {t("portal.procurement.live.title")}
-                </h3>
-                <p className="portal-proc__subtitle">
-                  {t("portal.procurement.live.description")}
-                </p>
-              </Card>
-            )}
+            {!editing && stage === "active" && <LiveStageCard />}
 
             <div className="portal-proc__reset">
               <button type="button" onClick={onReset} disabled={busy}>

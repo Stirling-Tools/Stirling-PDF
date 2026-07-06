@@ -166,34 +166,35 @@ export interface QuoteConfigInput {
   businessName: string;
 }
 
-const BASE = "/api/v1/procurement";
-
 export function fetchSnapshot(): Promise<ProcurementSnapshot> {
-  return apiClient.saas.json<ProcurementSnapshot>(BASE);
+  return apiClient.saas.json<ProcurementSnapshot>("/api/v1/procurement");
 }
 
 export function startTrial(): Promise<ProcurementSnapshot> {
-  return apiClient.saas.json<ProcurementSnapshot>(`${BASE}/trial/start`, {
-    method: "POST",
-  });
+  return apiClient.saas.json<ProcurementSnapshot>(
+    "/api/v1/procurement/trial/start",
+    { method: "POST" },
+  );
 }
 
 export function extendTrial(): Promise<ProcurementSnapshot> {
-  return apiClient.saas.json<ProcurementSnapshot>(`${BASE}/trial/extend`, {
-    method: "POST",
-  });
+  return apiClient.saas.json<ProcurementSnapshot>(
+    "/api/v1/procurement/trial/extend",
+    { method: "POST" },
+  );
 }
 
 /** Advance an issued quote to the agreement (security) stage for review + agree. */
 export function startAgreement(): Promise<ProcurementSnapshot> {
-  return apiClient.saas.json<ProcurementSnapshot>(`${BASE}/agreement`, {
-    method: "POST",
-  });
+  return apiClient.saas.json<ProcurementSnapshot>(
+    "/api/v1/procurement/agreement",
+    { method: "POST" },
+  );
 }
 
 /** Price a config server-side and persist it as a local DRAFT (no Stripe object yet). */
 export function buildQuote(cfg: QuoteConfigInput): Promise<QuoteResult> {
-  return apiClient.saas.json<QuoteResult>(`${BASE}/quote`, {
+  return apiClient.saas.json<QuoteResult>("/api/v1/procurement/quote", {
     method: "POST",
     body: cfg,
   });
@@ -242,14 +243,15 @@ export async function fetchQuotePdf(quoteId: number): Promise<Blob> {
  * Demo/manual stand-in for the invoice.paid webhook: mark the deal live (issue licence, go active).
  */
 export function goLive(): Promise<ProcurementSnapshot> {
-  return apiClient.saas.json<ProcurementSnapshot>(`${BASE}/go-live`, {
-    method: "POST",
-  });
+  return apiClient.saas.json<ProcurementSnapshot>(
+    "/api/v1/procurement/go-live",
+    { method: "POST" },
+  );
 }
 
 /** Reset the team's procurement (delete the deal) and get the fresh empty snapshot. */
 export function resetProcurement(): Promise<ProcurementSnapshot> {
-  return apiClient.saas.json<ProcurementSnapshot>(`${BASE}/reset`, {
+  return apiClient.saas.json<ProcurementSnapshot>("/api/v1/procurement/reset", {
     method: "POST",
   });
 }

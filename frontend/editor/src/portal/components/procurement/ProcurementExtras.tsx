@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
 import type { ProcurementSnapshot } from "@portal/api/procurement";
 import { useFocusTrap } from "@portal/components/procurement/ProcurementModal";
@@ -26,6 +27,7 @@ function SideModal({
   children: React.ReactNode;
   footer?: React.ReactNode;
 }) {
+  const { t } = useTranslation();
   const trapRef = useFocusTrap(open);
 
   useEffect(() => {
@@ -52,7 +54,7 @@ function SideModal({
           type="button"
           className="portal-procmodal__close"
           onClick={onClose}
-          aria-label="Close"
+          aria-label={t("portal.procurement.modal.close")}
         >
           ✕
         </button>
@@ -244,6 +246,7 @@ export function TrialManageModal({
   onExtend: () => void;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation();
   const ends = snapshot.trialEndsAt
     ? new Date(snapshot.trialEndsAt).toLocaleDateString(undefined, {
         month: "long",
@@ -256,10 +259,10 @@ export function TrialManageModal({
     <SideModal
       open={open}
       onClose={onClose}
-      title="Enterprise trial"
+      title={t("portal.procurement.trial.title")}
       subtitle={
         ends
-          ? `Your free trial runs through ${ends}. No card required.`
+          ? t("portal.procurement.trial.subtitle", { date: ends })
           : undefined
       }
       footer={
@@ -270,7 +273,7 @@ export function TrialManageModal({
             onClick={onCancel}
             disabled={busy}
           >
-            Cancel trial
+            {t("portal.procurement.trial.cancel")}
           </button>
           <Button
             variant="gradient"
@@ -279,15 +282,17 @@ export function TrialManageModal({
             disabled={maxed}
             onClick={onExtend}
           >
-            {maxed ? "Maxed out" : "Extend 7 days"}
+            {maxed
+              ? t("portal.procurement.trial.maxed")
+              : t("portal.procurement.trial.extend")}
           </Button>
         </>
       }
     >
       <p className="portal-sidemodal__text">
         {maxed
-          ? "You have used all your extensions — talk to your solutions engineer if you need more time."
-          : "Extending adds 7 days and notifies your solutions engineer."}
+          ? t("portal.procurement.trial.bodyMaxed")
+          : t("portal.procurement.trial.body")}
       </p>
     </SideModal>
   );

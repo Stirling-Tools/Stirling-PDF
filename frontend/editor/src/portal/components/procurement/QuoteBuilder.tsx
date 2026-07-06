@@ -1,6 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
+import {
+  DocumentsIcon,
+  PoliciesIcon,
+  UsersIcon,
+} from "@portal/components/icons";
 import { money } from "@portal/components/procurement/format";
 import {
   buildQuote,
@@ -102,7 +107,7 @@ export function QuoteBuilder({
       <div className="portal-qb__body">
         {step === 0 && (
           <Step
-            icon="📦"
+            icon={<DocumentsIcon size={22} />}
             title={t("portal.procurement.builder.s1Title")}
             sub={t("portal.procurement.builder.s1Sub")}
           >
@@ -111,7 +116,7 @@ export function QuoteBuilder({
                 <input
                   type="number"
                   min={0}
-                  placeholder="e.g. 250"
+                  placeholder={t("portal.procurement.builder.usersPlaceholder")}
                   value={cfg.users || ""}
                   onChange={(e) => {
                     const users = Number(e.target.value);
@@ -124,7 +129,9 @@ export function QuoteBuilder({
                 <input
                   type="number"
                   min={0}
-                  placeholder="e.g. 1,000,000"
+                  placeholder={t(
+                    "portal.procurement.builder.volumePlaceholder",
+                  )}
                   value={cfg.volume || ""}
                   onChange={(e) => {
                     setManualVolume(true);
@@ -147,7 +154,7 @@ export function QuoteBuilder({
 
         {step === 1 && (
           <Step
-            icon="🛡"
+            icon={<PoliciesIcon size={22} />}
             title={t("portal.procurement.builder.s2Title")}
             sub={t("portal.procurement.builder.s2Sub")}
           >
@@ -223,7 +230,7 @@ export function QuoteBuilder({
 
         {step === 2 && (
           <Step
-            icon="👤"
+            icon={<UsersIcon size={22} />}
             title={t("portal.procurement.builder.s3Title")}
             sub={t("portal.procurement.builder.s3Sub")}
           >
@@ -242,9 +249,15 @@ export function QuoteBuilder({
                   value={cfg.currency}
                   onChange={(e) => set("currency", e.target.value)}
                 >
-                  <option value="USD">United States (USD $)</option>
-                  <option value="GBP">United Kingdom (GBP £)</option>
-                  <option value="EUR">Eurozone (EUR €)</option>
+                  <option value="USD">
+                    {t("portal.procurement.builder.countryUS")}
+                  </option>
+                  <option value="GBP">
+                    {t("portal.procurement.builder.countryUK")}
+                  </option>
+                  <option value="EUR">
+                    {t("portal.procurement.builder.countryEuro")}
+                  </option>
                 </select>
               </Field>
             </div>
@@ -316,7 +329,7 @@ function Step({
   sub,
   children,
 }: {
-  icon: string;
+  icon: ReactNode;
   title: string;
   sub: string;
   children: React.ReactNode;
