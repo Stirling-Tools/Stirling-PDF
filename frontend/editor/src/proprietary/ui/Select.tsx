@@ -45,15 +45,16 @@ export interface SelectProps {
   id?: string;
   name?: string;
   "aria-label"?: string;
+  "aria-invalid"?: boolean;
+  "aria-describedby"?: string;
   disabled?: boolean;
   readOnly?: boolean;
   onFocus?: React.FocusEventHandler<HTMLInputElement>;
   onBlur?: React.FocusEventHandler<HTMLInputElement>;
 
-  // SUI
+  // SUI — invalid applies error styling; FormField renders the message itself.
   inputSize?: SelectSize;
   invalid?: boolean;
-  error?: React.ReactNode;
 }
 
 type PassthroughProps = Omit<
@@ -71,6 +72,7 @@ type PassthroughProps = Omit<
     | "id"
     | "name"
     | "aria-label"
+    | "aria-describedby"
     | "disabled"
     | "readOnly"
     | "onFocus"
@@ -88,7 +90,6 @@ type PassthroughProps = Omit<
 export function Select({
   inputSize = "md",
   invalid,
-  error,
   options,
   value,
   onChange,
@@ -102,6 +103,8 @@ export function Select({
   id,
   name,
   "aria-label": ariaLabel,
+  "aria-invalid": ariaInvalid,
+  "aria-describedby": ariaDescribedBy,
   disabled,
   readOnly,
   onFocus,
@@ -120,6 +123,7 @@ export function Select({
     id,
     name,
     "aria-label": ariaLabel,
+    "aria-describedby": ariaDescribedBy,
     disabled,
     readOnly,
     onFocus,
@@ -130,7 +134,9 @@ export function Select({
     <MantineSelect
       data={options}
       size={inputSize}
-      error={invalid ? (error ?? " ") : error}
+      // Boolean error applies invalid styling without rendering Mantine's own
+      // message element — FormField owns the visible error text.
+      error={invalid || ariaInvalid || undefined}
       withAsterisk={false}
       classNames={{ wrapper: "sui-mantine-wrapper" }}
       styles={{ wrapper: SUI_INPUT_VARS }}

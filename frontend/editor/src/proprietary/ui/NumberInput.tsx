@@ -47,6 +47,9 @@ export interface NumberInputProps {
   // Form
   id?: string;
   name?: string;
+  "aria-label"?: string;
+  "aria-invalid"?: boolean;
+  "aria-describedby"?: string;
   disabled?: boolean;
   readOnly?: boolean;
   autoFocus?: boolean;
@@ -54,10 +57,9 @@ export interface NumberInputProps {
   onBlur?: React.FocusEventHandler<HTMLInputElement>;
   onKeyDown?: React.KeyboardEventHandler<HTMLInputElement>;
 
-  // SUI
+  // SUI — invalid applies error styling; FormField renders the message itself.
   inputSize?: NumberInputSize;
   invalid?: boolean;
-  error?: React.ReactNode;
 }
 
 // Narrows MantineNumberInputProps to only what our interface exposes so the
@@ -84,6 +86,8 @@ type PassthroughProps = Omit<
     | "rightSectionWidth"
     | "id"
     | "name"
+    | "aria-label"
+    | "aria-describedby"
     | "disabled"
     | "readOnly"
     | "autoFocus"
@@ -101,7 +105,6 @@ type PassthroughProps = Omit<
 export function NumberInput({
   inputSize = "md",
   invalid,
-  error,
   value,
   onChange,
   defaultValue,
@@ -121,6 +124,9 @@ export function NumberInput({
   rightSectionWidth,
   id,
   name,
+  "aria-label": ariaLabel,
+  "aria-invalid": ariaInvalid,
+  "aria-describedby": ariaDescribedBy,
   disabled,
   readOnly,
   autoFocus,
@@ -148,6 +154,8 @@ export function NumberInput({
     rightSectionWidth,
     id,
     name,
+    "aria-label": ariaLabel,
+    "aria-describedby": ariaDescribedBy,
     disabled,
     readOnly,
     autoFocus,
@@ -159,7 +167,9 @@ export function NumberInput({
   return (
     <MantineNumberInput
       size={inputSize}
-      error={invalid ? (error ?? " ") : error}
+      // Boolean error applies invalid styling without rendering Mantine's own
+      // message element — FormField owns the visible error text.
+      error={invalid || ariaInvalid || undefined}
       withAsterisk={false}
       classNames={{
         wrapper: "sui-mantine-wrapper",

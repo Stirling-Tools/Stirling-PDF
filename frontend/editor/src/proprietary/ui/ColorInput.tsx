@@ -37,15 +37,17 @@ export interface ColorInputProps {
   placeholder?: string;
   id?: string;
   name?: string;
+  "aria-label"?: string;
+  "aria-invalid"?: boolean;
+  "aria-describedby"?: string;
   disabled?: boolean;
   readOnly?: boolean;
   onFocus?: React.FocusEventHandler<HTMLInputElement>;
   onBlur?: React.FocusEventHandler<HTMLInputElement>;
 
-  // SUI
+  // SUI — invalid applies error styling; FormField renders the message itself.
   inputSize?: ColorInputSize;
   invalid?: boolean;
-  error?: React.ReactNode;
 }
 
 type PassthroughProps = Omit<
@@ -62,6 +64,8 @@ type PassthroughProps = Omit<
     | "placeholder"
     | "id"
     | "name"
+    | "aria-label"
+    | "aria-describedby"
     | "disabled"
     | "readOnly"
     | "onFocus"
@@ -80,7 +84,6 @@ type PassthroughProps = Omit<
 export function ColorInput({
   inputSize = "md",
   invalid,
-  error,
   format = "hex",
   value,
   onChange,
@@ -92,6 +95,9 @@ export function ColorInput({
   placeholder,
   id,
   name,
+  "aria-label": ariaLabel,
+  "aria-invalid": ariaInvalid,
+  "aria-describedby": ariaDescribedBy,
   disabled,
   readOnly,
   onFocus,
@@ -109,6 +115,8 @@ export function ColorInput({
     placeholder,
     id,
     name,
+    "aria-label": ariaLabel,
+    "aria-describedby": ariaDescribedBy,
     disabled,
     readOnly,
     onFocus,
@@ -118,7 +126,9 @@ export function ColorInput({
   return (
     <MantineColorInput
       size={inputSize}
-      error={invalid ? (error ?? " ") : error}
+      // Boolean error applies invalid styling without rendering Mantine's own
+      // message element — FormField owns the visible error text.
+      error={invalid || ariaInvalid || undefined}
       withAsterisk={false}
       classNames={{ wrapper: "sui-mantine-wrapper" }}
       styles={{ wrapper: SUI_INPUT_VARS }}

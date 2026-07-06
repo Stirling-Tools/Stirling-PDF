@@ -112,7 +112,6 @@ export const MultiSelect_Error: Story = {
         onChange={() => {}}
         placeholder="Choose types…"
         invalid
-        error="At least one field type is required."
       />
     </FormField>
   ),
@@ -237,12 +236,7 @@ export const NumberInput_SmSize: Story = {
 export const NumberInput_Error: Story = {
   render: () => (
     <FormField label="Max pages" error="Must be between 1 and 10 000." required>
-      <NumberInput
-        value={-5}
-        onChange={() => {}}
-        invalid
-        error="Must be between 1 and 10 000."
-      />
+      <NumberInput value={-5} onChange={() => {}} invalid />
     </FormField>
   ),
 };
@@ -309,12 +303,7 @@ export const ColorInput_Error: Story = {
       error="Enter a valid hex colour."
       required
     >
-      <ColorInput
-        value="not-a-color"
-        onChange={() => {}}
-        invalid
-        error="Enter a valid hex colour."
-      />
+      <ColorInput value="not-a-color" onChange={() => {}} invalid />
     </FormField>
   ),
 };
@@ -419,7 +408,6 @@ export const Select_Error: Story = {
         onChange={() => {}}
         placeholder="Choose…"
         invalid
-        error="A retention period is required."
       />
     </FormField>
   ),

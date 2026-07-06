@@ -44,6 +44,9 @@ export interface MultiSelectProps {
   placeholder?: string;
   id?: string;
   name?: string;
+  "aria-label"?: string;
+  "aria-invalid"?: boolean;
+  "aria-describedby"?: string;
   disabled?: boolean;
   readOnly?: boolean;
   onFocus?: React.FocusEventHandler<HTMLInputElement>;
@@ -51,10 +54,9 @@ export interface MultiSelectProps {
   onDropdownOpen?: () => void;
   onDropdownClose?: () => void;
 
-  // SUI
+  // SUI — invalid applies error styling; FormField renders the message itself.
   inputSize?: MultiSelectSize;
   invalid?: boolean;
-  error?: React.ReactNode;
 }
 
 type PassthroughProps = Omit<
@@ -77,6 +79,8 @@ type PassthroughProps = Omit<
     | "placeholder"
     | "id"
     | "name"
+    | "aria-label"
+    | "aria-describedby"
     | "disabled"
     | "readOnly"
     | "onFocus"
@@ -96,7 +100,6 @@ type PassthroughProps = Omit<
 export function MultiSelect({
   inputSize = "md",
   invalid,
-  error,
   data,
   value,
   onChange,
@@ -114,6 +117,9 @@ export function MultiSelect({
   placeholder,
   id,
   name,
+  "aria-label": ariaLabel,
+  "aria-invalid": ariaInvalid,
+  "aria-describedby": ariaDescribedBy,
   disabled,
   readOnly,
   onFocus,
@@ -139,6 +145,8 @@ export function MultiSelect({
     placeholder,
     id,
     name,
+    "aria-label": ariaLabel,
+    "aria-describedby": ariaDescribedBy,
     disabled,
     readOnly,
     onFocus,
@@ -150,7 +158,9 @@ export function MultiSelect({
   return (
     <MantineMultiSelect
       size={inputSize}
-      error={invalid ? (error ?? " ") : error}
+      // Boolean error applies invalid styling without rendering Mantine's own
+      // message element — FormField owns the visible error text.
+      error={invalid || ariaInvalid || undefined}
       withAsterisk={false}
       classNames={{
         wrapper: "sui-mantine-wrapper",

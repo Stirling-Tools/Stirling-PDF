@@ -30,6 +30,9 @@ export interface SliderProps {
 
   // Form
   id?: string;
+  /** Accessible name for the slider thumb — the visible FormField label can't
+   * associate with Mantine's non-input thumb element, so set this too. */
+  "aria-label"?: string;
   disabled?: boolean;
 
   // SUI
@@ -46,6 +49,7 @@ type PassthroughProps = Omit<
     | "step"
     | "marks"
     | "label"
+    | "thumbLabel"
     | "id"
     | "disabled"
     | "size"
@@ -68,6 +72,7 @@ export function Slider({
   formatValue,
   showValue = true,
   id,
+  "aria-label": ariaLabel,
   disabled,
   inputSize = "md",
 }: SliderProps) {
@@ -83,6 +88,7 @@ export function Slider({
     step,
     marks,
     label,
+    thumbLabel: ariaLabel,
     id,
     disabled,
     size: inputSize,
