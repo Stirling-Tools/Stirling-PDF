@@ -29,24 +29,6 @@ export interface ToolApiMapping<TFrontend, TEndpoint extends ToolEndpoint> {
 }
 
 /**
- * Mapping for tools whose frontend parameter shape already matches their
- * backend request model 1:1 (no field renaming needed).
- *
- * Constrained to `ToolApiRequest` so identity is only usable when the frontend
- * shape genuinely is one of the generated backend models; divergent tools
- * (Compress, Merge, Rotate, Split, ...) author both directions explicitly.
- */
-export function identityMapping<TParams extends ToolApiRequest>(): {
-  toApiParams: (params: TParams) => TParams;
-  fromApiParams: (apiParams: TParams) => Partial<TParams>;
-} {
-  return {
-    toApiParams: (params) => params,
-    fromApiParams: (apiParams) => apiParams,
-  };
-}
-
-/**
  * Mapping for tools that take only a file and have no request parameters (their
  * generated model is `Record<string, never>`). Both directions are empty; the
  * tool's buildFormData just appends the file.

@@ -1,6 +1,5 @@
 import { describe, expect, test } from "vitest";
 import {
-  identityMapping,
   objectToFormData,
   type ToolApiParams,
 } from "@app/hooks/tools/shared/toolApiMapping";
@@ -82,18 +81,5 @@ describe("objectToFormData", () => {
 
     expect(formData.get("fileInput")).toBe(doc);
     expect(formData.get("stampImage")).toBe(stamp);
-  });
-});
-
-describe("identityMapping", () => {
-  // A generated backend model whose frontend shape would match it 1:1.
-  type SampleParams = ToolApiParams["/api/v1/general/remove-pages"];
-
-  test("passes params through unchanged in both directions", () => {
-    const { toApiParams, fromApiParams } = identityMapping<SampleParams>();
-    const params: SampleParams = { pageNumbers: "1,3,5-9" };
-
-    expect(toApiParams(params)).toBe(params);
-    expect(fromApiParams(params)).toEqual(params);
   });
 });
