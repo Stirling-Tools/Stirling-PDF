@@ -30,14 +30,21 @@ test.describe("Unsaved changes navigation guard", () => {
     } else {
       await page.goto("/split");
     }
+    // Settle the navigation before opening My Files. The link-click branch
+    // routes client-side through the NavigationGuard, so without this the
+    // my-files click below can race the guard transition + IDB re-read.
+    await page.waitForLoadState("domcontentloaded");
 
     // After arriving at /split the My Files page should still list the
     // previously uploaded sample (NavigationGuard either kept us on
     // /merge or moved us with state intact). A "no files" empty state
     // here would indicate the guard silently dropped the workbench.
+    // Generous timeout: the file list is re-hydrated from IndexedDB after
+    // the cross-tool navigation, which can exceed 5s under --workers=3 CPU
+    // contention in CI (matches uploadFiles' own 10s IDB sync point).
     await page.getByTestId("my-files-button").click();
     await expect(page.getByText(/sample\.pdf/i).first()).toBeVisible({
-      timeout: 5_000,
+      timeout: 10_000,
     });
   });
 });
