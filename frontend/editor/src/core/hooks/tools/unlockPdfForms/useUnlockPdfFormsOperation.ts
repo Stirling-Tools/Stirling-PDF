@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import {
   ToolType,
   useToolOperation,
+  defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
   fileOnlyMapping,
@@ -26,7 +27,7 @@ export const buildUnlockPdfFormsFormData = (
 ): FormData => objectToFormData(toApiParams(), { fileInput: file });
 
 // Static configuration object
-export const unlockPdfFormsOperationConfig = {
+export const unlockPdfFormsOperationConfig = defineSingleFileTool({
   toolType: ToolType.singleFile,
   buildFormData: buildUnlockPdfFormsFormData,
   toApiParams,
@@ -34,7 +35,7 @@ export const unlockPdfFormsOperationConfig = {
   operationType: "unlockPDFForms",
   endpoint: ENDPOINT,
   defaultParameters,
-} as const;
+});
 
 export const useUnlockPdfFormsOperation = () => {
   const { t } = useTranslation();

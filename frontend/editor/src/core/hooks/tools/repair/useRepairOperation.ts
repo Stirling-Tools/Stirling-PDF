@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import {
   ToolType,
   useToolOperation,
+  defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
   fileOnlyMapping,
@@ -25,7 +26,7 @@ export const buildRepairFormData = (
 ): FormData => objectToFormData(toApiParams(), { fileInput: file });
 
 // Static configuration object
-export const repairOperationConfig = {
+export const repairOperationConfig = defineSingleFileTool({
   toolType: ToolType.singleFile,
   buildFormData: buildRepairFormData,
   toApiParams,
@@ -33,7 +34,7 @@ export const repairOperationConfig = {
   operationType: "repair",
   endpoint: ENDPOINT,
   defaultParameters,
-} as const;
+});
 
 export const useRepairOperation = () => {
   const { t } = useTranslation();

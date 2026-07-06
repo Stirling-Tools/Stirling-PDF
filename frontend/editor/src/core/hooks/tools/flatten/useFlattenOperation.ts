@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import {
   ToolType,
   useToolOperation,
+  defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
   objectToFormData,
@@ -59,16 +60,15 @@ export const buildFlattenFormData = (
   objectToFormData(flattenToApiParams(parameters), { fileInput: file });
 
 // Static configuration object
-export const flattenOperationConfig = {
+export const flattenOperationConfig = defineSingleFileTool({
   toolType: ToolType.singleFile,
   buildFormData: buildFlattenFormData,
   toApiParams: flattenToApiParams,
   fromApiParams: flattenFromApiParams,
   operationType: "flatten",
   endpoint: ENDPOINT,
-  multiFileEndpoint: false,
   defaultParameters,
-} as const;
+});
 
 export const useFlattenOperation = () => {
   const { t } = useTranslation();

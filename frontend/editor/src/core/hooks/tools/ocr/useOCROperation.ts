@@ -8,6 +8,7 @@ import {
   useToolOperation,
   ToolOperationConfig,
   ToolType,
+  defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
   objectToFormData,
@@ -151,7 +152,7 @@ export const ocrResponseHandler = async (
 };
 
 // Static configuration object (without t function dependencies)
-export const ocrOperationConfig = {
+export const ocrOperationConfig = defineSingleFileTool({
   toolType: ToolType.singleFile,
   buildFormData: buildOCRFormData,
   toApiParams: ocrToApiParams,
@@ -159,7 +160,7 @@ export const ocrOperationConfig = {
   operationType: "ocr",
   endpoint: ENDPOINT,
   defaultParameters,
-} as const;
+});
 
 export const useOCROperation = () => {
   const { t } = useTranslation();

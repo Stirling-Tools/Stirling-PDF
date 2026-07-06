@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import {
   ToolType,
   useToolOperation,
+  defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
   objectToFormData,
@@ -71,7 +72,7 @@ export const buildChangePermissionsFormData = (
   });
 
 // Static configuration object
-export const changePermissionsOperationConfig = {
+export const changePermissionsOperationConfig = defineSingleFileTool({
   toolType: ToolType.singleFile,
   buildFormData: buildChangePermissionsFormData,
   toApiParams: changePermissionsToApiParams,
@@ -79,7 +80,7 @@ export const changePermissionsOperationConfig = {
   operationType: "changePermissions",
   endpoint: ENDPOINT, // Change Permissions is a fake endpoint for the Add Password tool
   defaultParameters,
-} as const;
+});
 
 export const useChangePermissionsOperation = () => {
   const { t } = useTranslation();

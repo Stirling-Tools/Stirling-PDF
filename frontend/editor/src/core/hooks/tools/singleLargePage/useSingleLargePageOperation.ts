@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import {
   ToolType,
   useToolOperation,
+  defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
   fileOnlyMapping,
@@ -26,7 +27,7 @@ export const buildSingleLargePageFormData = (
 ): FormData => objectToFormData(toApiParams(), { fileInput: file });
 
 // Static configuration object
-export const singleLargePageOperationConfig = {
+export const singleLargePageOperationConfig = defineSingleFileTool({
   toolType: ToolType.singleFile,
   buildFormData: buildSingleLargePageFormData,
   toApiParams,
@@ -34,7 +35,7 @@ export const singleLargePageOperationConfig = {
   operationType: "pdfToSinglePage",
   endpoint: ENDPOINT,
   defaultParameters,
-} as const;
+});
 
 export const useSingleLargePageOperation = () => {
   const { t } = useTranslation();

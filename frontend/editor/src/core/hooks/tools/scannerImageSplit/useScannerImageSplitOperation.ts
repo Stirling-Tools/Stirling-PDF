@@ -4,6 +4,7 @@ import {
   ToolType,
   useToolOperation,
   ToolOperationConfig,
+  defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
   objectToFormData,
@@ -54,7 +55,7 @@ export const buildScannerImageSplitFormData = (
   });
 
 // Static configuration object
-export const scannerImageSplitOperationConfig = {
+export const scannerImageSplitOperationConfig = defineSingleFileTool({
   toolType: ToolType.singleFile,
   buildFormData: buildScannerImageSplitFormData,
   toApiParams: scannerImageSplitToApiParams,
@@ -62,7 +63,7 @@ export const scannerImageSplitOperationConfig = {
   operationType: "scannerImageSplit",
   endpoint: ENDPOINT,
   defaultParameters,
-} as const;
+});
 
 export const useScannerImageSplitOperation = () => {
   const { t } = useTranslation();

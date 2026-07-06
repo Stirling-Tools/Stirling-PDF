@@ -3,6 +3,7 @@ import {
   useToolOperation,
   ToolOperationConfig,
   ToolType,
+  defineMultiFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
   objectToFormData,
@@ -56,16 +57,17 @@ const buildFormData = (
 };
 
 // Operation configuration for automation
-export const mergeOperationConfig: ToolOperationConfig<MergeParameters> = {
-  toolType: ToolType.multiFile,
-  buildFormData,
-  toApiParams: mergeToApiParams,
-  fromApiParams: mergeFromApiParams,
-  operationType: "merge",
-  endpoint: ENDPOINT,
-  filePrefix: "merged_",
-  defaultParameters,
-};
+export const mergeOperationConfig: ToolOperationConfig<MergeParameters> =
+  defineMultiFileTool({
+    toolType: ToolType.multiFile,
+    buildFormData,
+    toApiParams: mergeToApiParams,
+    fromApiParams: mergeFromApiParams,
+    operationType: "merge",
+    endpoint: ENDPOINT,
+    filePrefix: "merged_",
+    defaultParameters,
+  });
 
 export const useMergeOperation = () => {
   const { t } = useTranslation();

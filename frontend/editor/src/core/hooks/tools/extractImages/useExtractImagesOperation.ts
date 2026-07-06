@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
   ToolType,
+  defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
   objectToFormData,
@@ -41,7 +42,7 @@ export const buildExtractImagesFormData = (
   objectToFormData(extractImagesToApiParams(parameters), { fileInput: file });
 
 // Static configuration object (without response handler - will be added in hook)
-export const extractImagesOperationConfig = {
+export const extractImagesOperationConfig = defineSingleFileTool({
   toolType: ToolType.singleFile,
   buildFormData: buildExtractImagesFormData,
   toApiParams: extractImagesToApiParams,
@@ -49,7 +50,7 @@ export const extractImagesOperationConfig = {
   operationType: "extractImages",
   endpoint: ENDPOINT,
   defaultParameters,
-} as const;
+});
 
 export const useExtractImagesOperation = () => {
   const { t } = useTranslation();

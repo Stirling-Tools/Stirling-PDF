@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
   ToolType,
+  defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
   objectToFormData,
@@ -59,7 +60,7 @@ export const buildCropFormData = (
   objectToFormData(cropToApiParams(parameters), { fileInput: file });
 
 // Static configuration object
-export const cropOperationConfig = {
+export const cropOperationConfig = defineSingleFileTool({
   toolType: ToolType.singleFile,
   buildFormData: buildCropFormData,
   toApiParams: cropToApiParams,
@@ -67,7 +68,7 @@ export const cropOperationConfig = {
   operationType: "crop",
   endpoint: ENDPOINT,
   defaultParameters,
-} as const;
+});
 
 export const useCropOperation = () => {
   const { t } = useTranslation();

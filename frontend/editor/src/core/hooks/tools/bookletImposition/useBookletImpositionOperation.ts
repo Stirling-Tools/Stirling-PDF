@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
   ToolType,
+  defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
   objectToFormData,
@@ -59,7 +60,7 @@ export const buildBookletImpositionFormData = (
   });
 
 // Static configuration object
-export const bookletImpositionOperationConfig = {
+export const bookletImpositionOperationConfig = defineSingleFileTool({
   toolType: ToolType.singleFile,
   buildFormData: buildBookletImpositionFormData,
   toApiParams: bookletImpositionToApiParams,
@@ -67,7 +68,7 @@ export const bookletImpositionOperationConfig = {
   operationType: "bookletImposition",
   endpoint: ENDPOINT,
   defaultParameters,
-} as const;
+});
 
 export const useBookletImpositionOperation = () => {
   const { t } = useTranslation();

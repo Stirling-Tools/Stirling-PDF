@@ -4,6 +4,7 @@ import {
   ToolType,
   useToolOperation,
   ToolOperationConfig,
+  defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
   objectToFormData,
@@ -33,7 +34,8 @@ const SPLIT_ENDPOINTS = {
   [SPLIT_METHODS.BY_POSTER]: "/api/v1/general/split-for-poster-print",
 } as const satisfies Record<SplitMethod, ToolEndpoint>;
 
-type SplitApiParams = ToolApiParams[(typeof SPLIT_ENDPOINTS)[SplitMethod]];
+type SplitEndpoint = (typeof SPLIT_ENDPOINTS)[SplitMethod];
+type SplitApiParams = ToolApiParams[SplitEndpoint];
 type SectionsApiParams =
   ToolApiParams[(typeof SPLIT_ENDPOINTS)[typeof SPLIT_METHODS.BY_SECTIONS]];
 type PosterApiParams =
@@ -165,12 +167,12 @@ export const buildSplitFormData = (
 ): FormData =>
   objectToFormData(splitToApiParams(parameters), { fileInput: file });
 
-export const getSplitEndpoint = (parameters: SplitParameters): ToolEndpoint =>
+export const getSplitEndpoint = (parameters: SplitParameters): SplitEndpoint =>
   // Default to BY_PAGES when no method is selected yet.
   SPLIT_ENDPOINTS[parameters.method ?? SPLIT_METHODS.BY_PAGES];
 
 // Static configuration object
-export const splitOperationConfig = {
+export const splitOperationConfig = defineSingleFileTool({
   toolType: ToolType.singleFile,
   buildFormData: buildSplitFormData,
   toApiParams: splitToApiParams,
@@ -178,7 +180,7 @@ export const splitOperationConfig = {
   operationType: "split",
   endpoint: getSplitEndpoint,
   defaultParameters,
-} as const;
+});
 
 export const useSplitOperation = () => {
   const { t } = useTranslation();

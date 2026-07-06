@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   ToolType,
   useToolOperation,
-  ToolOperationConfig,
+  defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
   objectToFormData,
@@ -41,7 +41,7 @@ export const buildRemoveBlanksFormData = (
 ): FormData =>
   objectToFormData(removeBlanksToApiParams(parameters), { fileInput: file });
 
-export const removeBlanksOperationConfig = {
+export const removeBlanksOperationConfig = defineSingleFileTool({
   toolType: ToolType.singleFile,
   buildFormData: buildRemoveBlanksFormData,
   toApiParams: removeBlanksToApiParams,
@@ -49,7 +49,7 @@ export const removeBlanksOperationConfig = {
   operationType: "removeBlanks",
   endpoint: ENDPOINT,
   defaultParameters,
-} as const satisfies ToolOperationConfig<RemoveBlanksParameters>;
+});
 
 export const useRemoveBlanksOperation = () => {
   const { t } = useTranslation();
