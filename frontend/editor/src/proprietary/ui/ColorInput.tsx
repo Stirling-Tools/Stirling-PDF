@@ -18,34 +18,91 @@ const SUI_INPUT_VARS = {
 
 export type ColorInputSize = "sm" | "md";
 
-export interface ColorInputProps
-  extends Omit<MantineColorInputProps, "size"> {
+export interface ColorInputProps {
+  // Value
+  value?: string;
+  onChange?: (value: string) => void;
+  defaultValue?: string;
+
+  // Behaviour
+  format?: "hex" | "hexa" | "rgb" | "rgba" | "hsl" | "hsla";
+  swatches?: string[];
+  swatchesPerRow?: number;
+  withPicker?: boolean;
+
+  // Popover escape hatch — only for zIndex / offset overrides in modals
+  popoverProps?: MantineColorInputProps["popoverProps"];
+
+  // Form
+  placeholder?: string;
+  id?: string;
+  name?: string;
+  disabled?: boolean;
+  readOnly?: boolean;
+  onFocus?: React.FocusEventHandler<HTMLInputElement>;
+  onBlur?: React.FocusEventHandler<HTMLInputElement>;
+
+  // SUI
   inputSize?: ColorInputSize;
   invalid?: boolean;
+  error?: React.ReactNode;
 }
 
+type PassthroughProps = Omit<
+  Pick<
+    MantineColorInputProps,
+    | "value" | "onChange" | "defaultValue"
+    | "format" | "swatches" | "swatchesPerRow" | "withPicker"
+    | "popoverProps"
+    | "placeholder" | "id" | "name" | "disabled" | "readOnly"
+    | "onFocus" | "onBlur"
+  >,
+  never
+>;
+
 /**
- * SUI-styled color input (with swatch preview + picker popover) backed by Mantine.
- * Use with <FormField> for labels/errors.
+ * SUI colour picker input with swatch preview and popover picker. Use with
+ * <FormField> for labels and error display. Appearance is locked to SUI tokens.
+ *
+ * Defaults to hex format. Pass `popoverProps={{ withinPortal: true, zIndex: Z }}` when
+ * rendering inside a modal.
  */
 export function ColorInput({
   inputSize = "md",
   invalid,
   error,
-  classNames: _classNames,
-  styles: _styles,
   format = "hex",
-  ...props
+  value,
+  onChange,
+  defaultValue,
+  swatches,
+  swatchesPerRow,
+  withPicker,
+  popoverProps,
+  placeholder,
+  id,
+  name,
+  disabled,
+  readOnly,
+  onFocus,
+  onBlur,
 }: ColorInputProps) {
+  const passthroughProps: PassthroughProps = {
+    value, onChange, defaultValue,
+    format, swatches, swatchesPerRow, withPicker,
+    popoverProps,
+    placeholder, id, name, disabled, readOnly,
+    onFocus, onBlur,
+  };
+
   return (
     <MantineColorInput
       size={inputSize}
       error={invalid ? (error ?? " ") : error}
       withAsterisk={false}
-      format={format}
       classNames={{ wrapper: "sui-mantine-wrapper" }}
       styles={{ wrapper: SUI_INPUT_VARS }}
-      {...props}
+      {...passthroughProps}
     />
   );
 }

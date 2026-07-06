@@ -2,6 +2,7 @@ import type React from "react";
 import {
   MultiSelect as MantineMultiSelect,
   type MultiSelectProps as MantineMultiSelectProps,
+  type ComboboxData,
 } from "@mantine/core";
 import "@app/ui/MantineForms.css";
 
@@ -18,24 +19,102 @@ const SUI_INPUT_VARS = {
 
 export type MultiSelectSize = "sm" | "md";
 
-export interface MultiSelectProps
-  extends Omit<MantineMultiSelectProps, "size"> {
+export interface MultiSelectProps {
+  // Data
+  data: ComboboxData;
+  value?: string[];
+  onChange?: (value: string[]) => void;
+  defaultValue?: string[];
+
+  // Behaviour
+  searchable?: boolean;
+  clearable?: boolean;
+  limit?: number;
+  maxValues?: number;
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
+  nothingFoundMessage?: React.ReactNode;
+  maxDropdownHeight?: number | string;
+  filter?: MantineMultiSelectProps["filter"];
+
+  // Dropdown escape hatch — only for zIndex / offset overrides in modals
+  comboboxProps?: MantineMultiSelectProps["comboboxProps"];
+
+  // Form
+  placeholder?: string;
+  id?: string;
+  name?: string;
+  disabled?: boolean;
+  readOnly?: boolean;
+  onFocus?: React.FocusEventHandler<HTMLInputElement>;
+  onBlur?: React.FocusEventHandler<HTMLInputElement>;
+  onDropdownOpen?: () => void;
+  onDropdownClose?: () => void;
+
+  // SUI
   inputSize?: MultiSelectSize;
   invalid?: boolean;
+  error?: React.ReactNode;
 }
 
+type PassthroughProps = Omit<
+  Pick<
+    MantineMultiSelectProps,
+    | "data" | "value" | "onChange" | "defaultValue"
+    | "searchable" | "clearable" | "limit" | "maxValues"
+    | "searchValue" | "onSearchChange"
+    | "nothingFoundMessage" | "maxDropdownHeight" | "filter"
+    | "comboboxProps"
+    | "placeholder" | "id" | "name" | "disabled" | "readOnly"
+    | "onFocus" | "onBlur" | "onDropdownOpen" | "onDropdownClose"
+  >,
+  never
+>;
+
 /**
- * SUI-styled multi-select backed by Mantine. Use with <FormField> for labels/errors.
- * Accepts `inputSize` to match other SUI form elements.
+ * SUI multi-select with pill display and optional search. Use with <FormField>
+ * for labels and error display. Appearance is locked to SUI tokens.
+ *
+ * Pass `comboboxProps={{ zIndex: Z_INDEX_MODAL }}` when rendering inside a modal.
  */
 export function MultiSelect({
   inputSize = "md",
   invalid,
   error,
-  classNames: _classNames,
-  styles: _styles,
-  ...props
+  data,
+  value,
+  onChange,
+  defaultValue,
+  searchable,
+  clearable,
+  limit,
+  maxValues,
+  searchValue,
+  onSearchChange,
+  nothingFoundMessage,
+  maxDropdownHeight,
+  filter,
+  comboboxProps,
+  placeholder,
+  id,
+  name,
+  disabled,
+  readOnly,
+  onFocus,
+  onBlur,
+  onDropdownOpen,
+  onDropdownClose,
 }: MultiSelectProps) {
+  const passthroughProps: PassthroughProps = {
+    data, value, onChange, defaultValue,
+    searchable, clearable, limit, maxValues,
+    searchValue, onSearchChange,
+    nothingFoundMessage, maxDropdownHeight, filter,
+    comboboxProps,
+    placeholder, id, name, disabled, readOnly,
+    onFocus, onBlur, onDropdownOpen, onDropdownClose,
+  };
+
   return (
     <MantineMultiSelect
       size={inputSize}
@@ -47,7 +126,7 @@ export function MultiSelect({
         pillsList: "sui-mantine-pills-list",
       }}
       styles={{ wrapper: SUI_INPUT_VARS }}
-      {...props}
+      {...passthroughProps}
     />
   );
 }

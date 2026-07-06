@@ -18,35 +18,116 @@ const SUI_INPUT_VARS = {
 
 export type NumberInputSize = "sm" | "md";
 
-export interface NumberInputProps
-  extends Omit<MantineNumberInputProps, "size"> {
+export interface NumberInputProps {
+  // Value
+  value?: number | string;
+  onChange?: (value: number | string) => void;
+  defaultValue?: number | string;
+
+  // Constraints
+  min?: number;
+  max?: number;
+  step?: number;
+  decimalScale?: number;
+  fixedDecimalScale?: boolean;
+  allowNegative?: boolean;
+  allowDecimal?: boolean;
+  clampBehavior?: "strict" | "blur" | "none";
+
+  // Display
+  placeholder?: string;
+  suffix?: string;
+  prefix?: string;
+  hideControls?: boolean;
+
+  // Right section — escape hatch for inline unit labels
+  rightSection?: React.ReactNode;
+  rightSectionWidth?: React.CSSProperties["width"];
+
+  // Form
+  id?: string;
+  name?: string;
+  disabled?: boolean;
+  readOnly?: boolean;
+  autoFocus?: boolean;
+  onFocus?: React.FocusEventHandler<HTMLInputElement>;
+  onBlur?: React.FocusEventHandler<HTMLInputElement>;
+  onKeyDown?: React.KeyboardEventHandler<HTMLInputElement>;
+
+  // SUI
   inputSize?: NumberInputSize;
   invalid?: boolean;
+  error?: React.ReactNode;
 }
 
+// Narrows MantineNumberInputProps to only what our interface exposes so the
+// spread below stays type-safe without manually listing every prop.
+type PassthroughProps = Omit<
+  Pick<
+    MantineNumberInputProps,
+    | "value" | "onChange" | "defaultValue"
+    | "min" | "max" | "step"
+    | "decimalScale" | "fixedDecimalScale" | "allowNegative" | "allowDecimal" | "clampBehavior"
+    | "placeholder" | "suffix" | "prefix" | "hideControls"
+    | "rightSection" | "rightSectionWidth"
+    | "id" | "name" | "disabled" | "readOnly" | "autoFocus"
+    | "onFocus" | "onBlur" | "onKeyDown"
+  >,
+  never
+>;
+
 /**
- * SUI-styled number input (with increment/decrement controls) backed by Mantine.
- * Use with <FormField> for labels/errors.
+ * SUI number input with increment/decrement controls. Use with <FormField>
+ * for labels and error display. Appearance is locked to SUI tokens.
  */
 export function NumberInput({
   inputSize = "md",
   invalid,
   error,
-  classNames: _classNames,
-  styles: _styles,
-  ...props
+  value,
+  onChange,
+  defaultValue,
+  min,
+  max,
+  step,
+  decimalScale,
+  fixedDecimalScale,
+  allowNegative,
+  allowDecimal,
+  clampBehavior,
+  placeholder,
+  suffix,
+  prefix,
+  hideControls,
+  rightSection,
+  rightSectionWidth,
+  id,
+  name,
+  disabled,
+  readOnly,
+  autoFocus,
+  onFocus,
+  onBlur,
+  onKeyDown,
 }: NumberInputProps) {
+  const passthroughProps: PassthroughProps = {
+    value, onChange, defaultValue,
+    min, max, step,
+    decimalScale, fixedDecimalScale, allowNegative, allowDecimal, clampBehavior,
+    placeholder, suffix, prefix, hideControls,
+    rightSection, rightSectionWidth,
+    id, name, disabled, readOnly, autoFocus,
+    onFocus, onBlur, onKeyDown,
+  };
+
   return (
     <MantineNumberInput
       size={inputSize}
       error={invalid ? (error ?? " ") : error}
       withAsterisk={false}
-      classNames={{
-        wrapper: "sui-mantine-wrapper",
-        control: "sui-mantine-control",
-      }}
+      classNames={{ wrapper: "sui-mantine-wrapper", control: "sui-mantine-control" }}
       styles={{ wrapper: SUI_INPUT_VARS }}
-      {...props}
+      {...passthroughProps}
     />
   );
 }
