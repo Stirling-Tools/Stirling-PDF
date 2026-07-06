@@ -102,30 +102,16 @@ tasks:
     vars:
       MATRIXNAME: '{{index .MATCH 0}}'
     cmds:
-      - task: '{{.MATRIXNAME}}:matrix'
+      - for:
+          matrix:
+            FLAVOR: ["proprietary", "core", "saas"]
+            LOGIN: ["true", "false"]
+            SEC: ["true", "false"]
+        task: '{{.MATRIXNAME}}:matrix'
         vars:
-          STIRLING_FLAVOR: "proprietary"
-          SECURITY_ENABLELOGIN: "true"
-      - task: '{{.MATRIXNAME}}:matrix'
-        vars:
-          STIRLING_FLAVOR: "proprietary"
-          SECURITY_ENABLELOGIN: "false"
-      - task: '{{.MATRIXNAME}}:matrix'
-        vars:
-          STIRLING_FLAVOR: "core"
-          SECURITY_ENABLELOGIN: "true"
-      - task: '{{.MATRIXNAME}}:matrix'
-        vars:
-          STIRLING_FLAVOR: "core"
-          SECURITY_ENABLELOGIN: "false"
-      - task: '{{.MATRIXNAME}}:matrix'
-        vars:
-          STIRLING_FLAVOR: "saas"
-          SECURITY_ENABLELOGIN: "true"
-      - task: '{{.MATRIXNAME}}:matrix'
-        vars:
-          STIRLING_FLAVOR: "saas"
-          SECURITY_ENABLELOGIN: "false"
+          STIRLING_FLAVOR: '{{.ITEM.FLAVOR}}'
+          SECURITY_ENABLELOGIN: '{{.ITEM.LOGIN}}'
+          DOCKER_ENABLE_SECURITY: '{{.ITEM.SEC}}'
 
   test:
     desc: "Run the backend test matrix"
@@ -137,6 +123,7 @@ tasks:
     env:
       SECURITY_ENABLELOGIN: '{{.SECURITY_ENABLELOGIN}}'
       STIRLING_FLAVOR: '{{.STIRLING_FLAVOR}}'
+      DOCKER_ENABLE_SECURITY: '{{.DOCKER_ENABLE_SECURITY}}'
     desc: "Run backend tests for one configuration"
     # Cover the backend with the main build/property combinations that change
     # Gradle behavior in this repo.
@@ -157,6 +144,7 @@ tasks:
     env:
       SECURITY_ENABLELOGIN: '{{.SECURITY_ENABLELOGIN}}'
       STIRLING_FLAVOR: '{{.STIRLING_FLAVOR}}'
+      DOCKER_ENABLE_SECURITY: '{{.DOCKER_ENABLE_SECURITY}}'
     cmds:
       - '{{.FORMAT}}'
       - '{{.FORMAT}} -PbuildWithFrontend=true'
@@ -173,6 +161,7 @@ tasks:
     env:
       SECURITY_ENABLELOGIN: '{{.SECURITY_ENABLELOGIN}}'
       STIRLING_FLAVOR: '{{.STIRLING_FLAVOR}}'
+      DOCKER_ENABLE_SECURITY: '{{.DOCKER_ENABLE_SECURITY}}'
     # Mirror the test matrix so formatting checks use the same backend
     # configuration variants.
     cmds:
