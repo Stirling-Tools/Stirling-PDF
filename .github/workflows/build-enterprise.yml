@@ -165,6 +165,8 @@ jobs:
           wait_for_backend
       - name: Run enterprise OAuth Playwright tests
         id: oauth-tests
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results-oauth.json
         run: task e2e:enterprise -- --grep "OAuth"
       - name: Stop backend + tear down OAuth Keycloak
         if: always()
@@ -238,6 +240,8 @@ jobs:
           wait_for_backend
       - name: Run enterprise SAML Playwright tests
         id: saml-tests
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results-saml.json
         run: task e2e:enterprise -- --grep "SAML"
       - name: Stop backend + tear down SAML Keycloak
         if: always()
@@ -268,6 +272,8 @@ jobs:
           wait_for_backend
       - name: Run enterprise feature Playwright tests
         id: feature-tests
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results-feature.json
         run: task e2e:enterprise -- --grep "Enterprise license"
       - name: Print backend log on failure
         if: failure()
@@ -280,6 +286,19 @@ jobs:
         run: |
           source /tmp/helpers.sh
           stop_backend
+      - name: Flag flaky tests
+        # Runs regardless of the test outcomes: a flaky test (passed on retry)
+        # leaves its step green, so this is the only place it surfaces. Merges
+        # all three phase reports (some may be absent if an earlier phase hard-
+        # failed and skipped the rest). Emits ::warning:: annotations + a job
+        # summary; never fails the job.
+        if: always()
+        working-directory: frontend
+        run: >
+          npx tsx editor/scripts/report-flaky-tests.mts
+          "${{ github.workspace }}/frontend/playwright-report/results-oauth.json"
+          "${{ github.workspace }}/frontend/playwright-report/results-saml.json"
+          "${{ github.workspace }}/frontend/playwright-report/results-feature.json"
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
