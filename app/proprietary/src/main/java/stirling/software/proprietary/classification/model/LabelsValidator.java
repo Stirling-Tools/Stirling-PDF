@@ -3,6 +3,7 @@ package stirling.software.proprietary.classification.model;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Structural validation for a user- or admin-supplied label set, run before it is stored so a
@@ -19,6 +20,12 @@ public final class LabelsValidator {
     static final int MAX_LABELS = 500;
     static final int MAX_TEXT_LENGTH = 128;
 
+    // Icon is a Material Symbols key (lowercase, digits, hyphens). Enforce the SHAPE server-side —
+    // the exact allowlist lives in the frontend — so a client bypassing the UI can't store
+    // arbitrary
+    // text that would render as garbage (or worse) in every teammate's sidebar.
+    private static final Pattern ICON_KEY = Pattern.compile("^[a-z0-9-]+$");
+
     /**
      * @throws IllegalArgumentException with a human-readable message when the label set is invalid.
      */
@@ -32,9 +39,14 @@ public final class LabelsValidator {
         Set<String> names = new HashSet<>();
         for (ClassificationLabel label : labels.labels()) {
             requireText(label.name(), "Label name");
-            if (label.icon() != null && label.icon().length() > MAX_TEXT_LENGTH) {
-                throw new IllegalArgumentException(
-                        "Label icon is too long (max " + MAX_TEXT_LENGTH + " characters)");
+            if (label.icon() != null && !label.icon().isEmpty()) {
+                if (label.icon().length() > MAX_TEXT_LENGTH) {
+                    throw new IllegalArgumentException(
+                            "Label icon is too long (max " + MAX_TEXT_LENGTH + " characters)");
+                }
+                if (!ICON_KEY.matcher(label.icon()).matches()) {
+                    throw new IllegalArgumentException("Invalid label icon: " + label.icon());
+                }
             }
             if (!names.add(label.name().trim().toLowerCase(Locale.ROOT))) {
                 throw new IllegalArgumentException("Duplicate label name: " + label.name());

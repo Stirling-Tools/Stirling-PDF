@@ -1,19 +1,19 @@
-/**
- * Flat editor for a classification-label list: an add box on top, then the
- * labels as a wrapping grid of chips — each with an icon picker and a remove
- * button. Fully controlled (the caller owns the list); duplicate names are
- * rejected case-insensitively, optionally also against `reservedNames`
- * (e.g. the team set, when editing personal labels).
- */
+// Editor for a classification-label list: an add box on top, then the labels as chips (icon picker + remove), duplicate names rejected case-insensitively (optionally also against `reservedNames`). In `grouped` mode the chips are organised under collapsible parent categories (the device-local sidebar categories), matching the sidebar's category picker; labels in no category fall under "Ungrouped". Grouping is presentational — editing still mutates the flat list.
 
-import { useState } from "react";
+import { useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import { Button } from "@shared/components/Button";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
 import { LabelIconPicker } from "@app/components/policies/LabelIconPicker";
 import { DEFAULT_LABEL_ICON } from "@app/data/labelIcons";
+import {
+  getSidebarCategories,
+  subscribeSidebarCategories,
+} from "@app/services/fileSidebarCategories";
 import type { ClassificationLabel } from "@app/data/classificationLabels";
 
 const MAX_TEXT_LENGTH = 128;
@@ -26,6 +26,8 @@ interface LabelsEditorProps {
   reservedNames?: string[];
   addPlaceholder?: string;
   emptyText?: string;
+  /** Render chips under collapsible parent categories (like the sidebar picker). */
+  grouped?: boolean;
 }
 
 export function LabelsEditor({
@@ -35,6 +37,7 @@ export function LabelsEditor({
   reservedNames,
   addPlaceholder,
   emptyText,
+  grouped = false,
 }: LabelsEditorProps) {
   const { t } = useTranslation();
   const [pending, setPending] = useState("");
@@ -48,9 +51,7 @@ export function LabelsEditor({
         t(
           "policies.labels.tooLong",
           "Labels can be at most {{max}} characters.",
-          {
-            max: MAX_TEXT_LENGTH,
-          },
+          { max: MAX_TEXT_LENGTH },
         ),
       );
       return;
@@ -70,13 +71,53 @@ export function LabelsEditor({
     onChange([...value, { name }]);
   };
 
-  const removeAt = (index: number) =>
-    onChange(value.filter((_, i) => i !== index));
+  const removeByKey = (key: string) =>
+    onChange(value.filter((label) => label.name.toLowerCase() !== key));
 
-  const setIconAt = (index: number, icon: string) =>
+  const setIconByKey = (key: string, icon: string) =>
     onChange(
-      value.map((label, i) => (i === index ? { ...label, icon } : label)),
+      value.map((label) =>
+        label.name.toLowerCase() === key ? { ...label, icon } : label,
+      ),
     );
+
+  const renderChip = (label: ClassificationLabel) => {
+    const key = label.name.toLowerCase();
+    return (
+      <span className="labels-chip" role="listitem" key={key}>
+        {readOnly ? (
+          <span className="labels-chip-icon">
+            <LocalIcon icon={label.icon || DEFAULT_LABEL_ICON} width="1rem" />
+          </span>
+        ) : (
+          <LabelIconPicker
+            value={label.icon}
+            onChange={(icon) => setIconByKey(key, icon)}
+            ariaLabel={t(
+              "policies.labels.iconAria",
+              "Choose an icon for {{name}}",
+              { name: label.name },
+            )}
+          />
+        )}
+        <span className="labels-chip-name" title={label.name}>
+          {label.name}
+        </span>
+        {!readOnly && (
+          <button
+            type="button"
+            className="labels-chip-remove"
+            onClick={() => removeByKey(key)}
+            aria-label={t("policies.labels.removeAria", "Remove {{name}}", {
+              name: label.name,
+            })}
+          >
+            <CloseIcon sx={{ fontSize: "0.85rem" }} />
+          </button>
+        )}
+      </span>
+    );
+  };
 
   return (
     <div className="labels-editor">
@@ -118,50 +159,97 @@ export function LabelsEditor({
         <p className="labels-empty">
           {emptyText ?? t("policies.labels.empty", "No labels yet.")}
         </p>
+      ) : grouped ? (
+        <GroupedLabels value={value} renderChip={renderChip} />
       ) : (
         <div className="labels-chips" role="list">
-          {value.map((label, index) => (
-            <span className="labels-chip" role="listitem" key={label.name}>
-              {readOnly ? (
-                <span className="labels-chip-icon">
-                  <LocalIcon
-                    icon={label.icon || DEFAULT_LABEL_ICON}
-                    width="1rem"
-                  />
-                </span>
-              ) : (
-                <LabelIconPicker
-                  value={label.icon}
-                  onChange={(icon) => setIconAt(index, icon)}
-                  ariaLabel={t(
-                    "policies.labels.iconAria",
-                    "Choose an icon for {{name}}",
-                    { name: label.name },
-                  )}
-                />
-              )}
-              <span className="labels-chip-name" title={label.name}>
-                {label.name}
-              </span>
-              {!readOnly && (
-                <button
-                  type="button"
-                  className="labels-chip-remove"
-                  onClick={() => removeAt(index)}
-                  aria-label={t(
-                    "policies.labels.removeAria",
-                    "Remove {{name}}",
-                    {
-                      name: label.name,
-                    },
-                  )}
-                >
-                  <CloseIcon sx={{ fontSize: "0.85rem" }} />
-                </button>
-              )}
-            </span>
-          ))}
+          {value.map(renderChip)}
         </div>
+      )}
+    </div>
+  );
+}
+
+interface GroupedLabelsProps {
+  value: ClassificationLabel[];
+  renderChip: (label: ClassificationLabel) => ReactNode;
+}
+
+/** Chips laid out under collapsible parent categories (device-local structure). */
+function GroupedLabels({ value, renderChip }: GroupedLabelsProps) {
+  const { t } = useTranslation();
+  const categories = useSyncExternalStore(
+    subscribeSidebarCategories,
+    getSidebarCategories,
+  );
+
+  // Category sections that actually contain labels from `value`, plus the leftovers.
+  const { sections, ungrouped } = useMemo(() => {
+    const byKey = new Map(value.map((l) => [l.name.toLowerCase(), l]));
+    const claimed = new Set<string>();
+    const sections = categories
+      .map((category) => {
+        const members = category.labelKeys
+          .map((key) => byKey.get(key))
+          .filter((l): l is ClassificationLabel => !!l);
+        members.forEach((m) => claimed.add(m.name.toLowerCase()));
+        return { category, members };
+      })
+      .filter((s) => s.members.length > 0);
+    const ungrouped = value.filter((l) => !claimed.has(l.name.toLowerCase()));
+    return { sections, ungrouped };
+  }, [value, categories]);
+
+  // Only the first section starts expanded — a scannable overview.
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(
+    () => new Set(sections.length > 0 ? [sections[0].category.id] : []),
+  );
+  const toggle = (id: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  return (
+    <div className="labels-groups">
+      {sections.map(({ category, members }) => {
+        const isOpen = expanded.has(category.id);
+        return (
+          <section key={category.id} className="labels-group">
+            <button
+              type="button"
+              className="labels-group-header"
+              aria-expanded={isOpen}
+              onClick={() => toggle(category.id)}
+            >
+              {isOpen ? (
+                <KeyboardArrowDownIcon sx={{ fontSize: "1.1rem" }} />
+              ) : (
+                <KeyboardArrowRightIcon sx={{ fontSize: "1.1rem" }} />
+              )}
+              <LocalIcon icon={category.icon} width="1.05rem" />
+              <span className="labels-group-name">{category.name}</span>
+              <span className="labels-group-count">{members.length}</span>
+            </button>
+            {isOpen && (
+              <div className="labels-chips" role="list">
+                {members.map(renderChip)}
+              </div>
+            )}
+          </section>
+        );
+      })}
+      {ungrouped.length > 0 && (
+        <section className="labels-group">
+          <p className="labels-group-ungrouped">
+            {t("policies.labels.ungrouped", "Ungrouped")}
+          </p>
+          <div className="labels-chips" role="list">
+            {ungrouped.map(renderChip)}
+          </div>
+        </section>
       )}
     </div>
   );

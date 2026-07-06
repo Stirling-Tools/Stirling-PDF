@@ -167,6 +167,7 @@ export function LabelsEditorModal({
           value={draft}
           onChange={onDraftChange}
           readOnly={readOnly}
+          grouped
         />
       </div>
     </Modal>

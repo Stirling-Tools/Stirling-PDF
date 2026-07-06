@@ -307,12 +307,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         );
 
       const allStubs = [...stubs, ...pendingStubs];
-      // A version swap (policy delivery / tool output) briefly leaves BOTH the
-      // old leaf (still flagged leaf in IDB) and its replacement (workbench,
-      // not yet flushed) in the merged list. Two stubs for one document break
-      // the row list — rows key by lineage, and colliding keys corrupt React's
-      // reconciliation (phantom extra rows, rows surviving a group collapse).
-      // A superseded stub is exactly one another stub names as its parent.
+      // A version swap briefly lists both the old leaf (IDB) and its replacement (workbench); two stubs for one lineage collide on the row key and corrupt React reconciliation, so drop any stub another names as its parent.
       const superseded = new Set(
         allStubs.map((s) => s.parentFileId as string | undefined),
       );
@@ -432,15 +427,32 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       }
     }, [pendingViewFileId, state.files.ids, setActiveFileId, navActions]);
 
-    const filteredFileStubs = searchQuery.trim()
-      ? allFileStubs.filter((stub) =>
-          stub.name.toLowerCase().includes(searchQuery.toLowerCase()),
-        )
-      : allFileStubs;
+    // Memoized so an unrelated re-render (e.g. a policy-run store tick) keeps a
+    // stable array identity — avoids re-running the grouping memo + backfill effect.
+    const filteredFileStubs = useMemo(() => {
+      const q = searchQuery.trim().toLowerCase();
+      return q
+        ? allFileStubs.filter((stub) => stub.name.toLowerCase().includes(q))
+        : allFileStubs;
+    }, [allFileStubs, searchQuery]);
 
-    // How to group the list: SaaS groups by classification category; core returns
-    // null → a single flat, recency-sorted list (unchanged for OSS/desktop).
+    // SaaS groups by classification label; core returns null → one flat, recency-sorted list.
     const fileGroups = useFileSidebarGroups(filteredFileStubs);
+    // Workbench membership as a Set for O(1) per-row lookups (see renderFileRow).
+    const workbenchIds = useMemo(
+      () => new Set(state.files.ids.map((id) => id as string)),
+      [state.files.ids],
+    );
+    // How many rendered stubs share each lineage — >1 means split siblings, which
+    // must key by their unique leaf id rather than the shared lineage (see renderFileRow).
+    const lineageCounts = useMemo(() => {
+      const counts = new Map<string, number>();
+      for (const s of filteredFileStubs) {
+        const k = (s.originalFileId ?? s.id) as string;
+        counts.set(k, (counts.get(k) ?? 0) + 1);
+      }
+      return counts;
+    }, [filteredFileStubs]);
     // Per-group expand/collapse, falling back to each group's default until toggled.
     const [groupOpen, setGroupOpen] = useState<Record<string, boolean>>({});
     const setGroupOpenState = useCallback(
@@ -704,13 +716,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
     const width = collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH;
 
-    // Render one file row. Extracted so both the flat list and the grouped
-    // (SaaS) layout share identical row rendering.
+    // Render one file row (shared by the flat list and the grouped SaaS layout).
     const renderFileRow = (stub: StirlingFileStub) => {
-      const workbenchFileId = state.files.ids.find(
-        (id) => (id as string) === (stub.id as string),
-      );
-      const isInWorkbench = !!workbenchFileId;
+      // O(1) membership instead of a per-row linear scan of the workbench ids.
+      const isInWorkbench = workbenchIds.has(stub.id as string);
+      const workbenchFileId = isInWorkbench ? (stub.id as FileId) : undefined;
       const isSelected = isWatchedFoldersActive
         ? activeWatchedFolderId != null &&
           (folderMembership
@@ -743,13 +753,18 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             ? state.files.byId[workbenchFileId]?.thumbnailUrl
             : undefined) || stub.thumbnailUrl;
       const fileOrigin = getFileOrigin(stub);
+      // Key by lineage (originalFileId) so a version swap updates the row in place instead of
+      // remounting. But a 1-input→many-output op (split) yields sibling leaves that share one
+      // originalFileId; those would collide on the key, so fall back to the unique leaf id when a
+      // lineage is present more than once.
+      const lineageKey = (stub.originalFileId ?? stub.id) as string;
+      const rowKey =
+        (lineageCounts.get(lineageKey) ?? 0) > 1
+          ? (stub.id as string)
+          : lineageKey;
       return (
-        // Key by lineage (originalFileId), not the leaf id: when a policy versions
-        // a file the leaf id changes, but keeping the key stable lets React update
-        // the row in place instead of unmounting/remounting it — no flicker as the
-        // tagged file swaps in, and the enforce-glow doesn't re-fire.
         <FileItem
-          key={(stub.originalFileId ?? stub.id) as string}
+          key={rowKey}
           fileId={stub.id}
           name={stub.name}
           size={stub.size}

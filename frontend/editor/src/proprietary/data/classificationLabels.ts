@@ -1,37 +1,4 @@
-/**
- * Default classification labels — the single, type-safe source of truth.
- *
- * The Python engine can't import TypeScript, so the label NAMES are generated
- * into `engine/src/stirling/agents/default_classification_labels.generated.json`
- * by `editor/scripts/generate-classification-labels.mts`
- * (`task frontend:classifier-labels`, drift-guarded by
- * `task frontend:classifier-labels:check`). Edit THIS file, never the generated
- * JSON.
- *
- * A label is a flat, free-standing descriptor the classifier can apply to a
- * document (multi-label: a file can carry several). The default set below is
- * deliberately DOCUMENT-TYPE focused and broad: the classifier only reads the
- * first/last two pages, so labels that demand deep content analysis to get
- * right (PII/PHI detection and the like) are intentionally absent.
- *
- * Labels are declared in FAMILIES — presentational roll-ups the file sidebar
- * uses as its default groups ("Financial", "Legal", "Medical", …) so a fresh
- * user sees ~15 high-level groups instead of hundreds of granular ones. The
- * classifier itself never sees families: it tags granular label names only,
- * and the sidebar rolls them up at display time. Users can swap any family for
- * its individual labels in the sidebar's group picker.
- *
- * Layering:
- *  - This is the built-in DEFAULT, seeded for every SaaS team (admins edit the
- *    team set in the Classification policy settings).
- *  - Each user can ADD personal labels on top; those apply only to that user's
- *    own classification runs and sidebar.
- *  - The engine accepts the allowed label names per classify request; when none
- *    are supplied it falls back to the generated default.
- *
- * `icon` is a Material Symbols key from `labelIcons.ts` — presentational only
- * (file-sidebar label groups); the engine never sees it.
- */
+// Default classification labels — the type-safe source of truth. Edit THIS file, never the generated engine JSON (kept in sync by `task frontend:classifier-labels`, drift-guarded by `:check`). Labels are flat document-type descriptors (multi-label; no deep-content/PII types since the classifier only reads the first/last two pages) declared in FAMILIES — presentational sidebar roll-ups the classifier never sees. Seeded per team (admin-editable); users may add personal labels. `icon` is presentational only; the engine never sees it.
 
 export interface ClassificationLabel {
   /** Display name AND identity (unique, case-insensitive). */
@@ -431,10 +398,3 @@ export const LABEL_FAMILIES: LabelFamily[] = [
 /** Flat default label set — family order, as the classifier/team-seed sees it. */
 export const DEFAULT_CLASSIFICATION_LABELS: ClassificationLabel[] =
   LABEL_FAMILIES.flatMap((family) => family.labels);
-
-/** Family id per built-in label name (lower-cased) — the sidebar's roll-up map. */
-export const LABEL_FAMILY_BY_NAME: ReadonlyMap<string, string> = new Map(
-  LABEL_FAMILIES.flatMap((family) =>
-    family.labels.map((label) => [label.name.toLowerCase(), family.id]),
-  ),
-);

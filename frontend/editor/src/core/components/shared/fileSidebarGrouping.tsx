@@ -1,15 +1,4 @@
-/**
- * Extension seam for how the Files sidebar groups its file list.
- *
- * Core returns `null` → the sidebar renders one flat, recency-sorted list (the
- * default everywhere: OSS, desktop, proprietary). The SaaS layer overrides this
- * (shadowing the same `@app/*` path) to group files by document-classification
- * category — a "Recent" group on top plus a collapsible group per category —
- * since classification/policies only exist on SaaS.
- *
- * Keeping the strategy behind a seam means the shared sidebar carries no
- * SaaS/classification awareness; it just renders whatever groups it's handed.
- */
+// Extension seam for how the Files sidebar groups its list; core returns null (one flat, recency-sorted list) and a higher layer overrides this to group by classification. The shared sidebar just renders whatever groups it's handed.
 
 import type { StirlingFileStub } from "@app/types/fileContext";
 
@@ -28,21 +17,14 @@ export interface FileSidebarGroup {
   defaultExpanded: boolean;
 }
 
-/**
- * Return the groups to render, or `null` for a flat list. Core = flat.
- * Implemented as a hook so overrides may read app state (labels, config).
- */
+// Groups to render, or null for a flat list (core = flat). A hook so overrides may read app state.
 export function useFileSidebarGroups(
   _stubs: StirlingFileStub[],
 ): FileSidebarGroup[] | null {
   return null;
 }
 
-/**
- * Header control for customizing the grouping (rendered next to the Files
- * section's buttons). Core has no grouping, so no control; the SaaS override
- * renders a group picker here.
- */
+// Header control for customizing the grouping; core has none, an override renders a group picker.
 export function FileSidebarGroupControls(_props: {
   stubs: StirlingFileStub[];
 }) {

@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   persistVersionedOutputs: vi.fn(),
   getStirlingFile: vi.fn(),
   getStirlingFileStub: vi.fn(),
+  updateFileMetadata: vi.fn(),
   downloadPolicyOutput: vi.fn(),
   listPolicyRuns: vi.fn(),
   createStirlingFilesAndStubs: vi.fn(),
@@ -57,6 +58,7 @@ vi.mock("@app/services/fileStorage", () => ({
   fileStorage: {
     getStirlingFile: mocks.getStirlingFile,
     getStirlingFileStub: mocks.getStirlingFileStub,
+    updateFileMetadata: mocks.updateFileMetadata,
     persistVersionedOutputs: mocks.persistVersionedOutputs,
   },
 }));
@@ -103,6 +105,7 @@ beforeEach(() => {
   mocks.listPolicyRuns.mockResolvedValue([]);
   mocks.getStirlingFileStub.mockResolvedValue(null);
   mocks.persistVersionedOutputs.mockResolvedValue(undefined);
+  mocks.updateFileMetadata.mockResolvedValue(true);
   mocks.consumeFiles.mockResolvedValue(undefined);
   mocks.addFiles.mockResolvedValue([{ fileId: "out-1" }]);
   mocks.downloadPolicyOutput.mockResolvedValue(

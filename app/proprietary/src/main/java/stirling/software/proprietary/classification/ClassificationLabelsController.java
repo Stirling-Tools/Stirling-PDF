@@ -23,6 +23,7 @@ import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.classification.model.ClassificationLabels;
 import stirling.software.proprietary.classification.model.LabelsValidator;
 import stirling.software.proprietary.classification.store.ClassificationLabelStore;
+import stirling.software.proprietary.classification.store.TeamLabelsEntity;
 import stirling.software.proprietary.classification.store.UserLabelsEntity;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 
@@ -137,8 +138,22 @@ public class ClassificationLabelsController {
         }
     }
 
+    /**
+     * The caller's team key. With login disabled the single operator owns the {@link
+     * TeamLabelsEntity#NO_TEAM} sentinel row; with login enabled a caller with no resolvable team
+     * is an error rather than being dropped into the shared sentinel bucket (which would let
+     * unteamed users read and overwrite each other's "team" labels).
+     */
     private Long currentTeamId() {
-        return policyManagementAuthority.currentUserTeamId();
+        Long teamId = policyManagementAuthority.currentUserTeamId();
+        if (teamId != null) {
+            return teamId;
+        }
+        if (!applicationProperties.getSecurity().isEnableLogin()) {
+            return TeamLabelsEntity.NO_TEAM;
+        }
+        throw new ResponseStatusException(
+                HttpStatus.UNAUTHORIZED, "Could not resolve the current user's team");
     }
 
     /**

@@ -140,6 +140,22 @@
   --color-gray-800: #1f2937;
   --color-gray-900: #111827;
 
+  /* Categorical accents (sidebar groups, file-type icons, badges). One hue per
+     token; the dark block overrides each with a LIGHTER shade for contrast on
+     dark backgrounds. JS consumers go through utils/accentColors.ts. */
+  --accent-green: #16a34a;
+  --accent-blue: #2563eb;
+  --accent-red: #dc2626;
+  --accent-orange: #ea580c;
+  --accent-purple: #9333ea;
+  --accent-teal: #0d9488;
+  --accent-pink: #db2777;
+  --accent-amber: #d97706;
+  --accent-indigo: #4f46e5;
+  --accent-cyan: #0891b2;
+  --accent-violet: #7c3aed;
+  --accent-gray: #6b7280;
+
   /* Spacing system */
   --space-xs: 4px;
   --space-sm: 8px;
@@ -459,6 +475,20 @@
   --color-gray-700: #d1d5db;
   --color-gray-800: #e5e7eb;
   --color-gray-900: #f3f4f6;
+
+  /* Categorical accents: lighter shades of the same hues, for contrast on dark. */
+  --accent-green: #4ade80;
+  --accent-blue: #60a5fa;
+  --accent-red: #f87171;
+  --accent-orange: #fb923c;
+  --accent-purple: #c084fc;
+  --accent-teal: #2dd4bf;
+  --accent-pink: #f472b6;
+  --accent-amber: #fbbf24;
+  --accent-indigo: #818cf8;
+  --accent-cyan: #22d3ee;
+  --accent-violet: #a78bfa;
+  --accent-gray: #9ca3af;
 
   /* Category colors - same as light mode for consistency */
   --category-color-removal: #ef4444; /* Red for removal tools */

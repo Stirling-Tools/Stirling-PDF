@@ -3702,12 +3702,21 @@ searchPlaceholder = "Search files..."
 viewAll = "View all {{count}} files"
 
 [fileSidebar.groupsModal]
-customSection = "Team & personal labels"
+add = "Add"
+addLabel = "Add a label…"
+categoryIconAria = "Choose an icon for {{name}}"
+createCategory = "Create category"
+delete = "Delete category"
 done = "Done"
+hide = "Hide category"
+newCategory = "New category name…"
+removeLabel = "Remove {{name}}"
+rename = "Rename"
 reset = "Reset to defaults"
 search = "Search labels…"
-subtitle = "Choose which groups organize your files. Tick a category to see it as one group, or expand the granularity by ticking individual labels. Files in none of your groups appear under “Other”."
-title = "Sidebar groups"
+show = "Show category"
+subtitle = "Group your files into parent categories. Add existing or new labels to a category, rename it, or create your own. Files in none of your categories appear under “Other”."
+title = "Sidebar categories"
 
 [fileSidebar.fileItem]
 closeViewer = "Close viewer"
@@ -6051,6 +6060,7 @@ sectionLabel = "Classification labels"
 startFromScratch = "Start from scratch"
 teamCount = "team labels"
 tooLong = "Labels can be at most {{max}} characters."
+ungrouped = "Ungrouped"
 view = "View labels"
 
 [policies.toolConfig]

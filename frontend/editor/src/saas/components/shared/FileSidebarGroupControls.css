@@ -1,54 +1,90 @@
-/* Group-picker modal: family sections with toggleable member-label chips. */
+/* Category-manager modal: editable parent categories with member-label chips. */
 
 .fsg-body {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   max-height: 60vh;
   overflow-y: auto;
   padding-right: 4px;
 }
 
-.fsg-family {
+.fsg-cat {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.fsg-family-header {
+.fsg-cat-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   font-size: 13px;
   font-weight: 600;
-  cursor: pointer;
-  user-select: none;
   color: var(--text-primary, inherit);
+}
+
+.fsg-cat-toggle {
+  display: inline-flex;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
 }
 
 .fsg-chevron {
   font-size: 1.1rem !important;
   color: var(--text-muted, rgba(128, 128, 128, 0.9));
-  /* Pull the chevron flush left so headers align with the search field. */
   margin-left: -4px;
 }
 
-.fsg-family-name {
+.fsg-cat-name {
+  flex: 1;
+  text-align: left;
+  border: none;
+  background: transparent;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font: inherit;
+  color: inherit;
+  cursor: text;
+}
+
+.fsg-cat-name:hover {
+  background: var(--hover-bg, rgba(128, 128, 128, 0.12));
+}
+
+.fsg-rename {
   flex: 1;
 }
 
-.fsg-custom-title {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 600;
+.fsg-cat-action {
+  display: inline-flex;
+  border: none;
+  background: transparent;
+  padding: 2px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-muted, rgba(128, 128, 128, 0.9));
+}
+
+.fsg-cat-action:hover {
+  background: var(--hover-bg, rgba(128, 128, 128, 0.12));
+  color: var(--text-primary, inherit);
+}
+
+.fsg-cat-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  /* Indent past the chevron so the hierarchy reads at a glance. */
+  padding-left: 24px;
 }
 
 .fsg-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  /* Indent past the chevron + checkbox so hierarchy reads at a glance. */
-  padding-left: 46px;
 }
 
 .fsg-chip {
@@ -61,11 +97,6 @@
   border-radius: 999px;
   background: transparent;
   color: var(--text-muted, inherit);
-  cursor: pointer;
-}
-
-.fsg-chip:hover {
-  background: var(--hover-bg, rgba(128, 128, 128, 0.12));
 }
 
 .fsg-chip.is-on {
@@ -78,10 +109,53 @@
   );
 }
 
+.fsg-chip-remove {
+  display: inline-flex;
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin-left: 2px;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.7;
+}
+
+.fsg-chip-remove:hover {
+  opacity: 1;
+}
+
 .fsg-count {
   font-size: 11px;
   font-weight: 500;
   color: var(--text-muted, rgba(128, 128, 128, 0.9));
+}
+
+.fsg-add,
+.fsg-new {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fsg-new {
+  padding-top: 4px;
+  border-top: 1px solid var(--border-subtle, rgba(128, 128, 128, 0.2));
+}
+
+.fsg-add-input {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 8px;
+  font-size: 12px;
+  border: 1px solid var(--border-subtle, rgba(128, 128, 128, 0.35));
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-primary, inherit);
+}
+
+.fsg-add-input:focus {
+  outline: none;
+  border-color: var(--color-primary, #4f46e5);
 }
 
 .fsg-footer {

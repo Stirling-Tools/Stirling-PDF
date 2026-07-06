@@ -23,37 +23,11 @@ import {
 import ShareManagementModal from "@app/components/shared/ShareManagementModal";
 import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
 import { fileStorage } from "@app/services/fileStorage";
-import { extractPDFMetadata } from "@app/services/pdfMetadataService";
+import { readStubClassificationLabels } from "@app/services/fileClassification";
 import {
   VersionTimeline,
   DetailField,
 } from "@app/components/filesPage/VersionTimeline";
-
-/** Custom PDF Info-dictionary key the classify-and-label tool writes (must
- *  match the backend's PdfMetadataService.CLASSIFICATION_KEY). */
-const CLASSIFICATION_KEY = "StirlingPDFClassification";
-
-/** Reading classification means loading the file's bytes through PDF.js, so cap
- *  the auto-read by size — the app handles very large PDFs and we won't pull a
- *  multi-GB file into memory just to surface a metadata tag. */
-const MAX_CLASSIFICATION_READ_BYTES = 25 * 1024 * 1024;
-
-/** Parse the classification labels JSON stored in PDF metadata
- *  (`{"labels": ["Contract", "NDA"]}`); null if absent/empty/invalid. */
-function parseClassificationLabels(value: string): string[] | null {
-  try {
-    const raw = JSON.parse(value) as Record<string, unknown>;
-    const labels = Array.isArray(raw.labels)
-      ? raw.labels.filter(
-          (label): label is string =>
-            typeof label === "string" && label.trim().length > 0,
-        )
-      : [];
-    return labels.length > 0 ? labels : null;
-  } catch {
-    return null;
-  }
-}
 
 interface FileDetailsPanelProps {
   selectedFileIds: FileId[];
@@ -133,7 +107,7 @@ export function FileDetailsPanel({
   }, [singleFileForChain]);
 
   // Show the file's classification labels: the stub's cached copy when present
-  // (free — no byte load), else read the PDF metadata the policy wrote.
+  // (free — no byte load), else read the PDF metadata via the shared service.
   useEffect(() => {
     setClassification(null);
     const stub = singleFileForChain;
@@ -142,25 +116,10 @@ export function FileDetailsPanel({
       setClassification(stub.classificationLabels);
       return;
     }
-    if (stub.type && !stub.type.toLowerCase().includes("pdf")) return;
-    if (stub.size > MAX_CLASSIFICATION_READ_BYTES) return;
     let cancelled = false;
-    (async () => {
-      try {
-        const file = await fileStorage.getStirlingFile(stub.id);
-        if (cancelled || !file) return;
-        const result = await extractPDFMetadata(file);
-        if (cancelled || !result.success) return;
-        const entry = result.metadata.customMetadata.find(
-          (item) => item.key === CLASSIFICATION_KEY,
-        );
-        if (!entry) return;
-        const parsed = parseClassificationLabels(entry.value);
-        if (parsed && !cancelled) setClassification(parsed);
-      } catch (err) {
-        console.error("Failed to read classification metadata", err);
-      }
-    })();
+    void readStubClassificationLabels(stub).then((labels) => {
+      if (!cancelled && labels) setClassification(labels);
+    });
     return () => {
       cancelled = true;
     };

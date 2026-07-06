@@ -289,8 +289,8 @@ export function usePolicyAutoRun(): void {
         orderedUploadCategories,
         run.categoryId,
       );
-      const outputId = run.outputFileIds?.[0];
-      if (!nextCategory || !outputId) {
+      const outputIds = run.outputFileIds ?? [];
+      if (!nextCategory || outputIds.length === 0) {
         // End of the chain (or nothing to chain onto): don't revisit this run.
         chained.current.add(run.runId);
         continue;
@@ -299,13 +299,17 @@ export function usePolicyAutoRun(): void {
       // Next policy not ready yet (still reconciling) — retry when policies change.
       if (!backendId) continue;
       chained.current.add(run.runId);
-      if (isDispatched(nextCategory, outputId as FileId)) continue;
-      void runPolicyOnFile(
-        nextCategory,
-        backendId,
-        outputId as FileId,
-        run.fileName,
-      ).catch(() => {});
+      // Chain onto EVERY output, not just the first — a run that produced multiple files (split,
+      // ZIP-unpacked) must apply the next policy to all of them, or outputs 2..N silently skip it.
+      for (const outputId of outputIds) {
+        if (isDispatched(nextCategory, outputId as FileId)) continue;
+        void runPolicyOnFile(
+          nextCategory,
+          backendId,
+          outputId as FileId,
+          run.fileName,
+        ).catch(() => {});
+      }
     }
   }, [runs, policies, orderedUploadCategories]);
 
@@ -428,10 +432,10 @@ function applyOutputName(
   const dot = inputFileName.lastIndexOf(".");
   const base = dot > 0 ? inputFileName.slice(0, dot) : inputFileName;
   const ext = dot > 0 ? inputFileName.slice(dot) : "";
-  if (position === "suffix") return `${base}_${outputName}${ext}`;
-  if (position === "prefix") return `${outputName}_${base}${ext}`;
-  // auto-number requires dedup state not available here — fall back to suffix.
-  return `${base}_${outputName}${ext}`;
+  // auto-number needs dedup state not available here, so it falls back to suffix.
+  return position === "prefix"
+    ? `${outputName}_${base}${ext}`
+    : `${base}_${outputName}${ext}`;
 }
 
 /** The next upload policy after {@code categoryId} in the chain, or undefined if
@@ -478,11 +482,7 @@ async function reconcileServerRuns(
       status: view.status,
       outputs: view.outputs,
       error: view.error,
-      // Adopted for activity-feed visibility ONLY — never for output delivery. Without this,
-      // any completed run evicted from the capped local store gets re-adopted here on every
-      // refresh and re-delivered as a NEW workspace file (no fileId → no parent to version):
-      // phantom duplicates keep opening onto the workbench, and the adoption/eviction cycle
-      // never converges. Runs this client recorded (real fileId) still deliver normally.
+      // Adopted for feed visibility ONLY, never delivery: else a completed run evicted from the capped store gets re-adopted every refresh and re-delivered as a new file (no fileId → no parent), opening phantom duplicates forever. Client-recorded runs (real fileId) still deliver.
       imported: true,
       // Use the server's creation time, not now, so a rediscovered run shows its real age.
       startedAt: view.createdAt,
@@ -674,27 +674,28 @@ async function importOutputs(
     }
   } else {
     const added = await ctx.addFiles(files, { skipUploadTracking: true });
-    // Same loop-guard for new-file output: the produced file is a new workspace
-    // file the auto-run would otherwise re-enforce indefinitely.
     for (const f of added) markHandled(f.fileId as string);
     deliveredIds = added.map((f) => f.fileId as string);
-    // A new-file output has no parent to inherit from — stamp its labels onto
-    // both the workspace stub and storage so it lands in the right groups at once.
-    let stampedLabels = false;
+    // Mark each new-file output as tool-derived (the versioned path gets this from the
+    // CONSUME_FILES reducer; the addFiles path doesn't). This is the real loop guard: the dispatch
+    // effect skips `derivedFromTool` files, so a policy output is never re-enforced as a fresh
+    // upload regardless of how upload policies are later reordered — unlike per-(category,file)
+    // markers keyed to whichever policy is currently first. Also stamp labels so it lands in the
+    // right sidebar group immediately (a new file has no parent to inherit from).
+    let mutated = false;
     await Promise.all(
       added.map(async (f, i) => {
         const labels = await resolveLabels(files[i]);
-        if (!labels) return;
-        ctx.updateStirlingFileStub(f.fileId, {
-          classificationLabels: labels,
-        });
-        const ok = await fileStorage.updateFileMetadata(f.fileId, {
-          classificationLabels: labels,
-        });
-        if (ok) stampedLabels = true;
+        const updates = {
+          derivedFromTool: true,
+          ...(labels ? { classificationLabels: labels } : {}),
+        };
+        ctx.updateStirlingFileStub(f.fileId, updates);
+        const ok = await fileStorage.updateFileMetadata(f.fileId, updates);
+        if (ok) mutated = true;
       }),
     );
-    if (stampedLabels) ctx.bumpRevision();
+    if (mutated) ctx.bumpRevision();
   }
   const importedFileIds = [...done, ...fetched.map((f) => f.fileId)];
   const imported = run.outputs.every((out) =>

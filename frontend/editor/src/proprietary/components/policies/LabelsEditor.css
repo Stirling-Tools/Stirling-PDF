@@ -186,3 +186,42 @@
   align-items: center;
   gap: var(--space-2);
 }
+
+/* ---- Grouped mode: chips under collapsible parent categories ---- */
+.labels-groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.labels-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.labels-group-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-1, inherit);
+}
+.labels-group-name {
+  flex: 1;
+  text-align: left;
+}
+.labels-group-count {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-3, rgba(128, 128, 128, 0.9));
+}
+.labels-group-ungrouped {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-2, inherit);
+}

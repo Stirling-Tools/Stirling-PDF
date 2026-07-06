@@ -1,15 +1,4 @@
-/**
- * The Files sidebar's group picker — a "tune" button in the section header
- * opening a modal where the user chooses WHICH groups the sidebar shows.
- *
- * Built-in labels are listed under their families, busiest first, each section
- * collapsible (only the busiest starts expanded): a family checkbox shows the
- * whole family as ONE group (the default), while each member label can be
- * enabled as its own standalone group for finer granularity (e.g. hide
- * "Medical", show "Lab report"). Custom team/personal labels get their own
- * toggles. Changes apply instantly (device-local prefs, no save step); files
- * in no visible group fall back to the sidebar's "Other" group.
- */
+// The Files-sidebar category manager: a "tune" button opening a modal where you shape the parent categories your files group under. Each category (collapsible, busiest first) has an editable name + icon, a hide toggle, delete, and its member-label chips; add existing labels or type a new custom one (which joins your personal labels). Create new categories, reset to the built-in defaults. All device-local; files in no visible category fall back to "Other".
 
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
@@ -17,23 +6,31 @@ import TuneIcon from "@mui/icons-material/Tune";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
-import { Checkbox, TextInput } from "@mantine/core";
+import CloseIcon from "@mui/icons-material/Close";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import AddIcon from "@mui/icons-material/Add";
+import { TextInput } from "@mantine/core";
 import { Modal } from "@shared/components/Modal";
 import { Button } from "@shared/components/Button";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
+import { LabelIconPicker } from "@app/components/policies/LabelIconPicker";
 import { useClassificationLabels } from "@app/hooks/useClassificationLabels";
 import { DEFAULT_LABEL_ICON } from "@app/data/labelIcons";
+import { bucketStubsByLabel } from "@app/components/shared/fileSidebarGroupingLogic";
 import {
-  LABEL_FAMILIES,
-  LABEL_FAMILY_BY_NAME,
-} from "@app/data/classificationLabels";
-import {
-  getFileSidebarGroupPrefs,
-  resetFileSidebarGroupPrefs,
-  setGroupHidden,
-  setLabelEnabled,
-  subscribeFileSidebarGroupPrefs,
-} from "@app/services/fileSidebarGroupPrefs";
+  addCategory,
+  addLabelToCategory,
+  deleteCategory,
+  getSidebarCategories,
+  removeLabelFromCategory,
+  renameCategory,
+  resetSidebarCategories,
+  setCategoryHidden,
+  setCategoryIcon,
+  subscribeSidebarCategories,
+} from "@app/services/fileSidebarCategories";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import "@app/components/shared/FileSidebarGroupControls.css";
 
@@ -42,98 +39,129 @@ interface FileSidebarGroupControlsProps {
   stubs: StirlingFileStub[];
 }
 
+/** New categories start with a neutral folder icon the user can change. */
+const NEW_CATEGORY_ICON = "folder";
+
 export function FileSidebarGroupControls({
   stubs,
 }: FileSidebarGroupControlsProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const prefs = useSyncExternalStore(
-    subscribeFileSidebarGroupPrefs,
-    getFileSidebarGroupPrefs,
+  const categories = useSyncExternalStore(
+    subscribeSidebarCategories,
+    getSidebarCategories,
   );
-  // Only fetch the label sets while the picker is open — the sidebar itself
-  // doesn't need them here.
-  const { merged: labelSet } = useClassificationLabels(open);
+  // Only fetch the label sets while the picker is open.
+  const {
+    merged: labelSet,
+    myLabels,
+    saveMine,
+  } = useClassificationLabels(open);
 
-  const hidden = useMemo(() => new Set(prefs.hiddenGroups), [prefs]);
-  const enabled = useMemo(() => new Set(prefs.enabledLabels), [prefs]);
-
-  // Files per label key and per family (family counts dedupe multi-label files).
-  const { labelCounts, familyCounts } = useMemo(() => {
-    const labelCounts = new Map<string, number>();
-    const familyStubs = new Map<string, Set<string>>();
-    for (const stub of stubs) {
-      for (const label of stub.classificationLabels ?? []) {
-        const key = label.toLowerCase();
-        labelCounts.set(key, (labelCounts.get(key) ?? 0) + 1);
-        const familyId = LABEL_FAMILY_BY_NAME.get(key);
-        if (familyId) {
-          const ids = familyStubs.get(familyId) ?? new Set();
-          ids.add(stub.id as string);
-          familyStubs.set(familyId, ids);
-        }
-      }
-    }
-    const familyCounts = new Map<string, number>();
-    for (const [id, ids] of familyStubs) familyCounts.set(id, ids.size);
-    return { labelCounts, familyCounts };
+  // Per-label file counts from the same bucketing the sidebar groups use.
+  const labelCounts = useMemo(() => {
+    const byLabel = bucketStubsByLabel(stubs);
+    const counts = new Map<string, number>();
+    for (const [key, bucket] of byLabel) counts.set(key, bucket.stubs.length);
+    return counts;
   }, [stubs]);
 
-  // Custom labels = the user's effective set plus anything actually on files,
-  // minus the built-ins (those live under their family sections).
-  const customLabels = useMemo(() => {
-    const byKey = new Map<string, string>();
-    for (const label of labelSet) {
-      const key = label.name.toLowerCase();
-      if (!LABEL_FAMILY_BY_NAME.has(key)) byKey.set(key, label.name);
-    }
-    for (const stub of stubs) {
-      for (const label of stub.classificationLabels ?? []) {
-        const key = label.toLowerCase();
-        if (!LABEL_FAMILY_BY_NAME.has(key) && !byKey.has(key)) {
-          byKey.set(key, label);
+  // Files per category (deduped across its labels).
+  const categoryCounts = useMemo(() => {
+    const byLabel = bucketStubsByLabel(stubs);
+    const counts = new Map<string, number>();
+    for (const category of categories) {
+      const ids = new Set<string>();
+      for (const key of category.labelKeys) {
+        for (const stub of byLabel.get(key)?.stubs ?? []) {
+          ids.add(stub.id as string);
         }
       }
+      counts.set(category.id, ids.size);
     }
-    return [...byKey.entries()]
-      .map(([key, display]) => ({ key, display }))
-      .sort((a, b) =>
-        a.display.localeCompare(b.display, undefined, { sensitivity: "base" }),
-      );
-  }, [labelSet, stubs]);
+    return counts;
+  }, [stubs, categories]);
+
+  // Display name + icon per label key, from the effective vocabulary (team ∪ personal).
+  const vocab = useMemo(() => {
+    const byKey = new Map<string, { display: string; icon?: string }>();
+    for (const label of labelSet) {
+      byKey.set(label.name.toLowerCase(), {
+        display: label.name,
+        icon: label.icon,
+      });
+    }
+    return byKey;
+  }, [labelSet]);
+
+  const labelDisplay = (key: string) => vocab.get(key)?.display ?? key;
+  const labelIcon = (key: string) => vocab.get(key)?.icon ?? DEFAULT_LABEL_ICON;
 
   const q = query.trim().toLowerCase();
-  const matches = (name: string) => q === "" || name.toLowerCase().includes(q);
+  const matches = (text: string) => q === "" || text.toLowerCase().includes(q);
 
-  // Busiest categories first — the sections the user most likely came to
-  // adjust. Ties keep the declaration order.
-  const sortedFamilies = useMemo(
+  // Busiest categories first (ties keep declaration order).
+  const sortedCategories = useMemo(
     () =>
-      [...LABEL_FAMILIES].sort(
-        (a, b) => (familyCounts.get(b.id) ?? 0) - (familyCounts.get(a.id) ?? 0),
+      [...categories].sort(
+        (a, b) =>
+          (categoryCounts.get(b.id) ?? 0) - (categoryCounts.get(a.id) ?? 0),
       ),
-    [familyCounts],
+    [categories, categoryCounts],
   );
 
-  // Collapsed/expanded per family section. On open, only the busiest section
-  // starts expanded — a scannable overview instead of a wall of 270 chips.
-  const [expandedFamilies, setExpandedFamilies] = useState<ReadonlySet<string>>(
-    new Set(),
-  );
-  const toggleFamilyExpanded = (id: string) =>
-    setExpandedFamilies((prev) => {
+  // Per-category collapse; on open only the busiest starts expanded.
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
+  const toggleExpanded = (id: string) =>
+    setExpanded((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
+
+  // Inline rename + add-label drafts, keyed by category id.
+  const [renaming, setRenaming] = useState<string | null>(null);
+  const [renameDraft, setRenameDraft] = useState("");
+  const [addDraft, setAddDraft] = useState<Record<string, string>>({});
+  const [newCategory, setNewCategory] = useState("");
+
   const openPicker = () => {
     setQuery("");
-    setExpandedFamilies(
-      new Set(sortedFamilies.length > 0 ? [sortedFamilies[0].id] : []),
+    setRenaming(null);
+    setNewCategory("");
+    setExpanded(
+      new Set(sortedCategories.length > 0 ? [sortedCategories[0].id] : []),
     );
     setOpen(true);
+  };
+
+  const commitRename = (id: string) => {
+    const name = renameDraft.trim();
+    if (name) renameCategory(id, name);
+    setRenaming(null);
+  };
+
+  // Add a label to a category: an existing vocabulary label by name, or a brand-new custom label
+  // (which also joins the caller's personal label set so the classifier can actually assign it).
+  const addLabel = (categoryId: string) => {
+    const name = (addDraft[categoryId] ?? "").trim();
+    if (!name) return;
+    const key = name.toLowerCase();
+    if (!vocab.has(key)) {
+      void saveMine([...myLabels, { name }]).catch(() => {});
+    }
+    addLabelToCategory(categoryId, name);
+    setAddDraft((prev) => ({ ...prev, [categoryId]: "" }));
+  };
+
+  const createCategory = () => {
+    const name = newCategory.trim();
+    if (!name) return;
+    const id = addCategory(name, NEW_CATEGORY_ICON);
+    setExpanded((prev) => new Set(prev).add(id));
+    setNewCategory("");
   };
 
   return (
@@ -153,10 +181,10 @@ export function FileSidebarGroupControls({
         open={open}
         onClose={() => setOpen(false)}
         width="md"
-        title={t("fileSidebar.groupsModal.title", "Sidebar groups")}
+        title={t("fileSidebar.groupsModal.title", "Sidebar categories")}
         subtitle={t(
           "fileSidebar.groupsModal.subtitle",
-          "Choose which groups organize your files. Tick a category to see it as one group, or expand the granularity by ticking individual labels. Files in none of your groups appear under “Other”.",
+          "Group your files into parent categories. Add existing or new labels to a category, rename it, or create your own. Files in none of your categories appear under “Other”.",
         )}
         footer={
           <div className="fsg-footer">
@@ -164,7 +192,7 @@ export function FileSidebarGroupControls({
               variant="ghost"
               size="sm"
               leadingIcon={<RestartAltIcon sx={{ fontSize: "1rem" }} />}
-              onClick={resetFileSidebarGroupPrefs}
+              onClick={resetSidebarCategories}
             >
               {t("fileSidebar.groupsModal.reset", "Reset to defaults")}
             </Button>
@@ -183,128 +211,199 @@ export function FileSidebarGroupControls({
             data-autofocus
           />
 
-          {sortedFamilies.map((family) => {
-            // Family-name hits show the whole family; otherwise only matching
-            // member labels (and hide the section when nothing matches).
-            const familyHit = matches(family.name);
-            const members = familyHit
-              ? family.labels
-              : family.labels.filter((label) => matches(label.name));
-            if (members.length === 0) return null;
-            const familyShown = !hidden.has(`family:${family.id}`);
-            // Searching overrides the collapse state — a hit you can't see
-            // isn't a hit.
-            const isExpanded = q !== "" || expandedFamilies.has(family.id);
+          {sortedCategories.map((category) => {
+            const memberKeys = category.labelKeys.filter((key) =>
+              matches(labelDisplay(key)),
+            );
+            // Show the category if its name matches, or any member label matches.
+            if (!matches(category.name) && memberKeys.length === 0) return null;
+            const isExpanded = q !== "" || expanded.has(category.id);
+            const suggestions = [...vocab.keys()]
+              .filter((key) => !category.labelKeys.includes(key))
+              .map((key) => labelDisplay(key));
             return (
-              <section key={family.id} className="fsg-family">
-                <div
-                  className="fsg-family-header"
-                  role="button"
-                  tabIndex={0}
-                  aria-expanded={isExpanded}
-                  onClick={() => toggleFamilyExpanded(family.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      toggleFamilyExpanded(family.id);
-                    }
-                  }}
-                >
-                  {isExpanded ? (
-                    <KeyboardArrowDownIcon className="fsg-chevron" />
-                  ) : (
-                    <KeyboardArrowRightIcon className="fsg-chevron" />
-                  )}
-                  {/* The checkbox toggles the group's visibility; keep its
-                      clicks out of the header's expand/collapse. */}
-                  <span
-                    onClick={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => e.stopPropagation()}
+              <section key={category.id} className="fsg-cat">
+                <div className="fsg-cat-header">
+                  <button
+                    type="button"
+                    className="fsg-cat-toggle"
+                    aria-expanded={isExpanded}
+                    onClick={() => toggleExpanded(category.id)}
                   >
-                    <Checkbox
+                    {isExpanded ? (
+                      <KeyboardArrowDownIcon className="fsg-chevron" />
+                    ) : (
+                      <KeyboardArrowRightIcon className="fsg-chevron" />
+                    )}
+                  </button>
+                  <LabelIconPicker
+                    value={category.icon}
+                    onChange={(icon) => setCategoryIcon(category.id, icon)}
+                    ariaLabel={t(
+                      "fileSidebar.groupsModal.categoryIconAria",
+                      "Choose an icon for {{name}}",
+                      { name: category.name },
+                    )}
+                  />
+                  {renaming === category.id ? (
+                    <TextInput
+                      className="fsg-rename"
                       size="xs"
-                      checked={familyShown}
-                      onChange={(e) =>
-                        setGroupHidden(
-                          `family:${family.id}`,
-                          !e.currentTarget.checked,
-                        )
-                      }
-                      aria-label={family.name}
+                      value={renameDraft}
+                      autoFocus
+                      onChange={(e) => setRenameDraft(e.currentTarget.value)}
+                      onBlur={() => commitRename(category.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") commitRename(category.id);
+                        if (e.key === "Escape") setRenaming(null);
+                      }}
                     />
-                  </span>
-                  <LocalIcon icon={family.icon} width="1.05rem" />
-                  <span className="fsg-family-name">{family.name}</span>
+                  ) : (
+                    <button
+                      type="button"
+                      className="fsg-cat-name"
+                      title={t("fileSidebar.groupsModal.rename", "Rename")}
+                      onClick={() => {
+                        setRenaming(category.id);
+                        setRenameDraft(category.name);
+                      }}
+                    >
+                      {category.name}
+                    </button>
+                  )}
                   <span className="fsg-count">
-                    {familyCounts.get(family.id) ?? 0}
+                    {categoryCounts.get(category.id) ?? 0}
                   </span>
+                  <button
+                    type="button"
+                    className="fsg-cat-action"
+                    aria-label={
+                      category.hidden
+                        ? t("fileSidebar.groupsModal.show", "Show category")
+                        : t("fileSidebar.groupsModal.hide", "Hide category")
+                    }
+                    aria-pressed={!category.hidden}
+                    onClick={() =>
+                      setCategoryHidden(category.id, !category.hidden)
+                    }
+                  >
+                    {category.hidden ? (
+                      <VisibilityOffIcon sx={{ fontSize: "1rem" }} />
+                    ) : (
+                      <VisibilityIcon sx={{ fontSize: "1rem" }} />
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    className="fsg-cat-action"
+                    aria-label={t(
+                      "fileSidebar.groupsModal.delete",
+                      "Delete category",
+                    )}
+                    onClick={() => deleteCategory(category.id)}
+                  >
+                    <DeleteOutlineIcon sx={{ fontSize: "1rem" }} />
+                  </button>
                 </div>
+
                 {isExpanded && (
-                  <div className="fsg-chips">
-                    {members.map((label) => {
-                      const key = label.name.toLowerCase();
-                      const on = enabled.has(key);
-                      const count = labelCounts.get(key) ?? 0;
-                      return (
-                        <button
-                          key={key}
-                          type="button"
-                          className={`fsg-chip${on ? " is-on" : ""}`}
-                          aria-pressed={on}
-                          onClick={() => setLabelEnabled(label.name, !on)}
-                        >
-                          <LocalIcon
-                            icon={label.icon ?? DEFAULT_LABEL_ICON}
-                            width="0.95rem"
-                          />
-                          {label.name}
-                          {count > 0 && (
-                            <span className="fsg-count">{count}</span>
+                  <div className="fsg-cat-body">
+                    <div className="fsg-chips">
+                      {memberKeys.map((key) => (
+                        <span key={key} className="fsg-chip is-on">
+                          <LocalIcon icon={labelIcon(key)} width="0.95rem" />
+                          {labelDisplay(key)}
+                          {(labelCounts.get(key) ?? 0) > 0 && (
+                            <span className="fsg-count">
+                              {labelCounts.get(key)}
+                            </span>
                           )}
-                        </button>
-                      );
-                    })}
+                          <button
+                            type="button"
+                            className="fsg-chip-remove"
+                            aria-label={t(
+                              "fileSidebar.groupsModal.removeLabel",
+                              "Remove {{name}}",
+                              { name: labelDisplay(key) },
+                            )}
+                            onClick={() =>
+                              removeLabelFromCategory(category.id, key)
+                            }
+                          >
+                            <CloseIcon sx={{ fontSize: "0.8rem" }} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                    <div className="fsg-add">
+                      <input
+                        className="fsg-add-input"
+                        list={`fsg-vocab-${category.id}`}
+                        value={addDraft[category.id] ?? ""}
+                        placeholder={t(
+                          "fileSidebar.groupsModal.addLabel",
+                          "Add a label…",
+                        )}
+                        onChange={(e) =>
+                          setAddDraft((prev) => ({
+                            ...prev,
+                            [category.id]: e.target.value,
+                          }))
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            addLabel(category.id);
+                          }
+                        }}
+                      />
+                      <datalist id={`fsg-vocab-${category.id}`}>
+                        {suggestions.map((name) => (
+                          <option key={name} value={name} />
+                        ))}
+                      </datalist>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        leadingIcon={<AddIcon sx={{ fontSize: "0.9rem" }} />}
+                        onClick={() => addLabel(category.id)}
+                        disabled={!(addDraft[category.id] ?? "").trim()}
+                      >
+                        {t("fileSidebar.groupsModal.add", "Add")}
+                      </Button>
+                    </div>
                   </div>
                 )}
               </section>
             );
           })}
 
-          {customLabels.some((label) => matches(label.display)) && (
-            <section className="fsg-family">
-              <p className="fsg-custom-title">
-                {t(
-                  "fileSidebar.groupsModal.customSection",
-                  "Team & personal labels",
-                )}
-              </p>
-              <div className="fsg-chips">
-                {customLabels
-                  .filter((label) => matches(label.display))
-                  .map((label) => {
-                    const shown = !hidden.has(`label:${label.key}`);
-                    const count = labelCounts.get(label.key) ?? 0;
-                    return (
-                      <button
-                        key={label.key}
-                        type="button"
-                        className={`fsg-chip${shown ? " is-on" : ""}`}
-                        aria-pressed={shown}
-                        onClick={() =>
-                          setGroupHidden(`label:${label.key}`, shown)
-                        }
-                      >
-                        <LocalIcon icon={DEFAULT_LABEL_ICON} width="0.95rem" />
-                        {label.display}
-                        {count > 0 && (
-                          <span className="fsg-count">{count}</span>
-                        )}
-                      </button>
-                    );
-                  })}
-              </div>
-            </section>
-          )}
+          <div className="fsg-new">
+            <input
+              className="fsg-add-input"
+              value={newCategory}
+              placeholder={t(
+                "fileSidebar.groupsModal.newCategory",
+                "New category name…",
+              )}
+              onChange={(e) => setNewCategory(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  createCategory();
+                }
+              }}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              leadingIcon={<AddIcon sx={{ fontSize: "0.9rem" }} />}
+              onClick={createCategory}
+              disabled={!newCategory.trim()}
+            >
+              {t("fileSidebar.groupsModal.createCategory", "Create category")}
+            </Button>
+          </div>
         </div>
       </Modal>
     </>
