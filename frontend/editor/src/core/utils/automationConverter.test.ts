@@ -120,6 +120,71 @@ describe("automationConverter", () => {
       const config = convertToFolderScanningConfig(automation, registry);
       expect(config.pipeline[0].operation).toBe("unknownTool");
     });
+
+    test("maps parameters through the tool's toApiParams when present", () => {
+      const withMapper = {
+        ...registry,
+        compress: {
+          operationConfig: {
+            endpoint: "/api/v1/misc/compress-pdf",
+            toApiParams: (p: Record<string, any>) => ({
+              optimizeLevel: p.compressionLevel,
+            }),
+          },
+        },
+      } as unknown as Partial<ToolRegistry>;
+      const automation: AutomationConfig = {
+        ...sampleAutomation,
+        operations: [
+          { operation: "compress", parameters: { compressionLevel: 3 } },
+        ],
+      };
+      const config = convertToFolderScanningConfig(automation, withMapper);
+      expect(config.pipeline[0].parameters).toEqual({
+        optimizeLevel: 3,
+        fileInput: "automated",
+      });
+    });
+
+    test("falls back to raw params (and warns) when a tool's toApiParams throws", () => {
+      expectConsole.warn(/Failed to map parameters for operation "boom"/);
+      const throwingRegistry = {
+        ...registry,
+        boom: {
+          operationConfig: {
+            endpoint: "/api/v1/misc/boom",
+            toApiParams: () => {
+              // Mirrors a real mapper dereferencing a nested field that a
+              // partial/legacy stored step didn't populate.
+              throw new TypeError("cannot read properties of undefined");
+            },
+          },
+        },
+      } as unknown as Partial<ToolRegistry>;
+      const automation: AutomationConfig = {
+        ...sampleAutomation,
+        operations: [
+          { operation: "boom", parameters: { raw: "value" } },
+          { operation: "merge", parameters: { generateToc: true } },
+        ],
+      };
+      // One step's mapper throwing must not abort the whole export: the bad
+      // step degrades to raw params and the rest still map.
+      const config = convertToFolderScanningConfig(
+        automation,
+        throwingRegistry,
+      );
+      expect(config.pipeline).toEqual([
+        {
+          operation: "/api/v1/misc/boom",
+          parameters: { raw: "value", fileInput: "automated" },
+        },
+        {
+          operation: "/api/v1/general/merge-pdfs",
+          parameters: { generateToc: true, fileInput: "automated" },
+        },
+      ]);
+    });
   });
 
   describe("detectAutomationFormat", () => {

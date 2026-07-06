@@ -105,10 +105,22 @@ export function convertToFolderScanningConfig(
       // Map the UI parameters to the backend request shape via the tool's typed
       // Mapper B, so the pipeline gets the real field names (e.g. compress's
       // "compressionMethod" collapses to "optimizeLevel") instead of the raw
-      // frontend params. Tools without a mapper fall back to the raw params.
-      const apiParams = operationConfig?.toApiParams
-        ? operationConfig.toApiParams(op.parameters)
-        : op.parameters;
+      // frontend params. A mapper can throw on partial/legacy stored params
+      // (e.g. a tool whose mapper dereferences a nested field that isn't set);
+      // fall back to the raw params in that case, and for tools without a
+      // mapper, so one bad step never aborts the whole export.
+      const apiParams = (() => {
+        if (!operationConfig?.toApiParams) return op.parameters;
+        try {
+          return operationConfig.toApiParams(op.parameters);
+        } catch (error) {
+          console.warn(
+            `Failed to map parameters for operation "${op.operation}". ` +
+              `Falling back to raw parameters. Error: ${error}`,
+          );
+          return op.parameters;
+        }
+      })();
 
       return {
         operation: endpoint || op.operation,
