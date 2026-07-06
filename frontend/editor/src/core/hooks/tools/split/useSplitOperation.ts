@@ -166,7 +166,7 @@ export const buildSplitFormData = (
 ): FormData =>
   objectToFormData(splitToApiParams(parameters), { fileInput: file });
 
-export const getSplitEndpoint = (parameters: SplitParameters): string =>
+export const getSplitEndpoint = (parameters: SplitParameters): ToolEndpoint =>
   // Default to BY_PAGES when no method is selected yet.
   SPLIT_ENDPOINTS[parameters.method ?? SPLIT_METHODS.BY_PAGES];
 

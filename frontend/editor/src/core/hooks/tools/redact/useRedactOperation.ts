@@ -71,7 +71,7 @@ export const redactOperationConfig = {
   fromApiParams: redactFromApiParams,
   operationType: "redact",
   endpoint: (parameters: RedactParameters) =>
-    parameters.mode === "automatic" ? AUTO_ENDPOINT : "",
+    parameters.mode === "automatic" ? AUTO_ENDPOINT : null,
   defaultParameters,
 } as const;
 

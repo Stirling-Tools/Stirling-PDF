@@ -3,9 +3,15 @@ import { StirlingFile } from "@app/types/fileContext";
 import type { ResponseHandler } from "@app/utils/toolResponseProcessor";
 import { ToolId } from "@app/types/toolId";
 import type { ProcessingProgress } from "@app/hooks/tools/shared/useToolState";
-import type { ToolApiRequest } from "@app/types/toolApiTypes";
+import type { ToolApiRequest, ToolEndpoint } from "@app/types/toolApiTypes";
 
 export type { ProcessingProgress, ResponseHandler };
+
+/**
+ * A tool operation's backend endpoint, checked against the generated ToolEndpoint
+ * set, or `null` when the operation has no backend endpoint.
+ */
+export type ToolOperationEndpoint = ToolEndpoint | null;
 
 export enum ToolType {
   singleFile,
@@ -103,8 +109,12 @@ export interface SingleFileToolOperationConfig<
   /** Builds FormData for API request. */
   buildFormData: (params: TParams, file: File) => FormData;
 
-  /** API endpoint for the operation. Can be static string or function for dynamic routing. */
-  endpoint: string | ((params: TParams) => string);
+  /**
+   * API endpoint for the operation. Can be static or a function for dynamic routing.
+   */
+  endpoint:
+    | ToolOperationEndpoint
+    | ((params: TParams) => ToolOperationEndpoint);
 
   customProcessor?: undefined;
 }
@@ -121,8 +131,12 @@ export interface MultiFileToolOperationConfig<
   /** Builds FormData for API request. */
   buildFormData: (params: TParams, files: File[]) => FormData;
 
-  /** API endpoint for the operation. Can be static string or function for dynamic routing. */
-  endpoint: string | ((params: TParams) => string);
+  /**
+   * API endpoint for the operation. Can be static or a function for dynamic routing.
+   */
+  endpoint:
+    | ToolOperationEndpoint
+    | ((params: TParams) => ToolOperationEndpoint);
 
   customProcessor?: undefined;
 }

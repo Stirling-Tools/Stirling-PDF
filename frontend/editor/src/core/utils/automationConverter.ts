@@ -84,7 +84,9 @@ export function convertToFolderScanningConfig(
         endpoint = endpointConfig;
       } else if (typeof endpointConfig === "function") {
         try {
-          endpoint = endpointConfig(op.parameters);
+          // A tool with no endpoint for these params (returns null) falls through
+          // to the no-endpoint warning below, same as a static null endpoint.
+          endpoint = endpointConfig(op.parameters) ?? undefined;
         } catch (error) {
           console.warn(
             `Failed to resolve dynamic endpoint for operation "${op.operation}". ` +
