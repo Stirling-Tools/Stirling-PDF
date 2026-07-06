@@ -82,7 +82,15 @@
     },
     {
       "moduleName": ".*",
+      "moduleLicense": "Apache License version 2.0"
+    },
+    {
+      "moduleName": ".*",
       "moduleLicense": "Apache License, Version 2.0"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "Apache License, version 2.0"
     },
     {
       "moduleName": ".*",
@@ -107,6 +115,10 @@
     {
       "moduleName": ".*",
       "moduleLicense": "Mozilla Public License 2.0 (MPL-2.0)"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "Mozilla Public License Version 2.0"
     },
     {
       "moduleName": ".*",
@@ -171,6 +183,14 @@
     {
       "moduleName": ".*",
       "moduleLicense": "Eclipse Public License, Version 2.0"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "EPL-2.0"
+    },
+    {
+      "moduleName": ".*",
+      "moduleLicense": "LGPL-2.1-only"
     },
     {
       "moduleName": ".*",

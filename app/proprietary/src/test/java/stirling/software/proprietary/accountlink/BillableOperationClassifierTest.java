@@ -1,49 +1,78 @@
 package stirling.software.proprietary.accountlink;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import stirling.software.common.service.InternalApiClient;
+import stirling.software.proprietary.billing.BillingCategory;
 
 class BillableOperationClassifierTest {
 
-    @Test
-    void aiPathIsBillable() {
-        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/ai/tools/foo");
-        assertTrue(BillableOperationClassifier.isBillable(req));
+    private static MockHttpServletRequest req(String uri) {
+        return new MockHttpServletRequest("POST", uri);
     }
 
     @Test
-    void automationHeaderIsBillable() {
-        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/general/merge");
+    void aiPathIsAi() {
+        assertEquals(
+                BillingCategory.AI,
+                BillableOperationClassifier.categorize(req("/api/v1/ai/tools/foo"), false));
+    }
+
+    @Test
+    void automationHeaderIsAutomation() {
+        MockHttpServletRequest req = req("/api/v1/general/merge");
         req.addHeader(InternalApiClient.AUTOMATION_HEADER, "1");
-        assertTrue(BillableOperationClassifier.isBillable(req));
+        assertEquals(
+                BillingCategory.AUTOMATION, BillableOperationClassifier.categorize(req, false));
     }
 
     @Test
-    void plainManualToolIsFree() {
-        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/general/merge");
-        assertFalse(BillableOperationClassifier.isBillable(req));
+    void apiKeyToolCallIsApi() {
+        assertEquals(
+                BillingCategory.API,
+                BillableOperationClassifier.categorize(req("/api/v1/general/merge"), true));
     }
 
     @Test
-    void aiSegmentNotAtPathStartIsFree() {
-        // Tightened from substring to prefix: the AI segment appearing mid-path (e.g. behind a
-        // proxy prefix) must NOT classify a manual tool as billable.
-        MockHttpServletRequest req =
-                new MockHttpServletRequest("POST", "/proxy/api/v1/ai/tools/foo");
-        assertFalse(BillableOperationClassifier.isBillable(req));
+    void plainManualToolIsBypassed() {
+        assertEquals(
+                BillingCategory.BYPASSED,
+                BillableOperationClassifier.categorize(req("/api/v1/general/merge"), false));
     }
 
     @Test
-    void aiPathUnderContextPathIsBillable() {
-        // A real context-path deployment still classifies: /<ctx>/api/v1/ai/** is billable.
-        MockHttpServletRequest req =
-                new MockHttpServletRequest("POST", "/stirling/api/v1/ai/tools/foo");
+    void automationDominatesAiAndApiKey() {
+        // An AI tool dispatched inside a workflow (automation header) + API-key auth → AUTOMATION.
+        MockHttpServletRequest req = req("/api/v1/ai/tools/foo");
+        req.addHeader(InternalApiClient.AUTOMATION_HEADER, "true");
+        assertEquals(BillingCategory.AUTOMATION, BillableOperationClassifier.categorize(req, true));
+    }
+
+    @Test
+    void aiDominatesApiKey() {
+        // A direct API-key call to an AI tool bills as AI, not API.
+        assertEquals(
+                BillingCategory.AI,
+                BillableOperationClassifier.categorize(req("/api/v1/ai/tools/foo"), true));
+    }
+
+    @Test
+    void aiSegmentNotAtPathStartIsBypassed() {
+        // Tightened from substring to prefix: the AI segment mid-path (e.g. behind a proxy prefix)
+        // must NOT classify a manual tool as AI.
+        assertEquals(
+                BillingCategory.BYPASSED,
+                BillableOperationClassifier.categorize(req("/proxy/api/v1/ai/tools/foo"), false));
+    }
+
+    @Test
+    void aiPathUnderContextPathIsAi() {
+        // A real context-path deployment still classifies: /<ctx>/api/v1/ai/** is AI.
+        MockHttpServletRequest req = req("/stirling/api/v1/ai/tools/foo");
         req.setContextPath("/stirling");
-        assertTrue(BillableOperationClassifier.isBillable(req));
+        assertEquals(BillingCategory.AI, BillableOperationClassifier.categorize(req, false));
     }
 }

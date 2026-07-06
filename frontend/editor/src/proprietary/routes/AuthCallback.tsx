@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   consumePostLoginRedirectPath,
   springAuth,
-} from "@shared/auth/spring/springAuthClient";
+} from "@app/auth/spring/springAuthClient";
 import { handleAuthCallbackSuccess } from "@app/extensions/authCallback";
 import styles from "@app/routes/AuthCallback.module.css";
 
