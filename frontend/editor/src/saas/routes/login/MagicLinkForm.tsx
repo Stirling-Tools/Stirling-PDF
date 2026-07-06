@@ -1,5 +1,5 @@
 import { useTranslation } from "@app/hooks/useTranslation";
-import "@shared/auth/ui/auth.css";
+import "@app/auth/ui/auth.css";
 import "@app/routes/authShared/saas-auth.css";
 
 interface MagicLinkFormProps {

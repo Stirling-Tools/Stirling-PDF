@@ -1,7 +1,7 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
-import TomlBackend from "@shared/i18n/tomlBackend";
+import TomlBackend from "@app/i18n/tomlBackend";
 import {
   supportedLanguages,
   rtlLanguages,
@@ -10,10 +10,10 @@ import {
   normalizeLanguageCode,
   toUnderscoreFormat,
   toUnderscoreLanguages,
-} from "@shared/i18n/languages";
+} from "@app/i18n/languages";
 
 // Language metadata and code helpers are shared with the portal via
-// @shared/i18n. Re-export them so existing `@app/i18n` consumers are unchanged.
+// @app/i18n. Re-export them so existing `@app/i18n` consumers are unchanged.
 export {
   supportedLanguages,
   rtlLanguages,

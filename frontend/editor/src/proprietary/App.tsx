@@ -16,12 +16,13 @@ import MobileScannerPage from "@app/pages/MobileScannerPage";
 import Onboarding from "@app/components/onboarding/Onboarding";
 import WatchedFoldersRegistration from "@app/components/watchedFolders/WatchedFoldersRegistration";
 import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
+import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
 
 // Import global styles
 import "@app/styles/tailwind.css";
 import "@app/styles/cookieconsent.css";
 import "@app/styles/index.css";
-import "@shared/auth/ui/auth-theme.css";
+import "@app/auth/ui/auth-theme.css";
 
 // Import file ID debugging helpers (development only)
 import "@app/utils/fileIdSafety";
@@ -66,6 +67,10 @@ export default function App() {
             </PublicRouteProviders>
           }
         />
+
+        {/* Admin-only route-set (the portal): its own top-level shell, mounted
+            before the catch-all. Absent from core/desktop builds (empty stub). */}
+        {getAdminRouteExtensions()}
 
         {/* All other routes need AppProviders for backend integration */}
         <Route
