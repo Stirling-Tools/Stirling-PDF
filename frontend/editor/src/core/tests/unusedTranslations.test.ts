@@ -5,10 +5,10 @@ import {
   I18N_PROJECTS,
   REPO_ROOT,
   findUnusedKeys,
-} from "@shared/i18n/translationAudit";
+} from "@app/i18n/translationAudit";
 
 // One suite per frontend app (editor + portal). The scan logic lives in
-// @shared/i18n/translationAudit so both apps share one implementation; each
+// @app/i18n/translationAudit so both apps share one implementation; each
 // project carries its own ignoredKeyPatterns for runtime-assembled keys.
 describe.each(I18N_PROJECTS)(
   "Unused translation coverage — $name",
@@ -38,7 +38,7 @@ describe.each(I18N_PROJECTS)(
           `Found ${unused.length} unused en-US translation key(s). ` +
             `Remove them from ${localeRelative}, or (if the usage is too ` +
             `dynamic for the heuristic to spot) add a pattern to this ` +
-            `project's ignoredKeyPatterns in @shared/i18n/translationAudit.`,
+            `project's ignoredKeyPatterns in @app/i18n/translationAudit.`,
         ).toEqual([]);
       },
     );

@@ -6,6 +6,7 @@ import {
   skipOnboarding,
   type MockAppApiOptions,
 } from "@app/tests/helpers/api-stubs";
+import { suppressNativeFilePicker } from "@app/tests/helpers/ui-helpers";
 
 /**
  * Custom Playwright fixture for backend-free specs.
@@ -57,6 +58,7 @@ export const test = base.extend<StubFixtures>({
   seedJwt: [false, { option: true }],
 
   page: async ({ page, stubOptions, autoGoto, seedJwt }, use) => {
+    suppressNativeFilePicker(page);
     await seedCookieConsent(page);
     if (seedJwt) {
       // Logged-in users hit the orchestrator path that surfaces the
