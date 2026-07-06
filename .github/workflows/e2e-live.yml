@@ -169,7 +169,7 @@ jobs:
         if: always() && steps.pw-frontend-coverage.outputs.summary == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: playwright-frontend-coverage-${{ github.run_id }}
+          name: playwright-frontend-coverage
           path: |
             .test-state/playwright/coverage-pw-summary/
             .test-state/playwright/coverage-pw/

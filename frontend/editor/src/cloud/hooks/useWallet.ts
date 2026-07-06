@@ -57,10 +57,10 @@ import type {
   WalletMember,
   WalletCategoryBreakdown,
   WalletActivityRow,
-} from "@shared/billing";
+} from "@app/billing";
 
 // ─── Public types ───────────────────────────────────────────────────────
-// The wallet contract lives in @shared/billing (shared with the admin portal).
+// The wallet contract lives in @app/billing (shared with the admin portal).
 // Re-exported so existing `@app/hooks/useWallet` importers keep their imports.
 export type {
   Wallet,
