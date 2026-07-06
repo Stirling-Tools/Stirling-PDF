@@ -16,7 +16,9 @@ const required = Number(process.env.REQUIRED_JAVA ?? "25");
 const releasePath = process.argv[2] ?? "runtime/jre/release";
 
 function rebuildRuntime(reason) {
-  console.warn(`${reason} Rebuilding runtime with 'task desktop:jlink:runtime'.`);
+  console.warn(
+    `${reason} Rebuilding runtime with 'task desktop:jlink:runtime'.`,
+  );
 
   const isWindows = process.platform === "win32";
   // Node does not reliably spawn the Task .cmd shim directly on Windows in
@@ -88,7 +90,9 @@ if (!major || major < required) {
   major = parseMajor(raw);
 }
 
-console.log(`Bundled JRE major: ${major || "unknown"} (required >= ${required})`);
+console.log(
+  `Bundled JRE major: ${major || "unknown"} (required >= ${required})`,
+);
 
 if (!major || major < required) {
   console.error(

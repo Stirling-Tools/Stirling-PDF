@@ -166,7 +166,10 @@ tasks:
       - cmd: './gradlew bootJar --no-daemon -PjpdfiumPlatforms={{.JPDFIUM_PLATFORMS}}'
         platforms: [linux, darwin]
       - mkdir -p frontend/editor/src-tauri/libs
-      - cp app/core/build/libs/stirling-pdf-*.jar frontend/editor/src-tauri/libs/
+      - cmd: cp app/core/build/libs/stirling-pdf-*.jar frontend/editor/src-tauri/libs/
+        platforms: [linux, darwin]
+      - cmd: powershell -NoProfile -ExecutionPolicy Bypass -Command "New-Item -ItemType Directory -Force -Path 'frontend/editor/src-tauri/libs' | Out-Null; Copy-Item -Force (Get-ChildItem 'app/core/build/libs/stirling-pdf-*.jar' | Select-Object -First 1) 'frontend/editor/src-tauri/libs'"
+        platforms: [windows]
     status:
       - test -f frontend/editor/src-tauri/libs/stirling-pdf-*.jar
 
