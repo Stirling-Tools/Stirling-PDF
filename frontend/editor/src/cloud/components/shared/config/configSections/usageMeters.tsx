@@ -7,7 +7,7 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useWallet, type Wallet } from "@app/hooks/useWallet";
-import { currencySymbol, MeterBar, meterState } from "@shared/billing";
+import { currencySymbol, MeterBar, meterState } from "@app/billing";
 import "@app/components/shared/config/configSections/Payg.css";
 import "@app/components/shared/config/configSections/PaygFree.css";
 
