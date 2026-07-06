@@ -43,6 +43,7 @@ jobs:
       docker-base: ${{ steps.changes.outputs.docker-base }}
       tauri: ${{ steps.changes.outputs.tauri }}
       engine: ${{ steps.changes.outputs.engine }}
+      generated-models: ${{ steps.changes.outputs.generated-models }}
       proprietary: ${{ steps.changes.outputs.proprietary }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
@@ -172,10 +173,12 @@ jobs:
     secrets: inherit
 
   # The generated frontend types and engine tool models are both derived from
-  # the Java OpenAPI spec, so they can go stale from a backend (openapi),
-  # frontend, or engine change. One job checks both.
+  # the Java OpenAPI spec. This job regenerates and diffs them; it boots the
+  # backend, so it is gated on the narrow generated-models filter (spec source,
+  # generators, generated files, generation tasks) rather than the broad
+  # frontend filter, so a CSS-only PR does not pay for a backend build.
   generated-models:
-    if: needs.files-changed.outputs.openapi == 'true' || needs.files-changed.outputs.frontend == 'true' || needs.files-changed.outputs.engine == 'true'
+    if: needs.files-changed.outputs.generated-models == 'true'
     needs: [files-changed]
     permissions:
       contents: read
