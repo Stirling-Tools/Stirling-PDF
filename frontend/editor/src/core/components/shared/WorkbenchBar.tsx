@@ -321,7 +321,7 @@ export default function WorkbenchBar({
         (typeof btn.tooltip === "string" ? (btn.tooltip as string) : btn.id);
       const buttonNode = (
         <ActionIcon
-          variant={isActive ? "primary" : "tertiary"}
+          variant={isActive ? "primary" : "quiet"}
           className="workbench-bar-action-icon"
           onClick={triggerAction}
           disabled={disabled}
