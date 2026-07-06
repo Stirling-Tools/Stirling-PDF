@@ -47,11 +47,13 @@ ext {
     modernJavaVersion = 25
 }
 
+def buildJavaLanguageVersion = JavaLanguageVersion.of(project.findProperty('javaVersion')?.toString() ?: '25')
+
 java {
     sourceCompatibility = JavaVersion.VERSION_25
     targetCompatibility = JavaVersion.VERSION_25
     toolchain {
-        languageVersion = JavaLanguageVersion.of(project.findProperty('javaVersion')?.toString() ?: '25')
+        languageVersion = buildJavaLanguageVersion
     }
 }
 
@@ -174,7 +176,7 @@ subprojects {
         sourceCompatibility = JavaVersion.VERSION_25
         targetCompatibility = JavaVersion.VERSION_25
         toolchain {
-            languageVersion = JavaLanguageVersion.of(25)
+            languageVersion = buildJavaLanguageVersion
         }
     }
 
@@ -661,6 +663,9 @@ tasks.register('compileRestartHelper', JavaCompile) {
     def restartCompatibility = JavaVersion.toVersion(restartMajorVersion.toString())
     sourceCompatibility = restartCompatibility
     targetCompatibility = restartCompatibility
+    javaCompiler = javaToolchains.compilerFor {
+        languageVersion = buildJavaLanguageVersion
+    }
     options.release.set(restartMajorVersion)
 }
 
