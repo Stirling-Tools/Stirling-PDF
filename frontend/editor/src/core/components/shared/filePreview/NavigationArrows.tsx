@@ -1,5 +1,6 @@
 import React from "react";
 import { Box } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
@@ -17,6 +18,7 @@ const NavigationArrows: React.FC<NavigationArrowsProps> = ({
   disabled = false,
   children,
 }) => {
+  const { t } = useTranslation();
   const navigationArrowStyle = {
     position: "absolute" as const,
     top: "50%",
@@ -32,7 +34,7 @@ const NavigationArrows: React.FC<NavigationArrowsProps> = ({
         size="sm"
         onClick={onPrevious}
         disabled={disabled}
-        aria-label="Previous"
+        aria-label={t("common.previous", "Previous")}
         style={{
           ...navigationArrowStyle,
           left: "0",
@@ -60,7 +62,7 @@ const NavigationArrows: React.FC<NavigationArrowsProps> = ({
         size="sm"
         onClick={onNext}
         disabled={disabled}
-        aria-label="Next"
+        aria-label={t("common.next", "Next")}
         style={{
           ...navigationArrowStyle,
           right: "0",

@@ -91,7 +91,7 @@ function CheckoutActivationSlow({ onClose }: { onClose: () => void }) {
           "Your payment succeeded, but activation is taking a little longer than usual. It'll switch on automatically - close this and it'll appear here shortly.",
         )}
       </p>
-      <Button variant="outline" onClick={onClose}>
+      <Button variant="secondary" onClick={onClose}>
         {t("portal.billing.checkout.activationSlow.close", "Close")}
       </Button>
     </div>

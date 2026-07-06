@@ -386,7 +386,10 @@ export const AttachmentSidebar = ({
             accent="neutral"
             size="sm"
             onClick={toggleAttachmentSidebar}
-            aria-label="Close attachments sidebar"
+            aria-label={t(
+              "viewer.attachments.closeSidebar",
+              "Close attachments sidebar",
+            )}
             title={t("viewer.attachments.close", "Close attachments")}
           >
             <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />

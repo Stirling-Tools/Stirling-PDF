@@ -257,7 +257,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
                 <ActionIcon
                   variant="tertiary"
                   onClick={onClose}
-                  aria-label="Close"
+                  aria-label={t("common.close", "Close")}
                 >
                   <LocalIcon icon="close-rounded" width={18} height={18} />
                 </ActionIcon>

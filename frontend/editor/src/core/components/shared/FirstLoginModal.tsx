@@ -190,7 +190,7 @@ export default function FirstLoginModal({
 
           <Button
             fullWidth
-            onClick={handleSubmit}
+            type="submit"
             loading={loading}
             disabled={
               !currentPassword ||

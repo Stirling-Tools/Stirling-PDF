@@ -19,6 +19,7 @@ import { isStirlingFile, type FileId } from "@app/types/fileContext";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import apiClient from "@app/services/apiClient";
 import { PdfBookmarkObject, PdfActionType } from "@embedpdf/models";
+import { useTranslation } from "react-i18next";
 import BookmarksIcon from "@mui/icons-material/BookmarksRounded";
 import "@app/components/viewer/SidebarBase.css";
 import "@app/components/viewer/BookmarkSidebar.css";
@@ -92,6 +93,7 @@ export const BookmarkSidebar = ({
     getScrollState,
     toggleBookmarkSidebar,
   } = useViewer();
+  const { t } = useTranslation();
   const { handleToolSelectForced } = useToolWorkflow();
   const { selectors, actions: fileActions } = useFileContext();
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -689,7 +691,10 @@ export const BookmarkSidebar = ({
                   variant="tertiary"
                   size="sm"
                   onClick={expandAll}
-                  aria-label="Expand all bookmarks"
+                  aria-label={t(
+                    "viewer.bookmarks.expandAll",
+                    "Expand all bookmarks",
+                  )}
                   title="Expand all"
                 >
                   <LocalIcon
@@ -703,7 +708,10 @@ export const BookmarkSidebar = ({
                   variant="tertiary"
                   size="sm"
                   onClick={collapseAll}
-                  aria-label="Collapse all bookmarks"
+                  aria-label={t(
+                    "viewer.bookmarks.collapseAll",
+                    "Collapse all bookmarks",
+                  )}
                   title="Collapse all"
                 >
                   <LocalIcon
@@ -720,7 +728,10 @@ export const BookmarkSidebar = ({
             accent="neutral"
             size="sm"
             onClick={toggleBookmarkSidebar}
-            aria-label="Close bookmarks sidebar"
+            aria-label={t(
+              "viewer.bookmarks.closeSidebar",
+              "Close bookmarks sidebar",
+            )}
             title="Close bookmarks"
           >
             <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
@@ -829,7 +840,10 @@ export const BookmarkSidebar = ({
                 <TextInput
                   size="xs"
                   placeholder="Bookmark title"
-                  aria-label="Bookmark title"
+                  aria-label={t(
+                    "viewer.bookmarks.bookmarkTitle",
+                    "Bookmark title",
+                  )}
                   value={newBookmarkTitle}
                   onChange={(e) => setNewBookmarkTitle(e.currentTarget.value)}
                   autoFocus

@@ -1,4 +1,5 @@
 import CloseIcon from "@mui/icons-material/Close";
+import { useTranslation } from "react-i18next";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useLogoAssets } from "@app/hooks/useLogoAssets";
 
@@ -19,6 +20,7 @@ export default function LoginHeader({
   centerOnly = false,
   onClose,
 }: LoginHeaderProps) {
+  const { t } = useTranslation();
   const { tooltipLogo } = useLogoAssets();
 
   return (
@@ -58,7 +60,7 @@ export default function LoginHeader({
           <ActionIcon
             onClick={onClose}
             variant="tertiary"
-            aria-label="Close"
+            aria-label={t("common.close", "Close")}
             style={{
               flexShrink: 0,
               color: "var(--text-secondary)",

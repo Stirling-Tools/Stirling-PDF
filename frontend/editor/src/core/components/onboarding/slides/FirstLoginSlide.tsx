@@ -201,7 +201,7 @@ function FirstLoginForm({
 
             <Button
               fullWidth
-              onClick={handleSubmit}
+              type="submit"
               loading={loading}
               disabled={
                 !newPassword ||

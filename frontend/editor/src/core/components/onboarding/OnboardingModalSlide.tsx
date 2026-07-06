@@ -7,6 +7,7 @@
 
 import React from "react";
 import { Modal, Stack } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import DiamondOutlinedIcon from "@mui/icons-material/DiamondOutlined";
 
@@ -45,6 +46,7 @@ export default function OnboardingModalSlide({
   onAction,
   allowDismiss = true,
 }: OnboardingModalSlideProps) {
+  const { t } = useTranslation();
   const renderHero = () => {
     if (slideDefinition.hero.type === "dual-icon") {
       return (
@@ -141,7 +143,7 @@ export default function OnboardingModalSlide({
               onClick={onSkip}
               variant="tertiary"
               size="lg"
-              aria-label="Close"
+              aria-label={t("common.close", "Close")}
               style={{
                 position: "absolute",
                 top: 16,

@@ -754,7 +754,10 @@ export function CommentsSidebar({
             accent="neutral"
             size="sm"
             onClick={toggleCommentsSidebar}
-            aria-label="Close comments sidebar"
+            aria-label={t(
+              "viewer.comments.closeSidebar",
+              "Close comments sidebar",
+            )}
             title={t("viewer.comments.close", "Close comments")}
           >
             <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
