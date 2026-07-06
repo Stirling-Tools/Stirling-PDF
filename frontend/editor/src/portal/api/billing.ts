@@ -21,6 +21,18 @@ export async function fetchWallet(): Promise<Wallet> {
   return apiClient.saas.json<Wallet>("/api/v1/payg/wallet");
 }
 
+/**
+ * Force the SaaS to drop this team's cached wallet snapshot so the next
+ * {@link fetchWallet} reflects a just-changed billing state (e.g. a completed
+ * checkout) without waiting out the ~30s server-side cache. Best-effort — the
+ * caller polls regardless of whether this succeeds.
+ */
+export async function refreshWalletCache(): Promise<void> {
+  await apiClient.saas.json<void>("/api/v1/payg/wallet/refresh", {
+    method: "POST",
+  });
+}
+
 // ────────────────────────────────────────────────────────────────────────────
 // Cap — leader-only PATCH (real endpoint).
 // ────────────────────────────────────────────────────────────────────────────
