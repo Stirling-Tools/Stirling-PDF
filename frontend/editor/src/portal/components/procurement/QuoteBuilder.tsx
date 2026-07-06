@@ -60,9 +60,9 @@ export function QuoteBuilder({
 
   // Re-editing an existing quote: everything is seeded, so jump to the last step (details) with the
   // agreement pre-accepted — one click re-generates, or Back to change a field. No walking from step 1.
+  // Mount-only: seed the step from `initial` once (deliberately no deps).
   useEffect(() => {
     if (initial) setStep(STEPS.length - 1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const preview = previewAnnualMinor(cfg);
@@ -82,9 +82,14 @@ export function QuoteBuilder({
   return (
     <div className="portal-qb">
       <div className="portal-qb__head">
-        <h3 className="portal-qb__title">{t("portal.procurement.builder.title")}</h3>
+        <h3 className="portal-qb__title">
+          {t("portal.procurement.builder.title")}
+        </h3>
         <span className="portal-qb__stepchip">
-          {t("portal.procurement.builder.stepOf", { n: step + 1, total: STEPS.length })}
+          {t("portal.procurement.builder.stepOf", {
+            n: step + 1,
+            total: STEPS.length,
+          })}
         </span>
       </div>
       <div className="portal-qb__progress">
@@ -129,7 +134,9 @@ export function QuoteBuilder({
             </div>
             <p className="portal-qb__hint">
               {cfg.users > 0 && !manualVolume
-                ? t("portal.procurement.builder.volEstimated", { count: cfg.users })
+                ? t("portal.procurement.builder.volEstimated", {
+                    count: cfg.users,
+                  })
                 : cfg.users > 0
                   ? t("portal.procurement.builder.volManual")
                   : t("portal.procurement.builder.volNoUsers")}
@@ -221,7 +228,9 @@ export function QuoteBuilder({
           >
             <Field label={t("portal.procurement.builder.businessName")}>
               <input
-                placeholder={t("portal.procurement.builder.businessNamePlaceholder")}
+                placeholder={t(
+                  "portal.procurement.builder.businessNamePlaceholder",
+                )}
                 value={cfg.businessName}
                 onChange={(e) => set("businessName", e.target.value)}
               />
@@ -395,7 +404,6 @@ function AddOn({
     </button>
   );
 }
-
 
 function estimateVolume(users: number): number {
   const raw = Math.max(0, users) * 5 * 230 * 1.75;

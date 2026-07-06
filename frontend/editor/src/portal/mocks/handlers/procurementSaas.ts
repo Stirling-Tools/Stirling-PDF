@@ -181,7 +181,9 @@ export const procurementSaasHandlers = [
   http.post(`${SAAS}/api/v1/procurement/trial/extend`, () => {
     const d = deal as Record<string, unknown>;
     if (d.dealId) {
-      const base = d.trialEndsAt ? Date.parse(d.trialEndsAt as string) : Date.now();
+      const base = d.trialEndsAt
+        ? Date.parse(d.trialEndsAt as string)
+        : Date.now();
       d.trialEndsAt = new Date(base + 7 * 86_400_000).toISOString();
       d.trialExtensionsUsed = ((d.trialExtensionsUsed as number) ?? 0) + 1;
     }

@@ -967,10 +967,10 @@
   padding: 1.1rem 1.25rem;
   background:
     radial-gradient(
-        120% 140% at 100% 0%,
-        rgba(124, 58, 237, 0.08),
-        transparent 55%
-      ),
+      120% 140% at 100% 0%,
+      rgba(124, 58, 237, 0.08),
+      transparent 55%
+    ),
     var(--color-surface);
   display: flex;
   flex-direction: column;

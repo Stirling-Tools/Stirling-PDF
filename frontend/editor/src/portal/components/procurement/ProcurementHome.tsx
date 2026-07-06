@@ -64,7 +64,9 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
   const [downloading, setDownloading] = useState(false);
   const [invoicePdf, setInvoicePdf] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [extra, setExtra] = useState<null | "docs" | "schedule" | "trial">(null);
+  const [extra, setExtra] = useState<null | "docs" | "schedule" | "trial">(
+    null,
+  );
 
   const data = snap ?? (state.loading ? null : state.data);
   const started = data?.dealId != null;
@@ -216,7 +218,8 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
               <StageStepper journey={JOURNEY} currentStage={stage!} />
             </div>
 
-            {(editing || (isDraft && (stage === "trial" || stage === "quote"))) && (
+            {(editing ||
+              (isDraft && (stage === "trial" || stage === "quote"))) && (
               <QuoteBuilder
                 deployment="cloud"
                 initial={latest?.config}

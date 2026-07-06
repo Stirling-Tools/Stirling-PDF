@@ -80,20 +80,54 @@ const STAGE_DOCS: { group: string; docs: DocRow[] }[] = [
   {
     group: "Your deal",
     docs: [
-      { name: "Formal quote", sub: "Built to your volume, term, and service level", status: "available" },
-      { name: "Master Services Agreement", sub: "One signature — MSA, order form, EULA, and DPA combined", status: "action" },
-      { name: "Bank transfer instructions", sub: "Wire details for your AP team", status: "available" },
-      { name: "Purchase order", sub: "Issuing a PO? Upload it and we invoice against it", status: "request" },
+      {
+        name: "Formal quote",
+        sub: "Built to your volume, term, and service level",
+        status: "available",
+      },
+      {
+        name: "Master Services Agreement",
+        sub: "One signature — MSA, order form, EULA, and DPA combined",
+        status: "action",
+      },
+      {
+        name: "Bank transfer instructions",
+        sub: "Wire details for your AP team",
+        status: "available",
+      },
+      {
+        name: "Purchase order",
+        sub: "Issuing a PO? Upload it and we invoice against it",
+        status: "request",
+      },
     ],
   },
   {
     group: "Supporting your evaluation",
     docs: [
-      { name: "SOC 2 Type II report", sub: "Audited · NDA-gated", status: "available" },
-      { name: "Custom security review", sub: "We complete your questionnaire and join your review call", status: "request", fee: 5000 },
-      { name: "Business Associate Agreement", sub: "HIPAA · available on request", status: "request", fee: 2500 },
+      {
+        name: "SOC 2 Type II report",
+        sub: "Audited · NDA-gated",
+        status: "available",
+      },
+      {
+        name: "Custom security review",
+        sub: "We complete your questionnaire and join your review call",
+        status: "request",
+        fee: 5000,
+      },
+      {
+        name: "Business Associate Agreement",
+        sub: "HIPAA · available on request",
+        status: "request",
+        fee: 2500,
+      },
       { name: "IRS Form W-9", sub: "Stirling PDF Inc.", status: "available" },
-      { name: "Certificate of Insurance", sub: "Cyber + E&O · current policy", status: "available" },
+      {
+        name: "Certificate of Insurance",
+        sub: "Cyber + E&O · current policy",
+        status: "available",
+      },
     ],
   },
 ];
@@ -223,7 +257,11 @@ export function TrialManageModal({
       open={open}
       onClose={onClose}
       title="Enterprise trial"
-      subtitle={ends ? `Your free trial runs through ${ends}. No card required.` : undefined}
+      subtitle={
+        ends
+          ? `Your free trial runs through ${ends}. No card required.`
+          : undefined
+      }
       footer={
         <>
           <button
