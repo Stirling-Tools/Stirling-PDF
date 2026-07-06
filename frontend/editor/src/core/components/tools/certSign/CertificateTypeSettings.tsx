@@ -74,7 +74,7 @@ const CertificateTypeSettings = ({
       <div style={{ display: "flex", gap: "4px" }}>
         <Button
           variant={parameters.signMode === "MANUAL" ? "primary" : "secondary"}
-          accent={parameters.signMode === "MANUAL" ? "success" : undefined}
+          accent={parameters.signMode === "MANUAL" ? "default" : undefined}
           onClick={selectUpload}
           disabled={disabled}
           style={sourceButtonStyle}
@@ -84,7 +84,7 @@ const CertificateTypeSettings = ({
         {isServerCertificateEnabled && (
           <Button
             variant={parameters.signMode === "AUTO" ? "primary" : "secondary"}
-            accent={parameters.signMode === "AUTO" ? "success" : "default"}
+            accent={parameters.signMode === "AUTO" ? "default" : undefined}
             onClick={selectServer}
             disabled={disabled}
             style={sourceButtonStyle}
