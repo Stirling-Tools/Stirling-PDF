@@ -130,6 +130,8 @@ function ToastItem({
       </div>
       <Button
         variant="tertiary"
+        accent="neutral"
+        size="sm"
         shape="circle"
         className="sui-toast__close"
         onClick={() => onDismiss(entry.id)}

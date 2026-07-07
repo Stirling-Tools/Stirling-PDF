@@ -94,6 +94,8 @@ export function Modal({
               </div>
               <Button
                 variant="tertiary"
+                accent="neutral"
+                size="sm"
                 shape="circle"
                 className="sui-modal__close"
                 onClick={onClose}

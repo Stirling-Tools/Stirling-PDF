@@ -75,22 +75,10 @@
   color: var(--color-text-4);
 }
 
+/* Sizing/background/hover are owned by the Button; this just keeps it from
+ * stretching. */
 .sui-drawer__close {
   flex: 0 0 auto;
-  width: 1.75rem;
-  height: 1.75rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  color: var(--color-text-4);
-  transition:
-    background var(--motion-fast),
-    color var(--motion-fast);
-}
-.sui-drawer__close:hover {
-  background: var(--color-bg-hover);
-  color: var(--color-text-1);
 }
 
 .sui-drawer__body {

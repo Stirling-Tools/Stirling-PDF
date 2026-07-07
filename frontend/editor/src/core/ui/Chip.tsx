@@ -1,5 +1,10 @@
 import { Pill as MantinePill } from "@mantine/core";
-import type { CSSProperties, KeyboardEvent, ReactNode } from "react";
+import type {
+  CSSProperties,
+  HTMLAttributes,
+  KeyboardEvent,
+  ReactNode,
+} from "react";
 import "@app/ui/Chip.css";
 
 /** Same accent dial as Button. */
@@ -16,7 +21,10 @@ export type ChipSize = "xs" | "sm" | "md" | "lg";
 /** primary = solid fill; secondary = soft tinted tag (the default tag look). */
 export type ChipVariant = "primary" | "secondary";
 
-export interface ChipProps {
+export interface ChipProps extends Omit<
+  HTMLAttributes<HTMLElement>,
+  "onClick"
+> {
   accent?: ChipAccent;
   variant?: ChipVariant;
   size?: ChipSize;

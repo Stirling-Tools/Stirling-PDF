@@ -36,12 +36,12 @@ export const operationButtonVariantMap: Record<
 export const operationButtonAccentMap: Record<string, ButtonAccent> = {
   gray: "neutral",
   grey: "neutral",
-  blue: "neutral",
+  blue: "default",
   red: "danger",
   green: "success",
   yellow: "warning",
-  violet: "neutral",
-  grape: "neutral",
+  violet: "premium",
+  grape: "premium",
 };
 
 const OperationButton = ({
@@ -101,7 +101,7 @@ const OperationButton = ({
   const sharedVariant: ButtonVariant =
     operationButtonVariantMap[variant] ?? "primary";
   const sharedAccent: ButtonAccent =
-    operationButtonAccentMap[color] ?? "neutral";
+    operationButtonAccentMap[color] ?? "default";
 
   const button = (
     <Button

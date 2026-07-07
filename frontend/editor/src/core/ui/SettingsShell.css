@@ -109,24 +109,10 @@
   align-items: center;
   gap: 0.5rem;
 }
+/* Sizing/background/hover are owned by the Button; this just keeps it from
+ * stretching. */
 .sui-settings-shell__close {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: none;
-  color: var(--color-text-3);
-  cursor: pointer;
-  transition:
-    background var(--motion-fast),
-    color var(--motion-fast);
-}
-.sui-settings-shell__close:hover {
-  background: var(--color-bg-hover);
-  color: var(--color-text-1);
+  flex: 0 0 auto;
 }
 
 .sui-settings-shell__body {

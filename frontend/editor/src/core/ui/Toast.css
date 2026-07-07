@@ -52,19 +52,10 @@
   line-height: 1.45;
 }
 
+/* Sizing/background/hover are owned by the Button; this just keeps it from
+ * stretching and sizes the × glyph. */
 .sui-toast__close {
   flex: 0 0 auto;
-  width: 1.25rem;
-  height: 1.25rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  color: var(--color-text-4);
   font-size: 1rem;
   line-height: 1;
-}
-.sui-toast__close:hover {
-  background: var(--color-bg-hover);
-  color: var(--color-text-1);
 }

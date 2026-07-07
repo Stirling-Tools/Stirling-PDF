@@ -1,12 +1,9 @@
 import type { HTMLAttributes, ReactNode } from "react";
 import "@app/ui/Card.css";
 
-/** Same accent dial as Button/ActionIcon/Chip. */
+/** Subset of the shared accent dial that has a styled strip (see Card.css). */
 export type CardAccent =
   | "default"
-  | "neutral"
-  | "brand"
-  | "ai"
   | "premium"
   | "danger"
   | "success"

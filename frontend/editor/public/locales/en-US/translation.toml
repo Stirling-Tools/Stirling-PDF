@@ -2537,6 +2537,7 @@ title = "Rule of thumb"
 
 [certSign.source]
 device = "This device"
+noOtherSources = "No other certificate sources are available."
 server = "Server"
 stepTitle = "Certificate source"
 upload = "Upload"
@@ -9930,6 +9931,7 @@ zoomOut = "Zoom Out"
 [viewer.attachments]
 addAttachment = "Add attachment"
 close = "Close attachments"
+closeSidebar = "Close attachments sidebar"
 download = "Download attachment"
 empty = "No attachments in this document"
 loading = "Loading attachments..."
@@ -9950,6 +9952,7 @@ clearAll = "Clear all comments"
 clearAllDescription = "This removes comments and replies from the sidebar while keeping any attached annotations in the document."
 clearAllTitle = "Clear all comments?"
 close = "Close comments"
+closeSidebar = "Close comments sidebar"
 deleteAnnotationAndComment = "Delete annotation & comment"
 deleteDescription = "This annotation has a comment attached. You can remove just the comment from the sidebar while keeping the annotation, or delete everything."
 deleteTitle = "Remove annotation from comments?"
@@ -10653,3 +10656,17 @@ confirm = "Extract"
 message_one = "This ZIP contains {{count}} file. Extract anyway?"
 message_other = "This ZIP contains {{count}} files. Extract anyway?"
 title = "Large ZIP File"
+
+[viewer.bookmarks]
+bookmarkTitle = "Bookmark title"
+closeSidebar = "Close bookmarks sidebar"
+collapseAll = "Collapse all bookmarks"
+expandAll = "Expand all bookmarks"
+
+[viewer.layers]
+closeSidebar = "Close layers sidebar"
+hideAll = "Hide all layers"
+showAll = "Show all layers"
+
+[viewer.thumbnails]
+closeSidebar = "Close thumbnails sidebar"

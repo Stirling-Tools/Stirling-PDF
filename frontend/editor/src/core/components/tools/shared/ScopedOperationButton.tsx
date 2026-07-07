@@ -79,7 +79,7 @@ export function ScopedOperationButton({
   const loadingVariant: ButtonVariant =
     operationButtonVariantMap[props.variant ?? "filled"] ?? "primary";
   const loadingAccent: ButtonAccent =
-    operationButtonAccentMap[props.color ?? "blue"] ?? "neutral";
+    operationButtonAccentMap[props.color ?? "blue"] ?? "default";
 
   return (
     <>

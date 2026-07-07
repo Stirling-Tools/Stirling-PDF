@@ -58,7 +58,8 @@ export function CodeBlock({
         {copyable && (
           <Button
             variant="tertiary"
-            shape="circle"
+            size="sm"
+            shape="pill"
             className="sui-code__copy"
             onClick={copy}
             aria-label="Copy code"

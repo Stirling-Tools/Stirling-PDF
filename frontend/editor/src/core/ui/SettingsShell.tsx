@@ -93,6 +93,8 @@ export function SettingsShell({
             {onClose && (
               <Button
                 variant="tertiary"
+                accent="neutral"
+                size="sm"
                 shape="circle"
                 className="sui-settings-shell__close"
                 onClick={onClose}

@@ -101,6 +101,8 @@ export function Drawer({
               </div>
               <Button
                 variant="tertiary"
+                accent="neutral"
+                size="sm"
                 shape="circle"
                 className="sui-drawer__close"
                 onClick={onClose}

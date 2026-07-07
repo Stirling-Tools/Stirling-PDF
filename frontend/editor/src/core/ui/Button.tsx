@@ -59,11 +59,25 @@ export interface ButtonGroupProps {
   children?: ReactNode;
   className?: string;
   style?: CSSProperties;
+  orientation?: "horizontal" | "vertical";
+  /** Border width between attached buttons (Mantine `--button-border-width`). */
+  borderWidth?: number | string;
 }
 
-function ButtonGroup({ children, className, style }: ButtonGroupProps) {
+function ButtonGroup({
+  children,
+  className,
+  style,
+  orientation,
+  borderWidth,
+}: ButtonGroupProps) {
   return (
-    <MantineButton.Group className={className} style={style}>
+    <MantineButton.Group
+      className={className}
+      style={style}
+      orientation={orientation}
+      borderWidth={borderWidth}
+    >
       {children}
     </MantineButton.Group>
   );

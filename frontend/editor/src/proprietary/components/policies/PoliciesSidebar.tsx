@@ -207,7 +207,11 @@ export function PoliciesSection({
                         size="sm"
                         accent="neutral"
                         onClick={() =>
-                          window.open("https://stirling.com/contact", "_blank")
+                          window.open(
+                            "https://stirling.com/contact",
+                            "_blank",
+                            "noopener,noreferrer",
+                          )
                         }
                       >
                         {t(

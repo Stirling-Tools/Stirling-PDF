@@ -24,8 +24,9 @@
 }
 
 /* ---- gradient accents: brighten on hover instead of a hard bg swap ---- */
-.sui-acc-ai.sui-btn--primary:not(:disabled):hover,
-.sui-acc-premium.sui-btn--primary:not(:disabled):hover {
+/* [data-disabled] too: :disabled never matches polymorphic (as="a") roots. */
+.sui-acc-ai.sui-btn--primary:not(:disabled):not([data-disabled]):hover,
+.sui-acc-premium.sui-btn--primary:not(:disabled):not([data-disabled]):hover {
   filter: brightness(1.06);
 }
 
@@ -35,6 +36,6 @@
 }
 
 /* no-hover: !important to beat Mantine's own :hover background rule. */
-.sui-btn--no-hover:not(:disabled):hover {
+.sui-btn--no-hover:not(:disabled):not([data-disabled]):hover {
   background: var(--button-bg, transparent) !important;
 }

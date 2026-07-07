@@ -134,11 +134,17 @@
   margin-left: auto;
 }
 
-/* Shared action icon style - applies to both center and global buttons */
+/* Shared action icon style - applies to both center and global buttons.
+ * Tight 24px hit-box and no hover background: these are quiet toolbar icons —
+ * hover feedback comes from the icon colour darkening, not a bg tint. */
 .workbench-bar-action-icon {
   color: var(--text-secondary) !important;
-  width: 28px !important;
-  height: 28px !important;
+  /* min-* too: Mantine's ActionIcon sets min-width/min-height from --ai-size
+   * (36px), which floors the width and defeats the 24px clamp. */
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  min-height: 24px !important;
   background: transparent !important;
 }
 
@@ -150,7 +156,6 @@
 
 .workbench-bar-action-icon:hover {
   color: var(--text-primary) !important;
-  background-color: var(--hover-bg) !important;
 }
 
 .workbench-bar-action-icon[data-variant="filled"] {

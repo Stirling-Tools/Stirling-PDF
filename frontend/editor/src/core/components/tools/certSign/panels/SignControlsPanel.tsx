@@ -357,7 +357,6 @@ export default function SignControlsPanel({
         <Menu.Target>
           <Button
             variant="secondary"
-            accent="neutral"
             fullWidth
             justify="between"
             rightSection={<KeyboardArrowDownIcon sx={{ fontSize: "1.1rem" }} />}
