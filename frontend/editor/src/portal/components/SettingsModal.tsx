@@ -612,7 +612,7 @@ function WorkspacePanel({
       >
         <Select
           value={region}
-          onChange={(e) => onRegion(e.target.value)}
+          onChange={(value) => onRegion(value ?? "")}
           options={regionOptions}
         />
       </FormField>
@@ -750,8 +750,8 @@ function AuthenticationPanel({
         >
           <Select
             value={String(security.sessionTimeoutMins)}
-            onChange={(e) =>
-              onSecurity({ sessionTimeoutMins: Number(e.target.value) })
+            onChange={(value) =>
+              onSecurity({ sessionTimeoutMins: Number(value ?? "0") })
             }
             options={SESSION_TIMEOUT_VALUES.map((value) => ({
               value,
