@@ -28,10 +28,12 @@ from jinja2 import Environment, FileSystemLoader
 from pydantic_ai import Agent
 from pydantic_ai.output import NativeOutput
 
+from stirling.agents._registry import AgentDescriptor, OrchestratorRoute, RegisterableAgent
 from stirling.contracts import (
     EditCannotDoResponse,
     EditPlanResponse,
     OrchestratorRequest,
+    SupportedCapability,
     ToolOperationStep,
     format_conversation_history,
 )
@@ -317,7 +319,7 @@ def _safe_filename(title: str) -> str:
 # ── Agent ─────────────────────────────────────────────────────────────────────────────────────────
 
 
-class PdfCreateAgent:
+class PdfCreateAgent(RegisterableAgent):
     def __init__(self, runtime: AppRuntime) -> None:
         self.runtime = runtime
         self._jinja_env = _build_jinja_env()
@@ -341,6 +343,21 @@ class PdfCreateAgent:
             output_type=NativeOutput(WrittenSections),
             system_prompt=_WRITER_SYSTEM_PROMPT,
             model_settings={**runtime.smart_model_settings, "temperature": 0.3},
+        )
+
+    def describe(self) -> AgentDescriptor:
+        return AgentDescriptor(
+            orchestrator=OrchestratorRoute(
+                capability=SupportedCapability.PDF_CREATE,
+                tool_name="delegate_pdf_create",
+                tool_description=(
+                    "Delegate requests to create a new PDF document from scratch based on a"
+                    " description. Use this when the user wants to generate a new document"
+                    " (e.g. 'create an invoice', 'write a report', 'make a contract',"
+                    " 'draft a letter'). No input file is required."
+                ),
+                orchestrate=self.orchestrate,
+            ),
         )
 
     async def orchestrate(self, request: OrchestratorRequest) -> PdfCreateOrchestrateResponse:

@@ -12,9 +12,12 @@ from pydantic_ai.models.instrumented import InstrumentationSettings
 from stirling.agents import (
     ExecutionPlanningAgent,
     OrchestratorAgent,
+    PdfCreateAgent,
     PdfEditAgent,
     PdfQuestionAgent,
+    PdfReviewAgent,
     UserSpecAgent,
+    build_descriptors,
 )
 from stirling.agents.ledger import MathAuditorAgent
 from stirling.agents.pdf_comment import PdfCommentAgent
@@ -88,13 +91,28 @@ async def lifespan(fast_api: FastAPI):
     runtime = build_runtime(settings)
     fast_api.state.settings = settings
     fast_api.state.runtime = runtime
-    fast_api.state.orchestrator_agent = OrchestratorAgent(runtime)
     fast_api.state.pdf_edit_agent = PdfEditAgent(runtime)
     fast_api.state.pdf_question_agent = PdfQuestionAgent(runtime)
+    fast_api.state.pdf_review_agent = PdfReviewAgent(runtime)
+    fast_api.state.pdf_create_agent = PdfCreateAgent(runtime)
     fast_api.state.user_spec_agent = UserSpecAgent(runtime)
     fast_api.state.execution_planning_agent = ExecutionPlanningAgent(runtime)
     fast_api.state.math_auditor_agent = MathAuditorAgent(runtime)
     fast_api.state.pdf_comment_agent = PdfCommentAgent(runtime)
+    # One descriptor list drives both orchestrator routing and the MCP manifest.
+    fast_api.state.agent_descriptors = build_descriptors(
+        [
+            fast_api.state.pdf_edit_agent,
+            fast_api.state.pdf_question_agent,
+            fast_api.state.user_spec_agent,
+            fast_api.state.pdf_review_agent,
+            fast_api.state.pdf_create_agent,
+            fast_api.state.pdf_comment_agent,
+            fast_api.state.math_auditor_agent,
+            fast_api.state.execution_planning_agent,
+        ]
+    )
+    fast_api.state.orchestrator_agent = OrchestratorAgent(runtime, fast_api.state.agent_descriptors)
     tracer_provider = setup_posthog_tracking(settings)
     if tracer_provider:
         Agent.instrument_all(InstrumentationSettings(tracer_provider=tracer_provider))
