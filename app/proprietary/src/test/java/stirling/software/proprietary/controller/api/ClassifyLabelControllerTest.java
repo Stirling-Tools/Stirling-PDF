@@ -42,7 +42,6 @@ import tools.jackson.databind.json.JsonMapper;
 class ClassifyLabelControllerTest {
 
     private static final Long TEAM = 7L;
-    private static final Long USER = 31L;
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
@@ -110,24 +109,16 @@ class ClassifyLabelControllerTest {
     }
 
     @Test
-    void classifyAndLabel_sendsMergedTeamAndUserLabelNames() throws Exception {
+    void classifyAndLabel_sendsTeamLabelNames() throws Exception {
         when(policyManagementAuthority.currentUserTeamId()).thenReturn(TEAM);
-        when(policyManagementAuthority.currentUserId()).thenReturn(USER);
         labelStore.save(
                 TEAM,
                 new ClassificationLabels(
                         List.of(
                                 new ClassificationLabel("Invoice", "receipt-long"),
-                                new ClassificationLabel("Contract", null))),
+                                new ClassificationLabel("Contract", null),
+                                new ClassificationLabel("Timesheet", null))),
                 "admin");
-        labelStore.saveForUser(
-                USER,
-                new ClassificationLabels(
-                        List.of(
-                                // Duplicates the team's "Invoice" case-insensitively: the team's
-                                // first-seen casing must win.
-                                new ClassificationLabel("INVOICE", null),
-                                new ClassificationLabel("Timesheet", null))));
 
         stubSinglePageDocument();
 
@@ -146,12 +137,11 @@ class ClassifyLabelControllerTest {
     @Test
     void classifyAndLabel_omitsLabelsWhenNothingStored() throws Exception {
         when(policyManagementAuthority.currentUserTeamId()).thenReturn(TEAM);
-        when(policyManagementAuthority.currentUserId()).thenReturn(USER);
 
         stubSinglePageDocument();
 
-        // No team or user labels stored: null is serialized away (NON_NULL) so the engine falls
-        // back to its built-in default vocabulary.
+        // No team labels stored: null is serialized away (NON_NULL) so the engine falls back to its
+        // built-in default vocabulary.
         assertThat(sentEngineRequest().has("labels")).isFalse();
     }
 

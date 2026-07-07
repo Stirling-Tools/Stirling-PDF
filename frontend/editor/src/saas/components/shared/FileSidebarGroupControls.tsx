@@ -1,4 +1,4 @@
-// The Files-sidebar category manager: a "tune" button opening a modal where you shape the parent categories your files group under. Each category (collapsible, busiest first) has an editable name + icon, a hide toggle, delete, and its member-label chips; add existing labels or type a new custom one (which joins your personal labels). Create new categories, reset to the built-in defaults. All device-local; files in no visible category fall back to "Other".
+// The Files-sidebar category manager: a "tune" button opening a modal where you shape the parent categories your files group under. Each category (collapsible, busiest first) has an editable name + icon, a hide toggle, delete, and its member-label chips; add existing team labels to a category, create new categories, reset to the built-in defaults. All device-local (grouping only — it never changes the team's label vocabulary); files in no visible category fall back to "Other".
 
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
@@ -52,12 +52,8 @@ export function FileSidebarGroupControls({
     subscribeSidebarCategories,
     getSidebarCategories,
   );
-  // Only fetch the label sets while the picker is open.
-  const {
-    merged: labelSet,
-    myLabels,
-    saveMine,
-  } = useClassificationLabels(open);
+  // Only fetch the team label set while the picker is open.
+  const { merged: labelSet } = useClassificationLabels(open);
 
   // Bucketed once and reused for both the per-label and per-category counts below.
   const byLabel = useMemo(() => bucketStubsByLabel(stubs), [stubs]);
@@ -144,16 +140,15 @@ export function FileSidebarGroupControls({
     setRenaming(null);
   };
 
-  // Add a label to a category: an existing vocabulary label by name, or a brand-new custom label
-  // (which also joins the caller's personal label set so the classifier can actually assign it).
+  // Add an existing team label to a category (device-local grouping only — categories don't change
+  // the team vocabulary). A name that isn't a known team label is ignored; the input's datalist
+  // steers callers to real ones.
   const addLabel = (categoryId: string) => {
     const name = (addDraft[categoryId] ?? "").trim();
     if (!name) return;
-    const key = name.toLowerCase();
-    if (!vocab.has(key)) {
-      void saveMine([...myLabels, { name }]).catch(() => {});
-    }
-    addLabelToCategory(categoryId, name);
+    const known = vocab.get(name.toLowerCase());
+    if (!known) return;
+    addLabelToCategory(categoryId, known.display);
     setAddDraft((prev) => ({ ...prev, [categoryId]: "" }));
   };
 

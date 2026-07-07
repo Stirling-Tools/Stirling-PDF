@@ -29,7 +29,6 @@ import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 class ClassificationLabelsControllerTest {
 
     private static final Long TEAM = 7L;
-    private static final Long USER = 31L;
 
     @Mock private PolicyManagementAuthority policyManagementAuthority;
     @Mock private UserServiceInterface userService;
@@ -130,64 +129,5 @@ class ClassificationLabelsControllerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
         assertThat(controller.getTeamLabels().getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
-    }
-
-    @Test
-    @DisplayName("PUT /mine then GET /mine round-trips the caller's personal labels")
-    void mineSaveThenGet() {
-        loginEnabled(true);
-        when(policyManagementAuthority.currentUserId()).thenReturn(USER);
-
-        controller.saveMyLabels(sample());
-        ResponseEntity<ClassificationLabels> got = controller.getMyLabels();
-
-        assertThat(got.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(got.getBody()).isNotNull();
-        assertThat(got.getBody().labels()).hasSize(2);
-    }
-
-    @Test
-    @DisplayName("/mine is scoped per user and needs no editor role")
-    void minePerUser() {
-        loginEnabled(true);
-        when(policyManagementAuthority.currentUserId()).thenReturn(USER);
-        controller.saveMyLabels(sample());
-
-        when(policyManagementAuthority.currentUserId()).thenReturn(32L);
-        assertThat(controller.getMyLabels().getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
-    }
-
-    @Test
-    @DisplayName("PUT /mine rejects an invalid label set with 400")
-    void mineInvalid() {
-        ClassificationLabels blank =
-                new ClassificationLabels(List.of(new ClassificationLabel(" ", null)));
-        assertThatThrownBy(() -> controller.saveMyLabels(blank))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasFieldOrPropertyWithValue("statusCode", HttpStatus.BAD_REQUEST);
-    }
-
-    @Test
-    @DisplayName("/mine is 401 when login is enabled but the user can't be resolved")
-    void mineUnauthorizedWithoutResolvableUser() {
-        loginEnabled(true);
-        when(policyManagementAuthority.currentUserId()).thenReturn(null);
-
-        assertThatThrownBy(() -> controller.getMyLabels())
-                .isInstanceOf(ResponseStatusException.class)
-                .hasFieldOrPropertyWithValue("statusCode", HttpStatus.UNAUTHORIZED);
-    }
-
-    @Test
-    @DisplayName("/mine falls back to the sentinel personal set when login is disabled")
-    void mineSentinelWhenLoginDisabled() {
-        loginEnabled(false);
-        when(policyManagementAuthority.currentUserId()).thenReturn(null);
-
-        controller.saveMyLabels(sample());
-        ResponseEntity<ClassificationLabels> got = controller.getMyLabels();
-
-        assertThat(got.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(store.findByUser(0L)).isPresent();
     }
 }

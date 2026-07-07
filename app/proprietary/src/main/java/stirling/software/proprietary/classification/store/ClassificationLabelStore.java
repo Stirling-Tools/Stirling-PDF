@@ -5,9 +5,9 @@ import java.util.Optional;
 import stirling.software.proprietary.classification.model.ClassificationLabels;
 
 /**
- * Stores one {@link ClassificationLabels} set per team plus one additive personal set per user. A
- * {@code null} teamId addresses the unteamed set (login disabled / no resolvable team), mirroring
- * how the policy store treats a null team; user sets are keyed by the user's id directly.
+ * Stores one {@link ClassificationLabels} set per team. A {@code null} teamId addresses the
+ * unteamed set (login disabled / no resolvable team), mirroring how the policy store treats a null
+ * team.
  */
 public interface ClassificationLabelStore {
 
@@ -19,10 +19,4 @@ public interface ClassificationLabelStore {
 
     /** Remove the team's labels (reset to default). Returns whether a set existed. */
     boolean deleteByTeam(Long teamId);
-
-    /** The user's stored personal labels, or empty when they have none. */
-    Optional<ClassificationLabels> findByUser(long userId);
-
-    /** Create or replace the user's personal labels. Returns the stored value. */
-    ClassificationLabels saveForUser(long userId, ClassificationLabels labels);
 }

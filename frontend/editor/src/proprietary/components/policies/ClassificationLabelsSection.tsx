@@ -1,12 +1,9 @@
 /**
- * The Classification policy's labels control, shown in its Edit-Settings view.
- * Two blocks:
- *  - TEAM labels — a compact summary (count + chips) with an Expand button that
- *    opens the fat {@link LabelsEditorModal}. Team-shared; only users who can
- *    configure policies may edit it. Owns the editable draft and the
- *    load/save/import/export wiring via {@link useClassificationLabels}.
- *  - MY labels — the calling user's personal, additive labels; editable by
- *    anyone, applied only to their own classification runs. Saved immediately.
+ * The Classification policy's team-labels control, shown in its Edit-Settings
+ * view: a compact summary (count + chips) with an Expand button that opens the
+ * fat {@link LabelsEditorModal}. Team-shared; only users who can configure
+ * policies may edit it. Owns the editable draft and the load/save/import/export
+ * wiring via {@link useClassificationLabels}.
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -18,7 +15,6 @@ import { Button } from "@app/ui/Button";
 import { Chip } from "@app/ui/Chip";
 import { Banner } from "@app/ui/Banner";
 import { useClassificationLabels } from "@app/hooks/useClassificationLabels";
-import { LabelsEditor } from "@app/components/policies/LabelsEditor";
 import { LabelsEditorModal } from "@app/components/policies/LabelsEditorModal";
 import {
   downloadLabels,
@@ -42,16 +38,8 @@ export function ClassificationLabelsSection({
   canConfigure,
 }: ClassificationLabelsSectionProps) {
   const { t } = useTranslation();
-  const {
-    teamLabels,
-    isCustom,
-    myLabels,
-    loading,
-    saving,
-    error,
-    saveTeam,
-    saveMine,
-  } = useClassificationLabels(true);
+  const { teamLabels, isCustom, loading, saving, error, saveTeam } =
+    useClassificationLabels(true);
 
   const [draft, setDraft] = useState<ClassificationLabel[]>(teamLabels);
   const [open, setOpen] = useState(false);
@@ -93,14 +81,6 @@ export function ClassificationLabelsSection({
     }
     setLocalError(null);
     void saveTeam(draft).then(() => setOpen(false));
-  };
-
-  // Personal labels save immediately on change — they're the user's own, so
-  // there's no draft/approval step; failures surface via the shared error.
-  const onMyLabelsChange = (next: ClassificationLabel[]) => {
-    void saveMine(next).catch(() => {
-      // error state set by the hook; the list re-syncs from server truth.
-    });
   };
 
   return (
@@ -164,34 +144,6 @@ export function ClassificationLabelsSection({
           )}
         />
       )}
-
-      <p className="pol-section-label">
-        {t("policies.labels.mineLabel", "My labels")}
-      </p>
-      <Card>
-        <div className="labels-summary">
-          <span className="labels-summary-note">
-            {t(
-              "policies.labels.mineNote",
-              "Personal labels only you see — applied on top of the team set when your documents are classified.",
-            )}
-          </span>
-          <LabelsEditor
-            value={myLabels}
-            onChange={onMyLabelsChange}
-            readOnly={saving}
-            reservedNames={teamLabels.map((label) => label.name)}
-            addPlaceholder={t(
-              "policies.labels.mineAddPlaceholder",
-              "Add a personal label…",
-            )}
-            emptyText={t(
-              "policies.labels.mineEmpty",
-              "No personal labels yet.",
-            )}
-          />
-        </div>
-      </Card>
 
       {error && !open && <Banner tone="danger" description={error} />}
 

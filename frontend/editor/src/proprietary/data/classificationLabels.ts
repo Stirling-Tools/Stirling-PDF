@@ -1,4 +1,4 @@
-// Default classification labels — the type-safe source of truth. Edit THIS file, never the generated engine JSON (kept in sync by `task frontend:classifier-labels`, drift-guarded by `:check`). Labels are flat document-type descriptors (multi-label; no deep-content/PII types since the classifier only reads the first/last two pages) declared in FAMILIES — presentational sidebar roll-ups the classifier never sees. Seeded per team (admin-editable); users may add personal labels. `icon` is presentational only; the engine never sees it.
+// Default classification labels — the type-safe source of truth. Edit THIS file, never the generated engine JSON (kept in sync by `task frontend:classifier-labels`, drift-guarded by `:check`). Labels are flat document-type descriptors (multi-label; no deep-content/PII types since the classifier only reads the first/last two pages) declared in FAMILIES — presentational sidebar roll-ups the classifier never sees. Seeded per team (admin-editable). `icon` is presentational only; the engine never sees it.
 
 export interface ClassificationLabel {
   /** Display name AND identity (unique, case-insensitive). */

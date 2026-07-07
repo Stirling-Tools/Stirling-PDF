@@ -18,7 +18,7 @@ import tools.jackson.databind.ObjectMapper;
  * Durable {@link ClassificationLabelStore} backed by JPA; the runtime store. Gated on {@code
  * policies.enabled} — stored labels only matter when the Classification policy can run — so it
  * shares the policy subsystem's on/off switch. Each label set is persisted as JSON via {@link
- * TeamLabelsEntity} / {@link UserLabelsEntity}.
+ * TeamLabelsEntity}.
  */
 @Slf4j
 @Service
@@ -27,7 +27,6 @@ import tools.jackson.databind.ObjectMapper;
 public class JpaClassificationLabelStore implements ClassificationLabelStore {
 
     private final TeamLabelsRepository teamRepository;
-    private final UserLabelsRepository userRepository;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -56,23 +55,6 @@ public class JpaClassificationLabelStore implements ClassificationLabelStore {
         }
         teamRepository.deleteById(id);
         return true;
-    }
-
-    @Override
-    public Optional<ClassificationLabels> findByUser(long userId) {
-        return userRepository
-                .findById(userId)
-                .flatMap(entity -> parse(entity.getLabelsJson(), "user " + userId));
-    }
-
-    @Override
-    public ClassificationLabels saveForUser(long userId, ClassificationLabels labels) {
-        UserLabelsEntity entity = new UserLabelsEntity();
-        entity.setUserId(userId);
-        entity.setLabelsJson(objectMapper.writeValueAsString(labels));
-        entity.setUpdatedAt(Instant.now());
-        userRepository.save(entity);
-        return labels;
     }
 
     private Optional<ClassificationLabels> parse(String json, String owner) {

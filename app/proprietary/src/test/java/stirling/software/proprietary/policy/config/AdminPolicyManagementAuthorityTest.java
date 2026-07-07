@@ -55,19 +55,4 @@ class AdminPolicyManagementAuthorityTest {
         when(userService.getCurrentUsername()).thenReturn(null);
         assertNull(authority().currentUserTeamId());
     }
-
-    @Test
-    void currentUserIdResolvesFromTheCurrentUser() {
-        User user = new User();
-        user.setId(11L);
-        when(userService.getCurrentUsername()).thenReturn("alice");
-        when(userService.findByUsername("alice")).thenReturn(Optional.of(user));
-        assertEquals(11L, authority().currentUserId());
-    }
-
-    @Test
-    void currentUserIdIsNullWhenNoCurrentUser() {
-        when(userService.getCurrentUsername()).thenReturn(null);
-        assertNull(authority().currentUserId());
-    }
 }

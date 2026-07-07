@@ -13,7 +13,6 @@ import stirling.software.proprietary.classification.model.ClassificationLabels;
 public class InProcessClassificationLabelStore implements ClassificationLabelStore {
 
     private final Map<Long, ClassificationLabels> byTeam = new ConcurrentHashMap<>();
-    private final Map<Long, ClassificationLabels> byUser = new ConcurrentHashMap<>();
 
     @Override
     public Optional<ClassificationLabels> findByTeam(Long teamId) {
@@ -29,17 +28,6 @@ public class InProcessClassificationLabelStore implements ClassificationLabelSto
     @Override
     public boolean deleteByTeam(Long teamId) {
         return byTeam.remove(key(teamId)) != null;
-    }
-
-    @Override
-    public Optional<ClassificationLabels> findByUser(long userId) {
-        return Optional.ofNullable(byUser.get(userId));
-    }
-
-    @Override
-    public ClassificationLabels saveForUser(long userId, ClassificationLabels labels) {
-        byUser.put(userId, labels);
-        return labels;
     }
 
     private static long key(Long teamId) {

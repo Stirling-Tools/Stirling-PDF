@@ -19,12 +19,4 @@ public interface PolicyManagementAuthority {
      * ({@code null}-team) policies.
      */
     Long currentUserTeamId();
-
-    /**
-     * The current user's id, for per-user (rather than per-team) scoping such as personal
-     * classification labels. Resolved the same way as {@link #currentUserTeamId()}: {@code null}
-     * when there is no resolvable user (e.g. login disabled), in which case callers fall back to
-     * their unowned sentinel.
-     */
-    Long currentUserId();
 }

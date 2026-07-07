@@ -36,7 +36,6 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.proprietary.classification.model.ClassificationLabel;
 import stirling.software.proprietary.classification.store.ClassificationLabelStore;
-import stirling.software.proprietary.classification.store.UserLabelsEntity;
 import stirling.software.proprietary.model.api.ai.AiPageText;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.service.AiEngineClient;
@@ -50,10 +49,10 @@ import tools.jackson.databind.node.ObjectNode;
  * Dispatchable tool that classifies a PDF and writes the result into its metadata.
  *
  * <p>Runs as a Classification-policy pipeline step: it reads a bounded page window, asks the AI
- * engine to classify the document against the caller's allowed label names (the merged team and
- * personal sets), and stores the engine's JSON answer — minus the transport-only {@code outcome}
- * field — in the custom Info-dictionary key {@link PdfMetadataService#CLASSIFICATION_KEY}. Returns
- * the labelled PDF. Not intended for direct client use.
+ * engine to classify the document against the caller's team label set, and stores the engine's JSON
+ * answer — minus the transport-only {@code outcome} field — in the custom Info-dictionary key
+ * {@link PdfMetadataService#CLASSIFICATION_KEY}. Returns the labelled PDF. Not intended for direct
+ * client use.
  */
 @Slf4j
 @Hidden
@@ -171,11 +170,10 @@ public class ClassifyLabelController {
     }
 
     /**
-     * The allowed label names for the caller: the team set merged with the caller's personal
-     * additive set, de-duplicated case-insensitively (team first; first-seen casing wins). Only the
+     * The allowed label names for the caller's team, de-duplicated case-insensitively. Only the
      * names go to the engine — icons are presentational. Returns {@code null} — falling back to the
      * engine's built-in default vocabulary — when the policy subsystem is disabled (no store) or
-     * neither scope has any stored labels.
+     * the team has no stored labels.
      */
     private List<String> resolveAllowedLabelNames() {
         if (labelStore == null) {
@@ -185,19 +183,10 @@ public class ClassifyLabelController {
                 policyManagementAuthority == null
                         ? null
                         : policyManagementAuthority.currentUserTeamId();
-        Long userId =
-                policyManagementAuthority == null
-                        ? null
-                        : policyManagementAuthority.currentUserId();
 
         Map<String, String> namesByLowerCase = new LinkedHashMap<>();
         labelStore
                 .findByTeam(teamId)
-                .ifPresent(labels -> collectNames(labels.labels(), namesByLowerCase));
-        // A null user id maps onto the sentinel personal set (the login-disabled local operator,
-        // mirroring how the store keys the unteamed team set); nobody else can have written it.
-        labelStore
-                .findByUser(userId == null ? UserLabelsEntity.NO_USER : userId)
                 .ifPresent(labels -> collectNames(labels.labels(), namesByLowerCase));
 
         return namesByLowerCase.isEmpty() ? null : List.copyOf(namesByLowerCase.values());

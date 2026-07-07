@@ -1,18 +1,15 @@
 /**
- * Backend layer for classification labels (`/api/v1/classification/labels`).
- * Two scopes, both server-truth:
- *  - the TEAM set — one shared list, editable only by a team leader (SaaS) /
- *    admin (self-hosted); a team with none reads as 204 → `null`, and callers
- *    fall back to the built-in {@link DEFAULT_CLASSIFICATION_LABELS}.
- *  - the calling user's PERSONAL set (`…/labels/mine`) — additive labels that
- *    apply only to that user's own classification runs and sidebar.
+ * Backend layer for the team's classification labels
+ * (`/api/v1/classification/labels`) — one shared, server-truth list, editable
+ * only by a team leader (SaaS) / admin (self-hosted). A team with none reads as
+ * 204 → `null`, and callers fall back to the built-in
+ * {@link DEFAULT_CLASSIFICATION_LABELS}.
  */
 
 import apiClient from "@app/services/apiClient";
 import type { ClassificationLabel } from "@app/data/classificationLabels";
 
 const TEAM_ENDPOINT = "/api/v1/classification/labels";
-const MINE_ENDPOINT = "/api/v1/classification/labels/mine";
 
 /** Wire shape shared with the backend: the label list wrapped in an object. */
 interface LabelsPayload {
@@ -49,16 +46,4 @@ export function saveTeamLabels(
   labels: ClassificationLabel[],
 ): Promise<ClassificationLabel[]> {
   return saveLabels(TEAM_ENDPOINT, labels);
-}
-
-/** The calling user's personal labels, or `null` when none are stored. */
-export function fetchMyLabels(): Promise<ClassificationLabel[] | null> {
-  return fetchLabels(MINE_ENDPOINT);
-}
-
-/** Persist the calling user's personal labels; returns the stored value. */
-export function saveMyLabels(
-  labels: ClassificationLabel[],
-): Promise<ClassificationLabel[]> {
-  return saveLabels(MINE_ENDPOINT, labels);
 }

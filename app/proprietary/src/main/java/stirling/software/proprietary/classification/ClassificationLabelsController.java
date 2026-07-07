@@ -24,24 +24,21 @@ import stirling.software.proprietary.classification.model.ClassificationLabels;
 import stirling.software.proprietary.classification.model.LabelsValidator;
 import stirling.software.proprietary.classification.store.ClassificationLabelStore;
 import stirling.software.proprietary.classification.store.TeamLabelsEntity;
-import stirling.software.proprietary.classification.store.UserLabelsEntity;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 
 /**
- * Read/write the classification label sets — the flat vocabulary the document classifier runs
- * against. Two scopes: the team set is shared and team-scoped exactly like policies (every user
- * reads their own team's labels, and only a user who may edit policies — a team leader on SaaS, the
- * global admin self-hosted; see {@link PolicyManagementAuthority} — may change it; editing is gated
- * only when login is enabled, since single-user deployments trust the local operator), while {@code
- * /mine} is the calling user's personal additive set, editable by any authenticated user. A scope
- * with no stored labels reads as {@code 204}; when neither scope has any the classifier falls back
- * to the engine's built-in default.
+ * Read/write the team's classification label set — the flat vocabulary the document classifier runs
+ * against. Shared and team-scoped exactly like policies: every user reads their own team's labels,
+ * and only a user who may edit policies (a team leader on SaaS, the global admin self-hosted; see
+ * {@link PolicyManagementAuthority}) may change it — gated only when login is enabled, since
+ * single-user deployments trust the local operator. A team with no stored labels reads as {@code
+ * 204}, and the classifier then falls back to the engine's built-in default.
  */
 @RestController
 @RequestMapping("/api/v1/classification/labels")
 @Hidden
 @RequiredArgsConstructor
-@Tag(name = "Classification", description = "Team- and user-scoped document-classification labels")
+@Tag(name = "Classification", description = "Team-scoped document-classification labels")
 @ConditionalOnBooleanProperty(name = "policies.enabled")
 public class ClassificationLabelsController {
 
@@ -89,31 +86,6 @@ public class ClassificationLabelsController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/mine")
-    @Operation(
-            summary = "Get the caller's personal classification labels",
-            description =
-                    "Returns the calling user's own additive label set, or 204 when they have"
-                            + " none.")
-    public ResponseEntity<ClassificationLabels> getMyLabels() {
-        return labelStore
-                .findByUser(currentUserId())
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.noContent().build());
-    }
-
-    @PutMapping(value = "/mine", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(
-            summary = "Save the caller's personal classification labels",
-            description =
-                    "Validates and stores the calling user's own additive label set, applied on top"
-                            + " of the team set for their uploads only.")
-    public ResponseEntity<ClassificationLabels> saveMyLabels(
-            @RequestBody ClassificationLabels labels) {
-        validate(labels);
-        return ResponseEntity.ok(labelStore.saveForUser(currentUserId(), labels));
-    }
-
     private static void validate(ClassificationLabels labels) {
         try {
             LabelsValidator.validate(labels);
@@ -154,23 +126,6 @@ public class ClassificationLabelsController {
         }
         throw new ResponseStatusException(
                 HttpStatus.UNAUTHORIZED, "Could not resolve the current user's team");
-    }
-
-    /**
-     * The key for the caller's personal label set. With login disabled the single local operator
-     * owns the {@link UserLabelsEntity#NO_USER} sentinel row (mirroring the unteamed team set);
-     * with login enabled an unresolvable user is an error rather than a shared bucket.
-     */
-    private long currentUserId() {
-        Long userId = policyManagementAuthority.currentUserId();
-        if (userId != null) {
-            return userId;
-        }
-        if (!applicationProperties.getSecurity().isEnableLogin()) {
-            return UserLabelsEntity.NO_USER;
-        }
-        throw new ResponseStatusException(
-                HttpStatus.UNAUTHORIZED, "Could not resolve the current user");
     }
 
     private String currentUsername() {
