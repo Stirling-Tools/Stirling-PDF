@@ -4,6 +4,7 @@ import {
   type MultiSelectProps as MantineMultiSelectProps,
   type ComboboxData,
 } from "@mantine/core";
+import { useInputAria } from "@app/ui/ariaForwarding";
 import "@app/ui/MantineForms.css";
 
 const SUI_INPUT_VARS = {
@@ -47,6 +48,7 @@ export interface MultiSelectProps {
   "aria-label"?: string;
   "aria-invalid"?: boolean;
   "aria-describedby"?: string;
+  required?: boolean;
   disabled?: boolean;
   readOnly?: boolean;
   onFocus?: React.FocusEventHandler<HTMLInputElement>;
@@ -81,6 +83,7 @@ type PassthroughProps = Omit<
     | "name"
     | "aria-label"
     | "aria-describedby"
+    | "required"
     | "disabled"
     | "readOnly"
     | "onFocus"
@@ -120,6 +123,7 @@ export function MultiSelect({
   "aria-label": ariaLabel,
   "aria-invalid": ariaInvalid,
   "aria-describedby": ariaDescribedBy,
+  required,
   disabled,
   readOnly,
   onFocus,
@@ -127,6 +131,7 @@ export function MultiSelect({
   onDropdownOpen,
   onDropdownClose,
 }: MultiSelectProps) {
+  const inputRef = useInputAria({ describedBy: ariaDescribedBy, required });
   const passthroughProps: PassthroughProps = {
     data,
     value,
@@ -147,6 +152,7 @@ export function MultiSelect({
     name,
     "aria-label": ariaLabel,
     "aria-describedby": ariaDescribedBy,
+    required,
     disabled,
     readOnly,
     onFocus,
@@ -161,7 +167,11 @@ export function MultiSelect({
       // Boolean error applies invalid styling without rendering Mantine's own
       // message element — FormField owns the visible error text.
       error={invalid || ariaInvalid || undefined}
+      // FormField renders the asterisk; the field is announced as required
+      // via aria-required from useInputAria (Mantine keeps `required` on the
+      // pills wrapper, not the focusable field).
       withAsterisk={false}
+      ref={inputRef}
       classNames={{
         wrapper: "sui-mantine-wrapper",
         pill: "sui-mantine-pill",

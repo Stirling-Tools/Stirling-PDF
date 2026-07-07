@@ -3,6 +3,7 @@ import {
   Select as MantineSelect,
   type SelectProps as MantineSelectProps,
 } from "@mantine/core";
+import { useInputAria } from "@app/ui/ariaForwarding";
 import "@app/ui/MantineForms.css";
 
 const SUI_INPUT_VARS = {
@@ -47,6 +48,7 @@ export interface SelectProps {
   "aria-label"?: string;
   "aria-invalid"?: boolean;
   "aria-describedby"?: string;
+  required?: boolean;
   disabled?: boolean;
   readOnly?: boolean;
   onFocus?: React.FocusEventHandler<HTMLInputElement>;
@@ -73,6 +75,7 @@ type PassthroughProps = Omit<
     | "name"
     | "aria-label"
     | "aria-describedby"
+    | "required"
     | "disabled"
     | "readOnly"
     | "onFocus"
@@ -105,11 +108,13 @@ export function Select({
   "aria-label": ariaLabel,
   "aria-invalid": ariaInvalid,
   "aria-describedby": ariaDescribedBy,
+  required,
   disabled,
   readOnly,
   onFocus,
   onBlur,
 }: SelectProps) {
+  const inputRef = useInputAria({ describedBy: ariaDescribedBy });
   const passthroughProps: PassthroughProps = {
     value,
     onChange,
@@ -124,6 +129,7 @@ export function Select({
     name,
     "aria-label": ariaLabel,
     "aria-describedby": ariaDescribedBy,
+    required,
     disabled,
     readOnly,
     onFocus,
@@ -137,7 +143,9 @@ export function Select({
       // Boolean error applies invalid styling without rendering Mantine's own
       // message element — FormField owns the visible error text.
       error={invalid || ariaInvalid || undefined}
+      // required sets the input attribute only; FormField renders the asterisk.
       withAsterisk={false}
+      ref={inputRef}
       classNames={{ wrapper: "sui-mantine-wrapper" }}
       styles={{ wrapper: SUI_INPUT_VARS }}
       {...passthroughProps}

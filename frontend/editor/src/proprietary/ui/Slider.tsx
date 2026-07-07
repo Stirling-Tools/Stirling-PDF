@@ -2,6 +2,7 @@ import {
   Slider as MantineSlider,
   type SliderProps as MantineSliderProps,
 } from "@mantine/core";
+import { useThumbAria } from "@app/ui/ariaForwarding";
 import "@app/ui/MantineForms.css";
 
 export interface SliderMark {
@@ -33,6 +34,8 @@ export interface SliderProps {
   /** Accessible name for the slider thumb — the visible FormField label can't
    * associate with Mantine's non-input thumb element, so set this too. */
   "aria-label"?: string;
+  "aria-invalid"?: boolean;
+  "aria-describedby"?: string;
   disabled?: boolean;
 
   // SUI
@@ -73,12 +76,18 @@ export function Slider({
   showValue = true,
   id,
   "aria-label": ariaLabel,
+  "aria-invalid": ariaInvalid,
+  "aria-describedby": ariaDescribedBy,
   disabled,
   inputSize = "md",
 }: SliderProps) {
   const label = showValue
     ? (v: number) => (formatValue ? formatValue(v) : String(v))
     : null;
+
+  // The role="slider" element is the thumb, not an input, so FormField's
+  // injected aria wiring has to land there for AT to announce it.
+  const rootRef = useThumbAria(ariaDescribedBy, ariaInvalid);
 
   const passthroughProps: PassthroughProps = {
     value,
@@ -96,6 +105,7 @@ export function Slider({
 
   return (
     <MantineSlider
+      ref={rootRef}
       classNames={{ root: "sui-mantine-slider" }}
       {...passthroughProps}
     />

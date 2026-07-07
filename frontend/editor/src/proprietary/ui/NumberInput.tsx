@@ -3,6 +3,7 @@ import {
   NumberInput as MantineNumberInput,
   type NumberInputProps as MantineNumberInputProps,
 } from "@mantine/core";
+import { useInputAria } from "@app/ui/ariaForwarding";
 import "@app/ui/MantineForms.css";
 
 const SUI_INPUT_VARS = {
@@ -50,6 +51,7 @@ export interface NumberInputProps {
   "aria-label"?: string;
   "aria-invalid"?: boolean;
   "aria-describedby"?: string;
+  required?: boolean;
   disabled?: boolean;
   readOnly?: boolean;
   autoFocus?: boolean;
@@ -88,6 +90,7 @@ type PassthroughProps = Omit<
     | "name"
     | "aria-label"
     | "aria-describedby"
+    | "required"
     | "disabled"
     | "readOnly"
     | "autoFocus"
@@ -127,6 +130,7 @@ export function NumberInput({
   "aria-label": ariaLabel,
   "aria-invalid": ariaInvalid,
   "aria-describedby": ariaDescribedBy,
+  required,
   disabled,
   readOnly,
   autoFocus,
@@ -134,6 +138,7 @@ export function NumberInput({
   onBlur,
   onKeyDown,
 }: NumberInputProps) {
+  const inputRef = useInputAria({ describedBy: ariaDescribedBy });
   const passthroughProps: PassthroughProps = {
     value,
     onChange,
@@ -156,6 +161,7 @@ export function NumberInput({
     name,
     "aria-label": ariaLabel,
     "aria-describedby": ariaDescribedBy,
+    required,
     disabled,
     readOnly,
     autoFocus,
@@ -170,7 +176,9 @@ export function NumberInput({
       // Boolean error applies invalid styling without rendering Mantine's own
       // message element — FormField owns the visible error text.
       error={invalid || ariaInvalid || undefined}
+      // required sets the input attribute only; FormField renders the asterisk.
       withAsterisk={false}
+      ref={inputRef}
       classNames={{
         wrapper: "sui-mantine-wrapper",
         control: "sui-mantine-control",
