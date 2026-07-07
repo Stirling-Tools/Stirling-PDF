@@ -142,31 +142,9 @@ export function PaymentStageCard({
   );
 }
 
-/**
- * The live confirmation once the deal is active, with the team's licence key to copy — and, when
- * the paid offline add-on was taken, a download for the air-gapped licence file.
- */
-export function LiveStageCard({
-  licenseKey,
-  offlineAvailable,
-  downloadingLicense,
-  onDownloadOffline,
-}: {
-  licenseKey: string | null;
-  offlineAvailable: boolean;
-  downloadingLicense: boolean;
-  onDownloadOffline: () => void;
-}) {
+/** The live confirmation once the deal is active. */
+export function LiveStageCard() {
   const { t } = useTranslation();
-  const [copied, setCopied] = useState(false);
-
-  const copyKey = () => {
-    if (!licenseKey) return;
-    void navigator.clipboard?.writeText(licenseKey);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
-
   return (
     <Card padding="loose">
       <span className="portal-proc__eyebrow">
@@ -178,34 +156,60 @@ export function LiveStageCard({
       <p className="portal-proc__subtitle">
         {t("portal.procurement.live.description")}
       </p>
-
-      {licenseKey && (
-        <div className="portal-proc__license">
-          <span className="portal-proc__license-label">
-            {t("portal.procurement.license.label")}
-          </span>
-          <code className="portal-proc__license-key">{licenseKey}</code>
-          <div className="portal-proc__payment-actions">
-            <Button variant="outline" onClick={copyKey}>
-              {copied
-                ? t("portal.procurement.license.copied")
-                : t("portal.procurement.license.copy")}
-            </Button>
-            {offlineAvailable && (
-              <Button
-                variant="ghost"
-                loading={downloadingLicense}
-                onClick={onDownloadOffline}
-              >
-                {t("portal.procurement.license.downloadOffline")}
-              </Button>
-            )}
-          </div>
-          <p className="portal-proc__license-hint">
-            {t("portal.procurement.license.hint")}
-          </p>
-        </div>
-      )}
     </Card>
+  );
+}
+
+/**
+ * The team's licence key with Copy — and, when the paid offline add-on was taken, a download for
+ * the air-gapped licence file. Shown from the trial step onward (the key exists from the trial and
+ * is upgraded in place at accept), so it lives outside any single stage card.
+ */
+export function LicensePanel({
+  licenseKey,
+  offlineAvailable,
+  downloadingLicense,
+  onDownloadOffline,
+}: {
+  licenseKey: string;
+  offlineAvailable: boolean;
+  downloadingLicense: boolean;
+  onDownloadOffline: () => void;
+}) {
+  const { t } = useTranslation();
+  const [copied, setCopied] = useState(false);
+
+  const copyKey = () => {
+    void navigator.clipboard?.writeText(licenseKey);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
+  return (
+    <div className="portal-proc__license">
+      <span className="portal-proc__license-label">
+        {t("portal.procurement.license.label")}
+      </span>
+      <code className="portal-proc__license-key">{licenseKey}</code>
+      <div className="portal-proc__payment-actions">
+        <Button variant="outline" onClick={copyKey}>
+          {copied
+            ? t("portal.procurement.license.copied")
+            : t("portal.procurement.license.copy")}
+        </Button>
+        {offlineAvailable && (
+          <Button
+            variant="ghost"
+            loading={downloadingLicense}
+            onClick={onDownloadOffline}
+          >
+            {t("portal.procurement.license.downloadOffline")}
+          </Button>
+        )}
+      </div>
+      <p className="portal-proc__license-hint">
+        {t("portal.procurement.license.hint")}
+      </p>
+    </div>
   );
 }

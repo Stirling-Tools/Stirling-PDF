@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -228,6 +229,24 @@ public class ProcurementController {
         try {
             return ResponseEntity.ok(toSnapshot(procurement.startAgreement(teamId)));
         } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+    }
+
+    /**
+     * Provision on accept: upgrade the team's licence to the committed annual term, valid
+     * immediately. Called server-side by the accept edge function (ROLE_ADMIN via X-API-Key) once
+     * the subscription + invoice exist, so the buyer is licensed the moment they accept — the deal
+     * stays in the payment step until the invoice settles. Idempotent.
+     */
+    @PostMapping("/provision")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> provision(@RequestParam("teamId") long teamId) {
+        try {
+            procurement.provisionLicense(teamId);
+            return ResponseEntity.ok().build();
+        } catch (IllegalStateException e) {
+            log.warn("[procurement] provision rejected team={}: {}", teamId, e.getMessage());
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
     }

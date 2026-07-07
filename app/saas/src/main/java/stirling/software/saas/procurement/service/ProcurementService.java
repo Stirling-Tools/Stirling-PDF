@@ -211,42 +211,70 @@ public class ProcurementService {
     }
 
     /**
-     * Mark the deal live: issue the annual licence and advance to the active stage. In production
-     * this is driven by the {@code invoice.paid} webhook once the first invoice is settled; this
-     * method is the demo/manual stand-in until that webhook lands.
+     * Provision on accept: upgrade the team's licence to the committed annual term (valid
+     * immediately), so the buyer can get going the moment they accept — before the invoice is paid.
+     * Driven by the accept edge function once the subscription + invoice are created. Idempotent
+     * (upgrades the existing licence in place); deliberately does NOT change the stage — the deal
+     * stays in the payment step so the outstanding invoice remains visible until it settles.
+     */
+    @Transactional
+    public ProcurementDeal provisionLicense(Long teamId) {
+        ProcurementDeal deal =
+                dealRepo.findByTeamId(teamId)
+                        .orElseThrow(() -> new IllegalStateException("No deal for team " + teamId));
+        deal.setLicenseRef(issueOrUpgradeAnnual(deal));
+        deal = dealRepo.save(deal);
+        log.info("[procurement] licence provisioned team={} deal={}", teamId, deal.getDealId());
+        return deal;
+    }
+
+    /**
+     * Mark the deal fully live (advance to the active stage) once payment settles. In production
+     * this is the {@code invoice.paid} webhook; here it's the demo/manual stand-in. Re-affirms the
+     * annual licence in case provisioning didn't run at accept.
      */
     @Transactional
     public ProcurementDeal markLive(Long teamId) {
         ProcurementDeal deal =
                 dealRepo.findByTeamId(teamId)
                         .orElseThrow(() -> new IllegalStateException("No deal for team " + teamId));
-        int term = 1;
-        String deployment = "cloud";
-        int seats = 0; // 0 = unlimited
-        if (deal.getAcceptedQuoteId() != null) {
-            ProcurementQuote q = quoteRepo.findById(deal.getAcceptedQuoteId()).orElse(null);
-            if (q != null) {
-                term = Math.max(1, q.getTermYears());
-                if (q.getDeployment() != null && !q.getDeployment().isBlank()) {
-                    deployment = q.getDeployment();
-                }
-                if (q.getSeats() != null) {
-                    seats = q.getSeats();
-                }
-            }
-        }
-        deal.setLicenseRef(
-                licenses.issueAnnualLicense(
-                        teamId,
-                        leaderEmail(teamId),
-                        deployment,
-                        seats,
-                        LocalDateTime.now().plusYears(term),
-                        deal.getLicenseRef()));
+        deal.setLicenseRef(issueOrUpgradeAnnual(deal));
         deal.setStage(ProcurementDeal.STAGE_LIVE);
         deal = dealRepo.save(deal);
         log.info("[procurement] deal live team={} deal={}", teamId, deal.getDealId());
         return deal;
+    }
+
+    /**
+     * Issue or upgrade the committed annual licence from the deal's accepted (else latest) quote —
+     * term, deployment, and seats — upgrading the trial licence in place when one exists.
+     */
+    private String issueOrUpgradeAnnual(ProcurementDeal deal) {
+        int term = 1;
+        String deployment = "cloud";
+        int seats = 0; // 0 = unlimited
+        ProcurementQuote q =
+                deal.getAcceptedQuoteId() != null
+                        ? quoteRepo.findById(deal.getAcceptedQuoteId()).orElse(null)
+                        : quoteRepo.findByDealIdOrderByCreatedAtDesc(deal.getDealId()).stream()
+                                .findFirst()
+                                .orElse(null);
+        if (q != null) {
+            term = Math.max(1, q.getTermYears());
+            if (q.getDeployment() != null && !q.getDeployment().isBlank()) {
+                deployment = q.getDeployment();
+            }
+            if (q.getSeats() != null) {
+                seats = q.getSeats();
+            }
+        }
+        return licenses.issueAnnualLicense(
+                deal.getTeamId(),
+                leaderEmail(deal.getTeamId()),
+                deployment,
+                seats,
+                LocalDateTime.now().plusYears(term),
+                deal.getLicenseRef());
     }
 
     /**

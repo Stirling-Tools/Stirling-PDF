@@ -7610,7 +7610,7 @@ uploadCta = "Upload purchase order"
 uploadTitle = "Upload your purchase order"
 
 [portal.procurement.payment]
-description = "Your quote is accepted and a committed annual subscription has been created. Pay the first invoice to go live — you can pay or download it right here, no email needed."
+description = "Your quote is accepted and your licence is already active — your team can start right away. Pay the first invoice when you're ready; you can pay or download it here, no email needed."
 downloadInvoice = "Download invoice"
 simulate = "Simulate payment received (demo)"
 title = "Subscription created"

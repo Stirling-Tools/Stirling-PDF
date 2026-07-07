@@ -29,6 +29,7 @@ import {
 } from "@portal/components/procurement/ProcurementExtras";
 import { ProcurementModal } from "@portal/components/procurement/ProcurementModal";
 import {
+  LicensePanel,
   LiveStageCard,
   PaymentStageCard,
   QuoteMilestoneCard,
@@ -279,8 +280,10 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
               />
             )}
 
-            {!editing && stage === "active" && (
-              <LiveStageCard
+            {!editing && stage === "active" && <LiveStageCard />}
+
+            {data.licenseKey && (
+              <LicensePanel
                 licenseKey={data.licenseKey}
                 offlineAvailable={!!latest?.config.offlineLicense}
                 downloadingLicense={downloadingLicense}
