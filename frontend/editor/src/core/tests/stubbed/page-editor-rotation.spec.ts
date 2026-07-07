@@ -10,7 +10,10 @@ import { uploadFiles, dismissTourTooltip } from "@app/tests/helpers/ui-helpers";
 // Fixture: 4 portrait pages whose intrinsic /Rotate is 0, 90, 270, 180.
 // Page 3 (index 2) is 270 so a single rotate-right lands on a net-0 target -
 // the exact case the export used to drop, leaving the source rotation behind.
-const ROTATED_PDF = path.join(__dirname, "../test-fixtures/rotated-pages.pdf");
+const ROTATED_PDF = path.join(
+  import.meta.dirname,
+  "../test-fixtures/rotated-pages.pdf",
+);
 const SOURCE_ROTATIONS = [0, 90, 270, 180];
 
 /** Read the rotation each thumbnail is currently displaying (= page.rotation). */

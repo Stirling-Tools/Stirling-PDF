@@ -2,7 +2,7 @@
 // the decorators below transpiles to React.createElement and needs React in
 // scope. (The app + story files use the automatic runtime via the portal vite
 // config; this import is specifically for the preview config file.)
-import React, { useEffect } from "react";
+import React, { Suspense, useEffect } from "react";
 import type { Decorator, Preview } from "@storybook/react-vite";
 import { initialize, mswLoader } from "msw-storybook-addon";
 import { MemoryRouter } from "react-router-dom";
@@ -117,7 +117,9 @@ const withProviders: Decorator = (Story, context) => {
             <LinkProvider key={linkState} initialState={linkState}>
               <TierKey tier={tier}>
                 <UIProvider>
-                  <Story />
+                  <Suspense fallback={null}>
+                    <Story />
+                  </Suspense>
                 </UIProvider>
               </TierKey>
             </LinkProvider>

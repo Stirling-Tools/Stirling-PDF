@@ -22,7 +22,14 @@ function resolveFixturePath(filename: string): string {
       filename,
     ),
     path.join(process.cwd(), "src", "core", "tests", "test-fixtures", filename),
-    path.join(__dirname, "..", "core", "tests", "test-fixtures", filename),
+    path.join(
+      import.meta.dirname,
+      "..",
+      "core",
+      "tests",
+      "test-fixtures",
+      filename,
+    ),
   ];
   for (const p of candidates) {
     if (fs.existsSync(p)) return p;

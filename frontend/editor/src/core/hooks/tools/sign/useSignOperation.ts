@@ -54,7 +54,10 @@ export const signOperationConfig = {
   toolType: ToolType.singleFile,
   buildFormData: buildSignFormData,
   operationType: "sign",
-  endpoint: "/api/v1/security/add-signature",
+  // Signing is applied client-side in the viewer (see createStampTool ->
+  // flattenSignatures); there is no backend endpoint and the standard execute
+  // path is never used.
+  endpoint: null,
   filePrefix: "signed_",
   defaultParameters: DEFAULT_PARAMETERS,
 } as const;
