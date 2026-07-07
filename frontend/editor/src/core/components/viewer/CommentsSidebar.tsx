@@ -5,16 +5,15 @@ import {
   Text,
   Textarea,
   Stack,
-  ActionIcon,
   Group,
   Tooltip,
   TextInput,
   Menu,
   Modal,
-  Button,
-  UnstyledButton,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CheckIcon from "@mui/icons-material/CheckRounded";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
@@ -120,7 +119,6 @@ function getCommentDisplayContent(entry: {
 
 /** Placeholder authors we never show; use current user's name from context instead. */
 const PLACEHOLDER_AUTHORS = new Set(["Guest", "Digital Signature", ""]);
-
 function getAuthorName(
   obj: Pick<PdfAnnotationObject, "author">,
   currentDisplayName: string,
@@ -188,7 +186,6 @@ function getIconByType(type: number | undefined): string {
   if (type === 15) return "edit";
   return "comment";
 }
-
 function isCommentAnnotation(ann: PdfAnnotationObject): boolean {
   const customData = getStirlingAnnotationMetadata(ann).customData;
   const toolId = customData?.toolId ?? customData?.annotationToolId;
@@ -252,7 +249,6 @@ function getAnnotationToolId(ann: PdfAnnotationObject): string {
   const customData = getStirlingAnnotationMetadata(ann).customData;
   return customData?.toolId ?? customData?.annotationToolId ?? "";
 }
-
 function getAnnotationTypeLabel(
   ann: PdfAnnotationObject,
   t: (key: string, fallback: string) => string,
@@ -285,7 +281,6 @@ function getAnnotationTypeLabel(
   if (type === 1) return t("viewer.comments.typeComment", "Comment");
   return t("viewer.comments.typeComment", "Comment");
 }
-
 function AnnotationTypeIcon({ ann }: { ann: PdfAnnotationObject }) {
   const toolId = getAnnotationToolId(ann);
   const iconName = TOOL_ICON_MAP[toolId] ?? getIconByType(ann?.type);
@@ -714,9 +709,10 @@ export function CommentsSidebar({
           <Group gap={2} wrap="nowrap" style={{ flexShrink: 0 }}>
             <Tooltip label={t("viewer.comments.addComment", "Add comment")}>
               <ActionIcon
-                variant="subtle"
+                variant="tertiary"
+                accent="neutral"
                 size="sm"
-                color="gray"
+                aria-label={t("viewer.comments.addComment", "Add comment")}
                 onClick={handleAddComment}
               >
                 <LocalIcon icon="add" width="1.25rem" height="1.25rem" />
@@ -727,7 +723,15 @@ export function CommentsSidebar({
                 <Tooltip
                   label={t("viewer.comments.moreActions", "More actions")}
                 >
-                  <ActionIcon variant="subtle" size="sm" color="gray">
+                  <ActionIcon
+                    variant="tertiary"
+                    accent="neutral"
+                    size="sm"
+                    aria-label={t(
+                      "viewer.comments.moreActions",
+                      "More actions",
+                    )}
+                  >
                     <MoreHorizIcon style={{ fontSize: 20 }} />
                   </ActionIcon>
                 </Tooltip>
@@ -746,11 +750,14 @@ export function CommentsSidebar({
         )}
         {toggleCommentsSidebar && (
           <ActionIcon
-            variant="subtle"
+            variant="tertiary"
+            accent="neutral"
             size="sm"
-            color="gray"
             onClick={toggleCommentsSidebar}
-            aria-label="Close comments sidebar"
+            aria-label={t(
+              "viewer.comments.closeSidebar",
+              "Close comments sidebar",
+            )}
             title={t("viewer.comments.close", "Close comments")}
           >
             <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
@@ -775,9 +782,9 @@ export function CommentsSidebar({
               </Text>
               {isPlacingComment ? (
                 <Button
-                  variant="light"
-                  color="orange"
-                  size="xs"
+                  variant="tertiary"
+                  accent="warning"
+                  size="sm"
                   onClick={handleCancelPlacingComment}
                   leftSection={
                     <LocalIcon
@@ -794,8 +801,8 @@ export function CommentsSidebar({
                 </Button>
               ) : (
                 <Button
-                  variant="light"
-                  size="xs"
+                  variant="tertiary"
+                  size="sm"
                   onClick={handleAddComment}
                   leftSection={
                     <LocalIcon icon="add" width="1rem" height="1rem" />
@@ -809,10 +816,11 @@ export function CommentsSidebar({
             <>
               {isPlacingComment ? (
                 <Button
-                  variant="light"
-                  color="orange"
-                  size="compact-xs"
+                  variant="tertiary"
+                  accent="warning"
+                  size="sm"
                   fullWidth
+                  justify="start"
                   onClick={handleCancelPlacingComment}
                   leftSection={
                     <LocalIcon
@@ -821,12 +829,7 @@ export function CommentsSidebar({
                       height="0.9rem"
                     />
                   }
-                  styles={{
-                    root: {
-                      justifyContent: "flex-start",
-                      paddingInline: 6,
-                    },
-                  }}
+                  style={{ paddingInline: 6 }}
                 >
                   {t(
                     "viewer.comments.placingHint",
@@ -835,19 +838,15 @@ export function CommentsSidebar({
                 </Button>
               ) : (
                 <Button
-                  variant="subtle"
-                  size="compact-xs"
+                  variant="tertiary"
+                  size="sm"
                   fullWidth
+                  justify="start"
                   onClick={handleAddComment}
                   leftSection={
                     <LocalIcon icon="add" width="0.9rem" height="0.9rem" />
                   }
-                  styles={{
-                    root: {
-                      justifyContent: "flex-start",
-                      paddingInline: 6,
-                    },
-                  }}
+                  style={{ paddingInline: 6 }}
                 >
                   {t("viewer.comments.addComment", "Add comment")}
                 </Button>
@@ -943,9 +942,13 @@ export function CommentsSidebar({
                                   )}
                                 >
                                   <ActionIcon
-                                    variant="subtle"
+                                    variant="tertiary"
+                                    accent="neutral"
                                     size="sm"
-                                    color="gray"
+                                    aria-label={t(
+                                      "viewer.comments.locateAnnotation",
+                                      "Locate in document",
+                                    )}
                                     onClick={() =>
                                       handleLocateAnnotation(pageIndex, ann)
                                     }
@@ -962,9 +965,13 @@ export function CommentsSidebar({
                                       )}
                                     >
                                       <ActionIcon
-                                        variant="subtle"
+                                        variant="tertiary"
+                                        accent="neutral"
                                         size="sm"
-                                        color="gray"
+                                        aria-label={t(
+                                          "viewer.comments.moreActions",
+                                          "More actions",
+                                        )}
                                       >
                                         <MoreHorizIcon
                                           style={{ fontSize: 20 }}
@@ -1030,9 +1037,12 @@ export function CommentsSidebar({
                                     )}
                                   >
                                     <ActionIcon
-                                      variant="filled"
+                                      variant="primary"
                                       size="sm"
-                                      color="blue"
+                                      aria-label={t(
+                                        "viewer.comments.addComment",
+                                        "Add comment",
+                                      )}
                                       onClick={() => {
                                         handleSendMainComment(
                                           pageIndex,
@@ -1043,9 +1053,7 @@ export function CommentsSidebar({
                                       }}
                                       disabled={!(draft ?? "").trim()}
                                     >
-                                      <CheckIcon
-                                        style={{ fontSize: 18, color: "white" }}
-                                      />
+                                      <CheckIcon style={{ fontSize: 18 }} />
                                     </ActionIcon>
                                   </Tooltip>
                                 </Group>
@@ -1112,7 +1120,9 @@ export function CommentsSidebar({
                                               >
                                                 {canEditReply &&
                                                 !isEditingReply ? (
-                                                  <UnstyledButton
+                                                  <Button
+                                                    variant="tertiary"
+                                                    hover={false}
                                                     type="button"
                                                     onClick={() => {
                                                       setEditingReplyKey(
@@ -1135,7 +1145,7 @@ export function CommentsSidebar({
                                                         "Edit",
                                                       )}
                                                     </Text>
-                                                  </UnstyledButton>
+                                                  </Button>
                                                 ) : null}
                                                 {rTimestamp ? (
                                                   <Text size="xs" c="dimmed">
@@ -1178,9 +1188,12 @@ export function CommentsSidebar({
                                                     )}
                                                   >
                                                     <ActionIcon
-                                                      variant="filled"
+                                                      variant="primary"
                                                       size="sm"
-                                                      color="blue"
+                                                      aria-label={t(
+                                                        "viewer.comments.saveReply",
+                                                        "Save reply",
+                                                      )}
                                                       onClick={() =>
                                                         handleSaveReplyEdit(
                                                           replyEditKey,
@@ -1196,7 +1209,6 @@ export function CommentsSidebar({
                                                       <CheckIcon
                                                         style={{
                                                           fontSize: 18,
-                                                          color: "white",
                                                         }}
                                                       />
                                                     </ActionIcon>
@@ -1252,13 +1264,12 @@ export function CommentsSidebar({
                                     )}
                                   >
                                     <ActionIcon
-                                      variant="filled"
+                                      variant="primary"
                                       size="md"
-                                      color="blue"
-                                      style={{
-                                        backgroundColor:
-                                          "var(--mantine-color-blue-6)",
-                                      }}
+                                      aria-label={t(
+                                        "viewer.comments.addComment",
+                                        "Add comment",
+                                      )}
                                       onClick={() =>
                                         handleSendReply(
                                           pageIndex,
@@ -1268,9 +1279,7 @@ export function CommentsSidebar({
                                       }
                                       disabled={!replyDraft.trim()}
                                     >
-                                      <CheckIcon
-                                        style={{ fontSize: 20, color: "white" }}
-                                      />
+                                      <CheckIcon style={{ fontSize: 20 }} />
                                     </ActionIcon>
                                   </Tooltip>
                                 </Group>
@@ -1305,10 +1314,10 @@ export function CommentsSidebar({
           )}
         </Text>
         <Group justify="flex-end" gap="sm">
-          <Button variant="default" onClick={handleRemoveFromSidebar}>
+          <Button variant="secondary" onClick={handleRemoveFromSidebar}>
             {t("viewer.comments.removeCommentOnly", "Remove comment only")}
           </Button>
-          <Button color="red" onClick={handleDeleteAnnotation}>
+          <Button accent="danger" onClick={handleDeleteAnnotation}>
             {t(
               "viewer.comments.deleteAnnotationAndComment",
               "Delete annotation & comment",
@@ -1331,10 +1340,13 @@ export function CommentsSidebar({
           )}
         </Text>
         <Group justify="flex-end" gap="sm">
-          <Button variant="default" onClick={() => setClearAllModalOpen(false)}>
+          <Button
+            variant="secondary"
+            onClick={() => setClearAllModalOpen(false)}
+          >
             {t("viewer.comments.cancelClearAll", "Cancel")}
           </Button>
-          <Button color="red" onClick={handleClearAllComments}>
+          <Button accent="danger" onClick={handleClearAllComments}>
             {t("viewer.comments.clearAll", "Clear all comments")}
           </Button>
         </Group>

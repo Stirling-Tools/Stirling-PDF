@@ -178,6 +178,11 @@
   color: var(--color-text-4);
   text-decoration: none;
   white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--motion-fast);
+}
+.pol-row-upgrade:hover {
+  color: var(--color-text-1);
 }
 .pol-row-upgrade:hover {
   text-decoration: underline;

@@ -1,8 +1,7 @@
 import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
-  ToolOperationConfig,
-  ToolType,
+  defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
   fileOnlyMapping,
@@ -22,15 +21,13 @@ export const buildRemoveImageFormData = (
   file: File,
 ): FormData => objectToFormData(toApiParams(), { fileInput: file });
 
-export const removeImageOperationConfig: ToolOperationConfig<RemoveImageParameters> =
-  {
-    toolType: ToolType.singleFile,
-    buildFormData: buildRemoveImageFormData,
-    toApiParams,
-    fromApiParams,
-    operationType: "removeImage",
-    endpoint: ENDPOINT,
-  };
+export const removeImageOperationConfig = defineSingleFileTool({
+  buildFormData: buildRemoveImageFormData,
+  toApiParams,
+  fromApiParams,
+  operationType: "removeImage",
+  endpoint: ENDPOINT,
+});
 
 export const useRemoveImageOperation = () => {
   const { t } = useTranslation();

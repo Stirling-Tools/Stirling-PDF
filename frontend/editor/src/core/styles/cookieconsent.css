@@ -11,41 +11,30 @@
   z-index: 999999 !important;
 }
 
-/* Dark mode styling */
-.cc--darkmode .cm {
-  background: #2d2d2d !important;
-  color: #ffffff !important;
-  border-top: 1px solid #444 !important;
-}
-
+/* Dark mode styling — use the app's dark-theme design tokens so the banner
+ * matches the rest of the UI (navy-indigo surfaces) instead of a flat grey. */
+.cc--darkmode .cm,
 .cc--darkmode .pm {
-  background: #2d2d2d !important;
-  color: #ffffff !important;
+  background: var(--bg-surface) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-subtle) !important;
 }
 
 .cc--darkmode .pm-overlay {
-  background: rgba(0, 0, 0, 0.7) !important;
+  background: rgba(0, 0, 0, 0.6) !important;
 }
 
-/* Button styling */
-.cc--darkmode .cm__btn {
-  background: #444 !important;
-  color: #ffffff !important;
-  border: 1px solid #666 !important;
-}
-
-.cc--darkmode .cm__btn:hover {
-  background: #555 !important;
-}
-
+/* Buttons — match the shared neutral surface treatment. */
+.cc--darkmode .cm__btn,
 .cc--darkmode .pm__btn {
-  background: #444 !important;
-  color: #ffffff !important;
-  border: 1px solid #666 !important;
+  background: var(--bg-muted) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-default) !important;
 }
 
+.cc--darkmode .cm__btn:hover,
 .cc--darkmode .pm__btn:hover {
-  background: #555 !important;
+  background: var(--hover-bg) !important;
 }
 
 /* Ensure ScrollArea doesn't interfere */

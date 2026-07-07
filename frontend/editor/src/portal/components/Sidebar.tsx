@@ -1,5 +1,5 @@
+import { Button, Dropdown, NavItem } from "@app/ui";
 import { useTranslation } from "react-i18next";
-import { Dropdown, NavItem } from "@app/ui";
 import { useView, type ViewId } from "@portal/contexts/ViewContext";
 import { useTier } from "@portal/contexts/TierContext";
 import { useTheme } from "@portal/contexts/ThemeContext";
@@ -22,7 +22,6 @@ import {
   UsageIcon,
   LinkIcon,
   DocsIcon,
-  ProcurementIcon,
   SettingsIcon,
   ChevronDownIcon,
 } from "@portal/components/icons";
@@ -136,15 +135,10 @@ export function Sidebar() {
   const { activeView, setActiveView } = useView();
   const { theme } = useTheme();
   const { openSettings } = useUI();
-  const { tier } = useTier();
   const { t } = useTranslation();
 
-  // Procurement is the enterprise buyer's commercial journey — surfaced only to
-  // enterprise tenants (it has no free/pro equivalent).
-  const platformGroup: NavEntry[] =
-    tier === "enterprise"
-      ? [{ id: "procurement", icon: <ProcurementIcon /> }, ...GROUP_PLATFORM]
-      : GROUP_PLATFORM;
+  // Procurement is no longer a nav tab — it lives on Home as the deal-status hero and expands into
+  // a takeover modal (matching the marketing prototype).
 
   function renderGroup(entries: NavEntry[]) {
     return entries.map((entry) => (
@@ -178,13 +172,13 @@ export function Sidebar() {
 
         <Dropdown.Root align="end" className="portal-sidebar__app-switch">
           <Dropdown.Trigger>
-            <button
-              type="button"
+            <Button
+              variant="tertiary"
               className="portal-sidebar__app-switch-btn"
               aria-label={t("portal.shell.sidebar.switchApp")}
             >
               <ChevronDownIcon size={14} />
-            </button>
+            </Button>
           </Dropdown.Trigger>
           <Dropdown.Menu width="11rem">
             <Dropdown.Item
@@ -227,7 +221,7 @@ export function Sidebar() {
         </div>
         <div className="portal-sidebar__divider" aria-hidden />
         <div className="portal-sidebar__group">
-          {renderGroup(platformGroup)}
+          {renderGroup(GROUP_PLATFORM)}
         </div>
       </nav>
 

@@ -185,14 +185,13 @@ export function WelcomeCarousel({ onTryOp }: WelcomeCarouselProps) {
           </p>
           <div className="portal-carousel__cta">
             <Button
-              variant="gradient"
               onClick={() => runAction(slide.primary)}
-              trailingIcon={<span aria-hidden>→</span>}
+              rightSection={<span aria-hidden>→</span>}
             >
               {t(slide.primary.labelKey)}
             </Button>
             <Button
-              variant="outline"
+              variant="secondary"
               onClick={() => runAction(slide.secondary)}
             >
               {t(slide.secondary.labelKey)}
@@ -213,9 +212,9 @@ export function WelcomeCarousel({ onTryOp }: WelcomeCarouselProps) {
         aria-label={t("portal.welcome.pagination")}
       >
         {SLIDES.map((s, i) => (
-          <button
+          <Button
             key={s.id}
-            type="button"
+            variant="tertiary"
             aria-current={i === index ? "true" : undefined}
             aria-label={t("portal.welcome.slideLabel", {
               number: i + 1,

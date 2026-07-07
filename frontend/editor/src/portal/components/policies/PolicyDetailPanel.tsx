@@ -84,15 +84,16 @@ function ActivityError({ message }: { message: string }) {
       >
         {message}
       </span>
-      <button
+      <Button
         type="button"
+        variant="quiet"
         className="portal-policies__link portal-policies__activity-error-toggle"
         onClick={() => setExpanded((v) => !v)}
       >
         {expanded
           ? t("portal.policies.detail.showLess")
           : t("portal.policies.detail.showMore")}
-      </button>
+      </Button>
     </span>
   );
 }
@@ -139,8 +140,8 @@ export function PolicyDetailPanel({
         <div className="portal-policies__detail-foot">
           {canDelete && (
             <Button
-              variant="ghost"
-              accent="red"
+              variant="tertiary"
+              accent="danger"
               size="sm"
               onClick={onDelete}
               disabled={busy}
@@ -151,7 +152,7 @@ export function PolicyDetailPanel({
           )}
           {onRun && (
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={onRun}
               disabled={busy}
@@ -161,7 +162,7 @@ export function PolicyDetailPanel({
             </Button>
           )}
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             onClick={onTogglePause}
             disabled={busy}
@@ -278,13 +279,14 @@ export function PolicyDetailPanel({
                 {item.time}
               </span>
               {item.status === "flagged" && onRetry && (
-                <button
+                <Button
                   type="button"
+                  variant="quiet"
                   className="portal-policies__link portal-policies__activity-retry"
                   onClick={() => onRetry(item)}
                 >
                   {t("portal.policies.detail.retry")}
-                </button>
+                </Button>
               )}
             </div>
           ))}
