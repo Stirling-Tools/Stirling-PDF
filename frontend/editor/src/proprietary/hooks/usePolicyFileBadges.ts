@@ -12,7 +12,6 @@ import type { FileItemPolicyRef } from "@app/components/shared/FileSidebarFileIt
  *  reloaded runs fall outside this window, suppressing the glow on page reload. */
 const RECENT_MS = 5 * 60 * 1000;
 
-
 /** Policy accent name (ROW_ACCENT) → the CSS colour var the badge uses. */
 const ACCENT_VAR: Record<string, string> = {
   blue: "var(--color-blue)",

@@ -347,7 +347,9 @@ export function FileItem({
                   content={folder.name}
                   arrow
                   position="top"
-                  portalTarget={typeof document !== "undefined" ? document.body : undefined}
+                  portalTarget={
+                    typeof document !== "undefined" ? document.body : undefined
+                  }
                 >
                   <span
                     className="file-sidebar-folder-tag"
@@ -378,7 +380,9 @@ export function FileItem({
                   content={overflowFolders.map((f) => f.name).join(", ")}
                   arrow
                   position="top"
-                  portalTarget={typeof document !== "undefined" ? document.body : undefined}
+                  portalTarget={
+                    typeof document !== "undefined" ? document.body : undefined
+                  }
                 >
                   <span className="file-sidebar-folder-tag-more">
                     +{overflowFolders.length}
@@ -442,61 +446,93 @@ export function FileItem({
                   {t("fileSidebar.fileItem.versionHistory", "Version history")}
                 </Menu.Item>
               )}
-              {canSaveToCloud && onSaveToCloud && (() => {
-                const uploadLabel = isUploadedToCloud
-                  ? t("fileSidebar.fileItem.updateOnServer", "Update on server")
-                  : t("fileSidebar.fileItem.uploadToServer", "Upload to server");
-                return (
-                  <Tooltip
-                    content={policyEnforcing ? enforcingTooltip(uploadLabel) : undefined}
-                    disabled={!policyEnforcing}
-                    position="left"
-                    offset={6}
-                    arrow
-                    portalTarget={typeof document !== "undefined" ? document.body : undefined}
-                  >
-                    <div>
-                      <Menu.Item
-                        disabled={policyEnforcing}
-                        leftSection={<CloudUploadOutlinedIcon sx={{ fontSize: 16 }} />}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onSaveToCloud(fileId);
-                        }}
-                      >
-                        {uploadLabel}
-                      </Menu.Item>
-                    </div>
-                  </Tooltip>
-                );
-              })()}
-              {onDelete && (() => {
-                const deleteLabel = t("fileSidebar.fileItem.delete", "Delete");
-                return (
-                  <Tooltip
-                    content={policyEnforcing ? enforcingTooltip(deleteLabel) : undefined}
-                    disabled={!policyEnforcing}
-                    position="left"
-                    offset={6}
-                    arrow
-                    portalTarget={typeof document !== "undefined" ? document.body : undefined}
-                  >
-                    <div>
-                      <Menu.Item
-                        disabled={policyEnforcing}
-                        color="red"
-                        leftSection={<DeleteOutlineIcon sx={{ fontSize: 16 }} />}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDelete(fileId);
-                        }}
-                      >
-                        {deleteLabel}
-                      </Menu.Item>
-                    </div>
-                  </Tooltip>
-                );
-              })()}
+              {canSaveToCloud &&
+                onSaveToCloud &&
+                (() => {
+                  const uploadLabel = isUploadedToCloud
+                    ? t(
+                        "fileSidebar.fileItem.updateOnServer",
+                        "Update on server",
+                      )
+                    : t(
+                        "fileSidebar.fileItem.uploadToServer",
+                        "Upload to server",
+                      );
+                  return (
+                    <Tooltip
+                      content={
+                        policyEnforcing
+                          ? enforcingTooltip(uploadLabel)
+                          : undefined
+                      }
+                      disabled={!policyEnforcing}
+                      position="left"
+                      offset={6}
+                      arrow
+                      portalTarget={
+                        typeof document !== "undefined"
+                          ? document.body
+                          : undefined
+                      }
+                    >
+                      <div>
+                        <Menu.Item
+                          disabled={policyEnforcing}
+                          leftSection={
+                            <CloudUploadOutlinedIcon sx={{ fontSize: 16 }} />
+                          }
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSaveToCloud(fileId);
+                          }}
+                        >
+                          {uploadLabel}
+                        </Menu.Item>
+                      </div>
+                    </Tooltip>
+                  );
+                })()}
+              {onDelete &&
+                (() => {
+                  const deleteLabel = t(
+                    "fileSidebar.fileItem.delete",
+                    "Delete",
+                  );
+                  return (
+                    <Tooltip
+                      content={
+                        policyEnforcing
+                          ? enforcingTooltip(deleteLabel)
+                          : undefined
+                      }
+                      disabled={!policyEnforcing}
+                      position="left"
+                      offset={6}
+                      arrow
+                      portalTarget={
+                        typeof document !== "undefined"
+                          ? document.body
+                          : undefined
+                      }
+                    >
+                      <div>
+                        <Menu.Item
+                          disabled={policyEnforcing}
+                          color="red"
+                          leftSection={
+                            <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+                          }
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete(fileId);
+                          }}
+                        >
+                          {deleteLabel}
+                        </Menu.Item>
+                      </div>
+                    </Tooltip>
+                  );
+                })()}
             </Menu.Dropdown>
           </Menu>
         )}

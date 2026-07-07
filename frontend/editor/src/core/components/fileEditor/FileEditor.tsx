@@ -235,7 +235,9 @@ const FileEditor = ({
       const file = record ? selectors.getFile(record.id) : null;
       if (record && file) {
         removeFiles([record.id], false);
-        setSelectedFiles(selectedFileIdsRef.current.filter((id) => id !== record.id));
+        setSelectedFiles(
+          selectedFileIdsRef.current.filter((id) => id !== record.id),
+        );
       }
     },
     [selectors, removeFiles, setSelectedFiles],
@@ -408,7 +410,10 @@ const FileEditor = ({
                     onUnzipFile={handleUnzipFile}
                     toolMode={toolMode}
                     isSupported={isFileSupported(record.name)}
-                    policies={policyFileBadges.get(record.id as string) ?? EMPTY_POLICIES}
+                    policies={
+                      policyFileBadges.get(record.id as string) ??
+                      EMPTY_POLICIES
+                    }
                   />
                 );
               })}

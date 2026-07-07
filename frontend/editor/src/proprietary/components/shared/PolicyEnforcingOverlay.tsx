@@ -1,4 +1,14 @@
-import { ActionIcon, Center, Loader, Overlay, Progress, Stack, Text, ThemeIcon, Tooltip } from "@mantine/core";
+import {
+  ActionIcon,
+  Center,
+  Loader,
+  Overlay,
+  Progress,
+  Stack,
+  Text,
+  ThemeIcon,
+  Tooltip,
+} from "@mantine/core";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import { useTranslation } from "react-i18next";
@@ -25,15 +35,29 @@ export function PolicyEnforcingOverlay({
   const { t } = useTranslation();
   if (!enforcing) return null;
   return (
-    <Overlay color="var(--color-bg)" backgroundOpacity={0.9} blur={4} zIndex={zIndex}>
+    <Overlay
+      color="var(--color-bg)"
+      backgroundOpacity={0.9}
+      blur={4}
+      zIndex={zIndex}
+    >
       {onDismiss && (
-        <Tooltip label={t("policy.viewAnyway", "View file (policy still enforcing)")} position="left" withArrow>
+        <Tooltip
+          label={t("policy.viewAnyway", "View file (policy still enforcing)")}
+          position="left"
+          withArrow
+        >
           <ActionIcon
             variant="subtle"
             color="gray"
             size="sm"
             onClick={onDismiss}
-            style={{ position: "absolute", top: 12, right: 12, zIndex: zIndex + 1 }}
+            style={{
+              position: "absolute",
+              top: 12,
+              right: 12,
+              zIndex: zIndex + 1,
+            }}
             aria-label={t("policy.dismiss", "Dismiss overlay")}
           >
             <CloseIcon style={{ fontSize: 16 }} />
@@ -49,7 +73,14 @@ export function PolicyEnforcingOverlay({
             {t("policy.enforcingTitle", "Enforcing policy…")}
           </Text>
           {progress != null ? (
-            <Progress w="100%" size="xs" radius="xl" value={progress} striped animated />
+            <Progress
+              w="100%"
+              size="xs"
+              radius="xl"
+              value={progress}
+              striped
+              animated
+            />
           ) : (
             <Loader size="xs" />
           )}

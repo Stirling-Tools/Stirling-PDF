@@ -36,7 +36,6 @@
   background-color: rgba(59, 130, 246, 0.06);
 }
 
-
 .file-sidebar-file-item.selected {
   background-color: rgba(59, 130, 246, 0.12);
 }
@@ -158,16 +157,30 @@
   animation: sidebar-policy-spin 1s linear infinite;
 }
 @keyframes sidebar-policy-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 .file-sidebar-policy-badge--recent {
   animation: sidebar-policy-pulse 4.5s ease-in-out forwards;
 }
 @keyframes sidebar-policy-pulse {
-  0%, 24%, 48% { box-shadow: 0 0 0 0 transparent; }
-  12%, 36%     { box-shadow: 0 0 5px 2px currentColor; }
-  60%, 100%    { box-shadow: 0 0 0 0 transparent; }
+  0%,
+  24%,
+  48% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+  12%,
+  36% {
+    box-shadow: 0 0 5px 2px currentColor;
+  }
+  60%,
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
 }
 
 /* ---- Cloud badge (file saved to the server) ---- */

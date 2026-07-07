@@ -66,7 +66,9 @@ const HoverActionMenu: React.FC<HoverActionMenuProps> = ({
           position="bottom"
           offset={6}
           arrow
-          portalTarget={typeof document !== "undefined" ? document.body : undefined}
+          portalTarget={
+            typeof document !== "undefined" ? document.body : undefined
+          }
         >
           <div style={{ display: "inline-flex", alignItems: "center" }}>
             <ActionIcon
