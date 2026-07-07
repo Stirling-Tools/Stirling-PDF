@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ActionIcon, Button, Checkbox, Menu, Tooltip } from "@mantine/core";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import AutorenewIcon from "@mui/icons-material/Autorenew";
 import FolderIcon from "@mui/icons-material/Folder";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
@@ -592,10 +593,14 @@ function PolicyBadges({ fileId }: { fileId: string }) {
           position="top"
         >
           <span
-            className="files-page-policy-badge"
+            className={`files-page-policy-badge${policy.enforcing ? " files-page-policy-badge--enforcing" : ""}`}
             style={{ color: policy.accentColor }}
           >
-            <ShieldOutlinedIcon sx={{ fontSize: "0.7rem" }} />
+            {policy.enforcing ? (
+              <AutorenewIcon sx={{ fontSize: "0.7rem" }} />
+            ) : (
+              <ShieldOutlinedIcon sx={{ fontSize: "0.7rem" }} />
+            )}
           </span>
         </Tooltip>
       ))}

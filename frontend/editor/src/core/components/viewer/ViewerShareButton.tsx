@@ -1,5 +1,14 @@
 import { useState } from "react";
-import { ActionIcon, Button, Group, Loader, Modal, Progress, Stack, Text } from "@mantine/core";
+import {
+  ActionIcon,
+  Button,
+  Group,
+  Loader,
+  Modal,
+  Progress,
+  Stack,
+  Text,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import ShareIcon from "@mui/icons-material/Share";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
@@ -15,9 +24,10 @@ import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
-import { usePolicyRuns } from "@app/components/policies/policyRunStore";
-
-const IN_FLIGHT = ["PENDING", "RUNNING", "WAITING_FOR_INPUT"] as const;
+import {
+  POLICY_IN_FLIGHT_STATUSES,
+  usePolicyRuns,
+} from "@app/components/policies/policyRunStore";
 
 interface ViewerShareButtonProps {
   disabled?: boolean;
@@ -60,7 +70,7 @@ export default function ViewerShareButton({
     ? runs.find(
         (r) =>
           r.fileId === activeFileId &&
-          (IN_FLIGHT as readonly string[]).includes(r.status),
+          (POLICY_IN_FLIGHT_STATUSES as readonly string[]).includes(r.status),
       )
     : undefined;
   const enforcingProgress =
@@ -77,7 +87,7 @@ export default function ViewerShareButton({
         <ShieldOutlinedIcon style={{ fontSize: 13 }} />
         <Text size="xs" fw={600}>
           {t(
-            "policy.blockingShare",
+            "policy.blockingAction",
             "{{action}} blocked while enforcing policy, please wait",
             { action: label },
           )}

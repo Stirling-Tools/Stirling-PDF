@@ -49,6 +49,13 @@ export interface PolicyRunRecord {
   startedAt: number;
 }
 
+/** Statuses of a run that is still executing (not yet settled). */
+export const POLICY_IN_FLIGHT_STATUSES: readonly PolicyRunStatus[] = [
+  "PENDING",
+  "RUNNING",
+  "WAITING_FOR_INPUT",
+];
+
 interface RunState {
   runs: PolicyRunRecord[];
   dispatched: string[];

@@ -4,10 +4,11 @@ import type { ViewerProps } from "@core/components/viewer/Viewer";
 import type { EmbedPdfViewerProps } from "@core/components/viewer/EmbedPdfViewer";
 import { useViewer } from "@app/contexts/ViewerContext";
 import {
+  POLICY_IN_FLIGHT_STATUSES,
   usePolicyRuns,
   type PolicyRunRecord,
 } from "@app/components/policies/policyRunStore";
-import { PolicyEnforcementOverlay } from "./PolicyEnforcementOverlay";
+import { PolicyEnforcementOverlay } from "@app/components/viewer/PolicyEnforcementOverlay";
 
 type SignatureOverlayPassThrough = Pick<
   EmbedPdfViewerProps,
@@ -20,14 +21,6 @@ type SignatureOverlayPassThrough = Pick<
   | "signatureOverlayApiRef"
 >;
 
-const IN_FLIGHT_OR_FAILED = new Set([
-  "PENDING",
-  "RUNNING",
-  "WAITING_FOR_INPUT",
-  "FAILED",
-  "CANCELLED",
-]);
-
 const Viewer = (props: ViewerProps & SignatureOverlayPassThrough) => {
   const { activeFileId } = useViewer();
   const allRuns = usePolicyRuns();
@@ -36,7 +29,7 @@ const Viewer = (props: ViewerProps & SignatureOverlayPassThrough) => {
     ? allRuns.filter(
         (r: PolicyRunRecord) =>
           r.fileId === activeFileId &&
-          (IN_FLIGHT_OR_FAILED.has(r.status) || r.retrying === true),
+          (POLICY_IN_FLIGHT_STATUSES.includes(r.status) || r.retrying === true),
       )
     : [];
 
@@ -55,7 +48,10 @@ const Viewer = (props: ViewerProps & SignatureOverlayPassThrough) => {
     >
       <CoreViewer {...props} />
       {/* key resets dismissed state when the active file changes */}
-      <PolicyEnforcementOverlay key={activeFileId ?? ""} runs={activeFileRuns} />
+      <PolicyEnforcementOverlay
+        key={activeFileId ?? ""}
+        runs={activeFileRuns}
+      />
     </Box>
   );
 };

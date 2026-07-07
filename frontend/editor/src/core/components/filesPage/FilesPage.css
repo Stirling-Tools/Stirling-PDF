@@ -501,6 +501,14 @@
   /* `color` set inline to the policy accent; tint follows it. */
   background: color-mix(in srgb, currentColor 16%, transparent);
 }
+.files-page-policy-badge--enforcing svg {
+  animation: files-page-policy-spin 1s linear infinite;
+}
+@keyframes files-page-policy-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 /* Parent-folder breadcrumb shown on cards/rows during recursive search so
    the user can tell which folder each hit lives in without navigating. */

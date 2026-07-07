@@ -45,6 +45,7 @@ import { useWheelZoom } from "@app/hooks/useWheelZoom";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import { FormSaveBar } from "@app/tools/formFill/FormSaveBar";
 import { useViewerKeyCommand } from "@app/hooks/useViewerKeyCommand";
+import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
 import { alert } from "@app/components/toast";
 
 // ─── Measure dictionary extraction ────────────────────────────────────────────
@@ -441,6 +442,15 @@ const EmbedPdfViewerContent = ({
 
   const viewerKeyCommand = useViewerKeyCommand();
 
+  const policyFileBadges = usePolicyFileBadges();
+  const policyEnforcing =
+    !!activeFileId &&
+    (policyFileBadges.get(activeFileId) ?? []).some((p) => p.enforcing);
+  // Use a ref so the keydown handler always reads the latest value without
+  // needing to be in the effect's dependency array.
+  const policyEnforcingRef = useRef(false);
+  policyEnforcingRef.current = policyEnforcing;
+
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -466,7 +476,9 @@ const EmbedPdfViewerContent = ({
               case "p":
               case "P":
                 event.preventDefault();
-                printActions.print();
+                if (!policyEnforcingRef.current) {
+                  printActions.print();
+                }
                 return;
               case "a":
               case "A":
@@ -1333,6 +1345,7 @@ const EmbedPdfViewerContent = ({
               file={currentFile ?? null}
               isFormFillToolActive={isFormFillToolActive}
               onApply={handleFormApply}
+              policyEnforcing={policyEnforcing}
             />
             <StampPlacementOverlay
               containerRef={pdfContainerRef}

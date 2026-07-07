@@ -4,7 +4,8 @@ import type { Page } from "@playwright/test";
 
 /**
  * Verifies the PolicyEnforcementOverlay that blocks the viewer while a per-file
- * policy run is in progress or has failed.
+ * policy run is in progress. Settled runs (COMPLETED, FAILED, CANCELLED) never
+ * block — enforcement only holds the file while the outcome is undecided.
  *
  * The overlay is rendered by the proprietary Viewer shadow
  * (src/proprietary/components/viewer/Viewer.tsx), which wraps CoreViewer and
@@ -39,7 +40,8 @@ async function getActiveFileId(page: Page): Promise<string> {
   const fileId = await page
     .locator('[data-testid="viewer-root"]')
     .getAttribute("data-file-id");
-  if (!fileId) throw new Error("viewer-root[data-file-id] is empty after upload");
+  if (!fileId)
+    throw new Error("viewer-root[data-file-id] is empty after upload");
   return fileId;
 }
 
@@ -88,7 +90,6 @@ test.describe("PolicyEnforcementOverlay — viewer blocking", () => {
     await expect(page.getByText("Enforcing policy…")).toBeVisible({
       timeout: 5_000,
     });
-    await expect(page.getByText("Policy check failed")).not.toBeVisible();
   });
 
   test("shows progress bar when currentStep/stepCount are set", async ({
@@ -118,7 +119,7 @@ test.describe("PolicyEnforcementOverlay — viewer blocking", () => {
     });
   });
 
-  test("shows error alert for FAILED run with a message", async ({ page }) => {
+  test("does not block for a FAILED run", async ({ page }) => {
     await uploadAndRender(page);
     const fileId = await getActiveFileId(page);
     await injectPolicyRun(page, fileId, {
@@ -126,30 +127,15 @@ test.describe("PolicyEnforcementOverlay — viewer blocking", () => {
       error: "File contains restricted content",
     });
 
-    await expect(page.getByText("Policy check failed")).toBeVisible({
-      timeout: 5_000,
-    });
-    await expect(
-      page.getByText("File contains restricted content"),
-    ).toBeVisible();
     await expect(page.getByText("Enforcing policy…")).not.toBeVisible();
   });
 
-  test("shows generic fallback copy when FAILED but error is null", async ({
-    page,
-  }) => {
+  test("does not block for a CANCELLED run", async ({ page }) => {
     await uploadAndRender(page);
     const fileId = await getActiveFileId(page);
-    await injectPolicyRun(page, fileId, { status: "FAILED", error: null });
+    await injectPolicyRun(page, fileId, { status: "CANCELLED" });
 
-    await expect(page.getByText("Policy check failed")).toBeVisible({
-      timeout: 5_000,
-    });
-    await expect(
-      page.getByText(
-        "This file did not pass the required policy check and cannot be used.",
-      ),
-    ).toBeVisible();
+    await expect(page.getByText("Enforcing policy…")).not.toBeVisible();
   });
 
   test("hides overlay for a COMPLETED run", async ({ page }) => {
@@ -158,13 +144,11 @@ test.describe("PolicyEnforcementOverlay — viewer blocking", () => {
     await injectPolicyRun(page, fileId, { status: "COMPLETED" });
 
     await expect(page.getByText("Enforcing policy…")).not.toBeVisible();
-    await expect(page.getByText("Policy check failed")).not.toBeVisible();
   });
 
   test("hides overlay when no policy runs exist", async ({ page }) => {
     await uploadAndRender(page);
 
     await expect(page.getByText("Enforcing policy…")).not.toBeVisible();
-    await expect(page.getByText("Policy check failed")).not.toBeVisible();
   });
 });
