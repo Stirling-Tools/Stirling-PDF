@@ -13,6 +13,7 @@ import AddIcon from "@mui/icons-material/Add";
 import { TextInput } from "@mantine/core";
 import { Modal } from "@app/ui/Modal";
 import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { LabelChip } from "@app/ui/LabelChip";
 import { LabelIconPicker } from "@app/components/policies/LabelIconPicker";
 import { useClassificationLabels } from "@app/hooks/useClassificationLabels";
@@ -162,15 +163,15 @@ export function FileSidebarGroupControls({
   return (
     <>
       {/* -external: revealed on section-header hover, like the Browse button. */}
-      <button
+      <ActionIcon
+        variant="quiet"
         className="file-sidebar-section-btn file-sidebar-section-btn-external"
         onClick={openPicker}
-        title={t("fileSidebar.customizeGroups", "Customize groups")}
-        type="button"
+        aria-label={t("fileSidebar.customizeGroups", "Customize groups")}
         data-testid="customize-groups"
       >
         <TuneIcon sx={{ fontSize: "1rem" }} />
-      </button>
+      </ActionIcon>
 
       <Modal
         open={open}
@@ -220,10 +221,11 @@ export function FileSidebarGroupControls({
             return (
               <section key={category.id} className="fsg-cat">
                 <div className="fsg-cat-header">
-                  <button
-                    type="button"
+                  <ActionIcon
+                    variant="quiet"
                     className="fsg-cat-toggle"
                     aria-expanded={isExpanded}
+                    aria-label={category.name}
                     onClick={() => toggleExpanded(category.id)}
                   >
                     {isExpanded ? (
@@ -231,7 +233,7 @@ export function FileSidebarGroupControls({
                     ) : (
                       <KeyboardArrowRightIcon className="fsg-chevron" />
                     )}
-                  </button>
+                  </ActionIcon>
                   <LabelIconPicker
                     value={category.icon}
                     onChange={(icon) => setCategoryIcon(category.id, icon)}
@@ -255,6 +257,7 @@ export function FileSidebarGroupControls({
                       }}
                     />
                   ) : (
+                    // eslint-disable-next-line no-restricted-syntax -- inline text button (click-to-rename); no DS Button variant fits an inline label
                     <button
                       type="button"
                       className="fsg-cat-name"
@@ -270,8 +273,8 @@ export function FileSidebarGroupControls({
                   <span className="fsg-count">
                     {categoryCounts.get(category.id) ?? 0}
                   </span>
-                  <button
-                    type="button"
+                  <ActionIcon
+                    variant="quiet"
                     className="fsg-cat-action"
                     aria-label={
                       category.hidden
@@ -288,9 +291,9 @@ export function FileSidebarGroupControls({
                     ) : (
                       <VisibilityIcon sx={{ fontSize: "1rem" }} />
                     )}
-                  </button>
-                  <button
-                    type="button"
+                  </ActionIcon>
+                  <ActionIcon
+                    variant="quiet"
                     className="fsg-cat-action"
                     aria-label={t(
                       "fileSidebar.groupsModal.delete",
@@ -299,7 +302,7 @@ export function FileSidebarGroupControls({
                     onClick={() => deleteCategory(category.id)}
                   >
                     <DeleteOutlineIcon sx={{ fontSize: "1rem" }} />
-                  </button>
+                  </ActionIcon>
                 </div>
 
                 {isExpanded && (
