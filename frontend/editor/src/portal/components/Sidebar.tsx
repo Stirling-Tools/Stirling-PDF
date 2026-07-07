@@ -1,4 +1,5 @@
-import { Button, Dropdown, NavItem } from "@app/ui";
+import { NavItem } from "@app/ui";
+import { AppSwitch } from "@app/components/shared/AppSwitch";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useView, type ViewId } from "@portal/contexts/ViewContext";
@@ -24,7 +25,6 @@ import {
   LinkIcon,
   DocsIcon,
   SettingsIcon,
-  ChevronDownIcon,
 } from "@portal/components/icons";
 import "@portal/components/Sidebar.css";
 
@@ -180,43 +180,12 @@ export function Sidebar() {
           </span>
         </span>
 
-        <Dropdown.Root align="end" className="portal-sidebar__app-switch">
-          <Dropdown.Trigger>
-            <Button
-              variant="tertiary"
-              className="portal-sidebar__app-switch-btn"
-              aria-label={t("portal.shell.sidebar.switchApp")}
-            >
-              <ChevronDownIcon size={14} />
-            </Button>
-          </Dropdown.Trigger>
-          <Dropdown.Menu width="11rem">
-            <Dropdown.Item
-              active
-              leading={
-                <img
-                  className="portal-sidebar__app-icon"
-                  src={theme === "dark" ? markDark : markLight}
-                  alt=""
-                />
-              }
-            >
-              {t("portal.shell.sidebar.appProcessor")}
-            </Dropdown.Item>
-            <Dropdown.Item
-              onSelect={goToEditor}
-              leading={
-                <img
-                  className="portal-sidebar__app-icon"
-                  src={theme === "dark" ? markDark : markLight}
-                  alt=""
-                />
-              }
-            >
-              {t("portal.shell.sidebar.appEditor")}
-            </Dropdown.Item>
-          </Dropdown.Menu>
-        </Dropdown.Root>
+        <AppSwitch
+          className="portal-sidebar__app-switch"
+          current="processor"
+          theme={theme}
+          onSwitch={goToEditor}
+        />
       </div>
 
       <nav className="portal-sidebar__nav">
