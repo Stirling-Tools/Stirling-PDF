@@ -102,6 +102,13 @@
   flex-shrink: 0;
 }
 
+/* App switcher (portal builds only) sits at the far end of the header row. */
+.file-sidebar-app-switch {
+  margin-inline-start: auto;
+  display: flex;
+  align-items: center;
+}
+
 /* ---- Search row ---- */
 .file-sidebar-search-row {
   display: flex;
