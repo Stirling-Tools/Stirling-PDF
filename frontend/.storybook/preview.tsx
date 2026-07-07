@@ -7,7 +7,6 @@ import type { Decorator, Preview } from "@storybook/react-vite";
 import { initialize, mswLoader } from "msw-storybook-addon";
 import { MemoryRouter } from "react-router-dom";
 import { withThemeByDataAttribute } from "@storybook/addon-themes";
-import { MantineProvider } from "@mantine/core";
 
 // Reference React so the import isn't dropped as unused by the bundler — the
 // classic runtime needs it present even though it's not named in the JSX.
@@ -17,7 +16,7 @@ import { TierProvider, type Tier } from "@portal/contexts/TierContext";
 import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
 import { ThemeProvider } from "@portal/contexts/ThemeContext";
 import { UIProvider } from "@portal/contexts/UIContext";
-import { mantineTheme } from "@portal/theme/mantineTheme";
+import { SuiProvider } from "@portal/theme/SuiProvider";
 import { handlers } from "@portal/mocks/handlers";
 import { configureSupabase } from "@proprietary/auth/supabase/supabaseClient";
 
@@ -102,7 +101,7 @@ const withProviders: Decorator = (Story, context) => {
   return (
     <MemoryRouter initialEntries={["/"]}>
       <ThemeProvider>
-        <MantineProvider theme={mantineTheme} forceColorScheme={colorScheme}>
+        <SuiProvider colorScheme={colorScheme}>
           {/* LinkProvider must wrap TierProvider: TierContext derives its tier
               from useLink() (matches App.tsx's nesting). */}
           <LinkProvider key={linkState} initialState={linkState}>
@@ -115,7 +114,7 @@ const withProviders: Decorator = (Story, context) => {
               </UIProvider>
             </TierKey>
           </LinkProvider>
-        </MantineProvider>
+        </SuiProvider>
       </ThemeProvider>
     </MemoryRouter>
   );

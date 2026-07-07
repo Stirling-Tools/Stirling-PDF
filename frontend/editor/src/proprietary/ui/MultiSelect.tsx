@@ -1,7 +1,8 @@
 import type React from "react";
 import {
-  Select as MantineSelect,
-  type SelectProps as MantineSelectProps,
+  MultiSelect as MantineMultiSelect,
+  type MultiSelectProps as MantineMultiSelectProps,
+  type ComboboxData,
 } from "@mantine/core";
 import { useInputAria } from "@app/ui/ariaForwarding";
 import "@app/ui/MantineForms.css";
@@ -17,32 +18,31 @@ const SUI_INPUT_VARS = {
   "--input-height-md": "2.25rem",
 } as React.CSSProperties;
 
-export interface SelectOption {
-  value: string;
-  label: string;
-  disabled?: boolean;
-}
+export type MultiSelectSize = "sm" | "md";
 
-export type SelectSize = "sm" | "md";
-
-export interface SelectProps {
+export interface MultiSelectProps {
   // Data
-  options: SelectOption[];
-  value?: string | null;
-  onChange?: (value: string | null) => void;
-  defaultValue?: string;
+  data: ComboboxData;
+  value?: string[];
+  onChange?: (value: string[]) => void;
+  defaultValue?: string[];
 
   // Behaviour
   searchable?: boolean;
   clearable?: boolean;
-  placeholder?: string;
+  limit?: number;
+  maxValues?: number;
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
   nothingFoundMessage?: React.ReactNode;
   maxDropdownHeight?: number | string;
+  filter?: MantineMultiSelectProps["filter"];
 
-  // Dropdown escape hatch — for zIndex / offset overrides in modals
-  comboboxProps?: MantineSelectProps["comboboxProps"];
+  // Dropdown escape hatch — only for zIndex / offset overrides in modals
+  comboboxProps?: MantineMultiSelectProps["comboboxProps"];
 
   // Form
+  placeholder?: string;
   id?: string;
   name?: string;
   "aria-label"?: string;
@@ -53,24 +53,32 @@ export interface SelectProps {
   readOnly?: boolean;
   onFocus?: React.FocusEventHandler<HTMLInputElement>;
   onBlur?: React.FocusEventHandler<HTMLInputElement>;
+  onDropdownOpen?: () => void;
+  onDropdownClose?: () => void;
 
   // SUI — invalid applies error styling; FormField renders the message itself.
-  inputSize?: SelectSize;
+  inputSize?: MultiSelectSize;
   invalid?: boolean;
 }
 
 type PassthroughProps = Omit<
   Pick<
-    MantineSelectProps,
+    MantineMultiSelectProps,
+    | "data"
     | "value"
     | "onChange"
     | "defaultValue"
     | "searchable"
     | "clearable"
-    | "placeholder"
+    | "limit"
+    | "maxValues"
+    | "searchValue"
+    | "onSearchChange"
     | "nothingFoundMessage"
     | "maxDropdownHeight"
+    | "filter"
     | "comboboxProps"
+    | "placeholder"
     | "id"
     | "name"
     | "aria-label"
@@ -80,29 +88,36 @@ type PassthroughProps = Omit<
     | "readOnly"
     | "onFocus"
     | "onBlur"
+    | "onDropdownOpen"
+    | "onDropdownClose"
   >,
   never
 >;
 
 /**
- * SUI select / combobox backed by Mantine. Supports optional search and clear.
- * Use with <FormField> for labels and error display. Appearance is locked to SUI tokens.
+ * SUI multi-select with pill display and optional search. Use with <FormField>
+ * for labels and error display. Appearance is locked to SUI tokens.
  *
- * onChange receives the selected string value (or null when cleared), not a DOM event.
+ * Pass `comboboxProps={{ zIndex: Z_INDEX_MODAL }}` when rendering inside a modal.
  */
-export function Select({
+export function MultiSelect({
   inputSize = "md",
   invalid,
-  options,
+  data,
   value,
   onChange,
   defaultValue,
   searchable,
   clearable,
-  placeholder,
+  limit,
+  maxValues,
+  searchValue,
+  onSearchChange,
   nothingFoundMessage,
   maxDropdownHeight,
+  filter,
   comboboxProps,
+  placeholder,
   id,
   name,
   "aria-label": ariaLabel,
@@ -113,18 +128,26 @@ export function Select({
   readOnly,
   onFocus,
   onBlur,
-}: SelectProps) {
-  const inputRef = useInputAria({ describedBy: ariaDescribedBy });
+  onDropdownOpen,
+  onDropdownClose,
+}: MultiSelectProps) {
+  const inputRef = useInputAria({ describedBy: ariaDescribedBy, required });
   const passthroughProps: PassthroughProps = {
+    data,
     value,
     onChange,
     defaultValue,
     searchable,
     clearable,
-    placeholder,
+    limit,
+    maxValues,
+    searchValue,
+    onSearchChange,
     nothingFoundMessage,
     maxDropdownHeight,
+    filter,
     comboboxProps,
+    placeholder,
     id,
     name,
     "aria-label": ariaLabel,
@@ -134,19 +157,26 @@ export function Select({
     readOnly,
     onFocus,
     onBlur,
+    onDropdownOpen,
+    onDropdownClose,
   };
 
   return (
-    <MantineSelect
-      data={options}
+    <MantineMultiSelect
       size={inputSize}
       // Boolean error applies invalid styling without rendering Mantine's own
       // message element — FormField owns the visible error text.
       error={invalid || ariaInvalid || undefined}
-      // required sets the input attribute only; FormField renders the asterisk.
+      // FormField renders the asterisk; the field is announced as required
+      // via aria-required from useInputAria (Mantine keeps `required` on the
+      // pills wrapper, not the focusable field).
       withAsterisk={false}
       ref={inputRef}
-      classNames={{ wrapper: "sui-mantine-wrapper" }}
+      classNames={{
+        wrapper: "sui-mantine-wrapper",
+        pill: "sui-mantine-pill",
+        pillsList: "sui-mantine-pills-list",
+      }}
       styles={{ wrapper: SUI_INPUT_VARS }}
       {...passthroughProps}
     />

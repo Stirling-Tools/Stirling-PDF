@@ -91,7 +91,7 @@ export function InviteMemberModal({ open, onClose }: InviteMemberModalProps) {
           <Select
             options={ROLE_SELECT_OPTIONS}
             value={role}
-            onChange={(e) => setRole(e.target.value as RoleId)}
+            onChange={(value) => setRole((value ?? "") as RoleId)}
           />
         </FormField>
       </div>

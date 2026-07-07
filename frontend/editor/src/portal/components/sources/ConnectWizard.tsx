@@ -245,8 +245,8 @@ export function ConnectWizard({
                     value: o.value,
                     label: t(o.labelKey),
                   }))}
-                  onChange={(e) =>
-                    setOptions((o) => ({ ...o, [field.key]: e.target.value }))
+                  onChange={(value) =>
+                    setOptions((o) => ({ ...o, [field.key]: value ?? "" }))
                   }
                 />
               ) : (

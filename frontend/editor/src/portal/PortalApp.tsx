@@ -1,24 +1,19 @@
 import { type ReactNode } from "react";
-import { MantineProvider } from "@mantine/core";
 import { PortalAuthBoundary } from "@portal/auth/PortalAuthBoundary";
 import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
-import { mantineTheme } from "@portal/theme/mantineTheme";
+import { SuiProvider } from "@portal/theme/SuiProvider";
 import { PortalProviders } from "@portal/PortalProviders";
 // Reset + typography, scoped to .portal-scope below.
 import "@portal/theme/base.css";
 
 /**
- * Binds Mantine's colour scheme to the portal's own ThemeProvider so Mantine
- * components follow the same light/dark switch as the SUI primitives. Must sit
+ * Binds the SUI design system to the portal's own ThemeProvider so the SUI
+ * components follow the same light/dark switch as the CSS tokens. Must sit
  * inside <ThemeProvider> to read useTheme().
  */
-function PortalMantineProvider({ children }: { children: ReactNode }) {
+function ThemedSuiProvider({ children }: { children: ReactNode }) {
   const { theme } = useTheme();
-  return (
-    <MantineProvider theme={mantineTheme} forceColorScheme={theme}>
-      {children}
-    </MantineProvider>
-  );
+  return <SuiProvider colorScheme={theme}>{children}</SuiProvider>;
 }
 
 /**
@@ -34,14 +29,14 @@ function PortalMantineProvider({ children }: { children: ReactNode }) {
 export function PortalApp() {
   return (
     <ThemeProvider>
-      <PortalMantineProvider>
+      <ThemedSuiProvider>
         {/* Scopes base.css to the portal so it doesn't restyle the host editor. */}
         <div className="portal-scope">
           <PortalAuthBoundary>
             <PortalProviders />
           </PortalAuthBoundary>
         </div>
-      </PortalMantineProvider>
+      </ThemedSuiProvider>
     </ThemeProvider>
   );
 }
