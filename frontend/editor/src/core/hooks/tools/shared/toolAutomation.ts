@@ -17,7 +17,10 @@ import {
   type ToolRegistryEntry,
 } from "@app/data/toolsTaxonomy";
 import { type ToolId } from "@app/types/toolId";
-import { type ToolEndpoint } from "@app/types/toolApiTypes";
+import {
+  isToolEndpoint,
+  type ToolEndpoint,
+} from "@app/hooks/tools/shared/toolApiMapping";
 import {
   type ErasedToolParams,
   type RegistryToolOperationConfig,
@@ -73,20 +76,22 @@ export type WorkingToolStep = KnownToolStep | UnknownToolStep;
 
 /**
  * Resolve a tool's endpoint from parameters. Static endpoints ignore params; dynamic ones may
- * return undefined if the params don't determine one. The endpoint of a real tool is a generated
- * {@link ToolEndpoint}; the assertion covers the custom-tool config variant, which types its
- * endpoint as a plain string.
+ * return undefined if the params don't determine one. The result is validated against the generated
+ * endpoint set (via {@link isToolEndpoint}) rather than cast, so a config endpoint that is not a
+ * known {@link ToolEndpoint} (e.g. a custom tool's arbitrary string) resolves to undefined.
  */
 function resolveEndpoint(
   config: RegistryToolOperationConfig | undefined,
   params: ErasedToolParams,
 ): ToolEndpoint | undefined {
   const endpoint = config?.endpoint;
-  if (typeof endpoint === "string") return endpoint as ToolEndpoint;
+  if (typeof endpoint === "string") {
+    return isToolEndpoint(endpoint) ? endpoint : undefined;
+  }
   if (typeof endpoint === "function") {
     const resolved = safeCall(endpoint, params);
-    return typeof resolved === "string"
-      ? (resolved as ToolEndpoint)
+    return typeof resolved === "string" && isToolEndpoint(resolved)
+      ? resolved
       : undefined;
   }
   return undefined;
@@ -192,6 +197,16 @@ function findToolByEndpoint(
   return dynamic;
 }
 
+/** A stored step kept verbatim because its endpoint maps to no known tool. */
+function unmappedStep(step: ToolApiStep): UnknownToolStep {
+  return {
+    toolId: null,
+    operation: step.operation,
+    params: { ...step.parameters },
+    support: "unknown",
+  };
+}
+
 /**
  * Rehydrate a stored backend step into a working step for editing: map the endpoint back to a tool
  * and its backend parameters back to the frontend shape via `fromApiParams`. Steps whose endpoint
@@ -202,14 +217,7 @@ export function deserializeToolStep(
   registry: Partial<ToolRegistry>,
 ): WorkingToolStep {
   const match = findToolByEndpoint(step, registry);
-  if (!match) {
-    return {
-      toolId: null,
-      operation: step.operation,
-      params: { ...step.parameters },
-      support: "unknown",
-    };
-  }
+  if (!match) return unmappedStep(step);
   const [toolId, entry] = match;
   const config = entry.operationConfig;
   const params: ErasedToolParams = config?.fromApiParams
@@ -218,8 +226,10 @@ export function deserializeToolStep(
         ...config.fromApiParams(step.parameters as never),
       }
     : { ...(config?.defaultParameters ?? {}) };
-  // `step.operation` matched this tool's endpoint, so it is a valid ToolEndpoint value.
+  // Validate against the generated endpoint set instead of casting the matched string.
   const operation =
-    resolveEndpoint(config, params) ?? (step.operation as ToolEndpoint);
+    resolveEndpoint(config, params) ??
+    (isToolEndpoint(step.operation) ? step.operation : undefined);
+  if (operation === undefined) return unmappedStep(step);
   return { toolId, operation, params, support: classifyToolStepSupport(entry) };
 }
