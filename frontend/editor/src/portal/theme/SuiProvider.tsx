@@ -1,6 +1,9 @@
 import type { ReactNode } from "react";
 import { MantineProvider } from "@mantine/core";
-import { mantineTheme, suiCssVariablesResolver } from "./mantineTheme";
+import {
+  mantineTheme,
+  suiCssVariablesResolver,
+} from "@portal/theme/mantineTheme";
 
 export interface SuiProviderProps {
   /**
