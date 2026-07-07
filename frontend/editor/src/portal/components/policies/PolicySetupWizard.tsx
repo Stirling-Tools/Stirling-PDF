@@ -377,7 +377,7 @@ function PolicySetupWizardBody({
           <p className="portal-policies__wizard-desc">
             {t(
               "portal.policies.wizard.workflow.description",
-              "Choose what this policy does to every document it handles.",
+              "Choose what this policy does to every document it processes.",
             )}
           </p>
           <Card padding="none">

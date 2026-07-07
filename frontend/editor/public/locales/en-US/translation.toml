@@ -7402,14 +7402,14 @@ loading = "Loading sources…"
 [portal.policies.wizard.tabs]
 ariaLabel = "Setup steps"
 settings = "Settings"
-workflow = "Workflow"
+workflow = "Actions"
 
 [portal.policies.wizard.title]
 edit = "Edit {{category}} policy"
 setUp = "Set up {{category}} policy"
 
 [portal.policies.wizard.workflow]
-description = "The sequence of tools this policy runs on each document. Each tool is a Stirling endpoint; toggle the ones this policy should enforce."
+description = "Choose what this policy does to every document it processes."
 
 [portal.policySummary]
 activeSummary = "{{active}} / {{total}} active"
