@@ -184,4 +184,28 @@ describe("PipelineBuilder", () => {
     await waitFor(() => expect(deletePipeline).toHaveBeenCalledWith("plc-1"));
     expect(await screen.findByText("pipelines list")).toBeInTheDocument();
   });
+
+  it("prompts to save or discard when leaving with unsaved edits", async () => {
+    renderBuilder("/portal/pipelines/new");
+
+    fireEvent.change(await screen.findByRole("textbox"), {
+      target: { value: "Draft" },
+    });
+    fireEvent.click(screen.getByText("portal.pipelines.composer.cancel"));
+
+    expect(
+      await screen.findByText("portal.pipelines.builder.unsavedTitle"),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByText("portal.pipelines.builder.discard"));
+    expect(await screen.findByText("pipelines list")).toBeInTheDocument();
+  });
+
+  it("leaves immediately when there are no unsaved edits", async () => {
+    renderBuilder("/portal/pipelines/new");
+
+    await screen.findByRole("textbox");
+    fireEvent.click(screen.getByText("portal.pipelines.composer.cancel"));
+
+    expect(await screen.findByText("pipelines list")).toBeInTheDocument();
+  });
 });

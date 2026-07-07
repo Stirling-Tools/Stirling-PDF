@@ -154,6 +154,7 @@ export function PipelineBuilder() {
   const [runResult, setRunResult] = useState<RunResult | null>(null);
   const [pendingDelete, setPendingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [pendingNav, setPendingNav] = useState<string | null>(null);
 
   const mounted = useRef(true);
   useEffect(() => {
@@ -268,6 +269,26 @@ export function PipelineBuilder() {
   const uploadStepLabels = steps.filter(stepRequiresUpload).map(stepLabel);
   const hasUploadSteps = uploadStepLabels.length > 0;
 
+  // Track unsaved edits: snapshot the form and compare against the state captured just after
+  // seeding, so leaving the builder can prompt to save or discard.
+  const snapshot = JSON.stringify({
+    name: name.trim(),
+    enabled,
+    sourceIds: [...sourceIds].sort(),
+    steps: steps.map((step) => serializeToolStep(step, allTools)),
+    uploads: steps.map(stepRequiresUpload),
+    triggerType,
+    scheduleCount,
+    scheduleUnit,
+    outputMode,
+    outputDirectory,
+  });
+  const baseline = useRef<string | null>(null);
+  useEffect(() => {
+    if (seeded && baseline.current === null) baseline.current = snapshot;
+  }, [seeded, snapshot]);
+  const dirty = baseline.current !== null && baseline.current !== snapshot;
+
   const scheduleCountValid =
     triggerType !== "schedule" || Number(scheduleCount) > 0;
   const outputValid = outputMode !== "folder" || outputDirectory.trim() !== "";
@@ -306,11 +327,26 @@ export function PipelineBuilder() {
     return { type: triggerType, options: {} };
   }
 
+  const listPath = toPortalPath(VIEW_PATHS.pipelines);
+  const sourcesPath = `${toPortalPath(VIEW_PATHS.sources)}?new=1`;
+
   function close() {
-    navigate(toPortalPath(VIEW_PATHS.pipelines));
+    navigate(listPath);
   }
 
-  async function submit() {
+  // Leave the builder, but prompt first if there are unsaved edits (see the unsaved-changes modal).
+  function attemptLeave(destination: string) {
+    if (dirty) setPendingNav(destination);
+    else navigate(destination);
+  }
+
+  // Jump to the Sources page with its create wizard open, for when the source you want to run
+  // this pipeline over doesn't exist yet.
+  function goToSources() {
+    attemptLeave(sourcesPath);
+  }
+
+  async function save(destination: string) {
     if (!canSave) return;
     setSubmitting(true);
     setError(null);
@@ -329,7 +365,7 @@ export function PipelineBuilder() {
     };
     try {
       await savePipeline(policy);
-      close();
+      navigate(destination);
     } catch (e) {
       setError(errorMessage(e));
       setSubmitting(false);
@@ -412,7 +448,7 @@ export function PipelineBuilder() {
         <button
           type="button"
           className="portal-builder__back"
-          onClick={close}
+          onClick={() => attemptLeave(listPath)}
           aria-label={t("portal.pipelines.builder.back")}
         >
           <ArrowBackRoundedIcon style={{ fontSize: "1.125rem" }} />
@@ -461,14 +497,14 @@ export function PipelineBuilder() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={close}
+            onClick={() => attemptLeave(listPath)}
             disabled={submitting}
           >
             {t("portal.pipelines.composer.cancel")}
           </Button>
           <Button
             size="sm"
-            onClick={submit}
+            onClick={() => save(listPath)}
             loading={submitting}
             disabled={!canSave}
           >
@@ -522,6 +558,14 @@ export function PipelineBuilder() {
                 ))}
               </div>
             )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={goToSources}
+              leadingIcon={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
+            >
+              {t("portal.sources.actions.connectSource")}
+            </Button>
           </div>
 
           <div className="portal-builder__settings-col">
@@ -746,6 +790,54 @@ export function PipelineBuilder() {
         }
       >
         <p>{t("portal.pipelines.delete.body", { name: name || "" })}</p>
+      </Modal>
+
+      <Modal
+        open={pendingNav !== null}
+        onClose={() => !submitting && setPendingNav(null)}
+        width="sm"
+        title={t("portal.pipelines.builder.unsavedTitle")}
+        footer={
+          <div className="portal-pipelines__composer-footer">
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={submitting}
+              onClick={() => setPendingNav(null)}
+            >
+              {t("portal.pipelines.builder.keepEditing")}
+            </Button>
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <Button
+                variant="outline"
+                size="sm"
+                accent="red"
+                disabled={submitting}
+                onClick={() => {
+                  const target = pendingNav;
+                  setPendingNav(null);
+                  if (target) navigate(target);
+                }}
+              >
+                {t("portal.pipelines.builder.discard")}
+              </Button>
+              <Button
+                size="sm"
+                loading={submitting}
+                disabled={!canSave}
+                onClick={() => {
+                  const target = pendingNav;
+                  setPendingNav(null);
+                  if (target) void save(target);
+                }}
+              >
+                {t("portal.pipelines.composer.save")}
+              </Button>
+            </div>
+          </div>
+        }
+      >
+        <p>{t("portal.pipelines.builder.unsavedBody")}</p>
       </Modal>
     </div>
   );
