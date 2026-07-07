@@ -248,31 +248,26 @@
   gap: 0.375rem;
 }
 
-/* Workflow step — tool rows */
-.portal-policies__tool-head {
+/* Workflow step — policy capability settings list.
+ * Rows read as the policy's own settings (label + plain description + toggle),
+ * not a chain of distinct tools. Config reveals inline beneath an enabled row. */
+.portal-policies__capabilities {
   display: flex;
-  align-items: center;
-  gap: 0.625rem;
+  flex-direction: column;
 }
 
-.portal-policies__tool-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.25rem;
-  height: 1.25rem;
-  color: var(--color-text-2);
-  flex-shrink: 0;
+.portal-policies__capability {
+  padding: 0.75rem 0.875rem;
 }
 
-.portal-policies__tool-name {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--color-text-1);
-}
-
-.portal-policies__tool-body {
+.portal-policies__capability + .portal-policies__capability {
   border-top: 1px solid var(--color-border);
+}
+
+/* An enabled row with config gets a faint tint so the revealed settings read as
+ * belonging to it. */
+.portal-policies__capability[data-on] .portal-policies__capability-config {
+  border-top: 1px dashed var(--color-border);
   padding-top: 0.75rem;
   margin-top: 0.75rem;
 }

@@ -12,6 +12,7 @@ import {
   Tabs,
   ToggleSwitch,
 } from "@app/ui";
+import { SettingsRow } from "@app/ui/SettingsRow";
 import {
   POLICY_DOC_TYPES,
   TOOL_ENDPOINTS,
@@ -69,6 +70,58 @@ function resolveFieldValues(
 // Temporary: tracks which tools start disabled until the tool registry lands in
 // the portal and can drive this via registry metadata or a defaultEnabled flag.
 const DISABLED_BY_DEFAULT = new Set(["/api/v1/security/add-watermark"]);
+
+/**
+ * Policy-facing framing for each capability a policy can include. Labels and
+ * descriptions describe what the policy DOES to a document — deliberately not
+ * naming the underlying tool — so the setup reads as the policy's own settings
+ * rather than an assembled chain of tools. Endpoints with no entry fall back to
+ * the humanised endpoint name with no description.
+ */
+const CAPABILITY_META: Record<
+  string,
+  { labelKey: string; labelEn: string; descKey: string; descEn: string }
+> = {
+  [TOOL_ENDPOINTS.redact]: {
+    labelKey: "portal.policies.wizard.capability.redact.label",
+    labelEn: "Redact sensitive information",
+    descKey: "portal.policies.wizard.capability.redact.desc",
+    descEn:
+      "Finds and blacks out sensitive details — like Social Security and card numbers — so they can't be read.",
+  },
+  [TOOL_ENDPOINTS.sanitize]: {
+    labelKey: "portal.policies.wizard.capability.sanitize.label",
+    labelEn: "Strip active content",
+    descKey: "portal.policies.wizard.capability.sanitize.desc",
+    descEn:
+      "Removes hidden JavaScript so nothing can run automatically when the document is opened.",
+  },
+  [TOOL_ENDPOINTS.watermark]: {
+    labelKey: "portal.policies.wizard.capability.watermark.label",
+    labelEn: "Apply a watermark",
+    descKey: "portal.policies.wizard.capability.watermark.desc",
+    descEn: "Stamps a visible mark (e.g. “Confidential”) across every page.",
+  },
+  [TOOL_ENDPOINTS.ocr]: {
+    labelKey: "portal.policies.wizard.capability.ocr.label",
+    labelEn: "Make text searchable",
+    descKey: "portal.policies.wizard.capability.ocr.desc",
+    descEn: "Runs OCR so scanned pages become selectable, searchable text.",
+  },
+  [TOOL_ENDPOINTS.flatten]: {
+    labelKey: "portal.policies.wizard.capability.flatten.label",
+    labelEn: "Flatten the document",
+    descKey: "portal.policies.wizard.capability.flatten.desc",
+    descEn:
+      "Merges form fields and annotations into the page so they can't be edited.",
+  },
+  [TOOL_ENDPOINTS.compress]: {
+    labelKey: "portal.policies.wizard.capability.compress.label",
+    labelEn: "Reduce file size",
+    descKey: "portal.policies.wizard.capability.compress.desc",
+    descEn: "Compresses the document to a smaller file size.",
+  },
+};
 
 function seedTools(entry: CatalogueEntry): ToolState[] {
   const savedSteps = entry.policy?.steps ?? [];
@@ -322,53 +375,70 @@ function PolicySetupWizardBody({
       {step === "workflow" && (
         <div className="portal-policies__wizard-section">
           <p className="portal-policies__wizard-desc">
-            {t("portal.policies.wizard.workflow.description")}
+            {t(
+              "portal.policies.wizard.workflow.description",
+              "Choose what this policy does to every document it handles.",
+            )}
           </p>
-          {tools.map((tl) => {
-            const regEntry = registryByEndpoint.get(tl.operation);
-            const toolName = regEntry?.name ?? humanizeEndpoint(tl.operation);
-            return (
-              <Card key={tl.operation} padding="tight">
-                <div className="portal-policies__tool-head">
-                  {regEntry?.icon && (
-                    <span className="portal-policies__tool-icon" aria-hidden>
-                      {regEntry.icon}
-                    </span>
-                  )}
-                  <span className="portal-policies__tool-name">{toolName}</span>
-                  <span style={{ flex: 1 }} />
-                  <ToggleSwitch
-                    size="sm"
-                    checked={tl.enabled}
-                    onChange={(checked) =>
-                      patchTool(tl.operation, { enabled: checked })
-                    }
-                    label=""
-                  />
-                </div>
-                {tl.enabled && tl.operation === TOOL_ENDPOINTS.redact && (
-                  <div className="portal-policies__tool-body">
-                    <PolicyRedactConfig
-                      parameters={tl.parameters}
-                      onChange={(parameters) =>
-                        patchTool(tl.operation, { parameters })
+          <Card padding="none">
+            <div className="portal-policies__capabilities">
+              {tools.map((tl) => {
+                const meta = CAPABILITY_META[tl.operation];
+                const label = meta
+                  ? t(meta.labelKey, meta.labelEn)
+                  : (registryByEndpoint.get(tl.operation)?.name ??
+                    humanizeEndpoint(tl.operation));
+                const description = meta
+                  ? t(meta.descKey, meta.descEn)
+                  : undefined;
+                const hasConfig =
+                  tl.operation === TOOL_ENDPOINTS.redact ||
+                  tl.operation === TOOL_ENDPOINTS.watermark;
+                return (
+                  <div
+                    key={tl.operation}
+                    className="portal-policies__capability"
+                    data-on={tl.enabled || undefined}
+                  >
+                    <SettingsRow
+                      label={label}
+                      description={description}
+                      control={
+                        <ToggleSwitch
+                          size="sm"
+                          checked={tl.enabled}
+                          onChange={(checked) =>
+                            patchTool(tl.operation, { enabled: checked })
+                          }
+                          label=""
+                        />
                       }
                     />
+                    {tl.enabled && hasConfig && (
+                      <div className="portal-policies__capability-config">
+                        {tl.operation === TOOL_ENDPOINTS.redact && (
+                          <PolicyRedactConfig
+                            parameters={tl.parameters}
+                            onChange={(parameters) =>
+                              patchTool(tl.operation, { parameters })
+                            }
+                          />
+                        )}
+                        {tl.operation === TOOL_ENDPOINTS.watermark && (
+                          <PolicyWatermarkConfig
+                            parameters={tl.parameters}
+                            onChange={(parameters) =>
+                              patchTool(tl.operation, { parameters })
+                            }
+                          />
+                        )}
+                      </div>
+                    )}
                   </div>
-                )}
-                {tl.enabled && tl.operation === TOOL_ENDPOINTS.watermark && (
-                  <div className="portal-policies__tool-body">
-                    <PolicyWatermarkConfig
-                      parameters={tl.parameters}
-                      onChange={(parameters) =>
-                        patchTool(tl.operation, { parameters })
-                      }
-                    />
-                  </div>
-                )}
-              </Card>
-            );
-          })}
+                );
+              })}
+            </div>
+          </Card>
         </div>
       )}
 
