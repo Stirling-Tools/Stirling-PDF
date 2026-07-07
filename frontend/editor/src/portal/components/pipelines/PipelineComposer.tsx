@@ -11,22 +11,29 @@ import {
   RadioGroup,
   Select,
 } from "@app/ui";
+import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
+import { type ErasedToolParams } from "@app/hooks/tools/shared/toolOperationTypes";
+import { type ToolId } from "@app/types/toolId";
 import { errorMessage } from "@portal/api/http";
 import {
   fetchTriggers,
   savePipeline,
   type OutputSpec,
-  type PipelineStep,
   type Policy,
   type TriggerConfig,
   type TriggerInfo,
 } from "@portal/api/pipelines";
 import { fetchSources, type SourceView } from "@portal/api/sources";
 import { useAsync } from "@portal/hooks/useAsync";
+import { humanizeOperation } from "@portal/components/pipelines/pipelineOperations";
 import {
-  PIPELINE_OPERATIONS,
-  humanizeOperation,
-} from "@portal/components/pipelines/pipelineOperations";
+  deserializeStep,
+  getPipelineTools,
+  newWorkingStep,
+  serializeStep,
+  type WorkingStep,
+} from "@portal/components/pipelines/pipelineTools";
+import { PipelineStepSettings } from "@portal/components/pipelines/PipelineStepSettings";
 import "@portal/views/Pipelines.css";
 
 type OutputMode = "inline" | "folder";
@@ -89,10 +96,14 @@ function parseOutput(output: OutputSpec | undefined): {
 
 /**
  * Compose a pipeline (a backend policy): name it, pick the sources it pulls from
- * and how it's triggered, chain operations, and choose where output goes. On submit
- * a blank id creates and a set id updates, matching the backend's POST contract.
- * Per-operation parameter editing is out of scope here; operations are chained with
- * their defaults.
+ * and how it's triggered, chain tools with their settings, and choose where output
+ * goes. On submit a blank id creates and a set id updates, matching the backend's
+ * POST contract.
+ *
+ * Tool steps are edited in the frontend parameter shape (each tool's own settings UI)
+ * and serialized to the backend endpoint + parameters via the tools' mappers. Tools
+ * not yet migrated to the mapper seam can still be added, but run with backend
+ * defaults and show a "not supported yet" note instead of an editor.
  */
 export function PipelineComposer({
   open,
@@ -101,6 +112,8 @@ export function PipelineComposer({
   pipeline,
 }: PipelineComposerProps) {
   const { t } = useTranslation();
+  const { allTools } = useToolRegistry();
+  const pipelineTools = useMemo(() => getPipelineTools(allTools), [allTools]);
   const isEdit = pipeline !== undefined;
 
   const sourcesState = useAsync<SourceView[]>(
@@ -122,7 +135,8 @@ export function PipelineComposer({
 
   const [name, setName] = useState("");
   const [sourceIds, setSourceIds] = useState<string[]>([]);
-  const [steps, setSteps] = useState<PipelineStep[]>([]);
+  const [steps, setSteps] = useState<WorkingStep[]>([]);
+  const [configuringIndex, setConfiguringIndex] = useState<number | null>(null);
   const [triggerType, setTriggerType] = useState<string>(MANUAL);
   const [scheduleCount, setScheduleCount] = useState("1");
   const [scheduleUnit, setScheduleUnit] = useState<ScheduleUnit>("HOURS");
@@ -132,14 +146,18 @@ export function PipelineComposer({
   const [error, setError] = useState<string | null>(null);
 
   // Re-seed the form whenever the composer opens (or its target changes) so editing
-  // prefills the current config and a reopened create starts clean.
+  // prefills the current config and a reopened create starts clean. Stored steps are
+  // rehydrated into the frontend parameter shape so their settings UIs can render.
   useEffect(() => {
     if (!open) return;
     const trigger = parseTrigger(pipeline?.trigger ?? null);
     const output = parseOutput(pipeline?.output);
     setName(pipeline?.name ?? "");
     setSourceIds(pipeline?.sourceIds ?? []);
-    setSteps(pipeline?.steps ?? []);
+    setSteps(
+      (pipeline?.steps ?? []).map((step) => deserializeStep(step, allTools)),
+    );
+    setConfiguringIndex(null);
     setTriggerType(trigger.triggerType);
     setScheduleCount(trigger.count);
     setScheduleUnit(trigger.unit);
@@ -147,7 +165,7 @@ export function PipelineComposer({
     setOutputDirectory(output.directory);
     setSubmitting(false);
     setError(null);
-  }, [open, pipeline]);
+  }, [open, pipeline, allTools]);
 
   // Types of the currently-selected sources, for trigger compatibility.
   const selectedSourceTypes = useMemo(
@@ -183,18 +201,21 @@ export function PipelineComposer({
     );
   }
 
-  function addStep(operation: string, parameters: Record<string, unknown>) {
-    setSteps((current) => [
-      ...current,
-      { operation, parameters: { ...parameters } },
-    ]);
+  function addStep(toolId: ToolId) {
+    setSteps((current) => {
+      const next = [...current, newWorkingStep(toolId, allTools)];
+      setConfiguringIndex(next.length - 1);
+      return next;
+    });
   }
 
   function removeStep(index: number) {
+    setConfiguringIndex(null);
     setSteps((current) => current.filter((_, i) => i !== index));
   }
 
   function moveStep(index: number, delta: number) {
+    setConfiguringIndex(null);
     setSteps((current) => {
       const next = [...current];
       const target = index + delta;
@@ -202,6 +223,17 @@ export function PipelineComposer({
       [next[index], next[target]] = [next[target], next[index]];
       return next;
     });
+  }
+
+  function updateStepParams(index: number, params: ErasedToolParams) {
+    setSteps((current) =>
+      current.map((step, i) => (i === index ? { ...step, params } : step)),
+    );
+  }
+
+  function stepLabel(step: WorkingStep): string {
+    const entry = step.toolId ? allTools[step.toolId] : undefined;
+    return entry?.name ?? humanizeOperation(step.operation);
   }
 
   const scheduleCountValid =
@@ -252,7 +284,7 @@ export function PipelineComposer({
       enabled: pipeline?.enabled ?? true,
       trigger: buildTrigger(),
       sourceIds,
-      steps,
+      steps: steps.map((step) => serializeStep(step, allTools)),
       output,
     };
     try {
@@ -388,52 +420,80 @@ export function PipelineComposer({
           ) : (
             <ol className="portal-pipelines__chain">
               {steps.map((step, i) => (
-                <li
-                  key={`${step.operation}-${i}`}
-                  className="portal-pipelines__chain-row"
-                >
-                  <span className="portal-pipelines__chain-index">{i + 1}</span>
-                  <span className="portal-pipelines__chain-op">
-                    {humanizeOperation(step.operation)}
-                  </span>
-                  <div className="portal-pipelines__chain-actions">
+                <li key={`${step.operation}-${i}`}>
+                  <div className="portal-pipelines__chain-row">
+                    <span className="portal-pipelines__chain-index">
+                      {i + 1}
+                    </span>
                     <button
                       type="button"
-                      aria-label={t("portal.pipelines.composer.moveUp")}
-                      disabled={i === 0}
-                      onClick={() => moveStep(i, -1)}
+                      className="portal-pipelines__chain-op"
+                      aria-expanded={configuringIndex === i}
+                      onClick={() =>
+                        setConfiguringIndex(configuringIndex === i ? null : i)
+                      }
                     >
-                      ↑
+                      {stepLabel(step)}
                     </button>
-                    <button
-                      type="button"
-                      aria-label={t("portal.pipelines.composer.moveDown")}
-                      disabled={i === steps.length - 1}
-                      onClick={() => moveStep(i, 1)}
-                    >
-                      ↓
-                    </button>
-                    <button
-                      type="button"
-                      aria-label={t("portal.pipelines.composer.removeStep")}
-                      onClick={() => removeStep(i)}
-                    >
-                      ×
-                    </button>
+                    <div className="portal-pipelines__chain-actions">
+                      <button
+                        type="button"
+                        aria-label={t("portal.pipelines.composer.moveUp")}
+                        disabled={i === 0}
+                        onClick={() => moveStep(i, -1)}
+                      >
+                        ^
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={t("portal.pipelines.composer.moveDown")}
+                        disabled={i === steps.length - 1}
+                        onClick={() => moveStep(i, 1)}
+                      >
+                        v
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={t("portal.pipelines.composer.removeStep")}
+                        onClick={() => removeStep(i)}
+                      >
+                        x
+                      </button>
+                    </div>
                   </div>
+                  {configuringIndex === i && (
+                    <div
+                      className="portal-pipelines__chain-settings"
+                      style={{ padding: "0.5rem 0 0.75rem 2rem" }}
+                    >
+                      <span className="portal-pipelines__detail-heading">
+                        {t("portal.pipelines.composer.settingsTitle", {
+                          tool: stepLabel(step),
+                        })}
+                      </span>
+                      <PipelineStepSettings
+                        step={step}
+                        registry={allTools}
+                        onChange={(params) => updateStepParams(i, params)}
+                      />
+                    </div>
+                  )}
                 </li>
               ))}
             </ol>
           )}
+          <span className="portal-pipelines__detail-heading">
+            {t("portal.pipelines.composer.addTool")}
+          </span>
           <div className="portal-pipelines__op-palette">
-            {PIPELINE_OPERATIONS.map((op) => (
+            {pipelineTools.map((tool) => (
               <Chip
-                key={op.operation}
+                key={tool.toolId}
                 tone="blue"
                 size="sm"
-                onClick={() => addStep(op.operation, op.parameters)}
+                onClick={() => addStep(tool.toolId)}
               >
-                {`+ ${humanizeOperation(op.operation)}`}
+                {`+ ${tool.name}`}
               </Chip>
             ))}
           </div>

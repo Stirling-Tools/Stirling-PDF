@@ -4,6 +4,8 @@ import { MemoryRouter } from "react-router-dom";
 import { HttpError } from "@portal/api/http";
 import type { PipelinesOverviewResponse, Policy } from "@portal/api/pipelines";
 import type { SourcesResponse } from "@portal/api/sources";
+import type { ToolRegistryCatalog } from "@app/contexts/ToolRegistryContext";
+import type { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import { Pipelines } from "@portal/views/Pipelines";
 
 // Deterministic i18n: keys returned verbatim, so assertions are stable without
@@ -36,6 +38,38 @@ const fetchSources = vi.fn();
 vi.mock("@portal/api/sources", () => ({
   fetchSources: () => fetchSources(),
 }));
+
+// The composer reads the editor tool registry (provided by PortalApp in the real app).
+// A small fake keeps this view test deterministic: one editable tool, Compress.
+vi.mock("@app/contexts/ToolRegistryContext", () => {
+  const compress = {
+    name: "Compress",
+    icon: null,
+    component: null,
+    description: "",
+    categoryId: "recommendedTools",
+    subcategoryId: "general",
+    automationSettings: () => null,
+    operationConfig: {
+      operationType: "compress",
+      toolType: 0,
+      endpoint: "/api/v1/misc/compress-pdf",
+      defaultParameters: {},
+      buildFormData: () => new FormData(),
+      toApiParams: (params: Record<string, unknown>) => ({ ...params }),
+      fromApiParams: (params: Record<string, unknown>) => ({ ...params }),
+    },
+  } as unknown as ToolRegistryEntry;
+  const allTools = { compress } as unknown as ToolRegistryCatalog["allTools"];
+  const catalog: ToolRegistryCatalog = {
+    regularTools: allTools,
+    superTools: allTools,
+    linkTools: allTools,
+    allTools,
+    getToolById: () => null,
+  };
+  return { useToolRegistry: () => catalog };
+});
 
 const RESPONSE: PipelinesOverviewResponse = {
   kpis: [
@@ -228,7 +262,7 @@ describe("Pipelines view", () => {
     fireEvent.change(await screen.findByRole("textbox"), {
       target: { value: "Nightly compress" },
     });
-    // Operation palette chip labels are derived from the endpoint path.
+    // Palette chips are labeled with the tool's registry name.
     fireEvent.click(await screen.findByText("+ Compress"));
     fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
 

@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import { AuthProvider } from "@app/auth";
+import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
 import { ErrorBoundary } from "@portal/components/ErrorBoundary";
 import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
 import { TierProvider } from "@portal/contexts/TierContext";
@@ -136,9 +137,11 @@ export function PortalApp() {
                   <GlobalShortcuts />
                   <AuthGate>
                     <AccountLinkProvider>
-                      <AppShell>
-                        <RoutedContent />
-                      </AppShell>
+                      <ToolRegistryProvider>
+                        <AppShell>
+                          <RoutedContent />
+                        </AppShell>
+                      </ToolRegistryProvider>
                       <AssistantButton />
                       <AssistantPanel />
                       <SearchModal />
