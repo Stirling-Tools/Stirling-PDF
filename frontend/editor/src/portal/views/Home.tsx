@@ -27,6 +27,7 @@ import { UsageAreaChart } from "@portal/components/UsageAreaChart";
 import { RecentActivity } from "@portal/components/RecentActivity";
 import { SingleOpRunner } from "@portal/components/SingleOpRunner";
 import { ProcessingStatusStrip } from "@portal/components/ProcessingStatusStrip";
+import { ProcurementHome } from "@portal/components/procurement/ProcurementHome";
 import { PolicySummary } from "@portal/components/PolicySummary";
 import { PipelineForkWizard } from "@portal/components/PipelineForkWizard";
 import "@portal/views/Home.css";
@@ -423,6 +424,11 @@ export function Home() {
 
   return (
     <div className="portal-home">
+      {/* Procurement is a bolt-on to any tier: renders the deal-status hero when a
+          deal is underway, otherwise stays out of the way. Sits above the
+          tier-specific home content. */}
+      <ProcurementHome />
+
       {tier === "free" && (
         <>
           {/* Static welcome hero with the "Finish setting up" checklist
