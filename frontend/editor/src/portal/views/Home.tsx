@@ -20,16 +20,13 @@ import {
   type RegionHealth,
   type UsageSeriesResponse,
 } from "@portal/api/home";
-import { WelcomeBanner } from "@portal/components/WelcomeBanner";
-import { EditorStatusCard } from "@portal/components/EditorStatusCard";
+import { HomeHero } from "@portal/components/HomeHero";
 import { HomeGreeting } from "@portal/components/HomeGreeting";
-import { SetupChecklist } from "@portal/components/SetupChecklist";
 import { PopularUseCases } from "@portal/components/PopularUseCases";
 import { UsageAreaChart } from "@portal/components/UsageAreaChart";
 import { RecentActivity } from "@portal/components/RecentActivity";
 import { SingleOpRunner } from "@portal/components/SingleOpRunner";
 import { ProcessingStatusStrip } from "@portal/components/ProcessingStatusStrip";
-import { ProcurementHome } from "@portal/components/procurement/ProcurementHome";
 import { PolicySummary } from "@portal/components/PolicySummary";
 import { PipelineForkWizard } from "@portal/components/PipelineForkWizard";
 import "@portal/views/Home.css";
@@ -426,19 +423,15 @@ export function Home() {
 
   return (
     <div className="portal-home">
-      {/* Paid tiers open with a greeting; free opens with the welcome banner. */}
+      {/* Paid tiers open with a greeting; free opens straight with the banner. */}
       {tier !== "free" && <HomeGreeting />}
+
+      {/* Per-tier hero. Its footer is the deal-status hero while a procurement
+          deal is underway (a bolt-on to any tier), otherwise the setup checklist. */}
+      <HomeHero tier={tier} onTryOp={() => setRunnerOpen(true)} />
 
       {tier === "free" && (
         <>
-          {/* Static welcome hero with the "Finish setting up" checklist
-              attached as its footer — matches the free-tier home. */}
-          <WelcomeBanner
-            footer={<SetupChecklist onTryOp={() => setRunnerOpen(true)} />}
-          />
-          {/* Procurement is a bolt-on to any tier: renders the deal-status hero
-              when a deal is underway, otherwise the enterprise on-ramp. */}
-          <ProcurementHome />
           <ProcessingStatusStrip />
           <TierKpiStrip />
           <QuickActions onTryOp={() => setRunnerOpen(true)} />
@@ -451,12 +444,6 @@ export function Home() {
 
       {tier === "pro" && (
         <>
-          {/* Subscribed hero: the deployed Editor status card with the setup
-              checklist attached as its footer. */}
-          <EditorStatusCard
-            footer={<SetupChecklist onTryOp={() => setRunnerOpen(true)} />}
-          />
-          <ProcurementHome />
           <ProcessingStatusStrip />
           <ChartSection />
           <TierKpiStrip />
@@ -473,7 +460,6 @@ export function Home() {
 
       {tier === "enterprise" && (
         <>
-          <ProcurementHome />
           <ProcessingStatusStrip />
           <ChartSection />
           <TierKpiStrip />

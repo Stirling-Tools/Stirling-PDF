@@ -41,6 +41,11 @@ interface EditorStatusCardProps {
    * setting up" checklist), matching the free-tier hero's footer seam.
    */
   footer?: ReactNode;
+  /**
+   * Hide the active-users / invite chips. Used on enterprise, where the
+   * attached procurement deal hero already owns the invite action.
+   */
+  hideChips?: boolean;
 }
 
 /**
@@ -49,7 +54,7 @@ interface EditorStatusCardProps {
  * "Open in browser" action. Replaces the marketing welcome banner once an org is
  * paying and running its own instance.
  */
-export function EditorStatusCard({ footer }: EditorStatusCardProps) {
+export function EditorStatusCard({ footer, hideChips }: EditorStatusCardProps) {
   const { t } = useTranslation();
   const { setActiveView } = useView();
   const { data, loading } = useAsync<EditorDeployment>(
@@ -74,24 +79,28 @@ export function EditorStatusCard({ footer }: EditorStatusCardProps) {
             <>
               <div className="portal-editor-hero__title-row">
                 <span className="portal-editor-hero__name">{data.name}</span>
-                <button
-                  type="button"
-                  className="portal-editor-hero__chip"
-                  onClick={() => setActiveView("users")}
-                >
-                  <UsersIcon size={13} />
-                  {t("portal.home.editor.activeUsers", {
-                    n: data.activeUsers,
-                  })}
-                </button>
-                <button
-                  type="button"
-                  className="portal-editor-hero__chip"
-                  onClick={() => setActiveView("users")}
-                >
-                  <UserPlusIcon size={13} />
-                  {t("portal.home.editor.invite")}
-                </button>
+                {!hideChips && (
+                  <>
+                    <button
+                      type="button"
+                      className="portal-editor-hero__chip"
+                      onClick={() => setActiveView("users")}
+                    >
+                      <UsersIcon size={13} />
+                      {t("portal.home.editor.activeUsers", {
+                        n: data.activeUsers,
+                      })}
+                    </button>
+                    <button
+                      type="button"
+                      className="portal-editor-hero__chip"
+                      onClick={() => setActiveView("users")}
+                    >
+                      <UserPlusIcon size={13} />
+                      {t("portal.home.editor.invite")}
+                    </button>
+                  </>
+                )}
               </div>
               <div className="portal-editor-hero__meta">
                 <span className="portal-editor-hero__host">{data.host}</span>
