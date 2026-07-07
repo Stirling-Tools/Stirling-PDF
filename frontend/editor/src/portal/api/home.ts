@@ -1,7 +1,6 @@
 import { apiClient } from "@portal/api/http";
 import type {
   ActivityEvent,
-  EditorDeployment,
   KpiEntry,
   OnboardingStep,
   RegionHealth,
@@ -12,7 +11,6 @@ import type { Tier } from "@portal/contexts/TierContext";
 export type {
   ActivityEvent,
   ActivityKind,
-  EditorDeployment,
   KpiEntry,
   OnboardingStep,
   PipelineStage,
@@ -52,9 +50,4 @@ export async function fetchOnboarding(tier: Tier): Promise<OnboardingStep[]> {
   return apiClient.local.json<OnboardingStep[]>(
     `/v1/onboarding?tier=${encodeURIComponent(tier)}`,
   );
-}
-
-/** GET /v1/editor/deployment (subscribed-tier deployed Editor status) */
-export async function fetchEditorDeployment(): Promise<EditorDeployment> {
-  return apiClient.local.json<EditorDeployment>("/v1/editor/deployment");
 }

@@ -1,10 +1,16 @@
 import type { ReactNode } from "react";
-import { Fragment } from "react";
+import { Fragment, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, Skeleton } from "@app/ui";
+import { useTier } from "@portal/contexts/TierContext";
 import { useView } from "@portal/contexts/ViewContext";
 import { useAsync } from "@portal/hooks/useAsync";
-import { fetchEditorDeployment, type EditorDeployment } from "@portal/api/home";
+import {
+  fetchEditorDeployment,
+  type EditorDeploymentResponse,
+  type EditorInstance,
+  type TargetKind,
+} from "@portal/api/editorDeploy";
 import {
   ExternalLinkIcon,
   UsersIcon,
@@ -35,6 +41,22 @@ function StirlingMark() {
   );
 }
 
+const TARGET_LABEL: Record<TargetKind, string> = {
+  cloud: "Managed Cloud",
+  docker: "Self-hosted · Docker",
+  kubernetes: "Self-hosted · Kubernetes",
+};
+
+/** The instance to headline: the busiest healthy one, else the first. */
+function primaryInstance(instances: EditorInstance[]): EditorInstance | null {
+  if (instances.length === 0) return null;
+  const healthy = instances.filter((i) => i.status === "healthy");
+  const pool = healthy.length > 0 ? healthy : instances;
+  return pool.reduce((best, i) =>
+    i.activeUsers > best.activeUsers ? i : best,
+  );
+}
+
 interface EditorStatusCardProps {
   /**
    * Rendered as an attached footer strip inside the card (e.g. the "Finish
@@ -49,28 +71,52 @@ interface EditorStatusCardProps {
 }
 
 /**
- * Subscribed-tier home hero: a status card for the deployed PDF Editor instance
- * — brand mark, active-user + invite chips, a deployment meta line, and a single
- * "Open in browser" action. Replaces the marketing welcome banner once an org is
- * paying and running its own instance.
+ * Subscribed/enterprise home hero: a status card for the org's deployed PDF
+ * Editor. Reads the same `/v1/editor/deployment` data as the Editor admin view
+ * (host, version, live users, deployment shape) and headlines the busiest
+ * instance, with a single "Open in browser" action to the workspace URL.
  */
 export function EditorStatusCard({ footer, hideChips }: EditorStatusCardProps) {
   const { t } = useTranslation();
+  const { tier } = useTier();
   const { setActiveView } = useView();
-  const { data, loading } = useAsync<EditorDeployment>(
-    () => fetchEditorDeployment(),
-    [],
+  const { data, loading } = useAsync<EditorDeploymentResponse>(
+    () => fetchEditorDeployment(tier),
+    [tier],
   );
 
+  const view = useMemo(() => {
+    if (!data) return null;
+    const primary = primaryInstance(data.instances);
+    if (!primary) return null;
+    const activeUsers = data.instances.reduce((s, i) => s + i.activeUsers, 0);
+    return {
+      host: primary.host,
+      activeUsers,
+      workspaceUrl: data.summary.workspaceUrl,
+      meta: [
+        TARGET_LABEL[primary.target],
+        primary.region,
+        `v${primary.version}`,
+        t("portal.home.editor.updated", { time: primary.lastSeen }),
+      ],
+    };
+  }, [data, t]);
+
+  const ready = !loading && !!view;
+
   return (
-    <section className="portal-editor-hero" aria-label={data?.name}>
+    <section
+      className="portal-editor-hero"
+      aria-label={t("portal.home.editor.name")}
+    >
       <div className="portal-editor-hero__row">
         <div className="portal-editor-hero__logo">
           <StirlingMark />
         </div>
 
         <div className="portal-editor-hero__info">
-          {loading || !data ? (
+          {!ready || !view ? (
             <>
               <Skeleton width="12rem" height="1.25rem" />
               <Skeleton width="22rem" height="0.75rem" />
@@ -78,7 +124,9 @@ export function EditorStatusCard({ footer, hideChips }: EditorStatusCardProps) {
           ) : (
             <>
               <div className="portal-editor-hero__title-row">
-                <span className="portal-editor-hero__name">{data.name}</span>
+                <span className="portal-editor-hero__name">
+                  {t("portal.home.editor.name")}
+                </span>
                 {!hideChips && (
                   <>
                     <button
@@ -88,7 +136,7 @@ export function EditorStatusCard({ footer, hideChips }: EditorStatusCardProps) {
                     >
                       <UsersIcon size={13} />
                       {t("portal.home.editor.activeUsers", {
-                        n: data.activeUsers,
+                        n: view.activeUsers,
                       })}
                     </button>
                     <button
@@ -103,8 +151,8 @@ export function EditorStatusCard({ footer, hideChips }: EditorStatusCardProps) {
                 )}
               </div>
               <div className="portal-editor-hero__meta">
-                <span className="portal-editor-hero__host">{data.host}</span>
-                {data.meta.map((item, i) => (
+                <span className="portal-editor-hero__host">{view.host}</span>
+                {view.meta.map((item, i) => (
                   <Fragment key={i}>
                     <span className="portal-editor-hero__meta-sep">·</span>
                     <span>{item}</span>
@@ -119,10 +167,10 @@ export function EditorStatusCard({ footer, hideChips }: EditorStatusCardProps) {
           <Button
             variant="gradient"
             leadingIcon={<ExternalLinkIcon size={13} />}
-            disabled={loading || !data}
+            disabled={!ready || !view}
             onClick={() => {
-              if (data)
-                window.open(data.browserUrl, "_blank", "noopener,noreferrer");
+              if (view)
+                window.open(view.workspaceUrl, "_blank", "noopener,noreferrer");
             }}
           >
             {t("portal.home.editor.open")}

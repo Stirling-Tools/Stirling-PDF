@@ -6728,7 +6728,9 @@ title = "No usage yet"
 [portal.home.editor]
 activeUsers = "{{n}} active"
 invite = "Invite teammates"
+name = "Stirling PDF Editor"
 open = "Open in browser"
+updated = "updated {{time}}"
 
 [portal.home.greeting]
 afternoon = "Good afternoon"

@@ -360,34 +360,3 @@ export const PRO_ONBOARDING: OnboardingStep[] = [
     cta: { kind: "navigate", target: "sources" },
   },
 ];
-
-/**
- * The deployed PDF Editor shown as the subscribed-tier home hero: a status
- * card for the running instance (host, deployment shape, version) with a
- * live user count and an open-in-browser action.
- */
-export interface EditorDeployment {
-  /** Product name shown as the hero title. */
-  name: string;
-  /** Count of currently-active users, shown as a chip. */
-  activeUsers: number;
-  /** Hostname the instance is served from (monospace in the meta line). */
-  host: string;
-  /** Absolute URL the "Open in browser" action points at. */
-  browserUrl: string;
-  /** Meta line fragments after the host (deployment shape, SSO, version, deploy time). */
-  meta: string[];
-}
-
-export const EDITOR_DEPLOYMENT: EditorDeployment = {
-  name: "Stirling PDF Editor",
-  activeUsers: 7,
-  host: "pdf.internal.yourco.com",
-  browserUrl: "https://pdf.internal.yourco.com",
-  meta: [
-    "Self-hosted · Kubernetes",
-    "Okta SAML",
-    "v2.9.1",
-    "deployed 2 hours ago",
-  ],
-};

@@ -3,7 +3,6 @@ import type { Tier } from "@portal/contexts/TierContext";
 import {
   buildUsageSeries,
   buildUsageSeriesResponse,
-  EDITOR_DEPLOYMENT,
   enterpriseKpisFor,
   FREE_KPIS,
   FREE_ONBOARDING,
@@ -51,10 +50,5 @@ export const homeHandlers = [
     return HttpResponse.json(
       tier === "free" ? FREE_ONBOARDING : PRO_ONBOARDING,
     );
-  }),
-
-  http.get("/v1/editor/deployment", async () => {
-    await delay(120);
-    return HttpResponse.json(EDITOR_DEPLOYMENT);
   }),
 ];
