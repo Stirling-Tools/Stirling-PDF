@@ -1,5 +1,4 @@
 import {
-  ActionIcon,
   Center,
   Loader,
   Overlay,
@@ -9,6 +8,7 @@ import {
   ThemeIcon,
   Tooltip,
 } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import { useTranslation } from "react-i18next";
@@ -48,8 +48,8 @@ export function PolicyEnforcingOverlay({
           withArrow
         >
           <ActionIcon
-            variant="subtle"
-            color="gray"
+            variant="tertiary"
+            accent="neutral"
             size="sm"
             onClick={onDismiss}
             style={{

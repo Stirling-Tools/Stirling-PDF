@@ -310,6 +310,7 @@ export function FileItem({
                   label={folder.name}
                   withArrow
                   position="top"
+                  withinPortal
                 >
                   <span
                     className="file-sidebar-folder-tag"
@@ -340,6 +341,7 @@ export function FileItem({
                   label={overflowFolders.map((f) => f.name).join(", ")}
                   withArrow
                   position="top"
+                  withinPortal
                 >
                   <span className="file-sidebar-folder-tag-more">
                     +{overflowFolders.length}
