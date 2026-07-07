@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useMantineColorScheme } from "@mantine/core";
 import { useAuth } from "@app/auth/context";
 import { AppSwitch } from "@app/components/shared/AppSwitch";
-import { PORTAL_BASENAME } from "@portal/contexts/ViewContext";
+import { PORTAL_BASENAME } from "@app/routes/portalBasename";
 
 /**
  * Sidebar app switcher between the editor and the admin portal. Both are
