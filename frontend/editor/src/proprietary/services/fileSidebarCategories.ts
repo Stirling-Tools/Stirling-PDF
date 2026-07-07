@@ -183,6 +183,14 @@ export function removeLabelFromCategory(id: string, labelKey: string) {
   );
 }
 
+/** Restore the built-in default and clear the customized flag (undoes any prior `mutate`). */
 export function resetSidebarCategories() {
-  write(defaultCategories());
+  stored = null;
+  recompute();
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Quota/private-mode failures degrade to session-only categories.
+  }
+  for (const listener of listeners) listener();
 }

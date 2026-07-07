@@ -12,8 +12,8 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import AddIcon from "@mui/icons-material/Add";
 import { TextInput } from "@mantine/core";
-import { Modal } from "@shared/components/Modal";
-import { Button } from "@shared/components/Button";
+import { Modal } from "@app/ui/Modal";
+import { Button } from "@app/ui/Button";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
 import { LabelIconPicker } from "@app/components/policies/LabelIconPicker";
 import { useClassificationLabels } from "@app/hooks/useClassificationLabels";
@@ -59,17 +59,18 @@ export function FileSidebarGroupControls({
     saveMine,
   } = useClassificationLabels(open);
 
+  // Bucketed once and reused for both the per-label and per-category counts below.
+  const byLabel = useMemo(() => bucketStubsByLabel(stubs), [stubs]);
+
   // Per-label file counts from the same bucketing the sidebar groups use.
   const labelCounts = useMemo(() => {
-    const byLabel = bucketStubsByLabel(stubs);
     const counts = new Map<string, number>();
     for (const [key, bucket] of byLabel) counts.set(key, bucket.stubs.length);
     return counts;
-  }, [stubs]);
+  }, [byLabel]);
 
   // Files per category (deduped across its labels).
   const categoryCounts = useMemo(() => {
-    const byLabel = bucketStubsByLabel(stubs);
     const counts = new Map<string, number>();
     for (const category of categories) {
       const ids = new Set<string>();
@@ -81,7 +82,7 @@ export function FileSidebarGroupControls({
       counts.set(category.id, ids.size);
     }
     return counts;
-  }, [stubs, categories]);
+  }, [byLabel, categories]);
 
   // Display name + icon per label key, from the effective vocabulary (team ∪ personal).
   const vocab = useMemo(() => {

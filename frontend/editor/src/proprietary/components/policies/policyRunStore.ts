@@ -97,7 +97,8 @@ function capRuns(runs: PolicyRunRecord[]): PolicyRunRecord[] {
   if (runs.length <= MAX_RUNS) return runs;
   const trimmed = [...runs];
   for (let i = trimmed.length - 1; i >= 0 && trimmed.length > MAX_RUNS; i--) {
-    if (TERMINAL.has(trimmed[i].status)) trimmed.splice(i, 1);
+    const run = trimmed[i];
+    if (TERMINAL.has(run.status) && !isRunInFlight(run)) trimmed.splice(i, 1);
   }
   return trimmed;
 }

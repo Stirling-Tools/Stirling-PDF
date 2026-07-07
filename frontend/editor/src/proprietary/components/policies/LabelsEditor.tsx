@@ -6,7 +6,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
-import { Button } from "@shared/components/Button";
+import { Button } from "@app/ui/Button";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
 import { LabelIconPicker } from "@app/components/policies/LabelIconPicker";
 import { DEFAULT_LABEL_ICON } from "@app/data/labelIcons";

@@ -103,6 +103,26 @@ describe("policyRunStore", () => {
   });
 
   it("evicts the oldest TERMINAL runs first once over the cap", () => {
+    // Imported, since a COMPLETED-but-not-yet-imported run still counts as
+    // in-flight (see isRunInFlight) and must never be evicted.
+    for (let i = 0; i < 210; i++) {
+      recordRunStart(
+        rec({
+          runId: `r${i}`,
+          fileId: `f${i}`,
+          status: "COMPLETED",
+          imported: true,
+          startedAt: i,
+        }),
+      );
+    }
+    const runs = read("stirling-policy-runs").runs;
+    expect(runs).toHaveLength(200); // trimmed to MAX_RUNS
+    expect(runs[0].runId).toBe("r209"); // newest kept
+    expect(runs.some((r: PolicyRunRecord) => r.runId === "r0")).toBe(false); // oldest dropped
+  });
+
+  it("does not evict a COMPLETED run that hasn't been imported yet, even past the cap", () => {
     for (let i = 0; i < 210; i++) {
       recordRunStart(
         rec({
@@ -114,9 +134,8 @@ describe("policyRunStore", () => {
       );
     }
     const runs = read("stirling-policy-runs").runs;
-    expect(runs).toHaveLength(200); // trimmed to MAX_RUNS
-    expect(runs[0].runId).toBe("r209"); // newest kept
-    expect(runs.some((r: PolicyRunRecord) => r.runId === "r0")).toBe(false); // oldest dropped
+    expect(runs).toHaveLength(210);
+    expect(runs.some((r: PolicyRunRecord) => r.runId === "r0")).toBe(true);
   });
 
   describe("processing wave (scopes the panel's progress counts to this upload)", () => {

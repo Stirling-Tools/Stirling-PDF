@@ -15,9 +15,9 @@ import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import DeleteSweepOutlinedIcon from "@mui/icons-material/DeleteSweepOutlined";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import { Modal } from "@shared/components/Modal";
-import { Button } from "@shared/components/Button";
-import { Banner } from "@shared/components/Banner";
+import { Modal } from "@app/ui/Modal";
+import { Button } from "@app/ui/Button";
+import { Banner } from "@app/ui/Banner";
 import { LabelsEditor } from "@app/components/policies/LabelsEditor";
 import type { ClassificationLabel } from "@app/data/classificationLabels";
 

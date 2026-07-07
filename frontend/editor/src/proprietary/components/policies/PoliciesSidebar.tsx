@@ -66,7 +66,7 @@ import { PolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
 import { PolicyDetailPanel } from "@app/components/policies/PolicyDetailPanel";
 import { PolicyDeleteConfirmModal } from "@app/components/policies/PolicyDeleteConfirmModal";
 import type { PolicyCategory, PolicyConfigResult } from "@app/types/policies";
-import { PanelHeader } from "@shared/components/PanelHeader";
+import { PanelHeader } from "@app/ui/PanelHeader";
 import {
   usePolicySelection,
   selectPolicy,
