@@ -283,9 +283,12 @@ function parseFormat4(
 // Hard cap on entries built from any one cmap. This parser runs SYNCHRONOUSLY
 // in the loader's text-read phase; a corrupt/hostile font with a giant format-6
 // entryCount or a format-12 group spanning the whole plane (0..0x10FFFF) would
-// otherwise allocate ~1.1M entries and freeze the load. We only ever query
-// a-zA-Z0-9 + the occasional inserted char, so 70k is far more than enough.
-const MAX_CMAP_ENTRIES = 70_000;
+// otherwise allocate ~1.1M entries and freeze the load. Sized to hold a real
+// pan-Unicode font (Noto Sans CJK is ~44-65k BMP glyphs plus several thousand
+// in the SIP planes) without truncating its high codepoints in insertion order
+// - the old 70k cap dropped them, so a covered CJK char read back as uncovered
+// in the fonts panel. A hostile font still can't blow past this bound.
+const MAX_CMAP_ENTRIES = 200_000;
 
 /** Format 6: trimmed table mapping. Compact contiguous range. */
 function parseFormat6(dv: DataView, offset: number): Map<number, number> {

@@ -192,21 +192,27 @@ function maybeAutoPrefetch(
             pdfBase64,
             pageIndex: pageIdx >= 0 ? pageIdx : 0,
             locatorChar: ch,
-            locatorX: 1,
-            locatorY: 1,
             fontName: readFontName(ctx.module, perCharFont),
             text: ch,
           });
-          if (
-            !json ||
-            json.error ||
-            !json.charcodes ||
-            json.charcodes.length === 0
-          ) {
-            charCache.set(cacheKey(perCharFont, ch), null);
-            return;
+          const code =
+            json && !json.error && json.charcodes && json.charcodes.length > 0
+              ? json.charcodes[0]
+              : null;
+          charCache.set(cacheKey(perCharFont, ch), code);
+          // Stop the per-keystroke prefetch storm. resolve() looks this char up
+          // under the QUERIED font (the run's own/borrowed handle), not
+          // perCharFont. When they differ - a borrowed font that isn't the one
+          // rendering ch - the queried key would never get populated, so every
+          // keystroke would re-serialize and re-POST the entire PDF. Seed a null
+          // sentinel under the queried font so resolve() reports the char missing
+          // (the emit then defers to the perCharFont entry we just cached) instead
+          // of re-firing forever. We deliberately DON'T copy perCharFont's code
+          // here: it is valid only for perCharFont's subset, so reusing it under a
+          // different font would be the cross-font wrong-glyph bug.
+          if (perCharFont !== fontPtr) {
+            charCache.set(cacheKey(fontPtr, ch), null);
           }
-          charCache.set(cacheKey(perCharFont, ch), json.charcodes[0]);
         }),
       );
     } catch (err) {
@@ -404,7 +410,7 @@ export async function prewarmBackendCacheForPage(
     }
     return;
   }
-  const { module: m, pagePtr, docPtr } = editorCtx;
+  const { module: m, pagePtr } = editorCtx;
   if (prewarmedPages.has(pagePtr)) {
     if (typeof console !== "undefined") {
       console.log(
@@ -413,7 +419,6 @@ export async function prewarmBackendCacheForPage(
     }
     return;
   }
-  const ctx: ResolverContext = { module: m, pagePtr, docPtr };
 
   // Walk the page text once, collecting (perCharFont, unicode) for every
   // glyph. Dedupe so each (font, char) probe fires at most once per page.
@@ -486,42 +491,71 @@ export async function prewarmBackendCacheForPage(
     if (!bytes || bytes.byteLength === 0) return;
     const pdfBase64 = uint8ToBase64(bytes);
 
-    // Cap concurrent encode-charcodes requests to avoid overwhelming
-    // the Spring backend's PDFBox parser (50+ parallel POSTs can
-    // saturate the thread pool and cause some chars to silently
-    // time out, leaving them un-cached).
+    // Batch by font: fire ONE encode-charcodes request per font carrying ALL of
+    // that font's page chars, instead of one request per (font, char). The
+    // endpoint already accepts a multi-char `text` and returns its charcodes in
+    // request order; since we never probe whitespace here, the response has no
+    // gaps. This collapses an N-glyph page from N full-PDF uploads to roughly one
+    // per font - the dominant cost (uploading + re-parsing the whole document) is
+    // paid a handful of times, not once per character.
+    const byFont = new Map<number, string[]>();
+    for (const { ch, perCharFont } of probes) {
+      const arr = byFont.get(perCharFont);
+      if (arr) arr.push(ch);
+      else byFont.set(perCharFont, [ch]);
+    }
+    const fontBatches = [...byFont.entries()].map(([font, chars]) => ({
+      font,
+      chars,
+    }));
+
+    // Cap concurrent encode-charcodes requests to avoid overwhelming the Spring
+    // backend's PDFBox parser (many parallel POSTs can saturate the thread pool).
     const CONCURRENCY = 6;
-    let probeIdx = 0;
+    let batchIdx = 0;
     let probesSucceeded = 0;
     const workers: Promise<void>[] = [];
     for (let w = 0; w < CONCURRENCY; w++) {
       workers.push(
         (async () => {
           while (true) {
-            const me = probeIdx++;
-            if (me >= probes.length) return;
-            const { ch, perCharFont } = probes[me];
-            const reqKey = `prewarm:${perCharFont}:${ch}`;
+            const me = batchIdx++;
+            if (me >= fontBatches.length) return;
+            const { font, chars } = fontBatches[me];
+            const reqKey = `prewarm:${font}:${chars.join("")}`;
             if (inFlight.has(reqKey)) continue;
             inFlight.add(reqKey);
             try {
               const json = await postCharcodes({
                 pdfBase64,
                 pageIndex,
-                locatorChar: ch,
-                locatorX: 1,
-                locatorY: 1,
-                // Name the target font so a page with two fonts rendering `ch`
-                // encodes against THIS one, not whichever appears first.
-                fontName: readFontName(m, perCharFont),
-                text: ch,
+                // Any of this font's chars is a valid locator (the font renders
+                // them all). Name the font so a page with two fonts rendering the
+                // same char encodes against THIS one, not whichever appears first.
+                locatorChar: chars[0],
+                fontName: readFontName(m, font),
+                text: chars.join(""),
               });
-              if (!json || json.error || !json.charcodes?.length) {
-                continue;
+              if (!json || json.error) continue;
+              // Map returned charcodes back to chars: the backend appends one
+              // charcode per NON-missing char in request order, so walk chars in
+              // order and consume codes for the ones not reported missing.
+              const missing = new Set(json.missing ?? []);
+              const codes = json.charcodes ?? [];
+              let k = 0;
+              for (const ch of chars) {
+                if (missing.has(ch)) {
+                  charCache.set(cacheKey(font, ch), null);
+                  continue;
+                }
+                const code = codes[k++];
+                if (typeof code === "number") {
+                  charCache.set(cacheKey(font, ch), code);
+                  probesSucceeded += 1;
+                } else {
+                  charCache.set(cacheKey(font, ch), null);
+                }
               }
-              const code = json.charcodes[0];
-              charCache.set(cacheKey(perCharFont, ch), code);
-              probesSucceeded += 1;
             } finally {
               inFlight.delete(reqKey);
             }
@@ -561,8 +595,6 @@ export async function prewarmBackendCacheForPage(
     /* prewarm is best-effort - errors are silently swallowed */
     prewarmedPages.delete(pagePtr);
   }
-  // Mark ctx as referenced so eslint doesn't flag unused.
-  void ctx;
 }
 
 /** Test-only: clear the per-page prewarm guard. */

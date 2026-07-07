@@ -6,6 +6,7 @@ import { resetBackendResolverCaches } from "@app/tools/pdfTextEditor/v2/charcode
 import { resetCmapCache } from "@app/tools/pdfTextEditor/v2/charcode/CmapResolver";
 import { resetContentStreamCache } from "@app/tools/pdfTextEditor/v2/charcode/ContentStreamResolver";
 import {
+  resetDroppedBase14Chars,
   resetOnPageAdvCache,
   resetPerCharBranchPtrs,
 } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
@@ -30,6 +31,8 @@ function resetCharcodeCaches(): void {
   resetOnPageAdvCache();
   // The per-char ptr set is doc-scoped since PDFium reuses pointers.
   resetPerCharBranchPtrs();
+  // The dropped-char record is per-session/per-document, not pointer-keyed.
+  resetDroppedBase14Chars();
 }
 
 export type InteractionMode = "select" | "addText";

@@ -775,14 +775,17 @@ export function applyPartialEditPlan(
     ) {
       // Edit a mixed sub-run's EXISTING object in place: SetText the
       // surviving chars so the embedded (often subset) font is kept -
-      // the glyphs were already in the object, so they always render,
-      // unlike a borrowed-handle re-emit. Shift by the accumulated
+      // the glyphs were already in the object. Shift by the accumulated
       // offset and remeasure to keep following sub-runs aligned.
       absorbDeletesBefore(op.subRunIdx);
       const ptr = plan.prevMergedFromPtrs[op.subRunIdx];
       const origBounds = plan.prevMergedFromBounds[op.subRunIdx];
       const origWidth = origBounds.right - origBounds.x;
-      setObjText(m, ptr, op.text);
+      const modText = op.text;
+      // Read the object's own font BEFORE we touch it, so a fallback re-emit
+      // can reuse the same embedded font via the charcode/backend path.
+      const modFontPtr = objFontPtr(m, ptr);
+      setObjText(m, ptr, modText);
       if (Math.abs(offset) > 0.05) {
         try {
           m.FPDFPageObj_Transform(ptr, 1, 0, 0, 1, offset, 0);
@@ -792,15 +795,81 @@ export function applyPartialEditPlan(
       }
       const newX = origBounds.x + offset;
       const measuredRight = measureObjRightEdgePt(m, ptr);
-      const newRight = measuredRight > newX ? measuredRight : newX + origWidth;
-      newMergedFromPtrs.push(ptr);
-      newMergedFromTexts.push(op.text);
-      newMergedFromBounds.push({ x: newX, right: newRight });
-      newMergedFromCharStarts.push(op.startBIdx);
-      if (newRight > lastEnd) lastEnd = newRight;
-      // Subsequent sub-runs shift by the width delta (surviving text is
-      // usually narrower than the original).
-      offset += newRight - newX - origWidth;
+      // Validate the in-place SetText the SAME way inserts are validated.
+      // FPDFText_SetText runs PDFium's broken reverse Unicode->charcode lookup -
+      // the exact failure the whole charcode system exists to avoid - so even
+      // re-setting chars ALREADY in the object can render .notdef / tofu on a
+      // subset font. Previously the modify branch trusted SetText unconditionally
+      // and would silently persist corrupted glyphs. If the surviving glyphs
+      // measure sub-threshold, drop the object and re-emit modText through
+      // emitTextLine (backend/charcode path first, base-14 last) so a broken
+      // in-place edit never survives.
+      const modNonWs = modText.replace(/\s+/g, "").length;
+      const modMinExpected = modNonWs * run.fontSize * 0.15;
+      if (modNonWs > 0 && measuredRight - newX < modMinExpected) {
+        try {
+          m.FPDFPage_RemoveObject(page.pagePtr, ptr);
+        } catch {
+          /* best-effort */
+        }
+        const reptrs = emitTextLine({
+          doc,
+          page,
+          text: modText,
+          x: newX,
+          y: emitY,
+          fontSize: run.fontSize,
+          fill: run.fill,
+          originalFontPtr: modFontPtr,
+          originalFontSubset: run.fontSubset,
+          fallbackFamily,
+        });
+        let reRight = newX;
+        for (const rp of reptrs) {
+          const r = measureObjRightEdgePt(m, rp);
+          if (r > reRight) reRight = r;
+        }
+        if (reptrs.length === 0) {
+          // Nothing representable emitted - treat like a deletion: the sub-run's
+          // width collapses and following sub-runs shift left to close the gap.
+          offset -= origWidth;
+        } else {
+          // Slice modText across the re-emitted ptrs (one per char on the backend
+          // per-char branch, one per word otherwise) so each stored text is
+          // contiguous and the next edit's char-range sanity check still tiles.
+          const total = reRight - newX;
+          const per = Math.max(1, Math.floor(modText.length / reptrs.length));
+          let cur = newX;
+          let charCursor = 0;
+          for (let i = 0; i < reptrs.length; i++) {
+            const isLast = i === reptrs.length - 1;
+            const slice = isLast
+              ? modText.slice(charCursor)
+              : modText.slice(charCursor, charCursor + per);
+            const w = total / reptrs.length;
+            newMergedFromPtrs.push(reptrs[i]);
+            newMergedFromTexts.push(slice);
+            newMergedFromBounds.push({ x: cur, right: cur + w });
+            newMergedFromCharStarts.push(op.startBIdx + charCursor);
+            insertedPtrs.push(reptrs[i]);
+            cur += w;
+            charCursor += slice.length;
+          }
+          if (reRight > lastEnd) lastEnd = reRight;
+          offset += reRight - newX - origWidth;
+        }
+      } else {
+        const newRight =
+          measuredRight > newX ? measuredRight : newX + origWidth;
+        newMergedFromPtrs.push(ptr);
+        newMergedFromTexts.push(modText);
+        newMergedFromBounds.push({ x: newX, right: newRight });
+        newMergedFromCharStarts.push(op.startBIdx);
+        if (newRight > lastEnd) lastEnd = newRight;
+        // Subsequent sub-runs shift by the width delta (surviving text is
+        // usually narrower than the original).
+        offset += newRight - newX - origWidth;
+      }
     } else if (op.type === "insert" && op.text) {
       const insertText = op.text;
       const anchorIdx = op.anchorSubRunIdx;

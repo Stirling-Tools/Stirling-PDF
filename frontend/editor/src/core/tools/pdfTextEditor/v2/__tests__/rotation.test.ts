@@ -24,6 +24,17 @@ describe("rotationFromMatrix", () => {
     expect(rotationFromMatrix({ a: -1, b: 0 })).toBeDefined();
   });
 
+  it("flags a vertical mirror (negative determinant) that a,b alone miss", () => {
+    // y-flipped generator [1 0 0 -1]: sin~=0, cos>0, so the old a,b-only check
+    // called it upright and let the surgical horizontal path scatter it.
+    expect(rotationFromMatrix({ a: 1, b: 0, c: 0, d: -1 })).toBeDefined();
+  });
+
+  it("does NOT flag pure shear (synthetic oblique, positive determinant)", () => {
+    // Surgical path preserves the shear on survivors; re-emit would drop it.
+    expect(rotationFromMatrix({ a: 1, b: 0, c: 0.3, d: 1 })).toBeUndefined();
+  });
+
   it("returns undefined for a degenerate zero matrix", () => {
     expect(rotationFromMatrix({ a: 0, b: 0 })).toBeUndefined();
   });

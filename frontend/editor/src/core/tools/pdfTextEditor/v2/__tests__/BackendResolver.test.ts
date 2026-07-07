@@ -76,6 +76,34 @@ function makeFakeModule(char: string, fontPtr: number) {
 }
 
 /**
+ * Fake PDFium module rendering an arbitrary sequence of glyphs, each with its
+ * own font handle. `glyphs` is a list of [char, fontPtr] in page reading order.
+ * Used to exercise the prewarm batching + cross-font cache-key paths.
+ */
+function makeFakeModulePage(glyphs: Array<[string, number]>) {
+  const TEXT_PAGE = 555;
+  const OBJ_BASE = 1000;
+  return {
+    FPDFText_LoadPage: vi.fn(() => TEXT_PAGE),
+    FPDFText_ClosePage: vi.fn(),
+    FPDFText_CountChars: vi.fn(() => glyphs.length),
+    FPDFText_GetUnicode: vi.fn(
+      (_tp: number, i: number) => glyphs[i][0].codePointAt(0) ?? 0,
+    ),
+    FPDFText_GetTextObject: vi.fn((_tp: number, i: number) => OBJ_BASE + i),
+    FPDFTextObj_GetFont: vi.fn((obj: number) => glyphs[obj - OBJ_BASE][1]),
+  } as unknown as ResolverContext["module"];
+}
+
+/** Poll until `predicate` is true (async prefetch settles) or time out. */
+async function waitUntil(predicate: () => boolean): Promise<void> {
+  for (let i = 0; i < 100; i++) {
+    if (predicate()) return;
+    await new Promise((r) => setTimeout(r, 1));
+  }
+}
+
+/**
  * Install a fake editor document on window so `prewarmBackendCacheForPage`
  * resolves a page + module instead of bailing on "no-editor-ctx".
  */
@@ -155,6 +183,98 @@ describe("BackendResolver", () => {
 
       await expect(prewarmBackendCacheForPage(0)).resolves.toBeUndefined();
       expect(post).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("prewarm batching + cross-font cache key", () => {
+    const ENDPOINT = "/api/v1/general/pdf-text-editor-v2/encode-charcodes";
+
+    it("batches all of a font's page chars into ONE request (H3)", async () => {
+      // Two glyphs 'A','B' both rendered by font 7. Prewarm must fire ONE
+      // request carrying "AB", not one per char.
+      const module = makeFakeModulePage([
+        ["A", 7],
+        ["B", 7],
+      ]);
+      installEditorDocument(module, 9100, 4242);
+      post.mockResolvedValueOnce({ data: { charcodes: [65, 66] } });
+
+      await prewarmBackendCacheForPage(0);
+
+      expect(post).toHaveBeenCalledTimes(1);
+      expect(post).toHaveBeenCalledWith(
+        ENDPOINT,
+        expect.objectContaining({ text: "AB" }),
+        { headers: { suppressErrorToast: "true" } },
+      );
+      // Both chars cached under font 7 in request order.
+      const r = new BackendResolver();
+      const res = r.resolve(7, "AB", { module, pagePtr: 9100, docPtr: 4242 });
+      expect(res?.charcodes).toEqual([65, 66]);
+    });
+
+    it("fires one request per distinct font, not per char", async () => {
+      const module = makeFakeModulePage([
+        ["A", 7],
+        ["B", 8],
+      ]);
+      installEditorDocument(module, 9101, 4242);
+      post.mockResolvedValue({ data: { charcodes: [1] } });
+
+      await prewarmBackendCacheForPage(0);
+
+      expect(post).toHaveBeenCalledTimes(2);
+    });
+
+    it("respects the backend's `missing` list when mapping batched charcodes", async () => {
+      const module = makeFakeModulePage([
+        ["A", 7],
+        ["B", 7],
+        ["C", 7],
+      ]);
+      installEditorDocument(module, 9102, 4242);
+      // Backend could encode A and C but not B: charcodes align to the
+      // NON-missing chars in order.
+      post.mockResolvedValueOnce({
+        data: { charcodes: [65, 67], missing: ["B"] },
+      });
+
+      await prewarmBackendCacheForPage(0);
+
+      const r = new BackendResolver();
+      const ctx = { module, pagePtr: 9102, docPtr: 4242 };
+      expect(r.resolve(7, "A", ctx)?.charcodes).toEqual([65]);
+      expect(r.resolve(7, "C", ctx)?.charcodes).toEqual([67]);
+      // 'B' was reported missing -> cached null -> reported missing, not 67.
+      const b = r.resolve(7, "B", ctx);
+      expect(b?.charcodes).toEqual([]);
+      expect(b?.missing).toEqual(["B"]);
+    });
+
+    it("does not re-POST every keystroke when the queried font differs from the rendering font (H2)", async () => {
+      // 'A' is rendered by font 7 on the page, but the run is editing under a
+      // borrowed font handle 99. The first resolve misses and prefetches; the
+      // sentinel it seeds under font 99 must stop every subsequent keystroke
+      // from re-serializing + re-POSTing the whole PDF.
+      const module = makeFakeModulePage([["A", 7]]);
+      installEditorDocument(module, 9200, 4242);
+      post.mockResolvedValue({ data: { charcodes: [65] } });
+      const r = new BackendResolver();
+      const ctx: ResolverContext = { module, pagePtr: 9200, docPtr: 4242 };
+
+      r.resolve(99, "A", ctx); // miss under font 99 -> kicks prefetch
+      await waitUntil(() => post.mock.calls.length >= 1);
+      const callsAfterFirst = post.mock.calls.length;
+
+      // More keystrokes for the same (font 99, 'A'): the null sentinel must
+      // short-circuit resolve() so no further prefetch fires.
+      r.resolve(99, "A", ctx);
+      r.resolve(99, "A", ctx);
+      await new Promise((res) => setTimeout(res, 5));
+      expect(post.mock.calls.length).toBe(callsAfterFirst);
+
+      // The real charcode landed under the rendering font 7.
+      expect(r.resolve(7, "A", ctx)?.charcodes).toEqual([65]);
     });
   });
 

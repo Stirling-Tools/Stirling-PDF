@@ -37,6 +37,7 @@ describe("detectSaveRisks", () => {
       signatures: 0,
       xfaForm: false,
       encrypted: false,
+      droppedChars: [],
     });
     expect(hasSaveRisks(r)).toBe(false);
   });
@@ -62,8 +63,35 @@ describe("detectSaveRisks", () => {
         signatures: 1,
         xfaForm: false,
         encrypted: false,
+        droppedChars: [],
       }),
     ).toEqual(["1 digital signature will be invalidated."]);
+  });
+
+  it("flags characters dropped because no font could render them", () => {
+    const r = {
+      signatures: 0,
+      xfaForm: false,
+      encrypted: false,
+      droppedChars: ["中", "文"],
+    };
+    expect(hasSaveRisks(r)).toBe(true);
+    expect(describeSaveRisks(r)).toEqual([
+      "Some characters could not be embedded in any available font and were dropped: 中 文",
+    ]);
+  });
+
+  it("truncates a long dropped-char list with a +N more suffix", () => {
+    const dropped = Array.from({ length: 15 }, (_, i) =>
+      String.fromCharCode(0x4e00 + i),
+    );
+    const line = describeSaveRisks({
+      signatures: 0,
+      xfaForm: false,
+      encrypted: false,
+      droppedChars: dropped,
+    })[0];
+    expect(line).toContain("(+3 more)");
   });
 
   it("clamps negative signature counts and survives a missing API", () => {

@@ -528,8 +528,6 @@ class EmlToPdfParams(ApiModel):
 class EncodeCharcodesParams(ApiModel):
     font_name: str | None = None
     locator_char: str | None = None
-    locator_x: float | None = None
-    locator_y: float | None = None
     page_index: int | None = None
     pdf_base64: str | None = None
     text: str | None = None

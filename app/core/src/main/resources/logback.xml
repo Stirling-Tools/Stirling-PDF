@@ -57,11 +57,14 @@
          discover the encoding-to-Unicode map of an embedded subset
          font. For any subset font ~99% of those probes hit .notdef,
          and the default WARN level for those misses turned info.log
-         into a 1.4 GB monster overnight. The class-level static
-         initialiser in PdfTextEditorV2CharcodeController sets the
-         same level at runtime as a belt; this XML entry is the
-         braces (works even before that class loads, e.g. for other
-         endpoints that ever call `font.toUnicode(cc)` on a Type3). -->
+         into a 1.4 GB monster overnight.
+
+         This declarative logback entry is the SOLE mechanism: it is
+         visible to ops and revertable via configuration. An earlier
+         build also mutated this logger's level from a static block in
+         PdfTextEditorV2CharcodeController, which silenced the same
+         warnings JVM-wide with no trace in any config file - that
+         static block has been removed in favour of this entry. -->
     <logger name="org.apache.pdfbox.pdmodel.font.PDSimpleFont"
             level="ERROR" additivity="false">
         <appender-ref ref="CONSOLE"/>

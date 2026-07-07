@@ -34,9 +34,9 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
  * does have that ({@link PDFont#encode}).
  *
  * <p>This endpoint accepts the source PDF + a "locator" describing where to find the font in
- * question (page index + a sample char + the x/y of an existing rendering of that sample char) +
- * the Unicode text the frontend wants to encode. It returns the charcode sequence the frontend can
- * pass to {@code FPDFText_SetCharcodes}.
+ * question (page index + a sample char known to render in the target font, optionally narrowed by
+ * the font's /BaseFont name) + the Unicode text the frontend wants to encode. It returns the
+ * charcode sequence the frontend can pass to {@code FPDFText_SetCharcodes}.
  *
  * <p>If the locator can't find a matching text fragment, or if the font can't encode some chars,
  * the response reports which chars are missing so the frontend can fall back to Helvetica per char.
@@ -49,39 +49,47 @@ public class PdfTextEditorV2CharcodeController {
     /** Reject JSON bodies whose base64 implies a decoded PDF larger than this. */
     private static final int MAX_PDF_BYTES = 100 * 1024 * 1024;
 
+    /** Bound on the reverse-map cache so a busy multi-document server can't grow it forever. */
+    private static final int REVERSE_MAP_CACHE_MAX = 32;
+
+    /** Access-ordered LRU bounded at {@link #REVERSE_MAP_CACHE_MAX} entries. */
+    private static final class BoundedReverseMapCache
+            extends java.util.LinkedHashMap<String, java.util.Map<String, Long>> {
+        private static final long serialVersionUID = 1L;
+
+        BoundedReverseMapCache() {
+            super(16, 0.75f, true);
+        }
+
+        @Override
+        protected boolean removeEldestEntry(
+                java.util.Map.Entry<String, java.util.Map<String, Long>> eldest) {
+            return size() > REVERSE_MAP_CACHE_MAX;
+        }
+    }
+
     /**
-     * Cache the reverse Unicode map per font instance. PDFont instances are recreated per
-     * PDDocument load, so this WeakHashMap is GC'd with the doc and bounds memory.
+     * Reverse Unicode→charcode maps, cached by {@code pdfContentHash + "|" + fontName} so repeated
+     * edits on the SAME document reuse the 0..0xFFFF {@code toUnicode} probe instead of re-running
+     * it (up to 65 536 lookups per font) on every keystroke's request. Access-ordered LRU bounded
+     * by {@link #REVERSE_MAP_CACHE_MAX}.
+     *
+     * <p>The previous {@code WeakHashMap<PDFont, ...>} never hit across requests: every request
+     * loads a fresh {@link PDDocument} hence a fresh {@link PDFont} instance, so the key was never
+     * equal from one request to the next - it was effectively dead code. Keying on the PDF bytes'
+     * hash gives a stable cross-request key.
      */
-    private static final java.util.Map<PDFont, java.util.Map<String, Long>> REVERSE_MAP_CACHE =
-            java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>());
+    private static final java.util.Map<String, java.util.Map<String, Long>> REVERSE_MAP_CACHE =
+            java.util.Collections.synchronizedMap(new BoundedReverseMapCache());
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
 
-    /**
-     * Permanently silence PDFBox's per-charcode "No Unicode mapping for .notdef" WARN spam
-     * triggered by {@link #buildReverseUnicodeMap(PDFont)}. The reverse- CMap loop intentionally
-     * probes every charcode in 0..0xFFFF; for any subset font the vast majority of those probes
-     * return .notdef and PDSimpleFont logs a WARN for each one. Left unchecked this floods the log
-     * with 64K entries per probe per font per request - the previous build wrote ~3.5 GB to
-     * info.log in a few hours, which eventually starved Jetty's request threads and started
-     * returning 500s. Suppressing the logger costs nothing because the warnings are not actionable
-     * here: we DELIBERATELY want to iterate every charcode to discover which ones map to something.
-     */
-    static {
-        try {
-            ch.qos.logback.classic.Logger pdfboxFontLogger =
-                    (ch.qos.logback.classic.Logger)
-                            org.slf4j.LoggerFactory.getLogger(
-                                    "org.apache.pdfbox.pdmodel.font.PDSimpleFont");
-            pdfboxFontLogger.setLevel(ch.qos.logback.classic.Level.ERROR);
-        } catch (Throwable ignore) {
-            // Logger backend isn't Logback (e.g. unit test profile uses
-            // logback-test) - fall through; the WARN cost is bearable in those
-            // scenarios since the reverse-CMap loop isn't on the hot path
-            // there.
-        }
-    }
+    // NOTE: PDFBox's PDSimpleFont emits one "No Unicode mapping for .notdef" WARN per probed
+    // charcode when buildReverseUnicodeMap iterates 0..0xFFFF, which once flooded info.log to
+    // ~1.4 GB overnight. That logger is silenced DECLARATIVELY in logback.xml (a config entry ops
+    // can see and revert) rather than by mutating the global logger from a static block here -
+    // mutating it at class-load time hid the same warnings from every other tool in the JVM with
+    // no trace in configuration.
 
     @Data
     public static class EncodeCharcodesRequest {
@@ -93,16 +101,10 @@ public class PdfTextEditorV2CharcodeController {
         private int pageIndex;
 
         /**
-         * A char known to exist on the page in the target font. We use this together with {@code
-         * locatorX} / {@code locatorY} to find the source PDFont via PDFBox.
+         * A char known to exist on the page in the target font. Combined with {@code fontName}
+         * (when supplied) it locates the source PDFont via its ToUnicode CMap.
          */
         private String locatorChar;
-
-        /** PDF-space x of the existing locatorChar (in points, PDF origin lower-left). */
-        private double locatorX;
-
-        /** PDF-space y of the existing locatorChar. */
-        private double locatorY;
 
         /**
          * Optional /BaseFont name of the target font (as PDFium's FPDFFont_GetBaseFontName reports
@@ -192,13 +194,13 @@ public class PdfTextEditorV2CharcodeController {
                     findFontByToUnicode(page, request.getLocatorChar(), request.getFontName(), doc);
             if (font == null) {
                 resp.setError(
-                        "no text fragment matching locatorChar="
+                        "no font on page "
+                                + request.getPageIndex()
+                                + " renders locatorChar="
                                 + request.getLocatorChar()
-                                + " near ("
-                                + request.getLocatorX()
-                                + ","
-                                + request.getLocatorY()
-                                + ")");
+                                + (request.getFontName() != null
+                                        ? " (fontName=" + request.getFontName() + ")"
+                                        : ""));
                 return ResponseEntity.ok(resp);
             }
             // Build a reverse Unicode→charcode map by walking the font's ToUnicode CMap.
@@ -210,7 +212,7 @@ public class PdfTextEditorV2CharcodeController {
             // but they all carry a ToUnicode CMap mapping CIDs back to Unicode. We iterate
             // charcodes 0..0xFFFF, call font.toUnicode(cc) for each, and record the inverse
             // mapping for the chars the user wants to write.
-            java.util.Map<String, Long> reverseMap = buildReverseUnicodeMap(font);
+            java.util.Map<String, Long> reverseMap = buildReverseUnicodeMap(pdfBytes, font);
             List<Long> charcodes = new ArrayList<>();
             List<String> missing = new ArrayList<>();
             String text = request.getText();
@@ -273,19 +275,33 @@ public class PdfTextEditorV2CharcodeController {
      * PDFStreamEngine.processPage, which throws UnsupportedOperationException on Type3 font glyph
      * rendering. The PDFont lookup itself is purely metadata-driven and works on all subtypes.
      */
+    /** How strictly {@code scanResources} compares a candidate font's name to the requested one. */
+    private enum NameMatch {
+        /** Full /BaseFont equality, subset tag included. */
+        EXACT,
+        /** Equality after stripping the "ABCDEF+" subset tag from both names. */
+        STRIPPED,
+        /** No name constraint: first font that renders the char wins. */
+        ANY
+    }
+
     private static PDFont findFontByToUnicode(
             PDPage page, String wantChar, String fontName, PDDocument doc) {
         try {
             PDResources resources = page.getResources();
-            // First pass: if a target font name was supplied, prefer the font
-            // whose /BaseFont matches AND renders the char. This disambiguates a
-            // cross-font edit (two fonts both rendering wantChar). Falls through
-            // to the legacy first-match when fontName is null or doesn't match.
+            // When a target font name is supplied, prefer an EXACT /BaseFont match (tag included)
+            // BEFORE a tag-stripped one. Two distinct subsets of the same base font ("ABCDEF+Arial"
+            // and "GHIJKL+Arial", common after a merge) share different charcode spaces but compare
+            // equal once the tag is stripped, so an exact match must win first or we could encode
+            // against the wrong subset. Only when no exact match exists do we fall back to the
+            // tag-stripped comparison (a re-saved subset whose tag changed), then to first-match.
             if (fontName != null && !fontName.isEmpty()) {
-                PDFont named = scanResources(resources, wantChar, fontName);
-                if (named != null) return named;
+                PDFont exact = scanResources(resources, wantChar, fontName, NameMatch.EXACT);
+                if (exact != null) return exact;
+                PDFont stripped = scanResources(resources, wantChar, fontName, NameMatch.STRIPPED);
+                if (stripped != null) return stripped;
             }
-            PDFont match = scanResources(resources, wantChar, null);
+            PDFont match = scanResources(resources, wantChar, null, NameMatch.ANY);
             if (match != null) return match;
             // For Chrome/Skia PDFs the per-glyph Type3 fonts often live on the page directly,
             // so the scan above is enough. Future: walk Form XObjects too.
@@ -296,14 +312,15 @@ public class PdfTextEditorV2CharcodeController {
     }
 
     /**
-     * Return a font on the page that renders {@code wantChar}. When {@code wantName} is non-null,
-     * only a font whose /BaseFont equals it qualifies (cross-font disambiguation); otherwise the
-     * first font with the char wins. The subset tag ("ABCDEF+") is ignored when comparing names so
-     * a re-saved subset still matches.
+     * Return a font on the page that renders {@code wantChar}, subject to {@code mode}: {@code
+     * EXACT} requires the /BaseFont to equal {@code wantName} verbatim, {@code STRIPPED} compares
+     * with subset tags removed, {@code ANY} ignores the name entirely (first font with the char
+     * wins).
      */
-    private static PDFont scanResources(PDResources resources, String wantChar, String wantName) {
+    private static PDFont scanResources(
+            PDResources resources, String wantChar, String wantName, NameMatch mode) {
         if (resources == null) return null;
-        String wantBase = stripSubsetTag(wantName);
+        String wantStripped = stripSubsetTag(wantName);
         // Bound a crafted page declaring many fonts none of which match (CPU-DoS guard).
         int scanned = 0;
         final int MAX_FONTS = 64;
@@ -316,8 +333,12 @@ public class PdfTextEditorV2CharcodeController {
                 continue;
             }
             if (font == null) continue;
-            if (wantBase != null && !wantBase.equals(stripSubsetTag(font.getName()))) {
-                continue;
+            if (mode == NameMatch.EXACT) {
+                if (wantName == null || !wantName.equals(font.getName())) continue;
+            } else if (mode == NameMatch.STRIPPED) {
+                if (wantStripped == null || !wantStripped.equals(stripSubsetTag(font.getName()))) {
+                    continue;
+                }
             }
             // Cheap inverse-CMap probe: iterate codes until we hit one whose toUnicode is wantChar.
             // For Type3 with at most ~16 glyphs, this is microseconds. For full Type0 subsets
@@ -359,15 +380,35 @@ public class PdfTextEditorV2CharcodeController {
      * FPDFText_SetCharcodes on the frontend.
      *
      * <p>The 0..0xFFFF range is sufficient for Type0/CIDFontType2 fonts (CIDs are 16-bit). For
-     * single-byte fonts the loop short-circuits after 256. We don't go higher because (a) no PDF
-     * font has a CID outside that range in practice, (b) iterating 65536 entries per request is
-     * already a perceptible delay we'll cache later.
+     * single-byte fonts the loop short-circuits after 256. We don't go higher because no PDF font
+     * has a CID outside that range in practice; the per-font result is memoised in {@link
+     * #REVERSE_MAP_CACHE} so the 65 536-entry probe runs once per document+font, not per request.
      */
-    private static java.util.Map<String, Long> buildReverseUnicodeMap(PDFont font) {
-        // Cache per font instance. Cross-request reuse would need keying on font-dict bytes
-        // (out of scope); each request loads a new PDDocument hence a new PDFont.
-        return REVERSE_MAP_CACHE.computeIfAbsent(
-                font, PdfTextEditorV2CharcodeController::computeReverseUnicodeMap);
+    private static java.util.Map<String, Long> buildReverseUnicodeMap(
+            byte[] pdfBytes, PDFont font) {
+        // Cache by (PDF content hash | font name) so repeated edits on the SAME document reuse the
+        // 0..0xFFFF probe instead of rebuilding it on every keystroke's request. Two fonts sharing
+        // a name within one PDF (rare) would collide, but that is no worse than the previous
+        // no-cross-request-cache behaviour, and the hash isolates different documents.
+        String key = sha256Hex(pdfBytes) + "|" + font.getName();
+        return REVERSE_MAP_CACHE.computeIfAbsent(key, k -> computeReverseUnicodeMap(font));
+    }
+
+    /** Lowercase hex SHA-256 of the PDF bytes; used as the reverse-map cache key. */
+    private static String sha256Hex(byte[] bytes) {
+        try {
+            byte[] digest = java.security.MessageDigest.getInstance("SHA-256").digest(bytes);
+            StringBuilder sb = new StringBuilder(digest.length * 2);
+            for (byte b : digest) {
+                sb.append(Character.forDigit((b >> 4) & 0xf, 16));
+                sb.append(Character.forDigit(b & 0xf, 16));
+            }
+            return sb.toString();
+        } catch (java.security.NoSuchAlgorithmException e) {
+            // SHA-256 is always present in a JRE; fall back to a length+hash key just in case so
+            // the cache still functions (correctness holds - collisions only cost a rebuild).
+            return bytes.length + ":" + java.util.Arrays.hashCode(bytes);
+        }
     }
 
     private static java.util.Map<String, Long> computeReverseUnicodeMap(PDFont font) {

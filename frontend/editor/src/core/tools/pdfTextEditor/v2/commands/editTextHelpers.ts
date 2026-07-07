@@ -75,6 +75,40 @@ export function _clearVerifiedPerCharPtrsForTests(): void {
   resetPerCharBranchPtrs();
 }
 
+/**
+ * Characters that an edit could NOT represent and silently dropped: the source
+ * font couldn't render them, the bundled Unicode fallback (Noto Sans) didn't
+ * cover them either, and base-14 has no glyph, so `sanitizeForBase14` removed
+ * them rather than persist tofu. Accumulated across a session so the save flow
+ * can WARN the user instead of the characters vanishing without a trace (a new
+ * CJK / Arabic char typed into a doc whose fonts don't cover it). Doc-scoped:
+ * cleared on document switch alongside the pointer caches.
+ */
+const droppedBase14Chars = new Set<string>();
+
+/** Visible chars dropped this session because nothing could render them. */
+export function getDroppedBase14Chars(): string[] {
+  return [...droppedBase14Chars];
+}
+
+/** Doc-scoped reset for the dropped-char record. */
+export function resetDroppedBase14Chars(): void {
+  droppedBase14Chars.clear();
+}
+
+/** Test-only alias for {@link resetDroppedBase14Chars}. */
+export function _clearDroppedBase14CharsForTests(): void {
+  resetDroppedBase14Chars();
+}
+
+/** Record every VISIBLE char present in `original` but missing from `kept`. */
+function recordDroppedChars(original: string, kept: string): void {
+  const keptSet = new Set(kept);
+  for (const ch of original) {
+    if (!keptSet.has(ch) && ch.trim().length > 0) droppedBase14Chars.add(ch);
+  }
+}
+
 /** True when every character in `text` is also present in `pool`. */
 export function everyCharIn(text: string, pool: string): boolean {
   const set = new Set(pool);
@@ -480,12 +514,27 @@ export function splitIntoWordChunks(
 export function rotationFromMatrix(matrix: {
   a: number;
   b: number;
+  c?: number;
+  d?: number;
 }): { cos: number; sin: number } | undefined {
   const scale = Math.hypot(matrix.a, matrix.b);
   if (!scale) return undefined;
   const cos = matrix.a / scale;
   const sin = matrix.b / scale;
-  if (Math.abs(sin) < 1e-4 && cos > 0) return undefined; // upright, no flip
+  // A mirrored generator (negative determinant - e.g. a y-flipped text matrix
+  // [1 0 0 -1]) reads as sin~=0 / cos>0 from a,b ALONE and used to be mistaken
+  // for plain upright text, then edited by the horizontal surgical path which
+  // assumes a non-flipped y axis. Fold c,d into the check (defaulting to the
+  // upright identity when omitted, keeping the {a,b}-only callers unchanged) so
+  // a flip routes to the rotation-aware full re-emit instead. Pure shear
+  // (oblique-via-matrix: c!=0 with a POSITIVE determinant) is deliberately NOT
+  // treated as rotated - the surgical path preserves the shear on surviving
+  // glyphs, whereas a re-emit would drop it, so flagging it would regress
+  // synthetic-italic edits.
+  const c = matrix.c ?? 0;
+  const d = matrix.d ?? scale;
+  const mirrored = matrix.a * d - matrix.b * c < 0;
+  if (Math.abs(sin) < 1e-4 && cos > 0 && !mirrored) return undefined;
   return { cos, sin };
 }
 
@@ -585,6 +634,10 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
           opts.y,
         );
         if (fp) return fp;
+        // The bundled Noto fallback couldn't render the non-Latin chars either,
+        // so the base-14 emit below drops them. Record them so the save flow can
+        // warn instead of losing them silently.
+        recordDroppedChars(text, base14Text);
       }
       if (base14Text.length === 0) return 0; // nothing representable - drop
       const p = newBase14();
@@ -607,6 +660,15 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     // re-emits in base-14, so a broken reuse never persists.
     const strategyUsed = writeViaCharcodesOrSetText(ptr, text);
     applyFillAndPos(m, opts.page, ptr, opts.fill, x, opts.y);
+    // A whole-word SetCharcodes write via the BACKEND resolver used known-good
+    // (font, charcode) pairs PDFBox validated, so the glyph is real. Its bounds
+    // can still read ~0 right here because PDFium hasn't regenerated the page
+    // content stream yet - the SAME not-yet-generated false positive the per-char
+    // branch guards with `perCharBranchPtrs`. Trust it and skip the destructive
+    // width re-emit below; otherwise a correct source-font word gets thrown away
+    // and re-emitted in Helvetica. cmap / content-stream charcodes are GUESSES
+    // (see below) so they stay subject to the validation checks.
+    if (strategyUsed === "backend") return ptr;
     const right = measureObjRightEdgePt(m, ptr);
     const visible = text.replace(/\s+/g, "").length;
     // Narrowest base-14 glyph ("i") is ~0.22em; anything well under ~0.15em
@@ -617,14 +679,19 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       removeAndDestroyObject(m, opts.page.pagePtr, ptr);
       return emitBase14();
     }
-    // Self-validate an UNTRUSTED content-stream charcode guess: that
-    // resolver maps Unicode->CID by glyph order, which can pick a WRONG
-    // (but non-.notdef) glyph for re-encoded subsets. Compare the emitted
-    // advance to the advance the SAME chars actually render at on the page;
-    // a gross mismatch means the guess hit the wrong glyph, so drop it and
-    // re-emit in base-14 (right letter, safe font) rather than show a wrong
-    // glyph. Trusted strategies (backend/cmap) skip this check.
-    if (strategyUsed === "content-stream" && opts.originalFontPtr) {
+    // Self-validate an UNTRUSTED charcode GUESS. Two strategies produce
+    // valid-but-possibly-WRONG (non-.notdef) glyphs: content-stream maps
+    // Unicode->CID by page glyph order, and cmap assumes glyph-index==charcode
+    // which only holds for Identity-encoded CIDFontType2 (a Type0 with a
+    // predefined CMap or non-Identity CIDToGIDMap, or a simple TrueType, gets a
+    // wrong glyph). Compare the emitted advance to the advance the SAME chars
+    // render at on the page; a gross mismatch means a wrong glyph, so drop it and
+    // re-emit in base-14 (right letter, safe font). Trusted backend charcodes
+    // returned above and never reach here.
+    if (
+      (strategyUsed === "content-stream" || strategyUsed === "cmap") &&
+      opts.originalFontPtr
+    ) {
       let expected = 0;
       let known = 0;
       for (const ch of text) {
@@ -908,11 +975,22 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
           break;
         }
         applyFillAndPos(m, opts.page, ptr, opts.fill, cursor, opts.y);
-        const measured = measureObjRightEdgePt(m, ptr);
-        cursor =
-          measured > cursor
-            ? measured
-            : cursor + measureAdvancePt(pc.ch, family, size);
+        // Advance by the char's REAL on-page advance width (right side bearing
+        // included), read from the same font+char already on the page, rather
+        // than its ink bounding box (measureObjRightEdgePt) which drops the
+        // bearing and cramps/unevens per-char tracking. Fall back to the ink
+        // right edge, then to Helvetica metrics, when no on-page advance exists
+        // (e.g. a brand-new char not yet rendered anywhere).
+        const advEm = onPageAdvanceEm(m, opts.page.pagePtr, pc.font, pc.ch);
+        if (advEm != null) {
+          cursor += advEm * size;
+        } else {
+          const measured = measureObjRightEdgePt(m, ptr);
+          cursor =
+            measured > cursor
+              ? measured
+              : cursor + measureAdvancePt(pc.ch, family, size);
+        }
         emitCharcodeEvent({
           timestamp: 0,
           strategy: "backend",

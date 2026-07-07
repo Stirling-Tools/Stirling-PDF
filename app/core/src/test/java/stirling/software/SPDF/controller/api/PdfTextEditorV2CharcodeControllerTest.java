@@ -49,11 +49,8 @@ class PdfTextEditorV2CharcodeControllerTest {
         EncodeCharcodesRequest req = new EncodeCharcodesRequest();
         req.setPdfBase64(mushroomBase64());
         req.setPageIndex(0);
-        // findFontByToUnicode locates the font via the ToUnicode CMap, so the
-        // locator coordinates are unused - "M" exists on the first page.
+        // findFontByToUnicode locates the font via the ToUnicode CMap - "M" exists on page 0.
         req.setLocatorChar("M");
-        req.setLocatorX(1);
-        req.setLocatorY(1);
         req.setText(text);
         return req;
     }
@@ -130,8 +127,6 @@ class PdfTextEditorV2CharcodeControllerTest {
         req.setPdfBase64(twoFontBase64());
         req.setPageIndex(0);
         req.setLocatorChar("A");
-        req.setLocatorX(1);
-        req.setLocatorY(1);
         req.setFontName(fontName);
         req.setText("A");
         return req;
@@ -288,8 +283,6 @@ class PdfTextEditorV2CharcodeControllerTest {
         req.setPdfBase64(base64);
         req.setPageIndex(0);
         req.setLocatorChar("A");
-        req.setLocatorX(1);
-        req.setLocatorY(1);
         req.setText("A");
         return req;
     }
