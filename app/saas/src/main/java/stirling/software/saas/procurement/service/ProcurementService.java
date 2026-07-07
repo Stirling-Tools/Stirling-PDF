@@ -241,7 +241,8 @@ public class ProcurementService {
                         leaderEmail(teamId),
                         deployment,
                         seats,
-                        LocalDateTime.now().plusYears(term)));
+                        LocalDateTime.now().plusYears(term),
+                        deal.getLicenseRef()));
         deal.setStage(ProcurementDeal.STAGE_LIVE);
         deal = dealRepo.save(deal);
         log.info("[procurement] deal live team={} deal={}", teamId, deal.getDealId());

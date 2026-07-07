@@ -22,10 +22,18 @@ public interface EnterpriseLicenseService {
 
     /**
      * Issue/upgrade to a committed annual licence with the quote's entitlements ({@code seats} = 0
-     * means unlimited). Owned by {@code ownerEmail}; returns the licence reference.
+     * means unlimited). When {@code existingRef} is non-null (the team already has a trial
+     * licence), that licence is upgraded in place so the key the buyer already holds keeps working;
+     * otherwise a new licence is created. Owned by {@code ownerEmail}; returns the licence
+     * reference.
      */
     String issueAnnualLicense(
-            Long teamId, String ownerEmail, String deployment, int seats, LocalDateTime expiresAt);
+            Long teamId,
+            String ownerEmail,
+            String deployment,
+            int seats,
+            LocalDateTime expiresAt,
+            String existingRef);
 
     /** Suspend a licence (e.g. payment failed, deal lost). */
     void suspendLicense(String licenseRef);
