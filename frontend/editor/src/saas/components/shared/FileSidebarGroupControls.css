@@ -1,4 +1,9 @@
-/* Category-manager modal: editable parent categories with member-label chips. */
+/* Category-manager modal: editable parent categories with member-label chips.
+   Matches the labels editor's width so the two read as a set. */
+.fsg-modal {
+  width: min(1100px, 94vw);
+  max-width: min(1100px, 94vw);
+}
 
 .fsg-body {
   display: flex;
@@ -81,47 +86,11 @@
   padding-left: 24px;
 }
 
+/* Member chips are the shared @app/ui/LabelChip. */
 .fsg-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-}
-
-.fsg-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 8px;
-  font-size: 12px;
-  border: 1px solid var(--border-subtle, rgba(128, 128, 128, 0.35));
-  border-radius: 999px;
-  background: transparent;
-  color: var(--text-muted, inherit);
-}
-
-.fsg-chip.is-on {
-  border-color: var(--color-primary, #4f46e5);
-  color: var(--color-primary, #4f46e5);
-  background: color-mix(
-    in srgb,
-    var(--color-primary, #4f46e5) 10%,
-    transparent
-  );
-}
-
-.fsg-chip-remove {
-  display: inline-flex;
-  border: none;
-  background: transparent;
-  padding: 0;
-  margin-left: 2px;
-  cursor: pointer;
-  color: inherit;
-  opacity: 0.7;
-}
-
-.fsg-chip-remove:hover {
-  opacity: 1;
 }
 
 .fsg-count {

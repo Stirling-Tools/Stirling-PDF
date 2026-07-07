@@ -2,11 +2,11 @@
 
 import { useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import { Button } from "@app/ui/Button";
+import { LabelChip } from "@app/ui/LabelChip";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
 import { LabelIconPicker } from "@app/components/policies/LabelIconPicker";
 import { DEFAULT_LABEL_ICON } from "@app/data/labelIcons";
@@ -84,38 +84,31 @@ export function LabelsEditor({
   const renderChip = (label: ClassificationLabel) => {
     const key = label.name.toLowerCase();
     return (
-      <span className="labels-chip" role="listitem" key={key}>
-        {readOnly ? (
-          <span className="labels-chip-icon">
-            <LocalIcon icon={label.icon || DEFAULT_LABEL_ICON} width="1rem" />
-          </span>
-        ) : (
-          <LabelIconPicker
-            value={label.icon}
-            onChange={(icon) => setIconByKey(key, icon)}
-            ariaLabel={t(
-              "policies.labels.iconAria",
-              "Choose an icon for {{name}}",
-              { name: label.name },
-            )}
-          />
-        )}
-        <span className="labels-chip-name" title={label.name}>
-          {label.name}
-        </span>
-        {!readOnly && (
-          <button
-            type="button"
-            className="labels-chip-remove"
-            onClick={() => removeByKey(key)}
-            aria-label={t("policies.labels.removeAria", "Remove {{name}}", {
-              name: label.name,
-            })}
-          >
-            <CloseIcon sx={{ fontSize: "0.85rem" }} />
-          </button>
-        )}
-      </span>
+      <LabelChip
+        key={key}
+        label={label.name}
+        leading={
+          readOnly ? (
+            <span className="sui-labelchip-icon">
+              <LocalIcon icon={label.icon || DEFAULT_LABEL_ICON} width="1rem" />
+            </span>
+          ) : (
+            <LabelIconPicker
+              value={label.icon}
+              onChange={(icon) => setIconByKey(key, icon)}
+              ariaLabel={t(
+                "policies.labels.iconAria",
+                "Choose an icon for {{name}}",
+                { name: label.name },
+              )}
+            />
+          )
+        }
+        onRemove={readOnly ? undefined : () => removeByKey(key)}
+        removeAriaLabel={t("policies.labels.removeAria", "Remove {{name}}", {
+          name: label.name,
+        })}
+      />
     );
   };
 

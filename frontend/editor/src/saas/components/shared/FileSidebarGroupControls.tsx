@@ -6,7 +6,6 @@ import TuneIcon from "@mui/icons-material/Tune";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
-import CloseIcon from "@mui/icons-material/Close";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
@@ -14,7 +13,7 @@ import AddIcon from "@mui/icons-material/Add";
 import { TextInput } from "@mantine/core";
 import { Modal } from "@app/ui/Modal";
 import { Button } from "@app/ui/Button";
-import { LocalIcon } from "@app/components/shared/LocalIcon";
+import { LabelChip } from "@app/ui/LabelChip";
 import { LabelIconPicker } from "@app/components/policies/LabelIconPicker";
 import { useClassificationLabels } from "@app/hooks/useClassificationLabels";
 import { DEFAULT_LABEL_ICON } from "@app/data/labelIcons";
@@ -176,7 +175,8 @@ export function FileSidebarGroupControls({
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        width="md"
+        width="xl"
+        className="fsg-modal"
         title={t("fileSidebar.groupsModal.title", "Sidebar categories")}
         subtitle={t(
           "fileSidebar.groupsModal.subtitle",
@@ -306,29 +306,20 @@ export function FileSidebarGroupControls({
                   <div className="fsg-cat-body">
                     <div className="fsg-chips">
                       {memberKeys.map((key) => (
-                        <span key={key} className="fsg-chip is-on">
-                          <LocalIcon icon={labelIcon(key)} width="0.95rem" />
-                          {labelDisplay(key)}
-                          {(labelCounts.get(key) ?? 0) > 0 && (
-                            <span className="fsg-count">
-                              {labelCounts.get(key)}
-                            </span>
+                        <LabelChip
+                          key={key}
+                          label={labelDisplay(key)}
+                          icon={labelIcon(key)}
+                          count={labelCounts.get(key)}
+                          onRemove={() =>
+                            removeLabelFromCategory(category.id, key)
+                          }
+                          removeAriaLabel={t(
+                            "fileSidebar.groupsModal.removeLabel",
+                            "Remove {{name}}",
+                            { name: labelDisplay(key) },
                           )}
-                          <button
-                            type="button"
-                            className="fsg-chip-remove"
-                            aria-label={t(
-                              "fileSidebar.groupsModal.removeLabel",
-                              "Remove {{name}}",
-                              { name: labelDisplay(key) },
-                            )}
-                            onClick={() =>
-                              removeLabelFromCategory(category.id, key)
-                            }
-                          >
-                            <CloseIcon sx={{ fontSize: "0.8rem" }} />
-                          </button>
-                        </span>
+                        />
                       ))}
                     </div>
                     <div className="fsg-add">
