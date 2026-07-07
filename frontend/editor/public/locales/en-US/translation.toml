@@ -3701,6 +3701,17 @@ search = "Search"
 searchPlaceholder = "Search files..."
 viewAll = "View all {{count}} files"
 
+[fileSidebar.fileItem]
+closeViewer = "Close viewer"
+delete = "Delete"
+moreActions = "More actions"
+openInViewer = "Open in viewer"
+policyRunning = "{{name}} policy is running…"
+savedToServer = "Saved to server"
+updateOnServer = "Update on server"
+uploadToServer = "Upload to server"
+versionHistory = "Version history"
+
 [fileSidebar.groupsModal]
 add = "Add"
 addLabel = "Add a label…"
@@ -3717,17 +3728,6 @@ search = "Search labels…"
 show = "Show category"
 subtitle = "Group your files into parent categories. Add existing or new labels to a category, rename it, or create your own. Files in none of your categories appear under “Other”."
 title = "Sidebar categories"
-
-[fileSidebar.fileItem]
-closeViewer = "Close viewer"
-delete = "Delete"
-moreActions = "More actions"
-openInViewer = "Open in viewer"
-policyRunning = "{{name}} policy is running…"
-savedToServer = "Saved to server"
-updateOnServer = "Update on server"
-uploadToServer = "Upload to server"
-versionHistory = "Version history"
 
 [filesPage]
 addToWorkspace = "Add to workspace"
@@ -5991,47 +5991,6 @@ print = "Enforcing before print"
 [policies.fields]
 selectedCount = "{{count}} selected"
 
-[policies.pii]
-account = "Account numbers (labelled)"
-card = "Credit / debit cards"
-email = "Email addresses"
-fieldLabel = "PII to redact"
-iban = "IBANs"
-phone = "Phone numbers"
-placeholder = "Select PII types"
-routing = "US routing numbers (ABA)"
-ssn = "Social Security numbers"
-
-[policies.sidebar]
-activeCount = "{{count}} active"
-infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
-loading = "Loading…"
-optionsAriaLabel = "Policy options"
-policySettings = "Policy settings"
-railAriaLabel = "{{label}} policy — {{status}}"
-railSuffixActive = " (Active)"
-railSuffixPaused = " (Paused)"
-retryFailed = "Retry failed policies ({{count}})"
-rowProgress = "{{completed}} of {{total}} files processed"
-setUp = "Set up"
-title = "Policies"
-upgradeToEnterprise = "Upgrade to enterprise"
-whatIsPolicy = "What is a policy?"
-
-[policies.settings]
-onExport = "On export"
-onUpload = "On upload"
-noneExport = "No policies currently run on export."
-noneUpload = "No policies currently run on upload."
-reorderHandle = "Drag to reorder"
-runOrderDesc = "When more than one policy runs on the same trigger, they run in this order — each on the previous policy's output. Drag to reorder."
-title = "Policy settings"
-
-[policies.status]
-active = "Active"
-paused = "Paused"
-setup = "Set up"
-
 [policies.labels]
 add = "Add"
 addPlaceholder = "Add a label…"
@@ -6062,6 +6021,47 @@ teamCount = "team labels"
 tooLong = "Labels can be at most {{max}} characters."
 ungrouped = "Ungrouped"
 view = "View labels"
+
+[policies.pii]
+account = "Account numbers (labelled)"
+card = "Credit / debit cards"
+email = "Email addresses"
+fieldLabel = "PII to redact"
+iban = "IBANs"
+phone = "Phone numbers"
+placeholder = "Select PII types"
+routing = "US routing numbers (ABA)"
+ssn = "Social Security numbers"
+
+[policies.settings]
+noneExport = "No policies currently run on export."
+noneUpload = "No policies currently run on upload."
+onExport = "On export"
+onUpload = "On upload"
+reorderHandle = "Drag to reorder"
+runOrderDesc = "When more than one policy runs on the same trigger, they run in this order — each on the previous policy's output. Drag to reorder."
+title = "Policy settings"
+
+[policies.sidebar]
+activeCount = "{{count}} active"
+infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
+loading = "Loading…"
+optionsAriaLabel = "Policy options"
+policySettings = "Policy settings"
+railAriaLabel = "{{label}} policy — {{status}}"
+railSuffixActive = " (Active)"
+railSuffixPaused = " (Paused)"
+retryFailed = "Retry failed policies ({{count}})"
+rowProgress = "{{completed}} of {{total}} files processed"
+setUp = "Set up"
+title = "Policies"
+upgradeToEnterprise = "Upgrade to enterprise"
+whatIsPolicy = "What is a policy?"
+
+[policies.status]
+active = "Active"
+paused = "Paused"
+setup = "Set up"
 
 [policies.toolConfig]
 enableAriaLabel = "Enable {{tool}}"

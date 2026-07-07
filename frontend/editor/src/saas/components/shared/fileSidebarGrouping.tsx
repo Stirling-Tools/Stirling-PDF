@@ -20,8 +20,9 @@ import {
 import { buildLabelGroups } from "@app/components/shared/fileSidebarGroupingLogic";
 import type { FileId } from "@app/types/file";
 import type { StirlingFileStub } from "@app/types/fileContext";
+import type { FileSidebarGroup } from "@core/components/shared/fileSidebarGrouping";
 
-export type { FileSidebarGroup } from "@core/components/shared/fileSidebarGrouping";
+export type { FileSidebarGroup };
 // Pure grouping logic lives in a component-free module so tests don't drag in the picker's UI deps.
 export {
   buildLabelGroups,
