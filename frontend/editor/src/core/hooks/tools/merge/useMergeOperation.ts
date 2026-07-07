@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
-  ToolOperationConfig,
   defineMultiFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
@@ -56,16 +55,15 @@ const buildFormData = (
 };
 
 // Operation configuration for automation
-export const mergeOperationConfig: ToolOperationConfig<MergeParameters> =
-  defineMultiFileTool({
-    buildFormData,
-    toApiParams: mergeToApiParams,
-    fromApiParams: mergeFromApiParams,
-    operationType: "merge",
-    endpoint: ENDPOINT,
-    filePrefix: "merged_",
-    defaultParameters,
-  });
+export const mergeOperationConfig = defineMultiFileTool({
+  buildFormData,
+  toApiParams: mergeToApiParams,
+  fromApiParams: mergeFromApiParams,
+  operationType: "merge",
+  endpoint: ENDPOINT,
+  filePrefix: "merged_",
+  defaultParameters,
+});
 
 export const useMergeOperation = () => {
   const { t } = useTranslation();
