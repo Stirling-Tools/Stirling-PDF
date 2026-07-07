@@ -137,6 +137,7 @@
     "eslint": "^10.0.2",
     "fake-indexeddb": "^6.2.5",
     "jsdom": "^27.0.0",
+    "json-schema-to-typescript": "^15.0.4",
     "license-checker": "^25.0.1",
     "msw": "^2.14.6",
     "msw-storybook-addon": "^2.0.7",

@@ -107,7 +107,7 @@ class KeyLength(IntEnum):
 
 
 class AddPasswordParams(ApiModel):
-    key_length: KeyLength = Field(..., description="The length of the encryption key")
+    key_length: KeyLength = Field(KeyLength.integer_256, description="The length of the encryption key")
     owner_password: SecretStr | None = Field(
         None,
         description="The owner password to be added to the PDF file (Restricts what can be done with the document once it is opened)",
@@ -1283,8 +1283,8 @@ class PageSize1(StrEnum):
 class SplitForPosterPrintParams(ApiModel):
     page_size: PageSize1 = Field(..., description="Target page size for output chunks (e.g., 'A4', 'Letter', 'A3')")
     right_to_left: bool = Field(False, description="Split right-to-left instead of left-to-right")
-    xfactor: int | None = None
-    yfactor: int | None = None
+    x_factor: int = Field(2, description="Horizontal decimation factor (how many columns to split into)", ge=1, le=10)
+    y_factor: int = Field(2, description="Vertical decimation factor (how many rows to split into)", ge=1, le=10)
 
 
 class SplitPagesParams(ApiModel):
