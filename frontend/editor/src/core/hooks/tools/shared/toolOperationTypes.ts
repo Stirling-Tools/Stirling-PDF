@@ -205,6 +205,18 @@ export function defineMultiFileTool<
 }
 
 /**
+ * Custom-processor counterpart of {@link defineSingleFileTool}, for tools whose
+ * customProcessor owns the API calls and file handling. Rejects fields that
+ * belong to the file-based patterns (e.g. buildFormData) and any property not on
+ * the config, so a stray or stale field is a build error rather than dead weight.
+ */
+export function defineCustomTool<TParams>(
+  config: Omit<CustomToolOperationConfig<TParams>, "toolType">,
+): CustomToolOperationConfig<TParams> {
+  return { ...config, toolType: ToolType.custom };
+}
+
+/**
  * One generic source-of-truth for the props every automation settings component
  * accepts: the tool's parameters plus a typed change handler.
  */

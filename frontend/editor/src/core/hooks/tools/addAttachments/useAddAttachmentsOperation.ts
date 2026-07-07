@@ -1,8 +1,7 @@
 import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
-  ToolOperationConfig,
-  ToolType,
+  defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
   objectToFormData,
@@ -48,16 +47,14 @@ const buildFormData = (
   });
 
 // Operation configuration for automation
-export const addAttachmentsOperationConfig: ToolOperationConfig<AddAttachmentsParameters> =
-  {
-    toolType: ToolType.singleFile,
-    buildFormData,
-    toApiParams: addAttachmentsToApiParams,
-    fromApiParams: addAttachmentsFromApiParams,
-    operationType: "addAttachments",
-    endpoint: ENDPOINT,
-    defaultParameters: DEFAULT_ADD_ATTACHMENTS_PARAMETERS,
-  };
+export const addAttachmentsOperationConfig = defineSingleFileTool({
+  buildFormData,
+  toApiParams: addAttachmentsToApiParams,
+  fromApiParams: addAttachmentsFromApiParams,
+  operationType: "addAttachments",
+  endpoint: ENDPOINT,
+  defaultParameters: DEFAULT_ADD_ATTACHMENTS_PARAMETERS,
+});
 
 export const useAddAttachmentsOperation = () => {
   const { t } = useTranslation();
