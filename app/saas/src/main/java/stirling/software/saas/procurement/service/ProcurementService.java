@@ -249,6 +249,31 @@ public class ProcurementService {
     }
 
     /**
+     * Check out the offline/air-gapped licence file for a team, when the offline add-on was
+     * purchased. Requires an issued licence on the deal and the accepted quote to carry the offline
+     * add-on; returns empty otherwise (so the controller can 404 rather than leak that a licence
+     * exists). The certificate is generated on demand by Keygen and never stored.
+     */
+    @Transactional(readOnly = true)
+    public Optional<String> offlineLicenseFile(Long teamId) {
+        ProcurementDeal deal = dealRepo.findByTeamId(teamId).orElse(null);
+        if (deal == null || deal.getLicenseRef() == null) return Optional.empty();
+        if (!hasOfflineAddOn(deal)) return Optional.empty();
+        return Optional.of(licenses.checkOutLicenseFile(deal.getLicenseRef()));
+    }
+
+    /** Whether the deal's accepted (else latest) quote carries the paid offline-licence add-on. */
+    private boolean hasOfflineAddOn(ProcurementDeal deal) {
+        ProcurementQuote quote =
+                deal.getAcceptedQuoteId() != null
+                        ? quoteRepo.findById(deal.getAcceptedQuoteId()).orElse(null)
+                        : quoteRepo.findByDealIdOrderByCreatedAtDesc(deal.getDealId()).stream()
+                                .findFirst()
+                                .orElse(null);
+        return quote != null && quote.isOfflineLicense();
+    }
+
+    /**
      * Reset a team's procurement: delete the deal (quotes + activity cascade). For
      * re-demos/testing.
      */

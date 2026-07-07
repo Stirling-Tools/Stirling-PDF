@@ -7550,6 +7550,14 @@ subtitle = "Your solutions engineer is on every step. One next action at a time;
 title = "From trial to live, one guided path"
 trialTitle = "Enterprise trial"
 
+[portal.procurement.license]
+copied = "Copied"
+copy = "Copy key"
+downloadError = "Could not generate the offline licence file just yet — please try again in a moment."
+downloadOffline = "Download offline licence (.lic)"
+hint = "Paste this key into a self-hosted instance to activate it, or keep it for your records. Keep it safe."
+label = "Your licence key"
+
 [portal.procurement.link]
 cta = "Link account"
 description = "Procurement runs on your linked Stirling account: it's how we provision the trial, price your quote, and start billing. Link an account to start."

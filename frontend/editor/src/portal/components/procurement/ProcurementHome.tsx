@@ -8,6 +8,7 @@ import { useAsync } from "@portal/hooks/useAsync";
 import {
   acceptQuote,
   extendTrial,
+  fetchLicenseFile,
   fetchQuotePdf,
   fetchSnapshot,
   goLive,
@@ -59,6 +60,7 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [downloadingLicense, setDownloadingLicense] = useState(false);
   const [invoicePdf, setInvoicePdf] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [extra, setExtra] = useState<null | "docs" | "schedule" | "trial">(
@@ -131,6 +133,27 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
       setError(t("portal.procurement.milestone.downloadError"));
     } finally {
       setDownloading(false);
+    }
+  }
+
+  async function onDownloadOfflineLicense() {
+    setDownloadingLicense(true);
+    try {
+      const cert = await fetchLicenseFile();
+      const blob = new Blob([cert], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "stirling-enterprise.lic";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (e) {
+      console.error("[procurement] offline licence download failed", e);
+      setError(t("portal.procurement.license.downloadError"));
+    } finally {
+      setDownloadingLicense(false);
     }
   }
 
@@ -256,7 +279,14 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
               />
             )}
 
-            {!editing && stage === "active" && <LiveStageCard />}
+            {!editing && stage === "active" && (
+              <LiveStageCard
+                licenseKey={data.licenseKey}
+                offlineAvailable={!!latest?.config.offlineLicense}
+                downloadingLicense={downloadingLicense}
+                onDownloadOffline={onDownloadOfflineLicense}
+              />
+            )}
 
             <div className="portal-proc__reset">
               <button type="button" onClick={onReset} disabled={busy}>

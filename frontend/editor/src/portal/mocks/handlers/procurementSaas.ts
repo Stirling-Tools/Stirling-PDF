@@ -14,6 +14,7 @@ const EMPTY = {
   trialEndsAt: null,
   trialExtensionsUsed: 0,
   licensed: false,
+  licenseKey: null,
   latestQuote: null,
 };
 
@@ -164,6 +165,7 @@ export const procurementSaasHandlers = [
       trialEndsAt: new Date(now + 14 * 86_400_000).toISOString(),
       trialExtensionsUsed: 0,
       licensed: true,
+      licenseKey: "MOCK-TRIAL-KEY-0001",
       latestQuote: null,
     };
     return HttpResponse.json(deal);
@@ -202,8 +204,19 @@ export const procurementSaasHandlers = [
     if (d.dealId) {
       d.stage = "active";
       d.licensed = true;
+      d.licenseKey = "MOCK-ENTERPRISE-KEY-0001";
     }
     return HttpResponse.json(deal);
+  }),
+  http.get(`${SAAS}/api/v1/procurement/license/file`, () => {
+    const q = (deal as { latestQuote: { config?: Cfg } | null }).latestQuote;
+    if (!q?.config?.offlineLicense) {
+      return new HttpResponse(null, { status: 404 });
+    }
+    return new HttpResponse(
+      "-----BEGIN LICENSE FILE-----\nmock-offline-license\n-----END LICENSE FILE-----\n",
+      { headers: { "Content-Type": "text/plain" } },
+    );
   }),
   http.post(`${SAAS}/api/v1/procurement/reset`, () => {
     resetProcurementSaasStore();

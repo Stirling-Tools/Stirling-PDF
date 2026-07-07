@@ -4,7 +4,9 @@ import java.util.List;
 import java.util.Objects;
 
 import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -134,6 +136,7 @@ public class ProcurementController {
             String trialEndsAt,
             int trialExtensionsUsed,
             boolean licensed,
+            String licenseKey,
             QuoteResponse latestQuote) {}
 
     // ---- endpoints ----------------------------------------------------------
@@ -153,7 +156,30 @@ public class ProcurementController {
     }
 
     private static final SnapshotResponse EMPTY_SNAPSHOT =
-            new SnapshotResponse(null, null, null, null, 0, false, null);
+            new SnapshotResponse(null, null, null, null, 0, false, null, null);
+
+    /**
+     * Download the offline / air-gapped licence file (.lic) for the team, when the paid offline
+     * add-on was purchased. 404 when there's no licence or the add-on wasn't taken — we don't leak
+     * that a licence exists to a team without the add-on.
+     */
+    @GetMapping("/license/file")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<String> licenseFile(Authentication auth) {
+        Long teamId = resolveTeam(auth);
+        if (teamId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return procurement
+                .offlineLicenseFile(teamId)
+                .<ResponseEntity<String>>map(
+                        cert ->
+                                ResponseEntity.ok()
+                                        .header(
+                                                HttpHeaders.CONTENT_DISPOSITION,
+                                                "attachment; filename=\"stirling-enterprise.lic\"")
+                                        .contentType(MediaType.TEXT_PLAIN)
+                                        .body(cert))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
 
     @PostMapping("/trial/start")
     @PreAuthorize("isAuthenticated()")
@@ -276,6 +302,7 @@ public class ProcurementController {
                 str(deal.getTrialEndsAt()),
                 deal.getTrialExtensionsUsed(),
                 deal.getLicenseRef() != null,
+                deal.getLicenseRef(),
                 latest);
     }
 
