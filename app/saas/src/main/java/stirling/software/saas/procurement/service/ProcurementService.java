@@ -291,14 +291,14 @@ public class ProcurementService {
         return Optional.of(licenses.checkOutLicenseFile(deal.getLicenseRef()));
     }
 
-    /** Whether the deal's accepted (else latest) quote carries the paid offline-licence add-on. */
+    /**
+     * Whether the deal's <b>accepted</b> quote carries the paid offline-licence add-on. Gated on
+     * the accepted quote (not the latest) so merely toggling the add-on on an unaccepted draft
+     * can't unlock the offline file — it's only available once the add-on has actually been bought.
+     */
     private boolean hasOfflineAddOn(ProcurementDeal deal) {
-        ProcurementQuote quote =
-                deal.getAcceptedQuoteId() != null
-                        ? quoteRepo.findById(deal.getAcceptedQuoteId()).orElse(null)
-                        : quoteRepo.findByDealIdOrderByCreatedAtDesc(deal.getDealId()).stream()
-                                .findFirst()
-                                .orElse(null);
+        if (deal.getAcceptedQuoteId() == null) return false;
+        ProcurementQuote quote = quoteRepo.findById(deal.getAcceptedQuoteId()).orElse(null);
         return quote != null && quote.isOfflineLicense();
     }
 

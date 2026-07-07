@@ -49,10 +49,12 @@ public class KeygenEnterpriseLicenseService implements EnterpriseLicenseService 
 
     public KeygenEnterpriseLicenseService(KeygenConfigurationProperties config) {
         this.config = config;
+        // Fail fast: if the flag is on but creds are missing, a misconfigured prod deploy should be
+        // caught at startup, not at the first trial/provision. (Flag off → Mock bean, never here.)
         if (!config.isConfigured()) {
-            log.warn(
-                    "[procurement][keygen] enabled but not fully configured "
-                            + "(need STIRLING_KEYGEN_ACCOUNT_ID / _API_TOKEN / _POLICY_ID) — calls will fail");
+            throw new IllegalStateException(
+                    "stirling.keygen.enabled=true but Keygen is not fully configured — set "
+                            + "STIRLING_KEYGEN_ACCOUNT_ID / _API_TOKEN / _POLICY_ID, or turn the flag off");
         }
     }
 
@@ -225,9 +227,15 @@ public class KeygenEnterpriseLicenseService implements EnterpriseLicenseService 
 
     private void expect(HttpResponse<String> res, int status, String action) {
         if (res.statusCode() != status) {
-            // Body can echo the request but never the token; safe to log for diagnostics.
+            // Keep the response body out of the thrown message: it never carries the token, but can
+            // echo owner emails / metadata, and the message reaches warn-level logs. Body at debug.
+            log.debug(
+                    "[procurement][keygen] {} failed: HTTP {} body={}",
+                    action,
+                    res.statusCode(),
+                    res.body());
             throw new IllegalStateException(
-                    "Keygen " + action + " failed: HTTP " + res.statusCode() + " " + res.body());
+                    "Keygen " + action + " failed: HTTP " + res.statusCode());
         }
     }
 
