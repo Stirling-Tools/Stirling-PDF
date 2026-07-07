@@ -6,9 +6,18 @@
 
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { compile, type JSONSchema } from "json-schema-to-typescript";
-import * as prettier from "prettier";
+import { format } from "oxfmt";
+
+// Formatting config shared with the repo's oxfmt CLI, so generated output
+// matches `task frontend:format:check`. Resolved relative to this script so it
+// works regardless of the working directory.
+const OXFMT_CONFIG_PATH = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  "../../.oxfmtrc.json",
+);
 
 // The API namespaces whose endpoints are real, callable tools. `/api/v1/filter/`
 // (pipeline-only) and `/api/v1/ai/tools/` (not in the spec) are intentionally
@@ -362,11 +371,17 @@ async function compileAndWrite(
   ].join("\n");
 
   const body = `${FILE_HEADER}\n\n${models}\n\n${footer}\n`;
-  const prettierConfig = await prettier.resolveConfig(outputPath);
-  const formatted = await prettier.format(body, {
-    ...prettierConfig,
-    parser: "typescript",
-  });
+  const oxfmtConfig = JSON.parse(readFileSync(OXFMT_CONFIG_PATH, "utf-8"));
+  const { code: formatted, errors } = await format(
+    outputPath,
+    body,
+    oxfmtConfig,
+  );
+  if (errors.length > 0) {
+    throw new Error(
+      `oxfmt failed to format ${outputPath}:\n${errors.map((error) => error.message).join("\n")}`,
+    );
+  }
 
   if (check) {
     let current = "";

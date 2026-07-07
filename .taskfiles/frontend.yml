@@ -195,46 +195,37 @@ tasks:
     desc: "Run linting"
     deps: [install]
     cmds:
-      - task: lint:eslint
-      - task: lint:dpdm
-
-  lint:eslint:
-    desc: "Run ESLint linting"
-    deps: [install]
-    cmds:
-      - npx eslint --max-warnings=0
-
-  lint:dpdm:
-    desc: "Run circular import linting"
-    deps: [install]
-    cmds:
-      # Globs so dpdm walks the whole tree. dpdm expands the braces itself, so this is
-      # shell-agnostic. Covers the whole editor tree, including the portal layer.
-      - npx dpdm "editor/src/**/*.{ts,tsx}" --circular --no-warning --no-tree --exit-code circular:1
+      - task: lint:oxlint
 
   lint:fix:
     desc: "Auto-fix lint issues"
     deps: [install]
     cmds:
-      - npx eslint --fix
+      - npx oxlint --fix
 
   format:
     desc: "Auto-fix code formatting"
     deps: [install]
     cmds:
-      - npx prettier --write .
+      - npx oxfmt --write .
 
   format:check:
     desc: "Check code formatting"
     deps: [install]
     cmds:
-      - npx prettier --check .
+      - npx oxfmt --check .
 
   fix:
     desc: "Auto-fix lint and format"
     cmds:
       - task: format
       - task: lint:fix
+
+  lint:oxlint:
+    desc: "Run oxlint linting"
+    deps: [install]
+    cmds:
+      - npx oxlint --max-warnings=0
 
   typecheck:
     desc: "Typecheck default build of the app"

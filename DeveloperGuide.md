@@ -158,7 +158,7 @@ Stirling-PDF/
 │   │   │   └── locales/       # Internationalization files (JSON)
 │   │   └── vite.config.ts     # Vite configuration
 │   ├── package.json       # Shared workspace dependencies
-│   └── eslint.config.mjs  # Shared lint config
+│   └── oxlint.config.ts   # Shared lint config (oxlint)
 ├── customFiles/           # Custom static files and templates (generated at runtime used to replace existing files)
 ├── docs/                  # Documentation files
 ├── exampleYmlFiles/       # Example YAML configuration files
