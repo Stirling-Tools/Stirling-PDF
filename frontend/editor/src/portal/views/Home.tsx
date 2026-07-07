@@ -21,6 +21,8 @@ import {
   type UsageSeriesResponse,
 } from "@portal/api/home";
 import { WelcomeBanner } from "@portal/components/WelcomeBanner";
+import { EditorStatusCard } from "@portal/components/EditorStatusCard";
+import { HomeGreeting } from "@portal/components/HomeGreeting";
 import { SetupChecklist } from "@portal/components/SetupChecklist";
 import { PopularUseCases } from "@portal/components/PopularUseCases";
 import { UsageAreaChart } from "@portal/components/UsageAreaChart";
@@ -424,10 +426,8 @@ export function Home() {
 
   return (
     <div className="portal-home">
-      {/* Procurement is a bolt-on to any tier: renders the deal-status hero when a
-          deal is underway, otherwise stays out of the way. Sits above the
-          tier-specific home content. */}
-      <ProcurementHome />
+      {/* Paid tiers open with a greeting; free opens with the welcome banner. */}
+      {tier !== "free" && <HomeGreeting />}
 
       {tier === "free" && (
         <>
@@ -436,6 +436,9 @@ export function Home() {
           <WelcomeBanner
             footer={<SetupChecklist onTryOp={() => setRunnerOpen(true)} />}
           />
+          {/* Procurement is a bolt-on to any tier: renders the deal-status hero
+              when a deal is underway, otherwise the enterprise on-ramp. */}
+          <ProcurementHome />
           <ProcessingStatusStrip />
           <TierKpiStrip />
           <QuickActions onTryOp={() => setRunnerOpen(true)} />
@@ -448,6 +451,12 @@ export function Home() {
 
       {tier === "pro" && (
         <>
+          {/* Subscribed hero: the deployed Editor status card with the setup
+              checklist attached as its footer. */}
+          <EditorStatusCard
+            footer={<SetupChecklist onTryOp={() => setRunnerOpen(true)} />}
+          />
+          <ProcurementHome />
           <ProcessingStatusStrip />
           <ChartSection />
           <TierKpiStrip />
@@ -464,6 +473,7 @@ export function Home() {
 
       {tier === "enterprise" && (
         <>
+          <ProcurementHome />
           <ProcessingStatusStrip />
           <ChartSection />
           <TierKpiStrip />

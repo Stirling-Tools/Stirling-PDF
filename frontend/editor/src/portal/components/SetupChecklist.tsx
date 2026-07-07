@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, EmptyState } from "@app/ui";
+import { useTier } from "@portal/contexts/TierContext";
 import { useView, type ViewId } from "@portal/contexts/ViewContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import { fetchOnboarding, type OnboardingStep } from "@portal/api/home";
@@ -11,7 +12,12 @@ import "@portal/components/SetupChecklist.css";
 /*  Enterprise upsell rung                                                   */
 /* ──────────────────────────────────────────────────────────────────────── */
 
-function EnterpriseRung() {
+/**
+ * Enterprise on-ramp rung. The CTA differs by tier: free orgs start a guided
+ * trial, subscribed (paying) orgs jump straight to a quote — both land in the
+ * procurement flow.
+ */
+function EnterpriseRung({ paying }: { paying: boolean }) {
   const { t } = useTranslation();
   const { setActiveView } = useView();
   return (
@@ -31,7 +37,11 @@ function EnterpriseRung() {
         onClick={() => setActiveView("procurement")}
         trailingIcon={<span aria-hidden>→</span>}
       >
-        {t("portal.home.onboarding.enterprise.cta")}
+        {t(
+          paying
+            ? "portal.home.onboarding.enterprise.ctaQuote"
+            : "portal.home.onboarding.enterprise.cta",
+        )}
       </Button>
     </div>
   );
@@ -47,18 +57,20 @@ interface SetupChecklistProps {
 }
 
 /**
- * Free-tier getting-started checklist. Renders as the attached footer of the
- * welcome hero: an ordered do-this-then-that sequence of setup steps, each
- * navigable, with a status chip once complete. The header doubles as a dismiss
- * control; the Enterprise rung persists regardless so the upgrade path stays
- * visible even after the checklist is collapsed.
+ * Getting-started checklist, rendered as the attached footer of the home hero
+ * (welcome banner on free, deployed-Editor card on subscribed). An ordered
+ * do-this-then-that sequence of navigable steps, each with a status chip once
+ * complete. The header doubles as a dismiss control; the Enterprise rung
+ * persists regardless so the upgrade path stays visible even after the
+ * checklist is collapsed. Steps and the Enterprise CTA are tier-aware.
  */
 export function SetupChecklist({ onTryOp }: SetupChecklistProps) {
   const { t } = useTranslation();
+  const { tier } = useTier();
   const { setActiveView } = useView();
   const [dismissed, setDismissed] = useState(false);
 
-  const state = useAsync<OnboardingStep[]>(() => fetchOnboarding(), []);
+  const state = useAsync<OnboardingStep[]>(() => fetchOnboarding(tier), [tier]);
   const { data: steps } = state;
   const { isLoading, isEmpty } = useSectionFlags(state);
 
@@ -160,7 +172,7 @@ export function SetupChecklist({ onTryOp }: SetupChecklistProps) {
         </>
       )}
 
-      <EnterpriseRung />
+      <EnterpriseRung paying={tier !== "free"} />
     </div>
   );
 }

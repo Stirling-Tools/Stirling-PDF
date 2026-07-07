@@ -7,6 +7,23 @@
   margin: 0 auto;
 }
 
+/* Paid-tier greeting header */
+.portal-home__greeting {
+  margin-bottom: -0.25rem;
+}
+.portal-home__greeting-title {
+  margin: 0 0 0.25rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text-2);
+}
+.portal-home__greeting-date {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-4);
+}
+
 /* Product card grid */
 .portal-home__product-grid {
   display: grid;

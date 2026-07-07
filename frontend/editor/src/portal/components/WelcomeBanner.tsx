@@ -36,9 +36,9 @@ const RAIL_ICONS = [
 
 function EditorRail() {
   return (
-    <div className="portal-hero__rail" aria-hidden>
+    <div className="portal-welcome__rail" aria-hidden>
       {RAIL_ICONS.map((Icon, i) => (
-        <span key={i} className="portal-hero__rail-icon">
+        <span key={i} className="portal-welcome__rail-icon">
           <Icon size={13} />
         </span>
       ))}
@@ -48,62 +48,62 @@ function EditorRail() {
 
 function WelcomeEditorCard() {
   return (
-    <div className="portal-hero__editor" aria-hidden>
-      <div className="portal-hero__editor-bar">
-        <div className="portal-hero__editor-dots">
+    <div className="portal-welcome__editor" aria-hidden>
+      <div className="portal-welcome__editor-bar">
+        <div className="portal-welcome__editor-dots">
           <span />
           <span />
           <span />
         </div>
-        <div className="portal-hero__editor-file">
+        <div className="portal-welcome__editor-file">
           <EditorIcon size={12} />
-          <span className="portal-hero__editor-name">
+          <span className="portal-welcome__editor-name">
             Vulnerability Assessment Report CVE-2026-1847.pdf
           </span>
-          <span className="portal-hero__editor-sep">·</span>
-          <span className="portal-hero__editor-pages">18 pages</span>
+          <span className="portal-welcome__editor-sep">·</span>
+          <span className="portal-welcome__editor-pages">18 pages</span>
         </div>
-        <span className="portal-hero__editor-page">1 / 18</span>
+        <span className="portal-welcome__editor-page">1 / 18</span>
       </div>
 
-      <div className="portal-hero__editor-body">
+      <div className="portal-welcome__editor-body">
         <EditorRail />
-        <div className="portal-hero__doc">
-          <div className="portal-hero__doc-eyebrow">
+        <div className="portal-welcome__doc">
+          <div className="portal-welcome__doc-eyebrow">
             <span>SECURITY ASSESSMENT</span>
-            <span className="portal-hero__doc-critical">CRITICAL</span>
+            <span className="portal-welcome__doc-critical">CRITICAL</span>
           </div>
-          <div className="portal-hero__doc-title">
+          <div className="portal-welcome__doc-title">
             Vulnerability Assessment Report CVE-2026-1847
           </div>
-          <div className="portal-hero__doc-divider" />
-          <div className="portal-hero__doc-meta">
+          <div className="portal-welcome__doc-divider" />
+          <div className="portal-welcome__doc-meta">
             <span>
-              <span className="portal-hero__doc-meta-key">
+              <span className="portal-welcome__doc-meta-key">
                 Assessment Date:{" "}
               </span>
               February 2026
             </span>
             <span>
-              <span className="portal-hero__doc-meta-key">
+              <span className="portal-welcome__doc-meta-key">
                 Classification:{" "}
               </span>
               FOUO
             </span>
           </div>
-          <div className="portal-hero__doc-heading">EXECUTIVE SUMMARY</div>
-          <p className="portal-hero__doc-body">
+          <div className="portal-welcome__doc-heading">EXECUTIVE SUMMARY</div>
+          <p className="portal-welcome__doc-body">
             This assessment identifies critical vulnerabilities in the target
             environment and provides actionable remediation guidance prioritized
             by risk severity.
           </p>
-          <div className="portal-hero__doc-heading">KEY FINDINGS</div>
-          <div className="portal-hero__doc-finding portal-hero__doc-finding--critical">
-            <span className="portal-hero__doc-dot" />3 Critical vulnerabilities
-            identified
+          <div className="portal-welcome__doc-heading">KEY FINDINGS</div>
+          <div className="portal-welcome__doc-finding portal-welcome__doc-finding--critical">
+            <span className="portal-welcome__doc-dot" />3 Critical
+            vulnerabilities identified
           </div>
-          <div className="portal-hero__doc-finding portal-hero__doc-finding--high">
-            <span className="portal-hero__doc-dot" />7 High-severity issues
+          <div className="portal-welcome__doc-finding portal-welcome__doc-finding--high">
+            <span className="portal-welcome__doc-dot" />7 High-severity issues
             requiring attention
           </div>
         </div>
@@ -131,26 +131,29 @@ export function WelcomeBanner({ footer }: WelcomeBannerProps) {
   const { setActiveView } = useView();
 
   return (
-    <section className="portal-hero" aria-label={t("portal.welcome.ariaLabel")}>
-      <div className="portal-hero__body">
-        <div className="portal-hero__canvas" aria-hidden>
-          <div className="portal-hero__blob portal-hero__blob--1" />
-          <div className="portal-hero__blob portal-hero__blob--2" />
-          <div className="portal-hero__blob portal-hero__blob--3" />
+    <section
+      className="portal-welcome"
+      aria-label={t("portal.welcome.ariaLabel")}
+    >
+      <div className="portal-welcome__body">
+        <div className="portal-welcome__canvas" aria-hidden>
+          <div className="portal-welcome__blob portal-welcome__blob--1" />
+          <div className="portal-welcome__blob portal-welcome__blob--2" />
+          <div className="portal-welcome__blob portal-welcome__blob--3" />
         </div>
 
-        <div className="portal-hero__text">
-          <span className="portal-hero__badge">
+        <div className="portal-welcome__text">
+          <span className="portal-welcome__badge">
             {t("portal.welcome.badge")}
           </span>
-          <h1 className="portal-hero__title">
+          <h1 className="portal-welcome__title">
             {t("portal.welcome.title")}{" "}
-            <span className="portal-hero__title-accent">
+            <span className="portal-welcome__title-accent">
               {t("portal.welcome.titleAccent")}
             </span>
           </h1>
-          <p className="portal-hero__sub">{t("portal.welcome.subtitle")}</p>
-          <div className="portal-hero__cta">
+          <p className="portal-welcome__sub">{t("portal.welcome.subtitle")}</p>
+          <div className="portal-welcome__cta">
             <Button
               variant="gradient"
               leadingIcon={<DownloadIcon size={15} />}
@@ -166,15 +169,15 @@ export function WelcomeBanner({ footer }: WelcomeBannerProps) {
               {t("portal.welcome.inviteTeammates")}
             </Button>
           </div>
-          <p className="portal-hero__perks">{t("portal.welcome.perks")}</p>
+          <p className="portal-welcome__perks">{t("portal.welcome.perks")}</p>
         </div>
 
-        <div className="portal-hero__visual">
+        <div className="portal-welcome__visual">
           <WelcomeEditorCard />
         </div>
       </div>
 
-      {footer && <div className="portal-hero__footer">{footer}</div>}
+      {footer && <div className="portal-welcome__footer">{footer}</div>}
     </section>
   );
 }

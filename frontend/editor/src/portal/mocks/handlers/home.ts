@@ -3,9 +3,11 @@ import type { Tier } from "@portal/contexts/TierContext";
 import {
   buildUsageSeries,
   buildUsageSeriesResponse,
+  EDITOR_DEPLOYMENT,
   enterpriseKpisFor,
   FREE_KPIS,
   FREE_ONBOARDING,
+  PRO_ONBOARDING,
   proKpisFor,
   RECENT_ACTIVITY,
   REGION_HEALTH,
@@ -42,8 +44,17 @@ export const homeHandlers = [
     return HttpResponse.json(REGION_HEALTH);
   }),
 
-  http.get("/v1/onboarding", async () => {
+  http.get("/v1/onboarding", async ({ request }) => {
     await delay(120);
-    return HttpResponse.json(FREE_ONBOARDING);
+    const tier = (new URL(request.url).searchParams.get("tier") ??
+      "free") as Tier;
+    return HttpResponse.json(
+      tier === "free" ? FREE_ONBOARDING : PRO_ONBOARDING,
+    );
+  }),
+
+  http.get("/v1/editor/deployment", async () => {
+    await delay(120);
+    return HttpResponse.json(EDITOR_DEPLOYMENT);
   }),
 ];

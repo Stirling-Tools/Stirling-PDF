@@ -6725,6 +6725,16 @@ ready = "Ready to deploy"
 description = "Once documents are processed, your 30-day usage appears here."
 title = "No usage yet"
 
+[portal.home.editor]
+activeUsers = "{{n}} active"
+invite = "Invite teammates"
+open = "Open in browser"
+
+[portal.home.greeting]
+afternoon = "Good afternoon"
+evening = "Good evening"
+morning = "Good morning"
+
 [portal.home.kpis.enterprise]
 docs30d = "Docs / 30d"
 evalPassRate = "Eval pass rate"
@@ -6758,6 +6768,7 @@ title = "No onboarding steps yet"
 [portal.home.onboarding.enterprise]
 body = "Org-wide SSO + SCIM + RBAC, committed volume pricing, and air-gapped deployment."
 cta = "Start Trial"
+ctaQuote = "Get Quote"
 lead = "For 250+ employees."
 tag = "Enterprise"
 
