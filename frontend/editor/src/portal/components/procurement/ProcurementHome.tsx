@@ -164,8 +164,8 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
           </p>
         </div>
         <Button
-          variant="outline"
-          accent="blue"
+          variant="secondary"
+          accent="default"
           loading={busy}
           disabled={!isLinked}
           onClick={onStartTrial}
@@ -201,8 +201,8 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
             description={t("portal.procurement.link.description")}
             actions={
               <Button
-                variant="gradient"
-                accent="purple"
+                variant="primary"
+                accent="premium"
                 onClick={() => openLinkModal()}
               >
                 {t("portal.procurement.link.cta")}
