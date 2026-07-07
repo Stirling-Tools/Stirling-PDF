@@ -5913,14 +5913,6 @@ keyDescription = "Paste the license key from your email"
 success = "License Activated!"
 successMessage = "Your license has been successfully activated. You can now close this window."
 
-[policy]
-badgeEnforcing = "{{name}} enforcing…"
-badgeRan = "{{name}} policy ran on this file"
-blockingAction = "{{action}} blocked while enforcing policy, please wait"
-dismiss = "Dismiss overlay"
-enforcingTitle = "Enforcing policy…"
-viewAnyway = "View file (policy still enforcing)"
-
 [policies]
 deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
 deleteConfirmTitle = "Delete {{label}} policy?"
@@ -6069,6 +6061,14 @@ sourcesLabel = "Sources"
 stepOf = "Step {{step}} of {{total}}"
 toolChainDesc = "Configure the tools this policy runs on each document."
 typesSelected = "{{count}} types selected"
+
+[policy]
+badgeEnforcing = "{{name}} enforcing…"
+badgeRan = "{{name}} policy ran on this file"
+blockingAction = "{{action}} blocked while enforcing policy, please wait"
+dismiss = "Dismiss overlay"
+enforcingTitle = "Enforcing policy…"
+viewAnyway = "View file (policy still enforcing)"
 
 [portal.accountLink.card]
 billingNote = "Unattended processing bills against your org wallet."
