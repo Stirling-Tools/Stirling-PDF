@@ -31,9 +31,8 @@ import {
   PoliciesIcon,
   InfrastructureIcon,
   SparklesIcon,
-  LinkIcon,
 } from "@portal/components/icons";
-import { AccountLinkPanel } from "@portal/components/account-link/AccountLinkPanel";
+import { accountLinkSettings } from "@portal/components/settings/accountLinkSettings";
 import "@portal/components/SettingsModal.css";
 
 type SettingsSection =
@@ -150,11 +149,17 @@ export function SettingsModal({
       {
         title: t("portal.settings.groups.admin"),
         items: [
-          {
-            key: "account-link",
-            label: t("portal.settings.sections.account-link"),
-            icon: <LinkIcon size={16} />,
-          },
+          // Account-link is a self-hosted-only section; the SaaS build shadows
+          // the seam to null, dropping the item entirely.
+          ...(accountLinkSettings
+            ? [
+                {
+                  key: accountLinkSettings.navKey,
+                  label: t(accountLinkSettings.labelKey),
+                  icon: accountLinkSettings.icon,
+                },
+              ]
+            : []),
           {
             key: "authentication",
             label: t("portal.settings.sections.authentication"),
@@ -337,7 +342,9 @@ export function SettingsModal({
           />
         )}
 
-        {section === "account-link" && <AccountLinkPanel />}
+        {section === "account-link" && accountLinkSettings && (
+          <accountLinkSettings.Body />
+        )}
       </SettingsShell>
     </Modal>
   );
