@@ -14,6 +14,7 @@ import {
   deserializeToolStep,
   getExecutableTools,
   serializeToolStep,
+  stepRequiresUpload,
   type WorkingToolStep,
 } from "@app/hooks/tools/shared/toolAutomation";
 import { compressOperationConfig } from "@app/hooks/tools/compress/useCompressOperation";
@@ -137,5 +138,21 @@ describe("serialize/deserialize round-trip", () => {
       operation: "/api/v1/unknown/thing",
       parameters: { keep: true },
     });
+  });
+});
+
+describe("stepRequiresUpload", () => {
+  const step = (params: Record<string, unknown>): WorkingToolStep => ({
+    toolId: "compress" as ToolId,
+    operation: "/api/v1/misc/compress-pdf",
+    params,
+    support: "editable",
+  });
+
+  test("detects a File (or list of Files) among the parameters", () => {
+    const image = new File(["x"], "logo.png", { type: "image/png" });
+    expect(stepRequiresUpload(step({ level: 5 }))).toBe(false);
+    expect(stepRequiresUpload(step({ watermarkImage: image }))).toBe(true);
+    expect(stepRequiresUpload(step({ attachments: [image] }))).toBe(true);
   });
 });

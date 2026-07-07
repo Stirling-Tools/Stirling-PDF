@@ -122,6 +122,21 @@ export function classifyToolStepSupport(
   return entry.automationSettings ? "editable" : "noSettings";
 }
 
+function isFileValue(value: unknown): boolean {
+  if (typeof File === "undefined") return false;
+  if (value instanceof File) return true;
+  return Array.isArray(value) && value.some((item) => item instanceof File);
+}
+
+/**
+ * True if any of a step's parameters is an uploaded file (or list of files). Such a step cannot be
+ * saved into a stored pipeline yet: the file bytes are not persisted with the policy, so a later
+ * (e.g. scheduled) run would have nothing to send for that named file field.
+ */
+export function stepRequiresUpload(step: WorkingToolStep): boolean {
+  return Object.values(step.params).some(isFileValue);
+}
+
 /**
  * The tools that can be run as a backend operation step, sorted by name. Includes only automatable
  * tools whose endpoint resolves from defaults (so they can become a backend step); this drops

@@ -43,7 +43,21 @@ vi.mock("@app/contexts/ToolRegistryContext", () => {
     description: "",
     categoryId: "recommendedTools",
     subcategoryId: "general",
-    automationSettings: () => null,
+    automationSettings: (props: {
+      onParameterChange: (key: string, value: unknown) => void;
+    }) => (
+      <button
+        type="button"
+        onClick={() =>
+          props.onParameterChange(
+            "watermarkImage",
+            new File(["x"], "logo.png", { type: "image/png" }),
+          )
+        }
+      >
+        upload logo
+      </button>
+    ),
     operationConfig: {
       operationType: "compress",
       toolType: 0,
@@ -140,6 +154,25 @@ describe("PipelineBuilder", () => {
     expect(
       await screen.findByText("portal.pipelines.run.completed"),
     ).toBeInTheDocument();
+  });
+
+  it("blocks saving a step that needs an uploaded file", async () => {
+    renderBuilder("/portal/pipelines/new");
+
+    fireEvent.change(await screen.findByRole("textbox"), {
+      target: { value: "Watermarked" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /addTool/ }));
+    fireEvent.click(await screen.findByText("Compress"));
+    // The tool's settings upload a file, which a stored pipeline can't persist yet.
+    fireEvent.click(await screen.findByText("upload logo"));
+
+    expect(
+      await screen.findByText("portal.pipelines.builder.uploadUnsupported"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("portal.pipelines.composer.create").closest("button"),
+    ).toBeDisabled();
   });
 
   it("deletes an existing pipeline after confirmation", async () => {

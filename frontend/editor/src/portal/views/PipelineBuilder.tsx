@@ -26,6 +26,7 @@ import {
   getExecutableTools,
   newWorkingToolStep,
   serializeToolStep,
+  stepRequiresUpload,
   type ExecutableTool,
   type WorkingToolStep,
 } from "@app/hooks/tools/shared/toolAutomation";
@@ -262,11 +263,20 @@ export function PipelineBuilder() {
     return entry?.name ?? humanizeOperation(step.operation);
   }
 
+  // Steps whose params carry an uploaded file can't be saved: the bytes aren't persisted with the
+  // policy, so a later run would send null for that field (see stepRequiresUpload).
+  const uploadStepLabels = steps.filter(stepRequiresUpload).map(stepLabel);
+  const hasUploadSteps = uploadStepLabels.length > 0;
+
   const scheduleCountValid =
     triggerType !== "schedule" || Number(scheduleCount) > 0;
   const outputValid = outputMode !== "folder" || outputDirectory.trim() !== "";
   const canSave =
-    name.trim() !== "" && scheduleCountValid && outputValid && !submitting;
+    name.trim() !== "" &&
+    scheduleCountValid &&
+    outputValid &&
+    !hasUploadSteps &&
+    !submitting;
 
   const triggerOptions = [
     { value: MANUAL, label: t("portal.pipelines.composer.triggerManual") },
@@ -473,6 +483,14 @@ export function PipelineBuilder() {
       {runResult && (
         <Banner tone={runResult.tone} description={runResult.text} />
       )}
+      {hasUploadSteps && (
+        <Banner
+          tone="warning"
+          description={t("portal.pipelines.builder.uploadUnsupported", {
+            tools: uploadStepLabels.join(", "),
+          })}
+        />
+      )}
 
       {/* Pipeline-level settings, above the operation list. */}
       <section className="portal-builder__settings">
@@ -608,10 +626,16 @@ export function PipelineBuilder() {
                       <span className="portal-builder__step-name">
                         {stepLabel(step)}
                       </span>
-                      {step.support === "unsupported" && (
+                      {stepRequiresUpload(step) ? (
                         <span className="portal-builder__step-note">
-                          {t("portal.pipelines.builder.usesDefaults")}
+                          {t("portal.pipelines.builder.needsUpload")}
                         </span>
+                      ) : (
+                        step.support === "unsupported" && (
+                          <span className="portal-builder__step-note">
+                            {t("portal.pipelines.builder.usesDefaults")}
+                          </span>
+                        )
                       )}
                     </span>
                   </button>
