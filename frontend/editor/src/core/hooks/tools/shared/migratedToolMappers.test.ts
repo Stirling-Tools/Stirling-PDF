@@ -117,7 +117,7 @@ describe("migrated tool mappers (sweep)", () => {
 
 describe("redact mappers", () => {
   test("toApiParams builds the auto-redact body from UI parameters", () => {
-    const api = redactOperationConfig.toApiParams({
+    const api = redactOperationConfig.toApiParams!({
       mode: "automatic",
       wordsToRedact: ["foo", "bar"],
       useRegex: true,
@@ -138,7 +138,7 @@ describe("redact mappers", () => {
   });
 
   test("round-trips through fromApiParams", () => {
-    const api = redactOperationConfig.toApiParams({
+    const api = redactOperationConfig.toApiParams!({
       mode: "automatic",
       wordsToRedact: ["secret"],
       useRegex: false,
@@ -147,7 +147,7 @@ describe("redact mappers", () => {
       customPadding: 0.1,
       convertPDFToImage: true,
     });
-    const roundTripped = redactOperationConfig.toApiParams({
+    const roundTripped = redactOperationConfig.toApiParams!({
       mode: "automatic",
       wordsToRedact: [],
       useRegex: false,
@@ -155,7 +155,7 @@ describe("redact mappers", () => {
       redactColor: "#000000",
       customPadding: 0,
       convertPDFToImage: false,
-      ...redactOperationConfig.fromApiParams(api),
+      ...redactOperationConfig.fromApiParams!(api),
     });
 
     expect(roundTripped).toEqual(api);

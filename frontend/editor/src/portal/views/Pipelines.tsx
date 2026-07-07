@@ -114,7 +114,7 @@ export function Pipelines() {
             {t("portal.pipelines.subtitle")}
           </p>
         </div>
-        <Button onClick={openCreate} leadingIcon={<span aria-hidden>+</span>}>
+        <Button onClick={openCreate} leftSection={<span aria-hidden>+</span>}>
           {t("portal.pipelines.actions.newPipeline")}
         </Button>
       </header>
@@ -179,7 +179,7 @@ export function Pipelines() {
         footer={
           <div className="portal-pipelines__composer-footer">
             <Button
-              variant="ghost"
+              variant="tertiary"
               size="sm"
               disabled={deleting}
               onClick={() => setPendingDelete(null)}
@@ -188,7 +188,7 @@ export function Pipelines() {
             </Button>
             <Button
               size="sm"
-              accent="red"
+              accent="danger"
               loading={deleting}
               onClick={confirmDelete}
             >

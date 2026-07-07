@@ -83,8 +83,8 @@ export function LinkAccountCard({ link }: Props) {
             )}
           </span>
           <Button
-            variant="outline"
-            accent="red"
+            variant="secondary"
+            accent="danger"
             loading={linking}
             onClick={link.unlink}
           >

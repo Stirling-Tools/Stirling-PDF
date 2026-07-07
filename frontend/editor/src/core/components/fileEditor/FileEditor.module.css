@@ -291,15 +291,15 @@
    DARK MODE OVERRIDES
    ========================= */
 :global([data-mantine-color-scheme="dark"]) .card {
-  outline-color: #3a4047; /* deselected stroke */
+  outline-color: #1c2340; /* deselected stroke */
 }
 
 :global([data-mantine-color-scheme="dark"]) .card[data-selected="true"] {
-  outline-color: #4b525a; /* selected stroke (subtle grey) */
+  outline-color: #2d3560; /* selected stroke (subtle navy) */
 }
 
 :global([data-mantine-color-scheme="dark"]) .headerResting {
-  background: #1f2329; /* requested default unselected color */
+  background: #0d1020; /* requested default unselected color */
   color: var(--tool-header-text); /* #D0D6DC */
   border-bottom-color: var(--tool-header-border); /* #3A4047 */
 }

@@ -60,7 +60,7 @@ export function InviteMemberModal({ open, onClose }: InviteMemberModalProps) {
       subtitle={t("portal.users.invite.subtitle")}
       footer={
         <div className="portal-users__modal-footer">
-          <Button variant="ghost" size="sm" onClick={close}>
+          <Button variant="tertiary" size="sm" onClick={close}>
             {t("portal.users.invite.cancel")}
           </Button>
           <Button size="sm" onClick={submit} disabled={touched && !emailValid}>

@@ -251,7 +251,7 @@ function PolicySetupWizardBody({
       subtitle={config.summary}
       footer={
         <div className="portal-policies__wizard-foot">
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="tertiary" size="sm" onClick={onClose}>
             {t("portal.policies.wizard.actions.cancel")}
           </Button>
           {step === "workflow" ? (
@@ -265,7 +265,7 @@ function PolicySetupWizardBody({
           ) : (
             <>
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 style={{ marginLeft: "auto" }}
                 onClick={() => setStep("workflow")}
@@ -367,9 +367,10 @@ function PolicySetupWizardBody({
               />
             ) : (
               availableSources.map((src) => (
-                <button
+                <Button
                   key={src.id}
                   type="button"
+                  variant="quiet"
                   className={
                     "portal-policies__source" +
                     (sources.includes(src.id)
@@ -389,7 +390,7 @@ function PolicySetupWizardBody({
                       {src.type}
                     </span>
                   </span>
-                </button>
+                </Button>
               ))
             )}
           </div>
@@ -413,22 +414,23 @@ function PolicySetupWizardBody({
                         count: scopeTypes.length,
                       })}
                 </span>
-                <button
+                <Button
                   type="button"
+                  variant="quiet"
                   className="portal-policies__link"
                   onClick={() => setScopeNarrow((v) => !v)}
                 >
                   {scopeNarrow
                     ? t("portal.policies.wizard.docTypes.clear")
                     : t("portal.policies.wizard.docTypes.narrow")}
-                </button>
+                </Button>
               </div>
               {scopeNarrow && (
                 <div className="portal-policies__doctypes">
                   {POLICY_DOC_TYPES.map((dt) => (
                     <Chip
                       key={dt}
-                      tone={scopeTypes.includes(dt) ? "blue" : "neutral"}
+                      accent={scopeTypes.includes(dt) ? "default" : "neutral"}
                       size="sm"
                       onClick={() => toggleScopeType(dt)}
                     >

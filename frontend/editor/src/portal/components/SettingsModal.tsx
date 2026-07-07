@@ -260,10 +260,10 @@ export function SettingsModal({
             <span className="portal-settings__footer-note">
               {t("portal.settings.footerNote")}
             </span>
-            <Button variant="ghost" onClick={onClose}>
+            <Button variant="tertiary" onClick={onClose}>
               {t("portal.settings.cancel")}
             </Button>
-            <Button variant="gradient" onClick={onClose}>
+            <Button variant="primary" accent="premium" onClick={onClose}>
               {t("portal.settings.saveChanges")}
             </Button>
           </>
@@ -401,7 +401,7 @@ function ProfilePanel({
           </div>
           <span className="portal-settings__identity-email">{email}</span>
         </div>
-        <Button variant="outline" size="sm" disabled>
+        <Button variant="secondary" size="sm" disabled>
           {t("portal.settings.profile.changePhoto")}
         </Button>
       </div>
@@ -458,9 +458,10 @@ function AppearancePanel({
           aria-label={t("portal.settings.appearance.themeTitle")}
         >
           {THEME_OPTIONS.map((opt) => (
-            <button
+            <Button
               key={opt.value}
               type="button"
+              variant="quiet"
               role="radio"
               aria-checked={theme === opt.value}
               className={
@@ -482,7 +483,7 @@ function AppearancePanel({
                 </strong>
                 <span>{t(`portal.settings.appearance.${opt.value}.hint`)}</span>
               </span>
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -639,7 +640,7 @@ function WorkspacePanel({
             </span>
           </div>
         )}
-        <Button variant="outline" size="sm" disabled>
+        <Button variant="secondary" size="sm" disabled>
           {t("portal.settings.workspace.manageBilling")}
         </Button>
       </div>
@@ -811,7 +812,7 @@ function SessionsPanel({
                 </StatusBadge>
               ) : (
                 // TODO(backend): DELETE /v1/settings/sessions/{id}
-                <Button variant="ghost" size="sm">
+                <Button variant="tertiary" size="sm">
                   {t("portal.settings.sessions.revoke")}
                 </Button>
               )}
