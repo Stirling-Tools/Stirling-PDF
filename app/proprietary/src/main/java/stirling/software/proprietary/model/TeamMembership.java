@@ -1,4 +1,4 @@
-package stirling.software.saas.model;
+package stirling.software.proprietary.model;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -15,7 +15,6 @@ import lombok.Setter;
 import lombok.ToString;
 
 import stirling.software.common.model.enumeration.TeamRole;
-import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.model.User;
 
 /**

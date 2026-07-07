@@ -4,6 +4,7 @@ import { Users } from "@portal/views/Users";
 import { Documents } from "@portal/views/Documents";
 import { Pipelines } from "@portal/views/Pipelines";
 import { Sources } from "@portal/views/Sources";
+import { Integrations } from "@portal/views/Integrations";
 import { AgentBuilder } from "@portal/views/AgentBuilder";
 import { Policies } from "@portal/views/Policies";
 import { Components } from "@portal/views/Components";
@@ -21,6 +22,7 @@ export function ViewRouter() {
       <Route path={VIEW_PATHS.users} element={<Users />} />
       <Route path={VIEW_PATHS.pipelines} element={<Pipelines />} />
       <Route path={VIEW_PATHS.sources} element={<Sources />} />
+      <Route path={VIEW_PATHS.integrations} element={<Integrations />} />
       <Route path={VIEW_PATHS["agent-builder"]} element={<AgentBuilder />} />
       <Route path={VIEW_PATHS.policies} element={<Policies />} />
       <Route path={VIEW_PATHS.documents} element={<Documents />} />

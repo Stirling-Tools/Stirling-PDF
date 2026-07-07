@@ -59,6 +59,16 @@ export function SourcesIcon(props: IconProps) {
   );
 }
 
+export function IntegrationsIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect x="3" y="3" width="8" height="8" rx="1.5" />
+      <rect x="13" y="13" width="8" height="8" rx="1.5" />
+      <path d="M11 7h2a2 2 0 0 1 2 2v4" />
+    </Svg>
+  );
+}
+
 export function PipelinesIcon(props: IconProps) {
   return (
     <Svg {...props}>

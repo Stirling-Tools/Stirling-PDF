@@ -27,6 +27,7 @@ import stirling.software.proprietary.security.database.repository.SessionReposit
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.DatabaseService;
 import stirling.software.proprietary.security.service.LoginAttemptService;
@@ -43,6 +44,7 @@ class ProprietaryUIDataControllerTest {
     @Mock private SessionPersistentRegistry sessionPersistentRegistry;
     @Mock private UserRepository userRepository;
     @Mock private TeamRepository teamRepository;
+    @Mock private TeamMembershipRepository teamMembershipRepository;
     @Mock private SessionRepository sessionRepository;
     @Mock private DatabaseService databaseService;
     @Mock private UserLicenseSettingsService licenseSettingsService;
@@ -75,6 +77,7 @@ class ProprietaryUIDataControllerTest {
                         sessionPersistentRegistry,
                         userRepository,
                         teamRepository,
+                        teamMembershipRepository,
                         sessionRepository,
                         databaseService,
                         objectMapper,

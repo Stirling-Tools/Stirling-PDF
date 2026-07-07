@@ -14,6 +14,7 @@ import {
   HomeIcon,
   UsersIcon,
   SourcesIcon,
+  IntegrationsIcon,
   PoliciesIcon,
   PipelinesIcon,
   DocumentsIcon,
@@ -38,6 +39,7 @@ const GROUP_PRIMARY: NavEntry[] = [{ id: "home", icon: <HomeIcon /> }];
 const GROUP_OPERATIONAL: NavEntry[] = [
   { id: "users", icon: <UsersIcon /> },
   { id: "sources", icon: <SourcesIcon /> },
+  { id: "integrations", icon: <IntegrationsIcon /> },
   { id: "policies", icon: <PoliciesIcon /> },
   { id: "pipelines", icon: <PipelinesIcon /> },
   { id: "documents", icon: <DocumentsIcon /> },

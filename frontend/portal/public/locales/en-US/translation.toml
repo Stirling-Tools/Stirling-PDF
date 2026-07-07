@@ -1,11 +1,27 @@
 # Portal translations — US English is the source of truth. Other languages are
 # produced from this file by the Crowdin pipeline. Keys are grouped by
 # view/feature; shared strings live under [common].
+copy = "Copy"
+confirm = "Confirm"
 
 [common]
 inviteMember = "Invite member"
+cancel = "Cancel"
+save = "Save"
+done = "Done"
+loading = "Loading…"
 
 [users]
+rowActions = "Actions for {{name}}"
+teamActions = "Team actions"
+suspended = "Suspended"
+locked = "Locked"
+showAll = "Show all {{count}}"
+showLess = "Show less"
+subtitle2 = "Your people, teams, and access levels."
+learnMore = "Learn more about roles and access."
+you = "(you)"
+roleFor = "Role for {{name}}"
 title = "Users"
 subtitle = "The people in your organization and the access they hold — roles, status and security controls."
 
@@ -20,6 +36,7 @@ home = "Home"
 editor = "Editor"
 users = "Users"
 sources = "Sources"
+integrations = "Integrations"
 agent-builder = "Agent Builder"
 policies = "Policies"
 pipelines = "Pipelines"
@@ -103,7 +120,7 @@ accountFallback = "Account"
 changePhoto = "Change photo"
 fullName = "Full name"
 namePlaceholder = "Your name"
-email = "Email"
+email = "Email address"
 emailHelper = "Used for sign-in and notification delivery."
 emailPlaceholder = "you@company.com"
 
@@ -836,9 +853,40 @@ lastActive = "Last active"
 actionsFor = "Actions for {{name}}"
 changeRole = "Change role"
 suspend = "Suspend"
+reinstate = "Reinstate"
 remove = "Remove from org"
+portalAccess = "Portal access"
+grantPortal = "Grant portal access"
+revokePortal = "Revoke portal access"
 
 [users.invite]
+createTitle = "Create account"
+createSubtitle = "Create a self-hosted account with a password or SSO."
+create = "Create account"
+method = "How to add them"
+methodEmail = "Invite by email"
+methodDirect = "Create account directly"
+username = "Username"
+usernamePlaceholder = "jsmith"
+usernameError = "Username must be at least 3 characters"
+password = "Password"
+passwordError = "Password must be at least 8 characters"
+authType = "Sign-in method"
+authWeb = "Password"
+authOauth = "OAuth2 / SSO"
+authSaml = "SAML 2.0"
+forceChange = "Require a password change on first login"
+forceMfa = "Require MFA setup on first login"
+action = "Invite people"
+title = "Invite people"
+subtitle2 = "They'll get an email to join your Stirling workspace."
+send2 = "Send invite"
+emailPlaceholder2 = "name@company.com"
+team = "Team"
+roleHint = "Does the work. Gets the Editor; grant the Processor to run pipelines, agents, and the API."
+access = "Access"
+editorDesc = "Edit PDFs in the Stirling PDF Editor. Everyone gets this."
+processorDesc = "The governance surface, run pipelines, agents, and the API."
 subtitle = "They'll receive an email to join your organization."
 cancel = "Cancel"
 send = "Send invite"
@@ -1893,3 +1941,155 @@ eyebrow = "Enterprise only"
 title = "The procurement track opens with Enterprise"
 description = "Trial keys, committed-volume quotes, the one-signature agreement, payment, and your document ledger all live here once you start an enterprise evaluation."
 talkToSales = "Talk to sales"
+
+
+[users.portalAccess]
+admin = "Admin"
+role = "Team owner"
+granted = "Granted"
+none = "No access"
+
+[integrations]
+title = "Integrations"
+subtitle = "Stored API and MCP connections for the workspace. (S3 connections live in Sources.)"
+add = "Add integration"
+
+[integrations.empty]
+title = "No integrations yet"
+description = "Add an API or MCP connection to share it with your workspace."
+
+[integrations.table]
+name = "Name"
+type = "Type"
+access = "Who can use it"
+status = "Status"
+readOnly = "Read-only"
+actionsFor = "Actions for {{name}}"
+
+[integrations.status]
+active = "Active"
+disabled = "Disabled"
+
+[integrations.scope]
+user = "Personal"
+team = "Team"
+server = "Whole organization"
+
+[integrations.actions]
+edit = "Edit"
+share = "Share…"
+delete = "Delete"
+
+[integrations.form]
+type = "Type"
+name = "Name"
+namePlaceholder = "A label you'll recognize"
+scope = "Who can use it"
+nameRequired = "Name is required"
+fieldRequired = "{{field}} is required"
+keepSecret = "Leave blank to keep the saved value"
+enabled = "Enabled"
+enabledHint = "Turn off to keep the config without letting anyone use it."
+addTitle = "Add integration"
+addSubtitle = "Store an API or MCP connection for the workspace."
+editTitle = "Edit integration"
+editSubtitle = "Update this connection."
+
+[integrations.share]
+title = "Share access"
+person = "Person"
+pickPerson = "Select a person…"
+permission = "Permission"
+use = "Use"
+manage = "Manage"
+add = "Share"
+remove = "Remove"
+emptyTitle = "Not shared yet"
+emptyDescription = "Share this config with people to let them use it."
+
+[integrations.delete]
+title = "Delete integration"
+body = "This permanently removes the connection and everyone's access to it. This cannot be undone."
+confirm = "Delete"
+
+[users.role]
+orgOwner = "Org Owner"
+teamOwner = "Team Owner"
+member = "Member"
+guest = "Guest"
+
+[users.cap]
+editor = "Editor"
+processor = "Processor"
+addProcessor = "+ Processor"
+approver = "Approves policy"
+
+[users.group]
+org = "Organization"
+orgDesc = "Owners with org-wide authority and policy approval"
+owners = "{{count}} owner"
+team = "{{name}} team"
+teamMeta = "{{count}} people"
+ledBy = "led by {{owner}}"
+addToTeam = "Add to team"
+guests = "Guests"
+guestsDesc = "External collaborators, scoped to what you shared. Editor only."
+guestCount = "{{count}} guest"
+
+[users.newTeam]
+action = "+ New team"
+title = "New team"
+subtitle = "Group people under a Team Owner who manages their access."
+create = "Create team"
+name = "Team name"
+namePlaceholder = "e.g. Finance"
+owner = "Team Owner"
+ownerHelper = "Every team has a leader. They'll be invited as Team Owner, with the Processor on, and can add the rest. You can reassign later."
+ownerPlaceholder = "owner@company.com"
+nameRequired = "Team name is required"
+emailError = "Enter a valid email address"
+ownerFailed = "Team created, but the owner couldn't be invited. Assign one from the roster."
+
+[users.action]
+resetPw = "Reset password"
+move = "Move to team"
+suspend = "Suspend"
+reinstate = "Reinstate"
+unlock = "Unlock account"
+disableMfa = "Reset MFA"
+remove = "Remove from org"
+rename = "Rename team"
+deleteTeam = "Delete team"
+
+[users.confirm]
+disableMfaTitle = "Reset MFA"
+disableMfaBody = "Remove {{name}}'s MFA enrolment? They'll set it up again on next login if required."
+removeTitle = "Remove member"
+removeBody = "Permanently remove {{name}} from the organization? This cannot be undone."
+deleteTeamTitle = "Delete team"
+deleteTeamBody = "Delete the {{name}} team? Members move to the default team. (Teams that still own configs can't be deleted.)"
+
+[users.resetPw]
+title = "Reset password"
+apply = "Reset password"
+generate = "Generate a secure password"
+newPassword = "New password"
+copyHint = "Copy this now - it won't be shown again."
+copied = "Copied to clipboard"
+regen = "Regenerate"
+confirm = "Confirm password"
+forceChange = "Require a password change on next login"
+email = "Email the user about the reset"
+includePw = "Include the new password in the email"
+tooShort = "Password must be at least 8 characters"
+mismatch = "Passwords do not match"
+
+[users.moveTeam]
+title = "Move to team"
+apply = "Move"
+team = "Team"
+
+[users.renameTeam]
+title = "Rename team"
+apply = "Rename"
+name = "Team name"

@@ -139,6 +139,24 @@ function localAuthHeader(): Record<string, string> {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+/** POST an application/x-www-form-urlencoded body (Spring @RequestParam endpoints). */
+async function localForm<T>(
+  path: string,
+  params: Record<string, string>,
+  method: "POST" | "PUT" | "DELETE" = "POST",
+): Promise<T> {
+  const res = await fetch(path, {
+    method,
+    headers: { Accept: "application/json", ...localAuthHeader() },
+    body: new URLSearchParams(params),
+  });
+  if (res.status === 401) {
+    clearStoredToken();
+    window.dispatchEvent(new CustomEvent("jwt-available"));
+  }
+  return unwrap<T>(res);
+}
+
 async function localJson<T>(
   path: string,
   options: HttpRequestOptions = {},
@@ -209,6 +227,7 @@ export const apiClient = {
   /** Local backend (this instance). Spring admin bearer auto-attached. */
   local: {
     json: localJson,
+    form: localForm,
   },
   /** Hosted SaaS Java. Admin's Supabase JWT auto-attached. */
   saas: {

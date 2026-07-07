@@ -71,6 +71,12 @@ class UserServiceMoreTest {
     @Mock private FileShareRepository fileShareRepository;
     @Mock private FileShareAccessRepository fileShareAccessRepository;
 
+    @Mock
+    private stirling.software.proprietary.integration.repository.IntegrationConfigRepository
+            integrationConfigRepository;
+
+    @Mock private TeamMembershipService teamMembershipService;
+
     @InjectMocks private UserService userService;
 
     @AfterEach
