@@ -12,7 +12,6 @@ import {
   ChevronDownIcon,
 } from "@portal/components/icons";
 import { NotificationsDropdown } from "@portal/components/NotificationsDropdown";
-import { MocksToggle } from "@portal/components/MocksToggle";
 import "@portal/components/Header.css";
 
 function ThemeToggle() {
@@ -143,7 +142,6 @@ export function Header() {
       </Button>
 
       <div className="portal-header__right">
-        <MocksToggle />
         <ThemeToggle />
         <NotificationsDropdown />
         <TierSwitcher />

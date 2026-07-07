@@ -1,10 +1,10 @@
 # Portal data layer — mock backend & handover
 
-The portal is **mock-driven**. Every screen fetches real HTTP requests through a
-thin typed API layer; in dev and Storybook those requests are intercepted by
-[MSW](https://mswjs.io/) and answered with fixture data. Pointing the portal at a
-**real backend** is a matter of *not registering MSW* — no component or API-layer
-code changes.
+The mocks here are for **Storybook and tests only** — the running portal always
+hits the real network. Every screen fetches real HTTP requests through a thin
+typed API layer; in Storybook (via `msw-storybook-addon`, see
+`.storybook/preview.tsx`) and in vitest those requests are intercepted by
+[MSW](https://mswjs.io/) and answered with fixture data.
 
 ## The three layers
 
@@ -34,15 +34,13 @@ non-2xx). Views consume via `useAsync()` + `useSectionFlags()` (`hooks/useAsync.
   **demo shells** (local state, no submit endpoint yet) — wire these to real
   POSTs during backend integration.
 
-## Swapping in a real backend
+## Implementing a surface against the real backend
 
-1. Stop registering MSW (`mocks/browser.ts` / the dev bootstrap) — or gate it on
-   an env flag (it's already dev-only via `import.meta.env.DEV`).
-2. Make `httpJson` hit your API origin (add a `baseURL`/proxy in `api/http.ts`).
-3. Match the response shapes in `api/<surface>.ts` (the exported types are the spec).
-4. Delete `mocks/` once parity is confirmed. Optionally relocate the types from
-   `mocks/<surface>.ts` into `api/` (or a `types/` module) so they no longer live
-   beside fixtures — purely cosmetic; the `api/` re-exports already shield consumers.
+1. Make `httpJson` hit your API origin (add a `baseURL`/proxy in `api/http.ts`)
+   and match the response shapes in `api/<surface>.ts` (the exported types are
+   the spec).
+2. Keep the surface's handler in `mocks/handlers/` in sync — Storybook and the
+   tests still answer through it.
 
 ## Endpoint catalogue
 

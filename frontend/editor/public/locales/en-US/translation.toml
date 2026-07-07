@@ -7101,14 +7101,6 @@ models = "Models"
 security = "Security"
 storage = "Storage"
 
-[portal.mocks.label]
-off = "Mocks OFF"
-on = "Mocks ON"
-
-[portal.mocks.tooltip]
-off = "Mock data OFF — fetch calls go to the real network. Click to re-enable mocks (reloads the page)."
-on = "Mock data ON — fetch calls are intercepted by MSW. Click to switch to the real network (reloads the page)."
-
 [portal.nav]
 agent-builder = "Agent Builder"
 components = "Components"

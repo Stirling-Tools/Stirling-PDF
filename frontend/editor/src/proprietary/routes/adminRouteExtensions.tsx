@@ -3,12 +3,8 @@ import type { ReactElement } from "react";
 import { Route } from "react-router-dom";
 
 // Lazy so the portal is its own chunk, never in the editor's initial bundle;
-// only fetched when an admin navigates to /portal. Mocks start first so the
-// worker is ready before the portal's first fetch.
+// only fetched when an admin navigates to /portal.
 const PortalApp = lazy(async () => {
-  const { startPortalMocksIfEnabled } =
-    await import("@portal/mocks/startIfEnabled");
-  await startPortalMocksIfEnabled();
   const m = await import("@portal/PortalApp");
   return { default: m.PortalApp };
 });

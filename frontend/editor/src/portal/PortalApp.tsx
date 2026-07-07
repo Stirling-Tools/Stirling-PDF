@@ -130,8 +130,8 @@ export function PortalApp() {
           <AuthProvider mode="spring">
             <LinkProvider initialState="unlinked">
               {/* TierProvider sits INSIDE LinkProvider so it can derive the tier
-                from the real link/subscription state when MSW mocks are off. */}
-              <TierProvider initialTier="pro">
+                from the real link/subscription state. */}
+              <TierProvider>
                 <UIProvider>
                   <GlobalShortcuts />
                   <AuthGate>

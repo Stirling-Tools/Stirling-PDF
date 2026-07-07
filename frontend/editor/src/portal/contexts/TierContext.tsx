@@ -1,12 +1,10 @@
 import {
   createContext,
   useContext,
-  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
-import { readMocksPreference } from "@portal/mocks/preference";
 import { useLink, type LinkState } from "@portal/contexts/LinkContext";
 
 export type Tier = "free" | "pro" | "enterprise";
@@ -26,9 +24,9 @@ export const TIER_INFO: Record<Tier, TierInfo> = {
 
 interface TierContextValue {
   tier: Tier;
-  /** No-op when MSW mocks are off (tier is derived from real link state). */
+  /** No-op when the tier is derived from real link state (i.e. in the app). */
   setTier: (tier: Tier) => void;
-  /** True when the tier value is derived from the real wallet/link, not the dropdown. */
+  /** True when the tier value is derived from the real wallet/link, not pinned. */
   isDerived: boolean;
 }
 
@@ -47,36 +45,29 @@ function tierFromLinkState(linkState: LinkState): Tier {
 
 export function TierProvider({
   children,
-  initialTier = "pro",
+  initialTier,
 }: {
   children: ReactNode;
+  /**
+   * Pins the tier to a fixed, locally settable value. Storybook and demo
+   * surfaces pass this to stage a specific tier; the app omits it, so the
+   * tier is always derived from the real link/subscription state.
+   */
   initialTier?: Tier;
 }) {
-  // Mocks toggling reloads the page (see MocksToggle), so a single read at mount
-  // is correct — the preference can't change without us remounting.
-  const mocksOn = useMemo(() => readMocksPreference(), []);
+  const pinned = initialTier !== undefined;
   const { linkState } = useLink();
-
-  const [mockTier, setMockTier] = useState<Tier>(initialTier);
-
-  // When mocks are off, mirror the real link state into the tier so any
-  // component still keyed on `tier` (sidebar plan badge, gated panels) stays
-  // consistent with the wallet. When mocks are on, the dropdown wins.
-  useEffect(() => {
-    if (!mocksOn) {
-      setMockTier(tierFromLinkState(linkState));
-    }
-  }, [mocksOn, linkState]);
+  const [pinnedTier, setPinnedTier] = useState<Tier>(initialTier ?? "free");
 
   const value = useMemo<TierContextValue>(
     () => ({
-      tier: mocksOn ? mockTier : tierFromLinkState(linkState),
-      // Setter is a no-op when mocks are off — UI controls can disable themselves
+      tier: pinned ? pinnedTier : tierFromLinkState(linkState),
+      // Setter is a no-op when derived — UI controls can disable themselves
       // via `isDerived`, but even if one slips through, it has no effect.
-      setTier: mocksOn ? setMockTier : () => {},
-      isDerived: !mocksOn,
+      setTier: pinned ? setPinnedTier : () => {},
+      isDerived: !pinned,
     }),
-    [mocksOn, mockTier, linkState],
+    [pinned, pinnedTier, linkState],
   );
 
   return <TierContext.Provider value={value}>{children}</TierContext.Provider>;
