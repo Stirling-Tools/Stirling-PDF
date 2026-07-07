@@ -24,6 +24,11 @@ public class CacheConfig {
         this.applicationProperties = applicationProperties;
     }
 
+    /** Short-TTL caches for portal views derived from audit data (avoid per-load DB scans). */
+    private static final String PORTAL_INFRA_AUDIT_CACHE = "portalInfraAuditLog";
+
+    private static final String PORTAL_DOCUMENTS_CACHE = "portalDocuments";
+
     @Bean
     public CacheManager cacheManager() {
         int keyRetentionDays = applicationProperties.getSecurity().getJwt().getKeyRetentionDays();
@@ -33,6 +38,18 @@ public class CacheConfig {
                         .maximumSize(1000) // Make configurable?
                         .expireAfterWrite(Duration.ofDays(keyRetentionDays))
                         .recordStats());
+        // Portal audit view is refreshed frequently but must not re-scan the DB on every load;
+        // a single entry with a 30s TTL keeps it near-live while shedding the query load.
+        // One entry per scope: "server" (admins) plus one per team ("team:<id>").
+        for (String cacheName : new String[] {PORTAL_INFRA_AUDIT_CACHE, PORTAL_DOCUMENTS_CACHE}) {
+            cacheManager.registerCustomCache(
+                    cacheName,
+                    Caffeine.newBuilder()
+                            .maximumSize(256)
+                            .expireAfterWrite(Duration.ofSeconds(30))
+                            .recordStats()
+                            .build());
+        }
         return cacheManager;
     }
 }

@@ -165,6 +165,24 @@ async function localJson<T>(
   return unwrap<T>(res);
 }
 
+/** Same-origin GET returning a binary Blob (e.g. a CSV/JSON export download). */
+async function localBlob(
+  path: string,
+  options: HttpRequestOptions = {},
+): Promise<Blob> {
+  const res = await fetch(path, {
+    method: options.method ?? "GET",
+    headers: { ...localAuthHeader(), ...options.headers },
+    signal: options.signal,
+  });
+  if (res.status === 401) {
+    clearStoredToken();
+    window.dispatchEvent(new CustomEvent("jwt-available"));
+  }
+  if (!res.ok) throw new HttpError(res.status, res.statusText, null);
+  return res.blob();
+}
+
 // ────────────────────────────────────────────────────────────────────────────
 // saas — hosted SaaS Java, admin's Supabase JWT
 // ────────────────────────────────────────────────────────────────────────────
@@ -201,6 +219,24 @@ async function saasJson<T>(
   return unwrap<T>(res);
 }
 
+/** SaaS GET returning a binary Blob, with the Supabase JWT attached. */
+async function saasBlob(
+  path: string,
+  options: HttpRequestOptions = {},
+): Promise<Blob> {
+  const base = saasBaseUrl();
+  if (!base) throw new SaasUnconfiguredError();
+  const token = await getSaasAccessToken();
+  if (!token) throw new SaasNotLinkedError();
+  const res = await fetch(`${base}${path}`, {
+    method: options.method ?? "GET",
+    headers: { Authorization: `Bearer ${token}`, ...options.headers },
+    signal: options.signal,
+  });
+  if (!res.ok) throw new HttpError(res.status, res.statusText, null);
+  return res.blob();
+}
+
 // ────────────────────────────────────────────────────────────────────────────
 // Exported API client
 // ────────────────────────────────────────────────────────────────────────────
@@ -209,10 +245,12 @@ export const apiClient = {
   /** Local backend (this instance). Spring admin bearer auto-attached. */
   local: {
     json: localJson,
+    blob: localBlob,
   },
   /** Hosted SaaS Java. Admin's Supabase JWT auto-attached. */
   saas: {
     json: saasJson,
+    blob: saasBlob,
     /** True when VITE_SAAS_API_URL is set. Doesn't check session liveness. */
     isConfigured: (): boolean => Boolean(saasBaseUrl()),
   },

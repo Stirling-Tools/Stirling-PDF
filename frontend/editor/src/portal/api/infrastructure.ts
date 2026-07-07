@@ -90,9 +90,41 @@ export async function fetchStorage(tier: Tier): Promise<StorageConfig> {
   );
 }
 
-/** GET /v1/infrastructure/audit-log?tier=… */
+/**
+ * GET /api/v1/proprietary/ui-data/infrastructure/audit-log?tier=…
+ *
+ * Real backend endpoint (Enterprise): serves recent audit_events mapped to the
+ * tab's shape, cached server-side. The backend scopes the result to the caller:
+ *
+ *   - self-hosted / SaaS admin → whole-server view
+ *   - SaaS team leader         → only their own team's events
+ *
+ * In SaaS the portal authenticates with the Supabase JWT (apiClient.saas) so the
+ * backend can resolve the caller's team; self-hosted uses the same path via
+ * apiClient.local (Spring admin bearer). `tier` is accepted for symmetry but
+ * ignored server-side - the audit log isn't tier-scoped.
+ */
 export async function fetchAuditLog(tier: Tier): Promise<AuditLogResponse> {
-  return apiClient.local.json<AuditLogResponse>(
-    `/v1/infrastructure/audit-log${q(tier)}`,
-  );
+  const path = `/api/v1/proprietary/ui-data/infrastructure/audit-log${q(tier)}`;
+  return apiClient.saas.isConfigured()
+    ? apiClient.saas.json<AuditLogResponse>(path)
+    : apiClient.local.json<AuditLogResponse>(path);
+}
+
+/**
+ * GET /api/v1/proprietary/ui-data/audit-export — download the audit log as a
+ * CSV/JSON blob. This endpoint is admin-only and whole-server (no team scope),
+ * so the UI only offers it in the full-server view. Routed via the same
+ * local/saas client as {@link fetchAuditLog} so SaaS hits the SaaS backend.
+ */
+export async function exportAuditLog(
+  format: "csv" | "json",
+  fields: string,
+): Promise<Blob> {
+  const path = `/api/v1/proprietary/ui-data/audit-export?format=${format}&fields=${encodeURIComponent(
+    fields,
+  )}`;
+  return apiClient.saas.isConfigured()
+    ? apiClient.saas.blob(path)
+    : apiClient.local.blob(path);
 }

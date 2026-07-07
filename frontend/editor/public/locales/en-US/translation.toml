@@ -6555,7 +6555,9 @@ beforeHelper = "header against your signing secret before trusting a payload. SD
 beforeSignature = "Verify the"
 
 [portal.documents]
-subtitle = "Review and approve documents moving through your pipelines."
+exportCsv = "Export CSV"
+search = "Search by filename, ID..."
+subtitle = "Every document your org has processed, with its full processing record. Content access is request-gated."
 title = "Documents"
 
 [portal.documents.audit]
@@ -6593,42 +6595,38 @@ value = "Value"
 
 [portal.documents.filters]
 all = "All"
-archived = "Archived"
 ariaLabel = "Filter documents by status"
-needsReview = "Needs review"
+flagged = "Flagged"
+inReview = "In review"
 processed = "Processed"
 
 [portal.documents.overview]
-confidence = "Confidence"
-fieldsExtracted = "Fields extracted"
-received = "Received"
-source = "Source"
+action = "Pipeline / Action"
+product = "Product"
+received = "Time"
 status = "Status"
 type = "Type"
+user = "User"
 
 [portal.documents.queue.empty]
 description = "As sources feed documents into your pipelines they'll appear here for review."
 title = "No documents in the queue"
 
-[portal.documents.summary]
-avgConfidence = "Avg confidence"
-inQueue = "In queue"
-needsReview = "Needs review"
-processedToday = "Processed today"
-
 [portal.documents.table]
+auto = "Auto"
+editorAction = "Editor"
 empty = "No documents match this filter."
+rowActions = "Row actions"
 sensitiveLabel = "Sensitive"
 sensitiveTitle = "Sensitive — access required"
 
 [portal.documents.table.columns]
-confidence = "Confidence"
-fields = "Fields"
-name = "Name"
-source = "Source"
+action = "Pipeline / Action"
+document = "Document"
+product = "Product"
 status = "Status"
 time = "Time"
-type = "Type"
+user = "User"
 
 [portal.editorAdmin]
 subtitle = "Deploy the Stirling PDF Editor, pair self-hosted instances to your org, and operate the running fleet — targets, health, credentials, and offline activation in one place."
@@ -6840,12 +6838,31 @@ actor = "Actor"
 event = "Event"
 latency = "Latency"
 status = "Status"
-target = "Target"
+target = "Resource"
 timestamp = "Timestamp"
 
 [portal.infrastructure.audit.empty]
 description = "Workspace activity will appear here as it happens."
 title = "No audit events"
+
+[portal.infrastructure.audit.export]
+cancel = "Cancel"
+error = "Export failed. Please try again."
+exportButton = "Export"
+exporting = "Exporting…"
+fieldsLegend = "Columns"
+format = "Format"
+open = "Export"
+subtitle = "Download audit events as CSV or JSON. Choose which columns to include."
+title = "Export audit log"
+
+[portal.infrastructure.audit.export.fields]
+date = "Date"
+documentName = "Document name"
+ipAddress = "IP address"
+outcome = "Outcome"
+tool = "Tool"
+username = "Username"
 
 [portal.infrastructure.audit.filters]
 all = "All"
@@ -6854,6 +6871,10 @@ config = "Config"
 elevation = "Elevation"
 processing = "Processing"
 security = "Security"
+
+[portal.infrastructure.audit.forbidden]
+description = "The audit log is available to team leads and admins. Ask your team lead or an admin for access."
+title = "You don't have access"
 
 [portal.infrastructure.audit.metrics]
 config = "Config"

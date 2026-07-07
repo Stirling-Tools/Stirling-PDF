@@ -10,6 +10,13 @@
 /* Header */
 .portal-documents__head {
   display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.portal-documents__head-text {
+  display: flex;
   flex-direction: column;
   gap: 0.25rem;
 }
@@ -36,25 +43,50 @@
   gap: 1.25rem;
 }
 
+/* Toolbar: filter pills left, filename search right */
+.portal-documents__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.portal-documents__search {
+  width: 18rem;
+  max-width: 100%;
+}
+
 .portal-documents__table-skeleton {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-/* Table cells */
-.portal-documents__name-cell {
+/* Document cell: name + chips + descriptive sub-line */
+.portal-documents__doc-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.portal-documents__doc-head {
   display: flex;
   align-items: center;
-  gap: 0.4375rem;
+  gap: 0.5rem;
+  flex-wrap: wrap;
   min-width: 0;
 }
 
 .portal-documents__name {
   font-weight: 600;
   color: var(--color-text-1);
-  overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+.portal-documents__note {
+  font-size: 0.8125rem;
+  color: var(--color-text-4);
 }
 
 .portal-documents__lock {
@@ -68,32 +100,34 @@
   color: var(--color-text-4);
 }
 
-.portal-documents__mono {
-  font-family: var(--font-mono);
+.portal-documents__action {
   font-size: 0.8125rem;
   color: var(--color-text-2);
 }
 
-.portal-documents__confidence {
-  display: flex;
+.portal-documents__editor-action {
+  font-size: 0.8125rem;
+  font-style: italic;
+  color: var(--color-text-4);
+}
+
+.portal-documents__kebab {
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-4);
+  cursor: pointer;
 }
 
-.portal-documents__confidence-pct {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  white-space: nowrap;
-}
-
-.portal-documents__confidence-pct--success {
-  color: var(--color-green-dark);
-}
-.portal-documents__confidence-pct--warning {
-  color: var(--color-amber-dark);
-}
-.portal-documents__confidence-pct--danger {
-  color: var(--color-red);
+.portal-documents__kebab:hover {
+  background: rgba(127, 127, 127, 0.14);
+  color: var(--color-text-2);
 }
 
 /* Drawer body */
