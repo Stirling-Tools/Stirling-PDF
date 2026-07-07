@@ -266,6 +266,11 @@ export const useToolOperation = <TParams>(
               typeof config.endpoint === "function"
                 ? config.endpoint(params)
                 : config.endpoint;
+            if (!endpoint) {
+              throw new Error(
+                "This operation has no backend endpoint and cannot be executed directly.",
+              );
+            }
 
             const response = await apiClient.post(endpoint, formData, {
               responseType: "blob",

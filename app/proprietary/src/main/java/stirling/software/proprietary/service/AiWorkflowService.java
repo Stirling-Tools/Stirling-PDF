@@ -68,7 +68,6 @@ import tools.jackson.databind.ObjectMapper;
 public class AiWorkflowService {
 
     private static final String DOCUMENTS_ENDPOINT = "/api/v1/documents";
-    private static final String PDF_TO_MARKDOWN_ENDPOINT = "/api/v1/convert/pdf/markdown";
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final AiEngineClient aiEngineClient;
@@ -196,7 +195,6 @@ public class AiWorkflowService {
         return switch (response.getOutcome()) {
             case NEED_CONTENT -> onNeedContent(response, filesById, request, listener);
             case NEED_INGEST -> onNeedIngest(response, filesById, request, listener);
-            case CONVERT_MARKDOWN -> onConvertMarkdown(response, filesById, listener);
             case TOOL_CALL -> onToolCall(response, filesById, listener);
             case PLAN -> onPlan(response, filesById, request, listener);
             case ANSWER -> onAnswer(response, filesById, request, listener);
@@ -331,77 +329,6 @@ public class AiWorkflowService {
         nextRequest.setConversationHistory(request.getConversationHistory());
         nextRequest.setResumeWith(response.getResumeWith());
         return new WorkflowState.Pending(nextRequest);
-    }
-
-    /**
-     * Deterministically convert each requested PDF to Markdown via the {@code
-     * /convert/pdf/markdown} endpoint (backed by {@code PdfMarkdownConverter}) and return the
-     * {@code .md} file(s) as a completed result. No AI resume — the conversion output is the final
-     * answer.
-     */
-    private WorkflowState onConvertMarkdown(
-            AiWorkflowResponse response,
-            Map<String, MultipartFile> filesById,
-            ProgressListener listener) {
-        List<AiFile> filesToConvert = response.getFilesToIngest();
-        if (filesToConvert == null || filesToConvert.isEmpty()) {
-            return new WorkflowState.Terminal(
-                    cannotContinue(
-                            "AI engine requested markdown conversion without listing any files."));
-        }
-
-        try {
-            List<Resource> resultFiles = new ArrayList<>();
-            List<Integer> origins = new ArrayList<>();
-            List<String> inputNames = new ArrayList<>();
-            for (int i = 0; i < filesToConvert.size(); i++) {
-                AiFile file = filesToConvert.get(i);
-                MultipartFile multipartFile = filesById.get(file.getId());
-                if (multipartFile == null) {
-                    return new WorkflowState.Terminal(
-                            cannotContinue(
-                                    "AI engine requested markdown conversion for unknown file: "
-                                            + file.getName()));
-                }
-                listener.onProgress(
-                        AiWorkflowProgressEvent.executingTool(
-                                PDF_TO_MARKDOWN_ENDPOINT, i + 1, filesToConvert.size()));
-                Resource input = toResource(multipartFile);
-                PipelineDefinition definition =
-                        new PipelineDefinition(
-                                "convert-markdown",
-                                List.of(new PipelineStep(PDF_TO_MARKDOWN_ENDPOINT, Map.of())),
-                                null);
-                PolicyExecutionResult result =
-                        policyExecutor.execute(
-                                definition,
-                                PolicyInputs.of(List.of(input)),
-                                PolicyProgressListener.NOOP);
-                // Each conversion runs on one input, so every output traces back to file i.
-                for (Resource output : result.files()) {
-                    resultFiles.add(output);
-                    origins.add(i);
-                }
-                inputNames.add(multipartFile.getOriginalFilename());
-            }
-            return new WorkflowState.Terminal(
-                    buildCompletedResponse(null, resultFiles, origins, inputNames, null));
-        } catch (InternalApiTimeoutException e) {
-            log.error("PDF to Markdown conversion timed out: {}", e.getMessage());
-            return new WorkflowState.Terminal(
-                    cannotContinue(toolTimeoutMessage(PDF_TO_MARKDOWN_ENDPOINT, e)));
-        } catch (Exception e) {
-            AiWorkflowResponse limit = paygLimitResponseOrNull(e);
-            if (limit != null) {
-                log.info(
-                        "AI markdown conversion blocked by downstream entitlement gate ({})",
-                        limit.getErrorCode());
-                return new WorkflowState.Terminal(limit);
-            }
-            log.error("Failed to convert PDF to Markdown: {}", e.getMessage(), e);
-            return new WorkflowState.Terminal(
-                    cannotContinue(toolFailureMessage(PDF_TO_MARKDOWN_ENDPOINT, e)));
-        }
     }
 
     private Resource toResource(MultipartFile file) throws IOException {
