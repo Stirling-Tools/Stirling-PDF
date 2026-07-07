@@ -9,8 +9,16 @@ import {
   ToolOperationConfig,
   ToolType,
 } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  objectToFormData,
+  type ToolApiParams,
+  type ToolEndpoint,
+} from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import { useToolResources } from "@app/hooks/tools/shared/useToolResources";
+
+const ENDPOINT = "/api/v1/misc/ocr-pdf" satisfies ToolEndpoint;
+type OCRApiParams = ToolApiParams[typeof ENDPOINT];
 
 // Helper: get MIME type based on file extension
 function getMimeType(filename: string): string {
@@ -48,28 +56,49 @@ function stripExt(name: string): string {
   return i > 0 ? name.slice(0, i) : name;
 }
 
+// Convert the tool's UI parameters into the ocr-pdf request body. The return
+// type is the generated backend model, so a spec change that renames or drops a
+// field breaks the build here.
+export const ocrToApiParams = (parameters: OCRParameters): OCRApiParams => {
+  const options = parameters.additionalOptions || [];
+  return {
+    languages: parameters.languages,
+    ocrType: parameters.ocrType as OCRApiParams["ocrType"],
+    ocrRenderType: parameters.ocrRenderType as OCRApiParams["ocrRenderType"],
+    sidecar: options.includes("sidecar"),
+    deskew: options.includes("deskew"),
+    clean: options.includes("clean"),
+    cleanFinal: options.includes("cleanFinal"),
+    removeImagesAfter: options.includes("removeImagesAfter"),
+  };
+};
+
+// Reconstruct the tool's UI parameters from an ocr-pdf request body, so a stored
+// or AI-authored step can be re-rendered in the settings UI.
+export const ocrFromApiParams = (
+  apiParams: OCRApiParams,
+): Partial<OCRParameters> => {
+  const additionalOptions: string[] = [];
+  if (apiParams.sidecar) additionalOptions.push("sidecar");
+  if (apiParams.deskew) additionalOptions.push("deskew");
+  if (apiParams.clean) additionalOptions.push("clean");
+  if (apiParams.cleanFinal) additionalOptions.push("cleanFinal");
+  if (apiParams.removeImagesAfter) additionalOptions.push("removeImagesAfter");
+
+  return {
+    languages: apiParams.languages ?? defaultParameters.languages,
+    ocrType: apiParams.ocrType,
+    ocrRenderType: apiParams.ocrRenderType ?? defaultParameters.ocrRenderType,
+    additionalOptions,
+  };
+};
+
 // Static function that can be used by both the hook and automation executor
 export const buildOCRFormData = (
   parameters: OCRParameters,
   file: File,
-): FormData => {
-  const formData = new FormData();
-  formData.append("fileInput", file);
-  parameters.languages.forEach((lang) => formData.append("languages", lang));
-  formData.append("ocrType", parameters.ocrType);
-  formData.append("ocrRenderType", parameters.ocrRenderType);
-
-  const options = parameters.additionalOptions || [];
-  formData.append("sidecar", options.includes("sidecar").toString());
-  formData.append("deskew", options.includes("deskew").toString());
-  formData.append("clean", options.includes("clean").toString());
-  formData.append("cleanFinal", options.includes("cleanFinal").toString());
-  formData.append(
-    "removeImagesAfter",
-    options.includes("removeImagesAfter").toString(),
-  );
-  return formData;
-};
+): FormData =>
+  objectToFormData(ocrToApiParams(parameters), { fileInput: file });
 
 // Static response handler for OCR - can be used by automation executor
 export const ocrResponseHandler = async (
@@ -125,8 +154,10 @@ export const ocrResponseHandler = async (
 export const ocrOperationConfig = {
   toolType: ToolType.singleFile,
   buildFormData: buildOCRFormData,
+  toApiParams: ocrToApiParams,
+  fromApiParams: ocrFromApiParams,
   operationType: "ocr",
-  endpoint: "/api/v1/misc/ocr-pdf",
+  endpoint: ENDPOINT,
   defaultParameters,
 } as const;
 

@@ -3,8 +3,15 @@ import { StirlingFile } from "@app/types/fileContext";
 import type { ResponseHandler } from "@app/utils/toolResponseProcessor";
 import { ToolId } from "@app/types/toolId";
 import type { ProcessingProgress } from "@app/hooks/tools/shared/useToolState";
+import type { ToolApiRequest, ToolEndpoint } from "@app/types/toolApiTypes";
 
 export type { ProcessingProgress, ResponseHandler };
+
+/**
+ * A tool operation's backend endpoint, checked against the generated ToolEndpoint
+ * set, or `null` when the operation has no backend endpoint.
+ */
+export type ToolOperationEndpoint = ToolEndpoint | null;
 
 export enum ToolType {
   singleFile,
@@ -73,6 +80,19 @@ interface BaseToolOperationConfig<TParams> {
   defaultParameters?: TParams;
 
   /**
+   * Typed frontend params -> backend request model. When a tool provides this,
+   * it is the spec-checked source of truth for the request body and its
+   * buildFormData is derived from it via objectToFormData.
+   */
+  toApiParams?(params: TParams): ToolApiRequest;
+
+  /**
+   * Backend request model -> partial frontend params, so a stored API call
+   * can be re-hydrated into this tool's settings UI.
+   */
+  fromApiParams?(apiParams: ToolApiRequest): Partial<TParams>;
+
+  /**
    * For custom tools: if true, success implies all input files were successfully processed.
    * Use this for tools like Automate or Merge where Many-to-One relationships exist
    * and exact input-output mapping is difficult.
@@ -89,8 +109,12 @@ export interface SingleFileToolOperationConfig<
   /** Builds FormData for API request. */
   buildFormData: (params: TParams, file: File) => FormData;
 
-  /** API endpoint for the operation. Can be static string or function for dynamic routing. */
-  endpoint: string | ((params: TParams) => string);
+  /**
+   * API endpoint for the operation. Can be static or a function for dynamic routing.
+   */
+  endpoint:
+    | ToolOperationEndpoint
+    | ((params: TParams) => ToolOperationEndpoint);
 
   customProcessor?: undefined;
 }
@@ -107,8 +131,12 @@ export interface MultiFileToolOperationConfig<
   /** Builds FormData for API request. */
   buildFormData: (params: TParams, files: File[]) => FormData;
 
-  /** API endpoint for the operation. Can be static string or function for dynamic routing. */
-  endpoint: string | ((params: TParams) => string);
+  /**
+   * API endpoint for the operation. Can be static or a function for dynamic routing.
+   */
+  endpoint:
+    | ToolOperationEndpoint
+    | ((params: TParams) => ToolOperationEndpoint);
 
   customProcessor?: undefined;
 }
