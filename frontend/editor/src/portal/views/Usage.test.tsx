@@ -1,5 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
+import { MantineProvider } from "@mantine/core";
+import type { ReactElement } from "react";
+
+// Usage renders Mantine-backed @app/ui components (e.g. the "Manage Payment"
+// Button in the subscribed header), which need a MantineProvider in the tree.
+const renderUsage = (ui: ReactElement) =>
+  render(<MantineProvider>{ui}</MantineProvider>);
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -41,7 +48,7 @@ describe("Usage — link-free wallet renderer", () => {
     fetchWallet.mockResolvedValue({ status: "free" });
     const onWalletLoaded = vi.fn();
 
-    render(<Usage onWalletLoaded={onWalletLoaded} />);
+    renderUsage(<Usage onWalletLoaded={onWalletLoaded} />);
 
     // Renders immediately (no link prompt / login) and loads unconditionally.
     expect(screen.getByText("Usage & billing")).toBeInTheDocument();
@@ -53,7 +60,7 @@ describe("Usage — link-free wallet renderer", () => {
   it("works with no callbacks (SaaS passes none)", async () => {
     fetchWallet.mockResolvedValue({ status: "subscribed" });
 
-    render(<Usage />);
+    renderUsage(<Usage />);
 
     await waitFor(() => expect(fetchWallet).toHaveBeenCalledTimes(1));
   });
