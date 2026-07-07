@@ -8,7 +8,12 @@ import {
   RemovePasswordParameters,
   defaultParameters,
 } from "@app/hooks/tools/removePassword/useRemovePasswordParameters";
-import { buildRemovePasswordFormData } from "@app/hooks/tools/removePassword/buildRemovePasswordFormData";
+import {
+  buildRemovePasswordFormData,
+  removePasswordToApiParams,
+  removePasswordFromApiParams,
+  REMOVE_PASSWORD_ENDPOINT,
+} from "@app/hooks/tools/removePassword/buildRemovePasswordFormData";
 
 // Re-export for backwards compatibility with any other imports
 export { buildRemovePasswordFormData };
@@ -17,8 +22,10 @@ export { buildRemovePasswordFormData };
 export const removePasswordOperationConfig = {
   toolType: ToolType.singleFile,
   buildFormData: buildRemovePasswordFormData,
+  toApiParams: removePasswordToApiParams,
+  fromApiParams: removePasswordFromApiParams,
   operationType: "removePassword",
-  endpoint: "/api/v1/security/remove-password",
+  endpoint: REMOVE_PASSWORD_ENDPOINT,
   defaultParameters,
 } as const;
 
