@@ -102,11 +102,16 @@
   flex-shrink: 0;
 }
 
-/* App switcher (portal builds only) sits at the far end of the header row. */
+/* App switcher (portal builds only) sits at the far end of the header row.
+   The content-fade animation makes this span a stacking context, which would
+   trap the menu's z-index below later sidebar rows — elevate the span so the
+   open menu paints above them. */
 .file-sidebar-app-switch {
   margin-inline-start: auto;
   display: flex;
   align-items: center;
+  position: relative;
+  z-index: var(--z-dropdown);
 }
 
 /* ---- Search row ---- */
