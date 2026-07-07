@@ -1,0 +1,573 @@
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import {
+  Banner,
+  Button,
+  Checkbox,
+  FormField,
+  Input,
+  RadioGroup,
+  Select,
+  Spinner,
+} from "@app/ui";
+import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
+import { type ErasedToolParams } from "@app/hooks/tools/shared/toolOperationTypes";
+import {
+  deserializeToolStep,
+  getExecutableTools,
+  newWorkingToolStep,
+  serializeToolStep,
+  type ExecutableTool,
+  type WorkingToolStep,
+} from "@app/hooks/tools/shared/toolAutomation";
+import { errorMessage } from "@portal/api/http";
+import {
+  fetchPipeline,
+  fetchTriggers,
+  savePipeline,
+  type OutputSpec,
+  type Policy,
+  type TriggerConfig,
+  type TriggerInfo,
+} from "@portal/api/pipelines";
+import { fetchSources, type SourceView } from "@portal/api/sources";
+import { useAsync } from "@portal/hooks/useAsync";
+import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
+import { humanizeOperation } from "@portal/components/pipelines/pipelineOperations";
+import { PipelineStepSettings } from "@portal/components/pipelines/PipelineStepSettings";
+import { ToolPicker } from "@portal/components/pipelines/ToolPicker";
+import "@portal/views/PipelineBuilder.css";
+
+type OutputMode = "inline" | "folder";
+type ScheduleUnit = "MINUTES" | "HOURS" | "DAYS";
+
+const SCHEDULE_UNITS: ScheduleUnit[] = ["MINUTES", "HOURS", "DAYS"];
+/** Empty trigger type = manual-only (no automatic trigger). */
+const MANUAL = "";
+
+function parseTrigger(trigger: TriggerConfig | null): {
+  triggerType: string;
+  count: string;
+  unit: ScheduleUnit;
+} {
+  if (!trigger) return { triggerType: MANUAL, count: "1", unit: "HOURS" };
+  if (trigger.type === "schedule") {
+    const schedule = trigger.options?.schedule as
+      | { type?: string; count?: number; unit?: ScheduleUnit }
+      | undefined;
+    if (schedule?.type === "every") {
+      return {
+        triggerType: "schedule",
+        count: String(schedule.count ?? 1),
+        unit: schedule.unit ?? "HOURS",
+      };
+    }
+    return { triggerType: "schedule", count: "1", unit: "HOURS" };
+  }
+  return { triggerType: trigger.type, count: "1", unit: "HOURS" };
+}
+
+function parseOutput(output: OutputSpec | undefined): {
+  mode: OutputMode;
+  directory: string;
+} {
+  if (output?.type === "folder") {
+    return {
+      mode: "folder",
+      directory: String(output.options?.directory ?? ""),
+    };
+  }
+  return { mode: "inline", directory: "" };
+}
+
+/**
+ * Full-page pipeline builder (route: /pipelines/new and /pipelines/:id). Tool steps are chained on
+ * the left and configured in the right-hand inspector, which shows the selected step's settings or,
+ * when no step is selected, the pipeline-level settings (sources, trigger, output). Replaces the
+ * former modal composer.
+ */
+export function PipelineBuilder() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const isEdit = Boolean(id);
+  const { allTools } = useToolRegistry();
+  const executableTools = useMemo(
+    () => getExecutableTools(allTools),
+    [allTools],
+  );
+
+  const policyState = useAsync<Policy | null>(
+    async () => (id ? await fetchPipeline(id) : null),
+    [id],
+  );
+  const sourcesState = useAsync<SourceView[]>(
+    async () => (await fetchSources()).sources,
+    [],
+  );
+  const triggersState = useAsync<TriggerInfo[]>(
+    async () => await fetchTriggers(),
+    [],
+  );
+  const availableSources = sourcesState.data ?? [];
+  const triggers = useMemo(
+    () => triggersState.data ?? [],
+    [triggersState.data],
+  );
+
+  const [name, setName] = useState("");
+  const [enabled, setEnabled] = useState(true);
+  const [sourceIds, setSourceIds] = useState<string[]>([]);
+  const [steps, setSteps] = useState<WorkingToolStep[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [triggerType, setTriggerType] = useState<string>(MANUAL);
+  const [scheduleCount, setScheduleCount] = useState("1");
+  const [scheduleUnit, setScheduleUnit] = useState<ScheduleUnit>("HOURS");
+  const [outputMode, setOutputMode] = useState<OutputMode>("inline");
+  const [outputDirectory, setOutputDirectory] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [seeded, setSeeded] = useState(false);
+
+  // Seed the form once: immediately for a new pipeline, or after the policy loads for an edit.
+  useEffect(() => {
+    if (seeded) return;
+    if (isEdit && !policyState.data) return;
+    const policy = policyState.data ?? undefined;
+    const trigger = parseTrigger(policy?.trigger ?? null);
+    const output = parseOutput(policy?.output);
+    setName(policy?.name ?? "");
+    setEnabled(policy?.enabled ?? true);
+    setSourceIds(policy?.sourceIds ?? []);
+    setSteps(
+      (policy?.steps ?? []).map((step) => deserializeToolStep(step, allTools)),
+    );
+    setTriggerType(trigger.triggerType);
+    setScheduleCount(trigger.count);
+    setScheduleUnit(trigger.unit);
+    setOutputMode(output.mode);
+    setOutputDirectory(output.directory);
+    setSeeded(true);
+  }, [isEdit, policyState.data, allTools, seeded]);
+
+  const selectedSourceTypes = useMemo(
+    () =>
+      new Set(
+        availableSources
+          .filter((s) => sourceIds.includes(s.id))
+          .map((s) => s.type),
+      ),
+    [availableSources, sourceIds],
+  );
+
+  const triggerAvailable = useMemo(
+    () => (trigger: TriggerInfo) =>
+      !trigger.requiresSource ||
+      trigger.supportedSourceTypes.some((type) =>
+        selectedSourceTypes.has(type),
+      ),
+    [selectedSourceTypes],
+  );
+
+  useEffect(() => {
+    if (triggerType === MANUAL) return;
+    const selected = triggers.find((trigger) => trigger.type === triggerType);
+    if (selected && !triggerAvailable(selected)) setTriggerType(MANUAL);
+  }, [triggerType, triggers, triggerAvailable]);
+
+  function toggleSource(sourceId: string, checked: boolean) {
+    setSourceIds((ids) =>
+      checked
+        ? [...ids, sourceId]
+        : ids.filter((existing) => existing !== sourceId),
+    );
+  }
+
+  function addStep(tool: ExecutableTool) {
+    setSteps((current) => {
+      const next = [...current, newWorkingToolStep(tool, allTools)];
+      setSelectedIndex(next.length - 1);
+      return next;
+    });
+    setPickerOpen(false);
+  }
+
+  function removeStep(index: number) {
+    setSelectedIndex(null);
+    setSteps((current) => current.filter((_, i) => i !== index));
+  }
+
+  function moveStep(index: number, delta: number) {
+    setSteps((current) => {
+      const target = index + delta;
+      if (target < 0 || target >= current.length) return current;
+      const next = [...current];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+    setSelectedIndex((cur) => (cur === index ? index + delta : cur));
+  }
+
+  function updateStepParams(index: number, params: ErasedToolParams) {
+    setSteps((current) =>
+      current.map((step, i) =>
+        i === index && step.toolId !== null ? { ...step, params } : step,
+      ),
+    );
+  }
+
+  function stepLabel(step: WorkingToolStep): string {
+    const entry = step.toolId ? allTools[step.toolId] : undefined;
+    return entry?.name ?? humanizeOperation(step.operation);
+  }
+
+  const scheduleCountValid =
+    triggerType !== "schedule" || Number(scheduleCount) > 0;
+  const outputValid = outputMode !== "folder" || outputDirectory.trim() !== "";
+  const canSave =
+    name.trim() !== "" && scheduleCountValid && outputValid && !submitting;
+
+  const triggerOptions = [
+    { value: MANUAL, label: t("portal.pipelines.composer.triggerManual") },
+    ...triggers.map((trigger) => ({
+      value: trigger.type,
+      label: t(`portal.pipelines.trigger.${trigger.type}`, {
+        defaultValue: trigger.type,
+      }),
+      disabled: !triggerAvailable(trigger),
+    })),
+  ];
+
+  function buildTrigger(): TriggerConfig | null {
+    if (triggerType === MANUAL) return null;
+    if (triggerType === "schedule") {
+      return {
+        type: "schedule",
+        options: {
+          schedule: {
+            type: "every",
+            count: Number(scheduleCount),
+            unit: scheduleUnit,
+          },
+        },
+      };
+    }
+    return { type: triggerType, options: {} };
+  }
+
+  function close() {
+    navigate(toPortalPath(VIEW_PATHS.pipelines));
+  }
+
+  async function submit() {
+    if (!canSave) return;
+    setSubmitting(true);
+    setError(null);
+    const output: OutputSpec =
+      outputMode === "folder"
+        ? { type: "folder", options: { directory: outputDirectory.trim() } }
+        : { type: "inline", options: {} };
+    const policy: Policy = {
+      id: policyState.data?.id ?? undefined,
+      name: name.trim(),
+      enabled,
+      trigger: buildTrigger(),
+      sourceIds,
+      steps: steps.map((step) => serializeToolStep(step, allTools)),
+      output,
+    };
+    try {
+      await savePipeline(policy);
+      close();
+    } catch (e) {
+      setError(errorMessage(e));
+      setSubmitting(false);
+    }
+  }
+
+  if (isEdit && !seeded) {
+    return (
+      <div className="portal-builder__loading">
+        <Spinner />
+      </div>
+    );
+  }
+
+  const selectedStep =
+    selectedIndex !== null ? (steps[selectedIndex] ?? null) : null;
+
+  return (
+    <div className="portal-builder">
+      <header className="portal-builder__head">
+        <button
+          type="button"
+          className="portal-builder__back"
+          onClick={close}
+          aria-label={t("portal.pipelines.builder.back")}
+        >
+          {"<"} {t("portal.pipelines.title")}
+        </button>
+        <div className="portal-builder__head-main">
+          <Input
+            value={name}
+            placeholder={t("portal.pipelines.composer.namePlaceholder")}
+            aria-label={t("portal.pipelines.composer.name")}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </div>
+        <div className="portal-builder__head-actions">
+          <Checkbox
+            checked={enabled}
+            onChange={(e) => setEnabled(e.target.checked)}
+            label={t("portal.pipelines.builder.enabled")}
+          />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={close}
+            disabled={submitting}
+          >
+            {t("portal.pipelines.composer.cancel")}
+          </Button>
+          <Button
+            size="sm"
+            onClick={submit}
+            loading={submitting}
+            disabled={!canSave}
+          >
+            {isEdit
+              ? t("portal.pipelines.composer.save")
+              : t("portal.pipelines.composer.create")}
+          </Button>
+        </div>
+      </header>
+
+      {error && <Banner tone="danger" description={error} />}
+
+      <div className="portal-builder__grid">
+        <section className="portal-builder__flow">
+          <div className="portal-builder__section-label">
+            {t("portal.pipelines.composer.operations", { count: steps.length })}
+          </div>
+
+          {steps.length === 0 && !pickerOpen && (
+            <p className="portal-builder__empty">
+              {t("portal.pipelines.composer.chainEmpty")}
+            </p>
+          )}
+
+          <ol className="portal-builder__steps">
+            {steps.map((step, i) => (
+              <li key={`${step.operation}-${i}`}>
+                <div
+                  className={
+                    "portal-builder__step" +
+                    (selectedIndex === i ? " portal-builder__step--active" : "")
+                  }
+                >
+                  <button
+                    type="button"
+                    className="portal-builder__step-main"
+                    onClick={() => setSelectedIndex(i)}
+                  >
+                    <span className="portal-builder__step-index">{i + 1}</span>
+                    <span className="portal-builder__step-text">
+                      <span className="portal-builder__step-name">
+                        {stepLabel(step)}
+                      </span>
+                      {step.support === "unsupported" && (
+                        <span className="portal-builder__step-note">
+                          {t("portal.pipelines.builder.usesDefaults")}
+                        </span>
+                      )}
+                    </span>
+                  </button>
+                  <div className="portal-builder__step-actions">
+                    <button
+                      type="button"
+                      aria-label={t("portal.pipelines.composer.moveUp")}
+                      disabled={i === 0}
+                      onClick={() => moveStep(i, -1)}
+                    >
+                      ^
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={t("portal.pipelines.composer.moveDown")}
+                      disabled={i === steps.length - 1}
+                      onClick={() => moveStep(i, 1)}
+                    >
+                      v
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={t("portal.pipelines.composer.removeStep")}
+                      onClick={() => removeStep(i)}
+                    >
+                      x
+                    </button>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ol>
+
+          {pickerOpen ? (
+            <ToolPicker
+              tools={executableTools}
+              onPick={addStep}
+              onClose={() => setPickerOpen(false)}
+            />
+          ) : (
+            <button
+              type="button"
+              className="portal-builder__add-step"
+              onClick={() => setPickerOpen(true)}
+            >
+              + {t("portal.pipelines.composer.addTool")}
+            </button>
+          )}
+        </section>
+
+        <aside className="portal-builder__inspector">
+          {selectedStep ? (
+            <>
+              <div className="portal-builder__inspector-head">
+                <span className="portal-builder__inspector-title">
+                  {stepLabel(selectedStep)}
+                </span>
+                <button
+                  type="button"
+                  className="portal-builder__inspector-remove"
+                  aria-label={t("portal.pipelines.composer.removeStep")}
+                  onClick={() =>
+                    selectedIndex !== null && removeStep(selectedIndex)
+                  }
+                >
+                  x
+                </button>
+              </div>
+              <PipelineStepSettings
+                step={selectedStep}
+                registry={allTools}
+                onChange={(params) =>
+                  selectedIndex !== null &&
+                  updateStepParams(selectedIndex, params)
+                }
+              />
+            </>
+          ) : (
+            <>
+              <div className="portal-builder__inspector-head">
+                <span className="portal-builder__inspector-title">
+                  {t("portal.pipelines.builder.pipelineSettings")}
+                </span>
+              </div>
+
+              <span className="portal-pipelines__detail-heading">
+                {t("portal.pipelines.composer.sources")}
+              </span>
+              {sourcesState.loading ? (
+                <p className="portal-pipelines__muted">
+                  {t("portal.pipelines.composer.sourcesLoading")}
+                </p>
+              ) : availableSources.length === 0 ? (
+                <p className="portal-pipelines__muted">
+                  {t("portal.pipelines.composer.noSources")}
+                </p>
+              ) : (
+                <div className="portal-pipelines__source-list">
+                  {availableSources.map((source) => (
+                    <Checkbox
+                      key={source.id}
+                      checked={sourceIds.includes(source.id)}
+                      onChange={(e) =>
+                        toggleSource(source.id, e.target.checked)
+                      }
+                      label={source.name}
+                    />
+                  ))}
+                </div>
+              )}
+
+              <span className="portal-pipelines__detail-heading">
+                {t("portal.pipelines.composer.trigger")}
+              </span>
+              <RadioGroup<string>
+                name="pipeline-trigger"
+                value={triggerType}
+                onChange={setTriggerType}
+                direction="horizontal"
+                options={triggerOptions}
+              />
+              {triggerType === "schedule" && (
+                <div className="portal-pipelines__schedule">
+                  <span className="portal-pipelines__muted">
+                    {t("portal.pipelines.composer.scheduleEvery")}
+                  </span>
+                  <Input
+                    inputSize="sm"
+                    type="number"
+                    min={1}
+                    value={scheduleCount}
+                    invalid={!scheduleCountValid}
+                    onChange={(e) => setScheduleCount(e.target.value)}
+                    className="portal-pipelines__schedule-count"
+                  />
+                  <Select
+                    inputSize="sm"
+                    value={scheduleUnit}
+                    onChange={(e) =>
+                      setScheduleUnit(e.target.value as ScheduleUnit)
+                    }
+                    options={SCHEDULE_UNITS.map((unit) => ({
+                      value: unit,
+                      label: t(
+                        `portal.pipelines.composer.unit.${unit.toLowerCase()}`,
+                      ),
+                    }))}
+                  />
+                </div>
+              )}
+
+              <span className="portal-pipelines__detail-heading">
+                {t("portal.pipelines.composer.output")}
+              </span>
+              <RadioGroup<OutputMode>
+                name="pipeline-output"
+                value={outputMode}
+                onChange={setOutputMode}
+                direction="horizontal"
+                options={[
+                  {
+                    value: "inline",
+                    label: t("portal.pipelines.output.inline"),
+                  },
+                  {
+                    value: "folder",
+                    label: t("portal.pipelines.output.folder"),
+                  },
+                ]}
+              />
+              {outputMode === "folder" && (
+                <FormField
+                  label={t("portal.pipelines.composer.directory")}
+                  helperText={t("portal.pipelines.composer.directoryHelp")}
+                  required
+                >
+                  <Input
+                    value={outputDirectory}
+                    placeholder="/data/processed"
+                    onChange={(e) => setOutputDirectory(e.target.value)}
+                  />
+                </FormField>
+              )}
+            </>
+          )}
+        </aside>
+      </div>
+    </div>
+  );
+}

@@ -1,11 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { HttpError } from "@portal/api/http";
 import type { PipelinesOverviewResponse, Policy } from "@portal/api/pipelines";
-import type { SourcesResponse } from "@portal/api/sources";
-import type { ToolRegistryCatalog } from "@app/contexts/ToolRegistryContext";
-import type { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import { Pipelines } from "@portal/views/Pipelines";
 
 // Deterministic i18n: keys returned verbatim, so assertions are stable without
@@ -38,38 +35,6 @@ const fetchSources = vi.fn();
 vi.mock("@portal/api/sources", () => ({
   fetchSources: () => fetchSources(),
 }));
-
-// The composer reads the editor tool registry (provided by PortalApp in the real app).
-// A small fake keeps this view test deterministic: one editable tool, Compress.
-vi.mock("@app/contexts/ToolRegistryContext", () => {
-  const compress = {
-    name: "Compress",
-    icon: null,
-    component: null,
-    description: "",
-    categoryId: "recommendedTools",
-    subcategoryId: "general",
-    automationSettings: () => null,
-    operationConfig: {
-      operationType: "compress",
-      toolType: 0,
-      endpoint: "/api/v1/misc/compress-pdf",
-      defaultParameters: {},
-      buildFormData: () => new FormData(),
-      toApiParams: (params: Record<string, unknown>) => ({ ...params }),
-      fromApiParams: (params: Record<string, unknown>) => ({ ...params }),
-    },
-  } as unknown as ToolRegistryEntry;
-  const allTools = { compress } as unknown as ToolRegistryCatalog["allTools"];
-  const catalog: ToolRegistryCatalog = {
-    regularTools: allTools,
-    superTools: allTools,
-    linkTools: allTools,
-    allTools,
-    getToolById: () => null,
-  };
-  return { useToolRegistry: () => catalog };
-});
 
 const RESPONSE: PipelinesOverviewResponse = {
   kpis: [
@@ -114,24 +79,6 @@ const RAW_REDACTION: Policy = {
   sourceIds: ["src-claims"],
   steps: [{ operation: "/api/v1/security/auto-redact", parameters: {} }],
   output: { type: "inline", options: {} },
-};
-
-const SOURCES: SourcesResponse = {
-  kpis: [],
-  sources: [
-    {
-      id: "src-claims",
-      name: "Claims intake",
-      type: "folder",
-      status: "active",
-      referenceCount: 1,
-      referencingPolicies: [],
-      config: [],
-      docsTotal: 0,
-      docs24h: 0,
-      docs30d: 0,
-    },
-  ],
 };
 
 function renderView() {
@@ -248,36 +195,24 @@ describe("Pipelines view", () => {
     ).toBeInTheDocument();
   });
 
-  it("creates a pipeline with the chosen name and chained operation", async () => {
+  it("navigates to the builder when creating a pipeline", async () => {
     fetchPipelines.mockResolvedValue(RESPONSE);
-    fetchSources.mockResolvedValue(SOURCES);
-    savePipeline.mockResolvedValue({});
 
-    renderView();
+    render(
+      <MemoryRouter initialEntries={["/portal/pipelines"]}>
+        <Routes>
+          <Route path="/portal/pipelines" element={<Pipelines />} />
+          <Route
+            path="/portal/pipelines/new"
+            element={<div>builder route</div>}
+          />
+        </Routes>
+      </MemoryRouter>,
+    );
 
-    // Wait for the table so the initial fetch has settled, then open the composer.
     await screen.findByText("Redaction sweep");
     fireEvent.click(screen.getByText("portal.pipelines.actions.newPipeline"));
 
-    fireEvent.change(await screen.findByRole("textbox"), {
-      target: { value: "Nightly compress" },
-    });
-    // Palette chips are labeled with the tool's registry name.
-    fireEvent.click(await screen.findByText("+ Compress"));
-    fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
-
-    await waitFor(() => {
-      expect(savePipeline).toHaveBeenCalledTimes(1);
-    });
-    expect(savePipeline).toHaveBeenCalledWith(
-      expect.objectContaining({
-        name: "Nightly compress",
-        trigger: null,
-        output: expect.objectContaining({ type: "inline" }),
-        steps: [
-          expect.objectContaining({ operation: "/api/v1/misc/compress-pdf" }),
-        ],
-      }),
-    );
+    expect(await screen.findByText("builder route")).toBeInTheDocument();
   });
 });

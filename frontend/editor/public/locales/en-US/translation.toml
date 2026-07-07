@@ -7183,6 +7183,15 @@ title = "Pipelines"
 [portal.pipelines.actions]
 newPipeline = "New pipeline"
 
+[portal.pipelines.builder]
+addStep = "Add tool"
+back = "Back to pipelines"
+enabled = "Enabled"
+noToolMatches = "No tools match your search."
+pipelineSettings = "Pipeline settings"
+searchTools = "Search tools"
+usesDefaults = "Runs with default settings"
+
 [portal.pipelines.composer]
 addTool = "Add tool"
 cancel = "Cancel"

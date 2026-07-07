@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, EmptyState, Modal, Skeleton } from "@app/ui";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
@@ -10,12 +11,11 @@ import {
   savePipeline,
   type PipelinesOverviewResponse,
   type PipelineView,
-  type Policy,
 } from "@portal/api/pipelines";
+import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { KpiStrip } from "@portal/components/pipelines/KpiStrip";
 import { PipelinesTable } from "@portal/components/pipelines/PipelinesTable";
 import { PipelineDetailCard } from "@portal/components/pipelines/PipelineDetailCard";
-import { PipelineComposer } from "@portal/components/pipelines/PipelineComposer";
 import "@portal/views/Pipelines.css";
 
 export function Pipelines() {
@@ -31,9 +31,8 @@ export function Pipelines() {
   const { isLoading, isEmpty } = useSectionFlags(state);
   const refetch = useCallback(() => setVersion((v) => v + 1), []);
 
+  const navigate = useNavigate();
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [composerOpen, setComposerOpen] = useState(false);
-  const [editing, setEditing] = useState<Policy | null>(null);
   const [mutating, setMutating] = useState(false);
   const [pageError, setPageError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<PipelineView | null>(null);
@@ -44,24 +43,13 @@ export function Pipelines() {
   const expanded = pipelines.find((p) => p.id === expandedId) ?? null;
 
   function openCreate() {
-    setEditing(null);
-    setComposerOpen(true);
+    navigate(`${toPortalPath(VIEW_PATHS.pipelines)}/new`);
   }
 
-  // Editing needs the raw policy (steps, trigger, source ids), which the overview
-  // rows don't carry, so fetch it before opening the composer prefilled.
-  async function openEdit(pipeline: PipelineView) {
-    if (mutating) return;
-    setPageError(null);
-    setMutating(true);
-    try {
-      setEditing(await fetchPipeline(pipeline.id));
-      setComposerOpen(true);
-    } catch (e) {
-      setPageError(errorMessage(e));
-    } finally {
-      setMutating(false);
-    }
+  // The builder loads the full policy (steps, trigger, source ids) from its route;
+  // the overview rows don't carry it.
+  function openEdit(pipeline: PipelineView) {
+    navigate(`${toPortalPath(VIEW_PATHS.pipelines)}/${pipeline.id}`);
   }
 
   // Pause/resume: re-save the policy with enabled flipped (the backend has no
@@ -163,13 +151,6 @@ export function Pipelines() {
           busy={mutating}
         />
       )}
-
-      <PipelineComposer
-        open={composerOpen}
-        pipeline={editing ?? undefined}
-        onClose={() => setComposerOpen(false)}
-        onSaved={refetch}
-      />
 
       <Modal
         open={pendingDelete !== null}

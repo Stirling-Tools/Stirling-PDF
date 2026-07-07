@@ -13,6 +13,7 @@
 import { type ReactNode } from "react";
 import {
   getToolSupportsAutomate,
+  type SubcategoryId,
   type ToolRegistry,
   type ToolRegistryEntry,
 } from "@app/data/toolsTaxonomy";
@@ -40,6 +41,8 @@ export interface ExecutableTool {
   toolId: ToolId;
   name: string;
   icon: ReactNode;
+  /** Subcategory the tool belongs to, so a picker can group tools without re-reading the registry. */
+  subcategoryId: SubcategoryId;
   /** Endpoint resolved from default parameters, for display/inclusion. The stored step's endpoint is re-resolved from the configured parameters at serialization time. */
   endpoint: ToolEndpoint;
   support: ToolStepSupport;
@@ -138,6 +141,7 @@ export function getExecutableTools(
       toolId: id as ToolId,
       name: entry.name,
       icon: entry.icon,
+      subcategoryId: entry.subcategoryId,
       endpoint,
       support: classifyToolStepSupport(entry),
     });
