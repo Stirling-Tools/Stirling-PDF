@@ -1,6 +1,7 @@
 import { memo, useState, useCallback, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Menu, Tooltip } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
@@ -386,14 +387,15 @@ export const FileItem = memo(function FileItem({
             </span>
           )}
         </div>
-        <button
+        <ActionIcon
+          variant="tertiary"
+          size="sm"
           className="file-sidebar-eye-btn"
           onClick={(e) => {
             e.stopPropagation();
             onEyeClick(fileId, e);
           }}
           tabIndex={-1}
-          type="button"
           aria-label={
             isViewedInViewer
               ? t("fileSidebar.fileItem.closeViewer", "Close viewer")
@@ -408,25 +410,25 @@ export const FileItem = memo(function FileItem({
             className="file-sidebar-eye-closed"
             sx={{ fontSize: "1.1rem" }}
           />
-        </button>
-
+        </ActionIcon>
         {(onDelete ||
           onSaveToCloud ||
           (hasVersionHistory && onVersionHistory)) && (
           <Menu position="bottom-end" withinPortal shadow="md" width={190}>
             <Menu.Target>
-              <button
+              <ActionIcon
+                variant="tertiary"
+                size="sm"
                 className="file-sidebar-kebab-btn"
                 onClick={(e) => e.stopPropagation()}
                 tabIndex={-1}
-                type="button"
                 aria-label={t(
                   "fileSidebar.fileItem.moreActions",
                   "More actions",
                 )}
               >
                 <MoreVertIcon sx={{ fontSize: "1.1rem" }} />
-              </button>
+              </ActionIcon>
             </Menu.Target>
             <Menu.Dropdown onClick={(e) => e.stopPropagation()}>
               {hasVersionHistory && onVersionHistory && (

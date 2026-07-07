@@ -85,15 +85,15 @@ function ActivityError({
       >
         {message}
       </span>
-      <button
-        type="button"
+      <Button
+        variant="tertiary"
         className="pol-activity-error__toggle"
         onClick={() => setExpanded((v) => !v)}
       >
         {expanded
           ? t("policies.detail.showLess", "Show less")
           : t("policies.detail.showMore", "Show more")}
-      </button>
+      </Button>
     </span>
   );
 }
@@ -236,7 +236,7 @@ export function PolicyDetailPanel({
                       trailing={
                         item.status === "flagged" && onRetry ? (
                           <Button
-                            variant="ghost"
+                            variant="tertiary"
                             size="sm"
                             onClick={() => onRetry(item)}
                           >
@@ -309,22 +309,22 @@ export function PolicyDetailPanel({
         <div className={`pol-footer${canDelete ? "" : " pol-footer-end"}`}>
           {canDelete && (
             <Button
-              variant="ghost"
-              accent="red"
+              variant="tertiary"
+              accent="danger"
               size="sm"
-              leadingIcon={<DeleteOutlineIcon sx={{ fontSize: "0.9rem" }} />}
+              leftSection={<DeleteOutlineIcon sx={{ fontSize: "0.9rem" }} />}
               onClick={onDelete}
               style={{ marginRight: "auto" }}
             >
               {t("delete", "Delete")}
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={onTogglePause}>
+          <Button variant="secondary" size="sm" onClick={onTogglePause}>
             {isPaused
               ? t("policies.detail.resume", "Resume")
               : t("policies.detail.pause", "Pause")}
           </Button>
-          <Button variant="gradient" size="sm" onClick={onEditSettings}>
+          <Button size="sm" onClick={onEditSettings}>
             {t("policies.detail.editSettings", "Edit Settings")}
           </Button>
         </div>

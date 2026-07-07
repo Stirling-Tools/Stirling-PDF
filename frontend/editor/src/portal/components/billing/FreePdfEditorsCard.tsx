@@ -72,9 +72,9 @@ export function FreePdfEditorsCard() {
         </MetricStrip>
         {/* Opens the Users tab with its invite-member modal (via the ?invite param). */}
         <Button
-          variant="outline"
+          variant="secondary"
           size="sm"
-          leadingIcon={<PersonAddIcon sx={{ fontSize: 16 }} />}
+          leftSection={<PersonAddIcon sx={{ fontSize: 16 }} />}
           onClick={() => navigate("/users?invite=1")}
         >
           {t("portal.billing.freeEditors.inviteTeammates", "Invite teammates")}

@@ -101,12 +101,12 @@ export function ClassificationLabelsSection({
             </div>
             <div className="labels-chips">
               {teamLabels.slice(0, SUMMARY_CHIP_COUNT).map((label) => (
-                <Chip key={label.name} tone="neutral" size="sm">
+                <Chip key={label.name} accent="neutral" size="sm">
                   {label.name}
                 </Chip>
               ))}
               {teamLabels.length > SUMMARY_CHIP_COUNT && (
-                <Chip tone="neutral" size="sm">
+                <Chip accent="neutral" size="sm">
                   +{teamLabels.length - SUMMARY_CHIP_COUNT}
                 </Chip>
               )}
@@ -120,9 +120,9 @@ export function ClassificationLabelsSection({
                   )}
             </span>
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
-              leadingIcon={<OpenInFullIcon sx={{ fontSize: "1rem" }} />}
+              leftSection={<OpenInFullIcon sx={{ fontSize: "1rem" }} />}
               onClick={() => setOpen(true)}
               style={{ alignSelf: "flex-start" }}
             >

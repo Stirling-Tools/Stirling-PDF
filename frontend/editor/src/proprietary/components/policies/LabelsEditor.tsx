@@ -136,9 +136,9 @@ export function LabelsEditor({
             }}
           />
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
-            leadingIcon={<AddIcon sx={{ fontSize: "1rem" }} />}
+            leftSection={<AddIcon sx={{ fontSize: "1rem" }} />}
             onClick={add}
             disabled={!pending.trim()}
           >

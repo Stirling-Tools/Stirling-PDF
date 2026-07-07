@@ -7,6 +7,7 @@ import React, {
   forwardRef,
 } from "react";
 import { Loader, Tooltip } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useFileState, useFileActions } from "@app/contexts/file/fileHooks";
@@ -1140,26 +1141,31 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                     {t("fileSidebar.files", "Files")}
                   </span>
                   <FileSidebarGroupControls stubs={filteredFileStubs} />
-                  <button
+                  <ActionIcon
+                    variant="quiet"
                     className="file-sidebar-section-btn file-sidebar-section-btn-external"
                     onClick={() => navigate("/files")}
                     title={t(
                       "fileSidebar.openFileManager",
                       "Browse all files & folders",
                     )}
-                    type="button"
+                    aria-label={t(
+                      "fileSidebar.openFileManager",
+                      "Browse all files & folders",
+                    )}
                     data-testid="open-files-page"
                   >
                     <OpenInNewIcon sx={{ fontSize: "1rem" }} />
-                  </button>
-                  <button
+                  </ActionIcon>
+                  <ActionIcon
+                    variant="quiet"
                     className="file-sidebar-section-btn file-sidebar-section-btn-add"
                     onClick={() => nativeFileInputRef.current?.click()}
                     title={t("fileSidebar.addFiles", "Add files")}
-                    type="button"
+                    aria-label={t("fileSidebar.addFiles", "Add files")}
                   >
                     <AddIcon sx={{ fontSize: "1rem" }} />
-                  </button>
+                  </ActionIcon>
                 </div>
 
                 <BulkAddProgressRow />
@@ -1170,40 +1176,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   </div>
                 ) : filteredFileStubs.length > 0 ? (
                   <div className="file-sidebar-file-list">
-                    {/* Inline "Add files" row — kept for the flat list (OSS/desktop);
-                        omitted in the grouped (SaaS) view, where the header "+"
-                        covers adding files. */}
-                    {!fileGroups && (
-                      <button
-                        type="button"
-                        onClick={() => nativeFileInputRef.current?.click()}
-                        data-testid="add-files-row"
-                        style={{
-                          background: "transparent",
-                          border: "none",
-                          cursor: "pointer",
-                          color: "var(--text-muted)",
-                          padding: "4px 6px",
-                          marginBottom: 4,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 6,
-                          fontSize: 12,
-                          width: "100%",
-                          textAlign: "left",
-                          borderRadius: 4,
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = "var(--hover-bg)";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = "transparent";
-                        }}
-                      >
-                        <AddIcon sx={{ fontSize: "0.9rem" }} />
-                        {t("fileSidebar.addFiles", "Add files")}
-                      </button>
-                    )}
                     {fileGroups ? (
                       <>
                         {fileGroups.map((group) => {

@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ActionIcon, Badge, Button, Tooltip } from "@mantine/core";
+import { Badge, Tooltip } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import CloseIcon from "@mui/icons-material/Close";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
@@ -167,7 +169,12 @@ export function FileDetailsPanel({
           label={t("filesPage.closeDetails", "Close details")}
           withinPortal
         >
-          <ActionIcon variant="subtle" size="sm" onClick={onClose}>
+          <ActionIcon
+            variant="tertiary"
+            size="sm"
+            onClick={onClose}
+            aria-label={t("filesPage.closeDetails", "Close details")}
+          >
             <CloseIcon fontSize="small" />
           </ActionIcon>
         </Tooltip>
@@ -205,25 +212,27 @@ export function FileDetailsPanel({
                 <span className="files-page-details-ext-tag">{ext}</span>
               )}
               {(single.versionNumber ?? 1) > 1 && (
-                <Badge size="sm" variant="filled" color="blue">
+                <Badge size="sm" color="blue">
                   v{single.versionNumber}
                 </Badge>
               )}
             </div>
-            <button
-              type="button"
+            <Button
+              variant="tertiary"
               className="files-page-details-collapse-toggle"
               onClick={() => setFieldsOpen((o) => !o)}
               aria-expanded={fieldsOpen}
+              rightSection={
+                <KeyboardArrowDownIcon
+                  className={`files-page-details-collapse-chevron${
+                    fieldsOpen ? " is-open" : ""
+                  }`}
+                  fontSize="small"
+                />
+              }
             >
               <span>{t("filesPage.fileInfo", "File info")}</span>
-              <KeyboardArrowDownIcon
-                className={`files-page-details-collapse-chevron${
-                  fieldsOpen ? " is-open" : ""
-                }`}
-                fontSize="small"
-              />
-            </button>
+            </Button>
             {fieldsOpen && (
               <div className="files-page-details-fieldlist">
                 <DetailField
@@ -315,7 +324,7 @@ export function FileDetailsPanel({
               (compactVersions && onOpenVersionHistory ? (
                 <Button
                   leftSection={<HistoryIcon fontSize="small" />}
-                  variant="default"
+                  variant="secondary"
                   onClick={onOpenVersionHistory}
                 >
                   {t(
@@ -375,7 +384,6 @@ export function FileDetailsPanel({
       <div className="files-page-details-actions">
         <Button
           leftSection={<OpenInNewIcon fontSize="small" />}
-          variant="filled"
           onClick={() => onAddToWorkspace(selectedFileIds)}
         >
           {files.length === 1
@@ -386,7 +394,7 @@ export function FileDetailsPanel({
         </Button>
         <Button
           leftSection={<DownloadIcon fontSize="small" />}
-          variant="default"
+          variant="secondary"
           onClick={handleDownload}
           loading={downloading}
         >
@@ -413,14 +421,12 @@ export function FileDetailsPanel({
           >
             <Button
               leftSection={<LinkIcon fontSize="small" />}
-              variant="default"
+              variant="secondary"
               disabled={!sharingEnabled}
               onClick={() => setShareModalOpen(true)}
-              styles={{
-                root: {
-                  // Keep tooltip hoverable while button is disabled.
-                  pointerEvents: sharingEnabled ? undefined : "auto",
-                },
+              style={{
+                // Keep tooltip hoverable while button is disabled.
+                pointerEvents: sharingEnabled ? undefined : "auto",
               }}
             >
               {t("filesPage.shareManage", "Manage sharing")}
@@ -429,7 +435,7 @@ export function FileDetailsPanel({
         )}
         <Button
           leftSection={<DriveFileMoveIcon fontSize="small" />}
-          variant="default"
+          variant="secondary"
           onClick={() => onMove(selectedFileIds)}
         >
           {t("filesPage.moveTo", "Move to…")}
@@ -447,16 +453,12 @@ export function FileDetailsPanel({
           >
             <Button
               leftSection={<CloudUploadIcon fontSize="small" />}
-              variant="default"
+              variant="secondary"
               disabled={Boolean(saveToServerDisabledReason)}
               onClick={() => onSaveToServer(localOnlyFiles)}
-              styles={{
-                root: {
-                  // Keep tooltip hoverable while button is disabled.
-                  pointerEvents: saveToServerDisabledReason
-                    ? "auto"
-                    : undefined,
-                },
+              style={{
+                // Keep tooltip hoverable while button is disabled.
+                pointerEvents: saveToServerDisabledReason ? "auto" : undefined,
               }}
             >
               {t("filesPage.saveToServer", "Save to server")}
@@ -465,8 +467,7 @@ export function FileDetailsPanel({
         )}
         <Button
           leftSection={<DeleteIcon fontSize="small" />}
-          color="red"
-          variant="light"
+          accent="danger"
           onClick={() => onRemove(selectedFileIds)}
         >
           {t("filesPage.remove", "Delete")}

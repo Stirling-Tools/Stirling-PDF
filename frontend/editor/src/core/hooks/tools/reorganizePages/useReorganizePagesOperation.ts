@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import {
-  ToolOperationConfig,
-  ToolType,
+  defineSingleFileTool,
   useToolOperation,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
@@ -54,15 +53,13 @@ const buildFormData = (
     fileInput: file,
   });
 
-export const reorganizePagesOperationConfig: ToolOperationConfig<ReorganizePagesParameters> =
-  {
-    toolType: ToolType.singleFile,
-    buildFormData,
-    toApiParams: reorganizePagesToApiParams,
-    fromApiParams: reorganizePagesFromApiParams,
-    operationType: "reorganizePages",
-    endpoint: ENDPOINT,
-  };
+export const reorganizePagesOperationConfig = defineSingleFileTool({
+  buildFormData,
+  toApiParams: reorganizePagesToApiParams,
+  fromApiParams: reorganizePagesFromApiParams,
+  operationType: "reorganizePages",
+  endpoint: ENDPOINT,
+});
 
 export const useReorganizePagesOperation = () => {
   const { t } = useTranslation();

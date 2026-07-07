@@ -82,10 +82,10 @@ export function LabelsEditorModal({
             {!readOnly && (
               <>
                 <Button
-                  variant="ghost"
-                  accent="red"
+                  variant="tertiary"
+                  accent="danger"
                   size="sm"
-                  leadingIcon={
+                  leftSection={
                     <DeleteSweepOutlinedIcon sx={{ fontSize: "1rem" }} />
                   }
                   onClick={onClear}
@@ -94,10 +94,10 @@ export function LabelsEditorModal({
                   {t("policies.labels.startFromScratch", "Start from scratch")}
                 </Button>
                 <Button
-                  variant="ghost"
-                  accent="red"
+                  variant="tertiary"
+                  accent="danger"
                   size="sm"
-                  leadingIcon={<RestartAltIcon sx={{ fontSize: "1rem" }} />}
+                  leftSection={<RestartAltIcon sx={{ fontSize: "1rem" }} />}
                   onClick={onReset}
                   disabled={saving}
                 >
@@ -107,12 +107,12 @@ export function LabelsEditorModal({
             )}
           </div>
           <div className="labels-footer-right">
-            <Button variant="ghost" size="sm" onClick={onClose}>
+            <Button variant="tertiary" size="sm" onClick={onClose}>
               {readOnly ? t("close", "Close") : t("cancel", "Cancel")}
             </Button>
             {!readOnly && (
               <Button
-                variant="gradient"
+                variant="primary"
                 size="sm"
                 onClick={onSave}
                 disabled={!dirty || saving}
@@ -137,17 +137,17 @@ export function LabelsEditorModal({
         {!readOnly && (
           <div className="labels-toolbar">
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
-              leadingIcon={<FileUploadOutlinedIcon sx={{ fontSize: "1rem" }} />}
+              leftSection={<FileUploadOutlinedIcon sx={{ fontSize: "1rem" }} />}
               onClick={() => fileInput.current?.click()}
             >
               {t("policies.labels.import", "Import JSON")}
             </Button>
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
-              leadingIcon={
+              leftSection={
                 <FileDownloadOutlinedIcon sx={{ fontSize: "1rem" }} />
               }
               onClick={onExport}

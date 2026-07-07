@@ -185,14 +185,14 @@ export function FileSidebarGroupControls({
         footer={
           <div className="fsg-footer">
             <Button
-              variant="ghost"
+              variant="tertiary"
               size="sm"
-              leadingIcon={<RestartAltIcon sx={{ fontSize: "1rem" }} />}
+              leftSection={<RestartAltIcon sx={{ fontSize: "1rem" }} />}
               onClick={resetSidebarCategories}
             >
               {t("fileSidebar.groupsModal.reset", "Reset to defaults")}
             </Button>
-            <Button variant="gradient" size="sm" onClick={() => setOpen(false)}>
+            <Button variant="primary" size="sm" onClick={() => setOpen(false)}>
               {t("fileSidebar.groupsModal.done", "Done")}
             </Button>
           </div>
@@ -350,9 +350,9 @@ export function FileSidebarGroupControls({
                         ))}
                       </datalist>
                       <Button
-                        variant="outline"
+                        variant="secondary"
                         size="sm"
-                        leadingIcon={<AddIcon sx={{ fontSize: "0.9rem" }} />}
+                        leftSection={<AddIcon sx={{ fontSize: "0.9rem" }} />}
                         onClick={() => addLabel(category.id)}
                         disabled={!(addDraft[category.id] ?? "").trim()}
                       >
@@ -382,9 +382,9 @@ export function FileSidebarGroupControls({
               }}
             />
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
-              leadingIcon={<AddIcon sx={{ fontSize: "0.9rem" }} />}
+              leftSection={<AddIcon sx={{ fontSize: "0.9rem" }} />}
               onClick={createCategory}
               disabled={!newCategory.trim()}
             >
