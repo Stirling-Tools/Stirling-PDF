@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, Skeleton } from "@app/ui";
-import { useLink } from "@portal/contexts/LinkContext";
-import { useUI } from "@portal/contexts/UIContext";
 import {
   fetchWallet,
   refreshWalletCache,
@@ -14,7 +12,6 @@ import {
   type LocalUsage,
 } from "@portal/api/link";
 import { useStripePortal } from "@portal/hooks/useStripePortal";
-import { LinkAccountPrompt } from "@portal/components/billing/LinkAccountPrompt";
 import { FreePlanView } from "@portal/components/billing/FreePlanView";
 import { SubscribedPlanView } from "@portal/components/billing/SubscribedPlanView";
 import {
@@ -25,33 +22,44 @@ import {
 import "@portal/views/Usage.css";
 import "@portal/components/billing/billing.css";
 
+export interface UsageProps {
+  /**
+   * Called with the wallet whenever it loads (initial fetch + post-checkout
+   * flip). A flavor-agnostic hook the composition uses for cross-cutting state —
+   * self-hosted maps it onto the link/tier dimension; SaaS ignores it.
+   */
+  onWalletLoaded?: (wallet: Wallet) => void;
+  /**
+   * Invoked when the SaaS session has lapsed and the user chooses to re-sign-in.
+   * When omitted, the "session expired" notice shows without a sign-in action.
+   * Self-hosted wires this to its re-auth flow; SaaS leaves it unset (its session
+   * is owned by the app, so this path never triggers).
+   */
+  onReauth?: () => void;
+}
+
 /**
- * Billing & usage page. State-driven by the link/subscription dimension —
- * NOT by the legacy {@code tier} prop:
+ * Billing & usage page — a flavor-agnostic wallet renderer. Whether it should be
+ * shown at all (self-hosted only renders it once the instance is linked) is
+ * decided upstream by the billing gate; this component always loads the wallet
+ * and dispatches on {@code wallet.status}:
  *
- *   unlinked          → LinkAccountPrompt
- *   linked-free       → FreePlanView (free meter + PAYG explainer)
- *   linked-subscribed → SubscribedPlanView (period meter, cap, members,
- *                       invoices, Stripe portal)
+ *   free       → FreePlanView (free meter + PAYG explainer)
+ *   subscribed → SubscribedPlanView (period meter, cap, members, invoices)
  *
  * Wallet comes from {@code GET /api/v1/payg/wallet} (apiClient.saas). After a
- * subscription flip via Stripe checkout / cancel via the portal, the
- * onWalletChange refresh re-reads and the view re-dispatches on the new
- * status.
+ * checkout / cancel, the refresh re-reads and the view re-dispatches on status.
  */
-export function Usage() {
+export function Usage({ onWalletLoaded, onReauth }: UsageProps = {}) {
   const { t } = useTranslation();
-  const { isLinked, setLinkState, saasSessionNonce } = useLink();
-  const { openLinkModal } = useUI();
   const [wallet, setWallet] = useState<Wallet | null>(null);
   // Locally-accrued usage SaaS hasn't billed yet; added to the synced figure so
   // "current usage" reflects work since the last daily sync. Best-effort.
   const [localUsage, setLocalUsage] = useState<LocalUsage | null>(null);
-  const [loading, setLoading] = useState<boolean>(isLinked);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // The instance is linked but the browser's SaaS session has lapsed — needs a
-  // re-sign-in, NOT a re-link.
-  const [needsReauth, setNeedsReauth] = useState(false);
+  // The SaaS session has lapsed and needs a re-sign-in (self-hosted only).
+  const [sessionExpired, setSessionExpired] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   // Stripe customer portal — the subscribed header's "Manage Payment" action.
   const portal = useStripePortal(wallet);
@@ -65,20 +73,10 @@ export function Usage() {
   }, []);
 
   useEffect(() => {
-    // Only fetch the wallet when the instance is linked. Unlinked → render the
-    // link prompt; no SaaS call needed.
-    if (!isLinked) {
-      setWallet(null);
-      setLocalUsage(null);
-      setLoading(false);
-      setError(null);
-      setNeedsReauth(false);
-      return;
-    }
     let cancelled = false;
     setLoading(true);
     setError(null);
-    setNeedsReauth(false);
+    setSessionExpired(false);
     // Independent of the wallet load — a local-usage failure must not break the
     // page; it just means no unsynced delta is shown.
     fetchLocalUsage()
@@ -92,18 +90,13 @@ export function Usage() {
       .then((w) => {
         if (cancelled) return;
         setWallet(w);
-        // Derive the linked-free / linked-subscribed dimension from the live
-        // wallet. Only refines a `linked-*` state; never flips unlinked → linked.
-        setLinkState(
-          w.status === "subscribed" ? "linked-subscribed" : "linked-free",
-        );
+        onWalletLoaded?.(w);
       })
       .catch((e) => {
         if (cancelled) return;
         if (e instanceof SaasNotLinkedError) {
-          // Reached only when the instance IS linked (we don't fetch otherwise),
-          // so this means the attended SaaS session expired — prompt re-sign-in.
-          setNeedsReauth(true);
+          // The attended SaaS session expired — offer a re-sign-in.
+          setSessionExpired(true);
         } else if (e instanceof SaasUnconfiguredError) {
           setError(e.message);
         } else if (e instanceof HttpError) {
@@ -127,7 +120,7 @@ export function Usage() {
     return () => {
       cancelled = true;
     };
-  }, [isLinked, refreshKey, saasSessionNonce, setLinkState]);
+  }, [refreshKey, onWalletLoaded, t]);
 
   const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
 
@@ -146,9 +139,10 @@ export function Usage() {
         if (!mounted.current) return false;
         if (w.status === "subscribed") {
           setWallet(w);
-          setLinkState("linked-subscribed");
+          onWalletLoaded?.(w);
           // Nudge the local instance to refresh its gate now so billable work
-          // unblocks immediately rather than on its next poll. Fire-and-forget.
+          // unblocks immediately rather than on its next poll. Fire-and-forget;
+          // a no-op on SaaS (no local instance to sync).
           triggerLocalSync().catch(() => {});
           return true;
         }
@@ -162,7 +156,7 @@ export function Usage() {
     // shows its "almost there" notice rather than the page silently self-healing.
     setRefreshKey((k) => k + 1);
     return false;
-  }, [setLinkState]);
+  }, [onWalletLoaded]);
 
   return (
     <div className="portal-usage portal-billing">
@@ -193,23 +187,23 @@ export function Usage() {
       </header>
 
       <div className="portal-usage__body">
-        {!isLinked && <LinkAccountPrompt />}
-
-        {isLinked && loading && (
+        {loading && (
           <div className="portal-billing__skeleton" aria-hidden>
             <Skeleton height="10rem" />
             <Skeleton height="14rem" />
           </div>
         )}
 
-        {isLinked && needsReauth && (
+        {sessionExpired && (
           <Banner
             tone="warning"
             title={t("portal.usage.sessionExpired.title", "Session expired")}
             action={
-              <Button size="sm" onClick={() => openLinkModal("reauth")}>
-                {t("portal.usage.sessionExpired.action", "Sign in again")}
-              </Button>
+              onReauth ? (
+                <Button size="sm" onClick={onReauth}>
+                  {t("portal.usage.sessionExpired.action", "Sign in again")}
+                </Button>
+              ) : undefined
             }
           >
             {t(
@@ -219,7 +213,7 @@ export function Usage() {
           </Banner>
         )}
 
-        {isLinked && error && (
+        {error && (
           <Banner
             tone="danger"
             title={t("portal.usage.error.loadWallet", "Couldn't load wallet")}
@@ -228,7 +222,7 @@ export function Usage() {
           </Banner>
         )}
 
-        {isLinked && portal.error && (
+        {portal.error && (
           <Banner
             tone="danger"
             title={t(
@@ -240,7 +234,7 @@ export function Usage() {
           </Banner>
         )}
 
-        {isLinked && wallet && wallet.status === "free" && (
+        {wallet && wallet.status === "free" && (
           <FreePlanView
             wallet={wallet}
             unsynced={localUsage}
@@ -248,7 +242,7 @@ export function Usage() {
           />
         )}
 
-        {isLinked && wallet && wallet.status === "subscribed" && (
+        {wallet && wallet.status === "subscribed" && (
           <SubscribedPlanView
             wallet={wallet}
             unsynced={localUsage}

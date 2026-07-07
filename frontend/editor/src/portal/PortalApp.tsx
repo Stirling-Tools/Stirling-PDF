@@ -1,7 +1,7 @@
 import { useEffect, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
-import { AuthProvider } from "@app/auth";
+import { PortalAuthBoundary } from "@portal/auth/PortalAuthBoundary";
 import { ErrorBoundary } from "@portal/components/ErrorBoundary";
 import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
 import { TierProvider } from "@portal/contexts/TierContext";
@@ -10,7 +10,6 @@ import type { SupabaseLoginSession } from "@app/auth/ui/useSupabaseLogin";
 import { UIProvider, useUI } from "@portal/contexts/UIContext";
 import { mantineTheme } from "@portal/theme/mantineTheme";
 import { AppShell } from "@portal/components/AppShell";
-import { AuthGate } from "@portal/components/AuthGate";
 import { AssistantButton } from "@portal/components/AssistantButton";
 import { AssistantPanel } from "@portal/components/AssistantPanel";
 import { SearchModal } from "@portal/components/SearchModal";
@@ -132,29 +131,27 @@ export function PortalApp() {
       <PortalMantineProvider>
         {/* Scopes base.css to the portal so it doesn't restyle the host editor. */}
         <div className="portal-scope">
-          <AuthProvider mode="spring">
+          <PortalAuthBoundary>
             <LinkProvider initialState="unlinked">
               {/* TierProvider sits INSIDE LinkProvider so it can derive the tier
                 from the real link/subscription state when MSW mocks are off. */}
               <TierProvider initialTier="pro">
                 <UIProvider>
                   <GlobalShortcuts />
-                  <AuthGate>
-                    <AccountLinkProvider>
-                      <AppShell>
-                        <RoutedContent />
-                      </AppShell>
-                      <AssistantButton />
-                      <AssistantPanel />
-                      <SearchModal />
-                      <SettingsHost />
-                      <LinkModalHost />
-                    </AccountLinkProvider>
-                  </AuthGate>
+                  <AccountLinkProvider>
+                    <AppShell>
+                      <RoutedContent />
+                    </AppShell>
+                    <AssistantButton />
+                    <AssistantPanel />
+                    <SearchModal />
+                    <SettingsHost />
+                    <LinkModalHost />
+                  </AccountLinkProvider>
                 </UIProvider>
               </TierProvider>
             </LinkProvider>
-          </AuthProvider>
+          </PortalAuthBoundary>
         </div>
       </PortalMantineProvider>
     </ThemeProvider>
