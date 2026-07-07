@@ -1,4 +1,4 @@
-import type { ChipTone } from "@app/ui";
+import type { ChipAccent } from "@app/ui";
 
 /**
  * Per-type presentation + create-form metadata. User-facing copy is stored as
@@ -12,26 +12,26 @@ import type { ChipTone } from "@app/ui";
 export interface SourceTypeMeta {
   labelKey: string;
   icon: string;
-  tone: ChipTone;
+  accent: ChipAccent;
 }
 
 const SOURCE_TYPE_META: Record<string, SourceTypeMeta> = {
   folder: {
     labelKey: "portal.sources.types.folder.label",
     icon: "⛁",
-    tone: "blue",
+    accent: "default",
   },
   editor: {
     labelKey: "portal.sources.types.editor.label",
     icon: "✏",
-    tone: "green",
+    accent: "success",
   },
 };
 
 const UNKNOWN_TYPE_META: SourceTypeMeta = {
   labelKey: "portal.sources.types.unknown.label",
   icon: "◇",
-  tone: "neutral",
+  accent: "neutral",
 };
 
 export function sourceTypeMeta(type: string): SourceTypeMeta {

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  ActionIcon,
   Banner,
   Button,
   Checkbox,
@@ -280,7 +281,7 @@ export function PipelineComposer({
       footer={
         <div className="portal-pipelines__composer-footer">
           <Button
-            variant="ghost"
+            variant="tertiary"
             size="sm"
             disabled={submitting}
             onClick={onClose}
@@ -397,29 +398,29 @@ export function PipelineComposer({
                     {humanizeOperation(step.operation)}
                   </span>
                   <div className="portal-pipelines__chain-actions">
-                    <button
+                    <ActionIcon
                       type="button"
                       aria-label={t("portal.pipelines.composer.moveUp")}
                       disabled={i === 0}
                       onClick={() => moveStep(i, -1)}
                     >
                       ↑
-                    </button>
-                    <button
+                    </ActionIcon>
+                    <ActionIcon
                       type="button"
                       aria-label={t("portal.pipelines.composer.moveDown")}
                       disabled={i === steps.length - 1}
                       onClick={() => moveStep(i, 1)}
                     >
                       ↓
-                    </button>
-                    <button
+                    </ActionIcon>
+                    <ActionIcon
                       type="button"
                       aria-label={t("portal.pipelines.composer.removeStep")}
                       onClick={() => removeStep(i)}
                     >
                       ×
-                    </button>
+                    </ActionIcon>
                   </div>
                 </li>
               ))}
@@ -429,7 +430,7 @@ export function PipelineComposer({
             {PIPELINE_OPERATIONS.map((op) => (
               <Chip
                 key={op.operation}
-                tone="blue"
+                accent="default"
                 size="sm"
                 onClick={() => addStep(op.operation, op.parameters)}
               >

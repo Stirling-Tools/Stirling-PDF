@@ -276,8 +276,8 @@ export function TrialManageModal({
             {t("portal.procurement.trial.cancel")}
           </button>
           <Button
-            variant="gradient"
-            accent="purple"
+            variant="primary"
+            accent="premium"
             loading={busy}
             disabled={maxed}
             onClick={onExtend}

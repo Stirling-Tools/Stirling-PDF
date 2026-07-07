@@ -47,38 +47,6 @@
   flex-shrink: 0;
 }
 
-.guest-banner-dismiss {
-  padding: 6px;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--mantine-color-dimmed);
-  border: none;
-  cursor: pointer;
-}
-
-.guest-banner-dismiss:hover {
-  background: var(--mantine-color-gray-1, rgba(255, 255, 255, 0.05));
-}
-
-.guest-banner-signup {
-  white-space: nowrap;
-  padding: 6px 12px;
-  border-radius: 8px;
-  background: var(--blue-6, #2563eb);
-  color: #fff;
-  border: none;
-  font-size: 12px;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-}
-
-.guest-banner-signup:hover {
-  background: var(--blue-7, #1d4ed8);
-}
-
 .guest-banner-icon {
   width: 16px;
   height: 16px;
