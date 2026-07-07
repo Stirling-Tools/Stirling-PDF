@@ -1,6 +1,6 @@
 import React from "react";
-import { ActionIcon } from "@mantine/core";
-import { Tooltip } from "@app/components/shared/Tooltip";
+import { Tooltip } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import styles from "@app/components/shared/HoverActionMenu.module.css";
 import { Z_INDEX_HOVER_ACTION_MENU } from "@app/styles/zIndex";
 
@@ -60,23 +60,15 @@ const HoverActionMenu: React.FC<HoverActionMenuProps> = ({
       onClick={(e) => e.stopPropagation()}
     >
       {visibleActions.map((action) => (
-        <Tooltip
-          key={action.id}
-          content={action.tooltip ?? action.label}
-          position="bottom"
-          offset={6}
-          arrow
-          portalTarget={
-            typeof document !== "undefined" ? document.body : undefined
-          }
-        >
+        <Tooltip key={action.id} label={action.tooltip ?? action.label}>
+          {/* Wrapper keeps the tooltip working when the button is disabled
+              (disabled buttons don't emit the pointer events Tooltip needs). */}
           <div style={{ display: "inline-flex", alignItems: "center" }}>
             <ActionIcon
               size="md"
-              variant="subtle"
+              variant="tertiary"
               disabled={action.disabled}
               onClick={action.onClick}
-              c={action.color}
               aria-label={action.label}
               style={{ color: action.color || "var(--text-secondary)" }}
               data-tour={action.dataTour}

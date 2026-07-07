@@ -6,17 +6,14 @@ import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
 
 const srcGlobs = [
+  // The portal layer lives under editor/src/portal, so editor/src/** covers it.
   "editor/src/**/*.{js,mjs,jsx,ts,tsx}",
-  "portal/src/**/*.{js,mjs,jsx,ts,tsx}",
-  "portal/main.tsx",
-  "shared/**/*.{js,mjs,jsx,ts,tsx}",
 ];
 const nodeGlobs = [
   "scripts/**/*.{js,ts,mjs,mts}",
   "editor/scripts/**/*.{js,ts,mjs,mts}",
-  "portal/scripts/**/*.{js,ts,mjs,mts}",
+  // Covers editor/vite.config.ts and editor/vitest.config.ts.
   "editor/*.config.{js,ts,mjs}",
-  "portal/*.config.{js,ts,mjs}",
   "*.config.{js,ts,mjs}",
   ".storybook/*.{js,ts,mjs,mts,tsx}",
 ];
@@ -25,7 +22,7 @@ const baseRestrictedImportPatterns = [
   {
     regex: "^\\.",
     message:
-      "Use a workspace alias (@app/* for editor, @portal/* for portal, @shared/*) instead of relative imports.",
+      "Use a workspace alias (@app/* for editor, @portal/* for portal) instead of relative imports.",
   },
   {
     regex: "^src/",
@@ -33,12 +30,47 @@ const baseRestrictedImportPatterns = [
   },
 ];
 
+// Button/SegmentedControl/Chip must come from the shared DS (@app/ui), not Mantine.
+// If no variant fits, extend @app/ui — that layer (editor/src/core/ui) is exempt below.
+const mantineComponentImportRestrictions = [
+  {
+    selector:
+      "ImportDeclaration[source.value='@mantine/core'] > ImportSpecifier[imported.name=/^(Button|ActionIcon|UnstyledButton|CloseButton|FileButton)$/]",
+    message:
+      'Use the shared Button (@app/ui/Button) instead of the Mantine button family. variant=primary|secondary|tertiary, accent=default|neutral|brand|ai|premium|danger|success|warning; an icon-only button is `<Button leftSection={…} aria-label="…" />`. If no variant fits, extend the shared Button rather than importing Mantine.',
+  },
+  {
+    selector:
+      "ImportDeclaration[source.value='@mantine/core'] > ImportSpecifier[imported.name='SegmentedControl']",
+    message:
+      "Use the shared SegmentedControl (@app/ui/SegmentedControl) instead of Mantine's.",
+  },
+  {
+    selector:
+      "ImportDeclaration[source.value='@mantine/core'] > ImportSpecifier[imported.name=/^(Chip|Pill)$/]",
+    message:
+      "Use the shared Chip (@app/ui/Chip) instead of Mantine's Chip/Pill.",
+  },
+];
+
+// Raw <button> should be a shared Button too — but bespoke CSS-styled controls
+// (tabs, nav rows, preset chips) can be exempted from this selector alone.
+const rawButtonSyntaxRestriction = {
+  selector: "JSXOpeningElement[name.name='button']",
+  message:
+    "Use the shared Button (@app/ui/Button) instead of a raw <button> element. If no variant fits, extend the shared Button.",
+};
+
+const sharedComponentSyntaxRestrictions = [
+  ...mantineComponentImportRestrictions,
+  rawButtonSyntaxRestriction,
+];
+
 export default defineConfig(
   {
     // Everything that contains 3rd party code that we don't want to lint
     ignores: [
       "dist",
-      "dist-portal",
       "node_modules",
       "playwright-report",
       "storybook-static",
@@ -48,7 +80,6 @@ export default defineConfig(
       "editor/src-tauri",
       "editor/playwright-report",
       "editor/test-results",
-      "portal/public",
     ],
   },
   eslint.configs.recommended,
@@ -69,7 +100,6 @@ export default defineConfig(
         },
       ],
       "@typescript-eslint/no-explicit-any": "off", // Temporarily disabled until codebase conformant
-      "@typescript-eslint/no-require-imports": "off", // Temporarily disabled until codebase conformant
       "@typescript-eslint/no-unused-vars": [
         "error",
         {
@@ -152,6 +182,7 @@ export default defineConfig(
       ],
       "no-restricted-syntax": [
         "error",
+        ...sharedComponentSyntaxRestrictions,
         {
           selector:
             "MemberExpression[object.name='window'][property.name='location']",
@@ -167,43 +198,44 @@ export default defineConfig(
       ],
     },
   },
-  // The shared/ layer is the seed of a future packages/shared-ui — it must
-  // only depend on third-party packages and on itself. If it ever imports
-  // from editor or portal layers, extraction to a standalone package later
-  // becomes a rewrite instead of a `git mv`.
+  // app code must use shared DS Button/SegmentedControl/Chip; cloud/ covered above.
   {
-    files: ["shared/**/*.{js,mjs,jsx,ts,tsx}"],
+    files: ["editor/src/**/*.{js,mjs,jsx,ts,tsx}"],
+    ignores: [
+      "editor/src/cloud/**/*.{js,mjs,jsx,ts,tsx}", // covered by cloud/ block above
+      "editor/src/core/ui/**/*.{js,mjs,jsx,ts,tsx}", // the shared DS itself — wraps Mantine/raw elements
+      "**/*.stories.{js,mjs,jsx,ts,tsx}", // stories may demo Mantine directly
+      "**/*.test.{js,mjs,jsx,ts,tsx}", // tests may use raw elements as fixtures
+      "editor/src/prototypes/**/*.{js,mjs,jsx,ts,tsx}", // not shipped
+    ],
     rules: {
-      "no-restricted-imports": [
-        "error",
-        {
-          patterns: [
-            ...baseRestrictedImportPatterns,
-            {
-              regex: "^@app/",
-              message:
-                "shared/ must not depend on the editor layer (@app/* resolves into editor/src/).",
-            },
-            {
-              regex: "^@portal/",
-              message:
-                "shared/ must not depend on the portal layer. Use @shared/* or third-party imports only.",
-            },
-            {
-              regex: "^@core/",
-              message: "shared/ must not depend on editor/src/core/.",
-            },
-            {
-              regex: "^@proprietary/",
-              message: "shared/ must not depend on editor/src/proprietary/.",
-            },
-            {
-              regex: "^@tauri-apps/",
-              message: "shared/ must remain web-compatible (no Tauri APIs).",
-            },
-          ],
-        },
-      ],
+      "no-restricted-syntax": ["error", ...sharedComponentSyntaxRestrictions],
+    },
+  },
+  // Intentional exceptions: ARIA tablist tabs and sub-26px segmented header —
+  // semantically not buttons; shared Button sizing can't represent them.
+  // Do NOT add ordinary buttons here.
+  {
+    files: [
+      "editor/src/core/components/shared/FileSelectorPicker.tsx",
+      "editor/src/core/components/filesPage/FileManagerView.tsx",
+      "editor/src/core/pages/HomePage.tsx",
+    ],
+    rules: {
+      "no-restricted-syntax": "off",
+    },
+  },
+  // TEMPORARY: the procurement feature was merged in from main and still uses
+  // bespoke CSS-styled raw <button>s. Exempt ONLY the raw-<button> rule here —
+  // the Mantine import bans stay in force so this feature can't regress to
+  // Mantine's Button/Chip/SegmentedControl — and migrate these to the shared
+  // Button in a follow-up PR. Do NOT add other folders to this block.
+  {
+    files: [
+      "editor/src/portal/components/procurement/**/*.{js,mjs,jsx,ts,tsx}",
+    ],
+    rules: {
+      "no-restricted-syntax": ["error", ...mantineComponentImportRestrictions],
     },
   },
   // Stricter rules that not all sub-folders are conformant to yet.

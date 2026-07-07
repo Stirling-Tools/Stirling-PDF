@@ -65,7 +65,7 @@
   width: 20px;
   height: 20px;
   border-radius: 5px;
-  border: 1.5px solid var(--border-hover, #52525b);
+  border: 1.5px solid var(--border-hover, var(--border-strong));
 }
 
 .file-sidebar-file-item:hover .file-sidebar-file-checkbox-hover {

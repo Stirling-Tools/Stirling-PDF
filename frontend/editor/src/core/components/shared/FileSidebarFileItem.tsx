@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Group, Loader, Menu, Stack, Text } from "@mantine/core";
-import { Tooltip } from "@app/components/shared/Tooltip";
+import { Group, Loader, Menu, Stack, Text, Tooltip } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
@@ -288,11 +288,11 @@ export function FileItem({
             </span>
             {isUploadedToCloud && (
               <Tooltip
-                content={t(
+                label={t(
                   "fileSidebar.fileItem.savedToServer",
                   "Saved to server",
                 )}
-                arrow
+                withArrow
                 position="top"
               >
                 <span className="file-sidebar-cloud-badge" data-no-select>
@@ -307,12 +307,9 @@ export function FileItem({
               {visibleFolders.map((folder) => (
                 <Tooltip
                   key={folder.id}
-                  content={folder.name}
-                  arrow
+                  label={folder.name}
+                  withArrow
                   position="top"
-                  portalTarget={
-                    typeof document !== "undefined" ? document.body : undefined
-                  }
                 >
                   <span
                     className="file-sidebar-folder-tag"
@@ -340,12 +337,9 @@ export function FileItem({
               ))}
               {overflowFolders.length > 0 && (
                 <Tooltip
-                  content={overflowFolders.map((f) => f.name).join(", ")}
-                  arrow
+                  label={overflowFolders.map((f) => f.name).join(", ")}
+                  withArrow
                   position="top"
-                  portalTarget={
-                    typeof document !== "undefined" ? document.body : undefined
-                  }
                 >
                   <span className="file-sidebar-folder-tag-more">
                     +{overflowFolders.length}
@@ -355,14 +349,15 @@ export function FileItem({
             </span>
           )}
         </div>
-        <button
+        <ActionIcon
+          variant="tertiary"
+          size="sm"
           className="file-sidebar-eye-btn"
           onClick={(e) => {
             e.stopPropagation();
             onEyeClick(fileId, e);
           }}
           tabIndex={-1}
-          type="button"
           aria-label={
             isViewedInViewer
               ? t("fileSidebar.fileItem.closeViewer", "Close viewer")
@@ -377,25 +372,25 @@ export function FileItem({
             className="file-sidebar-eye-closed"
             sx={{ fontSize: "1.1rem" }}
           />
-        </button>
-
+        </ActionIcon>
         {(onDelete ||
           (canSaveToCloud && onSaveToCloud) ||
           (hasVersionHistory && onVersionHistory)) && (
           <Menu position="bottom-end" withinPortal shadow="md" width={190}>
             <Menu.Target>
-              <button
+              <ActionIcon
+                variant="tertiary"
+                size="sm"
                 className="file-sidebar-kebab-btn"
                 onClick={(e) => e.stopPropagation()}
                 tabIndex={-1}
-                type="button"
                 aria-label={t(
                   "fileSidebar.fileItem.moreActions",
                   "More actions",
                 )}
               >
                 <MoreVertIcon sx={{ fontSize: "1.1rem" }} />
-              </button>
+              </ActionIcon>
             </Menu.Target>
             <Menu.Dropdown onClick={(e) => e.stopPropagation()}>
               {hasVersionHistory && onVersionHistory && (
@@ -423,20 +418,11 @@ export function FileItem({
                       );
                   return (
                     <Tooltip
-                      content={
-                        policyEnforcing
-                          ? enforcingTooltip(uploadLabel)
-                          : undefined
-                      }
+                      label={enforcingTooltip(uploadLabel)}
                       disabled={!policyEnforcing}
                       position="left"
                       offset={6}
-                      arrow
-                      portalTarget={
-                        typeof document !== "undefined"
-                          ? document.body
-                          : undefined
-                      }
+                      withArrow
                     >
                       <div>
                         <Menu.Item
@@ -463,20 +449,11 @@ export function FileItem({
                   );
                   return (
                     <Tooltip
-                      content={
-                        policyEnforcing
-                          ? enforcingTooltip(deleteLabel)
-                          : undefined
-                      }
+                      label={enforcingTooltip(deleteLabel)}
                       disabled={!policyEnforcing}
                       position="left"
                       offset={6}
-                      arrow
-                      portalTarget={
-                        typeof document !== "undefined"
-                          ? document.body
-                          : undefined
-                      }
+                      withArrow
                     >
                       <div>
                         <Menu.Item

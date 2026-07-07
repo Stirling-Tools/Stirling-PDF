@@ -6,12 +6,13 @@ import { useTranslation } from "@app/hooks/useTranslation";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import { getBaseUrl, withBasePath } from "@app/constants/app";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
-import "@shared/auth/ui/auth.css";
+import "@app/auth/ui/auth.css";
 import "@app/routes/authShared/saas-auth.css";
 import { alert } from "@app/components/toast";
+import { Button } from "@app/ui/Button";
 
 // Import signup components
-import ErrorMessage from "@shared/auth/ui/ErrorMessage";
+import ErrorMessage from "@app/auth/ui/ErrorMessage";
 import OAuthButtons from "@app/routes/login/OAuthButtons";
 import SignupForm from "@app/routes/signup/SignupForm";
 import {
@@ -19,7 +20,7 @@ import {
   SignupFieldErrors,
 } from "@app/routes/signup/SignupFormValidation";
 import { useAuthService } from "@app/routes/signup/AuthService";
-import loginHeader from "@shared/assets/brand/modern-logo/LoginLightModeHeader.svg";
+import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -209,8 +210,8 @@ export default function Signup() {
       </div>
 
       {/* Email & Password button */}
-      <button
-        type="button"
+      <Button
+        variant="secondary"
         disabled={isSigningUp}
         onClick={() => setShowEmailForm((v) => !v)}
         className={`oauth-button-fullwidth auth-expandable-trigger ${showEmailForm ? "auth-expandable-trigger--active" : ""}`}
@@ -220,7 +221,7 @@ export default function Signup() {
           <span className="auth-at-icon">@</span>
           <span className="oauth-btn-label">{`${t("signup.signUpWith", "Sign up with")} email`}</span>
         </span>
-      </button>
+      </Button>
 
       {/* Email form — animated expand */}
       <div
@@ -249,8 +250,8 @@ export default function Signup() {
 
       {/* Skip */}
       <div style={{ textAlign: "center", margin: "1rem 0" }}>
-        <button
-          type="button"
+        <Button
+          variant="tertiary"
           onClick={handleAnonymousSignIn}
           disabled={isSigningUp}
           style={{
@@ -259,13 +260,13 @@ export default function Signup() {
             cursor: "pointer",
             fontSize: "1rem",
             fontWeight: 700,
-            color: "#000000",
+            color: "var(--text-primary)",
           }}
         >
           {isSigningUp
             ? t("login.signingIn", "Signing in...")
             : `${t("signup.skip", "Skip")} →`}
-        </button>
+        </Button>
       </div>
 
       {/* Bottom */}
@@ -276,8 +277,8 @@ export default function Signup() {
           paddingTop: "1rem",
         }}
       >
-        <button
-          type="button"
+        <Button
+          variant="tertiary"
           onClick={() => navigate("/login")}
           style={{
             background: "none",
@@ -288,7 +289,7 @@ export default function Signup() {
           }}
         >
           {t("signup.alreadyHaveAccount", "I already have an account")}
-        </button>
+        </Button>
       </div>
     </AuthLayout>
   );

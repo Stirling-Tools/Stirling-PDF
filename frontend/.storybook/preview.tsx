@@ -2,12 +2,11 @@
 // the decorators below transpiles to React.createElement and needs React in
 // scope. (The app + story files use the automatic runtime via the portal vite
 // config; this import is specifically for the preview config file.)
-import React, { useEffect } from "react";
+import React, { Suspense, useEffect } from "react";
 import type { Decorator, Preview } from "@storybook/react-vite";
 import { initialize, mswLoader } from "msw-storybook-addon";
 import { MemoryRouter } from "react-router-dom";
 import { withThemeByDataAttribute } from "@storybook/addon-themes";
-import { MantineProvider } from "@mantine/core";
 
 // Reference React so the import isn't dropped as unused by the bundler — the
 // classic runtime needs it present even though it's not named in the JSX.
@@ -15,15 +14,15 @@ void React;
 
 import { TierProvider, type Tier } from "@portal/contexts/TierContext";
 import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
-import { ThemeProvider } from "@portal/contexts/ThemeContext";
+import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
 import { UIProvider } from "@portal/contexts/UIContext";
-import { mantineTheme } from "@portal/theme/mantineTheme";
+import { SuiProvider } from "@portal/theme/SuiProvider";
 import { handlers } from "@portal/mocks/handlers";
-import { configureSupabase } from "@shared/auth/supabase/supabaseClient";
+import { configureSupabase } from "@proprietary/auth/supabase/supabaseClient";
 
 import "@mantine/core/styles.css";
-import "@shared/tokens/tokens.css";
-import "@shared/tokens/base.css";
+import "@core/tokens/tokens.css";
+import "@core/tokens/base.css";
 
 // Start MSW once. Storybook runs in a browser so this uses the service worker.
 initialize({ onUnhandledRequest: "bypass" }, handlers);
@@ -79,13 +78,21 @@ function TierKey({
   );
 }
 
-/** Keeps useTheme() and the data-theme attribute in sync. */
-function ThemeWatcher() {
+/**
+ * Makes the Storybook toolbar the SINGLE source of truth for the theme.
+ */
+function ThemeBridge({
+  theme,
+  children,
+}: {
+  theme: "light" | "dark";
+  children: React.ReactNode;
+}) {
+  const { setTheme } = useTheme();
   useEffect(() => {
-    // The addon-themes decorator already sets data-theme on <html>.
-    // We just read it on mount so ThemeProvider picks it up.
-  }, []);
-  return null;
+    setTheme(theme);
+  }, [theme, setTheme]);
+  return <>{children}</>;
 }
 
 const withProviders: Decorator = (Story, context) => {
@@ -102,18 +109,21 @@ const withProviders: Decorator = (Story, context) => {
   return (
     <MemoryRouter initialEntries={["/"]}>
       <ThemeProvider>
-        <MantineProvider theme={mantineTheme} forceColorScheme={colorScheme}>
-          {/* LinkProvider must wrap TierProvider: TierContext derives its tier
-              from useLink() (matches App.tsx's nesting). */}
-          <LinkProvider key={linkState} initialState={linkState}>
-            <TierKey tier={tier}>
-              <UIProvider>
-                <ThemeWatcher />
-                <Story />
-              </UIProvider>
-            </TierKey>
-          </LinkProvider>
-        </MantineProvider>
+        <ThemeBridge theme={colorScheme}>
+          <SuiProvider colorScheme={colorScheme}>
+            {/* LinkProvider must wrap TierProvider: TierContext derives its tier
+                from useLink() (matches App.tsx's nesting). */}
+            <LinkProvider key={linkState} initialState={linkState}>
+              <TierKey tier={tier}>
+                <UIProvider>
+                  <Suspense fallback={null}>
+                    <Story />
+                  </Suspense>
+                </UIProvider>
+              </TierKey>
+            </LinkProvider>
+          </SuiProvider>
+        </ThemeBridge>
       </ThemeProvider>
     </MemoryRouter>
   );

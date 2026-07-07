@@ -9,15 +9,15 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import LockIcon from "@mui/icons-material/Lock";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
-import { PanelHeader } from "@shared/components/PanelHeader";
+import { PanelHeader } from "@app/ui/PanelHeader";
 import { ROW_ACCENT } from "@app/components/policies/policyStatus";
-import { Card } from "@shared/components/Card";
-import { ChipFlow } from "@shared/components/ChipFlow";
-import { StatusBadge } from "@shared/components/StatusBadge";
-import { EmptyState } from "@shared/components/EmptyState";
-import { Button } from "@shared/components/Button";
-import { Banner } from "@shared/components/Banner";
-import { ListRow } from "@shared/components/ListRow";
+import { Card } from "@app/ui/Card";
+import { ChipFlow } from "@app/ui/ChipFlow";
+import { StatusBadge } from "@app/ui/StatusBadge";
+import { EmptyState } from "@app/ui/EmptyState";
+import { Button } from "@app/ui/Button";
+import { Banner } from "@app/ui/Banner";
+import { ListRow } from "@app/ui/ListRow";
 import type {
   PolicyActivityItem,
   PolicyCategory,
@@ -84,15 +84,15 @@ function ActivityError({
       >
         {message}
       </span>
-      <button
-        type="button"
+      <Button
+        variant="tertiary"
         className="pol-activity-error__toggle"
         onClick={() => setExpanded((v) => !v)}
       >
         {expanded
           ? t("policies.detail.showLess", "Show less")
           : t("policies.detail.showMore", "Show more")}
-      </button>
+      </Button>
     </span>
   );
 }
@@ -221,7 +221,7 @@ export function PolicyDetailPanel({
                   trailing={
                     item.status === "flagged" && onRetry ? (
                       <Button
-                        variant="ghost"
+                        variant="tertiary"
                         size="sm"
                         onClick={() => onRetry(item)}
                       >
@@ -290,22 +290,22 @@ export function PolicyDetailPanel({
         <div className={`pol-footer${canDelete ? "" : " pol-footer-end"}`}>
           {canDelete && (
             <Button
-              variant="ghost"
-              accent="red"
+              variant="tertiary"
+              accent="danger"
               size="sm"
-              leadingIcon={<DeleteOutlineIcon sx={{ fontSize: "0.9rem" }} />}
+              leftSection={<DeleteOutlineIcon sx={{ fontSize: "0.9rem" }} />}
               onClick={onDelete}
               style={{ marginRight: "auto" }}
             >
               {t("delete", "Delete")}
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={onTogglePause}>
+          <Button variant="secondary" size="sm" onClick={onTogglePause}>
             {isPaused
               ? t("policies.detail.resume", "Resume")
               : t("policies.detail.pause", "Pause")}
           </Button>
-          <Button variant="gradient" size="sm" onClick={onEditSettings}>
+          <Button size="sm" onClick={onEditSettings}>
             {t("policies.detail.editSettings", "Edit Settings")}
           </Button>
         </div>

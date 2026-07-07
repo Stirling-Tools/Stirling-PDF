@@ -4,7 +4,7 @@
 /* and a collapsed-rail of policy icons.                                     */
 /*                                                                           */
 /* Chrome (headers, cards, buttons, badges, chips, lists, steps…) uses SUI   */
-/* (@shared/components). The bespoke .pol-* bits below are thin layout        */
+/* (@app/ui). The bespoke .pol-* bits below are thin layout        */
 /* scaffolding + the collapsed rail; spacing snaps to the SUI --space-*       */
 /* scale and colour to the SUI token set so it reads as one product.         */
 
@@ -178,6 +178,11 @@
   color: var(--color-text-4);
   text-decoration: none;
   white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--motion-fast);
+}
+.pol-row-upgrade:hover {
+  color: var(--color-text-1);
 }
 .pol-row-upgrade:hover {
   text-decoration: underline;

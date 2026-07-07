@@ -7,7 +7,7 @@ import {
 } from "@app/tests/helpers/ui-helpers";
 import path from "path";
 
-const FIXTURES_DIR = path.join(__dirname, "../test-fixtures");
+const FIXTURES_DIR = path.join(import.meta.dirname, "../test-fixtures");
 const ENCRYPTED_PDF = path.join(FIXTURES_DIR, "encrypted.pdf");
 const SAMPLE_PDF = path.join(FIXTURES_DIR, "sample.pdf");
 
@@ -31,6 +31,9 @@ test.describe("Encrypted PDF: unlock then merge", () => {
     await page.goto("/merge");
     await page.waitForLoadState("domcontentloaded");
 
+    // `files-button`'s native picker is mocked globally
+    // (suppressNativeFilePicker), so the click is safe cross-browser; set the
+    // files on the hidden input directly.
     await page.getByTestId("files-button").click();
     await page
       .locator('[data-testid="file-input"]')

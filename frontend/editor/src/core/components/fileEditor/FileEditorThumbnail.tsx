@@ -1,14 +1,7 @@
 import React, { useState, useCallback, useRef, useMemo } from "react";
-import {
-  Text,
-  Modal,
-  Button,
-  Group,
-  Loader,
-  Stack,
-  ActionIcon,
-  Tooltip,
-} from "@mantine/core";
+import { Text, Modal, Group, Loader, Stack, Tooltip } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { Button } from "@app/ui/Button";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { alert } from "@app/components/toast";
 import { useTranslation } from "react-i18next";
@@ -587,9 +580,12 @@ const FileEditorThumbnail = ({
                     )}
                   >
                     <ActionIcon
-                      size="xs"
-                      variant="filled"
-                      color="yellow"
+                      size="sm"
+                      accent="warning"
+                      aria-label={t(
+                        "encryptedPdfUnlock.unlockPrompt",
+                        "Unlock PDF to continue",
+                      )}
                       onClick={(e) => {
                         e.stopPropagation();
                         openEncryptedUnlockPrompt(file.id);
@@ -651,17 +647,13 @@ const FileEditorThumbnail = ({
                 <PrivateContent>{file.name}</PrivateContent>
               </Text>
               <Group justify="flex-end" gap="sm">
-                <Button variant="light" onClick={handleCancelClose}>
+                <Button variant="secondary" onClick={handleCancelClose}>
                   {t("confirmCloseCancel", "Cancel")}
                 </Button>
-                <Button
-                  variant="filled"
-                  color="red"
-                  onClick={handleConfirmClose}
-                >
+                <Button accent="danger" onClick={handleConfirmClose}>
                   {t("confirmCloseDiscard", "Discard changes and close")}
                 </Button>
-                <Button variant="filled" onClick={handleSaveAndClose}>
+                <Button onClick={handleSaveAndClose}>
                   {t("confirmCloseSave", "Save and close")}
                 </Button>
               </Group>
@@ -678,14 +670,10 @@ const FileEditorThumbnail = ({
                 <PrivateContent>{file.name}</PrivateContent>
               </Text>
               <Group justify="flex-end" gap="sm">
-                <Button variant="light" onClick={handleCancelClose}>
+                <Button variant="secondary" onClick={handleCancelClose}>
                   {t("confirmCloseCancel", "Cancel")}
                 </Button>
-                <Button
-                  variant="filled"
-                  color="red"
-                  onClick={handleConfirmClose}
-                >
+                <Button accent="danger" onClick={handleConfirmClose}>
                   {t("confirmCloseConfirm", "Close File")}
                 </Button>
               </Group>

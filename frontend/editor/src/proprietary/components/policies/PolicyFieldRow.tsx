@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { ToggleSwitch } from "@shared/components/ToggleSwitch";
-import { Select } from "@shared/components/Select";
-import { Input } from "@shared/components/Input";
-import { Chip } from "@shared/components/Chip";
-import { SettingsRow } from "@shared/components/SettingsRow";
+import { ToggleSwitch } from "@app/ui/ToggleSwitch";
+import { Select } from "@app/ui/Select";
+import { Input } from "@app/ui/Input";
+import { Chip } from "@app/ui/Chip";
+import { SettingsRow } from "@app/ui/SettingsRow";
 import type { PolicyField } from "@app/types/policies";
 
 interface PolicyFieldRowProps {
@@ -51,12 +51,7 @@ export function PolicyFieldRow({
         </div>
         <div className="pol-field-chips">
           {(field.options ?? []).map((opt) => (
-            <Chip
-              key={opt}
-              tone={selected.includes(opt) ? "blue" : "neutral"}
-              size="sm"
-              onClick={() => toggle(opt)}
-            >
+            <Chip key={opt} size="sm" onClick={() => toggle(opt)}>
               {t(`policies.fieldOption.${field.key}.${opt}`, opt)}
             </Chip>
           ))}
@@ -81,7 +76,7 @@ export function PolicyFieldRow({
           label: t(`policies.fieldOption.${field.key}.${o}`, o),
         }))}
         value={typeof value === "string" ? value : ""}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(value) => onChange(value ?? "")}
         aria-label={fieldLabel}
       />
     ) : (

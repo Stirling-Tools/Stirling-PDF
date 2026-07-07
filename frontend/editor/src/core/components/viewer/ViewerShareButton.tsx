@@ -1,14 +1,7 @@
 import { useState } from "react";
-import {
-  ActionIcon,
-  Button,
-  Group,
-  Loader,
-  Modal,
-  Progress,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Group, Loader, Modal, Progress, Stack, Text } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import ShareIcon from "@mui/icons-material/Share";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
@@ -192,8 +185,7 @@ export default function ViewerShareButton({
       >
         <div className="workbench-bar-tooltip-wrapper">
           <ActionIcon
-            variant="subtle"
-            radius="md"
+            variant="tertiary"
             className="workbench-bar-action-icon"
             onClick={handleClick}
             disabled={isDisabled}
@@ -233,17 +225,17 @@ export default function ViewerShareButton({
           </Stack>
           <Group justify="center" gap="sm">
             <Button
-              variant="light"
-              color="var(--mantine-color-gray-8)"
-              w={BUTTON_WIDTH}
+              variant="secondary"
+              accent="neutral"
+              style={{ width: BUTTON_WIDTH }}
               onClick={() => setConfirmOpen(false)}
               disabled={saving}
             >
               {t("cancel", "Cancel")}
             </Button>
             <Button
-              variant="filled"
-              w={BUTTON_WIDTH}
+              variant="primary"
+              style={{ width: BUTTON_WIDTH }}
               leftSection={<CloudUploadIcon fontSize="small" />}
               onClick={handleSaveAndShare}
               loading={saving}

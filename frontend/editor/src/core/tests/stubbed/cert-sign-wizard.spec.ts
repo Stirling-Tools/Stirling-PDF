@@ -3,7 +3,7 @@ import { uploadFiles } from "@app/tests/helpers/ui-helpers";
 import type { Page, Route } from "@playwright/test";
 import path from "path";
 
-const FIXTURES_DIR = path.join(__dirname, "../test-fixtures");
+const FIXTURES_DIR = path.join(import.meta.dirname, "../test-fixtures");
 const SAMPLE_PDF = path.join(FIXTURES_DIR, "sample.pdf");
 
 // app-config the desktop bundle would return: hardware signing is offered only there.
@@ -59,7 +59,7 @@ async function mockHardwareEndpoints(page: Page) {
 }
 
 test.describe("CertSign tool - certificate source model", () => {
-  test("renders, accepts a PDF, and exposes the Upload source", async ({
+  test("renders, accepts a PDF, and defaults to upload when no other sources exist", async ({
     page,
   }) => {
     await page.route("**/api/v1/security/cert-sign", (route) =>
@@ -76,10 +76,14 @@ test.describe("CertSign tool - certificate source model", () => {
     await uploadFiles(page, SAMPLE_PDF);
 
     await expect(page).toHaveURL(/\/cert-sign/);
-    // Source step always offers "Upload" (the former "Manual" mode).
+    // With no server/hardware sources, the picker collapses to a hint and the
+    // flow proceeds in the default MANUAL (upload) mode — no lone Upload CTA.
     await expect(
-      page.getByRole("button", { name: /^upload$/i }).first(),
-    ).toBeAttached({ timeout: 10_000 });
+      page.getByText(/no other certificate sources are available/i).first(),
+    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("button", { name: /^upload$/i })).toHaveCount(
+      0,
+    );
   });
 
   test("does NOT offer 'This device' when not running as desktop", async ({
@@ -89,9 +93,10 @@ test.describe("CertSign tool - certificate source model", () => {
     await page.waitForLoadState("domcontentloaded");
     await uploadFiles(page, SAMPLE_PDF);
 
+    // No alternative sources: the picker is a hint, and hardware is never offered.
     await expect(
-      page.getByRole("button", { name: /^upload$/i }).first(),
-    ).toBeAttached({ timeout: 10_000 });
+      page.getByText(/no other certificate sources are available/i).first(),
+    ).toBeVisible({ timeout: 10_000 });
     await expect(
       page.getByRole("button", { name: /this device/i }),
     ).toHaveCount(0);

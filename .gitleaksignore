@@ -15,10 +15,10 @@ testing/compose/validate-mcp-test.sh:curl-auth-header:92
 testing/compose/validate-mcp-test.sh:curl-auth-header:116
 
 # Storybook example showing curl with a fake Bearer token placeholder (sk_live_a3f8...).
-frontend/shared/components/CodeBlock.stories.tsx:curl-auth-header:4
+frontend/editor/src/proprietary/ui/CodeBlock.stories.tsx:curl-auth-header:5
 
 # Truncated placeholder API key in portal docs example (sk_live_8f2c...e10) - not a real secret.
-frontend/portal/src/components/docs/GettingStartedSection.tsx:generic-api-key:31
+frontend/editor/src/portal/components/docs/GettingStartedSection.tsx:generic-api-key:30
 
 # False positive: generic-api-key matches the Java type name "X509Certificate"
 # in a method signature (CreateSignatureBase.resolveSignatureAlgorithm) - not a secret.

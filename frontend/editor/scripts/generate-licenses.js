@@ -1,20 +1,13 @@
 #!/usr/bin/env node
 
-const { execSync } = require("node:child_process");
-const {
-  existsSync,
-  mkdirSync,
-  writeFileSync,
-  readFileSync,
-} = require("node:fs");
-const path = require("node:path");
+import { execSync } from "node:child_process";
+import { existsSync, mkdirSync, writeFileSync, readFileSync } from "node:fs";
+import path from "node:path";
+import { argv } from "node:process";
 
-const { argv } = require("node:process");
 const inputIdx = argv.indexOf("--input");
 const INPUT_FILE = inputIdx > -1 ? argv[inputIdx + 1] : null;
 const POSTPROCESS_ONLY = !!INPUT_FILE;
-
-// __dirname is available in CommonJS by default
 
 /**
  * Generate 3rd party licenses for frontend dependencies
@@ -22,7 +15,7 @@ const POSTPROCESS_ONLY = !!INPUT_FILE;
  */
 
 const OUTPUT_FILE = path.join(
-  __dirname,
+  import.meta.dirname,
   "..",
   "src",
   "assets",
@@ -30,7 +23,7 @@ const OUTPUT_FILE = path.join(
 );
 // package.json lives at the workspace root (frontend/), not editor/. The
 // script is at frontend/editor/scripts/, so walk up two levels.
-const PACKAGE_JSON = path.join(__dirname, "..", "..", "package.json");
+const PACKAGE_JSON = path.join(import.meta.dirname, "..", "..", "package.json");
 
 // Ensure the output directory exists
 const outputDir = path.dirname(OUTPUT_FILE);
@@ -192,7 +185,7 @@ try {
 
     // Write license warnings to a separate file for CI/CD
     const warningsFile = path.join(
-      __dirname,
+      import.meta.dirname,
       "..",
       "src",
       "assets",

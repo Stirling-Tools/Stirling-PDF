@@ -1,6 +1,8 @@
 import React, { useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { ActionIcon, Button, Checkbox, Menu, Tooltip } from "@mantine/core";
+import { Checkbox, Menu, Tooltip } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { PolicyBadges as PolicyBadgeRow } from "@app/components/shared/PolicyBadges";
 import FolderIcon from "@mui/icons-material/Folder";
@@ -297,10 +299,10 @@ function EmptyState({
                 <span style={{ display: "inline-flex" }}>
                   <Button
                     size="md"
-                    variant="default"
+                    variant="secondary"
                     leftSection={<CreateNewFolderIcon fontSize="small" />}
                     disabled
-                    styles={{ root: { pointerEvents: "auto" } }}
+                    style={{ pointerEvents: "auto" }}
                   >
                     {t("filesPage.empty.newFolderCta", "Create folder")}
                   </Button>
@@ -309,7 +311,7 @@ function EmptyState({
             ) : (
               <Button
                 size="md"
-                variant="default"
+                variant="secondary"
                 leftSection={<CreateNewFolderIcon fontSize="small" />}
                 onClick={onCreateFolder}
               >
@@ -528,8 +530,6 @@ function FolderCard({
           <Menu.Target>
             <ActionIcon
               ref={kebabRef}
-              variant="filled"
-              color="gray"
               size="sm"
               onClick={(e) => e.stopPropagation()}
               aria-label={t("filesPage.folderMenu", "Folder actions")}
@@ -752,8 +752,6 @@ function FileCard({
           <Menu.Target>
             <ActionIcon
               ref={kebabRef}
-              variant="filled"
-              color="gray"
               size="sm"
               onClick={(e) => e.stopPropagation()}
               aria-label={t("filesPage.fileMenu", "File actions")}
@@ -1132,7 +1130,7 @@ function FolderRow({
         <Menu.Target>
           <ActionIcon
             ref={kebabRef}
-            variant="subtle"
+            variant="tertiary"
             size="sm"
             onClick={(e) => e.stopPropagation()}
             aria-label={t("filesPage.folderMenu", "Folder actions")}
@@ -1351,7 +1349,7 @@ function FileRow({
         <Menu.Target>
           <ActionIcon
             ref={kebabRef}
-            variant="subtle"
+            variant="tertiary"
             size="sm"
             onClick={(e) => e.stopPropagation()}
             aria-label={t("filesPage.fileMenu", "File actions")}
