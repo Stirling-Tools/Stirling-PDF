@@ -2,8 +2,7 @@ import React, { useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { ActionIcon, Button, Checkbox, Menu, Tooltip } from "@mantine/core";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
-import AutorenewIcon from "@mui/icons-material/Autorenew";
+import { PolicyBadges as PolicyBadgeRow } from "@app/components/shared/PolicyBadges";
 import FolderIcon from "@mui/icons-material/Folder";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
@@ -582,30 +581,7 @@ function FolderCard({
 /** Shield badges for the policies that have run on a file. */
 function PolicyBadges({ fileId }: { fileId: string }) {
   const badges = usePolicyFileBadges().get(fileId) ?? [];
-  if (badges.length === 0) return null;
-  return (
-    <span className="files-page-policy-badges" data-no-select>
-      {badges.slice(0, 3).map((policy) => (
-        <Tooltip
-          key={policy.id}
-          label={`${policy.name} policy ran on this file`}
-          withArrow
-          position="top"
-        >
-          <span
-            className={`files-page-policy-badge${policy.enforcing ? " files-page-policy-badge--enforcing" : ""}`}
-            style={{ color: policy.accentColor }}
-          >
-            {policy.enforcing ? (
-              <AutorenewIcon sx={{ fontSize: "0.7rem" }} />
-            ) : (
-              <ShieldOutlinedIcon sx={{ fontSize: "0.7rem" }} />
-            )}
-          </span>
-        </Tooltip>
-      ))}
-    </span>
-  );
+  return <PolicyBadgeRow policies={badges} />;
 }
 
 interface FileCardProps {

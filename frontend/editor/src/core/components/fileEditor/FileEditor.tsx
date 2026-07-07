@@ -20,7 +20,7 @@ import { alert } from "@app/components/toast";
 import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
-import type { FileItemPolicyRef } from "@app/components/shared/FileSidebarFileItem";
+import type { FileItemPolicyRef } from "@app/components/shared/PolicyBadges";
 
 const EMPTY_POLICIES: FileItemPolicyRef[] = [];
 

@@ -24,13 +24,15 @@ import PushPinIcon from "@mui/icons-material/PushPin";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
-import AutorenewIcon from "@mui/icons-material/Autorenew";
 import {
   draggable,
   dropTargetForElements,
 } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { StirlingFileStub } from "@app/types/fileContext";
-import type { FileItemPolicyRef } from "@app/components/shared/FileSidebarFileItem";
+import {
+  PolicyBadges,
+  type FileItemPolicyRef,
+} from "@app/components/shared/PolicyBadges";
 import { PolicyEnforcingOverlay } from "@app/components/shared/PolicyEnforcingOverlay";
 import { zipFileService } from "@app/services/zipFileService";
 
@@ -622,33 +624,7 @@ const FileEditorThumbnail = ({
           <span className={styles.fileNameText}>
             <PrivateContent>{truncateCenter(file.name, 40)}</PrivateContent>
           </span>
-          {policies.length > 0 && (
-            <span className={styles.fileNameBadges}>
-              {policies.slice(0, 3).map((policy) => (
-                <Tooltip
-                  key={policy.id}
-                  label={
-                    policy.enforcing
-                      ? `${policy.name} enforcing…`
-                      : `${policy.name} policy ran on this file`
-                  }
-                  withArrow
-                  position="top"
-                >
-                  <span
-                    className={`${styles.policyBadge}${policy.enforcing ? ` ${styles.policyBadgeEnforcing}` : ""}${policy.recent && !policy.enforcing ? ` ${styles.policyBadgeRecent}` : ""}`}
-                    style={{ color: policy.accentColor }}
-                  >
-                    {policy.enforcing ? (
-                      <AutorenewIcon style={{ fontSize: 11 }} />
-                    ) : (
-                      <ShieldOutlinedIcon style={{ fontSize: 11 }} />
-                    )}
-                  </span>
-                </Tooltip>
-              ))}
-            </span>
-          )}
+          <PolicyBadges policies={policies} className={styles.fileNameBadges} />
         </p>
         <p className={styles.fileMeta}>{metaLine}</p>
       </div>

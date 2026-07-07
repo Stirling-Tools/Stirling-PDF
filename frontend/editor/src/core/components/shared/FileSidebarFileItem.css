@@ -134,55 +134,6 @@
   text-overflow: ellipsis;
 }
 
-/* ---- Policy activity badges (a shield per policy that has run on the file) ---- */
-.file-sidebar-policy-badges {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  flex-shrink: 0;
-}
-.file-sidebar-policy-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 15px;
-  height: 15px;
-  border-radius: 4px;
-  /* `color` is set inline to the policy's accent; the tint follows it. */
-  color: var(--text-secondary);
-  background: color-mix(in srgb, currentColor 16%, transparent);
-}
-
-.file-sidebar-policy-badge--enforcing svg {
-  animation: sidebar-policy-spin 1s linear infinite;
-}
-@keyframes sidebar-policy-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-.file-sidebar-policy-badge--recent {
-  animation: sidebar-policy-pulse 4.5s ease-in-out forwards;
-}
-@keyframes sidebar-policy-pulse {
-  0%,
-  24%,
-  48% {
-    box-shadow: 0 0 0 0 transparent;
-  }
-  12%,
-  36% {
-    box-shadow: 0 0 5px 2px currentColor;
-  }
-  60%,
-  100% {
-    box-shadow: 0 0 0 0 transparent;
-  }
-}
-
 /* ---- Cloud badge (file saved to the server) ---- */
 .file-sidebar-cloud-badge {
   display: inline-flex;

@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from "react";
-import { Tooltip, ThemeIcon } from "@mantine/core";
-import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import { Tooltip } from "@mantine/core";
+import AutorenewIcon from "@mui/icons-material/Autorenew";
 import { useTranslation } from "react-i18next";
 import {
   POLICY_IN_FLIGHT_STATUSES,
   type PolicyRunRecord,
 } from "@app/components/policies/policyRunStore";
+import { policyAccentVar } from "@app/components/policies/policyStatus";
 import { PolicyEnforcingOverlay } from "@app/components/shared/PolicyEnforcingOverlay";
+import "@app/components/shared/PolicyBadges.css";
 
 interface Props {
   runs: PolicyRunRecord[];
@@ -36,29 +38,26 @@ export function PolicyEnforcementOverlay({ runs }: Props) {
       : undefined;
 
   if (dismissed) {
-    // Overlay dismissed — collapsed to a small corner badge so the user can read the PDF.
+    // Overlay dismissed — collapsed to a corner badge (same design as the
+    // per-file policy badges, larger) so the user can read the PDF.
     return (
       <Tooltip
         label={t("policy.enforcingTitle", "Enforcing policy…")}
         position="left"
         withArrow
       >
-        <ThemeIcon
-          size={32}
-          radius="xl"
-          variant="light"
-          color="blue"
+        <span
+          className="policy-badge policy-badge--lg policy-badge--enforcing"
           style={{
             position: "absolute",
-            bottom: 16,
+            top: 16,
             right: 16,
             zIndex: 1100,
-            cursor: "default",
-            boxShadow: "var(--shadow-md)",
+            color: policyAccentVar(inFlight.categoryId),
           }}
         >
-          <ShieldOutlinedIcon style={{ fontSize: 16 }} />
-        </ThemeIcon>
+          <AutorenewIcon style={{ fontSize: 16 }} />
+        </span>
       </Tooltip>
     );
   }

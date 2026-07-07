@@ -3,23 +3,14 @@ import { usePolicyRuns } from "@app/components/policies/policyRunStore";
 import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
-import { ROW_ACCENT } from "@app/components/policies/policyStatus";
-import type { FileItemPolicyRef } from "@app/components/shared/FileSidebarFileItem";
+import { policyAccentVar } from "@app/components/policies/policyStatus";
+import type { FileItemPolicyRef } from "@app/components/shared/PolicyBadges";
 
 /** How long after a run a badge counts as "recent" (drives the one-off glow).
  *  Measured from run start — must exceed the longest realistic policy wall-clock
  *  time so the glow still fires after a slow run completes and imports. Old or
  *  reloaded runs fall outside this window, suppressing the glow on page reload. */
 const RECENT_MS = 5 * 60 * 1000;
-
-/** Policy accent name (ROW_ACCENT) → the CSS colour var the badge uses. */
-const ACCENT_VAR: Record<string, string> = {
-  blue: "var(--color-blue)",
-  purple: "var(--color-purple)",
-  green: "var(--color-green)",
-  amber: "var(--color-amber)",
-  red: "var(--color-red)",
-};
 
 /** Minimal provenance shape needed to resolve a file's inherited badges. */
 type LineageStub = {
@@ -72,7 +63,7 @@ export function buildPolicyBadgeMap(
         list.push({
           id: run.categoryId,
           name,
-          accentColor: ACCENT_VAR[ROW_ACCENT[run.categoryId] ?? "blue"],
+          accentColor: policyAccentVar(run.categoryId),
           recent,
         });
         directByFile.set(fileId, list);
@@ -129,7 +120,7 @@ export function buildPolicyBadgeMap(
       list.push({
         id: run.categoryId,
         name,
-        accentColor: ACCENT_VAR[ROW_ACCENT[run.categoryId] ?? "blue"],
+        accentColor: policyAccentVar(run.categoryId),
         recent: false,
         enforcing: true,
       });

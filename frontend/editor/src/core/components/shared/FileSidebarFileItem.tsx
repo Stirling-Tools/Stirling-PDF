@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
-import AutorenewIcon from "@mui/icons-material/Autorenew";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 import CloudDoneIcon from "@mui/icons-material/CloudDone";
@@ -14,6 +13,10 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import HistoryIcon from "@mui/icons-material/History";
 import type { FileId } from "@app/types/file";
 import { FileDocIcon } from "@app/components/shared/FileDocIcon";
+import {
+  PolicyBadges,
+  type FileItemPolicyRef,
+} from "@app/components/shared/PolicyBadges";
 import { getFileDocVariant } from "@app/components/shared/filePreview/getFileTypeIcon";
 import { useLazyThumbnail } from "@app/hooks/useLazyThumbnail";
 import { IMAGE_EXTENSIONS } from "@app/utils/fileUtils";
@@ -133,19 +136,6 @@ export interface FileItemFolderRef {
   accentColor: string;
 }
 
-/** A policy that has run on this file, used for the activity badges. */
-export interface FileItemPolicyRef {
-  id: string;
-  name: string;
-  /** CSS colour for the badge (matches the policy's accent). */
-  accentColor: string;
-  /** True only just after the policy was applied — drives the one-off glow, so
-   *  it doesn't replay on every reload of an already-enforced file. */
-  recent: boolean;
-  /** True while the policy run is actively in-flight on this file. */
-  enforcing?: boolean;
-}
-
 export interface FileItemProps {
   fileId: FileId;
   name: string;
@@ -181,7 +171,6 @@ export interface FileItemProps {
 }
 
 const MAX_VISIBLE_FOLDER_TAGS = 2;
-const MAX_VISIBLE_POLICY_BADGES = 3;
 
 export function FileItem({
   fileId,
@@ -311,33 +300,7 @@ export function FileItem({
                 </span>
               </Tooltip>
             )}
-            {policies.length > 0 && (
-              <span className="file-sidebar-policy-badges" data-no-select>
-                {policies.slice(0, MAX_VISIBLE_POLICY_BADGES).map((policy) => (
-                  <Tooltip
-                    key={policy.id}
-                    content={
-                      policy.enforcing
-                        ? `${policy.name} enforcing…`
-                        : `${policy.name} policy ran on this file`
-                    }
-                    arrow
-                    position="top"
-                  >
-                    <span
-                      className={`file-sidebar-policy-badge${policy.enforcing ? " file-sidebar-policy-badge--enforcing" : ""}${policy.recent && !policy.enforcing ? " file-sidebar-policy-badge--recent" : ""}`}
-                      style={{ color: policy.accentColor }}
-                    >
-                      {policy.enforcing ? (
-                        <AutorenewIcon sx={{ fontSize: "0.7rem" }} />
-                      ) : (
-                        <ShieldOutlinedIcon sx={{ fontSize: "0.7rem" }} />
-                      )}
-                    </span>
-                  </Tooltip>
-                ))}
-              </span>
-            )}
+            <PolicyBadges policies={policies} />
           </span>
           {folders.length > 0 && (
             <span className="file-sidebar-folder-tags" data-no-select>

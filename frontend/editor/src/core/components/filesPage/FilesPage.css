@@ -484,32 +484,6 @@
   gap: 0.4rem;
 }
 
-/* Policy activity badges (a shield per policy that has run on the file). */
-.files-page-policy-badges {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  flex-shrink: 0;
-}
-.files-page-policy-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 15px;
-  height: 15px;
-  border-radius: 4px;
-  /* `color` set inline to the policy accent; tint follows it. */
-  background: color-mix(in srgb, currentColor 16%, transparent);
-}
-.files-page-policy-badge--enforcing svg {
-  animation: files-page-policy-spin 1s linear infinite;
-}
-@keyframes files-page-policy-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 /* Parent-folder breadcrumb shown on cards/rows during recursive search so
    the user can tell which folder each hit lives in without navigating. */
 .files-page-card-path {

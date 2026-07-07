@@ -5900,6 +5900,8 @@ success = "License Activated!"
 successMessage = "Your license has been successfully activated. You can now close this window."
 
 [policy]
+badgeEnforcing = "{{name}} enforcing…"
+badgeRan = "{{name}} policy ran on this file"
 blockingAction = "{{action}} blocked while enforcing policy, please wait"
 dismiss = "Dismiss overlay"
 enforcingTitle = "Enforcing policy…"
