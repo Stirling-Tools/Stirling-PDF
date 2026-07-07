@@ -24,6 +24,6 @@ export const Default: Story = {};
 /** As it renders on the subscribed home: the setup checklist attached as the footer. */
 export const WithSetupChecklist: Story = {
   args: {
-    footer: <SetupChecklist onTryOp={() => console.log("try op")} />,
+    footer: <SetupChecklist />,
   },
 };

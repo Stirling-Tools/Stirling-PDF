@@ -18,13 +18,7 @@ import { useProcurement } from "@portal/components/procurement/useProcurement";
  * procurement takeover flow modals render alongside so the hero's actions can
  * open them.
  */
-export function HomeHero({
-  tier,
-  onTryOp,
-}: {
-  tier: Tier;
-  onTryOp: () => void;
-}) {
+export function HomeHero({ tier }: { tier: Tier }) {
   const procurement = useProcurement();
   const dealActive =
     procurement.isLinked && procurement.started && !!procurement.data;
@@ -32,7 +26,7 @@ export function HomeHero({
   const footer = dealActive ? (
     <ControlledDealStatusHero controller={procurement} />
   ) : (
-    <SetupChecklist onTryOp={onTryOp} />
+    <SetupChecklist />
   );
 
   return (

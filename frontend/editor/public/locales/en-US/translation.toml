@@ -6732,6 +6732,11 @@ name = "Stirling PDF Editor"
 open = "Open in browser"
 updated = "updated {{time}}"
 
+[portal.home.editor.target]
+cloud = "Managed Cloud"
+docker = "Self-hosted · Docker"
+kubernetes = "Self-hosted · Kubernetes"
+
 [portal.home.greeting]
 afternoon = "Good afternoon"
 evening = "Good evening"
@@ -6758,14 +6763,9 @@ pipelines = "Pipelines"
 
 [portal.home.onboarding]
 dismiss = "Dismiss setup"
-doneChip = "Done"
 notStarted = "Not started"
 progress = "{{done}} of {{total}} done"
 title = "Finish setting up"
-
-[portal.home.onboarding.empty]
-description = "Onboarding tasks will appear here once your workspace is set up."
-title = "No onboarding steps yet"
 
 [portal.home.onboarding.enterprise]
 body = "Org-wide SSO + SCIM + RBAC, committed volume pricing, and air-gapped deployment."
@@ -6773,6 +6773,20 @@ cta = "Start Trial"
 ctaQuote = "Get Quote"
 lead = "For 250+ employees."
 tag = "Enterprise"
+
+[portal.home.onboarding.steps.editor]
+blurb = "Deploy the desktop app, free forever."
+title = "Download the PDF Editor"
+
+[portal.home.onboarding.steps.policies]
+blurb = "{{active}} active · {{recommended}} recommended"
+chip = "{{active}} active"
+title = "Turn on policies"
+
+[portal.home.onboarding.steps.sources]
+blurb = "{{connected}} connected · every PDF governed where it lands"
+chip = "{{connected}} connected"
+title = "Connect your sources"
 
 [portal.home.productGrid]
 ariaLabel = "Process PDFs at scale"

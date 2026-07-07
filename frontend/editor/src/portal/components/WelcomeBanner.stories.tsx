@@ -24,6 +24,6 @@ export const Default: Story = {};
  *  checklist attached as the footer strip. */
 export const WithSetupChecklist: Story = {
   args: {
-    footer: <SetupChecklist onTryOp={() => console.log("try op")} />,
+    footer: <SetupChecklist />,
   },
 };

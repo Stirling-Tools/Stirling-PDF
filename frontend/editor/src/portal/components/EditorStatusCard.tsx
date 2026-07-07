@@ -9,7 +9,6 @@ import {
   fetchEditorDeployment,
   type EditorDeploymentResponse,
   type EditorInstance,
-  type TargetKind,
 } from "@portal/api/editorDeploy";
 import {
   ExternalLinkIcon,
@@ -40,12 +39,6 @@ function StirlingMark() {
     </svg>
   );
 }
-
-const TARGET_LABEL: Record<TargetKind, string> = {
-  cloud: "Managed Cloud",
-  docker: "Self-hosted · Docker",
-  kubernetes: "Self-hosted · Kubernetes",
-};
 
 /** The instance to headline: the busiest healthy one, else the first. */
 function primaryInstance(instances: EditorInstance[]): EditorInstance | null {
@@ -95,7 +88,7 @@ export function EditorStatusCard({ footer, hideChips }: EditorStatusCardProps) {
       activeUsers,
       workspaceUrl: data.summary.workspaceUrl,
       meta: [
-        TARGET_LABEL[primary.target],
+        t(`portal.home.editor.target.${primary.target}`),
         primary.region,
         `v${primary.version}`,
         t("portal.home.editor.updated", { time: primary.lastSeen }),

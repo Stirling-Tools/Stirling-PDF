@@ -5,7 +5,6 @@ import { SetupChecklist } from "@portal/components/SetupChecklist";
 const meta: Meta<typeof SetupChecklist> = {
   title: "Portal/Home/SetupChecklist",
   component: SetupChecklist,
-  args: { onTryOp: () => console.log("try op") },
   parameters: { layout: "padded" },
   decorators: [
     (S) => (
@@ -26,15 +25,15 @@ const meta: Meta<typeof SetupChecklist> = {
 export default meta;
 type Story = StoryObj<typeof SetupChecklist>;
 
-/** Default free-tier checklist (2 of 3 done), served by the global MSW handlers. */
+/** Completion + counts derived from the live policies / sources MSW fixtures. */
 export const Default: Story = {};
 
-/** Slow fetch: shows the loading skeleton rows. */
+/** Slow policy/source fetch: shows the loading skeleton rows. */
 export const Loading: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("/v1/onboarding", async () => {
+        http.get("/api/v1/policies", async () => {
           await delay(100000);
           return HttpResponse.json([]);
         }),
@@ -43,15 +42,16 @@ export const Loading: Story = {
   },
 };
 
-/** No steps returned — the checklist collapses to just the Enterprise rung. */
-export const Empty: Story = {
+/** A fresh workspace — no active policies or connected sources: every step reads "Not started". */
+export const NotStarted: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("/v1/onboarding", async () => {
-          await delay(120);
-          return HttpResponse.json([]);
-        }),
+        http.get("/api/v1/policies", () => HttpResponse.json([])),
+        http.get("/api/v1/policies/runs", () => HttpResponse.json([])),
+        http.get("/api/v1/sources", () =>
+          HttpResponse.json({ kpis: [], sources: [] }),
+        ),
       ],
     },
   },

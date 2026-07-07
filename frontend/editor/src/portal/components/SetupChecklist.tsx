@@ -1,12 +1,16 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, EmptyState } from "@app/ui";
+import { Button } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
 import { useView, type ViewId } from "@portal/contexts/ViewContext";
-import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
-import { fetchOnboarding, type OnboardingStep } from "@portal/api/home";
+import { useAsync } from "@portal/hooks/useAsync";
+import { fetchPolicies, type PoliciesResponse } from "@portal/api/policies";
+import { fetchSources, type SourcesResponse } from "@portal/api/sources";
 import { CloseIcon } from "@portal/components/icons";
 import "@portal/components/SetupChecklist.css";
+
+/** Where the Stirling PDF Editor desktop app is downloaded. */
+const EDITOR_DOWNLOAD_URL = "https://stirling.com/download";
 
 /* ──────────────────────────────────────────────────────────────────────── */
 /*  Enterprise upsell rung                                                   */
@@ -51,45 +55,97 @@ function EnterpriseRung({ paying }: { paying: boolean }) {
 /*  "Finish setting up" checklist                                            */
 /* ──────────────────────────────────────────────────────────────────────── */
 
-interface SetupChecklistProps {
-  /** Opens the single-operation runner for steps whose CTA is `try-op`. */
-  onTryOp: () => void;
+type StepAction =
+  | { kind: "external"; href: string }
+  | { kind: "navigate"; view: ViewId };
+
+interface Step {
+  id: string;
+  title: string;
+  blurb: string;
+  done: boolean;
+  /** Status chip shown once the step is done. */
+  chip: string;
+  action: StepAction;
 }
 
 /**
  * Getting-started checklist, rendered as the attached footer of the home hero
- * (welcome banner on free, deployed-Editor card on subscribed). An ordered
- * do-this-then-that sequence of navigable steps, each with a status chip once
- * complete. The header doubles as a dismiss control; the Enterprise rung
- * persists regardless so the upgrade path stays visible even after the
- * checklist is collapsed. Steps and the Enterprise CTA are tier-aware.
+ * (welcome banner on free, deployed-Editor card on subscribed). Steps are a
+ * fixed do-this-then-that sequence with translatable copy; the completion
+ * state and counts are derived live from the org's real policies and sources
+ * (the same data the Policies / Sources pages show). The header doubles as a
+ * dismiss control; the Enterprise rung persists regardless.
  */
-export function SetupChecklist({ onTryOp }: SetupChecklistProps) {
+export function SetupChecklist() {
   const { t } = useTranslation();
   const { tier } = useTier();
   const { setActiveView } = useView();
   const [dismissed, setDismissed] = useState(false);
 
-  const state = useAsync<OnboardingStep[]>(() => fetchOnboarding(tier), [tier]);
-  const { data: steps } = state;
-  const { isLoading, isEmpty } = useSectionFlags(state);
+  const state = useAsync<[PoliciesResponse, SourcesResponse]>(
+    () => Promise.all([fetchPolicies(), fetchSources()]),
+    [],
+  );
+  const { data, loading } = state;
 
-  const doneCount = steps?.filter((s) => s.done).length ?? 0;
+  const steps = useMemo<Step[]>(() => {
+    const [policies, sources] = data ?? [];
+    const active = policies?.summary.active ?? 0;
+    const recommended = Math.max(
+      0,
+      (policies?.summary.categories ?? 0) - active,
+    );
+    // A source counts as connected once it's set up and not disabled.
+    const connected =
+      sources?.sources.filter((s) => s.status !== "disabled").length ?? 0;
 
-  function activate(step: OnboardingStep) {
-    if (step.done || !step.cta) return;
-    if (step.cta.kind === "try-op") {
-      onTryOp();
+    return [
+      {
+        id: "editor",
+        title: t("portal.home.onboarding.steps.editor.title"),
+        blurb: t("portal.home.onboarding.steps.editor.blurb"),
+        // "Deploy the desktop app" has no server signal — always an open task.
+        done: false,
+        chip: "",
+        action: { kind: "external", href: EDITOR_DOWNLOAD_URL },
+      },
+      {
+        id: "policies",
+        title: t("portal.home.onboarding.steps.policies.title"),
+        blurb: t("portal.home.onboarding.steps.policies.blurb", {
+          active,
+          recommended,
+        }),
+        done: active > 0,
+        chip: t("portal.home.onboarding.steps.policies.chip", { active }),
+        action: { kind: "navigate", view: "policies" },
+      },
+      {
+        id: "sources",
+        title: t("portal.home.onboarding.steps.sources.title"),
+        blurb: t("portal.home.onboarding.steps.sources.blurb", { connected }),
+        done: connected > 0,
+        chip: t("portal.home.onboarding.steps.sources.chip", { connected }),
+        action: { kind: "navigate", view: "sources" },
+      },
+    ];
+  }, [data, t]);
+
+  const doneCount = steps.filter((s) => s.done).length;
+
+  function activate(step: Step) {
+    if (step.done) return;
+    if (step.action.kind === "external") {
+      window.open(step.action.href, "_blank", "noopener,noreferrer");
     } else {
-      setActiveView(step.cta.target as ViewId);
+      setActiveView(step.action.view);
     }
   }
 
-  const showList = !dismissed && steps && steps.length > 0;
-
   return (
     <div className="portal-setup">
-      {isLoading && (
+      {loading && (
         <div className="portal-setup__list" aria-hidden>
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="portal-setup__row is-loading">
@@ -102,15 +158,7 @@ export function SetupChecklist({ onTryOp }: SetupChecklistProps) {
         </div>
       )}
 
-      {isEmpty && !dismissed && (
-        <EmptyState
-          size="compact"
-          title={t("portal.home.onboarding.empty.title")}
-          description={t("portal.home.onboarding.empty.description")}
-        />
-      )}
-
-      {showList && (
+      {!loading && !dismissed && (
         <>
           <div className="portal-setup__head">
             <span className="portal-setup__eyebrow">
@@ -131,43 +179,35 @@ export function SetupChecklist({ onTryOp }: SetupChecklistProps) {
           </div>
 
           <ol className="portal-setup__list">
-            {steps.map((s) => {
-              const interactive = !s.done && !!s.cta;
-              return (
-                <li key={s.id} className="portal-setup__item">
-                  <button
-                    type="button"
+            {steps.map((s) => (
+              <li key={s.id} className="portal-setup__item">
+                <button
+                  type="button"
+                  className={
+                    "portal-setup__row" +
+                    (s.done ? " is-done" : " is-interactive")
+                  }
+                  onClick={() => activate(s)}
+                  disabled={s.done}
+                >
+                  <span
+                    className={"portal-setup__dot" + (s.done ? " is-done" : "")}
+                    aria-hidden
+                  />
+                  <span className="portal-setup__text">
+                    <strong>{s.title}</strong>
+                    <span>{s.blurb}</span>
+                  </span>
+                  <span
                     className={
-                      "portal-setup__row" +
-                      (s.done ? " is-done" : "") +
-                      (interactive ? " is-interactive" : "")
+                      "portal-setup__chip" + (s.done ? " is-done" : "")
                     }
-                    onClick={() => activate(s)}
-                    disabled={!interactive}
                   >
-                    <span
-                      className={
-                        "portal-setup__dot" + (s.done ? " is-done" : "")
-                      }
-                      aria-hidden
-                    />
-                    <span className="portal-setup__text">
-                      <strong>{s.title}</strong>
-                      <span>{s.blurb}</span>
-                    </span>
-                    <span
-                      className={
-                        "portal-setup__chip" + (s.done ? " is-done" : "")
-                      }
-                    >
-                      {s.done
-                        ? (s.status ?? t("portal.home.onboarding.doneChip"))
-                        : t("portal.home.onboarding.notStarted")}
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
+                    {s.done ? s.chip : t("portal.home.onboarding.notStarted")}
+                  </span>
+                </button>
+              </li>
+            ))}
           </ol>
         </>
       )}

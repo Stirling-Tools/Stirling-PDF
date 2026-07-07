@@ -428,7 +428,7 @@ export function Home() {
 
       {/* Per-tier hero. Its footer is the deal-status hero while a procurement
           deal is underway (a bolt-on to any tier), otherwise the setup checklist. */}
-      <HomeHero tier={tier} onTryOp={() => setRunnerOpen(true)} />
+      <HomeHero tier={tier} />
 
       {tier === "free" && (
         <>
