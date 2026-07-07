@@ -1,6 +1,5 @@
 import { useEffect, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
-import { MantineProvider } from "@mantine/core";
 import { AuthProvider } from "@app/auth";
 import { ErrorBoundary } from "@portal/components/ErrorBoundary";
 import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
@@ -8,7 +7,7 @@ import { TierProvider } from "@portal/contexts/TierContext";
 import { LinkProvider, useLink } from "@portal/contexts/LinkContext";
 import type { SupabaseLoginSession } from "@app/auth/ui/useSupabaseLogin";
 import { UIProvider, useUI } from "@portal/contexts/UIContext";
-import { mantineTheme } from "@portal/theme/mantineTheme";
+import { SuiProvider } from "@portal/theme/SuiProvider";
 import { AppShell } from "@portal/components/AppShell";
 import { AuthGate } from "@portal/components/AuthGate";
 import { AssistantButton } from "@portal/components/AssistantButton";
@@ -25,17 +24,13 @@ import { ViewRouter } from "@portal/ViewRouter";
 import "@portal/theme/base.css";
 
 /**
- * Binds Mantine's colour scheme to the portal's own ThemeProvider so Mantine
- * components follow the same light/dark switch as the SUI primitives. Must sit
+ * Binds the SUI design system to the portal's own ThemeProvider so the SUI
+ * components follow the same light/dark switch as the CSS tokens. Must sit
  * inside <ThemeProvider> to read useTheme().
  */
-function PortalMantineProvider({ children }: { children: ReactNode }) {
+function ThemedSuiProvider({ children }: { children: ReactNode }) {
   const { theme } = useTheme();
-  return (
-    <MantineProvider theme={mantineTheme} forceColorScheme={theme}>
-      {children}
-    </MantineProvider>
-  );
+  return <SuiProvider colorScheme={theme}>{children}</SuiProvider>;
 }
 
 /**
@@ -129,7 +124,7 @@ function RoutedContent() {
 export function PortalApp() {
   return (
     <ThemeProvider>
-      <PortalMantineProvider>
+      <ThemedSuiProvider>
         {/* Scopes base.css to the portal so it doesn't restyle the host editor. */}
         <div className="portal-scope">
           <AuthProvider mode="spring">
@@ -156,7 +151,7 @@ export function PortalApp() {
             </LinkProvider>
           </AuthProvider>
         </div>
-      </PortalMantineProvider>
+      </ThemedSuiProvider>
     </ThemeProvider>
   );
 }

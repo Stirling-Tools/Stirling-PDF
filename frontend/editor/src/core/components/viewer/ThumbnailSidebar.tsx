@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { Box, ScrollArea, Text, ActionIcon } from "@mantine/core";
+import { Box, ScrollArea, Text } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { useTranslation } from "react-i18next";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -17,6 +19,7 @@ export function ThumbnailSidebar({
   onToggle,
   activeFileId,
 }: ThumbnailSidebarProps) {
+  const { t } = useTranslation();
   const { getScrollState, scrollActions, getThumbnailAPI } = useViewer();
   const [thumbnails, setThumbnails] = useState<{ [key: number]: string }>({});
 
@@ -182,11 +185,14 @@ export function ThumbnailSidebar({
               </Text>
             </div>
             <ActionIcon
-              variant="subtle"
+              variant="tertiary"
+              accent="neutral"
               size="sm"
-              color="gray"
               onClick={onToggle}
-              aria-label="Close thumbnails sidebar"
+              aria-label={t(
+                "viewer.thumbnails.closeSidebar",
+                "Close thumbnails sidebar",
+              )}
               title="Close thumbnails"
             >
               <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />

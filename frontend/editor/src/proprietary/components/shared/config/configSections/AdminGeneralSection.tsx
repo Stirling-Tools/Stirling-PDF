@@ -12,9 +12,9 @@ import {
   Group,
   MultiSelect,
   Badge,
-  SegmentedControl,
   Select,
 } from "@mantine/core";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { alert } from "@app/components/toast";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
 import { useRestartServer } from "@app/components/shared/config/useRestartServer";
@@ -499,7 +499,7 @@ export default function AdminGeneralSection() {
               <SegmentedControl
                 value={logoStyleValue}
                 onChange={handleLogoStyleChange}
-                data={[
+                options={[
                   {
                     value: "classic",
                     label: (

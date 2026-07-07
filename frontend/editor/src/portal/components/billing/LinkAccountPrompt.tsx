@@ -23,7 +23,11 @@ export function LinkAccountPrompt() {
           "Manual PDF editing — view, sign, merge, split, watermark, compress, convert, manual OCR — is always free, linked or not. Link to claim 500 free PDFs of metered processing (automation, AI, and the API); when you need more, turn on the Processor plan and only pay for what you use.",
         )}
         actions={
-          <Button variant="gradient" onClick={() => openLinkModal()}>
+          <Button
+            variant="primary"
+            accent="premium"
+            onClick={() => openLinkModal()}
+          >
             {t("portal.billing.linkPrompt.cta", "Link Stirling account")}
           </Button>
         }

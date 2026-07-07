@@ -50,7 +50,7 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
       </div>
 
       {comingSoon ? (
-        <Chip tone="neutral" size="sm">
+        <Chip accent="neutral" size="sm">
           {t("portal.policies.card.comingSoon")}
         </Chip>
       ) : policy ? (
@@ -82,7 +82,7 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
           </StatusBadge>
         </div>
       ) : (
-        <Chip tone="blue" size="sm">
+        <Chip accent="default" size="sm">
           {t("portal.policies.card.notSetUp")}
         </Chip>
       )}

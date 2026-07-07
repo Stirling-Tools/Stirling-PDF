@@ -58,6 +58,23 @@ const gray: MantineColorsTuple = [
   "var(--color-gray-900)",
 ];
 
+// Navy-indigo dark scale — replaces Mantine's neutral gray defaults so all
+// dark-mode components (SegmentedControl, inputs, dropdowns, etc.) use the
+// portal palette automatically via --mantine-color-dark-*.
+// dark-0..3 = text/icon shades, dark-4..7 = surface elevations, dark-8..9 = deepest bg.
+const dark: MantineColorsTuple = [
+  "#c2c8e0", // dark-0  — primary text on dark bg
+  "#9299b0", // dark-1  — secondary text
+  "#6e7898", // dark-2  — muted text / icons
+  "#4a5282", // dark-3  — subtle text / dividers
+  "#1c2340", // dark-4  — elevated surface / selected bg (e.g. SegmentedControl indicator)
+  "#131729", // dark-5  — card / panel surface
+  "#0d1020", // dark-6  — toolbar / sidebar bg (e.g. SegmentedControl root)
+  "#090b18", // dark-7  — page background (deepest reachable surface)
+  "#07091a", // dark-8
+  "#050714", // dark-9
+];
+
 export const mantineTheme = createTheme({
   // Primary color
   primaryColor: "primary",
@@ -68,6 +85,7 @@ export const mantineTheme = createTheme({
     green,
     yellow,
     gray,
+    dark,
   },
 
   // Spacing system - uses CSS variables

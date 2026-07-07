@@ -17,7 +17,6 @@ import React, {
   useMemo,
 } from "react";
 import {
-  Button,
   Text,
   Alert,
   Switch,
@@ -25,8 +24,9 @@ import {
   ScrollArea,
   Progress,
   Tooltip,
-  ActionIcon,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { isAxiosError } from "axios";
 import {
@@ -510,7 +510,7 @@ const FormFill = (_props: BaseToolProps) => {
                   <div className={styles.primaryActions}>
                     <Button
                       leftSection={<SaveIcon sx={{ fontSize: 14 }} />}
-                      size="xs"
+                      size="sm"
                       onClick={handleSave}
                       loading={saving}
                       disabled={!formState.isDirty && !flattenChanged}
@@ -524,7 +524,7 @@ const FormFill = (_props: BaseToolProps) => {
                       position="bottom"
                     >
                       <ActionIcon
-                        variant="light"
+                        variant="secondary"
                         size="md"
                         onClick={handleRefresh}
                         aria-label={t(
@@ -539,34 +539,31 @@ const FormFill = (_props: BaseToolProps) => {
 
                   <div className={styles.secondaryActions}>
                     <Button
-                      variant="light"
-                      color="blue"
+                      variant="secondary"
                       leftSection={<FileDownloadIcon sx={{ fontSize: 14 }} />}
                       loading={extracting}
                       onClick={handleExtractJson}
-                      size="xs"
+                      size="sm"
                     >
                       JSON
                     </Button>
 
                     <Button
-                      variant="light"
-                      color="blue"
+                      variant="secondary"
                       leftSection={<FileDownloadIcon sx={{ fontSize: 14 }} />}
                       loading={extracting}
                       onClick={handleExtractCsv}
-                      size="xs"
+                      size="sm"
                     >
                       CSV
                     </Button>
 
                     <Button
-                      variant="light"
-                      color="blue"
+                      variant="secondary"
                       leftSection={<FileDownloadIcon sx={{ fontSize: 14 }} />}
                       loading={extracting}
                       onClick={handleExtractXlsx}
-                      size="xs"
+                      size="sm"
                     >
                       XLSX
                     </Button>

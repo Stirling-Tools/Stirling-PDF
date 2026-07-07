@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.json",
-  "comment": "Path resolution for the portal's vitest project (referenced by vitest.config.ts). Broad include ('src', via the base) so vite-tsconfig-paths rewrites @app/* in every editor/src file the portal tests pull in (e.g. proprietary/ui), not just the portal layer. The portal's own typecheck uses src/portal/tsconfig.json.",
+  "comment": "Path resolution for the portal's vitest project (referenced by vitest.config.ts). Broad include ('src', via the base) so vite-tsconfig-paths rewrites @app/* in every editor/src file the portal tests pull in (e.g. core/ui), not just the portal layer. The portal's own typecheck uses src/portal/tsconfig.json.",
   "compilerOptions": {
     "paths": {
       "@app/*": [

@@ -130,6 +130,7 @@
     width 0.3s ease,
     max-width 0.3s ease;
   view-transition-name: tool-rail;
+  user-select: none;
 }
 
 .tool-panel__collapsed-strip {
