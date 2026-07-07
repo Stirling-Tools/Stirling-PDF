@@ -17,6 +17,7 @@ import { adjustPageScaleOperationConfig } from "@app/hooks/tools/adjustPageScale
 import { autoRenameOperationConfig } from "@app/hooks/tools/autoRename/useAutoRenameOperation";
 import { bookletImpositionOperationConfig } from "@app/hooks/tools/bookletImposition/useBookletImpositionOperation";
 import { certSignOperationConfig } from "@app/hooks/tools/certSign/useCertSignOperation";
+import { changeMetadataOperationConfig } from "@app/hooks/tools/changeMetadata/useChangeMetadataOperation";
 import { changePermissionsOperationConfig } from "@app/hooks/tools/changePermissions/useChangePermissionsOperation";
 import { cropOperationConfig } from "@app/hooks/tools/crop/useCropOperation";
 import { editTableOfContentsOperationConfig } from "@app/hooks/tools/editTableOfContents/useEditTableOfContentsOperation";
@@ -57,6 +58,7 @@ const MIGRATED_CONFIGS = [
   autoRenameOperationConfig,
   bookletImpositionOperationConfig,
   certSignOperationConfig,
+  changeMetadataOperationConfig,
   changePermissionsOperationConfig,
   cropOperationConfig,
   editTableOfContentsOperationConfig,
