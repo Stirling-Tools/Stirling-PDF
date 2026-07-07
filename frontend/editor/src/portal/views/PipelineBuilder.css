@@ -24,6 +24,9 @@
 }
 
 .portal-builder__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
   border: none;
   background: none;
   padding: 0;
@@ -166,24 +169,24 @@
   gap: 0.25rem;
 }
 
-.portal-builder__step-actions button,
-.portal-builder__inspector-remove {
+.portal-builder__step-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 1.5rem;
   height: 1.5rem;
+  padding: 0;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
   background: var(--color-surface);
   color: var(--color-text-3);
-  font-size: 0.8125rem;
-  line-height: 1;
   cursor: pointer;
   transition:
     background var(--motion-fast),
     color var(--motion-fast);
 }
 
-.portal-builder__step-actions button:hover:not(:disabled),
-.portal-builder__inspector-remove:hover {
+.portal-builder__step-actions button:hover:not(:disabled) {
   background: var(--color-bg-hover);
   color: var(--color-text-1);
 }
@@ -194,6 +197,10 @@
 }
 
 .portal-builder__add-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
   width: 100%;
   padding: 0.625rem;
   border: 1px dashed var(--color-border);
@@ -212,32 +219,44 @@
   color: var(--color-blue);
 }
 
-/* Inspector */
-.portal-builder__inspector {
+/* Pipeline settings (above the operation list) */
+.portal-builder__settings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  padding: 1.125rem;
+}
+
+.portal-builder__settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1.25rem;
+}
+
+.portal-builder__settings-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Inspector: heading sits outside the card so it aligns with the operations heading. */
+.portal-builder__inspector-col {
   position: sticky;
   top: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.625rem;
+}
+
+.portal-builder__inspector {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   padding: 1.125rem;
-}
-
-.portal-builder__inspector-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--color-border-light);
-}
-
-.portal-builder__inspector-title {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--color-text-1);
 }
 
 /* Tool picker */

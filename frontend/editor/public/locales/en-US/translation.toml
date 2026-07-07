@@ -7190,6 +7190,9 @@ enabled = "Enabled"
 noToolMatches = "No tools match your search."
 pipelineSettings = "Pipeline settings"
 searchTools = "Search tools"
+selectToolBody = "Add a tool to build your pipeline."
+selectToolTitle = "No tools yet"
+toolSettings = "Tool settings"
 usesDefaults = "Runs with default settings"
 
 [portal.pipelines.composer]

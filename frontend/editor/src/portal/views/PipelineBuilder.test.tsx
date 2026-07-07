@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
+import type { Policy } from "@portal/api/pipelines";
 import type { ToolRegistryCatalog } from "@app/contexts/ToolRegistryContext";
 import type { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import { PipelineBuilder } from "@portal/views/PipelineBuilder";
@@ -16,10 +17,16 @@ vi.mock("react-i18next", () => ({
 const fetchPipeline = vi.fn();
 const fetchTriggers = vi.fn();
 const savePipeline = vi.fn();
+const deletePipeline = vi.fn();
+const triggerPipeline = vi.fn();
+const fetchRun = vi.fn();
 vi.mock("@portal/api/pipelines", () => ({
   fetchPipeline: (id: string) => fetchPipeline(id),
   fetchTriggers: () => fetchTriggers(),
   savePipeline: (policy: unknown) => savePipeline(policy),
+  deletePipeline: (id: string) => deletePipeline(id),
+  triggerPipeline: (id: string) => triggerPipeline(id),
+  fetchRun: (runId: string) => fetchRun(runId),
 }));
 
 const fetchSources = vi.fn();
@@ -58,7 +65,17 @@ vi.mock("@app/contexts/ToolRegistryContext", () => {
   return { useToolRegistry: () => catalog };
 });
 
-function renderBuilder(initial = "/portal/pipelines/new") {
+const POLICY: Policy = {
+  id: "plc-1",
+  name: "Existing pipeline",
+  enabled: true,
+  trigger: null,
+  sourceIds: [],
+  steps: [],
+  output: { type: "inline", options: {} },
+};
+
+function renderBuilder(initial: string) {
   return render(
     <MemoryRouter initialEntries={[initial]}>
       <Routes>
@@ -75,21 +92,27 @@ describe("PipelineBuilder", () => {
     fetchPipeline.mockReset();
     fetchTriggers.mockReset();
     savePipeline.mockReset();
+    deletePipeline.mockReset();
+    triggerPipeline.mockReset();
+    fetchRun.mockReset();
     fetchSources.mockReset();
+    fetchPipeline.mockResolvedValue(POLICY);
     fetchTriggers.mockResolvedValue([]);
     fetchSources.mockResolvedValue({ kpis: [], sources: [] });
     savePipeline.mockResolvedValue({});
+    deletePipeline.mockResolvedValue(undefined);
+    triggerPipeline.mockResolvedValue(["run-1"]);
+    fetchRun.mockResolvedValue({ status: "COMPLETED" });
   });
 
   it("builds a new pipeline: name it, add a tool, and save", async () => {
-    renderBuilder();
+    renderBuilder("/portal/pipelines/new");
 
     // The name field is the only textbox before the picker opens.
     fireEvent.change(await screen.findByRole("textbox"), {
       target: { value: "Nightly compress" },
     });
 
-    // Open the tool picker and add Compress.
     fireEvent.click(screen.getByRole("button", { name: /addTool/ }));
     fireEvent.click(await screen.findByText("Compress"));
 
@@ -105,8 +128,27 @@ describe("PipelineBuilder", () => {
         ],
       }),
     );
+    expect(await screen.findByText("pipelines list")).toBeInTheDocument();
+  });
 
-    // On success it navigates back to the list.
+  it("runs an existing pipeline and reports success", async () => {
+    renderBuilder("/portal/pipelines/plc-1");
+
+    fireEvent.click(await screen.findByText("portal.pipelines.detail.run"));
+
+    await waitFor(() => expect(triggerPipeline).toHaveBeenCalledWith("plc-1"));
+    expect(
+      await screen.findByText("portal.pipelines.run.completed"),
+    ).toBeInTheDocument();
+  });
+
+  it("deletes an existing pipeline after confirmation", async () => {
+    renderBuilder("/portal/pipelines/plc-1");
+
+    fireEvent.click(await screen.findByText("portal.pipelines.detail.delete"));
+    fireEvent.click(await screen.findByText("portal.pipelines.delete.confirm"));
+
+    await waitFor(() => expect(deletePipeline).toHaveBeenCalledWith("plc-1"));
     expect(await screen.findByText("pipelines list")).toBeInTheDocument();
   });
 });

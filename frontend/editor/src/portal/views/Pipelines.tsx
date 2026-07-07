@@ -1,95 +1,32 @@
-import { useCallback, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, EmptyState, Modal, Skeleton } from "@app/ui";
+import { useNavigate } from "react-router-dom";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import { Button, EmptyState, Skeleton } from "@app/ui";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
-import { errorMessage } from "@portal/api/http";
 import {
-  deletePipeline,
-  fetchPipeline,
   fetchPipelines,
-  savePipeline,
   type PipelinesOverviewResponse,
   type PipelineView,
 } from "@portal/api/pipelines";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { KpiStrip } from "@portal/components/pipelines/KpiStrip";
 import { PipelinesTable } from "@portal/components/pipelines/PipelinesTable";
-import { PipelineDetailCard } from "@portal/components/pipelines/PipelineDetailCard";
 import "@portal/views/Pipelines.css";
 
 export function Pipelines() {
   const { t } = useTranslation();
-  // Refetch after every mutation by bumping this counter, so the table reflects
-  // the backend (mirrors the Sources view).
-  const [version, setVersion] = useState(0);
-  const state = useAsync<PipelinesOverviewResponse>(
-    () => fetchPipelines(),
-    [version],
-  );
+  const navigate = useNavigate();
+  const state = useAsync<PipelinesOverviewResponse>(() => fetchPipelines(), []);
   const { data, loading } = state;
   const { isLoading, isEmpty } = useSectionFlags(state);
-  const refetch = useCallback(() => setVersion((v) => v + 1), []);
-
-  const navigate = useNavigate();
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [mutating, setMutating] = useState(false);
-  const [pageError, setPageError] = useState<string | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<PipelineView | null>(null);
-  const [deleting, setDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const pipelines = data?.pipelines ?? [];
-  const expanded = pipelines.find((p) => p.id === expandedId) ?? null;
 
-  function openCreate() {
+  const openCreate = () =>
     navigate(`${toPortalPath(VIEW_PATHS.pipelines)}/new`);
-  }
-
-  // The builder loads the full policy (steps, trigger, source ids) from its route;
-  // the overview rows don't carry it.
-  function openEdit(pipeline: PipelineView) {
+  // A row opens that pipeline's own page (view / edit / run / delete live there).
+  const openPipeline = (pipeline: PipelineView) =>
     navigate(`${toPortalPath(VIEW_PATHS.pipelines)}/${pipeline.id}`);
-  }
-
-  // Pause/resume: re-save the policy with enabled flipped (the backend has no
-  // dedicated endpoint; every mutation routes through POST /policies). Fetch the
-  // raw record first so the full config round-trips intact.
-  async function togglePause(pipeline: PipelineView) {
-    if (mutating) return;
-    setPageError(null);
-    setMutating(true);
-    try {
-      const raw = await fetchPipeline(pipeline.id);
-      await savePipeline({ ...raw, enabled: !raw.enabled });
-      refetch();
-    } catch (e) {
-      setPageError(errorMessage(e));
-    } finally {
-      setMutating(false);
-    }
-  }
-
-  function requestDelete(pipeline: PipelineView) {
-    setDeleteError(null);
-    setPendingDelete(pipeline);
-  }
-
-  async function confirmDelete() {
-    if (!pendingDelete || deleting) return;
-    setDeleting(true);
-    setDeleteError(null);
-    try {
-      await deletePipeline(pendingDelete.id);
-      setPendingDelete(null);
-      setExpandedId(null);
-      refetch();
-    } catch (e) {
-      setDeleteError(errorMessage(e));
-    } finally {
-      setDeleting(false);
-    }
-  }
 
   return (
     <div className="portal-pipelines">
@@ -102,12 +39,13 @@ export function Pipelines() {
             {t("portal.pipelines.subtitle")}
           </p>
         </div>
-        <Button onClick={openCreate} leadingIcon={<span aria-hidden>+</span>}>
+        <Button
+          onClick={openCreate}
+          leadingIcon={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
+        >
           {t("portal.pipelines.actions.newPipeline")}
         </Button>
       </header>
-
-      {pageError && <Banner tone="danger" description={pageError} />}
 
       <KpiStrip data={data} loading={loading} />
 
@@ -132,59 +70,8 @@ export function Pipelines() {
       )}
 
       {!isLoading && !isEmpty && pipelines.length > 0 && (
-        <PipelinesTable
-          pipelines={pipelines}
-          expandedId={expandedId}
-          onRowClick={(p) =>
-            setExpandedId((cur) => (cur === p.id ? null : p.id))
-          }
-        />
+        <PipelinesTable pipelines={pipelines} onRowClick={openPipeline} />
       )}
-
-      {expanded && (
-        <PipelineDetailCard
-          pipeline={expanded}
-          onClose={() => setExpandedId(null)}
-          onEdit={openEdit}
-          onTogglePause={togglePause}
-          onDelete={requestDelete}
-          busy={mutating}
-        />
-      )}
-
-      <Modal
-        open={pendingDelete !== null}
-        onClose={() => !deleting && setPendingDelete(null)}
-        width="sm"
-        title={t("portal.pipelines.delete.title")}
-        footer={
-          <div className="portal-pipelines__composer-footer">
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={deleting}
-              onClick={() => setPendingDelete(null)}
-            >
-              {t("portal.pipelines.delete.cancel")}
-            </Button>
-            <Button
-              size="sm"
-              accent="red"
-              loading={deleting}
-              onClick={confirmDelete}
-            >
-              {t("portal.pipelines.delete.confirm")}
-            </Button>
-          </div>
-        }
-      >
-        <p>
-          {t("portal.pipelines.delete.body", {
-            name: pendingDelete?.name ?? "",
-          })}
-        </p>
-        {deleteError && <Banner tone="danger" description={deleteError} />}
-      </Modal>
     </div>
   );
 }

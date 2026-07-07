@@ -1,12 +1,20 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
+import KeyboardArrowUpRoundedIcon from "@mui/icons-material/KeyboardArrowUpRounded";
+import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import {
   Banner,
   Button,
   Checkbox,
+  EmptyState,
   FormField,
   Input,
+  Modal,
   RadioGroup,
   Select,
   Spinner,
@@ -23,11 +31,15 @@ import {
 } from "@app/hooks/tools/shared/toolAutomation";
 import { errorMessage } from "@portal/api/http";
 import {
+  deletePipeline,
   fetchPipeline,
+  fetchRun,
   fetchTriggers,
   savePipeline,
+  triggerPipeline,
   type OutputSpec,
   type Policy,
+  type PolicyRunView,
   type TriggerConfig,
   type TriggerInfo,
 } from "@portal/api/pipelines";
@@ -45,6 +57,13 @@ type ScheduleUnit = "MINUTES" | "HOURS" | "DAYS";
 const SCHEDULE_UNITS: ScheduleUnit[] = ["MINUTES", "HOURS", "DAYS"];
 /** Empty trigger type = manual-only (no automatic trigger). */
 const MANUAL = "";
+
+const TERMINAL_STATUSES = new Set(["COMPLETED", "FAILED", "CANCELLED"]);
+const POLL_INTERVAL_MS = 1500;
+const POLL_ATTEMPTS = 60;
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+type RunResult = { tone: "success" | "danger" | "info"; text: string };
 
 function parseTrigger(trigger: TriggerConfig | null): {
   triggerType: string;
@@ -82,10 +101,10 @@ function parseOutput(output: OutputSpec | undefined): {
 }
 
 /**
- * Full-page pipeline builder (route: /pipelines/new and /pipelines/:id). Tool steps are chained on
- * the left and configured in the right-hand inspector, which shows the selected step's settings or,
- * when no step is selected, the pipeline-level settings (sources, trigger, output). Replaces the
- * former modal composer.
+ * Full-page pipeline builder (route: /pipelines/new and /pipelines/:id). Pipeline-level settings
+ * (sources, trigger, output) sit above the operation list; the operation list and the selected
+ * tool's settings sit side by side below. For an existing pipeline the header also runs and
+ * deletes it. Replaces the former modal composer and the list's inline detail card.
  */
 export function PipelineBuilder() {
   const { t } = useTranslation();
@@ -130,6 +149,18 @@ export function PipelineBuilder() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [seeded, setSeeded] = useState(false);
+  const [running, setRunning] = useState(false);
+  const [runResult, setRunResult] = useState<RunResult | null>(null);
+  const [pendingDelete, setPendingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   // Seed the form once: immediately for a new pipeline, or after the policy loads for an edit.
   useEffect(() => {
@@ -151,6 +182,14 @@ export function PipelineBuilder() {
     setOutputDirectory(output.directory);
     setSeeded(true);
   }, [isEdit, policyState.data, allTools, seeded]);
+
+  // Keep one tool's settings open: auto-select the first step whenever a pipeline has steps but
+  // nothing is selected (initial load, or after the selected step is removed).
+  useEffect(() => {
+    if (seeded && selectedIndex === null && steps.length > 0) {
+      setSelectedIndex(0);
+    }
+  }, [seeded, selectedIndex, steps.length]);
 
   const selectedSourceTypes = useMemo(
     () =>
@@ -287,6 +326,65 @@ export function PipelineBuilder() {
     }
   }
 
+  // Poll a run until it reaches a terminal state (or we give up), so a failure surfaces.
+  async function awaitRun(runId: string): Promise<PolicyRunView | null> {
+    for (let attempt = 0; attempt < POLL_ATTEMPTS; attempt++) {
+      if (!mounted.current) return null;
+      const view = await fetchRun(runId);
+      if (TERMINAL_STATUSES.has(view.status)) return view;
+      await sleep(POLL_INTERVAL_MS);
+    }
+    return null;
+  }
+
+  async function handleRun() {
+    if (running || !id) return;
+    setRunning(true);
+    setRunResult(null);
+    try {
+      const runIds = await triggerPipeline(id);
+      if (runIds.length === 0) {
+        if (mounted.current)
+          setRunResult({ tone: "info", text: t("portal.pipelines.run.empty") });
+        return;
+      }
+      const finals = await Promise.all(runIds.map((runId) => awaitRun(runId)));
+      if (!mounted.current) return;
+      const failed = finals.find((r) => r?.status === "FAILED");
+      if (failed) {
+        setRunResult({
+          tone: "danger",
+          text: t("portal.pipelines.run.failed", { error: failed.error ?? "" }),
+        });
+      } else if (finals.every((r) => r?.status === "COMPLETED")) {
+        setRunResult({
+          tone: "success",
+          text: t("portal.pipelines.run.completed", { count: finals.length }),
+        });
+      } else {
+        setRunResult({ tone: "info", text: t("portal.pipelines.run.running") });
+      }
+    } catch (e) {
+      if (mounted.current)
+        setRunResult({ tone: "danger", text: errorMessage(e) });
+    } finally {
+      if (mounted.current) setRunning(false);
+    }
+  }
+
+  async function confirmDelete() {
+    if (!id || deleting) return;
+    setDeleting(true);
+    try {
+      await deletePipeline(id);
+      close();
+    } catch (e) {
+      setError(errorMessage(e));
+      setDeleting(false);
+      setPendingDelete(false);
+    }
+  }
+
   if (isEdit && !seeded) {
     return (
       <div className="portal-builder__loading">
@@ -307,7 +405,8 @@ export function PipelineBuilder() {
           onClick={close}
           aria-label={t("portal.pipelines.builder.back")}
         >
-          {"<"} {t("portal.pipelines.title")}
+          <ArrowBackRoundedIcon style={{ fontSize: "1.125rem" }} />
+          {t("portal.pipelines.title")}
         </button>
         <div className="portal-builder__head-main">
           <Input
@@ -323,6 +422,32 @@ export function PipelineBuilder() {
             onChange={(e) => setEnabled(e.target.checked)}
             label={t("portal.pipelines.builder.enabled")}
           />
+          {isEdit && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                loading={running}
+                onClick={handleRun}
+                leadingIcon={
+                  <PlayArrowRoundedIcon style={{ fontSize: "1.125rem" }} />
+                }
+              >
+                {t("portal.pipelines.detail.run")}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                accent="red"
+                onClick={() => setPendingDelete(true)}
+                leadingIcon={
+                  <DeleteOutlineRoundedIcon style={{ fontSize: "1.125rem" }} />
+                }
+              >
+                {t("portal.pipelines.detail.delete")}
+              </Button>
+            </>
+          )}
           <Button
             variant="ghost"
             size="sm"
@@ -345,6 +470,112 @@ export function PipelineBuilder() {
       </header>
 
       {error && <Banner tone="danger" description={error} />}
+      {runResult && (
+        <Banner tone={runResult.tone} description={runResult.text} />
+      )}
+
+      {/* Pipeline-level settings, above the operation list. */}
+      <section className="portal-builder__settings">
+        <div className="portal-builder__section-label">
+          {t("portal.pipelines.builder.pipelineSettings")}
+        </div>
+        <div className="portal-builder__settings-grid">
+          <div className="portal-builder__settings-col">
+            <span className="portal-pipelines__detail-heading">
+              {t("portal.pipelines.composer.sources")}
+            </span>
+            {sourcesState.loading ? (
+              <p className="portal-pipelines__muted">
+                {t("portal.pipelines.composer.sourcesLoading")}
+              </p>
+            ) : availableSources.length === 0 ? (
+              <p className="portal-pipelines__muted">
+                {t("portal.pipelines.composer.noSources")}
+              </p>
+            ) : (
+              <div className="portal-pipelines__source-list">
+                {availableSources.map((source) => (
+                  <Checkbox
+                    key={source.id}
+                    checked={sourceIds.includes(source.id)}
+                    onChange={(e) => toggleSource(source.id, e.target.checked)}
+                    label={source.name}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="portal-builder__settings-col">
+            <span className="portal-pipelines__detail-heading">
+              {t("portal.pipelines.composer.trigger")}
+            </span>
+            <RadioGroup<string>
+              name="pipeline-trigger"
+              value={triggerType}
+              onChange={setTriggerType}
+              options={triggerOptions}
+            />
+            {triggerType === "schedule" && (
+              <div className="portal-pipelines__schedule">
+                <span className="portal-pipelines__muted">
+                  {t("portal.pipelines.composer.scheduleEvery")}
+                </span>
+                <Input
+                  inputSize="sm"
+                  type="number"
+                  min={1}
+                  value={scheduleCount}
+                  invalid={!scheduleCountValid}
+                  onChange={(e) => setScheduleCount(e.target.value)}
+                  className="portal-pipelines__schedule-count"
+                />
+                <Select
+                  inputSize="sm"
+                  value={scheduleUnit}
+                  onChange={(e) =>
+                    setScheduleUnit(e.target.value as ScheduleUnit)
+                  }
+                  options={SCHEDULE_UNITS.map((unit) => ({
+                    value: unit,
+                    label: t(
+                      `portal.pipelines.composer.unit.${unit.toLowerCase()}`,
+                    ),
+                  }))}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="portal-builder__settings-col">
+            <span className="portal-pipelines__detail-heading">
+              {t("portal.pipelines.composer.output")}
+            </span>
+            <RadioGroup<OutputMode>
+              name="pipeline-output"
+              value={outputMode}
+              onChange={setOutputMode}
+              options={[
+                { value: "inline", label: t("portal.pipelines.output.inline") },
+                { value: "folder", label: t("portal.pipelines.output.folder") },
+              ]}
+            />
+            {outputMode === "folder" && (
+              <FormField
+                label={t("portal.pipelines.composer.directory")}
+                helperText={t("portal.pipelines.composer.directoryHelp")}
+                required
+              >
+                <Input
+                  value={outputDirectory}
+                  placeholder="/data/processed"
+                  onChange={(e) => setOutputDirectory(e.target.value)}
+                />
+              </FormField>
+            )}
+          </div>
+        </div>
+      </section>
 
       <div className="portal-builder__grid">
         <section className="portal-builder__flow">
@@ -391,7 +622,9 @@ export function PipelineBuilder() {
                       disabled={i === 0}
                       onClick={() => moveStep(i, -1)}
                     >
-                      ^
+                      <KeyboardArrowUpRoundedIcon
+                        style={{ fontSize: "1.125rem" }}
+                      />
                     </button>
                     <button
                       type="button"
@@ -399,14 +632,18 @@ export function PipelineBuilder() {
                       disabled={i === steps.length - 1}
                       onClick={() => moveStep(i, 1)}
                     >
-                      v
+                      <KeyboardArrowDownRoundedIcon
+                        style={{ fontSize: "1.125rem" }}
+                      />
                     </button>
                     <button
                       type="button"
                       aria-label={t("portal.pipelines.composer.removeStep")}
                       onClick={() => removeStep(i)}
                     >
-                      x
+                      <DeleteOutlineRoundedIcon
+                        style={{ fontSize: "1.125rem" }}
+                      />
                     </button>
                   </div>
                 </div>
@@ -426,29 +663,20 @@ export function PipelineBuilder() {
               className="portal-builder__add-step"
               onClick={() => setPickerOpen(true)}
             >
-              + {t("portal.pipelines.composer.addTool")}
+              <AddRoundedIcon style={{ fontSize: "1.125rem" }} />
+              {t("portal.pipelines.composer.addTool")}
             </button>
           )}
         </section>
 
-        <aside className="portal-builder__inspector">
-          {selectedStep ? (
-            <>
-              <div className="portal-builder__inspector-head">
-                <span className="portal-builder__inspector-title">
-                  {stepLabel(selectedStep)}
-                </span>
-                <button
-                  type="button"
-                  className="portal-builder__inspector-remove"
-                  aria-label={t("portal.pipelines.composer.removeStep")}
-                  onClick={() =>
-                    selectedIndex !== null && removeStep(selectedIndex)
-                  }
-                >
-                  x
-                </button>
-              </div>
+        <aside className="portal-builder__inspector-col">
+          <div className="portal-builder__section-label">
+            {selectedStep
+              ? stepLabel(selectedStep)
+              : t("portal.pipelines.builder.toolSettings")}
+          </div>
+          <div className="portal-builder__inspector">
+            {selectedStep ? (
               <PipelineStepSettings
                 step={selectedStep}
                 registry={allTools}
@@ -457,117 +685,44 @@ export function PipelineBuilder() {
                   updateStepParams(selectedIndex, params)
                 }
               />
-            </>
-          ) : (
-            <>
-              <div className="portal-builder__inspector-head">
-                <span className="portal-builder__inspector-title">
-                  {t("portal.pipelines.builder.pipelineSettings")}
-                </span>
-              </div>
-
-              <span className="portal-pipelines__detail-heading">
-                {t("portal.pipelines.composer.sources")}
-              </span>
-              {sourcesState.loading ? (
-                <p className="portal-pipelines__muted">
-                  {t("portal.pipelines.composer.sourcesLoading")}
-                </p>
-              ) : availableSources.length === 0 ? (
-                <p className="portal-pipelines__muted">
-                  {t("portal.pipelines.composer.noSources")}
-                </p>
-              ) : (
-                <div className="portal-pipelines__source-list">
-                  {availableSources.map((source) => (
-                    <Checkbox
-                      key={source.id}
-                      checked={sourceIds.includes(source.id)}
-                      onChange={(e) =>
-                        toggleSource(source.id, e.target.checked)
-                      }
-                      label={source.name}
-                    />
-                  ))}
-                </div>
-              )}
-
-              <span className="portal-pipelines__detail-heading">
-                {t("portal.pipelines.composer.trigger")}
-              </span>
-              <RadioGroup<string>
-                name="pipeline-trigger"
-                value={triggerType}
-                onChange={setTriggerType}
-                direction="horizontal"
-                options={triggerOptions}
+            ) : (
+              <EmptyState
+                title={t("portal.pipelines.builder.selectToolTitle")}
+                description={t("portal.pipelines.builder.selectToolBody")}
               />
-              {triggerType === "schedule" && (
-                <div className="portal-pipelines__schedule">
-                  <span className="portal-pipelines__muted">
-                    {t("portal.pipelines.composer.scheduleEvery")}
-                  </span>
-                  <Input
-                    inputSize="sm"
-                    type="number"
-                    min={1}
-                    value={scheduleCount}
-                    invalid={!scheduleCountValid}
-                    onChange={(e) => setScheduleCount(e.target.value)}
-                    className="portal-pipelines__schedule-count"
-                  />
-                  <Select
-                    inputSize="sm"
-                    value={scheduleUnit}
-                    onChange={(e) =>
-                      setScheduleUnit(e.target.value as ScheduleUnit)
-                    }
-                    options={SCHEDULE_UNITS.map((unit) => ({
-                      value: unit,
-                      label: t(
-                        `portal.pipelines.composer.unit.${unit.toLowerCase()}`,
-                      ),
-                    }))}
-                  />
-                </div>
-              )}
-
-              <span className="portal-pipelines__detail-heading">
-                {t("portal.pipelines.composer.output")}
-              </span>
-              <RadioGroup<OutputMode>
-                name="pipeline-output"
-                value={outputMode}
-                onChange={setOutputMode}
-                direction="horizontal"
-                options={[
-                  {
-                    value: "inline",
-                    label: t("portal.pipelines.output.inline"),
-                  },
-                  {
-                    value: "folder",
-                    label: t("portal.pipelines.output.folder"),
-                  },
-                ]}
-              />
-              {outputMode === "folder" && (
-                <FormField
-                  label={t("portal.pipelines.composer.directory")}
-                  helperText={t("portal.pipelines.composer.directoryHelp")}
-                  required
-                >
-                  <Input
-                    value={outputDirectory}
-                    placeholder="/data/processed"
-                    onChange={(e) => setOutputDirectory(e.target.value)}
-                  />
-                </FormField>
-              )}
-            </>
-          )}
+            )}
+          </div>
         </aside>
       </div>
+
+      <Modal
+        open={pendingDelete}
+        onClose={() => !deleting && setPendingDelete(false)}
+        width="sm"
+        title={t("portal.pipelines.delete.title")}
+        footer={
+          <div className="portal-pipelines__composer-footer">
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={deleting}
+              onClick={() => setPendingDelete(false)}
+            >
+              {t("portal.pipelines.delete.cancel")}
+            </Button>
+            <Button
+              size="sm"
+              accent="red"
+              loading={deleting}
+              onClick={confirmDelete}
+            >
+              {t("portal.pipelines.delete.confirm")}
+            </Button>
+          </div>
+        }
+      >
+        <p>{t("portal.pipelines.delete.body", { name: name || "" })}</p>
+      </Modal>
     </div>
   );
 }
