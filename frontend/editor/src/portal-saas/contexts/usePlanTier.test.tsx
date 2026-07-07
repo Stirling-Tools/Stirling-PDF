@@ -6,7 +6,7 @@ vi.mock("@portal/api/billing", () => ({
   fetchWallet: () => fetchWallet(),
 }));
 
-// Resolves to the SaaS override (src/saas/portal/contexts) via the @portal cascade.
+// Resolves to the SaaS override (src/portal-saas/contexts) via the @portal cascade.
 import { usePlanTier } from "@portal/contexts/usePlanTier";
 
 function Probe() {

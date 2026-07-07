@@ -104,7 +104,13 @@ export default defineConfig({
       {
         test: {
           name: "saas",
-          include: ["src/saas/**/*.test.{ts,tsx}"],
+          // src/saas = editor-saas layer; src/portal-saas = the portal's saas
+          // overrides (sibling to src/portal). Both build under the saas flavor,
+          // so both resolve @portal via the saas cascade (tsconfig.saas.vite.json).
+          include: [
+            "src/saas/**/*.test.{ts,tsx}",
+            "src/portal-saas/**/*.test.{ts,tsx}",
+          ],
           environment: "jsdom",
           globals: true,
           setupFiles: ["./src/saas/setupTests.ts"],
