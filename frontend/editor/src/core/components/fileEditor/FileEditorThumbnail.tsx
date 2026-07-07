@@ -398,6 +398,10 @@ const FileEditorThumbnail = ({
               id: "share",
               icon: <LinkIcon style={{ fontSize: 20 }} />,
               label: t("fileManager.share", "Share"),
+              disabled: policyEnforcing,
+              tooltip: policyEnforcing
+                ? enforcingTooltip(t("fileManager.share", "Share"))
+                : undefined,
               onClick: (e: React.MouseEvent) => {
                 e.stopPropagation();
                 setShowShareModal(true);

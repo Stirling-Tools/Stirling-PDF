@@ -119,31 +119,54 @@ test.describe("PolicyEnforcementOverlay — viewer blocking", () => {
     });
   });
 
-  test("does not block for a FAILED run", async ({ page }) => {
+  // The settled-state tests first inject a RUNNING run and wait for the
+  // overlay, proving the injection path was consumed — otherwise the
+  // not-visible assertion would pass trivially before React processed the
+  // storage event.
+
+  test("unblocks when the run reaches FAILED", async ({ page }) => {
     await uploadAndRender(page);
     const fileId = await getActiveFileId(page);
+    await injectPolicyRun(page, fileId, { status: "RUNNING" });
+    await expect(page.getByText("Enforcing policy…")).toBeVisible({
+      timeout: 5_000,
+    });
+
     await injectPolicyRun(page, fileId, {
       status: "FAILED",
       error: "File contains restricted content",
     });
-
-    await expect(page.getByText("Enforcing policy…")).not.toBeVisible();
+    await expect(page.getByText("Enforcing policy…")).not.toBeVisible({
+      timeout: 5_000,
+    });
   });
 
-  test("does not block for a CANCELLED run", async ({ page }) => {
+  test("unblocks when the run reaches CANCELLED", async ({ page }) => {
     await uploadAndRender(page);
     const fileId = await getActiveFileId(page);
+    await injectPolicyRun(page, fileId, { status: "RUNNING" });
+    await expect(page.getByText("Enforcing policy…")).toBeVisible({
+      timeout: 5_000,
+    });
+
     await injectPolicyRun(page, fileId, { status: "CANCELLED" });
-
-    await expect(page.getByText("Enforcing policy…")).not.toBeVisible();
+    await expect(page.getByText("Enforcing policy…")).not.toBeVisible({
+      timeout: 5_000,
+    });
   });
 
-  test("hides overlay for a COMPLETED run", async ({ page }) => {
+  test("unblocks when the run reaches COMPLETED", async ({ page }) => {
     await uploadAndRender(page);
     const fileId = await getActiveFileId(page);
-    await injectPolicyRun(page, fileId, { status: "COMPLETED" });
+    await injectPolicyRun(page, fileId, { status: "RUNNING" });
+    await expect(page.getByText("Enforcing policy…")).toBeVisible({
+      timeout: 5_000,
+    });
 
-    await expect(page.getByText("Enforcing policy…")).not.toBeVisible();
+    await injectPolicyRun(page, fileId, { status: "COMPLETED" });
+    await expect(page.getByText("Enforcing policy…")).not.toBeVisible({
+      timeout: 5_000,
+    });
   });
 
   test("hides overlay when no policy runs exist", async ({ page }) => {

@@ -131,15 +131,26 @@ export default function WorkbenchBar({
   const activeFiles = selectors.getFiles();
   const { activeFileId, setActiveFileId } = useViewer();
   const policyFileBadges = usePolicyFileBadges();
-  // Block print/export while the active file is under active policy enforcement.
-  const policyEnforcing =
-    !!activeFileId &&
-    (policyFileBadges.get(activeFileId) ?? []).some((p) => p.enforcing);
+  // Block print/export while any file the export would touch is under active
+  // policy enforcement: the viewer exports its active file, every other view
+  // exports the selection (or all files when nothing is selected).
+  const exportTargetIds: string[] =
+    currentView === "viewer"
+      ? activeFileId
+        ? [activeFileId]
+        : []
+      : selectedFileIds.length > 0
+        ? selectedFileIds
+        : activeFiles.filter(isStirlingFile).map((f) => f.fileId);
+  const enforcingFileId = exportTargetIds.find((id) =>
+    (policyFileBadges.get(id) ?? []).some((p) => p.enforcing),
+  );
+  const policyEnforcing = enforcingFileId != null;
   const policyRuns = usePolicyRuns();
   const enforcingRun = policyEnforcing
     ? policyRuns.find(
         (r) =>
-          r.fileId === activeFileId &&
+          r.fileId === enforcingFileId &&
           (POLICY_IN_FLIGHT_STATUSES as readonly string[]).includes(r.status),
       )
     : undefined;

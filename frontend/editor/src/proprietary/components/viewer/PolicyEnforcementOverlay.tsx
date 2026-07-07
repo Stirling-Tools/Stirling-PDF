@@ -51,7 +51,9 @@ export function PolicyEnforcementOverlay({ runs }: Props) {
           style={{
             position: "absolute",
             top: 16,
-            right: 16,
+            // Clear of the top-right corner itself: preview mode renders its
+            // close button there, and the badge must never swallow its clicks.
+            right: 56,
             zIndex: 1100,
             color: policyAccentVar(inFlight.categoryId),
           }}
