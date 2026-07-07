@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import {
-  ToolType,
-  type ToolOperationConfig,
+  defineSingleFileTool,
   useToolOperation,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
@@ -64,15 +63,13 @@ const buildFormData = (
     fileInput: file,
   });
 
-export const editTableOfContentsOperationConfig: ToolOperationConfig<EditTableOfContentsParameters> =
-  {
-    toolType: ToolType.singleFile,
-    operationType: "editTableOfContents",
-    endpoint: ENDPOINT,
-    buildFormData,
-    toApiParams: editTableOfContentsToApiParams,
-    fromApiParams: editTableOfContentsFromApiParams,
-  };
+export const editTableOfContentsOperationConfig = defineSingleFileTool({
+  operationType: "editTableOfContents",
+  endpoint: ENDPOINT,
+  buildFormData,
+  toApiParams: editTableOfContentsToApiParams,
+  fromApiParams: editTableOfContentsFromApiParams,
+});
 
 export const useEditTableOfContentsOperation = () => {
   const { t } = useTranslation();

@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
   ToolOperationHook,
-  ToolType,
+  defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
   SignParameters,
@@ -50,8 +50,7 @@ export const buildSignFormData = (
 };
 
 // Static configuration object
-export const signOperationConfig = {
-  toolType: ToolType.singleFile,
+export const signOperationConfig = defineSingleFileTool({
   buildFormData: buildSignFormData,
   operationType: "sign",
   // Signing is applied client-side in the viewer (see createStampTool ->
@@ -60,7 +59,7 @@ export const signOperationConfig = {
   endpoint: null,
   filePrefix: "signed_",
   defaultParameters: DEFAULT_PARAMETERS,
-} as const;
+});
 
 export const useSignOperation = (): ToolOperationHook<SignParameters> => {
   const { t } = useTranslation();
