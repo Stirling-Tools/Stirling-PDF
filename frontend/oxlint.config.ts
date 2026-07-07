@@ -2,10 +2,8 @@ import { defineConfig } from "oxlint";
 
 // App source globs
 const srcGlobs = [
+  // The portal layer lives under editor/src/portal, so editor/src/** covers it.
   "editor/src/**/*.{js,mjs,jsx,ts,tsx}",
-  "portal/src/**/*.{js,mjs,jsx,ts,tsx}",
-  "portal/main.tsx",
-  "shared/**/*.{js,mjs,jsx,ts,tsx}",
 ];
 
 // Node-tooling globs (scripts, config files, storybook).
@@ -13,23 +11,41 @@ const nodeGlobs = [
   "scripts/**/*.{js,ts,mjs,mts}",
   "editor/scripts/**/*.{js,ts,mjs,mts}",
   "editor/*.config.{js,ts,mjs}",
-  "portal/*.config.{js,ts,mjs}",
   "*.config.{js,ts,mjs}",
   ".storybook/*.{js,ts,mjs,mts,tsx}",
 ];
 
 // editor/src/core subfolders not yet conformant to the stricter type rules
 const coreNotYetConformant = [
-  "editor/src/core/components/**/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/contexts/**/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/data/**/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/hooks/**/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/pages/**/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/services/**/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/tests/**/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/tools/**/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/types/**/*.{js,mjs,jsx,ts,tsx}",
-  "editor/src/core/utils/**/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/components/annotation/**/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/components/pageEditor/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/components/pageEditor/commands/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/components/pageEditor/hooks/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/components/shared/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/components/shared/config/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/components/shared/config/configSections/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/components/shared/pageEditor/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/components/tools/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/components/tools/addStamp/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/components/tools/automate/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/components/tools/bookletImposition/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/components/tools/certSign/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/components/tools/pdfTextEditor/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/components/tools/shared/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/components/viewer/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/contexts/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/contexts/file/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/contexts/viewer/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/hooks/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/hooks/signing/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/hooks/tools/adjustContrast/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/hooks/tools/convert/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/hooks/tools/removePassword/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/hooks/tools/shared/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/services/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/tools/annotate/useAnnotationSelection.ts",
+  "editor/src/core/types/*.{js,mjs,jsx,ts,tsx}",
+  "editor/src/core/utils/*.{js,mjs,jsx,ts,tsx}",
 ];
 
 // Imports must use workspace aliases, never relative or absolute-src paths.
@@ -37,7 +53,7 @@ const aliasImportPatterns = [
   {
     regex: "^\\.",
     message:
-      "Use a workspace alias (@app/* for editor, @portal/* for portal, @shared/*) instead of relative imports.",
+      "Use a workspace alias (@app/* for editor, @portal/* for portal) instead of relative imports.",
   },
   {
     regex: "^src/",
@@ -51,36 +67,12 @@ const tauriPattern = {
     "Tauri APIs are desktop-only. Review frontend/editor/DeveloperGuide.md for structure advice.",
 };
 
-// shared/ must only depend on third-party packages and itself.
-const sharedLayerPatterns = [
-  {
-    regex: "^@app/",
-    message:
-      "shared/ must not depend on the editor layer (@app/* resolves into editor/src/).",
-  },
-  {
-    regex: "^@portal/",
-    message:
-      "shared/ must not depend on the portal layer. Use @shared/* or third-party imports only.",
-  },
-  { regex: "^@core/", message: "shared/ must not depend on editor/src/core/." },
-  {
-    regex: "^@proprietary/",
-    message: "shared/ must not depend on editor/src/proprietary/.",
-  },
-  {
-    regex: "^@tauri-apps/",
-    message: "shared/ must remain web-compatible (no Tauri APIs).",
-  },
-];
-
 export default defineConfig({
   plugins: ["typescript", "import"],
   categories: { correctness: "off" },
   env: { builtin: true },
   ignorePatterns: [
     "dist",
-    "dist-portal",
     "node_modules",
     "playwright-report",
     "storybook-static",
@@ -90,7 +82,6 @@ export default defineConfig({
     "editor/src-tauri",
     "editor/playwright-report",
     "editor/test-results",
-    "portal/public",
   ],
   rules: {
     "constructor-super": "error",
@@ -178,6 +169,7 @@ export default defineConfig({
     "typescript/no-misused-new": "error",
     "typescript/no-namespace": "error",
     "typescript/no-non-null-asserted-optional-chain": "error",
+    "typescript/no-require-imports": "error",
     "typescript/no-this-alias": "error",
     "typescript/no-unnecessary-type-constraint": "error",
     "typescript/no-unsafe-declaration-merging": "error",
@@ -219,15 +211,6 @@ export default defineConfig({
         "no-restricted-imports": [
           "error",
           { patterns: [...aliasImportPatterns, tauriPattern] },
-        ],
-      },
-    },
-    {
-      files: ["shared/**/*.{js,mjs,jsx,ts,tsx}"],
-      rules: {
-        "no-restricted-imports": [
-          "error",
-          { patterns: [...aliasImportPatterns, ...sharedLayerPatterns] },
         ],
       },
     },
