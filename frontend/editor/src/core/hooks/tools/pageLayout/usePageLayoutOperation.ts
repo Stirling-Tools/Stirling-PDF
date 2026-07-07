@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import {
-  ToolType,
   useToolOperation,
   defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
@@ -69,7 +68,6 @@ export const buildPageLayoutFormData = (
   objectToFormData(pageLayoutToApiParams(parameters), { fileInput: file });
 
 export const pageLayoutOperationConfig = defineSingleFileTool({
-  toolType: ToolType.singleFile,
   buildFormData: buildPageLayoutFormData,
   toApiParams: pageLayoutToApiParams,
   fromApiParams: pageLayoutFromApiParams,

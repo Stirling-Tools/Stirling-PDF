@@ -183,16 +183,15 @@ export type ToolOperationConfig<
 /**
  * Define a single-file tool's operation config. Infers the endpoint literal from
  * `endpoint` and binds toApiParams/fromApiParams to that endpoint's request
- * model, so a mapper cannot silently drift from the generated spec. Prefer this
- * over a bare object literal when authoring a tool.
+ * model, so a mapper cannot silently drift from the generated spec.
  */
 export function defineSingleFileTool<
   TParams,
   const TEndpoint extends ToolEndpoint,
 >(
-  config: SingleFileToolOperationConfig<TParams, TEndpoint>,
+  config: Omit<SingleFileToolOperationConfig<TParams, TEndpoint>, "toolType">,
 ): SingleFileToolOperationConfig<TParams, TEndpoint> {
-  return config;
+  return { ...config, toolType: ToolType.singleFile };
 }
 
 /** Multi-file counterpart of {@link defineSingleFileTool}. */
@@ -200,9 +199,9 @@ export function defineMultiFileTool<
   TParams,
   const TEndpoint extends ToolEndpoint,
 >(
-  config: MultiFileToolOperationConfig<TParams, TEndpoint>,
+  config: Omit<MultiFileToolOperationConfig<TParams, TEndpoint>, "toolType">,
 ): MultiFileToolOperationConfig<TParams, TEndpoint> {
-  return config;
+  return { ...config, toolType: ToolType.multiFile };
 }
 
 /**

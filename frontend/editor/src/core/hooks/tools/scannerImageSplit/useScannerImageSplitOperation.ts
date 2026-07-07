@@ -1,7 +1,6 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  ToolType,
   useToolOperation,
   ToolOperationConfig,
   defineSingleFileTool,
@@ -56,7 +55,6 @@ export const buildScannerImageSplitFormData = (
 
 // Static configuration object
 export const scannerImageSplitOperationConfig = defineSingleFileTool({
-  toolType: ToolType.singleFile,
   buildFormData: buildScannerImageSplitFormData,
   toApiParams: scannerImageSplitToApiParams,
   fromApiParams: scannerImageSplitFromApiParams,

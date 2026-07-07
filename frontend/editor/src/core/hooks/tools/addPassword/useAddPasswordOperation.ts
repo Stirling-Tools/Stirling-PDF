@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import {
-  ToolType,
   useToolOperation,
   defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
@@ -87,7 +86,6 @@ const fullDefaultParameters: AddPasswordFullParameters = {
 
 // Static configuration object
 export const addPasswordOperationConfig = defineSingleFileTool({
-  toolType: ToolType.singleFile,
   buildFormData: buildAddPasswordFormData,
   toApiParams: addPasswordToApiParams,
   fromApiParams: addPasswordFromApiParams,

@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import {
-  ToolType,
   useToolOperation,
   defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
@@ -27,7 +26,6 @@ export const buildRepairFormData = (
 
 // Static configuration object
 export const repairOperationConfig = defineSingleFileTool({
-  toolType: ToolType.singleFile,
   buildFormData: buildRepairFormData,
   toApiParams,
   fromApiParams,

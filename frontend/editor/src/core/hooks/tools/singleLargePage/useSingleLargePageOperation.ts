@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import {
-  ToolType,
   useToolOperation,
   defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
@@ -28,7 +27,6 @@ export const buildSingleLargePageFormData = (
 
 // Static configuration object
 export const singleLargePageOperationConfig = defineSingleFileTool({
-  toolType: ToolType.singleFile,
   buildFormData: buildSingleLargePageFormData,
   toApiParams,
   fromApiParams,

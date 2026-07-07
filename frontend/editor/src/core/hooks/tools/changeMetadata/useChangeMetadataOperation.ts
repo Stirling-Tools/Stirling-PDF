@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
-  ToolType,
   defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
@@ -77,7 +76,6 @@ export const buildChangeMetadataFormData = (
 
 // Static configuration object
 export const changeMetadataOperationConfig = defineSingleFileTool({
-  toolType: ToolType.singleFile,
   buildFormData: buildChangeMetadataFormData,
   operationType: "changeMetadata",
   endpoint: "/api/v1/misc/update-metadata",

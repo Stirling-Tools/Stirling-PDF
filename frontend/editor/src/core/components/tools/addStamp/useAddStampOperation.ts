@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import {
-  ToolType,
   useToolOperation,
   defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
@@ -89,7 +88,6 @@ export const buildAddStampFormData = (
   );
 
 export const addStampOperationConfig = defineSingleFileTool({
-  toolType: ToolType.singleFile,
   buildFormData: buildAddStampFormData,
   toApiParams: addStampToApiParams,
   fromApiParams: addStampFromApiParams,

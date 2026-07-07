@@ -2,7 +2,6 @@ import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
-  ToolType,
   defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
@@ -43,7 +42,6 @@ export const buildExtractImagesFormData = (
 
 // Static configuration object (without response handler - will be added in hook)
 export const extractImagesOperationConfig = defineSingleFileTool({
-  toolType: ToolType.singleFile,
   buildFormData: buildExtractImagesFormData,
   toApiParams: extractImagesToApiParams,
   fromApiParams: extractImagesFromApiParams,

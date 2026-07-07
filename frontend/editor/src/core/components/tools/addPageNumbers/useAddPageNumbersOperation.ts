@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import {
-  ToolType,
   useToolOperation,
   defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
@@ -75,7 +74,6 @@ export const buildAddPageNumbersFormData = (
   objectToFormData(addPageNumbersToApiParams(parameters), { fileInput: file });
 
 export const addPageNumbersOperationConfig = defineSingleFileTool({
-  toolType: ToolType.singleFile,
   buildFormData: buildAddPageNumbersFormData,
   toApiParams: addPageNumbersToApiParams,
   fromApiParams: addPageNumbersFromApiParams,

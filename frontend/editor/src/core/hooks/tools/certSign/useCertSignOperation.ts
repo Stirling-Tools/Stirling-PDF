@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import {
-  ToolType,
   useToolOperation,
   defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
@@ -138,7 +137,6 @@ export const buildCertSignFormData = (
 
 // Static configuration object
 export const certSignOperationConfig = defineSingleFileTool({
-  toolType: ToolType.singleFile,
   buildFormData: buildCertSignFormData,
   toApiParams: certSignToApiParams,
   fromApiParams: certSignFromApiParams,

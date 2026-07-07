@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
-  ToolType,
   defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
@@ -92,7 +91,6 @@ export const buildCompressFormData = (
 
 // Static configuration object
 export const compressOperationConfig = defineSingleFileTool({
-  toolType: ToolType.singleFile,
   buildFormData: buildCompressFormData,
   toApiParams: compressToApiParams,
   fromApiParams: compressFromApiParams,

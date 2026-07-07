@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
-  ToolType,
   defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
@@ -66,7 +65,6 @@ export const buildRedactFormData = (
 
 // Static configuration object
 export const redactOperationConfig = defineSingleFileTool({
-  toolType: ToolType.singleFile,
   buildFormData: buildRedactFormData,
   toApiParams: redactToApiParams,
   fromApiParams: redactFromApiParams,

@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import {
-  ToolType,
   useToolOperation,
   defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
@@ -89,7 +88,6 @@ export const buildAddWatermarkFormData = (
 
 // Static configuration object
 export const addWatermarkOperationConfig = defineSingleFileTool({
-  toolType: ToolType.singleFile,
   buildFormData: buildAddWatermarkFormData,
   toApiParams: addWatermarkToApiParams,
   fromApiParams: addWatermarkFromApiParams,

@@ -1,7 +1,6 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  ToolType,
   useToolOperation,
   defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
@@ -42,7 +41,6 @@ export const buildRemoveBlanksFormData = (
   objectToFormData(removeBlanksToApiParams(parameters), { fileInput: file });
 
 export const removeBlanksOperationConfig = defineSingleFileTool({
-  toolType: ToolType.singleFile,
   buildFormData: buildRemoveBlanksFormData,
   toApiParams: removeBlanksToApiParams,
   fromApiParams: removeBlanksFromApiParams,

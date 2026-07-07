@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import {
-  ToolType,
   useToolOperation,
   defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
@@ -57,7 +56,6 @@ export const buildSanitizeFormData = (
 
 // Static configuration object
 export const sanitizeOperationConfig = defineSingleFileTool({
-  toolType: ToolType.singleFile,
   buildFormData: buildSanitizeFormData,
   toApiParams: sanitizeToApiParams,
   fromApiParams: sanitizeFromApiParams,

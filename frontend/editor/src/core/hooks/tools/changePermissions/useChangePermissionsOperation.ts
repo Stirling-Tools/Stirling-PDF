@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import {
-  ToolType,
   useToolOperation,
   defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
@@ -73,7 +72,6 @@ export const buildChangePermissionsFormData = (
 
 // Static configuration object
 export const changePermissionsOperationConfig = defineSingleFileTool({
-  toolType: ToolType.singleFile,
   buildFormData: buildChangePermissionsFormData,
   toApiParams: changePermissionsToApiParams,
   fromApiParams: changePermissionsFromApiParams,

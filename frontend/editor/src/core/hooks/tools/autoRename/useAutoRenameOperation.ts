@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import {
-  ToolType,
   useToolOperation,
   defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
@@ -46,7 +45,6 @@ export const buildAutoRenameFormData = (
 
 // Static configuration object
 export const autoRenameOperationConfig = defineSingleFileTool({
-  toolType: ToolType.singleFile,
   buildFormData: buildAutoRenameFormData,
   toApiParams: autoRenameToApiParams,
   fromApiParams: autoRenameFromApiParams,

@@ -7,7 +7,6 @@ import {
 import {
   useToolOperation,
   ToolOperationConfig,
-  ToolType,
   defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
@@ -153,7 +152,6 @@ export const ocrResponseHandler = async (
 
 // Static configuration object (without t function dependencies)
 export const ocrOperationConfig = defineSingleFileTool({
-  toolType: ToolType.singleFile,
   buildFormData: buildOCRFormData,
   toApiParams: ocrToApiParams,
   fromApiParams: ocrFromApiParams,

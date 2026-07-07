@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
-  ToolType,
   defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
@@ -45,7 +44,6 @@ export const buildRotateFormData = (
 
 // Static configuration object
 export const rotateOperationConfig = defineSingleFileTool({
-  toolType: ToolType.singleFile,
   buildFormData: buildRotateFormData,
   toApiParams: rotateToApiParams,
   fromApiParams: rotateFromApiParams,

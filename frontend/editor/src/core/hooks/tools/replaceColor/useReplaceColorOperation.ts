@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import {
-  ToolType,
   useToolOperation,
   defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
@@ -64,7 +63,6 @@ export const buildReplaceColorFormData = (
   objectToFormData(replaceColorToApiParams(parameters), { fileInput: file });
 
 export const replaceColorOperationConfig = defineSingleFileTool({
-  toolType: ToolType.singleFile,
   buildFormData: buildReplaceColorFormData,
   toApiParams: replaceColorToApiParams,
   fromApiParams: replaceColorFromApiParams,

@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import {
-  ToolType,
   useToolOperation,
   defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
@@ -37,7 +36,6 @@ export const buildTimestampPdfFormData = (
   objectToFormData(timestampPdfToApiParams(parameters), { fileInput: file });
 
 export const timestampPdfOperationConfig = defineSingleFileTool({
-  toolType: ToolType.singleFile,
   buildFormData: buildTimestampPdfFormData,
   toApiParams: timestampPdfToApiParams,
   fromApiParams: timestampPdfFromApiParams,

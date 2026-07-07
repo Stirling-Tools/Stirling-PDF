@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import {
-  ToolType,
   useToolOperation,
   defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
@@ -21,7 +20,6 @@ export { buildRemovePasswordFormData };
 
 // Static configuration object
 export const removePasswordOperationConfig = defineSingleFileTool({
-  toolType: ToolType.singleFile,
   buildFormData: buildRemovePasswordFormData,
   toApiParams: removePasswordToApiParams,
   fromApiParams: removePasswordFromApiParams,

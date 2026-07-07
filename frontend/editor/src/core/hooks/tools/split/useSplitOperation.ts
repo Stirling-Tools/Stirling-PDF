@@ -1,7 +1,6 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  ToolType,
   useToolOperation,
   ToolOperationConfig,
   defineSingleFileTool,
@@ -173,7 +172,6 @@ export const getSplitEndpoint = (parameters: SplitParameters): SplitEndpoint =>
 
 // Static configuration object
 export const splitOperationConfig = defineSingleFileTool({
-  toolType: ToolType.singleFile,
   buildFormData: buildSplitFormData,
   toApiParams: splitToApiParams,
   fromApiParams: splitFromApiParams,
