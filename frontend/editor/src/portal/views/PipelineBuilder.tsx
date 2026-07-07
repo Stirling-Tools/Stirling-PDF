@@ -595,8 +595,8 @@ export function PipelineBuilder() {
                 <Select
                   inputSize="sm"
                   value={scheduleUnit}
-                  onChange={(e) =>
-                    setScheduleUnit(e.target.value as ScheduleUnit)
+                  onChange={(value) =>
+                    value && setScheduleUnit(value as ScheduleUnit)
                   }
                   options={SCHEDULE_UNITS.map((unit) => ({
                     value: unit,
