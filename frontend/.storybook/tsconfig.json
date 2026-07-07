@@ -5,8 +5,14 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "paths": {
-      "@portal/*": ["../portal/src/*"],
-      "@shared/*": ["../shared/*"]
+      "@app/*": [
+        "../editor/src/desktop/*",
+        "../editor/src/proprietary/*",
+        "../editor/src/core/*"
+      ],
+      "@core/*": ["../editor/src/core/*"],
+      "@proprietary/*": ["../editor/src/proprietary/*"],
+      "@portal/*": ["../editor/src/portal/*"]
     },
     "resolveJsonModule": true,
     "esModuleInterop": true,

@@ -44,3 +44,8 @@ export * from "@app/ui/Select";
 export * from "@app/ui/Checkbox";
 export * from "@app/ui/Radio";
 export * from "@app/ui/Slider";
+
+// Mantine-backed form elements (SUI-styled)
+export * from "@app/ui/MultiSelect";
+export * from "@app/ui/NumberInput";
+export * from "@app/ui/ColorInput";

@@ -1,7 +1,7 @@
 import type React from "react";
 import {
-  Select as MantineSelect,
-  type SelectProps as MantineSelectProps,
+  NumberInput as MantineNumberInput,
+  type NumberInputProps as MantineNumberInputProps,
 } from "@mantine/core";
 import { useInputAria } from "@app/ui/ariaForwarding";
 import "@app/ui/MantineForms.css";
@@ -17,30 +17,33 @@ const SUI_INPUT_VARS = {
   "--input-height-md": "2.25rem",
 } as React.CSSProperties;
 
-export interface SelectOption {
-  value: string;
-  label: string;
-  disabled?: boolean;
-}
+export type NumberInputSize = "sm" | "md";
 
-export type SelectSize = "sm" | "md";
+export interface NumberInputProps {
+  // Value
+  value?: number | string;
+  onChange?: (value: number | string) => void;
+  defaultValue?: number | string;
 
-export interface SelectProps {
-  // Data
-  options: SelectOption[];
-  value?: string | null;
-  onChange?: (value: string | null) => void;
-  defaultValue?: string;
+  // Constraints
+  min?: number;
+  max?: number;
+  step?: number;
+  decimalScale?: number;
+  fixedDecimalScale?: boolean;
+  allowNegative?: boolean;
+  allowDecimal?: boolean;
+  clampBehavior?: "strict" | "blur" | "none";
 
-  // Behaviour
-  searchable?: boolean;
-  clearable?: boolean;
+  // Display
   placeholder?: string;
-  nothingFoundMessage?: React.ReactNode;
-  maxDropdownHeight?: number | string;
+  suffix?: string;
+  prefix?: string;
+  hideControls?: boolean;
 
-  // Dropdown escape hatch — for zIndex / offset overrides in modals
-  comboboxProps?: MantineSelectProps["comboboxProps"];
+  // Right section — escape hatch for inline unit labels
+  rightSection?: React.ReactNode;
+  rightSectionWidth?: React.CSSProperties["width"];
 
   // Form
   id?: string;
@@ -51,26 +54,38 @@ export interface SelectProps {
   required?: boolean;
   disabled?: boolean;
   readOnly?: boolean;
+  autoFocus?: boolean;
   onFocus?: React.FocusEventHandler<HTMLInputElement>;
   onBlur?: React.FocusEventHandler<HTMLInputElement>;
+  onKeyDown?: React.KeyboardEventHandler<HTMLInputElement>;
 
   // SUI — invalid applies error styling; FormField renders the message itself.
-  inputSize?: SelectSize;
+  inputSize?: NumberInputSize;
   invalid?: boolean;
 }
 
+// Narrows MantineNumberInputProps to only what our interface exposes so the
+// spread below stays type-safe without manually listing every prop.
 type PassthroughProps = Omit<
   Pick<
-    MantineSelectProps,
+    MantineNumberInputProps,
     | "value"
     | "onChange"
     | "defaultValue"
-    | "searchable"
-    | "clearable"
+    | "min"
+    | "max"
+    | "step"
+    | "decimalScale"
+    | "fixedDecimalScale"
+    | "allowNegative"
+    | "allowDecimal"
+    | "clampBehavior"
     | "placeholder"
-    | "nothingFoundMessage"
-    | "maxDropdownHeight"
-    | "comboboxProps"
+    | "suffix"
+    | "prefix"
+    | "hideControls"
+    | "rightSection"
+    | "rightSectionWidth"
     | "id"
     | "name"
     | "aria-label"
@@ -78,31 +93,38 @@ type PassthroughProps = Omit<
     | "required"
     | "disabled"
     | "readOnly"
+    | "autoFocus"
     | "onFocus"
     | "onBlur"
+    | "onKeyDown"
   >,
   never
 >;
 
 /**
- * SUI select / combobox backed by Mantine. Supports optional search and clear.
- * Use with <FormField> for labels and error display. Appearance is locked to SUI tokens.
- *
- * onChange receives the selected string value (or null when cleared), not a DOM event.
+ * SUI number input with increment/decrement controls. Use with <FormField>
+ * for labels and error display. Appearance is locked to SUI tokens.
  */
-export function Select({
+export function NumberInput({
   inputSize = "md",
   invalid,
-  options,
   value,
   onChange,
   defaultValue,
-  searchable,
-  clearable,
+  min,
+  max,
+  step,
+  decimalScale,
+  fixedDecimalScale,
+  allowNegative,
+  allowDecimal,
+  clampBehavior,
   placeholder,
-  nothingFoundMessage,
-  maxDropdownHeight,
-  comboboxProps,
+  suffix,
+  prefix,
+  hideControls,
+  rightSection,
+  rightSectionWidth,
   id,
   name,
   "aria-label": ariaLabel,
@@ -111,20 +133,30 @@ export function Select({
   required,
   disabled,
   readOnly,
+  autoFocus,
   onFocus,
   onBlur,
-}: SelectProps) {
+  onKeyDown,
+}: NumberInputProps) {
   const inputRef = useInputAria({ describedBy: ariaDescribedBy });
   const passthroughProps: PassthroughProps = {
     value,
     onChange,
     defaultValue,
-    searchable,
-    clearable,
+    min,
+    max,
+    step,
+    decimalScale,
+    fixedDecimalScale,
+    allowNegative,
+    allowDecimal,
+    clampBehavior,
     placeholder,
-    nothingFoundMessage,
-    maxDropdownHeight,
-    comboboxProps,
+    suffix,
+    prefix,
+    hideControls,
+    rightSection,
+    rightSectionWidth,
     id,
     name,
     "aria-label": ariaLabel,
@@ -132,13 +164,14 @@ export function Select({
     required,
     disabled,
     readOnly,
+    autoFocus,
     onFocus,
     onBlur,
+    onKeyDown,
   };
 
   return (
-    <MantineSelect
-      data={options}
+    <MantineNumberInput
       size={inputSize}
       // Boolean error applies invalid styling without rendering Mantine's own
       // message element — FormField owns the visible error text.
@@ -146,7 +179,10 @@ export function Select({
       // required sets the input attribute only; FormField renders the asterisk.
       withAsterisk={false}
       ref={inputRef}
-      classNames={{ wrapper: "sui-mantine-wrapper" }}
+      classNames={{
+        wrapper: "sui-mantine-wrapper",
+        control: "sui-mantine-control",
+      }}
       styles={{ wrapper: SUI_INPUT_VARS }}
       {...passthroughProps}
     />

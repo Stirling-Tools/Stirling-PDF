@@ -1,7 +1,7 @@
 import type React from "react";
 import {
-  Select as MantineSelect,
-  type SelectProps as MantineSelectProps,
+  ColorInput as MantineColorInput,
+  type ColorInputProps as MantineColorInputProps,
 } from "@mantine/core";
 import { useInputAria } from "@app/ui/ariaForwarding";
 import "@app/ui/MantineForms.css";
@@ -17,32 +17,25 @@ const SUI_INPUT_VARS = {
   "--input-height-md": "2.25rem",
 } as React.CSSProperties;
 
-export interface SelectOption {
-  value: string;
-  label: string;
-  disabled?: boolean;
-}
+export type ColorInputSize = "sm" | "md";
 
-export type SelectSize = "sm" | "md";
-
-export interface SelectProps {
-  // Data
-  options: SelectOption[];
-  value?: string | null;
-  onChange?: (value: string | null) => void;
+export interface ColorInputProps {
+  // Value
+  value?: string;
+  onChange?: (value: string) => void;
   defaultValue?: string;
 
   // Behaviour
-  searchable?: boolean;
-  clearable?: boolean;
-  placeholder?: string;
-  nothingFoundMessage?: React.ReactNode;
-  maxDropdownHeight?: number | string;
+  format?: "hex" | "hexa" | "rgb" | "rgba" | "hsl" | "hsla";
+  swatches?: string[];
+  swatchesPerRow?: number;
+  withPicker?: boolean;
 
-  // Dropdown escape hatch — for zIndex / offset overrides in modals
-  comboboxProps?: MantineSelectProps["comboboxProps"];
+  // Popover escape hatch — only for zIndex / offset overrides in modals
+  popoverProps?: MantineColorInputProps["popoverProps"];
 
   // Form
+  placeholder?: string;
   id?: string;
   name?: string;
   "aria-label"?: string;
@@ -55,22 +48,22 @@ export interface SelectProps {
   onBlur?: React.FocusEventHandler<HTMLInputElement>;
 
   // SUI — invalid applies error styling; FormField renders the message itself.
-  inputSize?: SelectSize;
+  inputSize?: ColorInputSize;
   invalid?: boolean;
 }
 
 type PassthroughProps = Omit<
   Pick<
-    MantineSelectProps,
+    MantineColorInputProps,
     | "value"
     | "onChange"
     | "defaultValue"
-    | "searchable"
-    | "clearable"
+    | "format"
+    | "swatches"
+    | "swatchesPerRow"
+    | "withPicker"
+    | "popoverProps"
     | "placeholder"
-    | "nothingFoundMessage"
-    | "maxDropdownHeight"
-    | "comboboxProps"
     | "id"
     | "name"
     | "aria-label"
@@ -85,24 +78,24 @@ type PassthroughProps = Omit<
 >;
 
 /**
- * SUI select / combobox backed by Mantine. Supports optional search and clear.
- * Use with <FormField> for labels and error display. Appearance is locked to SUI tokens.
+ * SUI colour picker input with swatch preview and popover picker. Use with
+ * <FormField> for labels and error display. Appearance is locked to SUI tokens.
  *
- * onChange receives the selected string value (or null when cleared), not a DOM event.
+ * Defaults to hex format. Pass `popoverProps={{ withinPortal: true, zIndex: Z }}` when
+ * rendering inside a modal.
  */
-export function Select({
+export function ColorInput({
   inputSize = "md",
   invalid,
-  options,
+  format = "hex",
   value,
   onChange,
   defaultValue,
-  searchable,
-  clearable,
+  swatches,
+  swatchesPerRow,
+  withPicker,
+  popoverProps,
   placeholder,
-  nothingFoundMessage,
-  maxDropdownHeight,
-  comboboxProps,
   id,
   name,
   "aria-label": ariaLabel,
@@ -113,18 +106,18 @@ export function Select({
   readOnly,
   onFocus,
   onBlur,
-}: SelectProps) {
+}: ColorInputProps) {
   const inputRef = useInputAria({ describedBy: ariaDescribedBy });
   const passthroughProps: PassthroughProps = {
     value,
     onChange,
     defaultValue,
-    searchable,
-    clearable,
+    format,
+    swatches,
+    swatchesPerRow,
+    withPicker,
+    popoverProps,
     placeholder,
-    nothingFoundMessage,
-    maxDropdownHeight,
-    comboboxProps,
     id,
     name,
     "aria-label": ariaLabel,
@@ -137,8 +130,7 @@ export function Select({
   };
 
   return (
-    <MantineSelect
-      data={options}
+    <MantineColorInput
       size={inputSize}
       // Boolean error applies invalid styling without rendering Mantine's own
       // message element — FormField owns the visible error text.

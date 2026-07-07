@@ -455,8 +455,8 @@ function PolicySetupWizardBody({
                   <Select
                     inputSize="sm"
                     value={runOn}
-                    onChange={(e) =>
-                      setRunOn(e.target.value as "upload" | "export")
+                    onChange={(value) =>
+                      setRunOn((value ?? "upload") as "upload" | "export")
                     }
                     options={[
                       {
@@ -476,8 +476,10 @@ function PolicySetupWizardBody({
                   <Select
                     inputSize="sm"
                     value={outputMode}
-                    onChange={(e) => {
-                      const mode = e.target.value as "new_file" | "new_version";
+                    onChange={(value) => {
+                      const mode = (value ?? "new_file") as
+                        | "new_file"
+                        | "new_version";
                       setOutputMode(mode);
                       // Auto-number only applies to separate new files.
                       if (
@@ -510,9 +512,12 @@ function PolicySetupWizardBody({
                     <Select
                       inputSize="sm"
                       value={outputNamePosition}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setOutputNamePosition(
-                          e.target.value as "prefix" | "suffix" | "auto-number",
+                          (value ?? "suffix") as
+                            | "prefix"
+                            | "suffix"
+                            | "auto-number",
                         )
                       }
                       options={[
