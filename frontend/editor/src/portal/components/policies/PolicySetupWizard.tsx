@@ -467,21 +467,16 @@ function PolicySetupWizardBody({
           <h3 className="portal-policies__wizard-heading">
             {t("portal.policies.wizard.sources.heading")}
           </h3>
-          <div className="portal-policies__sources">
-            {sourcesAsync.loading && !sourcesAsync.data ? (
-              <p className="portal-policies__sources-loading">
-                {t("portal.policies.wizard.sources.loading")}
-              </p>
-            ) : availableSources.length === 1 ? (
-              <Banner
-                tone="neutral"
-                title={t("portal.policies.wizard.sources.emptyTitle")}
-                description={t(
-                  "portal.policies.wizard.sources.emptyDescription",
-                )}
-              />
-            ) : (
-              availableSources.map((src) => (
+          {sourcesAsync.loading && !sourcesAsync.data ? (
+            <p className="portal-policies__sources-loading">
+              {t("portal.policies.wizard.sources.loading")}
+            </p>
+          ) : (
+            // The editor is always an available source (unconditionally prepended
+            // to availableSources), so the list is never empty — no "no sources"
+            // state exists.
+            <div className="portal-policies__sources">
+              {availableSources.map((src) => (
                 <Button
                   key={src.id}
                   type="button"
@@ -506,9 +501,9 @@ function PolicySetupWizardBody({
                     </span>
                   </span>
                 </Button>
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          )}
 
           <h3 className="portal-policies__wizard-heading">
             {t("portal.policies.wizard.docTypes.heading")}

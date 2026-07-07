@@ -7394,8 +7394,6 @@ upload = "Upload"
 heading = "Settings"
 
 [portal.policies.wizard.sources]
-emptyDescription = "Connect a source on the Sources page first, then attach it to a policy here."
-emptyTitle = "No sources available"
 heading = "Sources"
 loading = "Loading sources…"
 
