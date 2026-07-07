@@ -3,10 +3,10 @@ import { useTranslation } from "react-i18next";
 import { Banner } from "@app/ui";
 import { type ToolRegistry } from "@app/data/toolsTaxonomy";
 import { type ErasedToolParams } from "@app/hooks/tools/shared/toolOperationTypes";
-import { type WorkingStep } from "@portal/components/pipelines/pipelineTools";
+import { type WorkingToolStep } from "@app/hooks/tools/shared/toolAutomation";
 
 interface PipelineStepSettingsProps {
-  step: WorkingStep;
+  step: WorkingToolStep;
   registry: Partial<ToolRegistry>;
   onChange: (params: ErasedToolParams) => void;
 }

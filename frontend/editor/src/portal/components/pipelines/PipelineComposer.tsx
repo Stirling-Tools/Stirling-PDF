@@ -13,7 +13,6 @@ import {
 } from "@app/ui";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import { type ErasedToolParams } from "@app/hooks/tools/shared/toolOperationTypes";
-import { type ToolId } from "@app/types/toolId";
 import { errorMessage } from "@portal/api/http";
 import {
   fetchTriggers,
@@ -27,12 +26,13 @@ import { fetchSources, type SourceView } from "@portal/api/sources";
 import { useAsync } from "@portal/hooks/useAsync";
 import { humanizeOperation } from "@portal/components/pipelines/pipelineOperations";
 import {
-  deserializeStep,
-  getPipelineTools,
-  newWorkingStep,
-  serializeStep,
-  type WorkingStep,
-} from "@portal/components/pipelines/pipelineTools";
+  deserializeToolStep,
+  getExecutableTools,
+  newWorkingToolStep,
+  serializeToolStep,
+  type ExecutableTool,
+  type WorkingToolStep,
+} from "@app/hooks/tools/shared/toolAutomation";
 import { PipelineStepSettings } from "@portal/components/pipelines/PipelineStepSettings";
 import "@portal/views/Pipelines.css";
 
@@ -113,7 +113,7 @@ export function PipelineComposer({
 }: PipelineComposerProps) {
   const { t } = useTranslation();
   const { allTools } = useToolRegistry();
-  const pipelineTools = useMemo(() => getPipelineTools(allTools), [allTools]);
+  const pipelineTools = useMemo(() => getExecutableTools(allTools), [allTools]);
   const isEdit = pipeline !== undefined;
 
   const sourcesState = useAsync<SourceView[]>(
@@ -135,7 +135,7 @@ export function PipelineComposer({
 
   const [name, setName] = useState("");
   const [sourceIds, setSourceIds] = useState<string[]>([]);
-  const [steps, setSteps] = useState<WorkingStep[]>([]);
+  const [steps, setSteps] = useState<WorkingToolStep[]>([]);
   const [configuringIndex, setConfiguringIndex] = useState<number | null>(null);
   const [triggerType, setTriggerType] = useState<string>(MANUAL);
   const [scheduleCount, setScheduleCount] = useState("1");
@@ -155,7 +155,9 @@ export function PipelineComposer({
     setName(pipeline?.name ?? "");
     setSourceIds(pipeline?.sourceIds ?? []);
     setSteps(
-      (pipeline?.steps ?? []).map((step) => deserializeStep(step, allTools)),
+      (pipeline?.steps ?? []).map((step) =>
+        deserializeToolStep(step, allTools),
+      ),
     );
     setConfiguringIndex(null);
     setTriggerType(trigger.triggerType);
@@ -201,9 +203,9 @@ export function PipelineComposer({
     );
   }
 
-  function addStep(toolId: ToolId) {
+  function addStep(tool: ExecutableTool) {
     setSteps((current) => {
-      const next = [...current, newWorkingStep(toolId, allTools)];
+      const next = [...current, newWorkingToolStep(tool, allTools)];
       setConfiguringIndex(next.length - 1);
       return next;
     });
@@ -227,11 +229,13 @@ export function PipelineComposer({
 
   function updateStepParams(index: number, params: ErasedToolParams) {
     setSteps((current) =>
-      current.map((step, i) => (i === index ? { ...step, params } : step)),
+      current.map((step, i) =>
+        i === index && step.toolId !== null ? { ...step, params } : step,
+      ),
     );
   }
 
-  function stepLabel(step: WorkingStep): string {
+  function stepLabel(step: WorkingToolStep): string {
     const entry = step.toolId ? allTools[step.toolId] : undefined;
     return entry?.name ?? humanizeOperation(step.operation);
   }
@@ -284,7 +288,7 @@ export function PipelineComposer({
       enabled: pipeline?.enabled ?? true,
       trigger: buildTrigger(),
       sourceIds,
-      steps: steps.map((step) => serializeStep(step, allTools)),
+      steps: steps.map((step) => serializeToolStep(step, allTools)),
       output,
     };
     try {
@@ -491,7 +495,7 @@ export function PipelineComposer({
                 key={tool.toolId}
                 tone="blue"
                 size="sm"
-                onClick={() => addStep(tool.toolId)}
+                onClick={() => addStep(tool)}
               >
                 {`+ ${tool.name}`}
               </Chip>
