@@ -69,16 +69,23 @@ const CertificateTypeSettings = ({
     onParameterChange("alias", undefined);
   };
 
-  return (
-    <Stack gap="md">
-      {!isServerCertificateEnabled && !isHardwareAvailable && (
+  const hasAlternativeSources = isServerCertificateEnabled || isHardwareAvailable;
+
+  if (!hasAlternativeSources) {
+    return (
+      <Stack gap="md">
         <div style={{ color: "var(--text-muted)", fontSize: "11px" }}>
           {t(
             "certSign.source.noOtherSources",
             "No other certificate sources are available.",
           )}
         </div>
-      )}
+      </Stack>
+    );
+  }
+
+  return (
+    <Stack gap="md">
       <div style={{ display: "flex", gap: "4px" }}>
         <Button
           variant={parameters.signMode === "MANUAL" ? "primary" : "secondary"}
