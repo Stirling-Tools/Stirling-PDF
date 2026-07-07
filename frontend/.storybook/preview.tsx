@@ -29,10 +29,10 @@ initialize({ onUnhandledRequest: "bypass" }, handlers);
 
 // Storybook-only: stub a SaaS session so apiClient.saas reads (invoices, payment
 // method, wallet) clear the session check and reach the MSW handlers instead of
-// failing with "No SaaS session". VITE_SAAS_SUPABASE_URL/KEY are intentionally
-// unset, so ensureSaasSupabase() is a no-op and never replaces this client; only
-// VITE_SAAS_API_URL (a mock origin MSW matches) is configured — injected via
-// .storybook/main.ts's viteFinal define, not a frontend/.env file.
+// failing with "No SaaS session". VITE_SUPABASE_URL/KEY are defined empty (see
+// .storybook/main.ts), so ensureSaasSupabase() is a no-op and never replaces this
+// client; only VITE_SAAS_API_URL (a mock origin MSW matches) is configured —
+// injected via .storybook/main.ts's viteFinal define, not a frontend/.env file.
 const saasStub = configureSupabase({
   url: "http://saas.mock",
   key: "storybook-anon-key",

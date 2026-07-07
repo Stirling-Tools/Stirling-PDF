@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 // Mock only the low-level client factory — NOT ensureSaasSupabase itself — so this
-// exercises the real SaaS configurator and proves it wires the shared client from
-// the editor's env (the gap finding #1 flagged: the old path left it unconfigured).
+// exercises the real configurator and proves it wires the shared client from the
+// one Stirling Supabase env (VITE_SUPABASE_*), shared by every flavor.
 const configureSupabase = vi.fn();
 const getSupabaseClient = vi.fn(() => ({ __client: true }));
 vi.mock("@app/auth/supabase/supabaseClient", () => ({
@@ -10,7 +10,7 @@ vi.mock("@app/auth/supabase/supabaseClient", () => ({
   getSupabaseClient,
 }));
 
-describe("ensureSaasSupabase (SaaS) — configures the shared client from the editor env", () => {
+describe("ensureSaasSupabase — configures the shared client from VITE_SUPABASE_*", () => {
   afterEach(() => {
     vi.resetModules();
     vi.unstubAllEnvs();
@@ -18,11 +18,10 @@ describe("ensureSaasSupabase (SaaS) — configures the shared client from the ed
     getSupabaseClient.mockClear();
   });
 
-  it("configures from VITE_SUPABASE_* (same project as the editor) and returns the client", async () => {
+  it("configures from VITE_SUPABASE_* and returns the client", async () => {
     vi.stubEnv("VITE_SUPABASE_URL", "https://proj.supabase.co");
     vi.stubEnv("VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY", "anon-key");
-    // Dynamic import so the module reads the stubbed env at load. Resolves to the
-    // SaaS override via the @portal cascade in the saas project.
+    // Dynamic import so the module reads the stubbed env at load.
     const { ensureSaasSupabase, isSaasSupabaseConfigured } =
       await import("@portal/auth/saasSupabase");
     expect(isSaasSupabaseConfigured).toBe(true);
@@ -34,7 +33,7 @@ describe("ensureSaasSupabase (SaaS) — configures the shared client from the ed
     expect(client).not.toBeNull();
   });
 
-  it("stays unconfigured (client null) when the editor env is absent", async () => {
+  it("stays unconfigured (client null) when the Supabase env is absent", async () => {
     vi.stubEnv("VITE_SUPABASE_URL", "");
     vi.stubEnv("VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY", "");
     const { ensureSaasSupabase, isSaasSupabaseConfigured } =

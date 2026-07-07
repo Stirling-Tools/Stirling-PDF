@@ -49,7 +49,7 @@ export function LinkAccountCard({ link }: Props) {
           )}
         >
           {t("portal.accountLink.card.loginNotConfigured.before", "Set")}{" "}
-          <code>VITE_SAAS_SUPABASE_URL</code>{" "}
+          <code>VITE_SUPABASE_URL</code>{" "}
           {t(
             "portal.accountLink.card.loginNotConfigured.after",
             "to enable account linking against the hosted Stirling account. In dev you can simulate sign-in from the link dialog.",
