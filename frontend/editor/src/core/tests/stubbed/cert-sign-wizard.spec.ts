@@ -81,9 +81,9 @@ test.describe("CertSign tool - certificate source model", () => {
     await expect(
       page.getByText(/no other certificate sources are available/i).first(),
     ).toBeVisible({ timeout: 10_000 });
-    await expect(
-      page.getByRole("button", { name: /^upload$/i }),
-    ).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /^upload$/i })).toHaveCount(
+      0,
+    );
   });
 
   test("does NOT offer 'This device' when not running as desktop", async ({

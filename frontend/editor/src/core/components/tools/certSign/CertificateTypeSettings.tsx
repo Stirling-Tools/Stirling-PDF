@@ -69,7 +69,8 @@ const CertificateTypeSettings = ({
     onParameterChange("alias", undefined);
   };
 
-  const hasAlternativeSources = isServerCertificateEnabled || isHardwareAvailable;
+  const hasAlternativeSources =
+    isServerCertificateEnabled || isHardwareAvailable;
 
   if (!hasAlternativeSources) {
     return (

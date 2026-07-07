@@ -225,6 +225,19 @@ export default defineConfig(
       "no-restricted-syntax": "off",
     },
   },
+  // TEMPORARY: the procurement feature was merged in from main and still uses
+  // bespoke CSS-styled raw <button>s. Exempt ONLY the raw-<button> rule here —
+  // the Mantine import bans stay in force so this feature can't regress to
+  // Mantine's Button/Chip/SegmentedControl — and migrate these to the shared
+  // Button in a follow-up PR. Do NOT add other folders to this block.
+  {
+    files: [
+      "editor/src/portal/components/procurement/**/*.{js,mjs,jsx,ts,tsx}",
+    ],
+    rules: {
+      "no-restricted-syntax": ["error", ...mantineComponentImportRestrictions],
+    },
+  },
   // Stricter rules that not all sub-folders are conformant to yet.
   {
     files: srcGlobs,
