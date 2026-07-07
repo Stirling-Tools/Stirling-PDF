@@ -16,6 +16,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.enumeration.TeamRole;
+import stirling.software.saas.model.TeamMembership;
 import stirling.software.saas.procurement.config.ProcurementConfigurationProperties;
 import stirling.software.saas.procurement.license.EnterpriseLicenseService;
 import stirling.software.saas.procurement.model.ProcurementDeal;
@@ -25,6 +27,7 @@ import stirling.software.saas.procurement.pricing.QuoteBreakdown;
 import stirling.software.saas.procurement.pricing.QuoteConfig;
 import stirling.software.saas.procurement.repository.ProcurementDealRepository;
 import stirling.software.saas.procurement.repository.ProcurementQuoteRepository;
+import stirling.software.saas.repository.TeamMembershipRepository;
 
 /**
  * Orchestrates a linked team's procurement journey: start a (mock-licensed) trial, build a
@@ -46,18 +49,37 @@ public class ProcurementService {
     private final ProcurementPricingService pricing;
     private final EnterpriseLicenseService licenses;
     private final ProcurementConfigurationProperties config;
+    private final TeamMembershipRepository memberRepo;
 
     public ProcurementService(
             ProcurementDealRepository dealRepo,
             ProcurementQuoteRepository quoteRepo,
             ProcurementPricingService pricing,
             EnterpriseLicenseService licenses,
-            ProcurementConfigurationProperties config) {
+            ProcurementConfigurationProperties config,
+            TeamMembershipRepository memberRepo) {
         this.dealRepo = dealRepo;
         this.quoteRepo = quoteRepo;
         this.pricing = pricing;
         this.licenses = licenses;
         this.config = config;
+        this.memberRepo = memberRepo;
+    }
+
+    /**
+     * The team leader's email — the natural owner of the team's Keygen licence. Falls back to the
+     * username when no email is set; null when the team has no leader.
+     */
+    private String leaderEmail(Long teamId) {
+        return memberRepo.findByTeamIdAndRole(teamId, TeamRole.LEADER).stream()
+                .findFirst()
+                .map(TeamMembership::getUser)
+                .map(
+                        u ->
+                                u.getEmail() != null && !u.getEmail().isBlank()
+                                        ? u.getEmail()
+                                        : u.getUsername())
+                .orElse(null);
     }
 
     @Transactional(readOnly = true)
@@ -85,7 +107,7 @@ public class ProcurementService {
         deal.setTrialStartedAt(now);
         deal.setTrialEndsAt(ends);
         deal.setTrialExtensionsUsed(0);
-        deal.setLicenseRef(licenses.issueTrialLicense(teamId, ends));
+        deal.setLicenseRef(licenses.issueTrialLicense(teamId, leaderEmail(teamId), ends));
         deal = dealRepo.save(deal);
         log.info(
                 "[procurement] trial started team={} deal={} ends={}",
@@ -200,6 +222,7 @@ public class ProcurementService {
                         .orElseThrow(() -> new IllegalStateException("No deal for team " + teamId));
         int term = 1;
         String deployment = "cloud";
+        int seats = 0; // 0 = unlimited
         if (deal.getAcceptedQuoteId() != null) {
             ProcurementQuote q = quoteRepo.findById(deal.getAcceptedQuoteId()).orElse(null);
             if (q != null) {
@@ -207,11 +230,18 @@ public class ProcurementService {
                 if (q.getDeployment() != null && !q.getDeployment().isBlank()) {
                     deployment = q.getDeployment();
                 }
+                if (q.getSeats() != null) {
+                    seats = q.getSeats();
+                }
             }
         }
         deal.setLicenseRef(
                 licenses.issueAnnualLicense(
-                        teamId, deployment, LocalDateTime.now().plusYears(term)));
+                        teamId,
+                        leaderEmail(teamId),
+                        deployment,
+                        seats,
+                        LocalDateTime.now().plusYears(term)));
         deal.setStage(ProcurementDeal.STAGE_LIVE);
         deal = dealRepo.save(deal);
         log.info("[procurement] deal live team={} deal={}", teamId, deal.getDealId());
