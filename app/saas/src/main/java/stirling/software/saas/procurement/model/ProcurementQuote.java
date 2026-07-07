@@ -80,6 +80,9 @@ public class ProcurementQuote implements Serializable {
     @Column(name = "qbr", nullable = false)
     private boolean qbr;
 
+    @Column(name = "offline_license", nullable = false)
+    private boolean offlineLicense;
+
     @Column(name = "annual_net_minor", nullable = false)
     private long annualNetMinor;
 

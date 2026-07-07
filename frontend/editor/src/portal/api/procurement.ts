@@ -161,6 +161,8 @@ export interface QuoteConfigInput {
   indemnification: boolean;
   training: boolean;
   qbr: boolean;
+  /** Offline / air-gapped licence file — a paid add-on. */
+  offlineLicense: boolean;
   currency: string;
   /** Buyer's company name — shown on the quote/agreement and remembered when re-editing. */
   businessName: string;

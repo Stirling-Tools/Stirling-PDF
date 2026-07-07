@@ -24,6 +24,7 @@ interface Cfg {
   indemnification: boolean;
   training: boolean;
   qbr: boolean;
+  offlineLicense: boolean;
   currency: string;
   businessName?: string;
 }
@@ -48,8 +49,9 @@ function priceQuote(cfg: Cfg) {
     withInd * TERM[Math.min(Math.max(cfg.termYears, 1), 5) - 1],
   );
   const qbr = cfg.qbr ? 800_000 : 0;
+  const offline = cfg.offlineLicense ? 1_200_000 : 0;
   const training = cfg.training ? 750_000 : 0;
-  const annualNetMinor = withInd - disc + qbr;
+  const annualNetMinor = withInd - disc + qbr + offline;
   const tcvMinor = annualNetMinor * cfg.termYears + training;
 
   type Kind = "RECURRING" | "ONE_TIME" | "DISCOUNT" | "INCLUDED";
@@ -96,6 +98,13 @@ function priceQuote(cfg: Cfg) {
       kind: "RECURRING",
       amountMinor: qbr,
     });
+  if (offline > 0)
+    lines.push({
+      key: "offline-license",
+      label: "Offline / air-gapped licence",
+      kind: "RECURRING",
+      amountMinor: offline,
+    });
   if (disc > 0)
     lines.push({
       key: "multi-year",
@@ -132,6 +141,7 @@ function priceQuote(cfg: Cfg) {
       indemnification: cfg.indemnification,
       training: cfg.training,
       qbr: cfg.qbr,
+      offlineLicense: cfg.offlineLicense,
       currency: cfg.currency || "USD",
       businessName: cfg.businessName ?? "",
     },

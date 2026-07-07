@@ -15,7 +15,7 @@ class ProcurementPricingServiceTest {
     private final ProcurementPricingService pricing = new ProcurementPricingService();
 
     private static QuoteConfig cfg(long volume, String sla, int term) {
-        return new QuoteConfig(volume, 0, "cloud", term, sla, false, false, false, "USD");
+        return new QuoteConfig(volume, 0, "cloud", term, sla, false, false, false, false, "USD");
     }
 
     @Test
@@ -42,7 +42,8 @@ class ProcurementPricingServiceTest {
     @Test
     void addOnsAndTermStack() {
         QuoteConfig c =
-                new QuoteConfig(1_000_000, 0, "cloud", 5, "dedicated", true, true, true, "USD");
+                new QuoteConfig(
+                        1_000_000, 0, "cloud", 5, "dedicated", true, true, true, false, "USD");
         QuoteBreakdown q = pricing.price(c);
 
         long usage = 4_000_000L;
@@ -59,6 +60,20 @@ class ProcurementPricingServiceTest {
                 .anyMatch(l -> l.key().equals("training") && l.kind() == Kind.ONE_TIME);
         assertThat(q.lineItems()).anyMatch(l -> l.key().equals("qbr"));
         assertThat(q.lineItems()).anyMatch(l -> l.key().equals("indemnification"));
+    }
+
+    @Test
+    void offlineLicenseAddsFlatUndiscountedAnnualFee() {
+        // Canonical quote (1M/priority/3yr) = $41,400/yr; the offline add-on is a flat $12,000/yr
+        // recurring fee, added after the multi-year discount (not discounted), like QBR.
+        QuoteConfig c =
+                new QuoteConfig(
+                        1_000_000, 0, "cloud", 3, "priority", false, false, false, true, "USD");
+        QuoteBreakdown q = pricing.price(c);
+
+        assertThat(q.annualNetMinor()).isEqualTo(4_140_000L + 1_200_000L); // $53,400
+        assertThat(q.tcvMinor()).isEqualTo((4_140_000L + 1_200_000L) * 3); // $160,200
+        assertThat(lineAmount(q, "offline-license")).isEqualTo(1_200_000L);
     }
 
     @Test

@@ -18,7 +18,8 @@ public record PricingRates(
         double indemnificationUplift,
         double[] termDiscountByYear, // index 0 = 1yr … index 4 = 5yr
         long qbrAnnualMinor,
-        long trainingOneTimeMinor) {
+        long trainingOneTimeMinor,
+        long offlineLicenseAnnualMinor) {
 
     public static PricingRates defaults() {
         return new PricingRates(
@@ -30,7 +31,8 @@ public record PricingRates(
                 0.05, // IP indemnification +5%
                 new double[] {0.0, 0.05, 0.10, 0.12, 0.15},
                 800_000, // QBRs $8,000 / yr
-                750_000); // onboarding & training $7,500 one-time
+                750_000, // onboarding & training $7,500 one-time
+                1_200_000); // offline/air-gapped licence $12,000 / yr
     }
 
     /** Volume-banded per-PDF rate for an annual volume, in minor units. */

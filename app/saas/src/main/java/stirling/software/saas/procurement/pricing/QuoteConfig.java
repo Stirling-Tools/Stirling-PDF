@@ -15,6 +15,7 @@ public record QuoteConfig(
         boolean indemnification,
         boolean training,
         boolean qbr,
+        boolean offlineLicense, // air-gapped/offline licence file — a paid add-on
         String currency) { // USD | EUR | GBP
 
     public QuoteConfig {

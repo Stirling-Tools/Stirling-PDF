@@ -150,6 +150,7 @@ public class ProcurementService {
         quote.setIndemnification(cfg.indemnification());
         quote.setTraining(cfg.training());
         quote.setQbr(cfg.qbr());
+        quote.setOfflineLicense(cfg.offlineLicense());
         quote.setBusinessName(businessName);
         quote.setAnnualNetMinor(breakdown.annualNetMinor());
         quote.setTcvMinor(breakdown.tcvMinor());

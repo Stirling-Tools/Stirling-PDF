@@ -78,6 +78,7 @@ public class ProcurementController {
             boolean indemnification,
             boolean training,
             boolean qbr,
+            boolean offlineLicense,
             String currency,
             String businessName) {
         QuoteConfig toConfig() {
@@ -90,6 +91,7 @@ public class ProcurementController {
                     indemnification,
                     training,
                     qbr,
+                    offlineLicense,
                     currency);
         }
     }
@@ -121,6 +123,7 @@ public class ProcurementController {
             boolean indemnification,
             boolean training,
             boolean qbr,
+            boolean offlineLicense,
             String currency,
             String businessName) {}
 
@@ -297,6 +300,7 @@ public class ProcurementController {
                         q.isIndemnification(),
                         q.isTraining(),
                         q.isQbr(),
+                        q.isOfflineLicense(),
                         q.getCurrency(),
                         q.getBusinessName()));
     }

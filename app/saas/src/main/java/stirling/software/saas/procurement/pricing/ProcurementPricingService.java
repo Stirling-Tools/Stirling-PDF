@@ -60,9 +60,12 @@ public class ProcurementPricingService {
         double termDiscount = rates.termDiscount(cfg.termYears());
         long discount = Math.round(withIndemnity * termDiscount);
         long qbr = cfg.qbr() ? rates.qbrAnnualMinor() : 0L;
+        long offline = cfg.offlineLicense() ? rates.offlineLicenseAnnualMinor() : 0L;
         long training = cfg.training() ? rates.trainingOneTimeMinor() : 0L;
 
-        long annualNet = (withIndemnity - discount) + qbr;
+        // Flat annual fees (QBR, offline licence) sit outside the multi-year discount, like the
+        // prototype — the discount only applies to usage + service level + indemnification.
+        long annualNet = (withIndemnity - discount) + qbr + offline;
         long tcv = annualNet * cfg.termYears() + training;
 
         List<QuoteLineItem> lines = new ArrayList<>();
@@ -97,6 +100,14 @@ public class ProcurementPricingService {
                             "Quarterly business reviews",
                             QuoteLineItem.Kind.RECURRING,
                             qbr));
+        }
+        if (offline > 0) {
+            lines.add(
+                    new QuoteLineItem(
+                            "offline-license",
+                            "Offline / air-gapped licence",
+                            QuoteLineItem.Kind.RECURRING,
+                            offline));
         }
         if (discount > 0) {
             lines.add(

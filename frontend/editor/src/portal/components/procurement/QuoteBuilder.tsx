@@ -51,6 +51,7 @@ export function QuoteBuilder({
       indemnification: false,
       training: false,
       qbr: false,
+      offlineLicense: false,
       currency: "USD",
       businessName: "",
     },
@@ -222,6 +223,12 @@ export function QuoteBuilder({
                   title={t("portal.procurement.builder.qbr")}
                   sub={t("portal.procurement.builder.qbrSub")}
                   onClick={() => set("qbr", !cfg.qbr)}
+                />
+                <AddOn
+                  on={cfg.offlineLicense}
+                  title={t("portal.procurement.builder.offlineLicense")}
+                  sub={t("portal.procurement.builder.offlineLicenseSub")}
+                  onClick={() => set("offlineLicense", !cfg.offlineLicense)}
                 />
               </div>
             </Field>
