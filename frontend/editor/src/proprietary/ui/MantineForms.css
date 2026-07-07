@@ -105,7 +105,7 @@
 
 /* ---- Dark mode: Mantine's own dark-mode vars beat ours when Mantine's
  * color-scheme is "dark". Reassert SUI tokens so the two systems stay in sync.
- * The portal's PortalMantineProvider syncs forceColorScheme to SUI theme, so
+ * SuiProvider syncs forceColorScheme to SUI theme, so
  * [data-mantine-color-scheme="dark"] === [data-theme="dark"] in practice. ---- */
 [data-mantine-color-scheme="dark"] .sui-mantine-wrapper {
   --input-bg: var(--color-surface);

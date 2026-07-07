@@ -78,9 +78,9 @@ const purple = tuple(
  * and other floating elements follow the SUI surface/border/text palette rather
  * than Mantine's default white/gray-* / dark-* scale.
  *
- * The portal's PortalMantineProvider syncs Mantine's color scheme to SUI's
- * light/dark toggle (forceColorScheme), so the light/dark buckets here align
- * with [data-theme="light/dark"] and the SUI token values are correct.
+ * SuiProvider syncs Mantine's color scheme to SUI's light/dark toggle
+ * (forceColorScheme), so the light/dark buckets here align with
+ * [data-theme="light/dark"] and the SUI token values are correct.
  */
 export const suiCssVariablesResolver: CSSVariablesResolver = () => ({
   variables: {
