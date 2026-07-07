@@ -49,6 +49,12 @@ const CertificateTypeSettings = ({
     onParameterChange,
   ]);
 
+  // Without a server certificate or hardware token, "Upload" is the only source,
+  // so a single-button chooser is a dead control - hide it entirely.
+  if (!isServerCertificateEnabled && !isHardwareAvailable) {
+    return null;
+  }
+
   const selectUpload = () => {
     onParameterChange("signMode", "MANUAL");
     if (parameters.signMode !== "MANUAL") {
