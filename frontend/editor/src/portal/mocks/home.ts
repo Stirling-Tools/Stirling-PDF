@@ -283,39 +283,49 @@ export const PIPELINE_STAGES: PipelineStage[] = [
 export interface OnboardingStep {
   id: string;
   title: string;
+  /** Supporting line under the title (progress detail, e.g. "2 active · 5 recommended"). */
   blurb: string;
   done: boolean;
-  /** What to render in the per-step CTA slot. */
+  /**
+   * Status chip shown at the row's trailing edge once the step is done
+   * (e.g. "2 active", "1 connected"). Steps that aren't done render a neutral
+   * "Not started" chip instead, so this is only set for completed steps.
+   */
+  status?: string;
+  /**
+   * Where activating the row leads. `navigate` moves to another portal view;
+   * `try-op` opens the single-operation runner in place.
+   */
   cta?: { kind: "try-op" } | { kind: "navigate"; target: string };
 }
 
+/**
+ * The free-tier "Finish setting up" checklist. Ordered as a do-this-then-that
+ * sequence: install the editor, turn on governance, then wire in sources.
+ * Mirrors the guided free onboarding in the marketing prototype.
+ */
 export const FREE_ONBOARDING: OnboardingStep[] = [
   {
-    id: "first-op",
-    title: "Run your first operation",
-    blurb: "Try extract, redact, or OCR on a sample document.",
+    id: "install-editor",
+    title: "Download the PDF Editor",
+    blurb: "Deploy the desktop app, free forever.",
+    done: false,
+    cta: { kind: "navigate", target: "editor" },
+  },
+  {
+    id: "turn-on-policies",
+    title: "Turn on policies",
+    blurb: "2 active · 5 recommended",
     done: true,
-    cta: { kind: "try-op" },
+    status: "2 active",
+    cta: { kind: "navigate", target: "policies" },
   },
   {
-    id: "connect-source",
-    title: "Connect a source",
-    blurb: "Attach an S3 bucket, webhook, or email inbox.",
-    done: false,
-    cta: { kind: "navigate", target: "sources" },
-  },
-  {
-    id: "build-pipeline",
-    title: "Build a pipeline",
-    blurb: "Compose ops into a repeatable workflow.",
-    done: false,
-    cta: { kind: "navigate", target: "pipelines" },
-  },
-  {
-    id: "wire-agent",
-    title: "Wire an agent",
-    blurb: "Expose Stirling via MCP or REST tool definitions.",
-    done: false,
+    id: "connect-sources",
+    title: "Connect your sources",
+    blurb: "1 connected · every PDF governed where it lands",
+    done: true,
+    status: "1 connected",
     cta: { kind: "navigate", target: "sources" },
   },
 ];

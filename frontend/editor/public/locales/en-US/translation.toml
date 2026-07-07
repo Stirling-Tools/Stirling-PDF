@@ -6745,15 +6745,21 @@ evalPassRate = "Eval pass rate"
 pipelines = "Pipelines"
 
 [portal.home.onboarding]
-progress = "{{done}} / {{total}} done"
-runAgain = "Run again"
-start = "Start"
-subtitle = "Four steps to a production-shaped Stirling project."
-title = "Get to value"
+dismiss = "Dismiss setup"
+doneChip = "Done"
+notStarted = "Not started"
+progress = "{{done}} of {{total}} done"
+title = "Finish setting up"
 
 [portal.home.onboarding.empty]
 description = "Onboarding tasks will appear here once your workspace is set up."
 title = "No onboarding steps yet"
+
+[portal.home.onboarding.enterprise]
+body = "Org-wide SSO + SCIM + RBAC, committed volume pricing, and air-gapped deployment."
+cta = "Start Trial"
+lead = "For 250+ employees."
+tag = "Enterprise"
 
 [portal.home.productGrid]
 ariaLabel = "Process PDFs at scale"
@@ -7874,36 +7880,14 @@ status = "Status"
 suspend = "Suspend"
 
 [portal.welcome]
-ariaLabel = "Stirling product highlights"
-pagination = "Carousel pagination"
-slideLabel = "Slide {{number}}: {{title}}"
-
-[portal.welcome.ornament.editor]
-critical = "Critical"
-ocrClean = "OCR-clean"
-schemaMatch = "schema match 0.97"
-signed = "signed"
-
-[portal.welcome.slides.agents]
-eyebrow = "AI Agents"
-primary = "Try PDF Processor"
-secondary = "View MCP docs"
-sub = "Wire your agent via MCP, REST or tool definitions. Deterministic operations and guardrails — test with scenarios and evals before you ship."
-title = "PDF Processor for AI Agents"
-
-[portal.welcome.slides.editor]
-eyebrow = "PDF Editor"
-primary = "Install PDF Editor"
-secondary = "Connect an instance"
-sub = "Annotate, sign, redact, and review locally or in the cloud. Brought to the platform as the credibility anchor of the Stirling control plane."
-title = "The #1 PDF Editor on GitHub"
-
-[portal.welcome.slides.platform]
-eyebrow = "Platform"
-primary = "Try a PDF operation"
-secondary = "Get an API key"
-sub = "Ingest from agents, APIs and connectors. Run composable pipelines with evals and golden sets. Land in a vault with zero-standing-access controls."
-title = "PDF Infrastructure for Developers"
+ariaLabel = "Welcome to Stirling PDF"
+badge = "Open-source"
+installEditor = "Install the Editor"
+inviteTeammates = "Invite teammates"
+perks = "Free forever · Self-hostable"
+subtitle = "The world's most secure PDF Editor is free for teams of all sizes. Includes 60+ PDF operations and SSO."
+title = "Welcome to"
+titleAccent = "Stirling PDF"
 
 [printFile]
 title = "Print File"
