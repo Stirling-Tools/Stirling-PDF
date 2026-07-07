@@ -1,7 +1,7 @@
 import { oauthProviders } from "@app/constants/authProviders";
 import { useTranslation } from "@app/hooks/useTranslation";
 import { Tooltip } from "@app/components/shared/Tooltip";
-import { oauthIconUrl } from "@shared/auth/ui/oauthIcons";
+import { oauthIconUrl } from "@app/auth/ui/oauthIcons";
 
 // Exports for compatibility with proprietary code
 export const DEBUG_SHOW_ALL_PROVIDERS = false;

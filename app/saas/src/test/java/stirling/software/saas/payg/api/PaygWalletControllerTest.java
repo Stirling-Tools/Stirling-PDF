@@ -433,6 +433,52 @@ class PaygWalletControllerTest {
     }
 
     // -----------------------------------------------------------------------------------------
+    // POST /wallet/refresh
+    // -----------------------------------------------------------------------------------------
+
+    @Test
+    void refreshWallet_dropsCallerTeamCache() {
+        User user = userWithId(30L, UUID.randomUUID());
+        Team team = teamWithId(70L);
+        when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
+        when(memberRepo.findPrimaryMembership(30L))
+                .thenReturn(List.of(membership(team, user, TeamRole.MEMBER)));
+
+        ResponseEntity<Void> resp = controller.refreshWallet(jwtAuth(user.getSupabaseId()));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        // Portal pokes this after checkout so the next /wallet read reflects the subscription
+        // immediately rather than after the cache TTL.
+        verify(entitlementService).invalidate(70L);
+    }
+
+    @Test
+    void refreshWallet_noTeam_isNoOpButOk() {
+        User user = userWithId(31L, UUID.randomUUID());
+        when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
+        when(memberRepo.findPrimaryMembership(31L)).thenReturn(List.of());
+
+        ResponseEntity<Void> resp = controller.refreshWallet(jwtAuth(user.getSupabaseId()));
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        verify(entitlementService, never()).invalidate(any());
+    }
+
+    @Test
+    void refreshWallet_anonymousIs401() {
+        Authentication anon =
+                new AnonymousAuthenticationToken(
+                        "k",
+                        "anonymousUser",
+                        List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS")));
+
+        ResponseEntity<Void> resp = controller.refreshWallet(anon);
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        verifyNoInteractions(entitlementService);
+    }
+
+    // -----------------------------------------------------------------------------------------
     // Fixtures
     // -----------------------------------------------------------------------------------------
 

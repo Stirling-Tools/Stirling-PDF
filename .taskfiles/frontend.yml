@@ -128,37 +128,6 @@ tasks:
       - task: dev:_run
         vars: { MODE: prototypes, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
 
-  dev:portal:
-    desc: "Start developer portal dev server"
-    ignore_error: true
-    deps: [install]
-    vars:
-      PORT: '{{.PORT | default "5173"}}'
-      BACKEND_URL: '{{.BACKEND_URL | default "http://localhost:8080"}}'
-      EDITOR_URL: '{{.EDITOR_URL | default ""}}'
-      OPEN: '{{.OPEN | default ""}}'
-      SUBPATH: '{{.SUBPATH | default ""}}'
-      MOCKS: '{{.MOCKS | default ""}}'
-    env:
-      BACKEND_URL: '{{.BACKEND_URL}}'
-    cmds:
-      - '{{if .SUBPATH}}RUN_SUBPATH={{.SUBPATH}} {{end}}{{if .MOCKS}}VITE_PORTAL_MOCKS={{.MOCKS}} {{end}}{{if .EDITOR_URL}}VITE_EDITOR_URL={{.EDITOR_URL}} {{end}}npx vite portal --port {{.PORT}}{{if .OPEN}} --open{{end}}'
-
-  dev:portal:proxy:serve:
-    internal: true
-    vars:
-      PORT: '{{.PORT | default "3000"}}'
-      BACKEND_URL: '{{.BACKEND_URL | default "http://localhost:8080"}}'
-      EDITOR_DEV_URL: '{{.EDITOR_DEV_URL | default ""}}'
-      PORTAL_DEV_URL: '{{.PORTAL_DEV_URL | default ""}}'
-    env:
-      PORT: '{{.PORT}}'
-      BACKEND_URL: '{{.BACKEND_URL}}'
-      EDITOR_DEV_URL: '{{.EDITOR_DEV_URL}}'
-      PORTAL_DEV_URL: '{{.PORTAL_DEV_URL}}'
-    cmds:
-      - npx tsx scripts/dev-origin-proxy.ts
-
   # ============================================================
   # Build
   # ============================================================
@@ -205,29 +174,6 @@ tasks:
     cmds:
       - npx vite build editor --mode prototypes
 
-  build:portal:
-    desc: "Build developer portal"
-    deps: [install]
-    vars:
-      SUBPATH: '{{.SUBPATH | default ""}}'
-    cmds:
-      - '{{if .SUBPATH}}RUN_SUBPATH={{.SUBPATH}} {{end}}npx vite build portal'
-
-  preview:portal:proxy:
-    desc: "Build + serve editor + portal behind one origin (prod-like auth testing)"
-    deps: [prepare]
-    vars:
-      PORT: '{{.PORT | default "3000"}}'
-      BACKEND_URL: '{{.BACKEND_URL | default "http://localhost:8080"}}'
-    env:
-      PORT: '{{.PORT}}'
-      BACKEND_URL: '{{.BACKEND_URL}}'
-    cmds:
-      - task: build:proprietary
-        vars: { PREVIEW: '1' }
-      - task: build:portal
-        vars: { SUBPATH: portal }
-      - npx tsx scripts/dev-origin-proxy.ts
 
   storybook:
     desc: "Start Storybook dev server"
@@ -263,8 +209,8 @@ tasks:
     deps: [install]
     cmds:
       # Globs so dpdm walks the whole tree. dpdm expands the braces itself, so this is
-      # shell-agnostic. Covers editor, portal, and the shared design system.
-      - npx dpdm "editor/src/**/*.{ts,tsx}" "portal/src/**/*.{ts,tsx}" "shared/**/*.{ts,tsx}" --circular --no-warning --no-tree --exit-code circular:1
+      # shell-agnostic. Covers the whole editor tree, including the portal layer.
+      - npx dpdm "editor/src/**/*.{ts,tsx}" --circular --no-warning --no-tree --exit-code circular:1
 
   lint:fix:
     desc: "Auto-fix lint issues"
@@ -346,8 +292,6 @@ tasks:
     deps: [prepare]
     cmds:
       - task: typecheck:_run
-        vars: { PROJECT: scripts/tsconfig.json }
-      - task: typecheck:_run
         vars: { PROJECT: editor/scripts/tsconfig.json }
 
   typecheck:prototypes:
@@ -362,14 +306,7 @@ tasks:
     deps: [install]
     cmds:
       - task: typecheck:_run
-        vars: { PROJECT: portal/tsconfig.json }
-
-  typecheck:shared:
-    desc: "Typecheck the shared design system"
-    deps: [install]
-    cmds:
-      - task: typecheck:_run
-        vars: { PROJECT: shared/tsconfig.json }
+        vars: { PROJECT: editor/src/portal/tsconfig.json }
 
   typecheck:all:
     desc: "Typecheck all build variants"
@@ -382,7 +319,6 @@ tasks:
       - task: typecheck:scripts
       - task: typecheck:prototypes
       - task: typecheck:portal
-      - task: typecheck:shared
 
   # ============================================================
   # Quality Gate
@@ -411,7 +347,6 @@ tasks:
       - task: lint
       - task: format:check
       - task: build
-      - task: build:portal
       - task: test
       - task: storybook:build
 
@@ -423,19 +358,12 @@ tasks:
     desc: "Run tests"
     cmds:
       - task: test:editor
-      - task: test:portal
 
   test:editor:
     desc: "Run editor tests"
     deps: [prepare]
     cmds:
       - npx vitest run --root editor
-
-  test:portal:
-    desc: "Run portal tests"
-    deps: [prepare]
-    cmds:
-      - npx vitest run --root portal
 
   test:watch:
     desc: "Run tests in watch mode"
@@ -468,6 +396,23 @@ tasks:
   # Code Generation
   # ============================================================
 
+  tool-models:
+    desc: "Generate tool API types from the Java OpenAPI spec"
+    deps: [install, ":backend:swagger"]
+    cmds:
+      - npx tsx editor/scripts/generate-tool-api-types.mts --spec ../SwaggerDoc.json --output editor/src/core/types/toolApiTypes.ts
+    sources:
+      - editor/scripts/generate-tool-api-types.mts
+      - ../SwaggerDoc.json
+    generates:
+      - editor/src/core/types/toolApiTypes.ts
+
+  tool-models:check:
+    desc: "Fail if committed tool API types are out of date"
+    deps: [install, ":backend:swagger"]
+    cmds:
+      - npx tsx editor/scripts/generate-tool-api-types.mts --spec ../SwaggerDoc.json --output editor/src/core/types/toolApiTypes.ts --check
+
   licenses:generate:
     desc: "Generate frontend license report"
     deps: [install]
@@ -481,7 +426,7 @@ tasks:
   clean:
     desc: "Clean build artifacts and caches"
     cmds:
-      - cmd: powershell rm -Recurse -Force -ErrorAction SilentlyContinue node_modules/.vite, editor/dist, dist, dist-portal
+      - cmd: powershell rm -Recurse -Force -ErrorAction SilentlyContinue node_modules/.vite, editor/dist, dist
         platforms: [windows]
-      - cmd: rm -rf node_modules/.vite editor/dist dist dist-portal
+      - cmd: rm -rf node_modules/.vite editor/dist dist
         platforms: [linux, darwin]

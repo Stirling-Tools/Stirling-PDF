@@ -2,7 +2,7 @@
 // the decorators below transpiles to React.createElement and needs React in
 // scope. (The app + story files use the automatic runtime via the portal vite
 // config; this import is specifically for the preview config file.)
-import React, { useEffect } from "react";
+import React, { Suspense, useEffect } from "react";
 import type { Decorator, Preview } from "@storybook/react-vite";
 import { initialize, mswLoader } from "msw-storybook-addon";
 import { MemoryRouter } from "react-router-dom";
@@ -19,11 +19,11 @@ import { ThemeProvider } from "@portal/contexts/ThemeContext";
 import { UIProvider } from "@portal/contexts/UIContext";
 import { mantineTheme } from "@portal/theme/mantineTheme";
 import { handlers } from "@portal/mocks/handlers";
-import { configureSupabase } from "@shared/auth/supabase/supabaseClient";
+import { configureSupabase } from "@proprietary/auth/supabase/supabaseClient";
 
 import "@mantine/core/styles.css";
-import "@shared/tokens/tokens.css";
-import "@shared/tokens/base.css";
+import "@core/tokens/tokens.css";
+import "@core/tokens/base.css";
 
 // Start MSW once. Storybook runs in a browser so this uses the service worker.
 initialize({ onUnhandledRequest: "bypass" }, handlers);
@@ -109,7 +109,9 @@ const withProviders: Decorator = (Story, context) => {
             <TierKey tier={tier}>
               <UIProvider>
                 <ThemeWatcher />
-                <Story />
+                <Suspense fallback={null}>
+                  <Story />
+                </Suspense>
               </UIProvider>
             </TierKey>
           </LinkProvider>
