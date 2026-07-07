@@ -20,6 +20,7 @@ import stirling.software.common.model.enumeration.TeamRole;
 import stirling.software.saas.model.TeamMembership;
 import stirling.software.saas.procurement.config.ProcurementConfigurationProperties;
 import stirling.software.saas.procurement.license.EnterpriseLicenseService;
+import stirling.software.saas.procurement.license.LicenseEntitlements;
 import stirling.software.saas.procurement.model.ProcurementDeal;
 import stirling.software.saas.procurement.model.ProcurementQuote;
 import stirling.software.saas.procurement.pricing.ProcurementPricingService;
@@ -246,35 +247,42 @@ public class ProcurementService {
     }
 
     /**
-     * Issue or upgrade the committed annual licence from the deal's accepted (else latest) quote —
-     * term, deployment, and seats — upgrading the trial licence in place when one exists.
+     * Issue or upgrade the committed annual licence from the deal's accepted (else latest) quote,
+     * stamping the full entitlement snapshot onto it and upgrading the trial licence in place when
+     * one exists.
      */
     private String issueOrUpgradeAnnual(ProcurementDeal deal) {
-        int term = 1;
-        String deployment = "cloud";
-        int seats = 0; // 0 = unlimited
         ProcurementQuote q =
                 deal.getAcceptedQuoteId() != null
                         ? quoteRepo.findById(deal.getAcceptedQuoteId()).orElse(null)
                         : quoteRepo.findByDealIdOrderByCreatedAtDesc(deal.getDealId()).stream()
                                 .findFirst()
                                 .orElse(null);
-        if (q != null) {
-            term = Math.max(1, q.getTermYears());
-            if (q.getDeployment() != null && !q.getDeployment().isBlank()) {
-                deployment = q.getDeployment();
-            }
-            if (q.getSeats() != null) {
-                seats = q.getSeats();
-            }
-        }
+        int term = q != null ? Math.max(1, q.getTermYears()) : 1;
+        String deployment =
+                q != null && q.getDeployment() != null && !q.getDeployment().isBlank()
+                        ? q.getDeployment()
+                        : "cloud";
+        int seats = q != null && q.getSeats() != null ? q.getSeats() : 0; // 0 = unlimited
+        LicenseEntitlements entitlements =
+                new LicenseEntitlements(
+                        q != null ? q.getVolume() : 0,
+                        seats,
+                        deployment,
+                        term,
+                        q != null ? q.getServiceLevel() : null,
+                        q != null && q.isIndemnification(),
+                        q != null && q.isTraining(),
+                        q != null && q.isQbr(),
+                        q != null && q.isOfflineLicense(),
+                        deal.getDealId(),
+                        deal.getSubscriptionId());
         return licenses.issueAnnualLicense(
                 deal.getTeamId(),
                 leaderEmail(deal.getTeamId()),
-                deployment,
-                seats,
                 LocalDateTime.now().plusYears(term),
-                deal.getLicenseRef());
+                deal.getLicenseRef(),
+                entitlements);
     }
 
     /**

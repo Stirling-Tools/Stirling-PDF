@@ -61,8 +61,9 @@ public class KeygenEnterpriseLicenseService implements EnterpriseLicenseService 
     @Override
     public String issueTrialLicense(Long teamId, String ownerEmail, LocalDateTime expiresAt) {
         String ownerId = findOrCreateUser(ownerEmail);
-        // Trial: enterprise entitlement, unlimited users, expiring at the trial end.
-        return createLicense(ownerId, expiresAt, metadata(teamId, null, 0, true));
+        // Trial: enterprise entitlement, unlimited users, expiring at the trial end. No committed
+        // volume/add-ons yet — those are stamped on the annual licence at provision.
+        return createLicense(ownerId, expiresAt, trialMetadata(teamId));
     }
 
     @Override
@@ -76,21 +77,21 @@ public class KeygenEnterpriseLicenseService implements EnterpriseLicenseService 
     public String issueAnnualLicense(
             Long teamId,
             String ownerEmail,
-            String deployment,
-            int seats,
             LocalDateTime expiresAt,
-            String existingRef) {
+            String existingRef,
+            LicenseEntitlements ent) {
+        Map<String, Object> metadata = annualMetadata(teamId, ent);
         // Upgrade the trial licence in place so the key the buyer already holds keeps working.
         if (existingRef != null && !existingRef.isBlank()) {
             Map<String, Object> attrs = new LinkedHashMap<>();
             attrs.put("expiry", iso(expiresAt));
             attrs.put("suspended", false);
-            attrs.put("metadata", metadata(teamId, deployment, seats, false));
+            attrs.put("metadata", metadata);
             patchLicense(existingRef, attrs);
             return existingRef;
         }
         String ownerId = findOrCreateUser(ownerEmail);
-        return createLicense(ownerId, expiresAt, metadata(teamId, deployment, seats, false));
+        return createLicense(ownerId, expiresAt, metadata);
     }
 
     @Override
@@ -181,18 +182,48 @@ public class KeygenEnterpriseLicenseService implements EnterpriseLicenseService 
 
     // ---- helpers ------------------------------------------------------------
 
-    /**
-     * Metadata the self-hosted verifier reads: {@code isEnterprise} + {@code users} (0 =
-     * unlimited).
-     */
-    private Map<String, Object> metadata(Long teamId, String deployment, int seats, boolean trial) {
+    // The self-hosted verifier only reads isEnterprise + users; everything else is informational
+    // (dashboard / reconciliation) but kept so the licence is a self-describing record of the deal.
+
+    /** Trial licence: enterprise, unlimited users, no committed volume/add-ons yet. */
+    private Map<String, Object> trialMetadata(Long teamId) {
+        Map<String, Object> m = baseMetadata(teamId, true);
+        m.put("users", 0); // 0 = unlimited during the trial
+        m.put("seat_count", 0);
+        return m;
+    }
+
+    /** Committed annual licence: the full entitlement snapshot from the accepted quote + deal. */
+    private Map<String, Object> annualMetadata(Long teamId, LicenseEntitlements ent) {
+        Map<String, Object> m = baseMetadata(teamId, false);
+        int seats = Math.max(0, ent.seats());
+        m.put("users", seats); // 0 = unlimited
+        m.put("seat_count", seats); // parity with the self-hosted edge's metadata
+        m.put("volume", ent.volume()); // committed PDFs / year
+        m.put("term_years", ent.termYears());
+        if (ent.serviceLevel() != null && !ent.serviceLevel().isBlank()) {
+            m.put("service_level", ent.serviceLevel());
+        }
+        m.put("indemnification", ent.indemnification());
+        m.put("training", ent.training());
+        m.put("qbr", ent.qbr());
+        m.put("offline_license", ent.offlineLicense());
+        if (ent.deployment() != null && !ent.deployment().isBlank()) {
+            m.put("deployment", ent.deployment());
+        }
+        if (ent.dealId() != null) m.put("deal_id", ent.dealId());
+        if (ent.subscriptionId() != null && !ent.subscriptionId().isBlank()) {
+            m.put("subscription_id", ent.subscriptionId());
+        }
+        return m;
+    }
+
+    private Map<String, Object> baseMetadata(Long teamId, boolean trial) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("team_id", teamId);
         m.put("plan_type", "enterprise");
         m.put("isEnterprise", true);
-        m.put("users", Math.max(0, seats));
         m.put("trial", trial);
-        if (deployment != null && !deployment.isBlank()) m.put("deployment", deployment);
         return m;
     }
 

@@ -48,18 +48,18 @@ public class MockEnterpriseLicenseService implements EnterpriseLicenseService {
     public String issueAnnualLicense(
             Long teamId,
             String ownerEmail,
-            String deployment,
-            int seats,
             LocalDateTime expiresAt,
-            String existingRef) {
+            String existingRef,
+            LicenseEntitlements ent) {
         // Upgrade in place when a trial licence already exists, so the key stays stable.
         String ref = existingRef != null ? existingRef : "mock-annual-" + UUID.randomUUID();
         log.info(
-                "[procurement][mock-license] issue annual team={} owner={} deployment={} seats={} expires={} ref={} upgrade={}",
+                "[procurement][mock-license] issue annual team={} owner={} seats={} volume={} deployment={} expires={} ref={} upgrade={}",
                 teamId,
                 ownerEmail,
-                deployment,
-                seats,
+                ent.seats(),
+                ent.volume(),
+                ent.deployment(),
                 expiresAt,
                 ref,
                 existingRef != null);
