@@ -79,43 +79,39 @@ const CertificateTypeSettings = ({
           )}
         </div>
       )}
-      {isServerCertificateEnabled && isHardwareAvailable && (
-        <div style={{ display: "flex", gap: "4px" }}>
+      <div style={{ display: "flex", gap: "4px" }}>
+        <Button
+          variant={parameters.signMode === "MANUAL" ? "primary" : "secondary"}
+          accent={parameters.signMode === "MANUAL" ? "default" : "neutral"}
+          onClick={selectUpload}
+          disabled={disabled}
+          style={sourceButtonStyle}
+        >
+          {t("certSign.source.upload", "Upload")}
+        </Button>
+        {isServerCertificateEnabled && (
           <Button
-            variant={parameters.signMode === "MANUAL" ? "primary" : "secondary"}
-            accent={parameters.signMode === "MANUAL" ? "default" : "neutral"}
-            onClick={selectUpload}
+            variant={parameters.signMode === "AUTO" ? "primary" : "secondary"}
+            accent={parameters.signMode === "AUTO" ? "default" : "neutral"}
+            onClick={selectServer}
             disabled={disabled}
             style={sourceButtonStyle}
           >
-            {t("certSign.source.upload", "Upload")}
+            {t("certSign.source.server", "Server")}
           </Button>
-          {isServerCertificateEnabled && (
-            <Button
-              variant={parameters.signMode === "AUTO" ? "primary" : "secondary"}
-              accent={parameters.signMode === "AUTO" ? "default" : "neutral"}
-              onClick={selectServer}
-              disabled={disabled}
-              style={sourceButtonStyle}
-            >
-              {t("certSign.source.server", "Server")}
-            </Button>
-          )}
-          {isHardwareAvailable && (
-            <Button
-              variant={
-                parameters.signMode === "DEVICE" ? "primary" : "secondary"
-              }
-              accent={parameters.signMode === "DEVICE" ? "default" : "neutral"}
-              onClick={selectDevice}
-              disabled={disabled}
-              style={sourceButtonStyle}
-            >
-              {t("certSign.source.device", "This device")}
-            </Button>
-          )}
-        </div>
-      )}
+        )}
+        {isHardwareAvailable && (
+          <Button
+            variant={parameters.signMode === "DEVICE" ? "primary" : "secondary"}
+            accent={parameters.signMode === "DEVICE" ? "default" : "neutral"}
+            onClick={selectDevice}
+            disabled={disabled}
+            style={sourceButtonStyle}
+          >
+            {t("certSign.source.device", "This device")}
+          </Button>
+        )}
+      </div>
     </Stack>
   );
 };

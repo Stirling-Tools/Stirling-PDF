@@ -9942,6 +9942,12 @@ retry = "Retry"
 searchPlaceholder = "Search attachments"
 title = "Attachments"
 
+[viewer.bookmarks]
+bookmarkTitle = "Bookmark title"
+closeSidebar = "Close bookmarks sidebar"
+collapseAll = "Collapse all bookmarks"
+expandAll = "Expand all bookmarks"
+
 [viewer.comments]
 addComment = "Add comment"
 addCommentPlaceholder = "Add comment..."
@@ -9984,6 +9990,11 @@ title = "Form Fields"
 unsavedBadge = "Unsaved"
 unsavedDesc = "You have unsaved changes"
 
+[viewer.layers]
+closeSidebar = "Close layers sidebar"
+hideAll = "Hide all layers"
+showAll = "Show all layers"
+
 [viewer.link]
 delete = "Delete link"
 
@@ -10013,6 +10024,9 @@ resultsOf = "of {{total}}"
 
 [viewer.signature]
 delete = "Delete signature"
+
+[viewer.thumbnails]
+closeSidebar = "Close thumbnails sidebar"
 
 [viewPdf]
 tags = "view,read,annotate,text,image,highlight,edit"
@@ -10656,17 +10670,3 @@ confirm = "Extract"
 message_one = "This ZIP contains {{count}} file. Extract anyway?"
 message_other = "This ZIP contains {{count}} files. Extract anyway?"
 title = "Large ZIP File"
-
-[viewer.bookmarks]
-bookmarkTitle = "Bookmark title"
-closeSidebar = "Close bookmarks sidebar"
-collapseAll = "Collapse all bookmarks"
-expandAll = "Expand all bookmarks"
-
-[viewer.layers]
-closeSidebar = "Close layers sidebar"
-hideAll = "Hide all layers"
-showAll = "Show all layers"
-
-[viewer.thumbnails]
-closeSidebar = "Close thumbnails sidebar"
