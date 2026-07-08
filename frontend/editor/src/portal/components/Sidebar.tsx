@@ -7,6 +7,7 @@ import { useTier } from "@portal/contexts/TierContext";
 import { useTheme } from "@portal/contexts/ThemeContext";
 import { useUI } from "@portal/contexts/UIContext";
 import { LinkAccountFooterItem } from "@portal/components/LinkAccountFooterItem";
+import { HIDDEN_NAV_VIEWS } from "@portal/components/navVisibility";
 import { useAsync } from "@portal/hooks/useAsync";
 import { fetchHomeKpis, type KpiEntry } from "@portal/api/home";
 import { EDITOR_URL, EDITOR_IS_SAME_APP } from "@portal/auth/editorUrl";
@@ -129,16 +130,18 @@ export function Sidebar() {
   // a takeover modal (matching the marketing prototype).
 
   function renderGroup(entries: NavEntry[]) {
-    return entries.map((entry) => (
-      <NavItem
-        key={entry.id}
-        id={entry.id}
-        label={t(`portal.nav.${entry.id}`)}
-        icon={entry.icon}
-        isActive={activeView === entry.id}
-        onClick={(id) => setActiveView(id as ViewId)}
-      />
-    ));
+    return entries
+      .filter((entry) => !HIDDEN_NAV_VIEWS.has(entry.id))
+      .map((entry) => (
+        <NavItem
+          key={entry.id}
+          id={entry.id}
+          label={t(`portal.nav.${entry.id}`)}
+          icon={entry.icon}
+          isActive={activeView === entry.id}
+          onClick={(id) => setActiveView(id as ViewId)}
+        />
+      ));
   }
 
   return (
