@@ -6,7 +6,11 @@ import type {
   ElementType,
   ReactNode,
 } from "react";
-import { CONTROL_HEIGHT } from "@app/ui/controlSizes";
+import {
+  CONTROL_HEIGHT,
+  CONTROL_PADDING_X,
+  type ControlPadding,
+} from "@app/ui/controlSizes";
 import "@app/ui/Button.css";
 
 /** primary=solid, secondary=outlined, tertiary=ghost (tinted hover), quiet=plain (no bg, hovers to text colour). */
@@ -30,6 +34,8 @@ type ButtonOwnProps = {
   variant?: ButtonVariant;
   accent?: ButtonAccent;
   size?: ButtonSize;
+  /** Horizontal-padding override; omit to use the size-based default. */
+  padding?: ControlPadding;
   justify?: ButtonJustify;
   shape?: ButtonShape;
   /** Alternative to children; use one or the other. */
@@ -103,6 +109,7 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
       variant = "primary",
       accent = "default",
       size = "md",
+      padding,
       justify = "center",
       shape = "default",
       text,
@@ -191,6 +198,10 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
         style={{
           ...(accentVars as CSSProperties),
           ...({ "--button-height": CONTROL_HEIGHT[size] } as CSSProperties),
+          // Padding override (inline to beat Mantine's size-based value).
+          ...(padding
+            ? ({ "--button-padding-x": CONTROL_PADDING_X[padding] } as CSSProperties)
+            : {}),
           // Icon-only: zero the size padding inline so the lone icon centres.
           ...(iconOnly ? ({ "--button-padding-x": "0" } as CSSProperties) : {}),
           ...style,

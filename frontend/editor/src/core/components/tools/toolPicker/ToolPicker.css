@@ -64,12 +64,11 @@
   --tool-button-selected-bg: var(--mantine-color-dark-4);
 }
 
-/* Compact tool buttons */
+/* Compact tool buttons (horizontal padding via the Button `padding` prop) */
 .tool-button {
   font-size: 0.875rem;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
-  padding-left: 0.5rem;
 }
 
 .tool-button .mantine-Button-label {
