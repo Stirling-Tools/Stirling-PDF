@@ -73,6 +73,14 @@ class RequestUriUtilsTest {
         assertTrue(RequestUriUtils.isStaticResource("/mobile-scanner"));
     }
 
+    @Test
+    void testIsStaticResource_portalShell() {
+        // The admin portal SPA shell is served pre-auth so it's directly navigable.
+        assertTrue(RequestUriUtils.isStaticResource("/portal"));
+        assertTrue(RequestUriUtils.isStaticResource("/portal/users"));
+        assertTrue(RequestUriUtils.isStaticResource("/app", "/app/portal"));
+    }
+
     // --- isFrontendRoute tests ---
 
     @Test
