@@ -28,8 +28,8 @@ import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
 
 /**
- * Tests for {@link FolderOutputSink}: outputs are staged hidden, recorded in the ledger under the
- * producing policy BEFORE becoming visible, then atomically renamed into the configured directory.
+ * Tests for {@link FolderOutputSink}: outputs are staged hidden, recorded in the ledger, then
+ * atomically renamed into the configured directory.
  */
 class FolderOutputSinkTest {
 
@@ -77,9 +77,31 @@ class FolderOutputSinkTest {
         sink.deliver(POLICY_RUN, List.of(named("a.pdf", "aaa")), OutputSpec.folder(out.toString()));
 
         Path delivered = FolderIdentities.canonicalDir(out).resolve("a.pdf");
-        String signature = FolderIdentities.statSignature(delivered);
-        assertFalse(ledger.claim("p1", delivered.toString(), signature)); // producer skips it
-        assertTrue(ledger.claim("p2", delivered.toString(), signature)); // chaining still works
+        String gate = FolderIdentities.statGate(delivered);
+        assertFalse(ledger.claim("p1", delivered.toString(), gate, null)); // producer skips it
+        assertTrue(ledger.claim("p2", delivered.toString(), gate, null)); // chaining still works
+    }
+
+    @Test
+    void aHashVerifyingProducerSkipsItsOwnOutputEvenIfTheGateMoved() throws IOException {
+        Path out = tempDir.resolve("out");
+
+        sink.deliver(POLICY_RUN, List.of(named("a.pdf", "aaa")), OutputSpec.folder(out.toString()));
+
+        // A hash-verifying reader matches on content even when the stat moved.
+        Path delivered = FolderIdentities.canonicalDir(out).resolve("a.pdf");
+        assertFalse(
+                ledger.claim(
+                        "p1",
+                        delivered.toString(),
+                        "999:12345",
+                        () -> {
+                            try {
+                                return FolderIdentities.contentHash(delivered);
+                            } catch (IOException e) {
+                                throw new java.io.UncheckedIOException(e);
+                            }
+                        }));
     }
 
     @Test
@@ -109,7 +131,7 @@ class FolderOutputSinkTest {
 
         Path delivered = FolderIdentities.canonicalDir(out).resolve("a.pdf");
         // No row was recorded, so any policy (including a hypothetical producer) may claim it.
-        assertTrue(ledger.claim("p1", delivered.toString(), "any-signature"));
+        assertTrue(ledger.claim("p1", delivered.toString(), "any-gate", null));
     }
 
     @Test
@@ -170,12 +192,13 @@ class FolderOutputSinkTest {
         private boolean recorded;
 
         @Override
-        public synchronized void recordOutput(String policyId, String identity, String signature) {
+        public synchronized void recordOutput(
+                String policyId, String identity, String gate, String contentHash) {
             assertFalse(
                     Files.exists(Path.of(identity)),
                     "output must be recorded before it is visible at its final path");
             recorded = true;
-            super.recordOutput(policyId, identity, signature);
+            super.recordOutput(policyId, identity, gate, contentHash);
         }
     }
 }

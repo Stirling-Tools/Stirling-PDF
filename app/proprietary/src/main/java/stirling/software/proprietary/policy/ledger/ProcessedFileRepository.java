@@ -10,40 +10,72 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Conditional updates for the processed-file ledger. Each claim variant is a compare-and-swap: it
- * re-checks the state it was decided against in the WHERE clause and reports rows updated, so a
- * racing claim loses cleanly with 0. Transactional per call so {@code JpaProcessedLedger} can run
- * them (and the insert-race retry) without an enclosing transaction.
+ * Conditional updates for the processed-file ledger: each claim variant re-checks in its WHERE
+ * clause the state it was decided against, so a racing claim loses cleanly with 0 rows updated.
+ * Transactional per call so the ledger can run them without an enclosing transaction.
  */
 @Repository
 public interface ProcessedFileRepository
         extends JpaRepository<ProcessedFileEntity, ProcessedFileId> {
 
     /**
-     * Re-claim a settled row (DONE / ERROR / INTERRUPTED) whose signature differs from the file's
-     * current one: the file changed, so process the new version. Resets the attempt count.
+     * Re-claim a settled row at a new gate without content verification; clears the stored hash,
+     * which described content this claim never checked.
      */
     @Modifying
     @Transactional
     @Query(
             "update ProcessedFileEntity e set e.status ="
                     + " stirling.software.proprietary.policy.ledger.ProcessedFileStatus.PROCESSING,"
-                    + " e.signature = :signature, e.attempts = 1, e.lastSeen = :now,"
+                    + " e.signature = :gate, e.contentHash = null, e.attempts = 1,"
+                    + " e.lastSeen = :now, e.updatedAt = :now"
+                    + " where e.policyId = :policyId and e.identityHash = :identityHash"
+                    + " and e.status <>"
+                    + " stirling.software.proprietary.policy.ledger.ProcessedFileStatus.PROCESSING"
+                    + " and e.signature <> :gate")
+    int reclaimAtNewGate(
+            @Param("policyId") String policyId,
+            @Param("identityHash") String identityHash,
+            @Param("gate") String gate,
+            @Param("now") long now);
+
+    /** Re-claim a settled row whose content verifiably changed (or was never hashed). */
+    @Modifying
+    @Transactional
+    @Query(
+            "update ProcessedFileEntity e set e.status ="
+                    + " stirling.software.proprietary.policy.ledger.ProcessedFileStatus.PROCESSING,"
+                    + " e.signature = :gate, e.contentHash = :contentHash, e.attempts = 1,"
+                    + " e.lastSeen = :now, e.updatedAt = :now"
+                    + " where e.policyId = :policyId and e.identityHash = :identityHash"
+                    + " and e.status <>"
+                    + " stirling.software.proprietary.policy.ledger.ProcessedFileStatus.PROCESSING"
+                    + " and (e.contentHash is null or e.contentHash <> :contentHash)")
+    int reclaimAtNewContent(
+            @Param("policyId") String policyId,
+            @Param("identityHash") String identityHash,
+            @Param("gate") String gate,
+            @Param("contentHash") String contentHash,
+            @Param("now") long now);
+
+    /** The gate moved but the content did not: track the new gate without changing status. */
+    @Modifying
+    @Transactional
+    @Query(
+            "update ProcessedFileEntity e set e.signature = :gate, e.lastSeen = :now,"
                     + " e.updatedAt = :now"
                     + " where e.policyId = :policyId and e.identityHash = :identityHash"
                     + " and e.status <>"
                     + " stirling.software.proprietary.policy.ledger.ProcessedFileStatus.PROCESSING"
-                    + " and e.signature <> :signature")
-    int reclaimAtNewSignature(
+                    + " and e.contentHash = :contentHash and e.signature <> :gate")
+    int refreshGate(
             @Param("policyId") String policyId,
             @Param("identityHash") String identityHash,
-            @Param("signature") String signature,
+            @Param("gate") String gate,
+            @Param("contentHash") String contentHash,
             @Param("now") long now);
 
-    /**
-     * Retry an INTERRUPTED row at the same signature, bounded by {@code maxAttempts} so a file
-     * whose run reliably kills the JVM cannot crash-loop it.
-     */
+    /** Bounded retry of an INTERRUPTED row at the same gate. */
     @Modifying
     @Transactional
     @Query(
@@ -53,29 +85,49 @@ public interface ProcessedFileRepository
                     + " where e.policyId = :policyId and e.identityHash = :identityHash"
                     + " and e.status ="
                     + " stirling.software.proprietary.policy.ledger.ProcessedFileStatus.INTERRUPTED"
-                    + " and e.signature = :signature and e.attempts < :maxAttempts")
-    int retryInterrupted(
+                    + " and e.signature = :gate and e.attempts < :maxAttempts")
+    int retryInterruptedAtGate(
             @Param("policyId") String policyId,
             @Param("identityHash") String identityHash,
-            @Param("signature") String signature,
+            @Param("gate") String gate,
+            @Param("maxAttempts") int maxAttempts,
+            @Param("now") long now);
+
+    /** Bounded retry of an INTERRUPTED row whose gate moved but whose content is unchanged. */
+    @Modifying
+    @Transactional
+    @Query(
+            "update ProcessedFileEntity e set e.status ="
+                    + " stirling.software.proprietary.policy.ledger.ProcessedFileStatus.PROCESSING,"
+                    + " e.signature = :gate, e.attempts = e.attempts + 1, e.lastSeen = :now,"
+                    + " e.updatedAt = :now"
+                    + " where e.policyId = :policyId and e.identityHash = :identityHash"
+                    + " and e.status ="
+                    + " stirling.software.proprietary.policy.ledger.ProcessedFileStatus.INTERRUPTED"
+                    + " and e.contentHash = :contentHash and e.attempts < :maxAttempts")
+    int retryInterruptedSameContent(
+            @Param("policyId") String policyId,
+            @Param("identityHash") String identityHash,
+            @Param("gate") String gate,
+            @Param("contentHash") String contentHash,
             @Param("maxAttempts") int maxAttempts,
             @Param("now") long now);
 
     /**
-     * Settle a row at its final status and signature, unconditionally: within one JVM only the run
-     * that claimed the row settles it, so the settle is authoritative. Returns 0 when the row was
-     * removed mid-run (file deleted and presence-cleaned); the caller re-inserts.
+     * Unconditional settle (only the claiming run settles a row); returns 0 when the row was
+     * removed mid-run so the caller re-inserts.
      */
     @Modifying
     @Transactional
     @Query(
-            "update ProcessedFileEntity e set e.status = :status, e.signature = :signature,"
-                    + " e.lastSeen = :now, e.updatedAt = :now"
+            "update ProcessedFileEntity e set e.status = :status, e.signature = :gate,"
+                    + " e.contentHash = :contentHash, e.lastSeen = :now, e.updatedAt = :now"
                     + " where e.policyId = :policyId and e.identityHash = :identityHash")
     int settle(
             @Param("policyId") String policyId,
             @Param("identityHash") String identityHash,
-            @Param("signature") String signature,
+            @Param("gate") String gate,
+            @Param("contentHash") String contentHash,
             @Param("status") ProcessedFileStatus status,
             @Param("now") long now);
 
@@ -91,8 +143,7 @@ public interface ProcessedFileRepository
             @Param("now") long now);
 
     /**
-     * Presence cleanup: remove rows not stamped since the sweep began. Never removes an in-flight
-     * claim (its settle would only resurrect a row that the next full sweep removes again).
+     * Presence cleanup: remove rows not stamped since the sweep began, keeping in-flight claims.
      */
     @Modifying
     @Transactional
@@ -107,10 +158,7 @@ public interface ProcessedFileRepository
     @Query("delete from ProcessedFileEntity e where e.policyId = :policyId")
     int deleteByPolicy(@Param("policyId") String policyId);
 
-    /**
-     * Boot recovery: runs died with the JVM, so every PROCESSING row is stale. Assumes the single
-     * node the folder-watch trigger already assumes.
-     */
+    /** Boot recovery: after a restart every PROCESSING row is stale (single node). */
     @Modifying
     @Transactional
     @Query(

@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,9 +34,8 @@ import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
 
 /**
- * Tests for {@link FolderInputSource}: consume mode tracks files IN PLACE through the ledger (claim
- * on pickup, settle on completion, reprocess on change), snapshot stays stateless, and discovery
- * skips hidden entries and honours the recursive option.
+ * Tests for {@link FolderInputSource}: consume mode tracks files in place through the ledger,
+ * snapshot stays stateless, and discovery skips hidden entries and honours the recursive option.
  */
 @ExtendWith(MockitoExtension.class)
 class FolderInputSourceTest {
@@ -74,7 +74,6 @@ class FolderInputSourceTest {
 
         assertEquals(1, work.size());
         assertEquals(1, work.get(0).inputs().primary().size());
-        // The file stays exactly where the user put it; no work dir appears.
         assertTrue(Files.exists(file));
         assertTrue(Files.notExists(inputDir.resolve(".stirling")));
 
@@ -114,6 +113,46 @@ class FolderInputSourceTest {
 
         Files.setLastModifiedTime(file, FileTime.from(Instant.now().plusSeconds(60)));
         assertEquals(1, source.resolve(InputSpec.folder(inputDir.toString()), ctx).size());
+    }
+
+    @Test
+    void statModeReprocessesOnATouchButHashModeDoesNot() throws IOException {
+        Path statDir = Files.createDirectories(tempDir.resolve("stat"));
+        Path hashDir = Files.createDirectories(tempDir.resolve("hash"));
+        Path statFile = statDir.resolve("doc.pdf");
+        Path hashFile = hashDir.resolve("doc.pdf");
+        Files.writeString(statFile, "data");
+        Files.writeString(hashFile, "data");
+        InputSpec statSpec = InputSpec.folder(statDir.toString());
+        InputSpec hashSpec =
+                new InputSpec(
+                        "folder", Map.of("directory", hashDir.toString(), "identity", "hash"));
+
+        source.resolve(statSpec, ctx).get(0).onComplete().accept(true);
+        source.resolve(hashSpec, ctx).get(0).onComplete().accept(true);
+
+        FileTime touched = FileTime.from(Instant.now().plusSeconds(60));
+        Files.setLastModifiedTime(statFile, touched);
+        Files.setLastModifiedTime(hashFile, touched);
+
+        // Same content, new mtime: stat mode reprocesses, hash mode verifies and skips.
+        assertEquals(1, source.resolve(statSpec, ctx).size());
+        assertTrue(source.resolve(hashSpec, ctx).isEmpty());
+    }
+
+    @Test
+    void hashModeReprocessesARealContentChange() throws IOException {
+        Path inputDir = Files.createDirectories(tempDir.resolve("in"));
+        Path file = inputDir.resolve("doc.pdf");
+        Files.writeString(file, "data");
+        InputSpec spec =
+                new InputSpec(
+                        "folder", Map.of("directory", inputDir.toString(), "identity", "hash"));
+
+        source.resolve(spec, ctx).get(0).onComplete().accept(true);
+        Files.writeString(file, "data v2 - longer");
+
+        assertEquals(1, source.resolve(spec, ctx).size());
     }
 
     @Test
@@ -157,6 +196,9 @@ class FolderInputSourceTest {
         Files.writeString(sub.resolve("nested.pdf"), "b");
         Path hiddenDir = Files.createDirectories(inputDir.resolve(".stirling"));
         Files.writeString(hiddenDir.resolve("skipped.pdf"), "c");
+        // Sink staging inside a watched subdirectory is pruned at any depth.
+        Path nestedStaging = Files.createDirectories(sub.resolve(".stirling").resolve("tmp"));
+        Files.writeString(nestedStaging.resolve("half-delivered"), "d");
 
         InputSpec flat = InputSpec.folder(inputDir.toString());
         InputSpec recursive =
@@ -167,6 +209,7 @@ class FolderInputSourceTest {
         assertEquals(1, source.resolve(recursive, ctx).size()); // top.pdf already claimed above
         assertTrue(ctx.present.stream().anyMatch(identity -> identity.endsWith("nested.pdf")));
         assertTrue(ctx.present.stream().noneMatch(identity -> identity.endsWith("skipped.pdf")));
+        assertTrue(ctx.present.stream().noneMatch(identity -> identity.endsWith("half-delivered")));
     }
 
     @Test
@@ -179,7 +222,7 @@ class FolderInputSourceTest {
         List<ResolvedInput> work = source.resolve(InputSpec.folder(inputDir.toString()), ctx);
 
         assertTrue(work.isEmpty());
-        // Present, so a full sweep will not prune its ledger row while it settles on disk.
+        // Reported present so a full sweep does not prune its row while it settles on disk.
         assertEquals(1, ctx.present.size());
         assertTrue(ctx.present.get(0).endsWith("mid-write.pdf"));
     }
@@ -258,13 +301,14 @@ class FolderInputSourceTest {
         private final List<String> present = new ArrayList<>();
 
         @Override
-        public boolean claim(String identity, String signature) {
-            return ledger.claim(POLICY, identity, signature);
+        public boolean claim(String identity, String gate, Supplier<String> contentHash) {
+            return ledger.claim(POLICY, identity, gate, contentHash);
         }
 
         @Override
-        public void settle(String identity, String finalSignature, boolean success) {
-            ledger.settle(POLICY, identity, finalSignature, success);
+        public void settle(
+                String identity, String finalGate, String finalContentHash, boolean success) {
+            ledger.settle(POLICY, identity, finalGate, finalContentHash, success);
         }
 
         @Override

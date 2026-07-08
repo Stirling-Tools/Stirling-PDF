@@ -31,15 +31,10 @@ import stirling.software.proprietary.policy.model.OutputSpec;
 
 /**
  * Writes a run's outputs to the {@code directory} given in the {@link OutputSpec}. Each output is
- * staged under a hidden {@code .stirling/tmp} dir (same filesystem), recorded in the processed-file
- * ledger under the producing policy, and only then atomically renamed into place - so by the time
- * any input sweep can see the file, the ledger row that stops the producing policy re-ingesting it
- * already exists, and half-written outputs are never visible at their final name. Ad-hoc runs (no
- * policy) record nothing; their outputs are deliberately visible to any watcher.
- *
- * <p>Files are uniquely named to avoid clobbering. Returned {@link ResultFile}s carry a synthetic
- * id since the deliverable is the file on disk, not a {@code FileStorage} entry, so folder outputs
- * are not downloadable via {@code /files/{id}}.
+ * staged under a hidden {@code .stirling/tmp} dir, recorded in the processed-file ledger, then
+ * atomically renamed into place, so the producing policy's row exists before the file is
+ * discoverable and half-written outputs are never visible. Returned {@link ResultFile}s carry a
+ * synthetic id since the deliverable is the file on disk, not a {@code FileStorage} entry.
  */
 @Slf4j
 @Service
@@ -90,10 +85,11 @@ public class FolderOutputSink implements PolicyOutputSink {
                 Files.copy(is, staged);
             }
             long size = Files.size(staged);
-            // Size and mtime survive the atomic rename, so the recorded signature matches what
-            // the next input scan derives from the visible file.
-            String signature = FolderIdentities.statSignature(staged);
-            Path target = moveIntoPlace(delivery, canonicalDir, name, staged, signature);
+            // Size and mtime survive the rename; both tiers are recorded so either detection
+            // mode recognises the file.
+            String gate = FolderIdentities.statGate(staged);
+            String contentHash = FolderIdentities.contentHash(staged);
+            Path target = moveIntoPlace(delivery, canonicalDir, name, staged, gate, contentHash);
             String contentType =
                     MediaTypeFactory.getMediaType(name)
                             .orElse(MediaType.APPLICATION_OCTET_STREAM)
@@ -111,19 +107,24 @@ public class FolderOutputSink implements PolicyOutputSink {
     }
 
     /**
-     * Record-then-rename: the ledger row must exist before the file is visible at its final path,
-     * or a watch-triggered sweep could claim the producing policy's own output in the gap. Losing
-     * the chosen name to a concurrent writer just re-picks; the row recorded for the stolen name
-     * self-heals, since whatever file sits there has a different signature and is processed
-     * normally - exactly what a new file at that path should get.
+     * The ledger row must exist before the file is visible at its final path, or a sweep could
+     * claim the producing policy's own output in the gap. Losing the chosen name to a concurrent
+     * writer re-picks; the stale row self-heals because whatever file holds that name has a
+     * different version.
      */
     private Path moveIntoPlace(
-            OutputDelivery delivery, Path dir, String name, Path staged, String signature)
+            OutputDelivery delivery,
+            Path dir,
+            String name,
+            Path staged,
+            String gate,
+            String contentHash)
             throws IOException {
         while (true) {
             Path target = uniqueTarget(dir, name);
             if (delivery.policyId() != null) {
-                processedLedger.recordOutput(delivery.policyId(), target.toString(), signature);
+                processedLedger.recordOutput(
+                        delivery.policyId(), target.toString(), gate, contentHash);
             }
             try {
                 Files.move(staged, target, StandardCopyOption.ATOMIC_MOVE);

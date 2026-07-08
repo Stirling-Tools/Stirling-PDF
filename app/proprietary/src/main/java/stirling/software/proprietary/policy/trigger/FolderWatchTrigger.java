@@ -203,8 +203,7 @@ public class FolderWatchTrigger implements PolicyTrigger {
             }
             if (dirs.stream().anyMatch(changedDirs::contains)) {
                 log.debug("Folder-watch policy {} ({}) saw activity", policy.id(), policy.name());
-                // Light sweep: claim what changed, skip ledger hygiene, so the per-drop cost stays
-                // proportional to the change; the periodic reconcile below runs the full sweep.
+                // Light: the periodic reconcile does the full sweep.
                 policyRunner.run(policy, SweepKind.LIGHT);
             }
         }

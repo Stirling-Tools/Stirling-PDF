@@ -18,14 +18,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * One processed-file ledger row: what version of a file ({@code signature}) a policy last settled
- * at, and where it is in the claim lifecycle. {@code identityHash} (SHA-256 of the source-owned
- * identity string) is the key component so arbitrarily long identities fit a fixed-width index; the
- * full {@code identity} is kept alongside for inspection. {@code policyId} is a plain value, not a
- * foreign key, matching the rest of the subsystem so it stays decoupled from the security entities.
- * All mutations happen through {@code ProcessedFileRepository}'s conditional updates; the entity
- * itself is only saved for fresh inserts, so {@code isNew} is always true and a lost insert race
- * surfaces as a constraint violation rather than a silent merge.
+ * One processed-file ledger row: the version a policy last settled a file at, and where it is in
+ * the claim lifecycle. Keyed by SHA-256 of the source-owned identity so any identity length fits a
+ * fixed-width index. {@code isNew} is always true: the entity is only saved for fresh inserts
+ * (everything else is a conditional update), so a lost insert race surfaces as a constraint
+ * violation rather than a silent merge.
  */
 @Entity
 @Table(name = "policy_processed_files")
@@ -51,6 +48,9 @@ public class ProcessedFileEntity implements Serializable, Persistable<ProcessedF
     @Column(name = "signature")
     private String signature;
 
+    @Column(name = "content_hash", length = 64)
+    private String contentHash;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 16)
     private ProcessedFileStatus status;
@@ -69,12 +69,14 @@ public class ProcessedFileEntity implements Serializable, Persistable<ProcessedF
             String identityHash,
             String identity,
             String signature,
+            String contentHash,
             ProcessedFileStatus status,
             long nowMillis) {
         this.policyId = policyId;
         this.identityHash = identityHash;
         this.identity = identity;
         this.signature = signature;
+        this.contentHash = contentHash;
         this.status = status;
         this.attempts = 1;
         this.lastSeen = nowMillis;

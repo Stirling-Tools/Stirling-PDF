@@ -3,16 +3,15 @@ package stirling.software.proprietary.policy.engine;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import stirling.software.proprietary.policy.input.ResolveContext;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 
 /**
  * The {@link ResolveContext} for one policy sweep: scopes ledger calls to the policy, gathers the
- * present-identity union across all of the policy's sources, and tracks whether presence cleanup is
- * safe. Any source that could not be listed completely (resolve failed, source paused, no bean for
- * its type, non-exhaustive listing) vetoes cleanup for the whole sweep - its files could not be
- * stamped, so pruning would wrongly forget them.
+ * present-identity union across sources, and vetoes presence cleanup when any source could not be
+ * listed completely (pruning would wrongly forget its files).
  */
 final class PolicySweep implements ResolveContext {
 
@@ -29,13 +28,14 @@ final class PolicySweep implements ResolveContext {
     }
 
     @Override
-    public boolean claim(String identity, String signature) {
-        return ledger.claim(policyId, identity, signature);
+    public boolean claim(String identity, String gate, Supplier<String> contentHash) {
+        return ledger.claim(policyId, identity, gate, contentHash);
     }
 
     @Override
-    public void settle(String identity, String finalSignature, boolean success) {
-        ledger.settle(policyId, identity, finalSignature, success);
+    public void settle(
+            String identity, String finalGate, String finalContentHash, boolean success) {
+        ledger.settle(policyId, identity, finalGate, finalContentHash, success);
     }
 
     @Override

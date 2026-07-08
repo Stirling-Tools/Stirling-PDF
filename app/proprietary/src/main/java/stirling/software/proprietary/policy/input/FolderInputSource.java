@@ -1,6 +1,7 @@
 package stirling.software.proprietary.policy.input;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -9,6 +10,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
@@ -26,15 +28,13 @@ import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 
 /**
- * Reads input files from a directory; each ready file is its own unit of work so one failure does
- * not affect the others.
- *
- * <p>Mode option: "consume" (default) tracks each file in place so each version runs once;
- * "snapshot" reads statelessly, so every run sees the full set. "recursive" descends into
- * subdirectories (hidden ones are skipped). "identity" picks the version signature: "stat"
- * (size+mtime, default) or "hash" (content hash - robust against mtime-preserving copies, at the
- * cost of reading every candidate file each sweep). Readiness is checked first so files mid-write
- * are skipped. Hidden files, and the legacy {@code .stirling} work directory, are never picked up.
+ * Reads input files from a directory, tracking processed files in place through the ledger; nothing
+ * is moved, and each ready file is its own unit of work. Options: "mode" is "consume" (default,
+ * each version runs once) or "snapshot" (stateless, every run sees the full set); "recursive"
+ * descends into subdirectories; "identity" is "stat" (default, any size/mtime change reprocesses)
+ * or "hash" (content-verified, so a touch does not reprocess). Hidden files and directories,
+ * including the legacy {@code .stirling} work dir, are never picked up, and files mid-write are
+ * skipped by the readiness check.
  */
 @Slf4j
 @Service
@@ -99,26 +99,64 @@ public class FolderInputSource implements InputSource {
                 continue;
             }
             String identity = FolderIdentities.identity(canonicalDir, inputDir, file);
-            String signature;
+            String gate;
+            boolean claimed;
             try {
-                signature = signatureOf(file, config);
-            } catch (IOException e) {
-                log.debug("Could not read {} for its signature: {}", file, e.getMessage());
+                gate = FolderIdentities.statGate(file);
+                claimed = ctx.claim(identity, gate, hashSupplier(file, config));
+            } catch (IOException | UncheckedIOException e) {
+                log.debug("Could not read {} for its version: {}", file, e.getMessage());
                 continue; // vanished or unreadable mid-sweep; the next sweep sees the truth
             }
-            if (!ctx.claim(identity, signature)) {
-                continue; // in flight, already settled at this version, or lost the race
+            if (!claimed) {
+                continue;
             }
             work.add(
                     new ResolvedInput(
                             PolicyInputs.of(List.of(fileResource(file))),
                             success ->
-                                    ctx.settle(
-                                            identity,
-                                            settleSignature(file, config, signature),
-                                            success)));
+                                    settleAtCurrentVersion(
+                                            ctx, identity, file, config, gate, success)));
         }
         return work;
+    }
+
+    /** Lazy verification tier; null in stat mode. */
+    private static Supplier<String> hashSupplier(Path file, FolderConfig config) {
+        if (!config.hashIdentity()) {
+            return null;
+        }
+        return () -> {
+            try {
+                return FolderIdentities.contentHash(file);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        };
+    }
+
+    /**
+     * Settle at the file's version as re-read after the run, so an in-place overwrite settles at
+     * what the run produced; falls back to the claim-time gate when the file is gone.
+     */
+    private static void settleAtCurrentVersion(
+            ResolveContext ctx,
+            String identity,
+            Path file,
+            FolderConfig config,
+            String claimGate,
+            boolean success) {
+        String gate = claimGate;
+        String contentHash = null;
+        try {
+            gate = FolderIdentities.statGate(file);
+            if (config.hashIdentity()) {
+                contentHash = FolderIdentities.contentHash(file);
+            }
+        } catch (IOException e) {
+            log.debug("Could not re-read {} at settle: {}", file, e.getMessage());
+        }
+        ctx.settle(identity, gate, contentHash, success);
     }
 
     /** Every non-hidden regular file in the source, readable or not. */
@@ -132,8 +170,7 @@ public class FolderInputSource implements InputSource {
             }
             return files;
         }
-        // Hidden subtrees (including the legacy .stirling work dir) are skipped wholesale;
-        // symlinked directories are not followed.
+        // Hidden subtrees are pruned wholesale; symlinked directories are not followed.
         Files.walkFileTree(
                 inputDir,
                 new SimpleFileVisitor<>() {
@@ -172,25 +209,6 @@ public class FolderInputSource implements InputSource {
             return Files.isHidden(path);
         } catch (IOException e) {
             return false;
-        }
-    }
-
-    private static String signatureOf(Path file, FolderConfig config) throws IOException {
-        return config.hashIdentity()
-                ? FolderIdentities.hashSignature(file)
-                : FolderIdentities.statSignature(file);
-    }
-
-    /**
-     * The signature to settle at: re-read so an in-place overwrite settles at the version this run
-     * produced rather than the one it consumed. Falls back to the claim-time signature when the
-     * file is gone (its row is presence-cleaned at the next full sweep anyway).
-     */
-    private static String settleSignature(Path file, FolderConfig config, String claimSignature) {
-        try {
-            return signatureOf(file, config);
-        } catch (IOException e) {
-            return claimSignature;
         }
     }
 

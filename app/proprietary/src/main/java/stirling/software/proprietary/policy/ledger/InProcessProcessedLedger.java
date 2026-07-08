@@ -3,12 +3,12 @@ package stirling.software.proprietary.policy.ledger;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
- * In-memory {@link ProcessedLedger} for tests and DB-less wiring; mirrors {@code
- * JpaProcessedLedger}'s claim/settle/cleanup semantics exactly (the shared contract test holds both
- * to them). Coarse synchronization: correctness over throughput.
+ * In-memory {@link ProcessedLedger} for tests and DB-less wiring; kept semantically identical to
+ * {@code JpaProcessedLedger} by the shared contract test.
  */
 public class InProcessProcessedLedger implements ProcessedLedger {
 
@@ -24,58 +24,95 @@ public class InProcessProcessedLedger implements ProcessedLedger {
     }
 
     @Override
-    public synchronized boolean claim(String policyId, String identity, String signature) {
+    public synchronized boolean claim(
+            String policyId, String identity, String gate, Supplier<String> contentHash) {
         Map<String, Row> rows = rowsByPolicy.computeIfAbsent(policyId, key -> new HashMap<>());
         long now = nowMillis.get();
         Row row = rows.get(identity);
         if (row == null) {
-            rows.put(identity, new Row(signature, ProcessedFileStatus.PROCESSING, 1, now));
+            String hash = contentHash == null ? null : contentHash.get();
+            rows.put(identity, new Row(gate, hash, ProcessedFileStatus.PROCESSING, 1, now));
             return true;
         }
         if (row.status == ProcessedFileStatus.PROCESSING) {
             return false;
         }
-        if (!signature.equals(row.signature)) {
-            row.signature = signature;
+        if (gate.equals(row.gate)) {
+            if (row.status == ProcessedFileStatus.INTERRUPTED && row.attempts < MAX_ATTEMPTS) {
+                row.status = ProcessedFileStatus.PROCESSING;
+                row.attempts++;
+                row.lastSeen = now;
+                return true;
+            }
+            return false;
+        }
+        if (contentHash == null) {
+            row.gate = gate;
+            row.contentHash = null;
             row.status = ProcessedFileStatus.PROCESSING;
             row.attempts = 1;
             row.lastSeen = now;
             return true;
         }
-        if (row.status == ProcessedFileStatus.INTERRUPTED && row.attempts < MAX_ATTEMPTS) {
-            row.status = ProcessedFileStatus.PROCESSING;
-            row.attempts++;
-            row.lastSeen = now;
-            return true;
+        String hash = contentHash.get();
+        if (Objects.equals(hash, row.contentHash)) {
+            if (row.status == ProcessedFileStatus.INTERRUPTED && row.attempts < MAX_ATTEMPTS) {
+                row.gate = gate;
+                row.status = ProcessedFileStatus.PROCESSING;
+                row.attempts++;
+                row.lastSeen = now;
+                return true;
+            }
+            if (row.status != ProcessedFileStatus.INTERRUPTED) {
+                row.gate = gate;
+                row.lastSeen = now;
+            }
+            return false;
         }
-        return false;
+        row.gate = gate;
+        row.contentHash = hash;
+        row.status = ProcessedFileStatus.PROCESSING;
+        row.attempts = 1;
+        row.lastSeen = now;
+        return true;
     }
 
     @Override
     public synchronized void settle(
-            String policyId, String identity, String finalSignature, boolean success) {
+            String policyId,
+            String identity,
+            String finalGate,
+            String finalContentHash,
+            boolean success) {
         upsertSettled(
                 policyId,
                 identity,
-                finalSignature,
+                finalGate,
+                finalContentHash,
                 success ? ProcessedFileStatus.DONE : ProcessedFileStatus.ERROR);
     }
 
     @Override
-    public synchronized void recordOutput(String policyId, String identity, String signature) {
-        upsertSettled(policyId, identity, signature, ProcessedFileStatus.DONE);
+    public synchronized void recordOutput(
+            String policyId, String identity, String gate, String contentHash) {
+        upsertSettled(policyId, identity, gate, contentHash, ProcessedFileStatus.DONE);
     }
 
     private void upsertSettled(
-            String policyId, String identity, String signature, ProcessedFileStatus status) {
+            String policyId,
+            String identity,
+            String gate,
+            String contentHash,
+            ProcessedFileStatus status) {
         Map<String, Row> rows = rowsByPolicy.computeIfAbsent(policyId, key -> new HashMap<>());
         long now = nowMillis.get();
         Row row = rows.get(identity);
         if (row == null) {
-            rows.put(identity, new Row(signature, status, 1, now));
+            rows.put(identity, new Row(gate, contentHash, status, 1, now));
             return;
         }
-        row.signature = signature;
+        row.gate = gate;
+        row.contentHash = contentHash;
         row.status = status;
         row.lastSeen = now;
     }
@@ -127,13 +164,20 @@ public class InProcessProcessedLedger implements ProcessedLedger {
     }
 
     private static final class Row {
-        private String signature;
+        private String gate;
+        private String contentHash;
         private ProcessedFileStatus status;
         private int attempts;
         private long lastSeen;
 
-        private Row(String signature, ProcessedFileStatus status, int attempts, long lastSeen) {
-            this.signature = signature;
+        private Row(
+                String gate,
+                String contentHash,
+                ProcessedFileStatus status,
+                int attempts,
+                long lastSeen) {
+            this.gate = gate;
+            this.contentHash = contentHash;
             this.status = status;
             this.attempts = attempts;
             this.lastSeen = lastSeen;

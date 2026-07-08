@@ -1,63 +1,56 @@
 package stirling.software.proprietary.policy.ledger;
 
 import java.util.Collection;
+import java.util.function.Supplier;
 
 /**
- * Remembers which files a policy has processed, one small row per {@code (policy, identity)}, so
- * watched folders are tracked in place instead of hoarding copies in a work directory. Identities
- * and signatures are opaque strings owned by the input source (folder: canonical absolute path and
- * {@code size:mtime} / content hash), so non-filesystem sources reuse the ledger unchanged.
- *
- * <p>Rows are scoped by policy, not source: several policies watching one folder each process a
- * file once, and a policy's overlapping (nested) sources dedupe against the same row. Growth is
- * bounded by presence reconciliation ({@link #markSeen} + {@link #deleteUnseen}) driven by the
- * caller's full-listing sweeps, so the ledger self-trims to roughly the files currently present.
+ * Remembers which files a policy has processed, one row per {@code (policy, identity)}, so sources
+ * track files in place. Identities are opaque source-owned strings; versions are two-tier: a cheap
+ * gate compared every sweep plus an optional content hash consulted only when the gate moves.
+ * Presence reconciliation ({@link #markSeen} + {@link #deleteUnseen}) keeps the table bounded.
  */
 public interface ProcessedLedger {
 
     /**
-     * Total claims of one signature before an {@link ProcessedFileStatus#INTERRUPTED} row stops
-     * being retried, so a file whose run kills the JVM cannot crash-loop it.
+     * Claims of one version before an {@link ProcessedFileStatus#INTERRUPTED} row stops retrying.
      */
     int MAX_ATTEMPTS = 3;
 
     /**
-     * Atomically claim a file at its current signature. True means this caller runs it; false means
-     * it is already claimed, already settled at this signature, or lost the race. A settled row
-     * with a different signature is re-claimed (the file changed).
+     * Atomically claim a file at its current version; true means this caller runs it. A null {@code
+     * contentHash} makes any gate change a new version; a non-null supplier is invoked at most
+     * once, only on a gate mismatch, and a matching hash refreshes the stored gate instead of
+     * reprocessing. Supplier exceptions propagate.
      */
-    boolean claim(String policyId, String identity, String signature);
+    boolean claim(String policyId, String identity, String gate, Supplier<String> contentHash);
+
+    /** Record a claimed file's outcome at its final version ({@code finalContentHash} nullable). */
+    void settle(
+            String policyId,
+            String identity,
+            String finalGate,
+            String finalContentHash,
+            boolean success);
 
     /**
-     * Record the run's outcome at the file's final signature (re-stat after the run, so an in-place
-     * overwrite settles at the version we produced). Re-inserts if the row was presence-cleaned
-     * mid-run.
+     * Record a produced file as {@link ProcessedFileStatus#DONE} so the policy skips its own
+     * outputs. Must be called before the file is visible at this identity; other policies have no
+     * row and still process it.
      */
-    void settle(String policyId, String identity, String finalSignature, boolean success);
-
-    /**
-     * Record a file this policy just produced as {@link ProcessedFileStatus#DONE} so the policy
-     * skips its own outputs. Must be called BEFORE the file becomes visible at this identity; other
-     * policies deliberately have no such row and still process it (chaining).
-     */
-    void recordOutput(String policyId, String identity, String signature);
+    void recordOutput(String policyId, String identity, String gate, String contentHash);
 
     /** Stamp presence for every identity a full-listing sweep observed. */
     void markSeen(String policyId, Collection<String> identities);
 
     /**
-     * Presence cleanup after a full sweep: remove this policy's rows not seen since {@code
-     * seenSinceMillis} (the sweep start), skipping in-flight claims. Only call when every enabled
-     * source listed completely; returns the number of rows removed.
+     * Remove rows not seen since {@code seenSinceMillis}, keeping in-flight claims. Only call after
+     * every enabled source listed completely; returns the number of rows removed.
      */
     int deleteUnseen(String policyId, long seenSinceMillis);
 
-    /** Forget everything for a policy: instant "reprocess from scratch" and delete-policy hook. */
+    /** Forget everything for a policy. */
     void clearPolicy(String policyId);
 
-    /**
-     * Boot recovery: flip in-flight claims from a previous JVM to {@link
-     * ProcessedFileStatus#INTERRUPTED} so they are retried (bounded by {@link #MAX_ATTEMPTS}).
-     */
+    /** Boot recovery: flip stale in-flight claims to {@link ProcessedFileStatus#INTERRUPTED}. */
     void recoverInterrupted();
 }

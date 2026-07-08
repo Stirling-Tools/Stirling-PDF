@@ -14,9 +14,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Tests for {@link FolderIdentities}: the input source and output sink must derive the same
- * identity for the same file - including through a symlinked alias of the directory - or
- * self-output skipping silently breaks.
+ * Tests for {@link FolderIdentities}: identity derivation must agree for the same file, even
+ * through a symlinked alias of the directory.
  */
 class FolderIdentitiesTest {
 
@@ -51,27 +50,27 @@ class FolderIdentitiesTest {
     }
 
     @Test
-    void statSignatureTracksSizeAndMtime() throws IOException {
+    void theGateTracksSizeAndMtime() throws IOException {
         Path file = tempDir.resolve("doc.pdf");
         Files.writeString(file, "data");
-        String before = FolderIdentities.statSignature(file);
+        String before = FolderIdentities.statGate(file);
 
         Files.setLastModifiedTime(file, FileTime.from(Instant.now().plusSeconds(60)));
 
-        assertNotEquals(before, FolderIdentities.statSignature(file));
+        assertNotEquals(before, FolderIdentities.statGate(file));
     }
 
     @Test
-    void hashSignatureIgnoresMtimeButTracksContent() throws IOException {
+    void theContentHashIgnoresMtimeButTracksContent() throws IOException {
         Path file = tempDir.resolve("doc.pdf");
         Files.writeString(file, "data");
-        String before = FolderIdentities.hashSignature(file);
+        String before = FolderIdentities.contentHash(file);
 
         Files.setLastModifiedTime(file, FileTime.from(Instant.now().plusSeconds(60)));
-        assertEquals(before, FolderIdentities.hashSignature(file));
+        assertEquals(before, FolderIdentities.contentHash(file));
 
         Files.writeString(file, "different");
-        assertNotEquals(before, FolderIdentities.hashSignature(file));
+        assertNotEquals(before, FolderIdentities.contentHash(file));
     }
 
     @Test

@@ -45,10 +45,8 @@ import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceStore;
 
 /**
- * Tests for {@link PolicyRunner}: the one place that turns a policy's sources into runs. Verifies
- * it pulls every source, runs one job per unit of work, feeds each unit's completion hook the run
- * outcome, that a generator (no sources) still runs once, and that ledger hygiene (presence
- * stamping + cleanup) runs exactly when a FULL sweep listed every enabled source completely.
+ * Tests for {@link PolicyRunner}: the one place that turns a policy's sources into runs, and the
+ * orchestrator of ledger hygiene (presence stamping + cleanup on complete FULL sweeps).
  */
 @ExtendWith(MockitoExtension.class)
 class PolicyRunnerTest {
@@ -217,7 +215,6 @@ class PolicyRunnerTest {
 
         runner.run(policy);
 
-        // Paused files cannot be stamped; pruning would make re-enabling reprocess everything.
         verify(processedLedger, never()).deleteUnseen(any(), anyLong());
     }
 
@@ -236,8 +233,7 @@ class PolicyRunnerTest {
 
     @Test
     void aMissingSourceDoesNotVetoCleanup() {
-        // A deleted source is how its rows are SUPPOSED to age out: the survivor sources keep
-        // stamping their files, and everything the deleted source alone covered gets pruned.
+        // A deleted source's rows age out precisely because cleanup still runs.
         Policy policy = policyReferencing(List.of("ghost-source-id"));
 
         runner.run(policy);

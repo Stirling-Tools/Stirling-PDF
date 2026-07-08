@@ -1,15 +1,14 @@
--- Per-policy processed-file ledger for policy input sources:
+-- Per-policy processed-file ledger:
 --
---   policy_processed_files  one row per (policy, file identity), replacing the old scheme of
---                           physically moving inputs into a .stirling work directory. The identity
---                           is an opaque source-owned string (folder: canonical absolute path);
---                           the signature is an opaque version token (folder: size:mtime or a
---                           content hash) so a changed file is reprocessed. Rows are claimed by a
---                           compare-and-swap into PROCESSING, settled to DONE/ERROR at run
---                           completion, flipped to INTERRUPTED at boot if a run died with the JVM,
---                           and removed by presence reconciliation once the file is confirmed gone
---                           from all of the policy's sources - so the table tracks roughly the
---                           files currently present, not everything ever seen.
+--   policy_processed_files  one row per (policy, file identity) recording the version a policy
+--                           last settled that file at, so folder sources track files in place
+--                           instead of moving them into a work directory. signature is a cheap
+--                           version gate (folder: size:mtime); content_hash an optional strong
+--                           token consulted only when the gate moves. Rows are claimed into
+--                           PROCESSING, settled to DONE/ERROR, flipped to INTERRUPTED at boot if
+--                           a run died with the JVM, and pruned once the file is gone from all of
+--                           the policy's sources, so the table stays near the set of files
+--                           currently present.
 --
 -- Gated by policies.enabled like the rest of the subsystem; Hibernate ddl-auto would also create
 -- this, but the migration keeps the schema explicit for the Flyway-managed deployments.
@@ -19,6 +18,7 @@ CREATE TABLE IF NOT EXISTS policy_processed_files (
     identity_hash VARCHAR(64)   NOT NULL,
     identity      VARCHAR(4096),
     signature     VARCHAR(255)  NOT NULL,
+    content_hash  VARCHAR(64),
     status        VARCHAR(16)   NOT NULL,
     attempts      SMALLINT      NOT NULL DEFAULT 1,
     last_seen     BIGINT        NOT NULL DEFAULT 0,

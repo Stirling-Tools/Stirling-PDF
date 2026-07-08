@@ -28,9 +28,8 @@ import stirling.software.proprietary.policy.source.SourceStore;
 /**
  * Turns a policy's referenced sources into runs: each {@code sourceId} is resolved live to its
  * persisted {@link Source}, then to an {@link InputSpec}. Triggers decide <em>when</em> and call
- * {@link #run(Policy)} (or the {@link SweepKind#LIGHT} overload on event paths); the controller
- * uses the supplied-input and ad-hoc entry points. A {@link SweepKind#FULL} sweep also reconciles
- * the processed-file ledger against what is actually present, which is what keeps it bounded.
+ * {@link #run(Policy)}; the controller uses the supplied-input and ad-hoc entry points. A {@link
+ * SweepKind#FULL} sweep also reconciles the processed-file ledger against what is present.
  */
 @Slf4j
 @Service
@@ -67,8 +66,7 @@ public class PolicyRunner {
         for (String sourceId : sourceIds) {
             Source source = sourceStore.get(sourceId).orElse(null);
             if (source == null) {
-                // A deleted source stops being listed, so its ledger rows age out through the
-                // presence cleanup below - deliberately no cleanup veto.
+                // No veto: a deleted source's rows should age out via the cleanup below.
                 log.warn("Policy {} references missing source {}; skipping", policy.id(), sourceId);
                 continue;
             }
@@ -78,8 +76,7 @@ public class PolicyRunner {
                         sourceId,
                         source.name(),
                         policy.id());
-                // Paused, not deleted: its files cannot be stamped while paused, so cleanup must
-                // not wipe them (re-enabling would otherwise reprocess the whole folder).
+                // Veto: a paused source's files cannot be stamped, so they must not be pruned.
                 context.vetoCleanup();
                 continue;
             }

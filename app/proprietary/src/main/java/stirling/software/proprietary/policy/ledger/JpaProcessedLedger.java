@@ -15,13 +15,11 @@ import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Durable {@link ProcessedLedger}; the runtime bean. Claims are atomic without a filesystem move: a
- * fresh claim is an insert flushed immediately (in its own transaction, since these methods are not
- * {@code @Transactional}) so a concurrent sweep's winning insert surfaces as a constraint
- * violation, and every other transition is a conditional update that re-checks the observed state,
- * so a lost race reports 0 rows and the caller simply skips. Boot recovery flips claims stranded by
- * a JVM death to INTERRUPTED - runs live in memory, so after a restart every PROCESSING row is
- * stale by definition (single node, as the folder-watch trigger already assumes).
+ * Durable {@link ProcessedLedger}; the runtime bean. A fresh claim is a flushed insert so a
+ * concurrent winner surfaces as a constraint violation; every other transition is a conditional
+ * update that re-checks the observed state, so a lost race reports 0 rows and the caller skips.
+ * Boot recovery assumes the single node the folder-watch trigger assumes: runs live in memory, so
+ * after a restart every PROCESSING row is stale.
  */
 @Slf4j
 @Service
@@ -45,7 +43,8 @@ public class JpaProcessedLedger implements ProcessedLedger {
     }
 
     @Override
-    public boolean claim(String policyId, String identity, String signature) {
+    public boolean claim(
+            String policyId, String identity, String gate, Supplier<String> contentHash) {
         String identityHash = FolderIdentities.identityHash(identity);
         long now = nowMillis.get();
         Optional<ProcessedFileEntity> existing =
@@ -57,7 +56,8 @@ public class JpaProcessedLedger implements ProcessedLedger {
                                 policyId,
                                 identityHash,
                                 identity,
-                                signature,
+                                gate,
+                                contentHash == null ? null : contentHash.get(),
                                 ProcessedFileStatus.PROCESSING,
                                 now));
                 return true;
@@ -69,50 +69,72 @@ public class JpaProcessedLedger implements ProcessedLedger {
         if (row.getStatus() == ProcessedFileStatus.PROCESSING) {
             return false;
         }
-        if (!signature.equals(row.getSignature())) {
-            return repository.reclaimAtNewSignature(policyId, identityHash, signature, now) > 0;
+        if (gate.equals(row.getSignature())) {
+            if (row.getStatus() == ProcessedFileStatus.INTERRUPTED) {
+                return repository.retryInterruptedAtGate(
+                                policyId, identityHash, gate, MAX_ATTEMPTS, now)
+                        > 0;
+            }
+            return false;
         }
-        if (row.getStatus() == ProcessedFileStatus.INTERRUPTED) {
-            return repository.retryInterrupted(policyId, identityHash, signature, MAX_ATTEMPTS, now)
-                    > 0;
+        if (contentHash == null) {
+            return repository.reclaimAtNewGate(policyId, identityHash, gate, now) > 0;
         }
-        return false;
+        String hash = contentHash.get();
+        if (hash.equals(row.getContentHash())) {
+            if (row.getStatus() == ProcessedFileStatus.INTERRUPTED) {
+                return repository.retryInterruptedSameContent(
+                                policyId, identityHash, gate, hash, MAX_ATTEMPTS, now)
+                        > 0;
+            }
+            repository.refreshGate(policyId, identityHash, gate, hash, now);
+            return false;
+        }
+        return repository.reclaimAtNewContent(policyId, identityHash, gate, hash, now) > 0;
     }
 
     @Override
-    public void settle(String policyId, String identity, String finalSignature, boolean success) {
+    public void settle(
+            String policyId,
+            String identity,
+            String finalGate,
+            String finalContentHash,
+            boolean success) {
         upsertSettled(
                 policyId,
                 identity,
-                finalSignature,
+                finalGate,
+                finalContentHash,
                 success ? ProcessedFileStatus.DONE : ProcessedFileStatus.ERROR);
     }
 
     @Override
-    public void recordOutput(String policyId, String identity, String signature) {
-        upsertSettled(policyId, identity, signature, ProcessedFileStatus.DONE);
+    public void recordOutput(String policyId, String identity, String gate, String contentHash) {
+        upsertSettled(policyId, identity, gate, contentHash, ProcessedFileStatus.DONE);
     }
 
     /**
-     * Settle-or-insert: the row normally exists (claim created it), but presence cleanup may have
-     * removed it mid-run (file deleted while processing), and an output row may be brand new. The
-     * insert is flushed so a concurrent winner surfaces as a constraint violation we retry as the
-     * update.
+     * Settle-or-insert: the row may have been presence-cleaned mid-run, and an output row may be
+     * brand new.
      */
     private void upsertSettled(
-            String policyId, String identity, String signature, ProcessedFileStatus status) {
+            String policyId,
+            String identity,
+            String gate,
+            String contentHash,
+            ProcessedFileStatus status) {
         String identityHash = FolderIdentities.identityHash(identity);
         long now = nowMillis.get();
-        if (repository.settle(policyId, identityHash, signature, status, now) > 0) {
+        if (repository.settle(policyId, identityHash, gate, contentHash, status, now) > 0) {
             return;
         }
         try {
             ProcessedFileEntity row =
                     new ProcessedFileEntity(
-                            policyId, identityHash, identity, signature, status, now);
+                            policyId, identityHash, identity, gate, contentHash, status, now);
             repository.saveAndFlush(row);
         } catch (DataIntegrityViolationException concurrentInsert) {
-            repository.settle(policyId, identityHash, signature, status, now);
+            repository.settle(policyId, identityHash, gate, contentHash, status, now);
         }
     }
 
