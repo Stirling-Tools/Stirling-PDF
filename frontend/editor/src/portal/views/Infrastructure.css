@@ -160,11 +160,8 @@
 }
 
 .portal-infra__key-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
   width: 100%;
+  --sui-btn-py: 0.875rem; /* 14px */
   padding: 0.875rem 1.125rem;
   background: transparent;
   text-align: left;

@@ -35,6 +35,10 @@
   white-space: normal;
 }
 
+.sui-btn .mantine-Button-label {
+  line-height: 1.4;
+}
+
 /* ---- height: --button-height is a minimum, not a cap ---- */
 /* Single-line content computes to exactly --button-height (same as ActionIcon /
    SegmentedControl via CONTROL_HEIGHT); taller content (wrapped label, stacked

@@ -112,7 +112,7 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
     {
       variant = "primary",
       accent = "default",
-      size = "md",
+      size = "sm",
       p,
       px,
       py,

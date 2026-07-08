@@ -462,6 +462,8 @@ function AppearancePanel({
               key={opt.value}
               type="button"
               variant="quiet"
+              justify="start"
+              fullWidth
               role="radio"
               aria-checked={theme === opt.value}
               className={
@@ -469,14 +471,16 @@ function AppearancePanel({
                 (theme === opt.value ? " is-active" : "")
               }
               onClick={() => onTheme(opt.value)}
+              leftSection={
+                <span
+                  className={`portal-settings__theme-swatch portal-settings__theme-swatch--${opt.value}`}
+                  aria-hidden
+                >
+                  <span />
+                  <span />
+                </span>
+              }
             >
-              <span
-                className={`portal-settings__theme-swatch portal-settings__theme-swatch--${opt.value}`}
-                aria-hidden
-              >
-                <span />
-                <span />
-              </span>
               <span className="portal-settings__theme-text">
                 <strong>
                   {t(`portal.settings.appearance.${opt.value}.label`)}

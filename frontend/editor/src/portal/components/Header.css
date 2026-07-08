@@ -104,9 +104,7 @@
 }
 
 .portal-header__tier-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
+  --sui-btn-py: 0.3125rem;
   padding: 0.3125rem 0.625rem;
   font-size: 0.75rem;
   color: var(--color-text-2);

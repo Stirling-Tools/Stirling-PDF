@@ -91,10 +91,8 @@
 }
 
 .portal-settings__theme-card {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem;
+  --sui-btn-py: 1rem; /* 16px — a touch more vertical room */
+  padding: 1rem 0.75rem;
   text-align: left;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
