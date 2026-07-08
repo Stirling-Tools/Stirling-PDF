@@ -20,9 +20,9 @@
  *                             domain.
  *
  * Endpoints that don't have a real backend yet still target their eventual
- * domain (almost always `.local`): with Mocks=on the MSW handlers intercept;
- * with Mocks=off they hit the real backend and 404 until the route ships, then
- * self-heal — no call-site migration needed.
+ * domain (almost always `.local`): they 404 until the route ships, then
+ * self-heal — no call-site migration needed. (Storybook and tests intercept
+ * the same calls with MSW handlers.)
  *
  * ## Why this is split, not a single function
  *
@@ -42,6 +42,7 @@
 import { clearStoredToken, getStoredToken } from "@app/auth";
 import { getSupabaseClient } from "@app/auth/supabase/supabaseClient";
 import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
+import { resolveDemoResponse } from "@portal/api/demoData";
 
 /** Read the SaaS base URL at call time so tests can stub it via vi.stubEnv. */
 function saasBaseUrl(): string | null {
@@ -143,6 +144,11 @@ async function localJson<T>(
   path: string,
   options: HttpRequestOptions = {},
 ): Promise<T> {
+  const demo = await resolveDemoResponse(
+    new URL(path, window.location.origin),
+    options,
+  );
+  if (demo) return unwrap<T>(demo);
   const res = await fetch(path, {
     method: options.method ?? "GET",
     headers: {
@@ -181,6 +187,14 @@ async function saasJson<T>(
   path: string,
   options: HttpRequestOptions = {},
 ): Promise<T> {
+  // Resolved before the config/session gates so demo data works on an
+  // unlinked or unconfigured org. http://saas.mock is the origin the SaaS
+  // handlers are written against (same one Storybook injects).
+  const demo = await resolveDemoResponse(
+    new URL(path, "http://saas.mock"),
+    options,
+  );
+  if (demo) return unwrap<T>(demo);
   const base = saasBaseUrl();
   if (!base) throw new SaasUnconfiguredError();
   const token = await getSaasAccessToken();
