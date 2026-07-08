@@ -217,6 +217,31 @@ async function saasJson<T>(
   return unwrap<T>(res);
 }
 
+/** Fetch a plain-text SaaS response (e.g. a downloadable licence file). Throws on a non-2xx. */
+async function saasText(
+  path: string,
+  options: HttpRequestOptions = {},
+): Promise<string> {
+  const base = saasBaseUrl();
+  // null = unset (self-hosted, no VITE_SAAS_API_URL). "" is same-origin (SaaS) — valid.
+  if (base === null) throw new SaasUnconfiguredError();
+  const token = await getPortalSaasToken();
+  if (!token) throw new SaasNotLinkedError();
+  const res = await fetch(`${base}${path}`, {
+    method: options.method ?? "GET",
+    headers: {
+      Accept: "text/plain",
+      Authorization: `Bearer ${token}`,
+      ...options.headers,
+    },
+    signal: options.signal,
+  });
+  if (!res.ok) {
+    throw new Error(`SaaS request failed (${res.status})`);
+  }
+  return res.text();
+}
+
 /** SaaS GET returning a binary Blob, with the Supabase JWT attached. */
 async function saasBlob(
   path: string,
@@ -249,6 +274,7 @@ export const apiClient = {
   /** Hosted SaaS Java. Admin's Supabase JWT auto-attached. */
   saas: {
     json: saasJson,
+    text: saasText,
     blob: saasBlob,
     /** True when a SaaS base URL is resolvable. Doesn't check session liveness. */
     isConfigured: (): boolean => saasBaseUrl() !== null,

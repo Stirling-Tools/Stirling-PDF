@@ -149,6 +149,8 @@ export interface ProcurementSnapshot {
   trialEndsAt: string | null;
   trialExtensionsUsed: number;
   licensed: boolean;
+  /** The team's Keygen licence key (present once licensed); shown in the portal to copy/install. */
+  licenseKey: string | null;
   latestQuote: QuoteResult | null;
 }
 
@@ -161,6 +163,8 @@ export interface QuoteConfigInput {
   indemnification: boolean;
   training: boolean;
   qbr: boolean;
+  /** Offline / air-gapped licence file — a paid add-on. */
+  offlineLicense: boolean;
   currency: string;
   /** Buyer's company name — shown on the quote/agreement and remembered when re-editing. */
   businessName: string;
@@ -168,6 +172,14 @@ export interface QuoteConfigInput {
 
 export function fetchSnapshot(): Promise<ProcurementSnapshot> {
   return apiClient.saas.json<ProcurementSnapshot>("/api/v1/procurement");
+}
+
+/**
+ * Download the offline / air-gapped licence file (.lic) as text. Only available when the paid
+ * offline add-on was purchased; the server 404s (→ throws) otherwise.
+ */
+export function fetchLicenseFile(): Promise<string> {
+  return apiClient.saas.text("/api/v1/procurement/license/file");
 }
 
 export function startTrial(): Promise<ProcurementSnapshot> {
