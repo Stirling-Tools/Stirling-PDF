@@ -368,18 +368,18 @@ jobs:
             }
 
             const deploymentUrl = `http://${{ secrets.NEW_VPS_HOST }}:${v2Port}`;
-            const httpsUrl = `https://${v2Port}.ssl.stirlingpdf.cloud`;
 
             // Only mention the portal when this image actually embeds it.
+            // Use the direct IP URL - the SSL hostname isn't supported yet.
             const withPortal = "${{ env.BUILD_PORTAL }}" === "true";
             const portalNote = withPortal
-              ? `🧩 **Admin portal** included — try it at [${httpsUrl}/portal](${httpsUrl}/portal).\n\n`
+              ? `🧩 **Admin portal** included - try it at [${deploymentUrl}/portal](${deploymentUrl}/portal).\n\n`
               : ``;
 
             const commentBody = `## 🚀 V2 Auto-Deployment Complete!\n\n` +
                               `Your V2 PR with embedded architecture has been deployed!\n\n` +
                               `🔗 **Direct Test URL (non-SSL)** [${deploymentUrl}](${deploymentUrl})\n\n` +
-                              `🔐 **Secure HTTPS URL**: [${httpsUrl}](${httpsUrl})\n\n` +
+                              `🔐 **Secure HTTPS URL**: unsupported currently\n\n` +
                               portalNote +
                               `_This deployment will be automatically cleaned up when the PR is closed._\n\n` +
                               `🔄 **Auto-deployed** for approved V2 contributors.`;
