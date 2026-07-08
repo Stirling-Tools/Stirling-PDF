@@ -20,14 +20,7 @@ import stirling.software.proprietary.model.api.audit.InfraAuditSummary;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
-/**
- * Builds the portal Infrastructure → Audit tab view from real {@code audit_events} rows.
- *
- * <p>The raw audit types ({@link AuditEventType}) are mapped to the tab's display categories
- * (auth/config/processing/security) and the read-noise types (UI_DATA, HTTP_REQUEST) are dropped.
- * The underlying rows come from {@link PortalAuditReadService}, which caches one scoped read shared
- * across every audit-derived surface; mapping here is cheap and runs per request.
- */
+/** Maps cached audit_events to the Infrastructure → Audit tab, dropping read-noise types. */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -47,11 +40,7 @@ public class PortalInfraAuditService {
         return buildFromEvents(auditReadService.serverEvents(), true);
     }
 
-    /**
-     * Team-scoped view: only events whose principal is in {@code principals} (a team's member
-     * emails). Reads through {@link PortalAuditReadService}'s per-team cache; an empty principal
-     * set yields an empty log rather than a query.
-     */
+    /** Team-scoped view: only events by the given principals; empty yields an empty log. */
     public InfraAuditLogResponse scopedAuditLog(String cacheKey, List<String> principals) {
         return buildFromEvents(auditReadService.scopedEvents(cacheKey, principals), false);
     }
@@ -204,8 +193,7 @@ public class PortalInfraAuditService {
 
     private static String targetFor(String category, String path, Map<String, Object> data) {
         if ("auth".equals(category)) {
-            // Auth events don't act on a resource - the session is the closest thing.
-            // (The client IP lives in the raw audit data if it's ever needed.)
+            // Auth events don't act on a resource; the session is the closest thing.
             return "Web session";
         }
         if ("config".equals(category)) {

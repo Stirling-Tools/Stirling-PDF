@@ -21,14 +21,7 @@ export {
   PRODUCT_CHIP_TONE,
 } from "@portal/mocks/documents";
 
-/**
- * GET /api/v1/proprietary/ui-data/documents?tier=…
- *
- * Real backend (Enterprise): the processing record derived from audit_events,
- * cached and scoped to the caller (admin → whole server; SaaS team leader →
- * their team). Routes via apiClient.saas in SaaS (Supabase JWT), else local.
- * `tier` is ignored server-side.
- */
+/** GET the audit-derived Documents feed; SaaS or local, scoped server-side. `tier` ignored. */
 export async function fetchDocuments(tier: Tier): Promise<DocumentsResponse> {
   const path = `/api/v1/proprietary/ui-data/documents?tier=${encodeURIComponent(tier)}`;
   return apiClient.saas.isConfigured()

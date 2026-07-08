@@ -2,10 +2,7 @@ package stirling.software.proprietary.audit;
 
 import org.springframework.stereotype.Component;
 
-/**
- * Self-hosted default: admins see the whole-server audit log, everyone else is denied. The saas
- * module overrides this with a {@code @Primary} bean that also scopes team leaders to their team.
- */
+/** Self-hosted default: admins see the whole-server audit log, everyone else is denied. */
 @Component
 public class DefaultPortalAuditScopeResolver implements PortalAuditScopeResolver {
 

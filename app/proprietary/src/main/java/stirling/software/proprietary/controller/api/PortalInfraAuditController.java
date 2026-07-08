@@ -16,12 +16,7 @@ import stirling.software.proprietary.model.api.audit.InfraAuditLogResponse;
 import stirling.software.proprietary.security.config.EnterpriseEndpoint;
 import stirling.software.proprietary.service.PortalInfraAuditService;
 
-/**
- * Serves the portal Infrastructure → Audit tab from real audit data. The caller's visibility is
- * decided by {@link PortalAuditScopeResolver}: self-hosted admins (and saas admins) see the whole
- * server; in saas a team leader sees only their own team's events. The heavy query + mapping is
- * cached per scope in {@link PortalInfraAuditService}, so repeated loads don't hit the database.
- */
+/** Serves the Infrastructure → Audit tab from real audit data, scoped and cached per caller. */
 @ProprietaryUiDataApi
 @RequiredArgsConstructor
 @EnterpriseEndpoint
@@ -30,10 +25,7 @@ public class PortalInfraAuditController {
     private final PortalInfraAuditService portalInfraAuditService;
     private final PortalAuditScopeResolver auditScopeResolver;
 
-    /**
-     * @param tier accepted for symmetry with the other portal infrastructure endpoints; the audit
-     *     log is not tier-scoped, so it is ignored.
-     */
+    // tier accepted for endpoint symmetry; ignored (audit log isn't tier-scoped).
     @GetMapping("/infrastructure/audit-log")
     @Operation(
             summary = "Infrastructure audit log",
@@ -42,8 +34,7 @@ public class PortalInfraAuditController {
             @RequestParam(value = "tier", required = false) String tier) {
         PortalAuditScope scope = auditScopeResolver.resolve();
         if (!scope.allowed()) {
-            // 403 (not a thrown exception) so the tab shows its access message,
-            // not a generic 500 - the resolver is the authorization gate here.
+            // Return 403 (not throw) so the tab shows its access message, not a generic 500.
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         InfraAuditLogResponse body =

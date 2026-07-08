@@ -22,13 +22,7 @@ import stirling.software.proprietary.model.api.documents.PortalReviewDocumentDto
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
-/**
- * Builds the portal Documents processing-activity feed from real {@code audit_events}. Each file in
- * a PDF_PROCESS / FILE_OPERATION event is one activity row: product (API vs Editor), operation,
- * user, outcome (processed/error), and time. Extraction fields don't exist yet, so {@code
- * confidence}/{@code extractions} come back null/empty. Rows come from the shared, per-scope cache
- * in {@link PortalAuditReadService}; mapping runs per request.
- */
+/** Builds the Documents feed from audit_events: one row per file; extraction fields stay null. */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -149,8 +143,7 @@ public class PortalDocumentsService {
                 .confidence(null)
                 .fieldsExtracted(0)
                 .time(relativeTime(timestamp))
-                // Audit events don't reveal content sensitivity, so never guess it
-                // from the operation name. Real gating waits on a real signal.
+                // Audit events don't reveal content sensitivity, so never guess it.
                 .sensitive(false)
                 .extractions(List.of())
                 .audit(List.of(op))

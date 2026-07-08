@@ -13,14 +13,7 @@ import stirling.software.proprietary.audit.PortalAuditScope;
 import stirling.software.proprietary.audit.PortalAuditScopeResolver;
 import stirling.software.saas.repository.TeamMembershipRepository;
 
-/**
- * SaaS audit visibility: an admin sees the whole server; a team {@code LEADER} sees only their own
- * team's events; everyone else is denied. Overrides {@link DefaultPortalAuditScopeResolver} via
- * {@code @Primary} in the saas profile.
- *
- * <p>Scoping is by {@code principal}: in saas the audit principal is the user's email (the Supabase
- * JWT name), so the team's member emails are exactly the principals to filter on.
- */
+/** SaaS audit visibility: admins see the server; team LEADERs see their team (by member email). */
 @Component
 @Primary
 @Profile("saas")

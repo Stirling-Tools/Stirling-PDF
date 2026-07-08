@@ -110,9 +110,7 @@ export function AuditTab() {
   const state = useAsync<AuditLogResponse>(() => fetchAuditLog(tier), [tier]);
   const { data, error } = state;
   const { isLoading, isEmpty } = useSectionFlags(state);
-  // A team member who isn't a lead (and any caller the backend scopes out) gets
-  // 403 from the endpoint. Surface that as an access message rather than the
-  // generic "no events" empty state, which would wrongly imply an idle team.
+  // Backend returns 403 for scoped-out callers; show an access message, not an empty state.
   const forbidden = error instanceof HttpError && error.status === 403;
 
   const rows = useMemo(() => {
@@ -128,8 +126,7 @@ export function AuditTab() {
           title={t("portal.infrastructure.audit.heading")}
           sub={t("portal.infrastructure.audit.subheading")}
         />
-        {/* Export is admin-only + whole-server, so only offer it in the
-            full-server view. Team-scoped leaders don't get an unusable button. */}
+        {/* Export is admin-only + whole-server, so only shown in the full-server view. */}
         {data?.fullServer && (
           <Button variant="secondary" onClick={() => setExportOpen(true)}>
             {t("portal.infrastructure.audit.export.open")}

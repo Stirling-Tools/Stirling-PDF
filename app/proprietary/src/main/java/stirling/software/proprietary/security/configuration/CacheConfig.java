@@ -24,10 +24,7 @@ public class CacheConfig {
         this.applicationProperties = applicationProperties;
     }
 
-    /**
-     * One short-TTL cache of recent audit rows, shared by every portal view derived from the audit
-     * trail (the Audit tab and Documents page both map from the same cached read).
-     */
+    /** Short-TTL cache of recent audit rows, shared by every audit-derived portal view. */
     private static final String PORTAL_AUDIT_EVENTS_CACHE = "portalAuditEvents";
 
     @Bean
@@ -39,9 +36,7 @@ public class CacheConfig {
                         .maximumSize(1000) // Make configurable?
                         .expireAfterWrite(Duration.ofDays(keyRetentionDays))
                         .recordStats());
-        // Portal audit views refresh frequently but must not re-scan the DB on every load; a 30s
-        // TTL keeps them near-live while shedding the query load. One entry per scope: "server"
-        // (admins) plus one per team ("team:<id>"), shared across every audit-derived surface.
+        // 30s TTL keeps audit views near-live without re-scanning the DB; one entry per scope.
         cacheManager.registerCustomCache(
                 PORTAL_AUDIT_EVENTS_CACHE,
                 Caffeine.newBuilder()

@@ -13,13 +13,7 @@ import stirling.software.proprietary.audit.PortalAuditEventRow;
 import stirling.software.proprietary.model.security.PersistentAuditEvent;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 
-/**
- * Single cached read of recent {@code audit_events}, shared by every portal view derived from the
- * audit trail (Infrastructure -> Audit tab and the Documents page). One cache entry per scope
- * ({@code "server"} or {@code "team:<id>"}) with a short TTL, so the DB is scanned once per scope
- * no matter how many surfaces map it. Mapping to view DTOs stays in the per-surface services and is
- * cheap enough to run on every request (in-memory over a few hundred rows).
- */
+/** One cached read of recent {@code audit_events} per scope, shared by all audit-derived views. */
 @Service
 @RequiredArgsConstructor
 public class PortalAuditReadService {

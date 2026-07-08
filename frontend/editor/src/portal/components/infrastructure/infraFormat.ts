@@ -100,8 +100,7 @@ export const AUDIT_TONE: Record<AuditStatus, StatusTone> = {
   info: "info",
 };
 
-// Human labels for the status badge. `danger`/`warning` are colour tones, not
-// outcomes - a failed op should read "Error", not "Danger".
+// Human labels for the status badge: danger/warning are tones, not outcomes (read "Error").
 export const AUDIT_STATUS_LABEL: Record<AuditStatus, string> = {
   success: "Success",
   warning: "Warning",

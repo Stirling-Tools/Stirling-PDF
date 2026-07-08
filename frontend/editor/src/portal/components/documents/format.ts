@@ -9,11 +9,7 @@ export function confidencePct(n: number | null | undefined): string {
   return `${Math.round(n * 100)}%`;
 }
 
-/**
- * Tone for a confidence value. The bands match the review thresholds: below
- * 60% is unreliable (danger), 60–85% warrants a glance (warning), above is
- * trusted (success). No value → neutral.
- */
+/** Tone for a confidence value: <60% danger, 60-85% warning, above success, none neutral. */
 export function confidenceTone(n: number | null | undefined): StatusTone {
   if (n == null) return "neutral";
   if (n < 0.6) return "danger";

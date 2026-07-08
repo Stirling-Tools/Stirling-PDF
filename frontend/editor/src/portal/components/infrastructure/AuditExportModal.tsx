@@ -30,11 +30,7 @@ const DEFAULT_FIELDS: Record<FieldKey, boolean> = {
   outcome: true,
 };
 
-/**
- * Export the audit log to CSV/JSON via the admin-only, whole-server
- * `/audit-export` endpoint (routed through the portal's local/saas client). The
- * caller only reaches this modal from the full-server view, so it's admin-gated.
- */
+/** Export the audit log to CSV/JSON via the admin-only, whole-server endpoint. */
 export function AuditExportModal({ open, onClose }: AuditExportModalProps) {
   const { t } = useTranslation();
   const [format, setFormat] = useState<ExportFormat>("csv");
@@ -127,8 +123,7 @@ export function AuditExportModal({ open, onClose }: AuditExportModalProps) {
                 label={fieldLabel[k]}
                 checked={fields[k]}
                 onChange={(e) => {
-                  // Capture the value synchronously - React nulls `currentTarget`
-                  // before the (async) state updater runs.
+                  // Capture synchronously; React nulls currentTarget before the state update.
                   const checked = e.target.checked;
                   setFields((prev) => ({ ...prev, [k]: checked }));
                 }}

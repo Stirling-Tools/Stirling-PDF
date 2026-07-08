@@ -16,11 +16,7 @@ import stirling.software.proprietary.model.api.documents.PortalDocumentsResponse
 import stirling.software.proprietary.security.config.EnterpriseEndpoint;
 import stirling.software.proprietary.service.PortalDocumentsService;
 
-/**
- * Serves the portal Documents review queue, derived from real audit data. Visibility follows the
- * same {@link PortalAuditScopeResolver} as the audit tab: admins see the whole server; a saas team
- * leader sees only their own team's documents. Cached per scope.
- */
+/** Serves the portal Documents review queue, derived from real audit data and scoped per caller. */
 @ProprietaryUiDataApi
 @RequiredArgsConstructor
 @EnterpriseEndpoint
@@ -29,10 +25,7 @@ public class PortalDocumentsController {
     private final PortalDocumentsService portalDocumentsService;
     private final PortalAuditScopeResolver auditScopeResolver;
 
-    /**
-     * @param tier accepted for symmetry with the mock seam; the queue isn't tier-scoped, so it's
-     *     ignored.
-     */
+    // tier accepted for mock-seam symmetry; ignored (queue isn't tier-scoped).
     @GetMapping("/documents")
     @Operation(
             summary = "Documents review queue",
