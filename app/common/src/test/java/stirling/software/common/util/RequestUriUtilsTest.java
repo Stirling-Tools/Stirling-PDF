@@ -73,6 +73,20 @@ class RequestUriUtilsTest {
         assertTrue(RequestUriUtils.isStaticResource("/mobile-scanner"));
     }
 
+    @Test
+    void testIsStaticResource_portalShell() {
+        // The embedded admin portal shell + its SPA routes are served pre-auth.
+        assertTrue(RequestUriUtils.isStaticResource("/portal"));
+        assertTrue(RequestUriUtils.isStaticResource("/portal/users"));
+        assertTrue(RequestUriUtils.isStaticResource("/portal/assets/portal-abc123.js"));
+    }
+
+    @Test
+    void testIsStaticResource_portalWithContextPath() {
+        assertTrue(RequestUriUtils.isStaticResource("/app", "/app/portal"));
+        assertTrue(RequestUriUtils.isStaticResource("/app", "/app/portal/pipelines"));
+    }
+
     // --- isFrontendRoute tests ---
 
     @Test

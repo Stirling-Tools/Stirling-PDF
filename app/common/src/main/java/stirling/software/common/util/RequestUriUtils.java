@@ -57,6 +57,13 @@ public class RequestUriUtils {
             return true;
         }
 
+        // Embedded admin portal SPA (/portal shell + its assets). The shell is safe
+        // to serve pre-auth: the portal enforces access via its own auth gate and
+        // the portal data APIs are secured independently.
+        if (normalizedUri.equals("/portal") || normalizedUri.startsWith("/portal/")) {
+            return true;
+        }
+
         // Treat common static file extensions as static resources
         return normalizedUri.endsWith(".svg")
                 || normalizedUri.endsWith(".png")

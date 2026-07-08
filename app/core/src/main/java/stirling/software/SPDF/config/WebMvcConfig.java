@@ -133,6 +133,23 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .resourceChain(true)
                 .addResolver(new EncodedResourceResolver());
 
+        // 4b. Embedded admin portal (its own SPA under /portal, built with
+        // -PbuildWithPortal). Fingerprinted assets are immutable; the rest
+        // (portal.html shell, logos, locales) revalidate so shell/route changes
+        // land immediately. SPA routes themselves are handled by the controller.
+        registry.addResourceHandler("/portal/assets/**")
+                .addResourceLocations(
+                        staticPath + "portal/assets/", "classpath:/static/portal/assets/")
+                .setCacheControl(IMMUTABLE_ONE_YEAR)
+                .resourceChain(true)
+                .addResolver(new EncodedResourceResolver());
+
+        registry.addResourceHandler("/portal/**")
+                .addResourceLocations(staticPath + "portal/", "classpath:/static/portal/")
+                .setCacheControl(NO_CACHE)
+                .resourceChain(true)
+                .addResolver(new EncodedResourceResolver());
+
         // 5. Catch-all (SPA fallback)
         // Must check with server to ensure index.html is always fresh.
         registry.addResourceHandler("/**")

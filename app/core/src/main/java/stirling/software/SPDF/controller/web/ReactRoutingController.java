@@ -44,6 +44,8 @@ public class ReactRoutingController {
     private boolean saasLandingExists = false;
     private String cachedMobileUploadHtml;
     private boolean mobileUploadHtmlExists = false;
+    private String cachedPortalHtml;
+    private boolean portalExists = false;
 
     @PostConstruct
     public void init() {
@@ -71,6 +73,15 @@ public class ReactRoutingController {
         // static upload page to serve at that route in desktop mode instead.
         this.cachedMobileUploadHtml = readStaticHtml("mobile-upload.html");
         this.mobileUploadHtmlExists = this.cachedMobileUploadHtml != null;
+
+        // Standalone admin portal (built with -PbuildWithPortal). When bundled it is
+        // served at /portal with its own <base href>; otherwise /portal falls through
+        // to the editor shell, which lazy-loads the portal route in that flavor.
+        this.cachedPortalHtml = processPortalHtml();
+        this.portalExists = this.cachedPortalHtml != null;
+        if (portalExists) {
+            log.info("Embedded admin portal detected; serving it at '/portal'");
+        }
 
         // Check for external index.html first (customFiles/static/)
         Path externalIndexPath = Path.of(InstallationPathConfig.getStaticPath(), "index.html");
@@ -152,6 +163,48 @@ public class ReactRoutingController {
         return new ClassPathResource("static/index.html");
     }
 
+    private String processPortalHtml() {
+        try {
+            Resource resource = getPortalHtmlResource();
+            if (resource == null || !resource.exists()) {
+                return null;
+            }
+            try (InputStream inputStream = resource.getInputStream()) {
+                String html = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+
+                String baseUrl = contextPath.endsWith("/") ? contextPath : contextPath + "/";
+                // The portal is mounted under /portal; its <base href> and BrowserRouter
+                // basename resolve there, while API calls still target the app root.
+                String portalBase = baseUrl + "portal/";
+                html = html.replace("%BASE_URL%", portalBase);
+                html =
+                        BASE_HREF_PATTERN
+                                .matcher(html)
+                                .replaceFirst("<base href=\\\"" + portalBase + "\\\" />");
+
+                // API base stays at the app root so /api/** calls don't hit /portal/api.
+                String contextPathScript =
+                        "<script>window.STIRLING_PDF_API_BASE_URL = '" + baseUrl + "';</script>";
+                html = html.replace("</head>", contextPathScript + "</head>");
+
+                return html;
+            }
+        } catch (Exception ex) {
+            log.warn("Failed to read portal.html; /portal will fall back to the editor shell", ex);
+            return null;
+        }
+    }
+
+    private Resource getPortalHtmlResource() {
+        Path externalPortalPath =
+                Path.of(InstallationPathConfig.getStaticPath(), "portal", "portal.html");
+        if (Files.exists(externalPortalPath) && Files.isReadable(externalPortalPath)) {
+            return new FileSystemResource(externalPortalPath.toFile());
+        }
+        ClassPathResource resource = new ClassPathResource("static/portal/portal.html");
+        return resource.exists() ? resource : null;
+    }
+
     private String readStaticHtml(String filename) {
         try {
             Path external = Path.of(InstallationPathConfig.getStaticPath(), filename);
@@ -229,6 +282,42 @@ public class ReactRoutingController {
                     .contentType(MediaType.TEXT_HTML)
                     .body(cachedMobileUploadHtml);
         }
+        return serveIndexHtml(request);
+    }
+
+    // The standalone admin portal is its own SPA under /portal. These forward the
+    // portal's client-side routes (/portal, /portal/users, ...) to portal.html;
+    // its fingerprinted assets (/portal/assets/**, etc.) are excluded so they fall
+    // through to the static resource handler. When no portal bundle is present,
+    // servePortalHtml serves the editor shell instead (no behaviour change).
+    @GetMapping(
+            value = {"/portal", "/portal/"},
+            produces = MediaType.TEXT_HTML_VALUE)
+    public ResponseEntity<String> servePortalRoot(HttpServletRequest request) {
+        return servePortalHtml(request);
+    }
+
+    @GetMapping(
+            "/portal/{path:^(?!assets|locales|css|js|images|modern-logo|classic-logo|vendor|samples|og_images)[^\\.]*$}")
+    public ResponseEntity<String> forwardPortalPaths(HttpServletRequest request) {
+        return servePortalHtml(request);
+    }
+
+    @GetMapping(
+            "/portal/{path:^(?!assets|locales|css|js|images|modern-logo|classic-logo|vendor|samples|og_images)[^\\.]*}/{subpath:^(?!.*\\.).*$}")
+    public ResponseEntity<String> forwardPortalNestedPaths(HttpServletRequest request) {
+        return servePortalHtml(request);
+    }
+
+    private ResponseEntity<String> servePortalHtml(HttpServletRequest request) {
+        if (portalExists && cachedPortalHtml != null) {
+            return ResponseEntity.ok()
+                    .cacheControl(CacheControl.noCache().mustRevalidate())
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(cachedPortalHtml);
+        }
+        // No standalone portal bundled: serve the editor shell, which lazy-loads the
+        // /portal route in the proprietary/saas flavors.
         return serveIndexHtml(request);
     }
 
