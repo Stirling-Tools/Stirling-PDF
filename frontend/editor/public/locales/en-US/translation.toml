@@ -6070,6 +6070,9 @@ dismiss = "Dismiss overlay"
 enforcingTitle = "Enforcing policy..."
 viewAnyway = "View file (policy still enforcing)"
 
+[portal]
+comingSoon = "Coming soon"
+
 [portal.accountLink.card]
 billingNote = "Unattended processing bills against your org wallet."
 eyebrow = "Account link"
