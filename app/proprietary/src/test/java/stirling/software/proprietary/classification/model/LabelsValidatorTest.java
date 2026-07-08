@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.DisplayName;
@@ -17,14 +18,23 @@ class LabelsValidatorTest {
     }
 
     private static ClassificationLabel label(String name) {
-        return new ClassificationLabel(name, null);
+        return new ClassificationLabel(slug(name), name, null);
+    }
+
+    private static String slug(String name) {
+        return name.trim()
+                .toLowerCase(Locale.ROOT)
+                .replaceAll("[^a-z0-9]+", "-")
+                .replaceAll("(^-|-$)", "");
     }
 
     @Test
     @DisplayName("accepts a well-formed label set")
     void acceptsValid() {
         ClassificationLabels set =
-                labels(new ClassificationLabel("Invoice", "receipt-long"), label("Contract"));
+                labels(
+                        new ClassificationLabel("invoice", "Invoice", "receipt-long"),
+                        label("Contract"));
         assertThatCode(() -> LabelsValidator.validate(set)).doesNotThrowAnyException();
     }
 
@@ -43,9 +53,12 @@ class LabelsValidatorTest {
     }
 
     @Test
-    @DisplayName("rejects duplicate names")
+    @DisplayName("rejects duplicate names (distinct ids)")
     void rejectsDuplicateNames() {
-        ClassificationLabels set = labels(label("Invoice"), label("Invoice"));
+        ClassificationLabels set =
+                labels(
+                        new ClassificationLabel("invoice-a", "Invoice", null),
+                        new ClassificationLabel("invoice-b", "Invoice", null));
         assertThatThrownBy(() -> LabelsValidator.validate(set))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Duplicate label name");
@@ -54,25 +67,52 @@ class LabelsValidatorTest {
     @Test
     @DisplayName("rejects duplicate names differing only by case")
     void rejectsDuplicateNamesCaseInsensitive() {
-        ClassificationLabels set = labels(label("Invoice"), label("INVOICE"));
+        ClassificationLabels set =
+                labels(
+                        new ClassificationLabel("invoice-a", "Invoice", null),
+                        new ClassificationLabel("invoice-b", "INVOICE", null));
         assertThatThrownBy(() -> LabelsValidator.validate(set))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Duplicate label name");
     }
 
     @Test
-    @DisplayName("rejects a blank name")
-    void rejectsBlankName() {
-        ClassificationLabels set = labels(label(" "));
+    @DisplayName("rejects duplicate ids")
+    void rejectsDuplicateIds() {
+        ClassificationLabels set =
+                labels(
+                        new ClassificationLabel("invoice", "Invoice", null),
+                        new ClassificationLabel("invoice", "Sales invoice", null));
         assertThatThrownBy(() -> LabelsValidator.validate(set))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("must not be blank");
+                .hasMessageContaining("Duplicate label id");
+    }
+
+    @Test
+    @DisplayName("rejects a blank name")
+    void rejectsBlankName() {
+        ClassificationLabels set = labels(new ClassificationLabel("blank", " ", null));
+        assertThatThrownBy(() -> LabelsValidator.validate(set))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Label name must not be blank");
+    }
+
+    @Test
+    @DisplayName("rejects a blank id")
+    void rejectsBlankId() {
+        ClassificationLabels set = labels(new ClassificationLabel(" ", "Invoice", null));
+        assertThatThrownBy(() -> LabelsValidator.validate(set))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Label id must not be blank");
     }
 
     @Test
     @DisplayName("rejects an over-long name")
     void rejectsOverLongName() {
-        ClassificationLabels set = labels(label("x".repeat(LabelsValidator.MAX_TEXT_LENGTH + 1)));
+        ClassificationLabels set =
+                labels(
+                        new ClassificationLabel(
+                                "x", "x".repeat(LabelsValidator.MAX_TEXT_LENGTH + 1), null));
         assertThatThrownBy(() -> LabelsValidator.validate(set))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("too long");
@@ -84,7 +124,9 @@ class LabelsValidatorTest {
         ClassificationLabels set =
                 labels(
                         new ClassificationLabel(
-                                "Invoice", "x".repeat(LabelsValidator.MAX_TEXT_LENGTH + 1)));
+                                "invoice",
+                                "Invoice",
+                                "x".repeat(LabelsValidator.MAX_TEXT_LENGTH + 1)));
         assertThatThrownBy(() -> LabelsValidator.validate(set))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("icon is too long");

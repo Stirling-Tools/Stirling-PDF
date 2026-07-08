@@ -42,6 +42,7 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import SettingsIcon from "@mui/icons-material/Settings";
 import type { FileId } from "@app/types/file";
 import { FileItem } from "@app/components/shared/FileSidebarFileItem";
+import { useLabelName } from "@app/data/labelDisplay";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
 import {
   FileSidebarGroupControls,
@@ -158,6 +159,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     ref,
   ) {
     const { t } = useTranslation();
+    // Resolves a file's stored classification label id to its display name.
+    const labelName = useLabelName();
     const [searchActive, setSearchActive] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const searchInputRef = useRef<HTMLInputElement>(null);
@@ -790,7 +793,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             isWatchedFoldersActive ? undefined : handleVersionHistory
           }
           hasVersionHistory={(stub.versionNumber ?? 1) > 1}
-          primaryLabel={stub.classificationLabels?.[0]}
+          primaryLabel={
+            stub.classificationLabels?.[0]
+              ? labelName(stub.classificationLabels[0])
+              : undefined
+          }
         />
       );
     };

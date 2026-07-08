@@ -39,6 +39,7 @@ from .document_classifier import (
     ClassifyDocumentRequest,
     ClassifyDocumentResponse,
     DocumentClassificationResponse,
+    LabelOption,
 )
 from .documents import (
     DeleteDocumentResponse,
@@ -146,6 +147,7 @@ __all__ = [
     "PurgeOwnerResponse",
     "Discrepancy",
     "DocumentClassificationResponse",
+    "LabelOption",
     "DocumentMeta",
     "DocumentSections",
     "DiscrepancyKind",

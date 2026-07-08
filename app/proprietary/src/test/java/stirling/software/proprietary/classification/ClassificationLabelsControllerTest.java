@@ -49,8 +49,8 @@ class ClassificationLabelsControllerTest {
     private static ClassificationLabels sample() {
         return new ClassificationLabels(
                 List.of(
-                        new ClassificationLabel("Invoice", "receipt-long"),
-                        new ClassificationLabel("Contract", null)));
+                        new ClassificationLabel("invoice", "Invoice", "receipt-long"),
+                        new ClassificationLabel("contract", "Contract", null)));
     }
 
     private void loginEnabled(boolean enabled) {
@@ -110,8 +110,8 @@ class ClassificationLabelsControllerTest {
         ClassificationLabels duplicate =
                 new ClassificationLabels(
                         List.of(
-                                new ClassificationLabel("Invoice", null),
-                                new ClassificationLabel("invoice", null)));
+                                new ClassificationLabel("invoice", "Invoice", null),
+                                new ClassificationLabel("invoice", "Invoice", null)));
 
         assertThatThrownBy(() -> controller.saveTeamLabels(duplicate))
                 .isInstanceOf(ResponseStatusException.class)

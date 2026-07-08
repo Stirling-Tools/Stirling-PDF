@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 /**
  * Structural validation for a user- or admin-supplied label set, run before it is stored so a
  * malformed vocabulary can never reach the classifier. Mirrors the invariants the engine relies on:
- * non-blank names, unique case-insensitively.
+ * non-blank ids and names, each unique within the set (ids exactly, names case-insensitively).
  */
 public final class LabelsValidator {
 
@@ -36,8 +36,10 @@ public final class LabelsValidator {
         if (labels.labels().size() > MAX_LABELS) {
             throw new IllegalArgumentException("Too many labels (max " + MAX_LABELS + ")");
         }
+        Set<String> ids = new HashSet<>();
         Set<String> names = new HashSet<>();
         for (ClassificationLabel label : labels.labels()) {
+            requireText(label.id(), "Label id");
             requireText(label.name(), "Label name");
             if (label.icon() != null && !label.icon().isEmpty()) {
                 if (label.icon().length() > MAX_TEXT_LENGTH) {
@@ -47,6 +49,9 @@ public final class LabelsValidator {
                 if (!ICON_KEY.matcher(label.icon()).matches()) {
                     throw new IllegalArgumentException("Invalid label icon: " + label.icon());
                 }
+            }
+            if (!ids.add(label.id().trim())) {
+                throw new IllegalArgumentException("Duplicate label id: " + label.id());
             }
             if (!names.add(label.name().trim().toLowerCase(Locale.ROOT))) {
                 throw new IllegalArgumentException("Duplicate label name: " + label.name());

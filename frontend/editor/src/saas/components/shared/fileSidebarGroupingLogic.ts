@@ -14,20 +14,16 @@ export type { FileSidebarGroup };
 /** Files shown in the always-expanded "Recent" group. */
 const RECENT_COUNT = 8;
 
-/** Per label key (case-insensitive; first-seen casing is the display name) → the stubs carrying it. */
+/** Per label id (a file's stored classification ids) → the stubs carrying it. */
 export function bucketStubsByLabel(
   stubs: StirlingFileStub[],
-): Map<string, { display: string; stubs: StirlingFileStub[] }> {
-  const byLabel = new Map<
-    string,
-    { display: string; stubs: StirlingFileStub[] }
-  >();
+): Map<string, { stubs: StirlingFileStub[] }> {
+  const byLabel = new Map<string, { stubs: StirlingFileStub[] }>();
   for (const stub of stubs) {
-    for (const label of stub.classificationLabels ?? []) {
-      const key = label.toLowerCase();
-      const bucket = byLabel.get(key);
+    for (const labelId of stub.classificationLabels ?? []) {
+      const bucket = byLabel.get(labelId);
       if (bucket) bucket.stubs.push(stub);
-      else byLabel.set(key, { display: label, stubs: [stub] });
+      else byLabel.set(labelId, { stubs: [stub] });
     }
   }
   return byLabel;
@@ -41,17 +37,22 @@ export function bucketStubsByLabel(
  */
 export function buildLabelGroups(
   stubs: StirlingFileStub[],
-  labelSet: readonly { name: string; icon?: string }[],
+  labelSet: readonly { id: string; name: string; icon?: string }[],
   t: (key: string, fallback: string) => string,
   categories: SidebarCategory[],
 ): FileSidebarGroup[] | null {
   if (stubs.length === 0) return null;
 
-  // icon per label name from the effective set (team ∪ personal); labels no longer in the set still group, just with the default icon.
-  const iconByName = new Map<string, string | undefined>();
+  // Display name + icon per label id from the effective set; ids no longer in the
+  // set still group, resolving to the id text and the default icon.
+  const nameById = new Map<string, string>();
+  const iconById = new Map<string, string | undefined>();
   for (const label of labelSet) {
-    iconByName.set(label.name.toLowerCase(), label.icon);
+    nameById.set(label.id, label.name);
+    iconById.set(label.id, label.icon);
   }
+  const labelName = (id: string) =>
+    t(`classification.labels.${id}`, nameById.get(id) ?? id);
 
   const recent = [...stubs]
     .sort((a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0))
@@ -66,11 +67,9 @@ export function buildLabelGroups(
   // (deduped — a file with two of the category's labels appears once).
   for (const category of categories) {
     if (category.hidden) continue;
-    const keys = new Set(category.labelKeys);
+    const ids = new Set(category.labelKeys);
     const members = stubs.filter((stub) =>
-      (stub.classificationLabels ?? []).some((label) =>
-        keys.has(label.toLowerCase()),
-      ),
+      (stub.classificationLabels ?? []).some((labelId) => ids.has(labelId)),
     );
     if (members.length === 0) continue;
     visible.push({
@@ -84,12 +83,12 @@ export function buildLabelGroups(
 
   // A label on a file but not in any category still gets its own group, so nothing is stranded
   // until the user files it into a category.
-  for (const [key, bucket] of byLabel) {
-    if (inACategory.has(key)) continue;
+  for (const [labelId, bucket] of byLabel) {
+    if (inACategory.has(labelId)) continue;
     visible.push({
-      id: `label:${key}`,
-      label: bucket.display,
-      icon: iconByName.get(key) ?? DEFAULT_LABEL_ICON,
+      id: `label:${labelId}`,
+      label: labelName(labelId),
+      icon: iconById.get(labelId) ?? DEFAULT_LABEL_ICON,
       stubs: bucket.stubs,
       defaultExpanded: false,
     });

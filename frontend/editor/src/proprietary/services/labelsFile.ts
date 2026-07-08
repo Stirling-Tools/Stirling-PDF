@@ -1,15 +1,19 @@
 /**
  * Client-side import/export + validation for a classification-labels JSON file
- * (`{"labels":[{"name":"Invoice","icon":"receipt-long"}, …]}`). Sharing a label
- * set between teams is done by exporting the JSON here and importing it on
- * another team. Validation mirrors the backend (`LabelsValidator`) so a
- * malformed file is caught before it's uploaded — the backend re-validates as
- * the authority.
+ * (`{"labels":[{"id":"invoice","name":"Invoice","icon":"receipt-long"}, …]}`).
+ * Sharing a label set between teams is done by exporting the JSON here and
+ * importing it on another team. Validation mirrors the backend
+ * (`LabelsValidator`) so a malformed file is caught before it's uploaded — the
+ * backend re-validates as the authority. A file may omit `id` (e.g. an older
+ * export); it is then derived from the name.
  */
 
 import { downloadJsonAsFile } from "@app/utils/downloadUtils";
 import { LABEL_ICON_KEYS } from "@app/data/labelIcons";
-import type { ClassificationLabel } from "@app/data/classificationLabels";
+import {
+  labelId,
+  type ClassificationLabel,
+} from "@app/data/classificationLabels";
 
 // Kept in sync with the backend LabelsValidator (the authority); enforced here
 // too so an oversized import is rejected before upload.
@@ -18,6 +22,12 @@ const MAX_TEXT_LENGTH = 128;
 
 interface LabelsFileShape {
   labels: ClassificationLabel[];
+}
+
+/** A label's effective id: the provided one, else derived from the name. */
+function effectiveId(label: Partial<ClassificationLabel>): string {
+  const provided = typeof label.id === "string" ? label.id.trim() : "";
+  return provided || labelId(label.name?.trim() ?? "");
 }
 
 /** Human-readable problems with a candidate labels file; empty means valid. */
@@ -33,7 +43,7 @@ export function validateLabels(value: unknown): string[] {
   if (labels.length > MAX_LABELS) {
     errors.push(`Too many labels (max ${MAX_LABELS}).`);
   }
-  const seen = new Set<string>();
+  const seenIds = new Set<string>();
   for (const label of labels) {
     if (!isText(label?.name)) {
       errors.push("Every label needs a non-empty name.");
@@ -43,9 +53,13 @@ export function validateLabels(value: unknown): string[] {
     if (name.length > MAX_TEXT_LENGTH) {
       errors.push(`Label "${name}" is over ${MAX_TEXT_LENGTH} characters.`);
     }
-    const key = name.toLowerCase();
-    if (seen.has(key)) errors.push(`Duplicate label: ${name}`);
-    seen.add(key);
+    const id = effectiveId(label);
+    if (!id) {
+      errors.push(`Label "${name}" has no usable id.`);
+      continue;
+    }
+    if (seenIds.has(id)) errors.push(`Duplicate label: ${name}`);
+    seenIds.add(id);
   }
   return errors;
 }
@@ -56,11 +70,12 @@ export function normalizeLabels(
 ): ClassificationLabel[] {
   return labels.map((label): ClassificationLabel => {
     const name = label.name.trim();
+    const id = effectiveId(label);
     // Keep the icon only if it's a known palette key, so a hand-crafted import
     // can't set an unbundled key that renders blank.
     return label.icon && LABEL_ICON_KEYS.has(label.icon)
-      ? { name, icon: label.icon }
-      : { name };
+      ? { id, name, icon: label.icon }
+      : { id, name };
   });
 }
 

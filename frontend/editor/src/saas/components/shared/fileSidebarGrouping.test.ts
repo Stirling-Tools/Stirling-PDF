@@ -3,7 +3,8 @@ import { buildLabelGroups } from "@app/components/shared/fileSidebarGroupingLogi
 import type { SidebarCategory } from "@app/services/fileSidebarCategories";
 import type { StirlingFileStub } from "@app/types/fileContext";
 
-// The grouping only reads id/lastModified/classificationLabels.
+// The grouping only reads id/lastModified/classificationLabels. classificationLabels
+// hold label IDS (a file's stored classification), and categories key on ids too.
 function stub(
   id: string,
   labels?: string[],
@@ -30,9 +31,9 @@ describe("buildLabelGroups", () => {
   it("rolls a category's labels into ONE group (deduped)", () => {
     const groups = buildLabelGroups(
       [
-        stub("a", ["NDA"]),
-        stub("b", ["Contract"]),
-        stub("c", ["NDA", "Contract"]),
+        stub("a", ["nda"]),
+        stub("b", ["contract"]),
+        stub("c", ["nda", "contract"]),
       ],
       [],
       t,
@@ -44,16 +45,19 @@ describe("buildLabelGroups", () => {
   });
 
   it("gives a label not in any category its own group", () => {
-    const groups = buildLabelGroups([stub("a", ["Weird one"])], [], t, [
-      LEGAL,
-    ])!;
-    const group = groups.find((g) => g.id === "label:weird one")!;
+    const groups = buildLabelGroups(
+      [stub("a", ["weird-one"])],
+      [{ id: "weird-one", name: "Weird one" }],
+      t,
+      [LEGAL],
+    )!;
+    const group = groups.find((g) => g.id === "label:weird-one")!;
     expect(group.label).toBe("Weird one");
     expect(group.stubs.map((s) => s.id)).toEqual(["a"]);
   });
 
   it("moves a hidden category's files into Other", () => {
-    const groups = buildLabelGroups([stub("a", ["Invoice"])], [], t, [
+    const groups = buildLabelGroups([stub("a", ["invoice"])], [], t, [
       cat("finance", "Financial", ["invoice"], true),
     ])!;
     expect(groups.some((g) => g.id === "category:finance")).toBe(false);
@@ -62,7 +66,7 @@ describe("buildLabelGroups", () => {
   });
 
   it("a file with labels in two categories appears in both", () => {
-    const groups = buildLabelGroups([stub("a", ["NDA", "Invoice"])], [], t, [
+    const groups = buildLabelGroups([stub("a", ["nda", "invoice"])], [], t, [
       LEGAL,
       FINANCE,
     ])!;
@@ -77,7 +81,7 @@ describe("buildLabelGroups", () => {
 
   it("puts unlabelled files in Other at the bottom", () => {
     const groups = buildLabelGroups(
-      [stub("a", ["Invoice"]), stub("b"), stub("c", [])],
+      [stub("a", ["invoice"]), stub("b"), stub("c", [])],
       [],
       t,
       [FINANCE],
@@ -90,9 +94,9 @@ describe("buildLabelGroups", () => {
   it("orders groups: Recent, groups alphabetically, Other last", () => {
     const groups = buildLabelGroups(
       [
-        stub("a", ["Invoice"]),
-        stub("b", ["NDA"]),
-        stub("c", ["Zzz"]),
+        stub("a", ["invoice"]),
+        stub("b", ["nda"]),
+        stub("c", ["zzz"]),
         stub("d"),
       ],
       [],

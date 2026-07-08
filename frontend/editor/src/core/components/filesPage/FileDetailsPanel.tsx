@@ -26,6 +26,7 @@ import ShareManagementModal from "@app/components/shared/ShareManagementModal";
 import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
 import { fileStorage } from "@app/services/fileStorage";
 import { readStubClassificationLabels } from "@app/services/fileClassification";
+import { useLabelName } from "@app/data/labelDisplay";
 import {
   VersionTimeline,
   DetailField,
@@ -81,8 +82,10 @@ export function FileDetailsPanel({
   // Version journey is collapsed by default so the panel stays short.
   const [versionsOpen, setVersionsOpen] = useState(false);
   // Document classification read from PDF metadata, plus its (collapsed) section.
+  // Stored as label ids; resolve to display names via the seam.
   const [classification, setClassification] = useState<string[] | null>(null);
   const [classificationOpen, setClassificationOpen] = useState(false);
+  const labelName = useLabelName();
   // Version chain for the selected file; empty for v1 or multi-select.
   const [versionChain, setVersionChain] = useState<StirlingFileStub[]>([]);
   const singleFileForChain = files.length === 1 ? files[0] : null;
@@ -307,7 +310,7 @@ export function FileDetailsPanel({
                             variant="light"
                             color="orange"
                           >
-                            {label}
+                            {labelName(label)}
                           </Badge>
                         ))}
                       </span>

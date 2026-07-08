@@ -52,12 +52,13 @@ export interface StirlingFileStub extends BaseFileMetadata {
   isPinned?: boolean; // Protected from tool consumption (replace/remove)
   isDirty?: boolean; // Has unsaved changes (only for files with localFilePath)
   /**
-   * Cached classification labels (display names) — the source of truth the
-   * Files sidebar groups by (so it never re-reads PDF bytes). Written when the
-   * classify policy runs (SaaS) and CARRIED FORWARD onto every later version
-   * via the stub (see {@code createChildStub} + the CONSUME_FILES reducer), so
-   * a second policy or a tool edit keeps the file in its label groups instead
-   * of dropping to "Other". Undefined for unclassified files / non-SaaS builds.
+   * Cached classification label ids — the source of truth the Files sidebar
+   * groups by (so it never re-reads PDF bytes); resolve to display names via the
+   * label-display seam. Written when the classify policy runs (SaaS) and CARRIED
+   * FORWARD onto every later version via the stub (see {@code createChildStub} +
+   * the CONSUME_FILES reducer), so a second policy or a tool edit keeps the file
+   * in its label groups instead of dropping to "Other". Undefined for
+   * unclassified files / non-SaaS builds.
    */
   classificationLabels?: string[];
   // Note: File object stored in provider ref, not in state

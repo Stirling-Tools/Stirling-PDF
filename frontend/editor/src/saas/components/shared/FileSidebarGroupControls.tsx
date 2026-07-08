@@ -80,20 +80,23 @@ export function FileSidebarGroupControls({
     return counts;
   }, [byLabel, categories]);
 
-  // Display name + icon per label key, from the effective vocabulary (team ∪ personal).
+  // Translated display name + icon per label id, plus a name→id lookup for the
+  // add-label input (which matches on the visible/canonical text).
   const vocab = useMemo(() => {
-    const byKey = new Map<string, { display: string; icon?: string }>();
+    const byId = new Map<string, { display: string; icon?: string }>();
+    const idByName = new Map<string, string>();
     for (const label of labelSet) {
-      byKey.set(label.name.toLowerCase(), {
-        display: label.name,
-        icon: label.icon,
-      });
+      const display = t(`classification.labels.${label.id}`, label.name);
+      byId.set(label.id, { display, icon: label.icon });
+      idByName.set(display.toLowerCase(), label.id);
+      idByName.set(label.name.toLowerCase(), label.id);
     }
-    return byKey;
-  }, [labelSet]);
+    return { byId, idByName };
+  }, [labelSet, t]);
 
-  const labelDisplay = (key: string) => vocab.get(key)?.display ?? key;
-  const labelIcon = (key: string) => vocab.get(key)?.icon ?? DEFAULT_LABEL_ICON;
+  const labelDisplay = (id: string) => vocab.byId.get(id)?.display ?? id;
+  const labelIcon = (id: string) =>
+    vocab.byId.get(id)?.icon ?? DEFAULT_LABEL_ICON;
 
   const q = query.trim().toLowerCase();
   const matches = (text: string) => q === "" || text.toLowerCase().includes(q);
@@ -146,9 +149,9 @@ export function FileSidebarGroupControls({
   const addLabel = (categoryId: string) => {
     const name = (addDraft[categoryId] ?? "").trim();
     if (!name) return;
-    const known = vocab.get(name.toLowerCase());
-    if (!known) return;
-    addLabelToCategory(categoryId, known.display);
+    const labelId = vocab.idByName.get(name.toLowerCase());
+    if (!labelId) return;
+    addLabelToCategory(categoryId, labelId);
     setAddDraft((prev) => ({ ...prev, [categoryId]: "" }));
   };
 
@@ -215,9 +218,9 @@ export function FileSidebarGroupControls({
             // Show the category if its name matches, or any member label matches.
             if (!matches(category.name) && memberKeys.length === 0) return null;
             const isExpanded = q !== "" || expanded.has(category.id);
-            const suggestions = [...vocab.keys()]
-              .filter((key) => !category.labelKeys.includes(key))
-              .map((key) => labelDisplay(key));
+            const suggestions = [...vocab.byId.keys()]
+              .filter((id) => !category.labelKeys.includes(id))
+              .map((id) => labelDisplay(id));
             return (
               <section key={category.id} className="fsg-cat">
                 <div className="fsg-cat-header">

@@ -14,7 +14,10 @@ import {
   getSidebarCategories,
   subscribeSidebarCategories,
 } from "@app/services/fileSidebarCategories";
-import type { ClassificationLabel } from "@app/data/classificationLabels";
+import {
+  labelId,
+  type ClassificationLabel,
+} from "@app/data/classificationLabels";
 
 const MAX_TEXT_LENGTH = 128;
 
@@ -68,21 +71,19 @@ export function LabelsEditor({
     }
     setAddError(null);
     setPending("");
-    onChange([...value, { name }]);
+    onChange([...value, { id: labelId(name), name }]);
   };
 
-  const removeByKey = (key: string) =>
-    onChange(value.filter((label) => label.name.toLowerCase() !== key));
+  const removeById = (id: string) =>
+    onChange(value.filter((label) => label.id !== id));
 
-  const setIconByKey = (key: string, icon: string) =>
+  const setIconById = (id: string, icon: string) =>
     onChange(
-      value.map((label) =>
-        label.name.toLowerCase() === key ? { ...label, icon } : label,
-      ),
+      value.map((label) => (label.id === id ? { ...label, icon } : label)),
     );
 
   const renderChip = (label: ClassificationLabel) => {
-    const key = label.name.toLowerCase();
+    const key = label.id;
     return (
       <LabelChip
         key={key}
@@ -95,7 +96,7 @@ export function LabelsEditor({
           ) : (
             <LabelIconPicker
               value={label.icon}
-              onChange={(icon) => setIconByKey(key, icon)}
+              onChange={(icon) => setIconById(key, icon)}
               ariaLabel={t(
                 "policies.labels.iconAria",
                 "Choose an icon for {{name}}",
@@ -104,7 +105,7 @@ export function LabelsEditor({
             />
           )
         }
-        onRemove={readOnly ? undefined : () => removeByKey(key)}
+        onRemove={readOnly ? undefined : () => removeById(key)}
         removeAriaLabel={t("policies.labels.removeAria", "Remove {{name}}", {
           name: label.name,
         })}
@@ -178,18 +179,18 @@ function GroupedLabels({ value, renderChip }: GroupedLabelsProps) {
 
   // Category sections that actually contain labels from `value`, plus the leftovers.
   const { sections, ungrouped } = useMemo(() => {
-    const byKey = new Map(value.map((l) => [l.name.toLowerCase(), l]));
+    const byId = new Map(value.map((l) => [l.id, l]));
     const claimed = new Set<string>();
     const sections = categories
       .map((category) => {
         const members = category.labelKeys
-          .map((key) => byKey.get(key))
+          .map((id) => byId.get(id))
           .filter((l): l is ClassificationLabel => !!l);
-        members.forEach((m) => claimed.add(m.name.toLowerCase()));
+        members.forEach((m) => claimed.add(m.id));
         return { category, members };
       })
       .filter((s) => s.members.length > 0);
-    const ungrouped = value.filter((l) => !claimed.has(l.name.toLowerCase()));
+    const ungrouped = value.filter((l) => !claimed.has(l.id));
     return { sections, ungrouped };
   }, [value, categories]);
 

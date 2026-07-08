@@ -3,10 +3,10 @@
  * TS source of truth (src/proprietary/data/classificationLabels.ts).
  *
  * The Python engine can't import TypeScript, so it reads the generated JSON at
- * startup. Only the label NAMES are emitted — icons are presentational and the
- * classifier never sees them. Editing the .ts and regenerating keeps the two in
- * lockstep — the .ts is type-checked, so a malformed entry fails the build
- * rather than shipping.
+ * startup. Each entry emits its stable `id` and human `name` — the engine shows
+ * the model the names and returns the ids. Icons are presentational and never
+ * emitted. Editing the .ts and regenerating keeps the two in lockstep — the .ts
+ * is type-checked, so a malformed entry fails the build rather than shipping.
  *
  * Run: `npx tsx editor/scripts/generate-classification-labels.mts`         (writes the JSON)
  *      `npx tsx editor/scripts/generate-classification-labels.mts --check` (CI drift guard)
@@ -40,7 +40,7 @@ const NOTICE =
   "AUTO-GENERATED from frontend/editor/src/proprietary/data/classificationLabels.ts " +
   "by editor/scripts/generate-classification-labels.mts — do NOT edit by hand; run `task frontend:classifier-labels`.";
 const labels = DEFAULT_CLASSIFICATION_LABELS.map(
-  (label: { name: string }) => label.name,
+  (label: { id: string; name: string }) => ({ id: label.id, name: label.name }),
 );
 const json = JSON.stringify({ _generated: NOTICE, labels }, null, 2) + "\n";
 

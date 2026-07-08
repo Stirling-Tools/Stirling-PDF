@@ -101,7 +101,7 @@ export function ClassificationLabelsSection({
             </div>
             <div className="labels-chips">
               {teamLabels.slice(0, SUMMARY_CHIP_COUNT).map((label) => (
-                <Chip key={label.name} accent="neutral" size="sm">
+                <Chip key={label.id} accent="neutral" size="sm">
                   {label.name}
                 </Chip>
               ))}

@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -120,7 +119,7 @@ public class ClassifyLabelController {
             List<AiPageText> pages = extractWindow(document);
             String requestBody =
                     objectMapper.writeValueAsString(
-                            new ClassifyEngineRequest(fileName, pages, resolveAllowedLabelNames()));
+                            new ClassifyEngineRequest(fileName, pages, resolveAllowedLabels()));
 
             String userId = userService != null ? userService.getCurrentUsername() : null;
             String responseJson = aiEngineClient.post(CLASSIFY_ENDPOINT, requestBody, userId);
@@ -170,12 +169,12 @@ public class ClassifyLabelController {
     }
 
     /**
-     * The allowed label names for the caller's team, de-duplicated case-insensitively. Only the
-     * names go to the engine — icons are presentational. Returns {@code null} — falling back to the
-     * engine's built-in default vocabulary — when the policy subsystem is disabled (no store) or
-     * the team has no stored labels.
+     * The allowed labels for the caller's team as {@code {id, name}} pairs, de-duplicated by id.
+     * The engine shows the model the names and returns the ids (icons are presentational and never
+     * sent). Returns {@code null} — falling back to the engine's built-in default vocabulary — when
+     * the policy subsystem is disabled (no store) or the team has no stored labels.
      */
-    private List<String> resolveAllowedLabelNames() {
+    private List<EngineLabel> resolveAllowedLabels() {
         if (labelStore == null) {
             return null;
         }
@@ -184,25 +183,30 @@ public class ClassifyLabelController {
                         ? null
                         : policyManagementAuthority.currentUserTeamId();
 
-        Map<String, String> namesByLowerCase = new LinkedHashMap<>();
-        labelStore
-                .findByTeam(teamId)
-                .ifPresent(labels -> collectNames(labels.labels(), namesByLowerCase));
+        Map<String, EngineLabel> byId = new LinkedHashMap<>();
+        labelStore.findByTeam(teamId).ifPresent(labels -> collectLabels(labels.labels(), byId));
 
-        return namesByLowerCase.isEmpty() ? null : List.copyOf(namesByLowerCase.values());
+        return byId.isEmpty() ? null : List.copyOf(byId.values());
     }
 
-    private static void collectNames(List<ClassificationLabel> labels, Map<String, String> into) {
+    private static void collectLabels(
+            List<ClassificationLabel> labels, Map<String, EngineLabel> into) {
         for (ClassificationLabel label : labels) {
-            if (label.name() == null || label.name().isBlank()) {
+            if (label.id() == null
+                    || label.id().isBlank()
+                    || label.name() == null
+                    || label.name().isBlank()) {
                 continue;
             }
-            into.putIfAbsent(label.name().toLowerCase(Locale.ROOT), label.name());
+            into.putIfAbsent(label.id(), new EngineLabel(label.id(), label.name()));
         }
     }
+
+    /** One allowed label sent to the engine: stable id + the name the model reasons over. */
+    private record EngineLabel(String id, String name) {}
 
     /** Request body for the engine's {@code /api/v1/documents/classify} endpoint. */
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private record ClassifyEngineRequest(
-            String fileName, List<AiPageText> pages, List<String> labels) {}
+            String fileName, List<AiPageText> pages, List<EngineLabel> labels) {}
 }

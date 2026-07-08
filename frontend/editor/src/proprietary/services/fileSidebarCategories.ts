@@ -12,13 +12,15 @@ export interface SidebarCategory {
   id: string;
   name: string;
   icon: string;
-  /** Lower-cased label names in this category. */
+  /** Label ids in this category (matches a file's stored classification ids). */
   labelKeys: string[];
   /** Defined but not rendered as a sidebar group. */
   hidden?: boolean;
 }
 
-const STORAGE_KEY = "stirling.fileSidebarCategories.v1";
+// v2: labelKeys hold label ids (was lower-cased names in v1); bumping discards
+// stale name-keyed prefs so they don't silently stop matching.
+const STORAGE_KEY = "stirling.fileSidebarCategories.v2";
 
 /** The built-in default, derived from LABEL_FAMILIES. Fresh copy per call (callers may mutate). */
 export function defaultCategories(): SidebarCategory[] {
@@ -26,7 +28,7 @@ export function defaultCategories(): SidebarCategory[] {
     id: family.id,
     name: family.name,
     icon: family.icon,
-    labelKeys: family.labels.map((label) => label.name.toLowerCase()),
+    labelKeys: family.labels.map((label) => label.id),
   }));
 }
 
@@ -161,23 +163,21 @@ export function deleteCategory(id: string) {
   mutate((categories) => categories.filter((c) => c.id !== id));
 }
 
-export function addLabelToCategory(id: string, labelName: string) {
-  const key = labelName.toLowerCase();
+export function addLabelToCategory(id: string, labelId: string) {
   mutate((categories) =>
     categories.map((c) =>
-      c.id === id && !c.labelKeys.includes(key)
-        ? { ...c, labelKeys: [...c.labelKeys, key] }
+      c.id === id && !c.labelKeys.includes(labelId)
+        ? { ...c, labelKeys: [...c.labelKeys, labelId] }
         : c,
     ),
   );
 }
 
-export function removeLabelFromCategory(id: string, labelKey: string) {
-  const key = labelKey.toLowerCase();
+export function removeLabelFromCategory(id: string, labelId: string) {
   mutate((categories) =>
     categories.map((c) =>
       c.id === id
-        ? { ...c, labelKeys: c.labelKeys.filter((k) => k !== key) }
+        ? { ...c, labelKeys: c.labelKeys.filter((k) => k !== labelId) }
         : c,
     ),
   );

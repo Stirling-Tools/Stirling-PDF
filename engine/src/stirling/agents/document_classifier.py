@@ -12,6 +12,7 @@ from stirling.contracts import (
     ClassifyDocumentRequest,
     ClassifyDocumentResponse,
     DocumentClassificationResponse,
+    LabelOption,
     PageText,
 )
 from stirling.models import ApiModel
@@ -33,8 +34,10 @@ WINDOW_PAGES = 2
 # `task frontend:classifier-labels` — edit that file, not this JSON.
 _DEFAULT_LABELS_PATH = Path(__file__).with_name("default_classification_labels.generated.json")
 # The file carries an underscore-prefixed "_generated" notice (JSON has no
-# comments); only the "labels" key is data.
-DEFAULT_LABELS: list[str] = json.loads(_DEFAULT_LABELS_PATH.read_text(encoding="utf-8"))["labels"]
+# comments); only the "labels" key is data — each an {id, name} pair.
+DEFAULT_LABELS: list[LabelOption] = [
+    LabelOption.model_validate(item) for item in json.loads(_DEFAULT_LABELS_PATH.read_text(encoding="utf-8"))["labels"]
+]
 
 
 _SYSTEM_PROMPT = (
@@ -60,9 +63,11 @@ class _ClassifierOutput(ApiModel):
     )
 
 
-def render_labels(labels: list[str]) -> str:
-    """Render the allowed vocabulary for the prompt."""
-    return f"Allowed labels: {', '.join(labels) or '(none)'}"
+def render_labels(labels: list[LabelOption]) -> str:
+    """Render the allowed vocabulary for the prompt — the model reasons over the
+    human names (it never sees ids)."""
+    names = [label.name for label in labels]
+    return f"Allowed labels: {', '.join(names) or '(none)'}"
 
 
 def select_window(pages: list[PageText], window: int = WINDOW_PAGES) -> list[PageText]:
@@ -83,22 +88,23 @@ def format_window(pages: list[PageText]) -> str:
     return "\n\n".join(f"[Page {page.page_number}]\n{page.text}" for page in pages)
 
 
-def validate_labels(output: _ClassifierOutput, allowed: list[str]) -> DocumentClassificationResponse:
-    """Coerce a raw model answer onto the allowed vocabulary.
+def validate_labels(output: _ClassifierOutput, allowed: list[LabelOption]) -> DocumentClassificationResponse:
+    """Coerce a raw model answer (names) onto the allowed vocabulary, returning
+    label **ids**.
 
-    Answers are matched case-insensitively and returned in the vocabulary's
-    canonical casing; anything off-list is dropped, duplicates collapse to the
-    first occurrence, and the result is capped at ``MAX_ASSIGNED_LABELS`` in the
-    model's order. The model identifies; these rules decide what is allowed to
-    stand.
+    The model answers with names; they are matched case-insensitively to the
+    allowed vocabulary and returned as that label's id. Anything off-list is
+    dropped, duplicates collapse to the first occurrence, and the result is
+    capped at ``MAX_ASSIGNED_LABELS`` in the model's order. The model identifies;
+    these rules decide what is allowed to stand.
     """
-    canonical_by_lower = {label.lower(): label for label in allowed}
+    id_by_lower_name = {label.name.lower(): label.id for label in allowed}
 
     kept: list[str] = []
-    for label in output.labels:
-        canonical = canonical_by_lower.get(label.strip().lower())
-        if canonical is not None and canonical not in kept:
-            kept.append(canonical)
+    for name in output.labels:
+        label_id = id_by_lower_name.get(name.strip().lower())
+        if label_id is not None and label_id not in kept:
+            kept.append(label_id)
         if len(kept) == MAX_ASSIGNED_LABELS:
             break
 
@@ -134,7 +140,7 @@ class DocumentClassifierAgent:
         return validate_labels(result.output, allowed)
 
     @staticmethod
-    def _build_prompt(file_name: str, allowed: list[str], window: list[PageText]) -> str:
+    def _build_prompt(file_name: str, allowed: list[LabelOption], window: list[PageText]) -> str:
         return (
             f"{render_labels(allowed)}\n\n"
             f"Document file name: {file_name}\n"

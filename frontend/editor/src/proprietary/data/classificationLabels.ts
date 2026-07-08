@@ -1,10 +1,37 @@
-// Default classification labels — the type-safe source of truth. Edit THIS file, never the generated engine JSON (kept in sync by `task frontend:classifier-labels`, drift-guarded by `:check`). Labels are flat document-type descriptors (multi-label; no deep-content/PII types since the classifier only reads the first/last two pages) declared in FAMILIES — presentational sidebar roll-ups the classifier never sees. Seeded per team (admin-editable). `icon` is presentational only; the engine never sees it.
+// Default classification labels — the type-safe source of truth. Edit THIS file, never the generated engine JSON (kept in sync by `task frontend:classifier-labels`, drift-guarded by `:check`). Each label has a stable `id` (slug, the identity used on the wire, in storage and for sidebar prefs) and a human `name` (display, translatable via `classification.labels.<id>`). Labels are flat document-type descriptors (multi-label; no deep-content/PII types since the classifier only reads the first/last two pages) declared in FAMILIES — presentational sidebar roll-ups the classifier never sees. Seeded per team (admin-editable). `icon` is presentational only; the engine never sees it.
 
 export interface ClassificationLabel {
-  /** Display name AND identity (unique, case-insensitive). */
+  /** Stable identity (slug) — the value on the wire, stored on the doc, and
+   *  keyed on. Independent of the (translatable) display name. */
+  id: string;
+  /** Human display name; the en-US default for `classification.labels.<id>`. */
   name: string;
   /** Material Symbols icon key (see `labelIcons.ts`). */
   icon?: string;
+}
+
+/** A built-in label as authored below — the `id` is derived from the name. */
+interface RawLabel {
+  name: string;
+  icon?: string;
+}
+interface RawFamily {
+  id: string;
+  name: string;
+  icon: string;
+  labels: RawLabel[];
+}
+
+/**
+ * Stable slug id from a label's canonical (English) name. The id — not the
+ * name — is the identity everywhere (classifier, storage, sidebar prefs), so
+ * treat the built-in names as stable: renaming one changes its id.
+ */
+export function labelId(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 export interface LabelFamily {
@@ -18,7 +45,7 @@ export interface LabelFamily {
   labels: ClassificationLabel[];
 }
 
-export const LABEL_FAMILIES: LabelFamily[] = [
+const RAW_LABEL_FAMILIES: RawFamily[] = [
   {
     id: "finance",
     name: "Financial",
@@ -394,6 +421,28 @@ export const LABEL_FAMILIES: LabelFamily[] = [
     ],
   },
 ];
+
+/**
+ * Built-in families with a derived stable `id` on every label. Authored in
+ * RAW_LABEL_FAMILIES (id-free); the id is `labelId(name)`. Throws at module load
+ * if two labels collapse to the same id, so a clash can't ship silently.
+ */
+export const LABEL_FAMILIES: LabelFamily[] = (() => {
+  const seen = new Set<string>();
+  return RAW_LABEL_FAMILIES.map((family) => ({
+    ...family,
+    labels: family.labels.map((label) => {
+      const id = labelId(label.name);
+      if (seen.has(id)) {
+        throw new Error(
+          `Duplicate classification label id "${id}" (from "${label.name}")`,
+        );
+      }
+      seen.add(id);
+      return { id, name: label.name, icon: label.icon };
+    }),
+  }));
+})();
 
 /** Flat default label set — family order, as the classifier/team-seed sees it. */
 export const DEFAULT_CLASSIFICATION_LABELS: ClassificationLabel[] =

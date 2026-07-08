@@ -79,7 +79,7 @@ class ClassifyLabelControllerTest {
         when(pdfContentExtractor.extractPageTextRaw(document, 1))
                 .thenReturn("Invoice total due 100.00");
         when(aiEngineClient.post(eq("/api/v1/documents/classify"), anyString(), isNull()))
-                .thenReturn("{\"outcome\":\"classification\",\"labels\":[\"Invoice\"]}");
+                .thenReturn("{\"outcome\":\"classification\",\"labels\":[\"invoice\"]}");
 
         try {
             controller.classifyAndLabel(file);
@@ -105,33 +105,42 @@ class ClassifyLabelControllerTest {
 
         JsonNode written = objectMapper.readTree(value.getValue());
         assertThat(written.has("outcome")).isFalse();
-        assertThat(written.get("labels").get(0).asText()).isEqualTo("Invoice");
+        // The engine returns label ids; they're stored on the document verbatim.
+        assertThat(written.get("labels").get(0).asText()).isEqualTo("invoice");
     }
 
     @Test
-    void classifyAndLabel_sendsTeamLabelNames() throws Exception {
+    void classifyAndLabel_sendsTeamLabelIdsAndNames() throws Exception {
         when(policyManagementAuthority.currentUserTeamId()).thenReturn(TEAM);
         labelStore.save(
                 TEAM,
                 new ClassificationLabels(
                         List.of(
-                                new ClassificationLabel("Invoice", "receipt-long"),
-                                new ClassificationLabel("Contract", null),
-                                new ClassificationLabel("Timesheet", null))),
+                                new ClassificationLabel("invoice", "Invoice", "receipt-long"),
+                                new ClassificationLabel("contract", "Contract", null),
+                                new ClassificationLabel("timesheet", "Timesheet", null))),
                 "admin");
 
         stubSinglePageDocument();
 
         JsonNode request = sentEngineRequest();
         assertThat(request.get("fileName").asText()).isEqualTo("invoice.pdf");
-        assertThat(request.get("labels").isArray()).isTrue();
+        JsonNode labels = request.get("labels");
+        assertThat(labels.isArray()).isTrue();
+        assertThat(labels.size()).isEqualTo(3);
+        // Each entry is an {id, name} pair — the model reasons over names, we store ids.
         assertThat(
                         List.of(
-                                request.get("labels").get(0).asText(),
-                                request.get("labels").get(1).asText(),
-                                request.get("labels").get(2).asText()))
+                                labels.get(0).get("id").asText(),
+                                labels.get(1).get("id").asText(),
+                                labels.get(2).get("id").asText()))
+                .containsExactly("invoice", "contract", "timesheet");
+        assertThat(
+                        List.of(
+                                labels.get(0).get("name").asText(),
+                                labels.get(1).get("name").asText(),
+                                labels.get(2).get("name").asText()))
                 .containsExactly("Invoice", "Contract", "Timesheet");
-        assertThat(request.get("labels").size()).isEqualTo(3);
     }
 
     @Test

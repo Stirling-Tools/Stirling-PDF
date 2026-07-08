@@ -7,6 +7,15 @@ from stirling.models import ApiModel
 from .documents import PageText
 
 
+class LabelOption(ApiModel):
+    """One allowed label: a stable ``id`` (the identity) plus the human ``name``
+    the model actually reasons over. The model picks names; the engine maps its
+    answer back to ids, so the result is language- and rename-stable."""
+
+    id: str = Field(min_length=1)
+    name: str = Field(min_length=1)
+
+
 class ClassifyDocumentRequest(ApiModel):
     """Classify one document from its page text.
 
@@ -14,26 +23,26 @@ class ClassifyDocumentRequest(ApiModel):
     (first/last pages), since the classifier reads no more than that. There is no
     ingestion or RAG step.
 
-    ``labels`` is the allowed label-name vocabulary for this request (the caller
-    merges team and user labels before sending). When omitted — or sent as an
-    empty list — the engine falls back to its built-in default vocabulary (see
-    ``DEFAULT_LABELS``).
+    ``labels`` is the allowed vocabulary for this request (the caller merges team
+    labels before sending), each an ``{id, name}`` pair. When omitted — or sent
+    as an empty list — the engine falls back to its built-in default vocabulary
+    (see ``DEFAULT_LABELS``).
     """
 
     file_name: str = Field(min_length=1)
     pages: list[PageText] = Field(default_factory=list)
-    labels: list[str] | None = None
+    labels: list[LabelOption] | None = None
 
 
 class DocumentClassificationResponse(ApiModel):
     """Terminal classification result.
 
     ``labels`` is the subset of the allowed vocabulary the model assigned to the
-    document: at most five entries, deduplicated, in the vocabulary's canonical
-    casing. An empty list is a valid answer — nothing in the vocabulary fit.
-    This is a plain answer from a dedicated endpoint — it carries no ``outcome``
-    discriminator (it isn't one of the orchestrator's WorkflowOutcome-routed
-    union responses).
+    document, as label **ids**: at most five entries, deduplicated, in the
+    model's order. An empty list is a valid answer — nothing in the vocabulary
+    fit. This is a plain answer from a dedicated endpoint — it carries no
+    ``outcome`` discriminator (it isn't one of the orchestrator's
+    WorkflowOutcome-routed union responses).
     """
 
     labels: list[str] = Field(default_factory=list)

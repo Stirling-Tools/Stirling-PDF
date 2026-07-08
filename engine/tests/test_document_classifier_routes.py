@@ -27,7 +27,8 @@ class StubClassifierAgent:
 @pytest.fixture
 def classification_client() -> Iterator[TestClient]:
     app.dependency_overrides[get_document_classifier_agent] = lambda: StubClassifierAgent(
-        DocumentClassificationResponse(labels=["Non-disclosure agreement", "Contract"])
+        # The result is label ids (the model's name answers, mapped to ids).
+        DocumentClassificationResponse(labels=["nda", "contract"])
     )
     try:
         yield TestClient(app)
@@ -41,13 +42,20 @@ def test_classify_returns_assigned_labels(classification_client: TestClient) -> 
         json={"fileName": "nda.pdf", "pages": [{"pageNumber": 1, "text": "Mutual NDA between A and B."}]},
     )
     assert response.status_code == 200
-    assert response.json() == {"labels": ["Non-disclosure agreement", "Contract"]}
+    assert response.json() == {"labels": ["nda", "contract"]}
 
 
 def test_classify_accepts_allowed_labels_on_the_request(classification_client: TestClient) -> None:
     response = classification_client.post(
         "/api/v1/documents/classify",
-        json={"fileName": "nda.pdf", "pages": [], "labels": ["Contract", "Invoice"]},
+        json={
+            "fileName": "nda.pdf",
+            "pages": [],
+            "labels": [
+                {"id": "contract", "name": "Contract"},
+                {"id": "invoice", "name": "Invoice"},
+            ],
+        },
     )
     assert response.status_code == 200
 
