@@ -112,8 +112,8 @@ export function ProcurementAgreement({
 
       <div className="portal-proc__payment-actions">
         <Button
-          variant="gradient"
-          accent="purple"
+          variant="primary"
+          accent="premium"
           loading={busy}
           disabled={!checked}
           onClick={onAgree}

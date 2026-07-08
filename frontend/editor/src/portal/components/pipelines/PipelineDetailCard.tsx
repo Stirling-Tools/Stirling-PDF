@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, Chip } from "@app/ui";
+import { ActionIcon, Banner, Button, Chip } from "@app/ui";
 import { errorMessage } from "@portal/api/http";
 import {
   fetchRun,
@@ -116,14 +116,14 @@ export function PipelineDetailCard({
             })}
           </span>
         </div>
-        <button
+        <ActionIcon
           type="button"
           className="portal-pipelines__expanded-close"
           onClick={onClose}
           aria-label={t("portal.pipelines.detail.closeAriaLabel")}
         >
           ×
-        </button>
+        </ActionIcon>
       </header>
 
       <div className="portal-pipelines__detail">
@@ -138,7 +138,7 @@ export function PipelineDetailCard({
           ) : (
             <div className="portal-pipelines__chips">
               {pipeline.steps.map((step, i) => (
-                <Chip key={`${step}-${i}`} tone="blue" size="sm">
+                <Chip key={`${step}-${i}`} size="sm">
                   {`${i + 1}. ${humanizeOperation(step)}`}
                 </Chip>
               ))}
@@ -157,7 +157,7 @@ export function PipelineDetailCard({
           ) : (
             <div className="portal-pipelines__chips">
               {pipeline.sources.map((source) => (
-                <Chip key={source.id} tone="neutral" size="sm">
+                <Chip key={source.id} accent="neutral" size="sm">
                   {source.name}
                 </Chip>
               ))}
@@ -169,7 +169,7 @@ export function PipelineDetailCard({
           <span className="portal-pipelines__detail-heading">
             {t("portal.pipelines.detail.output")}
           </span>
-          <Chip tone="purple" size="sm">
+          <Chip accent="premium" size="sm">
             {t(`portal.pipelines.output.${pipeline.output}`, {
               defaultValue: pipeline.output,
             })}
@@ -186,14 +186,14 @@ export function PipelineDetailCard({
           {t("portal.pipelines.detail.run")}
         </Button>
         <Button
-          variant="outline"
+          variant="secondary"
           disabled={busy || running}
           onClick={() => onEdit(pipeline)}
         >
           {t("portal.pipelines.detail.edit")}
         </Button>
         <Button
-          variant="outline"
+          variant="secondary"
           disabled={busy || running}
           onClick={() => onTogglePause(pipeline)}
         >
@@ -202,8 +202,8 @@ export function PipelineDetailCard({
             : t("portal.pipelines.detail.pause")}
         </Button>
         <Button
-          accent="red"
-          variant="outline"
+          accent="danger"
+          variant="secondary"
           disabled={busy || running}
           onClick={() => onDelete(pipeline)}
         >

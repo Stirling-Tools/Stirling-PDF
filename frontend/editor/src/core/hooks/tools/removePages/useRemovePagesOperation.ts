@@ -1,8 +1,7 @@
 import { useTranslation } from "react-i18next";
 import {
-  ToolType,
   useToolOperation,
-  ToolOperationConfig,
+  defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
   objectToFormData,
@@ -42,15 +41,14 @@ export const buildRemovePagesFormData = (
 ): FormData =>
   objectToFormData(removePagesToApiParams(parameters), { fileInput: file });
 
-export const removePagesOperationConfig = {
-  toolType: ToolType.singleFile,
+export const removePagesOperationConfig = defineSingleFileTool({
   buildFormData: buildRemovePagesFormData,
   toApiParams: removePagesToApiParams,
   fromApiParams: removePagesFromApiParams,
   operationType: "removePages",
   endpoint: ENDPOINT,
   defaultParameters,
-} as const satisfies ToolOperationConfig<RemovePagesParameters>;
+});
 
 export const useRemovePagesOperation = () => {
   const { t } = useTranslation();

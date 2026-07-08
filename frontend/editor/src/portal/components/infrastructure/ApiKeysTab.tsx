@@ -24,10 +24,9 @@ export function ApiKeysTab() {
           sub={t("portal.infrastructure.apiKeys.subheading")}
         />
         <Button
-          variant="gradient"
           size="sm"
           onClick={() => setModalOpen(true)}
-          leadingIcon={<span aria-hidden>+</span>}
+          leftSection={<span aria-hidden>+</span>}
         >
           {t("portal.infrastructure.apiKeys.createKey")}
         </Button>

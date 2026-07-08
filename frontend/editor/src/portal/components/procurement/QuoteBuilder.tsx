@@ -290,14 +290,14 @@ export function QuoteBuilder({
         </span>
         <div className="portal-qb__foot-btns">
           {step > 0 && (
-            <Button variant="outline" onClick={() => setStep(step - 1)}>
+            <Button variant="secondary" onClick={() => setStep(step - 1)}>
               {t("portal.procurement.builder.back")}
             </Button>
           )}
           {step === 0 && (
             <Button
-              variant="gradient"
-              accent="purple"
+              variant="primary"
+              accent="premium"
               disabled={cfg.volume <= 0}
               onClick={() => setStep(1)}
             >
@@ -306,8 +306,8 @@ export function QuoteBuilder({
           )}
           {step === 1 && (
             <Button
-              variant="gradient"
-              accent="purple"
+              variant="primary"
+              accent="premium"
               onClick={() => setStep(2)}
             >
               {t("portal.procurement.builder.continue")}
@@ -315,8 +315,8 @@ export function QuoteBuilder({
           )}
           {step === 2 && (
             <Button
-              variant="gradient"
-              accent="purple"
+              variant="primary"
+              accent="premium"
               loading={busy}
               disabled={!eula}
               onClick={generate}

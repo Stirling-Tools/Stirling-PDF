@@ -73,17 +73,17 @@ export function QuoteMilestoneCard({
       </div>
       <div className="portal-proc__payment-actions">
         <Button
-          variant="gradient"
-          accent="purple"
+          variant="primary"
+          accent="premium"
           loading={busy}
           onClick={onAccept}
         >
           {t("portal.procurement.milestone.accept")}
         </Button>
-        <Button variant="outline" loading={downloading} onClick={onDownload}>
+        <Button variant="secondary" loading={downloading} onClick={onDownload}>
           {t("portal.procurement.milestone.download")}
         </Button>
-        <Button variant="ghost" onClick={onEdit}>
+        <Button variant="tertiary" onClick={onEdit}>
           {t("portal.procurement.milestone.edit")}
         </Button>
       </div>
@@ -116,8 +116,8 @@ export function PaymentStageCard({
         <div className="portal-proc__payment-actions">
           {invoiceUrl && (
             <Button
-              variant="gradient"
-              accent="purple"
+              variant="primary"
+              accent="premium"
               onClick={() => window.open(invoiceUrl, "_blank", "noopener")}
             >
               {t("portal.procurement.payment.viewInvoice")}
@@ -125,7 +125,7 @@ export function PaymentStageCard({
           )}
           {invoicePdf && (
             <Button
-              variant="outline"
+              variant="secondary"
               onClick={() => window.open(invoicePdf, "_blank", "noopener")}
             >
               {t("portal.procurement.payment.downloadInvoice")}
@@ -192,14 +192,14 @@ export function LicensePanel({
       </span>
       <code className="portal-proc__license-key">{licenseKey}</code>
       <div className="portal-proc__payment-actions">
-        <Button variant="outline" onClick={copyKey}>
+        <Button variant="secondary" onClick={copyKey}>
           {copied
             ? t("portal.procurement.license.copied")
             : t("portal.procurement.license.copy")}
         </Button>
         {offlineAvailable && (
           <Button
-            variant="ghost"
+            variant="tertiary"
             loading={downloadingLicense}
             onClick={onDownloadOffline}
           >

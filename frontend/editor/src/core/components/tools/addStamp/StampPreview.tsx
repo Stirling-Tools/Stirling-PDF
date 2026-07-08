@@ -11,6 +11,7 @@ import {
 } from "@app/components/tools/addStamp/StampPreviewUtils";
 import styles from "@app/components/tools/addStamp/StampPreview.module.css";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
+import { Button } from "@app/ui/Button";
 
 type Props = {
   parameters: AddStampParameters;
@@ -429,9 +430,9 @@ export default function StampPreview({
                 parameters.position === idx &&
                 (parameters.overrideX < 0 || parameters.overrideY < 0);
               return (
-                <button
+                <Button
+                  variant="tertiary"
                   key={idx}
-                  type="button"
                   className={`${styles.gridTile} ${selected || hoverTile === idx ? styles.gridTileSelected : ""} ${hoverTile === idx ? styles.gridTileHovered : ""}`}
                   onClick={() => {
                     // Clear overrides to use grid positioning and set position
@@ -443,7 +444,7 @@ export default function StampPreview({
                   onMouseLeave={() => setHoverTile(null)}
                 >
                   {idx}
-                </button>
+                </Button>
               );
             })}
           </div>

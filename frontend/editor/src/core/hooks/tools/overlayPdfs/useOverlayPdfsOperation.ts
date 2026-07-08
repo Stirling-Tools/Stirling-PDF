@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
-  ToolType,
   type ToolOperationConfig,
+  defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
   objectToFormData,
@@ -60,14 +60,13 @@ const buildFormData = (
   });
 
 export const overlayPdfsOperationConfig: ToolOperationConfig<OverlayPdfsParameters> =
-  {
-    toolType: ToolType.singleFile,
+  defineSingleFileTool({
     buildFormData,
     toApiParams: overlayPdfsToApiParams,
     fromApiParams: overlayPdfsFromApiParams,
     operationType: "overlayPdfs",
     endpoint: ENDPOINT,
-  };
+  });
 
 export const useOverlayPdfsOperation = () => {
   const { t } = useTranslation();
