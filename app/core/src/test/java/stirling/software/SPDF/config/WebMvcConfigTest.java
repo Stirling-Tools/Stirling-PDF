@@ -88,8 +88,8 @@ class WebMvcConfigTest {
     class AddResourceHandlers {
 
         @Test
-        @DisplayName("registers all five resource handler groups")
-        void registersFiveHandlerGroups() {
+        @DisplayName("registers all seven resource handler groups")
+        void registersSevenHandlerGroups() {
             ResourceHandlerRegistry registry = mock(ResourceHandlerRegistry.class);
             ResourceHandlerRegistration registration =
                     mock(ResourceHandlerRegistration.class, RETURNS_DEEP_STUBS);
@@ -97,8 +97,9 @@ class WebMvcConfigTest {
 
             config.addResourceHandlers(registry);
 
-            // SW/PWA, assets, media+fonts, branding, catch-all = 5 handler registrations.
-            verify(registry, times(5)).addResourceHandler(any(String[].class));
+            // SW/PWA, assets, media+fonts, branding, portal assets, portal shell,
+            // catch-all = 7 handler registrations.
+            verify(registry, times(7)).addResourceHandler(any(String[].class));
         }
 
         @Test
@@ -115,7 +116,8 @@ class WebMvcConfigTest {
             verify(registry, atLeastOnce()).addResourceHandler(captor.capture());
             List<String> allPatterns =
                     captor.getAllValues().stream().flatMap(java.util.Arrays::stream).toList();
-            assertThat(allPatterns).contains("/**", "/assets/**", "/sw.js");
+            assertThat(allPatterns)
+                    .contains("/**", "/assets/**", "/sw.js", "/portal/assets/**", "/portal/**");
         }
     }
 
