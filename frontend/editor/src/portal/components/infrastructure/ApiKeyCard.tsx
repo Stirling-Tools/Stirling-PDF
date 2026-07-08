@@ -1,6 +1,6 @@
 import { useState } from "react";
+import { Button, Card, Chip, StatusBadge } from "@app/ui";
 import { useTranslation } from "react-i18next";
-import { Card, Chip, StatusBadge } from "@app/ui";
 import type { ApiKey } from "@portal/api/infrastructure";
 import {
   KEY_LABEL,
@@ -13,8 +13,8 @@ export function ApiKeyCard({ apiKey }: { apiKey: ApiKey }) {
   const [open, setOpen] = useState(false);
   return (
     <Card padding="default" className="portal-infra__key">
-      <button
-        type="button"
+      <Button
+        variant="tertiary"
         className="portal-infra__key-head"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
@@ -34,7 +34,7 @@ export function ApiKeyCard({ apiKey }: { apiKey: ApiKey }) {
             ›
           </span>
         </span>
-      </button>
+      </Button>
 
       {open && (
         <div className="portal-infra__key-body">
@@ -71,7 +71,7 @@ export function ApiKeyCard({ apiKey }: { apiKey: ApiKey }) {
               <dt>{t("portal.infrastructure.apiKeys.card.permissions")}</dt>
               <dd className="portal-infra__chips">
                 {apiKey.permissions.map((p) => (
-                  <Chip key={p} tone="blue" size="sm">
+                  <Chip key={p} size="sm">
                     {p}
                   </Chip>
                 ))}
@@ -86,7 +86,7 @@ export function ApiKeyCard({ apiKey }: { apiKey: ApiKey }) {
                   </span>
                 ) : (
                   apiKey.allowedIps.map((ip) => (
-                    <Chip key={ip} tone="neutral" size="sm">
+                    <Chip key={ip} size="sm">
                       <span className="portal-infra__mono">{ip}</span>
                     </Chip>
                   ))

@@ -181,7 +181,7 @@ export function Usage() {
           </div>
           {wallet?.status === "subscribed" && (
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               loading={portal.opening}
               onClick={portal.open}

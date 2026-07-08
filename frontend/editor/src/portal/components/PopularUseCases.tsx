@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Card, type CardProps } from "@app/ui";
+import { Button, Card, type CardProps } from "@app/ui";
 import { useView } from "@portal/contexts/ViewContext";
 import "@portal/components/PopularUseCases.css";
 
@@ -11,12 +11,12 @@ interface UseCase {
   accent: Accent;
 }
 
-const ACCENT_COLOR: Record<Accent, string> = {
-  blue: "var(--color-blue)",
-  purple: "var(--color-purple)",
-  green: "var(--color-green)",
-  amber: "var(--color-amber)",
-  red: "var(--color-red)",
+const ACCENT_COLOR: Partial<Record<Accent, string>> = {
+  default: "var(--color-blue)",
+  premium: "var(--color-purple)",
+  success: "var(--color-green)",
+  warning: "var(--color-amber)",
+  danger: "var(--color-red)",
 };
 
 /**
@@ -26,10 +26,10 @@ const ACCENT_COLOR: Record<Accent, string> = {
  * copy (eyebrow, title, blurb, cta) is keyed into useCases.items.<key>.
  */
 const USE_CASES: UseCase[] = [
-  { key: "autoRouting", accent: "blue" },
-  { key: "piiRedaction", accent: "red" },
-  { key: "trainingData", accent: "purple" },
-  { key: "authenticity", accent: "green" },
+  { key: "autoRouting", accent: "default" },
+  { key: "piiRedaction", accent: "danger" },
+  { key: "trainingData", accent: "premium" },
+  { key: "authenticity", accent: "success" },
 ];
 
 export function PopularUseCases() {
@@ -42,13 +42,14 @@ export function PopularUseCases() {
     >
       <header className="portal-usecases__head">
         <h2 className="portal-usecases__title">{t("portal.useCases.title")}</h2>
-        <button
+        <Button
+          variant="quiet"
           type="button"
           className="portal-usecases__viewall"
           onClick={() => setActiveView("pipelines")}
         >
           {t("portal.useCases.viewAll")} <span aria-hidden>→</span>
-        </button>
+        </Button>
       </header>
       <div className="portal-usecases__grid">
         {USE_CASES.map((uc) => (
@@ -70,7 +71,8 @@ export function PopularUseCases() {
             <p className="portal-usecases__blurb">
               {t(`portal.useCases.items.${uc.key}.blurb`)}
             </p>
-            <button
+            <Button
+              variant="quiet"
               type="button"
               className="portal-usecases__cta"
               style={{ color: ACCENT_COLOR[uc.accent] }}
@@ -78,7 +80,7 @@ export function PopularUseCases() {
             >
               {t(`portal.useCases.items.${uc.key}.cta`)}{" "}
               <span aria-hidden>→</span>
-            </button>
+            </Button>
           </Card>
         ))}
       </div>

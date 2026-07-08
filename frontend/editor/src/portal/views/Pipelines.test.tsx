@@ -1,7 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render as baseRender,
+  screen,
+  waitFor,
+} from "@testing-library/react";
+import { MantineProvider } from "@mantine/core";
 import { MemoryRouter } from "react-router-dom";
 import { HttpError } from "@portal/api/http";
+
+const render = (
+  ui: Parameters<typeof baseRender>[0],
+  options?: Parameters<typeof baseRender>[1],
+) => baseRender(ui, { wrapper: MantineProvider, ...options });
 import type { PipelinesOverviewResponse, Policy } from "@portal/api/pipelines";
 import type { SourcesResponse } from "@portal/api/sources";
 import { Pipelines } from "@portal/views/Pipelines";

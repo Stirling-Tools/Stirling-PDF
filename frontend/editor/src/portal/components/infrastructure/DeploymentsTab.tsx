@@ -141,11 +141,11 @@ export function DeploymentsTab() {
       header: t("portal.infrastructure.deployments.deployColumns.environment"),
       render: (d) => (
         <Chip
-          tone={
+          accent={
             d.environment === "production"
-              ? "blue"
+              ? "default"
               : d.environment === "canary"
-                ? "purple"
+                ? "premium"
                 : "neutral"
           }
           size="sm"

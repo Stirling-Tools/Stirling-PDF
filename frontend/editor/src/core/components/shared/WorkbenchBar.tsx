@@ -5,7 +5,9 @@ import React, {
   useRef,
   useSyncExternalStore,
 } from "react";
-import { ActionIcon } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -40,8 +42,8 @@ import {
   WorkbenchBarRenderContext,
   WorkbenchBarSection,
 } from "@app/types/workbenchBar";
-import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import FolderIcon from "@mui/icons-material/Folder";
+import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
+import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import PrintIcon from "@mui/icons-material/Print";
 import "@app/components/shared/WorkbenchBar.css";
@@ -316,17 +318,16 @@ export default function WorkbenchBar({
 
       const ariaLabel =
         btn.ariaLabel ||
-        (typeof btn.tooltip === "string" ? (btn.tooltip as string) : undefined);
+        (typeof btn.tooltip === "string" ? (btn.tooltip as string) : btn.id);
       const buttonNode = (
         <ActionIcon
-          variant={isActive ? "filled" : "subtle"}
-          color={isActive ? "blue" : undefined}
-          radius="md"
+          variant={isActive ? "primary" : "quiet"}
           className="workbench-bar-action-icon"
           onClick={triggerAction}
           disabled={disabled}
           aria-label={ariaLabel}
           aria-pressed={isActive ? true : undefined}
+          hover={isActive ? true : false}
         >
           {btn.icon}
         </ActionIcon>
@@ -341,12 +342,12 @@ export default function WorkbenchBar({
     {
       value: "viewer",
       label: t("workbenchBar.viewer", "Viewer"),
-      icon: <InsertDriveFileIcon fontSize="small" />,
+      icon: <InsertDriveFileOutlinedIcon fontSize="small" />,
     },
     {
       value: "fileEditor",
       label: t("workbenchBar.activeFiles", "Active Files"),
-      icon: <FolderIcon fontSize="small" />,
+      icon: <FolderOutlinedIcon fontSize="small" />,
     },
     ...(selectedTool === "multiTool"
       ? [
@@ -368,7 +369,7 @@ export default function WorkbenchBar({
       .map((v) => ({
         value: v.workbenchId,
         label: v.label,
-        icon: v.icon ?? <InsertDriveFileIcon fontSize="small" />,
+        icon: v.icon ?? <InsertDriveFileOutlinedIcon fontSize="small" />,
       })),
   ];
 
@@ -415,8 +416,8 @@ export default function WorkbenchBar({
       <div className="workbench-bar-views" data-tour="view-switcher">
         {returnRoute && hasFiles && (
           <>
-            <button
-              type="button"
+            <Button
+              variant="tertiary"
               className="workbench-bar-view-btn workbench-bar-back-btn"
               onClick={handleBackToFiles}
               aria-label={t(
@@ -428,8 +429,8 @@ export default function WorkbenchBar({
                   : "Back to My Files",
                 { folder: returnRoute.label ?? "" },
               )}
+              leftSection={<ArrowBackIcon style={{ fontSize: "1.1rem" }} />}
             >
-              <ArrowBackIcon style={{ fontSize: "1.1rem" }} />
               <span className="workbench-bar-view-label">
                 {returnRoute.label
                   ? t("filesPage.backToFolder", "Back to {{folder}}", {
@@ -437,23 +438,28 @@ export default function WorkbenchBar({
                     })
                   : t("filesPage.backToMyFiles", "Back to My Files")}
               </span>
-            </button>
+            </Button>
             <div className="workbench-bar-divider" />
           </>
         )}
-        {(hasFiles || isCustomView) &&
-          viewOptions.map((opt) => (
-            <button
-              key={opt.value}
-              className={`workbench-bar-view-btn${currentView === opt.value ? " active" : ""}`}
-              onClick={() => setCurrentView(opt.value)}
-              aria-pressed={currentView === opt.value}
-              type="button"
-            >
-              {opt.icon}
-              <span className="workbench-bar-view-label">{opt.label}</span>
-            </button>
-          ))}
+        {(hasFiles || isCustomView) && (
+          <SegmentedControl<WorkbenchType>
+            className="workbench-bar-views"
+            size="sm"
+            value={currentView}
+            onChange={setCurrentView}
+            variant="secondary"
+            options={viewOptions.map((opt) => ({
+              value: opt.value,
+              label: (
+                <>
+                  {opt.icon}
+                  <span className="workbench-bar-view-label">{opt.label}</span>
+                </>
+              ),
+            }))}
+          />
+        )}
       </div>
 
       {/* Tool buttons - second row, only rendered when buttons exist */}
@@ -493,8 +499,8 @@ export default function WorkbenchBar({
         {currentView === "viewer" &&
           renderWithTooltip(
             <ActionIcon
-              variant="subtle"
-              radius="md"
+              variant="tertiary"
+              hover={false}
               className="workbench-bar-action-icon"
               onClick={handlePrint}
               disabled={
@@ -511,13 +517,14 @@ export default function WorkbenchBar({
         {!isCustomView &&
           renderWithTooltip(
             <ActionIcon
-              variant="subtle"
-              radius="md"
+              variant="tertiary"
+              hover={false}
               className="workbench-bar-action-icon"
               onClick={() => handleExportAll()}
               disabled={
                 disableForFullscreen || totalItems === 0 || allButtonsDisabled
               }
+              aria-label={downloadTooltip}
             >
               <LocalIcon
                 icon={icons.downloadIconName}
@@ -533,13 +540,14 @@ export default function WorkbenchBar({
           icons.saveAsIconName &&
           renderWithTooltip(
             <ActionIcon
-              variant="subtle"
-              radius="md"
+              variant="tertiary"
+              hover={false}
               className="workbench-bar-action-icon"
               onClick={() => handleExportAll(true)}
               disabled={
                 disableForFullscreen || totalItems === 0 || allButtonsDisabled
               }
+              aria-label={t("workbenchBar.saveAs", "Save As")}
             >
               <LocalIcon
                 icon={icons.saveAsIconName}
@@ -559,8 +567,8 @@ export default function WorkbenchBar({
         {!isCustomView &&
           renderWithTooltip(
             <ActionIcon
-              variant="subtle"
-              radius="md"
+              variant="tertiary"
+              hover={false}
               className="workbench-bar-action-icon"
               onClick={handleClose}
               disabled={

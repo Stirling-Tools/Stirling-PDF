@@ -106,7 +106,7 @@ export function LinkAccountModal({
           </Banner>
           {import.meta.env.DEV && (
             <Button
-              variant="outline"
+              variant="secondary"
               onClick={async () => {
                 await onLinked({ access_token: "dev-stub-jwt" });
                 onClose();

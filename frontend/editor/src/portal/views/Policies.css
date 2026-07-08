@@ -36,6 +36,31 @@
   gap: 0.375rem;
 }
 
+/* Category row — locked (coming soon) */
+.portal-policies__row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  min-height: 2.25rem;
+}
+
+.portal-policies__row-name {
+  flex: 1;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text-3);
+}
+
+/* "Set up" underline link inside the active-row button's rightSection */
+.portal-policies__setup-link {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-blue);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 /* Category card — horizontal table row */
 .portal-policies__card {
   display: flex;
@@ -107,6 +132,55 @@
   font-size: 0.9375rem;
   font-weight: 600;
   color: var(--color-text-1);
+}
+
+.portal-policies__card-blurb {
+  font-size: 0.75rem;
+  color: var(--color-text-4);
+  line-height: 1.4;
+}
+
+.portal-policies__card-summary {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-text-2);
+}
+
+.portal-policies__card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: auto;
+  flex-wrap: wrap;
+}
+
+.portal-policies__card-rules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.portal-policies__card-cta {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-blue);
+}
+
+.portal-policies__chevron-right {
+  transform: rotate(-90deg);
+  display: block;
+}
+
+/* Configured-card stat footer */
+.portal-policies__card-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border-light);
 }
 
 /* Wizard + detail shared chrome */
