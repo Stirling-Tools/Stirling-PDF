@@ -1358,10 +1358,12 @@
   color: var(--color-text-5);
 }
 
-/* Calendly scheduler embed (Schedule a call). */
+/* Calendly scheduler embed (Schedule a call). The widget is always light (Calendly renders inputs on
+   white), so give it a white surface — it reads as a clean card even inside the dark-mode modal. */
 .portal-calendly {
   border-radius: 10px;
   overflow: hidden;
+  background: #ffffff;
 }
 
 /* ── Agreement (security) step ────────────────────────────────────────────── */
