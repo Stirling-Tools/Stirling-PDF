@@ -100,6 +100,20 @@ export function EditorStatusCard({ footer, hideChips }: EditorStatusCardProps) {
   }, [data, t]);
 
   const ready = !loading && !!view;
+  // The editor-deployment endpoint isn't implemented on every backend yet.
+  // When it's unavailable (finished loading with no data — e.g. a 404), skip
+  // the status row entirely and fall back to just the footer (the setup
+  // checklist, which reads supported endpoints). It lights up automatically
+  // once the backend serves /v1/editor/deployment.
+  const unavailable = !loading && !view;
+
+  if (unavailable) {
+    return footer ? (
+      <section className="portal-editor-hero portal-editor-hero--footer-only">
+        {footer}
+      </section>
+    ) : null;
+  }
 
   return (
     <section

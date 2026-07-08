@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { http, HttpResponse } from "msw";
 import { EditorStatusCard } from "@portal/components/EditorStatusCard";
 import { SetupChecklist } from "@portal/components/SetupChecklist";
 
@@ -25,5 +26,25 @@ export const Default: Story = {};
 export const WithSetupChecklist: Story = {
   args: {
     footer: <SetupChecklist />,
+  },
+};
+
+/**
+ * Backend without the editor-deployment endpoint (404): the status row is
+ * skipped and the card falls back to just the footer (setup checklist). It
+ * lights up automatically once /v1/editor/deployment is served.
+ */
+export const DeploymentUnavailable: Story = {
+  args: {
+    footer: <SetupChecklist />,
+  },
+  parameters: {
+    msw: {
+      handlers: [
+        http.get("/v1/editor/deployment", () =>
+          HttpResponse.json({ message: "not found" }, { status: 404 }),
+        ),
+      ],
+    },
   },
 };
