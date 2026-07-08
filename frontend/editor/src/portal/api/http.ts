@@ -40,14 +40,17 @@
  * admin and uses the Supabase JWT for SaaS reads. Don't add it here.
  */
 import { clearStoredToken, getStoredToken } from "@app/auth";
-import { getSupabaseClient } from "@app/auth/supabase/supabaseClient";
-import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
+import { getPortalSaasToken } from "@portal/auth/portalSaasSession";
+import { saasApiBase } from "@portal/api/saasApiBase";
 
-/** Read the SaaS base URL at call time so tests can stub it via vi.stubEnv. */
+/**
+ * SaaS base URL via the flavor seam: self-hosted reads VITE_SAAS_API_URL (a
+ * separate cloud backend); the SaaS build reuses the editor's single
+ * VITE_API_BASE_URL (in SaaS everything is the SaaS backend). {@code null} means
+ * not configured — a self-hosted-only state; the SaaS seam never returns null.
+ */
 function saasBaseUrl(): string | null {
-  const raw = import.meta.env.VITE_SAAS_API_URL;
-  if (!raw) return null;
-  return raw.replace(/\/+$/, "");
+  return saasApiBase();
 }
 
 export interface HttpRequestOptions {
@@ -169,21 +172,14 @@ async function localJson<T>(
 // saas — hosted SaaS Java, admin's Supabase JWT
 // ────────────────────────────────────────────────────────────────────────────
 
-async function getSaasAccessToken(): Promise<string | null> {
-  ensureSaasSupabase();
-  const supabase = getSupabaseClient();
-  if (!supabase) return null;
-  const { data } = await supabase.auth.getSession();
-  return data.session?.access_token ?? null;
-}
-
 async function saasJson<T>(
   path: string,
   options: HttpRequestOptions = {},
 ): Promise<T> {
   const base = saasBaseUrl();
-  if (!base) throw new SaasUnconfiguredError();
-  const token = await getSaasAccessToken();
+  // null = unset (self-hosted, no VITE_SAAS_API_URL). "" is same-origin (SaaS) — valid.
+  if (base === null) throw new SaasUnconfiguredError();
+  const token = await getPortalSaasToken();
   if (!token) throw new SaasNotLinkedError();
   const res = await fetch(`${base}${path}`, {
     method: options.method ?? "GET",
@@ -207,8 +203,9 @@ async function saasText(
   options: HttpRequestOptions = {},
 ): Promise<string> {
   const base = saasBaseUrl();
-  if (!base) throw new SaasUnconfiguredError();
-  const token = await getSaasAccessToken();
+  // null = unset (self-hosted, no VITE_SAAS_API_URL). "" is same-origin (SaaS) — valid.
+  if (base === null) throw new SaasUnconfiguredError();
+  const token = await getPortalSaasToken();
   if (!token) throw new SaasNotLinkedError();
   const res = await fetch(`${base}${path}`, {
     method: options.method ?? "GET",
@@ -238,7 +235,7 @@ export const apiClient = {
   saas: {
     json: saasJson,
     text: saasText,
-    /** True when VITE_SAAS_API_URL is set. Doesn't check session liveness. */
-    isConfigured: (): boolean => Boolean(saasBaseUrl()),
+    /** True when a SaaS base URL is resolvable. Doesn't check session liveness. */
+    isConfigured: (): boolean => saasBaseUrl() !== null,
   },
 } as const;

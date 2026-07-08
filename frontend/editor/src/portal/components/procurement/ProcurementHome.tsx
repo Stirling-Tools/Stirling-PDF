@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, Card, EmptyState, Skeleton } from "@app/ui";
-import { useLink } from "@portal/contexts/LinkContext";
+import { usePortalLinked } from "@portal/contexts/usePortalLinked";
 import { useUI } from "@portal/contexts/UIContext";
 import { useView } from "@portal/contexts/ViewContext";
 import { useAsync } from "@portal/hooks/useAsync";
@@ -48,7 +48,7 @@ import "@portal/views/Procurement.css";
  */
 export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
   const { t } = useTranslation();
-  const { isLinked } = useLink();
+  const isLinked = usePortalLinked();
   const { openLinkModal } = useUI();
   const { setActiveView } = useView();
 
