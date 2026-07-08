@@ -22,7 +22,7 @@ import { test, expect, type Page } from "@playwright/test";
 import path from "path";
 import { mockAppApis } from "@app/tests/helpers/api-stubs";
 
-const FIXTURES_DIR = path.join(__dirname, "../test-fixtures");
+const FIXTURES_DIR = path.join(import.meta.dirname, "../test-fixtures");
 const PDF_A = path.join(FIXTURES_DIR, "compare_sample_a.pdf");
 const PDF_B = path.join(FIXTURES_DIR, "compare_sample_b.pdf");
 

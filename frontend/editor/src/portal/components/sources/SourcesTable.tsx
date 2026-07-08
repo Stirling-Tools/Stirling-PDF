@@ -40,14 +40,14 @@ export function SourcesTable({
           return (
             <div className="portal-sources__name-cell">
               <span
-                className={`portal-sources__type-dot portal-sources__type-dot--${meta.tone}`}
+                className={`portal-sources__type-dot portal-sources__type-dot--${meta.accent}`}
                 aria-hidden
               >
                 {meta.icon}
               </span>
               <div className="portal-sources__name-text">
                 <strong>{s.name}</strong>
-                <Chip tone={meta.tone} size="sm">
+                <Chip accent={meta.accent} size="sm">
                   {t(meta.labelKey)}
                 </Chip>
               </div>

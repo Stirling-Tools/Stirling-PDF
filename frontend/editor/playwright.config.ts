@@ -34,7 +34,18 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : "50%",
-  reporter: [["html", { open: "never" }], ["list"]],
+  // In CI, add a JSON report alongside the HTML/list output so the workflow
+  // can flag flaky tests (passed only on retry) as warnings without failing
+  // the job. Path is pinned via PLAYWRIGHT_JSON_OUTPUT_FILE in the workflow;
+  // the outputFile here is just a sane default. Omitted locally to keep dev
+  // runs' terminal output clean.
+  reporter: process.env.CI
+    ? [
+        ["html", { open: "never" }],
+        ["list"],
+        ["json", { outputFile: "playwright-report/results.json" }],
+      ]
+    : [["html", { open: "never" }], ["list"]],
   timeout: 60_000,
   expect: { timeout: 10_000 },
 

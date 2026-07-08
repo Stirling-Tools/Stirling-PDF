@@ -3,16 +3,15 @@ import {
   Box,
   ScrollArea,
   Text,
-  ActionIcon,
   Loader,
   Stack,
   TextInput,
   NumberInput,
-  Button,
   Group,
-  UnstyledButton,
 } from "@mantine/core";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useFileContext } from "@app/contexts/FileContext";
@@ -20,6 +19,7 @@ import { isStirlingFile, type FileId } from "@app/types/fileContext";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import apiClient from "@app/services/apiClient";
 import { PdfBookmarkObject, PdfActionType } from "@embedpdf/models";
+import { useTranslation } from "react-i18next";
 import BookmarksIcon from "@mui/icons-material/BookmarksRounded";
 import "@app/components/viewer/SidebarBase.css";
 import "@app/components/viewer/BookmarkSidebar.css";
@@ -93,6 +93,7 @@ export const BookmarkSidebar = ({
     getScrollState,
     toggleBookmarkSidebar,
   } = useViewer();
+  const { t } = useTranslation();
   const { handleToolSelectForced } = useToolWorkflow();
   const { selectors, actions: fileActions } = useFileContext();
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -475,6 +476,34 @@ export const BookmarkSidebar = ({
     }));
   };
 
+  const expandAll = useCallback(() => {
+    const allExpanded: Record<string, boolean> = {};
+    const expandRecursive = (nodes: BookmarkNode[]) => {
+      nodes.forEach((node) => {
+        if (node.children && node.children.length > 0) {
+          allExpanded[node.id] = true;
+          expandRecursive(node.children as BookmarkNode[]);
+        }
+      });
+    };
+    expandRecursive(bookmarksWithIds);
+    setExpanded(allExpanded);
+  }, [bookmarksWithIds]);
+
+  const collapseAll = useCallback(() => {
+    const allCollapsed: Record<string, boolean> = {};
+    const collapseRecursive = (nodes: BookmarkNode[]) => {
+      nodes.forEach((node) => {
+        if (node.children && node.children.length > 0) {
+          allCollapsed[node.id] = false;
+          collapseRecursive(node.children as BookmarkNode[]);
+        }
+      });
+    };
+    collapseRecursive(bookmarksWithIds);
+    setExpanded(allCollapsed);
+  }, [bookmarksWithIds]);
+
   const handleBookmarkClick = (
     bookmark: PdfBookmarkObject,
     event: React.MouseEvent,
@@ -569,9 +598,10 @@ export const BookmarkSidebar = ({
           >
             {hasChildren ? (
               <ActionIcon
-                variant="subtle"
+                variant="tertiary"
                 size="sm"
                 className="bookmark-item__expand-icon"
+                aria-label={isNodeExpanded ? "Collapse" : "Expand"}
                 onClick={(event) => {
                   event.stopPropagation();
                   toggleNode(node.id);
@@ -654,12 +684,54 @@ export const BookmarkSidebar = ({
           </Text>
         </div>
         <Box style={{ display: "flex", alignItems: "center", gap: 2 }}>
+          {bookmarkSupport && bookmarksWithIds.length > 0 && (
+            <>
+              {Object.values(expanded).some((val) => val === false) ? (
+                <ActionIcon
+                  variant="tertiary"
+                  size="sm"
+                  onClick={expandAll}
+                  aria-label={t(
+                    "viewer.bookmarks.expandAll",
+                    "Expand all bookmarks",
+                  )}
+                  title="Expand all"
+                >
+                  <LocalIcon
+                    icon="unfold-more"
+                    width="1.1rem"
+                    height="1.1rem"
+                  />
+                </ActionIcon>
+              ) : (
+                <ActionIcon
+                  variant="tertiary"
+                  size="sm"
+                  onClick={collapseAll}
+                  aria-label={t(
+                    "viewer.bookmarks.collapseAll",
+                    "Collapse all bookmarks",
+                  )}
+                  title="Collapse all"
+                >
+                  <LocalIcon
+                    icon="unfold-less"
+                    width="1.1rem"
+                    height="1.1rem"
+                  />
+                </ActionIcon>
+              )}
+            </>
+          )}
           <ActionIcon
-            variant="subtle"
+            variant="tertiary"
+            accent="neutral"
             size="sm"
-            color="gray"
             onClick={toggleBookmarkSidebar}
-            aria-label="Close bookmarks sidebar"
+            aria-label={t(
+              "viewer.bookmarks.closeSidebar",
+              "Close bookmarks sidebar",
+            )}
             title="Close bookmarks"
           >
             <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
@@ -706,7 +778,7 @@ export const BookmarkSidebar = ({
               <Text size="sm" c="red" ta="center">
                 {currentError}
               </Text>
-              <Button size="xs" variant="light" onClick={requestReload}>
+              <Button variant="secondary" size="sm" onClick={requestReload}>
                 Retry
               </Button>
             </Stack>
@@ -726,7 +798,6 @@ export const BookmarkSidebar = ({
               </Text>
             </Stack>
           )}
-
           {showEmptyState && !isAddingBookmark && (
             <Stack align="center" gap="sm" py="lg">
               <LocalIcon
@@ -739,8 +810,8 @@ export const BookmarkSidebar = ({
                 No bookmarks in this document
               </Text>
               <Button
-                variant="light"
-                size="xs"
+                variant="tertiary"
+                size="sm"
                 onClick={handleOpenAddBookmark}
                 leftSection={
                   <LocalIcon icon="add" width="1rem" height="1rem" />
@@ -769,7 +840,10 @@ export const BookmarkSidebar = ({
                 <TextInput
                   size="xs"
                   placeholder="Bookmark title"
-                  aria-label="Bookmark title"
+                  aria-label={t(
+                    "viewer.bookmarks.bookmarkTitle",
+                    "Bookmark title",
+                  )}
                   value={newBookmarkTitle}
                   onChange={(e) => setNewBookmarkTitle(e.currentTarget.value)}
                   autoFocus
@@ -793,16 +867,16 @@ export const BookmarkSidebar = ({
                 )}
                 <Group justify="flex-end" gap="xs">
                   <Button
-                    size="xs"
-                    variant="default"
+                    size="sm"
+                    variant="secondary"
                     onClick={handleCancelAddBookmark}
                     disabled={isSavingBookmark}
                   >
                     Cancel
                   </Button>
                   <Button
-                    size="xs"
-                    color="blue"
+                    size="sm"
+                    variant="primary"
                     onClick={handleSubmitAddBookmark}
                     loading={isSavingBookmark}
                     disabled={!newBookmarkTitle.trim()}
@@ -813,25 +887,19 @@ export const BookmarkSidebar = ({
               </Stack>
             </Box>
           )}
-
           {showBookmarkList && (
             <>
               {!isAddingBookmark && (
                 <Button
-                  variant="subtle"
-                  size="compact-xs"
+                  variant="tertiary"
+                  size="sm"
                   fullWidth
+                  justify="start"
                   onClick={handleOpenAddBookmark}
                   leftSection={
                     <LocalIcon icon="add" width="0.9rem" height="0.9rem" />
                   }
-                  mb="xs"
-                  styles={{
-                    root: {
-                      justifyContent: "flex-start",
-                      paddingInline: 6,
-                    },
-                  }}
+                  style={{ marginBottom: "var(--space-xs)" }}
                 >
                   Add bookmark
                 </Button>
@@ -862,9 +930,12 @@ export const BookmarkSidebar = ({
             flexShrink: 0,
           }}
         >
-          <UnstyledButton
+          <Button
+            variant="tertiary"
+            hover={false}
             type="button"
             onClick={handleFallbackToTool}
+            fullWidth
             style={{ width: "100%" }}
           >
             <Group gap="xs" justify="center" wrap="nowrap">
@@ -883,7 +954,7 @@ export const BookmarkSidebar = ({
                 Need to reorder or nest? Open the Bookmark Editor
               </Text>
             </Group>
-          </UnstyledButton>
+          </Button>
         </Box>
       )}
     </Box>

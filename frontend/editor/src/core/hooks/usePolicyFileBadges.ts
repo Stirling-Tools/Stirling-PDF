@@ -1,4 +1,4 @@
-import type { FileItemPolicyRef } from "@app/components/shared/FileSidebarFileItem";
+import type { FileItemPolicyRef } from "@app/components/shared/PolicyBadges";
 
 /**
  * Policies that have run on each file, keyed by fileId — drives the shield

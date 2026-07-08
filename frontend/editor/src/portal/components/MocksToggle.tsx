@@ -6,6 +6,7 @@ import {
   writeMocksPreference,
 } from "@portal/mocks/preference";
 import "@portal/components/MocksToggle.css";
+import { Button } from "@app/ui/Button";
 
 /**
  * Dev-only header chip that flips MSW interception on and off. Persists the
@@ -32,8 +33,8 @@ export function MocksToggle() {
   }
 
   return (
-    <button
-      type="button"
+    <Button
+      variant="tertiary"
       className={
         "portal-mocks-toggle" +
         (enabled ? " is-on" : " is-off") +
@@ -49,6 +50,6 @@ export function MocksToggle() {
       <span className="portal-mocks-toggle__label">
         {enabled ? t("portal.mocks.label.on") : t("portal.mocks.label.off")}
       </span>
-    </button>
+    </Button>
   );
 }

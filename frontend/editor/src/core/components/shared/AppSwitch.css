@@ -1,0 +1,27 @@
+/* Trigger: bare square icon button that blends into either sidebar's header. */
+.app-switch-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-4);
+  transition:
+    background var(--motion-fast),
+    color var(--motion-fast);
+}
+
+.app-switch-btn:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-2);
+}
+
+.app-switch-icon {
+  width: 1rem;
+  height: 1.0625rem;
+  display: block;
+}

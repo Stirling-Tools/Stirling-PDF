@@ -1,5 +1,12 @@
-import { buildChangeMetadataFormData } from "@app/hooks/tools/changeMetadata/useChangeMetadataOperation";
-import { ChangeMetadataParameters } from "@app/hooks/tools/changeMetadata/useChangeMetadataParameters";
+import {
+  buildChangeMetadataFormData,
+  changeMetadataToApiParams,
+  changeMetadataFromApiParams,
+} from "@app/hooks/tools/changeMetadata/useChangeMetadataOperation";
+import {
+  ChangeMetadataParameters,
+  defaultParameters,
+} from "@app/hooks/tools/changeMetadata/useChangeMetadataParameters";
 import { TrappedStatus } from "@app/types/metadata";
 import { describe, expect, test } from "vitest";
 
@@ -140,5 +147,80 @@ describe("buildChangeMetadataFormData", () => {
 
     expect(formData.get("allRequestParams[customKey1]")).toBe("Department");
     expect(formData.get("allRequestParams[customValue1]")).toBe("Engineering");
+  });
+});
+
+describe("changeMetadata mappers", () => {
+  const fullApi: Parameters<typeof changeMetadataFromApiParams>[0] = {
+    title: "Title",
+    author: "Author",
+    subject: "Subject",
+    keywords: "a, b",
+    creator: "Creator",
+    producer: "Producer",
+    creationDate: "2024/01/15 10:30:00",
+    modificationDate: "2024/02/20 14:05:09",
+    trapped: "True",
+    deleteAll: false,
+    allRequestParams: {
+      customKey1: "Department",
+      customValue1: "Engineering",
+      customKey2: "Project",
+      customValue2: "Falcon",
+    },
+  };
+
+  test("round-trips a full request through fromApiParams and back", () => {
+    const roundTripped = changeMetadataToApiParams({
+      ...defaultParameters,
+      ...changeMetadataFromApiParams(fullApi),
+    });
+
+    expect(roundTripped).toEqual(fullApi);
+  });
+
+  test("reconstructs dates in local time and clears absent ones", () => {
+    const params = changeMetadataFromApiParams(fullApi);
+    expect(params.creationDate).toEqual(new Date(2024, 0, 15, 10, 30, 0));
+    expect(params.modificationDate).toEqual(new Date(2024, 1, 20, 14, 5, 9));
+
+    const cleared = changeMetadataFromApiParams({
+      creationDate: "",
+      modificationDate: undefined,
+    });
+    expect(cleared.creationDate).toBeNull();
+    expect(cleared.modificationDate).toBeNull();
+  });
+
+  test.each([TrappedStatus.TRUE, TrappedStatus.FALSE, TrappedStatus.UNKNOWN])(
+    "round-trips trapped=%s",
+    (trapped) => {
+      const api = changeMetadataToApiParams({ ...defaultParameters, trapped });
+      expect(api.trapped).toBe(trapped);
+      expect(changeMetadataFromApiParams(api).trapped).toBe(trapped);
+    },
+  );
+
+  test("falls back to the default for an unrecognised trapped value", () => {
+    const params = changeMetadataFromApiParams({
+      trapped: "Bogus",
+    } as unknown as Parameters<typeof changeMetadataFromApiParams>[0]);
+    expect(params.trapped).toBe(defaultParameters.trapped);
+  });
+
+  test("reconstructs custom metadata, tolerating non-contiguous indices", () => {
+    const params = changeMetadataFromApiParams({
+      allRequestParams: {
+        customKey1: "Department",
+        customValue1: "Engineering",
+        customKey3: "Project",
+        customValue3: "Falcon",
+      },
+    });
+
+    expect(params.customMetadata).toEqual([
+      { key: "Department", value: "Engineering", id: "custom1" },
+      { key: "Project", value: "Falcon", id: "custom3" },
+    ]);
   });
 });

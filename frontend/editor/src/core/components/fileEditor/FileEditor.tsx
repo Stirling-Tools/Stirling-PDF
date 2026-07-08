@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { flushSync } from "react-dom";
 import { Center, Box, LoadingOverlay } from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
@@ -19,6 +19,10 @@ import { FileId, StirlingFile } from "@app/types/fileContext";
 import { alert } from "@app/components/toast";
 import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
+import type { FileItemPolicyRef } from "@app/components/shared/PolicyBadges";
+
+const EMPTY_POLICIES: FileItemPolicyRef[] = [];
 
 interface FileEditorProps {
   onOpenPageEditor?: () => void;
@@ -31,6 +35,8 @@ const FileEditor = ({
   toolMode = false,
   supportedExtensions = ["pdf"],
 }: FileEditorProps) => {
+  const policyFileBadges = usePolicyFileBadges();
+
   // Utility function to check if a file extension is supported
   const isFileSupported = useCallback(
     (fileName: string): boolean => {
@@ -51,6 +57,14 @@ const FileEditor = ({
     () => selectors.getStirlingFileStubs(),
     [state.files.byId, state.files.ids],
   );
+
+  // Always-current refs so callbacks can read the latest stubs/selection without
+  // closing over them as deps — prevents every callback from regenerating whenever
+  // any stub changes (e.g. thumbnail load), which would bust React.memo on every thumbnail.
+  const stubsRef = useRef(activeStirlingFileStubs);
+  stubsRef.current = activeStirlingFileStubs;
+  const selectedFileIdsRef = useRef(selectedFileIds);
+  selectedFileIdsRef.current = selectedFileIds;
 
   // Get navigation actions
   const { actions: navActions } = useNavigationActions();
@@ -141,7 +155,7 @@ const FileEditor = ({
   // File reordering handler for drag and drop
   const handleReorderFiles = useCallback(
     (sourceFileId: FileId, targetFileId: FileId, selectedFileIds: FileId[]) => {
-      const currentIds = activeStirlingFileStubs.map((r) => r.id);
+      const currentIds = stubsRef.current.map((r) => r.id);
 
       // Find indices
       const sourceIndex = currentIds.findIndex((id) => id === sourceFileId);
@@ -211,38 +225,27 @@ const FileEditor = ({
       const moveCount = filesToMove.length;
       showStatus(`${moveCount > 1 ? `${moveCount} files` : "File"} reordered`);
     },
-    [activeStirlingFileStubs, reorderFiles, _setStatus],
+    [reorderFiles, showStatus],
   );
 
   // File operations using context
   const handleCloseFile = useCallback(
     (fileId: FileId) => {
-      const record = activeStirlingFileStubs.find((r) => r.id === fileId);
+      const record = stubsRef.current.find((r) => r.id === fileId);
       const file = record ? selectors.getFile(record.id) : null;
       if (record && file) {
-        // Remove file from context but keep in storage (close, don't delete)
-        const contextFileId = record.id;
-        removeFiles([contextFileId], false);
-
-        // Remove from context selections
-        const currentSelected = selectedFileIds.filter(
-          (id) => id !== contextFileId,
+        removeFiles([record.id], false);
+        setSelectedFiles(
+          selectedFileIdsRef.current.filter((id) => id !== record.id),
         );
-        setSelectedFiles(currentSelected);
       }
     },
-    [
-      activeStirlingFileStubs,
-      selectors,
-      removeFiles,
-      setSelectedFiles,
-      selectedFileIds,
-    ],
+    [selectors, removeFiles, setSelectedFiles],
   );
 
   const handleDownloadFile = useCallback(
     async (fileId: FileId) => {
-      const record = activeStirlingFileStubs.find((r) => r.id === fileId);
+      const record = stubsRef.current.find((r) => r.id === fileId);
       const file = record ? selectors.getFile(record.id) : null;
       console.log("[FileEditor] handleDownloadFile called:", {
         fileId,
@@ -278,12 +281,12 @@ const FileEditor = ({
         }
       }
     },
-    [activeStirlingFileStubs, selectors, fileActions],
+    [selectors, fileActions],
   );
 
   const handleUnzipFile = useCallback(
     async (fileId: FileId) => {
-      const record = activeStirlingFileStubs.find((r) => r.id === fileId);
+      const record = stubsRef.current.find((r) => r.id === fileId);
       const file = record ? selectors.getFile(record.id) : null;
       if (record && file) {
         try {
@@ -326,24 +329,19 @@ const FileEditor = ({
         }
       }
     },
-    [activeStirlingFileStubs, selectors, fileActions, removeFiles],
+    [selectors, fileActions, removeFiles],
   );
 
   const handleViewFile = useCallback(
     (fileId: FileId) => {
-      const index = activeStirlingFileStubs.findIndex((r) => r.id === fileId);
+      const index = stubsRef.current.findIndex((r) => r.id === fileId);
       if (index !== -1) {
         setActiveFileId(fileId as string);
         setActiveFileIndex(index);
         navActions.setWorkbench("viewer");
       }
     },
-    [
-      activeStirlingFileStubs,
-      setActiveFileId,
-      setActiveFileIndex,
-      navActions.setWorkbench,
-    ],
+    [setActiveFileId, setActiveFileIndex, navActions.setWorkbench],
   );
 
   const handleLoadFromStorage = useCallback(async (selectedFiles: File[]) => {
@@ -412,6 +410,10 @@ const FileEditor = ({
                     onUnzipFile={handleUnzipFile}
                     toolMode={toolMode}
                     isSupported={isFileSupported(record.name)}
+                    policies={
+                      policyFileBadges.get(record.id as string) ??
+                      EMPTY_POLICIES
+                    }
                   />
                 );
               })}
