@@ -294,9 +294,6 @@ jobs:
                 - /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/storage:/storage:rw
               environment:
                 DISABLE_ADDITIONAL_FEATURES: "false"
-                # Enable the admin portal's backend surfaces so the embedded
-                # /portal (built via BUILD_PORTAL above) loads real data instead
-                # of 404ing on its policy/source/account-link calls.
                 POLICIES_ENABLED: "true"
                 STIRLING_BILLING_ACCOUNT_LINK_ENABLED: "true"
                 SECURITY_ENABLELOGIN: "true"

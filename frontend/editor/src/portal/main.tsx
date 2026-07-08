@@ -11,6 +11,12 @@ import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
 import "../../vite-env.d.ts"; // eslint-disable-line no-restricted-imports -- Outside app paths
 import "@app/styles/index.css"; // Import global styles
+// SUI design tokens (--color-bg, --color-surface, --color-text-*, --font-sans …)
+// for both [data-theme="light"] and [data-theme="dark"]. The portal's Mantine
+// theme binds its surface/text/border variables to these, so without this import
+// the portal renders unthemed (flat, no card surfaces) — the editor gets it for
+// free via the core ThemeProvider, which the standalone portal doesn't use.
+import "@app/tokens/tokens.css";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { ColorSchemeScript } from "@mantine/core";
