@@ -349,6 +349,7 @@ export function PoliciesSection({
                   leftSection={
                     rowProgress.total > 0 ? (
                       <AppTooltip
+                        position="left"
                         content={t(
                           "policies.sidebar.rowProgress",
                           "{{completed}} of {{total}} files processed",
