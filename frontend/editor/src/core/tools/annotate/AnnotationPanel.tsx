@@ -277,6 +277,16 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
     },
     { id: "line", label: t("annotation.line", "Line"), icon: "show-chart" },
     {
+      id: "lineArrow",
+      label: t("annotation.lineArrow", "Arrow"),
+      icon: "arrow-right-alt",
+    },
+    {
+      id: "polyline",
+      label: t("annotation.polyline", "Polyline"),
+      icon: "polyline",
+    },
+    {
       id: "polygon",
       label: t("annotation.polygon", "Polygon"),
       icon: "change-history",
