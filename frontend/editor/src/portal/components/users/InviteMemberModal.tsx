@@ -1,13 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Button,
-  Checkbox,
-  FormField,
-  Input,
-  Modal,
-  Select,
-} from "@app/ui";
+import { Button, Checkbox, FormField, Input, Modal, Select } from "@app/ui";
 import {
   createMember,
   fetchUsers,
@@ -31,6 +24,10 @@ interface InviteMemberModalProps {
   canDirectCreate?: boolean;
   hasOauth?: boolean;
   hasSaml?: boolean;
+  /** Whether the "admin" (Org Owner) role can be assigned. Off on SaaS. */
+  adminRole?: boolean;
+  /** Which mode to open in (mainly for Storybook); defaults to email. */
+  initialMode?: "email" | "direct";
 }
 
 type InviteRole = "member" | "admin";
@@ -52,6 +49,8 @@ export function InviteMemberModal({
   canDirectCreate = false,
   hasOauth = false,
   hasSaml = false,
+  adminRole = true,
+  initialMode = "email",
 }: InviteMemberModalProps) {
   const { t } = useTranslation();
   const { tier } = useTier();
@@ -71,7 +70,7 @@ export function InviteMemberModal({
 
   useEffect(() => {
     if (!open) return;
-    setMode("email");
+    setMode(canDirectCreate ? initialMode : "email");
     setTeamId(
       defaultTeamId != null
         ? String(defaultTeamId)
@@ -79,7 +78,17 @@ export function InviteMemberModal({
           ? String(teams[0].id)
           : "",
     );
-  }, [open, defaultTeamId, teams]);
+  }, [open, defaultTeamId, teams, canDirectCreate, initialMode]);
+
+  // A server-side submit error must not outlive the input that caused it.
+  useEffect(() => {
+    setSubmitError(null);
+  }, [email, username, password]);
+
+  // Drop the "admin" (Org Owner) option where it can't be assigned (SaaS).
+  const roleOptions = adminRole
+    ? ROLE_SELECT_OPTIONS
+    : ROLE_SELECT_OPTIONS.filter((o) => o.value !== "admin");
 
   const authTypeOptions: { value: AuthType; label: string }[] = [
     { value: "WEB", label: t("users.invite.authWeb", "Password") },
@@ -315,7 +324,7 @@ export function InviteMemberModal({
         <div className="portal-users__invite-grid">
           <FormField label={t("users.invite.role", "Role")}>
             <Select
-              options={ROLE_SELECT_OPTIONS}
+              options={roleOptions}
               value={role}
               onChange={(e) => setRole(e.target.value as InviteRole)}
             />

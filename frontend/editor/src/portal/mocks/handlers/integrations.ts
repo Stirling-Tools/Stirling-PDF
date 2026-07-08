@@ -161,8 +161,7 @@ export const integrationsHandlers = [
     grantStore = grantStore.filter(
       (g) =>
         !(
-          g.resourceType === "INTEGRATION_CONFIG" &&
-          g.resourceId === String(id)
+          g.resourceType === "INTEGRATION_CONFIG" && g.resourceId === String(id)
         ),
     );
     return new HttpResponse(null, { status: 204 });

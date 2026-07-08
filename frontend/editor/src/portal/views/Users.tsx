@@ -30,6 +30,7 @@ import {
   type Team,
 } from "@portal/api/teams";
 import { errorMessage } from "@portal/api/http";
+import { usersCapabilities as caps } from "@app/portal/usersCapabilities";
 import { UsersDirectory } from "@portal/components/users/UsersDirectory";
 import { InviteMemberModal } from "@portal/components/users/InviteMemberModal";
 import { NewTeamModal } from "@portal/components/users/NewTeamModal";
@@ -56,8 +57,9 @@ export function Users() {
     () => fetchUsers(tier),
     [tier, refreshKey],
   );
+  // Grants are ADMIN-only; skip the fetch entirely on flavors that can't manage them.
   const grantsState = useAsync<ResourceGrant[]>(
-    () => fetchGrants("PORTAL"),
+    () => (caps.manageGrants ? fetchGrants("PORTAL") : Promise.resolve([])),
     [tier, refreshKey],
   );
   const teamsState = useAsync<Team[]>(() => fetchTeams(), [tier, refreshKey]);
@@ -84,23 +86,48 @@ export function Users() {
     setSearchParams(next, { replace: true });
   }, [searchParams, setSearchParams]);
 
+  // PORTAL grants held by a whole team (principalId = teamId); members inherit these.
+  const grantByTeam = useMemo(() => {
+    const m = new Map<number, ResourceGrant>();
+    for (const g of grantsState.data ?? []) {
+      if (g.principalType === "TEAM") m.set(g.principalId, g);
+    }
+    return m;
+  }, [grantsState.data]);
+
   const members = useMemo<Member[]>(() => {
     const grantByUser = new Map<string, ResourceGrant>();
     for (const g of grantsState.data ?? []) {
       if (g.principalType === "USER") grantByUser.set(String(g.principalId), g);
     }
-    return (usersState.data?.members ?? []).map((m) => {
+    return (usersState.data?.members ?? []).map((raw) => {
+      // Enforce the no-ROLE_ADMIN-on-SaaS rule: clamp any stray admin to member.
+      const m: Member =
+        !caps.adminRole && raw.role === "admin"
+          ? { ...raw, role: "member" }
+          : raw;
       let portalAccess: PortalAccessState;
       let portalGrantId: number | undefined;
       if (m.role === "admin") portalAccess = "admin";
+      // Optimistic: team owners/leads get Processor under the default policy
+      // (security.portal.defaultAccess=ADMINS_AND_TEAM_LEADS). A stricter policy
+      // (EXPLICIT_ONLY/ORG_ALL) may deny them server-side; the roster can't see
+      // the configured policy. Backend enforcement (canAccessPortal) is authoritative.
       else if (m.role === "team_owner" || m.teamLead) portalAccess = "role";
+      else if (m.teamId != null && grantByTeam.has(m.teamId))
+        portalAccess = "team";
       else if (grantByUser.has(m.id)) {
         portalAccess = "granted";
         portalGrantId = grantByUser.get(m.id)!.id;
       } else portalAccess = "none";
       return { ...m, portalAccess, portalGrantId };
     });
-  }, [usersState.data?.members, grantsState.data]);
+  }, [usersState.data?.members, grantsState.data, grantByTeam]);
+
+  const processorTeamIds = useMemo(
+    () => new Set(grantByTeam.keys()),
+    [grantByTeam],
+  );
 
   const teams = teamsState.data ?? [];
   const mailEnabled = usersState.data?.mailEnabled ?? false;
@@ -132,6 +159,23 @@ export function Users() {
   function revokeProcessor(member: Member) {
     if (!member.portalGrantId) return;
     run(() => revokeGrant(member.portalGrantId!));
+  }
+  // Grant/revoke Processor for a whole team (a TEAM-principal PORTAL grant).
+  function grantTeamProcessor(team: TeamGroup) {
+    run(() =>
+      createGrant({
+        resourceType: "PORTAL",
+        resourceId: "",
+        principalType: "TEAM",
+        principalId: team.id,
+        permission: "USE",
+      }),
+    );
+  }
+  function revokeTeamProcessor(team: TeamGroup) {
+    const grant = grantByTeam.get(team.id);
+    if (!grant) return;
+    run(() => revokeGrant(grant.id));
   }
   function openInvite(teamId: number | null) {
     setInviteTeamId(teamId);
@@ -175,7 +219,7 @@ export function Users() {
       title: t("users.confirm.deleteTeamTitle", "Delete team"),
       body: t(
         "users.confirm.deleteTeamBody",
-        "Delete the {{name}} team? Members move to the default team. (Teams that still own configs can't be deleted.)",
+        "Delete the {{name}} team? The team must be empty first - move its members to another team, and it can't still own any integration configs.",
         { name: team.name },
       ),
       confirmLabel: t("users.action.deleteTeam", "Delete team"),
@@ -197,9 +241,11 @@ export function Users() {
           </p>
         </div>
         <div className="portal-users__head-actions">
-          <Button variant="outline" onClick={() => setNewTeamOpen(true)}>
-            {t("users.newTeam.action", "+ New team")}
-          </Button>
+          {caps.createTeam && (
+            <Button variant="outline" onClick={() => setNewTeamOpen(true)}>
+              {t("users.newTeam.action", "+ New team")}
+            </Button>
+          )}
           <Button onClick={() => openInvite(null)}>
             {t("users.invite.action", "Invite people")}
           </Button>
@@ -239,9 +285,13 @@ export function Users() {
         <UsersDirectory
           members={members}
           teams={teams}
+          capabilities={caps}
           onChangeRole={changeRole}
           onGrantProcessor={grantProcessor}
           onRevokeProcessor={revokeProcessor}
+          processorTeamIds={processorTeamIds}
+          onGrantTeamProcessor={grantTeamProcessor}
+          onRevokeTeamProcessor={revokeTeamProcessor}
           onAddToTeam={(team) => openInvite(team.id)}
           onResetPassword={setResetPwMember}
           onMoveToTeam={setMoveMember}
@@ -262,9 +312,10 @@ export function Users() {
         onInvited={refresh}
         teams={teams}
         defaultTeamId={inviteTeamId}
-        canDirectCreate={authState.data?.canDirectCreate}
+        canDirectCreate={caps.directCreate && authState.data?.canDirectCreate}
         hasOauth={authState.data?.hasOauth}
         hasSaml={authState.data?.hasSaml}
+        adminRole={caps.adminRole}
       />
       <NewTeamModal
         open={newTeamOpen}

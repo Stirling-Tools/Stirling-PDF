@@ -47,20 +47,6 @@ export async function fetchGrants(
   return apiClient.local.json<ResourceGrant[]>(`${BASE}?${q.toString()}`);
 }
 
-/** GET /grants/by-principal: every grant a user or team holds. */
-export async function fetchGrantsByPrincipal(
-  principalType: PrincipalType,
-  principalId: number,
-): Promise<ResourceGrant[]> {
-  const q = new URLSearchParams({
-    principalType,
-    principalId: String(principalId),
-  });
-  return apiClient.local.json<ResourceGrant[]>(
-    `${BASE}/by-principal?${q.toString()}`,
-  );
-}
-
 /** POST /grants: grant (or, for a new permission, re-grant) access. */
 export async function createGrant(req: GrantRequest): Promise<ResourceGrant> {
   return apiClient.local.json<ResourceGrant>(BASE, {

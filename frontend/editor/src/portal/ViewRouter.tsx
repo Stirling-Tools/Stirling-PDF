@@ -28,10 +28,7 @@ export function ViewRouter() {
       <Route path={rel(VIEW_PATHS.users)} element={<Users />} />
       <Route path={rel(VIEW_PATHS.pipelines)} element={<Pipelines />} />
       <Route path={rel(VIEW_PATHS.sources)} element={<Sources />} />
-      <Route
-        path={rel(VIEW_PATHS.integrations)}
-        element={<Integrations />}
-      />
+      <Route path={rel(VIEW_PATHS.integrations)} element={<Integrations />} />
       <Route
         path={rel(VIEW_PATHS["agent-builder"])}
         element={<AgentBuilder />}

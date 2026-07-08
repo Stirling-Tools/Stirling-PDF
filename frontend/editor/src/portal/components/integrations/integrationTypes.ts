@@ -1,7 +1,4 @@
-import type {
-  IntegrationType,
-  OwnerScope,
-} from "@portal/api/integrations";
+import type { IntegrationType, OwnerScope } from "@portal/api/integrations";
 
 /** One field in a config's create/edit form. */
 export interface IntegrationField {

@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
 import { AuthProvider } from "@app/auth";
+import { portalAuthMode } from "@app/portal/authMode";
 import { ErrorBoundary } from "@portal/components/ErrorBoundary";
 import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
 import { TierProvider } from "@portal/contexts/TierContext";
@@ -132,7 +133,7 @@ export function PortalApp() {
       <PortalMantineProvider>
         {/* Scopes base.css to the portal so it doesn't restyle the host editor. */}
         <div className="portal-scope">
-          <AuthProvider mode="spring">
+          <AuthProvider mode={portalAuthMode}>
             <LinkProvider initialState="unlinked">
               {/* TierProvider sits INSIDE LinkProvider so it can derive the tier
                 from the real link/subscription state when MSW mocks are off. */}

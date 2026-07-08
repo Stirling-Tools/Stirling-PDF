@@ -1,13 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Button,
-  FormField,
-  Input,
-  Modal,
-  Select,
-  ToggleSwitch,
-} from "@app/ui";
+import { Button, FormField, Input, Modal, Select, ToggleSwitch } from "@app/ui";
 import {
   createIntegration,
   updateIntegration,

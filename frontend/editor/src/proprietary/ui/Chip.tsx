@@ -22,6 +22,8 @@ export interface ChipProps {
   onClick?: () => void;
   /** Show the leading dot affordance. Defaults to false (set true for status-style chips). */
   showDot?: boolean;
+  /** Dashed "box-cut" outline with no fill — for add/placeholder affordances. */
+  dashed?: boolean;
   children?: ReactNode;
   className?: string;
 }
@@ -39,6 +41,7 @@ export function Chip({
   onRemove,
   onClick,
   showDot,
+  dashed,
   children,
   className,
 }: ChipProps) {
@@ -48,6 +51,7 @@ export function Chip({
     `sui-chip--${tone}`,
     `sui-chip--${size}`,
     onClick ? "sui-chip--interactive" : "",
+    dashed ? "sui-chip--dashed" : "",
     className ?? "",
   ]
     .filter(Boolean)

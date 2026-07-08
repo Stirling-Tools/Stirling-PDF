@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Menu } from "@mantine/core";
+import PersonAddAltRounded from "@mui/icons-material/PersonAddAltRounded";
 import { Avatar, Chip, Select } from "@app/ui";
 import { type Member, type RoleId } from "@portal/api/users";
 import type { Team } from "@portal/api/teams";
-import { avatarToneForRole } from "@portal/components/users/format";
+import type { UsersCapabilities } from "@portal/api/usersCapabilities";
+import { avatarToneForMember } from "@portal/components/users/format";
 import {
   buildDirectory,
   type TeamGroup,
@@ -20,9 +22,15 @@ const SYSTEM_TEAMS = new Set(["Default", "Internal"]);
 interface UsersDirectoryProps {
   members: Member[];
   teams: Team[];
+  /** Flavor-specific action set (self-hosted org-admin vs SaaS team-leader). */
+  capabilities: UsersCapabilities;
   onChangeRole: (member: Member, role: RoleId) => void;
   onGrantProcessor: (member: Member) => void;
   onRevokeProcessor: (member: Member) => void;
+  /** Team ids holding a team-wide Processor grant; members inherit it. */
+  processorTeamIds: Set<number>;
+  onGrantTeamProcessor: (team: TeamGroup) => void;
+  onRevokeTeamProcessor: (team: TeamGroup) => void;
   onAddToTeam: (team: TeamGroup) => void;
   // Per-member admin actions (the row kebab).
   onResetPassword: (member: Member) => void;
@@ -39,6 +47,11 @@ interface UsersDirectoryProps {
    * app (no backend for it yet); on in Storybook to document the intended design.
    */
   showApprover?: boolean;
+  /**
+   * Show the Guests group + the "Guest" role option. Off in the live app (the
+   * Guest concept is parked); on in Storybook to document the intended design.
+   */
+  showGuests?: boolean;
 }
 
 /**
@@ -50,9 +63,13 @@ interface UsersDirectoryProps {
 export function UsersDirectory({
   members,
   teams,
+  capabilities,
   onChangeRole,
   onGrantProcessor,
   onRevokeProcessor,
+  processorTeamIds,
+  onGrantTeamProcessor,
+  onRevokeTeamProcessor,
   onAddToTeam,
   onResetPassword,
   onMoveToTeam,
@@ -63,6 +80,7 @@ export function UsersDirectory({
   onRenameTeam,
   onDeleteTeam,
   showApprover = false,
+  showGuests = false,
 }: UsersDirectoryProps) {
   const { t } = useTranslation();
   const dir = useMemo(() => buildDirectory(members, teams), [members, teams]);
@@ -77,9 +95,20 @@ export function UsersDirectory({
   }, [members]);
 
   const roleOptions: { value: RoleId; label: string }[] = [
-    { value: "admin", label: t("users.role.orgOwner", "Org Owner") },
+    // No SaaS user is ever ROLE_ADMIN, so the Org Owner option is dropped there.
+    ...(capabilities.adminRole
+      ? [
+          {
+            value: "admin" as RoleId,
+            label: t("users.role.orgOwner", "Org Owner"),
+          },
+        ]
+      : []),
     { value: "team_owner", label: t("users.role.teamOwner", "Team Owner") },
     { value: "member", label: t("users.role.member", "Member") },
+    ...(showGuests
+      ? [{ value: "guest" as RoleId, label: t("users.role.guest", "Guest") }]
+      : []),
   ];
 
   function toggleExpand(key: string) {
@@ -93,6 +122,26 @@ export function UsersDirectory({
 
   function ownerNames(owners: string[]): string {
     return owners.map((u) => nameByUsername.get(u) ?? u).join(", ");
+  }
+
+  // Whether the team-header kebab has any actions (else it isn't rendered).
+  function teamKebabHasItems(team: TeamGroup): boolean {
+    return (
+      capabilities.manageGrants ||
+      (!SYSTEM_TEAMS.has(team.name) &&
+        (capabilities.renameTeam || capabilities.deleteTeam))
+    );
+  }
+
+  // Whether any action sits above the "Remove" item (so we render a divider).
+  function rowKebabHasUpperActions(m: Member): boolean {
+    return (
+      capabilities.resetPassword ||
+      capabilities.moveTeam ||
+      capabilities.suspend ||
+      (capabilities.unlock && !!m.locked) ||
+      (capabilities.resetMfa && !!m.mfaEnabled)
+    );
   }
 
   function rowKebab(m: Member) {
@@ -110,34 +159,42 @@ export function UsersDirectory({
           </button>
         </Menu.Target>
         <Menu.Dropdown>
-          <Menu.Item disabled={m.isSelf} onClick={() => onResetPassword(m)}>
-            {t("users.action.resetPw", "Reset password")}
-          </Menu.Item>
-          <Menu.Item onClick={() => onMoveToTeam(m)}>
-            {t("users.action.move", "Move to team")}
-          </Menu.Item>
-          <Menu.Item disabled={m.isSelf} onClick={() => onToggleEnabled(m)}>
-            {m.status === "suspended"
-              ? t("users.action.reinstate", "Reinstate")
-              : t("users.action.suspend", "Suspend")}
-          </Menu.Item>
-          {m.locked && (
+          {capabilities.resetPassword && (
+            <Menu.Item disabled={m.isSelf} onClick={() => onResetPassword(m)}>
+              {t("users.action.resetPw", "Reset password")}
+            </Menu.Item>
+          )}
+          {capabilities.moveTeam && (
+            <Menu.Item onClick={() => onMoveToTeam(m)}>
+              {t("users.action.move", "Move to team")}
+            </Menu.Item>
+          )}
+          {capabilities.suspend && (
+            <Menu.Item disabled={m.isSelf} onClick={() => onToggleEnabled(m)}>
+              {m.status === "suspended"
+                ? t("users.action.reinstate", "Reinstate")
+                : t("users.action.suspend", "Suspend")}
+            </Menu.Item>
+          )}
+          {capabilities.unlock && m.locked && (
             <Menu.Item onClick={() => onUnlock(m)}>
               {t("users.action.unlock", "Unlock account")}
             </Menu.Item>
           )}
-          {m.mfaEnabled && (
+          {capabilities.resetMfa && m.mfaEnabled && (
             <Menu.Item disabled={m.isSelf} onClick={() => onDisableMfa(m)}>
               {t("users.action.disableMfa", "Reset MFA")}
             </Menu.Item>
           )}
-          <Menu.Divider />
+          {rowKebabHasUpperActions(m) && <Menu.Divider />}
           <Menu.Item
             color="red"
             disabled={m.isSelf}
             onClick={() => onRemove(m)}
           >
-            {t("users.action.remove", "Remove from org")}
+            {capabilities.removeScope === "team"
+              ? t("users.action.removeTeam", "Remove from team")
+              : t("users.action.remove", "Remove from org")}
           </Menu.Item>
         </Menu.Dropdown>
       </Menu>
@@ -145,12 +202,11 @@ export function UsersDirectory({
   }
 
   function renderRow(m: Member) {
-    const isOwnerRole = m.role === "admin" || m.role === "team_owner";
     const access = m.portalAccess ?? "none";
     return (
       <div className="portal-users__row" key={m.id}>
         <div className="portal-users__row-main">
-          <Avatar name={m.name} size="sm" tone={avatarToneForRole(m.role)} />
+          <Avatar name={m.name} size="sm" tone={avatarToneForMember(m)} />
           <div className="portal-users__row-id">
             <span className="portal-users__row-name">
               {m.name}
@@ -182,18 +238,32 @@ export function UsersDirectory({
             {t("users.cap.editor", "Editor")}
           </Chip>
           {access === "granted" ? (
-            <Chip tone="blue" size="sm" onRemove={() => onRevokeProcessor(m)}>
+            <Chip
+              tone="blue"
+              size="sm"
+              onRemove={
+                capabilities.manageGrants
+                  ? () => onRevokeProcessor(m)
+                  : undefined
+              }
+            >
               {t("users.cap.processor", "Processor")}
             </Chip>
-          ) : isOwnerRole ? (
+          ) : access !== "none" ? (
+            // admin / team-owner role / inherited from a team-wide grant
             <Chip tone="blue" size="sm">
               {t("users.cap.processor", "Processor")}
             </Chip>
-          ) : (
-            <Chip tone="neutral" size="sm" onClick={() => onGrantProcessor(m)}>
+          ) : capabilities.manageGrants ? (
+            <Chip
+              tone="neutral"
+              size="sm"
+              dashed
+              onClick={() => onGrantProcessor(m)}
+            >
               {t("users.cap.addProcessor", "+ Processor")}
             </Chip>
-          )}
+          ) : null}
           {showApprover && m.role === "admin" && (
             <Chip
               tone="green"
@@ -205,19 +275,26 @@ export function UsersDirectory({
           )}
         </div>
 
-        <span className="portal-users__row-active">{m.lastActive}</span>
+        <span
+          className="portal-users__row-active"
+          title={t("users.lastActive", "Last active")}
+        >
+          {m.lastActive}
+        </span>
 
-        <div className="portal-users__row-role">
-          <Select
-            aria-label={t("users.roleFor", "Role for {{name}}", {
-              name: m.name,
-            })}
-            options={roleOptions}
-            value={m.role}
-            disabled={m.isSelf}
-            onChange={(e) => onChangeRole(m, e.target.value as RoleId)}
-          />
-        </div>
+        {capabilities.changeRole && (
+          <div className="portal-users__row-role">
+            <Select
+              aria-label={t("users.roleFor", "Role for {{name}}", {
+                name: m.name,
+              })}
+              options={roleOptions}
+              value={m.role}
+              disabled={m.isSelf}
+              onChange={(e) => onChangeRole(m, e.target.value as RoleId)}
+            />
+          </div>
+        )}
 
         {rowKebab(m)}
       </div>
@@ -251,8 +328,8 @@ export function UsersDirectory({
 
   return (
     <div className="portal-users__directory">
-      {/* Organization */}
-      {dir.organization.length > 0 && (
+      {/* Organization (a single-org deployment only; SaaS has no org). */}
+      {capabilities.orgGroup && dir.organization.length > 0 && (
         <section className="portal-users__group">
           <header className="portal-users__group-head">
             <div className="portal-users__group-title">
@@ -298,14 +375,15 @@ export function UsersDirectory({
                 className="portal-users__group-action"
                 onClick={() => onAddToTeam(team)}
               >
+                <PersonAddAltRounded sx={{ fontSize: 15 }} />
                 {t("users.group.addToTeam", "Add to team")}
               </button>
-              {!SYSTEM_TEAMS.has(team.name) && (
+              {teamKebabHasItems(team) && (
                 <Menu
                   position="bottom-end"
                   withinPortal
                   shadow="md"
-                  width={180}
+                  width={210}
                 >
                   <Menu.Target>
                     <button
@@ -317,12 +395,41 @@ export function UsersDirectory({
                     </button>
                   </Menu.Target>
                   <Menu.Dropdown>
-                    <Menu.Item onClick={() => onRenameTeam(team)}>
-                      {t("users.action.rename", "Rename team")}
-                    </Menu.Item>
-                    <Menu.Item color="red" onClick={() => onDeleteTeam(team)}>
-                      {t("users.action.deleteTeam", "Delete team")}
-                    </Menu.Item>
+                    {capabilities.manageGrants &&
+                      (processorTeamIds.has(team.id) ? (
+                        <Menu.Item onClick={() => onRevokeTeamProcessor(team)}>
+                          {t(
+                            "users.team.revokeProcessor",
+                            "Revoke Processor from team",
+                          )}
+                        </Menu.Item>
+                      ) : (
+                        <Menu.Item onClick={() => onGrantTeamProcessor(team)}>
+                          {t(
+                            "users.team.grantProcessor",
+                            "Grant Processor to team",
+                          )}
+                        </Menu.Item>
+                      ))}
+                    {!SYSTEM_TEAMS.has(team.name) &&
+                      (capabilities.renameTeam || capabilities.deleteTeam) && (
+                        <>
+                          {capabilities.manageGrants && <Menu.Divider />}
+                          {capabilities.renameTeam && (
+                            <Menu.Item onClick={() => onRenameTeam(team)}>
+                              {t("users.action.rename", "Rename team")}
+                            </Menu.Item>
+                          )}
+                          {capabilities.deleteTeam && (
+                            <Menu.Item
+                              color="red"
+                              onClick={() => onDeleteTeam(team)}
+                            >
+                              {t("users.action.deleteTeam", "Delete team")}
+                            </Menu.Item>
+                          )}
+                        </>
+                      )}
                   </Menu.Dropdown>
                 </Menu>
               )}
@@ -331,6 +438,29 @@ export function UsersDirectory({
           {renderMembers(team.members, `team-${team.id}`)}
         </section>
       ))}
+
+      {/* Guests (parked in the live app; shown when showGuests is set). */}
+      {showGuests && dir.guests.length > 0 && (
+        <section className="portal-users__group">
+          <header className="portal-users__group-head">
+            <div className="portal-users__group-title">
+              <strong>{t("users.group.guests", "Guests")}</strong>
+              <span className="portal-users__group-desc">
+                {t(
+                  "users.group.guestsDesc",
+                  "External collaborators, scoped to what you shared. Editor only.",
+                )}
+              </span>
+            </div>
+            <span className="portal-users__group-count">
+              {t("users.group.guestCount", "{{count}} guest", {
+                count: dir.guests.length,
+              })}
+            </span>
+          </header>
+          {renderMembers(dir.guests, "guests")}
+        </section>
+      )}
     </div>
   );
 }

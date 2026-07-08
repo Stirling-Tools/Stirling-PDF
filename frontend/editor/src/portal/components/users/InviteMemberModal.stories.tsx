@@ -30,9 +30,24 @@ export const ScopedToTeam: Story = {
   args: { defaultTeamId: 2 },
 };
 
-/** Self-hosted with password login + SSO: the "Create account" mode is offered. */
+/** Self-hosted: the email/create toggle is offered (opens in email mode). */
 export const SelfHostedDirectCreate: Story = {
   args: { canDirectCreate: true, hasOauth: true, hasSaml: true },
+};
+
+/** The direct "Create account" form: username, password, sign-in method, force-MFA. */
+export const CreateAccountForm: Story = {
+  args: {
+    canDirectCreate: true,
+    hasOauth: true,
+    hasSaml: true,
+    initialMode: "direct",
+  },
+};
+
+/** SaaS: no "admin" (Org Owner) option - the role picker is member-only. */
+export const NoAdminRole: Story = {
+  args: { adminRole: false },
 };
 
 export const Closed: Story = { args: { open: false } };

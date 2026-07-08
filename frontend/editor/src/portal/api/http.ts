@@ -39,8 +39,9 @@
  * entitlement calls. It never enters the portal — the browser is the human
  * admin and uses the Supabase JWT for SaaS reads. Don't add it here.
  */
-import { clearStoredToken, getStoredToken } from "@app/auth";
+import { clearStoredToken } from "@app/auth";
 import { getSupabaseClient } from "@app/auth/supabase/supabaseClient";
+import { getBackendToken } from "@app/portal/backendToken";
 import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
 
 /** Read the SaaS base URL at call time so tests can stub it via vi.stubEnv. */
@@ -134,8 +135,11 @@ async function unwrap<T>(res: Response): Promise<T> {
 // local — same-origin Stirling backend, Spring admin bearer
 // ────────────────────────────────────────────────────────────────────────────
 
-function localAuthHeader(): Record<string, string> {
-  const token = getStoredToken();
+// Flavor-swapped bearer: Spring `stirling_jwt` self-hosted, Supabase JWT on SaaS
+// (via @app/portal/backendToken). The endpoints are identical across flavors -
+// only the credential differs, exactly as the editor's apiClient does it.
+async function localAuthHeader(): Promise<Record<string, string>> {
+  const token = await getBackendToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
@@ -147,7 +151,7 @@ async function localForm<T>(
 ): Promise<T> {
   const res = await fetch(path, {
     method,
-    headers: { Accept: "application/json", ...localAuthHeader() },
+    headers: { Accept: "application/json", ...(await localAuthHeader()) },
     body: new URLSearchParams(params),
   });
   if (res.status === 401) {
@@ -168,7 +172,7 @@ async function localJson<T>(
       ...(options.body !== undefined
         ? { "Content-Type": "application/json" }
         : {}),
-      ...localAuthHeader(),
+      ...(await localAuthHeader()),
       ...options.headers,
     },
     body: options.body !== undefined ? JSON.stringify(options.body) : undefined,

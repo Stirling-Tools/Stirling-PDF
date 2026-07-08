@@ -67,11 +67,14 @@ export function NewTeamModal({ open, onClose, onCreated }: NewTeamModalProps) {
     setSaving(true);
     try {
       await createTeam(name.trim());
+      let ownerFailed = false;
       if (email) {
         try {
           await inviteOwner(name.trim(), email);
         } catch {
-          // Team is created; owner invite (needs mail) can be redone from the roster.
+          // Team is created; keep the modal open so this recovery note stays
+          // readable (owner invite needs mail, can be redone from the roster).
+          ownerFailed = true;
           setNote(
             t(
               "users.newTeam.ownerFailed",
@@ -81,8 +84,7 @@ export function NewTeamModal({ open, onClose, onCreated }: NewTeamModalProps) {
         }
       }
       onCreated();
-      if (!email) close();
-      else setTimeout(close, 1200);
+      if (!ownerFailed) close();
     } catch (e) {
       setError(errorMessage(e));
     } finally {

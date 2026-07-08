@@ -201,9 +201,13 @@ export function Integrations() {
         </Button>
       </header>
 
-      {actionError && (
+      {(actionError || membersState.error) && (
         <p className="portal-integrations__error" role="alert">
-          {actionError}
+          {actionError ??
+            t(
+              "integrations.membersError",
+              "Couldn't load the people list, so sharing may be unavailable.",
+            )}
         </p>
       )}
 

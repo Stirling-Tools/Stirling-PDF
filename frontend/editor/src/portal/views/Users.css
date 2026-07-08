@@ -384,6 +384,12 @@
   flex: 1;
   flex-wrap: wrap;
 }
+/* Solid capability/status tags read cleaner without an outline; the dashed
+   "+ Processor" add-chip keeps its box-cut border. */
+.portal-users__caps .sui-chip:not(.sui-chip--dashed),
+.portal-users__row-tag {
+  border-color: transparent;
+}
 .portal-users__row-active {
   font-size: 0.78rem;
   color: var(--color-text-4);

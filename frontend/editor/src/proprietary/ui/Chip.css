@@ -65,6 +65,16 @@
   filter: brightness(1.05);
 }
 
+/* Dashed "box-cut" outline for add/placeholder affordances: no fill, dashed edge. */
+.sui-chip--dashed {
+  background: transparent;
+  border-style: dashed;
+}
+.sui-chip--dashed.sui-chip--interactive:hover {
+  background: var(--color-bg-muted);
+  filter: none;
+}
+
 .sui-chip__dot {
   width: 0.4375rem;
   height: 0.4375rem;

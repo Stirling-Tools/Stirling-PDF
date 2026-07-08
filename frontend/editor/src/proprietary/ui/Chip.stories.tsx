@@ -19,6 +19,7 @@ const meta: Meta<typeof Chip> = {
     },
     size: { control: "inline-radio", options: ["sm", "md"] },
     showDot: { control: "boolean" },
+    dashed: { control: "boolean" },
     onClick: { action: "clicked" },
     onRemove: { action: "removed" },
   },
@@ -28,6 +29,11 @@ type Story = StoryObj<typeof Chip>;
 
 /** Flip tone / size / dot / interactive / removable in controls. */
 export const Playground: Story = {};
+
+/** Dashed "box-cut" outline (no fill) — the add/placeholder affordance, e.g. "+ Processor". */
+export const DashedAdd: Story = {
+  args: { children: "+ Processor", dashed: true, size: "sm" },
+};
 
 export const ToneRow: Story = {
   render: () => (

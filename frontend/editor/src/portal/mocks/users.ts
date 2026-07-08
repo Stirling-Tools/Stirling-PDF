@@ -28,10 +28,11 @@ export type MemberStatus = "active" | "invited" | "suspended";
  * Effective portal (processor) access for a member:
  *   admin   — implicit, admins always have it
  *   role    — implicit via team-owner leadership (default policy)
- *   granted — explicit PORTAL grant
+ *   team    — inherited from a PORTAL grant on the member's whole team
+ *   granted — explicit per-user PORTAL grant
  *   none    — no access
  */
-export type PortalAccessState = "admin" | "role" | "granted" | "none";
+export type PortalAccessState = "admin" | "role" | "team" | "granted" | "none";
 
 export const PORTAL_ACCESS_TONE: Record<
   PortalAccessState,
@@ -39,6 +40,7 @@ export const PORTAL_ACCESS_TONE: Record<
 > = {
   admin: "info",
   role: "info",
+  team: "info",
   granted: "success",
   none: "neutral",
 };
@@ -71,6 +73,8 @@ export interface Member {
   mfaEnabled?: boolean;
   /** Auth provider: "web" (password), "oauth2", "saml2", etc. */
   authType?: string;
+  /** Raw stored authority (e.g. ROLE_USER, ROLE_WEB_ONLY_USER); preserved on team moves. */
+  authority?: string;
 }
 
 export interface Role {
@@ -264,7 +268,7 @@ const PRO_MEMBERS: Member[] = [
     email: "sam.lee@acme.com",
     role: "guest",
     status: "invited",
-    lastActive: "—",
+    lastActive: "Never",
   },
   {
     // Suspended: retains the seat but cannot sign in until reinstated.
@@ -309,7 +313,7 @@ const ENTERPRISE_EXTRA: Member[] = [
     email: "contractor@partner.io",
     role: "member",
     status: "invited",
-    lastActive: "—",
+    lastActive: "Never",
   },
 ];
 

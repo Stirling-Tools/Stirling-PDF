@@ -56,18 +56,24 @@ function roleIdFor(u: AdminUserSummaryDto): RoleId {
   return "member";
 }
 
+/** A member's last-seen time as plain language; "Never" when no session is tracked. */
 function relativeTime(value: number | string | undefined): string {
-  if (value === undefined || value === null) return "—";
+  if (value === undefined || value === null) return "Never";
   const ts = typeof value === "string" ? Date.parse(value) : value;
-  if (!Number.isFinite(ts) || ts <= 0) return "—";
+  if (!Number.isFinite(ts) || ts <= 0) return "Never";
   const mins = Math.max(0, Math.round((Date.now() - ts) / 60000));
-  if (mins < 1) return "just now";
+  if (mins < 1) return "Just now";
   if (mins < 60) return `${mins}m ago`;
   const hours = Math.round(mins / 60);
   if (hours < 24) return `${hours}h ago`;
   const days = Math.round(hours / 24);
-  if (days < 30) return `${days}d ago`;
-  return new Date(ts).toLocaleDateString();
+  if (days < 7) return `${days}d ago`;
+  const weeks = Math.round(days / 7);
+  if (weeks < 5) return weeks === 1 ? "1 week ago" : `${weeks} weeks ago`;
+  const months = Math.round(days / 30);
+  if (months < 12) return months <= 1 ? "1 month ago" : `${months} months ago`;
+  const years = Math.round(days / 365);
+  return years <= 1 ? "1 year ago" : `${years} years ago`;
 }
 
 /** 0 / huge sentinel license values mean "no seat limit". */
@@ -101,6 +107,7 @@ export async function fetchUsers(tier: Tier): Promise<UsersResponse> {
     locked: locked.has(u.username),
     mfaEnabled: data.userSettings?.[u.username]?.mfaEnabled === "true",
     authType: u.authenticationType,
+    authority: u.rolesAsString,
   }));
   const seatLimit = normalizeSeatLimit(data.maxAllowedUsers);
   const seatsUsed = data.totalUsers ?? members.length;
@@ -251,13 +258,19 @@ export async function disableMemberMfa(member: Member): Promise<void> {
   );
 }
 
-/** Move a member to a different team, keeping their role. */
+/**
+ * Move a member to a different team, keeping their role. The backend changeRole
+ * endpoint requires a role, so we echo back the member's stored authority
+ * verbatim - never collapse non-admins to ROLE_USER, which would silently
+ * promote a web-only (ROLE_WEB_ONLY_USER) account.
+ */
 export async function moveMemberToTeam(
   member: Member,
   teamId: number,
 ): Promise<void> {
   if (!member.username) throw new Error("Member has no backend identity");
-  const role = member.role === "admin" ? "ROLE_ADMIN" : "ROLE_USER";
+  const role =
+    member.authority ?? (member.role === "admin" ? "ROLE_ADMIN" : "ROLE_USER");
   await apiClient.local.form("/api/v1/user/admin/changeRole", {
     username: member.username,
     role,
