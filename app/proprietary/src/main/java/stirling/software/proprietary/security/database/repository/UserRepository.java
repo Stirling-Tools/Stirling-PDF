@@ -49,6 +49,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     long countByTeam(Team team);
 
+    /** Count real users, excluding a reserved username such as the internal API user. */
+    long countByUsernameNot(String username);
+
     List<User> findAllByTeam(Team team);
 
     // OAuth grandfathering queries
