@@ -439,5 +439,9 @@ function previewAnnualMinor(cfg: QuoteConfigInput): number {
   const disc = Math.round(
     withInd * TERM_DISCOUNT[Math.min(Math.max(cfg.termYears, 1), 5) - 1],
   );
-  return withInd - disc + (cfg.qbr ? 800_000 : 0);
+  // Flat annual add-ons (QBR, offline licence) sit outside the multi-year discount, mirroring the
+  // server (PricingRates: qbr 800_000, offline licence 1_200_000). TCV preview derives from this.
+  return (
+    withInd - disc + (cfg.qbr ? 800_000 : 0) + (cfg.offlineLicense ? 1_200_000 : 0)
+  );
 }
