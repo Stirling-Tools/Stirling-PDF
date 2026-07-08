@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLink } from "@portal/contexts/LinkContext";
+import { usePortalLinked } from "@portal/contexts/usePortalLinked";
 import { useAsync } from "@portal/hooks/useAsync";
 import {
   acceptQuote,
@@ -56,7 +56,7 @@ export interface ProcurementController {
 
 export function useProcurement(autoOpen = false): ProcurementController {
   const { t } = useTranslation();
-  const { isLinked } = useLink();
+  const isLinked = usePortalLinked();
 
   const state = useAsync<ProcurementSnapshot | null>(
     () => (isLinked ? fetchSnapshot() : Promise.resolve(null)),

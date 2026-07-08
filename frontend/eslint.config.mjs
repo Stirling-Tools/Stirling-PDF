@@ -6,7 +6,8 @@ import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
 
 const srcGlobs = [
-  // The portal layer lives under editor/src/portal, so editor/src/** covers it.
+  // The portal layers live under editor/src/portal (base) and
+  // editor/src/portal-saas (saas override), so editor/src/** covers them.
   "editor/src/**/*.{js,mjs,jsx,ts,tsx}",
 ];
 const nodeGlobs = [
@@ -71,6 +72,7 @@ export default defineConfig(
     // Everything that contains 3rd party code that we don't want to lint
     ignores: [
       "dist",
+      "dist-portal",
       "node_modules",
       "playwright-report",
       "storybook-static",
