@@ -3,9 +3,12 @@ package stirling.software.proprietary.policy.store;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import jakarta.persistence.LockModeType;
 
 @Repository
 public interface PolicyRepository extends JpaRepository<PolicyEntity, String> {
@@ -28,9 +31,15 @@ public interface PolicyRepository extends JpaRepository<PolicyEntity, String> {
     @Query("select p from PolicyEntity p order by coalesce(p.sortOrder, 0) asc, p.id asc")
     List<PolicyEntity> findAllOrdered();
 
-    /** The team's highest {@code sortOrder}, or null when it has no policies yet. */
+    /**
+     * The team's policy rows, locked for the transaction (SELECT … FOR UPDATE). Appending a new
+     * policy reads the max {@code sortOrder} from these under the lock, so two concurrent creates
+     * serialize instead of both reading a stale max and assigning the same position. Must be called
+     * inside a transaction.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query(
-            "select max(p.sortOrder) from PolicyEntity p where (:teamId is null and p.teamId is"
-                    + " null) or p.teamId = :teamId")
-    Integer findMaxSortOrder(@Param("teamId") Long teamId);
+            "select p from PolicyEntity p where (:teamId is null and p.teamId is null) or"
+                    + " p.teamId = :teamId")
+    List<PolicyEntity> findByTeamForUpdate(@Param("teamId") Long teamId);
 }

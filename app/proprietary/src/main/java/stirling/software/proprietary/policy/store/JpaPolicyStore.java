@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,6 +28,7 @@ public class JpaPolicyStore implements PolicyStore {
     private final ObjectMapper objectMapper;
 
     @Override
+    @Transactional
     public Policy save(Policy policy) {
         String id =
                 policy.id() == null || policy.id().isBlank()
@@ -63,12 +65,23 @@ public class JpaPolicyStore implements PolicyStore {
         return stored;
     }
 
+    /**
+     * Append position for a new policy: max(existing) + 1, computed under a pessimistic lock on the
+     * team's rows (see {@link PolicyRepository#findByTeamForUpdate}) so two concurrent creates
+     * can't both read the same max and assign a duplicate order. (A brand-new team has no rows to
+     * lock; a rare simultaneous first-create there ties at 0 — harmless, since the ordering query
+     * breaks ties by id and any later reorder normalises it.)
+     */
     private int nextSortOrder(Long teamId) {
-        Integer max = repository.findMaxSortOrder(teamId);
-        return max == null ? 0 : max + 1;
+        return repository.findByTeamForUpdate(teamId).stream()
+                        .map(entity -> entity.getSortOrder() == null ? 0 : entity.getSortOrder())
+                        .max(Integer::compareTo)
+                        .orElse(-1)
+                + 1;
     }
 
     @Override
+    @Transactional
     public void reorder(Long teamId, List<String> orderedIds) {
         int position = 0;
         for (String id : orderedIds) {

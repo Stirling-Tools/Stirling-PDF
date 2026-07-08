@@ -51,6 +51,28 @@ export function saveTeamLabels(
   return saveLabels(TEAM_ENDPOINT, labels);
 }
 
+/** Seed-write retry budget: the seed is a hard prerequisite (see below), so ride
+ *  out a transient blip rather than fail setup on the first hiccup. */
+const SEED_MAX_ATTEMPTS = 3;
+const SEED_RETRY_MS = 400;
+
+async function withRetry<T>(op: () => Promise<T>): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < SEED_MAX_ATTEMPTS; attempt++) {
+    try {
+      return await op();
+    } catch (error) {
+      lastError = error;
+      if (attempt < SEED_MAX_ATTEMPTS - 1) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, SEED_RETRY_MS * (attempt + 1)),
+        );
+      }
+    }
+  }
+  throw lastError;
+}
+
 /**
  * Seed the team's label set with the built-in defaults when it has none yet.
  *
@@ -60,18 +82,18 @@ export function saveTeamLabels(
  * copy into the team set the first time a classification policy is set up, so
  * classification works out of the box; the backend gates the write to admins.
  *
- * Only seeds when the fetch DEFINITIVELY reports no set (204 → null): on any
- * fetch error it does nothing, so a transient failure can never overwrite a
- * team's real (possibly customised) labels. A no-op once any set exists — later
- * admin edits are the source of truth and are never clobbered.
+ * The seed is a hard prerequisite of enabling a classification policy, so it must
+ * land or fail loudly — never silently leave an empty set behind a created
+ * policy. Both the fetch and the write retry a transient failure; if either
+ * ultimately fails this THROWS, and the caller aborts the setup (the admin sees
+ * the error and retries) instead of shipping a policy that classifies nothing —
+ * the same way a failed policy save already aborts setup. Still clobber-safe: it
+ * writes only when the fetch DEFINITIVELY reports no set (204 → null), so it
+ * never overwrites a team's real (possibly customised) labels, and it's a no-op
+ * once any set exists (later admin edits are the source of truth).
  */
 export async function seedTeamLabelsIfEmpty(): Promise<void> {
-  let existing: ClassificationLabel[] | null;
-  try {
-    existing = await fetchTeamLabels();
-  } catch {
-    return;
-  }
+  const existing = await withRetry(fetchTeamLabels);
   if (existing != null) return;
-  await saveTeamLabels(DEFAULT_CLASSIFICATION_LABELS).catch(() => {});
+  await withRetry(() => saveTeamLabels(DEFAULT_CLASSIFICATION_LABELS));
 }
