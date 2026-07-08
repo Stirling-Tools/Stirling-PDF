@@ -293,7 +293,7 @@ export const apiClient = {
 } as const;
 
 /**
- * The backend for instance-scoped portal data (users, teams, grants, integrations).
+ * The backend for instance-scoped portal data (users, teams, access grants).
  * Selected by BUILD FLAVOR, not apiClient.saas.isConfigured(): user management is
  * always instance-local, so a self-hosted box with VITE_SAAS_API_URL set for cloud
  * billing must not route user CRUD to the cloud. SaaS build -> saas (same-origin +

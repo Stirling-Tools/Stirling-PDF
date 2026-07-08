@@ -246,11 +246,7 @@ export default defineConfig(
   // without heavy overrides. Exempt ONLY the raw-<button> rule — the Mantine
   // import bans stay in force — and migrate these in a follow-up PR.
   {
-    files: [
-      "editor/src/portal/components/users/UsersDirectory.tsx",
-      "editor/src/portal/components/integrations/ShareConfigModal.tsx",
-      "editor/src/portal/views/Integrations.tsx",
-    ],
+    files: ["editor/src/portal/components/users/UsersDirectory.tsx"],
     rules: {
       "no-restricted-syntax": ["error", ...mantineComponentImportRestrictions],
     },
