@@ -37,11 +37,14 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
+import stirling.software.proprietary.billing.BillingCategory;
+import stirling.software.proprietary.billing.BillingCategoryClassifier;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
@@ -845,6 +848,55 @@ public class AuditService {
     public String captureCurrentOrigin() {
         String origin = determineOrigin();
         return origin;
+    }
+
+    /**
+     * Refines {@link #determineOrigin()} into an audit {@code source} that isolates genuine
+     * free-editor UI runs from automation/AI traffic that also arrives over the web channel.
+     *
+     * <p>API and SYSTEM origins pass through unchanged. A WEB origin is demoted to "AUTOMATION" or
+     * "AI" when the request carries the automation marker or targets an AI surface; only a manual
+     * interactive tool call (BillingCategory#BYPASSED) stays "WEB". A "WEB" source therefore counts
+     * as a free/BYPASSED UI run.
+     *
+     * <p>IMPORTANT: like {@link #captureCurrentOrigin()} this must be called on the request thread
+     * before async execution, because it reads the current {@link HttpServletRequest}.
+     *
+     * @return "API", "SYSTEM", "AUTOMATION", "AI", or "WEB"
+     */
+    public String captureCurrentSource() {
+        String origin = determineOrigin();
+        if (!"WEB".equals(origin)) {
+            return origin;
+        }
+
+        HttpServletRequest req = getCurrentRequest();
+        boolean automation =
+                req != null && req.getHeader(InternalApiClient.AUTOMATION_HEADER) != null;
+        boolean ai = req != null && isAiSurface(req);
+        BillingCategory category = BillingCategoryClassifier.classify(automation, ai, false);
+        return switch (category) {
+            case AUTOMATION -> "AUTOMATION";
+            case AI -> "AI";
+            default -> "WEB";
+        };
+    }
+
+    /**
+     * Prefix-match the AI surface (context-path-stripped) so /&lt;ctx&gt;/api/v1/ai/** classifies
+     * as AI. Mirrors the resolution in {@code BillableOperationClassifier}.
+     */
+    private boolean isAiSurface(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        if (uri == null) {
+            return false;
+        }
+        String ctx = request.getContextPath();
+        String path =
+                ctx != null && !ctx.isEmpty() && uri.startsWith(ctx)
+                        ? uri.substring(ctx.length())
+                        : uri;
+        return path.startsWith("/api/v1/ai/");
     }
 
     /**

@@ -130,6 +130,7 @@ public class ControllerAuditAspect {
 
         String previousPrincipal = MDC.get("auditPrincipal");
         String previousOrigin = MDC.get("auditOrigin");
+        String previousSource = MDC.get("auditSource");
         String previousIp = MDC.get("auditIp");
 
         // EARLY CAPTURE: Capture from SecurityContext on request thread, store in MDC for async
@@ -145,6 +146,12 @@ public class ControllerAuditAspect {
         if (capturedOrigin == null) {
             capturedOrigin = auditService.captureCurrentOrigin();
             MDC.put("auditOrigin", capturedOrigin);
+        }
+
+        String capturedSource = previousSource;
+        if (capturedSource == null) {
+            capturedSource = auditService.captureCurrentSource();
+            MDC.put("auditSource", capturedSource);
         }
 
         String capturedIp = previousIp;
@@ -247,6 +254,7 @@ public class ControllerAuditAspect {
         } finally {
             restoreMdcValue("auditPrincipal", previousPrincipal);
             restoreMdcValue("auditOrigin", previousOrigin);
+            restoreMdcValue("auditSource", previousSource);
             restoreMdcValue("auditIp", previousIp);
         }
     }
