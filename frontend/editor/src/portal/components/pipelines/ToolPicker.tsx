@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Button } from "@app/ui";
 import {
   getSubcategoryLabel,
   SUBCATEGORY_ORDER,
@@ -68,22 +69,26 @@ export function ToolPicker({ tools, onPick, onClose }: ToolPickerProps) {
                 {group.label}
               </div>
               {group.tools.map((tool) => (
-                <button
+                <Button
                   key={tool.toolId}
-                  type="button"
+                  variant="quiet"
+                  justify="start"
+                  fullWidth
                   className="portal-pipelines__picker-item"
                   onClick={() => onPick(tool)}
+                  leftSection={
+                    <span
+                      className="portal-pipelines__picker-icon"
+                      aria-hidden="true"
+                    >
+                      {tool.icon}
+                    </span>
+                  }
                 >
-                  <span
-                    className="portal-pipelines__picker-icon"
-                    aria-hidden="true"
-                  >
-                    {tool.icon}
-                  </span>
                   <span className="portal-pipelines__picker-name">
                     {tool.name}
                   </span>
-                </button>
+                </Button>
               ))}
             </div>
           ))

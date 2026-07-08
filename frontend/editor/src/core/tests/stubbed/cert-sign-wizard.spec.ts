@@ -59,7 +59,7 @@ async function mockHardwareEndpoints(page: Page) {
 }
 
 test.describe("CertSign tool - certificate source model", () => {
-  test("renders, accepts a PDF, and exposes the Upload source", async ({
+  test("skips the redundant source step and goes straight to certificate format when Upload is the only source", async ({
     page,
   }) => {
     await page.route("**/api/v1/security/cert-sign", (route) =>
@@ -76,10 +76,21 @@ test.describe("CertSign tool - certificate source model", () => {
     await uploadFiles(page, SAMPLE_PDF);
 
     await expect(page).toHaveURL(/\/cert-sign/);
-    // Source step always offers "Upload" (the former "Manual" mode).
+    // With no server cert or hardware token there is nothing to choose, so the
+    // whole "Certificate source" step is hidden and the format picker shows directly.
     await expect(
-      page.getByRole("button", { name: /^upload$/i }).first(),
-    ).toBeAttached({ timeout: 10_000 });
+      page.getByRole("button", { name: /pkcs12/i }).first(),
+    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/certificate source/i)).toHaveCount(0);
+    await expect(
+      page.getByText(/no other certificate sources are available/i),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: /this device/i }),
+    ).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /^server$/i })).toHaveCount(
+      0,
+    );
   });
 
   test("does NOT offer 'This device' when not running as desktop", async ({
@@ -89,9 +100,10 @@ test.describe("CertSign tool - certificate source model", () => {
     await page.waitForLoadState("domcontentloaded");
     await uploadFiles(page, SAMPLE_PDF);
 
+    // No alternative sources: the source step is hidden, and hardware is never offered.
     await expect(
-      page.getByRole("button", { name: /^upload$/i }).first(),
-    ).toBeAttached({ timeout: 10_000 });
+      page.getByRole("button", { name: /pkcs12/i }).first(),
+    ).toBeVisible({ timeout: 10_000 });
     await expect(
       page.getByRole("button", { name: /this device/i }),
     ).toHaveCount(0);

@@ -35,7 +35,7 @@ export function PipelinesTable({ pipelines, onRowClick }: PipelinesTableProps) {
             </span>
             <div className="portal-pipelines__name-text">
               <strong>{p.name}</strong>
-              <Chip tone="neutral" size="sm">
+              <Chip accent="neutral" size="sm">
                 {t(`portal.pipelines.trigger.${p.trigger}`, {
                   defaultValue: p.trigger,
                 })}

@@ -2,13 +2,13 @@ import { useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Stack,
-  SegmentedControl,
   Text,
   Radio,
   FileInput,
   PasswordInput,
   Divider,
 } from "@mantine/core";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { DrawingCanvas } from "@app/components/annotation/shared/DrawingCanvas";
 import { ImageUploader } from "@app/components/annotation/shared/ImageUploader";
 import { TextInputWithFont } from "@app/components/annotation/shared/TextInputWithFont";
@@ -241,12 +241,11 @@ const WetSignatureInput = ({
           onChange={(value) =>
             handleSignatureTypeChange(value as SignatureType)
           }
-          data={[
-            { label: t("sign.type.canvas", "Draw"), value: "canvas" },
-            { label: t("sign.type.image", "Upload"), value: "image" },
-            { label: t("sign.type.text", "Type"), value: "text" },
+          options={[
+            { label: t("sign.type.canvas", "Draw"), value: "canvas", disabled },
+            { label: t("sign.type.image", "Upload"), value: "image", disabled },
+            { label: t("sign.type.text", "Type"), value: "text", disabled },
           ]}
-          disabled={disabled}
         />
       </Stack>
 

@@ -8,6 +8,7 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import {
+  ActionIcon,
   Banner,
   Button,
   Checkbox,
@@ -445,15 +446,18 @@ export function PipelineBuilder() {
   return (
     <div className="portal-builder">
       <header className="portal-builder__head">
-        <button
-          type="button"
+        <Button
+          variant="quiet"
+          size="sm"
           className="portal-builder__back"
           onClick={() => attemptLeave(listPath)}
           aria-label={t("portal.pipelines.builder.back")}
+          leftSection={
+            <ArrowBackRoundedIcon style={{ fontSize: "1.125rem" }} />
+          }
         >
-          <ArrowBackRoundedIcon style={{ fontSize: "1.125rem" }} />
           {t("portal.pipelines.title")}
-        </button>
+        </Button>
         <div className="portal-builder__head-main">
           <Input
             value={name}
@@ -471,22 +475,22 @@ export function PipelineBuilder() {
           {isEdit && (
             <>
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 loading={running}
                 onClick={handleRun}
-                leadingIcon={
+                leftSection={
                   <PlayArrowRoundedIcon style={{ fontSize: "1.125rem" }} />
                 }
               >
                 {t("portal.pipelines.detail.run")}
               </Button>
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
-                accent="red"
+                accent="danger"
                 onClick={() => setPendingDelete(true)}
-                leadingIcon={
+                leftSection={
                   <DeleteOutlineRoundedIcon style={{ fontSize: "1.125rem" }} />
                 }
               >
@@ -495,7 +499,7 @@ export function PipelineBuilder() {
             </>
           )}
           <Button
-            variant="ghost"
+            variant="tertiary"
             size="sm"
             onClick={() => attemptLeave(listPath)}
             disabled={submitting}
@@ -559,10 +563,10 @@ export function PipelineBuilder() {
               </div>
             )}
             <Button
-              variant="ghost"
+              variant="tertiary"
               size="sm"
               onClick={goToSources}
-              leadingIcon={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
+              leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
             >
               {t("portal.sources.actions.connectSource")}
             </Button>
@@ -660,12 +664,17 @@ export function PipelineBuilder() {
                     (selectedIndex === i ? " portal-builder__step--active" : "")
                   }
                 >
-                  <button
-                    type="button"
+                  <Button
+                    variant="quiet"
+                    justify="start"
                     className="portal-builder__step-main"
                     onClick={() => setSelectedIndex(i)}
+                    leftSection={
+                      <span className="portal-builder__step-index">
+                        {i + 1}
+                      </span>
+                    }
                   >
-                    <span className="portal-builder__step-index">{i + 1}</span>
                     <span className="portal-builder__step-text">
                       <span className="portal-builder__step-name">
                         {stepLabel(step)}
@@ -682,10 +691,10 @@ export function PipelineBuilder() {
                         )
                       )}
                     </span>
-                  </button>
+                  </Button>
                   <div className="portal-builder__step-actions">
-                    <button
-                      type="button"
+                    <ActionIcon
+                      variant="tertiary"
                       aria-label={t("portal.pipelines.composer.moveUp")}
                       disabled={i === 0}
                       onClick={() => moveStep(i, -1)}
@@ -693,9 +702,9 @@ export function PipelineBuilder() {
                       <KeyboardArrowUpRoundedIcon
                         style={{ fontSize: "1.125rem" }}
                       />
-                    </button>
-                    <button
-                      type="button"
+                    </ActionIcon>
+                    <ActionIcon
+                      variant="tertiary"
                       aria-label={t("portal.pipelines.composer.moveDown")}
                       disabled={i === steps.length - 1}
                       onClick={() => moveStep(i, 1)}
@@ -703,16 +712,16 @@ export function PipelineBuilder() {
                       <KeyboardArrowDownRoundedIcon
                         style={{ fontSize: "1.125rem" }}
                       />
-                    </button>
-                    <button
-                      type="button"
+                    </ActionIcon>
+                    <ActionIcon
+                      variant="tertiary"
                       aria-label={t("portal.pipelines.composer.removeStep")}
                       onClick={() => removeStep(i)}
                     >
                       <DeleteOutlineRoundedIcon
                         style={{ fontSize: "1.125rem" }}
                       />
-                    </button>
+                    </ActionIcon>
                   </div>
                 </div>
               </li>
@@ -726,14 +735,15 @@ export function PipelineBuilder() {
               onClose={() => setPickerOpen(false)}
             />
           ) : (
-            <button
-              type="button"
+            <Button
+              variant="quiet"
+              fullWidth
               className="portal-builder__add-step"
               onClick={() => setPickerOpen(true)}
+              leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
             >
-              <AddRoundedIcon style={{ fontSize: "1.125rem" }} />
               {t("portal.pipelines.composer.addTool")}
-            </button>
+            </Button>
           )}
         </section>
 
@@ -771,7 +781,7 @@ export function PipelineBuilder() {
         footer={
           <div className="portal-pipelines__composer-footer">
             <Button
-              variant="ghost"
+              variant="tertiary"
               size="sm"
               disabled={deleting}
               onClick={() => setPendingDelete(false)}
@@ -780,7 +790,7 @@ export function PipelineBuilder() {
             </Button>
             <Button
               size="sm"
-              accent="red"
+              accent="danger"
               loading={deleting}
               onClick={confirmDelete}
             >
@@ -800,7 +810,7 @@ export function PipelineBuilder() {
         footer={
           <div className="portal-pipelines__composer-footer">
             <Button
-              variant="ghost"
+              variant="tertiary"
               size="sm"
               disabled={submitting}
               onClick={() => setPendingNav(null)}
@@ -809,9 +819,9 @@ export function PipelineBuilder() {
             </Button>
             <div style={{ display: "flex", gap: "0.5rem" }}>
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
-                accent="red"
+                accent="danger"
                 disabled={submitting}
                 onClick={() => {
                   const target = pendingNav;

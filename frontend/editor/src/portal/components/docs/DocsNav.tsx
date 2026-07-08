@@ -1,5 +1,5 @@
+import { Button, Skeleton, StatusBadge } from "@app/ui";
 import { useTranslation } from "react-i18next";
-import { Skeleton, StatusBadge } from "@app/ui";
 import type { DocsNavSection } from "@portal/api/docs";
 
 /** Left-hand documentation nav tree; each leaf selects an in-page section. */
@@ -31,8 +31,10 @@ export function DocsNav({
               const isActive = item.id === active;
               return (
                 <li key={item.id}>
-                  <button
-                    type="button"
+                  <Button
+                    variant="tertiary"
+                    justify="start"
+                    fullWidth
                     className={
                       "portal-docs__nav-link" + (isActive ? " is-active" : "")
                     }
@@ -48,7 +50,7 @@ export function DocsNav({
                         {item.badge}
                       </StatusBadge>
                     )}
-                  </button>
+                  </Button>
                 </li>
               );
             })}

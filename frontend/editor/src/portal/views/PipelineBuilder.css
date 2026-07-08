@@ -331,3 +331,64 @@
   color: var(--color-text-4);
   margin: 0;
 }
+
+/* The back link, step row, add-step affordance, tool-picker item and step
+   actions are the shared Button/ActionIcon carrying bespoke styling. Re-assert
+   their original look over the design-system button base (which otherwise
+   imposes a fixed height, its own padding/border and accent text colour). */
+.portal-builder__back.sui-btn {
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  font-weight: 400;
+  font-size: 0.8125rem;
+  color: var(--color-text-4);
+}
+
+.portal-builder__back.sui-btn:hover {
+  color: var(--color-text-1);
+}
+
+.portal-builder__step-main.sui-btn {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+  padding: 0.25rem;
+  font-weight: 400;
+  color: inherit;
+}
+
+.portal-builder__add-step.sui-btn {
+  height: auto;
+  min-height: 0;
+  padding: 0.625rem;
+  border: 1px dashed var(--color-border);
+  background: none;
+  font-weight: 400;
+  font-size: 0.8125rem;
+  color: var(--color-text-3);
+}
+
+.portal-builder__add-step.sui-btn:hover {
+  border-color: var(--color-blue);
+  color: var(--color-blue);
+}
+
+.portal-pipelines__picker-item.sui-btn {
+  height: auto;
+  min-height: 0;
+  padding: 0.4375rem 0.75rem;
+  font-weight: 400;
+  color: var(--color-text-1);
+}
+
+.portal-pipelines__picker-item.sui-btn:hover {
+  background: var(--color-bg-hover);
+}
+
+.portal-builder__step-actions .sui-ai {
+  width: 1.5rem;
+  height: 1.5rem;
+  min-width: 1.5rem;
+  min-height: 1.5rem;
+}

@@ -1,5 +1,6 @@
 import React from "react";
-import { ActionIcon, Tooltip } from "@mantine/core";
+import { Tooltip } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import styles from "@app/components/shared/HoverActionMenu.module.css";
 import { Z_INDEX_HOVER_ACTION_MENU } from "@app/styles/zIndex";
 
@@ -60,10 +61,9 @@ const HoverActionMenu: React.FC<HoverActionMenuProps> = ({
         <Tooltip key={action.id} label={action.label}>
           <ActionIcon
             size="md"
-            variant="subtle"
+            variant="tertiary"
             disabled={action.disabled}
             onClick={action.onClick}
-            c={action.color}
             aria-label={action.label}
             style={{ color: action.color || "var(--text-secondary)" }}
             data-tour={action.dataTour}

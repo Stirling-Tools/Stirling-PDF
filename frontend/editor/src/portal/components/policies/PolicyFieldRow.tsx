@@ -45,7 +45,7 @@ export function PolicyFieldRow({
           {(field.options ?? []).map((opt) => (
             <Chip
               key={opt}
-              tone={selected.includes(opt) ? "blue" : "neutral"}
+              accent={selected.includes(opt) ? "default" : "neutral"}
               size="sm"
               onClick={() => toggle(opt)}
             >

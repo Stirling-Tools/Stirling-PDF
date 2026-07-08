@@ -41,7 +41,7 @@ export function Pipelines() {
         </div>
         <Button
           onClick={openCreate}
-          leadingIcon={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
+          leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
         >
           {t("portal.pipelines.actions.newPipeline")}
         </Button>

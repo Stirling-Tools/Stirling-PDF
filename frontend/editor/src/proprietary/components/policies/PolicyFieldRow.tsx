@@ -51,12 +51,7 @@ export function PolicyFieldRow({
         </div>
         <div className="pol-field-chips">
           {(field.options ?? []).map((opt) => (
-            <Chip
-              key={opt}
-              tone={selected.includes(opt) ? "blue" : "neutral"}
-              size="sm"
-              onClick={() => toggle(opt)}
-            >
+            <Chip key={opt} size="sm" onClick={() => toggle(opt)}>
               {t(`policies.fieldOption.${field.key}.${opt}`, opt)}
             </Chip>
           ))}
