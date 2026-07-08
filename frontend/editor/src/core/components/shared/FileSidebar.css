@@ -406,6 +406,10 @@
   font-weight: 500;
   border-radius: 6px;
   text-align: left;
+  overflow: visible;
+}
+.file-sidebar-view-all::before {
+  display: none;
 }
 .file-sidebar-view-all:hover {
   background: var(--color-bg-hover, rgba(120, 120, 120, 0.1));
