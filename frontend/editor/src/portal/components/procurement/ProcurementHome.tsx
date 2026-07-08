@@ -244,7 +244,8 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
             </div>
 
             {(editing ||
-              (isDraft && (stage === "trial" || stage === "quote"))) && (
+              stage === "trial" ||
+              (isDraft && stage === "quote")) && (
               <QuoteBuilder
                 deployment="cloud"
                 initial={latest?.config}
