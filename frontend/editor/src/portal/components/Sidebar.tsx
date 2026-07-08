@@ -4,7 +4,7 @@ import { useView, type ViewId } from "@portal/contexts/ViewContext";
 import { useTier } from "@portal/contexts/TierContext";
 import { useTheme } from "@portal/contexts/ThemeContext";
 import { useUI } from "@portal/contexts/UIContext";
-import { useLink } from "@portal/contexts/LinkContext";
+import { LinkAccountFooterItem } from "@portal/components/LinkAccountFooterItem";
 import { useAsync } from "@portal/hooks/useAsync";
 import { fetchHomeKpis, type KpiEntry } from "@portal/api/home";
 import { EDITOR_URL } from "@portal/auth/editorUrl";
@@ -20,7 +20,6 @@ import {
   ComponentsIcon,
   InfrastructureIcon,
   UsageIcon,
-  LinkIcon,
   DocsIcon,
   SettingsIcon,
   ChevronDownIcon,
@@ -48,27 +47,6 @@ const GROUP_PLATFORM: NavEntry[] = [
   { id: "usage", icon: <UsageIcon /> },
   { id: "docs", icon: <DocsIcon /> },
 ];
-
-/**
- * Sidebar-footer link-account CTA. Only visible when the org is unlinked — once
- * linked, the linked-instances row + plan badge already communicate the state,
- * so a permanent footer button would be noise. Click → opens the login modal
- * directly.
- */
-function LinkAccountFooterItem() {
-  const { t } = useTranslation();
-  const { openLinkModal } = useUI();
-  const { linkState } = useLink();
-  if (linkState !== "unlinked") return null;
-  return (
-    <NavItem
-      id="account-link"
-      label={t("portal.shell.sidebar.linkAccount", "Link Stirling account")}
-      icon={<LinkIcon />}
-      onClick={() => openLinkModal()}
-    />
-  );
-}
 
 function UsageFooter() {
   const { tier } = useTier();

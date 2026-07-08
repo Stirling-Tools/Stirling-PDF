@@ -6,7 +6,8 @@ import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
 
 const srcGlobs = [
-  // The portal layer lives under editor/src/portal, so editor/src/** covers it.
+  // The portal layers live under editor/src/portal (base) and
+  // editor/src/portal-saas (saas override), so editor/src/** covers them.
   "editor/src/**/*.{js,mjs,jsx,ts,tsx}",
 ];
 const nodeGlobs = [
