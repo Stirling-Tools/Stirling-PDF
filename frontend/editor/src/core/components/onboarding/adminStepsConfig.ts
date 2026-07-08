@@ -196,8 +196,12 @@ export function createAdminStepsConfig({
   t,
   actions,
 }: CreateAdminStepsConfigArgs): Record<AdminTourStep, StepType> {
-  const { saveAdminState, openConfigModal, navigateToSection, scrollNavToSection } =
-    actions;
+  const {
+    saveAdminState,
+    openConfigModal,
+    navigateToSection,
+    scrollNavToSection,
+  } = actions;
 
   const build = (spec: AdminStepSpec): StepType => {
     const step: StepType = {

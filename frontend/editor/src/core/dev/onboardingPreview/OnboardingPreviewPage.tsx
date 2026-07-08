@@ -28,8 +28,7 @@ import {
   type PreviewTourType,
 } from "@app/dev/onboardingPreview/scenarios";
 
-const PREVIEW_ENABLED =
-  import.meta.env.VITE_DEV_ONBOARDING_PREVIEW === "true";
+const PREVIEW_ENABLED = import.meta.env.VITE_DEV_ONBOARDING_PREVIEW === "true";
 
 /** Route entry: only mounts the harness when the dev flag is set. */
 export function OnboardingPreviewRoute() {
@@ -53,8 +52,9 @@ class SlideErrorBoundary extends Component<
       return (
         <Paper withBorder p="md" radius="md">
           <Text size="sm" c="dimmed">
-            This slide renders live app UI (forms / auth context) and can only be
-            previewed inside the full editor. Error: {this.state.error.message}
+            This slide renders live app UI (forms / auth context) and can only
+            be previewed inside the full editor. Error:{" "}
+            {this.state.error.message}
           </Text>
         </Paper>
       );
@@ -310,10 +310,9 @@ export default function OnboardingPreviewPage() {
                             {step.position}
                           </Text>
                         </Group>
-                        <Text
-                          size="sm"
-                          dangerouslySetInnerHTML={{ __html: step.content }}
-                        />
+                        <Text size="sm">
+                          {step.content.replace(/<[^>]+>/g, "")}
+                        </Text>
                       </Paper>
                     ))}
                   </Stack>

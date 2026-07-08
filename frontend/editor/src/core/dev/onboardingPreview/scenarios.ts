@@ -249,6 +249,10 @@ export function getTourPreviews(t: TFunction): TourPreview[] {
   return [
     { id: "admin", label: "Admin tour", steps: toStepPreviews(admin) },
     { id: "tools", label: "User tour", steps: toStepPreviews(user) },
-    { id: "whatsnew", label: "What's new tour", steps: toStepPreviews(whatsNew) },
+    {
+      id: "whatsnew",
+      label: "What's new tour",
+      steps: toStepPreviews(whatsNew),
+    },
   ];
 }

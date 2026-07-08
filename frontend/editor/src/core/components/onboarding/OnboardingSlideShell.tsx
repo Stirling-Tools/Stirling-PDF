@@ -165,7 +165,11 @@ export default function OnboardingSlideShell({
                 zIndex: 10,
               }}
             >
-              <LocalIcon icon="close-rounded" width="1.25rem" height="1.25rem" />
+              <LocalIcon
+                icon="close-rounded"
+                width="1.25rem"
+                height="1.25rem"
+              />
             </ActionIcon>
           )}
           <div className={styles.heroLogo} key={`logo-${slideKey}`}>
@@ -196,7 +200,10 @@ export default function OnboardingSlideShell({
             </div>
 
             {stepCount > 1 && (
-              <OnboardingStepper totalSteps={stepCount} activeStep={stepIndex} />
+              <OnboardingStepper
+                totalSteps={stepCount}
+                activeStep={stepIndex}
+              />
             )}
 
             <div className={styles.buttonContainer}>

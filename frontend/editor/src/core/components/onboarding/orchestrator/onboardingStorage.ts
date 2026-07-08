@@ -5,7 +5,8 @@ const ONBOARDING_COMPLETED_KEY = `${STORAGE_PREFIX}::completed`;
 // Per-flow persistence lives under a single namespace so completion state
 // composes across build flavors and, in future, checklist-style flows that
 // track individual step completion (see setStepDone / getFlowProgress).
-const flowSeenKey = (flowId: string) => `${STORAGE_PREFIX}::flow::${flowId}::seen`;
+const flowSeenKey = (flowId: string) =>
+  `${STORAGE_PREFIX}::flow::${flowId}::seen`;
 const flowProgressKey = (flowId: string) =>
   `${STORAGE_PREFIX}::flow::${flowId}::progress`;
 
@@ -73,7 +74,10 @@ export function resetFlow(flowId: string): void {
     localStorage.removeItem(flowSeenKey(flowId));
     localStorage.removeItem(flowProgressKey(flowId));
   } catch (error) {
-    console.error(`[onboardingStorage] Error resetting flow "${flowId}":`, error);
+    console.error(
+      `[onboardingStorage] Error resetting flow "${flowId}":`,
+      error,
+    );
   }
 }
 

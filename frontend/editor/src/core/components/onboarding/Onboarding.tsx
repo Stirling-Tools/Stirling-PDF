@@ -453,7 +453,10 @@ export default function Onboarding() {
         transformButtons={(buttons) =>
           buttons.filter((btn) => btn.key !== "license-back")
         }
-        runtimeState={{ ...runtimeState, licenseNotice: effectiveLicenseNotice }}
+        runtimeState={{
+          ...runtimeState,
+          licenseNotice: effectiveLicenseNotice,
+        }}
         params={{
           osOptions: [],
           onDownloadUrlChange: () => {},

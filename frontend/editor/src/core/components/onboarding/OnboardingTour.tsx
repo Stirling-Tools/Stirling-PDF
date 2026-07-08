@@ -6,7 +6,7 @@
  * when the tour is open but onboarding is inactive.
  */
 
-import React from "react";
+import React, { type ReactNode } from "react";
 import { TourProvider, useTour, type StepType } from "@reactour/tour";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
@@ -14,6 +14,19 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CheckIcon from "@mui/icons-material/Check";
 import type { TFunction } from "i18next";
 import i18n from "@app/i18n";
+
+/**
+ * Renders tour copy that uses <strong> for emphasis as real React elements,
+ * so there is no raw-HTML injection surface (avoids dangerouslySetInnerHTML).
+ * Any other markup is shown as plain text.
+ */
+function renderTourContent(content: string): ReactNode {
+  return content.split(/(<strong>.*?<\/strong>)/g).map((part, index) => {
+    const match = part.match(/^<strong>(.*?)<\/strong>$/);
+    if (match) return <strong key={index}>{match[1]}</strong>;
+    return <React.Fragment key={index}>{part}</React.Fragment>;
+  });
+}
 
 /**
  * TourContent - Controls the tour visibility
@@ -170,10 +183,9 @@ export default function OnboardingTour({
           </ActionIcon>
         ),
         Content: ({ content }: { content: string }) => (
-          <div
-            style={{ paddingRight: "16px" }}
-            dangerouslySetInnerHTML={{ __html: content }}
-          />
+          <div style={{ paddingRight: "16px" }}>
+            {renderTourContent(content)}
+          </div>
         ),
       }}
     >

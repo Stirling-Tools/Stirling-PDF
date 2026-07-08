@@ -1,7 +1,11 @@
 import type { StepType } from "@reactour/tour";
 import type { TFunction } from "i18next";
 import type { NavigateFunction } from "react-router-dom";
-import { VIEW_PATHS, toPortalPath, type ViewId } from "@portal/contexts/ViewContext";
+import {
+  VIEW_PATHS,
+  toPortalPath,
+  type ViewId,
+} from "@portal/contexts/ViewContext";
 
 interface PortalTourStepSpec {
   view: ViewId;

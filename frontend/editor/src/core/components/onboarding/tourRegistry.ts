@@ -99,6 +99,7 @@ export function getTourSteps(
   tourType: string,
   ctx: TourBuildContext,
 ): StepType[] {
-  const definition = TOUR_REGISTRY[tourType] ?? TOUR_REGISTRY[DEFAULT_TOUR_TYPE];
+  const definition =
+    TOUR_REGISTRY[tourType] ?? TOUR_REGISTRY[DEFAULT_TOUR_TYPE];
   return definition.build(ctx);
 }

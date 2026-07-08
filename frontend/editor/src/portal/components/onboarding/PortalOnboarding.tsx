@@ -41,8 +41,7 @@ export default function PortalOnboarding() {
     [navigate, t],
   );
   const isRTL =
-    typeof document !== "undefined" &&
-    document.documentElement.dir === "rtl";
+    typeof document !== "undefined" && document.documentElement.dir === "rtl";
 
   const finish = () => {
     markFlowSeen(FLOW_ID);
@@ -113,9 +112,9 @@ export default function PortalOnboarding() {
           title="Welcome to the Stirling Processor"
           body={
             <span>
-              The Processor runs <strong>Policies</strong> — automated rules that
-              classify, secure, and organise every document that arrives. Take a
-              quick tour to see how it's laid out.
+              The Processor runs <strong>Policies</strong> — automated rules
+              that classify, secure, and organise every document that arrives.
+              Take a quick tour to see how it's laid out.
             </span>
           }
           stepIndex={0}
