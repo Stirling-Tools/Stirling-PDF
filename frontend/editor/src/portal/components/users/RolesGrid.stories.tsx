@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ROLES } from "@portal/mocks/users";
+import { ROLES } from "@portal/api/users";
 import { RolesGrid } from "@portal/components/users/RolesGrid";
 
 const meta: Meta<typeof RolesGrid> = {
