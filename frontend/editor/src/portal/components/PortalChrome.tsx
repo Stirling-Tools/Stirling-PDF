@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
 import { ErrorBoundary } from "@portal/components/ErrorBoundary";
 import { useUI } from "@portal/contexts/UIContext";
 import { AppShell } from "@portal/components/AppShell";
@@ -71,9 +72,12 @@ export function PortalChrome() {
   return (
     <>
       <GlobalShortcuts />
-      <AppShell>
-        <RoutedContent />
-      </AppShell>
+      {/* The pipeline builder reads the tool registry to list and configure operations. */}
+      <ToolRegistryProvider>
+        <AppShell>
+          <RoutedContent />
+        </AppShell>
+      </ToolRegistryProvider>
       <AssistantMount />
       <SearchModal />
       <SettingsHost />

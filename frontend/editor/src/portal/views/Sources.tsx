@@ -1,4 +1,5 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, EmptyState, Modal, Skeleton } from "@app/ui";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
@@ -22,6 +23,7 @@ import "@portal/views/Sources.css";
 
 export function Sources() {
   const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
   // Refetch after every mutation by bumping this counter, so the table reflects
   // the in-memory store the handlers maintain (mirrors the Policies view).
   const [version, setVersion] = useState(0);
@@ -61,6 +63,17 @@ export function Sources() {
     setEditingSource(null);
     setWizardOpen(true);
   }
+
+  // Arriving with ?new (e.g. from the pipeline builder's "connect a source" link) opens the
+  // create wizard straight away, then strips the flag so a refresh doesn't reopen it.
+  useEffect(() => {
+    if (searchParams.get("new") === null) return;
+    setEditingSource(null);
+    setWizardOpen(true);
+    const next = new URLSearchParams(searchParams);
+    next.delete("new");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   // Editing needs the raw source (config options), which the overview rows don't
   // carry, so fetch it before opening the wizard prefilled.

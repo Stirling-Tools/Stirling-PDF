@@ -1,10 +1,21 @@
 import {
+  TOOL_ENDPOINTS,
   type ToolApiParams,
   type ToolApiRequest,
   type ToolEndpoint,
 } from "@app/types/toolApiTypes";
 
 export type { ToolApiParams, ToolApiRequest, ToolEndpoint };
+
+const TOOL_ENDPOINT_SET: ReadonlySet<string> = new Set(TOOL_ENDPOINTS);
+
+/**
+ * Runtime check that a string is one of the generated tool endpoints, so callers can narrow an
+ * arbitrary endpoint path to {@link ToolEndpoint} against the real supported set rather than casting.
+ */
+export function isToolEndpoint(value: string): value is ToolEndpoint {
+  return TOOL_ENDPOINT_SET.has(value);
+}
 
 /**
  * Mapping for tools that take only a file and have no request parameters (their
