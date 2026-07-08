@@ -19,6 +19,9 @@ import {
 } from "@app/hooks/tools/shared/toolAutomation";
 import { compressOperationConfig } from "@app/hooks/tools/compress/useCompressOperation";
 import { defaultParameters as compressDefaults } from "@app/hooks/tools/compress/useCompressParameters";
+import { splitOperationConfig } from "@app/hooks/tools/split/useSplitOperation";
+import { SPLIT_METHODS } from "@app/constants/splitConstants";
+import { redactOperationConfig } from "@app/hooks/tools/redact/useRedactOperation";
 
 function entry(over: Partial<ToolRegistryEntry>): ToolRegistryEntry {
   return {
@@ -75,6 +78,20 @@ const registry: Partial<ToolRegistry> = {
   }),
   // Excluded: no operationConfig at all.
   extractPages: entry({ name: "Extract pages" }),
+};
+
+// Separate registry so these don't change the getExecutableTools expectations above.
+const dynamicRegistry: Partial<ToolRegistry> = {
+  split: entry({
+    name: "Split",
+    automationSettings: NoopSettings,
+    operationConfig: asRegistryConfig(splitOperationConfig),
+  }),
+  redact: entry({
+    name: "Redact",
+    automationSettings: NoopSettings,
+    operationConfig: asRegistryConfig(redactOperationConfig),
+  }),
 };
 
 describe("getExecutableTools", () => {
@@ -138,6 +155,46 @@ describe("serialize/deserialize round-trip", () => {
       operation: "/api/v1/unknown/thing",
       parameters: { keep: true },
     });
+  });
+
+  test("a dynamic-endpoint tool (split by chapters) round-trips as an editable step", () => {
+    const step: WorkingToolStep = {
+      toolId: "split" as ToolId,
+      operation: "/api/v1/general/split-pdf-by-chapters",
+      params: { method: SPLIT_METHODS.BY_CHAPTERS, bookmarkLevel: "2" },
+      support: "editable",
+    };
+
+    const api = serializeToolStep(step, dynamicRegistry);
+    expect(api.operation).toBe("/api/v1/general/split-pdf-by-chapters");
+    expect(api.parameters).toMatchObject({ bookmarkLevel: 2 });
+
+    // No `method` in the stored body, so this only matches via the declared endpoint set.
+    const back = deserializeToolStep(api, dynamicRegistry);
+    expect(back.toolId).toBe("split");
+    expect(back.support).toBe("editable");
+    expect(back.operation).toBe("/api/v1/general/split-pdf-by-chapters");
+    expect(back.params).toMatchObject({ method: SPLIT_METHODS.BY_CHAPTERS });
+  });
+
+  test("a dynamic-endpoint tool whose routing field is dropped (redact) stays editable", () => {
+    const step: WorkingToolStep = {
+      toolId: "redact" as ToolId,
+      operation: "/api/v1/security/auto-redact",
+      params: { mode: "automatic", wordsToRedact: ["secret"] },
+      support: "editable",
+    };
+
+    const api = serializeToolStep(step, dynamicRegistry);
+    expect(api.operation).toBe("/api/v1/security/auto-redact");
+    expect(api.parameters).not.toHaveProperty("mode");
+
+    // No `mode` in the body, so it only matches via the declared set (replay would yield null).
+    const back = deserializeToolStep(api, dynamicRegistry);
+    expect(back.toolId).toBe("redact");
+    expect(back.support).toBe("editable");
+    expect(back.operation).toBe("/api/v1/security/auto-redact");
+    expect(back.params).toMatchObject({ mode: "automatic" });
   });
 });
 

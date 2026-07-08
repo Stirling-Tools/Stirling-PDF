@@ -197,7 +197,11 @@ export function serializeToolStep(
   return { operation, parameters };
 }
 
-/** Find the registry tool whose endpoint matches a stored step's endpoint (static match, then dynamic replay). */
+/**
+ * Find the registry tool for a stored step's endpoint: exact match for static endpoints, else
+ * membership in a dynamic tool's declared `endpoints` set (replaying its function can't recover a
+ * frontend-only routing field). Replay is only the fallback when no set is declared.
+ */
 function findToolByEndpoint(
   step: ToolApiStep,
   registry: Partial<ToolRegistry>,
@@ -208,9 +212,11 @@ function findToolByEndpoint(
     if (typeof endpoint === "string") {
       if (endpoint === step.operation) return [id as ToolId, entry];
     } else if (typeof endpoint === "function" && !dynamic) {
-      if (safeCall(endpoint, step.parameters) === step.operation) {
-        dynamic = [id as ToolId, entry];
-      }
+      const declared = entry?.operationConfig?.endpoints;
+      const matched = declared
+        ? declared.some((e) => e === step.operation)
+        : safeCall(endpoint, step.parameters) === step.operation;
+      if (matched) dynamic = [id as ToolId, entry];
     }
   }
   return dynamic;
