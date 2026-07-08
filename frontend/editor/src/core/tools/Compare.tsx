@@ -498,36 +498,27 @@ const Compare = (props: BaseToolProps) => {
               {t("compare.original.label", "Original PDF")}
             </Text>
 
-            <div className="compare-step-selection__thumbs-row">
-              <Stack gap="sm" className="compare-step-selection__thumbs-col">
-                {renderSlot("base")}
-                <Text fw={700} size="sm" style={{ margin: 0 }}>
-                  {t("compare.edited.label", "Edited PDF")}
-                </Text>
-                {renderSlot("comparison")}
-              </Stack>
+            <Stack gap="sm" className="compare-step-selection__thumbs-col">
+              {renderSlot("base")}
 
               {hasBothSelected && (
-                /* Bespoke full-height vertical bar (icon stacked over label) —
-                   not a layout the shared Button supports. */
-                // eslint-disable-next-line no-restricted-syntax
-                <button
-                  type="button"
-                  className="compare-step-selection__swap"
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={handleSwap}
                   disabled={base.operation.isLoading}
-                  aria-label={t("compare.swap.label", "Swap")}
+                  leftSection={<SwapVertRoundedIcon fontSize="small" />}
+                  style={{ alignSelf: "center" }}
                 >
-                  <SwapVertRoundedIcon
-                    className="compare-step-selection__swap-icon"
-                    fontSize="inherit"
-                  />
-                  <span className="compare-step-selection__swap-label">
-                    {t("compare.swap.label", "Swap")}
-                  </span>
-                </button>
+                  {t("compare.swap.label", "Swap")}
+                </Button>
               )}
-            </div>
+
+              <Text fw={700} size="sm" style={{ margin: 0 }}>
+                {t("compare.edited.label", "Edited PDF")}
+              </Text>
+              {renderSlot("comparison")}
+            </Stack>
 
             <Modal
               opened={swapConfirmOpen}

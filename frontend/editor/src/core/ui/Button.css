@@ -60,3 +60,11 @@
 .sui-btn--no-hover:not(:disabled):not([data-disabled]):hover {
   background: var(--button-bg, transparent) !important;
 }
+
+[data-theme="dark"] .sui-btn--primary.mantine-Button-root:disabled:not([data-loading]),
+[data-theme="dark"]
+  .sui-btn--primary.mantine-Button-root[data-disabled]:not([data-loading]) {
+  background: var(--button-bg);
+  color: var(--button-color);
+  opacity: 0.55;
+}

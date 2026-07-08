@@ -136,7 +136,13 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
   ) {
     const label = text ?? children;
     const hasLabel = label != null && label !== false && label !== "";
-    const iconOnly = !hasLabel && (!!leftSection || !!rightSection || loading);
+    // A labelless button collapses to a square icon-only button — but never when
+    // `fullWidth` is set (it must span its container, e.g. a loading execute
+    // button whose label is momentarily absent while files hydrate).
+    const iconOnly =
+      !hasLabel &&
+      !fullWidth &&
+      (!!leftSection || !!rightSection || loading);
 
     // px/py override p for their axis; each stays undefined (= size default) if unset.
     const padX = px ?? p;

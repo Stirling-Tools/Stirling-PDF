@@ -153,6 +153,32 @@ export const Accents: Story = {
   ),
 };
 
+/** Loading keeps the button's shape. A labelless loader collapses to an icon
+    square — unless `fullWidth`, which must always span its container (e.g. an
+    execute button whose label is briefly absent while files hydrate). */
+export const Loading: Story = {
+  render: (args) => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12, width: 320 }}>
+      <Button {...args} loading text="Save changes" />
+      <Button {...args} loading leftSection={<Plus />} text="Save changes" />
+      {/* fullWidth + loading + no label — must fill width, not shrink to a square */}
+      <Button {...args} text={undefined} fullWidth loading />
+    </div>
+  ),
+};
+
+/** Disabled primary — dark mode keeps a muted accent instead of grey. */
+export const DisabledDark: Story = {
+  render: () => (
+    <div style={{ background: "var(--bg-surface)", padding: 24, width: 360 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <Button data-d="active" fullWidth text="Merge (8 files)" />
+        <Button data-d="disabled" fullWidth disabled text="Merge (8 files)" />
+      </div>
+    </div>
+  ),
+};
+
 /** Real size differences. */
 export const Sizes: Story = {
   render: (args) => (
