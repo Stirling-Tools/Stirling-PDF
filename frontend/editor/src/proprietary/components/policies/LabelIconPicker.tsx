@@ -52,33 +52,39 @@ export function LabelIconPicker({
       </Popover.Target>
       <Popover.Dropdown p="xs" style={{ maxHeight: 280, overflowY: "auto" }}>
         <SimpleGrid cols={10} spacing={4} verticalSpacing={4}>
-          {LABEL_ICON_OPTIONS.map((option) => (
-            <Tooltip
-              key={option.icon}
-              label={option.label}
-              withArrow
-              openDelay={300}
-            >
-              <ActionIcon
-                variant="quiet"
-                className={`labels-icon-option${option.icon === value ? " is-selected" : ""}`}
-                onClick={() => {
-                  onChange(option.icon);
-                  setOpen(false);
-                }}
-                aria-label={t(
-                  "policies.labels.pickIcon",
-                  "Use {{label}} icon",
-                  {
-                    label: option.label,
-                  },
-                )}
-                aria-pressed={option.icon === value}
+          {LABEL_ICON_OPTIONS.map((option) => {
+            const iconLabel = t(
+              `policies.labels.iconName.${option.icon}`,
+              option.label,
+            );
+            return (
+              <Tooltip
+                key={option.icon}
+                label={iconLabel}
+                withArrow
+                openDelay={300}
               >
-                <LocalIcon icon={option.icon} width="1.25rem" />
-              </ActionIcon>
-            </Tooltip>
-          ))}
+                <ActionIcon
+                  variant="quiet"
+                  className={`labels-icon-option${option.icon === value ? " is-selected" : ""}`}
+                  onClick={() => {
+                    onChange(option.icon);
+                    setOpen(false);
+                  }}
+                  aria-label={t(
+                    "policies.labels.pickIcon",
+                    "Use {{label}} icon",
+                    {
+                      label: iconLabel,
+                    },
+                  )}
+                  aria-pressed={option.icon === value}
+                >
+                  <LocalIcon icon={option.icon} width="1.25rem" />
+                </ActionIcon>
+              </Tooltip>
+            );
+          })}
         </SimpleGrid>
       </Popover.Dropdown>
     </Popover>

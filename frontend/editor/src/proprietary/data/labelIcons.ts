@@ -8,14 +8,15 @@
  * one up and bundles it — otherwise a picked icon would fall back to the CDN and
  * render blank offline. After adding/removing entries run `task frontend:prepare:icons`.
  *
- * Search is intentionally omitted for now (no synonyms/translations to maintain);
- * the palette is small enough to eyeball.
+ * Search is intentionally omitted for now (no synonyms to maintain); the palette
+ * is small enough to eyeball.
  */
 
 export interface LabelIconOption {
   /** Material Symbols key (no `material-symbols:` prefix). */
   icon: string;
-  /** Short English label — tooltip/aria only, not user-facing copy. */
+  /** Short English name — the en-US default for the icon's tooltip/aria; the
+   *  picker translates it via `policies.labels.iconName.<icon>`. */
   label: string;
 }
 
