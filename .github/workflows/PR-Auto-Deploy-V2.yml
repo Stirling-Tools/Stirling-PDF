@@ -246,7 +246,9 @@ jobs:
           file: ./docker/embedded/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-${{ steps.commit-hash.outputs.app_short }}
-          build-args: VERSION_TAG=v2-alpha
+          build-args: |
+            VERSION_TAG=v2-alpha
+            BUILD_PORTAL=true
           platforms: linux/amd64
 
       - name: Build and push V2 image (Docker fork fallback)
@@ -259,7 +261,9 @@ jobs:
           cache-from: type=gha,scope=stirling-pdf-latest
           cache-to: type=gha,mode=max,scope=stirling-pdf-latest
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-${{ steps.commit-hash.outputs.app_short }}
-          build-args: VERSION_TAG=v2-alpha
+          build-args: |
+            VERSION_TAG=v2-alpha
+            BUILD_PORTAL=true
           platforms: linux/amd64
 
       - name: Set up SSH
@@ -290,6 +294,11 @@ jobs:
                 - /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/storage:/storage:rw
               environment:
                 DISABLE_ADDITIONAL_FEATURES: "false"
+                # Enable the admin portal's backend surfaces so the embedded
+                # /portal (built via BUILD_PORTAL above) loads real data instead
+                # of 404ing on its policy/source/account-link calls.
+                POLICIES_ENABLED: "true"
+                STIRLING_BILLING_ACCOUNT_LINK_ENABLED: "true"
                 SECURITY_ENABLELOGIN: "true"
                 SECURITY_INITIALLOGIN_USERNAME: "${{ secrets.TEST_LOGIN_USERNAME }}"
                 SECURITY_INITIALLOGIN_PASSWORD: "${{ secrets.TEST_LOGIN_PASSWORD }}"
