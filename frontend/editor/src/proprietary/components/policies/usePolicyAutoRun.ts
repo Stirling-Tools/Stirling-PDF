@@ -309,7 +309,7 @@ export function usePolicyAutoRun(): void {
 interface ImportContext {
   addFiles: (
     files: File[],
-    options?: { skipUploadTracking?: boolean },
+    options?: { skipUploadTracking?: boolean; derivedFromTool?: boolean },
   ) => Promise<StirlingFile[]>;
   consumeFiles: (
     inputFileIds: FileId[],
@@ -498,9 +498,14 @@ async function importOutputs(
       parentStub,
       "automate",
     );
-    // Mark the outputs handled BEFORE adding them, so the auto-run never enforces
-    // the policy on its own output — that would version endlessly in a loop.
-    for (const s of stubs) markDispatched(run.categoryId, s.id);
+    // derivedFromTool is the durable cross-session guard; markDispatched is the
+    // belt-and-suspenders session guard. Both are needed: dispatched lives only
+    // in localStorage (wiped on clear / absent on a different device), while
+    // derivedFromTool is stamped on the stub itself.
+    for (const s of stubs) {
+      s.derivedFromTool = true;
+      markDispatched(run.categoryId, s.id);
+    }
     deliveredIds = stubs.map((s) => s.id as string);
     if (ctx.parentStub) {
       // Input is in the active workspace: version it there (workspace + storage).
@@ -516,9 +521,13 @@ async function importOutputs(
       ctx.bumpRevision();
     }
   } else {
-    const added = await ctx.addFiles(files, { skipUploadTracking: true });
-    // Same loop-guard for new-file output: the produced file is a new workspace
-    // file the auto-run would otherwise re-enforce indefinitely.
+    // derivedFromTool prevents the auto-run from ever re-enforcing this output,
+    // even if the dispatched list is cleared (localStorage wipe / different device).
+    const added = await ctx.addFiles(files, {
+      skipUploadTracking: true,
+      derivedFromTool: true,
+    });
+    // Belt-and-suspenders session guard on top of derivedFromTool.
     for (const f of added) markDispatched(run.categoryId, f.fileId);
     deliveredIds = added.map((f) => f.fileId as string);
   }

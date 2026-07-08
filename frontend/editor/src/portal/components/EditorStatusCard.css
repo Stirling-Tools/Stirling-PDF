@@ -1,0 +1,118 @@
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Subscribed-tier deployed-Editor hero                                     */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+.portal-editor-hero {
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border-input);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.portal-editor-hero__row {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.portal-editor-hero__logo {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 0.875rem;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+.portal-editor-hero__mark {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.portal-editor-hero__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.portal-editor-hero__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5625rem;
+  flex-wrap: wrap;
+}
+
+.portal-editor-hero__name {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-text-1);
+  margin-right: 0.125rem;
+}
+
+.portal-editor-hero__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+  padding: 0.3125rem 0.75rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border-input);
+  background: var(--color-bg-code);
+  color: var(--color-text-2);
+  font-size: 0.71875rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  transition:
+    background var(--motion-fast),
+    box-shadow var(--motion-fast),
+    transform var(--motion-fast);
+}
+.portal-editor-hero__chip:hover {
+  background: var(--color-surface);
+  box-shadow: 0 2px 5px rgba(15, 23, 42, 0.1);
+  transform: translateY(-1px);
+}
+.portal-editor-hero__chip svg {
+  color: var(--color-text-4);
+}
+
+.portal-editor-hero__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+  color: var(--color-text-5);
+}
+.portal-editor-hero__host {
+  color: var(--color-text-2);
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+.portal-editor-hero__meta-sep {
+  color: var(--color-border-input);
+}
+
+.portal-editor-hero__action {
+  flex-shrink: 0;
+}
+
+@media (max-width: 48rem) {
+  .portal-editor-hero__row {
+    flex-wrap: wrap;
+  }
+  .portal-editor-hero__action {
+    width: 100%;
+  }
+}
+
+/* Attached footer strip (setup checklist). */
+.portal-editor-hero__footer {
+  border-top: 1px solid var(--color-border-light);
+}

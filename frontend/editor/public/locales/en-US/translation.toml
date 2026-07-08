@@ -6062,6 +6062,14 @@ stepOf = "Step {{step}} of {{total}}"
 toolChainDesc = "Configure the tools this policy runs on each document."
 typesSelected = "{{count}} types selected"
 
+[policy]
+badgeEnforcing = "{{name}} enforcing..."
+badgeRan = "{{name}} policy ran on this file"
+blockingAction = "{{action}} blocked while enforcing policy, please wait..."
+dismiss = "Dismiss overlay"
+enforcingTitle = "Enforcing policy..."
+viewAnyway = "View file (policy still enforcing)"
+
 [portal]
 comingSoon = "Coming soon"
 
@@ -6276,7 +6284,6 @@ cost = "Cost"
 editorsDeployed = "Editors deployed"
 inviteTeammates = "Invite teammates"
 pdfsEdited = "PDFs edited"
-previewBadge = "Preview · sample data"
 subtitle = "Deploy anywhere, for your whole team."
 title = "Free PDF Editors"
 
@@ -6742,6 +6749,23 @@ ready = "Ready to deploy"
 description = "Once documents are processed, your 30-day usage appears here."
 title = "No usage yet"
 
+[portal.home.editor]
+activeUsers = "{{n}} active"
+invite = "Invite teammates"
+name = "Stirling PDF Editor"
+open = "Open in browser"
+updated = "updated {{time}}"
+
+[portal.home.editor.target]
+cloud = "Managed Cloud"
+docker = "Self-hosted · Docker"
+kubernetes = "Self-hosted · Kubernetes"
+
+[portal.home.greeting]
+afternoon = "Good afternoon"
+evening = "Good evening"
+morning = "Good morning"
+
 [portal.home.kpis.enterprise]
 docs30d = "Docs / 30d"
 evalPassRate = "Eval pass rate"
@@ -6762,15 +6786,31 @@ evalPassRate = "Eval pass rate"
 pipelines = "Pipelines"
 
 [portal.home.onboarding]
-progress = "{{done}} / {{total}} done"
-runAgain = "Run again"
-start = "Start"
-subtitle = "Four steps to a production-shaped Stirling project."
-title = "Get to value"
+dismiss = "Dismiss setup"
+notStarted = "Not started"
+progress = "{{done}} of {{total}} done"
+title = "Finish setting up"
 
-[portal.home.onboarding.empty]
-description = "Onboarding tasks will appear here once your workspace is set up."
-title = "No onboarding steps yet"
+[portal.home.onboarding.enterprise]
+body = "Org-wide SSO + SCIM + RBAC, committed volume pricing, and air-gapped deployment."
+cta = "Start Trial"
+ctaQuote = "Get Quote"
+lead = "For 250+ employees."
+tag = "Enterprise"
+
+[portal.home.onboarding.steps.editor]
+blurb = "Deploy the desktop app, free forever."
+title = "Download the PDF Editor"
+
+[portal.home.onboarding.steps.policies]
+blurb = "{{active}} active · {{recommended}} recommended"
+chip = "{{active}} active"
+title = "Turn on policies"
+
+[portal.home.onboarding.steps.sources]
+blurb = "{{connected}} connected · every PDF governed where it lands"
+chip = "{{connected}} connected"
+title = "Connect your sources"
 
 [portal.home.productGrid]
 ariaLabel = "Process PDFs at scale"
@@ -8018,36 +8058,14 @@ status = "Status"
 suspend = "Suspend"
 
 [portal.welcome]
-ariaLabel = "Stirling product highlights"
-pagination = "Carousel pagination"
-slideLabel = "Slide {{number}}: {{title}}"
-
-[portal.welcome.ornament.editor]
-critical = "Critical"
-ocrClean = "OCR-clean"
-schemaMatch = "schema match 0.97"
-signed = "signed"
-
-[portal.welcome.slides.agents]
-eyebrow = "AI Agents"
-primary = "Try PDF Processor"
-secondary = "View MCP docs"
-sub = "Wire your agent via MCP, REST or tool definitions. Deterministic operations and guardrails — test with scenarios and evals before you ship."
-title = "PDF Processor for AI Agents"
-
-[portal.welcome.slides.editor]
-eyebrow = "PDF Editor"
-primary = "Install PDF Editor"
-secondary = "Connect an instance"
-sub = "Annotate, sign, redact, and review locally or in the cloud. Brought to the platform as the credibility anchor of the Stirling control plane."
-title = "The #1 PDF Editor on GitHub"
-
-[portal.welcome.slides.platform]
-eyebrow = "Platform"
-primary = "Try a PDF operation"
-secondary = "Get an API key"
-sub = "Ingest from agents, APIs and connectors. Run composable pipelines with evals and golden sets. Land in a vault with zero-standing-access controls."
-title = "PDF Infrastructure for Developers"
+ariaLabel = "Welcome to Stirling PDF"
+badge = "Open-source"
+installEditor = "Install the Editor"
+inviteTeammates = "Invite teammates"
+perks = "Free forever · Self-hostable"
+subtitle = "The world's most secure PDF Editor is free for teams of all sizes. Includes 60+ PDF operations and SSO."
+title = "Welcome to"
+titleAccent = "Stirling PDF"
 
 [printFile]
 title = "Print File"

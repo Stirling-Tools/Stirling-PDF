@@ -240,6 +240,20 @@ export default defineConfig(
       "no-restricted-syntax": ["error", ...mantineComponentImportRestrictions],
     },
   },
+  // TEMPORARY (same rationale as procurement above): the portal home hero
+  // reuses the same bespoke CSS-styled raw <button> controls as the procurement
+  // deal hero — status/invite chips and full-width checklist rows that the
+  // shared Button can't represent. Exempt ONLY the raw-<button> rule; the
+  // Mantine import bans stay. Migrate these alongside the procurement buttons.
+  {
+    files: [
+      "editor/src/portal/components/EditorStatusCard.tsx",
+      "editor/src/portal/components/SetupChecklist.tsx",
+    ],
+    rules: {
+      "no-restricted-syntax": ["error", ...mantineComponentImportRestrictions],
+    },
+  },
   // Stricter rules that not all sub-folders are conformant to yet.
   {
     files: srcGlobs,
