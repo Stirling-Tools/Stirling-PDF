@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import {
   Chip,
   StatusBadge,
@@ -16,16 +17,11 @@ const STATUS_TONE: Record<PipelineStatus, StatusTone> = {
 
 interface PipelinesTableProps {
   pipelines: PipelineView[];
-  /** Id of the row whose detail panel is open, drives the caret state. */
-  expandedId: string | null;
+  /** A row opens that pipeline's own page. */
   onRowClick: (pipeline: PipelineView) => void;
 }
 
-export function PipelinesTable({
-  pipelines,
-  expandedId,
-  onRowClick,
-}: PipelinesTableProps) {
+export function PipelinesTable({ pipelines, onRowClick }: PipelinesTableProps) {
   const { t } = useTranslation();
   const columns = useMemo<TableColumn<PipelineView>[]>(
     () => [
@@ -90,24 +86,18 @@ export function PipelinesTable({
         ),
       },
       {
-        key: "expand",
+        key: "open",
         header: "",
         align: "right",
         width: "2.5rem",
-        render: (p) => (
-          <span
-            className={
-              "portal-pipelines__caret" +
-              (expandedId === p.id ? " is-open" : "")
-            }
-            aria-hidden
-          >
-            ▸
+        render: () => (
+          <span className="portal-pipelines__caret" aria-hidden>
+            <ChevronRightRoundedIcon style={{ fontSize: "1.25rem" }} />
           </span>
         ),
       },
     ],
-    [expandedId, t],
+    [t],
   );
 
   return (

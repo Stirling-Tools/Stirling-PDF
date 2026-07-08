@@ -28,12 +28,15 @@ interface FormSaveBarProps {
   isFormFillToolActive: boolean;
   /** Callback when form changes are applied (should reload PDF with filled values) */
   onApply?: (filledBlob: Blob) => Promise<void>;
+  /** Disable download while an ingestion-time policy run is in flight. */
+  policyEnforcing?: boolean;
 }
 
 export function FormSaveBar({
   file,
   isFormFillToolActive,
   onApply,
+  policyEnforcing = false,
 }: FormSaveBarProps) {
   const { t } = useTranslation();
   const { state, submitForm } = useFormFill();
@@ -181,7 +184,7 @@ export function FormSaveBar({
                     size="sm"
                     leftSection={<DownloadIcon sx={{ fontSize: 18 }} />}
                     loading={saving}
-                    disabled={applying}
+                    disabled={applying || policyEnforcing}
                     onClick={handleDownload}
                     style={{ flex: 1 }}
                   >

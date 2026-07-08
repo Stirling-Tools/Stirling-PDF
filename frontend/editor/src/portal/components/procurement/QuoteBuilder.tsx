@@ -51,6 +51,7 @@ export function QuoteBuilder({
       indemnification: false,
       training: false,
       qbr: false,
+      offlineLicense: false,
       currency: "USD",
       businessName: "",
     },
@@ -222,6 +223,12 @@ export function QuoteBuilder({
                   title={t("portal.procurement.builder.qbr")}
                   sub={t("portal.procurement.builder.qbrSub")}
                   onClick={() => set("qbr", !cfg.qbr)}
+                />
+                <AddOn
+                  on={cfg.offlineLicense}
+                  title={t("portal.procurement.builder.offlineLicense")}
+                  sub={t("portal.procurement.builder.offlineLicenseSub")}
+                  onClick={() => set("offlineLicense", !cfg.offlineLicense)}
                 />
               </div>
             </Field>
@@ -432,5 +439,12 @@ function previewAnnualMinor(cfg: QuoteConfigInput): number {
   const disc = Math.round(
     withInd * TERM_DISCOUNT[Math.min(Math.max(cfg.termYears, 1), 5) - 1],
   );
-  return withInd - disc + (cfg.qbr ? 800_000 : 0);
+  // Flat annual add-ons (QBR, offline licence) sit outside the multi-year discount, mirroring the
+  // server (PricingRates: qbr 800_000, offline licence 1_200_000). TCV preview derives from this.
+  return (
+    withInd -
+    disc +
+    (cfg.qbr ? 800_000 : 0) +
+    (cfg.offlineLicense ? 1_200_000 : 0)
+  );
 }

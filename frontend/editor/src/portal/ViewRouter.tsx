@@ -3,6 +3,7 @@ import { Home } from "@portal/views/Home";
 import { Users } from "@portal/views/Users";
 import { Documents } from "@portal/views/Documents";
 import { Pipelines } from "@portal/views/Pipelines";
+import { PipelineBuilder } from "@portal/views/PipelineBuilder";
 import { Sources } from "@portal/views/Sources";
 import { AgentBuilder } from "@portal/views/AgentBuilder";
 import { Policies } from "@portal/views/Policies";
@@ -26,6 +27,14 @@ export function ViewRouter() {
       <Route index element={<Home />} />
       <Route path={rel(VIEW_PATHS.users)} element={<Users />} />
       <Route path={rel(VIEW_PATHS.pipelines)} element={<Pipelines />} />
+      <Route
+        path={`${rel(VIEW_PATHS.pipelines)}/new`}
+        element={<PipelineBuilder />}
+      />
+      <Route
+        path={`${rel(VIEW_PATHS.pipelines)}/:id`}
+        element={<PipelineBuilder />}
+      />
       <Route path={rel(VIEW_PATHS.sources)} element={<Sources />} />
       <Route
         path={rel(VIEW_PATHS["agent-builder"])}
