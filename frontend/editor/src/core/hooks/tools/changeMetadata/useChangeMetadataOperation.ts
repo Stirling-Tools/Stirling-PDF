@@ -69,22 +69,32 @@ const buildCustomMetadataMap = (
   return map;
 };
 
-// Rebuild the UI's custom metadata list from the allRequestParams map by walking
-// the contiguous customKey<N>/customValue<N> pairs the mapper wrote out.
+// Rebuild the UI's custom metadata list from the allRequestParams map by pairing
+// customKey<N>/customValue<N> on their shared index N. Mirrors the backend
+// (MetadataController), which pairs by index across all entries and does not
+// assume the indices are contiguous, so a non-contiguous stored map round-trips.
 const parseCustomMetadataMap = (
   allRequestParams: ChangeMetadataApiParams["allRequestParams"],
 ): CustomMetadataEntry[] => {
   if (!allRequestParams) return [];
-  const entries: CustomMetadataEntry[] = [];
-  for (let n = 1; allRequestParams[`customKey${n}`] !== undefined; n += 1) {
-    entries.push({
+  return Object.keys(allRequestParams)
+    .map((key) => /^customKey(\d+)$/.exec(key)?.[1])
+    .filter((n): n is string => n !== undefined)
+    .map(Number)
+    .sort((a, b) => a - b)
+    .map((n) => ({
       key: allRequestParams[`customKey${n}`] ?? "",
       value: allRequestParams[`customValue${n}`] ?? "",
       id: `custom${n}`,
-    });
-  }
-  return entries;
+    }));
 };
+
+// Map the backend's trapped string onto the UI enum, validating against the
+// actual enum values so an unrecognised value falls back to the default instead
+// of being force-cast.
+const parseTrapped = (value: string | undefined): TrappedStatus =>
+  Object.values(TrappedStatus).find((status) => status === value) ??
+  defaultParameters.trapped;
 
 // Convert the tool's UI parameters into the update-metadata request body. The
 // return type is the generated backend model, so a spec change that renames or
@@ -118,9 +128,7 @@ export const changeMetadataFromApiParams = (
   producer: apiParams.producer ?? defaultParameters.producer,
   creationDate: parseDateFromBackend(apiParams.creationDate),
   modificationDate: parseDateFromBackend(apiParams.modificationDate),
-  trapped: apiParams.trapped
-    ? (apiParams.trapped as TrappedStatus)
-    : defaultParameters.trapped,
+  trapped: parseTrapped(apiParams.trapped),
   deleteAll: apiParams.deleteAll ?? defaultParameters.deleteAll,
   customMetadata: parseCustomMetadataMap(apiParams.allRequestParams),
 });
