@@ -83,16 +83,19 @@ export function EditorStatusCard({ footer, hideChips }: EditorStatusCardProps) {
     const primary = primaryInstance(data.instances);
     if (!primary) return null;
     const activeUsers = data.instances.reduce((s, i) => s + i.activeUsers, 0);
+    const targetLabel = t(`portal.home.editor.target.${primary.target}`);
     return {
       host: primary.host,
       activeUsers,
       workspaceUrl: data.summary.workspaceUrl,
       meta: [
-        t(`portal.home.editor.target.${primary.target}`),
+        // Skip the deployment label when it just repeats the host (e.g. the
+        // managed-cloud instance is literally named "Managed Cloud").
+        primary.host === targetLabel ? null : targetLabel,
         primary.region,
         `v${primary.version}`,
         t("portal.home.editor.updated", { time: primary.lastSeen }),
-      ],
+      ].filter(Boolean) as string[],
     };
   }, [data, t]);
 
