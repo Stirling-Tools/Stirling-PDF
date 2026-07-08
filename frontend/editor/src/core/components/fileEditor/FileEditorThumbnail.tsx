@@ -307,7 +307,7 @@ const FileEditorThumbnail = ({
           <Text size="xs" fw={600}>
             {t(
               "policy.blockingAction",
-              "{{action}} blocked while enforcing policy, please wait",
+              "{{action}} blocked while enforcing policy, please wait...",
               { action },
             )}
           </Text>
