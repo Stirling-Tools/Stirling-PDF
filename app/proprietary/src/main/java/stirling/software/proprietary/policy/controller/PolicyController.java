@@ -47,6 +47,7 @@ import stirling.software.proprietary.policy.engine.PolicyRunHandle;
 import stirling.software.proprietary.policy.engine.PolicyRunRegistry;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.PolicyValidator;
+import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
@@ -86,6 +87,7 @@ public class PolicyController {
     private final PolicyManagementAuthority policyManagementAuthority;
     private final PolicyTriggerManager policyTriggerManager;
     private final PolicyOverviewService policyOverviewService;
+    private final ProcessedLedger processedLedger;
     private final List<PolicyTrigger> policyTriggers;
     private final ApplicationProperties applicationProperties;
     private final TempFileManager tempFileManager;
@@ -337,12 +339,32 @@ public class PolicyController {
         boolean accessible =
                 policyStore.get(policyId).filter(policyAccessGuard::canAccess).isPresent();
         if (accessible && policyStore.delete(policyId)) {
+            processedLedger.clearPolicy(policyId);
             // Cancel any now-orphaned folder watch promptly rather than leaving the WatchKey open
             // until the next reconcile sweep.
             policyTriggerManager.notifyPoliciesChanged();
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @DeleteMapping("/{policyId}/processed-history")
+    @Operation(
+            summary = "Clear a policy's processed-file history",
+            description =
+                    "Forgets which source files this policy has already processed, so its next"
+                            + " sweep reprocesses everything currently in its sources. Does not"
+                            + " touch the files themselves.")
+    public ResponseEntity<Void> clearProcessedHistory(@PathVariable String policyId) {
+        requirePolicyEditingAllowed();
+        // Scope to the caller's team: a policy in another team reads as not-found.
+        boolean accessible =
+                policyStore.get(policyId).filter(policyAccessGuard::canAccess).isPresent();
+        if (!accessible) {
+            return ResponseEntity.notFound().build();
+        }
+        processedLedger.clearPolicy(policyId);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping(value = "/{policyId}/run", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

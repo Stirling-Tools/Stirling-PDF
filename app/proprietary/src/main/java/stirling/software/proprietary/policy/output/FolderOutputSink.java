@@ -2,11 +2,16 @@ package stirling.software.proprietary.policy.output;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
@@ -20,13 +25,21 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.job.ResultFile;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
+import stirling.software.proprietary.policy.ledger.FolderIdentities;
+import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.OutputSpec;
 
 /**
- * Writes a run's outputs to the {@code directory} given in the {@link OutputSpec}. Files are
- * streamed (not buffered) and uniquely named to avoid clobbering. Returned {@link ResultFile}s
- * carry a synthetic id since the deliverable is the file on disk, not a {@code FileStorage} entry,
- * so folder outputs are not downloadable via {@code /files/{id}}.
+ * Writes a run's outputs to the {@code directory} given in the {@link OutputSpec}. Each output is
+ * staged under a hidden {@code .stirling/tmp} dir (same filesystem), recorded in the processed-file
+ * ledger under the producing policy, and only then atomically renamed into place - so by the time
+ * any input sweep can see the file, the ledger row that stops the producing policy re-ingesting it
+ * already exists, and half-written outputs are never visible at their final name. Ad-hoc runs (no
+ * policy) record nothing; their outputs are deliberately visible to any watcher.
+ *
+ * <p>Files are uniquely named to avoid clobbering. Returned {@link ResultFile}s carry a synthetic
+ * id since the deliverable is the file on disk, not a {@code FileStorage} entry, so folder outputs
+ * are not downloadable via {@code /files/{id}}.
  */
 @Slf4j
 @Service
@@ -37,7 +50,11 @@ public class FolderOutputSink implements PolicyOutputSink {
     static final String TYPE = FolderAccessGuard.FOLDER_TYPE;
     static final String DIRECTORY_OPTION = "directory";
 
+    // Staging entries are renamed away within one delivery; anything older is a crash leftover.
+    private static final Duration STALE_TMP_AGE = Duration.ofDays(1);
+
     private final FolderAccessGuard accessGuard;
+    private final ProcessedLedger processedLedger;
 
     @Override
     public String type() {
@@ -55,20 +72,28 @@ public class FolderOutputSink implements PolicyOutputSink {
     }
 
     @Override
-    public List<ResultFile> deliver(String runId, List<Resource> outputs, OutputSpec spec)
-            throws IOException {
+    public List<ResultFile> deliver(
+            OutputDelivery delivery, List<Resource> outputs, OutputSpec spec) throws IOException {
         Path targetDir = accessGuard.requirePermitted(directoryOf(spec));
         Files.createDirectories(targetDir);
+        Path canonicalDir = FolderIdentities.canonicalDir(targetDir);
+        Path tmpDir = canonicalDir.resolve(".stirling").resolve("tmp");
+        Files.createDirectories(tmpDir);
+        sweepStaleTmp(tmpDir);
 
         List<ResultFile> results = new ArrayList<>();
         for (int i = 0; i < outputs.size(); i++) {
             Resource resource = outputs.get(i);
             String name = safeName(resource.getFilename(), i);
-            Path target = uniqueTarget(targetDir, name);
+            Path staged = tmpDir.resolve(UUID.randomUUID().toString());
             try (InputStream is = resource.getInputStream()) {
-                Files.copy(is, target);
+                Files.copy(is, staged);
             }
-            long size = Files.size(target);
+            long size = Files.size(staged);
+            // Size and mtime survive the atomic rename, so the recorded signature matches what
+            // the next input scan derives from the visible file.
+            String signature = FolderIdentities.statSignature(staged);
+            Path target = moveIntoPlace(delivery, canonicalDir, name, staged, signature);
             String contentType =
                     MediaTypeFactory.getMediaType(name)
                             .orElse(MediaType.APPLICATION_OCTET_STREAM)
@@ -80,9 +105,64 @@ public class FolderOutputSink implements PolicyOutputSink {
                             .contentType(contentType)
                             .fileSize(size)
                             .build());
-            log.debug("Wrote policy run {} output to {}", runId, target);
+            log.debug("Wrote policy run {} output to {}", delivery.runId(), target);
         }
         return results;
+    }
+
+    /**
+     * Record-then-rename: the ledger row must exist before the file is visible at its final path,
+     * or a watch-triggered sweep could claim the producing policy's own output in the gap. Losing
+     * the chosen name to a concurrent writer just re-picks; the row recorded for the stolen name
+     * self-heals, since whatever file sits there has a different signature and is processed
+     * normally - exactly what a new file at that path should get.
+     */
+    private Path moveIntoPlace(
+            OutputDelivery delivery, Path dir, String name, Path staged, String signature)
+            throws IOException {
+        while (true) {
+            Path target = uniqueTarget(dir, name);
+            if (delivery.policyId() != null) {
+                processedLedger.recordOutput(delivery.policyId(), target.toString(), signature);
+            }
+            try {
+                Files.move(staged, target, StandardCopyOption.ATOMIC_MOVE);
+                return target;
+            } catch (FileAlreadyExistsException raced) {
+                log.debug("Output name {} taken concurrently; re-picking", target);
+            }
+        }
+    }
+
+    /** Best-effort removal of staging leftovers from crashed deliveries. */
+    private static void sweepStaleTmp(Path tmpDir) {
+        Instant cutoff = Instant.now().minus(STALE_TMP_AGE);
+        try (Stream<Path> entries = Files.list(tmpDir)) {
+            entries.filter(Files::isRegularFile)
+                    .filter(
+                            entry -> {
+                                try {
+                                    return Files.getLastModifiedTime(entry)
+                                            .toInstant()
+                                            .isBefore(cutoff);
+                                } catch (IOException e) {
+                                    return false;
+                                }
+                            })
+                    .forEach(
+                            entry -> {
+                                try {
+                                    Files.deleteIfExists(entry);
+                                } catch (IOException e) {
+                                    log.debug(
+                                            "Could not remove stale staging file {}: {}",
+                                            entry,
+                                            e.getMessage());
+                                }
+                            });
+        } catch (IOException e) {
+            log.debug("Could not sweep staging dir {}: {}", tmpDir, e.getMessage());
+        }
     }
 
     private static Path directoryOf(OutputSpec spec) {

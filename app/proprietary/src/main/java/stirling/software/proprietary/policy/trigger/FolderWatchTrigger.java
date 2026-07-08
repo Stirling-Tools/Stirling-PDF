@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
+import stirling.software.proprietary.policy.engine.SweepKind;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.Policy;
@@ -202,7 +203,9 @@ public class FolderWatchTrigger implements PolicyTrigger {
             }
             if (dirs.stream().anyMatch(changedDirs::contains)) {
                 log.debug("Folder-watch policy {} ({}) saw activity", policy.id(), policy.name());
-                policyRunner.run(policy);
+                // Light sweep: claim what changed, skip ledger hygiene, so the per-drop cost stays
+                // proportional to the change; the periodic reconcile below runs the full sweep.
+                policyRunner.run(policy, SweepKind.LIGHT);
             }
         }
     }
