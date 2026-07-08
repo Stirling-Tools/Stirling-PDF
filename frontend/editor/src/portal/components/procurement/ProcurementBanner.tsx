@@ -20,6 +20,7 @@ export function ControlledDealStatusHero({
     <DealStatusHero
       snapshot={controller.data}
       busy={controller.busy}
+      canSchedule={controller.isLinked}
       onExpand={() => controller.setOpen(true)}
       onKeyDocs={() => controller.setExtra("docs")}
       onInvite={() => setActiveView("users")}

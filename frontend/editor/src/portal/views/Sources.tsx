@@ -1,7 +1,7 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, EmptyState, Modal, Skeleton } from "@app/ui";
-import { useView } from "@portal/contexts/ViewContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import { errorMessage } from "@portal/api/http";
 import {
@@ -14,7 +14,7 @@ import {
   type SourcesResponse,
   type SourceView,
 } from "@portal/api/sources";
-import { AgentBuilderIcon } from "@portal/components/icons";
+import { AgentBuilderAction } from "@portal/components/sources/AgentBuilderAction";
 import { KpiStrip } from "@portal/components/sources/KpiStrip";
 import { SourcesTable } from "@portal/components/sources/SourcesTable";
 import { SourceDetailCard } from "@portal/components/sources/SourceDetailCard";
@@ -23,7 +23,7 @@ import "@portal/views/Sources.css";
 
 export function Sources() {
   const { t } = useTranslation();
-  const { setActiveView } = useView();
+  const [searchParams, setSearchParams] = useSearchParams();
   // Refetch after every mutation by bumping this counter, so the table reflects
   // the in-memory store the handlers maintain (mirrors the Policies view).
   const [version, setVersion] = useState(0);
@@ -63,6 +63,17 @@ export function Sources() {
     setEditingSource(null);
     setWizardOpen(true);
   }
+
+  // Arriving with ?new (e.g. from the pipeline builder's "connect a source" link) opens the
+  // create wizard straight away, then strips the flag so a refresh doesn't reopen it.
+  useEffect(() => {
+    if (searchParams.get("new") === null) return;
+    setEditingSource(null);
+    setWizardOpen(true);
+    const next = new URLSearchParams(searchParams);
+    next.delete("new");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   // Editing needs the raw source (config options), which the overview rows don't
   // carry, so fetch it before opening the wizard prefilled.
@@ -126,13 +137,7 @@ export function Sources() {
           <p className="portal-sources__sub">{t("portal.sources.subtitle")}</p>
         </div>
         <div className="portal-sources__actions">
-          <Button
-            variant="secondary"
-            onClick={() => setActiveView("agent-builder")}
-            leftSection={<AgentBuilderIcon size={16} />}
-          >
-            {t("portal.sources.actions.agentBuilder")}
-          </Button>
+          <AgentBuilderAction />
           <Button onClick={openCreate} leftSection={<span aria-hidden>+</span>}>
             {t("portal.sources.actions.connectSource")}
           </Button>

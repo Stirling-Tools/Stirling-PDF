@@ -3,13 +3,15 @@ import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
 import type { ProcurementSnapshot } from "@portal/api/procurement";
+import { CalendlyInline } from "@portal/components/procurement/CalendlyInline";
 import { useFocusTrap } from "@portal/components/procurement/ProcurementModal";
 import "@portal/views/Procurement.css";
 
 /**
  * Small centred dialogs that hang off the deal-status hero's quick actions — Key documents, Schedule
- * a call, and trial management. Content is mocked for the pilot (static demo data); the shells and
- * wiring are real so the hero behaves like the marketing prototype.
+ * a call, and trial management. Schedule a call embeds the live Calendly scheduler; Key documents is
+ * still mocked for the pilot (static demo data). The shells and wiring are real so the hero behaves
+ * like the marketing prototype.
  */
 
 function SideModal({
@@ -19,6 +21,7 @@ function SideModal({
   subtitle,
   children,
   footer,
+  wide = false,
 }: {
   open: boolean;
   onClose: () => void;
@@ -26,6 +29,7 @@ function SideModal({
   subtitle?: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
+  wide?: boolean;
 }) {
   const { t } = useTranslation();
   const trapRef = useFocusTrap(open);
@@ -45,7 +49,7 @@ function SideModal({
     >
       <div
         ref={trapRef}
-        className="portal-sidemodal__panel"
+        className={`portal-sidemodal__panel${wide ? " portal-sidemodal__panel--wide" : ""}`}
         role="dialog"
         aria-modal="true"
         tabIndex={-1}
@@ -182,50 +186,26 @@ export function KeyDocumentsModal({
 }
 
 // ── Schedule a call ──────────────────────────────────────────────────────────
-const SLOTS = [
-  "Tomorrow · 10:00",
-  "Tomorrow · 15:30",
-  "Thursday · 11:00",
-  "Friday · 09:30",
-];
-
 export function ScheduleCallModal({
   open,
   onClose,
+  email,
 }: {
   open: boolean;
   onClose: () => void;
+  /** Linked account's email; prefills the Calendly booking form. */
+  email?: string | null;
 }) {
+  const { t } = useTranslation();
   return (
     <SideModal
       open={open}
       onClose={onClose}
-      title="Schedule a call"
-      subtitle="Your solutions engineer will walk your team through the rollout."
+      title={t("portal.procurement.schedule.title")}
+      subtitle={t("portal.procurement.schedule.subtitle")}
+      wide
     >
-      <div className="portal-se">
-        <span className="portal-se__avatar" aria-hidden>
-          SE
-        </span>
-        <div>
-          <div className="portal-se__name">Your solutions engineer</div>
-          <div className="portal-se__role">
-            Dedicated to your evaluation and rollout
-          </div>
-        </div>
-      </div>
-      <div className="portal-slots">
-        {SLOTS.map((s) => (
-          <button
-            key={s}
-            type="button"
-            className="portal-slots__slot"
-            onClick={onClose}
-          >
-            {s}
-          </button>
-        ))}
-      </div>
+      <CalendlyInline email={email} />
     </SideModal>
   );
 }

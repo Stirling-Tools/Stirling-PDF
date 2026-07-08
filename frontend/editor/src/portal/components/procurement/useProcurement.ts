@@ -5,6 +5,7 @@ import { useAsync } from "@portal/hooks/useAsync";
 import {
   acceptQuote,
   extendTrial,
+  fetchLicenseFile,
   fetchQuotePdf,
   fetchSnapshot,
   goLive,
@@ -35,6 +36,7 @@ export interface ProcurementController {
   isDraft: boolean;
   busy: boolean;
   downloading: boolean;
+  downloadingLicense: boolean;
   error: string | null;
   setError: (e: string | null) => void;
   open: boolean;
@@ -52,6 +54,7 @@ export interface ProcurementController {
   onAgree: () => void;
   onGoLive: () => void;
   onDownloadPdf: () => Promise<void>;
+  onDownloadOfflineLicense: () => Promise<void>;
 }
 
 export function useProcurement(autoOpen = false): ProcurementController {
@@ -67,6 +70,7 @@ export function useProcurement(autoOpen = false): ProcurementController {
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [downloadingLicense, setDownloadingLicense] = useState(false);
   const [invoicePdf, setInvoicePdf] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [extra, setExtra] = useState<ProcurementExtra>(null);
@@ -141,6 +145,27 @@ export function useProcurement(autoOpen = false): ProcurementController {
     }
   }
 
+  async function onDownloadOfflineLicense() {
+    setDownloadingLicense(true);
+    try {
+      const cert = await fetchLicenseFile();
+      const blob = new Blob([cert], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "stirling-enterprise.lic";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (e) {
+      console.error("[procurement] offline licence download failed", e);
+      setError(t("portal.procurement.license.downloadError"));
+    } finally {
+      setDownloadingLicense(false);
+    }
+  }
+
   // A deep link (/procurement) opens the flow when a deal is already underway; if there's no deal
   // yet it must NOT silently start a trial — leave the modal closed so the Start-trial CTA shows.
   useEffect(() => {
@@ -158,6 +183,7 @@ export function useProcurement(autoOpen = false): ProcurementController {
     isDraft,
     busy,
     downloading,
+    downloadingLicense,
     error,
     setError,
     open,
@@ -175,5 +201,6 @@ export function useProcurement(autoOpen = false): ProcurementController {
     onAgree,
     onGoLive,
     onDownloadPdf,
+    onDownloadOfflineLicense,
   };
 }

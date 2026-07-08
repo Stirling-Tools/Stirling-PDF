@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Banner, Button, EmptyState, Skeleton } from "@app/ui";
 import { useUI } from "@portal/contexts/UIContext";
+import { useLinkedAccountEmail } from "@portal/hooks/useLinkedAccountEmail";
 import { JOURNEY } from "@portal/api/procurement";
 import { ProcurementAgreement } from "@portal/components/procurement/ProcurementAgreement";
 import {
@@ -10,6 +11,7 @@ import {
 } from "@portal/components/procurement/ProcurementExtras";
 import { ProcurementModal } from "@portal/components/procurement/ProcurementModal";
 import {
+  LicensePanel,
   LiveStageCard,
   PaymentStageCard,
   QuoteMilestoneCard,
@@ -32,6 +34,7 @@ export function ProcurementFlow({
 }) {
   const { t } = useTranslation();
   const { openLinkModal } = useUI();
+  const scheduleEmail = useLinkedAccountEmail();
   const {
     isLinked,
     loading,
@@ -43,6 +46,7 @@ export function ProcurementFlow({
     isDraft,
     busy,
     downloading,
+    downloadingLicense,
     error,
     setError,
     open,
@@ -59,6 +63,7 @@ export function ProcurementFlow({
     onAgree,
     onGoLive,
     onDownloadPdf,
+    onDownloadOfflineLicense,
   } = controller;
 
   return (
@@ -143,6 +148,15 @@ export function ProcurementFlow({
 
             {!editing && stage === "active" && <LiveStageCard />}
 
+            {data?.licenseKey && (
+              <LicensePanel
+                licenseKey={data.licenseKey}
+                offlineAvailable={!!latest?.config.offlineLicense}
+                downloadingLicense={downloadingLicense}
+                onDownloadOffline={onDownloadOfflineLicense}
+              />
+            )}
+
             <div className="portal-proc__reset">
               <button type="button" onClick={onReset} disabled={busy}>
                 {t("portal.procurement.reset")}
@@ -159,6 +173,7 @@ export function ProcurementFlow({
       <ScheduleCallModal
         open={extra === "schedule"}
         onClose={() => setExtra(null)}
+        email={scheduleEmail}
       />
       {data && (
         <TrialManageModal
