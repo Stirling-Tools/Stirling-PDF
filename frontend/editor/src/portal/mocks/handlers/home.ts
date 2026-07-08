@@ -5,7 +5,6 @@ import {
   buildUsageSeriesResponse,
   enterpriseKpisFor,
   FREE_KPIS,
-  FREE_ONBOARDING,
   proKpisFor,
   RECENT_ACTIVITY,
   REGION_HEALTH,
@@ -40,10 +39,5 @@ export const homeHandlers = [
   http.get("/v1/regions/health", async () => {
     await delay(120);
     return HttpResponse.json(REGION_HEALTH);
-  }),
-
-  http.get("/v1/onboarding", async () => {
-    await delay(120);
-    return HttpResponse.json(FREE_ONBOARDING);
   }),
 ];

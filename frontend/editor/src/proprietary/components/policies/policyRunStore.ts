@@ -49,6 +49,13 @@ export interface PolicyRunRecord {
   startedAt: number;
 }
 
+/** Statuses of a run that is still executing (not yet settled). */
+export const POLICY_IN_FLIGHT_STATUSES: readonly PolicyRunStatus[] = [
+  "PENDING",
+  "RUNNING",
+  "WAITING_FOR_INPUT",
+];
+
 interface RunState {
   runs: PolicyRunRecord[];
   dispatched: string[];
@@ -92,6 +99,10 @@ function read(): RunState {
 let state: RunState = read();
 const listeners = new Set<() => void>();
 
+function notifyListeners() {
+  for (const l of listeners) l();
+}
+
 function emit() {
   try {
     if (typeof localStorage !== "undefined") {
@@ -100,7 +111,18 @@ function emit() {
   } catch {
     // Best-effort persistence.
   }
-  for (const l of listeners) l();
+  notifyListeners();
+}
+
+// Sync in-memory state when another tab (or a test via page.evaluate + dispatchEvent)
+// writes to the same localStorage key.
+if (typeof window !== "undefined") {
+  window.addEventListener("storage", (e) => {
+    if (e.key === STORAGE_KEY) {
+      state = read();
+      notifyListeners();
+    }
+  });
 }
 
 function subscribe(listener: () => void) {

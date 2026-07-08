@@ -4,7 +4,7 @@ import { Checkbox, Menu, Tooltip } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import { PolicyBadges as PolicyBadgeRow } from "@app/components/shared/PolicyBadges";
 import FolderIcon from "@mui/icons-material/Folder";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
@@ -581,26 +581,7 @@ function FolderCard({
 /** Shield badges for the policies that have run on a file. */
 function PolicyBadges({ fileId }: { fileId: string }) {
   const badges = usePolicyFileBadges().get(fileId) ?? [];
-  if (badges.length === 0) return null;
-  return (
-    <span className="files-page-policy-badges" data-no-select>
-      {badges.slice(0, 3).map((policy) => (
-        <Tooltip
-          key={policy.id}
-          label={`${policy.name} policy ran on this file`}
-          withArrow
-          position="top"
-        >
-          <span
-            className="files-page-policy-badge"
-            style={{ color: policy.accentColor }}
-          >
-            <ShieldOutlinedIcon sx={{ fontSize: "0.7rem" }} />
-          </span>
-        </Tooltip>
-      ))}
-    </span>
-  );
+  return <PolicyBadgeRow policies={badges} />;
 }
 
 interface FileCardProps {
