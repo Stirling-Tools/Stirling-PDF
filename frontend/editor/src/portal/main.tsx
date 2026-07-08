@@ -14,11 +14,28 @@ import "@app/styles/index.css"; // Import global styles
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { ColorSchemeScript } from "@mantine/core";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import "@app/i18n"; // Initialize i18next
-import { BASE_PATH } from "@app/constants/app";
 import { PortalApp } from "@portal/PortalApp";
 import { startPortalMocksIfEnabled } from "@portal/mocks/startIfEnabled";
+
+/**
+ * react-router basename = the deploy's context path ONLY (not /portal).
+ *
+ * The portal builds absolute `/portal/...` links itself (PORTAL_BASENAME in
+ * ViewContext) and mounts under a `/portal/*` route below — mirroring how the
+ * editor hosts the portal. If the basename included /portal, those links would
+ * double-prefix to /portal/portal/... The injected API base is the context path
+ * ("/" at root, "/foo/" under a subpath deploy), which is exactly the basename.
+ */
+function contextBasename(): string {
+  const apiBase =
+    (typeof window !== "undefined" &&
+      (window as { STIRLING_PDF_API_BASE_URL?: string })
+        .STIRLING_PDF_API_BASE_URL) ||
+    "/";
+  return apiBase.replace(/\/+$/, "");
+}
 
 async function bootstrap() {
   // No-op unless mocks are explicitly enabled (dev/preview only). Started before
@@ -30,14 +47,18 @@ async function bootstrap() {
     throw new Error("Root container missing in portal.html");
   }
 
-  // BASE_PATH is read from the <base href> the backend rewrites to
-  // ${contextPath}/portal/, so BrowserRouter's basename mounts the portal's
-  // routes under /portal. PortalApp supplies its own providers (auth, theme).
   ReactDOM.createRoot(container).render(
     <React.StrictMode>
       <ColorSchemeScript />
-      <BrowserRouter basename={BASE_PATH}>
-        <PortalApp />
+      <BrowserRouter basename={contextBasename()}>
+        <Routes>
+          {/* PortalApp owns everything under /portal (its ViewRouter's routes
+              are relative to this mount). */}
+          <Route path="/portal/*" element={<PortalApp />} />
+          {/* The bundle is only ever served at /portal, but redirect any stray
+              path to the portal root defensively. */}
+          <Route path="*" element={<Navigate to="/portal" replace />} />
+        </Routes>
       </BrowserRouter>
     </React.StrictMode>,
   );
