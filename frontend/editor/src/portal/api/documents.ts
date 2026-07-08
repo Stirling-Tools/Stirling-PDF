@@ -9,18 +9,22 @@ export type {
   DocumentsResponse,
   DocumentsSummary,
   Extraction,
+  ProductType,
   ReviewDocument,
 } from "@portal/mocks/documents";
 export {
+  classificationTone,
   DOC_AUDIT_LABEL,
   DOC_AUDIT_TONE,
   DOCUMENT_STATUS_LABEL,
   DOCUMENT_STATUS_TONE,
+  PRODUCT_CHIP_TONE,
 } from "@portal/mocks/documents";
 
-/** GET /v1/documents?tier=… — summary strip + the review queue for the tier. */
+/** GET the audit-derived Documents feed; SaaS or local, scoped server-side. `tier` ignored. */
 export async function fetchDocuments(tier: Tier): Promise<DocumentsResponse> {
-  return apiClient.local.json<DocumentsResponse>(
-    `/v1/documents?tier=${encodeURIComponent(tier)}`,
-  );
+  const path = `/api/v1/proprietary/ui-data/documents?tier=${encodeURIComponent(tier)}`;
+  return apiClient.saas.isConfigured()
+    ? apiClient.saas.json<DocumentsResponse>(path)
+    : apiClient.local.json<DocumentsResponse>(path);
 }
