@@ -12,48 +12,14 @@ import { fetchHomeKpis, type KpiEntry } from "@portal/api/home";
 import { EDITOR_URL, EDITOR_IS_SAME_APP } from "@portal/auth/editorUrl";
 import markLight from "@app/assets/brand/modern-logo/StirlingPDFLogoNoTextLight.svg";
 import markDark from "@app/assets/brand/modern-logo/StirlingPDFLogoNoTextDark.svg";
+import { SettingsIcon } from "@portal/components/icons";
 import {
-  HomeIcon,
-  UsersIcon,
-  SourcesIcon,
-  PoliciesIcon,
-  PipelinesIcon,
-  DocumentsIcon,
-  ComponentsIcon,
-  InfrastructureIcon,
-  UsageIcon,
-  DocsIcon,
-  SettingsIcon,
-} from "@portal/components/icons";
+  GROUP_PRIMARY,
+  GROUP_OPERATIONAL,
+  GROUP_PLATFORM,
+  type NavEntry,
+} from "@portal/components/sidebarGroups";
 import "@portal/components/Sidebar.css";
-
-interface NavEntry {
-  id: ViewId;
-  icon: React.ReactNode;
-  /** When set, the tab opens this URL in a new tab instead of navigating in-app. */
-  externalUrl?: string;
-}
-
-// Developer docs has no built-in portal page yet, so the tab opens the hosted docs
-// site in a new tab rather than routing to an empty page.
-const DEVELOPER_DOCS_URL = "https://docs.stirlingpdf.com/";
-
-const GROUP_PRIMARY: NavEntry[] = [{ id: "home", icon: <HomeIcon /> }];
-
-const GROUP_OPERATIONAL: NavEntry[] = [
-  { id: "users", icon: <UsersIcon /> },
-  { id: "sources", icon: <SourcesIcon /> },
-  { id: "policies", icon: <PoliciesIcon /> },
-  { id: "pipelines", icon: <PipelinesIcon /> },
-  { id: "documents", icon: <DocumentsIcon /> },
-  { id: "components", icon: <ComponentsIcon /> },
-];
-
-const GROUP_PLATFORM: NavEntry[] = [
-  { id: "infrastructure", icon: <InfrastructureIcon /> },
-  { id: "usage", icon: <UsageIcon /> },
-  { id: "docs", icon: <DocsIcon />, externalUrl: DEVELOPER_DOCS_URL },
-];
 
 function UsageFooter() {
   const { tier } = useTier();
