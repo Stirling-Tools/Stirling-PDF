@@ -33,11 +33,11 @@ test.describe("Watermark tool — mode selection after upload", () => {
   test("post-upload UI renders mode cards or settings (whatever the chooser is)", async ({
     page,
   }) => {
-    // The chooser may render as Mantine cards or buttons depending on the build.
-    // Either flavour is fine; what we want to catch is "post-upload watermark
-    // page is empty / errored".
+    // The chooser may render as Mantine cards, buttons, or a segmented control
+    // depending on the build. Either flavour is fine; what we want to catch is
+    // "post-upload watermark page is empty / errored".
     const choices = page.locator(
-      '.mantine-Card-root, button:has-text("Text"), button:has-text("Image"), button:has-text("File")',
+      '.mantine-Card-root, .mantine-SegmentedControl-root label, button:has-text("Text"), button:has-text("Image"), button:has-text("File")',
     );
     await expect
       .poll(async () => choices.count(), { timeout: 10_000 })

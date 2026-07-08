@@ -36,7 +36,7 @@ import "@portal/views/Home.css";
 /* ──────────────────────────────────────────────────────────────────────── */
 
 interface ProductCardProps {
-  accent: "blue" | "purple";
+  accent: "default" | "premium";
   badge?: string;
   title: string;
   blurb: string;
@@ -58,18 +58,21 @@ function ProductCard({
       <div className="portal-home__product-head">
         <h3 className="portal-home__product-title">{title}</h3>
         {badge && (
-          <StatusBadge tone={accent === "blue" ? "info" : "purple"} size="sm">
+          <StatusBadge
+            tone={accent === "default" ? "info" : "purple"}
+            size="sm"
+          >
             {badge}
           </StatusBadge>
         )}
       </div>
       <p className="portal-home__product-blurb">{blurb}</p>
       <Button
-        variant="outline"
+        variant="secondary"
         accent={accent}
         size="sm"
         onClick={() => setActiveView(target)}
-        trailingIcon={<span aria-hidden>→</span>}
+        rightSection={<span aria-hidden>→</span>}
       >
         {cta}
       </Button>
@@ -85,14 +88,14 @@ function ProductGrid() {
       aria-label={t("portal.home.productGrid.ariaLabel")}
     >
       <ProductCard
-        accent="purple"
+        accent="premium"
         title={t("portal.home.productGrid.sources.title")}
         blurb={t("portal.home.productGrid.sources.blurb")}
         cta={t("portal.home.productGrid.sources.cta")}
         target="sources"
       />
       <ProductCard
-        accent="blue"
+        accent="default"
         badge={t("portal.home.productGrid.pipelines.badge")}
         title={t("portal.home.productGrid.pipelines.title")}
         blurb={t("portal.home.productGrid.pipelines.blurb")}
@@ -100,7 +103,7 @@ function ProductGrid() {
         target="pipelines"
       />
       <ProductCard
-        accent="purple"
+        accent="premium"
         title={t("portal.home.productGrid.agents.title")}
         blurb={t("portal.home.productGrid.agents.blurb")}
         cta={t("portal.home.productGrid.agents.cta")}
@@ -128,7 +131,8 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
         </span>
       </div>
       <div className="portal-home__quick-list">
-        <button
+        <Button
+          variant="quiet"
           type="button"
           className="portal-home__quick-row"
           onClick={onTryOp}
@@ -150,8 +154,9 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
           <span className="portal-home__quick-arrow" aria-hidden>
             →
           </span>
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="quiet"
           type="button"
           className="portal-home__quick-row"
           onClick={() => setActiveView("pipelines")}
@@ -173,8 +178,9 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
           <span className="portal-home__quick-arrow" aria-hidden>
             →
           </span>
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="quiet"
           type="button"
           className="portal-home__quick-row"
           onClick={() => setActiveView("sources")}
@@ -196,8 +202,9 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
           <span className="portal-home__quick-arrow" aria-hidden>
             →
           </span>
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="quiet"
           type="button"
           className="portal-home__quick-row"
           onClick={() => setActiveView("infrastructure")}
@@ -219,7 +226,7 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
           <span className="portal-home__quick-arrow" aria-hidden>
             →
           </span>
-        </button>
+        </Button>
       </div>
     </Card>
   );

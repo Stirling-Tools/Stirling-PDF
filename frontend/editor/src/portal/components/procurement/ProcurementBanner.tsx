@@ -53,8 +53,8 @@ export function ProcurementUpsell({
         </p>
       </div>
       <Button
-        variant="outline"
-        accent="blue"
+        variant="secondary"
+        accent="default"
         loading={controller.busy}
         disabled={!controller.isLinked}
         onClick={controller.onStartTrial}

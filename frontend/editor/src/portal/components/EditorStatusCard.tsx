@@ -158,8 +158,8 @@ export function EditorStatusCard({ footer, hideChips }: EditorStatusCardProps) {
 
         <div className="portal-editor-hero__action">
           <Button
-            variant="gradient"
-            leadingIcon={<ExternalLinkIcon size={13} />}
+            variant="primary"
+            leftSection={<ExternalLinkIcon size={13} />}
             disabled={!ready || !view}
             onClick={() => {
               if (view)

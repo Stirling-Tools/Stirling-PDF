@@ -31,10 +31,10 @@ export const Open: Story = {
           contract and go live.
         </p>
         <div style={{ display: "flex", gap: "0.6rem" }}>
-          <Button variant="gradient" accent="purple">
+          <Button variant="primary" accent="premium">
             Continue to checkout
           </Button>
-          <Button variant="outline">Edit quote</Button>
+          <Button variant="secondary">Edit quote</Button>
         </div>
       </Card>
     ),

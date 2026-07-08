@@ -86,8 +86,8 @@ export function ProcurementFlow({
             description={t("portal.procurement.link.description")}
             actions={
               <Button
-                variant="gradient"
-                accent="purple"
+                variant="primary"
+                accent="premium"
                 onClick={() => openLinkModal()}
               >
                 {t("portal.procurement.link.cta")}

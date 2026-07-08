@@ -155,15 +155,15 @@ export function WelcomeBanner({ footer }: WelcomeBannerProps) {
           <p className="portal-welcome__sub">{t("portal.welcome.subtitle")}</p>
           <div className="portal-welcome__cta">
             <Button
-              variant="gradient"
-              leadingIcon={<DownloadIcon size={15} />}
+              variant="primary"
+              leftSection={<DownloadIcon size={15} />}
               onClick={() => setActiveView("editor")}
             >
               {t("portal.welcome.installEditor")}
             </Button>
             <Button
-              variant="outline"
-              leadingIcon={<UsersIcon size={15} />}
+              variant="secondary"
+              leftSection={<UsersIcon size={15} />}
               onClick={() => setActiveView("users")}
             >
               {t("portal.welcome.inviteTeammates")}

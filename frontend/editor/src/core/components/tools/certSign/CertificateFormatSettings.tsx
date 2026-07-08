@@ -1,4 +1,5 @@
-import { Stack, Button } from "@mantine/core";
+import { Stack } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { CertSignParameters } from "@app/hooks/tools/certSign/useCertSignParameters";
 
 interface CertificateFormatSettingsProps {
@@ -18,10 +19,7 @@ const CertificateFormatSettings = ({
         {/* First row - PKCS#12 and PFX */}
         <div style={{ display: "flex", gap: "4px" }}>
           <Button
-            variant={parameters.certType === "PKCS12" ? "filled" : "outline"}
-            color={
-              parameters.certType === "PKCS12" ? "blue" : "var(--text-muted)"
-            }
+            variant={parameters.certType === "PKCS12" ? "primary" : "secondary"}
             onClick={() => onParameterChange("certType", "PKCS12")}
             disabled={disabled}
             style={{
@@ -42,8 +40,7 @@ const CertificateFormatSettings = ({
             </div>
           </Button>
           <Button
-            variant={parameters.certType === "PFX" ? "filled" : "outline"}
-            color={parameters.certType === "PFX" ? "blue" : "var(--text-muted)"}
+            variant={parameters.certType === "PFX" ? "primary" : "secondary"}
             onClick={() => onParameterChange("certType", "PFX")}
             disabled={disabled}
             style={{
@@ -67,8 +64,7 @@ const CertificateFormatSettings = ({
         {/* Second row - PEM and JKS */}
         <div style={{ display: "flex", gap: "4px" }}>
           <Button
-            variant={parameters.certType === "PEM" ? "filled" : "outline"}
-            color={parameters.certType === "PEM" ? "blue" : "var(--text-muted)"}
+            variant={parameters.certType === "PEM" ? "primary" : "secondary"}
             onClick={() => onParameterChange("certType", "PEM")}
             disabled={disabled}
             style={{
@@ -89,8 +85,7 @@ const CertificateFormatSettings = ({
             </div>
           </Button>
           <Button
-            variant={parameters.certType === "JKS" ? "filled" : "outline"}
-            color={parameters.certType === "JKS" ? "blue" : "var(--text-muted)"}
+            variant={parameters.certType === "JKS" ? "primary" : "secondary"}
             onClick={() => onParameterChange("certType", "JKS")}
             disabled={disabled}
             style={{

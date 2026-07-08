@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import {
-  ToolType,
+  defineCustomTool,
   useToolOperation,
   CustomProcessorResult,
 } from "@app/hooks/tools/shared/useToolOperation";
@@ -195,14 +195,11 @@ async function processPdfClientSide(
   };
 }
 
-export const adjustContrastOperationConfig = {
-  toolType: ToolType.custom,
+export const adjustContrastOperationConfig = defineCustomTool({
   customProcessor: processPdfClientSide,
   operationType: "adjustContrast",
   defaultParameters,
-  settingsComponentPath:
-    "components/tools/adjustContrast/AdjustContrastSingleStepSettings",
-} as const;
+});
 
 export const useAdjustContrastOperation = () => {
   const { t } = useTranslation();

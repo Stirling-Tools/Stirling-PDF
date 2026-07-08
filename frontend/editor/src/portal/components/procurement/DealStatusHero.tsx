@@ -143,8 +143,8 @@ export function DealStatusHero({
         </span>
         <div className="portal-hero__next-actions">
           <Button
-            variant="gradient"
-            accent="purple"
+            variant="primary"
+            accent="premium"
             loading={busy}
             onClick={onExpand}
           >

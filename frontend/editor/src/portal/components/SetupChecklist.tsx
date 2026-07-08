@@ -36,10 +36,10 @@ function EnterpriseRung({ paying }: { paying: boolean }) {
         </p>
       </div>
       <Button
-        variant="outline"
+        variant="secondary"
         size="sm"
         onClick={() => setActiveView("procurement")}
-        trailingIcon={<span aria-hidden>→</span>}
+        rightSection={<span aria-hidden>→</span>}
       >
         {t(
           paying
