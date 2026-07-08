@@ -65,7 +65,10 @@ const POLL_INTERVAL_MS = 1500;
 const POLL_ATTEMPTS = 60;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-type RunResult = { tone: "success" | "danger" | "info"; text: string };
+type RunResult = {
+  tone: "success" | "danger" | "info" | "warning";
+  text: string;
+};
 
 function parseTrigger(trigger: TriggerConfig | null): {
   triggerType: string;
@@ -403,6 +406,12 @@ export function PipelineBuilder() {
           tone: "danger",
           text: t("portal.pipelines.run.failed", { error: failed.error ?? "" }),
         });
+      } else if (finals.some((r) => r === null)) {
+        // Gave up polling before a terminal status; the run may still finish server-side.
+        setRunResult({
+          tone: "warning",
+          text: t("portal.pipelines.run.timeout"),
+        });
       } else if (finals.every((r) => r?.status === "COMPLETED")) {
         setRunResult({
           tone: "success",
@@ -683,13 +692,15 @@ export function PipelineBuilder() {
                         <span className="portal-builder__step-note">
                           {t("portal.pipelines.builder.needsUpload")}
                         </span>
-                      ) : (
-                        step.support === "unsupported" && (
-                          <span className="portal-builder__step-note">
-                            {t("portal.pipelines.builder.usesDefaults")}
-                          </span>
-                        )
-                      )}
+                      ) : step.support === "unsupported" ? (
+                        <span className="portal-builder__step-note">
+                          {t("portal.pipelines.builder.usesDefaults")}
+                        </span>
+                      ) : step.support === "unknown" ? (
+                        <span className="portal-builder__step-note">
+                          {t("portal.pipelines.builder.unknownStep")}
+                        </span>
+                      ) : null}
                     </span>
                   </Button>
                   <div className="portal-builder__step-actions">
