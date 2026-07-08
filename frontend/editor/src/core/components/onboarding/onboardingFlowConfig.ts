@@ -1,4 +1,5 @@
 import WelcomeSlide from "@app/components/onboarding/slides/WelcomeSlide";
+import ProcessorIntroSlide from "@app/components/onboarding/slides/ProcessorIntroSlide";
 import DesktopInstallSlide from "@app/components/onboarding/slides/DesktopInstallSlide";
 import SecurityCheckSlide from "@app/components/onboarding/slides/SecurityCheckSlide";
 import PlanOverviewSlide from "@app/components/onboarding/slides/PlanOverviewSlide";
@@ -20,6 +21,7 @@ export type { OSOption };
 export type SlideId =
   | "first-login"
   | "welcome"
+  | "processor-intro"
   | "desktop-install"
   | "security-check"
   | "admin-overview"
@@ -47,6 +49,7 @@ export type ButtonAction =
   | "launch-admin"
   | "launch-tools"
   | "launch-auto"
+  | "open-processor"
   | "see-plans"
   | "skip-to-license"
   | "skip-tour"
@@ -115,6 +118,36 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
         variant: "primary",
         group: "right",
         action: "next",
+      },
+    ],
+  },
+  "processor-intro": {
+    id: "processor-intro",
+    createSlide: () => ProcessorIntroSlide(),
+    hero: { type: "diamond" },
+    buttons: [
+      {
+        key: "processor-back",
+        type: "icon",
+        icon: "chevron-left",
+        group: "left",
+        action: "prev",
+      },
+      {
+        key: "processor-skip",
+        type: "button",
+        label: "onboarding.buttons.skipForNow",
+        variant: "secondary",
+        group: "left",
+        action: "next",
+      },
+      {
+        key: "processor-open",
+        type: "button",
+        label: "onboarding.processorIntro.cta",
+        variant: "primary",
+        group: "right",
+        action: "open-processor",
       },
     ],
   },

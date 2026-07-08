@@ -1,6 +1,7 @@
 export type OnboardingStepId =
   | "first-login"
   | "welcome"
+  | "processor-intro"
   | "desktop-install"
   | "security-check"
   | "admin-overview"
@@ -45,6 +46,7 @@ export interface OnboardingStep {
   slideId?:
     | "first-login"
     | "welcome"
+    | "processor-intro"
     | "desktop-install"
     | "security-check"
     | "admin-overview"
@@ -88,6 +90,13 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     slideId: "welcome",
     // Desktop has its own onboarding modal (DesktopOnboardingModal)
     condition: (ctx) => !ctx.isDesktopApp,
+  },
+  {
+    id: "processor-intro",
+    type: "modal-slide",
+    slideId: "processor-intro",
+    // Admins can manage policies in the portal/processor; regular users can't.
+    condition: (ctx) => ctx.effectiveIsAdmin,
   },
   {
     id: "admin-overview",

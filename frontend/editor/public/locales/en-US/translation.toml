@@ -4964,6 +4964,11 @@ showMeAround = "Show me around"
 skipForNow = "Skip for now"
 skipTheTour = "Skip the tour"
 
+[onboarding.processorIntro]
+cta = "Check out the Processor"
+title = "Check out the Stirling Processor"
+body = "Stirling now runs <strong>Policies</strong> — automated rules that classify, secure, and process every document as it arrives. Set them up and monitor runs in the <strong>Processor</strong>."
+
 [onboarding.desktopInstall]
 body = "Stirling works best as a desktop app. You can use it offline, access documents faster, and make edits locally on your computer."
 selectOs = "Select operating system"

@@ -179,6 +179,10 @@ export default function Onboarding() {
           setIsTourOpen(true);
           break;
         }
+        case "open-processor":
+          actions.complete();
+          navigate("/portal");
+          break;
         case "skip-to-license":
           actions.complete();
           break;

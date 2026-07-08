@@ -19,6 +19,8 @@ export interface NavItemProps {
   trailing?: ReactNode;
   onClick?: (id: string) => void;
   className?: string;
+  /** Optional stable hook for guided tours / tests (rendered as data-tour). */
+  dataTour?: string;
 }
 
 /**
@@ -37,11 +39,13 @@ export function NavItem({
   trailing,
   onClick,
   className,
+  dataTour,
 }: NavItemProps) {
   return (
     <button
       type="button"
       onClick={() => onClick?.(id)}
+      data-tour={dataTour}
       className={[
         "sui-navitem",
         isActive ? "is-active" : "",

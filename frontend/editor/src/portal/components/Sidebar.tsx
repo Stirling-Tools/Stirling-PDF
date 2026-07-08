@@ -105,6 +105,7 @@ export function Sidebar() {
       <NavItem
         key={entry.id}
         id={entry.id}
+        dataTour={`portal-nav-${entry.id}`}
         label={t(`portal.nav.${entry.id}`)}
         icon={entry.icon}
         isActive={activeView === entry.id}

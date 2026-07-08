@@ -56,6 +56,7 @@ interface OnboardingTourProps {
   isOpen: boolean;
   onAdvance: (args: AdvanceArgs) => void;
   onClose: (args: CloseArgs) => void;
+  dimBackground?: boolean;
 }
 
 export default function OnboardingTour({
@@ -66,6 +67,7 @@ export default function OnboardingTour({
   isOpen,
   onAdvance,
   onClose,
+  dimBackground = true,
 }: OnboardingTourProps) {
   if (!isOpen) return null;
 
@@ -99,6 +101,11 @@ export default function OnboardingTour({
           padding: "20px",
           boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
           maxWidth: "400px",
+        }),
+        maskWrapper: (base) => ({
+          ...base,
+          // 0 = no dim: the page stays fully visible behind the popover.
+          opacity: dimBackground ? 0.7 : 0,
         }),
         maskArea: (base) => ({
           ...base,
