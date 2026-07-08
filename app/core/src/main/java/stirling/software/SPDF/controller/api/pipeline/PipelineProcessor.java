@@ -108,15 +108,7 @@ public class PipelineProcessor {
                             hasInputFileType = true;
                             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
                             body.add("fileInput", file);
-                            for (Entry<String, Object> entry : parameters.entrySet()) {
-                                if (entry.getValue() instanceof List<?> entryList) {
-                                    for (Object item : entryList) {
-                                        body.add(entry.getKey(), item);
-                                    }
-                                } else {
-                                    body.add(entry.getKey(), entry.getValue());
-                                }
-                            }
+                            addParametersToBody(body, parameters);
                             ResponseEntity<Resource> response =
                                     internalApiClient.post(operation, body);
                             // If the operation is filter and the response body is null or empty,
@@ -193,15 +185,7 @@ public class PipelineProcessor {
                     for (Resource file : matchingFiles) {
                         body.add("fileInput", file);
                     }
-                    for (Entry<String, Object> entry : parameters.entrySet()) {
-                        if (entry.getValue() instanceof List<?> entryList) {
-                            for (Object item : entryList) {
-                                body.add(entry.getKey(), item);
-                            }
-                        } else {
-                            body.add(entry.getKey(), entry.getValue());
-                        }
-                    }
+                    addParametersToBody(body, parameters);
                     ResponseEntity<Resource> response = internalApiClient.post(operation, body);
                     if (response.getBody()
                             instanceof InternalApiClient.TempFileResource tempFileResource) {
@@ -256,6 +240,30 @@ public class PipelineProcessor {
         result.setFiltersApplied(filtersApplied);
         result.setOutputFiles(outputFiles);
         return result;
+    }
+
+    private void addParametersToBody(
+            MultiValueMap<String, Object> body, Map<String, Object> parameters) {
+        for (Entry<String, Object> entry : parameters.entrySet()) {
+            Object value = entry.getValue();
+            if ("allRequestParams".equals(entry.getKey()) && value instanceof Map<?, ?> mapValue) {
+                for (Entry<?, ?> mapEntry : mapValue.entrySet()) {
+                    body.add(
+                            "allRequestParams[" + mapEntry.getKey() + "]",
+                            mapEntry.getValue());
+                }
+            } else if ("allRequestParams".equals(entry.getKey())
+                    && value instanceof String stringValue
+                    && stringValue.isBlank()) {
+                continue;
+            } else if (value instanceof List<?> entryList) {
+                for (Object item : entryList) {
+                    body.add(entry.getKey(), item);
+                }
+            } else {
+                body.add(entry.getKey(), value);
+            }
+        }
     }
 
     private List<Resource> processOutputFiles(
