@@ -1,19 +1,19 @@
 import React, { useCallback, useMemo, useState } from "react";
 import {
-  ActionIcon,
   Badge,
-  Button,
   Divider,
   Flex,
   Group,
   Menu,
   Modal,
   ScrollArea,
-  SegmentedControl,
   Stack,
   Switch,
   Text,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
@@ -148,7 +148,11 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
                   header={pdfTextEditorTips.header}
                   pinOnClick
                 >
-                  <ActionIcon variant="subtle" color="blue" size="sm">
+                  <ActionIcon
+                    variant="tertiary"
+                    size="sm"
+                    aria-label={t("pdfTextEditor.title", "PDF Text Editor")}
+                  >
                     <LocalIcon
                       icon="info-outline-rounded"
                       width="1.25rem"
@@ -194,9 +198,12 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
                       position="top"
                     >
                       <ActionIcon
-                        variant="subtle"
-                        color="gray"
+                        variant="tertiary"
                         size="sm"
+                        aria-label={t(
+                          "pdfTextEditor.options.autoScaleText.title",
+                          "Auto-scale text to fit boxes",
+                        )}
                         style={{ flexShrink: 0 }}
                       >
                         <InfoOutlinedIcon fontSize="small" />
@@ -275,7 +282,7 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
                     onChange={(value) =>
                       handleModeChangeRequest(value as GroupingMode)
                     }
-                    data={[
+                    options={[
                       {
                         label: t("pdfTextEditor.groupingMode.auto", "Auto"),
                         value: "auto",
@@ -316,9 +323,12 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
                       position="top"
                     >
                       <ActionIcon
-                        variant="subtle"
-                        color="gray"
+                        variant="tertiary"
                         size="sm"
+                        aria-label={t(
+                          "pdfTextEditor.options.forceSingleElement.title",
+                          "Lock edited text to a single PDF element",
+                        )}
                         style={{ flexShrink: 0 }}
                       >
                         <InfoOutlinedIcon fontSize="small" />
@@ -357,7 +367,6 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
 
         <Group gap="xs" wrap="nowrap" p="md">
           <Button
-            variant="filled"
             onClick={onSaveToWorkbench}
             loading={isSavingToWorkbench}
             disabled={!hasDocument || !hasChanges || isConverting}
@@ -368,9 +377,13 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
           <Menu position="bottom-end" withinPortal>
             <Menu.Target>
               <ActionIcon
-                variant="default"
+                variant="secondary"
                 size="lg"
                 disabled={!hasDocument || isConverting}
+                aria-label={t(
+                  "pdfTextEditor.actions.moreOptions",
+                  "More options",
+                )}
               >
                 <MoreHorizIcon fontSize="small" />
               </ActionIcon>
@@ -410,10 +423,10 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
             )}
           </Text>
           <Group justify="flex-end" gap="sm">
-            <Button variant="default" onClick={handleCancelModeChange}>
+            <Button variant="secondary" onClick={handleCancelModeChange}>
               {t("pdfTextEditor.modeChange.cancel", "Cancel")}
             </Button>
-            <Button color="red" onClick={handleConfirmModeChange}>
+            <Button accent="danger" onClick={handleConfirmModeChange}>
               {t("pdfTextEditor.modeChange.confirm", "Reset and Change Mode")}
             </Button>
           </Group>

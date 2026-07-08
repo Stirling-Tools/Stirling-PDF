@@ -111,7 +111,7 @@ export function ResetPasswordModal({
       subtitle={member?.name}
       footer={
         <div className="portal-users__modal-footer">
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="tertiary" size="sm" onClick={onClose}>
             {t("common.cancel", "Cancel")}
           </Button>
           <Button size="sm" onClick={() => void submit()} disabled={saving}>
@@ -142,13 +142,13 @@ export function ResetPasswordModal({
             <div className="portal-users__pw-row">
               <Input value={generated} readOnly />
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 onClick={() => setGenerated(generatePassword())}
               >
                 {t("users.resetPw.regen", "Regenerate")}
               </Button>
-              <Button variant="outline" size="sm" onClick={copy}>
+              <Button variant="secondary" size="sm" onClick={copy}>
                 {t("common.copy", "Copy")}
               </Button>
             </div>

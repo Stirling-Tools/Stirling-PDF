@@ -93,7 +93,11 @@ test.describe("PageEditor (multitool) rotation save", () => {
     // 4. The exported /Rotate must match what the editor showed: page 3 upright
     //    (0), the untouched pages keeping their source rotation.
     const outDoc = await PDFDocument.load(fs.readFileSync(tmpOut));
-    const outRotations = outDoc.getPages().map((p) => p.getRotation().angle);
+    const outRotations = outDoc
+      .getPages()
+      .map(
+        (p: { getRotation: () => { angle: number } }) => p.getRotation().angle,
+      );
     fs.rmSync(tmpOut, { force: true });
     expect(outRotations).toEqual([0, 90, 0, 180]);
   });

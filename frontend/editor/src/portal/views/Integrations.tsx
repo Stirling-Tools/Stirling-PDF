@@ -112,7 +112,7 @@ export function Integrations() {
         key: "type",
         header: t("integrations.table.type", "Type"),
         render: (c) => (
-          <Chip tone={TYPE_TONE[c.integrationType]} size="sm">
+          <Chip accent={TYPE_TONE[c.integrationType]} size="sm">
             {TYPE_LABEL[c.integrationType]}
           </Chip>
         ),
@@ -196,7 +196,7 @@ export function Integrations() {
             )}
           </p>
         </div>
-        <Button onClick={openCreate} leadingIcon={<span aria-hidden>+</span>}>
+        <Button onClick={openCreate} leftSection={<span aria-hidden>+</span>}>
           {t("integrations.add", "Add integration")}
         </Button>
       </header>
@@ -265,7 +265,7 @@ export function Integrations() {
         footer={
           <div className="portal-integrations__modal-footer">
             <Button
-              variant="ghost"
+              variant="tertiary"
               size="sm"
               onClick={() => setDeleteTarget(null)}
             >
@@ -273,7 +273,7 @@ export function Integrations() {
             </Button>
             <Button
               size="sm"
-              accent="red"
+              accent="danger"
               onClick={() => void confirmDelete()}
               disabled={deleting}
             >

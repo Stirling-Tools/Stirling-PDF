@@ -217,12 +217,20 @@ export function UsersDirectory({
                 </span>
               )}
               {m.status === "suspended" && (
-                <Chip tone="red" size="sm" className="portal-users__row-tag">
+                <Chip
+                  accent="danger"
+                  size="sm"
+                  className="portal-users__row-tag"
+                >
                   {t("users.suspended", "Suspended")}
                 </Chip>
               )}
               {m.locked && (
-                <Chip tone="amber" size="sm" className="portal-users__row-tag">
+                <Chip
+                  accent="warning"
+                  size="sm"
+                  className="portal-users__row-tag"
+                >
                   {t("users.locked", "Locked")}
                 </Chip>
               )}
@@ -234,12 +242,12 @@ export function UsersDirectory({
         </div>
 
         <div className="portal-users__caps">
-          <Chip tone="neutral" size="sm">
+          <Chip accent="neutral" size="sm">
             {t("users.cap.editor", "Editor")}
           </Chip>
           {access === "granted" ? (
             <Chip
-              tone="blue"
+              accent="default"
               size="sm"
               onRemove={
                 capabilities.manageGrants
@@ -251,12 +259,12 @@ export function UsersDirectory({
             </Chip>
           ) : access !== "none" ? (
             // admin / team-owner role / inherited from a team-wide grant
-            <Chip tone="blue" size="sm">
+            <Chip accent="default" size="sm">
               {t("users.cap.processor", "Processor")}
             </Chip>
           ) : capabilities.manageGrants ? (
             <Chip
-              tone="neutral"
+              accent="neutral"
               size="sm"
               dashed
               onClick={() => onGrantProcessor(m)}
@@ -266,7 +274,7 @@ export function UsersDirectory({
           ) : null}
           {showApprover && m.role === "admin" && (
             <Chip
-              tone="green"
+              accent="success"
               size="sm"
               leadingIcon={<span aria-hidden>✓</span>}
             >
@@ -291,7 +299,7 @@ export function UsersDirectory({
               options={roleOptions}
               value={m.role}
               disabled={m.isSelf}
-              onChange={(e) => onChangeRole(m, e.target.value as RoleId)}
+              onChange={(value) => onChangeRole(m, (value ?? m.role) as RoleId)}
             />
           </div>
         )}

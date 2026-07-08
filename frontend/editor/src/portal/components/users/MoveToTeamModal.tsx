@@ -62,7 +62,7 @@ export function MoveToTeamModal({
       subtitle={member?.name}
       footer={
         <div className="portal-users__modal-footer">
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="tertiary" size="sm" onClick={onClose}>
             {t("common.cancel", "Cancel")}
           </Button>
           <Button
@@ -80,7 +80,7 @@ export function MoveToTeamModal({
           <Select
             options={options}
             value={teamId}
-            onChange={(e) => setTeamId(e.target.value)}
+            onChange={(value) => setTeamId(value ?? "")}
           />
         </FormField>
         {error && (

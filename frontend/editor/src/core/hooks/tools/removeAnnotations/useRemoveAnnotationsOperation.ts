@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
-  ToolType,
+  defineCustomTool,
   CustomProcessorResult,
 } from "@app/hooks/tools/shared/useToolOperation";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
@@ -78,12 +78,11 @@ const removeAnnotationsProcessor = async (
 };
 
 // Static configuration object
-export const removeAnnotationsOperationConfig = {
-  toolType: ToolType.custom,
+export const removeAnnotationsOperationConfig = defineCustomTool({
   operationType: "removeAnnotations",
   customProcessor: removeAnnotationsProcessor,
   defaultParameters,
-} as const;
+});
 
 export const useRemoveAnnotationsOperation = () => {
   const { t } = useTranslation();

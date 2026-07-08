@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import {
-  ToolType,
   useToolOperation,
+  defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
   fileOnlyMapping,
@@ -25,15 +25,14 @@ export const buildRemoveCertificateSignFormData = (
 ): FormData => objectToFormData(toApiParams(), { fileInput: file });
 
 // Static configuration object
-export const removeCertificateSignOperationConfig = {
-  toolType: ToolType.singleFile,
+export const removeCertificateSignOperationConfig = defineSingleFileTool({
   buildFormData: buildRemoveCertificateSignFormData,
   toApiParams,
   fromApiParams,
   operationType: "removeCertSign",
   endpoint: ENDPOINT,
   defaultParameters,
-} as const;
+});
 
 export const useRemoveCertificateSignOperation = () => {
   const { t } = useTranslation();

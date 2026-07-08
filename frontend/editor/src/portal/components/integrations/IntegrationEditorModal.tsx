@@ -151,7 +151,7 @@ export function IntegrationEditorModal({
       }
       footer={
         <div className="portal-integrations__modal-footer">
-          <Button variant="ghost" size="sm" onClick={close}>
+          <Button variant="tertiary" size="sm" onClick={close}>
             {t("common.cancel", "Cancel")}
           </Button>
           <Button
@@ -170,7 +170,7 @@ export function IntegrationEditorModal({
             <Select
               options={TYPE_OPTIONS}
               value={type}
-              onChange={(e) => setType(e.target.value as FormType)}
+              onChange={(value) => setType((value ?? "") as FormType)}
             />
           </FormField>
         )}
@@ -197,7 +197,7 @@ export function IntegrationEditorModal({
                 label: s.label,
               }))}
               value={scope}
-              onChange={(e) => setScope(e.target.value as FormScope)}
+              onChange={(value) => setScope((value ?? "") as FormScope)}
             />
           </FormField>
         )}

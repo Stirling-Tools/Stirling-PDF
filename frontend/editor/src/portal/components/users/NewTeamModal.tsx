@@ -104,7 +104,7 @@ export function NewTeamModal({ open, onClose, onCreated }: NewTeamModalProps) {
       )}
       footer={
         <div className="portal-users__modal-footer">
-          <Button variant="ghost" size="sm" onClick={close}>
+          <Button variant="tertiary" size="sm" onClick={close}>
             {t("common.cancel", "Cancel")}
           </Button>
           <Button

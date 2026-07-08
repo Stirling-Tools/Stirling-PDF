@@ -55,7 +55,7 @@ export function RenameTeamModal({
       title={t("users.renameTeam.title", "Rename team")}
       footer={
         <div className="portal-users__modal-footer">
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="tertiary" size="sm" onClick={onClose}>
             {t("common.cancel", "Cancel")}
           </Button>
           <Button

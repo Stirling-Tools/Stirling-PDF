@@ -1,3 +1,4 @@
+import type { ChipAccent } from "@app/ui";
 import type { IntegrationType, OwnerScope } from "@portal/api/integrations";
 
 /** One field in a config's create/edit form. */
@@ -46,12 +47,9 @@ export const TYPE_LABEL: Record<IntegrationType, string> = {
   S3: "S3",
 };
 
-export const TYPE_TONE: Record<
-  IntegrationType,
-  "purple" | "blue" | "green" | "amber" | "neutral"
-> = {
-  API: "blue",
-  MCP: "purple",
+export const TYPE_TONE: Record<IntegrationType, ChipAccent> = {
+  API: "default",
+  MCP: "premium",
   S3: "neutral",
 };
 

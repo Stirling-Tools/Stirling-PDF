@@ -1,5 +1,5 @@
+import { Button, Dropdown, NavItem } from "@app/ui";
 import { useTranslation } from "react-i18next";
-import { Dropdown, NavItem } from "@app/ui";
 import { useView, type ViewId } from "@portal/contexts/ViewContext";
 import { useTier } from "@portal/contexts/TierContext";
 import { useTheme } from "@portal/contexts/ThemeContext";
@@ -174,13 +174,13 @@ export function Sidebar() {
 
         <Dropdown.Root align="end" className="portal-sidebar__app-switch">
           <Dropdown.Trigger>
-            <button
-              type="button"
+            <Button
+              variant="tertiary"
               className="portal-sidebar__app-switch-btn"
               aria-label={t("portal.shell.sidebar.switchApp")}
             >
               <ChevronDownIcon size={14} />
-            </button>
+            </Button>
           </Dropdown.Trigger>
           <Dropdown.Menu width="11rem">
             <Dropdown.Item

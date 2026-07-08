@@ -111,7 +111,7 @@ export function ShareConfigModal({
       subtitle={config?.name}
       footer={
         <div className="portal-integrations__modal-footer">
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="tertiary" size="sm" onClick={onClose}>
             {t("common.done", "Done")}
           </Button>
         </div>
@@ -129,7 +129,7 @@ export function ShareConfigModal({
                 ...options,
               ]}
               value={pickUser}
-              onChange={(e) => setPickUser(e.target.value)}
+              onChange={(value) => setPickUser(value ?? "")}
             />
           </FormField>
           <FormField label={t("integrations.share.permission", "Permission")}>
@@ -142,8 +142,8 @@ export function ShareConfigModal({
                 },
               ]}
               value={permission}
-              onChange={(e) =>
-                setPermission(e.target.value as AccessPermission)
+              onChange={(value) =>
+                setPermission((value ?? "USE") as AccessPermission)
               }
             />
           </FormField>
@@ -182,7 +182,7 @@ export function ShareConfigModal({
                   {nameById.get(String(g.principalId)) ?? `#${g.principalId}`}
                 </span>
                 <Chip
-                  tone={g.permission === "MANAGE" ? "amber" : "green"}
+                  accent={g.permission === "MANAGE" ? "warning" : "success"}
                   size="sm"
                 >
                   {g.permission === "MANAGE"

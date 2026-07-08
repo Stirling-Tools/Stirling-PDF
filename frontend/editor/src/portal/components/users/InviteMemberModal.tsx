@@ -230,7 +230,7 @@ export function InviteMemberModal({
       }
       footer={
         <div className="portal-users__modal-footer">
-          <Button variant="ghost" size="sm" onClick={close}>
+          <Button variant="tertiary" size="sm" onClick={close}>
             {t("common.cancel", "Cancel")}
           </Button>
           <Button size="sm" onClick={() => void submit()} disabled={sending}>
@@ -259,7 +259,7 @@ export function InviteMemberModal({
                 },
               ]}
               value={mode}
-              onChange={(e) => setMode(e.target.value as Mode)}
+              onChange={(value) => setMode((value ?? "email") as Mode)}
             />
           </FormField>
         )}
@@ -302,7 +302,9 @@ export function InviteMemberModal({
                 <Select
                   options={authTypeOptions}
                   value={authType}
-                  onChange={(e) => setAuthType(e.target.value as AuthType)}
+                  onChange={(value) =>
+                    setAuthType((value ?? "WEB") as AuthType)
+                  }
                 />
               </FormField>
             )}
@@ -326,7 +328,7 @@ export function InviteMemberModal({
             <Select
               options={roleOptions}
               value={role}
-              onChange={(e) => setRole(e.target.value as InviteRole)}
+              onChange={(value) => setRole((value ?? "member") as InviteRole)}
             />
           </FormField>
           <FormField label={t("users.invite.team", "Team")}>
@@ -336,7 +338,7 @@ export function InviteMemberModal({
                 label: tm.name,
               }))}
               value={teamId}
-              onChange={(e) => setTeamId(e.target.value)}
+              onChange={(value) => setTeamId(value ?? "")}
             />
           </FormField>
         </div>
