@@ -6133,6 +6133,9 @@ dismiss = "Dismiss overlay"
 enforcingTitle = "Enforcing policy..."
 viewAnyway = "View file (policy still enforcing)"
 
+[portal]
+comingSoon = "Coming soon"
+
 [portal.accountLink.card]
 billingNote = "Unattended processing bills against your org wallet."
 eyebrow = "Account link"
@@ -6344,7 +6347,6 @@ cost = "Cost"
 editorsDeployed = "Editors deployed"
 inviteTeammates = "Invite teammates"
 pdfsEdited = "PDFs edited"
-previewBadge = "Preview · sample data"
 subtitle = "Deploy anywhere, for your whole team."
 title = "Free PDF Editors"
 
@@ -6640,7 +6642,9 @@ beforeHelper = "header against your signing secret before trusting a payload. SD
 beforeSignature = "Verify the"
 
 [portal.documents]
-subtitle = "Review and approve documents moving through your pipelines."
+exportCsv = "Export CSV"
+search = "Search by filename, ID..."
+subtitle = "Every document your org has processed, with its full processing record. Content access is request-gated."
 title = "Documents"
 
 [portal.documents.audit]
@@ -6678,42 +6682,38 @@ value = "Value"
 
 [portal.documents.filters]
 all = "All"
-archived = "Archived"
 ariaLabel = "Filter documents by status"
-needsReview = "Needs review"
+flagged = "Flagged"
+inReview = "In review"
 processed = "Processed"
 
 [portal.documents.overview]
-confidence = "Confidence"
-fieldsExtracted = "Fields extracted"
-received = "Received"
-source = "Source"
+action = "Pipeline / Action"
+product = "Product"
+received = "Time"
 status = "Status"
 type = "Type"
+user = "User"
 
 [portal.documents.queue.empty]
 description = "As sources feed documents into your pipelines they'll appear here for review."
 title = "No documents in the queue"
 
-[portal.documents.summary]
-avgConfidence = "Avg confidence"
-inQueue = "In queue"
-needsReview = "Needs review"
-processedToday = "Processed today"
-
 [portal.documents.table]
+auto = "Auto"
+editorAction = "Editor"
 empty = "No documents match this filter."
+rowActions = "Row actions"
 sensitiveLabel = "Sensitive"
 sensitiveTitle = "Sensitive — access required"
 
 [portal.documents.table.columns]
-confidence = "Confidence"
-fields = "Fields"
-name = "Name"
-source = "Source"
+action = "Pipeline / Action"
+document = "Document"
+product = "Product"
 status = "Status"
 time = "Time"
-type = "Type"
+user = "User"
 
 [portal.editorAdmin]
 subtitle = "Deploy the Stirling PDF Editor, pair self-hosted instances to your org, and operate the running fleet — targets, health, credentials, and offline activation in one place."
@@ -6958,12 +6958,31 @@ actor = "Actor"
 event = "Event"
 latency = "Latency"
 status = "Status"
-target = "Target"
+target = "Resource"
 timestamp = "Timestamp"
 
 [portal.infrastructure.audit.empty]
 description = "Workspace activity will appear here as it happens."
 title = "No audit events"
+
+[portal.infrastructure.audit.export]
+cancel = "Cancel"
+error = "Export failed. Please try again."
+exportButton = "Export"
+exporting = "Exporting…"
+fieldsLegend = "Columns"
+format = "Format"
+open = "Export"
+subtitle = "Download audit events as CSV or JSON. Choose which columns to include."
+title = "Export audit log"
+
+[portal.infrastructure.audit.export.fields]
+date = "Date"
+documentName = "Document name"
+ipAddress = "IP address"
+outcome = "Outcome"
+tool = "Tool"
+username = "Username"
 
 [portal.infrastructure.audit.filters]
 all = "All"
@@ -6972,6 +6991,10 @@ config = "Config"
 elevation = "Elevation"
 processing = "Processing"
 security = "Security"
+
+[portal.infrastructure.audit.forbidden]
+description = "The audit log is available to team leads and admins. Ask your team lead or an admin for access."
+title = "You don't have access"
 
 [portal.infrastructure.audit.metrics]
 config = "Config"
@@ -7301,18 +7324,39 @@ title = "Pipelines"
 [portal.pipelines.actions]
 newPipeline = "New pipeline"
 
+[portal.pipelines.builder]
+addStep = "Add tool"
+back = "Back to pipelines"
+discard = "Discard changes"
+enabled = "Enabled"
+keepEditing = "Keep editing"
+needsUpload = "Needs an uploaded file"
+noToolMatches = "No tools match your search."
+pipelineSettings = "Pipeline settings"
+searchTools = "Search tools"
+selectToolBody = "Add a tool to build your pipeline."
+selectToolTitle = "No tools yet"
+toolSettings = "Tool settings"
+unknownStep = "Unrecognized operation, kept as-is."
+unsavedBody = "You have unsaved changes. Save them before leaving, or discard them?"
+unsavedTitle = "Unsaved changes"
+uploadUnsupported = "Uploaded files aren't supported in pipelines yet, so these steps can't be saved: {{tools}}."
+usesDefaults = "Runs with default settings"
+
 [portal.pipelines.composer]
+addTool = "Add tool"
 cancel = "Cancel"
-chainEmpty = "Add operations from the palette below."
+chainEmpty = "Add a tool to start building your pipeline."
 create = "Create pipeline"
 directory = "Output folder"
 directoryHelp = "Absolute path on the server. Must be within the configured allowed folders."
-editTitle = "Edit pipeline"
+editingUnsupported = "Displaying these tool params for editing is not supported yet."
 moveDown = "Move down"
 moveUp = "Move up"
 name = "Name"
 namePlaceholder = "e.g. Redaction sweep"
 noSources = "No sources connected yet. The pipeline can still run on files supplied to it directly."
+noToolSettings = "This tool has no configurable settings."
 operations_one = "Operation ({{count}})"
 operations_other = "Operations ({{count}})"
 output = "Output"
@@ -7321,8 +7365,6 @@ save = "Save changes"
 scheduleEvery = "Run every"
 sources = "Sources"
 sourcesLoading = "Loading sources..."
-subtitle = "Pick the sources it runs over, chain the operations, then choose when it runs and where output goes."
-title = "New pipeline"
 trigger = "Trigger"
 triggerManual = "Manual only"
 
@@ -7338,18 +7380,8 @@ confirm = "Delete"
 title = "Delete pipeline?"
 
 [portal.pipelines.detail]
-closeAriaLabel = "Close detail"
 delete = "Delete pipeline"
-edit = "Edit"
-noSources = "No sources. Files are supplied directly to each run."
-noSteps = "No operations configured."
-output = "Output"
-pause = "Pause"
-resume = "Resume"
 run = "Run now"
-sources = "Sources"
-steps = "Operations"
-subtitle = "{{trigger}} · {{status}}"
 
 [portal.pipelines.empty]
 action = "Create a pipeline"
@@ -7371,6 +7403,7 @@ completed_other = "All {{count}} runs completed."
 empty = "Nothing to run: the sources had no documents to process."
 failed = "Run failed: {{error}}"
 running = "Run started; still in progress."
+timeout = "Run is taking longer than expected; it may still finish in the background."
 
 [portal.pipelines.status]
 active = "Active"
@@ -7581,6 +7614,8 @@ generate = "Generate quote"
 included = "Included"
 indemnification = "IP indemnification"
 indemnificationSub = "We defend qualifying IP claims, per the EULA"
+offlineLicense = "Offline / air-gapped licence"
+offlineLicenseSub = "A downloadable licence file for an air-gapped self-hosted instance"
 qbr = "Quarterly business reviews"
 qbrSub = "Your SE reviews usage and roadmap each quarter"
 running = "{{annual}} / yr · {{years}}-yr {{tcv}}"
@@ -7666,6 +7701,14 @@ subtitle = "Your solutions engineer is on every step. One next action at a time;
 title = "From trial to live, one guided path"
 trialTitle = "Enterprise trial"
 
+[portal.procurement.license]
+copied = "Copied"
+copy = "Copy key"
+downloadError = "Could not generate the offline licence file just yet — please try again in a moment."
+downloadOffline = "Download offline licence (.lic)"
+hint = "Paste this key into a self-hosted instance to activate it, or keep it for your records. Keep it safe."
+label = "Your licence key"
+
 [portal.procurement.link]
 cta = "Link account"
 description = "Procurement runs on your linked Stirling account: it's how we provision the trial, price your quote, and start billing. Link an account to start."
@@ -7718,11 +7761,17 @@ uploadCta = "Upload purchase order"
 uploadTitle = "Upload your purchase order"
 
 [portal.procurement.payment]
-description = "Your quote is accepted and a committed annual subscription has been created. Pay the first invoice to go live — you can pay or download it right here, no email needed."
+description = "Your quote is accepted and your licence is already active — your team can start right away. Pay the first invoice when you're ready; you can pay or download it here, no email needed."
 downloadInvoice = "Download invoice"
 simulate = "Simulate payment received (demo)"
 title = "Subscription created"
 viewInvoice = "View & pay invoice"
+
+[portal.procurement.schedule]
+fallback = "Couldn't load the scheduler."
+fallbackLink = "Open scheduling in a new tab"
+subtitle = "Your solutions engineer will walk your team through the rollout. Pick a time that suits you."
+title = "Schedule a call"
 
 [portal.procurement.status]
 action = "Action needed"
