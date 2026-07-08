@@ -36,6 +36,12 @@
   font-size: 0.8125rem;
   color: var(--color-text-2);
   border-radius: var(--radius-sm);
+  /* Explicit button reset: hosts without a global button reset (e.g. the
+     editor) would otherwise show the UA's buttonface background and border. */
+  background: none;
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
   transition:
     background var(--motion-fast),
     color var(--motion-fast);

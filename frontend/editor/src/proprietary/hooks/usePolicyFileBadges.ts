@@ -1,53 +1,33 @@
-import {
-  useMemo,
-  cloneElement,
-  isValidElement,
-  type ReactElement,
-  type ReactNode,
-} from "react";
-import {
-  usePolicyRuns,
-  isRunInFlight,
-} from "@app/components/policies/policyRunStore";
+import { useMemo } from "react";
+import { usePolicyRuns } from "@app/components/policies/policyRunStore";
 import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
-import { ROW_ACCENT } from "@app/components/policies/policyStatus";
-import type { FileItemPolicyRef } from "@app/components/shared/FileSidebarFileItem";
+import { policyAccentVar } from "@app/components/policies/policyStatus";
+import type { FileItemPolicyRef } from "@app/components/shared/PolicyBadges";
 
-/** Policy accent name (ROW_ACCENT) → the CSS colour var the badge uses. */
-const ACCENT_VAR: Record<string, string> = {
-  blue: "var(--color-blue)",
-  purple: "var(--color-purple)",
-  green: "var(--color-green)",
-  amber: "var(--color-amber)",
-  red: "var(--color-red)",
-  orange: "var(--color-orange)",
-};
-
-/** Glyph size for the file-sidebar policy badge. */
-const BADGE_ICON_SIZE = "0.7rem";
-
-/** Reuse a policy category's own icon at badge size,
- * so each badge reflects its policy */
-function toBadgeIcon(icon: ReactNode): ReactNode {
-  return isValidElement(icon)
-    ? cloneElement(icon as ReactElement<{ sx?: object }>, {
-        sx: { fontSize: BADGE_ICON_SIZE },
-      })
-    : icon;
-}
+/** How long after a run a badge counts as "recent" (drives the one-off glow).
+ *  Measured from run start — must exceed the longest realistic policy wall-clock
+ *  time so the glow still fires after a slow run completes and imports. Old or
+ *  reloaded runs fall outside this window, suppressing the glow on page reload. */
+const RECENT_MS = 5 * 60 * 1000;
 
 /** Minimal provenance shape needed to resolve a file's inherited badges. */
-export type LineageStub = {
+type LineageStub = {
   id: string;
   parentFileId?: string;
   sourceFileIds?: string[];
 };
 
-/** Merge a ref into a list, deduping by policy id. */
+/** Merge a ref into a list, deduping by policy id. A direct (recent) hit wins
+ *  the glow over an inherited one for the same policy. */
 function mergeRef(list: FileItemPolicyRef[], ref: FileItemPolicyRef): void {
-  if (!list.some((p) => p.id === ref.id)) list.push(ref);
+  const existing = list.find((p) => p.id === ref.id);
+  if (!existing) {
+    list.push(ref);
+  } else if (ref.recent) {
+    existing.recent = true;
+  }
 }
 
 /**
@@ -62,27 +42,29 @@ function mergeRef(list: FileItemPolicyRef[], ref: FileItemPolicyRef): void {
  * from: its transitive `sourceFileIds` (recorded at the consume boundary, so it
  * covers split/merge/convert too) plus, defensively, its `parentFileId`.
  * Because `sourceFileIds` is transitive, a flat lookup suffices — no chain walk,
- * and it survives a consumed intermediate.
+ * and it survives a consumed intermediate. Inherited badges never glow
+ * (recent=false): only the original application does.
  */
 export function buildPolicyBadgeMap(
   runs: ReadonlyArray<PolicyRunRecord>,
   stubs: ReadonlyArray<LineageStub>,
   labelById: ReadonlyMap<string, string>,
-  iconById?: ReadonlyMap<string, ReactNode>,
+  now: number,
 ): Map<string, FileItemPolicyRef[]> {
   // Direct badges: a file that IS a policy run's output.
   const directByFile = new Map<string, FileItemPolicyRef[]>();
   for (const run of runs) {
     const name = labelById.get(run.categoryId);
     if (!name) continue;
+    const recent = now - run.startedAt < RECENT_MS;
     for (const fileId of run.outputFileIds ?? []) {
       const list = directByFile.get(fileId) ?? [];
       if (!list.some((p) => p.id === run.categoryId)) {
         list.push({
           id: run.categoryId,
           name,
-          icon: iconById?.get(run.categoryId),
-          accentColor: ACCENT_VAR[ROW_ACCENT[run.categoryId] ?? "blue"],
+          accentColor: policyAccentVar(run.categoryId),
+          recent,
         });
         directByFile.set(fileId, list);
       }
@@ -104,7 +86,7 @@ export function buildPolicyBadgeMap(
   // from. `sourceFileIds` is the transitive provenance set (so a flat lookup
   // catches even ancestors whose intermediate edits were consumed), and
   // `parentFileId` is included defensively for any child not created via a
-  // consume.
+  // consume. Inherited badges are marked recent=false (carried, not applied).
   for (const stub of stubs) {
     const sources = new Set<string>(stub.sourceFileIds ?? []);
     if (stub.parentFileId) sources.add(stub.parentFileId);
@@ -112,39 +94,40 @@ export function buildPolicyBadgeMap(
       const srcBadges = directByFile.get(src);
       if (!srcBadges?.length) continue;
       const list = result.get(stub.id) ?? [];
-      for (const ref of srcBadges) mergeRef(list, { ...ref });
+      for (const ref of srcBadges) mergeRef(list, { ...ref, recent: false });
       result.set(stub.id, list);
     }
   }
 
-  return result;
-}
-
-/**
- * Policies currently working on each file, keyed by the run's INPUT fileId (the
- * file the run executes on, which is the row shown in the sidebar until the
- * tagged output is imported). Drives the file-row processing spinner. Runs are
- * newest-first in the store, so the first in-flight run per file wins (chained
- * policies run sequentially — at most one is in flight per file at a time).
- */
-export function buildProcessingMap(
-  runs: ReadonlyArray<PolicyRunRecord>,
-  labelById: ReadonlyMap<string, string>,
-  iconById?: ReadonlyMap<string, ReactNode>,
-): Map<string, FileItemPolicyRef> {
-  const result = new Map<string, FileItemPolicyRef>();
+  // In-flight pass: add (or upgrade) a badge on the input file for any run that
+  // is currently being processed, so the sidebar shows a spinning indicator
+  // while the policy is actively enforcing — not just after it completes.
+  // Keep the spinner until `imported` is true: the status reaches COMPLETED
+  // before the output files are imported into the workspace, so gating on
+  // status alone would drop the badge during that async gap.
   for (const run of runs) {
-    if (!isRunInFlight(run)) continue;
-    if (result.has(run.fileId)) continue;
+    if (!run.fileId) continue;
+    const settled =
+      run.imported || run.status === "FAILED" || run.status === "CANCELLED";
+    if (settled && !run.retrying) continue;
     const name = labelById.get(run.categoryId);
     if (!name) continue;
-    result.set(run.fileId, {
-      id: run.categoryId,
-      name,
-      icon: iconById?.get(run.categoryId),
-      accentColor: ACCENT_VAR[ROW_ACCENT[run.categoryId] ?? "blue"],
-    });
+    const list = result.get(run.fileId) ?? [];
+    const existing = list.find((p) => p.id === run.categoryId);
+    if (existing) {
+      existing.enforcing = true;
+    } else {
+      list.push({
+        id: run.categoryId,
+        name,
+        accentColor: policyAccentVar(run.categoryId),
+        recent: false,
+        enforcing: true,
+      });
+      result.set(run.fileId, list);
+    }
   }
+
   return result;
 }
 
@@ -154,46 +137,14 @@ export function buildProcessingMap(
  * badge follows a document down its tool-edit chain — see
  * {@link buildPolicyBadgeMap}. Shadows the core stub via the {@code @app/*}
  * alias cascade.
- *
- * `extraStubs` lets a caller resolve lineage for files beyond the active
- * workspace — the Files sidebar passes its storage-backed stubs, so a CLOSED
- * file still inherits every policy in its chain (persisted records carry
- * parentFileId/sourceFileIds) instead of showing only the last direct badge.
  */
-export function usePolicyFileBadges(
-  extraStubs?: ReadonlyArray<LineageStub>,
-): Map<string, FileItemPolicyRef[]> {
+export function usePolicyFileBadges(): Map<string, FileItemPolicyRef[]> {
   const runs = usePolicyRuns();
   const { fileStubs } = useAllFiles();
   return useMemo(() => {
-    const categories = loadPolicyCatalog().categories;
-    const labelById = new Map(categories.map((c) => [c.id, c.label]));
-    const iconById = new Map<string, ReactNode>(
-      categories.map((c) => [c.id, toBadgeIcon(c.icon)]),
+    const labelById = new Map(
+      loadPolicyCatalog().categories.map((c) => [c.id, c.label]),
     );
-    // Union workspace + caller stubs (dedupe by id, workspace wins — its
-    // lineage is reducer-maintained and freshest).
-    const byId = new Map<string, LineageStub>();
-    for (const stub of extraStubs ?? []) byId.set(stub.id, stub);
-    for (const stub of fileStubs) byId.set(stub.id as string, stub);
-    return buildPolicyBadgeMap(runs, [...byId.values()], labelById, iconById);
-  }, [runs, fileStubs, extraStubs]);
-}
-
-/**
- * The policy currently working on each file, keyed by fileId — drives the
- * file-row processing spinner. Derived from the reactive run store; see
- * {@link buildProcessingMap}. Shadows the core stub via the {@code @app/*}
- * alias cascade.
- */
-export function usePolicyFileProcessing(): Map<string, FileItemPolicyRef> {
-  const runs = usePolicyRuns();
-  return useMemo(() => {
-    const categories = loadPolicyCatalog().categories;
-    const labelById = new Map(categories.map((c) => [c.id, c.label]));
-    const iconById = new Map<string, ReactNode>(
-      categories.map((c) => [c.id, toBadgeIcon(c.icon)]),
-    );
-    return buildProcessingMap(runs, labelById, iconById);
-  }, [runs]);
+    return buildPolicyBadgeMap(runs, fileStubs, labelById, Date.now());
+  }, [runs, fileStubs]);
 }

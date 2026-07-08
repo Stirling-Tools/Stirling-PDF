@@ -1,0 +1,62 @@
+/* Canonical policy badge styling — every per-file policy badge in the app
+ * (sidebar, thumbnails, files page, viewer indicator) uses these classes so
+ * colour and shape stay consistent. `color` is set inline to the policy's
+ * accent; the background tint follows it. */
+
+.policy-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.policy-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  background: color-mix(in srgb, currentColor 16%, transparent);
+  pointer-events: auto;
+}
+
+/* Larger variant for standalone indicators (e.g. the minimised viewer overlay). */
+.policy-badge--lg {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+}
+
+.policy-badge--enforcing svg {
+  animation: policy-badge-spin 1s linear infinite;
+}
+@keyframes policy-badge-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.policy-badge--recent {
+  animation: policy-badge-pulse 4.5s ease-in-out forwards;
+}
+@keyframes policy-badge-pulse {
+  0%,
+  24%,
+  48% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+  12%,
+  36% {
+    box-shadow: 0 0 5px 2px currentColor;
+  }
+  60%,
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}

@@ -1,6 +1,6 @@
-import { memo, useState, useCallback, useRef, type ReactNode } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Menu, Tooltip } from "@mantine/core";
+import { Group, Loader, Menu, Stack, Text, Tooltip } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
@@ -13,6 +13,10 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import HistoryIcon from "@mui/icons-material/History";
 import type { FileId } from "@app/types/file";
 import { FileDocIcon } from "@app/components/shared/FileDocIcon";
+import {
+  PolicyBadges,
+  type FileItemPolicyRef,
+} from "@app/components/shared/PolicyBadges";
 import { getFileDocVariant } from "@app/components/shared/filePreview/getFileTypeIcon";
 import { useLazyThumbnail } from "@app/hooks/useLazyThumbnail";
 import { IMAGE_EXTENSIONS } from "@app/utils/fileUtils";
@@ -132,17 +136,6 @@ export interface FileItemFolderRef {
   accentColor: string;
 }
 
-/** A policy that has run on (or is running on) this file — drives the activity
- *  badges and the in-progress spinner. */
-export interface FileItemPolicyRef {
-  id: string;
-  name: string;
-  /** Badge glyph — the policy's own icon; falls back to a shield. */
-  icon?: ReactNode;
-  /** CSS colour for the badge (matches the policy's accent). */
-  accentColor: string;
-}
-
 export interface FileItemProps {
   fileId: FileId;
   name: string;
@@ -161,9 +154,11 @@ export interface FileItemProps {
   folders?: FileItemFolderRef[];
   /** Clicking a membership dot opens that folder. */
   onFolderClick?: (folderId: string) => void;
-  /** Policy currently working on this file — swaps the file icon for a spinner
-   *  in the policy's colour with its badge inside. Omit when nothing is running. */
-  processingPolicy?: FileItemPolicyRef;
+  /** Policies that have run on this file — rendered as small shield badges. */
+  policies?: FileItemPolicyRef[];
+  /** The file's primary classification label (display name), shown in the meta
+   *  row in place of the file type when present. */
+  primaryLabel?: string;
   /** Delete (local only) from the kebab menu. Omit to hide the menu's delete. */
   onDelete?: (fileId: FileId) => void;
   /** Save to cloud from the kebab menu. */
@@ -176,19 +171,11 @@ export interface FileItemProps {
   onVersionHistory?: (fileId: FileId) => void;
   /** Whether this file has more than one version (drives the menu item). */
   hasVersionHistory?: boolean;
-  /** When set (SaaS grouped sidebar), the meta line shows "{label} • {date}"
-   *  instead of "{date} · {type}" — the file's first classification label. */
-  primaryLabel?: string;
 }
 
 const MAX_VISIBLE_FOLDER_TAGS = 2;
 
-// Memoized: the sidebar re-renders constantly during a policy wave / bulk add
-// (store emits, poll ticks, thumbnail hydrations), but most rows' props are
-// unchanged — memo keeps a 300-file list from re-rendering wholesale each time.
-// Parent must pass stable identities for arrays/callbacks (see FileSidebar's
-// NO_POLICIES/NO_FOLDERS + useCallback'd handlers).
-export const FileItem = memo(function FileItem({
+export function FileItem({
   fileId,
   name,
   size,
@@ -203,19 +190,36 @@ export const FileItem = memo(function FileItem({
   onDragStart,
   folders = [],
   onFolderClick,
-  processingPolicy,
+  policies = [],
+  primaryLabel,
   onDelete,
   onSaveToCloud,
   canSaveToCloud = false,
   isUploadedToCloud = false,
   onVersionHistory,
   hasVersionHistory = false,
-  primaryLabel,
 }: FileItemProps) {
   const { t } = useTranslation();
   const ext = getFileExtension(name);
   const dateLabel = lastModified ? formatFileDate(lastModified) : "";
   const typeLabel = ext ? ext.toUpperCase() : "File";
+
+  const policyEnforcing = policies.some((p) => p.enforcing);
+  const enforcingTooltip = (action: string): React.ReactNode => (
+    <Stack gap={6} py={2} w={200}>
+      <Group gap={6} wrap="nowrap">
+        <ShieldOutlinedIcon style={{ fontSize: 13 }} />
+        <Text size="xs" fw={600}>
+          {t(
+            "policy.blockingAction",
+            "{{action}} blocked while enforcing policy, please wait...",
+            { action },
+          )}
+        </Text>
+      </Group>
+      <Loader size="xs" />
+    </Stack>
+  );
 
   const visibleFolders = folders.slice(0, MAX_VISIBLE_FOLDER_TAGS);
   const overflowFolders = folders.slice(MAX_VISIBLE_FOLDER_TAGS);
@@ -263,34 +267,7 @@ export const FileItem = memo(function FileItem({
         onMouseLeave={handleMouseLeave}
       >
         <div className="file-sidebar-file-icon-wrapper">
-          {processingPolicy ? (
-            <Tooltip
-              label={t(
-                "fileSidebar.fileItem.policyRunning",
-                "{{name}} policy is running…",
-                { name: processingPolicy.name },
-              )}
-              withArrow
-              position="top"
-            >
-              <span
-                className="file-sidebar-file-spinner"
-                style={{ color: processingPolicy.accentColor }}
-                aria-label={t(
-                  "fileSidebar.fileItem.policyRunning",
-                  "{{name}} policy is running…",
-                  { name: processingPolicy.name },
-                )}
-              >
-                <span className="file-sidebar-file-spinner-ring" />
-                <span className="file-sidebar-file-spinner-badge">
-                  {processingPolicy.icon ?? (
-                    <ShieldOutlinedIcon sx={{ fontSize: "0.7rem" }} />
-                  )}
-                </span>
-              </span>
-            </Tooltip>
-          ) : isSelected ? (
+          {isSelected ? (
             <div className="file-sidebar-file-check">
               <CheckIcon className="file-sidebar-check-svg" />
             </div>
@@ -337,6 +314,7 @@ export const FileItem = memo(function FileItem({
                 </span>
               </Tooltip>
             )}
+            <PolicyBadges policies={policies} />
           </span>
           {folders.length > 0 && (
             <span className="file-sidebar-folder-tags" data-no-select>
@@ -412,7 +390,7 @@ export const FileItem = memo(function FileItem({
           />
         </ActionIcon>
         {(onDelete ||
-          onSaveToCloud ||
+          (canSaveToCloud && onSaveToCloud) ||
           (hasVersionHistory && onVersionHistory)) && (
           <Menu position="bottom-end" withinPortal shadow="md" width={190}>
             <Menu.Target>
@@ -442,17 +420,10 @@ export const FileItem = memo(function FileItem({
                   {t("fileSidebar.fileItem.versionHistory", "Version history")}
                 </Menu.Item>
               )}
-              {canSaveToCloud && onSaveToCloud && (
-                <Menu.Item
-                  leftSection={
-                    <CloudUploadOutlinedIcon sx={{ fontSize: 16 }} />
-                  }
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSaveToCloud(fileId);
-                  }}
-                >
-                  {isUploadedToCloud
+              {canSaveToCloud &&
+                onSaveToCloud &&
+                (() => {
+                  const uploadLabel = isUploadedToCloud
                     ? t(
                         "fileSidebar.fileItem.updateOnServer",
                         "Update on server",
@@ -460,21 +431,64 @@ export const FileItem = memo(function FileItem({
                     : t(
                         "fileSidebar.fileItem.uploadToServer",
                         "Upload to server",
-                      )}
-                </Menu.Item>
-              )}
-              {onDelete && (
-                <Menu.Item
-                  color="red"
-                  leftSection={<DeleteOutlineIcon sx={{ fontSize: 16 }} />}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(fileId);
-                  }}
-                >
-                  {t("fileSidebar.fileItem.delete", "Delete")}
-                </Menu.Item>
-              )}
+                      );
+                  return (
+                    <Tooltip
+                      label={enforcingTooltip(uploadLabel)}
+                      disabled={!policyEnforcing}
+                      position="left"
+                      offset={6}
+                      withArrow
+                    >
+                      <div>
+                        <Menu.Item
+                          disabled={policyEnforcing}
+                          leftSection={
+                            <CloudUploadOutlinedIcon sx={{ fontSize: 16 }} />
+                          }
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSaveToCloud(fileId);
+                          }}
+                        >
+                          {uploadLabel}
+                        </Menu.Item>
+                      </div>
+                    </Tooltip>
+                  );
+                })()}
+              {onDelete &&
+                (() => {
+                  const deleteLabel = t(
+                    "fileSidebar.fileItem.delete",
+                    "Delete",
+                  );
+                  return (
+                    <Tooltip
+                      label={enforcingTooltip(deleteLabel)}
+                      disabled={!policyEnforcing}
+                      position="left"
+                      offset={6}
+                      withArrow
+                    >
+                      <div>
+                        <Menu.Item
+                          disabled={policyEnforcing}
+                          color="red"
+                          leftSection={
+                            <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+                          }
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete(fileId);
+                          }}
+                        >
+                          {deleteLabel}
+                        </Menu.Item>
+                      </div>
+                    </Tooltip>
+                  );
+                })()}
             </Menu.Dropdown>
           </Menu>
         )}
@@ -498,4 +512,4 @@ export const FileItem = memo(function FileItem({
         )}
     </>
   );
-});
+}

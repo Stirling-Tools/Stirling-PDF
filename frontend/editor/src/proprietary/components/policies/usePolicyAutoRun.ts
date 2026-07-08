@@ -387,7 +387,7 @@ export function usePolicyAutoRun(): void {
 interface ImportContext {
   addFiles: (
     files: File[],
-    options?: { skipUploadTracking?: boolean },
+    options?: { skipUploadTracking?: boolean; derivedFromTool?: boolean },
   ) => Promise<StirlingFile[]>;
   consumeFiles: (
     inputFileIds: FileId[],
@@ -634,21 +634,26 @@ async function importOutputs(
     const lineage = Array.from(
       new Set([run.fileId as FileId, ...(parentStub.sourceFileIds ?? [])]),
     );
-    // Stamp the resolved labels onto each output stub (createChildStub already
+    // Stamp each output stub with: the resolved labels (createChildStub already
     // inherited the parent's; this also captures the classification origin,
-    // where the parent had none but the labelled file does).
+    // where the parent had none but the labelled file does), the transitive
+    // lineage, and derivedFromTool — the durable cross-session guard that stops
+    // the auto-run ever re-enforcing a policy on its own output (survives a
+    // localStorage wipe / a different device, unlike the dispatched markers).
     const categorized = await Promise.all(
       stubs.map(async (s, i) => {
         const labels = await resolveLabels(files[i]);
         return {
           ...s,
           sourceFileIds: lineage,
+          derivedFromTool: true,
           ...(labels ? { classificationLabels: labels } : {}),
         };
       }),
     );
-    // Mark the outputs handled BEFORE adding them, so the auto-run never enforces
-    // the policy on its own output — that would version endlessly in a loop.
+    // Mark the outputs handled BEFORE adding them (belt-and-suspenders session
+    // guard on top of derivedFromTool) so the auto-run never enforces the policy
+    // on its own output — that would version endlessly in a loop.
     for (const s of categorized) markHandled(s.id as string);
     deliveredIds = categorized.map((s) => s.id as string);
     if (ctx.parentStub) {
@@ -673,7 +678,13 @@ async function importOutputs(
       ctx.bumpRevision();
     }
   } else {
-    const added = await ctx.addFiles(files, { skipUploadTracking: true });
+    // derivedFromTool prevents the auto-run from ever re-enforcing this output,
+    // even if the dispatched list is cleared (localStorage wipe / different device).
+    const added = await ctx.addFiles(files, {
+      skipUploadTracking: true,
+      derivedFromTool: true,
+    });
+    // Belt-and-suspenders session guard on top of derivedFromTool.
     for (const f of added) markHandled(f.fileId as string);
     deliveredIds = added.map((f) => f.fileId as string);
     // Mark each new-file output as tool-derived (the versioned path gets this from the

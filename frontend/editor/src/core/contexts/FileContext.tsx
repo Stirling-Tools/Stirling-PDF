@@ -244,6 +244,7 @@ function FileContextInner({
         /** Persist to IDB without dispatching to workspace state. */
         skipWorkspaceDispatch?: boolean;
         skipUploadTracking?: boolean;
+        derivedFromTool?: boolean;
       },
     ): Promise<StirlingFile[]> => {
       const stirlingFiles = await addFiles(

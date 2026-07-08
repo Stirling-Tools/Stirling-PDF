@@ -30,6 +30,7 @@ import {
 import { accountService } from "@app/services/accountService";
 import { GoogleDriveIcon } from "@app/components/shared/CloudStorageIcons";
 import { Wordmark } from "@app/components/shared/Wordmark";
+import { AppSwitcher } from "@app/components/shared/AppSwitcher";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
@@ -62,7 +63,7 @@ import { fileStorage } from "@app/services/fileStorage";
 import { useBulkAddProgress } from "@app/services/bulkAddProgress";
 import { useFolderMembership } from "@app/hooks/useFolderMembership";
 import { useAllWatchedFolders } from "@app/hooks/useAllWatchedFolders";
-import { usePolicyFileProcessing } from "@app/hooks/usePolicyFileBadges";
+import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
 import {
   setWatchedFolderDraggedFileIds,
   clearWatchedFolderDraggedFileIds,
@@ -194,7 +195,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     // the workbench). The same map drives the per-file membership dots.
     const folderMembership = useFolderMembership();
     const allFolders = useAllWatchedFolders();
-    const policyFileProcessing = usePolicyFileProcessing();
+    const policyFileBadges = usePolicyFileBadges();
     const folderById = useMemo(
       () => new Map(allFolders.map((f) => [f.id, f])),
       [allFolders],
@@ -784,7 +785,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           onDragStart={handleWatchedFolderDragStart}
           folders={memberFolders}
           onFolderClick={openWatchedFolder}
-          processingPolicy={policyFileProcessing.get(stub.id as string)}
+          policies={policyFileBadges.get(stub.id as string) ?? []}
           onDelete={isWatchedFoldersActive ? undefined : handleSidebarDelete}
           onSaveToCloud={isWatchedFoldersActive ? undefined : handleSaveToCloud}
           canSaveToCloud={storageEnabled && fileOrigin !== "shared-with-me"}
@@ -864,6 +865,17 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   alt="Stirling PDF"
                   className="file-sidebar-brand-text sidebar-content-fade"
                 />
+              )}
+              {!collapsed && (
+                // The header row itself toggles collapse; stop the switcher's
+                // clicks and key presses from reaching it.
+                <span
+                  className="file-sidebar-app-switch sidebar-content-fade"
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => e.stopPropagation()}
+                >
+                  <AppSwitcher />
+                </span>
               )}
             </div>
           </Tooltip>
