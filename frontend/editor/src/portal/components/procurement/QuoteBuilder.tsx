@@ -15,12 +15,13 @@ import {
 import "@portal/views/Procurement.css";
 
 const STEPS = ["volume", "plan", "details"] as const;
-const TERM_DISCOUNT = [0, 0.05, 0.1, 0.12, 0.15]; // 1..5 years
-const SLA_UPLIFT: Record<string, number> = {
-  standard: 0,
-  priority: 0.15,
-  dedicated: 0.3,
-};
+const TERM_DISCOUNT = [0, 0.03, 0.05, 0.06, 0.07]; // 1..5 years — meter-only discount (D71)
+// Policy posture: the intensity (runs per PDF) fed to the committed-volume curve.
+const POSTURES = [
+  { intensity: 2, key: "essentials" },
+  { intensity: 4, key: "governed" },
+  { intensity: 7, key: "regulated" },
+] as const;
 
 /**
  * The enterprise quote builder — volume → commitment &amp; service → details. A client-side preview
@@ -45,14 +46,13 @@ export function QuoteBuilder({
     initial ?? {
       volume: 1_000_000,
       users: 0,
+      intensity: 4, // Governed — the default posture per the pricing alignment
       deployment,
       termYears: 3,
       serviceLevel: "priority",
       indemnification: false,
       training: false,
       qbr: false,
-      offlineLicense: false,
-      currency: "USD",
       businessName: "",
     },
   );
@@ -159,6 +159,20 @@ export function QuoteBuilder({
             title={t("portal.procurement.builder.s2Title")}
             sub={t("portal.procurement.builder.s2Sub")}
           >
+            <Field label={t("portal.procurement.builder.posture")}>
+              <div className="portal-qb__opts">
+                {POSTURES.map((p) => (
+                  <OptCard
+                    key={p.key}
+                    on={cfg.intensity === p.intensity}
+                    title={t(`portal.procurement.builder.posture_${p.key}`)}
+                    sub={t(`portal.procurement.builder.posture_${p.key}Sub`)}
+                    onClick={() => set("intensity", p.intensity)}
+                  />
+                ))}
+              </div>
+            </Field>
+
             <Field label={t("portal.procurement.builder.term")}>
               <div className="portal-qb__pills">
                 {[1, 2, 3, 4, 5].map((y) => (
@@ -224,12 +238,6 @@ export function QuoteBuilder({
                   sub={t("portal.procurement.builder.qbrSub")}
                   onClick={() => set("qbr", !cfg.qbr)}
                 />
-                <AddOn
-                  on={cfg.offlineLicense}
-                  title={t("portal.procurement.builder.offlineLicense")}
-                  sub={t("portal.procurement.builder.offlineLicenseSub")}
-                  onClick={() => set("offlineLicense", !cfg.offlineLicense)}
-                />
               </div>
             </Field>
           </Step>
@@ -250,24 +258,6 @@ export function QuoteBuilder({
                 onChange={(e) => set("businessName", e.target.value)}
               />
             </Field>
-            <div className="portal-qb__row">
-              <Field label={t("portal.procurement.builder.country")}>
-                <select
-                  value={cfg.currency}
-                  onChange={(e) => set("currency", e.target.value)}
-                >
-                  <option value="USD">
-                    {t("portal.procurement.builder.countryUS")}
-                  </option>
-                  <option value="GBP">
-                    {t("portal.procurement.builder.countryUK")}
-                  </option>
-                  <option value="EUR">
-                    {t("portal.procurement.builder.countryEuro")}
-                  </option>
-                </select>
-              </Field>
-            </div>
             <label className="portal-qb__eula">
               <input
                 type="checkbox"
@@ -283,9 +273,9 @@ export function QuoteBuilder({
       <div className="portal-qb__foot">
         <span className="portal-qb__running">
           {t("portal.procurement.builder.running", {
-            annual: money(preview, cfg.currency),
+            annual: money(preview),
             years: cfg.termYears,
-            tcv: money(tcvPreview, cfg.currency),
+            tcv: money(tcvPreview),
           })}
         </span>
         <div className="portal-qb__foot-btns">
@@ -431,20 +421,28 @@ function estimateVolume(users: number): number {
   return Math.round(raw / stepSize) * stepSize;
 }
 
+// Client mirror of the server pricing curve (ProcurementPricingService / quotePricing). The server
+// is authoritative; this only drives the live footer estimate. Minor units (cents); the meter
+// rounds to whole dollars, exactly like the backend, so the preview matches the issued quote.
 function previewAnnualMinor(cfg: QuoteConfigInput): number {
-  const perPdf = cfg.volume >= 5_000_000 ? 3 : cfg.volume >= 1_000_000 ? 4 : 5;
-  const usage = Math.round(cfg.volume * perPdf);
-  const withSla = Math.round(usage * (1 + (SLA_UPLIFT[cfg.serviceLevel] ?? 0)));
-  const withInd = cfg.indemnification ? Math.round(withSla * 1.05) : withSla;
-  const disc = Math.round(
-    withInd * TERM_DISCOUNT[Math.min(Math.max(cfg.termYears, 1), 5) - 1],
-  );
-  // Flat annual add-ons (QBR, offline licence) sit outside the multi-year discount, mirroring the
-  // server (PricingRates: qbr 800_000, offline licence 1_200_000). TCV preview derives from this.
-  return (
-    withInd -
-    disc +
-    (cfg.qbr ? 800_000 : 0) +
-    (cfg.offlineLicense ? 1_200_000 : 0)
-  );
+  const LIST = 0.01;
+  const FLOOR = 0.005;
+  const runVol = Math.max(0, cfg.volume) * Math.max(1, cfg.intensity);
+  const volDisc =
+    runVol > 1_000_000
+      ? Math.min(0.5, 0.06 * Math.log2(runVol / 1_000_000))
+      : 0;
+  const rate = Math.max(FLOOR, LIST * (1 - volDisc));
+  const termDisc = TERM_DISCOUNT[Math.min(Math.max(cfg.termYears, 1), 5) - 1];
+  const meterNet = Math.round(runVol * rate * (1 - termDisc)) * 100; // whole $ → minor units
+  const support = cfg.serviceLevel === "dedicated" ? 3_000_000 : 0; // std + priority included
+  const deploy =
+    cfg.deployment === "airgap"
+      ? 3_600_000
+      : cfg.deployment === "selfhost"
+        ? 1_200_000
+        : 0;
+  const indemnity = cfg.indemnification ? Math.round(meterNet * 0.05) : 0;
+  const qbr = cfg.qbr ? 800_000 : 0;
+  return meterNet + support + deploy + indemnity + qbr;
 }

@@ -157,15 +157,15 @@ export interface ProcurementSnapshot {
 export interface QuoteConfigInput {
   volume: number;
   users: number;
+  /** Policy posture as runs per PDF: Essentials 2, Governed 4, Regulated 7. */
+  intensity: number;
+  /** cloud | selfhost | airgap — set at the trial; drives the flat deployment fee + offline .lic. */
   deployment: string;
   termYears: number;
   serviceLevel: string;
   indemnification: boolean;
   training: boolean;
   qbr: boolean;
-  /** Offline / air-gapped licence file — a paid add-on. */
-  offlineLicense: boolean;
-  currency: string;
   /** Buyer's company name — shown on the quote/agreement and remembered when re-editing. */
   businessName: string;
 }

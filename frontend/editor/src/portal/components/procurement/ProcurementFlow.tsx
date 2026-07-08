@@ -151,7 +151,7 @@ export function ProcurementFlow({
             {data?.licenseKey && (
               <LicensePanel
                 licenseKey={data.licenseKey}
-                offlineAvailable={!!latest?.config.offlineLicense}
+                offlineAvailable={latest?.config.deployment === "airgap"}
                 downloadingLicense={downloadingLicense}
                 onDownloadOffline={onDownloadOfflineLicense}
               />

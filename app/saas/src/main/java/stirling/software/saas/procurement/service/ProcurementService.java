@@ -275,7 +275,7 @@ public class ProcurementService {
                         q != null && q.isIndemnification(),
                         q != null && q.isTraining(),
                         q != null && q.isQbr(),
-                        q != null && q.isOfflineLicense(),
+                        "airgap".equalsIgnoreCase(deployment), // offline .lic = air-gapped deploy
                         deal.getDealId(),
                         deal.getSubscriptionId());
         return licenses.issueAnnualLicense(
@@ -308,7 +308,9 @@ public class ProcurementService {
     private boolean hasOfflineAddOn(ProcurementDeal deal) {
         if (deal.getAcceptedQuoteId() == null) return false;
         ProcurementQuote quote = quoteRepo.findById(deal.getAcceptedQuoteId()).orElse(null);
-        return quote != null && quote.isOfflineLicense();
+        // Air-gapped deployments verify their licence offline, so they get the downloadable .lic;
+        // cloud/self-hosted check in online against Keygen. Deployment is the offline signal now.
+        return quote != null && "airgap".equalsIgnoreCase(quote.getDeployment());
     }
 
     /**
