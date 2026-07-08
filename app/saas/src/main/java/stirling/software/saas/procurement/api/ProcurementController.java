@@ -76,6 +76,7 @@ public class ProcurementController {
     public record QuoteRequest(
             long volume,
             int users,
+            int intensity, // policy posture (runs/PDF): 2 / 4 / 7; 0 → default Governed
             String deployment,
             int termYears,
             String serviceLevel,
@@ -89,6 +90,7 @@ public class ProcurementController {
             return new QuoteConfig(
                     volume,
                     users,
+                    intensity,
                     deployment,
                     termYears,
                     serviceLevel,
@@ -121,6 +123,7 @@ public class ProcurementController {
     public record QuoteConfigEcho(
             long volume,
             int users,
+            int intensity,
             String deployment,
             int termYears,
             String serviceLevel,
@@ -343,6 +346,7 @@ public class ProcurementController {
                 new QuoteConfigEcho(
                         q.getVolume(),
                         0,
+                        q.getIntensity(),
                         q.getDeployment(),
                         q.getTermYears(),
                         q.getServiceLevel(),

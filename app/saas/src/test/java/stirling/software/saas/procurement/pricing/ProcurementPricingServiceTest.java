@@ -7,87 +7,138 @@ import org.junit.jupiter.api.Test;
 import stirling.software.saas.procurement.pricing.QuoteLineItem.Kind;
 
 /**
- * Locks the pricing engine to the numbers the marketing prototype encodes — most importantly the
- * canonical quote QT-AC9F-0001 (1M PDFs, priority, 3-year) = $41,400/yr, $124,200 TCV.
+ * Locks the D71 pricing engine to the numbers marketing publishes. The two anchor fixtures are the
+ * ones the demo memo foots against: acme (90M PDFs · Governed · self-hosted · dedicated · 3-yr =
+ * $1,752,000/yr, $5,256,000 TCV) and Northwind (6M · Governed · cloud · standard · 3-yr =
+ * $165,278/yr). If either moves, the engine has drifted from marketing.
  */
 class ProcurementPricingServiceTest {
 
     private final ProcurementPricingService pricing = new ProcurementPricingService();
 
-    private static QuoteConfig cfg(long volume, String sla, int term) {
-        return new QuoteConfig(volume, 0, "cloud", term, sla, false, false, false, false, "USD");
+    private static QuoteConfig cfg(
+            long volume, int intensity, String deployment, int term, String sla) {
+        return new QuoteConfig(
+                volume, 0, intensity, deployment, term, sla, false, false, false, false, "USD");
     }
 
     @Test
-    void canonicalQuoteMatchesPrototype() {
-        QuoteBreakdown q = pricing.price(cfg(1_000_000, "priority", 3));
+    void acmeFixtureFootsExactly() {
+        // 90M PDFs × Governed(×4) = 360M runs → curve floors at $0.005/run → $0.0200/PDF effective.
+        // meter $1.8M − 5% (3-yr) = $1,710,000 + self-hosted $12K + dedicated SE/CSM $30K.
+        QuoteBreakdown q = pricing.price(cfg(90_000_000, 4, "selfhost", 3, "dedicated"));
 
-        assertThat(q.annualNetMinor()).isEqualTo(4_140_000L); // $41,400
-        assertThat(q.tcvMinor()).isEqualTo(12_420_000L); // $124,200
-        assertThat(lineAmount(q, "usage")).isEqualTo(4_000_000L); // $40,000 @ $0.04
-        assertThat(lineAmount(q, "service-level")).isEqualTo(600_000L); // +15%
-        assertThat(lineAmount(q, "multi-year")).isEqualTo(-460_000L); // -10%
+        assertThat(q.annualNetMinor()).isEqualTo(175_200_000L); // $1,752,000
+        assertThat(q.tcvMinor()).isEqualTo(525_600_000L); // $5,256,000
+        assertThat(lineAmount(q, "support")).isEqualTo(3_000_000L); // dedicated SE/CSM $30K
+        assertThat(lineAmount(q, "deployment")).isEqualTo(1_200_000L); // self-hosted $12K
     }
 
     @Test
-    void volumeBandsPickTheRightPerPdfRate() {
-        assertThat(lineAmount(pricing.price(cfg(500_000, "standard", 1)), "usage"))
-                .isEqualTo(2_500_000L); // 500k @ $0.05
-        assertThat(lineAmount(pricing.price(cfg(1_000_000, "standard", 1)), "usage"))
-                .isEqualTo(4_000_000L); // 1M @ $0.04
-        assertThat(lineAmount(pricing.price(cfg(5_000_000, "standard", 1)), "usage"))
-                .isEqualTo(15_000_000L); // 5M @ $0.03
+    void northwindFixtureFootsExactly() {
+        // 6M × Governed(×4) = 24M runs → $0.0290/PDF effective → $165,278/yr at 3-yr.
+        QuoteBreakdown q = pricing.price(cfg(6_000_000, 4, "cloud", 3, "standard"));
+
+        assertThat(q.annualNetMinor()).isEqualTo(16_527_800L); // $165,278
+        assertThat(q.tcvMinor()).isEqualTo(49_583_400L); // × 3 years
+        // Cloud + standard: no deployment or support line.
+        assertThat(q.lineItems()).noneMatch(l -> l.key().equals("deployment"));
+        assertThat(q.lineItems()).noneMatch(l -> l.key().equals("support"));
     }
 
     @Test
-    void addOnsAndTermStack() {
+    void rateFloorsAtHalfACent() {
+        // 100M × Regulated(×7) = 700M runs — deep past the knee, so the per-run rate is pinned to
+        // the $0.005 floor: base meter = 700M × $0.005 = $3,500,000 (1-yr, no term discount).
+        QuoteBreakdown q = pricing.price(cfg(100_000_000, 7, "cloud", 1, "standard"));
+        assertThat(lineAmount(q, "usage")).isEqualTo(350_000_000L); // $3,500,000
+        assertThat(q.annualNetMinor()).isEqualTo(350_000_000L);
+    }
+
+    @Test
+    void postureDrivesThePrice() {
+        // Same PDFs, three postures — the meter scales with runs, so Regulated > Governed >
+        // Essentials. (This is what the retired flat-per-PDF model could not express.)
+        long essentials = pricing.price(cfg(6_000_000, 2, "cloud", 3, "standard")).annualNetMinor();
+        long governed = pricing.price(cfg(6_000_000, 4, "cloud", 3, "standard")).annualNetMinor();
+        long regulated = pricing.price(cfg(6_000_000, 7, "cloud", 3, "standard")).annualNetMinor();
+
+        assertThat(essentials).isLessThan(governed);
+        assertThat(governed).isLessThan(regulated);
+        assertThat(governed).isEqualTo(16_527_800L); // Governed is the Northwind anchor
+    }
+
+    @Test
+    void deploymentIsAFlatFeeNotAMultiplier() {
+        long cloud = pricing.price(cfg(6_000_000, 4, "cloud", 3, "standard")).annualNetMinor();
+        long selfhost =
+                pricing.price(cfg(6_000_000, 4, "selfhost", 3, "standard")).annualNetMinor();
+        long airgap = pricing.price(cfg(6_000_000, 4, "airgap", 3, "standard")).annualNetMinor();
+
+        assertThat(selfhost - cloud).isEqualTo(1_200_000L); // +$12,000 flat
+        assertThat(airgap - cloud).isEqualTo(3_600_000L); // +$36,000 flat
+    }
+
+    @Test
+    void standardAndPriorityIncludedDedicatedIsFlat() {
+        long standard = pricing.price(cfg(6_000_000, 4, "cloud", 3, "standard")).annualNetMinor();
+        long priority = pricing.price(cfg(6_000_000, 4, "cloud", 3, "priority")).annualNetMinor();
+        long dedicated = pricing.price(cfg(6_000_000, 4, "cloud", 3, "dedicated")).annualNetMinor();
+
+        assertThat(priority).isEqualTo(standard); // both included, no uplift
+        assertThat(dedicated - standard).isEqualTo(3_000_000L); // dedicated SE/CSM +$30,000 flat
+    }
+
+    @Test
+    void termDiscountsTheMeterOnly() {
+        long oneYear = pricing.price(cfg(6_000_000, 4, "cloud", 1, "standard")).annualNetMinor();
+        long twoYear = pricing.price(cfg(6_000_000, 4, "cloud", 2, "standard")).annualNetMinor();
+        // 2-yr is 3% off the meter (discounted on the raw meter, then rounded to whole dollars).
+        assertThat(oneYear).isEqualTo(17_397_700L); // no discount
+        assertThat(twoYear).isEqualTo(16_875_700L); // −3% on the meter
+        assertThat(twoYear).isLessThan(oneYear);
+    }
+
+    @Test
+    void indemnificationIsFivePercentOfTheMeter() {
+        long base = pricing.price(cfg(6_000_000, 4, "cloud", 3, "standard")).annualNetMinor();
         QuoteConfig c =
                 new QuoteConfig(
-                        1_000_000, 0, "cloud", 5, "dedicated", true, true, true, false, "USD");
+                        6_000_000, 0, 4, "cloud", 3, "standard", true, false, false, false, "USD");
         QuoteBreakdown q = pricing.price(c);
+        assertThat(lineAmount(q, "indemnification")).isEqualTo(Math.round(base * 0.05));
+    }
 
-        long usage = 4_000_000L;
-        long withSla = Math.round(usage * 1.30); // 5,200,000
-        long withIndemnity = Math.round(withSla * 1.05); // 5,460,000
-        long discount = Math.round(withIndemnity * 0.15); // 819,000
-        long qbr = 800_000L;
-        long expectedAnnual = (withIndemnity - discount) + qbr;
-        long expectedTcv = expectedAnnual * 5 + 750_000L; // + training one-time
+    @Test
+    void trainingIsOneTimeOutsideTheAnnual() {
+        QuoteConfig withTraining =
+                new QuoteConfig(
+                        6_000_000, 0, 4, "cloud", 3, "standard", false, true, false, false, "USD");
+        QuoteBreakdown q = pricing.price(withTraining);
+        long baseAnnual = pricing.price(cfg(6_000_000, 4, "cloud", 3, "standard")).annualNetMinor();
 
-        assertThat(q.annualNetMinor()).isEqualTo(expectedAnnual);
-        assertThat(q.tcvMinor()).isEqualTo(expectedTcv);
+        assertThat(q.annualNetMinor()).isEqualTo(baseAnnual); // one-time never touches the annual
+        assertThat(q.tcvMinor()).isEqualTo(baseAnnual * 3 + 750_000L); // + $7,500 once
         assertThat(q.lineItems())
                 .anyMatch(l -> l.key().equals("training") && l.kind() == Kind.ONE_TIME);
-        assertThat(q.lineItems()).anyMatch(l -> l.key().equals("qbr"));
-        assertThat(q.lineItems()).anyMatch(l -> l.key().equals("indemnification"));
     }
 
     @Test
-    void offlineLicenseAddsFlatUndiscountedAnnualFee() {
-        // Canonical quote (1M/priority/3yr) = $41,400/yr; the offline add-on is a flat $12,000/yr
-        // recurring fee, added after the multi-year discount (not discounted), like QBR.
-        QuoteConfig c =
-                new QuoteConfig(
-                        1_000_000, 0, "cloud", 3, "priority", false, false, false, true, "USD");
-        QuoteBreakdown q = pricing.price(c);
-
-        assertThat(q.annualNetMinor()).isEqualTo(4_140_000L + 1_200_000L); // $53,400
-        assertThat(q.tcvMinor()).isEqualTo((4_140_000L + 1_200_000L) * 3); // $160,200
-        assertThat(lineAmount(q, "offline-license")).isEqualTo(1_200_000L);
+    void unsetPostureDefaultsToGoverned() {
+        long defaulted = pricing.price(cfg(6_000_000, 0, "cloud", 3, "standard")).annualNetMinor();
+        long governed = pricing.price(cfg(6_000_000, 4, "cloud", 3, "standard")).annualNetMinor();
+        assertThat(defaulted).isEqualTo(governed);
     }
 
     @Test
-    void standardSingleYearHasNoUpliftOrDiscountLines() {
-        QuoteBreakdown q = pricing.price(cfg(1_000_000, "standard", 1));
-        assertThat(q.annualNetMinor()).isEqualTo(4_000_000L);
-        assertThat(q.tcvMinor()).isEqualTo(4_000_000L);
-        assertThat(q.lineItems()).noneMatch(l -> l.key().equals("service-level"));
-        assertThat(q.lineItems()).noneMatch(l -> l.key().equals("multi-year"));
+    void ssoIsAlwaysAnIncludedZeroLine() {
+        QuoteBreakdown q = pricing.price(cfg(6_000_000, 4, "cloud", 3, "standard"));
+        assertThat(q.lineItems())
+                .anyMatch(l -> l.key().equals("seats") && l.kind() == Kind.INCLUDED);
     }
 
     @Test
     void volumeEstimateFromSeats() {
-        // ~2,013 PDFs/user/yr
         assertThat(pricing.estimateAnnualVolume(100)).isEqualTo(201_250L);
         assertThat(pricing.estimateAnnualVolume(0)).isZero();
     }

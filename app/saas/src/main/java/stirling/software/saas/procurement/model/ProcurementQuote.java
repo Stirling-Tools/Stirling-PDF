@@ -62,6 +62,10 @@ public class ProcurementQuote implements Serializable {
     @Column(name = "seats")
     private Integer seats;
 
+    /** Policy posture as runs-per-PDF: Essentials 2, Governed 4, Regulated 7. Defaults Governed. */
+    @Column(name = "intensity", nullable = false)
+    private int intensity = 4;
+
     @Column(name = "deployment", length = 24)
     private String deployment;
 

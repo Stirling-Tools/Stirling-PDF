@@ -9,18 +9,23 @@ package stirling.software.saas.procurement.pricing;
 public record QuoteConfig(
         long volume, // committed PDFs per year
         int users, // seats (drives the volume auto-estimate when the buyer hasn't overridden)
-        String deployment, // cloud | selfhost | airgap (inherited from the trial; not priced)
+        int intensity, // policy posture: runs per PDF — Essentials 2, Governed 4, Regulated 7
+        String deployment, // cloud | selfhost | airgap (priced flat; inherited from the trial)
         int termYears, // 1..5
-        String serviceLevel, // standard | priority | dedicated
+        String serviceLevel, // standard | priority (both included) | dedicated (flat SE/CSM fee)
         boolean indemnification,
         boolean training,
         boolean qbr,
-        boolean offlineLicense, // air-gapped/offline licence file — a paid add-on
-        String currency) { // USD | EUR | GBP
+        boolean offlineLicense, // offline .lic availability (gates download; no longer priced here)
+        String currency) { // USD only for now
+
+    /** Default posture when none is chosen — Governed (x4), per the pricing alignment decision. */
+    public static final int DEFAULT_INTENSITY = 4;
 
     public QuoteConfig {
         if (termYears < 1) termYears = 1;
         if (termYears > 5) termYears = 5;
+        if (intensity < 1) intensity = DEFAULT_INTENSITY;
         if (serviceLevel == null || serviceLevel.isBlank()) serviceLevel = "standard";
         if (currency == null || currency.isBlank()) currency = "USD";
     }
