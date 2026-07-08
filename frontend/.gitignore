@@ -16,7 +16,6 @@
 
 /editor/build
 /editor/dist
-/portal/dist
 
 # misc
 .DS_Store

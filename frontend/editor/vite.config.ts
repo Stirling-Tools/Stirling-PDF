@@ -139,7 +139,6 @@ const VALID_MODES = [
   "saas",
   "desktop",
   "prototypes",
-  "portal",
 ] as const;
 type BuildMode = (typeof VALID_MODES)[number];
 
@@ -149,7 +148,6 @@ const TSCONFIG_MAP: Record<BuildMode, string> = {
   saas: "./tsconfig.saas.vite.json",
   desktop: "./tsconfig.desktop.vite.json",
   prototypes: "./tsconfig.prototypes.vite.json",
-  portal: "./tsconfig.portal.vite.json",
 };
 
 export default defineConfig(async ({ mode }) => {
@@ -179,11 +177,6 @@ export default defineConfig(async ({ mode }) => {
         : "proprietary");
 
   const tsconfigProject = TSCONFIG_MAP[effectiveMode];
-
-  // The portal builds as its own app (portal.html) into ../portal/dist and is
-  // served by the backend under /portal. It has no PDF engine or per-tool OG
-  // pages, so those editor-only copies/plugins are dropped below.
-  const isPortal = effectiveMode === "portal";
 
   // Backend proxy target: default localhost:8080. Override via BACKEND_URL env var
   // so the top-level dev launcher can wire a dynamically-assigned backend port.
@@ -254,10 +247,34 @@ export default defineConfig(async ({ mode }) => {
         : []),
       viteStaticCopy({
         targets: [
-          // Brand assets live in core; both the editor and the portal serve
-          // them by URL, so copy each set to the /{variant}-logo path its
-          // markup and useLogoAssets resolve against.
           {
+            // node_modules is hoisted to the workspace root (frontend/), so
+            // these paths walk up one level from editor/.
+            src: "../node_modules/@embedpdf/pdfium/dist/pdfium.wasm",
+            dest: "pdfium",
+          },
+          {
+            // Copy jscanify vendor files to dist
+            src: "public/vendor/jscanify/*",
+            dest: "vendor/jscanify",
+          },
+          {
+            // pdfjs-dist CMap data for CJK / non-latin glyph mapping. Required
+            // when rendering PDFs inside workers where the default DOM fetch paths
+            // aren't available.
+            src: "../node_modules/pdfjs-dist/cmaps/*",
+            dest: "pdfjs/cmaps",
+          },
+          {
+            // pdfjs-dist standard font data (Helvetica/Times/etc.) needed so
+            // workers can substitute non-embedded base 14 fonts without DOM access.
+            src: "../node_modules/pdfjs-dist/standard_fonts/*",
+            dest: "pdfjs/standard_fonts",
+          },
+          {
+            // Brand assets live in core; the editor serves them by URL per
+            // variant, so copy each set to the /{variant}-logo path its
+            // manifests, index.html and useLogoAssets resolve against.
             src: "src/core/assets/brand/classic-logo/*",
             dest: "classic-logo",
           },
@@ -265,42 +282,10 @@ export default defineConfig(async ({ mode }) => {
             src: "src/core/assets/brand/modern-logo/*",
             dest: "modern-logo",
           },
-          // The PDF engine + pdfjs data are editor-only; the portal is an admin
-          // dashboard with no client-side PDF rendering, so skip them there.
-          ...(isPortal
-            ? []
-            : [
-                {
-                  // node_modules is hoisted to the workspace root (frontend/),
-                  // so these paths walk up one level from editor/.
-                  src: "../node_modules/@embedpdf/pdfium/dist/pdfium.wasm",
-                  dest: "pdfium",
-                },
-                {
-                  // Copy jscanify vendor files to dist
-                  src: "public/vendor/jscanify/*",
-                  dest: "vendor/jscanify",
-                },
-                {
-                  // pdfjs-dist CMap data for CJK / non-latin glyph mapping.
-                  // Required when rendering PDFs inside workers where the
-                  // default DOM fetch paths aren't available.
-                  src: "../node_modules/pdfjs-dist/cmaps/*",
-                  dest: "pdfjs/cmaps",
-                },
-                {
-                  // pdfjs-dist standard font data (Helvetica/Times/etc.) needed
-                  // so workers can substitute non-embedded base 14 fonts.
-                  src: "../node_modules/pdfjs-dist/standard_fonts/*",
-                  dest: "pdfjs/standard_fonts",
-                },
-              ]),
         ],
       }),
       compressStaticCopyPlugin(),
-      // Per-route OG prerender is driven by the editor's tool registry; the
-      // portal has no such routes, so skip it there.
-      ...(isPortal ? [] : [prerenderOgPlugin()]),
+      prerenderOgPlugin(),
     ],
     server: {
       host: true,
@@ -324,25 +309,12 @@ export default defineConfig(async ({ mode }) => {
     },
     build: {
       target: "esnext",
-      // The portal builds into ../portal/dist (a sibling of editor/dist) from
-      // its own portal.html entry; the editor keeps the default dist/index.html.
-      ...(isPortal
-        ? {
-            outDir: resolve(import.meta.dirname, "../portal/dist"),
-            emptyOutDir: true,
-          }
-        : {}),
       rollupOptions: {
-        input: isPortal
-          ? resolve(import.meta.dirname, "portal.html")
-          : undefined,
         output: {
-          manualChunks: isPortal
-            ? { "vendor-react": ["react", "react-dom"] }
-            : {
-                "vendor-react": ["react", "react-dom"],
-                "pdf-engine": ["@embedpdf/engines", "@embedpdf/pdfium"],
-              },
+          manualChunks: {
+            "vendor-react": ["react", "react-dom"],
+            "pdf-engine": ["@embedpdf/engines", "@embedpdf/pdfium"],
+          },
         },
       },
     },
@@ -358,9 +330,6 @@ export default defineConfig(async ({ mode }) => {
     // an absolute base so deep-route asset paths resolve to /assets/...
     // Trailing slash required: it becomes `<base href>`, and browsers resolve
     // relative URLs (manifest.json, favicon) against the base's *directory*.
-    // The portal keeps a relative base like the editor: the backend rewrites its
-    // <base href> to an absolute ${contextPath}/portal/, so relative assets
-    // resolve there regardless of route depth or subpath deploy.
     base: env.RUN_SUBPATH
       ? `/${env.RUN_SUBPATH}/`
       : process.env.VITE_BUILD_FOR_PREVIEW === "1"

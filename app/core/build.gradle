@@ -175,15 +175,17 @@ springBoot {
 // Frontend build tasks - only enabled with -PbuildWithFrontend=true
 def buildWithFrontend = project.hasProperty('buildWithFrontend') && project.property('buildWithFrontend') == 'true'
 def buildPrototypes = project.hasProperty('prototypesMode') && project.property('prototypesMode') == 'true'
-// Admin portal is its own embedded app, built + bundled only with -PbuildWithPortal=true
-// (the deploy GHA auto-sets it when the portal or AI layers change). Served at /portal.
+// The admin portal ships as a lazy route inside the editor bundle (see
+// proprietary/routes/adminRouteExtensions). -PbuildWithPortal=true includes that
+// chunk via VITE_INCLUDE_PORTAL on the editor build; the deploy GHA sets it when
+// the portal or AI layers change. Building the portal implies building the editor.
 def buildWithPortal = project.hasProperty('buildWithPortal') && project.property('buildWithPortal') == 'true'
-// The portal is an admin surface layered on top of the editor; shipping it without
-// the editor would leave the main app as the API landing page. So enabling the
-// portal implies building the editor frontend too - both apps get embedded.
 if (buildWithPortal) {
     buildWithFrontend = true
 }
+// Workspace root holds package.json and node_modules (shared across editor /
+// future portal). Editor-specific paths (src, public, dist, tauri) live one
+// level deeper under frontend/editor/.
 
 // Vite mode: -PprototypesMode > -PfrontendMode > enableSaas > disableAdditional > proprietary.
 def frontendModeOverride = project.findProperty('frontendMode')?.toString()?.toLowerCase()
@@ -202,15 +204,13 @@ if (buildPrototypes) {
 def frontendBuildTask = "frontend:build:${frontendMode}"
 
 // Workspace root holds package.json and node_modules (shared across editor /
-// portal). Editor-specific paths (src, public, dist, tauri) live one level
-// deeper under frontend/editor/. The portal builds from the same workspace
-// (its source is frontend/editor/src/portal) into a sibling dist dir.
+// future portal). Editor-specific paths (src, public, dist, tauri) live one
+// level deeper under frontend/editor/. When the portal lands as an embedded
+// app, add a sibling frontendPortalDir / frontendPortalDistDir alongside.
 def frontendDir = file('../../frontend')
 def frontendEditorDir = file('../../frontend/editor')
 def frontendEditorDistDir = file('../../frontend/editor/dist')
-def frontendPortalDistDir = file('../../frontend/portal/dist')
 def resourcesStaticDir = file('src/main/resources/static')
-def resourcesPortalDir = file('src/main/resources/static/portal')
 def generatedFrontendPaths = [
     'assets',
     'index.html',
@@ -305,9 +305,11 @@ tasks.register('npmBuild', Exec) {
     // Override VITE_API_BASE_URL to use relative paths for production builds
     // This ensures JARs work regardless of how they're deployed (direct, proxied, etc.)
     environment 'VITE_API_BASE_URL', '/'
+    // Include the admin portal's lazy route/chunk in the editor build when requested.
+    environment 'VITE_INCLUDE_PORTAL', (buildWithPortal ? 'true' : 'false')
 
     doFirst {
-        println "Building editor frontend application for production (mode=${frontendMode}, VITE_API_BASE_URL=/)"
+        println "Building editor frontend application for production (mode=${frontendMode}, VITE_API_BASE_URL=/, portal=${buildWithPortal})"
     }
 }
 
@@ -343,60 +345,6 @@ tasks.register('cleanFrontendAssets', Delete) {
     delete fileTree(dir: resourcesStaticDir, includes: ['*.html'], excludes: ['api-landing.html', 'mobile-upload.html'])
     // Nested prerendered route pages (e.g. settings/people.html)
     delete new File(resourcesStaticDir, 'settings')
-    // Embedded portal app (repopulated by copyPortalAssets when -PbuildWithPortal).
-    // Removing it here means an editor-only build never ships a stale portal.
-    delete resourcesPortalDir
-}
-
-tasks.register('npmBuildPortal', Exec) {
-    doNotTrackState("Frontend build depends on untracked npmInstall task")
-    enabled = buildWithPortal
-    group = 'frontend'
-    description = 'Build the admin portal as its own app'
-    workingDir file('../..')
-    commandLine = ['task', 'frontend:build:portal']
-    inputs.dir(new File(frontendEditorDir, 'src/portal'))
-    inputs.file(new File(frontendDir, 'package.json'))
-    outputs.dir(frontendPortalDistDir)
-
-    // Show live output
-    standardOutput = System.out
-    errorOutput = System.err
-
-    // Relative API base so the bundled portal works regardless of deploy origin.
-    environment 'VITE_API_BASE_URL', '/'
-
-    doFirst {
-        println "Building admin portal app for production (VITE_API_BASE_URL=/)"
-    }
-}
-
-tasks.register('copyPortalAssets', Copy) {
-    enabled = buildWithPortal
-    group = 'frontend'
-    description = 'Copy portal build to static resources under /portal'
-    dependsOn npmBuildPortal
-    dependsOn cleanFrontendAssets
-    from(frontendPortalDistDir) {
-        // Editor-only artifacts that get copied through the shared public/ dir
-        // but are dead weight for the admin portal.
-        exclude 'vendor/**'          // jscanify/opencv (client-side scanning)
-        exclude 'samples/**'         // editor sample PDFs
-        exclude 'og_images/**'       // per-tool social-preview art
-        exclude 'og-metadata*.json*' // OG prerender manifest
-        exclude 'mockServiceWorker.js*' // MSW dev mocks
-        exclude 'sw-folder-retry.js*'   // editor service worker helper
-        exclude 'robots.txt'
-        exclude 'favicon.ico'
-    }
-    into resourcesPortalDir
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
-    doFirst {
-        println "Copying portal build from ${frontendPortalDistDir} to ${resourcesPortalDir}..."
-    }
-    doLast {
-        println "Portal assets copied successfully!"
-    }
 }
 
 tasks.register('copyApiLandingPage', Copy) {
@@ -415,9 +363,6 @@ tasks.register('copyApiLandingPage', Copy) {
 tasks.named('copyFrontendAssets').configure {
     mustRunAfter tasks.matching { it.name.startsWith('spotless') }
 }
-tasks.named('copyPortalAssets').configure {
-    mustRunAfter tasks.matching { it.name.startsWith('spotless') }
-}
 
 if (buildWithFrontend) {
     println "Editor frontend build enabled - JAR will include React frontend (mode=${frontendMode})"
@@ -426,11 +371,6 @@ if (buildWithFrontend) {
     println "Frontend build disabled - JAR will be backend-only with API landing page"
     // When not building the UI, ensure any stale frontend assets are removed and use API landing page
     processResources.dependsOn copyApiLandingPage
-}
-
-if (buildWithPortal) {
-    println "Admin portal build enabled - JAR will embed the portal at /portal"
-    processResources.dependsOn copyPortalAssets
 }
 
 bootJar.dependsOn ':common:jar'

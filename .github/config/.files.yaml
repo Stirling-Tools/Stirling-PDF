@@ -93,14 +93,12 @@ engine: &engine
 # on when any of these change so the /portal app ships with the image.
 portal: &portal
   - frontend/editor/src/portal/**
-  - frontend/editor/portal.html
-  - frontend/editor/tsconfig.portal.vite.json
+  - frontend/editor/src/proprietary/routes/adminRouteExtensions.tsx
   - engine/**
   - app/proprietary/src/main/java/**/ai/**
   - app/proprietary/src/main/java/**/Ai*.java
   - app/proprietary/src/main/java/**/mcp/**
   - app/saas/src/main/java/**/ai/**
-  - .taskfiles/frontend.yml
 
 # Files that can make the committed generated API models (frontend tool API
 # types + engine tool models) go stale: the Java tool surfaces they derive from,
