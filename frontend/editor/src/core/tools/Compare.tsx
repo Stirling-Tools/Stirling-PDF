@@ -508,7 +508,11 @@ const Compare = (props: BaseToolProps) => {
               </Stack>
 
               {hasBothSelected && (
-                <Button
+                /* Bespoke full-height vertical bar (icon stacked over label) —
+                   not a layout the shared Button supports. */
+                // eslint-disable-next-line no-restricted-syntax
+                <button
+                  type="button"
                   className="compare-step-selection__swap"
                   onClick={handleSwap}
                   disabled={base.operation.isLoading}
@@ -521,7 +525,7 @@ const Compare = (props: BaseToolProps) => {
                   <span className="compare-step-selection__swap-label">
                     {t("compare.swap.label", "Swap")}
                   </span>
-                </Button>
+                </button>
               )}
             </div>
 
