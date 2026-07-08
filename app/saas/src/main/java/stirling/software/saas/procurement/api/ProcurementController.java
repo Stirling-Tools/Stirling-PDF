@@ -2,6 +2,7 @@ package stirling.software.saas.procurement.api;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpHeaders;
@@ -150,10 +151,14 @@ public class ProcurementController {
     @GetMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<SnapshotResponse> snapshot(Authentication auth) {
-        Long teamId = resolveTeam(auth);
-        if (teamId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        Optional<TeamMembership> membership = primaryMembership(auth);
+        if (membership.isEmpty()) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        Long teamId = membership.get().getTeam().getId();
+        // The licence key is the team's secret entitlement — leader-only. Members still see the
+        // journey (stage, trial, quote) but the key is withheld; the .lic file is likewise gated.
+        boolean leader = membership.get().getRole() == TeamRole.LEADER;
         return ResponseEntity.ok(
-                procurement.getDeal(teamId).map(this::toSnapshot).orElse(EMPTY_SNAPSHOT));
+                procurement.getDeal(teamId).map(d -> toSnapshot(d, leader)).orElse(EMPTY_SNAPSHOT));
     }
 
     private static final SnapshotResponse EMPTY_SNAPSHOT =
@@ -167,8 +172,9 @@ public class ProcurementController {
     @GetMapping("/license/file")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<String> licenseFile(Authentication auth) {
-        Long teamId = resolveTeam(auth);
-        if (teamId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        // Leader-only: the offline .lic is the team's portable entitlement, not a member artefact.
+        Long teamId = requireLeader(auth);
+        if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         return procurement
                 .offlineLicenseFile(teamId)
                 .<ResponseEntity<String>>map(
@@ -187,7 +193,7 @@ public class ProcurementController {
     public ResponseEntity<SnapshotResponse> startTrial(Authentication auth) {
         Long teamId = requireLeader(auth);
         if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        return ResponseEntity.ok(toSnapshot(procurement.startTrial(teamId)));
+        return ResponseEntity.ok(toSnapshot(procurement.startTrial(teamId), true));
     }
 
     @PostMapping("/trial/extend")
@@ -196,7 +202,7 @@ public class ProcurementController {
         Long teamId = requireLeader(auth);
         if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         try {
-            return ResponseEntity.ok(toSnapshot(procurement.extendTrial(teamId)));
+            return ResponseEntity.ok(toSnapshot(procurement.extendTrial(teamId), true));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
@@ -227,7 +233,7 @@ public class ProcurementController {
         Long teamId = requireLeader(auth);
         if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         try {
-            return ResponseEntity.ok(toSnapshot(procurement.startAgreement(teamId)));
+            return ResponseEntity.ok(toSnapshot(procurement.startAgreement(teamId), true));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
@@ -262,7 +268,7 @@ public class ProcurementController {
         Long teamId = requireLeader(auth);
         if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         try {
-            return ResponseEntity.ok(toSnapshot(procurement.markLive(teamId)));
+            return ResponseEntity.ok(toSnapshot(procurement.markLive(teamId), true));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
@@ -281,34 +287,31 @@ public class ProcurementController {
 
     // ---- helpers ------------------------------------------------------------
 
-    /**
-     * Resolve the caller's team from their primary membership; null when unauthenticated/teamless.
-     */
-    private Long resolveTeam(Authentication auth) {
+    /** The caller's primary team membership; empty when unauthenticated/teamless. */
+    private Optional<TeamMembership> primaryMembership(Authentication auth) {
         User user;
         try {
             user = AuthenticationUtils.getCurrentUser(auth, userRepository);
         } catch (SecurityException e) {
-            return null;
+            return Optional.empty();
         }
-        List<TeamMembership> rows = memberRepo.findPrimaryMembership(user.getId());
-        return rows.isEmpty() ? null : rows.get(0).getTeam().getId();
+        return memberRepo.findPrimaryMembership(user.getId()).stream().findFirst();
     }
 
     /** Team id only when the caller is the team leader; null otherwise (commercial actions). */
     private Long requireLeader(Authentication auth) {
-        User user;
-        try {
-            user = AuthenticationUtils.getCurrentUser(auth, userRepository);
-        } catch (SecurityException e) {
-            return null;
-        }
-        List<TeamMembership> rows = memberRepo.findPrimaryMembership(user.getId());
-        if (rows.isEmpty() || rows.get(0).getRole() != TeamRole.LEADER) return null;
-        return rows.get(0).getTeam().getId();
+        return primaryMembership(auth)
+                .filter(m -> m.getRole() == TeamRole.LEADER)
+                .map(m -> m.getTeam().getId())
+                .orElse(null);
     }
 
-    private SnapshotResponse toSnapshot(ProcurementDeal deal) {
+    /**
+     * Build the snapshot for a deal. {@code includeLicenseKey} is true only for the team leader; a
+     * member sees {@code licensed} but not the key itself (see {@link #snapshot}). Mutation
+     * endpoints are leader-gated, so they always pass true.
+     */
+    private SnapshotResponse toSnapshot(ProcurementDeal deal, boolean includeLicenseKey) {
         QuoteResponse latest =
                 procurement.quotesForDeal(deal.getDealId()).stream()
                         .findFirst()
@@ -321,7 +324,7 @@ public class ProcurementController {
                 str(deal.getTrialEndsAt()),
                 deal.getTrialExtensionsUsed(),
                 deal.getLicenseRef() != null,
-                deal.getLicenseRef(),
+                includeLicenseKey ? deal.getLicenseRef() : null,
                 latest);
     }
 

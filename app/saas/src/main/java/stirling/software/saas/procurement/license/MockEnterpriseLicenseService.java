@@ -30,10 +30,10 @@ public class MockEnterpriseLicenseService implements EnterpriseLicenseService {
     @Override
     public String issueTrialLicense(Long teamId, String ownerEmail, LocalDateTime expiresAt) {
         String ref = "mock-trial-" + UUID.randomUUID();
+        // Owner email is deliberately not logged — it's PII and adds nothing to the mock trace.
         log.info(
-                "[procurement][mock-license] issue trial team={} owner={} expires={} ref={}",
+                "[procurement][mock-license] issue trial team={} expires={} ref={}",
                 teamId,
-                ownerEmail,
                 expiresAt,
                 ref);
         return ref;
@@ -53,10 +53,10 @@ public class MockEnterpriseLicenseService implements EnterpriseLicenseService {
             LicenseEntitlements ent) {
         // Upgrade in place when a trial licence already exists, so the key stays stable.
         String ref = existingRef != null ? existingRef : "mock-annual-" + UUID.randomUUID();
+        // Owner email is deliberately not logged — it's PII and adds nothing to the mock trace.
         log.info(
-                "[procurement][mock-license] issue annual team={} owner={} seats={} volume={} deployment={} expires={} ref={} upgrade={}",
+                "[procurement][mock-license] issue annual team={} seats={} volume={} deployment={} expires={} ref={} upgrade={}",
                 teamId,
-                ownerEmail,
                 ent.seats(),
                 ent.volume(),
                 ent.deployment(),
