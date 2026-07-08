@@ -189,9 +189,12 @@ export function KeyDocumentsModal({
 export function ScheduleCallModal({
   open,
   onClose,
+  email,
 }: {
   open: boolean;
   onClose: () => void;
+  /** Linked account's email; prefills the Calendly booking form. */
+  email?: string | null;
 }) {
   const { t } = useTranslation();
   return (
@@ -202,7 +205,7 @@ export function ScheduleCallModal({
       subtitle={t("portal.procurement.schedule.subtitle")}
       wide
     >
-      <CalendlyInline />
+      <CalendlyInline email={email} />
     </SideModal>
   );
 }

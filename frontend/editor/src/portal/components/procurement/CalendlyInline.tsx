@@ -28,6 +28,7 @@ interface CalendlyWindow extends Window {
     initInlineWidget: (opts: {
       url: string;
       parentElement: HTMLElement;
+      prefill?: { name?: string; email?: string };
     }) => void;
   };
 }
@@ -41,9 +42,12 @@ function buildUrl(base: string, theme: "light" | "dark"): string {
 export function CalendlyInline({
   url = CALENDLY_URL,
   height = 640,
+  email,
 }: {
   url?: string;
   height?: number;
+  /** Prefills the booking form's email (the linked account's email). */
+  email?: string | null;
 }) {
   const { t } = useTranslation();
   const { theme } = useTheme();
@@ -61,15 +65,19 @@ export function CalendlyInline({
         const calendly = (window as CalendlyWindow).Calendly;
         if (cancelled || !el || !calendly) return;
         // Re-init explicitly (rather than relying on widget.js auto-scan) so the widget rebuilds on
-        // reopen and whenever the theme-derived URL changes.
+        // reopen and whenever the theme-derived URL or prefill changes.
         el.innerHTML = "";
-        calendly.initInlineWidget({ url: fullUrl, parentElement: el });
+        calendly.initInlineWidget({
+          url: fullUrl,
+          parentElement: el,
+          prefill: email ? { email } : undefined,
+        });
       })
       .catch(() => !cancelled && setFailed(true));
     return () => {
       cancelled = true;
     };
-  }, [fullUrl]);
+  }, [fullUrl, email]);
 
   if (failed) {
     return (

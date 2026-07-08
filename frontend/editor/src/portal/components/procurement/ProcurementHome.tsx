@@ -5,6 +5,7 @@ import { useLink } from "@portal/contexts/LinkContext";
 import { useUI } from "@portal/contexts/UIContext";
 import { useView } from "@portal/contexts/ViewContext";
 import { useAsync } from "@portal/hooks/useAsync";
+import { useLinkedAccountEmail } from "@portal/hooks/useLinkedAccountEmail";
 import {
   acceptQuote,
   extendTrial,
@@ -49,6 +50,7 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
   const { isLinked } = useLink();
   const { openLinkModal } = useUI();
   const { setActiveView } = useView();
+  const scheduleEmail = useLinkedAccountEmail();
 
   const state = useAsync<ProcurementSnapshot | null>(
     () => (isLinked ? fetchSnapshot() : Promise.resolve(null)),
@@ -145,6 +147,7 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
       <DealStatusHero
         snapshot={data}
         busy={busy}
+        canSchedule={isLinked}
         onExpand={() => setOpen(true)}
         onKeyDocs={() => setExtra("docs")}
         onInvite={() => setActiveView("users")}
@@ -274,6 +277,7 @@ export function ProcurementHome({ autoOpen = false }: { autoOpen?: boolean }) {
       <ScheduleCallModal
         open={extra === "schedule"}
         onClose={() => setExtra(null)}
+        email={scheduleEmail}
       />
       {data && (
         <TrialManageModal
