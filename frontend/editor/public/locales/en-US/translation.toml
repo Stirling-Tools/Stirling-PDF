@@ -7370,11 +7370,6 @@ label = "Output as"
 newFile = "New file"
 newVersion = "New version"
 
-[portal.policies.wizard.output.retries]
-delayLabel = "Retry delay (min)"
-heading = "Retries"
-maxLabel = "Max retries"
-
 [portal.policies.wizard.output.runOn]
 export = "Export"
 helper = "When the policy fires: on upload, or before export."

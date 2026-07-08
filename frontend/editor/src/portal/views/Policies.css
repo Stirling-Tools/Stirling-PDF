@@ -225,13 +225,6 @@
   font-weight: 600;
 }
 
-.portal-policies__wizard-subheading {
-  margin: 0.875rem 0 0;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--color-text-3);
-}
-
 .portal-policies__fields {
   display: flex;
   flex-direction: column;

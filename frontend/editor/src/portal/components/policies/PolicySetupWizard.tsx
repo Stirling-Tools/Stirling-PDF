@@ -232,10 +232,10 @@ function PolicySetupWizardBody({
   const [runOn, setRunOn] = useState<"upload" | "export">(
     policy?.state.runOn ?? "upload",
   );
-  const [maxRetries, setMaxRetries] = useState(policy?.state.maxRetries ?? 3);
-  const [retryDelayMinutes, setRetryDelayMinutes] = useState(
-    policy?.state.retryDelayMinutes ?? 5,
-  );
+  // Policies run once; retry config has no UI. Preserve any saved values on
+  // edit and default new policies to no retries (run once).
+  const [maxRetries] = useState(policy?.state.maxRetries ?? 0);
+  const [retryDelayMinutes] = useState(policy?.state.retryDelayMinutes ?? 0);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -613,33 +613,6 @@ function PolicySetupWizardBody({
               </>
             )}
             {/* TODO: reviewer user-picker goes here */}
-            <h4 className="portal-policies__wizard-subheading">
-              {t("portal.policies.wizard.output.retries.heading")}
-            </h4>
-            <FormField
-              label={t("portal.policies.wizard.output.retries.maxLabel")}
-            >
-              <Input
-                inputSize="sm"
-                type="number"
-                value={String(maxRetries)}
-                onChange={(e) =>
-                  setMaxRetries(Math.max(0, Number(e.target.value) || 0))
-                }
-              />
-            </FormField>
-            <FormField
-              label={t("portal.policies.wizard.output.retries.delayLabel")}
-            >
-              <Input
-                inputSize="sm"
-                type="number"
-                value={String(retryDelayMinutes)}
-                onChange={(e) =>
-                  setRetryDelayMinutes(Math.max(0, Number(e.target.value) || 0))
-                }
-              />
-            </FormField>
           </div>
         </div>
       )}
