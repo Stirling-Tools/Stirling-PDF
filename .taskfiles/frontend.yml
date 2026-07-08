@@ -55,15 +55,6 @@ tasks:
       - editor/src/core/data/ogImageMap.json
       - editor/public/og-metadata.json
 
-  prepare:classifier-labels:
-    internal: true
-    run: when_changed
-    desc: "Regenerate the engine classifier labels JSON from the TS source of truth"
-    cmds:
-      - npx tsx editor/scripts/generate-classification-labels.mts
-    sources:
-      - editor/src/proprietary/data/classificationLabels.ts
-
   prepare:
     desc: "Set up dev environment"
     run: when_changed
@@ -74,7 +65,6 @@ tasks:
         vars: { MODE: '{{.MODE}}' }
       - prepare:icons
       - prepare:og
-      - prepare:classifier-labels
 
   # ============================================================
   # Development
@@ -347,23 +337,12 @@ tasks:
     cmds:
       - node editor/scripts/generate-og-metadata.mjs --check
 
-  classifier-labels:
-    desc: "Regenerate the engine classifier labels JSON from the TS source"
-    cmds:
-      - npx tsx editor/scripts/generate-classification-labels.mts
-
-  classifier-labels:check:
-    desc: "Fail if the committed classifier labels JSON is out of date"
-    cmds:
-      - npx tsx editor/scripts/generate-classification-labels.mts --check
-
   check:all:
     desc: "Full CI quality gate"
     cmds:
       # Runs first, before prepare regenerates: guards the committed og-metadata.json /
       # ogImageMap.json that the Cloudflare Pages (plain `vite build`) deploy relies on.
       - task: og:check
-      - task: classifier-labels:check
       - task: typecheck:all
       - task: lint
       - task: format:check

@@ -1,12 +1,15 @@
 /**
  * Loads and persists the team's classification labels
  * (`/api/v1/classification/labels`) — one server-truth set shared by the whole
- * team; a team with none falls back to the built-in default. Editing is gated to
- * team leaders / admins by the backend — callers pass `canConfigure` (the policy
- * gate) to keep read-only users out of the save path.
+ * team. When the team has none, this shows the built-in default as a starting
+ * point for the editor/sidebar; note the classifier itself does NOT use that
+ * default — the backend only classifies against a team's saved set (an unsaved
+ * team is not classified). Editing is gated to team leaders / admins by the
+ * backend — callers pass `canConfigure` (the policy gate) to keep read-only
+ * users out of the save path.
  *
- * `merged` is the effective vocabulary — the team set (or the built-in default) —
- * what the classifier picks from and what the sidebar uses to resolve label icons.
+ * `teamLabels` is also what the sidebar/editor display uses — the team set, or
+ * the built-in default when the team has none.
  */
 
 import { useCallback, useEffect, useState } from "react";
@@ -21,8 +24,6 @@ export interface UseClassificationLabels {
   teamLabels: ClassificationLabel[];
   /** Whether the team has a stored set (vs. the built-in default). */
   isCustom: boolean;
-  /** Effective vocabulary: the team set (or the built-in default). */
-  merged: ClassificationLabel[];
   loading: boolean;
   saving: boolean;
   /** Last save failure, cleared on the next attempt. */
@@ -76,7 +77,6 @@ export function useClassificationLabels(
   return {
     teamLabels,
     isCustom,
-    merged: teamLabels,
     loading,
     saving,
     error,

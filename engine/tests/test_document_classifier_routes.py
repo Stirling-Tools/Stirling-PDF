@@ -36,10 +36,17 @@ def classification_client() -> Iterator[TestClient]:
         app.dependency_overrides.pop(get_document_classifier_agent, None)
 
 
+_LABELS = [{"id": "nda", "name": "NDA"}, {"id": "contract", "name": "Contract"}]
+
+
 def test_classify_returns_assigned_labels(classification_client: TestClient) -> None:
     response = classification_client.post(
         "/api/v1/documents/classify",
-        json={"fileName": "nda.pdf", "pages": [{"pageNumber": 1, "text": "Mutual NDA between A and B."}]},
+        json={
+            "fileName": "nda.pdf",
+            "pages": [{"pageNumber": 1, "text": "Mutual NDA between A and B."}],
+            "labels": _LABELS,
+        },
     )
     assert response.status_code == 200
     assert response.json() == {"labels": ["nda", "contract"]}
@@ -63,7 +70,7 @@ def test_classify_accepts_allowed_labels_on_the_request(classification_client: T
 def test_classify_accepts_empty_pages(classification_client: TestClient) -> None:
     response = classification_client.post(
         "/api/v1/documents/classify",
-        json={"fileName": "blank.pdf", "pages": []},
+        json={"fileName": "blank.pdf", "pages": [], "labels": _LABELS},
     )
     assert response.status_code == 200
 
@@ -71,6 +78,15 @@ def test_classify_accepts_empty_pages(classification_client: TestClient) -> None
 def test_classify_rejects_empty_file_name(classification_client: TestClient) -> None:
     response = classification_client.post(
         "/api/v1/documents/classify",
-        json={"fileName": "", "pages": []},
+        json={"fileName": "", "pages": [], "labels": _LABELS},
+    )
+    assert response.status_code == 422
+
+
+def test_classify_rejects_missing_labels(classification_client: TestClient) -> None:
+    # The backend always supplies the vocabulary; a request without one is invalid.
+    response = classification_client.post(
+        "/api/v1/documents/classify",
+        json={"fileName": "nda.pdf", "pages": []},
     )
     assert response.status_code == 422

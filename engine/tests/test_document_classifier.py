@@ -7,7 +7,6 @@ from unittest.mock import AsyncMock
 import pytest
 
 from stirling.agents.document_classifier import (
-    DEFAULT_LABELS,
     MAX_ASSIGNED_LABELS,
     DocumentClassifierAgent,
     _ClassifierOutput,
@@ -120,14 +119,6 @@ def test_render_labels_handles_empty_vocabulary() -> None:
     assert "(none)" in render_labels([])
 
 
-# ── DEFAULT_LABELS ───────────────────────────────────────────────────────────
-
-
-def test_default_labels_load_from_generated_json() -> None:
-    assert DEFAULT_LABELS
-    assert all(isinstance(label, LabelOption) and label.id and label.name for label in DEFAULT_LABELS)
-
-
 # ── DocumentClassifierAgent (inline page text) ───────────────────────────────
 
 
@@ -135,35 +126,6 @@ def _stub_model_answer(agent: DocumentClassifierAgent, labels: list[str]) -> Asy
     mock = AsyncMock(return_value=SimpleNamespace(output=_ClassifierOutput(labels=labels)))
     agent._agent.run = mock
     return mock
-
-
-@pytest.mark.anyio
-async def test_classify_falls_back_to_default_labels_when_omitted(runtime: AppRuntime) -> None:
-    agent = DocumentClassifierAgent(runtime)
-    run_mock = _stub_model_answer(agent, ["Invoice", "Boarding pass to Mars"])
-
-    result = await agent.classify(
-        ClassifyDocumentRequest(
-            file_name="invoice.pdf",
-            pages=[PageText(page_number=1, text="Invoice INV-1 total due 100.00")],
-        )
-    )
-
-    assert isinstance(result, DocumentClassificationResponse)
-    assert result.labels == ["invoice"]
-    assert run_mock.await_args is not None
-    prompt = run_mock.await_args.args[0]
-    assert DEFAULT_LABELS[0].name in prompt
-
-
-@pytest.mark.anyio
-async def test_classify_treats_empty_label_list_as_fallback(runtime: AppRuntime) -> None:
-    agent = DocumentClassifierAgent(runtime)
-    _stub_model_answer(agent, ["Invoice"])
-
-    result = await agent.classify(ClassifyDocumentRequest(file_name="a.pdf", pages=[], labels=[]))
-
-    assert result.labels == ["invoice"]  # matched against DEFAULT_LABELS, not the empty list
 
 
 @pytest.mark.anyio

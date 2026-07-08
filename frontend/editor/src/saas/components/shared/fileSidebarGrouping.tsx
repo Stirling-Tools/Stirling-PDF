@@ -50,7 +50,7 @@ export function useFileSidebarGroups(
   stubs: StirlingFileStub[],
 ): FileSidebarGroup[] | null {
   const { t } = useTranslation();
-  const { merged: labelSet } = useClassificationLabels(true);
+  const { teamLabels: labelSet } = useClassificationLabels(true);
   const { bumpRevision } = useIndexedDB();
   // Attempted reads keyed by id+lastModified: a re-classified file (new version bumps lastModified) is re-read and leaves "Other" on its own, while a truly-unlabelled file keeps a stable key and is read once.
   const attempted = useRef<Set<string>>(new Set());

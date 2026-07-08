@@ -23,15 +23,15 @@ class ClassifyDocumentRequest(ApiModel):
     (first/last pages), since the classifier reads no more than that. There is no
     ingestion or RAG step.
 
-    ``labels`` is the allowed vocabulary for this request (the caller merges team
-    labels before sending), each an ``{id, name}`` pair. When omitted — or sent
-    as an empty list — the engine falls back to its built-in default vocabulary
-    (see ``DEFAULT_LABELS``).
+    ``labels`` is the allowed vocabulary for this request — the caller (the
+    backend) always supplies it from the team's stored label set, each an
+    ``{id, name}`` pair. The engine holds no vocabulary of its own, so at least
+    one label is required.
     """
 
     file_name: str = Field(min_length=1)
     pages: list[PageText] = Field(default_factory=list)
-    labels: list[LabelOption] | None = None
+    labels: list[LabelOption] = Field(min_length=1)
 
 
 class DocumentClassificationResponse(ApiModel):

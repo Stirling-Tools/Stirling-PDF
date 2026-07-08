@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import json
 import logging
-from pathlib import Path
 
 from pydantic import Field
 from pydantic_ai import Agent
@@ -27,17 +25,6 @@ MAX_ASSIGNED_LABELS = 5
 # its opening (and closing) pages, so a fixed window keeps cost and latency flat
 # regardless of length. Promote to AppSettings if it ever needs tuning.
 WINDOW_PAGES = 2
-
-# The built-in vocabulary the classifier falls back to when a request doesn't
-# supply its own. GENERATED from the TS source of truth
-# (frontend/editor/src/proprietary/data/classificationLabels.ts) via
-# `task frontend:classifier-labels` — edit that file, not this JSON.
-_DEFAULT_LABELS_PATH = Path(__file__).with_name("default_classification_labels.generated.json")
-# The file carries an underscore-prefixed "_generated" notice (JSON has no
-# comments); only the "labels" key is data — each an {id, name} pair.
-DEFAULT_LABELS: list[LabelOption] = [
-    LabelOption.model_validate(item) for item in json.loads(_DEFAULT_LABELS_PATH.read_text(encoding="utf-8"))["labels"]
-]
 
 
 _SYSTEM_PROMPT = (
@@ -129,10 +116,9 @@ class DocumentClassifierAgent:
         )
 
     async def classify(self, request: ClassifyDocumentRequest) -> ClassifyDocumentResponse:
-        # Override point: a request-supplied vocabulary (team + user labels merged
-        # by the backend) wins; the generated default is the fallback. An empty
-        # list is treated like an omitted one.
-        allowed = request.labels or DEFAULT_LABELS
+        # The caller (the backend) always supplies the allowed vocabulary — the
+        # team's stored labels — so the engine holds no vocabulary of its own.
+        allowed = request.labels
         window = select_window(request.pages)
         prompt = self._build_prompt(request.file_name, allowed, window)
         logger.debug("[classify] prompt:\n%s", prompt)

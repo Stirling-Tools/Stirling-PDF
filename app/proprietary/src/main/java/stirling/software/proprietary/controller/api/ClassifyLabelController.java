@@ -19,8 +19,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
@@ -75,8 +73,8 @@ public class ClassifyLabelController {
 
     /**
      * Present only when the policy subsystem is enabled ({@code policies.enabled}); the store and
-     * team authority are gated on it. Null otherwise, in which case classification falls back to
-     * the engine's built-in default label vocabulary.
+     * team authority are gated on it. Null otherwise, in which case there are no team labels to
+     * classify against and the document is passed through unlabelled.
      */
     private final ClassificationLabelStore labelStore;
 
@@ -116,10 +114,18 @@ public class ClassifyLabelController {
         try (PDDocument document = pdfDocumentFactory.load(fileInput, true)) {
             String fileName = safeFileName(fileInput.getOriginalFilename());
 
+            List<EngineLabel> allowed = resolveAllowedLabels();
+            if (allowed.isEmpty()) {
+                // No vocabulary to classify against (the team stored no labels): pass the file
+                // through unlabelled rather than ask the engine to classify against nothing.
+                log.debug("[classify-and-label] {} has no team labels; skipping", fileName);
+                return WebResponseUtils.pdfDocToWebResponse(document, fileName, tempFileManager);
+            }
+
             List<AiPageText> pages = extractWindow(document);
             String requestBody =
                     objectMapper.writeValueAsString(
-                            new ClassifyEngineRequest(fileName, pages, resolveAllowedLabels()));
+                            new ClassifyEngineRequest(fileName, pages, allowed));
 
             String userId = userService != null ? userService.getCurrentUsername() : null;
             String responseJson = aiEngineClient.post(CLASSIFY_ENDPOINT, requestBody, userId);
@@ -171,12 +177,13 @@ public class ClassifyLabelController {
     /**
      * The allowed labels for the caller's team as {@code {id, name}} pairs, de-duplicated by id.
      * The engine shows the model the names and returns the ids (icons are presentational and never
-     * sent). Returns {@code null} — falling back to the engine's built-in default vocabulary — when
-     * the policy subsystem is disabled (no store) or the team has no stored labels.
+     * sent). Returns an empty list — the caller then skips classification — when the policy
+     * subsystem is disabled (no store) or the team has no stored labels. The engine holds no
+     * default vocabulary of its own, so a team's stored labels are the only source.
      */
     private List<EngineLabel> resolveAllowedLabels() {
         if (labelStore == null) {
-            return null;
+            return List.of();
         }
         Long teamId =
                 policyManagementAuthority == null
@@ -186,7 +193,7 @@ public class ClassifyLabelController {
         Map<String, EngineLabel> byId = new LinkedHashMap<>();
         labelStore.findByTeam(teamId).ifPresent(labels -> collectLabels(labels.labels(), byId));
 
-        return byId.isEmpty() ? null : List.copyOf(byId.values());
+        return List.copyOf(byId.values());
     }
 
     private static void collectLabels(
@@ -206,7 +213,6 @@ public class ClassifyLabelController {
     private record EngineLabel(String id, String name) {}
 
     /** Request body for the engine's {@code /api/v1/documents/classify} endpoint. */
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     private record ClassifyEngineRequest(
             String fileName, List<AiPageText> pages, List<EngineLabel> labels) {}
 }

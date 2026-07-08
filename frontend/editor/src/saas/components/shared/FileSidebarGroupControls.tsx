@@ -53,7 +53,7 @@ export function FileSidebarGroupControls({
     getSidebarCategories,
   );
   // Only fetch the team label set while the picker is open.
-  const { merged: labelSet } = useClassificationLabels(open);
+  const { teamLabels: labelSet } = useClassificationLabels(open);
 
   // Bucketed once and reused for both the per-label and per-category counts below.
   const byLabel = useMemo(() => bucketStubsByLabel(stubs), [stubs]);

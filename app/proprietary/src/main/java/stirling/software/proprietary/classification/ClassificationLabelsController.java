@@ -32,7 +32,8 @@ import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
  * and only a user who may edit policies (a team leader on SaaS, the global admin self-hosted; see
  * {@link PolicyManagementAuthority}) may change it — gated only when login is enabled, since
  * single-user deployments trust the local operator. A team with no stored labels reads as {@code
- * 204}, and the classifier then falls back to the engine's built-in default.
+ * 204}; that team has no vocabulary, so its documents are not classified (there is no built-in
+ * default on the backend or the engine — the label data lives only in the frontend).
  */
 @RestController
 @RequestMapping("/api/v1/classification/labels")
@@ -51,8 +52,8 @@ public class ClassificationLabelsController {
     @Operation(
             summary = "Get the team's classification labels",
             description =
-                    "Returns the caller's team label set, or 204 when the team has none (the"
-                            + " classifier then uses the built-in default).")
+                    "Returns the caller's team label set, or 204 when the team has none (its"
+                            + " documents are then not classified).")
     public ResponseEntity<ClassificationLabels> getTeamLabels() {
         return labelStore
                 .findByTeam(currentTeamId())
@@ -78,8 +79,9 @@ public class ClassificationLabelsController {
     @Operation(
             summary = "Reset the team's classification labels",
             description =
-                    "Removes the team's stored label set so the classifier falls back to the"
-                            + " built-in default. Requires the policy-editor role for the team.")
+                    "Removes the team's stored label set; its documents are then not classified"
+                            + " until labels are saved again. Requires the policy-editor role for the"
+                            + " team.")
     public ResponseEntity<Void> resetTeamLabels() {
         requireEditingAllowed();
         labelStore.deleteByTeam(currentTeamId());

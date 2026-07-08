@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -97,6 +98,13 @@ class ClassifyLabelControllerTest {
 
     @Test
     void classifyAndLabel_writesClassificationWithoutOutcome() throws Exception {
+        when(policyManagementAuthority.currentUserTeamId()).thenReturn(TEAM);
+        labelStore.save(
+                TEAM,
+                new ClassificationLabels(
+                        List.of(new ClassificationLabel("invoice", "Invoice", null))),
+                "admin");
+
         stubSinglePageDocument();
 
         ArgumentCaptor<String> value = ArgumentCaptor.forClass(String.class);
@@ -144,14 +152,16 @@ class ClassifyLabelControllerTest {
     }
 
     @Test
-    void classifyAndLabel_omitsLabelsWhenNothingStored() throws Exception {
+    void classifyAndLabel_skipsClassificationWhenNothingStored() throws Exception {
         when(policyManagementAuthority.currentUserTeamId()).thenReturn(TEAM);
 
         stubSinglePageDocument();
 
-        // No team labels stored: null is serialized away (NON_NULL) so the engine falls back to its
-        // built-in default vocabulary.
-        assertThat(sentEngineRequest().has("labels")).isFalse();
+        // No team labels stored, and the engine holds no default of its own, so the file is passed
+        // through unlabelled: neither the engine nor the metadata write is invoked.
+        verify(aiEngineClient, never()).post(anyString(), anyString(), any());
+        verify(pdfMetadataService, never())
+                .setClassificationMetadata(any(PDDocument.class), anyString());
     }
 
     @Test

@@ -62,8 +62,8 @@ public class JpaClassificationLabelStore implements ClassificationLabelStore {
             return Optional.of(objectMapper.readValue(json, ClassificationLabels.class));
         } catch (JacksonException e) {
             // A stored label set that no longer parses (corruption / manual DB edit) must not break
-            // classification: drop it so the caller falls back to the built-in default rather than
-            // surfacing a 500 on every upload.
+            // classification: drop it so the caller treats the team as having no labels (and skips
+            // classification) rather than surfacing a 500 on every upload.
             log.warn("Discarding unparseable stored labels for {}: {}", owner, e.getMessage());
             return Optional.empty();
         }

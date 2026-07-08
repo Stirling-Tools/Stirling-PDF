@@ -11,7 +11,7 @@ import stirling.software.proprietary.classification.model.ClassificationLabels;
  */
 public interface ClassificationLabelStore {
 
-    /** The team's stored labels, or empty when it has none (callers fall back to the default). */
+    /** The team's stored labels, or empty when it has none (callers then skip classification). */
     Optional<ClassificationLabels> findByTeam(Long teamId);
 
     /** Create or replace the team's labels. Returns the stored value. */
