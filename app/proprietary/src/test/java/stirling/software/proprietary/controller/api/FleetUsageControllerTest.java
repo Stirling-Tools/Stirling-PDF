@@ -17,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.model.api.usage.FleetUsageStats;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
@@ -40,7 +41,7 @@ class FleetUsageControllerTest {
     @DisplayName("deployed always reflects the user count")
     void deployedFromUserCount() {
         when(userRepository.count()).thenReturn(7L);
-        when(auditConfig.isEnabled()).thenReturn(false);
+        when(auditConfig.isLevelEnabled(AuditLevel.STANDARD)).thenReturn(false);
 
         FleetUsageStats stats = controller.fleetStats();
 
@@ -48,10 +49,12 @@ class FleetUsageControllerTest {
     }
 
     @Test
-    @DisplayName("audit-derived figures are null when auditing is disabled")
+    @DisplayName("audit-derived figures are null when auditing is below STANDARD")
     void auditOffYieldsNulls() {
         when(userRepository.count()).thenReturn(3L);
-        when(auditConfig.isEnabled()).thenReturn(false);
+        // Covers both disabled and the enabled-but-level=OFF/BASIC misconfig: isLevelEnabled
+        // is false, so no events can exist and we must report N/A, not a 0 from an empty table.
+        when(auditConfig.isLevelEnabled(AuditLevel.STANDARD)).thenReturn(false);
 
         FleetUsageStats stats = controller.fleetStats();
 
@@ -68,7 +71,7 @@ class FleetUsageControllerTest {
     @DisplayName("audit-derived figures come from the repository when auditing is enabled")
     void auditOnReadsRepository() {
         when(userRepository.count()).thenReturn(10L);
-        when(auditConfig.isEnabled()).thenReturn(true);
+        when(auditConfig.isLevelEnabled(AuditLevel.STANDARD)).thenReturn(true);
         when(auditRepository.countDistinctPrincipalsBySourceExcludingTypeAfter(
                         eq("WEB"), eq("UI_DATA"), any(Instant.class)))
                 .thenReturn(4L);
@@ -87,7 +90,7 @@ class FleetUsageControllerTest {
     @DisplayName("active editors are clamped to deployed (active is a subset)")
     void activeClampedToDeployed() {
         when(userRepository.count()).thenReturn(2L);
-        when(auditConfig.isEnabled()).thenReturn(true);
+        when(auditConfig.isLevelEnabled(AuditLevel.STANDARD)).thenReturn(true);
         when(auditRepository.countDistinctPrincipalsBySourceExcludingTypeAfter(
                         eq("WEB"), eq("UI_DATA"), any(Instant.class)))
                 .thenReturn(9L);

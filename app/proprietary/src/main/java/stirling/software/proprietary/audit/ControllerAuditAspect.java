@@ -148,6 +148,11 @@ public class ControllerAuditAspect {
             MDC.put("auditOrigin", capturedOrigin);
         }
 
+        // Only controller traffic is stamped with a source; @Audited (login/settings) and
+        // background events deliberately leave it null so they can't be miscounted as free UI
+        // runs. That guarantee relies on the finally block below restoring auditSource to its
+        // prior (usually null) value, so a handler reusing this pooled thread can't inherit a
+        // stale "WEB".
         String capturedSource = previousSource;
         if (capturedSource == null) {
             capturedSource = auditService.captureCurrentSource();
