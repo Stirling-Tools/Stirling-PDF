@@ -72,6 +72,7 @@ export default defineConfig(
     // Everything that contains 3rd party code that we don't want to lint
     ignores: [
       "dist",
+      "dist-portal",
       "node_modules",
       "playwright-report",
       "storybook-static",
