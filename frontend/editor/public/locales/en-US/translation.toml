@@ -7613,18 +7613,18 @@ uploadBody = "Send us your PO and we invoice against it on your terms. Drag in t
 uploadCta = "Upload purchase order"
 uploadTitle = "Upload your purchase order"
 
-[portal.procurement.schedule]
-fallback = "Couldn't load the scheduler."
-fallbackLink = "Open scheduling in a new tab"
-subtitle = "Your solutions engineer will walk your team through the rollout. Pick a time that suits you."
-title = "Schedule a call"
-
 [portal.procurement.payment]
 description = "Your quote is accepted and a committed annual subscription has been created. Pay the first invoice to go live — you can pay or download it right here, no email needed."
 downloadInvoice = "Download invoice"
 simulate = "Simulate payment received (demo)"
 title = "Subscription created"
 viewInvoice = "View & pay invoice"
+
+[portal.procurement.schedule]
+fallback = "Couldn't load the scheduler."
+fallbackLink = "Open scheduling in a new tab"
+subtitle = "Your solutions engineer will walk your team through the rollout. Pick a time that suits you."
+title = "Schedule a call"
 
 [portal.procurement.status]
 action = "Action needed"
