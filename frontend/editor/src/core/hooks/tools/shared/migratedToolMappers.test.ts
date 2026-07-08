@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { type RegistryToolOperationConfig } from "@app/hooks/tools/shared/toolOperationTypes";
+import {
+  ToolType,
+  type RegistryToolOperationConfig,
+} from "@app/hooks/tools/shared/toolOperationTypes";
 import { objectToFormData } from "@app/hooks/tools/shared/toolApiMapping";
 
 // Pilot tools.
@@ -17,6 +20,7 @@ import { adjustPageScaleOperationConfig } from "@app/hooks/tools/adjustPageScale
 import { autoRenameOperationConfig } from "@app/hooks/tools/autoRename/useAutoRenameOperation";
 import { bookletImpositionOperationConfig } from "@app/hooks/tools/bookletImposition/useBookletImpositionOperation";
 import { certSignOperationConfig } from "@app/hooks/tools/certSign/useCertSignOperation";
+import { changeMetadataOperationConfig } from "@app/hooks/tools/changeMetadata/useChangeMetadataOperation";
 import { changePermissionsOperationConfig } from "@app/hooks/tools/changePermissions/useChangePermissionsOperation";
 import { cropOperationConfig } from "@app/hooks/tools/crop/useCropOperation";
 import { editTableOfContentsOperationConfig } from "@app/hooks/tools/editTableOfContents/useEditTableOfContentsOperation";
@@ -57,6 +61,7 @@ const MIGRATED_CONFIGS = [
   autoRenameOperationConfig,
   bookletImpositionOperationConfig,
   certSignOperationConfig,
+  changeMetadataOperationConfig,
   changePermissionsOperationConfig,
   cropOperationConfig,
   editTableOfContentsOperationConfig,
@@ -102,22 +107,33 @@ describe("migrated tool mappers (sweep)", () => {
       expect(config.toApiParams).toBeDefined();
       expect(config.fromApiParams).toBeDefined();
 
-      // toApiParams(defaults) must produce a body objectToFormData can serialize
-      // (i.e. only primitives / arrays of primitives). A mapper that leaked a
-      // structured value would throw here.
+      // Serialize the defaults through the tool's own buildFormData - the real
+      // path the executor uses - so a tool whose toApiParams carries a structured
+      // field that buildFormData flattens itself (e.g. changeMetadata's
+      // allRequestParams map) is exercised too, not just tools whose mapper
+      // output is directly objectToFormData-able. Custom tools have no
+      // buildFormData, so fall back to serializing the mapper output directly.
       const params =
         config.defaultParameters ?? FALLBACK_PARAMS[config.operationType] ?? {};
-      const apiParams = config.toApiParams!(params);
-      expect(() =>
-        objectToFormData(apiParams, { fileInput: file }),
-      ).not.toThrow();
+      if (config.toolType === ToolType.multiFile) {
+        const build = config.buildFormData;
+        expect(() => build(params, [file])).not.toThrow();
+      } else if (config.toolType === ToolType.singleFile) {
+        const build = config.buildFormData;
+        expect(() => build(params, file)).not.toThrow();
+      } else {
+        const toApiParams = config.toApiParams!;
+        expect(() =>
+          objectToFormData(toApiParams(params), { fileInput: file }),
+        ).not.toThrow();
+      }
     },
   );
 });
 
 describe("redact mappers", () => {
   test("toApiParams builds the auto-redact body from UI parameters", () => {
-    const api = redactOperationConfig.toApiParams({
+    const api = redactOperationConfig.toApiParams!({
       mode: "automatic",
       wordsToRedact: ["foo", "bar"],
       useRegex: true,
@@ -138,7 +154,7 @@ describe("redact mappers", () => {
   });
 
   test("round-trips through fromApiParams", () => {
-    const api = redactOperationConfig.toApiParams({
+    const api = redactOperationConfig.toApiParams!({
       mode: "automatic",
       wordsToRedact: ["secret"],
       useRegex: false,
@@ -147,7 +163,7 @@ describe("redact mappers", () => {
       customPadding: 0.1,
       convertPDFToImage: true,
     });
-    const roundTripped = redactOperationConfig.toApiParams({
+    const roundTripped = redactOperationConfig.toApiParams!({
       mode: "automatic",
       wordsToRedact: [],
       useRegex: false,
@@ -155,7 +171,7 @@ describe("redact mappers", () => {
       redactColor: "#000000",
       customPadding: 0,
       convertPDFToImage: false,
-      ...redactOperationConfig.fromApiParams(api),
+      ...redactOperationConfig.fromApiParams!(api),
     });
 
     expect(roundTripped).toEqual(api);
