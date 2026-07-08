@@ -72,7 +72,7 @@
   padding-left: 0.5rem;
 }
 
-.tool-button .sui-btn__label {
+.tool-button .mantine-Button-label {
   font-size: 0.84rem;
   font-weight: 500;
   line-height: 1.2;
@@ -124,10 +124,9 @@
 .tool-picker__compact .tool-button {
   padding-top: 0.65rem;
   padding-bottom: 0.65rem;
-  height: auto;
 }
 
-.tool-picker__compact .tool-button .sui-btn__label {
+.tool-picker__compact .tool-button .mantine-Button-label {
   align-items: center;
 }
 

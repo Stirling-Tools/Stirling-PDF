@@ -35,6 +35,29 @@
   white-space: normal;
 }
 
+/* ---- height: --button-height is a minimum, not a cap ---- */
+/* Single-line content computes to exactly --button-height (same as ActionIcon /
+   SegmentedControl via CONTROL_HEIGHT); taller content (wrapped label, stacked
+   rows) grows the button instead of clipping mid-glyph. Mantine centers via
+   inner{height:100%} inside a fixed-height root; with height:auto that chain
+   collapses, so the root itself becomes the flex-centering container. */
+.sui-btn.mantine-Button-root {
+  display: inline-flex;
+  align-items: center;
+  height: auto;
+  min-height: var(--button-height);
+}
+.sui-btn.mantine-Button-root:where([data-block]) {
+  display: flex;
+}
+.sui-btn .mantine-Button-inner {
+  height: auto;
+  width: 100%;
+}
+.sui-btn .mantine-Button-label {
+  height: auto;
+}
+
 /* no-hover: !important to beat Mantine's own :hover background rule. */
 .sui-btn--no-hover:not(:disabled):not([data-disabled]):hover {
   background: var(--button-bg, transparent) !important;
