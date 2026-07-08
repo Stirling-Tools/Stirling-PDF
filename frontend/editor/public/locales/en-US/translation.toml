@@ -6071,6 +6071,9 @@ dismiss = "Dismiss overlay"
 enforcingTitle = "Enforcing policy..."
 viewAnyway = "View file (policy still enforcing)"
 
+[portal]
+comingSoon = "Coming soon"
+
 [portal.accountLink.card]
 billingNote = "Unattended processing bills against your org wallet."
 eyebrow = "Account link"
@@ -7546,6 +7549,8 @@ generate = "Generate quote"
 included = "Included"
 indemnification = "IP indemnification"
 indemnificationSub = "We defend qualifying IP claims, per the EULA"
+offlineLicense = "Offline / air-gapped licence"
+offlineLicenseSub = "A downloadable licence file for an air-gapped self-hosted instance"
 qbr = "Quarterly business reviews"
 qbrSub = "Your SE reviews usage and roadmap each quarter"
 running = "{{annual}} / yr · {{years}}-yr {{tcv}}"
@@ -7631,6 +7636,14 @@ subtitle = "Your solutions engineer is on every step. One next action at a time;
 title = "From trial to live, one guided path"
 trialTitle = "Enterprise trial"
 
+[portal.procurement.license]
+copied = "Copied"
+copy = "Copy key"
+downloadError = "Could not generate the offline licence file just yet — please try again in a moment."
+downloadOffline = "Download offline licence (.lic)"
+hint = "Paste this key into a self-hosted instance to activate it, or keep it for your records. Keep it safe."
+label = "Your licence key"
+
 [portal.procurement.link]
 cta = "Link account"
 description = "Procurement runs on your linked Stirling account: it's how we provision the trial, price your quote, and start billing. Link an account to start."
@@ -7683,7 +7696,7 @@ uploadCta = "Upload purchase order"
 uploadTitle = "Upload your purchase order"
 
 [portal.procurement.payment]
-description = "Your quote is accepted and a committed annual subscription has been created. Pay the first invoice to go live — you can pay or download it right here, no email needed."
+description = "Your quote is accepted and your licence is already active — your team can start right away. Pay the first invoice when you're ready; you can pay or download it here, no email needed."
 downloadInvoice = "Download invoice"
 simulate = "Simulate payment received (demo)"
 title = "Subscription created"

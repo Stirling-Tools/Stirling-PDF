@@ -11,6 +11,7 @@ import {
 } from "@portal/components/procurement/ProcurementExtras";
 import { ProcurementModal } from "@portal/components/procurement/ProcurementModal";
 import {
+  LicensePanel,
   LiveStageCard,
   PaymentStageCard,
   QuoteMilestoneCard,
@@ -45,6 +46,7 @@ export function ProcurementFlow({
     isDraft,
     busy,
     downloading,
+    downloadingLicense,
     error,
     setError,
     open,
@@ -61,6 +63,7 @@ export function ProcurementFlow({
     onAgree,
     onGoLive,
     onDownloadPdf,
+    onDownloadOfflineLicense,
   } = controller;
 
   return (
@@ -144,6 +147,15 @@ export function ProcurementFlow({
             )}
 
             {!editing && stage === "active" && <LiveStageCard />}
+
+            {data?.licenseKey && (
+              <LicensePanel
+                licenseKey={data.licenseKey}
+                offlineAvailable={!!latest?.config.offlineLicense}
+                downloadingLicense={downloadingLicense}
+                onDownloadOffline={onDownloadOfflineLicense}
+              />
+            )}
 
             <div className="portal-proc__reset">
               <button type="button" onClick={onReset} disabled={busy}>

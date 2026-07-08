@@ -1,4 +1,4 @@
-import { portalBackend } from "@portal/api/http";
+import { apiClient } from "@portal/api/http";
 
 /**
  * Access-control service layer: the ResourceGrant ACL the portal admin drives.
@@ -44,12 +44,12 @@ export async function fetchGrants(
 ): Promise<ResourceGrant[]> {
   const q = new URLSearchParams({ resourceType });
   if (resourceId) q.set("resourceId", resourceId);
-  return portalBackend.json<ResourceGrant[]>(`${BASE}?${q.toString()}`);
+  return apiClient.local.json<ResourceGrant[]>(`${BASE}?${q.toString()}`);
 }
 
 /** POST /grants: grant (or, for a new permission, re-grant) access. */
 export async function createGrant(req: GrantRequest): Promise<ResourceGrant> {
-  return portalBackend.json<ResourceGrant>(BASE, {
+  return apiClient.local.json<ResourceGrant>(BASE, {
     method: "POST",
     body: req,
   });
@@ -57,5 +57,5 @@ export async function createGrant(req: GrantRequest): Promise<ResourceGrant> {
 
 /** DELETE /grants/{id}: revoke a single grant row. */
 export async function revokeGrant(id: number): Promise<void> {
-  await portalBackend.json(`${BASE}/${id}`, { method: "DELETE" });
+  await apiClient.local.json(`${BASE}/${id}`, { method: "DELETE" });
 }
