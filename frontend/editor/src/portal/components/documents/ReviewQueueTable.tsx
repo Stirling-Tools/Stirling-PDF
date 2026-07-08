@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Chip, StatusBadge, Table, type TableColumn } from "@app/ui";
+import { Button, Chip, StatusBadge, Table, type TableColumn } from "@app/ui";
 import {
   classificationTone,
   DOCUMENT_STATUS_LABEL,
@@ -60,12 +60,12 @@ export function ReviewQueueTable({
             <div className="portal-documents__doc-head">
               <span className="portal-documents__name">{d.name}</span>
               {d.classification && (
-                <Chip tone={classificationTone(d)} size="sm">
+                <Chip accent={classificationTone(d)} size="sm">
                   {d.classification}
                 </Chip>
               )}
               {d.auto && (
-                <Chip tone="green" size="sm" leadingIcon={<BoltIcon />}>
+                <Chip accent="success" size="sm" leadingIcon={<BoltIcon />}>
                   {t("portal.documents.table.auto")}
                 </Chip>
               )}
@@ -88,7 +88,7 @@ export function ReviewQueueTable({
         header: t("portal.documents.table.columns.product"),
         width: "7rem",
         render: (d) => (
-          <Chip tone={PRODUCT_CHIP_TONE[d.product]} size="sm" showDot={false}>
+          <Chip accent={PRODUCT_CHIP_TONE[d.product]} size="sm" showDot={false}>
             {d.product}
           </Chip>
         ),
@@ -138,17 +138,17 @@ export function ReviewQueueTable({
         header: "",
         width: "3rem",
         render: (d) => (
-          <button
-            type="button"
-            className="portal-documents__kebab"
+          <Button
+            variant="quiet"
+            size="sm"
+            shape="circle"
+            leftSection={<KebabIcon />}
             aria-label={t("portal.documents.table.rowActions")}
             onClick={(e) => {
               e.stopPropagation();
               onRowClick(d);
             }}
-          >
-            <KebabIcon />
-          </button>
+          />
         ),
       },
     ],

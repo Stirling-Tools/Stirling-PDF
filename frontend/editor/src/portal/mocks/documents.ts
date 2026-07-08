@@ -11,7 +11,7 @@
  */
 
 import type { Tier } from "@portal/contexts/TierContext";
-import type { ChipTone, StatusTone } from "@app/ui";
+import type { ChipAccent, StatusTone } from "@app/ui";
 
 /* ──────────────────────────────────────────────────────────────────────── */
 /*  Domain types                                                             */
@@ -109,16 +109,16 @@ export const DOCUMENT_STATUS_TONE: Record<DocumentStatus, StatusTone> = {
   error: "danger",
 };
 
-export const PRODUCT_CHIP_TONE: Record<ProductType, ChipTone> = {
-  API: "blue",
-  Editor: "green",
+export const PRODUCT_CHIP_TONE: Record<ProductType, ChipAccent> = {
+  API: "brand",
+  Editor: "success",
 };
 
-/** Classification chip tone: red when unclassified, amber when it needs a look. */
-export function classificationTone(doc: ReviewDocument): ChipTone {
-  if (doc.classification === "Unclassified") return "red";
-  if (doc.status === "processed") return "green";
-  return "amber";
+/** Classification chip accent: danger when unclassified, warning when it needs a look. */
+export function classificationTone(doc: ReviewDocument): ChipAccent {
+  if (doc.classification === "Unclassified") return "danger";
+  if (doc.status === "processed") return "success";
+  return "warning";
 }
 
 export const DOC_AUDIT_LABEL: Record<DocAuditKind, string> = {

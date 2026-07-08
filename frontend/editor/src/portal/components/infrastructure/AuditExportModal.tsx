@@ -84,11 +84,11 @@ export function AuditExportModal({ open, onClose }: AuditExportModalProps) {
       subtitle={t("portal.infrastructure.audit.export.subtitle")}
       footer={
         <div className="portal-infra__export-actions">
-          <Button variant="ghost" onClick={onClose} disabled={exporting}>
+          <Button variant="tertiary" onClick={onClose} disabled={exporting}>
             {t("portal.infrastructure.audit.export.cancel")}
           </Button>
           <Button
-            variant="gradient"
+            variant="primary"
             onClick={handleExport}
             disabled={exporting || !anyField}
           >

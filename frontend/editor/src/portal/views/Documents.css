@@ -111,25 +111,6 @@
   color: var(--color-text-4);
 }
 
-.portal-documents__kebab {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  padding: 0;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--color-text-4);
-  cursor: pointer;
-}
-
-.portal-documents__kebab:hover {
-  background: rgba(127, 127, 127, 0.14);
-  color: var(--color-text-2);
-}
-
 /* Drawer body */
 .portal-documents__drawer {
   display: flex;

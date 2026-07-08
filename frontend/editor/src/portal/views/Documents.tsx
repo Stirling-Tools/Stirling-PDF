@@ -91,9 +91,9 @@ export function Documents() {
           </p>
         </div>
         <Button
-          variant="outline"
+          variant="secondary"
           size="sm"
-          leadingIcon={<DownloadIcon />}
+          leftSection={<DownloadIcon />}
           onClick={exportCsv}
           disabled={documents.length === 0}
         >

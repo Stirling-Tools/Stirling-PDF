@@ -131,7 +131,7 @@ export function AuditTab() {
         {/* Export is admin-only + whole-server, so only offer it in the
             full-server view. Team-scoped leaders don't get an unusable button. */}
         {data?.fullServer && (
-          <Button variant="outline" onClick={() => setExportOpen(true)}>
+          <Button variant="secondary" onClick={() => setExportOpen(true)}>
             {t("portal.infrastructure.audit.export.open")}
           </Button>
         )}
