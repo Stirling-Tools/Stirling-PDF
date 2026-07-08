@@ -235,6 +235,9 @@ export interface DecodedPolicy {
   reviewerEmail: string;
   fieldValues: Record<string, boolean | string | string[]>;
   folder: PolicyFolderSettings;
+  /** Position in the team's server-side run order (set from the fetch list index,
+   *  not decoded from the policy itself). */
+  order?: number;
 }
 
 const DEFAULT_FOLDER: PolicyFolderSettings = {

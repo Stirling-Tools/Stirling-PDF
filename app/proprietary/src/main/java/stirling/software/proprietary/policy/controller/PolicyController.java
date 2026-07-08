@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -211,6 +212,20 @@ public class PolicyController {
         // watched immediately instead of after the next reconcile sweep.
         policyTriggerManager.notifyPoliciesChanged();
         return ResponseEntity.ok(saved);
+    }
+
+    @PutMapping("/order")
+    @Operation(
+            summary = "Set the team's policy run order",
+            description =
+                    "Persists the team-wide order policies run in, from the given ordered list of"
+                            + " policy ids (position → order). The per-trigger order shown in the UI"
+                            + " is this one sequence filtered by trigger. Team-leader/admin only;"
+                            + " ids outside the caller's team are ignored.")
+    public ResponseEntity<Void> reorderPolicies(@RequestBody List<String> orderedPolicyIds) {
+        requirePolicyEditingAllowed();
+        policyStore.reorder(policyAccessGuard.teamForNewPolicy(), orderedPolicyIds);
+        return ResponseEntity.noContent().build();
     }
 
     /**

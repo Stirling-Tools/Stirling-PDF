@@ -1,6 +1,7 @@
 package stirling.software.proprietary.policy.store;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -50,9 +51,36 @@ public class JpaPolicyStore implements PolicyStore {
         entity.setEnabled(stored.enabled());
         entity.setTriggerType(stored.trigger() == null ? null : stored.trigger().type());
         entity.setTeamId(stored.teamId());
+        // Preserve an existing policy's run-order position; append a new one to the end of its
+        // team's queue (max + 1), so setting up a policy adds it last by default.
+        entity.setSortOrder(
+                repository
+                        .findById(id)
+                        .map(PolicyEntity::getSortOrder)
+                        .orElseGet(() -> nextSortOrder(stored.teamId())));
         entity.setPolicyJson(objectMapper.writeValueAsString(stored));
         repository.save(entity);
         return stored;
+    }
+
+    private int nextSortOrder(Long teamId) {
+        Integer max = repository.findMaxSortOrder(teamId);
+        return max == null ? 0 : max + 1;
+    }
+
+    @Override
+    public void reorder(Long teamId, List<String> orderedIds) {
+        int position = 0;
+        for (String id : orderedIds) {
+            PolicyEntity entity = repository.findById(id).orElse(null);
+            // Ignore unknown ids and any policy outside the caller's team — a reorder can't reach
+            // across teams.
+            if (entity == null || !Objects.equals(entity.getTeamId(), teamId)) {
+                continue;
+            }
+            entity.setSortOrder(position++);
+            repository.save(entity);
+        }
     }
 
     @Override
@@ -62,7 +90,7 @@ public class JpaPolicyStore implements PolicyStore {
 
     @Override
     public List<Policy> all() {
-        return repository.findAll().stream().map(this::toPolicy).toList();
+        return repository.findAllOrdered().stream().map(this::toPolicy).toList();
     }
 
     @Override

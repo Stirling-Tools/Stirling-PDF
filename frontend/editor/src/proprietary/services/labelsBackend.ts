@@ -7,7 +7,10 @@
  */
 
 import apiClient from "@app/services/apiClient";
-import type { ClassificationLabel } from "@app/data/classificationLabels";
+import {
+  DEFAULT_CLASSIFICATION_LABELS,
+  type ClassificationLabel,
+} from "@app/data/classificationLabels";
 
 const TEAM_ENDPOINT = "/api/v1/classification/labels";
 
@@ -46,4 +49,29 @@ export function saveTeamLabels(
   labels: ClassificationLabel[],
 ): Promise<ClassificationLabel[]> {
   return saveLabels(TEAM_ENDPOINT, labels);
+}
+
+/**
+ * Seed the team's label set with the built-in defaults when it has none yet.
+ *
+ * The engine holds no default vocabulary, so the backend can only send what the
+ * team has stored — a team with an empty set classifies nothing (documents come
+ * back unlabelled and don't group). This writes the frontend's single default
+ * copy into the team set the first time a classification policy is set up, so
+ * classification works out of the box; the backend gates the write to admins.
+ *
+ * Only seeds when the fetch DEFINITIVELY reports no set (204 → null): on any
+ * fetch error it does nothing, so a transient failure can never overwrite a
+ * team's real (possibly customised) labels. A no-op once any set exists — later
+ * admin edits are the source of truth and are never clobbered.
+ */
+export async function seedTeamLabelsIfEmpty(): Promise<void> {
+  let existing: ClassificationLabel[] | null;
+  try {
+    existing = await fetchTeamLabels();
+  } catch {
+    return;
+  }
+  if (existing != null) return;
+  await saveTeamLabels(DEFAULT_CLASSIFICATION_LABELS).catch(() => {});
 }

@@ -34,6 +34,9 @@ import {
   setPolicyEnabled,
   removePolicy,
 } from "@app/services/policyBackend";
+import { reorderPolicies as reorderBackendPolicies } from "@app/services/policyApi";
+import { seedTeamLabelsIfEmpty } from "@app/services/labelsBackend";
+import { getPolicyToolChain } from "@app/components/policies/policyToolChains";
 import type { PolicyToStore } from "@app/services/policyPipeline";
 import type {
   PoliciesByCategory,
@@ -136,6 +139,13 @@ export function usePolicies() {
     async (id: string, result: PolicyWizardResult) => {
       const category = loadPolicyCatalog().categories.find((c) => c.id === id);
       if (!category) throw new Error(`Unknown policy category: ${id}`);
+      // A policy whose chain classifies runs against the team's stored label set
+      // (the engine has no default). Seed it with the built-in defaults now so
+      // the very first enforced file has a vocabulary to classify against; no-op
+      // if the team already has a set (never clobbers admin edits).
+      if (getPolicyToolChain(id)?.includes("classify")) {
+        await seedTeamLabelsIfEmpty();
+      }
       // One policy per category, ever: reuse any existing backend record.
       const existingBackendId =
         loadPolicies()[id]?.backendId ??
@@ -215,6 +225,12 @@ export function usePolicies() {
     async (id: string, result: PolicyConfigResult) => {
       const category = loadPolicyCatalog().categories.find((c) => c.id === id);
       if (!category) throw new Error(`Unknown policy category: ${id}`);
+      // Seed the team's default label set on first classification-policy setup
+      // (see enablePolicy) — the engine has no default, so the stored set is the
+      // only vocabulary. No-op once the team has any set.
+      if (getPolicyToolChain(id)?.includes("classify")) {
+        await seedTeamLabelsIfEmpty();
+      }
       const current = loadPolicies()[id];
       // One policy per category, ever: reuse the existing backend record (even
       // if the local link was lost) so a save never creates a duplicate.
@@ -319,11 +335,22 @@ export function usePolicies() {
 
   /**
    * Persist a new execution order for the given categories (in the sequence
-   * provided). Local-only: order drives client-side chained dispatch, so there's
-   * no backend round-trip. The change event re-renders every policies consumer.
+   * provided). The order is server-side and team-wide: it's mirrored to the
+   * backend (mapping each category to its stored policy id) so it survives a
+   * cleared browser and is shared by the whole team. The local cache is updated
+   * first for an instant re-render; the next reconcile re-reads the server order.
    */
   const reorderPolicies = useCallback((orderedCategoryIds: string[]) => {
     persistPolicyOrder(orderedCategoryIds);
+    const current = loadPolicies();
+    const backendIds = orderedCategoryIds
+      .map((categoryId) => current[categoryId]?.backendId)
+      .filter((id): id is string => !!id);
+    if (backendIds.length > 0) {
+      // Fire-and-forget: on failure (offline / not a team leader) the optimistic
+      // local order stands until the next reconcile re-reads the server's order.
+      void reorderBackendPolicies(backendIds).catch(() => {});
+    }
   }, []);
 
   /**
