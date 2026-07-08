@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, StatusBadge, CarouselDots } from "@app/ui";
+import { Button, StatusBadge } from "@app/ui";
 import { useView, type ViewId } from "@portal/contexts/ViewContext";
 import "@portal/components/WelcomeCarousel.css";
 
@@ -206,19 +206,27 @@ export function WelcomeCarousel({ onTryOp }: WelcomeCarouselProps) {
         <div className="portal-carousel__blob portal-carousel__blob--2" />
       </div>
 
-      <CarouselDots
+      <div
         className="portal-carousel__dots"
-        count={SLIDES.length}
-        activeIndex={index}
-        onSelect={setIndex}
-        label={t("portal.welcome.pagination")}
-        dotLabel={(i) =>
-          t("portal.welcome.slideLabel", {
-            number: i + 1,
-            title: t(`portal.welcome.slides.${SLIDES[i].id}.title`),
-          })
-        }
-      />
+        role="group"
+        aria-label={t("portal.welcome.pagination")}
+      >
+        {SLIDES.map((s, i) => (
+          <Button
+            key={s.id}
+            variant="tertiary"
+            aria-current={i === index ? "true" : undefined}
+            aria-label={t("portal.welcome.slideLabel", {
+              number: i + 1,
+              title: t(`portal.welcome.slides.${s.id}.title`),
+            })}
+            className={
+              "portal-carousel__dot" + (i === index ? " is-active" : "")
+            }
+            onClick={() => setIndex(i)}
+          />
+        ))}
+      </div>
     </section>
   );
 }

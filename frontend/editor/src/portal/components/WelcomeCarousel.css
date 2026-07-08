@@ -202,12 +202,33 @@
   opacity: 0.3;
 }
 
-/* Pagination dots — styling lives in the shared CarouselDots component;
-   this only positions the group at the bottom-center of the carousel. */
+/* Pagination dots */
 .portal-carousel__dots {
   position: absolute;
   bottom: 0.875rem;
   left: 50%;
   transform: translateX(-50%);
+  display: flex;
+  gap: 0.375rem;
   z-index: 2;
+}
+.portal-carousel__dot {
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 50%;
+  background: var(--color-text-5);
+  opacity: 0.4;
+  transition:
+    opacity var(--motion-fast),
+    background var(--motion-fast),
+    width var(--motion-fast);
+}
+.portal-carousel__dot:hover {
+  opacity: 0.7;
+}
+.portal-carousel__dot.is-active {
+  width: 1rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-blue);
+  opacity: 1;
 }
