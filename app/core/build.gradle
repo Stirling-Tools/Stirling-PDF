@@ -178,6 +178,12 @@ def buildPrototypes = project.hasProperty('prototypesMode') && project.property(
 // Admin portal is its own embedded app, built + bundled only with -PbuildWithPortal=true
 // (the deploy GHA auto-sets it when the portal or AI layers change). Served at /portal.
 def buildWithPortal = project.hasProperty('buildWithPortal') && project.property('buildWithPortal') == 'true'
+// The portal is an admin surface layered on top of the editor; shipping it without
+// the editor would leave the main app as the API landing page. So enabling the
+// portal implies building the editor frontend too - both apps get embedded.
+if (buildWithPortal) {
+    buildWithFrontend = true
+}
 
 // Vite mode: -PprototypesMode > -PfrontendMode > enableSaas > disableAdditional > proprietary.
 def frontendModeOverride = project.findProperty('frontendMode')?.toString()?.toLowerCase()
