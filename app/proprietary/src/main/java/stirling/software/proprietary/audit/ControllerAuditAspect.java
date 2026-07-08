@@ -148,17 +148,6 @@ public class ControllerAuditAspect {
             MDC.put("auditOrigin", capturedOrigin);
         }
 
-        // Only controller traffic is stamped with a source; @Audited (login/settings) and
-        // background events deliberately leave it null so they can't be miscounted as free UI
-        // runs. That guarantee relies on the finally block below restoring auditSource to its
-        // prior (usually null) value, so a handler reusing this pooled thread can't inherit a
-        // stale "WEB".
-        String capturedSource = previousSource;
-        if (capturedSource == null) {
-            capturedSource = auditService.captureCurrentSource();
-            MDC.put("auditSource", capturedSource);
-        }
-
         String capturedIp = previousIp;
         if (capturedIp == null && req != null) {
             capturedIp = auditService.extractClientIp(req);
@@ -171,6 +160,14 @@ public class ControllerAuditAspect {
             // @Audited methods are audited by AuditAspect.
             if (auditedAnnotation != null) {
                 return joinPoint.proceed();
+            }
+
+            // Stamp the free-UI source only for non-@Audited controller traffic — an actual
+            // tool / UI action. @Audited events (login, settings) return above without a source,
+            // so they never count as an "active editor" or a free UI run. The finally block
+            // restores auditSource, so a pooled thread can't leak a stale "WEB" into them.
+            if (previousSource == null) {
+                MDC.put("auditSource", auditService.captureCurrentSource());
             }
 
             long start = System.currentTimeMillis();

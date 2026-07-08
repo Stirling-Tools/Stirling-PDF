@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.enumeration.Role;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.model.api.usage.FleetUsageStats;
@@ -45,7 +46,9 @@ public class FleetUsageController {
 
     @GetMapping("/fleet-stats")
     public FleetUsageStats fleetStats() {
-        Long deployed = userRepository.count();
+        // Exclude the reserved INTERNAL_API_USER row that InitialSecuritySetup creates on every
+        // install, so a fresh single-admin instance reads 1 editor, not 2.
+        Long deployed = userRepository.countByUsernameNot(Role.INTERNAL_API_USER.getRoleId());
         // STANDARD is the level at which the counted events are recorded; below it the data
         // can't exist, so report N/A instead of a 0 that would misrepresent an empty table.
         boolean auditOn = auditConfig.isLevelEnabled(AuditLevel.STANDARD);
