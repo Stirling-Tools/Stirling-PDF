@@ -55,6 +55,7 @@ import type { WatchedFolder } from "@app/types/watchedFolders";
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
 import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { IconBadge } from "@app/ui/IconBadge";
 import {
   deriveRowStatus,
@@ -226,8 +227,8 @@ export function PoliciesSection({
         />
         <Menu position="bottom-end" width="13rem" withinPortal>
           <Menu.Target>
-            <button
-              type="button"
+            <ActionIcon
+              variant="quiet"
               className="pol-info-btn"
               aria-label={t(
                 "policies.sidebar.optionsAriaLabel",
@@ -235,7 +236,7 @@ export function PoliciesSection({
               )}
             >
               <MoreHorizRounded sx={{ fontSize: "1.25rem" }} />
-            </button>
+            </ActionIcon>
           </Menu.Target>
           <Menu.Dropdown>
             {/* Hovering surfaces the same explanation the info tooltip used to show. */}
@@ -266,20 +267,22 @@ export function PoliciesSection({
       </div>
 
       {retryableRuns.length > 0 && !guestBlocked && (
-        <button
-          type="button"
+        <Button
+          variant="secondary"
+          size="sm"
+          fullWidth
           className="pol-retry-failed"
           onClick={retryAllFailed}
+          leftSection={<ReplayRounded sx={{ fontSize: "0.95rem" }} />}
         >
-          <ReplayRounded sx={{ fontSize: "0.95rem" }} />
-          <span>
-            {t(
-              "policies.sidebar.retryFailed",
-              "Retry failed policies ({{count}})",
-              { count: retryableRuns.length },
-            )}
-          </span>
-        </button>
+          {t(
+            "policies.sidebar.retryFailed",
+            "Retry failed policies ({{count}})",
+            {
+              count: retryableRuns.length,
+            },
+          )}
+        </Button>
       )}
 
       {expanded && (
@@ -297,8 +300,9 @@ export function PoliciesSection({
                     </span>
                     <span className="pol-row-trail">
                       <Button
-                        variant="tertiary"
+                        variant="quiet"
                         size="sm"
+                        fontSize="xs"
                         accent="neutral"
                         onClick={() =>
                           window.open(
@@ -339,48 +343,53 @@ export function PoliciesSection({
                   type="button"
                   variant="tertiary"
                   hover={false}
+                  fullWidth
+                  justify="between"
                   className="pol-row"
+                  leftSection={
+                    rowProgress.total > 0 ? (
+                      <AppTooltip
+                        content={t(
+                          "policies.sidebar.rowProgress",
+                          "{{completed}} of {{total}} files processed",
+                          {
+                            completed: rowProgress.completed,
+                            total: rowProgress.total,
+                          },
+                        )}
+                      >
+                        {icon}
+                      </AppTooltip>
+                    ) : (
+                      icon
+                    )
+                  }
+                  rightSection={
+                    <span className="pol-row-trail">
+                      {status === "setup" ? (
+                        <span className="pol-row-setup">
+                          {t("policies.sidebar.setUp", "Set up")}
+                        </span>
+                      ) : (
+                        <StatusBadge
+                          tone={status === "active" ? "success" : "warning"}
+                          size="sm"
+                        >
+                          {t(`policies.status.${status}`, STATUS_LABEL[status])}
+                        </StatusBadge>
+                      )}
+                      <ChevronRightIcon
+                        className="pol-row-chevron"
+                        sx={{ fontSize: "1rem" }}
+                      />
+                    </span>
+                  }
                   onClick={() =>
                     guestBlocked ? promptGuestSignup() : selectPolicy(cat.id)
                   }
                 >
-                  {rowProgress.total > 0 ? (
-                    <AppTooltip
-                      content={t(
-                        "policies.sidebar.rowProgress",
-                        "{{completed}} of {{total}} files processed",
-                        {
-                          completed: rowProgress.completed,
-                          total: rowProgress.total,
-                        },
-                      )}
-                      position="left"
-                    >
-                      {icon}
-                    </AppTooltip>
-                  ) : (
-                    icon
-                  )}
                   <span className="pol-row-label">
                     {t(`policies.catalog.${cat.id}`, cat.label)}
-                  </span>
-                  <span className="pol-row-trail">
-                    {status === "setup" ? (
-                      <span className="pol-row-setup">
-                        {t("policies.sidebar.setUp", "Set up")}
-                      </span>
-                    ) : (
-                      <StatusBadge
-                        tone={status === "active" ? "success" : "warning"}
-                        size="sm"
-                      >
-                        {t(`policies.status.${status}`, STATUS_LABEL[status])}
-                      </StatusBadge>
-                    )}
-                    <ChevronRightIcon
-                      className="pol-row-chevron"
-                      sx={{ fontSize: "1rem" }}
-                    />
                   </span>
                 </Button>
               );

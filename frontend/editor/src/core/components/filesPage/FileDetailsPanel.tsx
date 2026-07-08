@@ -267,20 +267,24 @@ export function FileDetailsPanel({
             )}
             {classification && (
               <>
-                <button
-                  type="button"
+                <Button
+                  variant="quiet"
+                  fullWidth
+                  justify="between"
                   className="files-page-details-collapse-toggle"
                   onClick={() => setClassificationOpen((o) => !o)}
                   aria-expanded={classificationOpen}
+                  rightSection={
+                    <KeyboardArrowDownIcon
+                      className={`files-page-details-collapse-chevron${
+                        classificationOpen ? " is-open" : ""
+                      }`}
+                      fontSize="small"
+                    />
+                  }
                 >
                   <span>{t("filesPage.classification", "Classification")}</span>
-                  <KeyboardArrowDownIcon
-                    className={`files-page-details-collapse-chevron${
-                      classificationOpen ? " is-open" : ""
-                    }`}
-                    fontSize="small"
-                  />
-                </button>
+                </Button>
                 {classificationOpen && (
                   <div className="files-page-details-fieldlist">
                     <div className="files-page-details-field">
@@ -335,11 +339,21 @@ export function FileDetailsPanel({
                 </Button>
               ) : (
                 <>
-                  <button
-                    type="button"
+                  <Button
+                    variant="quiet"
+                    fullWidth
+                    justify="between"
                     className="files-page-details-collapse-toggle"
                     onClick={() => setVersionsOpen((o) => !o)}
                     aria-expanded={versionsOpen}
+                    rightSection={
+                      <KeyboardArrowDownIcon
+                        className={`files-page-details-collapse-chevron${
+                          versionsOpen ? " is-open" : ""
+                        }`}
+                        fontSize="small"
+                      />
+                    }
                   >
                     <span>
                       {t(
@@ -348,13 +362,7 @@ export function FileDetailsPanel({
                         { count: versionChain.length },
                       )}
                     </span>
-                    <KeyboardArrowDownIcon
-                      className={`files-page-details-collapse-chevron${
-                        versionsOpen ? " is-open" : ""
-                      }`}
-                      fontSize="small"
-                    />
-                  </button>
+                  </Button>
                   {versionsOpen && (
                     <VersionTimeline
                       chain={versionChain}

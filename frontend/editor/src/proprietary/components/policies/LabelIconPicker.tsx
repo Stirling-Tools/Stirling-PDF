@@ -8,6 +8,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Popover, SimpleGrid, Tooltip } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 import { LABEL_ICON_OPTIONS, DEFAULT_LABEL_ICON } from "@app/data/labelIcons";
@@ -39,15 +40,15 @@ export function LabelIconPicker({
       zIndex={Z_INDEX_AUTOMATE_DROPDOWN}
     >
       <Popover.Target>
-        <button
-          type="button"
+        <ActionIcon
+          variant="quiet"
           className="labels-icon-pick"
           onClick={() => setOpen((o) => !o)}
           aria-label={ariaLabel}
           aria-haspopup="true"
         >
           <LocalIcon icon={value || DEFAULT_LABEL_ICON} width="1.15rem" />
-        </button>
+        </ActionIcon>
       </Popover.Target>
       <Popover.Dropdown p="xs" style={{ maxHeight: 280, overflowY: "auto" }}>
         <SimpleGrid cols={10} spacing={4} verticalSpacing={4}>
@@ -58,8 +59,8 @@ export function LabelIconPicker({
               withArrow
               openDelay={300}
             >
-              <button
-                type="button"
+              <ActionIcon
+                variant="quiet"
                 className={`labels-icon-option${option.icon === value ? " is-selected" : ""}`}
                 onClick={() => {
                   onChange(option.icon);
@@ -75,7 +76,7 @@ export function LabelIconPicker({
                 aria-pressed={option.icon === value}
               >
                 <LocalIcon icon={option.icon} width="1.25rem" />
-              </button>
+              </ActionIcon>
             </Tooltip>
           ))}
         </SimpleGrid>

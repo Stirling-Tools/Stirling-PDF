@@ -434,6 +434,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   padding: 12px 14px 6px 14px;
   margin: 4px 0 0 0;
 }

@@ -6,7 +6,7 @@
  * IndexedDB backing folder still holds the editable automation + run state.
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
 import {
@@ -41,6 +41,12 @@ import type {
   PolicyWizardResult,
 } from "@app/types/policies";
 
+/** Cold-start reconcile retry budget + capped backoff (≈0.5s→5s, ~1 min total),
+ *  enough to outlast a backend that starts a little after the frontend. */
+const RECONCILE_MAX_ATTEMPTS = 15;
+const reconcileRetryDelay = (attempt: number) =>
+  Math.min(500 * 2 ** attempt, 5000);
+
 /** Build the backend store-request for a category from a wizard result. */
 function toStoreRequest(
   categoryId: string,
@@ -66,23 +72,31 @@ function toStoreRequest(
 
 export function usePolicies() {
   const [policies, setPolicies] = useState<PoliciesByCategory>(loadPolicies);
-  const { config } = useAppConfig();
+  const { config, refetch: refetchAppConfig } = useAppConfig();
   const { isTeamLeader } = useSaaSTeam();
 
   useEffect(() => onPoliciesChange(() => setPolicies(loadPolicies())), []);
 
-  // Reconcile the local cache against the backend (the source of truth) on
-  // mount. Backend config wins; the locally-cached folderId (which the backend
-  // doesn't track) is preserved. If the backend is unreachable we keep the
-  // local cache as-is, so the surface still works offline.
+  // Latest refetch, read from inside the retry loop without re-triggering it.
+  const refetchAppConfigRef = useRef(refetchAppConfig);
+  refetchAppConfigRef.current = refetchAppConfig;
+
+  // Reconcile local cache against the backend (source of truth), preserving the
+  // locally-cached folderId; retry with backoff since the backend may not be up yet.
+  // On recovery, also re-resolve app config in case its admin/team-leader flags settled false while down.
   useEffect(() => {
     let cancelled = false;
-    void (async () => {
+    let attempt = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const reconcile = async () => {
       let byCategory;
       try {
         byCategory = await fetchPoliciesByCategory();
       } catch {
-        return; // offline / backend down — local cache stands.
+        if (cancelled || attempt >= RECONCILE_MAX_ATTEMPTS) return;
+        timer = setTimeout(reconcile, reconcileRetryDelay(attempt++));
+        return;
       }
       if (cancelled) return;
       const local = loadPolicies();
@@ -101,9 +115,14 @@ export function usePolicies() {
       for (const [id, state] of Object.entries(reconciled)) {
         updatePolicy(id, state);
       }
-    })();
+      // The backend was down at first load (we retried) — re-resolve the app
+      // config so the admin/team-leader gate isn't stuck on its offline default.
+      if (attempt > 0) void refetchAppConfigRef.current();
+    };
+    void reconcile();
     return () => {
       cancelled = true;
+      if (timer) clearTimeout(timer);
     };
   }, []);
 

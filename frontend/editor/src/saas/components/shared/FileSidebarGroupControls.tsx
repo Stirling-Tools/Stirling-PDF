@@ -257,9 +257,10 @@ export function FileSidebarGroupControls({
                       }}
                     />
                   ) : (
-                    // eslint-disable-next-line no-restricted-syntax -- inline text button (click-to-rename); no DS Button variant fits an inline label
-                    <button
-                      type="button"
+                    <Button
+                      variant="quiet"
+                      size="sm"
+                      justify="start"
                       className="fsg-cat-name"
                       title={t("fileSidebar.groupsModal.rename", "Rename")}
                       onClick={() => {
@@ -268,7 +269,7 @@ export function FileSidebarGroupControls({
                       }}
                     >
                       {category.name}
-                    </button>
+                    </Button>
                   )}
                   <span className="fsg-count">
                     {categoryCounts.get(category.id) ?? 0}

@@ -183,20 +183,24 @@ export function PolicyDetailPanel({
 
         {/* Recent Activity */}
         <div>
-          <button
-            type="button"
+          <Button
+            variant="quiet"
+            fullWidth
+            justify="between"
             className="pol-section-label pol-section-toggle"
             onClick={() => setActivityOpen((o) => !o)}
             aria-expanded={activityOpen}
+            rightSection={
+              <KeyboardArrowDownIcon
+                className={`pol-section-chevron${activityOpen ? " is-open" : ""}`}
+                fontSize="small"
+              />
+            }
           >
             <span>
               {t("policies.detail.recentActivity", "Recent Activity")}
             </span>
-            <KeyboardArrowDownIcon
-              className={`pol-section-chevron${activityOpen ? " is-open" : ""}`}
-              fontSize="small"
-            />
-          </button>
+          </Button>
           {activityOpen &&
             (activityItems.length > 0 ? (
               <Card padding="none">

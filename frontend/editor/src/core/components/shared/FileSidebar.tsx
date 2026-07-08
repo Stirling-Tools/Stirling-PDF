@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import { Loader, Tooltip } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useFileState, useFileActions } from "@app/contexts/file/fileHooks";
@@ -1183,52 +1184,65 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                             groupOpen[group.id] ?? group.defaultExpanded;
                           return (
                             <div className="file-sidebar-group" key={group.id}>
-                              <button
-                                type="button"
+                              <Button
+                                variant="quiet"
+                                fullWidth
+                                justify="between"
                                 className="file-sidebar-group-header"
                                 onClick={() =>
                                   setGroupOpenState(group.id, !isOpen)
                                 }
                                 aria-expanded={isOpen}
+                                leftSection={
+                                  <>
+                                    {isOpen ? (
+                                      <KeyboardArrowDownIcon
+                                        sx={{ fontSize: "1.1rem" }}
+                                      />
+                                    ) : (
+                                      <KeyboardArrowRightIcon
+                                        sx={{ fontSize: "1.1rem" }}
+                                      />
+                                    )}
+                                    {group.icon && (
+                                      <LocalIcon
+                                        icon={group.icon}
+                                        width="1.05rem"
+                                        className="file-sidebar-group-icon"
+                                        style={
+                                          group.color
+                                            ? { color: group.color }
+                                            : undefined
+                                        }
+                                      />
+                                    )}
+                                  </>
+                                }
+                                rightSection={
+                                  <span className="file-sidebar-group-count">
+                                    {group.stubs.length}
+                                  </span>
+                                }
                               >
-                                {isOpen ? (
-                                  <KeyboardArrowDownIcon
-                                    sx={{ fontSize: "1.1rem" }}
-                                  />
-                                ) : (
-                                  <KeyboardArrowRightIcon
-                                    sx={{ fontSize: "1.1rem" }}
-                                  />
-                                )}
-                                {group.icon && (
-                                  <LocalIcon
-                                    icon={group.icon}
-                                    width="1.05rem"
-                                    className="file-sidebar-group-icon"
-                                    style={
-                                      group.color
-                                        ? { color: group.color }
-                                        : undefined
-                                    }
-                                  />
-                                )}
                                 <span className="file-sidebar-group-label">
                                   {group.label}
                                 </span>
-                                <span className="file-sidebar-group-count">
-                                  {group.stubs.length}
-                                </span>
-                              </button>
+                              </Button>
                               <div className="file-sidebar-group-items">
                                 {isOpen && group.stubs.map(renderFileRow)}
                               </div>
                             </div>
                           );
                         })}
-                        <button
-                          type="button"
+                        <Button
+                          variant="quiet"
+                          fullWidth
+                          justify="between"
                           className="file-sidebar-view-all"
                           onClick={() => navigate("/files")}
+                          rightSection={
+                            <KeyboardArrowRightIcon sx={{ fontSize: "1rem" }} />
+                          }
                         >
                           {t(
                             "fileSidebar.viewAll",
@@ -1237,8 +1251,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                               count: filteredFileStubs.length,
                             },
                           )}
-                          <KeyboardArrowRightIcon sx={{ fontSize: "1rem" }} />
-                        </button>
+                        </Button>
                       </>
                     ) : (
                       filteredFileStubs.map(renderFileRow)

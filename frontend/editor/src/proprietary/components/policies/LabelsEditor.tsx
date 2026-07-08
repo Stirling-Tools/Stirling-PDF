@@ -211,21 +211,29 @@ function GroupedLabels({ value, renderChip }: GroupedLabelsProps) {
         const isOpen = expanded.has(category.id);
         return (
           <section key={category.id} className="labels-group">
-            <button
-              type="button"
+            <Button
+              variant="quiet"
+              fullWidth
+              justify="between"
               className="labels-group-header"
               aria-expanded={isOpen}
               onClick={() => toggle(category.id)}
+              leftSection={
+                <>
+                  {isOpen ? (
+                    <KeyboardArrowDownIcon sx={{ fontSize: "1.1rem" }} />
+                  ) : (
+                    <KeyboardArrowRightIcon sx={{ fontSize: "1.1rem" }} />
+                  )}
+                  <LocalIcon icon={category.icon} width="1.05rem" />
+                </>
+              }
+              rightSection={
+                <span className="labels-group-count">{members.length}</span>
+              }
             >
-              {isOpen ? (
-                <KeyboardArrowDownIcon sx={{ fontSize: "1.1rem" }} />
-              ) : (
-                <KeyboardArrowRightIcon sx={{ fontSize: "1.1rem" }} />
-              )}
-              <LocalIcon icon={category.icon} width="1.05rem" />
               <span className="labels-group-name">{category.name}</span>
-              <span className="labels-group-count">{members.length}</span>
-            </button>
+            </Button>
             {isOpen && (
               <div className="labels-chips" role="list">
                 {members.map(renderChip)}

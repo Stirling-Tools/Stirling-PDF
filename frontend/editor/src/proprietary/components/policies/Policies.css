@@ -191,6 +191,16 @@
   font-weight: 500;
   color: var(--color-text-1);
 }
+
+.pol-row > .mantine-Button-inner {
+  width: 100%;
+}
+.pol-row > .mantine-Button-inner > .mantine-Button-label {
+  flex: 1;
+  min-width: 0;
+  justify-content: flex-start;
+  overflow: visible;
+}
 .pol-row-trail {
   display: inline-flex;
   align-items: center;
