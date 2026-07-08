@@ -20,7 +20,7 @@ import i18n from "@app/i18n";
  * so there is no raw-HTML injection surface (avoids dangerouslySetInnerHTML).
  * Any other markup is shown as plain text.
  */
-function renderTourContent(content: string): ReactNode {
+export function renderTourContent(content: string): ReactNode {
   return content.split(/(<strong>.*?<\/strong>)/g).map((part, index) => {
     const match = part.match(/^<strong>(.*?)<\/strong>$/);
     if (match) return <strong key={index}>{match[1]}</strong>;

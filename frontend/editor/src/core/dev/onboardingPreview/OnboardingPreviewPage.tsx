@@ -15,6 +15,7 @@ import {
 } from "@mantine/core";
 import { Button } from "@app/ui";
 import OnboardingModalSlide from "@app/components/onboarding/OnboardingModalSlide";
+import { renderTourContent } from "@app/components/onboarding/OnboardingTour";
 import {
   SLIDE_DEFINITIONS,
   type ButtonAction,
@@ -310,8 +311,11 @@ export default function OnboardingPreviewPage() {
                             {step.position}
                           </Text>
                         </Group>
+                        {/* Reuse the tour's safe <strong> parser — renders
+                            emphasis as React elements, no string sanitization
+                            or raw HTML. */}
                         <Text size="sm">
-                          {step.content.replace(/<[^>]+>/g, "")}
+                          {renderTourContent(step.content)}
                         </Text>
                       </Paper>
                     ))}
