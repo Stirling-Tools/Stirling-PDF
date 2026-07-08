@@ -64,9 +64,12 @@ jobs:
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      # Detect whether the admin portal or the AI layers changed on this push so
-      # the main-app images can embed the /portal app (-PbuildWithPortal). Skipped
-      # on manual runs, which use the build_portal input instead.
+      # Same file-aware detection as build.yml's files-changed job (the shared
+      # dorny/paths-filter + .github/config/.files.yaml), applied to the merged
+      # change so the published images embed the /portal app (-PbuildWithPortal)
+      # exactly when the merged PR touched the portal or AI layers. Not a raw
+      # push diff; PRs get the same signal via files-changed -> test-build-docker.
+      # Skipped on manual runs, which use the build_portal input instead.
       - name: Detect portal/AI changes
         id: portal-changes
         if: env.RUN_MAIN_APP == 'true' && github.event_name != 'workflow_dispatch'
