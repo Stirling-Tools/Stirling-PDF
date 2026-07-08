@@ -30,7 +30,13 @@ import "@portal/components/Sidebar.css";
 interface NavEntry {
   id: ViewId;
   icon: React.ReactNode;
+  /** When set, the tab opens this URL in a new tab instead of navigating in-app. */
+  externalUrl?: string;
 }
+
+// Developer docs has no built-in portal page yet, so the tab opens the hosted docs
+// site in a new tab rather than routing to an empty page.
+const DEVELOPER_DOCS_URL = "https://docs.stirlingpdf.com/";
 
 const GROUP_PRIMARY: NavEntry[] = [{ id: "home", icon: <HomeIcon /> }];
 
@@ -46,7 +52,7 @@ const GROUP_OPERATIONAL: NavEntry[] = [
 const GROUP_PLATFORM: NavEntry[] = [
   { id: "infrastructure", icon: <InfrastructureIcon /> },
   { id: "usage", icon: <UsageIcon /> },
-  { id: "docs", icon: <DocsIcon /> },
+  { id: "docs", icon: <DocsIcon />, externalUrl: DEVELOPER_DOCS_URL },
 ];
 
 function UsageFooter() {
@@ -136,7 +142,13 @@ export function Sidebar() {
         label={t(`portal.nav.${entry.id}`)}
         icon={entry.icon}
         isActive={activeView === entry.id}
-        onClick={(id) => setActiveView(id as ViewId)}
+        onClick={(id) => {
+          if (entry.externalUrl) {
+            window.open(entry.externalUrl, "_blank", "noopener,noreferrer");
+          } else {
+            setActiveView(id as ViewId);
+          }
+        }}
       />
     ));
   }
