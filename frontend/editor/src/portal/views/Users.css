@@ -500,9 +500,14 @@
   align-items: center;
   gap: 0.5rem;
 }
-.portal-users__pw-row input {
+/* The password field flexes; the Regenerate/Copy buttons keep their full label
+   (flex-shrink:0) so they don't truncate in the narrow modal. */
+.portal-users__pw-row > *:first-child {
   flex: 1;
   min-width: 0;
+}
+.portal-users__pw-row > *:not(:first-child) {
+  flex-shrink: 0;
 }
 
 .portal-users__confirm-body {

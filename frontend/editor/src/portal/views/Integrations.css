@@ -111,11 +111,25 @@
   gap: 1rem;
 }
 
+/* Person picker gets its own full-width row so it never collapses in the narrow
+   share modal; permission + Share button share the row below. */
 .portal-integrations__share-add {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "person person"
+    "permission action";
   gap: 0.75rem;
   align-items: end;
+}
+.portal-integrations__share-add > *:nth-child(1) {
+  grid-area: person;
+}
+.portal-integrations__share-add > *:nth-child(2) {
+  grid-area: permission;
+}
+.portal-integrations__share-add > *:nth-child(3) {
+  grid-area: action;
 }
 
 .portal-integrations__share-list {
