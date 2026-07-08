@@ -4,7 +4,6 @@ import {
   Banner,
   Button,
   Card,
-  Chip,
   FormField,
   Input,
   Modal,
@@ -14,7 +13,6 @@ import {
 } from "@app/ui";
 import { SettingsRow } from "@app/ui/SettingsRow";
 import {
-  POLICY_DOC_TYPES,
   TOOL_ENDPOINTS,
   humanizeEndpoint,
   type CatalogueEntry,
@@ -217,12 +215,9 @@ function PolicySetupWizardBody({
     };
     return [editorSource, ...backendSources];
   }, [sourcesAsync.data, t]);
-  const [scopeNarrow, setScopeNarrow] = useState(
-    (policy?.state.scopeTypes.length ?? 0) > 0,
-  );
-  const [scopeTypes, setScopeTypes] = useState<string[]>(
-    policy?.state.scopeTypes ?? [],
-  );
+  // Document-type scoping has no UI; preserve any saved scope on edit and
+  // default new policies to all document types.
+  const [scopeTypes] = useState<string[]>(policy?.state.scopeTypes ?? []);
   // TODO: replace with user-picker backed by GET /api/v1/user/users (UserSummary[]).
   // Store username (which is the email in Spring Security) as reviewerEmail.
   // See UserSelector.tsx in the editor for the grouping/display pattern.
@@ -259,12 +254,6 @@ function PolicySetupWizardBody({
     );
   }
 
-  function toggleScopeType(dt: string) {
-    setScopeTypes((prev) =>
-      prev.includes(dt) ? prev.filter((d) => d !== dt) : [...prev, dt],
-    );
-  }
-
   async function submit() {
     if (submitting) return;
     if (enabledTools.length === 0) {
@@ -282,7 +271,7 @@ function PolicySetupWizardBody({
       await onSubmit(entry, {
         fieldValues,
         sources,
-        scopeTypes: scopeNarrow ? scopeTypes : [],
+        scopeTypes,
         reviewerEmail,
         outputMode,
         outputName: outputName.trim(),
@@ -297,8 +286,6 @@ function PolicySetupWizardBody({
       setError(t("portal.policies.wizard.errors.saveFailed"));
     }
   }
-
-  const docTypesEnabled = category.providesClassification === true;
 
   return (
     <Modal
@@ -477,10 +464,13 @@ function PolicySetupWizardBody({
             // state exists.
             <div className="portal-policies__sources">
               {availableSources.map((src) => (
+                // A selectable multi-line tile (icon + name + type + check).
+                // Uses the shared Button (raw <button> is lint-banned); the tile
+                // CSS overrides the Button's fixed height for the two-line layout.
                 <Button
                   key={src.id}
-                  type="button"
                   variant="quiet"
+                  justify="start"
                   className={
                     "portal-policies__source" +
                     (sources.includes(src.id)
@@ -503,53 +493,6 @@ function PolicySetupWizardBody({
                 </Button>
               ))}
             </div>
-          )}
-
-          <h3 className="portal-policies__wizard-heading">
-            {t("portal.policies.wizard.docTypes.heading")}
-          </h3>
-          {!docTypesEnabled ? (
-            <Banner
-              tone="neutral"
-              title={t("portal.policies.wizard.docTypes.allTitle")}
-              description={t("portal.policies.wizard.docTypes.allDescription")}
-            />
-          ) : (
-            <Card padding="tight">
-              <div className="portal-policies__doctypes-head">
-                <span>
-                  {scopeTypes.length === 0
-                    ? t("portal.policies.wizard.docTypes.allTitle")
-                    : t("portal.policies.wizard.docTypes.selected", {
-                        count: scopeTypes.length,
-                      })}
-                </span>
-                <Button
-                  type="button"
-                  variant="quiet"
-                  className="portal-policies__link"
-                  onClick={() => setScopeNarrow((v) => !v)}
-                >
-                  {scopeNarrow
-                    ? t("portal.policies.wizard.docTypes.clear")
-                    : t("portal.policies.wizard.docTypes.narrow")}
-                </Button>
-              </div>
-              {scopeNarrow && (
-                <div className="portal-policies__doctypes">
-                  {POLICY_DOC_TYPES.map((dt) => (
-                    <Chip
-                      key={dt}
-                      accent={scopeTypes.includes(dt) ? "default" : "neutral"}
-                      size="sm"
-                      onClick={() => toggleScopeType(dt)}
-                    >
-                      {dt}
-                    </Chip>
-                  ))}
-                </div>
-              )}
-            </Card>
           )}
 
           <h3 className="portal-policies__wizard-heading">

@@ -7351,15 +7351,6 @@ continue = "Continue"
 enablePolicy = "Enable policy"
 saveChanges = "Save changes"
 
-[portal.policies.wizard.docTypes]
-allDescription = "Set up an Ingestion (classification) policy to narrow this to specific document types."
-allTitle = "All document types"
-clear = "Clear"
-heading = "Document types"
-narrow = "Narrow"
-selected_one = "{{count}} selected"
-selected_other = "{{count}} selected"
-
 [portal.policies.wizard.errors]
 noTools = "Enable at least one tool in the workflow first."
 saveFailed = "Couldn't save the policy. Please try again."
