@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Banner, Button, EmptyState, Skeleton } from "@app/ui";
 import { useUI } from "@portal/contexts/UIContext";
+import { useLinkedAccountEmail } from "@portal/hooks/useLinkedAccountEmail";
 import { JOURNEY } from "@portal/api/procurement";
 import { ProcurementAgreement } from "@portal/components/procurement/ProcurementAgreement";
 import {
@@ -33,6 +34,7 @@ export function ProcurementFlow({
 }) {
   const { t } = useTranslation();
   const { openLinkModal } = useUI();
+  const scheduleEmail = useLinkedAccountEmail();
   const {
     isLinked,
     loading,
@@ -171,6 +173,7 @@ export function ProcurementFlow({
       <ScheduleCallModal
         open={extra === "schedule"}
         onClose={() => setExtra(null)}
+        email={scheduleEmail}
       />
       {data && (
         <TrialManageModal

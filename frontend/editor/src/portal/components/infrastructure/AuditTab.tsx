@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  Button,
   Card,
   EmptyState,
   MetricCard,
@@ -12,19 +13,21 @@ import {
 } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
+import { HttpError } from "@portal/api/http";
 import {
   fetchAuditLog,
   type AuditCategory,
   type AuditEvent,
   type AuditLogResponse,
 } from "@portal/api/infrastructure";
+import { AuditExportModal } from "@portal/components/infrastructure/AuditExportModal";
 import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
 import { TableSkeleton } from "@portal/components/infrastructure/TableSkeleton";
 import {
   AUDIT_CAT_LABEL,
   AUDIT_CAT_TONE,
+  AUDIT_STATUS_LABEL,
   AUDIT_TONE,
-  titleCase,
 } from "@portal/components/infrastructure/infraFormat";
 
 type AuditFilter = "all" | AuditCategory;
@@ -33,6 +36,7 @@ export function AuditTab() {
   const { t } = useTranslation();
   const { tier } = useTier();
   const [filter, setFilter] = useState<AuditFilter>("all");
+  const [exportOpen, setExportOpen] = useState(false);
 
   const auditFilters: TabItem<AuditFilter>[] = [
     { key: "all", label: t("portal.infrastructure.audit.filters.all") },
@@ -85,7 +89,7 @@ export function AuditTab() {
       header: t("portal.infrastructure.audit.columns.status"),
       render: (e) => (
         <StatusBadge tone={AUDIT_TONE[e.status]} size="sm">
-          {titleCase(e.status)}
+          {AUDIT_STATUS_LABEL[e.status]}
         </StatusBadge>
       ),
     },
@@ -104,8 +108,10 @@ export function AuditTab() {
   ];
 
   const state = useAsync<AuditLogResponse>(() => fetchAuditLog(tier), [tier]);
-  const { data } = state;
+  const { data, error } = state;
   const { isLoading, isEmpty } = useSectionFlags(state);
+  // Backend returns 403 for scoped-out callers; show an access message, not an empty state.
+  const forbidden = error instanceof HttpError && error.status === 403;
 
   const rows = useMemo(() => {
     if (!data) return [];
@@ -115,9 +121,22 @@ export function AuditTab() {
 
   return (
     <div className="portal-infra__stack">
-      <SectionHeader
-        title={t("portal.infrastructure.audit.heading")}
-        sub={t("portal.infrastructure.audit.subheading")}
+      <div className="portal-infra__audit-head">
+        <SectionHeader
+          title={t("portal.infrastructure.audit.heading")}
+          sub={t("portal.infrastructure.audit.subheading")}
+        />
+        {/* Export is admin-only + whole-server, so only shown in the full-server view. */}
+        {data?.fullServer && (
+          <Button variant="secondary" onClick={() => setExportOpen(true)}>
+            {t("portal.infrastructure.audit.export.open")}
+          </Button>
+        )}
+      </div>
+
+      <AuditExportModal
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
       />
 
       {data && (
@@ -141,17 +160,26 @@ export function AuditTab() {
         </section>
       )}
 
-      <Tabs<AuditFilter>
-        items={auditFilters}
-        activeKey={filter}
-        onChange={setFilter}
-        variant="pill"
-        ariaLabel={t("portal.infrastructure.audit.filterAriaLabel")}
-      />
+      {!forbidden && (
+        <Tabs<AuditFilter>
+          items={auditFilters}
+          activeKey={filter}
+          onChange={setFilter}
+          variant="pill"
+          ariaLabel={t("portal.infrastructure.audit.filterAriaLabel")}
+        />
+      )}
 
       <Card padding="none">
         {isLoading && <TableSkeleton rows={6} cols={6} />}
-        {isEmpty && (
+        {!isLoading && forbidden && (
+          <EmptyState
+            size="compact"
+            title={t("portal.infrastructure.audit.forbidden.title")}
+            description={t("portal.infrastructure.audit.forbidden.description")}
+          />
+        )}
+        {!isLoading && !forbidden && isEmpty && (
           <EmptyState
             size="compact"
             title={t("portal.infrastructure.audit.empty.title")}
