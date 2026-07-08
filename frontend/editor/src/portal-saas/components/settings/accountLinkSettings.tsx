@@ -1,4 +1,4 @@
-import type { AccountLinkSettingsSeam } from "@portalProprietary/components/settings/accountLinkSettings";
+import type { AccountLinkSettingsSeam } from "@portal-proprietary/components/settings/accountLinkSettings";
 
 /**
  * SaaS has no account-link concept — the signed-in account IS the SaaS account.

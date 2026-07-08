@@ -4,12 +4,6 @@ import { useAuth } from "@app/auth/context";
 import { Spinner } from "@app/ui";
 import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
 
-// Configure the shared Supabase client for the SaaS project before the provider
-// reads it. The portal mounts outside the editor's AppProviders, so it establishes
-// its own session — but against the SAME project, so a user already signed into the
-// editor is picked up from the persisted session with no second login. Idempotent.
-ensureSaasSupabase();
-
 function FullScreen({ children }: { children: ReactNode }) {
   return (
     <div
@@ -53,6 +47,12 @@ function SaasPortalGate({ children }: { children: ReactNode }) {
  * project (inheriting the editor's session) instead of the self-hosted Spring login.
  */
 export function PortalAuthBoundary({ children }: { children: ReactNode }) {
+  // Configure the shared Supabase client (SaaS project) synchronously here, before
+  // the AuthProvider below reads it — a useEffect would run too late for the first
+  // render, leaving the provider with a null client. Idempotent; the portal mounts
+  // outside the editor's AppProviders but against the SAME project, so a user already
+  // signed into the editor is picked up from the persisted session (no second login).
+  ensureSaasSupabase();
   return (
     <AuthProvider mode="supabase">
       <SaasPortalGate>{children}</SaasPortalGate>

@@ -9,7 +9,7 @@
         "./src/core/*"
       ],
       "@portal/*": ["./src/portal-saas/*", "./src/portal/*"],
-      "@portalProprietary/*": ["./src/portal/*"],
+      "@portal-proprietary/*": ["./src/portal/*"],
       "@cloud/*": ["./src/cloud/*"],
       "@proprietary/*": ["./src/proprietary/*"],
       "@core/*": ["./src/core/*"]
