@@ -49,7 +49,8 @@ interface CloseArgs {
 
 interface OnboardingTourProps {
   tourSteps: StepType[];
-  tourType: "admin" | "tools" | "whatsnew";
+  // Open tour id (see tourRegistry.ts); "admin" gets the dark mask.
+  tourType: string;
   isRTL: boolean;
   t: TFunction;
   isOpen: boolean;

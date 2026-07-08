@@ -8,6 +8,8 @@ import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import HomePage from "@app/pages/HomePage";
 import MobileScannerPage from "@app/pages/MobileScannerPage";
 import Onboarding from "@app/components/onboarding/Onboarding";
+import { OnboardingPreviewRoute } from "@app/dev/onboardingPreview/OnboardingPreviewPage";
+import OnboardingDevFab from "@app/dev/onboardingPreview/OnboardingDevFab";
 
 // Import global styles
 import "@app/styles/tailwind.css";
@@ -41,6 +43,18 @@ export default function App() {
           }
         />
 
+        {/* Dev-only onboarding persona preview — gated by VITE_DEV_ONBOARDING_PREVIEW.
+            Uses the same minimal providers as the public route; the component
+            redirects home when the flag is off. */}
+        <Route
+          path="/dev/onboarding"
+          element={
+            <PublicRouteProviders>
+              <OnboardingPreviewRoute />
+            </PublicRouteProviders>
+          }
+        />
+
         {/* All other routes need AppProviders for backend integration */}
         <Route
           path="*"
@@ -49,6 +63,7 @@ export default function App() {
               <AppLayout>
                 <HomePage />
                 <Onboarding />
+                <OnboardingDevFab />
               </AppLayout>
             </AppProviders>
           }

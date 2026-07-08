@@ -2,7 +2,14 @@ import FreeEditorSlide from "@app/components/onboarding/slides/FreeEditorSlide";
 import UsageSnapshotSlide from "@app/components/onboarding/slides/UsageSnapshotSlide";
 import TeamSlide from "@app/components/onboarding/slides/TeamSlide";
 import DesktopInstallSlide from "@app/components/onboarding/slides/DesktopInstallSlide";
-import { SlideConfig } from "@app/types/types";
+import type {
+  OSOption,
+  ButtonDefinition as ButtonDefinitionBase,
+  HeroDefinition as HeroDefinitionBase,
+  SlideDefinition as SlideDefinitionBase,
+} from "@app/components/onboarding/onboardingSlideTypes";
+
+export type { OSOption };
 
 export type SlideId = "free-editor" | "usage" | "team" | "desktop-install";
 
@@ -12,12 +19,6 @@ export type ButtonAction = "next" | "prev" | "close" | "download-selected";
 
 export type FlowState = Record<string, never>;
 
-export interface OSOption {
-  label: string;
-  url: string;
-  value: string;
-}
-
 export interface SlideFactoryParams {
   osLabel: string;
   osUrl: string;
@@ -25,27 +26,17 @@ export interface SlideFactoryParams {
   onDownloadUrlChange?: (url: string) => void;
 }
 
-export interface HeroDefinition {
-  type: HeroType;
-}
+export type HeroDefinition = HeroDefinitionBase<HeroType>;
 
-export interface ButtonDefinition {
-  key: string;
-  type: "button" | "icon";
-  label?: string;
-  icon?: "chevron-left";
-  variant?: "primary" | "secondary" | "default";
-  group: "left" | "right";
-  action: ButtonAction;
-  disabledWhen?: (state: FlowState) => boolean;
-}
+export type ButtonDefinition = ButtonDefinitionBase<ButtonAction, FlowState>;
 
-export interface SlideDefinition {
-  id: SlideId;
-  createSlide: (params: SlideFactoryParams) => SlideConfig;
-  hero: HeroDefinition;
-  buttons: ButtonDefinition[];
-}
+export type SlideDefinition = SlideDefinitionBase<
+  SlideId,
+  ButtonAction,
+  FlowState,
+  HeroType,
+  SlideFactoryParams
+>;
 
 const BACK_BUTTON: ButtonDefinition = {
   key: "back",

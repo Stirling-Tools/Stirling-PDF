@@ -7,8 +7,15 @@ import FirstLoginSlide from "@app/components/onboarding/slides/FirstLoginSlide";
 import TourOverviewSlide from "@app/components/onboarding/slides/TourOverviewSlide";
 import AnalyticsChoiceSlide from "@app/components/onboarding/slides/AnalyticsChoiceSlide";
 import MFASetupSlide from "@app/components/onboarding/slides/MFASetupSlide";
-import { SlideConfig, LicenseNotice } from "@app/types/types";
-import type { ButtonAccent } from "@app/ui/Button";
+import { LicenseNotice } from "@app/types/types";
+import type {
+  OSOption,
+  ButtonDefinition as ButtonDefinitionBase,
+  HeroDefinition as HeroDefinitionBase,
+  SlideDefinition as SlideDefinitionBase,
+} from "@app/components/onboarding/onboardingSlideTypes";
+
+export type { OSOption };
 
 export type SlideId =
   | "first-login"
@@ -50,12 +57,6 @@ export interface FlowState {
   selectedRole: "admin" | "user" | null;
 }
 
-export interface OSOption {
-  label: string;
-  url: string;
-  value: string;
-}
-
 export interface SlideFactoryParams {
   osLabel: string;
   osUrl: string;
@@ -74,29 +75,17 @@ export interface SlideFactoryParams {
   onMfaSetupComplete?: () => void;
 }
 
-export interface HeroDefinition {
-  type: HeroType;
-}
+export type HeroDefinition = HeroDefinitionBase<HeroType>;
 
-export interface ButtonDefinition {
-  key: string;
-  type: "button" | "icon";
-  label?: string;
-  icon?: "chevron-left";
-  variant?: "primary" | "secondary" | "default";
-  /** Accent for the shared Button; defaults to neutral. */
-  accent?: ButtonAccent;
-  group: "left" | "right";
-  action: ButtonAction;
-  disabledWhen?: (state: FlowState) => boolean;
-}
+export type ButtonDefinition = ButtonDefinitionBase<ButtonAction, FlowState>;
 
-export interface SlideDefinition {
-  id: SlideId;
-  createSlide: (params: SlideFactoryParams) => SlideConfig;
-  hero: HeroDefinition;
-  buttons: ButtonDefinition[];
-}
+export type SlideDefinition = SlideDefinitionBase<
+  SlideId,
+  ButtonAction,
+  FlowState,
+  HeroType,
+  SlideFactoryParams
+>;
 
 export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
   "first-login": {

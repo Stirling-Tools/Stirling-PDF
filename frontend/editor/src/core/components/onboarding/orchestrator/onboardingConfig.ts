@@ -15,7 +15,8 @@ export type OnboardingStepType = "modal-slide" | "tool-prompt";
 export interface OnboardingRuntimeState {
   selectedRole: "admin" | "user" | null;
   tourRequested: boolean;
-  tourType: "admin" | "tools" | "whatsnew";
+  // Open key into the tour registry (see tourRegistry.ts).
+  tourType: string;
   isDesktopApp: boolean;
   desktopSlideEnabled: boolean;
   analyticsNotConfigured: boolean;
@@ -99,17 +100,6 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     type: "modal-slide",
     slideId: "desktop-install",
     condition: (ctx) => !ctx.isDesktopApp && ctx.desktopSlideEnabled,
-  },
-  {
-    id: "security-check",
-    type: "modal-slide",
-    slideId: "security-check",
-    condition: () => false,
-  },
-  {
-    id: "tool-layout",
-    type: "tool-prompt",
-    condition: () => false,
   },
   {
     id: "tour-overview",

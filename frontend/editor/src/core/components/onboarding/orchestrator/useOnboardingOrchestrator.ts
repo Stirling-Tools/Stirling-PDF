@@ -41,13 +41,10 @@ function getInitialRuntimeState(
   try {
     const tourRequested =
       sessionStorage.getItem(SESSION_TOUR_REQUESTED) === "true";
-    const sessionTourType = sessionStorage.getItem(SESSION_TOUR_TYPE);
+    // Any stored tour id is accepted (validated against the registry at render);
+    // fall back to the default tour type when absent.
     const tourType =
-      sessionTourType === "admin" ||
-      sessionTourType === "tools" ||
-      sessionTourType === "whatsnew"
-        ? sessionTourType
-        : "whatsnew";
+      sessionStorage.getItem(SESSION_TOUR_TYPE) ?? baseState.tourType;
     const selectedRole = sessionStorage.getItem(SESSION_SELECTED_ROLE) as
       | "admin"
       | "user"

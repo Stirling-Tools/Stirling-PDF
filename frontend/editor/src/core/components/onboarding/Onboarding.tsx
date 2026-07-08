@@ -11,6 +11,7 @@ import OnboardingTour, {
   type CloseArgs,
 } from "@app/components/onboarding/OnboardingTour";
 import OnboardingModalSlide from "@app/components/onboarding/OnboardingModalSlide";
+import StaticOnboardingSlide from "@app/components/onboarding/StaticOnboardingSlide";
 import {
   useServerLicenseRequest,
   useTourRequest,
@@ -24,9 +25,7 @@ import {
 import ToolPanelModePrompt from "@app/components/tools/ToolPanelModePrompt";
 import { useTourOrchestration } from "@app/contexts/TourOrchestrationContext";
 import { useAdminTourOrchestration } from "@app/contexts/AdminTourOrchestrationContext";
-import { createUserStepsConfig } from "@app/components/onboarding/userStepsConfig";
-import { createAdminStepsConfig } from "@app/components/onboarding/adminStepsConfig";
-import { createWhatsNewStepsConfig } from "@app/components/onboarding/whatsNewStepsConfig";
+import { getTourSteps } from "@app/components/onboarding/tourRegistry";
 import { removeAllGlows } from "@app/components/onboarding/tourGlow";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import { useServerExperience } from "@app/hooks/useServerExperience";
@@ -220,76 +219,24 @@ export default function Onboarding() {
   const tourOrch = useTourOrchestration();
   const adminTourOrch = useAdminTourOrchestration();
 
-  const userStepsConfig = useMemo(
+  const tourSteps = useMemo<StepType[]>(
     () =>
-      createUserStepsConfig({
+      getTourSteps(runtimeState.tourType, {
         t,
-        actions: {
-          saveWorkbenchState: tourOrch.saveWorkbenchState,
-          closeFilesModal,
-          backToAllTools: tourOrch.backToAllTools,
-          selectCropTool: tourOrch.selectCropTool,
-          loadSampleFile: tourOrch.loadSampleFile,
-          switchToActiveFiles: tourOrch.switchToActiveFiles,
-          pinFile: tourOrch.pinFile,
-          revealFileCardHoverMenu: tourOrch.revealFileCardHoverMenu,
-          modifyCropSettings: tourOrch.modifyCropSettings,
-          executeTool: tourOrch.executeTool,
-          openFilesModal,
-          openSettingsHelpSection: () =>
-            adminTourOrch.navigateToSection("help"),
-        },
+        workbench: tourOrch,
+        admin: adminTourOrch,
+        openFilesModal,
+        closeFilesModal,
       }),
-    [t, tourOrch, adminTourOrch, closeFilesModal, openFilesModal],
+    [
+      runtimeState.tourType,
+      t,
+      tourOrch,
+      adminTourOrch,
+      openFilesModal,
+      closeFilesModal,
+    ],
   );
-
-  const whatsNewStepsConfig = useMemo(
-    () =>
-      createWhatsNewStepsConfig({
-        t,
-        actions: {
-          saveWorkbenchState: tourOrch.saveWorkbenchState,
-          closeFilesModal,
-          backToAllTools: tourOrch.backToAllTools,
-          openFilesModal,
-          loadSampleFile: tourOrch.loadSampleFile,
-          switchToViewer: tourOrch.switchToViewer,
-          switchToPageEditor: tourOrch.switchToPageEditor,
-          switchToActiveFiles: tourOrch.switchToActiveFiles,
-        },
-      }),
-    [t, tourOrch, closeFilesModal, openFilesModal],
-  );
-
-  const adminStepsConfig = useMemo(
-    () =>
-      createAdminStepsConfig({
-        t,
-        actions: {
-          saveAdminState: adminTourOrch.saveAdminState,
-          openConfigModal: adminTourOrch.openConfigModal,
-          navigateToSection: adminTourOrch.navigateToSection,
-          scrollNavToSection: adminTourOrch.scrollNavToSection,
-        },
-      }),
-    [t, adminTourOrch],
-  );
-
-  const tourSteps = useMemo<StepType[]>(() => {
-    switch (runtimeState.tourType) {
-      case "admin":
-        return Object.values(adminStepsConfig);
-      case "whatsnew":
-        return Object.values(whatsNewStepsConfig);
-      default:
-        return Object.values(userStepsConfig);
-    }
-  }, [
-    adminStepsConfig,
-    runtimeState.tourType,
-    userStepsConfig,
-    whatsNewStepsConfig,
-  ]);
 
   useEffect(() => {
     if (externalTourRequested) {
@@ -427,26 +374,18 @@ export default function Onboarding() {
     return null;
   }
 
-  // Show analytics modal before onboarding if needed
+  // Interrupt slides shown outside the normal step flow. Precedence is
+  // preserved by evaluation order: analytics consent → first login → MFA →
+  // external license notice.
   if (showAnalyticsModal) {
-    const slideDefinition = SLIDE_DEFINITIONS["analytics-choice"];
-    const slideContent = slideDefinition.createSlide({
-      osLabel: "",
-      osUrl: "",
-      selectedRole: null,
-      onRoleSelect: () => {},
-      analyticsError,
-      analyticsLoading,
-    });
-
     return (
-      <OnboardingModalSlide
-        slideDefinition={slideDefinition}
-        slideContent={slideContent}
+      <StaticOnboardingSlide
+        key="analytics-choice"
+        slideId="analytics-choice"
         runtimeState={runtimeState}
-        modalSlideCount={1}
-        currentModalSlideIndex={0}
+        params={{ analyticsError, analyticsLoading }}
         onSkip={() => {}} // No skip allowed
+        allowDismiss={false}
         onAction={async (action) => {
           if (action === "enable-analytics") {
             await handleAnalyticsChoice(true);
@@ -454,102 +393,69 @@ export default function Onboarding() {
             await handleAnalyticsChoice(false);
           }
         }}
-        allowDismiss={false}
       />
     );
   }
 
   if (firstLoginModalOpen) {
-    const baseSlideDefinition = SLIDE_DEFINITIONS["first-login"];
-    const slideContent = baseSlideDefinition.createSlide({
-      osLabel: "",
-      osUrl: "",
-      selectedRole: null,
-      onRoleSelect: () => {},
-      firstLoginUsername: runtimeState.firstLoginUsername,
-      onPasswordChanged: handlePasswordChanged,
-      usingDefaultCredentials: runtimeState.usingDefaultCredentials,
-    });
-
     return (
-      <OnboardingModalSlide
-        slideDefinition={baseSlideDefinition}
-        slideContent={slideContent}
+      <StaticOnboardingSlide
+        key="first-login"
+        slideId="first-login"
         runtimeState={runtimeState}
-        modalSlideCount={1}
-        currentModalSlideIndex={0}
+        params={{
+          firstLoginUsername: runtimeState.firstLoginUsername,
+          onPasswordChanged: handlePasswordChanged,
+          usingDefaultCredentials: runtimeState.usingDefaultCredentials,
+        }}
         onSkip={() => {}}
-        onAction={async (action) => {
+        allowDismiss={false}
+        onAction={(action) => {
           if (action === "complete-close") {
             handlePasswordChanged();
           }
         }}
-        allowDismiss={false}
       />
     );
   }
 
   if (mfaModalOpen) {
     console.log("[Onboarding] Rendering MFA setup modal slide.");
-    const baseSlideDefinition = SLIDE_DEFINITIONS["mfa-setup"];
-    const slideContent = baseSlideDefinition.createSlide({
-      osLabel: "",
-      osUrl: "",
-      selectedRole: null,
-      onRoleSelect: () => {},
-      onMfaSetupComplete: handleMfaSetupComplete,
-    });
-
     return (
-      <OnboardingModalSlide
-        slideDefinition={baseSlideDefinition}
-        slideContent={slideContent}
+      <StaticOnboardingSlide
+        key="mfa-setup"
+        slideId="mfa-setup"
         runtimeState={runtimeState}
-        modalSlideCount={1}
-        currentModalSlideIndex={0}
+        params={{ onMfaSetupComplete: handleMfaSetupComplete }}
         onSkip={() => {}}
-        onAction={async (action) => {
+        allowDismiss={false}
+        onAction={(action) => {
           if (action === "complete-close") {
             handleMfaSetupComplete();
           }
         }}
-        allowDismiss={false}
       />
     );
   }
 
   if (showLicenseSlide) {
-    const baseSlideDefinition = SLIDE_DEFINITIONS["server-license"];
-    // Remove back button for external license notice
-    const slideDefinition = {
-      ...baseSlideDefinition,
-      buttons: baseSlideDefinition.buttons.filter(
-        (btn) => btn.key !== "license-back",
-      ),
-    };
     const effectiveLicenseNotice =
       externalLicenseNotice || runtimeState.licenseNotice;
-    const slideContent = slideDefinition.createSlide({
-      osLabel: "",
-      osUrl: "",
-      osOptions: [],
-      onDownloadUrlChange: () => {},
-      selectedRole: null,
-      onRoleSelect: () => {},
-      licenseNotice: effectiveLicenseNotice,
-      loginEnabled: serverExperience.loginEnabled,
-    });
-
     return (
-      <OnboardingModalSlide
-        slideDefinition={slideDefinition}
-        slideContent={slideContent}
-        runtimeState={{
-          ...runtimeState,
+      <StaticOnboardingSlide
+        key="server-license"
+        slideId="server-license"
+        // Remove back button for the external license notice.
+        transformButtons={(buttons) =>
+          buttons.filter((btn) => btn.key !== "license-back")
+        }
+        runtimeState={{ ...runtimeState, licenseNotice: effectiveLicenseNotice }}
+        params={{
+          osOptions: [],
+          onDownloadUrlChange: () => {},
           licenseNotice: effectiveLicenseNotice,
+          loginEnabled: serverExperience.loginEnabled,
         }}
-        modalSlideCount={1}
-        currentModalSlideIndex={0}
         onSkip={closeLicenseSlide}
         onAction={(action) => {
           if (action === "see-plans") {

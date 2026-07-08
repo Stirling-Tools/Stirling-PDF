@@ -33,194 +33,223 @@ interface CreateAdminStepsConfigArgs {
   actions: AdminStepActions;
 }
 
+// Delay before applying glow so the target section has mounted after navigation.
+const GLOW_DELAY_MS = 100;
+
+/**
+ * Declarative spec for an admin tour step. Most steps do the same thing —
+ * clear existing glows, navigate to a settings section, then glow a set of nav
+ * items — so that behaviour is expressed as data (`section` + `glow`) and the
+ * runner below turns it into the reactour enter/after hooks. This replaces the
+ * removeGlow→navigate→setTimeout→addGlow block that was previously copy-pasted
+ * into every step.
+ */
+interface AdminStepSpec {
+  step: AdminTourStep;
+  selector: string;
+  contentKey: string;
+  contentDefault: string;
+  position: StepType["position"];
+  padding?: number;
+  highlightedSelectors?: string[];
+  /** Navigate to this settings section on enter (clears glows first). */
+  section?: string;
+  /** Selectors to glow shortly after navigating to `section`. */
+  glow?: string[];
+  /** Clear glows on enter without navigating (settings-overview step). */
+  clearGlowOnEnter?: boolean;
+  /** Save admin/workbench state on enter (first step). */
+  saveStateOnEnter?: boolean;
+  /** Open the config modal after this step (config-button step). */
+  openConfigAfter?: boolean;
+  /** Scroll the settings nav to this section after this step. */
+  scrollToAfter?: string;
+  /** Wait for the step's own selector to be present + highlightable on enter. */
+  waitForSelectorOnEnter?: boolean;
+}
+
+const NAV = {
+  people: [
+    '[data-tour="admin-people-nav"]',
+    '[data-tour="admin-teams-nav"]',
+    '[data-tour="settings-content-area"]',
+  ],
+  adminGeneral: [
+    '[data-tour="admin-adminGeneral-nav"]',
+    '[data-tour="admin-adminFeatures-nav"]',
+    '[data-tour="admin-adminEndpoints-nav"]',
+    '[data-tour="settings-content-area"]',
+  ],
+  adminDatabase: [
+    '[data-tour="admin-adminDatabase-nav"]',
+    '[data-tour="settings-content-area"]',
+  ],
+  adminConnections: [
+    '[data-tour="admin-adminConnections-nav"]',
+    '[data-tour="settings-content-area"]',
+  ],
+  adminTools: [
+    '[data-tour="admin-adminAudit-nav"]',
+    '[data-tour="admin-adminUsage-nav"]',
+    '[data-tour="settings-content-area"]',
+  ],
+} as const;
+
+const ADMIN_STEP_SPECS: AdminStepSpec[] = [
+  {
+    step: AdminTourStep.WELCOME,
+    selector: '[data-tour="config-button"]',
+    contentKey: "adminOnboarding.welcome",
+    contentDefault:
+      "Welcome to the <strong>Admin Tour</strong>! Let's explore the powerful enterprise features and settings available to system administrators.",
+    position: "right",
+    saveStateOnEnter: true,
+  },
+  {
+    step: AdminTourStep.CONFIG_BUTTON,
+    selector: '[data-tour="config-button"]',
+    contentKey: "adminOnboarding.configButton",
+    contentDefault:
+      "Open <strong>Settings</strong> to access all system configuration and administrative controls.",
+    position: "right",
+    openConfigAfter: true,
+  },
+  {
+    step: AdminTourStep.SETTINGS_OVERVIEW,
+    selector: ".modal-nav",
+    contentKey: "adminOnboarding.settingsOverview",
+    contentDefault:
+      "This is the <strong>Settings Panel</strong>. Admin settings are organised by category for easy navigation.",
+    position: "right",
+    padding: 0,
+    clearGlowOnEnter: true,
+  },
+  {
+    step: AdminTourStep.TEAMS_AND_USERS,
+    selector: '[data-tour="admin-people-nav"]',
+    contentKey: "adminOnboarding.teamsAndUsers",
+    contentDefault:
+      "Manage <strong>Teams</strong> and individual users here. You can invite new users via email, shareable links, or create custom accounts for them yourself.",
+    position: "right",
+    section: "people",
+    glow: [...NAV.people],
+    highlightedSelectors: [...NAV.people],
+  },
+  {
+    step: AdminTourStep.SYSTEM_CUSTOMIZATION,
+    selector: '[data-tour="admin-adminGeneral-nav"]',
+    contentKey: "adminOnboarding.systemCustomization",
+    contentDefault:
+      "We have extensive ways to customise the UI: <strong>System Settings</strong> let you change the app name and languages, <strong>Features</strong> allows server certificate management, and <strong>Endpoints</strong> lets you enable or disable specific tools for your users.",
+    position: "right",
+    section: "adminGeneral",
+    glow: [...NAV.adminGeneral],
+    highlightedSelectors: [...NAV.adminGeneral],
+  },
+  {
+    step: AdminTourStep.DATABASE_SECTION,
+    selector: '[data-tour="admin-adminDatabase-nav"]',
+    contentKey: "adminOnboarding.databaseSection",
+    contentDefault:
+      "For advanced production environments, we have settings to allow <strong>external database hookups</strong> so you can integrate with your existing infrastructure.",
+    position: "right",
+    section: "adminDatabase",
+    glow: [...NAV.adminDatabase],
+    highlightedSelectors: [...NAV.adminDatabase],
+  },
+  {
+    step: AdminTourStep.CONNECTIONS_SECTION,
+    selector: '[data-tour="admin-adminConnections-nav"]',
+    contentKey: "adminOnboarding.connectionsSection",
+    contentDefault:
+      "The <strong>Connections</strong> section supports various login methods including custom SSO and SAML providers like Google and GitHub, plus email integrations for notifications and communications.",
+    position: "right",
+    section: "adminConnections",
+    glow: [...NAV.adminConnections],
+    highlightedSelectors: [...NAV.adminConnections],
+    scrollToAfter: "adminAudit",
+  },
+  {
+    step: AdminTourStep.ADMIN_TOOLS,
+    selector: '[data-tour="admin-adminAudit-nav"]',
+    contentKey: "adminOnboarding.adminTools",
+    contentDefault:
+      "Finally, we have advanced administration tools like <strong>Auditing</strong> to track system activity and <strong>Usage Analytics</strong> to monitor how your users interact with the platform.",
+    position: "right",
+    section: "adminAudit",
+    glow: [...NAV.adminTools],
+    highlightedSelectors: [...NAV.adminTools],
+  },
+  {
+    step: AdminTourStep.WRAP_UP,
+    selector: '[data-tour="admin-help-nav"]',
+    contentKey: "adminOnboarding.wrapUp",
+    contentDefault:
+      "That's the admin tour! You've seen the enterprise features that make Stirling PDF a powerful, customisable solution for organisations. You can replay it anytime — just open <strong>Settings</strong> and find it here in the <strong>Tours</strong> section under Help.",
+    position: "right",
+    section: "help",
+    waitForSelectorOnEnter: true,
+  },
+];
+
 export function createAdminStepsConfig({
   t,
   actions,
 }: CreateAdminStepsConfigArgs): Record<AdminTourStep, StepType> {
-  const {
-    saveAdminState,
-    openConfigModal,
-    navigateToSection,
-    scrollNavToSection,
-  } = actions;
+  const { saveAdminState, openConfigModal, navigateToSection, scrollNavToSection } =
+    actions;
 
-  return {
-    [AdminTourStep.WELCOME]: {
-      selector: '[data-tour="config-button"]',
-      content: t(
-        "adminOnboarding.welcome",
-        "Welcome to the <strong>Admin Tour</strong>! Let's explore the powerful enterprise features and settings available to system administrators.",
-      ),
-      position: "right",
-      padding: 10,
-      action: () => {
-        saveAdminState();
-      },
-    },
-    [AdminTourStep.CONFIG_BUTTON]: {
-      selector: '[data-tour="config-button"]',
-      content: t(
-        "adminOnboarding.configButton",
-        "Open <strong>Settings</strong> to access all system configuration and administrative controls.",
-      ),
-      position: "right",
-      padding: 10,
-      actionAfter: () => {
-        openConfigModal();
-      },
-    },
-    [AdminTourStep.SETTINGS_OVERVIEW]: {
-      selector: ".modal-nav",
-      content: t(
-        "adminOnboarding.settingsOverview",
-        "This is the <strong>Settings Panel</strong>. Admin settings are organised by category for easy navigation.",
-      ),
-      position: "right",
-      padding: 0,
-      action: () => {
-        removeAllGlows();
-      },
-    },
-    [AdminTourStep.TEAMS_AND_USERS]: {
-      selector: '[data-tour="admin-people-nav"]',
-      highlightedSelectors: [
-        '[data-tour="admin-people-nav"]',
-        '[data-tour="admin-teams-nav"]',
-        '[data-tour="settings-content-area"]',
-      ],
-      content: t(
-        "adminOnboarding.teamsAndUsers",
-        "Manage <strong>Teams</strong> and individual users here. You can invite new users via email, shareable links, or create custom accounts for them yourself.",
-      ),
-      position: "right",
-      padding: 10,
-      action: () => {
-        removeAllGlows();
-        navigateToSection("people");
-        setTimeout(() => {
-          addGlowToElements([
-            '[data-tour="admin-people-nav"]',
-            '[data-tour="admin-teams-nav"]',
-            '[data-tour="settings-content-area"]',
-          ]);
-        }, 100);
-      },
-    },
-    [AdminTourStep.SYSTEM_CUSTOMIZATION]: {
-      selector: '[data-tour="admin-adminGeneral-nav"]',
-      highlightedSelectors: [
-        '[data-tour="admin-adminGeneral-nav"]',
-        '[data-tour="admin-adminFeatures-nav"]',
-        '[data-tour="admin-adminEndpoints-nav"]',
-        '[data-tour="settings-content-area"]',
-      ],
-      content: t(
-        "adminOnboarding.systemCustomization",
-        "We have extensive ways to customise the UI: <strong>System Settings</strong> let you change the app name and languages, <strong>Features</strong> allows server certificate management, and <strong>Endpoints</strong> lets you enable or disable specific tools for your users.",
-      ),
-      position: "right",
-      padding: 10,
-      action: () => {
-        removeAllGlows();
-        navigateToSection("adminGeneral");
-        setTimeout(() => {
-          addGlowToElements([
-            '[data-tour="admin-adminGeneral-nav"]',
-            '[data-tour="admin-adminFeatures-nav"]',
-            '[data-tour="admin-adminEndpoints-nav"]',
-            '[data-tour="settings-content-area"]',
-          ]);
-        }, 100);
-      },
-    },
-    [AdminTourStep.DATABASE_SECTION]: {
-      selector: '[data-tour="admin-adminDatabase-nav"]',
-      highlightedSelectors: [
-        '[data-tour="admin-adminDatabase-nav"]',
-        '[data-tour="settings-content-area"]',
-      ],
-      content: t(
-        "adminOnboarding.databaseSection",
-        "For advanced production environments, we have settings to allow <strong>external database hookups</strong> so you can integrate with your existing infrastructure.",
-      ),
-      position: "right",
-      padding: 10,
-      action: () => {
-        removeAllGlows();
-        navigateToSection("adminDatabase");
-        setTimeout(() => {
-          addGlowToElements([
-            '[data-tour="admin-adminDatabase-nav"]',
-            '[data-tour="settings-content-area"]',
-          ]);
-        }, 100);
-      },
-    },
-    [AdminTourStep.CONNECTIONS_SECTION]: {
-      selector: '[data-tour="admin-adminConnections-nav"]',
-      highlightedSelectors: [
-        '[data-tour="admin-adminConnections-nav"]',
-        '[data-tour="settings-content-area"]',
-      ],
-      content: t(
-        "adminOnboarding.connectionsSection",
-        "The <strong>Connections</strong> section supports various login methods including custom SSO and SAML providers like Google and GitHub, plus email integrations for notifications and communications.",
-      ),
-      position: "right",
-      padding: 10,
-      action: () => {
-        removeAllGlows();
-        navigateToSection("adminConnections");
-        setTimeout(() => {
-          addGlowToElements([
-            '[data-tour="admin-adminConnections-nav"]',
-            '[data-tour="settings-content-area"]',
-          ]);
-        }, 100);
-      },
-      actionAfter: async () => {
-        await scrollNavToSection("adminAudit");
-      },
-    },
-    [AdminTourStep.ADMIN_TOOLS]: {
-      selector: '[data-tour="admin-adminAudit-nav"]',
-      highlightedSelectors: [
-        '[data-tour="admin-adminAudit-nav"]',
-        '[data-tour="admin-adminUsage-nav"]',
-        '[data-tour="settings-content-area"]',
-      ],
-      content: t(
-        "adminOnboarding.adminTools",
-        "Finally, we have advanced administration tools like <strong>Auditing</strong> to track system activity and <strong>Usage Analytics</strong> to monitor how your users interact with the platform.",
-      ),
-      position: "right",
-      padding: 10,
-      action: () => {
-        removeAllGlows();
-        navigateToSection("adminAudit");
-        setTimeout(() => {
-          addGlowToElements([
-            '[data-tour="admin-adminAudit-nav"]',
-            '[data-tour="admin-adminUsage-nav"]',
-            '[data-tour="settings-content-area"]',
-          ]);
-        }, 100);
-      },
-    },
-    [AdminTourStep.WRAP_UP]: {
-      selector: '[data-tour="admin-help-nav"]',
-      content: t(
-        "adminOnboarding.wrapUp",
-        "That's the admin tour! You've seen the enterprise features that make Stirling PDF a powerful, customisable solution for organisations. You can replay it anytime — just open <strong>Settings</strong> and find it here in the <strong>Tours</strong> section under Help.",
-      ),
-      position: "right",
-      padding: 10,
-      action: async () => {
-        removeAllGlows();
-        navigateToSection("help");
-        await waitForElement('[data-tour="admin-help-nav"]', 5000);
-        await waitForHighlightable('[data-tour="admin-help-nav"]', 5000);
-      },
-    },
+  const build = (spec: AdminStepSpec): StepType => {
+    const step: StepType = {
+      selector: spec.selector,
+      content: t(spec.contentKey, spec.contentDefault),
+      position: spec.position,
+      padding: spec.padding ?? 10,
+    };
+    if (spec.highlightedSelectors) {
+      step.highlightedSelectors = spec.highlightedSelectors;
+    }
+
+    const hasEnter =
+      spec.saveStateOnEnter ||
+      spec.clearGlowOnEnter ||
+      !!spec.section ||
+      spec.waitForSelectorOnEnter;
+    if (hasEnter) {
+      step.action = async () => {
+        if (spec.saveStateOnEnter) saveAdminState();
+        if (spec.clearGlowOnEnter) removeAllGlows();
+        if (spec.section) {
+          removeAllGlows();
+          navigateToSection(spec.section);
+          if (spec.glow) {
+            const glow = spec.glow;
+            setTimeout(() => addGlowToElements(glow), GLOW_DELAY_MS);
+          }
+        }
+        if (spec.waitForSelectorOnEnter) {
+          await waitForElement(spec.selector, 5000);
+          await waitForHighlightable(spec.selector, 5000);
+        }
+      };
+    }
+
+    const hasAfter = spec.openConfigAfter || !!spec.scrollToAfter;
+    if (hasAfter) {
+      step.actionAfter = async () => {
+        if (spec.openConfigAfter) openConfigModal();
+        if (spec.scrollToAfter) await scrollNavToSection(spec.scrollToAfter);
+      };
+    }
+
+    return step;
   };
+
+  return ADMIN_STEP_SPECS.reduce(
+    (acc, spec) => {
+      acc[spec.step] = build(spec);
+      return acc;
+    },
+    {} as Record<AdminTourStep, StepType>,
+  );
 }
