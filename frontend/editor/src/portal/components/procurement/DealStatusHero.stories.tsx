@@ -18,6 +18,7 @@ const meta: Meta<typeof DealStatusHero> = {
   component: DealStatusHero,
   parameters: { layout: "padded" },
   args: {
+    canSchedule: true,
     onExpand: () => {},
     onKeyDocs: () => {},
     onInvite: () => {},
