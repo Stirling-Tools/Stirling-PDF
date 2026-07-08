@@ -29,6 +29,7 @@ import {
 import { accountService } from "@app/services/accountService";
 import { GoogleDriveIcon } from "@app/components/shared/CloudStorageIcons";
 import { Wordmark } from "@app/components/shared/Wordmark";
+import { AppSwitcher } from "@app/components/shared/AppSwitcher";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
@@ -678,6 +679,17 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   alt="Stirling PDF"
                   className="file-sidebar-brand-text sidebar-content-fade"
                 />
+              )}
+              {!collapsed && (
+                // The header row itself toggles collapse; stop the switcher's
+                // clicks and key presses from reaching it.
+                <span
+                  className="file-sidebar-app-switch sidebar-content-fade"
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => e.stopPropagation()}
+                >
+                  <AppSwitcher />
+                </span>
               )}
             </div>
           </Tooltip>
