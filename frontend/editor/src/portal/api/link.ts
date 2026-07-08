@@ -1,17 +1,46 @@
 import { apiClient } from "@portal/api/http";
-import type {
-  LinkInstanceRequest,
-  LinkStatus,
-  LinkedInstanceRow,
-  LocalUsage,
-} from "@portal/mocks/link";
 
-export type {
-  LinkInstanceRequest,
-  LinkStatus,
-  LinkedInstanceRow,
-  LocalUsage,
-} from "@portal/mocks/link";
+/** Body for POST /api/v1/account-link/link — the SaaS JWT + optional name. */
+export interface LinkInstanceRequest {
+  /** Admin's SaaS session JWT, obtained via the hosted-login popup. */
+  supabaseJwt: string;
+  /** Optional label for this instance. */
+  name?: string;
+}
+
+/** Link status for this instance (GET /api/v1/account-link/status). */
+export interface LinkStatus {
+  linked: boolean;
+  /** Display name the local backend stored at link time; null when unset. */
+  name: string | null;
+}
+
+/**
+ * Locally-accrued usage not yet reported to SaaS (GET /api/v1/account-link/usage).
+ * The portal adds this on top of the SaaS-synced spend so "current usage"
+ * includes work done since the last daily sync. Per-category unsynced units for
+ * the current period; all zero when metering is off or nothing is pending.
+ */
+export interface LocalUsage {
+  /** ISO timestamp of the current period start; null when unknown (not yet synced). */
+  periodStart: string | null;
+  apiUnsyncedUnits: number;
+  aiUnsyncedUnits: number;
+  automationUnsyncedUnits: number;
+  totalUnsyncedUnits: number;
+}
+
+/** A linked instance row (GET /api/v1/account-link/instances). */
+export interface LinkedInstanceRow {
+  instanceId: number;
+  deviceId: string;
+  name: string | null;
+  /** ISO timestamp the instance was registered. */
+  createdAt: string | null;
+  /** ISO timestamp the instance last presented its credential; null if never. */
+  lastSeenAt: string | null;
+  revoked: boolean;
+}
 
 /**
  * Account-link client (combined-billing "Mode A"). Two distinct surfaces:

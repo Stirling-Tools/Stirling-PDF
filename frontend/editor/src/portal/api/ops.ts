@@ -1,7 +1,15 @@
 import { apiClient, HttpError } from "@portal/api/http";
-import type { FeaturedOp, OpResultMap } from "@portal/mocks/ops";
 
-export type { FeaturedOp, OpResultMap };
+export type OpResultMap = Record<string, unknown>;
+
+export interface FeaturedOp {
+  id: string;
+  label: string;
+  endpoint: string;
+  accent: "blue" | "purple" | "green" | "amber" | "red";
+  /** Shown in the picker — short single line. */
+  blurb: string;
+}
 
 /** GET /v1/ops/featured */
 export async function fetchFeaturedOps(): Promise<FeaturedOp[]> {

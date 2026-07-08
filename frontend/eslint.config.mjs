@@ -135,6 +135,35 @@ export default defineConfig(
       ],
     },
   },
+  // The portal's mocks (MSW handlers + fixtures) exist for Storybook and tests
+  // only — the running app must never depend on them. Types and app-owned
+  // constants live in api/<surface>.ts (the backend contract); mocks import
+  // FROM api, never the reverse.
+  {
+    files: ["editor/src/portal/**/*.{js,mjs,jsx,ts,tsx}"],
+    ignores: [
+      "editor/src/portal/mocks/**",
+      "**/*.stories.*",
+      "**/*.test.*",
+      "**/storyFixtures.ts",
+      "editor/src/portal/setupTests.ts",
+    ],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            ...baseRestrictedImportPatterns,
+            {
+              regex: "^@portal/mocks",
+              message:
+                "Mocks are for Storybook/tests only. Types and constants live in @portal/api/<surface>.",
+            },
+          ],
+        },
+      ],
+    },
+  },
   // The cloud/ layer is the SHARED hosted/SaaS experience consumed by BOTH the
   // saas and desktop leaves, so it must stay platform-portable. It must not
   // reach platform-specific things directly (Supabase, Tauri, raw fetch,

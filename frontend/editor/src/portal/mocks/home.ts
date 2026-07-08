@@ -1,30 +1,22 @@
 /**
- * Home dashboard fixtures and the types api/home.ts shares with them.
- * api/home.ts imports the types; the MSW handlers in mocks/handlers/ serve the
- * fixture data over the intercepted apiClient.local.json() calls. Components never reach
- * into this module directly.
+ * Home dashboard fixtures. Types and the pipeline template/stage catalogues
+ * live in api/home.ts (the backend contract); this module only builds fake
+ * data for Storybook and tests.
  *
- * Once a real backend exists, the MSW handlers stop being registered and these
- * fixtures can be deleted (or kept as test seeds).
+ * The MSW handlers in mocks/handlers/ serve the fixture data over the
+ * intercepted apiClient.local.json() calls. Components never reach into this
+ * module directly. Once a real backend exists, the MSW handlers stop being
+ * registered and these fixtures can be deleted (or kept as test seeds).
  */
 
-export interface UsagePoint {
-  /** ISO date (YYYY-MM-DD). */
-  date: string;
-  /** Docs processed on that day. */
-  value: number;
-}
-
-/**
- * Server response for the usage-series endpoint. Returning the prior window's
- * total alongside the points lets the client derive the headline delta
- * deterministically from real data rather than carrying a hardcoded figure.
- */
-export interface UsageSeriesResponse {
-  points: UsagePoint[];
-  /** Equivalent docs total from the immediately prior 30-day window. */
-  priorTotal: number;
-}
+import type {
+  ActivityEvent,
+  KpiEntry,
+  OnboardingStep,
+  RegionHealth,
+  UsagePoint,
+  UsageSeriesResponse,
+} from "@portal/api/home";
 
 /** Builds 30 daily points ending today. Deterministic per day. */
 export function buildUsageSeries(): UsagePoint[] {
@@ -54,28 +46,6 @@ export function buildUsageSeriesResponse(): UsageSeriesResponse {
   // The current window's series simulates ~12% growth over the prior one.
   const priorTotal = Math.round(currentTotal / 1.12);
   return { points, priorTotal };
-}
-
-export type ActivityKind =
-  | "pipeline-run"
-  | "deploy"
-  | "drift"
-  | "eval"
-  | "agent"
-  | "billing";
-
-export interface ActivityEvent {
-  id: string;
-  kind: ActivityKind;
-  /** Short action verb shown at the top of the row. */
-  action: string;
-  /** Subject of the action (pipeline / endpoint / agent name). */
-  subject: string;
-  /** One-line detail line under the action. */
-  detail: string;
-  /** Relative-time string. */
-  time: string;
-  status: "success" | "warning" | "danger" | "info";
 }
 
 export const RECENT_ACTIVITY: ActivityEvent[] = [
@@ -153,18 +123,6 @@ export const RECENT_ACTIVITY: ActivityEvent[] = [
   },
 ];
 
-/**
- * KPI labels are owned by the client (see `KPI_LABELS_BY_TIER` in Home.tsx)
- * because they're product copy that should stay stable across loading / empty
- * / ready states. The API only ships values + deltas.
- */
-export interface KpiEntry {
-  value: string | number;
-  delta?: number;
-  description?: string;
-  deltaDirection?: "up" | "down" | "flat";
-}
-
 export const FREE_KPIS: KpiEntry[] = [
   { value: "247 / 500" },
   { value: 189 },
@@ -190,12 +148,6 @@ export function enterpriseKpisFor(docs30d: number): KpiEntry[] {
   ];
 }
 
-export interface RegionHealth {
-  name: string;
-  status: "healthy" | "degraded" | "down";
-  meta: string;
-}
-
 export const REGION_HEALTH: RegionHealth[] = [
   {
     name: "us-east-1",
@@ -213,81 +165,6 @@ export const REGION_HEALTH: RegionHealth[] = [
     meta: "412/min · P95 521ms · 99.92% uptime · degraded",
   },
 ];
-
-/**
- * Starter pipelines offered by the Home fork wizard. Forking clones one of
- * these templates as the seed for a new developer pipeline. Every template
- * runs the same four canonical stages (Ingest → Validate → Secure → Store);
- * the fixtures differ only in framing copy and which document types they target.
- */
-export interface PipelineTemplate {
-  id: string;
-  /** Display name shown on the template chip and the ready-state header. */
-  name: string;
-  /** One-line description of what the forked pipeline does. */
-  blurb: string;
-  /** Document types this template is tuned for. */
-  docTypes: string[];
-  accent: "blue" | "purple" | "green" | "amber";
-}
-
-export const PIPELINE_TEMPLATES: PipelineTemplate[] = [
-  {
-    id: "coi-compliance",
-    name: "COI Compliance",
-    blurb: "Validate certificates of insurance against carrier requirements.",
-    docTypes: ["Certificates of insurance", "Loss runs"],
-    accent: "blue",
-  },
-  {
-    id: "accounts-payable",
-    name: "Accounts Payable",
-    blurb: "Extract line items, match POs, and flag duplicate invoices.",
-    docTypes: ["Invoices", "Purchase orders"],
-    accent: "green",
-  },
-  {
-    id: "contract-review",
-    name: "Contract Review",
-    blurb: "Classify clauses, redact PII, and route to the right reviewer.",
-    docTypes: ["MSAs", "DPAs", "NDAs"],
-    accent: "purple",
-  },
-  {
-    id: "prior-authorization",
-    name: "Prior Authorization",
-    blurb: "Read auth requests, check coverage, and assemble payer packets.",
-    docTypes: ["Auth requests", "Clinical notes"],
-    accent: "amber",
-  },
-];
-
-/**
- * The four canonical stages every forked pipeline runs. Fixed and ordered —
- * the wizard's build animation lights them up left-to-right.
- */
-export interface PipelineStage {
-  key: string;
-  label: string;
-  /** What the stage does, shown under the label in the ready-state grid. */
-  detail: string;
-}
-
-export const PIPELINE_STAGES: PipelineStage[] = [
-  { key: "ingest", label: "Ingest", detail: "Accept, normalize, deduplicate" },
-  { key: "validate", label: "Validate", detail: "Classify and check schema" },
-  { key: "secure", label: "Secure", detail: "Redact PII, encrypt at rest" },
-  { key: "store", label: "Store", detail: "Emit JSON, persist, notify" },
-];
-
-export interface OnboardingStep {
-  id: string;
-  title: string;
-  blurb: string;
-  done: boolean;
-  /** What to render in the per-step CTA slot. */
-  cta?: { kind: "try-op" } | { kind: "navigate"; target: string };
-}
 
 export const FREE_ONBOARDING: OnboardingStep[] = [
   {

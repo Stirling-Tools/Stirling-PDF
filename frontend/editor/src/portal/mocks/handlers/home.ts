@@ -1,5 +1,6 @@
 import { http, HttpResponse, delay } from "msw";
 import type { Tier } from "@portal/contexts/TierContext";
+import type { KpiEntry } from "@portal/api/home";
 import {
   buildUsageSeries,
   buildUsageSeriesResponse,
@@ -9,7 +10,6 @@ import {
   proKpisFor,
   RECENT_ACTIVITY,
   REGION_HEALTH,
-  type KpiEntry,
 } from "@portal/mocks/home";
 
 function kpisFor(tier: Tier): KpiEntry[] {

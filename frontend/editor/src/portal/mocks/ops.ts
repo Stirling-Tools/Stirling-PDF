@@ -1,18 +1,10 @@
 /**
  * Mock op catalogue + canned operation results for the single-op runner.
- * Only api/ops.ts imports from this file.
+ * Types live in api/ops.ts (the backend contract); this module only builds
+ * the fake data the MSW handlers serve.
  */
 
-export type OpResultMap = Record<string, unknown>;
-
-export interface FeaturedOp {
-  id: string;
-  label: string;
-  endpoint: string;
-  accent: "blue" | "purple" | "green" | "amber" | "red";
-  /** Shown in the picker — short single line. */
-  blurb: string;
-}
+import type { FeaturedOp, OpResultMap } from "@portal/api/ops";
 
 export const FEATURED_OPS: FeaturedOp[] = [
   {
