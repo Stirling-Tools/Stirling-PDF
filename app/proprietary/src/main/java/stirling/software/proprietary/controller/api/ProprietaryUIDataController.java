@@ -33,6 +33,7 @@ import stirling.software.common.model.enumeration.TeamRole;
 import stirling.software.common.model.oauth2.GitHubProvider;
 import stirling.software.common.model.oauth2.GoogleProvider;
 import stirling.software.common.model.oauth2.KeycloakProvider;
+import stirling.software.proprietary.access.service.ResourceAccessService;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
@@ -78,6 +79,7 @@ public class ProprietaryUIDataController {
     private final PersistentAuditEventRepository auditRepository;
     private final MfaService mfaService;
     private final LoginAttemptService loginAttemptService;
+    private final ResourceAccessService resourceAccessService;
 
     public ProprietaryUIDataController(
             ApplicationProperties applicationProperties,
@@ -93,7 +95,8 @@ public class ProprietaryUIDataController {
             UserLicenseSettingsService licenseSettingsService,
             PersistentAuditEventRepository auditRepository,
             MfaService mfaService,
-            LoginAttemptService loginAttemptService) {
+            LoginAttemptService loginAttemptService,
+            ResourceAccessService resourceAccessService) {
         this.applicationProperties = applicationProperties;
         this.auditConfig = auditConfig;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
@@ -108,6 +111,7 @@ public class ProprietaryUIDataController {
         this.auditRepository = auditRepository;
         this.mfaService = mfaService;
         this.loginAttemptService = loginAttemptService;
+        this.resourceAccessService = resourceAccessService;
     }
 
     /**
@@ -575,6 +579,9 @@ public class ProprietaryUIDataController {
         AdminUserSummary summary = new AdminUserSummary();
         summary.setId(user.getId());
         summary.setTeamLead(leaderUserIds.contains(user.getId()));
+        // Authoritative portal access, same call /me uses, so the roster honors the configured
+        // policy instead of the frontend guessing from role/team-leadership.
+        summary.setPortalAccess(resourceAccessService.canAccessPortal(user));
         summary.setUsername(user.getUsername());
         summary.setEmail(user.getUsername()); // Use username as email for consistency
         summary.setRoleName(user.getRoleName());

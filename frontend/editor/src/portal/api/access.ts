@@ -11,7 +11,7 @@ import { apiClient } from "@portal/api/http";
  * Backend: /api/v1/admin/access/grants (admin only).
  */
 
-export type PrincipalType = "USER" | "TEAM" | "ORG";
+export type PrincipalType = "USER" | "TEAM";
 export type ResourceType = "PORTAL" | "INTEGRATION_CONFIG";
 export type AccessPermission = "USE" | "MANAGE";
 

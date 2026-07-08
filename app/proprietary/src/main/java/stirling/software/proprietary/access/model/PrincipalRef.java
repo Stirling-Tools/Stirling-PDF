@@ -13,10 +13,6 @@ public record PrincipalRef(PrincipalType type, Long id) {
         return new PrincipalRef(PrincipalType.TEAM, id);
     }
 
-    public static PrincipalRef org(Long id) {
-        return new PrincipalRef(PrincipalType.ORG, id);
-    }
-
     /** Canonical engine wire form, e.g. "user:12". */
     public String token() {
         return type.name().toLowerCase(Locale.ROOT) + ":" + id;

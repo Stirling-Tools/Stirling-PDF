@@ -10,19 +10,18 @@ import stirling.software.proprietary.security.model.User;
 
 class DefaultPrincipalResolverTest {
 
-    private final DefaultPrincipalResolver resolver = new DefaultPrincipalResolver(1L);
+    private final DefaultPrincipalResolver resolver = new DefaultPrincipalResolver();
 
     @Test
-    void userWithoutTeamProjectsUserAndOrg() {
+    void userWithoutTeamProjectsUser() {
         assertThat(resolver.principalsOf(user(5, null)))
-                .containsExactlyInAnyOrder(PrincipalRef.user(5L), PrincipalRef.org(1L));
+                .containsExactlyInAnyOrder(PrincipalRef.user(5L));
     }
 
     @Test
-    void userWithTeamProjectsUserTeamAndOrg() {
+    void userWithTeamProjectsUserAndTeam() {
         assertThat(resolver.principalsOf(user(5, 7L)))
-                .containsExactlyInAnyOrder(
-                        PrincipalRef.user(5L), PrincipalRef.team(7L), PrincipalRef.org(1L));
+                .containsExactlyInAnyOrder(PrincipalRef.user(5L), PrincipalRef.team(7L));
     }
 
     @Test
@@ -34,7 +33,12 @@ class DefaultPrincipalResolverTest {
     @Test
     void tokensUseTheCanonicalWireForm() {
         assertThat(resolver.principalTokens(user(5, 7L)))
-                .containsExactlyInAnyOrder("user:5", "team:7", "org:1");
+                .containsExactlyInAnyOrder("user:5", "team:7");
+    }
+
+    @Test
+    void selfHostedAllowsDeploymentWideAccess() {
+        assertThat(resolver.allowsDeploymentWideAccess()).isTrue();
     }
 
     private User user(long id, Long teamId) {

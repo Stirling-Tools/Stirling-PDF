@@ -6,14 +6,10 @@ import java.util.Set;
 import stirling.software.proprietary.access.model.PrincipalRef;
 import stirling.software.proprietary.security.model.User;
 
-/** Self-hosted projection: the user, their team, and the single deployment org. */
+/**
+ * Self-hosted projection: the user and their team. One deployment = one org, so ORG_ALL is open.
+ */
 public class DefaultPrincipalResolver implements PrincipalResolver {
-
-    private final long orgId;
-
-    public DefaultPrincipalResolver(long orgId) {
-        this.orgId = orgId;
-    }
 
     @Override
     public Set<PrincipalRef> principalsOf(User user) {
@@ -25,7 +21,12 @@ public class DefaultPrincipalResolver implements PrincipalResolver {
         if (user.getTeam() != null) {
             principals.add(PrincipalRef.team(user.getTeam().getId()));
         }
-        principals.add(PrincipalRef.org(orgId));
         return principals;
+    }
+
+    // Self-hosted is a single deployment-wide org, so ORG_ALL admits every authenticated user.
+    @Override
+    public boolean allowsDeploymentWideAccess() {
+        return true;
     }
 }

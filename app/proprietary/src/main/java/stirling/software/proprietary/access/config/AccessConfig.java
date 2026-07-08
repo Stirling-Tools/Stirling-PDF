@@ -1,6 +1,5 @@
 package stirling.software.proprietary.access.config;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,10 +20,10 @@ public class AccessConfig {
         return new DefaultTeamLeadLookup();
     }
 
-    /** USER/TEAM/ORG projection unless another bean is defined (saas ships USER/TEAM only). */
+    /** USER/TEAM projection unless another bean is defined (e.g. the saas resolver). */
     @Bean
     @ConditionalOnMissingBean(PrincipalResolver.class)
-    PrincipalResolver defaultPrincipalResolver(@Value("${security.org.id:1}") long orgId) {
-        return new DefaultPrincipalResolver(orgId);
+    PrincipalResolver defaultPrincipalResolver() {
+        return new DefaultPrincipalResolver();
     }
 }

@@ -30,7 +30,6 @@ class ResourceAccessServiceTest {
 
     private static final ResourceType TYPE = ResourceType.INTEGRATION_CONFIG;
     private static final String RID = "42";
-    private static final long ORG_ID = 1L;
 
     @Mock private ResourceGrantRepository grantRepository;
     @Mock private TeamLeadLookup teamLeadLookup;
@@ -39,7 +38,7 @@ class ResourceAccessServiceTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        service = newService(new DefaultPrincipalResolver(ORG_ID));
+        service = newService(new DefaultPrincipalResolver());
     }
 
     private ResourceAccessService newService(PrincipalResolver resolver) throws Exception {
@@ -117,19 +116,6 @@ class ResourceAccessServiceTest {
                 .isFalse();
     }
 
-    @Test
-    void orgOwnerRefNeverGrantsOwnership() {
-        stubGrants();
-        assertThat(
-                        service.canUseResource(
-                                TYPE,
-                                RID,
-                                PrincipalRef.org(ORG_ID),
-                                DefaultAccessPolicy.EXPLICIT_ONLY,
-                                user(5)))
-                .isFalse();
-    }
-
     // ---- explicit grants ----
 
     @Test
@@ -164,36 +150,6 @@ class ResourceAccessServiceTest {
                                 null,
                                 DefaultAccessPolicy.EXPLICIT_ONLY,
                                 userInTeam(5, 99)))
-                .isFalse();
-    }
-
-    @Test
-    void orgGrantAllowsAnyUserWhoseResolverProjectsOrg() {
-        stubGrants(grant(PrincipalType.ORG, ORG_ID, AccessPermission.USE));
-        assertThat(
-                        service.canUseResource(
-                                TYPE, RID, null, DefaultAccessPolicy.EXPLICIT_ONLY, user(5)))
-                .isTrue();
-    }
-
-    @Test
-    void orgGrantForAnotherOrgIdDoesNotMatch() {
-        stubGrants(grant(PrincipalType.ORG, 2L, AccessPermission.USE));
-        assertThat(
-                        service.canUseResource(
-                                TYPE, RID, null, DefaultAccessPolicy.EXPLICIT_ONLY, user(5)))
-                .isFalse();
-    }
-
-    @Test
-    void orgGrantIsInertWhenResolverProjectsNoOrg() throws Exception {
-        // Mirrors the saas resolver: USER/TEAM only, so ORG grants never match.
-        ResourceAccessService noOrg =
-                newService(u -> u == null ? Set.of() : Set.of(PrincipalRef.user(u.getId())));
-        stubGrants(grant(PrincipalType.ORG, ORG_ID, AccessPermission.USE));
-        assertThat(
-                        noOrg.canUseResource(
-                                TYPE, RID, null, DefaultAccessPolicy.EXPLICIT_ONLY, user(5)))
                 .isFalse();
     }
 
@@ -244,21 +200,32 @@ class ResourceAccessServiceTest {
         when(grantRepository.findByResourceTypeAndPrincipalTypeAndPrincipalId(
                         TYPE, PrincipalType.TEAM, 7L))
                 .thenReturn(List.of(grantOn("b")));
-        when(grantRepository.findByResourceTypeAndPrincipalTypeAndPrincipalId(
-                        TYPE, PrincipalType.ORG, ORG_ID))
-                .thenReturn(List.of(grantOn("c")));
 
         assertThat(service.grantedResourceIds(TYPE, userInTeam(5, 7)))
-                .containsExactlyInAnyOrder("a", "b", "c");
+                .containsExactlyInAnyOrder("a", "b");
     }
 
     // ---- default policies ----
 
     @Test
-    void orgAllDefaultAllowsAnyUser() {
+    void orgAllDefaultAllowsAnyUserWhenDeploymentWide() {
+        // Self-hosted resolver allows deployment-wide access, so ORG_ALL admits anyone.
         stubGrants();
         assertThat(service.canUseResource(TYPE, RID, null, DefaultAccessPolicy.ORG_ALL, user(5)))
                 .isTrue();
+    }
+
+    @Test
+    void orgAllDefaultDeniedWhenNotDeploymentWide() throws Exception {
+        // Mirrors the saas resolver (USER/TEAM only, no deployment-wide access): ORG_ALL must not
+        // leak a resource to a tenant's users, so an ungranted user is denied.
+        ResourceAccessService tenantScoped =
+                newService(u -> u == null ? Set.of() : Set.of(PrincipalRef.user(u.getId())));
+        stubGrants();
+        assertThat(
+                        tenantScoped.canUseResource(
+                                TYPE, RID, null, DefaultAccessPolicy.ORG_ALL, user(5)))
+                .isFalse();
     }
 
     @Test

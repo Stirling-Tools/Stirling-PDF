@@ -35,6 +35,8 @@ interface AdminUserSummaryDto {
   teamLead?: boolean;
   team?: { id: number; name: string };
   authenticationType?: string;
+  /** Authoritative server-side portal access (honors the configured default policy). */
+  portalAccess?: boolean;
 }
 
 interface AdminSettingsDto {
@@ -101,6 +103,7 @@ export async function fetchUsers(tier: Tier): Promise<UsersResponse> {
     teamName: u.team?.name,
     role: roleIdFor(u),
     teamLead: u.teamLead === true,
+    canAccessPortal: u.portalAccess === true,
     isSelf: !!data.currentUsername && data.currentUsername === u.username,
     status: u.enabled ? "active" : "suspended",
     lastActive: relativeTime(data.userLastRequest?.[u.username]),

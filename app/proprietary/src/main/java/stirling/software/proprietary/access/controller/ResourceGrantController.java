@@ -41,9 +41,6 @@ public class ResourceGrantController {
     private final UserRepository userRepository;
     private final TeamRepository teamRepository;
 
-    @org.springframework.beans.factory.annotation.Value("${security.org.id:1}")
-    private long orgId;
-
     @GetMapping("/grants")
     public ResponseEntity<?> list(
             @RequestParam ResourceType resourceType,
@@ -78,9 +75,7 @@ public class ResourceGrantController {
             return ResponseEntity.badRequest()
                     .body(Map.of("error", "resourceId is required for " + request.resourceType()));
         }
-        // Pin ORG grants to the configured org id so a client-sent value can't create a dead row.
-        Long principalId =
-                request.principalType() == PrincipalType.ORG ? orgId : request.principalId();
+        Long principalId = request.principalId();
         String principalError = validatePrincipalExists(request.principalType(), principalId);
         if (principalError != null) {
             return ResponseEntity.badRequest().body(Map.of("error", principalError));
@@ -105,12 +100,11 @@ public class ResourceGrantController {
         return ResponseEntity.ok(Map.of("message", "Grant revoked"));
     }
 
-    // Rejects grants to nonexistent principals (dead rows otherwise). ORG has no backing row.
+    // Rejects grants to nonexistent principals (dead rows otherwise).
     private String validatePrincipalExists(PrincipalType type, Long id) {
         return switch (type) {
             case USER -> userRepository.existsById(id) ? null : "User " + id + " does not exist";
             case TEAM -> teamRepository.existsById(id) ? null : "Team " + id + " does not exist";
-            case ORG -> null;
         };
     }
 

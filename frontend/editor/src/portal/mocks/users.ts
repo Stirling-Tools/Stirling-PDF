@@ -53,6 +53,8 @@ export interface Member {
   status: MemberStatus;
   /** Effective portal access; set by the view from the grant list. */
   portalAccess?: PortalAccessState;
+  /** Authoritative server-side portal access (roster DTO); drives whether a chip shows at all. */
+  canAccessPortal?: boolean;
   /** The explicit PORTAL grant's id, for revoke (present when access = granted). */
   portalGrantId?: number;
   /** Relative-time string, e.g. "4m ago". Invited members read "—". */
@@ -446,6 +448,9 @@ export function buildAdminSettingsData(tier: Tier) {
           ? "ROLE_WEB_ONLY_USER"
           : "ROLE_USER",
     teamLead: m.role === "team_owner",
+    // Authoritative portal access as the backend computes it under the default policy
+    // (admins + team leads), plus the seeded PORTAL grant on user id 2 (see mock grantStore).
+    portalAccess: m.role === "admin" || m.role === "team_owner" || i + 1 === 2,
     enabled: m.status !== "suspended",
     team: { id: 1, name: "Default" },
   }));

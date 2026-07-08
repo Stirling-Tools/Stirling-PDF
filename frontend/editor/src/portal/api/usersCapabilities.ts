@@ -1,9 +1,11 @@
 /**
  * Which user/team admin actions the current build's backend supports.
  *
- * The Users page UI is shared across flavors; only this capability set (and the
- * data adapter behind `@app/portal/usersBackend`) differs. Resolved at build
- * time via the `@app/*` alias — see `src/proprietary/portal/usersCapabilities.ts`
+ * The Users page UI and its data endpoints are shared across flavors; only this
+ * capability set differs. The endpoints are identical - just the bearer token is
+ * flavor-swapped (Spring vs Supabase) via `@app/portal/backendToken`, exactly as
+ * the editor's SaaS build reuses the same admin endpoints. Resolved at build time
+ * via the `@app/*` alias - see `src/proprietary/portal/usersCapabilities.ts`
  * (self-hosted, org-admin: everything) and `src/saas/portal/usersCapabilities.ts`
  * (SaaS, team-leader scoped: invite / rename / remove / seats only).
  */

@@ -18,6 +18,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
+import stirling.software.proprietary.access.service.ResourceAccessService;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.controller.api.ProprietaryUIDataController.AccountData;
 import stirling.software.proprietary.controller.api.ProprietaryUIDataController.DatabaseData;
@@ -51,6 +52,7 @@ class ProprietaryUIDataControllerTest {
     @Mock private PersistentAuditEventRepository auditRepository;
     @Mock private MfaService mfaService;
     @Mock private LoginAttemptService loginAttemptService;
+    @Mock private ResourceAccessService resourceAccessService;
 
     private ApplicationProperties applicationProperties;
     private AuditConfigurationProperties auditConfig;
@@ -85,7 +87,8 @@ class ProprietaryUIDataControllerTest {
                         licenseSettingsService,
                         auditRepository,
                         mfaService,
-                        loginAttemptService);
+                        loginAttemptService,
+                        resourceAccessService);
     }
 
     @Test

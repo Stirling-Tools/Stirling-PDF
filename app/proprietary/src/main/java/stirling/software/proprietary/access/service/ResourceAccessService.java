@@ -163,18 +163,13 @@ public class ResourceAccessService {
             return false;
         }
         return switch (policy) {
-            // Deployment-wide only where an org principal exists; saas resolvers omit it,
-            // so ORG_ALL cannot leak a tenant's resource to another tenant's users.
-            case ORG_ALL -> hasOrgPrincipal(user);
+            // Deployment-wide only where the resolver treats everyone as one org; saas resolvers
+            // return false, so ORG_ALL cannot leak a tenant's resource to another tenant's users.
+            case ORG_ALL -> principalResolver.allowsDeploymentWideAccess();
             // Admins already pass above; only team leads here, scoped to the owning team.
             case ADMINS_AND_TEAM_LEADS -> matchesTeamLeadDefault(owner, user);
             case EXPLICIT_ONLY -> false;
         };
-    }
-
-    private boolean hasOrgPrincipal(User user) {
-        return principalResolver.principalsOf(user).stream()
-                .anyMatch(p -> p.type() == PrincipalType.ORG);
     }
 
     // Portal (no owner) admits any team lead; a team-owned resource admits only that team's
@@ -188,7 +183,7 @@ public class ResourceAccessService {
                 && teamLeadLookup.isLeaderOfTeam(user, owner.id());
     }
 
-    // Team owners are the owning team's leaders; plain members are not. ORG never owns.
+    // Team owners are the owning team's leaders; plain members are not.
     private boolean isOwner(PrincipalRef owner, User user) {
         if (owner == null || owner.id() == null) {
             return false;
@@ -196,7 +191,6 @@ public class ResourceAccessService {
         return switch (owner.type()) {
             case USER -> owner.id().equals(user.getId());
             case TEAM -> teamLeadLookup.isLeaderOfTeam(user, owner.id());
-            case ORG -> false;
         };
     }
 

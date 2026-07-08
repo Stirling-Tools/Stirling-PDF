@@ -106,20 +106,19 @@ export function Users() {
         !caps.adminRole && raw.role === "admin"
           ? { ...raw, role: "member" }
           : raw;
+      // Presence is the server's authoritative decision (roster DTO's portalAccess, the same
+      // canAccessPortal /me uses), so a stricter/looser default policy can't drift. The grant
+      // maps only pick the display sub-state: which source, and whether the chip is removable.
       let portalAccess: PortalAccessState;
       let portalGrantId: number | undefined;
-      if (m.role === "admin") portalAccess = "admin";
-      // Optimistic: team owners/leads get Processor under the default policy
-      // (security.portal.defaultAccess=ADMINS_AND_TEAM_LEADS). A stricter policy
-      // (EXPLICIT_ONLY/ORG_ALL) may deny them server-side; the roster can't see
-      // the configured policy. Backend enforcement (canAccessPortal) is authoritative.
-      else if (m.role === "team_owner" || m.teamLead) portalAccess = "role";
-      else if (m.teamId != null && grantByTeam.has(m.teamId))
-        portalAccess = "team";
+      if (!m.canAccessPortal) portalAccess = "none";
+      else if (m.role === "admin") portalAccess = "admin";
       else if (grantByUser.has(m.id)) {
-        portalAccess = "granted";
+        portalAccess = "granted"; // a per-user grant is the removable source
         portalGrantId = grantByUser.get(m.id)!.id;
-      } else portalAccess = "none";
+      } else if (m.teamId != null && grantByTeam.has(m.teamId))
+        portalAccess = "team";
+      else portalAccess = "role"; // access via the default policy (e.g. team lead)
       return { ...m, portalAccess, portalGrantId };
     });
   }, [usersState.data?.members, grantsState.data, grantByTeam]);
