@@ -47,6 +47,9 @@
   height: auto;
   min-height: var(--button-height);
   align-content: center;
+  /* Vertical padding via the `py` prop; Mantine has no --button-padding-y.
+     Default 0 keeps height-driven layout unchanged for every other button. */
+  padding-block: var(--sui-btn-py, 0);
 }
 
 /* no-hover: !important to beat Mantine's own :hover background rule. */

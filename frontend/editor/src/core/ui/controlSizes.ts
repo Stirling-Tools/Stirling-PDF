@@ -8,8 +8,8 @@ export const CONTROL_HEIGHT = {
 
 export type ControlSize = keyof typeof CONTROL_HEIGHT;
 
-/** Optional horizontal-padding override scale for Button (`padding` prop). Undefined = Mantine's size-based default. */
-export const CONTROL_PADDING_X = {
+/** Optional padding-override scale for Button (`p`/`px`/`py` props). Undefined = Mantine's size-based default. */
+export const CONTROL_PADDING = {
   none: "0",
   xs: "0.5rem",
   sm: "0.75rem",
@@ -18,4 +18,4 @@ export const CONTROL_PADDING_X = {
   xl: "1.5rem",
 } as const;
 
-export type ControlPadding = keyof typeof CONTROL_PADDING_X;
+export type ControlPadding = keyof typeof CONTROL_PADDING;

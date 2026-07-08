@@ -119,6 +119,44 @@ function ProductGrid() {
 /*  Quick actions card                                                       */
 /* ──────────────────────────────────────────────────────────────────────── */
 
+/** Rows for the Quick Actions list. `view` navigates; a null `view` runs onTryOp. */
+const QUICK_ACTIONS: Array<{
+  key: string;
+  glyph: string;
+  bg: string;
+  fg: string;
+  view: ViewId | null;
+}> = [
+  {
+    key: "tryOp",
+    glyph: "▶",
+    bg: "var(--color-blue-light)",
+    fg: "var(--color-blue)",
+    view: null,
+  },
+  {
+    key: "buildPipeline",
+    glyph: "⌃",
+    bg: "var(--color-purple-light)",
+    fg: "var(--color-purple)",
+    view: "pipelines",
+  },
+  {
+    key: "connectSource",
+    glyph: "⇢",
+    bg: "var(--color-green-light)",
+    fg: "var(--color-green-dark)",
+    view: "sources",
+  },
+  {
+    key: "issueApiKey",
+    glyph: "⚙",
+    bg: "var(--color-amber-light)",
+    fg: "var(--color-amber-dark)",
+    view: "infrastructure",
+  },
+];
+
 function QuickActions({ onTryOp }: { onTryOp: () => void }) {
   const { t } = useTranslation();
   const { setActiveView } = useView();
@@ -133,102 +171,42 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
         </span>
       </div>
       <div className="portal-home__quick-list">
-        <Button
-          variant="quiet"
-          type="button"
-          className="portal-home__quick-row"
-          onClick={onTryOp}
-        >
-          <span
-            className="portal-home__quick-icon"
-            style={{
-              background: "var(--color-blue-light)",
-              color: "var(--color-blue)",
-            }}
-            aria-hidden
+        {QUICK_ACTIONS.map((action) => (
+          <Button
+            key={action.key}
+            variant="quiet"
+            justify="start"
+            fullWidth
+            px="sm"
+            py="sm"
+            type="button"
+            className="portal-home__quick-row"
+            onClick={
+              action.view ? () => setActiveView(action.view as ViewId) : onTryOp
+            }
+            leftSection={
+              <span
+                className="portal-home__quick-icon"
+                style={{ background: action.bg, color: action.fg }}
+                aria-hidden
+              >
+                {action.glyph}
+              </span>
+            }
+            rightSection={
+              <span className="portal-home__quick-arrow" aria-hidden>
+                →
+              </span>
+            }
           >
-            ▶
-          </span>
-          <span className="portal-home__quick-text">
-            <strong>{t("portal.home.quickActions.tryOp.title")}</strong>
-            <span>{t("portal.home.quickActions.tryOp.blurb")}</span>
-          </span>
-          <span className="portal-home__quick-arrow" aria-hidden>
-            →
-          </span>
-        </Button>
-        <Button
-          variant="quiet"
-          type="button"
-          className="portal-home__quick-row"
-          onClick={() => setActiveView("pipelines")}
-        >
-          <span
-            className="portal-home__quick-icon"
-            style={{
-              background: "var(--color-purple-light)",
-              color: "var(--color-purple)",
-            }}
-            aria-hidden
-          >
-            ⌃
-          </span>
-          <span className="portal-home__quick-text">
-            <strong>{t("portal.home.quickActions.buildPipeline.title")}</strong>
-            <span>{t("portal.home.quickActions.buildPipeline.blurb")}</span>
-          </span>
-          <span className="portal-home__quick-arrow" aria-hidden>
-            →
-          </span>
-        </Button>
-        <Button
-          variant="quiet"
-          type="button"
-          className="portal-home__quick-row"
-          onClick={() => setActiveView("sources")}
-        >
-          <span
-            className="portal-home__quick-icon"
-            style={{
-              background: "var(--color-green-light)",
-              color: "var(--color-green-dark)",
-            }}
-            aria-hidden
-          >
-            ⇢
-          </span>
-          <span className="portal-home__quick-text">
-            <strong>{t("portal.home.quickActions.connectSource.title")}</strong>
-            <span>{t("portal.home.quickActions.connectSource.blurb")}</span>
-          </span>
-          <span className="portal-home__quick-arrow" aria-hidden>
-            →
-          </span>
-        </Button>
-        <Button
-          variant="quiet"
-          type="button"
-          className="portal-home__quick-row"
-          onClick={() => setActiveView("infrastructure")}
-        >
-          <span
-            className="portal-home__quick-icon"
-            style={{
-              background: "var(--color-amber-light)",
-              color: "var(--color-amber-dark)",
-            }}
-            aria-hidden
-          >
-            ⚙
-          </span>
-          <span className="portal-home__quick-text">
-            <strong>{t("portal.home.quickActions.issueApiKey.title")}</strong>
-            <span>{t("portal.home.quickActions.issueApiKey.blurb")}</span>
-          </span>
-          <span className="portal-home__quick-arrow" aria-hidden>
-            →
-          </span>
-        </Button>
+            <span className="portal-home__quick-text">
+              <strong>
+                {t(`portal.home.quickActions.${action.key}.title`)}
+              </strong>
+              <span>{t(`portal.home.quickActions.${action.key}.blurb`)}</span>
+            </span>
+          </Button>
+        ))}
       </div>
     </Card>
   );

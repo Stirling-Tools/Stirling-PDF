@@ -72,7 +72,15 @@ const meta: Meta<typeof Button> = {
       ],
     },
     size: { control: "inline-radio", options: ["sm", "md", "lg", "xl"] },
-    padding: {
+    p: {
+      control: "inline-radio",
+      options: [undefined, "none", "xs", "sm", "md", "lg", "xl"],
+    },
+    px: {
+      control: "inline-radio",
+      options: [undefined, "none", "xs", "sm", "md", "lg", "xl"],
+    },
+    py: {
       control: "inline-radio",
       options: [undefined, "none", "xs", "sm", "md", "lg", "xl"],
     },
@@ -156,12 +164,12 @@ export const Sizes: Story = {
   ),
 };
 
-/** Horizontal-padding override; omit for the size-based default. */
+/** Padding override via `p` (both axes); `px`/`py` override a single axis. */
 export const Padding: Story = {
   render: (args) => (
     <Wrap>
-      {(["none", "xs", "sm", "md", "lg", "xl"] as const).map((padding) => (
-        <Button key={padding} {...args} padding={padding} text={padding} />
+      {(["none", "xs", "sm", "md", "lg", "xl"] as const).map((p) => (
+        <Button key={p} {...args} p={p} text={p} />
       ))}
     </Wrap>
   ),

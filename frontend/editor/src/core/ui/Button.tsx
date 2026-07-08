@@ -8,7 +8,7 @@ import type {
 } from "react";
 import {
   CONTROL_HEIGHT,
-  CONTROL_PADDING_X,
+  CONTROL_PADDING,
   type ControlPadding,
 } from "@app/ui/controlSizes";
 import "@app/ui/Button.css";
@@ -34,8 +34,12 @@ type ButtonOwnProps = {
   variant?: ButtonVariant;
   accent?: ButtonAccent;
   size?: ButtonSize;
-  /** Horizontal-padding override; omit to use the size-based default. */
-  padding?: ControlPadding;
+  /** Padding override for both axes */
+  p?: ControlPadding;
+  /** Horizontal-padding override  */
+  px?: ControlPadding;
+  /** Vertical-padding override  */
+  py?: ControlPadding;
   justify?: ButtonJustify;
   shape?: ButtonShape;
   /** Alternative to children; use one or the other. */
@@ -109,7 +113,9 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
       variant = "primary",
       accent = "default",
       size = "md",
-      padding,
+      p,
+      px,
+      py,
       justify = "center",
       shape = "default",
       text,
@@ -131,6 +137,10 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
     const label = text ?? children;
     const hasLabel = label != null && label !== false && label !== "";
     const iconOnly = !hasLabel && (!!leftSection || !!rightSection || loading);
+
+    // px/py override p for their axis; each stays undefined (= size default) if unset.
+    const padX = px ?? p;
+    const padY = py ?? p;
 
     // Sections flank a label → spread them without requiring justify="between".
     const effectiveJustify =
@@ -198,9 +208,13 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
         style={{
           ...(accentVars as CSSProperties),
           ...({ "--button-height": CONTROL_HEIGHT[size] } as CSSProperties),
-          // Padding override (inline to beat Mantine's size-based value).
-          ...(padding
-            ? ({ "--button-padding-x": CONTROL_PADDING_X[padding] } as CSSProperties)
+          // Padding overrides (inline to beat Mantine's size-based value).
+          // px → Mantine's own var; py → our --sui-btn-py (Mantine has no vertical padding).
+          ...(padX
+            ? ({ "--button-padding-x": CONTROL_PADDING[padX] } as CSSProperties)
+            : {}),
+          ...(padY
+            ? ({ "--sui-btn-py": CONTROL_PADDING[padY] } as CSSProperties)
             : {}),
           // Icon-only: zero the size padding inline so the lone icon centres.
           ...(iconOnly ? ({ "--button-padding-x": "0" } as CSSProperties) : {}),
