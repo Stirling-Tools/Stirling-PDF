@@ -18,11 +18,6 @@ on:
         required: false
         type: boolean
         default: false
-      build_portal:
-        description: "Embed the admin portal app at /portal (auto-on when portal/AI change on push)."
-        required: false
-        type: boolean
-        default: false
   push:
     branches:
       - master
@@ -63,32 +58,6 @@ jobs:
           egress-policy: audit
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      # Same file-aware detection as build.yml's files-changed job (the shared
-      # dorny/paths-filter + .github/config/.files.yaml), applied to the merged
-      # change so the published images embed the /portal app (-PbuildWithPortal)
-      # exactly when the merged PR touched the portal or AI layers. Not a raw
-      # push diff; PRs get the same signal via files-changed -> test-build-docker.
-      # Skipped on manual runs, which use the build_portal input instead.
-      - name: Detect portal/AI changes
-        id: portal-changes
-        if: env.RUN_MAIN_APP == 'true' && github.event_name != 'workflow_dispatch'
-        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
-        with:
-          filters: .github/config/.files.yaml
-
-      - name: Resolve BUILD_PORTAL flag
-        id: portal-flag
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            VALUE="${{ inputs.build_portal }}"
-          else
-            VALUE="${{ steps.portal-changes.outputs.portal }}"
-          fi
-          # Normalise empty (filter skipped / no match) to false.
-          [ "$VALUE" = "true" ] || VALUE="false"
-          echo "value=$VALUE" >> "$GITHUB_OUTPUT"
-          echo "BUILD_PORTAL resolved to: $VALUE"
 
       - name: Set up JDK 25
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
@@ -189,7 +158,6 @@ jobs:
           # No BASE_VERSION pin: inherit the Dockerfile ARG default (single source of truth).
           build-args: |
             VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
-            BUILD_PORTAL=${{ steps.portal-flag.outputs.value }}
           platforms: linux/amd64,linux/arm64/v8
           provenance: true
           sbom: true
@@ -235,9 +203,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=stirling-pdf-fat
           tags: ${{ steps.meta-fat.outputs.tags }}
           labels: ${{ steps.meta-fat.outputs.labels }}
-          build-args: |
-            VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
-            BUILD_PORTAL=${{ steps.portal-flag.outputs.value }}
+          build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
           platforms: linux/amd64,linux/arm64/v8
           provenance: true
           sbom: true
@@ -281,9 +247,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=stirling-pdf-ultra-lite
           tags: ${{ steps.meta-lite.outputs.tags }}
           labels: ${{ steps.meta-lite.outputs.labels }}
-          build-args: |
-            VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
-            BUILD_PORTAL=${{ steps.portal-flag.outputs.value }}
+          build-args: VERSION_TAG=${{ steps.versionNumber.outputs.versionNumber }}
           platforms: linux/amd64,linux/arm64/v8
           provenance: true
           sbom: true

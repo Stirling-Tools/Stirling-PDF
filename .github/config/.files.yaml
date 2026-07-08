@@ -87,19 +87,6 @@ engine: &engine
   - Taskfile.yml
   - .taskfiles/engine.yml
 
-# Files that make the embedded admin portal worth rebaking into the JAR: the
-# portal frontend layer itself, plus the AI surfaces (Python engine + AI-named
-# backend services / MCP) it fronts. The deploy workflow flips -PbuildWithPortal
-# on when any of these change so the /portal app ships with the image.
-portal: &portal
-  - frontend/editor/src/portal/**
-  - frontend/editor/src/proprietary/routes/adminRouteExtensions.tsx
-  - engine/**
-  - app/proprietary/src/main/java/**/ai/**
-  - app/proprietary/src/main/java/**/Ai*.java
-  - app/proprietary/src/main/java/**/mcp/**
-  - app/saas/src/main/java/**/ai/**
-
 # Files that can make the committed generated API models (frontend tool API
 # types + engine tool models) go stale: the Java tool surfaces they derive from,
 # the generators, the generated files themselves (to catch a hand-edit), and the

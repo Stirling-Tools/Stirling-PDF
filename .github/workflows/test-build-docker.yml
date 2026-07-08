@@ -12,11 +12,6 @@ on:
         required: false
         type: string
         default: "false"
-      build-portal:
-        description: "Whether the portal or AI layers changed (forwarded from files-changed); embeds the /portal app."
-        required: false
-        type: string
-        default: "false"
       depot_cores:
         description: "Depot runner vCPU count (used in runs-on). Override for benchmarking."
         required: false
@@ -169,7 +164,6 @@ jobs:
         run: |
           DOCKER_BUILDKIT=1 docker build \
             --build-arg BASE_IMAGE=${{ steps.build-params.outputs.base_image }} \
-            --build-arg BUILD_PORTAL=${{ inputs.build-portal }} \
             --file ./${{ matrix.docker-rev }} \
             --tag stirling-pdf-embedded:pr-test \
             .
@@ -185,7 +179,6 @@ jobs:
           platforms: ${{ steps.build-params.outputs.platforms }}
           build-args: |
             BASE_IMAGE=${{ steps.build-params.outputs.base_image }}
-            BUILD_PORTAL=${{ inputs.build-portal }}
           provenance: true
           sbom: true
 
@@ -204,7 +197,6 @@ jobs:
           platforms: ${{ steps.build-params.outputs.platforms }}
           build-args: |
             BASE_IMAGE=${{ steps.build-params.outputs.base_image }}
-            BUILD_PORTAL=${{ inputs.build-portal }}
           provenance: true
           sbom: true
 
