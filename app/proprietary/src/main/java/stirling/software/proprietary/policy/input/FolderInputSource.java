@@ -28,13 +28,14 @@ import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 
 /**
- * Reads input files from a directory, tracking processed files in place through the ledger; nothing
- * is moved, and each ready file is its own unit of work. Options: "mode" is "consume" (default,
- * each version runs once) or "snapshot" (stateless, every run sees the full set); "recursive"
- * descends into subdirectories; "identity" is "stat" (default, any size/mtime change reprocesses)
- * or "hash" (content-verified, so a touch does not reprocess). Hidden files and directories,
- * including the legacy {@code .stirling} work dir, are never picked up, and files mid-write are
- * skipped by the readiness check.
+ * Reads input files from a directory; each ready file is its own unit of work, claimed through the
+ * {@link ResolveContext} ledger rather than moved aside, so nothing accumulates in a work
+ * directory. Options: "mode" is "consume" (default: a successfully processed file is removed;
+ * failures stay in place and are not retried until they change) or "snapshot" (stateless, every run
+ * sees the full set); "recursive" descends into subdirectories; "identity" is "stat" (default, any
+ * size/mtime change is a new version) or "hash" (content-verified, so a touch does not reprocess).
+ * Hidden files and directories, including the legacy {@code .stirling} work dir, are never picked
+ * up, and files mid-write are skipped by the readiness check.
  */
 @Slf4j
 @Service
@@ -115,10 +116,31 @@ public class FolderInputSource implements InputSource {
                     new ResolvedInput(
                             PolicyInputs.of(List.of(fileResource(file))),
                             success ->
-                                    settleAtCurrentVersion(
-                                            ctx, identity, file, config, gate, success)));
+                                    completeConsumed(ctx, identity, file, config, gate, success)));
         }
         return work;
+    }
+
+    /**
+     * A successfully consumed input is removed (the delivered output is the artifact); its ledger
+     * row is presence-cleaned at the next full sweep. A failed input stays in place, parked by its
+     * ERROR row until it changes. If the delete fails the DONE row still stops reprocessing.
+     */
+    private static void completeConsumed(
+            ResolveContext ctx,
+            String identity,
+            Path file,
+            FolderConfig config,
+            String claimGate,
+            boolean success) {
+        if (success) {
+            try {
+                Files.deleteIfExists(file);
+            } catch (IOException e) {
+                log.warn("Could not remove consumed input {}: {}", file, e.getMessage());
+            }
+        }
+        settleAtCurrentVersion(ctx, identity, file, config, claimGate, success);
     }
 
     /** Lazy verification tier; null in stat mode. */

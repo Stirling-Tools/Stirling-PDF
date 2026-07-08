@@ -65,7 +65,7 @@ class FolderInputSourceTest {
     }
 
     @Test
-    void consumeTracksFilesInPlaceAndRunsEachVersionOnce() throws IOException {
+    void consumeRemovesTheFileOnceProcessed() throws IOException {
         Path inputDir = Files.createDirectories(tempDir.resolve("in"));
         Path file = inputDir.resolve("doc.pdf");
         Files.writeString(file, "data");
@@ -74,32 +74,30 @@ class FolderInputSourceTest {
 
         assertEquals(1, work.size());
         assertEquals(1, work.get(0).inputs().primary().size());
+        // In flight: still on disk, but a second sweep does not pick it up again.
         assertTrue(Files.exists(file));
         assertTrue(Files.notExists(inputDir.resolve(".stirling")));
-
-        // In flight: a second sweep does not pick it up again.
         assertTrue(source.resolve(InputSpec.folder(inputDir.toString()), ctx).isEmpty());
 
-        // Settled: still skipped, and still in place.
         work.get(0).onComplete().accept(true);
+        assertTrue(Files.notExists(file));
         assertTrue(source.resolve(InputSpec.folder(inputDir.toString()), ctx).isEmpty());
-        assertTrue(Files.exists(file));
     }
 
     @Test
-    void aChangedFileIsReprocessed() throws IOException {
+    void aReDroppedFileIsProcessedAgain() throws IOException {
         Path inputDir = Files.createDirectories(tempDir.resolve("in"));
         Path file = inputDir.resolve("doc.pdf");
         Files.writeString(file, "data");
 
         source.resolve(InputSpec.folder(inputDir.toString()), ctx).get(0).onComplete().accept(true);
-        Files.writeString(file, "data v2 - longer");
+        Files.writeString(file, "data again");
 
         assertEquals(1, source.resolve(InputSpec.folder(inputDir.toString()), ctx).size());
     }
 
     @Test
-    void aFailedFileIsNotRetriedUntilItChanges() throws IOException {
+    void aFailedFileStaysInPlaceAndIsNotRetriedUntilItChanges() throws IOException {
         Path inputDir = Files.createDirectories(tempDir.resolve("in"));
         Path file = inputDir.resolve("doc.pdf");
         Files.writeString(file, "data");
@@ -109,6 +107,7 @@ class FolderInputSourceTest {
                 .onComplete()
                 .accept(false);
 
+        assertTrue(Files.exists(file));
         assertTrue(source.resolve(InputSpec.folder(inputDir.toString()), ctx).isEmpty());
 
         Files.setLastModifiedTime(file, FileTime.from(Instant.now().plusSeconds(60)));
@@ -116,7 +115,7 @@ class FolderInputSourceTest {
     }
 
     @Test
-    void statModeReprocessesOnATouchButHashModeDoesNot() throws IOException {
+    void statModeRetriesAFailureOnATouchButHashModeDoesNot() throws IOException {
         Path statDir = Files.createDirectories(tempDir.resolve("stat"));
         Path hashDir = Files.createDirectories(tempDir.resolve("hash"));
         Path statFile = statDir.resolve("doc.pdf");
@@ -128,20 +127,21 @@ class FolderInputSourceTest {
                 new InputSpec(
                         "folder", Map.of("directory", hashDir.toString(), "identity", "hash"));
 
-        source.resolve(statSpec, ctx).get(0).onComplete().accept(true);
-        source.resolve(hashSpec, ctx).get(0).onComplete().accept(true);
+        source.resolve(statSpec, ctx).get(0).onComplete().accept(false);
+        source.resolve(hashSpec, ctx).get(0).onComplete().accept(false);
 
         FileTime touched = FileTime.from(Instant.now().plusSeconds(60));
         Files.setLastModifiedTime(statFile, touched);
         Files.setLastModifiedTime(hashFile, touched);
 
-        // Same content, new mtime: stat mode reprocesses, hash mode verifies and skips.
+        // Same content, new mtime: stat mode calls that a new version and retries; hash mode
+        // verifies the content is unchanged and keeps the failure parked.
         assertEquals(1, source.resolve(statSpec, ctx).size());
         assertTrue(source.resolve(hashSpec, ctx).isEmpty());
     }
 
     @Test
-    void hashModeReprocessesARealContentChange() throws IOException {
+    void hashModeRetriesAFailureOnARealContentChange() throws IOException {
         Path inputDir = Files.createDirectories(tempDir.resolve("in"));
         Path file = inputDir.resolve("doc.pdf");
         Files.writeString(file, "data");
@@ -149,7 +149,7 @@ class FolderInputSourceTest {
                 new InputSpec(
                         "folder", Map.of("directory", inputDir.toString(), "identity", "hash"));
 
-        source.resolve(spec, ctx).get(0).onComplete().accept(true);
+        source.resolve(spec, ctx).get(0).onComplete().accept(false);
         Files.writeString(file, "data v2 - longer");
 
         assertEquals(1, source.resolve(spec, ctx).size());
