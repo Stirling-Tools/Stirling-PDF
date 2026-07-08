@@ -32,7 +32,8 @@ export async function fetchPoliciesByCategory(): Promise<
   const byCategory = new Map<string, DecodedPolicy>();
   stored.forEach((policy, index) => {
     const decoded = fromBackendPolicy(policy);
-    if (decoded.categoryId) byCategory.set(decoded.categoryId, { ...decoded, order: index });
+    if (decoded.categoryId)
+      byCategory.set(decoded.categoryId, { ...decoded, order: index });
   });
   return byCategory;
 }
