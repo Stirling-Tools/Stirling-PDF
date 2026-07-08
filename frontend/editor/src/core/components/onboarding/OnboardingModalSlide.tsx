@@ -6,9 +6,10 @@
  */
 
 import React from "react";
-import { Modal, Stack, ActionIcon } from "@mantine/core";
+import { Modal, Stack } from "@mantine/core";
+import { useTranslation } from "react-i18next";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import DiamondOutlinedIcon from "@mui/icons-material/DiamondOutlined";
-import CloseIcon from "@mui/icons-material/Close";
 
 import type {
   SlideDefinition,
@@ -45,6 +46,7 @@ export default function OnboardingModalSlide({
   onAction,
   allowDismiss = true,
 }: OnboardingModalSlideProps) {
+  const { t } = useTranslation();
   const renderHero = () => {
     if (slideDefinition.hero.type === "dual-icon") {
       return (
@@ -139,8 +141,9 @@ export default function OnboardingModalSlide({
           {allowDismiss && (
             <ActionIcon
               onClick={onSkip}
-              radius="md"
-              size={36}
+              variant="tertiary"
+              size="lg"
+              aria-label={t("common.close", "Close")}
               style={{
                 position: "absolute",
                 top: 16,
@@ -150,15 +153,12 @@ export default function OnboardingModalSlide({
                 backdropFilter: "blur(4px)",
                 zIndex: 10,
               }}
-              styles={{
-                root: {
-                  "&:hover": {
-                    backgroundColor: "rgba(255, 255, 255, 0.3)",
-                  },
-                },
-              }}
             >
-              <CloseIcon fontSize="small" />
+              <LocalIcon
+                icon="close-rounded"
+                width="1.25rem"
+                height="1.25rem"
+              />
             </ActionIcon>
           )}
           <div className={styles.heroLogo} key={`logo-${slideContent.key}`}>

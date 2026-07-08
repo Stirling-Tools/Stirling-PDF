@@ -1,12 +1,6 @@
 import { useState } from "react";
-import {
-  Modal,
-  Stack,
-  Text,
-  PasswordInput,
-  Button,
-  Alert,
-} from "@mantine/core";
+import { Modal, Stack, Text, PasswordInput, Alert } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { accountService } from "@app/services/accountService";
@@ -195,8 +189,8 @@ export default function FirstLoginModal({
           />
 
           <Button
-            type="submit"
             fullWidth
+            type="submit"
             loading={loading}
             disabled={
               !currentPassword ||
@@ -205,7 +199,7 @@ export default function FirstLoginModal({
               newPassword.length < 8 ||
               confirmPassword.length < 8
             }
-            mt="md"
+            style={{ marginTop: "var(--mantine-spacing-md)" }}
           >
             {t("firstLogin.changePassword", "Change Password")}
           </Button>

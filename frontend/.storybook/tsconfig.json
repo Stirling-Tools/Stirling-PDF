@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "jsx": "react-jsx",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "paths": {
+      "@app/*": [
+        "../editor/src/desktop/*",
+        "../editor/src/proprietary/*",
+        "../editor/src/core/*"
+      ],
+      "@core/*": ["../editor/src/core/*"],
+      "@proprietary/*": ["../editor/src/proprietary/*"],
+      "@portal/*": ["../editor/src/portal/*"]
+    },
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true
+  },
+  "include": ["./**/*"]
+}

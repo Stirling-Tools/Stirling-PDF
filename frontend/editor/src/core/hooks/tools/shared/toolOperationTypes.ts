@@ -3,8 +3,15 @@ import { StirlingFile } from "@app/types/fileContext";
 import type { ResponseHandler } from "@app/utils/toolResponseProcessor";
 import { ToolId } from "@app/types/toolId";
 import type { ProcessingProgress } from "@app/hooks/tools/shared/useToolState";
+import type { ToolApiParams, ToolEndpoint } from "@app/types/toolApiTypes";
 
 export type { ProcessingProgress, ResponseHandler };
+
+/**
+ * A tool operation's backend endpoint, checked against the generated ToolEndpoint
+ * set, or `null` when the operation has no backend endpoint.
+ */
+export type ToolOperationEndpoint = ToolEndpoint | null;
 
 export enum ToolType {
   singleFile,
@@ -46,7 +53,7 @@ export interface CustomProcessorResult {
  * 2. Multi-file tools: toolType: multiFile, single API call with all files
  * 3. Complex tools: toolType: custom, customProcessor handles all processing logic
  */
-interface BaseToolOperationConfig<TParams> {
+interface BaseToolOperationConfig<TParams, TEndpoint extends ToolEndpoint> {
   /** Operation identifier for tracking and logging */
   operationType: ToolId;
 
@@ -73,6 +80,20 @@ interface BaseToolOperationConfig<TParams> {
   defaultParameters?: TParams;
 
   /**
+   * Typed frontend params -> backend request model. When a tool provides this,
+   * it is the spec-checked source of truth for the request body and its
+   * buildFormData is derived from it via objectToFormData. Bound to the tool's
+   * endpoint, so a spec rename of that endpoint's model breaks the build here.
+   */
+  toApiParams?(params: TParams): ToolApiParams[TEndpoint];
+
+  /**
+   * Backend request model -> partial frontend params, so a stored API call
+   * can be re-hydrated into this tool's settings UI.
+   */
+  fromApiParams?(apiParams: ToolApiParams[TEndpoint]): Partial<TParams>;
+
+  /**
    * For custom tools: if true, success implies all input files were successfully processed.
    * Use this for tools like Automate or Merge where Many-to-One relationships exist
    * and exact input-output mapping is difficult.
@@ -82,22 +103,27 @@ interface BaseToolOperationConfig<TParams> {
 
 export interface SingleFileToolOperationConfig<
   TParams,
-> extends BaseToolOperationConfig<TParams> {
+  TEndpoint extends ToolEndpoint = ToolEndpoint,
+> extends BaseToolOperationConfig<TParams, TEndpoint> {
   /** This tool processes one file at a time. */
   toolType: ToolType.singleFile;
 
   /** Builds FormData for API request. */
   buildFormData: (params: TParams, file: File) => FormData;
 
-  /** API endpoint for the operation. Can be static string or function for dynamic routing. */
-  endpoint: string | ((params: TParams) => string);
+  /**
+   * API endpoint for the operation, or a function for dynamic routing. `null`
+   * when the operation has no backend endpoint (see {@link ToolOperationEndpoint}).
+   */
+  endpoint: TEndpoint | null | ((params: TParams) => TEndpoint | null);
 
   customProcessor?: undefined;
 }
 
 export interface MultiFileToolOperationConfig<
   TParams,
-> extends BaseToolOperationConfig<TParams> {
+  TEndpoint extends ToolEndpoint = ToolEndpoint,
+> extends BaseToolOperationConfig<TParams, TEndpoint> {
   /** This tool processes multiple files at once. */
   toolType: ToolType.multiFile;
 
@@ -107,15 +133,18 @@ export interface MultiFileToolOperationConfig<
   /** Builds FormData for API request. */
   buildFormData: (params: TParams, files: File[]) => FormData;
 
-  /** API endpoint for the operation. Can be static string or function for dynamic routing. */
-  endpoint: string | ((params: TParams) => string);
+  /**
+   * API endpoint for the operation, or a function for dynamic routing. `null`
+   * when the operation has no backend endpoint (see {@link ToolOperationEndpoint}).
+   */
+  endpoint: TEndpoint | null | ((params: TParams) => TEndpoint | null);
 
   customProcessor?: undefined;
 }
 
 export interface CustomToolOperationConfig<
   TParams,
-> extends BaseToolOperationConfig<TParams> {
+> extends BaseToolOperationConfig<TParams, ToolEndpoint> {
   /** This tool has custom behaviour. */
   toolType: ToolType.custom;
 
@@ -143,10 +172,49 @@ export interface CustomToolOperationConfig<
   ) => Promise<CustomProcessorResult>;
 }
 
-export type ToolOperationConfig<TParams = void> =
-  | SingleFileToolOperationConfig<TParams>
-  | MultiFileToolOperationConfig<TParams>
+export type ToolOperationConfig<
+  TParams = void,
+  TEndpoint extends ToolEndpoint = ToolEndpoint,
+> =
+  | SingleFileToolOperationConfig<TParams, TEndpoint>
+  | MultiFileToolOperationConfig<TParams, TEndpoint>
   | CustomToolOperationConfig<TParams>;
+
+/**
+ * Define a single-file tool's operation config. Infers the endpoint literal from
+ * `endpoint` and binds toApiParams/fromApiParams to that endpoint's request
+ * model, so a mapper cannot silently drift from the generated spec.
+ */
+export function defineSingleFileTool<
+  TParams,
+  const TEndpoint extends ToolEndpoint,
+>(
+  config: Omit<SingleFileToolOperationConfig<TParams, TEndpoint>, "toolType">,
+): SingleFileToolOperationConfig<TParams, TEndpoint> {
+  return { ...config, toolType: ToolType.singleFile };
+}
+
+/** Multi-file counterpart of {@link defineSingleFileTool}. */
+export function defineMultiFileTool<
+  TParams,
+  const TEndpoint extends ToolEndpoint,
+>(
+  config: Omit<MultiFileToolOperationConfig<TParams, TEndpoint>, "toolType">,
+): MultiFileToolOperationConfig<TParams, TEndpoint> {
+  return { ...config, toolType: ToolType.multiFile };
+}
+
+/**
+ * Custom-processor counterpart of {@link defineSingleFileTool}, for tools whose
+ * customProcessor owns the API calls and file handling. Rejects fields that
+ * belong to the file-based patterns (e.g. buildFormData) and any property not on
+ * the config, so a stray or stale field is a build error rather than dead weight.
+ */
+export function defineCustomTool<TParams>(
+  config: Omit<CustomToolOperationConfig<TParams>, "toolType">,
+): CustomToolOperationConfig<TParams> {
+  return { ...config, toolType: ToolType.custom };
+}
 
 /**
  * One generic source-of-truth for the props every automation settings component

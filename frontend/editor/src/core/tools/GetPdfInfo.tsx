@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import LinkIcon from "@mui/icons-material/Link";
-import { Stack, Group, Divider, Text, UnstyledButton } from "@mantine/core";
+import { Stack, Divider, Text } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
@@ -177,7 +178,10 @@ const GetPdfInfo = (props: BaseToolProps) => {
           <Stack gap={0}>
             {CHAPTERS.map((c, idx) => (
               <Stack key={c.id} gap={0}>
-                <UnstyledButton
+                <Button
+                  variant="tertiary"
+                  fullWidth
+                  justify="start"
                   onClick={() => {
                     if (!reportData) return;
                     setCustomWorkbenchViewData(REPORT_VIEW_ID, {
@@ -188,19 +192,15 @@ const GetPdfInfo = (props: BaseToolProps) => {
                       navigationActions.setWorkbench(REPORT_WORKBENCH_ID);
                     }
                   }}
-                  style={{
-                    width: "100%",
-                    textAlign: "left",
-                    padding: "8px 4px",
-                  }}
-                >
-                  <Group justify="flex-start" gap="sm">
+                  style={{ padding: "8px 4px" }}
+                  leftSection={
                     <LinkIcon fontSize="small" style={{ opacity: 0.7 }} />
-                    <Text size="md" c="dimmed">
-                      {t(c.labelKey, c.fallback)}
-                    </Text>
-                  </Group>
-                </UnstyledButton>
+                  }
+                >
+                  <Text size="md" c="dimmed">
+                    {t(c.labelKey, c.fallback)}
+                  </Text>
+                </Button>
                 {idx < CHAPTERS.length - 1 && <Divider my={6} />}
               </Stack>
             ))}
