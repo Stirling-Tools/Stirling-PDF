@@ -7362,7 +7362,7 @@ subtitle = "Standing automations that enforce a tool pipeline on every document.
 title = "Policies"
 
 [portal.policies.card]
-comingSoon = "Coming soon"
+comingSoon = "Upgrade to Enterprise"
 notSetUp = "Not set up"
 
 [portal.policies.detail]
@@ -7476,7 +7476,7 @@ subtitle = "Standing automations every document passes through, regardless of wh
 title = "What runs on your PDFs"
 
 [portal.policySummary.action]
-comingSoon = "Coming soon"
+comingSoon = "Upgrade to Enterprise"
 configure = "Configure"
 setUp = "Set up"
 
