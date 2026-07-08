@@ -89,7 +89,7 @@ export function SegmentedControl<T extends string>({
       data={options.map((o) => ({
         label: o.label,
         value: o.value,
-        disabled: o.disabled,
+        disabled: o.disabled && o.value !== value,
       }))}
       value={value}
       onChange={(v) => onChange(v as T)}
