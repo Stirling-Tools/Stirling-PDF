@@ -71,6 +71,8 @@ export const redactOperationConfig = defineSingleFileTool({
   operationType: "redact",
   endpoint: (parameters: RedactParameters) =>
     parameters.mode === "automatic" ? AUTO_ENDPOINT : null,
+  // Routing set: `mode` is frontend-only, so a stored step matches by this rather than by replay.
+  endpoints: [AUTO_ENDPOINT],
   defaultParameters,
 });
 
