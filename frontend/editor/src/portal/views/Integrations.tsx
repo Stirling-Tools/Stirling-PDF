@@ -56,6 +56,10 @@ export function Integrations() {
     [configState.data],
   );
   const members: Member[] = membersState.data?.members ?? [];
+  // Sharing needs the admin-only roster; only admins can load it. If the fetch failed
+  // (a non-admin who owns a personal config gets 403), hide sharing rather than open a
+  // broken people-picker.
+  const canShare = membersState.data != null;
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<IntegrationConfig | null>(null);
@@ -67,7 +71,8 @@ export function Integrations() {
   const [deleting, setDeleting] = useState(false);
 
   const loading = configState.loading && configState.data === null;
-  const isEmpty = !configState.loading && configs.length === 0;
+  const loadError = !configState.loading && configState.error !== null;
+  const isEmpty = !configState.loading && !loadError && configs.length === 0;
 
   function refresh() {
     setRefreshKey((k) => k + 1);
@@ -163,9 +168,11 @@ export function Integrations() {
                 <Menu.Item onClick={() => openEdit(c)}>
                   {t("integrations.actions.edit", "Edit")}
                 </Menu.Item>
-                <Menu.Item onClick={() => openShare(c)}>
-                  {t("integrations.actions.share", "Share…")}
-                </Menu.Item>
+                {canShare && (
+                  <Menu.Item onClick={() => openShare(c)}>
+                    {t("integrations.actions.share", "Share…")}
+                  </Menu.Item>
+                )}
                 <Menu.Divider />
                 <Menu.Item color="red" onClick={() => setDeleteTarget(c)}>
                   {t("integrations.actions.delete", "Delete")}
@@ -179,7 +186,7 @@ export function Integrations() {
           ),
       },
     ],
-    [t],
+    [t, canShare],
   );
 
   return (
@@ -201,14 +208,28 @@ export function Integrations() {
         </Button>
       </header>
 
-      {(actionError || membersState.error) && (
+      {actionError && (
         <p className="portal-integrations__error" role="alert">
-          {actionError ??
-            t(
-              "integrations.membersError",
-              "Couldn't load the people list, so sharing may be unavailable.",
-            )}
+          {actionError}
         </p>
+      )}
+
+      {loadError && (
+        <EmptyState
+          title={t(
+            "integrations.loadError.title",
+            "Couldn't load integrations",
+          )}
+          description={t(
+            "integrations.loadError.description",
+            "Something went wrong reaching the backend. Try again.",
+          )}
+          actions={
+            <Button variant="secondary" onClick={refresh}>
+              {t("common.retry", "Retry")}
+            </Button>
+          }
+        />
       )}
 
       {loading && (

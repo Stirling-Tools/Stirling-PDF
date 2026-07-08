@@ -17,6 +17,8 @@ const meta: Meta<typeof InviteMemberModal> = {
     onClose: () => {},
     onInvited: () => {},
     teams: TEAMS,
+    // Admin build: the Processor access option is offered (gated on grant management).
+    manageGrants: true,
   },
 };
 export default meta;
@@ -45,9 +47,9 @@ export const CreateAccountForm: Story = {
   },
 };
 
-/** SaaS: no "admin" (Org Owner) option - the role picker is member-only. */
+/** SaaS: no "admin" (Org Owner) option and no Processor grant (both admin-only). */
 export const NoAdminRole: Story = {
-  args: { adminRole: false },
+  args: { adminRole: false, manageGrants: false },
 };
 
 export const Closed: Story = { args: { open: false } };

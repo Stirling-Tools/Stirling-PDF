@@ -263,22 +263,36 @@ export async function disableMemberMfa(member: Member): Promise<void> {
 
 /**
  * Move a member to a different team, keeping their role. The backend changeRole
- * endpoint requires a role, so we echo back the member's stored authority
- * verbatim - never collapse non-admins to ROLE_USER, which would silently
- * promote a web-only (ROLE_WEB_ONLY_USER) account.
+ * endpoint requires a single role, so we resolve one canonical authority from the
+ * member's stored roles (which may be a CSV) - preserving a web-only account and
+ * never silently promoting one to ROLE_USER.
  */
 export async function moveMemberToTeam(
   member: Member,
   teamId: number,
 ): Promise<void> {
   if (!member.username) throw new Error("Member has no backend identity");
-  const role =
-    member.authority ?? (member.role === "admin" ? "ROLE_ADMIN" : "ROLE_USER");
+  const role = canonicalAuthority(member);
   await apiClient.local.form("/api/v1/user/admin/changeRole", {
     username: member.username,
     role,
     teamId: String(teamId),
   });
+}
+
+/**
+ * The member's single canonical ROLE_* authority. `authority` is the raw stored
+ * rolesAsString, which may be a CSV; match on substrings so a compound value maps
+ * to one role. Web-only is preserved; team_owner/member both store as ROLE_USER
+ * (leadership is a separate membership, not an authority).
+ */
+function canonicalAuthority(member: Member): string {
+  const stored = member.authority ?? "";
+  if (stored.includes("ROLE_ADMIN")) return "ROLE_ADMIN";
+  if (stored.includes("ROLE_WEB_ONLY_USER")) return "ROLE_WEB_ONLY_USER";
+  if (stored.includes("ROLE_USER")) return "ROLE_USER";
+  // Authority absent/unrecognized: fall back to the displayed role, never upgrading.
+  return member.role === "admin" ? "ROLE_ADMIN" : "ROLE_USER";
 }
 
 /* ── direct account creation (self-hosted / password auth only) ────────── */

@@ -131,13 +131,16 @@ export function Users() {
   const teams = teamsState.data ?? [];
   const mailEnabled = usersState.data?.mailEnabled ?? false;
   const loading = usersState.loading && usersState.data === null;
-  const isEmpty = !usersState.loading && members.length === 0;
+  const loadError = !usersState.loading && usersState.error !== null;
+  const isEmpty = !usersState.loading && !loadError && members.length === 0;
 
   function run(action: () => Promise<unknown>) {
     setActionError(null);
     action()
-      .then(() => setRefreshKey((k) => k + 1))
-      .catch((error) => setActionError(errorMessage(error)));
+      .catch((error) => setActionError(errorMessage(error)))
+      // Refetch on success AND failure: a multi-step mutation (e.g. changeMemberRole)
+      // has no rollback, so a mid-sequence failure must resync the roster to real state.
+      .finally(() => setRefreshKey((k) => k + 1));
   }
   const refresh = () => setRefreshKey((k) => k + 1);
 
@@ -265,6 +268,21 @@ export function Users() {
         </div>
       )}
 
+      {loadError && (
+        <EmptyState
+          title={t("users.loadError.title", "Couldn't load members")}
+          description={t(
+            "users.loadError.description",
+            "Something went wrong reaching the backend, or you don't have access. Try again.",
+          )}
+          actions={
+            <Button variant="secondary" onClick={refresh}>
+              {t("common.retry", "Retry")}
+            </Button>
+          }
+        />
+      )}
+
       {isEmpty && (
         <EmptyState
           title={t("users.empty.title", "No members yet")}
@@ -315,6 +333,8 @@ export function Users() {
         hasOauth={authState.data?.hasOauth}
         hasSaml={authState.data?.hasSaml}
         adminRole={caps.adminRole}
+        manageGrants={caps.manageGrants}
+        onNotice={setActionError}
       />
       <NewTeamModal
         open={newTeamOpen}

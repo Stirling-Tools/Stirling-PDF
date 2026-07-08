@@ -10754,7 +10754,10 @@ title = "Large ZIP File"
 title = "Integrations"
 subtitle = "Stored API and MCP connections for the workspace. (S3 connections live in Sources.)"
 add = "Add integration"
-membersError = "Couldn't load the people list, so sharing may be unavailable."
+
+[integrations.loadError]
+title = "Couldn't load integrations"
+description = "Something went wrong reaching the backend. Try again."
 
 [integrations.form]
 nameRequired = "Name is required"
@@ -10857,7 +10860,12 @@ forceMfa = "Require MFA setup on first login"
 access = "Access"
 editorDesc = "Edit PDFs in the Stirling PDF Editor. Everyone gets this."
 processorDesc = "The governance surface, run pipelines, agents, and the API."
+processorDeferred = "Invite sent, but Processor access couldn't be granted yet - set it from the roster once they've joined."
 action = "Invite people"
+
+[users.loadError]
+title = "Couldn't load members"
+description = "Something went wrong reaching the backend, or you don't have access. Try again."
 
 [users.cap]
 editor = "Editor"

@@ -26,6 +26,10 @@ interface InviteMemberModalProps {
   hasSaml?: boolean;
   /** Whether the "admin" (Org Owner) role can be assigned. Off on SaaS. */
   adminRole?: boolean;
+  /** Whether portal-access grants can be created (ADMIN-only). Gates the Processor option. */
+  manageGrants?: boolean;
+  /** Non-blocking notice back to the parent (e.g. a deferred Processor grant). */
+  onNotice?: (message: string) => void;
   /** Which mode to open in (mainly for Storybook); defaults to email. */
   initialMode?: "email" | "direct";
 }
@@ -50,6 +54,8 @@ export function InviteMemberModal({
   hasOauth = false,
   hasSaml = false,
   adminRole = true,
+  manageGrants = false,
+  onNotice,
   initialMode = "email",
 }: InviteMemberModalProps) {
   const { t } = useTranslation();
@@ -150,20 +156,22 @@ export function InviteMemberModal({
     }, 200);
   }
 
-  // Grant Processor to the just-added user (best-effort: needs the new id).
+  // Grant Processor to the just-added user. Returns false when it couldn't be applied
+  // (an email invitee usually isn't a resolvable user yet, or the grant call is denied).
   async function grantProcessor(
     match: (m: { email: string; username?: string }) => boolean,
-  ) {
+  ): Promise<boolean> {
     const { members } = await fetchUsers(tier);
     const user = members.find(match);
-    if (user)
-      await createGrant({
-        resourceType: "PORTAL",
-        resourceId: "",
-        principalType: "USER",
-        principalId: Number(user.id),
-        permission: "USE",
-      });
+    if (!user) return false;
+    await createGrant({
+      resourceType: "PORTAL",
+      resourceId: "",
+      principalType: "USER",
+      principalId: Number(user.id),
+      permission: "USE",
+    });
+    return true;
   }
 
   async function submit() {
@@ -173,6 +181,7 @@ export function InviteMemberModal({
     const teamNum = teamId ? Number(teamId) : undefined;
     setSending(true);
     try {
+      let processorApplied = true;
       if (mode === "email") {
         if (!emailValid) return;
         const result = await inviteMember(email.trim(), role, teamNum);
@@ -181,9 +190,9 @@ export function InviteMemberModal({
           return;
         }
         if (processor)
-          await grantProcessor(
+          processorApplied = await grantProcessor(
             (m) => m.email === email.trim() || m.username === email.trim(),
-          ).catch(() => {});
+          ).catch(() => false);
       } else {
         if (!usernameValid || !passwordValid) return;
         const created = await createMember({
@@ -196,8 +205,17 @@ export function InviteMemberModal({
           forceMFA,
         });
         if (processor)
-          await grantProcessor((m) => m.username === created).catch(() => {});
+          processorApplied = await grantProcessor(
+            (m) => m.username === created,
+          ).catch(() => false);
       }
+      if (processor && !processorApplied)
+        onNotice?.(
+          t(
+            "users.invite.processorDeferred",
+            "Invite sent, but Processor access couldn't be granted yet - set it from the roster once they've joined.",
+          ),
+        );
       onInvited?.();
       close();
     } catch (e) {
@@ -378,15 +396,17 @@ export function InviteMemberModal({
               "Edit PDFs in the Stirling PDF Editor. Everyone gets this.",
             )}
           />
-          <Checkbox
-            checked={processor}
-            onChange={(e) => setProcessor(e.target.checked)}
-            label={t("users.cap.processor", "Processor")}
-            description={t(
-              "users.invite.processorDesc",
-              "The governance surface, run pipelines, agents, and the API.",
-            )}
-          />
+          {manageGrants && (
+            <Checkbox
+              checked={processor}
+              onChange={(e) => setProcessor(e.target.checked)}
+              label={t("users.cap.processor", "Processor")}
+              description={t(
+                "users.invite.processorDesc",
+                "The governance surface, run pipelines, agents, and the API.",
+              )}
+            />
+          )}
         </div>
       </div>
     </Modal>
