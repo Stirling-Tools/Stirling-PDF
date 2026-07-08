@@ -1243,6 +1243,8 @@
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   animation: portal-procmodal-fade 0.15s ease-out;
+  /* Portaled to <body>, outside .portal-scope, so set the portal UI font explicitly. */
+  font-family: var(--font-sans);
 }
 .portal-sidemodal__panel {
   position: relative;
@@ -1256,8 +1258,10 @@
   max-height: 86vh;
   overflow-y: auto;
 }
+/* Wide enough for Calendly's two-pane layout (its single-column layout below ~680px inner width is
+   tall and scrolls); paired with the embed's taller fixed height so the time view needs no scroll. */
 .portal-sidemodal__panel--wide {
-  max-width: 35rem;
+  max-width: 52rem;
 }
 .portal-sidemodal__header {
   margin-bottom: 1rem;

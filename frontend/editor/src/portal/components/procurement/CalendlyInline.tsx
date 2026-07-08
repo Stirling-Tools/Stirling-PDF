@@ -42,7 +42,7 @@ function buildUrl(base: string): string {
 
 export function CalendlyInline({
   url = CALENDLY_URL,
-  height = 640,
+  height = 760,
   email,
 }: {
   url?: string;
