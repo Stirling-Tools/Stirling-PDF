@@ -1,4 +1,10 @@
-import React, { useCallback, useMemo, useSyncExternalStore } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+} from "react";
 import { ActionIcon } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -375,8 +381,42 @@ export default function WorkbenchBar({
       })),
   ];
 
+  // Reflow the top row by content width: when the views + globals leave too
+  // little room for a usable search, bump the search to its own row
+  const barRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const bar = barRef.current;
+    if (!bar) return;
+    const MIN_SEARCH_WIDTH = 320;
+    const measure = () => {
+      const viewsEl = bar.querySelector<HTMLElement>(".workbench-bar-views");
+      const globalsEl = bar.querySelector<HTMLElement>(
+        ".workbench-bar-globals",
+      );
+      const viewsWidth = viewsEl?.offsetWidth ?? 0;
+      const globalsWidth = globalsEl?.offsetWidth ?? 0;
+      // clientWidth minus the two side clusters, the bar's 16px h-padding and
+      // the two 8px column gaps flanking the search.
+      const available = bar.clientWidth - viewsWidth - globalsWidth - 16 - 16;
+      bar.dataset.wrapped = String(available < MIN_SEARCH_WIDTH);
+    };
+    const ro = new ResizeObserver(measure);
+    ro.observe(bar);
+    const viewsEl = bar.querySelector<HTMLElement>(".workbench-bar-views");
+    const globalsEl = bar.querySelector<HTMLElement>(".workbench-bar-globals");
+    if (viewsEl) ro.observe(viewsEl);
+    if (globalsEl) ro.observe(globalsEl);
+    measure();
+    return () => ro.disconnect();
+  }, []);
+
   return (
-    <div className="workbench-bar" data-tour="workbench-bar">
+    <div
+      ref={barRef}
+      className="workbench-bar"
+      data-wrapped="true"
+      data-tour="workbench-bar"
+    >
       {/* Left: optional "Back to My Files" + view switcher */}
       <div className="workbench-bar-views" data-tour="view-switcher">
         {returnRoute && hasFiles && (

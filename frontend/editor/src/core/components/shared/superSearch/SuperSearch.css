@@ -5,6 +5,26 @@
   max-width: 560px;
 }
 
+.super-search input {
+  box-sizing: border-box;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background-color: var(--bg-muted);
+  /* Tighter than the shared TextInput default (8px/14px) for a compact,
+     professional bar — height lands in line with the 28px action icons. */
+  padding-top: 6px;
+  padding-bottom: 6px;
+  font-size: 13px;
+}
+
+[data-mantine-color-scheme="dark"] .super-search input {
+  background-color: var(--input-bg);
+}
+
+.super-search input:focus {
+  border-color: var(--accent-interactive);
+}
+
 /* Keyboard-shortcut hint pinned to the right of the input. */
 .super-search-kbd {
   position: absolute;
@@ -19,6 +39,8 @@
   color: var(--text-muted);
   background: var(--hover-bg);
   border: 1px solid var(--border-subtle);
+  /* Tiny breathing room between the ⌘ glyph and the K. */
+  letter-spacing: 0.06em;
 }
 
 /* Portalled to <body>; coords are set inline from the input's viewport rect. */

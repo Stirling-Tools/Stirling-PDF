@@ -2,13 +2,15 @@
 /* Horizontal toolbar at the top of the workbench area. */
 
 .workbench-bar {
-  /* Two-row grid: row 1 is [views | search | globals] with the search in an
-     `auto` centre column flanked by two equal 1fr tracks, so it stays
-     mathematically centred regardless of side content. Row 2 holds the
-     per-tool action icons on their own full-width strip. */
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  /* Flex-wrap layout that reflows by content width (measured in JS, which sets
+     data-wrapped). Roomy: row 1 is [views | search | globals] and the tool
+     icons sit on their own full-width row below. Crowded (data-wrapped): the
+     search bumps to its own row, leaving [views | globals] on row 1 and the
+     tools on row 3 — three rows total. `order` drives the reflow. */
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  align-content: flex-start;
   column-gap: 8px;
   min-height: 48px;
   padding: 0 8px;
@@ -20,14 +22,13 @@
 
 /* ---- View switcher (left) ---- */
 .workbench-bar-views {
-  grid-column: 1;
-  grid-row: 1;
-  justify-self: start;
+  order: 1;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 2px;
-  /* min-width:0 lets the 1fr track shrink instead of pushing the centre
-     column off-centre; overflow clips labels on very narrow viewports. */
+  /* min-width:0 lets it shrink instead of forcing a wrap; overflow clips labels
+     on very narrow viewports. */
   min-width: 0;
   overflow: hidden;
   height: 48px;
@@ -86,23 +87,30 @@
   line-height: 1;
 }
 
-/* ---- Super search (centre column, row 1) ---- */
+/* ---- Super search ---- */
+/* Roomy: grows to fill the centre between views and globals. */
 .workbench-bar-search {
-  grid-column: 2;
-  grid-row: 1;
-  justify-self: center;
+  order: 2;
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
   align-items: center;
-  /* Fixed-ish centre band: never collapses, never dominates. */
-  width: clamp(280px, 40vw, 560px);
-  max-width: 100%;
+  justify-content: center;
   height: 48px;
 }
 
-/* ---- Tool buttons (dedicated row 2, full width) ---- */
+/* Crowded: drops to its own full-width row between the top row and the tools. */
+.workbench-bar[data-wrapped="true"] .workbench-bar-search {
+  order: 3;
+  flex: 0 0 100%;
+  height: auto;
+  padding: 4px 0;
+}
+
+/* ---- Tool buttons (own full-width row, always below the top row) ---- */
 .workbench-bar-center {
-  grid-column: 1 / -1;
-  grid-row: 2;
+  order: 4;
+  flex: 0 0 100%;
   position: relative;
   display: flex;
   align-items: center;
@@ -148,14 +156,19 @@
 
 /* ---- Right: global buttons (print / download / save / close), row 1 ---- */
 .workbench-bar-globals {
-  grid-column: 3;
-  grid-row: 1;
-  justify-self: end;
+  order: 3;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 2px;
   min-width: 0;
   height: 48px;
+  margin-left: auto;
+}
+
+/* Crowded: globals stays on row 1, moving up beside the views. */
+.workbench-bar[data-wrapped="true"] .workbench-bar-globals {
+  order: 2;
 }
 
 /* Shared action icon style - applies to both center and global buttons */

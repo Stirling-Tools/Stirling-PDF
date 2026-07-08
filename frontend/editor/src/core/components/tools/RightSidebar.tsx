@@ -124,14 +124,6 @@ export default function RightSidebar() {
     policiesVisible &&
     !allToolsView &&
     leftPanelView === "toolPicker";
-  // When Policies are shown, the search moves OUT of the header to sit between
-  // the Policies and Tools sections (separating them); otherwise it stays in the
-  // header. Show the header search when there's a close button, or in the
-  // default tool-picker view.
-  const showInlineSearch = showPolicies && !showCloseButton;
-  const showHeaderSearch =
-    !showInlineSearch && (showCloseButton || leftPanelView === "toolPicker");
-
   const handleHeaderBack = () => {
     if (inToolView) {
       withViewTransition(() => handleBackToTools());
@@ -299,7 +291,13 @@ export default function RightSidebar() {
                     }
                   />
                 ) : (
-                  <div className="tool-panel__compact-header">
+                  <div
+                    className={`tool-panel__compact-header${
+                      headerCollapseOnly
+                        ? " tool-panel__compact-header--collapse-only"
+                        : ""
+                    }`}
+                  >
                     {showCloseButton ? (
                       <ActionIcon
                         variant="subtle"

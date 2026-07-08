@@ -19,10 +19,8 @@ import { fileStorage } from "@app/services/fileStorage";
 import { rankByFuzzy, idToWords } from "@app/utils/fuzzySearch";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { ToolId } from "@app/types/toolId";
-import {
-  SETTINGS_SEARCH_INDEX,
-  SETTINGS_SECTIONS,
-} from "@app/data/settingsSearchIndex";
+import { SETTINGS_SEARCH_INDEX } from "@app/data/settingsSearchIndex";
+import { SETTINGS_SECTION_REGISTRY } from "@app/data/settingsSectionRegistry";
 
 export type SuperSearchGroupId = "files" | "tools" | "settings";
 
@@ -219,10 +217,13 @@ export function useSuperSearch(
       onSelect: () => openSettings(item.section, item.anchor),
     }));
 
-    // Section-level entries (whole tab), gated like the modal nav.
-    const visibleSections = SETTINGS_SECTIONS.filter((s) => {
-      if (s.adminOnly && !isAdmin) return false;
+    // Section-level entries (whole tab), gated like the modal nav. The registry
+    // resolves per build (core / proprietary / saas / desktop), so this only
+    // ever sees sections the current build's settings modal can actually show.
+    const visibleSections = SETTINGS_SECTION_REGISTRY.filter((s) => {
       if (s.requiresLogin && !loginEnabled) return false;
+      // Admin-area sections mirror the builder's `isAdmin || !loginEnabled` gate.
+      if (s.adminArea && !(isAdmin || !loginEnabled)) return false;
       return true;
     });
     const sections = rankByFuzzy(visibleSections, trimmed, [
