@@ -153,7 +153,8 @@ export async function changeMemberRole(
   const holdsAdmin = member.role === "admin";
   const holdsLeader = member.teamLead === true;
   // A stored web-only/demo authority must be lifted to ROLE_USER for member/team_owner.
-  const holdsWebOnly = member.role === "guest";
+  // roleIdFor() surfaces a web-only account as "member", so read the raw authority.
+  const holdsWebOnly = (member.authority ?? "").includes("ROLE_WEB_ONLY_USER");
 
   if (target === "guest") {
     // Demote to web-only; drop any leadership first so no team is left ownerless-by-a-guest.

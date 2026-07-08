@@ -18,15 +18,26 @@ public class SecretMasker {
     // Cap recursion so a pathologically nested payload cannot overflow the stack.
     private static final int MAX_DEPTH = 32;
 
+    // Key-name substrings that mark a value sensitive. Over-masking a non-secret is
+    // safe; leaking a secret is not, so this errs broad - but a per-type schema
+    // whitelist would be a stronger boundary for free-form config (follow-up).
     private static final Set<String> SENSITIVE_HINTS =
             Set.of(
                     "secret",
                     "password",
+                    "passphrase",
+                    "pwd",
                     "token",
                     "apikey",
                     "accesskey",
                     "credential",
-                    "privatekey");
+                    "privatekey",
+                    "authorization",
+                    "cookie",
+                    "session",
+                    "connectionstring",
+                    "bearer",
+                    "signature");
 
     /** Replace sensitive values with the mask (recursively) for safe display. */
     public Map<String, Object> mask(Map<String, Object> config) {

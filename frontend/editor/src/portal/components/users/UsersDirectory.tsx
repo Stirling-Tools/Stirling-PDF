@@ -145,6 +145,10 @@ export function UsersDirectory({
   }
 
   function rowKebab(m: Member) {
+    // Removal is org-delete (admin-only) - the only backed path. SaaS "remove from
+    // team" has no endpoint, so don't offer a control that would 403 or org-delete.
+    const canRemove = capabilities.removeScope === "org";
+    if (!rowKebabHasUpperActions(m) && !canRemove) return null;
     return (
       <Menu position="bottom-end" withinPortal shadow="md" width={210}>
         <Menu.Target>
@@ -186,16 +190,16 @@ export function UsersDirectory({
               {t("users.action.disableMfa", "Reset MFA")}
             </Menu.Item>
           )}
-          {rowKebabHasUpperActions(m) && <Menu.Divider />}
-          <Menu.Item
-            color="red"
-            disabled={m.isSelf}
-            onClick={() => onRemove(m)}
-          >
-            {capabilities.removeScope === "team"
-              ? t("users.action.removeTeam", "Remove from team")
-              : t("users.action.remove", "Remove from org")}
-          </Menu.Item>
+          {canRemove && rowKebabHasUpperActions(m) && <Menu.Divider />}
+          {canRemove && (
+            <Menu.Item
+              color="red"
+              disabled={m.isSelf}
+              onClick={() => onRemove(m)}
+            >
+              {t("users.action.remove", "Remove from org")}
+            </Menu.Item>
+          )}
         </Menu.Dropdown>
       </Menu>
     );
