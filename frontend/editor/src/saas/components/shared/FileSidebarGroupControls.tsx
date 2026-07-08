@@ -16,6 +16,7 @@ import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { LabelChip } from "@app/ui/LabelChip";
 import { LabelIconPicker } from "@app/components/policies/LabelIconPicker";
+import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
 import { useClassificationLabels } from "@app/hooks/useClassificationLabels";
 import { DEFAULT_LABEL_ICON } from "@app/data/labelIcons";
 import { bucketStubsByLabel } from "@app/components/shared/fileSidebarGroupingLogic";
@@ -46,6 +47,7 @@ export function FileSidebarGroupControls({
   stubs,
 }: FileSidebarGroupControlsProps) {
   const { t } = useTranslation();
+  const enabled = useClassificationEnabled();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const categories = useSyncExternalStore(
@@ -162,6 +164,10 @@ export function FileSidebarGroupControls({
     setExpanded((prev) => new Set(prev).add(id));
     setNewCategory("");
   };
+
+  // Classification off (non-AI SaaS tenant) → no "customize groups" affordance,
+  // matching the flat, ungrouped list. (All hooks above run unconditionally.)
+  if (!enabled) return null;
 
   return (
     <>

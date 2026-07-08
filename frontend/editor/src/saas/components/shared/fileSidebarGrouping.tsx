@@ -9,6 +9,7 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
+import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
 import { useClassificationLabels } from "@app/hooks/useClassificationLabels";
 import { fileStorage } from "@app/services/fileStorage";
 import { readStubClassificationLabels } from "@app/services/fileClassification";
@@ -50,7 +51,11 @@ export function useFileSidebarGroups(
   stubs: StirlingFileStub[],
 ): FileSidebarGroup[] | null {
   const { t } = useTranslation();
-  const { teamLabels: labelSet } = useClassificationLabels(true);
+  // Classification off (AI disabled) → no grouping at all: return the flat list
+  // like core, and don't fetch team labels or backfill from metadata. Gates the
+  // whole feature so an AI-off SaaS tenant sees no Recent/Other/category chrome.
+  const enabled = useClassificationEnabled();
+  const { teamLabels: labelSet } = useClassificationLabels(enabled);
   const { bumpRevision } = useIndexedDB();
   // Attempted reads keyed by id+lastModified: a re-classified file (new version bumps lastModified) is re-read and leaves "Other" on its own, while a truly-unlabelled file keeps a stable key and is read once.
   const attempted = useRef<Set<string>>(new Set());
@@ -61,6 +66,7 @@ export function useFileSidebarGroups(
 
   // Fallback for files that arrive with labels already in metadata but no policy delivery (imports/shares): read+cache a few per idle pass, yielding while a policy wave is in flight since those stubs get stamped on delivery anyway.
   useEffect(() => {
+    if (!enabled) return;
     const pending = stubs
       .filter(
         (s) => !s.classificationLabels && !attempted.current.has(attemptKey(s)),
@@ -100,14 +106,14 @@ export function useFileSidebarGroups(
       cancelIdle();
       if (retryTimer !== undefined) window.clearTimeout(retryTimer);
     };
-  }, [stubs, bumpRevision, retryTick]);
+  }, [enabled, stubs, bumpRevision, retryTick]);
 
   const categories = useSyncExternalStore(
     subscribeSidebarCategories,
     getSidebarCategories,
   );
   return useMemo(
-    () => buildLabelGroups(stubs, labelSet, t, categories),
-    [stubs, labelSet, t, categories],
+    () => (enabled ? buildLabelGroups(stubs, labelSet, t, categories) : null),
+    [enabled, stubs, labelSet, t, categories],
   );
 }

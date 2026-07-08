@@ -27,6 +27,7 @@ import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
 import { fileStorage } from "@app/services/fileStorage";
 import { readStubClassificationLabels } from "@app/services/fileClassification";
 import { useLabelName } from "@app/data/labelDisplay";
+import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
 import {
   VersionTimeline,
   DetailField,
@@ -85,6 +86,7 @@ export function FileDetailsPanel({
   // Stored as label ids; resolve to display names via the seam.
   const [classification, setClassification] = useState<string[] | null>(null);
   const [classificationOpen, setClassificationOpen] = useState(false);
+  const classificationEnabled = useClassificationEnabled();
   const labelName = useLabelName();
   // Version chain for the selected file; empty for v1 or multi-select.
   const [versionChain, setVersionChain] = useState<StirlingFileStub[]>([]);
@@ -113,8 +115,12 @@ export function FileDetailsPanel({
 
   // Show the file's classification labels: the stub's cached copy when present
   // (free — no byte load), else read the PDF metadata via the shared service.
+  // Gated on classification being enabled (SaaS + AI): off-feature we never read
+  // the metadata or show the section, so a PDF that happens to carry the
+  // StirlingPDFClassification key never reveals the feature in a build without it.
   useEffect(() => {
     setClassification(null);
+    if (!classificationEnabled) return;
     const stub = singleFileForChain;
     if (!stub) return;
     if (stub.classificationLabels && stub.classificationLabels.length > 0) {
@@ -128,7 +134,7 @@ export function FileDetailsPanel({
     return () => {
       cancelled = true;
     };
-  }, [singleFileForChain]);
+  }, [singleFileForChain, classificationEnabled]);
 
   if (files.length === 0) {
     return null;
