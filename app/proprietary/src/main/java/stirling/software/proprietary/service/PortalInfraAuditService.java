@@ -6,20 +6,16 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.audit.AuditEventType;
+import stirling.software.proprietary.audit.PortalAuditEventRow;
 import stirling.software.proprietary.model.api.audit.InfraAuditEventDto;
 import stirling.software.proprietary.model.api.audit.InfraAuditLogResponse;
 import stirling.software.proprietary.model.api.audit.InfraAuditSummary;
-import stirling.software.proprietary.model.security.PersistentAuditEvent;
-import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
@@ -29,19 +25,13 @@ import tools.jackson.databind.ObjectMapper;
  *
  * <p>The raw audit types ({@link AuditEventType}) are mapped to the tab's display categories
  * (auth/config/processing/security) and the read-noise types (UI_DATA, HTTP_REQUEST) are dropped.
- * The result is cached ({@code portalInfraAuditLog}, short TTL - see CacheConfig) so the tab does
- * not hit the database on every load.
+ * The underlying rows come from {@link PortalAuditReadService}, which caches one scoped read shared
+ * across every audit-derived surface; mapping here is cheap and runs per request.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class PortalInfraAuditService {
-
-    /** Cache name - registered with a short TTL in CacheConfig. */
-    public static final String CACHE_NAME = "portalInfraAuditLog";
-
-    /** Newest candidate rows to scan (before filtering out read-noise). */
-    private static final int SCAN_LIMIT = 200;
 
     /** Rows returned to the tab after filtering. */
     private static final int RETURN_LIMIT = 40;
@@ -49,38 +39,28 @@ public class PortalInfraAuditService {
     private static final DateTimeFormatter TS_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.UTC);
 
-    private final PersistentAuditEventRepository auditRepository;
+    private final PortalAuditReadService auditReadService;
     private final ObjectMapper objectMapper;
 
-    /** Whole-server view (admins). Cached under the {@code "server"} key. */
-    @Cacheable(value = CACHE_NAME, key = "'server'")
+    /** Whole-server view (admins). */
     public InfraAuditLogResponse serverAuditLog() {
-        return buildFromEvents(auditRepository.findAll(recentPage()).getContent(), true);
+        return buildFromEvents(auditReadService.serverEvents(), true);
     }
 
     /**
      * Team-scoped view: only events whose principal is in {@code principals} (a team's member
-     * emails). Cached per {@code cacheKey} (e.g. {@code "team:42"}) so a team leader's repeated
-     * loads don't re-scan the DB. An empty principal set yields an empty log rather than a query.
+     * emails). Reads through {@link PortalAuditReadService}'s per-team cache; an empty principal
+     * set yields an empty log rather than a query.
      */
-    @Cacheable(value = CACHE_NAME, key = "#cacheKey")
     public InfraAuditLogResponse scopedAuditLog(String cacheKey, List<String> principals) {
-        if (principals.isEmpty()) {
-            return buildFromEvents(List.of(), false);
-        }
-        return buildFromEvents(
-                auditRepository.findByPrincipalIn(principals, recentPage()).getContent(), false);
-    }
-
-    private static PageRequest recentPage() {
-        return PageRequest.of(0, SCAN_LIMIT, Sort.by(Sort.Direction.DESC, "timestamp"));
+        return buildFromEvents(auditReadService.scopedEvents(cacheKey, principals), false);
     }
 
     private InfraAuditLogResponse buildFromEvents(
-            List<PersistentAuditEvent> recent, boolean fullServer) {
+            List<PortalAuditEventRow> recent, boolean fullServer) {
         List<InfraAuditEventDto> events =
                 recent.stream()
-                        .filter(e -> isInfraRelevant(e.getType()))
+                        .filter(e -> isInfraRelevant(e.type()))
                         .map(this::toDto)
                         .limit(RETURN_LIMIT)
                         .toList();
@@ -112,35 +92,34 @@ public class PortalInfraAuditService {
                 && !AuditEventType.HTTP_REQUEST.name().equals(type);
     }
 
-    private InfraAuditEventDto toDto(PersistentAuditEvent event) {
+    private InfraAuditEventDto toDto(PortalAuditEventRow event) {
         Map<String, Object> data = parseData(event);
         String path = asString(data.get("path"));
-        String category = categoryFor(event.getType(), path);
+        String category = categoryFor(event.type(), path);
 
         return InfraAuditEventDto.builder()
-                .id(String.valueOf(event.getId()))
-                .timestamp(
-                        event.getTimestamp() == null ? "" : TS_FORMAT.format(event.getTimestamp()))
+                .id(String.valueOf(event.id()))
+                .timestamp(event.timestamp() == null ? "" : TS_FORMAT.format(event.timestamp()))
                 .category(category)
-                .action(actionFor(event.getType(), path))
-                .actor(event.getPrincipal())
+                .action(actionFor(event.type(), path))
+                .actor(event.principal())
                 .target(targetFor(category, path, data))
-                .status(statusFor(event.getType(), category, data))
+                .status(statusFor(event.type(), category, data))
                 .latencyMs(asLong(data.get("latencyMs")))
                 .build();
     }
 
-    private Map<String, Object> parseData(PersistentAuditEvent event) {
-        if (event.getData() == null || event.getData().isEmpty()) {
+    private Map<String, Object> parseData(PortalAuditEventRow event) {
+        if (event.data() == null || event.data().isEmpty()) {
             return Map.of();
         }
         try {
             @SuppressWarnings("unchecked")
-            Map<String, Object> parsed = objectMapper.readValue(event.getData(), Map.class);
+            Map<String, Object> parsed = objectMapper.readValue(event.data(), Map.class);
             // A literal "null" payload parses to null; treat it as empty, not an NPE.
             return parsed == null ? Map.of() : parsed;
         } catch (JacksonException e) {
-            log.warn("Failed to parse audit event {} data as JSON", event.getId());
+            log.warn("Failed to parse audit event {} data as JSON", event.id());
             return Map.of();
         }
     }

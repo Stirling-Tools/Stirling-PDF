@@ -7,21 +7,17 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.audit.AuditEventType;
+import stirling.software.proprietary.audit.PortalAuditEventRow;
 import stirling.software.proprietary.model.api.documents.PortalDocAuditEventDto;
 import stirling.software.proprietary.model.api.documents.PortalDocumentsResponseDto;
 import stirling.software.proprietary.model.api.documents.PortalDocumentsSummaryDto;
 import stirling.software.proprietary.model.api.documents.PortalReviewDocumentDto;
-import stirling.software.proprietary.model.security.PersistentAuditEvent;
-import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
@@ -30,50 +26,39 @@ import tools.jackson.databind.ObjectMapper;
  * Builds the portal Documents processing-activity feed from real {@code audit_events}. Each file in
  * a PDF_PROCESS / FILE_OPERATION event is one activity row: product (API vs Editor), operation,
  * user, outcome (processed/error), and time. Extraction fields don't exist yet, so {@code
- * confidence}/{@code extractions} come back null/empty. Cached per scope.
+ * confidence}/{@code extractions} come back null/empty. Rows come from the shared, per-scope cache
+ * in {@link PortalAuditReadService}; mapping runs per request.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class PortalDocumentsService {
 
-    public static final String CACHE_NAME = "portalDocuments";
-
-    private static final int SCAN_LIMIT = 400;
     private static final int RETURN_LIMIT = 40;
 
-    private final PersistentAuditEventRepository auditRepository;
+    private final PortalAuditReadService auditReadService;
     private final ObjectMapper objectMapper;
 
     /** Whole-server view (admins). */
-    @Cacheable(value = CACHE_NAME, key = "'server'")
     public PortalDocumentsResponseDto serverDocuments() {
-        return build(auditRepository.findAll(recentPage()).getContent());
+        return build(auditReadService.serverEvents());
     }
 
     /** Team-scoped view: only files touched by {@code principals}. */
-    @Cacheable(value = CACHE_NAME, key = "#cacheKey")
     public PortalDocumentsResponseDto scopedDocuments(String cacheKey, List<String> principals) {
-        if (principals.isEmpty()) {
-            return build(List.of());
-        }
-        return build(auditRepository.findByPrincipalIn(principals, recentPage()).getContent());
+        return build(auditReadService.scopedEvents(cacheKey, principals));
     }
 
-    private static PageRequest recentPage() {
-        return PageRequest.of(0, SCAN_LIMIT, Sort.by(Sort.Direction.DESC, "timestamp"));
-    }
-
-    private PortalDocumentsResponseDto build(List<PersistentAuditEvent> events) {
+    private PortalDocumentsResponseDto build(List<PortalAuditEventRow> events) {
         // Events arrive newest-first; each file in a processing event is one activity row.
         Instant dayAgo = Instant.now().minus(Duration.ofDays(1));
         List<PortalReviewDocumentDto> documents = new ArrayList<>();
         int processedToday = 0;
-        for (PersistentAuditEvent event : events) {
+        for (PortalAuditEventRow event : events) {
             if (documents.size() >= RETURN_LIMIT) {
                 break;
             }
-            if (!isFileBearing(event.getType())) {
+            if (!isFileBearing(event.type())) {
                 continue;
             }
             Map<String, Object> data = parseData(event);
@@ -86,8 +71,8 @@ public class PortalDocumentsService {
             String product = "API integration".equals(source) ? "API" : "Editor";
             String action = prettyTool(path);
             boolean failed = isFailure(data);
-            Instant ts = event.getTimestamp();
-            long eventId = event.getId() == null ? 0L : event.getId();
+            Instant ts = event.timestamp();
+            long eventId = event.id();
             int idx = 0;
             for (Object f : fileList) {
                 if (documents.size() >= RETURN_LIMIT) {
@@ -107,7 +92,7 @@ public class PortalDocumentsService {
                                 asString(fileMap.get("type")),
                                 product,
                                 action,
-                                event.getPrincipal(),
+                                event.principal(),
                                 failed,
                                 source,
                                 ts));
@@ -269,17 +254,17 @@ public class PortalDocumentsService {
         return (hours / 24) + "d ago";
     }
 
-    private Map<String, Object> parseData(PersistentAuditEvent event) {
-        if (event.getData() == null || event.getData().isEmpty()) {
+    private Map<String, Object> parseData(PortalAuditEventRow event) {
+        if (event.data() == null || event.data().isEmpty()) {
             return Map.of();
         }
         try {
             @SuppressWarnings("unchecked")
-            Map<String, Object> parsed = objectMapper.readValue(event.getData(), Map.class);
+            Map<String, Object> parsed = objectMapper.readValue(event.data(), Map.class);
             // A literal "null" payload parses to null; treat it as empty, not an NPE.
             return parsed == null ? Map.of() : parsed;
         } catch (JacksonException e) {
-            log.warn("Failed to parse audit event {} data as JSON", event.getId());
+            log.warn("Failed to parse audit event {} data as JSON", event.id());
             return Map.of();
         }
     }
