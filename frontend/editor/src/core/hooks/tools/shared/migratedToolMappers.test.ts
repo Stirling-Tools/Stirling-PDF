@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { type RegistryToolOperationConfig } from "@app/hooks/tools/shared/toolOperationTypes";
+import {
+  ToolType,
+  type RegistryToolOperationConfig,
+} from "@app/hooks/tools/shared/toolOperationTypes";
 import { objectToFormData } from "@app/hooks/tools/shared/toolApiMapping";
 
 // Pilot tools.
@@ -104,15 +107,26 @@ describe("migrated tool mappers (sweep)", () => {
       expect(config.toApiParams).toBeDefined();
       expect(config.fromApiParams).toBeDefined();
 
-      // toApiParams(defaults) must produce a body objectToFormData can serialize
-      // (i.e. only primitives / arrays of primitives). A mapper that leaked a
-      // structured value would throw here.
+      // Serialize the defaults through the tool's own buildFormData - the real
+      // path the executor uses - so a tool whose toApiParams carries a structured
+      // field that buildFormData flattens itself (e.g. changeMetadata's
+      // allRequestParams map) is exercised too, not just tools whose mapper
+      // output is directly objectToFormData-able. Custom tools have no
+      // buildFormData, so fall back to serializing the mapper output directly.
       const params =
         config.defaultParameters ?? FALLBACK_PARAMS[config.operationType] ?? {};
-      const apiParams = config.toApiParams!(params);
-      expect(() =>
-        objectToFormData(apiParams, { fileInput: file }),
-      ).not.toThrow();
+      if (config.toolType === ToolType.multiFile) {
+        const build = config.buildFormData;
+        expect(() => build(params, [file])).not.toThrow();
+      } else if (config.toolType === ToolType.singleFile) {
+        const build = config.buildFormData;
+        expect(() => build(params, file)).not.toThrow();
+      } else {
+        const toApiParams = config.toApiParams!;
+        expect(() =>
+          objectToFormData(toApiParams(params), { fileInput: file }),
+        ).not.toThrow();
+      }
     },
   );
 });
