@@ -1,12 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  ActionIcon,
-  Button,
-  Group,
-  Stack,
-  Text,
-  TextInput,
-} from "@mantine/core";
+import { Group, Stack, Text, TextInput } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import CloseIcon from "@mui/icons-material/Close";
 import { EditTextCommand } from "@app/tools/pdfTextEditor/v2/commands/EditTextCommand";
@@ -163,14 +157,14 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
         <Text size="sm" fw={500}>
           {t("pdfTextEditorV2.find.title", "Find & replace")}
         </Text>
-        <ActionIcon
-          variant="subtle"
+        <Button
+          variant="tertiary"
+          size="sm"
           onClick={onClose}
           aria-label={t("pdfTextEditorV2.find.close", "Close find bar")}
           data-testid="v2-find-close"
-        >
-          <CloseIcon fontSize="small" />
-        </ActionIcon>
+          leftSection={<CloseIcon fontSize="small" />}
+        />
       </Group>
       <TextInput
         ref={inputRef}
@@ -234,8 +228,8 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
             : ""}
         </Text>
         <Button
-          size="xs"
-          variant="subtle"
+          size="sm"
+          variant="tertiary"
           onClick={prev}
           disabled={matches.length === 0}
           data-testid="v2-find-prev"
@@ -243,8 +237,8 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
           ↑
         </Button>
         <Button
-          size="xs"
-          variant="subtle"
+          size="sm"
+          variant="tertiary"
           onClick={next}
           disabled={matches.length === 0}
           data-testid="v2-find-next"
@@ -252,8 +246,8 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
           ↓
         </Button>
         <Button
-          size="xs"
-          variant="subtle"
+          size="sm"
+          variant="tertiary"
           onClick={doReplaceOne}
           disabled={matches.length === 0 || !query}
           data-testid="v2-replace-one"
@@ -261,8 +255,8 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
           {t("pdfTextEditorV2.find.replace", "Replace")}
         </Button>
         <Button
-          size="xs"
-          variant="subtle"
+          size="sm"
+          variant="tertiary"
           onClick={doReplaceAll}
           disabled={matches.length === 0 || !query}
           data-testid="v2-replace-all"

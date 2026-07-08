@@ -8,8 +8,14 @@ import path from "path";
  * (finding R). Verified by scanning the saved PDF for the DCTDecode filter.
  */
 
-const SAMPLE_PDF = path.join(__dirname, "../test-fixtures/sample.pdf");
-const SAMPLE_JPG = path.join(__dirname, "../test-fixtures/sample.jpg");
+const SAMPLE_PDF = path.join(
+  import.meta.dirname,
+  "../test-fixtures/sample.pdf",
+);
+const SAMPLE_JPG = path.join(
+  import.meta.dirname,
+  "../test-fixtures/sample.jpg",
+);
 
 test("inserting a JPEG embeds it as DCTDecode, not re-encoded RGBA", async ({
   page,

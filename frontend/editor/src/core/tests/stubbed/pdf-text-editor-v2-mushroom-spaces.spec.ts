@@ -18,7 +18,10 @@ import path from "path";
  * non-whitespace chars, and the paragraph keeps all its lines.
  */
 
-const MUSHROOM = path.join(__dirname, "../test-fixtures/mushroom-life.pdf");
+const MUSHROOM = path.join(
+  import.meta.dirname,
+  "../test-fixtures/mushroom-life.pdf",
+);
 
 interface CharcodeEvent {
   text: string;

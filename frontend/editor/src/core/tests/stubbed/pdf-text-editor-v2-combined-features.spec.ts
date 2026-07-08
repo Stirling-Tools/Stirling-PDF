@@ -12,8 +12,11 @@ import type {
  * find+replace) AND their interaction with the 12 bug fixes. Page-level
  * operations (page rotate/print/reset) are intentionally absent.
  */
-const SAMPLE = path.join(__dirname, "../../../../public/samples/Sample.pdf");
-const PNG = path.join(__dirname, "../test-fixtures/sample.png");
+const SAMPLE = path.join(
+  import.meta.dirname,
+  "../../../../public/samples/Sample.pdf",
+);
+const PNG = path.join(import.meta.dirname, "../test-fixtures/sample.png");
 
 // z-order / align / distribute live in the toolbar's "Arrange" menu, and
 // image rotate/flip in the "Image" menu. Open the menu, then click the item.

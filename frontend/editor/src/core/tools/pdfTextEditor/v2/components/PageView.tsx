@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Box, Loader } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { PdfiumPageRenderer } from "@app/tools/pdfTextEditor/v2/pdfium/PdfiumPageRenderer";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/v2/types";
@@ -265,22 +266,16 @@ export function PageView({
         >
           <span style={{ fontSize: 13 }}>Failed to render page</span>
           <span style={{ fontSize: 11, opacity: 0.8 }}>{renderError}</span>
-          <button
+          <Button
             type="button"
+            size="sm"
+            variant="secondary"
+            accent="danger"
             onClick={() => setRetryToken((t) => t + 1)}
-            style={{
-              border: "1px solid #a00",
-              background: "#fff",
-              color: "#a00",
-              borderRadius: 4,
-              padding: "4px 10px",
-              cursor: "pointer",
-              fontSize: 12,
-            }}
             data-testid={`v2-page-${page.pageIndex}-retry`}
           >
             Retry
-          </button>
+          </Button>
         </Box>
       )}
       <Box

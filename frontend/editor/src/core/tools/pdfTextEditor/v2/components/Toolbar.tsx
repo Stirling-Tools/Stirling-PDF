@@ -1,6 +1,4 @@
 import {
-  ActionIcon,
-  Button,
   ColorInput,
   Group,
   Menu,
@@ -9,6 +7,7 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import UndoIcon from "@mui/icons-material/Undo";
 import RedoIcon from "@mui/icons-material/Redo";
 import DeleteIcon from "@mui/icons-material/DeleteOutlined";
@@ -165,28 +164,28 @@ export function Toolbar({
       <Tooltip
         label={t("pdfTextEditorV2.toolbar.undoTooltip", "Undo (Ctrl+Z)")}
       >
-        <ActionIcon
-          variant="subtle"
+        <Button
+          variant="tertiary"
+          size="sm"
           onClick={onUndo}
           disabled={!canUndo}
           aria-label={t("pdfTextEditorV2.toolbar.undo", "Undo")}
           data-testid="v2-undo"
-        >
-          <UndoIcon fontSize="small" />
-        </ActionIcon>
+          leftSection={<UndoIcon fontSize="small" />}
+        />
       </Tooltip>
       <Tooltip
         label={t("pdfTextEditorV2.toolbar.redoTooltip", "Redo (Ctrl+Y)")}
       >
-        <ActionIcon
-          variant="subtle"
+        <Button
+          variant="tertiary"
+          size="sm"
           onClick={onRedo}
           disabled={!canRedo}
           aria-label={t("pdfTextEditorV2.toolbar.redo", "Redo")}
           data-testid="v2-redo"
-        >
-          <RedoIcon fontSize="small" />
-        </ActionIcon>
+          leftSection={<RedoIcon fontSize="small" />}
+        />
       </Tooltip>
       <ToolbarSeparator />
       <Select
@@ -229,26 +228,26 @@ export function Toolbar({
         data-testid="v2-colour"
       />
       <Tooltip label={t("pdfTextEditorV2.toolbar.bold", "Bold")}>
-        <ActionIcon
-          variant={state.bold ? "filled" : "subtle"}
+        <Button
+          variant={state.bold ? "primary" : "tertiary"}
+          size="sm"
           onClick={onToggleBold}
           disabled={disabled}
           aria-label={t("pdfTextEditorV2.toolbar.bold", "Bold")}
           data-testid="v2-bold"
-        >
-          <FormatBoldIcon fontSize="small" />
-        </ActionIcon>
+          leftSection={<FormatBoldIcon fontSize="small" />}
+        />
       </Tooltip>
       <Tooltip label={t("pdfTextEditorV2.toolbar.italic", "Italic")}>
-        <ActionIcon
-          variant={state.italic ? "filled" : "subtle"}
+        <Button
+          variant={state.italic ? "primary" : "tertiary"}
+          size="sm"
           onClick={onToggleItalic}
           disabled={disabled}
           aria-label={t("pdfTextEditorV2.toolbar.italic", "Italic")}
           data-testid="v2-italic"
-        >
-          <FormatItalicIcon fontSize="small" />
-        </ActionIcon>
+          leftSection={<FormatItalicIcon fontSize="small" />}
+        />
       </Tooltip>
       <Menu shadow="md" position="bottom-start" withinPortal>
         <Menu.Target>
@@ -258,17 +257,17 @@ export function Toolbar({
               "Change case (text runs only)",
             )}
           >
-            <ActionIcon
-              variant="subtle"
+            <Button
+              variant="tertiary"
+              size="sm"
               disabled={disabled || !hasRunSelection}
               aria-label={t(
                 "pdfTextEditorV2.toolbar.changeCase",
                 "Change case",
               )}
               data-testid="v2-change-case"
-            >
-              <TextFieldsIcon fontSize="small" />
-            </ActionIcon>
+              leftSection={<TextFieldsIcon fontSize="small" />}
+            />
           </Tooltip>
         </Menu.Target>
         <Menu.Dropdown>
@@ -312,8 +311,9 @@ export function Toolbar({
               )
         }
       >
-        <ActionIcon
-          variant={selectionAllLocked ? "filled" : "subtle"}
+        <Button
+          variant={selectionAllLocked ? "primary" : "tertiary"}
+          size="sm"
           onClick={onToggleLock}
           disabled={disabled}
           aria-label={
@@ -322,27 +322,28 @@ export function Toolbar({
               : t("pdfTextEditorV2.toolbar.lock", "Lock selection")
           }
           data-testid="v2-toggle-lock"
-        >
-          {selectionAllLocked ? (
-            <LockIcon fontSize="small" />
-          ) : (
-            <LockOpenIcon fontSize="small" />
-          )}
-        </ActionIcon>
+          leftSection={
+            selectionAllLocked ? (
+              <LockIcon fontSize="small" />
+            ) : (
+              <LockOpenIcon fontSize="small" />
+            )
+          }
+        />
       </Tooltip>
       <Tooltip
         label={t("pdfTextEditorV2.toolbar.deleteTooltip", "Delete (Del)")}
       >
-        <ActionIcon
-          variant="subtle"
-          color="red"
+        <Button
+          variant="tertiary"
+          accent="danger"
+          size="sm"
           onClick={onDelete}
           disabled={disabled}
           aria-label={t("pdfTextEditorV2.toolbar.delete", "Delete selected")}
           data-testid="v2-delete"
-        >
-          <DeleteIcon fontSize="small" />
-        </ActionIcon>
+          leftSection={<DeleteIcon fontSize="small" />}
+        />
       </Tooltip>
       <ToolbarSeparator />
       {/* Arrange groups the object-level z-order, align and distribute
@@ -351,8 +352,9 @@ export function Toolbar({
       <Menu shadow="md" position="bottom-start" withinPortal closeOnItemClick>
         <Menu.Target>
           <Button
-            size="xs"
-            variant="default"
+            size="sm"
+            variant="secondary"
+            accent="neutral"
             leftSection={<LayersIcon fontSize="small" />}
             rightSection={<ExpandMoreIcon fontSize="small" />}
             disabled={disabled}
@@ -489,8 +491,9 @@ export function Toolbar({
       <Menu shadow="md" position="bottom-start" withinPortal closeOnItemClick>
         <Menu.Target>
           <Button
-            size="xs"
-            variant="default"
+            size="sm"
+            variant="secondary"
+            accent="neutral"
             leftSection={<ImageIcon fontSize="small" />}
             rightSection={<ExpandMoreIcon fontSize="small" />}
             disabled={disabled}

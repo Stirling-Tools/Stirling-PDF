@@ -40,7 +40,9 @@ async function load(
   await expect(page.getByTestId("v2-root")).toBeVisible({ timeout: 30_000 });
   await page
     .locator('[data-testid="v2-file-input"]')
-    .setInputFiles(path.join(__dirname, `../test-fixtures/${name}.pdf`));
+    .setInputFiles(
+      path.join(import.meta.dirname, `../test-fixtures/${name}.pdf`),
+    );
   await expect(page.getByTestId("v2-page-0")).toBeVisible({ timeout: 30_000 });
   await page.waitForTimeout(800);
   return page.evaluate(() => {
@@ -163,7 +165,7 @@ test("editing text on a Rotate-90 page applies cleanly and keeps placement in-bo
   await page
     .locator('[data-testid="v2-file-input"]')
     .setInputFiles(
-      path.join(__dirname, "../test-fixtures/cropbox-rotate90.pdf"),
+      path.join(import.meta.dirname, "../test-fixtures/cropbox-rotate90.pdf"),
     );
   await expect(page.getByTestId("v2-page-0")).toBeVisible({ timeout: 30_000 });
   await page.waitForTimeout(800);
@@ -264,7 +266,9 @@ test("CropBox-offset: the rendered glyph pixels overlap the run overlay box", as
   await expect(page.getByTestId("v2-root")).toBeVisible({ timeout: 30_000 });
   await page
     .locator('[data-testid="v2-file-input"]')
-    .setInputFiles(path.join(__dirname, "../test-fixtures/cropbox-offset.pdf"));
+    .setInputFiles(
+      path.join(import.meta.dirname, "../test-fixtures/cropbox-offset.pdf"),
+    );
   await expect(page.getByTestId("v2-page-0")).toBeVisible({ timeout: 30_000 });
   await page.waitForTimeout(1200);
 

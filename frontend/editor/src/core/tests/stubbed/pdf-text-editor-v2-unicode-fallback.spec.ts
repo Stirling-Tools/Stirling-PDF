@@ -16,7 +16,10 @@ import type { V2TestWindow } from "@app/tests/stubbed/v2EditorTestTypes";
  * re-emit path where the fallback kicks in.
  */
 
-const SAMPLE = path.join(__dirname, "../../../../public/samples/Sample.pdf");
+const SAMPLE = path.join(
+  import.meta.dirname,
+  "../../../../public/samples/Sample.pdf",
+);
 
 // Scripts the bundled Noto Sans covers - these survive a round-trip.
 const COVERED = [{ name: "Cyrillic", text: "Привет" }];

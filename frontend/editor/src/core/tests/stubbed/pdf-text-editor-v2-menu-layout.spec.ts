@@ -12,7 +12,10 @@ import type { V2TestWindow } from "@app/tests/stubbed/v2EditorTestTypes";
  *    settings) - NOT in the toolbar;
  *  - the slim app top bar holds only chrome (zoom / save / help).
  */
-const SAMPLE = path.join(__dirname, "../../../../public/samples/Sample.pdf");
+const SAMPLE = path.join(
+  import.meta.dirname,
+  "../../../../public/samples/Sample.pdf",
+);
 
 async function open(page: Page, firstPage = 0): Promise<void> {
   await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });

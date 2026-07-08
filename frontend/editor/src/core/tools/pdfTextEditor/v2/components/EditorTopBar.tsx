@@ -1,4 +1,5 @@
-import { Box, Button, Group, Text, Tooltip } from "@mantine/core";
+import { Box, Group, Text, Tooltip } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import type { EditorStore } from "@app/tools/pdfTextEditor/v2/store/EditorStore";
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/v2/types";
@@ -81,8 +82,8 @@ export function EditorTopBar(props: TopBarProps) {
         <Group gap="xs">
           <Group gap={4} data-testid="v2-zoom-controls">
             <Button
-              size="xs"
-              variant="subtle"
+              size="sm"
+              variant="tertiary"
               aria-label={t("pdfTextEditorV2.zoom.out", "Zoom out")}
               data-testid="v2-zoom-out"
               onClick={() =>
@@ -97,8 +98,8 @@ export function EditorTopBar(props: TopBarProps) {
               {Math.round(renderScale * 100)}%
             </Text>
             <Button
-              size="xs"
-              variant="subtle"
+              size="sm"
+              variant="tertiary"
               aria-label={t("pdfTextEditorV2.zoom.in", "Zoom in")}
               data-testid="v2-zoom-in"
               onClick={() =>
@@ -110,8 +111,8 @@ export function EditorTopBar(props: TopBarProps) {
               +
             </Button>
             <Button
-              size="xs"
-              variant="subtle"
+              size="sm"
+              variant="tertiary"
               aria-label={t("pdfTextEditorV2.zoom.reset", "Reset zoom")}
               data-testid="v2-zoom-reset"
               onClick={() => store.setRenderScale(1)}
@@ -119,8 +120,8 @@ export function EditorTopBar(props: TopBarProps) {
               100%
             </Button>
             <Button
-              size="xs"
-              variant="subtle"
+              size="sm"
+              variant="tertiary"
               aria-label={t("pdfTextEditorV2.zoom.fitToWidth", "Fit to width")}
               data-testid="v2-zoom-fit"
               onClick={() => {
@@ -147,7 +148,7 @@ export function EditorTopBar(props: TopBarProps) {
               "Download edited PDF (Ctrl+S)",
             )}
           >
-            <Button size="xs" onClick={onSave} data-testid="v2-save">
+            <Button size="sm" onClick={onSave} data-testid="v2-save">
               {t("pdfTextEditorV2.save", "Save PDF")}
             </Button>
           </Tooltip>
@@ -155,8 +156,8 @@ export function EditorTopBar(props: TopBarProps) {
             label={t("pdfTextEditorV2.help.tooltip", "Keyboard shortcuts (?)")}
           >
             <Button
-              size="xs"
-              variant="subtle"
+              size="sm"
+              variant="tertiary"
               onClick={onShowHelp}
               aria-label={t(
                 "pdfTextEditorV2.help.ariaLabel",

@@ -16,9 +16,15 @@ import path from "path";
  * Backend-free: encode-charcodes is aborted so nothing depends on a server.
  */
 
-const ENCRYPTED = path.join(__dirname, "../test-fixtures/encrypted.pdf");
-const SIGNED = path.join(__dirname, "../test-fixtures/signed-sample.pdf");
-const SAMPLE = path.join(__dirname, "../test-fixtures/sample.pdf");
+const ENCRYPTED = path.join(
+  import.meta.dirname,
+  "../test-fixtures/encrypted.pdf",
+);
+const SIGNED = path.join(
+  import.meta.dirname,
+  "../test-fixtures/signed-sample.pdf",
+);
+const SAMPLE = path.join(import.meta.dirname, "../test-fixtures/sample.pdf");
 const ENCRYPTED_PASSWORD = "testpass123";
 
 async function gotoEditor(page: Page): Promise<void> {

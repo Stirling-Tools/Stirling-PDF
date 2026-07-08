@@ -1,12 +1,6 @@
 import { useEffect, useState } from "react";
-import {
-  Modal,
-  Stack,
-  Text,
-  Group,
-  Button,
-  PasswordInput,
-} from "@mantine/core";
+import { Modal, Stack, Text, Group, PasswordInput } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 
 interface PasswordPromptModalProps {
@@ -84,7 +78,8 @@ export function PasswordPromptModal({
         />
         <Group justify="flex-end" gap="sm">
           <Button
-            variant="default"
+            variant="secondary"
+            accent="neutral"
             onClick={onCancel}
             disabled={loading}
             data-testid="v2-password-cancel"

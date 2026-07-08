@@ -14,7 +14,10 @@ import type { V2TestWindow } from "@app/tests/stubbed/v2EditorTestTypes";
  * (fontNameDisambiguatesBetweenTwoFontsRenderingTheSameChar).
  */
 
-const SUBSET = path.join(__dirname, "../test-fixtures/subset-font-sample.pdf");
+const SUBSET = path.join(
+  import.meta.dirname,
+  "../test-fixtures/subset-font-sample.pdf",
+);
 
 test("editor sends the run's font name to encode-charcodes", async ({
   page,

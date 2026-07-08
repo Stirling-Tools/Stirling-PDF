@@ -15,7 +15,10 @@ import path from "path";
  * yellow summary - all without backend help (encode-charcodes is aborted).
  */
 
-const SUBSET = path.join(__dirname, "../test-fixtures/subset-font-sample.pdf");
+const SUBSET = path.join(
+  import.meta.dirname,
+  "../test-fixtures/subset-font-sample.pdf",
+);
 
 async function open(page: Page, file: string): Promise<void> {
   await page.route("**/encode-charcodes", (route: Route) => route.abort());

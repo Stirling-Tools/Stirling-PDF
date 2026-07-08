@@ -12,10 +12,13 @@ import type { V2TestWindow } from "@app/tests/stubbed/v2EditorTestTypes";
  */
 
 const ROTATED = path.join(
-  __dirname,
+  import.meta.dirname,
   "../test-fixtures/rotated-text-sample.pdf",
 );
-const ROTATE90 = path.join(__dirname, "../test-fixtures/cropbox-rotate90.pdf");
+const ROTATE90 = path.join(
+  import.meta.dirname,
+  "../test-fixtures/cropbox-rotate90.pdf",
+);
 
 async function rotatedRunMatrix(page: Page): Promise<{ a: number; b: number }> {
   return page.evaluate(() => {

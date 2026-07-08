@@ -5,36 +5,42 @@ import path from "path";
 // PDFium-self-consistent save can't pass invisibly.
 import { PDFDocument } from "@cantoo/pdf-lib";
 
-const SAMPLE_PDF = path.join(__dirname, "../test-fixtures/sample.pdf");
+const SAMPLE_PDF = path.join(
+  import.meta.dirname,
+  "../test-fixtures/sample.pdf",
+);
 const MULTI_PAGE_PDF = path.join(
-  __dirname,
+  import.meta.dirname,
   "../test-fixtures/multi-page-sample.pdf",
 );
 const FORM_XOBJECT_PDF = path.join(
-  __dirname,
+  import.meta.dirname,
   "../test-fixtures/form-xobject-sample.pdf",
 );
 const PARAGRAPH_PDF = path.join(
-  __dirname,
+  import.meta.dirname,
   "../test-fixtures/paragraph-sample.pdf",
 );
 // The same Sample.pdf that ships in `frontend/editor/public/samples/` -
 // copied here as a fixture so the test suite has a self-contained
 // reference to the file the user reproduces space-preservation bugs on.
 const USER_SAMPLE_PDF = path.join(
-  __dirname,
+  import.meta.dirname,
   "../test-fixtures/user-sample.pdf",
 );
 // Carries an embedded font whose name table has the 6-letter "ABCDEF+"
 // subset tag, so the editor reliably flags a run as fontSubset (lets the
 // subset-fallback test run deterministically instead of skipping).
 const SUBSET_FONT_PDF = path.join(
-  __dirname,
+  import.meta.dirname,
   "../test-fixtures/subset-font-sample.pdf",
 );
 // 80-page synthetic fixture (generate-big-sample.mjs). The largest input
 // in the suite - exercises the loading overlay and the lazy page reader.
-const BIG_SAMPLE_PDF = path.join(__dirname, "../test-fixtures/big-sample.pdf");
+const BIG_SAMPLE_PDF = path.join(
+  import.meta.dirname,
+  "../test-fixtures/big-sample.pdf",
+);
 
 /**
  * v2 PDF text editor regression suite.
@@ -539,7 +545,10 @@ test.describe("PDF text editor v2 - whitespace preservation", () => {
     await page
       .locator('[data-testid="v2-file-input"]')
       .setInputFiles(
-        path.join(__dirname, "../test-fixtures/stirling-marketing.pdf"),
+        path.join(
+          import.meta.dirname,
+          "../test-fixtures/stirling-marketing.pdf",
+        ),
       );
     await expect(page.getByTestId("v2-page-0")).toBeVisible({
       timeout: 30_000,

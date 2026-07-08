@@ -1,16 +1,15 @@
 import {
-  ActionIcon,
   Badge,
   Box,
-  Button,
   Group,
   HoverCard,
   Kbd,
-  SegmentedControl,
   Stack,
   Text,
   Tooltip,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import TextFieldsIcon from "@mui/icons-material/TextFieldsOutlined";
@@ -322,18 +321,17 @@ function FontsHelp() {
   return (
     <HoverCard width={272} shadow="md" withArrow position="left-start">
       <HoverCard.Target>
-        <ActionIcon
-          variant="subtle"
-          color="gray"
+        <Button
+          variant="tertiary"
+          accent="neutral"
           size="sm"
           aria-label={t(
             "pdfTextEditorV2.fonts.help.ariaLabel",
             "What do the font statuses mean?",
           )}
           data-testid="v2-fonts-info"
-        >
-          <InfoIcon fontSize="small" />
-        </ActionIcon>
+          leftSection={<InfoIcon fontSize="small" />}
+        />
       </HoverCard.Target>
       <HoverCard.Dropdown>
         <Stack gap={6}>
@@ -518,8 +516,9 @@ function InsertSection({
       </SectionLabel>
       <Group grow gap="xs" wrap="nowrap">
         <Button
-          size="xs"
-          variant={mode === "addText" ? "filled" : "default"}
+          size="sm"
+          variant={mode === "addText" ? "primary" : "secondary"}
+          accent={mode === "addText" ? "default" : "neutral"}
           leftSection={<TextFieldsIcon fontSize="small" />}
           onClick={onToggleAddText}
           data-testid="v2-add-text"
@@ -532,8 +531,9 @@ function InsertSection({
             : t("pdfTextEditorV2.sidebar.addText", "Add text")}
         </Button>
         <Button
-          size="xs"
-          variant="default"
+          size="sm"
+          variant="secondary"
+          accent="neutral"
           leftSection={<ImageIcon fontSize="small" />}
           onClick={onPickImage}
           data-testid="v2-add-image"
@@ -577,8 +577,9 @@ function ParagraphSection({
           }
         >
           <Button
-            size="xs"
-            variant="default"
+            size="sm"
+            variant="secondary"
+            accent="neutral"
             leftSection={<CallMergeIcon fontSize="small" />}
             onClick={onGroup}
             disabled={!canGroup}
@@ -601,8 +602,9 @@ function ParagraphSection({
           }
         >
           <Button
-            size="xs"
-            variant="default"
+            size="sm"
+            variant="secondary"
+            accent="neutral"
             leftSection={<CallSplitIcon fontSize="small" />}
             onClick={onUngroup}
             disabled={!canUngroup}
@@ -662,23 +664,24 @@ function GroupingModeControl({
       <Text size="xs" fw={500}>
         {t("pdfTextEditorV2.sidebar.textGrouping", "Text grouping")}
       </Text>
-      <SegmentedControl
-        size="xs"
-        fullWidth
-        value={mode}
-        onChange={(value) => onChange(value as GroupingMode)}
-        data={[
-          {
-            label: t("pdfTextEditorV2.sidebar.groupingAuto", "Auto"),
-            value: "auto",
-          },
-          {
-            label: t("pdfTextEditorV2.sidebar.groupingLine", "Line"),
-            value: "line",
-          },
-        ]}
-        data-testid="v2-grouping-mode-control"
-      />
+      <Box data-testid="v2-grouping-mode-control">
+        <SegmentedControl
+          size="xs"
+          fullWidth
+          value={mode}
+          onChange={onChange}
+          options={[
+            {
+              label: t("pdfTextEditorV2.sidebar.groupingAuto", "Auto"),
+              value: "auto",
+            },
+            {
+              label: t("pdfTextEditorV2.sidebar.groupingLine", "Line"),
+              value: "line",
+            },
+          ]}
+        />
+      </Box>
       <Text size="xs" c="dimmed">
         {mode === "auto"
           ? t(
@@ -712,23 +715,24 @@ function WidthModeControl({
       <Text size="xs" fw={500}>
         {t("pdfTextEditorV2.sidebar.textBoxWidth", "Text box width")}
       </Text>
-      <SegmentedControl
-        size="xs"
-        fullWidth
-        value={mode}
-        onChange={(value) => onChange(value as WidthMode)}
-        data={[
-          {
-            label: t("pdfTextEditorV2.sidebar.widthGrow", "Grow"),
-            value: "grow",
-          },
-          {
-            label: t("pdfTextEditorV2.sidebar.widthWrap", "Wrap"),
-            value: "wrap",
-          },
-        ]}
-        data-testid="v2-width-mode-control"
-      />
+      <Box data-testid="v2-width-mode-control">
+        <SegmentedControl
+          size="xs"
+          fullWidth
+          value={mode}
+          onChange={onChange}
+          options={[
+            {
+              label: t("pdfTextEditorV2.sidebar.widthGrow", "Grow"),
+              value: "grow",
+            },
+            {
+              label: t("pdfTextEditorV2.sidebar.widthWrap", "Wrap"),
+              value: "wrap",
+            },
+          ]}
+        />
+      </Box>
       <Text size="xs" c="dimmed">
         {mode === "wrap"
           ? t(

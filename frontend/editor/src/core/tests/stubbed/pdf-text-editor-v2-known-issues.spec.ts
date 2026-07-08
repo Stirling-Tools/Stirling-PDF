@@ -12,8 +12,14 @@ import type { V2TestWindow } from "@app/tests/stubbed/v2EditorTestTypes";
  * Scenarios are weighted to the shipped marketing Sample.pdf (Type3,
  * per-glyph fonts) because that is what users actually load.
  */
-const SAMPLE = path.join(__dirname, "../../../../public/samples/Sample.pdf");
-const SUBSET = path.join(__dirname, "../test-fixtures/subset-font-sample.pdf");
+const SAMPLE = path.join(
+  import.meta.dirname,
+  "../../../../public/samples/Sample.pdf",
+);
+const SUBSET = path.join(
+  import.meta.dirname,
+  "../test-fixtures/subset-font-sample.pdf",
+);
 
 async function open(page: Page, file: string, firstPage = 0): Promise<void> {
   await page.goto("/pdf-text-editor", { waitUntil: "domcontentloaded" });
@@ -520,7 +526,9 @@ test.describe("v2 editor - fixed-issue regressions", () => {
     await expect(page.getByTestId("v2-root")).toBeVisible({ timeout: 15_000 });
     await page
       .locator('[data-testid="v2-file-input"]')
-      .setInputFiles(path.join(__dirname, "../test-fixtures/encrypted.pdf"));
+      .setInputFiles(
+        path.join(import.meta.dirname, "../test-fixtures/encrypted.pdf"),
+      );
     await page.waitForTimeout(2500);
     const loaded = await page.getByTestId("v2-page-0").count();
     const error = await page.getByTestId("v2-error").count();
@@ -538,7 +546,9 @@ test.describe("v2 editor - fixed-issue regressions", () => {
     await expect(page.getByTestId("v2-root")).toBeVisible({ timeout: 15_000 });
     await page
       .locator('[data-testid="v2-file-input"]')
-      .setInputFiles(path.join(__dirname, "../test-fixtures/corrupted.pdf"));
+      .setInputFiles(
+        path.join(import.meta.dirname, "../test-fixtures/corrupted.pdf"),
+      );
     await page.waitForTimeout(2500);
     const loaded = await page.getByTestId("v2-page-0").count();
     const error = await page.getByTestId("v2-error").count();

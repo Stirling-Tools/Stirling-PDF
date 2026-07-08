@@ -15,7 +15,10 @@ import type { V2TestWindow } from "@app/tests/stubbed/v2EditorTestTypes";
  *     list items into an orphan bullet-only run - documented as a known
  *     grouping bug via test.fail until the grouper is reworked.
  */
-const SAMPLE = path.join(__dirname, "../../../../public/samples/Sample.pdf");
+const SAMPLE = path.join(
+  import.meta.dirname,
+  "../../../../public/samples/Sample.pdf",
+);
 
 // Align / distribute / z-order now live inside the toolbar's "Arrange" menu.
 // Open the menu, then act on or inspect the item.

@@ -1,4 +1,5 @@
-import { Modal, Stack, Text, Group, Button, List } from "@mantine/core";
+import { Modal, Stack, Text, Group, List } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import {
   describeSaveRisks,
@@ -52,14 +53,16 @@ export function SaveRiskModal({
         </Text>
         <Group justify="flex-end" gap="sm">
           <Button
-            variant="default"
+            variant="secondary"
+            accent="neutral"
             onClick={onCancel}
             data-testid="v2-save-risk-cancel"
           >
             {t("pdfTextEditorV2.saveRisk.cancel", "Cancel")}
           </Button>
           <Button
-            color="red"
+            variant="primary"
+            accent="danger"
             onClick={onConfirm}
             data-testid="v2-save-risk-confirm"
           >

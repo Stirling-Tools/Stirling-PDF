@@ -22,7 +22,10 @@ import type { V2TestWindow } from "@app/tests/stubbed/v2EditorTestTypes";
  * unchanged words keep their real glyphs - readable, font preserved.
  */
 
-const MUSHROOM = path.join(__dirname, "../test-fixtures/mushroom-life.pdf");
+const MUSHROOM = path.join(
+  import.meta.dirname,
+  "../test-fixtures/mushroom-life.pdf",
+);
 
 test("mid-line paragraph edit does not scramble unchanged words (cold backend, non-subset font)", async ({
   page,

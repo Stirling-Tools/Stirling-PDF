@@ -3,7 +3,10 @@ import type { Page } from "@playwright/test";
 import path from "path";
 import type { V2TestWindow } from "@app/tests/stubbed/v2EditorTestTypes";
 
-const SAMPLE = path.join(__dirname, "../../../../public/samples/Sample.pdf");
+const SAMPLE = path.join(
+  import.meta.dirname,
+  "../../../../public/samples/Sample.pdf",
+);
 
 /**
  * Comprehensive paragraph-editing battery for the v2 editor.
