@@ -1,4 +1,4 @@
-import { apiClient } from "@portal/api/http";
+import { portalBackend } from "@portal/api/http";
 
 /**
  * Integration-config service layer: stored API / MCP connections.
@@ -54,14 +54,14 @@ const BASE = "/api/v1/integrations";
 
 /** GET /integrations: every config the caller can see (own + shared + server). */
 export async function fetchIntegrations(): Promise<IntegrationConfig[]> {
-  return apiClient.local.json<IntegrationConfig[]>(BASE);
+  return portalBackend.json<IntegrationConfig[]>(BASE);
 }
 
 /** POST /integrations: create a config. */
 export async function createIntegration(
   req: IntegrationConfigRequest,
 ): Promise<IntegrationConfig> {
-  return apiClient.local.json<IntegrationConfig>(BASE, {
+  return portalBackend.json<IntegrationConfig>(BASE, {
     method: "POST",
     body: req,
   });
@@ -72,7 +72,7 @@ export async function updateIntegration(
   id: number,
   req: IntegrationConfigRequest,
 ): Promise<IntegrationConfig> {
-  return apiClient.local.json<IntegrationConfig>(`${BASE}/${id}`, {
+  return portalBackend.json<IntegrationConfig>(`${BASE}/${id}`, {
     method: "PUT",
     body: req,
   });
@@ -80,5 +80,5 @@ export async function updateIntegration(
 
 /** DELETE /integrations/{id}: remove a config and its shares. */
 export async function deleteIntegration(id: number): Promise<void> {
-  await apiClient.local.json(`${BASE}/${id}`, { method: "DELETE" });
+  await portalBackend.json(`${BASE}/${id}`, { method: "DELETE" });
 }

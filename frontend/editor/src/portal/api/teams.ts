@@ -1,4 +1,4 @@
-import { apiClient } from "@portal/api/http";
+import { portalBackend } from "@portal/api/http";
 
 /**
  * Teams service layer. The roster groups people under teams, each with a Team
@@ -21,7 +21,7 @@ interface TeamsDto {
 
 /** GET the teams summary and fold the owners map onto each team. */
 export async function fetchTeams(): Promise<Team[]> {
-  const data = await apiClient.local.json<TeamsDto>(
+  const data = await portalBackend.json<TeamsDto>(
     "/api/v1/proprietary/ui-data/teams",
   );
   return (data.teamsWithCounts ?? []).map((t) => ({
@@ -34,7 +34,7 @@ export async function fetchTeams(): Promise<Team[]> {
 
 /** POST /api/v1/team/create. */
 export async function createTeam(name: string): Promise<void> {
-  await apiClient.local.form("/api/v1/team/create", { name });
+  await portalBackend.form("/api/v1/team/create", { name });
 }
 
 /** POST /api/v1/team/addUser. */
@@ -42,7 +42,7 @@ export async function addUserToTeam(
   teamId: number,
   userId: string,
 ): Promise<void> {
-  await apiClient.local.form("/api/v1/team/addUser", {
+  await portalBackend.form("/api/v1/team/addUser", {
     teamId: String(teamId),
     userId,
   });
@@ -53,7 +53,7 @@ export async function setTeamOwner(
   teamId: number,
   userId: string,
 ): Promise<void> {
-  await apiClient.local.form("/api/v1/team/setOwner", {
+  await portalBackend.form("/api/v1/team/setOwner", {
     teamId: String(teamId),
     userId,
   });
@@ -64,7 +64,7 @@ export async function renameTeam(
   teamId: number,
   newName: string,
 ): Promise<void> {
-  await apiClient.local.form("/api/v1/team/rename", {
+  await portalBackend.form("/api/v1/team/rename", {
     teamId: String(teamId),
     newName,
   });
@@ -72,5 +72,5 @@ export async function renameTeam(
 
 /** POST /api/v1/team/delete (blocked by the backend if the team still has members/configs). */
 export async function deleteTeam(teamId: number): Promise<void> {
-  await apiClient.local.form("/api/v1/team/delete", { teamId: String(teamId) });
+  await portalBackend.form("/api/v1/team/delete", { teamId: String(teamId) });
 }

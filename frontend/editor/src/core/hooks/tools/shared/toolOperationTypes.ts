@@ -101,9 +101,9 @@ interface BaseToolOperationConfig<TParams, TEndpoint extends ToolEndpoint> {
   consumesAllInputs?: boolean;
 }
 
-export interface SingleFileToolOperationConfig<
+interface SingleFileToolBody<
   TParams,
-  TEndpoint extends ToolEndpoint = ToolEndpoint,
+  TEndpoint extends ToolEndpoint,
 > extends BaseToolOperationConfig<TParams, TEndpoint> {
   /** This tool processes one file at a time. */
   toolType: ToolType.singleFile;
@@ -111,18 +111,19 @@ export interface SingleFileToolOperationConfig<
   /** Builds FormData for API request. */
   buildFormData: (params: TParams, file: File) => FormData;
 
-  /**
-   * API endpoint for the operation, or a function for dynamic routing. `null`
-   * when the operation has no backend endpoint (see {@link ToolOperationEndpoint}).
-   */
-  endpoint: TEndpoint | null | ((params: TParams) => TEndpoint | null);
-
   customProcessor?: undefined;
 }
 
-export interface MultiFileToolOperationConfig<
+/** Single-file tool config; see {@link EndpointBinding} for the endpoint/endpoints rule. */
+export type SingleFileToolOperationConfig<
   TParams,
   TEndpoint extends ToolEndpoint = ToolEndpoint,
+> = SingleFileToolBody<TParams, TEndpoint> &
+  EndpointBinding<TParams, TEndpoint>;
+
+interface MultiFileToolBody<
+  TParams,
+  TEndpoint extends ToolEndpoint,
 > extends BaseToolOperationConfig<TParams, TEndpoint> {
   /** This tool processes multiple files at once. */
   toolType: ToolType.multiFile;
@@ -133,14 +134,14 @@ export interface MultiFileToolOperationConfig<
   /** Builds FormData for API request. */
   buildFormData: (params: TParams, files: File[]) => FormData;
 
-  /**
-   * API endpoint for the operation, or a function for dynamic routing. `null`
-   * when the operation has no backend endpoint (see {@link ToolOperationEndpoint}).
-   */
-  endpoint: TEndpoint | null | ((params: TParams) => TEndpoint | null);
-
   customProcessor?: undefined;
 }
+
+/** Multi-file counterpart of {@link SingleFileToolOperationConfig}. */
+export type MultiFileToolOperationConfig<
+  TParams,
+  TEndpoint extends ToolEndpoint = ToolEndpoint,
+> = MultiFileToolBody<TParams, TEndpoint> & EndpointBinding<TParams, TEndpoint>;
 
 export interface CustomToolOperationConfig<
   TParams,
@@ -156,6 +157,9 @@ export interface CustomToolOperationConfig<
    * Provide a function when the endpoint depends on runtime parameters.
    */
   endpoint?: string | ((params: TParams) => string | undefined);
+
+  /** `never` so `endpoints` stays readable across the union; custom tools declare no set. */
+  endpoints?: never;
 
   /**
    * Custom processing logic that completely bypasses standard file processing.
@@ -181,6 +185,23 @@ export type ToolOperationConfig<
   | CustomToolOperationConfig<TParams>;
 
 /**
+ * A static `endpoint` declares no set; a dynamic (function) `endpoint` must declare its full
+ * `endpoints` set, which is how findToolByEndpoint maps a stored step back to its tool when the
+ * endpoint-selecting parameter is frontend-only.
+ */
+type EndpointBinding<TParams, TEndpoint extends ToolEndpoint> =
+  | { endpoint: TEndpoint | null; endpoints?: never }
+  | {
+      endpoint: (params: TParams) => TEndpoint | null;
+      endpoints: readonly TEndpoint[];
+    };
+
+/** Union-distributing Omit, so stripping a key from a discriminated config keeps its branches. */
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
+  ? Omit<T, K>
+  : never;
+
+/**
  * Define a single-file tool's operation config. Infers the endpoint literal from
  * `endpoint` and binds toApiParams/fromApiParams to that endpoint's request
  * model, so a mapper cannot silently drift from the generated spec.
@@ -189,9 +210,15 @@ export function defineSingleFileTool<
   TParams,
   const TEndpoint extends ToolEndpoint,
 >(
-  config: Omit<SingleFileToolOperationConfig<TParams, TEndpoint>, "toolType">,
+  config: DistributiveOmit<
+    SingleFileToolOperationConfig<TParams, TEndpoint>,
+    "toolType"
+  >,
 ): SingleFileToolOperationConfig<TParams, TEndpoint> {
-  return { ...config, toolType: ToolType.singleFile };
+  return {
+    ...config,
+    toolType: ToolType.singleFile,
+  } as SingleFileToolOperationConfig<TParams, TEndpoint>;
 }
 
 /** Multi-file counterpart of {@link defineSingleFileTool}. */
@@ -199,9 +226,15 @@ export function defineMultiFileTool<
   TParams,
   const TEndpoint extends ToolEndpoint,
 >(
-  config: Omit<MultiFileToolOperationConfig<TParams, TEndpoint>, "toolType">,
+  config: DistributiveOmit<
+    MultiFileToolOperationConfig<TParams, TEndpoint>,
+    "toolType"
+  >,
 ): MultiFileToolOperationConfig<TParams, TEndpoint> {
-  return { ...config, toolType: ToolType.multiFile };
+  return {
+    ...config,
+    toolType: ToolType.multiFile,
+  } as MultiFileToolOperationConfig<TParams, TEndpoint>;
 }
 
 /**

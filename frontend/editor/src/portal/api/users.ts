@@ -1,4 +1,4 @@
-import { apiClient } from "@portal/api/http";
+import { portalBackend } from "@portal/api/http";
 import { ROLES } from "@portal/mocks/users";
 import type { Member, RoleId, UsersResponse } from "@portal/mocks/users";
 import type { Tier } from "@portal/contexts/TierContext";
@@ -90,7 +90,7 @@ function normalizeSeatLimit(max: number | undefined): number | null {
  * catalogue is client copy. `tier` shapes only the access card.
  */
 export async function fetchUsers(tier: Tier): Promise<UsersResponse> {
-  const data = await apiClient.local.json<AdminSettingsDto>(
+  const data = await portalBackend.json<AdminSettingsDto>(
     "/api/v1/proprietary/ui-data/admin-settings",
   );
   const locked = new Set(data.lockedUsers ?? []);
@@ -131,7 +131,7 @@ export async function fetchUsers(tier: Tier): Promise<UsersResponse> {
 /* ── row actions (Spring @RequestParam endpoints) ──────────────────────── */
 
 async function setAuthority(username: string, role: string): Promise<void> {
-  await apiClient.local.form("/api/v1/user/admin/changeRole", {
+  await portalBackend.form("/api/v1/user/admin/changeRole", {
     username,
     role,
   });
@@ -158,7 +158,7 @@ export async function changeMemberRole(
   if (target === "guest") {
     // Demote to web-only; drop any leadership first so no team is left ownerless-by-a-guest.
     if (holdsLeader && member.teamId) {
-      await apiClient.local.form("/api/v1/team/removeOwner", {
+      await portalBackend.form("/api/v1/team/removeOwner", {
         teamId: String(member.teamId),
         userId: member.id,
       });
@@ -177,7 +177,7 @@ export async function changeMemberRole(
       throw new Error("Member must belong to a team to become its owner");
     }
     // Assign ownership first so a 400 (e.g. system team) leaves the user unchanged.
-    await apiClient.local.form("/api/v1/team/setOwner", {
+    await portalBackend.form("/api/v1/team/setOwner", {
       teamId: String(member.teamId),
       userId: member.id,
     });
@@ -188,7 +188,7 @@ export async function changeMemberRole(
 
   // target === "member": drop any leadership, and normalise a non-ROLE_USER authority.
   if (holdsLeader && member.teamId) {
-    await apiClient.local.form("/api/v1/team/removeOwner", {
+    await portalBackend.form("/api/v1/team/removeOwner", {
       teamId: String(member.teamId),
       userId: member.id,
     });
@@ -202,7 +202,7 @@ export async function setMemberSuspended(
   suspended: boolean,
 ): Promise<void> {
   if (!member.username) throw new Error("Member has no backend identity");
-  await apiClient.local.form(
+  await portalBackend.form(
     `/api/v1/user/admin/changeUserEnabled/${encodeURIComponent(member.username)}`,
     { enabled: String(!suspended) },
   );
@@ -210,7 +210,7 @@ export async function setMemberSuspended(
 
 export async function removeMember(member: Member): Promise<void> {
   if (!member.username) throw new Error("Member has no backend identity");
-  await apiClient.local.json(
+  await portalBackend.json(
     `/api/v1/user/admin/deleteUser/${encodeURIComponent(member.username)}`,
     { method: "POST" },
   );
@@ -237,16 +237,13 @@ export async function resetMemberPassword(
   if (opts.forcePasswordChange) params.forcePasswordChange = "true";
   if (opts.sendEmail) params.sendEmail = "true";
   if (opts.includePassword) params.includePassword = "true";
-  await apiClient.local.form(
-    "/api/v1/user/admin/changePasswordForUser",
-    params,
-  );
+  await portalBackend.form("/api/v1/user/admin/changePasswordForUser", params);
 }
 
 /** Unlock an account locked after failed logins. */
 export async function unlockMember(member: Member): Promise<void> {
   if (!member.username) throw new Error("Member has no backend identity");
-  await apiClient.local.json(
+  await portalBackend.json(
     `/api/v1/user/admin/unlockUser/${encodeURIComponent(member.username)}`,
     { method: "POST" },
   );
@@ -255,7 +252,7 @@ export async function unlockMember(member: Member): Promise<void> {
 /** Reset (disable) a member's MFA enrolment. */
 export async function disableMemberMfa(member: Member): Promise<void> {
   if (!member.username) throw new Error("Member has no backend identity");
-  await apiClient.local.json(
+  await portalBackend.json(
     `/api/v1/auth/mfa/disable/admin/${encodeURIComponent(member.username)}`,
     { method: "POST" },
   );
@@ -273,7 +270,7 @@ export async function moveMemberToTeam(
 ): Promise<void> {
   if (!member.username) throw new Error("Member has no backend identity");
   const role = canonicalAuthority(member);
-  await apiClient.local.form("/api/v1/user/admin/changeRole", {
+  await portalBackend.form("/api/v1/user/admin/changeRole", {
     username: member.username,
     role,
     teamId: String(teamId),
@@ -317,7 +314,7 @@ export interface AdminAuthConfig {
 
 /** Probe the login config to decide whether direct account creation is offered. */
 export async function fetchAuthConfig(): Promise<AdminAuthConfig> {
-  const d = await apiClient.local.json<LoginConfigDto>(
+  const d = await portalBackend.json<LoginConfigDto>(
     "/api/v1/proprietary/ui-data/login",
   );
   const method = (d.loginMethod ?? "all").toLowerCase();
@@ -354,7 +351,7 @@ export async function createMember(p: CreateMemberParams): Promise<string> {
   if (p.teamId != null) params.teamId = String(p.teamId);
   if (p.forceChange) params.forceChange = "true";
   if (p.forceMFA) params.forceMFA = "true";
-  await apiClient.local.form("/api/v1/user/admin/saveUser", params);
+  await portalBackend.form("/api/v1/user/admin/saveUser", params);
   return p.username;
 }
 
@@ -377,7 +374,7 @@ export async function inviteMember(
     role: role === "admin" ? "ROLE_ADMIN" : "ROLE_USER",
   };
   if (teamId != null) params.teamId = String(teamId);
-  return apiClient.local.form<InviteResult>(
+  return portalBackend.form<InviteResult>(
     "/api/v1/user/admin/inviteUsers",
     params,
   );

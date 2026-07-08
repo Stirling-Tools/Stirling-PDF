@@ -655,126 +655,190 @@ export interface AuditEvent {
   latencyMs: number;
 }
 
+// Mirrors what the real backend (PortalInfraAuditService) returns: audit_events
+// mapped from real AuditEventType values to the tab's categories. Only real
+// types appear - there is no audited "elevation" event, so that category is
+// absent (its summary metric reads 0), matching the backend.
 const AUDIT_EVENTS_ALL: AuditEvent[] = [
   {
-    id: "a-1",
-    timestamp: "10:42:18",
+    id: "8841",
+    timestamp: "2026-07-07 18:59:31",
     category: "processing",
-    action: "Pipeline run completed",
-    actor: "ci-bot",
-    target: "COI Compliance",
+    action: "Compress PDF",
+    actor: "alice.chen@acme.com",
+    target: "acme-invoice-8841.pdf",
     status: "success",
-    latencyMs: 412,
+    latencyMs: 842,
   },
   {
-    id: "a-2",
-    timestamp: "10:38:02",
+    id: "8840",
+    timestamp: "2026-07-07 18:40:50",
     category: "auth",
-    action: "API key authenticated",
-    actor: "sk_live_a3f8…",
-    target: "us-east-1 gateway",
+    action: "User signed in",
+    actor: "carol.diaz@acme.com",
+    target: "Web session",
     status: "success",
-    latencyMs: 9,
+    latencyMs: 128,
   },
   {
-    id: "a-3",
-    timestamp: "10:31:55",
-    category: "elevation",
-    action: "Admin role assumed",
-    actor: "maria.chen",
-    target: "Security settings",
-    status: "warning",
-    latencyMs: 21,
-  },
-  {
-    id: "a-4",
-    timestamp: "10:24:40",
-    category: "config",
-    action: "Retention policy changed",
-    actor: "devon.park",
-    target: "30d → 90d",
-    status: "info",
-    latencyMs: 14,
-  },
-  {
-    id: "a-5",
-    timestamp: "10:19:07",
+    id: "8839",
+    timestamp: "2026-07-07 18:22:07",
     category: "security",
-    action: "IP allowlist updated",
-    actor: "maria.chen",
-    target: "203.0.113.7/32",
-    status: "info",
-    latencyMs: 11,
+    action: "Add password",
+    actor: "bob.martin@acme.com",
+    target: "MSA-Globex-2026.pdf",
+    status: "success",
+    latencyMs: 1203,
   },
   {
-    id: "a-6",
-    timestamp: "10:12:33",
+    id: "8838",
+    timestamp: "2026-07-07 17:58:44",
+    category: "config",
+    action: "Admin settings changed",
+    actor: "admin@stirlingpdf.com",
+    target: "/api/v1/admin/settings/update",
+    status: "info",
+    latencyMs: 210,
+  },
+  {
+    id: "8837",
+    timestamp: "2026-07-07 17:31:12",
+    category: "processing",
+    action: "Merge PDFs",
+    actor: "raj.patel@acme.com",
+    target: "onboarding-packet.pdf",
+    status: "success",
+    latencyMs: 2199,
+  },
+  {
+    id: "8836",
+    timestamp: "2026-07-07 17:04:55",
     category: "auth",
-    action: "Failed key authentication",
-    actor: "sk_live_d901…",
-    target: "us-west-2 gateway",
+    action: "Failed sign-in attempt",
+    actor: "bob.martn@acme.com",
+    target: "Web session",
     status: "danger",
-    latencyMs: 6,
+    latencyMs: 96,
   },
   {
-    id: "a-7",
-    timestamp: "10:04:51",
+    id: "8835",
+    timestamp: "2026-07-07 16:47:29",
     category: "processing",
-    action: "Redaction job queued",
-    actor: "ci-bot",
-    target: "Prior Auth batch",
+    action: "OCR PDF",
+    actor: "api-service@acme.com",
+    target: "scan-batch-0142.pdf",
     status: "success",
-    latencyMs: 188,
+    latencyMs: 8421,
   },
   {
-    id: "a-8",
-    timestamp: "09:58:12",
-    category: "elevation",
-    action: "Key rotation requested",
-    actor: "devon.park",
-    target: "Ops · admin (legacy)",
-    status: "warning",
-    latencyMs: 33,
-  },
-  {
-    id: "a-9",
-    timestamp: "09:51:44",
+    id: "8834",
+    timestamp: "2026-07-07 16:20:03",
     category: "security",
-    action: "Access policy set to HYOK",
-    actor: "maria.chen",
-    target: "Document encryption",
-    status: "info",
-    latencyMs: 27,
+    action: "Add watermark",
+    actor: "carol.diaz@acme.com",
+    target: "policy-handbook.pdf",
+    status: "success",
+    latencyMs: 640,
   },
   {
-    id: "a-10",
-    timestamp: "09:43:20",
+    id: "8833",
+    timestamp: "2026-07-07 15:58:41",
     category: "config",
-    action: "Region added",
-    actor: "ci-bot",
-    target: "eu-west-1",
-    status: "success",
-    latencyMs: 240,
+    action: "Profile settings updated",
+    actor: "alice.chen@acme.com",
+    target: "/api/v1/user/change-settings",
+    status: "info",
+    latencyMs: 175,
   },
   {
-    id: "a-11",
-    timestamp: "09:36:08",
+    id: "8832",
+    timestamp: "2026-07-07 15:29:18",
     category: "processing",
-    action: "Schema drift flagged",
-    actor: "extract-engine",
-    target: "Invoice v3",
-    status: "warning",
-    latencyMs: 95,
+    action: "Split pages",
+    actor: "bob.martin@acme.com",
+    target: "statement-june.pdf",
+    status: "success",
+    latencyMs: 410,
   },
   {
-    id: "a-12",
-    timestamp: "09:28:55",
-    category: "auth",
-    action: "SSO session started",
-    actor: "devon.park",
-    target: "Okta · acme.com",
+    id: "8831",
+    timestamp: "2026-07-07 15:02:37",
+    category: "processing",
+    action: "Compress PDF",
+    actor: "api-service@acme.com",
+    target: "purchase-order-6610.pdf",
+    status: "danger",
+    latencyMs: 1203,
+  },
+  {
+    id: "8830",
+    timestamp: "2026-07-07 14:41:50",
+    category: "security",
+    action: "Remove password",
+    actor: "raj.patel@acme.com",
+    target: "certificate-9001.pdf",
     status: "success",
-    latencyMs: 18,
+    latencyMs: 980,
+  },
+  {
+    id: "8829",
+    timestamp: "2026-07-07 14:15:22",
+    category: "processing",
+    action: "PDF to Image",
+    actor: "carol.diaz@acme.com",
+    target: "contract-amendment.pdf",
+    status: "warning",
+    latencyMs: 1560,
+  },
+  {
+    id: "8828",
+    timestamp: "2026-07-07 13:52:09",
+    category: "auth",
+    action: "User signed out",
+    actor: "alice.chen@acme.com",
+    target: "Web session",
+    status: "success",
+    latencyMs: 42,
+  },
+  {
+    id: "8827",
+    timestamp: "2026-07-07 13:30:44",
+    category: "config",
+    action: "Admin settings changed",
+    actor: "admin@stirlingpdf.com",
+    target: "/api/v1/admin/team/update",
+    status: "info",
+    latencyMs: 320,
+  },
+  {
+    id: "8826",
+    timestamp: "2026-07-07 13:03:58",
+    category: "processing",
+    action: "Extract images",
+    actor: "raj.patel@acme.com",
+    target: "expense-report-q2.pdf",
+    status: "success",
+    latencyMs: 2200,
+  },
+  {
+    id: "8825",
+    timestamp: "2026-07-07 12:38:11",
+    category: "auth",
+    action: "User signed in",
+    actor: "bob.martin@acme.com",
+    target: "Web session",
+    status: "success",
+    latencyMs: 110,
+  },
+  {
+    id: "8824",
+    timestamp: "2026-07-07 12:11:47",
+    category: "security",
+    action: "Add watermark",
+    actor: "alice.chen@acme.com",
+    target: "MSA-Globex-2026.pdf",
+    status: "success",
+    latencyMs: 705,
   },
 ];
 
@@ -788,6 +852,8 @@ export interface AuditSummary {
 export interface AuditLogResponse {
   summary: AuditSummary;
   events: AuditEvent[];
+  /** True for the whole-server (admin) view; gates the admin-only CSV export. */
+  fullServer: boolean;
 }
 
 /* ──────────────────────────────────────────────────────────────────────── */
@@ -1039,20 +1105,19 @@ export function modelsResponseFor(tier: Tier): ModelsResponse {
 export function auditLogFor(tier: Tier): AuditLogResponse {
   const events =
     tier === "free"
-      ? AUDIT_EVENTS_ALL.slice(0, 5)
+      ? AUDIT_EVENTS_ALL.slice(0, 6)
       : tier === "pro"
-        ? AUDIT_EVENTS_ALL.slice(0, 9)
+        ? AUDIT_EVENTS_ALL.slice(0, 12)
         : AUDIT_EVENTS_ALL;
 
-  // Headline counts reflect a full 24h window, not just the visible slice —
-  // the table shows the most recent events, the metrics show the day's totals.
-  const scale = tier === "free" ? 1 : tier === "pro" ? 21 : 86;
+  // Summary is derived from the returned events, exactly like the backend
+  // (PortalInfraAuditService) computes it - so mocks and real data reconcile.
   const summary: AuditSummary = {
-    totalEvents: events.length * scale,
-    processing:
-      events.filter((e) => e.category === "processing").length * scale,
-    elevation: events.filter((e) => e.category === "elevation").length * scale,
-    config: events.filter((e) => e.category === "config").length * scale,
+    totalEvents: events.length,
+    processing: events.filter((e) => e.category === "processing").length,
+    elevation: events.filter((e) => e.category === "elevation").length,
+    config: events.filter((e) => e.category === "config").length,
   };
-  return { summary, events };
+  // The mock represents the admin (whole-server) view, so export is offered.
+  return { summary, events, fullServer: true };
 }

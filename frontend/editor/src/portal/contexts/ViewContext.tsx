@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { PORTAL_BASENAME } from "@app/routes/portalBasename";
 
 export type ViewId =
   | "home"
@@ -58,9 +59,10 @@ export const VIEW_PATHS: Record<ViewId, string> = {
  * The portal is mounted as a route-set under this base path inside the editor
  * app (see the admin-route seam). VIEW_PATHS stay expressed as logical portal
  * paths; this facade adds/strips the base so components keep navigating by
- * ViewId without knowing where the portal is mounted.
+ * ViewId without knowing where the portal is mounted. The constant lives in
+ * core so portal-free build flavors can reference the mount point too.
  */
-export const PORTAL_BASENAME = "/portal";
+export { PORTAL_BASENAME };
 
 /** Logical view path -> full app path (e.g. "/users" -> "/portal/users"). */
 export function toPortalPath(viewPath: string): string {

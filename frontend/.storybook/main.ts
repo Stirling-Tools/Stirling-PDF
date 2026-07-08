@@ -61,6 +61,11 @@ const config: StorybookConfig = {
     config.define = {
       ...(config.define ?? {}),
       "import.meta.env.VITE_SAAS_API_URL": JSON.stringify("http://saas.mock"),
+      // Keep the Supabase auth env empty so ensureSaasSupabase() is a no-op and
+      // never replaces the mock SaaS client stubbed in preview.tsx.
+      "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(""),
+      "import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY":
+        JSON.stringify(""),
     };
     return config;
   },

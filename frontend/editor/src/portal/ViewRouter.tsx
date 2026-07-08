@@ -3,6 +3,7 @@ import { Home } from "@portal/views/Home";
 import { Users } from "@portal/views/Users";
 import { Documents } from "@portal/views/Documents";
 import { Pipelines } from "@portal/views/Pipelines";
+import { PipelineBuilder } from "@portal/views/PipelineBuilder";
 import { Sources } from "@portal/views/Sources";
 import { Integrations } from "@portal/views/Integrations";
 import { AgentBuilder } from "@portal/views/AgentBuilder";
@@ -10,7 +11,7 @@ import { Policies } from "@portal/views/Policies";
 import { Components } from "@portal/views/Components";
 import { EditorAdmin } from "@portal/views/EditorAdmin";
 import { Infrastructure } from "@portal/views/Infrastructure";
-import { Usage } from "@portal/views/Usage";
+import { PortalBillingGate } from "@portal/components/billing/PortalBillingGate";
 import { DeveloperDocs } from "@portal/views/DeveloperDocs";
 import { Procurement } from "@portal/views/Procurement";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
@@ -27,6 +28,14 @@ export function ViewRouter() {
       <Route index element={<Home />} />
       <Route path={rel(VIEW_PATHS.users)} element={<Users />} />
       <Route path={rel(VIEW_PATHS.pipelines)} element={<Pipelines />} />
+      <Route
+        path={`${rel(VIEW_PATHS.pipelines)}/new`}
+        element={<PipelineBuilder />}
+      />
+      <Route
+        path={`${rel(VIEW_PATHS.pipelines)}/:id`}
+        element={<PipelineBuilder />}
+      />
       <Route path={rel(VIEW_PATHS.sources)} element={<Sources />} />
       <Route path={rel(VIEW_PATHS.integrations)} element={<Integrations />} />
       <Route
@@ -41,7 +50,7 @@ export function ViewRouter() {
         path={rel(VIEW_PATHS.infrastructure)}
         element={<Infrastructure />}
       />
-      <Route path={rel(VIEW_PATHS.usage)} element={<Usage />} />
+      <Route path={rel(VIEW_PATHS.usage)} element={<PortalBillingGate />} />
       <Route path={rel(VIEW_PATHS.procurement)} element={<Procurement />} />
       <Route path={rel(VIEW_PATHS.docs)} element={<DeveloperDocs />} />
       {/* Account-link is now a Settings panel; redirect legacy bookmarks home. */}

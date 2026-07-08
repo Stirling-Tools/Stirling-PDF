@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Group, Modal, Stack, Text } from "@mantine/core";
+import { Group, Loader, Modal, Progress, Stack, Text } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import ShareIcon from "@mui/icons-material/Share";
+import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import ShareManagementModal from "@app/components/shared/ShareManagementModal";
@@ -15,6 +16,11 @@ import { alert } from "@app/components/toast";
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
+import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
+import {
+  POLICY_IN_FLIGHT_STATUSES,
+  usePolicyRuns,
+} from "@app/components/policies/policyRunStore";
 
 interface ViewerShareButtonProps {
   disabled?: boolean;
@@ -48,8 +54,54 @@ export default function ViewerShareButton({
     ? stubs.find((s) => s.id === activeFileId)
     : undefined;
 
+  const policyFileBadges = usePolicyFileBadges();
+  const runs = usePolicyRuns();
+  const enforcing =
+    !!activeFileId &&
+    (policyFileBadges.get(activeFileId) ?? []).some((p) => p.enforcing);
+  const enforcingRun = enforcing
+    ? runs.find(
+        (r) =>
+          r.fileId === activeFileId &&
+          (POLICY_IN_FLIGHT_STATUSES as readonly string[]).includes(r.status),
+      )
+    : undefined;
+  const enforcingProgress =
+    enforcingRun?.currentStep != null && enforcingRun.stepCount
+      ? Math.round((enforcingRun.currentStep / enforcingRun.stepCount) * 100)
+      : undefined;
+
   const label = t("workbenchBar.share", "Share");
-  const isDisabled = Boolean(disabled) || !stub;
+  const isDisabled = Boolean(disabled) || !stub || enforcing;
+
+  const tooltipContent = enforcing ? (
+    <Stack gap={6} py={2} w={200}>
+      <Group gap={6} wrap="nowrap">
+        <ShieldOutlinedIcon style={{ fontSize: 13 }} />
+        <Text size="xs" fw={600}>
+          {t(
+            "policy.blockingAction",
+            "{{action}} blocked while enforcing policy, please wait",
+            { action: label },
+          )}
+        </Text>
+      </Group>
+      {enforcingProgress != null ? (
+        <Progress
+          w="100%"
+          size="xs"
+          radius="xl"
+          value={enforcingProgress}
+          striped
+          animated
+        />
+      ) : (
+        <Loader size="xs" />
+      )}
+    </Stack>
+  ) : (
+    label
+  );
 
   const openShare = (target: StirlingFileStub) => {
     setShareStub(target);
@@ -125,7 +177,7 @@ export default function ViewerShareButton({
   return (
     <>
       <Tooltip
-        content={label}
+        content={tooltipContent}
         position="bottom"
         offset={6}
         arrow
