@@ -17,6 +17,12 @@
   height: 100%;
   padding-block: 0;
 }
+
+.sui-seg .mantine-SegmentedControl-label[data-active][data-disabled] {
+  color: var(--mantine-color-text);
+  opacity: 1;
+}
+
 /* Mantine wraps label content in .innerLabel; flex it so an icon + text sit
  * centered together with a consistent gap. Without this the inline-block icon
  * aligns to the text baseline and rides ~3px high. */
