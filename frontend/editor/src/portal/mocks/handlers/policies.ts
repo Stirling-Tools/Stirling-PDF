@@ -1,10 +1,6 @@
 import { http, HttpResponse, delay } from "msw";
-import {
-  seedPolicies,
-  seedPolicyRuns,
-  type WirePolicy,
-} from "@portal/mocks/policies";
-import type { PolicyRunView } from "@app/policies/types";
+import { seedPolicies, seedPolicyRuns } from "@portal/mocks/policies";
+import type { PolicyRunView, WirePolicy } from "@app/policies/types";
 
 /**
  * The portal exercises the REAL policy API base — `/api/v1/policies`, NOT the

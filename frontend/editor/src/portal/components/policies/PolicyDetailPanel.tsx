@@ -140,7 +140,7 @@ export function PolicyDetailPanel({
       open
       onClose={onClose}
       width="lg"
-      title={category.label}
+      title={t(category.label)}
       footer={
         <div className="portal-policies__detail-foot">
           {canDelete && (
@@ -231,10 +231,10 @@ export function PolicyDetailPanel({
                       →{" "}
                     </span>
                   )}
-                  {humanizeEndpoint(op)}
+                  {humanizeEndpoint(op, t)}
                 </span>
               ))
-            : config.rules.join(" · ")}
+            : config.rules.map((r) => t(r)).join(" · ")}
         </span>
       </div>
 
