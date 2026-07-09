@@ -56,13 +56,16 @@ public class PolicyRunner {
      * manual trigger can report back which runs to follow.
      */
     public List<String> run(Policy policy, SweepKind sweep) {
-        List<String> sourceIds = policy.sourceIds();
-        if (sourceIds.isEmpty()) {
-            return List.of(startRun(policy, PolicyInputs.of(List.of()), unused -> {}));
-        }
         long sweepStart = System.currentTimeMillis();
         PolicySweep context = new PolicySweep(policy.id(), sweep, processedLedger);
         List<String> runIds = new ArrayList<>();
+        List<String> sourceIds = policy.sourceIds();
+        if (sourceIds.isEmpty()) {
+            // Generator pipeline: one run with no input. Still fall through to the cleanup
+            // below so rows recorded for its folder outputs are pruned like anything else,
+            // instead of accumulating until the policy is deleted.
+            runIds.add(startRun(policy, PolicyInputs.of(List.of()), unused -> {}));
+        }
         for (String sourceId : sourceIds) {
             Source source = sourceStore.get(sourceId).orElse(null);
             if (source == null) {

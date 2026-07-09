@@ -80,7 +80,9 @@ class PolicyRunnerTest {
         ArgumentCaptor<PolicyInputs> inputs = ArgumentCaptor.forClass(PolicyInputs.class);
         verify(policyEngine).runPolicy(eq(policy), inputs.capture(), any());
         assertTrue(inputs.getValue().primary().isEmpty());
-        verifyNoInteractions(processedLedger);
+        // Ledger hygiene still runs: rows recorded for a generator policy's folder outputs
+        // are pruned by its own sweeps rather than accumulating until the policy is deleted.
+        verify(processedLedger).deleteUnseen(eq("p1"), anyLong());
     }
 
     @Test

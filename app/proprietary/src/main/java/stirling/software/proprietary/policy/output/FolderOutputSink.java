@@ -86,9 +86,11 @@ public class FolderOutputSink implements PolicyOutputSink {
             }
             long size = Files.size(staged);
             // Size and mtime survive the rename; both tiers are recorded so either detection
-            // mode recognises the file.
+            // mode recognises the file. Ad-hoc runs (no policyId) record nothing, so skip the
+            // full content read.
             String gate = FolderIdentities.statGate(staged);
-            String contentHash = FolderIdentities.contentHash(staged);
+            String contentHash =
+                    delivery.policyId() == null ? null : FolderIdentities.contentHash(staged);
             Path target = moveIntoPlace(delivery, canonicalDir, name, staged, gate, contentHash);
             String contentType =
                     MediaTypeFactory.getMediaType(name)
