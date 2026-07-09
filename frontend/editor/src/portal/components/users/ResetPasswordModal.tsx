@@ -66,7 +66,7 @@ export function ResetPasswordModal({
   }, [open]);
 
   function copy() {
-    void navigator.clipboard?.writeText(generated).then(() => setCopied(true));
+    void navigator.clipboard?.writeText(generated)?.then(() => setCopied(true));
   }
 
   async function submit() {
