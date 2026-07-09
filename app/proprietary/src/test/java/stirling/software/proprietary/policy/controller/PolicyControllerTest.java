@@ -34,6 +34,7 @@ import stirling.software.proprietary.policy.engine.PolicyRunHandle;
 import stirling.software.proprietary.policy.engine.PolicyRunRegistry;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.PolicyValidator;
+import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
@@ -62,6 +63,8 @@ class PolicyControllerTest {
     private stirling.software.proprietary.policy.overview.PolicyOverviewService
             policyOverviewService;
 
+    @Mock private ProcessedLedger processedLedger;
+
     @Mock private TempFileManager tempFileManager;
     @Mock private JobOwnershipService jobOwnershipService;
 
@@ -89,6 +92,7 @@ class PolicyControllerTest {
                         policyManagementAuthority,
                         policyTriggerManager,
                         policyOverviewService,
+                        processedLedger,
                         policyTriggers,
                         applicationProperties,
                         tempFileManager,
@@ -398,6 +402,7 @@ class PolicyControllerTest {
             ResponseEntity<Void> response = controller.deletePolicy("a");
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+            verify(processedLedger).clearPolicy("a");
             verify(policyTriggerManager).notifyPoliciesChanged();
         }
 
@@ -423,6 +428,53 @@ class PolicyControllerTest {
             when(policyManagementAuthority.canEditPolicies()).thenReturn(false);
 
             assertThatThrownBy(() -> controller.deletePolicy("a"))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .satisfies(
+                            e ->
+                                    assertThat(((ResponseStatusException) e).getStatusCode())
+                                            .isEqualTo(HttpStatus.FORBIDDEN));
+        }
+    }
+
+    @Nested
+    @DisplayName("clearProcessedHistory")
+    class ClearProcessedHistory {
+
+        @Test
+        @DisplayName("clears an accessible policy's history")
+        void clears() {
+            applicationProperties.getSecurity().setEnableLogin(false);
+            Policy p = policy("a", 1L);
+            when(policyStore.get("a")).thenReturn(Optional.of(p));
+            when(policyAccessGuard.canAccess(p)).thenReturn(true);
+
+            ResponseEntity<Void> response = controller.clearProcessedHistory("a");
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+            verify(processedLedger).clearPolicy("a");
+        }
+
+        @Test
+        @DisplayName("returns 404 when policy is not accessible")
+        void notAccessible() {
+            applicationProperties.getSecurity().setEnableLogin(false);
+            Policy p = policy("a", 1L);
+            when(policyStore.get("a")).thenReturn(Optional.of(p));
+            when(policyAccessGuard.canAccess(p)).thenReturn(false);
+
+            ResponseEntity<Void> response = controller.clearProcessedHistory("a");
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+            verify(processedLedger, never()).clearPolicy(any());
+        }
+
+        @Test
+        @DisplayName("forbidden when login enabled and caller cannot edit")
+        void forbidden() {
+            applicationProperties.getSecurity().setEnableLogin(true);
+            when(policyManagementAuthority.canEditPolicies()).thenReturn(false);
+
+            assertThatThrownBy(() -> controller.clearProcessedHistory("a"))
                     .isInstanceOf(ResponseStatusException.class)
                     .satisfies(
                             e ->

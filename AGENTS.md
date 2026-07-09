@@ -453,6 +453,7 @@ The frontend is organized with a clear separation of concerns:
 
 - **CRITICAL**: Always update translations in `en-US` only - all other languages (including `en-GB`) are handled separately
 - Translation files are located in `frontend/editor/public/locales/`
+- After changing any translation file, run `task pre-commit:fix`
 
 ## Important Notes
 
