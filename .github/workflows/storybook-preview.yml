@@ -106,45 +106,34 @@ jobs:
         run: |
           set -euo pipefail
           PR=${{ github.event.pull_request.number }}
-          # Offset from the app preview (which uses the bare PR number) to avoid
-          # a port collision on the shared VPS.
+          # Serve each PR's Storybook at the ROOT of its own port. Root serving is
+          # required: Storybook registers a global MSW service worker at the
+          # absolute /mockServiceWorker.js, which only resolves when the build is
+          # the server root (under a subpath it 404s and breaks every story).
+          # Port = PR number + 20000: offset from the app preview's bare-PR-number
+          # port, and bijective so no two PRs ever collide (valid until PR 45535).
           SB_PORT=$((PR + 20000))
           DIR=/stirling/SB-PR-$PR
 
           tar czf storybook.tgz -C frontend/storybook-static .
 
-          cat > docker-compose.yml << EOF
-          version: '3.3'
-          services:
-            storybook:
-              container_name: storybook-pr-$PR
-              image: nginx:alpine
-              ports:
-                - "$SB_PORT:80"
-              volumes:
-                - $DIR/site:/usr/share/nginx/html:ro
-              restart: on-failure:5
-          EOF
-
           scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-            storybook.tgz docker-compose.yml "$VPS_USER@$VPS_HOST:/tmp/"
+            storybook.tgz "$VPS_USER@$VPS_HOST:/tmp/storybook-$PR.tgz"
 
-          # Unquoted heredoc: $DIR expands here (a safe, PR-number-derived path);
-          # the remote receives the literal path.
+          # Unquoted heredoc: $DIR/$SB_PORT/$PR expand here (safe, PR-number-derived);
+          # the remote receives literal values.
           ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T \
             "$VPS_USER@$VPS_HOST" << ENDSSH
             set -e
-            rm -rf "$DIR/site" && mkdir -p "$DIR/site"
-            tar xzf /tmp/storybook.tgz -C "$DIR/site"
-            mv /tmp/docker-compose.yml "$DIR/docker-compose.yml"
-            rm -f /tmp/storybook.tgz
-            cd "$DIR"
-            docker-compose down --remove-orphans 2>/dev/null || true
-            docker-compose up -d
-            docker image prune -af --filter "until=336h" --filter "label!=keep=true" || true
+            rm -rf "$DIR" && mkdir -p "$DIR"
+            tar xzf /tmp/storybook-$PR.tgz -C "$DIR"
+            rm -f /tmp/storybook-$PR.tgz
+            docker rm -f storybook-pr-$PR 2>/dev/null || true
+            docker run -d --name storybook-pr-$PR --restart unless-stopped \
+              -p $SB_PORT:80 -v "$DIR":/usr/share/nginx/html:ro nginx:alpine
           ENDSSH
 
-          echo "url=http://$VPS_HOST:$SB_PORT" >> "$GITHUB_OUTPUT"
+          echo "url=http://$VPS_HOST:$SB_PORT/" >> "$GITHUB_OUTPUT"
 
       - name: Post Storybook preview comment
         if: success()
@@ -251,7 +240,7 @@ jobs:
           ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T \
             "$VPS_USER@$VPS_HOST" << ENDSSH || true
             set -e
-            if [ -d "$DIR" ]; then cd "$DIR" && docker-compose down --remove-orphans 2>/dev/null || true; fi
+            docker rm -f storybook-pr-$PR 2>/dev/null || true
             rm -rf "$DIR"
           ENDSSH
           rm -f ../private.key
