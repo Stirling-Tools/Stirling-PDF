@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase, signInAnonymously } from "@app/auth/supabase";
+import { Button } from "@app/ui/Button";
 import { useAuth } from "@app/auth/UseSession";
 import { useTranslation } from "@app/hooks/useTranslation";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
-import "@app/routes/authShared/auth.css";
+import "@app/auth/ui/auth.css";
 import "@app/routes/authShared/saas-auth.css";
 import {
   absoluteWithBasePath,
@@ -15,10 +16,11 @@ import {
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 
 // Import login components
-import ErrorMessage from "@app/routes/login/ErrorMessage";
+import ErrorMessage from "@app/auth/ui/ErrorMessage";
 import EmailPasswordForm from "@app/routes/login/EmailPasswordForm";
 import OAuthButtons from "@app/routes/login/OAuthButtons";
 import LoggedInState from "@app/routes/login/LoggedInState";
+import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -47,6 +49,25 @@ export default function Login() {
     }
   }, []);
 
+  // Same-origin relative path to return to after login (e.g. the OAuth
+  // consent page). Same sanitization rules as AuthCallback's `next`.
+  const nextPath = useMemo(() => {
+    try {
+      const next = new URL(window.location.href).searchParams.get("next");
+      return next && next.startsWith("/") && !next.startsWith("//")
+        ? next
+        : null;
+    } catch (_) {
+      return null;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (session && !loading && nextPath) {
+      navigate(nextPath, { replace: true });
+    }
+  }, [session, loading, nextPath, navigate]);
+
   const baseUrl = getBaseUrl();
 
   // Set document meta
@@ -65,8 +86,11 @@ export default function Login() {
     ogUrl: `${window.location.origin}${window.location.pathname}`,
   });
 
-  // Show logged in state if authenticated
+  // Show logged in state if authenticated (unless bouncing back to `next`)
   if (session && !loading) {
+    if (nextPath) {
+      return null;
+    }
     return <LoggedInState />;
   }
 
@@ -77,7 +101,9 @@ export default function Login() {
       setIsSigningIn(true);
       setError(null);
 
-      const redirectTo = absoluteWithBasePath("/auth/callback");
+      const redirectTo =
+        absoluteWithBasePath("/auth/callback") +
+        (nextPath ? `?next=${encodeURIComponent(nextPath)}` : "");
       console.log(`[Login] Signing in with ${provider}`);
 
       const oauthOptions: {
@@ -169,7 +195,9 @@ export default function Login() {
       const { error } = await supabase.auth.signInWithOtp({
         email: magicLinkEmail.trim(),
         options: {
-          emailRedirectTo: absoluteWithBasePath("/auth/callback"),
+          emailRedirectTo:
+            absoluteWithBasePath("/auth/callback") +
+            (nextPath ? `?next=${encodeURIComponent(nextPath)}` : ""),
         },
       });
 
@@ -241,7 +269,7 @@ export default function Login() {
       {/* Centered logo */}
       <div className="auth-logo-block">
         <img
-          src={withBasePath("/modern-logo/LoginLightModeHeader.svg")}
+          src={loginHeader}
           alt="Stirling PDF"
           className="auth-logo-header auth-logo-header--light"
         />
@@ -272,8 +300,8 @@ export default function Login() {
 
         {/* Magic link button + its expandable form as one unit */}
         <div>
-          <button
-            type="button"
+          <Button
+            variant="secondary"
             disabled={isSigningIn}
             onClick={toggleMagicLink}
             className={`oauth-button-fullwidth auth-expandable-trigger ${showMagicLinkForm ? "auth-expandable-trigger--active" : ""}`}
@@ -291,7 +319,7 @@ export default function Login() {
                 {t("login.useMagicLink", "Use magic link")}
               </span>
             </span>
-          </button>
+          </Button>
 
           <div
             className={`auth-expand-grid ${showMagicLinkForm ? "auth-expand-grid--open" : ""}`}
@@ -325,7 +353,7 @@ export default function Login() {
                       }
                       className="auth-input"
                     />
-                    <button
+                    <Button
                       onClick={signInWithMagicLink}
                       disabled={isSigningIn || !magicLinkEmail}
                       className="auth-magic-button"
@@ -333,7 +361,7 @@ export default function Login() {
                       {isSigningIn
                         ? t("login.sending")
                         : t("login.sendMagicLink")}
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>
@@ -343,8 +371,8 @@ export default function Login() {
       </div>
 
       {/* Email & Password button */}
-      <button
-        type="button"
+      <Button
+        variant="secondary"
         disabled={isSigningIn}
         onClick={toggleEmailForm}
         className={`oauth-button-fullwidth auth-expandable-trigger ${showEmailForm ? "auth-expandable-trigger--active" : ""}`}
@@ -354,7 +382,7 @@ export default function Login() {
           <span className="auth-at-icon">@</span>
           <span className="oauth-btn-label">{`${t("login.signInWith", "Sign in with")} email`}</span>
         </span>
-      </button>
+      </Button>
 
       {/* Email form — animated expand */}
       <div
@@ -373,22 +401,22 @@ export default function Login() {
                 isSigningIn ? t("login.loggingIn") : t("login.login")
               }
             />
-            <button
-              type="button"
+            <Button
+              variant="tertiary"
               onClick={() => navigate("/auth/reset")}
               className="auth-link-black"
               style={{ fontSize: "0.8125rem", marginTop: "0.25rem" }}
             >
               {t("login.forgotPassword", "Forgot your password?")}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
 
       {/* Skip */}
       <div style={{ textAlign: "center", margin: "1rem 0" }}>
-        <button
-          type="button"
+        <Button
+          variant="tertiary"
           onClick={handleAnonymousSignIn}
           disabled={isSigningIn}
           style={{
@@ -397,13 +425,13 @@ export default function Login() {
             cursor: "pointer",
             fontSize: "1rem",
             fontWeight: 700,
-            color: "#000000",
+            color: "var(--text-primary)",
           }}
         >
           {isSigningIn
             ? t("login.signingIn", "Signing in...")
             : `${t("signup.skip", "Skip")} →`}
-        </button>
+        </Button>
       </div>
 
       {/* Bottom */}
@@ -414,8 +442,8 @@ export default function Login() {
           paddingTop: "1rem",
         }}
       >
-        <button
-          type="button"
+        <Button
+          variant="tertiary"
           onClick={() => navigate("/signup")}
           style={{
             background: "none",
@@ -426,7 +454,7 @@ export default function Login() {
           }}
         >
           {t("login.createAccount", "Create an account")}
-        </button>
+        </Button>
       </div>
     </AuthLayout>
   );

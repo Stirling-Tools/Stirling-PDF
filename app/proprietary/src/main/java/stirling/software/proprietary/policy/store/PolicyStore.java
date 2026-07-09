@@ -5,24 +5,29 @@ import java.util.Optional;
 
 import stirling.software.proprietary.policy.model.Policy;
 
-/**
- * Stores {@link Policy} definitions. The in-memory implementation backs simple deployments now; a
- * durable (JPA) implementation can replace it behind this interface without touching callers.
- */
+/** Stores {@link Policy} definitions. */
 public interface PolicyStore {
 
-    /** Create or update a policy. A blank/absent id is assigned; returns the stored policy. */
+    /** Create or update; a blank/absent id is assigned. Returns the stored policy. */
     Policy save(Policy policy);
 
     Optional<Policy> get(String id);
 
     List<Policy> all();
 
-    /**
-     * Enabled policies whose automatic trigger is of the given type (used by background triggers).
-     */
+    /** Policies owned by the given team, loaded scoped rather than fetched globally. */
+    List<Policy> findByTeam(Long teamId);
+
+    /** Enabled policies with the given trigger type, for background triggers. */
     List<Policy> findByTriggerType(String triggerType);
 
-    /** Remove a policy; returns whether it existed. */
+    /**
+     * Set the team's run order from {@code orderedIds} (position → sortOrder). Only policies that
+     * belong to {@code teamId} are touched; unknown/other-team ids are ignored, so a caller can't
+     * reorder across teams. Ids omitted from the list keep their existing order.
+     */
+    void reorder(Long teamId, List<String> orderedIds);
+
+    /** Returns whether the policy existed. */
     boolean delete(String id);
 }

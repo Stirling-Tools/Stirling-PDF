@@ -49,6 +49,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     long countByTeam(Team team);
 
+    /** Count real users, excluding a reserved username such as the internal API user. */
+    long countByUsernameNot(String username);
+
     List<User> findAllByTeam(Team team);
 
     // OAuth grandfathering queries
@@ -104,15 +107,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u.id FROM User u WHERE u.username IS NULL AND u.createdAt < :cutoffDate")
     Stream<Long> findByUsernameIsNullAndCreatedAtBefore(
             @Param("cutoffDate") LocalDateTime cutoffDate);
-
-    /** Users with an API key but no row in {@code user_credits}. */
-    @Query(
-            value =
-                    "SELECT u.* FROM users u "
-                            + "LEFT JOIN user_credits uc ON uc.user_id = u.user_id "
-                            + "WHERE u.api_key IS NOT NULL AND uc.user_id IS NULL",
-            nativeQuery = true)
-    List<User> findUsersWithApiKeyButNoCredits();
 
     /** Single-shot UPDATE that reassigns a user to a different team. */
     @Modifying

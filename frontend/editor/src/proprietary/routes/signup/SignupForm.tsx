@@ -1,7 +1,8 @@
 import { useEffect } from "react";
-import "@app/routes/authShared/auth.css";
+import "@app/auth/ui/auth.css";
 import { useTranslation } from "react-i18next";
-import { Checkbox, TextInput, PasswordInput, Button } from "@mantine/core";
+import { Checkbox, TextInput, PasswordInput } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { SignupFieldErrors } from "@app/routes/signup/SignupFormValidation";
 
 interface SignupFormProps {

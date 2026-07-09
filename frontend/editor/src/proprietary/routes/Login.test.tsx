@@ -5,9 +5,11 @@ import { BrowserRouter, MemoryRouter } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
 import Login from "@app/routes/Login";
 import { useAuth } from "@app/auth/UseSession";
-import { springAuth } from "@app/auth/springAuthClient";
+import { springAuth } from "@app/auth/spring/springAuthClient";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import apiClient from "@app/services/apiClient";
+import { configureSpringAuth } from "@app/auth/config";
+import type { AxiosInstance } from "axios";
 
 // Mock i18n to return fallback text
 vi.mock("react-i18next", () => ({
@@ -41,10 +43,10 @@ vi.mock("@app/auth/UseSession", () => ({
 }));
 
 // Mock springAuth; keep the real redirect-path helpers.
-vi.mock("@app/auth/springAuthClient", async () => {
+vi.mock("@app/auth/spring/springAuthClient", async () => {
   const actual = await vi.importActual<
-    typeof import("@app/auth/springAuthClient")
-  >("@app/auth/springAuthClient");
+    typeof import("@app/auth/spring/springAuthClient")
+  >("@app/auth/spring/springAuthClient");
   return {
     ...actual,
     springAuth: {
@@ -110,6 +112,10 @@ describe("Login", () => {
       session: null,
       user: null,
       displayName: null,
+      isAnonymous: false,
+      isAdmin: false,
+      portalAccess: false,
+      role: null,
       loading: false,
       error: null,
       signOut: vi.fn(),
@@ -123,6 +129,11 @@ describe("Login", () => {
         providerList: {},
       },
     });
+
+    // The shared login hook reads getSpringAuthConfig().http; in the real app,
+    // startup points that at apiClient. Mirror that here so the mocked apiClient
+    // serves the login-ui-data fetch.
+    configureSpringAuth({ http: apiClient as unknown as AxiosInstance });
   });
 
   it("should render login form", async () => {
@@ -157,6 +168,10 @@ describe("Login", () => {
       session: mockSession,
       user: mockSession.user,
       displayName: mockSession.user.username,
+      isAnonymous: false,
+      isAdmin: false,
+      portalAccess: false,
+      role: mockSession.user.role,
       loading: false,
       error: null,
       signOut: vi.fn(),
@@ -181,6 +196,10 @@ describe("Login", () => {
       session: null,
       user: null,
       displayName: null,
+      isAnonymous: false,
+      isAdmin: false,
+      portalAccess: false,
+      role: null,
       loading: true,
       error: null,
       signOut: vi.fn(),
@@ -307,13 +326,13 @@ describe("Login", () => {
     // Wait for OAuth button to appear
     await waitFor(
       () => {
-        const button = screen.queryByText("Authentik");
+        const button = screen.queryByText(/Authentik/);
         expect(button).toBeTruthy();
       },
       { timeout: 3000 },
     );
 
-    const oauthButton = screen.getByText("Authentik");
+    const oauthButton = screen.getByText(/Authentik/);
     await user.click(oauthButton);
 
     await waitFor(() => {
@@ -353,13 +372,13 @@ describe("Login", () => {
     // Wait for OAuth button to appear (will show 'Mycompany' as label)
     await waitFor(
       () => {
-        const button = screen.queryByText("Mycompany");
+        const button = screen.queryByText(/Mycompany/);
         expect(button).toBeTruthy();
       },
       { timeout: 3000 },
     );
 
-    const oauthButton = screen.getByText("Mycompany");
+    const oauthButton = screen.getByText(/Mycompany/);
     await user.click(oauthButton);
 
     await waitFor(() => {
@@ -400,13 +419,13 @@ describe("Login", () => {
     // Wait for OAuth button to appear
     await waitFor(
       () => {
-        const button = screen.queryByText("OIDC");
+        const button = screen.queryByText(/OIDC/);
         expect(button).toBeTruthy();
       },
       { timeout: 3000 },
     );
 
-    const oauthButton = screen.getByText("OIDC");
+    const oauthButton = screen.getByText(/OIDC/);
     await user.click(oauthButton);
 
     await waitFor(() => {
@@ -742,12 +761,12 @@ describe("Login", () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText("Authentik")).toBeTruthy();
+        expect(screen.getByText(/Authentik/)).toBeTruthy();
       },
       { timeout: 3000 },
     );
 
-    await user.click(screen.getByText("Authentik"));
+    await user.click(screen.getByText(/Authentik/));
 
     await waitFor(() => {
       expect(springAuth.signInWithOAuth).toHaveBeenCalled();

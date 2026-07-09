@@ -1,5 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- Axios-compatible API requires matching axios's `any` signatures */
 import { fetch } from "@tauri-apps/plugin-http";
+import {
+  shouldUseFastLocalTransport,
+  fetchViaLocalProxy,
+  markFastTransportUnavailable,
+} from "@app/services/tauriLocalProxy";
 
 /**
  * Tauri HTTP Client - wrapper around Tauri's native HTTP client
@@ -213,6 +218,15 @@ class TauriHttpClient {
       if (finalConfig.data instanceof FormData) {
         // FormData can be passed directly
         body = finalConfig.data;
+        // Drop any caller-supplied Content-Type so the native fetch generates
+        // multipart/form-data WITH its boundary (matches axios's FormData
+        // handling). A boundary-less "multipart/form-data" header makes the
+        // server reject the body ("No multipart boundary parameter").
+        for (const key of Object.keys(headers)) {
+          if (key.toLowerCase() === "content-type") {
+            delete headers[key];
+          }
+        }
       } else if (typeof finalConfig.data === "object") {
         // Serialize as JSON
         body = JSON.stringify(finalConfig.data);
@@ -256,7 +270,47 @@ class TauriHttpClient {
         };
       }
 
-      const response = await fetch(url, fetchOptions);
+      // Fast path: for localhost PDF uploads/downloads, move the body as raw
+      // bytes via the Rust proxy instead of plugin-http's number-array IPC.
+      // Only binary localhost traffic qualifies (see shouldUseFastLocalTransport);
+      // everything else — remote requests, JSON/GET calls, anything without a
+      // PDF body — uses the unchanged plugin-http path. Falls back to plugin-http
+      // automatically if the fast path throws, so behaviour is never worse.
+      let response: Response;
+      if (
+        shouldUseFastLocalTransport(
+          url,
+          finalConfig.responseType,
+          finalConfig.data,
+        )
+      ) {
+        try {
+          response = await fetchViaLocalProxy(
+            url,
+            method,
+            headers,
+            body,
+            finalConfig.signal,
+          );
+        } catch (proxyError) {
+          // A deliberate abort must propagate, not silently re-issue the request.
+          if (
+            proxyError instanceof DOMException &&
+            proxyError.name === "AbortError"
+          ) {
+            throw proxyError;
+          }
+          // Fast path failed — trip the circuit breaker and fall back to plugin-http.
+          markFastTransportUnavailable();
+          console.warn(
+            "[TauriHttpClient] local fast-path failed; reverting to plugin-http for this session",
+            proxyError,
+          );
+          response = await fetch(url, fetchOptions);
+        }
+      } else {
+        response = await fetch(url, fetchOptions);
+      }
 
       // Convert Headers to plain object
       const responseHeaders: Record<string, string> = {};

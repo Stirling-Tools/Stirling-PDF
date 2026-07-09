@@ -4,7 +4,7 @@ import { AppProviders } from "@app/components/AppProviders";
 import { AppLayout } from "@app/components/AppLayout";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
-import { RainbowThemeProvider } from "@app/components/shared/RainbowThemeProvider";
+import { ThemeProvider } from "@app/components/shared/ThemeProvider";
 import Landing from "@app/routes/Landing";
 import Login from "@app/routes/Login";
 import Signup from "@app/routes/Signup";
@@ -16,21 +16,23 @@ import MobileScannerPage from "@app/pages/MobileScannerPage";
 import Onboarding from "@app/components/onboarding/Onboarding";
 import WatchedFoldersRegistration from "@app/components/watchedFolders/WatchedFoldersRegistration";
 import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
+import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
 
 // Import global styles
 import "@app/styles/tailwind.css";
 import "@app/styles/cookieconsent.css";
 import "@app/styles/index.css";
-import "@app/styles/auth-theme.css";
+import "@app/auth/ui/auth-theme.css";
 
 // Import file ID debugging helpers (development only)
 import "@app/utils/fileIdSafety";
 
-// Minimal providers for mobile scanner - no API calls, no authentication
-function MobileScannerProviders({ children }: { children: React.ReactNode }) {
+// Minimal providers for public, no-auth pages (mobile scanner, participant
+// signing) - no API calls, no authentication
+function PublicRouteProviders({ children }: { children: React.ReactNode }) {
   return (
     <PreferencesProvider>
-      <RainbowThemeProvider>{children}</RainbowThemeProvider>
+      <ThemeProvider>{children}</ThemeProvider>
     </PreferencesProvider>
   );
 }
@@ -50,9 +52,9 @@ export default function App() {
         <Route
           path="/mobile-scanner"
           element={
-            <MobileScannerProviders>
+            <PublicRouteProviders>
               <MobileScannerPage />
-            </MobileScannerProviders>
+            </PublicRouteProviders>
           }
         />
 
@@ -60,11 +62,15 @@ export default function App() {
         <Route
           path="/workflow/sign/:token"
           element={
-            <MobileScannerProviders>
+            <PublicRouteProviders>
               <ParticipantViewPage />
-            </MobileScannerProviders>
+            </PublicRouteProviders>
           }
         />
+
+        {/* Admin-only route-set (the portal): its own top-level shell, mounted
+            before the catch-all. Absent from core/desktop builds (empty stub). */}
+        {getAdminRouteExtensions()}
 
         {/* All other routes need AppProviders for backend integration */}
         <Route

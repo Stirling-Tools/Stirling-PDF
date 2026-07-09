@@ -2,9 +2,7 @@ import React, { useState } from "react";
 import {
   Alert,
   Avatar,
-  Button,
   Divider,
-  FileButton,
   Group,
   Image,
   LoadingOverlay,
@@ -13,6 +11,8 @@ import {
   TextInput,
   Modal,
 } from "@mantine/core";
+import { Button as DSButton } from "@app/ui/Button";
+import { FilePicker } from "@app/ui/FilePicker";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@app/auth/UseSession";
 import {
@@ -21,7 +21,7 @@ import {
   linkOAuthIdentity,
   supabase,
 } from "@app/auth/supabase";
-import { BASE_PATH } from "@app/constants/app";
+import { oauthIconUrl } from "@app/auth/ui/oauthIcons";
 import { oauthProviders } from "@app/constants/authProviders";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { absoluteWithBasePath } from "@app/constants/app";
@@ -363,9 +363,9 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
               </p>
             )}
           </div>
-          <Button color="red" variant="filled" onClick={onLogoutClick}>
+          <DSButton variant="primary" accent="danger" onClick={onLogoutClick}>
             {t("logOut", "Log out")}
-          </Button>
+          </DSButton>
         </div>
       </div>
 
@@ -434,8 +434,8 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
                   },
                 )}
               </Text>
-              <Button
-                variant="outline"
+              <DSButton
+                variant="secondary"
                 onClick={handleUseCustomPicture}
                 disabled={profileUploading}
               >
@@ -443,7 +443,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
                   "config.account.profilePicture.useCustom",
                   "Use custom picture",
                 )}
-              </Button>
+              </DSButton>
             </div>
           </Group>
         ) : (
@@ -464,24 +464,21 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
               }}
             >
               <Group gap="sm">
-                <FileButton
+                <FilePicker
                   onChange={handleProfileUpload}
                   accept="image/png,image/jpeg,image/webp"
                   disabled={!user || profileUploading}
+                  loading={profileUploading}
                 >
-                  {(props) => (
-                    <Button {...props} loading={profileUploading}>
-                      {t("config.account.profilePicture.upload", "Upload")}
-                    </Button>
-                  )}
-                </FileButton>
-                <Button
-                  variant="outline"
+                  {t("config.account.profilePicture.upload", "Upload")}
+                </FilePicker>
+                <DSButton
+                  variant="secondary"
                   onClick={handleProfileRemove}
                   disabled={!profilePictureUrl || profileUploading}
                 >
                   {t("config.account.profilePicture.remove", "Remove")}
-                </Button>
+                </DSButton>
               </Group>
               <Text size="xs" c="var(--mantine-color-dimmed)">
                 {t(
@@ -559,12 +556,12 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
                     key={provider.id}
                     content={`${t("config.account.upgrade.linkWith", "Link with")} ${provider.label}`}
                   >
-                    <Button
-                      variant="outline"
+                    <DSButton
+                      variant="secondary"
                       size="sm"
                       leftSection={
                         <Image
-                          src={`${BASE_PATH}/Login/${provider.file}`}
+                          src={oauthIconUrl(provider.file)}
                           alt={provider.label}
                           style={{ width: 16, height: 16 }}
                         />
@@ -581,7 +578,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
                       disabled={isLoading}
                     >
                       {provider.label}
-                    </Button>
+                    </DSButton>
                   </Tooltip>
                 ))}
             </div>
@@ -624,9 +621,9 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
                   )}
                   style={{ flex: 1 }}
                 />
-                <Button type="submit" disabled={isLoading}>
+                <DSButton type="submit" variant="primary" disabled={isLoading}>
                   {t("config.account.upgrade.upgradeButton", "Upgrade Account")}
-                </Button>
+                </DSButton>
               </Group>
             </form>
           </div>
@@ -644,13 +641,13 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
             borderTop: "1px solid var(--mantine-color-default-border)",
           }}
         >
-          <Button
-            color="red"
-            variant="outline"
+          <DSButton
+            variant="secondary"
+            accent="danger"
             onClick={() => setDeleteModalOpen(true)}
           >
             {t("config.account.overview.deleteAccount", "Delete Account")}
-          </Button>
+          </DSButton>
         </div>
       )}
 
@@ -693,11 +690,16 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
             mb="md"
           />
           <Group justify="flex-end" gap="sm">
-            <Button variant="default" onClick={closeDeleteModal} type="button">
+            <DSButton
+              variant="secondary"
+              onClick={closeDeleteModal}
+              type="button"
+            >
               {t("cancel", "Cancel")}
-            </Button>
-            <Button
-              color="red"
+            </DSButton>
+            <DSButton
+              variant="primary"
+              accent="danger"
               disabled={
                 confirmEmail.toLowerCase() !== user?.email?.toLowerCase()
               }
@@ -705,7 +707,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
               loading={isDeletingAccount}
             >
               {t("config.account.overview.confirmDelete", "Delete My Account")}
-            </Button>
+            </DSButton>
           </Group>
         </form>
       </Modal>

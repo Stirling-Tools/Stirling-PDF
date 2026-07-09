@@ -2,29 +2,66 @@
 // the decorators below transpiles to React.createElement and needs React in
 // scope. (The app + story files use the automatic runtime via the portal vite
 // config; this import is specifically for the preview config file.)
-import React, { useEffect } from "react";
+import React, { Suspense, useEffect } from "react";
 import type { Decorator, Preview } from "@storybook/react-vite";
 import { initialize, mswLoader } from "msw-storybook-addon";
 import { MemoryRouter } from "react-router-dom";
 import { withThemeByDataAttribute } from "@storybook/addon-themes";
-import { MantineProvider } from "@mantine/core";
 
 // Reference React so the import isn't dropped as unused by the bundler — the
 // classic runtime needs it present even though it's not named in the JSX.
 void React;
 
 import { TierProvider, type Tier } from "@portal/contexts/TierContext";
-import { ThemeProvider } from "@portal/contexts/ThemeContext";
+import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
+import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
 import { UIProvider } from "@portal/contexts/UIContext";
-import { mantineTheme } from "@portal/theme/mantineTheme";
+import { SuiProvider } from "@portal/theme/SuiProvider";
 import { handlers } from "@portal/mocks/handlers";
+import { configureSupabase } from "@proprietary/auth/supabase/supabaseClient";
+import i18next from "i18next";
+import { initReactI18next } from "react-i18next";
 
 import "@mantine/core/styles.css";
-import "@shared/tokens/tokens.css";
-import "@shared/tokens/base.css";
+import "@core/tokens/tokens.css";
+import "@core/tokens/base.css";
+
+// Storybook-only: init react-i18next so t(key, fallback, vars) interpolates its
+// English fallback (there's no backend here to load locale files). Without this,
+// the default t() returns raw templates like "{{count}} people · led by {{owner}}".
+if (!i18next.isInitialized) {
+  void i18next.use(initReactI18next).init({
+    lng: "en",
+    fallbackLng: "en",
+    resources: { en: { translation: {} } },
+    interpolation: { escapeValue: false },
+    react: { useSuspense: false },
+  });
+}
 
 // Start MSW once. Storybook runs in a browser so this uses the service worker.
 initialize({ onUnhandledRequest: "bypass" }, handlers);
+
+// Storybook-only: stub a SaaS session so apiClient.saas reads (invoices, payment
+// method, wallet) clear the session check and reach the MSW handlers instead of
+// failing with "No SaaS session". VITE_SUPABASE_URL/KEY are defined empty (see
+// .storybook/main.ts), so ensureSaasSupabase() is a no-op and never replaces this
+// client; only VITE_SAAS_API_URL (a mock origin MSW matches) is configured —
+// injected via .storybook/main.ts's viteFinal define, not a frontend/.env file.
+const saasStub = configureSupabase({
+  url: "http://saas.mock",
+  key: "storybook-anon-key",
+  authOptions: {
+    persistSession: false,
+    autoRefreshToken: false,
+    detectSessionInUrl: false,
+  },
+});
+saasStub.auth.getSession = async () =>
+  ({
+    data: { session: { access_token: "storybook-fake-jwt" } },
+    error: null,
+  }) as Awaited<ReturnType<typeof saasStub.auth.getSession>>;
 
 /**
  * Bridge between Storybook's `tier` global toolbar and the actual TierProvider.
@@ -56,17 +93,27 @@ function TierKey({
   );
 }
 
-/** Keeps useTheme() and the data-theme attribute in sync. */
-function ThemeWatcher() {
+/**
+ * Makes the Storybook toolbar the SINGLE source of truth for the theme.
+ */
+function ThemeBridge({
+  theme,
+  children,
+}: {
+  theme: "light" | "dark";
+  children: React.ReactNode;
+}) {
+  const { setTheme } = useTheme();
   useEffect(() => {
-    // The addon-themes decorator already sets data-theme on <html>.
-    // We just read it on mount so ThemeProvider picks it up.
-  }, []);
-  return null;
+    setTheme(theme);
+  }, [theme, setTheme]);
+  return <>{children}</>;
 }
 
 const withProviders: Decorator = (Story, context) => {
   const tier = (context.globals.tier as Tier) ?? "pro";
+  const linkState =
+    (context.globals.linkState as LinkState) ?? "linked-subscribed";
   // withThemeByDataAttribute exposes the toolbar theme as the `theme` global.
   // Bind Mantine's color scheme to it so Mantine chrome (inputs, focus rings,
   // default surfaces) follows the dark toggle alongside the SUI CSS variables.
@@ -77,14 +124,21 @@ const withProviders: Decorator = (Story, context) => {
   return (
     <MemoryRouter initialEntries={["/"]}>
       <ThemeProvider>
-        <MantineProvider theme={mantineTheme} forceColorScheme={colorScheme}>
-          <TierKey tier={tier}>
-            <UIProvider>
-              <ThemeWatcher />
-              <Story />
-            </UIProvider>
-          </TierKey>
-        </MantineProvider>
+        <ThemeBridge theme={colorScheme}>
+          <SuiProvider colorScheme={colorScheme}>
+            {/* LinkProvider must wrap TierProvider: TierContext derives its tier
+                from useLink() (matches App.tsx's nesting). */}
+            <LinkProvider key={linkState} initialState={linkState}>
+              <TierKey tier={tier}>
+                <UIProvider>
+                  <Suspense fallback={null}>
+                    <Story />
+                  </Suspense>
+                </UIProvider>
+              </TierKey>
+            </LinkProvider>
+          </SuiProvider>
+        </ThemeBridge>
       </ThemeProvider>
     </MemoryRouter>
   );
@@ -124,6 +178,20 @@ const preview: Preview = {
           { value: "free", title: "Free" },
           { value: "pro", title: "Pay-as-you-go" },
           { value: "enterprise", title: "Enterprise" },
+        ],
+        dynamicTitle: true,
+      },
+    },
+    linkState: {
+      name: "Link",
+      description: "Account-link state — drives useLink() everywhere",
+      defaultValue: "linked-subscribed",
+      toolbar: {
+        icon: "link",
+        items: [
+          { value: "unlinked", title: "Unlinked" },
+          { value: "linked-free", title: "Linked · Free" },
+          { value: "linked-subscribed", title: "Linked · PAYG" },
         ],
         dynamicTitle: true,
       },

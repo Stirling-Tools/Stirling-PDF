@@ -829,14 +829,55 @@
      and bottom padding stays at 1.1rem so the content still breathes
      against the panel edges. */
   padding: 0.3rem 1.1rem 1.1rem;
+  /* Grow to fill the panel and scroll internally so the action footer below
+     stays pinned and visible regardless of how tall the content gets. */
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
 }
 
+/* Pinned action footer - always visible so the buttons never scroll off. */
+.files-page-details-actions {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.6rem 1.1rem;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-toolbar);
+}
+
+/* Collapsible "File info" header (size/type/dates). */
+.files-page-details-collapse-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  color: var(--text-secondary, var(--text-primary));
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.files-page-details-collapse-chevron {
+  transition: transform 0.15s ease;
+}
+.files-page-details-collapse-chevron.is-open {
+  transform: rotate(180deg);
+}
+
 .files-page-details-thumb {
-  aspect-ratio: 4 / 3;
+  /* Compact fixed height (was a tall 4:3 box that dominated the panel and
+     pushed the action buttons off the bottom). */
+  height: 6.5rem;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: 0.6rem;
@@ -857,6 +898,11 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+
+/* On small screens (drawer) the preview isn't worth the vertical space. */
+.files-page-details-thumb.is-compact {
+  display: none;
 }
 
 .files-page-details-fieldlist {

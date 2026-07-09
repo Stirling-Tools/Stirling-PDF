@@ -62,8 +62,14 @@ function toFolderRecord(dto: ServerFolder): FolderRecord {
 
 export const folderSyncService = {
   async list(): Promise<FolderRecord[]> {
+    // Auto-fired by FolderProvider on every load; a persistent 401 must fail
+    // silently here or the global handler redirects to /login and loops.
     const response = await apiClient.get<ServerFolder[]>(
       "/api/v1/storage/folders",
+      {
+        suppressErrorToast: true,
+        skipAuthRedirect: true,
+      },
     );
     return (response.data ?? []).map(toFolderRecord);
   },

@@ -8,6 +8,7 @@ import TourOverviewSlide from "@app/components/onboarding/slides/TourOverviewSli
 import AnalyticsChoiceSlide from "@app/components/onboarding/slides/AnalyticsChoiceSlide";
 import MFASetupSlide from "@app/components/onboarding/slides/MFASetupSlide";
 import { SlideConfig, LicenseNotice } from "@app/types/types";
+import type { ButtonAccent } from "@app/ui/Button";
 
 export type SlideId =
   | "first-login"
@@ -83,6 +84,8 @@ export interface ButtonDefinition {
   label?: string;
   icon?: "chevron-left";
   variant?: "primary" | "secondary" | "default";
+  /** Accent for the shared Button; defaults to neutral. */
+  accent?: ButtonAccent;
   group: "left" | "right";
   action: ButtonAction;
   disabledWhen?: (state: FlowState) => boolean;
@@ -238,6 +241,7 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
         type: "button",
         label: "onboarding.serverLicense.seePlans",
         variant: "primary",
+        accent: "premium",
         group: "right",
         action: "see-plans",
       },

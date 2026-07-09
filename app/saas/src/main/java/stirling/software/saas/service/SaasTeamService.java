@@ -2,7 +2,6 @@ package stirling.software.saas.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.context.annotation.Profile;
@@ -17,20 +16,17 @@ import stirling.software.common.model.enumeration.InvitationStatus;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.enumeration.TeamRole;
 import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
+import stirling.software.saas.accountlink.LinkedInstanceRepository;
 import stirling.software.saas.billing.repository.BillingSubscriptionRepository;
-import stirling.software.saas.config.CreditsProperties;
 import stirling.software.saas.config.SupabaseConfigurationProperties;
-import stirling.software.saas.model.TeamCredit;
 import stirling.software.saas.model.TeamInvitation;
-import stirling.software.saas.model.TeamMembership;
 import stirling.software.saas.repository.SaasTeamExtensionsRepository;
-import stirling.software.saas.repository.TeamCreditRepository;
 import stirling.software.saas.repository.TeamInvitationRepository;
-import stirling.software.saas.repository.TeamMembershipRepository;
-import stirling.software.saas.repository.UserCreditRepository;
 
 /** SaaS-only team management: invitations, personal teams, seat caps, paid-subscription gating. */
 @Service
@@ -43,21 +39,39 @@ public class SaasTeamService {
     private final TeamMembershipRepository membershipRepository;
     private final TeamInvitationRepository invitationRepository;
     private final UserRepository userRepository;
-    private final UserCreditRepository userCreditRepository;
     private final BillingSubscriptionRepository billingSubscriptionRepository;
-    private final TeamCreditService teamCreditService;
-    private final TeamCreditRepository teamCreditRepository;
-    private final CreditsProperties creditsProperties;
     private final RestTemplate restTemplate;
     private final RateLimitService rateLimitService;
     private final SupabaseConfigurationProperties supabaseConfig;
     private final UserRoleService userRoleService;
     private final SaasTeamExtensionService saasTeamExtensionService;
     private final SaasTeamExtensionsRepository saasTeamExtensionsRepository;
+    private final LinkedInstanceRepository linkedInstanceRepository;
     private final stirling.software.proprietary.security.service.UserService userService;
+    private final stirling.software.proprietary.access.repository.ResourceGrantRepository
+            resourceGrantRepository;
+    private final stirling.software.proprietary.integration.repository.IntegrationConfigRepository
+            integrationConfigRepository;
+
+    // Team-owned integration configs + team grants FK the teams row; purge before deleting a team.
+    private void purgeTeamOwnedResources(Long teamId) {
+        integrationConfigRepository.deleteByOwnerTeam_Id(teamId);
+        resourceGrantRepository.deleteByPrincipalTypeAndPrincipalId(
+                stirling.software.proprietary.access.model.PrincipalType.TEAM, teamId);
+    }
 
     public static final String DEFAULT_TEAM_NAME = "Default";
     public static final String INTERNAL_TEAM_NAME = "Internal";
+
+    /** Returns the user's personal team, creating one if they have none. Idempotent. */
+    @Transactional
+    public Team ensurePersonalTeam(User user) {
+        Team existing = user.getTeam();
+        if (existing != null && saasTeamExtensionService.isPersonal(existing)) {
+            return existing;
+        }
+        return createPersonalTeam(user);
+    }
 
     /**
      * Create personal team for new user during signup or migrate existing user from Default team
@@ -99,9 +113,6 @@ public class SaasTeamService {
         Team oldTeam = user.getTeam();
         user.setTeam(savedTeam);
         userRepository.save(user);
-
-        // Initialize team credits
-        teamCreditService.initializeTeamCredits(savedTeam, user);
 
         // Clean up old Default/Internal team membership
         if (oldTeam != null
@@ -303,6 +314,11 @@ public class SaasTeamService {
             throw new IllegalStateException("Team has no available seats");
         }
 
+        // Validate: accepting won't orphan a team the user leads or that has a paid plan.
+        // Accepting moves the user off their current team; leaveTeam already blocks the
+        // last leader of a team from walking away, so accept must enforce the same rule.
+        assertCanLeaveCurrentTeamsToJoinAnother(acceptingUser);
+
         // User can only be in one team . leave existing teams before joining new one
         List<TeamMembership> existingMemberships =
                 membershipRepository.findByUserId(acceptingUser.getId());
@@ -342,6 +358,7 @@ public class SaasTeamService {
                     "Deleting empty personal team {} after user {} joined another team",
                     teamToDelete.getId(),
                     acceptingUser.getUsername());
+            purgeTeamOwnedResources(teamToDelete.getId());
             teamRepository.delete(teamToDelete);
         }
 
@@ -432,6 +449,7 @@ public class SaasTeamService {
         if (!saasTeamExtensionService.isPersonal(team)
                 && membershipRepository.countByTeamId(teamId) == 0) {
             log.info("Deleting empty non-personal team {} after last member removed", teamId);
+            purgeTeamOwnedResources(team.getId());
             teamRepository.delete(team);
         }
 
@@ -440,6 +458,66 @@ public class SaasTeamService {
                 remover.getId(),
                 memberUserId,
                 teamId);
+    }
+
+    /**
+     * Guard against silently orphaning a team when a user accepts an invite to another one.
+     *
+     * <p>{@link #acceptInvitation} moves a user to the inviting team by first leaving their current
+     * team(s). Personal teams are disposable (they get deleted on accept), but a non-personal team
+     * must not be left memberless while still billing. {@link #leaveTeam} already refuses to let
+     * the last leader walk away; accept took a shortcut around that check, which let a paid team's
+     * leader join another team and orphan their old team together with its live subscription.
+     *
+     * <p>So: for each non-personal team the user leads as its <em>last</em> leader, block the
+     * accept. The message points them at the right remedy — cancel the plan if the team is paid,
+     * otherwise transfer leadership first.
+     *
+     * <p>Linked self-hosted instances (combined-billing "Mode A") bind to a team via {@code
+     * linked_instance.team_id}, so they too orphan a team that is left memberless — a personal team
+     * that accept deletes, or a non-personal team left by its last leader. They're checked in that
+     * same orphaning branch (not for a non-leader leaving a team that lives on); the remedy is to
+     * revoke them.
+     *
+     * @param user the user attempting to accept an invitation
+     * @throws IllegalStateException if accepting would orphan a team the user leads or its
+     *     instances
+     */
+    private void assertCanLeaveCurrentTeamsToJoinAnother(User user) {
+        for (TeamMembership membership : membershipRepository.findByUserId(user.getId())) {
+            Team team = membership.getTeam();
+            boolean personal = saasTeamExtensionService.isPersonal(team);
+            if (!personal && !membership.isLeader()) {
+                // A non-leader leaving a shared team never orphans it.
+                continue;
+            }
+            if (!personal
+                    && membershipRepository.countByTeamIdAndRole(team.getId(), TeamRole.LEADER)
+                            > 1) {
+                // Another leader remains, so the team keeps an owner.
+                continue;
+            }
+            // Leaving here orphans the team: a personal team is deleted on accept; a non-personal
+            // team is being left by its last leader. Either way its linked self-hosted instances
+            // lose their billing team, so block until they're revoked.
+            if (linkedInstanceRepository.countByTeamIdAndRevokedAtIsNull(team.getId()) > 0) {
+                throw new IllegalStateException(
+                        "Revoke linked self-hosted instances on this team before joining another"
+                                + " team.");
+            }
+            if (personal) {
+                // Personal teams are disposable (deleted on accept) and never billed/shared.
+                continue;
+            }
+            if (hasActivePaidSubscription(team)) {
+                throw new IllegalStateException(
+                        "Your team has an active plan and you are its last leader. Cancel the plan"
+                                + " or transfer leadership before joining another team.");
+            }
+            throw new IllegalStateException(
+                    "You are the last leader of your team. Transfer leadership before joining"
+                            + " another team.");
+        }
     }
 
     /**
@@ -486,6 +564,7 @@ public class SaasTeamService {
         if (!saasTeamExtensionService.isPersonal(team)
                 && membershipRepository.countByTeamId(teamId) == 0) {
             log.info("Deleting empty non-personal team {} after last member left", teamId);
+            purgeTeamOwnedResources(team.getId());
             teamRepository.delete(team);
         }
 
@@ -737,64 +816,6 @@ public class SaasTeamService {
         }
 
         teamRepository.save(team);
-
-        Optional<TeamCredit> creditOpt = teamCreditRepository.findByTeamId(teamId);
-
-        int fixedAllocation =
-                creditsProperties.getCycle().getAllocations().getOrDefault("ROLE_PRO_USER", 500);
-
-        if (creditOpt.isPresent()) {
-            TeamCredit credit = creditOpt.get();
-
-            int oldAllocation =
-                    credit.getCycleCreditsAllocated() != null
-                            ? credit.getCycleCreditsAllocated()
-                            : 0;
-
-            if (oldAllocation != fixedAllocation) {
-                int currentRemaining =
-                        credit.getCycleCreditsRemaining() != null
-                                ? credit.getCycleCreditsRemaining()
-                                : 0;
-                int allocationDifference = fixedAllocation - oldAllocation;
-
-                credit.setCycleCreditsAllocated(fixedAllocation);
-
-                int newRemaining = Math.max(0, currentRemaining + allocationDifference);
-                credit.setCycleCreditsRemaining(newRemaining);
-
-                teamCreditRepository.save(credit);
-
-                log.info(
-                        "Updated team {} credit allocation: {} -> {} (fixed PRO amount). Remaining: {} -> {}",
-                        teamId,
-                        oldAllocation,
-                        fixedAllocation,
-                        currentRemaining,
-                        newRemaining);
-            } else {
-                log.debug(
-                        "Team {} already has fixed allocation of {} credits, no update needed",
-                        teamId,
-                        fixedAllocation);
-            }
-        } else {
-            log.warn("Team {} missing credit record; creating with fixed allocation", teamId);
-            TeamCredit credit = new TeamCredit(team);
-
-            credit.setCycleCreditsAllocated(fixedAllocation);
-            credit.setCycleCreditsRemaining(fixedAllocation);
-            credit.setBoughtCreditsRemaining(0);
-            credit.setTotalBoughtCredits(0);
-            credit.setTotalApiCallsMade(0L);
-            credit.setLastCycleResetAt(LocalDateTime.now());
-            teamCreditRepository.save(credit);
-
-            log.info(
-                    "Created team_credits record for team {} with {} fixed credits (unlimited seats model)",
-                    teamId,
-                    fixedAllocation);
-        }
 
         log.info(
                 "Team {} seat allocation updated: maxSeats={}, seatsUsed={}, isPersonal={}",

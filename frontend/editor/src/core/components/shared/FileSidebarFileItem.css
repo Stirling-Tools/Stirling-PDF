@@ -30,6 +30,11 @@
   border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.12s ease;
+  /* Skip layout/paint for offscreen rows — with hundreds of files the browser
+     only renders the viewport's worth. The intrinsic-size hint keeps scrollbar
+     geometry stable for unrendered rows. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 46px;
 }
 
 .file-sidebar-file-item:hover:not(.selected) {
@@ -65,7 +70,7 @@
   width: 20px;
   height: 20px;
   border-radius: 5px;
-  border: 1.5px solid var(--border-hover, #52525b);
+  border: 1.5px solid var(--border-hover, var(--border-strong));
 }
 
 .file-sidebar-file-item:hover .file-sidebar-file-checkbox-hover {
@@ -96,6 +101,47 @@
 .file-sidebar-check-svg {
   color: white;
   flex-shrink: 0;
+}
+
+/* Processing state: a spinner in the running policy's colour (set inline via
+   `color`) with that policy's badge glyph held still in the centre. Fills the
+   20px icon slot, replacing the file icon while a policy runs on the file. */
+.file-sidebar-file-spinner {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.file-sidebar-file-spinner-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, currentColor 22%, transparent);
+  border-top-color: currentColor;
+  animation: file-sidebar-spin 0.7s linear infinite;
+}
+
+.file-sidebar-file-spinner-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+}
+
+@keyframes file-sidebar-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .file-sidebar-file-spinner-ring {
+    animation-duration: 2s;
+  }
 }
 
 /* File info */
@@ -132,6 +178,15 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* ---- Cloud badge (file saved to the server) ---- */
+.file-sidebar-cloud-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--accent-interactive, #6366f1);
 }
 
 /* ---- Folder membership tags ---- */
@@ -265,6 +320,36 @@
 }
 .file-sidebar-file-item.viewed:hover .file-sidebar-eye-closed {
   display: block !important;
+}
+
+/* ---- Kebab button (per-file actions menu) ---- */
+.file-sidebar-kebab-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 0;
+  opacity: 0;
+  transition:
+    opacity 0.12s ease,
+    color 0.12s ease;
+}
+
+/* Reveal on row hover, and keep it shown while its menu is open. */
+.file-sidebar-file-item:hover .file-sidebar-kebab-btn,
+.file-sidebar-kebab-btn[aria-expanded="true"] {
+  opacity: 1;
+}
+
+.file-sidebar-kebab-btn:hover {
+  color: var(--text-primary);
 }
 
 /* ---- Date group headers ---- */

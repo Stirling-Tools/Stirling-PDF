@@ -43,7 +43,11 @@ export class TauriBackendService {
   }
 
   getBackendUrl(): string | null {
-    return this.backendPort ? `http://localhost:${this.backendPort}` : null;
+    // Use the IPv4 loopback literal, not "localhost": on macOS (and some Linux)
+    // "localhost" can resolve to IPv6 ::1 first, but the bundled backend binds
+    // the IPv4 wildcard, so a ::1 connection is refused and every tool shows
+    // "backend offline" even though the backend is up.
+    return this.backendPort ? `http://127.0.0.1:${this.backendPort}` : null;
   }
 
   subscribeToStatus(listener: (status: BackendStatus) => void): () => void {
@@ -227,7 +231,7 @@ export class TauriBackendService {
       });
   }
 
-  /** Always checks the local bundled backend at localhost:{port}. */
+  /** Always checks the local bundled backend at 127.0.0.1:{port}. */
   async checkBackendHealth(): Promise<boolean> {
     if (!this.backendStarted) {
       console.debug("[TauriBackendService] Health check: backend not started");
@@ -241,7 +245,7 @@ export class TauriBackendService {
       return false;
     }
 
-    const configUrl = `http://localhost:${this.backendPort}/api/v1/config/app-config`;
+    const configUrl = `http://127.0.0.1:${this.backendPort}/api/v1/config/app-config`;
     console.debug(
       `[TauriBackendService] Checking local backend health at: ${configUrl}`,
     );

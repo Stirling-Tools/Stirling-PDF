@@ -1,7 +1,12 @@
 import { useState, useEffect, useRef } from "react";
-import { Box, ScrollArea } from "@mantine/core";
+import { Box, ScrollArea, Text } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { useTranslation } from "react-i18next";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
+import LocalIcon from "@app/components/shared/LocalIcon";
+import ViewListIcon from "@mui/icons-material/ViewList";
+import "@app/components/viewer/SidebarBase.css";
 
 interface ThumbnailSidebarProps {
   visible: boolean;
@@ -11,9 +16,10 @@ interface ThumbnailSidebarProps {
 
 export function ThumbnailSidebar({
   visible,
-  onToggle: _onToggle,
+  onToggle,
   activeFileId,
 }: ThumbnailSidebarProps) {
+  const { t } = useTranslation();
   const { getScrollState, scrollActions, getThumbnailAPI } = useViewer();
   const [thumbnails, setThumbnails] = useState<{ [key: number]: string }>({});
 
@@ -153,20 +159,45 @@ export function ThumbnailSidebar({
       {/* Thumbnail Sidebar */}
       {visible && (
         <Box
+          className="sidebar-base"
           style={{
             position: "fixed",
             right: 0,
             top: 0,
             bottom: 0,
             width: "15rem",
-            backgroundColor: "var(--bg-surface)",
-            borderLeft: "1px solid var(--border-subtle)",
             zIndex: 998,
-            display: "flex",
-            flexDirection: "column",
-            boxShadow: "-2px 0 8px rgba(0, 0, 0, 0.1)",
           }}
         >
+          <div className="sidebar-base__header">
+            <div className="sidebar-base__header-title">
+              <span className="sidebar-base__header-icon">
+                <ViewListIcon fontSize="small" />
+              </span>
+              <Text
+                fw={600}
+                size="sm"
+                tt="uppercase"
+                lts={0.5}
+                style={{ flex: 1 }}
+              >
+                Pages
+              </Text>
+            </div>
+            <ActionIcon
+              variant="tertiary"
+              accent="neutral"
+              size="sm"
+              onClick={onToggle}
+              aria-label={t(
+                "viewer.thumbnails.closeSidebar",
+                "Close thumbnails sidebar",
+              )}
+              title="Close thumbnails"
+            >
+              <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
+            </ActionIcon>
+          </div>
           {/* Thumbnails Container */}
           <ScrollArea style={{ flex: 1 }}>
             <Box p="sm">

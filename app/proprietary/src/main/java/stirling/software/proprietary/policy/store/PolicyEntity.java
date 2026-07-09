@@ -12,13 +12,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * JPA row for a {@link stirling.software.proprietary.policy.model.Policy}.
- *
- * <p>The whole policy is stored as JSON in {@code policyJson} (authoritative on read, and the same
- * serialization the API uses); the scalar columns are denormalized copies for querying - notably
- * {@code triggerType} + {@code enabled} so background triggers can fetch their policies. Ownership
- * is a plain {@code owner} string rather than a foreign key, to stay decoupled from the security
- * entities; richer team scoping can be layered on later.
+ * JPA row for a {@link stirling.software.proprietary.policy.model.Policy}. The whole policy lives
+ * as JSON in {@code policyJson} (authoritative on read); the scalar columns are denormalized copies
+ * for querying, notably {@code triggerType} + {@code enabled} so background triggers can fetch
+ * their policies, and {@code teamId} so the caller's team can be loaded without scanning every
+ * team's rows. {@code owner} and {@code teamId} are plain values, not foreign keys, to stay
+ * decoupled from the security entities.
  */
 @Entity
 @Table(name = "policies")
@@ -44,6 +43,17 @@ public class PolicyEntity implements Serializable {
 
     @Column(name = "trigger_type")
     private String triggerType;
+
+    @Column(name = "team_id")
+    private Long teamId;
+
+    /**
+     * Position in the team's run order (ascending). Team-wide and admin-editable; the per-trigger
+     * order the UI shows is this single sequence filtered by trigger. New policies are appended
+     * (max + 1). Nullable for pre-existing rows; treated as 0 when sorting.
+     */
+    @Column(name = "sort_order")
+    private Integer sortOrder;
 
     @Column(name = "policy_json", columnDefinition = "text")
     private String policyJson;

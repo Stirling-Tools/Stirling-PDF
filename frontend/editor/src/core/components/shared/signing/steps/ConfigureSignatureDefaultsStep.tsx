@@ -1,4 +1,5 @@
-import { Button, Stack, Text, Group, Paper } from "@mantine/core";
+import { Stack, Text, Group, Paper } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SignatureSettingsInput, {
@@ -72,17 +73,14 @@ export const ConfigureSignatureDefaultsStep: React.FC<
 
       <Group gap="sm">
         <Button
-          variant="default"
+          variant="secondary"
           onClick={onBack}
           leftSection={<ArrowBackIcon sx={{ fontSize: 16 }} />}
         >
           {t("groupSigning.steps.back", "Back")}
         </Button>
         <Button onClick={onNext} disabled={disabled} style={{ flex: 1 }}>
-          {t(
-            "groupSigning.steps.configureDefaults.continue",
-            "Continue to Review",
-          )}
+          {t("groupSigning.steps.configureDefaults.continue", "Continue")}
         </Button>
       </Group>
     </Stack>

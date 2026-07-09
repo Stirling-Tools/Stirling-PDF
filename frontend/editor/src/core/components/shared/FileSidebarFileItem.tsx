@@ -1,11 +1,22 @@
-import { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Tooltip } from "@mantine/core";
+import { Group, Loader, Menu, Stack, Text, Tooltip } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
+import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
+import CloudDoneIcon from "@mui/icons-material/CloudDone";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
+import HistoryIcon from "@mui/icons-material/History";
 import type { FileId } from "@app/types/file";
 import { FileDocIcon } from "@app/components/shared/FileDocIcon";
+import {
+  PolicyBadges,
+  type FileItemPolicyRef,
+} from "@app/components/shared/PolicyBadges";
 import { getFileDocVariant } from "@app/components/shared/filePreview/getFileTypeIcon";
 import { useLazyThumbnail } from "@app/hooks/useLazyThumbnail";
 import { IMAGE_EXTENSIONS } from "@app/utils/fileUtils";
@@ -143,6 +154,23 @@ export interface FileItemProps {
   folders?: FileItemFolderRef[];
   /** Clicking a membership dot opens that folder. */
   onFolderClick?: (folderId: string) => void;
+  /** Policies that have run on this file — rendered as small shield badges. */
+  policies?: FileItemPolicyRef[];
+  /** The file's primary classification label (display name), shown in the meta
+   *  row in place of the file type when present. */
+  primaryLabel?: string;
+  /** Delete (local only) from the kebab menu. Omit to hide the menu's delete. */
+  onDelete?: (fileId: FileId) => void;
+  /** Save to cloud from the kebab menu. */
+  onSaveToCloud?: (fileId: FileId) => void;
+  /** Whether the upload-to-server menu item is offered (storage on, signed in). */
+  canSaveToCloud?: boolean;
+  /** File already lives on the server - shows a cloud badge + "Update" label. */
+  isUploadedToCloud?: boolean;
+  /** Open the version-history modal. Only shown when hasVersionHistory. */
+  onVersionHistory?: (fileId: FileId) => void;
+  /** Whether this file has more than one version (drives the menu item). */
+  hasVersionHistory?: boolean;
 }
 
 const MAX_VISIBLE_FOLDER_TAGS = 2;
@@ -162,11 +190,36 @@ export function FileItem({
   onDragStart,
   folders = [],
   onFolderClick,
+  policies = [],
+  primaryLabel,
+  onDelete,
+  onSaveToCloud,
+  canSaveToCloud = false,
+  isUploadedToCloud = false,
+  onVersionHistory,
+  hasVersionHistory = false,
 }: FileItemProps) {
   const { t } = useTranslation();
   const ext = getFileExtension(name);
   const dateLabel = lastModified ? formatFileDate(lastModified) : "";
   const typeLabel = ext ? ext.toUpperCase() : "File";
+
+  const policyEnforcing = policies.some((p) => p.enforcing);
+  const enforcingTooltip = (action: string): React.ReactNode => (
+    <Stack gap={6} py={2} w={200}>
+      <Group gap={6} wrap="nowrap">
+        <ShieldOutlinedIcon style={{ fontSize: 13 }} />
+        <Text size="xs" fw={600}>
+          {t(
+            "policy.blockingAction",
+            "{{action}} blocked while enforcing policy, please wait...",
+            { action },
+          )}
+        </Text>
+      </Group>
+      <Loader size="xs" />
+    </Stack>
+  );
 
   const visibleFolders = folders.slice(0, MAX_VISIBLE_FOLDER_TAGS);
   const overflowFolders = folders.slice(MAX_VISIBLE_FOLDER_TAGS);
@@ -233,10 +286,35 @@ export function FileItem({
           </span>
           <span className="file-sidebar-file-meta-row">
             <span className="file-sidebar-file-meta">
-              {dateLabel}
-              {dateLabel && typeLabel ? " · " : ""}
-              {typeLabel}
+              {primaryLabel ? (
+                <>
+                  {primaryLabel}
+                  {primaryLabel && dateLabel ? " • " : ""}
+                  {dateLabel}
+                </>
+              ) : (
+                <>
+                  {dateLabel}
+                  {dateLabel && typeLabel ? " · " : ""}
+                  {typeLabel}
+                </>
+              )}
             </span>
+            {isUploadedToCloud && (
+              <Tooltip
+                label={t(
+                  "fileSidebar.fileItem.savedToServer",
+                  "Saved to server",
+                )}
+                withArrow
+                position="top"
+              >
+                <span className="file-sidebar-cloud-badge" data-no-select>
+                  <CloudDoneIcon sx={{ fontSize: "0.85rem" }} />
+                </span>
+              </Tooltip>
+            )}
+            <PolicyBadges policies={policies} />
           </span>
           {folders.length > 0 && (
             <span className="file-sidebar-folder-tags" data-no-select>
@@ -287,14 +365,15 @@ export function FileItem({
             </span>
           )}
         </div>
-        <button
+        <ActionIcon
+          variant="tertiary"
+          size="sm"
           className="file-sidebar-eye-btn"
           onClick={(e) => {
             e.stopPropagation();
             onEyeClick(fileId, e);
           }}
           tabIndex={-1}
-          type="button"
           aria-label={
             isViewedInViewer
               ? t("fileSidebar.fileItem.closeViewer", "Close viewer")
@@ -309,7 +388,110 @@ export function FileItem({
             className="file-sidebar-eye-closed"
             sx={{ fontSize: "1.1rem" }}
           />
-        </button>
+        </ActionIcon>
+        {(onDelete ||
+          (canSaveToCloud && onSaveToCloud) ||
+          (hasVersionHistory && onVersionHistory)) && (
+          <Menu position="bottom-end" withinPortal shadow="md" width={190}>
+            <Menu.Target>
+              <ActionIcon
+                variant="tertiary"
+                size="sm"
+                className="file-sidebar-kebab-btn"
+                onClick={(e) => e.stopPropagation()}
+                tabIndex={-1}
+                aria-label={t(
+                  "fileSidebar.fileItem.moreActions",
+                  "More actions",
+                )}
+              >
+                <MoreVertIcon sx={{ fontSize: "1.1rem" }} />
+              </ActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown onClick={(e) => e.stopPropagation()}>
+              {hasVersionHistory && onVersionHistory && (
+                <Menu.Item
+                  leftSection={<HistoryIcon sx={{ fontSize: 16 }} />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onVersionHistory(fileId);
+                  }}
+                >
+                  {t("fileSidebar.fileItem.versionHistory", "Version history")}
+                </Menu.Item>
+              )}
+              {canSaveToCloud &&
+                onSaveToCloud &&
+                (() => {
+                  const uploadLabel = isUploadedToCloud
+                    ? t(
+                        "fileSidebar.fileItem.updateOnServer",
+                        "Update on server",
+                      )
+                    : t(
+                        "fileSidebar.fileItem.uploadToServer",
+                        "Upload to server",
+                      );
+                  return (
+                    <Tooltip
+                      label={enforcingTooltip(uploadLabel)}
+                      disabled={!policyEnforcing}
+                      position="left"
+                      offset={6}
+                      withArrow
+                    >
+                      <div>
+                        <Menu.Item
+                          disabled={policyEnforcing}
+                          leftSection={
+                            <CloudUploadOutlinedIcon sx={{ fontSize: 16 }} />
+                          }
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSaveToCloud(fileId);
+                          }}
+                        >
+                          {uploadLabel}
+                        </Menu.Item>
+                      </div>
+                    </Tooltip>
+                  );
+                })()}
+              {onDelete &&
+                (() => {
+                  const deleteLabel = t(
+                    "fileSidebar.fileItem.delete",
+                    "Delete",
+                  );
+                  return (
+                    <Tooltip
+                      label={enforcingTooltip(deleteLabel)}
+                      disabled={!policyEnforcing}
+                      position="left"
+                      offset={6}
+                      withArrow
+                    >
+                      <div>
+                        <Menu.Item
+                          disabled={policyEnforcing}
+                          color="red"
+                          leftSection={
+                            <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+                          }
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete(fileId);
+                          }}
+                        >
+                          {deleteLabel}
+                        </Menu.Item>
+                      </div>
+                    </Tooltip>
+                  );
+                })()}
+            </Menu.Dropdown>
+          </Menu>
+        )}
       </div>
 
       {useRasterThumb &&

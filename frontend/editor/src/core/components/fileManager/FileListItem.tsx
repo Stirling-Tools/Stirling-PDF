@@ -3,12 +3,12 @@ import {
   Group,
   Box,
   Text,
-  ActionIcon,
   Checkbox,
   Divider,
   Menu,
   Badge,
 } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -150,7 +150,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
         shareLinks?: Array<{ token?: string }>;
       }>(`/api/v1/storage/files/${file.remoteStorageId}`, {
         suppressErrorToast: true,
-      } as any);
+      });
       const links = response.data?.shareLinks ?? [];
       const token = links[links.length - 1]?.token;
       if (!token) {
@@ -323,10 +323,11 @@ const FileListItem: React.FC<FileListItemProps> = ({
           >
             <Menu.Target>
               <ActionIcon
-                variant="subtle"
-                c="dimmed"
+                variant="tertiary"
+                accent="neutral"
                 size="md"
                 onClick={(e) => e.stopPropagation()}
+                aria-label={t("fileManager.moreOptions", "More options")}
                 style={{
                   opacity: shouldShowHovered ? 1 : 0,
                   transform: shouldShowHovered ? "scale(1)" : "scale(0.8)",

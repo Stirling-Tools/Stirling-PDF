@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import LoginHeader from "@app/routes/login/LoginHeader";
-import ErrorMessage from "@app/routes/login/ErrorMessage";
+import ErrorMessage from "@app/auth/ui/ErrorMessage";
 import SignupForm from "@app/routes/signup/SignupForm";
 import {
   useSignupFormValidation,
   SignupFieldErrors,
 } from "@app/routes/signup/SignupFormValidation";
 import { authService } from "@app/services/authService";
-import "@app/routes/authShared/auth.css";
+import "@app/auth/ui/auth.css";
 
 interface SaaSSignupScreenProps {
   loading: boolean;

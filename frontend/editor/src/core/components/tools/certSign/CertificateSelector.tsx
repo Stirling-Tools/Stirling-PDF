@@ -1,12 +1,5 @@
-import {
-  Stack,
-  Radio,
-  Divider,
-  TextInput,
-  Text,
-  Group,
-  Button,
-} from "@mantine/core";
+import { Stack, Radio, Divider, TextInput, Text, Group } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
@@ -158,8 +151,8 @@ export const CertificateSelector: React.FC<CertificateSelectorProps> = ({
             {(["PKCS12", "PFX", "PEM", "JKS"] as UploadFormat[]).map((fmt) => (
               <Button
                 key={fmt}
-                size="xs"
-                variant={uploadFormat === fmt ? "filled" : "light"}
+                size="sm"
+                variant={uploadFormat === fmt ? "primary" : "secondary"}
                 onClick={() => handleFormatChange(fmt)}
                 disabled={disabled}
               >
@@ -183,20 +176,34 @@ export const CertificateSelector: React.FC<CertificateSelectorProps> = ({
             />
           )}
 
-          {/* PEM */}
+          {/* PEM — private key and certificate are two separate files */}
           {uploadFormat === "PEM" && (
-            <Stack gap="xs">
-              <FileUploadButton
-                file={privateKeyFile ?? undefined}
-                onChange={(file) => onPrivateKeyFileChange(file || null)}
-                accept=".pem,.der,.key"
-                disabled={disabled}
-                placeholder={t(
-                  "certSign.choosePrivateKey",
-                  "Choose Private Key File",
-                )}
-              />
-              {privateKeyFile && (
+            <Stack gap="sm">
+              <Stack gap={4}>
+                <Text size="xs" fw={600}>
+                  {t(
+                    "certSign.pemPrivateKeyLabel",
+                    "Private key (.pem / .key)",
+                  )}
+                </Text>
+                <FileUploadButton
+                  file={privateKeyFile ?? undefined}
+                  onChange={(file) => onPrivateKeyFileChange(file || null)}
+                  accept=".pem,.der,.key"
+                  disabled={disabled}
+                  placeholder={t(
+                    "certSign.choosePrivateKey",
+                    "Choose Private Key File",
+                  )}
+                />
+              </Stack>
+              <Stack gap={4}>
+                <Text size="xs" fw={600}>
+                  {t(
+                    "certSign.pemCertificateLabel",
+                    "Certificate (.pem / .crt)",
+                  )}
+                </Text>
                 <FileUploadButton
                   file={certFile ?? undefined}
                   onChange={(file) => onCertFileChange(file || null)}
@@ -207,7 +214,7 @@ export const CertificateSelector: React.FC<CertificateSelectorProps> = ({
                     "Choose Certificate File",
                   )}
                 />
-              )}
+              </Stack>
             </Stack>
           )}
 
