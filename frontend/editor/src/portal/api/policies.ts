@@ -207,7 +207,7 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
   {
     id: "retention",
     label: "portal.policies.categories.retention.label",
-    icon: "clock",
+    icon: "schedule",
     tone: "neutral",
     desc: "portal.policies.categories.retention.desc",
     comingSoon: true,
