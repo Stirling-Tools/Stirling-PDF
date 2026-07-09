@@ -69,7 +69,7 @@ export function ComponentCard({
 
       <div className="portal-components__frameworks">
         {component.frameworks.map((fw) => (
-          <Chip key={fw} size="sm" tone="neutral">
+          <Chip key={fw} size="sm">
             {fw}
           </Chip>
         ))}

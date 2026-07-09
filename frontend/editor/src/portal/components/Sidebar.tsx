@@ -1,120 +1,40 @@
+import { NavItem } from "@app/ui";
+import { AppSwitch } from "@app/components/shared/AppSwitch";
 import { useTranslation } from "react-i18next";
-import { Dropdown, NavItem } from "@app/ui";
+import { useNavigate } from "react-router-dom";
 import { useView, type ViewId } from "@portal/contexts/ViewContext";
 import { useTier } from "@portal/contexts/TierContext";
 import { useTheme } from "@portal/contexts/ThemeContext";
 import { useUI } from "@portal/contexts/UIContext";
-import { useLink } from "@portal/contexts/LinkContext";
+import { LinkAccountFooterItem } from "@portal/components/LinkAccountFooterItem";
 import { useAsync } from "@portal/hooks/useAsync";
-import { fetchHomeKpis, type KpiEntry } from "@portal/api/home";
-import { EDITOR_URL } from "@portal/auth/editorUrl";
+import { fetchFleetStats, type FleetStats } from "@portal/api/fleetStats";
+import { EDITOR_URL, EDITOR_IS_SAME_APP } from "@portal/auth/editorUrl";
 import markLight from "@app/assets/brand/modern-logo/StirlingPDFLogoNoTextLight.svg";
 import markDark from "@app/assets/brand/modern-logo/StirlingPDFLogoNoTextDark.svg";
+import { SettingsIcon } from "@portal/components/icons";
 import {
-  HomeIcon,
-  UsersIcon,
-  SourcesIcon,
-  PoliciesIcon,
-  PipelinesIcon,
-  DocumentsIcon,
-  ComponentsIcon,
-  InfrastructureIcon,
-  UsageIcon,
-  LinkIcon,
-  DocsIcon,
-  SettingsIcon,
-  ChevronDownIcon,
-} from "@portal/components/icons";
+  GROUP_PRIMARY,
+  GROUP_OPERATIONAL,
+  GROUP_PLATFORM,
+  type NavEntry,
+} from "@portal/components/sidebarGroups";
 import "@portal/components/Sidebar.css";
-
-interface NavEntry {
-  id: ViewId;
-  icon: React.ReactNode;
-}
-
-const GROUP_PRIMARY: NavEntry[] = [{ id: "home", icon: <HomeIcon /> }];
-
-const GROUP_OPERATIONAL: NavEntry[] = [
-  { id: "users", icon: <UsersIcon /> },
-  { id: "sources", icon: <SourcesIcon /> },
-  { id: "policies", icon: <PoliciesIcon /> },
-  { id: "pipelines", icon: <PipelinesIcon /> },
-  { id: "documents", icon: <DocumentsIcon /> },
-  { id: "components", icon: <ComponentsIcon /> },
-];
-
-const GROUP_PLATFORM: NavEntry[] = [
-  { id: "infrastructure", icon: <InfrastructureIcon /> },
-  { id: "usage", icon: <UsageIcon /> },
-  { id: "docs", icon: <DocsIcon /> },
-];
-
-/**
- * Sidebar-footer link-account CTA. Only visible when the org is unlinked — once
- * linked, the linked-instances row + plan badge already communicate the state,
- * so a permanent footer button would be noise. Click → opens the login modal
- * directly.
- */
-function LinkAccountFooterItem() {
-  const { t } = useTranslation();
-  const { openLinkModal } = useUI();
-  const { linkState } = useLink();
-  if (linkState !== "unlinked") return null;
-  return (
-    <NavItem
-      id="account-link"
-      label={t("portal.shell.sidebar.linkAccount", "Link Stirling account")}
-      icon={<LinkIcon />}
-      onClick={() => openLinkModal()}
-    />
-  );
-}
 
 function UsageFooter() {
   const { tier } = useTier();
   const { t } = useTranslation();
-  // Read the same endpoint Home's KPI strip uses so the doc count here can't
-  // drift from the headline figure. The first KPI is always the doc total.
-  const { data: kpis, loading } = useAsync<KpiEntry[]>(
-    () => fetchHomeKpis(tier),
-    [tier],
-  );
-  const docs = loading ? undefined : kpis?.[0]?.value;
-
-  if (tier === "free") {
-    // The free doc KPI is formatted "used / cap"; parse it for the meter.
-    const [used, cap] =
-      typeof docs === "string"
-        ? docs.split("/").map((s) => Number(s.replace(/[^\d]/g, "")))
-        : [];
-    const pct = used && cap ? (used / cap) * 100 : 0;
-    return (
-      <div className="portal-sidebar__usage portal-sidebar__usage--free">
-        <div className="portal-sidebar__usage-line">
-          <span className="portal-sidebar__usage-label">
-            {t("portal.shell.sidebar.docsProcessed")}
-          </span>
-          <span className="portal-sidebar__usage-value">{docs ?? "—"}</span>
-        </div>
-        <div
-          className="portal-sidebar__usage-track"
-          role="progressbar"
-          aria-valuenow={used ?? 0}
-          aria-valuemax={cap ?? 100}
-        >
-          <div
-            className="portal-sidebar__usage-fill"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-      </div>
-    );
-  }
+  // Real 30-day processed-PDF count from the fleet-usage endpoint (the same
+  // source as Home's status strip, so the two can't drift). null → "—".
+  const { data, loading } = useAsync<FleetStats>(() => fetchFleetStats(), []);
+  const docs = loading ? undefined : (data?.pdfsProcessed ?? undefined);
 
   const planLabel =
-    tier === "pro"
-      ? t("portal.shell.sidebar.planProcessor", "Processor plan")
-      : t("portal.shell.sidebar.planEnterprise", "Enterprise plan");
+    tier === "free"
+      ? t("portal.shell.sidebar.planEditor", "Editor plan")
+      : tier === "pro"
+        ? t("portal.shell.sidebar.planProcessor", "Processor plan")
+        : t("portal.shell.sidebar.planEnterprise", "Enterprise plan");
 
   return (
     <div className="portal-sidebar__usage">
@@ -136,6 +56,15 @@ export function Sidebar() {
   const { theme } = useTheme();
   const { openSettings } = useUI();
   const { t } = useTranslation();
+  const navigate = useNavigate();
+
+  // Editor and portal are one SPA when the editor serves this origin's root, so
+  // the switch stays client-side; an absolute EDITOR_URL (dev cross-app setup)
+  // needs a full page load.
+  const goToEditor = () => {
+    if (EDITOR_IS_SAME_APP) navigate("/");
+    else window.location.href = EDITOR_URL;
+  };
 
   // Procurement is no longer a nav tab — it lives on Home as the deal-status hero and expands into
   // a takeover modal (matching the marketing prototype).
@@ -148,7 +77,13 @@ export function Sidebar() {
         label={t(`portal.nav.${entry.id}`)}
         icon={entry.icon}
         isActive={activeView === entry.id}
-        onClick={(id) => setActiveView(id as ViewId)}
+        onClick={(id) => {
+          if (entry.externalUrl) {
+            window.open(entry.externalUrl, "_blank", "noopener,noreferrer");
+          } else {
+            setActiveView(id as ViewId);
+          }
+        }}
       />
     ));
   }
@@ -170,45 +105,12 @@ export function Sidebar() {
           </span>
         </span>
 
-        <Dropdown.Root align="end" className="portal-sidebar__app-switch">
-          <Dropdown.Trigger>
-            <button
-              type="button"
-              className="portal-sidebar__app-switch-btn"
-              aria-label={t("portal.shell.sidebar.switchApp")}
-            >
-              <ChevronDownIcon size={14} />
-            </button>
-          </Dropdown.Trigger>
-          <Dropdown.Menu width="11rem">
-            <Dropdown.Item
-              active
-              leading={
-                <img
-                  className="portal-sidebar__app-icon"
-                  src={theme === "dark" ? markDark : markLight}
-                  alt=""
-                />
-              }
-            >
-              {t("portal.shell.sidebar.appProcessor")}
-            </Dropdown.Item>
-            <Dropdown.Item
-              onSelect={() => {
-                window.location.href = EDITOR_URL;
-              }}
-              leading={
-                <img
-                  className="portal-sidebar__app-icon"
-                  src={theme === "dark" ? markDark : markLight}
-                  alt=""
-                />
-              }
-            >
-              {t("portal.shell.sidebar.appEditor")}
-            </Dropdown.Item>
-          </Dropdown.Menu>
-        </Dropdown.Root>
+        <AppSwitch
+          className="portal-sidebar__app-switch"
+          current="processor"
+          theme={theme}
+          onSwitch={goToEditor}
+        />
       </div>
 
       <nav className="portal-sidebar__nav">

@@ -51,6 +51,7 @@ export function QuoteBuilder({
       indemnification: false,
       training: false,
       qbr: false,
+      offlineLicense: false,
       currency: "USD",
       businessName: "",
     },
@@ -223,6 +224,12 @@ export function QuoteBuilder({
                   sub={t("portal.procurement.builder.qbrSub")}
                   onClick={() => set("qbr", !cfg.qbr)}
                 />
+                <AddOn
+                  on={cfg.offlineLicense}
+                  title={t("portal.procurement.builder.offlineLicense")}
+                  sub={t("portal.procurement.builder.offlineLicenseSub")}
+                  onClick={() => set("offlineLicense", !cfg.offlineLicense)}
+                />
               </div>
             </Field>
           </Step>
@@ -283,14 +290,14 @@ export function QuoteBuilder({
         </span>
         <div className="portal-qb__foot-btns">
           {step > 0 && (
-            <Button variant="outline" onClick={() => setStep(step - 1)}>
+            <Button variant="secondary" onClick={() => setStep(step - 1)}>
               {t("portal.procurement.builder.back")}
             </Button>
           )}
           {step === 0 && (
             <Button
-              variant="gradient"
-              accent="purple"
+              variant="primary"
+              accent="premium"
               disabled={cfg.volume <= 0}
               onClick={() => setStep(1)}
             >
@@ -299,8 +306,8 @@ export function QuoteBuilder({
           )}
           {step === 1 && (
             <Button
-              variant="gradient"
-              accent="purple"
+              variant="primary"
+              accent="premium"
               onClick={() => setStep(2)}
             >
               {t("portal.procurement.builder.continue")}
@@ -308,8 +315,8 @@ export function QuoteBuilder({
           )}
           {step === 2 && (
             <Button
-              variant="gradient"
-              accent="purple"
+              variant="primary"
+              accent="premium"
               loading={busy}
               disabled={!eula}
               onClick={generate}
@@ -432,5 +439,12 @@ function previewAnnualMinor(cfg: QuoteConfigInput): number {
   const disc = Math.round(
     withInd * TERM_DISCOUNT[Math.min(Math.max(cfg.termYears, 1), 5) - 1],
   );
-  return withInd - disc + (cfg.qbr ? 800_000 : 0);
+  // Flat annual add-ons (QBR, offline licence) sit outside the multi-year discount, mirroring the
+  // server (PricingRates: qbr 800_000, offline licence 1_200_000). TCV preview derives from this.
+  return (
+    withInd -
+    disc +
+    (cfg.qbr ? 800_000 : 0) +
+    (cfg.offlineLicense ? 1_200_000 : 0)
+  );
 }

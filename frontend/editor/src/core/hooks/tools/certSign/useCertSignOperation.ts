@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import {
-  ToolType,
   useToolOperation,
+  defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
   objectToFormData,
@@ -136,16 +136,14 @@ export const buildCertSignFormData = (
   });
 
 // Static configuration object
-export const certSignOperationConfig = {
-  toolType: ToolType.singleFile,
+export const certSignOperationConfig = defineSingleFileTool({
   buildFormData: buildCertSignFormData,
   toApiParams: certSignToApiParams,
   fromApiParams: certSignFromApiParams,
   operationType: "certSign",
   endpoint: ENDPOINT,
-  multiFileEndpoint: false,
   defaultParameters,
-} as const;
+});
 
 export const useCertSignOperation = () => {
   const { t } = useTranslation();

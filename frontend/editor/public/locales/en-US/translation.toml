@@ -7,6 +7,7 @@ black = "Black"
 blue = "Blue"
 cancel = "Cancel"
 chooseFile = "Choose File"
+clear = "Clear"
 close = "Close"
 comingSoon = "Coming soon"
 confirm = "Confirm"
@@ -87,6 +88,7 @@ processingCompleteMultiple = "{{count}} files are ready."
 property = "Property"
 quickPosition = "Quick Position"
 red = "Red"
+remove = "Remove"
 reset = "Reset"
 review = "Review"
 save = "Save"
@@ -180,6 +182,7 @@ addMoreFiles = "Add more files..."
 attachments = "Select Attachments"
 info = "Select files to attach to your PDF. These files will be embedded and accessible through the PDF's attachment panel."
 placeholder = "Choose files..."
+removeFile = "Remove file"
 selectedFiles = "Selected Files"
 submit = "Add Attachments"
 
@@ -1628,6 +1631,9 @@ title = "Do you want to help make Stirling PDF better?"
 tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
 
 [annotation]
+alignCenter = "Align center"
+alignLeft = "Align left"
+alignRight = "Align right"
 annotationStyle = "Annotation style"
 backgroundColor = "Background color"
 borderOff = "Border: Off"
@@ -2531,6 +2537,7 @@ title = "Rule of thumb"
 
 [certSign.source]
 device = "This device"
+noOtherSources = "No other certificate sources are available."
 server = "Server"
 stepTitle = "Certificate source"
 upload = "Upload"
@@ -2805,6 +2812,7 @@ back = "Back"
 cancel = "Cancel"
 close = "Close"
 collapse = "Collapse"
+confirm = "Confirm"
 continue = "Continue"
 copied = "Copied!"
 copy = "Copy"
@@ -3595,7 +3603,9 @@ makeCopy = "Make a copy"
 mobileShort = "Mobile"
 mobileUpload = "Mobile Upload"
 mobileUploadNotAvailable = "Mobile upload not enabled"
+moreOptions = "More options"
 myFiles = "My Files"
+nextFile = "Next file"
 noFiles = "No files available"
 noFilesFound = "No files found matching your search"
 noRecentFiles = "No recent files found"
@@ -3605,6 +3615,7 @@ openInFileEditor = "Open in File Editor"
 openInPageEditor = "Open in Page Editor"
 owner = "Owner"
 ownerUnknown = "Unknown"
+previousFile = "Previous file"
 recent = "Recent"
 removeBoth = "Remove from both"
 removeFilePrompt = "This file is saved on this device and on your server. Where would you like to remove it from?"
@@ -3680,7 +3691,9 @@ workbench = "Workbench"
 
 [fileSidebar]
 addFiles = "Add files"
+addingFiles = "Adding files…"
 collapse = "Collapse sidebar"
+customizeGroups = "Customize groups"
 dropHint = "Open files to get started"
 dropToAdd = "Drop files to add"
 expand = "Expand sidebar"
@@ -3693,8 +3706,11 @@ noFiles = "No files yet"
 openFileManager = "Browse all files & folders"
 openFromComputer = "Open from computer"
 openSettings = "Open settings"
+other = "Other"
+recent = "Recent"
 search = "Search"
 searchPlaceholder = "Search files..."
+viewAll = "View all {{count}} files"
 
 [fileSidebar.fileItem]
 closeViewer = "Close viewer"
@@ -3706,6 +3722,23 @@ updateOnServer = "Update on server"
 uploadToServer = "Upload to server"
 versionHistory = "Version history"
 
+[fileSidebar.groupsModal]
+add = "Add"
+addLabel = "Add a label…"
+categoryIconAria = "Choose an icon for {{name}}"
+createCategory = "Create category"
+delete = "Delete category"
+done = "Done"
+hide = "Hide category"
+newCategory = "New category name…"
+removeLabel = "Remove {{name}}"
+rename = "Rename"
+reset = "Reset to defaults"
+search = "Search labels…"
+show = "Show category"
+subtitle = "Group your files into parent categories. Add existing or new labels to a category, rename it, or create your own. Files in none of your categories appear under “Other”."
+title = "Sidebar categories"
+
 [filesPage]
 addToWorkspace = "Add to workspace"
 addToWorkspaceCount = "Add {{count}} to workspace"
@@ -3715,6 +3748,7 @@ backToFolder = "Back to {{folder}}"
 backToMyFiles = "Back to My Files"
 breadcrumbs = "Folder path"
 cancel = "Cancel"
+classification = "Classification"
 clearSearch = "Clear search"
 clearSelection = "Clear selection"
 closeDetails = "Close details"
@@ -3874,10 +3908,10 @@ uploadFilesFailedDetail = "Could not upload files: {{message}}"
 added = "Added"
 count = "Files"
 folder = "Folder"
+labels = "Labels"
 modified = "Modified"
 name = "Name"
 size = "Size"
-toolHistory = "Tool history"
 toolHistoryAtVersion = "Cumulative tool chain"
 totalSize = "Total size"
 type = "Type"
@@ -4614,10 +4648,10 @@ welcomeTitle = "You've been invited!"
 [landing]
 addFiles = "Add Files"
 heroSubtitle = "Drop in or add an existing PDF to get started."
-heroTitle = "Stirling PDF"
 mobileUpload = "Upload from Mobile"
 openFromComputer = "Open from computer"
 uploadFromComputer = "Upload from computer"
+workbenchEmptyStateHero = "Drop a PDF anywhere"
 
 [language]
 direction = "ltr"
@@ -4930,6 +4964,7 @@ title = "Output"
 [onboarding]
 activeFiles = "The <strong>Active Files</strong> view shows all of the PDFs you have loaded into the tool, and allows you to select which ones to process."
 allTools = "This is the <strong>Tools</strong> panel, where you can browse and select from all available PDF tools."
+close = "Close"
 cropSettings = "Now that we've selected the file we want crop, we can configure the Crop tool to choose the area that we want to crop the PDF to."
 fileCheckbox = "Clicking one of the files selects it for processing. You can select multiple files for batch operations."
 fileReplacement = "The modified file will replace the original file in the Workbench automatically, allowing you to easily run it through more tools."
@@ -4955,6 +4990,7 @@ skipTheTour = "Skip the tour"
 
 [onboarding.desktopInstall]
 body = "Stirling works best as a desktop app. You can use it offline, access documents faster, and make edits locally on your computer."
+selectOs = "Select operating system"
 title = "Download"
 titleWithOs = "Download for {{osLabel}}"
 
@@ -5566,7 +5602,9 @@ viewLabel = "PDF Editor"
 
 [pdfTextEditor.actions]
 applyChanges = "Apply Changes"
+clearText = "Clear text"
 downloadCopy = "Download Copy"
+moreOptions = "More options"
 reset = "Reset Changes"
 
 [pdfTextEditor.badges]
@@ -5966,6 +6004,33 @@ print = "Enforcing before print"
 [policies.fields]
 selectedCount = "{{count}} selected"
 
+[policies.labels]
+add = "Add"
+addPlaceholder = "Add a label…"
+customNote = "Customized for your team."
+defaultNote = "Using the built-in default, shared with your team."
+duplicate = "\"{{name}}\" already exists."
+edit = "Edit labels"
+empty = "No labels yet."
+export = "Export JSON"
+iconAria = "Choose an icon for {{name}}"
+import = "Import JSON"
+importError = "Couldn't import that file."
+managedNote = "Team labels are managed by your team leader."
+modalSubtitle = "Shared with your whole team. The classifier picks the labels that fit each document."
+modalTitle = "Classification labels"
+pickIcon = "Use {{label}} icon"
+removeAria = "Remove {{name}}"
+resetToDefault = "Reset to default"
+saveForTeam = "Save for team"
+saving = "Saving…"
+sectionLabel = "Classification labels"
+startFromScratch = "Start from scratch"
+teamCount = "team labels"
+tooLong = "Labels can be at most {{max}} characters."
+ungrouped = "Ungrouped"
+view = "View labels"
+
 [policies.pii]
 account = "Account numbers (labelled)"
 card = "Credit / debit cards"
@@ -5977,17 +6042,30 @@ placeholder = "Select PII types"
 routing = "US routing numbers (ABA)"
 ssn = "Social Security numbers"
 
+[policies.settings]
+noneExport = "No policies currently run on export."
+noneUpload = "No policies currently run on upload."
+onExport = "On export"
+onUpload = "On upload"
+reorderHandle = "Drag to reorder"
+runOrderDesc = "When more than one policy runs on the same trigger, they run in this order — each on the previous policy's output. Drag to reorder."
+title = "Policy settings"
+
 [policies.sidebar]
 activeCount = "{{count}} active"
-infoAriaLabel = "What is a policy?"
 infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
 loading = "Loading…"
+optionsAriaLabel = "Policy options"
+policySettings = "Policy settings"
 railAriaLabel = "{{label}} policy — {{status}}"
 railSuffixActive = " (Active)"
 railSuffixPaused = " (Paused)"
+retryFailed = "Retry failed policies ({{count}})"
+rowProgress = "{{completed}} of {{total}} files processed"
 setUp = "Set up"
 title = "Policies"
 upgradeToEnterprise = "Upgrade to enterprise"
+whatIsPolicy = "What is a policy?"
 
 [policies.status]
 active = "Active"
@@ -6047,6 +6125,17 @@ sourcesLabel = "Sources"
 stepOf = "Step {{step}} of {{total}}"
 toolChainDesc = "Configure the tools this policy runs on each document."
 typesSelected = "{{count}} types selected"
+
+[policy]
+badgeEnforcing = "{{name}} enforcing..."
+badgeRan = "{{name}} policy ran on this file"
+blockingAction = "{{action}} blocked while enforcing policy, please wait..."
+dismiss = "Dismiss overlay"
+enforcingTitle = "Enforcing policy..."
+viewAnyway = "View file (policy still enforcing)"
+
+[portal]
+comingSoon = "Coming soon"
 
 [portal.accountLink.card]
 billingNote = "Unattended processing bills against your org wallet."
@@ -6259,7 +6348,6 @@ cost = "Cost"
 editorsDeployed = "Editors deployed"
 inviteTeammates = "Invite teammates"
 pdfsEdited = "PDFs edited"
-previewBadge = "Preview · sample data"
 subtitle = "Deploy anywhere, for your whole team."
 title = "Free PDF Editors"
 
@@ -6438,9 +6526,6 @@ componentSpendMtd = "Component spend (MTD)"
 embedsThisMonth = "Embeds this month"
 inBeta = "In beta"
 
-[portal.common]
-inviteMember = "Invite member"
-
 [portal.componentsView]
 subtitle = "Embeddable SDK widgets you drop into your own app — a viewer, an e-sign flow, an AI review panel. Each is metered per action. Click a card for install, usage and props."
 title = "Components"
@@ -6555,7 +6640,9 @@ beforeHelper = "header against your signing secret before trusting a payload. SD
 beforeSignature = "Verify the"
 
 [portal.documents]
-subtitle = "Review and approve documents moving through your pipelines."
+exportCsv = "Export CSV"
+search = "Search by filename, ID..."
+subtitle = "Every document your org has processed, with its full processing record. Content access is request-gated."
 title = "Documents"
 
 [portal.documents.audit]
@@ -6593,42 +6680,38 @@ value = "Value"
 
 [portal.documents.filters]
 all = "All"
-archived = "Archived"
 ariaLabel = "Filter documents by status"
-needsReview = "Needs review"
+flagged = "Flagged"
+inReview = "In review"
 processed = "Processed"
 
 [portal.documents.overview]
-confidence = "Confidence"
-fieldsExtracted = "Fields extracted"
-received = "Received"
-source = "Source"
+action = "Pipeline / Action"
+product = "Product"
+received = "Time"
 status = "Status"
 type = "Type"
+user = "User"
 
 [portal.documents.queue.empty]
 description = "As sources feed documents into your pipelines they'll appear here for review."
 title = "No documents in the queue"
 
-[portal.documents.summary]
-avgConfidence = "Avg confidence"
-inQueue = "In queue"
-needsReview = "Needs review"
-processedToday = "Processed today"
-
 [portal.documents.table]
+auto = "Auto"
+editorAction = "Editor"
 empty = "No documents match this filter."
+rowActions = "Row actions"
 sensitiveLabel = "Sensitive"
 sensitiveTitle = "Sensitive — access required"
 
 [portal.documents.table.columns]
-confidence = "Confidence"
-fields = "Fields"
-name = "Name"
-source = "Source"
+action = "Pipeline / Action"
+document = "Document"
+product = "Product"
 status = "Status"
 time = "Time"
-type = "Type"
+user = "User"
 
 [portal.editorAdmin]
 subtitle = "Deploy the Stirling PDF Editor, pair self-hosted instances to your org, and operate the running fleet — targets, health, credentials, and offline activation in one place."
@@ -6708,71 +6791,49 @@ description = "This view hit an unexpected error. Try again, or pick another sec
 retry = "Try again"
 title = "Something went wrong on this page"
 
-[portal.forkWizard]
-subtitle = "Clone a proven workflow and tune it — every template ships the same four-stage backbone."
-title = "Fork a starter pipeline"
+[portal.home.editor]
+activeUsers = "{{n}} active"
+invite = "Invite teammates"
+name = "Stirling PDF Editor"
+open = "Open in browser"
+updated = "updated {{time}}"
 
-[portal.forkWizard.action]
-cancel = "Cancel"
-deploy = "Deploy pipeline"
-pickAnother = "Pick another"
+[portal.home.editor.target]
+cloud = "Managed Cloud"
+docker = "Self-hosted · Docker"
+kubernetes = "Self-hosted · Kubernetes"
 
-[portal.forkWizard.status]
-building = "Building…"
-ready = "Ready to deploy"
-
-[portal.home.chart.empty]
-description = "Once documents are processed, your 30-day usage appears here."
-title = "No usage yet"
-
-[portal.home.kpis.enterprise]
-docs30d = "Docs / 30d"
-evalPassRate = "Eval pass rate"
-p95Latency = "P95 latency"
-slaUptime = "SLA uptime (30d)"
-
-[portal.home.kpis.free]
-agents = "Agents"
-docsProcessed = "Docs processed"
-docsProcessedDescription = "Free plan cap"
-operations = "Operations"
-pipelines = "Pipelines"
-
-[portal.home.kpis.pro]
-agentsActive = "Agents active"
-docs30d = "Docs / 30d"
-evalPassRate = "Eval pass rate"
-pipelines = "Pipelines"
+[portal.home.greeting]
+afternoon = "Good afternoon"
+evening = "Good evening"
+morning = "Good morning"
 
 [portal.home.onboarding]
-progress = "{{done}} / {{total}} done"
-runAgain = "Run again"
-start = "Start"
-subtitle = "Four steps to a production-shaped Stirling project."
-title = "Get to value"
+dismiss = "Dismiss setup"
+notStarted = "Not started"
+progress = "{{done}} of {{total}} done"
+title = "Finish setting up"
 
-[portal.home.onboarding.empty]
-description = "Onboarding tasks will appear here once your workspace is set up."
-title = "No onboarding steps yet"
+[portal.home.onboarding.enterprise]
+body = "Org-wide SSO + SCIM + RBAC, committed volume pricing, and air-gapped deployment."
+cta = "Start Trial"
+ctaQuote = "Get Quote"
+lead = "For 250+ employees."
+tag = "Enterprise"
 
-[portal.home.productGrid]
-ariaLabel = "Process PDFs at scale"
+[portal.home.onboarding.steps.editor]
+blurb = "Deploy the desktop app, free forever."
+title = "Download the PDF Editor"
 
-[portal.home.productGrid.agents]
-blurb = "Wire your agent via MCP, REST, or tool definitions. Deterministic operations, scenarios, evals."
-cta = "Connect an agent"
-title = "Agents"
+[portal.home.onboarding.steps.policies]
+blurb = "{{active}} active · {{recommended}} recommended"
+chip = "{{active}} active"
+title = "Turn on policies"
 
-[portal.home.productGrid.pipelines]
-badge = "Hero"
-blurb = "Compose document workflows from typed operations. Upload a sample to get suggestions or start blank."
-cta = "Build a pipeline"
-title = "Pipelines"
-
-[portal.home.productGrid.sources]
-blurb = "Attach pipelines where PDFs already live — S3, agents, SharePoint, webhooks, batch, email."
-cta = "Connect a source"
-title = "Sources"
+[portal.home.onboarding.steps.sources]
+blurb = "{{connected}} connected · every PDF governed where it lands"
+chip = "{{connected}} connected"
+title = "Connect your sources"
 
 [portal.home.quickActions]
 subtitle = "Top tasks for today"
@@ -6789,18 +6850,6 @@ title = "Connect a source"
 [portal.home.quickActions.issueApiKey]
 blurb = "Scoped key with rate limits and IP allowlist"
 title = "Issue an API key"
-
-[portal.home.quickActions.tryOp]
-blurb = "Drop a sample, pick an op, see the JSON"
-title = "Try a PDF operation"
-
-[portal.home.regions]
-subtitle = "Real-time status for every deployed Stirling region."
-title = "Region health"
-
-[portal.home.regions.empty]
-description = "Once a region is deployed, its health appears here."
-title = "No regions yet"
 
 [portal.infrastructure]
 manageEditorDeployment = "Manage Editor deployment"
@@ -6840,12 +6889,31 @@ actor = "Actor"
 event = "Event"
 latency = "Latency"
 status = "Status"
-target = "Target"
+target = "Resource"
 timestamp = "Timestamp"
 
 [portal.infrastructure.audit.empty]
 description = "Workspace activity will appear here as it happens."
 title = "No audit events"
+
+[portal.infrastructure.audit.export]
+cancel = "Cancel"
+error = "Export failed. Please try again."
+exportButton = "Export"
+exporting = "Exporting…"
+fieldsLegend = "Columns"
+format = "Format"
+open = "Export"
+subtitle = "Download audit events as CSV or JSON. Choose which columns to include."
+title = "Export audit log"
+
+[portal.infrastructure.audit.export.fields]
+date = "Date"
+documentName = "Document name"
+ipAddress = "IP address"
+outcome = "Outcome"
+tool = "Tool"
+username = "Username"
 
 [portal.infrastructure.audit.filters]
 all = "All"
@@ -6854,6 +6922,10 @@ config = "Config"
 elevation = "Elevation"
 processing = "Processing"
 security = "Security"
+
+[portal.infrastructure.audit.forbidden]
+description = "The audit log is available to team leads and admins. Ask your team lead or an admin for access."
+title = "You don't have access"
 
 [portal.infrastructure.audit.metrics]
 config = "Config"
@@ -7131,51 +7203,6 @@ new_other = "{{count}} new"
 description = "No new notifications."
 title = "You're all caught up"
 
-[portal.opRunner]
-durationMs = "{{ms}} ms"
-featuredOps = "Featured ops"
-subtitle = "Drop a sample, pick an op, see what Stirling returns."
-title = "Try a PDF operation"
-
-[portal.opRunner.action]
-close = "Close"
-openBuilder = "Open the pipeline builder"
-run = "Run operation"
-runAgain = "Run again"
-running = "Running…"
-
-[portal.opRunner.drop]
-hint = "or use a sample document."
-pickAnother = "Pick another sample"
-replaceHint = "Drop again or pick another sample to replace."
-title = "Drop a PDF here"
-useSample = "Use a sample"
-
-[portal.opRunner.empty]
-description = "Once operations are published, they'll show up here."
-title = "No featured ops yet"
-
-[portal.opRunner.error]
-title = "The operation didn't complete"
-unknown = "Unknown error"
-
-[portal.opRunner.hint]
-aSample = "a sample"
-press = "Press"
-ready = "Ready"
-toInvoke = "to invoke"
-
-[portal.opRunner.hint.runOn]
-before = "Run"
-middle = "on"
-
-[portal.opRunner.running]
-title = "Running {{label}}…"
-
-[portal.opRunner.status]
-completed = "Completed"
-failed = "Failed"
-
 [portal.pipelines]
 subtitle = "Every automated document pipeline on the backend: an ordered chain of operations over a set of sources, run on a trigger. Click a row for its steps and sources."
 title = "Pipelines"
@@ -7183,18 +7210,39 @@ title = "Pipelines"
 [portal.pipelines.actions]
 newPipeline = "New pipeline"
 
+[portal.pipelines.builder]
+addStep = "Add tool"
+back = "Back to pipelines"
+discard = "Discard changes"
+enabled = "Enabled"
+keepEditing = "Keep editing"
+needsUpload = "Needs an uploaded file"
+noToolMatches = "No tools match your search."
+pipelineSettings = "Pipeline settings"
+searchTools = "Search tools"
+selectToolBody = "Add a tool to build your pipeline."
+selectToolTitle = "No tools yet"
+toolSettings = "Tool settings"
+unknownStep = "Unrecognized operation, kept as-is."
+unsavedBody = "You have unsaved changes. Save them before leaving, or discard them?"
+unsavedTitle = "Unsaved changes"
+uploadUnsupported = "Uploaded files aren't supported in pipelines yet, so these steps can't be saved: {{tools}}."
+usesDefaults = "Runs with default settings"
+
 [portal.pipelines.composer]
+addTool = "Add tool"
 cancel = "Cancel"
-chainEmpty = "Add operations from the palette below."
+chainEmpty = "Add a tool to start building your pipeline."
 create = "Create pipeline"
 directory = "Output folder"
 directoryHelp = "Absolute path on the server. Must be within the configured allowed folders."
-editTitle = "Edit pipeline"
+editingUnsupported = "Displaying these tool params for editing is not supported yet."
 moveDown = "Move down"
 moveUp = "Move up"
 name = "Name"
 namePlaceholder = "e.g. Redaction sweep"
 noSources = "No sources connected yet. The pipeline can still run on files supplied to it directly."
+noToolSettings = "This tool has no configurable settings."
 operations_one = "Operation ({{count}})"
 operations_other = "Operations ({{count}})"
 output = "Output"
@@ -7203,8 +7251,6 @@ save = "Save changes"
 scheduleEvery = "Run every"
 sources = "Sources"
 sourcesLoading = "Loading sources..."
-subtitle = "Pick the sources it runs over, chain the operations, then choose when it runs and where output goes."
-title = "New pipeline"
 trigger = "Trigger"
 triggerManual = "Manual only"
 
@@ -7220,18 +7266,8 @@ confirm = "Delete"
 title = "Delete pipeline?"
 
 [portal.pipelines.detail]
-closeAriaLabel = "Close detail"
 delete = "Delete pipeline"
-edit = "Edit"
-noSources = "No sources. Files are supplied directly to each run."
-noSteps = "No operations configured."
-output = "Output"
-pause = "Pause"
-resume = "Resume"
 run = "Run now"
-sources = "Sources"
-steps = "Operations"
-subtitle = "{{trigger}} · {{status}}"
 
 [portal.pipelines.empty]
 action = "Create a pipeline"
@@ -7253,6 +7289,7 @@ completed_other = "All {{count}} runs completed."
 empty = "Nothing to run: the sources had no documents to process."
 failed = "Run failed: {{error}}"
 running = "Run started; still in progress."
+timeout = "Run is taking longer than expected; it may still finish in the background."
 
 [portal.pipelines.status]
 active = "Active"
@@ -7290,6 +7327,7 @@ showMore = "Show more"
 sources = "Sources"
 
 [portal.policies.detail.actions]
+clearHistory = "Clear processed history"
 delete = "Delete"
 editSettings = "Edit settings"
 pause = "Pause"
@@ -7424,9 +7462,6 @@ soon = "Soon"
 
 [portal.processingStatus]
 managePlan = "Manage plan"
-pdfsThisMonth = "PDFs this month"
-progressLabel = "{{used}} of {{cap}} PDFs used this month"
-upgrade = "Upgrade"
 volumeSuffix = "PDFs processed · last 30 days"
 
 [portal.procurement]
@@ -7463,6 +7498,8 @@ generate = "Generate quote"
 included = "Included"
 indemnification = "IP indemnification"
 indemnificationSub = "We defend qualifying IP claims, per the EULA"
+offlineLicense = "Offline / air-gapped licence"
+offlineLicenseSub = "A downloadable licence file for an air-gapped self-hosted instance"
 qbr = "Quarterly business reviews"
 qbrSub = "Your SE reviews usage and roadmap each quarter"
 running = "{{annual}} / yr · {{years}}-yr {{tcv}}"
@@ -7548,6 +7585,14 @@ subtitle = "Your solutions engineer is on every step. One next action at a time;
 title = "From trial to live, one guided path"
 trialTitle = "Enterprise trial"
 
+[portal.procurement.license]
+copied = "Copied"
+copy = "Copy key"
+downloadError = "Could not generate the offline licence file just yet — please try again in a moment."
+downloadOffline = "Download offline licence (.lic)"
+hint = "Paste this key into a self-hosted instance to activate it, or keep it for your records. Keep it safe."
+label = "Your licence key"
+
 [portal.procurement.link]
 cta = "Link account"
 description = "Procurement runs on your linked Stirling account: it's how we provision the trial, price your quote, and start billing. Link an account to start."
@@ -7600,11 +7645,17 @@ uploadCta = "Upload purchase order"
 uploadTitle = "Upload your purchase order"
 
 [portal.procurement.payment]
-description = "Your quote is accepted and a committed annual subscription has been created. Pay the first invoice to go live — you can pay or download it right here, no email needed."
+description = "Your quote is accepted and your licence is already active — your team can start right away. Pay the first invoice when you're ready; you can pay or download it here, no email needed."
 downloadInvoice = "Download invoice"
 simulate = "Simulate payment received (demo)"
 title = "Subscription created"
 viewInvoice = "View & pay invoice"
+
+[portal.procurement.schedule]
+fallback = "Couldn't load the scheduler."
+fallbackLink = "Open scheduling in a new tab"
+subtitle = "Your solutions engineer will walk your team through the rollout. Pick a time that suits you."
+title = "Schedule a call"
 
 [portal.procurement.status]
 action = "Action needed"
@@ -7779,8 +7830,8 @@ appEditor = "Editor"
 appProcessor = "Processor"
 brandSuffix = "Stirling Processor"
 docsCount = "{{docs}} docs"
-docsProcessed = "Docs processed"
 linkAccount = "Link Stirling account"
+planEditor = "Editor plan"
 planEnterprise = "Enterprise plan"
 planProcessor = "Processor plan"
 primaryNav = "Primary navigation"
@@ -7846,12 +7897,27 @@ helperText = "Absolute path Stirling watches for files to process."
 label = "Directory path"
 placeholder = "/data/incoming"
 
+[portal.sources.types.folder.fields.identity]
+helperText = "Content check reads each changed file, so renames and touches that don't alter content are not reprocessed."
+label = "Change detection"
+
+[portal.sources.types.folder.fields.identity.options]
+hash = "Size, date and content check"
+stat = "Size and date modified"
+
 [portal.sources.types.folder.fields.mode]
 label = "Read mode"
 
 [portal.sources.types.folder.fields.mode.options]
 consume = "Consume: process each file once"
 snapshot = "Snapshot: re-read the folder every run"
+
+[portal.sources.types.folder.fields.recursive]
+label = "Folder depth"
+
+[portal.sources.types.folder.fields.recursive.options]
+all = "Include subfolders"
+top = "Top level only"
 
 [portal.sources.types.unknown]
 label = "Source"
@@ -7888,149 +7954,18 @@ action = "Sign in again"
 body = "Your Stirling account session has expired. Sign in again to view billing — your instance stays linked."
 title = "Session expired"
 
-[portal.usageChart]
-defaultLabel = "Docs processed · last 30 days"
-delta = "{{pct}}% vs prior 30d"
-docsValue = "{{value}} docs"
-srAnnounce = "{{date}}: {{value}} docs"
-
-[portal.useCases]
-title = "Popular use cases"
-viewAll = "View all pipelines"
-
-[portal.useCases.items.authenticity]
-blurb = "Cryptographic checks at the document boundary — signature validation, tamper detection, signing flows for outbound documents. Trust decisions in the pipeline, not your app code."
-cta = "Try authenticity check"
-eyebrow = "AUTHENTICITY"
-title = "Verify signatures and detect tampering"
-
-[portal.useCases.items.autoRouting]
-blurb = "One classifier reads what arrived — KYC form, invoice, contract, COI — and routes to the right downstream pipeline. No manual triage, no docs in the wrong workflow."
-cta = "Build a classifier pipeline"
-eyebrow = "AUTO-ROUTING"
-title = "Auto-classify and route incoming documents"
-
-[portal.useCases.items.piiRedaction]
-blurb = "Strip sensitive fields before storage, indexing, or LLM processing. Schema-aware, per-field audit, BYOK or HYOK keys. Compliance at the document boundary, not per pipeline."
-cta = "See redaction pipelines"
-eyebrow = "PII REDACTION"
-title = "Redact PII before it leaves your stack"
-
-[portal.useCases.items.trainingData]
-blurb = "Batch-import an archive, redact PII, classify, chunk, and emit ready-to-load JSON for fine-tuning, eval sets, or RAG. Self-completing and replayable."
-cta = "Build a training-data pipeline"
-eyebrow = "TRAINING DATA"
-title = "Turn PDFs into training data"
-
 [portal.users]
-subtitle = "The people in your organization and the access they hold — roles, status and security controls."
 title = "Users"
 
-[portal.users.access]
-subtitle = "Seats, authentication and provisioning for your organization."
-title = "Access & security"
-
-[portal.users.access.auth]
-title = "Authentication"
-
-[portal.users.access.auth.requireMfa]
-description = "Members must set up a second factor to sign in."
-enforced = "Enforced org-wide on this plan."
-label = "Require MFA"
-
-[portal.users.access.auth.shortSessions]
-description = "Sign members out after inactivity (currently {{timeout}})."
-label = "Short-lived sessions"
-
-[portal.users.access.scim]
-active = "Active"
-directory = "Directory"
-lastSync = "Last sync"
-note = "Members are created, updated and deactivated automatically from your identity provider."
-off = "Off"
-title = "SCIM provisioning"
-
-[portal.users.access.seats]
-title = "Seats"
-unlimited = "Your plan includes unlimited seats."
-usedLabel = "{{used}} of {{limit}} seats used"
-
-[portal.users.access.sso]
-connected = "Connected"
-domains = "Domains"
-manage = "Manage connection"
-notConfigured = "Not configured"
-provider = "Provider"
-title = "SSO / SAML"
-
-[portal.users.access.upgrade]
-action = "Upgrade plan"
-title = "Unlock team access controls"
-
-[portal.users.empty]
-description = "Invite your team to start collaborating on documents and pipelines."
-title = "No members yet"
-
-[portal.users.invite]
-cancel = "Cancel"
-email = "Email"
-emailError = "Enter a valid email address"
-emailPlaceholder = "teammate@acme.com"
-role = "Role"
-roleHelper = "Determines what the member can do once they join."
-send = "Send invite"
-subtitle = "They'll receive an email to join your organization."
-
-[portal.users.roles]
-subtitle = "Every role exists on every plan — what each one can do is fixed across the org."
-title = "Roles"
-
-[portal.users.summary]
-members = "Members"
-pendingInvites = "Pending invites"
-seatsUsed = "Seats used"
-
-[portal.users.table]
-actionsFor = "Actions for {{name}}"
-changeRole = "Change role"
-lastActive = "Last active"
-member = "Member"
-remove = "Remove from org"
-role = "Role"
-status = "Status"
-suspend = "Suspend"
-
 [portal.welcome]
-ariaLabel = "Stirling product highlights"
-pagination = "Carousel pagination"
-slideLabel = "Slide {{number}}: {{title}}"
-
-[portal.welcome.ornament.editor]
-critical = "Critical"
-ocrClean = "OCR-clean"
-schemaMatch = "schema match 0.97"
-signed = "signed"
-
-[portal.welcome.slides.agents]
-eyebrow = "AI Agents"
-primary = "Try PDF Processor"
-secondary = "View MCP docs"
-sub = "Wire your agent via MCP, REST or tool definitions. Deterministic operations and guardrails — test with scenarios and evals before you ship."
-title = "PDF Processor for AI Agents"
-
-[portal.welcome.slides.editor]
-eyebrow = "PDF Editor"
-primary = "Install PDF Editor"
-secondary = "Connect an instance"
-sub = "Annotate, sign, redact, and review locally or in the cloud. Brought to the platform as the credibility anchor of the Stirling control plane."
-title = "The #1 PDF Editor on GitHub"
-
-[portal.welcome.slides.platform]
-eyebrow = "Platform"
-primary = "Try a PDF operation"
-secondary = "Get an API key"
-sub = "Ingest from agents, APIs and connectors. Run composable pipelines with evals and golden sets. Land in a vault with zero-standing-access controls."
-title = "PDF Infrastructure for Developers"
+ariaLabel = "Welcome to Stirling PDF"
+badge = "Open-source"
+installEditor = "Install the Editor"
+inviteTeammates = "Invite teammates"
+perks = "Free forever · Self-hostable"
+subtitle = "The world's most secure PDF Editor is free for teams of all sizes. Includes 60+ PDF operations and SSO."
+title = "Welcome to"
+titleAccent = "Stirling PDF"
 
 [printFile]
 title = "Print File"
@@ -8918,6 +8853,21 @@ manage = "Manage"
 description = "Policies and legal information for this service."
 title = "Legal Documents"
 
+[settings.licenses]
+backendDescription = "Licenses for backend dependencies bundled with this server."
+backendLabel = "Backend Licenses"
+backendTitle = "Backend 3rd Party Licenses"
+empty = "No dependencies found."
+frontendDescription = "Licenses for frontend dependencies bundled into the release build."
+frontendLabel = "Frontend Licenses"
+frontendTitle = "Frontend 3rd Party Licenses"
+license = "License"
+listDescription = "The list is shown directly in the UI from the release bundle or backend endpoint."
+listTitle = "Bundled dependencies"
+loadError = "Failed to load third-party licenses"
+module = "Module"
+version = "Version"
+
 [settings.licensingAnalytics]
 audit = "Audit"
 plan = "Plan"
@@ -9670,7 +9620,9 @@ memberRemoved = "Member removed successfully"
 namePlaceholder = "Enter team name"
 personal = "Personal"
 removeError = "Failed to remove member"
+renameCancel = "Cancel rename"
 renameError = "Failed to rename team"
+renameSubmit = "Save team name"
 renameSuccess = "Team renamed successfully"
 
 [team.invitationBanner]
@@ -9686,6 +9638,7 @@ sendButton = "Send Invitation"
 title = "Invite Team Member"
 
 [team.members]
+actions = "Member actions"
 emailColumn = "Email"
 empty = "No team members yet"
 nameColumn = "Name"
@@ -9917,6 +9870,146 @@ title = "Detailed Statistics"
 unknownEndpoint = "Unknown endpoint"
 visits = "Visits"
 
+[users]
+lastActive = "Last active"
+learnMore = "Learn more about roles and access."
+locked = "Locked"
+roleFor = "Role for {{name}}"
+rowActions = "Actions for {{name}}"
+showAll = "Show all {{count}}"
+showLess = "Show less"
+subtitle2 = "Your people, teams, and access levels."
+suspended = "Suspended"
+teamActions = "Team actions"
+title = "Users"
+you = "(you)"
+
+[users.action]
+deleteTeam = "Delete team"
+disableMfa = "Reset MFA"
+move = "Move to team"
+reinstate = "Reinstate"
+remove = "Remove from org"
+rename = "Rename team"
+resetPw = "Reset password"
+suspend = "Suspend"
+unlock = "Unlock account"
+
+[users.cap]
+addProcessor = "+ Processor"
+approver = "Approves policy"
+editor = "Editor"
+processor = "Processor"
+
+[users.confirm]
+deleteTeamBody = "Delete the {{name}} team? The team must be empty first - move its members to another team, and it can't still own any integration configs."
+deleteTeamTitle = "Delete team"
+disableMfaBody = "Remove {{name}}'s MFA enrolment? They'll set it up again on next login if required."
+disableMfaTitle = "Reset MFA"
+removeBody = "Permanently remove {{name}} from the organization? This cannot be undone."
+removeTitle = "Remove member"
+
+[users.empty]
+description = "Invite your team to start collaborating."
+title = "No members yet"
+
+[users.group]
+addToTeam = "Add to team"
+guestCount = "{{count}} guest"
+guests = "Guests"
+guestsDesc = "External collaborators, scoped to what you shared. Editor only."
+ledBy = "led by {{owner}}"
+org = "Organization"
+orgDesc = "Owners with org-wide authority and policy approval"
+owners = "{{count}} owner"
+team = "{{name}} team"
+teamMeta = "{{count}} people"
+
+[users.invite]
+access = "Access"
+action = "Invite people"
+authOauth = "OAuth2 / SSO"
+authSaml = "SAML 2.0"
+authType = "Sign-in method"
+authWeb = "Password"
+create = "Create account"
+createSubtitle = "Create a self-hosted account with a password or SSO."
+createTitle = "Create account"
+editorDesc = "Edit PDFs in the Stirling PDF Editor. Everyone gets this."
+email = "Email address"
+emailError = "Enter a valid email address"
+emailPlaceholder2 = "name@company.com"
+forceChange = "Require a password change on first login"
+forceMfa = "Require MFA setup on first login"
+method = "How to add them"
+methodDirect = "Create account directly"
+methodEmail = "Invite by email"
+password = "Password"
+passwordError = "Password must be at least 8 characters"
+processorDeferred = "Invite sent, but Processor access couldn't be granted yet - set it from the roster once they've joined."
+processorDesc = "The governance surface, run pipelines, agents, and the API."
+role = "Role"
+send2 = "Send invite"
+subtitle2 = "They'll get an email to join your Stirling workspace."
+team = "Team"
+title = "Invite people"
+username = "Username"
+usernameError = "Username must be at least 3 characters"
+usernamePlaceholder = "jsmith"
+
+[users.loadError]
+description = "Something went wrong reaching the backend, or you don't have access. Try again."
+title = "Couldn't load members"
+
+[users.moveTeam]
+apply = "Move"
+team = "Team"
+title = "Move to team"
+
+[users.newTeam]
+action = "+ New team"
+create = "Create team"
+emailError = "Enter a valid email address"
+name = "Team name"
+namePlaceholder = "e.g. Finance"
+nameRequired = "Team name is required"
+owner = "Team Owner"
+ownerFailed = "Team created, but the owner couldn't be invited. Assign one from the roster."
+ownerHelper = "Every team has a leader. They'll be invited as Team Owner, with the Processor on, and can add the rest. You can reassign later."
+ownerPlaceholder = "owner@company.com"
+subtitle = "Group people under a Team Owner who manages their access."
+title = "New team"
+
+[users.renameTeam]
+apply = "Rename"
+name = "Team name"
+title = "Rename team"
+
+[users.resetPw]
+apply = "Reset password"
+confirm = "Confirm password"
+copied = "Copied to clipboard"
+copyHint = "Copy this now - it won't be shown again."
+email = "Email the user about the reset"
+forceChange = "Require a password change on next login"
+generate = "Generate a secure password"
+includePw = "Include the new password in the email"
+mismatch = "Passwords do not match"
+newPassword = "New password"
+regen = "Regenerate"
+title = "Reset password"
+tooShort = "Password must be at least 8 characters"
+
+[users.role]
+guest = "Guest"
+member = "Member"
+orgOwner = "Org Owner"
+teamOwner = "Team Owner"
+
+[users.team]
+grantProcessor = "Grant Processor to team"
+revokeProcessor = "Revoke Processor from team"
+
 [validateSignature]
 date = "Date"
 downloadCsv = "Download CSV"
@@ -10041,13 +10134,22 @@ zoomOut = "Zoom Out"
 [viewer.attachments]
 addAttachment = "Add attachment"
 close = "Close attachments"
+closeSidebar = "Close attachments sidebar"
+download = "Download attachment"
 empty = "No attachments in this document"
 loading = "Loading attachments..."
 noDocument = "Open a PDF to view its attachments."
 noMatch = "No attachments match your search"
 noSupport = "Attachment support is unavailable for this viewer."
+retry = "Retry"
 searchPlaceholder = "Search attachments"
 title = "Attachments"
+
+[viewer.bookmarks]
+bookmarkTitle = "Bookmark title"
+closeSidebar = "Close bookmarks sidebar"
+collapseAll = "Collapse all bookmarks"
+expandAll = "Expand all bookmarks"
 
 [viewer.comments]
 addComment = "Add comment"
@@ -10059,6 +10161,7 @@ clearAll = "Clear all comments"
 clearAllDescription = "This removes comments and replies from the sidebar while keeping any attached annotations in the document."
 clearAllTitle = "Clear all comments?"
 close = "Close comments"
+closeSidebar = "Close comments sidebar"
 deleteAnnotationAndComment = "Delete annotation & comment"
 deleteDescription = "This annotation has a comment attached. You can remove just the comment from the sidebar while keeping the annotation, or delete everything."
 deleteTitle = "Remove annotation from comments?"
@@ -10090,6 +10193,11 @@ title = "Form Fields"
 unsavedBadge = "Unsaved"
 unsavedDesc = "You have unsaved changes"
 
+[viewer.layers]
+closeSidebar = "Close layers sidebar"
+hideAll = "Hide all layers"
+showAll = "Show all layers"
+
 [viewer.link]
 delete = "Delete link"
 
@@ -10119,6 +10227,9 @@ resultsOf = "of {{total}}"
 
 [viewer.signature]
 delete = "Delete signature"
+
+[viewer.thumbnails]
+closeSidebar = "Close thumbnails sidebar"
 
 [viewPdf]
 tags = "view,read,annotate,text,image,highlight,edit"
@@ -10546,6 +10657,7 @@ loading = "Loading people..."
 locked = "locked"
 lockedBadge = "Locked"
 loginRequired = "Enable login mode first"
+memberActions = "Member actions"
 noMembersFound = "No members found"
 role = "Role"
 searchMembers = "Search members..."
@@ -10555,6 +10667,7 @@ unlockAccount = "Unlock Account"
 unlockUserError = "Failed to unlock user account"
 unlockUserSuccess = "User account unlocked successfully"
 user = "User"
+userInfo = "User info"
 
 [workspace.people.actions]
 upgrade = "Upgrade"
@@ -10700,6 +10813,7 @@ removeMemberError = "Failed to remove user from team"
 removeMemberSuccess = "User removed from team"
 renameTeamLabel = "Rename Team"
 system = "System"
+teamActions = "Team actions"
 teamName = "Team Name"
 teamNotFound = "Team not found"
 title = "Teams"

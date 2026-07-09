@@ -23,6 +23,7 @@ interface PolicyDetailPanelProps {
   onRun?: () => void;
   onTogglePause: () => void;
   onDelete: () => void;
+  onClearHistory?: () => void;
   onRetry?: (item: PolicyActivityItem) => void;
 }
 
@@ -84,15 +85,16 @@ function ActivityError({ message }: { message: string }) {
       >
         {message}
       </span>
-      <button
+      <Button
         type="button"
+        variant="quiet"
         className="portal-policies__link portal-policies__activity-error-toggle"
         onClick={() => setExpanded((v) => !v)}
       >
         {expanded
           ? t("portal.policies.detail.showLess")
           : t("portal.policies.detail.showMore")}
-      </button>
+      </Button>
     </span>
   );
 }
@@ -105,6 +107,7 @@ export function PolicyDetailPanel({
   onRun,
   onTogglePause,
   onDelete,
+  onClearHistory,
   onRetry,
 }: PolicyDetailPanelProps) {
   const { t } = useTranslation();
@@ -112,6 +115,9 @@ export function PolicyDetailPanel({
   const { category, config, state, steps, stats, activity } = policy;
   const isPaused = state.status === "paused";
   const canDelete = state.isDefault !== true;
+  // Processed history only exists for watched sources; editor uploads are never ledgered.
+  const canClearHistory =
+    onClearHistory !== undefined && state.sources.some((s) => s !== "editor");
 
   const enforceItems = steps.length > 0 ? steps.map((s) => s.operation) : null;
   const hasEditorSource = state.sources.includes("editor");
@@ -139,8 +145,8 @@ export function PolicyDetailPanel({
         <div className="portal-policies__detail-foot">
           {canDelete && (
             <Button
-              variant="ghost"
-              accent="red"
+              variant="tertiary"
+              accent="danger"
               size="sm"
               onClick={onDelete}
               disabled={busy}
@@ -151,7 +157,7 @@ export function PolicyDetailPanel({
           )}
           {onRun && (
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={onRun}
               disabled={busy}
@@ -160,8 +166,18 @@ export function PolicyDetailPanel({
               {t("portal.policies.detail.actions.runNow")}
             </Button>
           )}
+          {canClearHistory && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={onClearHistory}
+              disabled={busy}
+            >
+              {t("portal.policies.detail.actions.clearHistory")}
+            </Button>
+          )}
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             onClick={onTogglePause}
             disabled={busy}
@@ -278,13 +294,14 @@ export function PolicyDetailPanel({
                 {item.time}
               </span>
               {item.status === "flagged" && onRetry && (
-                <button
+                <Button
                   type="button"
+                  variant="quiet"
                   className="portal-policies__link portal-policies__activity-retry"
                   onClick={() => onRetry(item)}
                 >
                   {t("portal.policies.detail.retry")}
-                </button>
+                </Button>
               )}
             </div>
           ))}

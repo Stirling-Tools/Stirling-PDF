@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
-  ToolType,
+  defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
   objectToFormData,
@@ -64,16 +64,17 @@ export const buildRedactFormData = (
 };
 
 // Static configuration object
-export const redactOperationConfig = {
-  toolType: ToolType.singleFile,
+export const redactOperationConfig = defineSingleFileTool({
   buildFormData: buildRedactFormData,
   toApiParams: redactToApiParams,
   fromApiParams: redactFromApiParams,
   operationType: "redact",
   endpoint: (parameters: RedactParameters) =>
     parameters.mode === "automatic" ? AUTO_ENDPOINT : null,
+  // Routing set: `mode` is frontend-only, so a stored step matches by this rather than by replay.
+  endpoints: [AUTO_ENDPOINT],
   defaultParameters,
-} as const;
+});
 
 export const useRedactOperation = () => {
   const { t } = useTranslation();

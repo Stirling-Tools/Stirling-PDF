@@ -14,6 +14,7 @@ import "@portal/views/Procurement.css";
 export function DealStatusHero({
   snapshot,
   busy = false,
+  canSchedule,
   onExpand,
   onKeyDocs,
   onInvite,
@@ -23,6 +24,9 @@ export function DealStatusHero({
 }: {
   snapshot: ProcurementSnapshot;
   busy?: boolean;
+  /** Booking a call runs through the linked account (its email prefills Calendly), so the
+   * "Schedule a call" action only appears when the org has linked its account. */
+  canSchedule: boolean;
   onExpand: () => void;
   onKeyDocs: () => void;
   onInvite: () => void;
@@ -103,13 +107,15 @@ export function DealStatusHero({
               {t("portal.procurement.hero.inviteTeammates")}
             </button>
           )}
-          <button
-            type="button"
-            className="portal-hero__chip portal-hero__chip--action"
-            onClick={onSchedule}
-          >
-            {t("portal.procurement.hero.scheduleCall")}
-          </button>
+          {canSchedule && (
+            <button
+              type="button"
+              className="portal-hero__chip portal-hero__chip--action"
+              onClick={onSchedule}
+            >
+              {t("portal.procurement.hero.scheduleCall")}
+            </button>
+          )}
         </div>
       </div>
 
@@ -143,8 +149,8 @@ export function DealStatusHero({
         </span>
         <div className="portal-hero__next-actions">
           <Button
-            variant="gradient"
-            accent="purple"
+            variant="primary"
+            accent="premium"
             loading={busy}
             onClick={onExpand}
           >

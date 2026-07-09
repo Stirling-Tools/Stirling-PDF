@@ -1,9 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { Button } from "@app/ui";
+import { ActionIcon, Button } from "@app/ui";
 import type { SourceView } from "@portal/api/sources";
 import { SourceDetailPanel } from "@portal/components/sources/SourceDetailPanel";
 import { sourceTypeMeta } from "@portal/components/sources/sourceTypes";
 import "@portal/views/Sources.css";
+import CloseIcon from "@mui/icons-material/Close";
 
 interface SourceDetailCardProps {
   source: SourceView;
@@ -33,7 +34,7 @@ export function SourceDetailCard({
     <section className="portal-sources__expanded">
       <header className="portal-sources__expanded-head">
         <span
-          className={`portal-sources__type-dot portal-sources__type-dot--${meta.tone}`}
+          className={`portal-sources__type-dot portal-sources__type-dot--${meta.accent}`}
           aria-hidden
         >
           {meta.icon}
@@ -47,28 +48,28 @@ export function SourceDetailCard({
             })}
           </span>
         </div>
-        <button
-          type="button"
+        <ActionIcon
+          variant="tertiary"
           className="portal-sources__expanded-close"
           onClick={onClose}
           aria-label={t("portal.sources.detail.closeAriaLabel")}
         >
-          ×
-        </button>
+          <CloseIcon />
+        </ActionIcon>
       </header>
 
       <SourceDetailPanel source={source} docSeries={docSeries} />
 
       <div className="portal-sources__detail-actions">
         <Button
-          variant="outline"
+          variant="secondary"
           disabled={busy}
           onClick={() => onEdit(source)}
         >
           {t("portal.sources.detail.edit")}
         </Button>
         <Button
-          variant="outline"
+          variant="secondary"
           disabled={busy}
           onClick={() => onTogglePause(source)}
         >
@@ -77,8 +78,8 @@ export function SourceDetailCard({
             : t("portal.sources.detail.pause")}
         </Button>
         <Button
-          accent="red"
-          variant="outline"
+          accent="danger"
+          variant="secondary"
           disabled={busy}
           onClick={() => onDelete(source)}
         >

@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
-  ToolType,
+  defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
@@ -21,15 +21,14 @@ export {
   adjustPageScaleFromApiParams,
 };
 
-export const adjustPageScaleOperationConfig = {
-  toolType: ToolType.singleFile,
+export const adjustPageScaleOperationConfig = defineSingleFileTool({
   buildFormData: buildAdjustPageScaleFormData,
   toApiParams: adjustPageScaleToApiParams,
   fromApiParams: adjustPageScaleFromApiParams,
   operationType: "scalePages",
   endpoint: ADJUST_PAGE_SCALE_ENDPOINT,
   defaultParameters,
-} as const;
+});
 
 export const useAdjustPageScaleOperation = () => {
   const { t } = useTranslation();

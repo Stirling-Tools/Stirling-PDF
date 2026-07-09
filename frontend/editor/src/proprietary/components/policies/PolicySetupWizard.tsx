@@ -36,6 +36,7 @@ import {
 } from "@app/components/policies/PolicyWorkflowStep";
 import { PolicyToolConfigStep } from "@app/components/policies/PolicyToolConfigStep";
 import { getPolicyToolChain } from "@app/components/policies/policyToolChains";
+import { ClassificationLabelsSection } from "@app/components/policies/ClassificationLabelsSection";
 
 // Sources are always "editor" for this release, so the Sources step is dropped
 // from the flow (its panel code is kept below for when other sources return).
@@ -103,6 +104,9 @@ export function PolicySetupWizard({
   // Preset (tool-chain) policies render the locked tool config as their Workflow
   // step instead of the add/remove builder.
   const toolChain = getPolicyToolChain(category.id);
+  // A single-tool chain has nothing to toggle/configure, so its config UI is
+  // hidden (kept mounted so the submit trigger still emits that one tool).
+  const singleToolChain = toolChain != null && toolChain.length === 1;
   const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [fieldValues, setFieldValues] = useState(() =>
@@ -337,22 +341,29 @@ export function PolicySetupWizard({
         <div style={{ display: step === 1 ? undefined : "none" }}>
           {toolChain ? (
             <>
-              <p className="pol-desc">
-                {t(
-                  "policies.wizard.toolChainDesc",
-                  "Configure the tools this policy runs on each document.",
-                )}
-              </p>
-              <PolicyToolConfigStep
-                chainIds={toolChain}
-                initialOperations={
-                  existingAutomation?.operations ?? config.defaultOperations
-                }
-                presetOperations={config.defaultOperations}
-                categoryLabel={category.label}
-                saveTriggerRef={workflowSave}
-                onComplete={handleToolConfigSaved}
-              />
+              {/* Single-tool chains have nothing to configure — hide the prompt
+                  and the toggle, but keep the step mounted (display:none) so the
+                  final submit still emits that one tool. */}
+              {!singleToolChain && (
+                <p className="pol-desc">
+                  {t(
+                    "policies.wizard.toolChainDesc",
+                    "Configure the tools this policy runs on each document.",
+                  )}
+                </p>
+              )}
+              <div style={{ display: singleToolChain ? "none" : undefined }}>
+                <PolicyToolConfigStep
+                  chainIds={toolChain}
+                  initialOperations={
+                    existingAutomation?.operations ?? config.defaultOperations
+                  }
+                  presetOperations={config.defaultOperations}
+                  categoryLabel={category.label}
+                  saveTriggerRef={workflowSave}
+                  onComplete={handleToolConfigSaved}
+                />
+              </div>
             </>
           ) : (
             <>
@@ -370,6 +381,12 @@ export function PolicySetupWizard({
                 onSaveFailed={handleSaveFailed}
               />
             </>
+          )}
+          {/* The Classification policy owns the editable label sets (team-shared
+              + personal) the classifier picks from. Kept on the first step
+              alongside the tool so it's not buried. */}
+          {category.id === "classification" && (
+            <ClassificationLabelsSection canConfigure={canConfigure} />
           )}
         </div>
 
@@ -409,8 +426,8 @@ export function PolicySetupWizard({
                     <Select
                       inputSize="sm"
                       value={runOn}
-                      onChange={(e) =>
-                        setRunOn(e.target.value as "upload" | "export")
+                      onChange={(value) =>
+                        setRunOn((value ?? "upload") as "upload" | "export")
                       }
                       aria-label={t("policies.wizard.runOnLabel", "Run on")}
                       options={[
@@ -437,8 +454,8 @@ export function PolicySetupWizard({
                     <Select
                       inputSize="sm"
                       value={outputMode}
-                      onChange={(e) => {
-                        const mode = e.target.value as
+                      onChange={(value) => {
+                        const mode = (value ?? "new_file") as
                           | "new_file"
                           | "new_version";
                         setOutputMode(mode);
@@ -481,9 +498,12 @@ export function PolicySetupWizard({
                   <Select
                     inputSize="sm"
                     value={outputNamePosition}
-                    onChange={(e) =>
+                    onChange={(value) =>
                       setOutputNamePosition(
-                        e.target.value as "prefix" | "suffix" | "auto-number",
+                        (value ?? "suffix") as
+                          | "prefix"
+                          | "suffix"
+                          | "auto-number",
                       )
                     }
                     aria-label={t(
@@ -627,7 +647,7 @@ export function PolicySetupWizard({
                 )}
                 action={
                   <Button
-                    variant="ghost"
+                    variant="tertiary"
                     size="sm"
                     onClick={onSetupClassification}
                   >
@@ -653,14 +673,15 @@ export function PolicySetupWizard({
                           { count: scopeTypes.length },
                         )}
                   </span>
-                  <button
+                  <Button
+                    variant="tertiary"
                     className="pol-link"
                     onClick={() => setScopeNarrow((v) => !v)}
                   >
                     {scopeNarrow
                       ? t("policies.wizard.clear", "Clear")
                       : t("policies.wizard.edit", "Edit")}
-                  </button>
+                  </Button>
                 </div>
                 {scopeNarrow && (
                   <div className="pol-doctypes">
@@ -687,12 +708,11 @@ export function PolicySetupWizard({
       </div>
 
       <div className="pol-footer">
-        <Button variant="ghost" size="sm" onClick={back}>
+        <Button variant="tertiary" size="sm" onClick={back}>
           {step > 1 ? t("policies.wizard.back", "Back") : t("cancel", "Cancel")}
         </Button>
         {step < TOTAL_STEPS ? (
           <Button
-            variant="gradient"
             size="sm"
             style={{ marginLeft: "auto" }}
             onClick={() => setStep((s) => Math.min(TOTAL_STEPS, s + 1))}
@@ -701,7 +721,6 @@ export function PolicySetupWizard({
           </Button>
         ) : (
           <Button
-            variant="gradient"
             size="sm"
             style={{ marginLeft: "auto" }}
             onClick={submit}

@@ -3,11 +3,60 @@ package stirling.software.proprietary.config;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
+import java.time.Instant;
+import java.util.Map;
+
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.slf4j.MDC;
+import org.springframework.boot.actuate.audit.AuditEvent;
+
+import stirling.software.proprietary.model.security.PersistentAuditEvent;
+import stirling.software.proprietary.repository.PersistentAuditEventRepository;
+
+import tools.jackson.databind.json.JsonMapper;
 
 class CustomAuditEventRepositoryTest {
+
+    @AfterEach
+    void clearMdc() {
+        MDC.clear();
+    }
+
+    @Test
+    void sourceIsPopulatedFromMdcAuditSource() {
+        PersistentAuditEventRepository repo = mock(PersistentAuditEventRepository.class);
+        CustomAuditEventRepository writer =
+                new CustomAuditEventRepository(repo, JsonMapper.builder().build());
+
+        MDC.put("auditSource", "WEB");
+        writer.add(new AuditEvent(Instant.now(), "admin", "PDF_PROCESS", Map.of("k", "v")));
+
+        ArgumentCaptor<PersistentAuditEvent> captor =
+                ArgumentCaptor.forClass(PersistentAuditEvent.class);
+        verify(repo).save(captor.capture());
+        assertEquals("WEB", captor.getValue().getSource());
+    }
+
+    @Test
+    void sourceIsNullWhenMdcAbsent() {
+        PersistentAuditEventRepository repo = mock(PersistentAuditEventRepository.class);
+        CustomAuditEventRepository writer =
+                new CustomAuditEventRepository(repo, JsonMapper.builder().build());
+
+        writer.add(new AuditEvent(Instant.now(), "admin", "PDF_PROCESS", Map.of("k", "v")));
+
+        ArgumentCaptor<PersistentAuditEvent> captor =
+                ArgumentCaptor.forClass(PersistentAuditEvent.class);
+        verify(repo).save(captor.capture());
+        assertNull(captor.getValue().getSource());
+    }
 
     @Test
     void shortPrincipalPassesThroughUnchanged() {

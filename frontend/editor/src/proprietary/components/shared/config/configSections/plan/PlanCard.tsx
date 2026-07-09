@@ -1,5 +1,6 @@
 import React from "react";
-import { Button, Card, Text, Stack, Divider, Tooltip } from "@mantine/core";
+import { Card, Text, Stack, Divider, Tooltip } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { PlanTierGroup, LicenseInfo } from "@app/services/licenseService";
 import { PricingBadge } from "@app/components/shared/stripeCheckout/components/PricingBadge";
@@ -78,7 +79,7 @@ const PlanCard: React.FC<PlanCardProps> = ({
 
           <div style={{ flexGrow: 1 }} />
 
-          <Button variant="filled" disabled fullWidth className="plan-button">
+          <Button disabled fullWidth className="plan-button">
             {isCurrentTier
               ? t("plan.current", "Current Plan")
               : t("plan.free.included", "Included")}
@@ -190,7 +191,6 @@ const PlanCard: React.FC<PlanCardProps> = ({
             withArrow
           >
             <Button
-              variant="filled"
               fullWidth
               onClick={() =>
                 isCurrentTier && onManageClick
