@@ -17,11 +17,11 @@ function ThemedSuiProvider({ children }: { children: ReactNode }) {
 }
 
 /**
- * The portal, mounted as a route-set under /portal/* inside the editor app (via
- * the admin-route seam). It supplies its own providers and its own i18next
+ * The portal, mounted as a route-set under /processor/* inside the editor app
+ * (via the admin-route seam). It supplies its own providers and its own i18next
  * instance (the `portal` namespace), but NOT a router — the editor's
  * <BrowserRouter> is the one and only router; the portal's routes are relative
- * to the /portal mount (see ViewRouter).
+ * to the /processor mount (see ViewRouter).
  *
  * The provider stack itself is a per-flavor seam (see {@link PortalProviders}):
  * self-hosted mounts the account-link layer, SaaS does not.

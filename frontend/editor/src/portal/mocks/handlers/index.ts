@@ -1,8 +1,6 @@
 import { assistantHandlers } from "@portal/mocks/handlers/assistant";
 import { authHandlers } from "@portal/mocks/handlers/auth";
-import { homeHandlers } from "@portal/mocks/handlers/home";
 import { notificationsHandlers } from "@portal/mocks/handlers/notifications";
-import { opsHandlers } from "@portal/mocks/handlers/ops";
 import { searchHandlers } from "@portal/mocks/handlers/search";
 import { pipelinesHandlers } from "@portal/mocks/handlers/pipelines";
 import { sourcesHandlers } from "@portal/mocks/handlers/sources";
@@ -20,8 +18,6 @@ import { linkHandlers } from "@portal/mocks/handlers/link";
 
 export const handlers = [
   ...authHandlers,
-  ...homeHandlers,
-  ...opsHandlers,
   ...notificationsHandlers,
   ...assistantHandlers,
   ...searchHandlers,
@@ -51,8 +47,6 @@ export const handlers = [
  * Everything kept is portal-only. `handlers` above is still the full set.
  */
 export const embeddedDataHandlers = [
-  ...homeHandlers,
-  ...opsHandlers,
   ...notificationsHandlers,
   ...assistantHandlers,
   ...searchHandlers,
