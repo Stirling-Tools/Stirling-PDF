@@ -39,36 +39,37 @@ export interface JourneyStep {
 }
 
 /** Ordered journey definition, the stepper renders this verbatim. */
+/** `label`/`blurb`/`gatingAction` values are i18n keys — render with t(). */
 export const JOURNEY: JourneyStep[] = [
   {
     stage: "trial",
-    label: "Trial",
-    blurb: "Evaluate Stirling against your documents and workflows.",
-    gatingAction: "Build your quote",
+    label: "portal.procurement.journeySteps.trial.label",
+    blurb: "portal.procurement.journeySteps.trial.blurb",
+    gatingAction: "portal.procurement.journeySteps.trial.gatingAction",
   },
   {
     stage: "quote",
-    label: "Quote",
-    blurb: "Review committed-volume pricing and contract term.",
-    gatingAction: "Accept your quote",
+    label: "portal.procurement.journeySteps.quote.label",
+    blurb: "portal.procurement.journeySteps.quote.blurb",
+    gatingAction: "portal.procurement.journeySteps.quote.gatingAction",
   },
   {
     stage: "security",
-    label: "Agreement",
-    blurb: "One signature covers MSA, order form, EULA and DPA.",
-    gatingAction: "Review and sign your agreement",
+    label: "portal.procurement.journeySteps.agreement.label",
+    blurb: "portal.procurement.journeySteps.agreement.blurb",
+    gatingAction: "portal.procurement.journeySteps.agreement.gatingAction",
   },
   {
     stage: "procurement",
-    label: "Payment",
-    blurb: "Pay by card, bank transfer, or against a purchase order.",
-    gatingAction: "Confirm payment",
+    label: "portal.procurement.journeySteps.payment.label",
+    blurb: "portal.procurement.journeySteps.payment.blurb",
+    gatingAction: "portal.procurement.journeySteps.payment.gatingAction",
   },
   {
     stage: "active",
-    label: "Implementation",
-    blurb: "Provision your workspace and run the go-live playbook.",
-    gatingAction: "Provisioning your workspace",
+    label: "portal.procurement.journeySteps.implementation.label",
+    blurb: "portal.procurement.journeySteps.implementation.blurb",
+    gatingAction: "portal.procurement.journeySteps.implementation.gatingAction",
   },
 ];
 

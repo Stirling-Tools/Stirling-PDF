@@ -84,22 +84,26 @@ export function PipelineForkWizard() {
 
       {phase === "pick" && (
         <div className="portal-fork__templates">
-          {PIPELINE_TEMPLATES.map((t) => (
+          {PIPELINE_TEMPLATES.map((tpl) => (
             <Button
-              key={t.id}
+              key={tpl.id}
               variant="tertiary"
               className="portal-fork__template"
-              data-accent={t.accent}
-              onClick={() => fork(t)}
+              data-accent={tpl.accent}
+              onClick={() => fork(tpl)}
             >
-              <span className="portal-fork__template-name">{t.name}</span>
-              <span className="portal-fork__template-blurb">{t.blurb}</span>
+              <span className="portal-fork__template-name">{t(tpl.name)}</span>
+              <span className="portal-fork__template-blurb">
+                {t(tpl.blurb)}
+              </span>
               <span className="portal-fork__template-types">
-                {t.docTypes.map((d) => (
-                  <Chip key={d} size="sm">
-                    {d}
-                  </Chip>
-                ))}
+                {t(tpl.docTypesKey)
+                  .split(",")
+                  .map((d) => (
+                    <Chip key={d} size="sm">
+                      {d.trim()}
+                    </Chip>
+                  ))}
               </span>
             </Button>
           ))}
@@ -109,8 +113,8 @@ export function PipelineForkWizard() {
       {phase !== "pick" && template && (
         <div className="portal-fork__build">
           <div className="portal-fork__build-head">
-            <strong>{template.name}</strong>
-            <span>{template.blurb}</span>
+            <strong>{t(template.name)}</strong>
+            <span>{t(template.blurb)}</span>
           </div>
 
           <ol className="portal-fork__stages">
@@ -127,8 +131,8 @@ export function PipelineForkWizard() {
                     {done ? "✓" : i + 1}
                   </span>
                   <span className="portal-fork__stage-text">
-                    <strong>{stage.label}</strong>
-                    <span>{stage.detail}</span>
+                    <strong>{t(stage.label)}</strong>
+                    <span>{t(stage.detail)}</span>
                   </span>
                   {active && (
                     <span className="portal-fork__stage-spin" aria-hidden />

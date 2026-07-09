@@ -9,9 +9,10 @@ interface InviteMemberModalProps {
   onClose: () => void;
 }
 
+// Values hold i18n keys; resolved with t() where the select renders.
 const ROLE_SELECT_OPTIONS = ROLES.map((r) => ({
   value: r.id,
-  label: r.label,
+  labelKey: r.label,
 }));
 
 /** Org Owner is reserved for transfer flows — invites default to Developer. */
@@ -89,7 +90,10 @@ export function InviteMemberModal({ open, onClose }: InviteMemberModalProps) {
           helperText={t("portal.users.invite.roleHelper")}
         >
           <Select
-            options={ROLE_SELECT_OPTIONS}
+            options={ROLE_SELECT_OPTIONS.map((o) => ({
+              value: o.value,
+              label: t(o.labelKey),
+            }))}
             value={role}
             onChange={(value) => setRole((value ?? "") as RoleId)}
           />

@@ -4,8 +4,8 @@
  * deal data the MSW handlers in mocks/handlers/procurement.ts serve over the
  * intercepted httpJson() calls, for Storybook and tests.
  *
- * Once a real commercial backend exists the MSW handlers stop being registered
- * and these fixtures can be deleted (or kept as test seeds).
+ * The handlers serve Storybook and tests, so these fixtures stay in sync with
+ * the api contract for as long as those need them.
  */
 
 import type { Tier } from "@portal/contexts/TierContext";

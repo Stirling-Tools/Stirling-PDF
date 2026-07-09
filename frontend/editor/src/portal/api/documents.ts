@@ -89,11 +89,12 @@ export interface DocumentsResponse {
 /*  Lives client-side — product copy, not data.                              */
 /* ──────────────────────────────────────────────────────────────────────── */
 
+/** Values are i18n keys — render with t(). */
 export const DOCUMENT_STATUS_LABEL: Record<DocumentStatus, string> = {
-  processed: "Processed",
-  flagged: "Flagged",
-  "needs-review": "Needs review",
-  archived: "Archived",
+  processed: "portal.documents.status.processed",
+  flagged: "portal.documents.status.flagged",
+  "needs-review": "portal.documents.status.needsReview",
+  archived: "portal.documents.status.archived",
 };
 
 export const DOCUMENT_STATUS_TONE: Record<DocumentStatus, StatusTone> = {
@@ -103,14 +104,15 @@ export const DOCUMENT_STATUS_TONE: Record<DocumentStatus, StatusTone> = {
   archived: "neutral",
 };
 
+/** Values are i18n keys — render with t(). */
 export const DOC_AUDIT_LABEL: Record<DocAuditKind, string> = {
-  ingested: "Ingested",
-  extracted: "Extracted",
-  flagged: "Flagged",
-  reviewed: "Reviewed",
-  approved: "Approved",
-  archived: "Archived",
-  elevation: "Elevation",
+  ingested: "portal.documents.audit.ingested",
+  extracted: "portal.documents.audit.extracted",
+  flagged: "portal.documents.audit.flagged",
+  reviewed: "portal.documents.audit.reviewed",
+  approved: "portal.documents.audit.approved",
+  archived: "portal.documents.audit.archived",
+  elevation: "portal.documents.audit.elevation",
 };
 
 export const DOC_AUDIT_TONE: Record<DocAuditKind, StatusTone> = {

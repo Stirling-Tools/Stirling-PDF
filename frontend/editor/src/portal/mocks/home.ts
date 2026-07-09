@@ -5,8 +5,8 @@
  *
  * The MSW handlers in mocks/handlers/ serve the fixture data over the
  * intercepted apiClient.local.json() calls. Components never reach into this
- * module directly. Once a real backend exists, the MSW handlers stop being
- * registered and these fixtures can be deleted (or kept as test seeds).
+ * module directly. The handlers serve Storybook and tests, so these fixtures
+ * stay in sync with the api contract for as long as those need them.
  */
 
 import type {

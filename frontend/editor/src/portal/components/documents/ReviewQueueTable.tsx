@@ -52,7 +52,7 @@ export function ReviewQueueTable({
         header: t("portal.documents.table.columns.status"),
         render: (d) => (
           <StatusBadge tone={DOCUMENT_STATUS_TONE[d.status]} size="sm">
-            {DOCUMENT_STATUS_LABEL[d.status]}
+            {t(DOCUMENT_STATUS_LABEL[d.status])}
           </StatusBadge>
         ),
       },

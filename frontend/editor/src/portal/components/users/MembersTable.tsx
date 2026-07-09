@@ -67,7 +67,7 @@ export function MembersTable({
         header: t("portal.users.table.role"),
         render: (m) => (
           <Chip accent={chipAccentForRole(m.role)} size="sm">
-            {ROLE_LABEL[m.role]}
+            {t(ROLE_LABEL[m.role])}
           </Chip>
         ),
       },
@@ -120,7 +120,7 @@ export function MembersTable({
                   disabled={role === m.role}
                   onClick={() => onChangeRole(m, role)}
                 >
-                  {ROLE_LABEL[role]}
+                  {t(ROLE_LABEL[role])}
                 </Menu.Item>
               ))}
               <Menu.Divider />

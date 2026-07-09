@@ -71,38 +71,39 @@ export interface PipelineTemplate {
   name: string;
   /** One-line description of what the forked pipeline does. */
   blurb: string;
-  /** Document types this template is tuned for. */
-  docTypes: string[];
+  docTypesKey: string;
   accent: "blue" | "purple" | "green" | "amber";
 }
 
+/** `name`/`blurb` values are i18n keys; `docTypesKey` resolves to a comma-
+    separated list — render with t(). */
 export const PIPELINE_TEMPLATES: PipelineTemplate[] = [
   {
     id: "coi-compliance",
-    name: "COI Compliance",
-    blurb: "Validate certificates of insurance against carrier requirements.",
-    docTypes: ["Certificates of insurance", "Loss runs"],
+    name: "portal.home.pipelineTemplates.coiCompliance.name",
+    blurb: "portal.home.pipelineTemplates.coiCompliance.blurb",
+    docTypesKey: "portal.home.pipelineTemplates.coiCompliance.docTypes",
     accent: "blue",
   },
   {
     id: "accounts-payable",
-    name: "Accounts Payable",
-    blurb: "Extract line items, match POs, and flag duplicate invoices.",
-    docTypes: ["Invoices", "Purchase orders"],
+    name: "portal.home.pipelineTemplates.accountsPayable.name",
+    blurb: "portal.home.pipelineTemplates.accountsPayable.blurb",
+    docTypesKey: "portal.home.pipelineTemplates.accountsPayable.docTypes",
     accent: "green",
   },
   {
     id: "contract-review",
-    name: "Contract Review",
-    blurb: "Classify clauses, redact PII, and route to the right reviewer.",
-    docTypes: ["MSAs", "DPAs", "NDAs"],
+    name: "portal.home.pipelineTemplates.contractReview.name",
+    blurb: "portal.home.pipelineTemplates.contractReview.blurb",
+    docTypesKey: "portal.home.pipelineTemplates.contractReview.docTypes",
     accent: "purple",
   },
   {
     id: "prior-authorization",
-    name: "Prior Authorization",
-    blurb: "Read auth requests, check coverage, and assemble payer packets.",
-    docTypes: ["Auth requests", "Clinical notes"],
+    name: "portal.home.pipelineTemplates.priorAuthorization.name",
+    blurb: "portal.home.pipelineTemplates.priorAuthorization.blurb",
+    docTypesKey: "portal.home.pipelineTemplates.priorAuthorization.docTypes",
     accent: "amber",
   },
 ];
@@ -118,11 +119,28 @@ export interface PipelineStage {
   detail: string;
 }
 
+/** `label`/`detail` values are i18n keys — render with t(). */
 export const PIPELINE_STAGES: PipelineStage[] = [
-  { key: "ingest", label: "Ingest", detail: "Accept, normalize, deduplicate" },
-  { key: "validate", label: "Validate", detail: "Classify and check schema" },
-  { key: "secure", label: "Secure", detail: "Redact PII, encrypt at rest" },
-  { key: "store", label: "Store", detail: "Emit JSON, persist, notify" },
+  {
+    key: "ingest",
+    label: "portal.home.pipelineStages.ingest.label",
+    detail: "portal.home.pipelineStages.ingest.detail",
+  },
+  {
+    key: "validate",
+    label: "portal.home.pipelineStages.validate.label",
+    detail: "portal.home.pipelineStages.validate.detail",
+  },
+  {
+    key: "secure",
+    label: "portal.home.pipelineStages.secure.label",
+    detail: "portal.home.pipelineStages.secure.detail",
+  },
+  {
+    key: "store",
+    label: "portal.home.pipelineStages.store.label",
+    detail: "portal.home.pipelineStages.store.detail",
+  },
 ];
 
 export interface OnboardingStep {

@@ -59,15 +59,18 @@ export function TierProvider({
   const { linkState } = useLink();
   const [pinnedTier, setPinnedTier] = useState<Tier>(initialTier ?? "free");
 
+  // Memo on the resolved tier (not linkState) so link transitions that map to
+  // the same tier don't re-render every consumer.
+  const tier = pinned ? pinnedTier : tierFromLinkState(linkState);
   const value = useMemo<TierContextValue>(
     () => ({
-      tier: pinned ? pinnedTier : tierFromLinkState(linkState),
+      tier,
       // Setter is a no-op when derived — UI controls can disable themselves
       // via `isDerived`, but even if one slips through, it has no effect.
       setTier: pinned ? setPinnedTier : () => {},
       isDerived: !pinned,
     }),
-    [pinned, pinnedTier, linkState],
+    [pinned, tier],
   );
 
   return <TierContext.Provider value={value}>{children}</TierContext.Provider>;

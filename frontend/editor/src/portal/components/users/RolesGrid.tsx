@@ -26,13 +26,13 @@ export function RolesGrid({ roles }: RolesGridProps) {
           <Card key={role.id} padding="default" className="portal-users__role">
             <div className="portal-users__role-head">
               <Chip accent={chipAccentForRole(role.id)} size="sm">
-                {role.label}
+                {t(role.label)}
               </Chip>
             </div>
-            <p className="portal-users__role-summary">{role.summary}</p>
+            <p className="portal-users__role-summary">{t(role.summary)}</p>
             <ul className="portal-users__role-perms">
               {role.permissions.map((perm) => (
-                <li key={perm}>{perm}</li>
+                <li key={perm}>{t(perm)}</li>
               ))}
             </ul>
           </Card>

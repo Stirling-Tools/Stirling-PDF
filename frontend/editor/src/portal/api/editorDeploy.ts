@@ -137,11 +137,12 @@ export const INSTANCE_STATUS_TONE: Record<
   pairing: "info",
 };
 
+/** Values are i18n keys — render with t(). */
 export const INSTANCE_STATUS_LABEL: Record<InstanceStatus, string> = {
-  healthy: "Healthy",
-  degraded: "Degraded",
-  offline: "Offline",
-  pairing: "Pairing",
+  healthy: "portal.editorAdmin.status.healthy",
+  degraded: "portal.editorAdmin.status.degraded",
+  offline: "portal.editorAdmin.status.offline",
+  pairing: "portal.editorAdmin.status.pairing",
 };
 
 /* ──────────────────────────────────────────────────────────────────────── */

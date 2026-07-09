@@ -14,7 +14,7 @@ export function DocumentOverview({ doc }: { doc: ReviewDocument }) {
       <div className="portal-documents__stat-grid">
         <StatTile
           label={t("portal.documents.overview.status")}
-          value={DOCUMENT_STATUS_LABEL[doc.status]}
+          value={t(DOCUMENT_STATUS_LABEL[doc.status])}
         />
         <StatTile
           label={t("portal.documents.overview.type")}

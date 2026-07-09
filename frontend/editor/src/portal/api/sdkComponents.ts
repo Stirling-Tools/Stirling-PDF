@@ -94,25 +94,29 @@ export interface MaturityMeta {
   tone: "success" | "info";
 }
 
+/** `label` values are i18n keys — render with t(). */
 export const MATURITY_META: Record<ComponentMaturity, MaturityMeta> = {
-  ga: { label: "GA", tone: "success" },
-  beta: { label: "Beta", tone: "info" },
+  ga: { label: "portal.components.maturity.ga", tone: "success" },
+  beta: { label: "portal.components.maturity.beta", tone: "info" },
 };
 
-/** Human label for a billing unit, e.g. "render" → "/render". */
+/** Values are i18n keys — render with t(). */
 export const BILLING_UNIT_LABEL: Record<BillingUnit, string> = {
-  render: "render",
-  review: "review",
-  approval: "approval",
-  signature: "signature",
-  check: "check",
-  event: "event",
-  session: "session",
+  render: "portal.components.billingUnit.render",
+  review: "portal.components.billingUnit.review",
+  approval: "portal.components.billingUnit.approval",
+  signature: "portal.components.billingUnit.signature",
+  check: "portal.components.billingUnit.check",
+  event: "portal.components.billingUnit.event",
+  session: "portal.components.billingUnit.session",
 };
 
 /** Format a price as the per-action string shown on cards, e.g. "$0.04 / review". */
-export function formatPrice(pricing: ComponentPricing): string {
-  return `$${pricing.pricePerAction.toFixed(2)} / ${BILLING_UNIT_LABEL[pricing.unit]}`;
+export function formatPrice(
+  pricing: ComponentPricing,
+  t: (key: string) => string,
+): string {
+  return `$${pricing.pricePerAction.toFixed(2)} / ${t(BILLING_UNIT_LABEL[pricing.unit])}`;
 }
 
 const TIER_RANK: Record<Tier, number> = { free: 0, pro: 1, enterprise: 2 };

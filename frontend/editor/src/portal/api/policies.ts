@@ -1,9 +1,8 @@
 /**
  * Policies service layer.
  *
- * The portal calls the real Stirling policy API (`/api/v1/policies`). MSW
- * intercepts these calls in dev/Storybook; dropping MSW is enough to hit the
- * live backend — no call-site changes needed.
+ * The portal calls the real Stirling policy API (`/api/v1/policies`);
+ * Storybook and tests intercept the same calls with MSW handlers.
  *
  * `fetchPolicies()` assembles the decorated catalogue client-side from the
  * backend's flat `WirePolicy[]` + `PolicyRunView[]`, mirroring the same
@@ -34,7 +33,7 @@ export type {
 export type { WirePipelineStep as PipelineStep } from "@app/policies/types";
 
 /* ──────────────────────────────────────────────────────────────────────── */
-/*  Catalogue model — portal-specific (lifted from editor types/policies.ts) */
+/*  Catalogue model — portal-specific                                        */
 /* ──────────────────────────────────────────────────────────────────────── */
 
 export type PolicyStatus = "active" | "paused";
@@ -140,17 +139,21 @@ export const TOOL_ENDPOINTS: Record<string, string> = {
   compress: "/api/v1/misc/compress-pdf",
 };
 
+/** Values are i18n keys — render with t(). */
 export const ENDPOINT_LABELS: Record<string, string> = {
-  "/api/v1/security/auto-redact": "Redact PII",
-  "/api/v1/security/sanitize-pdf": "Remove JavaScript",
-  "/api/v1/security/add-watermark": "Watermark",
-  "/api/v1/misc/ocr-pdf": "OCR",
-  "/api/v1/misc/flatten": "Flatten",
-  "/api/v1/misc/compress-pdf": "Compress",
+  "/api/v1/security/auto-redact": "portal.policies.endpoints.autoRedact",
+  "/api/v1/security/sanitize-pdf": "portal.policies.endpoints.sanitizePdf",
+  "/api/v1/security/add-watermark": "portal.policies.endpoints.addWatermark",
+  "/api/v1/misc/ocr-pdf": "portal.policies.endpoints.ocrPdf",
+  "/api/v1/misc/flatten": "portal.policies.endpoints.flatten",
+  "/api/v1/misc/compress-pdf": "portal.policies.endpoints.compressPdf",
 };
 
-export function humanizeEndpoint(path: string): string {
-  if (ENDPOINT_LABELS[path]) return ENDPOINT_LABELS[path];
+export function humanizeEndpoint(
+  path: string,
+  t: (key: string) => string,
+): string {
+  if (ENDPOINT_LABELS[path]) return t(ENDPOINT_LABELS[path]);
   const last = path.split("/").filter(Boolean).pop() ?? path;
   return last
     .replace(/-/g, " ")
@@ -167,69 +170,79 @@ const DEFAULT_PII_PATTERNS: string[] = [
   "\\b(?:4\\d{12}(?:\\d{3})?|5[1-5]\\d{14}|3[47]\\d{13}|6(?:011|5\\d{2})\\d{12})\\b",
 ];
 
+/** `label`/`desc` values are i18n keys — render with t(). */
 export const POLICY_CATEGORIES: PolicyCategory[] = [
   {
     id: "ingestion",
-    label: "Ingestion",
+    label: "portal.policies.categories.ingestion.label",
     icon: "layers",
     tone: "blue",
-    desc: "Classify documents, extract structured data, enforce naming conventions, and normalize pages.",
+    desc: "portal.policies.categories.ingestion.desc",
     providesClassification: true,
     comingSoon: true,
   },
   {
     id: "security",
-    label: "Security",
+    label: "portal.policies.categories.security.label",
     icon: "shield",
     tone: "purple",
-    desc: "Detect PII, redact, strip active content, and watermark documents.",
+    desc: "portal.policies.categories.security.desc",
   },
   {
     id: "compliance",
-    label: "Compliance",
+    label: "portal.policies.categories.compliance.label",
     icon: "check",
     tone: "amber",
-    desc: "Enforce HIPAA, GDPR, SOC 2, or FedRAMP requirements on every document.",
+    desc: "portal.policies.categories.compliance.desc",
     comingSoon: true,
   },
   {
     id: "routing",
-    label: "Routing",
+    label: "portal.policies.categories.routing.label",
     icon: "route",
     tone: "green",
-    desc: "Auto-route documents to the right team, folder, or system.",
+    desc: "portal.policies.categories.routing.desc",
     comingSoon: true,
   },
   {
     id: "retention",
-    label: "Retention",
+    label: "portal.policies.categories.retention.label",
     icon: "clock",
     tone: "neutral",
-    desc: "Set how long documents are kept, when to archive, and when to delete.",
+    desc: "portal.policies.categories.retention.desc",
     comingSoon: true,
   },
 ];
 
+/**
+ * `summary`/`rules`/`scopeLabel`/field `label` values are i18n keys — render
+ * with t(). Field `value`/`options` strings are persisted policy state and
+ * stay as stable values (translating them would corrupt saved configs).
+ */
 export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
   ingestion: {
-    summary:
-      "Classifies documents, extracts structured data, enforces naming, and normalizes pages.",
-    rules: ["Classify", "Extract", "Name", "Normalize"],
-    scopeLabel: "All documents",
+    summary: "portal.policies.config.ingestion.summary",
+    rules: [
+      "portal.policies.config.ingestion.rules.0",
+      "portal.policies.config.ingestion.rules.1",
+      "portal.policies.config.ingestion.rules.2",
+      "portal.policies.config.ingestion.rules.3",
+    ],
+    scopeLabel: "portal.policies.config.scopeAll",
     defaultOperations: [
       { operation: TOOL_ENDPOINTS.ocr, parameters: {} },
       { operation: TOOL_ENDPOINTS.flatten, parameters: {} },
     ],
     fields: [
       {
-        label: "Min confidence",
+        label: "portal.policies.config.ingestion.fields.minConfidence",
         key: "minConfidence",
         type: "select",
         value: "80%",
         options: ["60%", "70%", "80%", "90%", "95%"],
       },
       {
-        label: "Below threshold",
+        label: "portal.policies.config.ingestion.fields.belowThreshold",
         key: "belowThreshold",
         type: "select",
         value: "Flag for review",
@@ -238,10 +251,13 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
     ],
   },
   security: {
-    summary:
-      "Detects and redacts PII, strips active content (JavaScript), and watermarks documents.",
-    rules: ["Redact PII", "Remove JavaScript", "Watermark"],
-    scopeLabel: "All documents",
+    summary: "portal.policies.config.security.summary",
+    rules: [
+      "portal.policies.config.security.rules.0",
+      "portal.policies.config.security.rules.1",
+      "portal.policies.config.security.rules.2",
+    ],
+    scopeLabel: "portal.policies.config.scopeAll",
     defaultOperations: [
       {
         operation: TOOL_ENDPOINTS.redact,
@@ -273,24 +289,27 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
     fields: [],
   },
   compliance: {
-    summary:
-      "Validates documents against regulatory frameworks before they leave the system.",
-    rules: ["Framework scan", "Enforce action", "Audit trail"],
-    scopeLabel: "All documents",
+    summary: "portal.policies.config.compliance.summary",
+    rules: [
+      "portal.policies.config.compliance.rules.0",
+      "portal.policies.config.compliance.rules.1",
+      "portal.policies.config.compliance.rules.2",
+    ],
+    scopeLabel: "portal.policies.config.scopeAll",
     defaultOperations: [
       { operation: TOOL_ENDPOINTS.sanitize, parameters: {} },
       { operation: TOOL_ENDPOINTS.flatten, parameters: {} },
     ],
     fields: [
       {
-        label: "Frameworks",
+        label: "portal.policies.config.compliance.fields.frameworks",
         key: "frameworks",
         type: "chips",
         value: ["HIPAA"],
         options: ["HIPAA", "GDPR", "SOC 2", "FedRAMP", "PCI DSS", "ISO 27001"],
       },
       {
-        label: "When non-compliant",
+        label: "portal.policies.config.compliance.fields.onViolation",
         key: "onViolation",
         type: "select",
         value: "Flag for review",
@@ -301,51 +320,77 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
           "Quarantine document",
         ],
       },
-      { label: "Audit trail", key: "auditTrail", type: "toggle", value: true },
-      { label: "Access log", key: "accessLog", type: "toggle", value: true },
+      {
+        label: "portal.policies.config.compliance.fields.auditTrail",
+        key: "auditTrail",
+        type: "toggle",
+        value: true,
+      },
+      {
+        label: "portal.policies.config.compliance.fields.accessLog",
+        key: "accessLog",
+        type: "toggle",
+        value: true,
+      },
     ],
   },
   routing: {
-    summary:
-      "Routes documents to the right destination based on type and classification.",
-    rules: ["Auto-classify", "Route to folder", "Webhook notify"],
-    scopeLabel: "All documents",
+    summary: "portal.policies.config.routing.summary",
+    rules: [
+      "portal.policies.config.routing.rules.0",
+      "portal.policies.config.routing.rules.1",
+      "portal.policies.config.routing.rules.2",
+    ],
+    scopeLabel: "portal.policies.config.scopeAll",
     defaultOperations: [{ operation: TOOL_ENDPOINTS.compress, parameters: {} }],
     fields: [
       {
-        label: "Destination",
+        label: "portal.policies.config.routing.fields.destination",
         key: "destination",
         type: "select",
         value: "Documents",
         options: ["Documents", "S3 bucket", "SharePoint", "Webhook"],
       },
-      { label: "Webhook URL", key: "webhookUrl", type: "text", value: "" },
-      { label: "Notify on route", key: "notify", type: "toggle", value: false },
+      {
+        label: "portal.policies.config.routing.fields.webhookUrl",
+        key: "webhookUrl",
+        type: "text",
+        value: "",
+      },
+      {
+        label: "portal.policies.config.routing.fields.notify",
+        key: "notify",
+        type: "toggle",
+        value: false,
+      },
     ],
   },
   retention: {
-    summary:
-      "Enforces how long documents are kept, when to archive, and when to delete.",
-    rules: ["Retention hold", "Auto-archive", "Deletion block"],
-    scopeLabel: "All documents",
+    summary: "portal.policies.config.retention.summary",
+    rules: [
+      "portal.policies.config.retention.rules.0",
+      "portal.policies.config.retention.rules.1",
+      "portal.policies.config.retention.rules.2",
+    ],
+    scopeLabel: "portal.policies.config.scopeAll",
     defaultOperations: [{ operation: TOOL_ENDPOINTS.compress, parameters: {} }],
     fields: [
       {
-        label: "Keep for",
+        label: "portal.policies.config.retention.fields.keepFor",
         key: "keepFor",
         type: "select",
         value: "7 years",
         options: ["30 days", "1 year", "3 years", "7 years", "Indefinite"],
       },
       {
-        label: "Archive after",
+        label: "portal.policies.config.retention.fields.archiveAfter",
         key: "archiveAfter",
         type: "select",
         value: "Never",
         options: ["30 days", "90 days", "1 year", "Never"],
       },
       {
-        label: "Immutable hold",
+        label: "portal.policies.config.retention.fields.immutableHold",
         key: "immutableHold",
         type: "toggle",
         value: false,

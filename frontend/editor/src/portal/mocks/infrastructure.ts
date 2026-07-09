@@ -9,8 +9,8 @@
  * and a trimmed slice of every list, pro adds a second region and the IP
  * allowlist, enterprise unlocks the full topology + compliance posture.
  *
- * Once a real backend exists the MSW handlers stop being registered and these
- * fixtures can be deleted (or kept as test seeds).
+ * The handlers serve Storybook and tests, so these fixtures stay in sync with
+ * the api contract for as long as those need them.
  */
 
 import type { Tier } from "@portal/contexts/TierContext";
