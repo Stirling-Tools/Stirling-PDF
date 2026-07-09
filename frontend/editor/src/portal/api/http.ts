@@ -42,6 +42,7 @@
  * admin and uses the Supabase JWT for SaaS reads. Don't add it here.
  */
 import { getPortalSaasToken } from "@portal/auth/portalSaasSession";
+import { resolveDemoResponse } from "@portal/api/demoData";
 import { saasApiBase } from "@portal/api/saasApiBase";
 import {
   localAuthHeader,
@@ -148,6 +149,11 @@ async function localJson<T>(
   path: string,
   options: HttpRequestOptions = {},
 ): Promise<T> {
+  const demo = await resolveDemoResponse(
+    new URL(`${localBaseUrl()}${path}`, window.location.origin),
+    options,
+  );
+  if (demo) return unwrap<T>(demo);
   const res = await fetch(`${localBaseUrl()}${path}`, {
     method: options.method ?? "GET",
     headers: {
@@ -188,6 +194,24 @@ async function localBlob(
   return res.blob();
 }
 
+/** POST an application/x-www-form-urlencoded body (Spring @RequestParam endpoints),
+ * via the localBackend seam — same base + auth as localJson. */
+async function localForm<T>(
+  path: string,
+  params: Record<string, string>,
+  method: "POST" | "PUT" | "DELETE" = "POST",
+): Promise<T> {
+  const res = await fetch(`${localBaseUrl()}${path}`, {
+    method,
+    headers: { Accept: "application/json", ...(await localAuthHeader()) },
+    body: new URLSearchParams(params),
+  });
+  if (res.status === 401) {
+    onLocalUnauthorized();
+  }
+  return unwrap<T>(res);
+}
+
 // ────────────────────────────────────────────────────────────────────────────
 // saas — hosted SaaS Java, admin's Supabase JWT
 // ────────────────────────────────────────────────────────────────────────────
@@ -196,6 +220,14 @@ async function saasJson<T>(
   path: string,
   options: HttpRequestOptions = {},
 ): Promise<T> {
+  // Resolved before the config/session gates so demo data works on an
+  // unlinked or unconfigured org. http://saas.mock is the origin the SaaS
+  // handlers are written against (same one Storybook injects).
+  const demo = await resolveDemoResponse(
+    new URL(path, "http://saas.mock"),
+    options,
+  );
+  if (demo) return unwrap<T>(demo);
   const base = saasBaseUrl();
   // null = unset (self-hosted, no VITE_SAAS_API_URL). "" is same-origin (SaaS) — valid.
   if (base === null) throw new SaasUnconfiguredError();
@@ -269,6 +301,7 @@ export const apiClient = {
   /** Local backend (this instance). Spring admin bearer auto-attached. */
   local: {
     json: localJson,
+    form: localForm,
     blob: localBlob,
   },
   /** Hosted SaaS Java. Admin's Supabase JWT auto-attached. */

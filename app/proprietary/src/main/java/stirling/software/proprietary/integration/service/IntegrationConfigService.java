@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.proprietary.access.model.DefaultAccessPolicy;
 import stirling.software.proprietary.access.model.OwnerScope;
 import stirling.software.proprietary.access.model.ResourceType;
+import stirling.software.proprietary.access.repository.ResourceGrantRepository;
 import stirling.software.proprietary.access.service.OwnershipService;
 import stirling.software.proprietary.access.service.SecretMasker;
 import stirling.software.proprietary.integration.dto.IntegrationConfigRequest;
@@ -41,6 +42,7 @@ public class IntegrationConfigService {
     private final IntegrationConfigRepository repository;
     private final OwnershipService ownership;
     private final SecretMasker secretMasker;
+    private final ResourceGrantRepository grantRepository;
 
     // ---- commands ----
 
@@ -49,6 +51,13 @@ public class IntegrationConfigService {
         OwnerScope scope = request.scope() == null ? OwnerScope.USER : request.scope();
         IntegrationConfig cfg = new IntegrationConfig();
         cfg.setIntegrationType(require(request.integrationType(), "integrationType"));
+        // S3 is infrastructure, not self-serve: no personal S3 for regular users. TEAM/SERVER
+        // scopes are already restricted to admins/team owners by assignOwnership.
+        if (cfg.getIntegrationType() == IntegrationType.S3
+                && scope == OwnerScope.USER
+                && !ownership.isAdmin(currentUser)) {
+            throw forbidden("S3 connections can only be created by administrators or team owners");
+        }
         cfg.setName(require(request.name(), "name"));
         cfg.setEnabled(request.enabled() == null || request.enabled());
         cfg.setLocked(request.locked() != null && request.locked());
@@ -104,6 +113,8 @@ public class IntegrationConfigService {
         if (!ownership.canManage(TYPE, cfg, currentUser)) {
             throw forbidden("You cannot manage this integration");
         }
+        // Drop grants sharing this config so they do not dangle as dead rows.
+        grantRepository.deleteByResourceTypeAndResourceId(TYPE, String.valueOf(cfg.getId()));
         repository.delete(cfg);
     }
 
