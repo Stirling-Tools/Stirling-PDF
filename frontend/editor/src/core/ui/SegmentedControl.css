@@ -1,0 +1,38 @@
+/* Mantine-backed SegmentedControl — colour from the shared accent palette (accents.css). */
+@import "./accents.css";
+
+/* Compact the track and let labels fill the fixed height (matches Button/ActionIcon). */
+.sui-seg.mantine-SegmentedControl-root {
+  --sc-padding: 0.1875rem; /* 3px track inset */
+  align-items: stretch;
+}
+.sui-seg .mantine-SegmentedControl-control {
+  display: flex;
+}
+.sui-seg .mantine-SegmentedControl-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding-block: 0;
+}
+/* Mantine wraps label content in .innerLabel; flex it so an icon + text sit
+ * centered together with a consistent gap. Without this the inline-block icon
+ * aligns to the text baseline and rides ~3px high. */
+.sui-seg .mantine-SegmentedControl-innerLabel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+}
+
+/* secondary: strip the boxed track AND the inter-segment separators so only the
+ * tinted active pill reads — no track chrome at all. */
+.sui-seg--secondary.mantine-SegmentedControl-root {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+.sui-seg--secondary .mantine-SegmentedControl-control::before {
+  background-color: transparent !important;
+}

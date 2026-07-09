@@ -85,8 +85,8 @@ export function DealJourney({
         </div>
         {!isTerminal && currentStep && (
           <Button
-            variant="gradient"
-            accent="purple"
+            variant="primary"
+            accent="premium"
             loading={advancing}
             onClick={() => onAdvance(currentStage)}
           >

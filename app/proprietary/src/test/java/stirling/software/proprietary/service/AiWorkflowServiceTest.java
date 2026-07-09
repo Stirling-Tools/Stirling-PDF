@@ -78,6 +78,7 @@ class AiWorkflowServiceTest {
     private static final String SPLIT_ENDPOINT = "/api/v1/general/split-pages";
     private static final String MERGE_ENDPOINT = "/api/v1/general/merge-pdfs";
     private static final String COMPRESS_ENDPOINT = "/api/v1/misc/compress-pdf";
+    private static final String MARKDOWN_ENDPOINT = "/api/v1/convert/pdf/markdown";
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private AiEngineClient aiEngineClient;
@@ -440,23 +441,23 @@ class AiWorkflowServiceTest {
     }
 
     @Test
-    void convertMarkdownRunsDeterministicConversionAndReturnsMdFile() throws IOException {
+    void planWithMarkdownStepReturnsMdFile() throws IOException {
+        // PDF→Markdown is a normal tool the edit agent emits as a plan step (no bespoke
+        // outcome); the plan executor runs the converter and returns the .md file.
         MockMultipartFile input = pdf("multi-column-test_lorem.pdf", "pdf-bytes");
-        when(fileIdStrategy.idFor(any())).thenReturn("doc-1");
         stubOrchestrator(
                 """
                 {
-                  "outcome":"convert_markdown",
-                  "reason":"PDF to Markdown requested.",
-                  "filesToIngest":[{"id":"doc-1","name":"multi-column-test_lorem.pdf"}]
+                  "outcome":"plan",
+                  "summary":"Convert to Markdown",
+                  "steps":[{"tool":"%s","parameters":{}}]
                 }
-                """);
-        when(toolMetadataService.shouldUnpackZipResponse("/api/v1/convert/pdf/markdown"))
-                .thenReturn(false);
-        stubEndpoint(
-                "/api/v1/convert/pdf/markdown",
-                pdfResource("# Title", "multi-column-test_lorem.md"));
-        AtomicInteger ids = stubFileStorage();
+                """
+                        .formatted(MARKDOWN_ENDPOINT));
+        when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
+        stubEndpoint(MARKDOWN_ENDPOINT, pdfResource("# Title", "multi-column-test_lorem.md"));
+        stubFileStorage();
 
         AiWorkflowResponse result = service.orchestrate(requestFor(input, "convert to markdown"));
 
@@ -464,8 +465,7 @@ class AiWorkflowServiceTest {
         assertEquals(1, result.getResultFiles().size());
         // Extension changes (pdf -> md), so the converter's response filename wins.
         assertEquals("multi-column-test_lorem.md", result.getResultFiles().get(0).getFileName());
-        assertEquals(1, ids.get());
-        verify(internalApiClient, times(1)).post(eq("/api/v1/convert/pdf/markdown"), any());
+        verify(internalApiClient, times(1)).post(eq(MARKDOWN_ENDPOINT), any());
     }
 
     @Test

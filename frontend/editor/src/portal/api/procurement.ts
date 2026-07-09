@@ -1,4 +1,5 @@
 import { apiClient } from "@portal/api/http";
+import { getSupabaseClient } from "@app/auth/supabase/supabaseClient";
 import type { Tier } from "@portal/contexts/TierContext";
 import type {
   DealStage,
@@ -91,4 +92,178 @@ export async function requestDocument(
     `/v1/procurement/documents/${encodeURIComponent(docId)}/request`,
     { method: "POST", body: { action } },
   );
+}
+
+// ============================================================================
+// Enterprise procurement — real SaaS backend (/api/v1/procurement).
+//
+// The journey/ledger visuals above still ride the MSW mock; the commercial spine
+// below (trial, server-priced quote, accept -> Stripe checkout) is the real thing,
+// served by the saas Java backend and gated on a linked account.
+// ============================================================================
+
+export type QuoteLineItemKind =
+  | "RECURRING"
+  | "ONE_TIME"
+  | "DISCOUNT"
+  | "INCLUDED";
+
+export interface QuoteLineItem {
+  key: string;
+  label: string;
+  kind: QuoteLineItemKind;
+  amountMinor: number;
+}
+
+export interface QuoteResult {
+  quoteId: number;
+  quoteNumber: string;
+  /** draft (priced, editable) | sent (issued Stripe quote — PDF + shareable) | accepted | expired. */
+  status: string;
+  currency: string;
+  annualNetMinor: number;
+  tcvMinor: number;
+  lineItems: QuoteLineItem[];
+  validUntil: string | null;
+  /** The Stripe Quote id once issued; null while still a local draft. */
+  stripeQuoteId: string | null;
+  /** Hosted Stripe invoice URL, present once the quote is accepted and the subscription invoice exists. */
+  invoiceUrl: string | null;
+  /** The inputs this quote was priced from, so the builder can seed itself on re-edit. */
+  config: QuoteConfigInput;
+}
+
+/** Outcome of accepting an issued quote: Stripe creates the subscription + first invoice. */
+export interface AcceptResult {
+  status: string;
+  subscriptionId: string | null;
+  invoiceUrl: string | null;
+  invoicePdf: string | null;
+}
+
+/** One shape for every state; an unstarted procurement has {@link ProcurementSnapshot.dealId} null. */
+export interface ProcurementSnapshot {
+  dealId: number | null;
+  stage: DealStage | null;
+  trialStartedAt: string | null;
+  trialEndsAt: string | null;
+  trialExtensionsUsed: number;
+  licensed: boolean;
+  /** The team's Keygen licence key (present once licensed); shown in the portal to copy/install. */
+  licenseKey: string | null;
+  latestQuote: QuoteResult | null;
+}
+
+export interface QuoteConfigInput {
+  volume: number;
+  users: number;
+  deployment: string;
+  termYears: number;
+  serviceLevel: string;
+  indemnification: boolean;
+  training: boolean;
+  qbr: boolean;
+  /** Offline / air-gapped licence file — a paid add-on. */
+  offlineLicense: boolean;
+  currency: string;
+  /** Buyer's company name — shown on the quote/agreement and remembered when re-editing. */
+  businessName: string;
+}
+
+export function fetchSnapshot(): Promise<ProcurementSnapshot> {
+  return apiClient.saas.json<ProcurementSnapshot>("/api/v1/procurement");
+}
+
+/**
+ * Download the offline / air-gapped licence file (.lic) as text. Only available when the paid
+ * offline add-on was purchased; the server 404s (→ throws) otherwise.
+ */
+export function fetchLicenseFile(): Promise<string> {
+  return apiClient.saas.text("/api/v1/procurement/license/file");
+}
+
+export function startTrial(): Promise<ProcurementSnapshot> {
+  return apiClient.saas.json<ProcurementSnapshot>(
+    "/api/v1/procurement/trial/start",
+    { method: "POST" },
+  );
+}
+
+export function extendTrial(): Promise<ProcurementSnapshot> {
+  return apiClient.saas.json<ProcurementSnapshot>(
+    "/api/v1/procurement/trial/extend",
+    { method: "POST" },
+  );
+}
+
+/** Advance an issued quote to the agreement (security) stage for review + agree. */
+export function startAgreement(): Promise<ProcurementSnapshot> {
+  return apiClient.saas.json<ProcurementSnapshot>(
+    "/api/v1/procurement/agreement",
+    { method: "POST" },
+  );
+}
+
+/** Price a config server-side and persist it as a local DRAFT (no Stripe object yet). */
+export function buildQuote(cfg: QuoteConfigInput): Promise<QuoteResult> {
+  return apiClient.saas.json<QuoteResult>("/api/v1/procurement/quote", {
+    method: "POST",
+    body: cfg,
+  });
+}
+
+// ---- Stripe Quote operations (Supabase edge functions) ---------------------
+// Java has no Stripe SDK, so issuing/accepting the quote and fetching its PDF run in edge functions
+// that own Stripe; they persist results back through SECURITY DEFINER RPCs. The portal invokes them
+// directly (same pattern the PAYG checkout uses).
+
+async function invokeEdge<T>(fn: string, quoteId: number): Promise<T> {
+  const supabase = getSupabaseClient();
+  if (!supabase) throw new Error("No SaaS session");
+  const { data, error } = await supabase.functions.invoke<T>(fn, {
+    body: { quote_id: quoteId },
+  });
+  if (error) throw error;
+  if (data == null) throw new Error(`${fn} returned no data`);
+  return data;
+}
+
+/** Turn a draft into an issued Stripe Quote (finalized → gets a number + PDF, shareable). */
+export function issueQuote(quoteId: number): Promise<QuoteResult> {
+  return invokeEdge<QuoteResult>("issue-procurement-quote", quoteId);
+}
+
+/** Accept an issued quote → Stripe creates the committed subscription + first invoice. */
+export function acceptQuote(quoteId: number): Promise<AcceptResult> {
+  return invokeEdge<AcceptResult>("accept-procurement-quote", quoteId);
+}
+
+/** Fetch the Stripe-generated quote PDF as a blob (for download / share). */
+export async function fetchQuotePdf(quoteId: number): Promise<Blob> {
+  const supabase = getSupabaseClient();
+  if (!supabase) throw new Error("No SaaS session");
+  const { data, error } = await supabase.functions.invoke<Blob>(
+    "get-procurement-quote-pdf",
+    { body: { quote_id: quoteId } },
+  );
+  if (error) throw error;
+  if (!data) throw new Error("No PDF returned");
+  return data;
+}
+
+/**
+ * Demo/manual stand-in for the invoice.paid webhook: mark the deal live (issue licence, go active).
+ */
+export function goLive(): Promise<ProcurementSnapshot> {
+  return apiClient.saas.json<ProcurementSnapshot>(
+    "/api/v1/procurement/go-live",
+    { method: "POST" },
+  );
+}
+
+/** Reset the team's procurement (delete the deal) and get the fresh empty snapshot. */
+export function resetProcurement(): Promise<ProcurementSnapshot> {
+  return apiClient.saas.json<ProcurementSnapshot>("/api/v1/procurement/reset", {
+    method: "POST",
+  });
 }
