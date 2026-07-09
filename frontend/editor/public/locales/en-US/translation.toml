@@ -2812,6 +2812,7 @@ back = "Back"
 cancel = "Cancel"
 close = "Close"
 collapse = "Collapse"
+confirm = "Confirm"
 continue = "Continue"
 copied = "Copied!"
 copy = "Copy"
@@ -6070,6 +6071,9 @@ dismiss = "Dismiss overlay"
 enforcingTitle = "Enforcing policy..."
 viewAnyway = "View file (policy still enforcing)"
 
+[portal]
+comingSoon = "Coming soon"
+
 [portal.accountLink.card]
 billingNote = "Unattended processing bills against your org wallet."
 eyebrow = "Account link"
@@ -6458,9 +6462,6 @@ componentsGa = "Components GA"
 componentSpendMtd = "Component spend (MTD)"
 embedsThisMonth = "Embeds this month"
 inBeta = "In beta"
-
-[portal.common]
-inviteMember = "Invite member"
 
 [portal.componentsView]
 subtitle = "Embeddable SDK widgets you drop into your own app — a viewer, an e-sign flow, an AI review panel. Each is metered per action. Click a card for install, usage and props."
@@ -8040,82 +8041,7 @@ eyebrow = "TRAINING DATA"
 title = "Turn PDFs into training data"
 
 [portal.users]
-subtitle = "The people in your organization and the access they hold — roles, status and security controls."
 title = "Users"
-
-[portal.users.access]
-subtitle = "Seats, authentication and provisioning for your organization."
-title = "Access & security"
-
-[portal.users.access.auth]
-title = "Authentication"
-
-[portal.users.access.auth.requireMfa]
-description = "Members must set up a second factor to sign in."
-enforced = "Enforced org-wide on this plan."
-label = "Require MFA"
-
-[portal.users.access.auth.shortSessions]
-description = "Sign members out after inactivity (currently {{timeout}})."
-label = "Short-lived sessions"
-
-[portal.users.access.scim]
-active = "Active"
-directory = "Directory"
-lastSync = "Last sync"
-note = "Members are created, updated and deactivated automatically from your identity provider."
-off = "Off"
-title = "SCIM provisioning"
-
-[portal.users.access.seats]
-title = "Seats"
-unlimited = "Your plan includes unlimited seats."
-usedLabel = "{{used}} of {{limit}} seats used"
-
-[portal.users.access.sso]
-connected = "Connected"
-domains = "Domains"
-manage = "Manage connection"
-notConfigured = "Not configured"
-provider = "Provider"
-title = "SSO / SAML"
-
-[portal.users.access.upgrade]
-action = "Upgrade plan"
-title = "Unlock team access controls"
-
-[portal.users.empty]
-description = "Invite your team to start collaborating on documents and pipelines."
-title = "No members yet"
-
-[portal.users.invite]
-cancel = "Cancel"
-email = "Email"
-emailError = "Enter a valid email address"
-emailPlaceholder = "teammate@acme.com"
-role = "Role"
-roleHelper = "Determines what the member can do once they join."
-send = "Send invite"
-subtitle = "They'll receive an email to join your organization."
-
-[portal.users.roles]
-subtitle = "Every role exists on every plan — what each one can do is fixed across the org."
-title = "Roles"
-
-[portal.users.summary]
-members = "Members"
-pendingInvites = "Pending invites"
-seatsUsed = "Seats used"
-
-[portal.users.table]
-actionsFor = "Actions for {{name}}"
-changeRole = "Change role"
-lastActive = "Last active"
-member = "Member"
-remove = "Remove from org"
-role = "Role"
-status = "Status"
-suspend = "Suspend"
 
 [portal.welcome]
 ariaLabel = "Welcome to Stirling PDF"
@@ -10029,6 +9955,146 @@ percentage = "Percentage"
 title = "Detailed Statistics"
 unknownEndpoint = "Unknown endpoint"
 visits = "Visits"
+
+[users]
+lastActive = "Last active"
+learnMore = "Learn more about roles and access."
+locked = "Locked"
+roleFor = "Role for {{name}}"
+rowActions = "Actions for {{name}}"
+showAll = "Show all {{count}}"
+showLess = "Show less"
+subtitle2 = "Your people, teams, and access levels."
+suspended = "Suspended"
+teamActions = "Team actions"
+title = "Users"
+you = "(you)"
+
+[users.action]
+deleteTeam = "Delete team"
+disableMfa = "Reset MFA"
+move = "Move to team"
+reinstate = "Reinstate"
+remove = "Remove from org"
+rename = "Rename team"
+resetPw = "Reset password"
+suspend = "Suspend"
+unlock = "Unlock account"
+
+[users.cap]
+addProcessor = "+ Processor"
+approver = "Approves policy"
+editor = "Editor"
+processor = "Processor"
+
+[users.confirm]
+deleteTeamBody = "Delete the {{name}} team? The team must be empty first - move its members to another team, and it can't still own any integration configs."
+deleteTeamTitle = "Delete team"
+disableMfaBody = "Remove {{name}}'s MFA enrolment? They'll set it up again on next login if required."
+disableMfaTitle = "Reset MFA"
+removeBody = "Permanently remove {{name}} from the organization? This cannot be undone."
+removeTitle = "Remove member"
+
+[users.empty]
+description = "Invite your team to start collaborating."
+title = "No members yet"
+
+[users.group]
+addToTeam = "Add to team"
+guestCount = "{{count}} guest"
+guests = "Guests"
+guestsDesc = "External collaborators, scoped to what you shared. Editor only."
+ledBy = "led by {{owner}}"
+org = "Organization"
+orgDesc = "Owners with org-wide authority and policy approval"
+owners = "{{count}} owner"
+team = "{{name}} team"
+teamMeta = "{{count}} people"
+
+[users.invite]
+access = "Access"
+action = "Invite people"
+authOauth = "OAuth2 / SSO"
+authSaml = "SAML 2.0"
+authType = "Sign-in method"
+authWeb = "Password"
+create = "Create account"
+createSubtitle = "Create a self-hosted account with a password or SSO."
+createTitle = "Create account"
+editorDesc = "Edit PDFs in the Stirling PDF Editor. Everyone gets this."
+email = "Email address"
+emailError = "Enter a valid email address"
+emailPlaceholder2 = "name@company.com"
+forceChange = "Require a password change on first login"
+forceMfa = "Require MFA setup on first login"
+method = "How to add them"
+methodDirect = "Create account directly"
+methodEmail = "Invite by email"
+password = "Password"
+passwordError = "Password must be at least 8 characters"
+processorDeferred = "Invite sent, but Processor access couldn't be granted yet - set it from the roster once they've joined."
+processorDesc = "The governance surface, run pipelines, agents, and the API."
+role = "Role"
+send2 = "Send invite"
+subtitle2 = "They'll get an email to join your Stirling workspace."
+team = "Team"
+title = "Invite people"
+username = "Username"
+usernameError = "Username must be at least 3 characters"
+usernamePlaceholder = "jsmith"
+
+[users.loadError]
+description = "Something went wrong reaching the backend, or you don't have access. Try again."
+title = "Couldn't load members"
+
+[users.moveTeam]
+apply = "Move"
+team = "Team"
+title = "Move to team"
+
+[users.newTeam]
+action = "+ New team"
+create = "Create team"
+emailError = "Enter a valid email address"
+name = "Team name"
+namePlaceholder = "e.g. Finance"
+nameRequired = "Team name is required"
+owner = "Team Owner"
+ownerFailed = "Team created, but the owner couldn't be invited. Assign one from the roster."
+ownerHelper = "Every team has a leader. They'll be invited as Team Owner, with the Processor on, and can add the rest. You can reassign later."
+ownerPlaceholder = "owner@company.com"
+subtitle = "Group people under a Team Owner who manages their access."
+title = "New team"
+
+[users.renameTeam]
+apply = "Rename"
+name = "Team name"
+title = "Rename team"
+
+[users.resetPw]
+apply = "Reset password"
+confirm = "Confirm password"
+copied = "Copied to clipboard"
+copyHint = "Copy this now - it won't be shown again."
+email = "Email the user about the reset"
+forceChange = "Require a password change on next login"
+generate = "Generate a secure password"
+includePw = "Include the new password in the email"
+mismatch = "Passwords do not match"
+newPassword = "New password"
+regen = "Regenerate"
+title = "Reset password"
+tooShort = "Password must be at least 8 characters"
+
+[users.role]
+guest = "Guest"
+member = "Member"
+orgOwner = "Org Owner"
+teamOwner = "Team Owner"
+
+[users.team]
+grantProcessor = "Grant Processor to team"
+revokeProcessor = "Revoke Processor from team"
 
 [validateSignature]
 date = "Date"

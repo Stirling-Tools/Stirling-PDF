@@ -25,9 +25,10 @@ import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.enumeration.TeamRole;
+import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
-import stirling.software.saas.model.TeamMembership;
+import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.saas.procurement.config.ProcurementConfigurationProperties;
 import stirling.software.saas.procurement.model.ProcurementDeal;
 import stirling.software.saas.procurement.model.ProcurementQuote;
@@ -35,7 +36,6 @@ import stirling.software.saas.procurement.pricing.ProcurementPricingService;
 import stirling.software.saas.procurement.pricing.QuoteConfig;
 import stirling.software.saas.procurement.pricing.QuoteLineItem;
 import stirling.software.saas.procurement.service.ProcurementService;
-import stirling.software.saas.repository.TeamMembershipRepository;
 import stirling.software.saas.util.AuthenticationUtils;
 
 /**

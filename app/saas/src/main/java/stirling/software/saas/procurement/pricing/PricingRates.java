@@ -22,8 +22,7 @@ public record PricingRates(
         long airgapDeployMinor, // flat: air-gapped deployment
         long qbrAnnualMinor, // flat: quarterly business reviews
         long trainingOneTimeMinor, // one-time: onboarding & training
-        double cpiEscalator) { // fixed CPI uplift applied to the annual fee on each post-term
-    // renewal
+        double cpiEscalator) { // fixed CPI uplift on the annual fee at each post-term renewal
 
     public static PricingRates defaults() {
         return new PricingRates(

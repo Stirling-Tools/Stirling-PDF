@@ -12,42 +12,14 @@ import { fetchHomeKpis, type KpiEntry } from "@portal/api/home";
 import { EDITOR_URL, EDITOR_IS_SAME_APP } from "@portal/auth/editorUrl";
 import markLight from "@app/assets/brand/modern-logo/StirlingPDFLogoNoTextLight.svg";
 import markDark from "@app/assets/brand/modern-logo/StirlingPDFLogoNoTextDark.svg";
+import { SettingsIcon } from "@portal/components/icons";
 import {
-  HomeIcon,
-  UsersIcon,
-  SourcesIcon,
-  PoliciesIcon,
-  PipelinesIcon,
-  DocumentsIcon,
-  ComponentsIcon,
-  InfrastructureIcon,
-  UsageIcon,
-  DocsIcon,
-  SettingsIcon,
-} from "@portal/components/icons";
+  GROUP_PRIMARY,
+  GROUP_OPERATIONAL,
+  GROUP_PLATFORM,
+  type NavEntry,
+} from "@portal/components/sidebarGroups";
 import "@portal/components/Sidebar.css";
-
-interface NavEntry {
-  id: ViewId;
-  icon: React.ReactNode;
-}
-
-const GROUP_PRIMARY: NavEntry[] = [{ id: "home", icon: <HomeIcon /> }];
-
-const GROUP_OPERATIONAL: NavEntry[] = [
-  { id: "users", icon: <UsersIcon /> },
-  { id: "sources", icon: <SourcesIcon /> },
-  { id: "policies", icon: <PoliciesIcon /> },
-  { id: "pipelines", icon: <PipelinesIcon /> },
-  { id: "documents", icon: <DocumentsIcon /> },
-  { id: "components", icon: <ComponentsIcon /> },
-];
-
-const GROUP_PLATFORM: NavEntry[] = [
-  { id: "infrastructure", icon: <InfrastructureIcon /> },
-  { id: "usage", icon: <UsageIcon /> },
-  { id: "docs", icon: <DocsIcon /> },
-];
 
 function UsageFooter() {
   const { tier } = useTier();
@@ -136,7 +108,13 @@ export function Sidebar() {
         label={t(`portal.nav.${entry.id}`)}
         icon={entry.icon}
         isActive={activeView === entry.id}
-        onClick={(id) => setActiveView(id as ViewId)}
+        onClick={(id) => {
+          if (entry.externalUrl) {
+            window.open(entry.externalUrl, "_blank", "noopener,noreferrer");
+          } else {
+            setActiveView(id as ViewId);
+          }
+        }}
       />
     ));
   }

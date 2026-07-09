@@ -4,8 +4,7 @@ import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
 import { ErrorBoundary } from "@portal/components/ErrorBoundary";
 import { useUI } from "@portal/contexts/UIContext";
 import { AppShell } from "@portal/components/AppShell";
-import { AssistantButton } from "@portal/components/AssistantButton";
-import { AssistantPanel } from "@portal/components/AssistantPanel";
+import { AssistantMount } from "@portal/components/AssistantMount";
 import { SearchModal } from "@portal/components/SearchModal";
 import { SettingsModal } from "@portal/components/SettingsModal";
 import { ViewRouter } from "@portal/ViewRouter";
@@ -79,8 +78,7 @@ export function PortalChrome() {
           <RoutedContent />
         </AppShell>
       </ToolRegistryProvider>
-      <AssistantButton />
-      <AssistantPanel />
+      <AssistantMount />
       <SearchModal />
       <SettingsHost />
     </>
