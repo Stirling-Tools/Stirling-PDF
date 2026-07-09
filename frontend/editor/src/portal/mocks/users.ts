@@ -144,6 +144,9 @@ export interface UsersResponse {
   access: AccessControls;
   /** Whether SMTP is configured (gates emailing passwords/invites). */
   mailEnabled: boolean;
+  /** Whether email invites will work: SMTP on AND mail.enableInvites=true. Gates the
+   * "Invite by email" option on self-hosted. */
+  emailInvitesEnabled: boolean;
 }
 
 /* ──────────────────────────────────────────────────────────────────────── */
@@ -425,6 +428,7 @@ export function buildUsersResponse(tier: Tier): UsersResponse {
     roles: ROLES,
     access: accessFor(tier),
     mailEnabled: false,
+    emailInvitesEnabled: false,
   };
 }
 
@@ -468,5 +472,7 @@ export function buildAdminSettingsData(tier: Tier) {
     disabledUsers: users.filter((u) => !u.enabled).length,
     maxAllowedUsers: seatLimit ?? 0,
     currentUsername: users[0]?.username,
+    mailEnabled: false,
+    emailInvitesEnabled: false,
   };
 }

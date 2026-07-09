@@ -404,6 +404,10 @@ public class ProprietaryUIDataController {
         data.setLicenseMaxUsers(licenseMaxUsers);
         data.setPremiumEnabled(premiumEnabled);
         data.setMailEnabled(applicationProperties.getMail().isEnabled());
+        // Email invites need the invites toggle AND SMTP on; matches the inviteUsers precondition.
+        data.setEmailInvitesEnabled(
+                applicationProperties.getMail().isEnableInvites()
+                        && applicationProperties.getMail().isEnabled());
         data.setUserSettings(userSettings);
         data.setLockedUsers(loginAttemptService.getAllBlockedUsers());
 
@@ -649,6 +653,7 @@ public class ProprietaryUIDataController {
         private int licenseMaxUsers;
         private boolean premiumEnabled;
         private boolean mailEnabled;
+        private boolean emailInvitesEnabled;
         private Map<String, Map<String, String>> userSettings;
         private List<String> lockedUsers;
     }

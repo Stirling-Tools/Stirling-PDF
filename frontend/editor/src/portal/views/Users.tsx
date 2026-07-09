@@ -130,6 +130,13 @@ export function Users() {
 
   const teams = teamsState.data ?? [];
   const mailEnabled = usersState.data?.mailEnabled ?? false;
+  // Email invites need SMTP + mail.enableInvites on self-hosted; SaaS (no directCreate path)
+  // always has email via Supabase, so it isn't gated on a self-hosted mail config.
+  const canEmailInvite =
+    caps.emailInvite &&
+    (caps.directCreate
+      ? (usersState.data?.emailInvitesEnabled ?? false)
+      : true);
   const loading = usersState.loading && usersState.data === null;
   const loadError = !usersState.loading && usersState.error !== null;
   const isEmpty = !usersState.loading && !loadError && members.length === 0;
@@ -330,6 +337,7 @@ export function Users() {
         teams={teams}
         defaultTeamId={inviteTeamId}
         canDirectCreate={caps.directCreate && authState.data?.canDirectCreate}
+        canEmailInvite={canEmailInvite}
         hasOauth={authState.data?.hasOauth}
         hasSaml={authState.data?.hasSaml}
         adminRole={caps.adminRole}

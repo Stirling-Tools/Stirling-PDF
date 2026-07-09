@@ -22,6 +22,9 @@ interface InviteMemberModalProps {
   defaultTeamId?: number | null;
   /** Self-hosted with password login: enables the "Create account" mode. */
   canDirectCreate?: boolean;
+  /** Whether "Invite by email" is offered. Off when SMTP/invites aren't configured
+   * (self-hosted); always on for SaaS. */
+  canEmailInvite?: boolean;
   hasOauth?: boolean;
   hasSaml?: boolean;
   /** Whether the "admin" (Org Owner) role can be assigned. Off on SaaS. */
@@ -30,7 +33,8 @@ interface InviteMemberModalProps {
   manageGrants?: boolean;
   /** Non-blocking notice back to the parent (e.g. a deferred Processor grant). */
   onNotice?: (message: string) => void;
-  /** Which mode to open in (mainly for Storybook); defaults to email. */
+  /** Force the initial mode (mainly for Storybook). Defaults to "direct" when account
+   * creation is available, else "email". */
   initialMode?: "email" | "direct";
 }
 
@@ -51,12 +55,13 @@ export function InviteMemberModal({
   teams,
   defaultTeamId,
   canDirectCreate = false,
+  canEmailInvite = true,
   hasOauth = false,
   hasSaml = false,
   adminRole = true,
   manageGrants = false,
   onNotice,
-  initialMode = "email",
+  initialMode,
 }: InviteMemberModalProps) {
   const { t } = useTranslation();
   const { tier } = useTier();
@@ -74,9 +79,21 @@ export function InviteMemberModal({
   const [sending, setSending] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  // Which add-user modes this flavor/config offers. Self-hosted offers direct create;
+  // SaaS offers email; self-hosted also offers email once SMTP + invites are configured.
+  const directAvailable = canDirectCreate;
+  const emailAvailable = canEmailInvite;
+  const preferredMode: Mode = directAvailable ? "direct" : "email";
+
   useEffect(() => {
     if (!open) return;
-    setMode(canDirectCreate ? initialMode : "email");
+    // Honor an explicit initialMode only when that mode is actually available.
+    const requested: Mode =
+      initialMode &&
+      (initialMode === "email" ? emailAvailable : directAvailable)
+        ? initialMode
+        : preferredMode;
+    setMode(requested);
     setTeamId(
       defaultTeamId != null
         ? String(defaultTeamId)
@@ -84,7 +101,15 @@ export function InviteMemberModal({
           ? String(teams[0].id)
           : "",
     );
-  }, [open, defaultTeamId, teams, canDirectCreate, initialMode]);
+  }, [
+    open,
+    defaultTeamId,
+    teams,
+    directAvailable,
+    emailAvailable,
+    preferredMode,
+    initialMode,
+  ]);
 
   // A server-side submit error must not outlive the input that caused it.
   useEffect(() => {
@@ -260,7 +285,7 @@ export function InviteMemberModal({
       }
     >
       <div className="portal-users__invite-body">
-        {canDirectCreate && (
+        {directAvailable && emailAvailable && (
           <FormField label={t("users.invite.method", "How to add them")}>
             <Select
               options={[

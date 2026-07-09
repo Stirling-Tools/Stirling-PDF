@@ -45,6 +45,7 @@ interface AdminSettingsDto {
   userSettings?: Record<string, Record<string, string>>;
   lockedUsers?: string[];
   mailEnabled?: boolean;
+  emailInvitesEnabled?: boolean;
   totalUsers?: number;
   maxAllowedUsers?: number;
   currentUsername?: string;
@@ -125,6 +126,7 @@ export async function fetchUsers(tier: Tier): Promise<UsersResponse> {
     roles: ROLES,
     access: { tier, seatsUsed, seatLimit },
     mailEnabled: data.mailEnabled === true,
+    emailInvitesEnabled: data.emailInvitesEnabled === true,
   };
 }
 

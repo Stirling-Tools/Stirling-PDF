@@ -32,9 +32,26 @@ export const ScopedToTeam: Story = {
   args: { defaultTeamId: 2 },
 };
 
-/** Self-hosted: the email/create toggle is offered (opens in email mode). */
+/** Self-hosted with mail configured: the email/create toggle is offered; opens in
+ * create mode (the default when account creation is available). */
 export const SelfHostedDirectCreate: Story = {
-  args: { canDirectCreate: true, hasOauth: true, hasSaml: true },
+  args: {
+    canDirectCreate: true,
+    canEmailInvite: true,
+    hasOauth: true,
+    hasSaml: true,
+  },
+};
+
+/** Self-hosted without SMTP/invites: no "Invite by email" option at all - just the
+ * create-account form. */
+export const SelfHostedNoMail: Story = {
+  args: {
+    canDirectCreate: true,
+    canEmailInvite: false,
+    hasOauth: true,
+    hasSaml: true,
+  },
 };
 
 /** The direct "Create account" form: username, password, sign-in method, force-MFA. */
