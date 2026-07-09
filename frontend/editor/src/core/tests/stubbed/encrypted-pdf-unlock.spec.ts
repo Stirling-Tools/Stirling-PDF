@@ -21,8 +21,9 @@ import { test, expect, type Page } from "@playwright/test";
 import path from "path";
 import fs from "fs";
 import { mockAppApis } from "@app/tests/helpers/api-stubs";
+import { suppressNativeFilePicker } from "@app/tests/helpers/ui-helpers";
 
-const FIXTURES_DIR = path.join(__dirname, "../test-fixtures");
+const FIXTURES_DIR = path.join(import.meta.dirname, "../test-fixtures");
 const ENCRYPTED_PDF = path.join(FIXTURES_DIR, "encrypted.pdf");
 
 const FAKE_UNLOCKED_PDF = Buffer.from(
@@ -63,8 +64,10 @@ function mockRemovePasswordWrongPassword(page: Page) {
 }
 
 async function uploadEncryptedFile(page: Page, filePath: string) {
+  // `files-button`'s native picker is mocked globally
+  // (suppressNativeFilePicker), so the click is safe cross-browser; set the
+  // files on the hidden input directly.
   await page.getByTestId("files-button").click();
-  // No modal flow - `files-button` triggers the native picker directly.
   await page.locator('[data-testid="file-input"]').setInputFiles(filePath);
 }
 
@@ -76,6 +79,10 @@ test.describe.configure({ mode: "serial" });
 
 test.describe("Encrypted PDF Unlock Modal", () => {
   test.beforeEach(async ({ page }) => {
+    // Raw @playwright/test fixture: install the picker suppression directly so
+    // the files-button click is intercepted cross-browser (firefox/webkit
+    // otherwise leak the native dialog onto the host and close the page).
+    suppressNativeFilePicker(page);
     await mockAppApis(page);
     await page.goto("/?bypassOnboarding=true");
     await page.waitForSelector('[data-testid="files-button"]', {
@@ -153,8 +160,9 @@ test.describe("Encrypted PDF Unlock Modal", () => {
   }) => {
     await mockRemovePasswordSuccess(page);
 
+    // `files-button`'s native picker is mocked globally; click it, then set
+    // the files on the hidden input directly.
     await page.getByTestId("files-button").click();
-    // No modal flow - `files-button` triggers the native picker directly.
     await page.locator('[data-testid="file-input"]').setInputFiles([
       {
         name: "encrypted-a.pdf",

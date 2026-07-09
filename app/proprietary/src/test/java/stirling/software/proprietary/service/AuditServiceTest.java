@@ -35,6 +35,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.InternalApiClient;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
@@ -81,6 +82,61 @@ class AuditServiceTest {
 
     private void bindRequest(MockHttpServletRequest request) {
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+    }
+
+    @Nested
+    @DisplayName("captureCurrentSource()")
+    class CaptureSource {
+
+        @Test
+        @DisplayName("a plain authenticated web tool call is WEB")
+        void plainWebIsWeb() {
+            authenticateAs("alice");
+            bindRequest(new MockHttpServletRequest("POST", "/api/v1/general/merge-pdfs"));
+
+            assertThat(service.captureCurrentSource()).isEqualTo("WEB");
+        }
+
+        @Test
+        @DisplayName("the automation marker header demotes WEB to AUTOMATION")
+        void automationHeaderIsAutomation() {
+            authenticateAs("alice");
+            MockHttpServletRequest req =
+                    new MockHttpServletRequest("POST", "/api/v1/general/merge");
+            req.addHeader(InternalApiClient.AUTOMATION_HEADER, "true");
+            bindRequest(req);
+
+            assertThat(service.captureCurrentSource()).isEqualTo("AUTOMATION");
+        }
+
+        @Test
+        @DisplayName("the AI surface demotes WEB to AI")
+        void aiSurfaceIsAi() {
+            authenticateAs("alice");
+            bindRequest(new MockHttpServletRequest("POST", "/api/v1/ai/tools/ask"));
+
+            assertThat(service.captureCurrentSource()).isEqualTo("AI");
+        }
+
+        @Test
+        @DisplayName("the AI surface is matched after stripping the deployment context path")
+        void aiSurfaceWithContextPathIsAi() {
+            authenticateAs("alice");
+            MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/ai/tools/ask");
+            req.setContextPath("/stirling");
+            req.setRequestURI("/stirling/api/v1/ai/tools/ask");
+            bindRequest(req);
+
+            assertThat(service.captureCurrentSource()).isEqualTo("AI");
+        }
+
+        @Test
+        @DisplayName("an unauthenticated request is SYSTEM, not WEB")
+        void anonymousIsSystem() {
+            bindRequest(new MockHttpServletRequest("POST", "/api/v1/general/merge-pdfs"));
+
+            assertThat(service.captureCurrentSource()).isEqualTo("SYSTEM");
+        }
     }
 
     @Nested

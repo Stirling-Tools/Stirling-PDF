@@ -4,19 +4,18 @@ import { useTranslation } from "react-i18next";
 import {
   Stack,
   Text,
-  Button,
   TextInput,
   Table,
-  ActionIcon,
   Menu,
   Badge,
   Loader,
   Group,
   Modal,
   Select,
-  CloseButton,
   Tooltip,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert } from "@app/components/toast";
 import { teamService, Team } from "@app/services/teamService";
@@ -380,9 +379,12 @@ export default function TeamsSection() {
                   <Menu position="bottom-end" withinPortal>
                     <Menu.Target>
                       <ActionIcon
-                        variant="subtle"
-                        color="gray"
+                        variant="tertiary"
                         disabled={!loginEnabled}
+                        aria-label={t(
+                          "workspace.teams.teamActions",
+                          "Team actions",
+                        )}
                       >
                         <LocalIcon
                           icon="more-vert"
@@ -456,16 +458,20 @@ export default function TeamsSection() {
         withCloseButton={false}
       >
         <div style={{ position: "relative" }}>
-          <CloseButton
+          <ActionIcon
             onClick={() => setCreateModalOpened(false)}
             size="lg"
+            variant="tertiary"
+            aria-label={t("close", "Close")}
             style={{
               position: "absolute",
               top: -8,
               right: -8,
               zIndex: 1,
             }}
-          />
+          >
+            <LocalIcon icon="close" width="1.25rem" height="1.25rem" />
+          </ActionIcon>
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">
@@ -493,7 +499,7 @@ export default function TeamsSection() {
               loading={processing}
               fullWidth
               size="md"
-              mt="md"
+              style={{ marginTop: "var(--mantine-spacing-md)" }}
             >
               {t("workspace.teams.createTeam.submit")}
             </Button>
@@ -512,16 +518,20 @@ export default function TeamsSection() {
         withCloseButton={false}
       >
         <div style={{ position: "relative" }}>
-          <CloseButton
+          <ActionIcon
             onClick={() => setRenameModalOpened(false)}
             size="lg"
+            variant="tertiary"
+            aria-label={t("close", "Close")}
             style={{
               position: "absolute",
               top: -8,
               right: -8,
               zIndex: 1,
             }}
-          />
+          >
+            <LocalIcon icon="close" width="1.25rem" height="1.25rem" />
+          </ActionIcon>
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">
@@ -555,7 +565,7 @@ export default function TeamsSection() {
               loading={processing}
               fullWidth
               size="md"
-              mt="md"
+              style={{ marginTop: "var(--mantine-spacing-md)" }}
             >
               {t("workspace.teams.renameTeam.submit")}
             </Button>
@@ -574,16 +584,20 @@ export default function TeamsSection() {
         withCloseButton={false}
       >
         <div style={{ position: "relative" }}>
-          <CloseButton
+          <ActionIcon
             onClick={() => setAddMemberModalOpened(false)}
             size="lg"
+            variant="tertiary"
+            aria-label={t("close", "Close")}
             style={{
               position: "absolute",
               top: -8,
               right: -8,
               zIndex: 1,
             }}
-          />
+          >
+            <LocalIcon icon="close" width="1.25rem" height="1.25rem" />
+          </ActionIcon>
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">
@@ -634,7 +648,7 @@ export default function TeamsSection() {
               loading={processing}
               fullWidth
               size="md"
-              mt="md"
+              style={{ marginTop: "var(--mantine-spacing-md)" }}
             >
               {t("workspace.teams.addMemberToTeam.submit")}
             </Button>

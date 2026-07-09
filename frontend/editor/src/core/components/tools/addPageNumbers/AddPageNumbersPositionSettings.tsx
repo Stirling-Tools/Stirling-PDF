@@ -49,6 +49,7 @@ const AddPageNumbersPositionSettings = ({
         </Text>
 
         <Tooltip
+          position="left"
           content={t(
             "pageSelectionPrompt",
             "Custom Page Selection (Enter a comma-separated list of page numbers 1,5,6 or Functions like 2n+1)",
@@ -69,6 +70,7 @@ const AddPageNumbersPositionSettings = ({
         </Tooltip>
 
         <Tooltip
+          position="left"
           content={t(
             "startingNumberTooltip",
             "The first number to display. Subsequent pages will increment from this number.",

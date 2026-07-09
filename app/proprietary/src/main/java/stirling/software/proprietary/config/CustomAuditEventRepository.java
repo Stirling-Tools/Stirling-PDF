@@ -60,6 +60,8 @@ public class CustomAuditEventRepository implements AuditEventRepository {
                 clean.put("requestId", rid);
             }
 
+            String source = MDC.get("auditSource");
+
             String auditEventData = mapper.writeValueAsString(clean);
             log.debug("AuditEvent data (JSON): {}", auditEventData);
 
@@ -67,6 +69,7 @@ public class CustomAuditEventRepository implements AuditEventRepository {
                     PersistentAuditEvent.builder()
                             .principal(safePrincipal(ev.getPrincipal()))
                             .type(ev.getType())
+                            .source(source)
                             .data(auditEventData)
                             .timestamp(ev.getTimestamp())
                             .build();

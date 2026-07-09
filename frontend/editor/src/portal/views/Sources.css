@@ -74,23 +74,23 @@
   background: var(--color-bg-subtle);
   color: var(--color-text-3);
 }
-.portal-sources__type-dot--blue {
+.portal-sources__type-dot--default {
   background: var(--color-blue-light);
   color: var(--color-blue);
 }
-.portal-sources__type-dot--purple {
+.portal-sources__type-dot--premium {
   background: var(--color-purple-light);
   color: var(--color-purple);
 }
-.portal-sources__type-dot--green {
+.portal-sources__type-dot--success {
   background: var(--color-green-light);
   color: var(--color-green-dark);
 }
-.portal-sources__type-dot--amber {
+.portal-sources__type-dot--warning {
   background: var(--color-amber-light);
   color: var(--color-amber-dark);
 }
-.portal-sources__type-dot--red {
+.portal-sources__type-dot--danger {
   background: var(--color-red-light);
   color: var(--color-red);
 }

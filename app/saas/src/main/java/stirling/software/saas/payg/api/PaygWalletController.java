@@ -19,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -327,6 +328,32 @@ public class PaygWalletController {
 
     /** Request body for {@link #updateCap}. */
     public record UpdateCapRequest(@Min(0) int capUsd, boolean noCap) {}
+
+    // ---------------------------------------------------------------------------------------
+    // POST /wallet/refresh — drop the caller's cached snapshot so the next read is fresh
+    // ---------------------------------------------------------------------------------------
+
+    /**
+     * Drops the caller's team snapshot + billing cache so the next {@code GET /wallet} reflects a
+     * billing state that just changed out-of-band. The subscription flip is written by a Postgres
+     * function ({@code payg_link_subscription}) with no Java event to invalidate on, so a client
+     * that knows a change just happened — the portal while finalizing a checkout — pokes the cache
+     * here rather than waiting out the ~30s TTL. Team-scoped to the caller: a client can only
+     * refresh its own team, and a no-team caller is a cheap no-op.
+     */
+    @PostMapping("/wallet/refresh")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> refreshWallet(Authentication auth) {
+        User user;
+        try {
+            user = AuthenticationUtils.getCurrentUser(auth, userRepository);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        primaryMembership(user.getId())
+                .ifPresent(m -> entitlementService.invalidate(m.getTeam().getId()));
+        return ResponseEntity.noContent().build();
+    }
 
     // ---------------------------------------------------------------------------------------
     // Helpers

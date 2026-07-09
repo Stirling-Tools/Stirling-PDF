@@ -32,6 +32,8 @@ export const VALID_NAV_KEYS = [
   "adminMcp",
   "help",
   "legal",
+  "backendThirdPartyLicenses",
+  "frontendThirdPartyLicenses",
   "payg",
 ] as const;
 

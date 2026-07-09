@@ -155,7 +155,13 @@ describe("auto-run import: new-version output delivery", () => {
     recordCompletedRun();
     await runImport();
 
-    expect(mocks.addFiles).toHaveBeenCalled();
+    // derivedFromTool must ride along so the auto-run never re-enforces this
+    // output, even after the dispatched list is wiped (fresh device / storage
+    // clear) — without it the output re-triggers the policy indefinitely.
+    expect(mocks.addFiles).toHaveBeenCalledWith(
+      expect.any(Array),
+      expect.objectContaining({ derivedFromTool: true }),
+    );
     expect(mocks.persistVersionedOutputs).not.toHaveBeenCalled();
     expect(mocks.consumeFiles).not.toHaveBeenCalled();
   });
@@ -182,7 +188,10 @@ describe("auto-run import: new-version output delivery", () => {
     });
 
     expect(getRun("srv-1")?.startedAt).toBe(1000);
-    expect(mocks.addFiles).toHaveBeenCalled();
+    expect(mocks.addFiles).toHaveBeenCalledWith(
+      expect.any(Array),
+      expect.objectContaining({ derivedFromTool: true }),
+    );
     expect(mocks.persistVersionedOutputs).not.toHaveBeenCalled();
   });
 });
