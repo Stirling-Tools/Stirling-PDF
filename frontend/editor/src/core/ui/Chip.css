@@ -1,0 +1,49 @@
+/* Mantine Pill-backed chip/tag — colour from the shared accent palette (accents.css). */
+@import "./accents.css";
+
+.sui-chip.mantine-Pill-root {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  border: 1px solid transparent;
+  font-weight: 500;
+  width: auto;
+}
+.sui-chip--primary.mantine-Pill-root {
+  background: var(--_solid);
+  color: var(--_on);
+}
+.sui-chip--secondary.mantine-Pill-root {
+  background: var(--_tint);
+  color: var(--_text);
+  border-color: var(--_bd);
+}
+.sui-chip--interactive {
+  cursor: pointer;
+}
+.sui-chip--loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.sui-chip__dot {
+  width: 0.5em;
+  height: 0.5em;
+  border-radius: 50%;
+  background: currentColor;
+}
+.sui-chip__icon {
+  display: inline-flex;
+  align-items: center;
+}
+.sui-chip__label {
+  display: inline-block;
+}
+.sui-chip__spinner {
+  width: 0.75em;
+  height: 0.75em;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  animation: spin 0.7s linear infinite;
+}
