@@ -7404,7 +7404,7 @@ subtitle = "Standing automations that enforce a tool pipeline on every document.
 title = "Policies"
 
 [portal.policies.card]
-comingSoon = "Coming soon"
+comingSoon = "Upgrade to Enterprise"
 notSetUp = "Not set up"
 
 [portal.policies.categories.compliance]
@@ -7511,6 +7511,12 @@ pause = "Pause"
 resume = "Resume"
 runNow = "Run now"
 
+[portal.policies.detail.clearHistory]
+body = "This policy will forget every file it has already processed and reprocess everything currently in its sources on the next run. The files themselves are not changed. This cannot be undone."
+cancel = "Cancel"
+confirm = "Clear history"
+title = "Clear processed history?"
+
 [portal.policies.detail.emptyActivity]
 description = "Documents will appear here once this policy runs."
 title = "No activity yet"
@@ -7560,14 +7566,29 @@ continue = "Continue"
 enablePolicy = "Enable policy"
 saveChanges = "Save changes"
 
-[portal.policies.wizard.docTypes]
-allDescription = "Set up an Ingestion (classification) policy to narrow this to specific document types."
-allTitle = "All document types"
-clear = "Clear"
-heading = "Document types"
-narrow = "Narrow"
-selected_one = "{{count}} selected"
-selected_other = "{{count}} selected"
+[portal.policies.wizard.capability.compress]
+desc = "Compresses the document to a smaller file size."
+label = "Reduce file size"
+
+[portal.policies.wizard.capability.flatten]
+desc = "Merges form fields and annotations into the page so they can't be edited."
+label = "Flatten the document"
+
+[portal.policies.wizard.capability.ocr]
+desc = "Runs OCR so scanned pages become selectable, searchable text."
+label = "Make text searchable"
+
+[portal.policies.wizard.capability.redact]
+desc = "Finds and blacks out sensitive details — like Social Security and card numbers — so they can't be read."
+label = "Redact sensitive information"
+
+[portal.policies.wizard.capability.sanitize]
+desc = "Removes hidden JavaScript so nothing can run automatically when the document is opened."
+label = "Strip active content"
+
+[portal.policies.wizard.capability.watermark]
+desc = "Stamps a visible mark (e.g. “Confidential”) across every page."
+label = "Apply a watermark"
 
 [portal.policies.wizard.errors]
 noTools = "Enable at least one tool in the workflow first."
@@ -7588,11 +7609,6 @@ label = "Output as"
 newFile = "New file"
 newVersion = "New version"
 
-[portal.policies.wizard.output.retries]
-delayLabel = "Retry delay (min)"
-heading = "Retries"
-maxLabel = "Max retries"
-
 [portal.policies.wizard.output.runOn]
 export = "Export"
 helper = "When the policy fires: on upload, or before export."
@@ -7603,22 +7619,20 @@ upload = "Upload"
 heading = "Settings"
 
 [portal.policies.wizard.sources]
-emptyDescription = "Connect a source on the Sources page first, then attach it to a policy here."
-emptyTitle = "No sources available"
 heading = "Sources"
 loading = "Loading sources…"
 
 [portal.policies.wizard.tabs]
 ariaLabel = "Setup steps"
 settings = "Settings"
-workflow = "Workflow"
+workflow = "Actions"
 
 [portal.policies.wizard.title]
 edit = "Edit {{category}} policy"
 setUp = "Set up {{category}} policy"
 
 [portal.policies.wizard.workflow]
-description = "The sequence of tools this policy runs on each document. Each tool is a Stirling endpoint; toggle the ones this policy should enforce."
+description = "Choose what this policy does to every document it processes."
 
 [portal.policySummary]
 activeSummary = "{{active}} / {{total}} active"
@@ -7627,7 +7641,7 @@ subtitle = "Standing automations every document passes through, regardless of wh
 title = "What runs on your PDFs"
 
 [portal.policySummary.action]
-comingSoon = "Coming soon"
+comingSoon = "Upgrade to Enterprise"
 configure = "Configure"
 setUp = "Set up"
 
@@ -7907,122 +7921,11 @@ noActionsTitle = "No quick actions"
 noMatches = "No matches for \"{{query}}\""
 noMatchesDescription = "Try a different keyword or browse the catalogue."
 
-[portal.settings]
-ariaLabel = "Settings"
-cancel = "Cancel"
-enterpriseBadge = "Enterprise"
-footerNote = "Changes apply to this workspace."
-saveChanges = "Save changes"
-
-[portal.settings.appearance]
-themeSub = "Choose how the portal looks on this device."
-themeTitle = "Theme"
-
-[portal.settings.appearance.dark]
-hint = "Dim surfaces"
-label = "Dark"
-
-[portal.settings.appearance.light]
-hint = "Bright surfaces"
-label = "Light"
-
-[portal.settings.authentication]
-sessionTimeout = "Session timeout"
-sessionTimeoutHelper = "Members re-authenticate after this idle period."
-sub = "Organisation-wide authentication controls."
-title = "Sign-in policy"
-
-[portal.settings.authentication.mfa]
-description = "Require every member to complete MFA at sign-in."
-label = "Enforce two-factor (MFA)"
-
-[portal.settings.authentication.scim]
-description = "Sync members and roles from your directory."
-label = "SCIM provisioning"
-
-[portal.settings.authentication.sso]
-description = "Federate sign-in through your identity provider."
-label = "Single sign-on (SAML)"
-
-[portal.settings.authentication.timeout]
-1440 = "24 hours"
-240 = "4 hours"
-480 = "8 hours"
-60 = "1 hour"
-720 = "12 hours"
-
-[portal.settings.earlyAccess]
-sub = "Opt into features still in preview."
-title = "Preview features"
-
 [portal.settings.groups]
-account = "Account"
 admin = "Admin"
-workspace = "Workspace"
-
-[portal.settings.notifications]
-sub = "Pick which events reach your inbox."
-title = "Email notifications"
-
-[portal.settings.notifications.pipeline-failures]
-description = "A run errors out or a step times out."
-label = "Pipeline failures"
-
-[portal.settings.notifications.pipeline-success]
-description = "Every successful pipeline run finishes."
-label = "Pipeline completions"
-
-[portal.settings.notifications.product-updates]
-description = "New operations, sources, and release notes."
-label = "Product updates"
-
-[portal.settings.notifications.security-alerts]
-description = "New API keys, sign-ins, or permission changes."
-label = "Security alerts"
-
-[portal.settings.notifications.usage-alerts]
-description = "You approach a plan limit or rate cap."
-label = "Usage & quota alerts"
-
-[portal.settings.notifications.weekly-digest]
-description = "A Monday summary of volume and health."
-label = "Weekly digest"
-
-[portal.settings.profile]
-accountFallback = "Account"
-changePhoto = "Change photo"
-email = "Email"
-emailHelper = "Used for sign-in and notification delivery."
-emailPlaceholder = "you@company.com"
-fullName = "Full name"
-namePlaceholder = "Your name"
 
 [portal.settings.sections]
 account-link = "Account link"
-appearance = "Appearance"
-authentication = "Authentication"
-early-access = "Early access"
-general = "General"
-notifications = "Notifications"
-profile = "Profile"
-sessions = "Active sessions"
-
-[portal.settings.sessions]
-revoke = "Revoke"
-sub = "Devices currently signed in to this account."
-thisDevice = "This device"
-title = "Active sessions"
-
-[portal.settings.workspace]
-manageBilling = "Manage billing"
-nameLabel = "Workspace name"
-namePlaceholder = "Workspace name"
-plan = "Plan"
-regionEnterpriseSuffix = "{{region}} · Enterprise"
-regionHelper = "Where documents are processed and stored at rest."
-regionLabel = "Data residency region"
-seats = "Seats"
-seatsUsed = "{{used}} of {{total}} used"
 
 [portal.shell.header]
 accountFallback = "Account"

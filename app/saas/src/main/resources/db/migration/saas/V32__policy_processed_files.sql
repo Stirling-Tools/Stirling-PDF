@@ -28,3 +28,9 @@ CREATE TABLE IF NOT EXISTS policy_processed_files (
 
 CREATE INDEX IF NOT EXISTS idx_processed_files_policy_seen
     ON policy_processed_files (policy_id, last_seen);
+
+-- The cross-policy deletion-consensus check (existsByIdentityHashAndStatusNot) filters identity_hash
+-- alone, so it cannot use the (policy_id, identity_hash) primary key; it runs once per successfully
+-- consumed file, so index it to avoid a full scan on the hot path.
+CREATE INDEX IF NOT EXISTS idx_processed_files_identity
+    ON policy_processed_files (identity_hash);

@@ -8,7 +8,6 @@ import { infrastructureHandlers } from "@portal/mocks/handlers/infrastructure";
 import { procurementHandlers } from "@portal/mocks/handlers/procurement";
 import { procurementSaasHandlers } from "@portal/mocks/handlers/procurementSaas";
 import { docsHandlers } from "@portal/mocks/handlers/docs";
-import { settingsHandlers } from "@portal/mocks/handlers/settings";
 import { usersHandlers } from "@portal/mocks/handlers/users";
 import { agentsHandlers } from "@portal/mocks/handlers/agents";
 import { policiesHandlers } from "@portal/mocks/handlers/policies";
@@ -28,7 +27,6 @@ export const handlers = [
   ...docsHandlers,
   ...procurementHandlers,
   ...procurementSaasHandlers,
-  ...settingsHandlers,
   ...usersHandlers,
   ...agentsHandlers,
   ...policiesHandlers,

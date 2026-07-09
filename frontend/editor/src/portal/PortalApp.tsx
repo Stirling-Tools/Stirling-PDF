@@ -3,6 +3,7 @@ import { PortalAuthBoundary } from "@portal/auth/PortalAuthBoundary";
 import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
 import { SuiProvider } from "@portal/theme/SuiProvider";
 import { PortalProviders } from "@portal/PortalProviders";
+import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
 // Reset + typography, scoped to .portal-scope below.
 import "@portal/theme/base.css";
 
@@ -32,9 +33,13 @@ export function PortalApp() {
       <ThemedSuiProvider>
         {/* Scopes base.css to the portal so it doesn't restyle the host editor. */}
         <div className="portal-scope">
-          <PortalAuthBoundary>
-            <PortalProviders />
-          </PortalAuthBoundary>
+          {/* Tool registry is read by portal views (e.g. the policy setup
+              wizard); mount it above the per-flavor provider split. */}
+          <ToolRegistryProvider>
+            <PortalAuthBoundary>
+              <PortalProviders />
+            </PortalAuthBoundary>
+          </ToolRegistryProvider>
         </div>
       </ThemedSuiProvider>
     </ThemeProvider>
