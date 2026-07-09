@@ -21,6 +21,10 @@ import { fileStorage } from "@app/services/fileStorage";
 import { zipFileService } from "@app/services/zipFileService";
 import { FileAnalyzer } from "@app/services/fileAnalyzer";
 import { trackPdfUploaded } from "@app/services/analytics";
+import {
+  reportBulkAddProgress,
+  clearBulkAddProgress,
+} from "@app/services/bulkAddProgress";
 const DEBUG = process.env.NODE_ENV === "development";
 const HYDRATION_CONCURRENCY = 2;
 let activeHydrations = 0;
@@ -358,11 +362,42 @@ export async function addFiles(
     // Collect hydrations to schedule after dispatch so updateStirlingFileStub finds files in state.
     const pendingHydrations: Array<() => Promise<void>> = [];
 
+    // Stream the batch into the workspace in chunks. The per-file pre-scan below
+    // (dedupe, encryption sniff — which reads each PDF's bytes) takes real time
+    // for a big folder drop; a single end-of-loop dispatch would leave the UI
+    // frozen-looking for seconds and then dump hundreds of rows in one render.
+    // Chunked dispatch keeps rows (and their thumbnail hydrations) streaming in,
+    // and the progress store drives the sidebar's "Adding files…" indicator.
+    const DISPATCH_CHUNK = 25;
+    let flushedStubs = 0;
+    let flushedHydrations = 0;
+    const flushChunk = () => {
+      if (
+        !options.skipWorkspaceDispatch &&
+        stirlingFileStubs.length > flushedStubs
+      ) {
+        dispatch({
+          type: "ADD_FILES",
+          payload: { stirlingFileStubs: stirlingFileStubs.slice(flushedStubs) },
+        });
+        flushedStubs = stirlingFileStubs.length;
+      }
+      // Hydrations only after their chunk is dispatched, so
+      // updateStirlingFileStub finds the files in state.
+      while (flushedHydrations < pendingHydrations.length) {
+        scheduleMetadataHydration(pendingHydrations[flushedHydrations++]);
+      }
+    };
+
+    reportBulkAddProgress(0, filesToProcess.length);
+    let scannedCount = 0;
+
     for (const file of filesToProcess) {
       const quickKey = createQuickKey(file);
 
       // Soft deduplication: Check if file already exists by metadata
       if (!allowDuplicates && existingQuickKeys.has(quickKey)) {
+        reportBulkAddProgress(++scannedCount, filesToProcess.length);
         continue;
       }
 
@@ -398,26 +433,28 @@ export async function addFiles(
       try {
         const { pendingFilePathMappings } =
           await import("@app/services/pendingFilePathMappings");
-        console.log(
-          `[FileActions] Checking for localFilePath mapping for quickKey: ${quickKey}`,
-        );
-        console.log(
-          `[FileActions] Available mappings:`,
-          Array.from(pendingFilePathMappings.keys()),
-        );
+        // DEBUG-gated: these fire per file, and a 300-file drop emitting 4 log
+        // lines each measurably stalls the main thread with devtools open.
+        if (DEBUG) {
+          console.log(
+            `[FileActions] Checking for localFilePath mapping for quickKey: ${quickKey}`,
+          );
+        }
         const localFilePath = pendingFilePathMappings.get(quickKey);
         if (localFilePath) {
-          console.log(`[FileActions] ✓ Found localFilePath: ${localFilePath}`);
+          if (DEBUG)
+            console.log(
+              `[FileActions] ✓ Found localFilePath: ${localFilePath}`,
+            );
           fileStub.localFilePath = localFilePath;
           pendingFilePathMappings.delete(quickKey); // Clean up after use
-          console.log(
-            `[FileActions] Applied localFilePath to file: ${file.name}`,
-          );
-        } else {
-          console.log(`[FileActions] ✗ No localFilePath found for this file`);
         }
       } catch (error) {
-        console.log("[FileActions] Could not check for localFilePath:", error);
+        if (DEBUG)
+          console.log(
+            "[FileActions] Could not check for localFilePath:",
+            error,
+          );
         // FileManagerContext may not be available in all contexts
       }
 
@@ -505,17 +542,15 @@ export async function addFiles(
           }
         }
       });
+
+      reportBulkAddProgress(++scannedCount, filesToProcess.length);
+      if (stirlingFileStubs.length - flushedStubs >= DISPATCH_CHUNK) {
+        flushChunk();
+      }
     }
 
-    // Batch dispatch in one render. Suppressed by skipWorkspaceDispatch.
-    if (stirlingFileStubs.length > 0 && !options.skipWorkspaceDispatch) {
-      dispatch({ type: "ADD_FILES", payload: { stirlingFileStubs } });
-    }
-
-    // Schedule hydrations after dispatch so updateStirlingFileStub finds files in state
-    for (const task of pendingHydrations) {
-      scheduleMetadataHydration(task);
-    }
+    // Flush the remainder (also the sole dispatch for small batches).
+    flushChunk();
 
     // Persist to storage if enabled using fileStorage service
     if (enablePersistence && stirlingFiles.length > 0) {
@@ -550,6 +585,7 @@ export async function addFiles(
 
     return stirlingFiles;
   } finally {
+    clearBulkAddProgress();
     // Always release mutex even if error occurs
     addFilesMutex.unlock();
   }
@@ -565,6 +601,10 @@ export async function consumeFiles(
   outputStirlingFileStubs: StirlingFileStub[],
   filesRef: React.MutableRefObject<Map<FileId, File>>,
   dispatch: React.Dispatch<FileContextAction>,
+  // Silent: replace the input in place (same grid slot) without auto-selecting
+  // or reordering the output. Used by background enforcement (policy auto-run)
+  // so a finished file updates in place instead of jumping to the top / opening.
+  options?: { silent?: boolean },
 ): Promise<FileId[]> {
   if (DEBUG)
     console.log(
@@ -611,6 +651,7 @@ export async function consumeFiles(
     payload: {
       inputFileIds,
       outputStirlingFileStubs: outputStirlingFileStubs,
+      silent: options?.silent ?? false,
     },
   });
 

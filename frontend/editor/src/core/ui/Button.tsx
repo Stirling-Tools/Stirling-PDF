@@ -22,6 +22,12 @@ export type ButtonAccent =
   | "success"
   | "warning";
 export type ButtonSize = "sm" | "md" | "lg" | "xl";
+/**
+ * Text-size scale, independent of `size` (which sets the control height). Unset
+ * inherits the `size`-derived default — i.e. `md` for a default button — so
+ * existing buttons are unchanged; set it to size the label on its own axis.
+ */
+export type ButtonFontSize = "xs" | "sm" | "md" | "lg" | "xl";
 /** `between` pins leftSection/label/rightSection to left/center/right (toolbar rows). */
 export type ButtonJustify = "center" | "start" | "end" | "between";
 export type ButtonShape = "default" | "circle" | "pill";
@@ -30,6 +36,8 @@ type ButtonOwnProps = {
   variant?: ButtonVariant;
   accent?: ButtonAccent;
   size?: ButtonSize;
+  /** Label text size, independent of `size`. Defaults to the `size`-derived value. */
+  fontSize?: ButtonFontSize;
   justify?: ButtonJustify;
   shape?: ButtonShape;
   /** Alternative to children; use one or the other. */
@@ -97,12 +105,23 @@ const MANTINE_JUSTIFY: Record<ButtonJustify, string> = {
   between: "space-between",
 };
 
+// Maps the fontSize scale onto Mantine's font-size tokens (xs 12 → xl 20px),
+// the same tokens `size` resolves to — so fontSize is a drop-in override.
+const FONT_SIZE_VAR: Record<ButtonFontSize, string> = {
+  xs: "var(--mantine-font-size-xs)",
+  sm: "var(--mantine-font-size-sm)",
+  md: "var(--mantine-font-size-md)",
+  lg: "var(--mantine-font-size-lg)",
+  xl: "var(--mantine-font-size-xl)",
+};
+
 const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
   function ButtonRoot(
     {
       variant = "primary",
       accent = "default",
       size = "md",
+      fontSize,
       justify = "center",
       shape = "default",
       text,
@@ -191,6 +210,11 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
         style={{
           ...(accentVars as CSSProperties),
           ...({ "--button-height": CONTROL_HEIGHT[size] } as CSSProperties),
+          // fontSize decouples label text size from `size`; unset leaves Mantine's
+          // size-derived --button-fz in place.
+          ...(fontSize
+            ? ({ "--button-fz": FONT_SIZE_VAR[fontSize] } as CSSProperties)
+            : {}),
           // Icon-only: zero the size padding inline so the lone icon centres.
           ...(iconOnly ? ({ "--button-padding-x": "0" } as CSSProperties) : {}),
           ...style,

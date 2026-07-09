@@ -34,6 +34,9 @@
 .sui-iconbadge--red {
   --ib-base: var(--color-red);
 }
+.sui-iconbadge--orange {
+  --ib-base: var(--color-orange);
+}
 .sui-iconbadge--neutral {
   --ib-base: var(--color-text-1);
   background: none;

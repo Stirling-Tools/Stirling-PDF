@@ -56,7 +56,9 @@ export function Avatar({
   const content = src ? (
     <img src={src} alt={ariaLabel ?? name} className="sui-avatar__img" />
   ) : (
-    <span aria-hidden>{initialsOf(name)}</span>
+    <span className="sui-avatar__initials" aria-hidden>
+      {initialsOf(name)}
+    </span>
   );
 
   if (onClick) {
