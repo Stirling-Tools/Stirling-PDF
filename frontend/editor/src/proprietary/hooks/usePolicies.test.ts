@@ -36,7 +36,18 @@ vi.mock("@app/services/policyApi", () => ({
   getPolicyRun: vi.fn(),
 }));
 
+// Minimal tool registry so the hook's endpoint→operation mapping can resolve
+// the compress tool when rebuilding a folder from stored steps.
+vi.mock("@app/contexts/ToolRegistryContext", () => ({
+  useToolRegistry: () => ({
+    allTools: {
+      compress: { operationConfig: { endpoint: "/api/v1/misc/compress-pdf" } },
+    },
+  }),
+}));
+
 import { usePolicies } from "@app/hooks/usePolicies";
+import { getPolicyAutomation } from "@app/services/policyFolders";
 
 // A minimal wizard result (workflow already saved + mapped by the builder).
 const wizardResult = {
@@ -152,5 +163,41 @@ describe("usePolicies", () => {
       await result.current.ensurePolicyFolder("ingestion");
     });
     expect(result.current.policies.ingestion.folderId).toBeTruthy();
+  });
+
+  it("ensurePolicyFolder rebuilds the pipeline from stored steps when a policy has no automation blob (portal-authored)", async () => {
+    // A policy authored in the portal: stored on the backend with steps
+    // (endpoint + params) but no `automation` blob the editor normally uses.
+    api.store.set("be-portal", {
+      id: "be-portal",
+      name: "Ingestion Policy",
+      enabled: true,
+      trigger: null,
+      steps: [
+        {
+          operation: "/api/v1/misc/compress-pdf",
+          parameters: { optimizeLevel: "5" },
+        },
+      ],
+      output: { type: "inline", options: { categoryId: "ingestion" } },
+    } as never);
+
+    const { result } = renderHook(() => usePolicies());
+    // Mount reconcile links the backend policy to the ingestion category.
+    await waitFor(() =>
+      expect(result.current.policies.ingestion.backendId).toBe("be-portal"),
+    );
+
+    let folderId: string | undefined;
+    await act(async () => {
+      folderId = await result.current.ensurePolicyFolder("ingestion");
+    });
+
+    // The rebuilt folder carries the portal's actual settings, mapped back from
+    // the endpoint to the editor's operation id — not the preset defaults.
+    const automation = await getPolicyAutomation(folderId!);
+    expect(automation?.operations).toEqual([
+      { operation: "compress", parameters: { optimizeLevel: "5" } },
+    ]);
   });
 });

@@ -11,7 +11,10 @@
  * using that registry.
  */
 
-import type { AutomationConfig } from "@app/types/automation";
+import type {
+  AutomationConfig,
+  AutomationOperation,
+} from "@app/types/automation";
 import type { ToolRegistry } from "@app/data/toolsTaxonomy";
 import type { PolicyFolderSettings } from "@app/types/policies";
 
@@ -184,6 +187,37 @@ export function buildPipelineDefinition(
   };
 }
 
+/**
+ * Reconstruct frontend automation operations from stored backend steps — the
+ * inverse of {@link buildPipelineDefinition}'s endpoint mapping. Used to hydrate
+ * a policy authored elsewhere (e.g. the portal) that carries `steps` but no
+ * `automation` blob: each step's endpoint path is mapped back to its tool
+ * registry operation id, keeping the step's parameters. Steps whose endpoint no
+ * longer resolves to a registry tool are dropped (can't be represented as an
+ * editable operation).
+ *
+ * Only endpoints declared as plain strings are matched; a tool whose endpoint is
+ * parameter-dependent (a function) can't be reversed here and is skipped.
+ */
+export function stepsToOperations(
+  steps: BackendPipelineStep[],
+  toolRegistry: Partial<ToolRegistry>,
+): AutomationOperation[] {
+  const operationByEndpoint = new Map<string, string>();
+  for (const [operation, entry] of Object.entries(toolRegistry)) {
+    const endpoint = entry?.operationConfig?.endpoint;
+    if (typeof endpoint === "string")
+      operationByEndpoint.set(endpoint, operation);
+  }
+  const operations: AutomationOperation[] = [];
+  for (const step of steps) {
+    const operation = operationByEndpoint.get(step.operation);
+    if (!operation) continue;
+    operations.push({ operation, parameters: step.parameters ?? {} });
+  }
+  return operations;
+}
+
 /** A frontend policy ready to persist on the backend (the full settings set). */
 export interface PolicyToStore {
   /** Existing backend id (blank/omitted → create). */
@@ -217,6 +251,12 @@ export interface DecodedPolicy {
   enabled: boolean;
   /** Null if the stored policy carried no automation blob. */
   automation: AutomationConfig | null;
+  /**
+   * The engine-runnable steps (endpoint paths + params). Always present. The
+   * fallback source for the editable pipeline when `automation` is null — e.g.
+   * a policy authored in the portal, which stores steps but not the blob.
+   */
+  steps: BackendPipelineStep[];
   sources: string[];
   scopeTypes: string[];
   reviewerEmail: string;
@@ -290,6 +330,7 @@ export function fromBackendPolicy(policy: BackendPolicy): DecodedPolicy {
     name: policy.name,
     enabled: policy.enabled,
     automation: (output.automation as AutomationConfig | undefined) ?? null,
+    steps: Array.isArray(policy.steps) ? policy.steps : [],
     sources: Array.isArray(meta.sources) ? (meta.sources as string[]) : [],
     scopeTypes: Array.isArray(meta.scopeTypes)
       ? (meta.scopeTypes as string[])

@@ -12,7 +12,7 @@
  *     collapsed; clicking an icon selects the policy and expands the rail.
  */
 
-import { useState, useEffect, useMemo, type ReactNode } from "react";
+import { useState, useEffect, useMemo, useRef, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -282,7 +282,8 @@ export function PolicyDetailTakeover() {
   // The configured policy's backing folder + automation (its real, editable
   // pipeline). `reloadKey` bumps after the edit modal saves so the detail
   // reflects the new steps. Falls back to the preset's rules when unconfigured.
-  const folderId = selectedId ? pol.policies[selectedId]?.folderId : undefined;
+  const selectedState = selectedId ? pol.policies[selectedId] : undefined;
+  const folderId = selectedState?.folderId;
   const [steps, setSteps] = useState<AutomationOperation[]>([]);
   const [backingFolder, setBackingFolder] = useState<WatchedFolder | null>(
     null,
@@ -313,6 +314,31 @@ export function PolicyDetailTakeover() {
       cancelled = true;
     };
   }, [folderId, reloadKey]);
+
+  // A policy authored in the portal arrives with a backend record but no local
+  // backing folder, so the effect above can't load its steps and the detail
+  // view would show an empty pipeline. Hydrate a backing folder from the backend
+  // record — its automation blob, or the stored steps for a portal-authored
+  // policy (ensurePolicyFolder is a no-op once a valid folder exists); it sets
+  // folderId, which re-runs the effect above to populate the view. The ref
+  // guards against a second hydration while the first is still in flight (before
+  // folderId propagates through state).
+  const { ensurePolicyFolder } = pol;
+  const hydratingRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!selectedId || !selectedState?.configured || selectedState.folderId)
+      return;
+    if (hydratingRef.current === selectedId) return;
+    hydratingRef.current = selectedId;
+    void ensurePolicyFolder(selectedId).finally(() => {
+      if (hydratingRef.current === selectedId) hydratingRef.current = null;
+    });
+  }, [
+    selectedId,
+    selectedState?.configured,
+    selectedState?.folderId,
+    ensurePolicyFolder,
+  ]);
 
   // Activity/stats come from the real backend runs the auto-run controller fires
   // on every upload (policyRunStore), filtered to this policy's category. The

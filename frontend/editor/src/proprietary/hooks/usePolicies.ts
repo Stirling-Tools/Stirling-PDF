@@ -9,6 +9,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
+import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import {
   loadPolicies,
   onPoliciesChange,
@@ -33,6 +34,7 @@ import {
   setPolicyEnabled,
   removePolicy,
 } from "@app/services/policyBackend";
+import { stepsToOperations } from "@app/services/policyPipeline";
 import type { PolicyToStore } from "@app/services/policyPipeline";
 import type {
   PoliciesByCategory,
@@ -67,6 +69,7 @@ export function usePolicies() {
   const [policies, setPolicies] = useState<PoliciesByCategory>(loadPolicies);
   const { config } = useAppConfig();
   const { isTeamLeader } = useSaaSTeam();
+  const { allTools } = useToolRegistry();
 
   useEffect(() => onPoliciesChange(() => setPolicies(loadPolicies())), []);
 
@@ -273,30 +276,39 @@ export function usePolicies() {
    * stored automation is used if present so the configured pipeline survives;
    * otherwise it falls back to the preset.
    */
-  const ensurePolicyFolder = useCallback(async (id: string) => {
-    const state = loadPolicies()[id];
-    const existing = state?.folderId;
-    // A healthy backing folder resolves to an automation; if it does, keep it.
-    if (existing && (await getPolicyAutomation(existing))) return existing;
-    const catalog = loadPolicyCatalog();
-    const category = catalog.categories.find((c) => c.id === id);
-    const config = catalog.configs[id];
-    if (!category || !config) return undefined;
-    // Stale/missing folder → recreate. Prefer the backend's stored automation
-    // (preserves the user's configured steps); else seed from the preset.
-    let operations = config.defaultOperations;
-    if (state?.backendId) {
-      const decoded = await fetchPoliciesByCategory()
-        .then((m) => m.get(id))
-        .catch(() => undefined);
-      if (decoded?.automation?.operations?.length) {
-        operations = decoded.automation.operations;
+  const ensurePolicyFolder = useCallback(
+    async (id: string) => {
+      const state = loadPolicies()[id];
+      const existing = state?.folderId;
+      // A healthy backing folder resolves to an automation; if it does, keep it.
+      if (existing && (await getPolicyAutomation(existing))) return existing;
+      const catalog = loadPolicyCatalog();
+      const category = catalog.categories.find((c) => c.id === id);
+      const config = catalog.configs[id];
+      if (!category || !config) return undefined;
+      // Stale/missing folder → recreate, preserving the configured pipeline.
+      // Prefer the backend's automation blob (the editor's own lossless
+      // round-trip); else rebuild from the stored steps — the case for a policy
+      // authored in the portal, which persists steps but not the blob; else fall
+      // back to the preset.
+      let operations = config.defaultOperations;
+      if (state?.backendId) {
+        const decoded = await fetchPoliciesByCategory()
+          .then((m) => m.get(id))
+          .catch(() => undefined);
+        if (decoded?.automation?.operations?.length) {
+          operations = decoded.automation.operations;
+        } else if (decoded?.steps?.length) {
+          const fromSteps = stepsToOperations(decoded.steps, allTools);
+          if (fromSteps.length) operations = fromSteps;
+        }
       }
-    }
-    const folder = await createPolicyFolder(category, operations);
-    updatePolicy(id, { folderId: folder.id });
-    return folder.id;
-  }, []);
+      const folder = await createPolicyFolder(category, operations);
+      updatePolicy(id, { folderId: folder.id });
+      return folder.id;
+    },
+    [allTools],
+  );
 
   // Only a team leader (SaaS) or a global admin (self-hosted) may configure;
   // everyone else gets the read-only surface. Login disabled (single-user)
