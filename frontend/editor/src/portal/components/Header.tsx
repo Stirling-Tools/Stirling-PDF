@@ -4,13 +4,7 @@ import { useAuth } from "@app/auth";
 import { useTheme } from "@portal/contexts/ThemeContext";
 import { useTier, TIER_INFO, type Tier } from "@portal/contexts/TierContext";
 import { useView } from "@portal/contexts/ViewContext";
-import { useUI } from "@portal/contexts/UIContext";
-import {
-  SearchIcon,
-  SunIcon,
-  MoonIcon,
-  ChevronDownIcon,
-} from "@portal/components/icons";
+import { SunIcon, MoonIcon, ChevronDownIcon } from "@portal/components/icons";
 import { NotificationsDropdown } from "@portal/components/NotificationsDropdown";
 import { MocksToggle } from "@portal/components/MocksToggle";
 import "@portal/components/Header.css";
@@ -116,7 +110,6 @@ function UserMenu() {
 
 export function Header() {
   const { activeView } = useView();
-  const { openSearch } = useUI();
   const { t } = useTranslation();
   return (
     <header className="portal-header">
@@ -125,22 +118,6 @@ export function Header() {
           {t(`portal.nav.${activeView}`)}
         </span>
       </div>
-
-      <Button
-        type="button"
-        variant="quiet"
-        className="portal-header__search"
-        aria-label={t("portal.shell.header.search")}
-        onClick={openSearch}
-      >
-        <SearchIcon size={14} />
-        <span className="portal-header__search-placeholder">
-          {t("portal.shell.header.searchPlaceholder")}
-        </span>
-        <span className="portal-header__search-kbd" aria-hidden>
-          ⌘K
-        </span>
-      </Button>
 
       <div className="portal-header__right">
         <MocksToggle />

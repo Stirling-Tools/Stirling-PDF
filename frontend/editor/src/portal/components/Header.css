@@ -25,41 +25,6 @@
   color: var(--color-header-text);
 }
 
-/* Search trigger */
-.portal-header__search {
-  flex: 0 1 20rem;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.375rem 0.625rem;
-  background: var(--color-search-bg);
-  border: 1px solid var(--color-search-border);
-  border-radius: var(--radius-md);
-  color: var(--color-search-text);
-  font-size: 0.75rem;
-  transition:
-    border-color var(--motion-fast),
-    background var(--motion-fast);
-}
-.portal-header__search:hover {
-  border-color: var(--color-search-border-hover);
-}
-
-.portal-header__search-placeholder {
-  flex: 1 1 auto;
-  text-align: left;
-}
-
-.portal-header__search-kbd {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  padding: 0.0625rem 0.25rem;
-  border-radius: var(--radius-xs);
-  background: var(--color-bg-muted);
-  color: var(--color-text-4);
-}
-
 /* Right cluster */
 .portal-header__right {
   flex: 0 0 auto;
