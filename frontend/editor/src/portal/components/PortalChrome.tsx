@@ -6,7 +6,7 @@ import { useUI } from "@portal/contexts/UIContext";
 import { AppShell } from "@portal/components/AppShell";
 import { AssistantMount } from "@portal/components/AssistantMount";
 import { SearchModal } from "@portal/components/SearchModal";
-import { SettingsModal } from "@portal/components/SettingsModal";
+import { PortalSettingsHost } from "@portal/components/PortalSettingsHost";
 import { ViewRouter } from "@portal/ViewRouter";
 
 /**
@@ -33,18 +33,6 @@ function GlobalShortcuts() {
   }, [toggleSearch, closeSearch]);
 
   return null;
-}
-
-/** Bridges the Settings modal's open/close props to UIContext state. */
-function SettingsHost() {
-  const { settingsOpen, settingsInitialSection, closeSettings } = useUI();
-  return (
-    <SettingsModal
-      open={settingsOpen}
-      onClose={closeSettings}
-      initialSection={settingsInitialSection}
-    />
-  );
 }
 
 /**
@@ -80,7 +68,7 @@ export function PortalChrome() {
       </ToolRegistryProvider>
       <AssistantMount />
       <SearchModal />
-      <SettingsHost />
+      <PortalSettingsHost />
     </>
   );
 }

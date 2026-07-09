@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.input.ResolvedInput;
+import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.Policy;
@@ -27,7 +28,8 @@ import stirling.software.proprietary.policy.source.SourceStore;
 /**
  * Turns a policy's referenced sources into runs: each {@code sourceId} is resolved live to its
  * persisted {@link Source}, then to an {@link InputSpec}. Triggers decide <em>when</em> and call
- * {@link #run(Policy)}; the controller uses the supplied-input and ad-hoc entry points.
+ * {@link #run(Policy)}; the controller uses the supplied-input and ad-hoc entry points. A {@link
+ * SweepKind#FULL} sweep also reconciles the processed-file ledger against what is present.
  */
 @Slf4j
 @Service
@@ -39,6 +41,12 @@ public class PolicyRunner {
     private final List<InputSource> inputSources;
     private final SourceStore sourceStore;
     private final SourceDocCounter docCounter;
+    private final ProcessedLedger processedLedger;
+
+    /** Full-listing sweep: resolve every source, then reconcile the ledger. */
+    public List<String> run(Policy policy) {
+        return run(policy, SweepKind.FULL);
+    }
 
     /**
      * Trigger entry point. Pulls every referenced source; each yielded unit becomes its own run so
@@ -47,15 +55,21 @@ public class PolicyRunner {
      * rest. Returns the ids of the runs it started (empty when sources yielded no work), so a
      * manual trigger can report back which runs to follow.
      */
-    public List<String> run(Policy policy) {
+    public List<String> run(Policy policy, SweepKind sweep) {
+        long sweepStart = System.currentTimeMillis();
+        PolicySweep context = new PolicySweep(policy.id(), sweep, processedLedger);
+        List<String> runIds = new ArrayList<>();
         List<String> sourceIds = policy.sourceIds();
         if (sourceIds.isEmpty()) {
-            return List.of(startRun(policy, PolicyInputs.of(List.of()), unused -> {}));
+            // Generator pipeline: one run with no input. Still fall through to the cleanup
+            // below so rows recorded for its folder outputs are pruned like anything else,
+            // instead of accumulating until the policy is deleted.
+            runIds.add(startRun(policy, PolicyInputs.of(List.of()), unused -> {}));
         }
-        List<String> runIds = new ArrayList<>();
         for (String sourceId : sourceIds) {
             Source source = sourceStore.get(sourceId).orElse(null);
             if (source == null) {
+                // No veto: a deleted source's rows should age out via the cleanup below.
                 log.warn("Policy {} references missing source {}; skipping", policy.id(), sourceId);
                 continue;
             }
@@ -65,9 +79,21 @@ public class PolicyRunner {
                         sourceId,
                         source.name(),
                         policy.id());
+                // Veto: a paused source's files cannot be stamped, so they must not be pruned.
+                context.vetoCleanup();
                 continue;
             }
-            runIds.addAll(pullAndRun(policy, sourceId, source.toInputSpec()));
+            runIds.addAll(pullAndRun(policy, sourceId, source.toInputSpec(), context));
+        }
+        if (context.cleanupAllowed()) {
+            processedLedger.markSeen(policy.id(), context.presentIdentities());
+            int removed = processedLedger.deleteUnseen(policy.id(), sweepStart);
+            if (removed > 0) {
+                log.debug(
+                        "Pruned {} ledger row(s) for files no longer present (policy {})",
+                        removed,
+                        policy.id());
+            }
         }
         return runIds;
     }
@@ -86,26 +112,33 @@ public class PolicyRunner {
 
     /**
      * Resolves the source and starts a run per unit; records how many documents the source fed and
-     * returns the ids of the runs started.
+     * returns the ids of the runs started. Any source that could not be listed completely vetoes
+     * this sweep's ledger cleanup.
      */
-    private List<String> pullAndRun(Policy policy, String sourceId, InputSpec spec) {
+    private List<String> pullAndRun(
+            Policy policy, String sourceId, InputSpec spec, PolicySweep context) {
         InputSource source = sourceFor(spec);
         if (source == null) {
             log.warn(
                     "No input source for type '{}' (policy {}); skipping",
                     spec.type(),
                     policy.id());
+            context.vetoCleanup();
             return List.of();
+        }
+        if (!source.listsExhaustively()) {
+            context.vetoCleanup();
         }
         List<ResolvedInput> work;
         try {
-            work = source.resolve(spec);
+            work = source.resolve(spec, context);
         } catch (IOException | RuntimeException e) {
             log.warn(
                     "Failed to resolve source '{}' for policy {}: {}",
                     spec.type(),
                     policy.id(),
                     e.getMessage());
+            context.vetoCleanup();
             return List.of();
         }
         List<String> runIds = new ArrayList<>();

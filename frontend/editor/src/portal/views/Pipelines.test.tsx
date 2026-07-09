@@ -48,14 +48,17 @@ const RESPONSE: PipelinesOverviewResponse = {
   ],
 };
 
-function renderView(initial = "/portal/pipelines") {
+function renderView(initial = "/processor/pipelines") {
   return render(
     <MemoryRouter initialEntries={[initial]}>
       <Routes>
-        <Route path="/portal/pipelines" element={<Pipelines />} />
-        <Route path="/portal/pipelines/new" element={<div>builder new</div>} />
+        <Route path="/processor/pipelines" element={<Pipelines />} />
         <Route
-          path="/portal/pipelines/:id"
+          path="/processor/pipelines/new"
+          element={<div>builder new</div>}
+        />
+        <Route
+          path="/processor/pipelines/:id"
           element={<div>pipeline page</div>}
         />
       </Routes>
