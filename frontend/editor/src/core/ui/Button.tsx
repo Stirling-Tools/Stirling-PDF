@@ -9,7 +9,9 @@ import type {
 import {
   CONTROL_HEIGHT,
   CONTROL_PADDING,
+  type ControlFontSize,
   type ControlPadding,
+  resolveFontSize,
 } from "@app/ui/controlSizes";
 import "@app/ui/Button.css";
 
@@ -27,11 +29,11 @@ export type ButtonAccent =
   | "warning";
 export type ButtonSize = "sm" | "md" | "lg" | "xl";
 /**
- * Text-size scale, independent of `size` (which sets the control height). Unset
- * inherits the `size`-derived default — i.e. `md` for a default button — so
- * existing buttons are unchanged; set it to size the label on its own axis.
+ * Relative label-size scale, applied on top of the `size`-derived base. `md`
+ * leaves the base unchanged; other values scale it up/down. Unset inherits
+ * Mantine's size default, so existing buttons are unchanged.
  */
-export type ButtonFontSize = "xs" | "sm" | "md" | "lg" | "xl";
+export type ButtonFontSize = ControlFontSize;
 /** `between` pins leftSection/label/rightSection to left/center/right (toolbar rows). */
 export type ButtonJustify = "center" | "start" | "end" | "between";
 export type ButtonShape = "default" | "circle" | "pill";
@@ -40,6 +42,8 @@ type ButtonOwnProps = {
   variant?: ButtonVariant;
   accent?: ButtonAccent;
   size?: ButtonSize;
+  /** Label size relative to `size`. Defaults to the `size`-derived value. */
+  fontSize?: ButtonFontSize;
   /** Padding override for both axes */
   p?: ControlPadding;
   /** Horizontal-padding override  */
@@ -119,6 +123,7 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
       variant = "primary",
       accent = "default",
       size = "sm",
+      fontSize,
       p,
       px,
       py,
@@ -218,6 +223,10 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
         style={{
           ...(accentVars as CSSProperties),
           ...({ "--button-height": CONTROL_HEIGHT[size] } as CSSProperties),
+          // Relative label size, scaled off the `size` base (unset → Mantine default).
+          ...(fontSize
+            ? ({ "--button-fz": resolveFontSize(size, fontSize) } as CSSProperties)
+            : {}),
           // Padding overrides (inline to beat Mantine's size-based value).
           // px → Mantine's own var; py → our --sui-btn-py (Mantine has no vertical padding).
           ...(padX
