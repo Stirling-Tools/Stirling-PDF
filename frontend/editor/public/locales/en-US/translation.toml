@@ -7327,6 +7327,7 @@ showMore = "Show more"
 sources = "Sources"
 
 [portal.policies.detail.actions]
+clearHistory = "Clear processed history"
 delete = "Delete"
 editSettings = "Edit settings"
 pause = "Pause"
@@ -7896,12 +7897,27 @@ helperText = "Absolute path Stirling watches for files to process."
 label = "Directory path"
 placeholder = "/data/incoming"
 
+[portal.sources.types.folder.fields.identity]
+helperText = "Content check reads each changed file, so renames and touches that don't alter content are not reprocessed."
+label = "Change detection"
+
+[portal.sources.types.folder.fields.identity.options]
+hash = "Size, date and content check"
+stat = "Size and date modified"
+
 [portal.sources.types.folder.fields.mode]
 label = "Read mode"
 
 [portal.sources.types.folder.fields.mode.options]
 consume = "Consume: process each file once"
 snapshot = "Snapshot: re-read the folder every run"
+
+[portal.sources.types.folder.fields.recursive]
+label = "Folder depth"
+
+[portal.sources.types.folder.fields.recursive.options]
+all = "Include subfolders"
+top = "Top level only"
 
 [portal.sources.types.unknown]
 label = "Source"
