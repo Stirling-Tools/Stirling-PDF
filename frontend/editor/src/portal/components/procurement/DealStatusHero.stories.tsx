@@ -9,6 +9,7 @@ const base: ProcurementSnapshot = {
   trialEndsAt: "2026-07-09T00:00:00Z",
   trialExtensionsUsed: 0,
   licensed: false,
+  licenseKey: null,
   latestQuote: null,
 };
 
@@ -18,6 +19,7 @@ const meta: Meta<typeof DealStatusHero> = {
   component: DealStatusHero,
   parameters: { layout: "padded" },
   args: {
+    canSchedule: true,
     onExpand: () => {},
     onKeyDocs: () => {},
     onInvite: () => {},

@@ -100,6 +100,14 @@ export const AUDIT_TONE: Record<AuditStatus, StatusTone> = {
   info: "info",
 };
 
+// Human labels for the status badge: danger/warning are tones, not outcomes (read "Error").
+export const AUDIT_STATUS_LABEL: Record<AuditStatus, string> = {
+  success: "Success",
+  warning: "Warning",
+  danger: "Error",
+  info: "Info",
+};
+
 export const AUDIT_CAT_LABEL: Record<AuditCategory, string> = {
   auth: "Auth",
   config: "Config",
