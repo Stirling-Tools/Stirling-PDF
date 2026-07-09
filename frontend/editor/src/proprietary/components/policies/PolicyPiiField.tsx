@@ -50,6 +50,7 @@ export function PolicyPiiField({
   return (
     <MultiSelect
       inputSize="sm"
+      aria-label={t("policies.pii.fieldLabel", "PII to redact")}
       placeholder={t("policies.pii.placeholder", "Select PII types")}
       data={PII_PRESETS.map((p) => ({
         value: p.value,
