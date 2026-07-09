@@ -23,7 +23,7 @@ const meta: Meta<typeof DealStatusHero> = {
   args: {
     canSchedule: true,
     onExpand: () => {},
-    onKeyDocs: () => {},
+    onLicense: () => {},
     onInvite: () => {},
     onSchedule: () => {},
     onManageTrial: () => {},

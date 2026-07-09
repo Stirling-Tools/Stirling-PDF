@@ -1,9 +1,11 @@
 import { apiClient } from "@portal/api/http";
 import { getSupabaseClient } from "@app/auth/supabase/supabaseClient";
 import type { Tier } from "@portal/contexts/TierContext";
+import { JOURNEY } from "@portal/mocks/procurement";
 import type {
   DealStage,
   DocAction,
+  JourneyStep,
   ProcurementResponse,
 } from "@portal/mocks/procurement";
 
@@ -22,7 +24,27 @@ export type {
   SupportingGroup,
   TrialInfo,
 } from "@portal/mocks/procurement";
-export { JOURNEY } from "@portal/mocks/procurement";
+export { JOURNEY };
+
+/**
+ * The commercial flow's stepper stages. The real backend collapses quote + agreement into a single
+ * accept step — accepting the issued quote is accepting the agreement — so the flow shows one fewer
+ * step than the mock ledger's {@link JOURNEY}. Derived from JOURNEY so the shared labels stay in one
+ * place; the "quote" step is relabelled to cover the agreement.
+ */
+export const FLOW_JOURNEY: JourneyStep[] = JOURNEY.filter(
+  (s) => s.stage !== "security",
+).map((s) =>
+  s.stage === "quote"
+    ? {
+        ...s,
+        label: "Quote & agreement",
+        blurb:
+          "Review committed-volume pricing, the term, and the agreement, then accept.",
+        gatingAction: "Accept & subscribe",
+      }
+    : s,
+);
 
 /** GET /v1/procurement?tier=…, the deal, journey, ledger and supporting pool. */
 export async function fetchProcurement(

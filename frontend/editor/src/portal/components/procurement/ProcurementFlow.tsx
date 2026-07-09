@@ -2,20 +2,18 @@ import { useTranslation } from "react-i18next";
 import { Banner, Button, EmptyState, Skeleton } from "@app/ui";
 import { useUI } from "@portal/contexts/UIContext";
 import { useLinkedAccountEmail } from "@portal/hooks/useLinkedAccountEmail";
-import { JOURNEY } from "@portal/api/procurement";
+import { FLOW_JOURNEY } from "@portal/api/procurement";
 import { ProcurementAgreement } from "@portal/components/procurement/ProcurementAgreement";
 import {
-  KeyDocumentsModal,
+  LicenseModal,
   ScheduleCallModal,
   TrialManageModal,
   TrialSetupModal,
 } from "@portal/components/procurement/ProcurementExtras";
 import { ProcurementModal } from "@portal/components/procurement/ProcurementModal";
 import {
-  LicensePanel,
   LiveStageCard,
   PaymentStageCard,
-  QuoteMilestoneCard,
 } from "@portal/components/procurement/ProcurementStages";
 import { QuoteBuilder } from "@portal/components/procurement/QuoteBuilder";
 import { StageStepper } from "@portal/components/procurement/StageStepper";
@@ -23,7 +21,7 @@ import type { ProcurementController } from "@portal/components/procurement/usePr
 
 /**
  * The procurement takeover flow: the full-screen journey modal (quote builder →
- * milestone → agreement → payment → live) plus the key-documents, schedule-call,
+ * quote & agreement → payment → live) plus the licence-key, schedule-call, trial-setup,
  * and trial-management modals. Driven entirely by a shared ProcurementController
  * so it can sit next to a deal-status hero rendered elsewhere (e.g. inside the
  * tier hero card on Home).
@@ -61,9 +59,7 @@ export function ProcurementFlow({
     onExtendTrial,
     onReset,
     onGenerate,
-    onAcceptQuote,
     onAgree,
-    onGoLive,
     onDownloadPdf,
     onDownloadOfflineLicense,
   } = controller;
@@ -108,7 +104,7 @@ export function ProcurementFlow({
         {isLinked && started && (
           <>
             <div className="portal-proc__modal-stepper">
-              <StageStepper journey={JOURNEY} currentStage={stage!} />
+              <StageStepper journey={FLOW_JOURNEY} currentStage={stage!} />
             </div>
 
             {(editing ||
@@ -121,50 +117,32 @@ export function ProcurementFlow({
               />
             )}
 
-            {!editing && isIssued && stage === "quote" && latest && (
-              <QuoteMilestoneCard
-                quote={latest}
-                busy={busy}
-                downloading={downloading}
-                onAccept={onAcceptQuote}
-                onDownload={onDownloadPdf}
-                onEdit={() => setEditing(true)}
-              />
-            )}
-
-            {!editing && stage === "security" && latest && (
-              <ProcurementAgreement
-                quote={latest}
-                busy={busy}
-                onAgree={onAgree}
-              />
-            )}
+            {/* Quote + agreement are one step: review the itemised quote and the agreement, then
+                accept straight into a committed subscription. Once accepted you can't go back.
+                ("security" is the retired agreement stage — still handled so an older deal that
+                stopped there isn't left blank.) */}
+            {!editing &&
+              isIssued &&
+              (stage === "quote" || stage === "security") &&
+              latest && (
+                <ProcurementAgreement
+                  quote={latest}
+                  busy={busy}
+                  downloading={downloading}
+                  onAgree={onAgree}
+                  onDownload={onDownloadPdf}
+                  onEdit={() => setEditing(true)}
+                />
+              )}
 
             {!editing && stage === "procurement" && latest && (
               <PaymentStageCard
                 invoiceUrl={latest.invoiceUrl}
                 invoicePdf={invoicePdf}
-                busy={busy}
-                onSimulate={onGoLive}
               />
             )}
 
             {!editing && stage === "active" && <LiveStageCard />}
-
-            {data?.licenseKey && (
-              <LicensePanel
-                licenseKey={data.licenseKey}
-                offlineAvailable={latest?.config.deployment === "airgap"}
-                downloadingLicense={downloadingLicense}
-                onDownloadOffline={onDownloadOfflineLicense}
-              />
-            )}
-
-            <div className="portal-proc__reset">
-              <button type="button" onClick={onReset} disabled={busy}>
-                {t("portal.procurement.reset")}
-              </button>
-            </div>
           </>
         )}
       </ProcurementModal>
@@ -175,10 +153,16 @@ export function ProcurementFlow({
         busy={busy}
         onConfirm={onConfirmSetup}
       />
-      <KeyDocumentsModal
-        open={extra === "docs"}
-        onClose={() => setExtra(null)}
-      />
+      {data?.licenseKey && (
+        <LicenseModal
+          open={extra === "license"}
+          onClose={() => setExtra(null)}
+          licenseKey={data.licenseKey}
+          offlineAvailable={latest?.config.deployment === "airgap"}
+          downloadingLicense={downloadingLicense}
+          onDownloadOffline={onDownloadOfflineLicense}
+        />
+      )}
       <ScheduleCallModal
         open={extra === "schedule"}
         onClose={() => setExtra(null)}

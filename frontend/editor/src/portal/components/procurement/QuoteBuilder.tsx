@@ -47,7 +47,9 @@ export function QuoteBuilder({
   const [step, setStep] = useState(0);
   const [cfg, setCfg] = useState<QuoteConfigInput>(
     initial ?? {
-      volume: seats > 0 ? estimateVolume(seats) : 1_000_000,
+      // Users-first: with no seats from the trial, leave volume empty so entering the team size
+      // auto-fills it (rather than pre-seeding a figure that hides the users → volume estimate).
+      volume: seats > 0 ? estimateVolume(seats) : 0,
       users: Math.max(0, seats),
       intensity: 4, // Governed — the default posture per the pricing alignment
       deployment,
@@ -169,7 +171,9 @@ export function QuoteBuilder({
                     key={p.key}
                     on={cfg.intensity === p.intensity}
                     title={t(`portal.procurement.builder.posture_${p.key}`)}
-                    sub={t(`portal.procurement.builder.posture_${p.key}Sub`)}
+                    sub={`${t("portal.procurement.builder.posture_count", {
+                      count: p.intensity,
+                    })} · ${t(`portal.procurement.builder.posture_${p.key}Sub`)}`}
                     onClick={() => set("intensity", p.intensity)}
                   />
                 ))}

@@ -15,11 +15,18 @@ import "@portal/views/Procurement.css";
 export function ProcurementAgreement({
   quote,
   busy,
+  downloading,
   onAgree,
+  onDownload,
+  onEdit,
 }: {
   quote: QuoteResult;
   busy: boolean;
+  downloading: boolean;
+  /** Accept the quote straight into a committed subscription (this is also the agreement). */
   onAgree: () => void;
+  onDownload: () => void;
+  onEdit: () => void;
 }) {
   const { t } = useTranslation();
   const [checked, setChecked] = useState(false);
@@ -132,6 +139,12 @@ export function ProcurementAgreement({
           onClick={onAgree}
         >
           {t("portal.procurement.agreement.agreeCta")}
+        </Button>
+        <Button variant="secondary" loading={downloading} onClick={onDownload}>
+          {t("portal.procurement.milestone.download")}
+        </Button>
+        <Button variant="tertiary" onClick={onEdit}>
+          {t("portal.procurement.milestone.edit")}
         </Button>
       </div>
     </Card>

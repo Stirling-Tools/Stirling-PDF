@@ -8,16 +8,19 @@ import {
   fetchLicenseFile,
   fetchQuotePdf,
   fetchSnapshot,
-  goLive,
   issueQuote,
   resetProcurement,
-  startAgreement,
   startTrial,
   type ProcurementSnapshot,
   type QuoteResult,
 } from "@portal/api/procurement";
 
-export type ProcurementExtra = null | "docs" | "schedule" | "trial" | "setup";
+export type ProcurementExtra =
+  | null
+  | "license"
+  | "schedule"
+  | "trial"
+  | "setup";
 
 /**
  * Owns the procurement deal state and actions shared by the Home hero footer
@@ -53,9 +56,7 @@ export interface ProcurementController {
   onExtendTrial: () => void;
   onReset: () => void;
   onGenerate: (draft: QuoteResult) => void;
-  onAcceptQuote: () => void;
   onAgree: () => void;
-  onGoLive: () => void;
   onDownloadPdf: () => Promise<void>;
   onDownloadOfflineLicense: () => Promise<void>;
 }
@@ -122,15 +123,14 @@ export function useProcurement(autoOpen = false): ProcurementController {
       await issueQuote(draft.quoteId);
       setEditing(false);
     });
-  // Milestone → agreement (security) stage; then agreeing accepts into a subscription.
-  const onAcceptQuote = () => run(startAgreement);
+  // Quote + agreement are one step now: agreeing accepts the issued quote straight into a
+  // committed subscription (Stripe), and provisioning upgrades the licence server-side.
   const onAgree = () =>
     run(async () => {
       if (!latest) return;
       const res = await acceptQuote(latest.quoteId);
       setInvoicePdf(res.invoicePdf);
     });
-  const onGoLive = () => run(goLive);
 
   async function onDownloadPdf() {
     if (!latest) return;
@@ -208,9 +208,7 @@ export function useProcurement(autoOpen = false): ProcurementController {
     onExtendTrial,
     onReset,
     onGenerate,
-    onAcceptQuote,
     onAgree,
-    onGoLive,
     onDownloadPdf,
     onDownloadOfflineLicense,
   };
