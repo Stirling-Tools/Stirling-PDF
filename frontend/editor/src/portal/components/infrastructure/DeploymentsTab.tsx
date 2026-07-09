@@ -21,9 +21,10 @@ import { TableSkeleton } from "@portal/components/infrastructure/TableSkeleton";
 import {
   DEPLOY_LABEL,
   DEPLOY_TONE,
+  ENVIRONMENT_LABEL,
   pct,
+  REGION_LABEL,
   REGION_TONE,
-  titleCase,
 } from "@portal/components/infrastructure/infraFormat";
 
 export function DeploymentsTab() {
@@ -79,7 +80,7 @@ export function DeploymentsTab() {
           size="sm"
           pulse={r.status === "healthy"}
         >
-          {titleCase(r.status)}
+          {t(REGION_LABEL[r.status])}
         </StatusBadge>
       ),
     },
@@ -150,7 +151,7 @@ export function DeploymentsTab() {
           }
           size="sm"
         >
-          {d.environment}
+          {t(ENVIRONMENT_LABEL[d.environment])}
         </Chip>
       ),
     },
@@ -164,7 +165,7 @@ export function DeploymentsTab() {
       header: t("portal.infrastructure.deployments.deployColumns.status"),
       render: (d) => (
         <StatusBadge tone={DEPLOY_TONE[d.status]} size="sm">
-          {DEPLOY_LABEL[d.status]}
+          {t(DEPLOY_LABEL[d.status])}
         </StatusBadge>
       ),
     },

@@ -185,7 +185,7 @@ export function SecurityTab() {
                 tone={KEY_MODE_TONE[data.keyManagement.mode]}
                 size="sm"
               >
-                {KEY_MODE_LABEL[data.keyManagement.mode]}
+                {t(KEY_MODE_LABEL[data.keyManagement.mode])}
               </StatusBadge>
             </div>
             {/* Rotation is a privileged backend action; disabled where Stirling
@@ -259,7 +259,7 @@ export function SecurityTab() {
               <div className="portal-infra__cert-head">
                 <span className="portal-infra__cell-strong">{c.name}</span>
                 <StatusBadge tone={CERT_TONE[c.status]} size="sm">
-                  {CERT_LABEL[c.status]}
+                  {t(CERT_LABEL[c.status])}
                 </StatusBadge>
               </div>
               <p className="portal-infra__cert-detail">{c.detail}</p>
@@ -283,7 +283,7 @@ export function SecurityTab() {
               <div className="portal-infra__cert-head">
                 <span className="portal-infra__cell-strong">{a.name}</span>
                 <StatusBadge tone={ATTESTATION_TONE[a.status]} size="sm">
-                  {ATTESTATION_LABEL[a.status]}
+                  {t(ATTESTATION_LABEL[a.status])}
                 </StatusBadge>
               </div>
               <Chip size="sm">{a.framework}</Chip>

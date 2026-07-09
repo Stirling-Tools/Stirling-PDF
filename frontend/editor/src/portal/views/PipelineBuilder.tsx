@@ -643,7 +643,9 @@ export function PipelineBuilder() {
               >
                 <Input
                   value={outputDirectory}
-                  placeholder="/data/processed"
+                  placeholder={t(
+                    "portal.pipelines.composer.directoryPlaceholder",
+                  )}
                   onChange={(e) => setOutputDirectory(e.target.value)}
                 />
               </FormField>

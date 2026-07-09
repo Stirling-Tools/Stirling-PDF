@@ -126,7 +126,10 @@ export function CreateKeyModal({
               {PERMISSION_OPTS.map((p) => (
                 <Checkbox
                   key={p}
-                  label={p}
+                  label={t(
+                    `portal.infrastructure.apiKeyPermission.${p.toLowerCase()}`,
+                    p,
+                  )}
                   checked={perms.includes(p)}
                   onChange={() => togglePerm(p)}
                 />
@@ -141,7 +144,9 @@ export function CreateKeyModal({
             <Input
               value={ips}
               onChange={(e) => setIps(e.target.value)}
-              placeholder="52.14.0.0/16, 203.0.113.7/32"
+              placeholder={t(
+                "portal.infrastructure.createKey.ipAllowlistPlaceholder",
+              )}
             />
           </FormField>
         </div>

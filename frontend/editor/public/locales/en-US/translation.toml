@@ -6824,6 +6824,11 @@ version = "Version"
 description = "Deploy a target and pair it to see live instance health here."
 title = "No instances reporting"
 
+[portal.editorAdmin.health.target]
+cloud = "Cloud"
+docker = "Docker"
+kubernetes = "K8s"
+
 [portal.editorAdmin.offlineActivation]
 enterpriseTag = "Enterprise"
 generateButton = "Generate offline bundle"
@@ -7040,6 +7045,7 @@ createKey = "Create key"
 done = "Done"
 ipAllowlistHelper = "Comma-separated CIDR ranges. Leave blank to allow any IP."
 ipAllowlistLabel = "IP allowlist"
+ipAllowlistPlaceholder = "52.14.0.0/16, 203.0.113.7/32"
 keyNameLabel = "Key name"
 keyNamePlaceholder = "e.g. Production · ingest"
 permissionsLabel = "Permissions"
@@ -7252,6 +7258,82 @@ heading = "Total usage"
 progressLabel = "Storage used"
 subheading = "Storage consumed across all connected providers."
 
+# Fixed-enum label maps rendered via t(MAP[value]) in the infrastructure tabs.
+[portal.infrastructure.apiKeyPermission]
+admin = "Admin"
+read = "Read"
+write = "Write"
+
+[portal.infrastructure.attestationLabel]
+attested = "Attested"
+inScope = "In scope"
+notApplicable = "N/A"
+
+[portal.infrastructure.auditCatLabel]
+auth = "Auth"
+config = "Config"
+elevation = "Elevation"
+processing = "Processing"
+security = "Security"
+
+[portal.infrastructure.auditStatusLabel]
+danger = "Error"
+info = "Info"
+success = "Success"
+warning = "Warning"
+
+[portal.infrastructure.certLabel]
+certified = "Certified"
+inProgress = "In progress"
+notStarted = "Not started"
+
+[portal.infrastructure.deployLabel]
+live = "Live"
+queued = "Queued"
+rolledBack = "Rolled back"
+rolling = "Rolling out"
+
+[portal.infrastructure.environmentLabel]
+canary = "Canary"
+production = "Production"
+staging = "Staging"
+
+[portal.infrastructure.keyLabel]
+active = "Active"
+revoked = "Revoked"
+rotateSoon = "Rotate soon"
+
+[portal.infrastructure.keyModeLabel]
+byok = "BYOK"
+hyok = "HYOK"
+managed = "Stirling-managed"
+
+[portal.infrastructure.modelLabel]
+active = "Active"
+degraded = "Degraded"
+disabled = "Disabled"
+
+[portal.infrastructure.modelProviderLabel]
+anthropic = "Anthropic"
+onPrem = "On-prem"
+openai = "OpenAI"
+stirling = "Stirling"
+
+[portal.infrastructure.modelTypeLabel]
+classification = "Classification"
+extraction = "Extraction"
+llm = "LLM"
+ocr = "OCR"
+
+[portal.infrastructure.regionLabel]
+degraded = "Degraded"
+down = "Down"
+healthy = "Healthy"
+
+[portal.infrastructure.models.cost]
+perCall = "{{price}}/call"
+perThousand = "{{price}}/1k"
+
 [portal.infrastructure.tabs]
 apiKeys = "API Keys"
 audit = "Audit Logs"
@@ -7329,6 +7411,7 @@ chainEmpty = "Add a tool to start building your pipeline."
 create = "Create pipeline"
 directory = "Output folder"
 directoryHelp = "Absolute path on the server. Must be within the configured allowed folders."
+directoryPlaceholder = "/data/processed"
 editingUnsupported = "Displaying these tool params for editing is not supported yet."
 moveDown = "Move down"
 moveUp = "Move up"
@@ -7809,6 +7892,56 @@ blurb = "Evaluate Stirling against your documents and workflows."
 gatingAction = "Build your quote"
 label = "Trial"
 
+[portal.procurement.keyDocs]
+oneTimeFee = " · one-time {{amount}}"
+subtitle = "Everything for each stage of your rollout, in one place."
+title = "Key documents"
+
+[portal.procurement.keyDocs.docs.baa]
+name = "Business Associate Agreement"
+sub = "HIPAA · available on request"
+
+[portal.procurement.keyDocs.docs.bankTransfer]
+name = "Bank transfer instructions"
+sub = "Wire details for your AP team"
+
+[portal.procurement.keyDocs.docs.coi]
+name = "Certificate of Insurance"
+sub = "Cyber + E&O · current policy"
+
+[portal.procurement.keyDocs.docs.formalQuote]
+name = "Formal quote"
+sub = "Built to your volume, term, and service level"
+
+[portal.procurement.keyDocs.docs.msa]
+name = "Master Services Agreement"
+sub = "One signature — MSA, order form, EULA, and DPA combined"
+
+[portal.procurement.keyDocs.docs.purchaseOrder]
+name = "Purchase order"
+sub = "Issuing a PO? Upload it and we invoice against it"
+
+[portal.procurement.keyDocs.docs.securityReview]
+name = "Custom security review"
+sub = "We complete your questionnaire and join your review call"
+
+[portal.procurement.keyDocs.docs.soc2]
+name = "SOC 2 Type II report"
+sub = "Audited · NDA-gated"
+
+[portal.procurement.keyDocs.docs.w9]
+name = "IRS Form W-9"
+sub = "Stirling PDF Inc."
+
+[portal.procurement.keyDocs.groups]
+evaluation = "Supporting your evaluation"
+yourDeal = "Your deal"
+
+[portal.procurement.keyDocs.status]
+action = "Action needed"
+available = "Download"
+request = "Request"
+
 [portal.procurement.license]
 copied = "Copied"
 copy = "Copy key"
@@ -8069,6 +8202,10 @@ title = "Session expired"
 
 [portal.users]
 title = "Users"
+
+[portal.users.seats]
+limited = "{{used}} / {{limit}}"
+unlimited = "{{used}} · Unlimited"
 
 [portal.users.roles]
 subtitle = "Every role exists on every plan — what each one can do is fixed across the org."

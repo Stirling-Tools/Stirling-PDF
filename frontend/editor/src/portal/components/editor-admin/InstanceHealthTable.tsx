@@ -16,9 +16,9 @@ import {
 } from "@portal/api/editorDeploy";
 
 const TARGET_LABEL: Record<EditorInstance["target"], string> = {
-  cloud: "Cloud",
-  docker: "Docker",
-  kubernetes: "K8s",
+  cloud: "portal.editorAdmin.health.target.cloud",
+  docker: "portal.editorAdmin.health.target.docker",
+  kubernetes: "portal.editorAdmin.health.target.kubernetes",
 };
 
 /** Map the target palette tone onto the shared Chip accent set. */
@@ -48,7 +48,7 @@ export function InstanceHealthTable({ instances }: Props) {
               size="sm"
               accent={TARGET_CHIP_ACCENT[TARGET_META[i.target].tone]}
             >
-              {TARGET_LABEL[i.target]}
+              {t(TARGET_LABEL[i.target])}
             </Chip>
           </span>
         </div>
