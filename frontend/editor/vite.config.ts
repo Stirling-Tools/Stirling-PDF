@@ -6,7 +6,7 @@ import { constants, brotliCompress, gzip } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { defineConfig, loadEnv } from "vite";
-import type { PluginOption } from "vite";
+import type { Connect, PluginOption } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
@@ -129,6 +129,38 @@ function prerenderOgPlugin(): PluginOption {
   };
 }
 
+/**
+ * When the app is served under a subpath (RUN_SUBPATH → base like "/app/"), Vite
+ * serves index.html at "/app/" and redirects "/" → the base, but a bare "/app"
+ * (no trailing slash) 404s. This middleware redirects "/app" → "/app/" so either
+ * form loads the app in dev and `vite preview`. Query strings are preserved.
+ */
+function subpathBareRedirectPlugin(subpath: string): PluginOption {
+  const bare = `/${subpath}`;
+  const withSlash = `${bare}/`;
+  const redirect: Connect.NextHandleFunction = (req, res, next) => {
+    const url = req.url ?? "";
+    const q = url.indexOf("?");
+    const pathname = q === -1 ? url : url.slice(0, q);
+    if (pathname === bare) {
+      res.statusCode = 301;
+      res.setHeader("Location", withSlash + (q === -1 ? "" : url.slice(q)));
+      res.end();
+      return;
+    }
+    next();
+  };
+  return {
+    name: "subpath-bare-redirect",
+    configureServer(server) {
+      server.middlewares.use(redirect);
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use(redirect);
+    },
+  };
+}
+
 // NOTE: cloud/ is a SHARED layer, not a runnable build flavor — it's compiled
 // into the saas and desktop builds. It has no entry here and no vite tsconfig;
 // it is only typechecked standalone via editor/src/cloud/tsconfig.json
@@ -178,6 +210,9 @@ export default defineConfig(async ({ mode }) => {
 
   const tsconfigProject = TSCONFIG_MAP[effectiveMode];
 
+  // Subpath the app is served under (base becomes "/<runSubpath>/"). Empty = root.
+  const runSubpath = (env.RUN_SUBPATH || "").replace(/^\/+|\/+$/g, "");
+
   // Backend proxy target: default localhost:8080. Override via BACKEND_URL env var
   // so the top-level dev launcher can wire a dynamically-assigned backend port.
   const backendUrl = process.env.BACKEND_URL || "http://localhost:8080";
@@ -217,6 +252,7 @@ export default defineConfig(async ({ mode }) => {
   return {
     plugins: [
       react(),
+      ...(runSubpath ? [subpathBareRedirectPlugin(runSubpath)] : []),
       tsconfigPaths({
         projects: [tsconfigProject],
       }),
@@ -330,8 +366,8 @@ export default defineConfig(async ({ mode }) => {
     // an absolute base so deep-route asset paths resolve to /assets/...
     // Trailing slash required: it becomes `<base href>`, and browsers resolve
     // relative URLs (manifest.json, favicon) against the base's *directory*.
-    base: env.RUN_SUBPATH
-      ? `/${env.RUN_SUBPATH}/`
+    base: runSubpath
+      ? `/${runSubpath}/`
       : process.env.VITE_BUILD_FOR_PREVIEW === "1"
         ? "/"
         : "./",

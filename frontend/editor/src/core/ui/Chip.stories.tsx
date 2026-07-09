@@ -1,3 +1,4 @@
+// One-line edit to demonstrate the storybook-preview workflow detects edits, not just adds.
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Chip } from "@app/ui/Chip";
 
@@ -29,6 +30,7 @@ const meta: Meta<typeof Chip> = {
     variant: { control: "inline-radio", options: ["primary", "secondary"] },
     size: { control: "inline-radio", options: ["xs", "sm", "md", "lg"] },
     showDot: { control: "boolean" },
+    dashed: { control: "boolean" },
     onClick: { action: "clicked" },
     onRemove: { action: "removed" },
   },
@@ -53,6 +55,13 @@ export const Accents: Story = {
       ))}
     </div>
   ),
+};
+
+/** "box-cut" add affordance: dashed outline, no fill, clickable. */
+export const DashedAdd: Story = {
+  args: { children: "+ Processor", dashed: true, accent: "neutral" },
+  argTypes: { onClick: { action: "clicked" } },
+  render: (args) => <Chip {...args} onClick={() => {}} />,
 };
 
 export const InContext_OpChain: Story = {

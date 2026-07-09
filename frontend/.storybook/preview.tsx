@@ -19,20 +19,35 @@ import { UIProvider } from "@portal/contexts/UIContext";
 import { SuiProvider } from "@portal/theme/SuiProvider";
 import { handlers } from "@portal/mocks/handlers";
 import { configureSupabase } from "@proprietary/auth/supabase/supabaseClient";
+import i18next from "i18next";
+import { initReactI18next } from "react-i18next";
 
 import "@mantine/core/styles.css";
 import "@core/tokens/tokens.css";
 import "@core/tokens/base.css";
+
+// Storybook-only: init react-i18next so t(key, fallback, vars) interpolates its
+// English fallback (there's no backend here to load locale files). Without this,
+// the default t() returns raw templates like "{{count}} people · led by {{owner}}".
+if (!i18next.isInitialized) {
+  void i18next.use(initReactI18next).init({
+    lng: "en",
+    fallbackLng: "en",
+    resources: { en: { translation: {} } },
+    interpolation: { escapeValue: false },
+    react: { useSuspense: false },
+  });
+}
 
 // Start MSW once. Storybook runs in a browser so this uses the service worker.
 initialize({ onUnhandledRequest: "bypass" }, handlers);
 
 // Storybook-only: stub a SaaS session so apiClient.saas reads (invoices, payment
 // method, wallet) clear the session check and reach the MSW handlers instead of
-// failing with "No SaaS session". VITE_SAAS_SUPABASE_URL/KEY are intentionally
-// unset, so ensureSaasSupabase() is a no-op and never replaces this client; only
-// VITE_SAAS_API_URL (a mock origin MSW matches) is configured — injected via
-// .storybook/main.ts's viteFinal define, not a frontend/.env file.
+// failing with "No SaaS session". VITE_SUPABASE_URL/KEY are defined empty (see
+// .storybook/main.ts), so ensureSaasSupabase() is a no-op and never replaces this
+// client; only VITE_SAAS_API_URL (a mock origin MSW matches) is configured —
+// injected via .storybook/main.ts's viteFinal define, not a frontend/.env file.
 const saasStub = configureSupabase({
   url: "http://saas.mock",
   key: "storybook-anon-key",

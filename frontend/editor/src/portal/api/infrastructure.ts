@@ -302,9 +302,23 @@ export async function fetchStorage(tier: Tier): Promise<StorageConfig> {
   );
 }
 
-/** GET /v1/infrastructure/audit-log?tier=… */
+/** GET the audit log; SaaS or local, backend-scoped (admin → server, SaaS lead → team). */
 export async function fetchAuditLog(tier: Tier): Promise<AuditLogResponse> {
-  return apiClient.local.json<AuditLogResponse>(
-    `/v1/infrastructure/audit-log${q(tier)}`,
-  );
+  const path = `/api/v1/proprietary/ui-data/infrastructure/audit-log${q(tier)}`;
+  return apiClient.saas.isConfigured()
+    ? apiClient.saas.json<AuditLogResponse>(path)
+    : apiClient.local.json<AuditLogResponse>(path);
+}
+
+/** Download the audit log as a CSV/JSON blob (admin-only, whole-server); SaaS or local. */
+export async function exportAuditLog(
+  format: "csv" | "json",
+  fields: string,
+): Promise<Blob> {
+  const path = `/api/v1/proprietary/ui-data/audit-export?format=${format}&fields=${encodeURIComponent(
+    fields,
+  )}`;
+  return apiClient.saas.isConfigured()
+    ? apiClient.saas.blob(path)
+    : apiClient.local.blob(path);
 }

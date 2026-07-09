@@ -259,4 +259,21 @@ public interface PersistentAuditEventRepository extends JpaRepository<Persistent
             "SELECT e FROM PersistentAuditEvent e WHERE e.type != :excludeType AND e.timestamp > :startDate")
     List<PersistentAuditEvent> findAllExceptTypeAndTimestampAfterForExport(
             @Param("excludeType") String excludeType, @Param("startDate") Instant startDate);
+
+    // Free-editor fleet usage: count genuine free-UI operations (source = "WEB") by type.
+    @Query(
+            "SELECT COUNT(e) FROM PersistentAuditEvent e "
+                    + "WHERE e.type IN :types AND e.source = :source AND e.timestamp > :since")
+    long countByTypeInAndSourceAndTimestampAfter(
+            @Param("types") List<String> types,
+            @Param("source") String source,
+            @Param("since") Instant since);
+
+    @Query(
+            "SELECT COUNT(DISTINCT e.principal) FROM PersistentAuditEvent e "
+                    + "WHERE e.source = :source AND e.type <> :excludeType AND e.timestamp > :since")
+    long countDistinctPrincipalsBySourceExcludingTypeAfter(
+            @Param("source") String source,
+            @Param("excludeType") String excludeType,
+            @Param("since") Instant since);
 }

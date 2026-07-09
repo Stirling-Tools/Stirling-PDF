@@ -1,12 +1,15 @@
 /**
- * Users fixtures. Types and the role catalogue live in api/users.ts (the
- * backend contract); this module only builds fake data for Storybook and
- * tests.
+ * Users fixtures and the types api/users.ts shares with them.
  *
  * "Users" is the people surface of the org: team members and their access.
  * A member has a role (which governs what they can do), a status, and activity.
  * Alongside the roster sit the role catalogue (a reference grid) and the
  * tier-scoped access controls (seat limits, MFA, sessions, SSO/SCIM).
+ *
+ * api/users.ts imports the types; the MSW handlers serve the fixture data over
+ * the intercepted apiClient.local.json() calls. Components never reach into this module
+ * directly. Once a real backend exists the handlers stop being registered and
+ * these fixtures can be deleted (or kept as test seeds).
  */
 
 import type { Tier } from "@portal/contexts/TierContext";
@@ -19,6 +22,10 @@ import type {
 import { ROLES } from "@portal/api/users";
 
 /* ──────────────────────────────────────────────────────────────────────── */
+/*  Roles & members                                                          */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+/* ──────────────────────────────────────────────────────────────────────── */
 /*  Member fixtures                                                          */
 /* ──────────────────────────────────────────────────────────────────────── */
 
@@ -28,7 +35,7 @@ const PRO_MEMBERS: Member[] = [
     id: "usr-you",
     name: "You",
     email: "you@acme.com",
-    role: "org_owner",
+    role: "admin",
     status: "active",
     lastActive: "just now",
   },
@@ -36,7 +43,7 @@ const PRO_MEMBERS: Member[] = [
     id: "usr-priya",
     name: "Priya Nair",
     email: "priya@acme.com",
-    role: "developer",
+    role: "member",
     status: "active",
     lastActive: "8m ago",
   },
@@ -44,7 +51,7 @@ const PRO_MEMBERS: Member[] = [
     id: "usr-marcus",
     name: "Marcus Webb",
     email: "marcus@acme.com",
-    role: "developer",
+    role: "member",
     status: "active",
     lastActive: "1h ago",
   },
@@ -52,7 +59,7 @@ const PRO_MEMBERS: Member[] = [
     id: "usr-dana",
     name: "Dana Osei",
     email: "dana@acme.com",
-    role: "reviewer",
+    role: "member",
     status: "active",
     lastActive: "yesterday",
   },
@@ -61,16 +68,16 @@ const PRO_MEMBERS: Member[] = [
     id: "usr-invite-1",
     name: "sam.lee@acme.com",
     email: "sam.lee@acme.com",
-    role: "viewer",
+    role: "guest",
     status: "invited",
-    lastActive: "—",
+    lastActive: "Never",
   },
   {
     // Suspended: retains the seat but cannot sign in until reinstated.
     id: "usr-leo",
     name: "Leo Fischer",
     email: "leo@acme.com",
-    role: "developer",
+    role: "member",
     status: "suspended",
     lastActive: "12 days ago",
   },
@@ -90,7 +97,7 @@ const ENTERPRISE_EXTRA: Member[] = [
     id: "usr-tom",
     name: "Tom Becker",
     email: "tom@acme.com",
-    role: "reviewer",
+    role: "member",
     status: "active",
     lastActive: "26m ago",
   },
@@ -98,7 +105,7 @@ const ENTERPRISE_EXTRA: Member[] = [
     id: "usr-nadia",
     name: "Nadia Costa",
     email: "nadia@acme.com",
-    role: "viewer",
+    role: "guest",
     status: "active",
     lastActive: "2h ago",
   },
@@ -106,9 +113,9 @@ const ENTERPRISE_EXTRA: Member[] = [
     id: "usr-invite-2",
     name: "contractor@partner.io",
     email: "contractor@partner.io",
-    role: "reviewer",
+    role: "member",
     status: "invited",
-    lastActive: "—",
+    lastActive: "Never",
   },
 ];
 
@@ -118,7 +125,7 @@ const FREE_MEMBERS: Member[] = [
     id: "usr-you",
     name: "You",
     email: "you@acme.com",
-    role: "org_owner",
+    role: "admin",
     status: "active",
     lastActive: "just now",
   },
@@ -126,7 +133,7 @@ const FREE_MEMBERS: Member[] = [
     id: "usr-jess",
     name: "Jess Allen",
     email: "jess@acme.com",
-    role: "developer",
+    role: "member",
     status: "active",
     lastActive: "3h ago",
   },
@@ -217,5 +224,52 @@ export function buildUsersResponse(tier: Tier): UsersResponse {
     members: membersFor(tier),
     roles: ROLES,
     access: accessFor(tier),
+    mailEnabled: false,
+    emailInvitesEnabled: false,
+  };
+}
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Backend-shaped fixtures                                                  */
+/*  api/users.ts now reads the real admin-settings endpoint; mock mode       */
+/*  serves this AdminSettingsData-shaped payload on the same route so the    */
+/*  real adapter is exercised end to end.                                    */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+export function buildAdminSettingsData(tier: Tier) {
+  const members = membersFor(tier);
+  const users = members.map((m, i) => ({
+    id: i + 1,
+    username: m.email,
+    email: m.email,
+    rolesAsString:
+      m.role === "admin"
+        ? "ROLE_ADMIN"
+        : m.role === "guest"
+          ? "ROLE_WEB_ONLY_USER"
+          : "ROLE_USER",
+    teamLead: m.role === "team_owner",
+    // Authoritative portal access as the backend computes it under the default policy
+    // (admins + team leads), plus the seeded PORTAL grant on user id 2 (see mock grantStore).
+    portalAccess: m.role === "admin" || m.role === "team_owner" || i + 1 === 2,
+    enabled: m.status !== "suspended",
+    team: { id: 1, name: "Default" },
+  }));
+  const userLastRequest = Object.fromEntries(
+    members
+      .filter((m) => m.status === "active")
+      .map((m, i) => [m.email, Date.now() - i * 45 * 60 * 1000]),
+  );
+  const seatLimit = seatLimitFor(tier);
+  return {
+    users,
+    userLastRequest,
+    totalUsers: users.length,
+    activeUsers: users.filter((u) => u.enabled).length,
+    disabledUsers: users.filter((u) => !u.enabled).length,
+    maxAllowedUsers: seatLimit ?? 0,
+    currentUsername: users[0]?.username,
+    mailEnabled: false,
+    emailInvitesEnabled: false,
   };
 }

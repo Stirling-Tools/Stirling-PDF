@@ -10,6 +10,8 @@ export interface HoverAction {
   label: string;
   onClick: (e: React.MouseEvent) => void;
   disabled?: boolean;
+  /** Overrides label in the tooltip — use for rich ReactNode content (e.g. enforcement messages). */
+  tooltip?: React.ReactNode;
   color?: string;
   hidden?: boolean;
   dataTour?: string;
@@ -58,18 +60,22 @@ const HoverActionMenu: React.FC<HoverActionMenuProps> = ({
       onClick={(e) => e.stopPropagation()}
     >
       {visibleActions.map((action) => (
-        <Tooltip key={action.id} label={action.label}>
-          <ActionIcon
-            size="md"
-            variant="tertiary"
-            disabled={action.disabled}
-            onClick={action.onClick}
-            aria-label={action.label}
-            style={{ color: action.color || "var(--text-secondary)" }}
-            data-tour={action.dataTour}
-          >
-            {action.icon}
-          </ActionIcon>
+        <Tooltip key={action.id} label={action.tooltip ?? action.label}>
+          {/* Wrapper keeps the tooltip working when the button is disabled
+              (disabled buttons don't emit the pointer events Tooltip needs). */}
+          <div style={{ display: "inline-flex", alignItems: "center" }}>
+            <ActionIcon
+              size="md"
+              variant="tertiary"
+              disabled={action.disabled}
+              onClick={action.onClick}
+              aria-label={action.label}
+              style={{ color: action.color || "var(--text-secondary)" }}
+              data-tour={action.dataTour}
+            >
+              {action.icon}
+            </ActionIcon>
+          </div>
         </Tooltip>
       ))}
     </div>

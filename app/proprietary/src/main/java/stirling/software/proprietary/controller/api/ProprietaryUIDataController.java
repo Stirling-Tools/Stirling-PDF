@@ -5,6 +5,7 @@ import static stirling.software.common.util.ProviderUtils.validateProvider;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
@@ -28,13 +29,16 @@ import stirling.software.common.model.ApplicationProperties.Security.OAUTH2.Clie
 import stirling.software.common.model.ApplicationProperties.Security.SAML2;
 import stirling.software.common.model.FileInfo;
 import stirling.software.common.model.enumeration.Role;
+import stirling.software.common.model.enumeration.TeamRole;
 import stirling.software.common.model.oauth2.GitHubProvider;
 import stirling.software.common.model.oauth2.GoogleProvider;
 import stirling.software.common.model.oauth2.KeycloakProvider;
+import stirling.software.proprietary.access.service.ResourceAccessService;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.model.dto.TeamWithUserCountDTO;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 import stirling.software.proprietary.security.config.EnterpriseEndpoint;
@@ -44,6 +48,7 @@ import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.SessionEntity;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.dto.AdminUserSummary;
+import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrincipal;
 import stirling.software.proprietary.security.service.DatabaseServiceInterface;
@@ -65,6 +70,7 @@ public class ProprietaryUIDataController {
     private final SessionPersistentRegistry sessionPersistentRegistry;
     private final UserRepository userRepository;
     private final TeamRepository teamRepository;
+    private final TeamMembershipRepository teamMembershipRepository;
     private final SessionRepository sessionRepository;
     private final DatabaseServiceInterface databaseService;
     private final boolean runningEE;
@@ -73,6 +79,7 @@ public class ProprietaryUIDataController {
     private final PersistentAuditEventRepository auditRepository;
     private final MfaService mfaService;
     private final LoginAttemptService loginAttemptService;
+    private final ResourceAccessService resourceAccessService;
 
     public ProprietaryUIDataController(
             ApplicationProperties applicationProperties,
@@ -80,6 +87,7 @@ public class ProprietaryUIDataController {
             SessionPersistentRegistry sessionPersistentRegistry,
             UserRepository userRepository,
             TeamRepository teamRepository,
+            TeamMembershipRepository teamMembershipRepository,
             SessionRepository sessionRepository,
             DatabaseServiceInterface databaseService,
             ObjectMapper objectMapper,
@@ -87,12 +95,14 @@ public class ProprietaryUIDataController {
             UserLicenseSettingsService licenseSettingsService,
             PersistentAuditEventRepository auditRepository,
             MfaService mfaService,
-            LoginAttemptService loginAttemptService) {
+            LoginAttemptService loginAttemptService,
+            ResourceAccessService resourceAccessService) {
         this.applicationProperties = applicationProperties;
         this.auditConfig = auditConfig;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
         this.userRepository = userRepository;
         this.teamRepository = teamRepository;
+        this.teamMembershipRepository = teamMembershipRepository;
         this.sessionRepository = sessionRepository;
         this.databaseService = databaseService;
         this.objectMapper = objectMapper;
@@ -101,6 +111,7 @@ public class ProprietaryUIDataController {
         this.auditRepository = auditRepository;
         this.mfaService = mfaService;
         this.loginAttemptService = loginAttemptService;
+        this.resourceAccessService = resourceAccessService;
     }
 
     /**
@@ -370,8 +381,11 @@ public class ProprietaryUIDataController {
         boolean premiumEnabled = applicationProperties.getPremium().isEnabled();
 
         // Convert User entities to AdminUserSummary DTOs to exclude sensitive fields
+        Set<Long> leaderUserIds = leaderUserIds();
         List<AdminUserSummary> userSummaries =
-                sortedUsers.stream().map(this::convertUserToSummary).toList();
+                sortedUsers.stream()
+                        .map(user -> convertUserToSummary(user, leaderUserIds))
+                        .toList();
 
         AdminSettingsData data = new AdminSettingsData();
         data.setUsers(userSummaries);
@@ -390,6 +404,10 @@ public class ProprietaryUIDataController {
         data.setLicenseMaxUsers(licenseMaxUsers);
         data.setPremiumEnabled(premiumEnabled);
         data.setMailEnabled(applicationProperties.getMail().isEnabled());
+        // Email invites need the invites toggle AND SMTP on; matches the inviteUsers precondition.
+        data.setEmailInvitesEnabled(
+                applicationProperties.getMail().isEnableInvites()
+                        && applicationProperties.getMail().isEnabled());
         data.setUserSettings(userSettings);
         data.setLockedUsers(loginAttemptService.getAllBlockedUsers());
 
@@ -468,9 +486,18 @@ public class ProprietaryUIDataController {
             teamLastRequest.put(teamId, lastActivity);
         }
 
+        Map<Long, List<String>> teamOwners = new HashMap<>();
+        for (TeamMembership row :
+                teamMembershipRepository.findByRoleFetchingUserAndTeam(TeamRole.LEADER)) {
+            teamOwners
+                    .computeIfAbsent(row.getTeam().getId(), id -> new ArrayList<>())
+                    .add(row.getUser().getUsername());
+        }
+
         TeamsData data = new TeamsData();
         data.setTeamsWithCounts(teamsWithCounts);
         data.setTeamLastRequest(teamLastRequest);
+        data.setTeamOwners(teamOwners);
 
         return ResponseEntity.ok(data);
     }
@@ -510,11 +537,17 @@ public class ProprietaryUIDataController {
             userLastRequest.put(username, lastRequest);
         }
 
+        Set<Long> ownerUserIds =
+                teamMembershipRepository.findByTeamIdAndRole(id, TeamRole.LEADER).stream()
+                        .map(row -> row.getUser().getId())
+                        .collect(Collectors.toSet());
+
         TeamDetailsData data = new TeamDetailsData();
         data.setTeam(team);
         data.setTeamUsers(teamUsers);
         data.setAvailableUsers(availableUsers);
         data.setUserLastRequest(userLastRequest);
+        data.setOwnerUserIds(ownerUserIds);
 
         return ResponseEntity.ok(data);
     }
@@ -535,13 +568,24 @@ public class ProprietaryUIDataController {
         return ResponseEntity.ok(data);
     }
 
+    /** User ids holding a LEADER membership on any team. */
+    private Set<Long> leaderUserIds() {
+        return teamMembershipRepository.findByRoleFetchingUserAndTeam(TeamRole.LEADER).stream()
+                .map(row -> row.getUser().getId())
+                .collect(Collectors.toSet());
+    }
+
     /**
      * Convert User entity to AdminUserSummary DTO, excluding sensitive fields like password and
      * apiKey.
      */
-    private AdminUserSummary convertUserToSummary(User user) {
+    private AdminUserSummary convertUserToSummary(User user, Set<Long> leaderUserIds) {
         AdminUserSummary summary = new AdminUserSummary();
         summary.setId(user.getId());
+        summary.setTeamLead(leaderUserIds.contains(user.getId()));
+        // Authoritative portal access, same call /me uses, so the roster honors the configured
+        // policy instead of the frontend guessing from role/team-leadership.
+        summary.setPortalAccess(resourceAccessService.canAccessPortal(user));
         summary.setUsername(user.getUsername());
         summary.setEmail(user.getUsername()); // Use username as email for consistency
         summary.setRoleName(user.getRoleName());
@@ -609,6 +653,7 @@ public class ProprietaryUIDataController {
         private int licenseMaxUsers;
         private boolean premiumEnabled;
         private boolean mailEnabled;
+        private boolean emailInvitesEnabled;
         private Map<String, Map<String, String>> userSettings;
         private List<String> lockedUsers;
     }
@@ -629,6 +674,7 @@ public class ProprietaryUIDataController {
     public static class TeamsData {
         private List<TeamWithUserCountDTO> teamsWithCounts;
         private Map<Long, Date> teamLastRequest;
+        private Map<Long, List<String>> teamOwners;
     }
 
     @Data
@@ -637,6 +683,7 @@ public class ProprietaryUIDataController {
         private List<User> teamUsers;
         private List<User> availableUsers;
         private Map<String, Date> userLastRequest;
+        private Set<Long> ownerUserIds;
     }
 
     @Data

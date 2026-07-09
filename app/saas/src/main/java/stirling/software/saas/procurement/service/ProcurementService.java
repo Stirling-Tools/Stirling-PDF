@@ -16,8 +16,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.enumeration.TeamRole;
+import stirling.software.proprietary.model.TeamMembership;
+import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.saas.procurement.config.ProcurementConfigurationProperties;
 import stirling.software.saas.procurement.license.EnterpriseLicenseService;
+import stirling.software.saas.procurement.license.LicenseEntitlements;
 import stirling.software.saas.procurement.model.ProcurementDeal;
 import stirling.software.saas.procurement.model.ProcurementQuote;
 import stirling.software.saas.procurement.pricing.ProcurementPricingService;
@@ -46,18 +50,37 @@ public class ProcurementService {
     private final ProcurementPricingService pricing;
     private final EnterpriseLicenseService licenses;
     private final ProcurementConfigurationProperties config;
+    private final TeamMembershipRepository memberRepo;
 
     public ProcurementService(
             ProcurementDealRepository dealRepo,
             ProcurementQuoteRepository quoteRepo,
             ProcurementPricingService pricing,
             EnterpriseLicenseService licenses,
-            ProcurementConfigurationProperties config) {
+            ProcurementConfigurationProperties config,
+            TeamMembershipRepository memberRepo) {
         this.dealRepo = dealRepo;
         this.quoteRepo = quoteRepo;
         this.pricing = pricing;
         this.licenses = licenses;
         this.config = config;
+        this.memberRepo = memberRepo;
+    }
+
+    /**
+     * The team leader's email — the natural owner of the team's Keygen licence. Falls back to the
+     * username when no email is set; null when the team has no leader.
+     */
+    private String leaderEmail(Long teamId) {
+        return memberRepo.findByTeamIdAndRole(teamId, TeamRole.LEADER).stream()
+                .findFirst()
+                .map(TeamMembership::getUser)
+                .map(
+                        u ->
+                                u.getEmail() != null && !u.getEmail().isBlank()
+                                        ? u.getEmail()
+                                        : u.getUsername())
+                .orElse(null);
     }
 
     @Transactional(readOnly = true)
@@ -85,7 +108,7 @@ public class ProcurementService {
         deal.setTrialStartedAt(now);
         deal.setTrialEndsAt(ends);
         deal.setTrialExtensionsUsed(0);
-        deal.setLicenseRef(licenses.issueTrialLicense(teamId, ends));
+        deal.setLicenseRef(licenses.issueTrialLicense(teamId, leaderEmail(teamId), ends));
         deal = dealRepo.save(deal);
         log.info(
                 "[procurement] trial started team={} deal={} ends={}",
@@ -144,12 +167,14 @@ public class ProcurementService {
         quote.setCurrency(cfg.currency());
         quote.setVolume(cfg.volume());
         quote.setSeats(cfg.users() > 0 ? cfg.users() : null);
+        quote.setIntensity(cfg.intensity());
         quote.setDeployment(cfg.deployment());
         quote.setTermYears(cfg.termYears());
         quote.setServiceLevel(cfg.serviceLevel());
         quote.setIndemnification(cfg.indemnification());
         quote.setTraining(cfg.training());
         quote.setQbr(cfg.qbr());
+        quote.setOfflineLicense(cfg.offlineLicense());
         quote.setBusinessName(businessName);
         quote.setAnnualNetMinor(breakdown.annualNetMinor());
         quote.setTcvMinor(breakdown.tcvMinor());
@@ -188,33 +213,102 @@ public class ProcurementService {
     }
 
     /**
-     * Mark the deal live: issue the annual licence and advance to the active stage. In production
-     * this is driven by the {@code invoice.paid} webhook once the first invoice is settled; this
-     * method is the demo/manual stand-in until that webhook lands.
+     * Provision on accept: upgrade the team's licence to the committed annual term (valid
+     * immediately), so the buyer can get going the moment they accept — before the invoice is paid.
+     * Driven by the accept edge function once the subscription + invoice are created. Idempotent
+     * (upgrades the existing licence in place); deliberately does NOT change the stage — the deal
+     * stays in the payment step so the outstanding invoice remains visible until it settles.
+     */
+    @Transactional
+    public ProcurementDeal provisionLicense(Long teamId) {
+        ProcurementDeal deal =
+                dealRepo.findByTeamId(teamId)
+                        .orElseThrow(() -> new IllegalStateException("No deal for team " + teamId));
+        deal.setLicenseRef(issueOrUpgradeAnnual(deal));
+        deal = dealRepo.save(deal);
+        log.info("[procurement] licence provisioned team={} deal={}", teamId, deal.getDealId());
+        return deal;
+    }
+
+    /**
+     * Mark the deal fully live (advance to the active stage) once payment settles. In production
+     * this is the {@code invoice.paid} webhook; here it's the demo/manual stand-in. Re-affirms the
+     * annual licence in case provisioning didn't run at accept.
      */
     @Transactional
     public ProcurementDeal markLive(Long teamId) {
         ProcurementDeal deal =
                 dealRepo.findByTeamId(teamId)
                         .orElseThrow(() -> new IllegalStateException("No deal for team " + teamId));
-        int term = 1;
-        String deployment = "cloud";
-        if (deal.getAcceptedQuoteId() != null) {
-            ProcurementQuote q = quoteRepo.findById(deal.getAcceptedQuoteId()).orElse(null);
-            if (q != null) {
-                term = Math.max(1, q.getTermYears());
-                if (q.getDeployment() != null && !q.getDeployment().isBlank()) {
-                    deployment = q.getDeployment();
-                }
-            }
-        }
-        deal.setLicenseRef(
-                licenses.issueAnnualLicense(
-                        teamId, deployment, LocalDateTime.now().plusYears(term)));
+        deal.setLicenseRef(issueOrUpgradeAnnual(deal));
         deal.setStage(ProcurementDeal.STAGE_LIVE);
         deal = dealRepo.save(deal);
         log.info("[procurement] deal live team={} deal={}", teamId, deal.getDealId());
         return deal;
+    }
+
+    /**
+     * Issue or upgrade the committed annual licence from the deal's accepted (else latest) quote,
+     * stamping the full entitlement snapshot onto it and upgrading the trial licence in place when
+     * one exists.
+     */
+    private String issueOrUpgradeAnnual(ProcurementDeal deal) {
+        ProcurementQuote q =
+                deal.getAcceptedQuoteId() != null
+                        ? quoteRepo.findById(deal.getAcceptedQuoteId()).orElse(null)
+                        : quoteRepo.findByDealIdOrderByCreatedAtDesc(deal.getDealId()).stream()
+                                .findFirst()
+                                .orElse(null);
+        int term = q != null ? Math.max(1, q.getTermYears()) : 1;
+        String deployment =
+                q != null && q.getDeployment() != null && !q.getDeployment().isBlank()
+                        ? q.getDeployment()
+                        : "cloud";
+        int seats = q != null && q.getSeats() != null ? q.getSeats() : 0; // 0 = unlimited
+        LicenseEntitlements entitlements =
+                new LicenseEntitlements(
+                        q != null ? q.getVolume() : 0,
+                        seats,
+                        deployment,
+                        term,
+                        q != null ? q.getServiceLevel() : null,
+                        q != null && q.isIndemnification(),
+                        q != null && q.isTraining(),
+                        q != null && q.isQbr(),
+                        q != null && q.isOfflineLicense(),
+                        deal.getDealId(),
+                        deal.getSubscriptionId());
+        return licenses.issueAnnualLicense(
+                deal.getTeamId(),
+                leaderEmail(deal.getTeamId()),
+                LocalDateTime.now().plusYears(term),
+                deal.getLicenseRef(),
+                entitlements);
+    }
+
+    /**
+     * Check out the offline/air-gapped licence file for a team, when the offline add-on was
+     * purchased. Requires an issued licence on the deal and the accepted quote to carry the offline
+     * add-on; returns empty otherwise (so the controller can 404 rather than leak that a licence
+     * exists). The certificate is generated on demand by Keygen and never stored.
+     */
+    @Transactional(readOnly = true)
+    public Optional<String> offlineLicenseFile(Long teamId) {
+        ProcurementDeal deal = dealRepo.findByTeamId(teamId).orElse(null);
+        if (deal == null || deal.getLicenseRef() == null) return Optional.empty();
+        if (!hasOfflineAddOn(deal)) return Optional.empty();
+        return Optional.of(licenses.checkOutLicenseFile(deal.getLicenseRef()));
+    }
+
+    /**
+     * Whether the deal's <b>accepted</b> quote carries the paid offline-licence add-on. Gated on
+     * the accepted quote (not the latest) so merely toggling the add-on on an unaccepted draft
+     * can't unlock the offline file — it's only available once the add-on has actually been bought.
+     */
+    private boolean hasOfflineAddOn(ProcurementDeal deal) {
+        if (deal.getAcceptedQuoteId() == null) return false;
+        ProcurementQuote quote = quoteRepo.findById(deal.getAcceptedQuoteId()).orElse(null);
+        return quote != null && quote.isOfflineLicense();
     }
 
     /**

@@ -1,41 +1,82 @@
 /**
- * Editor deployment fixtures. Types live in api/editorDeploy.ts (the backend
- * contract); this module only builds fake data for Storybook and tests.
+ * Editor deployment fixtures and the types api/editorDeploy.ts shares with them.
  *
  * This surface manages the org's deployment of the Stirling PDF *Editor* product
  * from the portal — where it runs (Managed Cloud / Docker / Kubernetes), how
  * self-hosted instances pair back to the org, the health of each running
  * instance, and the service credential / offline-activation lifecycle.
+ *
+ * api/editorDeploy.ts imports the types; the MSW handlers serve this fixture
+ * data over the intercepted apiClient.local.json() calls. Components never reach into this
+ * module directly. Once a real backend exists the handlers stop being registered
+ * and these fixtures can be deleted (or kept as test seeds).
  */
 
 import type { Tier } from "@portal/contexts/TierContext";
 import type {
   DeploymentSummary,
+  DeploymentSummaryMetric,
   DeploymentTarget,
   EditorDeploymentResponse,
   EditorInstance,
+  InstanceStatus,
+  PairingMethod,
   PairingOption,
+  TargetKind,
 } from "@portal/api/editorDeploy";
 
 /* ──────────────────────────────────────────────────────────────────────── */
-/*  Snippet builders                                                         */
+/*  Deployment targets                                                       */
 /* ──────────────────────────────────────────────────────────────────────── */
 
-const DOCKER_SNIPPET = `docker run -d --name stirling-editor \\
+/**
+ * Whether a target is usable on the current tier and, if so, whether the org
+ * has actually stood /* ──────────────────────────────────────────────────────────────────────── */
+/*  Pairing                                                                  */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+/** How a self-hosted editor connects itself to the org. */
+export type PairingMethod = "token" | "shortcode" | "iac";
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Running instances (deployment health)          export type InstanceStatus = "healthy" | "degraded" | "offline" | "pairing";
+
+export interface EditorInstance {
+  id: string;
+  /** Human host label, e.g. "edge-fra-01" or "Managed Cloud (us-east-1)". */
+  host: string;
+  target: TargetKind;
+  version: string;
+  region: string;
+  status: InstanceStatus;
+  /** Relative-time string, e.g. "12s ago". */
+  lastSeen: string;
+  activeUsers: number;
+}
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Summary metric strip                                                     */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+export interface DeploymentSummaryMetric {
+  labeexport interface DeploymentSummary {
+  metrics: DeploymentSummaryMetric[];
+  /** Masked service token + its rotation age, shown by the rotation card. */
+  sexport interface EditorDeploymentResponse {
+  summary: DeploymentSummary;
+  targets: DeploymentTarget[];
+  pairings: PairingOption[];
+  instances: EditorInstance[];
+}
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Presentation metadata (lives client-side — product copy, not data)       */
+/* ──────────────────────────────────────────────────────────────────────── const DOCKER_SNIPPET = `docker run -d --name stirling-editor \\
   -p 8080:8080 \\
   -e STIRLING_ORG_PAIRING_TOKEN="$PAIRING_TOKEN" \\
   -e STIRLING_REGION="us-east-1" \\
-  -v stirling-data:/var/lib/stirling \\
-  stirlingpdf/editor:3.2.1`;
-
-const HELM_SNIPPET = `helm repo add stirling https://charts.stirlingpdf.com
-helm install editor stirling/editor \\
-  --namespace stirling --create-namespace \\
-  --set org.pairingToken="$PAIRING_TOKEN" \\
-  --set image.tag=3.2.1 \\
-  --set replicaCount=3`;
-
-const CLOUD_SNIPPET = `# Managed Cloud is provisioned for you — no install step.
+  -vconst HELM_SNIPPET = `helm repo add stirling https://charts.stirlingpdf.com
+helm instalconst CLOUD_SNIPPET = `# Managed Cloud is provisioned for you — no install step.
 # Point your users at the org workspace URL:
 https://app.stirlingpdf.com/o/acme/editor`;
 
@@ -245,6 +286,7 @@ function summaryFor(
       lastRotated: tier === "enterprise" ? "11 days ago" : "34 days ago",
     },
     offlineActivationAvailable: tier === "enterprise",
+    workspaceUrl: "https://app.stirlingpdf.com/o/acme/editor",
   };
 }
 

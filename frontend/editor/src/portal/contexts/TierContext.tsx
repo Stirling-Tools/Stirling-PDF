@@ -5,7 +5,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useLink, type LinkState } from "@portal/contexts/LinkContext";
+import { usePlanTier } from "@portal/contexts/usePlanTier";
 
 export type Tier = "free" | "pro" | "enterprise";
 
@@ -24,24 +24,13 @@ export const TIER_INFO: Record<Tier, TierInfo> = {
 
 interface TierContextValue {
   tier: Tier;
-  /** No-op when the tier is derived from real link state (i.e. in the app). */
+  /** No-op when the tier is derived from the real plan (i.e. in the app). */
   setTier: (tier: Tier) => void;
-  /** True when the tier value is derived from the real wallet/link, not pinned. */
+  /** True when the tier value is derived from the real plan, not pinned. */
   isDerived: boolean;
 }
 
 const TierContext = createContext<TierContextValue | null>(null);
-
-/** Maps the real link/subscription state onto the tier the rest of the portal reads. */
-function tierFromLinkState(linkState: LinkState): Tier {
-  switch (linkState) {
-    case "linked-subscribed":
-      return "pro";
-    case "linked-free":
-    case "unlinked":
-      return "free";
-  }
-}
 
 export function TierProvider({
   children,
@@ -51,17 +40,18 @@ export function TierProvider({
   /**
    * Pins the tier to a fixed, locally settable value. Storybook and demo
    * surfaces pass this to stage a specific tier; the app omits it, so the
-   * tier is always derived from the real link/subscription state.
+   * tier is always derived from the real plan (see usePlanTier — link state
+   * self-hosted, wallet on SaaS).
    */
   initialTier?: Tier;
 }) {
   const pinned = initialTier !== undefined;
-  const { linkState } = useLink();
   const [pinnedTier, setPinnedTier] = useState<Tier>(initialTier ?? "free");
+  const derivedTier = usePlanTier();
 
-  // Memo on the resolved tier (not linkState) so link transitions that map to
+  // Memo on the resolved tier (not its inputs) so plan transitions that map to
   // the same tier don't re-render every consumer.
-  const tier = pinned ? pinnedTier : tierFromLinkState(linkState);
+  const tier = pinned ? pinnedTier : derivedTier;
   const value = useMemo<TierContextValue>(
     () => ({
       tier,

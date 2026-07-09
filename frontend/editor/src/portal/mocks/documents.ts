@@ -1,442 +1,329 @@
 /**
- * Document review-queue fixtures. Types live in api/documents.ts (the backend
- * contract); this module only builds fake data for Storybook and tests.
+ * Documents fixtures and the types api/documents.ts shares with them.
  *
- * A "document" here is a single item flowing through the org's pipelines and
- * waiting on a review/approval decision. Each carries its extracted fields, an
- * audit timeline, and a `sensitive` flag that gates whether its content is
- * shown directly or behind a zero-standing-access elevation request.
+ * A "document" is a file your org has processed, shown with its processing
+ * record: which product ran it (API vs Editor), the pipeline/action, the user,
+ * a classification chip (when auto-classified), the outcome, and when. Content
+ * access is request-gated (the `sensitive` flag drives the drawer's elevation).
+ * The real backend fills what it can from audit_events; the MSW handlers serve
+ * these fixtures for the demo. Confidence scores aren't supported yet, so they
+ * stay null and never surface in the table.
  */
 
 import type { Tier } from "@portal/contexts/TierContext";
 import type {
+  DocAuditEvent,
+  DocAuditKind,
+  DocumentStatus,
   DocumentsResponse,
   DocumentsSummary,
+  ProductType,
   ReviewDocument,
 } from "@portal/api/documents";
+import type { ChipAccent, StatusTone } from "@app/ui";
 
 /* ──────────────────────────────────────────────────────────────────────── */
-/*  Fixture builders                                                         */
+/*  Domain types                                                             */
 /* ──────────────────────────────────────────────────────────────────────── */
 
-/**
- * Pro-tier queue. A spread of statuses, types, sources, and confidences plus
- * deliberate edge cases: a 100%-confidence clean processed doc, a flagged
- * low-confidence outlier, and a doc with zero extracted fields.
- */
-const PRO_DOCS: ReviewDocument[] = [
-  {
-    id: "doc-inv-8841",
-    name: "ACME-INV-8841.pdf",
-    type: "Invoice",
-    status: "needs-review",
-    source: "invoices@acme.com",
-    confidence: 0.82,
-    fieldsExtracted: 6,
-    time: "3m ago",
-    sensitive: false,
-    extractions: [
-      { field: "Vendor", value: "Globex Supplies Ltd", confidence: 0.98 },
-      { field: "Invoice no.", value: "INV-8841", confidence: 0.99 },
-      { field: "Invoice date", value: "2026-06-12", confidence: 0.94 },
-      { field: "Due date", value: "2026-07-12", confidence: 0.88 },
-      { field: "Total", value: "$12,480.00", confidence: 0.71 },
-      { field: "PO number", value: "PO-2231 (unverified)", confidence: 0.42 },
-    ],
-    audit: [
-      {
-        id: "a1",
-        kind: "ingested",
-        time: "4m ago",
-        actor: "invoices@acme.com",
-        detail: "Received via email inbox",
-      },
-      {
-        id: "a2",
-        kind: "extracted",
-        time: "4m ago",
-        actor: "Invoice Extractor",
-        detail: "6 fields extracted · 82% mean confidence",
-      },
-      {
-        id: "a3",
-        kind: "flagged",
-        time: "3m ago",
-        actor: "Invoice Extractor",
-        detail: "PO number below 50% confidence — routed to review",
-      },
-    ],
-  },
-  {
-    id: "doc-receipt-3320",
-    name: "expense-receipt-3320.jpg",
-    type: "Receipt",
-    status: "processed",
-    source: "Stirling Desktop — Reviewer pool",
-    confidence: 1.0,
-    fieldsExtracted: 4,
-    time: "11m ago",
-    sensitive: false,
-    extractions: [
-      { field: "Merchant", value: "Blue Bottle Coffee", confidence: 1.0 },
-      { field: "Date", value: "2026-06-15", confidence: 1.0 },
-      { field: "Amount", value: "$8.50", confidence: 1.0 },
-      { field: "Category", value: "Meals", confidence: 1.0 },
-    ],
-    audit: [
-      {
-        id: "a1",
-        kind: "ingested",
-        time: "12m ago",
-        actor: "review-team@acme.com",
-        detail: "Uploaded from desktop app",
-      },
-      {
-        id: "a2",
-        kind: "extracted",
-        time: "12m ago",
-        actor: "Invoice Extractor",
-        detail: "4 fields extracted · 100% mean confidence",
-      },
-      {
-        id: "a3",
-        kind: "approved",
-        time: "11m ago",
-        actor: "Invoice Extractor",
-        detail: "Auto-approved — all fields above threshold",
-      },
-    ],
-  },
-  {
-    id: "doc-contract-7712",
-    name: "MSA-Globex-2026.pdf",
-    type: "Contract",
-    status: "needs-review",
-    source: "SharePoint — Legal",
-    confidence: 0.76,
-    fieldsExtracted: 5,
-    // Sensitive: legal contract behind zero-standing-access. Content is hidden
-    // until a timed elevation is granted.
-    sensitive: true,
-    time: "27m ago",
-    extractions: [
-      { field: "Counterparty", value: "Globex Corporation", confidence: 0.95 },
-      { field: "Effective date", value: "2026-07-01", confidence: 0.9 },
-      { field: "Term", value: "36 months", confidence: 0.84 },
-      { field: "Auto-renewal", value: "Yes — 12 months", confidence: 0.61 },
-      { field: "Governing law", value: "Delaware", confidence: 0.49 },
-    ],
-    audit: [
-      {
-        id: "a1",
-        kind: "ingested",
-        time: "31m ago",
-        actor: "SharePoint — Legal",
-        detail: "Synced from Contracts / Inbound",
-      },
-      {
-        id: "a2",
-        kind: "extracted",
-        time: "30m ago",
-        actor: "Contract Router",
-        detail: "5 fields extracted · 76% mean confidence",
-      },
-      {
-        id: "a3",
-        kind: "flagged",
-        time: "27m ago",
-        actor: "Contract Router",
-        detail: "Governing-law clause ambiguous — routed to legal review",
-      },
-    ],
-  },
-  {
-    id: "doc-claim-1190",
-    name: "claim-1190-intake.pdf",
-    type: "Claim",
-    status: "flagged",
-    source: "S3 — claims-intake",
-    confidence: 0.38,
-    fieldsExtracted: 3,
-    // Edge case: low-confidence outlier that failed to parse a scanned form.
-    sensitive: false,
-    time: "44m ago",
-    extractions: [
-      { field: "Claimant", value: "(illegible)", confidence: 0.21 },
-      { field: "Policy no.", value: "POL-44120", confidence: 0.66 },
-      { field: "Claim amount", value: "(not found)", confidence: 0.0 },
-    ],
-    audit: [
-      {
-        id: "a1",
-        kind: "ingested",
-        time: "46m ago",
-        actor: "S3 — claims-intake",
-        detail: "Picked up from intake bucket",
-      },
-      {
-        id: "a2",
-        kind: "extracted",
-        time: "45m ago",
-        actor: "KYC Processor",
-        detail: "3 fields extracted · 38% mean confidence",
-      },
-      {
-        id: "a3",
-        kind: "flagged",
-        time: "44m ago",
-        actor: "KYC Processor",
-        detail: "Scan quality too low — manual re-key required",
-      },
-    ],
-  },
-  {
-    id: "doc-w9-0042",
-    name: "vendor-W9-globex.pdf",
-    type: "Tax form",
-    status: "processed",
-    source: "Acme Production",
-    confidence: 0.93,
-    fieldsExtracted: 5,
-    sensitive: true,
-    time: "1h ago",
-    extractions: [
-      { field: "Legal name", value: "Globex Supplies Ltd", confidence: 0.97 },
-      { field: "TIN", value: "••-•••4821", confidence: 0.91 },
-      { field: "Entity type", value: "LLC", confidence: 0.95 },
-      {
-        field: "Address",
-        value: "44 Industrial Way, Springfield",
-        confidence: 0.9,
-      },
-      { field: "Signature", value: "Present", confidence: 0.92 },
-    ],
-    audit: [
-      {
-        id: "a1",
-        kind: "ingested",
-        time: "1h ago",
-        actor: "Acme Production",
-        detail: "Uploaded via POST /v1/extract",
-      },
-      {
-        id: "a2",
-        kind: "extracted",
-        time: "1h ago",
-        actor: "KYC Processor",
-        detail: "5 fields extracted · 93% mean confidence",
-      },
-      {
-        id: "a3",
-        kind: "approved",
-        time: "58m ago",
-        actor: "you@acme.com",
-        detail: "Reviewed and approved",
-      },
-    ],
-  },
-  {
-    id: "doc-po-6610",
-    name: "purchase-order-6610.pdf",
-    type: "Purchase order",
-    status: "archived",
-    source: "Nightly archive reprocess",
-    confidence: 0.88,
-    fieldsExtracted: 4,
-    sensitive: false,
-    time: "8h ago",
-    extractions: [
-      { field: "Supplier", value: "Initech", confidence: 0.92 },
-      { field: "PO number", value: "PO-6610", confidence: 0.99 },
-      { field: "Line items", value: "7", confidence: 0.85 },
-      { field: "Total", value: "$3,210.00", confidence: 0.78 },
-    ],
-    audit: [
-      {
-        id: "a1",
-        kind: "ingested",
-        time: "8h ago",
-        actor: "Nightly archive reprocess",
-        detail: "Reprocessed from archive bucket",
-      },
-      {
-        id: "a2",
-        kind: "extracted",
-        time: "8h ago",
-        actor: "Invoice Extractor",
-        detail: "4 fields extracted · 88% mean confidence",
-      },
-      {
-        id: "a3",
-        kind: "archived",
-        time: "8h ago",
-        actor: "system",
-        detail: "Retention policy — archived after approval",
-      },
-    ],
-  },
-];
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Fixture builder                                                          */
+/* ──────────────────────────────────────────────────────────────────────── */
 
-/**
- * Enterprise-only additions — deeper queue with more sensitive items so the
- * zero-standing-access elevation flow has something to gate, plus richer
- * audit trails.
- */
-const ENTERPRISE_EXTRA: ReviewDocument[] = [
-  {
-    id: "doc-kyc-5523",
-    name: "onboarding-passport-5523.pdf",
-    type: "KYC document",
-    status: "needs-review",
-    source: "S3 — claims-intake",
-    confidence: 0.79,
-    fieldsExtracted: 6,
-    sensitive: true,
-    time: "9m ago",
-    extractions: [
-      { field: "Full name", value: "Maria L. Vance", confidence: 0.96 },
-      { field: "Document type", value: "Passport", confidence: 0.99 },
-      { field: "Document no.", value: "••••••742", confidence: 0.83 },
-      { field: "Date of birth", value: "1989-03-14", confidence: 0.88 },
-      { field: "Nationality", value: "United Kingdom", confidence: 0.94 },
-      { field: "Expiry", value: "2029-11-02", confidence: 0.55 },
-    ],
-    audit: [
-      {
-        id: "a1",
-        kind: "ingested",
-        time: "10m ago",
-        actor: "S3 — claims-intake",
-        detail: "Picked up from intake bucket",
-      },
-      {
-        id: "a2",
-        kind: "extracted",
-        time: "10m ago",
-        actor: "KYC Processor",
-        detail: "6 fields extracted · 79% mean confidence",
-      },
-      {
-        id: "a3",
-        kind: "flagged",
-        time: "9m ago",
-        actor: "Compliance Sweep",
-        detail: "PII present — four-eyes review required before release",
-      },
-    ],
-  },
-  {
-    id: "doc-dpa-2207",
-    name: "DPA-globex-amendment.pdf",
-    type: "Contract",
-    status: "flagged",
-    source: "SharePoint — Legal",
-    confidence: 0.84,
-    fieldsExtracted: 5,
-    sensitive: true,
-    time: "1h ago",
-    extractions: [
-      { field: "Counterparty", value: "Globex Corporation", confidence: 0.95 },
-      { field: "Data categories", value: "PII, financial", confidence: 0.81 },
-      { field: "Sub-processors", value: "3 listed", confidence: 0.77 },
-      { field: "SCC version", value: "2021/914", confidence: 0.9 },
-      { field: "Breach window", value: "72 hours", confidence: 0.76 },
-    ],
-    audit: [
-      {
-        id: "a1",
-        kind: "ingested",
-        time: "1h ago",
-        actor: "SharePoint — Legal",
-        detail: "Synced from Contracts / Inbound",
-      },
-      {
-        id: "a2",
-        kind: "extracted",
-        time: "1h ago",
-        actor: "Contract Router",
-        detail: "5 fields extracted · 84% mean confidence",
-      },
-      {
-        id: "a3",
-        kind: "flagged",
-        time: "1h ago",
-        actor: "Compliance Sweep",
-        detail: "Sub-processor list changed — escalated to DPO",
-      },
-    ],
-  },
-  {
-    id: "doc-coi-9001",
-    name: "certificate-of-insurance-9001.pdf",
-    type: "Compliance",
-    status: "processed",
-    source: "Compliance Sweep",
-    confidence: 0.96,
-    fieldsExtracted: 5,
-    sensitive: false,
-    time: "2h ago",
-    extractions: [
-      { field: "Insured", value: "Acme Corp", confidence: 0.98 },
-      { field: "Carrier", value: "Liberty Mutual", confidence: 0.97 },
-      { field: "Policy no.", value: "CGL-77120", confidence: 0.95 },
-      { field: "Coverage", value: "$2,000,000", confidence: 0.96 },
-      { field: "Expiry", value: "2027-01-31", confidence: 0.94 },
-    ],
-    audit: [
-      {
-        id: "a1",
-        kind: "ingested",
-        time: "2h ago",
-        actor: "Compliance Sweep",
-        detail: "Pulled for COI compliance check",
-      },
-      {
-        id: "a2",
-        kind: "extracted",
-        time: "2h ago",
-        actor: "Compliance Sweep",
-        detail: "5 fields extracted · 96% mean confidence",
-      },
-      {
-        id: "a3",
-        kind: "approved",
-        time: "2h ago",
-        actor: "compliance@acme.com",
-        detail: "Coverage verified — approved",
-      },
-    ],
-  },
-];
+type DocSeed = {
+  id: string;
+  name: string;
+  product: ProductType;
+  user: string;
+  status: DocumentStatus;
+  time: string;
+  classification?: string;
+  auto?: boolean;
+  note?: string;
+  action?: string;
+  reviewer?: string;
+  sensitive?: boolean;
+  type?: string;
+};
 
-/** Documents for a given tier. Free is a slim queue; enterprise is the deepest. */
-export function documentsFor(tier: Tier): ReviewDocument[] {
-  if (tier === "free") {
-    // Free keeps a simple, non-sensitive queue — no elevation flow to exercise.
-    return PRO_DOCS.filter((d) => !d.sensitive).slice(0, 3);
-  }
-  if (tier === "enterprise") return [...ENTERPRISE_EXTRA, ...PRO_DOCS];
-  return PRO_DOCS;
+function mk(s: DocSeed): ReviewDocument {
+  const source = s.product === "API" ? "API integration" : "Web upload";
+  const resultKind: DocAuditKind =
+    s.status === "flagged"
+      ? "flagged"
+      : s.status === "in-review"
+        ? "reviewed"
+        : "extracted";
+  const audit: DocAuditEvent[] = [
+    {
+      id: `${s.id}-a1`,
+      kind: "ingested",
+      time: s.time,
+      actor: s.user || "system",
+      detail: `Received via ${source}`,
+    },
+    {
+      id: `${s.id}-a2`,
+      kind: resultKind,
+      time: s.time,
+      actor: s.user || "system",
+      detail: s.note ?? (s.action ? `Ran ${s.action}` : "Processed"),
+    },
+  ];
+  return {
+    id: s.id,
+    name: s.name,
+    type: s.type ?? "PDF",
+    classification: s.classification ?? null,
+    auto: s.auto ?? false,
+    note: s.note ?? null,
+    product: s.product,
+    action: s.action ?? null,
+    user: s.user,
+    status: s.status,
+    reviewer: s.reviewer ?? null,
+    source,
+    confidence: null,
+    fieldsExtracted: 0,
+    time: s.time,
+    sensitive: s.sensitive ?? false,
+    extractions: [],
+    audit,
+  };
 }
 
-/** Summary strip derived from the tier's queue so the KPIs always reconcile. */
+// Ordered newest-first; 15 processed, 4 needs-review, 1 in-review → "All 20".
+const DOCS: ReviewDocument[] = [
+  mk({
+    id: "d1",
+    name: "acme_services_agreement.pdf",
+    classification: "Contract",
+    auto: true,
+    product: "API",
+    action: "contract",
+    user: "matt",
+    status: "processed",
+    time: "2 min ago",
+  }),
+  mk({
+    id: "d2",
+    name: "quarterly_report_draft.pdf",
+    note: "Merge + watermark removal",
+    product: "Editor",
+    user: "sarah.k",
+    status: "processed",
+    time: "3 min ago",
+  }),
+  mk({
+    id: "d3",
+    name: "flagged_contract.pdf",
+    classification: "Contract",
+    note: "Low confidence PII detection",
+    product: "API",
+    action: "contract",
+    user: "matt",
+    status: "flagged",
+    time: "4 min ago",
+  }),
+  mk({
+    id: "d4",
+    name: "loan_disclosure_preview.pdf",
+    classification: "Closing Disclosure",
+    auto: true,
+    product: "API",
+    action: "closing disclosure",
+    user: "",
+    status: "processed",
+    time: "5 min ago",
+  }),
+  mk({
+    id: "d5",
+    name: "patient_intake_form.pdf",
+    classification: "Patient Intake",
+    auto: true,
+    product: "API",
+    action: "patient intake",
+    user: "matt",
+    status: "processed",
+    time: "6 min ago",
+  }),
+  mk({
+    id: "d6",
+    name: "invoice_batch_march.pdf",
+    note: "Split into 12 pages + OCR",
+    product: "Editor",
+    user: "mike.r",
+    status: "processed",
+    time: "8 min ago",
+  }),
+  mk({
+    id: "d7",
+    name: "unknown_format.pdf",
+    classification: "Unclassified",
+    note: "Unrecognized format, needs manual classification",
+    product: "API",
+    action: "documents",
+    user: "matt",
+    status: "flagged",
+    time: "9 min ago",
+  }),
+  mk({
+    id: "d8",
+    name: "employee_w2_martinez.pdf",
+    classification: "Tax Document",
+    auto: true,
+    product: "API",
+    action: "tax document",
+    user: "matt",
+    status: "processed",
+    time: "11 min ago",
+  }),
+  mk({
+    id: "d9",
+    name: "nda_countersigned.pdf",
+    classification: "Contract",
+    auto: true,
+    product: "API",
+    action: "contract",
+    user: "",
+    status: "processed",
+    time: "13 min ago",
+  }),
+  mk({
+    id: "d10",
+    name: "ambiguous_signature.pdf",
+    classification: "Contract",
+    note: "Signature verification failed",
+    product: "API",
+    action: "contract",
+    user: "matt",
+    status: "in-review",
+    reviewer: "Sarah K.",
+    time: "15 min ago",
+  }),
+  mk({
+    id: "d11",
+    name: "vendor_invoice_globex.pdf",
+    classification: "Invoice",
+    auto: true,
+    product: "API",
+    action: "invoice",
+    user: "matt",
+    status: "processed",
+    time: "18 min ago",
+  }),
+  mk({
+    id: "d12",
+    name: "merged_appendix.pdf",
+    note: "Merge + compress",
+    product: "Editor",
+    user: "sarah.k",
+    status: "processed",
+    time: "22 min ago",
+  }),
+  mk({
+    id: "d13",
+    name: "medical_record_scan.pdf",
+    classification: "Patient Intake",
+    auto: true,
+    product: "API",
+    action: "patient intake",
+    user: "lisa.m",
+    status: "processed",
+    time: "25 min ago",
+    sensitive: true,
+  }),
+  mk({
+    id: "d14",
+    name: "redacted_statement.pdf",
+    note: "Redact PII + flatten",
+    product: "Editor",
+    user: "mike.r",
+    status: "processed",
+    time: "30 min ago",
+    sensitive: true,
+  }),
+  mk({
+    id: "d15",
+    name: "w4_form_chen.pdf",
+    classification: "Tax Document",
+    auto: true,
+    product: "API",
+    action: "tax document",
+    user: "matt",
+    status: "processed",
+    time: "35 min ago",
+  }),
+  mk({
+    id: "d16",
+    name: "offer_letter_draft.pdf",
+    classification: "Contract",
+    note: "Missing signature block",
+    product: "API",
+    action: "contract",
+    user: "john.d",
+    status: "flagged",
+    time: "40 min ago",
+  }),
+  mk({
+    id: "d17",
+    name: "compressed_brochure.pdf",
+    note: "Compress + convert to PDF",
+    product: "Editor",
+    user: "sarah.k",
+    status: "processed",
+    time: "48 min ago",
+  }),
+  mk({
+    id: "d18",
+    name: "blurry_receipt.pdf",
+    classification: "Unclassified",
+    note: "Image too low-res to classify",
+    product: "API",
+    action: "documents",
+    user: "matt",
+    status: "flagged",
+    time: "52 min ago",
+  }),
+  mk({
+    id: "d19",
+    name: "signed_nda_partner.pdf",
+    classification: "Contract",
+    auto: true,
+    product: "API",
+    action: "contract",
+    user: "",
+    status: "processed",
+    time: "1 h ago",
+  }),
+  mk({
+    id: "d20",
+    name: "bank_statement_june.pdf",
+    classification: "Closing Disclosure",
+    auto: true,
+    product: "API",
+    action: "closing disclosure",
+    user: "lisa.m",
+    status: "processed",
+    time: "1 h ago",
+    sensitive: true,
+  }),
+];
+
+/** Documents for a given tier. Free is a slim queue; pro/enterprise get all. */
+export function documentsFor(tier: Tier): ReviewDocument[] {
+  if (tier === "free") return DOCS.filter((d) => !d.sensitive).slice(0, 6);
+  return DOCS;
+}
+
 export function summaryFor(tier: Tier): DocumentsSummary {
   const docs = documentsFor(tier);
-  const needsReview = docs.filter((d) => d.status === "needs-review").length;
-  const avgConfidence =
-    docs.length === 0
-      ? 0
-      : docs.reduce((sum, d) => sum + d.confidence, 0) / docs.length;
-  // "Processed today" approximates same-day throughput from the visible queue;
-  // a real backend would count against an actual calendar boundary.
-  const processedToday = docs.filter(
-    (d) => d.status === "processed" || d.status === "archived",
-  ).length;
+  const processed = docs.filter((d) => d.status === "processed").length;
   return {
     totalInQueue: docs.length,
-    needsReview,
-    avgConfidence,
-    processedToday,
+    processed,
+    errors: docs.filter((d) => d.status === "error").length,
+    processedToday: processed,
   };
 }
 
