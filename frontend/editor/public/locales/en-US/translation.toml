@@ -7892,7 +7892,7 @@ sub = "Built to your volume, term, and service level"
 
 [portal.procurement.keyDocs.docs.msa]
 name = "Master Services Agreement"
-sub = "One signature — MSA, order form, EULA, and DPA combined"
+sub = "One signature - MSA, order form, EULA, and DPA combined"
 
 [portal.procurement.keyDocs.docs.purchaseOrder]
 name = "Purchase order"
