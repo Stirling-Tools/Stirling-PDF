@@ -43,11 +43,13 @@ import {
   type OutputSpec,
   type Policy,
   type PolicyRunView,
+  type PipelineOutputMode,
   type TriggerConfig,
   type TriggerInfo,
   type TriggerOutcome,
 } from "@portal/api/pipelines";
 import { clearProcessedHistory } from "@portal/api/policies";
+import { availableOutputModes } from "@portal/components/pipelines/outputModes";
 import { fetchSources, type SourceView } from "@portal/api/sources";
 import { useAsync } from "@portal/hooks/useAsync";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
@@ -56,7 +58,10 @@ import { PipelineStepSettings } from "@portal/components/pipelines/PipelineStepS
 import { ToolPicker } from "@portal/components/pipelines/ToolPicker";
 import "@portal/views/PipelineBuilder.css";
 
-type OutputMode = "inline" | "folder" | "s3";
+type OutputMode = PipelineOutputMode;
+
+/** New pipelines (and specs of unoffered types) start on the first offered destination. */
+const DEFAULT_OUTPUT_MODE = availableOutputModes()[0];
 
 /** The s3 output's connection fields, mirrored from the OutputSpec options. */
 interface S3OutputOptions {
@@ -142,7 +147,7 @@ function parseOutput(output: OutputSpec | undefined): {
       },
     };
   }
-  return { mode: "inline", directory: "", s3: EMPTY_S3_OUTPUT };
+  return { mode: DEFAULT_OUTPUT_MODE, directory: "", s3: EMPTY_S3_OUTPUT };
 }
 
 /**
@@ -189,7 +194,7 @@ export function PipelineBuilder() {
   const [triggerType, setTriggerType] = useState<string>(MANUAL);
   const [scheduleCount, setScheduleCount] = useState("1");
   const [scheduleUnit, setScheduleUnit] = useState<ScheduleUnit>("HOURS");
-  const [outputMode, setOutputMode] = useState<OutputMode>("inline");
+  const [outputMode, setOutputMode] = useState<OutputMode>(DEFAULT_OUTPUT_MODE);
   const [outputDirectory, setOutputDirectory] = useState("");
   const [outputS3, setOutputS3] = useState<S3OutputOptions>(EMPTY_S3_OUTPUT);
   const [s3ConfigOpen, setS3ConfigOpen] = useState(false);
@@ -744,11 +749,10 @@ export function PipelineBuilder() {
               name="pipeline-output"
               value={outputMode}
               onChange={setOutputMode}
-              options={[
-                { value: "inline", label: t("portal.pipelines.output.inline") },
-                { value: "folder", label: t("portal.pipelines.output.folder") },
-                { value: "s3", label: t("portal.pipelines.output.s3") },
-              ]}
+              options={availableOutputModes().map((mode) => ({
+                value: mode,
+                label: t(`portal.pipelines.output.${mode}`),
+              }))}
             />
             {outputMode === "folder" && (
               <FormField

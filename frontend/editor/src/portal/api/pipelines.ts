@@ -30,6 +30,9 @@ export interface OutputSpec {
   options: Record<string, unknown>;
 }
 
+/** The output destinations the pipeline builder can offer. */
+export type PipelineOutputMode = "inline" | "folder" | "s3";
+
 /**
  * The stored policy record: the create/update body (`id` blank on create) and what
  * the backend returns from GET/POST. Mirrors Policy.java exactly; `owner`/`teamId`
