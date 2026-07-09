@@ -1,4 +1,4 @@
-package stirling.software.saas.model;
+package stirling.software.proprietary.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import stirling.software.common.model.enumeration.TeamRole;
-import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.model.User;
 
 /** Constructor, accessor, equals/hashCode/toString, and role-helper tests for TeamMembership. */
