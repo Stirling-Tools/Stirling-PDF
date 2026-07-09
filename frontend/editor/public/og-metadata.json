@@ -499,6 +499,11 @@
       "image": "/og_images/home.png",
       "title": "Payg Settings - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/account-link": {
+      "image": "/og_images/home.png",
+      "title": "Account Link Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     }
   },
   "byPath": {
@@ -653,6 +658,7 @@
     "/settings/legal": "/settings/legal",
     "/settings/backendThirdPartyLicenses": "/settings/backendThirdPartyLicenses",
     "/settings/frontendThirdPartyLicenses": "/settings/frontendThirdPartyLicenses",
-    "/settings/payg": "/settings/payg"
+    "/settings/payg": "/settings/payg",
+    "/settings/account-link": "/settings/account-link"
   }
 }
