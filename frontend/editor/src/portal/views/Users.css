@@ -253,3 +253,266 @@
   gap: 0.5rem;
   width: 100%;
 }
+
+.portal-users__error {
+  margin: 0.75rem 0 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--sui-danger, #dc2626) 12%, transparent);
+  color: var(--sui-danger, #dc2626);
+  font-size: 0.85rem;
+}
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Directory (grouped roster) — Organization / teams / guests               */
+/* ──────────────────────────────────────────────────────────────────────── */
+.portal-users__head-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.portal-users__link {
+  color: var(--color-blue);
+  text-decoration: none;
+}
+.portal-users__link:hover {
+  text-decoration: underline;
+}
+
+.portal-users__directory {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.portal-users__group {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.portal-users__group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--color-border-light);
+  background: var(--color-bg-subtle);
+}
+
+.portal-users__group-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.portal-users__group-title > strong {
+  font-size: 0.9rem;
+  font-weight: 650;
+  color: var(--color-text-1);
+}
+.portal-users__group-desc {
+  font-size: 0.8rem;
+  color: var(--color-text-4);
+}
+.portal-users__group-count {
+  font-size: 0.78rem;
+  color: var(--color-text-4);
+  white-space: nowrap;
+}
+.portal-users__group-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-blue);
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.portal-users__group-action:hover {
+  text-decoration: underline;
+}
+
+.portal-users__row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.7rem 1.25rem;
+}
+.portal-users__row + .portal-users__row {
+  border-top: 1px solid var(--color-border-light);
+}
+.portal-users__row-main {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 250px;
+  flex-shrink: 0;
+  min-width: 0;
+}
+.portal-users__row-id {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.portal-users__row-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+.portal-users__row-you {
+  font-weight: 400;
+  color: var(--color-text-4);
+}
+.portal-users__row-email {
+  font-size: 0.78rem;
+  color: var(--color-text-4);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.portal-users__caps {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1;
+  flex-wrap: wrap;
+}
+/* Solid capability/status tags read cleaner without an outline; the dashed
+   "+ Processor" add-chip keeps its box-cut border. */
+.portal-users__caps .sui-chip:not(.sui-chip--dashed),
+.portal-users__row-tag {
+  border-color: transparent;
+}
+.portal-users__row-active {
+  font-size: 0.78rem;
+  color: var(--color-text-4);
+  white-space: nowrap;
+}
+.portal-users__row-role {
+  width: 148px;
+  flex-shrink: 0;
+}
+
+/* Invite modal extras */
+.portal-users__invite-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+.portal-users__invite-hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--color-text-4);
+}
+.portal-users__invite-access {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border-light);
+}
+.portal-users__invite-access-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-2);
+}
+.portal-users__form-note {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-3);
+}
+
+@media (max-width: 720px) {
+  .portal-users__row {
+    flex-wrap: wrap;
+  }
+  .portal-users__row-main {
+    width: 100%;
+  }
+  .portal-users__invite-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Row kebab + team-header actions + expander + tags ─────────────────── */
+.portal-users__group-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.portal-users__row-kebab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text-4);
+  font-size: 1.125rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background var(--motion-fast),
+    color var(--motion-fast),
+    border-color var(--motion-fast);
+}
+.portal-users__row-kebab:hover {
+  background: var(--color-bg-hover);
+  border-color: var(--color-border);
+  color: var(--color-text-1);
+}
+
+.portal-users__show-more {
+  display: block;
+  width: 100%;
+  padding: 0.6rem 1.25rem;
+  text-align: center;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--color-border-light);
+  color: var(--color-blue);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.portal-users__show-more:hover {
+  background: var(--color-bg-hover);
+}
+
+.portal-users__row-tag {
+  margin-left: 0.4rem;
+  vertical-align: middle;
+}
+
+.portal-users__pw-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+/* The password field flexes; the Regenerate/Copy buttons keep their full label
+   (flex-shrink:0) so they don't truncate in the narrow modal. */
+.portal-users__pw-row > *:first-child {
+  flex: 1;
+  min-width: 0;
+}
+.portal-users__pw-row > *:not(:first-child) {
+  flex-shrink: 0;
+}
+
+.portal-users__confirm-body {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-text-3);
+}

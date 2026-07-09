@@ -61,7 +61,12 @@ describe("ConnectWizard", () => {
     expect(createSource).toHaveBeenCalledWith({
       name: "Claims intake",
       type: "folder",
-      options: { directory: "/data/incoming", mode: "consume" },
+      options: {
+        directory: "/data/incoming",
+        mode: "consume",
+        recursive: "false",
+        identity: "stat",
+      },
       enabled: true,
     });
     await waitFor(() => {
@@ -101,11 +106,17 @@ describe("ConnectWizard", () => {
     await waitFor(() => {
       expect(createSource).toHaveBeenCalledTimes(1);
     });
+    // Options absent from the stored source are submitted at their defaults.
     expect(createSource).toHaveBeenCalledWith({
       id: "s1",
       name: "James",
       type: "folder",
-      options: { directory: "/data/in", mode: "consume" },
+      options: {
+        directory: "/data/in",
+        mode: "consume",
+        recursive: "false",
+        identity: "stat",
+      },
       enabled: true,
     });
     await waitFor(() => {

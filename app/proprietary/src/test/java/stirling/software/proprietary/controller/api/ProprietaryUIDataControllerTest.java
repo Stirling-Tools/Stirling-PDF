@@ -18,6 +18,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
+import stirling.software.proprietary.access.service.ResourceAccessService;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
 import stirling.software.proprietary.controller.api.ProprietaryUIDataController.AccountData;
 import stirling.software.proprietary.controller.api.ProprietaryUIDataController.DatabaseData;
@@ -27,6 +28,7 @@ import stirling.software.proprietary.security.database.repository.SessionReposit
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.DatabaseService;
 import stirling.software.proprietary.security.service.LoginAttemptService;
@@ -43,12 +45,14 @@ class ProprietaryUIDataControllerTest {
     @Mock private SessionPersistentRegistry sessionPersistentRegistry;
     @Mock private UserRepository userRepository;
     @Mock private TeamRepository teamRepository;
+    @Mock private TeamMembershipRepository teamMembershipRepository;
     @Mock private SessionRepository sessionRepository;
     @Mock private DatabaseService databaseService;
     @Mock private UserLicenseSettingsService licenseSettingsService;
     @Mock private PersistentAuditEventRepository auditRepository;
     @Mock private MfaService mfaService;
     @Mock private LoginAttemptService loginAttemptService;
+    @Mock private ResourceAccessService resourceAccessService;
 
     private ApplicationProperties applicationProperties;
     private AuditConfigurationProperties auditConfig;
@@ -75,6 +79,7 @@ class ProprietaryUIDataControllerTest {
                         sessionPersistentRegistry,
                         userRepository,
                         teamRepository,
+                        teamMembershipRepository,
                         sessionRepository,
                         databaseService,
                         objectMapper,
@@ -82,7 +87,8 @@ class ProprietaryUIDataControllerTest {
                         licenseSettingsService,
                         auditRepository,
                         mfaService,
-                        loginAttemptService);
+                        loginAttemptService,
+                        resourceAccessService);
     }
 
     @Test

@@ -57,6 +57,7 @@ export interface VersionTimelineProps {
   currentId: FileId;
   onAddToWorkspace: (fileIds: FileId[]) => void;
   onRemove: (fileIds: FileId[]) => void;
+  hideHeader?: boolean;
 }
 
 /** Version timeline with per-row tool deltas and collapse-when-long. */
@@ -65,6 +66,7 @@ export function VersionTimeline({
   currentId,
   onAddToWorkspace,
   onRemove,
+  hideHeader = false,
 }: VersionTimelineProps) {
   const { t } = useTranslation();
   const [expandedIds, setExpandedIds] = useState<Set<FileId>>(new Set());
@@ -122,15 +124,17 @@ export function VersionTimeline({
 
   return (
     <div className="files-page-details-version-timeline">
-      <div className="files-page-details-version-timeline-label">
-        <HistoryIcon fontSize="small" />
-        <span>{t("filesPage.field.versionHistory", "Version journey")}</span>
-        <span className="files-page-details-version-timeline-count">
-          {t("filesPage.versionsCount", "{{count}} versions", {
-            count: ordered.length,
-          })}
-        </span>
-      </div>
+      {!hideHeader && (
+        <div className="files-page-details-version-timeline-label">
+          <HistoryIcon fontSize="small" />
+          <span>{t("filesPage.field.versionHistory", "Version journey")}</span>
+          <span className="files-page-details-version-timeline-count">
+            {t("filesPage.versionsCount", "{{count}} versions", {
+              count: ordered.length,
+            })}
+          </span>
+        </div>
+      )}
       <ol className="files-page-details-version-timeline-list">
         {rows.map((row, idx) => {
           const isLast = idx === rows.length - 1;

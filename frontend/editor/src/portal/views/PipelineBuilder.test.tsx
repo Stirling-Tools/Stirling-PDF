@@ -104,9 +104,12 @@ function renderBuilder(initial: string) {
   return render(
     <MemoryRouter initialEntries={[initial]}>
       <Routes>
-        <Route path="/portal/pipelines/new" element={<PipelineBuilder />} />
-        <Route path="/portal/pipelines/:id" element={<PipelineBuilder />} />
-        <Route path="/portal/pipelines" element={<div>pipelines list</div>} />
+        <Route path="/processor/pipelines/new" element={<PipelineBuilder />} />
+        <Route path="/processor/pipelines/:id" element={<PipelineBuilder />} />
+        <Route
+          path="/processor/pipelines"
+          element={<div>pipelines list</div>}
+        />
       </Routes>
     </MemoryRouter>,
   );
@@ -131,7 +134,7 @@ describe("PipelineBuilder", () => {
   });
 
   it("builds a new pipeline: name it, add a tool, and save", async () => {
-    renderBuilder("/portal/pipelines/new");
+    renderBuilder("/processor/pipelines/new");
 
     // The name field is the only textbox before the picker opens.
     fireEvent.change(await screen.findByRole("textbox"), {
@@ -157,7 +160,7 @@ describe("PipelineBuilder", () => {
   });
 
   it("runs an existing pipeline and reports success", async () => {
-    renderBuilder("/portal/pipelines/plc-1");
+    renderBuilder("/processor/pipelines/plc-1");
 
     fireEvent.click(await screen.findByText("portal.pipelines.detail.run"));
 
@@ -168,7 +171,7 @@ describe("PipelineBuilder", () => {
   });
 
   it("blocks saving a step that needs an uploaded file", async () => {
-    renderBuilder("/portal/pipelines/new");
+    renderBuilder("/processor/pipelines/new");
 
     fireEvent.change(await screen.findByRole("textbox"), {
       target: { value: "Watermarked" },
@@ -187,7 +190,7 @@ describe("PipelineBuilder", () => {
   });
 
   it("deletes an existing pipeline after confirmation", async () => {
-    renderBuilder("/portal/pipelines/plc-1");
+    renderBuilder("/processor/pipelines/plc-1");
 
     fireEvent.click(await screen.findByText("portal.pipelines.detail.delete"));
     fireEvent.click(await screen.findByText("portal.pipelines.delete.confirm"));
@@ -197,7 +200,7 @@ describe("PipelineBuilder", () => {
   });
 
   it("prompts to save or discard when leaving with unsaved edits", async () => {
-    renderBuilder("/portal/pipelines/new");
+    renderBuilder("/processor/pipelines/new");
 
     fireEvent.change(await screen.findByRole("textbox"), {
       target: { value: "Draft" },
@@ -212,7 +215,7 @@ describe("PipelineBuilder", () => {
   });
 
   it("leaves immediately when there are no unsaved edits", async () => {
-    renderBuilder("/portal/pipelines/new");
+    renderBuilder("/processor/pipelines/new");
 
     await screen.findByRole("textbox");
     fireEvent.click(screen.getByText("portal.pipelines.composer.cancel"));
