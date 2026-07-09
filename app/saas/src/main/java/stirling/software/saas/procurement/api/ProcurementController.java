@@ -87,7 +87,6 @@ public class ProcurementController {
             boolean indemnification,
             boolean training,
             boolean qbr,
-            boolean offlineLicense,
             String currency,
             String businessName) {
         QuoteConfig toConfig() {
@@ -101,7 +100,6 @@ public class ProcurementController {
                     indemnification,
                     training,
                     qbr,
-                    offlineLicense,
                     currency);
         }
     }
@@ -139,7 +137,6 @@ public class ProcurementController {
             boolean indemnification,
             boolean training,
             boolean qbr,
-            boolean offlineLicense,
             String currency,
             String businessName) {}
 
@@ -182,9 +179,9 @@ public class ProcurementController {
             new SnapshotResponse(null, null, null, 0, null, null, 0, false, null, null);
 
     /**
-     * Download the offline / air-gapped licence file (.lic) for the team, when the paid offline
-     * add-on was purchased. 404 when there's no licence or the add-on wasn't taken — we don't leak
-     * that a licence exists to a team without the add-on.
+     * Download the offline / air-gapped licence file (.lic) for the team — available for an
+     * air-gapped deployment from the trial licence onward. 404 when there's no licence yet or the
+     * deployment isn't air-gapped, so we don't leak that a licence exists.
      */
     @GetMapping("/license/file")
     @PreAuthorize("isAuthenticated()")
@@ -360,7 +357,12 @@ public class ProcurementController {
                 q.getCurrency(),
                 q.getAnnualNetMinor(),
                 q.getTcvMinor(),
-                pricing.renewalAnnualMinor(q.getAnnualNetMinor()),
+                // Prefer the renewal locked at quote time; fall back to a live projection for
+                // quotes
+                // priced before the column existed.
+                q.getRenewalAnnualMinor() > 0
+                        ? q.getRenewalAnnualMinor()
+                        : pricing.renewalAnnualMinor(q.getAnnualNetMinor()),
                 pricing.cpiRatePct(),
                 parseLineItems(q.getLineItemsJson()),
                 q.getValidUntil() == null ? null : q.getValidUntil().toString(),
@@ -377,7 +379,6 @@ public class ProcurementController {
                         q.isIndemnification(),
                         q.isTraining(),
                         q.isQbr(),
-                        q.isOfflineLicense(),
                         q.getCurrency(),
                         q.getBusinessName()));
     }

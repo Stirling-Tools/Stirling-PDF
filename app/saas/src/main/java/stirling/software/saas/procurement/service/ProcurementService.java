@@ -192,10 +192,10 @@ public class ProcurementService {
         quote.setIndemnification(cfg.indemnification());
         quote.setTraining(cfg.training());
         quote.setQbr(cfg.qbr());
-        quote.setOfflineLicense(cfg.offlineLicense());
         quote.setBusinessName(businessName);
         quote.setAnnualNetMinor(breakdown.annualNetMinor());
         quote.setTcvMinor(breakdown.tcvMinor());
+        quote.setRenewalAnnualMinor(breakdown.renewalAnnualNetMinor());
         quote.setLineItemsJson(writeLineItems(breakdown));
         quote.setValidUntil(LocalDate.now().plusDays(30));
         quote = quoteRepo.save(quote);
@@ -305,30 +305,19 @@ public class ProcurementService {
     }
 
     /**
-     * Check out the offline/air-gapped licence file for a team, when the offline add-on was
-     * purchased. Requires an issued licence on the deal and the accepted quote to carry the offline
-     * add-on; returns empty otherwise (so the controller can 404 rather than leak that a licence
-     * exists). The certificate is generated on demand by Keygen and never stored.
+     * Check out the offline/air-gapped licence file (.lic) for a team. Available for an air-gapped
+     * deployment (chosen at trial setup) from the trial licence onward — cloud/self-hosted verify
+     * online against Keygen and don't get a file. Returns empty when there's no licence yet or the
+     * deployment isn't air-gapped, so the controller can 404 rather than leak that a licence
+     * exists. The certificate is generated on demand by Keygen (from whatever licence the deal
+     * currently holds — trial or committed annual) and never stored.
      */
     @Transactional(readOnly = true)
     public Optional<String> offlineLicenseFile(Long teamId) {
         ProcurementDeal deal = dealRepo.findByTeamId(teamId).orElse(null);
         if (deal == null || deal.getLicenseRef() == null) return Optional.empty();
-        if (!hasOfflineAddOn(deal)) return Optional.empty();
+        if (!"airgap".equalsIgnoreCase(deal.getDeployment())) return Optional.empty();
         return Optional.of(licenses.checkOutLicenseFile(deal.getLicenseRef()));
-    }
-
-    /**
-     * Whether the deal's <b>accepted</b> quote carries the paid offline-licence add-on. Gated on
-     * the accepted quote (not the latest) so merely toggling the add-on on an unaccepted draft
-     * can't unlock the offline file — it's only available once the add-on has actually been bought.
-     */
-    private boolean hasOfflineAddOn(ProcurementDeal deal) {
-        if (deal.getAcceptedQuoteId() == null) return false;
-        ProcurementQuote quote = quoteRepo.findById(deal.getAcceptedQuoteId()).orElse(null);
-        // Air-gapped deployments verify their licence offline, so they get the downloadable .lic;
-        // cloud/self-hosted check in online against Keygen. Deployment is the offline signal now.
-        return quote != null && "airgap".equalsIgnoreCase(quote.getDeployment());
     }
 
     /**

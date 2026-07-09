@@ -84,14 +84,16 @@ public class ProcurementQuote implements Serializable {
     @Column(name = "qbr", nullable = false)
     private boolean qbr;
 
-    @Column(name = "offline_license", nullable = false)
-    private boolean offlineLicense;
-
     @Column(name = "annual_net_minor", nullable = false)
     private long annualNetMinor;
 
     @Column(name = "tcv_minor", nullable = false)
     private long tcvMinor;
+
+    // First post-term renewal fee (annual net + one CPI step), locked at quote time so the buyer's
+    // quoted renewal doesn't drift if the rate card changes later.
+    @Column(name = "renewal_annual_minor", nullable = false)
+    private long renewalAnnualMinor;
 
     @Column(name = "line_items", columnDefinition = "text")
     private String lineItemsJson;

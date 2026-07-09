@@ -16,7 +16,6 @@ public record QuoteConfig(
         boolean indemnification,
         boolean training,
         boolean qbr,
-        boolean offlineLicense, // offline .lic availability (gates download; no longer priced here)
         String currency) { // USD only for now
 
     /** Default posture when none is chosen — Governed (x4), per the pricing alignment decision. */

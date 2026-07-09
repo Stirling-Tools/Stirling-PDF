@@ -19,7 +19,7 @@ class ProcurementPricingServiceTest {
     private static QuoteConfig cfg(
             long volume, int intensity, String deployment, int term, String sla) {
         return new QuoteConfig(
-                volume, 0, intensity, deployment, term, sla, false, false, false, false, "USD");
+                volume, 0, intensity, deployment, term, sla, false, false, false, "USD");
     }
 
     @Test
@@ -117,8 +117,7 @@ class ProcurementPricingServiceTest {
     void indemnificationIsFivePercentOfTheMeter() {
         long base = pricing.price(cfg(6_000_000, 4, "cloud", 3, "standard")).annualNetMinor();
         QuoteConfig c =
-                new QuoteConfig(
-                        6_000_000, 0, 4, "cloud", 3, "standard", true, false, false, false, "USD");
+                new QuoteConfig(6_000_000, 0, 4, "cloud", 3, "standard", true, false, false, "USD");
         QuoteBreakdown q = pricing.price(c);
         assertThat(lineAmount(q, "indemnification")).isEqualTo(Math.round(base * 0.05));
     }
@@ -126,8 +125,7 @@ class ProcurementPricingServiceTest {
     @Test
     void trainingIsOneTimeOutsideTheAnnual() {
         QuoteConfig withTraining =
-                new QuoteConfig(
-                        6_000_000, 0, 4, "cloud", 3, "standard", false, true, false, false, "USD");
+                new QuoteConfig(6_000_000, 0, 4, "cloud", 3, "standard", false, true, false, "USD");
         QuoteBreakdown q = pricing.price(withTraining);
         long baseAnnual = pricing.price(cfg(6_000_000, 4, "cloud", 3, "standard")).annualNetMinor();
 

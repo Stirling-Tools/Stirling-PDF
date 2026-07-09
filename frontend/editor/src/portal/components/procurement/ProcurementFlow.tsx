@@ -158,7 +158,7 @@ export function ProcurementFlow({
           open={extra === "license"}
           onClose={() => setExtra(null)}
           licenseKey={data.licenseKey}
-          offlineAvailable={latest?.config.deployment === "airgap"}
+          offlineAvailable={data.deployment === "airgap"}
           downloadingLicense={downloadingLicense}
           onDownloadOffline={onDownloadOfflineLicense}
         />
