@@ -159,6 +159,49 @@ describe("PipelineBuilder", () => {
     expect(await screen.findByText("pipelines list")).toBeInTheDocument();
   });
 
+  it("saves an s3 output with its connection options", async () => {
+    renderBuilder("/processor/pipelines/new");
+
+    fireEvent.change(await screen.findByRole("textbox"), {
+      target: { value: "Bucket to bucket" },
+    });
+    fireEvent.click(screen.getByLabelText("portal.pipelines.output.s3"));
+
+    // With s3 selected but no bucket, saving is blocked.
+    expect(
+      screen.getByText("portal.pipelines.composer.create").closest("button"),
+    ).toBeDisabled();
+
+    // Textboxes: name, bucket, region, prefix, access key id, endpoint; the
+    // secret renders as a password input outside the textbox role.
+    const inputs = screen.getAllByRole("textbox") as HTMLInputElement[];
+    fireEvent.change(inputs[1], { target: { value: "claims-processed" } });
+    fireEvent.change(inputs[4], { target: { value: "AKIAEXAMPLE" } });
+    const secret = document.querySelector(
+      'input[type="password"]',
+    ) as HTMLInputElement;
+    fireEvent.change(secret, { target: { value: "shh-secret" } });
+
+    fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
+
+    await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
+    expect(savePipeline).toHaveBeenCalledWith(
+      expect.objectContaining({
+        output: {
+          type: "s3",
+          options: {
+            bucket: "claims-processed",
+            region: "us-east-1",
+            prefix: "",
+            endpoint: "",
+            accessKeyId: "AKIAEXAMPLE",
+            secretAccessKey: "shh-secret",
+          },
+        },
+      }),
+    );
+  });
+
   it("runs an existing pipeline and reports success", async () => {
     renderBuilder("/processor/pipelines/plc-1");
 

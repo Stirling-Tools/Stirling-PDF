@@ -27,6 +27,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.ledger.InProcessProcessedLedger;
 import stirling.software.proprietary.policy.model.InputSpec;
+import stirling.software.proprietary.policy.s3.S3ConnectionPool;
 
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.exception.SdkClientException;
@@ -60,7 +61,9 @@ class S3InputSourceTest {
 
     @BeforeEach
     void setUp() {
-        source = new S3InputSource(new ApplicationProperties(), config -> s3Client);
+        source =
+                new S3InputSource(
+                        new S3ConnectionPool(new ApplicationProperties(), config -> s3Client));
         ledger = new InProcessProcessedLedger();
         ctx = new RecordingContext();
     }

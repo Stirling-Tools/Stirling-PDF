@@ -61,6 +61,21 @@ class SecretMaskerTest {
         }
 
         @Test
+        @DisplayName("should mask camelCase secretAccessKey despite no word boundary")
+        void shouldMaskCamelCaseSecretAccessKey() {
+            Map<String, Object> input =
+                    Map.of(
+                            "secretAccessKey", "shh",
+                            "accessKeyId", "AKIAEXAMPLE");
+
+            Map<String, Object> result = SecretMasker.mask(input);
+
+            assertEquals("***REDACTED***", result.get("secretAccessKey"));
+            // Access key ids are username-like, not secrets.
+            assertEquals("AKIAEXAMPLE", result.get("accessKeyId"));
+        }
+
+        @Test
         @DisplayName("should mask nested map sensitive keys")
         void shouldMaskNestedMapSensitiveKeys() {
             Map<String, Object> input =

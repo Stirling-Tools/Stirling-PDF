@@ -7247,6 +7247,7 @@ operations_one = "Operation ({{count}})"
 operations_other = "Operations ({{count}})"
 output = "Output"
 removeStep = "Remove operation"
+s3PrefixHelp = "Outputs are uploaded under this key prefix."
 save = "Save changes"
 scheduleEvery = "Run every"
 sources = "Sources"
@@ -7282,6 +7283,7 @@ total = "Pipelines"
 [portal.pipelines.output]
 folder = "Write to folder"
 inline = "Return files"
+s3 = "Write to Amazon S3"
 
 [portal.pipelines.run]
 completed_one = "Run completed."

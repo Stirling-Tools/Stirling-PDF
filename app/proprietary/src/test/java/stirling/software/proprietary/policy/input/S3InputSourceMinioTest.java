@@ -22,6 +22,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.ledger.InProcessProcessedLedger;
 import stirling.software.proprietary.policy.model.InputSpec;
+import stirling.software.proprietary.policy.s3.S3ConnectionPool;
 
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -81,7 +82,7 @@ class S3InputSourceMinioTest {
         // The MinIO endpoint resolves to loopback, so the operator opt-in must be on.
         ApplicationProperties properties = new ApplicationProperties();
         properties.getPolicies().setAllowPrivateS3Endpoints(true);
-        source = new S3InputSource(properties);
+        source = new S3InputSource(new S3ConnectionPool(properties));
         ledger = new InProcessProcessedLedger();
         ctx = new RecordingContext();
     }
@@ -159,7 +160,8 @@ class S3InputSourceMinioTest {
 
     @Test
     void aPrivateEndpointIsRejectedWithoutTheOperatorOptIn() {
-        S3InputSource guarded = new S3InputSource(new ApplicationProperties());
+        S3InputSource guarded =
+                new S3InputSource(new S3ConnectionPool(new ApplicationProperties()));
 
         assertThatThrownBy(() -> guarded.validate(spec(Map.of())))
                 .isInstanceOf(IllegalArgumentException.class)

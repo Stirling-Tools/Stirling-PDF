@@ -53,7 +53,26 @@ import { PipelineStepSettings } from "@portal/components/pipelines/PipelineStepS
 import { ToolPicker } from "@portal/components/pipelines/ToolPicker";
 import "@portal/views/PipelineBuilder.css";
 
-type OutputMode = "inline" | "folder";
+type OutputMode = "inline" | "folder" | "s3";
+
+/** The s3 output's connection fields, mirrored from the OutputSpec options. */
+interface S3OutputOptions {
+  bucket: string;
+  region: string;
+  prefix: string;
+  endpoint: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+}
+
+const EMPTY_S3_OUTPUT: S3OutputOptions = {
+  bucket: "",
+  region: "us-east-1",
+  prefix: "",
+  endpoint: "",
+  accessKeyId: "",
+  secretAccessKey: "",
+};
 type ScheduleUnit = "MINUTES" | "HOURS" | "DAYS";
 
 const SCHEDULE_UNITS: ScheduleUnit[] = ["MINUTES", "HOURS", "DAYS"];
@@ -95,14 +114,32 @@ function parseTrigger(trigger: TriggerConfig | null): {
 function parseOutput(output: OutputSpec | undefined): {
   mode: OutputMode;
   directory: string;
+  s3: S3OutputOptions;
 } {
   if (output?.type === "folder") {
     return {
       mode: "folder",
       directory: String(output.options?.directory ?? ""),
+      s3: EMPTY_S3_OUTPUT,
     };
   }
-  return { mode: "inline", directory: "" };
+  if (output?.type === "s3") {
+    const option = (key: keyof S3OutputOptions, fallback = "") =>
+      String(output.options?.[key] ?? fallback);
+    return {
+      mode: "s3",
+      directory: "",
+      s3: {
+        bucket: option("bucket"),
+        region: option("region", "us-east-1"),
+        prefix: option("prefix"),
+        endpoint: option("endpoint"),
+        accessKeyId: option("accessKeyId"),
+        secretAccessKey: option("secretAccessKey"),
+      },
+    };
+  }
+  return { mode: "inline", directory: "", s3: EMPTY_S3_OUTPUT };
 }
 
 /**
@@ -151,6 +188,7 @@ export function PipelineBuilder() {
   const [scheduleUnit, setScheduleUnit] = useState<ScheduleUnit>("HOURS");
   const [outputMode, setOutputMode] = useState<OutputMode>("inline");
   const [outputDirectory, setOutputDirectory] = useState("");
+  const [outputS3, setOutputS3] = useState<S3OutputOptions>(EMPTY_S3_OUTPUT);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [seeded, setSeeded] = useState(false);
@@ -186,6 +224,7 @@ export function PipelineBuilder() {
     setScheduleUnit(trigger.unit);
     setOutputMode(output.mode);
     setOutputDirectory(output.directory);
+    setOutputS3(output.s3);
     setSeeded(true);
   }, [isEdit, policyState.data, allTools, seeded]);
 
@@ -221,6 +260,10 @@ export function PipelineBuilder() {
     const selected = triggers.find((trigger) => trigger.type === triggerType);
     if (selected && !triggerAvailable(selected)) setTriggerType(MANUAL);
   }, [triggerType, triggers, triggerAvailable]);
+
+  function setS3Field(key: keyof S3OutputOptions, value: string) {
+    setOutputS3((current) => ({ ...current, [key]: value }));
+  }
 
   function toggleSource(sourceId: string, checked: boolean) {
     setSourceIds((ids) =>
@@ -286,6 +329,7 @@ export function PipelineBuilder() {
     scheduleUnit,
     outputMode,
     outputDirectory,
+    outputS3,
   });
   const baseline = useRef<string | null>(null);
   useEffect(() => {
@@ -295,7 +339,13 @@ export function PipelineBuilder() {
 
   const scheduleCountValid =
     triggerType !== "schedule" || Number(scheduleCount) > 0;
-  const outputValid = outputMode !== "folder" || outputDirectory.trim() !== "";
+  const s3OutputValid =
+    outputMode !== "s3" ||
+    (outputS3.bucket.trim() !== "" &&
+      (outputS3.accessKeyId.trim() === "") ===
+        (outputS3.secretAccessKey.trim() === ""));
+  const outputValid =
+    (outputMode !== "folder" || outputDirectory.trim() !== "") && s3OutputValid;
   const canSave =
     name.trim() !== "" &&
     scheduleCountValid &&
@@ -357,7 +407,9 @@ export function PipelineBuilder() {
     const output: OutputSpec =
       outputMode === "folder"
         ? { type: "folder", options: { directory: outputDirectory.trim() } }
-        : { type: "inline", options: {} };
+        : outputMode === "s3"
+          ? { type: "s3", options: { ...outputS3 } }
+          : { type: "inline", options: {} };
     const policy: Policy = {
       id: policyState.data?.id ?? undefined,
       name: name.trim(),
@@ -633,6 +685,7 @@ export function PipelineBuilder() {
               options={[
                 { value: "inline", label: t("portal.pipelines.output.inline") },
                 { value: "folder", label: t("portal.pipelines.output.folder") },
+                { value: "s3", label: t("portal.pipelines.output.s3") },
               ]}
             />
             {outputMode === "folder" && (
@@ -647,6 +700,75 @@ export function PipelineBuilder() {
                   onChange={(e) => setOutputDirectory(e.target.value)}
                 />
               </FormField>
+            )}
+            {outputMode === "s3" && (
+              <>
+                <FormField
+                  label={t("portal.sources.types.s3.fields.bucket.label")}
+                  required
+                >
+                  <Input
+                    value={outputS3.bucket}
+                    placeholder="my-company-inbox"
+                    onChange={(e) => setS3Field("bucket", e.target.value)}
+                  />
+                </FormField>
+                <FormField
+                  label={t("portal.sources.types.s3.fields.region.label")}
+                >
+                  <Input
+                    value={outputS3.region}
+                    placeholder="us-east-1"
+                    onChange={(e) => setS3Field("region", e.target.value)}
+                  />
+                </FormField>
+                <FormField
+                  label={t("portal.sources.types.s3.fields.prefix.label")}
+                  helperText={t("portal.pipelines.composer.s3PrefixHelp")}
+                >
+                  <Input
+                    value={outputS3.prefix}
+                    placeholder="processed/"
+                    onChange={(e) => setS3Field("prefix", e.target.value)}
+                  />
+                </FormField>
+                <FormField
+                  label={t("portal.sources.types.s3.fields.accessKeyId.label")}
+                  helperText={t(
+                    "portal.sources.types.s3.fields.accessKeyId.helperText",
+                  )}
+                >
+                  <Input
+                    value={outputS3.accessKeyId}
+                    onChange={(e) => setS3Field("accessKeyId", e.target.value)}
+                  />
+                </FormField>
+                <FormField
+                  label={t(
+                    "portal.sources.types.s3.fields.secretAccessKey.label",
+                  )}
+                >
+                  <Input
+                    type="password"
+                    value={outputS3.secretAccessKey}
+                    onChange={(e) =>
+                      setS3Field("secretAccessKey", e.target.value)
+                    }
+                  />
+                </FormField>
+                <FormField
+                  label={t("portal.sources.types.s3.fields.endpoint.label")}
+                  helperText={t(
+                    "portal.sources.types.s3.fields.endpoint.helperText",
+                  )}
+                >
+                  <Input
+                    value={outputS3.endpoint}
+                    placeholder="https://s3.example.com"
+                    onChange={(e) => setS3Field("endpoint", e.target.value)}
+                  />
+                </FormField>
+              </>
             )}
           </div>
         </div>
