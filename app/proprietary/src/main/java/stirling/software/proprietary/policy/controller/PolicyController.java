@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -47,6 +48,7 @@ import stirling.software.proprietary.policy.engine.PolicyRunHandle;
 import stirling.software.proprietary.policy.engine.PolicyRunRegistry;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.PolicyValidator;
+import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
@@ -86,6 +88,7 @@ public class PolicyController {
     private final PolicyManagementAuthority policyManagementAuthority;
     private final PolicyTriggerManager policyTriggerManager;
     private final PolicyOverviewService policyOverviewService;
+    private final ProcessedLedger processedLedger;
     private final List<PolicyTrigger> policyTriggers;
     private final ApplicationProperties applicationProperties;
     private final TempFileManager tempFileManager;
@@ -213,6 +216,20 @@ public class PolicyController {
         return ResponseEntity.ok(saved);
     }
 
+    @PutMapping("/order")
+    @Operation(
+            summary = "Set the team's policy run order",
+            description =
+                    "Persists the team-wide order policies run in, from the given ordered list of"
+                            + " policy ids (position → order). The per-trigger order shown in the UI"
+                            + " is this one sequence filtered by trigger. Team-leader/admin only;"
+                            + " ids outside the caller's team are ignored.")
+    public ResponseEntity<Void> reorderPolicies(@RequestBody List<String> orderedPolicyIds) {
+        requirePolicyEditingAllowed();
+        policyStore.reorder(policyAccessGuard.teamForNewPolicy(), orderedPolicyIds);
+        return ResponseEntity.noContent().build();
+    }
+
     /**
      * Every {@code sourceId} a policy references must resolve to a source in the caller's team, so
      * a client can neither reference a non-existent source nor reach across teams to use another
@@ -337,12 +354,32 @@ public class PolicyController {
         boolean accessible =
                 policyStore.get(policyId).filter(policyAccessGuard::canAccess).isPresent();
         if (accessible && policyStore.delete(policyId)) {
+            processedLedger.clearPolicy(policyId);
             // Cancel any now-orphaned folder watch promptly rather than leaving the WatchKey open
             // until the next reconcile sweep.
             policyTriggerManager.notifyPoliciesChanged();
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @DeleteMapping("/{policyId}/processed-history")
+    @Operation(
+            summary = "Clear a policy's processed-file history",
+            description =
+                    "Forgets which source files this policy has already processed, so its next"
+                            + " sweep reprocesses everything currently in its sources. Does not"
+                            + " touch the files themselves.")
+    public ResponseEntity<Void> clearProcessedHistory(@PathVariable String policyId) {
+        requirePolicyEditingAllowed();
+        // Scope to the caller's team: a policy in another team reads as not-found.
+        boolean accessible =
+                policyStore.get(policyId).filter(policyAccessGuard::canAccess).isPresent();
+        if (!accessible) {
+            return ResponseEntity.notFound().build();
+        }
+        processedLedger.clearPolicy(policyId);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping(value = "/{policyId}/run", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

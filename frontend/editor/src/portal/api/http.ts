@@ -188,6 +188,24 @@ async function localBlob(
   return res.blob();
 }
 
+/** POST an application/x-www-form-urlencoded body (Spring @RequestParam endpoints),
+ * via the localBackend seam — same base + auth as localJson. */
+async function localForm<T>(
+  path: string,
+  params: Record<string, string>,
+  method: "POST" | "PUT" | "DELETE" = "POST",
+): Promise<T> {
+  const res = await fetch(`${localBaseUrl()}${path}`, {
+    method,
+    headers: { Accept: "application/json", ...(await localAuthHeader()) },
+    body: new URLSearchParams(params),
+  });
+  if (res.status === 401) {
+    onLocalUnauthorized();
+  }
+  return unwrap<T>(res);
+}
+
 // ────────────────────────────────────────────────────────────────────────────
 // saas — hosted SaaS Java, admin's Supabase JWT
 // ────────────────────────────────────────────────────────────────────────────
@@ -269,6 +287,7 @@ export const apiClient = {
   /** Local backend (this instance). Spring admin bearer auto-attached. */
   local: {
     json: localJson,
+    form: localForm,
     blob: localBlob,
   },
   /** Hosted SaaS Java. Admin's Supabase JWT auto-attached. */

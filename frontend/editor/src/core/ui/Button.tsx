@@ -26,6 +26,12 @@ export type ButtonAccent =
   | "success"
   | "warning";
 export type ButtonSize = "sm" | "md" | "lg" | "xl";
+/**
+ * Text-size scale, independent of `size` (which sets the control height). Unset
+ * inherits the `size`-derived default — i.e. `md` for a default button — so
+ * existing buttons are unchanged; set it to size the label on its own axis.
+ */
+export type ButtonFontSize = "xs" | "sm" | "md" | "lg" | "xl";
 /** `between` pins leftSection/label/rightSection to left/center/right (toolbar rows). */
 export type ButtonJustify = "center" | "start" | "end" | "between";
 export type ButtonShape = "default" | "circle" | "pill";
@@ -105,6 +111,16 @@ const MANTINE_JUSTIFY: Record<ButtonJustify, string> = {
   start: "flex-start",
   end: "flex-end",
   between: "space-between",
+};
+
+// Maps the fontSize scale onto Mantine's font-size tokens (xs 12 → xl 20px),
+// the same tokens `size` resolves to — so fontSize is a drop-in override.
+const FONT_SIZE_VAR: Record<ButtonFontSize, string> = {
+  xs: "var(--mantine-font-size-xs)",
+  sm: "var(--mantine-font-size-sm)",
+  md: "var(--mantine-font-size-md)",
+  lg: "var(--mantine-font-size-lg)",
+  xl: "var(--mantine-font-size-xl)",
 };
 
 const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(

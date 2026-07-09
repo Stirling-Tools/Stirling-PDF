@@ -18,16 +18,32 @@ import type { Tier } from "@portal/contexts/TierContext";
 /*  Roles & members                                                          */
 /* ──────────────────────────────────────────────────────────────────────── */
 
-/** The five org roles, most → least privileged. Order is meaningful: it drives
- *  the role select and the reference grid. */
-export type RoleId =
-  | "org_owner"
-  | "team_owner"
-  | "developer"
-  | "reviewer"
-  | "viewer";
+/** The four org roles, most → least privileged, mapped onto the backend's
+ *  authorities + team leadership. Order drives the role select and grid. */
+export type RoleId = "admin" | "team_owner" | "member" | "guest";
 
 export type MemberStatus = "active" | "invited" | "suspended";
+
+/**
+ * Effective portal (processor) access for a member:
+ *   admin   — implicit, admins always have it
+ *   role    — implicit via team-owner leadership (default policy)
+ *   team    — inherited from a PORTAL grant on the member's whole team
+ *   granted — explicit per-user PORTAL grant
+ *   none    — no access
+ */
+export type PortalAccessState = "admin" | "role" | "team" | "granted" | "none";
+
+export const PORTAL_ACCESS_TONE: Record<
+  PortalAccessState,
+  "success" | "info" | "neutral" | "warning"
+> = {
+  admin: "info",
+  role: "info",
+  team: "info",
+  granted: "success",
+  none: "neutral",
+};
 
 export interface Member {
   id: string;
@@ -35,10 +51,32 @@ export interface Member {
   email: string;
   role: RoleId;
   status: MemberStatus;
+  /** Effective portal access; set by the view from the grant list. */
+  portalAccess?: PortalAccessState;
+  /** Authoritative server-side portal access (roster DTO); drives whether a chip shows at all. */
+  canAccessPortal?: boolean;
+  /** The explicit PORTAL grant's id, for revoke (present when access = granted). */
+  portalGrantId?: number;
   /** Relative-time string, e.g. "4m ago". Invited members read "—". */
   lastActive: string;
   /** Optional avatar image; falls back to initials when absent. */
   avatarUrl?: string;
+  /** Backend linkage for row actions (absent on pure fixtures). */
+  username?: string;
+  teamId?: number;
+  teamName?: string;
+  /** Holds a LEADER membership on their team (independent of displayed role). */
+  teamLead?: boolean;
+  /** The signed-in admin's own row; self-directed actions are disabled. */
+  isSelf?: boolean;
+  /** Account locked after failed logins (admin can unlock). */
+  locked?: boolean;
+  /** MFA enrolled (admin can reset it). */
+  mfaEnabled?: boolean;
+  /** Auth provider: "web" (password), "oauth2", "saml2", etc. */
+  authType?: string;
+  /** Raw stored authority (e.g. ROLE_USER, ROLE_WEB_ONLY_USER); preserved on team moves. */
+  authority?: string;
 }
 
 export interface Role {
@@ -104,6 +142,11 @@ export interface UsersResponse {
   members: Member[];
   roles: Role[];
   access: AccessControls;
+  /** Whether SMTP is configured (gates emailing passwords/invites). */
+  mailEnabled: boolean;
+  /** Whether email invites will work: SMTP on AND mail.enableInvites=true. Gates the
+   * "Invite by email" option on self-hosted. */
+  emailInvitesEnabled: boolean;
 }
 
 /* ──────────────────────────────────────────────────────────────────────── */
@@ -127,62 +170,51 @@ export const MEMBER_STATUS_TONE: Record<
 
 export const ROLES: Role[] = [
   {
-    id: "org_owner",
-    label: "Org Owner",
-    summary: "Full governance over the organization, billing and members.",
+    id: "admin",
+    label: "Admin (Org owner)",
+    summary: "Full governance over the workspace, settings and members.",
     permissions: [
-      "Manage billing & plan",
-      "Add, suspend and remove members",
-      "Configure SSO, SCIM and security policy",
+      "Manage users, teams and roles",
+      "Manage all integrations incl. S3 connections",
+      "Grant or revoke portal access",
       "Everything Team Owner can do",
     ],
     tone: "purple",
   },
   {
     id: "team_owner",
-    label: "Team Owner",
-    summary: "Team-scoped admin — manage members and pipelines for a team.",
+    label: "Team owner",
+    summary: "Owns a team — manages its members' resources and shared configs.",
     permissions: [
-      "Invite & manage team members",
-      "Create and deploy pipelines",
-      "View team usage & audit log",
-      "No org billing or SSO access",
+      "Create & manage the team's S3 connections",
+      "Manage team-owned integration configs",
+      "Portal access via the default policy",
+      "Everything Member can do",
     ],
     tone: "blue",
   },
   {
-    id: "developer",
-    label: "Developer",
-    summary: "Build and operate pipelines, agents and integrations.",
+    id: "member",
+    label: "Member",
+    summary:
+      "Regular user — works with shared resources and their own configs.",
     permissions: [
-      "Create & edit pipelines",
-      "Manage API keys, agents and webhooks",
-      "Run and debug document jobs",
-      "Read team audit log",
+      "Use the editor and shared integrations",
+      "Create personal API & MCP configs",
+      "See team configs shared with them",
+      "No S3 or workspace management",
     ],
     tone: "green",
   },
   {
-    id: "reviewer",
-    label: "Reviewer",
-    summary: "Approve or reject documents routed for human review.",
+    id: "guest",
+    label: "Guest",
+    summary: "Limited or web-only access; cannot hold personal configs.",
     permissions: [
-      "Approve / reject review tasks",
-      "Annotate and redact documents",
-      "Read assigned pipelines",
-      "No pipeline or key management",
-    ],
-    tone: "amber",
-  },
-  {
-    id: "viewer",
-    label: "Viewer",
-    summary: "Read-only access to documents and dashboards.",
-    permissions: [
-      "View documents & results",
-      "View dashboards & usage",
-      "Export permitted reports",
-      "No write access",
+      "Web-only / demo usage",
+      "No API keys or integrations",
+      "No portal access",
+      "Read-only where shared",
     ],
     tone: "neutral",
   },
@@ -206,7 +238,7 @@ const PRO_MEMBERS: Member[] = [
     id: "usr-you",
     name: "You",
     email: "you@acme.com",
-    role: "org_owner",
+    role: "admin",
     status: "active",
     lastActive: "just now",
   },
@@ -214,7 +246,7 @@ const PRO_MEMBERS: Member[] = [
     id: "usr-priya",
     name: "Priya Nair",
     email: "priya@acme.com",
-    role: "developer",
+    role: "member",
     status: "active",
     lastActive: "8m ago",
   },
@@ -222,7 +254,7 @@ const PRO_MEMBERS: Member[] = [
     id: "usr-marcus",
     name: "Marcus Webb",
     email: "marcus@acme.com",
-    role: "developer",
+    role: "member",
     status: "active",
     lastActive: "1h ago",
   },
@@ -230,7 +262,7 @@ const PRO_MEMBERS: Member[] = [
     id: "usr-dana",
     name: "Dana Osei",
     email: "dana@acme.com",
-    role: "reviewer",
+    role: "member",
     status: "active",
     lastActive: "yesterday",
   },
@@ -239,16 +271,16 @@ const PRO_MEMBERS: Member[] = [
     id: "usr-invite-1",
     name: "sam.lee@acme.com",
     email: "sam.lee@acme.com",
-    role: "viewer",
+    role: "guest",
     status: "invited",
-    lastActive: "—",
+    lastActive: "Never",
   },
   {
     // Suspended: retains the seat but cannot sign in until reinstated.
     id: "usr-leo",
     name: "Leo Fischer",
     email: "leo@acme.com",
-    role: "developer",
+    role: "member",
     status: "suspended",
     lastActive: "12 days ago",
   },
@@ -268,7 +300,7 @@ const ENTERPRISE_EXTRA: Member[] = [
     id: "usr-tom",
     name: "Tom Becker",
     email: "tom@acme.com",
-    role: "reviewer",
+    role: "member",
     status: "active",
     lastActive: "26m ago",
   },
@@ -276,7 +308,7 @@ const ENTERPRISE_EXTRA: Member[] = [
     id: "usr-nadia",
     name: "Nadia Costa",
     email: "nadia@acme.com",
-    role: "viewer",
+    role: "guest",
     status: "active",
     lastActive: "2h ago",
   },
@@ -284,9 +316,9 @@ const ENTERPRISE_EXTRA: Member[] = [
     id: "usr-invite-2",
     name: "contractor@partner.io",
     email: "contractor@partner.io",
-    role: "reviewer",
+    role: "member",
     status: "invited",
-    lastActive: "—",
+    lastActive: "Never",
   },
 ];
 
@@ -296,7 +328,7 @@ const FREE_MEMBERS: Member[] = [
     id: "usr-you",
     name: "You",
     email: "you@acme.com",
-    role: "org_owner",
+    role: "admin",
     status: "active",
     lastActive: "just now",
   },
@@ -304,7 +336,7 @@ const FREE_MEMBERS: Member[] = [
     id: "usr-jess",
     name: "Jess Allen",
     email: "jess@acme.com",
-    role: "developer",
+    role: "member",
     status: "active",
     lastActive: "3h ago",
   },
@@ -395,5 +427,52 @@ export function buildUsersResponse(tier: Tier): UsersResponse {
     members: membersFor(tier),
     roles: ROLES,
     access: accessFor(tier),
+    mailEnabled: false,
+    emailInvitesEnabled: false,
+  };
+}
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Backend-shaped fixtures                                                  */
+/*  api/users.ts now reads the real admin-settings endpoint; mock mode       */
+/*  serves this AdminSettingsData-shaped payload on the same route so the    */
+/*  real adapter is exercised end to end.                                    */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+export function buildAdminSettingsData(tier: Tier) {
+  const members = membersFor(tier);
+  const users = members.map((m, i) => ({
+    id: i + 1,
+    username: m.email,
+    email: m.email,
+    rolesAsString:
+      m.role === "admin"
+        ? "ROLE_ADMIN"
+        : m.role === "guest"
+          ? "ROLE_WEB_ONLY_USER"
+          : "ROLE_USER",
+    teamLead: m.role === "team_owner",
+    // Authoritative portal access as the backend computes it under the default policy
+    // (admins + team leads), plus the seeded PORTAL grant on user id 2 (see mock grantStore).
+    portalAccess: m.role === "admin" || m.role === "team_owner" || i + 1 === 2,
+    enabled: m.status !== "suspended",
+    team: { id: 1, name: "Default" },
+  }));
+  const userLastRequest = Object.fromEntries(
+    members
+      .filter((m) => m.status === "active")
+      .map((m, i) => [m.email, Date.now() - i * 45 * 60 * 1000]),
+  );
+  const seatLimit = seatLimitFor(tier);
+  return {
+    users,
+    userLastRequest,
+    totalUsers: users.length,
+    activeUsers: users.filter((u) => u.enabled).length,
+    disabledUsers: users.filter((u) => !u.enabled).length,
+    maxAllowedUsers: seatLimit ?? 0,
+    currentUsername: users[0]?.username,
+    mailEnabled: false,
+    emailInvitesEnabled: false,
   };
 }

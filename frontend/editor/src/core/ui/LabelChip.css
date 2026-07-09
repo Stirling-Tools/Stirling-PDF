@@ -1,0 +1,57 @@
+/* Shared classification-label pill (team labels editor + sidebar category manager). */
+
+.sui-labelchip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0.2rem 0.3rem 0.2rem 0.25rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  max-width: 16rem;
+}
+
+.sui-labelchip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--color-text-2);
+}
+
+.sui-labelchip-name {
+  font-size: 0.8125rem;
+  color: var(--color-text-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sui-labelchip-count {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--color-text-3);
+  padding-left: 0.1rem;
+}
+
+.sui-labelchip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-3);
+  cursor: pointer;
+  transition:
+    background var(--motion-fast),
+    color var(--motion-fast);
+}
+
+.sui-labelchip-remove:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-red);
+}

@@ -177,6 +177,19 @@ export async function deletePolicy(id: string): Promise<void> {
   );
 }
 
+/**
+ * DELETE /api/v1/policies/{id}/processed-history — forget which source files
+ * the policy has processed, so its next sweep reprocesses everything present.
+ */
+export async function clearProcessedHistory(id: string): Promise<void> {
+  await apiClient.local.json<void>(
+    `/api/v1/policies/${encodeURIComponent(id)}/processed-history`,
+    {
+      method: "DELETE",
+    },
+  );
+}
+
 // ── Wire-build helpers (so Policies.tsx doesn't need codec knowledge) ────────
 
 const DEFAULT_RETRIES = 3;
