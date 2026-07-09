@@ -5943,33 +5943,13 @@ partialOutputsUnavailable = "Some policy outputs are no longer available to down
 runNotFound = "The enforcement run could no longer be found."
 timedOut = "Enforcement timed out before the run could finish."
 
-[policies.catalog]
-compliance = "Compliance"
-ingestion = "Ingestion"
-retention = "Retention"
-routing = "Routing"
-security = "Security"
-
 [policies.detail]
-close = "Close"
-editSettings = "Edit Settings"
 enforces = "Enforces"
-managedByOrg = "Managed by your organization. Contact a team leader to change this policy."
-noActivityDescription = "Documents will appear here once this policy runs."
-noActivityTitle = "No activity yet"
 onEveryUpload = "On every upload"
-originalsNote = "Originals stay untouched • Enforced version saved alongside"
-pause = "Pause"
 recentActivity = "Recent Activity"
-resume = "Resume"
 retry = "Retry"
 showLess = "Show less"
 showMore = "Show more"
-statActive = "Active"
-statDataProcessed = "Data processed"
-statDocsEnforced = "Docs enforced"
-statusActive = "Active"
-statusPaused = "Paused"
 
 [policies.docType]
 Contracts = "Contracts"
@@ -5993,13 +5973,6 @@ printPolicyAppliedTitle = "Policy applied before printing"
 successTitle = "{{names}} applied"
 summaryMore = "{{first}}, {{second}} and {{more}} more"
 summaryTwo = "{{first}} and {{second}}"
-
-[policies.enforcement.triggerVerb]
-convert = "Enforcing before convert"
-default = "Enforcing"
-export = "Enforcing before export"
-input = "Enforcing on import"
-print = "Enforcing before print"
 
 [policies.field]
 accessLog = "Access log"
@@ -6059,9 +6032,6 @@ Indefinite = "Indefinite"
 "Block export" = "Block export"
 "Flag for review" = "Flag for review"
 "Quarantine document" = "Quarantine document"
-
-[policies.fields]
-selectedCount = "{{count}} selected"
 
 [policies.labels]
 add = "Add"
