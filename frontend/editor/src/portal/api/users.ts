@@ -7,6 +7,7 @@ export type {
   AccessControls,
   Member,
   MemberStatus,
+  PendingInvitation,
   PortalAccessState,
   Role,
   RoleId,
