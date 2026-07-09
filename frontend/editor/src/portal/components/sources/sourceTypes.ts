@@ -91,6 +91,43 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
           },
         ],
       },
+      {
+        key: "recursive",
+        labelKey: "portal.sources.types.folder.fields.recursive.label",
+        control: "select",
+        defaultValue: "false",
+        options: [
+          {
+            value: "false",
+            labelKey:
+              "portal.sources.types.folder.fields.recursive.options.top",
+          },
+          {
+            value: "true",
+            labelKey:
+              "portal.sources.types.folder.fields.recursive.options.all",
+          },
+        ],
+      },
+      {
+        key: "identity",
+        labelKey: "portal.sources.types.folder.fields.identity.label",
+        control: "select",
+        defaultValue: "stat",
+        helperTextKey: "portal.sources.types.folder.fields.identity.helperText",
+        options: [
+          {
+            value: "stat",
+            labelKey:
+              "portal.sources.types.folder.fields.identity.options.stat",
+          },
+          {
+            value: "hash",
+            labelKey:
+              "portal.sources.types.folder.fields.identity.options.hash",
+          },
+        ],
+      },
     ],
   },
 ];
