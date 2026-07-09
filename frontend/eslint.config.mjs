@@ -6,7 +6,8 @@ import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
 
 const srcGlobs = [
-  // The portal layer lives under editor/src/portal, so editor/src/** covers it.
+  // The portal layers live under editor/src/portal (base) and
+  // editor/src/portal-saas (saas override), so editor/src/** covers them.
   "editor/src/**/*.{js,mjs,jsx,ts,tsx}",
 ];
 const nodeGlobs = [
@@ -71,6 +72,7 @@ export default defineConfig(
     // Everything that contains 3rd party code that we don't want to lint
     ignores: [
       "dist",
+      "dist-portal",
       "node_modules",
       "playwright-report",
       "storybook-static",
@@ -233,6 +235,20 @@ export default defineConfig(
   {
     files: [
       "editor/src/portal/components/procurement/**/*.{js,mjs,jsx,ts,tsx}",
+    ],
+    rules: {
+      "no-restricted-syntax": ["error", ...mantineComponentImportRestrictions],
+    },
+  },
+  // TEMPORARY (same rationale as procurement above): the portal home hero
+  // reuses the same bespoke CSS-styled raw <button> controls as the procurement
+  // deal hero — status/invite chips and full-width checklist rows that the
+  // shared Button can't represent. Exempt ONLY the raw-<button> rule; the
+  // Mantine import bans stay. Migrate these alongside the procurement buttons.
+  {
+    files: [
+      "editor/src/portal/components/EditorStatusCard.tsx",
+      "editor/src/portal/components/SetupChecklist.tsx",
     ],
     rules: {
       "no-restricted-syntax": ["error", ...mantineComponentImportRestrictions],

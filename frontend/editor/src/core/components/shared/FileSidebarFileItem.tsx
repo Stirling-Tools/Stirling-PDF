@@ -1,6 +1,6 @@
-import { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Menu, Tooltip } from "@mantine/core";
+import { Group, Loader, Menu, Stack, Text, Tooltip } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
@@ -13,6 +13,10 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import HistoryIcon from "@mui/icons-material/History";
 import type { FileId } from "@app/types/file";
 import { FileDocIcon } from "@app/components/shared/FileDocIcon";
+import {
+  PolicyBadges,
+  type FileItemPolicyRef,
+} from "@app/components/shared/PolicyBadges";
 import { getFileDocVariant } from "@app/components/shared/filePreview/getFileTypeIcon";
 import { useLazyThumbnail } from "@app/hooks/useLazyThumbnail";
 import { IMAGE_EXTENSIONS } from "@app/utils/fileUtils";
@@ -132,17 +136,6 @@ export interface FileItemFolderRef {
   accentColor: string;
 }
 
-/** A policy that has run on this file, used for the activity badges. */
-export interface FileItemPolicyRef {
-  id: string;
-  name: string;
-  /** CSS colour for the badge (matches the policy's accent). */
-  accentColor: string;
-  /** True only just after the policy was applied — drives the one-off glow, so
-   *  it doesn't replay on every reload of an already-enforced file. */
-  recent: boolean;
-}
-
 export interface FileItemProps {
   fileId: FileId;
   name: string;
@@ -178,7 +171,6 @@ export interface FileItemProps {
 }
 
 const MAX_VISIBLE_FOLDER_TAGS = 2;
-const MAX_VISIBLE_POLICY_BADGES = 3;
 
 export function FileItem({
   fileId,
@@ -208,6 +200,23 @@ export function FileItem({
   const dateLabel = lastModified ? formatFileDate(lastModified) : "";
   const typeLabel = ext ? ext.toUpperCase() : "File";
 
+  const policyEnforcing = policies.some((p) => p.enforcing);
+  const enforcingTooltip = (action: string): React.ReactNode => (
+    <Stack gap={6} py={2} w={200}>
+      <Group gap={6} wrap="nowrap">
+        <ShieldOutlinedIcon style={{ fontSize: 13 }} />
+        <Text size="xs" fw={600}>
+          {t(
+            "policy.blockingAction",
+            "{{action}} blocked while enforcing policy, please wait...",
+            { action },
+          )}
+        </Text>
+      </Group>
+      <Loader size="xs" />
+    </Stack>
+  );
+
   const visibleFolders = folders.slice(0, MAX_VISIBLE_FOLDER_TAGS);
   const overflowFolders = folders.slice(MAX_VISIBLE_FOLDER_TAGS);
 
@@ -228,9 +237,6 @@ export function FileItem({
 
   const handleMouseLeave = useCallback(() => setHoverRect(null), []);
 
-  // A just-applied policy (recent run) drives the one-off row glow.
-  const recentPolicy = policies.find((p) => p.recent);
-
   // Reactive: tooltip appears as soon as both hover rect and thumbnail are ready
   const thumbPos =
     hoverRect && resolvedThumbnail
@@ -244,14 +250,7 @@ export function FileItem({
     <>
       <div
         ref={itemRef}
-        className={`file-sidebar-file-item${isSelected ? " selected" : ""}${isActive ? " active" : ""}${isViewedInViewer ? " viewed" : ""}${recentPolicy ? " policy-enforced" : ""}`}
-        style={
-          recentPolicy
-            ? ({
-                "--policy-glow": recentPolicy.accentColor,
-              } as React.CSSProperties)
-            : undefined
-        }
+        className={`file-sidebar-file-item${isSelected ? " selected" : ""}${isActive ? " active" : ""}${isViewedInViewer ? " viewed" : ""}`}
         onClick={() => onClick(fileId)}
         draggable={draggable}
         onDragStart={
@@ -301,25 +300,7 @@ export function FileItem({
                 </span>
               </Tooltip>
             )}
-            {policies.length > 0 && (
-              <span className="file-sidebar-policy-badges" data-no-select>
-                {policies.slice(0, MAX_VISIBLE_POLICY_BADGES).map((policy) => (
-                  <Tooltip
-                    key={policy.id}
-                    label={`${policy.name} policy ran on this file`}
-                    withArrow
-                    position="top"
-                  >
-                    <span
-                      className="file-sidebar-policy-badge"
-                      style={{ color: policy.accentColor }}
-                    >
-                      <ShieldOutlinedIcon sx={{ fontSize: "0.7rem" }} />
-                    </span>
-                  </Tooltip>
-                ))}
-              </span>
-            )}
+            <PolicyBadges policies={policies} />
           </span>
           {folders.length > 0 && (
             <span className="file-sidebar-folder-tags" data-no-select>
@@ -396,7 +377,7 @@ export function FileItem({
             />
           </ActionIcon>
           {(onDelete ||
-            onSaveToCloud ||
+            (canSaveToCloud && onSaveToCloud) ||
             (hasVersionHistory && onVersionHistory)) && (
             <Menu position="bottom-end" withinPortal shadow="md" width={190}>
               <Menu.Target>
@@ -429,17 +410,10 @@ export function FileItem({
                     )}
                   </Menu.Item>
                 )}
-                {canSaveToCloud && onSaveToCloud && (
-                  <Menu.Item
-                    leftSection={
-                      <CloudUploadOutlinedIcon sx={{ fontSize: 16 }} />
-                    }
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSaveToCloud(fileId);
-                    }}
-                  >
-                    {isUploadedToCloud
+                {canSaveToCloud &&
+                  onSaveToCloud &&
+                  (() => {
+                    const uploadLabel = isUploadedToCloud
                       ? t(
                           "fileSidebar.fileItem.updateOnServer",
                           "Update on server",
@@ -447,21 +421,64 @@ export function FileItem({
                       : t(
                           "fileSidebar.fileItem.uploadToServer",
                           "Upload to server",
-                        )}
-                  </Menu.Item>
-                )}
-                {onDelete && (
-                  <Menu.Item
-                    color="red"
-                    leftSection={<DeleteOutlineIcon sx={{ fontSize: 16 }} />}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete(fileId);
-                    }}
-                  >
-                    {t("fileSidebar.fileItem.delete", "Delete")}
-                  </Menu.Item>
-                )}
+                        );
+                    return (
+                      <Tooltip
+                        label={enforcingTooltip(uploadLabel)}
+                        disabled={!policyEnforcing}
+                        position="left"
+                        offset={6}
+                        withArrow
+                      >
+                        <div>
+                          <Menu.Item
+                            disabled={policyEnforcing}
+                            leftSection={
+                              <CloudUploadOutlinedIcon sx={{ fontSize: 16 }} />
+                            }
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onSaveToCloud(fileId);
+                            }}
+                          >
+                            {uploadLabel}
+                          </Menu.Item>
+                        </div>
+                      </Tooltip>
+                    );
+                  })()}
+                {onDelete &&
+                  (() => {
+                    const deleteLabel = t(
+                      "fileSidebar.fileItem.delete",
+                      "Delete",
+                    );
+                    return (
+                      <Tooltip
+                        label={enforcingTooltip(deleteLabel)}
+                        disabled={!policyEnforcing}
+                        position="left"
+                        offset={6}
+                        withArrow
+                      >
+                        <div>
+                          <Menu.Item
+                            disabled={policyEnforcing}
+                            color="red"
+                            leftSection={
+                              <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+                            }
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDelete(fileId);
+                            }}
+                          >
+                            {deleteLabel}
+                          </Menu.Item>
+                        </div>
+                      </Tooltip>
+                    );
+                  })()}
               </Menu.Dropdown>
             </Menu>
           )}

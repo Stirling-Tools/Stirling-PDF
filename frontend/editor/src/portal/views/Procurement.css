@@ -1119,6 +1119,37 @@
   flex-wrap: wrap;
   margin-top: 1rem;
 }
+.portal-proc__license {
+  margin-top: 1.25rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border, rgba(0, 0, 0, 0.1));
+  border-radius: 0.6rem;
+  background: var(--color-surface-2, rgba(0, 0, 0, 0.02));
+}
+.portal-proc__license-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-2);
+}
+.portal-proc__license-key {
+  display: block;
+  margin-top: 0.4rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.4rem;
+  background: var(--color-surface-3, rgba(0, 0, 0, 0.05));
+  font-family: var(--font-mono, monospace);
+  font-size: 0.85rem;
+  word-break: break-all;
+  color: var(--color-text-1);
+}
+.portal-proc__license-hint {
+  margin: 0.6rem 0 0;
+  font-size: 0.75rem;
+  color: var(--color-text-3, var(--color-text-2));
+}
 .portal-proc__milestone-for {
   margin: 0.15rem 0 0;
   font-size: 0.8125rem;
@@ -1243,6 +1274,8 @@
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   animation: portal-procmodal-fade 0.15s ease-out;
+  /* Portaled to <body>, outside .portal-scope, so set the portal UI font explicitly. */
+  font-family: var(--font-sans);
 }
 .portal-sidemodal__panel {
   position: relative;
@@ -1255,6 +1288,11 @@
   padding: 1.35rem 1.4rem 1.4rem;
   max-height: 86vh;
   overflow-y: auto;
+}
+/* Wide enough for Calendly's two-pane layout (its single-column layout below ~680px inner width is
+   tall and scrolls); paired with the embed's taller fixed height so the time view needs no scroll. */
+.portal-sidemodal__panel--wide {
+  max-width: 52rem;
 }
 .portal-sidemodal__header {
   margin-bottom: 1rem;
@@ -1355,53 +1393,12 @@
   color: var(--color-text-5);
 }
 
-/* Solutions-engineer + time slots (Schedule a call). */
-.portal-se {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-.portal-se__avatar {
-  width: 2.4rem;
-  height: 2.4rem;
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--color-primary, #2383e2);
-  background: var(--color-primary-light, #eaf2fb);
-  flex-shrink: 0;
-}
-.portal-se__name {
-  font-size: 0.875rem;
-  font-weight: 650;
-  color: var(--color-text-1);
-}
-.portal-se__role {
-  font-size: 0.75rem;
-  color: var(--color-text-4);
-}
-.portal-slots {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
-}
-.portal-slots__slot {
-  padding: 0.6rem 0.75rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--color-text-2);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 9px;
-  cursor: pointer;
-}
-.portal-slots__slot:hover {
-  border-color: var(--color-primary, #2383e2);
-  color: var(--color-primary, #2383e2);
+/* Calendly scheduler embed (Schedule a call). The widget is always light (Calendly renders inputs on
+   white), so give it a white surface — it reads as a clean card even inside the dark-mode modal. */
+.portal-calendly {
+  border-radius: 10px;
+  overflow: hidden;
+  background: #ffffff;
 }
 
 /* ── Agreement (security) step ────────────────────────────────────────────── */
