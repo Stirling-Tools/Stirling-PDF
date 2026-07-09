@@ -152,6 +152,20 @@ export const Sizes: Story = {
   ),
 };
 
+/**
+ * `fontSize` scales the label text independently of `size` (which sets height).
+ * Unset inherits the `size`-derived default (md for a default button).
+ */
+export const FontSizes: Story = {
+  render: (args) => (
+    <Wrap>
+      {(["xs", "sm", "md", "lg", "xl"] as const).map((fontSize) => (
+        <Button key={fontSize} {...args} fontSize={fontSize} text={fontSize} />
+      ))}
+    </Wrap>
+  ),
+};
+
 /** Icons are optional and positional: `leftSection`, `rightSection`, or both. */
 export const WithIcons: Story = {
   render: (args) => (

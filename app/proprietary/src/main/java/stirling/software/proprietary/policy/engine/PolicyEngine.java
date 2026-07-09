@@ -36,6 +36,7 @@ import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.WaitState;
+import stirling.software.proprietary.policy.output.OutputDelivery;
 import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 import stirling.software.proprietary.service.DownstreamEntitlementError;
@@ -205,7 +206,12 @@ public class PolicyEngine {
             PolicyExecutionResult result =
                     stepExecutor.execute(run.getDefinition(), inputs, listener);
             OutputSpec output = run.getDefinition().output();
-            List<ResultFile> outputs = sinkFor(output).deliver(runId, result.files(), output);
+            List<ResultFile> outputs =
+                    sinkFor(output)
+                            .deliver(
+                                    new OutputDelivery(runId, run.getPolicyId()),
+                                    result.files(),
+                                    output);
             taskManager.setMultipleFileResults(runId, outputs);
             taskManager.setComplete(runId);
             run.complete(outputs);

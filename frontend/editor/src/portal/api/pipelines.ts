@@ -6,9 +6,8 @@ import { apiClient } from "@portal/api/http";
  * A "pipeline" in the portal IS a backend policy (PolicyController, Policy.java):
  * an ordered chain of tool steps with input sources, a trigger, and an output
  * destination. This surface lists EVERY backend policy (the user-facing Policies
- * page builds only a friendly subset of the same records). Like Sources, it calls
- * the REAL Stirling API base `/api/v1/policies`, so dropping MSW points these exact
- * calls at the live backend.
+ * page builds only a friendly subset of the same records). Like Sources, it
+ * calls the real Stirling API base `/api/v1/policies`.
  */
 
 /** One tool invocation in a pipeline. `operation` is a Stirling endpoint path. */
