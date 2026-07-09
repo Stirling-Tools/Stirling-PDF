@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
@@ -194,6 +195,54 @@ abstract class ProcessedLedgerContractTest {
     void policiesTrackTheSameFileIndependently() {
         assertTrue(ledger.claim(POLICY, FILE, GATE, null));
         assertTrue(ledger.claim(OTHER_POLICY, FILE, GATE, null));
+    }
+
+    @Test
+    void statesForSnapshotsOnlyExistingRows() {
+        assertTrue(ledger.claim(POLICY, FILE, GATE, null));
+
+        Map<String, ClaimState> states = ledger.statesFor(POLICY, List.of(FILE, "/in/other.pdf"));
+
+        assertEquals(1, states.size());
+        assertEquals(ProcessedFileStatus.PROCESSING, states.get(FILE).status());
+        assertEquals(GATE, states.get(FILE).gate());
+    }
+
+    @Test
+    void aStaleAbsentSnapshotLosesTheClaimRaceInsteadOfDoubleClaiming() {
+        ClaimState absent = ledger.statesFor(POLICY, List.of(FILE)).get(FILE); // no row yet
+        assertTrue(ledger.claim(POLICY, FILE, GATE, null)); // another sweep wins meanwhile
+
+        assertFalse(ledger.claim(POLICY, FILE, GATE, null, absent));
+    }
+
+    @Test
+    void aStaleSettledSnapshotCannotReclaimAnInFlightRow() {
+        assertTrue(ledger.claim(POLICY, FILE, GATE, null));
+        ledger.settle(POLICY, FILE, GATE, null, true);
+        ClaimState settled = ledger.statesFor(POLICY, List.of(FILE)).get(FILE);
+        assertTrue(ledger.claim(POLICY, FILE, NEW_GATE, null)); // a fresh sweep reclaims first
+
+        assertFalse(ledger.claim(POLICY, FILE, "100:3333", null, settled));
+    }
+
+    @Test
+    void aForgottenOutputIsClaimableAtAnyVersion() {
+        ledger.recordOutput(POLICY, FILE, GATE, HASH);
+        ledger.forgetOutput(POLICY, FILE, GATE);
+
+        // Even a byte-identical file at that identity is fresh work: the record is gone.
+        assertTrue(ledger.claim(POLICY, FILE, GATE, hash(HASH)));
+    }
+
+    @Test
+    void forgetOutputLeavesARowReclaimedInTheMeantime() {
+        ledger.recordOutput(POLICY, FILE, GATE, HASH);
+        assertTrue(ledger.claim(POLICY, FILE, NEW_GATE, null)); // a real claim took the row over
+
+        ledger.forgetOutput(POLICY, FILE, GATE);
+
+        assertFalse(ledger.claim(POLICY, FILE, NEW_GATE, null)); // still in flight, not deleted
     }
 
     @Test

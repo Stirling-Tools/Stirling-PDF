@@ -1,6 +1,7 @@
 package stirling.software.proprietary.policy.ledger;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -133,6 +134,26 @@ public interface ProcessedFileRepository
 
     /** Whether any policy's row at this identity is in a state other than {@code status}. */
     boolean existsByIdentityHashAndStatusNot(String identityHash, ProcessedFileStatus status);
+
+    /** One policy's rows across a chunk of identity hashes, for a sweep's claim snapshot. */
+    List<ProcessedFileEntity> findByPolicyIdAndIdentityHashIn(
+            String policyId, Collection<String> identityHashes);
+
+    /**
+     * Remove an output record whose rename never landed, only while still settled exactly as
+     * recorded; a row a claim has since taken over is left alone.
+     */
+    @Modifying
+    @Transactional
+    @Query(
+            "delete from ProcessedFileEntity e where e.policyId = :policyId"
+                    + " and e.identityHash = :identityHash and e.signature = :gate"
+                    + " and e.status ="
+                    + " stirling.software.proprietary.policy.ledger.ProcessedFileStatus.DONE")
+    int deleteDoneAt(
+            @Param("policyId") String policyId,
+            @Param("identityHash") String identityHash,
+            @Param("gate") String gate);
 
     /** Stamp presence for the given identities; chunked by the caller for very large folders. */
     @Modifying

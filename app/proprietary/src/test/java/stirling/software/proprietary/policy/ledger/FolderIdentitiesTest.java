@@ -75,10 +75,10 @@ class FolderIdentitiesTest {
 
     @Test
     void identityHashIsAStableFixedWidthKey() {
-        String hash = FolderIdentities.identityHash("/in/doc.pdf");
+        String hash = IdentityHasher.identityHash("/in/doc.pdf");
 
         assertEquals(64, hash.length());
-        assertEquals(hash, FolderIdentities.identityHash("/in/doc.pdf"));
-        assertNotEquals(hash, FolderIdentities.identityHash("/in/other.pdf"));
+        assertEquals(hash, IdentityHasher.identityHash("/in/doc.pdf"));
+        assertNotEquals(hash, IdentityHasher.identityHash("/in/other.pdf"));
     }
 }

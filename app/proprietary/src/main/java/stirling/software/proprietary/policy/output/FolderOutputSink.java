@@ -6,6 +6,8 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.security.DigestOutputStream;
+import java.security.MessageDigest;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -24,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.job.ResultFile;
+import stirling.software.proprietary.billing.ContentHasher;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.ledger.FolderIdentities;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
@@ -81,16 +84,10 @@ public class FolderOutputSink implements PolicyOutputSink {
             Resource resource = outputs.get(i);
             String name = safeName(resource.getFilename(), i);
             Path staged = tmpDir.resolve(UUID.randomUUID().toString());
-            try (InputStream is = resource.getInputStream()) {
-                Files.copy(is, staged);
-            }
+            String contentHash = stage(resource, staged, delivery.policyId() != null);
             long size = Files.size(staged);
-            // Size and mtime survive the rename; both tiers are recorded so either detection
-            // mode recognises the file. Ad-hoc runs (no policyId) record nothing, so skip the
-            // full content read.
+            // Size and mtime survive the rename.
             String gate = FolderIdentities.statGate(staged);
-            String contentHash =
-                    delivery.policyId() == null ? null : FolderIdentities.contentHash(staged);
             Path target = moveIntoPlace(delivery, canonicalDir, name, staged, gate, contentHash);
             String contentType =
                     MediaTypeFactory.getMediaType(name)
@@ -109,10 +106,31 @@ public class FolderOutputSink implements PolicyOutputSink {
     }
 
     /**
+     * Stream the output to its staging path. For a recorded delivery (stored policy) the content
+     * hash is digested in the same pass, so the ledger gets both version tiers without re-reading a
+     * possibly huge output; ad-hoc runs record nothing and skip the digest entirely.
+     */
+    private static String stage(Resource resource, Path staged, boolean hashed) throws IOException {
+        if (!hashed) {
+            try (InputStream is = resource.getInputStream()) {
+                Files.copy(is, staged);
+            }
+            return null;
+        }
+        MessageDigest digest = ContentHasher.newSha256();
+        try (InputStream is = resource.getInputStream();
+                DigestOutputStream out =
+                        new DigestOutputStream(Files.newOutputStream(staged), digest)) {
+            is.transferTo(out);
+        }
+        return ContentHasher.toHex(digest.digest());
+    }
+
+    /**
      * The ledger row must exist before the file is visible at its final path, or a sweep could
      * claim the producing policy's own output in the gap. Losing the chosen name to a concurrent
-     * writer re-picks; the stale row self-heals because whatever file holds that name has a
-     * different version.
+     * writer forgets the just-recorded row - whatever file actually owns that name must stay
+     * claimable at any version - then re-picks.
      */
     private Path moveIntoPlace(
             OutputDelivery delivery,
@@ -132,6 +150,9 @@ public class FolderOutputSink implements PolicyOutputSink {
                 Files.move(staged, target, StandardCopyOption.ATOMIC_MOVE);
                 return target;
             } catch (FileAlreadyExistsException raced) {
+                if (delivery.policyId() != null) {
+                    processedLedger.forgetOutput(delivery.policyId(), target.toString(), gate);
+                }
                 log.debug("Output name {} taken concurrently; re-picking", target);
             }
         }

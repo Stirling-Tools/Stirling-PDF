@@ -169,6 +169,8 @@ class PolicyRunnerTest {
 
         runner.run(policy);
 
+        // Presence reporting also bulk-prefetches claim state: one lookup for the whole listing.
+        verify(processedLedger).statesFor(eq("p1"), eq(List.of("/in/a.pdf", "/in/b.pdf")));
         verify(processedLedger).markSeen("p1", Set.of("/in/a.pdf", "/in/b.pdf"));
         verify(processedLedger).deleteUnseen(eq("p1"), anyLong());
     }

@@ -24,8 +24,28 @@ public class InProcessProcessedLedger implements ProcessedLedger {
     }
 
     @Override
+    public synchronized Map<String, ClaimState> statesFor(
+            String policyId, Collection<String> identities) {
+        Map<String, Row> rows = rowsByPolicy.getOrDefault(policyId, Map.of());
+        Map<String, ClaimState> states = new HashMap<>();
+        for (String identity : identities) {
+            Row row = rows.get(identity);
+            if (row != null) {
+                states.put(identity, new ClaimState(row.status, row.gate, row.contentHash));
+            }
+        }
+        return states;
+    }
+
+    // Single-lock store: the live row is never staler than any observed snapshot, so decide
+    // against it directly; the conditional updates of the JPA ledger yield the same outcomes.
+    @Override
     public synchronized boolean claim(
-            String policyId, String identity, String gate, Supplier<String> contentHash) {
+            String policyId,
+            String identity,
+            String gate,
+            Supplier<String> contentHash,
+            ClaimState observed) {
         Map<String, Row> rows = rowsByPolicy.computeIfAbsent(policyId, key -> new HashMap<>());
         long now = nowMillis.get();
         Row row = rows.get(identity);
@@ -96,6 +116,18 @@ public class InProcessProcessedLedger implements ProcessedLedger {
     public synchronized void recordOutput(
             String policyId, String identity, String gate, String contentHash) {
         upsertSettled(policyId, identity, gate, contentHash, ProcessedFileStatus.DONE);
+    }
+
+    @Override
+    public synchronized void forgetOutput(String policyId, String identity, String gate) {
+        Map<String, Row> rows = rowsByPolicy.get(policyId);
+        if (rows == null) {
+            return;
+        }
+        Row row = rows.get(identity);
+        if (row != null && row.status == ProcessedFileStatus.DONE && gate.equals(row.gate)) {
+            rows.remove(identity);
+        }
     }
 
     private void upsertSettled(

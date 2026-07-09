@@ -1,17 +1,23 @@
 package stirling.software.proprietary.policy.engine;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
 import stirling.software.proprietary.policy.input.ResolveContext;
+import stirling.software.proprietary.policy.ledger.ClaimState;
+import stirling.software.proprietary.policy.ledger.ProcessedFileStatus;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 
 /**
  * The {@link ResolveContext} for one policy sweep: scopes ledger calls to the policy, gathers the
- * present-identity union across sources, and vetoes presence cleanup when any source could not be
- * listed completely (pruning would wrongly forget its files).
+ * present-identity union across sources, prefetches claim state in bulk so per-file claims skip
+ * their row lookup, and vetoes presence cleanup when any source could not be listed completely
+ * (pruning would wrongly forget its files).
  */
 final class PolicySweep implements ResolveContext {
 
@@ -19,6 +25,11 @@ final class PolicySweep implements ResolveContext {
     private final SweepKind kind;
     private final ProcessedLedger ledger;
     private final Set<String> present = new HashSet<>();
+    // Claim states loaded in bulk at reportPresent; a claim outside the prefetch falls back to a
+    // single lookup. A stale entry cannot double-claim (the ledger re-checks every transition),
+    // it can only defer a file to the next sweep.
+    private final Map<String, ClaimState> prefetched = new HashMap<>();
+    private final Set<String> prefetchedIdentities = new HashSet<>();
     private boolean cleanupVetoed;
 
     PolicySweep(String policyId, SweepKind kind, ProcessedLedger ledger) {
@@ -28,8 +39,19 @@ final class PolicySweep implements ResolveContext {
     }
 
     @Override
-    public boolean claim(String identity, String gate, Supplier<String> contentHash) {
-        return ledger.claim(policyId, identity, gate, contentHash);
+    public synchronized boolean claim(String identity, String gate, Supplier<String> contentHash) {
+        ClaimState observed =
+                prefetchedIdentities.contains(identity)
+                        ? prefetched.get(identity)
+                        : ledger.statesFor(policyId, List.of(identity)).get(identity);
+        boolean claimed = ledger.claim(policyId, identity, gate, contentHash, observed);
+        if (claimed) {
+            // A nested source surfacing the same file later in this sweep sees it in flight
+            // without another lookup.
+            prefetchedIdentities.add(identity);
+            prefetched.put(identity, new ClaimState(ProcessedFileStatus.PROCESSING, gate, null));
+        }
+        return claimed;
     }
 
     @Override
@@ -49,6 +71,8 @@ final class PolicySweep implements ResolveContext {
         if (kind == SweepKind.FULL) {
             present.addAll(identities);
         }
+        prefetched.putAll(ledger.statesFor(policyId, identities));
+        prefetchedIdentities.addAll(identities);
     }
 
     synchronized void vetoCleanup() {

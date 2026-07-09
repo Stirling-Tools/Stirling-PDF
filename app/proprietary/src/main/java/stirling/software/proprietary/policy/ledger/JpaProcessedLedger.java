@@ -1,8 +1,9 @@
 package stirling.software.proprietary.policy.ledger;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,13 +44,40 @@ public class JpaProcessedLedger implements ProcessedLedger {
     }
 
     @Override
+    public Map<String, ClaimState> statesFor(String policyId, Collection<String> identities) {
+        if (identities.isEmpty()) {
+            return Map.of();
+        }
+        Map<String, String> identityByHash = new HashMap<>();
+        for (String identity : identities) {
+            identityByHash.put(IdentityHasher.identityHash(identity), identity);
+        }
+        Map<String, ClaimState> states = new HashMap<>();
+        List<String> hashes = List.copyOf(identityByHash.keySet());
+        for (int from = 0; from < hashes.size(); from += STAMP_CHUNK) {
+            List<ProcessedFileEntity> rows =
+                    repository.findByPolicyIdAndIdentityHashIn(
+                            policyId,
+                            hashes.subList(from, Math.min(from + STAMP_CHUNK, hashes.size())));
+            for (ProcessedFileEntity row : rows) {
+                states.put(
+                        identityByHash.get(row.getIdentityHash()),
+                        new ClaimState(row.getStatus(), row.getSignature(), row.getContentHash()));
+            }
+        }
+        return states;
+    }
+
+    @Override
     public boolean claim(
-            String policyId, String identity, String gate, Supplier<String> contentHash) {
-        String identityHash = FolderIdentities.identityHash(identity);
+            String policyId,
+            String identity,
+            String gate,
+            Supplier<String> contentHash,
+            ClaimState observed) {
+        String identityHash = IdentityHasher.identityHash(identity);
         long now = nowMillis.get();
-        Optional<ProcessedFileEntity> existing =
-                repository.findById(new ProcessedFileId(policyId, identityHash));
-        if (existing.isEmpty()) {
+        if (observed == null) {
             try {
                 repository.saveAndFlush(
                         new ProcessedFileEntity(
@@ -65,12 +93,11 @@ public class JpaProcessedLedger implements ProcessedLedger {
                 return false;
             }
         }
-        ProcessedFileEntity row = existing.get();
-        if (row.getStatus() == ProcessedFileStatus.PROCESSING) {
+        if (observed.status() == ProcessedFileStatus.PROCESSING) {
             return false;
         }
-        if (gate.equals(row.getSignature())) {
-            if (row.getStatus() == ProcessedFileStatus.INTERRUPTED) {
+        if (gate.equals(observed.gate())) {
+            if (observed.status() == ProcessedFileStatus.INTERRUPTED) {
                 return repository.retryInterruptedAtGate(
                                 policyId, identityHash, gate, MAX_ATTEMPTS, now)
                         > 0;
@@ -81,8 +108,8 @@ public class JpaProcessedLedger implements ProcessedLedger {
             return repository.reclaimAtNewGate(policyId, identityHash, gate, now) > 0;
         }
         String hash = contentHash.get();
-        if (hash.equals(row.getContentHash())) {
-            if (row.getStatus() == ProcessedFileStatus.INTERRUPTED) {
+        if (hash.equals(observed.contentHash())) {
+            if (observed.status() == ProcessedFileStatus.INTERRUPTED) {
                 return repository.retryInterruptedSameContent(
                                 policyId, identityHash, gate, hash, MAX_ATTEMPTS, now)
                         > 0;
@@ -113,6 +140,11 @@ public class JpaProcessedLedger implements ProcessedLedger {
         upsertSettled(policyId, identity, gate, contentHash, ProcessedFileStatus.DONE);
     }
 
+    @Override
+    public void forgetOutput(String policyId, String identity, String gate) {
+        repository.deleteDoneAt(policyId, IdentityHasher.identityHash(identity), gate);
+    }
+
     /**
      * Settle-or-insert: the row may have been presence-cleaned mid-run, and an output row may be
      * brand new.
@@ -123,7 +155,7 @@ public class JpaProcessedLedger implements ProcessedLedger {
             String gate,
             String contentHash,
             ProcessedFileStatus status) {
-        String identityHash = FolderIdentities.identityHash(identity);
+        String identityHash = IdentityHasher.identityHash(identity);
         long now = nowMillis.get();
         if (repository.settle(policyId, identityHash, gate, contentHash, status, now) > 0) {
             return;
@@ -141,7 +173,7 @@ public class JpaProcessedLedger implements ProcessedLedger {
     @Override
     public boolean allSettledDone(String identity) {
         return !repository.existsByIdentityHashAndStatusNot(
-                FolderIdentities.identityHash(identity), ProcessedFileStatus.DONE);
+                IdentityHasher.identityHash(identity), ProcessedFileStatus.DONE);
     }
 
     @Override
@@ -149,7 +181,7 @@ public class JpaProcessedLedger implements ProcessedLedger {
         if (identities.isEmpty()) {
             return;
         }
-        List<String> hashes = identities.stream().map(FolderIdentities::identityHash).toList();
+        List<String> hashes = identities.stream().map(IdentityHasher::identityHash).toList();
         long now = nowMillis.get();
         for (int from = 0; from < hashes.size(); from += STAMP_CHUNK) {
             repository.stampSeen(
