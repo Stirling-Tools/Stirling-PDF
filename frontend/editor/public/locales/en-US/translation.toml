@@ -6783,6 +6783,8 @@ type = "Type"
 user = "User"
 
 [portal.documents.queue.empty]
+connectSource = "Connect a source"
+createPipeline = "Create a pipeline"
 description = "As sources feed documents into your pipelines they'll appear here for review."
 title = "No documents in the queue"
 
@@ -7364,6 +7366,7 @@ run = "Run now"
 
 [portal.pipelines.empty]
 action = "Create a pipeline"
+connectSource = "Connect a source"
 description = "Create your first pipeline: pick the sources it runs over, chain the operations, and choose where output goes."
 title = "No pipelines yet"
 
@@ -7981,6 +7984,7 @@ usedBy = "Used by"
 
 [portal.sources.empty]
 description = "Connect a folder (and, soon, cloud storage) so your policies have somewhere to pull documents from."
+docs = "Read the docs"
 title = "No sources connected yet"
 
 [portal.sources.kpi]

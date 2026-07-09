@@ -9,6 +9,7 @@ import {
   type PipelineView,
 } from "@portal/api/pipelines";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
+import { PipelinesIcon } from "@portal/components/icons";
 import { KpiStrip } from "@portal/components/pipelines/KpiStrip";
 import { PipelinesTable } from "@portal/components/pipelines/PipelinesTable";
 import "@portal/views/Pipelines.css";
@@ -18,12 +19,18 @@ export function Pipelines() {
   const navigate = useNavigate();
   const state = useAsync<PipelinesOverviewResponse>(() => fetchPipelines(), []);
   const { data, loading } = state;
-  const { isLoading, isEmpty } = useSectionFlags(state);
+  const { isLoading } = useSectionFlags(state);
 
   const pipelines = data?.pipelines ?? [];
+  // Empty once the fetch settles with no pipelines (or fails → no data). Gates
+  // both the KPI strip and the empty panel so no placeholder stat boxes sit
+  // above an empty page.
+  const showEmpty = !isLoading && pipelines.length === 0;
 
   const openCreate = () =>
     navigate(`${toPortalPath(VIEW_PATHS.pipelines)}/new`);
+  const connectSource = () =>
+    navigate(`${toPortalPath(VIEW_PATHS.sources)}?new`);
   // A row opens that pipeline's own page (view / edit / run / delete live there).
   const openPipeline = (pipeline: PipelineView) =>
     navigate(`${toPortalPath(VIEW_PATHS.pipelines)}/${pipeline.id}`);
@@ -47,7 +54,7 @@ export function Pipelines() {
         </Button>
       </header>
 
-      <KpiStrip data={data} loading={loading} />
+      {!showEmpty && <KpiStrip data={data} loading={loading} />}
 
       {isLoading && (
         <div className="portal-pipelines__table-skeleton" aria-hidden>
@@ -57,19 +64,30 @@ export function Pipelines() {
         </div>
       )}
 
-      {isEmpty && (
+      {showEmpty && (
         <EmptyState
+          icon={<PipelinesIcon size={28} />}
           title={t("portal.pipelines.empty.title")}
           description={t("portal.pipelines.empty.description")}
           actions={
-            <Button onClick={openCreate}>
-              {t("portal.pipelines.empty.action")}
-            </Button>
+            <>
+              <Button
+                onClick={openCreate}
+                leftSection={
+                  <AddRoundedIcon style={{ fontSize: "1.125rem" }} />
+                }
+              >
+                {t("portal.pipelines.empty.action")}
+              </Button>
+              <Button variant="secondary" onClick={connectSource}>
+                {t("portal.pipelines.empty.connectSource")}
+              </Button>
+            </>
           }
         />
       )}
 
-      {!isLoading && !isEmpty && pipelines.length > 0 && (
+      {!isLoading && pipelines.length > 0 && (
         <PipelinesTable pipelines={pipelines} onRowClick={openPipeline} />
       )}
     </div>
