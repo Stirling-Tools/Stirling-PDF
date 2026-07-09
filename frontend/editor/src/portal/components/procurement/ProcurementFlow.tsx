@@ -161,6 +161,7 @@ export function ProcurementFlow({
           offlineAvailable={data.deployment === "airgap"}
           downloadingLicense={downloadingLicense}
           onDownloadOffline={onDownloadOfflineLicense}
+          trial={data.stage !== "procurement" && data.stage !== "active"}
         />
       )}
       <ScheduleCallModal

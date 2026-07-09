@@ -82,6 +82,7 @@ export function LicenseModal({
   offlineAvailable,
   downloadingLicense,
   onDownloadOffline,
+  trial = false,
 }: {
   open: boolean;
   onClose: () => void;
@@ -89,6 +90,9 @@ export function LicenseModal({
   offlineAvailable: boolean;
   downloadingLicense: boolean;
   onDownloadOffline: () => void;
+  /** Licence is still the trial one (not yet upgraded on accept) — the downloadable .lic is a
+   * snapshot, so warn that it must be re-downloaded once the agreement is in place. */
+  trial?: boolean;
 }) {
   const { t } = useTranslation();
   return (
@@ -104,6 +108,11 @@ export function LicenseModal({
         downloadingLicense={downloadingLicense}
         onDownloadOffline={onDownloadOffline}
       />
+      {offlineAvailable && trial && (
+        <p className="portal-proc__license-hint">
+          {t("portal.procurement.license.trialFileHint")}
+        </p>
+      )}
     </SideModal>
   );
 }
