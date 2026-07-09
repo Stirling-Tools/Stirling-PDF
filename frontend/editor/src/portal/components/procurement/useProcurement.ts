@@ -17,7 +17,7 @@ import {
   type QuoteResult,
 } from "@portal/api/procurement";
 
-export type ProcurementExtra = null | "docs" | "schedule" | "trial";
+export type ProcurementExtra = null | "docs" | "schedule" | "trial" | "setup";
 
 /**
  * Owns the procurement deal state and actions shared by the Home hero footer
@@ -46,7 +46,10 @@ export interface ProcurementController {
   extra: ProcurementExtra;
   setExtra: (e: ProcurementExtra) => void;
   invoicePdf: string | null;
+  /** Open the trial-setup dialog (deployment + seats) — the trial only starts once it's confirmed. */
   onStartTrial: () => void;
+  /** Confirm the setup dialog: start the trial with the chosen deployment/seats, then open the flow. */
+  onConfirmSetup: (deployment: string, seats: number) => void;
   onExtendTrial: () => void;
   onReset: () => void;
   onGenerate: (draft: QuoteResult) => void;
@@ -99,7 +102,14 @@ export function useProcurement(autoOpen = false): ProcurementController {
     }
   }
 
-  const onStartTrial = () => run(startTrial);
+  // The setup dialog collects deployment + seats first; the trial starts on confirm.
+  const onStartTrial = () => setExtra("setup");
+  const onConfirmSetup = (deployment: string, seats: number) =>
+    run(async () => {
+      await startTrial(deployment, seats);
+      setExtra(null);
+      setOpen(true);
+    });
   const onExtendTrial = () => run(extendTrial);
   const onReset = () =>
     run(async () => {
@@ -194,6 +204,7 @@ export function useProcurement(autoOpen = false): ProcurementController {
     setExtra,
     invoicePdf,
     onStartTrial,
+    onConfirmSetup,
     onExtendTrial,
     onReset,
     onGenerate,

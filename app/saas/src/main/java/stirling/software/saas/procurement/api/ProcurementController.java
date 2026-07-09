@@ -134,9 +134,14 @@ public class ProcurementController {
             String currency,
             String businessName) {}
 
+    /** Trial setup captured before the trial starts: deployment target + seat count. */
+    public record StartTrialRequest(String deployment, int users) {}
+
     public record SnapshotResponse(
             Long dealId,
             String stage,
+            String deployment,
+            int seats,
             String trialStartedAt,
             String trialEndsAt,
             int trialExtensionsUsed,
@@ -165,7 +170,7 @@ public class ProcurementController {
     }
 
     private static final SnapshotResponse EMPTY_SNAPSHOT =
-            new SnapshotResponse(null, null, null, null, 0, false, null, null);
+            new SnapshotResponse(null, null, null, 0, null, null, 0, false, null, null);
 
     /**
      * Download the offline / air-gapped licence file (.lic) for the team, when the paid offline
@@ -193,10 +198,15 @@ public class ProcurementController {
 
     @PostMapping("/trial/start")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<SnapshotResponse> startTrial(Authentication auth) {
+    public ResponseEntity<SnapshotResponse> startTrial(
+            @RequestBody(required = false) StartTrialRequest request, Authentication auth) {
         Long teamId = requireLeader(auth);
         if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        return ResponseEntity.ok(toSnapshot(procurement.startTrial(teamId), true));
+        // Body is optional so an older client (no setup step) still starts a cloud trial.
+        String deployment = request != null ? request.deployment() : null;
+        int seats = request != null ? request.users() : 0;
+        return ResponseEntity.ok(
+                toSnapshot(procurement.startTrial(teamId, deployment, seats), true));
     }
 
     @PostMapping("/trial/extend")
@@ -323,6 +333,8 @@ public class ProcurementController {
         return new SnapshotResponse(
                 deal.getDealId(),
                 deal.getStage(),
+                deal.getDeployment(),
+                deal.getSeats(),
                 str(deal.getTrialStartedAt()),
                 str(deal.getTrialEndsAt()),
                 deal.getTrialExtensionsUsed(),

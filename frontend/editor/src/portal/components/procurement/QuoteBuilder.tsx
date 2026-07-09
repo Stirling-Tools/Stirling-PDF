@@ -31,10 +31,13 @@ const POSTURES = [
  */
 export function QuoteBuilder({
   deployment,
+  seats = 0,
   initial,
   onGenerate,
 }: {
   deployment: string;
+  /** Seat count from the trial setup; seeds the users field + volume estimate on a fresh quote. */
+  seats?: number;
   /** Seed the builder from an existing quote's config (re-editing a quote). */
   initial?: QuoteConfigInput;
   /** Called with the priced DRAFT quote; the parent issues it as a Stripe Quote. */
@@ -44,8 +47,8 @@ export function QuoteBuilder({
   const [step, setStep] = useState(0);
   const [cfg, setCfg] = useState<QuoteConfigInput>(
     initial ?? {
-      volume: 1_000_000,
-      users: 0,
+      volume: seats > 0 ? estimateVolume(seats) : 1_000_000,
+      users: Math.max(0, seats),
       intensity: 4, // Governed — the default posture per the pricing alignment
       deployment,
       termYears: 3,

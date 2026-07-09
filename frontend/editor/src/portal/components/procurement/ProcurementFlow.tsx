@@ -8,6 +8,7 @@ import {
   KeyDocumentsModal,
   ScheduleCallModal,
   TrialManageModal,
+  TrialSetupModal,
 } from "@portal/components/procurement/ProcurementExtras";
 import { ProcurementModal } from "@portal/components/procurement/ProcurementModal";
 import {
@@ -56,6 +57,7 @@ export function ProcurementFlow({
     extra,
     setExtra,
     invoicePdf,
+    onConfirmSetup,
     onExtendTrial,
     onReset,
     onGenerate,
@@ -112,7 +114,8 @@ export function ProcurementFlow({
             {(editing ||
               (isDraft && (stage === "trial" || stage === "quote"))) && (
               <QuoteBuilder
-                deployment="cloud"
+                deployment={data?.deployment ?? "cloud"}
+                seats={data?.seats ?? 0}
                 initial={latest?.config}
                 onGenerate={onGenerate}
               />
@@ -166,6 +169,12 @@ export function ProcurementFlow({
         )}
       </ProcurementModal>
 
+      <TrialSetupModal
+        open={extra === "setup"}
+        onClose={() => setExtra(null)}
+        busy={busy}
+        onConfirm={onConfirmSetup}
+      />
       <KeyDocumentsModal
         open={extra === "docs"}
         onClose={() => setExtra(null)}

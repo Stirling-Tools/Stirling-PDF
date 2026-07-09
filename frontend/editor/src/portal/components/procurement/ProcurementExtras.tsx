@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
@@ -206,6 +206,97 @@ export function ScheduleCallModal({
       wide
     >
       <CalendlyInline email={email} />
+    </SideModal>
+  );
+}
+
+// ── Trial setup ────────────────────────────────────────────────────────────
+const DEPLOYMENTS = ["cloud", "selfhost", "airgap"] as const;
+
+/**
+ * Captured before the trial starts: where the buyer will run Stirling (which drives the deployment
+ * fee and, for air-gapped, the offline licence) and their team size. Both seed the quote builder so
+ * it opens on their real environment; the trial only begins once this is confirmed.
+ */
+export function TrialSetupModal({
+  open,
+  onClose,
+  busy,
+  onConfirm,
+}: {
+  open: boolean;
+  onClose: () => void;
+  busy: boolean;
+  onConfirm: (deployment: string, seats: number) => void;
+}) {
+  const { t } = useTranslation();
+  const [deployment, setDeployment] = useState<string>("cloud");
+  const [seats, setSeats] = useState("");
+
+  // Reset to defaults each time the dialog opens, so a cancelled setup doesn't linger.
+  useEffect(() => {
+    if (open) {
+      setDeployment("cloud");
+      setSeats("");
+    }
+  }, [open]);
+
+  return (
+    <SideModal
+      open={open}
+      onClose={onClose}
+      title={t("portal.procurement.setup.title")}
+      subtitle={t("portal.procurement.setup.subtitle")}
+      footer={
+        <Button
+          variant="primary"
+          accent="premium"
+          loading={busy}
+          onClick={() => onConfirm(deployment, Math.max(0, Number(seats) || 0))}
+        >
+          {t("portal.procurement.setup.start")}
+        </Button>
+      }
+    >
+      <label className="portal-qb__field">
+        <span className="portal-qb__field-label">
+          {t("portal.procurement.setup.deployment")}
+        </span>
+        <div className="portal-qb__opts">
+          {DEPLOYMENTS.map((d) => (
+            <button
+              key={d}
+              type="button"
+              className="portal-qb__opt"
+              data-on={deployment === d || undefined}
+              onClick={() => setDeployment(d)}
+            >
+              <span className="portal-qb__opt-title">
+                {t(`portal.procurement.setup.${d}`)}
+              </span>
+              <span className="portal-qb__opt-sub">
+                {t(`portal.procurement.setup.${d}Sub`)}
+              </span>
+            </button>
+          ))}
+        </div>
+      </label>
+
+      <label className="portal-qb__field">
+        <span className="portal-qb__field-label">
+          {t("portal.procurement.setup.seats")}
+        </span>
+        <input
+          type="number"
+          min={0}
+          placeholder={t("portal.procurement.setup.seatsPlaceholder")}
+          value={seats}
+          onChange={(e) => setSeats(e.target.value)}
+        />
+      </label>
+      <p className="portal-sidemodal__text">
+        {t("portal.procurement.setup.seatsHint")}
+      </p>
     </SideModal>
   );
 }

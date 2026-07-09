@@ -96,26 +96,44 @@ public class ProcurementService {
     /**
      * Start (or restart) the free trial for a team: issue a mock trial licence and stamp the trial
      * window on the deal. No Stripe: a no-card trial has no subscription; the entitlement is the
-     * Keygen licence, and the deal row is the journey state.
+     * Keygen licence, and the deal row is the journey state. The buyer's chosen deployment target
+     * ({@code cloud}/{@code selfhost}/{@code airgap}) and seat count are captured here so the quote
+     * builder opens seeded to their environment; both are still editable when the quote is built.
      */
     @Transactional
-    public ProcurementDeal startTrial(Long teamId) {
+    public ProcurementDeal startTrial(Long teamId, String deployment, int seats) {
         ProcurementDeal deal =
                 dealRepo.findByTeamId(teamId).orElseGet(() -> new ProcurementDeal(teamId));
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime ends = now.plusDays(config.getTrialDurationDays());
         deal.setStage(ProcurementDeal.STAGE_TRIAL);
+        deal.setDeployment(normalizeDeployment(deployment));
+        deal.setSeats(Math.max(0, seats));
         deal.setTrialStartedAt(now);
         deal.setTrialEndsAt(ends);
         deal.setTrialExtensionsUsed(0);
         deal.setLicenseRef(licenses.issueTrialLicense(teamId, leaderEmail(teamId), ends));
         deal = dealRepo.save(deal);
         log.info(
-                "[procurement] trial started team={} deal={} ends={}",
+                "[procurement] trial started team={} deal={} deployment={} seats={} ends={}",
                 teamId,
                 deal.getDealId(),
+                deal.getDeployment(),
+                deal.getSeats(),
                 ends);
         return deal;
+    }
+
+    /**
+     * Constrain a caller-supplied deployment to the known set; anything else falls back to cloud.
+     */
+    private static String normalizeDeployment(String deployment) {
+        if (deployment == null) return "cloud";
+        String d = deployment.trim().toLowerCase(Locale.ROOT);
+        return switch (d) {
+            case "selfhost", "airgap", "cloud" -> d;
+            default -> "cloud";
+        };
     }
 
     /** Extend the current trial by the configured increment, up to the cap. */

@@ -145,6 +145,10 @@ export interface AcceptResult {
 export interface ProcurementSnapshot {
   dealId: number | null;
   stage: DealStage | null;
+  /** cloud | selfhost | airgap — chosen at the trial-setup step; seeds the quote builder. */
+  deployment: string;
+  /** Seat count captured at trial setup (0 = unspecified); seeds the builder's volume estimate. */
+  seats: number;
   trialStartedAt: string | null;
   trialEndsAt: string | null;
   trialExtensionsUsed: number;
@@ -182,10 +186,17 @@ export function fetchLicenseFile(): Promise<string> {
   return apiClient.saas.text("/api/v1/procurement/license/file");
 }
 
-export function startTrial(): Promise<ProcurementSnapshot> {
+/**
+ * Start the trial with the buyer's chosen deployment target and seat count (captured in the setup
+ * step). These seed the quote builder; both remain editable when the quote is built.
+ */
+export function startTrial(
+  deployment: string,
+  seats: number,
+): Promise<ProcurementSnapshot> {
   return apiClient.saas.json<ProcurementSnapshot>(
     "/api/v1/procurement/trial/start",
-    { method: "POST" },
+    { method: "POST", body: { deployment, users: seats } },
   );
 }
 

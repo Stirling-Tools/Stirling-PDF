@@ -10,6 +10,8 @@ const SAAS = "http://saas.mock";
 const EMPTY = {
   dealId: null,
   stage: null,
+  deployment: "cloud",
+  seats: 0,
   trialStartedAt: null,
   trialEndsAt: null,
   trialExtensionsUsed: 0,
@@ -177,11 +179,20 @@ export function resetProcurementSaasStore() {
 
 export const procurementSaasHandlers = [
   http.get(`${SAAS}/api/v1/procurement`, () => HttpResponse.json(deal)),
-  http.post(`${SAAS}/api/v1/procurement/trial/start`, () => {
+  http.post(`${SAAS}/api/v1/procurement/trial/start`, async ({ request }) => {
+    const body = (await request.json().catch(() => ({}))) as Partial<{
+      deployment: string;
+      users: number;
+    }>;
+    const allowed = ["cloud", "selfhost", "airgap"];
     const now = Date.now();
     deal = {
       dealId: 1,
       stage: "trial",
+      deployment: allowed.includes(body.deployment ?? "")
+        ? body.deployment
+        : "cloud",
+      seats: Math.max(0, Number(body.users) || 0),
       trialStartedAt: new Date(now).toISOString(),
       trialEndsAt: new Date(now + 14 * 86_400_000).toISOString(),
       trialExtensionsUsed: 0,
