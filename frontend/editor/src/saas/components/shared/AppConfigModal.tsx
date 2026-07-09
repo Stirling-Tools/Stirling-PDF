@@ -9,7 +9,10 @@ import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import Overview from "@app/components/shared/config/configSections/Overview";
 import { createSaasConfigNavSections } from "@app/components/shared/config/saasConfigNavSections";
-import { NavKey } from "@app/components/shared/config/types";
+import {
+  NavKey,
+  type ConfigNavSection,
+} from "@app/components/shared/config/types";
 import { stripBasePath, withBasePath } from "@app/constants/app";
 import { COOKIE_CONSENT_SCROLL_SHARD } from "@app/hooks/useCookieConsent";
 import "@app/components/shared/AppConfigModal.css";
@@ -21,9 +24,21 @@ import {
 interface AppConfigModalProps {
   opened: boolean;
   onClose: () => void;
+  /** Accepted for interface parity with the core shell; this shell never
+   *  URL-syncs, so it has no effect. */
+  urlSync?: boolean;
+  /** Section to land on when opening (used by non-URL hosts like the portal). */
+  initialSection?: NavKey | null;
+  /** Host-specific sections appended after the saas registry sections. */
+  extraSections?: ConfigNavSection[];
 }
 
-const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
+const AppConfigModal: React.FC<AppConfigModalProps> = ({
+  opened,
+  onClose,
+  initialSection,
+  extraSections,
+}) => {
   const isMobile = useMediaQuery("(max-width: 1024px)");
 
   const { signOut, user } = useAuth();
@@ -53,16 +68,21 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
   // usage-limit modal CTAs, which need to land on the Plan section), select that section. The
   // opener (QuickAccessBar) opens the modal whenever the path is /settings/*, but doesn't carry
   // the section, and `active` defaults to "overview" — so without this a deep link would open on
-  // Overview rather than the linked section.
+  // Overview rather than the linked section. Non-URL hosts (the portal) pass the
+  // section directly instead.
   useEffect(() => {
     if (!opened) return;
+    if (initialSection) {
+      setActive(initialSection);
+      return;
+    }
     const match = stripBasePath(window.location.pathname).match(
       /^\/settings\/([^/?#]+)/,
     );
     if (match) {
       setActive(match[1] as NavKey);
     }
-  }, [opened]);
+  }, [opened, initialSection]);
 
   // Listen for notice updates (e.g., "Not enough credits..." next to Plan title)
   useEffect(() => {
@@ -116,15 +136,14 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
   // Left navigation structure and icons. The Plan tab now internally branches
   // free vs subscribed × leader vs member via useWallet(), so the modal no
   // longer plumbs paygEnabled / isLeader through to the nav builder.
-  const configNavSections = useMemo(
-    () =>
-      createSaasConfigNavSections(Overview, openLogoutConfirm, {
-        isDev,
-        isAnonymous,
-        t,
-      }),
-    [openLogoutConfirm, isDev, isAnonymous, t],
-  );
+  const configNavSections = useMemo(() => {
+    const sections = createSaasConfigNavSections(Overview, openLogoutConfirm, {
+      isDev,
+      isAnonymous,
+      t,
+    });
+    return extraSections?.length ? [...sections, ...extraSections] : sections;
+  }, [openLogoutConfirm, isDev, isAnonymous, t, extraSections]);
 
   const activeLabel = useMemo(() => {
     for (const section of configNavSections) {

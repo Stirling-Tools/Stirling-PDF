@@ -17,7 +17,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.enumeration.TeamRole;
-import stirling.software.saas.model.TeamMembership;
+import stirling.software.proprietary.model.TeamMembership;
+import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.saas.procurement.config.ProcurementConfigurationProperties;
 import stirling.software.saas.procurement.license.EnterpriseLicenseService;
 import stirling.software.saas.procurement.license.LicenseEntitlements;
@@ -28,7 +29,6 @@ import stirling.software.saas.procurement.pricing.QuoteBreakdown;
 import stirling.software.saas.procurement.pricing.QuoteConfig;
 import stirling.software.saas.procurement.repository.ProcurementDealRepository;
 import stirling.software.saas.procurement.repository.ProcurementQuoteRepository;
-import stirling.software.saas.repository.TeamMembershipRepository;
 
 /**
  * Orchestrates a linked team's procurement journey: start a (mock-licensed) trial, build a

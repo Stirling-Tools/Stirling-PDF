@@ -6,6 +6,7 @@ import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {
   buildWireFromSetup,
   buildWireFromState,
+  clearProcessedHistory,
   deletePolicy,
   fetchPolicies,
   savePolicy,
@@ -101,6 +102,11 @@ export function Policies() {
     if (id) void runLifecycle(() => deletePolicy(id));
   }
 
+  function handleClearHistory() {
+    const id = detail?.policy?.state.backendId;
+    if (id) void runLifecycle(() => clearProcessedHistory(id));
+  }
+
   function handleEdit() {
     if (detail) {
       setWizard(detail);
@@ -159,6 +165,7 @@ export function Policies() {
         onEdit={handleEdit}
         onTogglePause={handleTogglePause}
         onDelete={handleDelete}
+        onClearHistory={handleClearHistory}
       />
 
       <PolicySetupWizard
