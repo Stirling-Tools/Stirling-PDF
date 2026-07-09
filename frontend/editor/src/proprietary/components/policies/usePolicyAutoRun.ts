@@ -554,11 +554,8 @@ async function importOutputs(
   }
 }
 
-/**
- * Resolve the file's bytes, fire a backend run, and record it. Exported so the
- * activity feed's Retry action can re-run a policy on a previously-failed file.
- */
-export async function runPolicyOnFile(
+/** Resolve the file's bytes, fire a backend run, and record it. */
+async function runPolicyOnFile(
   categoryId: string,
   backendId: string,
   fileId: FileId,
