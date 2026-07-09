@@ -51,6 +51,15 @@ export async function deletePolicy(id: string): Promise<void> {
   await apiClient.delete(`/api/v1/policies/${encodeURIComponent(id)}`);
 }
 
+/**
+ * Persist the team's run order (server-side, shared by the whole team). Sends the
+ * ordered backend policy ids; the backend maps position → order and ignores any
+ * id outside the caller's team. Team-leader/admin only (403 otherwise).
+ */
+export async function reorderPolicies(orderedIds: string[]): Promise<void> {
+  await apiClient.put("/api/v1/policies/order", orderedIds);
+}
+
 /** Run a stored policy by id on the supplied files; returns the run id. */
 export async function runStoredPolicy(
   id: string,

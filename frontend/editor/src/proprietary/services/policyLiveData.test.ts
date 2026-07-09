@@ -4,6 +4,8 @@ import {
   runsToActivity,
   runsToStats,
   policyActiveFor,
+  progressByCategory,
+  retryableFailedRuns,
 } from "@app/services/policyLiveData";
 import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
 
@@ -117,6 +119,117 @@ describe("runsToStats", () => {
   it("derives activeFor from the backing folder's creation time", () => {
     const fiveDaysAgo = new Date(Date.now() - 5 * 86400000).toISOString();
     expect(runsToStats([], fiveDaysAgo).activeFor).toBe("5d");
+  });
+});
+
+describe("progressByCategory", () => {
+  it("tallies running / completed / total per category", () => {
+    const map = progressByCategory([
+      run({ runId: "a", categoryId: "classification", status: "RUNNING" }),
+      run({
+        runId: "b",
+        categoryId: "classification",
+        status: "COMPLETED",
+        imported: true,
+      }),
+      run({ runId: "c", categoryId: "security", status: "RUNNING" }),
+    ]);
+    expect(map.get("classification")).toEqual({
+      running: 1,
+      completed: 1,
+      total: 2,
+    });
+    expect(map.get("security")).toEqual({ running: 1, completed: 0, total: 1 });
+  });
+
+  it("a COMPLETED-but-not-imported run still counts as running (not done)", () => {
+    const map = progressByCategory([
+      run({ categoryId: "security", status: "COMPLETED", imported: false }),
+    ]);
+    expect(map.get("security")).toEqual({ running: 1, completed: 0, total: 1 });
+  });
+
+  it("scopes to the current wave — history before sinceStartedAt is excluded", () => {
+    // The store persists runs across every upload; the panel must only count the
+    // current wave, so an old batch (startedAt < sinceStartedAt) is ignored.
+    const map = progressByCategory(
+      [
+        run({ runId: "new1", status: "RUNNING", startedAt: 1000 }),
+        run({
+          runId: "new2",
+          status: "COMPLETED",
+          imported: true,
+          startedAt: 1000,
+        }),
+        run({
+          runId: "old",
+          status: "COMPLETED",
+          imported: true,
+          startedAt: 10,
+        }),
+      ],
+      1000,
+    );
+    // Only the two wave runs counted; the pre-wave "old" run is excluded.
+    expect(map.get("security")).toEqual({ running: 1, completed: 1, total: 2 });
+  });
+});
+
+describe("retryableFailedRuns — bulk-retry eligibility", () => {
+  it("includes a plain failed run", () => {
+    const eligible = retryableFailedRuns([
+      run({ runId: "a", status: "FAILED" }),
+    ]);
+    expect(eligible.map((r) => r.runId)).toEqual(["a"]);
+  });
+
+  it("NEVER retries a (policy, file) that has since succeeded", () => {
+    // The caveat: a stale failure row must not re-enforce a file that already
+    // went through — e.g. the user retried it individually and it completed.
+    const eligible = retryableFailedRuns([
+      run({ runId: "ok", status: "COMPLETED", imported: true }), // newest
+      run({ runId: "old-fail", status: "FAILED" }),
+    ]);
+    expect(eligible).toEqual([]);
+  });
+
+  it("skips a (policy, file) whose retry is already running", () => {
+    const eligible = retryableFailedRuns([
+      run({ runId: "live", status: "RUNNING" }), // newest
+      run({ runId: "old-fail", status: "FAILED" }),
+    ]);
+    expect(eligible).toEqual([]);
+  });
+
+  it("keeps only the LATEST failed attempt per (policy, file)", () => {
+    const eligible = retryableFailedRuns([
+      run({ runId: "fail-new", status: "FAILED", startedAt: 2 }),
+      run({ runId: "fail-old", status: "FAILED", startedAt: 1 }),
+    ]);
+    expect(eligible.map((r) => r.runId)).toEqual(["fail-new"]);
+  });
+
+  it("treats policies independently — the same file can retry under another policy", () => {
+    const eligible = retryableFailedRuns([
+      run({ runId: "sec-ok", categoryId: "security", status: "COMPLETED" }),
+      run({ runId: "wm-fail", categoryId: "watermark", status: "FAILED" }),
+    ]);
+    expect(eligible.map((r) => r.runId)).toEqual(["wm-fail"]);
+  });
+
+  it("excludes runs mid auto-retry backoff and orphans with no local file", () => {
+    const eligible = retryableFailedRuns([
+      run({ runId: "backoff", status: "FAILED", retrying: true }),
+      run({ runId: "orphan", fileId: "", status: "FAILED" }),
+    ]);
+    expect(eligible).toEqual([]);
+  });
+
+  it("includes cancelled runs (they never produced output)", () => {
+    const eligible = retryableFailedRuns([
+      run({ runId: "c", status: "CANCELLED" }),
+    ]);
+    expect(eligible.map((r) => r.runId)).toEqual(["c"]);
   });
 });
 

@@ -21,6 +21,13 @@ public interface PolicyStore {
     /** Enabled policies with the given trigger type, for background triggers. */
     List<Policy> findByTriggerType(String triggerType);
 
+    /**
+     * Set the team's run order from {@code orderedIds} (position → sortOrder). Only policies that
+     * belong to {@code teamId} are touched; unknown/other-team ids are ignored, so a caller can't
+     * reorder across teams. Ids omitted from the list keep their existing order.
+     */
+    void reorder(Long teamId, List<String> orderedIds);
+
     /** Returns whether the policy existed. */
     boolean delete(String id);
 }
