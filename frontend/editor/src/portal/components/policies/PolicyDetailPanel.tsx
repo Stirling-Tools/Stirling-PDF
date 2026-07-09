@@ -23,6 +23,7 @@ interface PolicyDetailPanelProps {
   onRun?: () => void;
   onTogglePause: () => void;
   onDelete: () => void;
+  onClearHistory?: () => void;
   onRetry?: (item: PolicyActivityItem) => void;
 }
 
@@ -106,6 +107,7 @@ export function PolicyDetailPanel({
   onRun,
   onTogglePause,
   onDelete,
+  onClearHistory,
   onRetry,
 }: PolicyDetailPanelProps) {
   const { t } = useTranslation();
@@ -113,6 +115,9 @@ export function PolicyDetailPanel({
   const { category, config, state, steps, stats, activity } = policy;
   const isPaused = state.status === "paused";
   const canDelete = state.isDefault !== true;
+  // Processed history only exists for watched sources; editor uploads are never ledgered.
+  const canClearHistory =
+    onClearHistory !== undefined && state.sources.some((s) => s !== "editor");
 
   const enforceItems = steps.length > 0 ? steps.map((s) => s.operation) : null;
   const hasEditorSource = state.sources.includes("editor");
@@ -135,7 +140,7 @@ export function PolicyDetailPanel({
       open
       onClose={onClose}
       width="lg"
-      title={category.label}
+      title={t(category.label)}
       footer={
         <div className="portal-policies__detail-foot">
           {canDelete && (
@@ -159,6 +164,16 @@ export function PolicyDetailPanel({
               style={canDelete ? undefined : { marginRight: "auto" }}
             >
               {t("portal.policies.detail.actions.runNow")}
+            </Button>
+          )}
+          {canClearHistory && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={onClearHistory}
+              disabled={busy}
+            >
+              {t("portal.policies.detail.actions.clearHistory")}
             </Button>
           )}
           <Button
@@ -216,10 +231,10 @@ export function PolicyDetailPanel({
                       →{" "}
                     </span>
                   )}
-                  {humanizeEndpoint(op)}
+                  {humanizeEndpoint(op, t)}
                 </span>
               ))
-            : config.rules.join(" · ")}
+            : config.rules.map((r) => t(r)).join(" · ")}
         </span>
       </div>
 

@@ -299,14 +299,14 @@ function PolicySetupWizardBody({
           </span>
           {isEdit
             ? t("portal.policies.wizard.title.edit", {
-                category: category.label,
+                category: t(category.label),
               })
             : t("portal.policies.wizard.title.setUp", {
-                category: category.label,
+                category: t(category.label),
               })}
         </span>
       }
-      subtitle={config.summary}
+      subtitle={t(config.summary)}
       footer={
         <div className="portal-policies__wizard-foot">
           <Button variant="tertiary" size="sm" onClick={onClose}>
@@ -374,7 +374,7 @@ function PolicySetupWizardBody({
                 const label = meta
                   ? t(meta.labelKey, meta.labelEn)
                   : (registryByEndpoint.get(tl.operation)?.name ??
-                    humanizeEndpoint(tl.operation));
+                    humanizeEndpoint(tl.operation, t));
                 const description = meta
                   ? t(meta.descKey, meta.descEn)
                   : undefined;

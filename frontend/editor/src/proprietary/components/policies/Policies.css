@@ -90,12 +90,100 @@
   outline: 2px solid var(--color-blue);
   outline-offset: -2px;
 }
+/* Processing indicator: a spinning ring around the category icon while the
+   policy has runs in flight. */
+.pol-row-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  --pol-ring: var(--color-blue);
+}
+.pol-row-icon[data-accent="purple"] {
+  --pol-ring: var(--color-purple);
+}
+.pol-row-icon[data-accent="green"] {
+  --pol-ring: var(--color-green);
+}
+.pol-row-icon[data-accent="amber"] {
+  --pol-ring: var(--color-amber);
+}
+.pol-row-icon[data-accent="red"] {
+  --pol-ring: var(--color-red);
+}
+.pol-row-icon[data-accent="orange"] {
+  --pol-ring: var(--color-orange);
+}
+.pol-row-icon.is-processing .sui-iconbadge {
+  --ib-accent: var(--ib-base);
+}
+.pol-row-ring {
+  position: absolute;
+  inset: -3px;
+  border-radius: 999px;
+  border: 2px solid color-mix(in srgb, var(--pol-ring) 20%, transparent);
+  border-top-color: var(--pol-ring);
+  animation: pol-ring-spin 0.7s linear infinite;
+  pointer-events: none;
+}
+
+/* Global "Retry failed policies (N)" action under the panel header — one place
+   to resume every file the chain stranded, whichever step failed. Amber, so it
+   reads as "needs attention" without screaming error. */
+.pol-retry-failed {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1_5);
+  width: calc(100% - 2 * var(--space-1_5));
+  margin: 0 var(--space-1_5) var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border: none;
+  border-radius: var(--radius-lg);
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  color: var(--color-amber, #d97706);
+  background: color-mix(in srgb, var(--color-amber, #d97706) 12%, transparent);
+  transition: background var(--motion-fast);
+}
+.pol-retry-failed:hover {
+  background: color-mix(in srgb, var(--color-amber, #d97706) 20%, transparent);
+}
+.pol-retry-failed:focus-visible {
+  outline: 2px solid var(--color-amber, #d97706);
+  outline-offset: -2px;
+}
+@keyframes pol-ring-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pol-row-ring {
+    animation-duration: 2s;
+  }
+}
+
 .pol-row-label {
   flex: 1;
   min-width: 0;
   font-size: 0.8125rem;
   font-weight: 500;
   color: var(--color-text-1);
+}
+
+.pol-row > .mantine-Button-inner {
+  width: 100%;
+}
+.pol-row > .mantine-Button-inner > .mantine-Button-label {
+  flex: 1;
+  min-width: 0;
+  justify-content: flex-start;
+  overflow: visible;
 }
 .pol-row-trail {
   display: inline-flex;
@@ -113,6 +201,81 @@
 .pol-row-chevron {
   color: var(--color-text-4);
   flex-shrink: 0;
+}
+
+/* ── Policy settings: per-trigger run-order lists ── */
+.pol-reorder-section {
+  margin-top: var(--space-3);
+}
+.pol-reorder-list {
+  display: flex;
+  flex-direction: column;
+  margin-top: var(--space-1);
+}
+/* A reorder row: leading grip + tinted icon + label. Square (no radius) so the
+   drop line reads as one straight rule across the list. */
+.pol-reorder-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1_5) var(--space-2);
+}
+.pol-reorder-row[data-dragging] {
+  opacity: 0.4;
+}
+/* Straight, full-width blue insertion line at the drop position (no curves). */
+.pol-reorder-row[data-drop="above"]::before,
+.pol-reorder-row[data-drop="below"]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--color-blue);
+  pointer-events: none;
+}
+.pol-reorder-row[data-drop="above"]::before {
+  top: -1px;
+}
+.pol-reorder-row[data-drop="below"]::after {
+  bottom: -1px;
+}
+.pol-reorder-grip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.25rem;
+  color: var(--color-text-4);
+  cursor: grab;
+}
+.pol-reorder-grip:active {
+  cursor: grabbing;
+}
+.pol-reorder-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-1);
+}
+/* The drag ghost (a cloned row): the whole row with a full blue outline, kept
+   translucent so the list shows through as it moves. */
+.pol-reorder-row--ghost {
+  border-radius: var(--radius-lg);
+  outline: 2px solid var(--color-blue);
+  outline-offset: -2px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+  opacity: 0.55;
+}
+/* Empty-state line for a trigger with no policies. */
+.pol-reorder-empty {
+  margin: var(--space-1) 0 0;
+  padding: var(--space-1_5) var(--space-2);
+  font-size: 0.8125rem;
+  color: var(--color-text-3);
 }
 
 /* Retry button on a failed activity row. */
@@ -263,6 +426,37 @@
   color: var(--color-text-4);
   /* Bottom gap so the label doesn't hug its card/chips. */
   margin: 0 0 var(--space-2);
+}
+
+/* A section label rendered as a collapse toggle (Recent Activity): strip the
+   button chrome but keep the .pol-section-label typography, chevron pushed right. */
+.pol-section-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+}
+
+.pol-section-chevron {
+  margin-left: auto;
+  color: var(--color-text-4);
+  transition: transform 0.15s ease;
+}
+.pol-section-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+/* Recent-activity feed: cap to ~4.5 rows (and never more than ~45% of the
+   viewport) then scroll, so a long history doesn't push the stats footer away. */
+.pol-activity-list {
+  max-height: min(22rem, 45vh);
+  overflow-y: auto;
 }
 
 /* Sub-section header inside a settings card (e.g. "Output filename"). The field
