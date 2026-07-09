@@ -73,7 +73,7 @@ export function InstanceHealthTable({ instances }: Props) {
           size="sm"
           pulse={i.status === "healthy"}
         >
-          {INSTANCE_STATUS_LABEL[i.status]}
+          {t(INSTANCE_STATUS_LABEL[i.status])}
         </StatusBadge>
       ),
     },
