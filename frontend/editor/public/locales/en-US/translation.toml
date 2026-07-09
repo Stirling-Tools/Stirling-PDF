@@ -7511,6 +7511,12 @@ pause = "Pause"
 resume = "Resume"
 runNow = "Run now"
 
+[portal.policies.detail.clearHistory]
+body = "This policy will forget every file it has already processed and reprocess everything currently in its sources on the next run. The files themselves are not changed. This cannot be undone."
+cancel = "Cancel"
+confirm = "Clear history"
+title = "Clear processed history?"
+
 [portal.policies.detail.emptyActivity]
 description = "Documents will appear here once this policy runs."
 title = "No activity yet"
