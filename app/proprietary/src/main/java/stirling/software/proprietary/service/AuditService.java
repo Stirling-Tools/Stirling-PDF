@@ -37,9 +37,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.RequestUriUtils;
 import stirling.software.proprietary.accountlink.BillableOperationClassifier;
+import stirling.software.proprietary.audit.AuditContext;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
@@ -466,6 +468,34 @@ public class AuditService {
                         file.getOriginalFilename(),
                         e.getMessage());
             }
+        }
+    }
+
+    /**
+     * Merge controller-supplied context into the audit data, read in the aspect's {@code finally}
+     * after the controller body has run. A policy run stamps its name and step endpoints as request
+     * attributes ({@link AuditContext}); the internal loopback dispatch that executes each pipeline
+     * step carries the automation marker header ({@link InternalApiClient#AUTOMATION_HEADER}).
+     * Surfacing these lets the portal label a run as its policy instead of the raw {@code /run}
+     * endpoint, and flag its sub-steps as automation rather than direct user actions.
+     *
+     * @param data The existing audit data map
+     * @param req The current request, or null when not in a web context
+     */
+    public void addAutomationContext(Map<String, Object> data, HttpServletRequest req) {
+        if (req == null) {
+            return;
+        }
+        Object policyName = req.getAttribute(AuditContext.REQ_ATTR_POLICY_NAME);
+        if (policyName != null) {
+            data.put("policyName", String.valueOf(policyName));
+        }
+        Object steps = req.getAttribute(AuditContext.REQ_ATTR_POLICY_STEPS);
+        if (steps instanceof List<?> list && !list.isEmpty()) {
+            data.put("policySteps", list);
+        }
+        if ("true".equalsIgnoreCase(req.getHeader(InternalApiClient.AUTOMATION_HEADER))) {
+            data.put("automation", Boolean.TRUE);
         }
     }
 

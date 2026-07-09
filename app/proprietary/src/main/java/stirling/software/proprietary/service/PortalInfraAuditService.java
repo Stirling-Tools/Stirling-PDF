@@ -84,18 +84,29 @@ public class PortalInfraAuditService {
     private InfraAuditEventDto toDto(PortalAuditEventRow event) {
         Map<String, Object> data = parseData(event);
         String path = asString(data.get("path"));
+        String policyName = asString(data.get("policyName"));
+        boolean automation = isAutomation(data);
+        // A policy dispatch carries its name but no automation marker; the internal tool steps it
+        // fans out carry the marker (and no name). The dispatch is the "policy" row; the steps are
+        // its automation sub-rows.
+        boolean policyDispatch = (policyName != null || isPolicyRunPath(path)) && !automation;
         String category = categoryFor(event.type(), path);
 
         return InfraAuditEventDto.builder()
                 .id(String.valueOf(event.id()))
                 .timestamp(event.timestamp() == null ? "" : TS_FORMAT.format(event.timestamp()))
                 .category(category)
-                .action(actionFor(event.type(), path))
+                .action(actionFor(event.type(), path, policyName, automation))
                 .actor(event.principal())
-                .target(targetFor(category, path, data))
+                .target(targetFor(category, path, data, policyDispatch))
                 .status(statusFor(event.type(), category, data))
                 .latencyMs(asLong(data.get("latencyMs")))
                 .build();
+    }
+
+    private static boolean isAutomation(Map<String, Object> data) {
+        Object v = data.get("automation");
+        return Boolean.TRUE.equals(v) || "true".equalsIgnoreCase(String.valueOf(v));
     }
 
     private Map<String, Object> parseData(PortalAuditEventRow event) {
@@ -140,7 +151,40 @@ public class PortalInfraAuditService {
                 || p.contains("redact");
     }
 
-    private static String actionFor(String type, String path) {
+    /**
+     * Label for a row. A policy dispatch (name, no automation marker) shows the policy itself; an
+     * internal pipeline step (automation marker) is flagged so it isn't read as a direct action.
+     */
+    private static String actionFor(
+            String type, String path, String policyName, boolean automation) {
+        if (!automation) {
+            if (policyName != null) {
+                return policyName;
+            }
+            if (isPolicyRunPath(path)) {
+                // A run with no name (ad-hoc pipeline) still reads better than the "run" endpoint.
+                return "Policy run";
+            }
+        }
+        String base = baseActionFor(type, path);
+        if (automation) {
+            return policyName != null
+                    ? base + " (policy: " + policyName + ")"
+                    : base + " (automation)";
+        }
+        return base;
+    }
+
+    /**
+     * The pipeline-run endpoints: {@code /policies/run}, {@code /run/stream}, {@code /{id}/run}.
+     */
+    private static boolean isPolicyRunPath(String path) {
+        return path != null
+                && path.contains("/policies/")
+                && (path.endsWith("/run") || path.endsWith("/run/stream"));
+    }
+
+    private static String baseActionFor(String type, String path) {
         AuditEventType t = AuditEventType.fromString(type);
         if (t == null) {
             return prettyTool(path);
@@ -191,7 +235,32 @@ public class PortalInfraAuditService {
         return sb.isEmpty() ? "PDF operation" : sb.toString();
     }
 
-    private static String targetFor(String category, String path, Map<String, Object> data) {
+    /** "Auto Redact, Compress PDF" from the run's step endpoints; first three, then "+N more". */
+    private static String prettyStepList(Object steps) {
+        if (!(steps instanceof List<?> list) || list.isEmpty()) {
+            return null;
+        }
+        int shown = Math.min(3, list.size());
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < shown; i++) {
+            if (i > 0) {
+                sb.append(", ");
+            }
+            sb.append(prettyTool(asString(list.get(i))));
+        }
+        if (list.size() > shown) {
+            sb.append(" +").append(list.size() - shown).append(" more");
+        }
+        return sb.toString();
+    }
+
+    private static String targetFor(
+            String category, String path, Map<String, Object> data, boolean policyDispatch) {
+        if (policyDispatch) {
+            // The run touches no single file at this level; show the tools the policy runs instead.
+            String steps = prettyStepList(data.get("policySteps"));
+            return steps != null ? steps : "Pipeline";
+        }
         if ("auth".equals(category)) {
             // Auth events don't act on a resource; the session is the closest thing.
             return "Web session";

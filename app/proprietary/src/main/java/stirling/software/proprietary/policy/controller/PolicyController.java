@@ -22,6 +22,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -31,6 +33,7 @@ import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
@@ -41,6 +44,7 @@ import stirling.software.common.model.job.JobResponse;
 import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
+import stirling.software.proprietary.audit.AuditContext;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.engine.PolicyRunHandle;
@@ -48,6 +52,7 @@ import stirling.software.proprietary.policy.engine.PolicyRunRegistry;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.PolicyValidator;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
+import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
@@ -104,6 +109,7 @@ public class PolicyController {
             @RequestPart("json") PipelineDefinition definition,
             @Valid @ModelAttribute PolicyRunFiles files)
             throws IOException {
+        stampPolicyAudit(definition);
         requireRunnable(definition);
         PolicyInputs inputs = toInputs(files);
         String runId =
@@ -122,6 +128,7 @@ public class PolicyController {
             @RequestPart("json") PipelineDefinition definition,
             @Valid @ModelAttribute PolicyRunFiles files)
             throws IOException {
+        stampPolicyAudit(definition);
         requireRunnable(definition);
         PolicyInputs inputs = toInputs(files);
 
@@ -364,6 +371,7 @@ public class PolicyController {
                                 () ->
                                         new ResponseStatusException(
                                                 HttpStatus.NOT_FOUND, "No policy: " + policyId));
+        stampPolicyAudit(policy.toDefinition());
         PolicyInputs inputs = toInputs(files);
         String runId = policyRunner.runWith(policy, inputs, PolicyProgressListener.NOOP).runId();
         return ResponseEntity.accepted().body(new JobResponse<>(true, runId, null));
@@ -393,6 +401,31 @@ public class PolicyController {
         if (definition.steps().isEmpty()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Pipeline definition has no steps");
+        }
+    }
+
+    /**
+     * Stamp this run's policy name and step endpoints onto the current request so the audit aspect
+     * can label the event as the policy it ran (rather than the generic {@code /run} endpoint) and
+     * record which tools it executed. No-op outside a web request.
+     */
+    private static void stampPolicyAudit(PipelineDefinition definition) {
+        if (definition == null
+                || !(RequestContextHolder.getRequestAttributes()
+                        instanceof ServletRequestAttributes attrs)) {
+            return;
+        }
+        HttpServletRequest request = attrs.getRequest();
+        if (definition.name() != null && !definition.name().isBlank()) {
+            request.setAttribute(AuditContext.REQ_ATTR_POLICY_NAME, definition.name());
+        }
+        List<String> steps =
+                definition.steps().stream()
+                        .map(PipelineStep::operation)
+                        .filter(op -> op != null && !op.isBlank())
+                        .toList();
+        if (!steps.isEmpty()) {
+            request.setAttribute(AuditContext.REQ_ATTR_POLICY_STEPS, steps);
         }
     }
 
