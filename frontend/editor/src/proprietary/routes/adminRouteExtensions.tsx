@@ -1,6 +1,7 @@
 import { lazy } from "react";
 import type { ReactElement } from "react";
 import { Route } from "react-router-dom";
+import { PORTAL_BASENAME } from "@app/routes/portalBasename";
 
 // The portal ships as a lazy chunk of the editor. It's included in dev (so it's
 // always available to work on) and in production builds made with
@@ -24,12 +25,18 @@ const PortalApp = includePortal
   : null;
 
 /**
- * The portal mounts as an admin-only route-set at /portal/*. Access is gated
- * inside PortalApp (its own AuthProvider + AuthGate, plus server enforcement),
- * so this just wires the lazy route into the editor's router when the portal is
- * included in this build.
+ * The portal mounts as an admin-only route-set at PORTAL_BASENAME (/processor/*).
+ * Access is gated inside PortalApp (its own AuthProvider + AuthGate, plus server
+ * enforcement), so this just wires the lazy route into the editor's router when
+ * the portal is included in this build.
  */
 export function getAdminRouteExtensions(): ReactElement[] {
   if (!PortalApp) return [];
-  return [<Route key="portal" path="/portal/*" element={<PortalApp />} />];
+  return [
+    <Route
+      key="portal"
+      path={`${PORTAL_BASENAME}/*`}
+      element={<PortalApp />}
+    />,
+  ];
 }
