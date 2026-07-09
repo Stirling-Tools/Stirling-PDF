@@ -153,7 +153,7 @@ export function ConnectWizard({
       footer={
         <div className="portal-sources__wizard-footer">
           <Button
-            variant="ghost"
+            variant="tertiary"
             size="sm"
             disabled={submitting}
             onClick={() =>
@@ -169,7 +169,7 @@ export function ConnectWizard({
             onClick={advance}
             loading={submitting}
             disabled={!canContinue}
-            trailingIcon={!isLast ? <span aria-hidden>→</span> : undefined}
+            rightSection={!isLast ? <span aria-hidden>→</span> : undefined}
           >
             {!isLast
               ? t("portal.sources.wizard.continue")
@@ -200,9 +200,9 @@ export function ConnectWizard({
       {stepId === "type" && (
         <div className="portal-sources__type-grid">
           {CREATABLE_SOURCE_TYPES.map((ct) => (
-            <button
+            <Button
               key={ct.type}
-              type="button"
+              variant="tertiary"
               className={
                 "portal-sources__type-card" +
                 (type.type === ct.type ? " is-selected" : "")
@@ -215,7 +215,7 @@ export function ConnectWizard({
               <span className="portal-sources__type-name">
                 {t(ct.labelKey)}
               </span>
-            </button>
+            </Button>
           ))}
         </div>
       )}
@@ -245,8 +245,8 @@ export function ConnectWizard({
                     value: o.value,
                     label: t(o.labelKey),
                   }))}
-                  onChange={(e) =>
-                    setOptions((o) => ({ ...o, [field.key]: e.target.value }))
+                  onChange={(value) =>
+                    setOptions((o) => ({ ...o, [field.key]: value ?? "" }))
                   }
                 />
               ) : (

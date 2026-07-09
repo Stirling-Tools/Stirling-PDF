@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Group, Text, ActionIcon, Menu, Button, Box } from "@mantine/core";
+import { Group, Text, Menu, Box } from "@mantine/core";
+import { Button as SharedButton } from "@app/ui/Button";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -181,31 +182,24 @@ export default function AutomationEntry({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Button
-        variant="subtle"
+      <SharedButton
+        variant="tertiary"
         onClick={onClick}
         size="sm"
-        radius="md"
         fullWidth
-        justify="flex-start"
+        justify="start"
         className="tool-button"
-        styles={{
-          root: {
-            borderRadius: 0,
-            color: "var(--tools-text-and-icon-color)",
-            overflow: "visible",
-            backgroundColor: shouldShowMenu
-              ? "var(--automation-entry-hover-bg)"
-              : undefined,
-            "&:hover": {
-              backgroundColor: "var(--automation-entry-hover-bg)",
-            },
-          },
-          label: { overflow: "visible" },
+        style={{
+          borderRadius: 0,
+          color: "var(--tools-text-and-icon-color)",
+          overflow: "visible",
+          backgroundColor: shouldShowMenu
+            ? "var(--automation-entry-hover-bg)"
+            : undefined,
         }}
       >
         {buttonContent}
-      </Button>
+      </SharedButton>
       {showMenu && (
         <Menu
           position="bottom-end"
@@ -214,9 +208,10 @@ export default function AutomationEntry({
           onClose={() => setIsMenuOpen(false)}
         >
           <Menu.Target>
-            <ActionIcon
-              variant="subtle"
-              c="dimmed"
+            <SharedButton
+              leftSection={<MoreVertIcon style={{ fontSize: 20 }} />}
+              variant="tertiary"
+              accent="neutral"
               size="md"
               aria-label={t(
                 "automate.entryMenu.label",
@@ -234,9 +229,7 @@ export default function AutomationEntry({
                 transition: "opacity 0.2s ease",
                 pointerEvents: shouldShowMenu ? "auto" : "none",
               }}
-            >
-              <MoreVertIcon style={{ fontSize: 20 }} />
-            </ActionIcon>
+            />
           </Menu.Target>
 
           <Menu.Dropdown>

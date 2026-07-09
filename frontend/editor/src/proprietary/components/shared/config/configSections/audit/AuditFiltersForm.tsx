@@ -1,12 +1,6 @@
 import React from "react";
-import {
-  Group,
-  MultiSelect,
-  Button,
-  Stack,
-  SimpleGrid,
-  Text,
-} from "@mantine/core";
+import { Group, MultiSelect, Stack, SimpleGrid, Text } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { DateInput } from "@mantine/dates";
 import { useTranslation } from "react-i18next";
 import { AuditFilters } from "@app/services/auditService";
@@ -102,32 +96,32 @@ const AuditFiltersForm: React.FC<AuditFiltersFormProps> = ({
         </Text>
         <Group gap="xs">
           <Button
-            variant={isPresetActive("today") ? "filled" : "light"}
-            size="xs"
+            variant={isPresetActive("today") ? "primary" : "secondary"}
+            size="sm"
             onClick={() => handleQuickPreset("today")}
             disabled={disabled}
           >
             {t("audit.filters.today", "Today")}
           </Button>
           <Button
-            variant={isPresetActive("last7") ? "filled" : "light"}
-            size="xs"
+            variant={isPresetActive("last7") ? "primary" : "secondary"}
+            size="sm"
             onClick={() => handleQuickPreset("last7")}
             disabled={disabled}
           >
             {t("audit.filters.last7Days", "Last 7 days")}
           </Button>
           <Button
-            variant={isPresetActive("last30") ? "filled" : "light"}
-            size="xs"
+            variant={isPresetActive("last30") ? "primary" : "secondary"}
+            size="sm"
             onClick={() => handleQuickPreset("last30")}
             disabled={disabled}
           >
             {t("audit.filters.last30Days", "Last 30 days")}
           </Button>
           <Button
-            variant={isPresetActive("thisMonth") ? "filled" : "light"}
-            size="xs"
+            variant={isPresetActive("thisMonth") ? "primary" : "secondary"}
+            size="sm"
             onClick={() => handleQuickPreset("thisMonth")}
             disabled={disabled}
           >
@@ -216,7 +210,7 @@ const AuditFiltersForm: React.FC<AuditFiltersFormProps> = ({
       {/* Clear Button */}
       <Group justify="flex-end">
         <Button
-          variant="outline"
+          variant="secondary"
           size="sm"
           onClick={onClearFilters}
           disabled={disabled}

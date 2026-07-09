@@ -123,6 +123,14 @@
   left: 0;
   right: 0;
   bottom: calc(var(--file-meta-line-height) + var(--file-meta-gap));
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.fileNameText {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
@@ -131,6 +139,12 @@
   text-overflow: ellipsis;
   overflow-wrap: break-word;
   word-break: normal;
+  min-width: 0;
+}
+
+/* Layout-only wrapper for the shared PolicyBadges row in the file-name line. */
+.fileNameBadges {
+  padding-top: 2px;
 }
 
 .fileMeta {
@@ -207,6 +221,7 @@
   pointer-events: auto;
 }
 
+/* Policy badges pinned to top-right of thumbnail */
 .statusDot {
   display: inline-block;
   width: 8px;

@@ -57,6 +57,15 @@ public class RequestUriUtils {
             return true;
         }
 
+        // Admin portal SPA shell. Served publicly like the editor root so a direct
+        // nav / refresh to /portal loads the app (the JWT lives in localStorage, not
+        // a cookie, so the server can't authenticate the navigation itself). The
+        // portal gates access via its own auth gate + RequirePortalAccess, and its
+        // data APIs stay protected, so serving the shell pre-auth is safe.
+        if (normalizedUri.equals("/portal") || normalizedUri.startsWith("/portal/")) {
+            return true;
+        }
+
         // Treat common static file extensions as static resources
         return normalizedUri.endsWith(".svg")
                 || normalizedUri.endsWith(".png")

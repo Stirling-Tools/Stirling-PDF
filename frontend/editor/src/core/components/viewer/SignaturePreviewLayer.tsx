@@ -1,6 +1,7 @@
 import { memo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ActionIcon, Tooltip } from "@mantine/core";
+import { Tooltip } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import CloseIcon from "@mui/icons-material/Close";
 import { useInteractionManagerCapability } from "@embedpdf/plugin-interaction-manager/react";
 import {
@@ -162,9 +163,9 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
               {!readOnly && (
                 <ActionIcon
                   size="sm"
-                  radius="xl"
-                  variant="filled"
-                  color="red"
+                  shape="circle"
+                  variant="primary"
+                  accent="danger"
                   style={{
                     position: "absolute",
                     top: -10,

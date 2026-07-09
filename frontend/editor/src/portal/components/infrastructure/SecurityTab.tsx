@@ -191,7 +191,7 @@ export function SecurityTab() {
             {/* Rotation is a privileged backend action; disabled where Stirling
                 holds the keys (managed tiers can't rotate customer keys). */}
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               disabled={!data.keyManagement.customerManaged}
               onClick={() => {
@@ -286,9 +286,7 @@ export function SecurityTab() {
                   {ATTESTATION_LABEL[a.status]}
                 </StatusBadge>
               </div>
-              <Chip tone="neutral" size="sm">
-                {a.framework}
-              </Chip>
+              <Chip size="sm">{a.framework}</Chip>
               <p className="portal-infra__cert-detail">{a.detail}</p>
               {a.reportUrl ? (
                 <a

@@ -1,0 +1,41 @@
+/* Mantine-backed Button — colour driven by the shared accent palette (accents.css). */
+@import "./accents.css";
+
+/* ---- icon-only: square, no horizontal padding ---- */
+.sui-btn--icon.mantine-Button-root {
+  --button-padding-x: 0;
+  width: var(--button-height);
+  min-width: var(--button-height);
+}
+/* Zero the section margin / hide the empty label so the lone icon centres. */
+.sui-btn--icon .mantine-Button-section {
+  margin-inline: 0;
+}
+.sui-btn--icon .mantine-Button-label {
+  display: none;
+}
+
+/* ---- shape ---- */
+.sui-btn--circle.mantine-Button-root {
+  --button-radius: 50%;
+}
+.sui-btn--pill.mantine-Button-root {
+  --button-radius: 9999px;
+}
+
+/* ---- gradient accents: brighten on hover instead of a hard bg swap ---- */
+/* [data-disabled] too: :disabled never matches polymorphic (as="a") roots. */
+.sui-acc-ai.sui-btn--primary:not(:disabled):not([data-disabled]):hover,
+.sui-acc-premium.sui-btn--primary:not(:disabled):not([data-disabled]):hover {
+  filter: brightness(1.06);
+}
+
+/* ---- overflow: default wraps the label; Mantine's label is nowrap ---- */
+.sui-btn--wrap .mantine-Button-label {
+  white-space: normal;
+}
+
+/* no-hover: !important to beat Mantine's own :hover background rule. */
+.sui-btn--no-hover:not(:disabled):not([data-disabled]):hover {
+  background: var(--button-bg, transparent) !important;
+}
