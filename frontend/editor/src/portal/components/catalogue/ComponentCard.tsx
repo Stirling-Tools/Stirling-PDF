@@ -44,7 +44,7 @@ export function ComponentCard({
       <div className="portal-components__card-head">
         <h3 className="portal-components__card-name">{component.name}</h3>
         <StatusBadge tone={maturity.tone} size="sm" showDot={false}>
-          {maturity.label}
+          {t(maturity.label)}
         </StatusBadge>
         {!unlocked && (
           <span
@@ -60,7 +60,7 @@ export function ComponentCard({
 
       <div className="portal-components__card-meta">
         <span className="portal-components__price">
-          {formatPrice(component.pricing)}
+          {formatPrice(component.pricing, t)}
         </span>
         <span className="portal-components__pkg">
           @stirling/{component.package}

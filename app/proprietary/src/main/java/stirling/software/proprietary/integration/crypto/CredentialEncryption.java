@@ -1,12 +1,16 @@
 package stirling.software.proprietary.integration.crypto;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.EnumSet;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -74,7 +78,7 @@ public class CredentialEncryption {
             generator.init(256);
             SecretKey generated = generator.generateKey();
             Files.createDirectories(path.getParent());
-            Files.writeString(path, Base64.getEncoder().encodeToString(generated.getEncoded()));
+            writeOwnerOnly(path, Base64.getEncoder().encodeToString(generated.getEncoded()));
             log.warn(
                     "Generated a new credential encryption key at {}. Back this file up: losing it"
                             + " makes stored integration secrets unrecoverable.",
@@ -82,6 +86,25 @@ public class CredentialEncryption {
             return generated;
         } catch (Exception e) {
             throw new IllegalStateException("Unable to initialise credential encryption key", e);
+        }
+    }
+
+    // The master key decrypts every stored integration secret, so create it 0600
+    // (owner-only) atomically. On non-POSIX filesystems (Windows) the config-dir
+    // ACL is the protection; we still create the file, just without POSIX perms.
+    private static void writeOwnerOnly(Path path, String content) throws IOException {
+        EnumSet<PosixFilePermission> ownerOnly =
+                EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE);
+        try {
+            Files.createFile(path, PosixFilePermissions.asFileAttribute(ownerOnly));
+        } catch (UnsupportedOperationException e) {
+            Files.createFile(path);
+        }
+        Files.writeString(path, content);
+        try {
+            Files.setPosixFilePermissions(path, ownerOnly);
+        } catch (UnsupportedOperationException ignored) {
+            // Non-POSIX filesystem: nothing to tighten here.
         }
     }
 
