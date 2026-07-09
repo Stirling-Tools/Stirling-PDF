@@ -113,16 +113,6 @@ const MANTINE_JUSTIFY: Record<ButtonJustify, string> = {
   between: "space-between",
 };
 
-// Maps the fontSize scale onto Mantine's font-size tokens (xs 12 → xl 20px),
-// the same tokens `size` resolves to — so fontSize is a drop-in override.
-const FONT_SIZE_VAR: Record<ButtonFontSize, string> = {
-  xs: "var(--mantine-font-size-xs)",
-  sm: "var(--mantine-font-size-sm)",
-  md: "var(--mantine-font-size-md)",
-  lg: "var(--mantine-font-size-lg)",
-  xl: "var(--mantine-font-size-xl)",
-};
-
 const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
   function ButtonRoot(
     {
