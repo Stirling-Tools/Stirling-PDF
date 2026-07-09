@@ -14,15 +14,14 @@ import { useView, type ViewId } from "@portal/contexts/ViewContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {
   fetchHomeKpis,
-  fetchOnboarding,
   fetchRegionHealth,
   fetchUsageSeries,
   type KpiEntry,
-  type OnboardingStep,
   type RegionHealth,
   type UsageSeriesResponse,
 } from "@portal/api/home";
-import { WelcomeCarousel } from "@portal/components/WelcomeCarousel";
+import { HomeHero } from "@portal/components/HomeHero";
+import { HomeGreeting } from "@portal/components/HomeGreeting";
 import { PopularUseCases } from "@portal/components/PopularUseCases";
 import { UsageAreaChart } from "@portal/components/UsageAreaChart";
 import { RecentActivity } from "@portal/components/RecentActivity";
@@ -37,7 +36,7 @@ import "@portal/views/Home.css";
 /* ──────────────────────────────────────────────────────────────────────── */
 
 interface ProductCardProps {
-  accent: "blue" | "purple";
+  accent: "default" | "premium";
   badge?: string;
   title: string;
   blurb: string;
@@ -59,18 +58,21 @@ function ProductCard({
       <div className="portal-home__product-head">
         <h3 className="portal-home__product-title">{title}</h3>
         {badge && (
-          <StatusBadge tone={accent === "blue" ? "info" : "purple"} size="sm">
+          <StatusBadge
+            tone={accent === "default" ? "info" : "purple"}
+            size="sm"
+          >
             {badge}
           </StatusBadge>
         )}
       </div>
       <p className="portal-home__product-blurb">{blurb}</p>
       <Button
-        variant="outline"
+        variant="secondary"
         accent={accent}
         size="sm"
         onClick={() => setActiveView(target)}
-        trailingIcon={<span aria-hidden>→</span>}
+        rightSection={<span aria-hidden>→</span>}
       >
         {cta}
       </Button>
@@ -86,14 +88,14 @@ function ProductGrid() {
       aria-label={t("portal.home.productGrid.ariaLabel")}
     >
       <ProductCard
-        accent="purple"
+        accent="premium"
         title={t("portal.home.productGrid.sources.title")}
         blurb={t("portal.home.productGrid.sources.blurb")}
         cta={t("portal.home.productGrid.sources.cta")}
         target="sources"
       />
       <ProductCard
-        accent="blue"
+        accent="default"
         badge={t("portal.home.productGrid.pipelines.badge")}
         title={t("portal.home.productGrid.pipelines.title")}
         blurb={t("portal.home.productGrid.pipelines.blurb")}
@@ -101,7 +103,7 @@ function ProductGrid() {
         target="pipelines"
       />
       <ProductCard
-        accent="purple"
+        accent="premium"
         title={t("portal.home.productGrid.agents.title")}
         blurb={t("portal.home.productGrid.agents.blurb")}
         cta={t("portal.home.productGrid.agents.cta")}
@@ -129,7 +131,8 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
         </span>
       </div>
       <div className="portal-home__quick-list">
-        <button
+        <Button
+          variant="quiet"
           type="button"
           className="portal-home__quick-row"
           onClick={onTryOp}
@@ -151,8 +154,9 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
           <span className="portal-home__quick-arrow" aria-hidden>
             →
           </span>
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="quiet"
           type="button"
           className="portal-home__quick-row"
           onClick={() => setActiveView("pipelines")}
@@ -174,8 +178,9 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
           <span className="portal-home__quick-arrow" aria-hidden>
             →
           </span>
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="quiet"
           type="button"
           className="portal-home__quick-row"
           onClick={() => setActiveView("sources")}
@@ -197,8 +202,9 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
           <span className="portal-home__quick-arrow" aria-hidden>
             →
           </span>
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="quiet"
           type="button"
           className="portal-home__quick-row"
           onClick={() => setActiveView("infrastructure")}
@@ -220,119 +226,8 @@ function QuickActions({ onTryOp }: { onTryOp: () => void }) {
           <span className="portal-home__quick-arrow" aria-hidden>
             →
           </span>
-        </button>
-      </div>
-    </Card>
-  );
-}
-
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Free-tier onboarding checklist                                           */
-/* ──────────────────────────────────────────────────────────────────────── */
-
-function FreeOnboarding({ onTryOp }: { onTryOp: () => void }) {
-  const { t } = useTranslation();
-  const { setActiveView } = useView();
-  const state = useAsync<OnboardingStep[]>(() => fetchOnboarding(), []);
-  const { data: steps } = state;
-  const { isLoading, isEmpty } = useSectionFlags(state);
-
-  const doneCount = steps?.filter((s) => s.done).length ?? 0;
-
-  function renderCta(step: OnboardingStep) {
-    if (step.done) {
-      return (
-        <Button size="sm" variant="ghost" onClick={onTryOp}>
-          {t("portal.home.onboarding.runAgain")}
         </Button>
-      );
-    }
-    if (!step.cta) return null;
-    if (step.cta.kind === "try-op") {
-      return (
-        <Button size="sm" variant="outline" onClick={onTryOp}>
-          {t("portal.home.onboarding.start")}
-        </Button>
-      );
-    }
-    const target = step.cta.target;
-    return (
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={() => setActiveView(target as ViewId)}
-      >
-        {t("portal.home.onboarding.start")}
-      </Button>
-    );
-  }
-
-  return (
-    <Card padding="loose" className="portal-home__onboard">
-      <div className="portal-home__onboard-head">
-        <div>
-          <h2 className="portal-home__onboard-title">
-            {t("portal.home.onboarding.title")}
-          </h2>
-          <p className="portal-home__onboard-sub">
-            {t("portal.home.onboarding.subtitle")}
-          </p>
-        </div>
-        {steps && steps.length > 0 && (
-          <StatusBadge tone="info" size="sm">
-            {t("portal.home.onboarding.progress", {
-              done: doneCount,
-              total: steps.length,
-            })}
-          </StatusBadge>
-        )}
       </div>
-
-      {isLoading && (
-        <ol className="portal-home__onboard-list" aria-hidden>
-          {Array.from({ length: 4 }).map((_, i) => (
-            <li
-              key={`skel-${i}`}
-              className="portal-home__onboard-step is-loading"
-            >
-              <span className="portal-home__onboard-mark" />
-              <div className="portal-home__onboard-text">
-                <div className="portal-home__onboard-skel" />
-              </div>
-            </li>
-          ))}
-        </ol>
-      )}
-
-      {isEmpty && (
-        <EmptyState
-          size="compact"
-          title={t("portal.home.onboarding.empty.title")}
-          description={t("portal.home.onboarding.empty.description")}
-        />
-      )}
-
-      {steps && steps.length > 0 && (
-        <ol className="portal-home__onboard-list">
-          {steps.map((s, i) => (
-            <li
-              key={s.id}
-              className={
-                "portal-home__onboard-step" + (s.done ? " is-done" : "")
-              }
-            >
-              <span className="portal-home__onboard-mark">
-                {s.done ? "✓" : i + 1}
-              </span>
-              <div className="portal-home__onboard-text">
-                <strong>{s.title}</strong>
-                <span>{s.blurb}</span>
-              </div>
-              {renderCta(s)}
-            </li>
-          ))}
-        </ol>
-      )}
     </Card>
   );
 }
@@ -535,16 +430,18 @@ export function Home() {
 
   return (
     <div className="portal-home">
-      <WelcomeCarousel onTryOp={() => setRunnerOpen(true)} />
-      <ProcessingStatusStrip />
+      {/* Paid tiers open with a greeting; free opens straight with the banner. */}
+      {tier !== "free" && <HomeGreeting />}
+
+      {/* Per-tier hero. Its footer is the deal-status hero while a procurement
+          deal is underway (a bolt-on to any tier), otherwise the setup checklist. */}
+      <HomeHero tier={tier} />
 
       {tier === "free" && (
         <>
+          <ProcessingStatusStrip />
           <TierKpiStrip />
-          <div className="portal-home__row">
-            <FreeOnboarding onTryOp={() => setRunnerOpen(true)} />
-            <QuickActions onTryOp={() => setRunnerOpen(true)} />
-          </div>
+          <QuickActions onTryOp={() => setRunnerOpen(true)} />
           <PolicySummary />
           <PipelineForkWizard />
           <ProductGrid />
@@ -554,6 +451,7 @@ export function Home() {
 
       {tier === "pro" && (
         <>
+          <ProcessingStatusStrip />
           <ChartSection />
           <TierKpiStrip />
           <div className="portal-home__row">
@@ -569,6 +467,7 @@ export function Home() {
 
       {tier === "enterprise" && (
         <>
+          <ProcessingStatusStrip />
           <ChartSection />
           <TierKpiStrip />
           <EnterpriseRegions />

@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Card, EmptyState, Skeleton, StatusBadge } from "@app/ui";
+import { Button, Card, EmptyState, Skeleton, StatusBadge } from "@app/ui";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {
   fetchRecentActivity,
@@ -33,9 +33,9 @@ export function RecentActivity() {
         <h2 className="portal-activity__title">
           {t("portal.recentActivity.title")}
         </h2>
-        <button type="button" className="portal-activity__more">
+        <Button variant="quiet" type="button" className="portal-activity__more">
           {t("portal.recentActivity.viewAll")} →
-        </button>
+        </Button>
       </header>
 
       {isLoading && (

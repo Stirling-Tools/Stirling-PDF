@@ -37,7 +37,7 @@ export function BootstrapDialog({ open, onClose }: BootstrapDialogProps) {
       subtitle={t("portal.agentBuilder.bootstrap.subtitle")}
       footer={
         <div className="portal-agents__dialog-footer">
-          <Button variant="ghost" size="sm" onClick={close}>
+          <Button variant="tertiary" size="sm" onClick={close}>
             {t("portal.agentBuilder.bootstrap.cancel")}
           </Button>
           <Button size="sm" onClick={bootstrap} disabled={!fileName}>

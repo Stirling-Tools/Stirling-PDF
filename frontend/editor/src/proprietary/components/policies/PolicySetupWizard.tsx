@@ -409,8 +409,8 @@ export function PolicySetupWizard({
                     <Select
                       inputSize="sm"
                       value={runOn}
-                      onChange={(e) =>
-                        setRunOn(e.target.value as "upload" | "export")
+                      onChange={(value) =>
+                        setRunOn((value ?? "upload") as "upload" | "export")
                       }
                       aria-label={t("policies.wizard.runOnLabel", "Run on")}
                       options={[
@@ -437,8 +437,8 @@ export function PolicySetupWizard({
                     <Select
                       inputSize="sm"
                       value={outputMode}
-                      onChange={(e) => {
-                        const mode = e.target.value as
+                      onChange={(value) => {
+                        const mode = (value ?? "new_file") as
                           | "new_file"
                           | "new_version";
                         setOutputMode(mode);
@@ -481,9 +481,12 @@ export function PolicySetupWizard({
                   <Select
                     inputSize="sm"
                     value={outputNamePosition}
-                    onChange={(e) =>
+                    onChange={(value) =>
                       setOutputNamePosition(
-                        e.target.value as "prefix" | "suffix" | "auto-number",
+                        (value ?? "suffix") as
+                          | "prefix"
+                          | "suffix"
+                          | "auto-number",
                       )
                     }
                     aria-label={t(
@@ -627,7 +630,7 @@ export function PolicySetupWizard({
                 )}
                 action={
                   <Button
-                    variant="ghost"
+                    variant="tertiary"
                     size="sm"
                     onClick={onSetupClassification}
                   >
@@ -653,14 +656,15 @@ export function PolicySetupWizard({
                           { count: scopeTypes.length },
                         )}
                   </span>
-                  <button
+                  <Button
+                    variant="tertiary"
                     className="pol-link"
                     onClick={() => setScopeNarrow((v) => !v)}
                   >
                     {scopeNarrow
                       ? t("policies.wizard.clear", "Clear")
                       : t("policies.wizard.edit", "Edit")}
-                  </button>
+                  </Button>
                 </div>
                 {scopeNarrow && (
                   <div className="pol-doctypes">
@@ -687,12 +691,11 @@ export function PolicySetupWizard({
       </div>
 
       <div className="pol-footer">
-        <Button variant="ghost" size="sm" onClick={back}>
+        <Button variant="tertiary" size="sm" onClick={back}>
           {step > 1 ? t("policies.wizard.back", "Back") : t("cancel", "Cancel")}
         </Button>
         {step < TOTAL_STEPS ? (
           <Button
-            variant="gradient"
             size="sm"
             style={{ marginLeft: "auto" }}
             onClick={() => setStep((s) => Math.min(TOTAL_STEPS, s + 1))}
@@ -701,7 +704,6 @@ export function PolicySetupWizard({
           </Button>
         ) : (
           <Button
-            variant="gradient"
             size="sm"
             style={{ marginLeft: "auto" }}
             onClick={submit}

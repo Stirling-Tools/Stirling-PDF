@@ -108,6 +108,8 @@ export interface DeploymentSummary {
   serviceToken: { masked: string; lastRotated: string };
   /** Air-gapped activation is enterprise-only; gate the card on this flag. */
   offlineActivationAvailable: boolean;
+  /** Where users launch the Editor — the org workspace URL (Open in browser). */
+  workspaceUrl: string;
 }
 
 export interface EditorDeploymentResponse {
@@ -377,6 +379,7 @@ function summaryFor(
       lastRotated: tier === "enterprise" ? "11 days ago" : "34 days ago",
     },
     offlineActivationAvailable: tier === "enterprise",
+    workspaceUrl: "https://app.stirlingpdf.com/o/acme/editor",
   };
 }
 

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Box, Popover, ScrollArea, Text, Loader } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import AddIcon from "@mui/icons-material/Add";
 import { useTranslation } from "react-i18next";
 import {
@@ -555,9 +556,10 @@ export function FileSelectorPicker({
                 const meta = buildMeta(stub);
                 const isItemLoading = loadingId === stub.id;
                 return (
-                  <button
+                  <Button
                     key={stub.id}
-                    type="button"
+                    variant="tertiary"
+                    hover={false}
                     className={styles.fileItem}
                     onClick={() => void loadAndSelect(stub)}
                     disabled={!!loadingId}
@@ -568,6 +570,9 @@ export function FileSelectorPicker({
                       })
                     }
                     onMouseLeave={() => setHoveredStub(null)}
+                    rightSection={
+                      isItemLoading ? <Loader size="xs" /> : undefined
+                    }
                   >
                     <div className={styles.fileItemContent}>
                       <span className={styles.fileName} title={stub.name}>
@@ -575,8 +580,7 @@ export function FileSelectorPicker({
                       </span>
                       {meta && <span className={styles.fileMeta}>{meta}</span>}
                     </div>
-                    {isItemLoading && <Loader size="xs" />}
-                  </button>
+                  </Button>
                 );
               })
             )}

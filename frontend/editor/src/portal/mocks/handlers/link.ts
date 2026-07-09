@@ -1,6 +1,7 @@
 import { http, HttpResponse, delay } from "msw";
 import {
   getLocalStatus,
+  getLocalUsage,
   linkLocal,
   listInstances,
   revokeInstance,
@@ -37,10 +38,23 @@ export const linkHandlers = [
     return HttpResponse.json(linkLocal(name), { status: 201 });
   }),
 
+  http.get("/api/v1/account-link/usage", async () => {
+    await delay(120);
+    return HttpResponse.json(getLocalUsage());
+  }),
+
   http.post("/api/v1/account-link/unlink", async () => {
     await delay(120);
     // Clear local link state, then 204 (no body) to match the real backend.
     unlinkLocal();
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  // Manual sync trigger — the real backend runs a sync + entitlement refresh and
+  // returns 204 (or 409 when metering is off). The portal fires it best-effort
+  // after a checkout completes; the mock just acknowledges.
+  http.post("/api/v1/account-link/sync-now", async () => {
+    await delay(120);
     return new HttpResponse(null, { status: 204 });
   }),
 
