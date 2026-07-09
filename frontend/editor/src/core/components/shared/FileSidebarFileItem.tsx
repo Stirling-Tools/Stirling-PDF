@@ -156,6 +156,9 @@ export interface FileItemProps {
   onFolderClick?: (folderId: string) => void;
   /** Policies that have run on this file — rendered as small shield badges. */
   policies?: FileItemPolicyRef[];
+  /** The file's primary classification label (display name), shown in the meta
+   *  row in place of the file type when present. */
+  primaryLabel?: string;
   /** Delete (local only) from the kebab menu. Omit to hide the menu's delete. */
   onDelete?: (fileId: FileId) => void;
   /** Save to cloud from the kebab menu. */
@@ -188,6 +191,7 @@ export function FileItem({
   folders = [],
   onFolderClick,
   policies = [],
+  primaryLabel,
   onDelete,
   onSaveToCloud,
   canSaveToCloud = false,
@@ -282,9 +286,19 @@ export function FileItem({
           </span>
           <span className="file-sidebar-file-meta-row">
             <span className="file-sidebar-file-meta">
-              {dateLabel}
-              {dateLabel && typeLabel ? " · " : ""}
-              {typeLabel}
+              {primaryLabel ? (
+                <>
+                  {primaryLabel}
+                  {primaryLabel && dateLabel ? " • " : ""}
+                  {dateLabel}
+                </>
+              ) : (
+                <>
+                  {dateLabel}
+                  {dateLabel && typeLabel ? " · " : ""}
+                  {typeLabel}
+                </>
+              )}
             </span>
             {isUploadedToCloud && (
               <Tooltip

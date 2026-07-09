@@ -120,7 +120,7 @@ export function ReviewQueueTable({
         width: "10rem",
         render: (d) => (
           <StatusBadge tone={DOCUMENT_STATUS_TONE[d.status]} size="sm">
-            {DOCUMENT_STATUS_LABEL[d.status]}
+            {t(DOCUMENT_STATUS_LABEL[d.status])}
             {d.status === "in-review" && d.reviewer ? ` · ${d.reviewer}` : ""}
           </StatusBadge>
         ),

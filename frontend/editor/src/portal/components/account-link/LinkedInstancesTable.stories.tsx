@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { listInstances, type LinkedInstanceRow } from "@portal/mocks/link";
+import type { LinkedInstanceRow } from "@portal/api/link";
+import { listInstances } from "@portal/mocks/link";
 import { LinkedInstancesTable } from "@portal/components/account-link/LinkedInstancesTable";
 import "@portal/views/AccountLink.css";
 
