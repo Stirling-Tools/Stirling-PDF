@@ -44,7 +44,7 @@ public class PolicyRunner {
     private final ProcessedLedger processedLedger;
 
     /** Full-listing sweep: resolve every source, then reconcile the ledger. */
-    public List<String> run(Policy policy) {
+    public SweepOutcome run(Policy policy) {
         return run(policy, SweepKind.FULL);
     }
 
@@ -52,10 +52,10 @@ public class PolicyRunner {
      * Trigger entry point. Pulls every referenced source; each yielded unit becomes its own run so
      * one failure does not affect the others. No sources means one run with no input (generator
      * pipeline). Missing or disabled sources are skipped so one broken reference does not stop the
-     * rest. Returns the ids of the runs it started (empty when sources yielded no work), so a
-     * manual trigger can report back which runs to follow.
+     * rest. Returns the ids of the runs it started plus what the sweep skipped, so a manual trigger
+     * can report which runs to follow or why nothing ran.
      */
-    public List<String> run(Policy policy, SweepKind sweep) {
+    public SweepOutcome run(Policy policy, SweepKind sweep) {
         long sweepStart = System.currentTimeMillis();
         PolicySweep context = new PolicySweep(policy.id(), sweep, processedLedger);
         List<String> runIds = new ArrayList<>();
@@ -95,7 +95,7 @@ public class PolicyRunner {
                         policy.id());
             }
         }
-        return runIds;
+        return context.outcome(runIds);
     }
 
     /** Run a stored policy on caller-supplied files (e.g. manual upload), bypassing its sources. */

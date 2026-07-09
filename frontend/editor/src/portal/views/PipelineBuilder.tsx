@@ -5,6 +5,7 @@ import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import KeyboardArrowUpRoundedIcon from "@mui/icons-material/KeyboardArrowUpRounded";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import {
@@ -44,7 +45,9 @@ import {
   type PolicyRunView,
   type TriggerConfig,
   type TriggerInfo,
+  type TriggerOutcome,
 } from "@portal/api/pipelines";
+import { clearProcessedHistory } from "@portal/api/policies";
 import { fetchSources, type SourceView } from "@portal/api/sources";
 import { useAsync } from "@portal/hooks/useAsync";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
@@ -193,6 +196,7 @@ export function PipelineBuilder() {
   const [error, setError] = useState<string | null>(null);
   const [seeded, setSeeded] = useState(false);
   const [running, setRunning] = useState(false);
+  const [clearingHistory, setClearingHistory] = useState(false);
   const [runResult, setRunResult] = useState<RunResult | null>(null);
   const [pendingDelete, setPendingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -439,15 +443,37 @@ export function PipelineBuilder() {
     return null;
   }
 
+  /** Explain an empty trigger: parked files outrank blander reasons. */
+  function emptySweepResult(outcome: TriggerOutcome): RunResult {
+    if (outcome.parked > 0) {
+      return {
+        tone: "warning",
+        text: t("portal.pipelines.run.parked", { count: outcome.parked }),
+      };
+    }
+    if (outcome.inFlight > 0) {
+      return { tone: "info", text: t("portal.pipelines.run.inFlight") };
+    }
+    if (outcome.alreadyProcessed > 0) {
+      return {
+        tone: "info",
+        text: t("portal.pipelines.run.allProcessed", {
+          count: outcome.alreadyProcessed,
+        }),
+      };
+    }
+    return { tone: "info", text: t("portal.pipelines.run.empty") };
+  }
+
   async function handleRun() {
     if (running || !id) return;
     setRunning(true);
     setRunResult(null);
     try {
-      const runIds = await triggerPipeline(id);
+      const outcome = await triggerPipeline(id);
+      const runIds = outcome.runIds;
       if (runIds.length === 0) {
-        if (mounted.current)
-          setRunResult({ tone: "info", text: t("portal.pipelines.run.empty") });
+        if (mounted.current) setRunResult(emptySweepResult(outcome));
         return;
       }
       const finals = await Promise.all(runIds.map((runId) => awaitRun(runId)));
@@ -477,6 +503,30 @@ export function PipelineBuilder() {
         setRunResult({ tone: "danger", text: errorMessage(e) });
     } finally {
       if (mounted.current) setRunning(false);
+    }
+  }
+
+  /**
+   * Forget which source files this pipeline has processed, so the next sweep
+   * reprocesses everything currently in its sources (the standard retry for a
+   * parked-by-failure file). Does not touch the files themselves.
+   */
+  async function handleClearHistory() {
+    if (clearingHistory || !id) return;
+    setClearingHistory(true);
+    setRunResult(null);
+    try {
+      await clearProcessedHistory(id);
+      if (mounted.current)
+        setRunResult({
+          tone: "success",
+          text: t("portal.pipelines.run.historyCleared"),
+        });
+    } catch (e) {
+      if (mounted.current)
+        setRunResult({ tone: "danger", text: errorMessage(e) });
+    } finally {
+      if (mounted.current) setClearingHistory(false);
     }
   }
 
@@ -545,6 +595,17 @@ export function PipelineBuilder() {
                 }
               >
                 {t("portal.pipelines.detail.run")}
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                loading={clearingHistory}
+                onClick={handleClearHistory}
+                leftSection={
+                  <HistoryRoundedIcon style={{ fontSize: "1.125rem" }} />
+                }
+              >
+                {t("portal.pipelines.detail.clearHistory")}
               </Button>
               <Button
                 variant="secondary"

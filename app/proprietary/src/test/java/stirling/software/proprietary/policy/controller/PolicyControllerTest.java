@@ -34,6 +34,7 @@ import stirling.software.proprietary.policy.engine.PolicyRunHandle;
 import stirling.software.proprietary.policy.engine.PolicyRunRegistry;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.PolicyValidator;
+import stirling.software.proprietary.policy.engine.SweepOutcome;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.PipelineStep;
@@ -536,17 +537,18 @@ class PolicyControllerTest {
         }
 
         @Test
-        @DisplayName("trigger runs an accessible policy against its sources and returns run ids")
+        @DisplayName("trigger runs an accessible policy against its sources and returns the sweep")
         void triggersRun() {
             Policy p = policy("a", 1L);
             when(policyStore.get("a")).thenReturn(Optional.of(p));
             when(policyAccessGuard.canAccess(p)).thenReturn(true);
-            when(policyRunner.run(p)).thenReturn(List.of("run-a", "run-b"));
+            SweepOutcome outcome = new SweepOutcome(List.of("run-a", "run-b"), 3, 1, 0, 0);
+            when(policyRunner.run(p)).thenReturn(outcome);
 
-            ResponseEntity<List<String>> response = controller.trigger("a");
+            ResponseEntity<SweepOutcome> response = controller.trigger("a");
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
-            assertThat(response.getBody()).containsExactly("run-a", "run-b");
+            assertThat(response.getBody()).isEqualTo(outcome);
         }
 
         @Test

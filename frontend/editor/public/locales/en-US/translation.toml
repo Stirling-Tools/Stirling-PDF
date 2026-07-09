@@ -7267,6 +7267,7 @@ confirm = "Delete"
 title = "Delete pipeline?"
 
 [portal.pipelines.detail]
+clearHistory = "Clear history"
 delete = "Delete pipeline"
 run = "Run now"
 
@@ -7286,10 +7287,16 @@ inline = "Return files"
 s3 = "Write to Amazon S3"
 
 [portal.pipelines.run]
+allProcessed_one = "Nothing to run: the source's {{count}} document has already been processed."
+allProcessed_other = "Nothing to run: all {{count}} documents in the sources have already been processed."
 completed_one = "Run completed."
 completed_other = "All {{count}} runs completed."
 empty = "Nothing to run: the sources had no documents to process."
 failed = "Run failed: {{error}}"
+historyCleared = "History cleared. The next run reprocesses everything currently in the sources."
+inFlight = "Nothing new to run: documents are still being processed from an earlier run."
+parked_one = "Nothing to run: {{count}} document failed previously and is parked. Fix the cause, then clear history to retry it."
+parked_other = "Nothing to run: {{count}} documents failed previously and are parked. Fix the cause, then clear history to retry them."
 running = "Run started; still in progress."
 timeout = "Run is taking longer than expected; it may still finish in the background."
 

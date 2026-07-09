@@ -7,7 +7,7 @@ import {
 } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import type { Policy } from "@portal/api/pipelines";
+import type { Policy, TriggerOutcome } from "@portal/api/pipelines";
 import type { ToolRegistryCatalog } from "@app/contexts/ToolRegistryContext";
 import type { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import { PipelineBuilder } from "@portal/views/PipelineBuilder";
@@ -43,6 +43,11 @@ vi.mock("@portal/api/pipelines", () => ({
 const fetchSources = vi.fn();
 vi.mock("@portal/api/sources", () => ({
   fetchSources: () => fetchSources(),
+}));
+
+const clearProcessedHistory = vi.fn();
+vi.mock("@portal/api/policies", () => ({
+  clearProcessedHistory: (id: string) => clearProcessedHistory(id),
 }));
 
 // One editable tool, Compress, so the picker and step settings have something to render.
@@ -100,6 +105,17 @@ const POLICY: Policy = {
   output: { type: "inline", options: {} },
 };
 
+function outcome(overrides: Partial<TriggerOutcome>): TriggerOutcome {
+  return {
+    runIds: [],
+    filesListed: 0,
+    alreadyProcessed: 0,
+    parked: 0,
+    inFlight: 0,
+    ...overrides,
+  };
+}
+
 function renderBuilder(initial: string) {
   return render(
     <MemoryRouter initialEntries={[initial]}>
@@ -129,8 +145,10 @@ describe("PipelineBuilder", () => {
     fetchSources.mockResolvedValue({ kpis: [], sources: [] });
     savePipeline.mockResolvedValue({});
     deletePipeline.mockResolvedValue(undefined);
-    triggerPipeline.mockResolvedValue(["run-1"]);
+    triggerPipeline.mockResolvedValue(outcome({ runIds: ["run-1"] }));
     fetchRun.mockResolvedValue({ status: "COMPLETED" });
+    clearProcessedHistory.mockReset();
+    clearProcessedHistory.mockResolvedValue(undefined);
   });
 
   it("builds a new pipeline: name it, add a tool, and save", async () => {
@@ -210,6 +228,45 @@ describe("PipelineBuilder", () => {
     await waitFor(() => expect(triggerPipeline).toHaveBeenCalledWith("plc-1"));
     expect(
       await screen.findByText("portal.pipelines.run.completed"),
+    ).toBeInTheDocument();
+  });
+
+  it("explains an empty trigger when files are parked by a failed run", async () => {
+    triggerPipeline.mockResolvedValue(outcome({ filesListed: 2, parked: 2 }));
+    renderBuilder("/processor/pipelines/plc-1");
+
+    fireEvent.click(await screen.findByText("portal.pipelines.detail.run"));
+
+    expect(
+      await screen.findByText("portal.pipelines.run.parked"),
+    ).toBeInTheDocument();
+  });
+
+  it("explains an empty trigger when everything is already processed", async () => {
+    triggerPipeline.mockResolvedValue(
+      outcome({ filesListed: 3, alreadyProcessed: 3 }),
+    );
+    renderBuilder("/processor/pipelines/plc-1");
+
+    fireEvent.click(await screen.findByText("portal.pipelines.detail.run"));
+
+    expect(
+      await screen.findByText("portal.pipelines.run.allProcessed"),
+    ).toBeInTheDocument();
+  });
+
+  it("clears processed history from the header and confirms", async () => {
+    renderBuilder("/processor/pipelines/plc-1");
+
+    fireEvent.click(
+      await screen.findByText("portal.pipelines.detail.clearHistory"),
+    );
+
+    await waitFor(() =>
+      expect(clearProcessedHistory).toHaveBeenCalledWith("plc-1"),
+    );
+    expect(
+      await screen.findByText("portal.pipelines.run.historyCleared"),
     ).toBeInTheDocument();
   });
 

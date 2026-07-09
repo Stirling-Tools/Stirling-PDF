@@ -48,6 +48,7 @@ import stirling.software.proprietary.policy.engine.PolicyRunHandle;
 import stirling.software.proprietary.policy.engine.PolicyRunRegistry;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.PolicyValidator;
+import stirling.software.proprietary.policy.engine.SweepOutcome;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.Policy;
@@ -412,9 +413,10 @@ public class PolicyController {
             description =
                     "Pulls the policy's configured sources and runs the pipeline now, regardless of"
                             + " the enabled flag (which only gates automatic triggering). Returns"
-                            + " the ids of the runs started; poll the run-status endpoint for each."
-                            + " Empty when the sources yielded no work to do.")
-    public ResponseEntity<List<String>> trigger(@PathVariable String policyId) {
+                            + " the ids of the runs started (poll the run-status endpoint for each)"
+                            + " plus what the sweep skipped - already-processed, parked-by-failure,"
+                            + " and in-flight counts - so an empty result explains itself.")
+    public ResponseEntity<SweepOutcome> trigger(@PathVariable String policyId) {
         Policy policy =
                 policyStore
                         .get(policyId)
