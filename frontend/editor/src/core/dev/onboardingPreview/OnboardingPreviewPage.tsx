@@ -314,9 +314,7 @@ export default function OnboardingPreviewPage() {
                         {/* Reuse the tour's safe <strong> parser — renders
                             emphasis as React elements, no string sanitization
                             or raw HTML. */}
-                        <Text size="sm">
-                          {renderTourContent(step.content)}
-                        </Text>
+                        <Text size="sm">{renderTourContent(step.content)}</Text>
                       </Paper>
                     ))}
                   </Stack>
