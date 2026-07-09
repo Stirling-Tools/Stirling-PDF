@@ -7560,6 +7560,30 @@ continue = "Continue"
 enablePolicy = "Enable policy"
 saveChanges = "Save changes"
 
+[portal.policies.wizard.capability.compress]
+desc = "Compresses the document to a smaller file size."
+label = "Reduce file size"
+
+[portal.policies.wizard.capability.flatten]
+desc = "Merges form fields and annotations into the page so they can't be edited."
+label = "Flatten the document"
+
+[portal.policies.wizard.capability.ocr]
+desc = "Runs OCR so scanned pages become selectable, searchable text."
+label = "Make text searchable"
+
+[portal.policies.wizard.capability.redact]
+desc = "Finds and blacks out sensitive details — like Social Security and card numbers — so they can't be read."
+label = "Redact sensitive information"
+
+[portal.policies.wizard.capability.sanitize]
+desc = "Removes hidden JavaScript so nothing can run automatically when the document is opened."
+label = "Strip active content"
+
+[portal.policies.wizard.capability.watermark]
+desc = "Stamps a visible mark (e.g. “Confidential”) across every page."
+label = "Apply a watermark"
+
 [portal.policies.wizard.errors]
 noTools = "Enable at least one tool in the workflow first."
 saveFailed = "Couldn't save the policy. Please try again."
