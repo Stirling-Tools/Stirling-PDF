@@ -195,6 +195,8 @@ export interface AuditSummary {
 export interface AuditLogResponse {
   summary: AuditSummary;
   events: AuditEvent[];
+  /** True for the whole-server (admin) view; gates the admin-only CSV export. */
+  fullServer: boolean;
 }
 
 /* ──────────────────────────────────────────────────────────────────────── */

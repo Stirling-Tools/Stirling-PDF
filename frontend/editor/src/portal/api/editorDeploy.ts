@@ -103,6 +103,8 @@ export interface DeploymentSummary {
   serviceToken: { masked: string; lastRotated: string };
   /** Air-gapped activation is enterprise-only; gate the card on this flag. */
   offlineActivationAvailable: boolean;
+  /** Where users launch the Editor — the org workspace URL (Open in browser). */
+  workspaceUrl: string;
 }
 
 export interface EditorDeploymentResponse {

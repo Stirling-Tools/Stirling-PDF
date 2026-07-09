@@ -6595,9 +6595,6 @@ componentSpendMtd = "Component spend (MTD)"
 embedsThisMonth = "Embeds this month"
 inBeta = "In beta"
 
-[portal.common]
-inviteMember = "Invite member"
-
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
@@ -6795,12 +6792,6 @@ flagged = "Needs Review"
 inReview = "In Review"
 processed = "Processed"
 
-[portal.documents.summary]
-avgConfidence = "Avg confidence"
-inQueue = "In queue"
-needsReview = "Needs review"
-processedToday = "Processed today"
-
 [portal.documents.table]
 auto = "Auto"
 editorAction = "Editor"
@@ -6931,8 +6922,6 @@ ctaQuote = "Get Quote"
 lead = "For 250+ employees."
 tag = "Enterprise"
 
-[portal.home.productGrid]
-ariaLabel = "Process PDFs at scale"
 [portal.home.onboarding.steps.editor]
 blurb = "Deploy the desktop app, free forever."
 title = "Download the PDF Editor"
@@ -8177,61 +8166,6 @@ title = "Session expired"
 [portal.users]
 title = "Users"
 
-[portal.users.access]
-subtitle = "Seats, authentication and provisioning for your organization."
-title = "Access & security"
-
-[portal.users.access.auth]
-title = "Authentication"
-
-[portal.users.access.auth.requireMfa]
-description = "Members must set up a second factor to sign in."
-enforced = "Enforced org-wide on this plan."
-label = "Require MFA"
-
-[portal.users.access.auth.shortSessions]
-description = "Sign members out after inactivity (currently {{timeout}})."
-label = "Short-lived sessions"
-
-[portal.users.access.scim]
-active = "Active"
-directory = "Directory"
-lastSync = "Last sync"
-note = "Members are created, updated and deactivated automatically from your identity provider."
-off = "Off"
-title = "SCIM provisioning"
-
-[portal.users.access.seats]
-title = "Seats"
-unlimited = "Your plan includes unlimited seats."
-usedLabel = "{{used}} of {{limit}} seats used"
-
-[portal.users.access.sso]
-connected = "Connected"
-domains = "Domains"
-manage = "Manage connection"
-notConfigured = "Not configured"
-provider = "Provider"
-title = "SSO / SAML"
-
-[portal.users.access.upgrade]
-action = "Upgrade plan"
-title = "Unlock team access controls"
-
-[portal.users.empty]
-description = "Invite your team to start collaborating on documents and pipelines."
-title = "No members yet"
-
-[portal.users.invite]
-cancel = "Cancel"
-email = "Email"
-emailError = "Enter a valid email address"
-emailPlaceholder = "teammate@acme.com"
-role = "Role"
-roleHelper = "Determines what the member can do once they join."
-send = "Send invite"
-subtitle = "They'll receive an email to join your organization."
-
 [portal.users.roles]
 subtitle = "Every role exists on every plan — what each one can do is fixed across the org."
 title = "Roles"
@@ -8275,21 +8209,6 @@ summary = "Limited or web-only access; cannot hold personal configs."
 [portal.users.roles.admin]
 label = "Admin (Org owner)"
 summary = "Full governance over the workspace, settings and members."
-
-[portal.users.summary]
-members = "Members"
-pendingInvites = "Pending invites"
-seatsUsed = "Seats used"
-
-[portal.users.table]
-actionsFor = "Actions for {{name}}"
-changeRole = "Change role"
-lastActive = "Last active"
-member = "Member"
-remove = "Remove from org"
-role = "Role"
-status = "Status"
-suspend = "Suspend"
 
 [portal.welcome]
 ariaLabel = "Welcome to Stirling PDF"

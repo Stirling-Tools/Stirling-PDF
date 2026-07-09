@@ -20,7 +20,6 @@ import type {
   ProductType,
   ReviewDocument,
 } from "@portal/api/documents";
-import type { ChipAccent, StatusTone } from "@app/ui";
 
 /* ──────────────────────────────────────────────────────────────────────── */
 /*  Domain types                                                             */

@@ -14,34 +14,18 @@
 
 import type { Tier } from "@portal/contexts/TierContext";
 import type {
-  AccessPolicy,
   ApiKey,
-  ApiKeyPermission,
-  ApiKeyStatus,
-  AttestationStatus,
-  AuditCategory,
   AuditEvent,
   AuditLogResponse,
-  AuditStatus,
   AuditSummary,
-  CertStatus,
   ComplianceAttestation,
   ComplianceCert,
-  DataResidency,
   DeploymentRegion,
-  DeploymentStatus,
   IpAllowEntry,
   KeyManagement,
-  KeyMode,
-  ModelCostUnit,
   ModelEntry,
-  ModelProvider,
-  ModelStatus,
-  ModelType,
   ModelsResponse,
-  ModelsSummary,
   RecentDeployment,
-  RetentionWindow,
   RoutingRule,
   SecurityConfig,
   StorageConfig,
@@ -52,7 +36,7 @@ import type {
 /*  Deployments                                                              */
 /* ──────────────────────────────────────────────────────────────────────── */
 
-export type DeploymentStatus = "live" | "rolling" | "rolled-bconst REGION_US_EAST: DeploymentRegion = {
+const REGION_US_EAST: DeploymentRegion = {
   name: "US East (N. Virginia)",
   code: "us-east-1",
   latencyMs: 41,
@@ -178,61 +162,99 @@ export function recentDeploymentsFor(tier: Tier): RecentDeployment[] {
 /*  API Keys                                                                 */
 /* ──────────────────────────────────────────────────────────────────────── */
 
-export type ApiKeyStatus = "active" | "revoked" | "rotate-soon";
-export type ApiKeyPermission = "Read" | "Write" | "Admin";
-
-export interface ApiKey {
-  id: string;
-  name: string;
-  /** Masked prefix shown in the list, e.g. "sk_live_a3f8…". */
-  prefix: string;
-  created: string;
-  lastUsed:const API_KEYS_ALL: ApiKey[] = [
+const API_KEYS_ALL: ApiKey[] = [
   {
     id: "key-1",
-    name: "export function apiKeysFor(tier: Tier): ApiKey[] {
+    name: "Production · ingest",
+    prefix: "sk_live_a3f8…",
+    created: "Mar 2, 2026",
+    lastUsed: "2m ago",
+    status: "active",
+    rateLimit: 1200,
+    permissions: ["Read", "Write"],
+    allowedIps: ["52.14.0.0/16", "18.221.0.0/16"],
+    usageToday: 84210,
+    usageMonth: 2410933,
+  },
+  {
+    id: "key-2",
+    name: "Analytics · read-only",
+    prefix: "sk_live_77be…",
+    created: "Jan 18, 2026",
+    lastUsed: "41m ago",
+    status: "active",
+    rateLimit: 300,
+    permissions: ["Read"],
+    allowedIps: [],
+    usageToday: 6120,
+    usageMonth: 188400,
+  },
+  {
+    id: "key-3",
+    name: "Ops · admin (legacy)",
+    prefix: "sk_live_d901…",
+    created: "Aug 9, 2025",
+    lastUsed: "6d ago",
+    status: "rotate-soon",
+    rateLimit: 600,
+    permissions: ["Read", "Write", "Admin"],
+    allowedIps: ["203.0.113.7/32"],
+    usageToday: 0,
+    usageMonth: 14200,
+  },
+  {
+    id: "key-4",
+    name: "Sandbox · webhook tester",
+    prefix: "sk_test_2c4a…",
+    created: "May 30, 2026",
+    lastUsed: "never",
+    status: "revoked",
+    rateLimit: 60,
+    permissions: ["Read"],
+    allowedIps: [],
+    usageToday: 0,
+    usageMonth: 0,
+  },
+];
+
+export function apiKeysFor(tier: Tier): ApiKey[] {
   if (tier === "free") return API_KEYS_ALL.slice(0, 1);
   if (tier === "pro") return API_KEYS_ALL.slice(0, 3);
   return API_KEYS_ALL;
 }
 
 /* ──────────────────────────────────────────────────────────────────────── */
-/*  Security        /* ──────────────────────────────────────────────────────────────────────── */
+/*  Security                                                                 */
+/* ──────────────────────────────────────────────────────────────────────── */
 
-export type AccessPolicy = "stirling" | "byok" | "hyok";
-export type DataResidency = "us" | "eu" | "apac";
-export type CertStatus = "certified" | "in-progress" | "not-started";
-
-export interface ComplianceCert {
-  id: string;
-  name: string;
-  status: CertStatus;
-  detail: string;
-}
-
-export interface IpAllowEntry {
-  id: string;
-  label: string;
-  cidr: string;
-  addedBy: string;
-  added: string;
-}
-
-/**
- * Where encryption keys live. Mirrors the {@link AccessPolicy} posture but is
- * surfaced separately because the key *custody model* (who can decrypt) is the
- * detail security teams scrutinise:
- *   - `managed` — Stirling-owned KMS keys; zero key ops on the customer side.
- *   - `byok` — customer key, but Stirling can use it to decrypt while proceexport type KeyMode = "managed" | "byok" | "hyok";
-
-export interface KeyManagement {
-  mode: KeyMode;
-  /**export type AttestationStatus = "attested" | "in-scope" | "not-applicable";
-
-expexport interface SecurityConfig {
-  accessPolicy: AccessPconst CERTS_FULL: ComplianceCert[] = [
+const CERTS_FULL: ComplianceCert[] = [
   {
-    id:const CERTS_FREE: ComplianceCert[] = [
+    id: "soc2",
+    name: "SOC 2 Type II",
+    status: "certified",
+    detail: "Audited Apr 2026 · Coalfire",
+  },
+  {
+    id: "iso",
+    name: "ISO 27001",
+    status: "certified",
+    detail: "Cert #IS-774201 · valid to 2027",
+  },
+  {
+    id: "hipaa",
+    name: "HIPAA",
+    status: "certified",
+    detail: "BAA available · PHI-eligible",
+  },
+  {
+    id: "gdpr",
+    name: "GDPR",
+    status: "certified",
+    detail: "EU SCCs · DPA on file",
+  },
+];
+
+const CERTS_FREE: ComplianceCert[] = [
   {
     id: "soc2",
     name: "SOC 2 Type II",
@@ -246,10 +268,56 @@ expexport interface SecurityConfig {
     detail: "Inherited — Stirling platform",
   },
   {
-    id: "hipaaconst KEY_MANAGED: KeyManagement = {
+    id: "hipaa",
+    name: "HIPAA",
+    status: "not-started",
+    detail: "Requires a paid plan + BAA",
+  },
+  {
+    id: "gdpr",
+    name: "GDPR",
+    status: "in-progress",
+    detail: "Standard EU processing terms",
+  },
+];
+
+const IP_ALLOWLIST: IpAllowEntry[] = [
+  {
+    id: "ip-1",
+    label: "Corp VPN egress",
+    cidr: "52.14.0.0/16",
+    addedBy: "maria.chen",
+    added: "Feb 11, 2026",
+  },
+  {
+    id: "ip-2",
+    label: "Data centre — IAD",
+    cidr: "18.221.0.0/16",
+    addedBy: "devon.park",
+    added: "Jan 4, 2026",
+  },
+  {
+    id: "ip-3",
+    label: "On-call jump host",
+    cidr: "203.0.113.7/32",
+    addedBy: "maria.chen",
+    added: "Dec 19, 2025",
+  },
+];
+
+// Stirling-managed key custody — what free/pro tiers run on. No key ops on the
+// customer side, so the provider/key fields describe Stirling's own KMS.
+const KEY_MANAGED: KeyManagement = {
   mode: "managed",
   provider: "Stirling KMS",
-  keyId: "arn:stirling:kms:us-east-1:platform/cmk-deconst KEY_HYOK: KeyManagement = {
+  keyId: "arn:stirling:kms:us-east-1:platform/cmk-default",
+  algorithm: "AES-256-GCM",
+  lastRotated: "32 days ago",
+  rotationPolicy: "Automatic · every 90 days",
+  customerManaged: false,
+};
+
+const KEY_HYOK: KeyManagement = {
   mode: "hyok",
   provider: "AWS CloudHSM (customer)",
   keyId: "arn:aws:kms:eu-west-1:418xxxx:key/2a7e-hyok",
@@ -272,7 +340,84 @@ const ATTESTATIONS_FULL: ComplianceAttestation[] = [
   {
     id: "iso27001",
     name: "ISO 27001",
-    framework: "ISO/IEexport function securityFor(tier: Tier): SecurityConfig {
+    framework: "ISO/IEC 27001:2022",
+    status: "attested",
+    detail: "Cert #IS-774201 · valid to 2027",
+    reportUrl: "/v1/infrastructure/security/reports/iso27001",
+  },
+  {
+    id: "hipaa",
+    name: "HIPAA",
+    framework: "US healthcare · PHI",
+    status: "attested",
+    detail: "BAA signed · PHI-eligible workloads",
+    reportUrl: "/v1/infrastructure/security/reports/hipaa",
+  },
+  {
+    id: "gdpr",
+    name: "GDPR",
+    framework: "EU data protection",
+    status: "attested",
+    detail: "EU SCCs · DPA on file · EU residency",
+    reportUrl: "/v1/infrastructure/security/reports/gdpr",
+  },
+  {
+    id: "pci",
+    name: "PCI DSS",
+    framework: "Payment card data",
+    status: "in-scope",
+    detail: "SAQ-D in progress · QSA assessment Q3",
+    reportUrl: null,
+  },
+];
+
+// What lower tiers can claim: the platform-inherited attestations only. HIPAA
+// and PCI require a paid contract + signed paperwork, so they read as
+// not-applicable until the customer upgrades.
+const ATTESTATIONS_FREE: ComplianceAttestation[] = [
+  {
+    id: "soc2",
+    name: "SOC 2 Type II",
+    framework: "AICPA Trust Services",
+    status: "attested",
+    detail: "Inherited — Stirling platform",
+    reportUrl: "/v1/infrastructure/security/reports/soc2",
+  },
+  {
+    id: "iso27001",
+    name: "ISO 27001",
+    framework: "ISO/IEC 27001:2022",
+    status: "attested",
+    detail: "Inherited — Stirling platform",
+    reportUrl: "/v1/infrastructure/security/reports/iso27001",
+  },
+  {
+    id: "gdpr",
+    name: "GDPR",
+    framework: "EU data protection",
+    status: "in-scope",
+    detail: "Standard EU processing terms",
+    reportUrl: null,
+  },
+  {
+    id: "hipaa",
+    name: "HIPAA",
+    framework: "US healthcare · PHI",
+    status: "not-applicable",
+    detail: "Requires a paid plan + signed BAA",
+    reportUrl: null,
+  },
+  {
+    id: "pci",
+    name: "PCI DSS",
+    framework: "Payment card data",
+    status: "not-applicable",
+    detail: "Requires an enterprise contract",
+    reportUrl: null,
+  },
+];
+
+export function securityFor(tier: Tier): SecurityConfig {
   if (tier === "free") {
     return {
       accessPolicy: "stirling",
@@ -307,26 +452,6 @@ const ATTESTATIONS_FULL: ComplianceAttestation[] = [
 /* ──────────────────────────────────────────────────────────────────────── */
 /*  Storage                                                                  */
 /* ──────────────────────────────────────────────────────────────────────── */
-
-export type RetentionWindow = "30" | "60" | "90" | "180" | "never";
-
-export interface StorageProvider {
-  id: string;
-  name: string;
-  kind: "stirling" | "s3" | "azure";
-  connected: boolean;
-  detail: string;
-  usedGb: number;
-}
-
-export interface StorageConfig {
-  /** Total used storage, GB. */
-  usedGb: number;
-  /** Quota ceiling, GB. */
-  quotaGb: number;
-  retention: RetentionWindow;
-  providers: StorageProvider[];
-}
 
 const PROVIDERS_FULL: StorageProvider[] = [
   {
@@ -384,26 +509,6 @@ export function storageFor(tier: Tier): StorageConfig {
 /*  Audit Logs                                                               */
 /* ──────────────────────────────────────────────────────────────────────── */
 
-export type AuditCategory =
-  | "auth"
-  | "config"
-  | "elevation"
-  | "processing"
-  | "security";
-
-export type AuditStatus = "success" | "warning" | "danger" | "info";
-
-export interface AuditEvent {
-  id: string;
-  timestamp: string;
-  category: AuditCategory;
-  action: string;
-  actor: string;
-  target: string;
-  status: AuditStatus;
-  latencyMs: number;
-}
-
 // Mirrors what the real backend (PortalInfraAuditService) returns: audit_events
 // mapped from real AuditEventType values to the tab's categories. Only real
 // types appear - there is no audited "elevation" event, so that category is
@@ -423,48 +528,177 @@ const AUDIT_EVENTS_ALL: AuditEvent[] = [
     id: "8840",
     timestamp: "2026-07-07 18:40:50",
     category: "auth",
-    acexport interface AuditLogResponse {
-  summary: AuditSummary;
-  events: AuditEvent[];
-  /** True for the whole-server (admin) view; gates the admin-only CSV export./* ──────────────────────────────────────────────────────────────────────── */
+    action: "User signed in",
+    actor: "carol.diaz@acme.com",
+    target: "Web session",
+    status: "success",
+    latencyMs: 128,
+  },
+  {
+    id: "8839",
+    timestamp: "2026-07-07 18:22:07",
+    category: "security",
+    action: "Add password",
+    actor: "bob.martin@acme.com",
+    target: "MSA-Globex-2026.pdf",
+    status: "success",
+    latencyMs: 1203,
+  },
+  {
+    id: "8838",
+    timestamp: "2026-07-07 17:58:44",
+    category: "config",
+    action: "Admin settings changed",
+    actor: "admin@stirlingpdf.com",
+    target: "/api/v1/admin/settings/update",
+    status: "info",
+    latencyMs: 210,
+  },
+  {
+    id: "8837",
+    timestamp: "2026-07-07 17:31:12",
+    category: "processing",
+    action: "Merge PDFs",
+    actor: "raj.patel@acme.com",
+    target: "onboarding-packet.pdf",
+    status: "success",
+    latencyMs: 2199,
+  },
+  {
+    id: "8836",
+    timestamp: "2026-07-07 17:04:55",
+    category: "auth",
+    action: "Failed sign-in attempt",
+    actor: "bob.martn@acme.com",
+    target: "Web session",
+    status: "danger",
+    latencyMs: 96,
+  },
+  {
+    id: "8835",
+    timestamp: "2026-07-07 16:47:29",
+    category: "processing",
+    action: "OCR PDF",
+    actor: "api-service@acme.com",
+    target: "scan-batch-0142.pdf",
+    status: "success",
+    latencyMs: 8421,
+  },
+  {
+    id: "8834",
+    timestamp: "2026-07-07 16:20:03",
+    category: "security",
+    action: "Add watermark",
+    actor: "carol.diaz@acme.com",
+    target: "policy-handbook.pdf",
+    status: "success",
+    latencyMs: 640,
+  },
+  {
+    id: "8833",
+    timestamp: "2026-07-07 15:58:41",
+    category: "config",
+    action: "Profile settings updated",
+    actor: "alice.chen@acme.com",
+    target: "/api/v1/user/change-settings",
+    status: "info",
+    latencyMs: 175,
+  },
+  {
+    id: "8832",
+    timestamp: "2026-07-07 15:29:18",
+    category: "processing",
+    action: "Split pages",
+    actor: "bob.martin@acme.com",
+    target: "statement-june.pdf",
+    status: "success",
+    latencyMs: 410,
+  },
+  {
+    id: "8831",
+    timestamp: "2026-07-07 15:02:37",
+    category: "processing",
+    action: "Compress PDF",
+    actor: "api-service@acme.com",
+    target: "purchase-order-6610.pdf",
+    status: "danger",
+    latencyMs: 1203,
+  },
+  {
+    id: "8830",
+    timestamp: "2026-07-07 14:41:50",
+    category: "security",
+    action: "Remove password",
+    actor: "raj.patel@acme.com",
+    target: "certificate-9001.pdf",
+    status: "success",
+    latencyMs: 980,
+  },
+  {
+    id: "8829",
+    timestamp: "2026-07-07 14:15:22",
+    category: "processing",
+    action: "PDF to Image",
+    actor: "carol.diaz@acme.com",
+    target: "contract-amendment.pdf",
+    status: "warning",
+    latencyMs: 1560,
+  },
+  {
+    id: "8828",
+    timestamp: "2026-07-07 13:52:09",
+    category: "auth",
+    action: "User signed out",
+    actor: "alice.chen@acme.com",
+    target: "Web session",
+    status: "success",
+    latencyMs: 42,
+  },
+  {
+    id: "8827",
+    timestamp: "2026-07-07 13:30:44",
+    category: "config",
+    action: "Admin settings changed",
+    actor: "admin@stirlingpdf.com",
+    target: "/api/v1/admin/team/update",
+    status: "info",
+    latencyMs: 320,
+  },
+  {
+    id: "8826",
+    timestamp: "2026-07-07 13:03:58",
+    category: "processing",
+    action: "Extract images",
+    actor: "raj.patel@acme.com",
+    target: "expense-report-q2.pdf",
+    status: "success",
+    latencyMs: 2200,
+  },
+  {
+    id: "8825",
+    timestamp: "2026-07-07 12:38:11",
+    category: "auth",
+    action: "User signed in",
+    actor: "bob.martin@acme.com",
+    target: "Web session",
+    status: "success",
+    latencyMs: 110,
+  },
+  {
+    id: "8824",
+    timestamp: "2026-07-07 12:11:47",
+    category: "security",
+    action: "Add watermark",
+    actor: "alice.chen@acme.com",
+    target: "MSA-Globex-2026.pdf",
+    status: "success",
+    latencyMs: 705,
+  },
+];
 
-export type ModelProvider = "stirling" | "openai" | "anthropic" | "on-prem";
-export type ModelType = "extraction" | "classification" | "ocr" | "llm";
-export type ModelStatus = "active" | "degraded" | "disabled";
-
-/** Whether a model's cost is billed per 1k documents or per individual call. */
-export type ModelCostUnit = "per-1k-docs" | "per-call";
-
-export interface ModelEntry {
-  id: string;
-  name: string;
-  provider: ModelProvider;
-  type: ModelType;
-  status: ModelStatus;
-  /** Median inference latency, ms. */
-  latencyMs: number;
-  /** Cost in USD for the model's billing unit (see {@link costUnit}). */
-  cost: number;
-  costUnit: ModelCostUnit;
-  version: string;
-  /** Share of capacity this model is currently absorbing (0–1). */
-  load: number;
-  /** True for customer-registered bring-your-own / on-prem models. */
-  managed: boolean;
-}
-
-/** A binding from a processing operation (optionally a doc-type) to a model. */
-export interface RoutingRule {
-  id: string;
-  /** The operation or pipeline stage this rule governs. */
-  operation: string;
-  /** Doc-type scopeexport interface ModelsSummary {
-  activeModels: number;
-  /** Capacity-weighted average latency acrosexport interface ModelsResponse {
-  summary: ModelsSummary;
-  models: ModelEntry[];
-  routing: RoutingRule[];
-}
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Models                                                                   */
+/* ──────────────────────────────────────────────────────────────────────── */
 
 const MODELS_ALL: ModelEntry[] = [
   {
@@ -474,7 +708,94 @@ const MODELS_ALL: ModelEntry[] = [
     type: "extraction",
     status: "active",
     latencyMs: 142,
-    cost: 0export function modelsFor(tier: Tier): ModelEntry[] {
+    cost: 0.9,
+    costUnit: "per-1k-docs",
+    version: "v3.4.2",
+    load: 0.71,
+    managed: true,
+  },
+  {
+    id: "m-classify-v2",
+    name: "Stirling Classify",
+    provider: "stirling",
+    type: "classification",
+    status: "active",
+    latencyMs: 61,
+    cost: 0.4,
+    costUnit: "per-1k-docs",
+    version: "v2.8.0",
+    load: 0.48,
+    managed: true,
+  },
+  {
+    id: "m-ocr-tess",
+    name: "Stirling OCR",
+    provider: "stirling",
+    type: "ocr",
+    status: "active",
+    latencyMs: 318,
+    cost: 1.2,
+    costUnit: "per-1k-docs",
+    version: "v3.1.0",
+    load: 0.55,
+    managed: true,
+  },
+  {
+    id: "m-gpt4o",
+    name: "GPT-4o",
+    provider: "openai",
+    type: "llm",
+    status: "active",
+    latencyMs: 880,
+    cost: 0.012,
+    costUnit: "per-call",
+    version: "2026-05",
+    load: 0.33,
+    managed: true,
+  },
+  {
+    id: "m-claude-sonnet",
+    name: "Claude Sonnet 4.5",
+    provider: "anthropic",
+    type: "llm",
+    status: "degraded",
+    latencyMs: 1240,
+    cost: 0.009,
+    costUnit: "per-call",
+    version: "2026-04",
+    load: 0.21,
+    managed: true,
+  },
+  {
+    id: "m-onprem-ocr",
+    name: "On-prem OCR (Tesseract)",
+    provider: "on-prem",
+    type: "ocr",
+    status: "active",
+    latencyMs: 502,
+    cost: 0,
+    costUnit: "per-1k-docs",
+    version: "byo-1.2",
+    load: 0.12,
+    managed: false,
+  },
+  // Registered but parked: a customer LLM weight kept warm without traffic.
+  {
+    id: "m-onprem-llm",
+    name: "On-prem Llama 3 70B",
+    provider: "on-prem",
+    type: "llm",
+    status: "disabled",
+    latencyMs: 0,
+    cost: 0,
+    costUnit: "per-call",
+    version: "byo-0.9",
+    load: 0,
+    managed: false,
+  },
+];
+
+export function modelsFor(tier: Tier): ModelEntry[] {
   // Free sees only the two managed Stirling models it can actually use.
   if (tier === "free")
     return MODELS_ALL.filter(
@@ -555,7 +876,35 @@ export function modelsResponseFor(tier: Tier): ModelsResponse {
           )
         : 0;
 
-  const monthlySpend = tier === "free" ? 0 : tier === "pro" ? 1840 : 6120export function auditLogFor(tier: Tier): AuditLogResponse {
+  const monthlySpend = tier === "free" ? 0 : tier === "pro" ? 1840 : 6120;
+
+  return {
+    summary: {
+      activeModels: active.length,
+      avgLatencyMs,
+      monthlySpend,
+    },
+    models,
+    routing: routingFor(tier),
+  };
+}
+
+export function auditLogFor(tier: Tier): AuditLogResponse {
   const events =
     tier === "free"
-      ? AUDIT_EVENTS_A
+      ? AUDIT_EVENTS_ALL.slice(0, 6)
+      : tier === "pro"
+        ? AUDIT_EVENTS_ALL.slice(0, 12)
+        : AUDIT_EVENTS_ALL;
+
+  // Summary is derived from the returned events, exactly like the backend
+  // (PortalInfraAuditService) computes it - so mocks and real data reconcile.
+  const summary: AuditSummary = {
+    totalEvents: events.length,
+    processing: events.filter((e) => e.category === "processing").length,
+    elevation: events.filter((e) => e.category === "elevation").length,
+    config: events.filter((e) => e.category === "config").length,
+  };
+  // The mock represents the admin (whole-server) view, so export is offered.
+  return { summary, events, fullServer: true };
+}

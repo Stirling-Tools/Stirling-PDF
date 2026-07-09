@@ -211,7 +211,6 @@ export const ROLE_TONE: Record<RoleId, Role["tone"]> = Object.fromEntries(
   ROLES.map((r) => [r.id, r.tone]),
 ) as Record<RoleId, Role["tone"]>;
 
-
 /** Roles an admin can assign from the portal; guest is derived, not assigned. */
 export const ASSIGNABLE_ROLES: RoleId[] = ["admin", "team_owner", "member"];
 
