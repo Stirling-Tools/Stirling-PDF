@@ -192,6 +192,7 @@ export function PipelineBuilder() {
   const [outputMode, setOutputMode] = useState<OutputMode>("inline");
   const [outputDirectory, setOutputDirectory] = useState("");
   const [outputS3, setOutputS3] = useState<S3OutputOptions>(EMPTY_S3_OUTPUT);
+  const [s3ConfigOpen, setS3ConfigOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [seeded, setSeeded] = useState(false);
@@ -763,73 +764,25 @@ export function PipelineBuilder() {
               </FormField>
             )}
             {outputMode === "s3" && (
-              <>
-                <FormField
-                  label={t("portal.sources.types.s3.fields.bucket.label")}
-                  required
+              <div className="portal-builder__s3-output">
+                <span
+                  className={
+                    "portal-builder__s3-summary" +
+                    (outputS3.bucket ? "" : " is-unset")
+                  }
                 >
-                  <Input
-                    value={outputS3.bucket}
-                    placeholder="my-company-inbox"
-                    onChange={(e) => setS3Field("bucket", e.target.value)}
-                  />
-                </FormField>
-                <FormField
-                  label={t("portal.sources.types.s3.fields.region.label")}
+                  {outputS3.bucket
+                    ? `s3://${outputS3.bucket}/${outputS3.prefix}`
+                    : t("portal.pipelines.composer.s3NotConfigured")}
+                </span>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setS3ConfigOpen(true)}
                 >
-                  <Input
-                    value={outputS3.region}
-                    placeholder="us-east-1"
-                    onChange={(e) => setS3Field("region", e.target.value)}
-                  />
-                </FormField>
-                <FormField
-                  label={t("portal.sources.types.s3.fields.prefix.label")}
-                  helperText={t("portal.pipelines.composer.s3PrefixHelp")}
-                >
-                  <Input
-                    value={outputS3.prefix}
-                    placeholder="processed/"
-                    onChange={(e) => setS3Field("prefix", e.target.value)}
-                  />
-                </FormField>
-                <FormField
-                  label={t("portal.sources.types.s3.fields.accessKeyId.label")}
-                  helperText={t(
-                    "portal.sources.types.s3.fields.accessKeyId.helperText",
-                  )}
-                >
-                  <Input
-                    value={outputS3.accessKeyId}
-                    onChange={(e) => setS3Field("accessKeyId", e.target.value)}
-                  />
-                </FormField>
-                <FormField
-                  label={t(
-                    "portal.sources.types.s3.fields.secretAccessKey.label",
-                  )}
-                >
-                  <Input
-                    type="password"
-                    value={outputS3.secretAccessKey}
-                    onChange={(e) =>
-                      setS3Field("secretAccessKey", e.target.value)
-                    }
-                  />
-                </FormField>
-                <FormField
-                  label={t("portal.sources.types.s3.fields.endpoint.label")}
-                  helperText={t(
-                    "portal.sources.types.s3.fields.endpoint.helperText",
-                  )}
-                >
-                  <Input
-                    value={outputS3.endpoint}
-                    placeholder="https://s3.example.com"
-                    onChange={(e) => setS3Field("endpoint", e.target.value)}
-                  />
-                </FormField>
-              </>
+                  {t("portal.pipelines.composer.s3Configure")}
+                </Button>
+              </div>
             )}
           </div>
         </div>
@@ -1042,6 +995,79 @@ export function PipelineBuilder() {
         }
       >
         <p>{t("portal.pipelines.builder.unsavedBody")}</p>
+      </Modal>
+
+      <Modal
+        open={s3ConfigOpen}
+        onClose={() => setS3ConfigOpen(false)}
+        title={t("portal.pipelines.composer.s3ModalTitle")}
+        footer={
+          <div className="portal-pipelines__composer-footer">
+            <Button size="sm" onClick={() => setS3ConfigOpen(false)}>
+              {t("portal.pipelines.composer.s3Done")}
+            </Button>
+          </div>
+        }
+      >
+        <div className="portal-builder__s3-fields">
+          <FormField
+            label={t("portal.sources.types.s3.fields.bucket.label")}
+            required
+          >
+            <Input
+              value={outputS3.bucket}
+              placeholder="my-company-inbox"
+              onChange={(e) => setS3Field("bucket", e.target.value)}
+            />
+          </FormField>
+          <FormField label={t("portal.sources.types.s3.fields.region.label")}>
+            <Input
+              value={outputS3.region}
+              placeholder="us-east-1"
+              onChange={(e) => setS3Field("region", e.target.value)}
+            />
+          </FormField>
+          <FormField
+            label={t("portal.sources.types.s3.fields.prefix.label")}
+            helperText={t("portal.pipelines.composer.s3PrefixHelp")}
+          >
+            <Input
+              value={outputS3.prefix}
+              placeholder="processed/"
+              onChange={(e) => setS3Field("prefix", e.target.value)}
+            />
+          </FormField>
+          <FormField
+            label={t("portal.sources.types.s3.fields.accessKeyId.label")}
+            helperText={t(
+              "portal.sources.types.s3.fields.accessKeyId.helperText",
+            )}
+          >
+            <Input
+              value={outputS3.accessKeyId}
+              onChange={(e) => setS3Field("accessKeyId", e.target.value)}
+            />
+          </FormField>
+          <FormField
+            label={t("portal.sources.types.s3.fields.secretAccessKey.label")}
+          >
+            <Input
+              type="password"
+              value={outputS3.secretAccessKey}
+              onChange={(e) => setS3Field("secretAccessKey", e.target.value)}
+            />
+          </FormField>
+          <FormField
+            label={t("portal.sources.types.s3.fields.endpoint.label")}
+            helperText={t("portal.sources.types.s3.fields.endpoint.helperText")}
+          >
+            <Input
+              value={outputS3.endpoint}
+              placeholder="https://s3.example.com"
+              onChange={(e) => setS3Field("endpoint", e.target.value)}
+            />
+          </FormField>
+        </div>
       </Modal>
     </div>
   );

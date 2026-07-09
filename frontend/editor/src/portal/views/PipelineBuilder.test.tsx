@@ -185,21 +185,32 @@ describe("PipelineBuilder", () => {
     });
     fireEvent.click(screen.getByLabelText("portal.pipelines.output.s3"));
 
-    // With s3 selected but no bucket, saving is blocked.
+    // With s3 selected but no bucket, saving is blocked and the summary reads
+    // unconfigured; the connection fields live behind the Configure modal.
     expect(
       screen.getByText("portal.pipelines.composer.create").closest("button"),
     ).toBeDisabled();
+    expect(
+      screen.getByText("portal.pipelines.composer.s3NotConfigured"),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByText("portal.pipelines.composer.s3Configure"));
 
-    // Textboxes: name, bucket, region, prefix, access key id, endpoint; the
-    // secret renders as a password input outside the textbox role.
+    // Textboxes: name, then the modal's bucket, region, prefix, access key id,
+    // endpoint; the secret renders as a password input outside the textbox role.
     const inputs = screen.getAllByRole("textbox") as HTMLInputElement[];
     fireEvent.change(inputs[1], { target: { value: "claims-processed" } });
+    fireEvent.change(inputs[3], { target: { value: "processed/" } });
     fireEvent.change(inputs[4], { target: { value: "AKIAEXAMPLE" } });
     const secret = document.querySelector(
       'input[type="password"]',
     ) as HTMLInputElement;
     fireEvent.change(secret, { target: { value: "shh-secret" } });
+    fireEvent.click(screen.getByText("portal.pipelines.composer.s3Done"));
 
+    // The summary now shows the configured destination.
+    expect(
+      screen.getByText("s3://claims-processed/processed/"),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
 
     await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
@@ -210,7 +221,7 @@ describe("PipelineBuilder", () => {
           options: {
             bucket: "claims-processed",
             region: "us-east-1",
-            prefix: "",
+            prefix: "processed/",
             endpoint: "",
             accessKeyId: "AKIAEXAMPLE",
             secretAccessKey: "shh-secret",
