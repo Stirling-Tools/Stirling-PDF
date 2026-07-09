@@ -140,9 +140,7 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
     // `fullWidth` is set (it must span its container, e.g. a loading execute
     // button whose label is momentarily absent while files hydrate).
     const iconOnly =
-      !hasLabel &&
-      !fullWidth &&
-      (!!leftSection || !!rightSection || loading);
+      !hasLabel && !fullWidth && (!!leftSection || !!rightSection || loading);
 
     // px/py override p for their axis; each stays undefined (= size default) if unset.
     const padX = px ?? p;

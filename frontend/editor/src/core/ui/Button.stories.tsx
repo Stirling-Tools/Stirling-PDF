@@ -158,7 +158,9 @@ export const Accents: Story = {
     execute button whose label is briefly absent while files hydrate). */
 export const Loading: Story = {
   render: (args) => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12, width: 320 }}>
+    <div
+      style={{ display: "flex", flexDirection: "column", gap: 12, width: 320 }}
+    >
       <Button {...args} loading text="Save changes" />
       <Button {...args} loading leftSection={<Plus />} text="Save changes" />
       {/* fullWidth + loading + no label — must fill width, not shrink to a square */}
