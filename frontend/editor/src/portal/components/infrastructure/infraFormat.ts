@@ -1,4 +1,4 @@
-import type { ChipTone, StatusTone } from "@app/ui";
+import type { ChipAccent, StatusTone } from "@app/ui";
 import type {
   ApiKeyStatus,
   AttestationStatus,
@@ -100,6 +100,14 @@ export const AUDIT_TONE: Record<AuditStatus, StatusTone> = {
   info: "info",
 };
 
+// Human labels for the status badge: danger/warning are tones, not outcomes (read "Error").
+export const AUDIT_STATUS_LABEL: Record<AuditStatus, string> = {
+  success: "Success",
+  warning: "Warning",
+  danger: "Error",
+  info: "Info",
+};
+
 export const AUDIT_CAT_LABEL: Record<AuditCategory, string> = {
   auth: "Auth",
   config: "Config",
@@ -135,11 +143,11 @@ export const MODEL_TYPE_LABEL: Record<ModelType, string> = {
   llm: "LLM",
 };
 
-export const MODEL_TYPE_TONE: Record<ModelType, ChipTone> = {
-  extraction: "blue",
-  classification: "purple",
-  ocr: "green",
-  llm: "amber",
+export const MODEL_TYPE_TONE: Record<ModelType, ChipAccent> = {
+  extraction: "default",
+  classification: "premium",
+  ocr: "success",
+  llm: "warning",
 };
 
 export const MODEL_PROVIDER_LABEL: Record<ModelProvider, string> = {

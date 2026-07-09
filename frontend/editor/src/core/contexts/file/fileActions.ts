@@ -254,6 +254,9 @@ interface AddFileOptions {
   ) => Promise<boolean>; // Optional callback to confirm extraction of large ZIP files
   allowDuplicates?: boolean;
   skipUploadTracking?: boolean;
+  /** When true, marks every added stub as derivedFromTool so the policy
+   *  auto-run skips it — used for policy outputs imported via addFiles. */
+  derivedFromTool?: boolean;
 }
 
 /**
@@ -368,6 +371,7 @@ export async function addFiles(
 
       // Create new filestub with minimal metadata; hydrate thumbnails/processedFile asynchronously
       const fileStub = createNewStirlingFileStub(file, fileId);
+      if (options.derivedFromTool) fileStub.derivedFromTool = true;
 
       // Early encryption detection for PDFs — set the flag before dispatch so the
       // viewer gate and modal queue pick it up immediately instead of after hydration

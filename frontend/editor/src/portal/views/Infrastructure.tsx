@@ -44,7 +44,7 @@ export function Infrastructure() {
           </p>
         </div>
         <Button
-          variant="outline"
+          variant="secondary"
           size="sm"
           onClick={() => setActiveView("editor")}
         >

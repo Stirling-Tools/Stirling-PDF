@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Box, Button, Card, Divider, Group, Stack, Text } from "@mantine/core";
+import { Box, Card, Divider, Group, Stack, Text } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { BookmarkNode } from "@app/utils/editTableOfContents";
 import ErrorNotification from "@app/components/tools/shared/ErrorNotification";
@@ -150,7 +151,6 @@ const EditTableOfContentsWorkbenchView = ({
             <Group justify="flex-end">
               <Button
                 leftSection={<LocalIcon icon="menu-book-rounded" />}
-                color="blue"
                 onClick={onExecute}
                 disabled={isExecuteDisabled}
                 loading={isExecuting}
@@ -213,7 +213,7 @@ const EditTableOfContentsWorkbenchView = ({
                   </Button>
                 )}
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   leftSection={<LocalIcon icon="rotate-left" />}
                   onClick={onUndo}
                   disabled={isExecuting}

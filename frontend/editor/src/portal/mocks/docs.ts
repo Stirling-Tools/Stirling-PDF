@@ -17,6 +17,7 @@
  * fixtures can be deleted (or kept as test seeds).
  */
 
+import type { CardAccent } from "@app/ui";
 import type { Tier } from "@portal/contexts/TierContext";
 import type { CodeLang } from "@app/ui";
 
@@ -145,7 +146,7 @@ export interface Playbook {
   blurb: string;
   /** Ordered stages rendered as a chip flow. */
   steps: string[];
-  accent: "blue" | "purple" | "green";
+  accent: CardAccent;
 }
 
 /** A bundled, named agent capability — a deterministic op chain. */
@@ -337,28 +338,28 @@ const PLAYBOOKS: Playbook[] = [
       "Three-way match",
       "POST to ERP",
     ],
-    accent: "blue",
+    accent: "default",
   },
   {
     title: "PII redaction at scale",
     blurb:
       "Sweep a document set for PII and write redacted copies to cold storage.",
     steps: ["S3 source", "Detect PII", "Redact", "Store to bucket"],
-    accent: "purple",
+    accent: "premium",
   },
   {
     title: "Compliance evidence pack",
     blurb:
       "Bundle SOC 2 and audit reports into a verified, timestamped archive.",
     steps: ["Batch upload", "Classify", "Validate schema", "Sign & archive"],
-    accent: "green",
+    accent: "success",
   },
   {
     title: "Agent document tool",
     blurb:
       "Expose extraction as an MCP tool your agent can call deterministically.",
     steps: ["Define tool", "Bind endpoint", "Run evals", "Ship to agent"],
-    accent: "purple",
+    accent: "premium",
   },
 ];
 

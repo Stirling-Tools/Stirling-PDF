@@ -1,5 +1,7 @@
 import React from "react";
-import { Button, Group, Tooltip, ActionIcon } from "@mantine/core";
+import { Group, Tooltip } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
@@ -30,7 +32,7 @@ export function LandingActions({
     <>
       <Group gap="sm" justify="center" wrap="wrap" mb="xs">
         <Button
-          classNames={{ root: "landing-btn-primary" }}
+          className="landing-btn-primary"
           leftSection={
             <LocalIcon
               icon={icons.uploadIconName}
@@ -48,8 +50,8 @@ export function LandingActions({
         </Button>
 
         <Button
-          variant="default"
-          classNames={{ root: "landing-btn-secondary" }}
+          variant="secondary"
+          className="landing-btn-secondary"
           leftSection={
             <LocalIcon
               icon="add"
@@ -70,10 +72,9 @@ export function LandingActions({
           <Tooltip label={terminology.mobileUpload} position="bottom">
             <ActionIcon
               size="lg"
-              variant="default"
-              radius="md"
+              variant="secondary"
               aria-label={terminology.mobileUpload}
-              classNames={{ root: "landing-btn-secondary landing-btn-icon" }}
+              className="landing-btn-secondary landing-btn-icon"
               onClick={(e) => {
                 e.stopPropagation();
                 onMobileUploadClick();
