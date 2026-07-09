@@ -27,13 +27,11 @@ export function CreateKeyModal({
   const { t } = useTranslation();
   const [name, setName] = useState("");
   const [perms, setPerms] = useState<ApiKeyPermission[]>(["Read"]);
-  const [ips, setIps] = useState("");
   const [created, setCreated] = useState(false);
 
   function reset() {
     setName("");
     setPerms(["Read"]);
-    setIps("");
     setCreated(false);
   }
 
@@ -50,8 +48,8 @@ export function CreateKeyModal({
   }
 
   function createKey() {
-    // TODO(backend): POST /v1/infrastructure/api-keys { name, perms, ips }
-    // and render the one-time secret from the response instead of the fixture.
+    // TODO(backend): POST /v1/infrastructure/api-keys { name, perms } and render
+    // the one-time secret from the response instead of the fixture.
     setCreated(true);
   }
 
@@ -132,17 +130,6 @@ export function CreateKeyModal({
                 />
               ))}
             </div>
-          </FormField>
-
-          <FormField
-            label={t("portal.infrastructure.createKey.ipAllowlistLabel")}
-            helperText={t("portal.infrastructure.createKey.ipAllowlistHelper")}
-          >
-            <Input
-              value={ips}
-              onChange={(e) => setIps(e.target.value)}
-              placeholder="52.14.0.0/16, 203.0.113.7/32"
-            />
           </FormField>
         </div>
       )}
