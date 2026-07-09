@@ -6958,6 +6958,12 @@ sectionsAriaLabel = "Infrastructure sections"
 subtitle = "Deployments, credentials, security posture, storage, and the audit trail for your Stirling workspace."
 title = "Infrastructure"
 
+# Fixed-enum label maps rendered via t(MAP[value]) in the infrastructure tabs.
+[portal.infrastructure.apiKeyPermission]
+admin = "Admin"
+read = "Read"
+write = "Write"
+
 [portal.infrastructure.apiKeys]
 createKey = "Create key"
 heading = "API keys"
@@ -6977,6 +6983,11 @@ usageToday = "Usage today"
 [portal.infrastructure.apiKeys.empty]
 description = "Create a scoped key to start calling the Stirling API."
 title = "No API keys yet"
+
+[portal.infrastructure.attestationLabel]
+attested = "Attested"
+inScope = "In scope"
+notApplicable = "N/A"
 
 [portal.infrastructure.audit]
 filterAriaLabel = "Filter audit events by category"
@@ -7034,6 +7045,24 @@ elevation = "Elevation"
 processing = "Processing"
 totalEvents = "Total events · 24h"
 
+[portal.infrastructure.auditCatLabel]
+auth = "Auth"
+config = "Config"
+elevation = "Elevation"
+processing = "Processing"
+security = "Security"
+
+[portal.infrastructure.auditStatusLabel]
+danger = "Error"
+info = "Info"
+success = "Success"
+warning = "Warning"
+
+[portal.infrastructure.certLabel]
+certified = "Certified"
+inProgress = "In progress"
+notStarted = "Not started"
+
 [portal.infrastructure.createKey]
 cancel = "Cancel"
 createKey = "Create key"
@@ -7049,6 +7078,12 @@ subtitle = "Scope the key to the minimum it needs. You can rotate or revoke at a
 subtitleCreated = "Copy this secret now — it won't be shown again."
 title = "Create API key"
 titleCreated = "Key created"
+
+[portal.infrastructure.deployLabel]
+live = "Live"
+queued = "Queued"
+rolledBack = "Rolled back"
+rolling = "Rolling out"
 
 [portal.infrastructure.deployments]
 msValue = "{{value}} ms"
@@ -7085,6 +7120,16 @@ subheading = "Live health for every deployed Stirling region — latency, load, 
 description = "Deployed regions appear here once your workspace is provisioned."
 title = "No regions deployed"
 
+[portal.infrastructure.keyLabel]
+active = "Active"
+revoked = "Revoked"
+rotateSoon = "Rotate soon"
+
+[portal.infrastructure.modelLabel]
+active = "Active"
+degraded = "Degraded"
+disabled = "Disabled"
+
 [portal.infrastructure.models]
 heading = "Models"
 msValue = "{{value}} ms"
@@ -7112,6 +7157,10 @@ status = "Status"
 type = "Type"
 version = "Version"
 
+[portal.infrastructure.models.cost]
+perCall = "{{price}}/call"
+perThousand = "{{price}}/1k"
+
 [portal.infrastructure.models.metrics]
 activeModels = "Active models"
 avgLatency = "Avg latency"
@@ -7134,6 +7183,17 @@ docType = "Document type"
 modelForAria = "Model for {{operation}}"
 operation = "Operation"
 routedTo = "Routed to"
+
+[portal.infrastructure.modelTypeLabel]
+classification = "Classification"
+extraction = "Extraction"
+llm = "LLM"
+ocr = "OCR"
+
+[portal.infrastructure.regionLabel]
+degraded = "Degraded"
+down = "Down"
+healthy = "Healthy"
 
 [portal.infrastructure.security.access.byok]
 description = "Supply a key from your own KMS. Stirling encrypts with it but can still read."
@@ -7251,66 +7311,6 @@ never = "Never delete"
 heading = "Total usage"
 progressLabel = "Storage used"
 subheading = "Storage consumed across all connected providers."
-
-# Fixed-enum label maps rendered via t(MAP[value]) in the infrastructure tabs.
-[portal.infrastructure.apiKeyPermission]
-admin = "Admin"
-read = "Read"
-write = "Write"
-
-[portal.infrastructure.attestationLabel]
-attested = "Attested"
-inScope = "In scope"
-notApplicable = "N/A"
-
-[portal.infrastructure.auditCatLabel]
-auth = "Auth"
-config = "Config"
-elevation = "Elevation"
-processing = "Processing"
-security = "Security"
-
-[portal.infrastructure.auditStatusLabel]
-danger = "Error"
-info = "Info"
-success = "Success"
-warning = "Warning"
-
-[portal.infrastructure.certLabel]
-certified = "Certified"
-inProgress = "In progress"
-notStarted = "Not started"
-
-[portal.infrastructure.deployLabel]
-live = "Live"
-queued = "Queued"
-rolledBack = "Rolled back"
-rolling = "Rolling out"
-
-[portal.infrastructure.keyLabel]
-active = "Active"
-revoked = "Revoked"
-rotateSoon = "Rotate soon"
-
-[portal.infrastructure.modelLabel]
-active = "Active"
-degraded = "Degraded"
-disabled = "Disabled"
-
-[portal.infrastructure.modelTypeLabel]
-classification = "Classification"
-extraction = "Extraction"
-llm = "LLM"
-ocr = "OCR"
-
-[portal.infrastructure.regionLabel]
-degraded = "Degraded"
-down = "Down"
-healthy = "Healthy"
-
-[portal.infrastructure.models.cost]
-perCall = "{{price}}/call"
-perThousand = "{{price}}/1k"
 
 [portal.infrastructure.tabs]
 apiKeys = "API Keys"
@@ -8180,10 +8180,6 @@ title = "Session expired"
 [portal.users]
 title = "Users"
 
-[portal.users.seats]
-limited = "{{used}} / {{limit}}"
-unlimited = "{{used}} · Unlimited"
-
 [portal.users.roles]
 subtitle = "Every role exists on every plan — what each one can do is fixed across the org."
 title = "Roles"
@@ -8227,6 +8223,10 @@ summary = "Owns a team — manages its members' resources and shared configs."
 1 = "Manage team-owned integration configs"
 2 = "Portal access via the default policy"
 3 = "Everything Member can do"
+
+[portal.users.seats]
+limited = "{{used}} / {{limit}}"
+unlimited = "{{used}} · Unlimited"
 
 [portal.welcome]
 ariaLabel = "Welcome to Stirling PDF"
