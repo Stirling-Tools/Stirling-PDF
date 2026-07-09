@@ -112,6 +112,7 @@ export const AUDIT_CAT_LABEL: Record<AuditCategory, string> = {
   auth: "Auth",
   config: "Config",
   elevation: "Elevation",
+  policy: "Policy",
   processing: "Processing",
   security: "Security",
 };
@@ -120,6 +121,7 @@ export const AUDIT_CAT_TONE: Record<AuditCategory, StatusTone> = {
   auth: "info",
   config: "neutral",
   elevation: "purple",
+  policy: "purple",
   processing: "success",
   security: "warning",
 };

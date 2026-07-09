@@ -54,6 +54,7 @@ public class PortalInfraAuditService {
                         .limit(RETURN_LIMIT)
                         .toList();
 
+        int policy = (int) events.stream().filter(e -> "policy".equals(e.getCategory())).count();
         int processing =
                 (int) events.stream().filter(e -> "processing".equals(e.getCategory())).count();
         int elevation =
@@ -63,6 +64,7 @@ public class PortalInfraAuditService {
         InfraAuditSummary summary =
                 InfraAuditSummary.builder()
                         .totalEvents(events.size())
+                        .policy(policy)
                         .processing(processing)
                         .elevation(elevation)
                         .config(config)
@@ -90,7 +92,9 @@ public class PortalInfraAuditService {
         // fans out carry the marker (and no name). The dispatch is the "policy" row; the steps are
         // its automation sub-rows.
         boolean policyDispatch = (policyName != null || isPolicyRunPath(path)) && !automation;
-        String category = categoryFor(event.type(), path);
+        // A dispatch is its own "policy" category so the UI badges it as a policy run, not a
+        // generic processing op; its internal steps keep their real tool category.
+        String category = policyDispatch ? "policy" : categoryFor(event.type(), path);
 
         return InfraAuditEventDto.builder()
                 .id(String.valueOf(event.id()))

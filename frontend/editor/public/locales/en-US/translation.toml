@@ -6926,6 +6926,7 @@ all = "All"
 auth = "Auth"
 config = "Config"
 elevation = "Elevation"
+policy = "Policy"
 processing = "Processing"
 security = "Security"
 
@@ -6936,6 +6937,7 @@ title = "You don't have access"
 [portal.infrastructure.audit.metrics]
 config = "Config"
 elevation = "Elevation"
+policy = "Policy"
 processing = "Processing"
 totalEvents = "Total events · 24h"
 

@@ -50,17 +50,22 @@ class PortalInfraAuditServiceTest {
 
     @Test
     void policyDispatchShowsPolicyNameAndTheToolsItRuns() {
-        InfraAuditEventDto e =
-                onlyEvent(
-                        "{\"path\":\"/api/v1/policies/run\",\"policyName\":\"Redaction\","
-                                + "\"policySteps\":[\"/api/v1/security/auto-redact\","
-                                + "\"/api/v1/misc/compress-pdf\"],\"statusCode\":202,"
-                                + "\"latencyMs\":5}");
+        String data =
+                "{\"path\":\"/api/v1/policies/run\",\"policyName\":\"Redaction\","
+                        + "\"policySteps\":[\"/api/v1/security/auto-redact\","
+                        + "\"/api/v1/misc/compress-pdf\"],\"statusCode\":202,"
+                        + "\"latencyMs\":5}";
+        when(auditReadService.serverEvents()).thenReturn(List.of(row(1L, data)));
 
-        // Was "Run" / "Run"; now names the policy and lists what it ran.
+        var resp = service.serverAuditLog();
+        InfraAuditEventDto e = resp.getEvents().get(0);
+
+        // Was "Run" / "Run" under "processing"; now names the policy, lists what it ran, and
+        // badges as its own "policy" category with its own summary count.
         assertThat(e.getAction()).isEqualTo("Redaction");
-        assertThat(e.getCategory()).isEqualTo("processing");
+        assertThat(e.getCategory()).isEqualTo("policy");
         assertThat(e.getTarget()).isEqualTo("Auto Redact, Compress PDF");
+        assertThat(resp.getSummary().getPolicy()).isEqualTo(1);
     }
 
     @Test
