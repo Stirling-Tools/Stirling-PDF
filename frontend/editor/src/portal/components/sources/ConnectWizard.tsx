@@ -251,6 +251,7 @@ export function ConnectWizard({
                 />
               ) : (
                 <Input
+                  type={field.control === "password" ? "password" : undefined}
                   value={options[field.key] ?? ""}
                   placeholder={
                     field.placeholderKey ? t(field.placeholderKey) : undefined
@@ -280,7 +281,11 @@ export function ConnectWizard({
               <StatTile
                 key={field.key}
                 label={t(field.labelKey)}
-                value={options[field.key] || "—"}
+                value={
+                  field.control === "password" && options[field.key]
+                    ? "********"
+                    : options[field.key] || "—"
+                }
               />
             ))}
           </div>
