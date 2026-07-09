@@ -7,7 +7,92 @@
 
 import i18n from "@app/i18n";
 import type { PolicyActivityItem, PolicyStats } from "@app/types/policies";
-import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
+import {
+  dispatchKey,
+  isRunInFlight,
+  type PolicyRunRecord,
+} from "@app/components/policies/policyRunStore";
+
+/**
+ * The failed runs that are actually worth re-running, one per (policy, file):
+ *  - terminal-failed (FAILED/CANCELLED) and not already in an auto-retry backoff;
+ *  - with a local input file to re-run on (reconciled server orphans have none);
+ *  - EXCLUDING any (policy, file) that has since succeeded or is currently
+ *    running — a stale failure row must never re-enforce a file that already
+ *    went through, or race a run that's still going.
+ * Runs are newest-first in the store, so the first failed run seen per key is
+ * the latest attempt. This is the groundwork for bulk "retry all failed" and,
+ * later, "run a newly-enabled policy across not-yet-processed files".
+ */
+export function retryableFailedRuns(
+  runs: PolicyRunRecord[],
+): PolicyRunRecord[] {
+  // Keys settled by a success or still being worked — off-limits for retry.
+  const settledOrActive = new Set<string>();
+  for (const run of runs) {
+    if (run.status === "COMPLETED" || isRunInFlight(run)) {
+      settledOrActive.add(dispatchKey(run.categoryId, run.fileId));
+    }
+  }
+  const seen = new Set<string>();
+  const eligible: PolicyRunRecord[] = [];
+  for (const run of runs) {
+    if (run.status !== "FAILED" && run.status !== "CANCELLED") continue;
+    if (run.retrying) continue;
+    if (!run.fileId) continue;
+    const key = dispatchKey(run.categoryId, run.fileId);
+    if (settledOrActive.has(key) || seen.has(key)) continue;
+    seen.add(key);
+    eligible.push(run);
+  }
+  return eligible;
+}
+
+/** Live per-policy run tally — drives the panel's processing ring + counts. */
+export interface PolicyRunProgress {
+  /** Runs still working: dispatched/running, retrying, or done-but-not-imported. */
+  running: number;
+  /** Runs that finished successfully AND landed in the workspace. */
+  completed: number;
+  /** Every run in the current wave for the policy (running + completed + failed). */
+  total: number;
+}
+
+/** Empty tally, so callers can render a zero state without null checks. */
+export const EMPTY_RUN_PROGRESS: PolicyRunProgress = {
+  running: 0,
+  completed: 0,
+  total: 0,
+};
+
+/**
+ * Tally runs per policy category for the panel's live indicators: how many are
+ * still processing, how many completed, and the total in the CURRENT wave.
+ * Keyed by categoryId.
+ *
+ * `sinceStartedAt` scopes to the current upload wave (the store resets it when a
+ * run starts with nothing in flight) so the counts reflect "this upload", not the
+ * whole run history persisted in localStorage across every past upload.
+ */
+export function progressByCategory(
+  runs: PolicyRunRecord[],
+  sinceStartedAt = 0,
+): Map<string, PolicyRunProgress> {
+  const byCat = new Map<string, PolicyRunProgress>();
+  for (const run of runs) {
+    if (run.startedAt < sinceStartedAt) continue;
+    const p = byCat.get(run.categoryId) ?? {
+      running: 0,
+      completed: 0,
+      total: 0,
+    };
+    p.total += 1;
+    if (isRunInFlight(run)) p.running += 1;
+    else if (run.status === "COMPLETED") p.completed += 1;
+    byCat.set(run.categoryId, p);
+  }
+  return byCat;
+}
 
 /** Relative "Nm/Nh ago" for an activity timestamp (epoch ms). */
 function relativeTime(ts: number): string {
