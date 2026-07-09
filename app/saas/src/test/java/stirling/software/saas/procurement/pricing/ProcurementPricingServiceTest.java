@@ -30,6 +30,7 @@ class ProcurementPricingServiceTest {
 
         assertThat(q.annualNetMinor()).isEqualTo(175_200_000L); // $1,752,000
         assertThat(q.tcvMinor()).isEqualTo(525_600_000L); // $5,256,000
+        assertThat(q.renewalAnnualNetMinor()).isEqualTo(180_456_000L); // $1,752,000 + 3% CPI
         assertThat(lineAmount(q, "support")).isEqualTo(3_000_000L); // dedicated SE/CSM $30K
         assertThat(lineAmount(q, "deployment")).isEqualTo(1_200_000L); // self-hosted $12K
     }
@@ -44,6 +45,19 @@ class ProcurementPricingServiceTest {
         // Cloud + standard: no deployment or support line.
         assertThat(q.lineItems()).noneMatch(l -> l.key().equals("deployment"));
         assertThat(q.lineItems()).noneMatch(l -> l.key().equals("support"));
+    }
+
+    @Test
+    void renewalAppliesCpiEscalatorAfterAFlatTerm() {
+        // The committed term is flat (TCV = annual × years, asserted above). The 3% CPI escalator
+        // describes only the first post-term renewal: annual + one 3% step. It never touches TCV.
+        QuoteBreakdown q = pricing.price(cfg(6_000_000, 4, "cloud", 3, "standard"));
+        assertThat(q.renewalAnnualNetMinor())
+                .isEqualTo(Math.round(q.annualNetMinor() * 1.03)); // 16,527,800 → 17,023,634
+        assertThat(q.tcvMinor()).isEqualTo(q.annualNetMinor() * 3); // renewal is outside the TCV
+        assertThat(pricing.cpiRatePct()).isEqualTo(3);
+        assertThat(pricing.renewalAnnualMinor(q.annualNetMinor()))
+                .isEqualTo(q.renewalAnnualNetMinor()); // stored-quote echo agrees with pricing
     }
 
     @Test

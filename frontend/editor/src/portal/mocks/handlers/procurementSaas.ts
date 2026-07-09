@@ -153,6 +153,8 @@ function priceQuote(cfg: Cfg) {
     currency: "USD",
     annualNetMinor,
     tcvMinor,
+    renewalAnnualNetMinor: Math.round(annualNetMinor * 1.03), // +3% CPI on renewal
+    cpiRatePct: 3,
     lineItems: lines,
     validUntil: "2026-07-31",
     stripeQuoteId: null,

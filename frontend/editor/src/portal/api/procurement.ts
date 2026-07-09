@@ -123,6 +123,10 @@ export interface QuoteResult {
   currency: string;
   annualNetMinor: number;
   tcvMinor: number;
+  /** First post-term renewal fee after the CPI escalator; the committed term itself is flat. */
+  renewalAnnualNetMinor: number;
+  /** The fixed CPI escalator applied per renewal, as a whole percent (e.g. 3). */
+  cpiRatePct: number;
   lineItems: QuoteLineItem[];
   validUntil: string | null;
   /** The Stripe Quote id once issued; null while still a local draft. */

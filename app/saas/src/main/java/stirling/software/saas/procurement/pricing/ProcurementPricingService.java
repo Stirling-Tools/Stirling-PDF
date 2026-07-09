@@ -82,6 +82,7 @@ public class ProcurementPricingService {
 
         long annualNet = meterNetMinor + support + deploy + indemnity + qbr;
         long tcv = annualNet * cfg.termYears() + training;
+        long renewalAnnual = renewalAnnualMinor(annualNet, rates);
 
         double effectivePerPdf = rate * intensity; // quotes speak per-PDF-at-posture, never per-run
 
@@ -151,7 +152,29 @@ public class ProcurementPricingService {
                             QuoteLineItem.Kind.ONE_TIME,
                             training));
         }
-        return new QuoteBreakdown(lines, annualNet, tcv, cfg.currency());
+        return new QuoteBreakdown(lines, annualNet, tcv, renewalAnnual, cfg.currency());
+    }
+
+    /** The default CPI escalator (fraction) applied to the annual fee on each post-term renewal. */
+    public double cpiEscalator() {
+        return PricingRates.defaults().cpiEscalator();
+    }
+
+    /** The CPI escalator as a whole-percent figure for buyer-facing copy (3% → 3). */
+    public int cpiRatePct() {
+        return (int) Math.round(cpiEscalator() * 100.0);
+    }
+
+    /**
+     * The escalated annual fee at the first renewal: the committed annual plus one CPI step. Used
+     * both when pricing a fresh quote and when echoing a stored one, so the two always agree.
+     */
+    public long renewalAnnualMinor(long annualNetMinor) {
+        return renewalAnnualMinor(annualNetMinor, PricingRates.defaults());
+    }
+
+    private static long renewalAnnualMinor(long annualNetMinor, PricingRates rates) {
+        return Math.round(annualNetMinor * (1.0 + rates.cpiEscalator()));
     }
 
     private static long deployFeeMinor(String deployment, PricingRates rates) {

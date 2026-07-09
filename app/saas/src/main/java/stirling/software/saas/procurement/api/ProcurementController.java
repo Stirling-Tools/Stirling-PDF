@@ -31,6 +31,7 @@ import stirling.software.saas.model.TeamMembership;
 import stirling.software.saas.procurement.config.ProcurementConfigurationProperties;
 import stirling.software.saas.procurement.model.ProcurementDeal;
 import stirling.software.saas.procurement.model.ProcurementQuote;
+import stirling.software.saas.procurement.pricing.ProcurementPricingService;
 import stirling.software.saas.procurement.pricing.QuoteConfig;
 import stirling.software.saas.procurement.pricing.QuoteLineItem;
 import stirling.software.saas.procurement.service.ProcurementService;
@@ -56,16 +57,19 @@ public class ProcurementController {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final ProcurementService procurement;
+    private final ProcurementPricingService pricing;
     private final TeamMembershipRepository memberRepo;
     private final UserRepository userRepository;
     private final ProcurementConfigurationProperties config;
 
     public ProcurementController(
             ProcurementService procurement,
+            ProcurementPricingService pricing,
             TeamMembershipRepository memberRepo,
             UserRepository userRepository,
             ProcurementConfigurationProperties config) {
         this.procurement = Objects.requireNonNull(procurement);
+        this.pricing = Objects.requireNonNull(pricing);
         this.memberRepo = Objects.requireNonNull(memberRepo);
         this.userRepository = Objects.requireNonNull(userRepository);
         this.config = Objects.requireNonNull(config);
@@ -109,6 +113,10 @@ public class ProcurementController {
             String currency,
             long annualNetMinor,
             long tcvMinor,
+            // First post-term renewal fee after the CPI escalator, and that escalator as a whole
+            // percent — the committed term is flat, so these describe only the auto-renewal.
+            long renewalAnnualNetMinor,
+            int cpiRatePct,
             List<QuoteLineItem> lineItems,
             String validUntil,
             String stripeQuoteId,
@@ -351,6 +359,8 @@ public class ProcurementController {
                 q.getCurrency(),
                 q.getAnnualNetMinor(),
                 q.getTcvMinor(),
+                pricing.renewalAnnualMinor(q.getAnnualNetMinor()),
+                pricing.cpiRatePct(),
                 parseLineItems(q.getLineItemsJson()),
                 q.getValidUntil() == null ? null : q.getValidUntil().toString(),
                 q.getStripeQuoteId(),
