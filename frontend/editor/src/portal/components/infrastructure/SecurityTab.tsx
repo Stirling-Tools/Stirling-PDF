@@ -185,7 +185,7 @@ export function SecurityTab() {
                 tone={KEY_MODE_TONE[data.keyManagement.mode]}
                 size="sm"
               >
-                {t(KEY_MODE_LABEL[data.keyManagement.mode])}
+                {KEY_MODE_LABEL[data.keyManagement.mode]}
               </StatusBadge>
             </div>
             {/* Rotation is a privileged backend action; disabled where Stirling

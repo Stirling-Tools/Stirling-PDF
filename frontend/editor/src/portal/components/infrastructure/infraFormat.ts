@@ -12,7 +12,6 @@ import type {
   ModelProvider,
   ModelStatus,
   ModelType,
-  RecentDeployment,
   RegionStatus,
 } from "@portal/api/infrastructure";
 
@@ -53,15 +52,6 @@ export const DEPLOY_LABEL: Record<DeploymentStatus, string> = {
   queued: "portal.infrastructure.deployLabel.queued",
 };
 
-export const ENVIRONMENT_LABEL: Record<
-  RecentDeployment["environment"],
-  string
-> = {
-  production: "portal.infrastructure.environmentLabel.production",
-  staging: "portal.infrastructure.environmentLabel.staging",
-  canary: "portal.infrastructure.environmentLabel.canary",
-};
-
 export const KEY_TONE: Record<ApiKeyStatus, StatusTone> = {
   active: "success",
   revoked: "danger",
@@ -86,10 +76,11 @@ export const CERT_LABEL: Record<CertStatus, string> = {
   "not-started": "portal.infrastructure.certLabel.notStarted",
 };
 
+// Brand/acronym key-management modes are not localised.
 export const KEY_MODE_LABEL: Record<KeyMode, string> = {
-  managed: "portal.infrastructure.keyModeLabel.managed",
-  byok: "portal.infrastructure.keyModeLabel.byok",
-  hyok: "portal.infrastructure.keyModeLabel.hyok",
+  managed: "Stirling-managed",
+  byok: "BYOK",
+  hyok: "HYOK",
 };
 
 export const KEY_MODE_TONE: Record<KeyMode, StatusTone> = {
@@ -168,11 +159,12 @@ export const MODEL_TYPE_TONE: Record<ModelType, ChipAccent> = {
   llm: "warning",
 };
 
+// Provider names are proper nouns, not localised.
 export const MODEL_PROVIDER_LABEL: Record<ModelProvider, string> = {
-  stirling: "portal.infrastructure.modelProviderLabel.stirling",
-  openai: "portal.infrastructure.modelProviderLabel.openai",
-  anthropic: "portal.infrastructure.modelProviderLabel.anthropic",
-  "on-prem": "portal.infrastructure.modelProviderLabel.onPrem",
+  stirling: "Stirling",
+  openai: "OpenAI",
+  anthropic: "Anthropic",
+  "on-prem": "On-prem",
 };
 
 /** Render a model's cost with the unit it's billed against. */

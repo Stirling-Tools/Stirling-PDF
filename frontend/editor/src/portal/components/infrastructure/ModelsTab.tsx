@@ -47,7 +47,7 @@ export function ModelsTab() {
         <div className="portal-infra__cell-stack">
           <span className="portal-infra__cell-strong">{m.name}</span>
           <Chip accent="neutral" size="sm">
-            {t(MODEL_PROVIDER_LABEL[m.provider])}
+            {MODEL_PROVIDER_LABEL[m.provider]}
           </Chip>
         </div>
       ),

@@ -6824,11 +6824,6 @@ version = "Version"
 description = "Deploy a target and pair it to see live instance health here."
 title = "No instances reporting"
 
-[portal.editorAdmin.health.target]
-cloud = "Cloud"
-docker = "Docker"
-kubernetes = "K8s"
-
 [portal.editorAdmin.offlineActivation]
 enterpriseTag = "Enterprise"
 generateButton = "Generate offline bundle"
@@ -7045,7 +7040,6 @@ createKey = "Create key"
 done = "Done"
 ipAllowlistHelper = "Comma-separated CIDR ranges. Leave blank to allow any IP."
 ipAllowlistLabel = "IP allowlist"
-ipAllowlistPlaceholder = "52.14.0.0/16, 203.0.113.7/32"
 keyNameLabel = "Key name"
 keyNamePlaceholder = "e.g. Production · ingest"
 permissionsLabel = "Permissions"
@@ -7293,31 +7287,15 @@ queued = "Queued"
 rolledBack = "Rolled back"
 rolling = "Rolling out"
 
-[portal.infrastructure.environmentLabel]
-canary = "Canary"
-production = "Production"
-staging = "Staging"
-
 [portal.infrastructure.keyLabel]
 active = "Active"
 revoked = "Revoked"
 rotateSoon = "Rotate soon"
 
-[portal.infrastructure.keyModeLabel]
-byok = "BYOK"
-hyok = "HYOK"
-managed = "Stirling-managed"
-
 [portal.infrastructure.modelLabel]
 active = "Active"
 degraded = "Degraded"
 disabled = "Disabled"
-
-[portal.infrastructure.modelProviderLabel]
-anthropic = "Anthropic"
-onPrem = "On-prem"
-openai = "OpenAI"
-stirling = "Stirling"
 
 [portal.infrastructure.modelTypeLabel]
 classification = "Classification"
@@ -7411,7 +7389,6 @@ chainEmpty = "Add a tool to start building your pipeline."
 create = "Create pipeline"
 directory = "Output folder"
 directoryHelp = "Absolute path on the server. Must be within the configured allowed folders."
-directoryPlaceholder = "/data/processed"
 editingUnsupported = "Displaying these tool params for editing is not supported yet."
 moveDown = "Move down"
 moveUp = "Move up"

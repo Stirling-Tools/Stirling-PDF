@@ -21,7 +21,6 @@ import { TableSkeleton } from "@portal/components/infrastructure/TableSkeleton";
 import {
   DEPLOY_LABEL,
   DEPLOY_TONE,
-  ENVIRONMENT_LABEL,
   pct,
   REGION_LABEL,
   REGION_TONE,
@@ -151,7 +150,7 @@ export function DeploymentsTab() {
           }
           size="sm"
         >
-          {t(ENVIRONMENT_LABEL[d.environment])}
+          {d.environment}
         </Chip>
       ),
     },

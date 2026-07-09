@@ -144,9 +144,7 @@ export function CreateKeyModal({
             <Input
               value={ips}
               onChange={(e) => setIps(e.target.value)}
-              placeholder={t(
-                "portal.infrastructure.createKey.ipAllowlistPlaceholder",
-              )}
+              placeholder="52.14.0.0/16, 203.0.113.7/32"
             />
           </FormField>
         </div>
