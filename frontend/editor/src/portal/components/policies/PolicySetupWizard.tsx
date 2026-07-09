@@ -241,14 +241,14 @@ function PolicySetupWizardBody({
           </span>
           {isEdit
             ? t("portal.policies.wizard.title.edit", {
-                category: category.label,
+                category: t(category.label),
               })
             : t("portal.policies.wizard.title.setUp", {
-                category: category.label,
+                category: t(category.label),
               })}
         </span>
       }
-      subtitle={config.summary}
+      subtitle={t(config.summary)}
       footer={
         <div className="portal-policies__wizard-foot">
           <Button variant="tertiary" size="sm" onClick={onClose}>
@@ -310,7 +310,7 @@ function PolicySetupWizardBody({
             <Card key={tl.operation} padding="tight">
               <div className="portal-policies__tool-head">
                 <span className="portal-policies__tool-name">
-                  {humanizeEndpoint(tl.operation)}
+                  {humanizeEndpoint(tl.operation, t)}
                 </span>
                 <span style={{ flex: 1 }} />
                 <ToggleSwitch
@@ -434,7 +434,7 @@ function PolicySetupWizardBody({
                       size="sm"
                       onClick={() => toggleScopeType(dt)}
                     >
-                      {dt}
+                      {t(`policies.docType.${dt}`, dt)}
                     </Chip>
                   ))}
                 </div>

@@ -11,7 +11,7 @@ import { PortalChrome } from "@portal/components/PortalChrome";
  */
 export function PortalProviders() {
   return (
-    <TierProvider initialTier="pro">
+    <TierProvider>
       <UIProvider>
         <PortalChrome />
       </UIProvider>
