@@ -39,6 +39,12 @@ final class PolicySweep implements ResolveContext {
     }
 
     @Override
+    public boolean allSettledDone(String identity) {
+        // Deliberately not policy-scoped: consume deletion needs every claimant's consensus.
+        return ledger.allSettledDone(identity);
+    }
+
+    @Override
     public synchronized void reportPresent(Collection<String> identities) {
         if (kind == SweepKind.FULL) {
             present.addAll(identities);

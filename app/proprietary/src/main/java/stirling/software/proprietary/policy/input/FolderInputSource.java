@@ -31,12 +31,13 @@ import stirling.software.proprietary.policy.model.PolicyInputs;
 /**
  * Reads input files from a directory; each ready file is its own unit of work, claimed through the
  * {@link ResolveContext} ledger rather than moved aside, so nothing accumulates in a work
- * directory. Options: "mode" is "consume" (default: a successfully processed file is removed;
- * failures stay in place and are not retried until they change) or "snapshot" (stateless, every run
- * sees the full set); "recursive" descends into subdirectories; "identity" is "stat" (default, any
- * size/mtime change is a new version) or "hash" (content-verified, so a touch does not reprocess).
- * Hidden files and directories, including the legacy {@code .stirling} work dir, are never picked
- * up, and files mid-write are skipped by the readiness check.
+ * directory. Options: "mode" is "consume" (default: a processed file is removed once every policy
+ * that claimed it has settled successfully and it is still the version that ran; failures stay in
+ * place and are not retried until they change) or "snapshot" (stateless, every run sees the full
+ * set); "recursive" descends into subdirectories; "identity" is "stat" (default, any size/mtime
+ * change is a new version) or "hash" (content-verified, so a touch does not reprocess). Hidden
+ * files and directories, including the legacy {@code .stirling} work dir, are never picked up, and
+ * files mid-write are skipped by the readiness check.
  */
 @Slf4j
 @Service
@@ -104,11 +105,13 @@ public class FolderInputSource implements InputSource {
                 continue;
             }
             String identity = FolderIdentities.identity(canonicalDir, inputDir, file);
+            MemoizedContentHash contentHash =
+                    config.hashIdentity() ? new MemoizedContentHash(file) : null;
             String gate;
             boolean claimed;
             try {
                 gate = FolderIdentities.statGate(file);
-                claimed = ctx.claim(identity, gate, hashSupplier(file, config));
+                claimed = ctx.claim(identity, gate, contentHash);
             } catch (IOException | UncheckedIOException e) {
                 log.debug("Could not read {} for its version: {}", file, e.getMessage());
                 continue; // vanished or unreadable mid-sweep; the next sweep sees the truth
@@ -120,69 +123,90 @@ public class FolderInputSource implements InputSource {
                     new ResolvedInput(
                             PolicyInputs.of(List.of(fileResource(file))),
                             success ->
-                                    completeConsumed(ctx, identity, file, config, gate, success)));
+                                    completeConsumed(
+                                            ctx, identity, file, gate, contentHash, success)));
         }
         return work;
     }
 
     /**
-     * A successfully consumed input is removed (the delivered output is the artifact); its ledger
-     * row is presence-cleaned at the next full sweep. A failed input stays in place, parked by its
-     * ERROR row until it changes. If the delete fails the DONE row still stops reprocessing.
+     * Settle at the version this run claimed - never a re-read, so a file replaced mid-run reads as
+     * a new unclaimed version next sweep instead of being marked processed. Then remove the input
+     * only when it is still the processed version (a mid-run replacement must survive) and every
+     * policy that claimed it has settled DONE, so co-watching policies all read the original and
+     * one failure parks the file for everyone. A failed run settles ERROR and never deletes; the
+     * DONE row of a file that could not be deleted still stops reprocessing.
      */
     private static void completeConsumed(
             ResolveContext ctx,
             String identity,
             Path file,
-            FolderConfig config,
             String claimGate,
+            MemoizedContentHash contentHash,
             boolean success) {
-        if (success) {
-            try {
+        ctx.settle(identity, claimGate, claimedHash(file, claimGate, contentHash), success);
+        if (!success) {
+            return;
+        }
+        try {
+            if (FolderIdentities.statGate(file).equals(claimGate) && ctx.allSettledDone(identity)) {
                 Files.deleteIfExists(file);
-            } catch (IOException e) {
-                log.warn("Could not remove consumed input {}: {}", file, e.getMessage());
             }
+        } catch (NoSuchFileException alreadyGone) {
+            // Removed by the user or a co-watching policy's own consensus delete: nothing to do.
+        } catch (IOException e) {
+            log.warn("Could not remove consumed input {}: {}", file, e.getMessage());
         }
-        settleAtCurrentVersion(ctx, identity, file, config, claimGate, success);
-    }
-
-    /** Lazy verification tier; null in stat mode. */
-    private static Supplier<String> hashSupplier(Path file, FolderConfig config) {
-        if (!config.hashIdentity()) {
-            return null;
-        }
-        return () -> {
-            try {
-                return FolderIdentities.contentHash(file);
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        };
     }
 
     /**
-     * Settle at the file's version as re-read after the run, so an in-place overwrite settles at
-     * what the run produced; falls back to the claim-time gate when the file is gone.
+     * The claimed version's content hash: the value computed during the claim when the ledger
+     * consulted the verifier, else computed now while the file is still at the claimed gate (so the
+     * hash describes what actually ran), else null. Always null in stat mode.
      */
-    private static void settleAtCurrentVersion(
-            ResolveContext ctx,
-            String identity,
-            Path file,
-            FolderConfig config,
-            String claimGate,
-            boolean success) {
-        String gate = claimGate;
-        String contentHash = null;
-        try {
-            gate = FolderIdentities.statGate(file);
-            if (config.hashIdentity()) {
-                contentHash = FolderIdentities.contentHash(file);
-            }
-        } catch (IOException e) {
-            log.debug("Could not re-read {} at settle: {}", file, e.getMessage());
+    private static String claimedHash(Path file, String claimGate, MemoizedContentHash hash) {
+        if (hash == null) {
+            return null;
         }
-        ctx.settle(identity, gate, contentHash, success);
+        String computed = hash.valueIfComputed();
+        if (computed != null) {
+            return computed;
+        }
+        try {
+            if (FolderIdentities.statGate(file).equals(claimGate)) {
+                return hash.get();
+            }
+        } catch (IOException | UncheckedIOException e) {
+            log.debug("Could not hash {} at settle: {}", file, e.getMessage());
+        }
+        return null;
+    }
+
+    /** Lazy verification tier: invoked at most once by the ledger, retained for the settle. */
+    private static final class MemoizedContentHash implements Supplier<String> {
+
+        private final Path file;
+        private volatile String value;
+
+        private MemoizedContentHash(Path file) {
+            this.file = file;
+        }
+
+        @Override
+        public String get() {
+            if (value == null) {
+                try {
+                    value = FolderIdentities.contentHash(file);
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            }
+            return value;
+        }
+
+        String valueIfComputed() {
+            return value;
+        }
     }
 
     /** Every non-hidden regular file in the source, readable or not. */

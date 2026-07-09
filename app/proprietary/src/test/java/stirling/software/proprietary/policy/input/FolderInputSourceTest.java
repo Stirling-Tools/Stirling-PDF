@@ -86,6 +86,65 @@ class FolderInputSourceTest {
     }
 
     @Test
+    void aFileReplacedMidRunSurvivesTheDeleteAndRunsAgain() throws IOException {
+        Path inputDir = Files.createDirectories(tempDir.resolve("in"));
+        Path file = inputDir.resolve("doc.pdf");
+        Files.writeString(file, "data");
+
+        List<ResolvedInput> work = source.resolve(InputSpec.folder(inputDir.toString()), ctx);
+        // The user saves a new version while the run is executing.
+        Files.writeString(file, "new data, different size");
+        work.get(0).onComplete().accept(true);
+
+        // The delete is version-guarded: the replacement is not the file that ran, so it stays
+        // and is claimed as fresh work instead of being marked processed.
+        assertTrue(Files.exists(file));
+        assertEquals(1, source.resolve(InputSpec.folder(inputDir.toString()), ctx).size());
+    }
+
+    @Test
+    void aSharedFileIsRemovedOnlyOnceEveryPolicyHasProcessedIt() throws IOException {
+        Path inputDir = Files.createDirectories(tempDir.resolve("in"));
+        Path file = inputDir.resolve("doc.pdf");
+        Files.writeString(file, "data");
+        InputSpec spec = InputSpec.folder(inputDir.toString());
+        RecordingContext other = new RecordingContext("p2");
+
+        List<ResolvedInput> mine = source.resolve(spec, ctx);
+        List<ResolvedInput> theirs = source.resolve(spec, other);
+        assertEquals(1, mine.size());
+        assertEquals(1, theirs.size());
+
+        mine.get(0).onComplete().accept(true);
+        // The other policy's claim is still in flight, so the first finisher must not delete.
+        assertTrue(Files.exists(file));
+
+        theirs.get(0).onComplete().accept(true);
+        assertTrue(Files.notExists(file));
+    }
+
+    @Test
+    void aSharedFileStaysParkedWhenAnyPolicyFailsOnIt() throws IOException {
+        Path inputDir = Files.createDirectories(tempDir.resolve("in"));
+        Path file = inputDir.resolve("doc.pdf");
+        Files.writeString(file, "data");
+        InputSpec spec = InputSpec.folder(inputDir.toString());
+        RecordingContext other = new RecordingContext("p2");
+
+        List<ResolvedInput> mine = source.resolve(spec, ctx);
+        List<ResolvedInput> theirs = source.resolve(spec, other);
+
+        theirs.get(0).onComplete().accept(false);
+        mine.get(0).onComplete().accept(true);
+
+        // The failure parks the file for everyone (retried when it changes), regardless of
+        // which policy settled last.
+        assertTrue(Files.exists(file));
+        assertTrue(source.resolve(spec, ctx).isEmpty());
+        assertTrue(source.resolve(spec, other).isEmpty());
+    }
+
+    @Test
     void aReDroppedFileIsProcessedAgain() throws IOException {
         Path inputDir = Files.createDirectories(tempDir.resolve("in"));
         Path file = inputDir.resolve("doc.pdf");
@@ -302,17 +361,31 @@ class FolderInputSourceTest {
     /** Policy-scoped context backed by the in-process ledger, recording presence reports. */
     private class RecordingContext implements ResolveContext {
 
+        private final String policyId;
         private final List<String> present = new ArrayList<>();
+
+        private RecordingContext() {
+            this(POLICY);
+        }
+
+        private RecordingContext(String policyId) {
+            this.policyId = policyId;
+        }
 
         @Override
         public boolean claim(String identity, String gate, Supplier<String> contentHash) {
-            return ledger.claim(POLICY, identity, gate, contentHash);
+            return ledger.claim(policyId, identity, gate, contentHash);
         }
 
         @Override
         public void settle(
                 String identity, String finalGate, String finalContentHash, boolean success) {
-            ledger.settle(POLICY, identity, finalGate, finalContentHash, success);
+            ledger.settle(policyId, identity, finalGate, finalContentHash, success);
+        }
+
+        @Override
+        public boolean allSettledDone(String identity) {
+            return ledger.allSettledDone(identity);
         }
 
         @Override

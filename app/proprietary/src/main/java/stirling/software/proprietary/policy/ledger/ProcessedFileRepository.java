@@ -131,6 +131,9 @@ public interface ProcessedFileRepository
             @Param("status") ProcessedFileStatus status,
             @Param("now") long now);
 
+    /** Whether any policy's row at this identity is in a state other than {@code status}. */
+    boolean existsByIdentityHashAndStatusNot(String identityHash, ProcessedFileStatus status);
+
     /** Stamp presence for the given identities; chunked by the caller for very large folders. */
     @Modifying
     @Transactional

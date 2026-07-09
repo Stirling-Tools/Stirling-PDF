@@ -39,6 +39,14 @@ public interface ProcessedLedger {
      */
     void recordOutput(String policyId, String identity, String gate, String contentHash);
 
+    /**
+     * Whether every row at this identity - across all policies, by design - is {@link
+     * ProcessedFileStatus#DONE}. Consume-mode deletion gates on this so a shared input is removed
+     * only once every claimant has processed it; in-flight, failed, and interrupted rows all veto,
+     * parking the file. Vacuously true when no rows exist.
+     */
+    boolean allSettledDone(String identity);
+
     /** Stamp presence for every identity a full-listing sweep observed. */
     void markSeen(String policyId, Collection<String> identities);
 

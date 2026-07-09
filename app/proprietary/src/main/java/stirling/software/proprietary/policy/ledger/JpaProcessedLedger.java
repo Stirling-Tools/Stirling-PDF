@@ -139,6 +139,12 @@ public class JpaProcessedLedger implements ProcessedLedger {
     }
 
     @Override
+    public boolean allSettledDone(String identity) {
+        return !repository.existsByIdentityHashAndStatusNot(
+                FolderIdentities.identityHash(identity), ProcessedFileStatus.DONE);
+    }
+
+    @Override
     public void markSeen(String policyId, Collection<String> identities) {
         if (identities.isEmpty()) {
             return;

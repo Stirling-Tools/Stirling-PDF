@@ -197,6 +197,33 @@ abstract class ProcessedLedgerContractTest {
     }
 
     @Test
+    void deletionConsensusNeedsEveryClaimantSettledDone() {
+        assertTrue(ledger.allSettledDone(FILE)); // vacuous: no rows yet
+        assertTrue(ledger.claim(POLICY, FILE, GATE, null));
+        assertTrue(ledger.claim(OTHER_POLICY, FILE, GATE, null));
+        ledger.settle(POLICY, FILE, GATE, null, true);
+        assertFalse(ledger.allSettledDone(FILE)); // the other claim is still in flight
+        ledger.settle(OTHER_POLICY, FILE, GATE, null, true);
+        assertTrue(ledger.allSettledDone(FILE));
+    }
+
+    @Test
+    void aFailedClaimVetoesDeletionConsensus() {
+        assertTrue(ledger.claim(POLICY, FILE, GATE, null));
+        assertTrue(ledger.claim(OTHER_POLICY, FILE, GATE, null));
+        ledger.settle(POLICY, FILE, GATE, null, true);
+        ledger.settle(OTHER_POLICY, FILE, GATE, null, false);
+        assertFalse(ledger.allSettledDone(FILE));
+    }
+
+    @Test
+    void anInterruptedClaimVetoesDeletionConsensus() {
+        assertTrue(ledger.claim(POLICY, FILE, GATE, null));
+        ledger.recoverInterrupted();
+        assertFalse(ledger.allSettledDone(FILE));
+    }
+
+    @Test
     void settleRecreatesARowRemovedMidRun() {
         ledger.claim(POLICY, FILE, GATE, null);
         ledger.clearPolicy(POLICY); // e.g. a clear-history while the run is in flight

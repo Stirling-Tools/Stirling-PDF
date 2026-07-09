@@ -118,6 +118,17 @@ public class InProcessProcessedLedger implements ProcessedLedger {
     }
 
     @Override
+    public synchronized boolean allSettledDone(String identity) {
+        for (Map<String, Row> rows : rowsByPolicy.values()) {
+            Row row = rows.get(identity);
+            if (row != null && row.status != ProcessedFileStatus.DONE) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
     public synchronized void markSeen(String policyId, Collection<String> identities) {
         Map<String, Row> rows = rowsByPolicy.get(policyId);
         if (rows == null) {
