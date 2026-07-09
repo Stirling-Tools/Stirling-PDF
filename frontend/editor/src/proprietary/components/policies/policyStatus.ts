@@ -5,22 +5,23 @@ import type { IconBadgeAccent } from "@app/ui/IconBadge";
  */
 export const ROW_ACCENT: Record<string, IconBadgeAccent> = {
   ingestion: "blue",
+  classification: "orange",
   security: "purple",
   compliance: "green",
   routing: "amber",
   retention: "red",
 };
 
-/** Accent name → the CSS colour var the policy badges tint with. */
-const ACCENT_VAR: Record<string, string> = {
-  blue: "var(--color-blue)",
-  purple: "var(--color-purple)",
-  green: "var(--color-green)",
-  amber: "var(--color-amber)",
-  red: "var(--color-red)",
-};
-
-/** CSS colour var for a policy category's accent (blue for unknown categories). */
+/**
+ * CSS colour var for a policy category's accent (blue for unknown categories) —
+ * the tint used by the file badges and the enforcement overlay.
+ *
+ * Derived straight from the accent name (`--color-<accent>`), which is exactly
+ * the token {@link IconBadge} uses for the same accent. Deriving it (rather than
+ * keeping a second name→var map) means the badge tint can never drift from the
+ * sidebar's colour — previously `orange` was missing from that map, so the
+ * Classification badge/overlay rendered untinted while its sidebar row was orange.
+ */
 export function policyAccentVar(categoryId: string): string {
-  return ACCENT_VAR[ROW_ACCENT[categoryId] ?? "blue"];
+  return `var(--color-${ROW_ACCENT[categoryId] ?? "blue"})`;
 }
