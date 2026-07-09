@@ -3,12 +3,14 @@ import type {
   LinkInstanceRequest,
   LinkStatus,
   LinkedInstanceRow,
+  LocalUsage,
 } from "@portal/mocks/link";
 
 export type {
   LinkInstanceRequest,
   LinkStatus,
   LinkedInstanceRow,
+  LocalUsage,
 } from "@portal/mocks/link";
 
 /**
@@ -58,12 +60,32 @@ export async function fetchStatus(): Promise<LinkStatus> {
 }
 
 /**
+ * Locally-accrued usage not yet reported to SaaS — the portal adds this on top
+ * of the SaaS-synced spend so "current usage" includes work done since the last
+ * daily sync. Local-backend call; returns zeros when metering is off.
+ */
+export async function fetchLocalUsage(): Promise<LocalUsage> {
+  return apiClient.local.json<LocalUsage>(`${BASE}/usage`);
+}
+
+/**
  * Drop this instance's link. The local backend best-effort tells SaaS to
  * revoke before clearing the credential locally, then returns 204 — there's no
  * body, so the caller sets the known unlinked status itself.
  */
 export async function unlinkInstance(): Promise<void> {
   await apiClient.local.json<void>(`${BASE}/unlink`, { method: "POST" });
+}
+
+/**
+ * Nudge the local backend to sync + refresh its cached entitlement now. Called
+ * right after a checkout completes so the instance's request-time gate reflects
+ * the new subscription immediately instead of waiting out its entitlement-cache
+ * TTL. Best-effort — the caller swallows failures (metering off → 409, or the
+ * local backend unreachable); the scheduled sync / TTL refresh is the backstop.
+ */
+export async function triggerLocalSync(): Promise<void> {
+  await apiClient.local.json<void>(`${BASE}/sync-now`, { method: "POST" });
 }
 
 /**

@@ -1,22 +1,50 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { ProgressBar, StatusBadge, Table, type TableColumn } from "@app/ui";
+import { Button, Chip, StatusBadge, Table, type TableColumn } from "@app/ui";
 import {
+  classificationTone,
   DOCUMENT_STATUS_LABEL,
   DOCUMENT_STATUS_TONE,
+  PRODUCT_CHIP_TONE,
   type ReviewDocument,
 } from "@portal/api/documents";
-import {
-  confidencePct,
-  confidenceTone,
-} from "@portal/components/documents/format";
 
 interface ReviewQueueTableProps {
   documents: ReviewDocument[];
   onRowClick: (doc: ReviewDocument) => void;
 }
 
-/** The document stream — one row per document awaiting a review decision. */
+function BoltIcon() {
+  return (
+    <svg
+      width="10"
+      height="10"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+    >
+      <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" />
+    </svg>
+  );
+}
+
+function KebabIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+    >
+      <circle cx="12" cy="5" r="1.6" />
+      <circle cx="12" cy="12" r="1.6" />
+      <circle cx="12" cy="19" r="1.6" />
+    </svg>
+  );
+}
+
+/** The document stream - one row per document your org has processed. */
 export function ReviewQueueTable({
   documents,
   onRowClick,
@@ -25,79 +53,106 @@ export function ReviewQueueTable({
   const columns = useMemo<TableColumn<ReviewDocument>[]>(
     () => [
       {
-        key: "name",
-        header: t("portal.documents.table.columns.name"),
+        key: "document",
+        header: t("portal.documents.table.columns.document"),
         render: (d) => (
-          <div className="portal-documents__name-cell">
-            <span className="portal-documents__name">{d.name}</span>
-            {d.sensitive && (
-              <span
-                className="portal-documents__lock"
-                title={t("portal.documents.table.sensitiveTitle")}
-                aria-label={t("portal.documents.table.sensitiveLabel")}
-              >
-                🔒
-              </span>
-            )}
+          <div className="portal-documents__doc-cell">
+            <div className="portal-documents__doc-head">
+              <span className="portal-documents__name">{d.name}</span>
+              {d.classification && (
+                <Chip accent={classificationTone(d)} size="sm">
+                  {d.classification}
+                </Chip>
+              )}
+              {d.auto && (
+                <Chip accent="success" size="sm" leadingIcon={<BoltIcon />}>
+                  {t("portal.documents.table.auto")}
+                </Chip>
+              )}
+              {d.sensitive && (
+                <span
+                  className="portal-documents__lock"
+                  title={t("portal.documents.table.sensitiveTitle")}
+                  aria-label={t("portal.documents.table.sensitiveLabel")}
+                >
+                  🔒
+                </span>
+              )}
+            </div>
+            {d.note && <span className="portal-documents__note">{d.note}</span>}
           </div>
         ),
       },
       {
-        key: "type",
-        header: t("portal.documents.table.columns.type"),
-        render: (d) => d.type,
+        key: "product",
+        header: t("portal.documents.table.columns.product"),
+        width: "7rem",
+        render: (d) => (
+          <Chip accent={PRODUCT_CHIP_TONE[d.product]} size="sm" showDot={false}>
+            {d.product}
+          </Chip>
+        ),
+      },
+      {
+        key: "action",
+        header: t("portal.documents.table.columns.action"),
+        width: "12rem",
+        render: (d) =>
+          d.product === "Editor" || !d.action ? (
+            <span className="portal-documents__editor-action">
+              {t("portal.documents.table.editorAction")}
+            </span>
+          ) : (
+            <span className="portal-documents__action">{d.action}</span>
+          ),
+      },
+      {
+        key: "user",
+        header: t("portal.documents.table.columns.user"),
+        width: "8rem",
+        render: (d) => (
+          <span className="portal-documents__muted">{d.user || "-"}</span>
+        ),
       },
       {
         key: "status",
         header: t("portal.documents.table.columns.status"),
+        width: "10rem",
         render: (d) => (
           <StatusBadge tone={DOCUMENT_STATUS_TONE[d.status]} size="sm">
             {DOCUMENT_STATUS_LABEL[d.status]}
+            {d.status === "in-review" && d.reviewer ? ` · ${d.reviewer}` : ""}
           </StatusBadge>
-        ),
-      },
-      {
-        key: "source",
-        header: t("portal.documents.table.columns.source"),
-        render: (d) => (
-          <span className="portal-documents__muted">{d.source}</span>
-        ),
-      },
-      {
-        key: "confidence",
-        header: t("portal.documents.table.columns.confidence"),
-        width: "9rem",
-        render: (d) => (
-          <div className="portal-documents__confidence">
-            <ProgressBar value={d.confidence} height={6} />
-            <span
-              className={`portal-documents__confidence-pct portal-documents__confidence-pct--${confidenceTone(
-                d.confidence,
-              )}`}
-            >
-              {confidencePct(d.confidence)}
-            </span>
-          </div>
-        ),
-      },
-      {
-        key: "fields",
-        header: t("portal.documents.table.columns.fields"),
-        align: "right",
-        render: (d) => (
-          <span className="portal-documents__mono">{d.fieldsExtracted}</span>
         ),
       },
       {
         key: "time",
         header: t("portal.documents.table.columns.time"),
-        align: "right",
+        width: "7rem",
         render: (d) => (
           <span className="portal-documents__muted">{d.time}</span>
         ),
       },
+      {
+        key: "actions",
+        header: "",
+        width: "3rem",
+        render: (d) => (
+          <Button
+            variant="quiet"
+            size="sm"
+            shape="circle"
+            leftSection={<KebabIcon />}
+            aria-label={t("portal.documents.table.rowActions")}
+            onClick={(e) => {
+              e.stopPropagation();
+              onRowClick(d);
+            }}
+          />
+        ),
+      },
     ],
-    [t],
+    [t, onRowClick],
   );
 
   return (

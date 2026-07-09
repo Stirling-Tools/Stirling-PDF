@@ -1,7 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { MantineProvider } from "@mantine/core";
 import { HttpError } from "@portal/api/http";
 import { ConnectWizard } from "@portal/components/sources/ConnectWizard";
+
+function renderWithMantine(ui: React.ReactElement) {
+  return render(<MantineProvider>{ui}</MantineProvider>);
+}
 
 // Deterministic i18n: keys come back verbatim so the test never waits on the
 // async TOML backend.
@@ -41,7 +46,9 @@ describe("ConnectWizard", () => {
     const onCreated = vi.fn();
     const onClose = vi.fn();
 
-    render(<ConnectWizard open onClose={onClose} onCreated={onCreated} />);
+    renderWithMantine(
+      <ConnectWizard open onClose={onClose} onCreated={onCreated} />,
+    );
 
     stepToReview();
 
@@ -66,7 +73,7 @@ describe("ConnectWizard", () => {
     createSource.mockResolvedValue({ id: "s1" });
     const onCreated = vi.fn();
 
-    render(
+    renderWithMantine(
       <ConnectWizard
         open
         source={{
@@ -113,7 +120,9 @@ describe("ConnectWizard", () => {
       }),
     );
 
-    render(<ConnectWizard open onClose={vi.fn()} onCreated={vi.fn()} />);
+    renderWithMantine(
+      <ConnectWizard open onClose={vi.fn()} onCreated={vi.fn()} />,
+    );
 
     stepToReview();
     fireEvent.click(screen.getByText("portal.sources.actions.connectSource"));

@@ -2,7 +2,6 @@ import { apiClient } from "@portal/api/http";
 import type {
   ActivityEvent,
   KpiEntry,
-  OnboardingStep,
   RegionHealth,
   UsageSeriesResponse,
 } from "@portal/mocks/home";
@@ -12,7 +11,6 @@ export type {
   ActivityEvent,
   ActivityKind,
   KpiEntry,
-  OnboardingStep,
   PipelineStage,
   PipelineTemplate,
   RegionHealth,
@@ -43,9 +41,4 @@ export async function fetchHomeKpis(tier: Tier): Promise<KpiEntry[]> {
 /** GET /v1/regions/health (Enterprise) */
 export async function fetchRegionHealth(): Promise<RegionHealth[]> {
   return apiClient.local.json<RegionHealth[]>("/v1/regions/health");
-}
-
-/** GET /v1/onboarding (Free) */
-export async function fetchOnboarding(): Promise<OnboardingStep[]> {
-  return apiClient.local.json<OnboardingStep[]>("/v1/onboarding");
 }

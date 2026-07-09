@@ -133,7 +133,7 @@ export function Policies() {
           title={t("portal.policies.offline.title")}
           description={t("portal.policies.offline.description")}
           action={
-            <Button variant="outline" size="sm" onClick={refetch}>
+            <Button variant="secondary" size="sm" onClick={refetch}>
               {t("portal.policies.offline.retry")}
             </Button>
           }

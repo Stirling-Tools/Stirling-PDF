@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { Modal, Stack, Button } from "@mantine/core";
+import { Modal, Stack } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import CelebrationIcon from "@mui/icons-material/CelebrationOutlined";
 import AnimatedSlideBackground from "@app/components/onboarding/slides/AnimatedSlideBackground";
@@ -169,7 +170,7 @@ export function FreeLimitReachedModal({ onClose }: FreeLimitReachedModalProps) {
               >
                 <Button
                   onClick={onClose}
-                  variant="default"
+                  variant="secondary"
                   size="sm"
                   className="free-limit-modal-button"
                   style={{

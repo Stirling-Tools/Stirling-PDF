@@ -1,7 +1,10 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import path from "path";
 
-const SAMPLE_PDF = path.join(__dirname, "../test-fixtures/sample.pdf");
+const SAMPLE_PDF = path.join(
+  import.meta.dirname,
+  "../test-fixtures/sample.pdf",
+);
 
 /**
  * The reader/viewer exposes an in-PDF text search via CustomSearchLayer.
@@ -16,8 +19,9 @@ test.describe("Reader - in-document text search", () => {
     await page.goto("/read");
     await page.waitForLoadState("domcontentloaded");
 
-    // Upload a PDF first so the reader has content. `files-button` now
-    // triggers the native picker directly - no modal flow involved.
+    // Upload a PDF first so the reader has content. The `files-button` native
+    // picker is mocked globally (suppressNativeFilePicker), so the click is
+    // safe cross-browser; set the files on the hidden input directly.
     await page.getByTestId("files-button").click();
     await page.locator('[data-testid="file-input"]').setInputFiles(SAMPLE_PDF);
 
