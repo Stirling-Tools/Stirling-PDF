@@ -1,4 +1,5 @@
 import type { Tier } from "@portal/contexts/TierContext";
+import { useUI } from "@portal/contexts/UIContext";
 import { WelcomeBanner } from "@portal/components/WelcomeBanner";
 import { EditorStatusCard } from "@portal/components/EditorStatusCard";
 import { SetupChecklist } from "@portal/components/SetupChecklist";
@@ -19,14 +20,22 @@ import { useProcurement } from "@portal/components/procurement/useProcurement";
  * open them.
  */
 export function HomeHero({ tier }: { tier: Tier }) {
+  const { openLinkModal } = useUI();
   const procurement = useProcurement();
   const dealActive =
     procurement.isLinked && procurement.started && !!procurement.data;
 
+  // Start the enterprise flow right here on Home: open the trial-setup modal when the account is
+  // linked, otherwise prompt to link first — no navigating off to the procurement view.
+  const onStartEnterprise = () => {
+    if (procurement.isLinked) procurement.onStartTrial();
+    else openLinkModal();
+  };
+
   const footer = dealActive ? (
     <ControlledDealStatusHero controller={procurement} />
   ) : (
-    <SetupChecklist />
+    <SetupChecklist onStartEnterprise={onStartEnterprise} />
   );
 
   return (
