@@ -41,9 +41,10 @@ interface InviteMemberModalProps {
 type InviteRole = "member" | "admin";
 type Mode = "email" | "direct";
 
-const ROLE_SELECT_OPTIONS: { value: InviteRole; label: string }[] = [
-  { value: "member", label: ROLE_LABEL.member },
-  { value: "admin", label: ROLE_LABEL.admin },
+// Values hold i18n keys; resolved with t() where the select renders.
+const ROLE_SELECT_OPTIONS: { value: InviteRole; labelKey: string }[] = [
+  { value: "member", labelKey: ROLE_LABEL.member },
+  { value: "admin", labelKey: ROLE_LABEL.admin },
 ];
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -117,9 +118,11 @@ export function InviteMemberModal({
   }, [email, username, password]);
 
   // Drop the "admin" (Org Owner) option where it can't be assigned (SaaS).
-  const roleOptions = adminRole
-    ? ROLE_SELECT_OPTIONS
-    : ROLE_SELECT_OPTIONS.filter((o) => o.value !== "admin");
+  const roleOptions = (
+    adminRole
+      ? ROLE_SELECT_OPTIONS
+      : ROLE_SELECT_OPTIONS.filter((o) => o.value !== "admin")
+  ).map((o) => ({ value: o.value, label: t(o.labelKey) }));
 
   const authTypeOptions: { value: AuthType; label: string }[] = [
     { value: "WEB", label: t("users.invite.authWeb", "Password") },

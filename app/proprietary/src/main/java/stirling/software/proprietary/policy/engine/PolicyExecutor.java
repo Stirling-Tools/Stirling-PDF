@@ -58,6 +58,11 @@ public class PolicyExecutor {
     // payload the tool surfaced alongside or instead of a file.
     private record ToolResult(List<Resource> files, JsonNode report) {}
 
+    // A step's output files paired with each file's origin (the index into the original pipeline
+    // inputs it traces back to, or null when it has no single source). Origins compose across steps
+    // so the final result can be mapped back onto the files that entered the pipeline.
+    private record StepOutput(List<Resource> files, List<Integer> origins, JsonNode report) {}
+
     /**
      * Run every step in order, feeding each step's output into the next. Supporting files in {@code
      * inputs} bind to named file fields and never enter the document stream.
@@ -75,6 +80,12 @@ public class PolicyExecutor {
 
         List<Resource> currentFiles = inputs.primary();
         Map<String, List<Resource>> supportingFiles = inputs.supportingFiles();
+        // Seed each input with its own index as origin; steps carry these through so the final
+        // outputs can be traced back to the files that entered the pipeline.
+        List<Integer> currentOrigins = new ArrayList<>();
+        for (int k = 0; k < currentFiles.size(); k++) {
+            currentOrigins.add(k);
+        }
         // Last non-null report wins: the terminal step defines the output.
         JsonNode lastReport = null;
         String lastReportTool = null;
@@ -87,8 +98,10 @@ public class PolicyExecutor {
                         "Pipeline step " + (i + 1) + " has no operation");
             }
             listener.onStepStart(i + 1, steps.size(), operation);
-            ToolResult stepResult = executeStep(step, currentFiles, supportingFiles);
+            StepOutput stepResult =
+                    executeStep(step, currentFiles, currentOrigins, supportingFiles);
             currentFiles = stepResult.files();
+            currentOrigins = stepResult.origins();
             if (stepResult.report() != null) {
                 lastReport = stepResult.report();
                 lastReportTool = operation;
@@ -96,7 +109,7 @@ public class PolicyExecutor {
             listener.onStepComplete(i + 1, steps.size(), operation);
         }
 
-        return new PolicyExecutionResult(currentFiles, lastReport, lastReportTool);
+        return new PolicyExecutionResult(currentFiles, currentOrigins, lastReport, lastReportTool);
     }
 
     /**
@@ -104,32 +117,50 @@ public class PolicyExecutor {
      * responses are unpacked so each inner file is its own result (e.g. split). For per-file
      * dispatch the first non-null report wins.
      */
-    private ToolResult executeStep(
+    private StepOutput executeStep(
             PipelineStep step,
             List<Resource> inputFiles,
+            List<Integer> inputOrigins,
             Map<String, List<Resource>> supportingFiles)
             throws IOException {
         requireAcceptedTypes(step.operation(), inputFiles);
         List<Resource> files = new ArrayList<>();
+        List<Integer> origins = new ArrayList<>();
         JsonNode report = null;
         if (toolMetadataService.isMultiInput(step.operation())) {
+            // One call over all inputs. The outputs derive from a single input only when exactly
+            // one entered; otherwise (a genuine merge) there is no single source.
             ToolResult r = callEndpoint(step, inputFiles, supportingFiles);
-            files.addAll(r.files());
+            Integer origin = inputOrigins.size() == 1 ? inputOrigins.get(0) : null;
+            for (Resource file : r.files()) {
+                files.add(file);
+                origins.add(origin);
+            }
             report = r.report();
         } else if (inputFiles.isEmpty()) {
             ToolResult r = callEndpoint(step, List.of(), supportingFiles);
-            files.addAll(r.files());
+            for (Resource file : r.files()) {
+                files.add(file);
+                origins.add(null);
+            }
             report = r.report();
         } else {
-            for (Resource file : inputFiles) {
-                ToolResult r = callEndpoint(step, List.of(file), supportingFiles);
-                files.addAll(r.files());
+            // One call per file: every output of this call inherits that input's origin, so a 1:1
+            // op keeps its chain and a split (one input, many outputs) tags each output with the
+            // same source.
+            for (int k = 0; k < inputFiles.size(); k++) {
+                Integer origin = inputOrigins.get(k);
+                ToolResult r = callEndpoint(step, List.of(inputFiles.get(k)), supportingFiles);
+                for (Resource file : r.files()) {
+                    files.add(file);
+                    origins.add(origin);
+                }
                 if (report == null) {
                     report = r.report();
                 }
             }
         }
-        return new ToolResult(files, report);
+        return new StepOutput(files, origins, report);
     }
 
     /**

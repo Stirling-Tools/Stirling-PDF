@@ -1,14 +1,15 @@
 import type { UsersBackend } from "@portal/api/usersBackend";
 import { apiClient } from "@portal/api/http";
-import { ROLES } from "@portal/mocks/users";
-import type {
-  Member,
-  PendingInvitation,
-  RoleId,
-  UsersResponse,
-} from "@portal/mocks/users";
+import {
+  ROLES,
+  type AdminAuthConfig,
+  type InviteResult,
+  type Member,
+  type PendingInvitation,
+  type RoleId,
+  type UsersResponse,
+} from "@portal/api/users";
 import type { Team } from "@portal/api/teams";
-import type { AdminAuthConfig, InviteResult } from "@portal/api/users";
 import type { Tier } from "@portal/contexts/TierContext";
 
 /**

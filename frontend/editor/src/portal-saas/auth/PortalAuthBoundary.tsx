@@ -3,6 +3,7 @@ import { AuthProvider } from "@app/auth";
 import { useAuth } from "@app/auth/context";
 import { Spinner } from "@app/ui";
 import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
+import { EDITOR_URL } from "@portal/auth/editorUrl";
 
 function FullScreen({ children }: { children: ReactNode }) {
   return (
@@ -20,19 +21,22 @@ function FullScreen({ children }: { children: ReactNode }) {
 }
 
 /**
- * SaaS gate: viewing your own usage is not admin-gated, so require only a session
- * (not portalAccess). No session → bounce to the editor's Supabase login, which
- * returns here signed in. This is deliberately laxer than the self-hosted
- * RequirePortalAccess admin gate.
+ * SaaS gate: viewing your own usage is not admin-gated, so any real (signed-in,
+ * non-guest) account may enter - deliberately laxer than the self-hosted
+ * RequirePortalAccess admin gate. But an anonymous guest session has no account
+ * to view or manage, so it is not eligible: bounce it to the editor (where a
+ * guest can sign up), mirroring the self-hosted forbidden path. No session at
+ * all -> the editor's Supabase login, which returns here signed in.
  */
 function SaasPortalGate({ children }: { children: ReactNode }) {
-  const { session, loading } = useAuth();
+  const { session, loading, isAnonymous } = useAuth();
+  const blocked = !loading && (!session || isAnonymous);
   useEffect(() => {
-    if (!loading && !session) {
-      window.location.href = "/login";
-    }
-  }, [loading, session]);
-  if (loading || !session) {
+    if (!blocked) return;
+    // Guest (has a session but anonymous) -> editor; no session -> login.
+    window.location.href = session ? EDITOR_URL : "/login";
+  }, [blocked, session]);
+  if (loading || blocked) {
     return (
       <FullScreen>
         <Spinner size="lg" />

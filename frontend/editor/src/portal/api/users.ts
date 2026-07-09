@@ -1,26 +1,233 @@
 import { apiClient } from "@portal/api/http";
-import { ROLES } from "@portal/mocks/users";
-import type { Member, RoleId, UsersResponse } from "@portal/mocks/users";
 import type { Tier } from "@portal/contexts/TierContext";
 
-export type {
-  AccessControls,
-  Member,
-  MemberStatus,
-  PendingInvitation,
+/** The four org roles, most → least privileged, mapped onto the backend's
+ *  authorities + team leadership. Order drives the role select and grid. */
+export type RoleId = "admin" | "team_owner" | "member" | "guest";
+
+export type MemberStatus = "active" | "invited" | "suspended";
+
+/**
+ * Effective portal (processor) access for a member:
+ *   admin   — implicit, admins always have it
+ *   role    — implicit via team-owner leadership (default policy)
+ *   team    — inherited from a PORTAL grant on the member's whole team
+ *   granted — explicit per-user PORTAL grant
+ *   none    — no access
+ */
+export type PortalAccessState = "admin" | "role" | "team" | "granted" | "none";
+
+export const PORTAL_ACCESS_TONE: Record<
   PortalAccessState,
-  Role,
-  RoleId,
-  UsersResponse,
-  UsersSummary,
-} from "@portal/mocks/users";
-export {
-  MEMBER_STATUS_TONE,
-  PORTAL_ACCESS_TONE,
-  ROLES,
-  ROLE_LABEL,
-  ROLE_TONE,
-} from "@portal/mocks/users";
+  "success" | "info" | "neutral" | "warning"
+> = {
+  admin: "info",
+  role: "info",
+  team: "info",
+  granted: "success",
+  none: "neutral",
+};
+
+export interface Member {
+  id: string;
+  name: string;
+  email: string;
+  role: RoleId;
+  status: MemberStatus;
+  /** Effective portal access; set by the view from the grant list. */
+  portalAccess?: PortalAccessState;
+  /** Authoritative server-side portal access (roster DTO); drives whether a chip shows at all. */
+  canAccessPortal?: boolean;
+  /** The explicit PORTAL grant's id, for revoke (present when access = granted). */
+  portalGrantId?: number;
+  /** Relative-time string, e.g. "4m ago". Invited members read "—". */
+  lastActive: string;
+  /** Optional avatar image; falls back to initials when absent. */
+  avatarUrl?: string;
+  /** Backend linkage for row actions (absent on pure fixtures). */
+  username?: string;
+  teamId?: number;
+  teamName?: string;
+  /** Holds a LEADER membership on their team (independent of displayed role). */
+  teamLead?: boolean;
+  /** The signed-in admin's own row; self-directed actions are disabled. */
+  isSelf?: boolean;
+  /** Account locked after failed logins (admin can unlock). */
+  locked?: boolean;
+  /** MFA enrolled (admin can reset it). */
+  mfaEnabled?: boolean;
+  /** Auth provider: "web" (password), "oauth2", "saml2", etc. */
+  authType?: string;
+  /** Raw stored authority (e.g. ROLE_USER, ROLE_WEB_ONLY_USER); preserved on team moves. */
+  authority?: string;
+}
+
+export interface Role {
+  id: RoleId;
+  label: string;
+  /** One-line summary of what the role can do. */
+  summary: string;
+  /** Concrete permission bullets shown in the reference grid. */
+  permissions: string[];
+  tone: "purple" | "blue" | "green" | "amber" | "neutral";
+}
+
+/**
+ * A pending team invitation (SaaS only). Mapped from SaasTeamController's
+ * InvitationDTO; self-hosted has no pending-invite concept (invites create the
+ * account immediately) so the roster's `invitations` list stays empty there.
+ */
+export interface PendingInvitation {
+  /** Backend invitationId, used for cancel. */
+  id: number;
+  /** Invitee email. */
+  email: string;
+  /** Who sent it (inviter email), for context. */
+  invitedBy?: string;
+  /** ISO expiry, if the backend surfaces one. */
+  expiresAt?: string;
+}
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Access controls (tier-scoped)                                            */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Access posture for the org, shaped by tier. Free exposes only the seat limit
+ * and an upgrade nudge; pro adds session/MFA self-service; enterprise adds
+ * SSO/SAML, SCIM provisioning, enforced MFA and a session policy. Fields are
+ * optional so the panel renders whatever the tier returns.
+ */
+export interface AccessControls {
+  tier: Tier;
+  /** Seats consumed by active + invited members. */
+  seatsUsed: number;
+  /** Total seats on the plan; null = unlimited (enterprise). */
+  seatLimit: number | null;
+  /** Free only: copy for the upgrade nudge. */
+  upgradeHint?: string;
+  /** Pro+: end-user MFA available (self-service, not enforced). */
+  mfaAvailable?: boolean;
+  /** Enterprise: MFA enforced org-wide. */
+  mfaEnforced?: boolean;
+  /** Pro+: idle session timeout, e.g. "30 days" / "12 hours". */
+  sessionTimeout?: string;
+  /** Enterprise: SSO connection summary. */
+  sso?: {
+    provider: string;
+    status: "connected" | "not_configured";
+    /** Email domains that auto-route to SSO. */
+    domains: string[];
+  };
+  /** Enterprise: SCIM directory provisioning. */
+  scim?: {
+    enabled: boolean;
+    /** Where the directory syncs from, e.g. "Okta". */
+    directory: string;
+    lastSync: string;
+  };
+}
+
+export interface UsersSummary {
+  totalMembers: number;
+  pendingInvites: number;
+  seatsUsed: number;
+  /** null = unlimited. */
+  seatLimit: number | null;
+}
+
+export interface UsersResponse {
+  summary: UsersSummary;
+  members: Member[];
+  roles: Role[];
+  access: AccessControls;
+  /** Pending team invitations (SaaS); undefined/empty on self-hosted. */
+  invitations?: PendingInvitation[];
+  /** Whether SMTP is configured (gates emailing passwords/invites). */
+  mailEnabled: boolean;
+  /** Whether email invites will work: SMTP on AND mail.enableInvites=true. Gates the
+   * "Invite by email" option on self-hosted. */
+  emailInvitesEnabled: boolean;
+}
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Presentation metadata — product copy, lives client-side                  */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+export const MEMBER_STATUS_TONE: Record<
+  MemberStatus,
+  "success" | "warning" | "danger" | "neutral" | "info"
+> = {
+  active: "success",
+  invited: "info",
+  suspended: "danger",
+};
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Role catalogue                                                           */
+/*  The same five roles exist on every tier — what varies is who can fill    */
+/*  them and how access is enforced, not the role definitions themselves.    */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+/** `label`/`summary`/`permissions` values are i18n keys — render with t(). */
+export const ROLES: Role[] = [
+  {
+    id: "admin",
+    label: "portal.users.roles.admin.label",
+    summary: "portal.users.roles.admin.summary",
+    permissions: [
+      "portal.users.roles.admin.permissions.0",
+      "portal.users.roles.admin.permissions.1",
+      "portal.users.roles.admin.permissions.2",
+      "portal.users.roles.admin.permissions.3",
+    ],
+    tone: "purple",
+  },
+  {
+    id: "team_owner",
+    label: "portal.users.roles.team_owner.label",
+    summary: "portal.users.roles.team_owner.summary",
+    permissions: [
+      "portal.users.roles.team_owner.permissions.0",
+      "portal.users.roles.team_owner.permissions.1",
+      "portal.users.roles.team_owner.permissions.2",
+      "portal.users.roles.team_owner.permissions.3",
+    ],
+    tone: "blue",
+  },
+  {
+    id: "member",
+    label: "portal.users.roles.member.label",
+    summary: "portal.users.roles.member.summary",
+    permissions: [
+      "portal.users.roles.member.permissions.0",
+      "portal.users.roles.member.permissions.1",
+      "portal.users.roles.member.permissions.2",
+      "portal.users.roles.member.permissions.3",
+    ],
+    tone: "green",
+  },
+  {
+    id: "guest",
+    label: "portal.users.roles.guest.label",
+    summary: "portal.users.roles.guest.summary",
+    permissions: [
+      "portal.users.roles.guest.permissions.0",
+      "portal.users.roles.guest.permissions.1",
+      "portal.users.roles.guest.permissions.2",
+      "portal.users.roles.guest.permissions.3",
+    ],
+    tone: "neutral",
+  },
+];
+
+export const ROLE_LABEL: Record<RoleId, string> = Object.fromEntries(
+  ROLES.map((r) => [r.id, r.label]),
+) as Record<RoleId, string>;
+
+export const ROLE_TONE: Record<RoleId, Role["tone"]> = Object.fromEntries(
+  ROLES.map((r) => [r.id, r.tone]),
+) as Record<RoleId, Role["tone"]>;
 
 /** Roles an admin can assign from the portal; guest is derived, not assigned. */
 export const ASSIGNABLE_ROLES: RoleId[] = ["admin", "team_owner", "member"];

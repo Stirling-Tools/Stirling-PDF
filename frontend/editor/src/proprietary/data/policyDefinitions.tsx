@@ -16,6 +16,7 @@ import PublicIcon from "@mui/icons-material/Public";
 import CloudIcon from "@mui/icons-material/Cloud";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
+import LabelOutlinedIcon from "@mui/icons-material/LabelOutlined";
 import type {
   PolicyCategory,
   PolicyConfigDef,
@@ -41,6 +42,14 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
     label: "Security",
     icon: <ShieldIcon sx={ICON_SX} />,
     desc: "Detect PII, encrypt, verify authenticity, control access, and certify documents.",
+  },
+  {
+    id: "classification",
+    label: "Classification",
+    icon: <LabelOutlinedIcon sx={ICON_SX} />,
+    desc: "Identify each document's type on upload and tag its metadata for filing and search.",
+    // Needs the AI engine to classify; hidden from the policy list when it's off.
+    requiresAiEngine: true,
   },
   {
     id: "compliance",
@@ -202,6 +211,16 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
     scopeLabel: "All PDFs on this device",
     // No policy-level setting fields: tool config lives in the Workflow step;
     // output naming + retries are set in the wizard.
+    fields: [],
+  },
+  classification: {
+    summary:
+      "Classifies every uploaded document and writes the result to its metadata.",
+    rules: ["Classify", "Tag metadata"],
+    // Single backend step: classify the document via the AI engine and store the
+    // result in the document's StirlingPDFClassification metadata field.
+    defaultOperations: [{ operation: "classify", parameters: {} }],
+    scopeLabel: "All PDFs on this device",
     fields: [],
   },
   compliance: {

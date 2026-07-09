@@ -18,10 +18,14 @@
  * `usersCapabilities`.
  */
 import type { Tier } from "@portal/contexts/TierContext";
-import type { UsersResponse } from "@portal/mocks/users";
-import type { Member, RoleId } from "@portal/mocks/users";
 import type { Team } from "@portal/api/teams";
-import type { AdminAuthConfig, InviteResult } from "@portal/api/users";
+import type {
+  AdminAuthConfig,
+  InviteResult,
+  Member,
+  RoleId,
+  UsersResponse,
+} from "@portal/api/users";
 
 export interface UsersBackend {
   /** Roster + summary + (SaaS) pending invitations, adapted onto UsersResponse. */

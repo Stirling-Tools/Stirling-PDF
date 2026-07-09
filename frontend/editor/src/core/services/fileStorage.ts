@@ -29,6 +29,10 @@ export interface StoredStirlingFileRecord extends BaseFileMetadata {
   thumbnail?: string;
   thumbnailStoredAt?: number; // Epoch ms - sliding 30-day TTL
   url?: string; // For compatibility with existing components
+  // Cached classification labels — mirrors the stub field so the sidebar can
+  // group by label without re-reading PDF bytes, and it survives versioning.
+  // See StirlingFileStub.classificationLabels.
+  classificationLabels?: string[];
 }
 
 export interface StorageStats {
@@ -148,6 +152,9 @@ class FileStorageService {
 
       // Folder organisation (root when null)
       folderId: stub.folderId ?? null,
+
+      // Cached classification category, if already known (preserved across re-stores).
+      classificationLabels: stub.classificationLabels,
     };
 
     return new Promise((resolve, reject) => {
@@ -273,6 +280,7 @@ class FileStorageService {
           sourceFileIds: record.sourceFileIds,
           folderId: record.folderId ?? null,
           createdAt: record.createdAt || Date.now(),
+          classificationLabels: record.classificationLabels,
         };
 
         resolve(stub);
@@ -332,6 +340,7 @@ class FileStorageService {
               sourceFileIds: record.sourceFileIds,
               folderId: record.folderId ?? null,
               createdAt: record.createdAt || Date.now(),
+              classificationLabels: record.classificationLabels,
             });
           }
           cursor.continue();
@@ -423,6 +432,7 @@ class FileStorageService {
               sourceFileIds: record.sourceFileIds,
               folderId: record.folderId ?? null,
               createdAt: record.createdAt || Date.now(),
+              classificationLabels: record.classificationLabels,
             });
           }
           cursor.continue();

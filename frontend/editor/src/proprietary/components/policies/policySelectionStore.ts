@@ -15,9 +15,16 @@ import type { PolicyDetailView } from "@app/types/policies";
 interface PolicySelection {
   selectedId: string | null;
   detailView: PolicyDetailView;
+  /** The policy-settings page (execution order) takes over the rail. Independent
+   *  of {@link selectedId} — it's a section-level view, not tied to one policy. */
+  settingsOpen: boolean;
 }
 
-let state: PolicySelection = { selectedId: null, detailView: "detail" };
+let state: PolicySelection = {
+  selectedId: null,
+  detailView: "detail",
+  settingsOpen: false,
+};
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -37,6 +44,7 @@ function getSnapshot(): PolicySelection {
 const SERVER_SNAPSHOT: PolicySelection = {
   selectedId: null,
   detailView: "detail",
+  settingsOpen: false,
 };
 function getServerSnapshot(): PolicySelection {
   return SERVER_SNAPSHOT;
@@ -44,7 +52,7 @@ function getServerSnapshot(): PolicySelection {
 
 /** Open a policy's detail (resets the sub-view to the narrative). */
 export function selectPolicy(id: string | null) {
-  state = { selectedId: id, detailView: "detail" };
+  state = { selectedId: id, detailView: "detail", settingsOpen: false };
   emit();
 }
 
@@ -55,6 +63,19 @@ export function setPolicyDetailView(view: PolicyDetailView) {
   emit();
 }
 
+/** Open the policy-settings page (execution order). Clears any open policy. */
+export function openPolicySettings() {
+  state = { selectedId: null, detailView: "detail", settingsOpen: true };
+  emit();
+}
+
+/** Close the policy-settings page and return to the list. */
+export function closePolicySettings() {
+  if (!state.settingsOpen) return;
+  state = { ...state, settingsOpen: false };
+  emit();
+}
+
 /** Close the open policy and return to the list. */
 export function closePolicy() {
   selectPolicy(null);
@@ -62,7 +83,7 @@ export function closePolicy() {
 
 /** Reset to the initial state — used by tests to isolate the module store. */
 export function resetPolicySelection() {
-  state = { selectedId: null, detailView: "detail" };
+  state = { selectedId: null, detailView: "detail", settingsOpen: false };
   emit();
 }
 
