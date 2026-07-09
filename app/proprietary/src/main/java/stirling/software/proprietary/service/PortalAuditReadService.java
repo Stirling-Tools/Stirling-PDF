@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.PortalAuditEventRow;
 import stirling.software.proprietary.model.security.PersistentAuditEvent;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
@@ -24,12 +25,21 @@ public class PortalAuditReadService {
     /** Newest rows to scan; each surface filters this down to what it shows. */
     private static final int SCAN_LIMIT = 400;
 
+    /**
+     * Read/polling noise excluded at the query level so the scan window stays full of meaningful
+     * events. Otherwise a busy scope's recent rows fill with these and the visible list shrinks as
+     * traffic grows - the "audit getting smaller over time" a user would see. No portal surface
+     * shows these types anyway (the infra tab and documents feed both drop them).
+     */
+    private static final List<String> NOISE_TYPES =
+            List.of(AuditEventType.UI_DATA.name(), AuditEventType.HTTP_REQUEST.name());
+
     private final PersistentAuditEventRepository auditRepository;
 
     /** Recent whole-server events (admins). */
     @Cacheable(value = CACHE_NAME, key = "'server'")
     public List<PortalAuditEventRow> serverEvents() {
-        return toRows(auditRepository.findAll(recentPage()).getContent());
+        return toRows(auditRepository.findByTypeNotIn(NOISE_TYPES, recentPage()).getContent());
     }
 
     /** Recent events by the given principals (team scope). Empty principals yield an empty list. */
@@ -38,7 +48,10 @@ public class PortalAuditReadService {
         if (principals.isEmpty()) {
             return List.of();
         }
-        return toRows(auditRepository.findByPrincipalIn(principals, recentPage()).getContent());
+        return toRows(
+                auditRepository
+                        .findByTypeNotInAndPrincipalIn(NOISE_TYPES, principals, recentPage())
+                        .getContent());
     }
 
     private static PageRequest recentPage() {

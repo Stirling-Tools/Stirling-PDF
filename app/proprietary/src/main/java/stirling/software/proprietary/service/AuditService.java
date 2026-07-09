@@ -487,6 +487,15 @@ public class AuditService {
             return;
         }
         Object policyName = req.getAttribute(AuditContext.REQ_ATTR_POLICY_NAME);
+        if (policyName == null) {
+            // A pipeline step's loopback dispatch carries its parent policy name as a header, so
+            // the
+            // step audit ties back to the policy that ran it (not a bare direct call).
+            String header = req.getHeader(InternalApiClient.POLICY_NAME_HEADER);
+            if (header != null && !header.isBlank()) {
+                policyName = header;
+            }
+        }
         if (policyName != null) {
             data.put("policyName", String.valueOf(policyName));
         }

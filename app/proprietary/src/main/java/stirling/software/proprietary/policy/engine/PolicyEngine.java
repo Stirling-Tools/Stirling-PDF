@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.job.ResultFile;
 import stirling.software.common.service.FileStorage;
+import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.service.InternalApiTimeoutException;
 import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.service.JobQueue;
@@ -147,6 +148,7 @@ public class PolicyEngine {
                         runAsPrincipal(
                                 billingPrincipal,
                                 fileOwner,
+                                definition.name(),
                                 () -> runToCompletion(run, inputs, tracking, completion));
 
         // One admission unit per run; steps run synchronously within it, so this gates heavy work
@@ -355,17 +357,25 @@ public class PolicyEngine {
      * dispatch attributes (and charges) usage to that user. A null/blank principal runs as-is.
      * Restores the previous MDC value afterward (defensive — worker threads aren't pooled).
      */
-    private static void runAsPrincipal(String billingPrincipal, String fileOwner, Runnable body) {
+    private static void runAsPrincipal(
+            String billingPrincipal, String fileOwner, String policyName, Runnable body) {
         // Billing identity (MDC auditPrincipal) and output-file ownership (JobContext owner) are
         // set
         // independently: usage is charged to billingPrincipal, but stored output files are owned by
         // fileOwner — the user who triggered an org-wide policy — so they can fetch their results.
         // Either may be null (e.g. login disabled, or a trigger-fired run); each is applied only
-        // when present and restored afterward (defensive — worker threads aren't pooled).
+        // when present and restored afterward (defensive — worker threads aren't pooled). The
+        // policy
+        // name rides MDC too so each tool step's loopback dispatch (InternalApiClient) can forward
+        // it as a header, letting the audit tie the step back to its policy.
         String previousPrincipal = MDC.get(AUDIT_PRINCIPAL_MDC_KEY);
+        String previousPolicyName = MDC.get(InternalApiClient.POLICY_NAME_MDC_KEY);
         String previousOwner = JobContext.getOwner();
         if (billingPrincipal != null && !billingPrincipal.isBlank()) {
             MDC.put(AUDIT_PRINCIPAL_MDC_KEY, billingPrincipal);
+        }
+        if (policyName != null && !policyName.isBlank()) {
+            MDC.put(InternalApiClient.POLICY_NAME_MDC_KEY, policyName);
         }
         if (fileOwner != null && !fileOwner.isBlank()) {
             JobContext.setOwner(fileOwner);
@@ -377,6 +387,11 @@ public class PolicyEngine {
                 MDC.put(AUDIT_PRINCIPAL_MDC_KEY, previousPrincipal);
             } else {
                 MDC.remove(AUDIT_PRINCIPAL_MDC_KEY);
+            }
+            if (previousPolicyName != null) {
+                MDC.put(InternalApiClient.POLICY_NAME_MDC_KEY, previousPolicyName);
+            } else {
+                MDC.remove(InternalApiClient.POLICY_NAME_MDC_KEY);
             }
             JobContext.setOwner(previousOwner);
         }

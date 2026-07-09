@@ -83,6 +83,20 @@ class PortalInfraAuditServiceTest {
     }
 
     @Test
+    void internalStepCarryingItsPolicyNameLinksBackToThePolicy() {
+        InfraAuditEventDto e =
+                onlyEvent(
+                        "{\"path\":\"/api/v1/security/auto-redact\",\"automation\":true,"
+                                + "\"policyName\":\"Redaction demo\",\"files\":[{\"name\":"
+                                + "\"demo.pdf\"}],\"statusCode\":200}");
+
+        // The forwarded policy name makes the step's origin unmistakable.
+        assertThat(e.getAction()).isEqualTo("Auto Redact (policy: Redaction demo)");
+        assertThat(e.getCategory()).isEqualTo("security");
+        assertThat(e.getTarget()).isEqualTo("demo.pdf");
+    }
+
+    @Test
     void adHocRunWithoutNameStillReadsAsPolicyRun() {
         InfraAuditEventDto e =
                 onlyEvent(
