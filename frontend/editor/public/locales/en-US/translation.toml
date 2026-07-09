@@ -9955,11 +9955,13 @@ title = "Users"
 you = "(you)"
 
 [users.action]
+cancelInvite = "Cancel invitation"
 deleteTeam = "Delete team"
 disableMfa = "Reset MFA"
 move = "Move to team"
 reinstate = "Reinstate"
 remove = "Remove from org"
+removeTeam = "Remove from team"
 rename = "Rename team"
 resetPw = "Reset password"
 suspend = "Suspend"
@@ -9972,11 +9974,14 @@ editor = "Editor"
 processor = "Processor"
 
 [users.confirm]
+cancelInviteBody = "Cancel the invitation to {{email}}? They won't be able to join with the current link."
+cancelInviteTitle = "Cancel invitation"
 deleteTeamBody = "Delete the {{name}} team? The team must be empty first - move its members to another team, and it can't still own any integration configs."
 deleteTeamTitle = "Delete team"
 disableMfaBody = "Remove {{name}}'s MFA enrolment? They'll set it up again on next login if required."
 disableMfaTitle = "Reset MFA"
 removeBody = "Permanently remove {{name}} from the organization? This cannot be undone."
+removeTeamBody = "Remove {{name}} from the team? They keep their account but lose access to this team's resources."
 removeTitle = "Remove member"
 
 [users.empty]
@@ -10026,6 +10031,14 @@ title = "Invite people"
 username = "Username"
 usernameError = "Username must be at least 3 characters"
 usernamePlaceholder = "jsmith"
+
+[users.invites]
+by = "Invited by {{who}}"
+cancel = "Cancel"
+count = "{{count}} pending"
+desc = "Invited people who haven't joined yet. They hold a seat until they accept."
+expires = "Expires"
+title = "Pending invitations"
 
 [users.loadError]
 description = "Something went wrong reaching the backend, or you don't have access. Try again."
