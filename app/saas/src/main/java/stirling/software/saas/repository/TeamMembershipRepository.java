@@ -1,14 +1,16 @@
-package stirling.software.saas.repository;
+package stirling.software.proprietary.security.repository;
 
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import stirling.software.common.model.enumeration.TeamRole;
-import stirling.software.saas.model.TeamMembership;
+import stirling.software.proprietary.model.TeamMembership;
+import stirling.software.proprietary.security.model.User;
 
 public interface TeamMembershipRepository extends JpaRepository<TeamMembership, Long> {
 
@@ -104,4 +106,24 @@ public interface TeamMembershipRepository extends JpaRepository<TeamMembership, 
      * @param userId the user ID
      */
     void deleteByTeamIdAndUserId(Long teamId, Long userId);
+
+    /** Leadership checks for TeamLeadLookup. */
+    boolean existsByTeamIdAndUserIdAndRole(Long teamId, Long userId, TeamRole role);
+
+    boolean existsByUserIdAndRole(Long userId, TeamRole role);
+
+    /** All rows holding a role, users and teams pre-fetched for out-of-session mapping. */
+    @Query(
+            "SELECT tm FROM TeamMembership tm JOIN FETCH tm.user JOIN FETCH tm.team"
+                    + " WHERE tm.role = :role")
+    List<TeamMembership> findByRoleFetchingUserAndTeam(@Param("role") TeamRole role);
+
+    void deleteByTeamId(Long teamId);
+
+    void deleteByUserId(Long userId);
+
+    // Detach invitation references so deleting the inviting user does not hit the FK.
+    @Modifying
+    @Query("update TeamMembership tm set tm.invitedBy = null where tm.invitedBy = :user")
+    void clearInvitedBy(@Param("user") User user);
 }
