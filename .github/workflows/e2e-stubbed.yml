@@ -44,11 +44,22 @@ jobs:
           VITE_BUILD_FOR_PREVIEW: "1"
         run: task frontend:build
       - name: Run stubbed E2E tests (chromium)
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results.json
         run: task e2e:stubbed -- --workers=3
+      - name: Flag flaky tests
+        # Runs regardless of the test outcome: a flaky test (passed on retry)
+        # leaves the step green, so this is the only place it surfaces. Emits
+        # ::warning:: annotations + a job summary; never fails the job.
+        if: always()
+        working-directory: frontend
+        run: npx tsx editor/scripts/report-flaky-tests.mts "$PLAYWRIGHT_JSON_OUTPUT_FILE"
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results.json
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: playwright-report-stubbed-${{ github.run_id }}
-          path: frontend/editor/playwright-report/
+          path: frontend/playwright-report/
           retention-days: 7

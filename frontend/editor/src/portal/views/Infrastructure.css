@@ -71,6 +71,51 @@
   color: var(--color-text-4);
 }
 
+/* Audit tab header row: section heading + Export action */
+.portal-infra__audit-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+/* Export modal body */
+.portal-infra__export {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.portal-infra__export-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.portal-infra__export-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.portal-infra__export-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1rem;
+}
+
+.portal-infra__export-error {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-danger, #e5484d);
+}
+
+.portal-infra__export-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
 /* Two-column split */
 .portal-infra__split {
   display: grid;

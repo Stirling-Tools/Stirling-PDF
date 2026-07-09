@@ -45,7 +45,7 @@ export function PolicyFieldRow({
           {(field.options ?? []).map((opt) => (
             <Chip
               key={opt}
-              tone={selected.includes(opt) ? "blue" : "neutral"}
+              accent={selected.includes(opt) ? "default" : "neutral"}
               size="sm"
               onClick={() => toggle(opt)}
             >
@@ -64,7 +64,7 @@ export function PolicyFieldRow({
           inputSize="sm"
           value={typeof value === "string" ? value : ""}
           options={(field.options ?? []).map((o) => ({ value: o, label: o }))}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(value) => onChange(value ?? "")}
         />
       </FormField>
     );

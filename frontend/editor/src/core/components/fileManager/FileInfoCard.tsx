@@ -8,8 +8,8 @@ import {
   Group,
   Divider,
   ScrollArea,
-  Button,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { detectFileExtension, getFileSize } from "@app/utils/fileUtils";
 import { StirlingFileStub } from "@app/types/fileContext";
@@ -208,7 +208,7 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
               <Divider />
               <Button
                 size="sm"
-                variant="light"
+                variant="secondary"
                 onClick={() => onMakeCopy(currentFile)}
                 fullWidth
               >
@@ -260,7 +260,7 @@ const FileInfoCard: React.FC<FileInfoCardProps> = ({
                   </Group>
                   <Button
                     size="sm"
-                    variant="light"
+                    variant="secondary"
                     onClick={() => setShowShareManageModal(true)}
                     fullWidth
                   >

@@ -217,25 +217,6 @@
   border-top: 1px solid var(--payg-divider);
   padding-top: 16px;
 }
-.paygf-cta__button {
-  padding: 13px 22px;
-  border: none;
-  border-radius: 11px;
-  background: linear-gradient(135deg, var(--payg-accent) 0%, #6c5ce7 100%);
-  color: white;
-  font-weight: 600;
-  font-size: 0.95rem;
-  font-family: inherit;
-  cursor: pointer;
-  transition:
-    transform 120ms ease,
-    box-shadow 120ms ease;
-  white-space: nowrap;
-}
-.paygf-cta__button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 22px -6px rgba(10, 139, 255, 0.55);
-}
 .paygf-cta__reassurance {
   margin: 0;
   font-size: 0.78rem;

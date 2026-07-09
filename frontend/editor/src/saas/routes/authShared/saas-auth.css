@@ -129,6 +129,11 @@
   text-align: center;
 }
 
+/* ── Dark-mode icon inversion for monochrome OAuth logos ────────────── */
+[data-mantine-color-scheme="dark"] .oauth-icon--github {
+  filter: invert(1);
+}
+
 /* ── Icon helpers inside oauth-button-fullwidth ─────────────────────── */
 .auth-at-icon {
   font-size: 1.25rem;
