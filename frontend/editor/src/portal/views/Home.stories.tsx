@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { http, HttpResponse, delay } from "msw";
+import { http, HttpResponse } from "msw";
 import { Home } from "@portal/views/Home";
 
 const meta: Meta<typeof Home> = {
@@ -35,20 +35,6 @@ export const SubscribedInProcurement: Story = {
             latestQuote: null,
           }),
         ),
-      ],
-    },
-  },
-};
-
-export const SlowUsage: Story = {
-  globals: { tier: "pro" },
-  parameters: {
-    msw: {
-      handlers: [
-        http.get("/v1/analytics/usage", async () => {
-          await delay(3000);
-          return HttpResponse.json({ points: [], priorTotal: 0 });
-        }),
       ],
     },
   },

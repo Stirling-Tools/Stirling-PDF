@@ -6730,23 +6730,6 @@ description = "This view hit an unexpected error. Try again, or pick another sec
 retry = "Try again"
 title = "Something went wrong on this page"
 
-[portal.forkWizard]
-subtitle = "Clone a proven workflow and tune it — every template ships the same four-stage backbone."
-title = "Fork a starter pipeline"
-
-[portal.forkWizard.action]
-cancel = "Cancel"
-deploy = "Deploy pipeline"
-pickAnother = "Pick another"
-
-[portal.forkWizard.status]
-building = "Building…"
-ready = "Ready to deploy"
-
-[portal.home.chart.empty]
-description = "Once documents are processed, your 30-day usage appears here."
-title = "No usage yet"
-
 [portal.home.editor]
 activeUsers = "{{n}} active"
 invite = "Invite teammates"
@@ -6763,25 +6746,6 @@ kubernetes = "Self-hosted · Kubernetes"
 afternoon = "Good afternoon"
 evening = "Good evening"
 morning = "Good morning"
-
-[portal.home.kpis.enterprise]
-docs30d = "Docs / 30d"
-evalPassRate = "Eval pass rate"
-p95Latency = "P95 latency"
-slaUptime = "SLA uptime (30d)"
-
-[portal.home.kpis.free]
-agents = "Agents"
-docsProcessed = "Docs processed"
-docsProcessedDescription = "Free plan cap"
-operations = "Operations"
-pipelines = "Pipelines"
-
-[portal.home.kpis.pro]
-agentsActive = "Agents active"
-docs30d = "Docs / 30d"
-evalPassRate = "Eval pass rate"
-pipelines = "Pipelines"
 
 [portal.home.onboarding]
 dismiss = "Dismiss setup"
@@ -6810,25 +6774,6 @@ blurb = "{{connected}} connected · every PDF governed where it lands"
 chip = "{{connected}} connected"
 title = "Connect your sources"
 
-[portal.home.productGrid]
-ariaLabel = "Process PDFs at scale"
-
-[portal.home.productGrid.agents]
-blurb = "Wire your agent via MCP, REST, or tool definitions. Deterministic operations, scenarios, evals."
-cta = "Connect an agent"
-title = "Agents"
-
-[portal.home.productGrid.pipelines]
-badge = "Hero"
-blurb = "Compose document workflows from typed operations. Upload a sample to get suggestions or start blank."
-cta = "Build a pipeline"
-title = "Pipelines"
-
-[portal.home.productGrid.sources]
-blurb = "Attach pipelines where PDFs already live — S3, agents, SharePoint, webhooks, batch, email."
-cta = "Connect a source"
-title = "Sources"
-
 [portal.home.quickActions]
 subtitle = "Top tasks for today"
 title = "Quick actions"
@@ -6844,18 +6789,6 @@ title = "Connect a source"
 [portal.home.quickActions.issueApiKey]
 blurb = "Scoped key with rate limits and IP allowlist"
 title = "Issue an API key"
-
-[portal.home.quickActions.tryOp]
-blurb = "Drop a sample, pick an op, see the JSON"
-title = "Try a PDF operation"
-
-[portal.home.regions]
-subtitle = "Real-time status for every deployed Stirling region."
-title = "Region health"
-
-[portal.home.regions.empty]
-description = "Once a region is deployed, its health appears here."
-title = "No regions yet"
 
 [portal.infrastructure]
 manageEditorDeployment = "Manage Editor deployment"
@@ -7209,51 +7142,6 @@ new_other = "{{count}} new"
 description = "No new notifications."
 title = "You're all caught up"
 
-[portal.opRunner]
-durationMs = "{{ms}} ms"
-featuredOps = "Featured ops"
-subtitle = "Drop a sample, pick an op, see what Stirling returns."
-title = "Try a PDF operation"
-
-[portal.opRunner.action]
-close = "Close"
-openBuilder = "Open the pipeline builder"
-run = "Run operation"
-runAgain = "Run again"
-running = "Running…"
-
-[portal.opRunner.drop]
-hint = "or use a sample document."
-pickAnother = "Pick another sample"
-replaceHint = "Drop again or pick another sample to replace."
-title = "Drop a PDF here"
-useSample = "Use a sample"
-
-[portal.opRunner.empty]
-description = "Once operations are published, they'll show up here."
-title = "No featured ops yet"
-
-[portal.opRunner.error]
-title = "The operation didn't complete"
-unknown = "Unknown error"
-
-[portal.opRunner.hint]
-aSample = "a sample"
-press = "Press"
-ready = "Ready"
-toInvoke = "to invoke"
-
-[portal.opRunner.hint.runOn]
-before = "Run"
-middle = "on"
-
-[portal.opRunner.running]
-title = "Running {{label}}…"
-
-[portal.opRunner.status]
-completed = "Completed"
-failed = "Failed"
-
 [portal.pipelines]
 subtitle = "Every automated document pipeline on the backend: an ordered chain of operations over a set of sources, run on a trigger. Click a row for its steps and sources."
 title = "Pipelines"
@@ -7512,9 +7400,6 @@ soon = "Soon"
 
 [portal.processingStatus]
 managePlan = "Manage plan"
-pdfsThisMonth = "PDFs this month"
-progressLabel = "{{used}} of {{cap}} PDFs used this month"
-upgrade = "Upgrade"
 volumeSuffix = "PDFs processed · last 30 days"
 
 [portal.procurement]
@@ -7883,8 +7768,8 @@ appEditor = "Editor"
 appProcessor = "Processor"
 brandSuffix = "Stirling Processor"
 docsCount = "{{docs}} docs"
-docsProcessed = "Docs processed"
 linkAccount = "Link Stirling account"
+planEditor = "Editor plan"
 planEnterprise = "Enterprise plan"
 planProcessor = "Processor plan"
 primaryNav = "Primary navigation"
@@ -7991,40 +7876,6 @@ walletUnavailable = "Wallet unavailable: {{status}} {{statusText}}"
 action = "Sign in again"
 body = "Your Stirling account session has expired. Sign in again to view billing — your instance stays linked."
 title = "Session expired"
-
-[portal.usageChart]
-defaultLabel = "Docs processed · last 30 days"
-delta = "{{pct}}% vs prior 30d"
-docsValue = "{{value}} docs"
-srAnnounce = "{{date}}: {{value}} docs"
-
-[portal.useCases]
-title = "Popular use cases"
-viewAll = "View all pipelines"
-
-[portal.useCases.items.authenticity]
-blurb = "Cryptographic checks at the document boundary — signature validation, tamper detection, signing flows for outbound documents. Trust decisions in the pipeline, not your app code."
-cta = "Try authenticity check"
-eyebrow = "AUTHENTICITY"
-title = "Verify signatures and detect tampering"
-
-[portal.useCases.items.autoRouting]
-blurb = "One classifier reads what arrived — KYC form, invoice, contract, COI — and routes to the right downstream pipeline. No manual triage, no docs in the wrong workflow."
-cta = "Build a classifier pipeline"
-eyebrow = "AUTO-ROUTING"
-title = "Auto-classify and route incoming documents"
-
-[portal.useCases.items.piiRedaction]
-blurb = "Strip sensitive fields before storage, indexing, or LLM processing. Schema-aware, per-field audit, BYOK or HYOK keys. Compliance at the document boundary, not per pipeline."
-cta = "See redaction pipelines"
-eyebrow = "PII REDACTION"
-title = "Redact PII before it leaves your stack"
-
-[portal.useCases.items.trainingData]
-blurb = "Batch-import an archive, redact PII, classify, chunk, and emit ready-to-load JSON for fine-tuning, eval sets, or RAG. Self-completing and replayable."
-cta = "Build a training-data pipeline"
-eyebrow = "TRAINING DATA"
-title = "Turn PDFs into training data"
 
 [portal.users]
 subtitle = "The people in your organization and the access they hold — roles, status and security controls."
