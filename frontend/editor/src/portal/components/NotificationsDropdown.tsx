@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Dropdown, EmptyState, Skeleton } from "@app/ui";
+import { ActionIcon, Button, Dropdown, EmptyState, Skeleton } from "@app/ui";
 import { BellIcon } from "@portal/components/icons";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {
@@ -45,8 +45,9 @@ export function NotificationsDropdown() {
   return (
     <Dropdown.Root align="end">
       <Dropdown.Trigger>
-        <button
+        <ActionIcon
           type="button"
+          variant="quiet"
           className="portal-header__icon-btn portal-header__icon-btn--badge"
           aria-label={
             hasUnread
@@ -60,7 +61,7 @@ export function NotificationsDropdown() {
           {hasUnread && (
             <span className="portal-header__bell-dot" aria-hidden />
           )}
-        </button>
+        </ActionIcon>
       </Dropdown.Trigger>
       <Dropdown.Menu width="22.5rem" className="portal-notif__menu">
         <div className="portal-notif__header">
@@ -115,17 +116,22 @@ export function NotificationsDropdown() {
           </ul>
         )}
         <div className="portal-notif__footer">
-          <button
+          <Button
             type="button"
+            variant="quiet"
             className="portal-notif__action"
             onClick={onMarkAllRead}
             disabled={!hasUnread}
           >
             {t("portal.notifications.markAllRead")}
-          </button>
-          <button type="button" className="portal-notif__action">
+          </Button>
+          <Button
+            type="button"
+            variant="quiet"
+            className="portal-notif__action"
+          >
             {t("portal.notifications.viewAll")}
-          </button>
+          </Button>
         </div>
       </Dropdown.Menu>
     </Dropdown.Root>

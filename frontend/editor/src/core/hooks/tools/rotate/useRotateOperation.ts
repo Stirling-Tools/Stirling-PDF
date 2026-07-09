@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
-  ToolType,
+  defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
   objectToFormData,
@@ -43,15 +43,14 @@ export const buildRotateFormData = (
   objectToFormData(rotateToApiParams(parameters), { fileInput: file });
 
 // Static configuration object
-export const rotateOperationConfig = {
-  toolType: ToolType.singleFile,
+export const rotateOperationConfig = defineSingleFileTool({
   buildFormData: buildRotateFormData,
   toApiParams: rotateToApiParams,
   fromApiParams: rotateFromApiParams,
   operationType: "rotate",
   endpoint: ENDPOINT,
   defaultParameters,
-} as const;
+});
 
 export const useRotateOperation = () => {
   const { t } = useTranslation();

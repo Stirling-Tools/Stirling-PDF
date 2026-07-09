@@ -1,13 +1,7 @@
 import React, { useState, useCallback, useRef, useMemo } from "react";
-import {
-  Text,
-  Modal,
-  Button,
-  Group,
-  Stack,
-  ActionIcon,
-  Tooltip,
-} from "@mantine/core";
+import { Text, Modal, Group, Loader, Stack, Tooltip } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { Button } from "@app/ui/Button";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { alert } from "@app/components/toast";
 import { useTranslation } from "react-i18next";
@@ -22,11 +16,17 @@ import HistoryIcon from "@mui/icons-material/History";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
+import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import {
   draggable,
   dropTargetForElements,
 } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { StirlingFileStub } from "@app/types/fileContext";
+import {
+  PolicyBadges,
+  type FileItemPolicyRef,
+} from "@app/components/shared/PolicyBadges";
+import { PolicyEnforcingOverlay } from "@app/components/shared/PolicyEnforcingOverlay";
 import { zipFileService } from "@app/services/zipFileService";
 
 import styles from "@app/components/fileEditor/FileEditorThumbnail.module.css";
@@ -63,6 +63,7 @@ interface FileEditorThumbnailProps {
   onUnzipFile?: (fileId: FileId) => void;
   toolMode?: boolean;
   isSupported?: boolean;
+  policies?: FileItemPolicyRef[];
 }
 
 const FileEditorThumbnail = ({
@@ -73,6 +74,7 @@ const FileEditorThumbnail = ({
   onDownloadFile,
   onUnzipFile,
   isSupported = true,
+  policies = [],
 }: FileEditorThumbnailProps) => {
   const { t } = useTranslation();
   const { config } = useAppConfig();
@@ -292,8 +294,28 @@ const FileEditorThumbnail = ({
 
   const [showVersionHistory, setShowVersionHistory] = useState(false);
 
-  const hoverActions = useMemo<HoverAction[]>(
-    () => [
+  const policyEnforcing = policies.some((p) => p.enforcing);
+
+  const hoverActions = useMemo<HoverAction[]>(() => {
+    const uploadLabel = isUploaded
+      ? t("fileManager.updateOnServer", "Update on Server")
+      : t("fileManager.uploadToServer", "Upload to Server");
+    const enforcingTooltip = (action: string): React.ReactNode => (
+      <Stack gap={4} py={2} w={180}>
+        <Group gap={6} wrap="nowrap">
+          <ShieldOutlinedIcon style={{ fontSize: 13 }} />
+          <Text size="xs" fw={600}>
+            {t(
+              "policy.blockingAction",
+              "{{action}} blocked while enforcing policy, please wait...",
+              { action },
+            )}
+          </Text>
+        </Group>
+        <Loader size="xs" />
+      </Stack>
+    );
+    return [
       {
         id: "view",
         icon: <VisibilityIcon style={{ fontSize: 20 }} />,
@@ -337,6 +359,10 @@ const FileEditorThumbnail = ({
         id: "download",
         icon: <DownloadOutlinedIcon style={{ fontSize: 20 }} />,
         label: terminology.download,
+        disabled: policyEnforcing,
+        tooltip: policyEnforcing
+          ? enforcingTooltip(terminology.download)
+          : undefined,
         onClick: (e) => {
           e.stopPropagation();
           onDownloadFile(file.id);
@@ -347,9 +373,11 @@ const FileEditorThumbnail = ({
             {
               id: "upload",
               icon: <CloudUploadIcon style={{ fontSize: 20 }} />,
-              label: isUploaded
-                ? t("fileManager.updateOnServer", "Update on Server")
-                : t("fileManager.uploadToServer", "Upload to Server"),
+              label: uploadLabel,
+              disabled: policyEnforcing,
+              tooltip: policyEnforcing
+                ? enforcingTooltip(uploadLabel)
+                : undefined,
               onClick: (e: React.MouseEvent) => {
                 e.stopPropagation();
                 setShowUploadModal(true);
@@ -363,6 +391,10 @@ const FileEditorThumbnail = ({
               id: "share",
               icon: <LinkIcon style={{ fontSize: 20 }} />,
               label: t("fileManager.share", "Share"),
+              disabled: policyEnforcing,
+              tooltip: policyEnforcing
+                ? enforcingTooltip(t("fileManager.share", "Share"))
+                : undefined,
               onClick: (e: React.MouseEvent) => {
                 e.stopPropagation();
                 setShowShareModal(true);
@@ -408,30 +440,30 @@ const FileEditorThumbnail = ({
         },
         color: "red",
       },
-    ],
-    [
-      t,
-      file.id,
-      file.name,
-      file.versionNumber,
-      isZipFile,
-      isCBZ,
-      isCBR,
-      isPinned,
-      actualFile,
-      terminology,
-      DownloadOutlinedIcon,
-      onViewFile,
-      onDownloadFile,
-      onUnzipFile,
-      handleCloseWithConfirmation,
-      canUpload,
-      canShare,
-      isUploaded,
-      pinFile,
-      unpinFile,
-    ],
-  );
+    ];
+  }, [
+    t,
+    file.id,
+    file.name,
+    file.versionNumber,
+    isZipFile,
+    isCBZ,
+    isCBR,
+    isPinned,
+    actualFile,
+    terminology,
+    DownloadOutlinedIcon,
+    onViewFile,
+    onDownloadFile,
+    onUnzipFile,
+    handleCloseWithConfirmation,
+    policyEnforcing,
+    canUpload,
+    canShare,
+    isUploaded,
+    pinFile,
+    unpinFile,
+  ]);
 
   const handleCardClick = () => {
     if (!isSupported) return;
@@ -503,6 +535,9 @@ const FileEditorThumbnail = ({
                 </div>
               )}
 
+              {/* Policy enforcement overlay — shown while any policy is in-flight */}
+              <PolicyEnforcingOverlay enforcing={policyEnforcing} zIndex={2} />
+
               {/* Thumbnail image or loading state */}
               <DocumentThumbnail
                 file={file}
@@ -545,9 +580,12 @@ const FileEditorThumbnail = ({
                     )}
                   >
                     <ActionIcon
-                      size="xs"
-                      variant="filled"
-                      color="yellow"
+                      size="sm"
+                      accent="warning"
+                      aria-label={t(
+                        "encryptedPdfUnlock.unlockPrompt",
+                        "Unlock PDF to continue",
+                      )}
                       onClick={(e) => {
                         e.stopPropagation();
                         openEncryptedUnlockPrompt(file.id);
@@ -583,7 +621,10 @@ const FileEditorThumbnail = ({
       {/* File name + meta */}
       <div className={styles.fileText}>
         <p className={styles.fileName}>
-          <PrivateContent>{truncateCenter(file.name, 40)}</PrivateContent>
+          <span className={styles.fileNameText}>
+            <PrivateContent>{truncateCenter(file.name, 40)}</PrivateContent>
+          </span>
+          <PolicyBadges policies={policies} className={styles.fileNameBadges} />
         </p>
         <p className={styles.fileMeta}>{metaLine}</p>
       </div>
@@ -606,17 +647,13 @@ const FileEditorThumbnail = ({
                 <PrivateContent>{file.name}</PrivateContent>
               </Text>
               <Group justify="flex-end" gap="sm">
-                <Button variant="light" onClick={handleCancelClose}>
+                <Button variant="secondary" onClick={handleCancelClose}>
                   {t("confirmCloseCancel", "Cancel")}
                 </Button>
-                <Button
-                  variant="filled"
-                  color="red"
-                  onClick={handleConfirmClose}
-                >
+                <Button accent="danger" onClick={handleConfirmClose}>
                   {t("confirmCloseDiscard", "Discard changes and close")}
                 </Button>
-                <Button variant="filled" onClick={handleSaveAndClose}>
+                <Button onClick={handleSaveAndClose}>
                   {t("confirmCloseSave", "Save and close")}
                 </Button>
               </Group>
@@ -633,14 +670,10 @@ const FileEditorThumbnail = ({
                 <PrivateContent>{file.name}</PrivateContent>
               </Text>
               <Group justify="flex-end" gap="sm">
-                <Button variant="light" onClick={handleCancelClose}>
+                <Button variant="secondary" onClick={handleCancelClose}>
                   {t("confirmCloseCancel", "Cancel")}
                 </Button>
-                <Button
-                  variant="filled"
-                  color="red"
-                  onClick={handleConfirmClose}
-                >
+                <Button accent="danger" onClick={handleConfirmClose}>
                   {t("confirmCloseConfirm", "Close File")}
                 </Button>
               </Group>

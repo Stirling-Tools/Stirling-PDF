@@ -8,7 +8,7 @@
 
 import React from "react";
 import { TourProvider, useTour, type StepType } from "@reactour/tour";
-import { CloseButton, ActionIcon } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CheckIcon from "@mui/icons-material/Check";
@@ -137,7 +137,7 @@ export default function OnboardingTour({
                 setIsOpen,
               })
             }
-            variant="subtle"
+            variant="tertiary"
             size="lg"
             aria-label={
               isLast
@@ -151,11 +151,15 @@ export default function OnboardingTour({
       }}
       components={{
         Close: ({ onClick }) => (
-          <CloseButton
+          <ActionIcon
             onClick={onClick}
+            variant="tertiary"
             size="md"
+            aria-label={t("onboarding.close", "Close")}
             style={{ position: "absolute", top: "8px", right: "8px" }}
-          />
+          >
+            &times;
+          </ActionIcon>
         ),
         Content: ({ content }: { content: string }) => (
           <div
