@@ -1,3 +1,4 @@
+// One-line edit to demonstrate the storybook-preview workflow detects edits, not just adds.
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Chip } from "@app/ui/Chip";
 
