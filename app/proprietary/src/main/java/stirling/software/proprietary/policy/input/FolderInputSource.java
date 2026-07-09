@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -73,8 +74,11 @@ public class FolderInputSource implements InputSource {
         FolderConfig config = FolderConfig.from(spec.options());
         Path inputDir = accessGuard.requirePermitted(config.directory());
         if (!Files.isDirectory(inputDir)) {
-            log.debug("Folder input dir does not exist: {}", inputDir);
-            return List.of();
+            // Fail rather than return empty: an unmounted drive must read as "could not list",
+            // which vetoes the sweep's presence cleanup, not as "verifiably no files", which
+            // would wipe the policy's history and reprocess everything on remount.
+            throw new NoSuchFileException(
+                    inputDir.toString(), null, "input directory does not exist");
         }
         Path canonicalDir = FolderIdentities.canonicalDir(inputDir);
         List<Path> present = listFiles(inputDir, config.recursive());

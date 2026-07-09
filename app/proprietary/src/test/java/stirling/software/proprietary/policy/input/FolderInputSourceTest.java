@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
@@ -265,10 +266,13 @@ class FolderInputSourceTest {
     }
 
     @Test
-    void nonexistentDirectoryYieldsNoWork() throws IOException {
-        List<ResolvedInput> work =
-                source.resolve(InputSpec.folder(tempDir.resolve("nope").toString()), ctx);
-        assertTrue(work.isEmpty());
+    void nonexistentDirectoryFailsResolveSoTheSweepVetoesCleanup() {
+        // An unreachable directory (e.g. unmounted drive) must surface as a failed listing, not
+        // an empty one: the runner vetoes presence cleanup on failure, keeping the history that
+        // an empty listing would wipe.
+        assertThrows(
+                NoSuchFileException.class,
+                () -> source.resolve(InputSpec.folder(tempDir.resolve("nope").toString()), ctx));
     }
 
     @Test
