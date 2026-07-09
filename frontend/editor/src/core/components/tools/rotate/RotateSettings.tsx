@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
-import { Stack, Text, Box, ActionIcon, Group, Center } from "@mantine/core";
+import { Stack, Text, Box, Group, Center } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import RotateLeftIcon from "@mui/icons-material/RotateLeft";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
@@ -94,8 +95,8 @@ const RotateSettings = ({
       {/* Rotation Controls */}
       <Group justify="center" gap="lg">
         <ActionIcon
-          size="xl"
-          variant="outline"
+          size="lg"
+          variant="secondary"
           onClick={parameters.rotateAnticlockwise}
           disabled={disabled}
           aria-label={t("rotate.rotateLeft", "Rotate Anticlockwise")}
@@ -105,8 +106,8 @@ const RotateSettings = ({
         </ActionIcon>
 
         <ActionIcon
-          size="xl"
-          variant="outline"
+          size="lg"
+          variant="secondary"
           onClick={parameters.rotateClockwise}
           disabled={disabled}
           aria-label={t("rotate.rotateRight", "Rotate Clockwise")}

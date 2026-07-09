@@ -9,6 +9,15 @@ export const USD = new Intl.NumberFormat(undefined, {
   maximumFractionDigits: 0,
 });
 
+/** Format a minor-unit (cents) amount in the given currency, whole units (no decimals). */
+export function money(minor: number, currency: string): string {
+  return new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency: currency || "USD",
+    maximumFractionDigits: 0,
+  }).format(minor / 100);
+}
+
 /** Document status → badge tone. Action items lean amber to pull the eye. */
 export const STATUS_TONE: Record<DocStatus, StatusTone> = {
   available: "success",

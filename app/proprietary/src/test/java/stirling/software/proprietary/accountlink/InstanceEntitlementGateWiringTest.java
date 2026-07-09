@@ -19,6 +19,7 @@ class InstanceEntitlementGateWiringTest {
     private AccountLinkProperties properties;
     private DeviceCredentialStore store;
     private EntitlementCache cache;
+    private LocalUsageService localUsage;
     private InstanceEntitlementGate gate;
 
     @BeforeEach
@@ -27,7 +28,14 @@ class InstanceEntitlementGateWiringTest {
         properties.setEnabled(true);
         store = mock(DeviceCredentialStore.class);
         cache = mock(EntitlementCache.class);
-        gate = new InstanceEntitlementGate(properties, store, cache);
+        localUsage = mock(LocalUsageService.class);
+        gate =
+                new InstanceEntitlementGate(
+                        properties,
+                        store,
+                        cache,
+                        mock(AccountLinkSyncStateRepository.class),
+                        localUsage);
     }
 
     @Test
@@ -55,6 +63,10 @@ class InstanceEntitlementGateWiringTest {
                 .thenReturn(
                         Optional.of(
                                 new InstanceEntitlement(false, 5, 0, null, EntitlementState.OK)));
+        // Unsubscribed → the gate reads local unsynced usage to deplete the grant in real time;
+        // nothing pending here, so the 5 free units still allow the request.
+        when(localUsage.currentPeriodUnsynced())
+                .thenReturn(new LocalUsageService.LocalUsage(null, 0, 0, 0, 0));
         GateDecision d = gate.evaluate(true);
         assertTrue(d.allowed());
         assertEquals(GateDecision.Reason.ENTITLED, d.reason());

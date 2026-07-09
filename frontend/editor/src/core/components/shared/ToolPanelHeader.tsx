@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ActionIcon } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import CloseIcon from "@mui/icons-material/Close";
 import "@app/components/shared/ToolPanelHeader.css";
 
@@ -38,12 +38,12 @@ export function ToolPanelHeader({
       {onClose && (
         <ActionIcon
           className="sui-panelhdr__close"
-          variant="subtle"
-          color="gray"
-          radius="xl"
+          variant="tertiary"
+          accent="neutral"
+          shape="circle"
           size="md"
           onClick={onClose}
-          aria-label={closeLabel}
+          aria-label={closeLabel ?? ""}
         >
           <CloseIcon sx={{ fontSize: 18 }} />
         </ActionIcon>

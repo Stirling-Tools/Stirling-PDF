@@ -7,6 +7,7 @@ black = "Black"
 blue = "Blue"
 cancel = "Cancel"
 chooseFile = "Choose File"
+clear = "Clear"
 close = "Close"
 comingSoon = "Coming soon"
 confirm = "Confirm"
@@ -87,6 +88,7 @@ processingCompleteMultiple = "{{count}} files are ready."
 property = "Property"
 quickPosition = "Quick Position"
 red = "Red"
+remove = "Remove"
 reset = "Reset"
 review = "Review"
 save = "Save"
@@ -180,6 +182,7 @@ addMoreFiles = "Add more files..."
 attachments = "Select Attachments"
 info = "Select files to attach to your PDF. These files will be embedded and accessible through the PDF's attachment panel."
 placeholder = "Choose files..."
+removeFile = "Remove file"
 selectedFiles = "Selected Files"
 submit = "Add Attachments"
 
@@ -1628,6 +1631,9 @@ title = "Do you want to help make Stirling PDF better?"
 tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
 
 [annotation]
+alignCenter = "Align center"
+alignLeft = "Align left"
+alignRight = "Align right"
 annotationStyle = "Annotation style"
 backgroundColor = "Background color"
 borderOff = "Border: Off"
@@ -2531,6 +2537,7 @@ title = "Rule of thumb"
 
 [certSign.source]
 device = "This device"
+noOtherSources = "No other certificate sources are available."
 server = "Server"
 stepTitle = "Certificate source"
 upload = "Upload"
@@ -3595,7 +3602,9 @@ makeCopy = "Make a copy"
 mobileShort = "Mobile"
 mobileUpload = "Mobile Upload"
 mobileUploadNotAvailable = "Mobile upload not enabled"
+moreOptions = "More options"
 myFiles = "My Files"
+nextFile = "Next file"
 noFiles = "No files available"
 noFilesFound = "No files found matching your search"
 noRecentFiles = "No recent files found"
@@ -3605,6 +3614,7 @@ openInFileEditor = "Open in File Editor"
 openInPageEditor = "Open in Page Editor"
 owner = "Owner"
 ownerUnknown = "Unknown"
+previousFile = "Previous file"
 recent = "Recent"
 removeBoth = "Remove from both"
 removeFilePrompt = "This file is saved on this device and on your server. Where would you like to remove it from?"
@@ -4614,10 +4624,10 @@ welcomeTitle = "You've been invited!"
 [landing]
 addFiles = "Add Files"
 heroSubtitle = "Drop in or add an existing PDF to get started."
-heroTitle = "Stirling PDF"
 mobileUpload = "Upload from Mobile"
 openFromComputer = "Open from computer"
 uploadFromComputer = "Upload from computer"
+workbenchEmptyStateHero = "Drop a PDF anywhere"
 
 [language]
 direction = "ltr"
@@ -4930,6 +4940,7 @@ title = "Output"
 [onboarding]
 activeFiles = "The <strong>Active Files</strong> view shows all of the PDFs you have loaded into the tool, and allows you to select which ones to process."
 allTools = "This is the <strong>Tools</strong> panel, where you can browse and select from all available PDF tools."
+close = "Close"
 cropSettings = "Now that we've selected the file we want crop, we can configure the Crop tool to choose the area that we want to crop the PDF to."
 fileCheckbox = "Clicking one of the files selects it for processing. You can select multiple files for batch operations."
 fileReplacement = "The modified file will replace the original file in the Workbench automatically, allowing you to easily run it through more tools."
@@ -4955,6 +4966,7 @@ skipTheTour = "Skip the tour"
 
 [onboarding.desktopInstall]
 body = "Stirling works best as a desktop app. You can use it offline, access documents faster, and make edits locally on your computer."
+selectOs = "Select operating system"
 title = "Download"
 titleWithOs = "Download for {{osLabel}}"
 
@@ -5566,7 +5578,9 @@ viewLabel = "PDF Editor"
 
 [pdfTextEditor.actions]
 applyChanges = "Apply Changes"
+clearText = "Clear text"
 downloadCopy = "Download Copy"
+moreOptions = "More options"
 reset = "Reset Changes"
 
 [pdfTextEditor.badges]
@@ -6048,6 +6062,17 @@ stepOf = "Step {{step}} of {{total}}"
 toolChainDesc = "Configure the tools this policy runs on each document."
 typesSelected = "{{count}} types selected"
 
+[policy]
+badgeEnforcing = "{{name}} enforcing..."
+badgeRan = "{{name}} policy ran on this file"
+blockingAction = "{{action}} blocked while enforcing policy, please wait..."
+dismiss = "Dismiss overlay"
+enforcingTitle = "Enforcing policy..."
+viewAnyway = "View file (policy still enforcing)"
+
+[portal]
+comingSoon = "Coming soon"
+
 [portal.accountLink.card]
 billingNote = "Unattended processing bills against your org wallet."
 eyebrow = "Account link"
@@ -6229,8 +6254,18 @@ noClientSecret = "Edge function returned no client_secret."
 subtitle = "Add a card to keep going past your free Editor-plan grant. Stripe handles the rest."
 title = "Turn on the Processor plan"
 
+[portal.billing.checkout.activationSlow]
+body = "Your payment succeeded, but activation is taking a little longer than usual. It'll switch on automatically - close this and it'll appear here shortly."
+close = "Close"
+title = "Almost there"
+
 [portal.billing.checkout.error]
 title = "Couldn't start checkout"
+
+[portal.billing.checkout.finalizing]
+body = "Your payment went through. We're switching on metered processing across your linked instances - this usually takes a few seconds."
+hint = "Please keep this window open."
+title = "Activating your Processor plan..."
 
 [portal.billing.checkout.notConfigured]
 bodyAfter = "in the portal env to enable in-app checkout."
@@ -6249,7 +6284,6 @@ cost = "Cost"
 editorsDeployed = "Editors deployed"
 inviteTeammates = "Invite teammates"
 pdfsEdited = "PDFs edited"
-previewBadge = "Preview · sample data"
 subtitle = "Deploy anywhere, for your whole team."
 title = "Free PDF Editors"
 
@@ -6545,7 +6579,9 @@ beforeHelper = "header against your signing secret before trusting a payload. SD
 beforeSignature = "Verify the"
 
 [portal.documents]
-subtitle = "Review and approve documents moving through your pipelines."
+exportCsv = "Export CSV"
+search = "Search by filename, ID..."
+subtitle = "Every document your org has processed, with its full processing record. Content access is request-gated."
 title = "Documents"
 
 [portal.documents.audit]
@@ -6583,42 +6619,38 @@ value = "Value"
 
 [portal.documents.filters]
 all = "All"
-archived = "Archived"
 ariaLabel = "Filter documents by status"
-needsReview = "Needs review"
+flagged = "Flagged"
+inReview = "In review"
 processed = "Processed"
 
 [portal.documents.overview]
-confidence = "Confidence"
-fieldsExtracted = "Fields extracted"
-received = "Received"
-source = "Source"
+action = "Pipeline / Action"
+product = "Product"
+received = "Time"
 status = "Status"
 type = "Type"
+user = "User"
 
 [portal.documents.queue.empty]
 description = "As sources feed documents into your pipelines they'll appear here for review."
 title = "No documents in the queue"
 
-[portal.documents.summary]
-avgConfidence = "Avg confidence"
-inQueue = "In queue"
-needsReview = "Needs review"
-processedToday = "Processed today"
-
 [portal.documents.table]
+auto = "Auto"
+editorAction = "Editor"
 empty = "No documents match this filter."
+rowActions = "Row actions"
 sensitiveLabel = "Sensitive"
 sensitiveTitle = "Sensitive — access required"
 
 [portal.documents.table.columns]
-confidence = "Confidence"
-fields = "Fields"
-name = "Name"
-source = "Source"
+action = "Pipeline / Action"
+document = "Document"
+product = "Product"
 status = "Status"
 time = "Time"
-type = "Type"
+user = "User"
 
 [portal.editorAdmin]
 subtitle = "Deploy the Stirling PDF Editor, pair self-hosted instances to your org, and operate the running fleet — targets, health, credentials, and offline activation in one place."
@@ -6715,6 +6747,23 @@ ready = "Ready to deploy"
 description = "Once documents are processed, your 30-day usage appears here."
 title = "No usage yet"
 
+[portal.home.editor]
+activeUsers = "{{n}} active"
+invite = "Invite teammates"
+name = "Stirling PDF Editor"
+open = "Open in browser"
+updated = "updated {{time}}"
+
+[portal.home.editor.target]
+cloud = "Managed Cloud"
+docker = "Self-hosted · Docker"
+kubernetes = "Self-hosted · Kubernetes"
+
+[portal.home.greeting]
+afternoon = "Good afternoon"
+evening = "Good evening"
+morning = "Good morning"
+
 [portal.home.kpis.enterprise]
 docs30d = "Docs / 30d"
 evalPassRate = "Eval pass rate"
@@ -6735,15 +6784,31 @@ evalPassRate = "Eval pass rate"
 pipelines = "Pipelines"
 
 [portal.home.onboarding]
-progress = "{{done}} / {{total}} done"
-runAgain = "Run again"
-start = "Start"
-subtitle = "Four steps to a production-shaped Stirling project."
-title = "Get to value"
+dismiss = "Dismiss setup"
+notStarted = "Not started"
+progress = "{{done}} of {{total}} done"
+title = "Finish setting up"
 
-[portal.home.onboarding.empty]
-description = "Onboarding tasks will appear here once your workspace is set up."
-title = "No onboarding steps yet"
+[portal.home.onboarding.enterprise]
+body = "Org-wide SSO + SCIM + RBAC, committed volume pricing, and air-gapped deployment."
+cta = "Start Trial"
+ctaQuote = "Get Quote"
+lead = "For 250+ employees."
+tag = "Enterprise"
+
+[portal.home.onboarding.steps.editor]
+blurb = "Deploy the desktop app, free forever."
+title = "Download the PDF Editor"
+
+[portal.home.onboarding.steps.policies]
+blurb = "{{active}} active · {{recommended}} recommended"
+chip = "{{active}} active"
+title = "Turn on policies"
+
+[portal.home.onboarding.steps.sources]
+blurb = "{{connected}} connected · every PDF governed where it lands"
+chip = "{{connected}} connected"
+title = "Connect your sources"
 
 [portal.home.productGrid]
 ariaLabel = "Process PDFs at scale"
@@ -6830,12 +6895,31 @@ actor = "Actor"
 event = "Event"
 latency = "Latency"
 status = "Status"
-target = "Target"
+target = "Resource"
 timestamp = "Timestamp"
 
 [portal.infrastructure.audit.empty]
 description = "Workspace activity will appear here as it happens."
 title = "No audit events"
+
+[portal.infrastructure.audit.export]
+cancel = "Cancel"
+error = "Export failed. Please try again."
+exportButton = "Export"
+exporting = "Exporting…"
+fieldsLegend = "Columns"
+format = "Format"
+open = "Export"
+subtitle = "Download audit events as CSV or JSON. Choose which columns to include."
+title = "Export audit log"
+
+[portal.infrastructure.audit.export.fields]
+date = "Date"
+documentName = "Document name"
+ipAddress = "IP address"
+outcome = "Outcome"
+tool = "Tool"
+username = "Username"
 
 [portal.infrastructure.audit.filters]
 all = "All"
@@ -6844,6 +6928,10 @@ config = "Config"
 elevation = "Elevation"
 processing = "Processing"
 security = "Security"
+
+[portal.infrastructure.audit.forbidden]
+description = "The audit log is available to team leads and admins. Ask your team lead or an admin for access."
+title = "You don't have access"
 
 [portal.infrastructure.audit.metrics]
 config = "Config"
@@ -7173,18 +7261,39 @@ title = "Pipelines"
 [portal.pipelines.actions]
 newPipeline = "New pipeline"
 
+[portal.pipelines.builder]
+addStep = "Add tool"
+back = "Back to pipelines"
+discard = "Discard changes"
+enabled = "Enabled"
+keepEditing = "Keep editing"
+needsUpload = "Needs an uploaded file"
+noToolMatches = "No tools match your search."
+pipelineSettings = "Pipeline settings"
+searchTools = "Search tools"
+selectToolBody = "Add a tool to build your pipeline."
+selectToolTitle = "No tools yet"
+toolSettings = "Tool settings"
+unknownStep = "Unrecognized operation, kept as-is."
+unsavedBody = "You have unsaved changes. Save them before leaving, or discard them?"
+unsavedTitle = "Unsaved changes"
+uploadUnsupported = "Uploaded files aren't supported in pipelines yet, so these steps can't be saved: {{tools}}."
+usesDefaults = "Runs with default settings"
+
 [portal.pipelines.composer]
+addTool = "Add tool"
 cancel = "Cancel"
-chainEmpty = "Add operations from the palette below."
+chainEmpty = "Add a tool to start building your pipeline."
 create = "Create pipeline"
 directory = "Output folder"
 directoryHelp = "Absolute path on the server. Must be within the configured allowed folders."
-editTitle = "Edit pipeline"
+editingUnsupported = "Displaying these tool params for editing is not supported yet."
 moveDown = "Move down"
 moveUp = "Move up"
 name = "Name"
 namePlaceholder = "e.g. Redaction sweep"
 noSources = "No sources connected yet. The pipeline can still run on files supplied to it directly."
+noToolSettings = "This tool has no configurable settings."
 operations_one = "Operation ({{count}})"
 operations_other = "Operations ({{count}})"
 output = "Output"
@@ -7193,8 +7302,6 @@ save = "Save changes"
 scheduleEvery = "Run every"
 sources = "Sources"
 sourcesLoading = "Loading sources..."
-subtitle = "Pick the sources it runs over, chain the operations, then choose when it runs and where output goes."
-title = "New pipeline"
 trigger = "Trigger"
 triggerManual = "Manual only"
 
@@ -7210,18 +7317,8 @@ confirm = "Delete"
 title = "Delete pipeline?"
 
 [portal.pipelines.detail]
-closeAriaLabel = "Close detail"
 delete = "Delete pipeline"
-edit = "Edit"
-noSources = "No sources. Files are supplied directly to each run."
-noSteps = "No operations configured."
-output = "Output"
-pause = "Pause"
-resume = "Resume"
 run = "Run now"
-sources = "Sources"
-steps = "Operations"
-subtitle = "{{trigger}} · {{status}}"
 
 [portal.pipelines.empty]
 action = "Create a pipeline"
@@ -7243,6 +7340,7 @@ completed_other = "All {{count}} runs completed."
 empty = "Nothing to run: the sources had no documents to process."
 failed = "Run failed: {{error}}"
 running = "Run started; still in progress."
+timeout = "Run is taking longer than expected; it may still finish in the background."
 
 [portal.pipelines.status]
 active = "Active"
@@ -7420,7 +7518,7 @@ upgrade = "Upgrade"
 volumeSuffix = "PDFs processed · last 30 days"
 
 [portal.procurement]
-enterpriseBadge = "Enterprise"
+reset = "Reset procurement (demo)"
 subtitle = "Get your team evaluated, contracted, and onboarded. Every document in one place."
 title = "Procurement"
 
@@ -7430,6 +7528,65 @@ pay = "Pay now"
 request = "Request"
 sign = "Review & sign"
 upload = "Upload"
+
+[portal.procurement.agreement]
+agreeCta = "Agree & subscribe"
+confirm = "I have read and agree to the Stirling Enterprise Agreement."
+eyebrow = "Agreement"
+intro = "One combined agreement covers your deal: Master Service Agreement, Order Form, EULA, and Data Processing Agreement. Review it, then agree to accept the quote into a committed subscription."
+title = "Review your enterprise agreement"
+
+[portal.procurement.builder]
+addons = "Add-ons"
+back = "Back"
+businessName = "Business name"
+businessNamePlaceholder = "Your company"
+continue = "Continue"
+country = "Country"
+countryEuro = "Eurozone (EUR €)"
+countryUK = "United Kingdom (GBP £)"
+countryUS = "United States (USD $)"
+eula = "I have read and agree to the Stirling Enterprise EULA. It governs the agreement generated from this quote."
+generate = "Generate quote"
+included = "Included"
+indemnification = "IP indemnification"
+indemnificationSub = "We defend qualifying IP claims, per the EULA"
+offlineLicense = "Offline / air-gapped licence"
+offlineLicenseSub = "A downloadable licence file for an air-gapped self-hosted instance"
+qbr = "Quarterly business reviews"
+qbrSub = "Your SE reviews usage and roadmap each quarter"
+running = "{{annual}} / yr · {{years}}-yr {{tcv}}"
+s1Sub = "Your team, and the PDFs you expect to run each year."
+# Step 1 — volume
+s1Title = "How much will you process?"
+s2Sub = "Longer terms discount the rate; your service level sets support."
+# Step 2 — commitment & service
+s2Title = "Commitment and service"
+s3Sub = "For the quote and the agreement it generates."
+# Step 3 — details
+s3Title = "Your details"
+serviceLevel = "Service level"
+slDedicated = "Dedicated"
+slDedicatedSub = "4 business hours · dedicated account manager · +30%"
+slPriority = "Priority"
+slPrioritySub = "Same business day · named CSM · +15%"
+slStandard = "Standard"
+slStandardSub = "Next business day · shared CSM · included"
+stepOf = "Step {{n}} of {{total}}"
+term = "Term"
+termDiscount = "{{pct}}% multi-year commitment discount applied"
+title = "Build your quote"
+training = "Onboarding & training"
+trainingSub = "Live sessions to get your team running"
+users = "Total users"
+usersPlaceholder = "e.g. 250"
+volEstimated = "Estimated from {{count}} users (~2,000 PDFs each, including automation). Edit if you know better."
+volManual = "Using your figure. Re-estimate from your team size any time."
+volNoUsers = "Not sure? Enter your team size and we'll estimate it."
+volume = "Annual PDF volume"
+volumePlaceholder = "e.g. 1,000,000"
+years_one = "{{count}} year"
+years_other = "{{count}} years"
 
 [portal.procurement.docs]
 count_one = "{{count}} doc"
@@ -7446,6 +7603,30 @@ supportingTitle = "Supporting your evaluation"
 title = "Documents"
 upcoming = "Upcoming"
 
+[portal.procurement.error]
+title = "Something went wrong"
+
+[portal.procurement.hero]
+company = "Your enterprise deal"
+ctaAgreement = "Review & sign agreement"
+ctaLive = "You're live"
+ctaPayment = "Add payment"
+ctaQuote = "Review your quote"
+ctaTrial = "Build your quote"
+eyebrow = "Enterprise procurement"
+inviteTeammates = "Invite teammates"
+keyDocs = "Key documents"
+nextStep = "Next step: {{action}}"
+notStarted = "Not started"
+open = "Open procurement"
+scheduleCall = "Schedule a call"
+setup1Sub = "Invite your teammates"
+setup1Title = "Deploy the PDF Editor"
+setup2Sub = "Turn on processing across editors and other sources"
+setup2Title = "Connect the PDF Processor"
+setup3Sub = "Turn on Security, Compliance, Routing, or Retention when you need them"
+setup3Title = "Add recommended policies"
+
 [portal.procurement.journey]
 daysLeft_one = "{{count}} day left"
 daysLeft_other = "{{count}} days left"
@@ -7457,15 +7638,47 @@ subtitle = "Your solutions engineer is on every step. One next action at a time;
 title = "From trial to live, one guided path"
 trialTitle = "Enterprise trial"
 
+[portal.procurement.license]
+copied = "Copied"
+copy = "Copy key"
+downloadError = "Could not generate the offline licence file just yet — please try again in a moment."
+downloadOffline = "Download offline licence (.lic)"
+hint = "Paste this key into a self-hosted instance to activate it, or keep it for your records. Keep it safe."
+label = "Your licence key"
+
+[portal.procurement.link]
+cta = "Link account"
+description = "Procurement runs on your linked Stirling account: it's how we provision the trial, price your quote, and start billing. Link an account to start."
+eyebrow = "Enterprise"
+title = "Link your account to begin"
+
+[portal.procurement.live]
+description = "Your subscription is active and your licence is issued. Your team is provisioned and billing has started."
+eyebrow = "Live"
+title = "You're live on Stirling Enterprise"
+
 [portal.procurement.locked]
 description = "Trial keys, committed-volume quotes, the one-signature agreement, payment, and your document ledger all live here once you start an enterprise evaluation."
 eyebrow = "Enterprise only"
 talkToSales = "Talk to sales"
 title = "The procurement track opens with Enterprise"
 
+[portal.procurement.milestone]
+accept = "Accept & continue"
+description = "Download the PDF to share it with your team, come back to accept when you're ready, or make changes."
+download = "Download PDF"
+downloadError = "Could not download the quote PDF just yet — please try again in a moment."
+edit = "Edit quote"
+eyebrow = "Quote {{number}}"
+perYear = " / yr"
+preparedFor = "Prepared for {{company}}"
+tcv = "{{value}} total contract value"
+title = "Your quote is ready"
+
 [portal.procurement.modal]
 cancel = "Cancel"
 chooseFile = "Choose file"
+close = "Close"
 downloadBody = "Your download will begin shortly."
 downloadCta = "Download"
 downloadTitle = "Download"
@@ -7484,12 +7697,40 @@ uploadBody = "Send us your PO and we invoice against it on your terms. Drag in t
 uploadCta = "Upload purchase order"
 uploadTitle = "Upload your purchase order"
 
+[portal.procurement.payment]
+description = "Your quote is accepted and your licence is already active — your team can start right away. Pay the first invoice when you're ready; you can pay or download it here, no email needed."
+downloadInvoice = "Download invoice"
+simulate = "Simulate payment received (demo)"
+title = "Subscription created"
+viewInvoice = "View & pay invoice"
+
+[portal.procurement.schedule]
+fallback = "Couldn't load the scheduler."
+fallbackLink = "Open scheduling in a new tab"
+subtitle = "Your solutions engineer will walk your team through the rollout. Pick a time that suits you."
+title = "Schedule a call"
+
 [portal.procurement.status]
 action = "Action needed"
 available = "Available"
 complete = "Complete"
 pending = "Pending"
 request = "On request"
+
+[portal.procurement.trial]
+body = "Extending adds 7 days and notifies your solutions engineer."
+bodyMaxed = "You have used all your extensions — talk to your solutions engineer if you need more time."
+cancel = "Cancel trial"
+extend = "Extend 7 days"
+maxed = "Maxed out"
+subtitle = "Your free trial runs through {{date}}. No card required."
+title = "Enterprise trial"
+
+[portal.procurement.upsell]
+homeBadge = "Enterprise"
+homeBody = "Committed volume pricing, org-wide SSO + SCIM + RBAC, 90-day immutable audit, and a dedicated SE."
+homeCta = "Start Trial →"
+homeHeadline = "Process millions of PDFs."
 
 [portal.recentActivity]
 title = "Recent activity"
@@ -7746,10 +7987,6 @@ loadWallet = "Couldn't load wallet"
 openStripePortal = "Couldn't open Stripe portal"
 walletUnavailable = "Wallet unavailable: {{status}} {{statusText}}"
 
-[portal.usage.finalizing]
-body = "It can take a few seconds for your subscription to activate. This page updates automatically."
-title = "Finalizing your subscription…"
-
 [portal.usage.sessionExpired]
 action = "Sign in again"
 body = "Your Stirling account session has expired. Sign in again to view billing — your instance stays linked."
@@ -7868,36 +8105,14 @@ status = "Status"
 suspend = "Suspend"
 
 [portal.welcome]
-ariaLabel = "Stirling product highlights"
-pagination = "Carousel pagination"
-slideLabel = "Slide {{number}}: {{title}}"
-
-[portal.welcome.ornament.editor]
-critical = "Critical"
-ocrClean = "OCR-clean"
-schemaMatch = "schema match 0.97"
-signed = "signed"
-
-[portal.welcome.slides.agents]
-eyebrow = "AI Agents"
-primary = "Try PDF Processor"
-secondary = "View MCP docs"
-sub = "Wire your agent via MCP, REST or tool definitions. Deterministic operations and guardrails — test with scenarios and evals before you ship."
-title = "PDF Processor for AI Agents"
-
-[portal.welcome.slides.editor]
-eyebrow = "PDF Editor"
-primary = "Install PDF Editor"
-secondary = "Connect an instance"
-sub = "Annotate, sign, redact, and review locally or in the cloud. Brought to the platform as the credibility anchor of the Stirling control plane."
-title = "The #1 PDF Editor on GitHub"
-
-[portal.welcome.slides.platform]
-eyebrow = "Platform"
-primary = "Try a PDF operation"
-secondary = "Get an API key"
-sub = "Ingest from agents, APIs and connectors. Run composable pipelines with evals and golden sets. Land in a vault with zero-standing-access controls."
-title = "PDF Infrastructure for Developers"
+ariaLabel = "Welcome to Stirling PDF"
+badge = "Open-source"
+installEditor = "Install the Editor"
+inviteTeammates = "Invite teammates"
+perks = "Free forever · Self-hostable"
+subtitle = "The world's most secure PDF Editor is free for teams of all sizes. Includes 60+ PDF operations and SSO."
+title = "Welcome to"
+titleAccent = "Stirling PDF"
 
 [printFile]
 title = "Print File"
@@ -8785,6 +9000,21 @@ manage = "Manage"
 description = "Policies and legal information for this service."
 title = "Legal Documents"
 
+[settings.licenses]
+backendDescription = "Licenses for backend dependencies bundled with this server."
+backendLabel = "Backend Licenses"
+backendTitle = "Backend 3rd Party Licenses"
+empty = "No dependencies found."
+frontendDescription = "Licenses for frontend dependencies bundled into the release build."
+frontendLabel = "Frontend Licenses"
+frontendTitle = "Frontend 3rd Party Licenses"
+license = "License"
+listDescription = "The list is shown directly in the UI from the release bundle or backend endpoint."
+listTitle = "Bundled dependencies"
+loadError = "Failed to load third-party licenses"
+module = "Module"
+version = "Version"
+
 [settings.licensingAnalytics]
 audit = "Audit"
 plan = "Plan"
@@ -9537,7 +9767,9 @@ memberRemoved = "Member removed successfully"
 namePlaceholder = "Enter team name"
 personal = "Personal"
 removeError = "Failed to remove member"
+renameCancel = "Cancel rename"
 renameError = "Failed to rename team"
+renameSubmit = "Save team name"
 renameSuccess = "Team renamed successfully"
 
 [team.invitationBanner]
@@ -9553,6 +9785,7 @@ sendButton = "Send Invitation"
 title = "Invite Team Member"
 
 [team.members]
+actions = "Member actions"
 emailColumn = "Email"
 empty = "No team members yet"
 nameColumn = "Name"
@@ -9908,13 +10141,22 @@ zoomOut = "Zoom Out"
 [viewer.attachments]
 addAttachment = "Add attachment"
 close = "Close attachments"
+closeSidebar = "Close attachments sidebar"
+download = "Download attachment"
 empty = "No attachments in this document"
 loading = "Loading attachments..."
 noDocument = "Open a PDF to view its attachments."
 noMatch = "No attachments match your search"
 noSupport = "Attachment support is unavailable for this viewer."
+retry = "Retry"
 searchPlaceholder = "Search attachments"
 title = "Attachments"
+
+[viewer.bookmarks]
+bookmarkTitle = "Bookmark title"
+closeSidebar = "Close bookmarks sidebar"
+collapseAll = "Collapse all bookmarks"
+expandAll = "Expand all bookmarks"
 
 [viewer.comments]
 addComment = "Add comment"
@@ -9926,6 +10168,7 @@ clearAll = "Clear all comments"
 clearAllDescription = "This removes comments and replies from the sidebar while keeping any attached annotations in the document."
 clearAllTitle = "Clear all comments?"
 close = "Close comments"
+closeSidebar = "Close comments sidebar"
 deleteAnnotationAndComment = "Delete annotation & comment"
 deleteDescription = "This annotation has a comment attached. You can remove just the comment from the sidebar while keeping the annotation, or delete everything."
 deleteTitle = "Remove annotation from comments?"
@@ -9957,6 +10200,11 @@ title = "Form Fields"
 unsavedBadge = "Unsaved"
 unsavedDesc = "You have unsaved changes"
 
+[viewer.layers]
+closeSidebar = "Close layers sidebar"
+hideAll = "Hide all layers"
+showAll = "Show all layers"
+
 [viewer.link]
 delete = "Delete link"
 
@@ -9986,6 +10234,9 @@ resultsOf = "of {{total}}"
 
 [viewer.signature]
 delete = "Delete signature"
+
+[viewer.thumbnails]
+closeSidebar = "Close thumbnails sidebar"
 
 [viewPdf]
 tags = "view,read,annotate,text,image,highlight,edit"
@@ -10413,6 +10664,7 @@ loading = "Loading people..."
 locked = "locked"
 lockedBadge = "Locked"
 loginRequired = "Enable login mode first"
+memberActions = "Member actions"
 noMembersFound = "No members found"
 role = "Role"
 searchMembers = "Search members..."
@@ -10422,6 +10674,7 @@ unlockAccount = "Unlock Account"
 unlockUserError = "Failed to unlock user account"
 unlockUserSuccess = "User account unlocked successfully"
 user = "User"
+userInfo = "User info"
 
 [workspace.people.actions]
 upgrade = "Upgrade"
@@ -10567,6 +10820,7 @@ removeMemberError = "Failed to remove user from team"
 removeMemberSuccess = "User removed from team"
 renameTeamLabel = "Rename Team"
 system = "System"
+teamActions = "Team actions"
 teamName = "Team Name"
 teamNotFound = "Team not found"
 title = "Teams"

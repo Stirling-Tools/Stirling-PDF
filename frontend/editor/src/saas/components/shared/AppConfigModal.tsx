@@ -1,5 +1,7 @@
 import React, { useCallback, useMemo, useState, useEffect } from "react";
-import { Modal, Button, Text, ActionIcon } from "@mantine/core";
+import { Modal, Text } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useMediaQuery } from "@mantine/hooks";
 import { useAuth } from "@app/auth/UseSession";
 import { isUserAnonymous } from "@app/auth/supabase";
@@ -253,9 +255,9 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
                   ) : null}
                 </Text>
                 <ActionIcon
-                  variant="subtle"
+                  variant="tertiary"
                   onClick={onClose}
-                  aria-label="Close"
+                  aria-label={t("common.close", "Close")}
                 >
                   <LocalIcon icon="close-rounded" width={18} height={18} />
                 </ActionIcon>
@@ -276,11 +278,11 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
         <div className="confirm-modal-content">
           <Text>Are you sure you want to sign out?</Text>
           <div className="confirm-modal-buttons">
-            <Button variant="default" onClick={() => setConfirmOpen(false)}>
+            <Button variant="secondary" onClick={() => setConfirmOpen(false)}>
               Cancel
             </Button>
             <Button
-              color="red"
+              accent="danger"
               onClick={async () => {
                 try {
                   await signOut();

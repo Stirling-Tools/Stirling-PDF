@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { type OAuthProvider } from "@app/auth/spring/oauthTypes";
-import { Button } from "@mantine/core";
+import { Button as DSButton } from "@app/ui/Button";
 import { oauthIconUrl, GENERIC_PROVIDER_ICON } from "@app/auth/ui/oauthIcons";
 
 // Debug flag to show all providers for UI testing
@@ -107,58 +107,24 @@ export default function OAuthButtons({
             key={p.id}
             title={`${t("login.signInWith", "Sign in with")} ${p.label}`}
           >
-            <Button
+            <DSButton
               onClick={() => onProviderClick(p.id)}
               disabled={isSubmitting}
               className="oauth-button-icon"
               aria-label={`${t("login.signInWith", "Sign in with")} ${p.label}`}
-              variant="default"
+              variant="tertiary"
             >
               <img
                 src={oauthIconUrl(p.file)}
                 alt={p.label}
                 className="oauth-icon-small"
               />
-            </Button>
+            </DSButton>
           </div>
         ))}
       </div>
     );
   }
-
-  if (layout === "fullwidth") {
-    // Mirrors the SaaS editor login: rounded pill buttons stacked vertically,
-    // each with the provider's icon + "Sign in with X" label.
-    return (
-      <div className="oauth-container-fullwidth">
-        {providers.map((p) => (
-          <button
-            key={p.id}
-            type="button"
-            onClick={() => onProviderClick(p.id)}
-            disabled={isSubmitting}
-            className="oauth-button-fullwidth"
-            title={p.label}
-            aria-label={`${ctaPrefix ?? ""}${p.label}`}
-          >
-            <span className="oauth-btn-group">
-              <img
-                src={oauthIconUrl(p.file)}
-                alt={p.label}
-                className="oauth-icon-medium"
-                style={{ marginRight: "0.5rem", flexShrink: 0 }}
-              />
-              <span className="oauth-btn-label">
-                {ctaPrefix ?? ""}
-                {p.label}
-              </span>
-            </span>
-          </button>
-        ))}
-      </div>
-    );
-  }
-
   if (layout === "grid") {
     return (
       <div className="oauth-container-grid">
@@ -167,20 +133,51 @@ export default function OAuthButtons({
             key={p.id}
             title={`${t("login.signInWith", "Sign in with")} ${p.label}`}
           >
-            <Button
+            <DSButton
               onClick={() => onProviderClick(p.id)}
               disabled={isSubmitting}
               className="oauth-button-grid"
               aria-label={`${t("login.signInWith", "Sign in with")} ${p.label}`}
-              variant="default"
+              variant="tertiary"
             >
               <img
                 src={oauthIconUrl(p.file)}
                 alt={p.label}
                 className="oauth-icon-medium"
               />
-            </Button>
+            </DSButton>
           </div>
+        ))}
+      </div>
+    );
+  }
+  if (layout === "fullwidth") {
+    // Mirrors the SaaS editor login: rounded pill buttons stacked vertically,
+    // each with the provider's icon + "Sign in with X" label.
+    return (
+      <div className="oauth-container-fullwidth">
+        {providers.map((p) => (
+          <DSButton
+            key={p.id}
+            variant="secondary"
+            onClick={() => onProviderClick(p.id)}
+            disabled={isSubmitting}
+            className="oauth-button-fullwidth"
+            title={p.label}
+            aria-label={ctaPrefix ? `${ctaPrefix} ${p.label}` : p.label}
+          >
+            <span className="oauth-btn-group">
+              <img
+                src={oauthIconUrl(p.file)}
+                alt={p.label}
+                className={`oauth-icon-medium oauth-icon--${p.providerId}`}
+                style={{ marginRight: "0.5rem", flexShrink: 0 }}
+              />
+              <span className="oauth-btn-label">
+                {ctaPrefix ? `${ctaPrefix} ${p.label}` : p.label}
+              </span>
+            </span>
+          </DSButton>
         ))}
       </div>
     );
@@ -195,12 +192,12 @@ export default function OAuthButtons({
           key={p.id}
           title={`${t("login.signInWith", "Sign in with")} ${p.label}`}
         >
-          <Button
+          <DSButton
             onClick={() => onProviderClick(p.id)}
             disabled={!demoMode && isSubmitting}
             className={`oauth-button-vertical${useNewStyle && isSingleProvider ? " oauth-button-vertical-single" : ""}${!useNewStyle ? " oauth-button-vertical-legacy" : ""}${isTinted ? " oauth-button-vertical-tinted" : ""}${isOutline ? " oauth-button-vertical-outline" : ""}${isLight ? " oauth-button-vertical-light" : ""}`}
             aria-label={`${t("login.signInWith", "Sign in with")} ${p.label}`}
-            variant="default"
+            variant="tertiary"
             style={
               isTinted
                 ? ({
@@ -238,7 +235,7 @@ export default function OAuthButtons({
                 </svg>
               </span>
             )}
-          </Button>
+          </DSButton>
         </div>
       ))}
     </div>

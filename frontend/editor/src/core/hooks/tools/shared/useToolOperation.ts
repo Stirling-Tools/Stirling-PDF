@@ -40,6 +40,9 @@ import {
 } from "@app/hooks/tools/shared/toolOperationHelpers";
 import {
   ToolType,
+  defineSingleFileTool,
+  defineMultiFileTool,
+  defineCustomTool,
   ToolOperationConfig,
   ToolOperationHook,
   CustomProcessorResult,
@@ -50,7 +53,12 @@ import {
   ResponseHandler,
 } from "@app/hooks/tools/shared/toolOperationTypes";
 
-export { ToolType };
+export {
+  ToolType,
+  defineSingleFileTool,
+  defineMultiFileTool,
+  defineCustomTool,
+};
 export type {
   ToolOperationConfig,
   ToolOperationHook,
@@ -69,10 +77,10 @@ export { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
  * Shared hook for tool operations providing consistent error handling, progress tracking,
  * and FileContext integration. Eliminates boilerplate while maintaining flexibility.
  *
- * Supports three tool patterns:
- * 1. Single-file tools: Set multiFileEndpoint: false, processes files individually
- * 2. Multi-file tools: Set multiFileEndpoint: true, single API call with all files
- * 3. Complex tools: Provide customProcessor for full control over processing logic
+ * Supports three tool patterns, selected by the config's toolType:
+ * 1. Single-file tools (ToolType.singleFile): processes files individually
+ * 2. Multi-file tools (ToolType.multiFile): single API call with all files
+ * 3. Complex tools (ToolType.custom): customProcessor takes full control
  *
  * @param config - Tool operation configuration
  * @returns Hook interface with state and execution methods
@@ -266,6 +274,11 @@ export const useToolOperation = <TParams>(
               typeof config.endpoint === "function"
                 ? config.endpoint(params)
                 : config.endpoint;
+            if (!endpoint) {
+              throw new Error(
+                "This operation has no backend endpoint and cannot be executed directly.",
+              );
+            }
 
             const response = await apiClient.post(endpoint, formData, {
               responseType: "blob",

@@ -1,13 +1,6 @@
 import { useState } from "react";
-import {
-  Box,
-  Flex,
-  Group,
-  Text,
-  Button,
-  TextInput,
-  Select,
-} from "@mantine/core";
+import { Box, Flex, Group, Text, TextInput, Select } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import SearchIcon from "@mui/icons-material/Search";
 import SortIcon from "@mui/icons-material/Sort";
@@ -121,7 +114,7 @@ const FileGrid = ({
           </Group>
 
           {onDeleteAll && (
-            <Button color="red" size="sm" onClick={onDeleteAll}>
+            <Button accent="danger" size="sm" onClick={onDeleteAll}>
               {t("fileManager.deleteAll", "Delete All")}
             </Button>
           )}
@@ -179,7 +172,7 @@ const FileGrid = ({
       {/* Show All Button */}
       {hasMoreFiles && onShowAll && (
         <Group justify="center" mt="md">
-          <Button variant="light" onClick={onShowAll}>
+          <Button variant="secondary" onClick={onShowAll}>
             {t("fileManager.showAll", "Show All")} ({sortedFiles.length} files)
           </Button>
         </Group>

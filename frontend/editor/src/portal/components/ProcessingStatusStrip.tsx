@@ -57,7 +57,7 @@ export function ProcessingStatusStrip() {
           nearCap ? (
             <Button
               size="sm"
-              variant="outline"
+              variant="secondary"
               onClick={() => setActiveView("usage")}
             >
               {t("portal.processingStatus.upgrade")}
@@ -104,7 +104,7 @@ export function ProcessingStatusStrip() {
       </span>
       <Button
         size="sm"
-        variant="ghost"
+        variant="tertiary"
         className="portal-statusstrip__manage"
         onClick={() => setActiveView("usage")}
       >

@@ -98,7 +98,7 @@ export function ComponentDetailModal({
         ) : (
           <Button
             size="sm"
-            accent="purple"
+            accent="premium"
             // TODO(backend): route to the upgrade / contact-sales flow.
             onClick={() => onClose()}
           >
@@ -147,7 +147,7 @@ export function ComponentDetailModal({
             </p>
             <div className="portal-components__frameworks">
               {component.frameworks.map((fw) => (
-                <Chip key={fw} size="sm" tone="blue">
+                <Chip key={fw} size="sm">
                   {fw}
                 </Chip>
               ))}
