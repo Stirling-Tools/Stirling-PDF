@@ -302,7 +302,7 @@ export function PoliciesSection({
                       <Button
                         variant="quiet"
                         size="sm"
-                        fontSize="sm"
+                        fontSize="xs"
                         accent="neutral"
                         onClick={() =>
                           window.open(

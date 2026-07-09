@@ -225,7 +225,9 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
           ...({ "--button-height": CONTROL_HEIGHT[size] } as CSSProperties),
           // Relative label size, scaled off the `size` base (unset → Mantine default).
           ...(fontSize
-            ? ({ "--button-fz": resolveFontSize(size, fontSize) } as CSSProperties)
+            ? ({
+                "--button-fz": resolveFontSize(size, fontSize),
+              } as CSSProperties)
             : {}),
           // Padding overrides (inline to beat Mantine's size-based value).
           // px → Mantine's own var; py → our --sui-btn-py (Mantine has no vertical padding).
