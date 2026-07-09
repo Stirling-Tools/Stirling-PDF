@@ -7984,7 +7984,6 @@ usedBy = "Used by"
 
 [portal.sources.empty]
 description = "Connect a folder (and, soon, cloud storage) so your policies have somewhere to pull documents from."
-docs = "Read the docs"
 title = "No sources connected yet"
 
 [portal.sources.kpi]

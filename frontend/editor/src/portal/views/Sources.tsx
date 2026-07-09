@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, EmptyState, Modal, Skeleton } from "@app/ui";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
-import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { SourcesIcon } from "@portal/components/icons";
 import { errorMessage } from "@portal/api/http";
 import {
@@ -25,7 +24,6 @@ import "@portal/views/Sources.css";
 
 export function Sources() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   // Refetch after every mutation by bumping this counter, so the table reflects
   // the in-memory store the handlers maintain (mirrors the Policies view).
@@ -169,20 +167,12 @@ export function Sources() {
           title={t("portal.sources.empty.title")}
           description={t("portal.sources.empty.description")}
           actions={
-            <>
-              <Button
-                onClick={openCreate}
-                leftSection={<span aria-hidden>+</span>}
-              >
-                {t("portal.sources.actions.connectSource")}
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() => navigate(toPortalPath(VIEW_PATHS.docs))}
-              >
-                {t("portal.sources.empty.docs")}
-              </Button>
-            </>
+            <Button
+              onClick={openCreate}
+              leftSection={<span aria-hidden>+</span>}
+            >
+              {t("portal.sources.actions.connectSource")}
+            </Button>
           }
         />
       )}

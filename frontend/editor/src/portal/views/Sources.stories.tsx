@@ -15,8 +15,7 @@ export const Default: Story = {};
 
 /**
  * A fresh workspace with no sources connected. The stat boxes stay hidden and
- * the empty-state panel drives the user to connect a source (primary) or read
- * the docs (secondary).
+ * the empty-state panel drives the user to connect a source.
  */
 export const Empty: Story = {
   parameters: {

@@ -154,7 +154,7 @@ describe("Sources view", () => {
     expect(screen.getByText("portal.sources.kpi.total")).toBeInTheDocument();
   });
 
-  it("hides the stat boxes and shows connect + docs CTAs when empty", async () => {
+  it("hides the stat boxes and shows the connect CTA when empty", async () => {
     fetchSources.mockResolvedValue({
       kpis: [
         { value: 0, description: "" },
@@ -164,11 +164,10 @@ describe("Sources view", () => {
       sources: [],
     });
     renderView();
-    // The empty-state panel and its secondary "docs" CTA render.
+    // The empty-state panel renders.
     expect(
       await screen.findByText("portal.sources.empty.title"),
     ).toBeInTheDocument();
-    expect(screen.getByText("portal.sources.empty.docs")).toBeInTheDocument();
     // The KPI strip is gone: no stat-box labels over an empty page.
     expect(
       screen.queryByText("portal.sources.kpi.total"),
