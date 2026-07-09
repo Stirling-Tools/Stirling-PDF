@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import {
   Box,
-  Button,
   Divider,
   Group,
   Modal,
@@ -10,6 +9,7 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import Markdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -188,10 +188,10 @@ export default function LoginAgreementModal() {
             )}
           </Text>
           <Group gap="sm" wrap="nowrap">
-            <Button variant="default" onClick={handleDecline}>
+            <Button variant="secondary" onClick={handleDecline}>
               {t("loginAgreementDecline", "Decline")}
             </Button>
-            <Button onClick={handleAccept}>
+            <Button variant="primary" onClick={handleAccept}>
               {t("loginAgreementAccept", "Accept")}
             </Button>
           </Group>

@@ -280,42 +280,6 @@ export const PIPELINE_STAGES: PipelineStage[] = [
   { key: "store", label: "Store", detail: "Emit JSON, persist, notify" },
 ];
 
-export interface OnboardingStep {
-  id: string;
-  title: string;
-  blurb: string;
-  done: boolean;
-  /** What to render in the per-step CTA slot. */
-  cta?: { kind: "try-op" } | { kind: "navigate"; target: string };
-}
-
-export const FREE_ONBOARDING: OnboardingStep[] = [
-  {
-    id: "first-op",
-    title: "Run your first operation",
-    blurb: "Try extract, redact, or OCR on a sample document.",
-    done: true,
-    cta: { kind: "try-op" },
-  },
-  {
-    id: "connect-source",
-    title: "Connect a source",
-    blurb: "Attach an S3 bucket, webhook, or email inbox.",
-    done: false,
-    cta: { kind: "navigate", target: "sources" },
-  },
-  {
-    id: "build-pipeline",
-    title: "Build a pipeline",
-    blurb: "Compose ops into a repeatable workflow.",
-    done: false,
-    cta: { kind: "navigate", target: "pipelines" },
-  },
-  {
-    id: "wire-agent",
-    title: "Wire an agent",
-    blurb: "Expose Stirling via MCP or REST tool definitions.",
-    done: false,
-    cta: { kind: "navigate", target: "sources" },
-  },
-];
+// The free/subscribed "Finish setting up" checklist is no longer fixture-driven:
+// SetupChecklist builds its steps client-side and derives completion from the
+// live policies + sources APIs. See components/SetupChecklist.tsx.

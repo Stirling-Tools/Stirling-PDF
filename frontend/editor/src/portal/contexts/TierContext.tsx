@@ -7,7 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { readMocksPreference } from "@portal/mocks/preference";
-import { useLink, type LinkState } from "@portal/contexts/LinkContext";
+import { usePlanTier } from "@portal/contexts/usePlanTier";
 
 export type Tier = "free" | "pro" | "enterprise";
 
@@ -34,17 +34,6 @@ interface TierContextValue {
 
 const TierContext = createContext<TierContextValue | null>(null);
 
-/** Maps the real link/subscription state onto the tier the rest of the portal reads. */
-function tierFromLinkState(linkState: LinkState): Tier {
-  switch (linkState) {
-    case "linked-subscribed":
-      return "pro";
-    case "linked-free":
-    case "unlinked":
-      return "free";
-  }
-}
-
 export function TierProvider({
   children,
   initialTier = "pro",
@@ -55,28 +44,30 @@ export function TierProvider({
   // Mocks toggling reloads the page (see MocksToggle), so a single read at mount
   // is correct — the preference can't change without us remounting.
   const mocksOn = useMemo(() => readMocksPreference(), []);
-  const { linkState } = useLink();
+  // Real derived tier. Its source is a per-flavor seam: self-hosted derives it
+  // from the link/subscription state, SaaS from the wallet (see usePlanTier).
+  const derivedTier = usePlanTier();
 
   const [mockTier, setMockTier] = useState<Tier>(initialTier);
 
-  // When mocks are off, mirror the real link state into the tier so any
-  // component still keyed on `tier` (sidebar plan badge, gated panels) stays
-  // consistent with the wallet. When mocks are on, the dropdown wins.
+  // When mocks are off, mirror the derived tier so any component keyed on `tier`
+  // (sidebar plan badge, gated panels) stays consistent. When mocks are on, the
+  // dropdown wins.
   useEffect(() => {
     if (!mocksOn) {
-      setMockTier(tierFromLinkState(linkState));
+      setMockTier(derivedTier);
     }
-  }, [mocksOn, linkState]);
+  }, [mocksOn, derivedTier]);
 
   const value = useMemo<TierContextValue>(
     () => ({
-      tier: mocksOn ? mockTier : tierFromLinkState(linkState),
+      tier: mocksOn ? mockTier : derivedTier,
       // Setter is a no-op when mocks are off — UI controls can disable themselves
       // via `isDerived`, but even if one slips through, it has no effect.
       setTier: mocksOn ? setMockTier : () => {},
       isDerived: !mocksOn,
     }),
-    [mocksOn, mockTier, linkState],
+    [mocksOn, mockTier, derivedTier],
   );
 
   return <TierContext.Provider value={value}>{children}</TierContext.Provider>;
