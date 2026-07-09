@@ -23,6 +23,7 @@ interface PolicyDetailPanelProps {
   onRun?: () => void;
   onTogglePause: () => void;
   onDelete: () => void;
+  onClearHistory?: () => void;
   onRetry?: (item: PolicyActivityItem) => void;
 }
 
@@ -106,13 +107,18 @@ export function PolicyDetailPanel({
   onRun,
   onTogglePause,
   onDelete,
+  onClearHistory,
   onRetry,
 }: PolicyDetailPanelProps) {
   const { t } = useTranslation();
+  const [confirmingClear, setConfirmingClear] = useState(false);
   if (!policy) return null;
   const { category, config, state, steps, stats, activity } = policy;
   const isPaused = state.status === "paused";
   const canDelete = state.isDefault !== true;
+  // Processed history only exists for watched sources; editor uploads are never ledgered.
+  const canClearHistory =
+    onClearHistory !== undefined && state.sources.some((s) => s !== "editor");
 
   const enforceItems = steps.length > 0 ? steps.map((s) => s.operation) : null;
   const hasEditorSource = state.sources.includes("editor");
@@ -131,190 +137,241 @@ export function PolicyDetailPanel({
   }
 
   return (
-    <Modal
-      open
-      onClose={onClose}
-      width="lg"
-      title={category.label}
-      footer={
-        <div className="portal-policies__detail-foot">
-          {canDelete && (
-            <Button
-              variant="tertiary"
-              accent="danger"
-              size="sm"
-              onClick={onDelete}
-              disabled={busy}
-              style={{ marginRight: "auto" }}
-            >
-              {t("portal.policies.detail.actions.delete")}
-            </Button>
-          )}
-          {onRun && (
+    <>
+      <Modal
+        open
+        onClose={onClose}
+        width="lg"
+        title={t(category.label)}
+        footer={
+          <div className="portal-policies__detail-foot">
+            {canDelete && (
+              <Button
+                variant="tertiary"
+                accent="danger"
+                size="sm"
+                onClick={onDelete}
+                disabled={busy}
+                style={{ marginRight: "auto" }}
+              >
+                {t("portal.policies.detail.actions.delete")}
+              </Button>
+            )}
+            {onRun && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={onRun}
+                disabled={busy}
+                style={canDelete ? undefined : { marginRight: "auto" }}
+              >
+                {t("portal.policies.detail.actions.runNow")}
+              </Button>
+            )}
+            {canClearHistory && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setConfirmingClear(true)}
+                disabled={busy}
+              >
+                {t("portal.policies.detail.actions.clearHistory")}
+              </Button>
+            )}
             <Button
               variant="secondary"
               size="sm"
-              onClick={onRun}
+              onClick={onTogglePause}
               disabled={busy}
-              style={canDelete ? undefined : { marginRight: "auto" }}
             >
-              {t("portal.policies.detail.actions.runNow")}
+              {isPaused
+                ? t("portal.policies.detail.actions.resume")
+                : t("portal.policies.detail.actions.pause")}
             </Button>
-          )}
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={onTogglePause}
-            disabled={busy}
+            <Button size="sm" onClick={onEdit} disabled={busy}>
+              {t("portal.policies.detail.actions.editSettings")}
+            </Button>
+          </div>
+        }
+      >
+        {/* Status + trigger strip */}
+        <div className="portal-policies__detail-status">
+          <StatusBadge
+            tone={isPaused ? "warning" : "success"}
+            pulse={!isPaused}
           >
             {isPaused
-              ? t("portal.policies.detail.actions.resume")
-              : t("portal.policies.detail.actions.pause")}
-          </Button>
-          <Button size="sm" onClick={onEdit} disabled={busy}>
-            {t("portal.policies.detail.actions.editSettings")}
-          </Button>
+              ? t("portal.policies.status.paused")
+              : t("portal.policies.status.active")}
+          </StatusBadge>
+          {hasEditorSource && (
+            <>
+              <span className="portal-policies__detail-sep" aria-hidden>
+                ·
+              </span>
+              <span className="portal-policies__detail-meta">{trigger}</span>
+              <span className="portal-policies__detail-sep" aria-hidden>
+                ·
+              </span>
+              <span className="portal-policies__detail-meta">
+                {outputLabel}
+              </span>
+            </>
+          )}
         </div>
-      }
-    >
-      {/* Status + trigger strip */}
-      <div className="portal-policies__detail-status">
-        <StatusBadge tone={isPaused ? "warning" : "success"} pulse={!isPaused}>
-          {isPaused
-            ? t("portal.policies.status.paused")
-            : t("portal.policies.status.active")}
-        </StatusBadge>
-        {hasEditorSource && (
-          <>
-            <span className="portal-policies__detail-sep" aria-hidden>
-              ·
-            </span>
-            <span className="portal-policies__detail-meta">{trigger}</span>
-            <span className="portal-policies__detail-sep" aria-hidden>
-              ·
-            </span>
-            <span className="portal-policies__detail-meta">{outputLabel}</span>
-          </>
-        )}
-      </div>
 
-      {/* Enforces — plain text, no pills */}
-      <div className="portal-policies__detail-inline">
-        <span className="portal-policies__detail-inline-label">
-          {t("portal.policies.detail.enforces")}
-        </span>
-        <span className="portal-policies__detail-inline-value">
-          {enforceItems
-            ? enforceItems.map((op, i) => (
-                <span key={op}>
-                  {i > 0 && (
-                    <span
-                      className="portal-policies__enforce-arrow"
-                      aria-hidden
-                    >
-                      {" "}
-                      →{" "}
-                    </span>
-                  )}
-                  {humanizeEndpoint(op)}
-                </span>
-              ))
-            : config.rules.join(" · ")}
-        </span>
-      </div>
-
-      {/* Sources */}
-      {state.sources.length > 0 && (
+        {/* Enforces — plain text, no pills */}
         <div className="portal-policies__detail-inline">
           <span className="portal-policies__detail-inline-label">
-            {t("portal.policies.detail.sources")}
+            {t("portal.policies.detail.enforces")}
           </span>
           <span className="portal-policies__detail-inline-value">
-            {state.sources.map(sourceLabel).join(" · ")}
+            {enforceItems
+              ? enforceItems.map((op, i) => (
+                  <span key={op}>
+                    {i > 0 && (
+                      <span
+                        className="portal-policies__enforce-arrow"
+                        aria-hidden
+                      >
+                        {" "}
+                        →{" "}
+                      </span>
+                    )}
+                    {humanizeEndpoint(op, t)}
+                  </span>
+                ))
+              : config.rules.map((r) => t(r)).join(" · ")}
           </span>
         </div>
-      )}
 
-      <h3 className="portal-policies__wizard-heading">
-        {t("portal.policies.detail.recentActivity")}
-      </h3>
+        {/* Sources */}
+        {state.sources.length > 0 && (
+          <div className="portal-policies__detail-inline">
+            <span className="portal-policies__detail-inline-label">
+              {t("portal.policies.detail.sources")}
+            </span>
+            <span className="portal-policies__detail-inline-value">
+              {state.sources.map(sourceLabel).join(" · ")}
+            </span>
+          </div>
+        )}
 
-      {activity.length > 0 ? (
-        <Card padding="none">
-          {activity.map((item, i) => (
-            <div
-              key={`${item.doc}-${i}`}
-              className="portal-policies__activity-row"
-            >
-              <span
-                className={`portal-policies__activity-icon portal-policies__activity-icon--${
-                  item.status === "flagged"
-                    ? "warning"
-                    : item.status === "processing"
-                      ? "info"
-                      : "success"
-                }`}
+        <h3 className="portal-policies__wizard-heading">
+          {t("portal.policies.detail.recentActivity")}
+        </h3>
+
+        {activity.length > 0 ? (
+          <Card padding="none">
+            {activity.map((item, i) => (
+              <div
+                key={`${item.doc}-${i}`}
+                className="portal-policies__activity-row"
               >
-                {item.status === "flagged" ? (
-                  <WarnIcon />
-                ) : item.status === "processing" ? (
-                  <SpinIcon />
-                ) : (
-                  <CheckIcon />
-                )}
-              </span>
-              <span className="portal-policies__activity-text">
-                <span className="portal-policies__activity-doc">
-                  {item.doc}
-                </span>
-                <span className="portal-policies__activity-action">
+                <span
+                  className={`portal-policies__activity-icon portal-policies__activity-icon--${
+                    item.status === "flagged"
+                      ? "warning"
+                      : item.status === "processing"
+                        ? "info"
+                        : "success"
+                  }`}
+                >
                   {item.status === "flagged" ? (
-                    <ActivityError message={item.action} />
+                    <WarnIcon />
+                  ) : item.status === "processing" ? (
+                    <SpinIcon />
                   ) : (
-                    item.action
+                    <CheckIcon />
                   )}
                 </span>
-              </span>
-              <span className="portal-policies__activity-time">
-                {item.time}
-              </span>
-              {item.status === "flagged" && onRetry && (
-                <Button
-                  type="button"
-                  variant="quiet"
-                  className="portal-policies__link portal-policies__activity-retry"
-                  onClick={() => onRetry(item)}
-                >
-                  {t("portal.policies.detail.retry")}
-                </Button>
+                <span className="portal-policies__activity-text">
+                  <span className="portal-policies__activity-doc">
+                    {item.doc}
+                  </span>
+                  <span className="portal-policies__activity-action">
+                    {item.status === "flagged" ? (
+                      <ActivityError message={item.action} />
+                    ) : (
+                      item.action
+                    )}
+                  </span>
+                </span>
+                <span className="portal-policies__activity-time">
+                  {item.time}
+                </span>
+                {item.status === "flagged" && onRetry && (
+                  <Button
+                    type="button"
+                    variant="quiet"
+                    className="portal-policies__link portal-policies__activity-retry"
+                    onClick={() => onRetry(item)}
+                  >
+                    {t("portal.policies.detail.retry")}
+                  </Button>
+                )}
+              </div>
+            ))}
+          </Card>
+        ) : (
+          <Card padding="default">
+            <EmptyState
+              size="compact"
+              title={t("portal.policies.detail.emptyActivity.title")}
+              description={t(
+                "portal.policies.detail.emptyActivity.description",
               )}
-            </div>
-          ))}
-        </Card>
-      ) : (
-        <Card padding="default">
-          <EmptyState
-            size="compact"
-            title={t("portal.policies.detail.emptyActivity.title")}
-            description={t("portal.policies.detail.emptyActivity.description")}
+            />
+          </Card>
+        )}
+
+        <Card padding="none" className="portal-policies__detail-stats">
+          <StatTile
+            label={t("portal.policies.stats.docsEnforced")}
+            value={stats.enforced.toLocaleString()}
+          />
+          <StatTile
+            label={t("portal.policies.stats.dataProcessed")}
+            value={stats.dataProcessed}
+          />
+          <StatTile
+            label={t("portal.policies.stats.activeFor")}
+            value={stats.activeFor}
           />
         </Card>
-      )}
-
-      <Card padding="none" className="portal-policies__detail-stats">
-        <StatTile
-          label={t("portal.policies.stats.docsEnforced")}
-          value={stats.enforced.toLocaleString()}
-        />
-        <StatTile
-          label={t("portal.policies.stats.dataProcessed")}
-          value={stats.dataProcessed}
-        />
-        <StatTile
-          label={t("portal.policies.stats.activeFor")}
-          value={stats.activeFor}
-        />
-      </Card>
-    </Modal>
+      </Modal>
+      <Modal
+        open={confirmingClear}
+        onClose={() => setConfirmingClear(false)}
+        width="sm"
+        title={t("portal.policies.detail.clearHistory.title")}
+        footer={
+          <div className="portal-policies__detail-foot">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setConfirmingClear(false)}
+              disabled={busy}
+            >
+              {t("portal.policies.detail.clearHistory.cancel")}
+            </Button>
+            <Button
+              variant="primary"
+              accent="danger"
+              size="sm"
+              disabled={busy}
+              onClick={() => {
+                setConfirmingClear(false);
+                onClearHistory?.();
+              }}
+            >
+              {t("portal.policies.detail.clearHistory.confirm")}
+            </Button>
+          </div>
+        }
+      >
+        {t("portal.policies.detail.clearHistory.body")}
+      </Modal>
+    </>
   );
 }

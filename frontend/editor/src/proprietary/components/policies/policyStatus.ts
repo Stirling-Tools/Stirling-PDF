@@ -17,27 +17,31 @@ export const STATUS_LABEL: Record<PolicyRowStatus, string> = {
   setup: "Set up",
 };
 
-/**
- * Per-category accent colour
- */
+/** Per-category icon accent — neutral (no tint background) across all categories. */
 export const ROW_ACCENT: Record<string, IconBadgeAccent> = {
+  ingestion: "neutral",
+  security: "neutral",
+  compliance: "neutral",
+  routing: "neutral",
+  retention: "neutral",
+};
+
+/** Per-category colour for the file badges + enforcement overlay. Separate from
+ *  ROW_ACCENT: the sidebar rows render neutral by design, but the badges keep
+ *  their identity colours so files remain distinguishable at a glance. */
+const BADGE_ACCENT: Record<string, string> = {
   ingestion: "blue",
+  classification: "orange",
   security: "purple",
   compliance: "green",
   routing: "amber",
   retention: "red",
 };
 
-/** Accent name → the CSS colour var the policy badges tint with. */
-const ACCENT_VAR: Record<string, string> = {
-  blue: "var(--color-blue)",
-  purple: "var(--color-purple)",
-  green: "var(--color-green)",
-  amber: "var(--color-amber)",
-  red: "var(--color-red)",
-};
-
-/** CSS colour var for a policy category's accent (blue for unknown categories). */
+/**
+ * CSS colour var for a policy category's badge accent (blue for unknown
+ * categories) — the tint used by the file badges and the enforcement overlay.
+ */
 export function policyAccentVar(categoryId: string): string {
-  return ACCENT_VAR[ROW_ACCENT[categoryId] ?? "blue"];
+  return `var(--color-${BADGE_ACCENT[categoryId] ?? "blue"})`;
 }
