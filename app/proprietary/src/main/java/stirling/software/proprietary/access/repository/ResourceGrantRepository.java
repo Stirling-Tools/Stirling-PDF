@@ -3,13 +3,11 @@ package stirling.software.proprietary.access.repository;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import stirling.software.proprietary.access.model.PrincipalType;
 import stirling.software.proprietary.access.model.ResourceGrant;
 import stirling.software.proprietary.access.model.ResourceType;
 
-@Repository
 public interface ResourceGrantRepository extends JpaRepository<ResourceGrant, Long> {
 
     List<ResourceGrant> findByResourceTypeAndResourceId(

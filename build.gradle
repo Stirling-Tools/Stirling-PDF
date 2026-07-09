@@ -2,11 +2,11 @@ plugins {
     id "java"
     id "jacoco"
     id "io.spring.dependency-management" version "1.1.7"
-    id "org.springframework.boot" version "4.0.6"
+    id "org.springframework.boot" version "4.1.0"
     id "org.springdoc.openapi-gradle-plugin" version "1.9.0"
     id "io.swagger.swaggerhub" version "1.3.2"
     id "com.diffplug.spotless" version "8.5.0"
-    id "com.github.jk1.dependency-license-report" version "3.1.2"
+    id "com.github.jk1.dependency-license-report" version "3.1.4"
     //id "nebula.lint" version "19.0.3"
     id "org.sonarqube" version "7.2.3.7755"
 }
@@ -20,12 +20,12 @@ import org.gradle.api.tasks.testing.Test
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 
 ext {
-    springBootVersion = "4.0.6"
+    springBootVersion = "4.1.0"
     pdfboxVersion = "3.0.7"
     imageioVersion = "3.13.1"
     lombokVersion = "1.18.46"
     bouncycastleVersion = "1.84"
-    springSecuritySamlVersion = "7.0.5"
+    springSecuritySamlVersion = "7.1.0"
     openSamlVersion = "5.2.1"
     commonmarkVersion = "0.28.0"
     googleJavaFormatVersion = "1.28.0"
@@ -60,6 +60,19 @@ ext.isSecurityDisabled = { ->
     System.getenv('DISABLE_ADDITIONAL_FEATURES') == 'true' ||
     (project.hasProperty('DISABLE_ADDITIONAL_FEATURES') &&
      System.getProperty('DISABLE_ADDITIONAL_FEATURES') == 'true')
+}
+
+ext.getEnv = { ->
+    def sel = System.getenv('SECURITY_ENABLELOGIN')
+    logger.lifecycle("SECURITY_ENABLELOGIN: ${sel}")
+    def des = System.getenv('DOCKER_ENABLE_SECURITY')
+    logger.lifecycle("DOCKER_ENABLE_SECURITY: ${des}")
+    def flavorValue = System.getenv('STIRLING_FLAVOR')
+    logger.lifecycle("STIRLING_FLAVOR: ${flavorValue}")
+    def saas = System.getenv('ENABLE_SAAS')
+    logger.lifecycle("ENABLE_SAAS: ${saas}")
+    def daf = System.getenv('DISABLE_ADDITIONAL_FEATURES')
+    logger.lifecycle("DISABLE_ADDITIONAL_FEATURES: ${daf}")
 }
 
 ext.mavenUrl = System.getenv("MAVEN_PUBLIC_URL") ?: ""
@@ -226,6 +239,8 @@ subprojects {
         resolutionStrategy.force "org.bouncycastle:bcprov-jdk18on:${bouncycastleVersion}"
         resolutionStrategy.force "org.bouncycastle:bcpkix-jdk18on:${bouncycastleVersion}"
         resolutionStrategy.force "org.bouncycastle:bcutil-jdk18on:${bouncycastleVersion}"
+        resolutionStrategy.force "org.apache.santuario:xmlsec:4.0.4"
+        resolutionStrategy.force "com.google.guava:guava:${guavaVersion}"
     }
 
     dependencyManagement {
@@ -608,6 +623,7 @@ dependencies {
     if (rootProject.ext.isSecurityDisabled()) {
         implementation project(':proprietary')
     }
+    rootProject.ext.getEnv()
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"

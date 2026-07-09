@@ -43,7 +43,7 @@ class SaasJpaConfigScanTest {
 
         Set<String> actual = Set.copyOf(Arrays.asList(annotation.basePackages()));
         assertThat(actual)
-                .as("Every package holding @Repository interfaces must be listed")
+                .as("Every package holding repository interfaces must be listed")
                 .containsAll(EXPECTED_REPO_PACKAGES);
     }
 

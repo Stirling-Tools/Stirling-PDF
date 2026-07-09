@@ -5,12 +5,10 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Repository;
 
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.model.dto.TeamWithUserCountDTO;
 
-@Repository
 public interface TeamRepository extends JpaRepository<Team, Long> {
     Optional<Team> findByName(String name);
 
