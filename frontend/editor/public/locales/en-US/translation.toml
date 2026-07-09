@@ -7815,11 +7815,8 @@ seats = "Seats"
 seatsUsed = "{{used}} of {{total}} used"
 
 [portal.shell.header]
-accountFallback = "Account"
-accountMenu = "Account menu"
 darkMode = "Dark mode"
 lightMode = "Light mode"
-signOut = "Sign out"
 switchToDark = "Switch to dark theme"
 switchToLight = "Switch to light theme"
 
