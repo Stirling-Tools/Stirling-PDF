@@ -295,6 +295,9 @@ const FileEditorThumbnail = ({
   const [showVersionHistory, setShowVersionHistory] = useState(false);
 
   const policyEnforcing = policies.some((p) => p.enforcing);
+  // Accent of the policy currently enforcing, so the overlay's icon/spinner match
+  // that policy's badge instead of a fixed blue.
+  const enforcingAccent = policies.find((p) => p.enforcing)?.accentColor;
 
   const hoverActions = useMemo<HoverAction[]>(() => {
     const uploadLabel = isUploaded
@@ -536,7 +539,11 @@ const FileEditorThumbnail = ({
               )}
 
               {/* Policy enforcement overlay — shown while any policy is in-flight */}
-              <PolicyEnforcingOverlay enforcing={policyEnforcing} zIndex={2} />
+              <PolicyEnforcingOverlay
+                enforcing={policyEnforcing}
+                zIndex={2}
+                accentVar={enforcingAccent}
+              />
 
               {/* Thumbnail image or loading state */}
               <DocumentThumbnail

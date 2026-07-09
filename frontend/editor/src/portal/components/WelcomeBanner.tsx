@@ -2,10 +2,12 @@ import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
 import { useView } from "@portal/contexts/ViewContext";
+import { EDITOR_URL } from "@portal/auth/editorUrl";
 import {
   DownloadIcon,
   UsersIcon,
   EditorIcon,
+  ExternalLinkIcon,
   SearchIcon,
   SourcesIcon,
   PoliciesIcon,
@@ -156,13 +158,22 @@ export function WelcomeBanner({ footer }: WelcomeBannerProps) {
           <div className="portal-welcome__cta">
             <Button
               variant="primary"
+              leftSection={<ExternalLinkIcon size={15} />}
+              onClick={() => {
+                window.location.href = EDITOR_URL;
+              }}
+            >
+              {t("portal.welcome.openInBrowser")}
+            </Button>
+            <Button
+              variant="secondary"
               leftSection={<DownloadIcon size={15} />}
               onClick={() => setActiveView("editor")}
             >
               {t("portal.welcome.installEditor")}
             </Button>
             <Button
-              variant="secondary"
+              variant="tertiary"
               leftSection={<UsersIcon size={15} />}
               onClick={() => setActiveView("users")}
             >
