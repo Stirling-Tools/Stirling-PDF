@@ -56,7 +56,8 @@ export function FreePlanView({ wallet, unsynced, onSubscribed }: Props) {
 
   const switchOnAction = isLeader ? (
     <Button
-      variant="gradient"
+      variant="primary"
+      accent="premium"
       onClick={openCheckout}
       disabled={wallet.teamId == null}
     >

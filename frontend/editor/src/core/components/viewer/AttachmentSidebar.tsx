@@ -1,15 +1,8 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import {
-  Box,
-  ScrollArea,
-  Text,
-  ActionIcon,
-  Button,
-  Loader,
-  Stack,
-  TextInput,
-} from "@mantine/core";
+import { Box, ScrollArea, Text, Loader, Stack, TextInput } from "@mantine/core";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { PdfAttachmentObject } from "@embedpdf/models";
@@ -322,9 +315,10 @@ export const AttachmentSidebar = ({
             )}
           </div>
           <ActionIcon
-            variant="subtle"
+            variant="tertiary"
             size="sm"
             className="attachment-item__download-icon"
+            aria-label={t("viewer.attachments.download", "Download attachment")}
             onClick={(event) => handleDownload(attachment, event)}
           >
             <DownloadIcon sx={{ fontSize: "1.2rem" }} />
@@ -388,11 +382,14 @@ export const AttachmentSidebar = ({
         </div>
         <Box style={{ display: "flex", alignItems: "center", gap: 2 }}>
           <ActionIcon
-            variant="subtle"
+            variant="tertiary"
+            accent="neutral"
             size="sm"
-            color="gray"
             onClick={toggleAttachmentSidebar}
-            aria-label="Close attachments sidebar"
+            aria-label={t(
+              "viewer.attachments.closeSidebar",
+              "Close attachments sidebar",
+            )}
             title={t("viewer.attachments.close", "Close attachments")}
           >
             <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
@@ -451,7 +448,11 @@ export const AttachmentSidebar = ({
               <Text size="sm" c="red" ta="center">
                 {currentError}
               </Text>
-              <ActionIcon variant="light" onClick={requestReload}>
+              <ActionIcon
+                variant="secondary"
+                aria-label={t("viewer.attachments.retry", "Retry")}
+                onClick={requestReload}
+              >
                 <LocalIcon icon="refresh" />
               </ActionIcon>
             </Stack>
@@ -487,8 +488,8 @@ export const AttachmentSidebar = ({
                 )}
               </Text>
               <Button
-                variant="light"
-                size="xs"
+                variant="secondary"
+                size="sm"
                 onClick={handleAddAttachment}
                 leftSection={
                   <LocalIcon icon="add" width="1rem" height="1rem" />
@@ -502,20 +503,15 @@ export const AttachmentSidebar = ({
           {showAttachmentList && (
             <>
               <Button
-                variant="subtle"
-                size="compact-xs"
+                variant="tertiary"
+                size="sm"
                 fullWidth
+                justify="start"
                 onClick={handleAddAttachment}
                 leftSection={
                   <LocalIcon icon="add" width="0.9rem" height="0.9rem" />
                 }
-                mb="xs"
-                styles={{
-                  root: {
-                    justifyContent: "flex-start",
-                    paddingInline: 6,
-                  },
-                }}
+                style={{ marginBottom: "var(--space-xs)" }}
               >
                 {t("viewer.attachments.addAttachment", "Add attachment")}
               </Button>

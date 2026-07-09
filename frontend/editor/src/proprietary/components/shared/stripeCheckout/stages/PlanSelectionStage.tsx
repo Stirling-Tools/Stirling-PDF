@@ -1,13 +1,6 @@
 import React from "react";
-import {
-  Stack,
-  Button,
-  Text,
-  Grid,
-  Paper,
-  Alert,
-  Divider,
-} from "@mantine/core";
+import { Stack, Text, Grid, Paper, Alert, Divider } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { PlanTierGroup } from "@app/services/licenseService";
 import { SavingsCalculation } from "@app/components/shared/stripeCheckout/types/checkout";
@@ -87,7 +80,7 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
                 )}
 
                 <div style={{ marginTop: "auto", paddingTop: "1rem" }}>
-                  <Button variant="light" fullWidth size="lg">
+                  <Button variant="secondary" fullWidth>
                     {t("payment.planStage.selectMonthly", "Select Monthly")}
                   </Button>
                 </div>
@@ -200,7 +193,7 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
                 )}
 
                 <div style={{ marginTop: "auto", paddingTop: "1rem" }}>
-                  <Button variant="filled" fullWidth size="lg">
+                  <Button fullWidth>
                     {t("payment.planStage.selectYearly", "Select Yearly")}
                   </Button>
                 </div>
