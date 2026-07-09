@@ -138,7 +138,7 @@ export function ProcurementFlow({
             {!editing && stage === "procurement" && latest && (
               <PaymentStageCard
                 invoiceUrl={latest.invoiceUrl}
-                invoicePdf={invoicePdf}
+                invoicePdf={latest.invoicePdf ?? invoicePdf}
               />
             )}
 

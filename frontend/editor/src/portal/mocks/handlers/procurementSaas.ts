@@ -159,6 +159,7 @@ function priceQuote(cfg: Cfg) {
     validUntil: "2026-07-31",
     stripeQuoteId: null,
     invoiceUrl: null,
+    invoicePdf: null,
     config: {
       volume: cfg.volume,
       users: 0,
@@ -272,16 +273,18 @@ export const procurementSaasHandlers = [
     const q = (deal as { latestQuote: Record<string, unknown> | null })
       .latestQuote;
     const invoiceUrl = "https://invoice.stripe.com/i/mock_procurement";
+    const invoicePdf = "https://invoice.stripe.com/i/mock_procurement/pdf";
     if (q) {
       q.status = "accepted";
       q.invoiceUrl = invoiceUrl;
+      q.invoicePdf = invoicePdf;
       (deal as Record<string, unknown>).stage = "procurement";
     }
     return HttpResponse.json({
       status: "accepted",
       subscriptionId: "sub_mock_procurement",
       invoiceUrl,
-      invoicePdf: "https://invoice.stripe.com/i/mock_procurement/pdf",
+      invoicePdf,
     });
   }),
   http.post(`${SAAS}/functions/v1/get-procurement-quote-pdf`, () => {

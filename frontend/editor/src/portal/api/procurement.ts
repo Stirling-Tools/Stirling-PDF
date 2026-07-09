@@ -155,6 +155,8 @@ export interface QuoteResult {
   stripeQuoteId: string | null;
   /** Hosted Stripe invoice URL, present once the quote is accepted and the subscription invoice exists. */
   invoiceUrl: string | null;
+  /** Direct PDF link for that invoice; persisted so the download button survives a reload. */
+  invoicePdf: string | null;
   /** The inputs this quote was priced from, so the builder can seed itself on re-edit. */
   config: QuoteConfigInput;
 }

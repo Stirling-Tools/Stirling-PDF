@@ -121,6 +121,7 @@ public class ProcurementController {
             String validUntil,
             String stripeQuoteId,
             String invoiceUrl,
+            String invoicePdf,
             QuoteConfigEcho config) {}
 
     /**
@@ -365,6 +366,7 @@ public class ProcurementController {
                 q.getValidUntil() == null ? null : q.getValidUntil().toString(),
                 q.getStripeQuoteId(),
                 q.getStripeInvoiceUrl(),
+                q.getStripeInvoicePdf(),
                 new QuoteConfigEcho(
                         q.getVolume(),
                         0,
