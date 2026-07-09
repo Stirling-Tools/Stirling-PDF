@@ -19,10 +19,25 @@ import { UIProvider } from "@portal/contexts/UIContext";
 import { SuiProvider } from "@portal/theme/SuiProvider";
 import { handlers } from "@portal/mocks/handlers";
 import { configureSupabase } from "@proprietary/auth/supabase/supabaseClient";
+import i18next from "i18next";
+import { initReactI18next } from "react-i18next";
 
 import "@mantine/core/styles.css";
 import "@core/tokens/tokens.css";
 import "@core/tokens/base.css";
+
+// Storybook-only: init react-i18next so t(key, fallback, vars) interpolates its
+// English fallback (there's no backend here to load locale files). Without this,
+// the default t() returns raw templates like "{{count}} people · led by {{owner}}".
+if (!i18next.isInitialized) {
+  void i18next.use(initReactI18next).init({
+    lng: "en",
+    fallbackLng: "en",
+    resources: { en: { translation: {} } },
+    interpolation: { escapeValue: false },
+    react: { useSuspense: false },
+  });
+}
 
 // Start MSW once. Storybook runs in a browser so this uses the service worker.
 initialize({ onUnhandledRequest: "bypass" }, handlers);
