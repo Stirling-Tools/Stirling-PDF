@@ -41,8 +41,8 @@ public class InlineOutputSink implements PolicyOutputSink {
     }
 
     @Override
-    public List<ResultFile> deliver(String runId, List<Resource> outputs, OutputSpec spec)
-            throws IOException {
+    public List<ResultFile> deliver(
+            OutputDelivery delivery, List<Resource> outputs, OutputSpec spec) throws IOException {
         List<ResultFile> results = new ArrayList<>();
         for (int i = 0; i < outputs.size(); i++) {
             Resource resource = outputs.get(i);

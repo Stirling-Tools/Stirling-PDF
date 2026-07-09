@@ -15,7 +15,7 @@ import { DeveloperDocs } from "@portal/views/DeveloperDocs";
 import { Procurement } from "@portal/views/Procurement";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 
-// The portal mounts as a route-set under /portal/* in the editor app, so these
+// The portal mounts as a route-set under /processor/* in the editor app, so these
 // child routes are relative to that base: strip the leading slash from the
 // logical VIEW_PATHS, and home is the index route. Redirects use toPortalPath
 // so they resolve to the portal, not the editor root.

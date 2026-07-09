@@ -91,27 +91,9 @@
   gap: 0.5rem;
 }
 
-.portal-sidebar__usage-label {
-  color: var(--color-text-4);
-}
-
 .portal-sidebar__usage-value {
   color: var(--color-usage-value);
   font-weight: 500;
-}
-
-.portal-sidebar__usage-track {
-  margin-top: 0.5rem;
-  height: 0.25rem;
-  background: var(--color-usage-track);
-  border-radius: var(--radius-pill);
-  overflow: hidden;
-}
-
-.portal-sidebar__usage-fill {
-  height: 100%;
-  background: var(--grad-blue-btn);
-  transition: width var(--motion-slow);
 }
 
 .portal-sidebar__plan {

@@ -21,7 +21,7 @@ import { useUI } from "@portal/contexts/UIContext";
  * Spring on self-hosted, Supabase on SaaS — same underlying session the portal
  * is already signed in with), and the editor ThemeProvider (which also carries
  * the Mantine theme + toasts the sections expect). URL sync is off — the portal
- * owns its /portal/* routes, so the modal keeps its section purely in state.
+ * owns its own route subtree, so the modal keeps its section purely in state.
  *
  * Everything (providers included) mounts on first open and stays mounted, so
  * the editor theme wiring never runs for portal sessions that never open
