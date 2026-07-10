@@ -63,6 +63,28 @@ interface PortalResponse {
   error?: string;
 }
 
+/**
+ * The signed-in SaaS billing account's email, read from the SaaS Supabase
+ * session (the same identity whose JWT the edge function runs under, and which
+ * owns the Stripe customer). Used to prefill + lock Stripe Checkout's email
+ * field so it can't be left blank for the browser to autofill with the wrong
+ * account — the cause of Stripe-customer↔user mismatches. Best-effort: returns
+ * undefined if the session isn't readable, leaving the field un-prefilled.
+ */
+async function currentBillingEmail(): Promise<string | undefined> {
+  try {
+    ensureSaasSupabase();
+    const supabase = getSupabaseClient();
+    // getSession reads the persisted session (no network round-trip), so the
+    // prefill stays reliable even on a flaky connection.
+    const email = (await supabase?.auth.getSession())?.data.session?.user
+      ?.email;
+    return email ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 async function invoke<T>(
   name: string,
   body: Record<string, unknown>,
@@ -111,6 +133,13 @@ export interface CheckoutSession {
 export async function createCheckoutSession(
   req: CheckoutSessionRequest,
 ): Promise<CheckoutSession> {
+  // Prefill the checkout email from the signed-in SaaS account unless the caller
+  // supplied one explicitly. Without this the field renders blank and the browser
+  // autofills it (often with the wrong account), creating a Stripe customer that
+  // doesn't match the logged-in user. The edge function should still treat its JWT
+  // as authoritative — this is a client-side prefill, not a trust boundary.
+  const billingOwnerEmail =
+    req.billingOwnerEmail ?? (await currentBillingEmail());
   const res = await invoke<CheckoutResponse>("create-checkout-session", {
     team_id: req.teamId,
     currency: req.currency ?? "usd",
@@ -121,9 +150,7 @@ export async function createCheckoutSession(
     // redirect on completion. A redirect would reload the page, skip that finalize step, and
     // make Stripe ignore onComplete entirely (console warns "redirect_on_completion: always").
     redirect_on_completion: "never",
-    ...(req.billingOwnerEmail
-      ? { billing_owner_email: req.billingOwnerEmail }
-      : {}),
+    ...(billingOwnerEmail ? { billing_owner_email: billingOwnerEmail } : {}),
   });
   if (!res.success) {
     throw new StripeFunctionError(

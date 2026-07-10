@@ -5,9 +5,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
  * already-subscribed-redirect vs neither-secret-nor-url mapping, the mock flag,
  * unconfigured Supabase, and the portal-session path.
  */
-const { getClient, invoke } = vi.hoisted(() => ({
+const { getClient, invoke, getSession } = vi.hoisted(() => ({
   getClient: vi.fn(),
   invoke: vi.fn(),
+  getSession: vi.fn(),
 }));
 
 vi.mock("@portal/auth/saasSupabase", () => ({ ensureSaasSupabase: vi.fn() }));
@@ -26,7 +27,10 @@ const req = { teamId: 1, successUrl: "s", cancelUrl: "c" } as const;
 
 beforeEach(() => {
   invoke.mockReset();
-  getClient.mockReset().mockReturnValue({ functions: { invoke } });
+  getSession.mockReset().mockResolvedValue({ data: { session: null } });
+  getClient
+    .mockReset()
+    .mockReturnValue({ functions: { invoke }, auth: { getSession } });
 });
 afterEach(() => vi.restoreAllMocks());
 
@@ -81,6 +85,51 @@ describe("createCheckoutSession", () => {
   it("throws when neither client_secret nor url is returned", async () => {
     invoke.mockResolvedValue({ data: { success: true }, error: null });
     await expect(createCheckoutSession(req)).rejects.toThrow(/neither/);
+  });
+
+  it("prefills billing_owner_email from the signed-in SaaS session", async () => {
+    getSession.mockResolvedValue({
+      data: { session: { user: { email: "leader@acme.com" } } },
+    });
+    invoke.mockResolvedValue({
+      data: { success: true, client_secret: "cs_123" },
+      error: null,
+    });
+    await createCheckoutSession(req);
+    expect(invoke).toHaveBeenCalledWith(
+      "create-checkout-session",
+      expect.objectContaining({
+        body: expect.objectContaining({
+          billing_owner_email: "leader@acme.com",
+        }),
+      }),
+    );
+  });
+
+  it("omits billing_owner_email when no session email is available", async () => {
+    invoke.mockResolvedValue({
+      data: { success: true, client_secret: "cs_123" },
+      error: null,
+    });
+    await createCheckoutSession(req);
+    const body = invoke.mock.calls[0][1].body as Record<string, unknown>;
+    expect(body).not.toHaveProperty("billing_owner_email");
+  });
+
+  it("an explicit billingOwnerEmail overrides the session", async () => {
+    getSession.mockResolvedValue({
+      data: { session: { user: { email: "session@acme.com" } } },
+    });
+    invoke.mockResolvedValue({
+      data: { success: true, client_secret: "cs_123" },
+      error: null,
+    });
+    await createCheckoutSession({
+      ...req,
+      billingOwnerEmail: "explicit@acme.com",
+    });
+    const body = invoke.mock.calls[0][1].body as Record<string, unknown>;
+    expect(body.billing_owner_email).toBe("explicit@acme.com");
   });
 
   it("throws unconfigured when there is no Supabase client", async () => {
