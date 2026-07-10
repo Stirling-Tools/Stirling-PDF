@@ -47,6 +47,7 @@ export function WelcomeBanner({ footer }: WelcomeBannerProps) {
         </div>
         <Button
           variant="primary"
+          className="portal-welcome__cta"
           leftSection={<ExternalLinkIcon size={15} />}
           onClick={() => {
             window.location.href = EDITOR_URL;
