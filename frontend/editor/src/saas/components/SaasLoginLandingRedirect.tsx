@@ -41,6 +41,16 @@ export function SaasLoginLandingRedirect() {
   const landingView = preferences.loginLandingView;
   const [resolving, setResolving] = useState(false);
 
+  // One-time config log so a live instance reveals the silent build gates
+  // (soft-release mode off, or portal not bundled) even before any login.
+  useEffect(() => {
+    console.debug("[login-landing] config", {
+      mode: loginLandingMode(),
+      portalAvailable: isPortalAvailable(),
+      basename: PORTAL_BASENAME,
+    });
+  }, []);
+
   useEffect(() => {
     // Soft-release flag: outside "dynamic" nobody is auto-routed to the processor.
     if (loginLandingMode() !== "dynamic") return;
@@ -49,6 +59,15 @@ export function SaasLoginLandingRedirect() {
     // (StrictMode double-invoke, or a dependency change mid-lookup) instead of
     // dropping the redirect with the flag already spent.
     if (!hasLoginLandingPending()) return;
+    // From here a fresh-login redirect is pending; log the gate state so a live
+    // instance shows exactly what blocked (or allowed) the redirect.
+    console.debug("[login-landing] pending", {
+      isSignedIn,
+      onAuthRoute: isAuthRoute(location.pathname),
+      portalAvailable: isPortalAvailable(),
+      landingView,
+      path: location.pathname,
+    });
     if (!isSignedIn) return;
     // Let the normal post-login navigation settle off the auth pages first.
     if (isAuthRoute(location.pathname)) return;
@@ -82,8 +101,16 @@ export function SaasLoginLandingRedirect() {
         meRes.status === "fulfilled" ? meRes.value.data?.user?.role : null;
       const teams =
         teamsRes.status === "fulfilled" ? (teamsRes.value.data ?? []) : [];
+      const goToProcessor = landsOnProcessor(role, teams);
+      console.debug("[login-landing] decision", {
+        role,
+        teamCount: teams.length,
+        meOk: meRes.status === "fulfilled",
+        teamsOk: teamsRes.status === "fulfilled",
+        goToProcessor,
+      });
       // On any lookup failure the fields default to member → stay on the editor.
-      settle(landsOnProcessor(role, teams));
+      settle(goToProcessor);
     });
 
     return () => {
