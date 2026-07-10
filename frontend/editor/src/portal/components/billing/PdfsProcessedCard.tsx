@@ -57,17 +57,20 @@ export function PdfsProcessedCard({
   unsynced?: LocalUsage | null;
 }) {
   const { t } = useTranslation();
-  // Fold instance-local unsynced usage into both the headline and the split, so
-  // the card shows synced + not-yet-billed work as a single current-usage figure.
-  const pending = unsynced?.totalUnsyncedUnits ?? 0;
-  const base = wallet.categoryBreakdown;
-  const b: WalletCategoryBreakdown = {
-    api: base.api + (unsynced?.apiUnsyncedUnits ?? 0),
-    ai: base.ai + (unsynced?.aiUnsyncedUnits ?? 0),
-    automation: base.automation + (unsynced?.automationUnsyncedUnits ?? 0),
-  };
-  const total = b.api + b.ai + b.automation;
-  const headline = wallet.billableUsed + pending;
+  // The count dimension (PDFs) is shown separately from the size-scaled meter
+  // units. Instance-local unsynced usage (combined-billing) is units-only, so it
+  // folds into the meter-units figure; the PDF count reflects synced processing.
+  const pendingUnits = unsynced?.totalUnsyncedUnits ?? 0;
+  const docs = wallet.docsProcessedThisPeriod;
+  const uniquePdfs = wallet.uniquePdfsThisPeriod;
+  const meterUnits = wallet.spendUnitsThisPeriod + pendingUnits;
+  const sizeMultiplierPdfs = wallet.sizeMultiplierPdfsThisPeriod;
+
+  // Per-category PDF counts drive the split ("this many PDFs ran automation / AI /
+  // API"); units are surfaced in the aggregate summary line, not per bucket.
+  const perDocs: WalletCategoryBreakdown = wallet.categoryDocs;
+  const totalDocs = perDocs.api + perDocs.ai + perDocs.automation;
+  const avgUnitsPerPdf = docs > 0 ? meterUnits / docs : 0;
 
   return (
     <Card padding="loose">
@@ -78,66 +81,90 @@ export function PdfsProcessedCard({
         )}
       </span>
       <div className="portal-billing__bignum-row">
-        <span className="portal-billing__bignum">
-          {headline.toLocaleString()}
-        </span>
+        <span className="portal-billing__bignum">{docs.toLocaleString()}</span>
         <span className="portal-billing__bignum-unit">
-          {t("portal.billing.pdfsProcessed.unit", "metered PDFs")}
+          {t("portal.billing.pdfsProcessed.unit", "PDFs")}
         </span>
       </div>
 
-      {total > 0 ? (
+      {docs > 0 ? (
         <>
-          <div
-            className="portal-billing__segbar"
-            role="img"
-            aria-label={t(
-              "portal.billing.pdfsProcessed.segbarAriaLabel",
-              "Metered PDFs split by category",
+          <p className="portal-billing__section-sub">
+            {t(
+              "portal.billing.pdfsProcessed.summary",
+              "{{unique}} unique · {{units}} meter units · {{avg}} avg units/PDF",
+              {
+                unique: uniquePdfs.toLocaleString(),
+                units: meterUnits.toLocaleString(),
+                avg: avgUnitsPerPdf.toFixed(1),
+              },
             )}
-          >
-            {SEGMENTS.map((s) =>
-              b[s.key] > 0 ? (
-                <span
-                  key={s.key}
-                  className={`portal-billing__segbar-seg portal-billing__segbar-seg--${s.cls}`}
-                  style={{ width: `${(b[s.key] / total) * 100}%` }}
-                />
-              ) : null,
-            )}
-          </div>
-          <div className="portal-billing__seglegend">
-            {SEGMENTS.map((s) => (
-              <div className="portal-billing__seglegend-row" key={s.key}>
-                <span
-                  className={`portal-billing__dot portal-billing__dot--${s.cls}`}
-                  aria-hidden
-                />
-                <span className="portal-billing__seglegend-label">
-                  {t(s.labelKey, s.labelDefault)}
-                </span>
-                <span className="portal-billing__seglegend-val">
-                  {t(
-                    "portal.billing.pdfsProcessed.legendValue",
-                    "{{formatted}} PDFs",
-                    {
-                      count: b[s.key],
-                      formatted: b[s.key].toLocaleString(),
-                    },
-                  )}
-                </span>
-                <span className="portal-billing__seglegend-desc">
-                  {t(s.descKey, s.descDefault)}
-                </span>
+          </p>
+          {totalDocs > 0 ? (
+            <>
+              <div
+                className="portal-billing__segbar"
+                role="img"
+                aria-label={t(
+                  "portal.billing.pdfsProcessed.segbarAriaLabel",
+                  "PDFs split by category",
+                )}
+              >
+                {SEGMENTS.map((s) =>
+                  perDocs[s.key] > 0 ? (
+                    <span
+                      key={s.key}
+                      className={`portal-billing__segbar-seg portal-billing__segbar-seg--${s.cls}`}
+                      style={{
+                        width: `${(perDocs[s.key] / totalDocs) * 100}%`,
+                      }}
+                    />
+                  ) : null,
+                )}
               </div>
-            ))}
-          </div>
+              <div className="portal-billing__seglegend">
+                {SEGMENTS.map((s) => (
+                  <div className="portal-billing__seglegend-row" key={s.key}>
+                    <span
+                      className={`portal-billing__dot portal-billing__dot--${s.cls}`}
+                      aria-hidden
+                    />
+                    <span className="portal-billing__seglegend-label">
+                      {t(s.labelKey, s.labelDefault)}
+                    </span>
+                    <span className="portal-billing__seglegend-val">
+                      {t(
+                        "portal.billing.pdfsProcessed.legendValue",
+                        "{{formatted}} PDFs",
+                        {
+                          count: perDocs[s.key],
+                          formatted: perDocs[s.key].toLocaleString(),
+                        },
+                      )}
+                    </span>
+                    <span className="portal-billing__seglegend-desc">
+                      {t(s.descKey, s.descDefault)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : null}
+          {sizeMultiplierPdfs > 0 ? (
+            <p className="portal-billing__section-sub">
+              {t(
+                "portal.billing.pdfsProcessed.sizeMultiplier",
+                "{{formatted}} PDFs used a size multiplier",
+                { formatted: sizeMultiplierPdfs.toLocaleString() },
+              )}
+            </p>
+          ) : null}
         </>
       ) : (
         <p className="portal-billing__section-sub">
           {t(
             "portal.billing.pdfsProcessed.emptyPeriod",
-            "No metered processing yet this period.",
+            "No processing yet this period.",
           )}
         </p>
       )}
