@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.job.ResultFile;
+import stirling.software.common.service.AutomationRunContext;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.InternalApiTimeoutException;
 import stirling.software.common.service.JobOwnershipService;
@@ -202,8 +203,7 @@ public class PolicyEngine {
         // One policy run = one automation run. Scope the run id on this worker thread (the async
         // hop already happened) so every tool sub-step dispatched via InternalApiClient groups into
         // a single charge, and two separate policy runs on the same document stay distinct charges.
-        try (stirling.software.common.service.AutomationRunContext.Scope runScope =
-                stirling.software.common.service.AutomationRunContext.open(runId)) {
+        try (AutomationRunContext.Scope runScope = AutomationRunContext.open(runId)) {
             try {
                 run.markRunning();
                 PolicyExecutionResult result =

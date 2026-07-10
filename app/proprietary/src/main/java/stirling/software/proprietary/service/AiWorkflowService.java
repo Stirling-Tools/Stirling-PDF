@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FilenameUtils;
@@ -27,6 +28,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.AutomationRunContext;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.InternalApiTimeoutException;
@@ -159,9 +161,8 @@ public class AiWorkflowService {
         // One AI orchestration = one automation run. Scope a run id (on whichever thread runs
         // orchestrate — request thread for sync, stream-executor for streaming) so every tool
         // sub-step it dispatches via PolicyExecutor → InternalApiClient groups into one charge.
-        try (stirling.software.common.service.AutomationRunContext.Scope ignored =
-                stirling.software.common.service.AutomationRunContext.open(
-                        java.util.UUID.randomUUID().toString())) {
+        try (AutomationRunContext.Scope ignored =
+                AutomationRunContext.open(UUID.randomUUID().toString())) {
 
             // Key by opaque file id, not filename. Filenames aren't guaranteed unique across an
             // upload (users can rotate the same 'scan.pdf' twice), and the engine identifies files

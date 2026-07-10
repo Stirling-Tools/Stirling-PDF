@@ -285,10 +285,17 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
         request.setAttribute(ATTR_INPUT_BYTES, totalInputBytes);
         request.setAttribute(ATTR_TOOL_ID, resolveToolId(request));
 
-        // Automation-run correlation id set by the orchestrator (pipeline / policy / AI-workflow)
-        // and propagated by InternalApiClient. Null for a direct one-off call → its own charge.
+        // Automation-run correlation id, honoured ONLY from an internal automation dispatch.
+        // InternalApiClient stamps X-Stirling-Automation on every loopback sub-step alongside the
+        // run id, so a genuine pipeline / policy / AI run always carries both. A raw external
+        // request that sets X-Stirling-Run-Id on its own is ignored (each such call stays its own
+        // charge): otherwise an API caller could pin a constant run id to collapse separate
+        // same-content calls into one charge, defeating "charge per API call". Null → standalone.
         String headerRunId = request.getHeader(AutomationRunContext.RUN_ID_HEADER);
-        String runId = (headerRunId != null && !headerRunId.isBlank()) ? headerRunId : null;
+        String runId =
+                (hasAutomationHeader(request) && headerRunId != null && !headerRunId.isBlank())
+                        ? headerRunId
+                        : null;
         ChargeContext ctx =
                 new ChargeContext(
                         currentUser.getId(),
@@ -504,9 +511,20 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
         }
     }
 
+    /**
+     * True when the request carries the internal-dispatch marker InternalApiClient stamps on every
+     * loopback sub-step ({@code X-Stirling-Automation: true}). This is the trust boundary for both
+     * the AUTOMATION billing category and for honouring {@code X-Stirling-Run-Id}: an external
+     * caller can't group charges via a run id without also declaring itself automation (which
+     * changes its own billing category).
+     */
+    private static boolean hasAutomationHeader(HttpServletRequest request) {
+        String header = request.getHeader(AUTOMATION_HEADER);
+        return header != null && "true".equalsIgnoreCase(header.trim());
+    }
+
     private static JobSource determineSource(HttpServletRequest request, Authentication auth) {
-        String automationHeader = request.getHeader(AUTOMATION_HEADER);
-        if (automationHeader != null && "true".equalsIgnoreCase(automationHeader.trim())) {
+        if (hasAutomationHeader(request)) {
             return JobSource.PIPELINE;
         }
         String desktopHeader = request.getHeader(DESKTOP_CLIENT_HEADER);
@@ -533,8 +551,7 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
      */
     private static BillingCategory determineCategory(
             HandlerMethod handler, HttpServletRequest request, Authentication auth) {
-        String automationHeader = request.getHeader(AUTOMATION_HEADER);
-        if (automationHeader != null && "true".equalsIgnoreCase(automationHeader.trim())) {
+        if (hasAutomationHeader(request)) {
             return BillingCategory.AUTOMATION;
         }
         RequiresFeature ann =

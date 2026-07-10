@@ -1,19 +1,21 @@
 import { useTranslation } from "react-i18next";
 import { Card } from "@app/ui";
+import { formatMinor } from "@app/billing";
 import type { Wallet, WalletCategoryBreakdown } from "@portal/api/billing";
 import type { LocalUsage } from "@portal/api/link";
 
 /**
- * "PDFs processed this period" headline + a stacked split of where the metered
- * PDFs went. The split reuses the wallet's existing {@code categoryBreakdown}
- * (API / Agents / Automation — the same buckets the entitlement service tracks;
- * the "AI" bucket surfaces as "Agents" here). Real data only: the bar hides when
- * nothing metered has run yet.
+ * "PDFs processed this period" headline (the input-file count) plus a summary line
+ * separating that count from the size-scaled meter units, and a stacked split of
+ * where the PDFs went by category (API / Agents / Automation — the "AI" bucket
+ * surfaces as "Agents" here), driven by the wallet's per-category {@code categoryDocs}
+ * counts. Real data only: everything hides when nothing has run this period.
  *
- * <p>When a linked instance has accrued usage SaaS hasn't billed yet ({@code
- * unsynced}), it's folded into the headline + split so "current usage" reflects
- * work done since the last daily sync. The synced-vs-pending split is an internal
- * detail the customer doesn't need, so it's not surfaced — just the combined total.
+ * <p>Instance-local usage a linked instance has accrued but SaaS hasn't billed yet
+ * ({@code unsynced}) is units-only, so it folds into the meter-units figure (and the
+ * avg-per-PDF that derives from it) but NOT the PDF count or the per-category split,
+ * which reflect synced processing. The synced-vs-pending distinction is an internal
+ * detail, so only the combined unit total is surfaced.
  */
 const SEGMENTS: ReadonlyArray<{
   key: keyof WalletCategoryBreakdown;
@@ -70,7 +72,18 @@ export function PdfsProcessedCard({
   // API"); units are surfaced in the aggregate summary line, not per bucket.
   const perDocs: WalletCategoryBreakdown = wallet.categoryDocs;
   const totalDocs = perDocs.api + perDocs.ai + perDocs.automation;
-  const avgUnitsPerPdf = docs > 0 ? meterUnits / docs : 0;
+
+  // Average cost per PDF in minor currency units — meter units × the per-unit rate,
+  // spread over the input files processed. Shown only when the rate is known (free-tier
+  // and unknown-price snapshots omit the term rather than imply $0.00).
+  const rate = wallet.pricePerDocMinor;
+  const showAvgCost = docs > 0 && rate != null;
+  const avgCostMinor =
+    rate != null && docs > 0 ? (meterUnits / docs) * rate : 0;
+
+  // Something ran once there are either counted PDFs or metered units (instance-local
+  // unsynced usage is units-only, so it keeps the card out of the empty state).
+  const hasActivity = docs > 0 || meterUnits > 0;
 
   return (
     <Card padding="loose">
@@ -87,18 +100,27 @@ export function PdfsProcessedCard({
         </span>
       </div>
 
-      {docs > 0 ? (
+      {hasActivity ? (
         <>
           <p className="portal-billing__section-sub">
-            {t(
-              "portal.billing.pdfsProcessed.summary",
-              "{{unique}} unique · {{units}} meter units · {{avg}} avg units/PDF",
-              {
-                unique: uniquePdfs.toLocaleString(),
-                units: meterUnits.toLocaleString(),
-                avg: avgUnitsPerPdf.toFixed(1),
-              },
-            )}
+            {showAvgCost
+              ? t(
+                  "portal.billing.pdfsProcessed.summary",
+                  "{{unique}} unique · {{units}} meter units · {{avg}} avg per PDF",
+                  {
+                    unique: uniquePdfs.toLocaleString(),
+                    units: meterUnits.toLocaleString(),
+                    avg: formatMinor(avgCostMinor, wallet.currency),
+                  },
+                )
+              : t(
+                  "portal.billing.pdfsProcessed.summaryNoRate",
+                  "{{unique}} unique · {{units}} meter units",
+                  {
+                    unique: uniquePdfs.toLocaleString(),
+                    units: meterUnits.toLocaleString(),
+                  },
+                )}
           </p>
           {totalDocs > 0 ? (
             <>

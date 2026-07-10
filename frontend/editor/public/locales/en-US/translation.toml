@@ -6483,7 +6483,8 @@ segmentApiLabel = "API"
 segmentAutomationDesc = "Automations & pipelines"
 segmentAutomationLabel = "Automation"
 sizeMultiplier = "{{formatted}} PDFs used a size multiplier"
-summary = "{{unique}} unique · {{units}} meter units · {{avg}} avg units/PDF"
+summary = "{{unique}} unique · {{units}} meter units · {{avg}} avg per PDF"
+summaryNoRate = "{{unique}} unique · {{units}} meter units"
 unit = "PDFs"
 
 [portal.billing.spendLimit]
