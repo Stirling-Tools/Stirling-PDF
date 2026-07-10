@@ -51,6 +51,7 @@ import {
 import { clearProcessedHistory } from "@portal/api/policies";
 import { availableOutputModes } from "@portal/components/pipelines/outputModes";
 import { fetchSources, type SourceView } from "@portal/api/sources";
+import { EDITOR_SOURCE_TYPE } from "@portal/components/sources/sourceTypes";
 import { useAsync } from "@portal/hooks/useAsync";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { humanizeOperation } from "@portal/components/pipelines/pipelineOperations";
@@ -172,7 +173,12 @@ export function PipelineBuilder() {
     [id],
   );
   const sourcesState = useAsync<SourceView[]>(
-    async () => (await fetchSources()).sources,
+    // The editor is a built-in, client-driven source (it runs on editor upload, not as a pipeline
+    // input), so it's excluded from the sources a pipeline can pull from.
+    async () =>
+      (await fetchSources()).sources.filter(
+        (source) => source.type !== EDITOR_SOURCE_TYPE,
+      ),
     [],
   );
   const triggersState = useAsync<TriggerInfo[]>(

@@ -21,6 +21,7 @@ import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
+import stirling.software.proprietary.policy.source.EditorSource;
 import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceDocCounter;
 import stirling.software.proprietary.policy.source.SourceStore;
@@ -98,10 +99,16 @@ public class PolicyRunner {
         return context.outcome(runIds);
     }
 
-    /** Run a stored policy on caller-supplied files (e.g. manual upload), bypassing its sources. */
+    /**
+     * Run a stored policy on caller-supplied files (e.g. an editor upload), bypassing its sources.
+     * The supplied documents are still counted against the virtual {@link EditorSource}, scoped to
+     * the policy's team, so the Sources overview reports the whole team's editor throughput.
+     */
     public PolicyRunHandle runWith(
             Policy policy, PolicyInputs inputs, PolicyProgressListener listener) {
-        return policyEngine.runPolicy(policy, inputs, listener);
+        PolicyRunHandle handle = policyEngine.runPolicy(policy, inputs, listener);
+        docCounter.record(EditorSource.counterKey(policy.teamId()), inputs.primary().size());
+        return handle;
     }
 
     /** Run an ad-hoc pipeline with no stored policy (AI/Automate one-offs). */
