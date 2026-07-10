@@ -200,17 +200,17 @@ export function createUserStepsConfig({
       actionAfter: () => pinFile(),
     },
     [TourStep.WRAP_UP]: {
-      selector: '[data-tour="admin-help-nav"]',
+      selector: '[data-tour="settings-modal"]',
       content: t(
         "onboarding.wrapUp",
         "You're all set! You can replay this tour anytime — just open <strong>Settings</strong> and find it here in the <strong>Tours</strong> section under Help.",
       ),
-      position: "right",
-      padding: 10,
+      position: "center",
+      padding: 0,
       action: async () => {
         openSettingsHelpSection();
-        await waitForElement('[data-tour="admin-help-nav"]', 5000);
-        await waitForHighlightable('[data-tour="admin-help-nav"]', 5000);
+        await waitForElement('[data-tour="settings-modal"]', 5000);
+        await waitForHighlightable('[data-tour="settings-modal"]', 5000);
       },
     },
   };

@@ -3,6 +3,7 @@ import { Modal, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useMediaQuery } from "@mantine/hooks";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "@app/auth/UseSession";
 import { isUserAnonymous } from "@app/auth/supabase";
 import { useTranslation } from "react-i18next";
@@ -47,6 +48,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [active, setActive] = useState<NavKey>("overview");
   const [notice, setNotice] = useState<string | null>(null);
+  const location = useLocation();
 
   // The modal mounts lazily on first open, so a synchronous `appConfig:navigate`
   // dispatched by the opener can arrive before the listener below is attached.
@@ -85,13 +87,13 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
       setActive(initialSection);
       return;
     }
-    const match = stripBasePath(window.location.pathname).match(
+    const match = stripBasePath(location.pathname).match(
       /^\/settings\/([^/?#]+)/,
     );
     if (match) {
       setActive(match[1] as NavKey);
     }
-  }, [opened, initialSection]);
+  }, [opened, initialSection, location.pathname]);
 
   // Listen for notice updates (e.g., "Not enough credits..." next to Plan title)
   useEffect(() => {
@@ -197,7 +199,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
         closeOnEscape={!overlayActive}
         closeOnClickOutside={!overlayActive}
       >
-        <div className="modal-container">
+        <div className="modal-container" data-tour="settings-modal">
           {/* Left navigation */}
           <div
             className={`modal-nav ${isMobile ? "mobile" : ""}`}
@@ -229,6 +231,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
                       return (
                         <div
                           key={item.key}
+                          data-tour={`admin-${item.key}-nav`}
                           onClick={() => setActive(item.key)}
                           className={`modal-nav-item ${isMobile ? "mobile" : ""}`}
                           style={{
