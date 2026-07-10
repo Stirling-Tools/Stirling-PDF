@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Button, Card } from "@app/ui";
+import { useView } from "@portal/contexts/ViewContext";
 
 interface Props {
   /** Render without the Card wrapper, to embed inside another card's column. */
@@ -8,10 +9,12 @@ interface Props {
 
 /**
  * Volume-discount / Enterprise upsell, shared by the free and subscribed billing
- * views. The CTA is intentionally inert until the sales/quote URL is confirmed.
+ * views. The CTA opens the procurement journey (/procurement auto-opens the quote
+ * builder in the takeover modal).
  */
 export function EnterpriseUpsell({ bare = false }: Props) {
   const { t } = useTranslation();
+  const { setActiveView } = useView();
   const body = (
     <>
       <span className="portal-billing__eyebrow">
@@ -32,8 +35,7 @@ export function EnterpriseUpsell({ bare = false }: Props) {
             )}
           </p>
         </div>
-        {/* Destination wired when the enterprise/sales URL is confirmed. */}
-        <Button variant="gradient" size="sm" disabled>
+        <Button size="sm" onClick={() => setActiveView("procurement")}>
           {t(
             "portal.billing.enterpriseUpsell.cta",
             "Build your Enterprise quote",

@@ -1,7 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { MantineProvider } from "@mantine/core";
 import { HttpError } from "@portal/api/http";
 import { ConnectWizard } from "@portal/components/sources/ConnectWizard";
+
+function renderWithMantine(ui: React.ReactElement) {
+  return render(<MantineProvider>{ui}</MantineProvider>);
+}
 
 // Deterministic i18n: keys come back verbatim so the test never waits on the
 // async TOML backend.
@@ -41,7 +46,9 @@ describe("ConnectWizard", () => {
     const onCreated = vi.fn();
     const onClose = vi.fn();
 
-    render(<ConnectWizard open onClose={onClose} onCreated={onCreated} />);
+    renderWithMantine(
+      <ConnectWizard open onClose={onClose} onCreated={onCreated} />,
+    );
 
     stepToReview();
 
@@ -54,7 +61,12 @@ describe("ConnectWizard", () => {
     expect(createSource).toHaveBeenCalledWith({
       name: "Claims intake",
       type: "folder",
-      options: { directory: "/data/incoming", mode: "consume" },
+      options: {
+        directory: "/data/incoming",
+        mode: "consume",
+        recursive: "false",
+        identity: "stat",
+      },
       enabled: true,
     });
     await waitFor(() => {
@@ -66,7 +78,7 @@ describe("ConnectWizard", () => {
     createSource.mockResolvedValue({ id: "s1" });
     const onCreated = vi.fn();
 
-    render(
+    renderWithMantine(
       <ConnectWizard
         open
         source={{
@@ -94,11 +106,17 @@ describe("ConnectWizard", () => {
     await waitFor(() => {
       expect(createSource).toHaveBeenCalledTimes(1);
     });
+    // Options absent from the stored source are submitted at their defaults.
     expect(createSource).toHaveBeenCalledWith({
       id: "s1",
       name: "James",
       type: "folder",
-      options: { directory: "/data/in", mode: "consume" },
+      options: {
+        directory: "/data/in",
+        mode: "consume",
+        recursive: "false",
+        identity: "stat",
+      },
       enabled: true,
     });
     await waitFor(() => {
@@ -113,7 +131,9 @@ describe("ConnectWizard", () => {
       }),
     );
 
-    render(<ConnectWizard open onClose={vi.fn()} onCreated={vi.fn()} />);
+    renderWithMantine(
+      <ConnectWizard open onClose={vi.fn()} onCreated={vi.fn()} />,
+    );
 
     stepToReview();
     fireEvent.click(screen.getByText("portal.sources.actions.connectSource"));

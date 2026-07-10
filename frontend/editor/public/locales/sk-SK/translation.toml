@@ -7,6 +7,7 @@ black = "Čierna"
 blue = "Modrá"
 cancel = "Zrušiť"
 chooseFile = "Vybrať súbor"
+clear = "Vymazať"
 close = "Zatvoriť"
 comingSoon = "Už čoskoro"
 confirm = "Potvrdiť"
@@ -87,6 +88,7 @@ processingCompleteMultiple = "Je pripravených {{count}} súborov."
 property = "Vlastnosť"
 quickPosition = "Rýchla pozícia"
 red = "Červená"
+remove = "Odstrániť"
 reset = "Resetovať"
 review = "Skontrolovať"
 save = "Uložiť"
@@ -180,6 +182,7 @@ addMoreFiles = "Pridať ďalšie súbory..."
 attachments = "Vyberte prílohy"
 info = "Vyberte súbory, ktoré chcete pripojiť k PDF. Tieto súbory budú vložené a prístupné cez panel príloh PDF."
 placeholder = "Vyberte súbory..."
+removeFile = "Odstrániť súbor"
 selectedFiles = "Vybrané súbory"
 submit = "Pridať prílohy"
 
@@ -1628,6 +1631,9 @@ title = "Chcete zlepšiť Stirling PDF?"
 tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
 
 [annotation]
+alignCenter = "Zarovnať na stred"
+alignLeft = "Zarovnať doľava"
+alignRight = "Zarovnať doprava"
 annotationStyle = "Štýl anotácie"
 backgroundColor = "Farba pozadia"
 borderOff = "Okraj: Vypnuté"
@@ -2531,6 +2537,7 @@ title = "Všeobecné pravidlo"
 
 [certSign.source]
 device = "Toto zariadenie"
+noOtherSources = "Nie sú dostupné žiadne ďalšie zdroje certifikátov."
 server = "Server"
 stepTitle = "Zdroj certifikátu"
 upload = "Nahrať"
@@ -2805,6 +2812,7 @@ back = "Späť"
 cancel = "Zrušiť"
 close = "Zavrieť"
 collapse = "Zbaliť"
+confirm = "Potvrdiť"
 continue = "Pokračovať"
 copied = "Skopírované!"
 copy = "Kopírovať"
@@ -3595,7 +3603,9 @@ makeCopy = "Vytvoriť kópiu"
 mobileShort = "Mobil"
 mobileUpload = "Nahrávanie z mobilu"
 mobileUploadNotAvailable = "Nahrávanie z mobilu nie je povolené"
+moreOptions = "Ďalšie možnosti"
 myFiles = "Moje súbory"
+nextFile = "Ďalší súbor"
 noFiles = "Nie sú dostupné žiadne súbory"
 noFilesFound = "Nenašli sa žiadne súbory zodpovedajúce vášmu vyhľadávaniu"
 noRecentFiles = "Nenašli sa žiadne nedávne súbory"
@@ -3605,6 +3615,7 @@ openInFileEditor = "Otvoriť v editore súborov"
 openInPageEditor = "Otvoriť v editore stránok"
 owner = "Vlastník"
 ownerUnknown = "Neznámy"
+previousFile = "Predchádzajúci súbor"
 recent = "Nedávne"
 removeBoth = "Odstrániť z oboch"
 removeFilePrompt = "Tento súbor je uložený v tomto zariadení aj na vašom serveri. Odkiaľ ho chcete odstrániť?"
@@ -3680,7 +3691,9 @@ workbench = "Pracovná plocha"
 
 [fileSidebar]
 addFiles = "Pridať súbory"
+addingFiles = "Pridávajú sa súbory…"
 collapse = "Zbaliť bočný panel"
+customizeGroups = "Prispôsobiť skupiny"
 dropHint = "Ak chcete začať, otvorte súbory"
 dropToAdd = "Drop files to add"
 expand = "Rozbaliť bočný panel"
@@ -3693,8 +3706,11 @@ noFiles = "Zatiaľ žiadne súbory"
 openFileManager = "Otvoriť správcu súborov"
 openFromComputer = "Otvoriť z počítača"
 openSettings = "Otvoriť nastavenia"
+other = "Ostatné"
+recent = "Nedávne"
 search = "Hľadať"
 searchPlaceholder = "Hľadať súbory..."
+viewAll = "Zobraziť všetkých {{count}} súborov"
 
 [fileSidebar.fileItem]
 closeViewer = "Zavrieť prehliadač"
@@ -3706,6 +3722,23 @@ updateOnServer = "Update on server"
 uploadToServer = "Upload to server"
 versionHistory = "Version history"
 
+[fileSidebar.groupsModal]
+add = "Pridať"
+addLabel = "Pridať štítok…"
+categoryIconAria = "Vybrať ikonu pre {{name}}"
+createCategory = "Vytvoriť kategóriu"
+delete = "Odstrániť kategóriu"
+done = "Hotovo"
+hide = "Skryť kategóriu"
+newCategory = "Nový názov kategórie…"
+removeLabel = "Odstrániť {{name}}"
+rename = "Premenovať"
+reset = "Obnoviť predvolené nastavenia"
+search = "Hľadať štítky…"
+show = "Zobraziť kategóriu"
+subtitle = "Zoskupte svoje súbory do nadradených kategórií. Pridajte existujúce alebo nové štítky do kategórie, premenujte ju alebo si vytvorte vlastnú. Súbory, ktoré nie sú v žiadnej z vašich kategórií, sa zobrazia v časti „Ostatné“."
+title = "Kategórie bočného panela"
+
 [filesPage]
 addToWorkspace = "Pridať do pracovného priestoru"
 addToWorkspaceCount = "Pridať {{count}} do pracovného priestoru"
@@ -3715,6 +3748,7 @@ backToFolder = "Späť do {{folder}}"
 backToMyFiles = "Späť na Moje súbory"
 breadcrumbs = "Cesta k priečinku"
 cancel = "Zrušiť"
+classification = "Klasifikácia"
 clearSearch = "Vymazať vyhľadávanie"
 clearSelection = "Zrušiť výber"
 closeDetails = "Zavrieť podrobnosti"
@@ -3874,10 +3908,10 @@ uploadFilesFailedDetail = "Nepodarilo sa nahrať súbory: {{message}}"
 added = "Pridané"
 count = "Súbory"
 folder = "Priečinok"
+labels = "Štítky"
 modified = "Zmenené"
 name = "Názov"
 size = "Veľkosť"
-toolHistory = "História nástrojov"
 toolHistoryAtVersion = "Kumulatívny reťazec nástrojov"
 totalSize = "Celková veľkosť"
 type = "Typ"
@@ -4614,10 +4648,10 @@ welcomeTitle = "Boli ste pozvaní!"
 [landing]
 addFiles = "Pridať súbory"
 heroSubtitle = "Pretiahnite alebo pridajte existujúci súbor PDF a začnite."
-heroTitle = "Stirling PDF"
 mobileUpload = "Nahratie z mobilu"
 openFromComputer = "Otvoriť z počítača"
 uploadFromComputer = "Nahrať z počítača"
+workbenchEmptyStateHero = "Presuňte PDF kamkoľvek"
 
 [language]
 direction = "ltr"
@@ -4930,6 +4964,7 @@ title = "Výstup"
 [onboarding]
 activeFiles = "Zobrazenie <strong>Aktívne súbory</strong> zobrazuje všetky PDF načítané do nástroja a umožňuje vybrať, ktoré chcete spracovať."
 allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
+close = "Zavrieť"
 cropSettings = "Keď sme vybrali súbor, ktorý chceme orezať, môžeme nakonfigurovať nástroj Orez tak, aby sme zvolili oblasť, na ktorú chceme PDF orezať."
 fileCheckbox = "Kliknutím na niektorý zo súborov ho vyberiete na spracovanie. Môžete vybrať viac súborov pre hromadné operácie."
 fileReplacement = "Upravený súbor automaticky nahradí pôvodný súbor na pracovnej ploche, čo vám umožní ľahko ho spracovať ďalšími nástrojmi."
@@ -4955,6 +4990,7 @@ skipTheTour = "Preskočiť prehliadku"
 
 [onboarding.desktopInstall]
 body = "Stirling najlepšie funguje ako desktopová aplikácia. Môžete ju používať offline, pristupovať k dokumentom rýchlejšie a upravovať lokálne na počítači."
+selectOs = "Vyberte operačný systém"
 title = "Stiahnuť"
 titleWithOs = "Stiahnuť pre {{osLabel}}"
 
@@ -5566,7 +5602,9 @@ viewLabel = "Editor PDF"
 
 [pdfTextEditor.actions]
 applyChanges = "Použiť zmeny"
+clearText = "Vymazať text"
 downloadCopy = "Stiahnuť kópiu"
+moreOptions = "Ďalšie možnosti"
 reset = "Resetovať zmeny"
 
 [pdfTextEditor.badges]
@@ -5942,6 +5980,16 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.docType]
+Contracts = "Zmluvy"
+"Financial reports" = "Finančné správy"
+"HR records" = "HR záznamy"
+Insurance = "Poistenie"
+Invoices = "Faktúry"
+"Legal filings" = "Právne podania"
+"Medical / PHI" = "Zdravotné / PHI"
+"Tax documents" = "Daňové dokumenty"
+
 [policies.enforcement]
 applying = "Uplatňuje sa {{names}}"
 applyingProgress = "Uplatňuje sa {{names}} ({{done}} z {{total}})"
@@ -5963,8 +6011,94 @@ export = "Vynucovanie pred exportom"
 input = "Vynucovanie pri importe"
 print = "Vynucovanie pred tlačou"
 
+[policies.field]
+accessLog = "Protokol prístupu"
+archiveAfter = "Archivovať po"
+auditTrail = "Auditná stopa"
+belowThreshold = "Pod prahom"
+destination = "Cieľ"
+frameworks = "Rámce"
+immutableHold = "Nemenné pozdržanie"
+keepFor = "Uchovať na"
+minConfidence = "Min. spoľahlivosť"
+notify = "Upozorniť pri smerovaní"
+onViolation = "Pri nesúlade"
+webhookUrl = "Webhook URL"
+
+[policies.fieldOption.archiveAfter]
+"1 year" = "1 rok"
+"30 days" = "30 dní"
+"90 days" = "90 dní"
+Never = "Nikdy"
+
+[policies.fieldOption.belowThreshold]
+"Flag for review" = "Označiť na kontrolu"
+Hold = "Pozdržať"
+"Route to bucket" = "Smerovať do bucketu"
+
+[policies.fieldOption.destination]
+Documents = "Dokumenty"
+"S3 bucket" = "S3 bucket"
+SharePoint = "SharePoint"
+Webhook = "Webhook"
+
+[policies.fieldOption.frameworks]
+FedRAMP = "FedRAMP"
+GDPR = "GDPR"
+HIPAA = "HIPAA"
+"ISO 27001" = "ISO 27001"
+"PCI DSS" = "PCI DSS"
+"SOC 2" = "SOC 2"
+
+[policies.fieldOption.keepFor]
+"1 year" = "1 rok"
+"3 years" = "3 roky"
+"30 days" = "30 dní"
+"7 years" = "7 rokov"
+Indefinite = "Na neurčito"
+
+[policies.fieldOption.minConfidence]
+"60%" = "60%"
+"70%" = "70%"
+"80%" = "80%"
+"90%" = "90%"
+"95%" = "95%"
+
+[policies.fieldOption.onViolation]
+"Auto-redact PHI" = "Automaticky začierniť PHI"
+"Block export" = "Blokovať export"
+"Flag for review" = "Označiť na kontrolu"
+"Quarantine document" = "Umiestniť dokument do karantény"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
+
+[policies.labels]
+add = "Pridať"
+addPlaceholder = "Pridať štítok…"
+customNote = "Prispôsobené pre váš tím."
+defaultNote = "Používa sa vstavané predvolené nastavenie zdieľané s vaším tímom."
+duplicate = "„{{name}}“ už existuje."
+edit = "Upraviť štítky"
+empty = "Zatiaľ žiadne štítky."
+export = "Exportovať JSON"
+iconAria = "Vybrať ikonu pre {{name}}"
+import = "Importovať JSON"
+importError = "Tento súbor sa nepodarilo importovať."
+managedNote = "Tímové štítky spravuje vedúci vášho tímu."
+modalSubtitle = "Zdieľané s celým vaším tímom. Klasifikátor vyberie štítky, ktoré sa hodia ku každému dokumentu."
+modalTitle = "Klasifikačné štítky"
+pickIcon = "Použiť ikonu {{label}}"
+removeAria = "Odstrániť {{name}}"
+resetToDefault = "Obnoviť predvolené"
+saveForTeam = "Uložiť pre tím"
+saving = "Ukladá sa…"
+sectionLabel = "Klasifikačné štítky"
+startFromScratch = "Začať od začiatku"
+teamCount = "tímové štítky"
+tooLong = "Štítky môžu mať najviac {{max}} znakov."
+ungrouped = "Nezoskupené"
+view = "Zobraziť štítky"
 
 [policies.pii]
 account = "Čísla účtov (označené)"
@@ -5977,17 +6111,30 @@ placeholder = "Select PII types"
 routing = "US smerovacie čísla (ABA)"
 ssn = "Čísla sociálneho zabezpečenia"
 
+[policies.settings]
+noneExport = "Pri exporte sa momentálne nespúšťajú žiadne zásady."
+noneUpload = "Pri nahrávaní sa momentálne nespúšťajú žiadne zásady."
+onExport = "Pri exporte"
+onUpload = "Pri nahrávaní"
+reorderHandle = "Potiahnutím zmeniť poradie"
+runOrderDesc = "Keď sa pri rovnakom spúšťači spustí viac než jedna zásada, spustia sa v tomto poradí — každá na výstupe predchádzajúcej zásady. Potiahnutím zmeníte poradie."
+title = "Nastavenia zásad"
+
 [policies.sidebar]
 activeCount = "{{count}} active"
-infoAriaLabel = "What is a policy?"
 infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
 loading = "Loading…"
+optionsAriaLabel = "Možnosti zásad"
+policySettings = "Nastavenia zásad"
 railAriaLabel = "{{label}} policy — {{status}}"
 railSuffixActive = " (Active)"
 railSuffixPaused = " (Paused)"
+retryFailed = "Znova skúsiť neúspešné zásady ({{count}})"
+rowProgress = "Spracovaných {{completed}} z {{total}} súborov"
 setUp = "Set up"
 title = "Policies"
 upgradeToEnterprise = "Upgrade to enterprise"
+whatIsPolicy = "Čo je zásada?"
 
 [policies.status]
 active = "Active"
@@ -6047,6 +6194,1933 @@ sourcesLabel = "Sources"
 stepOf = "Step {{step}} of {{total}}"
 toolChainDesc = "Configure the tools this policy runs on each document."
 typesSelected = "{{count}} types selected"
+
+[policy]
+badgeEnforcing = "{{name}} sa vynucuje..."
+badgeRan = "Zásada {{name}} sa spustila na tomto súbore"
+blockingAction = "{{action}} zablokované počas vynucovania zásady, čakajte prosím..."
+dismiss = "Zavrieť prekrytie"
+enforcingTitle = "Vynucuje sa zásada..."
+viewAnyway = "Zobraziť súbor (zásada sa stále vynucuje)"
+
+[portal]
+comingSoon = "Už čoskoro"
+
+[portal.accountLink.card]
+billingNote = "Bezobslužné spracovanie sa účtuje z peňaženky vašej organizácie."
+eyebrow = "Prepojenie účtu"
+linkButton = "Prepojiť váš účet Stirling"
+linked = "Prepojené"
+linkedAs = "Prepojené ako {{name}}."
+linkedGeneric = "Táto inštancia je prepojená."
+notLinked = "Neprepojené"
+title = "Prepojiť túto organizáciu s jej účtom Stirling"
+unlink = "Zrušiť prepojenie"
+
+[portal.accountLink.card.error]
+title = "Nepodarilo sa prepojiť"
+
+[portal.accountLink.card.loginNotConfigured]
+after = "na povolenie prepájania účtov s hosťovaným účtom Stirling. Vo vývoji môžete simulovať prihlásenie z dialógu prepojenia."
+before = "Nastavte"
+title = "SaaS prihlásenie nie je nakonfigurované"
+
+[portal.accountLink.gate]
+action = "Prepojiť účet"
+description = "Prepojte účet Stirling tejto organizácie, aby ste mohli používať spoplatnené funkcie."
+title = "Prepojte na odomknutie"
+titleFeature = "Prepojte na odomknutie {{feature}}"
+
+[portal.accountLink.instances]
+active = "Aktívne"
+revoke = "Odvolať"
+revoked = "Odvolané"
+unnamed = "Nepomenovaná inštancia"
+
+[portal.accountLink.instances.columns]
+instance = "Inštancia"
+lastSeen = "Naposledy videné"
+linked = "Prepojené"
+status = "Stav"
+
+[portal.accountLink.instances.empty]
+description = "Prepojte účet tejto organizácie a potom zaregistrujte svoje self-hosted inštancie, aby sa tu zobrazili."
+title = "Žiadne prepojené inštancie"
+
+[portal.accountLink.instances.time]
+daysAgo_one = "pred {{count}} d"
+daysAgo_other = "pred {{count}} d"
+hoursAgo_one = "pred {{count}} h"
+hoursAgo_other = "pred {{count}} h"
+justNow = "práve teraz"
+minutesAgo_one = "pred {{count}} min"
+minutesAgo_other = "pred {{count}} min"
+never = "nikdy"
+
+[portal.accountLink.modal]
+linkSubtitle = "Prihláste sa do účtu, voči ktorému má tento server účtovať."
+linkTitle = "Prepojiť váš účet Stirling"
+reauthSubtitle = "Platnosť vašej relácie vypršala — znova sa prihláste do svojho účtu Stirling. Vaša inštancia zostane prepojená."
+reauthTitle = "Znova sa prihlásiť"
+simulateSignIn = "Simulovať prihlásenie (dev)"
+
+[portal.accountLink.modal.loginNotConfigured]
+after = "na povolenie prepájania v aplikácii s hosťovaným účtom Stirling."
+and = "a"
+before = "Nastavte"
+title = "SaaS prihlásenie nie je nakonfigurované"
+
+[portal.accountLink.panel]
+instancesSub = "Každá self-hosted inštancia zaregistrovaná v tejto organizácii. Odvolajte poverenie, aby ste okamžite prerušili jej bezobslužný prístup."
+instancesTitle = "Prepojené inštancie"
+revokeError = "Inštanciu sa nepodarilo odvolať"
+sub = "Prepojte túto self-hosted organizáciu s jej účtom Stirling, aby sa bezobslužné spracovanie účtovalo z peňaženky vašej organizácie."
+
+[portal.accountLink.panel.loadError]
+forbidden = "Prepojené inštancie organizácie môže zobraziť iba vlastník tímu."
+generic = "Prepojené inštancie tímu sa nepodarilo načítať. Skúste to o chvíľu znova."
+title = "Prepojené inštancie sa nepodarilo načítať"
+
+[portal.accountLink.state]
+free = "Plán Editor"
+subscribed = "Plán Processor"
+unlinked = "Neprepojené"
+
+[portal.agentBuilder]
+bootstrapFromDocument = "Inicializovať z dokumentu"
+sectionsAriaLabel = "Sekcie tvorcu agentov"
+selectorAriaLabel = "Agenti"
+subtitle = "Navrhujte, testujte a nasadzujte AI agentov, ktorí klasifikujú, extrahujú z vašich dokumentov a smerujú ich. Definujte scenáre, obmedzte prístup k nástrojom, spustite golden set a publikujte verziu."
+title = "Tvorca agentov"
+
+[portal.agentBuilder.bootstrap]
+cancel = "Zrušiť"
+dropzoneText = "Vyberte vzorový dokument (PDF alebo obrázok)"
+lead = "Presuňte vzorový dokument a navrhneme scenáre a schému extrakcie, ktoré môžete doladiť. Nič sa nepublikuje, kým to neskontrolujete."
+submit = "Inicializovať agenta"
+subtitle = "Vytvoriť základ nového agenta z jedného reprezentatívneho súboru"
+title = "Inicializovať z dokumentu"
+
+[portal.agentBuilder.empty]
+description = "Inicializujte agenta zo vzorového dokumentu, aby sa vytvoril základ scenárov a schémy extrakcie, potom ho dolaďte a publikujte."
+title = "Zatiaľ žiadni agenti"
+
+[portal.agentBuilder.evals]
+casesPassing = "Úspešné prípady"
+columnCase = "Eval prípad"
+columnLatency = "Latencia"
+columnResult = "Výsledok"
+fail = "neúspech"
+goldenSetPassRate = "Miera úspešnosti golden-set"
+latencyMs = "{{ms}} ms"
+notRun = "nespustené"
+pass = "úspech"
+passRate = "Miera úspešnosti"
+runEvals = "Spustiť evals"
+
+[portal.agentBuilder.evals.empty]
+description = "Evals premieňajú vaše scenáre na opakovateľný golden set. Prejdite na vyšší plán, aby ste mohli sledovať mieru úspešnosti v čase a podmieniť ňou publikovanie."
+title = "Zatiaľ žiadny golden set"
+
+[portal.agentBuilder.kpi]
+acrossGoldenSets = "naprieč golden setmi"
+activeAgents = "Aktívni agenti"
+avgPassRate = "Priemerná úspešnosť eval"
+fleetWide = "v celej flotile"
+latestPublished = "Naposledy publikované"
+scenarios = "Scenáre"
+testCases = "testovacie prípady"
+totalDescription_one = "{{count}} celkom"
+totalDescription_other = "{{count}} celkom"
+
+[portal.agentBuilder.scenarios]
+add = "Pridať"
+addScenario = "Pridať scenár"
+enable = "Povoliť"
+expectationLabel = "Očakávané správanie"
+expectationPlaceholder = "Čo má agent urobiť"
+inEval = "v eval"
+mute = "Stlmiť"
+muted = "stlmené"
+nameLabel = "Názov"
+namePlaceholder = "napr. Eskalácia súladu"
+
+[portal.agentBuilder.tabs]
+evals = "Evals"
+scenarios = "Scenáre"
+tools = "Nástroje"
+versions = "Verzie"
+
+[portal.agentBuilder.tools]
+broadAccess = "Široký prístup"
+deniedHint = "Vybrané nástroje sú blokované. Všetko ostatné zostáva vyvolateľné."
+deniedTools = "Zakázané nástroje"
+governanceGate = "Správa nástrojov je dostupná v pláne Enterprise."
+restricted = "Obmedzené"
+restrictedAccess = "Obmedzený prístup k nástrojom"
+restrictedDescription = "Povoliť každý nástroj okrem tých, ktoré nižšie zakážete."
+
+[portal.agentBuilder.versions]
+current = "aktuálna"
+historyGate = "Úplná história verzií a rollback sú dostupné v pláne Enterprise."
+publish = "Publikovať"
+rollBack = "Vrátiť späť"
+
+[portal.assistant]
+close = "Zavrieť asistenta"
+error = "Asistenta sa nepodarilo kontaktovať."
+errorWithDetail = "Asistenta sa nepodarilo kontaktovať: {{detail}}"
+inputAriaLabel = "Opýtať sa asistenta"
+inputPlaceholder = "Opýtajte sa na Stirling…"
+open = "Otvoriť asistenta"
+send = "Odoslať"
+title = "Asistent"
+tryAsking = "Skúste sa opýtať"
+typing = "Píše"
+
+[portal.auth]
+loading = "Načítava sa"
+redirectingToEditor = "Presmerováva sa do editora..."
+
+[portal.billing.checkout]
+noClientSecret = "Edge funkcia nevrátila client_secret."
+subtitle = "Pridajte kartu, aby ste mohli pokračovať po vyčerpaní bezplatného grantu plánu Editor. Stripe sa postará o zvyšok."
+title = "Zapnúť plán Processor"
+
+[portal.billing.checkout.activationSlow]
+body = "Vaša platba bola úspešná, ale aktivácia trvá o niečo dlhšie než zvyčajne. Zapne sa automaticky – zavrite toto okno a čoskoro sa tu zobrazí."
+close = "Zavrieť"
+title = "Už takmer hotovo"
+
+[portal.billing.checkout.error]
+title = "Checkout sa nepodarilo spustiť"
+
+[portal.billing.checkout.finalizing]
+body = "Vaša platba prešla. Zapíname merané spracovanie naprieč vašimi prepojenými inštanciami – zvyčajne to trvá niekoľko sekúnd."
+hint = "Nechajte toto okno otvorené."
+title = "Aktivuje sa váš plán Processor..."
+
+[portal.billing.checkout.notConfigured]
+bodyAfter = "v env portálu na povolenie checkoutu v aplikácii."
+bodyBefore = "Nastavte"
+title = "Stripe nie je nakonfigurovaný"
+
+[portal.billing.enterpriseUpsell]
+cta = "Vytvoriť vašu ponuku Enterprise"
+description = "Zľavy za záväzný objem, nasadenie air-gapped, vlastná MSA a bezpečnostné posúdenia, a partnerstvá s distribútormi tretích strán."
+eyebrow = "Množstevná zľava · 1M+ PDF"
+title = "Stirling Enterprise"
+
+[portal.billing.freeEditors]
+activeThisMonth = "Aktívne tento mesiac"
+cost = "Náklady"
+editorsDeployed = "Nasadené editory"
+inviteTeammates = "Pozvať členov tímu"
+pdfsEdited = "Upravené PDF"
+subtitle = "Nasaďte kdekoľvek, pre celý váš tím."
+title = "Bezplatné PDF editory"
+
+[portal.billing.freePlan]
+checkoutErrorTitle = "Checkout sa nepodarilo spustiť"
+currentPlan = "Aktuálny plán"
+freeForever = "Navždy zadarmo"
+noTeamResolved = "Vo vašej peňaženke zatiaľ nie je vyriešený žiadny tím — obnovte stránku a skúste to znova."
+ownerOnly = "Plán Processor môže zapnúť iba vlastník tímu."
+planName = "Editor"
+ssoIncluded = "SSO zahrnuté"
+switchOnProcessor = "Zapnúť Processor →"
+unlimitedUsers = "Neobmedzení používatelia"
+
+[portal.billing.invoices]
+columnAmount = "Suma"
+columnDate = "Dátum"
+columnDescription = "Popis"
+columnPdfsProcessed = "Spracované PDF"
+columnStatus = "Stav"
+descriptionFallback = "Faktúra"
+downloadAriaLabel = "Stiahnuť faktúru {{number}} ako PDF"
+emptyDescription = "Keď sa váš tím prihlási na odber a uzavrie sa prvý cyklus, vaše faktúry sa zobrazia tu."
+emptyTitle = "Zatiaľ žiadne faktúry"
+fetchLimitNote_one = "Zobrazuje sa vaša {{count}} najnovšia faktúra. Staršie faktúry sú v portáli Stripe."
+fetchLimitNote_other = "Zobrazuje sa vašich {{count}} najnovších faktúr. Staršie faktúry sú v portáli Stripe."
+loadError = "Faktúry sa nepodarilo načítať: {{error}}"
+pdfLink = "PDF ↓"
+showAll_one = "Zobraziť všetky {{count}}"
+showAll_other = "Zobraziť všetkých {{count}}"
+showFewer_one = "Zobraziť menej (prvých {{count}})"
+showFewer_other = "Zobraziť menej (prvých {{count}})"
+showMostRecent_one = "Zobraziť {{count}} najnovšiu"
+showMostRecent_other = "Zobraziť {{count}} najnovších"
+title = "História faktúr"
+viewAriaLabel = "Zobraziť faktúru {{number}} v Stripe"
+viewLink = "Zobraziť ↗"
+
+[portal.billing.linkPrompt]
+cta = "Prepojiť účet Stirling"
+description = "Manuálna úprava PDF — zobrazenie, podpisovanie, zlúčenie, rozdelenie, vodoznak, kompresia, konverzia, manuálne OCR — je vždy bezplatná, či už je účet prepojený alebo nie. Prepojením získate 500 bezplatných PDF meraného spracovania (automatizácia, AI a API); keď budete potrebovať viac, zapnite plán Processor a plaťte iba za to, čo použijete."
+title = "Prepojiť váš účet Stirling"
+
+[portal.billing.paymentMethod]
+billedMonthly = "Účtované mesačne"
+cardEnding = "{{brand}} končiaca na {{last4}}"
+cardFallback = "Karta"
+expiresBilledMonthly = "Platnosť do {{expiry}} · účtované mesačne"
+eyebrow = "Spôsob platby"
+managedSub = "Vaša karta a fakturačné údaje sú bezpečne uložené v zákazníckom portáli Stripe."
+managedTitle = "Spravované v Stripe"
+update = "Aktualizovať"
+
+[portal.billing.pdfsProcessed]
+emptyPeriod = "V tomto období zatiaľ neprebehlo žiadne merané spracovanie."
+eyebrow = "PDF spracované v tomto období"
+legendValue_one = "{{formatted}} PDF"
+legendValue_other = "{{formatted}} PDF"
+segbarAriaLabel = "Merané PDF rozdelené podľa kategórie"
+segmentAgentsDesc = "Akcie AI agentov"
+segmentAgentsLabel = "Agenti"
+segmentApiDesc = "Priame API požiadavky"
+segmentApiLabel = "API"
+segmentAutomationDesc = "Automatizácie a pipeline"
+segmentAutomationLabel = "Automatizácia"
+unit = "merané PDF"
+
+[portal.billing.spendLimit]
+adjustLimit = "Upraviť limit"
+cancel = "Zrušiť"
+capControlNote = "Zmeny sa prejavia okamžite — strop môžete kedykoľvek zvýšiť alebo znížiť."
+capSuffix = "/ mesiac"
+capSuffixWithDocs = "/ mesiac · ≈ {{documents}} dokumentov"
+displaySub = "Účtuje sa vám iba to, čo spracujete automaticky — nikdy nie nad strop."
+editTitle = "Nastaviť mesačný strop"
+eyebrow = "Limit výdavkov"
+guardrailBody = "pevný strop — nikdy vám nebude účtované nad jeho rámec. Pri dosiahnutí stropu sa merané spracovanie pozastaví (neobmedzená úprava PDF bude naďalej fungovať), kým ho nezvýšite alebo sa cyklus nevynuluje. Nič sa nestratí."
+guardrailLabel = "Vaše ochranné pravidlo:"
+noCap = "bez stropu"
+pctUsed = "využité {{pct}} %"
+remaining = "zostáva {{amount}}"
+save = "Uložiť limit"
+saveError = "Limit sa nepodarilo uložiť"
+thisPeriodUncapped = "{{amount}} v tomto období · bez stropu"
+usedThisMonth = "{{amount}} použité tento mesiac"
+useSuggested = "Použiť navrhované · {{amount}} / mesiac"
+
+[portal.billing.spendLimit.projection]
+body_one = "Pri {{rate}}/deň dosiahnete strop za ~{{count}} deň (~{{monthEnd}} na konci mesiaca). Navrhovaný limit ~{{suggested}}."
+body_other = "Pri {{rate}}/deň dosiahnete strop za ~{{count}} dní (~{{monthEnd}} na konci mesiaca). Navrhovaný limit ~{{suggested}}."
+label = "Predpokladá sa prekročenie."
+
+[portal.billing.spendThisMonth]
+eyebrow = "Výdavky tento mesiac"
+processed_one = "Spracované {{formattedCount}} PDF."
+processed_other = "Spracovaných {{formattedCount}} PDF."
+processedWithRate_one = "Spracované {{formattedCount}} PDF, po {{rate}} za kus."
+processedWithRate_other = "Spracovaných {{formattedCount}} PDF, po {{rate}} za kus."
+
+[portal.billing.subscribedPlan.capWarn]
+approachingBody = "Zvýšte ho teraz, aby sa automatizované spracovanie nikdy nepozastavilo."
+approachingTitle = "Ste na {{pct}} % svojho mesačného limitu výdavkov"
+raiseLimit = "Zvýšiť limit"
+reachedBody = "Merané spracovanie je pozastavené, kým nezvýšite limit alebo sa cyklus nevynuluje. Neobmedzená úprava PDF naďalej funguje."
+reachedTitle = "Mesačný limit výdavkov bol dosiahnutý"
+
+[portal.billing.subscribedPlan.portalError]
+title = "Portál Stripe sa nepodarilo otvoriť"
+
+[portal.billing.walletMeter]
+capSuffix_one = "z {{allowance}} bezplatných PDF použitých"
+capSuffix_other = "z {{allowance}} bezplatných PDF použitých"
+eyebrow = "Skúšobná verzia Processor"
+statusLabel_one = "zostáva {{remaining}}"
+statusLabel_other = "zostáva {{remaining}}"
+sub = "Používajte PDF Editor zadarmo. Plaťte za automatické spracovanie PDF."
+title_one = "Spracujte {{allowance}} PDF zadarmo"
+title_other = "Spracujte {{allowance}} PDF zadarmo"
+titleWithRate_one = "Spracujte {{allowance}} PDF zadarmo, potom {{rate}}/PDF"
+titleWithRate_other = "Spracujte {{allowance}} PDF zadarmo, potom {{rate}}/PDF"
+
+[portal.catalogue.card]
+lockedAriaLabel = "Zamknuté"
+openAriaLabel = "Otvoriť komponent {{name}}"
+
+[portal.catalogue.detail]
+addToProject = "Pridať do projektu"
+ariaLabel = "Detail komponentu"
+tabsAriaLabel = "Sekcie detailu komponentu"
+upgradeToUnlock = "Prejdite na vyšší plán na odomknutie"
+
+[portal.catalogue.detail.code]
+install = "Inštalácia"
+usage = "Použitie"
+
+[portal.catalogue.detail.locked]
+description = "{{name}} je zahrnuté od plánu {{tier}}. Prejdite na vyšší plán, aby ste ho mohli vložiť."
+title = "Nie je dostupné vo vašom pláne"
+
+[portal.catalogue.detail.preview]
+badge = "Živý náhľad"
+note = "Interaktívny sandbox sa vykreslí tu"
+
+[portal.catalogue.detail.pricing]
+note = "Merané za {{unit}}. Použitie nad mesačnú bezplatnú kvótu sa účtuje na váš účet a je rozpísané v časti Použitie a fakturácia."
+
+[portal.catalogue.detail.stats]
+billedOn = "Účtované podľa"
+embeds30d = "Vloženia (30 d)"
+freeQuota = "Bezplatná kvóta"
+freeQuotaValue = "{{amount}} / mes."
+maturity = "Vyspelosť"
+none = "Žiadne"
+perAction = "Za akciu"
+price = "Cena"
+
+[portal.catalogue.detail.tabs]
+code = "Kód"
+overview = "Prehľad"
+pricing = "Ceny"
+props = "Props / API"
+
+[portal.catalogue.props]
+optional = "voliteľné"
+required = "povinné"
+
+[portal.catalogue.props.columns]
+description = "Popis"
+name = "Prop"
+required = "Povinné"
+type = "Typ"
+
+[portal.catalogue.summary]
+componentsGa = "Komponenty GA"
+componentSpendMtd = "Výdavky na komponenty (MTD)"
+embedsThisMonth = "Vloženia tento mesiac"
+inBeta = "V beta"
+
+[portal.components.billingUnit]
+approval = "schválenie"
+check = "kontrola"
+event = "udalosť"
+render = "vykreslenie"
+review = "revízia"
+session = "relácia"
+signature = "podpis"
+
+[portal.components.maturity]
+beta = "Beta"
+ga = "GA"
+
+[portal.componentsView]
+subtitle = "Vložiteľné SDK widgety, ktoré pridáte do vlastnej aplikácie — prehliadač, tok e-podpisu, panel AI kontroly. Každý je meraný za akciu. Kliknite na kartu pre inštaláciu, použitie a props."
+title = "Komponenty"
+
+[portal.componentsView.empty]
+description = "Katalóg komponentov sa nepodarilo načítať. Skúste to čoskoro znova."
+title = "Nie sú dostupné žiadne komponenty"
+
+[portal.componentsView.lockedBanner]
+description = "Komponenty GA sú dostupné v režime Pay-as-you-go; niekoľko komponentov Beta je iba pre Enterprise. Zamknuté karty zobrazujú výzvu na upgrade."
+title = "Niektoré komponenty vyžadujú platený plán"
+
+[portal.docs.authentication]
+codeCaption = "každá požiadavka"
+eyebrow = "ZAČÍNAME"
+lead = "Všetky požiadavky sa overujú pomocou bearer tokenu. Kľúče sú obmedzené na prostredie a nikdy nevypršia, pokiaľ nie sú rotované."
+liveKey = "Produkčné kľúče — účtované, s limitom frekvencie podľa vášho plánu."
+testKey = "Sandbox kľúče — bezplatné, vracajú syntetické testovacie dáta."
+title = "Autentifikácia"
+
+[portal.docs.components]
+codeCaption = "vložiť prehliadač"
+eyebrow = "KOMPONENTY"
+lead = "Vložiteľné UI pre fronty kontrol a kontrolu dokumentov. Prineste si vlastné štýly alebo použite dodanú tému."
+title = "Prehliadače na vloženie"
+
+[portal.docs.endpoints]
+eyebrow = "API REFERENCIA"
+fieldCount_one = "{{count}} pole"
+fieldCount_other = "{{count}} polí"
+filterAll = "Všetko"
+filterAriaLabel = "Filtrovať endpointy podľa vertikály"
+lead = "Každý typ dokumentu je typovaný endpoint. Odošlite súbor cez POST a prijmite JSON validovaný podľa schémy. Filtrujte podľa vertikály nižšie."
+title = "Endpointy"
+
+[portal.docs.errors]
+codeCaption = "422 Unprocessable Entity"
+eyebrow = "API REFERENCIA"
+lead = "Chyby vracajú stabilný strojovo čitateľný kód a ľudsky zrozumiteľnú správu. Telo 4xx vždy obsahuje request_id pre podporu."
+title = "Chyby"
+
+[portal.docs.nav]
+ariaLabel = "Dokumentácia"
+
+[portal.docs.nav.empty]
+description = "Index dokumentácie sa nepodarilo načítať."
+title = "Dokumentácia nie je dostupná"
+
+[portal.docs.quickstart]
+eyebrow = "ZAČÍNAME"
+lead = "Odošlite svoj prvý dokument na typovaný endpoint a získajte štruktúrovaný JSON späť v troch krokoch. Bez tréningu modelu, bez prompt engineeringu."
+title = "Quickstart"
+
+[portal.docs.quickstart.callout]
+bodyAfterLink = "pre recepty na kopírovanie a vloženie."
+bodyBeforeLink = "zapojte rovnaké volanie do pipeline na reťazenie validácie, začiernenia a doručenia — alebo ho sprístupnite agentovi cez MCP. Pozrite si"
+label = "Ďalej:"
+link = "Playbooky"
+
+[portal.docs.quickstart.step1]
+body = "Vytvorte obmedzený kľúč na karte Infraštruktúra. Kľúče nesú limity frekvencie a voliteľný IP allowlist. Exportujte ho do svojho shellu:"
+title = "Vydajte API kľúč"
+
+[portal.docs.quickstart.step2]
+body = "Odošlite súbor cez POST na ľubovoľný typovaný endpoint. Endpoint určuje schému, ktorú dostanete späť — tu je extraktor faktúr."
+snippetCaption = "extrahovať faktúru"
+title = "Odoslať dokument"
+
+[portal.docs.quickstart.step3]
+body = "Každá odpoveď je validovaná podľa schémy endpointu, so skóre spoľahlivosti a pôvodom pre každé pole."
+codeCaption = "200 OK"
+title = "Prečítať štruktúrovaný výsledok"
+
+[portal.docs.rateLimits]
+burst = "Burst"
+codeCaption = "429 Too Many Requests"
+concurrency = "Súbežnosť"
+eyebrow = "ZAČÍNAME"
+lead = "Limity sa škálujú podľa vášho plánu. Odpoveď 429 obsahuje hlavičku Retry-After; SDK ustupujú automaticky."
+requestsPerMinute = "Požiadavky / minúta"
+title = "Limity frekvencie a kvóty"
+
+[portal.docs.recipes]
+cloneButton = "Klonovať recept"
+eyebrow = "PLAYBOOKY"
+lead = "End-to-end vzory, ktoré reťazia zdroje, operácie a ciele. Každý sa mapuje na pipeline, ktorú môžete klonovať."
+title = "Recepty"
+
+[portal.docs.sdks]
+eyebrow = "SDKS"
+lead = "Klienti prvej strany s typovanými odpoveďami, automatickými opakovaniami a streamovanými nahrávaniami. Všetci sledujú rovnaký katalóg endpointov."
+title = "Oficiálne SDKs"
+
+[portal.docs.sdks.status]
+beta = "Beta"
+deprecated = "Zastarané"
+
+[portal.docs.skills]
+eyebrow = "ZRUČNOSTI"
+lead = "Zabalené pomenované schopnosti, ktoré váš agent vyvoláva ako jeden nástroj. Každá zručnosť je deterministický reťazec operácií s pripojenými evals."
+title = "Zručnosti agentov"
+
+[portal.docs.webhooks]
+codeCaption = "document.processed"
+eyebrow = "API REFERENCIA"
+lead = "Prihláste sa na odber udalostí document.processed, pipeline.completed a quota.threshold. Payloady sú podpísané pomocou HMAC-SHA256."
+title = "Webhooks"
+
+[portal.docs.webhooks.callout]
+afterHelper = "pomocníka."
+beforeHelper = "hlavičku voči vášmu podpisovému tajomstvu predtým, než payloadu dôverujete. SDK obsahujú"
+beforeSignature = "Overte"
+
+[portal.documents]
+exportCsv = "Exportovať CSV"
+search = "Hľadať podľa názvu súboru, ID..."
+subtitle = "Každý dokument, ktorý vaša organizácia spracovala, s úplným záznamom spracovania. Prístup k obsahu podlieha žiadosti."
+title = "Dokumenty"
+
+[portal.documents.audit]
+approved = "Schválené"
+archived = "Archivované"
+elevation = "Zvýšenie oprávnení"
+empty = "Zatiaľ neboli zaznamenané žiadne udalosti."
+extracted = "Spracované"
+flagged = "Vyžaduje kontrolu"
+ingested = "Prijaté"
+reviewed = "V kontrole"
+
+[portal.documents.drawer]
+sectionsAriaLabel = "Sekcie detailov dokumentu"
+
+[portal.documents.drawer.tabs]
+audit = "Audit"
+extractions = "Extrakcie"
+overview = "Prehľad"
+
+[portal.documents.elevation]
+requestAccess = "Požiadať o prístup"
+
+[portal.documents.elevation.active]
+description = "Dočasné povolenie — prístup sa zaznamenáva a je časovo obmedzený."
+descriptionFourEyes = "Dočasné povolenie — bol upozornený kolega na kontrolu (princíp štyroch očí)."
+title = "Prístup vyprší o {{time}}"
+
+[portal.documents.elevation.gated]
+description = "Obsah je chránený režimom zero-standing-access. Žiadosť spustí časovo obmedzené povolenie."
+descriptionFourEyes = "Obsah je chránený režimom zero-standing-access. Žiadosť spustí časovo obmedzené povolenie a upozorní kolegu na kontrolu (princíp štyroch očí)."
+title = "Citlivý dokument"
+
+[portal.documents.extractions]
+empty = "Z tohto dokumentu neboli extrahované žiadne polia."
+masked = "Extrahované polia sú skryté. Požiadajte o časovo obmedzený prístup na zobrazenie obsahu tohto dokumentu."
+
+[portal.documents.extractions.columns]
+confidence = "Spoľahlivosť"
+field = "Pole"
+value = "Hodnota"
+
+[portal.documents.filters]
+all = "Všetko"
+ariaLabel = "Filtrovať dokumenty podľa stavu"
+flagged = "Označené"
+inReview = "V kontrole"
+processed = "Spracované"
+
+[portal.documents.overview]
+action = "Pipeline / Akcia"
+product = "Produkt"
+received = "Čas"
+status = "Stav"
+type = "Typ"
+user = "Používateľ"
+
+[portal.documents.queue.empty]
+description = "Keď zdroje odošlú dokumenty do vašich pipeline, zobrazia sa tu na kontrolu."
+title = "Vo fronte nie sú žiadne dokumenty"
+
+[portal.documents.status]
+error = "Chyba"
+flagged = "Vyžaduje kontrolu"
+inReview = "V kontrole"
+processed = "Spracované"
+
+[portal.documents.table]
+auto = "Automaticky"
+editorAction = "Editor"
+empty = "Tomuto filtru nezodpovedajú žiadne dokumenty."
+rowActions = "Akcie riadka"
+sensitiveLabel = "Citlivé"
+sensitiveTitle = "Citlivé — vyžaduje sa prístup"
+
+[portal.documents.table.columns]
+action = "Pipeline / Akcia"
+document = "Dokument"
+product = "Produkt"
+status = "Stav"
+time = "Čas"
+user = "Používateľ"
+
+[portal.editorAdmin]
+subtitle = "Nasaďte Stirling PDF Editor, spárujte self-hosted inštancie s vašou organizáciou a spravujte bežiacu flotilu — ciele, stav, prihlasovacie údaje a offline aktiváciu na jednom mieste."
+title = "Nasadenie Editoru"
+
+[portal.editorAdmin.health.columns]
+activeUsers = "Aktívni používatelia"
+host = "Host"
+lastSeen = "Naposledy videné"
+region = "Región"
+status = "Stav"
+version = "Verzia"
+
+[portal.editorAdmin.health.empty]
+description = "Nasaďte cieľ a spárujte ho, aby ste tu videli živý stav inštancie."
+title = "Žiadne inštancie neposielajú hlásenia"
+
+[portal.editorAdmin.offlineActivation]
+enterpriseTag = "Enterprise"
+generateButton = "Vygenerovať offline balík"
+lockCopy = "Offline a on-prem aktivácia je súčasťou Enterprise."
+subtitle = "Vygenerujte podpísaný aktivačný balík pre offline alebo on-prem inštaláciu bez odchádzajúceho sieťového pripojenia. Preneste ho do inštancie a použite ho pri prvom nastavení."
+talkToSales = "Kontaktovať obchodné oddelenie"
+title = "Aktivácia v izolovanom prostredí"
+
+[portal.editorAdmin.offlineActivation.readyBanner]
+description = "{{file}} je podpísaný a pripravený na prenos. Aktivuje jednu inštanciu a vyprší o 14 dní."
+title = "Balík je pripravený"
+
+[portal.editorAdmin.pairing]
+generated = "Vygenerované ✓"
+generateNewCode = "Vygenerovať nový kód"
+lockCopy = "Provisioning cez IaC je súčasťou Enterprise."
+rotate = "Rotovať"
+talkToSales = "Kontaktovať obchodné oddelenie"
+
+[portal.editorAdmin.sections.health]
+sub = "Každá inštancia Editoru odosielajúca hlásenia — verzia, región, stav, naposledy videné a aktívni používatelia."
+title = "Stav inštancií"
+
+[portal.editorAdmin.sections.pairing]
+sub = "Pripojte self-hosted editor k tejto organizácii. Vygenerujte token, odovzdajte krátky kód alebo ho zapojte cez IaC."
+title = "Párovanie"
+
+[portal.editorAdmin.sections.targets]
+sub = "Kde Editor beží. Skopírujte úryvok na spustenie self-hosted inštancie alebo použite Managed Cloud bez operácií."
+title = "Ciele nasadenia"
+
+[portal.editorAdmin.serviceToken]
+currentToken = "Aktuálny token"
+lastRotated = "Naposledy rotované"
+rotateButton = "Rotovať servisný token"
+subtitle = "Inštancie sa autentifikujú do organizácie pomocou tohto prihlasovacieho údaja. Rotujte ho podľa plánu alebo okamžite po podozrení na únik."
+title = "Servisný token"
+
+[portal.editorAdmin.serviceToken.rotatedBanner]
+description = "Bol vydaný nový token. Aktualizujte STIRLING_SERVICE_TOKEN každej self-hosted inštancie počas 24-hodinového ochranného okna, inak prejdú offline."
+title = "Rotovať bežiace inštancie"
+
+[portal.editorAdmin.status]
+degraded = "Zhoršený"
+healthy = "V poriadku"
+offline = "Offline"
+pairing = "Párovanie"
+
+[portal.editorAdmin.targets]
+instanceCount_one = "{{count}} inštancia"
+instanceCount_other = "{{count}} inštancií"
+talkToSales = "Kontaktovať obchodné oddelenie"
+upgradePlan = "Inovovať plán"
+
+[portal.editorAdmin.targets.lock]
+enterprise = "On-prem a Kubernetes self-hosting sú súčasťou Enterprise."
+paid = "Self-hosting s Docker a Kubernetes sa odomkne v platenom pláne."
+
+[portal.editorAdmin.targets.state]
+available = "Dostupné"
+locked = "Uzamknuté"
+running = "Beží"
+
+[portal.errorBoundary]
+description = "V tomto zobrazení nastala neočakávaná chyba. Skúste to znova alebo vyberte inú sekciu z bočného panela."
+retry = "Skúsiť znova"
+title = "Na tejto stránke sa niečo pokazilo"
+
+[portal.home.editor]
+activeUsers = "{{n}} aktívnych"
+invite = "Pozvať členov tímu"
+name = "Stirling PDF Editor"
+open = "Otvoriť v prehliadači"
+updated = "aktualizované {{time}}"
+
+[portal.home.editor.target]
+cloud = "Managed Cloud"
+docker = "Self-hosted · Docker"
+kubernetes = "Self-hosted · Kubernetes"
+
+[portal.home.greeting]
+afternoon = "Dobré popoludnie"
+evening = "Dobrý večer"
+morning = "Dobré ráno"
+
+[portal.home.onboarding]
+dismiss = "Zavrieť nastavenie"
+notStarted = "Nespustené"
+progress = "Dokončené {{done}} z {{total}}"
+title = "Dokončite nastavenie"
+
+[portal.home.onboarding.enterprise]
+body = "SSO + SCIM + RBAC pre celú organizáciu, dohodnuté objemové ceny a nasadenie v izolovanom prostredí."
+cta = "Spustiť skúšobnú verziu"
+ctaQuote = "Získať ponuku"
+lead = "Pre 250+ zamestnancov."
+tag = "Enterprise"
+
+[portal.home.onboarding.steps.editor]
+blurb = "Nasaďte desktopovú aplikáciu, navždy zadarmo."
+title = "Stiahnuť PDF Editor"
+
+[portal.home.onboarding.steps.policies]
+blurb = "{{active}} aktívnych · {{recommended}} odporúčaných"
+chip = "{{active}} aktívnych"
+title = "Zapnúť politiky"
+
+[portal.home.onboarding.steps.sources]
+blurb = "{{connected}} pripojených · každý PDF je riadený tam, kde sa objaví"
+chip = "{{connected}} pripojených"
+title = "Pripojte svoje zdroje"
+
+[portal.home.quickActions]
+subtitle = "Najdôležitejšie úlohy na dnes"
+title = "Rýchle akcie"
+
+[portal.home.quickActions.buildPipeline]
+blurb = "3-krokový kompozér nad knižnicou typovaných operácií"
+title = "Vytvoriť pipeline"
+
+[portal.home.quickActions.connectSource]
+blurb = "S3, agenti, webhooky, sledované priečinky"
+title = "Pripojiť zdroj"
+
+[portal.home.quickActions.issueApiKey]
+blurb = "Kľúč s rozsahom, limitmi rýchlosti a IP allowlistom"
+title = "Vydať API kľúč"
+
+[portal.infrastructure]
+manageEditorDeployment = "Spravovať nasadenie Editoru"
+sectionsAriaLabel = "Sekcie infraštruktúry"
+subtitle = "Nasadenia, prihlasovacie údaje, bezpečnostný stav, úložisko a auditná stopa pre váš pracovný priestor Stirling."
+title = "Infraštruktúra"
+
+[portal.infrastructure.apiKeys]
+createKey = "Vytvoriť kľúč"
+heading = "API kľúče"
+subheading = "Prihlasovacie údaje s rozsahom, limitmi rýchlosti pre každý kľúč, oprávneniami a IP allowlistami."
+
+[portal.infrastructure.apiKeys.card]
+allowedIps = "Povolené IP adresy"
+anyIp = "Ľubovoľná IP adresa (bez allowlistu)"
+created = "Vytvorené"
+lastUsed = "Naposledy použité"
+permissions = "Oprávnenia"
+rateLimit = "Limit rýchlosti"
+rateLimitValue = "{{value}} pož./min"
+usageMonth = "Použitie tento mesiac"
+usageToday = "Použitie dnes"
+
+[portal.infrastructure.apiKeys.empty]
+description = "Vytvorte kľúč s rozsahom a začnite volať Stirling API."
+title = "Zatiaľ žiadne API kľúče"
+
+[portal.infrastructure.audit]
+filterAriaLabel = "Filtrovať auditné udalosti podľa kategórie"
+heading = "Auditné záznamy"
+latencyValue = "{{value}} ms"
+noEventsInCategory = "V tejto kategórii nie sú žiadne udalosti."
+subheading = "Každá udalosť autentifikácie, konfigurácie a spracovania vo vašom pracovnom priestore."
+
+[portal.infrastructure.audit.columns]
+actor = "Aktér"
+event = "Udalosť"
+latency = "Latencia"
+status = "Stav"
+target = "Zdroj"
+timestamp = "Časová značka"
+
+[portal.infrastructure.audit.empty]
+description = "Aktivita pracovného priestoru sa tu zobrazí, keď nastane."
+title = "Žiadne auditné udalosti"
+
+[portal.infrastructure.audit.export]
+cancel = "Zrušiť"
+error = "Export zlyhal. Skúste to znova."
+exportButton = "Exportovať"
+exporting = "Exportuje sa…"
+fieldsLegend = "Stĺpce"
+format = "Formát"
+open = "Exportovať"
+subtitle = "Stiahnite auditné udalosti ako CSV alebo JSON. Vyberte, ktoré stĺpce zahrnúť."
+title = "Exportovať auditný záznam"
+
+[portal.infrastructure.audit.export.fields]
+date = "Dátum"
+documentName = "Názov dokumentu"
+ipAddress = "IP adresa"
+outcome = "Výsledok"
+tool = "Nástroj"
+username = "Používateľské meno"
+
+[portal.infrastructure.audit.filters]
+all = "Všetko"
+auth = "Autentifikácia"
+config = "Konfigurácia"
+elevation = "Zvýšenie oprávnení"
+processing = "Spracovanie"
+security = "Bezpečnosť"
+
+[portal.infrastructure.audit.forbidden]
+description = "Auditný záznam je dostupný vedúcim tímov a administrátorom. Požiadajte vedúceho tímu alebo administrátora o prístup."
+title = "Nemáte prístup"
+
+[portal.infrastructure.audit.metrics]
+config = "Konfigurácia"
+elevation = "Zvýšenie oprávnení"
+processing = "Spracovanie"
+totalEvents = "Celkový počet udalostí · 24 h"
+
+[portal.infrastructure.createKey]
+cancel = "Zrušiť"
+createKey = "Vytvoriť kľúč"
+done = "Hotovo"
+ipAllowlistHelper = "Rozsahy CIDR oddelené čiarkami. Nechajte prázdne, ak chcete povoliť ľubovoľnú IP adresu."
+ipAllowlistLabel = "IP allowlist"
+keyNameLabel = "Názov kľúča"
+keyNamePlaceholder = "napr. Produkcia · ingest"
+permissionsLabel = "Oprávnenia"
+secretKeyCaption = "Tajný kľúč"
+secretWarning = "Uložte ho v správcovi tajomstiev. Stirling vždy ukladá iba hash — neskôr ho nebude možné obnoviť."
+subtitle = "Obmedzte rozsah kľúča na minimum, ktoré potrebuje. Kedykoľvek ho môžete rotovať alebo zrušiť."
+subtitleCreated = "Skopírujte tento tajný kľúč teraz — znova sa už nezobrazí."
+title = "Vytvoriť API kľúč"
+titleCreated = "Kľúč vytvorený"
+
+[portal.infrastructure.deployments]
+msValue = "{{value}} ms"
+throughputValue = "{{value}}/min"
+
+[portal.infrastructure.deployments.deployColumns]
+deployedBy = "Nasadil"
+environment = "Prostredie"
+product = "Produkt"
+status = "Stav"
+version = "Verzia"
+when = "Kedy"
+
+[portal.infrastructure.deployments.recent]
+heading = "Nedávne nasadenia"
+subheading = "Najnovšie nasadenia naprieč produktmi a prostrediami."
+
+[portal.infrastructure.deployments.regionColumns]
+instances = "Inštancie"
+latency = "Latencia"
+load = "Zaťaženie"
+p99 = "P99"
+region = "Región"
+status = "Stav"
+throughput = "Priepustnosť"
+uptime = "Dostupnosť"
+version = "Verzia"
+
+[portal.infrastructure.deployments.regions]
+heading = "Regióny"
+subheading = "Živý stav pre každý nasadený región Stirling — latencia, zaťaženie a verzia rollout."
+
+[portal.infrastructure.deployments.regions.empty]
+description = "Nasadené regióny sa tu zobrazia po zriadení vášho pracovného priestoru."
+title = "Žiadne nasadené regióny"
+
+[portal.infrastructure.models]
+heading = "Modely"
+msValue = "{{value}} ms"
+subheading = "Katalóg modelov a smerovanie, ktoré poháňa spracovanie dokumentov vo vašom pracovnom priestore."
+
+[portal.infrastructure.models.byom]
+description = "Zaregistrujte on-prem alebo self-hosted model a pripnite ho k regiónu na spracovanie viazané na rezidenciu dát."
+title = "Prineste si vlastný model"
+
+[portal.infrastructure.models.catalogue]
+heading = "Katalóg"
+sub = "Spravované modely dostupné pre váš pracovný priestor, so živou latenciou a nákladmi."
+subEnterprise = "Spravované, vlastné a on-prem modely — s dostupným pripnutím podľa regiónu."
+
+[portal.infrastructure.models.catalogue.empty]
+description = "Modely v katalógu vášho pracovného priestoru sa zobrazia tu."
+title = "Nie sú dostupné žiadne modely"
+
+[portal.infrastructure.models.columns]
+cost = "Náklady"
+latency = "Latencia"
+load = "Zaťaženie"
+model = "Model"
+status = "Stav"
+type = "Typ"
+version = "Verzia"
+
+[portal.infrastructure.models.metrics]
+activeModels = "Aktívne modely"
+avgLatency = "Priem. latencia"
+included = "Zahrnuté"
+monthlySpend = "Mesačné náklady na modely"
+
+[portal.infrastructure.models.routing]
+empty = "Nie sú nakonfigurované žiadne pravidlá smerovania."
+heading = "Pravidlá smerovania"
+sub = "Ktorý model obsluhuje jednotlivé operácie. Predvolené pravidlo sa použije, keď sa nezhoduje žiadne užšie pravidlo."
+subLocked = "Smerujte operácie na konkrétne modely — dostupné v platených plánoch."
+
+[portal.infrastructure.models.routing.lockedBanner]
+description = "Inovujte na Pro a ovládajte, ktorý model obsluhuje jednotlivé operácie a typy dokumentov."
+title = "Smerovanie modelov je platená funkcia"
+
+[portal.infrastructure.models.routingColumns]
+default = "Predvolené"
+docType = "Typ dokumentu"
+modelForAria = "Model pre {{operation}}"
+operation = "Operácia"
+routedTo = "Smerované na"
+
+[portal.infrastructure.security.access.byok]
+description = "Dodajte kľúč z vlastného KMS. Stirling ním šifruje, ale stále môže čítať."
+label = "Prineste si vlastný kľúč (BYOK)"
+
+[portal.infrastructure.security.access.hyok]
+description = "Kľúče nikdy neopustia váš KMS. Stirling uchováva iba ciphertext."
+label = "Držte si vlastný kľúč (HYOK)"
+
+[portal.infrastructure.security.access.stirling]
+description = "Stirling spravuje šifrovacie kľúče. Najjednoduchšie — žiadne operácie s kľúčmi na vašej strane."
+label = "Kľúče držané službou Stirling"
+
+[portal.infrastructure.security.accessPolicy]
+heading = "Politika prístupu k dokumentom"
+subheading = "Riadi, kto môže dešifrovať spracované dokumenty v pokoji."
+
+[portal.infrastructure.security.attestations]
+heading = "Potvrdenia zhody"
+noReport = "Nie je dostupná žiadna správa"
+subheading = "Auditný stav podľa jednotlivých rámcov, so správami dostupnými pre potvrdené kontroly."
+viewReport = "Zobraziť správu →"
+
+[portal.infrastructure.security.compliance]
+heading = "Zhoda"
+subheading = "Potvrdenia a certifikácie pokrývajúce platformu Stirling."
+
+[portal.infrastructure.security.empty]
+description = "Bezpečnostná konfigurácia vášho pracovného priestoru sa zobrazí tu."
+title = "Bezpečnostný stav nie je dostupný"
+
+[portal.infrastructure.security.hyokBanner]
+description = "S HYOK šifrovacie kľúče nikdy neopustia váš KMS. Stirling ukladá a spracúva iba ciphertext, ktorý môžete kedykoľvek odvolať."
+title = "Stirling nemôže dešifrovať vaše dokumenty"
+
+[portal.infrastructure.security.ipAllowlist]
+empty = "Nie sú nakonfigurované žiadne rozsahy IP adries — všetky IP adresy sú povolené."
+heading = "IP allowlist"
+sub = "Prístup k API je obmedzený na tieto rozsahy CIDR."
+subLocked = "Obmedzte prístup k API na známe rozsahy IP adries — dostupné v platených plánoch."
+
+[portal.infrastructure.security.ipAllowlist.lockedBanner]
+description = "Inovujte na Pro a obmedzte prístup k API na konkrétne siete."
+title = "IP allowlisting je platená funkcia"
+
+[portal.infrastructure.security.ipColumns]
+added = "Pridané"
+addedBy = "Pridal"
+cidr = "CIDR"
+label = "Štítok"
+
+[portal.infrastructure.security.keyManagement]
+algorithm = "Algoritmus"
+heading = "Správa šifrovacích kľúčov"
+keyId = "Identifikátor kľúča"
+lastRotated = "Naposledy rotované"
+rotateKey = "Rotovať kľúč"
+rotationPolicy = "Politika rotácie"
+subheading = "Správa kľúčov, ktoré šifrujú dokumenty v pokoji — kto môže dešifrovať a ako sa kľúče rotujú."
+
+[portal.infrastructure.security.managedBanner]
+description = "Správa kľúčov bring-your-own-key (BYOK) a hold-your-own-key (HYOK) je dostupná v Enterprise. Inovujte a dodajte kľúče z vlastného KMS."
+title = "Kľúče vo vašom pláne spravuje Stirling"
+
+[portal.infrastructure.security.residency.apac]
+description = "ap-southeast-1"
+label = "Ázia a Tichomorie"
+
+[portal.infrastructure.security.residency.eu]
+description = "eu-west-1 · dátová hranica GDPR"
+label = "Európska únia"
+
+[portal.infrastructure.security.residency.us]
+description = "us-east-1 · us-west-2"
+label = "Spojené štáty"
+
+[portal.infrastructure.security.residencyHeader]
+heading = "Rezidencia dát"
+subheading = "Kde sa dokumenty ukladajú a spracúvajú."
+
+[portal.infrastructure.storage]
+gbValue = "{{value}} GB"
+percentUsed = "{{value}} použité"
+
+[portal.infrastructure.storage.empty]
+description = "Pripojené úložisko a použitie sa zobrazia tu."
+title = "Nie je nakonfigurované žiadne úložisko"
+
+[portal.infrastructure.storage.lifecycle]
+active = "Aktívne"
+activeRange = "0–{{value}} d"
+archived = "Archivované"
+coldStorage = "studené úložisko"
+deleted = "Odstránené"
+never = "nikdy"
+purged = "vyčistené"
+
+[portal.infrastructure.storage.providers]
+connect = "Pripojiť"
+connected = "Pripojené"
+heading = "Pripojení poskytovatelia"
+subheading = "Kam sa zapisujú spracované artefakty."
+
+[portal.infrastructure.storage.retention]
+heading = "Uchovávanie"
+subheading = "Ako dlho sa artefakty uchovávajú pred odstránením v životnom cykle."
+windowLabel = "Predvolené okno uchovávania"
+
+[portal.infrastructure.storage.retentionOption]
+days_one = "{{count}} deň"
+days_other = "{{count}} dní"
+never = "Nikdy neodstraňovať"
+
+[portal.infrastructure.storage.totalUsage]
+heading = "Celkové použitie"
+progressLabel = "Použité úložisko"
+subheading = "Úložisko spotrebované naprieč všetkými pripojenými poskytovateľmi."
+
+[portal.infrastructure.tabs]
+apiKeys = "API kľúče"
+audit = "Auditné záznamy"
+deployments = "Nasadenia"
+models = "Modely"
+security = "Bezpečnosť"
+storage = "Úložisko"
+
+[portal.nav]
+agent-builder = "Agent Builder"
+components = "Komponenty"
+docs = "Dokumentácia pre vývojárov"
+documents = "Dokumenty"
+editor = "Editor"
+home = "Domov"
+infrastructure = "Infraštruktúra"
+pipelines = "Pipeline"
+policies = "Politiky"
+procurement = "Obstarávanie"
+settings = "Nastavenia"
+sources = "Zdroje"
+usage = "Používanie a fakturácia"
+users = "Používatelia"
+
+[portal.notifications]
+markAllRead = "Označiť všetko ako prečítané"
+title = "Oznámenia"
+viewAll = "Zobraziť všetko"
+
+[portal.notifications.ariaLabel]
+none = "Oznámenia, žiadne neprečítané"
+unread_one = "Oznámenia, {{count}} neprečítané"
+unread_other = "Oznámenia, {{count}} neprečítaných"
+
+[portal.notifications.count]
+allRead = "všetko prečítané"
+loading = "načítava sa"
+new_one = "{{count}} nové"
+new_other = "{{count}} nových"
+
+[portal.notifications.empty]
+description = "Žiadne nové oznámenia."
+title = "Všetko máte vybavené"
+
+[portal.pipelines]
+subtitle = "Každý automatizovaný dokumentový pipeline na backende: usporiadaný reťazec operácií nad množinou zdrojov, spustený triggerom. Kliknite na riadok pre jeho kroky a zdroje."
+title = "Pipeline"
+
+[portal.pipelines.actions]
+newPipeline = "Nový pipeline"
+
+[portal.pipelines.builder]
+addStep = "Pridať nástroj"
+back = "Späť na pipeline"
+discard = "Zahodiť zmeny"
+enabled = "Povolené"
+keepEditing = "Pokračovať v úpravách"
+needsUpload = "Vyžaduje nahraný súbor"
+noToolMatches = "Vašemu vyhľadávaniu nezodpovedajú žiadne nástroje."
+pipelineSettings = "Nastavenia pipeline"
+searchTools = "Hľadať nástroje"
+selectToolBody = "Pridajte nástroj na vytvorenie pipeline."
+selectToolTitle = "Zatiaľ žiadne nástroje"
+toolSettings = "Nastavenia nástroja"
+unknownStep = "Nerozpoznaná operácia, ponechaná bez zmeny."
+unsavedBody = "Máte neuložené zmeny. Uložte ich pred odchodom alebo ich zahodiť?"
+unsavedTitle = "Neuložené zmeny"
+uploadUnsupported = "Nahrané súbory ešte nie sú v pipeline podporované, takže tieto kroky sa nedajú uložiť: {{tools}}."
+usesDefaults = "Spúšťa sa s predvolenými nastaveniami"
+
+[portal.pipelines.composer]
+addTool = "Pridať nástroj"
+cancel = "Zrušiť"
+chainEmpty = "Pridajte nástroj a začnite vytvárať pipeline."
+create = "Vytvoriť pipeline"
+directory = "Výstupný priečinok"
+directoryHelp = "Absolútna cesta na serveri. Musí byť v rámci nakonfigurovaných povolených priečinkov."
+editingUnsupported = "Zobrazenie týchto parametrov nástroja na úpravu zatiaľ nie je podporované."
+moveDown = "Presunúť nadol"
+moveUp = "Presunúť nahor"
+name = "Názov"
+namePlaceholder = "napr. Prechod redakciou"
+noSources = "Zatiaľ nie sú pripojené žiadne zdroje. Pipeline sa stále môže spustiť na súboroch dodaných priamo doň."
+noToolSettings = "Tento nástroj nemá žiadne konfigurovateľné nastavenia."
+operations_one = "Operácia ({{count}})"
+operations_other = "Operácie ({{count}})"
+output = "Výstup"
+removeStep = "Odstrániť operáciu"
+save = "Uložiť zmeny"
+scheduleEvery = "Spúšťať každých"
+sources = "Zdroje"
+sourcesLoading = "Načítavajú sa zdroje..."
+trigger = "Trigger"
+triggerManual = "Iba manuálne"
+
+[portal.pipelines.composer.unit]
+days = "dní"
+hours = "hodín"
+minutes = "minút"
+
+[portal.pipelines.delete]
+body = "Odstrániť \"{{name}}\"? Túto akciu nie je možné vrátiť späť."
+cancel = "Zrušiť"
+confirm = "Odstrániť"
+title = "Odstrániť pipeline?"
+
+[portal.pipelines.detail]
+delete = "Odstrániť pipeline"
+run = "Spustiť teraz"
+
+[portal.pipelines.empty]
+action = "Vytvoriť pipeline"
+description = "Vytvorte svoj prvý pipeline: vyberte zdroje, nad ktorými beží, spojte operácie do reťazca a vyberte, kam pôjde výstup."
+title = "Zatiaľ žiadne pipeline"
+
+[portal.pipelines.kpi]
+active = "Aktívne"
+paused = "Pozastavené"
+total = "Pipeline"
+
+[portal.pipelines.output]
+folder = "Zapísať do priečinka"
+inline = "Vrátiť súbory"
+
+[portal.pipelines.run]
+completed_one = "Spustenie dokončené."
+completed_other = "Všetkých {{count}} spustení dokončených."
+empty = "Nie je čo spustiť: zdroje nemali žiadne dokumenty na spracovanie."
+failed = "Spustenie zlyhalo: {{error}}"
+running = "Spustenie začalo; stále prebieha."
+timeout = "Spustenie trvá dlhšie, než sa očakávalo; môže sa stále dokončiť na pozadí."
+
+[portal.pipelines.status]
+active = "Aktívne"
+paused = "Pozastavené"
+
+[portal.pipelines.table]
+name = "Pipeline"
+sources = "Zdroje"
+status = "Stav"
+steps = "Kroky"
+
+[portal.pipelines.trigger]
+folder-watch = "Sledovanie priečinka"
+manual = "Manuálne"
+schedule = "Naplánované"
+
+[portal.policies]
+subtitle = "Trvalé automatizácie, ktoré vynucujú pipeline nástrojov na každom dokumente. Každá politika sa spustí pri nahraní alebo exporte, vykoná svoj reťazec nástrojov a uloží vynútenú verziu vedľa originálu."
+title = "Politiky"
+
+[portal.policies.card]
+comingSoon = "Inovovať na Enterprise"
+notSetUp = "Nenastavené"
+
+[portal.policies.categories.compliance]
+desc = "Vynucujte požiadavky HIPAA, GDPR, SOC 2 alebo FedRAMP na každom dokumente."
+label = "Zhoda"
+
+[portal.policies.categories.ingestion]
+desc = "Klasifikujte dokumenty, extrahujte štruktúrované údaje, vynucujte konvencie pomenovania a normalizujte stránky."
+label = "Príjem"
+
+[portal.policies.categories.retention]
+desc = "Nastavte, ako dlho sa dokumenty uchovávajú, kedy sa archivujú a kedy sa odstraňujú."
+label = "Uchovávanie"
+
+[portal.policies.categories.routing]
+desc = "Automaticky smerujte dokumenty do správneho tímu, priečinka alebo systému."
+label = "Smerovanie"
+
+[portal.policies.categories.security]
+desc = "Detegujte PII, redigujte, odstraňujte aktívny obsah a pridávajte vodoznaky do dokumentov."
+label = "Bezpečnosť"
+
+[portal.policies.config]
+scopeAll = "Všetky dokumenty"
+
+[portal.policies.config.compliance]
+summary = "Overuje dokumenty podľa regulačných rámcov predtým, než opustia systém."
+
+[portal.policies.config.compliance.fields]
+accessLog = "Záznam prístupu"
+auditTrail = "Auditná stopa"
+frameworks = "Rámce"
+onViolation = "Pri nesúlade"
+
+[portal.policies.config.compliance.rules]
+0 = "Sken rámca"
+1 = "Vynútiť akciu"
+2 = "Auditná stopa"
+
+[portal.policies.config.ingestion]
+summary = "Klasifikuje dokumenty, extrahuje štruktúrované údaje, vynucuje pomenovanie a normalizuje stránky."
+
+[portal.policies.config.ingestion.fields]
+belowThreshold = "Pod prahom"
+minConfidence = "Min. spoľahlivosť"
+
+[portal.policies.config.ingestion.rules]
+0 = "Klasifikovať"
+1 = "Extrahovať"
+2 = "Pomenovať"
+3 = "Normalizovať"
+
+[portal.policies.config.retention]
+summary = "Vynucuje, ako dlho sa dokumenty uchovávajú, kedy sa archivujú a kedy sa odstraňujú."
+
+[portal.policies.config.retention.fields]
+archiveAfter = "Archivovať po"
+immutableHold = "Nemenné pozdržanie"
+keepFor = "Uchovať počas"
+
+[portal.policies.config.retention.rules]
+0 = "Pozdržanie uchovávania"
+1 = "Automatická archivácia"
+2 = "Blokovanie odstránenia"
+
+[portal.policies.config.routing]
+summary = "Smeruje dokumenty do správneho cieľa na základe typu a klasifikácie."
+
+[portal.policies.config.routing.fields]
+destination = "Cieľ"
+notify = "Upozorniť pri smerovaní"
+webhookUrl = "Webhook URL"
+
+[portal.policies.config.routing.rules]
+0 = "Automaticky klasifikovať"
+1 = "Smerovať do priečinka"
+2 = "Webhook upozornenie"
+
+[portal.policies.config.security]
+summary = "Deteguje a rediguje PII, odstraňuje aktívny obsah (JavaScript) a pridáva vodoznaky do dokumentov."
+
+[portal.policies.config.security.rules]
+0 = "Redigovať PII"
+1 = "Odstrániť JavaScript"
+2 = "Vodoznak"
+
+[portal.policies.detail]
+enforces = "Vynucuje"
+onEveryExport = "Pri každom exporte"
+onEveryUpload = "Pri každom nahraní"
+outputAsNewFile = "ako nový súbor"
+outputAsNewVersion = "ako novú verziu"
+recentActivity = "Nedávna aktivita"
+retry = "Skúsiť znova"
+showLess = "Zobraziť menej"
+showMore = "Zobraziť viac"
+sources = "Zdroje"
+
+[portal.policies.detail.actions]
+clearHistory = "Vymazať históriu spracovania"
+delete = "Odstrániť"
+editSettings = "Upraviť nastavenia"
+pause = "Pozastaviť"
+resume = "Pokračovať"
+runNow = "Spustiť teraz"
+
+[portal.policies.detail.clearHistory]
+body = "Táto politika zabudne každý súbor, ktorý už spracovala, a pri ďalšom spustení znova spracuje všetko, čo sa aktuálne nachádza v jej zdrojoch. Samotné súbory sa nezmenia. Túto akciu nie je možné vrátiť späť."
+cancel = "Zrušiť"
+confirm = "Vymazať históriu"
+title = "Vymazať históriu spracovania?"
+
+[portal.policies.detail.emptyActivity]
+description = "Dokumenty sa tu zobrazia po spustení tejto politiky."
+title = "Zatiaľ žiadna aktivita"
+
+[portal.policies.endpoints]
+addWatermark = "Vodoznak"
+autoRedact = "Redigovať PII"
+compressPdf = "Komprimovať"
+flatten = "Zlúčiť vrstvy"
+ocrPdf = "OCR"
+sanitizePdf = "Odstrániť JavaScript"
+
+[portal.policies.offline]
+description = "Vaše politiky sú uložené a zobrazia sa po obnovení pripojenia."
+retry = "Skúsiť znova"
+title = "Backend nie je dostupný"
+
+[portal.policies.stats]
+activeFor = "Aktívne"
+dataProcessed = "Spracované údaje"
+docsEnforced = "Vynútené dokumenty"
+
+[portal.policies.status]
+active = "Aktívne"
+paused = "Pozastavené"
+
+[portal.policies.summary.active]
+description = "Vynucuje sa pri nahraní/exporte"
+label = "Aktívne politiky"
+
+[portal.policies.summary.categories]
+description = "Dostupné na konfiguráciu"
+label = "Kategórie"
+
+[portal.policies.summary.docsEnforced]
+description = "Naprieč aktívnymi politikami"
+label = "Vynútené dokumenty"
+
+[portal.policies.summary.paused]
+description = "Nakonfigurované, ale nespúšťa sa"
+label = "Pozastavené"
+
+[portal.policies.wizard.actions]
+back = "Späť"
+cancel = "Zrušiť"
+continue = "Pokračovať"
+enablePolicy = "Povoliť politiku"
+saveChanges = "Uložiť zmeny"
+
+[portal.policies.wizard.capability.compress]
+desc = "Komprimuje dokument na menšiu veľkosť súboru."
+label = "Zmenšiť veľkosť súboru"
+
+[portal.policies.wizard.capability.flatten]
+desc = "Zlúči polia formulára a anotácie so stránkou, aby ich nebolo možné upravovať."
+label = "Zlúčiť vrstvy dokumentu"
+
+[portal.policies.wizard.capability.ocr]
+desc = "Spustí OCR, aby sa zo skenovaných stránok stal vyberateľný a vyhľadateľný text."
+label = "Urobiť text vyhľadateľným"
+
+[portal.policies.wizard.capability.redact]
+desc = "Nájde a začierni citlivé údaje — napríklad čísla sociálneho poistenia a kariet — aby sa nedali prečítať."
+label = "Redigovať citlivé informácie"
+
+[portal.policies.wizard.capability.sanitize]
+desc = "Odstráni skrytý JavaScript, aby sa pri otvorení dokumentu nič nespustilo automaticky."
+label = "Odstrániť aktívny obsah"
+
+[portal.policies.wizard.capability.watermark]
+desc = "Označí každú stránku viditeľnou značkou (napr. „Dôverné“)."
+label = "Použiť vodoznak"
+
+[portal.policies.wizard.errors]
+noTools = "Najprv vo workflow povoľte aspoň jeden nástroj."
+saveFailed = "Politiku sa nepodarilo uložiť. Skúste to znova."
+
+[portal.policies.wizard.output]
+heading = "Výstup a spustenie"
+
+[portal.policies.wizard.output.filenameRule]
+autoNumber = "Automatické číslovanie"
+label = "Pravidlo názvu súboru"
+placeholder = "Text na pridanie (voliteľné)"
+prefix = "Predpona"
+suffix = "Prípona"
+
+[portal.policies.wizard.output.outputAs]
+label = "Výstup ako"
+newFile = "Nový súbor"
+newVersion = "Nová verzia"
+
+[portal.policies.wizard.output.runOn]
+export = "Export"
+helper = "Kedy sa politika spustí: pri nahraní alebo pred exportom."
+label = "Spustiť pri"
+upload = "Nahraní"
+
+[portal.policies.wizard.settings]
+heading = "Nastavenia"
+
+[portal.policies.wizard.sources]
+heading = "Zdroje"
+loading = "Načítavajú sa zdroje…"
+
+[portal.policies.wizard.tabs]
+ariaLabel = "Kroky nastavenia"
+settings = "Nastavenia"
+workflow = "Akcie"
+
+[portal.policies.wizard.title]
+edit = "Upraviť politiku {{category}}"
+setUp = "Nastaviť politiku {{category}}"
+
+[portal.policies.wizard.workflow]
+description = "Vyberte, čo táto politika urobí s každým dokumentom, ktorý spracuje."
+
+[portal.policySummary]
+activeSummary = "{{active}} / {{total}} aktívnych"
+noRule = "Zatiaľ sa nevynucuje žiadne pravidlo"
+subtitle = "Trvalé automatizácie, ktorými prechádza každý dokument bez ohľadu na to, ktorá pipeline ho spracúva."
+title = "Čo sa spúšťa na vašich PDF"
+
+[portal.policySummary.action]
+comingSoon = "Upgradovať na Enterprise"
+configure = "Konfigurovať"
+setUp = "Nastaviť"
+
+[portal.policySummary.column]
+activeRule = "Aktívne pravidlo"
+policy = "Politika"
+status = "Stav"
+
+[portal.policySummary.empty]
+description = "Po nakonfigurovaní politík sa tu zobrazia kategórie."
+title = "Zatiaľ žiadne politiky"
+
+[portal.policySummary.state]
+active = "Aktívne"
+off = "Vypnuté"
+soon = "Čoskoro"
+
+[portal.processingStatus]
+managePlan = "Spravovať plán"
+volumeSuffix = "Spracované PDF · posledných 30 dní"
+
+[portal.procurement]
+reset = "Resetovať obstarávanie (demo)"
+subtitle = "Nechajte svoj tím vyhodnotiť, zazmluvniť a zaučiť. Každý dokument na jednom mieste."
+title = "Obstarávanie"
+
+[portal.procurement.action]
+download = "Stiahnuť"
+pay = "Zaplatiť teraz"
+request = "Vyžiadať"
+sign = "Skontrolovať a podpísať"
+upload = "Nahrať"
+
+[portal.procurement.agreement]
+agreeCta = "Súhlasiť a predplatiť"
+confirm = "Prečítal/-a som si Stirling Enterprise Agreement a súhlasím s ňou."
+eyebrow = "Zmluva"
+intro = "Jedna kombinovaná zmluva pokrýva vašu dohodu: Master Service Agreement, Order Form, EULA a Data Processing Agreement. Skontrolujte ju a potom súhlasom prijmite ponuku ako záväzné predplatné."
+title = "Skontrolujte svoju enterprise zmluvu"
+
+[portal.procurement.builder]
+addons = "Doplnky"
+back = "Späť"
+businessName = "Názov firmy"
+businessNamePlaceholder = "Vaša spoločnosť"
+continue = "Pokračovať"
+country = "Krajina"
+countryEuro = "Eurozóna (EUR €)"
+countryUK = "Spojené kráľovstvo (GBP £)"
+countryUS = "Spojené štáty (USD $)"
+eula = "Prečítal/-a som si Stirling Enterprise EULA a súhlasím s ňou. Riadi zmluvu vygenerovanú z tejto ponuky."
+generate = "Vygenerovať ponuku"
+included = "Zahrnuté"
+indemnification = "Odškodnenie za IP"
+indemnificationSub = "Obhajujeme oprávnené nároky týkajúce sa IP podľa EULA"
+offlineLicense = "Offline / izolovaná licencia"
+offlineLicenseSub = "Stiahnuteľný licenčný súbor pre izolovanú self-hosted inštanciu"
+qbr = "Štvrťročné obchodné hodnotenia"
+qbrSub = "Váš SE každý štvrťrok prehodnotí používanie a plán rozvoja"
+running = "{{annual}} / rok · {{years}}-ročné {{tcv}}"
+s1Sub = "Váš tím a PDF, ktoré očakávate spracovať každý rok."
+s1Title = "Koľko budete spracúvať?"
+s2Sub = "Dlhšie obdobia znižujú sadzbu; úroveň služby určuje podporu."
+s2Title = "Záväzok a služba"
+s3Sub = "Pre ponuku a zmluvu, ktorú vygeneruje."
+s3Title = "Vaše údaje"
+serviceLevel = "Úroveň služby"
+slDedicated = "Vyhradená"
+slDedicatedSub = "4 pracovné hodiny · vyhradený account manager · +30 %"
+slPriority = "Prioritná"
+slPrioritySub = "Ten istý pracovný deň · pridelený CSM · +15 %"
+slStandard = "Štandardná"
+slStandardSub = "Nasledujúci pracovný deň · zdieľaný CSM · zahrnuté"
+stepOf = "Krok {{n}} z {{total}}"
+term = "Obdobie"
+termDiscount = "Uplatnená {{pct}}% zľava za viacročný záväzok"
+title = "Vytvorte svoju ponuku"
+training = "Onboarding a školenie"
+trainingSub = "Živé relácie, aby váš tím začal pracovať"
+users = "Celkový počet používateľov"
+usersPlaceholder = "napr. 250"
+volEstimated = "Odhadnuté z {{count}} používateľov (~2 000 PDF na každého vrátane automatizácie). Upravte, ak máte presnejší údaj."
+volManual = "Používa sa váš údaj. Kedykoľvek môžete znova odhadnúť podľa veľkosti tímu."
+volNoUsers = "Nie ste si istí? Zadajte veľkosť tímu a my to odhadneme."
+volume = "Ročný objem PDF"
+volumePlaceholder = "napr. 1 000 000"
+years_one = "{{count}} rok"
+years_other = "{{count}} roky"
+
+[portal.procurement.docs]
+count_one = "{{count}} dokument"
+count_other = "{{count}} dokumenty"
+done = "Hotovo"
+here = "Ste tu"
+hide = "Skryť"
+optional = "Voliteľné"
+paidAddon = "Platený doplnok"
+show = "Zobraziť"
+subtitle = "Všetko, čo potrebujete v každom kroku cesty, zobrazené podľa toho, ako sa dohoda posúva ďalej."
+supportingSubtitle = "SOC 2, bezpečnostné kontroly, daňové formuláre a ďalšie, pripravené, keď si ich vyžiada váš bezpečnostný alebo obstarávací tím. Niektoré majú jednorazový poplatok."
+supportingTitle = "Podpora vášho hodnotenia"
+title = "Dokumenty"
+upcoming = "Nadchádzajúce"
+
+[portal.procurement.error]
+title = "Niečo sa pokazilo"
+
+[portal.procurement.hero]
+company = "Vaša enterprise dohoda"
+ctaAgreement = "Skontrolovať a podpísať zmluvu"
+ctaLive = "Ste live"
+ctaPayment = "Pridať platbu"
+ctaQuote = "Skontrolovať ponuku"
+ctaTrial = "Vytvoriť ponuku"
+eyebrow = "Enterprise obstarávanie"
+inviteTeammates = "Pozvať spoluhráčov"
+keyDocs = "Kľúčové dokumenty"
+nextStep = "Ďalší krok: {{action}}"
+notStarted = "Nezačaté"
+open = "Otvoriť obstarávanie"
+scheduleCall = "Naplánovať hovor"
+setup1Sub = "Pozvite svojich spoluhráčov"
+setup1Title = "Nasadiť PDF Editor"
+setup2Sub = "Zapnite spracovanie naprieč editormi a ďalšími zdrojmi"
+setup2Title = "Pripojiť PDF Processor"
+setup3Sub = "Zapnite Security, Compliance, Routing alebo Retention, keď ich budete potrebovať"
+setup3Title = "Pridať odporúčané politiky"
+
+[portal.procurement.journey]
+daysLeft_one = "Zostáva {{count}} deň"
+daysLeft_other = "Zostávajú {{count}} dni"
+engineerLabel = "Váš solutions engineer"
+eyebrow = "Vaše zavedenie"
+live = "Ste live na Stirling Enterprise"
+nextStep = "Ďalší krok: {{action}}"
+subtitle = "Váš solutions engineer je pri každom kroku. Naraz jedna ďalšia akcia; celý kontrolný zoznam je nižšie."
+title = "Od skúšobnej verzie po live, jedna vedená cesta"
+trialTitle = "Enterprise skúšobná verzia"
+
+[portal.procurement.journeySteps.agreement]
+blurb = "Jeden podpis pokrýva MSA, objednávkový formulár, EULA a DPA."
+gatingAction = "Skontrolujte a podpíšte zmluvu"
+label = "Zmluva"
+
+[portal.procurement.journeySteps.implementation]
+blurb = "Zriaďte svoj workspace a spustite go-live playbook."
+gatingAction = "Zriaďuje sa váš workspace"
+label = "Implementácia"
+
+[portal.procurement.journeySteps.payment]
+blurb = "Zaplaťte kartou, bankovým prevodom alebo na základe objednávky."
+gatingAction = "Potvrdiť platbu"
+label = "Platba"
+
+[portal.procurement.journeySteps.quote]
+blurb = "Skontrolujte cenu za záväzný objem a zmluvné obdobie."
+gatingAction = "Prijmite svoju ponuku"
+label = "Ponuka"
+
+[portal.procurement.journeySteps.trial]
+blurb = "Vyhodnoťte Stirling na svojich dokumentoch a workflow."
+gatingAction = "Vytvorte svoju ponuku"
+label = "Skúšobná verzia"
+
+[portal.procurement.license]
+copied = "Skopírované"
+copy = "Kopírovať kľúč"
+downloadError = "Offline licenčný súbor zatiaľ nebolo možné vygenerovať — skúste to znova o chvíľu."
+downloadOffline = "Stiahnuť offline licenciu (.lic)"
+hint = "Vložte tento kľúč do self-hosted inštancie na jej aktiváciu alebo si ho ponechajte pre svoje záznamy. Uchovajte ho bezpečne."
+label = "Váš licenčný kľúč"
+
+[portal.procurement.link]
+cta = "Prepojiť účet"
+description = "Obstarávanie beží na vašom prepojenom účte Stirling: takto zriaďujeme skúšobnú verziu, oceňujeme ponuku a spúšťame fakturáciu. Prepojte účet a začnite."
+eyebrow = "Enterprise"
+title = "Prepojte svoj účet a začnite"
+
+[portal.procurement.live]
+description = "Vaše predplatné je aktívne a licencia je vydaná. Váš tím je zriadený a fakturácia sa začala."
+eyebrow = "Live"
+title = "Ste live na Stirling Enterprise"
+
+[portal.procurement.locked]
+description = "Skúšobné kľúče, ponuky na záväzný objem, zmluva na jeden podpis, platba a register dokumentov budú po spustení enterprise hodnotenia všetky tu."
+eyebrow = "Iba Enterprise"
+talkToSales = "Kontaktovať predaj"
+title = "Obstarávacia cesta sa otvára s Enterprise"
+
+[portal.procurement.milestone]
+accept = "Prijať a pokračovať"
+description = "Stiahnite si PDF a zdieľajte ho so svojím tímom, vráťte sa a prijmite ho, keď budete pripravení, alebo vykonajte zmeny."
+download = "Stiahnuť PDF"
+downloadError = "PDF ponuky sa zatiaľ nepodarilo stiahnuť — skúste to znova o chvíľu."
+edit = "Upraviť ponuku"
+eyebrow = "Ponuka {{number}}"
+perYear = " / rok"
+preparedFor = "Pripravené pre {{company}}"
+tcv = "{{value}} celková hodnota zmluvy"
+title = "Vaša ponuka je pripravená"
+
+[portal.procurement.modal]
+cancel = "Zrušiť"
+chooseFile = "Vybrať súbor"
+close = "Zavrieť"
+downloadBody = "Sťahovanie sa čoskoro začne."
+downloadCta = "Stiahnuť"
+downloadTitle = "Stiahnuť"
+noFile = "Nie je vybraný žiadny súbor"
+payBody = "Zaplaťte záväznú zmluvu kartou alebo bankovým prevodom cez Stripe. Váš workspace sa zriadi hneď po pripísaní platby."
+payCta = "Pokračovať na Stripe"
+payTitle = "Potvrdiť platbu"
+requestBodyFree = "Vygenerujeme to na požiadanie. Potvrďte a váš solutions engineer vám to čoskoro pošle."
+requestBodyPaid = "Toto je platený doplnok. Potvrďte a váš solutions engineer ho nacení a pošle dokumenty."
+requestCta = "Vyžiadať"
+requestTitle = "Vyžiadať tento dokument"
+signBody = "Otvorí Stirling Enterprise Agreement na elektronický podpis: jeden podpis pokrýva MSA, objednávkový formulár, EULA a DPA. Automaticky spolupodpíšeme a posuniete sa k platbe."
+signCta = "Otvoriť na podpis"
+signTitle = "Skontrolujte a podpíšte svoju zmluvu"
+uploadBody = "Pošlite nám svoju objednávku a my ju vyfakturujeme podľa vašich podmienok. Presuňte PDF sem alebo vyberte súbor nižšie."
+uploadCta = "Nahrať objednávku"
+uploadTitle = "Nahrať svoju objednávku"
+
+[portal.procurement.payment]
+description = "Vaša ponuka je prijatá a licencia je už aktívna — váš tím môže začať hneď. Zaplaťte prvú faktúru, keď budete pripravení; môžete ju zaplatiť alebo stiahnuť tu, bez potreby emailu."
+downloadInvoice = "Stiahnuť faktúru"
+simulate = "Simulovať prijatie platby (demo)"
+title = "Predplatné vytvorené"
+viewInvoice = "Zobraziť a zaplatiť faktúru"
+
+[portal.procurement.schedule]
+fallback = "Plánovač sa nepodarilo načítať."
+fallbackLink = "Otvoriť plánovanie na novej karte"
+subtitle = "Váš solutions engineer prevedie váš tím zavedením. Vyberte si čas, ktorý vám vyhovuje."
+title = "Naplánovať hovor"
+
+[portal.procurement.status]
+action = "Vyžaduje sa akcia"
+available = "Dostupné"
+complete = "Dokončené"
+pending = "Čaká sa"
+request = "Na požiadanie"
+
+[portal.procurement.trial]
+body = "Predĺženie pridá 7 dní a upozorní vášho solutions engineer."
+bodyMaxed = "Využili ste všetky predĺženia — ak potrebujete viac času, kontaktujte svojho solutions engineer."
+cancel = "Zrušiť skúšobnú verziu"
+extend = "Predĺžiť o 7 dní"
+maxed = "Maximum dosiahnuté"
+subtitle = "Vaša bezplatná skúšobná verzia trvá do {{date}}. Karta nie je potrebná."
+title = "Enterprise skúšobná verzia"
+
+[portal.procurement.upsell]
+homeBadge = "Enterprise"
+homeBody = "Ceny za záväzný objem, SSO + SCIM + RBAC pre celú organizáciu, 90-dňový nemenný audit a vyhradený SE."
+homeCta = "Spustiť skúšobnú verziu →"
+homeHeadline = "Spracujte milióny PDF."
+
+[portal.recentActivity]
+title = "Nedávna aktivita"
+viewAll = "Zobraziť všetko"
+
+[portal.recentActivity.empty]
+description = "Spustenia pipeline, nasadenia a udalosti agentov sa zobrazia tu."
+title = "Zatiaľ tu nič nie je"
+
+[portal.search]
+ariaLabel = "Hľadať"
+placeholder = "Hľadať v Stirling — endpointy, pipeline, dokumenty…"
+
+[portal.search.empty]
+noActionsDescription = "Rýchle akcie sa tu zobrazia, keď budú dostupné."
+noActionsTitle = "Žiadne rýchle akcie"
+noMatches = "Žiadne zhody pre „{{query}}“"
+noMatchesDescription = "Skúste iné kľúčové slovo alebo prejdite katalóg."
+
+[portal.settings.groups]
+admin = "Admin"
+
+[portal.settings.sections]
+account-link = "Prepojenie účtu"
+
+[portal.shell.header]
+accountFallback = "Účet"
+accountMenu = "Menu účtu"
+darkMode = "Tmavý režim"
+lightMode = "Svetlý režim"
+search = "Hľadať"
+searchPlaceholder = "Hľadať…"
+signOut = "Odhlásiť sa"
+switchToDark = "Prepnúť na tmavú tému"
+switchToLight = "Prepnúť na svetlú tému"
+
+[portal.shell.sidebar]
+appEditor = "Editor"
+appProcessor = "Processor"
+brandSuffix = "Stirling Processor"
+docsCount = "{{docs}} dokumentov"
+linkAccount = "Prepojiť účet Stirling"
+planEditor = "Plán Editor"
+planEnterprise = "Plán Enterprise"
+planProcessor = "Plán Processor"
+primaryNav = "Primárna navigácia"
+switchApp = "Prepnúť aplikáciu"
+
+[portal.sources]
+subtitle = "Opakovane použiteľné vstupné pripojenia, ktoré privádzajú dokumenty do Stirling. Nakonfigurujte pripojenie raz a potom ho odkazujte z ľubovoľného počtu politík. Kliknutím na riadok zobrazíte jeho konfiguráciu a politiky, ktoré ho používajú."
+title = "Zdroje"
+
+[portal.sources.actions]
+agentBuilder = "Agent Builder"
+connectSource = "Pripojiť zdroj"
+
+[portal.sources.delete]
+body = "Odstrániť „{{name}}“? Túto akciu nie je možné vrátiť späť. Politiky, ktoré naň odkazujú, bude potrebné aktualizovať."
+cancel = "Zrušiť"
+confirm = "Odstrániť"
+title = "Odstrániť zdroj?"
+
+[portal.sources.detail]
+closeAriaLabel = "Zavrieť detail"
+delete = "Odstrániť zdroj"
+docs24h = "Posledných 24 h"
+docs30d = "Posledných 30 dní"
+docsTotal = "Celkovo zistené"
+docsTrend = "Dokumenty za posledných 30 dní"
+documents = "Dokumenty"
+edit = "Upraviť"
+notReferenced = "Nepoužíva ho žiadna politika, takže ho možno bezpečne odstrániť."
+pause = "Pozastaviť"
+resume = "Pokračovať"
+subtitle = "{{type}} · {{status}}"
+usedBy = "Používa"
+
+[portal.sources.empty]
+description = "Pripojte priečinok (a čoskoro aj cloudové úložisko), aby mali vaše politiky odkiaľ získavať dokumenty."
+title = "Zatiaľ nie sú pripojené žiadne zdroje"
+
+[portal.sources.kpi]
+inUse = "Používa sa"
+total = "Pripojenia"
+unused = "Nepoužité"
+
+[portal.sources.status]
+active = "Aktívne"
+disabled = "Zakázané"
+unused = "Nepoužité"
+
+[portal.sources.table]
+source = "Zdroj"
+status = "Stav"
+usedBy = "Politiky"
+
+[portal.sources.types.editor]
+label = "Editor"
+
+[portal.sources.types.folder]
+description = "Sledujte adresár na serveri pre nové dokumenty."
+label = "Priečinok"
+
+[portal.sources.types.folder.fields.directory]
+helperText = "Absolútna cesta, ktorú Stirling sleduje pre súbory na spracovanie."
+label = "Cesta k adresáru"
+placeholder = "/data/incoming"
+
+[portal.sources.types.folder.fields.identity]
+helperText = "Kontrola obsahu číta každý zmenený súbor, takže premenovania a dotyky, ktoré nemenia obsah, sa znova nespracujú."
+label = "Detekcia zmien"
+
+[portal.sources.types.folder.fields.identity.options]
+hash = "Veľkosť, dátum a kontrola obsahu"
+stat = "Veľkosť a dátum úpravy"
+
+[portal.sources.types.folder.fields.mode]
+label = "Režim čítania"
+
+[portal.sources.types.folder.fields.mode.options]
+consume = "Spotrebovať: spracovať každý súbor raz"
+snapshot = "Snímka: znova prečítať priečinok pri každom spustení"
+
+[portal.sources.types.folder.fields.recursive]
+label = "Hĺbka priečinka"
+
+[portal.sources.types.folder.fields.recursive.options]
+all = "Zahrnúť podpriečinky"
+top = "Iba najvyššia úroveň"
+
+[portal.sources.types.unknown]
+label = "Zdroj"
+
+[portal.sources.wizard]
+back = "Späť"
+cancel = "Zrušiť"
+continue = "Pokračovať"
+editTitle = "Upraviť zdroj"
+name = "Názov"
+namePlaceholder = "napr. Príjem poistných nárokov"
+save = "Uložiť zmeny"
+subtitle = "Krok {{current}} z {{total}} · {{label}}"
+title = "Pripojiť zdroj"
+type = "Typ"
+
+[portal.sources.wizard.steps]
+chooseType = "Vybrať typ"
+configure = "Konfigurovať"
+review = "Skontrolovať a pripojiť"
+
+[portal.usage]
+managePayment = "Spravovať platbu"
+subtitle = "Spotreba, faktúry a správa plánu pre každý PDF, ktorý Stirling fakturoval, v jednej konzole."
+title = "Používanie a fakturácia"
+
+[portal.usage.error]
+loadWallet = "Peňaženku sa nepodarilo načítať"
+openStripePortal = "Stripe portál sa nepodarilo otvoriť"
+walletUnavailable = "Peňaženka nie je dostupná: {{status}} {{statusText}}"
+
+[portal.usage.sessionExpired]
+action = "Znova sa prihlásiť"
+body = "Platnosť relácie vášho účtu Stirling vypršala. Ak chcete zobraziť fakturáciu, prihláste sa znova — vaša inštancia zostáva prepojená."
+title = "Relácia vypršala"
+
+[portal.users]
+title = "Používatelia"
+
+[portal.users.roles]
+subtitle = "Každá rola existuje v každom pláne — to, čo môže každá robiť, je pevne dané naprieč organizáciou."
+title = "Roly"
+
+[portal.users.roles.admin]
+label = "Admin (vlastník organizácie)"
+summary = "Úplná správa workspace, nastavení a členov."
+
+[portal.users.roles.admin.permissions]
+0 = "Spravovať používateľov, tímy a roly"
+1 = "Spravovať všetky integrácie vrátane S3 pripojení"
+2 = "Udeliť alebo odobrať prístup k portálu"
+3 = "Všetko, čo môže robiť vlastník tímu"
+
+[portal.users.roles.guest]
+label = "Hosť"
+summary = "Obmedzený alebo iba webový prístup; nemôže mať osobné konfigurácie."
+
+[portal.users.roles.guest.permissions]
+0 = "Iba webové / demo používanie"
+1 = "Žiadne API kľúče ani integrácie"
+2 = "Žiadny prístup k portálu"
+3 = "Iba na čítanie tam, kde je zdieľané"
+
+[portal.users.roles.member]
+label = "Člen"
+summary = "Bežný používateľ — pracuje so zdieľanými zdrojmi a vlastnými konfiguráciami."
+
+[portal.users.roles.member.permissions]
+0 = "Používať editor a zdieľané integrácie"
+1 = "Vytvárať osobné API a MCP konfigurácie"
+2 = "Vidieť tímové konfigurácie, ktoré sú s ním zdieľané"
+3 = "Bez správy S3 alebo workspace"
+
+[portal.users.roles.team_owner]
+label = "Vlastník tímu"
+summary = "Vlastní tím — spravuje zdroje jeho členov a zdieľané konfigurácie."
+
+[portal.users.roles.team_owner.permissions]
+0 = "Vytvárať a spravovať S3 pripojenia tímu"
+1 = "Spravovať tímové integračné konfigurácie"
+2 = "Prístup k portálu cez predvolenú politiku"
+3 = "Všetko, čo môže robiť člen"
+
+[portal.welcome]
+ariaLabel = "Vitajte v Stirling PDF"
+badge = "Open-source"
+installEditor = "Nainštalovať Editor"
+inviteTeammates = "Pozvať spoluhráčov"
+openInBrowser = "Otvoriť v prehliadači"
+perks = "Navždy zadarmo · Self-hostable"
+subtitle = "Najbezpečnejší PDF Editor na svete je zadarmo pre tímy všetkých veľkostí. Zahŕňa viac ako 60 PDF operácií a SSO."
+title = "Vitajte v"
+titleAccent = "Stirling PDF"
 
 [printFile]
 title = "Vytlačiť súbor"
@@ -6934,6 +9008,21 @@ manage = "Manage"
 description = "Policies and legal information for this service."
 title = "Legal Documents"
 
+[settings.licenses]
+backendDescription = "Licencie pre backend závislosti pribalené k tomuto serveru."
+backendLabel = "Backend licencie"
+backendTitle = "Licencie backend tretích strán"
+empty = "Nenašli sa žiadne závislosti."
+frontendDescription = "Licencie pre frontend závislosti pribalené do release buildu."
+frontendLabel = "Frontend licencie"
+frontendTitle = "Licencie frontend tretích strán"
+license = "Licencia"
+listDescription = "Zoznam sa zobrazuje priamo v UI z release balíka alebo backend endpointu."
+listTitle = "Pribalené závislosti"
+loadError = "Licencie tretích strán sa nepodarilo načítať"
+module = "Modul"
+version = "Verzia"
+
 [settings.licensingAnalytics]
 audit = "Audit"
 plan = "Plán"
@@ -7686,7 +9775,9 @@ memberRemoved = "Člen bol úspešne odstránený"
 namePlaceholder = "Zadajte názov tímu"
 personal = "Osobné"
 removeError = "Člena sa nepodarilo odstrániť"
+renameCancel = "Zrušiť premenovanie"
 renameError = "Tím sa nepodarilo premenovať"
+renameSubmit = "Uložiť názov tímu"
 renameSuccess = "Tím bol úspešne premenovaný"
 
 [team.invitationBanner]
@@ -7702,6 +9793,7 @@ sendButton = "Odoslať pozvánku"
 title = "Pozvať člena tímu"
 
 [team.members]
+actions = "Akcie člena"
 emailColumn = "E‑mail"
 empty = "Zatiaľ žiadni členovia tímu"
 nameColumn = "Meno"
@@ -7933,6 +10025,146 @@ title = "Podrobné štatistiky"
 unknownEndpoint = "Neznámy koncový bod"
 visits = "Návštevy"
 
+[users]
+lastActive = "Naposledy aktívny"
+learnMore = "Zistiť viac o rolách a prístupe."
+locked = "Zamknuté"
+roleFor = "Rola pre {{name}}"
+rowActions = "Akcie pre {{name}}"
+showAll = "Zobraziť všetkých {{count}}"
+showLess = "Zobraziť menej"
+subtitle2 = "Vaši ľudia, tímy a úrovne prístupu."
+suspended = "Pozastavený"
+teamActions = "Akcie tímu"
+title = "Používatelia"
+you = "(vy)"
+
+[users.action]
+deleteTeam = "Odstrániť tím"
+disableMfa = "Resetovať MFA"
+move = "Presunúť do tímu"
+reinstate = "Obnoviť"
+remove = "Odstrániť z organizácie"
+rename = "Premenovať tím"
+resetPw = "Resetovať heslo"
+suspend = "Pozastaviť"
+unlock = "Odomknúť účet"
+
+[users.cap]
+addProcessor = "+ Processor"
+approver = "Schvaľuje politiku"
+editor = "Editor"
+processor = "Processor"
+
+[users.confirm]
+deleteTeamBody = "Odstrániť tím {{name}}? Tím musí byť najprv prázdny - presuňte jeho členov do iného tímu a nesmie stále vlastniť žiadne integračné konfigurácie."
+deleteTeamTitle = "Odstrániť tím"
+disableMfaBody = "Odstrániť MFA registráciu používateľa {{name}}? Ak je to vyžadované, nastaví si ju znova pri ďalšom prihlásení."
+disableMfaTitle = "Resetovať MFA"
+removeBody = "Natrvalo odstrániť {{name}} z organizácie? Túto akciu nie je možné vrátiť späť."
+removeTitle = "Odstrániť člena"
+
+[users.empty]
+description = "Pozvite svoj tím a začnite spolupracovať."
+title = "Zatiaľ žiadni členovia"
+
+[users.group]
+addToTeam = "Pridať do tímu"
+guestCount = "{{count}} hosť"
+guests = "Hostia"
+guestsDesc = "Externí spolupracovníci, obmedzení na to, čo ste zdieľali. Iba Editor."
+ledBy = "vedie {{owner}}"
+org = "Organizácia"
+orgDesc = "Vlastníci s celofiremnou autoritou a schvaľovaním politík"
+owners = "{{count}} vlastník"
+team = "Tím {{name}}"
+teamMeta = "{{count}} ľudí"
+
+[users.invite]
+access = "Prístup"
+action = "Pozvať ľudí"
+authOauth = "OAuth2 / SSO"
+authSaml = "SAML 2.0"
+authType = "Spôsob prihlásenia"
+authWeb = "Heslo"
+create = "Vytvoriť účet"
+createSubtitle = "Vytvorte self-hosted účet s heslom alebo SSO."
+createTitle = "Vytvoriť účet"
+editorDesc = "Upravujte PDF v Stirling PDF Editor. Toto dostane každý."
+email = "Emailová adresa"
+emailError = "Zadajte platnú emailovú adresu"
+emailPlaceholder2 = "name@company.com"
+forceChange = "Vyžadovať zmenu hesla pri prvom prihlásení"
+forceMfa = "Vyžadovať nastavenie MFA pri prvom prihlásení"
+method = "Ako ich pridať"
+methodDirect = "Vytvoriť účet priamo"
+methodEmail = "Pozvať emailom"
+password = "Heslo"
+passwordError = "Heslo musí mať aspoň 8 znakov"
+processorDeferred = "Pozvánka bola odoslaná, ale prístup k Processor zatiaľ nebolo možné udeliť - nastavte ho zo zoznamu po ich pripojení."
+processorDesc = "Priestor pre governance, spúšťanie pipeline, agentov a API."
+role = "Rola"
+send2 = "Odoslať pozvánku"
+subtitle2 = "Dostanú e-mail s pozvánkou do vášho pracovného priestoru Stirling."
+team = "Tím"
+title = "Pozvať ľudí"
+username = "Používateľské meno"
+usernameError = "Používateľské meno musí mať aspoň 3 znaky"
+usernamePlaceholder = "jsmith"
+
+[users.loadError]
+description = "Pri pripájaní k backendu sa niečo pokazilo alebo nemáte prístup. Skúste to znova."
+title = "Nepodarilo sa načítať členov"
+
+[users.moveTeam]
+apply = "Presunúť"
+team = "Tím"
+title = "Presunúť do tímu"
+
+[users.newTeam]
+action = "+ Nový tím"
+create = "Vytvoriť tím"
+emailError = "Zadajte platnú e-mailovú adresu"
+name = "Názov tímu"
+namePlaceholder = "napr. Financie"
+nameRequired = "Názov tímu je povinný"
+owner = "Vlastník tímu"
+ownerFailed = "Tím bol vytvorený, ale vlastníka sa nepodarilo pozvať. Priraďte ho zo zoznamu členov."
+ownerHelper = "Každý tím má vedúceho. Bude pozvaný ako Vlastník tímu, s povolenou rolou Spracovateľ, a môže pridať ostatných. Neskôr ho môžete zmeniť."
+ownerPlaceholder = "owner@company.com"
+subtitle = "Zoskupte ľudí pod Vlastníka tímu, ktorý spravuje ich prístup."
+title = "Nový tím"
+
+[users.renameTeam]
+apply = "Premenovať"
+name = "Názov tímu"
+title = "Premenovať tím"
+
+[users.resetPw]
+apply = "Resetovať heslo"
+confirm = "Potvrdiť heslo"
+copied = "Skopírované do schránky"
+copyHint = "Skopírujte si ho teraz – už sa znova nezobrazí."
+email = "Poslať používateľovi e-mail o resetovaní"
+forceChange = "Vyžadovať zmenu hesla pri ďalšom prihlásení"
+generate = "Vygenerovať bezpečné heslo"
+includePw = "Zahrnúť nové heslo do e-mailu"
+mismatch = "Heslá sa nezhodujú"
+newPassword = "Nové heslo"
+regen = "Vygenerovať znova"
+title = "Resetovať heslo"
+tooShort = "Heslo musí mať aspoň 8 znakov"
+
+[users.role]
+guest = "Hosť"
+member = "Člen"
+orgOwner = "Vlastník organizácie"
+teamOwner = "Vlastník tímu"
+
+[users.team]
+grantProcessor = "Udeliť tímu rolu Spracovateľ"
+revokeProcessor = "Odobrať tímu rolu Spracovateľ"
+
 [validateSignature]
 date = "Dátum"
 downloadCsv = "Stiahnuť CSV"
@@ -8057,13 +10289,22 @@ zoomOut = "Oddialiť"
 [viewer.attachments]
 addAttachment = "Pridať prílohu"
 close = "Zavrieť prílohy"
+closeSidebar = "Zavrieť bočný panel príloh"
+download = "Stiahnuť prílohu"
 empty = "Tento dokument neobsahuje žiadne prílohy"
 loading = "Načítavajú sa prílohy..."
 noDocument = "Otvorte PDF, aby ste videli jeho prílohy."
 noMatch = "Žiadne prílohy nezodpovedajú vášmu vyhľadávaniu"
 noSupport = "Podpora príloh nie je pre tento prehliadač dostupná."
+retry = "Skúsiť znova"
 searchPlaceholder = "Hľadať prílohy"
 title = "Prílohy"
+
+[viewer.bookmarks]
+bookmarkTitle = "Názov záložky"
+closeSidebar = "Zavrieť bočný panel záložiek"
+collapseAll = "Zbaliť všetky záložky"
+expandAll = "Rozbaliť všetky záložky"
 
 [viewer.comments]
 addComment = "Pridať komentár"
@@ -8075,6 +10316,7 @@ clearAll = "Vymazať všetky komentáre"
 clearAllDescription = "Týmto odstránite komentáre a odpovede z bočného panela, pričom pripojené anotácie zostanú v dokumente zachované."
 clearAllTitle = "Vymazať všetky komentáre?"
 close = "Zavrieť komentáre"
+closeSidebar = "Zavrieť bočný panel komentárov"
 deleteAnnotationAndComment = "Odstrániť anotáciu aj komentár"
 deleteDescription = "Táto anotácia má pripojený komentár. Môžete odstrániť iba komentár z bočného panela a ponechať anotáciu, alebo vymazať všetko."
 deleteTitle = "Odstrániť anotáciu z komentárov?"
@@ -8106,6 +10348,11 @@ title = "Polia formulára"
 unsavedBadge = "Neuložené"
 unsavedDesc = "Máte neuložené zmeny"
 
+[viewer.layers]
+closeSidebar = "Zavrieť bočný panel vrstiev"
+hideAll = "Skryť všetky vrstvy"
+showAll = "Zobraziť všetky vrstvy"
+
 [viewer.link]
 delete = "Odstrániť odkaz"
 
@@ -8135,6 +10382,9 @@ resultsOf = "z {{total}}"
 
 [viewer.signature]
 delete = "Odstrániť podpis"
+
+[viewer.thumbnails]
+closeSidebar = "Zavrieť bočný panel miniatúr"
 
 [viewPdf]
 tags = "zobraziť,čítať,anotovať,text,obrázok"
@@ -8562,6 +10812,7 @@ loading = "Načítavajú sa ľudia..."
 locked = "zamknutý"
 lockedBadge = "Zamknutý"
 loginRequired = "Najprv zapnite režim prihlásenia"
+memberActions = "Akcie člena"
 noMembersFound = "Nenašli sa žiadni členovia"
 role = "Rola"
 searchMembers = "Hľadať členov..."
@@ -8571,6 +10822,7 @@ unlockAccount = "Odomknúť účet"
 unlockUserError = "Nepodarilo sa odomknúť používateľský účet"
 unlockUserSuccess = "Používateľský účet bol úspešne odomknutý"
 user = "Používateľ"
+userInfo = "Informácie o používateľovi"
 
 [workspace.people.actions]
 upgrade = "Upgradovať"
@@ -8716,6 +10968,7 @@ removeMemberError = "Nepodarilo sa odstrániť používateľa z tímu"
 removeMemberSuccess = "Používateľ bol odstránený z tímu"
 renameTeamLabel = "Premenovať tím"
 system = "Systém"
+teamActions = "Akcie tímu"
 teamName = "Názov tímu"
 teamNotFound = "Tím sa nenašiel"
 title = "Tímy"

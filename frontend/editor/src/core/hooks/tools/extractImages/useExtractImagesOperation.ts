@@ -2,8 +2,13 @@ import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
   useToolOperation,
-  ToolType,
+  defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  objectToFormData,
+  type ToolApiParams,
+  type ToolEndpoint,
+} from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
   ExtractImagesParameters,
@@ -11,26 +16,39 @@ import {
 } from "@app/hooks/tools/extractImages/useExtractImagesParameters";
 import { useToolResources } from "@app/hooks/tools/shared/useToolResources";
 
+const ENDPOINT = "/api/v1/misc/extract-images" satisfies ToolEndpoint;
+type ExtractImagesApiParams = ToolApiParams[typeof ENDPOINT];
+
+// The frontend param type uses "jpg" while the backend model uses "jpeg"; the
+// wire value is preserved verbatim (as the pre-mapper code did) via the cast.
+export const extractImagesToApiParams = (
+  parameters: ExtractImagesParameters,
+): ExtractImagesApiParams => ({
+  format: parameters.format as ExtractImagesApiParams["format"],
+});
+
+export const extractImagesFromApiParams = (
+  apiParams: ExtractImagesApiParams,
+): Partial<ExtractImagesParameters> => ({
+  format: apiParams.format as ExtractImagesParameters["format"],
+});
+
 // Static configuration that can be used by both the hook and automation executor
 export const buildExtractImagesFormData = (
   parameters: ExtractImagesParameters,
   file: File,
-): FormData => {
-  const formData = new FormData();
-  formData.append("fileInput", file);
-  formData.append("format", parameters.format);
-  // formData.append("allowDuplicates", parameters.allowDuplicates.toString());
-  return formData;
-};
+): FormData =>
+  objectToFormData(extractImagesToApiParams(parameters), { fileInput: file });
 
 // Static configuration object (without response handler - will be added in hook)
-export const extractImagesOperationConfig = {
-  toolType: ToolType.singleFile,
+export const extractImagesOperationConfig = defineSingleFileTool({
   buildFormData: buildExtractImagesFormData,
+  toApiParams: extractImagesToApiParams,
+  fromApiParams: extractImagesFromApiParams,
   operationType: "extractImages",
-  endpoint: "/api/v1/misc/extract-images",
+  endpoint: ENDPOINT,
   defaultParameters,
-} as const;
+});
 
 export const useExtractImagesOperation = () => {
   const { t } = useTranslation();

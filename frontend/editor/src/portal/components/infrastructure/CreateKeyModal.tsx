@@ -72,16 +72,17 @@ export function CreateKeyModal({
       }
       footer={
         created ? (
-          <Button variant="gradient" onClick={close}>
+          <Button variant="primary" accent="premium" onClick={close}>
             {t("portal.infrastructure.createKey.done")}
           </Button>
         ) : (
           <div className="portal-infra__modal-actions">
-            <Button variant="ghost" onClick={close}>
+            <Button variant="tertiary" onClick={close}>
               {t("portal.infrastructure.createKey.cancel")}
             </Button>
             <Button
-              variant="gradient"
+              variant="primary"
+              accent="premium"
               disabled={name.trim() === "" || perms.length === 0}
               onClick={createKey}
             >
@@ -125,7 +126,10 @@ export function CreateKeyModal({
               {PERMISSION_OPTS.map((p) => (
                 <Checkbox
                   key={p}
-                  label={p}
+                  label={t(
+                    `portal.infrastructure.apiKeyPermission.${p.toLowerCase()}`,
+                    p,
+                  )}
                   checked={perms.includes(p)}
                   onChange={() => togglePerm(p)}
                 />

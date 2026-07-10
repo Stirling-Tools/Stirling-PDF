@@ -47,6 +47,14 @@ public class PolicyEntity implements Serializable {
     @Column(name = "team_id")
     private Long teamId;
 
+    /**
+     * Position in the team's run order (ascending). Team-wide and admin-editable; the per-trigger
+     * order the UI shows is this single sequence filtered by trigger. New policies are appended
+     * (max + 1). Nullable for pre-existing rows; treated as 0 when sorting.
+     */
+    @Column(name = "sort_order")
+    private Integer sortOrder;
+
     @Column(name = "policy_json", columnDefinition = "text")
     private String policyJson;
 }
