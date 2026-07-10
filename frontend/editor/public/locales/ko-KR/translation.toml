@@ -7,6 +7,7 @@ black = "검정"
 blue = "파랑"
 cancel = "취소"
 chooseFile = "파일 선택"
+clear = "지우기"
 close = "닫기"
 comingSoon = "곧 제공"
 confirm = "확인"
@@ -87,6 +88,7 @@ processingCompleteMultiple = "{{count}}개의 파일이 준비되었습니다."
 property = "속성"
 quickPosition = "빠른 위치"
 red = "빨강"
+remove = "제거"
 reset = "초기화"
 review = "검토"
 save = "저장"
@@ -180,6 +182,7 @@ addMoreFiles = "파일 더 추가..."
 attachments = "첨부 파일 선택"
 info = "PDF에 첨부할 파일을 선택하세요. 선택한 파일은 포함되며 PDF의 첨부 패널을 통해 접근할 수 있습니다."
 placeholder = "파일 선택..."
+removeFile = "파일 제거"
 selectedFiles = "선택된 파일"
 submit = "첨부 추가"
 
@@ -1628,6 +1631,9 @@ title = "Stirling PDF를 더 좋게 만들고 싶으신가요?"
 tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
 
 [annotation]
+alignCenter = "가운데 정렬"
+alignLeft = "왼쪽 정렬"
+alignRight = "오른쪽 정렬"
 annotationStyle = "주석 스타일"
 backgroundColor = "배경색"
 borderOff = "테두리: 꺼짐"
@@ -2531,6 +2537,7 @@ title = "선택 기준"
 
 [certSign.source]
 device = "이 장치"
+noOtherSources = "사용 가능한 다른 인증서 소스가 없습니다."
 server = "서버"
 stepTitle = "인증서 원본"
 upload = "업로드"
@@ -2805,6 +2812,7 @@ back = "뒤로"
 cancel = "취소"
 close = "닫기"
 collapse = "접기"
+confirm = "확인"
 continue = "계속"
 copied = "복사됨!"
 copy = "복사"
@@ -3595,7 +3603,9 @@ makeCopy = "복사본 만들기"
 mobileShort = "모바일"
 mobileUpload = "모바일 업로드"
 mobileUploadNotAvailable = "모바일 업로드가 활성화되어 있지 않습니다"
+moreOptions = "더 많은 옵션"
 myFiles = "내 파일"
+nextFile = "다음 파일"
 noFiles = "사용 가능한 파일이 없습니다"
 noFilesFound = "검색과 일치하는 파일이 없습니다"
 noRecentFiles = "최근 파일이 없습니다"
@@ -3605,6 +3615,7 @@ openInFileEditor = "파일 편집기에서 열기"
 openInPageEditor = "페이지 편집기에서 열기"
 owner = "소유자"
 ownerUnknown = "알 수 없음"
+previousFile = "이전 파일"
 recent = "최근"
 removeBoth = "둘 다에서 제거"
 removeFilePrompt = "이 파일은 이 기기와 서버에 모두 저장되어 있습니다. 어디에서 제거하시겠습니까?"
@@ -3680,7 +3691,9 @@ workbench = "작업대"
 
 [fileSidebar]
 addFiles = "파일 추가"
+addingFiles = "파일 추가 중…"
 collapse = "사이드바 접기"
+customizeGroups = "그룹 사용자 지정"
 dropHint = "시작하려면 파일을 여세요"
 dropToAdd = "Drop files to add"
 expand = "사이드바 펼치기"
@@ -3693,8 +3706,11 @@ noFiles = "아직 파일이 없습니다"
 openFileManager = "파일 관리자 열기"
 openFromComputer = "컴퓨터에서 열기"
 openSettings = "설정 열기"
+other = "기타"
+recent = "최근"
 search = "검색"
 searchPlaceholder = "파일 검색..."
+viewAll = "{{count}}개 파일 모두 보기"
 
 [fileSidebar.fileItem]
 closeViewer = "뷰어 닫기"
@@ -3706,6 +3722,23 @@ updateOnServer = "Update on server"
 uploadToServer = "Upload to server"
 versionHistory = "Version history"
 
+[fileSidebar.groupsModal]
+add = "추가"
+addLabel = "라벨 추가…"
+categoryIconAria = "{{name}}의 아이콘 선택"
+createCategory = "카테고리 만들기"
+delete = "카테고리 삭제"
+done = "완료"
+hide = "카테고리 숨기기"
+newCategory = "새 카테고리 이름…"
+removeLabel = "{{name}} 제거"
+rename = "이름 변경"
+reset = "기본값으로 재설정"
+search = "라벨 검색…"
+show = "카테고리 표시"
+subtitle = "파일을 상위 카테고리로 그룹화하세요. 기존 또는 새 라벨을 카테고리에 추가하거나, 이름을 변경하거나, 직접 만들 수 있습니다. 어떤 카테고리에도 속하지 않는 파일은 “기타” 아래에 표시됩니다."
+title = "사이드바 카테고리"
+
 [filesPage]
 addToWorkspace = "작업 공간에 추가"
 addToWorkspaceCount = "{{count}}개를 작업 공간에 추가"
@@ -3715,6 +3748,7 @@ backToFolder = "{{folder}}로 돌아가기"
 backToMyFiles = "내 파일로 돌아가기"
 breadcrumbs = "폴더 경로"
 cancel = "취소"
+classification = "분류"
 clearSearch = "검색 지우기"
 clearSelection = "선택 해제"
 closeDetails = "세부정보 닫기"
@@ -3874,10 +3908,10 @@ uploadFilesFailedDetail = "파일을 업로드할 수 없습니다: {{message}}"
 added = "추가됨"
 count = "파일"
 folder = "폴더"
+labels = "라벨"
 modified = "수정됨"
 name = "이름"
 size = "크기"
-toolHistory = "도구 기록"
 toolHistoryAtVersion = "누적 도구 체인"
 totalSize = "총 크기"
 type = "유형"
@@ -4614,10 +4648,10 @@ welcomeTitle = "초대를 받으셨습니다!"
 [landing]
 addFiles = "파일 추가"
 heroSubtitle = "시작하려면 기존 PDF를 끌어놓거나 추가하세요."
-heroTitle = "Stirling PDF"
 mobileUpload = "모바일에서 업로드"
 openFromComputer = "컴퓨터에서 열기"
 uploadFromComputer = "컴퓨터에서 업로드"
+workbenchEmptyStateHero = "어디에나 PDF를 놓으세요"
 
 [language]
 direction = "ltr"
@@ -4930,6 +4964,7 @@ title = "출력"
 [onboarding]
 activeFiles = "<strong>활성 파일</strong> 보기에는 도구에 로드한 모든 PDF가 표시되며, 처리할 파일을 선택할 수 있습니다."
 allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
+close = "닫기"
 cropSettings = "이제 자르려는 파일을 선택했으므로, 자르기 도구를 구성하여 PDF를 자를 영역을 지정할 수 있습니다."
 fileCheckbox = "파일을 클릭하면 처리 대상으로 선택됩니다. 배치 작업을 위해 여러 파일을 선택할 수 있습니다."
 fileReplacement = "수정된 파일은 워크벤치에서 원본 파일을 자동으로 대체하므로, 더 많은 도구로 쉽게 이어서 작업할 수 있습니다."
@@ -4955,6 +4990,7 @@ skipTheTour = "투어 건너뛰기"
 
 [onboarding.desktopInstall]
 body = "Stirling은 데스크톱 앱으로 사용할 때 가장 잘 작동합니다. 오프라인으로 사용하고, 문서를 더 빠르게 열며, 컴퓨터에서 로컬로 편집할 수 있습니다."
+selectOs = "운영 체제 선택"
 title = "다운로드"
 titleWithOs = "{{osLabel}}용 다운로드"
 
@@ -5566,7 +5602,9 @@ viewLabel = "PDF 편집기"
 
 [pdfTextEditor.actions]
 applyChanges = "변경 사항 적용"
+clearText = "텍스트 지우기"
 downloadCopy = "사본 다운로드"
+moreOptions = "더 많은 옵션"
 reset = "변경 사항 초기화"
 
 [pdfTextEditor.badges]
@@ -5942,6 +5980,16 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.docType]
+Contracts = "계약서"
+"Financial reports" = "재무 보고서"
+"HR records" = "HR 기록"
+Insurance = "보험"
+Invoices = "송장"
+"Legal filings" = "법적 제출 서류"
+"Medical / PHI" = "의료 / PHI"
+"Tax documents" = "세금 문서"
+
 [policies.enforcement]
 applying = "{{names}} 적용 중"
 applyingProgress = "{{names}} 적용 중 ({{done}}/{{total}})"
@@ -5963,8 +6011,94 @@ export = "내보내기 전에 정책 적용"
 input = "가져오기 시 정책 적용"
 print = "인쇄 전에 정책 적용"
 
+[policies.field]
+accessLog = "액세스 로그"
+archiveAfter = "다음 이후 보관"
+auditTrail = "감사 추적"
+belowThreshold = "임계값 미만"
+destination = "대상"
+frameworks = "프레임워크"
+immutableHold = "변경 불가 보류"
+keepFor = "보관 기간"
+minConfidence = "최소 신뢰도"
+notify = "라우팅 시 알림"
+onViolation = "비준수 시"
+webhookUrl = "Webhook URL"
+
+[policies.fieldOption.archiveAfter]
+"1 year" = "1년"
+"30 days" = "30일"
+"90 days" = "90일"
+Never = "안 함"
+
+[policies.fieldOption.belowThreshold]
+"Flag for review" = "검토 대상으로 표시"
+Hold = "보류"
+"Route to bucket" = "버킷으로 라우팅"
+
+[policies.fieldOption.destination]
+Documents = "문서"
+"S3 bucket" = "S3 bucket"
+SharePoint = "SharePoint"
+Webhook = "Webhook"
+
+[policies.fieldOption.frameworks]
+FedRAMP = "FedRAMP"
+GDPR = "GDPR"
+HIPAA = "HIPAA"
+"ISO 27001" = "ISO 27001"
+"PCI DSS" = "PCI DSS"
+"SOC 2" = "SOC 2"
+
+[policies.fieldOption.keepFor]
+"1 year" = "1년"
+"3 years" = "3년"
+"30 days" = "30일"
+"7 years" = "7년"
+Indefinite = "무기한"
+
+[policies.fieldOption.minConfidence]
+"60%" = "60%"
+"70%" = "70%"
+"80%" = "80%"
+"90%" = "90%"
+"95%" = "95%"
+
+[policies.fieldOption.onViolation]
+"Auto-redact PHI" = "PHI 자동 수정"
+"Block export" = "내보내기 차단"
+"Flag for review" = "검토 대상으로 표시"
+"Quarantine document" = "문서 격리"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
+
+[policies.labels]
+add = "추가"
+addPlaceholder = "라벨 추가…"
+customNote = "팀에 맞게 사용자 지정되었습니다."
+defaultNote = "기본 내장값을 사용 중이며 팀과 공유됩니다."
+duplicate = "\"{{name}}\"이(가) 이미 존재합니다."
+edit = "라벨 편집"
+empty = "아직 라벨이 없습니다."
+export = "JSON 내보내기"
+iconAria = "{{name}}의 아이콘 선택"
+import = "JSON 가져오기"
+importError = "해당 파일을 가져올 수 없습니다."
+managedNote = "팀 라벨은 팀 리더가 관리합니다."
+modalSubtitle = "전체 팀과 공유됩니다. 분류기가 각 문서에 맞는 라벨을 선택합니다."
+modalTitle = "분류 라벨"
+pickIcon = "{{label}} 아이콘 사용"
+removeAria = "{{name}} 제거"
+resetToDefault = "기본값으로 재설정"
+saveForTeam = "팀용으로 저장"
+saving = "저장 중…"
+sectionLabel = "분류 라벨"
+startFromScratch = "처음부터 시작"
+teamCount = "팀 라벨"
+tooLong = "라벨은 최대 {{max}}자까지 가능합니다."
+ungrouped = "그룹 없음"
+view = "라벨 보기"
 
 [policies.pii]
 account = "계좌 번호(라벨 지정됨)"
@@ -5977,17 +6111,30 @@ placeholder = "Select PII types"
 routing = "미국 라우팅 번호(ABA)"
 ssn = "사회보장 번호"
 
+[policies.settings]
+noneExport = "현재 내보내기 시 실행되는 정책이 없습니다."
+noneUpload = "현재 업로드 시 실행되는 정책이 없습니다."
+onExport = "내보내기 시"
+onUpload = "업로드 시"
+reorderHandle = "드래그하여 순서 변경"
+runOrderDesc = "둘 이상의 정책이 같은 트리거에서 실행되면 이 순서대로 실행됩니다 — 각 정책은 이전 정책의 출력에 대해 실행됩니다. 드래그하여 순서를 변경하세요."
+title = "정책 설정"
+
 [policies.sidebar]
 activeCount = "{{count}} active"
-infoAriaLabel = "What is a policy?"
 infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
 loading = "Loading…"
+optionsAriaLabel = "정책 옵션"
+policySettings = "정책 설정"
 railAriaLabel = "{{label}} policy — {{status}}"
 railSuffixActive = " (Active)"
 railSuffixPaused = " (Paused)"
+retryFailed = "실패한 정책 다시 시도({{count}})"
+rowProgress = "{{total}}개 파일 중 {{completed}}개 처리됨"
 setUp = "Set up"
 title = "Policies"
 upgradeToEnterprise = "Upgrade to enterprise"
+whatIsPolicy = "정책이란 무엇인가요?"
 
 [policies.status]
 active = "Active"
@@ -6047,6 +6194,1933 @@ sourcesLabel = "Sources"
 stepOf = "Step {{step}} of {{total}}"
 toolChainDesc = "Configure the tools this policy runs on each document."
 typesSelected = "{{count}} types selected"
+
+[policy]
+badgeEnforcing = "{{name}} 적용 중..."
+badgeRan = "이 파일에 {{name}} 정책이 실행되었습니다"
+blockingAction = "정책 적용 중 {{action}}이(가) 차단되었습니다. 잠시 기다려 주세요..."
+dismiss = "오버레이 닫기"
+enforcingTitle = "정책 적용 중..."
+viewAnyway = "파일 보기(정책은 계속 적용 중)"
+
+[portal]
+comingSoon = "곧 제공 예정"
+
+[portal.accountLink.card]
+billingNote = "무인 처리는 조직 지갑에 청구됩니다."
+eyebrow = "계정 연결"
+linkButton = "Stirling 계정 연결"
+linked = "연결됨"
+linkedAs = "{{name}}(으)로 연결됨."
+linkedGeneric = "이 인스턴스는 연결되었습니다."
+notLinked = "연결되지 않음"
+title = "이 조직을 Stirling 계정에 연결"
+unlink = "연결 해제"
+
+[portal.accountLink.card.error]
+title = "연결할 수 없음"
+
+[portal.accountLink.card.loginNotConfigured]
+after = "호스팅된 Stirling 계정에 대한 계정 연결을 활성화하세요. 개발 환경에서는 연결 대화 상자에서 로그인을 시뮬레이션할 수 있습니다."
+before = "설정"
+title = "SaaS 로그인이 구성되지 않음"
+
+[portal.accountLink.gate]
+action = "계정 연결"
+description = "청구 가능 기능을 사용하려면 이 조직의 Stirling 계정을 연결하세요."
+title = "연결하여 잠금 해제"
+titleFeature = "연결하여 {{feature}} 잠금 해제"
+
+[portal.accountLink.instances]
+active = "활성"
+revoke = "취소"
+revoked = "취소됨"
+unnamed = "이름 없는 인스턴스"
+
+[portal.accountLink.instances.columns]
+instance = "인스턴스"
+lastSeen = "마지막 확인"
+linked = "연결됨"
+status = "상태"
+
+[portal.accountLink.instances.empty]
+description = "이 조직의 계정을 연결한 다음 자체 호스팅 인스턴스를 등록하면 여기에서 볼 수 있습니다."
+title = "연결된 인스턴스 없음"
+
+[portal.accountLink.instances.time]
+daysAgo_one = "{{count}}일 전"
+daysAgo_other = "{{count}}일 전"
+hoursAgo_one = "{{count}}시간 전"
+hoursAgo_other = "{{count}}시간 전"
+justNow = "방금"
+minutesAgo_one = "{{count}}분 전"
+minutesAgo_other = "{{count}}분 전"
+never = "없음"
+
+[portal.accountLink.modal]
+linkSubtitle = "이 서버에서 청구할 계정으로 로그인하세요."
+linkTitle = "Stirling 계정 연결"
+reauthSubtitle = "세션이 만료되었습니다 — Stirling 계정에 다시 로그인하세요. 인스턴스 연결은 유지됩니다."
+reauthTitle = "다시 로그인"
+simulateSignIn = "로그인 시뮬레이션(dev)"
+
+[portal.accountLink.modal.loginNotConfigured]
+after = "호스팅된 Stirling 계정에 대한 앱 내 연결을 활성화하세요."
+and = "및"
+before = "설정"
+title = "SaaS 로그인이 구성되지 않음"
+
+[portal.accountLink.panel]
+instancesSub = "이 조직에 등록된 모든 자체 호스팅 인스턴스입니다. 자격 증명을 취소하면 무인 액세스가 즉시 차단됩니다."
+instancesTitle = "연결된 인스턴스"
+revokeError = "인스턴스를 취소할 수 없음"
+sub = "무인 처리 비용이 조직 지갑에 청구되도록 이 자체 호스팅 조직을 Stirling 계정에 연결하세요."
+
+[portal.accountLink.panel.loadError]
+forbidden = "팀 소유자만 조직의 연결된 인스턴스를 볼 수 있습니다."
+generic = "팀의 연결된 인스턴스를 불러올 수 없습니다. 잠시 후 다시 시도하세요."
+title = "연결된 인스턴스를 불러올 수 없음"
+
+[portal.accountLink.state]
+free = "Editor 플랜"
+subscribed = "Processor 플랜"
+unlinked = "연결되지 않음"
+
+[portal.agentBuilder]
+bootstrapFromDocument = "문서에서 Bootstrap"
+sectionsAriaLabel = "Agent Builder 섹션"
+selectorAriaLabel = "Agent"
+subtitle = "문서를 분류하고, 추출하고, 라우팅하는 AI agent를 설계, 테스트, 배포하세요. 시나리오를 정의하고, 도구 액세스를 제한하고, golden set을 실행하고, 버전을 게시하세요."
+title = "Agent Builder"
+
+[portal.agentBuilder.bootstrap]
+cancel = "취소"
+dropzoneText = "샘플 문서(PDF 또는 이미지) 선택"
+lead = "샘플 문서를 놓으면 조정할 수 있는 시나리오와 추출 스키마를 제안합니다. 검토하기 전까지는 아무것도 게시되지 않습니다."
+submit = "Agent Bootstrap"
+subtitle = "대표 파일 하나로 새 agent 시드"
+title = "문서에서 Bootstrap"
+
+[portal.agentBuilder.empty]
+description = "샘플 문서에서 agent를 Bootstrap하여 시나리오와 추출 스키마를 시드한 다음 조정하고 게시하세요."
+title = "아직 agent가 없습니다"
+
+[portal.agentBuilder.evals]
+casesPassing = "통과한 케이스"
+columnCase = "Eval 케이스"
+columnLatency = "지연 시간"
+columnResult = "결과"
+fail = "실패"
+goldenSetPassRate = "Golden-set 통과율"
+latencyMs = "{{ms}} ms"
+notRun = "실행 안 됨"
+pass = "통과"
+passRate = "통과율"
+runEvals = "eval 실행"
+
+[portal.agentBuilder.evals.empty]
+description = "Eval은 시나리오를 반복 가능한 golden set으로 만듭니다. 업그레이드하면 시간 경과에 따른 통과율을 캡처하고 이를 기준으로 게시를 제어할 수 있습니다."
+title = "아직 golden set이 없습니다"
+
+[portal.agentBuilder.kpi]
+acrossGoldenSets = "golden set 전체"
+activeAgents = "활성 agent"
+avgPassRate = "평균 eval 통과율"
+fleetWide = "전체 fleet"
+latestPublished = "최신 게시"
+scenarios = "시나리오"
+testCases = "테스트 케이스"
+totalDescription_one = "총 {{count}}개"
+totalDescription_other = "총 {{count}}개"
+
+[portal.agentBuilder.scenarios]
+add = "추가"
+addScenario = "시나리오 추가"
+enable = "활성화"
+expectationLabel = "예상 동작"
+expectationPlaceholder = "agent가 수행해야 할 작업"
+inEval = "eval 중"
+mute = "음소거"
+muted = "음소거됨"
+nameLabel = "이름"
+namePlaceholder = "예: 규정 준수 에스컬레이션"
+
+[portal.agentBuilder.tabs]
+evals = "Evals"
+scenarios = "시나리오"
+tools = "도구"
+versions = "버전"
+
+[portal.agentBuilder.tools]
+broadAccess = "광범위한 액세스"
+deniedHint = "선택한 도구가 차단되었습니다. 그 외 모든 도구는 호출 가능합니다."
+deniedTools = "거부된 도구"
+governanceGate = "도구 거버넌스는 Enterprise 플랜에서 사용할 수 있습니다."
+restricted = "제한됨"
+restrictedAccess = "제한된 도구 액세스"
+restrictedDescription = "아래에서 거부한 도구를 제외한 모든 도구를 허용합니다."
+
+[portal.agentBuilder.versions]
+current = "현재"
+historyGate = "전체 버전 기록 및 롤백은 Enterprise 플랜에서 사용할 수 있습니다."
+publish = "게시"
+rollBack = "롤백"
+
+[portal.assistant]
+close = "Assistant 닫기"
+error = "Assistant에 연결할 수 없습니다."
+errorWithDetail = "Assistant에 연결할 수 없습니다: {{detail}}"
+inputAriaLabel = "Assistant에게 질문"
+inputPlaceholder = "Stirling에 대해 질문하세요…"
+open = "Assistant 열기"
+send = "보내기"
+title = "Assistant"
+tryAsking = "질문해 보세요"
+typing = "입력 중"
+
+[portal.auth]
+loading = "로딩 중"
+redirectingToEditor = "Editor로 리디렉션 중..."
+
+[portal.billing.checkout]
+noClientSecret = "Edge function이 client_secret을 반환하지 않았습니다."
+subtitle = "무료 Editor 플랜 제공량을 넘어 계속 사용하려면 카드를 추가하세요. 나머지는 Stripe가 처리합니다."
+title = "Processor 플랜 켜기"
+
+[portal.billing.checkout.activationSlow]
+body = "결제는 성공했지만 활성화가 평소보다 조금 더 오래 걸리고 있습니다. 자동으로 켜집니다 - 이를 닫으면 곧 여기에 표시됩니다."
+close = "닫기"
+title = "거의 완료되었습니다"
+
+[portal.billing.checkout.error]
+title = "Checkout을 시작할 수 없음"
+
+[portal.billing.checkout.finalizing]
+body = "결제가 완료되었습니다. 연결된 인스턴스 전반에서 종량제 처리를 켜는 중입니다 - 보통 몇 초 정도 걸립니다."
+hint = "이 창을 열어 두세요."
+title = "Processor 플랜 활성화 중..."
+
+[portal.billing.checkout.notConfigured]
+bodyAfter = "을(를) portal env에 설정하여 앱 내 checkout을 활성화하세요."
+bodyBefore = "설정"
+title = "Stripe가 구성되지 않음"
+
+[portal.billing.enterpriseUpsell]
+cta = "Enterprise 견적 만들기"
+description = "약정 사용량 할인, air-gapped 배포, 맞춤 MSA 및 보안 검토, 3rd-party 배포 파트너십."
+eyebrow = "사용량 할인 · 1M+ PDFs"
+title = "Stirling Enterprise"
+
+[portal.billing.freeEditors]
+activeThisMonth = "이번 달 활성"
+cost = "비용"
+editorsDeployed = "배포된 Editor"
+inviteTeammates = "팀원 초대"
+pdfsEdited = "편집된 PDFs"
+subtitle = "어디에나, 전체 팀을 위해 배포하세요."
+title = "무료 PDF Editors"
+
+[portal.billing.freePlan]
+checkoutErrorTitle = "Checkout을 시작할 수 없음"
+currentPlan = "현재 플랜"
+freeForever = "영구 무료"
+noTeamResolved = "지갑에서 아직 팀이 확인되지 않았습니다 — 새로 고침 후 다시 시도하세요."
+ownerOnly = "팀 소유자만 Processor 플랜을 켤 수 있습니다."
+planName = "Editor"
+ssoIncluded = "SSO 포함"
+switchOnProcessor = "Processor 켜기 →"
+unlimitedUsers = "무제한 사용자"
+
+[portal.billing.invoices]
+columnAmount = "금액"
+columnDate = "날짜"
+columnDescription = "설명"
+columnPdfsProcessed = "처리된 PDFs"
+columnStatus = "상태"
+descriptionFallback = "송장"
+downloadAriaLabel = "송장 {{number}}을(를) PDF로 다운로드"
+emptyDescription = "팀이 구독하고 첫 번째 주기가 종료되면 송장이 여기에 표시됩니다."
+emptyTitle = "아직 송장이 없습니다"
+fetchLimitNote_one = "가장 최근 송장 {{count}}개를 표시 중입니다. 이전 송장은 Stripe portal에 있습니다."
+fetchLimitNote_other = "가장 최근 송장 {{count}}개를 표시 중입니다. 이전 송장은 Stripe portal에 있습니다."
+loadError = "송장을 불러올 수 없습니다: {{error}}"
+pdfLink = "PDF ↓"
+showAll_one = "전체 {{count}}개 표시"
+showAll_other = "전체 {{count}}개 표시"
+showFewer_one = "더 적게 표시(상위 {{count}}개)"
+showFewer_other = "더 적게 표시(상위 {{count}}개)"
+showMostRecent_one = "가장 최근 {{count}}개 표시"
+showMostRecent_other = "가장 최근 {{count}}개 표시"
+title = "송장 기록"
+viewAriaLabel = "Stripe에서 송장 {{number}} 보기"
+viewLink = "보기 ↗"
+
+[portal.billing.linkPrompt]
+cta = "Stirling 계정 연결"
+description = "수동 PDF 편집 — 보기, 서명, 병합, 분할, 워터마크, 압축, 변환, 수동 OCR — 은 연결 여부와 관계없이 항상 무료입니다. 연결하면 종량제 처리(자동화, AI, API)용 무료 PDF 500개를 받을 수 있습니다. 더 필요할 때 Processor 플랜을 켜고 사용한 만큼만 결제하세요."
+title = "Stirling 계정 연결"
+
+[portal.billing.paymentMethod]
+billedMonthly = "월별 청구"
+cardEnding = "{{last4}}로 끝나는 {{brand}}"
+cardFallback = "카드"
+expiresBilledMonthly = "만료 {{expiry}} · 월별 청구"
+eyebrow = "결제 수단"
+managedSub = "카드와 청구 정보는 Stripe 고객 portal에 안전하게 보관됩니다."
+managedTitle = "Stripe에서 관리됨"
+update = "업데이트"
+
+[portal.billing.pdfsProcessed]
+emptyPeriod = "이번 기간에는 아직 종량제 처리가 없습니다."
+eyebrow = "이번 기간 처리된 PDFs"
+legendValue_one = "{{formatted}} PDFs"
+legendValue_other = "{{formatted}} PDFs"
+segbarAriaLabel = "카테고리별 종량제 PDFs 분할"
+segmentAgentsDesc = "AI agent 작업"
+segmentAgentsLabel = "Agents"
+segmentApiDesc = "직접 API 요청"
+segmentApiLabel = "API"
+segmentAutomationDesc = "자동화 및 파이프라인"
+segmentAutomationLabel = "자동화"
+unit = "종량제 PDFs"
+
+[portal.billing.spendLimit]
+adjustLimit = "한도 조정"
+cancel = "취소"
+capControlNote = "변경 사항은 즉시 적용됩니다 — 언제든지 상한을 올리거나 낮출 수 있습니다."
+capSuffix = "/ 월"
+capSuffixWithDocs = "/ 월 · ≈ {{documents}}개 문서"
+displaySub = "자동으로 처리한 것에 대해서만 청구되며 — 상한을 넘지 않습니다."
+editTitle = "월별 상한 설정"
+eyebrow = "지출 한도"
+guardrailBody = "엄격한 상한입니다 — 이 금액을 넘어 청구되지 않습니다. 상한에 도달하면 올리거나 주기가 재설정될 때까지 종량제 처리가 일시 중지됩니다(무제한 PDF 편집은 계속 작동). 손실되는 것은 없습니다."
+guardrailLabel = "보호 장치:"
+noCap = "상한 없음"
+pctUsed = "{{pct}}% 사용됨"
+remaining = "{{amount}} 남음"
+save = "한도 저장"
+saveError = "한도를 저장할 수 없음"
+thisPeriodUncapped = "이번 기간 {{amount}} · 상한 없음"
+usedThisMonth = "이번 달 {{amount}} 사용됨"
+useSuggested = "제안 사용 · {{amount}} / 월"
+
+[portal.billing.spendLimit.projection]
+body_one = "{{rate}}/일 기준으로 약 {{count}}일 후 상한에 도달합니다(월말 예상 ~{{monthEnd}}). 제안 한도는 약 {{suggested}}입니다."
+body_other = "{{rate}}/일 기준으로 약 {{count}}일 후 상한에 도달합니다(월말 예상 ~{{monthEnd}}). 제안 한도는 약 {{suggested}}입니다."
+label = "초과 예상."
+
+[portal.billing.spendThisMonth]
+eyebrow = "이번 달 지출"
+processed_one = "{{formattedCount}} PDF 처리됨."
+processed_other = "{{formattedCount}} PDFs 처리됨."
+processedWithRate_one = "{{formattedCount}} PDF 처리됨, 각 {{rate}}."
+processedWithRate_other = "{{formattedCount}} PDFs 처리됨, 각 {{rate}}."
+
+[portal.billing.subscribedPlan.capWarn]
+approachingBody = "자동 처리가 멈추지 않도록 지금 올리세요."
+approachingTitle = "월별 지출 한도의 {{pct}}%에 도달했습니다"
+raiseLimit = "한도 올리기"
+reachedBody = "한도를 올리거나 주기가 재설정될 때까지 종량제 처리가 일시 중지됩니다. 무제한 PDF 편집은 계속 작동합니다."
+reachedTitle = "월별 지출 한도에 도달했습니다"
+
+[portal.billing.subscribedPlan.portalError]
+title = "Stripe portal을 열 수 없음"
+
+[portal.billing.walletMeter]
+capSuffix_one = "무료 PDFs {{allowance}}개 중 사용됨"
+capSuffix_other = "무료 PDFs {{allowance}}개 중 사용됨"
+eyebrow = "Processor 평가판"
+statusLabel_one = "{{remaining}} 남음"
+statusLabel_other = "{{remaining}} 남음"
+sub = "PDF Editor는 무료로 사용하세요. PDF 자동 처리에는 비용이 부과됩니다."
+title_one = "PDF {{allowance}}개 무료 처리"
+title_other = "PDF {{allowance}}개 무료 처리"
+titleWithRate_one = "PDF {{allowance}}개 무료 처리 후 {{rate}}/PDF"
+titleWithRate_other = "PDF {{allowance}}개 무료 처리 후 {{rate}}/PDF"
+
+[portal.catalogue.card]
+lockedAriaLabel = "잠김"
+openAriaLabel = "{{name}} 구성 요소 열기"
+
+[portal.catalogue.detail]
+addToProject = "프로젝트에 추가"
+ariaLabel = "구성 요소 상세"
+tabsAriaLabel = "구성 요소 상세 섹션"
+upgradeToUnlock = "업그레이드하여 잠금 해제"
+
+[portal.catalogue.detail.code]
+install = "설치"
+usage = "사용법"
+
+[portal.catalogue.detail.locked]
+description = "{{name}}은(는) {{tier}} 플랜부터 포함됩니다. 임베드하려면 업그레이드하세요."
+title = "현재 플랜에서 사용할 수 없음"
+
+[portal.catalogue.detail.preview]
+badge = "라이브 미리보기"
+note = "Interactive sandbox가 여기에 렌더링됩니다"
+
+[portal.catalogue.detail.pricing]
+note = "{{unit}}당 종량제입니다. 월별 무료 할당량을 초과한 사용량은 계정에 청구되며 Usage & Billing에 항목별로 표시됩니다."
+
+[portal.catalogue.detail.stats]
+billedOn = "청구 기준"
+embeds30d = "임베드(30일)"
+freeQuota = "무료 할당량"
+freeQuotaValue = "{{amount}} / 월"
+maturity = "성숙도"
+none = "없음"
+perAction = "작업당"
+price = "가격"
+
+[portal.catalogue.detail.tabs]
+code = "Code"
+overview = "개요"
+pricing = "가격"
+props = "Props / API"
+
+[portal.catalogue.props]
+optional = "선택 사항"
+required = "필수"
+
+[portal.catalogue.props.columns]
+description = "설명"
+name = "Prop"
+required = "필수"
+type = "유형"
+
+[portal.catalogue.summary]
+componentsGa = "구성 요소 GA"
+componentSpendMtd = "구성 요소 지출(MTD)"
+embedsThisMonth = "이번 달 임베드"
+inBeta = "Beta 중"
+
+[portal.components.billingUnit]
+approval = "승인"
+check = "확인"
+event = "이벤트"
+render = "렌더링"
+review = "검토"
+session = "세션"
+signature = "서명"
+
+[portal.components.maturity]
+beta = "Beta"
+ga = "GA"
+
+[portal.componentsView]
+subtitle = "자체 앱에 넣을 수 있는 임베드 가능한 SDK 위젯 — viewer, e-sign 흐름, AI 검토 패널. 각 항목은 작업당 종량제입니다. 설치, 사용법, props를 보려면 카드를 클릭하세요."
+title = "구성 요소"
+
+[portal.componentsView.empty]
+description = "구성 요소 카탈로그를 불러올 수 없습니다. 잠시 후 다시 시도하세요."
+title = "사용 가능한 구성 요소 없음"
+
+[portal.componentsView.lockedBanner]
+description = "GA 구성 요소는 Pay-as-you-go에서 사용할 수 있으며, 일부 Beta 구성 요소는 enterprise 전용입니다. 잠긴 카드에는 업그레이드 안내가 표시됩니다."
+title = "일부 구성 요소에는 유료 플랜이 필요합니다"
+
+[portal.docs.authentication]
+codeCaption = "모든 요청"
+eyebrow = "시작하기"
+lead = "모든 요청은 bearer token으로 인증됩니다. 키는 환경별로 범위가 지정되며 교체하지 않는 한 만료되지 않습니다."
+liveKey = "Production keys — 청구되며, 플랜에 따라 rate limit이 적용됩니다."
+testKey = "Sandbox keys — 무료이며, synthetic fixtures를 반환합니다."
+title = "인증"
+
+[portal.docs.components]
+codeCaption = "viewer 임베드"
+eyebrow = "구성 요소"
+lead = "검토 대기열 및 문서 검사를 위한 임베드 가능한 UI입니다. 자체 스타일을 가져오거나 제공된 테마를 사용하세요."
+title = "Drop-in viewers"
+
+[portal.docs.endpoints]
+eyebrow = "API REFERENCE"
+fieldCount_one = "{{count}}개 필드"
+fieldCount_other = "{{count}}개 필드"
+filterAll = "전체"
+filterAriaLabel = "vertical별 endpoint 필터링"
+lead = "모든 문서 유형은 typed endpoint입니다. 파일을 POST하면 스키마로 검증된 JSON을 받습니다. 아래에서 vertical별로 필터링하세요."
+title = "Endpoints"
+
+[portal.docs.errors]
+codeCaption = "422 Unprocessable Entity"
+eyebrow = "API REFERENCE"
+lead = "오류는 안정적인 machine-readable code와 사람이 읽을 수 있는 메시지를 반환합니다. 4xx 본문에는 항상 지원을 위한 request_id가 포함됩니다."
+title = "오류"
+
+[portal.docs.nav]
+ariaLabel = "문서"
+
+[portal.docs.nav.empty]
+description = "문서 색인을 불러올 수 없습니다."
+title = "Docs를 사용할 수 없음"
+
+[portal.docs.quickstart]
+eyebrow = "시작하기"
+lead = "typed endpoint로 첫 문서를 보내고 세 단계로 구조화된 JSON을 받으세요. 모델 학습이나 프롬프트 엔지니어링이 필요 없습니다."
+title = "Quickstart"
+
+[portal.docs.quickstart.callout]
+bodyAfterLink = "에서 복사-붙여넣기용 레시피를 확인하세요."
+bodyBeforeLink = "동일한 호출을 파이프라인에 연결하여 검증, 수정, 전달을 체인으로 이어가거나 — MCP를 통해 agent에 노출하세요."
+label = "다음:"
+link = "Playbooks"
+
+[portal.docs.quickstart.step1]
+body = "Infrastructure 탭에서 범위가 지정된 키를 만드세요. 키에는 rate limit과 선택적 IP allowlist가 포함됩니다. 이를 shell로 내보내세요:"
+title = "API key 발급"
+
+[portal.docs.quickstart.step2]
+body = "typed endpoint에 파일을 POST하세요. endpoint가 반환받을 스키마를 결정합니다 — 여기서는 송장 추출기입니다."
+snippetCaption = "송장 추출"
+title = "문서 보내기"
+
+[portal.docs.quickstart.step3]
+body = "모든 응답은 endpoint 스키마에 대해 검증되며, 신뢰도 점수와 필드별 출처가 포함됩니다."
+codeCaption = "200 OK"
+title = "구조화된 결과 읽기"
+
+[portal.docs.rateLimits]
+burst = "Burst"
+codeCaption = "429 Too Many Requests"
+concurrency = "동시성"
+eyebrow = "시작하기"
+lead = "한도는 플랜에 따라 확장됩니다. 429 응답에는 Retry-After 헤더가 포함되며, SDK가 자동으로 back off합니다."
+requestsPerMinute = "요청 / 분"
+title = "Rate limits 및 할당량"
+
+[portal.docs.recipes]
+cloneButton = "레시피 복제"
+eyebrow = "PLAYBOOKS"
+lead = "소스, 작업, 대상을 체인으로 연결하는 end-to-end 패턴입니다. 각 항목은 복제할 수 있는 파이프라인에 매핑됩니다."
+title = "레시피"
+
+[portal.docs.sdks]
+eyebrow = "SDKS"
+lead = "typed responses, 자동 재시도, 스트리밍 업로드를 갖춘 first-party clients입니다. 모두 동일한 endpoint 카탈로그를 추적합니다."
+title = "공식 SDKs"
+
+[portal.docs.sdks.status]
+beta = "Beta"
+deprecated = "Deprecated"
+
+[portal.docs.skills]
+eyebrow = "SKILLS"
+lead = "agent가 단일 도구로 호출하는 번들형 명명된 기능입니다. 각 skill은 eval이 연결된 결정적 작업 체인입니다."
+title = "Agent skills"
+
+[portal.docs.webhooks]
+codeCaption = "document.processed"
+eyebrow = "API REFERENCE"
+lead = "document.processed, pipeline.completed, quota.threshold 이벤트를 구독하세요. Payload는 HMAC-SHA256으로 서명됩니다."
+title = "Webhooks"
+
+[portal.docs.webhooks.callout]
+afterHelper = "helper를 제공합니다."
+beforeHelper = "헤더를 서명 secret과 대조한 후 payload를 신뢰하세요. SDK에는"
+beforeSignature = "다음을 확인하세요:"
+
+[portal.documents]
+exportCsv = "CSV 내보내기"
+search = "파일 이름, ID로 검색..."
+subtitle = "조직에서 처리한 모든 문서와 전체 처리 기록입니다. 콘텐츠 액세스는 요청 게이트로 보호됩니다."
+title = "문서"
+
+[portal.documents.audit]
+approved = "승인됨"
+archived = "보관됨"
+elevation = "권한 상승"
+empty = "아직 기록된 이벤트가 없습니다."
+extracted = "처리됨"
+flagged = "검토 필요"
+ingested = "수집됨"
+reviewed = "검토 중"
+
+[portal.documents.drawer]
+sectionsAriaLabel = "문서 세부 섹션"
+
+[portal.documents.drawer.tabs]
+audit = "감사"
+extractions = "추출"
+overview = "개요"
+
+[portal.documents.elevation]
+requestAccess = "접근 요청"
+
+[portal.documents.elevation.active]
+description = "임시 권한 부여 — 접근이 기록되며 시간 제한이 있습니다."
+descriptionFourEyes = "임시 권한 부여 — 동료 검토자에게 알림이 전송되었습니다(four-eyes)."
+title = "접근이 {{time}} 후 만료됩니다"
+
+[portal.documents.elevation.gated]
+description = "콘텐츠가 zero-standing-access로 제한됩니다. 요청하면 시간 제한 권한 부여가 시작됩니다."
+descriptionFourEyes = "콘텐츠가 zero-standing-access로 제한됩니다. 요청하면 시간 제한 권한 부여가 시작되고 동료 검토자에게 알림이 전송됩니다(four-eyes)."
+title = "민감한 문서"
+
+[portal.documents.extractions]
+empty = "이 문서에서 추출된 필드가 없습니다."
+masked = "추출된 필드가 숨겨져 있습니다. 이 문서의 콘텐츠를 보려면 시간 제한 접근을 요청하세요."
+
+[portal.documents.extractions.columns]
+confidence = "신뢰도"
+field = "필드"
+value = "값"
+
+[portal.documents.filters]
+all = "전체"
+ariaLabel = "상태별 문서 필터링"
+flagged = "플래그 지정됨"
+inReview = "검토 중"
+processed = "처리됨"
+
+[portal.documents.overview]
+action = "파이프라인 / 작업"
+product = "제품"
+received = "시간"
+status = "상태"
+type = "유형"
+user = "사용자"
+
+[portal.documents.queue.empty]
+description = "소스가 문서를 파이프라인에 공급하면 검토를 위해 여기에 표시됩니다."
+title = "대기열에 문서가 없습니다"
+
+[portal.documents.status]
+error = "오류"
+flagged = "검토 필요"
+inReview = "검토 중"
+processed = "처리됨"
+
+[portal.documents.table]
+auto = "자동"
+editorAction = "편집자"
+empty = "이 필터와 일치하는 문서가 없습니다."
+rowActions = "행 작업"
+sensitiveLabel = "민감"
+sensitiveTitle = "민감 — 접근 필요"
+
+[portal.documents.table.columns]
+action = "파이프라인 / 작업"
+document = "문서"
+product = "제품"
+status = "상태"
+time = "시간"
+user = "사용자"
+
+[portal.editorAdmin]
+subtitle = "Stirling PDF Editor를 배포하고, 셀프 호스팅 인스턴스를 조직에 페어링하며, 실행 중인 플릿(대상, 상태, 자격 증명, 오프라인 활성화)을 한곳에서 운영하세요."
+title = "Editor 배포"
+
+[portal.editorAdmin.health.columns]
+activeUsers = "활성 사용자"
+host = "호스트"
+lastSeen = "마지막 확인"
+region = "지역"
+status = "상태"
+version = "버전"
+
+[portal.editorAdmin.health.empty]
+description = "대상을 배포하고 페어링하면 실시간 인스턴스 상태가 여기에 표시됩니다."
+title = "보고 중인 인스턴스가 없습니다"
+
+[portal.editorAdmin.offlineActivation]
+enterpriseTag = "Enterprise"
+generateButton = "오프라인 번들 생성"
+lockCopy = "오프라인 및 온프레미스 활성화는 Enterprise에 포함됩니다."
+subtitle = "외부 네트워크 경로가 없는 오프라인 또는 온프레미스 설치를 위한 서명된 활성화 번들을 생성하세요. 인스턴스로 전송한 후 최초 실행 설정 중 적용하세요."
+talkToSales = "영업팀에 문의"
+title = "네트워크 격리 활성화"
+
+[portal.editorAdmin.offlineActivation.readyBanner]
+description = "{{file}}이(가) 서명되어 전송할 준비가 되었습니다. 이 번들은 인스턴스 하나를 활성화하며 14일 후 만료됩니다."
+title = "번들 준비됨"
+
+[portal.editorAdmin.pairing]
+generated = "생성됨 ✓"
+generateNewCode = "새 코드 생성"
+lockCopy = "IaC 프로비저닝은 Enterprise에 포함됩니다."
+rotate = "교체"
+talkToSales = "영업팀에 문의"
+
+[portal.editorAdmin.sections.health]
+sub = "보고 중인 모든 Editor 인스턴스 — 버전, 지역, 상태, 마지막 확인, 활성 사용자."
+title = "인스턴스 상태"
+
+[portal.editorAdmin.sections.pairing]
+sub = "셀프 호스팅 Editor를 이 조직에 연결하세요. 토큰을 생성하고 짧은 코드를 전달하거나 IaC를 통해 연결하세요."
+title = "페어링"
+
+[portal.editorAdmin.sections.targets]
+sub = "Editor가 실행되는 위치입니다. 스니펫을 복사해 셀프 호스팅 인스턴스를 세우거나, 운영 부담 없는 Managed Cloud를 사용하세요."
+title = "배포 대상"
+
+[portal.editorAdmin.serviceToken]
+currentToken = "현재 토큰"
+lastRotated = "마지막 교체"
+rotateButton = "서비스 토큰 교체"
+subtitle = "인스턴스는 이 자격 증명으로 조직에 인증합니다. 일정에 따라 또는 유출이 의심되는 즉시 교체하세요."
+title = "서비스 토큰"
+
+[portal.editorAdmin.serviceToken.rotatedBanner]
+description = "새 토큰이 발급되었습니다. 24시간 유예 기간 내에 각 셀프 호스팅 인스턴스의 STIRLING_SERVICE_TOKEN을 업데이트하지 않으면 오프라인 상태가 됩니다."
+title = "실행 중인 인스턴스 교체"
+
+[portal.editorAdmin.status]
+degraded = "성능 저하"
+healthy = "정상"
+offline = "오프라인"
+pairing = "페어링 중"
+
+[portal.editorAdmin.targets]
+instanceCount_one = "{{count}}개 인스턴스"
+instanceCount_other = "{{count}}개 인스턴스"
+talkToSales = "영업팀에 문의"
+upgradePlan = "플랜 업그레이드"
+
+[portal.editorAdmin.targets.lock]
+enterprise = "온프레미스 및 Kubernetes 셀프 호스팅은 Enterprise에 포함됩니다."
+paid = "Docker 및 Kubernetes를 사용한 셀프 호스팅은 유료 플랜에서 사용할 수 있습니다."
+
+[portal.editorAdmin.targets.state]
+available = "사용 가능"
+locked = "잠김"
+running = "실행 중"
+
+[portal.errorBoundary]
+description = "이 보기에서 예기치 않은 오류가 발생했습니다. 다시 시도하거나 사이드바에서 다른 섹션을 선택하세요."
+retry = "다시 시도"
+title = "이 페이지에서 문제가 발생했습니다"
+
+[portal.home.editor]
+activeUsers = "{{n}}명 활성"
+invite = "팀원 초대"
+name = "Stirling PDF Editor"
+open = "브라우저에서 열기"
+updated = "{{time}} 업데이트됨"
+
+[portal.home.editor.target]
+cloud = "Managed Cloud"
+docker = "셀프 호스팅 · Docker"
+kubernetes = "셀프 호스팅 · Kubernetes"
+
+[portal.home.greeting]
+afternoon = "좋은 오후입니다"
+evening = "좋은 저녁입니다"
+morning = "좋은 아침입니다"
+
+[portal.home.onboarding]
+dismiss = "설정 닫기"
+notStarted = "시작되지 않음"
+progress = "{{total}}개 중 {{done}}개 완료"
+title = "설정 완료"
+
+[portal.home.onboarding.enterprise]
+body = "조직 전체 SSO + SCIM + RBAC, 약정 사용량 가격, 네트워크 격리 배포."
+cta = "평가판 시작"
+ctaQuote = "견적 받기"
+lead = "직원 250명 이상 대상."
+tag = "Enterprise"
+
+[portal.home.onboarding.steps.editor]
+blurb = "데스크톱 앱을 배포하세요. 영구 무료입니다."
+title = "PDF Editor 다운로드"
+
+[portal.home.onboarding.steps.policies]
+blurb = "{{active}}개 활성 · {{recommended}}개 권장"
+chip = "{{active}}개 활성"
+title = "정책 켜기"
+
+[portal.home.onboarding.steps.sources]
+blurb = "{{connected}}개 연결됨 · 도착하는 모든 PDF 관리"
+chip = "{{connected}}개 연결됨"
+title = "소스 연결"
+
+[portal.home.quickActions]
+subtitle = "오늘의 주요 작업"
+title = "빠른 작업"
+
+[portal.home.quickActions.buildPipeline]
+blurb = "유형화된 작업 라이브러리 기반 3단계 작성기"
+title = "파이프라인 구축"
+
+[portal.home.quickActions.connectSource]
+blurb = "S3, 에이전트, webhooks, 감시 폴더"
+title = "소스 연결"
+
+[portal.home.quickActions.issueApiKey]
+blurb = "속도 제한 및 IP 허용 목록이 있는 범위 지정 키"
+title = "API 키 발급"
+
+[portal.infrastructure]
+manageEditorDeployment = "Editor 배포 관리"
+sectionsAriaLabel = "인프라 섹션"
+subtitle = "Stirling 워크스페이스의 배포, 자격 증명, 보안 상태, 스토리지, 감사 추적."
+title = "인프라"
+
+[portal.infrastructure.apiKeys]
+createKey = "키 생성"
+heading = "API 키"
+subheading = "키별 속도 제한, 권한, IP 허용 목록이 있는 범위 지정 자격 증명입니다."
+
+[portal.infrastructure.apiKeys.card]
+allowedIps = "허용된 IP"
+anyIp = "모든 IP(허용 목록 없음)"
+created = "생성됨"
+lastUsed = "마지막 사용"
+permissions = "권한"
+rateLimit = "속도 제한"
+rateLimitValue = "{{value}} req/min"
+usageMonth = "이번 달 사용량"
+usageToday = "오늘 사용량"
+
+[portal.infrastructure.apiKeys.empty]
+description = "Stirling API 호출을 시작하려면 범위 지정 키를 생성하세요."
+title = "아직 API 키가 없습니다"
+
+[portal.infrastructure.audit]
+filterAriaLabel = "카테고리별 감사 이벤트 필터링"
+heading = "감사 로그"
+latencyValue = "{{value}} ms"
+noEventsInCategory = "이 카테고리에 이벤트가 없습니다."
+subheading = "워크스페이스 전반의 모든 인증, 구성, 처리 이벤트입니다."
+
+[portal.infrastructure.audit.columns]
+actor = "행위자"
+event = "이벤트"
+latency = "지연 시간"
+status = "상태"
+target = "리소스"
+timestamp = "타임스탬프"
+
+[portal.infrastructure.audit.empty]
+description = "워크스페이스 활동이 발생하면 여기에 표시됩니다."
+title = "감사 이벤트 없음"
+
+[portal.infrastructure.audit.export]
+cancel = "취소"
+error = "내보내기에 실패했습니다. 다시 시도하세요."
+exportButton = "내보내기"
+exporting = "내보내는 중…"
+fieldsLegend = "열"
+format = "형식"
+open = "내보내기"
+subtitle = "감사 이벤트를 CSV 또는 JSON으로 다운로드하세요. 포함할 열을 선택하세요."
+title = "감사 로그 내보내기"
+
+[portal.infrastructure.audit.export.fields]
+date = "날짜"
+documentName = "문서 이름"
+ipAddress = "IP 주소"
+outcome = "결과"
+tool = "도구"
+username = "사용자 이름"
+
+[portal.infrastructure.audit.filters]
+all = "전체"
+auth = "인증"
+config = "구성"
+elevation = "권한 상승"
+processing = "처리"
+security = "보안"
+
+[portal.infrastructure.audit.forbidden]
+description = "감사 로그는 팀 리드와 관리자에게 제공됩니다. 접근 권한은 팀 리드나 관리자에게 요청하세요."
+title = "접근 권한이 없습니다"
+
+[portal.infrastructure.audit.metrics]
+config = "구성"
+elevation = "권한 상승"
+processing = "처리"
+totalEvents = "총 이벤트 · 24시간"
+
+[portal.infrastructure.createKey]
+cancel = "취소"
+createKey = "키 생성"
+done = "완료"
+ipAllowlistHelper = "쉼표로 구분된 CIDR 범위입니다. 모든 IP를 허용하려면 비워 두세요."
+ipAllowlistLabel = "IP 허용 목록"
+keyNameLabel = "키 이름"
+keyNamePlaceholder = "예: Production · ingest"
+permissionsLabel = "권한"
+secretKeyCaption = "비밀 키"
+secretWarning = "이를 secrets manager에 저장하세요. Stirling은 항상 해시만 저장하므로 나중에 복구할 방법이 없습니다."
+subtitle = "키 범위는 필요한 최소한으로 지정하세요. 언제든지 교체하거나 취소할 수 있습니다."
+subtitleCreated = "지금 이 비밀을 복사하세요 — 다시 표시되지 않습니다."
+title = "API 키 생성"
+titleCreated = "키 생성됨"
+
+[portal.infrastructure.deployments]
+msValue = "{{value}} ms"
+throughputValue = "{{value}}/min"
+
+[portal.infrastructure.deployments.deployColumns]
+deployedBy = "배포자"
+environment = "환경"
+product = "제품"
+status = "상태"
+version = "버전"
+when = "시점"
+
+[portal.infrastructure.deployments.recent]
+heading = "최근 배포"
+subheading = "제품 및 환경 전반의 최신 롤아웃입니다."
+
+[portal.infrastructure.deployments.regionColumns]
+instances = "인스턴스"
+latency = "지연 시간"
+load = "부하"
+p99 = "P99"
+region = "지역"
+status = "상태"
+throughput = "처리량"
+uptime = "가동 시간"
+version = "버전"
+
+[portal.infrastructure.deployments.regions]
+heading = "지역"
+subheading = "배포된 모든 Stirling 지역의 실시간 상태 — 지연 시간, 부하, 롤아웃 버전."
+
+[portal.infrastructure.deployments.regions.empty]
+description = "워크스페이스가 프로비저닝되면 배포된 지역이 여기에 표시됩니다."
+title = "배포된 지역 없음"
+
+[portal.infrastructure.models]
+heading = "모델"
+msValue = "{{value}} ms"
+subheading = "워크스페이스 전반의 문서 처리를 구동하는 모델 카탈로그 및 라우팅입니다."
+
+[portal.infrastructure.models.byom]
+description = "온프레미스 또는 셀프 호스팅 모델을 등록하고 데이터 레지던시 기반 처리를 위해 지역에 고정하세요."
+title = "자체 모델 가져오기"
+
+[portal.infrastructure.models.catalogue]
+heading = "카탈로그"
+sub = "워크스페이스에서 사용할 수 있는 관리형 모델이며, 실시간 지연 시간과 비용을 포함합니다."
+subEnterprise = "관리형, 자체 제공, 온프레미스 모델 — 지역별 고정 사용 가능."
+
+[portal.infrastructure.models.catalogue.empty]
+description = "워크스페이스 카탈로그의 모델이 여기에 표시됩니다."
+title = "사용 가능한 모델 없음"
+
+[portal.infrastructure.models.columns]
+cost = "비용"
+latency = "지연 시간"
+load = "부하"
+model = "모델"
+status = "상태"
+type = "유형"
+version = "버전"
+
+[portal.infrastructure.models.metrics]
+activeModels = "활성 모델"
+avgLatency = "평균 지연 시간"
+included = "포함됨"
+monthlySpend = "월별 모델 지출"
+
+[portal.infrastructure.models.routing]
+empty = "구성된 라우팅 규칙이 없습니다."
+heading = "라우팅 규칙"
+sub = "각 작업을 처리할 모델입니다. 더 구체적인 규칙과 일치하지 않을 때 기본값이 적용됩니다."
+subLocked = "작업을 특정 모델로 라우팅 — 유료 플랜에서 사용 가능."
+
+[portal.infrastructure.models.routing.lockedBanner]
+description = "각 작업과 문서 유형을 처리할 모델을 제어하려면 Pro로 업그레이드하세요."
+title = "모델 라우팅은 유료 기능입니다"
+
+[portal.infrastructure.models.routingColumns]
+default = "기본값"
+docType = "문서 유형"
+modelForAria = "{{operation}}용 모델"
+operation = "작업"
+routedTo = "라우팅 대상"
+
+[portal.infrastructure.security.access.byok]
+description = "자체 KMS의 키를 제공하세요. Stirling은 이 키로 암호화하지만 여전히 읽을 수 있습니다."
+label = "자체 키 가져오기(BYOK)"
+
+[portal.infrastructure.security.access.hyok]
+description = "키는 KMS를 벗어나지 않습니다. Stirling은 암호문만 보유합니다."
+label = "자체 키 보유(HYOK)"
+
+[portal.infrastructure.security.access.stirling]
+description = "Stirling이 암호화 키를 관리합니다. 가장 간단하며 사용자가 키 작업을 할 필요가 없습니다."
+label = "Stirling 보유 키"
+
+[portal.infrastructure.security.accessPolicy]
+heading = "문서 접근 정책"
+subheading = "저장된 처리 완료 문서를 복호화할 수 있는 사용자를 제어합니다."
+
+[portal.infrastructure.security.attestations]
+heading = "컴플라이언스 증명"
+noReport = "사용 가능한 보고서 없음"
+subheading = "증명된 제어에 대한 보고서가 제공되는 프레임워크별 감사 상태입니다."
+viewReport = "보고서 보기 →"
+
+[portal.infrastructure.security.compliance]
+heading = "컴플라이언스"
+subheading = "Stirling 플랫폼을 포괄하는 증명 및 인증입니다."
+
+[portal.infrastructure.security.empty]
+description = "워크스페이스의 보안 구성이 여기에 표시됩니다."
+title = "보안 상태를 사용할 수 없음"
+
+[portal.infrastructure.security.hyokBanner]
+description = "HYOK를 사용하면 암호화 키가 KMS를 벗어나지 않습니다. Stirling은 언제든지 취소할 수 있는 암호문만 저장하고 처리합니다."
+title = "Stirling은 문서를 복호화할 수 없습니다"
+
+[portal.infrastructure.security.ipAllowlist]
+empty = "구성된 IP 범위가 없습니다 — 모든 IP가 허용됩니다."
+heading = "IP 허용 목록"
+sub = "API 접근이 이러한 CIDR 범위로 제한됩니다."
+subLocked = "API 접근을 알려진 IP 범위로 제한 — 유료 플랜에서 사용 가능."
+
+[portal.infrastructure.security.ipAllowlist.lockedBanner]
+description = "API 접근을 특정 네트워크로 제한하려면 Pro로 업그레이드하세요."
+title = "IP 허용 목록은 유료 기능입니다"
+
+[portal.infrastructure.security.ipColumns]
+added = "추가됨"
+addedBy = "추가한 사람"
+cidr = "CIDR"
+label = "레이블"
+
+[portal.infrastructure.security.keyManagement]
+algorithm = "Algorithm"
+heading = "암호화 키 관리"
+keyId = "키 식별자"
+lastRotated = "마지막 교체"
+rotateKey = "키 교체"
+rotationPolicy = "교체 정책"
+subheading = "저장된 문서를 암호화하는 키의 보관 관리 — 복호화 가능 주체 및 키 교체 방식."
+
+[portal.infrastructure.security.managedBanner]
+description = "Bring-your-own-key(BYOK) 및 hold-your-own-key(HYOK) 보관 관리는 Enterprise에서 사용할 수 있습니다. 자체 KMS의 키를 제공하려면 업그레이드하세요."
+title = "현재 플랜에서는 키가 Stirling에서 관리됩니다"
+
+[portal.infrastructure.security.residency.apac]
+description = "ap-southeast-1"
+label = "아시아 태평양"
+
+[portal.infrastructure.security.residency.eu]
+description = "eu-west-1 · GDPR 데이터 경계"
+label = "유럽 연합"
+
+[portal.infrastructure.security.residency.us]
+description = "us-east-1 · us-west-2"
+label = "미국"
+
+[portal.infrastructure.security.residencyHeader]
+heading = "데이터 레지던시"
+subheading = "문서가 저장되고 처리되는 위치입니다."
+
+[portal.infrastructure.storage]
+gbValue = "{{value}} GB"
+percentUsed = "{{value}} 사용됨"
+
+[portal.infrastructure.storage.empty]
+description = "연결된 스토리지와 사용량이 여기에 표시됩니다."
+title = "구성된 스토리지 없음"
+
+[portal.infrastructure.storage.lifecycle]
+active = "활성"
+activeRange = "0–{{value}}d"
+archived = "보관됨"
+coldStorage = "cold storage"
+deleted = "삭제됨"
+never = "없음"
+purged = "영구 삭제됨"
+
+[portal.infrastructure.storage.providers]
+connect = "연결"
+connected = "연결됨"
+heading = "연결된 제공업체"
+subheading = "처리된 아티팩트가 기록되는 위치입니다."
+
+[portal.infrastructure.storage.retention]
+heading = "보존"
+subheading = "수명 주기 삭제 전 아티팩트가 보관되는 기간입니다."
+windowLabel = "기본 보존 기간"
+
+[portal.infrastructure.storage.retentionOption]
+days_one = "{{count}}일"
+days_other = "{{count}}일"
+never = "삭제하지 않음"
+
+[portal.infrastructure.storage.totalUsage]
+heading = "총 사용량"
+progressLabel = "사용된 스토리지"
+subheading = "연결된 모든 제공업체에서 소비된 스토리지입니다."
+
+[portal.infrastructure.tabs]
+apiKeys = "API 키"
+audit = "감사 로그"
+deployments = "배포"
+models = "모델"
+security = "보안"
+storage = "스토리지"
+
+[portal.nav]
+agent-builder = "Agent Builder"
+components = "구성 요소"
+docs = "개발자 문서"
+documents = "문서"
+editor = "Editor"
+home = "홈"
+infrastructure = "인프라"
+pipelines = "파이프라인"
+policies = "정책"
+procurement = "구매"
+settings = "설정"
+sources = "소스"
+usage = "사용량 및 청구"
+users = "사용자"
+
+[portal.notifications]
+markAllRead = "모두 읽음으로 표시"
+title = "알림"
+viewAll = "모두 보기"
+
+[portal.notifications.ariaLabel]
+none = "알림, 읽지 않은 항목 없음"
+unread_one = "알림, 읽지 않은 항목 {{count}}개"
+unread_other = "알림, 읽지 않은 항목 {{count}}개"
+
+[portal.notifications.count]
+allRead = "모두 읽음"
+loading = "로드 중"
+new_one = "새 항목 {{count}}개"
+new_other = "새 항목 {{count}}개"
+
+[portal.notifications.empty]
+description = "새 알림이 없습니다."
+title = "모두 확인했습니다"
+
+[portal.pipelines]
+subtitle = "백엔드의 모든 자동 문서 파이프라인: 소스 집합에 대한 순서 지정된 작업 체인이 트리거에 의해 실행됩니다. 행을 클릭하면 단계와 소스를 볼 수 있습니다."
+title = "파이프라인"
+
+[portal.pipelines.actions]
+newPipeline = "새 파이프라인"
+
+[portal.pipelines.builder]
+addStep = "도구 추가"
+back = "파이프라인으로 돌아가기"
+discard = "변경 사항 버리기"
+enabled = "활성화됨"
+keepEditing = "계속 편집"
+needsUpload = "업로드된 파일 필요"
+noToolMatches = "검색과 일치하는 도구가 없습니다."
+pipelineSettings = "파이프라인 설정"
+searchTools = "도구 검색"
+selectToolBody = "파이프라인을 구축하려면 도구를 추가하세요."
+selectToolTitle = "아직 도구가 없습니다"
+toolSettings = "도구 설정"
+unknownStep = "인식되지 않는 작업이며, 그대로 유지되었습니다."
+unsavedBody = "저장되지 않은 변경 사항이 있습니다. 나가기 전에 저장하시겠습니까, 아니면 버리시겠습니까?"
+unsavedTitle = "저장되지 않은 변경 사항"
+uploadUnsupported = "업로드된 파일은 아직 파이프라인에서 지원되지 않으므로 다음 단계는 저장할 수 없습니다: {{tools}}."
+usesDefaults = "기본 설정으로 실행"
+
+[portal.pipelines.composer]
+addTool = "도구 추가"
+cancel = "취소"
+chainEmpty = "파이프라인 구축을 시작하려면 도구를 추가하세요."
+create = "파이프라인 생성"
+directory = "출력 폴더"
+directoryHelp = "서버의 절대 경로입니다. 구성된 허용 폴더 내에 있어야 합니다."
+editingUnsupported = "편집을 위해 이러한 도구 매개변수를 표시하는 기능은 아직 지원되지 않습니다."
+moveDown = "아래로 이동"
+moveUp = "위로 이동"
+name = "이름"
+namePlaceholder = "예: Redaction sweep"
+noSources = "아직 연결된 소스가 없습니다. 파이프라인은 직접 제공된 파일에서도 계속 실행할 수 있습니다."
+noToolSettings = "이 도구에는 구성 가능한 설정이 없습니다."
+operations_one = "작업({{count}})"
+operations_other = "작업({{count}})"
+output = "출력"
+removeStep = "작업 제거"
+save = "변경 사항 저장"
+scheduleEvery = "실행 주기"
+sources = "소스"
+sourcesLoading = "소스 로드 중..."
+trigger = "트리거"
+triggerManual = "수동만"
+
+[portal.pipelines.composer.unit]
+days = "일"
+hours = "시간"
+minutes = "분"
+
+[portal.pipelines.delete]
+body = "\"{{name}}\"을(를) 삭제하시겠습니까? 이 작업은 취소할 수 없습니다."
+cancel = "취소"
+confirm = "삭제"
+title = "파이프라인을 삭제하시겠습니까?"
+
+[portal.pipelines.detail]
+delete = "파이프라인 삭제"
+run = "지금 실행"
+
+[portal.pipelines.empty]
+action = "파이프라인 생성"
+description = "첫 번째 파이프라인을 생성하세요. 실행할 소스를 선택하고, 작업을 연결하며, 출력 위치를 선택하세요."
+title = "아직 파이프라인이 없습니다"
+
+[portal.pipelines.kpi]
+active = "활성"
+paused = "일시 중지됨"
+total = "파이프라인"
+
+[portal.pipelines.output]
+folder = "폴더에 쓰기"
+inline = "파일 반환"
+
+[portal.pipelines.run]
+completed_one = "실행이 완료되었습니다."
+completed_other = "{{count}}개 실행이 모두 완료되었습니다."
+empty = "실행할 항목이 없습니다. 소스에 처리할 문서가 없습니다."
+failed = "실행 실패: {{error}}"
+running = "실행이 시작되었으며 아직 진행 중입니다."
+timeout = "실행이 예상보다 오래 걸리고 있습니다. 백그라운드에서 계속 완료될 수 있습니다."
+
+[portal.pipelines.status]
+active = "활성"
+paused = "일시 중지됨"
+
+[portal.pipelines.table]
+name = "파이프라인"
+sources = "소스"
+status = "상태"
+steps = "단계"
+
+[portal.pipelines.trigger]
+folder-watch = "폴더 감시"
+manual = "수동"
+schedule = "예약됨"
+
+[portal.policies]
+subtitle = "모든 문서에 도구 파이프라인을 적용하는 상시 자동화입니다. 각 정책은 업로드 또는 내보내기 시 실행되고, 도구 체인을 실행한 뒤 적용된 버전을 원본과 함께 저장합니다."
+title = "정책"
+
+[portal.policies.card]
+comingSoon = "Enterprise로 업그레이드"
+notSetUp = "설정되지 않음"
+
+[portal.policies.categories.compliance]
+desc = "모든 문서에 HIPAA, GDPR, SOC 2 또는 FedRAMP 요구 사항을 적용합니다."
+label = "컴플라이언스"
+
+[portal.policies.categories.ingestion]
+desc = "문서를 분류하고, 구조화된 데이터를 추출하며, 명명 규칙을 적용하고 페이지를 정규화합니다."
+label = "수집"
+
+[portal.policies.categories.retention]
+desc = "문서를 보관할 기간, 보관 처리 시점, 삭제 시점을 설정합니다."
+label = "보존"
+
+[portal.policies.categories.routing]
+desc = "문서를 적절한 팀, 폴더 또는 시스템으로 자동 라우팅합니다."
+label = "라우팅"
+
+[portal.policies.categories.security]
+desc = "PII를 감지하고, 마스킹하며, 활성 콘텐츠를 제거하고, 문서에 워터마크를 적용합니다."
+label = "보안"
+
+[portal.policies.config]
+scopeAll = "모든 문서"
+
+[portal.policies.config.compliance]
+summary = "문서가 시스템을 떠나기 전에 규제 프레임워크에 맞는지 검증합니다."
+
+[portal.policies.config.compliance.fields]
+accessLog = "접근 로그"
+auditTrail = "감사 추적"
+frameworks = "프레임워크"
+onViolation = "미준수 시"
+
+[portal.policies.config.compliance.rules]
+0 = "프레임워크 스캔"
+1 = "작업 적용"
+2 = "감사 추적"
+
+[portal.policies.config.ingestion]
+summary = "문서를 분류하고, 구조화된 데이터를 추출하며, 명명을 적용하고, 페이지를 정규화합니다."
+
+[portal.policies.config.ingestion.fields]
+belowThreshold = "임계값 미만"
+minConfidence = "최소 신뢰도"
+
+[portal.policies.config.ingestion.rules]
+0 = "분류"
+1 = "추출"
+2 = "이름 지정"
+3 = "정규화"
+
+[portal.policies.config.retention]
+summary = "문서를 보관할 기간, 보관 처리 시점, 삭제 시점을 적용합니다."
+
+[portal.policies.config.retention.fields]
+archiveAfter = "다음 이후 보관"
+immutableHold = "변경 불가 보류"
+keepFor = "보관 기간"
+
+[portal.policies.config.retention.rules]
+0 = "보존 보류"
+1 = "자동 보관"
+2 = "삭제 차단"
+
+[portal.policies.config.routing]
+summary = "유형과 분류에 따라 문서를 적절한 대상으로 라우팅합니다."
+
+[portal.policies.config.routing.fields]
+destination = "대상"
+notify = "라우팅 시 알림"
+webhookUrl = "Webhook URL"
+
+[portal.policies.config.routing.rules]
+0 = "자동 분류"
+1 = "폴더로 라우팅"
+2 = "Webhook 알림"
+
+[portal.policies.config.security]
+summary = "PII를 감지 및 마스킹하고, 활성 콘텐츠(JavaScript)를 제거하며, 문서에 워터마크를 적용합니다."
+
+[portal.policies.config.security.rules]
+0 = "PII 마스킹"
+1 = "JavaScript 제거"
+2 = "워터마크"
+
+[portal.policies.detail]
+enforces = "적용 항목"
+onEveryExport = "모든 내보내기 시"
+onEveryUpload = "모든 업로드 시"
+outputAsNewFile = "새 파일로"
+outputAsNewVersion = "새 버전으로"
+recentActivity = "최근 활동"
+retry = "다시 시도"
+showLess = "간단히 보기"
+showMore = "더 보기"
+sources = "소스"
+
+[portal.policies.detail.actions]
+clearHistory = "처리 기록 지우기"
+delete = "삭제"
+editSettings = "설정 편집"
+pause = "일시 중지"
+resume = "재개"
+runNow = "지금 실행"
+
+[portal.policies.detail.clearHistory]
+body = "이 정책은 이미 처리한 모든 파일을 잊고, 다음 실행 시 현재 소스에 있는 모든 항목을 다시 처리합니다. 파일 자체는 변경되지 않습니다. 이 작업은 되돌릴 수 없습니다."
+cancel = "취소"
+confirm = "기록 지우기"
+title = "처리 기록을 지우시겠습니까?"
+
+[portal.policies.detail.emptyActivity]
+description = "이 정책이 실행되면 문서가 여기에 표시됩니다."
+title = "아직 활동 없음"
+
+[portal.policies.endpoints]
+addWatermark = "워터마크"
+autoRedact = "PII 마스킹"
+compressPdf = "압축"
+flatten = "병합"
+ocrPdf = "OCR"
+sanitizePdf = "JavaScript 제거"
+
+[portal.policies.offline]
+description = "정책이 저장되었으며 연결이 복원되면 표시됩니다."
+retry = "다시 시도"
+title = "Backend를 사용할 수 없음"
+
+[portal.policies.stats]
+activeFor = "활성"
+dataProcessed = "처리된 데이터"
+docsEnforced = "적용된 문서"
+
+[portal.policies.status]
+active = "활성"
+paused = "일시 중지됨"
+
+[portal.policies.summary.active]
+description = "업로드/내보내기 시 적용"
+label = "활성 정책"
+
+[portal.policies.summary.categories]
+description = "구성 가능"
+label = "카테고리"
+
+[portal.policies.summary.docsEnforced]
+description = "활성 정책 전체"
+label = "적용된 문서"
+
+[portal.policies.summary.paused]
+description = "구성되었지만 실행되지 않음"
+label = "일시 중지됨"
+
+[portal.policies.wizard.actions]
+back = "뒤로"
+cancel = "취소"
+continue = "계속"
+enablePolicy = "정책 활성화"
+saveChanges = "변경 사항 저장"
+
+[portal.policies.wizard.capability.compress]
+desc = "문서를 더 작은 파일 크기로 압축합니다."
+label = "파일 크기 줄이기"
+
+[portal.policies.wizard.capability.flatten]
+desc = "양식 필드와 주석을 페이지에 병합하여 편집할 수 없게 합니다."
+label = "문서 병합"
+
+[portal.policies.wizard.capability.ocr]
+desc = "OCR을 실행하여 스캔된 페이지를 선택 및 검색 가능한 텍스트로 만듭니다."
+label = "텍스트 검색 가능하게 만들기"
+
+[portal.policies.wizard.capability.redact]
+desc = "주민등록번호 및 카드 번호와 같은 민감한 세부 정보를 찾아 검게 처리하여 읽을 수 없게 합니다."
+label = "민감한 정보 마스킹"
+
+[portal.policies.wizard.capability.sanitize]
+desc = "숨겨진 JavaScript를 제거하여 문서를 열 때 아무것도 자동으로 실행되지 않게 합니다."
+label = "활성 콘텐츠 제거"
+
+[portal.policies.wizard.capability.watermark]
+desc = "모든 페이지에 표시되는 표시(예: “기밀”)를 찍습니다."
+label = "워터마크 적용"
+
+[portal.policies.wizard.errors]
+noTools = "먼저 워크플로에서 하나 이상의 도구를 활성화하세요."
+saveFailed = "정책을 저장할 수 없습니다. 다시 시도하세요."
+
+[portal.policies.wizard.output]
+heading = "출력 및 실행"
+
+[portal.policies.wizard.output.filenameRule]
+autoNumber = "자동 번호 지정"
+label = "파일 이름 규칙"
+placeholder = "추가할 텍스트(선택 사항)"
+prefix = "접두사"
+suffix = "접미사"
+
+[portal.policies.wizard.output.outputAs]
+label = "출력 형식"
+newFile = "새 파일"
+newVersion = "새 버전"
+
+[portal.policies.wizard.output.runOn]
+export = "내보내기"
+helper = "정책이 실행되는 시점: 업로드 시 또는 내보내기 전."
+label = "실행 시점"
+upload = "업로드"
+
+[portal.policies.wizard.settings]
+heading = "설정"
+
+[portal.policies.wizard.sources]
+heading = "소스"
+loading = "소스 로드 중…"
+
+[portal.policies.wizard.tabs]
+ariaLabel = "설정 단계"
+settings = "설정"
+workflow = "작업"
+
+[portal.policies.wizard.title]
+edit = "{{category}} 정책 편집"
+setUp = "{{category}} 정책 설정"
+
+[portal.policies.wizard.workflow]
+description = "이 정책이 처리하는 모든 문서에 수행할 작업을 선택하세요."
+
+[portal.policySummary]
+activeSummary = "{{active}} / {{total}} 활성"
+noRule = "아직 적용된 규칙 없음"
+subtitle = "어떤 파이프라인이 처리하든 모든 문서가 거치는 상시 자동화입니다."
+title = "PDF에서 실행되는 항목"
+
+[portal.policySummary.action]
+comingSoon = "Enterprise로 업그레이드"
+configure = "구성"
+setUp = "설정"
+
+[portal.policySummary.column]
+activeRule = "활성 규칙"
+policy = "정책"
+status = "상태"
+
+[portal.policySummary.empty]
+description = "정책이 구성되면 카테고리가 여기에 표시됩니다."
+title = "아직 정책 없음"
+
+[portal.policySummary.state]
+active = "활성"
+off = "꺼짐"
+soon = "곧 제공"
+
+[portal.processingStatus]
+managePlan = "플랜 관리"
+volumeSuffix = "처리된 PDFs · 최근 30일"
+
+[portal.procurement]
+reset = "조달 재설정(데모)"
+subtitle = "팀 평가, 계약, 온보딩을 완료하세요. 모든 문서를 한곳에서 관리합니다."
+title = "조달"
+
+[portal.procurement.action]
+download = "다운로드"
+pay = "지금 결제"
+request = "요청"
+sign = "검토 및 서명"
+upload = "업로드"
+
+[portal.procurement.agreement]
+agreeCta = "동의하고 구독"
+confirm = "Stirling Enterprise Agreement를 읽었으며 이에 동의합니다."
+eyebrow = "계약"
+intro = "하나의 통합 계약으로 거래를 포괄합니다: Master Service Agreement, Order Form, EULA, Data Processing Agreement. 검토한 후 견적을 확정 구독으로 수락하려면 동의하세요."
+title = "엔터프라이즈 계약 검토"
+
+[portal.procurement.builder]
+addons = "추가 기능"
+back = "뒤로"
+businessName = "회사명"
+businessNamePlaceholder = "귀사"
+continue = "계속"
+country = "국가"
+countryEuro = "유로존(EUR €)"
+countryUK = "영국(GBP £)"
+countryUS = "미국(USD $)"
+eula = "Stirling Enterprise EULA를 읽었으며 이에 동의합니다. 이 견적에서 생성되는 계약에 적용됩니다."
+generate = "견적 생성"
+included = "포함됨"
+indemnification = "IP 면책"
+indemnificationSub = "EULA에 따라 적격 IP 클레임을 방어합니다"
+offlineLicense = "오프라인 / 에어갭 라이선스"
+offlineLicenseSub = "에어갭 self-hosted 인스턴스용 다운로드 가능한 라이선스 파일"
+qbr = "분기별 비즈니스 리뷰"
+qbrSub = "담당 SE가 매 분기 사용량과 로드맵을 검토합니다"
+running = "{{annual}} / 년 · {{years}}년 {{tcv}}"
+s1Sub = "귀하의 팀과 매년 실행할 것으로 예상되는 PDFs입니다."
+s1Title = "얼마나 처리하시겠습니까?"
+s2Sub = "기간이 길수록 요금 할인이 적용되며, 서비스 수준에 따라 지원이 결정됩니다."
+s2Title = "약정 및 서비스"
+s3Sub = "견적 및 그로부터 생성되는 계약에 사용됩니다."
+s3Title = "상세 정보"
+serviceLevel = "서비스 수준"
+slDedicated = "전담"
+slDedicatedSub = "영업일 기준 4시간 · 전담 계정 매니저 · +30%"
+slPriority = "우선"
+slPrioritySub = "영업일 당일 · 지정 CSM · +15%"
+slStandard = "표준"
+slStandardSub = "다음 영업일 · 공유 CSM · 포함"
+stepOf = "{{total}}단계 중 {{n}}단계"
+term = "기간"
+termDiscount = "{{pct}}% 다년 약정 할인 적용됨"
+title = "견적 만들기"
+training = "온보딩 및 교육"
+trainingSub = "팀이 바로 사용할 수 있도록 라이브 세션 제공"
+users = "전체 사용자"
+usersPlaceholder = "예: 250"
+volEstimated = "{{count}}명의 사용자 기준 예상(~각 2,000 PDFs, 자동화 포함). 더 정확한 수치를 알고 있다면 편집하세요."
+volManual = "입력한 수치를 사용 중입니다. 언제든지 팀 규모를 기준으로 다시 추정할 수 있습니다."
+volNoUsers = "잘 모르시나요? 팀 규모를 입력하면 추정해 드립니다."
+volume = "연간 PDF 볼륨"
+volumePlaceholder = "예: 1,000,000"
+years_one = "{{count}}년"
+years_other = "{{count}}년"
+
+[portal.procurement.docs]
+count_one = "{{count}}개 문서"
+count_other = "{{count}}개 문서"
+done = "완료"
+here = "현재 위치"
+hide = "숨기기"
+optional = "선택 사항"
+paidAddon = "유료 추가 기능"
+show = "표시"
+subtitle = "여정의 각 단계에서 필요한 모든 항목이 거래 진행에 맞춰 표시됩니다."
+supportingSubtitle = "SOC 2, 보안 검토, 세금 양식 등 보안 또는 조달 팀이 요청할 때 준비되어 있습니다. 일부는 일회성 수수료가 부과됩니다."
+supportingTitle = "평가 지원"
+title = "문서"
+upcoming = "예정"
+
+[portal.procurement.error]
+title = "문제가 발생했습니다"
+
+[portal.procurement.hero]
+company = "엔터프라이즈 거래"
+ctaAgreement = "계약 검토 및 서명"
+ctaLive = "라이브 상태입니다"
+ctaPayment = "결제 추가"
+ctaQuote = "견적 검토"
+ctaTrial = "견적 만들기"
+eyebrow = "Enterprise 조달"
+inviteTeammates = "팀원 초대"
+keyDocs = "주요 문서"
+nextStep = "다음 단계: {{action}}"
+notStarted = "시작 안 함"
+open = "조달 열기"
+scheduleCall = "통화 예약"
+setup1Sub = "팀원을 초대하세요"
+setup1Title = "PDF Editor 배포"
+setup2Sub = "편집기 및 기타 소스 전반에서 처리를 켜세요"
+setup2Title = "PDF Processor 연결"
+setup3Sub = "필요할 때 보안, 컴플라이언스, 라우팅 또는 보존을 켜세요"
+setup3Title = "권장 정책 추가"
+
+[portal.procurement.journey]
+daysLeft_one = "{{count}}일 남음"
+daysLeft_other = "{{count}}일 남음"
+engineerLabel = "담당 솔루션 엔지니어"
+eyebrow = "롤아웃"
+live = "Stirling Enterprise에서 라이브 상태입니다"
+nextStep = "다음 단계: {{action}}"
+subtitle = "담당 솔루션 엔지니어가 모든 단계에 함께합니다. 한 번에 하나의 다음 작업을 진행하며, 전체 체크리스트는 아래에 있습니다."
+title = "평가판에서 라이브까지, 하나의 안내 경로"
+trialTitle = "Enterprise 평가판"
+
+[portal.procurement.journeySteps.agreement]
+blurb = "하나의 서명으로 MSA, 주문서, EULA, DPA를 포괄합니다."
+gatingAction = "계약 검토 및 서명"
+label = "계약"
+
+[portal.procurement.journeySteps.implementation]
+blurb = "워크스페이스를 프로비저닝하고 go-live 플레이북을 실행합니다."
+gatingAction = "워크스페이스 프로비저닝"
+label = "구현"
+
+[portal.procurement.journeySteps.payment]
+blurb = "카드, 은행 송금 또는 구매 주문서 기준으로 결제하세요."
+gatingAction = "결제 확인"
+label = "결제"
+
+[portal.procurement.journeySteps.quote]
+blurb = "약정 볼륨 가격과 계약 기간을 검토하세요."
+gatingAction = "견적 수락"
+label = "견적"
+
+[portal.procurement.journeySteps.trial]
+blurb = "문서와 워크플로에 대해 Stirling을 평가하세요."
+gatingAction = "견적 만들기"
+label = "평가판"
+
+[portal.procurement.license]
+copied = "복사됨"
+copy = "키 복사"
+downloadError = "아직 오프라인 라이선스 파일을 생성할 수 없습니다. 잠시 후 다시 시도하세요."
+downloadOffline = "오프라인 라이선스 다운로드(.lic)"
+hint = "이 키를 self-hosted 인스턴스에 붙여넣어 활성화하거나 기록용으로 보관하세요. 안전하게 보관하세요."
+label = "라이선스 키"
+
+[portal.procurement.link]
+cta = "계정 연결"
+description = "조달은 연결된 Stirling 계정에서 실행됩니다. 이 계정으로 평가판을 프로비저닝하고, 견적 가격을 책정하며, 청구를 시작합니다. 시작하려면 계정을 연결하세요."
+eyebrow = "Enterprise"
+title = "시작하려면 계정을 연결하세요"
+
+[portal.procurement.live]
+description = "구독이 활성화되었으며 라이선스가 발급되었습니다. 팀이 프로비저닝되었고 청구가 시작되었습니다."
+eyebrow = "라이브"
+title = "Stirling Enterprise에서 라이브 상태입니다"
+
+[portal.procurement.locked]
+description = "엔터프라이즈 평가를 시작하면 평가판 키, 약정 볼륨 견적, 단일 서명 계약, 결제 및 문서 원장이 모두 여기에 표시됩니다."
+eyebrow = "Enterprise 전용"
+talkToSales = "영업팀에 문의"
+title = "조달 트랙은 Enterprise에서 열립니다"
+
+[portal.procurement.milestone]
+accept = "수락하고 계속"
+description = "PDF를 다운로드하여 팀과 공유하고, 준비되면 돌아와 수락하거나 변경하세요."
+download = "PDF 다운로드"
+downloadError = "아직 견적 PDF를 다운로드할 수 없습니다. 잠시 후 다시 시도하세요."
+edit = "견적 편집"
+eyebrow = "견적 {{number}}"
+perYear = " / 년"
+preparedFor = "{{company}}용으로 준비됨"
+tcv = "총 계약 가치 {{value}}"
+title = "견적이 준비되었습니다"
+
+[portal.procurement.modal]
+cancel = "취소"
+chooseFile = "파일 선택"
+close = "닫기"
+downloadBody = "다운로드가 곧 시작됩니다."
+downloadCta = "다운로드"
+downloadTitle = "다운로드"
+noFile = "선택된 파일 없음"
+payBody = "Stripe를 통해 카드 또는 은행 송금으로 약정 계약을 결제하세요. 결제가 확인되는 즉시 워크스페이스가 프로비저닝됩니다."
+payCta = "Stripe로 계속"
+payTitle = "결제 확인"
+requestBodyFree = "요청 시 생성합니다. 확인하면 담당 솔루션 엔지니어가 곧 보내드립니다."
+requestBodyPaid = "유료 추가 기능입니다. 확인하면 담당 솔루션 엔지니어가 범위를 정하고 서류를 보내드립니다."
+requestCta = "요청"
+requestTitle = "이 문서 요청"
+signBody = "전자 서명을 위해 Stirling Enterprise Agreement를 엽니다. 하나의 서명으로 MSA, 주문서, EULA, DPA를 포괄합니다. 당사가 자동으로 대응 서명하고 결제로 진행됩니다."
+signCta = "서명용으로 열기"
+signTitle = "계약 검토 및 서명"
+uploadBody = "PO를 보내주시면 귀하의 조건에 맞춰 송장을 발행합니다. PDF를 끌어오거나 아래에서 파일을 선택하세요."
+uploadCta = "구매 주문서 업로드"
+uploadTitle = "구매 주문서 업로드"
+
+[portal.procurement.payment]
+description = "견적이 수락되었고 라이선스가 이미 활성화되어 팀이 바로 시작할 수 있습니다. 준비되면 첫 번째 송장을 결제하세요. 이메일 없이 여기에서 결제하거나 다운로드할 수 있습니다."
+downloadInvoice = "송장 다운로드"
+simulate = "결제 수신 시뮬레이션(데모)"
+title = "구독 생성됨"
+viewInvoice = "송장 보기 및 결제"
+
+[portal.procurement.schedule]
+fallback = "스케줄러를 로드할 수 없습니다."
+fallbackLink = "새 탭에서 일정 예약 열기"
+subtitle = "담당 솔루션 엔지니어가 팀의 롤아웃을 안내합니다. 편한 시간을 선택하세요."
+title = "통화 예약"
+
+[portal.procurement.status]
+action = "작업 필요"
+available = "사용 가능"
+complete = "완료"
+pending = "대기 중"
+request = "요청 시"
+
+[portal.procurement.trial]
+body = "연장하면 7일이 추가되고 담당 솔루션 엔지니어에게 알림이 전송됩니다."
+bodyMaxed = "모든 연장 횟수를 사용했습니다. 시간이 더 필요하면 담당 솔루션 엔지니어에게 문의하세요."
+cancel = "평가판 취소"
+extend = "7일 연장"
+maxed = "한도 도달"
+subtitle = "무료 평가판은 {{date}}까지 진행됩니다. 카드가 필요하지 않습니다."
+title = "Enterprise 평가판"
+
+[portal.procurement.upsell]
+homeBadge = "Enterprise"
+homeBody = "약정 볼륨 가격, 조직 전체 SSO + SCIM + RBAC, 90일 변경 불가능 감사, 전담 SE."
+homeCta = "평가판 시작 →"
+homeHeadline = "수백만 개의 PDFs를 처리하세요."
+
+[portal.recentActivity]
+title = "최근 활동"
+viewAll = "모두 보기"
+
+[portal.recentActivity.empty]
+description = "파이프라인 실행, 배포 및 에이전트 이벤트가 여기에 표시됩니다."
+title = "아직 아무것도 없음"
+
+[portal.search]
+ariaLabel = "검색"
+placeholder = "Stirling 검색 — 엔드포인트, 파이프라인, 문서…"
+
+[portal.search.empty]
+noActionsDescription = "빠른 작업을 사용할 수 있게 되면 여기에 표시됩니다."
+noActionsTitle = "빠른 작업 없음"
+noMatches = "\"{{query}}\"에 대한 일치 항목 없음"
+noMatchesDescription = "다른 키워드를 시도하거나 카탈로그를 찾아보세요."
+
+[portal.settings.groups]
+admin = "관리자"
+
+[portal.settings.sections]
+account-link = "계정 연결"
+
+[portal.shell.header]
+accountFallback = "계정"
+accountMenu = "계정 메뉴"
+darkMode = "다크 모드"
+lightMode = "라이트 모드"
+search = "검색"
+searchPlaceholder = "검색…"
+signOut = "로그아웃"
+switchToDark = "다크 테마로 전환"
+switchToLight = "라이트 테마로 전환"
+
+[portal.shell.sidebar]
+appEditor = "편집기"
+appProcessor = "프로세서"
+brandSuffix = "Stirling Processor"
+docsCount = "{{docs}}개 문서"
+linkAccount = "Stirling 계정 연결"
+planEditor = "Editor 플랜"
+planEnterprise = "Enterprise 플랜"
+planProcessor = "Processor 플랜"
+primaryNav = "기본 탐색"
+switchApp = "앱 전환"
+
+[portal.sources]
+subtitle = "문서를 Stirling으로 공급하는 재사용 가능한 입력 연결입니다. 연결을 한 번 구성한 다음 여러 정책에서 참조하세요. 행을 클릭하면 해당 구성과 사용하는 정책을 볼 수 있습니다."
+title = "소스"
+
+[portal.sources.actions]
+agentBuilder = "Agent Builder"
+connectSource = "소스 연결"
+
+[portal.sources.delete]
+body = "\"{{name}}\"을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다. 이를 참조하는 정책은 업데이트해야 합니다."
+cancel = "취소"
+confirm = "삭제"
+title = "소스를 삭제하시겠습니까?"
+
+[portal.sources.detail]
+closeAriaLabel = "세부 정보 닫기"
+delete = "소스 삭제"
+docs24h = "최근 24시간"
+docs30d = "최근 30일"
+docsTotal = "총 확인됨"
+docsTrend = "최근 30일간 문서"
+documents = "문서"
+edit = "편집"
+notReferenced = "어떤 정책에서도 참조하지 않으므로 삭제해도 안전합니다."
+pause = "일시 중지"
+resume = "재개"
+subtitle = "{{type}} · {{status}}"
+usedBy = "사용 중"
+
+[portal.sources.empty]
+description = "정책이 문서를 가져올 위치를 가질 수 있도록 폴더(곧 cloud storage도)를 연결하세요."
+title = "아직 연결된 소스 없음"
+
+[portal.sources.kpi]
+inUse = "사용 중"
+total = "연결"
+unused = "미사용"
+
+[portal.sources.status]
+active = "활성"
+disabled = "비활성화됨"
+unused = "미사용"
+
+[portal.sources.table]
+source = "소스"
+status = "상태"
+usedBy = "정책"
+
+[portal.sources.types.editor]
+label = "편집기"
+
+[portal.sources.types.folder]
+description = "서버의 디렉터리에서 새 문서를 감시합니다."
+label = "폴더"
+
+[portal.sources.types.folder.fields.directory]
+helperText = "Stirling이 처리할 파일을 감시하는 절대 경로입니다."
+label = "디렉터리 경로"
+placeholder = "/data/incoming"
+
+[portal.sources.types.folder.fields.identity]
+helperText = "콘텐츠 검사는 변경된 각 파일을 읽으므로, 콘텐츠를 변경하지 않는 이름 변경 및 터치는 다시 처리되지 않습니다."
+label = "변경 감지"
+
+[portal.sources.types.folder.fields.identity.options]
+hash = "크기, 날짜 및 콘텐츠 검사"
+stat = "크기 및 수정 날짜"
+
+[portal.sources.types.folder.fields.mode]
+label = "읽기 모드"
+
+[portal.sources.types.folder.fields.mode.options]
+consume = "소비: 각 파일을 한 번 처리"
+snapshot = "스냅샷: 실행할 때마다 폴더 다시 읽기"
+
+[portal.sources.types.folder.fields.recursive]
+label = "폴더 깊이"
+
+[portal.sources.types.folder.fields.recursive.options]
+all = "하위 폴더 포함"
+top = "최상위 수준만"
+
+[portal.sources.types.unknown]
+label = "소스"
+
+[portal.sources.wizard]
+back = "뒤로"
+cancel = "취소"
+continue = "계속"
+editTitle = "소스 편집"
+name = "이름"
+namePlaceholder = "예: 클레임 접수"
+save = "변경 사항 저장"
+subtitle = "{{total}}단계 중 {{current}}단계 · {{label}}"
+title = "소스 연결"
+type = "유형"
+
+[portal.sources.wizard.steps]
+chooseType = "유형 선택"
+configure = "구성"
+review = "검토 및 연결"
+
+[portal.usage]
+managePayment = "결제 관리"
+subtitle = "Stirling이 청구한 모든 PDF에 대한 사용량, 송장 및 플랜 관리를 하나의 콘솔에서 제공합니다."
+title = "사용량 및 청구"
+
+[portal.usage.error]
+loadWallet = "지갑을 로드할 수 없음"
+openStripePortal = "Stripe 포털을 열 수 없음"
+walletUnavailable = "지갑을 사용할 수 없음: {{status}} {{statusText}}"
+
+[portal.usage.sessionExpired]
+action = "다시 로그인"
+body = "Stirling 계정 세션이 만료되었습니다. 청구를 보려면 다시 로그인하세요. 인스턴스 연결은 유지됩니다."
+title = "세션 만료됨"
+
+[portal.users]
+title = "사용자"
+
+[portal.users.roles]
+subtitle = "모든 역할은 모든 플랜에 존재하며, 각 역할이 할 수 있는 일은 조직 전체에서 고정되어 있습니다."
+title = "역할"
+
+[portal.users.roles.admin]
+label = "관리자(조직 소유자)"
+summary = "워크스페이스, 설정 및 구성원에 대한 전체 거버넌스."
+
+[portal.users.roles.admin.permissions]
+0 = "사용자, 팀 및 역할 관리"
+1 = "S3 연결을 포함한 모든 통합 관리"
+2 = "포털 액세스 권한 부여 또는 취소"
+3 = "팀 소유자가 할 수 있는 모든 작업"
+
+[portal.users.roles.guest]
+label = "게스트"
+summary = "제한적 또는 웹 전용 액세스이며, 개인 구성을 보유할 수 없습니다."
+
+[portal.users.roles.guest.permissions]
+0 = "웹 전용 / 데모 사용"
+1 = "API 키 또는 통합 없음"
+2 = "포털 액세스 없음"
+3 = "공유된 경우 읽기 전용"
+
+[portal.users.roles.member]
+label = "구성원"
+summary = "일반 사용자 — 공유 리소스와 자신의 구성을 사용합니다."
+
+[portal.users.roles.member.permissions]
+0 = "편집기 및 공유 통합 사용"
+1 = "개인 API 및 MCP 구성 생성"
+2 = "공유된 팀 구성 보기"
+3 = "S3 또는 워크스페이스 관리 불가"
+
+[portal.users.roles.team_owner]
+label = "팀 소유자"
+summary = "팀을 소유하며, 팀 구성원의 리소스와 공유 구성을 관리합니다."
+
+[portal.users.roles.team_owner.permissions]
+0 = "팀의 S3 연결 생성 및 관리"
+1 = "팀 소유 통합 구성 관리"
+2 = "기본 정책을 통한 포털 액세스"
+3 = "구성원이 할 수 있는 모든 작업"
+
+[portal.welcome]
+ariaLabel = "Stirling PDF에 오신 것을 환영합니다"
+badge = "Open-source"
+installEditor = "Editor 설치"
+inviteTeammates = "팀원 초대"
+openInBrowser = "브라우저에서 열기"
+perks = "영구 무료 · Self-hostable"
+subtitle = "세계에서 가장 안전한 PDF Editor는 모든 규모의 팀에게 무료입니다. 60개 이상의 PDF 작업과 SSO가 포함됩니다."
+title = "환영합니다"
+titleAccent = "Stirling PDF"
 
 [printFile]
 title = "파일 인쇄"
@@ -6934,6 +9008,21 @@ manage = "Manage"
 description = "Policies and legal information for this service."
 title = "Legal Documents"
 
+[settings.licenses]
+backendDescription = "이 서버에 번들로 포함된 backend 종속성의 라이선스입니다."
+backendLabel = "Backend 라이선스"
+backendTitle = "Backend 3rd Party 라이선스"
+empty = "종속성을 찾을 수 없습니다."
+frontendDescription = "릴리스 빌드에 번들로 포함된 frontend 종속성의 라이선스입니다."
+frontendLabel = "Frontend 라이선스"
+frontendTitle = "Frontend 3rd Party 라이선스"
+license = "라이선스"
+listDescription = "목록은 릴리스 번들 또는 backend 엔드포인트에서 UI에 직접 표시됩니다."
+listTitle = "번들 종속성"
+loadError = "타사 라이선스를 로드하지 못했습니다"
+module = "모듈"
+version = "버전"
+
 [settings.licensingAnalytics]
 audit = "감사"
 plan = "플랜"
@@ -7686,7 +9775,9 @@ memberRemoved = "구성원이 제거되었습니다"
 namePlaceholder = "팀 이름을 입력하세요"
 personal = "개인"
 removeError = "구성원을 제거하지 못했습니다"
+renameCancel = "이름 변경 취소"
 renameError = "팀 이름을 변경하지 못했습니다"
+renameSubmit = "팀 이름 저장"
 renameSuccess = "팀 이름이 변경되었습니다"
 
 [team.invitationBanner]
@@ -7702,6 +9793,7 @@ sendButton = "초대 보내기"
 title = "팀원 초대"
 
 [team.members]
+actions = "구성원 작업"
 emailColumn = "이메일"
 empty = "아직 팀원이 없습니다"
 nameColumn = "이름"
@@ -7933,6 +10025,146 @@ title = "상세 통계"
 unknownEndpoint = "알 수 없는 엔드포인트"
 visits = "방문 수"
 
+[users]
+lastActive = "마지막 활동"
+learnMore = "역할 및 액세스에 대해 자세히 알아보기."
+locked = "잠김"
+roleFor = "{{name}}의 역할"
+rowActions = "{{name}}에 대한 작업"
+showAll = "{{count}}개 모두 표시"
+showLess = "간단히 표시"
+subtitle2 = "사용자, 팀 및 액세스 수준입니다."
+suspended = "일시 정지됨"
+teamActions = "팀 작업"
+title = "사용자"
+you = "(나)"
+
+[users.action]
+deleteTeam = "팀 삭제"
+disableMfa = "MFA 재설정"
+move = "팀으로 이동"
+reinstate = "복원"
+remove = "조직에서 제거"
+rename = "팀 이름 변경"
+resetPw = "비밀번호 재설정"
+suspend = "일시 정지"
+unlock = "계정 잠금 해제"
+
+[users.cap]
+addProcessor = "+ Processor"
+approver = "정책 승인"
+editor = "편집기"
+processor = "프로세서"
+
+[users.confirm]
+deleteTeamBody = "{{name}} 팀을 삭제하시겠습니까? 먼저 팀이 비어 있어야 합니다. 구성원을 다른 팀으로 이동해야 하며, 여전히 통합 구성을 소유하고 있으면 안 됩니다."
+deleteTeamTitle = "팀 삭제"
+disableMfaBody = "{{name}}의 MFA 등록을 제거하시겠습니까? 필요한 경우 다음 로그인 시 다시 설정하게 됩니다."
+disableMfaTitle = "MFA 재설정"
+removeBody = "{{name}}을(를) 조직에서 영구적으로 제거하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+removeTitle = "구성원 제거"
+
+[users.empty]
+description = "협업을 시작하려면 팀을 초대하세요."
+title = "아직 구성원 없음"
+
+[users.group]
+addToTeam = "팀에 추가"
+guestCount = "{{count}}명 게스트"
+guests = "게스트"
+guestsDesc = "외부 협업자, 공유한 범위로 제한됨. 편집기만 사용."
+ledBy = "{{owner}}이(가) 이끎"
+org = "조직"
+orgDesc = "조직 전체 권한 및 정책 승인을 가진 소유자"
+owners = "{{count}}명 소유자"
+team = "{{name}} 팀"
+teamMeta = "{{count}}명"
+
+[users.invite]
+access = "액세스"
+action = "사용자 초대"
+authOauth = "OAuth2 / SSO"
+authSaml = "SAML 2.0"
+authType = "로그인 방법"
+authWeb = "비밀번호"
+create = "계정 생성"
+createSubtitle = "비밀번호 또는 SSO로 self-hosted 계정을 생성합니다."
+createTitle = "계정 생성"
+editorDesc = "Stirling PDF Editor에서 PDFs를 편집합니다. 모두에게 제공됩니다."
+email = "Email 주소"
+emailError = "유효한 Email 주소를 입력하세요"
+emailPlaceholder2 = "name@company.com"
+forceChange = "첫 로그인 시 비밀번호 변경 요구"
+forceMfa = "첫 로그인 시 MFA 설정 요구"
+method = "추가 방법"
+methodDirect = "계정 직접 생성"
+methodEmail = "Email로 초대"
+password = "비밀번호"
+passwordError = "비밀번호는 8자 이상이어야 합니다"
+processorDeferred = "초대가 전송되었지만 아직 Processor 액세스 권한을 부여할 수 없습니다. 참여한 후 명단에서 설정하세요."
+processorDesc = "거버넌스 표면, 파이프라인 실행, 에이전트 및 API."
+role = "역할"
+send2 = "초대 보내기"
+subtitle2 = "Stirling 작업 공간에 참여할 수 있도록 이메일을 받게 됩니다."
+team = "팀"
+title = "사용자 초대"
+username = "사용자 이름"
+usernameError = "사용자 이름은 최소 3자 이상이어야 합니다"
+usernamePlaceholder = "jsmith"
+
+[users.loadError]
+description = "백엔드에 연결하는 중 문제가 발생했거나 접근 권한이 없습니다. 다시 시도하세요."
+title = "멤버를 불러올 수 없습니다"
+
+[users.moveTeam]
+apply = "이동"
+team = "팀"
+title = "팀으로 이동"
+
+[users.newTeam]
+action = "+ 새 팀"
+create = "팀 만들기"
+emailError = "유효한 이메일 주소를 입력하세요"
+name = "팀 이름"
+namePlaceholder = "예: 재무"
+nameRequired = "팀 이름은 필수입니다"
+owner = "팀 소유자"
+ownerFailed = "팀이 생성되었지만 소유자를 초대할 수 없습니다. 명단에서 한 명을 지정하세요."
+ownerHelper = "모든 팀에는 리더가 있습니다. Processor가 켜진 상태로 팀 소유자로 초대되며, 나머지 멤버를 추가할 수 있습니다. 나중에 다시 지정할 수 있습니다."
+ownerPlaceholder = "owner@company.com"
+subtitle = "접근 권한을 관리하는 팀 소유자 아래에 사람들을 그룹화합니다."
+title = "새 팀"
+
+[users.renameTeam]
+apply = "이름 변경"
+name = "팀 이름"
+title = "팀 이름 변경"
+
+[users.resetPw]
+apply = "비밀번호 재설정"
+confirm = "비밀번호 확인"
+copied = "클립보드에 복사됨"
+copyHint = "지금 복사하세요 - 다시 표시되지 않습니다."
+email = "재설정에 대해 사용자에게 이메일 보내기"
+forceChange = "다음 로그인 시 비밀번호 변경 요구"
+generate = "보안 비밀번호 생성"
+includePw = "이메일에 새 비밀번호 포함"
+mismatch = "비밀번호가 일치하지 않습니다"
+newPassword = "새 비밀번호"
+regen = "다시 생성"
+title = "비밀번호 재설정"
+tooShort = "비밀번호는 최소 8자 이상이어야 합니다"
+
+[users.role]
+guest = "게스트"
+member = "멤버"
+orgOwner = "조직 소유자"
+teamOwner = "팀 소유자"
+
+[users.team]
+grantProcessor = "팀에 Processor 부여"
+revokeProcessor = "팀에서 Processor 해제"
+
 [validateSignature]
 date = "날짜"
 downloadCsv = "CSV 다운로드"
@@ -8057,13 +10289,22 @@ zoomOut = "축소"
 [viewer.attachments]
 addAttachment = "첨부 파일 추가"
 close = "첨부 파일 닫기"
+closeSidebar = "첨부 파일 사이드바 닫기"
+download = "첨부 파일 다운로드"
 empty = "이 문서에는 첨부 파일이 없습니다"
 loading = "첨부 파일 불러오는 중..."
 noDocument = "첨부 파일을 보려면 PDF를 여세요."
 noMatch = "검색과 일치하는 첨부 파일이 없습니다"
 noSupport = "이 뷰어는 첨부 파일을 지원하지 않습니다."
+retry = "다시 시도"
 searchPlaceholder = "첨부 파일 검색"
 title = "첨부 파일"
+
+[viewer.bookmarks]
+bookmarkTitle = "북마크 제목"
+closeSidebar = "북마크 사이드바 닫기"
+collapseAll = "모든 북마크 접기"
+expandAll = "모든 북마크 펼치기"
 
 [viewer.comments]
 addComment = "댓글 추가"
@@ -8075,6 +10316,7 @@ clearAll = "모든 댓글 지우기"
 clearAllDescription = "사이드바에서 댓글과 답글을 제거하지만, 문서에 연결된 주석은 유지됩니다."
 clearAllTitle = "모든 댓글을 지우시겠습니까?"
 close = "주석 닫기"
+closeSidebar = "댓글 사이드바 닫기"
 deleteAnnotationAndComment = "주석 및 댓글 삭제"
 deleteDescription = "이 주석에는 댓글이 연결되어 있습니다. 주석은 유지하고 사이드바에서 댓글만 제거하거나, 모두 삭제할 수 있습니다."
 deleteTitle = "댓글에서 주석을 제거하시겠습니까?"
@@ -8106,6 +10348,11 @@ title = "양식 필드"
 unsavedBadge = "미저장"
 unsavedDesc = "저장되지 않은 변경 사항이 있습니다"
 
+[viewer.layers]
+closeSidebar = "레이어 사이드바 닫기"
+hideAll = "모든 레이어 숨기기"
+showAll = "모든 레이어 표시"
+
 [viewer.link]
 delete = "링크 삭제"
 
@@ -8135,6 +10382,9 @@ resultsOf = "총 {{total}} 중"
 
 [viewer.signature]
 delete = "서명 삭제"
+
+[viewer.thumbnails]
+closeSidebar = "썸네일 사이드바 닫기"
 
 [viewPdf]
 tags = "보기,읽기,주석,텍스트,이미지"
@@ -8562,6 +10812,7 @@ loading = "구성원 불러오는 중..."
 locked = "잠김"
 lockedBadge = "잠김"
 loginRequired = "먼저 로그인 모드를 활성화하세요"
+memberActions = "멤버 작업"
 noMembersFound = "멤버를 찾을 수 없습니다"
 role = "역할"
 searchMembers = "멤버 검색..."
@@ -8571,6 +10822,7 @@ unlockAccount = "계정 잠금 해제"
 unlockUserError = "사용자 계정 잠금 해제에 실패했습니다"
 unlockUserSuccess = "사용자 계정이 성공적으로 잠금 해제되었습니다"
 user = "사용자"
+userInfo = "사용자 정보"
 
 [workspace.people.actions]
 upgrade = "업그레이드"
@@ -8716,6 +10968,7 @@ removeMemberError = "사용자를 팀에서 제거하지 못했습니다"
 removeMemberSuccess = "사용자가 팀에서 제거되었습니다"
 renameTeamLabel = "팀 이름 변경"
 system = "시스템"
+teamActions = "팀 작업"
 teamName = "팀 이름"
 teamNotFound = "팀을 찾을 수 없습니다"
 title = "팀"
