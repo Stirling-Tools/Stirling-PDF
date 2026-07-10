@@ -1,42 +1,42 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import apiClient from "@app/services/apiClient";
 import { useAuth } from "@app/auth/UseSession";
 import { usePreferences } from "@app/contexts/PreferencesContext";
-import { isAuthRoute } from "@app/utils/pathUtils";
+import { isAuthRoute } from "@app/constants/routes";
 import { PORTAL_BASENAME } from "@app/routes/portalBasename";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import { Z_INDEX_SIGN_IN_MODAL } from "@app/styles/zIndex";
-import type { Team } from "@app/contexts/SaaSTeamContext";
 import {
   consumeLoginLandingPending,
+  fetchLandsOnProcessor,
   hasLoginLandingPending,
   isPortalAvailable,
-  landsOnProcessor,
   loginLandingMode,
 } from "@app/utils/loginLanding";
 
 /**
- * On a fresh SaaS sign-in, sends real team leads to the processor and everyone
- * else to the editor. Fires once per login, guarded by a sessionStorage flag set
- * at login and consumed only once the destination is decided, so it never
- * hijacks later in-session navigation. Gated by the VITE_LOGIN_LANDING_MODE
+ * On a fresh sign-in (any flavor), sends processor users to the processor and
+ * everyone else to the editor. Fires once per login, guarded by a sessionStorage
+ * flag set at login and consumed only once the destination is decided, so it
+ * never hijacks later in-session navigation. Gated by the VITE_LOGIN_LANDING_MODE
  * soft-release flag ("dynamic" to enable).
  *
- * Processor-bound = an admin, or a leader of a non-personal team (see
- * landsOnProcessor). Members and solo/personal-team users stay on the editor.
+ * The decision (see fetchLandsOnProcessor) is driven by the shared /api/v1/auth/me
+ * so self-hosted and SaaS share one code path. While the lookup is in flight for
+ * a would-be processor user, a full-screen loader is shown so the editor never
+ * flashes before the redirect resolves.
  *
- * While the lookup is in flight for a would-be processor user, a full-screen
- * loader is shown so the editor never flashes before the redirect resolves.
+ * Mounted once (in AppProviders) for every flavor; not on the portal route-set,
+ * which is a separate top-level route.
  */
-export function SaasLoginLandingRedirect() {
+export function LoginLandingRedirect() {
   const navigate = useNavigate();
   const location = useLocation();
   const { session, isAnonymous } = useAuth();
   const { preferences } = usePreferences();
   // A settled, non-anonymous session. Depend on this boolean rather than the
   // session object so the effect - and its in-flight lookup - is not torn down
-  // by the identity churn of setSession() firing on every Supabase auth event.
+  // by the identity churn of setSession() firing on every auth event.
   const isSignedIn = !!session && !isAnonymous;
   const landingView = preferences.loginLandingView;
   const [resolving, setResolving] = useState(false);
@@ -59,8 +59,6 @@ export function SaasLoginLandingRedirect() {
     // (StrictMode double-invoke, or a dependency change mid-lookup) instead of
     // dropping the redirect with the flag already spent.
     if (!hasLoginLandingPending()) return;
-    // From here a fresh-login redirect is pending; log the gate state so a live
-    // instance shows exactly what blocked (or allowed) the redirect.
     console.debug("[login-landing] pending", {
       isSignedIn,
       onAuthRoute: isAuthRoute(location.pathname),
@@ -81,35 +79,16 @@ export function SaasLoginLandingRedirect() {
       if (goToProcessor) navigate(PORTAL_BASENAME, { replace: true });
     };
 
-    // Members always stay on the editor, and a lead who chose "editor" opts out -
+    // A user who chose "editor" opts out, and no processor to route to -
     // decide synchronously, no lookup needed.
     if (landingView === "editor" || !isPortalAvailable()) {
       settle(false);
       return;
     }
 
-    // Admin comes from the backend role (/auth/me); non-personal team leadership
-    // from /team/my. Either one lands the user on the processor.
     setResolving(true);
-    void Promise.allSettled([
-      apiClient.get<{ user?: { role?: string } }>("/api/v1/auth/me", {
-        suppressErrorToast: true,
-      }),
-      apiClient.get<Team[]>("/api/v1/team/my", { suppressErrorToast: true }),
-    ]).then(([meRes, teamsRes]) => {
-      const role =
-        meRes.status === "fulfilled" ? meRes.value.data?.user?.role : null;
-      const teams =
-        teamsRes.status === "fulfilled" ? (teamsRes.value.data ?? []) : [];
-      const goToProcessor = landsOnProcessor(role, teams);
-      console.debug("[login-landing] decision", {
-        role,
-        teamCount: teams.length,
-        meOk: meRes.status === "fulfilled",
-        teamsOk: teamsRes.status === "fulfilled",
-        goToProcessor,
-      });
-      // On any lookup failure the fields default to member → stay on the editor.
+    void fetchLandsOnProcessor().then((goToProcessor) => {
+      console.debug("[login-landing] decision", { goToProcessor });
       settle(goToProcessor);
     });
 
@@ -138,4 +117,4 @@ export function SaasLoginLandingRedirect() {
   return null;
 }
 
-export default SaasLoginLandingRedirect;
+export default LoginLandingRedirect;

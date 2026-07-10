@@ -4,6 +4,7 @@ import {
   consumePostLoginRedirectPath,
   springAuth,
 } from "@app/auth/spring/springAuthClient";
+import { markLoginLandingPending } from "@app/utils/loginLanding";
 import { handleAuthCallbackSuccess } from "@app/extensions/authCallback";
 import styles from "@app/routes/AuthCallback.module.css";
 
@@ -78,6 +79,9 @@ export default function AuthCallback() {
         await new Promise((resolve) => setTimeout(resolve, 100));
 
         const target = consumePostLoginRedirectPath() ?? "/";
+        // Fresh OAuth/SSO login with no explicit destination: let the role-based
+        // landing route processor users.
+        if (target === "/") markLoginLandingPending();
         console.info(
           `[AuthCallback] Authenticated ${data.session.user.username} in ${elapsed()}, navigating to ${target}`,
         );

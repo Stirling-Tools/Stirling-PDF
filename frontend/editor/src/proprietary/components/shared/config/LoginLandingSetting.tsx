@@ -1,54 +1,41 @@
 import { useEffect, useState } from "react";
 import { Paper, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import apiClient from "@app/services/apiClient";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { usePreferences } from "@app/contexts/PreferencesContext";
-import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
 import type { LoginLandingView } from "@app/services/preferencesService";
 import {
+  fetchLandsOnProcessor,
   isPortalAvailable,
-  landsOnProcessor,
   loginLandingMode,
 } from "@app/utils/loginLanding";
 
 /**
  * Processor-user preference: where to land after signing in (processor vs
- * editor). Shown only to users who default to the processor (admins and
- * non-personal team leads); hidden for members and solo users.
+ * editor). Shown only to users who default to the processor (see
+ * fetchLandsOnProcessor); hidden for members and solo users. Shared by all
+ * flavors.
  */
-export function SaasLoginLandingSetting() {
+export function LoginLandingSetting() {
   const { t } = useTranslation();
   const { preferences, updatePreference } = usePreferences();
-  const { teams } = useSaaSTeam();
-  const [role, setRole] = useState<string | null>(null);
+  const [eligible, setEligible] = useState(false);
 
-  // Backend role (for the admin case) - team leadership alone can't tell an admin
-  // apart, since every user leads their personal team. Best-effort.
+  // Only look up eligibility when the control could actually show; skip the
+  // request entirely in soft-release / no-portal builds.
+  const active = loginLandingMode() === "dynamic" && isPortalAvailable();
   useEffect(() => {
+    if (!active) return;
     let cancelled = false;
-    void apiClient
-      .get<{ user?: { role?: string } }>("/api/v1/auth/me", {
-        suppressErrorToast: true,
-      })
-      .then((r) => {
-        if (!cancelled) setRole(r.data?.user?.role ?? null);
-      })
-      .catch(() => {
-        // Keep role null → fall back to team-leadership visibility.
-      });
+    void fetchLandsOnProcessor().then((v) => {
+      if (!cancelled) setEligible(v);
+    });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [active]);
 
-  // Hidden unless the role-based landing is switched on (soft-release flag), the
-  // processor is available, and the user is processor-bound (admin or real lead).
-  if (
-    loginLandingMode() !== "dynamic" ||
-    !isPortalAvailable() ||
-    !landsOnProcessor(role, teams)
-  ) {
+  if (!active || !eligible) {
     return null;
   }
 
@@ -69,7 +56,7 @@ export function SaasLoginLandingSetting() {
           <Text size="xs" c="dimmed" mt={4}>
             {t(
               "settings.general.loginLanding.description",
-              "Choose which app opens when you sign in to Stirling Cloud.",
+              "Choose which app opens when you sign in.",
             )}
           </Text>
         </div>
@@ -94,4 +81,4 @@ export function SaasLoginLandingSetting() {
   );
 }
 
-export default SaasLoginLandingSetting;
+export default LoginLandingSetting;
