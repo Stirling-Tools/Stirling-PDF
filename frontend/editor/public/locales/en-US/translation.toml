@@ -6250,7 +6250,7 @@ bodyBefore = "Set"
 title = "Stripe not configured"
 
 [portal.billing.enterpriseUpsell]
-cta = "Build your Enterprise quote"
+cta = "Explore Enterprise"
 description = "Committed volume discounts, air-gapped deployment, custom MSA and security reviews, and 3rd-party distributor partnerships."
 eyebrow = "Volume discount · 1M+ PDFs"
 title = "Stirling Enterprise"
@@ -6738,8 +6738,63 @@ description = "This view hit an unexpected error. Try again, or pick another sec
 retry = "Try again"
 title = "Something went wrong on this page"
 
+[portal.home.download]
+back = "Back"
+body = "Download the desktop app or self-host the server."
+done = "Done"
+guide = "Open the {{name}} guide"
+openInBrowser = "Open in browser instead"
+sectionDesktop = "Desktop app"
+sectionSelfHosted = "Self-hosted"
+title = "Install the Stirling PDF Editor"
+
+[portal.home.download.docker]
+detailBody = "Run the official image on your server."
+note = "Opens at :8080. Default login: admin / stirling."
+tagline = "Run the server in a container"
+title = "Docker"
+variantFat = "Fat"
+variantLite = "Ultra-Lite"
+variantStandard = "Standard"
+
+[portal.home.download.kubernetes]
+detailBody = "Install the official Helm chart."
+note = "Add a PVC for /configs to persist settings."
+tagline = "Deploy to a cluster with Helm"
+title = "Kubernetes"
+
+[portal.home.download.linux]
+detailBody = "Native builds for your distribution."
+guideBtn = "View Linux install options"
+note = "AppImage, .deb and .rpm builds are available for common distros."
+tagline = "Native desktop app for your distro"
+title = "Linux"
+
+[portal.home.download.mac]
+altLabel = "Or via Homebrew"
+detailBody = "Run the installer, or use Homebrew."
+downloadBtn = "Download for macOS"
+tagline = "Native app for Apple silicon and Intel"
+title = "macOS"
+
+[portal.home.download.manual]
+detailBody = "Run the .jar on a bare metal server."
+downloadBtn = "Download the .jar"
+note = "Requires Java 21+. Opens at :8080; default login admin / stirling."
+runLabel = "Then run it"
+tagline = "Run the .jar on a bare metal server"
+title = "Manual server setup"
+
+[portal.home.download.windows]
+altLabel = "Or via winget"
+detailBody = "Run the installer, or use a package manager."
+downloadBtn = "Download installer"
+tagline = "Native app for Microsoft Windows"
+title = "Windows"
+
 [portal.home.editor]
 activeUsers = "{{n}} active"
+install = "Install the editor"
 invite = "Invite teammates"
 name = "Stirling PDF Editor"
 open = "Open in browser"
@@ -6755,12 +6810,6 @@ afternoon = "Good afternoon"
 evening = "Good evening"
 morning = "Good morning"
 
-[portal.home.onboarding]
-dismiss = "Dismiss setup"
-notStarted = "Not started"
-progress = "{{done}} of {{total}} done"
-title = "Finish setting up"
-
 [portal.home.onboarding.enterprise]
 body = "Org-wide SSO + SCIM + RBAC, committed volume pricing, and air-gapped deployment."
 cta = "Start Trial"
@@ -6769,18 +6818,16 @@ lead = "For 250+ employees."
 tag = "Enterprise"
 
 [portal.home.onboarding.steps.editor]
-blurb = "Deploy the desktop app, free forever."
-title = "Download the PDF Editor"
+blurb = "Install the desktop app or self-host"
+title = "Download the editor"
+
+[portal.home.onboarding.steps.invite]
+blurb = "Bring your team into the secure workspace"
+title = "Invite teammates"
 
 [portal.home.onboarding.steps.policies]
 blurb = "{{active}} active · {{recommended}} recommended"
-chip = "{{active}} active"
-title = "Turn on policies"
-
-[portal.home.onboarding.steps.sources]
-blurb = "{{connected}} connected · every PDF governed where it lands"
-chip = "{{connected}} connected"
-title = "Connect your sources"
+title = "Confirm your policies"
 
 [portal.home.quickActions]
 subtitle = "Top tasks for today"
@@ -8076,14 +8123,11 @@ unlimited = "{{used}} · Unlimited"
 
 [portal.welcome]
 ariaLabel = "Welcome to Stirling PDF"
-badge = "Open-source"
-installEditor = "Install the Editor"
-inviteTeammates = "Invite teammates"
+install = "Install the editor"
+invite = "Invite teammates"
 openInBrowser = "Open in browser"
-perks = "Free forever · Self-hostable"
-subtitle = "The world's most secure PDF Editor is free for teams of all sizes. Includes 60+ PDF operations and SSO."
-title = "Welcome to"
-titleAccent = "Stirling PDF"
+productName = "PDF Editor"
+stats = "30M downloads · 60+ PDF operations · Free forever"
 
 [printFile]
 title = "Print File"
