@@ -95,7 +95,7 @@ jobs:
 
       - name: Build and push test image (Docker fork fallback)
         if: env.USE_DEPOT != 'true'
-        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
           file: ./docker/embedded/Dockerfile
