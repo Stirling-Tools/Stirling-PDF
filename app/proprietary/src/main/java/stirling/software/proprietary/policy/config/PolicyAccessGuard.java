@@ -37,7 +37,7 @@ public class PolicyAccessGuard {
 
     /** Team a new policy is stamped with — the creator's team. {@code null} when login disabled. */
     public Long teamForNewPolicy() {
-        return enforced() ? policyManagementAuthority.currentUserTeamId() : null;
+        return enforced() ? policyManagementAuthority.requireCurrentUserTeamId() : null;
     }
 
     /** Whether the policy belongs to the current user's team (so they may view/run/edit it). */
@@ -45,7 +45,8 @@ public class PolicyAccessGuard {
         if (!enforced()) {
             return true;
         }
-        return Objects.equals(policy.teamId(), policyManagementAuthority.currentUserTeamId());
+        return Objects.equals(
+                policy.teamId(), policyManagementAuthority.requireCurrentUserTeamId());
     }
 
     /**
@@ -57,7 +58,7 @@ public class PolicyAccessGuard {
         if (!enforced()) {
             return store.all();
         }
-        return store.findByTeam(policyManagementAuthority.currentUserTeamId());
+        return store.findByTeam(policyManagementAuthority.requireCurrentUserTeamId());
     }
 
     private boolean enforced() {

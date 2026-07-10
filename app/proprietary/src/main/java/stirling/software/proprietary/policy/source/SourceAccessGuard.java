@@ -34,7 +34,7 @@ public class SourceAccessGuard {
 
     /** Team a new source is stamped with: the creator's team. {@code null} when login disabled. */
     public Long teamForNewSource() {
-        return enforced() ? policyManagementAuthority.currentUserTeamId() : null;
+        return enforced() ? policyManagementAuthority.requireCurrentUserTeamId() : null;
     }
 
     /** Whether the source belongs to the current user's team (so they may view/edit it). */
@@ -42,7 +42,8 @@ public class SourceAccessGuard {
         if (!enforced()) {
             return true;
         }
-        return Objects.equals(source.teamId(), policyManagementAuthority.currentUserTeamId());
+        return Objects.equals(
+                source.teamId(), policyManagementAuthority.requireCurrentUserTeamId());
     }
 
     /**
@@ -54,7 +55,7 @@ public class SourceAccessGuard {
         if (!enforced()) {
             return store.all();
         }
-        return store.findByTeam(policyManagementAuthority.currentUserTeamId());
+        return store.findByTeam(policyManagementAuthority.requireCurrentUserTeamId());
     }
 
     private boolean enforced() {

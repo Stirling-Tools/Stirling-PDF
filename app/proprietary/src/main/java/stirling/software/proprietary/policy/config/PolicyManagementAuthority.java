@@ -1,5 +1,8 @@
 package stirling.software.proprietary.policy.config;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
 /**
  * The current user's policy context, pluggable per deployment so the policy layer (proprietary)
  * needn't know the team model. SaaS: a user may edit policies only if they lead their team, and
@@ -19,4 +22,17 @@ public interface PolicyManagementAuthority {
      * ({@code null}-team) policies.
      */
     Long currentUserTeamId();
+
+    /**
+     * Scoping team for an enforced (login-enabled) request, never null — rejects the rare-but-
+     * possible unteamed caller instead of letting them share the unteamed bucket.
+     */
+    default Long requireCurrentUserTeamId() {
+        Long teamId = currentUserTeamId();
+        if (teamId == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED, "Could not resolve the current user's team");
+        }
+        return teamId;
+    }
 }

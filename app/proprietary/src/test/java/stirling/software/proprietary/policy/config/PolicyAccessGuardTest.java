@@ -39,7 +39,7 @@ class PolicyAccessGuardTest {
 
     @Test
     void visibleFromLoadsOnlyTheCallersTeam() {
-        when(policyManagementAuthority.currentUserTeamId()).thenReturn(1L);
+        when(policyManagementAuthority.requireCurrentUserTeamId()).thenReturn(1L);
         PolicyStore store = new InProcessPolicyStore();
         store.save(inTeam(1L));
         store.save(inTeam(2L));
@@ -63,7 +63,7 @@ class PolicyAccessGuardTest {
 
     @Test
     void canAccessOnlyOwnTeamsPolicy() {
-        when(policyManagementAuthority.currentUserTeamId()).thenReturn(1L);
+        when(policyManagementAuthority.requireCurrentUserTeamId()).thenReturn(1L);
         assertTrue(guard(true).canAccess(inTeam(1L)));
         assertFalse(guard(true).canAccess(inTeam(2L)));
         assertFalse(guard(true).canAccess(inTeam(null)));
@@ -77,7 +77,7 @@ class PolicyAccessGuardTest {
     @Test
     void ownerAndTeamForNewPolicyComeFromTheCurrentUserWhenLoginEnabled() {
         when(userService.getCurrentUsername()).thenReturn("alice");
-        when(policyManagementAuthority.currentUserTeamId()).thenReturn(7L);
+        when(policyManagementAuthority.requireCurrentUserTeamId()).thenReturn(7L);
         assertEquals("alice", guard(true).ownerForNewPolicy());
         assertEquals(7L, guard(true).teamForNewPolicy());
     }

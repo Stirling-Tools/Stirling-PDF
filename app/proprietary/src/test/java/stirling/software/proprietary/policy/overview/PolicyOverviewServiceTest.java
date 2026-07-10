@@ -119,7 +119,7 @@ class PolicyOverviewServiceTest {
         properties.getSecurity().setEnableLogin(true);
         UserServiceInterface userService = mock(UserServiceInterface.class);
         PolicyManagementAuthority authority = mock(PolicyManagementAuthority.class);
-        when(authority.currentUserTeamId()).thenReturn(1L);
+        when(authority.requireCurrentUserTeamId()).thenReturn(1L);
         SourceAccessGuard sourceGuard = new SourceAccessGuard(userService, properties, authority);
         PolicyAccessGuard policyGuard = new PolicyAccessGuard(userService, properties, authority);
         PolicyOverviewService scoped =
