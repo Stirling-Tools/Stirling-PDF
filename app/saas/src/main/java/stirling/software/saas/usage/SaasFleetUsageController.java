@@ -19,12 +19,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.config.AuditConfigurationProperties;
+import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.model.api.usage.FleetUsageStats;
 import stirling.software.proprietary.repository.PersistentAuditEventRepository;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
-import stirling.software.saas.model.TeamMembership;
-import stirling.software.saas.repository.TeamMembershipRepository;
+import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.saas.util.AuthenticationUtils;
 
 /**
