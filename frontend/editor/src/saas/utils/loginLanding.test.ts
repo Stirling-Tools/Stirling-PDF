@@ -5,6 +5,7 @@ import {
   consumeLoginLandingPending,
   hasLoginLandingPending,
   isPortalAvailable,
+  landsOnProcessor,
   leadsRealTeam,
   loginLandingMode,
   markLoginLandingPending,
@@ -56,6 +57,35 @@ describe("leadsRealTeam", () => {
         team({ isLeader: true, isPersonal: false }),
       ]),
     ).toBe(true);
+  });
+});
+
+describe("landsOnProcessor", () => {
+  it("is true for an admin even with no real team", () => {
+    expect(landsOnProcessor("ROLE_ADMIN", [])).toBe(true);
+    expect(
+      landsOnProcessor("ROLE_ADMIN", [
+        team({ isLeader: true, isPersonal: true }),
+      ]),
+    ).toBe(true);
+  });
+
+  it("is true for a non-admin who leads a real team", () => {
+    expect(
+      landsOnProcessor("USER", [team({ isLeader: true, isPersonal: false })]),
+    ).toBe(true);
+  });
+
+  it("is false for a non-admin member", () => {
+    expect(
+      landsOnProcessor("USER", [team({ isLeader: false, isPersonal: false })]),
+    ).toBe(false);
+  });
+
+  it("is false for a non-admin solo (personal-team) user", () => {
+    expect(
+      landsOnProcessor(null, [team({ isLeader: true, isPersonal: true })]),
+    ).toBe(false);
   });
 });
 

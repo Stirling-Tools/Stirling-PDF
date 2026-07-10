@@ -8,6 +8,8 @@ import type { Team } from "@app/contexts/SaaSTeamContext";
 const h = vi.hoisted(() => ({
   auth: { session: null as unknown, isAnonymous: false },
   prefs: { loginLandingView: "processor" as "processor" | "editor" },
+  role: null as string | null,
+  teams: [] as Team[],
   get: vi.fn(),
 }));
 
@@ -59,16 +61,25 @@ beforeEach(() => {
   vi.stubEnv("VITE_LOGIN_LANDING_MODE", "dynamic");
   h.auth = { ...SIGNED_IN };
   h.prefs = { loginLandingView: "processor" };
+  h.role = null;
+  h.teams = [];
   h.get.mockReset();
+  h.get.mockImplementation((url: string) => {
+    if (url === "/api/v1/auth/me") {
+      return Promise.resolve({ data: { user: { role: h.role } } });
+    }
+    if (url === "/api/v1/team/my") {
+      return Promise.resolve({ data: h.teams });
+    }
+    return Promise.resolve({ data: {} });
+  });
 });
 
 afterEach(() => vi.unstubAllEnvs());
 
 describe("SaasLoginLandingRedirect", () => {
   it("sends a real team lead to the processor and consumes the flag", async () => {
-    h.get.mockResolvedValue({
-      data: [team({ isLeader: true, isPersonal: false })],
-    });
+    h.teams = [team({ isLeader: true, isPersonal: false })];
     markLoginLandingPending();
 
     renderAt("/");
@@ -79,24 +90,31 @@ describe("SaasLoginLandingRedirect", () => {
     expect(hasLoginLandingPending()).toBe(false);
   });
 
+  it("sends an admin to the processor even without a real team", async () => {
+    h.role = "ROLE_ADMIN";
+    h.teams = [team({ isLeader: true, isPersonal: true })];
+    markLoginLandingPending();
+
+    renderAt("/");
+
+    await waitFor(() =>
+      expect(screen.getByTestId("pathname").textContent).toBe("/processor"),
+    );
+  });
+
   it("keeps a member on the editor", async () => {
-    h.get.mockResolvedValue({
-      data: [team({ isLeader: false, isPersonal: false })],
-    });
+    h.teams = [team({ isLeader: false, isPersonal: false })];
     markLoginLandingPending();
 
     renderAt("/");
 
     // Flag is consumed only once the lookup resolves.
     await waitFor(() => expect(hasLoginLandingPending()).toBe(false));
-    expect(h.get).toHaveBeenCalled();
     expect(screen.getByTestId("pathname").textContent).toBe("/");
   });
 
-  it("keeps a solo (personal-team) user on the editor", async () => {
-    h.get.mockResolvedValue({
-      data: [team({ isLeader: true, isPersonal: true })],
-    });
+  it("keeps a solo (personal-team) non-admin on the editor", async () => {
+    h.teams = [team({ isLeader: true, isPersonal: true })];
     markLoginLandingPending();
 
     renderAt("/");
@@ -106,9 +124,7 @@ describe("SaasLoginLandingRedirect", () => {
   });
 
   it("still redirects a team lead under StrictMode double-invoke", async () => {
-    h.get.mockResolvedValue({
-      data: [team({ isLeader: true, isPersonal: false })],
-    });
+    h.teams = [team({ isLeader: true, isPersonal: false })];
     markLoginLandingPending();
 
     render(
@@ -126,8 +142,9 @@ describe("SaasLoginLandingRedirect", () => {
     expect(hasLoginLandingPending()).toBe(false);
   });
 
-  it("does not fetch or redirect when a lead opted into the editor", async () => {
+  it("does not fetch or redirect when a processor user opted into the editor", async () => {
     h.prefs = { loginLandingView: "editor" };
+    h.role = "ROLE_ADMIN";
     markLoginLandingPending();
 
     renderAt("/");
@@ -139,11 +156,9 @@ describe("SaasLoginLandingRedirect", () => {
     expect(hasLoginLandingPending()).toBe(false);
   });
 
-  it("does nothing in editor mode (soft release), even for a team lead", async () => {
+  it("does nothing in editor mode (soft release), even for an admin", async () => {
     vi.stubEnv("VITE_LOGIN_LANDING_MODE", "editor");
-    h.get.mockResolvedValue({
-      data: [team({ isLeader: true, isPersonal: false })],
-    });
+    h.role = "ROLE_ADMIN";
     markLoginLandingPending();
 
     renderAt("/");
@@ -154,9 +169,7 @@ describe("SaasLoginLandingRedirect", () => {
   });
 
   it("does nothing without the fresh-login flag", async () => {
-    h.get.mockResolvedValue({
-      data: [team({ isLeader: true, isPersonal: false })],
-    });
+    h.teams = [team({ isLeader: true, isPersonal: false })];
 
     renderAt("/");
 
@@ -166,9 +179,7 @@ describe("SaasLoginLandingRedirect", () => {
   });
 
   it("waits on auth routes and does not consume the flag there", async () => {
-    h.get.mockResolvedValue({
-      data: [team({ isLeader: true, isPersonal: false })],
-    });
+    h.teams = [team({ isLeader: true, isPersonal: false })];
     markLoginLandingPending();
 
     renderAt("/login");
@@ -180,6 +191,7 @@ describe("SaasLoginLandingRedirect", () => {
 
   it("ignores anonymous sessions", async () => {
     h.auth = { session: { user: { id: "anon" } }, isAnonymous: true };
+    h.role = "ROLE_ADMIN";
     markLoginLandingPending();
 
     renderAt("/");

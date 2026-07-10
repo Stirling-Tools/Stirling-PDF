@@ -12,7 +12,7 @@ import {
   consumeLoginLandingPending,
   hasLoginLandingPending,
   isPortalAvailable,
-  leadsRealTeam,
+  landsOnProcessor,
   loginLandingMode,
 } from "@app/utils/loginLanding";
 
@@ -23,12 +23,8 @@ import {
  * hijacks later in-session navigation. Gated by the VITE_LOGIN_LANDING_MODE
  * soft-release flag ("dynamic" to enable).
  *
- * "Team lead" = leads a non-personal team (from /api/v1/team/my) - the
- * requirement's leads-vs-members axis, which correctly leaves solo/personal-team
- * users on the editor. Admins whose only team is personal, and ACL-only portal
- * grantees, are intentionally not auto-redirected (they reach the processor via
- * the app switcher); this keeps the signal client-side without a second
- * /auth/me round-trip and avoids sending personal-team users to an empty one.
+ * Processor-bound = an admin, or a leader of a non-personal team (see
+ * landsOnProcessor). Members and solo/personal-team users stay on the editor.
  *
  * While the lookup is in flight for a would-be processor user, a full-screen
  * loader is shown so the editor never flashes before the redirect resolves.
@@ -73,12 +69,22 @@ export function SaasLoginLandingRedirect() {
       return;
     }
 
+    // Admin comes from the backend role (/auth/me); non-personal team leadership
+    // from /team/my. Either one lands the user on the processor.
     setResolving(true);
-    void apiClient
-      .get<Team[]>("/api/v1/team/my", { suppressErrorToast: true })
-      .then((res) => settle(leadsRealTeam(res.data ?? [])))
-      // No team data → treat as a member and stay on the editor.
-      .catch(() => settle(false));
+    void Promise.allSettled([
+      apiClient.get<{ user?: { role?: string } }>("/api/v1/auth/me", {
+        suppressErrorToast: true,
+      }),
+      apiClient.get<Team[]>("/api/v1/team/my", { suppressErrorToast: true }),
+    ]).then(([meRes, teamsRes]) => {
+      const role =
+        meRes.status === "fulfilled" ? meRes.value.data?.user?.role : null;
+      const teams =
+        teamsRes.status === "fulfilled" ? (teamsRes.value.data ?? []) : [];
+      // On any lookup failure the fields default to member → stay on the editor.
+      settle(landsOnProcessor(role, teams));
+    });
 
     return () => {
       active = false;

@@ -1,3 +1,4 @@
+import { isAdminRole } from "@app/auth/roles";
 import type { Team } from "@app/contexts/SaaSTeamContext";
 
 /**
@@ -33,6 +34,20 @@ export function loginLandingMode(): LoginLandingMode {
 /** A user "leads a team" (→ processor) only if they lead a non-personal team. */
 export function leadsRealTeam(teams: Team[]): boolean {
   return teams.some((team) => team.isLeader && !team.isPersonal);
+}
+
+/**
+ * Who defaults to (and may choose) the processor: an admin, or a leader of a
+ * non-personal team. Admins are included via role because in SaaS every user
+ * leads their own personal team, so the backend teamLead/portalAccess flags are
+ * true for everyone - the backend role (from /api/v1/auth/me) is the only
+ * reliable admin signal, and non-personal leadership comes from /api/v1/team/my.
+ */
+export function landsOnProcessor(
+  role: string | null | undefined,
+  teams: Team[],
+): boolean {
+  return isAdminRole(role) || leadsRealTeam(teams);
 }
 
 // The processor/portal route-set is only bundled in some builds (mirrors

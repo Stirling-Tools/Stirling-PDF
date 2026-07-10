@@ -5,10 +5,13 @@ import type { Team } from "@app/contexts/SaaSTeamContext";
 
 const h = vi.hoisted(() => ({
   teams: [] as Team[],
+  role: null as string | null,
   prefs: { loginLandingView: "processor" as "processor" | "editor" },
   update: vi.fn(),
+  get: vi.fn(),
 }));
 
+vi.mock("@app/services/apiClient", () => ({ default: { get: h.get } }));
 vi.mock("@app/contexts/SaaSTeamContext", () => ({
   useSaaSTeam: () => ({ teams: h.teams }),
 }));
@@ -51,8 +54,13 @@ beforeEach(() => {
   vi.stubEnv("VITE_INCLUDE_PORTAL", "true");
   vi.stubEnv("VITE_LOGIN_LANDING_MODE", "dynamic");
   h.teams = [];
+  h.role = null;
   h.prefs = { loginLandingView: "processor" };
   h.update.mockReset();
+  h.get.mockReset();
+  h.get.mockImplementation(() =>
+    Promise.resolve({ data: { user: { role: h.role } } }),
+  );
 });
 
 afterEach(() => vi.unstubAllEnvs());
@@ -66,13 +74,21 @@ describe("SaasLoginLandingSetting", () => {
     expect(screen.getByText("Editor")).toBeInTheDocument();
   });
 
+  it("shows the control for an admin with no real team", async () => {
+    h.role = "ROLE_ADMIN";
+    h.teams = [team({ isLeader: true, isPersonal: true })];
+    renderSetting();
+    // Appears once the /auth/me role resolves.
+    expect(await screen.findByText("After signing in")).toBeInTheDocument();
+  });
+
   it("renders nothing for a member", () => {
     h.teams = [team({ isLeader: false, isPersonal: false })];
     renderSetting();
     expect(screen.queryByText("After signing in")).not.toBeInTheDocument();
   });
 
-  it("renders nothing for a solo (personal-team) user", () => {
+  it("renders nothing for a solo (personal-team) non-admin", () => {
     h.teams = [team({ isLeader: true, isPersonal: true })];
     renderSetting();
     expect(screen.queryByText("After signing in")).not.toBeInTheDocument();

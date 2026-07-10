@@ -1,30 +1,53 @@
+import { useEffect, useState } from "react";
 import { Paper, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import apiClient from "@app/services/apiClient";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
 import type { LoginLandingView } from "@app/services/preferencesService";
 import {
   isPortalAvailable,
-  leadsRealTeam,
+  landsOnProcessor,
   loginLandingMode,
 } from "@app/utils/loginLanding";
 
 /**
- * Team-lead-only preference: where to land after signing in (processor vs
- * editor). Hidden for members and solo users, who can't reach the processor.
+ * Processor-user preference: where to land after signing in (processor vs
+ * editor). Shown only to users who default to the processor (admins and
+ * non-personal team leads); hidden for members and solo users.
  */
 export function SaasLoginLandingSetting() {
   const { t } = useTranslation();
   const { preferences, updatePreference } = usePreferences();
   const { teams } = useSaaSTeam();
+  const [role, setRole] = useState<string | null>(null);
 
-  // Hidden unless the role-based landing is switched on (soft-release flag) and
-  // the user is a real team lead with the processor available.
+  // Backend role (for the admin case) - team leadership alone can't tell an admin
+  // apart, since every user leads their personal team. Best-effort.
+  useEffect(() => {
+    let cancelled = false;
+    void apiClient
+      .get<{ user?: { role?: string } }>("/api/v1/auth/me", {
+        suppressErrorToast: true,
+      })
+      .then((r) => {
+        if (!cancelled) setRole(r.data?.user?.role ?? null);
+      })
+      .catch(() => {
+        // Keep role null → fall back to team-leadership visibility.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Hidden unless the role-based landing is switched on (soft-release flag), the
+  // processor is available, and the user is processor-bound (admin or real lead).
   if (
     loginLandingMode() !== "dynamic" ||
     !isPortalAvailable() ||
-    !leadsRealTeam(teams)
+    !landsOnProcessor(role, teams)
   ) {
     return null;
   }
