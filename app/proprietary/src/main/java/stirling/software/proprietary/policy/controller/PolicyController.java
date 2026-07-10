@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -47,6 +48,9 @@ import stirling.software.proprietary.policy.engine.PolicyRunHandle;
 import stirling.software.proprietary.policy.engine.PolicyRunRegistry;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.PolicyValidator;
+import stirling.software.proprietary.policy.engine.SweepOutcome;
+import stirling.software.proprietary.policy.ledger.ProcessedLedger;
+import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
@@ -62,6 +66,7 @@ import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.policy.trigger.PolicyTrigger;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
 import stirling.software.proprietary.policy.trigger.TriggerInfo;
+import stirling.software.proprietary.util.SecretMasker;
 
 /**
  * Policy CRUD plus pipeline runs (stored or ad-hoc). Runs are async: returns a run id, poll {@code
@@ -86,6 +91,7 @@ public class PolicyController {
     private final PolicyManagementAuthority policyManagementAuthority;
     private final PolicyTriggerManager policyTriggerManager;
     private final PolicyOverviewService policyOverviewService;
+    private final ProcessedLedger processedLedger;
     private final List<PolicyTrigger> policyTriggers;
     private final ApplicationProperties applicationProperties;
     private final TempFileManager tempFileManager;
@@ -199,7 +205,7 @@ public class PolicyController {
                             + " assigned; returns the stored policy with its id.")
     public ResponseEntity<Policy> savePolicy(@RequestBody Policy policy) {
         requirePolicyEditingAllowed();
-        Policy owned = resolveOwnership(policy);
+        Policy owned = withStoredOutputSecrets(resolveOwnership(policy));
         requireAccessibleSources(owned);
         try {
             policyValidator.validate(owned);
@@ -210,7 +216,21 @@ public class PolicyController {
         // Re-sync trigger registrations now so a new/changed folder-watch policy starts being
         // watched immediately instead of after the next reconcile sweep.
         policyTriggerManager.notifyPoliciesChanged();
-        return ResponseEntity.ok(saved);
+        return ResponseEntity.ok(withMaskedOutputSecrets(saved));
+    }
+
+    @PutMapping("/order")
+    @Operation(
+            summary = "Set the team's policy run order",
+            description =
+                    "Persists the team-wide order policies run in, from the given ordered list of"
+                            + " policy ids (position → order). The per-trigger order shown in the UI"
+                            + " is this one sequence filtered by trigger. Team-leader/admin only;"
+                            + " ids outside the caller's team are ignored.")
+    public ResponseEntity<Void> reorderPolicies(@RequestBody List<String> orderedPolicyIds) {
+        requirePolicyEditingAllowed();
+        policyStore.reorder(policyAccessGuard.teamForNewPolicy(), orderedPolicyIds);
+        return ResponseEntity.noContent().build();
     }
 
     /**
@@ -265,6 +285,50 @@ public class PolicyController {
                 teamId);
     }
 
+    /** Output secrets never leave the server: reads return the redaction sentinel instead. */
+    private static Policy withMaskedOutputSecrets(Policy policy) {
+        return withOutput(
+                policy,
+                new OutputSpec(
+                        policy.output().type(), SecretMasker.mask(policy.output().options())));
+    }
+
+    /**
+     * An edit that round-trips a masked read sends output secrets back as the sentinel; restore
+     * them from the stored policy so saving without re-typing keeps them (validation then runs
+     * against the real values).
+     */
+    private Policy withStoredOutputSecrets(Policy incoming) {
+        if (incoming.id() == null || incoming.id().isBlank()) {
+            return incoming;
+        }
+        return policyStore
+                .get(incoming.id())
+                .map(
+                        existing ->
+                                withOutput(
+                                        incoming,
+                                        new OutputSpec(
+                                                incoming.output().type(),
+                                                SecretMasker.restoreRedacted(
+                                                        incoming.output().options(),
+                                                        existing.output().options()))))
+                .orElse(incoming);
+    }
+
+    private static Policy withOutput(Policy policy, OutputSpec output) {
+        return new Policy(
+                policy.id(),
+                policy.name(),
+                policy.owner(),
+                policy.enabled(),
+                policy.trigger(),
+                policy.sourceIds(),
+                policy.steps(),
+                output,
+                policy.teamId());
+    }
+
     /**
      * Creating, editing, pausing/resuming, and deleting policies requires the editor role for the
      * caller's team — a team leader on SaaS (see {@link PolicyManagementAuthority}); the global
@@ -289,9 +353,14 @@ public class PolicyController {
     @GetMapping
     @Operation(
             summary = "List policies",
-            description = "Lists the policies belonging to the caller's team.")
+            description =
+                    "Lists the policies belonging to the caller's team. Secret-bearing output"
+                            + " options are returned as a redaction sentinel, never their stored"
+                            + " values.")
     public List<Policy> listPolicies() {
-        return policyAccessGuard.visibleFrom(policyStore);
+        return policyAccessGuard.visibleFrom(policyStore).stream()
+                .map(PolicyController::withMaskedOutputSecrets)
+                .toList();
     }
 
     @GetMapping("/overview")
@@ -320,11 +389,17 @@ public class PolicyController {
     }
 
     @GetMapping("/{policyId}")
-    @Operation(summary = "Get a policy by id")
+    @Operation(
+            summary = "Get a policy by id",
+            description =
+                    "Secret-bearing output options are returned as a redaction sentinel, never"
+                            + " their stored values; an edit that sends the sentinel back keeps"
+                            + " them.")
     public ResponseEntity<Policy> getPolicy(@PathVariable String policyId) {
         return policyStore
                 .get(policyId)
                 .filter(policyAccessGuard::canAccess)
+                .map(PolicyController::withMaskedOutputSecrets)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -337,12 +412,32 @@ public class PolicyController {
         boolean accessible =
                 policyStore.get(policyId).filter(policyAccessGuard::canAccess).isPresent();
         if (accessible && policyStore.delete(policyId)) {
+            processedLedger.clearPolicy(policyId);
             // Cancel any now-orphaned folder watch promptly rather than leaving the WatchKey open
             // until the next reconcile sweep.
             policyTriggerManager.notifyPoliciesChanged();
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @DeleteMapping("/{policyId}/processed-history")
+    @Operation(
+            summary = "Clear a policy's processed-file history",
+            description =
+                    "Forgets which source files this policy has already processed, so its next"
+                            + " sweep reprocesses everything currently in its sources. Does not"
+                            + " touch the files themselves.")
+    public ResponseEntity<Void> clearProcessedHistory(@PathVariable String policyId) {
+        requirePolicyEditingAllowed();
+        // Scope to the caller's team: a policy in another team reads as not-found.
+        boolean accessible =
+                policyStore.get(policyId).filter(policyAccessGuard::canAccess).isPresent();
+        if (!accessible) {
+            return ResponseEntity.notFound().build();
+        }
+        processedLedger.clearPolicy(policyId);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping(value = "/{policyId}/run", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -375,9 +470,10 @@ public class PolicyController {
             description =
                     "Pulls the policy's configured sources and runs the pipeline now, regardless of"
                             + " the enabled flag (which only gates automatic triggering). Returns"
-                            + " the ids of the runs started; poll the run-status endpoint for each."
-                            + " Empty when the sources yielded no work to do.")
-    public ResponseEntity<List<String>> trigger(@PathVariable String policyId) {
+                            + " the ids of the runs started (poll the run-status endpoint for each)"
+                            + " plus what the sweep skipped - already-processed, parked-by-failure,"
+                            + " and in-flight counts - so an empty result explains itself.")
+    public ResponseEntity<SweepOutcome> trigger(@PathVariable String policyId) {
         Policy policy =
                 policyStore
                         .get(policyId)

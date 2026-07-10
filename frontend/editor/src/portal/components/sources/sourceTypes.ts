@@ -26,6 +26,11 @@ const SOURCE_TYPE_META: Record<string, SourceTypeMeta> = {
     icon: "✏",
     accent: "success",
   },
+  s3: {
+    labelKey: "portal.sources.types.s3.label",
+    icon: "☁",
+    accent: "brand",
+  },
 };
 
 const UNKNOWN_TYPE_META: SourceTypeMeta = {
@@ -42,7 +47,7 @@ export function sourceTypeMeta(type: string): SourceTypeMeta {
 export interface SourceFieldDef {
   key: string;
   labelKey: string;
-  control: "text" | "select";
+  control: "text" | "password" | "select";
   required?: boolean;
   placeholderKey?: string;
   helperTextKey?: string;
@@ -88,6 +93,107 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
             value: "snapshot",
             labelKey:
               "portal.sources.types.folder.fields.mode.options.snapshot",
+          },
+        ],
+      },
+      {
+        key: "recursive",
+        labelKey: "portal.sources.types.folder.fields.recursive.label",
+        control: "select",
+        defaultValue: "false",
+        options: [
+          {
+            value: "false",
+            labelKey:
+              "portal.sources.types.folder.fields.recursive.options.top",
+          },
+          {
+            value: "true",
+            labelKey:
+              "portal.sources.types.folder.fields.recursive.options.all",
+          },
+        ],
+      },
+      {
+        key: "identity",
+        labelKey: "portal.sources.types.folder.fields.identity.label",
+        control: "select",
+        defaultValue: "stat",
+        helperTextKey: "portal.sources.types.folder.fields.identity.helperText",
+        options: [
+          {
+            value: "stat",
+            labelKey:
+              "portal.sources.types.folder.fields.identity.options.stat",
+          },
+          {
+            value: "hash",
+            labelKey:
+              "portal.sources.types.folder.fields.identity.options.hash",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    type: "s3",
+    labelKey: "portal.sources.types.s3.label",
+    descriptionKey: "portal.sources.types.s3.description",
+    fields: [
+      {
+        key: "bucket",
+        labelKey: "portal.sources.types.s3.fields.bucket.label",
+        control: "text",
+        required: true,
+        placeholderKey: "portal.sources.types.s3.fields.bucket.placeholder",
+      },
+      {
+        key: "region",
+        labelKey: "portal.sources.types.s3.fields.region.label",
+        control: "text",
+        defaultValue: "us-east-1",
+        placeholderKey: "portal.sources.types.s3.fields.region.placeholder",
+      },
+      {
+        key: "prefix",
+        labelKey: "portal.sources.types.s3.fields.prefix.label",
+        control: "text",
+        placeholderKey: "portal.sources.types.s3.fields.prefix.placeholder",
+        helperTextKey: "portal.sources.types.s3.fields.prefix.helperText",
+      },
+      {
+        key: "accessKeyId",
+        labelKey: "portal.sources.types.s3.fields.accessKeyId.label",
+        control: "text",
+        required: true,
+      },
+      {
+        key: "secretAccessKey",
+        labelKey: "portal.sources.types.s3.fields.secretAccessKey.label",
+        control: "password",
+        required: true,
+      },
+      {
+        key: "endpoint",
+        labelKey: "portal.sources.types.s3.fields.endpoint.label",
+        control: "text",
+        placeholderKey: "portal.sources.types.s3.fields.endpoint.placeholder",
+        helperTextKey: "portal.sources.types.s3.fields.endpoint.helperText",
+      },
+      {
+        key: "mode",
+        labelKey: "portal.sources.types.s3.fields.mode.label",
+        control: "select",
+        defaultValue: "consume",
+        helperTextKey: "portal.sources.types.s3.fields.mode.helperText",
+        options: [
+          {
+            value: "consume",
+            labelKey: "portal.sources.types.s3.fields.mode.options.consume",
+          },
+          {
+            value: "snapshot",
+            labelKey: "portal.sources.types.s3.fields.mode.options.snapshot",
           },
         ],
       },

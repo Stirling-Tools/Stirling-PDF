@@ -240,6 +240,17 @@ export default defineConfig(
       "no-restricted-syntax": ["error", ...mantineComponentImportRestrictions],
     },
   },
+  // TEMPORARY: the portal user-management / integrations surface predates the
+  // button consolidation and uses bespoke CSS-styled raw <button>s (kebab
+  // triggers, inline text-link actions) that the shared Button can't represent
+  // without heavy overrides. Exempt ONLY the raw-<button> rule — the Mantine
+  // import bans stay in force — and migrate these in a follow-up PR.
+  {
+    files: ["editor/src/portal/components/users/UsersDirectory.tsx"],
+    rules: {
+      "no-restricted-syntax": ["error", ...mantineComponentImportRestrictions],
+    },
+  },
   // TEMPORARY (same rationale as procurement above): the portal home hero
   // reuses the same bespoke CSS-styled raw <button> controls as the procurement
   // deal hero — status/invite chips and full-width checklist rows that the

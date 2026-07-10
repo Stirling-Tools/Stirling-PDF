@@ -7,6 +7,7 @@ black = "Beltza"
 blue = "Urdina"
 cancel = "Utzi"
 chooseFile = "Aukeratu fitxategia"
+clear = "Garbitu"
 close = "Itxi"
 comingSoon = "Laster"
 confirm = "Berretsi"
@@ -87,6 +88,7 @@ processingCompleteMultiple = "{{count}} fitxategi prest daude."
 property = "Propietate"
 quickPosition = "Posizio azkarra"
 red = "Gorria"
+remove = "Kendu"
 reset = "Berrezarri"
 review = "Berrikusi"
 save = "Gorde"
@@ -180,6 +182,7 @@ addMoreFiles = "Gehitu fitxategi gehiago..."
 attachments = "Eranskinak hautatu"
 info = "Hautatu zure PDFari eransteko fitxategiak. Fitxategi hauek txertatuta egongo dira eta PDFaren eranskin-paneletik eskuragarri."
 placeholder = "Aukeratu fitxategiak..."
+removeFile = "Kendu fitxategia"
 selectedFiles = "Hautatutako fitxategiak"
 submit = "Gehitu eranskinak"
 
@@ -1628,6 +1631,9 @@ title = "Stirling PDF hobetzea nahi duzu?"
 tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
 
 [annotation]
+alignCenter = "Lerrokatu erdian"
+alignLeft = "Lerrokatu ezkerrera"
+alignRight = "Lerrokatu eskuinera"
 annotationStyle = "Anotazioaren estiloa"
 backgroundColor = "Atzeko planoaren kolorea"
 borderOff = "Ertza: desaktibo"
@@ -2531,6 +2537,7 @@ title = "Arau orokorra"
 
 [certSign.source]
 device = "Gailu hau"
+noOtherSources = "Ez dago beste ziurtagiri-iturririk erabilgarri."
 server = "Zerbitzaria"
 stepTitle = "Ziurtagiriaren iturburua"
 upload = "Igo"
@@ -2805,6 +2812,7 @@ back = "Atzera"
 cancel = "Utzi"
 close = "Itxi"
 collapse = "Tolestu"
+confirm = "Berretsi"
 continue = "Jarraitu"
 copied = "Kopiatuta!"
 copy = "Kopiatu"
@@ -3595,7 +3603,9 @@ makeCopy = "Egin kopia bat"
 mobileShort = "Mugikorra"
 mobileUpload = "Mugikorretik kargatzea"
 mobileUploadNotAvailable = "Mugikorreko kargaketa ez dago gaituta"
+moreOptions = "Aukera gehiago"
 myFiles = "Nire fitxategiak"
+nextFile = "Hurrengo fitxategia"
 noFiles = "Ez dago fitxategirik eskuragarri"
 noFilesFound = "Ez da aurkitu zure bilaketarekin bat datorren fitxategirik"
 noRecentFiles = "Ez da azken fitxategirik aurkitu"
@@ -3605,6 +3615,7 @@ openInFileEditor = "Ireki fitxategi-editorean"
 openInPageEditor = "Ireki orri-editorean"
 owner = "Jabea"
 ownerUnknown = "Ezezaguna"
+previousFile = "Aurreko fitxategia"
 recent = "Azkenak"
 removeBoth = "Kendu bietatik"
 removeFilePrompt = "Fitxategi hau gailu honetan eta zure zerbitzarian gordeta dago. Nondik kendu nahi duzu?"
@@ -3680,7 +3691,9 @@ workbench = "Lan-mahaia"
 
 [fileSidebar]
 addFiles = "Gehitu fitxategiak"
+addingFiles = "Fitxategiak gehitzen…"
 collapse = "Tolestu alboko barra"
+customizeGroups = "Pertsonalizatu taldeak"
 dropHint = "Ireki fitxategiak hasteko"
 dropToAdd = "Drop files to add"
 expand = "Zabaldu alboko barra"
@@ -3693,8 +3706,11 @@ noFiles = "Oraindik ez dago fitxategirik"
 openFileManager = "Ireki fitxategi-kudeatzailea"
 openFromComputer = "Ireki ordenagailutik"
 openSettings = "Ireki ezarpenak"
+other = "Besteak"
+recent = "Azkenak"
 search = "Bilatu"
 searchPlaceholder = "Bilatu fitxategiak..."
+viewAll = "Ikusi {{count}} fitxategi guztiak"
 
 [fileSidebar.fileItem]
 closeViewer = "Itxi ikustailea"
@@ -3706,6 +3722,23 @@ updateOnServer = "Update on server"
 uploadToServer = "Upload to server"
 versionHistory = "Version history"
 
+[fileSidebar.groupsModal]
+add = "Gehitu"
+addLabel = "Gehitu etiketa bat…"
+categoryIconAria = "Aukeratu ikono bat {{name}}(r)entzat"
+createCategory = "Sortu kategoria"
+delete = "Ezabatu kategoria"
+done = "Eginda"
+hide = "Ezkutatu kategoria"
+newCategory = "Kategoria-izen berria…"
+removeLabel = "Kendu {{name}}"
+rename = "Aldatu izena"
+reset = "Berrezarri lehenetsietara"
+search = "Bilatu etiketak…"
+show = "Erakutsi kategoria"
+subtitle = "Taldekatu zure fitxategiak kategoria nagusietan. Gehitu kategoria bati lehendik dauden edo etiketa berriak, aldatu izena edo sortu zurea. Zure kategorietako batean ez dauden fitxategiak “Besteak” atalean agertuko dira."
+title = "Alboko barrako kategoriak"
+
 [filesPage]
 addToWorkspace = "Gehitu lan-eremura"
 addToWorkspaceCount = "Gehitu {{count}} lan-eremura"
@@ -3715,6 +3748,7 @@ backToFolder = "Itzuli hona: {{folder}}"
 backToMyFiles = "Itzuli Nire Fitxategietara"
 breadcrumbs = "Karpetaren bidea"
 cancel = "Utzi"
+classification = "Sailkapena"
 clearSearch = "Garbitu bilaketa"
 clearSelection = "Garbitu hautapena"
 closeDetails = "Itxi xehetasunak"
@@ -3874,10 +3908,10 @@ uploadFilesFailedDetail = "Ezin izan dira fitxategiak igo: {{message}}"
 added = "Gehituta"
 count = "Fitxategiak"
 folder = "Karpeta"
+labels = "Etiketak"
 modified = "Aldatuta"
 name = "Izena"
 size = "Tamaina"
-toolHistory = "Tresnen historia"
 toolHistoryAtVersion = "Tresna-kate metatua"
 totalSize = "Tamaina osoa"
 type = "Mota"
@@ -4614,10 +4648,10 @@ welcomeTitle = "Gonbidapena jaso duzu!"
 [landing]
 addFiles = "Gehitu fitxategiak"
 heroSubtitle = "Jaregin edo gehitu dagoen PDF bat hasteko."
-heroTitle = "Stirling PDF"
 mobileUpload = "Kargatu mugikorretik"
 openFromComputer = "Ireki ordenagailutik"
 uploadFromComputer = "Igo ordenagailutik"
+workbenchEmptyStateHero = "Jaregin PDF bat edonon"
 
 [language]
 direction = "ltr"
@@ -4930,6 +4964,7 @@ title = "Irteera"
 [onboarding]
 activeFiles = "<strong>Fitxategi Aktiboak</strong> ikuspegiak tresnan kargatuta dituzun PDF guztiak erakusten ditu, eta zein prozesatu hautatzeko aukera ematen dizu."
 allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
+close = "Itxi"
 cropSettings = "Orain moztu nahi dugun fitxategia hautatu dugunez, <strong>Moztu</strong> tresna konfigura dezakegu PDFa moztu nahi dugun eremua aukeratzeko."
 fileCheckbox = "Fitxategietako bat sakatzean, prozesatzeko hautatzen da. Hainbat fitxategi hauta ditzakezu batch eragiketetarako."
 fileReplacement = "Aldatutako fitxategiak automatikoki ordezkatuko du jatorrizkoa Lan-mahaian, errazago beste tresna batzuekin berriz prozesatzeko."
@@ -4955,6 +4990,7 @@ skipTheTour = "Utzi bisita gidatua"
 
 [onboarding.desktopInstall]
 body = "Stirling hobekien funtzionatzen du mahaigaineko aplikazio gisa. Offline erabil dezakezu, dokumentuak azkarrago atzitu, eta editatu tokian bertan zure ordenagailuan."
+selectOs = "Hautatu sistema eragilea"
 title = "Deskargatu"
 titleWithOs = "Deskargatu {{osLabel}}-rako"
 
@@ -5566,7 +5602,9 @@ viewLabel = "PDF Editorea"
 
 [pdfTextEditor.actions]
 applyChanges = "Aplikatu aldaketak"
+clearText = "Garbitu testua"
 downloadCopy = "Deskargatu kopia"
+moreOptions = "Aukera gehiago"
 reset = "Aldaketak berrezarri"
 
 [pdfTextEditor.badges]
@@ -5942,6 +5980,16 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.docType]
+Contracts = "Kontratuak"
+"Financial reports" = "Finantza-txostenak"
+"HR records" = "Giza baliabideen erregistroak"
+Insurance = "Aseguruak"
+Invoices = "Fakturak"
+"Legal filings" = "Legezko aurkezpenak"
+"Medical / PHI" = "Medikua / PHI"
+"Tax documents" = "Zerga-dokumentuak"
+
 [policies.enforcement]
 applying = "{{names}} aplikatzen"
 applyingProgress = "{{names}} aplikatzen ({{done}}/{{total}})"
@@ -5963,8 +6011,94 @@ export = "Esportatu aurretik betearazten"
 input = "Inportatzean betearazten"
 print = "Inprimatu aurretik betearazten"
 
+[policies.field]
+accessLog = "Sarbide-erregistroa"
+archiveAfter = "Artxibatu honen ondoren"
+auditTrail = "Auditoria-arrastoa"
+belowThreshold = "Atalasearen azpitik"
+destination = "Helmuga"
+frameworks = "Esparruak"
+immutableHold = "Eutsi aldaezina"
+keepFor = "Mantendu honetarako"
+minConfidence = "Gutxieneko konfiantza"
+notify = "Jakinarazi bideratzean"
+onViolation = "Betetzen ez denean"
+webhookUrl = "Webhook URL"
+
+[policies.fieldOption.archiveAfter]
+"1 year" = "1 urte"
+"30 days" = "30 egun"
+"90 days" = "90 egun"
+Never = "Inoiz ez"
+
+[policies.fieldOption.belowThreshold]
+"Flag for review" = "Markatu berrikusteko"
+Hold = "Eutsi"
+"Route to bucket" = "Bideratu bucket-era"
+
+[policies.fieldOption.destination]
+Documents = "Dokumentuak"
+"S3 bucket" = "S3 bucket"
+SharePoint = "SharePoint"
+Webhook = "Webhook"
+
+[policies.fieldOption.frameworks]
+FedRAMP = "FedRAMP"
+GDPR = "GDPR"
+HIPAA = "HIPAA"
+"ISO 27001" = "ISO 27001"
+"PCI DSS" = "PCI DSS"
+"SOC 2" = "SOC 2"
+
+[policies.fieldOption.keepFor]
+"1 year" = "1 urte"
+"3 years" = "3 urte"
+"30 days" = "30 egun"
+"7 years" = "7 urte"
+Indefinite = "Mugagabe"
+
+[policies.fieldOption.minConfidence]
+"60%" = "60%"
+"70%" = "70%"
+"80%" = "80%"
+"90%" = "90%"
+"95%" = "95%"
+
+[policies.fieldOption.onViolation]
+"Auto-redact PHI" = "Automatikoki ezkutatu PHI"
+"Block export" = "Blokeatu esportazioa"
+"Flag for review" = "Markatu berrikusteko"
+"Quarantine document" = "Jarri dokumentua berrogeialdian"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
+
+[policies.labels]
+add = "Gehitu"
+addPlaceholder = "Gehitu etiketa bat…"
+customNote = "Zure talderako pertsonalizatua."
+defaultNote = "Lehenetsi integratua erabiltzen, zure taldearekin partekatua."
+duplicate = "\"{{name}}\" lehendik badago."
+edit = "Editatu etiketak"
+empty = "Oraindik ez dago etiketarik."
+export = "Esportatu JSON"
+iconAria = "Aukeratu ikono bat {{name}}(r)entzat"
+import = "Inportatu JSON"
+importError = "Ezin izan da fitxategi hori inportatu."
+managedNote = "Taldeko etiketak zure talde-buruak kudeatzen ditu."
+modalSubtitle = "Zure talde osoarekin partekatua. Sailkatzaileak dokumentu bakoitzari dagozkion etiketak aukeratzen ditu."
+modalTitle = "Sailkapen-etiketak"
+pickIcon = "Erabili {{label}} ikonoa"
+removeAria = "Kendu {{name}}"
+resetToDefault = "Berrezarri lehenetsira"
+saveForTeam = "Gorde taldearentzat"
+saving = "Gordetzen…"
+sectionLabel = "Sailkapen-etiketak"
+startFromScratch = "Hasi hutsetik"
+teamCount = "taldeko etiketak"
+tooLong = "Etiketek gehienez {{max}} karaktere izan ditzakete."
+ungrouped = "Taldekatu gabe"
+view = "Ikusi etiketak"
 
 [policies.pii]
 account = "Kontu-zenbakiak (etiketatuak)"
@@ -5977,17 +6111,30 @@ placeholder = "Select PII types"
 routing = "AEBetako bideratze-zenbakiak (ABA)"
 ssn = "Gizarte Segurantzako zenbakiak"
 
+[policies.settings]
+noneExport = "Une honetan ez da politikarik exekutatzen esportatzean."
+noneUpload = "Une honetan ez da politikarik exekutatzen kargatzean."
+onExport = "Esportatzean"
+onUpload = "Kargatzean"
+reorderHandle = "Arrastatu berrordenatzeko"
+runOrderDesc = "Politika bat baino gehiago abiarazle berean exekutatzen denean, ordena honetan exekutatzen dira — bakoitza aurreko politikaren irteeran. Arrastatu berrordenatzeko."
+title = "Politika-ezarpenak"
+
 [policies.sidebar]
 activeCount = "{{count}} active"
-infoAriaLabel = "What is a policy?"
 infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
 loading = "Loading…"
+optionsAriaLabel = "Politika-aukerak"
+policySettings = "Politika-ezarpenak"
 railAriaLabel = "{{label}} policy — {{status}}"
 railSuffixActive = " (Active)"
 railSuffixPaused = " (Paused)"
+retryFailed = "Saiatu berriro huts egindako politikak ({{count}})"
+rowProgress = "{{completed}} / {{total}} fitxategi prozesatuta"
 setUp = "Set up"
 title = "Policies"
 upgradeToEnterprise = "Upgrade to enterprise"
+whatIsPolicy = "Zer da politika bat?"
 
 [policies.status]
 active = "Active"
@@ -6047,6 +6194,1933 @@ sourcesLabel = "Sources"
 stepOf = "Step {{step}} of {{total}}"
 toolChainDesc = "Configure the tools this policy runs on each document."
 typesSelected = "{{count}} types selected"
+
+[policy]
+badgeEnforcing = "{{name}} betearazten..."
+badgeRan = "{{name}} politika fitxategi honetan exekutatu da"
+blockingAction = "{{action}} blokeatuta politika betearazten den bitartean; itxaron, mesedez..."
+dismiss = "Baztertu gainjartzea"
+enforcingTitle = "Politika betearazten..."
+viewAnyway = "Ikusi fitxategia (politika oraindik betearazten ari da)"
+
+[portal]
+comingSoon = "Laster"
+
+[portal.accountLink.card]
+billingNote = "Gainbegiratu gabeko prozesamendua zure erakundearen zorroari fakturatzen zaio."
+eyebrow = "Kontu-lotura"
+linkButton = "Lotu zure Stirling kontua"
+linked = "Lotuta"
+linkedAs = "{{name}} gisa lotuta."
+linkedGeneric = "Instantzia hau lotuta dago."
+notLinked = "Lotu gabe"
+title = "Lotu erakunde hau bere Stirling kontuarekin"
+unlink = "Kendu lotura"
+
+[portal.accountLink.card.error]
+title = "Ezin izan da lotu"
+
+[portal.accountLink.card.loginNotConfigured]
+after = "hostatutako Stirling kontuarekin kontu-lotura gaitzeko. Garapenean, saio-hasiera simula dezakezu lotura-elkarrizketatik."
+before = "Ezarri"
+title = "SaaS saio-hasiera ez dago konfiguratuta"
+
+[portal.accountLink.gate]
+action = "Lotu kontua"
+description = "Lotu erakunde honen Stirling kontua fakturagarriak diren eginbideak erabiltzeko."
+title = "Lotu desblokeatzeko"
+titleFeature = "Lotu {{feature}} desblokeatzeko"
+
+[portal.accountLink.instances]
+active = "Aktibo"
+revoke = "Ezeztatu"
+revoked = "Ezeztatuta"
+unnamed = "Izenik gabeko instantzia"
+
+[portal.accountLink.instances.columns]
+instance = "Instantzia"
+lastSeen = "Azken aldiz ikusita"
+linked = "Lotuta"
+status = "Egoera"
+
+[portal.accountLink.instances.empty]
+description = "Lotu erakunde honen kontua, eta gero erregistratu zure self-hosted instantziak hemen ikusteko."
+title = "Ez dago lotutako instantziarik"
+
+[portal.accountLink.instances.time]
+daysAgo_one = "duela {{count}} egun"
+daysAgo_other = "duela {{count}} egun"
+hoursAgo_one = "duela {{count}} ordu"
+hoursAgo_other = "duela {{count}} ordu"
+justNow = "orain bertan"
+minutesAgo_one = "duela {{count}} minutu"
+minutesAgo_other = "duela {{count}} minutu"
+never = "inoiz ez"
+
+[portal.accountLink.modal]
+linkSubtitle = "Hasi saioa zerbitzari honek fakturatu behar duen kontuan."
+linkTitle = "Lotu zure Stirling kontua"
+reauthSubtitle = "Zure saioa iraungi da — hasi saioa berriro zure Stirling kontuan. Zure instantziak lotuta jarraituko du."
+reauthTitle = "Hasi saioa berriro"
+simulateSignIn = "Simulatu saio-hasiera (dev)"
+
+[portal.accountLink.modal.loginNotConfigured]
+after = "hostatutako Stirling kontuarekin aplikazio barruko lotura gaitzeko."
+and = "eta"
+before = "Ezarri"
+title = "SaaS saio-hasiera ez dago konfiguratuta"
+
+[portal.accountLink.panel]
+instancesSub = "Erakunde honetan erregistratutako self-hosted instantzia guztiak. Ezeztatu kredentzial bat berehala haren gainbegiratu gabeko sarbidea eteteko."
+instancesTitle = "Lotutako instantziak"
+revokeError = "Ezin izan da instantzia ezeztatu"
+sub = "Lotu self-hosted erakunde hau bere Stirling kontuarekin, gainbegiratu gabeko prozesamendua zure erakundearen zorroari fakturatzeko."
+
+[portal.accountLink.panel.loadError]
+forbidden = "Taldearen jabeak bakarrik ikus ditzake erakundearen lotutako instantziak."
+generic = "Ezin izan dira taldearen lotutako instantziak kargatu. Saiatu berriro une batean."
+title = "Ezin izan dira lotutako instantziak kargatu"
+
+[portal.accountLink.state]
+free = "Editor plana"
+subscribed = "Processor plana"
+unlinked = "Lotu gabe"
+
+[portal.agentBuilder]
+bootstrapFromDocument = "Hasieratu dokumentutik"
+sectionsAriaLabel = "Agente-eraikitzailearen atalak"
+selectorAriaLabel = "Agenteak"
+subtitle = "Diseinatu, probatu eta argitaratu dokumentuak sailkatu, haietatik erauzi eta bideratzen dituzten AI agenteak. Definitu agertokiak, mugatu tresnen sarbidea, exekutatu urrezko multzo bat eta argitaratu bertsio bat."
+title = "Agente-eraikitzailea"
+
+[portal.agentBuilder.bootstrap]
+cancel = "Utzi"
+dropzoneText = "Aukeratu lagin-dokumentu bat (PDF edo irudia)"
+lead = "Jaregin lagin-dokumentu bat eta findu dezakezun agertokiak eta erauzketa-eskema bat proposatuko dizkizugu. Ez da ezer argitaratuko zuk berrikusi arte."
+submit = "Hasieratu agentea"
+subtitle = "Sortu agente berri baten oinarria fitxategi adierazgarri batetik"
+title = "Hasieratu dokumentu batetik"
+
+[portal.agentBuilder.empty]
+description = "Hasieratu agente bat lagin-dokumentu batetik bere agertokiak eta erauzketa-eskema sortzeko; gero, findu eta argitaratu."
+title = "Oraindik ez dago agenterik"
+
+[portal.agentBuilder.evals]
+casesPassing = "Gainditzen duten kasuak"
+columnCase = "Ebaluazio-kasua"
+columnLatency = "Latentzia"
+columnResult = "Emaitza"
+fail = "huts egin"
+goldenSetPassRate = "Urrezko multzoaren gainditze-tasa"
+latencyMs = "{{ms}} ms"
+notRun = "exekutatu gabe"
+pass = "gainditu"
+passRate = "Gainditze-tasa"
+runEvals = "Exekutatu ebaluazioak"
+
+[portal.agentBuilder.evals.empty]
+description = "Ebaluazioek zure agertokiak urrezko multzo errepikagarri bihurtzen dituzte. Eguneratu plana denboran zehar gainditze-tasa jasotzeko eta argitalpenak horren arabera baldintzatzeko."
+title = "Oraindik ez dago urrezko multzorik"
+
+[portal.agentBuilder.kpi]
+acrossGoldenSets = "urrezko multzoetan zehar"
+activeAgents = "Agente aktiboak"
+avgPassRate = "Batez besteko ebaluazioen gainditze-tasa"
+fleetWide = "flota osoan"
+latestPublished = "Azken argitaratua"
+scenarios = "Agertokiak"
+testCases = "proba-kasuak"
+totalDescription_one = "{{count}} guztira"
+totalDescription_other = "{{count}} guztira"
+
+[portal.agentBuilder.scenarios]
+add = "Gehitu"
+addScenario = "Gehitu agertokia"
+enable = "Gaitu"
+expectationLabel = "Espero den portaera"
+expectationPlaceholder = "Agenteak egin beharko lukeena"
+inEval = "ebaluazioan"
+mute = "Isilarazi"
+muted = "isilarazita"
+nameLabel = "Izena"
+namePlaceholder = "adib. Betetze-eskalatzea"
+
+[portal.agentBuilder.tabs]
+evals = "Ebaluazioak"
+scenarios = "Agertokiak"
+tools = "Tresnak"
+versions = "Bertsioak"
+
+[portal.agentBuilder.tools]
+broadAccess = "Sarbide zabala"
+deniedHint = "Hautatutako tresnak blokeatuta daude. Gainerako guztia deigarria izaten jarraitzen du."
+deniedTools = "Ukatutako tresnak"
+governanceGate = "Tresnen gobernantza Enterprise planean dago erabilgarri."
+restricted = "Murriztua"
+restrictedAccess = "Tresnen sarbide murriztua"
+restrictedDescription = "Baimendu tresna guztiak, behean ukatzen dituzunak izan ezik."
+
+[portal.agentBuilder.versions]
+current = "uneko"
+historyGate = "Bertsio-historia osoa eta atzera egitea Enterprise planean daude erabilgarri."
+publish = "Argitaratu"
+rollBack = "Itzuli atzera"
+
+[portal.assistant]
+close = "Itxi laguntzailea"
+error = "Ezin izan da laguntzailearekin konektatu."
+errorWithDetail = "Ezin izan da laguntzailearekin konektatu: {{detail}}"
+inputAriaLabel = "Galdetu laguntzaileari"
+inputPlaceholder = "Galdetu Stirling-i buruz…"
+open = "Ireki laguntzailea"
+send = "Bidali"
+title = "Laguntzailea"
+tryAsking = "Saiatu galdetzen"
+typing = "Idazten"
+
+[portal.auth]
+loading = "Kargatzen"
+redirectingToEditor = "Editorera birbideratzen..."
+
+[portal.billing.checkout]
+noClientSecret = "Edge funtzioak ez du client_secret itzuli."
+subtitle = "Gehitu txartel bat doako Editor planaren baimenetik harago jarraitzeko. Stripe-k gainerakoa kudeatzen du."
+title = "Aktibatu Processor plana"
+
+[portal.billing.checkout.activationSlow]
+body = "Ordainketa ondo egin da, baina aktibazioa ohikoa baino pixka bat gehiago luzatzen ari da. Automatikoki aktibatuko da - itxi hau eta laster agertuko da hemen."
+close = "Itxi"
+title = "Ia prest"
+
+[portal.billing.checkout.error]
+title = "Ezin izan da ordainketa-prozesua hasi"
+
+[portal.billing.checkout.finalizing]
+body = "Zure ordainketa gauzatu da. Neurtutako prozesamendua aktibatzen ari gara lotutako instantzietan - normalean segundo batzuk behar ditu."
+hint = "Mantendu leiho hau irekita, mesedez."
+title = "Zure Processor plana aktibatzen..."
+
+[portal.billing.checkout.notConfigured]
+bodyAfter = "portaleko env-en aplikazio barruko ordainketa gaitzeko."
+bodyBefore = "Ezarri"
+title = "Stripe ez dago konfiguratuta"
+
+[portal.billing.enterpriseUpsell]
+cta = "Sortu zure Enterprise aurrekontua"
+description = "Bolumen-konpromisoagatiko deskontuak, air-gapped hedapena, MSA pertsonalizatua eta segurtasun-berrikuspenak, eta hirugarrenen banatzaileekin lankidetzak."
+eyebrow = "Bolumen-deskontua · 1M+ PDF"
+title = "Stirling Enterprise"
+
+[portal.billing.freeEditors]
+activeThisMonth = "Aktibo hilabete honetan"
+cost = "Kostua"
+editorsDeployed = "Hedatutako editoreak"
+inviteTeammates = "Gonbidatu taldekideak"
+pdfsEdited = "Editatutako PDFak"
+subtitle = "Hedatu edonon, zure talde osoarentzat."
+title = "Doako PDF editoreak"
+
+[portal.billing.freePlan]
+checkoutErrorTitle = "Ezin izan da ordainketa-prozesua hasi"
+currentPlan = "Uneko plana"
+freeForever = "Doan betiko"
+noTeamResolved = "Zure zorroan oraindik ez da talderik ebatzi — freskatu eta saiatu berriro."
+ownerOnly = "Taldearen jabeak bakarrik aktiba dezake Processor plana."
+planName = "Editor"
+ssoIncluded = "SSO barne"
+switchOnProcessor = "Aktibatu Processor →"
+unlimitedUsers = "Erabiltzaile mugagabeak"
+
+[portal.billing.invoices]
+columnAmount = "Zenbatekoa"
+columnDate = "Data"
+columnDescription = "Deskribapena"
+columnPdfsProcessed = "Prozesatutako PDFak"
+columnStatus = "Egoera"
+descriptionFallback = "Faktura"
+downloadAriaLabel = "Deskargatu {{number}} faktura PDF gisa"
+emptyDescription = "Zure taldeak harpidetza egin eta lehen zikloa ixtean, zure fakturak hemen agertuko dira."
+emptyTitle = "Oraindik ez dago fakturarik"
+fetchLimitNote_one = "Zure azken {{count}} fakturak erakusten. Faktura zaharragoak Stripe atarian daude."
+fetchLimitNote_other = "Zure azken {{count}} fakturak erakusten. Faktura zaharragoak Stripe atarian daude."
+loadError = "Ezin izan dira fakturak kargatu: {{error}}"
+pdfLink = "PDF ↓"
+showAll_one = "Erakutsi {{count}} guztiak"
+showAll_other = "Erakutsi {{count}} guztiak"
+showFewer_one = "Erakutsi gutxiago (lehen {{count}})"
+showFewer_other = "Erakutsi gutxiago (lehen {{count}})"
+showMostRecent_one = "Erakutsi azken {{count}}"
+showMostRecent_other = "Erakutsi azken {{count}}"
+title = "Fakturen historia"
+viewAriaLabel = "Ikusi {{number}} faktura Stripe-n"
+viewLink = "Ikusi ↗"
+
+[portal.billing.linkPrompt]
+cta = "Lotu Stirling kontua"
+description = "Eskuzko PDF edizioa — ikusi, sinatu, bateratu, zatitu, ur-marka jarri, konprimitu, bihurtu, eskuzko OCR — beti doakoa da, lotuta egon ala ez. Lotu 500 PDF doako neurtutako prozesamendurako (automatizazioa, AI eta API) eskuratzeko; gehiago behar duzunean, aktibatu Processor plana eta ordaindu erabiltzen duzunagatik soilik."
+title = "Lotu zure Stirling kontua"
+
+[portal.billing.paymentMethod]
+billedMonthly = "Hilero fakturatua"
+cardEnding = "{{brand}} amaiera {{last4}}"
+cardFallback = "Txartela"
+expiresBilledMonthly = "Iraungitzea: {{expiry}} · hilero fakturatua"
+eyebrow = "Ordainketa-metodoa"
+managedSub = "Zure txartela eta fakturazio-xehetasunak seguru gordetzen dira Stripe-ren bezero-atarian."
+managedTitle = "Stripe-n kudeatua"
+update = "Eguneratu"
+
+[portal.billing.pdfsProcessed]
+emptyPeriod = "Oraindik ez dago neurtutako prozesamendurik aldi honetan."
+eyebrow = "Aldi honetan prozesatutako PDFak"
+legendValue_one = "{{formatted}} PDF"
+legendValue_other = "{{formatted}} PDF"
+segbarAriaLabel = "Neurtutako PDFak kategoriaren arabera banatuta"
+segmentAgentsDesc = "AI agenteen ekintzak"
+segmentAgentsLabel = "Agenteak"
+segmentApiDesc = "API eskaera zuzenak"
+segmentApiLabel = "API"
+segmentAutomationDesc = "Automatizazioak eta pipeline-ak"
+segmentAutomationLabel = "Automatizazioa"
+unit = "neurtutako PDFak"
+
+[portal.billing.spendLimit]
+adjustLimit = "Doitu muga"
+cancel = "Utzi"
+capControlNote = "Aldaketak berehala aplikatzen dira — igo edo jaitsi sabaia edozein unetan."
+capSuffix = "/ hilabete"
+capSuffixWithDocs = "/ hilabete · ≈ {{documents}} dokumentu"
+displaySub = "Automatikoki prozesatzen duzunagatik soilik fakturatzen zaizu — inoiz ez sabaitik gora."
+editTitle = "Ezarri zure hileko sabaia"
+eyebrow = "Gastu-muga"
+guardrailBody = "sabai gogorra — ez zaizu inoiz hortik gora fakturatuko. Mugara iristean, neurtutako prozesamendua pausatu egiten da (PDF edizio mugagabeak funtzionatzen jarraitzen du) muga igo arte edo zikloa berrezarri arte. Ez da ezer galtzen."
+guardrailLabel = "Zure babes-muga:"
+noCap = "mugarik gabe"
+pctUsed = "%{{pct}} erabilita"
+remaining = "{{amount}} geratzen da"
+save = "Gorde muga"
+saveError = "Ezin izan da muga gorde"
+thisPeriodUncapped = "{{amount}} aldi honetan · mugarik gabe"
+usedThisMonth = "{{amount}} erabilita hilabete honetan"
+useSuggested = "Erabili iradokitakoa · {{amount}} / hilabete"
+
+[portal.billing.spendLimit.projection]
+body_one = "{{rate}}/egun tasarekin, mugara ~{{count}} egunean iritsiko zara (~{{monthEnd}} hilabete-amaiera). Iradokitako muga ~{{suggested}}."
+body_other = "{{rate}}/egun tasarekin, mugara ~{{count}} egunean iritsiko zara (~{{monthEnd}} hilabete-amaiera). Iradokitako muga ~{{suggested}}."
+label = "Gainditzea aurreikusten da."
+
+[portal.billing.spendThisMonth]
+eyebrow = "Hilabete honetako gastua"
+processed_one = "{{formattedCount}} PDF prozesatuta."
+processed_other = "{{formattedCount}} PDF prozesatuta."
+processedWithRate_one = "{{formattedCount}} PDF prozesatuta, bakoitza {{rate}}."
+processedWithRate_other = "{{formattedCount}} PDF prozesatuta, bakoitza {{rate}}."
+
+[portal.billing.subscribedPlan.capWarn]
+approachingBody = "Igo ezazu orain prozesamendu automatikoa inoiz pausa ez dadin."
+approachingTitle = "Zure hileko gastu-mugaren %{{pct}}-n zaude"
+raiseLimit = "Igo muga"
+reachedBody = "Neurtutako prozesamendua pausatuta dago muga igo arte edo zikloa berrezarri arte. PDF edizio mugagabeak funtzionatzen jarraitzen du."
+reachedTitle = "Hileko gastu-mugara iritsi da"
+
+[portal.billing.subscribedPlan.portalError]
+title = "Ezin izan da Stripe ataria ireki"
+
+[portal.billing.walletMeter]
+capSuffix_one = "{{allowance}} doako PDFetatik erabilita"
+capSuffix_other = "{{allowance}} doako PDFetatik erabilita"
+eyebrow = "Processor proba"
+statusLabel_one = "{{remaining}} geratzen da"
+statusLabel_other = "{{remaining}} geratzen dira"
+sub = "Erabili PDF Editor doan. Ordaindu PDFak automatikoki prozesatzeko."
+title_one = "Prozesatu {{allowance}} PDF doan"
+title_other = "Prozesatu {{allowance}} PDF doan"
+titleWithRate_one = "Prozesatu {{allowance}} PDF doan, gero {{rate}}/PDF"
+titleWithRate_other = "Prozesatu {{allowance}} PDF doan, gero {{rate}}/PDF"
+
+[portal.catalogue.card]
+lockedAriaLabel = "Blokeatuta"
+openAriaLabel = "Ireki {{name}} osagaia"
+
+[portal.catalogue.detail]
+addToProject = "Gehitu proiektuari"
+ariaLabel = "Osagaiaren xehetasuna"
+tabsAriaLabel = "Osagaiaren xehetasun-atalak"
+upgradeToUnlock = "Eguneratu desblokeatzeko"
+
+[portal.catalogue.detail.code]
+install = "Instalatu"
+usage = "Erabilera"
+
+[portal.catalogue.detail.locked]
+description = "{{name}} {{tier}} planetik aurrera dago barne. Eguneratu plana txertatzeko."
+title = "Ez dago erabilgarri zure planean"
+
+[portal.catalogue.detail.preview]
+badge = "Zuzeneko aurrebista"
+note = "Sandbox interaktiboa hemen errendatuko da"
+
+[portal.catalogue.detail.pricing]
+note = "{{unit}} bakoitzeko neurtua. Hileko doako kuotatik gorako erabilera zure kontuan fakturatzen da eta Erabilera eta fakturazioa atalean xehatzen da."
+
+[portal.catalogue.detail.stats]
+billedOn = "Honetan fakturatua"
+embeds30d = "Txertaketak (30 egun)"
+freeQuota = "Doako kuota"
+freeQuotaValue = "{{amount}} / hil"
+maturity = "Heldutasuna"
+none = "Bat ere ez"
+perAction = "Ekintza bakoitzeko"
+price = "Prezioa"
+
+[portal.catalogue.detail.tabs]
+code = "Kodea"
+overview = "Ikuspegi orokorra"
+pricing = "Prezioak"
+props = "Props / API"
+
+[portal.catalogue.props]
+optional = "aukerakoa"
+required = "beharrezkoa"
+
+[portal.catalogue.props.columns]
+description = "Deskribapena"
+name = "Prop"
+required = "Beharrezkoa"
+type = "Mota"
+
+[portal.catalogue.summary]
+componentsGa = "GA osagaiak"
+componentSpendMtd = "Osagaien gastua (MTD)"
+embedsThisMonth = "Txertaketak hilabete honetan"
+inBeta = "Beta-n"
+
+[portal.components.billingUnit]
+approval = "onarpena"
+check = "egiaztapena"
+event = "gertaera"
+render = "errendatzea"
+review = "berrikuspena"
+session = "saioa"
+signature = "sinadura"
+
+[portal.components.maturity]
+beta = "Beta"
+ga = "GA"
+
+[portal.componentsView]
+subtitle = "Zure aplikazioan txertatzeko SDK widgetak — bistaratzailea, sinadura elektronikoaren fluxua, AI berrikuspen-panela. Bakoitza ekintza bakoitzeko neurtzen da. Egin klik txartel batean instalazioa, erabilera eta props ikusteko."
+title = "Osagaiak"
+
+[portal.componentsView.empty]
+description = "Ezin izan da osagaien katalogoa kargatu. Saiatu berriro laster."
+title = "Ez dago osagairik erabilgarri"
+
+[portal.componentsView.lockedBanner]
+description = "GA osagaiak Pay-as-you-go planean daude erabilgarri; Beta osagai batzuk Enterprise-rako soilik dira. Blokeatutako txartelek eguneratzeko iradokizuna erakusten dute."
+title = "Osagai batzuek ordainpeko plana behar dute"
+
+[portal.docs.authentication]
+codeCaption = "eskaera bakoitza"
+eyebrow = "HASTEN"
+lead = "Eskaera guztiak bearer token batekin autentifikatzen dira. Gakoak ingurune bakoitzerako mugatzen dira eta ez dira inoiz iraungitzen biratu ezean."
+liveKey = "Produkzio-gakoak — fakturatuak, zure planaren arabera tasa-mugatuak."
+testKey = "Sandbox gakoak — doakoak, fixture sintetikoak itzultzen dituzte."
+title = "Autentifikazioa"
+
+[portal.docs.components]
+codeCaption = "txertatu bistaratzailea"
+eyebrow = "OSAGAIAK"
+lead = "Berrikuspen-ilaretarako eta dokumentu-ikuskapenerako txertatzeko UI. Ekarri zure estiloak edo erabili bidalitako gaia."
+title = "Berehala erabiltzeko bistaratzaileak"
+
+[portal.docs.endpoints]
+eyebrow = "API ERREFERENTZIA"
+fieldCount_one = "{{count}} eremu"
+fieldCount_other = "{{count}} eremu"
+filterAll = "Guztiak"
+filterAriaLabel = "Iragazi endpointak bertikalaren arabera"
+lead = "Dokumentu mota bakoitza endpoint tipatu bat da. POST fitxategi bat, jaso eskemak balioztatutako JSON. Iragazi bertikalaren arabera behean."
+title = "Endpointak"
+
+[portal.docs.errors]
+codeCaption = "422 Unprocessable Entity"
+eyebrow = "API ERREFERENTZIA"
+lead = "Erroreek makinak irakurtzeko kode egonkor bat eta giza mezu bat itzultzen dituzte. 4xx gorputzak beti request_id bat dauka euskarriarentzat."
+title = "Erroreak"
+
+[portal.docs.nav]
+ariaLabel = "Dokumentazioa"
+
+[portal.docs.nav.empty]
+description = "Ezin izan da dokumentazio-indizea kargatu."
+title = "Dokumentazioa ez dago erabilgarri"
+
+[portal.docs.quickstart]
+eyebrow = "HASTEN"
+lead = "Bidali zure lehen dokumentua endpoint tipatu batera eta jaso JSON egituratua hiru urratsetan. Ez dago eredu-entrenamendurik, ez prompt engineering-ik."
+title = "Quickstart"
+
+[portal.docs.quickstart.callout]
+bodyAfterLink = "kopiatu-itsasteko errezetetarako."
+bodyBeforeLink = "integratu dei bera pipeline batean balioztapena, ezkutatzea eta entrega kateatzeko — edo jarri agente baten eskura MCP bidez. Ikusi"
+label = "Hurrengoa:"
+link = "Playbookak"
+
+[portal.docs.quickstart.step1]
+body = "Sortu esparru mugatuko gako bat Azpiegitura fitxatik. Gakoek tasa-mugak eta aukerako IP baimendu-zerrenda daramate. Esportatu zure shell-era:"
+title = "Jaulki API gako bat"
+
+[portal.docs.quickstart.step2]
+body = "POST fitxategi bat edozein endpoint tipatutara. Endpointak zehazten du jasoko duzun eskema — hemen, faktura-erauzgailua."
+snippetCaption = "erauzi faktura bat"
+title = "Bidali dokumentu bat"
+
+[portal.docs.quickstart.step3]
+body = "Erantzun bakoitza endpointaren eskemaren aurka balioztatzen da, konfiantza-puntuazioarekin eta eremu bakoitzeko jatorriarekin."
+codeCaption = "200 OK"
+title = "Irakurri emaitza egituratua"
+
+[portal.docs.rateLimits]
+burst = "Bolada"
+codeCaption = "429 Too Many Requests"
+concurrency = "Aldi berekoak"
+eyebrow = "HASTEN"
+lead = "Mugak zure planaren arabera eskalatzen dira. 429 erantzun batek Retry-After goiburua dauka; SDKek automatikoki atzera egiten dute."
+requestsPerMinute = "Eskaerak / minutu"
+title = "Tasa-mugak eta kuotak"
+
+[portal.docs.recipes]
+cloneButton = "Klonatu errezeta"
+eyebrow = "PLAYBOOKAK"
+lead = "Iturriak, eragiketak eta helmugak kateatzen dituzten muturretik muturrerako ereduak. Bakoitza klona dezakezun pipeline bati dagokio."
+title = "Errezetak"
+
+[portal.docs.sdks]
+eyebrow = "SDKAK"
+lead = "Lehen mailako bezeroak erantzun tipatuekin, berriro saiatzeko automatikoekin eta streaming kargekin. Guztiek endpoint katalogo bera jarraitzen dute."
+title = "SDK ofizialak"
+
+[portal.docs.sdks.status]
+beta = "Beta"
+deprecated = "Zaharkitua"
+
+[portal.docs.skills]
+eyebrow = "TREBETASUNAK"
+lead = "Agenteak tresna bakar gisa deitzen dituen gaitasun integratu eta izendatuak. Trebetasun bakoitza ebaluazioak lotuta dituen eragiketa-kate determinista bat da."
+title = "Agente-trebetasunak"
+
+[portal.docs.webhooks]
+codeCaption = "document.processed"
+eyebrow = "API ERREFERENTZIA"
+lead = "Harpidetu document.processed, pipeline.completed eta quota.threshold gertaeretara. Payloadak HMAC-SHA256 bidez sinatuta daude."
+title = "Webhookak"
+
+[portal.docs.webhooks.callout]
+afterHelper = "helper bat dute."
+beforeHelper = "goiburua zure sinadura-sekretuarekin, payload batean fidatu aurretik. SDKek"
+beforeSignature = "Egiaztatu"
+
+[portal.documents]
+exportCsv = "Esportatu CSV"
+search = "Bilatu fitxategi-izenaren, IDaren arabera..."
+subtitle = "Zure erakundeak prozesatu dituen dokumentu guztiak, prozesamendu-erregistro osoarekin. Edukirako sarbidea eskaeraren bidez mugatuta dago."
+title = "Dokumentuak"
+
+[portal.documents.audit]
+approved = "Onartuta"
+archived = "Artxibatuta"
+elevation = "Sarbide-igoera"
+empty = "Oraindik ez da gertaerarik erregistratu."
+extracted = "Prozesatua"
+flagged = "Berrikusi behar da"
+ingested = "Ingestatuta"
+reviewed = "Berrikusten"
+
+[portal.documents.drawer]
+sectionsAriaLabel = "Dokumentuaren xehetasun-atalak"
+
+[portal.documents.drawer.tabs]
+audit = "Auditoria"
+extractions = "Erauzketak"
+overview = "Ikuspegi orokorra"
+
+[portal.documents.elevation]
+requestAccess = "Eskatu sarbidea"
+
+[portal.documents.elevation.active]
+description = "Aldi baterako baimena — sarbidea erregistratzen da eta denboraz mugatuta dago."
+descriptionFourEyes = "Aldi baterako baimena — pareko berrikusle bati jakinarazi zaio (lau begiko kontrola)."
+title = "Sarbidea {{time}} barru iraungiko da"
+
+[portal.documents.elevation.gated]
+description = "Edukia zero-standing-access bidez mugatuta dago. Eskaera egiteak denboraz mugatutako baimena hasten du."
+descriptionFourEyes = "Edukia zero-standing-access bidez mugatuta dago. Eskaera egiteak denboraz mugatutako baimena hasten du eta pareko berrikusle bati jakinarazten dio (lau begiko kontrola)."
+title = "Dokumentu sentikorra"
+
+[portal.documents.extractions]
+empty = "Ez da eremurik erauzi dokumentu honetatik."
+masked = "Erauzitako eremuak ezkutatuta daude. Eskatu denboraz mugatutako sarbidea dokumentu honen edukia ikusteko."
+
+[portal.documents.extractions.columns]
+confidence = "Konfiantza"
+field = "Eremua"
+value = "Balioa"
+
+[portal.documents.filters]
+all = "Guztiak"
+ariaLabel = "Iragazi dokumentuak egoeraren arabera"
+flagged = "Markatuta"
+inReview = "Berrikusten"
+processed = "Prozesatua"
+
+[portal.documents.overview]
+action = "Pipelinea / Ekintza"
+product = "Produktua"
+received = "Ordua"
+status = "Egoera"
+type = "Mota"
+user = "Erabiltzailea"
+
+[portal.documents.queue.empty]
+description = "Iturburuek dokumentuak zure pipelineetara bidali ahala, hemen agertuko dira berrikusteko."
+title = "Ez dago dokumenturik ilaran"
+
+[portal.documents.status]
+error = "Errorea"
+flagged = "Berrikusi behar da"
+inReview = "Berrikusten"
+processed = "Prozesatua"
+
+[portal.documents.table]
+auto = "Automatikoa"
+editorAction = "Editorea"
+empty = "Ez dago iragazki honekin bat datorren dokumenturik."
+rowActions = "Errenkadako ekintzak"
+sensitiveLabel = "Sentikorra"
+sensitiveTitle = "Sentikorra — sarbidea behar da"
+
+[portal.documents.table.columns]
+action = "Pipelinea / Ekintza"
+document = "Dokumentua"
+product = "Produktua"
+status = "Egoera"
+time = "Ordua"
+user = "Erabiltzailea"
+
+[portal.editorAdmin]
+subtitle = "Hedatu Stirling PDF Editor, parekatu norberak ostatatutako instantziak zure erakundearekin, eta kudeatu martxan dagoen flota — helburuak, osasuna, kredentzialak eta offline aktibazioa leku bakarrean."
+title = "Editorearen hedapena"
+
+[portal.editorAdmin.health.columns]
+activeUsers = "Erabiltzaile aktiboak"
+host = "Host"
+lastSeen = "Azken aldiz ikusita"
+region = "Eskualdea"
+status = "Egoera"
+version = "Bertsioa"
+
+[portal.editorAdmin.health.empty]
+description = "Hedatu helburu bat eta parekatu, instantzien osasuna zuzenean hemen ikusteko."
+title = "Ez dago instantziarik txostenik bidaltzen"
+
+[portal.editorAdmin.offlineActivation]
+enterpriseTag = "Enterprise"
+generateButton = "Sortu offline sorta"
+lockCopy = "Offline eta on-prem aktibazioa Enterprise planaren parte da."
+subtitle = "Sortu sinatutako aktibazio-sorta bat offline edo on-prem instalazio baterako, kanporako sare-biderik gabe. Transferitu instantziara eta aplikatu lehen exekuzioko konfigurazioan."
+talkToSales = "Jarri harremanetan salmentekin"
+title = "Sarez isolatutako aktibazioa"
+
+[portal.editorAdmin.offlineActivation.readyBanner]
+description = "{{file}} sinatuta dago eta transferitzeko prest. Instantzia bat aktibatzen du eta 14 egun barru iraungitzen da."
+title = "Sorta prest"
+
+[portal.editorAdmin.pairing]
+generated = "Sortuta ✓"
+generateNewCode = "Sortu kode berria"
+lockCopy = "IaC hornikuntza Enterprise planaren parte da."
+rotate = "Biratu"
+talkToSales = "Jarri harremanetan salmentekin"
+
+[portal.editorAdmin.sections.health]
+sub = "Txostenak bidaltzen dituen Editor instantzia bakoitza — bertsioa, eskualdea, egoera, azken aldiz ikusita eta erabiltzaile aktiboak."
+title = "Instantzien osasuna"
+
+[portal.editorAdmin.sections.pairing]
+sub = "Konektatu norberak ostatatutako editore bat erakunde honetara. Sortu token bat, eman kode labur bat edo konektatu IaC bidez."
+title = "Parekatzea"
+
+[portal.editorAdmin.sections.targets]
+sub = "Editor non exekutatzen den. Kopiatu zatitxo bat norberak ostatatutako instantzia bat martxan jartzeko, edo erabili Managed Cloud eragiketarik gabe."
+title = "Hedapen-helburuak"
+
+[portal.editorAdmin.serviceToken]
+currentToken = "Uneko tokena"
+lastRotated = "Azken biraketa"
+rotateButton = "Biratu zerbitzu-tokena"
+subtitle = "Instantziek kredentzial honekin autentifikatzen dira erakundean. Biratu programatutako maiztasunez edo berehala, filtrazio bat susmatuz gero."
+title = "Zerbitzu-tokena"
+
+[portal.editorAdmin.serviceToken.rotatedBanner]
+description = "Token berri bat jaulki da. Eguneratu norberak ostatatutako instantzia bakoitzaren STIRLING_SERVICE_TOKEN 24 orduko grazia-epearen barruan; bestela offline geratuko dira."
+title = "Biratu martxan dauden instantziak"
+
+[portal.editorAdmin.status]
+degraded = "Degradatuta"
+healthy = "Osasuntsu"
+offline = "Offline"
+pairing = "Parekatzen"
+
+[portal.editorAdmin.targets]
+instanceCount_one = "{{count}} instantzia"
+instanceCount_other = "{{count}} instantzia"
+talkToSales = "Jarri harremanetan salmentekin"
+upgradePlan = "Berritu plana"
+
+[portal.editorAdmin.targets.lock]
+enterprise = "On-prem eta Kubernetes bidezko norberak ostatatzea Enterprise planaren parte dira."
+paid = "Docker eta Kubernetes bidezko norberak ostatatzea ordaindutako plan batean desblokeatzen da."
+
+[portal.editorAdmin.targets.state]
+available = "Eskuragarri"
+locked = "Blokeatuta"
+running = "Martxan"
+
+[portal.errorBoundary]
+description = "Ikuspegi honek ustekabeko errore bat izan du. Saiatu berriro, edo aukeratu alboko barrako beste atal bat."
+retry = "Saiatu berriro"
+title = "Zerbait gaizki atera da orri honetan"
+
+[portal.home.editor]
+activeUsers = "{{n}} aktibo"
+invite = "Gonbidatu taldekideak"
+name = "Stirling PDF Editor"
+open = "Ireki arakatzailean"
+updated = "eguneratua {{time}}"
+
+[portal.home.editor.target]
+cloud = "Managed Cloud"
+docker = "Norberak ostatatua · Docker"
+kubernetes = "Norberak ostatatua · Kubernetes"
+
+[portal.home.greeting]
+afternoon = "Arratsalde on"
+evening = "Gabon"
+morning = "Egun on"
+
+[portal.home.onboarding]
+dismiss = "Baztertu konfigurazioa"
+notStarted = "Hasi gabe"
+progress = "{{done}} / {{total}} eginda"
+title = "Amaitu konfigurazioa"
+
+[portal.home.onboarding.enterprise]
+body = "Erakunde osoko SSO + SCIM + RBAC, konprometitutako bolumen-prezioak eta sarez isolatutako hedapena."
+cta = "Hasi proba"
+ctaQuote = "Eskatu aurrekontua"
+lead = "250+ langilerentzat."
+tag = "Enterprise"
+
+[portal.home.onboarding.steps.editor]
+blurb = "Hedatu mahaigaineko aplikazioa, betiko doan."
+title = "Deskargatu PDF Editor"
+
+[portal.home.onboarding.steps.policies]
+blurb = "{{active}} aktibo · {{recommended}} gomendatu"
+chip = "{{active}} aktibo"
+title = "Aktibatu gidalerroak"
+
+[portal.home.onboarding.steps.sources]
+blurb = "{{connected}} konektatuta · PDF bakoitza gobernatuta iristen den tokian"
+chip = "{{connected}} konektatuta"
+title = "Konektatu zure iturburuak"
+
+[portal.home.quickActions]
+subtitle = "Gaurko zeregin nagusiak"
+title = "Ekintza azkarrak"
+
+[portal.home.quickActions.buildPipeline]
+blurb = "3 urratseko konposatzailea idatzitako eragiketa-liburutegiaren gainean"
+title = "Eraiki pipeline bat"
+
+[portal.home.quickActions.connectSource]
+blurb = "S3, agenteak, webhooks, zaindutako karpetak"
+title = "Konektatu iturburu bat"
+
+[portal.home.quickActions.issueApiKey]
+blurb = "Esparru mugatuko gakoa, tasa-mugekin eta IP baimen-zerrendarekin"
+title = "Jaulki API gako bat"
+
+[portal.infrastructure]
+manageEditorDeployment = "Kudeatu Editorearen hedapena"
+sectionsAriaLabel = "Azpiegitura-atalak"
+subtitle = "Hedapenak, kredentzialak, segurtasun-jarrera, biltegiratzea eta auditoria-arrastoa zure Stirling lan-eremurako."
+title = "Azpiegitura"
+
+[portal.infrastructure.apiKeys]
+createKey = "Sortu gakoa"
+heading = "API gakoak"
+subheading = "Esparru mugatuko kredentzialak, gako bakoitzeko tasa-mugekin, baimenekin eta IP baimen-zerrendekin."
+
+[portal.infrastructure.apiKeys.card]
+allowedIps = "Baimendutako IPak"
+anyIp = "Edozein IP (baimen-zerrendarik gabe)"
+created = "Sortuta"
+lastUsed = "Azken erabilera"
+permissions = "Baimenak"
+rateLimit = "Tasa-muga"
+rateLimitValue = "{{value}} eskaera/min"
+usageMonth = "Hilabete honetako erabilera"
+usageToday = "Gaurko erabilera"
+
+[portal.infrastructure.apiKeys.empty]
+description = "Sortu esparru mugatuko gako bat Stirling API deitzen hasteko."
+title = "Oraindik ez dago API gakorik"
+
+[portal.infrastructure.audit]
+filterAriaLabel = "Iragazi auditoria-gertaerak kategoriaren arabera"
+heading = "Auditoria-erregistroak"
+latencyValue = "{{value}} ms"
+noEventsInCategory = "Ez dago gertaerarik kategoria honetan."
+subheading = "Zure lan-eremuko autentifikazio-, konfigurazio- eta prozesatze-gertaera guztiak."
+
+[portal.infrastructure.audit.columns]
+actor = "Eragilea"
+event = "Gertaera"
+latency = "Latentzia"
+status = "Egoera"
+target = "Baliabidea"
+timestamp = "Denbora-zigilua"
+
+[portal.infrastructure.audit.empty]
+description = "Lan-eremuko jarduera hemen agertuko da gertatu ahala."
+title = "Ez dago auditoria-gertaerarik"
+
+[portal.infrastructure.audit.export]
+cancel = "Utzi"
+error = "Esportazioak huts egin du. Saiatu berriro."
+exportButton = "Esportatu"
+exporting = "Esportatzen…"
+fieldsLegend = "Zutabeak"
+format = "Formatua"
+open = "Esportatu"
+subtitle = "Deskargatu auditoria-gertaerak CSV edo JSON gisa. Aukeratu zein zutabe sartu."
+title = "Esportatu auditoria-erregistroa"
+
+[portal.infrastructure.audit.export.fields]
+date = "Data"
+documentName = "Dokumentuaren izena"
+ipAddress = "IP helbidea"
+outcome = "Emaitza"
+tool = "Tresna"
+username = "Erabiltzaile-izena"
+
+[portal.infrastructure.audit.filters]
+all = "Guztiak"
+auth = "Auth"
+config = "Konfig."
+elevation = "Sarbide-igoera"
+processing = "Prozesamendua"
+security = "Segurtasuna"
+
+[portal.infrastructure.audit.forbidden]
+description = "Auditoria-erregistroa taldeko arduradunentzat eta administratzaileentzat dago eskuragarri. Eskatu sarbidea zure taldeko arduradunari edo administratzaile bati."
+title = "Ez duzu sarbiderik"
+
+[portal.infrastructure.audit.metrics]
+config = "Konfig."
+elevation = "Sarbide-igoera"
+processing = "Prozesamendua"
+totalEvents = "Gertaerak guztira · 24h"
+
+[portal.infrastructure.createKey]
+cancel = "Utzi"
+createKey = "Sortu gakoa"
+done = "Eginda"
+ipAllowlistHelper = "Komaz bereizitako CIDR barrutiak. Utzi hutsik edozein IP baimentzeko."
+ipAllowlistLabel = "IP baimen-zerrenda"
+keyNameLabel = "Gakoaren izena"
+keyNamePlaceholder = "adib. Ekoizpena · ingestioa"
+permissionsLabel = "Baimenak"
+secretKeyCaption = "Gako sekretua"
+secretWarning = "Gorde hau sekretuen kudeatzaile batean. Stirling-ek hash bat baino ez du gordetzen — ez dago gero berreskuratzeko modurik."
+subtitle = "Mugatu gakoa behar duen gutxienekora. Edonoiz biratu edo baliogabetu dezakezu."
+subtitleCreated = "Kopiatu sekretu hau orain — ez da berriro erakutsiko."
+title = "Sortu API gakoa"
+titleCreated = "Gakoa sortuta"
+
+[portal.infrastructure.deployments]
+msValue = "{{value}} ms"
+throughputValue = "{{value}}/min"
+
+[portal.infrastructure.deployments.deployColumns]
+deployedBy = "Hedatu duena"
+environment = "Ingurunea"
+product = "Produktua"
+status = "Egoera"
+version = "Bertsioa"
+when = "Noiz"
+
+[portal.infrastructure.deployments.recent]
+heading = "Azken hedapenak"
+subheading = "Produktu eta inguruneetako azken zabalkundeak."
+
+[portal.infrastructure.deployments.regionColumns]
+instances = "Instantziak"
+latency = "Latentzia"
+load = "Karga"
+p99 = "P99"
+region = "Eskualdea"
+status = "Egoera"
+throughput = "Errendimendua"
+uptime = "Erabilgarritasun-denbora"
+version = "Bertsioa"
+
+[portal.infrastructure.deployments.regions]
+heading = "Eskualdeak"
+subheading = "Hedatutako Stirling eskualde bakoitzaren zuzeneko osasuna — latentzia, karga eta zabalkunde-bertsioa."
+
+[portal.infrastructure.deployments.regions.empty]
+description = "Hedatutako eskualdeak hemen agertuko dira zure lan-eremua hornitu ondoren."
+title = "Ez dago eskualderik hedatuta"
+
+[portal.infrastructure.models]
+heading = "Modeloak"
+msValue = "{{value}} ms"
+subheading = "Zure lan-eremuan dokumentuen prozesamendua elikatzen duten modelo-katalogoa eta bideratzea."
+
+[portal.infrastructure.models.byom]
+description = "Erregistratu on-prem edo norberak ostatatutako modelo bat eta lotu eskualde bati datu-egoitzak mugatutako prozesamendurako."
+title = "Ekarri zure modeloa"
+
+[portal.infrastructure.models.catalogue]
+heading = "Katalogoa"
+sub = "Zure lan-eremurako eskuragarri dauden kudeatutako modeloak, zuzeneko latentziarekin eta kostuarekin."
+subEnterprise = "Kudeatutako, norberak ekarritako eta on-prem modeloak — eskualdeka lotzeko aukerarekin."
+
+[portal.infrastructure.models.catalogue.empty]
+description = "Zure lan-eremuko katalogoko modeloak hemen agertuko dira."
+title = "Ez dago modelorik erabilgarri"
+
+[portal.infrastructure.models.columns]
+cost = "Kostua"
+latency = "Latentzia"
+load = "Karga"
+model = "Modeloa"
+status = "Egoera"
+type = "Mota"
+version = "Bertsioa"
+
+[portal.infrastructure.models.metrics]
+activeModels = "Modelo aktiboak"
+avgLatency = "Batez besteko latentzia"
+included = "Barne"
+monthlySpend = "Hileko modelo-gastua"
+
+[portal.infrastructure.models.routing]
+empty = "Ez dago bideratze-arau konfiguraturik."
+heading = "Bideratze-arauak"
+sub = "Zein modelok kudeatzen duen eragiketa bakoitza. Lehenetsia aplikatzen da arau zehatzagorik bat ez datorrenean."
+subLocked = "Bideratu eragiketak modelo zehatzetara — ordaindutako planetan eskuragarri."
+
+[portal.infrastructure.models.routing.lockedBanner]
+description = "Berritu Pro planera eragiketa eta dokumentu mota bakoitza zein modelok kudeatzen duen kontrolatzeko."
+title = "Modeloen bideratzea ordaindutako eginbidea da"
+
+[portal.infrastructure.models.routingColumns]
+default = "Lehenetsia"
+docType = "Dokumentu mota"
+modelForAria = "{{operation}} eragiketarako modeloa"
+operation = "Eragiketa"
+routedTo = "Hona bideratua"
+
+[portal.infrastructure.security.access.byok]
+description = "Eman zure KMS propioaren gako bat. Stirling-ek harekin zifratzen du, baina oraindik irakur dezake."
+label = "Ekarri zure gakoa (BYOK)"
+
+[portal.infrastructure.security.access.hyok]
+description = "Gakoak ez dira inoiz zure KMS-tik irteten. Stirling-ek zifratu-testua baino ez du gordetzen."
+label = "Gorde zure gakoa (HYOK)"
+
+[portal.infrastructure.security.access.stirling]
+description = "Stirling-ek zifratze-gakoak kudeatzen ditu. Errazena — zure aldetik gako-eragiketarik gabe."
+label = "Stirling-ek gordetako gakoak"
+
+[portal.infrastructure.security.accessPolicy]
+heading = "Dokumentuetarako sarbide-gidalerroa"
+subheading = "Atsedenean dauden prozesatutako dokumentuak nork deszifratu ditzakeen kontrolatzen du."
+
+[portal.infrastructure.security.attestations]
+heading = "Betetze-egiaztapenak"
+noReport = "Ez dago txostenik eskuragarri"
+subheading = "Esparruz esparruko auditoria-jarrera, egiaztatutako kontroletan txostenak eskuragarri direla."
+viewReport = "Ikusi txostena →"
+
+[portal.infrastructure.security.compliance]
+heading = "Betetzea"
+subheading = "Stirling plataforma estaltzen duten egiaztapenak eta ziurtagiriak."
+
+[portal.infrastructure.security.empty]
+description = "Zure lan-eremuko segurtasun-konfigurazioa hemen agertuko da."
+title = "Segurtasun-jarrera ez dago eskuragarri"
+
+[portal.infrastructure.security.hyokBanner]
+description = "HYOK erabiliz, zifratze-gakoak ez dira inoiz zure KMS-tik irteten. Stirling-ek edozein unetan baliogabetu dezakezun zifratu-testua baino ez du gordetzen eta prozesatzen."
+title = "Stirling-ek ezin ditu zure dokumentuak deszifratu"
+
+[portal.infrastructure.security.ipAllowlist]
+empty = "Ez dago IP barrutirik konfiguratuta — IP guztiak baimenduta daude."
+heading = "IP baimen-zerrenda"
+sub = "API sarbidea CIDR barruti hauetara mugatuta dago."
+subLocked = "Mugatu API sarbidea IP barruti ezagunetara — ordaindutako planetan eskuragarri."
+
+[portal.infrastructure.security.ipAllowlist.lockedBanner]
+description = "Berritu Pro planera API sarbidea sare zehatzetara mugatzeko."
+title = "IP baimen-zerrendak ordaindutako eginbidea dira"
+
+[portal.infrastructure.security.ipColumns]
+added = "Gehituta"
+addedBy = "Gehitu duena"
+cidr = "CIDR"
+label = "Etiketa"
+
+[portal.infrastructure.security.keyManagement]
+algorithm = "Algoritmoa"
+heading = "Zifratze-gakoen kudeaketa"
+keyId = "Gako-identifikatzailea"
+lastRotated = "Azken biraketa"
+rotateKey = "Biratu gakoa"
+rotationPolicy = "Biraketa-gidalerroa"
+subheading = "Atsedenean dokumentuak zifratzen dituzten gakoen zaintza — nork deszifratu dezakeen eta gakoak nola biratzen diren."
+
+[portal.infrastructure.security.managedBanner]
+description = "Bring-your-own-key (BYOK) eta hold-your-own-key (HYOK) zaintza Enterprise planean daude eskuragarri. Berritu zure KMS propioko gakoak emateko."
+title = "Zure planean, gakoak Stirling-ek kudeatzen ditu"
+
+[portal.infrastructure.security.residency.apac]
+description = "ap-southeast-1"
+label = "Asia Pazifikoa"
+
+[portal.infrastructure.security.residency.eu]
+description = "eu-west-1 · GDPR datu-muga"
+label = "Europar Batasuna"
+
+[portal.infrastructure.security.residency.us]
+description = "us-east-1 · us-west-2"
+label = "Estatu Batuak"
+
+[portal.infrastructure.security.residencyHeader]
+heading = "Datu-egoitza"
+subheading = "Dokumentuak non gordetzen eta prozesatzen diren."
+
+[portal.infrastructure.storage]
+gbValue = "{{value}} GB"
+percentUsed = "{{value}} erabilita"
+
+[portal.infrastructure.storage.empty]
+description = "Konektatutako biltegiratzea eta erabilera hemen agertuko dira."
+title = "Ez dago biltegiratzerik konfiguratuta"
+
+[portal.infrastructure.storage.lifecycle]
+active = "Aktibo"
+activeRange = "0–{{value}}d"
+archived = "Artxibatuta"
+coldStorage = "biltegiratze hotza"
+deleted = "Ezabatuta"
+never = "inoiz ez"
+purged = "garbituta"
+
+[portal.infrastructure.storage.providers]
+connect = "Konektatu"
+connected = "Konektatuta"
+heading = "Konektatutako hornitzaileak"
+subheading = "Prozesatutako artefaktuak non idazten diren."
+
+[portal.infrastructure.storage.retention]
+heading = "Atxikipena"
+subheading = "Artefaktuak bizi-zikloko ezabaketaren aurretik zenbat denboraz mantentzen diren."
+windowLabel = "Atxikipen-leiho lehenetsia"
+
+[portal.infrastructure.storage.retentionOption]
+days_one = "{{count}} egun"
+days_other = "{{count}} egun"
+never = "Ez ezabatu inoiz"
+
+[portal.infrastructure.storage.totalUsage]
+heading = "Erabilera guztira"
+progressLabel = "Erabilitako biltegiratzea"
+subheading = "Konektatutako hornitzaile guztietan kontsumitutako biltegiratzea."
+
+[portal.infrastructure.tabs]
+apiKeys = "API gakoak"
+audit = "Auditoria-erregistroak"
+deployments = "Hedapenak"
+models = "Modeloak"
+security = "Segurtasuna"
+storage = "Biltegiratzea"
+
+[portal.nav]
+agent-builder = "Agente-eraikitzailea"
+components = "Osagaiak"
+docs = "Garatzaileentzako dokumentazioa"
+documents = "Dokumentuak"
+editor = "Editorea"
+home = "Hasiera"
+infrastructure = "Azpiegitura"
+pipelines = "Pipelineak"
+policies = "Gidalerroak"
+procurement = "Erosketak"
+settings = "Ezarpenak"
+sources = "Iturburuak"
+usage = "Erabilera eta fakturazioa"
+users = "Erabiltzaileak"
+
+[portal.notifications]
+markAllRead = "Markatu guztiak irakurrita"
+title = "Jakinarazpenak"
+viewAll = "Ikusi guztiak"
+
+[portal.notifications.ariaLabel]
+none = "Jakinarazpenak, irakurri gabekorik ez"
+unread_one = "Jakinarazpenak, {{count}} irakurri gabe"
+unread_other = "Jakinarazpenak, {{count}} irakurri gabe"
+
+[portal.notifications.count]
+allRead = "guztiak irakurrita"
+loading = "kargatzen"
+new_one = "{{count}} berri"
+new_other = "{{count}} berri"
+
+[portal.notifications.empty]
+description = "Ez dago jakinarazpen berririk."
+title = "Dena eguneratuta duzu"
+
+[portal.pipelines]
+subtitle = "Backend-eko dokumentu-pipeline automatizatu guztiak: iturburu multzo baten gaineko eragiketa-kate ordenatua, abiarazle batek exekutatua. Egin klik errenkada batean haren urratsak eta iturburuak ikusteko."
+title = "Pipelineak"
+
+[portal.pipelines.actions]
+newPipeline = "Pipeline berria"
+
+[portal.pipelines.builder]
+addStep = "Gehitu tresna"
+back = "Itzuli pipelineetara"
+discard = "Baztertu aldaketak"
+enabled = "Gaituta"
+keepEditing = "Jarraitu editatzen"
+needsUpload = "Kargatutako fitxategi bat behar du"
+noToolMatches = "Ez dago zure bilaketarekin bat datorren tresnarik."
+pipelineSettings = "Pipelinearen ezarpenak"
+searchTools = "Bilatu tresnak"
+selectToolBody = "Gehitu tresna bat zure pipelinea eraikitzeko."
+selectToolTitle = "Oraindik ez dago tresnarik"
+toolSettings = "Tresnaren ezarpenak"
+unknownStep = "Eragiketa ezezaguna, bere horretan mantendu da."
+unsavedBody = "Gorde gabeko aldaketak dituzu. Gorde irten aurretik, edo baztertu?"
+unsavedTitle = "Gorde gabeko aldaketak"
+uploadUnsupported = "Kargatutako fitxategiak oraindik ez dira onartzen pipelineetan; beraz, urrats hauek ezin dira gorde: {{tools}}."
+usesDefaults = "Ezarpen lehenetsiekin exekutatzen da"
+
+[portal.pipelines.composer]
+addTool = "Gehitu tresna"
+cancel = "Utzi"
+chainEmpty = "Gehitu tresna bat zure pipelinea eraikitzen hasteko."
+create = "Sortu pipelinea"
+directory = "Irteera-karpeta"
+directoryHelp = "Zerbitzariko bide absolutua. Konfiguratutako baimendutako karpeten barruan egon behar du."
+editingUnsupported = "Tresna-parametro hauek editatzeko bistaratzea oraindik ez da onartzen."
+moveDown = "Mugitu behera"
+moveUp = "Mugitu gora"
+name = "Izena"
+namePlaceholder = "adib. Erredakzio-ekorketa"
+noSources = "Oraindik ez dago iturbururik konektatuta. Pipelinea zuzenean emandako fitxategietan exekuta daiteke hala ere."
+noToolSettings = "Tresna honek ez du ezarpen konfiguragarririk."
+operations_one = "Eragiketa ({{count}})"
+operations_other = "Eragiketak ({{count}})"
+output = "Irteera"
+removeStep = "Kendu eragiketa"
+save = "Gorde aldaketak"
+scheduleEvery = "Exekutatu behin"
+sources = "Iturburuak"
+sourcesLoading = "Iturburuak kargatzen..."
+trigger = "Abiarazlea"
+triggerManual = "Eskuz bakarrik"
+
+[portal.pipelines.composer.unit]
+days = "egun"
+hours = "ordu"
+minutes = "minutu"
+
+[portal.pipelines.delete]
+body = "Ezabatu \"{{name}}\"? Hau ezin da desegin."
+cancel = "Utzi"
+confirm = "Ezabatu"
+title = "Ezabatu pipelinea?"
+
+[portal.pipelines.detail]
+delete = "Ezabatu pipelinea"
+run = "Exekutatu orain"
+
+[portal.pipelines.empty]
+action = "Sortu pipeline bat"
+description = "Sortu zure lehen pipelinea: aukeratu zein iturburutan exekutatuko den, kateatu eragiketak eta aukeratu irteera nora joango den."
+title = "Oraindik ez dago pipelinerik"
+
+[portal.pipelines.kpi]
+active = "Aktibo"
+paused = "Pausatuta"
+total = "Pipelineak"
+
+[portal.pipelines.output]
+folder = "Idatzi karpetara"
+inline = "Itzuli fitxategiak"
+
+[portal.pipelines.run]
+completed_one = "Exekuzioa osatu da."
+completed_other = "{{count}} exekuzio guztiak osatu dira."
+empty = "Ez dago exekutatzeko ezer: iturburuek ez zuten prozesatzeko dokumenturik."
+failed = "Exekuzioak huts egin du: {{error}}"
+running = "Exekuzioa hasi da; oraindik martxan dago."
+timeout = "Exekuzioa espero baino gehiago luzatzen ari da; baliteke atzeko planoan amaitzea."
+
+[portal.pipelines.status]
+active = "Aktibo"
+paused = "Pausatuta"
+
+[portal.pipelines.table]
+name = "Pipelinea"
+sources = "Iturburuak"
+status = "Egoera"
+steps = "Urratsak"
+
+[portal.pipelines.trigger]
+folder-watch = "Karpetaren zaintza"
+manual = "Eskuzkoa"
+schedule = "Programatua"
+
+[portal.policies]
+subtitle = "Dokumentu bakoitzean tresna-pipeline bat betearazten duten automatizazio iraunkorrak. Gidalerro bakoitza kargatzean edo esportatzean aktibatzen da, bere tresna-katea exekutatzen du eta betearazitako bertsioa jatorrizkoaren alboan gordetzen du."
+title = "Gidalerroak"
+
+[portal.policies.card]
+comingSoon = "Berritu Enterprise planera"
+notSetUp = "Konfiguratu gabe"
+
+[portal.policies.categories.compliance]
+desc = "Betearazi HIPAA, GDPR, SOC 2 edo FedRAMP eskakizunak dokumentu bakoitzean."
+label = "Betetzea"
+
+[portal.policies.categories.ingestion]
+desc = "Sailkatu dokumentuak, erauzi datu egituratuak, betearazi izendapen-konbentzioak eta normalizatu orriak."
+label = "Ingestioa"
+
+[portal.policies.categories.retention]
+desc = "Ezarri dokumentuak zenbat denboraz mantentzen diren, noiz artxibatu eta noiz ezabatu."
+label = "Atxikipena"
+
+[portal.policies.categories.routing]
+desc = "Bideratu automatikoki dokumentuak talde, karpeta edo sistema egokira."
+label = "Bideratzea"
+
+[portal.policies.categories.security]
+desc = "Detektatu PII, erredaktatu, kendu eduki aktiboa eta jarri ur-marka dokumentuei."
+label = "Segurtasuna"
+
+[portal.policies.config]
+scopeAll = "Dokumentu guztiak"
+
+[portal.policies.config.compliance]
+summary = "Dokumentuak arau-esparruen arabera baliozkotzen ditu sistematik irten aurretik."
+
+[portal.policies.config.compliance.fields]
+accessLog = "Sarbide-erregistroa"
+auditTrail = "Auditoria-arrastoa"
+frameworks = "Esparruak"
+onViolation = "Betetzen ez denean"
+
+[portal.policies.config.compliance.rules]
+0 = "Esparru-eskaneatzea"
+1 = "Betearazi ekintza"
+2 = "Auditoria-arrastoa"
+
+[portal.policies.config.ingestion]
+summary = "Dokumentuak sailkatzen ditu, datu egituratuak erauzten ditu, izendapena betearazten du eta orriak normalizatzen ditu."
+
+[portal.policies.config.ingestion.fields]
+belowThreshold = "Atalasearen azpitik"
+minConfidence = "Gutxieneko konfiantza"
+
+[portal.policies.config.ingestion.rules]
+0 = "Sailkatu"
+1 = "Erauzi"
+2 = "Izena"
+3 = "Normalizatu"
+
+[portal.policies.config.retention]
+summary = "Dokumentuak zenbat denboraz mantentzen diren, noiz artxibatu eta noiz ezabatu betearazten du."
+
+[portal.policies.config.retention.fields]
+archiveAfter = "Artxibatu ondoren"
+immutableHold = "Blokeo aldaezina"
+keepFor = "Mantendu honetarako"
+
+[portal.policies.config.retention.rules]
+0 = "Atxikipen-blokeoa"
+1 = "Artxibatu automatikoki"
+2 = "Ezabaketa-blokeoa"
+
+[portal.policies.config.routing]
+summary = "Dokumentuak helmuga egokira bideratzen ditu motaren eta sailkapenaren arabera."
+
+[portal.policies.config.routing.fields]
+destination = "Helmuga"
+notify = "Jakinarazi bideratzean"
+webhookUrl = "Webhook URL"
+
+[portal.policies.config.routing.rules]
+0 = "Sailkatu automatikoki"
+1 = "Bideratu karpetara"
+2 = "Webhook jakinarazpena"
+
+[portal.policies.config.security]
+summary = "PII detektatu eta erredaktatzen du, eduki aktiboa (JavaScript) kentzen du eta dokumentuei ur-marka jartzen die."
+
+[portal.policies.config.security.rules]
+0 = "Erredaktatu PII"
+1 = "Kendu JavaScript"
+2 = "Ur-marka"
+
+[portal.policies.detail]
+enforces = "Betearazten du"
+onEveryExport = "Esportazio bakoitzean"
+onEveryUpload = "Karga bakoitzean"
+outputAsNewFile = "fitxategi berri gisa"
+outputAsNewVersion = "bertsio berri gisa"
+recentActivity = "Azken jarduera"
+retry = "Saiatu berriro"
+showLess = "Erakutsi gutxiago"
+showMore = "Erakutsi gehiago"
+sources = "Iturburuak"
+
+[portal.policies.detail.actions]
+clearHistory = "Garbitu prozesatutako historia"
+delete = "Ezabatu"
+editSettings = "Editatu ezarpenak"
+pause = "Pausatu"
+resume = "Berrekin"
+runNow = "Exekutatu orain"
+
+[portal.policies.detail.clearHistory]
+body = "Politika honek dagoeneko prozesatu dituen fitxategi guztiak ahaztuko ditu, eta hurrengo exekuzioan une honetan bere iturburuetan dagoen guztia berriro prozesatuko du. Fitxategiak berak ez dira aldatzen. Hau ezin da desegin."
+cancel = "Utzi"
+confirm = "Garbitu historia"
+title = "Prozesatutako historia garbitu?"
+
+[portal.policies.detail.emptyActivity]
+description = "Dokumentuak hemen agertuko dira politika hau exekutatzen denean."
+title = "Oraindik ez dago jarduerarik"
+
+[portal.policies.endpoints]
+addWatermark = "Ur-marka"
+autoRedact = "PII erredaktatu"
+compressPdf = "Konprimitu"
+flatten = "Lautu"
+ocrPdf = "OCR"
+sanitizePdf = "Kendu JavaScript"
+
+[portal.policies.offline]
+description = "Zure politikak gordeta daude eta konexioa leheneratzen denean agertuko dira."
+retry = "Saiatu berriro"
+title = "Backend ez dago erabilgarri"
+
+[portal.policies.stats]
+activeFor = "Aktibo"
+dataProcessed = "Prozesatutako datuak"
+docsEnforced = "Betearazitako dok."
+
+[portal.policies.status]
+active = "Aktibo"
+paused = "Pausatuta"
+
+[portal.policies.summary.active]
+description = "Kargatzean/esportatzean betearazten"
+label = "Politika aktiboak"
+
+[portal.policies.summary.categories]
+description = "Konfiguratzeko erabilgarri"
+label = "Kategoriak"
+
+[portal.policies.summary.docsEnforced]
+description = "Politika aktibo guztietan"
+label = "Betearazitako dok."
+
+[portal.policies.summary.paused]
+description = "Konfiguratuta baina ez da abiarazten"
+label = "Pausatuta"
+
+[portal.policies.wizard.actions]
+back = "Atzera"
+cancel = "Utzi"
+continue = "Jarraitu"
+enablePolicy = "Gaitu politika"
+saveChanges = "Gorde aldaketak"
+
+[portal.policies.wizard.capability.compress]
+desc = "Dokumentua konprimitu fitxategi-tamaina txikiagoa izan dezan."
+label = "Murriztu fitxategiaren tamaina"
+
+[portal.policies.wizard.capability.flatten]
+desc = "Formulario-eremuak eta oharpenak orrian bateratzen ditu, editatu ezin daitezen."
+label = "Lautu dokumentua"
+
+[portal.policies.wizard.capability.ocr]
+desc = "OCR exekutatzen du eskaneatutako orriak hautagarri eta bilagarri den testu bihur daitezen."
+label = "Egin testua bilagarri"
+
+[portal.policies.wizard.capability.redact]
+desc = "Xehetasun sentikorrak aurkitu eta beltzez estaltzen ditu — adibidez, Gizarte Segurantzako eta txartelen zenbakiak — irakurri ezin daitezen."
+label = "Erredaktatu informazio sentikorra"
+
+[portal.policies.wizard.capability.sanitize]
+desc = "Ezkutuko JavaScript kentzen du, dokumentua irekitzean ezer automatikoki exekuta ez dadin."
+label = "Kendu eduki aktiboa"
+
+[portal.policies.wizard.capability.watermark]
+desc = "Marka ikusgarri bat jartzen du (adib. “Konfidentziala”) orri guztietan."
+label = "Aplikatu ur-marka"
+
+[portal.policies.wizard.errors]
+noTools = "Gaitu gutxienez tresna bat lan-fluxuan lehenik."
+saveFailed = "Ezin izan da politika gorde. Saiatu berriro."
+
+[portal.policies.wizard.output]
+heading = "Irteera eta exekuzioa"
+
+[portal.policies.wizard.output.filenameRule]
+autoNumber = "Zenbakitze automatikoa"
+label = "Fitxategi-izenaren araua"
+placeholder = "Gehitzeko testua (aukerakoa)"
+prefix = "Aurrizkia"
+suffix = "Atzizkia"
+
+[portal.policies.wizard.output.outputAs]
+label = "Irteera honela"
+newFile = "Fitxategi berria"
+newVersion = "Bertsio berria"
+
+[portal.policies.wizard.output.runOn]
+export = "Esportazioa"
+helper = "Politika noiz abiarazten den: kargatzean edo esportatu aurretik."
+label = "Exekutatu hemen"
+upload = "Kargatzea"
+
+[portal.policies.wizard.settings]
+heading = "Ezarpenak"
+
+[portal.policies.wizard.sources]
+heading = "Iturburuak"
+loading = "Iturburuak kargatzen…"
+
+[portal.policies.wizard.tabs]
+ariaLabel = "Konfigurazio-urratsak"
+settings = "Ezarpenak"
+workflow = "Ekintzak"
+
+[portal.policies.wizard.title]
+edit = "Editatu {{category}} politika"
+setUp = "Konfiguratu {{category}} politika"
+
+[portal.policies.wizard.workflow]
+description = "Aukeratu politika honek zer egiten dion prozesatzen duen dokumentu bakoitzari."
+
+[portal.policySummary]
+activeSummary = "{{active}} / {{total}} aktibo"
+noRule = "Oraindik ez da araurik betearazi"
+subtitle = "Dokumentu bakoitzak zeharkatzen dituen automatizazio iraunkorrak, hura zein pipeline-k kudeatzen duen kontuan hartu gabe."
+title = "Zer exekutatzen den zure PDFetan"
+
+[portal.policySummary.action]
+comingSoon = "Eguneratu Enterprise-ra"
+configure = "Konfiguratu"
+setUp = "Konfiguratu"
+
+[portal.policySummary.column]
+activeRule = "Arau aktiboa"
+policy = "Politika"
+status = "Egoera"
+
+[portal.policySummary.empty]
+description = "Politikak konfiguratu ondoren, kategoriak hemen agertuko dira."
+title = "Oraindik ez dago politikarik"
+
+[portal.policySummary.state]
+active = "Aktibo"
+off = "Desaktibatuta"
+soon = "Laster"
+
+[portal.processingStatus]
+managePlan = "Kudeatu plana"
+volumeSuffix = "Prozesatutako PDFak · azken 30 egunak"
+
+[portal.procurement]
+reset = "Berrezarri erosketa (demo)"
+subtitle = "Lortu zure taldea ebaluatzea, kontratatzea eta martxan jartzea. Dokumentu guztiak leku bakarrean."
+title = "Erosketa"
+
+[portal.procurement.action]
+download = "Deskargatu"
+pay = "Ordaindu orain"
+request = "Eskatu"
+sign = "Berrikusi eta sinatu"
+upload = "Kargatu"
+
+[portal.procurement.agreement]
+agreeCta = "Adostu eta harpidetu"
+confirm = "Stirling Enterprise Agreement irakurri dut eta ados nago."
+eyebrow = "Akordioa"
+intro = "Akordio bateratu batek zure tratua estaltzen du: Master Service Agreement, Order Form, EULA eta Data Processing Agreement. Berrikusi, eta gero adostu aurrekontua harpidetza konprometitu gisa onartzeko."
+title = "Berrikusi zure enpresa-akordioa"
+
+[portal.procurement.builder]
+addons = "Gehigarriak"
+back = "Atzera"
+businessName = "Enpresaren izena"
+businessNamePlaceholder = "Zure enpresa"
+continue = "Jarraitu"
+country = "Herrialdea"
+countryEuro = "Eurogunea (EUR €)"
+countryUK = "Erresuma Batua (GBP £)"
+countryUS = "Estatu Batuak (USD $)"
+eula = "Stirling Enterprise EULA irakurri dut eta ados nago. Aurrekontu honetatik sortutako akordioa arautzen du."
+generate = "Sortu aurrekontua"
+included = "Barne"
+indemnification = "IP kalte-ordaina"
+indemnificationSub = "EULAren arabera, IP erreklamazio kalifikatuak defendatzen ditugu"
+offlineLicense = "Offline / air-gapped lizentzia"
+offlineLicenseSub = "Air-gapped self-hosted instantzia baterako deskarga daitekeen lizentzia-fitxategia"
+qbr = "Hiruhileko negozio-berrikuspenak"
+qbrSub = "Zure SEk erabilera eta roadmap-a berrikusten ditu hiruhileko bakoitzean"
+running = "{{annual}} / urte · {{years}} urteko {{tcv}}"
+s1Sub = "Zure taldea eta urtero exekutatzea espero dituzun PDFak."
+s1Title = "Zenbat prozesatuko duzu?"
+s2Sub = "Epe luzeagoek tarifa deskontatzen dute; zure zerbitzu-mailak euskarria ezartzen du."
+s2Title = "Konpromisoa eta zerbitzua"
+s3Sub = "Aurrekonturako eta horrek sortzen duen akordiorako."
+s3Title = "Zure datuak"
+serviceLevel = "Zerbitzu-maila"
+slDedicated = "Dedikatua"
+slDedicatedSub = "4 lanordu · kontu-kudeatzaile dedikatua · +30%"
+slPriority = "Lehentasunezkoa"
+slPrioritySub = "Lanegun berean · izendatutako CSM · +15%"
+slStandard = "Estandarra"
+slStandardSub = "Hurrengo laneguna · partekatutako CSM · barne"
+stepOf = "{{total}} urratsetatik {{n}}."
+term = "Epea"
+termDiscount = "{{pct}}% urte anitzeko konpromiso-deskontua aplikatuta"
+title = "Eraiki zure aurrekontua"
+training = "Onboarding eta prestakuntza"
+trainingSub = "Zuzeneko saioak zure taldea martxan jartzeko"
+users = "Erabiltzaileak guztira"
+usersPlaceholder = "adib. 250"
+volEstimated = "{{count}} erabiltzaileren arabera kalkulatua (~2.000 PDF bakoitzeko, automatizazioa barne). Editatu hobeto badakizu."
+volManual = "Zure kopurua erabiltzen. Berriro kalkulatu zure taldearen tamainaren arabera nahi duzunean."
+volNoUsers = "Ez zaude ziur? Sartu zure taldearen tamaina eta guk kalkulatuko dugu."
+volume = "Urteko PDF bolumena"
+volumePlaceholder = "adib. 1.000.000"
+years_one = "{{count}} urte"
+years_other = "{{count}} urte"
+
+[portal.procurement.docs]
+count_one = "{{count}} dok."
+count_other = "{{count}} dok."
+done = "Eginda"
+here = "Hemen zaude"
+hide = "Ezkutatu"
+optional = "Aukerakoa"
+paidAddon = "Ordainpeko gehigarria"
+show = "Erakutsi"
+subtitle = "Ibilbideko urrats bakoitzean behar duzun guztia, tratua aurrera doan heinean agertuta."
+supportingSubtitle = "SOC 2, segurtasun-berrikuspenak, zerga-inprimakiak eta gehiago, zure segurtasun- edo erosketa-taldeak eskatzen duenean prest. Batzuek behin bakarrik ordaintzeko kuota dute."
+supportingTitle = "Zure ebaluazioari euskarria ematen"
+title = "Dokumentuak"
+upcoming = "Datozenak"
+
+[portal.procurement.error]
+title = "Zerbait gaizki joan da"
+
+[portal.procurement.hero]
+company = "Zure enpresa-tratua"
+ctaAgreement = "Berrikusi eta sinatu akordioa"
+ctaLive = "Martxan zaude"
+ctaPayment = "Gehitu ordainketa"
+ctaQuote = "Berrikusi zure aurrekontua"
+ctaTrial = "Eraiki zure aurrekontua"
+eyebrow = "Enterprise erosketa"
+inviteTeammates = "Gonbidatu taldekideak"
+keyDocs = "Dokumentu nagusiak"
+nextStep = "Hurrengo urratsa: {{action}}"
+notStarted = "Hasi gabe"
+open = "Ireki erosketa"
+scheduleCall = "Programatu dei bat"
+setup1Sub = "Gonbidatu zure taldekideak"
+setup1Title = "Hedatu PDF Editor"
+setup2Sub = "Aktibatu prozesamendua editoreetan eta beste iturburu batzuetan"
+setup2Title = "Konektatu PDF Processor"
+setup3Sub = "Aktibatu Security, Compliance, Routing edo Retention behar dituzunean"
+setup3Title = "Gehitu gomendatutako politikak"
+
+[portal.procurement.journey]
+daysLeft_one = "{{count}} egun geratzen da"
+daysLeft_other = "{{count}} egun geratzen dira"
+engineerLabel = "Zure solutions engineer"
+eyebrow = "Zure hedapena"
+live = "Stirling Enterprise-n martxan zaude"
+nextStep = "Hurrengo urratsa: {{action}}"
+subtitle = "Zure solutions engineer urrats guztietan dago. Hurrengo ekintza bat aldi berean; kontrol-zerrenda osoa behean dago."
+title = "Probalditik martxan egotera, bide gidatu bakarra"
+trialTitle = "Enterprise probaldia"
+
+[portal.procurement.journeySteps.agreement]
+blurb = "Sinadura batek MSA, order form, EULA eta DPA estaltzen ditu."
+gatingAction = "Berrikusi eta sinatu zure akordioa"
+label = "Akordioa"
+
+[portal.procurement.journeySteps.implementation]
+blurb = "Hornitu zure lan-eremua eta exekutatu go-live playbook-a."
+gatingAction = "Zure lan-eremua hornitzen"
+label = "Inplementazioa"
+
+[portal.procurement.journeySteps.payment]
+blurb = "Ordaindu txartelarekin, banku-transferentziaz edo erosketa-agindu baten kontra."
+gatingAction = "Berretsi ordainketa"
+label = "Ordainketa"
+
+[portal.procurement.journeySteps.quote]
+blurb = "Berrikusi bolumen konprometituaren prezioak eta kontratuaren epea."
+gatingAction = "Onartu zure aurrekontua"
+label = "Aurrekontua"
+
+[portal.procurement.journeySteps.trial]
+blurb = "Ebaluatu Stirling zure dokumentu eta lan-fluxuen aurka."
+gatingAction = "Eraiki zure aurrekontua"
+label = "Probaldia"
+
+[portal.procurement.license]
+copied = "Kopiatuta"
+copy = "Kopiatu gakoa"
+downloadError = "Oraindik ezin izan da offline lizentzia-fitxategia sortu — saiatu berriro une batean."
+downloadOffline = "Deskargatu offline lizentzia (.lic)"
+hint = "Itsatsi gako hau self-hosted instantzia batean aktibatzeko, edo gorde zure erregistroetarako. Gorde seguru."
+label = "Zure lizentzia-gakoa"
+
+[portal.procurement.link]
+cta = "Lotu kontua"
+description = "Erosketa zure lotutako Stirling kontuan exekutatzen da: horrela hornitzen dugu probaldia, aurrekontuaren prezioa kalkulatzen dugu eta fakturazioa hasten dugu. Lotu kontu bat hasteko."
+eyebrow = "Enterprise"
+title = "Lotu zure kontua hasteko"
+
+[portal.procurement.live]
+description = "Zure harpidetza aktibo dago eta zure lizentzia jaulkita dago. Zure taldea hornituta dago eta fakturazioa hasi da."
+eyebrow = "Martxan"
+title = "Stirling Enterprise-n martxan zaude"
+
+[portal.procurement.locked]
+description = "Probaldi-gakoak, bolumen konprometituaren aurrekontuak, sinadura bakarreko akordioa, ordainketa eta zure dokumentu-liburua hemen egongo dira enterprise ebaluazioa hasten duzunean."
+eyebrow = "Enterprise soilik"
+talkToSales = "Hitz egin salmentekin"
+title = "Erosketa-bidea Enterprise-rekin irekitzen da"
+
+[portal.procurement.milestone]
+accept = "Onartu eta jarraitu"
+description = "Deskargatu PDFa zure taldearekin partekatzeko, itzuli prest zaudenean onartzera edo egin aldaketak."
+download = "Deskargatu PDF"
+downloadError = "Oraindik ezin izan da aurrekontuaren PDFa deskargatu — saiatu berriro une batean."
+edit = "Editatu aurrekontua"
+eyebrow = "{{number}} aurrekontua"
+perYear = " / urte"
+preparedFor = "{{company}}-rentzat prestatua"
+tcv = "{{value}} kontratuaren balio osoa"
+title = "Zure aurrekontua prest dago"
+
+[portal.procurement.modal]
+cancel = "Utzi"
+chooseFile = "Aukeratu fitxategia"
+close = "Itxi"
+downloadBody = "Zure deskarga laster hasiko da."
+downloadCta = "Deskargatu"
+downloadTitle = "Deskargatu"
+noFile = "Ez da fitxategirik hautatu"
+payBody = "Ordaindu zure kontratu konprometitua txartelarekin edo banku-transferentziaz Stripe bidez. Zure lan-eremua ordainketa garbitu bezain laster hornituko da."
+payCta = "Jarraitu Stripe-ra"
+payTitle = "Berretsi ordainketa"
+requestBodyFree = "Eskariaren arabera sortzen dugu. Berretsi eta zure solutions engineer-ek laster bidaliko dizu."
+requestBodyPaid = "Hau ordainpeko gehigarria da. Berretsi eta zure solutions engineer-ek irismena zehaztu eta dokumentazioa bidaliko du."
+requestCta = "Eskatu"
+requestTitle = "Eskatu dokumentu hau"
+signBody = "Stirling Enterprise Agreement irekitzen du e-sinadurarako: sinadura batek MSA, order form, EULA eta DPA estaltzen ditu. Guk automatikoki kontrassinatu eta ordainketara aurreratzen zara."
+signCta = "Ireki sinatzeko"
+signTitle = "Berrikusi eta sinatu zure akordioa"
+uploadBody = "Bidali zure PO eta haren kontra fakturatuko dizugu zure baldintzetan. Arrastatu PDFa edo aukeratu fitxategi bat behean."
+uploadCta = "Kargatu erosketa-agindua"
+uploadTitle = "Kargatu zure erosketa-agindua"
+
+[portal.procurement.payment]
+description = "Zure aurrekontua onartuta dago eta zure lizentzia dagoeneko aktibo dago — zure taldea berehala has daiteke. Ordaindu lehen faktura prest zaudenean; hemen ordaindu edo deskarga dezakezu, emailik behar gabe."
+downloadInvoice = "Deskargatu faktura"
+simulate = "Simulatu ordainketa jasota (demo)"
+title = "Harpidetza sortuta"
+viewInvoice = "Ikusi eta ordaindu faktura"
+
+[portal.procurement.schedule]
+fallback = "Ezin izan da programatzailea kargatu."
+fallbackLink = "Ireki programazioa fitxa berri batean"
+subtitle = "Zure solutions engineer-ek hedapenean zehar gidatuko du zure taldea. Aukeratu ondo datorkizun ordua."
+title = "Programatu dei bat"
+
+[portal.procurement.status]
+action = "Ekintza behar da"
+available = "Erabilgarri"
+complete = "Osatuta"
+pending = "Zain"
+request = "Eskatuta"
+
+[portal.procurement.trial]
+body = "Luzatzeak 7 egun gehitzen ditu eta zure solutions engineer-i jakinarazten dio."
+bodyMaxed = "Luzapen guztiak erabili dituzu — hitz egin zure solutions engineer-ekin denbora gehiago behar baduzu."
+cancel = "Utzi probaldia"
+extend = "Luzatu 7 egun"
+maxed = "Mugara iritsita"
+subtitle = "Zure doako probaldia {{date}} arte doa. Ez da txartelik behar."
+title = "Enterprise probaldia"
+
+[portal.procurement.upsell]
+homeBadge = "Enterprise"
+homeBody = "Bolumen konprometituaren prezioak, erakunde osorako SSO + SCIM + RBAC, 90 eguneko auditoretza aldaezina eta SE dedikatua."
+homeCta = "Hasi probaldia →"
+homeHeadline = "Prozesatu milioika PDF."
+
+[portal.recentActivity]
+title = "Azken jarduera"
+viewAll = "Ikusi dena"
+
+[portal.recentActivity.empty]
+description = "Pipeline exekuzioak, hedapenak eta agente-gertaerak hemen agertuko dira."
+title = "Oraindik ez dago ezer hemen"
+
+[portal.search]
+ariaLabel = "Bilatu"
+placeholder = "Bilatu Stirling — endpointak, pipelineak, dokumentuak…"
+
+[portal.search.empty]
+noActionsDescription = "Ekintza azkarrak hemen agertuko dira erabilgarri daudenean."
+noActionsTitle = "Ez dago ekintza azkarrik"
+noMatches = "Ez dago bat-etortzerik \"{{query}}\"-rentzat"
+noMatchesDescription = "Saiatu beste gako-hitz batekin edo arakatu katalogoa."
+
+[portal.settings.groups]
+admin = "Admin"
+
+[portal.settings.sections]
+account-link = "Kontu-lotura"
+
+[portal.shell.header]
+accountFallback = "Kontua"
+accountMenu = "Kontu-menua"
+darkMode = "Modu iluna"
+lightMode = "Modu argia"
+search = "Bilatu"
+searchPlaceholder = "Bilatu…"
+signOut = "Amaitu saioa"
+switchToDark = "Aldatu gai ilunera"
+switchToLight = "Aldatu gai argira"
+
+[portal.shell.sidebar]
+appEditor = "Editorea"
+appProcessor = "Prozesadorea"
+brandSuffix = "Stirling Processor"
+docsCount = "{{docs}} dok."
+linkAccount = "Lotu Stirling kontua"
+planEditor = "Editor plana"
+planEnterprise = "Enterprise plana"
+planProcessor = "Processor plana"
+primaryNav = "Nabigazio nagusia"
+switchApp = "Aldatu aplikazioa"
+
+[portal.sources]
+subtitle = "Stirling-era dokumentuak elikatzen dituzten sarrera-konexio berrerabilgarriak. Konfiguratu konexio bat behin, eta erreferentziatu nahi adina politikatan. Egin klik errenkada batean haren konfigurazioa eta zein politikek erabiltzen duten ikusteko."
+title = "Iturburuak"
+
+[portal.sources.actions]
+agentBuilder = "Agent Builder"
+connectSource = "Konektatu iturburua"
+
+[portal.sources.delete]
+body = "Ezabatu \"{{name}}\"? Hau ezin da desegin. Hura erreferentziatzen duten politikak eguneratu beharko lirateke."
+cancel = "Utzi"
+confirm = "Ezabatu"
+title = "Ezabatu iturburua?"
+
+[portal.sources.detail]
+closeAriaLabel = "Itxi xehetasuna"
+delete = "Ezabatu iturburua"
+docs24h = "Azken 24 h"
+docs30d = "Azken 30 egunak"
+docsTotal = "Ikusitakoak guztira"
+docsTrend = "Azken 30 egunetako dokumentuak"
+documents = "Dokumentuak"
+edit = "Editatu"
+notReferenced = "Ez du politikak erreferentziatzen; beraz, seguru ezaba daiteke."
+pause = "Pausatu"
+resume = "Berrekin"
+subtitle = "{{type}} · {{status}}"
+usedBy = "Honek erabilia"
+
+[portal.sources.empty]
+description = "Konektatu karpeta bat (eta, laster, hodeiko biltegiratzea), zure politikek dokumentuak nondik hartu izan dezaten."
+title = "Oraindik ez dago iturbururik konektatuta"
+
+[portal.sources.kpi]
+inUse = "Erabiltzen"
+total = "Konexioak"
+unused = "Erabili gabe"
+
+[portal.sources.status]
+active = "Aktibo"
+disabled = "Desgaituta"
+unused = "Erabili gabe"
+
+[portal.sources.table]
+source = "Iturburua"
+status = "Egoera"
+usedBy = "Politikak"
+
+[portal.sources.types.editor]
+label = "Editorea"
+
+[portal.sources.types.folder]
+description = "Begiratu zerbitzariko direktorio bat dokumentu berriak detektatzeko."
+label = "Karpeta"
+
+[portal.sources.types.folder.fields.directory]
+helperText = "Stirling-ek prozesatzeko fitxategiak zaintzen dituen bide absolutua."
+label = "Direktorioaren bidea"
+placeholder = "/data/incoming"
+
+[portal.sources.types.folder.fields.identity]
+helperText = "Eduki-egiaztapenak aldatutako fitxategi bakoitza irakurtzen du; beraz, edukia aldatzen ez duten izen-aldaketak eta ukituak ez dira berriro prozesatzen."
+label = "Aldaketen detekzioa"
+
+[portal.sources.types.folder.fields.identity.options]
+hash = "Tamaina, data eta eduki-egiaztapena"
+stat = "Tamaina eta aldatze-data"
+
+[portal.sources.types.folder.fields.mode]
+label = "Irakurketa-modua"
+
+[portal.sources.types.folder.fields.mode.options]
+consume = "Kontsumitu: prozesatu fitxategi bakoitza behin"
+snapshot = "Snapshot: berrirakurri karpeta exekuzio bakoitzean"
+
+[portal.sources.types.folder.fields.recursive]
+label = "Karpetaren sakonera"
+
+[portal.sources.types.folder.fields.recursive.options]
+all = "Sartu azpikarpetak"
+top = "Goiko maila soilik"
+
+[portal.sources.types.unknown]
+label = "Iturburua"
+
+[portal.sources.wizard]
+back = "Atzera"
+cancel = "Utzi"
+continue = "Jarraitu"
+editTitle = "Editatu iturburua"
+name = "Izena"
+namePlaceholder = "adib. Erreklamazioen sarrera"
+save = "Gorde aldaketak"
+subtitle = "{{total}} urratsetatik {{current}} · {{label}}"
+title = "Konektatu iturburu bat"
+type = "Mota"
+
+[portal.sources.wizard.steps]
+chooseType = "Aukeratu mota"
+configure = "Konfiguratu"
+review = "Berrikusi eta konektatu"
+
+[portal.usage]
+managePayment = "Kudeatu ordainketa"
+subtitle = "Stirling-ek fakturatutako PDF guztien kontsumoa, fakturak eta plan-kudeaketa, kontsola bakarrean."
+title = "Erabilera eta fakturazioa"
+
+[portal.usage.error]
+loadWallet = "Ezin izan da wallet-a kargatu"
+openStripePortal = "Ezin izan da Stripe ataria ireki"
+walletUnavailable = "Wallet ez dago erabilgarri: {{status}} {{statusText}}"
+
+[portal.usage.sessionExpired]
+action = "Hasi saioa berriro"
+body = "Zure Stirling kontuaren saioa iraungi da. Hasi saioa berriro fakturazioa ikusteko — zure instantziak lotuta jarraitzen du."
+title = "Saioa iraungi da"
+
+[portal.users]
+title = "Erabiltzaileak"
+
+[portal.users.roles]
+subtitle = "Rol guztiak plan guztietan daude — bakoitzak egin dezakeena finkoa da erakunde osoan."
+title = "Rolak"
+
+[portal.users.roles.admin]
+label = "Admin (erakundearen jabea)"
+summary = "Lan-eremuaren, ezarpenen eta kideen gaineko gobernantza osoa."
+
+[portal.users.roles.admin.permissions]
+0 = "Kudeatu erabiltzaileak, taldeak eta rolak"
+1 = "Kudeatu integrazio guztiak, S3 konexioak barne"
+2 = "Eman edo kendu atarirako sarbidea"
+3 = "Team Owner-ek egin dezakeen guztia"
+
+[portal.users.roles.guest]
+label = "Gonbidatua"
+summary = "Sarbide mugatua edo web bidezkoa soilik; ezin ditu konfigurazio pertsonalak eduki."
+
+[portal.users.roles.guest.permissions]
+0 = "Web bidezko / demo erabilera soilik"
+1 = "Ez API gakorik edo integraziorik"
+2 = "Ez atarirako sarbiderik"
+3 = "Irakurtzeko soilik partekatuta dagoenean"
+
+[portal.users.roles.member]
+label = "Kidea"
+summary = "Erabiltzaile arrunta — partekatutako baliabideekin eta bere konfigurazioekin lan egiten du."
+
+[portal.users.roles.member.permissions]
+0 = "Erabili editorea eta partekatutako integrazioak"
+1 = "Sortu API eta MCP konfigurazio pertsonalak"
+2 = "Ikusi berarekin partekatutako talde-konfigurazioak"
+3 = "Ez S3 edo lan-eremuaren kudeaketarik"
+
+[portal.users.roles.team_owner]
+label = "Taldearen jabea"
+summary = "Talde baten jabea da — kideen baliabideak eta partekatutako konfigurazioak kudeatzen ditu."
+
+[portal.users.roles.team_owner.permissions]
+0 = "Sortu eta kudeatu taldearen S3 konexioak"
+1 = "Kudeatu taldearen jabetzako integrazio-konfigurazioak"
+2 = "Atarirako sarbidea politika lehenetsiaren bidez"
+3 = "Member-ek egin dezakeen guztia"
+
+[portal.welcome]
+ariaLabel = "Ongi etorri Stirling PDF-ra"
+badge = "Open-source"
+installEditor = "Instalatu editorea"
+inviteTeammates = "Gonbidatu taldekideak"
+openInBrowser = "Ireki arakatzailean"
+perks = "Doan betiko · Self-hostable"
+subtitle = "Munduko PDF Editor seguruena doakoa da tamaina guztietako taldeentzat. 60+ PDF eragiketa eta SSO barne."
+title = "Ongi etorri"
+titleAccent = "Stirling PDF"
 
 [printFile]
 title = "Inprimatu fitxategia"
@@ -6934,6 +9008,21 @@ manage = "Manage"
 description = "Policies and legal information for this service."
 title = "Legal Documents"
 
+[settings.licenses]
+backendDescription = "Zerbitzari honekin batera bildutako backend mendekotasunen lizentziak."
+backendLabel = "Backend lizentziak"
+backendTitle = "Backend-eko 3rd Party lizentziak"
+empty = "Ez da mendekotasunik aurkitu."
+frontendDescription = "Release build-ean bildutako frontend mendekotasunen lizentziak."
+frontendLabel = "Frontend lizentziak"
+frontendTitle = "Frontend-eko 3rd Party lizentziak"
+license = "Lizentzia"
+listDescription = "Zerrenda zuzenean UIan erakusten da release bundle-tik edo backend endpoint-etik."
+listTitle = "Bildutako mendekotasunak"
+loadError = "Ezin izan dira hirugarrenen lizentziak kargatu"
+module = "Modulua"
+version = "Bertsioa"
+
 [settings.licensingAnalytics]
 audit = "Ikuskaritza"
 plan = "Plana"
@@ -7686,7 +9775,9 @@ memberRemoved = "Kidea ongi kendu da"
 namePlaceholder = "Sartu taldearen izena"
 personal = "Pertsonala"
 removeError = "Ezin izan da kidea kendu"
+renameCancel = "Utzi izena aldatzea"
 renameError = "Ezin izan da taldea berrizendatu"
+renameSubmit = "Gorde taldearen izena"
 renameSuccess = "Taldea ongi berrizendatu da"
 
 [team.invitationBanner]
@@ -7702,6 +9793,7 @@ sendButton = "Bidali gonbidapena"
 title = "Gonbidatu taldeko kidea"
 
 [team.members]
+actions = "Kideen ekintzak"
 emailColumn = "Posta elektronikoa"
 empty = "Oraindik ez dago taldekiderik"
 nameColumn = "Izena"
@@ -7933,6 +10025,146 @@ title = "Estatistika xeheak"
 unknownEndpoint = "Amaiera-puntu ezezaguna"
 visits = "Bisitak"
 
+[users]
+lastActive = "Azken jarduera"
+learnMore = "Ikasi gehiago rolei eta sarbideari buruz."
+locked = "Blokeatuta"
+roleFor = "{{name}}-ren rola"
+rowActions = "{{name}}-ren ekintzak"
+showAll = "Erakutsi {{count}} guztiak"
+showLess = "Erakutsi gutxiago"
+subtitle2 = "Zure pertsonak, taldeak eta sarbide-mailak."
+suspended = "Etenda"
+teamActions = "Taldearen ekintzak"
+title = "Erabiltzaileak"
+you = "(zu)"
+
+[users.action]
+deleteTeam = "Ezabatu taldea"
+disableMfa = "Berrezarri MFA"
+move = "Mugitu taldera"
+reinstate = "Berrezarri"
+remove = "Kendu erakundetik"
+rename = "Aldatu taldearen izena"
+resetPw = "Berrezarri pasahitza"
+suspend = "Eten"
+unlock = "Desblokeatu kontua"
+
+[users.cap]
+addProcessor = "+ Processor"
+approver = "Politika onartzen du"
+editor = "Editorea"
+processor = "Processor"
+
+[users.confirm]
+deleteTeamBody = "Ezabatu {{name}} taldea? Taldeak hutsik egon behar du lehenik - mugitu kideak beste talde batera, eta ezin du integrazio-konfiguraziorik oraindik bere jabetzan eduki."
+deleteTeamTitle = "Ezabatu taldea"
+disableMfaBody = "Kendu {{name}}-ren MFA erregistroa? Hurrengo saio-hasieran berriro konfiguratuko du, beharrezkoa bada."
+disableMfaTitle = "Berrezarri MFA"
+removeBody = "Betiko kendu {{name}} erakundetik? Hau ezin da desegin."
+removeTitle = "Kendu kidea"
+
+[users.empty]
+description = "Gonbidatu zure taldea elkarlanean hasteko."
+title = "Oraindik ez dago kiderik"
+
+[users.group]
+addToTeam = "Gehitu taldera"
+guestCount = "{{count}} gonbidatu"
+guests = "Gonbidatuak"
+guestsDesc = "Kanpoko kolaboratzaileak, partekatu duzunera mugatuak. Editorea soilik."
+ledBy = "{{owner}}-k gidatua"
+org = "Erakundea"
+orgDesc = "Erakunde osoko agintea eta politika-onarpena dituzten jabeak"
+owners = "{{count}} jabe"
+team = "{{name}} taldea"
+teamMeta = "{{count}} pertsona"
+
+[users.invite]
+access = "Sarbidea"
+action = "Gonbidatu pertsonak"
+authOauth = "OAuth2 / SSO"
+authSaml = "SAML 2.0"
+authType = "Saioa hasteko metodoa"
+authWeb = "Pasahitza"
+create = "Sortu kontua"
+createSubtitle = "Sortu self-hosted kontu bat pasahitzarekin edo SSOrekin."
+createTitle = "Sortu kontua"
+editorDesc = "Editatu PDFak Stirling PDF Editor-en. Denek jasotzen dute hau."
+email = "Email helbidea"
+emailError = "Sartu baliozko email helbide bat"
+emailPlaceholder2 = "name@company.com"
+forceChange = "Eskatu pasahitza aldatzea lehen saio-hasieran"
+forceMfa = "Eskatu MFA konfiguratzea lehen saio-hasieran"
+method = "Nola gehitu"
+methodDirect = "Sortu kontua zuzenean"
+methodEmail = "Gonbidatu email bidez"
+password = "Pasahitza"
+passwordError = "Pasahitzak gutxienez 8 karaktere izan behar ditu"
+processorDeferred = "Gonbidapena bidalita, baina Processor sarbidea oraindik ezin izan da eman - ezarri zerrendatik elkartu ondoren."
+processorDesc = "Gobernantza-azalera, pipelineak, agenteak eta API exekutatzeko."
+role = "Rola"
+send2 = "Bidali gonbidapena"
+subtitle2 = "Mezu elektroniko bat jasoko dute zure Stirling lan-eremura sartzeko."
+team = "Taldea"
+title = "Gonbidatu pertsonak"
+username = "Erabiltzaile-izena"
+usernameError = "Erabiltzaile-izenak gutxienez 3 karaktere izan behar ditu"
+usernamePlaceholder = "jsmith"
+
+[users.loadError]
+description = "Zerbait gaizki joan da backend-era konektatzean, edo ez duzu sarbiderik. Saiatu berriro."
+title = "Ezin izan dira kideak kargatu"
+
+[users.moveTeam]
+apply = "Mugitu"
+team = "Taldea"
+title = "Mugitu taldera"
+
+[users.newTeam]
+action = "+ Talde berria"
+create = "Sortu taldea"
+emailError = "Sartu baliozko helbide elektroniko bat"
+name = "Taldearen izena"
+namePlaceholder = "adib. Finantzak"
+nameRequired = "Taldearen izena beharrezkoa da"
+owner = "Taldearen jabea"
+ownerFailed = "Taldea sortu da, baina ezin izan da jabea gonbidatu. Esleitu bat kideen zerrendatik."
+ownerHelper = "Talde bakoitzak arduradun bat du. Pertsona hori Taldearen jabe gisa gonbidatuko da, Prozesatzailea aktibatuta, eta gainerakoak gehitu ahal izango ditu. Gero berriro esleitu dezakezu."
+ownerPlaceholder = "owner@company.com"
+subtitle = "Taldekatu pertsonak haien sarbidea kudeatzen duen Taldearen jabe baten pean."
+title = "Talde berria"
+
+[users.renameTeam]
+apply = "Aldatu izena"
+name = "Taldearen izena"
+title = "Aldatu taldearen izena"
+
+[users.resetPw]
+apply = "Berrezarri pasahitza"
+confirm = "Berretsi pasahitza"
+copied = "Arbelean kopiatu da"
+copyHint = "Kopiatu hau orain - ez da berriro erakutsiko."
+email = "Bidali erabiltzaileari mezu elektroniko bat berrezarpenari buruz"
+forceChange = "Eskatu pasahitza aldatzea hurrengo saio-hasieran"
+generate = "Sortu pasahitz seguru bat"
+includePw = "Sartu pasahitz berria mezu elektronikoan"
+mismatch = "Pasahitzak ez datoz bat"
+newPassword = "Pasahitz berria"
+regen = "Birsortu"
+title = "Berrezarri pasahitza"
+tooShort = "Pasahitzak gutxienez 8 karaktere izan behar ditu"
+
+[users.role]
+guest = "Gonbidatua"
+member = "Kidea"
+orgOwner = "Erakundearen jabea"
+teamOwner = "Taldearen jabea"
+
+[users.team]
+grantProcessor = "Eman Prozesatzailea taldeari"
+revokeProcessor = "Kendu Prozesatzailea taldetik"
+
 [validateSignature]
 date = "Data"
 downloadCsv = "CSV deskargatu"
@@ -8057,13 +10289,22 @@ zoomOut = "Zoom txikitu"
 [viewer.attachments]
 addAttachment = "Gehitu eranskina"
 close = "Itxi eranskinak"
+closeSidebar = "Itxi eranskinen alboko barra"
+download = "Deskargatu eranskina"
 empty = "Ez dago eranskinik dokumentu honetan"
 loading = "Eranskinak kargatzen..."
 noDocument = "Ireki PDF bat bere eranskinak ikusteko."
 noMatch = "Ez dago zure bilaketarekin bat datorren eranskinik"
 noSupport = "Eranskinetarako euskarria ez dago erabilgarri ikusgailu honetan."
+retry = "Saiatu berriro"
 searchPlaceholder = "Bilatu eranskinak"
 title = "Eranskinak"
+
+[viewer.bookmarks]
+bookmarkTitle = "Laster-markaren izenburua"
+closeSidebar = "Itxi laster-marken alboko barra"
+collapseAll = "Tolestu laster-marka guztiak"
+expandAll = "Zabaldu laster-marka guztiak"
 
 [viewer.comments]
 addComment = "Gehitu iruzkina"
@@ -8075,6 +10316,7 @@ clearAll = "Ezabatu iruzkin guztiak"
 clearAllDescription = "Honek albo-barratik iruzkinak eta erantzunak kentzen ditu, dokumentuan erantsitako edozein anotazio mantenduz."
 clearAllTitle = "Iruzkin guztiak ezabatu?"
 close = "Itxi iruzkinak"
+closeSidebar = "Itxi iruzkinen alboko barra"
 deleteAnnotationAndComment = "Ezabatu anotazioa eta iruzkina"
 deleteDescription = "Anotazio honek iruzkin bat du erantsita. Alboko barratik iruzkina bakarrik ken dezakezu anotazioa mantenduz, edo dena ezabatu."
 deleteTitle = "Kendu anotazioa iruzkinenetik?"
@@ -8106,6 +10348,11 @@ title = "Inprimaki-eremuak"
 unsavedBadge = "Gorde gabe"
 unsavedDesc = "Gorde gabeko aldaketak dituzu"
 
+[viewer.layers]
+closeSidebar = "Itxi geruzen alboko barra"
+hideAll = "Ezkutatu geruza guztiak"
+showAll = "Erakutsi geruza guztiak"
+
 [viewer.link]
 delete = "Ezabatu esteka"
 
@@ -8135,6 +10382,9 @@ resultsOf = " / {{total}}"
 
 [viewer.signature]
 delete = "Ezabatu sinadura"
+
+[viewer.thumbnails]
+closeSidebar = "Itxi miniaturen alboko barra"
 
 [viewPdf]
 tags = "view,read,annotate,text,image"
@@ -8562,6 +10812,7 @@ loading = "Pertsonak kargatzen..."
 locked = "blokeatuta"
 lockedBadge = "Blokeatuta"
 loginRequired = "Gaitu saio-hasiera modua lehenik"
+memberActions = "Kidearen ekintzak"
 noMembersFound = "Ez da kiderik aurkitu"
 role = "Rola"
 searchMembers = "Bilatu kideak..."
@@ -8571,6 +10822,7 @@ unlockAccount = "Desblokeatu kontua"
 unlockUserError = "Erabiltzaile-kontua desblokeatzeak huts egin du"
 unlockUserSuccess = "Erabiltzaile-kontua arrakastaz desblokeatu da"
 user = "Erabiltzailea"
+userInfo = "Erabiltzailearen informazioa"
 
 [workspace.people.actions]
 upgrade = "Eguneratu"
@@ -8716,6 +10968,7 @@ removeMemberError = "Ezin izan da erabiltzailea taldetik kendu"
 removeMemberSuccess = "Erabiltzailea taldetik kendu da"
 renameTeamLabel = "Taldea berrizendatu"
 system = "Sistema"
+teamActions = "Taldearen ekintzak"
 teamName = "Taldearen izena"
 teamNotFound = "Ez da taldea aurkitu"
 title = "Taldeak"

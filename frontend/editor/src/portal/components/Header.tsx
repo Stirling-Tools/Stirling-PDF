@@ -12,7 +12,6 @@ import {
   ChevronDownIcon,
 } from "@portal/components/icons";
 import { NotificationsDropdown } from "@portal/components/NotificationsDropdown";
-import { MocksToggle } from "@portal/components/MocksToggle";
 import "@portal/components/Header.css";
 
 function ThemeToggle() {
@@ -43,9 +42,9 @@ function ThemeToggle() {
 function TierSwitcher() {
   const { tier, setTier, isDerived } = useTier();
   const info = TIER_INFO[tier];
-  // When mocks are off, the tier is derived from the real link/wallet state —
-  // pair the dropdown with the mocks toggle (hidden in prod) so testing real
-  // billing flows can't be perturbed by accidentally flipping the mock tier.
+  // In the app the tier is derived from the real link/wallet state and can't
+  // be switched by hand; the dropdown only renders where the tier is pinned
+  // (Storybook / demo surfaces — see TierProvider's initialTier).
   if (isDerived) return null;
   return (
     <Dropdown.Root align="end">
@@ -53,15 +52,18 @@ function TierSwitcher() {
         <Button
           type="button"
           variant="quiet"
+          justify="start"
           className="portal-header__tier-btn"
+          leftSection={
+            <span
+              className="portal-header__tier-dot"
+              style={{ background: info.dotColor }}
+              aria-hidden
+            />
+          }
+          rightSection={<ChevronDownIcon size={14} />}
         >
-          <span
-            className="portal-header__tier-dot"
-            style={{ background: info.dotColor }}
-            aria-hidden
-          />
           <span className="portal-header__tier-label">{info.label}</span>
-          <ChevronDownIcon size={14} />
         </Button>
       </Dropdown.Trigger>
       <Dropdown.Menu width="12rem">
@@ -143,7 +145,6 @@ export function Header() {
       </Button>
 
       <div className="portal-header__right">
-        <MocksToggle />
         <ThemeToggle />
         <NotificationsDropdown />
         <TierSwitcher />

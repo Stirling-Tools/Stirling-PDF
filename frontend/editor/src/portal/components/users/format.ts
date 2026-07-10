@@ -1,6 +1,10 @@
+import type { TFunction } from "i18next";
 import type { AvatarTone, ChipAccent } from "@app/ui";
-import type { RoleId } from "@portal/api/users";
+import type { Member, RoleId } from "@portal/api/users";
 import { ROLE_TONE } from "@portal/api/users";
+
+/** Vivid tones cycled per-person so a big roster reads as distinct people. */
+const AVATAR_TONES: AvatarTone[] = ["blue", "purple", "green", "amber", "red"];
 
 /** Map the role palette onto the shared Chip accent set. */
 const ROLE_CHIP_ACCENT: Record<
@@ -20,14 +24,24 @@ export function chipAccentForRole(role: RoleId): ChipAccent {
 }
 
 /** Seats used / limit as display copy; null limit → "Unlimited". */
-export function seatsLabel(used: number, limit: number | null): string {
-  return limit === null ? `${used} · Unlimited` : `${used} / ${limit}`;
+export function seatsLabel(
+  t: TFunction,
+  used: number,
+  limit: number | null,
+): string {
+  return limit === null
+    ? t("portal.users.seats.unlimited", { used })
+    : t("portal.users.seats.limited", { used, limit });
 }
 
 /**
- * Avatar tone for a member, keyed off their role so the roster reads as a
- * legend for the role catalogue. Falls back to neutral for unknown roles.
+ * A stable avatar tone for a member, hashed from their identity so everyone
+ * gets a distinct, consistent colour (role is conveyed by the row's controls,
+ * not the avatar).
  */
-export function avatarToneForRole(role: RoleId): AvatarTone {
-  return (ROLE_TONE[role] ?? "neutral") as AvatarTone;
+export function avatarToneForMember(m: Member): AvatarTone {
+  const key = m.username || m.name || m.id || "";
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) | 0;
+  return AVATAR_TONES[Math.abs(h) % AVATAR_TONES.length];
 }

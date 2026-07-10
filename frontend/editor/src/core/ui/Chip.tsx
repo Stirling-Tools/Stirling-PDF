@@ -36,6 +36,8 @@ export interface ChipProps extends Omit<
   onClick?: () => void;
   /** Leading status dot. Use for status-style chips. */
   showDot?: boolean;
+  /** Dashed "box-cut" outline with no fill - for add/placeholder affordances. */
+  dashed?: boolean;
   style?: CSSProperties;
   children?: ReactNode;
   className?: string;
@@ -52,6 +54,7 @@ export function Chip({
   onRemove,
   onClick,
   showDot,
+  dashed,
   style,
   children,
   className,
@@ -63,6 +66,7 @@ export function Chip({
     `sui-chip--${variant}`,
     onClick ? "sui-chip--interactive" : "",
     loading ? "sui-chip--loading" : "",
+    dashed ? "sui-chip--dashed" : "",
     className ?? "",
   ]
     .filter(Boolean)

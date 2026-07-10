@@ -28,6 +28,7 @@ import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.InProcessPolicyStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
+import stirling.software.proprietary.util.SecretMasker;
 
 /**
  * Tests for {@link SourceController}'s delete guard: a source still referenced by a policy is
@@ -107,6 +108,80 @@ class SourceControllerTest {
     @Test
     void deletingAMissingSourceIsNotFound() {
         assertEquals(404, controller.delete("nope").getStatusCode().value());
+    }
+
+    @Test
+    void readsReturnSecretsAsTheRedactionSentinel() {
+        Source saved = sourceStore.save(s3Source("shh"));
+
+        Source read = controller.get(saved.id()).getBody();
+
+        assertEquals(SecretMasker.REDACTED, read.options().get("secretAccessKey"));
+        assertEquals("AKIAEXAMPLE", read.options().get("accessKeyId"));
+        // The store itself keeps the real value.
+        assertEquals(
+                "shh", sourceStore.get(saved.id()).orElseThrow().options().get("secretAccessKey"));
+    }
+
+    @Test
+    void savingTheSentinelBackKeepsTheStoredSecret() {
+        Source saved = sourceStore.save(s3Source("shh"));
+
+        Source edited =
+                new Source(
+                        saved.id(),
+                        "Renamed",
+                        saved.type(),
+                        Map.of(
+                                "bucket", "inbox",
+                                "accessKeyId", "AKIAEXAMPLE",
+                                "secretAccessKey", SecretMasker.REDACTED),
+                        true,
+                        saved.owner(),
+                        saved.teamId());
+        Source response = controller.save(edited).getBody();
+
+        assertEquals(
+                "shh", sourceStore.get(saved.id()).orElseThrow().options().get("secretAccessKey"));
+        // The save response is masked too; only the store sees the real value.
+        assertEquals(SecretMasker.REDACTED, response.options().get("secretAccessKey"));
+    }
+
+    @Test
+    void savingANewSecretReplacesTheStoredOne() {
+        Source saved = sourceStore.save(s3Source("old-secret"));
+
+        Source edited =
+                new Source(
+                        saved.id(),
+                        saved.name(),
+                        saved.type(),
+                        Map.of(
+                                "bucket", "inbox",
+                                "accessKeyId", "AKIAEXAMPLE",
+                                "secretAccessKey", "new-secret"),
+                        true,
+                        saved.owner(),
+                        saved.teamId());
+        controller.save(edited);
+
+        assertEquals(
+                "new-secret",
+                sourceStore.get(saved.id()).orElseThrow().options().get("secretAccessKey"));
+    }
+
+    private static Source s3Source(String secret) {
+        return new Source(
+                null,
+                "Bucket intake",
+                "s3",
+                Map.of(
+                        "bucket", "inbox",
+                        "accessKeyId", "AKIAEXAMPLE",
+                        "secretAccessKey", secret),
+                true,
+                "owner",
+                null);
     }
 
     private static Source folderSource() {
