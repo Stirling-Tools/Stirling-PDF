@@ -39,7 +39,7 @@
     "@mantine/dates": "^8.3.1",
     "@mantine/dropzone": "^8.3.1",
     "@mantine/hooks": "^8.3.1",
-    "@mui/icons-material": "^9.0.0",
+    "@mui/icons-material": "^9.2.0",
     "@mui/material": "^9.0.0",
     "@posthog/react": "^1.8.2",
     "@reactour/tour": "^3.8.0",
