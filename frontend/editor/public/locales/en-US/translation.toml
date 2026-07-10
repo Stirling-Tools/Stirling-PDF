@@ -6961,11 +6961,6 @@ subtitle = "Deployments, credentials, security posture, storage, and the audit t
 title = "Infrastructure"
 
 # Fixed-enum label maps rendered via t(MAP[value]) in the infrastructure tabs.
-[portal.infrastructure.apiKeyPermission]
-admin = "Admin"
-read = "Read"
-write = "Write"
-
 [portal.infrastructure.apiKeys]
 createKey = "Create key"
 heading = "API keys"
