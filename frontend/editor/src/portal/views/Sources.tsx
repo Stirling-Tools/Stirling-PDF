@@ -27,6 +27,7 @@ import { KpiStrip } from "@portal/components/sources/KpiStrip";
 import { SourcesTable } from "@portal/components/sources/SourcesTable";
 import { SourceDetailCard } from "@portal/components/sources/SourceDetailCard";
 import { ConnectWizard } from "@portal/components/sources/ConnectWizard";
+import { CreateKeyModal } from "@portal/components/infrastructure/CreateKeyModal";
 import "@portal/views/Sources.css";
 
 /**
@@ -80,6 +81,7 @@ export function Sources() {
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [apiKeyModalOpen, setApiKeyModalOpen] = useState(false);
   const [editingSource, setEditingSource] = useState<Source | null>(null);
   const [mutating, setMutating] = useState(false);
   const [pageError, setPageError] = useState<string | null>(null);
@@ -192,6 +194,13 @@ export function Sources() {
         </div>
         <div className="portal-sources__actions">
           <AgentBuilderAction />
+          <Button
+            variant="secondary"
+            onClick={() => setApiKeyModalOpen(true)}
+            leftSection={<span aria-hidden>+</span>}
+          >
+            {t("portal.sources.actions.createApiKey")}
+          </Button>
           <Button onClick={openCreate} leftSection={<span aria-hidden>+</span>}>
             {t("portal.sources.actions.connectSource")}
           </Button>
@@ -255,6 +264,14 @@ export function Sources() {
         open={wizardOpen}
         source={editingSource ?? undefined}
         onClose={() => setWizardOpen(false)}
+        onCreated={refetch}
+      />
+
+      <CreateKeyModal
+        open={apiKeyModalOpen}
+        onClose={() => setApiKeyModalOpen(false)}
+        canCreateTeamKeys={apiKeyState.data?.canCreateTeamKeys ?? false}
+        teamName={apiKeyState.data?.teamName ?? null}
         onCreated={refetch}
       />
 

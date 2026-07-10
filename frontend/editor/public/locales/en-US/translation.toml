@@ -7913,6 +7913,7 @@ title = "Sources"
 [portal.sources.actions]
 agentBuilder = "Agent Builder"
 connectSource = "Connect source"
+createApiKey = "Create API key"
 
 [portal.sources.delete]
 body = "Delete \"{{name}}\"? This can't be undone. Policies that reference it would need to be updated."
