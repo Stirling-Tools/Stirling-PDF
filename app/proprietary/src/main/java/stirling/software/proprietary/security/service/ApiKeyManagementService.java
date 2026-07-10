@@ -93,6 +93,7 @@ public class ApiKeyManagementService {
         List<Long> ids = visible.stream().map(ApiKey::getId).toList();
         Map<Long, Long> todayById = new HashMap<>();
         Map<Long, Long> monthById = new HashMap<>();
+        Map<Long, Long> totalById = new HashMap<>();
         if (!ids.isEmpty()) {
             usageRepository
                     .countForDayByIds(ids, today)
@@ -100,6 +101,9 @@ public class ApiKeyManagementService {
             usageRepository
                     .sumSinceByIds(ids, today - (MONTH_WINDOW_DAYS - 1))
                     .forEach(r -> monthById.put(r.getApiKeyId(), r.getTotal()));
+            usageRepository
+                    .sumSinceByIds(ids, Long.MIN_VALUE)
+                    .forEach(r -> totalById.put(r.getApiKeyId(), r.getTotal()));
         }
 
         List<PortalApiKeyDto> keys =
@@ -111,7 +115,8 @@ public class ApiKeyManagementService {
                                                 k,
                                                 teamName,
                                                 zeroIfNull(todayById.get(k.getId())),
-                                                zeroIfNull(monthById.get(k.getId()))))
+                                                zeroIfNull(monthById.get(k.getId())),
+                                                zeroIfNull(totalById.get(k.getId()))))
                         .toList();
         return PortalApiKeysResponse.builder()
                 .keys(keys)
@@ -181,7 +186,7 @@ public class ApiKeyManagementService {
                                 .build());
 
         return CreatedApiKeyDto.builder()
-                .key(toDto(caller, saved, teamName, 0L, 0L))
+                .key(toDto(caller, saved, teamName, 0L, 0L, 0L))
                 .secret(rawKey)
                 .build();
     }
@@ -269,7 +274,12 @@ public class ApiKeyManagementService {
     }
 
     private PortalApiKeyDto toDto(
-            User caller, ApiKey key, String teamName, long usageToday, long usageMonth) {
+            User caller,
+            ApiKey key,
+            String teamName,
+            long usageToday,
+            long usageMonth,
+            long usageTotal) {
         return PortalApiKeyDto.builder()
                 .id(String.valueOf(key.getId()))
                 .name(key.getName())
@@ -285,6 +295,7 @@ public class ApiKeyManagementService {
                 .status(key.isActive() ? "active" : "revoked")
                 .usageToday(usageToday)
                 .usageMonth(usageMonth)
+                .usageTotal(usageTotal)
                 .canManage(canManage(caller, key))
                 .build();
     }

@@ -175,6 +175,7 @@ const API_KEYS_ALL: ApiKey[] = [
     status: "active",
     usageToday: 84210,
     usageMonth: 2410933,
+    usageTotal: 2410933,
     canManage: true,
   },
   {
@@ -188,6 +189,7 @@ const API_KEYS_ALL: ApiKey[] = [
     status: "active",
     usageToday: 6120,
     usageMonth: 188400,
+    usageTotal: 188400,
     canManage: true,
   },
   {
@@ -201,6 +203,7 @@ const API_KEYS_ALL: ApiKey[] = [
     status: "active",
     usageToday: 0,
     usageMonth: 14200,
+    usageTotal: 14200,
     canManage: true,
   },
   {
@@ -214,6 +217,7 @@ const API_KEYS_ALL: ApiKey[] = [
     status: "revoked",
     usageToday: 0,
     usageMonth: 0,
+    usageTotal: 0,
     canManage: true,
   },
 ];

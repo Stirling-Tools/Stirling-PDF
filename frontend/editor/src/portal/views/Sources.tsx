@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { Banner, Button, EmptyState, Modal, Skeleton } from "@app/ui";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import { SourcesIcon } from "@portal/components/icons";
@@ -15,12 +16,45 @@ import {
   type SourcesResponse,
   type SourceView,
 } from "@portal/api/sources";
+import {
+  fetchApiKeys,
+  type ApiKey,
+  type ApiKeysResponse,
+} from "@portal/api/infrastructure";
+import { KEY_SCOPE_LABEL } from "@portal/components/infrastructure/infraFormat";
 import { AgentBuilderAction } from "@portal/components/sources/AgentBuilderAction";
 import { KpiStrip } from "@portal/components/sources/KpiStrip";
 import { SourcesTable } from "@portal/components/sources/SourcesTable";
 import { SourceDetailCard } from "@portal/components/sources/SourceDetailCard";
 import { ConnectWizard } from "@portal/components/sources/ConnectWizard";
 import "@portal/views/Sources.css";
+
+/**
+ * Present an API key as a read-only Sources row: it shows up in the list with its
+ * usage stats but is never a policy input (type "apikey" has no edit/create path).
+ */
+function apiKeyToSourceRow(k: ApiKey, t: TFunction): SourceView {
+  const scope =
+    k.scope === "personal" || !k.teamName
+      ? t(KEY_SCOPE_LABEL[k.scope])
+      : `${t(KEY_SCOPE_LABEL[k.scope])} · ${k.teamName}`;
+  return {
+    id: `apikey:${k.id}`,
+    name: k.name,
+    type: "apikey",
+    status: k.status === "revoked" ? "disabled" : "active",
+    referenceCount: 0,
+    referencingPolicies: [],
+    config: [
+      { label: t("portal.sources.detail.apiKeyScope"), value: scope },
+      { label: t("portal.sources.detail.apiKeyPrefix"), value: k.prefix },
+      { label: t("portal.sources.detail.apiKeyLastUsed"), value: k.lastUsed },
+    ],
+    docsTotal: k.usageTotal,
+    docs24h: k.usageToday,
+    docs30d: k.usageMonth,
+  };
+}
 
 export function Sources() {
   const { t } = useTranslation();
@@ -33,6 +67,17 @@ export function Sources() {
   const { isLoading } = useSectionFlags(state);
   const refetch = useCallback(() => setVersion((v) => v + 1), []);
 
+  // API keys surface here as read-only rows (usage stats, no policy wiring). A
+  // failed/empty fetch just yields no key rows - it never blocks the sources list.
+  const apiKeyState = useAsync<ApiKeysResponse>(
+    () => fetchApiKeys(),
+    [version],
+  );
+  const apiKeyRows = useMemo(
+    () => (apiKeyState.data?.keys ?? []).map((k) => apiKeyToSourceRow(k, t)),
+    [apiKeyState.data, t],
+  );
+
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [editingSource, setEditingSource] = useState<Source | null>(null);
@@ -42,8 +87,12 @@ export function Sources() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const sources = data?.sources ?? [];
+  const sources = useMemo(
+    () => [...(data?.sources ?? []), ...apiKeyRows],
+    [data, apiKeyRows],
+  );
   const expanded = sources.find((s) => s.id === expandedId) ?? null;
+  const expandedIsApiKey = expanded?.type === "apikey";
   // Empty once the fetch settles with no sources (or fails → no data). Gates
   // both the KPI strip and the empty panel so no placeholder stat boxes sit
   // above an empty page.
@@ -53,13 +102,13 @@ export function Sources() {
   // expanded row only (empty while collapsed, so no request fires).
   const docSeriesState = useAsync<{ id: string; series: number[] }>(
     () =>
-      expandedId
+      expandedId && !expandedIsApiKey
         ? fetchSourceDocCounts(expandedId).then((series) => ({
             id: expandedId,
             series,
           }))
         : Promise.resolve({ id: "", series: [] }),
-    [expandedId],
+    [expandedId, expandedIsApiKey],
   );
   const docSeries =
     docSeriesState.data?.id === expandedId ? docSeriesState.data.series : [];
@@ -151,7 +200,9 @@ export function Sources() {
 
       {pageError && <Banner tone="danger" description={pageError} />}
 
-      {!showEmpty && <KpiStrip data={data} loading={loading} />}
+      {(loading || (data?.sources?.length ?? 0) > 0) && (
+        <KpiStrip data={data} loading={loading} />
+      )}
 
       {isLoading && (
         <div className="portal-sources__table-skeleton" aria-hidden>
@@ -196,6 +247,7 @@ export function Sources() {
           onTogglePause={togglePause}
           onDelete={requestDelete}
           busy={mutating}
+          readOnly={expandedIsApiKey}
         />
       )}
 

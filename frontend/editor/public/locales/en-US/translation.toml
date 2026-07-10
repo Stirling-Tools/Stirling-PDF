@@ -8084,6 +8084,10 @@ confirm = "Delete"
 title = "Delete source?"
 
 [portal.sources.detail]
+apiKeyLastUsed = "Last used"
+apiKeyPrefix = "Key prefix"
+apiKeyReadOnly = "Managed in Infrastructure → API keys. Shown here for visibility and usage only."
+apiKeyScope = "Scope"
 closeAriaLabel = "Close detail"
 delete = "Delete source"
 docs24h = "Last 24h"
@@ -8116,6 +8120,9 @@ unused = "Unused"
 source = "Source"
 status = "Status"
 usedBy = "Policies"
+
+[portal.sources.types.apikey]
+label = "API key"
 
 [portal.sources.types.editor]
 label = "Editor"

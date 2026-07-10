@@ -15,6 +15,8 @@ interface SourceDetailCardProps {
   onDelete: (source: SourceView) => void;
   /** Disables the actions while a mutation is in flight. */
   busy?: boolean;
+  /** Read-only rows (e.g. API keys) show stats only, with no edit/pause/delete. */
+  readOnly?: boolean;
 }
 
 /** Expanded detail for the selected source row, with edit/pause/delete actions. */
@@ -26,6 +28,7 @@ export function SourceDetailCard({
   onTogglePause,
   onDelete,
   busy = false,
+  readOnly = false,
 }: SourceDetailCardProps) {
   const { t } = useTranslation();
   const meta = sourceTypeMeta(source.type);
@@ -60,32 +63,38 @@ export function SourceDetailCard({
 
       <SourceDetailPanel source={source} docSeries={docSeries} />
 
-      <div className="portal-sources__detail-actions">
-        <Button
-          variant="secondary"
-          disabled={busy}
-          onClick={() => onEdit(source)}
-        >
-          {t("portal.sources.detail.edit")}
-        </Button>
-        <Button
-          variant="secondary"
-          disabled={busy}
-          onClick={() => onTogglePause(source)}
-        >
-          {paused
-            ? t("portal.sources.detail.resume")
-            : t("portal.sources.detail.pause")}
-        </Button>
-        <Button
-          accent="danger"
-          variant="secondary"
-          disabled={busy}
-          onClick={() => onDelete(source)}
-        >
-          {t("portal.sources.detail.delete")}
-        </Button>
-      </div>
+      {readOnly ? (
+        <p className="portal-sources__muted portal-sources__detail-readonly">
+          {t("portal.sources.detail.apiKeyReadOnly")}
+        </p>
+      ) : (
+        <div className="portal-sources__detail-actions">
+          <Button
+            variant="secondary"
+            disabled={busy}
+            onClick={() => onEdit(source)}
+          >
+            {t("portal.sources.detail.edit")}
+          </Button>
+          <Button
+            variant="secondary"
+            disabled={busy}
+            onClick={() => onTogglePause(source)}
+          >
+            {paused
+              ? t("portal.sources.detail.resume")
+              : t("portal.sources.detail.pause")}
+          </Button>
+          <Button
+            accent="danger"
+            variant="secondary"
+            disabled={busy}
+            onClick={() => onDelete(source)}
+          >
+            {t("portal.sources.detail.delete")}
+          </Button>
+        </div>
+      )}
     </section>
   );
 }

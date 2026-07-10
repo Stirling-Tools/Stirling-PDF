@@ -68,6 +68,8 @@ export interface ApiKey {
   usageToday: number;
   /** Requests in the trailing 30 days. */
   usageMonth: number;
+  /** Lifetime request count. */
+  usageTotal: number;
   /** Whether the current user may revoke this key. */
   canManage: boolean;
 }

@@ -38,6 +38,11 @@ vi.mock("@portal/api/sources", () => ({
   deleteSource: (id: string) => deleteSource(id),
 }));
 
+const fetchApiKeys = vi.fn();
+vi.mock("@portal/api/infrastructure", () => ({
+  fetchApiKeys: () => fetchApiKeys(),
+}));
+
 const RESPONSE: SourcesResponse = {
   kpis: [
     { value: 2, description: "" },
@@ -91,6 +96,12 @@ describe("Sources view", () => {
     fetchSourceDocCounts.mockResolvedValue([]);
     createSource.mockReset();
     deleteSource.mockReset();
+    fetchApiKeys.mockReset();
+    fetchApiKeys.mockResolvedValue({
+      keys: [],
+      canCreateTeamKeys: false,
+      teamName: null,
+    });
   });
 
   it("surfaces the inline 409 message when deleting a referenced source", async () => {
@@ -152,6 +163,46 @@ describe("Sources view", () => {
     renderView();
     await screen.findByText("Claims intake");
     expect(screen.getByText("portal.sources.kpi.total")).toBeInTheDocument();
+  });
+
+  it("lists API keys as read-only rows with no edit/delete actions", async () => {
+    fetchSources.mockResolvedValue({ ...RESPONSE, sources: [] });
+    fetchApiKeys.mockResolvedValue({
+      keys: [
+        {
+          id: "7",
+          name: "Production ingest",
+          prefix: "sk_a3f81b2c",
+          scope: "personal",
+          teamName: null,
+          created: "2026-03-02",
+          lastUsed: "2026-07-10 09:14",
+          status: "active",
+          usageToday: 12,
+          usageMonth: 340,
+          usageTotal: 5000,
+          canManage: true,
+        },
+      ],
+      canCreateTeamKeys: false,
+      teamName: null,
+    });
+
+    renderView();
+
+    const row = await screen.findByText("Production ingest");
+    fireEvent.click(row);
+
+    // Read-only note is shown; no destructive/edit actions for an API-key row.
+    expect(
+      await screen.findByText("portal.sources.detail.apiKeyReadOnly"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("portal.sources.detail.delete"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("portal.sources.detail.edit"),
+    ).not.toBeInTheDocument();
   });
 
   it("hides the stat boxes and shows the connect CTA when empty", async () => {

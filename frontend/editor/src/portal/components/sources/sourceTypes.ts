@@ -26,6 +26,13 @@ const SOURCE_TYPE_META: Record<string, SourceTypeMeta> = {
     icon: "✏",
     accent: "success",
   },
+  // Read-only rows surfaced from the Infrastructure API keys - shown for visibility
+  // and usage stats, never creatable or usable as a policy input.
+  apikey: {
+    labelKey: "portal.sources.types.apikey.label",
+    icon: "🔑",
+    accent: "brand",
+  },
 };
 
 const UNKNOWN_TYPE_META: SourceTypeMeta = {

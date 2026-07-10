@@ -14,6 +14,7 @@ const BASE: ApiKey = {
   status: "active",
   usageToday: 84210,
   usageMonth: 2410933,
+  usageTotal: 9820145,
   canManage: true,
 };
 

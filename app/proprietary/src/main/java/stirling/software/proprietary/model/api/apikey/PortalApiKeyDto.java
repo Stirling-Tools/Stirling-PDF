@@ -21,5 +21,7 @@ public record PortalApiKeyDto(
         String status,
         long usageToday,
         long usageMonth,
+        /** Lifetime request count for the key. */
+        long usageTotal,
         /** Whether the current caller may revoke this key. */
         boolean canManage) {}
