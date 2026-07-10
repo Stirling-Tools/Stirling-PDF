@@ -28,7 +28,7 @@ export const WithUnsynced: Story = {
   },
 };
 
-/** Nothing metered yet this period — the split hides. */
+/** Nothing processed yet this period — the split + summary hide. */
 export const Empty: Story = {
   args: {
     wallet: {
@@ -36,6 +36,10 @@ export const Empty: Story = {
       billableUsed: 0,
       spendUnitsThisPeriod: 0,
       categoryBreakdown: { api: 0, ai: 0, automation: 0 },
+      categoryDocs: { api: 0, ai: 0, automation: 0 },
+      docsProcessedThisPeriod: 0,
+      uniquePdfsThisPeriod: 0,
+      sizeMultiplierPdfsThisPeriod: 0,
     },
   },
 };
