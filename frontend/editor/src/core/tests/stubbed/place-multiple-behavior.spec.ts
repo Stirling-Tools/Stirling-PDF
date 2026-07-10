@@ -3,7 +3,7 @@ import { uploadFiles, dismissTourTooltip } from "@app/tests/helpers/ui-helpers";
 import type { Page } from "@playwright/test";
 import path from "path";
 
-const SAMPLE_PDF = path.join(__dirname, "../test-fixtures/sample.pdf");
+const SAMPLE_PDF = path.join(import.meta.dirname, "../test-fixtures/sample.pdf");
 
 const FIRST_PAGE = '[data-page-index="0"]';
 const pauseButton = (page: Page) =>

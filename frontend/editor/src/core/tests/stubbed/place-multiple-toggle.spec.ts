@@ -2,7 +2,7 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import { uploadFiles } from "@app/tests/helpers/ui-helpers";
 import path from "path";
 
-const SAMPLE_PDF = path.join(__dirname, "../test-fixtures/sample.pdf");
+const SAMPLE_PDF = path.join(import.meta.dirname, "../test-fixtures/sample.pdf");
 
 const TOOLS_WITH_PLACEMENT_TOGGLE: Array<{ name: string; url: string }> = [
   { name: "AddImage", url: "/add-image" },
