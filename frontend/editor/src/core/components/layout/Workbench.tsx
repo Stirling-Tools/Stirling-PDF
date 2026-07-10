@@ -1,6 +1,5 @@
 import { useEffect, useState, Suspense, lazy } from "react";
 import { Box, Loader, Center } from "@mantine/core";
-import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useFileState } from "@app/contexts/FileContext";
@@ -11,11 +10,12 @@ import {
 import { isBaseWorkbench } from "@app/types/workbench";
 import { VIEWER_SUPPORTED_EXTENSIONS } from "@app/utils/fileUtils";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useSigningOverlay } from "@app/contexts/SigningOverlayContext";
+import { useCookieConsent } from "@app/hooks/useCookieConsent";
 import styles from "@app/components/layout/Workbench.module.css";
 
 import WorkbenchBar from "@app/components/shared/WorkbenchBar";
 import LandingPage from "@app/components/shared/LandingPage";
-import Footer from "@app/components/shared/Footer";
 import DismissAllErrorsButton from "@app/components/shared/DismissAllErrorsButton";
 import { ChatFAB } from "@app/components/chat/ChatFAB";
 
@@ -34,8 +34,11 @@ const FileManagerView = lazy(
 
 // No props needed - component uses contexts directly
 export default function Workbench() {
-  const { isRainbowMode } = useRainbowThemeContext();
   const { config } = useAppConfig();
+
+  // The consent banner used to be initialised by the footer; the legal links
+  // now live in Settings → Legal, so the workbench owns the banner lifecycle.
+  useCookieConsent({ analyticsEnabled: config?.enableAnalytics === true });
 
   // Use context-based hooks to eliminate all prop drilling
   const { selectors } = useFileState();
@@ -54,6 +57,7 @@ export default function Workbench() {
   } = useToolWorkflow();
 
   const { handleToolSelect } = useToolWorkflow();
+  const { overlay: signingOverlay } = useSigningOverlay();
 
   // Get navigation state - this is the source of truth
   const { selectedTool: selectedToolId } = useNavigationState();
@@ -111,6 +115,25 @@ export default function Workbench() {
     // currently loaded into the workbench - it lives on top of the IDB store.
     if (currentView === "myFiles") {
       return <FileManagerView />;
+    }
+
+    // Shared Signing drives the main viewer from the sidebar (document + overlays
+    // via context), ahead of the empty-state landing page.
+    if (currentView === "viewer" && signingOverlay?.file) {
+      return (
+        <Viewer
+          sidebarsVisible={sidebarsVisible}
+          setSidebarsVisible={setSidebarsVisible}
+          previewFile={signingOverlay.file}
+          signaturePreviews={signingOverlay.signaturePreviews}
+          signaturePreviewsReadOnly={signingOverlay.signaturePreviewsReadOnly}
+          signaturePlacementMode={signingOverlay.signaturePlacementMode}
+          signaturePlacementData={signingOverlay.signaturePlacementData}
+          signaturePlacementType={signingOverlay.signaturePlacementType}
+          onSignaturePreviewsChange={signingOverlay.onSignaturePreviewsChange}
+          signatureOverlayApiRef={signingOverlay.signatureOverlayApiRef}
+        />
+      );
     }
 
     if (activeFiles.length === 0) {
@@ -195,14 +218,7 @@ export default function Workbench() {
     <Box
       className="flex-1 h-full min-w-0 relative flex flex-col"
       data-tour="workbench"
-      style={
-        isRainbowMode
-          ? // No background color in rainbow mode, but still pin min-width:0
-            // so inner flex children (files-page toolbar, etc.) actually
-            // shrink on narrow viewports.
-            { minWidth: 0 }
-          : { backgroundColor: "var(--bg-background)", minWidth: 0 }
-      }
+      style={{ backgroundColor: "var(--bg-background)", minWidth: 0 }}
     >
       {/* Workbench Bar - animates in/out based on file presence */}
       {currentView !== "myFiles" &&
@@ -252,15 +268,6 @@ export default function Workbench() {
           {renderMainContent()}
         </Suspense>
       </Box>
-
-      <Footer
-        analyticsEnabled={config?.enableAnalytics === true}
-        termsAndConditions={config?.termsAndConditions}
-        privacyPolicy={config?.privacyPolicy}
-        cookiePolicy={config?.cookiePolicy}
-        impressum={config?.impressum}
-        accessibilityStatement={config?.accessibilityStatement}
-      />
     </Box>
   );
 }

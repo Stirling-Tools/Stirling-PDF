@@ -140,6 +140,22 @@
   --color-gray-800: #1f2937;
   --color-gray-900: #111827;
 
+  /* Categorical accents (sidebar groups, file-type icons, badges). One hue per
+     token; the dark block overrides each with a LIGHTER shade for contrast on
+     dark backgrounds. JS consumers go through utils/accentColors.ts. */
+  --accent-green: #16a34a;
+  --accent-blue: #2563eb;
+  --accent-red: #dc2626;
+  --accent-orange: #ea580c;
+  --accent-purple: #9333ea;
+  --accent-teal: #0d9488;
+  --accent-pink: #db2777;
+  --accent-amber: #d97706;
+  --accent-indigo: #4f46e5;
+  --accent-cyan: #0891b2;
+  --accent-violet: #7c3aed;
+  --accent-gray: #6b7280;
+
   /* Spacing system */
   --space-xs: 4px;
   --space-sm: 8px;
@@ -185,6 +201,7 @@
   --border-subtle: #e5e7eb;
   --border-default: #e2e8f0;
   --border-strong: #9ca3af;
+  --border-hover: #9ca3af;
   --hover-bg: #f9fafb;
   --active-bg: #f3f4f6;
   --automation-entry-hover-bg: var(--color-gray-100);
@@ -202,8 +219,6 @@
   --icon-sign-color: #ffffff;
   --icon-automate-bg: #a576e3;
   --icon-automate-color: #ffffff;
-  --icon-watchedFolders-bg: #f59e0b;
-  --icon-watchedFolders-color: #ffffff;
   --icon-files-bg: #d3e7f7;
   --icon-files-color: #0a8bff;
   --icon-activity-bg: #d3e7f7;
@@ -346,8 +361,6 @@
   --api-keys-card-shadow: rgba(0, 0, 0, 0.06);
   --api-keys-input-bg: #f8f8f8;
   --api-keys-input-border: #e0e0e0;
-  --api-keys-button-bg: #f5f5f5;
-  --api-keys-button-color: #333333;
 
   /* PDF Report Colors (always light) */
   --pdf-light-header-bg: 239 246 255;
@@ -412,32 +425,27 @@
 :root {
   --onboarding-title: #0a0a0a;
   --onboarding-body: #4a5565;
-  --onboarding-primary-button-bg: #101828;
-  --onboarding-primary-button-text: #ffffff;
-  --onboarding-secondary-button-bg: #ffffff;
-  --onboarding-secondary-button-text: #6a7282;
-  --onboarding-secondary-button-border: #e5e5e5;
   --onboarding-step-active: #1e2939;
   --onboarding-step-inactive: #d1d5dc;
 }
 
 [data-mantine-color-scheme="dark"] {
-  /* Dark theme gray scale (inverted) */
-  --gray-50: 17 24 39;
-  --gray-100: 31 35 41;
-  --gray-200: 42 47 54;
-  --gray-300: 55 65 81;
-  --gray-400: 75 85 99;
-  --gray-500: 107 114 128;
-  --gray-600: 156 163 175;
-  --gray-700: 209 213 219;
-  --gray-800: 229 231 235;
-  --gray-900: 243 244 246;
+  /* Dark theme gray scale (inverted) — navy-indigo tinted */
+  --gray-50: 9 11 24;
+  --gray-100: 13 16 32;
+  --gray-200: 19 23 41;
+  --gray-300: 28 35 64;
+  --gray-400: 45 55 96;
+  --gray-500: 90 98 128;
+  --gray-600: 144 153 185;
+  --gray-700: 195 200 230;
+  --gray-800: 218 222 245;
+  --gray-900: 238 241 252;
 
-  /* Dark semantic colors for Tailwind */
-  --surface: 31 35 41;
-  --background: 42 47 54;
-  --border: 55 65 81;
+  /* Dark semantic colors for Tailwind — aligned with portal tokens.css */
+  --surface: 21 28 46; /* #151c2e — portal --color-surface */
+  --background: 9 12 20; /* #090c14 — portal --color-bg */
+  --border: 40 50 72; /* #283248 — portal --color-border */
 
   /* Dark theme Mantine colors */
   --color-red-50: #2d1b1b;
@@ -461,6 +469,20 @@
   --color-gray-700: #d1d5db;
   --color-gray-800: #e5e7eb;
   --color-gray-900: #f3f4f6;
+
+  /* Categorical accents: lighter shades of the same hues, for contrast on dark. */
+  --accent-green: #4ade80;
+  --accent-blue: #60a5fa;
+  --accent-red: #f87171;
+  --accent-orange: #fb923c;
+  --accent-purple: #c084fc;
+  --accent-teal: #2dd4bf;
+  --accent-pink: #f472b6;
+  --accent-amber: #fbbf24;
+  --accent-indigo: #818cf8;
+  --accent-cyan: #22d3ee;
+  --accent-violet: #a78bfa;
+  --accent-gray: #9ca3af;
 
   /* Category colors - same as light mode for consistency */
   --category-color-removal: #ef4444; /* Red for removal tools */
@@ -502,63 +524,66 @@
   --color-yellow-800: #fef08a;
   --color-yellow-900: #fef9c3;
 
-  /* Dark theme semantic colors */
-  --bg-surface: #2a2f36;
-  --bg-raised: #1f2329;
-  --bg-muted: #1f2329;
-  --bg-background: #2a2f36;
-  --bg-toolbar: #1f2329;
-  --bg-file-manager: #1f2329;
-  --bg-file-list: #2a2f36;
-  --btn-open-file: #0a8bff;
-  --text-primary: #f9fafb;
-  --text-secondary: #d1d5db;
-  --text-muted: #9ca3af;
+  /* Dark theme semantic colors — deep navy/indigo palette, aligned with portal
+     tokens.css so the editor and portal (Processor) dark modes don't drift.
+     Chrome surfaces (--bg-toolbar, --bg-file-manager) sit at the portal's
+     sidebar level (#0d1120) so the left/right sidebars lift off the darker
+     canvas (--bg-background) instead of blending into it. */
+  --bg-surface: #151c2e; /* portal --color-surface */
+  --bg-raised: #0d1120; /* portal --color-bg-alt */
+  --bg-muted: #0d1120;
+  --bg-background: #090c14; /* portal --color-bg */
+  --bg-toolbar: #0d1120; /* portal --color-sidebar-bg — lifted off the canvas */
+  --bg-file-manager: #0d1120; /* portal --color-sidebar-bg */
+  --bg-file-list: #151c2e; /* portal --color-surface */
+  --btn-open-file: #4f8ef5;
+  --text-primary: #e8eaf6;
+  --text-secondary: #9299b0;
+  --text-muted: #5b6280;
   /* Always-dark text (for use on light backgrounds like alerts) - does not change in dark mode */
   --text-always-dark: #1f2937;
   --text-always-dark-muted: #6b7280;
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-default: #3a4047;
-  --border-strong: #4b5563;
-  --hover-bg: #374151;
-  --active-bg: #4b5563;
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-default: #1e2840; /* portal --color-border-light */
+  --border-strong: #283248; /* portal --color-border */
+  --border-hover: #3d4f6a; /* portal --color-border-hover */
+  --hover-bg: #1c2640; /* portal --color-bg-hover */
+  --active-bg: #243044; /* portal --color-bg-muted */
   --automation-entry-hover-bg: var(--color-gray-200);
 
   /* Icon colors for dark mode */
-  --icon-user-bg: #2a2f36;
-  --icon-user-color: #6e7581;
-  --icon-notifications-bg: #2a2f36;
-  --icon-notifications-color: #6e7581;
-  --icon-tools-bg: #4b525a;
-  --icon-tools-color: #eaeaea;
-  --icon-read-bg: #4b525a;
-  --icon-read-color: #eaeaea;
-  --icon-sign-bg: #4b525a;
-  --icon-sign-color: #eaeaea;
-  --icon-automate-bg: #4b525a;
-  --icon-automate-color: #eaeaea;
-  --icon-watchedFolders-bg: #4b525a;
-  --icon-watchedFolders-color: #eaeaea;
-  --icon-files-bg: #4b525a;
-  --icon-files-color: #eaeaea;
-  --icon-activity-bg: #4b525a;
-  --icon-activity-color: #eaeaea;
-  --icon-config-bg: #4b525a;
-  --icon-config-color: #eaeaea;
+  --icon-user-bg: #131729;
+  --icon-user-color: #6e7898;
+  --icon-notifications-bg: #131729;
+  --icon-notifications-color: #6e7898;
+  --icon-tools-bg: #1c2340;
+  --icon-tools-color: #e0e3f8;
+  --icon-read-bg: #1c2340;
+  --icon-read-color: #e0e3f8;
+  --icon-sign-bg: #1c2340;
+  --icon-sign-color: #e0e3f8;
+  --icon-automate-bg: #1c2340;
+  --icon-automate-color: #e0e3f8;
+  --icon-files-bg: #1c2340;
+  --icon-files-color: #e0e3f8;
+  --icon-activity-bg: #1c2340;
+  --icon-activity-color: #e0e3f8;
+  --icon-config-bg: #1c2340;
+  --icon-config-color: #e0e3f8;
 
   /* Inactive icon colors for dark mode */
-  --icon-inactive-bg: #2a2f36;
-  --icon-inactive-color: #6e7581;
+  --icon-inactive-bg: #131729;
+  --icon-inactive-color: #6e7898;
 
   /* Dark mode tooltip colors */
-  --tooltip-title-bg: #4b525a;
-  --tooltip-title-color: #fff;
+  --tooltip-title-bg: #1c2340;
+  --tooltip-title-color: #e8eaf6;
   --tooltip-header-bg: var(--bg-raised);
   --tooltip-header-color: var(--text-primary);
   --tooltip-border: var(--border-default);
 
-  --accent-interactive: #ffffff;
-  --text-instruction: #ffffff;
+  --accent-interactive: #e8eaf6;
+  --text-instruction: #e8eaf6;
   --text-brand: var(--color-gray-800);
   --text-brand-accent: #ef4444;
 
@@ -567,77 +592,77 @@
   --spdf-compare-added-badge-fg: var(--color-green-500);
 
   /* container */
-  --landing-paper-bg: #171a1f;
+  --landing-paper-bg: #090b18;
   --landing-inner-paper-bg: var(--bg-raised);
-  --landing-inner-paper-border: #2d3237;
+  --landing-inner-paper-border: #1c2340;
 
   /* landing dark overrides */
   --landing-stack-glow-bg: radial-gradient(
     circle,
-    rgba(30, 136, 229, 0.22) 0%,
+    rgba(50, 90, 210, 0.22) 0%,
     transparent 70%
   );
   --landing-doc-shadow-back-idle:
-    0 4px 20px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.25);
+    0 4px 20px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.35);
   --landing-doc-shadow-back-hover:
-    0 14px 44px rgba(0, 0, 0, 0.55), 0 6px 16px rgba(0, 0, 0, 0.35);
+    0 14px 44px rgba(0, 0, 0, 0.65), 0 6px 16px rgba(0, 0, 0, 0.45);
   --landing-doc-shadow-front-idle:
-    0 8px 30px rgba(0, 0, 0, 0.45), 0 4px 12px rgba(0, 0, 0, 0.3),
+    0 8px 30px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.4),
     0 0 0 1px rgba(255, 255, 255, 0.04);
   --landing-doc-shadow-front-hover:
-    0 20px 52px rgba(0, 0, 0, 0.6), 0 10px 24px rgba(0, 0, 0, 0.4),
+    0 20px 52px rgba(0, 0, 0, 0.7), 0 10px 24px rgba(0, 0, 0, 0.5),
     0 0 0 1px rgba(255, 255, 255, 0.06);
-  --landing-button-color: #ffffff;
+  --landing-button-color: #e8eaf6;
   --landing-button-hover-bg: var(--bg-raised);
 
   /* selected file header colors for dark */
-  --header-selected-bg: #1e88e5;
+  --header-selected-bg: #2040a0;
   --header-selected-fg: #ffffff;
   /* file card background (dark) */
-  --file-card-bg: #1f2329;
-  --accordion-item-bg: #373d45; /* accordion item background - more distinguishable */
+  --file-card-bg: #0d1120;
+  --accordion-item-bg: #1c2340; /* accordion item background - more distinguishable */
 
   /* shadows */
-  --drop-shadow-color: rgba(255, 255, 255, 0.08);
-  --drop-shadow-color-strong: rgba(255, 255, 255, 0.04);
-  --drop-shadow-filter: drop-shadow(0 0.2rem 0.4rem rgba(200, 200, 200, 0.08))
-    drop-shadow(0 0.6rem 0.6rem rgba(200, 200, 200, 0.06))
-    drop-shadow(0 1.2rem 1rem rgba(200, 200, 200, 0.04));
+  --drop-shadow-color: rgba(255, 255, 255, 0.05);
+  --drop-shadow-color-strong: rgba(255, 255, 255, 0.03);
+  --drop-shadow-filter: drop-shadow(0 0.2rem 0.4rem rgba(0, 0, 0, 0.3))
+    drop-shadow(0 0.6rem 0.6rem rgba(0, 0, 0, 0.2))
+    drop-shadow(0 1.2rem 1rem rgba(0, 0, 0, 0.15));
 
   /* Adjust shadows for dark mode */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.4);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.5);
 
   --tools-text-and-icon-color: var(--text-primary);
 
   /* Tool picker sticky header variables (dark mode) */
-  --tool-header-bg: #2a2f36;
-  --tool-header-border: #3a4047;
-  --tool-header-text: #d0d6dc;
-  --tool-header-badge-bg: #4b525a;
-  --tool-header-badge-text: #ffffff;
+  --tool-header-bg: #131729;
+  --tool-header-border: #1c2340;
+  --tool-header-text: #c2c8e0;
+  --tool-header-badge-bg: #1c2340;
+  --tool-header-badge-text: #e8eaf6;
 
   /* Subcategory title styling (dark mode) */
-  --tool-subcategory-text-color: #9ca3af; /* lighter text in dark mode as well */
-  --tool-subcategory-rule-color: #3a4047; /* doubly lighter (relative) line in dark */
+  --tool-subcategory-text-color: #5b6280;
+  --tool-subcategory-rule-color: #1c2340;
 
   /* PDF text selection colors (dark mode) */
-  --pdf-selection-bg: rgba(96, 165, 250, 0.25);
-  --pdf-selection-ring: rgba(96, 165, 250, 0.28);
+  --pdf-selection-bg: rgba(96, 130, 250, 0.25);
+  --pdf-selection-ring: rgba(96, 130, 250, 0.28);
 
   /* Placeholder text colors (dark mode) */
-  --search-text-and-icon-color: #ffffff !important;
-  --input-bg: #4b525a;
+  --search-text-and-icon-color: #e8eaf6 !important;
+  --input-bg: #1c2340;
 
   /* Tool panel search bar background colors (dark mode) */
-  --tool-panel-search-bg: #1f2329;
-  --tool-panel-search-border-bottom: #4b525a;
+  --tool-panel-search-bg: #0d1020;
+  --tool-panel-search-border-bottom: #1c2340;
 
-  --information-text-bg: #292e34;
-  --information-text-color: #ececec;
+  --information-text-bg: #131729;
+  --information-text-color: #e0e3f8;
 
   /* Bulk selection panel specific colors (dark mode) */
   --bulk-panel-bg: var(--bg-raised); /* dark background for parent container */
@@ -646,36 +671,29 @@
     --border-default
   ); /* default border for cards and buttons */
   --bulk-card-hover-border: var(--border-strong); /* stronger border on hover */
-  --unsupported-bar-bg: #1f2329;
-  --unsupported-bar-border: #4b525a;
+  --unsupported-bar-bg: #0d1020;
+  --unsupported-bar-border: #1c2340;
 
   /* Config Modal colors (dark mode) */
-  --modal-nav-bg: #1f2329;
-  --modal-nav-section-title: #9ca3af;
-  --modal-nav-item: #d0d6dc;
-  --modal-nav-item-active: #0a8bff;
-  --modal-nav-item-active-bg: rgba(10, 139, 255, 0.15);
-  --modal-content-bg: #2a2f36;
-  --modal-header-border: rgba(255, 255, 255, 0.08);
+  --modal-nav-bg: #0d1020;
+  --modal-nav-section-title: #5b6280;
+  --modal-nav-item: #c2c8e0;
+  --modal-nav-item-active: #4f8ef5;
+  --modal-nav-item-active-bg: rgba(79, 142, 245, 0.15);
+  --modal-content-bg: #131729;
+  --modal-header-border: rgba(255, 255, 255, 0.05);
 
   /* Onboarding (dark mode) */
-  --onboarding-title: #f9fafb;
-  --onboarding-body: #d1d5db;
-  --onboarding-primary-button-bg: #ffffff;
-  --onboarding-primary-button-text: #0b1220;
-  --onboarding-secondary-button-bg: transparent;
-  --onboarding-secondary-button-text: #e5e7eb;
-  --onboarding-secondary-button-border: #3a4047;
-  --onboarding-step-active: #e5e7eb;
-  --onboarding-step-inactive: #4b5563;
+  --onboarding-title: #e8eaf6;
+  --onboarding-body: #9299b0;
+  --onboarding-step-active: #d8dcf0;
+  --onboarding-step-inactive: #2d3560;
   /* API Keys section colors (dark mode) */
-  --api-keys-card-bg: #2a2f36;
-  --api-keys-card-border: #3a4047;
+  --api-keys-card-bg: #131729;
+  --api-keys-card-border: #1c2340;
   --api-keys-card-shadow: none;
-  --api-keys-input-bg: #1f2329;
-  --api-keys-input-border: #3a4047;
-  --api-keys-button-bg: #3a4047;
-  --api-keys-button-color: #d0d6dc;
+  --api-keys-input-bg: #0d1020;
+  --api-keys-input-border: #1c2340;
 
   /* Code token colors (dark mode - Cursor-like) */
   --code-kw-color: #c792ea; /* purple */
@@ -683,21 +701,21 @@
   --code-num-color: #f78c6c; /* orange */
   --code-com-color: #697098; /* muted gray-blue */
   /* Compare tool specific colors (dark mode) - only for colors that don't have existing theme pairs */
-  --compare-upload-dropzone-bg: rgba(31, 35, 41, 0.45);
-  --compare-upload-dropzone-border: rgba(75, 85, 99, 0.6);
-  --compare-upload-icon-bg: rgba(75, 85, 99, 0.2);
-  --compare-upload-icon-color: rgba(243, 244, 246, 0.75);
-  --compare-upload-divider: rgba(75, 85, 99, 0.5);
+  --compare-upload-dropzone-bg: rgba(9, 11, 24, 0.45);
+  --compare-upload-dropzone-border: rgba(28, 35, 64, 0.6);
+  --compare-upload-icon-bg: rgba(28, 35, 64, 0.2);
+  --compare-upload-icon-color: rgba(232, 234, 246, 0.75);
+  --compare-upload-divider: rgba(28, 35, 64, 0.5);
 
   /* Compare page label chip (dark mode): slightly darker than surrounding rows */
-  --compare-page-label-bg: #1f2329;
+  --compare-page-label-bg: #0d1020;
   --compare-page-label-fg: var(--text-secondary);
 
   /* Status indicator dot ring shadow (dark) */
-  --status-dot-ring: 0 0 0 2px rgba(255, 255, 255, 0.18);
+  --status-dot-ring: 0 0 0 2px rgba(255, 255, 255, 0.15);
 
   /* Input element styling (dark) */
-  --input-bg: #4b525a;
+  --input-bg: #1c2340;
 
   /* Select/dropdown placeholder state (dark) */
   --select-placeholder-bg: var(--mantine-color-dark-5);
@@ -721,11 +739,11 @@
 
 /* Plan section card borders - only override in dark mode */
 [data-mantine-color-scheme="dark"] .plan-card {
-  --paper-border-color: rgb(158, 158, 158) !important;
+  --paper-border-color: rgb(44, 52, 120) !important;
 }
 
 [data-mantine-color-scheme="dark"] .plan-card [data-size="sm"] {
-  color: rgb(221, 221, 221) !important;
+  color: rgb(194, 200, 224) !important;
 }
 
 /* Current plan badge - use light mode green in dark mode */
@@ -740,7 +758,7 @@
 
 [data-mantine-color-scheme="dark"]
   .plan-button:not(:disabled):not([data-disabled]) {
-  background-color: #1c598e !important;
+  background-color: #2040a0 !important;
 }
 
 /* Lighter grey for disabled plan buttons */
@@ -800,10 +818,11 @@
 }
 /* ── PDF Link Overlay (viewer) ── */
 :root {
-  --link-hover-bg: rgba(10, 139, 255, 0.04);
-  --link-hover-border: rgba(10, 139, 255, 0.15);
+  --link-hover-bg: rgba(10, 139, 255, 0.1);
+  --link-hover-border: rgba(10, 139, 255, 0.32);
   --link-hover-shadow:
-    0 0 0 0.5px rgba(10, 139, 255, 0.05), 0 1px 3px rgba(10, 139, 255, 0.04);
+    inset 0 0 0 1px rgba(255, 255, 255, 0.35),
+    0 1px 4px rgba(10, 139, 255, 0.12);
   --link-focus-ring: rgba(10, 139, 255, 0.25);
   --link-toolbar-bg: rgba(15, 23, 42, 0.88);
   --link-toolbar-border: rgba(255, 255, 255, 0.1);
@@ -813,15 +832,15 @@
 }
 
 [data-mantine-color-scheme="dark"] {
-  --link-hover-bg: rgba(10, 139, 255, 0.06);
-  --link-hover-border: rgba(59, 170, 255, 0.2);
+  --link-hover-bg: rgba(79, 130, 245, 0.14);
+  --link-hover-border: rgba(79, 130, 245, 0.38);
   --link-hover-shadow:
-    0 0 0 0.5px rgba(59, 170, 255, 0.1), 0 1px 3px rgba(10, 139, 255, 0.08);
-  --link-focus-ring: rgba(59, 170, 255, 0.3);
-  --link-toolbar-bg: rgba(15, 23, 42, 0.92);
-  --link-toolbar-border: rgba(255, 255, 255, 0.08);
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 1px 4px rgba(79, 142, 245, 0.18);
+  --link-focus-ring: rgba(79, 130, 245, 0.3);
+  --link-toolbar-bg: rgba(9, 11, 24, 0.94);
+  --link-toolbar-border: rgba(255, 255, 255, 0.07);
   --link-toolbar-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.35), 0 4px 12px rgba(0, 0, 0, 0.25),
+    0 12px 40px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.35),
     0 0 0 0.5px rgba(255, 255, 255, 0.04);
 }
 
@@ -847,7 +866,7 @@
 .pdf-link-overlay:hover,
 .pdf-link-overlay--active {
   background: var(--link-hover-bg);
-  border-bottom: 2px solid var(--color-primary-500);
+  border-color: var(--link-hover-border);
   box-shadow: var(--link-hover-shadow);
 }
 
@@ -889,6 +908,7 @@
   align-items: center;
   height: 32px;
   padding: 0 4px;
+  box-sizing: border-box;
   pointer-events: auto;
   white-space: nowrap;
   user-select: none;
@@ -934,11 +954,15 @@
   cursor: pointer;
   transition: all 0.12s ease;
   white-space: nowrap;
-  line-height: 1;
+  line-height: 1.25;
   border-radius: 9999px;
 }
 
 .pdf-link-toolbar-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.25;
   transition: color 0.12s ease;
 }
 
@@ -985,6 +1009,10 @@
   background: rgba(255, 255, 255, 0.08);
 }
 
+.pdf-link-toolbar-btn--go {
+  min-width: 0;
+}
+
 .pdf-link-toolbar-sep {
   width: 1px;
   height: 16px;
@@ -997,7 +1025,7 @@
 }
 
 [data-theme="dark"] {
-  --shadow-color: rgba(0, 0, 0, 0.75);
+  --shadow-color: rgba(0, 0, 0, 0.88);
 }
 
 /* ---- Wordmark light/dark switching (use instead of JS colorScheme checks) ---- */

@@ -2,21 +2,40 @@ import { useCallback, useMemo, useState } from "react";
 import {
   Alert,
   Badge,
-  Button,
   Divider,
   Group,
   Loader,
   Stack,
   Text,
-  SegmentedControl,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import type { SignatureValidationReportEntry } from "@app/types/validateSignature";
 import type { ValidateSignatureOperationHook } from "@app/hooks/tools/validateSignature/useValidateSignatureOperation";
 import "@app/components/tools/validateSignature/reportView/styles.css";
+import type { TFunction } from "i18next";
 import FitText from "@app/components/shared/FitText";
 import { SuggestedToolsSection } from "@app/components/tools/shared/SuggestedToolsSection";
 import { downloadFile } from "@app/services/downloadService";
+import {
+  computeSignatureStatus,
+  type SignatureStatusKind,
+} from "@app/hooks/tools/validateSignature/utils/signatureStatus";
+
+// Worst trust-aware status across a file's signatures - keeps the summary badge
+// consistent with the per-signature badges in the report (valid vs unverified vs invalid).
+const fileStatusKind = (
+  result: SignatureValidationReportEntry,
+  t: TFunction<"translation">,
+): SignatureStatusKind => {
+  if (result.error) return "invalid";
+  if (result.signatures.length === 0) return "neutral";
+  const kinds = result.signatures.map((s) => computeSignatureStatus(s, t).kind);
+  if (kinds.includes("invalid")) return "invalid";
+  if (kinds.includes("warning")) return "warning";
+  return "valid";
+};
 
 interface ValidateSignatureResultsProps {
   operation: ValidateSignatureOperationHook;
@@ -26,31 +45,34 @@ interface ValidateSignatureResultsProps {
   reportAvailable?: boolean;
 }
 
-const useFileSummary = (results: SignatureValidationReportEntry[]) => {
+const useFileSummary = (
+  results: SignatureValidationReportEntry[],
+  t: TFunction<"translation">,
+) => {
   return useMemo(() => {
-    if (results.length === 0) {
-      return { fileCount: 0, signatureCount: 0, fullyValidCount: 0 };
-    }
-
     let signatureCount = 0;
-    let fullyValidCount = 0;
+    let validCount = 0;
+    let warningCount = 0;
+    let invalidCount = 0;
 
     results.forEach((result) => {
       signatureCount += result.signatures.length;
       result.signatures.forEach((signature) => {
-        const isValid = signature.valid;
-        if (isValid) {
-          fullyValidCount += 1;
-        }
+        const kind = computeSignatureStatus(signature, t).kind;
+        if (kind === "valid") validCount += 1;
+        else if (kind === "warning") warningCount += 1;
+        else if (kind === "invalid") invalidCount += 1;
       });
     });
 
     return {
       fileCount: results.length,
       signatureCount,
-      fullyValidCount,
+      validCount,
+      warningCount,
+      invalidCount,
     };
-  }, [results]);
+  }, [results, t]);
 };
 
 const findFileByExtension = (files: File[], extension: string) => {
@@ -64,7 +86,7 @@ const ValidateSignatureResults = ({
   errorMessage,
 }: ValidateSignatureResultsProps) => {
   const { t } = useTranslation();
-  const summary = useFileSummary(results);
+  const summary = useFileSummary(results, t);
 
   const pdfFile = useMemo(
     () => findFileByExtension(operation.files, ".pdf"),
@@ -97,10 +119,16 @@ const ValidateSignatureResults = ({
     return t("validateSignature.downloadJson", "Download JSON");
   }, [selectedType, t]);
 
-  const downloadTypeOptions = [
+  const downloadTypeOptions: {
+    label: string;
+    value: "pdf" | "csv" | "json";
+  }[] = [
     { label: t("validateSignature.downloadType.pdf", "PDF"), value: "pdf" },
     { label: t("validateSignature.downloadType.csv", "CSV"), value: "csv" },
-    { label: t("validateSignature.downloadType.json", "JSON"), value: "json" },
+    {
+      label: t("validateSignature.downloadType.json", "JSON"),
+      value: "json",
+    },
   ];
 
   const handleDownload = useCallback((file: File) => {
@@ -173,14 +201,30 @@ const ValidateSignatureResults = ({
             },
           )}
         </Badge>
-        {summary.signatureCount > 0 && (
+        {summary.validCount > 0 && (
           <Badge color="green" variant="light">
             {t(
               "validateSignature.report.signaturesValid",
               "{{count}} fully valid",
-              {
-                count: summary.fullyValidCount,
-              },
+              { count: summary.validCount },
+            )}
+          </Badge>
+        )}
+        {summary.warningCount > 0 && (
+          <Badge color="yellow" variant="light">
+            {t(
+              "validateSignature.report.signaturesUnverified",
+              "{{count}} need review",
+              { count: summary.warningCount },
+            )}
+          </Badge>
+        )}
+        {summary.invalidCount > 0 && (
+          <Badge color="red" variant="light">
+            {t(
+              "validateSignature.report.signaturesInvalid",
+              "{{count}} invalid",
+              { count: summary.invalidCount },
             )}
           </Badge>
         )}
@@ -188,25 +232,16 @@ const ValidateSignatureResults = ({
 
       <Stack gap="sm" style={{ maxHeight: "20rem", overflowY: "auto" }}>
         {results.map((result) => {
-          const hasError = Boolean(result.error);
-          const hasSignatures = result.signatures.length > 0;
-          const allValid =
-            hasSignatures &&
-            result.signatures.every((signature) => signature.valid);
-          const badgeLabel = hasError
-            ? t("validateSignature.status.invalid", "Invalid")
-            : hasSignatures
-              ? allValid
-                ? t("validateSignature.status.valid", "Valid")
-                : t("validateSignature.status.invalid", "Invalid")
-              : t("validateSignature.noSignaturesShort", "No signatures");
-          const badgeClass = hasError
-            ? "status-badge status-badge--invalid"
-            : hasSignatures
-              ? allValid
-                ? "status-badge status-badge--valid"
-                : "status-badge status-badge--warning"
-              : "status-badge status-badge--neutral";
+          const kind = fileStatusKind(result, t);
+          const badgeLabel =
+            kind === "invalid"
+              ? t("validateSignature.status.invalid", "Invalid")
+              : kind === "warning"
+                ? t("validateSignature.status.untrustedShort", "Unverified")
+                : kind === "valid"
+                  ? t("validateSignature.status.valid", "Valid")
+                  : t("validateSignature.noSignaturesShort", "No signatures");
+          const badgeClass = `status-badge status-badge--${kind}`;
 
           return (
             <Stack
@@ -260,10 +295,9 @@ const ValidateSignatureResults = ({
         <SegmentedControl
           value={selectedType}
           onChange={(v) => setSelectedType(v as "pdf" | "csv" | "json")}
-          data={downloadTypeOptions}
+          options={downloadTypeOptions}
         />
         <Button
-          color="blue"
           onClick={() => selectedFile && handleDownload(selectedFile)}
           disabled={!selectedFile}
           fullWidth

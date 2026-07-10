@@ -10,18 +10,27 @@ RUN apt-get update \
     && rm /tmp/task.deb \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
+# Source under /app/engine/ to match root Taskfile's `includes.engine.dir: engine`.
+WORKDIR /app/engine
 
-COPY pyproject.toml uv.lock Taskfile.yml .env ./
-COPY .taskfiles/ ./.taskfiles/
+COPY pyproject.toml uv.lock .env ./
 COPY scripts/ ./scripts/
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
 
 COPY src/ ./src/
 
-ENV PATH="/app/.venv/bin:$PATH"
+WORKDIR /app
+COPY Taskfile.yml ./
+COPY .taskfiles/ ./.taskfiles/
+
+ENV PATH="/app/engine/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
+ENV STIRLING_ENGINE_WORKERS=4
+# Container runs on a fixed port; skip the host-only free-port probe (its script
+# is not shipped in the image). engine:run honours these.
+ENV ENGINE_PORT_PROBE=false
+ENV STIRLING_ENGINE_PORT=5001
 
 EXPOSE 5001
 

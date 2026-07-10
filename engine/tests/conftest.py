@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from stirling.config import AppSettings, RagBackend, load_settings
+from stirling.config import AppSettings, DocumentsBackend, load_settings
 from stirling.services import build_runtime
 from stirling.services.runtime import AppRuntime
 
@@ -23,10 +23,13 @@ def build_app_settings() -> AppSettings:
         fast_model_name="test",
         smart_model_max_tokens=8192,
         fast_model_max_tokens=2048,
-        rag_backend=RagBackend.SQLITE,
+        model_max_concurrency=32,
+        documents_backend=DocumentsBackend.SQLITE,
         rag_embedding_model="voyageai:voyage-4",
-        rag_store_path=Path(":memory:"),
-        rag_pgvector_dsn="",
+        documents_sqlite_path=Path(":memory:"),
+        documents_pgvector_dsn="",
+        documents_pgvector_pool_min_size=1,
+        documents_pgvector_pool_max_size=10,
         rag_chunk_size=512,
         rag_chunk_overlap=64,
         rag_default_top_k=5,
@@ -41,6 +44,7 @@ def build_app_settings() -> AppSettings:
         contradiction_canonicaliser_batch_size=500,
         max_pages=200,
         max_characters=200_000,
+        require_user_id=False,
         posthog_enabled=False,
         posthog_api_key="",
         posthog_host="https://eu.i.posthog.com",

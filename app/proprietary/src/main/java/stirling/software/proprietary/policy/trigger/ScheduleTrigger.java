@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -24,20 +25,14 @@ import stirling.software.proprietary.policy.store.PolicyStore;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Fires policies on a {@link Schedule}. On {@link #start()} it sweeps on a fixed interval; each
- * sweep finds the enabled "schedule" policies and runs any whose next firing has come due since it
- * last fired.
+ * Fires policies on a {@link Schedule}: a fixed-interval sweep runs each due "schedule" policy.
  *
- * <p>The trigger only decides <em>when</em>: once a policy is due it hands it to the {@link
- * PolicyRunner}, which pulls from the policy's configured sources and starts the runs. The trigger
- * knows nothing about folders, buckets, or how many runs a sweep produces.
- *
- * <p>Caveat: last-fire times are tracked <b>in memory</b>, so this assumes a single node and resets
- * on restart; cluster-wide coordination (leader election) is a follow-up.
+ * <p>Last-fire times are in memory, so this assumes a single node and resets on restart.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class ScheduleTrigger implements PolicyTrigger {
 
     private static final String TYPE = "schedule";
@@ -101,22 +96,26 @@ public class ScheduleTrigger implements PolicyTrigger {
                 continue;
             }
 
-            // First time we see a policy, baseline its last-fire to now so it does not fire
-            // immediately; subsequent sweeps fire it once its next firing has passed.
+            // Baseline a newly-seen policy to now so it does not fire immediately.
             Instant last = lastFiredByPolicy.computeIfAbsent(policy.id(), id -> now);
             ZonedDateTime next = config.schedule().nextAfter(last.atZone(config.zone()));
-            if (!next.toInstant().isAfter(now)) {
-                lastFiredByPolicy.put(policy.id(), now);
-                log.info("Scheduled policy {} ({}) is due", policy.id(), policy.name());
-                policyRunner.run(policy);
+            if (next.toInstant().isAfter(now)) {
+                continue;
             }
+            ZonedDateTime later = config.schedule().nextAfter(next);
+            while (!later.toInstant().isAfter(now)) {
+                next = later;
+                later = config.schedule().nextAfter(later);
+            }
+            lastFiredByPolicy.put(policy.id(), next.toInstant());
+            log.info("Scheduled policy {} ({}) is due", policy.id(), policy.name());
+            policyRunner.run(policy);
         }
     }
 
     /**
-     * The typed, validated form of a schedule trigger's options: the {@link Schedule} and the zone
-     * its wall-clock kinds are evaluated in (default UTC). Construction fails for a missing/invalid
-     * schedule or zone.
+     * Validated schedule-trigger options: the {@link Schedule} and the zone it runs in (UTC by
+     * default).
      */
     record ScheduleConfig(Schedule schedule, ZoneId zone) {
 

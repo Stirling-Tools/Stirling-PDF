@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import LoginRightCarousel from "@app/components/shared/LoginRightCarousel";
+import LoginRightCarousel from "@app/auth/ui/LoginRightCarousel";
 import buildLoginSlides from "@app/components/shared/loginSlides";
 import styles from "@app/routes/authShared/AuthLayout.module.css";
 import { useLogoVariant } from "@app/hooks/useLogoVariant";
@@ -29,27 +29,6 @@ export default function AuthLayout({
 
   // Use either overflow detection or email form expansion to determine scrollable state
   const shouldBeScrollable = isOverflowing || isEmailFormExpanded;
-
-  // Force light mode on auth pages
-  useEffect(() => {
-    const htmlElement = document.documentElement;
-    const previousColorScheme = htmlElement.getAttribute(
-      "data-mantine-color-scheme",
-    );
-
-    // Set light mode
-    htmlElement.setAttribute("data-mantine-color-scheme", "light");
-
-    // Cleanup: restore previous theme when leaving auth pages
-    return () => {
-      if (previousColorScheme) {
-        htmlElement.setAttribute(
-          "data-mantine-color-scheme",
-          previousColorScheme,
-        );
-      }
-    };
-  }, []);
 
   useEffect(() => {
     const update = () => {
@@ -101,7 +80,7 @@ export default function AuthLayout({
           marginRight: "-1.5rem",
         }}
       >
-        <Footer forceLightMode={true} analyticsEnabled />
+        <Footer analyticsEnabled />
       </div>
     </div>
   );

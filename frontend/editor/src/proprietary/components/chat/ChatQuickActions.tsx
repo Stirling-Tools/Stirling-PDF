@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Box, Group, Stack, Text, UnstyledButton } from "@mantine/core";
+import { Box, Group, Stack, Text } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import CloseIcon from "@mui/icons-material/Close";
 import CompressIcon from "@mui/icons-material/Compress";
 import ContentCutIcon from "@mui/icons-material/ContentCut";
@@ -8,7 +10,6 @@ import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFileOutlined";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import LayersIcon from "@mui/icons-material/Layers";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import RotateRightIcon from "@mui/icons-material/RotateRight";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { useAllFiles, useFileActions } from "@app/contexts/FileContext";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
@@ -27,7 +28,10 @@ interface QuickAction {
 
 function QuickActionCard({ action }: { action: QuickAction }) {
   return (
-    <UnstyledButton
+    <Button
+      type="button"
+      variant="tertiary"
+      hover={false}
       className="chat-quick-action"
       onClick={action.onClick}
       aria-label={action.title}
@@ -52,7 +56,7 @@ function QuickActionCard({ action }: { action: QuickAction }) {
           }}
         />
       </Group>
-    </UnstyledButton>
+    </Button>
   );
 }
 
@@ -82,23 +86,27 @@ function WorkbenchFilePills({
           <span className="chat-file-pill__label" title={stub.name}>
             {stub.name}
           </span>
-          <button
+          <ActionIcon
             type="button"
+            variant="tertiary"
             className="chat-file-pill__remove"
             onClick={() => onRemove(stub.id)}
             aria-label={removeLabel(stub.name)}
           >
             <CloseIcon sx={{ fontSize: 12 }} />
-          </button>
+          </ActionIcon>
         </span>
       ))}
       {overflow > 0 && (
-        <UnstyledButton
+        <Button
+          type="button"
+          variant="tertiary"
+          hover={false}
           className="chat-file-pill chat-file-pill--more"
           onClick={onOpenFilesModal}
         >
           {moreLabel(overflow)}
-        </UnstyledButton>
+        </Button>
       )}
     </div>
   );
@@ -205,21 +213,11 @@ export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
         "chat.quickActions.compressOne",
         "Compress this document",
       );
-      const rotateText = t(
-        "chat.quickActions.rotateOne",
-        "Rotate this document",
-      );
       result.push({
         key: "compress",
         icon: <CompressIcon sx={{ fontSize: 18 }} />,
         title: compressText,
         onClick: send(compressText),
-      });
-      result.push({
-        key: "rotate",
-        icon: <RotateRightIcon sx={{ fontSize: 18 }} />,
-        title: rotateText,
-        onClick: send(rotateText),
       });
       return result;
     }
@@ -246,10 +244,6 @@ export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
       "chat.quickActions.compressMany",
       "Compress these documents",
     );
-    const rotateText = t(
-      "chat.quickActions.rotateMany",
-      "Rotate these documents",
-    );
     result.push({
       key: "merge",
       icon: <LayersIcon sx={{ fontSize: 18 }} />,
@@ -261,12 +255,6 @@ export function ChatQuickActions({ heading, onAction }: ChatQuickActionsProps) {
       icon: <CompressIcon sx={{ fontSize: 18 }} />,
       title: compressText,
       onClick: send(compressText),
-    });
-    result.push({
-      key: "rotate",
-      icon: <RotateRightIcon sx={{ fontSize: 18 }} />,
-      title: rotateText,
-      onClick: send(rotateText),
     });
     return result;
   }, [summary, t, onAction, openFilesModal]);

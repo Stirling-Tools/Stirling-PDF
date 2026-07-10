@@ -1,13 +1,11 @@
 import { useState, useEffect } from "react";
 import { isAxiosError } from "axios";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import {
   Stack,
   Text,
-  Button,
   TextInput,
   Table,
-  ActionIcon,
   Menu,
   Badge,
   Loader,
@@ -15,11 +13,12 @@ import {
   Modal,
   Select,
   Tooltip,
-  CloseButton,
   Avatar,
   Box,
   type ComboboxItem,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert } from "@app/components/toast";
 import {
@@ -84,13 +83,31 @@ export default function PeopleSection() {
     ? t("workspace.people.loginRequired", "Enable login mode first")
     : hasNoSlots
       ? t(
-          "workspace.people.license.noSlotsAvailable",
+          "workspace.people.license.slotsAvailable",
           "No user slots available",
+          {
+            count: 0,
+          },
         )
       : null;
 
   const isCurrentUser = (user: User) => currentUser?.username === user.username;
   const isLockedUser = (user: User) => lockedUsers.includes(user.username);
+  const getUserRoleId = (user: User) =>
+    user.rolesAsString ||
+    (user.roleName?.startsWith("ROLE_") ? user.roleName : undefined) ||
+    "ROLE_USER";
+
+  const getRoleLabel = (roleId: string) => {
+    switch (roleId) {
+      case "ROLE_ADMIN":
+        return t("workspace.people.admin", "Admin");
+      case "ROLE_USER":
+        return t("workspace.people.user", "User");
+      default:
+        return roleId;
+    }
+  };
 
   // Form state for edit user modal
   const [editForm, setEditForm] = useState({
@@ -350,7 +367,7 @@ export default function PeopleSection() {
   const openEditModal = (user: User) => {
     setSelectedUser(user);
     setEditForm({
-      role: user.roleName,
+      role: getUserRoleId(user),
       teamId: user.team?.id,
     });
     setEditUserModalOpened(true);
@@ -382,7 +399,7 @@ export default function PeopleSection() {
   const roleOptions = [
     {
       value: "ROLE_ADMIN",
-      label: t("workspace.people.admin"),
+      label: getRoleLabel("ROLE_ADMIN"),
       description: t(
         "workspace.people.roleDescriptions.admin",
         "Can manage settings and invite members, with full administrative access.",
@@ -391,9 +408,9 @@ export default function PeopleSection() {
     },
     {
       value: "ROLE_USER",
-      label: t("workspace.people.member"),
+      label: getRoleLabel("ROLE_USER"),
       description: t(
-        "workspace.people.roleDescriptions.member",
+        "workspace.people.roleDescriptions.user",
         "Can view and edit shared files, but cannot manage workspace settings or members.",
       ),
       icon: "person",
@@ -471,7 +488,9 @@ export default function PeopleSection() {
             </Text>
             <Text component="span" c="dimmed">
               {" "}
-              {t("workspace.people.license.users", "users")}
+              {t("workspace.people.license.users", "users", {
+                count: licenseInfo.totalUsers,
+              })}
             </Text>
           </Text>
 
@@ -479,13 +498,16 @@ export default function PeopleSection() {
             <Group gap="xs" wrap="nowrap" align="center">
               <Badge color="red" variant="light" size="sm">
                 {t(
-                  "workspace.people.license.noSlotsAvailable",
-                  "No slots available",
+                  "workspace.people.license.slotsAvailable",
+                  "No user slots available",
+                  {
+                    count: 0,
+                  },
                 )}
               </Badge>
               <Button
-                size="compact-sm"
-                variant="outline"
+                size="sm"
+                variant="secondary"
                 onClick={() => navigate("/settings/adminPlan")}
               >
                 {t("workspace.people.actions.upgrade", "Upgrade")}
@@ -527,7 +549,7 @@ export default function PeopleSection() {
               <Text size="sm" c="dimmed" span>
                 •
               </Text>
-              <UpdateSeatsButton size="xs" onSuccess={fetchData} />
+              <UpdateSeatsButton size="sm" onSuccess={fetchData} />
             </>
           )}
         </Group>
@@ -560,7 +582,7 @@ export default function PeopleSection() {
               (licenseInfo ? licenseInfo.availableSlots === 0 : false)
             }
           >
-            {t("workspace.people.addMembers")}
+            {t("workspace.people.addMembers", "Add Members")}
           </Button>
         </Tooltip>
       </Group>
@@ -698,18 +720,18 @@ export default function PeopleSection() {
                     size="sm"
                     variant="light"
                     color={
-                      (user.rolesAsString || "").includes("ROLE_ADMIN")
+                      getUserRoleId(user) === "ROLE_ADMIN"
                         ? "blue"
-                        : "cyan"
+                        : getUserRoleId(user) === "ROLE_PRO_USER"
+                          ? "grape"
+                          : "cyan"
                     }
                     styles={{
                       root: { maxWidth: "none" },
                       label: { overflow: "visible" },
                     }}
                   >
-                    {(user.rolesAsString || "").includes("ROLE_ADMIN")
-                      ? t("workspace.people.admin", "Admin")
-                      : t("workspace.people.member", "Member")}
+                    {getRoleLabel(getUserRoleId(user))}
                   </Badge>
                 </Table.Td>
                 <Table.Td>
@@ -760,7 +782,11 @@ export default function PeopleSection() {
                       withArrow
                       zIndex={Z_INDEX_OVER_CONFIG_MODAL + 10}
                     >
-                      <ActionIcon variant="subtle" size="sm">
+                      <ActionIcon
+                        variant="tertiary"
+                        size="sm"
+                        aria-label={t("workspace.people.userInfo", "User info")}
+                      >
                         <LocalIcon icon="info" width="1rem" height="1rem" />
                       </ActionIcon>
                     </Tooltip>
@@ -769,7 +795,14 @@ export default function PeopleSection() {
                     {!isCurrentUser(user) && (
                       <Menu position="bottom-end" withinPortal>
                         <Menu.Target>
-                          <ActionIcon variant="subtle" disabled={!loginEnabled}>
+                          <ActionIcon
+                            variant="tertiary"
+                            disabled={!loginEnabled}
+                            aria-label={t(
+                              "workspace.people.memberActions",
+                              "Member actions",
+                            )}
+                          >
                             <LocalIcon
                               icon="more-vert"
                               width="1rem"
@@ -970,16 +1003,20 @@ export default function PeopleSection() {
         withCloseButton={false}
       >
         <Box pos="relative">
-          <CloseButton
+          <ActionIcon
             onClick={closeEditModal}
             size="lg"
+            variant="tertiary"
+            aria-label={t("close", "Close")}
             style={{
               position: "absolute",
               top: -8,
               right: -8,
               zIndex: 1,
             }}
-          />
+          >
+            <LocalIcon icon="close" width="1.25rem" height="1.25rem" />
+          </ActionIcon>
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">
@@ -993,13 +1030,35 @@ export default function PeopleSection() {
                 {t("workspace.people.editMember.title")}
               </Text>
               <Text size="sm" c="dimmed" ta="center">
-                {t("workspace.people.editMember.editing")}{" "}
-                <strong>{selectedUser?.username}</strong>
+                <Trans
+                  i18nKey="workspace.people.editMember.editing"
+                  defaults="Editing: <0>{{username}}</0>"
+                  values={{ username: selectedUser?.username ?? "" }}
+                  components={[<strong />]}
+                />
               </Text>
             </Stack>
             <Select
               label={t("workspace.people.editMember.role")}
-              data={roleOptions}
+              data={
+                selectedUser &&
+                !roleOptions.some(
+                  (option) => option.value === getUserRoleId(selectedUser),
+                )
+                  ? [
+                      ...roleOptions,
+                      {
+                        value: getUserRoleId(selectedUser),
+                        label: getRoleLabel(getUserRoleId(selectedUser)),
+                        description: t(
+                          "workspace.people.roleDescriptions.currentRole",
+                          "Current assigned role.",
+                        ),
+                        icon: "person",
+                      },
+                    ]
+                  : roleOptions
+              }
               value={editForm.role}
               onChange={(value) =>
                 setEditForm({ ...editForm, role: value || "ROLE_USER" })
@@ -1032,7 +1091,7 @@ export default function PeopleSection() {
               loading={processing}
               fullWidth
               size="md"
-              mt="md"
+              style={{ marginTop: "var(--mantine-spacing-md)" }}
             >
               {t("workspace.people.editMember.submit")}
             </Button>

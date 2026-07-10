@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useFrontendVersionInfo } from "@app/hooks/useFrontendVersionInfo";
+import { useIsMobile } from "@app/hooks/useIsMobile";
 import { updateService, type UpdateSummary } from "@app/services/updateService";
+import { isUpdatePopupAllowed } from "@app/components/shared/updatePopupGate";
 import UpdateModal from "@app/components/shared/UpdateModal";
 
 /**
@@ -21,31 +23,12 @@ const SNOOZE_KEY = "stirling-pdf-updater:snoozedUntil";
 const SNOOZE_DURATION_MS = 24 * 60 * 60 * 1000;
 
 /**
- * Best-effort Tauri detection without importing `@tauri-apps/api` into the
- * core bundle (which must remain runnable on plain web). Tauri v2 injects
- * `__TAURI_INTERNALS__` before any user code runs.
- */
-function isRunningInTauri(): boolean {
-  if (typeof window === "undefined") return false;
-  return (
-    typeof (window as unknown as { __TAURI_INTERNALS__?: unknown })
-      .__TAURI_INTERNALS__ !== "undefined"
-  );
-}
-
-/**
  * Web/server-side auto-popup that shows the UpdateModal on startup when a
- * newer Stirling-PDF version is available. Previously this check only ran
- * from the Settings → General "Check for Updates" button, so non-desktop
- * users could sit on stale versions indefinitely without any prompt.
- *
- * On desktop (Tauri) this component is a no-op — `useDesktopUpdatePopup`
- * drives the desktop flow because it also has to honour the headless
- * `updateMode` provisioning flag and wire up the silent/auto installer.
- * Running both would double-popup.
+ * newer Stirling-PDF version is available.
  */
 export function UpdateStartupPopup() {
   const { config } = useAppConfig();
+  const isMobile = useIsMobile();
   const { appVersion } = useFrontendVersionInfo(config?.appVersion);
 
   // The version to compare against the latest. Prefer the frontend version
@@ -59,12 +42,12 @@ export function UpdateStartupPopup() {
   const [showModal, setShowModal] = useState(false);
   const hasChecked = useRef(false);
 
+  const allowed = isUpdatePopupAllowed(config, isMobile);
+
   useEffect(() => {
-    // Skip on desktop — the Tauri popup owns that flow end-to-end.
-    if (isRunningInTauri()) return;
     if (hasChecked.current) return;
     if (!currentVersion) return;
-    // Don't even schedule the timer until we have a version to compare.
+    if (!allowed) return;
     hasChecked.current = true;
 
     const timer = setTimeout(async () => {
@@ -101,12 +84,14 @@ export function UpdateStartupPopup() {
 
     return () => clearTimeout(timer);
   }, [
+    allowed,
     currentVersion,
     config?.machineType,
     config?.activeSecurity,
     config?.license,
   ]);
 
+  if (!allowed) return null;
   if (!updateSummary || !currentVersion) return null;
 
   const machineInfo = {

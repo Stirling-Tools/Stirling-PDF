@@ -6,6 +6,12 @@ export const Z_INDEX_OVER_FULLSCREEN_SURFACE = 1300;
 export const Z_ANALYTICS_MODAL = 1301;
 // Config/Settings modal - should appear above analytics modal when navigating from onboarding
 export const Z_INDEX_CONFIG_MODAL = 1400;
+// Modal layered directly over the settings/config modal (e.g. the Stripe
+// checkout modal). Consumed by the shared cloud/ checkout component, so it
+// lives in the core base both the saas and cloud cascades resolve.
+// Must be strictly ABOVE the config modal (1400); 1450 is taken by the cookie
+// preferences modal, so sit above the whole settings cluster (below 2000).
+export const Z_INDEX_OVER_SETTINGS_MODAL = 1500;
 
 export const Z_INDEX_FILE_MANAGER_MODAL = 1200;
 
@@ -26,10 +32,17 @@ export const Z_INDEX_DRAG_BADGE = 1001;
 // Modal that appears on top of config modal (e.g., restart confirmation, update modal)
 export const Z_INDEX_OVER_CONFIG_MODAL = 2000;
 
+// Cookie-consent banner — above the chat FAB (1050), below all modals and onboarding; reaches CSS via --z-index-cookie-consent
+export const Z_INDEX_COOKIE_CONSENT_BANNER = 1060;
+// Cookie-consent preferences dialog — above the config modal it opens from; reaches CSS via --z-index-cookie-preferences
+export const Z_INDEX_COOKIE_PREFERENCES_MODAL = 1450;
+
 // Sign-in modal — must appear above all app UI including config and analytics modals
 export const Z_INDEX_SIGN_IN_MODAL = 9000;
 
-// Toast notifications and error displays - Always on top (higher than rainbow theme at 10000)
+// Floating viewer menus rendered through document.body portals.
+export const Z_INDEX_VIEWER_FLOATING_MENU = 10000;
+
 export const Z_INDEX_TOAST = 10001;
 
 // Signature preview overlays inside the PDF viewer

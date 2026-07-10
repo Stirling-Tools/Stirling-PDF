@@ -2,6 +2,7 @@ import { Flex } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useCookieConsent } from "@app/hooks/useCookieConsent";
 import { useFooterInfo } from "@app/hooks/useFooterInfo";
+import { Button } from "@app/ui/Button";
 
 interface FooterProps {
   privacyPolicy?: string;
@@ -10,7 +11,6 @@ interface FooterProps {
   cookiePolicy?: string;
   impressum?: string;
   analyticsEnabled?: boolean;
-  forceLightMode?: boolean;
 }
 
 export default function Footer({
@@ -20,7 +20,6 @@ export default function Footer({
   cookiePolicy,
   impressum,
   analyticsEnabled,
-  forceLightMode = false,
 }: FooterProps) {
   const { t } = useTranslation();
   const { footerInfo } = useFooterInfo();
@@ -38,7 +37,6 @@ export default function Footer({
 
   const { showCookiePreferences } = useCookieConsent({
     analyticsEnabled: finalAnalyticsEnabled,
-    forceLightMode,
   });
 
   // Default URLs
@@ -56,12 +54,8 @@ export default function Footer({
     <div
       style={{
         height: "var(--footer-height)",
-        backgroundColor: forceLightMode
-          ? "#f1f3f5"
-          : "var(--mantine-color-gray-1)",
-        borderTop: forceLightMode
-          ? "1px solid #e9ecef"
-          : "1px solid var(--mantine-color-gray-2)",
+        backgroundColor: "var(--bg-surface)",
+        borderTop: "1px solid var(--border-subtle)",
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
@@ -74,18 +68,8 @@ export default function Footer({
         direction="row"
         style={{
           fontSize: "0.75rem",
-          color: forceLightMode ? "#495057" : undefined,
         }}
       >
-        <a
-          className="footer-link px-3"
-          id="survey"
-          target="_blank"
-          rel="noopener noreferrer"
-          href="https://stirlingpdf.info/s/cm28y3niq000o56dv7liv8wsu"
-        >
-          {t("survey.nav", "Survey")}
-        </a>
         <a
           className="footer-link px-3"
           target="_blank"
@@ -149,13 +133,14 @@ export default function Footer({
           </a>
         )}
         {finalAnalyticsEnabled && (
-          <button
+          <Button
+            variant="tertiary"
             className="footer-link px-3"
             id="cookieBanner"
             onClick={showCookiePreferences}
           >
             {t("legal.showCookieBanner", "Cookie Preferences")}
-          </button>
+          </Button>
         )}
       </Flex>
     </div>

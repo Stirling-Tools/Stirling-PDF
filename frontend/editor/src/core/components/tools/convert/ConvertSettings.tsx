@@ -1,16 +1,14 @@
 import { useMemo } from "react";
-import {
-  Stack,
-  Text,
-  Group,
-  Divider,
-  UnstyledButton,
-  useMantineTheme,
-} from "@mantine/core";
+import { Stack, Text, Group, Divider, useMantineTheme } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useTranslation } from "react-i18next";
 import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
-import { isImageFormat, isWebFormat } from "@app/utils/convertUtils";
+import {
+  isImageFormat,
+  isWebFormat,
+  getAvailableToExtensions as defaultGetAvailableToExtensions,
+} from "@app/utils/convertUtils";
 import { getConversionEndpoints } from "@app/data/toolsTaxonomy";
 import { useFileSelection } from "@app/contexts/FileContext";
 import { useFileState } from "@app/contexts/FileContext";
@@ -47,18 +45,18 @@ interface ConvertSettingsProps {
     key: K,
     value: ConvertParameters[K],
   ) => void;
-  getAvailableToExtensions: (
+  getAvailableToExtensions?: (
     fromExtension: string,
   ) => Array<{ value: string; label: string; group: string }>;
-  selectedFiles: StirlingFile[];
+  selectedFiles?: StirlingFile[];
   disabled?: boolean;
 }
 
 const ConvertSettings = ({
   parameters,
   onParameterChange,
-  getAvailableToExtensions,
-  selectedFiles,
+  getAvailableToExtensions = defaultGetAvailableToExtensions,
+  selectedFiles = [],
   disabled = false,
 }: ConvertSettingsProps) => {
   const { t } = useTranslation();
@@ -332,7 +330,11 @@ const ConvertSettings = ({
           {t("convert.convertTo", "Convert to")}:
         </Text>
         {!parameters.fromExtension ? (
-          <UnstyledButton
+          <Button
+            variant="tertiary"
+            hover={false}
+            fullWidth
+            disabled
             style={{
               padding: "0.5rem 0.75rem",
               border: `0.0625rem solid ${theme.colors.gray[4]}`,
@@ -342,7 +344,7 @@ const ConvertSettings = ({
               cursor: "not-allowed",
             }}
           >
-            <Group justify="space-between">
+            <Group justify="space-between" style={{ width: "100%" }}>
               <Text size="sm">
                 {t(
                   "convert.selectSourceFormatFirst",
@@ -356,7 +358,7 @@ const ConvertSettings = ({
                 }}
               />
             </Group>
-          </UnstyledButton>
+          </Button>
         ) : (
           <GroupedFormatDropdown
             name="convert-to-dropdown"

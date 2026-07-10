@@ -1,0 +1,71 @@
+/* Mantine-backed Button — colour driven by the shared accent palette (accents.css). */
+@import "./accents.css";
+
+/* ---- icon-only: square, no horizontal padding ---- */
+.sui-btn--icon.mantine-Button-root {
+  --button-padding-x: 0;
+  width: var(--button-height);
+  min-width: var(--button-height);
+}
+/* Zero the section margin / hide the empty label so the lone icon centres. */
+.sui-btn--icon .mantine-Button-section {
+  margin-inline: 0;
+}
+.sui-btn--icon .mantine-Button-label {
+  display: none;
+}
+
+/* ---- shape ---- */
+.sui-btn--circle.mantine-Button-root {
+  --button-radius: 50%;
+}
+.sui-btn--pill.mantine-Button-root {
+  --button-radius: 9999px;
+}
+
+/* ---- gradient accents: brighten on hover instead of a hard bg swap ---- */
+/* [data-disabled] too: :disabled never matches polymorphic (as="a") roots. */
+.sui-acc-ai.sui-btn--primary:not(:disabled):not([data-disabled]):hover,
+.sui-acc-premium.sui-btn--primary:not(:disabled):not([data-disabled]):hover {
+  filter: brightness(1.06);
+}
+
+/* ---- overflow: default wraps the label; Mantine's label is nowrap ---- */
+.sui-btn--wrap .mantine-Button-label {
+  white-space: normal;
+}
+
+.sui-btn .mantine-Button-label {
+  line-height: 1.4;
+}
+
+/* ---- height: --button-height is a minimum, not a cap ---- */
+/* Single-line content computes to exactly --button-height (same as ActionIcon /
+   SegmentedControl via CONTROL_HEIGHT); taller content (wrapped label, stacked
+   rows) grows the button instead of clipping mid-glyph. Under height:auto the
+   inner's height:100% resolves to auto on its own, so block-level
+   align-content re-centers short content — deliberately NOT flex on the root:
+   that display would out-specificity consumers' own display (e.g. a
+   width:100% list row) and turn them inline-level. */
+.sui-btn.mantine-Button-root {
+  height: auto;
+  min-height: var(--button-height);
+  align-content: center;
+  /* Vertical padding via the `py` prop; Mantine has no --button-padding-y.
+     Default 0 keeps height-driven layout unchanged for every other button. */
+  padding-block: var(--sui-btn-py, 0);
+}
+
+/* no-hover: !important to beat Mantine's own :hover background rule. */
+.sui-btn--no-hover:not(:disabled):not([data-disabled]):hover {
+  background: var(--button-bg, transparent) !important;
+}
+
+[data-theme="dark"]
+  .sui-btn--primary.mantine-Button-root:disabled:not([data-loading]),
+[data-theme="dark"]
+  .sui-btn--primary.mantine-Button-root[data-disabled]:not([data-loading]) {
+  background: var(--button-bg);
+  color: var(--button-color);
+  opacity: 0.55;
+}

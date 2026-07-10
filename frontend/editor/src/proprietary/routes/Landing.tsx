@@ -7,6 +7,7 @@ import { useBackendProbe } from "@app/hooks/useBackendProbe";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
 import LoginHeader from "@app/routes/login/LoginHeader";
 import { useTranslation } from "react-i18next";
+import { Button } from "@app/ui/Button";
 
 /**
  * Landing component - Smart router based on authentication status
@@ -143,19 +144,20 @@ export default function Landing() {
             border: "1px solid rgba(37, 99, 235, 0.2)",
           }}
         >
-          <p
-            style={{ margin: "0 0 0.75rem 0", color: "rgba(15, 23, 42, 0.8)" }}
-          >
-            {t("backendStartup.unreachable")}
+          <p style={{ margin: "0 0 0.75rem 0", color: "var(--text-primary)" }}>
+            {t(
+              "backendStartup.unreachable",
+              "The application cannot currently connect to the backend. Verify the backend status and network connectivity, then try again.",
+            )}
           </p>
-          <button
+          <Button
             type="button"
             onClick={handleRetry}
             className="auth-cta-button px-4 py-[0.75rem] rounded-[0.625rem] text-base font-semibold mt-5 border-0 cursor-pointer"
             style={{ width: "fit-content" }}
           >
             {t("backendStartup.retry", "Retry")}
-          </button>
+          </Button>
         </div>
       </AuthLayout>
     );

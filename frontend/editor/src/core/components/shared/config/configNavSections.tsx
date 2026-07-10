@@ -1,25 +1,21 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { NavKey } from "@app/components/shared/config/types";
 import HotkeysSection from "@app/components/shared/config/configSections/HotkeysSection";
 import GeneralSection from "@app/components/shared/config/configSections/GeneralSection";
 import HelpSection from "@app/components/shared/config/configSections/HelpSection";
+import LegalSection from "@app/components/shared/config/configSections/LegalSection";
+import {
+  BackendThirdPartyLicensesSection,
+  FrontendThirdPartyLicensesSection,
+} from "@app/components/shared/config/configSections/ThirdPartyLicensesSection";
+import type {
+  ConfigNavItem,
+  ConfigNavSection,
+} from "@app/components/shared/config/types";
 
-export interface ConfigNavItem {
-  key: NavKey;
-  label: string;
-  icon: string;
-  component: React.ReactNode;
-  disabled?: boolean;
-  disabledTooltip?: string;
-  badge?: string;
-  badgeColor?: string;
-}
-
-export interface ConfigNavSection {
-  title: string;
-  items: ConfigNavItem[];
-}
+// Re-exported for the many existing importers; the definitions live in
+// config/types so type-only consumers don't pull the section tree in.
+export type { ConfigNavItem, ConfigNavSection };
 
 export interface ConfigColors {
   navBg: string;
@@ -67,6 +63,29 @@ export const useConfigNavSections = (
           component: (
             <HelpSection isAdmin={_isAdmin} onRequestClose={onRequestClose} />
           ),
+        },
+      ],
+    },
+    {
+      title: t("settings.legal.title", "Legal"),
+      items: [
+        {
+          key: "legal",
+          label: t("settings.legal.label", "Legal"),
+          icon: "gavel-rounded",
+          component: <LegalSection />,
+        },
+        {
+          key: "backendThirdPartyLicenses",
+          label: t("settings.licenses.backendLabel", "Backend Licenses"),
+          icon: "article-rounded",
+          component: <BackendThirdPartyLicensesSection />,
+        },
+        {
+          key: "frontendThirdPartyLicenses",
+          label: t("settings.licenses.frontendLabel", "Frontend Licenses"),
+          icon: "code-rounded",
+          component: <FrontendThirdPartyLicensesSection />,
         },
       ],
     },

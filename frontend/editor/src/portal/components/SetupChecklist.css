@@ -1,0 +1,122 @@
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Getting-started steps (home-hero body)                                   */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+.portal-setup {
+  display: flex;
+  flex-direction: column;
+}
+
+.portal-setup__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.portal-setup__row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.875rem;
+  width: 100%;
+  padding: 0.6875rem 1.25rem;
+  border: none;
+  border-top: 1px solid var(--color-border-light);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--motion-fast);
+}
+.portal-setup__item:first-child .portal-setup__row {
+  border-top: none;
+}
+.portal-setup__row:hover {
+  background: var(--color-bg-hover);
+}
+
+/* Numbered step marker */
+.portal-setup__num {
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid var(--color-border-input);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-4);
+}
+/* Completed step: filled green check. */
+.portal-setup__num.is-done {
+  border-color: var(--color-green);
+  background: var(--color-green);
+  color: #fff;
+}
+.portal-setup__row.is-done .portal-setup__text strong {
+  color: var(--color-text-2);
+}
+
+.portal-setup__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.portal-setup__text strong {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+.portal-setup__text span {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--color-text-4);
+}
+
+/* ── Enterprise upsell rung ── */
+.portal-setup__enterprise {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--color-border-light);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-blue) 5%, transparent) 0%,
+    transparent 55%
+  );
+}
+
+.portal-setup__enterprise-copy {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.portal-setup__enterprise-tag {
+  flex-shrink: 0;
+  padding: 0.1875rem 0.5625rem;
+  border-radius: var(--radius-md);
+  font-size: 0.59375rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-blue-dark);
+  background: var(--color-blue-light);
+}
+
+.portal-setup__enterprise-text {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-text-3);
+  min-width: 0;
+}
+.portal-setup__enterprise-text strong {
+  color: var(--color-text-1);
+  font-weight: 700;
+}

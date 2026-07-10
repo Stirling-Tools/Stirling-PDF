@@ -1,5 +1,8 @@
 import React from "react";
-import "@app/routes/authShared/auth.css";
+import { Button } from "@app/ui/Button";
+
+// TODO: add saas-auth.css to the same location as auth.css
+import "@app/auth/ui/auth.css";
 import "@app/routes/authShared/saas-auth.css";
 
 interface GuestSignInButtonProps {
@@ -14,13 +17,13 @@ export default function GuestSignInButton({
   disabled,
 }: GuestSignInButtonProps) {
   return (
-    <button
-      type="button"
+    <Button
+      variant="secondary"
       onClick={onClick}
       disabled={disabled}
       className="w-full px-4 py-[0.75rem] rounded-[0.625rem] text-base font-semibold mb-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed auth-guest-button"
     >
       {label}
-    </button>
+    </Button>
   );
 }

@@ -5,13 +5,19 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { Badge, Modal, Text, ActionIcon, Tooltip, Group } from "@mantine/core";
+import { Badge, Modal, Text, Tooltip, Group } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useConfigNavSections } from "@app/components/shared/config/configNavSections";
-import { NavKey, VALID_NAV_KEYS } from "@app/components/shared/config/types";
+import {
+  NavKey,
+  VALID_NAV_KEYS,
+  type ConfigNavSection,
+} from "@app/components/shared/config/types";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { COOKIE_CONSENT_SCROLL_SHARD } from "@app/hooks/useCookieConsent";
 import "@app/components/shared/AppConfigModal.css";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import {
@@ -24,10 +30,23 @@ import {
   useUnsavedChanges,
 } from "@app/contexts/UnsavedChangesContext";
 import { SettingsSearchBar } from "@app/components/shared/config/SettingsSearchBar";
+import { stripBasePath, withBasePath } from "@app/constants/app";
 
 interface AppConfigModalProps {
   opened: boolean;
   onClose: () => void;
+  /**
+   * Mirror the active section to /settings/<key> URLs (deep links, history
+   * unwind on close). Hosts mounted away from the editor's /settings route —
+   * the admin portal — turn this off and the modal keeps its section purely in
+   * state.
+   */
+  urlSync?: boolean;
+  /** Section to land on when opening. Only honoured when urlSync is off (URL
+   *  deep links win otherwise). */
+  initialSection?: NavKey | null;
+  /** Host-specific sections appended after the build's registry sections. */
+  extraSections?: ConfigNavSection[];
 }
 
 // Extract section from URL path (e.g., /settings/people -> people)
@@ -43,12 +62,18 @@ const getSectionFromPath = (pathname: string): NavKey | null => {
 const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   opened,
   onClose,
+  urlSync = true,
+  initialSection,
+  extraSections,
 }) => {
   const { t } = useTranslation();
   // Initialize from the URL so a deep link (`/settings/people`) lands on the
   // right tab without a one-frame "general" flicker.
   const [active, setActive] = useState<NavKey>(
-    () => getSectionFromPath(window.location.pathname) ?? "general",
+    () =>
+      (urlSync ? getSectionFromPath(window.location.pathname) : null) ??
+      initialSection ??
+      "general",
   );
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -63,6 +88,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   // those update the URL via `history.replaceState` directly and never push
   // a new React Router location.
   useEffect(() => {
+    if (!urlSync) return;
     const section = getSectionFromPath(location.pathname);
     if (opened && section) {
       setActive(section);
@@ -74,7 +100,14 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
       // If at /settings without a section, redirect to general
       navigate("/settings/general", { replace: true });
     }
-  }, [location.pathname, opened, navigate]);
+  }, [location.pathname, opened, navigate, urlSync]);
+
+  // Non-URL hosts land the modal on the section they asked for.
+  useEffect(() => {
+    if (opened && !urlSync && initialSection) {
+      setActive(initialSection);
+    }
+  }, [opened, urlSync, initialSection]);
 
   useEffect(() => {
     if (opened) {
@@ -96,19 +129,21 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   const switchSection = useCallback(
     (key: NavKey) => {
       setActive(key);
-      const alreadyInSettings =
-        window.location.pathname.startsWith("/settings");
+      if (!urlSync) return;
+      const alreadyInSettings = stripBasePath(
+        window.location.pathname,
+      ).startsWith("/settings");
       if (alreadyInSettings) {
         window.history.replaceState(
           window.history.state,
           "",
-          `/settings/${key}`,
+          withBasePath(`/settings/${key}`),
         );
       } else {
         navigate(`/settings/${key}`);
       }
     },
-    [navigate],
+    [navigate, urlSync],
   );
 
   // Backwards-compat: external `appConfig:navigate` events route through the
@@ -150,17 +185,25 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
     const canProceed = await confirmIfDirty();
     if (!canProceed) return;
 
-    // Pop back to whatever the user came from (files / viewer / tools).
-    // location.key === "default" means /settings was the first entry in
-    // this tab (deep link / refresh), so there's nothing to pop to;
-    // fall back to home in that case.
-    if (location.key === "default") {
-      navigate("/", { replace: true });
-    } else {
-      navigate(-1);
+    // Only unwind history if settings was opened via the URL; opened via state
+    // there's no /settings entry to pop and navigate(-1) would jump to /files.
+    if (urlSync && location.pathname.startsWith("/settings")) {
+      // "default" key = first entry (deep link/refresh); nothing to pop to.
+      if (location.key === "default") {
+        navigate("/", { replace: true });
+      } else {
+        navigate(-1);
+      }
     }
     onClose();
-  }, [confirmIfDirty, location.key, navigate, onClose]);
+  }, [
+    confirmIfDirty,
+    location.key,
+    location.pathname,
+    navigate,
+    onClose,
+    urlSync,
+  ]);
 
   // Synchronous wrapper for contexts (e.g. tour buttons) that need () => void
   const handleCloseSync = useCallback(() => {
@@ -168,11 +211,18 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   }, [handleClose]);
 
   // Left navigation structure and icons
-  const configNavSections = useConfigNavSections(
+  const registrySections = useConfigNavSections(
     isAdmin,
     runningEE,
     loginEnabled,
     handleCloseSync,
+  );
+  const configNavSections = useMemo(
+    () =>
+      extraSections?.length
+        ? [...registrySections, ...extraSections]
+        : registrySections,
+    [registrySections, extraSections],
   );
 
   const activeLabel = useMemo(() => {
@@ -214,6 +264,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
       padding={0}
       fullScreen={isMobile}
       styles={{ content: { overflowY: "hidden", overscrollBehavior: "none" } }}
+      removeScrollProps={{ shards: [COOKIE_CONSENT_SCROLL_SHARD] }}
     >
       <div className="modal-container">
         {/* Left navigation */}
@@ -360,7 +411,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                 />
                 <ActionIcon
                   ref={closeButtonRef}
-                  variant="subtle"
+                  variant="tertiary"
                   onClick={handleClose}
                   aria-label={t("settings.close", "Close")}
                   data-autofocus

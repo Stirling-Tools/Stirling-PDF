@@ -2,7 +2,7 @@ name: Enterprise E2E (Playwright)
 
 # Enterprise Playwright suite — exercises premium-key gated features (audit,
 # teams, analytics) plus full OAuth + SAML logins via the Keycloak compose
-# stacks under testing/compose. Slow and secret-gated, so it runs in three
+# stacks under testing/compose. Slow and secret-gated, so it runs in four
 # situations:
 #
 #   - PRs that touch proprietary / premium / SSO compose / enterprise tests
@@ -12,8 +12,6 @@ name: Enterprise E2E (Playwright)
 #   - on a nightly cron schedule (catches Keycloak image drift, license
 #     expiry, upstream proprietary changes),
 #   - manual workflow_dispatch.
-#
-# Auto-skipped when secrets.PREMIUM_KEY_ENTERPRISE is missing (forks, dependabot).
 
 on:
   workflow_call:
@@ -52,6 +50,10 @@ jobs:
 
   playwright-e2e-enterprise:
     needs: pick
+    # Skip on fork PRs / untrusted authors: they have no PREMIUM_KEY_ENTERPRISE
+    # (nor DEPOT_TOKEN), so the suite can't boot premium and would fail. See the
+    # header comment. GitHub reports the skipped reusable workflow as success.
+    if: needs.pick.outputs.is_fork != 'true'
     runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || format('depot-ubuntu-24.04-{0}', inputs.depot_cores || '8') }}
     timeout-minutes: 45
     env:
@@ -78,7 +80,7 @@ jobs:
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
       - name: Install Task
-        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
       - name: Install Playwright (chromium only)
         run: task e2e:install -- chromium
       - name: Build frontend (needed for playwright's vite preview webServer)
@@ -165,6 +167,8 @@ jobs:
           wait_for_backend
       - name: Run enterprise OAuth Playwright tests
         id: oauth-tests
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results-oauth.json
         run: task e2e:enterprise -- --grep "OAuth"
       - name: Stop backend + tear down OAuth Keycloak
         if: always()
@@ -238,6 +242,8 @@ jobs:
           wait_for_backend
       - name: Run enterprise SAML Playwright tests
         id: saml-tests
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results-saml.json
         run: task e2e:enterprise -- --grep "SAML"
       - name: Stop backend + tear down SAML Keycloak
         if: always()
@@ -268,6 +274,8 @@ jobs:
           wait_for_backend
       - name: Run enterprise feature Playwright tests
         id: feature-tests
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results-feature.json
         run: task e2e:enterprise -- --grep "Enterprise license"
       - name: Print backend log on failure
         if: failure()
@@ -280,10 +288,23 @@ jobs:
         run: |
           source /tmp/helpers.sh
           stop_backend
+      - name: Flag flaky tests
+        # Runs regardless of the test outcomes: a flaky test (passed on retry)
+        # leaves its step green, so this is the only place it surfaces. Merges
+        # all three phase reports (some may be absent if an earlier phase hard-
+        # failed and skipped the rest). Emits ::warning:: annotations + a job
+        # summary; never fails the job.
+        if: always()
+        working-directory: frontend
+        run: >
+          npx tsx editor/scripts/report-flaky-tests.mts
+          "${{ github.workspace }}/frontend/playwright-report/results-oauth.json"
+          "${{ github.workspace }}/frontend/playwright-report/results-saml.json"
+          "${{ github.workspace }}/frontend/playwright-report/results-feature.json"
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: playwright-report-enterprise-${{ github.run_id }}
-          path: frontend/editor/playwright-report/
+          path: frontend/playwright-report/
           retention-days: 7

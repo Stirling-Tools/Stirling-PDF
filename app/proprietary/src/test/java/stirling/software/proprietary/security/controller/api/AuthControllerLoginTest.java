@@ -28,6 +28,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
+import stirling.software.proprietary.access.service.ResourceAccessService;
+import stirling.software.proprietary.access.service.TeamLeadLookup;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
@@ -58,6 +60,8 @@ class AuthControllerLoginTest {
     @Mock private MfaService mfaService;
     @Mock private TotpService totpService;
     @Mock private RefreshRateLimitService refreshRateLimitService;
+    @Mock private ResourceAccessService resourceAccessService;
+    @Mock private TeamLeadLookup teamLeadLookup;
 
     @BeforeEach
     void setUp() {
@@ -80,7 +84,9 @@ class AuthControllerLoginTest {
                         refreshRateLimitService,
                         securityProperties,
                         applicationProperties,
-                        new stirling.software.proprietary.service.AiUserDataService(null));
+                        new stirling.software.proprietary.service.AiUserDataService(null),
+                        resourceAccessService,
+                        teamLeadLookup);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 

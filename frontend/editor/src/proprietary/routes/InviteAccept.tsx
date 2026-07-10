@@ -15,10 +15,10 @@ import {
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
 import LoginHeader from "@app/routes/login/LoginHeader";
-import ErrorMessage from "@app/routes/login/ErrorMessage";
+import ErrorMessage from "@app/auth/ui/ErrorMessage";
 import { BASE_PATH } from "@app/constants/app";
 import apiClient from "@app/services/apiClient";
-
+import { Button } from "@app/ui/Button";
 interface InviteData {
   email: string | null;
   role: string;
@@ -163,13 +163,13 @@ export default function InviteAccept() {
         />
         <ErrorMessage error={error} />
         <div className="auth-section">
-          <button
+          <Button
             type="button"
             onClick={() => navigate("/login")}
             className="w-full px-4 py-[0.75rem] rounded-[0.625rem] text-base font-semibold cursor-pointer border-0 auth-cta-button"
           >
             {t("invite.goToLogin", "Go to Login")}
-          </button>
+          </Button>
         </div>
       </AuthLayout>
     );
@@ -259,7 +259,7 @@ export default function InviteAccept() {
           />
 
           <div className="auth-section">
-            <button
+            <Button
               type="submit"
               disabled={submitting}
               className="w-full px-4 py-[0.75rem] rounded-[0.625rem] text-base font-semibold cursor-pointer border-0 disabled:opacity-50 disabled:cursor-not-allowed auth-cta-button"
@@ -267,7 +267,7 @@ export default function InviteAccept() {
               {submitting
                 ? t("invite.creating", "Creating Account...")
                 : t("invite.createAccount", "Create Account")}
-            </button>
+            </Button>
           </div>
         </Stack>
       </form>
