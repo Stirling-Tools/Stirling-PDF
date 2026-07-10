@@ -6514,6 +6514,8 @@ label = "Projected to exceed."
 
 [portal.billing.spendThisMonth]
 eyebrow = "Spend this month"
+freeRemaining_one = "{{formatted}} free PDF remaining"
+freeRemaining_other = "{{formatted}} free PDFs remaining"
 processed_one = "{{formattedCount}} PDF processed."
 processed_other = "{{formattedCount}} PDFs processed."
 processedWithRate_one = "{{formattedCount}} PDF processed, at {{rate}} each."
