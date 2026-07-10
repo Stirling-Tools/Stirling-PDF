@@ -144,6 +144,9 @@ class ApiKeyAuthenticationServiceTest {
         List<String> auths =
                 result.get().authorities().stream().map(GrantedAuthority::getAuthority).toList();
         assertThat(auths).doesNotContain(Role.ADMIN.getRoleId()).contains(Role.USER.getRoleId());
+        // Marked team-scoped so SaaS team-leader checks (a membership lookup, not an authority)
+        // won't treat this shared key as a leader.
+        assertThat(result.get().teamScoped()).isTrue();
     }
 
     @Test
@@ -161,6 +164,8 @@ class ApiKeyAuthenticationServiceTest {
         List<String> auths =
                 result.get().authorities().stream().map(GrantedAuthority::getAuthority).toList();
         assertThat(auths).contains(Role.ADMIN.getRoleId());
+        // A personal key is not shared, so it is never team-scoped (keeps the owner's full role).
+        assertThat(result.get().teamScoped()).isFalse();
     }
 
     @Test

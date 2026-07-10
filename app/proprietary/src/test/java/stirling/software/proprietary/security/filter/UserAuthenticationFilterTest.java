@@ -110,7 +110,10 @@ class UserAuthenticationFilterTest {
                     .thenReturn(
                             Optional.of(
                                     new ApiKeyAuthentication(
-                                            user, "Prod (sk_demo0000)", user.getAuthorities())));
+                                            user,
+                                            "Prod (sk_demo0000)",
+                                            user.getAuthorities(),
+                                            false)));
             when(userService.usernameExistsIgnoreCase("api-user")).thenReturn(true);
             when(userService.isUserDisabled("api-user")).thenReturn(false);
             when(sessionPersistentRegistry.getAllSessions(any(), anyBoolean()))

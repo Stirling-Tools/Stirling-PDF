@@ -99,7 +99,7 @@ class SupabaseAuthenticationFilterTest {
                         Optional.of(
                                 new stirling.software.proprietary.security.service
                                         .ApiKeyAuthenticationService.ApiKeyAuthentication(
-                                        user, null, user.getAuthorities())));
+                                        user, null, user.getAuthorities(), false)));
 
         request.setRequestURI("/api/v1/something");
         request.setMethod("POST");

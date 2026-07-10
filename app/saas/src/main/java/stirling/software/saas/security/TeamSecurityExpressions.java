@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.model.enumeration.TeamRole;
+import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.security.service.UserService;
@@ -34,6 +35,9 @@ public class TeamSecurityExpressions {
 
     /** Whether the current authenticated user is a {@code LEADER} of the given team. */
     public boolean isTeamLeader(Long teamId) {
+        if (isSharedTeamApiKey()) {
+            return false;
+        }
         User currentUser = getCurrentUser();
         if (currentUser == null) {
             return false;
@@ -46,6 +50,9 @@ public class TeamSecurityExpressions {
 
     /** Whether the current authenticated user is a {@code LEADER} of their own team. */
     public boolean isCurrentUserTeamLeader() {
+        if (isSharedTeamApiKey()) {
+            return false;
+        }
         User currentUser = getCurrentUser();
         if (currentUser == null || currentUser.getTeam() == null) {
             return false;
@@ -54,6 +61,17 @@ public class TeamSecurityExpressions {
                 .findByTeamIdAndUserId(currentUser.getTeam().getId(), currentUser.getId())
                 .map(membership -> membership.getRole() == TeamRole.LEADER)
                 .orElse(false);
+    }
+
+    /**
+     * A shared team key must never authenticate with team-leader powers: it acts at the level of the
+     * least-privileged member who can use it. Team-leadership isn't a {@code GrantedAuthority} on
+     * SaaS (it's a membership-role lookup on the acting owner), so the owner-strips in {@code
+     * ApiKeyAuthenticationService} can't cap it - the token's team-scope flag does.
+     */
+    private boolean isSharedTeamApiKey() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth instanceof ApiKeyAuthenticationToken token && token.isTeamScoped();
     }
 
     /** The current authenticated user's team id, or {@code null} if unauthenticated / teamless. */

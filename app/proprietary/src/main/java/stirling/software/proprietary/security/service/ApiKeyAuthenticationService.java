@@ -71,14 +71,18 @@ public class ApiKeyAuthenticationService {
             }
             usageRecorder.record(key.getId());
             return Optional.of(
-                    new ApiKeyAuthentication(owner, auditLabel(key), authoritiesFor(owner, key)));
+                    new ApiKeyAuthentication(
+                            owner,
+                            auditLabel(key),
+                            authoritiesFor(owner, key),
+                            key.getScope().isTeamScoped()));
         }
 
         // Legacy single per-user key: keep working, always personal to its user.
         return userRepository
                 .findByApiKey(rawKey)
                 .filter(User::isEnabled)
-                .map(user -> new ApiKeyAuthentication(user, null, user.getAuthorities()));
+                .map(user -> new ApiKeyAuthentication(user, null, user.getAuthorities(), false));
     }
 
     /**
@@ -130,8 +134,12 @@ public class ApiKeyAuthenticationService {
     }
 
     /**
-     * A resolved key: the user, an optional processor-feed label, and the authorities to run as.
+     * A resolved key: the user, an optional processor-feed label, the authorities to run as, and
+     * whether it is a shared team key (which must not confer team-leader powers).
      */
     public record ApiKeyAuthentication(
-            User user, String auditLabel, Collection<? extends GrantedAuthority> authorities) {}
+            User user,
+            String auditLabel,
+            Collection<? extends GrantedAuthority> authorities,
+            boolean teamScoped) {}
 }
