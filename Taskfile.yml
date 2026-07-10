@@ -186,6 +186,16 @@ tasks:
       - task: engine:format:check
 
   # ============================================================
+  # Code generation
+  # ============================================================
+
+  tool-models:
+    desc: "Generate all API models from the Java OpenAPI spec"
+    cmds:
+      - task: frontend:tool-models
+      - task: engine:tool-models
+
+  # ============================================================
   # Quality Gate
   # ============================================================
 

@@ -3,12 +3,12 @@ import {
   Text,
   Group,
   Select,
-  SegmentedControl,
   NumberInput,
-  Button,
-  ActionIcon,
   Divider,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import {
   type OverlayPdfsParameters,
@@ -121,17 +121,18 @@ export default function OverlayPdfsSettings({
           onChange={(v) =>
             onParameterChange("overlayPosition", (v === "1" ? 1 : 0) as 0 | 1)
           }
-          data={[
+          options={[
             {
               label: t("overlay-pdfs.position.foreground", "Foreground"),
               value: "0",
+              disabled,
             },
             {
               label: t("overlay-pdfs.position.background", "Background"),
               value: "1",
+              disabled,
             },
           ]}
-          disabled={disabled}
         />
       </Stack>
 
@@ -183,8 +184,7 @@ export default function OverlayPdfsSettings({
           {t("overlay-pdfs.overlayFiles.label", "Overlay Files")}
         </Text>
         <Button
-          size="xs"
-          color="blue"
+          size="sm"
           onClick={handleOpenOverlayFilesModal}
           disabled={disabled}
           leftSection={<LocalIcon icon="add" width="14" height="14" />}
@@ -219,8 +219,8 @@ export default function OverlayPdfsSettings({
                       </Group>
                       <ActionIcon
                         size="sm"
-                        variant="subtle"
-                        color="red"
+                        variant="tertiary"
+                        accent="danger"
                         className={styles.removeButton}
                         onClick={() => {
                           const next = (parameters.overlayFiles || []).filter(
@@ -229,6 +229,7 @@ export default function OverlayPdfsSettings({
                           handleOverlayFilesChange(next);
                         }}
                         disabled={disabled}
+                        aria-label={t("remove", "Remove")}
                       >
                         <LocalIcon
                           icon="close-rounded"

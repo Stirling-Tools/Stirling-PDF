@@ -1,8 +1,6 @@
 /**
- * Developer Docs fixtures and the types api/docs.ts shares with them.
- * api/docs.ts imports the types; the MSW handlers in mocks/handlers/ serve the
- * fixture data over the intercepted apiClient.local.json() calls. Components never reach
- * into this module directly.
+ * Developer Docs fixtures. Types live in api/docs.ts (the backend contract);
+ * this module only builds fake data for Storybook and tests.
  *
  * Two payloads back the surface:
  *   - the left-hand nav tree (`buildDocsNav`), and
@@ -12,35 +10,24 @@
  *
  * Rate limits scale with plan: free is throttled hard, pro lifts the ceiling,
  * enterprise is negotiated ("Custom"). The rest of the content is tier-neutral.
- *
- * Once a real backend exists the MSW handlers stop being registered and these
- * fixtures can be deleted (or kept as test seeds).
  */
 
 import type { Tier } from "@portal/contexts/TierContext";
-import type { CodeLang } from "@app/ui";
+import type {
+  AgentSkill,
+  ApiErrorRow,
+  CodeSample,
+  DocsContent,
+  DocsNavSection,
+  EmbedComponent,
+  Playbook,
+  RateLimit,
+  Sdk,
+} from "@portal/api/docs";
 
 /* ──────────────────────────────────────────────────────────────────────── */
 /*  Navigation                                                               */
 /* ──────────────────────────────────────────────────────────────────────── */
-
-/** A leaf entry in the docs nav — maps 1:1 to a content section. */
-export interface DocsNavItem {
-  /** Stable id used as the in-page section anchor. */
-  id: string;
-  label: string;
-  /** Optional badge shown to the right of the label (e.g. "New", "Beta"). */
-  badge?: string;
-}
-
-/** A top-level grouping in the docs nav tree. */
-export interface DocsNavSection {
-  id: string;
-  label: string;
-  /** Single-glyph icon shown beside the section header. */
-  icon: string;
-  items: DocsNavItem[];
-}
 
 export function buildDocsNav(): DocsNavSection[] {
   return [
@@ -94,79 +81,6 @@ export function buildDocsNav(): DocsNavSection[] {
 /* ──────────────────────────────────────────────────────────────────────── */
 /*  Reference content                                                        */
 /* ──────────────────────────────────────────────────────────────────────── */
-
-/** One tab in a multi-language code snippet. */
-export interface CodeSample {
-  /** Stable key used as the snippet tab id. */
-  key: string;
-  label: string;
-  lang: CodeLang;
-  code: string;
-}
-
-/** Per-tier request ceilings rendered by the rate-limits section. */
-export interface RateLimit {
-  rpm: string;
-  burst: string;
-  concurrency: string;
-}
-
-/** A single HTTP status row in the error table. */
-export interface ApiErrorRow {
-  code: string;
-  /** Severity colour — amber for recoverable, red for hard failures. */
-  tone: "amber" | "red";
-  meaning: string;
-}
-
-export type SdkStatus = "ga" | "beta" | "deprecated";
-
-/** An official client library in the SDK matrix. */
-export interface Sdk {
-  name: string;
-  /** Single-glyph icon shown beside the name. */
-  icon: string;
-  install: string;
-  lang: CodeLang;
-  status: SdkStatus;
-}
-
-/** An embeddable UI component in the drop-in viewer library. */
-export interface EmbedComponent {
-  name: string;
-  blurb: string;
-  /** Stack tag, e.g. "React" or "Web". */
-  tag: string;
-}
-
-/** A copy-paste, end-to-end pipeline recipe. */
-export interface Playbook {
-  title: string;
-  blurb: string;
-  /** Ordered stages rendered as a chip flow. */
-  steps: string[];
-  accent: "blue" | "purple" | "green";
-}
-
-/** A bundled, named agent capability — a deterministic op chain. */
-export interface AgentSkill {
-  name: string;
-  blurb: string;
-  /** Op chain shown as a mono string, e.g. "extract · validate". */
-  ops: string;
-}
-
-/** The complete data-driven docs payload for one tier. */
-export interface DocsContent {
-  quickstartSamples: CodeSample[];
-  quickstartResponse: string;
-  rateLimit: RateLimit;
-  errors: ApiErrorRow[];
-  sdks: Sdk[];
-  components: EmbedComponent[];
-  playbooks: Playbook[];
-  skills: AgentSkill[];
-}
 
 const QUICKSTART_SAMPLES: CodeSample[] = [
   {
@@ -337,28 +251,28 @@ const PLAYBOOKS: Playbook[] = [
       "Three-way match",
       "POST to ERP",
     ],
-    accent: "blue",
+    accent: "default",
   },
   {
     title: "PII redaction at scale",
     blurb:
       "Sweep a document set for PII and write redacted copies to cold storage.",
     steps: ["S3 source", "Detect PII", "Redact", "Store to bucket"],
-    accent: "purple",
+    accent: "premium",
   },
   {
     title: "Compliance evidence pack",
     blurb:
       "Bundle SOC 2 and audit reports into a verified, timestamped archive.",
     steps: ["Batch upload", "Classify", "Validate schema", "Sign & archive"],
-    accent: "green",
+    accent: "success",
   },
   {
     title: "Agent document tool",
     blurb:
       "Expose extraction as an MCP tool your agent can call deterministically.",
     steps: ["Define tool", "Bind endpoint", "Run evals", "Ship to agent"],
-    accent: "purple",
+    accent: "premium",
   },
 ];
 

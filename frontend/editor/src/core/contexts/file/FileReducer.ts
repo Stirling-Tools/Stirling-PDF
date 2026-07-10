@@ -74,6 +74,82 @@ function processFileSwap(
   };
 }
 
+/**
+ * In-place variant of {@link processFileSwap} for background enforcement: the
+ * outputs take the FIRST removed input's grid position (rather than jumping to
+ * the front), and the outputs are NOT auto-selected — they only inherit the
+ * input's selection state, so a file that was selected stays selected in place
+ * and one that wasn't stays unselected. This keeps a finished policy run from
+ * yanking the file to the top of the list or pulling it into view.
+ */
+function processFileSwapInPlace(
+  state: FileContextState,
+  filesToRemove: FileId[],
+  filesToAdd: StirlingFileStub[],
+): FileContextState {
+  const unpinnedRemoveIds = filesToRemove.filter(
+    (id) => !state.pinnedFiles.has(id),
+  );
+  const removeSet = new Set(unpinnedRemoveIds);
+
+  // If none of the inputs are in the workspace anymore (e.g. the user closed the
+  // file after its background run started), don't re-add the outputs — they're
+  // already persisted to storage. Leaving the workbench untouched is what stops a
+  // finished run from re-opening a file the user has since closed.
+  const inputPresent = state.files.ids.some((id) => removeSet.has(id));
+  if (!inputPresent) return state;
+
+  const newById = { ...state.files.byId };
+  unpinnedRemoveIds.forEach((id) => {
+    delete newById[id];
+  });
+
+  const addedIds: FileId[] = [];
+  filesToAdd.forEach((record) => {
+    if (!newById[record.id]) {
+      addedIds.push(record.id);
+      newById[record.id] = record;
+    }
+  });
+
+  // Insert the outputs where the first removed input sat. Because that index is
+  // the FIRST removed id, every id before it survives — so it's also the correct
+  // insertion index into the inputs-removed list.
+  const firstIdx = state.files.ids.findIndex((id) => removeSet.has(id));
+  const withoutInputs = state.files.ids.filter((id) => !removeSet.has(id));
+  const newIds =
+    firstIdx === -1
+      ? [...withoutInputs, ...addedIds]
+      : [
+          ...withoutInputs.slice(0, firstIdx),
+          ...addedIds,
+          ...withoutInputs.slice(firstIdx),
+        ];
+
+  // Outputs inherit the input's selection state (no auto-select).
+  const inputWasSelected = filesToRemove.some((id) =>
+    state.ui.selectedFileIds.includes(id),
+  );
+  const validSelectedFileIds = state.ui.selectedFileIds.filter(
+    (id) => !removeSet.has(id),
+  );
+  const newSelectedFileIds = inputWasSelected
+    ? [...validSelectedFileIds, ...addedIds]
+    : validSelectedFileIds;
+
+  return {
+    ...state,
+    files: {
+      ids: newIds,
+      byId: newById,
+    },
+    ui: {
+      ...state.ui,
+      selectedFileIds: newSelectedFileIds,
+    },
+  };
+}
+
 // Pure reducer function
 export function fileContextReducer(
   state: FileContextState,
@@ -286,13 +362,13 @@ export function fileContextReducer(
     }
 
     case "CONSUME_FILES": {
-      const { inputFileIds, outputStirlingFileStubs } = action.payload;
+      const { inputFileIds, outputStirlingFileStubs, silent } = action.payload;
 
       // Transitive provenance: the outputs derive from these inputs AND from
       // whatever those inputs themselves derived from. Accumulating the closure
       // (rather than just the immediate inputs) means a policy badge still
       // resolves after an intermediate edit has been consumed and removed —
-      // e.g. redact → edit → split still tags each split part. Captured before
+      // e.g. redact → edit → split still marks each split part. Captured before
       // the inputs are swapped out below.
       const sourceFileIds = Array.from(
         new Set(
@@ -303,18 +379,35 @@ export function fileContextReducer(
         ),
       );
 
+      // Carry the document's classification labels forward across the edit: any
+      // tool that versions/derives a classified file keeps it in its label
+      // groups instead of dropping to "Other" and waiting on a PDF re-read.
+      // Inherited from the first input that has any; an output that already
+      // carries its own (e.g. a fresh classify result) keeps them.
+      const inheritedLabels = inputFileIds
+        .map((id) => state.files.byId[id]?.classificationLabels)
+        .find((labels) => labels && labels.length > 0);
+
       // Mark every consume output as tool-produced (the single chokepoint for
       // both versioned edits and independent artifacts like convert/split/merge)
       // and stamp its provenance. Tag here, not in processFileSwap, so
       // UNDO_CONSUME (which restores the original inputs through the same helper)
       // doesn't mislabel real uploads.
-      const taggedOutputs = outputStirlingFileStubs.map((stub) => ({
+      const provenancedOutputs = outputStirlingFileStubs.map((stub) => ({
         ...stub,
         derivedFromTool: true,
         sourceFileIds,
+        classificationLabels: stub.classificationLabels ?? inheritedLabels,
       }));
 
-      return processFileSwap(state, inputFileIds, taggedOutputs);
+      // Silent (background enforcement): replace inputs in their existing grid
+      // slot without auto-selecting or moving the outputs to the front, so a
+      // finished policy run doesn't yank the file to the top or open it.
+      if (silent) {
+        return processFileSwapInPlace(state, inputFileIds, provenancedOutputs);
+      }
+
+      return processFileSwap(state, inputFileIds, provenancedOutputs);
     }
 
     case "UNDO_CONSUME_FILES": {

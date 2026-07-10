@@ -141,6 +141,57 @@ export function SupabaseAuthProvider({
     };
   }, []);
 
+  // Enrich with backend truth: grant-based portal access and team leadership
+  // come from /api/v1/auth/me, not Supabase claims. Best-effort; the
+  // isAdminRole fallback below covers failures and anonymous sessions.
+  useEffect(() => {
+    const token = session?.access_token;
+    const sessionUser = session?.user;
+    if (
+      !token ||
+      !sessionUser ||
+      sessionUser.is_anonymous ||
+      sessionUser.portalAccess !== undefined
+    ) {
+      return;
+    }
+    let cancelled = false;
+    void fetch("/api/v1/auth/me", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+      },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then(
+        (
+          data: {
+            user?: { portalAccess?: boolean; teamLead?: boolean };
+          } | null,
+        ) => {
+          if (cancelled || !data?.user) return;
+          setSession((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  user: {
+                    ...prev.user,
+                    portalAccess: data.user?.portalAccess,
+                    teamLead: data.user?.teamLead,
+                  },
+                }
+              : prev,
+          );
+        },
+      )
+      .catch(() => {
+        // Backend unreachable or /me unsupported: keep the claim fallback.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.access_token, session?.user?.id, session?.user?.portalAccess]);
+
   const user = session?.user ?? null;
   const value: AuthContextValue = {
     session,

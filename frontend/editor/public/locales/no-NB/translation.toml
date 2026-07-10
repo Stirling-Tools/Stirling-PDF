@@ -7,6 +7,7 @@ black = "Svart"
 blue = "Blå"
 cancel = "Avbryt"
 chooseFile = "Velg fil"
+clear = "Tøm"
 close = "Lukk"
 comingSoon = "Kommer snart"
 confirm = "Bekreft"
@@ -87,6 +88,7 @@ processingCompleteMultiple = "{{count}} filer er klare."
 property = "Egenskap"
 quickPosition = "Hurtigposisjon"
 red = "Rød"
+remove = "Fjern"
 reset = "Tilbakestill"
 review = "Gjennomgå"
 save = "Lagre"
@@ -180,6 +182,7 @@ addMoreFiles = "Legg til flere filer..."
 attachments = "Velg vedlegg"
 info = "Velg filer som skal legges ved PDF-en. Disse filene blir innebygd og tilgjengelige via PDF-ens vedleggspanel."
 placeholder = "Velg filer..."
+removeFile = "Fjern fil"
 selectedFiles = "Valgte filer"
 submit = "Legg til vedlegg"
 
@@ -1628,6 +1631,9 @@ title = "Vill du gjøre Stirling PDF bedre?"
 tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
 
 [annotation]
+alignCenter = "Midtstill"
+alignLeft = "Venstrejuster"
+alignRight = "Høyrejuster"
 annotationStyle = "Merknadsstil"
 backgroundColor = "Bakgrunnsfarge"
 borderOff = "Kant: Av"
@@ -2531,6 +2537,7 @@ title = "Tommelfingerregel"
 
 [certSign.source]
 device = "Denne enheten"
+noOtherSources = "Ingen andre sertifikatkilder er tilgjengelige."
 server = "Server"
 stepTitle = "Sertifikatkilde"
 upload = "Last opp"
@@ -2805,6 +2812,7 @@ back = "Tilbake"
 cancel = "Avbryt"
 close = "Lukk"
 collapse = "Slå sammen"
+confirm = "Bekreft"
 continue = "Fortsett"
 copied = "Kopiert!"
 copy = "Kopier"
@@ -3595,7 +3603,9 @@ makeCopy = "Lag en kopi"
 mobileShort = "Mobil"
 mobileUpload = "Mobilopplasting"
 mobileUploadNotAvailable = "Mobilopplasting er ikke aktivert"
+moreOptions = "Flere alternativer"
 myFiles = "Mine filer"
+nextFile = "Neste fil"
 noFiles = "Ingen filer tilgjengelig"
 noFilesFound = "Ingen filer funnet som samsvarer med søket ditt"
 noRecentFiles = "Ingen nylige filer funnet"
@@ -3605,6 +3615,7 @@ openInFileEditor = "Åpne i filredigerer"
 openInPageEditor = "Åpne i Sideeditor"
 owner = "Eier"
 ownerUnknown = "Ukjent"
+previousFile = "Forrige fil"
 recent = "Nylige"
 removeBoth = "Fjern fra begge"
 removeFilePrompt = "Denne filen er lagret på denne enheten og på serveren. Hvor vil du fjerne den fra?"
@@ -3680,7 +3691,9 @@ workbench = "Arbeidsområde"
 
 [fileSidebar]
 addFiles = "Legg til filer"
+addingFiles = "Legger til filer…"
 collapse = "Skjul sidepanel"
+customizeGroups = "Tilpass grupper"
 dropHint = "Åpne filer for å komme i gang"
 dropToAdd = "Drop files to add"
 expand = "Utvid sidepanel"
@@ -3693,8 +3706,11 @@ noFiles = "Ingen filer ennå"
 openFileManager = "Åpne filbehandler"
 openFromComputer = "Åpne fra datamaskin"
 openSettings = "Åpne innstillinger"
+other = "Annet"
+recent = "Nylig"
 search = "Søk"
 searchPlaceholder = "Søk i filer..."
+viewAll = "Vis alle {{count}} filer"
 
 [fileSidebar.fileItem]
 closeViewer = "Lukk fremviser"
@@ -3706,6 +3722,23 @@ updateOnServer = "Update on server"
 uploadToServer = "Upload to server"
 versionHistory = "Version history"
 
+[fileSidebar.groupsModal]
+add = "Legg til"
+addLabel = "Legg til en etikett…"
+categoryIconAria = "Velg et ikon for {{name}}"
+createCategory = "Opprett kategori"
+delete = "Slett kategori"
+done = "Ferdig"
+hide = "Skjul kategori"
+newCategory = "Nytt kategorinavn…"
+removeLabel = "Fjern {{name}}"
+rename = "Gi nytt navn"
+reset = "Tilbakestill til standarder"
+search = "Søk i etiketter…"
+show = "Vis kategori"
+subtitle = "Grupper filene dine i overordnede kategorier. Legg til eksisterende eller nye etiketter i en kategori, gi den nytt navn, eller opprett din egen. Filer som ikke er i noen av kategoriene dine, vises under «Annet»."
+title = "Sidefeltkategorier"
+
 [filesPage]
 addToWorkspace = "Legg til i arbeidsområde"
 addToWorkspaceCount = "Legg {{count}} til i arbeidsområde"
@@ -3715,6 +3748,7 @@ backToFolder = "Tilbake til {{folder}}"
 backToMyFiles = "Tilbake til Mine filer"
 breadcrumbs = "Mappesti"
 cancel = "Avbryt"
+classification = "Klassifisering"
 clearSearch = "Tøm søk"
 clearSelection = "Tøm utvalg"
 closeDetails = "Lukk detaljer"
@@ -3874,10 +3908,10 @@ uploadFilesFailedDetail = "Kunne ikke laste opp filer: {{message}}"
 added = "Lagt til"
 count = "Filer"
 folder = "Mappe"
+labels = "Etiketter"
 modified = "Endret"
 name = "Navn"
 size = "Størrelse"
-toolHistory = "Verktøyhistorikk"
 toolHistoryAtVersion = "Samlet verktøykjede"
 totalSize = "Total størrelse"
 type = "Type"
@@ -4614,10 +4648,10 @@ welcomeTitle = "Du er invitert!"
 [landing]
 addFiles = "Legg til filer"
 heroSubtitle = "Slipp inn eller legg til en eksisterende PDF for å komme i gang."
-heroTitle = "Stirling PDF"
 mobileUpload = "Last opp fra mobil"
 openFromComputer = "Åpne fra datamaskin"
 uploadFromComputer = "Last opp fra datamaskin"
+workbenchEmptyStateHero = "Slipp en PDF hvor som helst"
 
 [language]
 direction = "ltr"
@@ -4930,6 +4964,7 @@ title = "Utdata"
 [onboarding]
 activeFiles = "Visningen <strong>Aktive filer</strong> viser alle PDF-ene du har lastet inn i verktøyet, og lar deg velge hvilke som skal behandles."
 allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
+close = "Lukk"
 cropSettings = "Nå som vi har valgt filen vi vil beskjære, kan vi konfigurere Beskjær-verktøyet til å velge området vi vil beskjære PDF-en til."
 fileCheckbox = "Å klikke på en av filene velger den for behandling. Du kan velge flere filer for batchoperasjoner."
 fileReplacement = "Den endrede filen vil erstatte originalfilen i Arbeidsbenken automatisk, slik at du enkelt kan kjøre den gjennom flere verktøy."
@@ -4955,6 +4990,7 @@ skipTheTour = "Hopp over omvisningen"
 
 [onboarding.desktopInstall]
 body = "Stirling fungerer best som en skrivebordsapp. Du kan bruke den offline, få raskere tilgang til dokumenter og gjøre redigeringer lokalt på datamaskinen."
+selectOs = "Velg operativsystem"
 title = "Last ned"
 titleWithOs = "Last ned for {{osLabel}}"
 
@@ -5566,7 +5602,9 @@ viewLabel = "PDF-redigerer"
 
 [pdfTextEditor.actions]
 applyChanges = "Bruk endringer"
+clearText = "Tøm tekst"
 downloadCopy = "Last ned kopi"
+moreOptions = "Flere alternativer"
 reset = "Tilbakestill endringer"
 
 [pdfTextEditor.badges]
@@ -5942,6 +5980,16 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.docType]
+Contracts = "Kontrakter"
+"Financial reports" = "Finansrapporter"
+"HR records" = "HR-poster"
+Insurance = "Forsikring"
+Invoices = "Fakturaer"
+"Legal filings" = "Juridiske innsendelser"
+"Medical / PHI" = "Medisinsk / PHI"
+"Tax documents" = "Skattedokumenter"
+
 [policies.enforcement]
 applying = "Tar i bruk {{names}}"
 applyingProgress = "Tar i bruk {{names}} ({{done}} av {{total}})"
@@ -5963,8 +6011,94 @@ export = "Håndhever før eksport"
 input = "Håndhever ved import"
 print = "Håndhever før utskrift"
 
+[policies.field]
+accessLog = "Tilgangslogg"
+archiveAfter = "Arkiver etter"
+auditTrail = "Revisjonsspor"
+belowThreshold = "Under terskel"
+destination = "Destinasjon"
+frameworks = "Rammeverk"
+immutableHold = "Uforanderlig sperre"
+keepFor = "Behold i"
+minConfidence = "Min. sikkerhet"
+notify = "Varsle ved ruting"
+onViolation = "Ved manglende samsvar"
+webhookUrl = "Webhook URL"
+
+[policies.fieldOption.archiveAfter]
+"1 year" = "1 år"
+"30 days" = "30 dager"
+"90 days" = "90 dager"
+Never = "Aldri"
+
+[policies.fieldOption.belowThreshold]
+"Flag for review" = "Merk for gjennomgang"
+Hold = "Hold tilbake"
+"Route to bucket" = "Rut til bucket"
+
+[policies.fieldOption.destination]
+Documents = "Dokumenter"
+"S3 bucket" = "S3 bucket"
+SharePoint = "SharePoint"
+Webhook = "Webhook"
+
+[policies.fieldOption.frameworks]
+FedRAMP = "FedRAMP"
+GDPR = "GDPR"
+HIPAA = "HIPAA"
+"ISO 27001" = "ISO 27001"
+"PCI DSS" = "PCI DSS"
+"SOC 2" = "SOC 2"
+
+[policies.fieldOption.keepFor]
+"1 year" = "1 år"
+"3 years" = "3 år"
+"30 days" = "30 dager"
+"7 years" = "7 år"
+Indefinite = "På ubestemt tid"
+
+[policies.fieldOption.minConfidence]
+"60%" = "60%"
+"70%" = "70%"
+"80%" = "80%"
+"90%" = "90%"
+"95%" = "95%"
+
+[policies.fieldOption.onViolation]
+"Auto-redact PHI" = "Sladd PHI automatisk"
+"Block export" = "Blokker eksport"
+"Flag for review" = "Merk for gjennomgang"
+"Quarantine document" = "Sett dokument i karantene"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
+
+[policies.labels]
+add = "Legg til"
+addPlaceholder = "Legg til en etikett…"
+customNote = "Tilpasset for teamet ditt."
+defaultNote = "Bruker den innebygde standarden, delt med teamet ditt."
+duplicate = "\"{{name}}\" finnes allerede."
+edit = "Rediger etiketter"
+empty = "Ingen etiketter ennå."
+export = "Eksporter JSON"
+iconAria = "Velg et ikon for {{name}}"
+import = "Importer JSON"
+importError = "Kunne ikke importere den filen."
+managedNote = "Teametiketter administreres av teamlederen din."
+modalSubtitle = "Delt med hele teamet ditt. Klassifisereren velger etikettene som passer hvert dokument."
+modalTitle = "Klassifiseringsetiketter"
+pickIcon = "Bruk {{label}}-ikon"
+removeAria = "Fjern {{name}}"
+resetToDefault = "Tilbakestill til standard"
+saveForTeam = "Lagre for team"
+saving = "Lagrer…"
+sectionLabel = "Klassifiseringsetiketter"
+startFromScratch = "Start fra bunnen"
+teamCount = "teametiketter"
+tooLong = "Etiketter kan være høyst {{max}} tegn."
+ungrouped = "Ugruppert"
+view = "Vis etiketter"
 
 [policies.pii]
 account = "Kontonumre (merket)"
@@ -5977,17 +6111,30 @@ placeholder = "Select PII types"
 routing = "Amerikanske routing-numre (ABA)"
 ssn = "Social Security-numre"
 
+[policies.settings]
+noneExport = "Ingen policyer kjøres for øyeblikket ved eksport."
+noneUpload = "Ingen policyer kjøres for øyeblikket ved opplasting."
+onExport = "Ved eksport"
+onUpload = "Ved opplasting"
+reorderHandle = "Dra for å endre rekkefølge"
+runOrderDesc = "Når mer enn én policy kjøres på samme utløser, kjøres de i denne rekkefølgen — hver på utdataene fra forrige policy. Dra for å endre rekkefølge."
+title = "Policyinnstillinger"
+
 [policies.sidebar]
 activeCount = "{{count}} active"
-infoAriaLabel = "What is a policy?"
 infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
 loading = "Loading…"
+optionsAriaLabel = "Policyalternativer"
+policySettings = "Policyinnstillinger"
 railAriaLabel = "{{label}} policy — {{status}}"
 railSuffixActive = " (Active)"
 railSuffixPaused = " (Paused)"
+retryFailed = "Prøv mislykkede policyer på nytt ({{count}})"
+rowProgress = "{{completed}} av {{total}} filer behandlet"
 setUp = "Set up"
 title = "Policies"
 upgradeToEnterprise = "Upgrade to enterprise"
+whatIsPolicy = "Hva er en policy?"
 
 [policies.status]
 active = "Active"
@@ -6047,6 +6194,1933 @@ sourcesLabel = "Sources"
 stepOf = "Step {{step}} of {{total}}"
 toolChainDesc = "Configure the tools this policy runs on each document."
 typesSelected = "{{count}} types selected"
+
+[policy]
+badgeEnforcing = "{{name}} håndheves..."
+badgeRan = "{{name}}-policyen kjørte på denne filen"
+blockingAction = "{{action}} blokkert mens policy håndheves, vent..."
+dismiss = "Avvis overlegg"
+enforcingTitle = "Håndhever policy..."
+viewAnyway = "Vis fil (policy håndheves fortsatt)"
+
+[portal]
+comingSoon = "Kommer snart"
+
+[portal.accountLink.card]
+billingNote = "Uovervåket behandling faktureres mot organisasjonens lommebok."
+eyebrow = "Kontokobling"
+linkButton = "Koble til Stirling-kontoen din"
+linked = "Koblet til"
+linkedAs = "Koblet til som {{name}}."
+linkedGeneric = "Denne instansen er koblet til."
+notLinked = "Ikke koblet til"
+title = "Koble denne organisasjonen til Stirling-kontoen dens"
+unlink = "Koble fra"
+
+[portal.accountLink.card.error]
+title = "Kunne ikke koble til"
+
+[portal.accountLink.card.loginNotConfigured]
+after = "for å aktivere kontokobling mot den hostede Stirling-kontoen. I dev kan du simulere innlogging fra koblingsdialogen."
+before = "Angi"
+title = "SaaS-innlogging er ikke konfigurert"
+
+[portal.accountLink.gate]
+action = "Koble til konto"
+description = "Koble til denne organisasjonens Stirling-konto for å bruke fakturerbare funksjoner."
+title = "Koble til for å låse opp"
+titleFeature = "Koble til for å låse opp {{feature}}"
+
+[portal.accountLink.instances]
+active = "Aktiv"
+revoke = "Tilbakekall"
+revoked = "Tilbakekalt"
+unnamed = "Instans uten navn"
+
+[portal.accountLink.instances.columns]
+instance = "Instans"
+lastSeen = "Sist sett"
+linked = "Koblet til"
+status = "Status"
+
+[portal.accountLink.instances.empty]
+description = "Koble til denne organisasjonens konto, og registrer deretter dine selvhostede instanser for å se dem her."
+title = "Ingen tilkoblede instanser"
+
+[portal.accountLink.instances.time]
+daysAgo_one = "for {{count}} d siden"
+daysAgo_other = "for {{count}} d siden"
+hoursAgo_one = "for {{count}} t siden"
+hoursAgo_other = "for {{count}} t siden"
+justNow = "akkurat nå"
+minutesAgo_one = "for {{count}} min siden"
+minutesAgo_other = "for {{count}} min siden"
+never = "aldri"
+
+[portal.accountLink.modal]
+linkSubtitle = "Logg på kontoen denne serveren skal fakturere mot."
+linkTitle = "Koble til Stirling-kontoen din"
+reauthSubtitle = "Økten din er utløpt — logg på Stirling-kontoen din igjen. Instansen din forblir koblet til."
+reauthTitle = "Logg på igjen"
+simulateSignIn = "Simuler innlogging (dev)"
+
+[portal.accountLink.modal.loginNotConfigured]
+after = "for å aktivere kobling i appen mot den hostede Stirling-kontoen."
+and = "og"
+before = "Angi"
+title = "SaaS-innlogging er ikke konfigurert"
+
+[portal.accountLink.panel]
+instancesSub = "Hver selvhostede instans registrert til denne organisasjonen. Tilbakekall en legitimasjon for umiddelbart å avbryte dens uovervåkede tilgang."
+instancesTitle = "Tilkoblede instanser"
+revokeError = "Kunne ikke tilbakekalle instans"
+sub = "Koble denne selvhostede organisasjonen til Stirling-kontoen dens, slik at uovervåket behandling faktureres mot organisasjonens lommebok."
+
+[portal.accountLink.panel.loadError]
+forbidden = "Bare teameieren kan vise organisasjonens tilkoblede instanser."
+generic = "Kunne ikke laste teamets tilkoblede instanser. Prøv igjen om et øyeblikk."
+title = "Kunne ikke laste tilkoblede instanser"
+
+[portal.accountLink.state]
+free = "Editor-plan"
+subscribed = "Processor-plan"
+unlinked = "Ikke koblet til"
+
+[portal.agentBuilder]
+bootstrapFromDocument = "Initialiser fra dokument"
+sectionsAriaLabel = "Agentbyggerseksjoner"
+selectorAriaLabel = "Agenter"
+subtitle = "Utform, test og lever AI-agentene som klassifiserer, trekker ut fra og ruter dokumentene dine. Definer scenarioer, avgrens verktøytilgang, kjør et golden set og publiser en versjon."
+title = "Agentbygger"
+
+[portal.agentBuilder.bootstrap]
+cancel = "Avbryt"
+dropzoneText = "Velg et eksempeldokument (PDF eller bilde)"
+lead = "Slipp et eksempeldokument, så foreslår vi scenarioer og et ekstraksjonsskjema du kan finjustere. Ingenting publiseres før du har gjennomgått det."
+submit = "Initialiser agent"
+subtitle = "Start en ny agent fra én representativ fil"
+title = "Initialiser fra et dokument"
+
+[portal.agentBuilder.empty]
+description = "Initialiser en agent fra et eksempeldokument for å starte scenarioene og ekstraksjonsskjemaet, og finjuster og publiser deretter."
+title = "Ingen agenter ennå"
+
+[portal.agentBuilder.evals]
+casesPassing = "Tilfeller bestått"
+columnCase = "Eval-tilfelle"
+columnLatency = "Latens"
+columnResult = "Resultat"
+fail = "mislykket"
+goldenSetPassRate = "Beståttandel for golden set"
+latencyMs = "{{ms}} ms"
+notRun = "ikke kjørt"
+pass = "bestått"
+passRate = "Beståttandel"
+runEvals = "Kjør evalueringer"
+
+[portal.agentBuilder.evals.empty]
+description = "Evalueringer gjør scenarioene dine om til et repeterbart golden set. Oppgrader for å registrere beståttandel over tid og styre publiseringer etter den."
+title = "Ingen golden set ennå"
+
+[portal.agentBuilder.kpi]
+acrossGoldenSets = "på tvers av golden sets"
+activeAgents = "Aktive agenter"
+avgPassRate = "Gj.sn. beståttandel for evalueringer"
+fleetWide = "på tvers av flåten"
+latestPublished = "Sist publisert"
+scenarios = "Scenarioer"
+testCases = "testtilfeller"
+totalDescription_one = "{{count}} totalt"
+totalDescription_other = "{{count}} totalt"
+
+[portal.agentBuilder.scenarios]
+add = "Legg til"
+addScenario = "Legg til scenario"
+enable = "Aktiver"
+expectationLabel = "Forventet atferd"
+expectationPlaceholder = "Hva agenten skal gjøre"
+inEval = "i evaluering"
+mute = "Demp"
+muted = "dempet"
+nameLabel = "Navn"
+namePlaceholder = "f.eks. eskalering av samsvar"
+
+[portal.agentBuilder.tabs]
+evals = "Evalueringer"
+scenarios = "Scenarioer"
+tools = "Verktøy"
+versions = "Versjoner"
+
+[portal.agentBuilder.tools]
+broadAccess = "Bred tilgang"
+deniedHint = "Valgte verktøy er blokkert. Alt annet kan fortsatt kalles."
+deniedTools = "Avviste verktøy"
+governanceGate = "Verktøystyring er tilgjengelig på Enterprise-planen."
+restricted = "Begrenset"
+restrictedAccess = "Begrenset verktøytilgang"
+restrictedDescription = "Tillat alle verktøy unntatt de du avviser nedenfor."
+
+[portal.agentBuilder.versions]
+current = "gjeldende"
+historyGate = "Full versjonshistorikk og tilbakestilling er tilgjengelig på Enterprise-planen."
+publish = "Publiser"
+rollBack = "Rull tilbake"
+
+[portal.assistant]
+close = "Lukk assistent"
+error = "Kunne ikke nå assistenten."
+errorWithDetail = "Kunne ikke nå assistenten: {{detail}}"
+inputAriaLabel = "Spør assistenten"
+inputPlaceholder = "Spør om Stirling…"
+open = "Åpne assistent"
+send = "Send"
+title = "Assistent"
+tryAsking = "Prøv å spørre"
+typing = "Skriver"
+
+[portal.auth]
+loading = "Laster"
+redirectingToEditor = "Omdirigerer til redigeringsprogrammet..."
+
+[portal.billing.checkout]
+noClientSecret = "Edge-funksjonen returnerte ingen client_secret."
+subtitle = "Legg til et kort for å fortsette etter den gratis tildelingen i Editor-planen. Stripe håndterer resten."
+title = "Slå på Processor-planen"
+
+[portal.billing.checkout.activationSlow]
+body = "Betalingen din lyktes, men aktiveringen tar litt lengre tid enn vanlig. Den slås på automatisk - lukk dette, så vises den her snart."
+close = "Lukk"
+title = "Nesten ferdig"
+
+[portal.billing.checkout.error]
+title = "Kunne ikke starte checkout"
+
+[portal.billing.checkout.finalizing]
+body = "Betalingen din gikk gjennom. Vi slår på målt behandling på tvers av de tilkoblede instansene dine - dette tar vanligvis noen sekunder."
+hint = "Hold dette vinduet åpent."
+title = "Aktiverer Processor-planen din..."
+
+[portal.billing.checkout.notConfigured]
+bodyAfter = "i portal-env for å aktivere checkout i appen."
+bodyBefore = "Angi"
+title = "Stripe er ikke konfigurert"
+
+[portal.billing.enterpriseUpsell]
+cta = "Bygg ditt Enterprise-tilbud"
+description = "Volumrabatter med forpliktelse, air-gapped utrulling, tilpasset MSA og sikkerhetsgjennomganger, samt partnerskap med tredjepartsdistributører."
+eyebrow = "Volumrabatt · 1M+ PDF-er"
+title = "Stirling Enterprise"
+
+[portal.billing.freeEditors]
+activeThisMonth = "Aktive denne måneden"
+cost = "Kostnad"
+editorsDeployed = "Redigeringsprogrammer utrullet"
+inviteTeammates = "Inviter teammedlemmer"
+pdfsEdited = "PDF-er redigert"
+subtitle = "Rull ut hvor som helst, for hele teamet ditt."
+title = "Gratis PDF-redigeringsprogrammer"
+
+[portal.billing.freePlan]
+checkoutErrorTitle = "Kunne ikke starte checkout"
+currentPlan = "Gjeldende plan"
+freeForever = "Gratis for alltid"
+noTeamResolved = "Ingen team er løst på lommeboken din ennå — oppdater og prøv igjen."
+ownerOnly = "Bare teameieren kan slå på Processor-planen."
+planName = "Editor"
+ssoIncluded = "SSO inkludert"
+switchOnProcessor = "Slå på Processor →"
+unlimitedUsers = "Ubegrenset antall brukere"
+
+[portal.billing.invoices]
+columnAmount = "Beløp"
+columnDate = "Dato"
+columnDescription = "Beskrivelse"
+columnPdfsProcessed = "PDF-er behandlet"
+columnStatus = "Status"
+descriptionFallback = "Faktura"
+downloadAriaLabel = "Last ned faktura {{number}} som PDF"
+emptyDescription = "Når teamet ditt abonnerer og den første syklusen avsluttes, vises fakturaene dine her."
+emptyTitle = "Ingen fakturaer ennå"
+fetchLimitNote_one = "Viser den {{count}} nyeste fakturaen din. Eldre fakturaer er i Stripe-portalen."
+fetchLimitNote_other = "Viser de {{count}} nyeste fakturaene dine. Eldre fakturaer er i Stripe-portalen."
+loadError = "Kunne ikke laste fakturaer: {{error}}"
+pdfLink = "PDF ↓"
+showAll_one = "Vis alle {{count}}"
+showAll_other = "Vis alle {{count}}"
+showFewer_one = "Vis færre (topp {{count}})"
+showFewer_other = "Vis færre (topp {{count}})"
+showMostRecent_one = "Vis {{count}} nyeste"
+showMostRecent_other = "Vis {{count}} nyeste"
+title = "Fakturahistorikk"
+viewAriaLabel = "Vis faktura {{number}} i Stripe"
+viewLink = "Vis ↗"
+
+[portal.billing.linkPrompt]
+cta = "Koble til Stirling-konto"
+description = "Manuell PDF-redigering — visning, signering, sammenslåing, splitting, vannmerking, komprimering, konvertering, manuell OCR — er alltid gratis, koblet til eller ikke. Koble til for å kreve 500 gratis PDF-er med målt behandling (automatisering, AI og API); når du trenger mer, slår du på Processor-planen og betaler bare for det du bruker."
+title = "Koble til Stirling-kontoen din"
+
+[portal.billing.paymentMethod]
+billedMonthly = "Faktureres månedlig"
+cardEnding = "{{brand}} som slutter på {{last4}}"
+cardFallback = "Kort"
+expiresBilledMonthly = "Utløper {{expiry}} · faktureres månedlig"
+eyebrow = "Betalingsmåte"
+managedSub = "Kort- og faktureringsdetaljene dine oppbevares sikkert i Stripes kundeportal."
+managedTitle = "Administreres i Stripe"
+update = "Oppdater"
+
+[portal.billing.pdfsProcessed]
+emptyPeriod = "Ingen målt behandling ennå i denne perioden."
+eyebrow = "PDF-er behandlet denne perioden"
+legendValue_one = "{{formatted}} PDF-er"
+legendValue_other = "{{formatted}} PDF-er"
+segbarAriaLabel = "Målte PDF-er fordelt etter kategori"
+segmentAgentsDesc = "AI-agenthandlinger"
+segmentAgentsLabel = "Agenter"
+segmentApiDesc = "Direkte API-forespørsler"
+segmentApiLabel = "API"
+segmentAutomationDesc = "Automatiseringer og pipelines"
+segmentAutomationLabel = "Automatisering"
+unit = "målte PDF-er"
+
+[portal.billing.spendLimit]
+adjustLimit = "Juster grense"
+cancel = "Avbryt"
+capControlNote = "Endringer gjelder umiddelbart — hev eller senk taket når som helst."
+capSuffix = "/ måned"
+capSuffixWithDocs = "/ måned · ≈ {{documents}} dokumenter"
+displaySub = "Du faktureres bare for det du behandler automatisk — aldri over taket."
+editTitle = "Angi månedstaket ditt"
+eyebrow = "Forbruksgrense"
+guardrailBody = "et hardt tak — du faktureres aldri over det. Ved taket pauses målt behandling (ubegrenset PDF-redigering fortsetter å fungere) til du øker det eller syklusen tilbakestilles. Ingenting går tapt."
+guardrailLabel = "Din sikkerhetsgrense:"
+noCap = "ingen grense"
+pctUsed = "{{pct}}% brukt"
+remaining = "{{amount}} gjenstår"
+save = "Lagre grense"
+saveError = "Kunne ikke lagre grense"
+thisPeriodUncapped = "{{amount}} denne perioden · uten grense"
+usedThisMonth = "{{amount}} brukt denne måneden"
+useSuggested = "Bruk foreslått · {{amount}} / måned"
+
+[portal.billing.spendLimit.projection]
+body_one = "Ved {{rate}}/dag når du taket om ~{{count}} dag (~{{monthEnd}} ved månedsslutt). Foreslått grense ~{{suggested}}."
+body_other = "Ved {{rate}}/dag når du taket om ~{{count}} dager (~{{monthEnd}} ved månedsslutt). Foreslått grense ~{{suggested}}."
+label = "Forventes å overskrides."
+
+[portal.billing.spendThisMonth]
+eyebrow = "Forbruk denne måneden"
+processed_one = "{{formattedCount}} PDF behandlet."
+processed_other = "{{formattedCount}} PDF-er behandlet."
+processedWithRate_one = "{{formattedCount}} PDF behandlet, til {{rate}} hver."
+processedWithRate_other = "{{formattedCount}} PDF-er behandlet, til {{rate}} hver."
+
+[portal.billing.subscribedPlan.capWarn]
+approachingBody = "Øk den nå, slik at automatisert behandling aldri pauses."
+approachingTitle = "Du er på {{pct}}% av den månedlige forbruksgrensen din"
+raiseLimit = "Øk grense"
+reachedBody = "Målt behandling er pauset til du øker grensen eller syklusen tilbakestilles. Ubegrenset PDF-redigering fortsetter å fungere."
+reachedTitle = "Månedlig forbruksgrense nådd"
+
+[portal.billing.subscribedPlan.portalError]
+title = "Kunne ikke åpne Stripe-portalen"
+
+[portal.billing.walletMeter]
+capSuffix_one = "av {{allowance}} gratis PDF-er brukt"
+capSuffix_other = "av {{allowance}} gratis PDF-er brukt"
+eyebrow = "Processor-prøveperiode"
+statusLabel_one = "{{remaining}} igjen"
+statusLabel_other = "{{remaining}} igjen"
+sub = "Bruk PDF Editor gratis. Betal for å behandle PDF-er automatisk."
+title_one = "Behandle {{allowance}} PDF-er gratis"
+title_other = "Behandle {{allowance}} PDF-er gratis"
+titleWithRate_one = "Behandle {{allowance}} PDF-er gratis, deretter {{rate}}/PDF"
+titleWithRate_other = "Behandle {{allowance}} PDF-er gratis, deretter {{rate}}/PDF"
+
+[portal.catalogue.card]
+lockedAriaLabel = "Låst"
+openAriaLabel = "Åpne {{name}}-komponent"
+
+[portal.catalogue.detail]
+addToProject = "Legg til i prosjekt"
+ariaLabel = "Komponentdetalj"
+tabsAriaLabel = "Komponentdetaljseksjoner"
+upgradeToUnlock = "Oppgrader for å låse opp"
+
+[portal.catalogue.detail.code]
+install = "Installer"
+usage = "Bruk"
+
+[portal.catalogue.detail.locked]
+description = "{{name}} er inkludert fra {{tier}}-planen. Oppgrader for å bygge den inn."
+title = "Ikke tilgjengelig i planen din"
+
+[portal.catalogue.detail.preview]
+badge = "Live-forhåndsvisning"
+note = "Interaktiv sandbox gjengis her"
+
+[portal.catalogue.detail.pricing]
+note = "Målt per {{unit}}. Bruk utover den månedlige gratiskvoten faktureres kontoen din og spesifiseres under Bruk og fakturering."
+
+[portal.catalogue.detail.stats]
+billedOn = "Faktureres på"
+embeds30d = "Innbygginger (30 d)"
+freeQuota = "Gratiskvote"
+freeQuotaValue = "{{amount}} / mnd"
+maturity = "Modenhet"
+none = "Ingen"
+perAction = "Per handling"
+price = "Pris"
+
+[portal.catalogue.detail.tabs]
+code = "Code"
+overview = "Oversikt"
+pricing = "Priser"
+props = "Props / API"
+
+[portal.catalogue.props]
+optional = "valgfritt"
+required = "påkrevd"
+
+[portal.catalogue.props.columns]
+description = "Beskrivelse"
+name = "Prop"
+required = "Påkrevd"
+type = "Type"
+
+[portal.catalogue.summary]
+componentsGa = "Komponenter GA"
+componentSpendMtd = "Komponentforbruk (MTD)"
+embedsThisMonth = "Innbygginger denne måneden"
+inBeta = "I beta"
+
+[portal.components.billingUnit]
+approval = "godkjenning"
+check = "sjekk"
+event = "hendelse"
+render = "gjengivelse"
+review = "gjennomgang"
+session = "økt"
+signature = "signatur"
+
+[portal.components.maturity]
+beta = "Beta"
+ga = "GA"
+
+[portal.componentsView]
+subtitle = "Innbyggbare SDK-widgets du slipper inn i din egen app — en viser, en e-sign-flyt, et AI-gjennomgangspanel. Hver måles per handling. Klikk på et kort for installasjon, bruk og props."
+title = "Komponenter"
+
+[portal.componentsView.empty]
+description = "Komponentkatalogen kunne ikke lastes. Prøv igjen om kort tid."
+title = "Ingen komponenter tilgjengelig"
+
+[portal.componentsView.lockedBanner]
+description = "GA-komponenter er tilgjengelige med betal etter bruk; noen få Beta-komponenter er kun for Enterprise. Låste kort viser en oppgraderingsoppfordring."
+title = "Noen komponenter trenger en betalt plan"
+
+[portal.docs.authentication]
+codeCaption = "hver forespørsel"
+eyebrow = "KOM I GANG"
+lead = "Alle forespørsler autentiseres med et bearer-token. Nøkler er avgrenset per miljø og utløper aldri med mindre de roteres."
+liveKey = "Produksjonsnøkler — fakturerte, hastighetsbegrenset etter planen din."
+testKey = "Sandbox-nøkler — gratis, returnerer syntetiske testdata."
+title = "Autentisering"
+
+[portal.docs.components]
+codeCaption = "bygg inn viseren"
+eyebrow = "KOMPONENTER"
+lead = "Innbyggbart UI for gjennomgangskøer og dokumentinspeksjon. Ta med egne stiler eller bruk temaet som følger med."
+title = "Drop-in-visere"
+
+[portal.docs.endpoints]
+eyebrow = "API-REFERANSE"
+fieldCount_one = "{{count}} felt"
+fieldCount_other = "{{count}} felt"
+filterAll = "Alle"
+filterAriaLabel = "Filtrer endpoints etter vertikal"
+lead = "Hver dokumenttype er et typet endpoint. POST en fil, motta skjemavalidert JSON. Filtrer etter vertikal nedenfor."
+title = "Endpoints"
+
+[portal.docs.errors]
+codeCaption = "422 Unprocessable Entity"
+eyebrow = "API-REFERANSE"
+lead = "Feil returnerer en stabil maskinlesbar kode pluss en melding for mennesker. 4xx-body inneholder alltid en request_id for støtte."
+title = "Feil"
+
+[portal.docs.nav]
+ariaLabel = "Dokumentasjon"
+
+[portal.docs.nav.empty]
+description = "Dokumentasjonsindeksen kunne ikke lastes."
+title = "Docs utilgjengelige"
+
+[portal.docs.quickstart]
+eyebrow = "KOM I GANG"
+lead = "Send det første dokumentet ditt til et typet endpoint og få strukturert JSON tilbake i tre trinn. Ingen modellopplæring, ingen prompt engineering."
+title = "Quickstart"
+
+[portal.docs.quickstart.callout]
+bodyAfterLink = "for oppskrifter som kan kopieres og limes inn."
+bodyBeforeLink = "koble samme kall inn i en pipeline for å kjede validering, sladding og levering — eller eksponer det for en agent over MCP. Se"
+label = "Neste:"
+link = "Playbooks"
+
+[portal.docs.quickstart.step1]
+body = "Opprett en avgrenset nøkkel fra Infrastruktur-fanen. Nøkler har hastighetsgrenser og en valgfri IP-tillatelsesliste. Eksporter den til skallet ditt:"
+title = "Utsted en API-nøkkel"
+
+[portal.docs.quickstart.step2]
+body = "POST en fil til et typet endpoint. Endpointet bestemmer skjemaet du får tilbake — her fakturauttrekkeren."
+snippetCaption = "trekk ut en faktura"
+title = "Send et dokument"
+
+[portal.docs.quickstart.step3]
+body = "Hvert svar valideres mot endpoint-skjemaet, med en sikkerhetsscore og proveniens per felt."
+codeCaption = "200 OK"
+title = "Les det strukturerte resultatet"
+
+[portal.docs.rateLimits]
+burst = "Burst"
+codeCaption = "429 Too Many Requests"
+concurrency = "Samtidighet"
+eyebrow = "KOM I GANG"
+lead = "Grenser skalerer med planen din. Et 429-svar inkluderer en Retry-After-header; SDK-ene trekker seg automatisk tilbake."
+requestsPerMinute = "Forespørsler / minutt"
+title = "Hastighetsgrenser og kvoter"
+
+[portal.docs.recipes]
+cloneButton = "Klon oppskrift"
+eyebrow = "PLAYBOOKS"
+lead = "Ende-til-ende-mønstre som kjeder kilder, operasjoner og destinasjoner. Hver av dem kartlegges til en pipeline du kan klone."
+title = "Oppskrifter"
+
+[portal.docs.sdks]
+eyebrow = "SDKS"
+lead = "Førstepartsklienter med typede svar, automatiske nye forsøk og strømmende opplastinger. Alle følger samme endpoint-katalog."
+title = "Offisielle SDK-er"
+
+[portal.docs.sdks.status]
+beta = "Beta"
+deprecated = "Utdatert"
+
+[portal.docs.skills]
+eyebrow = "FERDIGHETER"
+lead = "Samlede, navngitte kapabiliteter agenten din påkaller som ett enkelt verktøy. Hver ferdighet er en deterministisk operasjonskjede med evalueringer vedlagt."
+title = "Agentferdigheter"
+
+[portal.docs.webhooks]
+codeCaption = "document.processed"
+eyebrow = "API-REFERANSE"
+lead = "Abonner på hendelsene document.processed, pipeline.completed og quota.threshold. Payloads signeres med HMAC-SHA256."
+title = "Webhooks"
+
+[portal.docs.webhooks.callout]
+afterHelper = "hjelper."
+beforeHelper = "header mot signeringshemmeligheten din før du stoler på en payload. SDK-ene leveres med en"
+beforeSignature = "Verifiser"
+
+[portal.documents]
+exportCsv = "Eksporter CSV"
+search = "Søk etter filnavn, ID..."
+subtitle = "Hvert dokument organisasjonen din har behandlet, med full behandlingspost. Innholdstilgang krever forespørsel."
+title = "Dokumenter"
+
+[portal.documents.audit]
+approved = "Godkjent"
+archived = "Arkivert"
+elevation = "Tilgangsøkning"
+empty = "Ingen hendelser registrert ennå."
+extracted = "Behandlet"
+flagged = "Trenger gjennomgang"
+ingested = "Inntatt"
+reviewed = "Til gjennomgang"
+
+[portal.documents.drawer]
+sectionsAriaLabel = "Seksjoner for dokumentdetaljer"
+
+[portal.documents.drawer.tabs]
+audit = "Revisjon"
+extractions = "Uttrekk"
+overview = "Oversikt"
+
+[portal.documents.elevation]
+requestAccess = "Be om tilgang"
+
+[portal.documents.elevation.active]
+description = "Midlertidig tildeling — tilgang logges og er tidsbegrenset."
+descriptionFourEyes = "Midlertidig tildeling — en fagfelle ble varslet (fire øyne)."
+title = "Tilgang utløper om {{time}}"
+
+[portal.documents.elevation.gated]
+description = "Innholdet er beskyttet av null permanent tilgang. Forespørsel starter en tidsbegrenset tildeling."
+descriptionFourEyes = "Innholdet er beskyttet av null permanent tilgang. Forespørsel starter en tidsbegrenset tildeling og varsler en fagfelle (fire øyne)."
+title = "Sensitivt dokument"
+
+[portal.documents.extractions]
+empty = "Ingen felt ble trukket ut fra dette dokumentet."
+masked = "Uttrekkede felt er skjult. Be om tidsbegrenset tilgang for å vise innholdet i dette dokumentet."
+
+[portal.documents.extractions.columns]
+confidence = "Konfidens"
+field = "Felt"
+value = "Verdi"
+
+[portal.documents.filters]
+all = "Alle"
+ariaLabel = "Filtrer dokumenter etter status"
+flagged = "Flagget"
+inReview = "Til gjennomgang"
+processed = "Behandlet"
+
+[portal.documents.overview]
+action = "Pipeline / handling"
+product = "Produkt"
+received = "Tid"
+status = "Status"
+type = "Type"
+user = "Bruker"
+
+[portal.documents.queue.empty]
+description = "Når kilder sender dokumenter inn i dine pipelines, vises de her for gjennomgang."
+title = "Ingen dokumenter i køen"
+
+[portal.documents.status]
+error = "Feil"
+flagged = "Trenger gjennomgang"
+inReview = "Til gjennomgang"
+processed = "Behandlet"
+
+[portal.documents.table]
+auto = "Auto"
+editorAction = "Redigerer"
+empty = "Ingen dokumenter samsvarer med dette filteret."
+rowActions = "Radhandlinger"
+sensitiveLabel = "Sensitivt"
+sensitiveTitle = "Sensitivt — tilgang kreves"
+
+[portal.documents.table.columns]
+action = "Pipeline / handling"
+document = "Dokument"
+product = "Produkt"
+status = "Status"
+time = "Tid"
+user = "Bruker"
+
+[portal.editorAdmin]
+subtitle = "Distribuer Stirling PDF Editor, par selvhostede instanser med organisasjonen din, og drift den kjørende flåten — mål, helse, legitimasjon og offline-aktivering på ett sted."
+title = "Editor-distribusjon"
+
+[portal.editorAdmin.health.columns]
+activeUsers = "Aktive brukere"
+host = "Host"
+lastSeen = "Sist sett"
+region = "Region"
+status = "Status"
+version = "Versjon"
+
+[portal.editorAdmin.health.empty]
+description = "Distribuer et mål og par det for å se sanntidshelse for instanser her."
+title = "Ingen instanser rapporterer"
+
+[portal.editorAdmin.offlineActivation]
+enterpriseTag = "Enterprise"
+generateButton = "Generer offline-pakke"
+lockCopy = "Offline- og lokal aktivering er en del av Enterprise."
+subtitle = "Generer en signert aktiveringspakke for en offline- eller lokal installasjon uten utgående nettverksbane. Overfør den til instansen og bruk den under førstegangsoppsett."
+talkToSales = "Kontakt salg"
+title = "Isolert aktivering"
+
+[portal.editorAdmin.offlineActivation.readyBanner]
+description = "{{file}} er signert og klar til overføring. Den aktiverer én instans og utløper om 14 dager."
+title = "Pakken er klar"
+
+[portal.editorAdmin.pairing]
+generated = "Generert ✓"
+generateNewCode = "Generer ny kode"
+lockCopy = "IaC-klargjøring er en del av Enterprise."
+rotate = "Roter"
+talkToSales = "Kontakt salg"
+
+[portal.editorAdmin.sections.health]
+sub = "Hver Editor-instans som rapporterer inn — versjon, region, status, sist sett og aktive brukere."
+title = "Instanshelse"
+
+[portal.editorAdmin.sections.pairing]
+sub = "Koble en selvhostet redigerer til denne organisasjonen. Generer et token, overlever en kort kode, eller koble den via IaC."
+title = "Paring"
+
+[portal.editorAdmin.sections.targets]
+sub = "Hvor Editor kjører. Kopier en kodebit for å sette opp en selvhostet instans, eller bruk Managed Cloud uten drift."
+title = "Distribusjonsmål"
+
+[portal.editorAdmin.serviceToken]
+currentToken = "Gjeldende token"
+lastRotated = "Sist rotert"
+rotateButton = "Roter tjenestetoken"
+subtitle = "Instanser autentiserer mot organisasjonen med denne legitimasjonen. Roter den etter en tidsplan eller umiddelbart etter en mistenkt lekkasje."
+title = "Tjenestetoken"
+
+[portal.editorAdmin.serviceToken.rotatedBanner]
+description = "Et nytt token ble utstedt. Oppdater STIRLING_SERVICE_TOKEN for hver selvhostede instans innen 24-timers fristvinduet, ellers går de offline."
+title = "Roter kjørende instanser"
+
+[portal.editorAdmin.status]
+degraded = "Redusert"
+healthy = "Frisk"
+offline = "Offline"
+pairing = "Parer"
+
+[portal.editorAdmin.targets]
+instanceCount_one = "{{count}} instans"
+instanceCount_other = "{{count}} instanser"
+talkToSales = "Kontakt salg"
+upgradePlan = "Oppgrader plan"
+
+[portal.editorAdmin.targets.lock]
+enterprise = "Lokal og Kubernetes-selvhosting er en del av Enterprise."
+paid = "Selvhosting med Docker og Kubernetes låses opp med en betalt plan."
+
+[portal.editorAdmin.targets.state]
+available = "Tilgjengelig"
+locked = "Låst"
+running = "Kjører"
+
+[portal.errorBoundary]
+description = "Denne visningen traff en uventet feil. Prøv igjen, eller velg en annen seksjon fra sidefeltet."
+retry = "Prøv igjen"
+title = "Noe gikk galt på denne siden"
+
+[portal.home.editor]
+activeUsers = "{{n}} aktive"
+invite = "Inviter lagkamerater"
+name = "Stirling PDF Editor"
+open = "Åpne i nettleser"
+updated = "oppdatert {{time}}"
+
+[portal.home.editor.target]
+cloud = "Managed Cloud"
+docker = "Selvhostet · Docker"
+kubernetes = "Selvhostet · Kubernetes"
+
+[portal.home.greeting]
+afternoon = "God ettermiddag"
+evening = "God kveld"
+morning = "God morgen"
+
+[portal.home.onboarding]
+dismiss = "Avvis oppsett"
+notStarted = "Ikke startet"
+progress = "{{done}} av {{total}} fullført"
+title = "Fullfør oppsettet"
+
+[portal.home.onboarding.enterprise]
+body = "SSO + SCIM + RBAC for hele organisasjonen, forpliktende volumprising og isolert distribusjon."
+cta = "Start prøveperiode"
+ctaQuote = "Få tilbud"
+lead = "For 250+ ansatte."
+tag = "Enterprise"
+
+[portal.home.onboarding.steps.editor]
+blurb = "Distribuer skrivebordsappen, gratis for alltid."
+title = "Last ned PDF Editor"
+
+[portal.home.onboarding.steps.policies]
+blurb = "{{active}} aktive · {{recommended}} anbefalt"
+chip = "{{active}} aktive"
+title = "Slå på policyer"
+
+[portal.home.onboarding.steps.sources]
+blurb = "{{connected}} tilkoblet · hver PDF styres der den lander"
+chip = "{{connected}} tilkoblet"
+title = "Koble til kildene dine"
+
+[portal.home.quickActions]
+subtitle = "Viktigste oppgaver for i dag"
+title = "Hurtighandlinger"
+
+[portal.home.quickActions.buildPipeline]
+blurb = "3-trinns komponist over det typede operasjonsbiblioteket"
+title = "Bygg en pipeline"
+
+[portal.home.quickActions.connectSource]
+blurb = "S3, agenter, webhooks, overvåkede mapper"
+title = "Koble til en kilde"
+
+[portal.home.quickActions.issueApiKey]
+blurb = "Avgrenset nøkkel med hastighetsgrenser og IP-tillatelsesliste"
+title = "Utsted en API-nøkkel"
+
+[portal.infrastructure]
+manageEditorDeployment = "Administrer Editor-distribusjon"
+sectionsAriaLabel = "Infrastrukturseksjoner"
+subtitle = "Distribusjoner, legitimasjon, sikkerhetsstilling, lagring og revisjonssporet for Stirling-arbeidsområdet ditt."
+title = "Infrastruktur"
+
+[portal.infrastructure.apiKeys]
+createKey = "Opprett nøkkel"
+heading = "API-nøkler"
+subheading = "Avgrenset legitimasjon med hastighetsgrenser per nøkkel, tillatelser og IP-tillatelseslister."
+
+[portal.infrastructure.apiKeys.card]
+allowedIps = "Tillatte IP-er"
+anyIp = "Enhver IP (ingen tillatelsesliste)"
+created = "Opprettet"
+lastUsed = "Sist brukt"
+permissions = "Tillatelser"
+rateLimit = "Hastighetsgrense"
+rateLimitValue = "{{value}} foresp./min"
+usageMonth = "Bruk denne måneden"
+usageToday = "Bruk i dag"
+
+[portal.infrastructure.apiKeys.empty]
+description = "Opprett en avgrenset nøkkel for å begynne å kalle Stirling API."
+title = "Ingen API-nøkler ennå"
+
+[portal.infrastructure.audit]
+filterAriaLabel = "Filtrer revisjonshendelser etter kategori"
+heading = "Revisjonslogger"
+latencyValue = "{{value}} ms"
+noEventsInCategory = "Ingen hendelser i denne kategorien."
+subheading = "Hver autentiserings-, konfigurasjons- og behandlingshendelse på tvers av arbeidsområdet ditt."
+
+[portal.infrastructure.audit.columns]
+actor = "Aktør"
+event = "Hendelse"
+latency = "Latens"
+status = "Status"
+target = "Ressurs"
+timestamp = "Tidsstempel"
+
+[portal.infrastructure.audit.empty]
+description = "Arbeidsområdeaktivitet vises her etter hvert som den skjer."
+title = "Ingen revisjonshendelser"
+
+[portal.infrastructure.audit.export]
+cancel = "Avbryt"
+error = "Eksport mislyktes. Prøv igjen."
+exportButton = "Eksporter"
+exporting = "Eksporterer…"
+fieldsLegend = "Kolonner"
+format = "Format"
+open = "Eksporter"
+subtitle = "Last ned revisjonshendelser som CSV eller JSON. Velg hvilke kolonner som skal inkluderes."
+title = "Eksporter revisjonslogg"
+
+[portal.infrastructure.audit.export.fields]
+date = "Dato"
+documentName = "Dokumentnavn"
+ipAddress = "IP-adresse"
+outcome = "Utfall"
+tool = "Verktøy"
+username = "Brukernavn"
+
+[portal.infrastructure.audit.filters]
+all = "Alle"
+auth = "Autentisering"
+config = "Konfigurasjon"
+elevation = "Tilgangsøkning"
+processing = "Behandling"
+security = "Sikkerhet"
+
+[portal.infrastructure.audit.forbidden]
+description = "Revisjonsloggen er tilgjengelig for teamledere og administratorer. Be teamlederen din eller en administrator om tilgang."
+title = "Du har ikke tilgang"
+
+[portal.infrastructure.audit.metrics]
+config = "Konfigurasjon"
+elevation = "Tilgangsøkning"
+processing = "Behandling"
+totalEvents = "Totalt antall hendelser · 24 t"
+
+[portal.infrastructure.createKey]
+cancel = "Avbryt"
+createKey = "Opprett nøkkel"
+done = "Ferdig"
+ipAllowlistHelper = "Kommaseparerte CIDR-områder. La stå tomt for å tillate enhver IP."
+ipAllowlistLabel = "IP-tillatelsesliste"
+keyNameLabel = "Nøkkelnavn"
+keyNamePlaceholder = "f.eks. Produksjon · inntak"
+permissionsLabel = "Tillatelser"
+secretKeyCaption = "Hemmelig nøkkel"
+secretWarning = "Lagre dette i en hemmelighetsbehandler. Stirling lagrer bare en hash — det finnes ingen måte å gjenopprette den senere."
+subtitle = "Avgrens nøkkelen til det minste den trenger. Du kan rotere eller tilbakekalle når som helst."
+subtitleCreated = "Kopier denne hemmeligheten nå — den vises ikke igjen."
+title = "Opprett API-nøkkel"
+titleCreated = "Nøkkel opprettet"
+
+[portal.infrastructure.deployments]
+msValue = "{{value}} ms"
+throughputValue = "{{value}}/min"
+
+[portal.infrastructure.deployments.deployColumns]
+deployedBy = "Distribuert av"
+environment = "Miljø"
+product = "Produkt"
+status = "Status"
+version = "Versjon"
+when = "Når"
+
+[portal.infrastructure.deployments.recent]
+heading = "Nylige distribusjoner"
+subheading = "De nyeste utrullingene på tvers av produkter og miljøer."
+
+[portal.infrastructure.deployments.regionColumns]
+instances = "Instanser"
+latency = "Latens"
+load = "Belastning"
+p99 = "P99"
+region = "Region"
+status = "Status"
+throughput = "Gjennomstrømning"
+uptime = "Oppetid"
+version = "Versjon"
+
+[portal.infrastructure.deployments.regions]
+heading = "Regioner"
+subheading = "Sanntidshelse for hver distribuerte Stirling-region — latens, belastning og utrullingsversjon."
+
+[portal.infrastructure.deployments.regions.empty]
+description = "Distribuerte regioner vises her når arbeidsområdet ditt er klargjort."
+title = "Ingen regioner distribuert"
+
+[portal.infrastructure.models]
+heading = "Modeller"
+msValue = "{{value}} ms"
+subheading = "Modellkatalogen og rutingen som driver dokumentbehandling på tvers av arbeidsområdet ditt."
+
+[portal.infrastructure.models.byom]
+description = "Registrer en lokal eller selvhostet modell og fest den til en region for behandling bundet til datalokalitet."
+title = "Ta med din egen modell"
+
+[portal.infrastructure.models.catalogue]
+heading = "Katalog"
+sub = "Administrerte modeller tilgjengelige for arbeidsområdet ditt, med sanntidslatens og kostnad."
+subEnterprise = "Administrerte, egne og lokale modeller — med festing per region tilgjengelig."
+
+[portal.infrastructure.models.catalogue.empty]
+description = "Modeller i katalogen til arbeidsområdet ditt vises her."
+title = "Ingen modeller tilgjengelige"
+
+[portal.infrastructure.models.columns]
+cost = "Kostnad"
+latency = "Latens"
+load = "Belastning"
+model = "Modell"
+status = "Status"
+type = "Type"
+version = "Versjon"
+
+[portal.infrastructure.models.metrics]
+activeModels = "Aktive modeller"
+avgLatency = "Gj.sn. latens"
+included = "Inkludert"
+monthlySpend = "Månedlige modellkostnader"
+
+[portal.infrastructure.models.routing]
+empty = "Ingen rutingsregler konfigurert."
+heading = "Rutingsregler"
+sub = "Hvilken modell som håndterer hver operasjon. Standarden brukes når ingen smalere regel samsvarer."
+subLocked = "Rut operasjoner til spesifikke modeller — tilgjengelig med betalte planer."
+
+[portal.infrastructure.models.routing.lockedBanner]
+description = "Oppgrader til Pro for å kontrollere hvilken modell som håndterer hver operasjon og dokumenttype."
+title = "Modellruting er en betalt funksjon"
+
+[portal.infrastructure.models.routingColumns]
+default = "Standard"
+docType = "Dokumenttype"
+modelForAria = "Modell for {{operation}}"
+operation = "Operasjon"
+routedTo = "Rutet til"
+
+[portal.infrastructure.security.access.byok]
+description = "Oppgi en nøkkel fra din egen KMS. Stirling krypterer med den, men kan fortsatt lese."
+label = "Ta med din egen nøkkel (BYOK)"
+
+[portal.infrastructure.security.access.hyok]
+description = "Nøkler forlater aldri din KMS. Stirling holder bare chiffertekst."
+label = "Hold din egen nøkkel (HYOK)"
+
+[portal.infrastructure.security.access.stirling]
+description = "Stirling administrerer krypteringsnøkler. Enklest — null nøkkeldrift på din side."
+label = "Nøkler holdt av Stirling"
+
+[portal.infrastructure.security.accessPolicy]
+heading = "Policy for dokumenttilgang"
+subheading = "Kontrollerer hvem som kan dekryptere behandlede dokumenter i ro."
+
+[portal.infrastructure.security.attestations]
+heading = "Samsvarsattestasjoner"
+noReport = "Ingen rapport tilgjengelig"
+subheading = "Revisjonsstilling rammeverk for rammeverk, med rapporter tilgjengelige for attesterte kontroller."
+viewReport = "Vis rapport →"
+
+[portal.infrastructure.security.compliance]
+heading = "Samsvar"
+subheading = "Attestasjoner og sertifiseringer som dekker Stirling-plattformen."
+
+[portal.infrastructure.security.empty]
+description = "Sikkerhetskonfigurasjonen for arbeidsområdet ditt vises her."
+title = "Sikkerhetsstilling utilgjengelig"
+
+[portal.infrastructure.security.hyokBanner]
+description = "Med HYOK forlater krypteringsnøkler aldri din KMS. Stirling lagrer og behandler bare chiffertekst som du kan tilbakekalle når som helst."
+title = "Stirling kan ikke dekryptere dokumentene dine"
+
+[portal.infrastructure.security.ipAllowlist]
+empty = "Ingen IP-områder konfigurert — alle IP-er tillatt."
+heading = "IP-tillatelsesliste"
+sub = "API-tilgang er begrenset til disse CIDR-områdene."
+subLocked = "Begrens API-tilgang til kjente IP-områder — tilgjengelig med betalte planer."
+
+[portal.infrastructure.security.ipAllowlist.lockedBanner]
+description = "Oppgrader til Pro for å begrense API-tilgang til spesifikke nettverk."
+title = "IP-tillatelseslisting er en betalt funksjon"
+
+[portal.infrastructure.security.ipColumns]
+added = "Lagt til"
+addedBy = "Lagt til av"
+cidr = "CIDR"
+label = "Etikett"
+
+[portal.infrastructure.security.keyManagement]
+algorithm = "Algoritme"
+heading = "Administrasjon av krypteringsnøkler"
+keyId = "Nøkkelidentifikator"
+lastRotated = "Sist rotert"
+rotateKey = "Roter nøkkel"
+rotationPolicy = "Rotasjonspolicy"
+subheading = "Forvaring av nøklene som krypterer dokumenter i ro — hvem som kan dekryptere, og hvordan nøkler roteres."
+
+[portal.infrastructure.security.managedBanner]
+description = "Forvaring med ta-med-din-egen-nøkkel (BYOK) og hold-din-egen-nøkkel (HYOK) er tilgjengelig på Enterprise. Oppgrader for å oppgi nøkler fra din egen KMS."
+title = "Nøkler administreres av Stirling på planen din"
+
+[portal.infrastructure.security.residency.apac]
+description = "ap-southeast-1"
+label = "Asia-Stillehavet"
+
+[portal.infrastructure.security.residency.eu]
+description = "eu-west-1 · GDPR-datagrense"
+label = "Den europeiske union"
+
+[portal.infrastructure.security.residency.us]
+description = "us-east-1 · us-west-2"
+label = "USA"
+
+[portal.infrastructure.security.residencyHeader]
+heading = "Datalokalitet"
+subheading = "Hvor dokumenter lagres og behandles."
+
+[portal.infrastructure.storage]
+gbValue = "{{value}} GB"
+percentUsed = "{{value}} brukt"
+
+[portal.infrastructure.storage.empty]
+description = "Tilkoblet lagring og bruk vises her."
+title = "Ingen lagring konfigurert"
+
+[portal.infrastructure.storage.lifecycle]
+active = "Aktiv"
+activeRange = "0–{{value}}d"
+archived = "Arkivert"
+coldStorage = "kaldlagring"
+deleted = "Slettet"
+never = "aldri"
+purged = "slettet permanent"
+
+[portal.infrastructure.storage.providers]
+connect = "Koble til"
+connected = "Tilkoblet"
+heading = "Tilkoblede leverandører"
+subheading = "Hvor behandlede artefakter skrives."
+
+[portal.infrastructure.storage.retention]
+heading = "Oppbevaring"
+subheading = "Hvor lenge artefakter beholdes før livssyklussletting."
+windowLabel = "Standard oppbevaringsvindu"
+
+[portal.infrastructure.storage.retentionOption]
+days_one = "{{count}} dag"
+days_other = "{{count}} dager"
+never = "Slett aldri"
+
+[portal.infrastructure.storage.totalUsage]
+heading = "Total bruk"
+progressLabel = "Lagring brukt"
+subheading = "Lagring brukt på tvers av alle tilkoblede leverandører."
+
+[portal.infrastructure.tabs]
+apiKeys = "API-nøkler"
+audit = "Revisjonslogger"
+deployments = "Distribusjoner"
+models = "Modeller"
+security = "Sikkerhet"
+storage = "Lagring"
+
+[portal.nav]
+agent-builder = "Agentbygger"
+components = "Komponenter"
+docs = "Utviklerdokumentasjon"
+documents = "Dokumenter"
+editor = "Redigerer"
+home = "Hjem"
+infrastructure = "Infrastruktur"
+pipelines = "Pipelines"
+policies = "Policyer"
+procurement = "Innkjøp"
+settings = "Innstillinger"
+sources = "Kilder"
+usage = "Bruk og fakturering"
+users = "Brukere"
+
+[portal.notifications]
+markAllRead = "Merk alle som lest"
+title = "Varsler"
+viewAll = "Vis alle"
+
+[portal.notifications.ariaLabel]
+none = "Varsler, ingen uleste"
+unread_one = "Varsler, {{count}} ulest"
+unread_other = "Varsler, {{count}} uleste"
+
+[portal.notifications.count]
+allRead = "alle lest"
+loading = "laster"
+new_one = "{{count}} nytt"
+new_other = "{{count}} nye"
+
+[portal.notifications.empty]
+description = "Ingen nye varsler."
+title = "Du er helt ajour"
+
+[portal.pipelines]
+subtitle = "Hver automatiserte dokumentpipeline på backend: en ordnet kjede av operasjoner over et sett med kilder, kjørt på en utløser. Klikk på en rad for å se trinnene og kildene."
+title = "Pipelines"
+
+[portal.pipelines.actions]
+newPipeline = "Ny pipeline"
+
+[portal.pipelines.builder]
+addStep = "Legg til verktøy"
+back = "Tilbake til pipelines"
+discard = "Forkast endringer"
+enabled = "Aktivert"
+keepEditing = "Fortsett å redigere"
+needsUpload = "Trenger en opplastet fil"
+noToolMatches = "Ingen verktøy samsvarer med søket ditt."
+pipelineSettings = "Pipeline-innstillinger"
+searchTools = "Søk i verktøy"
+selectToolBody = "Legg til et verktøy for å bygge pipelinen din."
+selectToolTitle = "Ingen verktøy ennå"
+toolSettings = "Verktøyinnstillinger"
+unknownStep = "Ukjent operasjon, beholdt som den er."
+unsavedBody = "Du har ulagrede endringer. Lagre dem før du forlater, eller forkast dem?"
+unsavedTitle = "Ulagrede endringer"
+uploadUnsupported = "Opplastede filer støttes ikke i pipelines ennå, så disse trinnene kan ikke lagres: {{tools}}."
+usesDefaults = "Kjører med standardinnstillinger"
+
+[portal.pipelines.composer]
+addTool = "Legg til verktøy"
+cancel = "Avbryt"
+chainEmpty = "Legg til et verktøy for å begynne å bygge pipelinen din."
+create = "Opprett pipeline"
+directory = "Utdatamappe"
+directoryHelp = "Absolutt sti på serveren. Må være innenfor de konfigurerte tillatte mappene."
+editingUnsupported = "Visning av disse verktøyparametrene for redigering støttes ikke ennå."
+moveDown = "Flytt ned"
+moveUp = "Flytt opp"
+name = "Navn"
+namePlaceholder = "f.eks. Redigeringsgjennomgang"
+noSources = "Ingen kilder tilkoblet ennå. Pipelinen kan fortsatt kjøre på filer som leveres direkte til den."
+noToolSettings = "Dette verktøyet har ingen konfigurerbare innstillinger."
+operations_one = "Operasjon ({{count}})"
+operations_other = "Operasjoner ({{count}})"
+output = "Utdata"
+removeStep = "Fjern operasjon"
+save = "Lagre endringer"
+scheduleEvery = "Kjør hver"
+sources = "Kilder"
+sourcesLoading = "Laster kilder..."
+trigger = "Utløser"
+triggerManual = "Kun manuelt"
+
+[portal.pipelines.composer.unit]
+days = "dager"
+hours = "timer"
+minutes = "minutter"
+
+[portal.pipelines.delete]
+body = "Slette \"{{name}}\"? Dette kan ikke angres."
+cancel = "Avbryt"
+confirm = "Slett"
+title = "Slette pipeline?"
+
+[portal.pipelines.detail]
+delete = "Slett pipeline"
+run = "Kjør nå"
+
+[portal.pipelines.empty]
+action = "Opprett en pipeline"
+description = "Opprett din første pipeline: velg kildene den kjører over, kjed operasjonene, og velg hvor utdata skal gå."
+title = "Ingen pipelines ennå"
+
+[portal.pipelines.kpi]
+active = "Aktive"
+paused = "Satt på pause"
+total = "Pipelines"
+
+[portal.pipelines.output]
+folder = "Skriv til mappe"
+inline = "Returner filer"
+
+[portal.pipelines.run]
+completed_one = "Kjøring fullført."
+completed_other = "Alle {{count}} kjøringer fullført."
+empty = "Ingenting å kjøre: kildene hadde ingen dokumenter å behandle."
+failed = "Kjøring mislyktes: {{error}}"
+running = "Kjøring startet; fortsatt pågår."
+timeout = "Kjøringen tar lengre tid enn forventet; den kan fortsatt fullføres i bakgrunnen."
+
+[portal.pipelines.status]
+active = "Aktiv"
+paused = "Satt på pause"
+
+[portal.pipelines.table]
+name = "Pipeline"
+sources = "Kilder"
+status = "Status"
+steps = "Trinn"
+
+[portal.pipelines.trigger]
+folder-watch = "Mappeovervåking"
+manual = "Manuell"
+schedule = "Planlagt"
+
+[portal.policies]
+subtitle = "Stående automatiseringer som håndhever en verktøypipeline på hvert dokument. Hver policy utløses ved opplasting eller eksport, kjører verktøykjeden sin, og lagrer den håndhevede versjonen ved siden av originalen."
+title = "Policyer"
+
+[portal.policies.card]
+comingSoon = "Oppgrader til Enterprise"
+notSetUp = "Ikke satt opp"
+
+[portal.policies.categories.compliance]
+desc = "Håndhev HIPAA-, GDPR-, SOC 2- eller FedRAMP-krav på hvert dokument."
+label = "Samsvar"
+
+[portal.policies.categories.ingestion]
+desc = "Klassifiser dokumenter, trekk ut strukturerte data, håndhev navnekonvensjoner og normaliser sider."
+label = "Inntak"
+
+[portal.policies.categories.retention]
+desc = "Angi hvor lenge dokumenter beholdes, når de skal arkiveres, og når de skal slettes."
+label = "Oppbevaring"
+
+[portal.policies.categories.routing]
+desc = "Rut dokumenter automatisk til riktig team, mappe eller system."
+label = "Ruting"
+
+[portal.policies.categories.security]
+desc = "Oppdag PII, rediger bort, fjern aktivt innhold og vannmerk dokumenter."
+label = "Sikkerhet"
+
+[portal.policies.config]
+scopeAll = "Alle dokumenter"
+
+[portal.policies.config.compliance]
+summary = "Validerer dokumenter mot regulatoriske rammeverk før de forlater systemet."
+
+[portal.policies.config.compliance.fields]
+accessLog = "Tilgangslogg"
+auditTrail = "Revisjonsspor"
+frameworks = "Rammeverk"
+onViolation = "Når ikke i samsvar"
+
+[portal.policies.config.compliance.rules]
+0 = "Rammeverkskanning"
+1 = "Håndhev handling"
+2 = "Revisjonsspor"
+
+[portal.policies.config.ingestion]
+summary = "Klassifiserer dokumenter, trekker ut strukturerte data, håndhever navngiving og normaliserer sider."
+
+[portal.policies.config.ingestion.fields]
+belowThreshold = "Under terskel"
+minConfidence = "Min. konfidens"
+
+[portal.policies.config.ingestion.rules]
+0 = "Klassifiser"
+1 = "Trekk ut"
+2 = "Navngi"
+3 = "Normaliser"
+
+[portal.policies.config.retention]
+summary = "Håndhever hvor lenge dokumenter beholdes, når de skal arkiveres, og når de skal slettes."
+
+[portal.policies.config.retention.fields]
+archiveAfter = "Arkiver etter"
+immutableHold = "Uforanderlig sperre"
+keepFor = "Behold i"
+
+[portal.policies.config.retention.rules]
+0 = "Oppbevaringssperre"
+1 = "Automatisk arkivering"
+2 = "Sletteblokkering"
+
+[portal.policies.config.routing]
+summary = "Ruter dokumenter til riktig destinasjon basert på type og klassifisering."
+
+[portal.policies.config.routing.fields]
+destination = "Destinasjon"
+notify = "Varsle ved ruting"
+webhookUrl = "Webhook URL"
+
+[portal.policies.config.routing.rules]
+0 = "Automatisk klassifisering"
+1 = "Rut til mappe"
+2 = "Webhook-varsling"
+
+[portal.policies.config.security]
+summary = "Oppdager og redigerer bort PII, fjerner aktivt innhold (JavaScript), og vannmerker dokumenter."
+
+[portal.policies.config.security.rules]
+0 = "Rediger bort PII"
+1 = "Fjern JavaScript"
+2 = "Vannmerke"
+
+[portal.policies.detail]
+enforces = "Håndhever"
+onEveryExport = "Ved hver eksport"
+onEveryUpload = "Ved hver opplasting"
+outputAsNewFile = "som en ny fil"
+outputAsNewVersion = "som en ny versjon"
+recentActivity = "Nylig aktivitet"
+retry = "Prøv på nytt"
+showLess = "Vis mindre"
+showMore = "Vis mer"
+sources = "Kilder"
+
+[portal.policies.detail.actions]
+clearHistory = "Tøm behandlingshistorikk"
+delete = "Slett"
+editSettings = "Rediger innstillinger"
+pause = "Sett på pause"
+resume = "Fortsett"
+runNow = "Kjør nå"
+
+[portal.policies.detail.clearHistory]
+body = "Denne policyen vil glemme alle filer den allerede har behandlet, og behandle alt som for øyeblikket finnes i kildene på nytt ved neste kjøring. Selve filene endres ikke. Dette kan ikke angres."
+cancel = "Avbryt"
+confirm = "Tøm historikk"
+title = "Tømme behandlingshistorikk?"
+
+[portal.policies.detail.emptyActivity]
+description = "Dokumenter vises her når denne policyen kjører."
+title = "Ingen aktivitet ennå"
+
+[portal.policies.endpoints]
+addWatermark = "Vannmerke"
+autoRedact = "Sladd personopplysninger"
+compressPdf = "Komprimer"
+flatten = "Flat ut"
+ocrPdf = "OCR"
+sanitizePdf = "Fjern JavaScript"
+
+[portal.policies.offline]
+description = "Policyene dine er lagret og vises når tilkoblingen er gjenopprettet."
+retry = "Prøv igjen"
+title = "Backend utilgjengelig"
+
+[portal.policies.stats]
+activeFor = "Aktiv"
+dataProcessed = "Data behandlet"
+docsEnforced = "Dokumenter håndhevet"
+
+[portal.policies.status]
+active = "Aktiv"
+paused = "Satt på pause"
+
+[portal.policies.summary.active]
+description = "Håndheves ved opplasting/eksport"
+label = "Aktive policyer"
+
+[portal.policies.summary.categories]
+description = "Tilgjengelige for konfigurering"
+label = "Kategorier"
+
+[portal.policies.summary.docsEnforced]
+description = "På tvers av aktive policyer"
+label = "Dokumenter håndhevet"
+
+[portal.policies.summary.paused]
+description = "Konfigurert, men kjører ikke"
+label = "Satt på pause"
+
+[portal.policies.wizard.actions]
+back = "Tilbake"
+cancel = "Avbryt"
+continue = "Fortsett"
+enablePolicy = "Aktiver policy"
+saveChanges = "Lagre endringer"
+
+[portal.policies.wizard.capability.compress]
+desc = "Komprimerer dokumentet til en mindre filstørrelse."
+label = "Reduser filstørrelse"
+
+[portal.policies.wizard.capability.flatten]
+desc = "Slår sammen skjemafelt og merknader inn i siden slik at de ikke kan redigeres."
+label = "Flat ut dokumentet"
+
+[portal.policies.wizard.capability.ocr]
+desc = "Kjører OCR slik at skannede sider blir markerbar, søkbar tekst."
+label = "Gjør tekst søkbar"
+
+[portal.policies.wizard.capability.redact]
+desc = "Finner og sladder sensitive detaljer — som personnummer og kortnumre — slik at de ikke kan leses."
+label = "Sladd sensitiv informasjon"
+
+[portal.policies.wizard.capability.sanitize]
+desc = "Fjerner skjult JavaScript slik at ingenting kan kjøre automatisk når dokumentet åpnes."
+label = "Fjern aktivt innhold"
+
+[portal.policies.wizard.capability.watermark]
+desc = "Stempler et synlig merke (f.eks. «Konfidensielt») over hver side."
+label = "Bruk et vannmerke"
+
+[portal.policies.wizard.errors]
+noTools = "Aktiver minst ett verktøy i arbeidsflyten først."
+saveFailed = "Kunne ikke lagre policyen. Prøv igjen."
+
+[portal.policies.wizard.output]
+heading = "Utdata og kjøring"
+
+[portal.policies.wizard.output.filenameRule]
+autoNumber = "Automatisk nummerering"
+label = "Regel for filnavn"
+placeholder = "Tekst som skal legges til (valgfritt)"
+prefix = "Prefiks"
+suffix = "Suffiks"
+
+[portal.policies.wizard.output.outputAs]
+label = "Utdata som"
+newFile = "Ny fil"
+newVersion = "Ny versjon"
+
+[portal.policies.wizard.output.runOn]
+export = "Eksport"
+helper = "Når policyen utløses: ved opplasting eller før eksport."
+label = "Kjør ved"
+upload = "Opplasting"
+
+[portal.policies.wizard.settings]
+heading = "Innstillinger"
+
+[portal.policies.wizard.sources]
+heading = "Kilder"
+loading = "Laster kilder…"
+
+[portal.policies.wizard.tabs]
+ariaLabel = "Oppsettstrinn"
+settings = "Innstillinger"
+workflow = "Handlinger"
+
+[portal.policies.wizard.title]
+edit = "Rediger {{category}}-policy"
+setUp = "Sett opp {{category}}-policy"
+
+[portal.policies.wizard.workflow]
+description = "Velg hva denne policyen gjør med hvert dokument den behandler."
+
+[portal.policySummary]
+activeSummary = "{{active}} / {{total}} aktive"
+noRule = "Ingen regel håndhevet ennå"
+subtitle = "Faste automatiseringer som hvert dokument går gjennom, uansett hvilken pipeline som håndterer det."
+title = "Hva som kjøres på PDF-ene dine"
+
+[portal.policySummary.action]
+comingSoon = "Oppgrader til Enterprise"
+configure = "Konfigurer"
+setUp = "Sett opp"
+
+[portal.policySummary.column]
+activeRule = "Aktiv regel"
+policy = "Policy"
+status = "Status"
+
+[portal.policySummary.empty]
+description = "Når policyer er konfigurert, vises kategoriene her."
+title = "Ingen policyer ennå"
+
+[portal.policySummary.state]
+active = "Aktiv"
+off = "Av"
+soon = "Snart"
+
+[portal.processingStatus]
+managePlan = "Administrer abonnement"
+volumeSuffix = "PDF-er behandlet · siste 30 dager"
+
+[portal.procurement]
+reset = "Tilbakestill innkjøp (demo)"
+subtitle = "Få teamet evaluert, kontraktsfestet og onboardet. Alle dokumenter på ett sted."
+title = "Innkjøp"
+
+[portal.procurement.action]
+download = "Last ned"
+pay = "Betal nå"
+request = "Be om"
+sign = "Se gjennom og signer"
+upload = "Last opp"
+
+[portal.procurement.agreement]
+agreeCta = "Godta og abonner"
+confirm = "Jeg har lest og godtar Stirling Enterprise Agreement."
+eyebrow = "Avtale"
+intro = "Én samlet avtale dekker avtalen din: Master Service Agreement, bestillingsskjema, EULA og databehandleravtale. Se gjennom den, og godta deretter for å akseptere tilbudet som et forpliktende abonnement."
+title = "Se gjennom enterprise-avtalen din"
+
+[portal.procurement.builder]
+addons = "Tillegg"
+back = "Tilbake"
+businessName = "Bedriftsnavn"
+businessNamePlaceholder = "Bedriften din"
+continue = "Fortsett"
+country = "Land"
+countryEuro = "Eurosonen (EUR €)"
+countryUK = "Storbritannia (GBP £)"
+countryUS = "USA (USD $)"
+eula = "Jeg har lest og godtar Stirling Enterprise EULA. Den styrer avtalen som genereres fra dette tilbudet."
+generate = "Generer tilbud"
+included = "Inkludert"
+indemnification = "IP-skadesløsholdelse"
+indemnificationSub = "Vi forsvarer kvalifiserende IP-krav, i henhold til EULA"
+offlineLicense = "Offline / air-gapped-lisens"
+offlineLicenseSub = "En nedlastbar lisensfil for en air-gapped, selvdriftet instans"
+qbr = "Kvartalsvise forretningsgjennomganger"
+qbrSub = "Din SE gjennomgår bruk og veikart hvert kvartal"
+running = "{{annual}} / år · {{years}} år {{tcv}}"
+s1Sub = "Teamet ditt, og PDF-ene du forventer å kjøre hvert år."
+s1Title = "Hvor mye vil du behandle?"
+s2Sub = "Lengre perioder gir rabatt på satsen; servicenivået ditt bestemmer support."
+s2Title = "Forpliktelse og service"
+s3Sub = "For tilbudet og avtalen det genererer."
+s3Title = "Dine detaljer"
+serviceLevel = "Servicenivå"
+slDedicated = "Dedikert"
+slDedicatedSub = "4 virketimer · dedikert kundeansvarlig · +30 %"
+slPriority = "Prioritet"
+slPrioritySub = "Samme virkedag · navngitt CSM · +15 %"
+slStandard = "Standard"
+slStandardSub = "Neste virkedag · delt CSM · inkludert"
+stepOf = "Trinn {{n}} av {{total}}"
+term = "Periode"
+termDiscount = "{{pct}} % rabatt for flerårig forpliktelse brukt"
+title = "Bygg tilbudet ditt"
+training = "Onboarding og opplæring"
+trainingSub = "Live-økter for å få teamet ditt i gang"
+users = "Totalt antall brukere"
+usersPlaceholder = "f.eks. 250"
+volEstimated = "Estimert fra {{count}} brukere (~2,000 PDF-er hver, inkludert automatisering). Rediger hvis du vet bedre."
+volManual = "Bruker tallet ditt. Estimer på nytt fra teamstørrelsen når som helst."
+volNoUsers = "Usikker? Angi teamstørrelsen din, så estimerer vi det."
+volume = "Årlig PDF-volum"
+volumePlaceholder = "f.eks. 1,000,000"
+years_one = "{{count}} år"
+years_other = "{{count}} år"
+
+[portal.procurement.docs]
+count_one = "{{count}} dokument"
+count_other = "{{count}} dokumenter"
+done = "Ferdig"
+here = "Du er her"
+hide = "Skjul"
+optional = "Valgfritt"
+paidAddon = "Betalt tillegg"
+show = "Vis"
+subtitle = "Alt du trenger på hvert trinn av reisen, vist etter hvert som avtalen går gjennom den."
+supportingSubtitle = "SOC 2, sikkerhetsgjennomganger, skatteskjemaer og mer, klart når sikkerhets- eller innkjøpsteamet ditt spør. Noen har et engangsgebyr."
+supportingTitle = "Støtter evalueringen din"
+title = "Dokumenter"
+upcoming = "Kommende"
+
+[portal.procurement.error]
+title = "Noe gikk galt"
+
+[portal.procurement.hero]
+company = "Enterprise-avtalen din"
+ctaAgreement = "Se gjennom og signer avtale"
+ctaLive = "Du er i drift"
+ctaPayment = "Legg til betaling"
+ctaQuote = "Se gjennom tilbudet ditt"
+ctaTrial = "Bygg tilbudet ditt"
+eyebrow = "Enterprise-innkjøp"
+inviteTeammates = "Inviter teammedlemmer"
+keyDocs = "Nøkkeldokumenter"
+nextStep = "Neste trinn: {{action}}"
+notStarted = "Ikke startet"
+open = "Åpne innkjøp"
+scheduleCall = "Planlegg en samtale"
+setup1Sub = "Inviter teammedlemmene dine"
+setup1Title = "Rull ut PDF Editor"
+setup2Sub = "Slå på behandling på tvers av editorer og andre kilder"
+setup2Title = "Koble til PDF Processor"
+setup3Sub = "Slå på sikkerhet, samsvar, ruting eller oppbevaring når du trenger dem"
+setup3Title = "Legg til anbefalte policyer"
+
+[portal.procurement.journey]
+daysLeft_one = "{{count}} dag igjen"
+daysLeft_other = "{{count}} dager igjen"
+engineerLabel = "Din løsningsingeniør"
+eyebrow = "Utrullingen din"
+live = "Du er i drift på Stirling Enterprise"
+nextStep = "Neste trinn: {{action}}"
+subtitle = "Løsningsingeniøren din er med på hvert trinn. Én neste handling om gangen; hele sjekklisten er nedenfor."
+title = "Fra prøveperiode til drift, én veiledet vei"
+trialTitle = "Enterprise-prøveperiode"
+
+[portal.procurement.journeySteps.agreement]
+blurb = "Én signatur dekker MSA, bestillingsskjema, EULA og DPA."
+gatingAction = "Se gjennom og signer avtalen din"
+label = "Avtale"
+
+[portal.procurement.journeySteps.implementation]
+blurb = "Klargjør arbeidsområdet ditt og kjør go-live-håndboken."
+gatingAction = "Klargjør arbeidsområdet ditt"
+label = "Implementering"
+
+[portal.procurement.journeySteps.payment]
+blurb = "Betal med kort, bankoverføring eller mot en innkjøpsordre."
+gatingAction = "Bekreft betaling"
+label = "Betaling"
+
+[portal.procurement.journeySteps.quote]
+blurb = "Se gjennom priser for forpliktet volum og kontraktsperiode."
+gatingAction = "Godta tilbudet ditt"
+label = "Tilbud"
+
+[portal.procurement.journeySteps.trial]
+blurb = "Evaluer Stirling mot dokumentene og arbeidsflytene dine."
+gatingAction = "Bygg tilbudet ditt"
+label = "Prøveperiode"
+
+[portal.procurement.license]
+copied = "Kopiert"
+copy = "Kopier nøkkel"
+downloadError = "Kunne ikke generere offline-lisensfilen ennå — prøv igjen om et øyeblikk."
+downloadOffline = "Last ned offline-lisens (.lic)"
+hint = "Lim inn denne nøkkelen i en selvdriftet instans for å aktivere den, eller behold den for arkivet ditt. Oppbevar den trygt."
+label = "Lisensnøkkelen din"
+
+[portal.procurement.link]
+cta = "Koble til konto"
+description = "Innkjøp kjører på den tilkoblede Stirling-kontoen din: det er slik vi klargjør prøveperioden, priser tilbudet ditt og starter fakturering. Koble til en konto for å starte."
+eyebrow = "Enterprise"
+title = "Koble til kontoen din for å begynne"
+
+[portal.procurement.live]
+description = "Abonnementet ditt er aktivt og lisensen din er utstedt. Teamet ditt er klargjort, og fakturering har startet."
+eyebrow = "I drift"
+title = "Du er i drift på Stirling Enterprise"
+
+[portal.procurement.locked]
+description = "Prøvenøkler, tilbud for forpliktet volum, avtalen med én signatur, betaling og dokumentregisteret ditt finnes alle her når du starter en enterprise-evaluering."
+eyebrow = "Kun Enterprise"
+talkToSales = "Snakk med salg"
+title = "Innkjøpsløpet åpnes med Enterprise"
+
+[portal.procurement.milestone]
+accept = "Godta og fortsett"
+description = "Last ned PDF-en for å dele den med teamet ditt, kom tilbake for å godta når du er klar, eller gjør endringer."
+download = "Last ned PDF"
+downloadError = "Kunne ikke laste ned tilbuds-PDF-en ennå — prøv igjen om et øyeblikk."
+edit = "Rediger tilbud"
+eyebrow = "Tilbud {{number}}"
+perYear = " / år"
+preparedFor = "Utarbeidet for {{company}}"
+tcv = "{{value}} total kontraktsverdi"
+title = "Tilbudet ditt er klart"
+
+[portal.procurement.modal]
+cancel = "Avbryt"
+chooseFile = "Velg fil"
+close = "Lukk"
+downloadBody = "Nedlastingen starter snart."
+downloadCta = "Last ned"
+downloadTitle = "Last ned"
+noFile = "Ingen fil valgt"
+payBody = "Betal den forpliktede kontrakten din med kort eller bankoverføring gjennom Stripe. Arbeidsområdet ditt klargjøres så snart betalingen er godkjent."
+payCta = "Fortsett til Stripe"
+payTitle = "Bekreft betaling"
+requestBodyFree = "Vi genererer dette på forespørsel. Bekreft, så sender løsningsingeniøren din det over snart."
+requestBodyPaid = "Dette er et betalt tillegg. Bekreft, så avgrenser løsningsingeniøren din det og sender papirarbeidet."
+requestCta = "Be om"
+requestTitle = "Be om dette dokumentet"
+signBody = "Åpner Stirling Enterprise Agreement for e-signatur: én signatur dekker MSA, bestillingsskjema, EULA og DPA. Vi motsignerer automatisk, og du går videre til betaling."
+signCta = "Åpne for signering"
+signTitle = "Se gjennom og signer avtalen din"
+uploadBody = "Send oss innkjøpsordren din, så fakturerer vi mot den på dine vilkår. Dra inn PDF-en eller velg en fil nedenfor."
+uploadCta = "Last opp innkjøpsordre"
+uploadTitle = "Last opp innkjøpsordren din"
+
+[portal.procurement.payment]
+description = "Tilbudet ditt er akseptert og lisensen din er allerede aktiv — teamet ditt kan starte med én gang. Betal den første fakturaen når du er klar; du kan betale eller laste den ned her, ingen e-post nødvendig."
+downloadInvoice = "Last ned faktura"
+simulate = "Simuler mottatt betaling (demo)"
+title = "Abonnement opprettet"
+viewInvoice = "Vis og betal faktura"
+
+[portal.procurement.schedule]
+fallback = "Kunne ikke laste planleggeren."
+fallbackLink = "Åpne planlegging i en ny fane"
+subtitle = "Løsningsingeniøren din vil gå gjennom utrullingen med teamet ditt. Velg et tidspunkt som passer deg."
+title = "Planlegg en samtale"
+
+[portal.procurement.status]
+action = "Handling kreves"
+available = "Tilgjengelig"
+complete = "Fullført"
+pending = "Venter"
+request = "På forespørsel"
+
+[portal.procurement.trial]
+body = "Forlengelse legger til 7 dager og varsler løsningsingeniøren din."
+bodyMaxed = "Du har brukt alle forlengelsene dine — snakk med løsningsingeniøren din hvis du trenger mer tid."
+cancel = "Avbryt prøveperiode"
+extend = "Forleng 7 dager"
+maxed = "Maksimert"
+subtitle = "Den gratis prøveperioden din varer til {{date}}. Ingen kort kreves."
+title = "Enterprise-prøveperiode"
+
+[portal.procurement.upsell]
+homeBadge = "Enterprise"
+homeBody = "Priser for forpliktet volum, SSO + SCIM + RBAC for hele organisasjonen, 90-dagers uforanderlig revisjonsspor og en dedikert SE."
+homeCta = "Start prøveperiode →"
+homeHeadline = "Behandle millioner av PDF-er."
+
+[portal.recentActivity]
+title = "Nylig aktivitet"
+viewAll = "Vis alle"
+
+[portal.recentActivity.empty]
+description = "Pipeline-kjøringer, utrullinger og agenthendelser vises her."
+title = "Ingenting her ennå"
+
+[portal.search]
+ariaLabel = "Søk"
+placeholder = "Søk i Stirling — endpoints, pipelines, docs…"
+
+[portal.search.empty]
+noActionsDescription = "Hurtighandlinger vises her når de er tilgjengelige."
+noActionsTitle = "Ingen hurtighandlinger"
+noMatches = "Ingen treff for \"{{query}}\""
+noMatchesDescription = "Prøv et annet søkeord eller bla gjennom katalogen."
+
+[portal.settings.groups]
+admin = "Administrator"
+
+[portal.settings.sections]
+account-link = "Kontokobling"
+
+[portal.shell.header]
+accountFallback = "Konto"
+accountMenu = "Kontomeny"
+darkMode = "Mørk modus"
+lightMode = "Lys modus"
+search = "Søk"
+searchPlaceholder = "Søk…"
+signOut = "Logg av"
+switchToDark = "Bytt til mørkt tema"
+switchToLight = "Bytt til lyst tema"
+
+[portal.shell.sidebar]
+appEditor = "Editor"
+appProcessor = "Processor"
+brandSuffix = "Stirling Processor"
+docsCount = "{{docs}} dokumenter"
+linkAccount = "Koble til Stirling-konto"
+planEditor = "Editor-abonnement"
+planEnterprise = "Enterprise-abonnement"
+planProcessor = "Processor-abonnement"
+primaryNav = "Primær navigasjon"
+switchApp = "Bytt app"
+
+[portal.sources]
+subtitle = "Gjenbrukbare inndatakoblinger som mater dokumenter inn i Stirling. Konfigurer en kobling én gang, og referer deretter til den fra et hvilket som helst antall policyer. Klikk på en rad for konfigurasjonen og hvilke policyer som bruker den."
+title = "Kilder"
+
+[portal.sources.actions]
+agentBuilder = "Agent Builder"
+connectSource = "Koble til kilde"
+
+[portal.sources.delete]
+body = "Slette \"{{name}}\"? Dette kan ikke angres. Policyer som refererer til den, må oppdateres."
+cancel = "Avbryt"
+confirm = "Slett"
+title = "Slette kilde?"
+
+[portal.sources.detail]
+closeAriaLabel = "Lukk detaljer"
+delete = "Slett kilde"
+docs24h = "Siste 24 t"
+docs30d = "Siste 30 dager"
+docsTotal = "Totalt sett"
+docsTrend = "Dokumenter de siste 30 dagene"
+documents = "Dokumenter"
+edit = "Rediger"
+notReferenced = "Den refereres ikke av noen policy, så den er trygg å slette."
+pause = "Sett på pause"
+resume = "Fortsett"
+subtitle = "{{type}} · {{status}}"
+usedBy = "Brukt av"
+
+[portal.sources.empty]
+description = "Koble til en mappe (og snart skylagring) slik at policyene dine har et sted å hente dokumenter fra."
+title = "Ingen kilder koblet til ennå"
+
+[portal.sources.kpi]
+inUse = "I bruk"
+total = "Koblinger"
+unused = "Ubrukt"
+
+[portal.sources.status]
+active = "Aktiv"
+disabled = "Deaktivert"
+unused = "Ubrukt"
+
+[portal.sources.table]
+source = "Kilde"
+status = "Status"
+usedBy = "Policyer"
+
+[portal.sources.types.editor]
+label = "Editor"
+
+[portal.sources.types.folder]
+description = "Overvåk en katalog på serveren for nye dokumenter."
+label = "Mappe"
+
+[portal.sources.types.folder.fields.directory]
+helperText = "Absolutt sti som Stirling overvåker for filer som skal behandles."
+label = "Katalogsti"
+placeholder = "/data/incoming"
+
+[portal.sources.types.folder.fields.identity]
+helperText = "Innholdskontroll leser hver endrede fil, så omdøping og touch-operasjoner som ikke endrer innhold, behandles ikke på nytt."
+label = "Endringsdeteksjon"
+
+[portal.sources.types.folder.fields.identity.options]
+hash = "Størrelse, dato og innholdskontroll"
+stat = "Størrelse og endringsdato"
+
+[portal.sources.types.folder.fields.mode]
+label = "Lesemodus"
+
+[portal.sources.types.folder.fields.mode.options]
+consume = "Konsumer: behandle hver fil én gang"
+snapshot = "Snapshot: les mappen på nytt ved hver kjøring"
+
+[portal.sources.types.folder.fields.recursive]
+label = "Mappedybde"
+
+[portal.sources.types.folder.fields.recursive.options]
+all = "Inkluder undermapper"
+top = "Kun toppnivå"
+
+[portal.sources.types.unknown]
+label = "Kilde"
+
+[portal.sources.wizard]
+back = "Tilbake"
+cancel = "Avbryt"
+continue = "Fortsett"
+editTitle = "Rediger kilde"
+name = "Navn"
+namePlaceholder = "f.eks. kravmottak"
+save = "Lagre endringer"
+subtitle = "Trinn {{current}} av {{total}} · {{label}}"
+title = "Koble til en kilde"
+type = "Type"
+
+[portal.sources.wizard.steps]
+chooseType = "Velg type"
+configure = "Konfigurer"
+review = "Se gjennom og koble til"
+
+[portal.usage]
+managePayment = "Administrer betaling"
+subtitle = "Forbruk, fakturaer og abonnementsadministrasjon for hver PDF Stirling har fakturert, i én konsoll."
+title = "Bruk og fakturering"
+
+[portal.usage.error]
+loadWallet = "Kunne ikke laste wallet"
+openStripePortal = "Kunne ikke åpne Stripe-portalen"
+walletUnavailable = "Wallet utilgjengelig: {{status}} {{statusText}}"
+
+[portal.usage.sessionExpired]
+action = "Logg på igjen"
+body = "Stirling-kontoøkten din er utløpt. Logg på igjen for å vise fakturering — instansen din forblir koblet."
+title = "Økten er utløpt"
+
+[portal.users]
+title = "Brukere"
+
+[portal.users.roles]
+subtitle = "Alle roller finnes på alle abonnementer — hva hver enkelt kan gjøre, er fast på tvers av organisasjonen."
+title = "Roller"
+
+[portal.users.roles.admin]
+label = "Administrator (org-eier)"
+summary = "Full styring over arbeidsområdet, innstillinger og medlemmer."
+
+[portal.users.roles.admin.permissions]
+0 = "Administrer brukere, team og roller"
+1 = "Administrer alle integrasjoner inkl. S3-tilkoblinger"
+2 = "Gi eller tilbakekall portaltilgang"
+3 = "Alt teameier kan gjøre"
+
+[portal.users.roles.guest]
+label = "Gjest"
+summary = "Begrenset eller kun nettbasert tilgang; kan ikke ha personlige konfigurasjoner."
+
+[portal.users.roles.guest.permissions]
+0 = "Kun nettbasert / demobruk"
+1 = "Ingen API-nøkler eller integrasjoner"
+2 = "Ingen portaltilgang"
+3 = "Skrivebeskyttet der delt"
+
+[portal.users.roles.member]
+label = "Medlem"
+summary = "Vanlig bruker — arbeider med delte ressurser og egne konfigurasjoner."
+
+[portal.users.roles.member.permissions]
+0 = "Bruk editoren og delte integrasjoner"
+1 = "Opprett personlige API- og MCP-konfigurasjoner"
+2 = "Se teamkonfigurasjoner som er delt med dem"
+3 = "Ingen S3- eller arbeidsområdeadministrasjon"
+
+[portal.users.roles.team_owner]
+label = "Teameier"
+summary = "Eier et team — administrerer medlemmenes ressurser og delte konfigurasjoner."
+
+[portal.users.roles.team_owner.permissions]
+0 = "Opprett og administrer teamets S3-tilkoblinger"
+1 = "Administrer teameide integrasjonskonfigurasjoner"
+2 = "Portaltilgang via standardpolicyen"
+3 = "Alt medlem kan gjøre"
+
+[portal.welcome]
+ariaLabel = "Velkommen til Stirling PDF"
+badge = "Åpen kildekode"
+installEditor = "Installer Editor"
+inviteTeammates = "Inviter teammedlemmer"
+openInBrowser = "Åpne i nettleser"
+perks = "Gratis for alltid · Kan driftes selv"
+subtitle = "Verdens sikreste PDF Editor er gratis for team i alle størrelser. Inkluderer 60+ PDF-operasjoner og SSO."
+title = "Velkommen til"
+titleAccent = "Stirling PDF"
 
 [printFile]
 title = "Skriv ut fil"
@@ -6934,6 +9008,21 @@ manage = "Manage"
 description = "Policies and legal information for this service."
 title = "Legal Documents"
 
+[settings.licenses]
+backendDescription = "Lisenser for backend-avhengigheter som er pakket med denne serveren."
+backendLabel = "Backend-lisenser"
+backendTitle = "Backend-tredjepartslisenser"
+empty = "Ingen avhengigheter funnet."
+frontendDescription = "Lisenser for frontend-avhengigheter som er pakket inn i release-builden."
+frontendLabel = "Frontend-lisenser"
+frontendTitle = "Frontend-tredjepartslisenser"
+license = "Lisens"
+listDescription = "Listen vises direkte i UI fra release-pakken eller backend-endpointet."
+listTitle = "Pakkede avhengigheter"
+loadError = "Kunne ikke laste tredjepartslisenser"
+module = "Modul"
+version = "Versjon"
+
 [settings.licensingAnalytics]
 audit = "Revisjon"
 plan = "Plan"
@@ -7686,7 +9775,9 @@ memberRemoved = "Medlem fjernet"
 namePlaceholder = "Skriv inn teamnavn"
 personal = "Personlig"
 removeError = "Kunne ikke fjerne medlem"
+renameCancel = "Avbryt omdøping"
 renameError = "Kunne ikke gi nytt navn til teamet"
+renameSubmit = "Lagre teamnavn"
 renameSuccess = "Teamet har fått nytt navn"
 
 [team.invitationBanner]
@@ -7702,6 +9793,7 @@ sendButton = "Send invitasjon"
 title = "Inviter teammedlem"
 
 [team.members]
+actions = "Medlemshandlinger"
 emailColumn = "E-post"
 empty = "Ingen teammedlemmer ennå"
 nameColumn = "Navn"
@@ -7933,6 +10025,146 @@ title = "Detaljert statistikk"
 unknownEndpoint = "Ukjent endepunkt"
 visits = "Besøk"
 
+[users]
+lastActive = "Sist aktiv"
+learnMore = "Lær mer om roller og tilgang."
+locked = "Låst"
+roleFor = "Rolle for {{name}}"
+rowActions = "Handlinger for {{name}}"
+showAll = "Vis alle {{count}}"
+showLess = "Vis mindre"
+subtitle2 = "Personene dine, teamene og tilgangsnivåene."
+suspended = "Suspendert"
+teamActions = "Teamhandlinger"
+title = "Brukere"
+you = "(deg)"
+
+[users.action]
+deleteTeam = "Slett team"
+disableMfa = "Tilbakestill MFA"
+move = "Flytt til team"
+reinstate = "Gjeninnsett"
+remove = "Fjern fra org"
+rename = "Gi team nytt navn"
+resetPw = "Tilbakestill passord"
+suspend = "Suspender"
+unlock = "Lås opp konto"
+
+[users.cap]
+addProcessor = "+ Processor"
+approver = "Godkjenner policy"
+editor = "Editor"
+processor = "Processor"
+
+[users.confirm]
+deleteTeamBody = "Slette teamet {{name}}? Teamet må være tomt først - flytt medlemmene til et annet team, og det kan ikke fortsatt eie noen integrasjonskonfigurasjoner."
+deleteTeamTitle = "Slett team"
+disableMfaBody = "Fjerne MFA-registreringen til {{name}}? De setter den opp igjen ved neste pålogging hvis det kreves."
+disableMfaTitle = "Tilbakestill MFA"
+removeBody = "Fjerne {{name}} permanent fra organisasjonen? Dette kan ikke angres."
+removeTitle = "Fjern medlem"
+
+[users.empty]
+description = "Inviter teamet ditt for å begynne å samarbeide."
+title = "Ingen medlemmer ennå"
+
+[users.group]
+addToTeam = "Legg til i team"
+guestCount = "{{count}} gjest"
+guests = "Gjester"
+guestsDesc = "Eksterne samarbeidspartnere, begrenset til det du delte. Kun Editor."
+ledBy = "ledet av {{owner}}"
+org = "Organisasjon"
+orgDesc = "Eiere med myndighet på tvers av organisasjonen og policygodkjenning"
+owners = "{{count}} eier"
+team = "{{name}}-team"
+teamMeta = "{{count}} personer"
+
+[users.invite]
+access = "Tilgang"
+action = "Inviter personer"
+authOauth = "OAuth2 / SSO"
+authSaml = "SAML 2.0"
+authType = "Påloggingsmetode"
+authWeb = "Passord"
+create = "Opprett konto"
+createSubtitle = "Opprett en selvdriftet konto med passord eller SSO."
+createTitle = "Opprett konto"
+editorDesc = "Rediger PDF-er i Stirling PDF Editor. Alle får dette."
+email = "E-postadresse"
+emailError = "Angi en gyldig e-postadresse"
+emailPlaceholder2 = "navn@bedrift.no"
+forceChange = "Krev passordendring ved første pålogging"
+forceMfa = "Krev MFA-oppsett ved første pålogging"
+method = "Hvordan legge dem til"
+methodDirect = "Opprett konto direkte"
+methodEmail = "Inviter via e-post"
+password = "Passord"
+passwordError = "Passordet må være minst 8 tegn"
+processorDeferred = "Invitasjon sendt, men Processor-tilgang kunne ikke gis ennå - angi den fra listen når de har blitt med."
+processorDesc = "Styringsflaten, kjør pipelines, agenter og API."
+role = "Rolle"
+send2 = "Send invitasjon"
+subtitle2 = "De får en e-post for å bli med i Stirling-arbeidsområdet ditt."
+team = "Team"
+title = "Inviter personer"
+username = "Brukernavn"
+usernameError = "Brukernavnet må være minst 3 tegn"
+usernamePlaceholder = "jsmith"
+
+[users.loadError]
+description = "Noe gikk galt ved kontakt med backend, eller du har ikke tilgang. Prøv igjen."
+title = "Kunne ikke laste inn medlemmer"
+
+[users.moveTeam]
+apply = "Flytt"
+team = "Team"
+title = "Flytt til team"
+
+[users.newTeam]
+action = "+ Nytt team"
+create = "Opprett team"
+emailError = "Oppgi en gyldig e-postadresse"
+name = "Teamnavn"
+namePlaceholder = "f.eks. Finans"
+nameRequired = "Teamnavn er påkrevd"
+owner = "Teameier"
+ownerFailed = "Teamet ble opprettet, men eieren kunne ikke inviteres. Tildel en fra medlemslisten."
+ownerHelper = "Hvert team har en leder. De blir invitert som teameier, med Processor aktivert, og kan legge til resten. Du kan tildele på nytt senere."
+ownerPlaceholder = "owner@company.com"
+subtitle = "Grupper personer under en teameier som administrerer tilgangen deres."
+title = "Nytt team"
+
+[users.renameTeam]
+apply = "Gi nytt navn"
+name = "Teamnavn"
+title = "Gi team nytt navn"
+
+[users.resetPw]
+apply = "Tilbakestill passord"
+confirm = "Bekreft passord"
+copied = "Kopiert til utklippstavlen"
+copyHint = "Kopier dette nå - det vises ikke igjen."
+email = "Send e-post til brukeren om tilbakestillingen"
+forceChange = "Krev passordendring ved neste innlogging"
+generate = "Generer et sikkert passord"
+includePw = "Inkluder det nye passordet i e-posten"
+mismatch = "Passordene samsvarer ikke"
+newPassword = "Nytt passord"
+regen = "Generer på nytt"
+title = "Tilbakestill passord"
+tooShort = "Passordet må være minst 8 tegn"
+
+[users.role]
+guest = "Gjest"
+member = "Medlem"
+orgOwner = "Organisasjonseier"
+teamOwner = "Teameier"
+
+[users.team]
+grantProcessor = "Gi Processor til team"
+revokeProcessor = "Fjern Processor fra team"
+
 [validateSignature]
 date = "Dato"
 downloadCsv = "Last ned CSV"
@@ -8057,13 +10289,22 @@ zoomOut = "Zoom ut"
 [viewer.attachments]
 addAttachment = "Legg til vedlegg"
 close = "Lukk vedlegg"
+closeSidebar = "Lukk sidepanelet for vedlegg"
+download = "Last ned vedlegg"
 empty = "Ingen vedlegg i dette dokumentet"
 loading = "Laster vedlegg..."
 noDocument = "Åpne en PDF for å se vedleggene."
 noMatch = "Ingen vedlegg samsvarer med søket ditt"
 noSupport = "Støtte for vedlegg er ikke tilgjengelig i denne viseren."
+retry = "Prøv igjen"
 searchPlaceholder = "Søk i vedlegg"
 title = "Vedlegg"
+
+[viewer.bookmarks]
+bookmarkTitle = "Bokmerketittel"
+closeSidebar = "Lukk sidepanelet for bokmerker"
+collapseAll = "Skjul alle bokmerker"
+expandAll = "Utvid alle bokmerker"
 
 [viewer.comments]
 addComment = "Legg til kommentar"
@@ -8075,6 +10316,7 @@ clearAll = "Fjern alle kommentarer"
 clearAllDescription = "Dette fjerner kommentarer og svar fra sidepanelet, men beholder eventuelle tilknyttede merknader i dokumentet."
 clearAllTitle = "Fjerne alle kommentarer?"
 close = "Lukk kommentarer"
+closeSidebar = "Lukk sidepanelet for kommentarer"
 deleteAnnotationAndComment = "Slett merknad og kommentar"
 deleteDescription = "Denne merknaden har en kommentar tilknyttet. Du kan fjerne bare kommentaren fra sidepanelet og beholde merknaden, eller slette alt."
 deleteTitle = "Fjerne merknad fra kommentarer?"
@@ -8106,6 +10348,11 @@ title = "Skjemafelter"
 unsavedBadge = "Ulagret"
 unsavedDesc = "Du har ulagrede endringer"
 
+[viewer.layers]
+closeSidebar = "Lukk sidepanelet for lag"
+hideAll = "Skjul alle lag"
+showAll = "Vis alle lag"
+
 [viewer.link]
 delete = "Slett lenke"
 
@@ -8135,6 +10382,9 @@ resultsOf = "av {{total}}"
 
 [viewer.signature]
 delete = "Slett signatur"
+
+[viewer.thumbnails]
+closeSidebar = "Lukk sidepanelet for miniatyrbilder"
 
 [viewPdf]
 tags = "vis,les,annoter,tekst,bilde"
@@ -8562,6 +10812,7 @@ loading = "Laster personer..."
 locked = "låst"
 lockedBadge = "Låst"
 loginRequired = "Aktiver innloggingsmodus først"
+memberActions = "Medlemshandlinger"
 noMembersFound = "Ingen medlemmer funnet"
 role = "Rolle"
 searchMembers = "Søk i medlemmer..."
@@ -8571,6 +10822,7 @@ unlockAccount = "Lås opp konto"
 unlockUserError = "Kunne ikke låse opp brukerkonto"
 unlockUserSuccess = "Brukerkonto låst opp"
 user = "Bruker"
+userInfo = "Brukerinformasjon"
 
 [workspace.people.actions]
 upgrade = "Oppgrader"
@@ -8716,6 +10968,7 @@ removeMemberError = "Kunne ikke fjerne bruker fra team"
 removeMemberSuccess = "Bruker fjernet fra team"
 renameTeamLabel = "Gi team nytt navn"
 system = "System"
+teamActions = "Teamhandlinger"
 teamName = "Teamnavn"
 teamNotFound = "Team ikke funnet"
 title = "Team"

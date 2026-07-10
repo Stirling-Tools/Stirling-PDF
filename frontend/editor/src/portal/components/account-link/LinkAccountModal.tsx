@@ -96,9 +96,9 @@ export function LinkAccountModal({
             )}
           >
             {t("portal.accountLink.modal.loginNotConfigured.before", "Set")}{" "}
-            <code>VITE_SAAS_SUPABASE_URL</code>{" "}
+            <code>VITE_SUPABASE_URL</code>{" "}
             {t("portal.accountLink.modal.loginNotConfigured.and", "and")}{" "}
-            <code>VITE_SAAS_SUPABASE_ANON_KEY</code>{" "}
+            <code>VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY</code>{" "}
             {t(
               "portal.accountLink.modal.loginNotConfigured.after",
               "to enable in-app linking against the hosted Stirling account.",
@@ -106,7 +106,7 @@ export function LinkAccountModal({
           </Banner>
           {import.meta.env.DEV && (
             <Button
-              variant="outline"
+              variant="secondary"
               onClick={async () => {
                 await onLinked({ access_token: "dev-stub-jwt" });
                 onClose();
