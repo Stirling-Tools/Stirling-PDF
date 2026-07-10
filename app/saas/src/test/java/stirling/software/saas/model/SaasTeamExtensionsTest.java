@@ -14,14 +14,14 @@ import stirling.software.proprietary.model.Team;
 class SaasTeamExtensionsTest {
 
     @Test
-    @DisplayName("no-arg constructor carries sensible standard-team defaults")
+    @DisplayName("no-arg constructor carries sensible standard-team defaults (unlimited seats)")
     void defaults() {
         SaasTeamExtensions ext = new SaasTeamExtensions();
         assertThat(ext.getTeamType()).isEqualTo(SaasTeamExtensions.TEAM_TYPE_STANDARD);
         assertThat(ext.getIsPersonal()).isFalse();
-        assertThat(ext.getSeatCount()).isEqualTo(1);
+        assertThat(ext.getSeatCount()).isEqualTo(SaasTeamExtensions.UNLIMITED_SEATS);
         assertThat(ext.getSeatsUsed()).isZero();
-        assertThat(ext.getMaxSeats()).isEqualTo(1);
+        assertThat(ext.getMaxSeats()).isEqualTo(SaasTeamExtensions.UNLIMITED_SEATS);
         assertThat(ext.isPersonal()).isFalse();
     }
 
@@ -109,13 +109,17 @@ class SaasTeamExtensionsTest {
         }
 
         @Test
-        @DisplayName("personal team with null seat counters has no available seats")
-        void personalNullCountersFalse() {
+        @DisplayName("personal team with a null/zero max is unlimited")
+        void personalUnlimitedWhenNoCap() {
             SaasTeamExtensions ext = new SaasTeamExtensions();
             ext.setIsPersonal(Boolean.TRUE);
-            ext.setSeatsUsed(null);
+            ext.setSeatsUsed(500);
+
             ext.setMaxSeats(null);
-            assertThat(ext.hasAvailableSeats()).isFalse();
+            assertThat(ext.hasAvailableSeats()).isTrue();
+
+            ext.setMaxSeats(SaasTeamExtensions.UNLIMITED_SEATS);
+            assertThat(ext.hasAvailableSeats()).isTrue();
         }
     }
 

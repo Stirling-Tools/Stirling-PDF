@@ -96,7 +96,12 @@ public class SaasTeamService {
         Team savedTeam = teamRepository.save(team);
 
         saasTeamExtensionService.setPersonal(savedTeam, true);
-        saasTeamExtensionService.setSeats(savedTeam, 1, 1);
+        // Seats are unlimited under PAYG (0 = no cap); is_personal stays only as a disposable-team
+        // marker for the orphan guard, rename block, and PRO-via-team semantics.
+        saasTeamExtensionService.setSeats(
+                savedTeam,
+                stirling.software.saas.model.SaasTeamExtensions.UNLIMITED_SEATS,
+                stirling.software.saas.model.SaasTeamExtensions.UNLIMITED_SEATS);
         saasTeamExtensionService.setCreatedByUserId(savedTeam, user.getId());
         saasTeamExtensionsRepository.incrementSeatsUsed(savedTeam.getId());
 
@@ -155,15 +160,14 @@ public class SaasTeamService {
             throw new SecurityException("Only team leaders can invite members");
         }
 
-        // Auto-convert personal team to non-personal team for Pro users
+        // First invite turns a disposable personal team into a shared standard one. Seats are
+        // already unlimited (0 = no cap), so only the personal marker needs flipping.
         if (saasTeamExtensionService.isPersonal(team)) {
             log.info(
                     "Converting personal team {} to non-personal team for first invitation by {}",
                     team.getName(),
                     inviter.getUsername());
             saasTeamExtensionService.setPersonal(team, false);
-            // Unlimited seats once converted to standard
-            saasTeamExtensionService.setSeats(team, Integer.MAX_VALUE, Integer.MAX_VALUE);
         }
 
         // Validate: team can invite (not personal, has available seats)

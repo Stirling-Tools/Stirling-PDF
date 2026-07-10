@@ -46,6 +46,12 @@ public class SaasTeamExtensions implements Serializable {
     public static final String TEAM_TYPE_PERSONAL = "PERSONAL";
     public static final String TEAM_TYPE_STANDARD = "STANDARD";
 
+    /**
+     * Sentinel for {@code max_seats}/{@code seat_count}: no cap. Frontend reads {@code <= 0} the
+     * same way.
+     */
+    public static final int UNLIMITED_SEATS = 0;
+
     @Id
     @Column(name = "team_id")
     private Long teamId;
@@ -66,13 +72,15 @@ public class SaasTeamExtensions implements Serializable {
     private Boolean isPersonal = Boolean.FALSE;
 
     @Column(name = "seat_count", nullable = false)
-    private Integer seatCount = 1;
+    private Integer seatCount = UNLIMITED_SEATS;
 
     @Column(name = "seats_used", nullable = false)
     private Integer seatsUsed = 0;
 
+    // 0 (or null) means unlimited — the PAYG model does not cap team size. A positive value still
+    // caps, so the seat machinery survives for any future seat-based plan.
     @Column(name = "max_seats", nullable = false)
-    private Integer maxSeats = 1;
+    private Integer maxSeats = UNLIMITED_SEATS;
 
     @Column(name = "created_by_user_id")
     private Long createdByUserId;
@@ -100,19 +108,23 @@ public class SaasTeamExtensions implements Serializable {
     }
 
     /**
-     * Whether this team has unused seats. Personal teams enforce a 1-seat limit; standard teams are
-     * unlimited.
+     * Whether this team has unused seats. Standard teams are always unlimited. Personal teams are
+     * unlimited too unless a positive {@code maxSeats} cap is set ({@code <= 0}/null = unlimited),
+     * which lets the seat machinery survive without capping team size under the PAYG model.
      */
     public boolean hasAvailableSeats() {
         if (isPersonal()) {
-            return seatsUsed != null && maxSeats != null && seatsUsed < maxSeats;
+            if (maxSeats == null || maxSeats <= UNLIMITED_SEATS) {
+                return true;
+            }
+            return seatsUsed != null && seatsUsed < maxSeats;
         }
         return true;
     }
 
     /**
-     * Whether this team accepts new invitations. Personal teams (1 seat, owned by one user) never
-     * do; standard teams always do.
+     * Whether this team accepts new invitations. Personal (disposable single-owner) teams don't;
+     * they convert to standard on their first invite. Standard teams always do.
      */
     public boolean canInviteMembers() {
         return !isPersonal();

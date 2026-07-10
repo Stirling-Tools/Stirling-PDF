@@ -3,6 +3,7 @@ package stirling.software.saas.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -177,7 +178,7 @@ class SaasTeamServiceTest {
 
             assertThat(result).isSameAs(saved);
             verify(saasTeamExtensionService).setPersonal(saved, true);
-            verify(saasTeamExtensionService).setSeats(saved, 1, 1);
+            verify(saasTeamExtensionService).setSeats(saved, 0, 0);
             verify(saasTeamExtensionService).setCreatedByUserId(saved, 1L);
             verify(saasTeamExtensionsRepository).incrementSeatsUsed(50L);
 
@@ -311,7 +312,8 @@ class SaasTeamServiceTest {
             service.inviteUserToTeam(teamId, "b@x.com", inviter);
 
             verify(saasTeamExtensionService).setPersonal(t, false);
-            verify(saasTeamExtensionService).setSeats(t, Integer.MAX_VALUE, Integer.MAX_VALUE);
+            // Seats stay unlimited (0); conversion only flips the personal marker now.
+            verify(saasTeamExtensionService, never()).setSeats(any(), anyInt(), anyInt());
         }
 
         @Test

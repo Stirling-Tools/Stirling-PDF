@@ -657,6 +657,9 @@ public class SaasTeamController {
 
             int maxSeats = saasTeamExtensionService.getMaxSeats(team);
             int seatsUsed = saasTeamExtensionService.getSeatsUsed(team);
+            // maxSeats <= 0 means unlimited (PAYG default); don't report a negative remainder.
+            boolean unlimitedSeats = maxSeats <= 0;
+            int availableSeats = unlimitedSeats ? 0 : Math.max(0, maxSeats - seatsUsed);
             return ResponseEntity.ok(
                     Map.of(
                             "teamId",
@@ -670,7 +673,9 @@ public class SaasTeamController {
                             "seatsUsed",
                             seatsUsed,
                             "availableSeats",
-                            maxSeats - seatsUsed,
+                            availableSeats,
+                            "unlimitedSeats",
+                            unlimitedSeats,
                             "isLeader",
                             isLeader,
                             "members",
