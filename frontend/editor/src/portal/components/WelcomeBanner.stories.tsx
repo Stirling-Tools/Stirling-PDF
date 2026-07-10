@@ -5,6 +5,7 @@ import type { OnboardingProgress } from "@portal/hooks/useOnboardingProgress";
 
 const progress: OnboardingProgress = {
   loading: false,
+  deployed: false,
   editorDone: false,
   policiesDone: true,
   inviteDone: false,

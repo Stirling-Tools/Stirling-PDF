@@ -16,7 +16,9 @@ import { fetchUsers } from "@portal/api/users";
  */
 export interface OnboardingProgress {
   loading: boolean;
-  /** Editor deployed (at least one instance reporting in). */
+  /** A real deployment is reporting in (drives the live-status header). */
+  deployed: boolean;
+  /** Download step done — a real deployment OR the user's own download/Done. */
   editorDone: boolean;
   policiesDone: boolean;
   /** More than just the admin on the team. */
@@ -41,9 +43,10 @@ export function useOnboardingProgress(): OnboardingProgress {
 
   const [deploy, policies, users] = data ?? [null, null, null];
 
+  const deployed = (deploy?.instances.length ?? 0) > 0;
   // Authoritative signal is a deployed instance; the user's own download/Done
   // action marks it complete immediately via the persisted flag.
-  const editorDone = editorInstalled || (deploy?.instances.length ?? 0) > 0;
+  const editorDone = editorInstalled || deployed;
   const policiesActive = policies?.summary.active ?? 0;
   const policiesRecommended = Math.max(
     0,
@@ -54,6 +57,7 @@ export function useOnboardingProgress(): OnboardingProgress {
 
   return {
     loading,
+    deployed,
     editorDone,
     policiesDone,
     inviteDone,

@@ -10,10 +10,10 @@ import { useProcurement } from "@portal/components/procurement/useProcurement";
 /**
  * The Home hero, composed with a procurement-aware, progress-aware footer:
  *
- *  - not deployed (free, no instance) → marketing welcome header + setup steps
- *  - deployed / paid                  → deployed-Editor status header + steps
- *  - onboarding complete              → header only; the setup steps collapse away
- *  - enterprise                       → status header with chips hidden (the deal hero owns invite)
+ *  - no live deployment  → welcome header (+ setup steps until complete)
+ *  - deployment live     → deployed-Editor status header (+ steps until complete)
+ *  - onboarding complete → header only; the setup steps collapse away
+ *  - enterprise          → status header with chips hidden (the deal hero owns invite)
  *
  * The footer is the deal-status hero while a procurement deal is underway
  * (procurement is a bolt-on to any tier); otherwise the setup checklist, until
@@ -34,9 +34,11 @@ export function HomeHero({ tier }: { tier: Tier }) {
     <SetupChecklist progress={progress} />
   );
 
-  // Show the deployed-status header once the Editor is live (or on paid tiers);
-  // pre-deployment free orgs get the marketing welcome header.
-  const showStatus = tier !== "free" || progress.editorDone;
+  // The live-status header (EditorStatusCard) needs a real deployment to show;
+  // without one it renders nothing, so route to it only when actually deployed.
+  // Everything else — including a step completed via the local download flag —
+  // keeps the always-present welcome header, so the card never vanishes.
+  const showStatus = progress.deployed;
 
   return (
     <>
