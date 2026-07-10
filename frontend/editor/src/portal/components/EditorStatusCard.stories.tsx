@@ -2,6 +2,17 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse } from "msw";
 import { EditorStatusCard } from "@portal/components/EditorStatusCard";
 import { SetupChecklist } from "@portal/components/SetupChecklist";
+import type { OnboardingProgress } from "@portal/hooks/useOnboardingProgress";
+
+const progress: OnboardingProgress = {
+  loading: false,
+  editorDone: true,
+  policiesDone: true,
+  inviteDone: false,
+  policiesActive: 3,
+  policiesRecommended: 4,
+  allComplete: false,
+};
 
 const meta: Meta<typeof EditorStatusCard> = {
   title: "Portal/Home/EditorStatusCard",
@@ -25,7 +36,7 @@ export const Default: Story = {};
 /** As it renders on the subscribed home: the setup checklist attached as the footer. */
 export const WithSetupChecklist: Story = {
   args: {
-    footer: <SetupChecklist />,
+    footer: <SetupChecklist progress={progress} />,
   },
 };
 
@@ -36,7 +47,7 @@ export const WithSetupChecklist: Story = {
  */
 export const DeploymentUnavailable: Story = {
   args: {
-    footer: <SetupChecklist />,
+    footer: <SetupChecklist progress={progress} />,
   },
   parameters: {
     msw: {

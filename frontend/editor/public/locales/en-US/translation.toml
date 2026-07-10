@@ -6952,6 +6952,7 @@ title = "Windows"
 
 [portal.home.editor]
 activeUsers = "{{n}} active"
+install = "Install the editor"
 invite = "Invite teammates"
 name = "Stirling PDF Editor"
 open = "Open in browser"

@@ -1,11 +1,22 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { http, HttpResponse, delay } from "msw";
 import { SetupChecklist } from "@portal/components/SetupChecklist";
+import type { OnboardingProgress } from "@portal/hooks/useOnboardingProgress";
+
+const base: OnboardingProgress = {
+  loading: false,
+  editorDone: false,
+  policiesDone: false,
+  inviteDone: false,
+  policiesActive: 0,
+  policiesRecommended: 6,
+  allComplete: false,
+};
 
 const meta: Meta<typeof SetupChecklist> = {
   title: "Portal/Home/SetupChecklist",
   component: SetupChecklist,
   parameters: { layout: "padded" },
+  args: { progress: base },
   decorators: [
     (S) => (
       <div
@@ -25,34 +36,30 @@ const meta: Meta<typeof SetupChecklist> = {
 export default meta;
 type Story = StoryObj<typeof SetupChecklist>;
 
-/** Completion + counts derived from the live policies / sources MSW fixtures. */
-export const Default: Story = {};
+/** A fresh workspace — no step complete yet. */
+export const NotStarted: Story = {};
 
-/** Slow policy/source fetch: shows the loading skeleton rows. */
-export const Loading: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        http.get("/api/v1/policies", async () => {
-          await delay(100000);
-          return HttpResponse.json([]);
-        }),
-      ],
+/** Policies confirmed; editor + invite still open. */
+export const InProgress: Story = {
+  args: {
+    progress: {
+      ...base,
+      policiesDone: true,
+      policiesActive: 2,
+      policiesRecommended: 5,
     },
   },
 };
 
-/** A fresh workspace — no active policies or connected sources: every step reads "Not started". */
-export const NotStarted: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        http.get("/api/v1/policies", () => HttpResponse.json([])),
-        http.get("/api/v1/policies/runs", () => HttpResponse.json([])),
-        http.get("/api/v1/sources", () =>
-          HttpResponse.json({ kpis: [], sources: [] }),
-        ),
-      ],
+/** Editor deployed + policies on; only the invite step remains. */
+export const AlmostDone: Story = {
+  args: {
+    progress: {
+      ...base,
+      editorDone: true,
+      policiesDone: true,
+      policiesActive: 4,
+      policiesRecommended: 3,
     },
   },
 };

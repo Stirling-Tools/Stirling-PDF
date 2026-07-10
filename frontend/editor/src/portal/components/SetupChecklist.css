@@ -47,6 +47,15 @@
   font-weight: 600;
   color: var(--color-text-4);
 }
+/* Completed step: filled green check. */
+.portal-setup__num.is-done {
+  border-color: var(--color-green);
+  background: var(--color-green);
+  color: #fff;
+}
+.portal-setup__row.is-done .portal-setup__text strong {
+  color: var(--color-text-2);
+}
 
 .portal-setup__text {
   display: flex;

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Fragment, useMemo } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, Skeleton } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
@@ -11,10 +11,12 @@ import {
   type EditorInstance,
 } from "@portal/api/editorDeploy";
 import {
+  DownloadIcon,
   ExternalLinkIcon,
   UsersIcon,
   UserPlusIcon,
 } from "@portal/components/icons";
+import { DownloadEditorModal } from "@portal/components/DownloadEditorModal";
 import "@portal/components/EditorStatusCard.css";
 
 /** The Stirling brand mark, drawn at the hero size. Decorative. */
@@ -73,6 +75,7 @@ export function EditorStatusCard({ footer, hideChips }: EditorStatusCardProps) {
   const { t } = useTranslation();
   const { tier } = useTier();
   const { setActiveView } = useView();
+  const [installOpen, setInstallOpen] = useState(false);
   const { data, loading } = useAsync<EditorDeploymentResponse>(
     () => fetchEditorDeployment(tier),
     [tier],
@@ -174,8 +177,18 @@ export function EditorStatusCard({ footer, hideChips }: EditorStatusCardProps) {
         </div>
 
         <div className="portal-editor-hero__action">
+          <button
+            type="button"
+            className="portal-editor-hero__icon-btn"
+            onClick={() => setInstallOpen(true)}
+            aria-label={t("portal.home.editor.install")}
+            title={t("portal.home.editor.install")}
+          >
+            <DownloadIcon size={16} />
+          </button>
           <Button
             variant="primary"
+            className="portal-editor-hero__cta"
             leftSection={<ExternalLinkIcon size={13} />}
             disabled={!ready || !view}
             onClick={() => {
@@ -189,6 +202,11 @@ export function EditorStatusCard({ footer, hideChips }: EditorStatusCardProps) {
       </div>
 
       {footer && <div className="portal-editor-hero__footer">{footer}</div>}
+
+      <DownloadEditorModal
+        open={installOpen}
+        onClose={() => setInstallOpen(false)}
+      />
     </section>
   );
 }

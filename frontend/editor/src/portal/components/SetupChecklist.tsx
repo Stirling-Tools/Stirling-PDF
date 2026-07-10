@@ -1,11 +1,11 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
 import { useView } from "@portal/contexts/ViewContext";
-import { useAsync } from "@portal/hooks/useAsync";
-import { fetchPolicies, type PoliciesResponse } from "@portal/api/policies";
+import type { OnboardingProgress } from "@portal/hooks/useOnboardingProgress";
 import { DownloadEditorModal } from "@portal/components/DownloadEditorModal";
+import CheckRounded from "@mui/icons-material/CheckRounded";
 import "@portal/components/SetupChecklist.css";
 
 /* ──────────────────────────────────────────────────────────────────────── */
@@ -55,55 +55,49 @@ interface Step {
   id: string;
   title: string;
   blurb: string;
+  done: boolean;
   onClick: () => void;
 }
 
 /**
  * Numbered getting-started steps, rendered as the body of the home hero. Each
- * row is a shortcut that opens its in-app surface — download/deploy the editor,
- * confirm policies, invite teammates — so the card is a quick-start, not a
- * completion tracker. The policies blurb carries live counts (the same data the
- * Policies page shows). The Enterprise rung sits at the foot regardless of tier.
+ * row opens its in-app surface; a completed step (from {@link OnboardingProgress})
+ * swaps its number for a check. When every step is done the parent collapses the
+ * hero to the deployed-status header and stops rendering this list entirely.
  */
-export function SetupChecklist() {
+export function SetupChecklist({ progress }: { progress: OnboardingProgress }) {
   const { t } = useTranslation();
   const { tier } = useTier();
   const { setActiveView } = useView();
   const [downloadOpen, setDownloadOpen] = useState(false);
 
-  // Only the policies step shows live numbers; sources was dropped from the
-  // top-three to match the simplified marketing card.
-  const { data } = useAsync<PoliciesResponse>(() => fetchPolicies(), []);
-  const active = data?.summary.active ?? 0;
-  const recommended = Math.max(0, (data?.summary.categories ?? 0) - active);
-
-  const steps = useMemo<Step[]>(
-    () => [
-      {
-        id: "editor",
-        title: t("portal.home.onboarding.steps.editor.title"),
-        blurb: t("portal.home.onboarding.steps.editor.blurb"),
-        // Downloads are per-OS, so open a picker modal rather than route away.
-        onClick: () => setDownloadOpen(true),
-      },
-      {
-        id: "policies",
-        title: t("portal.home.onboarding.steps.policies.title"),
-        blurb: t("portal.home.onboarding.steps.policies.blurb", {
-          active,
-          recommended,
-        }),
-        onClick: () => setActiveView("policies"),
-      },
-      {
-        id: "invite",
-        title: t("portal.home.onboarding.steps.invite.title"),
-        blurb: t("portal.home.onboarding.steps.invite.blurb"),
-        onClick: () => setActiveView("users"),
-      },
-    ],
-    [t, active, recommended, setActiveView],
-  );
+  const steps: Step[] = [
+    {
+      id: "editor",
+      title: t("portal.home.onboarding.steps.editor.title"),
+      blurb: t("portal.home.onboarding.steps.editor.blurb"),
+      done: progress.editorDone,
+      // Downloads are per-OS, so open the install picker rather than route away.
+      onClick: () => setDownloadOpen(true),
+    },
+    {
+      id: "policies",
+      title: t("portal.home.onboarding.steps.policies.title"),
+      blurb: t("portal.home.onboarding.steps.policies.blurb", {
+        active: progress.policiesActive,
+        recommended: progress.policiesRecommended,
+      }),
+      done: progress.policiesDone,
+      onClick: () => setActiveView("policies"),
+    },
+    {
+      id: "invite",
+      title: t("portal.home.onboarding.steps.invite.title"),
+      blurb: t("portal.home.onboarding.steps.invite.blurb"),
+      done: progress.inviteDone,
+      onClick: () => setActiveView("users"),
+    },
+  ];
 
   return (
     <div className="portal-setup">
@@ -112,11 +106,14 @@ export function SetupChecklist() {
           <li key={s.id} className="portal-setup__item">
             <button
               type="button"
-              className="portal-setup__row"
+              className={"portal-setup__row" + (s.done ? " is-done" : "")}
               onClick={s.onClick}
             >
-              <span className="portal-setup__num" aria-hidden>
-                {i + 1}
+              <span
+                className={"portal-setup__num" + (s.done ? " is-done" : "")}
+                aria-hidden
+              >
+                {s.done ? <CheckRounded sx={{ fontSize: 16 }} /> : i + 1}
               </span>
               <span className="portal-setup__text">
                 <strong>{s.title}</strong>
