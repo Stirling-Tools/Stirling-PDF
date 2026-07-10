@@ -76,7 +76,10 @@ export function ApiKeyCard({ apiKey }: { apiKey: ApiKey }) {
               <dd className="portal-infra__chips">
                 {apiKey.permissions.map((p) => (
                   <Chip key={p} size="sm">
-                    {p}
+                    {t(
+                      `portal.infrastructure.apiKeyPermission.${p.toLowerCase()}`,
+                      p,
+                    )}
                   </Chip>
                 ))}
               </dd>

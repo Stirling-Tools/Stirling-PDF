@@ -36,6 +36,10 @@ export function Policies() {
 
   const catalogue = data?.catalogue ?? [];
   const refetch = useCallback(() => setVersion((v) => v + 1), []);
+  // The catalogue cards are always shown (they're the "configure a policy" CTAs),
+  // but the summary strip is pure stat boxes: hide it until at least one policy
+  // is configured so a fresh workspace doesn't show a row of zeros.
+  const hasPolicies = !!data && data.summary.active + data.summary.paused > 0;
 
   const displayCatalogue: CatalogueEntry[] =
     catalogue.length > 0
@@ -123,7 +127,7 @@ export function Policies() {
 
       {pageError && <Banner tone="danger" description={pageError} />}
 
-      <CatalogueSummary data={data} loading={loading} />
+      {hasPolicies && <CatalogueSummary data={data} loading={loading} />}
 
       {isLoading && (
         <div className="portal-policies__grid" aria-hidden>
