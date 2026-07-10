@@ -71,7 +71,7 @@ public class ApiKeyManagementService {
         User caller = requireCaller();
         migrateLegacyKey(caller);
 
-        boolean isManager = policyAuthority.canEditPolicies();
+        boolean isManager = isTeamKeyManager();
         Long teamId = policyAuthority.currentUserTeamId();
         String teamName = teamId == null ? null : teamNameFor(teamId);
 
@@ -153,9 +153,10 @@ public class ApiKeyManagementService {
         Long teamId = null;
         String teamName = null;
         if (scope.isTeamScoped()) {
-            if (!policyAuthority.canEditPolicies()) {
+            if (!isTeamKeyManager()) {
                 throw new ResponseStatusException(
-                        HttpStatus.FORBIDDEN, "Only a team leader may create team API keys");
+                        HttpStatus.FORBIDDEN,
+                        "Team API keys can only be created by a team leader or an admin");
             }
             teamId = policyAuthority.currentUserTeamId();
             if (teamId == null) {
@@ -204,12 +205,20 @@ public class ApiKeyManagementService {
         clearLegacyColumnIfMatches(key);
     }
 
+    /**
+     * Team keys are managed by a team leader (the SaaS rule) or an admin (either flavor) - an admin
+     * is effectively a leader for this purpose, which the SaaS team-leader-only check misses.
+     */
+    private boolean isTeamKeyManager() {
+        return policyAuthority.canEditPolicies() || userService.isCurrentUserAdmin();
+    }
+
     /** Whether the caller may revoke a given key. */
     private boolean canManage(User caller, ApiKey key) {
         if (key.getScope() == ApiKeyScope.PERSONAL) {
             return key.getOwnerUserId().equals(caller.getId());
         }
-        return policyAuthority.canEditPolicies()
+        return isTeamKeyManager()
                 && key.getTeamId() != null
                 && key.getTeamId().equals(policyAuthority.currentUserTeamId());
     }

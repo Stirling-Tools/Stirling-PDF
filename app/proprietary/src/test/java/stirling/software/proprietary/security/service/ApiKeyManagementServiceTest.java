@@ -235,6 +235,24 @@ class ApiKeyManagementServiceTest {
         assertThat(saved.getValue().getTeamId()).isEqualTo(5L);
     }
 
+    @Test
+    @DisplayName("an admin who is not a team leader can still create a team key")
+    void adminCanCreateTeamKey() {
+        when(policyAuthority.canEditPolicies()).thenReturn(false);
+        when(userService.isCurrentUserAdmin()).thenReturn(true);
+        when(policyAuthority.currentUserTeamId()).thenReturn(5L);
+        Team team = new Team();
+        team.setName("Acme");
+        when(teamRepository.findById(5L)).thenReturn(Optional.of(team));
+
+        service.createKey(new CreateApiKeyRequest("Admin team key", "team-members"));
+
+        ArgumentCaptor<ApiKey> saved = ArgumentCaptor.forClass(ApiKey.class);
+        verify(apiKeyRepository).save(saved.capture());
+        assertThat(saved.getValue().getScope()).isEqualTo(ApiKeyScope.TEAM_MEMBERS);
+        assertThat(saved.getValue().getTeamId()).isEqualTo(5L);
+    }
+
     // ---- revocation ---------------------------------------------------------
 
     @Test
