@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { ActionIcon, Button } from "@app/ui";
 import { useTranslation } from "react-i18next";
 import { useUI } from "@portal/contexts/UIContext";
 import { useAsync } from "@portal/hooks/useAsync";
@@ -95,14 +96,14 @@ export function AssistantPanel() {
             {t("portal.assistant.title")}
           </span>
         </div>
-        <button
-          type="button"
+        <ActionIcon
+          variant="tertiary"
           className="portal-assistant__close"
           onClick={closeAssistant}
-          aria-label={t("portal.assistant.close")}
+          aria-label={t("portal.assistant.close", "Close assistant")}
         >
           <CloseIcon size={16} />
-        </button>
+        </ActionIcon>
       </header>
 
       <div className="portal-assistant__messages" ref={messagesRef}>
@@ -113,15 +114,16 @@ export function AssistantPanel() {
             </div>
             <div className="portal-assistant__suggestions-list">
               {suggestions.map((s) => (
-                <button
+                <Button
                   key={s}
-                  type="button"
+                  variant="secondary"
+                  size="sm"
                   className="portal-assistant__suggestion"
                   onClick={() => send(s)}
                   disabled={typing}
                 >
                   {s}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -166,14 +168,14 @@ export function AssistantPanel() {
           className="portal-assistant__input"
           disabled={typing}
         />
-        <button
+        <ActionIcon
           type="submit"
           className="portal-assistant__send"
           disabled={!input.trim() || typing}
           aria-label={t("portal.assistant.send")}
         >
           <SendIcon size={14} />
-        </button>
+        </ActionIcon>
       </form>
     </aside>
   );

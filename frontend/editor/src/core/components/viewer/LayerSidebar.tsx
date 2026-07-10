@@ -6,13 +6,14 @@ import {
   Checkbox,
   Stack,
   Loader,
-  ActionIcon,
   Tooltip,
 } from "@mantine/core";
 import LayersIcon from "@mui/icons-material/Layers";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import { useTranslation } from "react-i18next";
 import { useViewer } from "@app/contexts/ViewerContext";
 import "@app/components/viewer/SidebarBase.css";
 import "@app/components/viewer/LayerSidebar.css";
@@ -51,6 +52,7 @@ export function LayerSidebar({
   onApplyLayers,
   onLayersDetected,
 }: LayerSidebarProps) {
+  const { t } = useTranslation();
   const { toggleLayerSidebar } = useViewer();
   const [layers, setLayers] = useState<LayerInfo[]>([]);
   const [visibility, setVisibility] = useState<Record<string, boolean>>({});
@@ -339,26 +341,25 @@ export function LayerSidebar({
           </Text>
           {isApplying && <Loader size="xs" type="dots" />}
         </div>
-
         <div className="layer-sidebar__header-actions">
           {status === "ready" && leafIds.length > 0 && (
             <>
               <ActionIcon
-                variant="subtle"
+                variant="tertiary"
                 size="sm"
                 onClick={showAll}
                 disabled={allVisible || isApplying}
-                aria-label="Show all layers"
+                aria-label={t("viewer.layers.showAll", "Show all layers")}
                 title="Show all"
               >
                 <VisibilityIcon sx={{ fontSize: "1rem" }} />
               </ActionIcon>
               <ActionIcon
-                variant="subtle"
+                variant="tertiary"
                 size="sm"
                 onClick={hideAll}
                 disabled={allHidden || isApplying}
-                aria-label="Hide all layers"
+                aria-label={t("viewer.layers.hideAll", "Hide all layers")}
                 title="Hide all"
               >
                 <VisibilityOffIcon sx={{ fontSize: "1rem" }} />
@@ -366,11 +367,11 @@ export function LayerSidebar({
             </>
           )}
           <ActionIcon
-            variant="subtle"
+            variant="tertiary"
+            accent="neutral"
             size="sm"
-            color="gray"
             onClick={toggleLayerSidebar}
-            aria-label="Close layers sidebar"
+            aria-label={t("viewer.layers.closeSidebar", "Close layers sidebar")}
             title="Close layers"
           >
             <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />

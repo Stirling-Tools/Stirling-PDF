@@ -7,42 +7,22 @@
   margin: 0 auto;
 }
 
-/* Product card grid */
-.portal-home__product-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.875rem;
+/* Paid-tier greeting header */
+.portal-home__greeting {
+  margin-bottom: -0.25rem;
 }
-
-@media (max-width: 60rem) {
-  .portal-home__product-grid {
-    grid-template-columns: 1fr;
-  }
+.portal-home__greeting-title {
+  margin: 0 0 0.25rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text-2);
 }
-
-.portal-home__product-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.portal-home__product-title {
+.portal-home__greeting-date {
   margin: 0;
-  font-size: 1.0625rem;
-  font-weight: 600;
-  color: var(--color-text-1);
-}
-
-.portal-home__product-blurb {
-  margin: 0 0 1rem;
   font-size: 0.8125rem;
-  line-height: 1.5;
-  color: var(--color-text-3);
+  color: var(--color-text-4);
 }
-
-/* Metric strip now uses the shared <MetricStrip>. */
 
 /* Two-column dashboard row (activity + quick actions) */
 .portal-home__row {
@@ -136,130 +116,4 @@
 
 .portal-home__quick-row:hover .portal-home__quick-arrow {
   color: var(--color-blue);
-}
-
-/* Free-tier onboarding card */
-.portal-home__onboard-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.5rem;
-  margin-bottom: 0.875rem;
-}
-
-.portal-home__onboard-title {
-  margin: 0;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--color-text-1);
-}
-
-.portal-home__onboard-sub {
-  margin: 0;
-  font-size: 0.75rem;
-  color: var(--color-text-4);
-}
-
-.portal-home__onboard-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.portal-home__onboard-step {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem 0.625rem;
-  background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border-light);
-  border-radius: var(--radius-md);
-}
-
-.portal-home__onboard-step.is-done {
-  background: var(--color-green-light);
-  border-color: color-mix(in srgb, var(--color-green) 30%, transparent);
-}
-
-.portal-home__onboard-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 50%;
-  font-size: 0.75rem;
-  font-weight: 600;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-4);
-}
-
-.portal-home__onboard-step.is-done .portal-home__onboard-mark {
-  background: var(--color-green);
-  color: var(--color-text-on-accent);
-  border-color: var(--color-green);
-}
-
-.portal-home__onboard-text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.portal-home__onboard-text strong {
-  font-size: 0.8125rem;
-  color: var(--color-text-1);
-  font-weight: 600;
-}
-
-.portal-home__onboard-text span {
-  font-size: 0.75rem;
-  color: var(--color-text-4);
-}
-
-/* Enterprise region strip */
-.portal-home__regions {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
-}
-
-@media (max-width: 50rem) {
-  .portal-home__regions {
-    grid-template-columns: 1fr;
-  }
-}
-
-.portal-home__region {
-  padding: 0.625rem 0.75rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-}
-
-.portal-home__region-name {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--color-text-1);
-}
-
-.portal-home__region-dot {
-  width: 0.4375rem;
-  height: 0.4375rem;
-  border-radius: 50%;
-}
-
-.portal-home__region-meta {
-  margin-top: 0.25rem;
-  font-size: 0.6875rem;
-  color: var(--color-text-4);
-  font-family: var(--font-mono);
 }

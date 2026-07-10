@@ -52,6 +52,10 @@
   --color-amber-light: #fef3c7;
   --color-amber-border: #fde68a;
   --color-amber-dark: #92400e;
+  --color-orange: #f97316;
+  --color-orange-light: #fff7ed;
+  --color-orange-border: #fed7aa;
+  --color-orange-dark: #9a3412;
 
   /* Category accents (theme-stable) */
   --color-cat-insurance: #0ea5e9;
@@ -116,6 +120,8 @@
 
   --color-toggle-off: #cbd5e1;
   --color-badge-red: #ef4444;
+
+  /* Segmented control — semantic tokens so dark mode can decouple from blue surfaces */
 
   /* Shadows */
   --shadow-sm: inset 0 0 0 1px #e3e8ee;
@@ -195,6 +201,10 @@
      #fbbf24 — identical to the base — which left Mantine's amber hover a
      no-op in dark mode. */
   --color-amber-dark: #f59e0b;
+  --color-orange: #fb923c;
+  --color-orange-light: #2a1408;
+  --color-orange-border: #7c2d12;
+  --color-orange-dark: #fdba74;
 
   --color-bg: #090c14;
   --color-bg-alt: #0d1120;
@@ -240,6 +250,8 @@
   --color-usage-track: #1e2840;
 
   --color-toggle-off: #3d4f6a;
+
+  /* Segmented control — blue-toned dark to match app surface colors */
 
   --shadow-sm: inset 0 0 0 1px #283248;
   --shadow-md: inset 0 0 0 1px #283248, 0 1px 3px rgba(0, 0, 0, 0.3);
@@ -403,6 +415,15 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+/* Default transition set (avoids text-colour transitions); not !important so components can override. */
+*,
+*::before,
+*::after {
+  transition-property:
+    background, background-color, border, border-color, box-shadow, opacity,
+    transform, fill, stroke, outline-color;
 }
 
 /* Visually-hidden utility for content meant only for screen readers. */

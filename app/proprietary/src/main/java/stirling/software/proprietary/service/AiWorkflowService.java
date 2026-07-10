@@ -68,7 +68,6 @@ import tools.jackson.databind.ObjectMapper;
 public class AiWorkflowService {
 
     private static final String DOCUMENTS_ENDPOINT = "/api/v1/documents";
-    private static final String PDF_TO_MARKDOWN_ENDPOINT = "/api/v1/convert/pdf/markdown";
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final AiEngineClient aiEngineClient;
@@ -196,7 +195,6 @@ public class AiWorkflowService {
         return switch (response.getOutcome()) {
             case NEED_CONTENT -> onNeedContent(response, filesById, request, listener);
             case NEED_INGEST -> onNeedIngest(response, filesById, request, listener);
-            case CONVERT_MARKDOWN -> onConvertMarkdown(response, filesById, listener);
             case TOOL_CALL -> onToolCall(response, filesById, listener);
             case PLAN -> onPlan(response, filesById, request, listener);
             case ANSWER -> onAnswer(response, filesById, request, listener);
@@ -333,72 +331,6 @@ public class AiWorkflowService {
         return new WorkflowState.Pending(nextRequest);
     }
 
-    /**
-     * Deterministically convert each requested PDF to Markdown via the {@code
-     * /convert/pdf/markdown} endpoint (backed by {@code PdfMarkdownConverter}) and return the
-     * {@code .md} file(s) as a completed result. No AI resume — the conversion output is the final
-     * answer.
-     */
-    private WorkflowState onConvertMarkdown(
-            AiWorkflowResponse response,
-            Map<String, MultipartFile> filesById,
-            ProgressListener listener) {
-        List<AiFile> filesToConvert = response.getFilesToIngest();
-        if (filesToConvert == null || filesToConvert.isEmpty()) {
-            return new WorkflowState.Terminal(
-                    cannotContinue(
-                            "AI engine requested markdown conversion without listing any files."));
-        }
-
-        try {
-            List<Resource> resultFiles = new ArrayList<>();
-            List<String> inputNames = new ArrayList<>();
-            for (int i = 0; i < filesToConvert.size(); i++) {
-                AiFile file = filesToConvert.get(i);
-                MultipartFile multipartFile = filesById.get(file.getId());
-                if (multipartFile == null) {
-                    return new WorkflowState.Terminal(
-                            cannotContinue(
-                                    "AI engine requested markdown conversion for unknown file: "
-                                            + file.getName()));
-                }
-                listener.onProgress(
-                        AiWorkflowProgressEvent.executingTool(
-                                PDF_TO_MARKDOWN_ENDPOINT, i + 1, filesToConvert.size()));
-                Resource input = toResource(multipartFile);
-                PipelineDefinition definition =
-                        new PipelineDefinition(
-                                "convert-markdown",
-                                List.of(new PipelineStep(PDF_TO_MARKDOWN_ENDPOINT, Map.of())),
-                                null);
-                PolicyExecutionResult result =
-                        policyExecutor.execute(
-                                definition,
-                                PolicyInputs.of(List.of(input)),
-                                PolicyProgressListener.NOOP);
-                resultFiles.addAll(result.files());
-                inputNames.add(multipartFile.getOriginalFilename());
-            }
-            return new WorkflowState.Terminal(
-                    buildCompletedResponse(null, resultFiles, inputNames, null));
-        } catch (InternalApiTimeoutException e) {
-            log.error("PDF to Markdown conversion timed out: {}", e.getMessage());
-            return new WorkflowState.Terminal(
-                    cannotContinue(toolTimeoutMessage(PDF_TO_MARKDOWN_ENDPOINT, e)));
-        } catch (Exception e) {
-            AiWorkflowResponse limit = paygLimitResponseOrNull(e);
-            if (limit != null) {
-                log.info(
-                        "AI markdown conversion blocked by downstream entitlement gate ({})",
-                        limit.getErrorCode());
-                return new WorkflowState.Terminal(limit);
-            }
-            log.error("Failed to convert PDF to Markdown: {}", e.getMessage(), e);
-            return new WorkflowState.Terminal(
-                    cannotContinue(toolFailureMessage(PDF_TO_MARKDOWN_ENDPOINT, e)));
-        }
-    }
-
     private Resource toResource(MultipartFile file) throws IOException {
         TempFile tempFile = tempFileManager.createManagedTempFile("ai-workflow");
         file.transferTo(tempFile.getPath());
@@ -472,6 +404,7 @@ public class AiWorkflowService {
                     buildCompletedResponse(
                             response.getRationale(),
                             result.files(),
+                            result.origins(),
                             inputFileNames(filesById),
                             result.report()));
         } catch (InternalApiTimeoutException e) {
@@ -533,7 +466,8 @@ public class AiWorkflowService {
                     }
                 };
         return new WorkflowState.Terminal(
-                buildCompletedResponse(response.getSummary(), List.of(resource), List.of(), null));
+                buildCompletedResponse(
+                        response.getSummary(), List.of(resource), null, List.of(), null));
     }
 
     @SuppressWarnings("unchecked")
@@ -591,7 +525,11 @@ public class AiWorkflowService {
 
             return new WorkflowState.Terminal(
                     buildCompletedResponse(
-                            summary, result.files(), inputFileNames(filesById), result.report()));
+                            summary,
+                            result.files(),
+                            result.origins(),
+                            inputFileNames(filesById),
+                            result.report()));
         } catch (InternalApiTimeoutException e) {
             log.error("Plan step on tool {} timed out: {}", e.getEndpointPath(), e.getMessage());
             return new WorkflowState.Terminal(
@@ -680,19 +618,35 @@ public class AiWorkflowService {
     private AiWorkflowResponse buildCompletedResponse(
             String summary,
             List<Resource> resultFiles,
+            List<Integer> origins,
             List<String> inputFileNames,
             JsonNode report)
             throws IOException {
         // Store every output file individually so each gets its own Stirling file ID and the
         // frontend can add them as independent variants without going through a zip.
-        boolean preserveInputNames = inputFileNames.size() == resultFiles.size();
+        // Count outputs per source so only a clean 1:1 transform (one output for a source) reuses
+        // the input's name; a split (one input → many outputs) keeps each entry's own name.
+        Map<Integer, Long> outputsPerOrigin =
+                origins == null
+                        ? Map.of()
+                        : origins.stream()
+                                .filter(o -> o != null)
+                                .collect(Collectors.groupingBy(o -> o, Collectors.counting()));
         List<AiWorkflowResultFile> descriptors = new ArrayList<>();
         for (int i = 0; i < resultFiles.size(); i++) {
             Resource resource = resultFiles.get(i);
             String responseName = resource.getFilename();
-            String inputName = preserveInputNames ? inputFileNames.get(i) : null;
-            // Prefer the input name only for 1:1 operations where the output keeps the same
-            // extension (rotate, compress, etc.). For converters and other extension-changing
+            // The output's source input (from the executor), used both to name it and to tell the
+            // client which file to version in place.
+            Integer origin = origins != null && i < origins.size() ? origins.get(i) : null;
+            boolean uniqueOrigin =
+                    origin != null && outputsPerOrigin.getOrDefault(origin, 0L) == 1L;
+            String inputName =
+                    uniqueOrigin && origin >= 0 && origin < inputFileNames.size()
+                            ? inputFileNames.get(origin)
+                            : null;
+            // Prefer the source input's name only for 1:1 operations where the output keeps the
+            // same extension (rotate, compress, etc.). For converters and other extension-changing
             // tools, the response filename from Content-Disposition is authoritative.
             String name;
             if (inputName != null
@@ -712,7 +666,11 @@ public class AiWorkflowService {
             try (java.io.InputStream is = resource.getInputStream()) {
                 fileId = fileStorage.storeInputStream(is, name).fileId();
             }
-            descriptors.add(new AiWorkflowResultFile(fileId, name, contentType));
+            // Only expose the source when this is a clean 1:1 transform, so the client can treat a
+            // present sourceIndex as "replace that input in place" without further disambiguation.
+            descriptors.add(
+                    new AiWorkflowResultFile(
+                            fileId, name, contentType, uniqueOrigin ? origin : null));
         }
 
         AiWorkflowResponse completed = new AiWorkflowResponse();

@@ -81,104 +81,6 @@
   color: var(--color-blue);
 }
 
-/* Expanded detail panel */
-.portal-pipelines__expanded {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  padding: 1.25rem;
-  animation: portal-pipelines-reveal var(--motion-fast) ease-out;
-}
-
-@keyframes portal-pipelines-reveal {
-  from {
-    opacity: 0;
-    transform: translateY(-0.25rem);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.portal-pipelines__expanded-head {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding-bottom: 0.875rem;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid var(--color-border-light);
-}
-
-.portal-pipelines__expanded-title {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--color-text-1);
-}
-
-.portal-pipelines__expanded-sub {
-  font-size: 0.75rem;
-  color: var(--color-text-4);
-}
-
-.portal-pipelines__expanded-close {
-  margin-left: auto;
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  color: var(--color-text-4);
-  font-size: 1.125rem;
-  line-height: 1;
-  cursor: pointer;
-  transition:
-    background var(--motion-fast),
-    color var(--motion-fast);
-}
-
-.portal-pipelines__expanded-close:hover {
-  background: var(--color-bg-hover);
-  color: var(--color-text-1);
-}
-
-/* Detail body */
-.portal-pipelines__detail {
-  display: flex;
-  flex-direction: column;
-  gap: 1.125rem;
-}
-
-.portal-pipelines__detail-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.portal-pipelines__detail-heading {
-  font-size: 0.6875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--color-text-5);
-  font-weight: 600;
-}
-
-.portal-pipelines__chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.375rem;
-}
-
-.portal-pipelines__detail-actions {
-  display: flex;
-  gap: 0.5rem;
-  padding-top: 0.875rem;
-  margin-top: 1rem;
-  border-top: 1px solid var(--color-border-light);
-}
-
 /* Table skeleton */
 .portal-pipelines__table-skeleton {
   display: flex;
@@ -186,20 +88,13 @@
   gap: 0.5rem;
 }
 
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Composer                                                                 */
-/* ──────────────────────────────────────────────────────────────────────── */
-
-.portal-pipelines__composer {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.portal-pipelines__composer-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+/* Shared with the pipeline builder page. */
+.portal-pipelines__detail-heading {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-5);
+  font-weight: 600;
 }
 
 .portal-pipelines__composer-footer {
@@ -221,83 +116,6 @@
   border-radius: var(--radius-md);
 }
 
-/* Operation chain */
-.portal-pipelines__chain {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-}
-
-.portal-pipelines__chain-row {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  padding: 0.4375rem 0.625rem;
-  background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border-light);
-  border-radius: var(--radius-md);
-}
-
-.portal-pipelines__chain-index {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.25rem;
-  height: 1.25rem;
-  flex-shrink: 0;
-  border-radius: 50%;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  background: var(--color-blue-light);
-  color: var(--color-blue);
-}
-
-.portal-pipelines__chain-op {
-  flex: 1;
-  font-size: 0.8125rem;
-  color: var(--color-text-1);
-}
-
-.portal-pipelines__chain-actions {
-  display: flex;
-  gap: 0.25rem;
-}
-
-.portal-pipelines__chain-actions button {
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  color: var(--color-text-3);
-  font-size: 0.8125rem;
-  line-height: 1;
-  cursor: pointer;
-  transition:
-    background var(--motion-fast),
-    color var(--motion-fast);
-}
-
-.portal-pipelines__chain-actions button:hover:not(:disabled) {
-  background: var(--color-bg-hover);
-  color: var(--color-text-1);
-}
-
-.portal-pipelines__chain-actions button:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
-.portal-pipelines__op-palette {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.375rem;
-}
-
-/* Schedule row */
 .portal-pipelines__schedule {
   display: flex;
   align-items: center;

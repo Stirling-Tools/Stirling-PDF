@@ -10,15 +10,15 @@ import {
 
 /** Maps a document's action to the button accent + variant. */
 function buttonStyle(doc: LedgerDoc): {
-  variant: "gradient" | "outline";
-  accent: "purple" | "blue";
+  variant: "primary" | "secondary";
+  accent: "premium" | "default";
 } {
   // The agreement signature and online payment are the deal-advancing actions;
-  // give them the filled accent CTA. Everything else is a quieter outline.
+  // give them the filled premium CTA. Everything else is a quieter outline.
   if (doc.action === "sign" || doc.action === "pay") {
-    return { variant: "gradient", accent: "purple" };
+    return { variant: "primary", accent: "premium" };
   }
-  return { variant: "outline", accent: "blue" };
+  return { variant: "secondary", accent: "default" };
 }
 
 /**
@@ -52,12 +52,12 @@ export function DocRow({
         <div className="portal-proc__doc-name-row">
           <span className="portal-proc__doc-name">{doc.name}</span>
           {doc.optional && (
-            <Chip tone="neutral" size="sm">
+            <Chip accent="neutral" size="sm">
               {t("portal.procurement.docs.optional")}
             </Chip>
           )}
           {doc.fee !== undefined && (
-            <Chip tone="amber" size="sm">
+            <Chip accent="warning" size="sm">
               {t("portal.procurement.docs.paidAddon")}
             </Chip>
           )}

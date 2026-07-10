@@ -96,7 +96,7 @@ export function PaymentMethodCard({ onManage, managing }: Props) {
           )}
         </div>
         <Button
-          variant="outline"
+          variant="secondary"
           size="sm"
           loading={managing}
           onClick={onManage}
