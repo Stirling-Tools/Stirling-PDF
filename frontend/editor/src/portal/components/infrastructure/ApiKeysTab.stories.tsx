@@ -20,14 +20,19 @@ type Story = StoryObj<typeof ApiKeysTab>;
 
 export const Default: Story = {};
 
+const EMPTY = { keys: [], canCreateTeamKeys: false, teamName: null };
+
 export const Loading: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("/v1/infrastructure/api-keys", async () => {
-          await delay("infinite");
-          return HttpResponse.json([]);
-        }),
+        http.get(
+          "*/api/v1/proprietary/ui-data/infrastructure/api-keys",
+          async () => {
+            await delay("infinite");
+            return HttpResponse.json(EMPTY);
+          },
+        ),
       ],
     },
   },
@@ -37,7 +42,9 @@ export const Empty: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("/v1/infrastructure/api-keys", () => HttpResponse.json([])),
+        http.get("*/api/v1/proprietary/ui-data/infrastructure/api-keys", () =>
+          HttpResponse.json(EMPTY),
+        ),
       ],
     },
   },

@@ -95,6 +95,7 @@ public class UserService implements UserServiceInterface {
     private final ResourceGrantRepository resourceGrantRepository;
     private final IntegrationConfigRepository integrationConfigRepository;
     private final TeamMembershipService teamMembershipService;
+    private final ApiKeyAuthenticationService apiKeyAuthenticationService;
 
     @Transactional
     public void processSSOPostLogin(
@@ -173,6 +174,9 @@ public class UserService implements UserServiceInterface {
 
     public User addApiKeyToUser(String username) {
         Optional<User> userOpt = findByUsernameIgnoreCase(username);
+        // Rotating/regenerating the legacy key must also revoke its migrated api_keys shadow row,
+        // otherwise the old secret keeps authenticating (it resolves from api_keys first).
+        userOpt.map(User::getApiKey).ifPresent(apiKeyAuthenticationService::revokeMigratedKey);
         User user = saveUser(userOpt, generateApiKey());
         try {
             databaseService.exportDatabase();
@@ -220,7 +224,8 @@ public class UserService implements UserServiceInterface {
     }
 
     public Optional<User> getUserByApiKey(String apiKey) {
-        return userRepository.findByApiKey(apiKey);
+        // Resolves the multi-key api_keys table first, then the legacy per-user column.
+        return apiKeyAuthenticationService.resolveUser(apiKey);
     }
 
     public Optional<User> loadUserByApiKey(String apiKey) {

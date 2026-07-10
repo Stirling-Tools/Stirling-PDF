@@ -4,13 +4,22 @@ import { useTranslation } from "react-i18next";
 import type { ApiKey } from "@portal/api/infrastructure";
 import {
   KEY_LABEL,
+  KEY_SCOPE_LABEL,
+  KEY_SCOPE_TONE,
   KEY_TONE,
 } from "@portal/components/infrastructure/infraFormat";
 
 /** Collapsible row for a single API key: header summary + expandable detail grid. */
-export function ApiKeyCard({ apiKey }: { apiKey: ApiKey }) {
+export function ApiKeyCard({
+  apiKey,
+  onRevoke,
+}: {
+  apiKey: ApiKey;
+  onRevoke: (id: string) => void;
+}) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  const revocable = apiKey.canManage && apiKey.status === "active";
   return (
     <Card padding="default" className="portal-infra__key">
       <Button
@@ -24,6 +33,11 @@ export function ApiKeyCard({ apiKey }: { apiKey: ApiKey }) {
           <code className="portal-infra__cell-code">{apiKey.prefix}</code>
         </span>
         <span className="portal-infra__key-head-right">
+          <Chip size="sm" accent={KEY_SCOPE_TONE[apiKey.scope]}>
+            {apiKey.scope === "personal" || !apiKey.teamName
+              ? t(KEY_SCOPE_LABEL[apiKey.scope])
+              : `${t(KEY_SCOPE_LABEL[apiKey.scope])} · ${apiKey.teamName}`}
+          </Chip>
           <StatusBadge tone={KEY_TONE[apiKey.status]} size="sm">
             {t(KEY_LABEL[apiKey.status])}
           </StatusBadge>
@@ -48,14 +62,6 @@ export function ApiKeyCard({ apiKey }: { apiKey: ApiKey }) {
               <dd>{apiKey.lastUsed}</dd>
             </div>
             <div>
-              <dt>{t("portal.infrastructure.apiKeys.card.rateLimit")}</dt>
-              <dd className="portal-infra__mono">
-                {t("portal.infrastructure.apiKeys.card.rateLimitValue", {
-                  value: apiKey.rateLimit.toLocaleString(),
-                })}
-              </dd>
-            </div>
-            <div>
               <dt>{t("portal.infrastructure.apiKeys.card.usageToday")}</dt>
               <dd className="portal-infra__mono">
                 {apiKey.usageToday.toLocaleString()}
@@ -67,36 +73,20 @@ export function ApiKeyCard({ apiKey }: { apiKey: ApiKey }) {
                 {apiKey.usageMonth.toLocaleString()}
               </dd>
             </div>
-            <div>
-              <dt>{t("portal.infrastructure.apiKeys.card.permissions")}</dt>
-              <dd className="portal-infra__chips">
-                {apiKey.permissions.map((p) => (
-                  <Chip key={p} size="sm">
-                    {t(
-                      `portal.infrastructure.apiKeyPermission.${p.toLowerCase()}`,
-                      p,
-                    )}
-                  </Chip>
-                ))}
-              </dd>
-            </div>
-            <div className="portal-infra__kv-wide">
-              <dt>{t("portal.infrastructure.apiKeys.card.allowedIps")}</dt>
-              <dd className="portal-infra__chips">
-                {apiKey.allowedIps.length === 0 ? (
-                  <span className="portal-infra__muted">
-                    {t("portal.infrastructure.apiKeys.card.anyIp")}
-                  </span>
-                ) : (
-                  apiKey.allowedIps.map((ip) => (
-                    <Chip key={ip} size="sm">
-                      <span className="portal-infra__mono">{ip}</span>
-                    </Chip>
-                  ))
-                )}
-              </dd>
-            </div>
           </dl>
+
+          {revocable && (
+            <div className="portal-infra__modal-actions">
+              <Button
+                variant="secondary"
+                accent="danger"
+                size="sm"
+                onClick={() => onRevoke(apiKey.id)}
+              >
+                {t("portal.infrastructure.apiKeys.card.revoke")}
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </Card>

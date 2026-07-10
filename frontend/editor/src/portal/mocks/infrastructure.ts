@@ -15,6 +15,7 @@
 import type { Tier } from "@portal/contexts/TierContext";
 import type {
   ApiKey,
+  ApiKeysResponse,
   AuditEvent,
   AuditLogResponse,
   AuditSummary,
@@ -166,61 +167,65 @@ const API_KEYS_ALL: ApiKey[] = [
   {
     id: "key-1",
     name: "Production · ingest",
-    prefix: "sk_live_a3f8…",
-    created: "Mar 2, 2026",
-    lastUsed: "2m ago",
+    prefix: "sk_a3f81b2c",
+    scope: "personal",
+    teamName: null,
+    created: "2026-03-02",
+    lastUsed: "2026-07-10 09:14",
     status: "active",
-    rateLimit: 1200,
-    permissions: ["Read", "Write"],
-    allowedIps: ["52.14.0.0/16", "18.221.0.0/16"],
     usageToday: 84210,
     usageMonth: 2410933,
+    canManage: true,
   },
   {
     id: "key-2",
-    name: "Analytics · read-only",
-    prefix: "sk_live_77be…",
-    created: "Jan 18, 2026",
-    lastUsed: "41m ago",
+    name: "Team · shared ingest",
+    prefix: "sk_77be0f42",
+    scope: "team-members",
+    teamName: "Acme Corp",
+    created: "2026-01-18",
+    lastUsed: "2026-07-10 08:33",
     status: "active",
-    rateLimit: 300,
-    permissions: ["Read"],
-    allowedIps: [],
     usageToday: 6120,
     usageMonth: 188400,
+    canManage: true,
   },
   {
     id: "key-3",
-    name: "Ops · admin (legacy)",
-    prefix: "sk_live_d901…",
-    created: "Aug 9, 2025",
-    lastUsed: "6d ago",
-    status: "rotate-soon",
-    rateLimit: 600,
-    permissions: ["Read", "Write", "Admin"],
-    allowedIps: ["203.0.113.7/32"],
+    name: "Ops · leaders only",
+    prefix: "sk_d9013ab7",
+    scope: "team-lead",
+    teamName: "Acme Corp",
+    created: "2025-08-09",
+    lastUsed: "2026-07-04 17:02",
+    status: "active",
     usageToday: 0,
     usageMonth: 14200,
+    canManage: true,
   },
   {
     id: "key-4",
     name: "Sandbox · webhook tester",
-    prefix: "sk_test_2c4a…",
-    created: "May 30, 2026",
-    lastUsed: "never",
+    prefix: "sk_2c4a91de",
+    scope: "personal",
+    teamName: null,
+    created: "2026-05-30",
+    lastUsed: "Never",
     status: "revoked",
-    rateLimit: 60,
-    permissions: ["Read"],
-    allowedIps: [],
     usageToday: 0,
     usageMonth: 0,
+    canManage: true,
   },
 ];
 
-export function apiKeysFor(tier: Tier): ApiKey[] {
-  if (tier === "free") return API_KEYS_ALL.slice(0, 1);
-  if (tier === "pro") return API_KEYS_ALL.slice(0, 3);
-  return API_KEYS_ALL;
+export function apiKeysFor(tier: Tier): ApiKeysResponse {
+  const keys =
+    tier === "free"
+      ? API_KEYS_ALL.slice(0, 1)
+      : tier === "pro"
+        ? API_KEYS_ALL.slice(0, 3)
+        : API_KEYS_ALL;
+  return { keys, canCreateTeamKeys: tier !== "free", teamName: "Acme Corp" };
 }
 
 /* ──────────────────────────────────────────────────────────────────────── */

@@ -71,6 +71,7 @@ class UserServiceTest {
             integrationConfigRepository;
 
     @Mock private TeamMembershipService teamMembershipService;
+    @Mock private ApiKeyAuthenticationService apiKeyAuthenticationService;
 
     @Spy @InjectMocks private UserService userService;
 

@@ -1,20 +1,39 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, EmptyState, Skeleton } from "@app/ui";
-import { useTier } from "@portal/contexts/TierContext";
-import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
-import { fetchApiKeys, type ApiKey } from "@portal/api/infrastructure";
+import { Banner, Button, EmptyState, Skeleton } from "@app/ui";
+import { useAsync } from "@portal/hooks/useAsync";
+import {
+  fetchApiKeys,
+  revokeApiKey,
+  type ApiKeysResponse,
+} from "@portal/api/infrastructure";
+import { errorMessage } from "@portal/api/http";
 import { ApiKeyCard } from "@portal/components/infrastructure/ApiKeyCard";
 import { CreateKeyModal } from "@portal/components/infrastructure/CreateKeyModal";
 import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
 
 export function ApiKeysTab() {
   const { t } = useTranslation();
-  const { tier } = useTier();
   const [modalOpen, setModalOpen] = useState(false);
-  const state = useAsync<ApiKey[]>(() => fetchApiKeys(tier), [tier]);
-  const { data: keys } = state;
-  const { isLoading, isEmpty } = useSectionFlags(state);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const state = useAsync<ApiKeysResponse>(() => fetchApiKeys(), [reloadKey]);
+  const { data, loading } = state;
+
+  const reload = () => setReloadKey((n) => n + 1);
+  const keys = data?.keys ?? [];
+  const isLoading = loading && data === null;
+  const isEmpty = !loading && keys.length === 0;
+
+  async function revoke(id: string) {
+    setError(null);
+    try {
+      await revokeApiKey(id);
+      reload();
+    } catch (e) {
+      setError(errorMessage(e));
+    }
+  }
 
   return (
     <div className="portal-infra__stack">
@@ -32,6 +51,8 @@ export function ApiKeysTab() {
         </Button>
       </div>
 
+      {error && <Banner tone="danger" description={error} />}
+
       {isLoading && (
         <div className="portal-infra__stack" aria-hidden>
           {Array.from({ length: 3 }).map((_, i) => (
@@ -48,15 +69,21 @@ export function ApiKeysTab() {
         />
       )}
 
-      {keys && keys.length > 0 && (
+      {keys.length > 0 && (
         <div className="portal-infra__keys">
           {keys.map((k) => (
-            <ApiKeyCard key={k.id} apiKey={k} />
+            <ApiKeyCard key={k.id} apiKey={k} onRevoke={revoke} />
           ))}
         </div>
       )}
 
-      <CreateKeyModal open={modalOpen} onClose={() => setModalOpen(false)} />
+      <CreateKeyModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        canCreateTeamKeys={data?.canCreateTeamKeys ?? false}
+        teamName={data?.teamName ?? null}
+        onCreated={reload}
+      />
     </div>
   );
 }

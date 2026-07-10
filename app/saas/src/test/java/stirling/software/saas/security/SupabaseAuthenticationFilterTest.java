@@ -48,6 +48,10 @@ class SupabaseAuthenticationFilterTest {
     @Mock private stirling.software.saas.service.SaasTeamService saasTeamService;
     @Mock private JwtDecoder jwtDecoder;
 
+    @Mock
+    private stirling.software.proprietary.security.service.ApiKeyAuthenticationService
+            apiKeyAuthenticationService;
+
     private SupabaseAuthenticationFilter filter;
     private MockHttpServletRequest request;
     private MockHttpServletResponse response;
@@ -58,7 +62,12 @@ class SupabaseAuthenticationFilterTest {
         SecurityContextHolder.clearContext();
         filter =
                 new SupabaseAuthenticationFilter(
-                        teamService, userService, supabaseUserService, saasTeamService, jwtDecoder);
+                        teamService,
+                        userService,
+                        supabaseUserService,
+                        saasTeamService,
+                        jwtDecoder,
+                        apiKeyAuthenticationService);
         request = new MockHttpServletRequest();
         response = new MockHttpServletResponse();
         chain = new MockFilterChain();
@@ -85,7 +94,12 @@ class SupabaseAuthenticationFilterTest {
     void apiKeyHeaderPopulatesSecurityContext() throws Exception {
         User user = newUser("alice");
         user.setApiKey("api-key-123");
-        when(userService.getUserByApiKey("api-key-123")).thenReturn(Optional.of(user));
+        when(apiKeyAuthenticationService.authenticate("api-key-123"))
+                .thenReturn(
+                        Optional.of(
+                                new stirling.software.proprietary.security.service
+                                        .ApiKeyAuthenticationService.ApiKeyAuthentication(
+                                        user, null, user.getAuthorities())));
 
         request.setRequestURI("/api/v1/something");
         request.setMethod("POST");
@@ -103,7 +117,7 @@ class SupabaseAuthenticationFilterTest {
 
     @Test
     void invalidApiKeyTriggers401() throws Exception {
-        when(userService.getUserByApiKey("nope")).thenReturn(Optional.empty());
+        when(apiKeyAuthenticationService.authenticate("nope")).thenReturn(Optional.empty());
 
         request.setRequestURI("/api/v1/something");
         request.setMethod("POST");

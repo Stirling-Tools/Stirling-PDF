@@ -29,6 +29,8 @@ import org.springframework.security.core.session.SessionInformation;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.service.ApiKeyAuthenticationService;
+import stirling.software.proprietary.security.service.ApiKeyAuthenticationService.ApiKeyAuthentication;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 
@@ -37,6 +39,7 @@ import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 class UserAuthenticationFilterTest {
 
     @Mock private UserService userService;
+    @Mock private ApiKeyAuthenticationService apiKeyAuthenticationService;
     @Mock private SessionPersistentRegistry sessionPersistentRegistry;
 
     private ApplicationProperties.Security securityProp;
@@ -60,7 +63,11 @@ class UserAuthenticationFilterTest {
 
     private UserAuthenticationFilter filter(boolean loginEnabled) {
         return new UserAuthenticationFilter(
-                securityProp, userService, sessionPersistentRegistry, loginEnabled);
+                securityProp,
+                userService,
+                apiKeyAuthenticationService,
+                sessionPersistentRegistry,
+                loginEnabled);
     }
 
     private static User enabledUser(String username) {
@@ -99,7 +106,11 @@ class UserAuthenticationFilterTest {
             User user = enabledUser("api-user");
             user.addAuthority(
                     new stirling.software.proprietary.security.model.Authority("ROLE_USER", user));
-            when(userService.getUserByApiKey("good-key")).thenReturn(Optional.of(user));
+            when(apiKeyAuthenticationService.authenticate("good-key"))
+                    .thenReturn(
+                            Optional.of(
+                                    new ApiKeyAuthentication(
+                                            user, "Prod (sk_demo0000)", user.getAuthorities())));
             when(userService.usernameExistsIgnoreCase("api-user")).thenReturn(true);
             when(userService.isUserDisabled("api-user")).thenReturn(false);
             when(sessionPersistentRegistry.getAllSessions(any(), anyBoolean()))
@@ -117,7 +128,7 @@ class UserAuthenticationFilterTest {
         void invalidApiKeyRejected() throws Exception {
             request.setRequestURI("/api/v1/some/protected");
             request.addHeader("X-API-KEY", "bad-key");
-            when(userService.getUserByApiKey("bad-key")).thenReturn(Optional.empty());
+            when(apiKeyAuthenticationService.authenticate("bad-key")).thenReturn(Optional.empty());
 
             filter(true).doFilter(request, response, filterChain);
 

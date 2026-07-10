@@ -61,8 +61,9 @@ public class PortalDocumentsService {
                 continue;
             }
             String path = asString(data.get("path"));
-            String source = sourceLabel(asString(data.get("__origin")));
-            String product = "API integration".equals(source) ? "API" : "Editor";
+            String origin = asString(data.get("__origin"));
+            String source = sourceLabel(origin, asString(data.get("__apiKeyLabel")));
+            String product = "API".equals(origin) ? "API" : "Editor";
             String action = prettyTool(path);
             boolean failed = isFailure(data);
             Instant ts = event.timestamp();
@@ -164,9 +165,12 @@ public class PortalDocumentsService {
         return code instanceof Number n && n.intValue() >= 400;
     }
 
-    private static String sourceLabel(String origin) {
+    private static String sourceLabel(String origin, String apiKeyLabel) {
         if ("API".equals(origin)) {
-            return "API integration";
+            // Attribute to the specific named key when known, else the generic API channel.
+            return apiKeyLabel != null && !apiKeyLabel.isBlank()
+                    ? "API key · " + apiKeyLabel
+                    : "API integration";
         }
         if ("SYSTEM".equals(origin)) {
             return "System";
