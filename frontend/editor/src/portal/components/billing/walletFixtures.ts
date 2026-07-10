@@ -19,6 +19,10 @@ export const freeWallet: Wallet = {
   stripeSubscriptionId: null,
   spendUnitsThisPeriod: 120,
   categoryBreakdown: { api: 40, ai: 30, automation: 50 },
+  categoryDocs: { api: 30, ai: 20, automation: 40 },
+  docsProcessedThisPeriod: 90,
+  uniquePdfsThisPeriod: 84,
+  sizeMultiplierPdfsThisPeriod: 12,
   members: [],
   recent: [],
 };
@@ -42,6 +46,10 @@ export const subscribedWallet: Wallet = {
   stripeSubscriptionId: "sub_123",
   spendUnitsThisPeriod: 2250,
   categoryBreakdown: { api: 900, ai: 600, automation: 750 },
+  categoryDocs: { api: 700, ai: 450, automation: 600 },
+  docsProcessedThisPeriod: 1750,
+  uniquePdfsThisPeriod: 1600,
+  sizeMultiplierPdfsThisPeriod: 320,
   members: [
     {
       userId: "u1",
