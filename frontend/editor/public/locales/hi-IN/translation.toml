@@ -5981,14 +5981,14 @@ statusActive = "Active"
 statusPaused = "Paused"
 
 [policies.docType]
-Contracts = "अनुबंध"
-"Financial reports" = "वित्तीय रिपोर्ट"
-"HR records" = "HR रिकॉर्ड"
-Insurance = "बीमा"
-Invoices = "इनवॉइस"
-"Legal filings" = "कानूनी फ़ाइलिंग"
-"Medical / PHI" = "मेडिकल / PHI"
-"Tax documents" = "कर दस्तावेज़"
+contracts = "अनुबंध"
+financialReports = "वित्तीय रिपोर्ट"
+hrRecords = "HR रिकॉर्ड"
+insurance = "बीमा"
+invoices = "इनवॉइस"
+legalFilings = "कानूनी फ़ाइलिंग"
+medicalPhi = "मेडिकल / PHI"
+taxDocuments = "कर दस्तावेज़"
 
 [policies.enforcement]
 applying = "{{names}} लागू किए जा रहे हैं"
@@ -6026,49 +6026,49 @@ onViolation = "अनुपालन न होने पर"
 webhookUrl = "Webhook URL"
 
 [policies.fieldOption.archiveAfter]
-"1 year" = "1 वर्ष"
-"30 days" = "30 दिन"
-"90 days" = "90 दिन"
-Never = "कभी नहीं"
+oneYear = "1 वर्ष"
+thirtyDays = "30 दिन"
+ninetyDays = "90 दिन"
+never = "कभी नहीं"
 
 [policies.fieldOption.belowThreshold]
-"Flag for review" = "समीक्षा के लिए फ़्लैग करें"
-Hold = "होल्ड करें"
-"Route to bucket" = "बकेट में रूट करें"
+flagForReview = "समीक्षा के लिए फ़्लैग करें"
+hold = "होल्ड करें"
+routeToBucket = "बकेट में रूट करें"
 
 [policies.fieldOption.destination]
-Documents = "दस्तावेज़"
-"S3 bucket" = "S3 बकेट"
-SharePoint = "SharePoint"
-Webhook = "Webhook"
+documents = "दस्तावेज़"
+s3Bucket = "S3 बकेट"
+sharePoint = "SharePoint"
+webhook = "Webhook"
 
 [policies.fieldOption.frameworks]
-FedRAMP = "FedRAMP"
-GDPR = "GDPR"
-HIPAA = "HIPAA"
-"ISO 27001" = "ISO 27001"
-"PCI DSS" = "PCI DSS"
-"SOC 2" = "SOC 2"
+fedramp = "FedRAMP"
+gdpr = "GDPR"
+hipaa = "HIPAA"
+iso27001 = "ISO 27001"
+pciDss = "PCI DSS"
+soc2 = "SOC 2"
 
 [policies.fieldOption.keepFor]
-"1 year" = "1 वर्ष"
-"3 years" = "3 वर्ष"
-"30 days" = "30 दिन"
-"7 years" = "7 वर्ष"
-Indefinite = "अनिश्चित काल"
+oneYear = "1 वर्ष"
+threeYears = "3 वर्ष"
+thirtyDays = "30 दिन"
+sevenYears = "7 वर्ष"
+indefinite = "अनिश्चित काल"
 
 [policies.fieldOption.minConfidence]
-"60%" = "60%"
-"70%" = "70%"
-"80%" = "80%"
-"90%" = "90%"
-"95%" = "95%"
+p60 = "60%"
+p70 = "70%"
+p80 = "80%"
+p90 = "90%"
+p95 = "95%"
 
 [policies.fieldOption.onViolation]
-"Auto-redact PHI" = "PHI को अपने-आप redact करें"
-"Block export" = "export ब्लॉक करें"
-"Flag for review" = "समीक्षा के लिए फ़्लैग करें"
-"Quarantine document" = "दस्तावेज़ को क्वारंटीन करें"
+autoRedactPhi = "PHI को अपने-आप redact करें"
+blockExport = "export ब्लॉक करें"
+flagForReview = "समीक्षा के लिए फ़्लैग करें"
+quarantineDocument = "दस्तावेज़ को क्वारंटीन करें"
 
 [policies.fields]
 selectedCount = "{{count}} selected"

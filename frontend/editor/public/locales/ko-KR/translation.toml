@@ -5981,14 +5981,14 @@ statusActive = "Active"
 statusPaused = "Paused"
 
 [policies.docType]
-Contracts = "계약서"
-"Financial reports" = "재무 보고서"
-"HR records" = "HR 기록"
-Insurance = "보험"
-Invoices = "송장"
-"Legal filings" = "법적 제출 서류"
-"Medical / PHI" = "의료 / PHI"
-"Tax documents" = "세금 문서"
+contracts = "계약서"
+financialReports = "재무 보고서"
+hrRecords = "HR 기록"
+insurance = "보험"
+invoices = "송장"
+legalFilings = "법적 제출 서류"
+medicalPhi = "의료 / PHI"
+taxDocuments = "세금 문서"
 
 [policies.enforcement]
 applying = "{{names}} 적용 중"
@@ -6026,49 +6026,49 @@ onViolation = "비준수 시"
 webhookUrl = "Webhook URL"
 
 [policies.fieldOption.archiveAfter]
-"1 year" = "1년"
-"30 days" = "30일"
-"90 days" = "90일"
-Never = "안 함"
+oneYear = "1년"
+thirtyDays = "30일"
+ninetyDays = "90일"
+never = "안 함"
 
 [policies.fieldOption.belowThreshold]
-"Flag for review" = "검토 대상으로 표시"
-Hold = "보류"
-"Route to bucket" = "버킷으로 라우팅"
+flagForReview = "검토 대상으로 표시"
+hold = "보류"
+routeToBucket = "버킷으로 라우팅"
 
 [policies.fieldOption.destination]
-Documents = "문서"
-"S3 bucket" = "S3 bucket"
-SharePoint = "SharePoint"
-Webhook = "Webhook"
+documents = "문서"
+s3Bucket = "S3 bucket"
+sharePoint = "SharePoint"
+webhook = "Webhook"
 
 [policies.fieldOption.frameworks]
-FedRAMP = "FedRAMP"
-GDPR = "GDPR"
-HIPAA = "HIPAA"
-"ISO 27001" = "ISO 27001"
-"PCI DSS" = "PCI DSS"
-"SOC 2" = "SOC 2"
+fedramp = "FedRAMP"
+gdpr = "GDPR"
+hipaa = "HIPAA"
+iso27001 = "ISO 27001"
+pciDss = "PCI DSS"
+soc2 = "SOC 2"
 
 [policies.fieldOption.keepFor]
-"1 year" = "1년"
-"3 years" = "3년"
-"30 days" = "30일"
-"7 years" = "7년"
-Indefinite = "무기한"
+oneYear = "1년"
+threeYears = "3년"
+thirtyDays = "30일"
+sevenYears = "7년"
+indefinite = "무기한"
 
 [policies.fieldOption.minConfidence]
-"60%" = "60%"
-"70%" = "70%"
-"80%" = "80%"
-"90%" = "90%"
-"95%" = "95%"
+p60 = "60%"
+p70 = "70%"
+p80 = "80%"
+p90 = "90%"
+p95 = "95%"
 
 [policies.fieldOption.onViolation]
-"Auto-redact PHI" = "PHI 자동 수정"
-"Block export" = "내보내기 차단"
-"Flag for review" = "검토 대상으로 표시"
-"Quarantine document" = "문서 격리"
+autoRedactPhi = "PHI 자동 수정"
+blockExport = "내보내기 차단"
+flagForReview = "검토 대상으로 표시"
+quarantineDocument = "문서 격리"
 
 [policies.fields]
 selectedCount = "{{count}} selected"

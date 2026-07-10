@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Chip, FormField, Input, Select, ToggleSwitch } from "@app/ui";
 import type { PolicyField } from "@portal/api/policies";
+import { policyOptionKey } from "@app/policies/optionKeys";
 import "@portal/views/Policies.css";
 
 interface PolicyFieldRowProps {
@@ -51,7 +52,10 @@ export function PolicyFieldRow({
               size="sm"
               onClick={() => toggle(opt)}
             >
-              {t(`policies.fieldOption.${field.key}.${opt}`, opt)}
+              {t(
+                `policies.fieldOption.${field.key}.${policyOptionKey(opt)}`,
+                opt,
+              )}
             </Chip>
           ))}
         </div>
@@ -67,7 +71,10 @@ export function PolicyFieldRow({
           value={typeof value === "string" ? value : ""}
           options={(field.options ?? []).map((o) => ({
             value: o,
-            label: t(`policies.fieldOption.${field.key}.${o}`, o),
+            label: t(
+              `policies.fieldOption.${field.key}.${policyOptionKey(o)}`,
+              o,
+            ),
           }))}
           onChange={(value) => onChange(value ?? "")}
         />

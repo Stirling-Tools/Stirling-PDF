@@ -5981,14 +5981,14 @@ statusActive = "Active"
 statusPaused = "Paused"
 
 [policies.docType]
-Contracts = "العقود"
-"Financial reports" = "التقارير المالية"
-"HR records" = "سجلات الموارد البشرية"
-Insurance = "التأمين"
-Invoices = "الفواتير"
-"Legal filings" = "الإيداعات القانونية"
-"Medical / PHI" = "طبي / PHI"
-"Tax documents" = "المستندات الضريبية"
+contracts = "العقود"
+financialReports = "التقارير المالية"
+hrRecords = "سجلات الموارد البشرية"
+insurance = "التأمين"
+invoices = "الفواتير"
+legalFilings = "الإيداعات القانونية"
+medicalPhi = "طبي / PHI"
+taxDocuments = "المستندات الضريبية"
 
 [policies.enforcement]
 applying = "جارٍ تطبيق {{names}}"
@@ -6026,49 +6026,49 @@ onViolation = "عند عدم الامتثال"
 webhookUrl = "Webhook URL"
 
 [policies.fieldOption.archiveAfter]
-"1 year" = "سنة واحدة"
-"30 days" = "30 يومًا"
-"90 days" = "90 يومًا"
-Never = "أبدًا"
+oneYear = "سنة واحدة"
+thirtyDays = "30 يومًا"
+ninetyDays = "90 يومًا"
+never = "أبدًا"
 
 [policies.fieldOption.belowThreshold]
-"Flag for review" = "وضع علامة للمراجعة"
-Hold = "احتجاز"
-"Route to bucket" = "توجيه إلى bucket"
+flagForReview = "وضع علامة للمراجعة"
+hold = "احتجاز"
+routeToBucket = "توجيه إلى bucket"
 
 [policies.fieldOption.destination]
-Documents = "المستندات"
-"S3 bucket" = "S3 bucket"
-SharePoint = "SharePoint"
-Webhook = "Webhook"
+documents = "المستندات"
+s3Bucket = "S3 bucket"
+sharePoint = "SharePoint"
+webhook = "Webhook"
 
 [policies.fieldOption.frameworks]
-FedRAMP = "FedRAMP"
-GDPR = "GDPR"
-HIPAA = "HIPAA"
-"ISO 27001" = "ISO 27001"
-"PCI DSS" = "PCI DSS"
-"SOC 2" = "SOC 2"
+fedramp = "FedRAMP"
+gdpr = "GDPR"
+hipaa = "HIPAA"
+iso27001 = "ISO 27001"
+pciDss = "PCI DSS"
+soc2 = "SOC 2"
 
 [policies.fieldOption.keepFor]
-"1 year" = "سنة واحدة"
-"3 years" = "3 سنوات"
-"30 days" = "30 يومًا"
-"7 years" = "7 سنوات"
-Indefinite = "إلى أجل غير مسمى"
+oneYear = "سنة واحدة"
+threeYears = "3 سنوات"
+thirtyDays = "30 يومًا"
+sevenYears = "7 سنوات"
+indefinite = "إلى أجل غير مسمى"
 
 [policies.fieldOption.minConfidence]
-"60%" = "60%"
-"70%" = "70%"
-"80%" = "80%"
-"90%" = "90%"
-"95%" = "95%"
+p60 = "60%"
+p70 = "70%"
+p80 = "80%"
+p90 = "90%"
+p95 = "95%"
 
 [policies.fieldOption.onViolation]
-"Auto-redact PHI" = "تنقيح PHI تلقائيًا"
-"Block export" = "حظر التصدير"
-"Flag for review" = "وضع علامة للمراجعة"
-"Quarantine document" = "عزل المستند"
+autoRedactPhi = "تنقيح PHI تلقائيًا"
+blockExport = "حظر التصدير"
+flagForReview = "وضع علامة للمراجعة"
+quarantineDocument = "عزل المستند"
 
 [policies.fields]
 selectedCount = "{{count}} selected"

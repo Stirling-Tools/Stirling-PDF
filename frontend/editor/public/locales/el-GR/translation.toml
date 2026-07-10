@@ -5981,14 +5981,14 @@ statusActive = "Active"
 statusPaused = "Paused"
 
 [policies.docType]
-Contracts = "Συμβάσεις"
-"Financial reports" = "Οικονομικές αναφορές"
-"HR records" = "Αρχεία HR"
-Insurance = "Ασφάλειες"
-Invoices = "Τιμολόγια"
-"Legal filings" = "Νομικές καταθέσεις"
-"Medical / PHI" = "Ιατρικά / PHI"
-"Tax documents" = "Φορολογικά έγγραφα"
+contracts = "Συμβάσεις"
+financialReports = "Οικονομικές αναφορές"
+hrRecords = "Αρχεία HR"
+insurance = "Ασφάλειες"
+invoices = "Τιμολόγια"
+legalFilings = "Νομικές καταθέσεις"
+medicalPhi = "Ιατρικά / PHI"
+taxDocuments = "Φορολογικά έγγραφα"
 
 [policies.enforcement]
 applying = "Εφαρμογή {{names}}"
@@ -6026,49 +6026,49 @@ onViolation = "Όταν δεν συμμορφώνεται"
 webhookUrl = "Webhook URL"
 
 [policies.fieldOption.archiveAfter]
-"1 year" = "1 έτος"
-"30 days" = "30 ημέρες"
-"90 days" = "90 ημέρες"
-Never = "Ποτέ"
+oneYear = "1 έτος"
+thirtyDays = "30 ημέρες"
+ninetyDays = "90 ημέρες"
+never = "Ποτέ"
 
 [policies.fieldOption.belowThreshold]
-"Flag for review" = "Επισήμανση για έλεγχο"
-Hold = "Διατήρηση"
-"Route to bucket" = "Δρομολόγηση σε bucket"
+flagForReview = "Επισήμανση για έλεγχο"
+hold = "Διατήρηση"
+routeToBucket = "Δρομολόγηση σε bucket"
 
 [policies.fieldOption.destination]
-Documents = "Έγγραφα"
-"S3 bucket" = "S3 bucket"
-SharePoint = "SharePoint"
-Webhook = "Webhook"
+documents = "Έγγραφα"
+s3Bucket = "S3 bucket"
+sharePoint = "SharePoint"
+webhook = "Webhook"
 
 [policies.fieldOption.frameworks]
-FedRAMP = "FedRAMP"
-GDPR = "GDPR"
-HIPAA = "HIPAA"
-"ISO 27001" = "ISO 27001"
-"PCI DSS" = "PCI DSS"
-"SOC 2" = "SOC 2"
+fedramp = "FedRAMP"
+gdpr = "GDPR"
+hipaa = "HIPAA"
+iso27001 = "ISO 27001"
+pciDss = "PCI DSS"
+soc2 = "SOC 2"
 
 [policies.fieldOption.keepFor]
-"1 year" = "1 έτος"
-"3 years" = "3 έτη"
-"30 days" = "30 ημέρες"
-"7 years" = "7 έτη"
-Indefinite = "Επ' αόριστον"
+oneYear = "1 έτος"
+threeYears = "3 έτη"
+thirtyDays = "30 ημέρες"
+sevenYears = "7 έτη"
+indefinite = "Επ' αόριστον"
 
 [policies.fieldOption.minConfidence]
-"60%" = "60%"
-"70%" = "70%"
-"80%" = "80%"
-"90%" = "90%"
-"95%" = "95%"
+p60 = "60%"
+p70 = "70%"
+p80 = "80%"
+p90 = "90%"
+p95 = "95%"
 
 [policies.fieldOption.onViolation]
-"Auto-redact PHI" = "Αυτόματη απόκρυψη PHI"
-"Block export" = "Αποκλεισμός εξαγωγής"
-"Flag for review" = "Επισήμανση για έλεγχο"
-"Quarantine document" = "Καραντίνα εγγράφου"
+autoRedactPhi = "Αυτόματη απόκρυψη PHI"
+blockExport = "Αποκλεισμός εξαγωγής"
+flagForReview = "Επισήμανση για έλεγχο"
+quarantineDocument = "Καραντίνα εγγράφου"
 
 [policies.fields]
 selectedCount = "{{count}} selected"

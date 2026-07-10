@@ -30,6 +30,7 @@ import { buildPipelineDefinition } from "@app/services/policyPipeline";
 import { useAuth } from "@app/auth/UseSession";
 import { PolicyFieldRow } from "@app/components/policies/PolicyFieldRow";
 import { resolveFieldValues } from "@app/components/policies/policyValues";
+import { policyOptionKey } from "@app/policies/optionKeys";
 import {
   PolicyWorkflowStep,
   AutomationMode,
@@ -696,7 +697,7 @@ export function PolicySetupWizard({
                               : [...prev, dt],
                           )
                         }
-                        label={t(`policies.docType.${dt}`, dt)}
+                        label={t(`policies.docType.${policyOptionKey(dt)}`, dt)}
                       />
                     ))}
                   </div>
