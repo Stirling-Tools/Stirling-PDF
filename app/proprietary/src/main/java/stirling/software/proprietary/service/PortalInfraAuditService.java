@@ -88,10 +88,9 @@ public class PortalInfraAuditService {
         String path = asString(data.get("path"));
         String policyName = asString(data.get("policyName"));
         boolean automation = isAutomation(data);
-        // A policy dispatch carries its name but no automation marker; the internal tool steps it
-        // fans out carry the marker (and no name). The dispatch is the "policy" row; the steps are
-        // its automation sub-rows.
-        boolean policyDispatch = (policyName != null || isPolicyRunPath(path)) && !automation;
+        // Classify a dispatch by its real run-path URI, not a policyName: the latter can be spoofed
+        // via the X-Stirling-Policy-Name header to make a direct call pose as a policy row.
+        boolean policyDispatch = isPolicyRunPath(path) && !automation;
         // A dispatch is its own "policy" category so the UI badges it as a policy run, not a
         // generic processing op; its internal steps keep their real tool category.
         String category = policyDispatch ? "policy" : categoryFor(event.type(), path);
@@ -156,19 +155,16 @@ public class PortalInfraAuditService {
     }
 
     /**
-     * Label for a row. A policy dispatch (name, no automation marker) shows the policy itself; an
-     * internal pipeline step (automation marker) is flagged so it isn't read as a direct action.
+     * Label for a row. A genuine policy dispatch (a {@code /policies/.../run} request) shows the
+     * policy it ran; an internal pipeline step (automation marker) is flagged so it isn't read as a
+     * direct action. The name is only shown as the action on a real run URI, so a spoofed
+     * X-Stirling-Policy-Name header on a direct tool call can't overwrite its true action.
      */
     private static String actionFor(
             String type, String path, String policyName, boolean automation) {
-        if (!automation) {
-            if (policyName != null) {
-                return policyName;
-            }
-            if (isPolicyRunPath(path)) {
-                // A run with no name (ad-hoc pipeline) still reads better than the "run" endpoint.
-                return "Policy run";
-            }
+        if (!automation && isPolicyRunPath(path)) {
+            // A run with no name (ad-hoc pipeline) still reads better than the "run" endpoint.
+            return policyName != null ? policyName : "Policy run";
         }
         String base = baseActionFor(type, path);
         if (automation) {

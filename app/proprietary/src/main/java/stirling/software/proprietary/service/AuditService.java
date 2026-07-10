@@ -497,15 +497,45 @@ public class AuditService {
             }
         }
         if (policyName != null) {
-            data.put("policyName", String.valueOf(policyName));
+            // Both sources are caller-controlled (the header is spoofable and, unlike the sender in
+            // InternalApiClient, uncapped); strip newlines and cap before persisting to audit JSON.
+            String safe = capLabel(String.valueOf(policyName));
+            if (!safe.isEmpty()) {
+                data.put("policyName", safe);
+            }
         }
         Object steps = req.getAttribute(AuditContext.REQ_ATTR_POLICY_STEPS);
         if (steps instanceof List<?> list && !list.isEmpty()) {
-            data.put("policySteps", list);
+            // Caller-supplied and unbounded; cap count and each entry so a crafted run can't
+            // bloat the audit JSON the portal cache loads and parses in bulk.
+            List<String> safeSteps =
+                    list.stream()
+                            .limit(MAX_POLICY_STEPS)
+                            .map(s -> capLabel(String.valueOf(s)))
+                            .filter(s -> !s.isEmpty())
+                            .toList();
+            if (!safeSteps.isEmpty()) {
+                data.put("policySteps", safeSteps);
+            }
         }
         if ("true".equalsIgnoreCase(req.getHeader(InternalApiClient.AUTOMATION_HEADER))) {
             data.put("automation", Boolean.TRUE);
         }
+    }
+
+    /** Max characters kept for a persisted policy label; mirrors the InternalApiClient send cap. */
+    private static final int MAX_LABEL_LEN = 200;
+
+    /** Max step endpoints kept on a run's audit event; the portal only shows the first few. */
+    private static final int MAX_POLICY_STEPS = 50;
+
+    /** Single-line, length-capped label safe to persist to audit JSON and render in the portal. */
+    private static String capLabel(String value) {
+        if (value == null) {
+            return "";
+        }
+        String safe = value.replaceAll("[\\r\\n]", " ").trim();
+        return safe.length() > MAX_LABEL_LEN ? safe.substring(0, MAX_LABEL_LEN) : safe;
     }
 
     /**

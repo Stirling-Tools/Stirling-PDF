@@ -119,4 +119,31 @@ class PortalInfraAuditServiceTest {
         assertThat(e.getCategory()).isEqualTo("processing");
         assertThat(e.getTarget()).isEqualTo("a.pdf");
     }
+
+    /**
+     * A spoofed X-Stirling-Policy-Name header lands in audit data as policyName on a direct tool
+     * call (no automation marker, non-run path). It must NOT flip the row into a "policy" dispatch
+     * that overwrites the real action and hides the affected file - only a real /policies/.../run
+     * URI does that.
+     */
+    @Test
+    void forgedPolicyNameOnDirectCallCannotMaskTheRealAction() {
+        when(auditReadService.serverEvents())
+                .thenReturn(
+                        List.of(
+                                row(
+                                        1L,
+                                        "{\"path\":\"/api/v1/security/remove-password\","
+                                                + "\"policyName\":\"Daily cleanup\",\"files\":"
+                                                + "[{\"name\":\"secret.pdf\"}],\"statusCode\":200}")));
+
+        var resp = service.serverAuditLog();
+        InfraAuditEventDto e = resp.getEvents().get(0);
+
+        // Real op and file stay visible; the forged name does not become the action or category.
+        assertThat(e.getAction()).isEqualTo("Remove Password");
+        assertThat(e.getCategory()).isEqualTo("security");
+        assertThat(e.getTarget()).isEqualTo("secret.pdf");
+        assertThat(resp.getSummary().getPolicy()).isEqualTo(0);
+    }
 }
