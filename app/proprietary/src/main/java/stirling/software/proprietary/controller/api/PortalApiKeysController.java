@@ -16,16 +16,15 @@ import stirling.software.common.annotations.api.ProprietaryUiDataApi;
 import stirling.software.proprietary.model.api.apikey.CreateApiKeyRequest;
 import stirling.software.proprietary.model.api.apikey.CreatedApiKeyDto;
 import stirling.software.proprietary.model.api.apikey.PortalApiKeysResponse;
-import stirling.software.proprietary.security.config.EnterpriseEndpoint;
 import stirling.software.proprietary.security.service.ApiKeyManagementService;
 
 /**
  * Real backing for the portal Infrastructure → API Keys tab: list/create/revoke named keys, scoped
- * personal or to the caller's team. Replaces the former portal-only mock endpoint.
+ * personal or to the caller's team. Replaces the former portal-only mock endpoint. Not gated behind
+ * an Enterprise license - API keys are a core auth feature available on every self-hosted instance.
  */
 @ProprietaryUiDataApi
 @RequiredArgsConstructor
-@EnterpriseEndpoint
 public class PortalApiKeysController {
 
     private final ApiKeyManagementService apiKeyManagementService;
