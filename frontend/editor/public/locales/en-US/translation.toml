@@ -6895,6 +6895,7 @@ title = "Something went wrong on this page"
 [portal.home.download]
 back = "Back"
 body = "Download the desktop app or self-host the server."
+done = "Done"
 guide = "Open the {{name}} guide"
 openInBrowser = "Open in browser instead"
 sectionDesktop = "Desktop app"
@@ -6929,13 +6930,6 @@ detailBody = "Run the installer, or use Homebrew."
 downloadBtn = "Download for macOS"
 tagline = "Native app for Apple silicon and Intel"
 title = "macOS"
-
-[portal.home.download.managed]
-cta = "Open deployment settings"
-detailBody = "Pre-configure and lock the app across a fleet."
-note = "Manage fleet-wide config, pinning and device pairing from the Editor deployment page."
-tagline = "Pre-configure and lock the app across a fleet"
-title = "Managed deployment"
 
 [portal.home.download.manual]
 detailBody = "Run the .jar on a bare metal server."

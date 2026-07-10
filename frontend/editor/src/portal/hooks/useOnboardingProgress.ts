@@ -1,5 +1,6 @@
 import { useTier } from "@portal/contexts/TierContext";
 import { useAsync } from "@portal/hooks/useAsync";
+import { useEditorInstalled } from "@portal/hooks/useEditorInstalled";
 import { fetchEditorDeployment } from "@portal/api/editorDeploy";
 import { fetchPolicies } from "@portal/api/policies";
 import { fetchUsers } from "@portal/api/users";
@@ -27,6 +28,7 @@ export interface OnboardingProgress {
 
 export function useOnboardingProgress(): OnboardingProgress {
   const { tier } = useTier();
+  const editorInstalled = useEditorInstalled();
   const { data, loading } = useAsync(
     () =>
       Promise.all([
@@ -39,7 +41,9 @@ export function useOnboardingProgress(): OnboardingProgress {
 
   const [deploy, policies, users] = data ?? [null, null, null];
 
-  const editorDone = (deploy?.instances.length ?? 0) > 0;
+  // Authoritative signal is a deployed instance; the user's own download/Done
+  // action marks it complete immediately via the persisted flag.
+  const editorDone = editorInstalled || (deploy?.instances.length ?? 0) > 0;
   const policiesActive = policies?.summary.active ?? 0;
   const policiesRecommended = Math.max(
     0,

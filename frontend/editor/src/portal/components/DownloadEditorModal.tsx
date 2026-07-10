@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, CodeBlock, Modal, SegmentedControl } from "@app/ui";
-import { useView } from "@portal/contexts/ViewContext";
 import { EDITOR_URL } from "@portal/auth/editorUrl";
+import { markEditorInstalled } from "@portal/hooks/useEditorInstalled";
 import { DOWNLOAD_URLS } from "@app/constants/downloads";
 import DownloadRounded from "@mui/icons-material/DownloadRounded";
-import DevicesRounded from "@mui/icons-material/DevicesRounded";
 import DnsRounded from "@mui/icons-material/DnsRounded";
 import LayersRounded from "@mui/icons-material/LayersRounded";
 import TerminalRounded from "@mui/icons-material/TerminalRounded";
@@ -38,17 +37,16 @@ const GUIDES = {
   manual: DOWNLOAD_URLS.LINUX_DOCS,
 } as const;
 
-type OptionId = keyof typeof GUIDES | "managed";
+type OptionId = keyof typeof GUIDES;
 type DockerVariant = "latest" | "latest-fat" | "latest-ultra-lite";
 
-const DESKTOP: OptionId[] = ["windows", "mac", "linux", "managed"];
+const DESKTOP: OptionId[] = ["windows", "mac", "linux"];
 const SELF_HOSTED: OptionId[] = ["docker", "kubernetes", "manual"];
 
 const ICONS: Record<OptionId, SvgIconComponent> = {
   windows: DownloadRounded,
   mac: DownloadRounded,
   linux: DownloadRounded,
-  managed: DevicesRounded,
   docker: DnsRounded,
   kubernetes: LayersRounded,
   manual: TerminalRounded,
@@ -66,19 +64,28 @@ function openUrl(url: string) {
 /**
  * Install-the-editor modal. Lists desktop + self-hosted options; each opens a
  * detail pane with a download button and/or copyable install command and a
- * guide link. Instructions only — nothing is persisted (the demo's "Confirm
- * deployment" step is intentionally out of scope until a registration endpoint
- * exists).
+ * guide link. A completing action — clicking a download button or pressing Done
+ * — marks the getting-started "Download the editor" step complete (via
+ * {@link markEditorInstalled}); nothing else is persisted.
  */
 export function DownloadEditorModal({ open, onClose }: Props) {
   const { t } = useTranslation();
-  const { setActiveView } = useView();
   const [selected, setSelected] = useState<OptionId | null>(null);
   const [dockerVariant, setDockerVariant] = useState<DockerVariant>("latest");
 
   const close = () => {
     setSelected(null);
     onClose();
+  };
+
+  // A download or a Done press completes the "Download the editor" step.
+  const download = (url: string) => {
+    openUrl(url);
+    markEditorInstalled();
+  };
+  const done = () => {
+    markEditorInstalled();
+    close();
   };
 
   const guideLink = (id: keyof typeof GUIDES) => (
@@ -111,7 +118,7 @@ export function DownloadEditorModal({ open, onClose }: Props) {
             <Button
               variant="primary"
               leftSection={<DownloadRounded sx={{ fontSize: 16 }} />}
-              onClick={() => openUrl(url)}
+              onClick={() => download(url)}
             >
               {t(`portal.home.download.${id}.downloadBtn`)}
             </Button>
@@ -133,21 +140,6 @@ export function DownloadEditorModal({ open, onClose }: Props) {
               onClick={() => openUrl(GUIDES.linux)}
             >
               {t("portal.home.download.linux.guideBtn")}
-            </Button>
-          </>
-        );
-      case "managed":
-        return (
-          <>
-            {note("managed")}
-            <Button
-              variant="primary"
-              onClick={() => {
-                close();
-                setActiveView("editor");
-              }}
-            >
-              {t("portal.home.download.managed.cta")}
             </Button>
           </>
         );
@@ -191,7 +183,7 @@ export function DownloadEditorModal({ open, onClose }: Props) {
             <Button
               variant="primary"
               leftSection={<DownloadRounded sx={{ fontSize: 16 }} />}
-              onClick={() => openUrl(JAR_URL)}
+              onClick={() => download(JAR_URL)}
             >
               {t("portal.home.download.manual.downloadBtn")}
             </Button>
@@ -250,9 +242,14 @@ export function DownloadEditorModal({ open, onClose }: Props) {
       }
       footer={
         detail ? (
-          <Button variant="secondary" onClick={() => setSelected(null)}>
-            {t("portal.home.download.back")}
-          </Button>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <Button variant="secondary" onClick={() => setSelected(null)}>
+              {t("portal.home.download.back")}
+            </Button>
+            <Button variant="primary" onClick={done}>
+              {t("portal.home.download.done")}
+            </Button>
+          </div>
         ) : (
           <Button
             variant="secondary"
