@@ -66,6 +66,10 @@ public class ProcurementQuote implements Serializable {
     @Column(name = "intensity", nullable = false)
     private int intensity = 4;
 
+    /** File-size tier multiplier on the rate (D93): Compact 1.0, Standard 1.4, Heavy 2.4. */
+    @Column(name = "size_mult", nullable = false)
+    private double sizeMult = 1.0;
+
     @Column(name = "deployment", length = 24)
     private String deployment;
 

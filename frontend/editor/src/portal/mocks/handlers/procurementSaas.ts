@@ -24,6 +24,7 @@ interface Cfg {
   volume: number;
   users?: number;
   intensity: number;
+  sizeMult: number;
   deployment: string;
   serviceLevel: string;
   termYears: number;
@@ -49,7 +50,9 @@ function priceQuote(cfg: Cfg) {
     runVol > 1_000_000
       ? Math.min(0.5, 0.06 * Math.log2(runVol / 1_000_000))
       : 0;
-  const rate = Math.max(FLOOR, LIST * (1 - volDisc));
+  // File-size tier (D93) scales the rate after the floor; snap to a known multiplier.
+  const sizeMult = [1.0, 1.4, 2.4].includes(cfg.sizeMult) ? cfg.sizeMult : 1.0;
+  const rate = Math.max(FLOOR, LIST * (1 - volDisc)) * sizeMult;
   const termDisc = TERM[Math.min(Math.max(cfg.termYears, 1), 5) - 1];
   const annualBase = Math.round(runVol * rate) * 100; // whole $ → minor
   const meterNet = Math.round(runVol * rate * (1 - termDisc)) * 100;
@@ -164,6 +167,7 @@ function priceQuote(cfg: Cfg) {
       volume: cfg.volume,
       users: 0,
       intensity,
+      sizeMult,
       deployment: cfg.deployment || "cloud",
       termYears: cfg.termYears,
       serviceLevel: cfg.serviceLevel,

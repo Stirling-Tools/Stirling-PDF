@@ -81,6 +81,7 @@ public class ProcurementController {
             long volume,
             int users,
             int intensity, // policy posture (runs/PDF): 2 / 4 / 7; 0 → default Governed
+            double sizeMult, // PDF-size tier multiplier: 1.0 / 1.4 / 2.4; 0 → no uplift
             String deployment,
             int termYears,
             String serviceLevel,
@@ -94,6 +95,7 @@ public class ProcurementController {
                     volume,
                     users,
                     intensity,
+                    sizeMult,
                     deployment,
                     termYears,
                     serviceLevel,
@@ -131,6 +133,7 @@ public class ProcurementController {
             long volume,
             int users,
             int intensity,
+            double sizeMult,
             String deployment,
             int termYears,
             String serviceLevel,
@@ -373,6 +376,7 @@ public class ProcurementController {
                         q.getVolume(),
                         0,
                         q.getIntensity(),
+                        q.getSizeMult(),
                         q.getDeployment(),
                         q.getTermYears(),
                         q.getServiceLevel(),

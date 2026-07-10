@@ -16,11 +16,17 @@ import "@portal/views/Procurement.css";
 
 const STEPS = ["volume", "plan", "details"] as const;
 const TERM_DISCOUNT = [0, 0.03, 0.05, 0.06, 0.07]; // 1..5 years — meter-only discount (D71)
-// Policy posture: the intensity (runs per PDF) fed to the committed-volume curve.
+// Governance posture: the intensity (runs per PDF) fed to the committed-volume curve.
 const POSTURES = [
   { intensity: 2, key: "essentials" },
   { intensity: 4, key: "governed" },
   { intensity: 7, key: "regulated" },
+] as const;
+// PDF-size tiers (D93): a multiplier on the rate. Default Standard (×1.4). Mirrors the server.
+const SIZE_TIERS = [
+  { mult: 1.0, key: "compact" },
+  { mult: 1.4, key: "standard" },
+  { mult: 2.4, key: "heavy" },
 ] as const;
 
 /**
@@ -51,7 +57,8 @@ export function QuoteBuilder({
       // auto-fills it (rather than pre-seeding a figure that hides the users → volume estimate).
       volume: seats > 0 ? estimateVolume(seats) : 0,
       users: Math.max(0, seats),
-      intensity: 4, // Governed — the default posture per the pricing alignment
+      intensity: 4, // Governed — the default governance posture per the pricing alignment
+      sizeMult: 1.4, // Standard — the default PDF-size tier (D93)
       deployment,
       termYears: 3,
       serviceLevel: "priority",
@@ -175,6 +182,20 @@ export function QuoteBuilder({
                       count: p.intensity,
                     })} · ${t(`portal.procurement.builder.posture_${p.key}Sub`)}`}
                     onClick={() => set("intensity", p.intensity)}
+                  />
+                ))}
+              </div>
+            </Field>
+
+            <Field label={t("portal.procurement.builder.pdfSize")}>
+              <div className="portal-qb__opts">
+                {SIZE_TIERS.map((s) => (
+                  <OptCard
+                    key={s.key}
+                    on={cfg.sizeMult === s.mult}
+                    title={t(`portal.procurement.builder.size_${s.key}`)}
+                    sub={`×${s.mult} · ${t(`portal.procurement.builder.size_${s.key}Sub`)}`}
+                    onClick={() => set("sizeMult", s.mult)}
                   />
                 ))}
               </div>
@@ -439,7 +460,7 @@ function previewAnnualMinor(cfg: QuoteConfigInput): number {
     runVol > 1_000_000
       ? Math.min(0.5, 0.06 * Math.log2(runVol / 1_000_000))
       : 0;
-  const rate = Math.max(FLOOR, LIST * (1 - volDisc));
+  const rate = Math.max(FLOOR, LIST * (1 - volDisc)) * (cfg.sizeMult || 1);
   const termDisc = TERM_DISCOUNT[Math.min(Math.max(cfg.termYears, 1), 5) - 1];
   const meterNet = Math.round(runVol * rate * (1 - termDisc)) * 100; // whole $ → minor units
   const support = cfg.serviceLevel === "dedicated" ? 3_000_000 : 0; // std + priority included

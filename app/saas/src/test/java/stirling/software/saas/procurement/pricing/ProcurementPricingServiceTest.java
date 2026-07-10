@@ -18,8 +18,13 @@ class ProcurementPricingServiceTest {
 
     private static QuoteConfig cfg(
             long volume, int intensity, String deployment, int term, String sla) {
+        return cfgSize(volume, intensity, deployment, term, sla, 1.0);
+    }
+
+    private static QuoteConfig cfgSize(
+            long volume, int intensity, String deployment, int term, String sla, double sizeMult) {
         return new QuoteConfig(
-                volume, 0, intensity, deployment, term, sla, false, false, false, "USD");
+                volume, 0, intensity, sizeMult, deployment, term, sla, false, false, false, "USD");
     }
 
     @Test
@@ -58,6 +63,28 @@ class ProcurementPricingServiceTest {
         assertThat(pricing.cpiRatePct()).isEqualTo(3);
         assertThat(pricing.renewalAnnualMinor(q.annualNetMinor()))
                 .isEqualTo(q.renewalAnnualNetMinor()); // stored-quote echo agrees with pricing
+    }
+
+    @Test
+    void fileSizeTierMultipliesTheMeter() {
+        // D93: the size tier scales the per-run rate, so the meter (hence annual/TCV/renewal) grows
+        // while flat fees stay put. Compact (1.0) is the anchor; Standard is ×1.4, Heavy ×2.4.
+        long compact =
+                pricing.price(cfgSize(6_000_000, 4, "cloud", 3, "standard", 1.0)).annualNetMinor();
+        long standard =
+                pricing.price(cfgSize(6_000_000, 4, "cloud", 3, "standard", 1.4)).annualNetMinor();
+        long heavy =
+                pricing.price(cfgSize(6_000_000, 4, "cloud", 3, "standard", 2.4)).annualNetMinor();
+
+        assertThat(compact).isEqualTo(16_527_800L); // == the Northwind anchor (size 1.0)
+        assertThat(standard).isEqualTo(23_138_900L); // rate ×1.4
+        assertThat(compact).isLessThan(standard);
+        assertThat(standard).isLessThan(heavy);
+        // An unknown/tampered multiplier snaps back to 1.0 (no cheaper factor sneaks through).
+        assertThat(
+                        pricing.price(cfgSize(6_000_000, 4, "cloud", 3, "standard", 0.3))
+                                .annualNetMinor())
+                .isEqualTo(compact);
     }
 
     @Test
@@ -117,7 +144,8 @@ class ProcurementPricingServiceTest {
     void indemnificationIsFivePercentOfTheMeter() {
         long base = pricing.price(cfg(6_000_000, 4, "cloud", 3, "standard")).annualNetMinor();
         QuoteConfig c =
-                new QuoteConfig(6_000_000, 0, 4, "cloud", 3, "standard", true, false, false, "USD");
+                new QuoteConfig(
+                        6_000_000, 0, 4, 1.0, "cloud", 3, "standard", true, false, false, "USD");
         QuoteBreakdown q = pricing.price(c);
         assertThat(lineAmount(q, "indemnification")).isEqualTo(Math.round(base * 0.05));
     }
@@ -125,7 +153,8 @@ class ProcurementPricingServiceTest {
     @Test
     void trainingIsOneTimeOutsideTheAnnual() {
         QuoteConfig withTraining =
-                new QuoteConfig(6_000_000, 0, 4, "cloud", 3, "standard", false, true, false, "USD");
+                new QuoteConfig(
+                        6_000_000, 0, 4, 1.0, "cloud", 3, "standard", false, true, false, "USD");
         QuoteBreakdown q = pricing.price(withTraining);
         long baseAnnual = pricing.price(cfg(6_000_000, 4, "cloud", 3, "standard")).annualNetMinor();
 

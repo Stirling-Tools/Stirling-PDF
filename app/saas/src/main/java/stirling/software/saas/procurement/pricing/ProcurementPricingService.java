@@ -61,6 +61,11 @@ public class ProcurementPricingService {
                                         * (Math.log(runVol / (double) RUN_CURVE_KNEE) / LOG2))
                         : 0.0;
         double rate = Math.max(rates.floorRatePerRun(), rates.listRatePerRun() * (1.0 - volDisc));
+        // File-size multiplier (D93): larger, image-heavy PDFs cost more OCR/compute/storage. Folds
+        // into the per-run rate after the floor, so it flows through the meter, TCV and renewal.
+        // QuoteConfig has already snapped it to a known tier, so a tampered request can't sneak a
+        // cheaper factor in.
+        rate *= cfg.sizeMult();
         double termDisc = rates.termDiscount(cfg.termYears());
 
         // The meter is a whole-dollar figure (the quote reads in dollars), then minor units.

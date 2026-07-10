@@ -338,8 +338,10 @@ export interface ProcurementSnapshot {
 export interface QuoteConfigInput {
   volume: number;
   users: number;
-  /** Policy posture as runs per PDF: Essentials 2, Governed 4, Regulated 7. */
+  /** Policy posture (governance) as runs per PDF: Essentials 2, Governed 4, Regulated 7. */
   intensity: number;
+  /** PDF-size tier multiplier on the rate: Compact 1.0, Standard 1.4, Heavy 2.4. */
+  sizeMult: number;
   /** cloud | selfhost | airgap — set at the trial; drives the flat deployment fee + offline .lic. */
   deployment: string;
   termYears: number;

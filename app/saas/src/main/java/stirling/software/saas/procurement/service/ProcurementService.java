@@ -186,6 +186,7 @@ public class ProcurementService {
         quote.setVolume(cfg.volume());
         quote.setSeats(cfg.users() > 0 ? cfg.users() : null);
         quote.setIntensity(cfg.intensity());
+        quote.setSizeMult(cfg.sizeMult());
         quote.setDeployment(cfg.deployment());
         quote.setTermYears(cfg.termYears());
         quote.setServiceLevel(cfg.serviceLevel());
