@@ -8067,10 +8067,6 @@ title = "Saioa iraungi da"
 [portal.users]
 title = "Erabiltzaileak"
 
-[portal.users.roles]
-subtitle = "Rol guztiak plan guztietan daude — bakoitzak egin dezakeena finkoa da erakunde osoan."
-title = "Rolak"
-
 [portal.users.roles.admin]
 label = "Admin (erakundearen jabea)"
 summary = "Lan-eremuaren, ezarpenen eta kideen gaineko gobernantza osoa."

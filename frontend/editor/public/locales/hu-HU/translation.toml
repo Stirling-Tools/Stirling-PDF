@@ -8067,10 +8067,6 @@ title = "Munkamenet lejárt"
 [portal.users]
 title = "Felhasználók"
 
-[portal.users.roles]
-subtitle = "Minden szerepkör minden csomagban létezik — az, hogy melyik mit tehet, szervezetszerte rögzített."
-title = "Szerepkörök"
-
 [portal.users.roles.admin]
 label = "Admin (szervezettulajdonos)"
 summary = "Teljes irányítás a munkaterület, beállítások és tagok felett."

@@ -8067,10 +8067,6 @@ title = "Sesja wygasła"
 [portal.users]
 title = "Użytkownicy"
 
-[portal.users.roles]
-subtitle = "Każda rola istnieje w każdym planie — to, co każda z nich może robić, jest stałe w całej organizacji."
-title = "Role"
-
 [portal.users.roles.admin]
 label = "Admin (właściciel organizacji)"
 summary = "Pełne zarządzanie workspace, ustawieniami i członkami."

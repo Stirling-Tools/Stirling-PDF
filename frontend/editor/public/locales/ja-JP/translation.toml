@@ -8067,10 +8067,6 @@ title = "セッションの期限切れ"
 [portal.users]
 title = "ユーザー"
 
-[portal.users.roles]
-subtitle = "すべてのロールはすべてのプランに存在し、各ロールでできることは組織全体で固定されています。"
-title = "ロール"
-
 [portal.users.roles.admin]
 label = "管理者（組織オーナー）"
 summary = "ワークスペース、設定、メンバーを完全に管理できます。"

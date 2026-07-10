@@ -8067,10 +8067,6 @@ title = "Sessió caducada"
 [portal.users]
 title = "Usuaris"
 
-[portal.users.roles]
-subtitle = "Cada rol existeix en tots els plans — el que pot fer cadascun és fix a tota l'organització."
-title = "Rols"
-
 [portal.users.roles.admin]
 label = "Admin (propietari de l'org)"
 summary = "Governança completa sobre l'espai de treball, la configuració i els membres."

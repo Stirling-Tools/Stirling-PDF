@@ -8067,10 +8067,6 @@ title = "Session expirée"
 [portal.users]
 title = "Utilisateurs"
 
-[portal.users.roles]
-subtitle = "Chaque rôle existe sur chaque plan — ce que chacun peut faire est fixe dans toute l’organisation."
-title = "Rôles"
-
 [portal.users.roles.admin]
 label = "Admin (propriétaire de l’organisation)"
 summary = "Gouvernance complète de l’espace de travail, des paramètres et des membres."

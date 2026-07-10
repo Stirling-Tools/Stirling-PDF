@@ -8067,10 +8067,6 @@ title = "Sessiyanın müddəti bitib"
 [portal.users]
 title = "İstifadəçilər"
 
-[portal.users.roles]
-subtitle = "Hər rol hər planda mövcuddur — hər birinin nə edə biləcəyi təşkilat üzrə sabitdir."
-title = "Rollar"
-
 [portal.users.roles.admin]
 label = "Admin (Təşkilat sahibi)"
 summary = "İş sahəsi, parametrlər və üzvlər üzərində tam idarəetmə."

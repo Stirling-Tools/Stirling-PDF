@@ -8067,10 +8067,6 @@ title = "Sesi kedaluwarsa"
 [portal.users]
 title = "Pengguna"
 
-[portal.users.roles]
-subtitle = "Setiap peran ada di setiap paket — apa yang dapat dilakukan masing-masing tetap di seluruh org."
-title = "Peran"
-
 [portal.users.roles.admin]
 label = "Admin (Pemilik org)"
 summary = "Tata kelola penuh atas workspace, pengaturan, dan anggota."

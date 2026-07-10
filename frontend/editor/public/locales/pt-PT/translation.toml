@@ -8067,10 +8067,6 @@ title = "Sessão expirada"
 [portal.users]
 title = "Utilizadores"
 
-[portal.users.roles]
-subtitle = "Todas as funções existem em todos os planos — o que cada uma pode fazer é fixo em toda a organização."
-title = "Funções"
-
 [portal.users.roles.admin]
 label = "Admin (Proprietário da organização)"
 summary = "Governação total sobre o workspace, definições e membros."

@@ -8067,10 +8067,6 @@ title = "Seja je potekla"
 [portal.users]
 title = "Uporabniki"
 
-[portal.users.roles]
-subtitle = "Vsaka vloga obstaja v vsakem paketu — kaj lahko vsaka naredi, je fiksno v celotni organizaciji."
-title = "Vloge"
-
 [portal.users.roles.admin]
 label = "Admin (lastnik organizacije)"
 summary = "Popolno upravljanje delovnega prostora, nastavitev in članov."

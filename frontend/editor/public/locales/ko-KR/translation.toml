@@ -8067,10 +8067,6 @@ title = "세션 만료됨"
 [portal.users]
 title = "사용자"
 
-[portal.users.roles]
-subtitle = "모든 역할은 모든 플랜에 존재하며, 각 역할이 할 수 있는 일은 조직 전체에서 고정되어 있습니다."
-title = "역할"
-
 [portal.users.roles.admin]
 label = "관리자(조직 소유자)"
 summary = "워크스페이스, 설정 및 구성원에 대한 전체 거버넌스."

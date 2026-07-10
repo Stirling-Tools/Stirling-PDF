@@ -8067,10 +8067,6 @@ title = "Session കാലഹരണപ്പെട്ടു"
 [portal.users]
 title = "ഉപയോക്താക്കൾ"
 
-[portal.users.roles]
-subtitle = "എല്ലാ plan-ലും ഓരോ role ഉണ്ട് — ഓരോന്നിന് ചെയ്യാനാവുന്നത് org-ലാകെ നിശ്ചിതമാണ്."
-title = "Roles"
-
 [portal.users.roles.admin]
 label = "Admin (Org owner)"
 summary = "Workspace, settings, members എന്നിവയിൽ പൂർണ്ണ governance."

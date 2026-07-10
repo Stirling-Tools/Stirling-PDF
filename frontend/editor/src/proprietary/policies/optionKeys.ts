@@ -39,6 +39,7 @@ const OPTION_KEY_BY_LABEL: Record<string, string> = {
   SharePoint: "sharePoint",
   Webhook: "webhook",
   // Compliance frameworks
+  CCPA: "ccpa",
   FedRAMP: "fedramp",
   GDPR: "gdpr",
   HIPAA: "hipaa",

@@ -8067,10 +8067,6 @@ title = "Sessionen har löpt ut"
 [portal.users]
 title = "Användare"
 
-[portal.users.roles]
-subtitle = "Varje roll finns på varje plan — vad var och en kan göra är fast i hela organisationen."
-title = "Roller"
-
 [portal.users.roles.admin]
 label = "Admin (organisationsägare)"
 summary = "Full styrning över arbetsytan, inställningar och medlemmar."

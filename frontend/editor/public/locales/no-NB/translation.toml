@@ -8067,10 +8067,6 @@ title = "Økten er utløpt"
 [portal.users]
 title = "Brukere"
 
-[portal.users.roles]
-subtitle = "Alle roller finnes på alle abonnementer — hva hver enkelt kan gjøre, er fast på tvers av organisasjonen."
-title = "Roller"
-
 [portal.users.roles.admin]
 label = "Administrator (org-eier)"
 summary = "Full styring over arbeidsområdet, innstillinger og medlemmer."

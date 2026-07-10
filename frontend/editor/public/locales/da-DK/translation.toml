@@ -8067,10 +8067,6 @@ title = "Session udløbet"
 [portal.users]
 title = "Brugere"
 
-[portal.users.roles]
-subtitle = "Alle roller findes på alle abonnementer — hvad hver enkelt kan gøre, er fast på tværs af organisationen."
-title = "Roller"
-
 [portal.users.roles.admin]
 label = "Admin (organisationsejer)"
 summary = "Fuld styring over workspace, indstillinger og medlemmer."

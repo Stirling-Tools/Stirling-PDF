@@ -8067,10 +8067,6 @@ title = "Seisiún imithe in éag"
 [portal.users]
 title = "Úsáideoirí"
 
-[portal.users.roles]
-subtitle = "Tá gach ról ann ar gach plean — tá an méid is féidir le gach ceann a dhéanamh socraithe ar fud na heagraíochta."
-title = "Róil"
-
 [portal.users.roles.admin]
 label = "Riarachán (Úinéir eagraíochta)"
 summary = "Rialachas iomlán ar an spás oibre, socruithe agus baill."

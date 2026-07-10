@@ -6043,6 +6043,7 @@ sharePoint = "SharePoint"
 webhook = "Webhook"
 
 [policies.fieldOption.frameworks]
+ccpa = "CCPA"
 fedramp = "FedRAMP"
 gdpr = "GDPR"
 hipaa = "HIPAA"
@@ -8182,10 +8183,6 @@ title = "Session expired"
 
 [portal.users]
 title = "Users"
-
-[portal.users.roles]
-subtitle = "Every role exists on every plan — what each one can do is fixed across the org."
-title = "Roles"
 
 [portal.users.roles.admin]
 label = "Admin (Org owner)"

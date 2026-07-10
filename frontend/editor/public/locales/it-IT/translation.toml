@@ -8067,10 +8067,6 @@ title = "Sessione scaduta"
 [portal.users]
 title = "Utenti"
 
-[portal.users.roles]
-subtitle = "Ogni ruolo esiste su ogni piano — ciò che ciascuno può fare è fisso in tutta l'organizzazione."
-title = "Ruoli"
-
 [portal.users.roles.admin]
 label = "Admin (proprietario org)"
 summary = "Governance completa su workspace, impostazioni e membri."

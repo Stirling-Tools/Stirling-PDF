@@ -8067,10 +8067,6 @@ title = "เซสชันหมดอายุ"
 [portal.users]
 title = "ผู้ใช้"
 
-[portal.users.roles]
-subtitle = "ทุกบทบาทมีอยู่ในทุกแผน — สิ่งที่แต่ละบทบาททำได้ถูกกำหนดตายตัวทั่วทั้งองค์กร"
-title = "บทบาท"
-
 [portal.users.roles.admin]
 label = "Admin (เจ้าขององค์กร)"
 summary = "การกำกับดูแลเต็มรูปแบบเหนือ workspace, การตั้งค่า และสมาชิก"

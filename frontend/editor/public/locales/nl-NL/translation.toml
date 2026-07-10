@@ -8067,10 +8067,6 @@ title = "Sessie verlopen"
 [portal.users]
 title = "Gebruikers"
 
-[portal.users.roles]
-subtitle = "Elke rol bestaat op elk abonnement — wat elke rol kan doen is vastgelegd voor de hele organisatie."
-title = "Rollen"
-
 [portal.users.roles.admin]
 label = "Admin (organisatie-eigenaar)"
 summary = "Volledig beheer over de workspace, instellingen en leden."

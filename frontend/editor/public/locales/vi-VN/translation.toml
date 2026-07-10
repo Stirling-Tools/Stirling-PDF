@@ -8067,10 +8067,6 @@ title = "Phiên đã hết hạn"
 [portal.users]
 title = "Người dùng"
 
-[portal.users.roles]
-subtitle = "Mọi vai trò tồn tại trên mọi gói — những gì mỗi vai trò có thể làm là cố định trên toàn tổ chức."
-title = "Vai trò"
-
 [portal.users.roles.admin]
 label = "Quản trị viên (Chủ sở hữu tổ chức)"
 summary = "Toàn quyền quản trị workspace, cài đặt và thành viên."

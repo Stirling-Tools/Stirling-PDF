@@ -8067,10 +8067,6 @@ title = "Relácia vypršala"
 [portal.users]
 title = "Používatelia"
 
-[portal.users.roles]
-subtitle = "Každá rola existuje v každom pláne — to, čo môže každá robiť, je pevne dané naprieč organizáciou."
-title = "Roly"
-
 [portal.users.roles.admin]
 label = "Admin (vlastník organizácie)"
 summary = "Úplná správa workspace, nastavení a členov."

@@ -8067,10 +8067,6 @@ title = "Sitzung abgelaufen"
 [portal.users]
 title = "Benutzer"
 
-[portal.users.roles]
-subtitle = "Jede Rolle existiert in jedem Plan — was jede Rolle tun kann, ist in der gesamten Organisation festgelegt."
-title = "Rollen"
-
 [portal.users.roles.admin]
 label = "Admin (Org-Inhaber)"
 summary = "Vollständige Steuerung über Workspace, Einstellungen und Mitglieder."

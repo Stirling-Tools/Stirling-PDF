@@ -8067,10 +8067,6 @@ title = "Oturum süresi doldu"
 [portal.users]
 title = "Kullanıcılar"
 
-[portal.users.roles]
-subtitle = "Her rol her planda bulunur — her birinin yapabilecekleri kuruluş genelinde sabittir."
-title = "Roller"
-
 [portal.users.roles.admin]
 label = "Yönetici (Kuruluş sahibi)"
 summary = "Çalışma alanı, ayarlar ve üyeler üzerinde tam yönetişim."

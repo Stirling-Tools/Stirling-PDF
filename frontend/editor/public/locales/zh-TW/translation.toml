@@ -8067,10 +8067,6 @@ title = "工作階段已過期"
 [portal.users]
 title = "使用者"
 
-[portal.users.roles]
-subtitle = "每個方案都有所有角色 — 各角色可執行的動作在整個組織中固定一致。"
-title = "角色"
-
 [portal.users.roles.admin]
 label = "管理員（組織擁有者）"
 summary = "對工作區、設定和成員擁有完整治理權限。"

@@ -8067,10 +8067,6 @@ title = "Sesija je istekla"
 [portal.users]
 title = "Korisnici"
 
-[portal.users.roles]
-subtitle = "Svaka uloga postoji na svakom planu — ono što svaka može da radi je fiksno na nivou organizacije."
-title = "Uloge"
-
 [portal.users.roles.admin]
 label = "Admin (vlasnik organizacije)"
 summary = "Puno upravljanje radnim prostorom, podešavanjima i članovima."

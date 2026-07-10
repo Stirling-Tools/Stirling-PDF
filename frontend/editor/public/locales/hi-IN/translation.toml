@@ -8067,10 +8067,6 @@ title = "Session समाप्त"
 [portal.users]
 title = "उपयोगकर्ता"
 
-[portal.users.roles]
-subtitle = "हर role हर plan पर मौजूद है — प्रत्येक क्या कर सकता है, यह org में fixed है।"
-title = "Roles"
-
 [portal.users.roles.admin]
 label = "Admin (Org owner)"
 summary = "Workspace, settings और members पर पूर्ण governance।"

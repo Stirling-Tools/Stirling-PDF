@@ -8067,10 +8067,6 @@ title = "会话已过期"
 [portal.users]
 title = "用户"
 
-[portal.users.roles]
-subtitle = "每个方案都有每个角色——每个角色可执行的操作在整个组织中固定。"
-title = "角色"
-
 [portal.users.roles.admin]
 label = "管理员（组织所有者）"
 summary = "对工作区、设置和成员拥有完整治理权限。"

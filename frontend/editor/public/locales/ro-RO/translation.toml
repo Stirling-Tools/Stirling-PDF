@@ -8067,10 +8067,6 @@ title = "Sesiune expirată"
 [portal.users]
 title = "Utilizatori"
 
-[portal.users.roles]
-subtitle = "Fiecare rol există în fiecare plan — ce poate face fiecare este fix în întreaga org."
-title = "Roluri"
-
 [portal.users.roles.admin]
 label = "Admin (proprietar org)"
 summary = "Guvernanță completă asupra spațiului de lucru, setărilor și membrilor."
