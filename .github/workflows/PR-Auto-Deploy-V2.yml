@@ -116,6 +116,9 @@ jobs:
     env:
       USE_DEPOT: ${{ needs.pick.outputs.is_fork != 'true' }}
       DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
+      # Single source of truth for whether this preview embeds the admin portal:
+      # drives the image build-arg and the deployment comment.
+      BUILD_PORTAL: "true"
 
     steps:
       - name: Harden Runner
@@ -246,7 +249,9 @@ jobs:
           file: ./docker/embedded/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-${{ steps.commit-hash.outputs.app_short }}
-          build-args: VERSION_TAG=v2-alpha
+          build-args: |
+            VERSION_TAG=v2-alpha
+            BUILD_PORTAL=${{ env.BUILD_PORTAL }}
           platforms: linux/amd64
 
       - name: Build and push V2 image (Docker fork fallback)
@@ -259,7 +264,9 @@ jobs:
           cache-from: type=gha,scope=stirling-pdf-latest
           cache-to: type=gha,mode=max,scope=stirling-pdf-latest
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/test:v2-${{ steps.commit-hash.outputs.app_short }}
-          build-args: VERSION_TAG=v2-alpha
+          build-args: |
+            VERSION_TAG=v2-alpha
+            BUILD_PORTAL=${{ env.BUILD_PORTAL }}
           platforms: linux/amd64
 
       - name: Set up SSH
@@ -290,6 +297,8 @@ jobs:
                 - /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/storage:/storage:rw
               environment:
                 DISABLE_ADDITIONAL_FEATURES: "false"
+                POLICIES_ENABLED: "true"
+                STIRLING_BILLING_ACCOUNT_LINK_ENABLED: "true"
                 SECURITY_ENABLELOGIN: "true"
                 SECURITY_INITIALLOGIN_USERNAME: "${{ secrets.TEST_LOGIN_USERNAME }}"
                 SECURITY_INITIALLOGIN_PASSWORD: "${{ secrets.TEST_LOGIN_PASSWORD }}"
@@ -333,9 +342,70 @@ jobs:
           # Set port for output
           echo "v2_port=${V2_PORT}" >> $GITHUB_OUTPUT
 
+      # ---- Storybook preview (only when this PR touches stories/.storybook) ----
+      # Runs inside the same approved-contributor-gated deploy job, so it deploys
+      # under the exact same access rules as the app preview.
+      - name: Detect Storybook changes
+        id: sb-changes
+        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+        with:
+          list-files: json
+          filters: |
+            storybook:
+              - 'frontend/**/*.stories.@(ts|tsx|mdx)'
+              - 'frontend/**/*.mdx'
+              - 'frontend/.storybook/**'
+
+      - name: Set up Node.js for Storybook
+        if: steps.sb-changes.outputs.storybook == 'true'
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Task for Storybook
+        if: steps.sb-changes.outputs.storybook == 'true'
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
+
+      - name: Build and deploy Storybook
+        id: storybook
+        if: steps.sb-changes.outputs.storybook == 'true'
+        env:
+          VPS_HOST: ${{ secrets.NEW_VPS_HOST }}
+          VPS_USER: ${{ secrets.NEW_VPS_USERNAME }}
+        run: |
+          set -euo pipefail
+          # `prepare` generates the icon set stories import (not committed).
+          task frontend:prepare
+          task frontend:storybook:build
+          PR=${{ needs.check-pr.outputs.pr_number }}
+          # Served at the ROOT of its own port so Storybook's global MSW worker
+          # (/mockServiceWorker.js) resolves. Port = PR + 20000 (bijective, offset
+          # from the app preview's bare-PR-number port).
+          SB_PORT=$((PR + 20000))
+          DIR=/stirling/SB-PR-$PR
+          tar czf storybook.tgz -C frontend/storybook-static .
+          scp -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            storybook.tgz "$VPS_USER@$VPS_HOST:/tmp/storybook-$PR.tgz"
+          ssh -i ../private.key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T \
+            "$VPS_USER@$VPS_HOST" << ENDSSH
+            set -e
+            rm -rf "$DIR" && mkdir -p "$DIR"
+            tar xzf /tmp/storybook-$PR.tgz -C "$DIR"
+            rm -f /tmp/storybook-$PR.tgz
+            docker rm -f storybook-pr-$PR 2>/dev/null || true
+            docker run -d --name storybook-pr-$PR --restart unless-stopped \
+              -p $SB_PORT:80 -v "$DIR":/usr/share/nginx/html:ro nginx:alpine
+          ENDSSH
+          echo "url=http://$VPS_HOST:$SB_PORT/" >> "$GITHUB_OUTPUT"
+
       - name: Post V2 deployment URL to PR
         if: success()
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          SB_URL: ${{ steps.storybook.outputs.url }}
+          SB_FILES: ${{ steps.sb-changes.outputs.storybook_files }}
         with:
           github-token: ${{ steps.setup-bot.outputs.token }}
           script: |
@@ -359,12 +429,40 @@ jobs:
             }
 
             const deploymentUrl = `http://${{ secrets.NEW_VPS_HOST }}:${v2Port}`;
-            const httpsUrl = `https://${v2Port}.ssl.stirlingpdf.cloud`;
+
+            // Only mention the portal when this image actually embeds it.
+            // Use the direct IP URL - the SSL hostname isn't supported yet.
+            const withPortal = "${{ env.BUILD_PORTAL }}" === "true";
+            const portalNote = withPortal
+              ? `🧩 **Admin portal** included - try it at [${deploymentUrl}/portal](${deploymentUrl}/portal).\n\n`
+              : ``;
+
+            // Storybook preview: only present when this PR changed stories/config.
+            const sbUrl = process.env.SB_URL;
+            let storybookNote = "";
+            if (sbUrl) {
+              const files = JSON.parse(process.env.SB_FILES || "[]");
+              const stories = files.filter((f) => /\.stories\.(ts|tsx|mdx)$/.test(f));
+              const config = files.filter((f) => f.startsWith("frontend/.storybook/"));
+              const shorten = (f) =>
+                f.replace(/^frontend\/editor\/src\//, "").replace(/^frontend\//, "");
+              const storyList = stories.map((f) => `- \`${shorten(f)}\``).join("\n");
+              const configList = config.map((f) => `- \`${shorten(f)}\``).join("\n");
+              const summary =
+                `${stories.length} stor${stories.length === 1 ? "y" : "ies"} changed` +
+                (config.length ? ` (+${config.length} config file${config.length === 1 ? "" : "s"})` : "");
+              storybookNote =
+                `📚 **Storybook:** [${sbUrl}](${sbUrl})\n\n` +
+                `<details>\n<summary>${summary}</summary>\n\n` +
+                (storyList ? `**Stories**\n${storyList}\n\n` : "") +
+                (configList ? `**Config**\n${configList}\n` : "") +
+                `</details>\n\n`;
+            }
 
             const commentBody = `## 🚀 V2 Auto-Deployment Complete!\n\n` +
-                              `Your V2 PR with embedded architecture has been deployed!\n\n` +
                               `🔗 **Direct Test URL (non-SSL)** [${deploymentUrl}](${deploymentUrl})\n\n` +
-                              `🔐 **Secure HTTPS URL**: [${httpsUrl}](${httpsUrl})\n\n` +
+                              portalNote +
+                              storybookNote +
                               `_This deployment will be automatically cleaned up when the PR is closed._\n\n` +
                               `🔄 **Auto-deployed** for approved V2 contributors.`;
 
@@ -460,7 +558,11 @@ jobs:
             else
               echo "V2 PR directory not found, nothing to clean up"
             fi
-            
+
+            # Remove this PR's Storybook preview (container + files), if any.
+            docker rm -f storybook-pr-${{ github.event.pull_request.number }} 2>/dev/null || true
+            rm -rf /stirling/SB-PR-${{ github.event.pull_request.number }}
+
             # Clean up old unused images (older than 2 weeks) but keep recent ones for reuse
             docker image prune -af --filter "until=336h" --filter "label!=keep=true" || true
 

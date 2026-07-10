@@ -2,17 +2,16 @@
 import { useTranslation } from "react-i18next";
 import {
   Stack,
-  Button,
   Text,
   Alert,
-  SegmentedControl,
   Divider,
-  ActionIcon,
   Tooltip,
   Group,
   Box,
   Checkbox,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
 import { useSignature } from "@app/contexts/SignatureContext";
 import { useViewer } from "@app/contexts/ViewerContext";
@@ -445,9 +444,9 @@ const SignSettings = ({
 
     const button = (
       <Button
-        size="xs"
-        variant="outline"
-        color={isSaved ? "green" : undefined}
+        size="sm"
+        variant="secondary"
+        accent={isSaved ? "success" : undefined}
         onClick={() => onClick(scope)}
         disabled={
           !isReady || disabled || isSavedSignatureLimitReached || !hasChanges
@@ -1158,49 +1157,33 @@ const SignSettings = ({
     onActivateSignaturePlacement || onDeactivateSignature ? (
       isPlacementMode ? (
         <Tooltip label={translate("mode.pause", "Pause placement")}>
-          <ActionIcon
-            variant="default"
-            size="lg"
+          <Button
+            variant="secondary"
             aria-label={translate("mode.pause", "Pause placement")}
             onClick={handlePausePlacement}
             disabled={disabled || !onDeactivateSignature}
-            style={{
-              width: "auto",
-              paddingInline: "0.75rem",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.4rem",
-            }}
+            leftSection={
+              <LocalIcon icon="pause-circle-rounded" width={20} height={20} />
+            }
           >
-            <LocalIcon icon="pause-circle-rounded" width={20} height={20} />
-            <Text component="span" size="sm" fw={500}>
-              {translate("mode.pause", "Pause placement")}
-            </Text>
-          </ActionIcon>
+            {translate("mode.pause", "Pause placement")}
+          </Button>
         </Tooltip>
       ) : (
         <Tooltip label={translate("mode.resume", "Resume placement")}>
-          <ActionIcon
-            variant="default"
-            size="lg"
+          <Button
+            variant="secondary"
             aria-label={translate("mode.resume", "Resume placement")}
             onClick={handleResumePlacement}
             disabled={
               disabled || !isCurrentTypeReady || !onActivateSignaturePlacement
             }
-            style={{
-              width: "auto",
-              paddingInline: "0.75rem",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.4rem",
-            }}
+            leftSection={
+              <LocalIcon icon="play-arrow-rounded" width={20} height={20} />
+            }
           >
-            <LocalIcon icon="play-arrow-rounded" width={20} height={20} />
-            <Text component="span" size="sm" fw={500}>
-              {translate("mode.resume", "Resume placement")}
-            </Text>
-          </ActionIcon>
+            {translate("mode.resume", "Resume placement")}
+          </Button>
         </Tooltip>
       )
     ) : null;
@@ -1221,7 +1204,7 @@ const SignSettings = ({
             onChange={(value) =>
               handleSignatureSourceChange(value as SignatureSource)
             }
-            data={sourceOptions}
+            options={sourceOptions}
           />
         )}
         {renderSignatureBuilder()}
@@ -1278,7 +1261,7 @@ const SignSettings = ({
       />
 
       {onSave && (
-        <Button onClick={onSave} color="blue" variant="filled" fullWidth>
+        <Button onClick={onSave} fullWidth>
           {translate("applySignatures", "Apply Signatures")}
         </Button>
       )}

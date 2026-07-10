@@ -18,13 +18,13 @@ export function AuthenticationSection() {
       />
       <div className="portal-docs__keytable">
         <div className="portal-docs__keyrow">
-          <Chip tone="green" size="sm" showDot>
+          <Chip accent="success" size="sm" showDot>
             sk_live_
           </Chip>
           <span>{t("portal.docs.authentication.liveKey")}</span>
         </div>
         <div className="portal-docs__keyrow">
-          <Chip tone="amber" size="sm" showDot>
+          <Chip accent="warning" size="sm" showDot>
             sk_test_
           </Chip>
           <span>{t("portal.docs.authentication.testKey")}</span>

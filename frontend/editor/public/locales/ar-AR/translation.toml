@@ -7,6 +7,7 @@ black = "أسود"
 blue = "أزرق"
 cancel = "إلغاء"
 chooseFile = "اختر ملفًا"
+clear = "مسح"
 close = "إغلاق"
 comingSoon = "قريبًا"
 confirm = "تأكيد"
@@ -87,6 +88,7 @@ processingCompleteMultiple = "تم تجهيز {{count}} ملفًا."
 property = "الخاصية"
 quickPosition = "موضع سريع"
 red = "أحمر"
+remove = "إزالة"
 reset = "إعداة ضبط"
 review = "مراجعة"
 save = "حفظ"
@@ -180,6 +182,7 @@ addMoreFiles = "أضف مزيدًا من الملفات..."
 attachments = "اختر المرفقات"
 info = "اختر ملفات لإرفاقها بملف PDF الخاص بك. سيتم تضمين هذه الملفات وإتاحتها عبر لوحة مرفقات PDF."
 placeholder = "اختر ملفات..."
+removeFile = "إزالة الملف"
 selectedFiles = "الملفات المحددة"
 submit = "إضافة المرفقات"
 
@@ -1628,6 +1631,9 @@ title = "هل تريد تحسين Stirling PDF؟"
 tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
 
 [annotation]
+alignCenter = "محاذاة للوسط"
+alignLeft = "محاذاة لليسار"
+alignRight = "محاذاة لليمين"
 annotationStyle = "نمط التعليق التوضيحي"
 backgroundColor = "لون الخلفية"
 borderOff = "الحد: معطّل"
@@ -2531,6 +2537,7 @@ title = "قاعدة عامة"
 
 [certSign.source]
 device = "هذا الجهاز"
+noOtherSources = "لا تتوفر مصادر شهادات أخرى."
 server = "الخادم"
 stepTitle = "مصدر الشهادة"
 upload = "رفع"
@@ -2805,6 +2812,7 @@ back = "رجوع"
 cancel = "إلغاء"
 close = "إغلاق"
 collapse = "طيّ"
+confirm = "تأكيد"
 continue = "متابعة"
 copied = "تم النسخ!"
 copy = "نسخ"
@@ -3595,7 +3603,9 @@ makeCopy = "إنشاء نسخة"
 mobileShort = "الهاتف"
 mobileUpload = "رفع من الهاتف المحمول"
 mobileUploadNotAvailable = "الرفع من الهاتف غير مُمكّن"
+moreOptions = "المزيد من الخيارات"
 myFiles = "ملفاتي"
+nextFile = "الملف التالي"
 noFiles = "لا توجد ملفات متاحة"
 noFilesFound = "لم يتم العثور على ملفات تطابق بحثك"
 noRecentFiles = "لم يتم العثور على ملفات حديثة"
@@ -3605,6 +3615,7 @@ openInFileEditor = "فتح في محرر الملفات"
 openInPageEditor = "فتح في محرّر الصفحات"
 owner = "المالك"
 ownerUnknown = "غير معروف"
+previousFile = "الملف السابق"
 recent = "الأخيرة"
 removeBoth = "إزالة من كليهما"
 removeFilePrompt = "هذا الملف محفوظ على هذا الجهاز وعلى خادمك. من أين ترغب في إزالته؟"
@@ -3680,7 +3691,9 @@ workbench = "مساحة العمل"
 
 [fileSidebar]
 addFiles = "إضافة ملفات"
+addingFiles = "جارٍ إضافة الملفات…"
 collapse = "طيّ الشريط الجانبي"
+customizeGroups = "تخصيص المجموعات"
 dropHint = "افتح ملفات للبدء"
 dropToAdd = "Drop files to add"
 expand = "توسيع الشريط الجانبي"
@@ -3693,8 +3706,11 @@ noFiles = "لا توجد ملفات بعد"
 openFileManager = "فتح مدير الملفات"
 openFromComputer = "فتح من الكمبيوتر"
 openSettings = "فتح الإعدادات"
+other = "أخرى"
+recent = "الأحدث"
 search = "بحث"
 searchPlaceholder = "ابحث في الملفات..."
+viewAll = "عرض كل ملفات {{count}}"
 
 [fileSidebar.fileItem]
 closeViewer = "إغلاق العارض"
@@ -3706,6 +3722,23 @@ updateOnServer = "Update on server"
 uploadToServer = "Upload to server"
 versionHistory = "Version history"
 
+[fileSidebar.groupsModal]
+add = "إضافة"
+addLabel = "إضافة تسمية…"
+categoryIconAria = "اختر أيقونة لـ {{name}}"
+createCategory = "إنشاء فئة"
+delete = "حذف الفئة"
+done = "تم"
+hide = "إخفاء الفئة"
+newCategory = "اسم فئة جديد…"
+removeLabel = "إزالة {{name}}"
+rename = "إعادة تسمية"
+reset = "إعادة التعيين إلى الافتراضيات"
+search = "البحث في التسميات…"
+show = "إظهار الفئة"
+subtitle = "جمّع ملفاتك ضمن فئات رئيسية. أضف تسميات موجودة أو جديدة إلى فئة، أو أعد تسميتها، أو أنشئ فئتك الخاصة. تظهر الملفات غير الموجودة ضمن أي من فئاتك تحت “أخرى”."
+title = "فئات الشريط الجانبي"
+
 [filesPage]
 addToWorkspace = "إضافة إلى مساحة العمل"
 addToWorkspaceCount = "إضافة {{count}} إلى مساحة العمل"
@@ -3715,6 +3748,7 @@ backToFolder = "الرجوع إلى {{folder}}"
 backToMyFiles = "الرجوع إلى ملفاتي"
 breadcrumbs = "مسار المجلد"
 cancel = "إلغاء"
+classification = "التصنيف"
 clearSearch = "مسح البحث"
 clearSelection = "مسح التحديد"
 closeDetails = "إغلاق التفاصيل"
@@ -3874,10 +3908,10 @@ uploadFilesFailedDetail = "تعذّر رفع الملفات: {{message}}"
 added = "أُضيف"
 count = "ملفات"
 folder = "مجلد"
+labels = "التسميات"
 modified = "معدَّل"
 name = "الاسم"
 size = "الحجم"
-toolHistory = "سجل الأداة"
 toolHistoryAtVersion = "سلسلة الأدوات التراكمية"
 totalSize = "الحجم الإجمالي"
 type = "النوع"
@@ -4614,10 +4648,10 @@ welcomeTitle = "لقد تمت دعوتك!"
 [landing]
 addFiles = "إضافة ملفات"
 heroSubtitle = "اسحب وافلت أو أضف ملف PDF موجودا للبدء."
-heroTitle = "Stirling PDF"
 mobileUpload = "رفع من الهاتف المحمول"
 openFromComputer = "فتح من الكمبيوتر"
 uploadFromComputer = "الرفع من الكمبيوتر"
+workbenchEmptyStateHero = "أفلت ملف PDF في أي مكان"
 
 [language]
 direction = "rtl"
@@ -4930,6 +4964,7 @@ title = "الناتج"
 [onboarding]
 activeFiles = "تعرض واجهة <strong>الملفات النشطة</strong> جميع ملفات PDF التي حمّلتها إلى الأداة، وتتيح لك اختيار ما تريد معالجته."
 allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
+close = "إغلاق"
 cropSettings = "بعد أن اخترنا الملف الذي نريد قصّه، يمكننا تهيئة أداة القص لاختيار المنطقة التي سنقصّ إليها ملف PDF."
 fileCheckbox = "يؤدي النقر على أحد الملفات إلى اختياره للمعالجة. يمكنك تحديد عدة ملفات لتنفيذ العمليات الدُفعية."
 fileReplacement = "سيحل الملف المعدّل محل الملف الأصلي في منضدة العمل تلقائيًا، مما يتيح لك تشغيله بسهولة عبر مزيد من الأدوات."
@@ -4955,6 +4990,7 @@ skipTheTour = "تخطي الجولة"
 
 [onboarding.desktopInstall]
 body = "يعمل Stirling بشكل أفضل كتطبيق سطح مكتب. يمكنك استخدامه دون اتصال، والوصول إلى المستندات بسرعة أكبر، وإجراء التعديلات محلياً على جهازك."
+selectOs = "حدد نظام التشغيل"
 title = "تنزيل"
 titleWithOs = "تنزيل لـ {{osLabel}}"
 
@@ -5566,7 +5602,9 @@ viewLabel = "محرر PDF"
 
 [pdfTextEditor.actions]
 applyChanges = "تطبيق التغييرات"
+clearText = "مسح النص"
 downloadCopy = "تنزيل نسخة"
+moreOptions = "المزيد من الخيارات"
 reset = "إعادة تعيين التغييرات"
 
 [pdfTextEditor.badges]
@@ -5942,6 +5980,16 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.docType]
+Contracts = "العقود"
+"Financial reports" = "التقارير المالية"
+"HR records" = "سجلات الموارد البشرية"
+Insurance = "التأمين"
+Invoices = "الفواتير"
+"Legal filings" = "الإيداعات القانونية"
+"Medical / PHI" = "طبي / PHI"
+"Tax documents" = "المستندات الضريبية"
+
 [policies.enforcement]
 applying = "جارٍ تطبيق {{names}}"
 applyingProgress = "جارٍ تطبيق {{names}} ({{done}} من {{total}})"
@@ -5963,8 +6011,94 @@ export = "فرض قبل التصدير"
 input = "فرض عند الاستيراد"
 print = "فرض قبل الطباعة"
 
+[policies.field]
+accessLog = "سجل الوصول"
+archiveAfter = "الأرشفة بعد"
+auditTrail = "مسار التدقيق"
+belowThreshold = "أقل من الحد"
+destination = "الوجهة"
+frameworks = "الأطر"
+immutableHold = "احتجاز غير قابل للتغيير"
+keepFor = "الاحتفاظ لمدة"
+minConfidence = "الحد الأدنى للثقة"
+notify = "إشعار عند التوجيه"
+onViolation = "عند عدم الامتثال"
+webhookUrl = "Webhook URL"
+
+[policies.fieldOption.archiveAfter]
+"1 year" = "سنة واحدة"
+"30 days" = "30 يومًا"
+"90 days" = "90 يومًا"
+Never = "أبدًا"
+
+[policies.fieldOption.belowThreshold]
+"Flag for review" = "وضع علامة للمراجعة"
+Hold = "احتجاز"
+"Route to bucket" = "توجيه إلى bucket"
+
+[policies.fieldOption.destination]
+Documents = "المستندات"
+"S3 bucket" = "S3 bucket"
+SharePoint = "SharePoint"
+Webhook = "Webhook"
+
+[policies.fieldOption.frameworks]
+FedRAMP = "FedRAMP"
+GDPR = "GDPR"
+HIPAA = "HIPAA"
+"ISO 27001" = "ISO 27001"
+"PCI DSS" = "PCI DSS"
+"SOC 2" = "SOC 2"
+
+[policies.fieldOption.keepFor]
+"1 year" = "سنة واحدة"
+"3 years" = "3 سنوات"
+"30 days" = "30 يومًا"
+"7 years" = "7 سنوات"
+Indefinite = "إلى أجل غير مسمى"
+
+[policies.fieldOption.minConfidence]
+"60%" = "60%"
+"70%" = "70%"
+"80%" = "80%"
+"90%" = "90%"
+"95%" = "95%"
+
+[policies.fieldOption.onViolation]
+"Auto-redact PHI" = "تنقيح PHI تلقائيًا"
+"Block export" = "حظر التصدير"
+"Flag for review" = "وضع علامة للمراجعة"
+"Quarantine document" = "عزل المستند"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
+
+[policies.labels]
+add = "إضافة"
+addPlaceholder = "إضافة تسمية…"
+customNote = "مخصص لفريقك."
+defaultNote = "يتم استخدام الإعداد الافتراضي المدمج، والمشترك مع فريقك."
+duplicate = "\"{{name}}\" موجود بالفعل."
+edit = "تعديل التسميات"
+empty = "لا توجد تسميات بعد."
+export = "تصدير JSON"
+iconAria = "اختر أيقونة لـ {{name}}"
+import = "استيراد JSON"
+importError = "تعذر استيراد ذلك الملف."
+managedNote = "تتم إدارة تسميات الفريق بواسطة قائد فريقك."
+modalSubtitle = "مشتركة مع فريقك بالكامل. يختار المصنّف التسميات المناسبة لكل مستند."
+modalTitle = "تسميات التصنيف"
+pickIcon = "استخدام أيقونة {{label}}"
+removeAria = "إزالة {{name}}"
+resetToDefault = "إعادة التعيين إلى الافتراضي"
+saveForTeam = "حفظ للفريق"
+saving = "جارٍ الحفظ…"
+sectionLabel = "تسميات التصنيف"
+startFromScratch = "البدء من الصفر"
+teamCount = "تسميات الفريق"
+tooLong = "يمكن أن تتكون التسميات من {{max}} حرفًا كحد أقصى."
+ungrouped = "غير مجمعة"
+view = "عرض التسميات"
 
 [policies.pii]
 account = "أرقام الحسابات (موسومة)"
@@ -5977,17 +6111,30 @@ placeholder = "Select PII types"
 routing = "أرقام التوجيه الأمريكية (ABA)"
 ssn = "أرقام الضمان الاجتماعي"
 
+[policies.settings]
+noneExport = "لا توجد سياسات تعمل حاليًا عند التصدير."
+noneUpload = "لا توجد سياسات تعمل حاليًا عند الرفع."
+onExport = "عند التصدير"
+onUpload = "عند الرفع"
+reorderHandle = "اسحب لإعادة الترتيب"
+runOrderDesc = "عند تشغيل أكثر من سياسة على نفس المشغّل، يتم تشغيلها بهذا الترتيب — كل منها على مخرجات السياسة السابقة. اسحب لإعادة الترتيب."
+title = "إعدادات السياسة"
+
 [policies.sidebar]
 activeCount = "{{count}} active"
-infoAriaLabel = "What is a policy?"
 infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
 loading = "Loading…"
+optionsAriaLabel = "خيارات السياسة"
+policySettings = "إعدادات السياسة"
 railAriaLabel = "{{label}} policy — {{status}}"
 railSuffixActive = " (Active)"
 railSuffixPaused = " (Paused)"
+retryFailed = "إعادة محاولة السياسات الفاشلة ({{count}})"
+rowProgress = "تمت معالجة {{completed}} من {{total}} ملفات"
 setUp = "Set up"
 title = "Policies"
 upgradeToEnterprise = "Upgrade to enterprise"
+whatIsPolicy = "ما هي السياسة؟"
 
 [policies.status]
 active = "Active"
@@ -6047,6 +6194,1933 @@ sourcesLabel = "Sources"
 stepOf = "Step {{step}} of {{total}}"
 toolChainDesc = "Configure the tools this policy runs on each document."
 typesSelected = "{{count}} types selected"
+
+[policy]
+badgeEnforcing = "جارٍ فرض {{name}}..."
+badgeRan = "تم تشغيل سياسة {{name}} على هذا الملف"
+blockingAction = "تم حظر {{action}} أثناء فرض السياسة، يرجى الانتظار..."
+dismiss = "إغلاق التراكب"
+enforcingTitle = "جارٍ فرض السياسة..."
+viewAnyway = "عرض الملف (لا تزال السياسة قيد الفرض)"
+
+[portal]
+comingSoon = "قريبًا"
+
+[portal.accountLink.card]
+billingNote = "تتم فوترة المعالجة غير المراقبة من محفظة مؤسستك."
+eyebrow = "ربط الحساب"
+linkButton = "ربط حساب Stirling الخاص بك"
+linked = "مرتبط"
+linkedAs = "مرتبط باسم {{name}}."
+linkedGeneric = "هذا المثيل مرتبط."
+notLinked = "غير مرتبط"
+title = "ربط هذه المؤسسة بحساب Stirling الخاص بها"
+unlink = "إلغاء الربط"
+
+[portal.accountLink.card.error]
+title = "تعذر الربط"
+
+[portal.accountLink.card.loginNotConfigured]
+after = "لتمكين ربط الحساب مقابل حساب Stirling المستضاف. في بيئة التطوير يمكنك محاكاة تسجيل الدخول من مربع حوار الربط."
+before = "عيّن"
+title = "لم يتم تكوين تسجيل دخول SaaS"
+
+[portal.accountLink.gate]
+action = "ربط الحساب"
+description = "اربط حساب Stirling لهذه المؤسسة لاستخدام الميزات القابلة للفوترة."
+title = "اربط لإلغاء القفل"
+titleFeature = "اربط لإلغاء قفل {{feature}}"
+
+[portal.accountLink.instances]
+active = "نشط"
+revoke = "إبطال"
+revoked = "تم الإبطال"
+unnamed = "مثيل بلا اسم"
+
+[portal.accountLink.instances.columns]
+instance = "المثيل"
+lastSeen = "آخر ظهور"
+linked = "مرتبط"
+status = "الحالة"
+
+[portal.accountLink.instances.empty]
+description = "اربط حساب هذه المؤسسة، ثم سجّل مثيلاتك المستضافة ذاتيًا لرؤيتها هنا."
+title = "لا توجد مثيلات مرتبطة"
+
+[portal.accountLink.instances.time]
+daysAgo_one = "منذ {{count}} يوم"
+daysAgo_other = "منذ {{count}} يوم"
+hoursAgo_one = "منذ {{count}} ساعة"
+hoursAgo_other = "منذ {{count}} ساعة"
+justNow = "الآن"
+minutesAgo_one = "منذ {{count}} دقيقة"
+minutesAgo_other = "منذ {{count}} دقيقة"
+never = "أبدًا"
+
+[portal.accountLink.modal]
+linkSubtitle = "سجّل الدخول إلى الحساب الذي يجب أن تُفوتر عليه هذه الخادم."
+linkTitle = "ربط حساب Stirling الخاص بك"
+reauthSubtitle = "انتهت صلاحية جلستك — سجّل الدخول مرة أخرى إلى حساب Stirling الخاص بك. يبقى مثيلك مرتبطًا."
+reauthTitle = "تسجيل الدخول مرة أخرى"
+simulateSignIn = "محاكاة تسجيل الدخول (dev)"
+
+[portal.accountLink.modal.loginNotConfigured]
+after = "لتمكين الربط داخل التطبيق مقابل حساب Stirling المستضاف."
+and = "و"
+before = "عيّن"
+title = "لم يتم تكوين تسجيل دخول SaaS"
+
+[portal.accountLink.panel]
+instancesSub = "كل مثيل مستضاف ذاتيًا مسجل لهذه المؤسسة. أبطل بيانات اعتماد لقطع وصوله غير المراقب فورًا."
+instancesTitle = "المثيلات المرتبطة"
+revokeError = "تعذر إبطال المثيل"
+sub = "اربط هذه المؤسسة المستضافة ذاتيًا بحساب Stirling الخاص بها لتتم فوترة المعالجة غير المراقبة من محفظة مؤسستك."
+
+[portal.accountLink.panel.loadError]
+forbidden = "يمكن لمالك الفريق فقط عرض المثيلات المرتبطة بالمؤسسة."
+generic = "تعذر تحميل المثيلات المرتبطة بالفريق. حاول مرة أخرى بعد قليل."
+title = "تعذر تحميل المثيلات المرتبطة"
+
+[portal.accountLink.state]
+free = "خطة Editor"
+subscribed = "خطة Processor"
+unlinked = "غير مرتبط"
+
+[portal.agentBuilder]
+bootstrapFromDocument = "التمهيد من مستند"
+sectionsAriaLabel = "أقسام منشئ الوكيل"
+selectorAriaLabel = "الوكلاء"
+subtitle = "صمّم واختبر وانشر وكلاء AI الذين يصنفون مستنداتك ويستخرجون منها ويوجهونها. عرّف السيناريوهات، وقيّد وصول الأدوات، وشغّل مجموعة ذهبية، وانشر إصدارًا."
+title = "منشئ الوكلاء"
+
+[portal.agentBuilder.bootstrap]
+cancel = "إلغاء"
+dropzoneText = "اختر مستندًا نموذجيًا (PDF أو صورة)"
+lead = "أفلت مستندًا نموذجيًا وسنقترح سيناريوهات ومخطط استخراج يمكنك تنقيحه. لا يتم نشر أي شيء حتى تراجعه."
+submit = "تمهيد الوكيل"
+subtitle = "ابدأ وكيلًا جديدًا من ملف تمثيلي واحد"
+title = "التمهيد من مستند"
+
+[portal.agentBuilder.empty]
+description = "مهّد وكيلًا من مستند نموذجي لبدء سيناريوهاته ومخطط الاستخراج، ثم نقّحه وانشره."
+title = "لا توجد وكلاء بعد"
+
+[portal.agentBuilder.evals]
+casesPassing = "الحالات الناجحة"
+columnCase = "حالة التقييم"
+columnLatency = "زمن الاستجابة"
+columnResult = "النتيجة"
+fail = "فشل"
+goldenSetPassRate = "معدل نجاح المجموعة الذهبية"
+latencyMs = "{{ms}} ms"
+notRun = "لم يتم التشغيل"
+pass = "نجاح"
+passRate = "معدل النجاح"
+runEvals = "تشغيل التقييمات"
+
+[portal.agentBuilder.evals.empty]
+description = "تحوّل التقييمات سيناريوهاتك إلى مجموعة ذهبية قابلة للتكرار. قم بالترقية لالتقاط معدل النجاح عبر الوقت والتحكم في النشر بناءً عليه."
+title = "لا توجد مجموعة ذهبية بعد"
+
+[portal.agentBuilder.kpi]
+acrossGoldenSets = "عبر المجموعات الذهبية"
+activeAgents = "الوكلاء النشطون"
+avgPassRate = "متوسط معدل نجاح التقييم"
+fleetWide = "على مستوى الأسطول"
+latestPublished = "آخر منشور"
+scenarios = "السيناريوهات"
+testCases = "حالات اختبار"
+totalDescription_one = "{{count}} إجمالًا"
+totalDescription_other = "{{count}} إجمالًا"
+
+[portal.agentBuilder.scenarios]
+add = "إضافة"
+addScenario = "إضافة سيناريو"
+enable = "تمكين"
+expectationLabel = "السلوك المتوقع"
+expectationPlaceholder = "ما يجب أن يفعله الوكيل"
+inEval = "في التقييم"
+mute = "كتم"
+muted = "مكتوم"
+nameLabel = "الاسم"
+namePlaceholder = "مثال: تصعيد الامتثال"
+
+[portal.agentBuilder.tabs]
+evals = "التقييمات"
+scenarios = "السيناريوهات"
+tools = "الأدوات"
+versions = "الإصدارات"
+
+[portal.agentBuilder.tools]
+broadAccess = "وصول واسع"
+deniedHint = "الأدوات المحددة محظورة. كل ما عدا ذلك يبقى قابلًا للاستدعاء."
+deniedTools = "الأدوات المرفوضة"
+governanceGate = "حوكمة الأدوات متاحة في خطة Enterprise."
+restricted = "مقيّد"
+restrictedAccess = "وصول مقيّد للأدوات"
+restrictedDescription = "اسمح بكل أداة باستثناء الأدوات التي ترفضها أدناه."
+
+[portal.agentBuilder.versions]
+current = "الحالي"
+historyGate = "سجل الإصدارات الكامل والرجوع متاحان في خطة Enterprise."
+publish = "نشر"
+rollBack = "رجوع"
+
+[portal.assistant]
+close = "إغلاق المساعد"
+error = "تعذر الوصول إلى المساعد."
+errorWithDetail = "تعذر الوصول إلى المساعد: {{detail}}"
+inputAriaLabel = "اسأل المساعد"
+inputPlaceholder = "اسأل عن Stirling…"
+open = "فتح المساعد"
+send = "إرسال"
+title = "المساعد"
+tryAsking = "جرّب السؤال"
+typing = "يكتب"
+
+[portal.auth]
+loading = "جارٍ التحميل"
+redirectingToEditor = "جارٍ إعادة التوجيه إلى المحرر..."
+
+[portal.billing.checkout]
+noClientSecret = "أعادت Edge function قيمة client_secret غير موجودة."
+subtitle = "أضف بطاقة للمتابعة بعد منحة خطة Editor المجانية. يتولى Stripe الباقي."
+title = "تشغيل خطة Processor"
+
+[portal.billing.checkout.activationSlow]
+body = "تم الدفع بنجاح، لكن التفعيل يستغرق وقتًا أطول قليلًا من المعتاد. سيتم تشغيله تلقائيًا - أغلق هذا وسيظهر هنا قريبًا."
+close = "إغلاق"
+title = "كدنا ننتهي"
+
+[portal.billing.checkout.error]
+title = "تعذر بدء الدفع"
+
+[portal.billing.checkout.finalizing]
+body = "تمت عملية الدفع. نحن نشغّل المعالجة المقاسة عبر مثيلاتك المرتبطة - يستغرق هذا عادةً بضع ثوانٍ."
+hint = "يرجى إبقاء هذه النافذة مفتوحة."
+title = "جارٍ تفعيل خطة Processor..."
+
+[portal.billing.checkout.notConfigured]
+bodyAfter = "في بيئة البوابة لتمكين الدفع داخل التطبيق."
+bodyBefore = "عيّن"
+title = "لم يتم تكوين Stripe"
+
+[portal.billing.enterpriseUpsell]
+cta = "أنشئ عرض سعر Enterprise الخاص بك"
+description = "خصومات حجم ملتزمة، ونشر معزول عن الشبكة، وMSA مخصص ومراجعات أمنية، وشراكات موزعين من جهات خارجية."
+eyebrow = "خصم الحجم · أكثر من 1M PDF"
+title = "Stirling Enterprise"
+
+[portal.billing.freeEditors]
+activeThisMonth = "نشط هذا الشهر"
+cost = "التكلفة"
+editorsDeployed = "المحررات المنشورة"
+inviteTeammates = "دعوة الزملاء"
+pdfsEdited = "ملفات PDF المعدلة"
+subtitle = "انشر في أي مكان، لفريقك بالكامل."
+title = "محررات PDF مجانية"
+
+[portal.billing.freePlan]
+checkoutErrorTitle = "تعذر بدء الدفع"
+currentPlan = "الخطة الحالية"
+freeForever = "مجاني إلى الأبد"
+noTeamResolved = "لم يتم تحديد فريق في محفظتك بعد — حدّث وحاول مرة أخرى."
+ownerOnly = "يمكن لمالك الفريق فقط تشغيل خطة Processor."
+planName = "Editor"
+ssoIncluded = "SSO مضمن"
+switchOnProcessor = "تشغيل Processor ←"
+unlimitedUsers = "مستخدمون غير محدودين"
+
+[portal.billing.invoices]
+columnAmount = "المبلغ"
+columnDate = "التاريخ"
+columnDescription = "الوصف"
+columnPdfsProcessed = "ملفات PDF المعالجة"
+columnStatus = "الحالة"
+descriptionFallback = "فاتورة"
+downloadAriaLabel = "تنزيل الفاتورة {{number}} كملف PDF"
+emptyDescription = "بمجرد اشتراك فريقك وإغلاق الدورة الأولى، ستظهر فواتيرك هنا."
+emptyTitle = "لا توجد فواتير بعد"
+fetchLimitNote_one = "يتم عرض أحدث {{count}} فواتير لك. الفواتير الأقدم موجودة في بوابة Stripe."
+fetchLimitNote_other = "يتم عرض أحدث {{count}} فواتير لك. الفواتير الأقدم موجودة في بوابة Stripe."
+loadError = "تعذر تحميل الفواتير: {{error}}"
+pdfLink = "PDF ↓"
+showAll_one = "عرض كل {{count}}"
+showAll_other = "عرض كل {{count}}"
+showFewer_one = "عرض أقل (أعلى {{count}})"
+showFewer_other = "عرض أقل (أعلى {{count}})"
+showMostRecent_one = "عرض أحدث {{count}}"
+showMostRecent_other = "عرض أحدث {{count}}"
+title = "سجل الفواتير"
+viewAriaLabel = "عرض الفاتورة {{number}} في Stripe"
+viewLink = "عرض ↗"
+
+[portal.billing.linkPrompt]
+cta = "ربط حساب Stirling"
+description = "تحرير PDF اليدوي — عرض، توقيع، دمج، تقسيم، علامة مائية، ضغط، تحويل، OCR يدوي — مجاني دائمًا، سواء كان الحساب مرتبطًا أم لا. اربط للحصول على 500 ملف PDF مجاني من المعالجة المقاسة (الأتمتة وAI وAPI)؛ وعندما تحتاج إلى المزيد، شغّل خطة Processor وادفع فقط مقابل ما تستخدمه."
+title = "ربط حساب Stirling الخاص بك"
+
+[portal.billing.paymentMethod]
+billedMonthly = "تتم الفوترة شهريًا"
+cardEnding = "{{brand}} تنتهي بـ {{last4}}"
+cardFallback = "بطاقة"
+expiresBilledMonthly = "تنتهي في {{expiry}} · تتم الفوترة شهريًا"
+eyebrow = "طريقة الدفع"
+managedSub = "يتم حفظ بطاقتك وتفاصيل الفوترة بأمان في بوابة عملاء Stripe."
+managedTitle = "تُدار في Stripe"
+update = "تحديث"
+
+[portal.billing.pdfsProcessed]
+emptyPeriod = "لا توجد معالجة مقاسة بعد في هذه الفترة."
+eyebrow = "ملفات PDF المعالجة في هذه الفترة"
+legendValue_one = "{{formatted}} ملف PDF"
+legendValue_other = "{{formatted}} ملفات PDF"
+segbarAriaLabel = "تقسيم ملفات PDF المقاسة حسب الفئة"
+segmentAgentsDesc = "إجراءات وكلاء AI"
+segmentAgentsLabel = "الوكلاء"
+segmentApiDesc = "طلبات API مباشرة"
+segmentApiLabel = "API"
+segmentAutomationDesc = "الأتمتة ومسارات المعالجة"
+segmentAutomationLabel = "الأتمتة"
+unit = "ملفات PDF مقاسة"
+
+[portal.billing.spendLimit]
+adjustLimit = "تعديل الحد"
+cancel = "إلغاء"
+capControlNote = "تُطبق التغييرات فورًا — ارفع السقف أو اخفضه في أي وقت."
+capSuffix = "/ الشهر"
+capSuffixWithDocs = "/ الشهر · ≈ {{documents}} مستند"
+displaySub = "تتم فوترة ما تعالجه تلقائيًا فقط — ولا تتجاوز السقف أبدًا."
+editTitle = "تعيين سقفك الشهري"
+eyebrow = "حد الإنفاق"
+guardrailBody = "سقف صارم — لن تتم فوترتك أبدًا بعد تجاوزه. عند بلوغ الحد، تتوقف المعالجة المقاسة مؤقتًا (يستمر تحرير PDF غير المحدود في العمل) حتى ترفعه أو تتم إعادة تعيين الدورة. لا يضيع أي شيء."
+guardrailLabel = "حاجز الحماية الخاص بك:"
+noCap = "بلا حد"
+pctUsed = "تم استخدام {{pct}}%"
+remaining = "المتبقي {{amount}}"
+save = "حفظ الحد"
+saveError = "تعذر حفظ الحد"
+thisPeriodUncapped = "{{amount}} هذه الفترة · بلا حد"
+usedThisMonth = "تم استخدام {{amount}} هذا الشهر"
+useSuggested = "استخدام المقترح · {{amount}} / الشهر"
+
+[portal.billing.spendLimit.projection]
+body_one = "بمعدل {{rate}}/اليوم ستصل إلى الحد خلال ~{{count}} يوم (~{{monthEnd}} نهاية الشهر). الحد المقترح ~{{suggested}}."
+body_other = "بمعدل {{rate}}/اليوم ستصل إلى الحد خلال ~{{count}} أيام (~{{monthEnd}} نهاية الشهر). الحد المقترح ~{{suggested}}."
+label = "متوقع تجاوزه."
+
+[portal.billing.spendThisMonth]
+eyebrow = "الإنفاق هذا الشهر"
+processed_one = "تمت معالجة {{formattedCount}} ملف PDF."
+processed_other = "تمت معالجة {{formattedCount}} ملفات PDF."
+processedWithRate_one = "تمت معالجة {{formattedCount}} ملف PDF، بسعر {{rate}} لكل واحد."
+processedWithRate_other = "تمت معالجة {{formattedCount}} ملفات PDF، بسعر {{rate}} لكل واحد."
+
+[portal.billing.subscribedPlan.capWarn]
+approachingBody = "ارفعه الآن حتى لا تتوقف المعالجة التلقائية أبدًا."
+approachingTitle = "لقد وصلت إلى {{pct}}% من حد إنفاقك الشهري"
+raiseLimit = "رفع الحد"
+reachedBody = "تم إيقاف المعالجة المقاسة مؤقتًا حتى ترفع الحد أو تتم إعادة تعيين الدورة. يستمر تحرير PDF غير المحدود في العمل."
+reachedTitle = "تم بلوغ حد الإنفاق الشهري"
+
+[portal.billing.subscribedPlan.portalError]
+title = "تعذر فتح بوابة Stripe"
+
+[portal.billing.walletMeter]
+capSuffix_one = "من {{allowance}} ملفات PDF مجانية مستخدمة"
+capSuffix_other = "من {{allowance}} ملفات PDF مجانية مستخدمة"
+eyebrow = "تجربة Processor"
+statusLabel_one = "متبقٍ {{remaining}}"
+statusLabel_other = "متبقٍ {{remaining}}"
+sub = "استخدم محرر PDF مجانًا. ادفع لمعالجة ملفات PDF تلقائيًا."
+title_one = "عالِج {{allowance}} ملف PDF مجانًا"
+title_other = "عالِج {{allowance}} ملفات PDF مجانًا"
+titleWithRate_one = "عالِج {{allowance}} ملف PDF مجانًا، ثم {{rate}}/PDF"
+titleWithRate_other = "عالِج {{allowance}} ملفات PDF مجانًا، ثم {{rate}}/PDF"
+
+[portal.catalogue.card]
+lockedAriaLabel = "مقفل"
+openAriaLabel = "فتح مكون {{name}}"
+
+[portal.catalogue.detail]
+addToProject = "إضافة إلى المشروع"
+ariaLabel = "تفاصيل المكون"
+tabsAriaLabel = "أقسام تفاصيل المكون"
+upgradeToUnlock = "الترقية لإلغاء القفل"
+
+[portal.catalogue.detail.code]
+install = "تثبيت"
+usage = "الاستخدام"
+
+[portal.catalogue.detail.locked]
+description = "{{name}} مضمن بدءًا من خطة {{tier}}. قم بالترقية لتضمينه."
+title = "غير متاح في خطتك"
+
+[portal.catalogue.detail.preview]
+badge = "معاينة مباشرة"
+note = "يتم عرض صندوق الرمل التفاعلي هنا"
+
+[portal.catalogue.detail.pricing]
+note = "مقاس لكل {{unit}}. تتم فوترة الاستخدام بعد الحصة الشهرية المجانية على حسابك ويُفصّل ضمن الاستخدام والفوترة."
+
+[portal.catalogue.detail.stats]
+billedOn = "تتم الفوترة على"
+embeds30d = "التضمينات (30 يومًا)"
+freeQuota = "الحصة المجانية"
+freeQuotaValue = "{{amount}} / شهر"
+maturity = "النضج"
+none = "لا شيء"
+perAction = "لكل إجراء"
+price = "السعر"
+
+[portal.catalogue.detail.tabs]
+code = "Code"
+overview = "نظرة عامة"
+pricing = "التسعير"
+props = "Props / API"
+
+[portal.catalogue.props]
+optional = "اختياري"
+required = "مطلوب"
+
+[portal.catalogue.props.columns]
+description = "الوصف"
+name = "Prop"
+required = "مطلوب"
+type = "النوع"
+
+[portal.catalogue.summary]
+componentsGa = "مكونات GA"
+componentSpendMtd = "إنفاق المكونات (MTD)"
+embedsThisMonth = "التضمينات هذا الشهر"
+inBeta = "في Beta"
+
+[portal.components.billingUnit]
+approval = "موافقة"
+check = "فحص"
+event = "حدث"
+render = "عرض"
+review = "مراجعة"
+session = "جلسة"
+signature = "توقيع"
+
+[portal.components.maturity]
+beta = "Beta"
+ga = "GA"
+
+[portal.componentsView]
+subtitle = "ودجات SDK قابلة للتضمين تضعها في تطبيقك — عارض، وتدفق توقيع إلكتروني، ولوحة مراجعة AI. كل منها مقاس لكل إجراء. انقر على بطاقة للتثبيت والاستخدام وprops."
+title = "المكونات"
+
+[portal.componentsView.empty]
+description = "تعذر تحميل كتالوج المكونات. حاول مرة أخرى قريبًا."
+title = "لا توجد مكونات متاحة"
+
+[portal.componentsView.lockedBanner]
+description = "مكونات GA متاحة على Pay-as-you-go؛ وبعض مكونات Beta مخصصة للمؤسسات فقط. تعرض البطاقات المقفلة تلميحًا للترقية."
+title = "تحتاج بعض المكونات إلى خطة مدفوعة"
+
+[portal.docs.authentication]
+codeCaption = "كل طلب"
+eyebrow = "البدء"
+lead = "تتم مصادقة كل الطلبات باستخدام bearer token. المفاتيح محددة النطاق لكل بيئة ولا تنتهي صلاحيتها إلا إذا تم تدويرها."
+liveKey = "مفاتيح الإنتاج — قابلة للفوترة، ومحدودة المعدل حسب خطتك."
+testKey = "مفاتيح Sandbox — مجانية، وتعيد بيانات تركيبية."
+title = "المصادقة"
+
+[portal.docs.components]
+codeCaption = "تضمين العارض"
+eyebrow = "المكونات"
+lead = "واجهة UI قابلة للتضمين لقوائم المراجعة وفحص المستندات. استخدم أنماطك الخاصة أو استخدم السمة المرفقة."
+title = "عارضون جاهزون للإدراج"
+
+[portal.docs.endpoints]
+eyebrow = "مرجع API"
+fieldCount_one = "{{count}} حقل"
+fieldCount_other = "{{count}} حقول"
+filterAll = "الكل"
+filterAriaLabel = "تصفية endpoints حسب المجال"
+lead = "كل نوع مستند هو endpoint بنوع محدد. أرسل ملفًا عبر POST، واستلم JSON تم التحقق منه بالمخطط. صفِّ حسب المجال أدناه."
+title = "Endpoints"
+
+[portal.docs.errors]
+codeCaption = "422 Unprocessable Entity"
+eyebrow = "مرجع API"
+lead = "تعيد الأخطاء رمزًا ثابتًا قابلًا للقراءة آليًا بالإضافة إلى رسالة بشرية. يتضمن جسم 4xx دائمًا request_id للدعم."
+title = "الأخطاء"
+
+[portal.docs.nav]
+ariaLabel = "التوثيق"
+
+[portal.docs.nav.empty]
+description = "تعذر تحميل فهرس التوثيق."
+title = "التوثيق غير متاح"
+
+[portal.docs.quickstart]
+eyebrow = "البدء"
+lead = "أرسل مستندك الأول إلى endpoint بنوع محدد واحصل على JSON منظم خلال ثلاث خطوات. لا تدريب للنموذج ولا هندسة prompts."
+title = "البدء السريع"
+
+[portal.docs.quickstart.callout]
+bodyAfterLink = "لوصفات النسخ واللصق."
+bodyBeforeLink = "اربط نفس الاستدعاء في مسار معالجة لسلسلة التحقق والتنقيح والتسليم — أو اعرضه لوكيل عبر MCP. راجع"
+label = "التالي:"
+link = "أدلة التشغيل"
+
+[portal.docs.quickstart.step1]
+body = "أنشئ مفتاحًا محدد النطاق من علامة تبويب البنية التحتية. تحمل المفاتيح حدود معدل وقائمة سماح IP اختيارية. صدّره إلى shell لديك:"
+title = "إصدار مفتاح API"
+
+[portal.docs.quickstart.step2]
+body = "أرسل ملفًا عبر POST إلى أي endpoint بنوع محدد. يحدد endpoint المخطط الذي تحصل عليه — هنا، مستخرج الفواتير."
+snippetCaption = "استخراج فاتورة"
+title = "إرسال مستند"
+
+[portal.docs.quickstart.step3]
+body = "يتم التحقق من كل استجابة مقابل مخطط endpoint، مع درجة ثقة ومصدر لكل حقل."
+codeCaption = "200 OK"
+title = "قراءة النتيجة المنظمة"
+
+[portal.docs.rateLimits]
+burst = "الدفعة"
+codeCaption = "429 Too Many Requests"
+concurrency = "التزامن"
+eyebrow = "البدء"
+lead = "تتوسع الحدود حسب خطتك. تتضمن استجابة 429 ترويسة Retry-After؛ تتراجع SDKs تلقائيًا."
+requestsPerMinute = "الطلبات / الدقيقة"
+title = "حدود المعدل والحصص"
+
+[portal.docs.recipes]
+cloneButton = "استنساخ الوصفة"
+eyebrow = "أدلة التشغيل"
+lead = "أنماط من البداية إلى النهاية تربط المصادر والعمليات والوجهات. كل منها يتوافق مع مسار معالجة يمكنك استنساخه."
+title = "الوصفات"
+
+[portal.docs.sdks]
+eyebrow = "SDKS"
+lead = "عملاء الطرف الأول باستجابات ذات أنواع محددة، وإعادة محاولات تلقائية، ورفع متدفق. يتتبع الجميع نفس كتالوج endpoints."
+title = "SDKs الرسمية"
+
+[portal.docs.sdks.status]
+beta = "Beta"
+deprecated = "مهمل"
+
+[portal.docs.skills]
+eyebrow = "المهارات"
+lead = "قدرات مدمجة ومسمّاة يستدعيها وكيلك كأداة واحدة. كل مهارة هي سلسلة عمليات حتمية مع تقييمات مرفقة."
+title = "مهارات الوكيل"
+
+[portal.docs.webhooks]
+codeCaption = "document.processed"
+eyebrow = "مرجع API"
+lead = "اشترك في أحداث document.processed وpipeline.completed وquota.threshold. يتم توقيع الحمولات باستخدام HMAC-SHA256."
+title = "Webhooks"
+
+[portal.docs.webhooks.callout]
+afterHelper = "مساعد."
+beforeHelper = "مقابل سر التوقيع لديك قبل الوثوق بأي حمولة. توفر SDKs"
+beforeSignature = "تحقق من ترويسة"
+
+[portal.documents]
+exportCsv = "تصدير CSV"
+search = "البحث باسم الملف أو ID..."
+subtitle = "كل مستند عالجته مؤسستك، مع سجل معالجته الكامل. الوصول إلى المحتوى يخضع لطلب."
+title = "المستندات"
+
+[portal.documents.audit]
+approved = "تمت الموافقة"
+archived = "تمت الأرشفة"
+elevation = "رفع الصلاحية"
+empty = "لم يتم تسجيل أي أحداث بعد."
+extracted = "تمت المعالجة"
+flagged = "تحتاج إلى مراجعة"
+ingested = "تم الاستيعاب"
+reviewed = "قيد المراجعة"
+
+[portal.documents.drawer]
+sectionsAriaLabel = "أقسام تفاصيل المستند"
+
+[portal.documents.drawer.tabs]
+audit = "التدقيق"
+extractions = "الاستخراجات"
+overview = "نظرة عامة"
+
+[portal.documents.elevation]
+requestAccess = "طلب الوصول"
+
+[portal.documents.elevation.active]
+description = "منح مؤقت — يتم تسجيل الوصول ومحدد بمدة زمنية."
+descriptionFourEyes = "منح مؤقت — تم إخطار مراجع زميل (مراجعة ثنائية)."
+title = "ينتهي الوصول خلال {{time}}"
+
+[portal.documents.elevation.gated]
+description = "المحتوى محمي بسياسة عدم وجود وصول دائم. يؤدي الطلب إلى بدء منح محدد بمدة زمنية."
+descriptionFourEyes = "المحتوى محمي بسياسة عدم وجود وصول دائم. يؤدي الطلب إلى بدء منح محدد بمدة زمنية وإخطار مراجع زميل (مراجعة ثنائية)."
+title = "مستند حساس"
+
+[portal.documents.extractions]
+empty = "لم يتم استخراج أي حقول من هذا المستند."
+masked = "حقول الاستخراج مخفية. اطلب وصولًا محدد المدة لعرض محتوى هذا المستند."
+
+[portal.documents.extractions.columns]
+confidence = "الثقة"
+field = "الحقل"
+value = "القيمة"
+
+[portal.documents.filters]
+all = "الكل"
+ariaLabel = "تصفية المستندات حسب الحالة"
+flagged = "معلّم"
+inReview = "قيد المراجعة"
+processed = "تمت المعالجة"
+
+[portal.documents.overview]
+action = "مسار العمل / الإجراء"
+product = "المنتج"
+received = "الوقت"
+status = "الحالة"
+type = "النوع"
+user = "المستخدم"
+
+[portal.documents.queue.empty]
+description = "عندما تغذي المصادر المستندات إلى مسارات العمل لديك، ستظهر هنا للمراجعة."
+title = "لا توجد مستندات في قائمة الانتظار"
+
+[portal.documents.status]
+error = "خطأ"
+flagged = "تحتاج إلى مراجعة"
+inReview = "قيد المراجعة"
+processed = "تمت المعالجة"
+
+[portal.documents.table]
+auto = "تلقائي"
+editorAction = "المحرر"
+empty = "لا توجد مستندات تطابق عامل التصفية هذا."
+rowActions = "إجراءات الصف"
+sensitiveLabel = "حساس"
+sensitiveTitle = "حساس — الوصول مطلوب"
+
+[portal.documents.table.columns]
+action = "مسار العمل / الإجراء"
+document = "المستند"
+product = "المنتج"
+status = "الحالة"
+time = "الوقت"
+user = "المستخدم"
+
+[portal.editorAdmin]
+subtitle = "انشر Stirling PDF Editor، واربط المثيلات المستضافة ذاتيًا بمؤسستك، وشغّل الأسطول النشط — الأهداف والصحة وبيانات الاعتماد والتفعيل دون اتصال في مكان واحد."
+title = "نشر المحرر"
+
+[portal.editorAdmin.health.columns]
+activeUsers = "المستخدمون النشطون"
+host = "المضيف"
+lastSeen = "آخر ظهور"
+region = "المنطقة"
+status = "الحالة"
+version = "الإصدار"
+
+[portal.editorAdmin.health.empty]
+description = "انشر هدفًا واربطه لرؤية صحة المثيل الحية هنا."
+title = "لا توجد مثيلات تقوم بالإبلاغ"
+
+[portal.editorAdmin.offlineActivation]
+enterpriseTag = "Enterprise"
+generateButton = "إنشاء حزمة دون اتصال"
+lockCopy = "التفعيل دون اتصال وداخل المؤسسة جزء من Enterprise."
+subtitle = "أنشئ حزمة تفعيل موقعة لتثبيت دون اتصال أو داخل المؤسسة بدون مسار شبكة صادر. انقلها إلى المثيل وطبقها أثناء إعداد التشغيل الأول."
+talkToSales = "تحدث إلى المبيعات"
+title = "تفعيل معزول عن الشبكة"
+
+[portal.editorAdmin.offlineActivation.readyBanner]
+description = "{{file}} موقّع وجاهز للنقل. يفعّل مثيلًا واحدًا وتنتهي صلاحيته خلال 14 يومًا."
+title = "الحزمة جاهزة"
+
+[portal.editorAdmin.pairing]
+generated = "تم الإنشاء ✓"
+generateNewCode = "إنشاء رمز جديد"
+lockCopy = "التزويد عبر IaC جزء من Enterprise."
+rotate = "تدوير"
+talkToSales = "تحدث إلى المبيعات"
+
+[portal.editorAdmin.sections.health]
+sub = "كل مثيل Editor يقوم بالإبلاغ — الإصدار والمنطقة والحالة وآخر ظهور والمستخدمون النشطون."
+title = "صحة المثيل"
+
+[portal.editorAdmin.sections.pairing]
+sub = "اربط محررًا مستضافًا ذاتيًا بهذه المؤسسة. أنشئ رمزًا مميزًا، أو سلّم رمزًا قصيرًا، أو اربطه عبر IaC."
+title = "الربط"
+
+[portal.editorAdmin.sections.targets]
+sub = "مكان تشغيل Editor. انسخ مقتطفًا لإعداد مثيل مستضاف ذاتيًا، أو استخدم Managed Cloud دون عمليات تشغيل."
+title = "أهداف النشر"
+
+[portal.editorAdmin.serviceToken]
+currentToken = "الرمز المميز الحالي"
+lastRotated = "آخر تدوير"
+rotateButton = "تدوير رمز الخدمة المميز"
+subtitle = "تتحقق المثيلات من هويتها لدى المؤسسة باستخدام بيانات الاعتماد هذه. قم بتدويرها وفق جدول أو فورًا بعد الاشتباه في تسريب."
+title = "رمز الخدمة المميز"
+
+[portal.editorAdmin.serviceToken.rotatedBanner]
+description = "تم إصدار رمز مميز جديد. حدّث STIRLING_SERVICE_TOKEN لكل مثيل مستضاف ذاتيًا ضمن فترة السماح البالغة 24 ساعة وإلا ستصبح غير متصلة."
+title = "تدوير المثيلات قيد التشغيل"
+
+[portal.editorAdmin.status]
+degraded = "متدهورة"
+healthy = "سليمة"
+offline = "غير متصل"
+pairing = "جارٍ الربط"
+
+[portal.editorAdmin.targets]
+instanceCount_one = "{{count}} مثيل"
+instanceCount_other = "{{count}} مثيلات"
+talkToSales = "تحدث إلى المبيعات"
+upgradePlan = "ترقية الخطة"
+
+[portal.editorAdmin.targets.lock]
+enterprise = "الاستضافة الذاتية داخل المؤسسة وباستخدام Kubernetes جزء من Enterprise."
+paid = "يتم فتح الاستضافة الذاتية باستخدام Docker وKubernetes في خطة مدفوعة."
+
+[portal.editorAdmin.targets.state]
+available = "متاح"
+locked = "مقفلة"
+running = "قيد التشغيل"
+
+[portal.errorBoundary]
+description = "واجه هذا العرض خطأً غير متوقع. حاول مرة أخرى، أو اختر قسمًا آخر من الشريط الجانبي."
+retry = "حاول مرة أخرى"
+title = "حدث خطأ ما في هذه الصفحة"
+
+[portal.home.editor]
+activeUsers = "{{n}} نشط"
+invite = "دعوة زملاء الفريق"
+name = "Stirling PDF Editor"
+open = "فتح في المتصفح"
+updated = "تم التحديث {{time}}"
+
+[portal.home.editor.target]
+cloud = "Managed Cloud"
+docker = "مستضاف ذاتيًا · Docker"
+kubernetes = "مستضاف ذاتيًا · Kubernetes"
+
+[portal.home.greeting]
+afternoon = "مساء الخير"
+evening = "مساء الخير"
+morning = "صباح الخير"
+
+[portal.home.onboarding]
+dismiss = "تجاهل الإعداد"
+notStarted = "لم يبدأ"
+progress = "تم إنجاز {{done}} من {{total}}"
+title = "إكمال الإعداد"
+
+[portal.home.onboarding.enterprise]
+body = "SSO + SCIM + RBAC على مستوى المؤسسة، وتسعير حجم ملتزم، ونشر معزول عن الشبكة."
+cta = "بدء التجربة"
+ctaQuote = "الحصول على عرض سعر"
+lead = "لأكثر من 250 موظفًا."
+tag = "Enterprise"
+
+[portal.home.onboarding.steps.editor]
+blurb = "انشر تطبيق سطح المكتب، مجاني للأبد."
+title = "تنزيل PDF Editor"
+
+[portal.home.onboarding.steps.policies]
+blurb = "{{active}} نشطة · {{recommended}} موصى بها"
+chip = "{{active}} نشطة"
+title = "تشغيل السياسات"
+
+[portal.home.onboarding.steps.sources]
+blurb = "{{connected}} متصلة · كل PDF محكوم أينما وصل"
+chip = "{{connected}} متصلة"
+title = "ربط مصادرك"
+
+[portal.home.quickActions]
+subtitle = "أهم مهام اليوم"
+title = "إجراءات سريعة"
+
+[portal.home.quickActions.buildPipeline]
+blurb = "منشئ من 3 خطوات فوق مكتبة العمليات المصنفة"
+title = "إنشاء مسار عمل"
+
+[portal.home.quickActions.connectSource]
+blurb = "S3، وكلاء، webhooks، مجلدات مراقبة"
+title = "ربط مصدر"
+
+[portal.home.quickActions.issueApiKey]
+blurb = "مفتاح محدد النطاق مع حدود معدل وقائمة سماح IP"
+title = "إصدار مفتاح API"
+
+[portal.infrastructure]
+manageEditorDeployment = "إدارة نشر Editor"
+sectionsAriaLabel = "أقسام البنية التحتية"
+subtitle = "عمليات النشر وبيانات الاعتماد ووضع الأمان والتخزين ومسار التدقيق لمساحة عمل Stirling لديك."
+title = "البنية التحتية"
+
+[portal.infrastructure.apiKeys]
+createKey = "إنشاء مفتاح"
+heading = "مفاتيح API"
+subheading = "بيانات اعتماد محددة النطاق مع حدود معدل لكل مفتاح وأذونات وقوائم سماح IP."
+
+[portal.infrastructure.apiKeys.card]
+allowedIps = "عناوين IP المسموح بها"
+anyIp = "أي IP (بدون قائمة سماح)"
+created = "تم الإنشاء"
+lastUsed = "آخر استخدام"
+permissions = "الأذونات"
+rateLimit = "حد المعدل"
+rateLimitValue = "{{value}} طلب/دقيقة"
+usageMonth = "الاستخدام هذا الشهر"
+usageToday = "الاستخدام اليوم"
+
+[portal.infrastructure.apiKeys.empty]
+description = "أنشئ مفتاحًا محدد النطاق للبدء في استدعاء Stirling API."
+title = "لا توجد مفاتيح API بعد"
+
+[portal.infrastructure.audit]
+filterAriaLabel = "تصفية أحداث التدقيق حسب الفئة"
+heading = "سجلات التدقيق"
+latencyValue = "{{value}} ms"
+noEventsInCategory = "لا توجد أحداث في هذه الفئة."
+subheading = "كل حدث مصادقة وتكوين ومعالجة عبر مساحة عملك."
+
+[portal.infrastructure.audit.columns]
+actor = "الفاعل"
+event = "الحدث"
+latency = "زمن الاستجابة"
+status = "الحالة"
+target = "المورد"
+timestamp = "الطابع الزمني"
+
+[portal.infrastructure.audit.empty]
+description = "سيظهر نشاط مساحة العمل هنا عند حدوثه."
+title = "لا توجد أحداث تدقيق"
+
+[portal.infrastructure.audit.export]
+cancel = "إلغاء"
+error = "فشل التصدير. يرجى المحاولة مرة أخرى."
+exportButton = "تصدير"
+exporting = "جارٍ التصدير…"
+fieldsLegend = "الأعمدة"
+format = "التنسيق"
+open = "تصدير"
+subtitle = "نزّل أحداث التدقيق بصيغة CSV أو JSON. اختر الأعمدة المراد تضمينها."
+title = "تصدير سجل التدقيق"
+
+[portal.infrastructure.audit.export.fields]
+date = "التاريخ"
+documentName = "اسم المستند"
+ipAddress = "عنوان IP"
+outcome = "النتيجة"
+tool = "الأداة"
+username = "اسم المستخدم"
+
+[portal.infrastructure.audit.filters]
+all = "الكل"
+auth = "المصادقة"
+config = "التكوين"
+elevation = "رفع الصلاحية"
+processing = "المعالجة"
+security = "الأمان"
+
+[portal.infrastructure.audit.forbidden]
+description = "سجل التدقيق متاح لقادة الفرق والمسؤولين. اطلب الوصول من قائد فريقك أو مسؤول."
+title = "ليس لديك وصول"
+
+[portal.infrastructure.audit.metrics]
+config = "التكوين"
+elevation = "رفع الصلاحية"
+processing = "المعالجة"
+totalEvents = "إجمالي الأحداث · 24 ساعة"
+
+[portal.infrastructure.createKey]
+cancel = "إلغاء"
+createKey = "إنشاء مفتاح"
+done = "تم"
+ipAllowlistHelper = "نطاقات CIDR مفصولة بفواصل. اتركه فارغًا للسماح بأي IP."
+ipAllowlistLabel = "قائمة سماح IP"
+keyNameLabel = "اسم المفتاح"
+keyNamePlaceholder = "مثال: الإنتاج · الاستيعاب"
+permissionsLabel = "الأذونات"
+secretKeyCaption = "المفتاح السري"
+secretWarning = "خزّن هذا في مدير أسرار. لا يخزن Stirling إلا تجزئة — ولا توجد طريقة لاستعادته لاحقًا."
+subtitle = "حدد نطاق المفتاح إلى الحد الأدنى الذي يحتاجه. يمكنك تدويره أو إلغاؤه في أي وقت."
+subtitleCreated = "انسخ هذا السر الآن — لن يتم عرضه مرة أخرى."
+title = "إنشاء مفتاح API"
+titleCreated = "تم إنشاء المفتاح"
+
+[portal.infrastructure.deployments]
+msValue = "{{value}} ms"
+throughputValue = "{{value}}/دقيقة"
+
+[portal.infrastructure.deployments.deployColumns]
+deployedBy = "تم النشر بواسطة"
+environment = "البيئة"
+product = "المنتج"
+status = "الحالة"
+version = "الإصدار"
+when = "متى"
+
+[portal.infrastructure.deployments.recent]
+heading = "عمليات النشر الأخيرة"
+subheading = "أحدث عمليات الطرح عبر المنتجات والبيئات."
+
+[portal.infrastructure.deployments.regionColumns]
+instances = "المثيلات"
+latency = "زمن الاستجابة"
+load = "الحمل"
+p99 = "P99"
+region = "المنطقة"
+status = "الحالة"
+throughput = "الإنتاجية"
+uptime = "وقت التشغيل"
+version = "الإصدار"
+
+[portal.infrastructure.deployments.regions]
+heading = "المناطق"
+subheading = "صحة حية لكل منطقة Stirling منشورة — زمن الاستجابة والحمل وإصدار الطرح."
+
+[portal.infrastructure.deployments.regions.empty]
+description = "ستظهر المناطق المنشورة هنا بمجرد تزويد مساحة عملك."
+title = "لا توجد مناطق منشورة"
+
+[portal.infrastructure.models]
+heading = "النماذج"
+msValue = "{{value}} ms"
+subheading = "كتالوج النماذج والتوجيه الذي يشغل معالجة المستندات عبر مساحة عملك."
+
+[portal.infrastructure.models.byom]
+description = "سجّل نموذجًا داخل المؤسسة أو مستضافًا ذاتيًا وثبّته في منطقة للمعالجة المقيدة بإقامة البيانات."
+title = "أحضر نموذجك الخاص"
+
+[portal.infrastructure.models.catalogue]
+heading = "الكتالوج"
+sub = "النماذج المُدارة المتاحة لمساحة عملك، مع زمن استجابة وتكلفة حيين."
+subEnterprise = "نماذج مُدارة، وأحضر نموذجك الخاص، ونماذج داخل المؤسسة — مع إمكانية التثبيت لكل منطقة."
+
+[portal.infrastructure.models.catalogue.empty]
+description = "ستظهر النماذج في كتالوج مساحة عملك هنا."
+title = "لا توجد نماذج متاحة"
+
+[portal.infrastructure.models.columns]
+cost = "التكلفة"
+latency = "زمن الاستجابة"
+load = "الحمل"
+model = "النموذج"
+status = "الحالة"
+type = "النوع"
+version = "الإصدار"
+
+[portal.infrastructure.models.metrics]
+activeModels = "النماذج النشطة"
+avgLatency = "متوسط زمن الاستجابة"
+included = "مضمن"
+monthlySpend = "الإنفاق الشهري على النماذج"
+
+[portal.infrastructure.models.routing]
+empty = "لا توجد قواعد توجيه مكوّنة."
+heading = "قواعد التوجيه"
+sub = "أي نموذج يتولى كل عملية. ينطبق الافتراضي عندما لا تطابق قاعدة أضيق."
+subLocked = "وجّه العمليات إلى نماذج محددة — متاح في الخطط المدفوعة."
+
+[portal.infrastructure.models.routing.lockedBanner]
+description = "قم بالترقية إلى Pro للتحكم في النموذج الذي يتولى كل عملية ونوع مستند."
+title = "توجيه النماذج ميزة مدفوعة"
+
+[portal.infrastructure.models.routingColumns]
+default = "افتراضي"
+docType = "نوع المستند"
+modelForAria = "نموذج لـ {{operation}}"
+operation = "العملية"
+routedTo = "موجّه إلى"
+
+[portal.infrastructure.security.access.byok]
+description = "قدّم مفتاحًا من KMS الخاص بك. يقوم Stirling بالتشفير به لكنه لا يزال قادرًا على القراءة."
+label = "أحضر مفتاحك الخاص (BYOK)"
+
+[portal.infrastructure.security.access.hyok]
+description = "لا تغادر المفاتيح KMS الخاص بك أبدًا. يحتفظ Stirling بالنص المشفر فقط."
+label = "احتفظ بمفتاحك الخاص (HYOK)"
+
+[portal.infrastructure.security.access.stirling]
+description = "يدير Stirling مفاتيح التشفير. الأبسط — لا عمليات مفاتيح من جانبك."
+label = "مفاتيح يحتفظ بها Stirling"
+
+[portal.infrastructure.security.accessPolicy]
+heading = "سياسة الوصول إلى المستندات"
+subheading = "تتحكم في من يمكنه فك تشفير المستندات المعالجة أثناء السكون."
+
+[portal.infrastructure.security.attestations]
+heading = "إثباتات الامتثال"
+noReport = "لا يوجد تقرير متاح"
+subheading = "وضع التدقيق حسب إطار العمل، مع تقارير متاحة للضوابط المثبتة."
+viewReport = "عرض التقرير ←"
+
+[portal.infrastructure.security.compliance]
+heading = "الامتثال"
+subheading = "إثباتات وشهادات تغطي منصة Stirling."
+
+[portal.infrastructure.security.empty]
+description = "سيظهر تكوين الأمان لمساحة عملك هنا."
+title = "وضع الأمان غير متاح"
+
+[portal.infrastructure.security.hyokBanner]
+description = "مع HYOK، لا تغادر مفاتيح التشفير KMS الخاص بك أبدًا. يخزن Stirling ويعالج فقط النص المشفر الذي يمكنك إلغاؤه في أي وقت."
+title = "لا يستطيع Stirling فك تشفير مستنداتك"
+
+[portal.infrastructure.security.ipAllowlist]
+empty = "لا توجد نطاقات IP مكوّنة — كل عناوين IP مسموح بها."
+heading = "قائمة سماح IP"
+sub = "وصول API مقيد بهذه نطاقات CIDR."
+subLocked = "قيّد وصول API إلى نطاقات IP معروفة — متاح في الخطط المدفوعة."
+
+[portal.infrastructure.security.ipAllowlist.lockedBanner]
+description = "قم بالترقية إلى Pro لتقييد وصول API إلى شبكات محددة."
+title = "قائمة سماح IP ميزة مدفوعة"
+
+[portal.infrastructure.security.ipColumns]
+added = "تمت الإضافة"
+addedBy = "أضيف بواسطة"
+cidr = "CIDR"
+label = "التسمية"
+
+[portal.infrastructure.security.keyManagement]
+algorithm = "الخوارزمية"
+heading = "إدارة مفاتيح التشفير"
+keyId = "معرّف المفتاح"
+lastRotated = "آخر تدوير"
+rotateKey = "تدوير المفتاح"
+rotationPolicy = "سياسة التدوير"
+subheading = "حيازة المفاتيح التي تشفر المستندات أثناء السكون — من يمكنه فك التشفير، وكيف يتم تدوير المفاتيح."
+
+[portal.infrastructure.security.managedBanner]
+description = "حيازة أحضر مفتاحك الخاص (BYOK) واحتفظ بمفتاحك الخاص (HYOK) متاحة في Enterprise. قم بالترقية لتقديم مفاتيح من KMS الخاص بك."
+title = "يدير Stirling المفاتيح في خطتك"
+
+[portal.infrastructure.security.residency.apac]
+description = "ap-southeast-1"
+label = "آسيا والمحيط الهادئ"
+
+[portal.infrastructure.security.residency.eu]
+description = "eu-west-1 · حدود بيانات GDPR"
+label = "الاتحاد الأوروبي"
+
+[portal.infrastructure.security.residency.us]
+description = "us-east-1 · us-west-2"
+label = "الولايات المتحدة"
+
+[portal.infrastructure.security.residencyHeader]
+heading = "إقامة البيانات"
+subheading = "مكان تخزين المستندات ومعالجتها."
+
+[portal.infrastructure.storage]
+gbValue = "{{value}} GB"
+percentUsed = "{{value}} مستخدم"
+
+[portal.infrastructure.storage.empty]
+description = "سيظهر التخزين المتصل والاستخدام هنا."
+title = "لا يوجد تخزين مكوّن"
+
+[portal.infrastructure.storage.lifecycle]
+active = "نشط"
+activeRange = "0–{{value}} يوم"
+archived = "مؤرشف"
+coldStorage = "تخزين بارد"
+deleted = "محذوف"
+never = "أبدًا"
+purged = "تمت إزالته نهائيًا"
+
+[portal.infrastructure.storage.providers]
+connect = "ربط"
+connected = "متصل"
+heading = "الموفرون المتصلون"
+subheading = "مكان كتابة المخرجات المعالجة."
+
+[portal.infrastructure.storage.retention]
+heading = "الاحتفاظ"
+subheading = "مدة الاحتفاظ بالمخرجات قبل حذف دورة الحياة."
+windowLabel = "نافذة الاحتفاظ الافتراضية"
+
+[portal.infrastructure.storage.retentionOption]
+days_one = "{{count}} يوم"
+days_other = "{{count}} أيام"
+never = "عدم الحذف أبدًا"
+
+[portal.infrastructure.storage.totalUsage]
+heading = "إجمالي الاستخدام"
+progressLabel = "التخزين المستخدم"
+subheading = "التخزين المستهلك عبر جميع الموفرين المتصلين."
+
+[portal.infrastructure.tabs]
+apiKeys = "مفاتيح API"
+audit = "سجلات التدقيق"
+deployments = "عمليات النشر"
+models = "النماذج"
+security = "الأمان"
+storage = "التخزين"
+
+[portal.nav]
+agent-builder = "منشئ الوكلاء"
+components = "المكونات"
+docs = "وثائق المطورين"
+documents = "المستندات"
+editor = "المحرر"
+home = "الرئيسية"
+infrastructure = "البنية التحتية"
+pipelines = "مسارات العمل"
+policies = "السياسات"
+procurement = "المشتريات"
+settings = "الإعدادات"
+sources = "المصادر"
+usage = "الاستخدام والفوترة"
+users = "المستخدمون"
+
+[portal.notifications]
+markAllRead = "وضع علامة على الكل كمقروء"
+title = "الإشعارات"
+viewAll = "عرض الكل"
+
+[portal.notifications.ariaLabel]
+none = "الإشعارات، لا توجد غير مقروءة"
+unread_one = "الإشعارات، {{count}} غير مقروء"
+unread_other = "الإشعارات، {{count}} غير مقروءة"
+
+[portal.notifications.count]
+allRead = "الكل مقروء"
+loading = "جارٍ التحميل"
+new_one = "{{count}} جديد"
+new_other = "{{count}} جديدة"
+
+[portal.notifications.empty]
+description = "لا توجد إشعارات جديدة."
+title = "أنت مطّلع على كل شيء"
+
+[portal.pipelines]
+subtitle = "كل مسار عمل مستندات آلي على الواجهة الخلفية: سلسلة مرتبة من العمليات على مجموعة من المصادر، تعمل عند مشغّل. انقر على صف لرؤية خطواته ومصادره."
+title = "مسارات العمل"
+
+[portal.pipelines.actions]
+newPipeline = "مسار عمل جديد"
+
+[portal.pipelines.builder]
+addStep = "إضافة أداة"
+back = "العودة إلى مسارات العمل"
+discard = "تجاهل التغييرات"
+enabled = "مفعّل"
+keepEditing = "متابعة التحرير"
+needsUpload = "يحتاج إلى ملف مرفوع"
+noToolMatches = "لا توجد أدوات تطابق بحثك."
+pipelineSettings = "إعدادات مسار العمل"
+searchTools = "البحث في الأدوات"
+selectToolBody = "أضف أداة لإنشاء مسار عملك."
+selectToolTitle = "لا توجد أدوات بعد"
+toolSettings = "إعدادات الأداة"
+unknownStep = "عملية غير معروفة، تم الإبقاء عليها كما هي."
+unsavedBody = "لديك تغييرات غير محفوظة. احفظها قبل المغادرة، أم تتجاهلها؟"
+unsavedTitle = "تغييرات غير محفوظة"
+uploadUnsupported = "الملفات المرفوعة غير مدعومة في مسارات العمل بعد، لذلك لا يمكن حفظ هذه الخطوات: {{tools}}."
+usesDefaults = "يعمل بالإعدادات الافتراضية"
+
+[portal.pipelines.composer]
+addTool = "إضافة أداة"
+cancel = "إلغاء"
+chainEmpty = "أضف أداة لبدء إنشاء مسار عملك."
+create = "إنشاء مسار عمل"
+directory = "مجلد الإخراج"
+directoryHelp = "مسار مطلق على الخادم. يجب أن يكون ضمن المجلدات المسموح بها المكوّنة."
+editingUnsupported = "عرض معاملات هذه الأداة للتحرير غير مدعوم بعد."
+moveDown = "نقل إلى الأسفل"
+moveUp = "نقل إلى الأعلى"
+name = "الاسم"
+namePlaceholder = "مثال: مسح التنقيح"
+noSources = "لا توجد مصادر متصلة بعد. لا يزال بإمكان مسار العمل العمل على الملفات المقدمة إليه مباشرة."
+noToolSettings = "لا تحتوي هذه الأداة على إعدادات قابلة للتكوين."
+operations_one = "عملية ({{count}})"
+operations_other = "عمليات ({{count}})"
+output = "الإخراج"
+removeStep = "إزالة العملية"
+save = "حفظ التغييرات"
+scheduleEvery = "تشغيل كل"
+sources = "المصادر"
+sourcesLoading = "جارٍ تحميل المصادر..."
+trigger = "المشغّل"
+triggerManual = "يدوي فقط"
+
+[portal.pipelines.composer.unit]
+days = "أيام"
+hours = "ساعات"
+minutes = "دقائق"
+
+[portal.pipelines.delete]
+body = "حذف \"{{name}}\"؟ لا يمكن التراجع عن هذا."
+cancel = "إلغاء"
+confirm = "حذف"
+title = "حذف مسار العمل؟"
+
+[portal.pipelines.detail]
+delete = "حذف مسار العمل"
+run = "تشغيل الآن"
+
+[portal.pipelines.empty]
+action = "إنشاء مسار عمل"
+description = "أنشئ مسار عملك الأول: اختر المصادر التي يعمل عليها، وسلسلة العمليات، ومكان انتقال الإخراج."
+title = "لا توجد مسارات عمل بعد"
+
+[portal.pipelines.kpi]
+active = "نشطة"
+paused = "متوقفة مؤقتًا"
+total = "مسارات العمل"
+
+[portal.pipelines.output]
+folder = "كتابة إلى مجلد"
+inline = "إرجاع الملفات"
+
+[portal.pipelines.run]
+completed_one = "اكتمل التشغيل."
+completed_other = "اكتملت كل عمليات التشغيل البالغ عددها {{count}}."
+empty = "لا يوجد شيء لتشغيله: لم تكن لدى المصادر مستندات للمعالجة."
+failed = "فشل التشغيل: {{error}}"
+running = "بدأ التشغيل؛ لا يزال قيد التقدم."
+timeout = "يستغرق التشغيل وقتًا أطول من المتوقع؛ قد يظل ينتهي في الخلفية."
+
+[portal.pipelines.status]
+active = "نشط"
+paused = "متوقف مؤقتًا"
+
+[portal.pipelines.table]
+name = "مسار العمل"
+sources = "المصادر"
+status = "الحالة"
+steps = "الخطوات"
+
+[portal.pipelines.trigger]
+folder-watch = "مراقبة المجلد"
+manual = "يدوي"
+schedule = "مجدول"
+
+[portal.policies]
+subtitle = "أتمتات دائمة تفرض مسار أدوات على كل مستند. يتم تشغيل كل سياسة عند الرفع أو التصدير، وتشغّل سلسلة أدواتها، وتحفظ النسخة المفروضة بجانب الأصل."
+title = "السياسات"
+
+[portal.policies.card]
+comingSoon = "الترقية إلى Enterprise"
+notSetUp = "غير معدّة"
+
+[portal.policies.categories.compliance]
+desc = "فرض متطلبات HIPAA أو GDPR أو SOC 2 أو FedRAMP على كل مستند."
+label = "الامتثال"
+
+[portal.policies.categories.ingestion]
+desc = "تصنيف المستندات، واستخراج البيانات المنظمة، وفرض اصطلاحات التسمية، وتطبيع الصفحات."
+label = "الاستيعاب"
+
+[portal.policies.categories.retention]
+desc = "حدد مدة الاحتفاظ بالمستندات، ومتى تُؤرشف، ومتى تُحذف."
+label = "الاحتفاظ"
+
+[portal.policies.categories.routing]
+desc = "توجيه المستندات تلقائيًا إلى الفريق أو المجلد أو النظام المناسب."
+label = "التوجيه"
+
+[portal.policies.categories.security]
+desc = "اكتشاف PII، والتنقيح، وإزالة المحتوى النشط، ووضع علامة مائية على المستندات."
+label = "الأمان"
+
+[portal.policies.config]
+scopeAll = "كل المستندات"
+
+[portal.policies.config.compliance]
+summary = "يتحقق من المستندات مقابل الأطر التنظيمية قبل مغادرتها النظام."
+
+[portal.policies.config.compliance.fields]
+accessLog = "سجل الوصول"
+auditTrail = "مسار التدقيق"
+frameworks = "الأطر"
+onViolation = "عند عدم الامتثال"
+
+[portal.policies.config.compliance.rules]
+0 = "فحص الإطار"
+1 = "فرض الإجراء"
+2 = "مسار التدقيق"
+
+[portal.policies.config.ingestion]
+summary = "يصنّف المستندات، ويستخرج البيانات المنظمة، ويفرض التسمية، ويطبع الصفحات."
+
+[portal.policies.config.ingestion.fields]
+belowThreshold = "دون الحد"
+minConfidence = "الحد الأدنى للثقة"
+
+[portal.policies.config.ingestion.rules]
+0 = "تصنيف"
+1 = "استخراج"
+2 = "تسمية"
+3 = "تطبيع"
+
+[portal.policies.config.retention]
+summary = "يفرض مدة الاحتفاظ بالمستندات، ومتى تُؤرشف، ومتى تُحذف."
+
+[portal.policies.config.retention.fields]
+archiveAfter = "الأرشفة بعد"
+immutableHold = "حجز غير قابل للتغيير"
+keepFor = "الاحتفاظ لمدة"
+
+[portal.policies.config.retention.rules]
+0 = "حجز الاحتفاظ"
+1 = "أرشفة تلقائية"
+2 = "حظر الحذف"
+
+[portal.policies.config.routing]
+summary = "يوجّه المستندات إلى الوجهة المناسبة بناءً على النوع والتصنيف."
+
+[portal.policies.config.routing.fields]
+destination = "الوجهة"
+notify = "الإخطار عند التوجيه"
+webhookUrl = "Webhook URL"
+
+[portal.policies.config.routing.rules]
+0 = "تصنيف تلقائي"
+1 = "توجيه إلى مجلد"
+2 = "إشعار webhook"
+
+[portal.policies.config.security]
+summary = "يكتشف وينقح PII، ويزيل المحتوى النشط (JavaScript)، ويضع علامات مائية على المستندات."
+
+[portal.policies.config.security.rules]
+0 = "تنقيح PII"
+1 = "إزالة JavaScript"
+2 = "علامة مائية"
+
+[portal.policies.detail]
+enforces = "يفرض"
+onEveryExport = "عند كل تصدير"
+onEveryUpload = "عند كل رفع"
+outputAsNewFile = "كملف جديد"
+outputAsNewVersion = "كإصدار جديد"
+recentActivity = "النشاط الأخير"
+retry = "إعادة المحاولة"
+showLess = "عرض أقل"
+showMore = "عرض المزيد"
+sources = "المصادر"
+
+[portal.policies.detail.actions]
+clearHistory = "مسح سجل المعالجة"
+delete = "حذف"
+editSettings = "تعديل الإعدادات"
+pause = "إيقاف مؤقت"
+resume = "استئناف"
+runNow = "تشغيل الآن"
+
+[portal.policies.detail.clearHistory]
+body = "ستنسى هذه السياسة كل ملف عالجته بالفعل وستعيد معالجة كل ما هو موجود حاليًا في مصادرها عند التشغيل التالي. لن تتغير الملفات نفسها. لا يمكن التراجع عن ذلك."
+cancel = "إلغاء"
+confirm = "مسح السجل"
+title = "هل تريد مسح سجل المعالجة؟"
+
+[portal.policies.detail.emptyActivity]
+description = "ستظهر المستندات هنا بمجرد تشغيل هذه السياسة."
+title = "لا يوجد نشاط بعد"
+
+[portal.policies.endpoints]
+addWatermark = "علامة مائية"
+autoRedact = "تنقيح PII"
+compressPdf = "ضغط"
+flatten = "تسطيح"
+ocrPdf = "OCR"
+sanitizePdf = "إزالة JavaScript"
+
+[portal.policies.offline]
+description = "تم حفظ سياساتك وستظهر بمجرد استعادة الاتصال."
+retry = "إعادة المحاولة"
+title = "الخلفية غير متاحة"
+
+[portal.policies.stats]
+activeFor = "نشطة"
+dataProcessed = "البيانات المعالجة"
+docsEnforced = "المستندات المطبقة"
+
+[portal.policies.status]
+active = "نشطة"
+paused = "متوقفة مؤقتًا"
+
+[portal.policies.summary.active]
+description = "تُطبّق عند الرفع/التصدير"
+label = "السياسات النشطة"
+
+[portal.policies.summary.categories]
+description = "متاحة للتكوين"
+label = "الفئات"
+
+[portal.policies.summary.docsEnforced]
+description = "عبر السياسات النشطة"
+label = "المستندات المطبقة"
+
+[portal.policies.summary.paused]
+description = "مكوّنة لكنها لا تعمل"
+label = "متوقفة مؤقتًا"
+
+[portal.policies.wizard.actions]
+back = "رجوع"
+cancel = "إلغاء"
+continue = "متابعة"
+enablePolicy = "تفعيل السياسة"
+saveChanges = "حفظ التغييرات"
+
+[portal.policies.wizard.capability.compress]
+desc = "يضغط المستند إلى حجم ملف أصغر."
+label = "تقليل حجم الملف"
+
+[portal.policies.wizard.capability.flatten]
+desc = "يدمج حقول النماذج والتعليقات التوضيحية في الصفحة بحيث لا يمكن تعديلها."
+label = "تسطيح المستند"
+
+[portal.policies.wizard.capability.ocr]
+desc = "يشغّل OCR بحيث تصبح الصفحات الممسوحة ضوئيًا نصًا قابلاً للتحديد والبحث."
+label = "جعل النص قابلاً للبحث"
+
+[portal.policies.wizard.capability.redact]
+desc = "يعثر على التفاصيل الحساسة ويحجبها — مثل أرقام الضمان الاجتماعي والبطاقات — بحيث لا يمكن قراءتها."
+label = "تنقيح المعلومات الحساسة"
+
+[portal.policies.wizard.capability.sanitize]
+desc = "يزيل JavaScript المخفي حتى لا يتم تشغيل أي شيء تلقائيًا عند فتح المستند."
+label = "إزالة المحتوى النشط"
+
+[portal.policies.wizard.capability.watermark]
+desc = "يضع علامة مرئية (مثل “سري”) على كل صفحة."
+label = "تطبيق علامة مائية"
+
+[portal.policies.wizard.errors]
+noTools = "فعّل أداة واحدة على الأقل في سير العمل أولًا."
+saveFailed = "تعذّر حفظ السياسة. يُرجى المحاولة مرة أخرى."
+
+[portal.policies.wizard.output]
+heading = "المخرجات والتشغيل"
+
+[portal.policies.wizard.output.filenameRule]
+autoNumber = "ترقيم تلقائي"
+label = "قاعدة اسم الملف"
+placeholder = "نص لإضافته (اختياري)"
+prefix = "بادئة"
+suffix = "لاحقة"
+
+[portal.policies.wizard.output.outputAs]
+label = "الإخراج كـ"
+newFile = "ملف جديد"
+newVersion = "إصدار جديد"
+
+[portal.policies.wizard.output.runOn]
+export = "تصدير"
+helper = "متى تعمل السياسة: عند الرفع، أو قبل التصدير."
+label = "تشغيل عند"
+upload = "رفع"
+
+[portal.policies.wizard.settings]
+heading = "الإعدادات"
+
+[portal.policies.wizard.sources]
+heading = "المصادر"
+loading = "جارٍ تحميل المصادر…"
+
+[portal.policies.wizard.tabs]
+ariaLabel = "خطوات الإعداد"
+settings = "الإعدادات"
+workflow = "الإجراءات"
+
+[portal.policies.wizard.title]
+edit = "تعديل سياسة {{category}}"
+setUp = "إعداد سياسة {{category}}"
+
+[portal.policies.wizard.workflow]
+description = "اختر ما تفعله هذه السياسة بكل مستند تعالجه."
+
+[portal.policySummary]
+activeSummary = "{{active}} / {{total}} نشطة"
+noRule = "لم يتم تطبيق أي قاعدة بعد"
+subtitle = "أتمتة دائمة يمر عبرها كل مستند، بغض النظر عن مسار المعالجة الذي يتولاه."
+title = "ما يعمل على ملفات PDF الخاصة بك"
+
+[portal.policySummary.action]
+comingSoon = "الترقية إلى Enterprise"
+configure = "تكوين"
+setUp = "إعداد"
+
+[portal.policySummary.column]
+activeRule = "القاعدة النشطة"
+policy = "السياسة"
+status = "الحالة"
+
+[portal.policySummary.empty]
+description = "بمجرد تكوين السياسات، ستظهر الفئات هنا."
+title = "لا توجد سياسات بعد"
+
+[portal.policySummary.state]
+active = "نشطة"
+off = "متوقفة"
+soon = "قريبًا"
+
+[portal.processingStatus]
+managePlan = "إدارة الخطة"
+volumeSuffix = "ملفات PDF تمت معالجتها · آخر 30 يومًا"
+
+[portal.procurement]
+reset = "إعادة ضبط المشتريات (تجريبي)"
+subtitle = "احصل على تقييم فريقك، والتعاقد معه، وتهيئته. كل مستند في مكان واحد."
+title = "المشتريات"
+
+[portal.procurement.action]
+download = "تنزيل"
+pay = "ادفع الآن"
+request = "طلب"
+sign = "مراجعة وتوقيع"
+upload = "رفع"
+
+[portal.procurement.agreement]
+agreeCta = "الموافقة والاشتراك"
+confirm = "لقد قرأت ووافقت على اتفاقية Stirling Enterprise."
+eyebrow = "الاتفاقية"
+intro = "تغطي اتفاقية واحدة مدمجة صفقتك: اتفاقية الخدمة الرئيسية، ونموذج الطلب، وEULA، واتفاقية معالجة البيانات. راجعها، ثم وافق لقبول عرض السعر ضمن اشتراك ملتزم."
+title = "راجع اتفاقية المؤسسة الخاصة بك"
+
+[portal.procurement.builder]
+addons = "الإضافات"
+back = "رجوع"
+businessName = "اسم النشاط التجاري"
+businessNamePlaceholder = "شركتك"
+continue = "متابعة"
+country = "الدولة"
+countryEuro = "منطقة اليورو (EUR €)"
+countryUK = "المملكة المتحدة (GBP £)"
+countryUS = "الولايات المتحدة (USD $)"
+eula = "لقد قرأت ووافقت على Stirling Enterprise EULA. وهي تحكم الاتفاقية التي يتم إنشاؤها من عرض السعر هذا."
+generate = "إنشاء عرض سعر"
+included = "مضمن"
+indemnification = "تعويض IP"
+indemnificationSub = "ندافع عن مطالبات IP المؤهلة، وفقًا لـ EULA"
+offlineLicense = "ترخيص Offline / air-gapped"
+offlineLicenseSub = "ملف ترخيص قابل للتنزيل لمثيل self-hosted معزول air-gapped"
+qbr = "مراجعات أعمال ربع سنوية"
+qbrSub = "يراجع SE الخاص بك الاستخدام وخريطة الطريق كل ربع سنة"
+running = "{{annual}} / سنة · {{years}}-سنة {{tcv}}"
+s1Sub = "فريقك وملفات PDF التي تتوقع تشغيلها كل عام."
+s1Title = "كم ستعالج؟"
+s2Sub = "تخفض المدد الأطول السعر؛ ويحدد مستوى الخدمة الدعم."
+s2Title = "الالتزام والخدمة"
+s3Sub = "لعرض السعر والاتفاقية التي ينشئها."
+s3Title = "تفاصيلك"
+serviceLevel = "مستوى الخدمة"
+slDedicated = "مخصص"
+slDedicatedSub = "4 ساعات عمل · مدير حساب مخصص · +30%"
+slPriority = "أولوية"
+slPrioritySub = "نفس يوم العمل · CSM مُسمّى · +15%"
+slStandard = "قياسي"
+slStandardSub = "يوم العمل التالي · CSM مشترك · مضمن"
+stepOf = "الخطوة {{n}} من {{total}}"
+term = "المدة"
+termDiscount = "تم تطبيق خصم {{pct}}% لالتزام متعدد السنوات"
+title = "أنشئ عرض السعر الخاص بك"
+training = "التهيئة والتدريب"
+trainingSub = "جلسات مباشرة لتشغيل فريقك"
+users = "إجمالي المستخدمين"
+usersPlaceholder = "مثال: 250"
+volEstimated = "مقدّر من {{count}} مستخدمين (~2,000 ملف PDF لكل منهم، بما في ذلك الأتمتة). عدّل إذا كنت تعرف رقمًا أدق."
+volManual = "باستخدام الرقم الذي أدخلته. أعد التقدير من حجم فريقك في أي وقت."
+volNoUsers = "لست متأكدًا؟ أدخل حجم فريقك وسنقدّره."
+volume = "حجم PDF السنوي"
+volumePlaceholder = "مثال: 1,000,000"
+years_one = "{{count}} سنة"
+years_other = "{{count}} سنوات"
+
+[portal.procurement.docs]
+count_one = "{{count}} مستند"
+count_other = "{{count}} مستندات"
+done = "تم"
+here = "أنت هنا"
+hide = "إخفاء"
+optional = "اختياري"
+paidAddon = "إضافة مدفوعة"
+show = "إظهار"
+subtitle = "كل ما تحتاجه في كل خطوة من الرحلة، يظهر مع تقدم الصفقة خلالها."
+supportingSubtitle = "SOC 2، ومراجعات الأمان، ونماذج الضرائب والمزيد، جاهزة عندما يطلبها فريق الأمان أو المشتريات لديك. بعضها يتضمن رسومًا لمرة واحدة."
+supportingTitle = "دعم تقييمك"
+title = "المستندات"
+upcoming = "قادم"
+
+[portal.procurement.error]
+title = "حدث خطأ ما"
+
+[portal.procurement.hero]
+company = "صفقة المؤسسة الخاصة بك"
+ctaAgreement = "مراجعة الاتفاقية وتوقيعها"
+ctaLive = "أنت جاهز للعمل"
+ctaPayment = "إضافة الدفع"
+ctaQuote = "مراجعة عرض السعر"
+ctaTrial = "أنشئ عرض السعر"
+eyebrow = "مشتريات Enterprise"
+inviteTeammates = "دعوة زملاء الفريق"
+keyDocs = "المستندات الرئيسية"
+nextStep = "الخطوة التالية: {{action}}"
+notStarted = "لم يبدأ"
+open = "فتح المشتريات"
+scheduleCall = "جدولة مكالمة"
+setup1Sub = "ادعُ زملاء فريقك"
+setup1Title = "نشر محرر PDF"
+setup2Sub = "تشغيل المعالجة عبر المحررين والمصادر الأخرى"
+setup2Title = "توصيل معالج PDF"
+setup3Sub = "فعّل الأمان أو الامتثال أو التوجيه أو الاحتفاظ عند الحاجة إليها"
+setup3Title = "إضافة السياسات الموصى بها"
+
+[portal.procurement.journey]
+daysLeft_one = "باقي {{count}} يوم"
+daysLeft_other = "باقي {{count}} أيام"
+engineerLabel = "مهندس الحلول الخاص بك"
+eyebrow = "إطلاقك"
+live = "أنت جاهز للعمل على Stirling Enterprise"
+nextStep = "الخطوة التالية: {{action}}"
+subtitle = "مهندس الحلول الخاص بك معك في كل خطوة. إجراء تالٍ واحد في كل مرة؛ وقائمة التحقق الكاملة أدناه."
+title = "من التجربة إلى التشغيل، مسار موجه واحد"
+trialTitle = "تجربة Enterprise"
+
+[portal.procurement.journeySteps.agreement]
+blurb = "توقيع واحد يغطي MSA، ونموذج الطلب، وEULA، وDPA."
+gatingAction = "راجع اتفاقيتك ووقّعها"
+label = "الاتفاقية"
+
+[portal.procurement.journeySteps.implementation]
+blurb = "توفير مساحة العمل الخاصة بك وتشغيل دليل الإطلاق."
+gatingAction = "جارٍ توفير مساحة العمل الخاصة بك"
+label = "التنفيذ"
+
+[portal.procurement.journeySteps.payment]
+blurb = "ادفع بالبطاقة أو التحويل البنكي أو مقابل أمر شراء."
+gatingAction = "تأكيد الدفع"
+label = "الدفع"
+
+[portal.procurement.journeySteps.quote]
+blurb = "راجع تسعير الحجم الملتزم ومدة العقد."
+gatingAction = "اقبل عرض السعر الخاص بك"
+label = "عرض السعر"
+
+[portal.procurement.journeySteps.trial]
+blurb = "قيّم Stirling مقابل مستنداتك وسير عملك."
+gatingAction = "أنشئ عرض السعر الخاص بك"
+label = "التجربة"
+
+[portal.procurement.license]
+copied = "تم النسخ"
+copy = "نسخ المفتاح"
+downloadError = "تعذّر إنشاء ملف الترخيص Offline الآن — يُرجى المحاولة مرة أخرى بعد قليل."
+downloadOffline = "تنزيل ترخيص Offline (.lic)"
+hint = "الصق هذا المفتاح في مثيل self-hosted لتفعيله، أو احتفظ به لسجلاتك. حافظ عليه آمنًا."
+label = "مفتاح الترخيص الخاص بك"
+
+[portal.procurement.link]
+cta = "ربط الحساب"
+description = "تعمل المشتريات على حساب Stirling المرتبط لديك: فهو الطريقة التي نوفر بها التجربة، ونسعّر عرضك، ونبدأ الفوترة. اربط حسابًا للبدء."
+eyebrow = "Enterprise"
+title = "اربط حسابك للبدء"
+
+[portal.procurement.live]
+description = "اشتراكك نشط وتم إصدار ترخيصك. تم توفير فريقك وبدأت الفوترة."
+eyebrow = "مباشر"
+title = "أنت جاهز للعمل على Stirling Enterprise"
+
+[portal.procurement.locked]
+description = "مفاتيح التجربة، وعروض الأسعار للحجم الملتزم، والاتفاقية ذات التوقيع الواحد، والدفع، وسجل مستنداتك كلها هنا بمجرد بدء تقييم Enterprise."
+eyebrow = "Enterprise فقط"
+talkToSales = "تحدث إلى المبيعات"
+title = "يفتح مسار المشتريات مع Enterprise"
+
+[portal.procurement.milestone]
+accept = "قبول ومتابعة"
+description = "نزّل PDF لمشاركته مع فريقك، وعد لقبوله عندما تكون جاهزًا، أو أجرِ تغييرات."
+download = "تنزيل PDF"
+downloadError = "تعذّر تنزيل عرض السعر PDF الآن — يُرجى المحاولة مرة أخرى بعد قليل."
+edit = "تعديل عرض السعر"
+eyebrow = "عرض السعر {{number}}"
+perYear = " / سنة"
+preparedFor = "مُعدّ لـ {{company}}"
+tcv = "{{value}} إجمالي قيمة العقد"
+title = "عرض السعر الخاص بك جاهز"
+
+[portal.procurement.modal]
+cancel = "إلغاء"
+chooseFile = "اختيار ملف"
+close = "إغلاق"
+downloadBody = "سيبدأ التنزيل بعد قليل."
+downloadCta = "تنزيل"
+downloadTitle = "تنزيل"
+noFile = "لم يتم تحديد ملف"
+payBody = "ادفع عقدك الملتزم بالبطاقة أو التحويل البنكي عبر Stripe. يتم توفير مساحة العمل الخاصة بك بمجرد تسوية الدفع."
+payCta = "المتابعة إلى Stripe"
+payTitle = "تأكيد الدفع"
+requestBodyFree = "سننشئ هذا عند الطلب. أكّد وسيقوم مهندس الحلول الخاص بك بإرساله قريبًا."
+requestBodyPaid = "هذه إضافة مدفوعة. أكّد وسيحدد مهندس الحلول الخاص بك نطاقها ويرسل المستندات."
+requestCta = "طلب"
+requestTitle = "طلب هذا المستند"
+signBody = "يفتح اتفاقية Stirling Enterprise للتوقيع الإلكتروني: توقيع واحد يغطي MSA، ونموذج الطلب، وEULA، وDPA. نوقّع بالمقابل تلقائيًا وتنتقل إلى الدفع."
+signCta = "فتح للتوقيع"
+signTitle = "راجع اتفاقيتك ووقّعها"
+uploadBody = "أرسل لنا PO الخاص بك وسنصدر فاتورة مقابله وفق شروطك. اسحب PDF أو اختر ملفًا أدناه."
+uploadCta = "رفع أمر الشراء"
+uploadTitle = "رفع أمر الشراء الخاص بك"
+
+[portal.procurement.payment]
+description = "تم قبول عرض السعر الخاص بك وترخيصك نشط بالفعل — يمكن لفريقك البدء فورًا. ادفع الفاتورة الأولى عندما تكون جاهزًا؛ يمكنك الدفع أو تنزيلها هنا، دون الحاجة إلى بريد إلكتروني."
+downloadInvoice = "تنزيل الفاتورة"
+simulate = "محاكاة استلام الدفع (تجريبي)"
+title = "تم إنشاء الاشتراك"
+viewInvoice = "عرض الفاتورة ودفعها"
+
+[portal.procurement.schedule]
+fallback = "تعذّر تحميل المجدول."
+fallbackLink = "فتح الجدولة في تبويب جديد"
+subtitle = "سيرشد مهندس الحلول الخاص بك فريقك خلال الإطلاق. اختر وقتًا يناسبك."
+title = "جدولة مكالمة"
+
+[portal.procurement.status]
+action = "إجراء مطلوب"
+available = "متاح"
+complete = "مكتمل"
+pending = "معلّق"
+request = "عند الطلب"
+
+[portal.procurement.trial]
+body = "يضيف التمديد 7 أيام ويُخطر مهندس الحلول الخاص بك."
+bodyMaxed = "لقد استخدمت كل التمديدات — تحدث إلى مهندس الحلول الخاص بك إذا كنت تحتاج إلى مزيد من الوقت."
+cancel = "إلغاء التجربة"
+extend = "تمديد 7 أيام"
+maxed = "بلغ الحد الأقصى"
+subtitle = "تستمر تجربتك المجانية حتى {{date}}. لا حاجة إلى بطاقة."
+title = "تجربة Enterprise"
+
+[portal.procurement.upsell]
+homeBadge = "Enterprise"
+homeBody = "تسعير حجم ملتزم، وSSO + SCIM + RBAC على مستوى المؤسسة، وتدقيق غير قابل للتغيير لمدة 90 يومًا، وSE مخصص."
+homeCta = "بدء التجربة →"
+homeHeadline = "عالج ملايين ملفات PDF."
+
+[portal.recentActivity]
+title = "النشاط الأخير"
+viewAll = "عرض الكل"
+
+[portal.recentActivity.empty]
+description = "ستظهر هنا عمليات تشغيل المسارات وعمليات النشر وأحداث الوكلاء."
+title = "لا شيء هنا بعد"
+
+[portal.search]
+ariaLabel = "بحث"
+placeholder = "ابحث في Stirling — endpoints، المسارات، المستندات…"
+
+[portal.search.empty]
+noActionsDescription = "ستظهر الإجراءات السريعة هنا بمجرد توفرها."
+noActionsTitle = "لا توجد إجراءات سريعة"
+noMatches = "لا توجد نتائج لـ \"{{query}}\""
+noMatchesDescription = "جرّب كلمة مفتاحية مختلفة أو تصفح الفهرس."
+
+[portal.settings.groups]
+admin = "المسؤول"
+
+[portal.settings.sections]
+account-link = "ربط الحساب"
+
+[portal.shell.header]
+accountFallback = "الحساب"
+accountMenu = "قائمة الحساب"
+darkMode = "الوضع الداكن"
+lightMode = "الوضع الفاتح"
+search = "بحث"
+searchPlaceholder = "بحث…"
+signOut = "تسجيل الخروج"
+switchToDark = "التبديل إلى السمة الداكنة"
+switchToLight = "التبديل إلى السمة الفاتحة"
+
+[portal.shell.sidebar]
+appEditor = "المحرر"
+appProcessor = "المعالج"
+brandSuffix = "Stirling Processor"
+docsCount = "{{docs}} مستند"
+linkAccount = "ربط حساب Stirling"
+planEditor = "خطة المحرر"
+planEnterprise = "خطة Enterprise"
+planProcessor = "خطة المعالج"
+primaryNav = "التنقل الرئيسي"
+switchApp = "تبديل التطبيق"
+
+[portal.sources]
+subtitle = "اتصالات إدخال قابلة لإعادة الاستخدام تغذي المستندات إلى Stirling. كوّن الاتصال مرة واحدة، ثم أشر إليه من أي عدد من السياسات. انقر على صف لمعرفة تكوينه والسياسات التي تستخدمه."
+title = "المصادر"
+
+[portal.sources.actions]
+agentBuilder = "Agent Builder"
+connectSource = "توصيل مصدر"
+
+[portal.sources.delete]
+body = "حذف \"{{name}}\"؟ لا يمكن التراجع عن ذلك. يجب تحديث السياسات التي تشير إليه."
+cancel = "إلغاء"
+confirm = "حذف"
+title = "حذف المصدر؟"
+
+[portal.sources.detail]
+closeAriaLabel = "إغلاق التفاصيل"
+delete = "حذف المصدر"
+docs24h = "آخر 24 ساعة"
+docs30d = "آخر 30 يومًا"
+docsTotal = "الإجمالي المشاهَد"
+docsTrend = "المستندات خلال آخر 30 يومًا"
+documents = "المستندات"
+edit = "تعديل"
+notReferenced = "لا تتم الإشارة إليه من أي سياسة، لذا من الآمن حذفه."
+pause = "إيقاف مؤقت"
+resume = "استئناف"
+subtitle = "{{type}} · {{status}}"
+usedBy = "مستخدم بواسطة"
+
+[portal.sources.empty]
+description = "وصّل مجلدًا (وقريبًا، التخزين السحابي) حتى يكون لدى سياساتك مكان تسحب منه المستندات."
+title = "لا توجد مصادر متصلة بعد"
+
+[portal.sources.kpi]
+inUse = "قيد الاستخدام"
+total = "الاتصالات"
+unused = "غير مستخدم"
+
+[portal.sources.status]
+active = "نشط"
+disabled = "معطل"
+unused = "غير مستخدم"
+
+[portal.sources.table]
+source = "المصدر"
+status = "الحالة"
+usedBy = "السياسات"
+
+[portal.sources.types.editor]
+label = "المحرر"
+
+[portal.sources.types.folder]
+description = "مراقبة دليل على الخادم للمستندات الجديدة."
+label = "مجلد"
+
+[portal.sources.types.folder.fields.directory]
+helperText = "المسار المطلق الذي يراقبه Stirling للملفات المراد معالجتها."
+label = "مسار الدليل"
+placeholder = "/data/incoming"
+
+[portal.sources.types.folder.fields.identity]
+helperText = "يفحص التحقق من المحتوى كل ملف تم تغييره، لذلك لا تتم إعادة معالجة عمليات إعادة التسمية واللمسات التي لا تغيّر المحتوى."
+label = "اكتشاف التغيير"
+
+[portal.sources.types.folder.fields.identity.options]
+hash = "الحجم والتاريخ والتحقق من المحتوى"
+stat = "الحجم وتاريخ التعديل"
+
+[portal.sources.types.folder.fields.mode]
+label = "وضع القراءة"
+
+[portal.sources.types.folder.fields.mode.options]
+consume = "استهلاك: معالجة كل ملف مرة واحدة"
+snapshot = "لقطة: إعادة قراءة المجلد في كل تشغيل"
+
+[portal.sources.types.folder.fields.recursive]
+label = "عمق المجلد"
+
+[portal.sources.types.folder.fields.recursive.options]
+all = "تضمين المجلدات الفرعية"
+top = "المستوى الأعلى فقط"
+
+[portal.sources.types.unknown]
+label = "المصدر"
+
+[portal.sources.wizard]
+back = "رجوع"
+cancel = "إلغاء"
+continue = "متابعة"
+editTitle = "تعديل المصدر"
+name = "الاسم"
+namePlaceholder = "مثال: استقبال المطالبات"
+save = "حفظ التغييرات"
+subtitle = "الخطوة {{current}} من {{total}} · {{label}}"
+title = "توصيل مصدر"
+type = "النوع"
+
+[portal.sources.wizard.steps]
+chooseType = "اختيار النوع"
+configure = "تكوين"
+review = "مراجعة وتوصيل"
+
+[portal.usage]
+managePayment = "إدارة الدفع"
+subtitle = "الاستهلاك والفواتير وإدارة الخطة لكل PDF قام Stirling بفوترته، في وحدة تحكم واحدة."
+title = "الاستخدام والفوترة"
+
+[portal.usage.error]
+loadWallet = "تعذّر تحميل المحفظة"
+openStripePortal = "تعذّر فتح بوابة Stripe"
+walletUnavailable = "المحفظة غير متاحة: {{status}} {{statusText}}"
+
+[portal.usage.sessionExpired]
+action = "تسجيل الدخول مرة أخرى"
+body = "انتهت صلاحية جلسة حساب Stirling الخاص بك. سجّل الدخول مرة أخرى لعرض الفوترة — يظل مثيلك مرتبطًا."
+title = "انتهت صلاحية الجلسة"
+
+[portal.users]
+title = "المستخدمون"
+
+[portal.users.roles]
+subtitle = "كل دور موجود في كل خطة — وما يمكن لكل دور فعله ثابت عبر المؤسسة."
+title = "الأدوار"
+
+[portal.users.roles.admin]
+label = "المسؤول (مالك المؤسسة)"
+summary = "حوكمة كاملة على مساحة العمل والإعدادات والأعضاء."
+
+[portal.users.roles.admin.permissions]
+0 = "إدارة المستخدمين والفرق والأدوار"
+1 = "إدارة كل عمليات التكامل بما في ذلك اتصالات S3"
+2 = "منح أو إلغاء وصول البوابة"
+3 = "كل ما يمكن لمالك الفريق القيام به"
+
+[portal.users.roles.guest]
+label = "ضيف"
+summary = "وصول محدود أو عبر الويب فقط؛ لا يمكنه امتلاك تكوينات شخصية."
+
+[portal.users.roles.guest.permissions]
+0 = "استخدام عبر الويب فقط / تجريبي"
+1 = "لا توجد مفاتيح API أو عمليات تكامل"
+2 = "لا يوجد وصول إلى البوابة"
+3 = "قراءة فقط حيث تتم المشاركة"
+
+[portal.users.roles.member]
+label = "عضو"
+summary = "مستخدم عادي — يعمل مع الموارد المشتركة وتكويناته الخاصة."
+
+[portal.users.roles.member.permissions]
+0 = "استخدام المحرر وعمليات التكامل المشتركة"
+1 = "إنشاء تكوينات API وMCP شخصية"
+2 = "رؤية تكوينات الفريق المشتركة معه"
+3 = "لا توجد إدارة S3 أو مساحة عمل"
+
+[portal.users.roles.team_owner]
+label = "مالك الفريق"
+summary = "يمتلك فريقًا — يدير موارد أعضائه والتكوينات المشتركة."
+
+[portal.users.roles.team_owner.permissions]
+0 = "إنشاء وإدارة اتصالات S3 الخاصة بالفريق"
+1 = "إدارة تكوينات التكامل المملوكة للفريق"
+2 = "الوصول إلى البوابة عبر السياسة الافتراضية"
+3 = "كل ما يمكن للعضو القيام به"
+
+[portal.welcome]
+ariaLabel = "مرحبًا بك في Stirling PDF"
+badge = "Open-source"
+installEditor = "تثبيت المحرر"
+inviteTeammates = "دعوة زملاء الفريق"
+openInBrowser = "فتح في المتصفح"
+perks = "مجاني للأبد · قابل للاستضافة الذاتية"
+subtitle = "محرر PDF الأكثر أمانًا في العالم مجاني للفرق بجميع أحجامها. يتضمن أكثر من 60 عملية PDF وSSO."
+title = "مرحبًا بك في"
+titleAccent = "Stirling PDF"
 
 [printFile]
 title = "طباعة ملف"
@@ -6934,6 +9008,21 @@ manage = "Manage"
 description = "Policies and legal information for this service."
 title = "Legal Documents"
 
+[settings.licenses]
+backendDescription = "تراخيص تبعيات الخلفية المضمّنة مع هذا الخادم."
+backendLabel = "تراخيص الخلفية"
+backendTitle = "تراخيص الطرف الثالث للخلفية"
+empty = "لم يتم العثور على تبعيات."
+frontendDescription = "تراخيص تبعيات الواجهة الأمامية المضمّنة في إصدار النشر."
+frontendLabel = "تراخيص الواجهة الأمامية"
+frontendTitle = "تراخيص الطرف الثالث للواجهة الأمامية"
+license = "الترخيص"
+listDescription = "تُعرض القائمة مباشرة في UI من حزمة الإصدار أو endpoint الخلفية."
+listTitle = "التبعيات المضمّنة"
+loadError = "فشل تحميل تراخيص الطرف الثالث"
+module = "الوحدة"
+version = "الإصدار"
+
 [settings.licensingAnalytics]
 audit = "التدقيق"
 plan = "الخطة"
@@ -7686,7 +9775,9 @@ memberRemoved = "تمت إزالة العضو بنجاح"
 namePlaceholder = "أدخل اسم الفريق"
 personal = "شخصي"
 removeError = "تعذّرت إزالة العضو"
+renameCancel = "إلغاء إعادة التسمية"
 renameError = "تعذّرت إعادة تسمية الفريق"
+renameSubmit = "حفظ اسم الفريق"
 renameSuccess = "تمت إعادة تسمية الفريق بنجاح"
 
 [team.invitationBanner]
@@ -7702,6 +9793,7 @@ sendButton = "إرسال الدعوة"
 title = "دعوة عضو فريق"
 
 [team.members]
+actions = "إجراءات العضو"
 emailColumn = "البريد الإلكتروني"
 empty = "لا يوجد أعضاء فريق بعد"
 nameColumn = "الاسم"
@@ -7933,6 +10025,146 @@ title = "إحصائيات مفصلة"
 unknownEndpoint = "نقطة نهاية غير معروفة"
 visits = "الزيارات"
 
+[users]
+lastActive = "آخر نشاط"
+learnMore = "تعرّف على المزيد حول الأدوار والوصول."
+locked = "مقفل"
+roleFor = "الدور لـ {{name}}"
+rowActions = "إجراءات لـ {{name}}"
+showAll = "عرض كل {{count}}"
+showLess = "عرض أقل"
+subtitle2 = "أفرادك وفرقك ومستويات الوصول."
+suspended = "معلّق"
+teamActions = "إجراءات الفريق"
+title = "المستخدمون"
+you = "(أنت)"
+
+[users.action]
+deleteTeam = "حذف الفريق"
+disableMfa = "إعادة ضبط MFA"
+move = "نقل إلى فريق"
+reinstate = "إعادة التفعيل"
+remove = "إزالة من المؤسسة"
+rename = "إعادة تسمية الفريق"
+resetPw = "إعادة ضبط كلمة المرور"
+suspend = "تعليق"
+unlock = "فتح الحساب"
+
+[users.cap]
+addProcessor = "+ المعالج"
+approver = "يعتمد السياسة"
+editor = "المحرر"
+processor = "المعالج"
+
+[users.confirm]
+deleteTeamBody = "حذف فريق {{name}}؟ يجب أن يكون الفريق فارغًا أولًا - انقل أعضاءه إلى فريق آخر، ولا يمكن أن يظل مالكًا لأي تكوينات تكامل."
+deleteTeamTitle = "حذف الفريق"
+disableMfaBody = "إزالة تسجيل MFA الخاص بـ {{name}}؟ سيقوم بإعداده مرة أخرى عند تسجيل الدخول التالي إذا كان مطلوبًا."
+disableMfaTitle = "إعادة ضبط MFA"
+removeBody = "هل تريد إزالة {{name}} نهائيًا من المؤسسة؟ لا يمكن التراجع عن ذلك."
+removeTitle = "إزالة العضو"
+
+[users.empty]
+description = "ادعُ فريقك لبدء التعاون."
+title = "لا يوجد أعضاء بعد"
+
+[users.group]
+addToTeam = "إضافة إلى فريق"
+guestCount = "{{count}} ضيف"
+guests = "الضيوف"
+guestsDesc = "متعاونون خارجيون، ضمن نطاق ما شاركته. المحرر فقط."
+ledBy = "بقيادة {{owner}}"
+org = "المؤسسة"
+orgDesc = "مالكون بسلطة على مستوى المؤسسة واعتماد السياسات"
+owners = "{{count}} مالك"
+team = "فريق {{name}}"
+teamMeta = "{{count}} شخص"
+
+[users.invite]
+access = "الوصول"
+action = "دعوة أشخاص"
+authOauth = "OAuth2 / SSO"
+authSaml = "SAML 2.0"
+authType = "طريقة تسجيل الدخول"
+authWeb = "كلمة المرور"
+create = "إنشاء حساب"
+createSubtitle = "أنشئ حساب self-hosted بكلمة مرور أو SSO."
+createTitle = "إنشاء حساب"
+editorDesc = "حرّر ملفات PDF في محرر Stirling PDF. يحصل الجميع على هذا."
+email = "عنوان البريد الإلكتروني"
+emailError = "أدخل عنوان بريد إلكتروني صالحًا"
+emailPlaceholder2 = "name@company.com"
+forceChange = "طلب تغيير كلمة المرور عند أول تسجيل دخول"
+forceMfa = "طلب إعداد MFA عند أول تسجيل دخول"
+method = "كيفية إضافتهم"
+methodDirect = "إنشاء حساب مباشرة"
+methodEmail = "دعوة عبر البريد الإلكتروني"
+password = "كلمة المرور"
+passwordError = "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل"
+processorDeferred = "تم إرسال الدعوة، لكن تعذّر منح وصول المعالج بعد - عيّنه من القائمة بعد انضمامهم."
+processorDesc = "سطح الحوكمة، تشغيل المسارات، والوكلاء، وAPI."
+role = "الدور"
+send2 = "إرسال الدعوة"
+subtitle2 = "سيتلقون بريدًا إلكترونيًا للانضمام إلى مساحة عمل Stirling الخاصة بك."
+team = "الفريق"
+title = "دعوة الأشخاص"
+username = "اسم المستخدم"
+usernameError = "يجب أن يتكون اسم المستخدم من 3 أحرف على الأقل"
+usernamePlaceholder = "jsmith"
+
+[users.loadError]
+description = "حدث خطأ ما أثناء الوصول إلى الخادم الخلفي، أو ليس لديك صلاحية الوصول. حاول مرة أخرى."
+title = "تعذر تحميل الأعضاء"
+
+[users.moveTeam]
+apply = "نقل"
+team = "الفريق"
+title = "نقل إلى فريق"
+
+[users.newTeam]
+action = "+ فريق جديد"
+create = "إنشاء فريق"
+emailError = "أدخل عنوان بريد إلكتروني صالحًا"
+name = "اسم الفريق"
+namePlaceholder = "مثال: المالية"
+nameRequired = "اسم الفريق مطلوب"
+owner = "مالك الفريق"
+ownerFailed = "تم إنشاء الفريق، لكن تعذر دعوة المالك. عيّن واحدًا من قائمة الأعضاء."
+ownerHelper = "لكل فريق قائد. ستتم دعوته كمالك للفريق، مع تفعيل المعالج، ويمكنه إضافة البقية. يمكنك إعادة التعيين لاحقًا."
+ownerPlaceholder = "owner@company.com"
+subtitle = "اجمع الأشخاص ضمن مالك فريق يدير وصولهم."
+title = "فريق جديد"
+
+[users.renameTeam]
+apply = "إعادة تسمية"
+name = "اسم الفريق"
+title = "إعادة تسمية الفريق"
+
+[users.resetPw]
+apply = "إعادة تعيين كلمة المرور"
+confirm = "تأكيد كلمة المرور"
+copied = "تم النسخ إلى الحافظة"
+copyHint = "انسخ هذا الآن - لن يتم عرضه مرة أخرى."
+email = "إرسال بريد إلكتروني إلى المستخدم بشأن إعادة التعيين"
+forceChange = "طلب تغيير كلمة المرور عند تسجيل الدخول التالي"
+generate = "إنشاء كلمة مرور آمنة"
+includePw = "تضمين كلمة المرور الجديدة في البريد الإلكتروني"
+mismatch = "كلمتا المرور غير متطابقتين"
+newPassword = "كلمة المرور الجديدة"
+regen = "إعادة الإنشاء"
+title = "إعادة تعيين كلمة المرور"
+tooShort = "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل"
+
+[users.role]
+guest = "ضيف"
+member = "عضو"
+orgOwner = "مالك المؤسسة"
+teamOwner = "مالك الفريق"
+
+[users.team]
+grantProcessor = "منح المعالج للفريق"
+revokeProcessor = "إلغاء المعالج من الفريق"
+
 [validateSignature]
 date = "التاريخ"
 downloadCsv = "تنزيل CSV"
@@ -8057,13 +10289,22 @@ zoomOut = "تصغير"
 [viewer.attachments]
 addAttachment = "إضافة مرفق"
 close = "إغلاق المرفقات"
+closeSidebar = "إغلاق الشريط الجانبي للمرفقات"
+download = "تنزيل المرفق"
 empty = "لا توجد مرفقات في هذا المستند"
 loading = "جارٍ تحميل المرفقات..."
 noDocument = "افتح ملف PDF لعرض مرفقاته."
 noMatch = "لا توجد مرفقات تطابق بحثك"
 noSupport = "دعم المرفقات غير متاح في هذا العارض."
+retry = "إعادة المحاولة"
 searchPlaceholder = "ابحث في المرفقات"
 title = "المرفقات"
+
+[viewer.bookmarks]
+bookmarkTitle = "عنوان الإشارة المرجعية"
+closeSidebar = "إغلاق الشريط الجانبي للإشارات المرجعية"
+collapseAll = "طي جميع الإشارات المرجعية"
+expandAll = "توسيع جميع الإشارات المرجعية"
 
 [viewer.comments]
 addComment = "إضافة تعليق"
@@ -8075,6 +10316,7 @@ clearAll = "مسح جميع التعليقات"
 clearAllDescription = "يؤدي هذا إلى إزالة التعليقات والردود من الشريط الجانبي مع الإبقاء على أي تعليقات توضيحية مرفقة في المستند."
 clearAllTitle = "هل تريد مسح جميع التعليقات؟"
 close = "إغلاق التعليقات"
+closeSidebar = "إغلاق الشريط الجانبي للتعليقات"
 deleteAnnotationAndComment = "حذف التعليق التوضيحي والتعليق"
 deleteDescription = "يحتوي هذا التعليق التوضيحي على تعليق مرفق. يمكنك إزالة التعليق فقط من الشريط الجانبي مع إبقاء التعليق التوضيحي، أو حذف كل شيء."
 deleteTitle = "إزالة التعليق التوضيحي من التعليقات؟"
@@ -8106,6 +10348,11 @@ title = "حقول النموذج"
 unsavedBadge = "غير محفوظ"
 unsavedDesc = "لديك تغييرات غير محفوظة"
 
+[viewer.layers]
+closeSidebar = "إغلاق الشريط الجانبي للطبقات"
+hideAll = "إخفاء جميع الطبقات"
+showAll = "إظهار جميع الطبقات"
+
 [viewer.link]
 delete = "حذف الرابط"
 
@@ -8135,6 +10382,9 @@ resultsOf = "من {{total}}"
 
 [viewer.signature]
 delete = "حذف التوقيع"
+
+[viewer.thumbnails]
+closeSidebar = "إغلاق الشريط الجانبي للصور المصغرة"
 
 [viewPdf]
 tags = "عرض,قراءة,تعليق,نص,صورة"
@@ -8562,6 +10812,7 @@ loading = "جارٍ تحميل الأشخاص..."
 locked = "مقفل"
 lockedBadge = "مقفل"
 loginRequired = "فعّل وضع تسجيل الدخول أولاً"
+memberActions = "إجراءات العضو"
 noMembersFound = "لم يتم العثور على أعضاء"
 role = "الدور"
 searchMembers = "ابحث عن الأعضاء..."
@@ -8571,6 +10822,7 @@ unlockAccount = "فتح قفل الحساب"
 unlockUserError = "فشل فتح قفل حساب المستخدم"
 unlockUserSuccess = "تم فتح قفل حساب المستخدم بنجاح"
 user = "مستخدم"
+userInfo = "معلومات المستخدم"
 
 [workspace.people.actions]
 upgrade = "ترقية"
@@ -8716,6 +10968,7 @@ removeMemberError = "فشل إزالة المستخدم من الفريق"
 removeMemberSuccess = "تمت إزالة المستخدم من الفريق"
 renameTeamLabel = "إعادة تسمية الفريق"
 system = "النظام"
+teamActions = "إجراءات الفريق"
 teamName = "اسم الفريق"
 teamNotFound = "لم يتم العثور على الفريق"
 title = "الفرق"

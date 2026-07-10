@@ -98,6 +98,7 @@ def translate_language(
     timeout: int,
     skip_verification: bool,
     include_existing: bool,
+    model: str,
 ) -> Tuple[str, bool, str]:
     """
     Translate a single language.
@@ -115,6 +116,8 @@ def translate_language(
         str(batch_size),
         "--timeout",
         str(timeout),
+        "--model",
+        model,
     ]
 
     if skip_verification:
@@ -139,11 +142,11 @@ def translate_language(
             safe_print(f"[{language}] ✓ Success")
             return (language, True, "Success")
         else:
-            error_msg = (
-                result.stderr.strip() or result.stdout.strip() or "Unknown error"
-            )
-            safe_print(f"[{language}] ✗ Failed: {error_msg[:100]}")
-            return (language, False, error_msg[:200])  # Truncate long errors
+            # Show the actual error (last line of output), not the header
+            output = result.stderr.strip() or result.stdout.strip() or "Unknown error"
+            error_msg = output.splitlines()[-1][:200]
+            safe_print(f"[{language}] ✗ Failed: {error_msg}")
+            return (language, False, error_msg)
 
     except subprocess.TimeoutExpired:
         safe_print(f"[{language}] ✗ Timeout exceeded")
@@ -177,6 +180,11 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
 
     parser.add_argument(
         "--api-key", help="OpenAI API key (or set OPENAI_API_KEY env var)"
+    )
+    parser.add_argument(
+        "--model",
+        default="gpt-5.5",
+        help="OpenAI model (default: gpt-5.5; gpt-5.6-sol/terra/luna if your org has 5.6 access)",
     )
     parser.add_argument(
         "--parallel",
@@ -277,6 +285,7 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
     print("Bulk Translation Configuration")
     print(f"{'=' * 60}")
     print(f"Languages to translate: {len(languages)}")
+    print(f"Model: {args.model}")
     print(f"Parallel threads: {args.parallel}")
     print(f"Batch size: {args.batch_size}")
     print(f"Timeout per batch: {args.timeout}s")
@@ -308,6 +317,7 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
                 args.timeout,
                 args.skip_verification,
                 args.include_existing,
+                args.model,
             ): lang
             for lang in languages
         }
