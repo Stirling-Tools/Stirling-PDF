@@ -66,8 +66,12 @@ public class ProcessingJob implements Serializable {
      * Number of input files this charge represents — the count dimension, kept distinct from {@link
      * #docUnits} (which scales with file size). A split (1 input → many outputs) stays 1; a merge
      * (N inputs → 1 output) is N. Fixed at open; joined steps never change it.
+     *
+     * <p>The {@code columnDefinition} default keeps the ddl-auto ADD COLUMN safe on an
+     * already-populated {@code processing_job} (a bare {@code NOT NULL} add is rejected by Postgres
+     * on a non-empty table).
      */
-    @Column(name = "doc_count", nullable = false)
+    @Column(name = "doc_count", nullable = false, columnDefinition = "integer not null default 1")
     private Integer docCount = 1;
 
     /**
