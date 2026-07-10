@@ -40,10 +40,7 @@ export function HomeHero({ tier }: { tier: Tier }) {
   const footer = dealActive ? (
     <ControlledDealStatusHero controller={procurement} />
   ) : progress.allComplete ? undefined : (
-    <SetupChecklist
-      progress={progress}
-      onStartEnterprise={onStartEnterprise}
-    />
+    <SetupChecklist progress={progress} onStartEnterprise={onStartEnterprise} />
   );
 
   // The live-status header (EditorStatusCard) needs a real deployment to show;
