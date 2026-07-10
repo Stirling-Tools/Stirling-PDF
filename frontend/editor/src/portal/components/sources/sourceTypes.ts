@@ -15,6 +15,13 @@ export interface SourceTypeMeta {
   accent: ChipAccent;
 }
 
+/**
+ * The built-in editor source. It is virtual (never created/edited/deleted like a folder), always
+ * present in the list, and only tracks throughput - so rows of this type render without a config,
+ * a type chip, or edit/pause/delete actions.
+ */
+export const EDITOR_SOURCE_TYPE = "editor";
+
 const SOURCE_TYPE_META: Record<string, SourceTypeMeta> = {
   folder: {
     labelKey: "portal.sources.types.folder.label",

@@ -111,6 +111,33 @@ class SourceControllerTest {
     }
 
     @Test
+    void documentCountsForTheEditorReturnsTheTeamSeries() {
+        ResponseEntity<List<Long>> response = controller.documentCounts(EditorSource.ID);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(30, response.getBody().size());
+    }
+
+    @Test
+    void theEditorIsBuiltInAndCannotBeDeleted() {
+        ResponseStatusException ex =
+                assertThrows(
+                        ResponseStatusException.class, () -> controller.delete(EditorSource.ID));
+
+        assertEquals(400, ex.getStatusCode().value());
+    }
+
+    @Test
+    void theEditorIsBuiltInAndCannotBeSaved() {
+        Source editor = new Source(null, "Editor", "editor", Map.of(), true, null, null);
+
+        ResponseStatusException ex =
+                assertThrows(ResponseStatusException.class, () -> controller.save(editor));
+
+        assertEquals(400, ex.getStatusCode().value());
+    }
+
+    @Test
     void readsReturnSecretsAsTheRedactionSentinel() {
         Source saved = sourceStore.save(s3Source("shh"));
 
