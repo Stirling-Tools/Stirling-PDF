@@ -6026,10 +6026,10 @@ onViolation = "При несоответствии"
 webhookUrl = "Webhook URL"
 
 [policies.fieldOption.archiveAfter]
+never = "Никогда"
+ninetyDays = "90 дней"
 oneYear = "1 год"
 thirtyDays = "30 дней"
-ninetyDays = "90 дней"
-never = "Никогда"
 
 [policies.fieldOption.belowThreshold]
 flagForReview = "Пометить для проверки"
@@ -6051,11 +6051,11 @@ pciDss = "PCI DSS"
 soc2 = "SOC 2"
 
 [policies.fieldOption.keepFor]
-oneYear = "1 год"
-threeYears = "3 года"
-thirtyDays = "30 дней"
-sevenYears = "7 лет"
 indefinite = "Бессрочно"
+oneYear = "1 год"
+sevenYears = "7 лет"
+thirtyDays = "30 дней"
+threeYears = "3 года"
 
 [policies.fieldOption.minConfidence]
 p60 = "60%"

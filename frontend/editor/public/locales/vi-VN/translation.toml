@@ -6026,10 +6026,10 @@ onViolation = "Khi không tuân thủ"
 webhookUrl = "Webhook URL"
 
 [policies.fieldOption.archiveAfter]
+never = "Không bao giờ"
+ninetyDays = "90 ngày"
 oneYear = "1 năm"
 thirtyDays = "30 ngày"
-ninetyDays = "90 ngày"
-never = "Không bao giờ"
 
 [policies.fieldOption.belowThreshold]
 flagForReview = "Đánh dấu để xem xét"
@@ -6051,11 +6051,11 @@ pciDss = "PCI DSS"
 soc2 = "SOC 2"
 
 [policies.fieldOption.keepFor]
-oneYear = "1 năm"
-threeYears = "3 năm"
-thirtyDays = "30 ngày"
-sevenYears = "7 năm"
 indefinite = "Vô thời hạn"
+oneYear = "1 năm"
+sevenYears = "7 năm"
+thirtyDays = "30 ngày"
+threeYears = "3 năm"
 
 [policies.fieldOption.minConfidence]
 p60 = "60%"

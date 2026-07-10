@@ -6026,10 +6026,10 @@ onViolation = "Uyumsuz olduğunda"
 webhookUrl = "Webhook URL"
 
 [policies.fieldOption.archiveAfter]
+never = "Asla"
+ninetyDays = "90 gün"
 oneYear = "1 yıl"
 thirtyDays = "30 gün"
-ninetyDays = "90 gün"
-never = "Asla"
 
 [policies.fieldOption.belowThreshold]
 flagForReview = "İnceleme için işaretle"
@@ -6051,11 +6051,11 @@ pciDss = "PCI DSS"
 soc2 = "SOC 2"
 
 [policies.fieldOption.keepFor]
-oneYear = "1 yıl"
-threeYears = "3 yıl"
-thirtyDays = "30 gün"
-sevenYears = "7 yıl"
 indefinite = "Süresiz"
+oneYear = "1 yıl"
+sevenYears = "7 yıl"
+thirtyDays = "30 gün"
+threeYears = "3 yıl"
 
 [policies.fieldOption.minConfidence]
 p60 = "60%"

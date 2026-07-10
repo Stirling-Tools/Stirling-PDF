@@ -6026,10 +6026,10 @@ onViolation = "هنگام عدم انطباق"
 webhookUrl = "URL Webhook"
 
 [policies.fieldOption.archiveAfter]
+never = "هرگز"
+ninetyDays = "۹۰ روز"
 oneYear = "۱ سال"
 thirtyDays = "۳۰ روز"
-ninetyDays = "۹۰ روز"
-never = "هرگز"
 
 [policies.fieldOption.belowThreshold]
 flagForReview = "علامت‌گذاری برای بازبینی"
@@ -6051,11 +6051,11 @@ pciDss = "PCI DSS"
 soc2 = "SOC 2"
 
 [policies.fieldOption.keepFor]
-oneYear = "۱ سال"
-threeYears = "۳ سال"
-thirtyDays = "۳۰ روز"
-sevenYears = "۷ سال"
 indefinite = "نامحدود"
+oneYear = "۱ سال"
+sevenYears = "۷ سال"
+thirtyDays = "۳۰ روز"
+threeYears = "۳ سال"
 
 [policies.fieldOption.minConfidence]
 p60 = "60%"

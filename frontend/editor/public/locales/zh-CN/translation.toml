@@ -6026,10 +6026,10 @@ onViolation = "不合规时"
 webhookUrl = "Webhook URL"
 
 [policies.fieldOption.archiveAfter]
+never = "从不"
+ninetyDays = "90 天"
 oneYear = "1 年"
 thirtyDays = "30 天"
-ninetyDays = "90 天"
-never = "从不"
 
 [policies.fieldOption.belowThreshold]
 flagForReview = "标记以供审核"
@@ -6051,11 +6051,11 @@ pciDss = "PCI DSS"
 soc2 = "SOC 2"
 
 [policies.fieldOption.keepFor]
-oneYear = "1 年"
-threeYears = "3 年"
-thirtyDays = "30 天"
-sevenYears = "7 年"
 indefinite = "无限期"
+oneYear = "1 年"
+sevenYears = "7 年"
+thirtyDays = "30 天"
+threeYears = "3 年"
 
 [policies.fieldOption.minConfidence]
 p60 = "60%"

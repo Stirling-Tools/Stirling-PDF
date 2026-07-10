@@ -6026,10 +6026,10 @@ onViolation = "En cas de non-conformité"
 webhookUrl = "URL du webhook"
 
 [policies.fieldOption.archiveAfter]
+never = "Jamais"
+ninetyDays = "90 jours"
 oneYear = "1 an"
 thirtyDays = "30 jours"
-ninetyDays = "90 jours"
-never = "Jamais"
 
 [policies.fieldOption.belowThreshold]
 flagForReview = "Marquer pour examen"
@@ -6051,11 +6051,11 @@ pciDss = "PCI DSS"
 soc2 = "SOC 2"
 
 [policies.fieldOption.keepFor]
-oneYear = "1 an"
-threeYears = "3 ans"
-thirtyDays = "30 jours"
-sevenYears = "7 ans"
 indefinite = "Indéfiniment"
+oneYear = "1 an"
+sevenYears = "7 ans"
+thirtyDays = "30 jours"
+threeYears = "3 ans"
 
 [policies.fieldOption.minConfidence]
 p60 = "60%"

@@ -6026,10 +6026,10 @@ onViolation = "Vid bristande efterlevnad"
 webhookUrl = "Webhook URL"
 
 [policies.fieldOption.archiveAfter]
+never = "Aldrig"
+ninetyDays = "90 dagar"
 oneYear = "1 år"
 thirtyDays = "30 dagar"
-ninetyDays = "90 dagar"
-never = "Aldrig"
 
 [policies.fieldOption.belowThreshold]
 flagForReview = "Flagga för granskning"
@@ -6051,11 +6051,11 @@ pciDss = "PCI DSS"
 soc2 = "SOC 2"
 
 [policies.fieldOption.keepFor]
-oneYear = "1 år"
-threeYears = "3 år"
-thirtyDays = "30 dagar"
-sevenYears = "7 år"
 indefinite = "Tills vidare"
+oneYear = "1 år"
+sevenYears = "7 år"
+thirtyDays = "30 dagar"
+threeYears = "3 år"
 
 [policies.fieldOption.minConfidence]
 p60 = "60%"

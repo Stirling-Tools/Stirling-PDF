@@ -6026,10 +6026,10 @@ onViolation = "Bij niet-naleving"
 webhookUrl = "Webhook URL"
 
 [policies.fieldOption.archiveAfter]
+never = "Nooit"
+ninetyDays = "90 dagen"
 oneYear = "1 jaar"
 thirtyDays = "30 dagen"
-ninetyDays = "90 dagen"
-never = "Nooit"
 
 [policies.fieldOption.belowThreshold]
 flagForReview = "Markeren voor beoordeling"
@@ -6051,11 +6051,11 @@ pciDss = "PCI DSS"
 soc2 = "SOC 2"
 
 [policies.fieldOption.keepFor]
-oneYear = "1 jaar"
-threeYears = "3 jaar"
-thirtyDays = "30 dagen"
-sevenYears = "7 jaar"
 indefinite = "Onbepaalde tijd"
+oneYear = "1 jaar"
+sevenYears = "7 jaar"
+thirtyDays = "30 dagen"
+threeYears = "3 jaar"
 
 [policies.fieldOption.minConfidence]
 p60 = "60%"

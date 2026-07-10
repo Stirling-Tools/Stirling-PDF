@@ -6026,10 +6026,10 @@ onViolation = "അനുസരണക്കേട് ഉണ്ടായാൽ"
 webhookUrl = "Webhook URL"
 
 [policies.fieldOption.archiveAfter]
+never = "ഒരിക്കലും ഇല്ല"
+ninetyDays = "90 ദിവസം"
 oneYear = "1 വർഷം"
 thirtyDays = "30 ദിവസം"
-ninetyDays = "90 ദിവസം"
-never = "ഒരിക്കലും ഇല്ല"
 
 [policies.fieldOption.belowThreshold]
 flagForReview = "അവലോകനത്തിനായി അടയാളപ്പെടുത്തുക"
@@ -6051,11 +6051,11 @@ pciDss = "PCI DSS"
 soc2 = "SOC 2"
 
 [policies.fieldOption.keepFor]
-oneYear = "1 വർഷം"
-threeYears = "3 വർഷം"
-thirtyDays = "30 ദിവസം"
-sevenYears = "7 വർഷം"
 indefinite = "അനിശ്ചിതകാലം"
+oneYear = "1 വർഷം"
+sevenYears = "7 വർഷം"
+thirtyDays = "30 ദിവസം"
+threeYears = "3 വർഷം"
 
 [policies.fieldOption.minConfidence]
 p60 = "60%"

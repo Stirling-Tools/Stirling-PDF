@@ -6026,10 +6026,10 @@ onViolation = "비준수 시"
 webhookUrl = "Webhook URL"
 
 [policies.fieldOption.archiveAfter]
+never = "안 함"
+ninetyDays = "90일"
 oneYear = "1년"
 thirtyDays = "30일"
-ninetyDays = "90일"
-never = "안 함"
 
 [policies.fieldOption.belowThreshold]
 flagForReview = "검토 대상으로 표시"
@@ -6051,11 +6051,11 @@ pciDss = "PCI DSS"
 soc2 = "SOC 2"
 
 [policies.fieldOption.keepFor]
-oneYear = "1년"
-threeYears = "3년"
-thirtyDays = "30일"
-sevenYears = "7년"
 indefinite = "무기한"
+oneYear = "1년"
+sevenYears = "7년"
+thirtyDays = "30일"
+threeYears = "3년"
 
 [policies.fieldOption.minConfidence]
 p60 = "60%"

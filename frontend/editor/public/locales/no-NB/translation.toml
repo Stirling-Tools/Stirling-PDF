@@ -6026,10 +6026,10 @@ onViolation = "Ved manglende samsvar"
 webhookUrl = "Webhook URL"
 
 [policies.fieldOption.archiveAfter]
+never = "Aldri"
+ninetyDays = "90 dager"
 oneYear = "1 år"
 thirtyDays = "30 dager"
-ninetyDays = "90 dager"
-never = "Aldri"
 
 [policies.fieldOption.belowThreshold]
 flagForReview = "Merk for gjennomgang"
@@ -6051,11 +6051,11 @@ pciDss = "PCI DSS"
 soc2 = "SOC 2"
 
 [policies.fieldOption.keepFor]
-oneYear = "1 år"
-threeYears = "3 år"
-thirtyDays = "30 dager"
-sevenYears = "7 år"
 indefinite = "På ubestemt tid"
+oneYear = "1 år"
+sevenYears = "7 år"
+thirtyDays = "30 dager"
+threeYears = "3 år"
 
 [policies.fieldOption.minConfidence]
 p60 = "60%"

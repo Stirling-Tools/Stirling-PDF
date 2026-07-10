@@ -6026,10 +6026,10 @@ onViolation = "Saat tidak patuh"
 webhookUrl = "Webhook URL"
 
 [policies.fieldOption.archiveAfter]
+never = "Tidak pernah"
+ninetyDays = "90 hari"
 oneYear = "1 tahun"
 thirtyDays = "30 hari"
-ninetyDays = "90 hari"
-never = "Tidak pernah"
 
 [policies.fieldOption.belowThreshold]
 flagForReview = "Tandai untuk ditinjau"
@@ -6051,11 +6051,11 @@ pciDss = "PCI DSS"
 soc2 = "SOC 2"
 
 [policies.fieldOption.keepFor]
-oneYear = "1 tahun"
-threeYears = "3 tahun"
-thirtyDays = "30 hari"
-sevenYears = "7 tahun"
 indefinite = "Tanpa batas"
+oneYear = "1 tahun"
+sevenYears = "7 tahun"
+thirtyDays = "30 hari"
+threeYears = "3 tahun"
 
 [policies.fieldOption.minConfidence]
 p60 = "60%"

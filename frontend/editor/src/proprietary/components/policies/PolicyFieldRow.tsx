@@ -5,7 +5,6 @@ import { Input } from "@app/ui/Input";
 import { Chip } from "@app/ui/Chip";
 import { SettingsRow } from "@app/ui/SettingsRow";
 import type { PolicyField } from "@app/types/policies";
-import { policyOptionKey } from "@app/policies/optionKeys";
 
 interface PolicyFieldRowProps {
   field: PolicyField;
@@ -28,9 +27,8 @@ export function PolicyFieldRow({
   first,
 }: PolicyFieldRowProps) {
   const { t } = useTranslation();
-  // Field labels and option labels come from the policy catalog data; option
-  // labels are keyed by a descriptive id via policyOptionKey (English stays the
-  // fallback) so the translation keys aren't the display strings themselves.
+  // Field labels and option labels come from the policy catalog data, so they're
+  // wrapped at the render site with data-keyed ids (English stays the fallback).
   const fieldLabel = t(`policies.field.${field.key}`, field.label);
 
   if (field.type === "chips") {
@@ -54,10 +52,7 @@ export function PolicyFieldRow({
         <div className="pol-field-chips">
           {(field.options ?? []).map((opt) => (
             <Chip key={opt} size="sm" onClick={() => toggle(opt)}>
-              {t(
-                `policies.fieldOption.${field.key}.${policyOptionKey(opt)}`,
-                opt,
-              )}
+              {t(`policies.fieldOption.${field.key}.${opt}`, opt)}
             </Chip>
           ))}
         </div>
@@ -78,10 +73,7 @@ export function PolicyFieldRow({
         inputSize="sm"
         options={(field.options ?? []).map((o) => ({
           value: o,
-          label: t(
-            `policies.fieldOption.${field.key}.${policyOptionKey(o)}`,
-            o,
-          ),
+          label: t(`policies.fieldOption.${field.key}.${o}`, o),
         }))}
         value={typeof value === "string" ? value : ""}
         onChange={(value) => onChange(value ?? "")}

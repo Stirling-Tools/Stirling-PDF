@@ -6026,10 +6026,10 @@ onViolation = "Când nu este conform"
 webhookUrl = "Webhook URL"
 
 [policies.fieldOption.archiveAfter]
+never = "Niciodată"
+ninetyDays = "90 de zile"
 oneYear = "1 an"
 thirtyDays = "30 de zile"
-ninetyDays = "90 de zile"
-never = "Niciodată"
 
 [policies.fieldOption.belowThreshold]
 flagForReview = "Marchează pentru revizuire"
@@ -6051,11 +6051,11 @@ pciDss = "PCI DSS"
 soc2 = "SOC 2"
 
 [policies.fieldOption.keepFor]
-oneYear = "1 an"
-threeYears = "3 ani"
-thirtyDays = "30 de zile"
-sevenYears = "7 ani"
 indefinite = "Pe termen nelimitat"
+oneYear = "1 an"
+sevenYears = "7 ani"
+thirtyDays = "30 de zile"
+threeYears = "3 ani"
 
 [policies.fieldOption.minConfidence]
 p60 = "60%"

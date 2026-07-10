@@ -6026,10 +6026,10 @@ onViolation = "Nuair nach bhfuil sé comhlíontach"
 webhookUrl = "Webhook URL"
 
 [policies.fieldOption.archiveAfter]
+never = "Riamh"
+ninetyDays = "90 lá"
 oneYear = "1 bhliain"
 thirtyDays = "30 lá"
-ninetyDays = "90 lá"
-never = "Riamh"
 
 [policies.fieldOption.belowThreshold]
 flagForReview = "Marcáil le hathbhreithniú"
@@ -6051,11 +6051,11 @@ pciDss = "PCI DSS"
 soc2 = "SOC 2"
 
 [policies.fieldOption.keepFor]
-oneYear = "1 bhliain"
-threeYears = "3 bliana"
-thirtyDays = "30 lá"
-sevenYears = "7 mbliana"
 indefinite = "Gan teorainn"
+oneYear = "1 bhliain"
+sevenYears = "7 mbliana"
+thirtyDays = "30 lá"
+threeYears = "3 bliana"
 
 [policies.fieldOption.minConfidence]
 p60 = "60%"

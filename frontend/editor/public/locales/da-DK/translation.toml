@@ -6026,10 +6026,10 @@ onViolation = "Når ikke-kompatibel"
 webhookUrl = "Webhook URL"
 
 [policies.fieldOption.archiveAfter]
+never = "Aldrig"
+ninetyDays = "90 dage"
 oneYear = "1 år"
 thirtyDays = "30 dage"
-ninetyDays = "90 dage"
-never = "Aldrig"
 
 [policies.fieldOption.belowThreshold]
 flagForReview = "Markér til gennemgang"
@@ -6051,11 +6051,11 @@ pciDss = "PCI DSS"
 soc2 = "SOC 2"
 
 [policies.fieldOption.keepFor]
-oneYear = "1 år"
-threeYears = "3 år"
-thirtyDays = "30 dage"
-sevenYears = "7 år"
 indefinite = "På ubestemt tid"
+oneYear = "1 år"
+sevenYears = "7 år"
+thirtyDays = "30 dage"
+threeYears = "3 år"
 
 [policies.fieldOption.minConfidence]
 p60 = "60%"

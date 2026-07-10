@@ -6026,10 +6026,10 @@ onViolation = "У разі невідповідності"
 webhookUrl = "Webhook URL"
 
 [policies.fieldOption.archiveAfter]
+never = "Ніколи"
+ninetyDays = "90 днів"
 oneYear = "1 рік"
 thirtyDays = "30 днів"
-ninetyDays = "90 днів"
-never = "Ніколи"
 
 [policies.fieldOption.belowThreshold]
 flagForReview = "Позначити для перевірки"
@@ -6051,11 +6051,11 @@ pciDss = "PCI DSS"
 soc2 = "SOC 2"
 
 [policies.fieldOption.keepFor]
-oneYear = "1 рік"
-threeYears = "3 роки"
-thirtyDays = "30 днів"
-sevenYears = "7 років"
 indefinite = "Безстроково"
+oneYear = "1 рік"
+sevenYears = "7 років"
+thirtyDays = "30 днів"
+threeYears = "3 роки"
 
 [policies.fieldOption.minConfidence]
 p60 = "60%"

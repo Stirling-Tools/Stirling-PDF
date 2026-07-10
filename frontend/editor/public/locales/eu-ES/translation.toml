@@ -6026,10 +6026,10 @@ onViolation = "Betetzen ez denean"
 webhookUrl = "Webhook URL"
 
 [policies.fieldOption.archiveAfter]
+never = "Inoiz ez"
+ninetyDays = "90 egun"
 oneYear = "1 urte"
 thirtyDays = "30 egun"
-ninetyDays = "90 egun"
-never = "Inoiz ez"
 
 [policies.fieldOption.belowThreshold]
 flagForReview = "Markatu berrikusteko"
@@ -6051,11 +6051,11 @@ pciDss = "PCI DSS"
 soc2 = "SOC 2"
 
 [policies.fieldOption.keepFor]
-oneYear = "1 urte"
-threeYears = "3 urte"
-thirtyDays = "30 egun"
-sevenYears = "7 urte"
 indefinite = "Mugagabe"
+oneYear = "1 urte"
+sevenYears = "7 urte"
+thirtyDays = "30 egun"
+threeYears = "3 urte"
 
 [policies.fieldOption.minConfidence]
 p60 = "60%"

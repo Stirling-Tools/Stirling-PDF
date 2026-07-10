@@ -6026,10 +6026,10 @@ onViolation = "Όταν δεν συμμορφώνεται"
 webhookUrl = "Webhook URL"
 
 [policies.fieldOption.archiveAfter]
+never = "Ποτέ"
+ninetyDays = "90 ημέρες"
 oneYear = "1 έτος"
 thirtyDays = "30 ημέρες"
-ninetyDays = "90 ημέρες"
-never = "Ποτέ"
 
 [policies.fieldOption.belowThreshold]
 flagForReview = "Επισήμανση για έλεγχο"
@@ -6051,11 +6051,11 @@ pciDss = "PCI DSS"
 soc2 = "SOC 2"
 
 [policies.fieldOption.keepFor]
-oneYear = "1 έτος"
-threeYears = "3 έτη"
-thirtyDays = "30 ημέρες"
-sevenYears = "7 έτη"
 indefinite = "Επ' αόριστον"
+oneYear = "1 έτος"
+sevenYears = "7 έτη"
+thirtyDays = "30 ημέρες"
+threeYears = "3 έτη"
 
 [policies.fieldOption.minConfidence]
 p60 = "60%"

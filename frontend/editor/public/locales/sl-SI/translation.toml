@@ -6026,10 +6026,10 @@ onViolation = "Ob neskladnosti"
 webhookUrl = "Webhook URL"
 
 [policies.fieldOption.archiveAfter]
+never = "Nikoli"
+ninetyDays = "90 dni"
 oneYear = "1 leto"
 thirtyDays = "30 dni"
-ninetyDays = "90 dni"
-never = "Nikoli"
 
 [policies.fieldOption.belowThreshold]
 flagForReview = "Označi za pregled"
@@ -6051,11 +6051,11 @@ pciDss = "PCI DSS"
 soc2 = "SOC 2"
 
 [policies.fieldOption.keepFor]
-oneYear = "1 leto"
-threeYears = "3 leta"
-thirtyDays = "30 dni"
-sevenYears = "7 let"
 indefinite = "Nedoločeno"
+oneYear = "1 leto"
+sevenYears = "7 let"
+thirtyDays = "30 dni"
+threeYears = "3 leta"
 
 [policies.fieldOption.minConfidence]
 p60 = "60%"

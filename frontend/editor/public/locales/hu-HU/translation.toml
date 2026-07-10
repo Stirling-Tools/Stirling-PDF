@@ -6026,10 +6026,10 @@ onViolation = "Ha nem megfelelő"
 webhookUrl = "Webhook URL"
 
 [policies.fieldOption.archiveAfter]
+never = "Soha"
+ninetyDays = "90 nap"
 oneYear = "1 év"
 thirtyDays = "30 nap"
-ninetyDays = "90 nap"
-never = "Soha"
 
 [policies.fieldOption.belowThreshold]
 flagForReview = "Megjelölés felülvizsgálatra"
@@ -6051,11 +6051,11 @@ pciDss = "PCI DSS"
 soc2 = "SOC 2"
 
 [policies.fieldOption.keepFor]
-oneYear = "1 év"
-threeYears = "3 év"
-thirtyDays = "30 nap"
-sevenYears = "7 év"
 indefinite = "Határozatlan ideig"
+oneYear = "1 év"
+sevenYears = "7 év"
+thirtyDays = "30 nap"
+threeYears = "3 év"
 
 [policies.fieldOption.minConfidence]
 p60 = "60%"

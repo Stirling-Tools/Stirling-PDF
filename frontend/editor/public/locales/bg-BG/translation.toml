@@ -6026,10 +6026,10 @@ onViolation = "При несъответствие"
 webhookUrl = "Webhook URL"
 
 [policies.fieldOption.archiveAfter]
+never = "Никога"
+ninetyDays = "90 дни"
 oneYear = "1 година"
 thirtyDays = "30 дни"
-ninetyDays = "90 дни"
-never = "Никога"
 
 [policies.fieldOption.belowThreshold]
 flagForReview = "Маркирай за преглед"
@@ -6051,11 +6051,11 @@ pciDss = "PCI DSS"
 soc2 = "SOC 2"
 
 [policies.fieldOption.keepFor]
-oneYear = "1 година"
-threeYears = "3 години"
-thirtyDays = "30 дни"
-sevenYears = "7 години"
 indefinite = "Безсрочно"
+oneYear = "1 година"
+sevenYears = "7 години"
+thirtyDays = "30 дни"
+threeYears = "3 години"
 
 [policies.fieldOption.minConfidence]
 p60 = "60%"
