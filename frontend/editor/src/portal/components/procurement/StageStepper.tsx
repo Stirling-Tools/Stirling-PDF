@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import { useTranslation } from "react-i18next";
 import type { DealStage, JourneyStep } from "@portal/api/procurement";
 
 /** Status of a step relative to the deal's current stage. */
@@ -19,6 +20,7 @@ export function StageStepper({
   currentStage: DealStage;
   locked?: boolean;
 }) {
+  const { t } = useTranslation();
   const order = journey.map((s) => s.stage);
   const curIdx = locked ? -1 : order.indexOf(currentStage);
 
@@ -40,7 +42,7 @@ export function StageStepper({
             )}
             <div className={`portal-proc__step portal-proc__step--${state}`}>
               <span className="portal-proc__step-dot" aria-hidden />
-              <span className="portal-proc__step-label">{step.label}</span>
+              <span className="portal-proc__step-label">{t(step.label)}</span>
             </div>
           </Fragment>
         );

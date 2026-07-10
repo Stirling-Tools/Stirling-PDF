@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Avatar, Dropdown } from "@app/ui";
+import { ActionIcon, Avatar, Button, Dropdown } from "@app/ui";
 import { useAuth } from "@app/auth";
 import { useTheme } from "@portal/contexts/ThemeContext";
 import { useTier, TIER_INFO, type Tier } from "@portal/contexts/TierContext";
@@ -12,15 +12,15 @@ import {
   ChevronDownIcon,
 } from "@portal/components/icons";
 import { NotificationsDropdown } from "@portal/components/NotificationsDropdown";
-import { MocksToggle } from "@portal/components/MocksToggle";
 import "@portal/components/Header.css";
 
 function ThemeToggle() {
   const { theme, toggle } = useTheme();
   const { t } = useTranslation();
   return (
-    <button
+    <ActionIcon
       type="button"
+      variant="quiet"
       className="portal-header__icon-btn"
       onClick={toggle}
       aria-label={
@@ -35,21 +35,25 @@ function ThemeToggle() {
       }
     >
       {theme === "light" ? <MoonIcon size={16} /> : <SunIcon size={16} />}
-    </button>
+    </ActionIcon>
   );
 }
 
 function TierSwitcher() {
   const { tier, setTier, isDerived } = useTier();
   const info = TIER_INFO[tier];
-  // When mocks are off, the tier is derived from the real link/wallet state —
-  // pair the dropdown with the mocks toggle (hidden in prod) so testing real
-  // billing flows can't be perturbed by accidentally flipping the mock tier.
+  // In the app the tier is derived from the real link/wallet state and can't
+  // be switched by hand; the dropdown only renders where the tier is pinned
+  // (Storybook / demo surfaces — see TierProvider's initialTier).
   if (isDerived) return null;
   return (
     <Dropdown.Root align="end">
       <Dropdown.Trigger>
-        <button type="button" className="portal-header__tier-btn">
+        <Button
+          type="button"
+          variant="quiet"
+          className="portal-header__tier-btn"
+        >
           <span
             className="portal-header__tier-dot"
             style={{ background: info.dotColor }}
@@ -57,7 +61,7 @@ function TierSwitcher() {
           />
           <span className="portal-header__tier-label">{info.label}</span>
           <ChevronDownIcon size={14} />
-        </button>
+        </Button>
       </Dropdown.Trigger>
       <Dropdown.Menu width="12rem">
         {(Object.keys(TIER_INFO) as Tier[]).map((id) => (
@@ -89,14 +93,15 @@ function UserMenu() {
   return (
     <Dropdown.Root align="end">
       <Dropdown.Trigger>
-        <button
+        <ActionIcon
           type="button"
+          variant="quiet"
           className="portal-header__user"
           aria-label={t("portal.shell.header.accountMenu", "Account menu")}
           title={name}
         >
           <Avatar name={name} size="md" tone="blue" />
-        </button>
+        </ActionIcon>
       </Dropdown.Trigger>
       <Dropdown.Menu width="12rem">
         <Dropdown.Item disabled>{name}</Dropdown.Item>
@@ -120,8 +125,9 @@ export function Header() {
         </span>
       </div>
 
-      <button
+      <Button
         type="button"
+        variant="quiet"
         className="portal-header__search"
         aria-label={t("portal.shell.header.search")}
         onClick={openSearch}
@@ -133,10 +139,9 @@ export function Header() {
         <span className="portal-header__search-kbd" aria-hidden>
           ⌘K
         </span>
-      </button>
+      </Button>
 
       <div className="portal-header__right">
-        <MocksToggle />
         <ThemeToggle />
         <NotificationsDropdown />
         <TierSwitcher />
