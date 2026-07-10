@@ -88,6 +88,10 @@ public class SourceController {
                     "The trailing 30-day per-day document series (oldest first) for the source's"
                             + " sparkline.")
     public ResponseEntity<List<Long>> documentCounts(@PathVariable String sourceId) {
+        // The editor is virtual: its series is tracked per team, not against a persisted source.
+        if (EditorSource.ID.equals(sourceId)) {
+            return ResponseEntity.ok(overviewService.editorDailySeries());
+        }
         return sourceStore
                 .get(sourceId)
                 .filter(sourceAccessGuard::canAccess)
@@ -104,6 +108,7 @@ public class SourceController {
                             + " matching source type.")
     public ResponseEntity<Source> save(@RequestBody Source source) {
         requireSourceEditingAllowed();
+        requireNotEditor(source.id(), source.type());
         Source owned = withStoredSecrets(resolveOwnership(source));
         try {
             validateConfig(owned);
@@ -125,6 +130,7 @@ public class SourceController {
                             + " so the connection can't be pulled out from under a live policy.")
     public ResponseEntity<Void> delete(@PathVariable String sourceId) {
         requireSourceEditingAllowed();
+        requireNotEditor(sourceId, null);
         Source source = sourceStore.get(sourceId).filter(sourceAccessGuard::canAccess).orElse(null);
         if (source == null) {
             return ResponseEntity.notFound().build();
@@ -235,6 +241,18 @@ public class SourceController {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
                     "Sources may only be created or modified by a team leader");
+        }
+    }
+
+    /**
+     * The editor is a built-in, virtual source: it is always present and cannot be created, edited,
+     * or deleted like a persisted connection. Reject any attempt to touch it by id or type.
+     */
+    private static void requireNotEditor(String id, String type) {
+        if (EditorSource.ID.equals(id) || EditorSource.TYPE.equals(type)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "The editor is a built-in source and cannot be created, edited, or deleted");
         }
     }
 

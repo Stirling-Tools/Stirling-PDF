@@ -7954,7 +7954,9 @@ status = "Status"
 usedBy = "Policies"
 
 [portal.sources.types.editor]
+description = "Documents your team has processed in the editor, across policy and AI runs."
 label = "Editor"
+noPolicies = "No policies run from the editor yet."
 
 [portal.sources.types.folder]
 description = "Watch a directory on the server for new documents."
