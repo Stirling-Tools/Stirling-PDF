@@ -1,14 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
-import {
-  Group,
-  Button,
-  NumberInput,
-  Select,
-  Stack,
-  Text,
-  Grid,
-} from "@mantine/core";
+import { Group, NumberInput, Select, Stack, Text, Grid } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { Button } from "@app/ui/Button";
 import type { MeasureScale } from "@app/utils/measurementTypes";
 import {
   generateScaleLabel,
@@ -214,8 +207,9 @@ export function ScaleSettingsPanel({
           {PRESET_SCALES.map((preset) => (
             <Grid.Col span={4} key={preset}>
               <Button
-                variant={presetSelected === preset ? "filled" : "light"}
-                size="xs"
+                variant={presetSelected === preset ? "primary" : "tertiary"}
+                size="sm"
+                fontSize="xs"
                 fullWidth
                 onClick={() => handlePresetClick(preset)}
               >
@@ -268,7 +262,7 @@ export function ScaleSettingsPanel({
         </Text>
       </div>
 
-      <Button onClick={handleApply} fullWidth color="blue" size="sm">
+      <Button onClick={handleApply} fullWidth size="sm">
         {t("scaleSettings.apply", "Apply Scale")}
       </Button>
 
@@ -296,7 +290,7 @@ export function ScaleSettingsPanel({
       <Button
         onClick={handleCalibrationToggle}
         fullWidth
-        variant={isCalibrationActive ? "filled" : "outline"}
+        variant={isCalibrationActive ? "primary" : "secondary"}
         size="sm"
         disabled={
           isCalibrationActive ? !onCancelCalibration : !onStartCalibration
@@ -316,7 +310,7 @@ export function ScaleSettingsPanel({
         <Button
           onClick={() => onResetScale?.()}
           fullWidth
-          variant="default"
+          variant="secondary"
           size="sm"
         >
           {t("scaleSettings.reset", "Reset to Defaults")}

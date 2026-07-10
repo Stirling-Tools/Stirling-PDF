@@ -1,9 +1,10 @@
 import { useRef } from "react";
-import { ActionIcon, Popover } from "@mantine/core";
+import { Popover } from "@mantine/core";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { Tooltip, type TooltipProps } from "@app/components/shared/Tooltip";
 import { ScaleSettingsPanel } from "@app/components/viewer/ScaleSettingsPanel";
 import type { MeasureScale } from "@app/utils/measurementTypes";
+import { ActionIcon } from "@app/ui/ActionIcon";
 
 interface RulerScaleSettingsButtonProps {
   disabled?: boolean;
@@ -49,14 +50,12 @@ export function RulerScaleSettingsButton({
           >
             <ActionIcon
               ref={scalePopoverRef}
-              variant="filled"
-              color="blue"
-              radius="md"
-              className="right-rail-icon"
+              variant="primary"
+              className="workbench-bar-action-icon"
               disabled={disabled}
               aria-label={label}
             >
-              <SettingsIcon sx={{ fontSize: "1.5rem" }} />
+              <SettingsIcon sx={{ fontSize: "1rem" }} />
             </ActionIcon>
           </Tooltip>
         </div>

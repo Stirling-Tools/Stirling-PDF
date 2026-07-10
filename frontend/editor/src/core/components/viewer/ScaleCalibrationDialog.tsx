@@ -1,14 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  Button,
-  Group,
-  Modal,
-  NumberInput,
-  Select,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Group, Modal, NumberInput, Select, Stack, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { Button } from "@app/ui/Button";
 import type { MeasureScale, PagePoint } from "@app/utils/measurementTypes";
 import {
   UNIT_OPTIONS,
@@ -184,7 +177,7 @@ export function ScaleCalibrationDialog({
 
         {/* Actions: Cancel or Apply */}
         <Group justify="flex-end">
-          <Button variant="default" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose}>
             {t("common.cancel", "Cancel")}
           </Button>
           <Button onClick={handleApply}>
