@@ -4,12 +4,12 @@ import {
   Text,
   Group,
   Stack,
-  SegmentedControl,
   Loader,
   Alert,
   Box,
   SimpleGrid,
 } from "@mantine/core";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import {
   AreaChart,
   Area,
@@ -161,13 +161,24 @@ const AuditChartsSection: React.FC<AuditChartsSectionProps> = ({
         <SegmentedControl
           value={timePeriod}
           onChange={(value) => {
-            onTimePeriodChange?.(value as "day" | "week" | "month");
+            onTimePeriodChange?.(value);
           }}
-          disabled={!loginEnabled}
-          data={[
-            { label: t("audit.charts.day", "Day"), value: "day" },
-            { label: t("audit.charts.week", "Week"), value: "week" },
-            { label: t("audit.charts.month", "Month"), value: "month" },
+          options={[
+            {
+              label: t("audit.charts.day", "Day"),
+              value: "day",
+              disabled: !loginEnabled,
+            },
+            {
+              label: t("audit.charts.week", "Week"),
+              value: "week",
+              disabled: !loginEnabled,
+            },
+            {
+              label: t("audit.charts.month", "Month"),
+              value: "month",
+              disabled: !loginEnabled,
+            },
           ]}
         />
       </Group>

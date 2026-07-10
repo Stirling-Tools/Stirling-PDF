@@ -522,9 +522,27 @@
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
       "noindex": true
     },
+    "/settings/backendThirdPartyLicenses": {
+      "image": "/og_images/home.png",
+      "title": "Backend Third Party Licenses Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "noindex": true
+    },
+    "/settings/frontendThirdPartyLicenses": {
+      "image": "/og_images/home.png",
+      "title": "Frontend Third Party Licenses Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "noindex": true
+    },
     "/settings/payg": {
       "image": "/og_images/home.png",
       "title": "Payg Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "noindex": true
+    },
+    "/settings/account-link": {
+      "image": "/og_images/home.png",
+      "title": "Account Link Settings - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
       "noindex": true
     },
@@ -774,7 +792,10 @@
     "/settings/adminMcp": "/settings/adminMcp",
     "/settings/help": "/settings/help",
     "/settings/legal": "/settings/legal",
-    "/settings/payg": "/settings/payg"
+    "/settings/backendThirdPartyLicenses": "/settings/backendThirdPartyLicenses",
+    "/settings/frontendThirdPartyLicenses": "/settings/frontendThirdPartyLicenses",
+    "/settings/payg": "/settings/payg",
+    "/settings/account-link": "/settings/account-link"
   },
   "navLinks": [
     {

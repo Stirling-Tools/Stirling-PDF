@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { LockedState } from "@portal/components/procurement/LockedState";
-import { JOURNEY } from "@portal/mocks/procurement";
+import { JOURNEY } from "@portal/api/procurement";
 import "@portal/views/Procurement.css";
 
 const meta: Meta<typeof LockedState> = {

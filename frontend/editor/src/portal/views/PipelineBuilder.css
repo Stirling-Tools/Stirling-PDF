@@ -1,0 +1,394 @@
+.portal-builder {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  max-width: 84rem;
+  margin: 0 auto;
+}
+
+.portal-builder__loading {
+  display: flex;
+  justify-content: center;
+  padding: 4rem 0;
+}
+
+/* Header */
+.portal-builder__head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.portal-builder__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-4);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.portal-builder__back:hover {
+  color: var(--color-text-1);
+}
+
+.portal-builder__head-main {
+  flex: 1;
+  min-width: 12rem;
+}
+
+.portal-builder__head-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Two-pane layout */
+.portal-builder__grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (max-width: 60rem) {
+  .portal-builder__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.portal-builder__flow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.portal-builder__section-label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-5);
+  font-weight: 600;
+}
+
+.portal-builder__empty {
+  font-size: 0.8125rem;
+  color: var(--color-text-4);
+  margin: 0;
+  padding: 0.5rem 0;
+}
+
+/* Step cards */
+.portal-builder__steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.portal-builder__step {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  padding: 0.5rem 0.625rem;
+  transition:
+    border-color var(--motion-fast),
+    background var(--motion-fast);
+}
+
+.portal-builder__step--active {
+  border-color: var(--color-blue);
+  background: var(--color-blue-light);
+}
+
+.portal-builder__step-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  border: none;
+  background: none;
+  padding: 0.25rem;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+}
+
+.portal-builder__step-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  background: var(--color-blue-light);
+  color: var(--color-blue);
+}
+
+.portal-builder__step--active .portal-builder__step-index {
+  background: var(--color-blue);
+  color: #fff;
+}
+
+.portal-builder__step-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.portal-builder__step-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-1);
+}
+
+.portal-builder__step-note {
+  font-size: 0.6875rem;
+  color: var(--color-text-4);
+}
+
+.portal-builder__step-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.portal-builder__step-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-3);
+  cursor: pointer;
+  transition:
+    background var(--motion-fast),
+    color var(--motion-fast);
+}
+
+.portal-builder__step-actions button:hover:not(:disabled) {
+  background: var(--color-bg-hover);
+  color: var(--color-text-1);
+}
+
+.portal-builder__step-actions button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.portal-builder__add-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  width: 100%;
+  padding: 0.625rem;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  background: none;
+  color: var(--color-text-3);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition:
+    border-color var(--motion-fast),
+    color var(--motion-fast);
+}
+
+.portal-builder__add-step:hover {
+  border-color: var(--color-blue);
+  color: var(--color-blue);
+}
+
+/* Pipeline settings (above the operation list) */
+.portal-builder__settings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  padding: 1.125rem;
+}
+
+.portal-builder__settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1.25rem;
+}
+
+.portal-builder__settings-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Inspector: heading sits outside the card so it aligns with the operations heading. */
+.portal-builder__inspector-col {
+  position: sticky;
+  top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.portal-builder__inspector {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 1.125rem;
+}
+
+/* Tool picker */
+.portal-pipelines__picker {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.portal-pipelines__picker-search {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.portal-pipelines__picker-search input {
+  flex: 1;
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-1);
+  outline: none;
+}
+
+.portal-pipelines__picker-list {
+  max-height: 20rem;
+  overflow-y: auto;
+  padding: 0.25rem 0;
+}
+
+.portal-pipelines__picker-group-label {
+  padding: 0.5rem 0.75rem 0.25rem;
+  font-size: 0.6875rem;
+  color: var(--color-text-5);
+}
+
+.portal-pipelines__picker-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  border: none;
+  background: none;
+  padding: 0.4375rem 0.75rem;
+  text-align: left;
+  cursor: pointer;
+  color: var(--color-text-1);
+  transition: background var(--motion-fast);
+}
+
+.portal-pipelines__picker-item:hover {
+  background: var(--color-bg-hover);
+}
+
+.portal-pipelines__picker-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text-3);
+  font-size: 1.125rem;
+}
+
+.portal-pipelines__picker-name {
+  font-size: 0.8125rem;
+}
+
+.portal-pipelines__picker-empty {
+  padding: 1rem 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--color-text-4);
+  margin: 0;
+}
+
+/* The back link, step row, add-step affordance, tool-picker item and step
+   actions are the shared Button/ActionIcon carrying bespoke styling. Re-assert
+   their original look over the design-system button base (which otherwise
+   imposes a fixed height, its own padding/border and accent text colour). */
+.portal-builder__back.sui-btn {
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  font-weight: 400;
+  font-size: 0.8125rem;
+  color: var(--color-text-4);
+}
+
+.portal-builder__back.sui-btn:hover {
+  color: var(--color-text-1);
+}
+
+.portal-builder__step-main.sui-btn {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+  padding: 0.25rem;
+  font-weight: 400;
+  color: inherit;
+}
+
+.portal-builder__add-step.sui-btn {
+  height: auto;
+  min-height: 0;
+  padding: 0.625rem;
+  border: 1px dashed var(--color-border);
+  background: none;
+  font-weight: 400;
+  font-size: 0.8125rem;
+  color: var(--color-text-3);
+}
+
+.portal-builder__add-step.sui-btn:hover {
+  border-color: var(--color-blue);
+  color: var(--color-blue);
+}
+
+.portal-pipelines__picker-item.sui-btn {
+  height: auto;
+  min-height: 0;
+  padding: 0.4375rem 0.75rem;
+  font-weight: 400;
+  color: var(--color-text-1);
+}
+
+.portal-pipelines__picker-item.sui-btn:hover {
+  background: var(--color-bg-hover);
+}
+
+.portal-builder__step-actions .sui-ai {
+  width: 1.5rem;
+  height: 1.5rem;
+  min-width: 1.5rem;
+  min-height: 1.5rem;
+}

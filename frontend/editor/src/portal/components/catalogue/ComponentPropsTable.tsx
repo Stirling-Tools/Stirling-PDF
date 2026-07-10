@@ -32,7 +32,7 @@ export function ComponentPropsTable({ props: rows }: ComponentPropsTableProps) {
         header: t("portal.catalogue.props.columns.required"),
         render: (p) =>
           p.required ? (
-            <Chip size="sm" tone="amber">
+            <Chip size="sm" accent="warning">
               {t("portal.catalogue.props.required")}
             </Chip>
           ) : (

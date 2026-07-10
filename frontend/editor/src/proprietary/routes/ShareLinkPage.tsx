@@ -4,7 +4,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import {
   Alert,
   Badge,
-  Button,
   Group,
   Loader,
   Paper,
@@ -13,6 +12,7 @@ import {
   Title,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { Button } from "@app/ui/Button";
 import DownloadIcon from "@mui/icons-material/Download";
 import LoginIcon from "@mui/icons-material/Login";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
@@ -232,7 +232,7 @@ export default function ShareLinkPage() {
                   {t("storageShare.openInApp", "Open in Stirling PDF")}
                 </Button>
                 <Button
-                  variant="light"
+                  variant="secondary"
                   leftSection={<DownloadIcon style={{ fontSize: 18 }} />}
                   onClick={handleDownload}
                   loading={isWorking}

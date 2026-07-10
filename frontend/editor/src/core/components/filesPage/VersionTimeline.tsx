@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ActionIcon, Badge, Menu } from "@mantine/core";
+import { Badge, Menu } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -55,6 +57,7 @@ export interface VersionTimelineProps {
   currentId: FileId;
   onAddToWorkspace: (fileIds: FileId[]) => void;
   onRemove: (fileIds: FileId[]) => void;
+  hideHeader?: boolean;
 }
 
 /** Version timeline with per-row tool deltas and collapse-when-long. */
@@ -63,6 +66,7 @@ export function VersionTimeline({
   currentId,
   onAddToWorkspace,
   onRemove,
+  hideHeader = false,
 }: VersionTimelineProps) {
   const { t } = useTranslation();
   const [expandedIds, setExpandedIds] = useState<Set<FileId>>(new Set());
@@ -120,15 +124,17 @@ export function VersionTimeline({
 
   return (
     <div className="files-page-details-version-timeline">
-      <div className="files-page-details-version-timeline-label">
-        <HistoryIcon fontSize="small" />
-        <span>{t("filesPage.field.versionHistory", "Version journey")}</span>
-        <span className="files-page-details-version-timeline-count">
-          {t("filesPage.versionsCount", "{{count}} versions", {
-            count: ordered.length,
-          })}
-        </span>
-      </div>
+      {!hideHeader && (
+        <div className="files-page-details-version-timeline-label">
+          <HistoryIcon fontSize="small" />
+          <span>{t("filesPage.field.versionHistory", "Version journey")}</span>
+          <span className="files-page-details-version-timeline-count">
+            {t("filesPage.versionsCount", "{{count}} versions", {
+              count: ordered.length,
+            })}
+          </span>
+        </div>
+      )}
       <ol className="files-page-details-version-timeline-list">
         {rows.map((row, idx) => {
           const isLast = idx === rows.length - 1;
@@ -144,8 +150,8 @@ export function VersionTimeline({
                     <span className="files-page-details-version-timeline-rail-line" />
                   )}
                 </div>
-                <button
-                  type="button"
+                <Button
+                  variant="tertiary"
                   className="files-page-details-version-timeline-ellipsis-btn"
                   onClick={() => setShowAllCollapsed(true)}
                 >
@@ -154,7 +160,7 @@ export function VersionTimeline({
                     "Show {{count}} earlier versions",
                     { count: row.hidden },
                   )}
-                </button>
+                </Button>
               </li>
             );
           }
@@ -181,24 +187,31 @@ export function VersionTimeline({
                 )}
               </div>
               <div className="files-page-details-version-timeline-body">
-                <button
-                  type="button"
+                <Button
+                  variant="tertiary"
                   className="files-page-details-version-timeline-summary"
                   onClick={() => toggleExpand(v.id)}
                   aria-expanded={isExpanded}
+                  leftSection={
+                    <Badge
+                      size="xs"
+                      variant={isActive ? "filled" : "outline"}
+                      color="blue"
+                    >
+                      v{v.versionNumber ?? 1}
+                    </Badge>
+                  }
+                  rightSection={
+                    <KeyboardArrowDownIcon
+                      className={`files-page-details-version-timeline-chevron${
+                        isExpanded ? " is-expanded" : ""
+                      }`}
+                      fontSize="small"
+                    />
+                  }
                 >
-                  <Badge
-                    size="xs"
-                    variant={isActive ? "filled" : "outline"}
-                    color="blue"
-                  >
-                    v{v.versionNumber ?? 1}
-                  </Badge>
                   {delta ? (
                     <span className="files-page-details-version-timeline-delta">
-                      <span className="files-page-details-version-timeline-delta-plus">
-                        +
-                      </span>
                       <ToolLabel toolId={delta.toolId} />
                     </span>
                   ) : (
@@ -206,14 +219,7 @@ export function VersionTimeline({
                       {t("filesPage.versionOrigin", "Original upload")}
                     </span>
                   )}
-                  <span className="files-page-details-version-timeline-spacer" />
-                  <KeyboardArrowDownIcon
-                    className={`files-page-details-version-timeline-chevron${
-                      isExpanded ? " is-expanded" : ""
-                    }`}
-                    fontSize="small"
-                  />
-                </button>
+                </Button>
                 <div className="files-page-details-version-timeline-meta-line">
                   <span>{formatFileSize(v.size)}</span>
                   {v.lastModified ? (
@@ -230,7 +236,7 @@ export function VersionTimeline({
                   <Menu position="bottom-end" withinPortal shadow="md">
                     <Menu.Target>
                       <ActionIcon
-                        variant="subtle"
+                        variant="tertiary"
                         size="sm"
                         aria-label={t(
                           "filesPage.versionActions",
@@ -303,13 +309,13 @@ export function VersionTimeline({
         })}
       </ol>
       {collapsible && showAllCollapsed && (
-        <button
-          type="button"
+        <Button
+          variant="tertiary"
           className="files-page-details-version-timeline-collapse-btn"
           onClick={() => setShowAllCollapsed(false)}
         >
           {t("filesPage.versionCollapse", "Collapse middle versions")}
-        </button>
+        </Button>
       )}
     </div>
   );

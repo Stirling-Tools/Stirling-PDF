@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Chip, FormField, Input, Select, ToggleSwitch } from "@app/ui";
 import type { PolicyField } from "@portal/api/policies";
 import "@portal/views/Policies.css";
@@ -19,13 +20,14 @@ export function PolicyFieldRow({
   value,
   onChange,
 }: PolicyFieldRowProps) {
+  const { t } = useTranslation();
   if (field.type === "toggle") {
     return (
       <div className="portal-policies__toggle-row">
         <ToggleSwitch
           checked={Boolean(value)}
           onChange={onChange}
-          label={field.label}
+          label={t(field.label)}
         />
       </div>
     );
@@ -40,16 +42,16 @@ export function PolicyFieldRow({
           : [...selected, opt],
       );
     return (
-      <FormField label={field.label}>
+      <FormField label={t(field.label)}>
         <div className="portal-policies__field-chips">
           {(field.options ?? []).map((opt) => (
             <Chip
               key={opt}
-              tone={selected.includes(opt) ? "blue" : "neutral"}
+              accent={selected.includes(opt) ? "default" : "neutral"}
               size="sm"
               onClick={() => toggle(opt)}
             >
-              {opt}
+              {t(`policies.fieldOption.${field.key}.${opt}`, opt)}
             </Chip>
           ))}
         </div>
@@ -59,19 +61,22 @@ export function PolicyFieldRow({
 
   if (field.type === "select") {
     return (
-      <FormField label={field.label}>
+      <FormField label={t(field.label)}>
         <Select
           inputSize="sm"
           value={typeof value === "string" ? value : ""}
-          options={(field.options ?? []).map((o) => ({ value: o, label: o }))}
-          onChange={(e) => onChange(e.target.value)}
+          options={(field.options ?? []).map((o) => ({
+            value: o,
+            label: t(`policies.fieldOption.${field.key}.${o}`, o),
+          }))}
+          onChange={(value) => onChange(value ?? "")}
         />
       </FormField>
     );
   }
 
   return (
-    <FormField label={field.label}>
+    <FormField label={t(field.label)}>
       <Input
         inputSize="sm"
         value={typeof value === "string" ? value : ""}

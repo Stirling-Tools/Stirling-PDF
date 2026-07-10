@@ -36,6 +36,31 @@
   gap: 0.375rem;
 }
 
+/* Category row — locked (coming soon) */
+.portal-policies__row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  min-height: 2.25rem;
+}
+
+.portal-policies__row-name {
+  flex: 1;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text-3);
+}
+
+/* "Set up" underline link inside the active-row button's rightSection */
+.portal-policies__setup-link {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-blue);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 /* Category card — horizontal table row */
 .portal-policies__card {
   display: flex;
@@ -109,6 +134,55 @@
   color: var(--color-text-1);
 }
 
+.portal-policies__card-blurb {
+  font-size: 0.75rem;
+  color: var(--color-text-4);
+  line-height: 1.4;
+}
+
+.portal-policies__card-summary {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-text-2);
+}
+
+.portal-policies__card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: auto;
+  flex-wrap: wrap;
+}
+
+.portal-policies__card-rules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.portal-policies__card-cta {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-blue);
+}
+
+.portal-policies__chevron-right {
+  transform: rotate(-90deg);
+  display: block;
+}
+
+/* Configured-card stat footer */
+.portal-policies__card-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border-light);
+}
+
 /* Wizard + detail shared chrome */
 .portal-policies__wizard-title {
   display: inline-flex;
@@ -151,13 +225,6 @@
   font-weight: 600;
 }
 
-.portal-policies__wizard-subheading {
-  margin: 0.875rem 0 0;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--color-text-3);
-}
-
 .portal-policies__fields {
   display: flex;
   flex-direction: column;
@@ -174,17 +241,28 @@
   gap: 0.375rem;
 }
 
-/* Workflow step — tool rows */
-.portal-policies__tool-head {
+/* Workflow step — policy capability settings list.
+ * Rows read as the policy's own settings (label + plain description + toggle),
+ * not a chain of distinct tools. Config reveals inline beneath an enabled row. */
+.portal-policies__capabilities {
   display: flex;
-  align-items: center;
-  gap: 0.625rem;
+  flex-direction: column;
 }
 
-.portal-policies__tool-name {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--color-text-1);
+.portal-policies__capability {
+  padding: 0.75rem 0.875rem;
+}
+
+.portal-policies__capability + .portal-policies__capability {
+  border-top: 1px solid var(--color-border);
+}
+
+/* An enabled row with config gets a faint tint so the revealed settings read as
+ * belonging to it. */
+.portal-policies__capability[data-on] .portal-policies__capability-config {
+  border-top: 1px dashed var(--color-border);
+  padding-top: 0.75rem;
+  margin-top: 0.75rem;
 }
 
 /* Sources picker */
@@ -210,9 +288,30 @@
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-md);
   cursor: pointer;
+  /* Shared Button pins a fixed control height and natural width; this tile is a
+     full-width, two-line card, so fill the grid cell and grow to fit content. */
+  width: 100%;
+  height: auto;
+  font-weight: inherit;
   transition:
     border-color var(--motion-fast),
     background var(--motion-fast);
+}
+
+/* The shared Button wraps children in an inner/label node. Let the inner grow
+   (so the ::after check sits at the far right) and the label carry the
+   icon + two-line-text row. */
+.portal-policies__source .mantine-Button-inner {
+  flex: 1;
+  min-width: 0;
+}
+
+.portal-policies__source .mantine-Button-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  white-space: normal;
 }
 
 .portal-policies__source::after {
@@ -277,22 +376,6 @@
   font-size: 0.6875rem;
   color: var(--color-text-4);
   line-height: 1.4;
-}
-
-/* Doc-type scope */
-.portal-policies__doctypes-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 0.8125rem;
-  color: var(--color-text-2);
-}
-
-.portal-policies__doctypes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.375rem;
-  margin-top: 0.625rem;
 }
 
 .portal-policies__link {

@@ -30,18 +30,18 @@ import stirling.software.common.model.enumeration.InvitationStatus;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.enumeration.TeamRole;
 import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.saas.accountlink.LinkedInstanceRepository;
 import stirling.software.saas.billing.repository.BillingSubscriptionRepository;
 import stirling.software.saas.config.SupabaseConfigurationProperties;
 import stirling.software.saas.model.TeamInvitation;
-import stirling.software.saas.model.TeamMembership;
 import stirling.software.saas.repository.SaasTeamExtensionsRepository;
 import stirling.software.saas.repository.TeamInvitationRepository;
-import stirling.software.saas.repository.TeamMembershipRepository;
 
 /**
  * Unit tests for {@link SaasTeamService}.
@@ -67,6 +67,14 @@ class SaasTeamServiceTest {
     @Mock private SaasTeamExtensionsRepository saasTeamExtensionsRepository;
     @Mock private LinkedInstanceRepository linkedInstanceRepository;
     @Mock private stirling.software.proprietary.security.service.UserService userService;
+
+    @Mock
+    private stirling.software.proprietary.access.repository.ResourceGrantRepository
+            resourceGrantRepository;
+
+    @Mock
+    private stirling.software.proprietary.integration.repository.IntegrationConfigRepository
+            integrationConfigRepository;
 
     @InjectMocks private SaasTeamService service;
 
