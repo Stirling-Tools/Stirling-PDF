@@ -5,11 +5,12 @@
 
 /* ── Hero text ───────────────────────────────────────────── */
 .landing-title {
-  display: block;
-  margin: 1.75rem auto 0.5rem;
-  height: 3rem;
-  width: auto;
-  max-width: 100%;
+  margin: 1.75rem 0 0.5rem;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--text-primary);
 }
 
 .landing-subtitle {

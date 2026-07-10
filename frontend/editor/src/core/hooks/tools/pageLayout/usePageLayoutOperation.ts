@@ -1,44 +1,80 @@
 import { useTranslation } from "react-i18next";
 import {
-  ToolType,
   useToolOperation,
+  defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  objectToFormData,
+  type ToolApiParams,
+  type ToolEndpoint,
+} from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
   PageLayoutParameters,
   defaultParameters,
 } from "@app/hooks/tools/pageLayout/usePageLayoutParameters";
 
+const ENDPOINT = "/api/v1/general/multi-page-layout" satisfies ToolEndpoint;
+type PageLayoutApiParams = ToolApiParams[typeof ENDPOINT];
+
+// Convert the tool's UI parameters into the multi-page-layout request body. The
+// return type is the generated backend model, so a spec change that renames or
+// drops a field breaks the build here.
+export const pageLayoutToApiParams = (
+  parameters: PageLayoutParameters,
+): PageLayoutApiParams => ({
+  mode: parameters.mode,
+  pagesPerSheet:
+    parameters.pagesPerSheet as PageLayoutApiParams["pagesPerSheet"],
+  rows: parameters.rows,
+  cols: parameters.cols,
+  orientation: parameters.orientation,
+  arrangement: parameters.arrangement,
+  readingDirection: parameters.readingDirection,
+  innerMargin: parameters.innerMargin ?? 0,
+  topMargin: parameters.topMargin ?? 0,
+  bottomMargin: parameters.bottomMargin ?? 0,
+  leftMargin: parameters.leftMargin ?? 0,
+  rightMargin: parameters.rightMargin ?? 0,
+  addBorder: parameters.addBorder,
+  borderWidth: parameters.borderWidth ?? 1,
+});
+
+// Reconstruct the tool's UI parameters from a multi-page-layout request body, so
+// a stored or AI-authored step can be re-rendered in the settings UI.
+export const pageLayoutFromApiParams = (
+  apiParams: PageLayoutApiParams,
+): Partial<PageLayoutParameters> => ({
+  mode: apiParams.mode,
+  pagesPerSheet: apiParams.pagesPerSheet,
+  rows: apiParams.rows,
+  cols: apiParams.cols,
+  orientation: apiParams.orientation,
+  arrangement: apiParams.arrangement,
+  readingDirection: apiParams.readingDirection,
+  innerMargin: apiParams.innerMargin,
+  topMargin: apiParams.topMargin,
+  bottomMargin: apiParams.bottomMargin,
+  leftMargin: apiParams.leftMargin,
+  rightMargin: apiParams.rightMargin,
+  addBorder: apiParams.addBorder,
+  borderWidth: apiParams.borderWidth,
+});
+
 export const buildPageLayoutFormData = (
   parameters: PageLayoutParameters,
   file: File,
-): FormData => {
-  const formData = new FormData();
-  formData.append("fileInput", file);
-  formData.append("mode", String(parameters.mode));
-  formData.append("pagesPerSheet", String(parameters.pagesPerSheet));
-  formData.append("rows", String(parameters.rows));
-  formData.append("cols", String(parameters.cols));
-  formData.append("orientation", String(parameters.orientation));
-  formData.append("arrangement", String(parameters.arrangement));
-  formData.append("readingDirection", String(parameters.readingDirection));
-  formData.append("innerMargin", String(parameters.innerMargin ?? 0));
-  formData.append("topMargin", String(parameters.topMargin ?? 0));
-  formData.append("bottomMargin", String(parameters.bottomMargin ?? 0));
-  formData.append("leftMargin", String(parameters.leftMargin ?? 0));
-  formData.append("rightMargin", String(parameters.rightMargin ?? 0));
-  formData.append("addBorder", String(parameters.addBorder));
-  formData.append("borderWidth", String(parameters.borderWidth ?? 1));
-  return formData;
-};
+): FormData =>
+  objectToFormData(pageLayoutToApiParams(parameters), { fileInput: file });
 
-export const pageLayoutOperationConfig = {
-  toolType: ToolType.singleFile,
+export const pageLayoutOperationConfig = defineSingleFileTool({
   buildFormData: buildPageLayoutFormData,
+  toApiParams: pageLayoutToApiParams,
+  fromApiParams: pageLayoutFromApiParams,
   operationType: "pageLayout",
-  endpoint: "/api/v1/general/multi-page-layout",
+  endpoint: ENDPOINT,
   defaultParameters,
-} as const;
+});
 
 export const usePageLayoutOperation = () => {
   const { t } = useTranslation();
