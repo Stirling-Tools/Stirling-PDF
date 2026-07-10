@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, CodeBlock, Modal, SegmentedControl } from "@app/ui";
 import { useView } from "@portal/contexts/ViewContext";
+import { EDITOR_URL } from "@portal/auth/editorUrl";
 import { DOWNLOAD_URLS } from "@app/constants/downloads";
 import DownloadRounded from "@mui/icons-material/DownloadRounded";
 import DevicesRounded from "@mui/icons-material/DevicesRounded";
@@ -242,7 +243,13 @@ export function DownloadEditorModal({ open, onClose }: Props) {
             {t("portal.home.download.back")}
           </Button>
         ) : (
-          <Button variant="secondary" onClick={close}>
+          <Button
+            variant="secondary"
+            leftSection={<OpenInNewRounded sx={{ fontSize: 15 }} />}
+            onClick={() => {
+              window.location.href = EDITOR_URL;
+            }}
+          >
             {t("portal.home.download.openInBrowser")}
           </Button>
         )
