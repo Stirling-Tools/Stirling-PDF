@@ -198,6 +198,31 @@ export function serializeToolStep(
 }
 
 /**
+ * Serialize a step held as an endpoint path plus frontend-shaped params - the form the policy setup
+ * wizard keeps, where params match the tool's UI shape (e.g. redact's `wordsToRedact`) rather than
+ * the backend contract - into the backend step contract, mapping params through the tool's
+ * `toApiParams` (merged over its defaults, so fields the wizard never set still get their defaults).
+ * The endpoint maps to a tool by path, so this works for dynamic-endpoint tools whose config
+ * endpoint is a function. Endpoints that map to no known tool pass through unchanged.
+ */
+export function serializeStepFromEndpoint(
+  operation: string,
+  params: ErasedToolParams,
+  registry: Partial<ToolRegistry>,
+): ToolApiStep {
+  const match = findToolByEndpoint({ operation, parameters: params }, registry);
+  const config = match?.[1].operationConfig;
+  if (!config) return { operation, parameters: params };
+  const merged = { ...(config.defaultParameters ?? {}), ...params };
+  return {
+    operation: resolveEndpoint(config, merged) ?? operation,
+    parameters: config.toApiParams
+      ? (config.toApiParams(merged) as Record<string, unknown>)
+      : {},
+  };
+}
+
+/**
  * Find the registry tool for a stored step's endpoint: exact match for static endpoints, else
  * membership in a dynamic tool's declared `endpoints` set (replaying its function can't recover a
  * frontend-only routing field). Replay is only the fallback when no set is declared.
