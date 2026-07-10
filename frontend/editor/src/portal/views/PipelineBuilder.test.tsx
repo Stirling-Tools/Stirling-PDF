@@ -196,15 +196,11 @@ describe("PipelineBuilder", () => {
     });
     fireEvent.click(screen.getByLabelText("portal.pipelines.output.s3"));
 
-    // With s3 selected but no connection, saving is blocked and the summary
-    // reads unconfigured; the connection lives behind the Configure modal.
+    // With s3 selected but no connection chosen, saving is blocked. The
+    // connection picker + prefix are inline (no modal), like the folder output.
     expect(
       screen.getByText("portal.pipelines.composer.create").closest("button"),
     ).toBeDisabled();
-    expect(
-      screen.getByText("portal.pipelines.composer.s3NotConfigured"),
-    ).toBeInTheDocument();
-    fireEvent.click(screen.getByText("portal.pipelines.composer.s3Configure"));
 
     // No connections exist: create one inline from the picker. Target fields by
     // label, not position - the picker's Mantine Select also carries an input
@@ -236,7 +232,7 @@ describe("PipelineBuilder", () => {
     );
     fireEvent.click(screen.getByText("portal.connections.picker.save"));
     await waitFor(() => expect(createIntegration).toHaveBeenCalledTimes(1));
-    // The inline create form closes once the connection is saved and selected.
+    // The connection modal closes once saved and the connection is selected.
     await waitFor(() =>
       expect(
         screen.queryByText("portal.connections.picker.save"),
@@ -249,12 +245,6 @@ describe("PipelineBuilder", () => {
       ),
       { target: { value: "processed/" } },
     );
-    fireEvent.click(screen.getByText("portal.pipelines.composer.s3Done"));
-
-    // The summary now shows the configured destination.
-    expect(
-      screen.getByText("portal.pipelines.composer.s3ConfiguredSummary"),
-    ).toBeInTheDocument();
     fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
 
     await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));

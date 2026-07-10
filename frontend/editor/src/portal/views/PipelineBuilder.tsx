@@ -190,7 +190,6 @@ export function PipelineBuilder() {
   const [outputMode, setOutputMode] = useState<OutputMode>(DEFAULT_OUTPUT_MODE);
   const [outputDirectory, setOutputDirectory] = useState("");
   const [outputS3, setOutputS3] = useState<S3OutputOptions>(EMPTY_S3_OUTPUT);
-  const [s3ConfigOpen, setS3ConfigOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [seeded, setSeeded] = useState(false);
@@ -263,10 +262,6 @@ export function PipelineBuilder() {
     const selected = triggers.find((trigger) => trigger.type === triggerType);
     if (selected && !triggerAvailable(selected)) setTriggerType(MANUAL);
   }, [triggerType, triggers, triggerAvailable]);
-
-  function setS3Field(key: keyof S3OutputOptions, value: string) {
-    setOutputS3((current) => ({ ...current, [key]: value }));
-  }
 
   function toggleSource(sourceId: string, checked: boolean) {
     setSourceIds((ids) =>
@@ -758,27 +753,31 @@ export function PipelineBuilder() {
               </FormField>
             )}
             {outputMode === "s3" && (
-              <div className="portal-builder__s3-output">
-                <span
-                  className={
-                    "portal-builder__s3-summary" +
-                    (outputS3.connectionId ? "" : " is-unset")
-                  }
+              <>
+                <FormField
+                  label={t("portal.sources.types.s3.fields.connection.label")}
+                  required
                 >
-                  {outputS3.connectionId
-                    ? t("portal.pipelines.composer.s3ConfiguredSummary", {
-                        prefix: outputS3.prefix || "/",
-                      })
-                    : t("portal.pipelines.composer.s3NotConfigured")}
-                </span>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setS3ConfigOpen(true)}
+                  <S3ConnectionPicker
+                    value={outputS3.connectionId}
+                    onChange={(connectionId) =>
+                      setOutputS3((s) => ({ ...s, connectionId }))
+                    }
+                  />
+                </FormField>
+                <FormField
+                  label={t("portal.sources.types.s3.fields.prefix.label")}
+                  helperText={t("portal.pipelines.composer.s3PrefixHelp")}
                 >
-                  {t("portal.pipelines.composer.s3Configure")}
-                </Button>
-              </div>
+                  <Input
+                    value={outputS3.prefix}
+                    placeholder="processed/"
+                    onChange={(e) =>
+                      setOutputS3((s) => ({ ...s, prefix: e.target.value }))
+                    }
+                  />
+                </FormField>
+              </>
             )}
           </div>
         </div>
@@ -991,46 +990,6 @@ export function PipelineBuilder() {
         }
       >
         <p>{t("portal.pipelines.builder.unsavedBody")}</p>
-      </Modal>
-
-      <Modal
-        open={s3ConfigOpen}
-        onClose={() => setS3ConfigOpen(false)}
-        title={t("portal.pipelines.composer.s3ModalTitle")}
-        footer={
-          <div className="portal-pipelines__composer-footer">
-            <Button size="sm" onClick={() => setS3ConfigOpen(false)}>
-              {t("portal.pipelines.composer.s3Done")}
-            </Button>
-          </div>
-        }
-      >
-        <div className="portal-builder__s3-fields">
-          <FormField
-            label={t("portal.sources.types.s3.fields.connection.label")}
-            helperText={t(
-              "portal.sources.types.s3.fields.connection.helperText",
-            )}
-            required
-          >
-            <S3ConnectionPicker
-              value={outputS3.connectionId}
-              onChange={(connectionId) =>
-                setS3Field("connectionId", connectionId)
-              }
-            />
-          </FormField>
-          <FormField
-            label={t("portal.sources.types.s3.fields.prefix.label")}
-            helperText={t("portal.pipelines.composer.s3PrefixHelp")}
-          >
-            <Input
-              value={outputS3.prefix}
-              placeholder="processed/"
-              onChange={(e) => setS3Field("prefix", e.target.value)}
-            />
-          </FormField>
-        </div>
       </Modal>
     </div>
   );
