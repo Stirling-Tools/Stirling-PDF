@@ -49,6 +49,9 @@ class IntegrationConfigServiceTest {
     @Mock private OwnershipService ownership;
     @Mock private SecretMasker secretMasker;
 
+    @Mock
+    private stirling.software.proprietary.access.repository.ResourceGrantRepository grantRepository;
+
     @InjectMocks private IntegrationConfigService service;
 
     @Test
@@ -58,9 +61,9 @@ class IntegrationConfigServiceTest {
         User user = user(7);
 
         IntegrationConfig created =
-                service.create(request(IntegrationType.S3, OwnerScope.USER, null), user);
+                service.create(request(IntegrationType.API, OwnerScope.USER, null), user);
 
-        assertThat(created.getIntegrationType()).isEqualTo(IntegrationType.S3);
+        assertThat(created.getIntegrationType()).isEqualTo(IntegrationType.API);
         assertThat(created.getName()).isEqualTo("name");
         verify(ownership)
                 .assignOwnership(eq(created), eq(OwnerScope.USER), isNull(), eq(user), any());
@@ -154,6 +157,60 @@ class IntegrationConfigServiceTest {
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(e -> ((ResponseStatusException) e).getStatusCode())
                 .isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    // ---- S3 type policy ----
+
+    @Test
+    void s3PersonalCreateForbiddenForRegularUser() {
+        User user = user(7);
+        when(ownership.isAdmin(user)).thenReturn(false);
+
+        assertThatThrownBy(
+                        () ->
+                                service.create(
+                                        request(IntegrationType.S3, OwnerScope.USER, null), user))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                .isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    void s3PersonalCreateAllowedForAdmin() {
+        when(secretMasker.sanitize(any())).thenReturn(Map.of("bucket", "b"));
+        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        User admin = user(1);
+        when(ownership.isAdmin(admin)).thenReturn(true);
+
+        IntegrationConfig created =
+                service.create(request(IntegrationType.S3, OwnerScope.USER, null), admin);
+
+        assertThat(created.getIntegrationType()).isEqualTo(IntegrationType.S3);
+    }
+
+    @Test
+    void s3TeamScopeCreateDelegatesLeadershipToOwnership() {
+        // TEAM scope skips the personal-S3 gate; assignOwnership enforces admin/team-owner.
+        when(secretMasker.sanitize(any())).thenReturn(Map.of("bucket", "b"));
+        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        User leader = user(7);
+
+        IntegrationConfig created =
+                service.create(request(IntegrationType.S3, OwnerScope.TEAM, 3L), leader);
+
+        verify(ownership)
+                .assignOwnership(eq(created), eq(OwnerScope.TEAM), eq(3L), eq(leader), any());
+    }
+
+    @Test
+    void mcpPersonalCreateAllowedForRegularUser() {
+        when(secretMasker.sanitize(any())).thenReturn(Map.of("token", "t"));
+        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        IntegrationConfig created =
+                service.create(request(IntegrationType.MCP, OwnerScope.USER, null), user(7));
+
+        assertThat(created.getIntegrationType()).isEqualTo(IntegrationType.MCP);
     }
 
     // ---- helpers ----

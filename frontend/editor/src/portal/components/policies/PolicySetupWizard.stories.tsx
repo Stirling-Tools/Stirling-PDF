@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
 import {
   POLICY_CATEGORIES,
   POLICY_CONFIG,
@@ -12,6 +13,15 @@ const meta: Meta<typeof PolicySetupWizard> = {
   title: "Portal/Policies/PolicySetupWizard",
   component: PolicySetupWizard,
   parameters: { layout: "fullscreen" },
+  // The wizard reads the tool registry (for capability fallback names/icons),
+  // so stories must supply the provider the app mounts in PortalApp.
+  decorators: [
+    (Story) => (
+      <ToolRegistryProvider>
+        <Story />
+      </ToolRegistryProvider>
+    ),
+  ],
   args: {
     onClose: () => {},
     onSubmit: async () => {},

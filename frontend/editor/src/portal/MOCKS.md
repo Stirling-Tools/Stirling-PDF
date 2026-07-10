@@ -1,25 +1,33 @@
 # Portal data layer — mock backend & handover
 
-The portal is **mock-driven**. Every screen fetches real HTTP requests through a
-thin typed API layer; in dev and Storybook those requests are intercepted by
-[MSW](https://mswjs.io/) and answered with fixture data. Pointing the portal at a
-**real backend** is a matter of *not registering MSW* — no component or API-layer
-code changes.
+The mocks here are for **Storybook and tests** — the running portal hits the
+real network. Every screen fetches real HTTP requests through a thin typed API
+layer; in Storybook (via `msw-storybook-addon`, see `.storybook/preview.tsx`)
+and in vitest those requests are intercepted by [MSW](https://mswjs.io/) and
+answered with fixture data.
+
+One deliberate in-app exception: `api/demoData.ts` can answer `apiClient`
+calls from these same handlers while explicitly enabled (the onboarding tour
+does this so views render populated). No service worker, no interception —
+msw and the fixtures load lazily on first enable and stop answering on
+disable.
 
 ## The three layers
 
 ```
-view (useAsync)  ──►  api/<surface>.ts  ──►  httpJson(fetch)  ──►  MSW handler (dev)   ──►  fixture builder
-                          (the contract)                          └► real backend (prod) ─┘
+view (useAsync)  ──►  api/<surface>.ts  ──►  httpJson(fetch)  ──►  real backend (app)
+                          (the contract)                      └►  MSW handler (Storybook/tests)  ──►  fixture builder
 ```
 
-1. **`api/<surface>.ts`** — thin, typed `httpJson` wrappers. **This is the backend
-   contract.** Each function documents its endpoint (method, path, query params)
-   and its response type. Nothing else in the app issues fetches.
+1. **`api/<surface>.ts`** — thin, typed `httpJson` wrappers **plus the canonical
+   TS types and app-owned constants. This is the backend contract.** Each
+   function documents its endpoint (method, path, query params) and its response
+   type. Nothing else in the app issues fetches, and nothing in the app imports
+   from `mocks/`.
 2. **`mocks/handlers/<surface>.ts`** — MSW handlers that answer those endpoints
    with `mocks/<surface>.ts` fixtures. Registered in `mocks/handlers/index.ts`.
-3. **`mocks/<surface>.ts`** — fixture builders **and the canonical TS types**
-   (re-exported through `api/<surface>.ts`, so consumers import types from `api/`).
+3. **`mocks/<surface>.ts`** — fixture builders only, importing their types from
+   `api/<surface>.ts` (mocks depend on the contract, never the reverse).
 
 `api/http.ts` is the single `fetch` wrapper (sets headers, throws `HttpError` on
 non-2xx). Views consume via `useAsync()` + `useSectionFlags()` (`hooks/useAsync.ts`).
@@ -34,15 +42,13 @@ non-2xx). Views consume via `useAsync()` + `useSectionFlags()` (`hooks/useAsync.
   **demo shells** (local state, no submit endpoint yet) — wire these to real
   POSTs during backend integration.
 
-## Swapping in a real backend
+## Implementing a surface against the real backend
 
-1. Stop registering MSW (`mocks/browser.ts` / the dev bootstrap) — or gate it on
-   an env flag (it's already dev-only via `import.meta.env.DEV`).
-2. Make `httpJson` hit your API origin (add a `baseURL`/proxy in `api/http.ts`).
-3. Match the response shapes in `api/<surface>.ts` (the exported types are the spec).
-4. Delete `mocks/` once parity is confirmed. Optionally relocate the types from
-   `mocks/<surface>.ts` into `api/` (or a `types/` module) so they no longer live
-   beside fixtures — purely cosmetic; the `api/` re-exports already shield consumers.
+1. Make `httpJson` hit your API origin (add a `baseURL`/proxy in `api/http.ts`)
+   and match the response shapes in `api/<surface>.ts` (the exported types are
+   the spec).
+2. Keep the surface's handler in `mocks/handlers/` in sync — Storybook and the
+   tests still answer through it.
 
 ## Endpoint catalogue
 
@@ -52,7 +58,6 @@ non-2xx). Views consume via `useAsync()` + `useSectionFlags()` (`hooks/useAsync.
 | Home | `GET /v1/analytics/usage` | — | `fetchUsageSeries` | `UsageSeriesResponse` |
 | Home | `GET /v1/activity` | — | `fetchRecentActivity` | `ActivityEvent[]` |
 | Home | `GET /v1/regions/health` | — | `fetchRegionHealth` | `RegionHealth[]` |
-| Home | `GET /v1/onboarding` | — | `fetchOnboarding` | `OnboardingStep[]` |
 | Users | `GET /v1/users` | `tier` | `fetchUsers` | `UsersResponse` |
 | Documents | `GET /v1/documents` | `tier` | `fetchDocuments` | `DocumentsResponse` |
 | Pipelines | `GET /v1/pipelines` · `POST /v1/pipelines/:id/promote-to-policy` | `tier` | `fetchPipelines` · `promoteToPolicy` | `PipelinesResponse` |
@@ -83,4 +88,4 @@ non-2xx). Views consume via `useAsync()` + `useSectionFlags()` (`hooks/useAsync.
 >
 > **Policies** targets the **real** backend base `/api/v1/policies` (Stirling's
 > `PolicyController`) rather than the mock `/v1/...` convention — its contract
-> mirrors the live policy engine, so MSW can be dropped with no code change.
+> mirrors the live policy engine.

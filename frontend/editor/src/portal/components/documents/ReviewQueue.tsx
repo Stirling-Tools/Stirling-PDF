@@ -1,57 +1,80 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { EmptyState, Skeleton, Tabs, type TabItem } from "@app/ui";
-import { useTier } from "@portal/contexts/TierContext";
-import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import {
-  fetchDocuments,
-  type DocumentStatus,
-  type DocumentsResponse,
-  type ReviewDocument,
-} from "@portal/api/documents";
-import { DocumentsSummaryStrip } from "@portal/components/documents/DocumentsSummaryStrip";
+  Button,
+  EmptyState,
+  Input,
+  Skeleton,
+  Tabs,
+  type TabItem,
+} from "@app/ui";
+import type { DocumentStatus, ReviewDocument } from "@portal/api/documents";
+import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
+import { DocumentsIcon } from "@portal/components/icons";
 import { ReviewQueueTable } from "@portal/components/documents/ReviewQueueTable";
 import { DocumentDrawer } from "@portal/components/documents/DocumentDrawer";
 
-type QueueFilter = "all" | "needs-review" | "processed" | "archived";
+type QueueFilter = "all" | "flagged" | "processed" | "in-review";
 
 /** Which document statuses each filter pill admits. */
 const FILTER_STATUSES: Record<QueueFilter, DocumentStatus[] | null> = {
   all: null,
-  // "Needs review" surfaces both routed-for-review and flagged docs — the two
-  // states that demand a human decision.
-  "needs-review": ["needs-review", "flagged"],
+  flagged: ["flagged"],
   processed: ["processed"],
-  archived: ["archived"],
+  "in-review": ["in-review"],
 };
 
-function countFor(docs: ReviewDocument[], filter: QueueFilter): number {
-  const statuses = FILTER_STATUSES[filter];
-  if (statuses === null) return docs.length;
-  return docs.filter((d) => statuses.includes(d.status)).length;
+interface ReviewQueueProps {
+  documents: ReviewDocument[];
+  loading: boolean;
+}
+
+function SearchIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
+      <path
+        d="m20 20-3.5-3.5"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
 }
 
 /**
- * The review/approval queue: KPI strip, status filter pills, the document
- * stream table, and a detail drawer. The primary Documents surface.
+ * The processing list: status filter pills, a filename search, the document
+ * table, and a detail drawer. The primary Documents surface.
  */
-export function ReviewQueue() {
+export function ReviewQueue({ documents, loading }: ReviewQueueProps) {
   const { t } = useTranslation();
-  const { tier } = useTier();
-  const state = useAsync<DocumentsResponse>(() => fetchDocuments(tier), [tier]);
-  const { data, loading } = state;
-  const { isLoading, isEmpty } = useSectionFlags(state);
-
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<QueueFilter>("all");
+  const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const documents = useMemo(() => data?.documents ?? [], [data]);
+  const searched = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return documents;
+    return documents.filter(
+      (d) => d.name.toLowerCase().includes(q) || d.id.toLowerCase().includes(q),
+    );
+  }, [documents, query]);
 
   const rows = useMemo(() => {
     const statuses = FILTER_STATUSES[filter];
-    if (statuses === null) return documents;
-    return documents.filter((d) => statuses.includes(d.status));
-  }, [documents, filter]);
+    if (statuses === null) return searched;
+    return searched.filter((d) => statuses.includes(d.status));
+  }, [searched, filter]);
+
+  const countFor = (f: QueueFilter): number => {
+    const statuses = FILTER_STATUSES[f];
+    if (statuses === null) return documents.length;
+    return documents.filter((d) => statuses.includes(d.status)).length;
+  };
 
   const selected = documents.find((d) => d.id === selectedId) ?? null;
 
@@ -59,39 +82,52 @@ export function ReviewQueue() {
     {
       key: "all",
       label: t("portal.documents.filters.all"),
-      count: countFor(documents, "all"),
+      count: countFor("all"),
     },
     {
-      key: "needs-review",
-      label: t("portal.documents.filters.needsReview"),
-      count: countFor(documents, "needs-review"),
+      key: "flagged",
+      label: t("portal.documents.filters.flagged"),
+      count: countFor("flagged"),
     },
     {
       key: "processed",
       label: t("portal.documents.filters.processed"),
-      count: countFor(documents, "processed"),
+      count: countFor("processed"),
     },
     {
-      key: "archived",
-      label: t("portal.documents.filters.archived"),
-      count: countFor(documents, "archived"),
+      key: "in-review",
+      label: t("portal.documents.filters.inReview"),
+      count: countFor("in-review"),
     },
   ];
 
+  const isLoading = loading && documents.length === 0;
+  const isEmpty = !loading && documents.length === 0;
+
   return (
     <div className="portal-documents__queue">
-      <DocumentsSummaryStrip
-        summary={data?.summary ?? null}
-        loading={loading}
-      />
-
-      <Tabs<QueueFilter>
-        items={filterItems}
-        activeKey={filter}
-        onChange={setFilter}
-        variant="pill"
-        ariaLabel={t("portal.documents.filters.ariaLabel")}
-      />
+      {/* The filter pills + search are counters over the list, so hide them when
+          the list is empty — the empty state stands alone. */}
+      {!isLoading && !isEmpty && (
+        <div className="portal-documents__toolbar">
+          <Tabs<QueueFilter>
+            items={filterItems}
+            activeKey={filter}
+            onChange={setFilter}
+            variant="pill"
+            ariaLabel={t("portal.documents.filters.ariaLabel")}
+          />
+          <Input
+            className="portal-documents__search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={t("portal.documents.search")}
+            aria-label={t("portal.documents.search")}
+            leadingIcon={<SearchIcon />}
+            inputSize="sm"
+          />
+        </div>
+      )}
 
       {isLoading && (
         <div className="portal-documents__table-skeleton" aria-hidden>
@@ -103,8 +139,31 @@ export function ReviewQueue() {
 
       {isEmpty && (
         <EmptyState
+          icon={<DocumentsIcon size={28} />}
           title={t("portal.documents.queue.empty.title")}
           description={t("portal.documents.queue.empty.description")}
+          actions={
+            <>
+              <Button
+                onClick={() =>
+                  navigate(`${toPortalPath(VIEW_PATHS.pipelines)}/new`)
+                }
+                leftSection={
+                  <AddRoundedIcon style={{ fontSize: "1.125rem" }} />
+                }
+              >
+                {t("portal.documents.queue.empty.createPipeline")}
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() =>
+                  navigate(`${toPortalPath(VIEW_PATHS.sources)}?new`)
+                }
+              >
+                {t("portal.documents.queue.empty.connectSource")}
+              </Button>
+            </>
+          }
         />
       )}
 

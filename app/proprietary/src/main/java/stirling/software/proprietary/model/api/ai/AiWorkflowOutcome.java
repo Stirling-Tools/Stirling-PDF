@@ -21,8 +21,7 @@ public enum AiWorkflowOutcome {
     COMPLETED("completed"),
     UNSUPPORTED_CAPABILITY("unsupported_capability"),
     CANNOT_CONTINUE("cannot_continue"),
-    GENERATE_FILE("generate_file"),
-    CONVERT_MARKDOWN("convert_markdown");
+    GENERATE_FILE("generate_file");
 
     private final String value;
 

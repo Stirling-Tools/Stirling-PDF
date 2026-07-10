@@ -16,17 +16,17 @@ import stirling.software.common.model.enumeration.InvitationStatus;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.enumeration.TeamRole;
 import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.saas.accountlink.LinkedInstanceRepository;
 import stirling.software.saas.billing.repository.BillingSubscriptionRepository;
 import stirling.software.saas.config.SupabaseConfigurationProperties;
 import stirling.software.saas.model.TeamInvitation;
-import stirling.software.saas.model.TeamMembership;
 import stirling.software.saas.repository.SaasTeamExtensionsRepository;
 import stirling.software.saas.repository.TeamInvitationRepository;
-import stirling.software.saas.repository.TeamMembershipRepository;
 
 /** SaaS-only team management: invitations, personal teams, seat caps, paid-subscription gating. */
 @Service
@@ -48,6 +48,17 @@ public class SaasTeamService {
     private final SaasTeamExtensionsRepository saasTeamExtensionsRepository;
     private final LinkedInstanceRepository linkedInstanceRepository;
     private final stirling.software.proprietary.security.service.UserService userService;
+    private final stirling.software.proprietary.access.repository.ResourceGrantRepository
+            resourceGrantRepository;
+    private final stirling.software.proprietary.integration.repository.IntegrationConfigRepository
+            integrationConfigRepository;
+
+    // Team-owned integration configs + team grants FK the teams row; purge before deleting a team.
+    private void purgeTeamOwnedResources(Long teamId) {
+        integrationConfigRepository.deleteByOwnerTeam_Id(teamId);
+        resourceGrantRepository.deleteByPrincipalTypeAndPrincipalId(
+                stirling.software.proprietary.access.model.PrincipalType.TEAM, teamId);
+    }
 
     public static final String DEFAULT_TEAM_NAME = "Default";
     public static final String INTERNAL_TEAM_NAME = "Internal";
@@ -347,6 +358,7 @@ public class SaasTeamService {
                     "Deleting empty personal team {} after user {} joined another team",
                     teamToDelete.getId(),
                     acceptingUser.getUsername());
+            purgeTeamOwnedResources(teamToDelete.getId());
             teamRepository.delete(teamToDelete);
         }
 
@@ -437,6 +449,7 @@ public class SaasTeamService {
         if (!saasTeamExtensionService.isPersonal(team)
                 && membershipRepository.countByTeamId(teamId) == 0) {
             log.info("Deleting empty non-personal team {} after last member removed", teamId);
+            purgeTeamOwnedResources(team.getId());
             teamRepository.delete(team);
         }
 
@@ -551,6 +564,7 @@ public class SaasTeamService {
         if (!saasTeamExtensionService.isPersonal(team)
                 && membershipRepository.countByTeamId(teamId) == 0) {
             log.info("Deleting empty non-personal team {} after last member left", teamId);
+            purgeTeamOwnedResources(team.getId());
             teamRepository.delete(team);
         }
 

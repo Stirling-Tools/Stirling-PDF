@@ -4,7 +4,6 @@ import {
   Banner,
   Button,
   Card,
-  Chip,
   FormField,
   Input,
   Modal,
@@ -12,18 +11,23 @@ import {
   Tabs,
   ToggleSwitch,
 } from "@app/ui";
+import { SettingsRow } from "@app/ui/SettingsRow";
 import {
-  POLICY_DOC_TYPES,
+  TOOL_ENDPOINTS,
   humanizeEndpoint,
   type CatalogueEntry,
   type PipelineStep,
   type PolicySetupResult,
 } from "@portal/api/policies";
+import type { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import { fetchSources } from "@portal/api/sources";
 import { useAsync } from "@portal/hooks/useAsync";
 import { PolicyFieldRow } from "@portal/components/policies/PolicyFieldRow";
 import { policyIcon } from "@portal/components/policies/policyIcons";
 import { sourceTypeMeta } from "@portal/components/sources/sourceTypes";
+import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
+import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig";
+import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
 import "@portal/views/Policies.css";
 
 interface PolicySetupWizardProps {
@@ -64,6 +68,58 @@ function resolveFieldValues(
 // Temporary: tracks which tools start disabled until the tool registry lands in
 // the portal and can drive this via registry metadata or a defaultEnabled flag.
 const DISABLED_BY_DEFAULT = new Set(["/api/v1/security/add-watermark"]);
+
+/**
+ * Policy-facing framing for each capability a policy can include. Labels and
+ * descriptions describe what the policy DOES to a document — deliberately not
+ * naming the underlying tool — so the setup reads as the policy's own settings
+ * rather than an assembled chain of tools. Endpoints with no entry fall back to
+ * the humanised endpoint name with no description.
+ */
+const CAPABILITY_META: Record<
+  string,
+  { labelKey: string; labelEn: string; descKey: string; descEn: string }
+> = {
+  [TOOL_ENDPOINTS.redact]: {
+    labelKey: "portal.policies.wizard.capability.redact.label",
+    labelEn: "Redact sensitive information",
+    descKey: "portal.policies.wizard.capability.redact.desc",
+    descEn:
+      "Finds and blacks out sensitive details — like Social Security and card numbers — so they can't be read.",
+  },
+  [TOOL_ENDPOINTS.sanitize]: {
+    labelKey: "portal.policies.wizard.capability.sanitize.label",
+    labelEn: "Strip active content",
+    descKey: "portal.policies.wizard.capability.sanitize.desc",
+    descEn:
+      "Removes hidden JavaScript so nothing can run automatically when the document is opened.",
+  },
+  [TOOL_ENDPOINTS.watermark]: {
+    labelKey: "portal.policies.wizard.capability.watermark.label",
+    labelEn: "Apply a watermark",
+    descKey: "portal.policies.wizard.capability.watermark.desc",
+    descEn: "Stamps a visible mark (e.g. “Confidential”) across every page.",
+  },
+  [TOOL_ENDPOINTS.ocr]: {
+    labelKey: "portal.policies.wizard.capability.ocr.label",
+    labelEn: "Make text searchable",
+    descKey: "portal.policies.wizard.capability.ocr.desc",
+    descEn: "Runs OCR so scanned pages become selectable, searchable text.",
+  },
+  [TOOL_ENDPOINTS.flatten]: {
+    labelKey: "portal.policies.wizard.capability.flatten.label",
+    labelEn: "Flatten the document",
+    descKey: "portal.policies.wizard.capability.flatten.desc",
+    descEn:
+      "Merges form fields and annotations into the page so they can't be edited.",
+  },
+  [TOOL_ENDPOINTS.compress]: {
+    labelKey: "portal.policies.wizard.capability.compress.label",
+    labelEn: "Reduce file size",
+    descKey: "portal.policies.wizard.capability.compress.desc",
+    descEn: "Compresses the document to a smaller file size.",
+  },
+};
 
 function seedTools(entry: CatalogueEntry): ToolState[] {
   const savedSteps = entry.policy?.steps ?? [];
@@ -117,6 +173,19 @@ function PolicySetupWizardBody({
   onSubmit: (entry: CatalogueEntry, result: PolicySetupResult) => Promise<void>;
 }) {
   const { t } = useTranslation();
+  const { allTools: toolRegistry } = useToolRegistry();
+
+  // Portal tool operations are endpoint paths (/api/v1/…), not short registry IDs.
+  // Build a reverse map so we can look up icons and display names by endpoint.
+  const registryByEndpoint = useMemo(() => {
+    const map = new Map<string, ToolRegistryEntry>();
+    for (const entry of Object.values(toolRegistry)) {
+      const ep = (entry as ToolRegistryEntry).operationConfig?.endpoint;
+      if (typeof ep === "string") map.set(ep, entry as ToolRegistryEntry);
+    }
+    return map;
+  }, [toolRegistry]);
+
   const { category, config, policy } = entry;
   const isEdit = policy != null;
 
@@ -146,12 +215,9 @@ function PolicySetupWizardBody({
     };
     return [editorSource, ...backendSources];
   }, [sourcesAsync.data, t]);
-  const [scopeNarrow, setScopeNarrow] = useState(
-    (policy?.state.scopeTypes.length ?? 0) > 0,
-  );
-  const [scopeTypes, setScopeTypes] = useState<string[]>(
-    policy?.state.scopeTypes ?? [],
-  );
+  // Document-type scoping has no UI; preserve any saved scope on edit and
+  // default new policies to all document types.
+  const [scopeTypes] = useState<string[]>(policy?.state.scopeTypes ?? []);
   // TODO: replace with user-picker backed by GET /api/v1/user/users (UserSummary[]).
   // Store username (which is the email in Spring Security) as reviewerEmail.
   // See UserSelector.tsx in the editor for the grouping/display pattern.
@@ -166,10 +232,10 @@ function PolicySetupWizardBody({
   const [runOn, setRunOn] = useState<"upload" | "export">(
     policy?.state.runOn ?? "upload",
   );
-  const [maxRetries, setMaxRetries] = useState(policy?.state.maxRetries ?? 3);
-  const [retryDelayMinutes, setRetryDelayMinutes] = useState(
-    policy?.state.retryDelayMinutes ?? 5,
-  );
+  // Policies run once; retry config has no UI. Preserve any saved values on
+  // edit and default new policies to no retries (run once).
+  const [maxRetries] = useState(policy?.state.maxRetries ?? 0);
+  const [retryDelayMinutes] = useState(policy?.state.retryDelayMinutes ?? 0);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -185,12 +251,6 @@ function PolicySetupWizardBody({
   function toggleSource(id: string) {
     setSources((prev) =>
       prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id],
-    );
-  }
-
-  function toggleScopeType(dt: string) {
-    setScopeTypes((prev) =>
-      prev.includes(dt) ? prev.filter((d) => d !== dt) : [...prev, dt],
     );
   }
 
@@ -211,7 +271,7 @@ function PolicySetupWizardBody({
       await onSubmit(entry, {
         fieldValues,
         sources,
-        scopeTypes: scopeNarrow ? scopeTypes : [],
+        scopeTypes,
         reviewerEmail,
         outputMode,
         outputName: outputName.trim(),
@@ -227,8 +287,6 @@ function PolicySetupWizardBody({
     }
   }
 
-  const docTypesEnabled = category.providesClassification === true;
-
   return (
     <Modal
       open
@@ -241,17 +299,17 @@ function PolicySetupWizardBody({
           </span>
           {isEdit
             ? t("portal.policies.wizard.title.edit", {
-                category: category.label,
+                category: t(category.label),
               })
             : t("portal.policies.wizard.title.setUp", {
-                category: category.label,
+                category: t(category.label),
               })}
         </span>
       }
-      subtitle={config.summary}
+      subtitle={t(config.summary)}
       footer={
         <div className="portal-policies__wizard-foot">
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="tertiary" size="sm" onClick={onClose}>
             {t("portal.policies.wizard.actions.cancel")}
           </Button>
           {step === "workflow" ? (
@@ -265,7 +323,7 @@ function PolicySetupWizardBody({
           ) : (
             <>
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 style={{ marginLeft: "auto" }}
                 onClick={() => setStep("workflow")}
@@ -304,26 +362,70 @@ function PolicySetupWizardBody({
       {step === "workflow" && (
         <div className="portal-policies__wizard-section">
           <p className="portal-policies__wizard-desc">
-            {t("portal.policies.wizard.workflow.description")}
+            {t(
+              "portal.policies.wizard.workflow.description",
+              "Choose what this policy does to every document it processes.",
+            )}
           </p>
-          {tools.map((tl) => (
-            <Card key={tl.operation} padding="tight">
-              <div className="portal-policies__tool-head">
-                <span className="portal-policies__tool-name">
-                  {humanizeEndpoint(tl.operation)}
-                </span>
-                <span style={{ flex: 1 }} />
-                <ToggleSwitch
-                  size="sm"
-                  checked={tl.enabled}
-                  onChange={(checked) =>
-                    patchTool(tl.operation, { enabled: checked })
-                  }
-                  label=""
-                />
-              </div>
-            </Card>
-          ))}
+          <Card padding="none">
+            <div className="portal-policies__capabilities">
+              {tools.map((tl) => {
+                const meta = CAPABILITY_META[tl.operation];
+                const label = meta
+                  ? t(meta.labelKey, meta.labelEn)
+                  : (registryByEndpoint.get(tl.operation)?.name ??
+                    humanizeEndpoint(tl.operation, t));
+                const description = meta
+                  ? t(meta.descKey, meta.descEn)
+                  : undefined;
+                const hasConfig =
+                  tl.operation === TOOL_ENDPOINTS.redact ||
+                  tl.operation === TOOL_ENDPOINTS.watermark;
+                return (
+                  <div
+                    key={tl.operation}
+                    className="portal-policies__capability"
+                    data-on={tl.enabled || undefined}
+                  >
+                    <SettingsRow
+                      label={label}
+                      description={description}
+                      control={
+                        <ToggleSwitch
+                          size="sm"
+                          checked={tl.enabled}
+                          onChange={(checked) =>
+                            patchTool(tl.operation, { enabled: checked })
+                          }
+                          label=""
+                        />
+                      }
+                    />
+                    {tl.enabled && hasConfig && (
+                      <div className="portal-policies__capability-config">
+                        {tl.operation === TOOL_ENDPOINTS.redact && (
+                          <PolicyRedactConfig
+                            parameters={tl.parameters}
+                            onChange={(parameters) =>
+                              patchTool(tl.operation, { parameters })
+                            }
+                          />
+                        )}
+                        {tl.operation === TOOL_ENDPOINTS.watermark && (
+                          <PolicyWatermarkConfig
+                            parameters={tl.parameters}
+                            onChange={(parameters) =>
+                              patchTool(tl.operation, { parameters })
+                            }
+                          />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
         </div>
       )}
 
@@ -352,24 +454,23 @@ function PolicySetupWizardBody({
           <h3 className="portal-policies__wizard-heading">
             {t("portal.policies.wizard.sources.heading")}
           </h3>
-          <div className="portal-policies__sources">
-            {sourcesAsync.loading && !sourcesAsync.data ? (
-              <p className="portal-policies__sources-loading">
-                {t("portal.policies.wizard.sources.loading")}
-              </p>
-            ) : availableSources.length === 1 ? (
-              <Banner
-                tone="neutral"
-                title={t("portal.policies.wizard.sources.emptyTitle")}
-                description={t(
-                  "portal.policies.wizard.sources.emptyDescription",
-                )}
-              />
-            ) : (
-              availableSources.map((src) => (
-                <button
+          {sourcesAsync.loading && !sourcesAsync.data ? (
+            <p className="portal-policies__sources-loading">
+              {t("portal.policies.wizard.sources.loading")}
+            </p>
+          ) : (
+            // The editor is always an available source (unconditionally prepended
+            // to availableSources), so the list is never empty — no "no sources"
+            // state exists.
+            <div className="portal-policies__sources">
+              {availableSources.map((src) => (
+                // A selectable multi-line tile (icon + name + type + check).
+                // Uses the shared Button (raw <button> is lint-banned); the tile
+                // CSS overrides the Button's fixed height for the two-line layout.
+                <Button
                   key={src.id}
-                  type="button"
+                  variant="quiet"
+                  justify="start"
                   className={
                     "portal-policies__source" +
                     (sources.includes(src.id)
@@ -389,55 +490,9 @@ function PolicySetupWizardBody({
                       {src.type}
                     </span>
                   </span>
-                </button>
-              ))
-            )}
-          </div>
-
-          <h3 className="portal-policies__wizard-heading">
-            {t("portal.policies.wizard.docTypes.heading")}
-          </h3>
-          {!docTypesEnabled ? (
-            <Banner
-              tone="neutral"
-              title={t("portal.policies.wizard.docTypes.allTitle")}
-              description={t("portal.policies.wizard.docTypes.allDescription")}
-            />
-          ) : (
-            <Card padding="tight">
-              <div className="portal-policies__doctypes-head">
-                <span>
-                  {scopeTypes.length === 0
-                    ? t("portal.policies.wizard.docTypes.allTitle")
-                    : t("portal.policies.wizard.docTypes.selected", {
-                        count: scopeTypes.length,
-                      })}
-                </span>
-                <button
-                  type="button"
-                  className="portal-policies__link"
-                  onClick={() => setScopeNarrow((v) => !v)}
-                >
-                  {scopeNarrow
-                    ? t("portal.policies.wizard.docTypes.clear")
-                    : t("portal.policies.wizard.docTypes.narrow")}
-                </button>
-              </div>
-              {scopeNarrow && (
-                <div className="portal-policies__doctypes">
-                  {POLICY_DOC_TYPES.map((dt) => (
-                    <Chip
-                      key={dt}
-                      tone={scopeTypes.includes(dt) ? "blue" : "neutral"}
-                      size="sm"
-                      onClick={() => toggleScopeType(dt)}
-                    >
-                      {dt}
-                    </Chip>
-                  ))}
-                </div>
-              )}
-            </Card>
+                </Button>
+              ))}
+            </div>
           )}
 
           <h3 className="portal-policies__wizard-heading">
@@ -453,8 +508,8 @@ function PolicySetupWizardBody({
                   <Select
                     inputSize="sm"
                     value={runOn}
-                    onChange={(e) =>
-                      setRunOn(e.target.value as "upload" | "export")
+                    onChange={(value) =>
+                      setRunOn((value ?? "upload") as "upload" | "export")
                     }
                     options={[
                       {
@@ -474,8 +529,10 @@ function PolicySetupWizardBody({
                   <Select
                     inputSize="sm"
                     value={outputMode}
-                    onChange={(e) => {
-                      const mode = e.target.value as "new_file" | "new_version";
+                    onChange={(value) => {
+                      const mode = (value ?? "new_file") as
+                        | "new_file"
+                        | "new_version";
                       setOutputMode(mode);
                       // Auto-number only applies to separate new files.
                       if (
@@ -508,9 +565,12 @@ function PolicySetupWizardBody({
                     <Select
                       inputSize="sm"
                       value={outputNamePosition}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setOutputNamePosition(
-                          e.target.value as "prefix" | "suffix" | "auto-number",
+                          (value ?? "suffix") as
+                            | "prefix"
+                            | "suffix"
+                            | "auto-number",
                         )
                       }
                       options={[
@@ -553,33 +613,6 @@ function PolicySetupWizardBody({
               </>
             )}
             {/* TODO: reviewer user-picker goes here */}
-            <h4 className="portal-policies__wizard-subheading">
-              {t("portal.policies.wizard.output.retries.heading")}
-            </h4>
-            <FormField
-              label={t("portal.policies.wizard.output.retries.maxLabel")}
-            >
-              <Input
-                inputSize="sm"
-                type="number"
-                value={String(maxRetries)}
-                onChange={(e) =>
-                  setMaxRetries(Math.max(0, Number(e.target.value) || 0))
-                }
-              />
-            </FormField>
-            <FormField
-              label={t("portal.policies.wizard.output.retries.delayLabel")}
-            >
-              <Input
-                inputSize="sm"
-                type="number"
-                value={String(retryDelayMinutes)}
-                onChange={(e) =>
-                  setRetryDelayMinutes(Math.max(0, Number(e.target.value) || 0))
-                }
-              />
-            </FormField>
           </div>
         </div>
       )}

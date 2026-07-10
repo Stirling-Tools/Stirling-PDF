@@ -16,7 +16,7 @@ import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 export interface DropdownItem {
   value: string;
   name: string;
-  leftIcon?: ReactNode;
+  leftSection?: ReactNode;
   disabled?: boolean;
 }
 
@@ -232,9 +232,9 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
                     }}
                   >
                     <Group gap="sm" style={{ flex: 1 }}>
-                      {item.leftIcon && (
+                      {item.leftSection && (
                         <Box style={{ display: "flex", alignItems: "center" }}>
-                          {item.leftIcon}
+                          {item.leftSection}
                         </Box>
                       )}
                       <Text size="sm">{item.name}</Text>

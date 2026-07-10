@@ -7,6 +7,7 @@ black = "سیاه"
 blue = "آبی"
 cancel = "انصراف"
 chooseFile = "انتخاب فایل"
+clear = "پاک کردن"
 close = "بستن"
 comingSoon = "به‌زودی"
 confirm = "تأیید"
@@ -87,6 +88,7 @@ processingCompleteMultiple = "{{count}} فایل آماده‌اند."
 property = "ویژگی"
 quickPosition = "موقعیت سریع"
 red = "قرمز"
+remove = "حذف"
 reset = "تنظیم مجدد"
 review = "بررسی"
 save = "ذخیره"
@@ -180,6 +182,7 @@ addMoreFiles = "افزودن فایل‌های بیشتر..."
 attachments = "انتخاب پیوست‌ها"
 info = "فایل‌هایی را برای پیوست به PDF خود انتخاب کنید. این فایل‌ها درون PDF جاسازی شده و از طریق پنل پیوست‌ها قابل دسترسی خواهند بود."
 placeholder = "انتخاب فایل‌ها..."
+removeFile = "حذف فایل"
 selectedFiles = "فایل‌های انتخاب‌شده"
 submit = "افزودن پیوست‌ها"
 
@@ -1628,6 +1631,9 @@ title = "آیا می‌خواهید Stirling PDF را بهتر کنید؟"
 tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
 
 [annotation]
+alignCenter = "تراز در مرکز"
+alignLeft = "تراز چپ"
+alignRight = "تراز راست"
 annotationStyle = "سبک حاشیه‌نویسی"
 backgroundColor = "رنگ پس‌زمینه"
 borderOff = "حاشیه: خاموش"
@@ -2531,6 +2537,7 @@ title = "قاعده سرانگشتی"
 
 [certSign.source]
 device = "این دستگاه"
+noOtherSources = "هیچ منبع گواهی دیگری در دسترس نیست."
 server = "سرور"
 stepTitle = "منبع گواهی"
 upload = "بارگذاری"
@@ -2805,6 +2812,7 @@ back = "بازگشت"
 cancel = "انصراف"
 close = "بستن"
 collapse = "جمع کردن"
+confirm = "تأیید"
 continue = "ادامه"
 copied = "کپی شد!"
 copy = "کپی"
@@ -3595,7 +3603,9 @@ makeCopy = "ایجاد رونوشت"
 mobileShort = "موبایل"
 mobileUpload = "آپلود از موبایل"
 mobileUploadNotAvailable = "آپلود موبایل فعال نیست"
+moreOptions = "گزینه‌های بیشتر"
 myFiles = "فایل‌های من"
+nextFile = "فایل بعدی"
 noFiles = "فایلی موجود نیست"
 noFilesFound = "فایلی مطابق جستجو یافت نشد"
 noRecentFiles = "هیچ فایل اخیری یافت نشد"
@@ -3605,6 +3615,7 @@ openInFileEditor = "باز کردن در ویرایشگر فایل"
 openInPageEditor = "باز کردن در ویرایشگر صفحه"
 owner = "مالک"
 ownerUnknown = "نامشخص"
+previousFile = "فایل قبلی"
 recent = "اخیر"
 removeBoth = "حذف از هر دو"
 removeFilePrompt = "این فایل در این دستگاه و روی سرور شما ذخیره شده است. مایلید آن را از کجا حذف کنید؟"
@@ -3680,7 +3691,9 @@ workbench = "محیط کار"
 
 [fileSidebar]
 addFiles = "افزودن فایل‌ها"
+addingFiles = "در حال افزودن فایل‌ها…"
 collapse = "جمع کردن نوار کناری"
+customizeGroups = "سفارشی‌سازی گروه‌ها"
 dropHint = "برای شروع فایل‌ها را باز کنید"
 dropToAdd = "Drop files to add"
 expand = "گسترش نوار کناری"
@@ -3693,8 +3706,11 @@ noFiles = "هنوز فایلی نیست"
 openFileManager = "باز کردن مدیریت فایل"
 openFromComputer = "باز کردن از رایانه"
 openSettings = "باز کردن تنظیمات"
+other = "سایر"
+recent = "اخیر"
 search = "جستجو"
 searchPlaceholder = "جستجوی فایل‌ها..."
+viewAll = "مشاهده همه {{count}} فایل"
 
 [fileSidebar.fileItem]
 closeViewer = "بستن نمایشگر"
@@ -3706,6 +3722,23 @@ updateOnServer = "Update on server"
 uploadToServer = "Upload to server"
 versionHistory = "Version history"
 
+[fileSidebar.groupsModal]
+add = "افزودن"
+addLabel = "افزودن برچسب…"
+categoryIconAria = "انتخاب آیکون برای {{name}}"
+createCategory = "ایجاد دسته"
+delete = "حذف دسته"
+done = "انجام شد"
+hide = "پنهان کردن دسته"
+newCategory = "نام دسته جدید…"
+removeLabel = "حذف {{name}}"
+rename = "تغییر نام"
+reset = "بازنشانی به پیش‌فرض‌ها"
+search = "جستجوی برچسب‌ها…"
+show = "نمایش دسته"
+subtitle = "فایل‌های خود را در دسته‌های والد گروه‌بندی کنید. برچسب‌های موجود یا جدید را به یک دسته اضافه کنید، نام آن را تغییر دهید، یا دسته خودتان را بسازید. فایل‌هایی که در هیچ‌یک از دسته‌های شما نیستند زیر «سایر» نمایش داده می‌شوند."
+title = "دسته‌های نوار کناری"
+
 [filesPage]
 addToWorkspace = "افزودن به فضای کاری"
 addToWorkspaceCount = "افزودن {{count}} مورد به فضای کاری"
@@ -3715,6 +3748,7 @@ backToFolder = "بازگشت به {{folder}}"
 backToMyFiles = "بازگشت به فایل‌های من"
 breadcrumbs = "مسیر پوشه"
 cancel = "لغو"
+classification = "طبقه‌بندی"
 clearSearch = "پاک‌کردن جستجو"
 clearSelection = "پاک‌کردن انتخاب"
 closeDetails = "بستن جزئیات"
@@ -3874,10 +3908,10 @@ uploadFilesFailedDetail = "امکان بارگذاری فایل‌ها نبود:
 added = "افزوده"
 count = "فایل‌ها"
 folder = "پوشه"
+labels = "برچسب‌ها"
 modified = "تغییر یافته"
 name = "نام"
 size = "حجم"
-toolHistory = "تاریخچهٔ ابزار"
 toolHistoryAtVersion = "زنجیرهٔ ابزار تجمیعی"
 totalSize = "حجم کل"
 type = "نوع"
@@ -4614,10 +4648,10 @@ welcomeTitle = "شما دعوت شده‌اید!"
 [landing]
 addFiles = "افزودن فایل‌ها"
 heroSubtitle = "برای شروع یک PDF موجود را بکشید و رها کنید یا اضافه کنید."
-heroTitle = "Stirling PDF"
 mobileUpload = "آپلود از موبایل"
 openFromComputer = "باز کردن از رایانه"
 uploadFromComputer = "بارگذاری از رایانه"
+workbenchEmptyStateHero = "یک PDF را هرجا رها کنید"
 
 [language]
 direction = "rtl"
@@ -4930,6 +4964,7 @@ title = "خروجی"
 [onboarding]
 activeFiles = "نمای <strong>Active Files</strong> همه PDFهایی را که در ابزار بارگذاری کرده‌اید نشان می‌دهد و به شما امکان می‌دهد انتخاب کنید کدام‌ها پردازش شوند."
 allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
+close = "بستن"
 cropSettings = "حالا که فایلی را که می‌خواهیم برش دهیم انتخاب کرده‌ایم، می‌توانیم ابزار Crop را پیکربندی کنیم تا ناحیه‌ای را که می‌خواهیم PDF به آن برش داده شود انتخاب کنیم."
 fileCheckbox = "با کلیک روی یکی از فایل‌ها، آن برای پردازش انتخاب می‌شود. می‌توانید چندین فایل را برای عملیات دسته‌ای انتخاب کنید."
 fileReplacement = "فایل تغییر‌یافته به‌طور خودکار در Workbench جایگزین فایل اصلی می‌شود و امکان می‌دهد به‌راحتی آن را از ابزارهای بیشتری عبور دهید."
@@ -4955,6 +4990,7 @@ skipTheTour = "از تور بگذر"
 
 [onboarding.desktopInstall]
 body = "Stirling به‌صورت برنامه دسکتاپ بهترین عملکرد را دارد. می‌توانید آفلاین از آن استفاده کنید، سریع‌تر به اسناد دسترسی داشته باشید و ویرایش‌ها را به‌صورت محلی روی رایانه انجام دهید."
+selectOs = "انتخاب سیستم‌عامل"
 title = "دانلود"
 titleWithOs = "دانلود برای {{osLabel}}"
 
@@ -5566,7 +5602,9 @@ viewLabel = "ویرایشگر PDF"
 
 [pdfTextEditor.actions]
 applyChanges = "اعمال تغییرات"
+clearText = "پاک کردن متن"
 downloadCopy = "دانلود نسخه"
+moreOptions = "گزینه‌های بیشتر"
 reset = "بازنشانی تغییرات"
 
 [pdfTextEditor.badges]
@@ -5942,6 +5980,16 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.docType]
+Contracts = "قراردادها"
+"Financial reports" = "گزارش‌های مالی"
+"HR records" = "سوابق منابع انسانی"
+Insurance = "بیمه"
+Invoices = "فاکتورها"
+"Legal filings" = "پرونده‌های حقوقی"
+"Medical / PHI" = "پزشکی / PHI"
+"Tax documents" = "اسناد مالیاتی"
+
 [policies.enforcement]
 applying = "در حال اعمال {{names}}"
 applyingProgress = "در حال اعمال {{names}} ({{done}} از {{total}})"
@@ -5963,8 +6011,94 @@ export = "اعمال پیش از صدور"
 input = "اعمال هنگام وارد کردن"
 print = "اعمال پیش از چاپ"
 
+[policies.field]
+accessLog = "گزارش دسترسی"
+archiveAfter = "بایگانی پس از"
+auditTrail = "ردیابی حسابرسی"
+belowThreshold = "زیر آستانه"
+destination = "مقصد"
+frameworks = "چارچوب‌ها"
+immutableHold = "نگهداری تغییرناپذیر"
+keepFor = "نگهداری برای"
+minConfidence = "حداقل اطمینان"
+notify = "اعلان هنگام مسیریابی"
+onViolation = "هنگام عدم انطباق"
+webhookUrl = "URL Webhook"
+
+[policies.fieldOption.archiveAfter]
+"1 year" = "۱ سال"
+"30 days" = "۳۰ روز"
+"90 days" = "۹۰ روز"
+Never = "هرگز"
+
+[policies.fieldOption.belowThreshold]
+"Flag for review" = "علامت‌گذاری برای بازبینی"
+Hold = "نگه داشتن"
+"Route to bucket" = "مسیریابی به bucket"
+
+[policies.fieldOption.destination]
+Documents = "اسناد"
+"S3 bucket" = "S3 bucket"
+SharePoint = "SharePoint"
+Webhook = "Webhook"
+
+[policies.fieldOption.frameworks]
+FedRAMP = "FedRAMP"
+GDPR = "GDPR"
+HIPAA = "HIPAA"
+"ISO 27001" = "ISO 27001"
+"PCI DSS" = "PCI DSS"
+"SOC 2" = "SOC 2"
+
+[policies.fieldOption.keepFor]
+"1 year" = "۱ سال"
+"3 years" = "۳ سال"
+"30 days" = "۳۰ روز"
+"7 years" = "۷ سال"
+Indefinite = "نامحدود"
+
+[policies.fieldOption.minConfidence]
+"60%" = "60%"
+"70%" = "70%"
+"80%" = "80%"
+"90%" = "90%"
+"95%" = "95%"
+
+[policies.fieldOption.onViolation]
+"Auto-redact PHI" = "حذف خودکار PHI"
+"Block export" = "مسدود کردن خروجی"
+"Flag for review" = "علامت‌گذاری برای بازبینی"
+"Quarantine document" = "قرنطینه کردن سند"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
+
+[policies.labels]
+add = "افزودن"
+addPlaceholder = "افزودن برچسب…"
+customNote = "برای تیم شما سفارشی شده است."
+defaultNote = "استفاده از پیش‌فرض داخلی، مشترک با تیم شما."
+duplicate = "\"{{name}}\" از قبل وجود دارد."
+edit = "ویرایش برچسب‌ها"
+empty = "هنوز برچسبی وجود ندارد."
+export = "خروجی JSON"
+iconAria = "انتخاب آیکون برای {{name}}"
+import = "وارد کردن JSON"
+importError = "امکان وارد کردن آن فایل وجود نداشت."
+managedNote = "برچسب‌های تیم توسط رهبر تیم شما مدیریت می‌شوند."
+modalSubtitle = "با کل تیم شما مشترک است. طبقه‌بند برچسب‌هایی را انتخاب می‌کند که با هر سند مطابقت دارند."
+modalTitle = "برچسب‌های طبقه‌بندی"
+pickIcon = "استفاده از آیکون {{label}}"
+removeAria = "حذف {{name}}"
+resetToDefault = "بازنشانی به پیش‌فرض"
+saveForTeam = "ذخیره برای تیم"
+saving = "در حال ذخیره…"
+sectionLabel = "برچسب‌های طبقه‌بندی"
+startFromScratch = "شروع از ابتدا"
+teamCount = "برچسب‌های تیم"
+tooLong = "برچسب‌ها حداکثر می‌توانند {{max}} نویسه باشند."
+ungrouped = "گروه‌بندی‌نشده"
+view = "مشاهده برچسب‌ها"
 
 [policies.pii]
 account = "شماره‌های حساب (برچسب‌دار)"
@@ -5977,17 +6111,30 @@ placeholder = "Select PII types"
 routing = "شماره‌های مسیریابی بانکی ایالات متحده (ABA)"
 ssn = "شماره‌های تأمین اجتماعی"
 
+[policies.settings]
+noneExport = "در حال حاضر هیچ خط‌مشی‌ای هنگام خروجی اجرا نمی‌شود."
+noneUpload = "در حال حاضر هیچ خط‌مشی‌ای هنگام بارگذاری اجرا نمی‌شود."
+onExport = "هنگام خروجی"
+onUpload = "هنگام بارگذاری"
+reorderHandle = "برای تغییر ترتیب بکشید"
+runOrderDesc = "وقتی بیش از یک خط‌مشی روی یک ماشه اجرا می‌شود، به این ترتیب اجرا می‌شوند — هرکدام روی خروجی خط‌مشی قبلی. برای تغییر ترتیب بکشید."
+title = "تنظیمات خط‌مشی"
+
 [policies.sidebar]
 activeCount = "{{count}} active"
-infoAriaLabel = "What is a policy?"
 infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
 loading = "Loading…"
+optionsAriaLabel = "گزینه‌های خط‌مشی"
+policySettings = "تنظیمات خط‌مشی"
 railAriaLabel = "{{label}} policy — {{status}}"
 railSuffixActive = " (Active)"
 railSuffixPaused = " (Paused)"
+retryFailed = "تلاش دوباره برای خط‌مشی‌های ناموفق ({{count}})"
+rowProgress = "{{completed}} از {{total}} فایل پردازش شد"
 setUp = "Set up"
 title = "Policies"
 upgradeToEnterprise = "Upgrade to enterprise"
+whatIsPolicy = "خط‌مشی چیست؟"
 
 [policies.status]
 active = "Active"
@@ -6047,6 +6194,1933 @@ sourcesLabel = "Sources"
 stepOf = "Step {{step}} of {{total}}"
 toolChainDesc = "Configure the tools this policy runs on each document."
 typesSelected = "{{count}} types selected"
+
+[policy]
+badgeEnforcing = "{{name}} در حال اعمال..."
+badgeRan = "خط‌مشی {{name}} روی این فایل اجرا شد"
+blockingAction = "{{action}} هنگام اعمال خط‌مشی مسدود شد، لطفاً صبر کنید..."
+dismiss = "بستن پوشش"
+enforcingTitle = "در حال اعمال خط‌مشی..."
+viewAnyway = "مشاهده فایل (خط‌مشی همچنان در حال اعمال است)"
+
+[portal]
+comingSoon = "به‌زودی"
+
+[portal.accountLink.card]
+billingNote = "پردازش بدون نظارت از کیف پول سازمان شما هزینه می‌شود."
+eyebrow = "پیوند حساب"
+linkButton = "پیوند دادن حساب Stirling شما"
+linked = "پیوند داده شد"
+linkedAs = "به‌عنوان {{name}} پیوند داده شد."
+linkedGeneric = "این نمونه پیوند داده شده است."
+notLinked = "پیوند داده نشده"
+title = "پیوند دادن این سازمان به حساب Stirling آن"
+unlink = "لغو پیوند"
+
+[portal.accountLink.card.error]
+title = "امکان پیوند دادن وجود نداشت"
+
+[portal.accountLink.card.loginNotConfigured]
+after = "تا پیوند حساب با حساب Stirling میزبانی‌شده فعال شود. در حالت توسعه می‌توانید ورود را از گفتگوی پیوند شبیه‌سازی کنید."
+before = "تنظیم کنید"
+title = "ورود SaaS پیکربندی نشده است"
+
+[portal.accountLink.gate]
+action = "پیوند حساب"
+description = "حساب Stirling این سازمان را برای استفاده از قابلیت‌های قابل‌هزینه پیوند دهید."
+title = "برای باز کردن قفل پیوند دهید"
+titleFeature = "برای باز کردن قفل {{feature}} پیوند دهید"
+
+[portal.accountLink.instances]
+active = "فعال"
+revoke = "لغو"
+revoked = "لغو شد"
+unnamed = "نمونه بی‌نام"
+
+[portal.accountLink.instances.columns]
+instance = "نمونه"
+lastSeen = "آخرین مشاهده"
+linked = "پیوند داده‌شده"
+status = "وضعیت"
+
+[portal.accountLink.instances.empty]
+description = "حساب این سازمان را پیوند دهید، سپس نمونه‌های خودمیزبان خود را ثبت کنید تا آن‌ها را اینجا ببینید."
+title = "هیچ نمونه پیوندداده‌شده‌ای وجود ندارد"
+
+[portal.accountLink.instances.time]
+daysAgo_one = "{{count}} روز پیش"
+daysAgo_other = "{{count}} روز پیش"
+hoursAgo_one = "{{count}} ساعت پیش"
+hoursAgo_other = "{{count}} ساعت پیش"
+justNow = "همین حالا"
+minutesAgo_one = "{{count}} دقیقه پیش"
+minutesAgo_other = "{{count}} دقیقه پیش"
+never = "هرگز"
+
+[portal.accountLink.modal]
+linkSubtitle = "وارد حسابی شوید که این سرور باید هزینه‌ها را به آن نسبت دهد."
+linkTitle = "پیوند دادن حساب Stirling شما"
+reauthSubtitle = "نشست شما منقضی شده است — دوباره وارد حساب Stirling خود شوید. نمونه شما پیوند داده‌شده باقی می‌ماند."
+reauthTitle = "دوباره وارد شوید"
+simulateSignIn = "شبیه‌سازی ورود (dev)"
+
+[portal.accountLink.modal.loginNotConfigured]
+after = "تا پیوند درون‌برنامه‌ای با حساب Stirling میزبانی‌شده فعال شود."
+and = "و"
+before = "تنظیم کنید"
+title = "ورود SaaS پیکربندی نشده است"
+
+[portal.accountLink.panel]
+instancesSub = "هر نمونه خودمیزبان ثبت‌شده برای این سازمان. یک اعتبارنامه را لغو کنید تا دسترسی بدون نظارت آن فوراً قطع شود."
+instancesTitle = "نمونه‌های پیوندداده‌شده"
+revokeError = "امکان لغو نمونه وجود نداشت"
+sub = "این سازمان خودمیزبان را به حساب Stirling آن پیوند دهید تا پردازش بدون نظارت از کیف پول سازمان شما هزینه شود."
+
+[portal.accountLink.panel.loadError]
+forbidden = "فقط مالک تیم می‌تواند نمونه‌های پیوندداده‌شده سازمان را مشاهده کند."
+generic = "امکان بارگیری نمونه‌های پیوندداده‌شده تیم وجود نداشت. کمی بعد دوباره تلاش کنید."
+title = "امکان بارگیری نمونه‌های پیوندداده‌شده وجود نداشت"
+
+[portal.accountLink.state]
+free = "طرح Editor"
+subscribed = "طرح Processor"
+unlinked = "پیوند داده نشده"
+
+[portal.agentBuilder]
+bootstrapFromDocument = "راه‌اندازی اولیه از سند"
+sectionsAriaLabel = "بخش‌های سازنده عامل"
+selectorAriaLabel = "عامل‌ها"
+subtitle = "عامل‌های AI را طراحی، آزمایش و منتشر کنید که اسناد شما را طبقه‌بندی می‌کنند، از آن‌ها استخراج می‌کنند و مسیریابی می‌کنند. سناریوها را تعریف کنید، دسترسی ابزار را محدود کنید، یک مجموعه طلایی اجرا کنید و یک نسخه منتشر کنید."
+title = "سازنده عامل"
+
+[portal.agentBuilder.bootstrap]
+cancel = "لغو"
+dropzoneText = "یک سند نمونه انتخاب کنید (PDF یا تصویر)"
+lead = "یک سند نمونه رها کنید تا سناریوها و یک شِمای استخراج پیشنهاد کنیم که بتوانید اصلاحش کنید. تا زمانی که آن را بازبینی نکنید چیزی منتشر نمی‌شود."
+submit = "راه‌اندازی اولیه عامل"
+subtitle = "آغاز یک عامل جدید از یک فایل نماینده"
+title = "راه‌اندازی اولیه از یک سند"
+
+[portal.agentBuilder.empty]
+description = "یک عامل را از یک سند نمونه راه‌اندازی اولیه کنید تا سناریوها و شِمای استخراج آن آغاز شود، سپس اصلاح و منتشر کنید."
+title = "هنوز عاملی وجود ندارد"
+
+[portal.agentBuilder.evals]
+casesPassing = "موارد موفق"
+columnCase = "مورد ارزیابی"
+columnLatency = "تأخیر"
+columnResult = "نتیجه"
+fail = "ناموفق"
+goldenSetPassRate = "نرخ موفقیت مجموعه طلایی"
+latencyMs = "{{ms}} ms"
+notRun = "اجرا نشده"
+pass = "موفق"
+passRate = "نرخ موفقیت"
+runEvals = "اجرای ارزیابی‌ها"
+
+[portal.agentBuilder.evals.empty]
+description = "ارزیابی‌ها سناریوهای شما را به یک مجموعه طلایی تکرارپذیر تبدیل می‌کنند. ارتقا دهید تا نرخ موفقیت را در طول زمان ثبت کنید و انتشارها را بر اساس آن کنترل کنید."
+title = "هنوز مجموعه طلایی وجود ندارد"
+
+[portal.agentBuilder.kpi]
+acrossGoldenSets = "در سراسر مجموعه‌های طلایی"
+activeAgents = "عامل‌های فعال"
+avgPassRate = "میانگین نرخ موفقیت ارزیابی"
+fleetWide = "در کل ناوگان"
+latestPublished = "آخرین منتشرشده"
+scenarios = "سناریوها"
+testCases = "موارد آزمون"
+totalDescription_one = "در مجموع {{count}}"
+totalDescription_other = "در مجموع {{count}}"
+
+[portal.agentBuilder.scenarios]
+add = "افزودن"
+addScenario = "افزودن سناریو"
+enable = "فعال‌سازی"
+expectationLabel = "رفتار مورد انتظار"
+expectationPlaceholder = "عامل باید چه کاری انجام دهد"
+inEval = "در ارزیابی"
+mute = "بی‌صدا کردن"
+muted = "بی‌صدا شده"
+nameLabel = "نام"
+namePlaceholder = "مثلاً تشدید انطباق"
+
+[portal.agentBuilder.tabs]
+evals = "ارزیابی‌ها"
+scenarios = "سناریوها"
+tools = "ابزارها"
+versions = "نسخه‌ها"
+
+[portal.agentBuilder.tools]
+broadAccess = "دسترسی گسترده"
+deniedHint = "ابزارهای انتخاب‌شده مسدود هستند. همه موارد دیگر همچنان قابل فراخوانی می‌مانند."
+deniedTools = "ابزارهای ردشده"
+governanceGate = "حاکمیت ابزار در طرح Enterprise در دسترس است."
+restricted = "محدود"
+restrictedAccess = "دسترسی محدود به ابزار"
+restrictedDescription = "همه ابزارها را به‌جز مواردی که در زیر رد می‌کنید مجاز کنید."
+
+[portal.agentBuilder.versions]
+current = "فعلی"
+historyGate = "تاریخچه کامل نسخه‌ها و بازگشت به عقب در طرح Enterprise در دسترس است."
+publish = "انتشار"
+rollBack = "بازگشت به عقب"
+
+[portal.assistant]
+close = "بستن دستیار"
+error = "امکان دسترسی به دستیار وجود نداشت."
+errorWithDetail = "امکان دسترسی به دستیار وجود نداشت: {{detail}}"
+inputAriaLabel = "از دستیار بپرسید"
+inputPlaceholder = "درباره Stirling بپرسید…"
+open = "باز کردن دستیار"
+send = "ارسال"
+title = "دستیار"
+tryAsking = "سؤال کردن را امتحان کنید"
+typing = "در حال تایپ"
+
+[portal.auth]
+loading = "در حال بارگیری"
+redirectingToEditor = "در حال هدایت به ویرایشگر..."
+
+[portal.billing.checkout]
+noClientSecret = "تابع Edge مقدار client_secret برنگرداند."
+subtitle = "برای ادامه پس از اعتبار رایگان طرح Editor، یک کارت اضافه کنید. Stripe بقیه کارها را انجام می‌دهد."
+title = "فعال کردن طرح Processor"
+
+[portal.billing.checkout.activationSlow]
+body = "پرداخت شما موفق بود، اما فعال‌سازی کمی بیشتر از معمول طول می‌کشد. به‌طور خودکار فعال می‌شود - این را ببندید و به‌زودی اینجا نمایش داده می‌شود."
+close = "بستن"
+title = "تقریباً تمام شد"
+
+[portal.billing.checkout.error]
+title = "امکان شروع پرداخت وجود نداشت"
+
+[portal.billing.checkout.finalizing]
+body = "پرداخت شما انجام شد. ما در حال فعال‌سازی پردازش اندازه‌گیری‌شده در نمونه‌های پیوندداده‌شده شما هستیم - این معمولاً چند ثانیه طول می‌کشد."
+hint = "لطفاً این پنجره را باز نگه دارید."
+title = "در حال فعال‌سازی طرح Processor شما..."
+
+[portal.billing.checkout.notConfigured]
+bodyAfter = "در env پورتال تنظیم کنید تا پرداخت درون‌برنامه‌ای فعال شود."
+bodyBefore = "تنظیم کنید"
+title = "Stripe پیکربندی نشده است"
+
+[portal.billing.enterpriseUpsell]
+cta = "پیشنهاد قیمت Enterprise خود را بسازید"
+description = "تخفیف‌های حجم متعهد، استقرار air-gapped، MSA سفارشی و بازبینی‌های امنیتی، و همکاری با توزیع‌کنندگان شخص ثالث."
+eyebrow = "تخفیف حجمی · بیش از 1M PDF"
+title = "Stirling Enterprise"
+
+[portal.billing.freeEditors]
+activeThisMonth = "فعال در این ماه"
+cost = "هزینه"
+editorsDeployed = "ویرایشگرهای مستقرشده"
+inviteTeammates = "دعوت از هم‌تیمی‌ها"
+pdfsEdited = "PDFهای ویرایش‌شده"
+subtitle = "در هرجا، برای کل تیم خود مستقر کنید."
+title = "ویرایشگرهای PDF رایگان"
+
+[portal.billing.freePlan]
+checkoutErrorTitle = "امکان شروع پرداخت وجود نداشت"
+currentPlan = "طرح فعلی"
+freeForever = "برای همیشه رایگان"
+noTeamResolved = "هنوز هیچ تیمی در کیف پول شما شناسایی نشده است — تازه‌سازی کنید و دوباره تلاش کنید."
+ownerOnly = "فقط مالک تیم می‌تواند طرح Processor را فعال کند."
+planName = "Editor"
+ssoIncluded = "SSO شامل است"
+switchOnProcessor = "فعال کردن Processor →"
+unlimitedUsers = "کاربران نامحدود"
+
+[portal.billing.invoices]
+columnAmount = "مبلغ"
+columnDate = "تاریخ"
+columnDescription = "توضیحات"
+columnPdfsProcessed = "PDFهای پردازش‌شده"
+columnStatus = "وضعیت"
+descriptionFallback = "فاکتور"
+downloadAriaLabel = "دانلود فاکتور {{number}} به‌صورت PDF"
+emptyDescription = "پس از اینکه تیم شما مشترک شد و اولین چرخه بسته شد، فاکتورهای شما اینجا نمایش داده می‌شوند."
+emptyTitle = "هنوز فاکتوری وجود ندارد"
+fetchLimitNote_one = "{{count}} فاکتور اخیر شما نمایش داده می‌شود. فاکتورهای قدیمی‌تر در پورتال Stripe هستند."
+fetchLimitNote_other = "{{count}} فاکتور اخیر شما نمایش داده می‌شود. فاکتورهای قدیمی‌تر در پورتال Stripe هستند."
+loadError = "امکان بارگیری فاکتورها وجود نداشت: {{error}}"
+pdfLink = "PDF ↓"
+showAll_one = "نمایش همه {{count}}"
+showAll_other = "نمایش همه {{count}}"
+showFewer_one = "نمایش کمتر ({{count}} مورد بالا)"
+showFewer_other = "نمایش کمتر ({{count}} مورد بالا)"
+showMostRecent_one = "نمایش {{count}} مورد اخیر"
+showMostRecent_other = "نمایش {{count}} مورد اخیر"
+title = "تاریخچه فاکتورها"
+viewAriaLabel = "مشاهده فاکتور {{number}} در Stripe"
+viewLink = "مشاهده ↗"
+
+[portal.billing.linkPrompt]
+cta = "پیوند حساب Stirling"
+description = "ویرایش دستی PDF — مشاهده، امضا، ادغام، تقسیم، واترمارک، فشرده‌سازی، تبدیل، OCR دستی — چه پیوند داده باشید چه نه، همیشه رایگان است. برای دریافت 500 PDF رایگان از پردازش اندازه‌گیری‌شده (اتوماسیون، AI و API) پیوند دهید؛ وقتی به مقدار بیشتری نیاز داشتید، طرح Processor را فعال کنید و فقط برای آنچه استفاده می‌کنید پرداخت کنید."
+title = "پیوند دادن حساب Stirling شما"
+
+[portal.billing.paymentMethod]
+billedMonthly = "صورتحساب ماهانه"
+cardEnding = "{{brand}} با پایان {{last4}}"
+cardFallback = "کارت"
+expiresBilledMonthly = "منقضی می‌شود {{expiry}} · صورتحساب ماهانه"
+eyebrow = "روش پرداخت"
+managedSub = "کارت و جزئیات صورتحساب شما به‌صورت امن در پورتال مشتری Stripe نگهداری می‌شود."
+managedTitle = "مدیریت‌شده در Stripe"
+update = "به‌روزرسانی"
+
+[portal.billing.pdfsProcessed]
+emptyPeriod = "هنوز در این دوره پردازش اندازه‌گیری‌شده‌ای وجود ندارد."
+eyebrow = "PDFهای پردازش‌شده در این دوره"
+legendValue_one = "{{formatted}} PDF"
+legendValue_other = "{{formatted}} PDF"
+segbarAriaLabel = "PDFهای اندازه‌گیری‌شده تفکیک‌شده بر اساس دسته"
+segmentAgentsDesc = "اقدام‌های عامل AI"
+segmentAgentsLabel = "عامل‌ها"
+segmentApiDesc = "درخواست‌های مستقیم API"
+segmentApiLabel = "API"
+segmentAutomationDesc = "اتوماسیون‌ها و خط لوله‌ها"
+segmentAutomationLabel = "اتوماسیون"
+unit = "PDFهای اندازه‌گیری‌شده"
+
+[portal.billing.spendLimit]
+adjustLimit = "تنظیم حد"
+cancel = "لغو"
+capControlNote = "تغییرات فوراً اعمال می‌شوند — سقف را هر زمان بالا یا پایین ببرید."
+capSuffix = "/ ماه"
+capSuffixWithDocs = "/ ماه · ≈ {{documents}} سند"
+displaySub = "فقط برای آنچه به‌طور خودکار پردازش می‌کنید صورت‌حساب می‌شوید — هرگز فراتر از سقف."
+editTitle = "تنظیم سقف ماهانه شما"
+eyebrow = "حد هزینه"
+guardrailBody = "یک سقف سخت — هرگز فراتر از آن صورت‌حساب نمی‌شوید. در سقف، پردازش اندازه‌گیری‌شده متوقف می‌شود (ویرایش نامحدود PDF همچنان کار می‌کند) تا زمانی که آن را افزایش دهید یا چرخه بازنشانی شود. چیزی از دست نمی‌رود."
+guardrailLabel = "حفاظ شما:"
+noCap = "بدون سقف"
+pctUsed = "{{pct}}% استفاده شده"
+remaining = "{{amount}} باقی‌مانده"
+save = "ذخیره حد"
+saveError = "امکان ذخیره حد وجود نداشت"
+thisPeriodUncapped = "{{amount}} این دوره · بدون سقف"
+usedThisMonth = "{{amount}} استفاده‌شده در این ماه"
+useSuggested = "استفاده از پیشنهادی · {{amount}} / ماه"
+
+[portal.billing.spendLimit.projection]
+body_one = "با {{rate}}/روز، در حدود {{count}} روز به سقف می‌رسید (حدود پایان ماه {{monthEnd}}). حد پیشنهادی حدود {{suggested}}."
+body_other = "با {{rate}}/روز، در حدود {{count}} روز به سقف می‌رسید (حدود پایان ماه {{monthEnd}}). حد پیشنهادی حدود {{suggested}}."
+label = "پیش‌بینی می‌شود از حد عبور کند."
+
+[portal.billing.spendThisMonth]
+eyebrow = "هزینه این ماه"
+processed_one = "{{formattedCount}} PDF پردازش شد."
+processed_other = "{{formattedCount}} PDF پردازش شد."
+processedWithRate_one = "{{formattedCount}} PDF پردازش شد، هرکدام با {{rate}}."
+processedWithRate_other = "{{formattedCount}} PDF پردازش شد، هرکدام با {{rate}}."
+
+[portal.billing.subscribedPlan.capWarn]
+approachingBody = "همین حالا آن را افزایش دهید تا پردازش خودکار هرگز متوقف نشود."
+approachingTitle = "شما به {{pct}}% از حد هزینه ماهانه خود رسیده‌اید"
+raiseLimit = "افزایش حد"
+reachedBody = "پردازش اندازه‌گیری‌شده تا زمانی که حد را افزایش دهید یا چرخه بازنشانی شود متوقف شده است. ویرایش نامحدود PDF همچنان کار می‌کند."
+reachedTitle = "حد هزینه ماهانه رسیده است"
+
+[portal.billing.subscribedPlan.portalError]
+title = "امکان باز کردن پورتال Stripe وجود نداشت"
+
+[portal.billing.walletMeter]
+capSuffix_one = "از {{allowance}} PDF رایگان استفاده شده"
+capSuffix_other = "از {{allowance}} PDF رایگان استفاده شده"
+eyebrow = "آزمایشی Processor"
+statusLabel_one = "{{remaining}} باقی‌مانده"
+statusLabel_other = "{{remaining}} باقی‌مانده"
+sub = "از PDF Editor رایگان استفاده کنید. برای پردازش خودکار PDFها پرداخت کنید."
+title_one = "{{allowance}} PDF را رایگان پردازش کنید"
+title_other = "{{allowance}} PDF را رایگان پردازش کنید"
+titleWithRate_one = "{{allowance}} PDF را رایگان پردازش کنید، سپس {{rate}}/PDF"
+titleWithRate_other = "{{allowance}} PDF را رایگان پردازش کنید، سپس {{rate}}/PDF"
+
+[portal.catalogue.card]
+lockedAriaLabel = "قفل‌شده"
+openAriaLabel = "باز کردن مؤلفه {{name}}"
+
+[portal.catalogue.detail]
+addToProject = "افزودن به پروژه"
+ariaLabel = "جزئیات مؤلفه"
+tabsAriaLabel = "بخش‌های جزئیات مؤلفه"
+upgradeToUnlock = "برای باز کردن قفل ارتقا دهید"
+
+[portal.catalogue.detail.code]
+install = "نصب"
+usage = "استفاده"
+
+[portal.catalogue.detail.locked]
+description = "{{name}} از طرح {{tier}} شامل می‌شود. برای جاسازی آن ارتقا دهید."
+title = "در طرح شما در دسترس نیست"
+
+[portal.catalogue.detail.preview]
+badge = "پیش‌نمایش زنده"
+note = "sandbox تعاملی اینجا رندر می‌شود"
+
+[portal.catalogue.detail.pricing]
+note = "بر اساس {{unit}} اندازه‌گیری می‌شود. استفاده فراتر از سهمیه رایگان ماهانه به حساب شما صورت‌حساب می‌شود و زیر Usage & Billing به‌صورت موردی نمایش داده می‌شود."
+
+[portal.catalogue.detail.stats]
+billedOn = "صورت‌حساب بر اساس"
+embeds30d = "جاسازی‌ها (30 روز)"
+freeQuota = "سهمیه رایگان"
+freeQuotaValue = "{{amount}} / ماه"
+maturity = "بلوغ"
+none = "هیچ‌کدام"
+perAction = "به‌ازای هر اقدام"
+price = "قیمت"
+
+[portal.catalogue.detail.tabs]
+code = "کد"
+overview = "نمای کلی"
+pricing = "قیمت‌گذاری"
+props = "Props / API"
+
+[portal.catalogue.props]
+optional = "اختیاری"
+required = "الزامی"
+
+[portal.catalogue.props.columns]
+description = "توضیحات"
+name = "Prop"
+required = "الزامی"
+type = "نوع"
+
+[portal.catalogue.summary]
+componentsGa = "مؤلفه‌های GA"
+componentSpendMtd = "هزینه مؤلفه (MTD)"
+embedsThisMonth = "جاسازی‌ها در این ماه"
+inBeta = "در Beta"
+
+[portal.components.billingUnit]
+approval = "تأیید"
+check = "بررسی"
+event = "رویداد"
+render = "رندر"
+review = "بازبینی"
+session = "نشست"
+signature = "امضا"
+
+[portal.components.maturity]
+beta = "Beta"
+ga = "GA"
+
+[portal.componentsView]
+subtitle = "ویجت‌های SDK قابل جاسازی که در برنامه خودتان قرار می‌دهید — یک نمایشگر، جریان e-sign، پنل بازبینی AI. هرکدام به‌ازای هر اقدام اندازه‌گیری می‌شود. برای نصب، استفاده و props روی کارت کلیک کنید."
+title = "مؤلفه‌ها"
+
+[portal.componentsView.empty]
+description = "کاتالوگ مؤلفه‌ها بارگیری نشد. کمی بعد دوباره تلاش کنید."
+title = "هیچ مؤلفه‌ای در دسترس نیست"
+
+[portal.componentsView.lockedBanner]
+description = "مؤلفه‌های GA در Pay-as-you-go در دسترس هستند؛ چند مؤلفه Beta فقط برای enterprise هستند. کارت‌های قفل‌شده یک پیشنهاد ارتقا نشان می‌دهند."
+title = "برخی مؤلفه‌ها به طرح پولی نیاز دارند"
+
+[portal.docs.authentication]
+codeCaption = "هر درخواست"
+eyebrow = "شروع به کار"
+lead = "همه درخواست‌ها با bearer token احراز هویت می‌شوند. کلیدها برای هر محیط محدوده‌بندی شده‌اند و هرگز منقضی نمی‌شوند مگر اینکه چرخانده شوند."
+liveKey = "کلیدهای Production — قابل‌هزینه، با محدودیت نرخ بر اساس طرح شما."
+testKey = "کلیدهای Sandbox — رایگان، با بازگرداندن fixtureهای مصنوعی."
+title = "احراز هویت"
+
+[portal.docs.components]
+codeCaption = "جاسازی نمایشگر"
+eyebrow = "مؤلفه‌ها"
+lead = "UI قابل جاسازی برای صف‌های بازبینی و بازرسی سند. سبک‌های خودتان را بیاورید یا از تم ارائه‌شده استفاده کنید."
+title = "نمایشگرهای آماده استفاده"
+
+[portal.docs.endpoints]
+eyebrow = "مرجع API"
+fieldCount_one = "{{count}} فیلد"
+fieldCount_other = "{{count}} فیلد"
+filterAll = "همه"
+filterAriaLabel = "فیلتر endpointها بر اساس حوزه"
+lead = "هر نوع سند یک endpoint تایپ‌شده است. یک فایل را POST کنید و JSON اعتبارسنجی‌شده با schema دریافت کنید. بر اساس حوزه زیر فیلتر کنید."
+title = "Endpointها"
+
+[portal.docs.errors]
+codeCaption = "422 Unprocessable Entity"
+eyebrow = "مرجع API"
+lead = "خطاها یک کد پایدار قابل‌خواندن برای ماشین به‌همراه پیام انسانی برمی‌گردانند. بدنه 4xx همیشه شامل یک request_id برای پشتیبانی است."
+title = "خطاها"
+
+[portal.docs.nav]
+ariaLabel = "مستندات"
+
+[portal.docs.nav.empty]
+description = "فهرست مستندات بارگیری نشد."
+title = "مستندات در دسترس نیست"
+
+[portal.docs.quickstart]
+eyebrow = "شروع به کار"
+lead = "اولین سند خود را به یک endpoint تایپ‌شده ارسال کنید و در سه مرحله JSON ساختاریافته دریافت کنید. بدون آموزش مدل، بدون prompt engineering."
+title = "شروع سریع"
+
+[portal.docs.quickstart.callout]
+bodyAfterLink = "برای دستورالعمل‌های آماده کپی."
+bodyBeforeLink = "همان فراخوانی را در یک خط لوله وصل کنید تا اعتبارسنجی، حذف و تحویل را زنجیره کنید — یا آن را از طریق MCP در اختیار یک عامل قرار دهید. ببینید"
+label = "بعدی:"
+link = "Playbooks"
+
+[portal.docs.quickstart.step1]
+body = "یک کلید محدوده‌بندی‌شده از تب Infrastructure ایجاد کنید. کلیدها محدودیت‌های نرخ و یک allowlist اختیاری IP دارند. آن را به shell خود export کنید:"
+title = "صدور یک کلید API"
+
+[portal.docs.quickstart.step2]
+body = "یک فایل را به هر endpoint تایپ‌شده POST کنید. endpoint شِمایی را که دریافت می‌کنید تعیین می‌کند — اینجا، استخراج‌کننده فاکتور."
+snippetCaption = "استخراج یک فاکتور"
+title = "ارسال یک سند"
+
+[portal.docs.quickstart.step3]
+body = "هر پاسخ در برابر schema endpoint اعتبارسنجی می‌شود، با یک امتیاز اطمینان و منشأ برای هر فیلد."
+codeCaption = "200 OK"
+title = "خواندن نتیجه ساختاریافته"
+
+[portal.docs.rateLimits]
+burst = "Burst"
+codeCaption = "429 Too Many Requests"
+concurrency = "همزمانی"
+eyebrow = "شروع به کار"
+lead = "محدودیت‌ها با طرح شما مقیاس می‌گیرند. پاسخ 429 شامل هدر Retry-After است؛ SDKها به‌طور خودکار عقب‌نشینی می‌کنند."
+requestsPerMinute = "درخواست‌ها / دقیقه"
+title = "محدودیت‌های نرخ و سهمیه‌ها"
+
+[portal.docs.recipes]
+cloneButton = "کلون کردن recipe"
+eyebrow = "PLAYBOOKS"
+lead = "الگوهای سرتاسری که منابع، عملیات و مقصدها را زنجیره می‌کنند. هرکدام به یک خط لوله نگاشت می‌شود که می‌توانید کلون کنید."
+title = "Recipeها"
+
+[portal.docs.sdks]
+eyebrow = "SDKS"
+lead = "کلاینت‌های رسمی با پاسخ‌های تایپ‌شده، تلاش مجدد خودکار و بارگذاری‌های استریم. همه همان کاتالوگ endpoint را دنبال می‌کنند."
+title = "SDKهای رسمی"
+
+[portal.docs.sdks.status]
+beta = "Beta"
+deprecated = "منسوخ‌شده"
+
+[portal.docs.skills]
+eyebrow = "مهارت‌ها"
+lead = "قابلیت‌های بسته‌بندی‌شده و نام‌دار که عامل شما به‌عنوان یک ابزار واحد فراخوانی می‌کند. هر مهارت یک زنجیره عملیات قطعی با ارزیابی‌های پیوست‌شده است."
+title = "مهارت‌های عامل"
+
+[portal.docs.webhooks]
+codeCaption = "document.processed"
+eyebrow = "مرجع API"
+lead = "در رویدادهای document.processed، pipeline.completed و quota.threshold مشترک شوید. payloadها با HMAC-SHA256 امضا می‌شوند."
+title = "Webhookها"
+
+[portal.docs.webhooks.callout]
+afterHelper = "helper."
+beforeHelper = "را در برابر signing secret خود بررسی کنید قبل از اینکه به یک payload اعتماد کنید. SDKها یک"
+beforeSignature = "تأیید کنید"
+
+[portal.documents]
+exportCsv = "خروجی CSV"
+search = "جستجو بر اساس نام فایل، ID..."
+subtitle = "هر سندی که سازمان شما پردازش کرده است، همراه با سابقه کامل پردازش آن. دسترسی به محتوا نیازمند درخواست است."
+title = "اسناد"
+
+[portal.documents.audit]
+approved = "تأیید شد"
+archived = "بایگانی شد"
+elevation = "ارتقای دسترسی"
+empty = "هنوز هیچ رویدادی ثبت نشده است."
+extracted = "پردازش‌شده"
+flagged = "نیازمند بازبینی"
+ingested = "دریافت‌شده"
+reviewed = "در حال بازبینی"
+
+[portal.documents.drawer]
+sectionsAriaLabel = "بخش‌های جزئیات سند"
+
+[portal.documents.drawer.tabs]
+audit = "حسابرسی"
+extractions = "استخراج‌ها"
+overview = "نمای کلی"
+
+[portal.documents.elevation]
+requestAccess = "درخواست دسترسی"
+
+[portal.documents.elevation.active]
+description = "مجوز موقت — دسترسی ثبت می‌شود و زمان‌محدود است."
+descriptionFourEyes = "مجوز موقت — یک بازبین همتا مطلع شد (چهارچشمی)."
+title = "دسترسی تا {{time}} دیگر منقضی می‌شود"
+
+[portal.documents.elevation.gated]
+description = "محتوا با zero-standing-access محدود شده است. درخواست، یک مجوز زمان‌محدود را آغاز می‌کند."
+descriptionFourEyes = "محتوا با zero-standing-access محدود شده است. درخواست، یک مجوز زمان‌محدود را آغاز می‌کند و یک بازبین همتا را مطلع می‌کند (چهارچشمی)."
+title = "سند حساس"
+
+[portal.documents.extractions]
+empty = "هیچ فیلدی از این سند استخراج نشد."
+masked = "فیلدهای استخراج‌شده پنهان هستند. برای مشاهده محتوای این سند، دسترسی زمان‌دار درخواست کنید."
+
+[portal.documents.extractions.columns]
+confidence = "اطمینان"
+field = "فیلد"
+value = "مقدار"
+
+[portal.documents.filters]
+all = "همه"
+ariaLabel = "فیلتر کردن اسناد بر اساس وضعیت"
+flagged = "علامت‌گذاری‌شده"
+inReview = "در حال بازبینی"
+processed = "پردازش‌شده"
+
+[portal.documents.overview]
+action = "Pipeline / اقدام"
+product = "محصول"
+received = "زمان"
+status = "وضعیت"
+type = "نوع"
+user = "کاربر"
+
+[portal.documents.queue.empty]
+description = "وقتی منابع اسناد را وارد پایپ‌لاین‌های شما کنند، برای بازبینی اینجا نمایش داده می‌شوند."
+title = "هیچ سندی در صف نیست"
+
+[portal.documents.status]
+error = "خطا"
+flagged = "نیازمند بازبینی"
+inReview = "در حال بازبینی"
+processed = "پردازش‌شده"
+
+[portal.documents.table]
+auto = "خودکار"
+editorAction = "ویرایشگر"
+empty = "هیچ سندی با این فیلتر مطابقت ندارد."
+rowActions = "اقدامات ردیف"
+sensitiveLabel = "حساس"
+sensitiveTitle = "حساس — دسترسی لازم است"
+
+[portal.documents.table.columns]
+action = "Pipeline / اقدام"
+document = "سند"
+product = "محصول"
+status = "وضعیت"
+time = "زمان"
+user = "کاربر"
+
+[portal.editorAdmin]
+subtitle = "Stirling PDF Editor را مستقر کنید، نمونه‌های خودمیزبان را به سازمان خود متصل کنید و ناوگان در حال اجرا را مدیریت کنید — اهداف، سلامت، اعتبارنامه‌ها و فعال‌سازی آفلاین در یک مکان."
+title = "استقرار ویرایشگر"
+
+[portal.editorAdmin.health.columns]
+activeUsers = "کاربران فعال"
+host = "Host"
+lastSeen = "آخرین مشاهده"
+region = "Region"
+status = "وضعیت"
+version = "نسخه"
+
+[portal.editorAdmin.health.empty]
+description = "یک هدف را مستقر و متصل کنید تا سلامت زنده نمونه را اینجا ببینید."
+title = "هیچ نمونه‌ای گزارش نمی‌دهد"
+
+[portal.editorAdmin.offlineActivation]
+enterpriseTag = "Enterprise"
+generateButton = "ایجاد بسته آفلاین"
+lockCopy = "فعال‌سازی آفلاین و on-prem بخشی از Enterprise است."
+subtitle = "برای نصب آفلاین یا on-prem بدون مسیر شبکه خروجی، یک بسته فعال‌سازی امضاشده ایجاد کنید. آن را به نمونه منتقل کنید و هنگام راه‌اندازی اولیه اعمال کنید."
+talkToSales = "صحبت با فروش"
+title = "فعال‌سازی Air-gapped"
+
+[portal.editorAdmin.offlineActivation.readyBanner]
+description = "{{file}} امضا شده و آماده انتقال است. یک نمونه را فعال می‌کند و پس از ۱۴ روز منقضی می‌شود."
+title = "بسته آماده است"
+
+[portal.editorAdmin.pairing]
+generated = "ایجاد شد ✓"
+generateNewCode = "ایجاد کد جدید"
+lockCopy = "تأمین IaC بخشی از Enterprise است."
+rotate = "چرخش"
+talkToSales = "صحبت با فروش"
+
+[portal.editorAdmin.sections.health]
+sub = "هر نمونه ویرایشگر که گزارش می‌دهد — نسخه، region، وضعیت، آخرین مشاهده و کاربران فعال."
+title = "سلامت نمونه"
+
+[portal.editorAdmin.sections.pairing]
+sub = "یک ویرایشگر خودمیزبان را به این سازمان متصل کنید. یک token ایجاد کنید، یک کد کوتاه تحویل دهید، یا آن را از طریق IaC متصل کنید."
+title = "اتصال"
+
+[portal.editorAdmin.sections.targets]
+sub = "محل اجرای ویرایشگر. برای راه‌اندازی یک نمونه خودمیزبان، یک قطعه کد را کپی کنید، یا از Managed Cloud بدون عملیات استفاده کنید."
+title = "اهداف استقرار"
+
+[portal.editorAdmin.serviceToken]
+currentToken = "Token فعلی"
+lastRotated = "آخرین چرخش"
+rotateButton = "چرخش service token"
+subtitle = "نمونه‌ها با این اعتبارنامه در سازمان احراز هویت می‌کنند. آن را طبق برنامه یا بلافاصله پس از نشت مشکوک بچرخانید."
+title = "Service token"
+
+[portal.editorAdmin.serviceToken.rotatedBanner]
+description = "یک token جدید صادر شد. STIRLING_SERVICE_TOKEN هر نمونه خودمیزبان را در بازه مهلت ۲۴ ساعته به‌روزرسانی کنید، وگرنه آفلاین می‌شوند."
+title = "چرخش نمونه‌های در حال اجرا"
+
+[portal.editorAdmin.status]
+degraded = "تنزل‌یافته"
+healthy = "سالم"
+offline = "آفلاین"
+pairing = "در حال اتصال"
+
+[portal.editorAdmin.targets]
+instanceCount_one = "{{count}} نمونه"
+instanceCount_other = "{{count}} نمونه"
+talkToSales = "صحبت با فروش"
+upgradePlan = "ارتقای طرح"
+
+[portal.editorAdmin.targets.lock]
+enterprise = "خودمیزبانی on-prem و Kubernetes بخشی از Enterprise است."
+paid = "خودمیزبانی با Docker و Kubernetes در یک طرح پولی فعال می‌شود."
+
+[portal.editorAdmin.targets.state]
+available = "در دسترس"
+locked = "قفل‌شده"
+running = "در حال اجرا"
+
+[portal.errorBoundary]
+description = "این نما با خطای غیرمنتظره‌ای روبه‌رو شد. دوباره تلاش کنید، یا بخش دیگری را از نوار کناری انتخاب کنید."
+retry = "دوباره تلاش کنید"
+title = "در این صفحه مشکلی پیش آمد"
+
+[portal.home.editor]
+activeUsers = "{{n}} فعال"
+invite = "دعوت از هم‌تیمی‌ها"
+name = "Stirling PDF Editor"
+open = "باز کردن در مرورگر"
+updated = "به‌روزرسانی‌شده {{time}}"
+
+[portal.home.editor.target]
+cloud = "Managed Cloud"
+docker = "خودمیزبان · Docker"
+kubernetes = "خودمیزبان · Kubernetes"
+
+[portal.home.greeting]
+afternoon = "عصر بخیر"
+evening = "شب بخیر"
+morning = "صبح بخیر"
+
+[portal.home.onboarding]
+dismiss = "رد کردن راه‌اندازی"
+notStarted = "شروع‌نشده"
+progress = "{{done}} از {{total}} انجام شد"
+title = "تکمیل راه‌اندازی"
+
+[portal.home.onboarding.enterprise]
+body = "SSO + SCIM + RBAC در سطح سازمان، قیمت‌گذاری حجمی تعهدی، و استقرار air-gapped."
+cta = "شروع دوره آزمایشی"
+ctaQuote = "دریافت پیش‌فاکتور"
+lead = "برای بیش از ۲۵۰ کارمند."
+tag = "Enterprise"
+
+[portal.home.onboarding.steps.editor]
+blurb = "برنامه دسکتاپ را مستقر کنید، برای همیشه رایگان."
+title = "دانلود PDF Editor"
+
+[portal.home.onboarding.steps.policies]
+blurb = "{{active}} فعال · {{recommended}} پیشنهادی"
+chip = "{{active}} فعال"
+title = "فعال کردن سیاست‌ها"
+
+[portal.home.onboarding.steps.sources]
+blurb = "{{connected}} متصل · هر PDF در محل ورود تحت حاکمیت است"
+chip = "{{connected}} متصل"
+title = "اتصال منابع"
+
+[portal.home.quickActions]
+subtitle = "کارهای اصلی امروز"
+title = "اقدامات سریع"
+
+[portal.home.quickActions.buildPipeline]
+blurb = "سازنده ۳ مرحله‌ای روی کتابخانه عملیات تایپ‌شده"
+title = "ساخت یک پایپ‌لاین"
+
+[portal.home.quickActions.connectSource]
+blurb = "S3، agentها، webhookها، پوشه‌های پایش‌شده"
+title = "اتصال یک منبع"
+
+[portal.home.quickActions.issueApiKey]
+blurb = "کلید محدودشده با rate limit و IP allowlist"
+title = "صدور کلید API"
+
+[portal.infrastructure]
+manageEditorDeployment = "مدیریت استقرار ویرایشگر"
+sectionsAriaLabel = "بخش‌های زیرساخت"
+subtitle = "استقرارها، اعتبارنامه‌ها، وضعیت امنیتی، ذخیره‌سازی و ردپای حسابرسی برای فضای کاری Stirling شما."
+title = "زیرساخت"
+
+[portal.infrastructure.apiKeys]
+createKey = "ایجاد کلید"
+heading = "کلیدهای API"
+subheading = "اعتبارنامه‌های محدودشده با rate limit، مجوزها و IP allowlist برای هر کلید."
+
+[portal.infrastructure.apiKeys.card]
+allowedIps = "IPهای مجاز"
+anyIp = "هر IP (بدون allowlist)"
+created = "ایجادشده"
+lastUsed = "آخرین استفاده"
+permissions = "مجوزها"
+rateLimit = "Rate limit"
+rateLimitValue = "{{value}} درخواست/دقیقه"
+usageMonth = "مصرف این ماه"
+usageToday = "مصرف امروز"
+
+[portal.infrastructure.apiKeys.empty]
+description = "برای شروع فراخوانی Stirling API یک کلید محدودشده ایجاد کنید."
+title = "هنوز کلید API وجود ندارد"
+
+[portal.infrastructure.audit]
+filterAriaLabel = "فیلتر کردن رویدادهای حسابرسی بر اساس دسته"
+heading = "گزارش‌های حسابرسی"
+latencyValue = "{{value}} ms"
+noEventsInCategory = "هیچ رویدادی در این دسته وجود ندارد."
+subheading = "هر رویداد احراز هویت، پیکربندی و پردازش در سراسر فضای کاری شما."
+
+[portal.infrastructure.audit.columns]
+actor = "عامل"
+event = "رویداد"
+latency = "Latency"
+status = "وضعیت"
+target = "منبع"
+timestamp = "Timestamp"
+
+[portal.infrastructure.audit.empty]
+description = "فعالیت فضای کاری هنگام وقوع اینجا نمایش داده می‌شود."
+title = "هیچ رویداد حسابرسی وجود ندارد"
+
+[portal.infrastructure.audit.export]
+cancel = "لغو"
+error = "Export ناموفق بود. لطفاً دوباره تلاش کنید."
+exportButton = "Export"
+exporting = "در حال export…"
+fieldsLegend = "ستون‌ها"
+format = "Format"
+open = "Export"
+subtitle = "رویدادهای حسابرسی را به‌صورت CSV یا JSON دانلود کنید. ستون‌های موردنظر برای شامل شدن را انتخاب کنید."
+title = "Export گزارش حسابرسی"
+
+[portal.infrastructure.audit.export.fields]
+date = "تاریخ"
+documentName = "نام سند"
+ipAddress = "آدرس IP"
+outcome = "نتیجه"
+tool = "ابزار"
+username = "نام کاربری"
+
+[portal.infrastructure.audit.filters]
+all = "همه"
+auth = "احراز هویت"
+config = "پیکربندی"
+elevation = "ارتقای دسترسی"
+processing = "پردازش"
+security = "امنیت"
+
+[portal.infrastructure.audit.forbidden]
+description = "گزارش حسابرسی برای سرپرستان تیم و مدیران در دسترس است. برای دسترسی، از سرپرست تیم یا یک مدیر درخواست کنید."
+title = "شما دسترسی ندارید"
+
+[portal.infrastructure.audit.metrics]
+config = "پیکربندی"
+elevation = "ارتقای دسترسی"
+processing = "پردازش"
+totalEvents = "کل رویدادها · ۲۴ ساعت"
+
+[portal.infrastructure.createKey]
+cancel = "لغو"
+createKey = "ایجاد کلید"
+done = "انجام شد"
+ipAllowlistHelper = "محدوده‌های CIDR جداشده با ویرگول. برای مجاز بودن هر IP خالی بگذارید."
+ipAllowlistLabel = "IP allowlist"
+keyNameLabel = "نام کلید"
+keyNamePlaceholder = "مثلاً Production · ingest"
+permissionsLabel = "مجوزها"
+secretKeyCaption = "کلید محرمانه"
+secretWarning = "این را در یک secrets manager ذخیره کنید. Stirling فقط یک hash ذخیره می‌کند — هیچ راهی برای بازیابی آن در آینده وجود ندارد."
+subtitle = "دامنه کلید را به حداقل نیاز آن محدود کنید. هر زمان می‌توانید آن را بچرخانید یا لغو کنید."
+subtitleCreated = "این secret را اکنون کپی کنید — دوباره نمایش داده نخواهد شد."
+title = "ایجاد کلید API"
+titleCreated = "کلید ایجاد شد"
+
+[portal.infrastructure.deployments]
+msValue = "{{value}} ms"
+throughputValue = "{{value}}/دقیقه"
+
+[portal.infrastructure.deployments.deployColumns]
+deployedBy = "مستقرشده توسط"
+environment = "محیط"
+product = "محصول"
+status = "وضعیت"
+version = "نسخه"
+when = "زمان"
+
+[portal.infrastructure.deployments.recent]
+heading = "استقرارهای اخیر"
+subheading = "آخرین rolloutها در محصولات و محیط‌ها."
+
+[portal.infrastructure.deployments.regionColumns]
+instances = "نمونه‌ها"
+latency = "Latency"
+load = "بار"
+p99 = "P99"
+region = "Region"
+status = "وضعیت"
+throughput = "Throughput"
+uptime = "Uptime"
+version = "نسخه"
+
+[portal.infrastructure.deployments.regions]
+heading = "Regions"
+subheading = "سلامت زنده برای هر Stirling region مستقرشده — latency، بار و نسخه rollout."
+
+[portal.infrastructure.deployments.regions.empty]
+description = "پس از تأمین فضای کاری شما، regionهای مستقرشده اینجا نمایش داده می‌شوند."
+title = "هیچ regionی مستقر نشده است"
+
+[portal.infrastructure.models]
+heading = "مدل‌ها"
+msValue = "{{value}} ms"
+subheading = "کاتالوگ مدل و routing که پردازش سند را در سراسر فضای کاری شما توانمند می‌کند."
+
+[portal.infrastructure.models.byom]
+description = "یک مدل on-prem یا خودمیزبان ثبت کنید و آن را برای پردازش محدود به data residency به یک region پین کنید."
+title = "مدل خودتان را بیاورید"
+
+[portal.infrastructure.models.catalogue]
+heading = "کاتالوگ"
+sub = "مدل‌های مدیریت‌شده در دسترس فضای کاری شما، با latency و هزینه زنده."
+subEnterprise = "مدل‌های مدیریت‌شده، bring-your-own و on-prem — با امکان پین کردن برای هر region."
+
+[portal.infrastructure.models.catalogue.empty]
+description = "مدل‌های موجود در کاتالوگ فضای کاری شما اینجا نمایش داده می‌شوند."
+title = "هیچ مدلی در دسترس نیست"
+
+[portal.infrastructure.models.columns]
+cost = "هزینه"
+latency = "Latency"
+load = "بار"
+model = "مدل"
+status = "وضعیت"
+type = "نوع"
+version = "نسخه"
+
+[portal.infrastructure.models.metrics]
+activeModels = "مدل‌های فعال"
+avgLatency = "میانگین latency"
+included = "شامل‌شده"
+monthlySpend = "هزینه ماهانه مدل"
+
+[portal.infrastructure.models.routing]
+empty = "هیچ قانون routing پیکربندی نشده است."
+heading = "قوانین routing"
+sub = "کدام مدل هر عملیات را مدیریت می‌کند. حالت پیش‌فرض زمانی اعمال می‌شود که هیچ قانون محدودتری مطابقت نداشته باشد."
+subLocked = "هدایت عملیات به مدل‌های مشخص — در طرح‌های پولی در دسترس است."
+
+[portal.infrastructure.models.routing.lockedBanner]
+description = "برای کنترل اینکه کدام مدل هر عملیات و نوع سند را مدیریت کند، به Pro ارتقا دهید."
+title = "Model routing یک قابلیت پولی است"
+
+[portal.infrastructure.models.routingColumns]
+default = "پیش‌فرض"
+docType = "نوع سند"
+modelForAria = "مدل برای {{operation}}"
+operation = "عملیات"
+routedTo = "هدایت‌شده به"
+
+[portal.infrastructure.security.access.byok]
+description = "یک کلید از KMS خودتان ارائه دهید. Stirling با آن رمزنگاری می‌کند اما همچنان می‌تواند بخواند."
+label = "Bring your own key (BYOK)"
+
+[portal.infrastructure.security.access.hyok]
+description = "کلیدها هرگز KMS شما را ترک نمی‌کنند. Stirling فقط ciphertext را نگه می‌دارد."
+label = "Hold your own key (HYOK)"
+
+[portal.infrastructure.security.access.stirling]
+description = "Stirling کلیدهای رمزنگاری را مدیریت می‌کند. ساده‌ترین حالت — بدون عملیات کلید از سمت شما."
+label = "کلیدهای نگه‌داری‌شده توسط Stirling"
+
+[portal.infrastructure.security.accessPolicy]
+heading = "سیاست دسترسی سند"
+subheading = "کنترل می‌کند چه کسانی می‌توانند اسناد پردازش‌شده در حالت at rest را رمزگشایی کنند."
+
+[portal.infrastructure.security.attestations]
+heading = "گواهی‌های انطباق"
+noReport = "هیچ گزارشی در دسترس نیست"
+subheading = "وضعیت حسابرسی چارچوب‌به‌چارچوب، با گزارش‌های در دسترس برای کنترل‌های گواهی‌شده."
+viewReport = "مشاهده گزارش →"
+
+[portal.infrastructure.security.compliance]
+heading = "انطباق"
+subheading = "گواهی‌ها و تأییدیه‌هایی که پلتفرم Stirling را پوشش می‌دهند."
+
+[portal.infrastructure.security.empty]
+description = "پیکربندی امنیتی فضای کاری شما اینجا نمایش داده می‌شود."
+title = "وضعیت امنیتی در دسترس نیست"
+
+[portal.infrastructure.security.hyokBanner]
+description = "با HYOK، کلیدهای رمزنگاری هرگز KMS شما را ترک نمی‌کنند. Stirling فقط ciphertext را ذخیره و پردازش می‌کند که می‌توانید هر زمان لغو کنید."
+title = "Stirling نمی‌تواند اسناد شما را رمزگشایی کند"
+
+[portal.infrastructure.security.ipAllowlist]
+empty = "هیچ محدوده IP پیکربندی نشده است — همه IPها مجاز هستند."
+heading = "IP allowlist"
+sub = "دسترسی API به این محدوده‌های CIDR محدود شده است."
+subLocked = "محدود کردن دسترسی API به محدوده‌های IP شناخته‌شده — در طرح‌های پولی در دسترس است."
+
+[portal.infrastructure.security.ipAllowlist.lockedBanner]
+description = "برای محدود کردن دسترسی API به شبکه‌های مشخص، به Pro ارتقا دهید."
+title = "IP allowlisting یک قابلیت پولی است"
+
+[portal.infrastructure.security.ipColumns]
+added = "افزوده‌شده"
+addedBy = "افزوده‌شده توسط"
+cidr = "CIDR"
+label = "برچسب"
+
+[portal.infrastructure.security.keyManagement]
+algorithm = "Algorithm"
+heading = "مدیریت کلید رمزنگاری"
+keyId = "شناسه کلید"
+lastRotated = "آخرین چرخش"
+rotateKey = "چرخش کلید"
+rotationPolicy = "سیاست چرخش"
+subheading = "نگه‌داری کلیدهایی که اسناد at rest را رمزنگاری می‌کنند — چه کسی می‌تواند رمزگشایی کند و کلیدها چگونه می‌چرخند."
+
+[portal.infrastructure.security.managedBanner]
+description = "نگه‌داری bring-your-own-key (BYOK) و hold-your-own-key (HYOK) در Enterprise در دسترس است. برای ارائه کلیدها از KMS خودتان ارتقا دهید."
+title = "در طرح شما، کلیدها توسط Stirling مدیریت می‌شوند"
+
+[portal.infrastructure.security.residency.apac]
+description = "ap-southeast-1"
+label = "آسیا-اقیانوسیه"
+
+[portal.infrastructure.security.residency.eu]
+description = "eu-west-1 · مرز داده GDPR"
+label = "اتحادیه اروپا"
+
+[portal.infrastructure.security.residency.us]
+description = "us-east-1 · us-west-2"
+label = "ایالات متحده"
+
+[portal.infrastructure.security.residencyHeader]
+heading = "Data residency"
+subheading = "محل ذخیره و پردازش اسناد."
+
+[portal.infrastructure.storage]
+gbValue = "{{value}} GB"
+percentUsed = "{{value}} استفاده‌شده"
+
+[portal.infrastructure.storage.empty]
+description = "ذخیره‌سازی متصل و مصرف اینجا نمایش داده می‌شود."
+title = "هیچ ذخیره‌سازی پیکربندی نشده است"
+
+[portal.infrastructure.storage.lifecycle]
+active = "فعال"
+activeRange = "0–{{value}} روز"
+archived = "آرشیوشده"
+coldStorage = "ذخیره‌سازی سرد"
+deleted = "حذف‌شده"
+never = "هرگز"
+purged = "پاک‌سازی‌شده"
+
+[portal.infrastructure.storage.providers]
+connect = "اتصال"
+connected = "متصل"
+heading = "ارائه‌دهندگان متصل"
+subheading = "محل نوشتن artifactهای پردازش‌شده."
+
+[portal.infrastructure.storage.retention]
+heading = "نگه‌داری"
+subheading = "مدت نگه‌داری artifactها پیش از حذف چرخه عمر."
+windowLabel = "بازه نگه‌داری پیش‌فرض"
+
+[portal.infrastructure.storage.retentionOption]
+days_one = "{{count}} روز"
+days_other = "{{count}} روز"
+never = "هرگز حذف نکن"
+
+[portal.infrastructure.storage.totalUsage]
+heading = "مصرف کل"
+progressLabel = "ذخیره‌سازی استفاده‌شده"
+subheading = "ذخیره‌سازی مصرف‌شده در همه ارائه‌دهندگان متصل."
+
+[portal.infrastructure.tabs]
+apiKeys = "کلیدهای API"
+audit = "گزارش‌های حسابرسی"
+deployments = "استقرارها"
+models = "مدل‌ها"
+security = "امنیت"
+storage = "ذخیره‌سازی"
+
+[portal.nav]
+agent-builder = "سازنده Agent"
+components = "کامپوننت‌ها"
+docs = "مستندات توسعه‌دهنده"
+documents = "اسناد"
+editor = "ویرایشگر"
+home = "خانه"
+infrastructure = "زیرساخت"
+pipelines = "پایپ‌لاین‌ها"
+policies = "سیاست‌ها"
+procurement = "تدارکات"
+settings = "تنظیمات"
+sources = "منابع"
+usage = "مصرف و صورت‌حساب"
+users = "کاربران"
+
+[portal.notifications]
+markAllRead = "علامت‌گذاری همه به‌عنوان خوانده‌شده"
+title = "اعلان‌ها"
+viewAll = "مشاهده همه"
+
+[portal.notifications.ariaLabel]
+none = "اعلان‌ها، خوانده‌نشده‌ای نیست"
+unread_one = "اعلان‌ها، {{count}} خوانده‌نشده"
+unread_other = "اعلان‌ها، {{count}} خوانده‌نشده"
+
+[portal.notifications.count]
+allRead = "همه خوانده‌شده"
+loading = "در حال بارگذاری"
+new_one = "{{count}} جدید"
+new_other = "{{count}} جدید"
+
+[portal.notifications.empty]
+description = "اعلان جدیدی وجود ندارد."
+title = "همه چیز به‌روز است"
+
+[portal.pipelines]
+subtitle = "هر پایپ‌لاین سند خودکار در backend: زنجیره‌ای مرتب از عملیات روی مجموعه‌ای از منابع که با یک trigger اجرا می‌شود. برای دیدن مراحل و منابع، روی یک ردیف کلیک کنید."
+title = "پایپ‌لاین‌ها"
+
+[portal.pipelines.actions]
+newPipeline = "پایپ‌لاین جدید"
+
+[portal.pipelines.builder]
+addStep = "افزودن ابزار"
+back = "بازگشت به پایپ‌لاین‌ها"
+discard = "دور انداختن تغییرات"
+enabled = "فعال"
+keepEditing = "ادامه ویرایش"
+needsUpload = "به یک فایل آپلودشده نیاز دارد"
+noToolMatches = "هیچ ابزاری با جستجوی شما مطابقت ندارد."
+pipelineSettings = "تنظیمات پایپ‌لاین"
+searchTools = "جستجوی ابزارها"
+selectToolBody = "برای ساخت پایپ‌لاین خود، یک ابزار اضافه کنید."
+selectToolTitle = "هنوز ابزاری وجود ندارد"
+toolSettings = "تنظیمات ابزار"
+unknownStep = "عملیات ناشناخته، بدون تغییر نگه داشته شد."
+unsavedBody = "تغییرات ذخیره‌نشده دارید. پیش از خروج آن‌ها را ذخیره می‌کنید یا دور می‌اندازید؟"
+unsavedTitle = "تغییرات ذخیره‌نشده"
+uploadUnsupported = "فایل‌های آپلودشده هنوز در پایپ‌لاین‌ها پشتیبانی نمی‌شوند، بنابراین این مراحل قابل ذخیره نیستند: {{tools}}."
+usesDefaults = "با تنظیمات پیش‌فرض اجرا می‌شود"
+
+[portal.pipelines.composer]
+addTool = "افزودن ابزار"
+cancel = "لغو"
+chainEmpty = "برای شروع ساخت پایپ‌لاین خود، یک ابزار اضافه کنید."
+create = "ایجاد پایپ‌لاین"
+directory = "پوشه خروجی"
+directoryHelp = "مسیر مطلق روی سرور. باید داخل پوشه‌های مجاز پیکربندی‌شده باشد."
+editingUnsupported = "نمایش این params ابزار برای ویرایش هنوز پشتیبانی نمی‌شود."
+moveDown = "انتقال به پایین"
+moveUp = "انتقال به بالا"
+name = "نام"
+namePlaceholder = "مثلاً Redaction sweep"
+noSources = "هنوز هیچ منبعی متصل نیست. پایپ‌لاین همچنان می‌تواند روی فایل‌هایی که مستقیماً به آن داده می‌شوند اجرا شود."
+noToolSettings = "این ابزار تنظیمات قابل پیکربندی ندارد."
+operations_one = "عملیات ({{count}})"
+operations_other = "عملیات ({{count}})"
+output = "خروجی"
+removeStep = "حذف عملیات"
+save = "ذخیره تغییرات"
+scheduleEvery = "اجرا هر"
+sources = "منابع"
+sourcesLoading = "در حال بارگذاری منابع..."
+trigger = "Trigger"
+triggerManual = "فقط دستی"
+
+[portal.pipelines.composer.unit]
+days = "روز"
+hours = "ساعت"
+minutes = "دقیقه"
+
+[portal.pipelines.delete]
+body = "«{{name}}» حذف شود؟ این کار قابل بازگشت نیست."
+cancel = "لغو"
+confirm = "حذف"
+title = "پایپ‌لاین حذف شود؟"
+
+[portal.pipelines.detail]
+delete = "حذف پایپ‌لاین"
+run = "اکنون اجرا کن"
+
+[portal.pipelines.empty]
+action = "ایجاد یک پایپ‌لاین"
+description = "اولین پایپ‌لاین خود را ایجاد کنید: منابعی را که روی آن‌ها اجرا می‌شود انتخاب کنید، عملیات را زنجیره کنید و محل خروجی را انتخاب کنید."
+title = "هنوز پایپ‌لاینی وجود ندارد"
+
+[portal.pipelines.kpi]
+active = "فعال"
+paused = "متوقف‌شده"
+total = "پایپ‌لاین‌ها"
+
+[portal.pipelines.output]
+folder = "نوشتن در پوشه"
+inline = "بازگرداندن فایل‌ها"
+
+[portal.pipelines.run]
+completed_one = "اجرا کامل شد."
+completed_other = "همه {{count}} اجرا کامل شد."
+empty = "چیزی برای اجرا نیست: منابع سندی برای پردازش نداشتند."
+failed = "اجرا ناموفق بود: {{error}}"
+running = "اجرا شروع شد؛ هنوز در حال پیشرفت است."
+timeout = "اجرا بیشتر از حد انتظار طول می‌کشد؛ ممکن است همچنان در پس‌زمینه کامل شود."
+
+[portal.pipelines.status]
+active = "فعال"
+paused = "متوقف‌شده"
+
+[portal.pipelines.table]
+name = "پایپ‌لاین"
+sources = "منابع"
+status = "وضعیت"
+steps = "مراحل"
+
+[portal.pipelines.trigger]
+folder-watch = "پایش پوشه"
+manual = "دستی"
+schedule = "زمان‌بندی‌شده"
+
+[portal.policies]
+subtitle = "اتوماسیون‌های دائمی که یک پایپ‌لاین ابزار را روی هر سند اعمال می‌کنند. هر سیاست هنگام آپلود یا export اجرا می‌شود، زنجیره ابزار خود را اجرا می‌کند و نسخه اعمال‌شده را کنار نسخه اصلی ذخیره می‌کند."
+title = "سیاست‌ها"
+
+[portal.policies.card]
+comingSoon = "ارتقا به Enterprise"
+notSetUp = "راه‌اندازی نشده"
+
+[portal.policies.categories.compliance]
+desc = "الزامات HIPAA، GDPR، SOC 2 یا FedRAMP را روی هر سند اعمال کنید."
+label = "انطباق"
+
+[portal.policies.categories.ingestion]
+desc = "اسناد را طبقه‌بندی کنید، داده‌های ساختاریافته استخراج کنید، قراردادهای نام‌گذاری را اعمال کنید و صفحات را نرمال‌سازی کنید."
+label = "دریافت"
+
+[portal.policies.categories.retention]
+desc = "تعیین کنید اسناد چه مدت نگه‌داری شوند، چه زمانی آرشیو شوند و چه زمانی حذف شوند."
+label = "نگه‌داری"
+
+[portal.policies.categories.routing]
+desc = "اسناد را به‌صورت خودکار به تیم، پوشه یا سیستم درست هدایت کنید."
+label = "Routing"
+
+[portal.policies.categories.security]
+desc = "PII را شناسایی و redaction کنید، محتوای فعال را حذف کنید و اسناد را watermark کنید."
+label = "امنیت"
+
+[portal.policies.config]
+scopeAll = "همه اسناد"
+
+[portal.policies.config.compliance]
+summary = "اسناد را پیش از خروج از سیستم در برابر چارچوب‌های مقرراتی اعتبارسنجی می‌کند."
+
+[portal.policies.config.compliance.fields]
+accessLog = "گزارش دسترسی"
+auditTrail = "ردپای حسابرسی"
+frameworks = "چارچوب‌ها"
+onViolation = "هنگام عدم انطباق"
+
+[portal.policies.config.compliance.rules]
+0 = "اسکن چارچوب"
+1 = "اعمال اقدام"
+2 = "ردپای حسابرسی"
+
+[portal.policies.config.ingestion]
+summary = "اسناد را طبقه‌بندی می‌کند، داده‌های ساختاریافته استخراج می‌کند، نام‌گذاری را اعمال می‌کند و صفحات را نرمال‌سازی می‌کند."
+
+[portal.policies.config.ingestion.fields]
+belowThreshold = "زیر آستانه"
+minConfidence = "حداقل اطمینان"
+
+[portal.policies.config.ingestion.rules]
+0 = "طبقه‌بندی"
+1 = "استخراج"
+2 = "نام‌گذاری"
+3 = "نرمال‌سازی"
+
+[portal.policies.config.retention]
+summary = "مدت نگه‌داری اسناد، زمان آرشیو و زمان حذف را اعمال می‌کند."
+
+[portal.policies.config.retention.fields]
+archiveAfter = "آرشیو پس از"
+immutableHold = "نگه‌داری تغییرناپذیر"
+keepFor = "نگه‌داری به مدت"
+
+[portal.policies.config.retention.rules]
+0 = "نگه‌داری retention"
+1 = "آرشیو خودکار"
+2 = "مسدودسازی حذف"
+
+[portal.policies.config.routing]
+summary = "اسناد را بر اساس نوع و طبقه‌بندی به مقصد درست هدایت می‌کند."
+
+[portal.policies.config.routing.fields]
+destination = "مقصد"
+notify = "اطلاع‌رسانی هنگام routing"
+webhookUrl = "Webhook URL"
+
+[portal.policies.config.routing.rules]
+0 = "طبقه‌بندی خودکار"
+1 = "هدایت به پوشه"
+2 = "اطلاع‌رسانی webhook"
+
+[portal.policies.config.security]
+summary = "PII را شناسایی و redaction می‌کند، محتوای فعال (JavaScript) را حذف می‌کند و اسناد را watermark می‌کند."
+
+[portal.policies.config.security.rules]
+0 = "Redact PII"
+1 = "حذف JavaScript"
+2 = "Watermark"
+
+[portal.policies.detail]
+enforces = "اعمال می‌کند"
+onEveryExport = "در هر export"
+onEveryUpload = "در هر آپلود"
+outputAsNewFile = "به‌عنوان فایل جدید"
+outputAsNewVersion = "به‌عنوان نسخه جدید"
+recentActivity = "فعالیت اخیر"
+retry = "تلاش مجدد"
+showLess = "نمایش کمتر"
+showMore = "نمایش بیشتر"
+sources = "منابع"
+
+[portal.policies.detail.actions]
+clearHistory = "پاک کردن سابقه پردازش"
+delete = "حذف"
+editSettings = "ویرایش تنظیمات"
+pause = "مکث"
+resume = "ادامه"
+runNow = "اکنون اجرا کن"
+
+[portal.policies.detail.clearHistory]
+body = "این خط‌مشی همه فایل‌هایی را که قبلاً پردازش کرده فراموش می‌کند و در اجرای بعدی، همه مواردی را که اکنون در منابع آن هستند دوباره پردازش می‌کند. خود فایل‌ها تغییر نمی‌کنند. این کار قابل بازگشت نیست."
+cancel = "لغو"
+confirm = "پاک کردن سابقه"
+title = "سابقه پردازش پاک شود؟"
+
+[portal.policies.detail.emptyActivity]
+description = "پس از اجرای این خط‌مشی، اسناد اینجا نمایش داده می‌شوند."
+title = "هنوز فعالیتی وجود ندارد"
+
+[portal.policies.endpoints]
+addWatermark = "واترمارک"
+autoRedact = "حذف PII"
+compressPdf = "فشرده‌سازی"
+flatten = "تخت کردن"
+ocrPdf = "OCR"
+sanitizePdf = "حذف JavaScript"
+
+[portal.policies.offline]
+description = "خط‌مشی‌های شما ذخیره شده‌اند و پس از بازیابی اتصال نمایش داده می‌شوند."
+retry = "تلاش دوباره"
+title = "Backend در دسترس نیست"
+
+[portal.policies.stats]
+activeFor = "فعال"
+dataProcessed = "داده پردازش‌شده"
+docsEnforced = "اسناد اعمال‌شده"
+
+[portal.policies.status]
+active = "فعال"
+paused = "متوقف"
+
+[portal.policies.summary.active]
+description = "اعمال هنگام آپلود/خروجی گرفتن"
+label = "خط‌مشی‌های فعال"
+
+[portal.policies.summary.categories]
+description = "آماده پیکربندی"
+label = "دسته‌ها"
+
+[portal.policies.summary.docsEnforced]
+description = "در سراسر خط‌مشی‌های فعال"
+label = "اسناد اعمال‌شده"
+
+[portal.policies.summary.paused]
+description = "پیکربندی شده اما اجرا نمی‌شود"
+label = "متوقف"
+
+[portal.policies.wizard.actions]
+back = "بازگشت"
+cancel = "لغو"
+continue = "ادامه"
+enablePolicy = "فعال کردن خط‌مشی"
+saveChanges = "ذخیره تغییرات"
+
+[portal.policies.wizard.capability.compress]
+desc = "سند را به اندازه فایل کوچک‌تر فشرده می‌کند."
+label = "کاهش اندازه فایل"
+
+[portal.policies.wizard.capability.flatten]
+desc = "فیلدهای فرم و حاشیه‌نویسی‌ها را در صفحه ادغام می‌کند تا قابل ویرایش نباشند."
+label = "تخت کردن سند"
+
+[portal.policies.wizard.capability.ocr]
+desc = "OCR را اجرا می‌کند تا صفحات اسکن‌شده به متن قابل انتخاب و جستجو تبدیل شوند."
+label = "قابل جستجو کردن متن"
+
+[portal.policies.wizard.capability.redact]
+desc = "جزئیات حساس — مانند شماره‌های تأمین اجتماعی و کارت — را پیدا و سیاه می‌کند تا قابل خواندن نباشند."
+label = "حذف اطلاعات حساس"
+
+[portal.policies.wizard.capability.sanitize]
+desc = "JavaScript پنهان را حذف می‌کند تا هنگام باز شدن سند چیزی به‌صورت خودکار اجرا نشود."
+label = "حذف محتوای فعال"
+
+[portal.policies.wizard.capability.watermark]
+desc = "یک نشان قابل مشاهده (مثلاً «محرمانه») را روی همه صفحات درج می‌کند."
+label = "اعمال واترمارک"
+
+[portal.policies.wizard.errors]
+noTools = "ابتدا حداقل یک ابزار را در گردش کار فعال کنید."
+saveFailed = "خط‌مشی ذخیره نشد. لطفاً دوباره تلاش کنید."
+
+[portal.policies.wizard.output]
+heading = "خروجی و اجرا"
+
+[portal.policies.wizard.output.filenameRule]
+autoNumber = "شماره‌گذاری خودکار"
+label = "قاعده نام فایل"
+placeholder = "متن برای افزودن (اختیاری)"
+prefix = "پیشوند"
+suffix = "پسوند"
+
+[portal.policies.wizard.output.outputAs]
+label = "خروجی به‌صورت"
+newFile = "فایل جدید"
+newVersion = "نسخه جدید"
+
+[portal.policies.wizard.output.runOn]
+export = "خروجی گرفتن"
+helper = "زمان اجرای خط‌مشی: هنگام آپلود، یا پیش از خروجی گرفتن."
+label = "اجرا هنگام"
+upload = "آپلود"
+
+[portal.policies.wizard.settings]
+heading = "تنظیمات"
+
+[portal.policies.wizard.sources]
+heading = "منابع"
+loading = "در حال بارگیری منابع…"
+
+[portal.policies.wizard.tabs]
+ariaLabel = "مراحل راه‌اندازی"
+settings = "تنظیمات"
+workflow = "اقدامات"
+
+[portal.policies.wizard.title]
+edit = "ویرایش خط‌مشی {{category}}"
+setUp = "راه‌اندازی خط‌مشی {{category}}"
+
+[portal.policies.wizard.workflow]
+description = "انتخاب کنید این خط‌مشی با هر سندی که پردازش می‌کند چه کاری انجام دهد."
+
+[portal.policySummary]
+activeSummary = "{{active}} / {{total}} فعال"
+noRule = "هنوز هیچ قاعده‌ای اعمال نشده است"
+subtitle = "اتوماسیون‌های دائمی که هر سند از آن‌ها عبور می‌کند، فارغ از اینکه کدام پایپ‌لاین آن را مدیریت می‌کند."
+title = "آنچه روی PDFهای شما اجرا می‌شود"
+
+[portal.policySummary.action]
+comingSoon = "ارتقا به Enterprise"
+configure = "پیکربندی"
+setUp = "راه‌اندازی"
+
+[portal.policySummary.column]
+activeRule = "قاعده فعال"
+policy = "خط‌مشی"
+status = "وضعیت"
+
+[portal.policySummary.empty]
+description = "پس از پیکربندی خط‌مشی‌ها، دسته‌ها اینجا نمایش داده می‌شوند."
+title = "هنوز خط‌مشی‌ای وجود ندارد"
+
+[portal.policySummary.state]
+active = "فعال"
+off = "خاموش"
+soon = "به‌زودی"
+
+[portal.processingStatus]
+managePlan = "مدیریت طرح"
+volumeSuffix = "PDFهای پردازش‌شده · ۳۰ روز گذشته"
+
+[portal.procurement]
+reset = "بازنشانی خرید سازمانی (دمو)"
+subtitle = "تیم خود را ارزیابی، قراردادبندی و راه‌اندازی کنید. همه اسناد در یک مکان."
+title = "خرید سازمانی"
+
+[portal.procurement.action]
+download = "دانلود"
+pay = "اکنون پرداخت کنید"
+request = "درخواست"
+sign = "بررسی و امضا"
+upload = "آپلود"
+
+[portal.procurement.agreement]
+agreeCta = "موافقت و اشتراک"
+confirm = "من توافق‌نامه Stirling Enterprise را خوانده‌ام و با آن موافقم."
+eyebrow = "توافق‌نامه"
+intro = "یک توافق‌نامه ترکیبی معامله شما را پوشش می‌دهد: Master Service Agreement، Order Form، EULA و Data Processing Agreement. آن را بررسی کنید، سپس موافقت کنید تا پیشنهاد قیمت را به‌عنوان یک اشتراک متعهد بپذیرید."
+title = "توافق‌نامه Enterprise خود را بررسی کنید"
+
+[portal.procurement.builder]
+addons = "افزونه‌ها"
+back = "بازگشت"
+businessName = "نام کسب‌وکار"
+businessNamePlaceholder = "شرکت شما"
+continue = "ادامه"
+country = "کشور"
+countryEuro = "منطقه یورو (EUR €)"
+countryUK = "بریتانیا (GBP £)"
+countryUS = "ایالات متحده (USD $)"
+eula = "من EULA مربوط به Stirling Enterprise را خوانده‌ام و با آن موافقم. این سند بر توافق‌نامه‌ای که از این پیشنهاد قیمت ایجاد می‌شود حاکم است."
+generate = "ایجاد پیشنهاد قیمت"
+included = "شامل"
+indemnification = "غرامت IP"
+indemnificationSub = "طبق EULA، از ادعاهای واجد شرایط IP دفاع می‌کنیم"
+offlineLicense = "مجوز آفلاین / air-gapped"
+offlineLicenseSub = "یک فایل مجوز قابل دانلود برای یک نمونه self-hosted و air-gapped"
+qbr = "بازبینی‌های فصلی کسب‌وکار"
+qbrSub = "SE شما هر فصل استفاده و نقشه راه را بررسی می‌کند"
+running = "{{annual}} / سال · {{years}} ساله {{tcv}}"
+s1Sub = "تیم شما و PDFهایی که انتظار دارید هر سال اجرا شوند."
+s1Title = "چه مقدار پردازش خواهید کرد؟"
+s2Sub = "دوره‌های طولانی‌تر نرخ را کاهش می‌دهند؛ سطح سرویس شما پشتیبانی را تعیین می‌کند."
+s2Title = "تعهد و سرویس"
+s3Sub = "برای پیشنهاد قیمت و توافق‌نامه‌ای که ایجاد می‌کند."
+s3Title = "جزئیات شما"
+serviceLevel = "سطح سرویس"
+slDedicated = "اختصاصی"
+slDedicatedSub = "۴ ساعت کاری · مدیر حساب اختصاصی · +۳۰٪"
+slPriority = "اولویت‌دار"
+slPrioritySub = "همان روز کاری · CSM مشخص · +۱۵٪"
+slStandard = "استاندارد"
+slStandardSub = "روز کاری بعد · CSM مشترک · شامل"
+stepOf = "مرحله {{n}} از {{total}}"
+term = "دوره"
+termDiscount = "{{pct}}٪ تخفیف تعهد چندساله اعمال شد"
+title = "ساخت پیشنهاد قیمت"
+training = "راه‌اندازی و آموزش"
+trainingSub = "جلسات زنده برای شروع کار تیم شما"
+users = "کل کاربران"
+usersPlaceholder = "مثلاً 250"
+volEstimated = "برآورد شده از {{count}} کاربر (حدود ۲٬۰۰۰ PDF برای هر نفر، شامل اتوماسیون). اگر عدد دقیق‌تری می‌دانید ویرایش کنید."
+volManual = "از عدد شما استفاده می‌شود. هر زمان می‌توانید بر اساس اندازه تیم دوباره برآورد کنید."
+volNoUsers = "مطمئن نیستید؟ اندازه تیم خود را وارد کنید تا برایتان برآورد کنیم."
+volume = "حجم سالانه PDF"
+volumePlaceholder = "مثلاً 1,000,000"
+years_one = "{{count}} سال"
+years_other = "{{count}} سال"
+
+[portal.procurement.docs]
+count_one = "{{count}} سند"
+count_other = "{{count}} سند"
+done = "انجام شد"
+here = "اینجا هستید"
+hide = "پنهان کردن"
+optional = "اختیاری"
+paidAddon = "افزونه پولی"
+show = "نمایش"
+subtitle = "هر چیزی که در هر مرحله از مسیر نیاز دارید، هم‌زمان با پیشرفت معامله نمایش داده می‌شود."
+supportingSubtitle = "SOC 2، بازبینی‌های امنیتی، فرم‌های مالیاتی و موارد بیشتر، آماده زمانی که تیم امنیت یا خرید شما درخواست کند. برخی هزینه یک‌باره دارند."
+supportingTitle = "پشتیبانی از ارزیابی شما"
+title = "اسناد"
+upcoming = "پیش‌رو"
+
+[portal.procurement.error]
+title = "مشکلی پیش آمد"
+
+[portal.procurement.hero]
+company = "معامله Enterprise شما"
+ctaAgreement = "بررسی و امضای توافق‌نامه"
+ctaLive = "شما فعال هستید"
+ctaPayment = "افزودن پرداخت"
+ctaQuote = "بررسی پیشنهاد قیمت"
+ctaTrial = "ساخت پیشنهاد قیمت"
+eyebrow = "خرید سازمانی Enterprise"
+inviteTeammates = "دعوت از هم‌تیمی‌ها"
+keyDocs = "اسناد کلیدی"
+nextStep = "مرحله بعد: {{action}}"
+notStarted = "شروع نشده"
+open = "باز کردن خرید سازمانی"
+scheduleCall = "زمان‌بندی تماس"
+setup1Sub = "هم‌تیمی‌های خود را دعوت کنید"
+setup1Title = "استقرار ویرایشگر PDF"
+setup2Sub = "پردازش را در ویرایشگرها و منابع دیگر فعال کنید"
+setup2Title = "اتصال پردازشگر PDF"
+setup3Sub = "در صورت نیاز، Security، Compliance، Routing یا Retention را فعال کنید"
+setup3Title = "افزودن خط‌مشی‌های پیشنهادی"
+
+[portal.procurement.journey]
+daysLeft_one = "{{count}} روز باقی مانده"
+daysLeft_other = "{{count}} روز باقی مانده"
+engineerLabel = "مهندس راهکارهای شما"
+eyebrow = "استقرار شما"
+live = "شما در Stirling Enterprise فعال هستید"
+nextStep = "مرحله بعد: {{action}}"
+subtitle = "مهندس راهکارهای شما در همه مراحل همراه است. هر بار یک اقدام بعدی؛ فهرست کامل در پایین آمده است."
+title = "از دوره آزمایشی تا اجرا، یک مسیر هدایت‌شده"
+trialTitle = "دوره آزمایشی Enterprise"
+
+[portal.procurement.journeySteps.agreement]
+blurb = "یک امضا MSA، فرم سفارش، EULA و DPA را پوشش می‌دهد."
+gatingAction = "توافق‌نامه خود را بررسی و امضا کنید"
+label = "توافق‌نامه"
+
+[portal.procurement.journeySteps.implementation]
+blurb = "فضای کاری خود را آماده کنید و دستورالعمل go-live را اجرا کنید."
+gatingAction = "در حال آماده‌سازی فضای کاری شما"
+label = "پیاده‌سازی"
+
+[portal.procurement.journeySteps.payment]
+blurb = "با کارت، انتقال بانکی یا در برابر سفارش خرید پرداخت کنید."
+gatingAction = "تأیید پرداخت"
+label = "پرداخت"
+
+[portal.procurement.journeySteps.quote]
+blurb = "قیمت‌گذاری حجم متعهد و مدت قرارداد را بررسی کنید."
+gatingAction = "پیشنهاد قیمت خود را بپذیرید"
+label = "پیشنهاد قیمت"
+
+[portal.procurement.journeySteps.trial]
+blurb = "Stirling را با اسناد و گردش کارهای خود ارزیابی کنید."
+gatingAction = "پیشنهاد قیمت خود را بسازید"
+label = "دوره آزمایشی"
+
+[portal.procurement.license]
+copied = "کپی شد"
+copy = "کپی کلید"
+downloadError = "هنوز امکان ایجاد فایل مجوز آفلاین وجود ندارد — لطفاً چند لحظه دیگر دوباره تلاش کنید."
+downloadOffline = "دانلود مجوز آفلاین (.lic)"
+hint = "این کلید را برای فعال‌سازی در یک نمونه self-hosted وارد کنید، یا برای سوابق خود نگه دارید. آن را امن نگه دارید."
+label = "کلید مجوز شما"
+
+[portal.procurement.link]
+cta = "پیوند دادن حساب"
+description = "خرید سازمانی روی حساب Stirling پیوندشده شما اجرا می‌شود: از این طریق دوره آزمایشی را آماده می‌کنیم، پیشنهاد قیمت را تعیین می‌کنیم و صورتحساب را شروع می‌کنیم. برای شروع، یک حساب را پیوند دهید."
+eyebrow = "Enterprise"
+title = "برای شروع، حساب خود را پیوند دهید"
+
+[portal.procurement.live]
+description = "اشتراک شما فعال است و مجوز شما صادر شده است. تیم شما آماده شده و صورتحساب آغاز شده است."
+eyebrow = "فعال"
+title = "شما در Stirling Enterprise فعال هستید"
+
+[portal.procurement.locked]
+description = "کلیدهای آزمایشی، پیشنهادهای قیمت با حجم متعهد، توافق‌نامه تک‌امضایی، پرداخت و دفتر اسناد شما پس از شروع ارزیابی Enterprise همه اینجا قرار می‌گیرند."
+eyebrow = "فقط Enterprise"
+talkToSales = "صحبت با فروش"
+title = "مسیر خرید سازمانی با Enterprise باز می‌شود"
+
+[portal.procurement.milestone]
+accept = "پذیرش و ادامه"
+description = "PDF را دانلود کنید تا با تیم خود به اشتراک بگذارید، وقتی آماده بودید برای پذیرش برگردید، یا تغییرات ایجاد کنید."
+download = "دانلود PDF"
+downloadError = "هنوز امکان دانلود PDF پیشنهاد قیمت وجود ندارد — لطفاً چند لحظه دیگر دوباره تلاش کنید."
+edit = "ویرایش پیشنهاد قیمت"
+eyebrow = "پیشنهاد قیمت {{number}}"
+perYear = " / سال"
+preparedFor = "تهیه‌شده برای {{company}}"
+tcv = "{{value}} ارزش کل قرارداد"
+title = "پیشنهاد قیمت شما آماده است"
+
+[portal.procurement.modal]
+cancel = "لغو"
+chooseFile = "انتخاب فایل"
+close = "بستن"
+downloadBody = "دانلود شما به‌زودی آغاز می‌شود."
+downloadCta = "دانلود"
+downloadTitle = "دانلود"
+noFile = "هیچ فایلی انتخاب نشده است"
+payBody = "قرارداد متعهد خود را از طریق Stripe با کارت یا انتقال بانکی پرداخت کنید. فضای کاری شما به‌محض تسویه پرداخت آماده می‌شود."
+payCta = "ادامه به Stripe"
+payTitle = "تأیید پرداخت"
+requestBodyFree = "ما این مورد را بنا به درخواست ایجاد می‌کنیم. تأیید کنید تا مهندس راهکارهای شما به‌زودی آن را ارسال کند."
+requestBodyPaid = "این یک افزونه پولی است. تأیید کنید تا مهندس راهکارهای شما آن را برآورد کرده و مدارک را ارسال کند."
+requestCta = "درخواست"
+requestTitle = "درخواست این سند"
+signBody = "توافق‌نامه Stirling Enterprise را برای امضای الکترونیکی باز می‌کند: یک امضا MSA، فرم سفارش، EULA و DPA را پوشش می‌دهد. ما به‌صورت خودکار امضای متقابل می‌کنیم و شما به مرحله پرداخت می‌روید."
+signCta = "باز کردن برای امضا"
+signTitle = "توافق‌نامه خود را بررسی و امضا کنید"
+uploadBody = "PO خود را برای ما بفرستید و ما مطابق شرایط شما فاکتور صادر می‌کنیم. PDF را بکشید و رها کنید یا از پایین یک فایل انتخاب کنید."
+uploadCta = "آپلود سفارش خرید"
+uploadTitle = "آپلود سفارش خرید شما"
+
+[portal.procurement.payment]
+description = "پیشنهاد قیمت شما پذیرفته شده و مجوز شما از قبل فعال است — تیم شما می‌تواند بلافاصله شروع کند. هر زمان آماده بودید اولین فاکتور را پرداخت کنید؛ می‌توانید آن را اینجا پرداخت یا دانلود کنید، بدون نیاز به ایمیل."
+downloadInvoice = "دانلود فاکتور"
+simulate = "شبیه‌سازی دریافت پرداخت (دمو)"
+title = "اشتراک ایجاد شد"
+viewInvoice = "مشاهده و پرداخت فاکتور"
+
+[portal.procurement.schedule]
+fallback = "زمان‌بند بارگیری نشد."
+fallbackLink = "باز کردن زمان‌بندی در برگه جدید"
+subtitle = "مهندس راهکارهای شما تیم‌تان را در طول استقرار راهنمایی می‌کند. زمانی را انتخاب کنید که برای شما مناسب است."
+title = "زمان‌بندی تماس"
+
+[portal.procurement.status]
+action = "اقدام لازم است"
+available = "در دسترس"
+complete = "کامل"
+pending = "در انتظار"
+request = "در صورت درخواست"
+
+[portal.procurement.trial]
+body = "تمدید، ۷ روز اضافه می‌کند و به مهندس راهکارهای شما اطلاع می‌دهد."
+bodyMaxed = "همه تمدیدهای خود را استفاده کرده‌اید — اگر به زمان بیشتری نیاز دارید با مهندس راهکارهای خود صحبت کنید."
+cancel = "لغو دوره آزمایشی"
+extend = "تمدید ۷ روز"
+maxed = "به سقف رسیده"
+subtitle = "دوره آزمایشی رایگان شما تا {{date}} ادامه دارد. کارت لازم نیست."
+title = "دوره آزمایشی Enterprise"
+
+[portal.procurement.upsell]
+homeBadge = "Enterprise"
+homeBody = "قیمت‌گذاری حجم متعهد، SSO + SCIM + RBAC در سطح سازمان، ممیزی تغییرناپذیر ۹۰ روزه و SE اختصاصی."
+homeCta = "شروع دوره آزمایشی →"
+homeHeadline = "میلیون‌ها PDF را پردازش کنید."
+
+[portal.recentActivity]
+title = "فعالیت اخیر"
+viewAll = "مشاهده همه"
+
+[portal.recentActivity.empty]
+description = "اجرای پایپ‌لاین‌ها، استقرارها و رویدادهای عامل اینجا نمایش داده می‌شوند."
+title = "هنوز چیزی اینجا نیست"
+
+[portal.search]
+ariaLabel = "جستجو"
+placeholder = "جستجو در Stirling — endpoints، پایپ‌لاین‌ها، مستندات…"
+
+[portal.search.empty]
+noActionsDescription = "وقتی اقدامات سریع در دسترس باشند، اینجا نمایش داده می‌شوند."
+noActionsTitle = "اقدام سریعی وجود ندارد"
+noMatches = "هیچ نتیجه‌ای برای «{{query}}» یافت نشد"
+noMatchesDescription = "یک کلیدواژه دیگر امتحان کنید یا کاتالوگ را مرور کنید."
+
+[portal.settings.groups]
+admin = "مدیر"
+
+[portal.settings.sections]
+account-link = "پیوند حساب"
+
+[portal.shell.header]
+accountFallback = "حساب"
+accountMenu = "منوی حساب"
+darkMode = "حالت تاریک"
+lightMode = "حالت روشن"
+search = "جستجو"
+searchPlaceholder = "جستجو…"
+signOut = "خروج"
+switchToDark = "تغییر به پوسته تاریک"
+switchToLight = "تغییر به پوسته روشن"
+
+[portal.shell.sidebar]
+appEditor = "ویرایشگر"
+appProcessor = "پردازشگر"
+brandSuffix = "Stirling Processor"
+docsCount = "{{docs}} سند"
+linkAccount = "پیوند حساب Stirling"
+planEditor = "طرح ویرایشگر"
+planEnterprise = "طرح Enterprise"
+planProcessor = "طرح پردازشگر"
+primaryNav = "ناوبری اصلی"
+switchApp = "تغییر برنامه"
+
+[portal.sources]
+subtitle = "اتصالات ورودی قابل استفاده مجدد که اسناد را به Stirling وارد می‌کنند. یک اتصال را یک‌بار پیکربندی کنید، سپس از آن در هر تعداد خط‌مشی استفاده کنید. برای پیکربندی و دیدن خط‌مشی‌هایی که از آن استفاده می‌کنند، روی یک ردیف کلیک کنید."
+title = "منابع"
+
+[portal.sources.actions]
+agentBuilder = "Agent Builder"
+connectSource = "اتصال منبع"
+
+[portal.sources.delete]
+body = "«{{name}}» حذف شود؟ این کار قابل بازگشت نیست. خط‌مشی‌هایی که به آن ارجاع می‌دهند باید به‌روزرسانی شوند."
+cancel = "لغو"
+confirm = "حذف"
+title = "منبع حذف شود؟"
+
+[portal.sources.detail]
+closeAriaLabel = "بستن جزئیات"
+delete = "حذف منبع"
+docs24h = "۲۴ ساعت گذشته"
+docs30d = "۳۰ روز گذشته"
+docsTotal = "کل مشاهده‌شده"
+docsTrend = "اسناد در ۳۰ روز گذشته"
+documents = "اسناد"
+edit = "ویرایش"
+notReferenced = "هیچ خط‌مشی‌ای به آن ارجاع نمی‌دهد، بنابراین حذف آن امن است."
+pause = "مکث"
+resume = "ادامه"
+subtitle = "{{type}} · {{status}}"
+usedBy = "استفاده‌شده توسط"
+
+[portal.sources.empty]
+description = "یک پوشه (و به‌زودی فضای ذخیره‌سازی ابری) را متصل کنید تا خط‌مشی‌های شما جایی برای دریافت اسناد داشته باشند."
+title = "هنوز هیچ منبعی متصل نشده است"
+
+[portal.sources.kpi]
+inUse = "در حال استفاده"
+total = "اتصالات"
+unused = "استفاده‌نشده"
+
+[portal.sources.status]
+active = "فعال"
+disabled = "غیرفعال"
+unused = "استفاده‌نشده"
+
+[portal.sources.table]
+source = "منبع"
+status = "وضعیت"
+usedBy = "خط‌مشی‌ها"
+
+[portal.sources.types.editor]
+label = "ویرایشگر"
+
+[portal.sources.types.folder]
+description = "یک دایرکتوری روی سرور را برای اسناد جدید پایش کنید."
+label = "پوشه"
+
+[portal.sources.types.folder.fields.directory]
+helperText = "مسیر مطلقی که Stirling برای فایل‌های قابل پردازش پایش می‌کند."
+label = "مسیر دایرکتوری"
+placeholder = "/data/incoming"
+
+[portal.sources.types.folder.fields.identity]
+helperText = "بررسی محتوا هر فایل تغییرکرده را می‌خواند، بنابراین تغییر نام‌ها و لمس‌هایی که محتوا را تغییر نمی‌دهند دوباره پردازش نمی‌شوند."
+label = "تشخیص تغییر"
+
+[portal.sources.types.folder.fields.identity.options]
+hash = "اندازه، تاریخ و بررسی محتوا"
+stat = "اندازه و تاریخ تغییر"
+
+[portal.sources.types.folder.fields.mode]
+label = "حالت خواندن"
+
+[portal.sources.types.folder.fields.mode.options]
+consume = "مصرف: هر فایل را یک‌بار پردازش کن"
+snapshot = "Snapshot: در هر اجرا پوشه را دوباره بخوان"
+
+[portal.sources.types.folder.fields.recursive]
+label = "عمق پوشه"
+
+[portal.sources.types.folder.fields.recursive.options]
+all = "شامل زیرپوشه‌ها"
+top = "فقط سطح بالا"
+
+[portal.sources.types.unknown]
+label = "منبع"
+
+[portal.sources.wizard]
+back = "بازگشت"
+cancel = "لغو"
+continue = "ادامه"
+editTitle = "ویرایش منبع"
+name = "نام"
+namePlaceholder = "مثلاً دریافت ادعاها"
+save = "ذخیره تغییرات"
+subtitle = "مرحله {{current}} از {{total}} · {{label}}"
+title = "اتصال یک منبع"
+type = "نوع"
+
+[portal.sources.wizard.steps]
+chooseType = "انتخاب نوع"
+configure = "پیکربندی"
+review = "بررسی و اتصال"
+
+[portal.usage]
+managePayment = "مدیریت پرداخت"
+subtitle = "مصرف، فاکتورها و مدیریت طرح برای هر PDF که Stirling صورتحساب کرده، در یک کنسول."
+title = "استفاده و صورتحساب"
+
+[portal.usage.error]
+loadWallet = "کیف پول بارگیری نشد"
+openStripePortal = "پورتال Stripe باز نشد"
+walletUnavailable = "کیف پول در دسترس نیست: {{status}} {{statusText}}"
+
+[portal.usage.sessionExpired]
+action = "دوباره وارد شوید"
+body = "نشست حساب Stirling شما منقضی شده است. برای مشاهده صورتحساب دوباره وارد شوید — نمونه شما همچنان پیوندشده می‌ماند."
+title = "نشست منقضی شد"
+
+[portal.users]
+title = "کاربران"
+
+[portal.users.roles]
+subtitle = "هر نقش در هر طرح وجود دارد — کاری که هر نقش می‌تواند انجام دهد در کل سازمان ثابت است."
+title = "نقش‌ها"
+
+[portal.users.roles.admin]
+label = "مدیر (مالک سازمان)"
+summary = "حاکمیت کامل بر فضای کاری، تنظیمات و اعضا."
+
+[portal.users.roles.admin.permissions]
+0 = "مدیریت کاربران، تیم‌ها و نقش‌ها"
+1 = "مدیریت همه یکپارچه‌سازی‌ها از جمله اتصالات S3"
+2 = "اعطا یا لغو دسترسی پورتال"
+3 = "هر کاری که مالک تیم می‌تواند انجام دهد"
+
+[portal.users.roles.guest]
+label = "مهمان"
+summary = "دسترسی محدود یا فقط وب؛ نمی‌تواند پیکربندی‌های شخصی داشته باشد."
+
+[portal.users.roles.guest.permissions]
+0 = "استفاده فقط وب / دمو"
+1 = "بدون کلیدهای API یا یکپارچه‌سازی‌ها"
+2 = "بدون دسترسی پورتال"
+3 = "فقط خواندنی در موارد به‌اشتراک‌گذاشته‌شده"
+
+[portal.users.roles.member]
+label = "عضو"
+summary = "کاربر عادی — با منابع مشترک و پیکربندی‌های خود کار می‌کند."
+
+[portal.users.roles.member.permissions]
+0 = "استفاده از ویرایشگر و یکپارچه‌سازی‌های مشترک"
+1 = "ایجاد پیکربندی‌های شخصی API و MCP"
+2 = "مشاهده پیکربندی‌های تیمی به‌اشتراک‌گذاشته‌شده با آن‌ها"
+3 = "بدون مدیریت S3 یا فضای کاری"
+
+[portal.users.roles.team_owner]
+label = "مالک تیم"
+summary = "مالک یک تیم است — منابع اعضا و پیکربندی‌های مشترک آن را مدیریت می‌کند."
+
+[portal.users.roles.team_owner.permissions]
+0 = "ایجاد و مدیریت اتصالات S3 تیم"
+1 = "مدیریت پیکربندی‌های یکپارچه‌سازی متعلق به تیم"
+2 = "دسترسی پورتال از طریق خط‌مشی پیش‌فرض"
+3 = "هر کاری که عضو می‌تواند انجام دهد"
+
+[portal.welcome]
+ariaLabel = "به Stirling PDF خوش آمدید"
+badge = "Open-source"
+installEditor = "نصب ویرایشگر"
+inviteTeammates = "دعوت از هم‌تیمی‌ها"
+openInBrowser = "باز کردن در مرورگر"
+perks = "همیشه رایگان · قابل self-host"
+subtitle = "امن‌ترین ویرایشگر PDF جهان برای تیم‌ها با هر اندازه‌ای رایگان است. شامل بیش از ۶۰ عملیات PDF و SSO."
+title = "خوش آمدید به"
+titleAccent = "Stirling PDF"
 
 [printFile]
 title = "چاپ فایل"
@@ -6934,6 +9008,21 @@ manage = "Manage"
 description = "Policies and legal information for this service."
 title = "Legal Documents"
 
+[settings.licenses]
+backendDescription = "مجوزهای وابستگی‌های backend که با این سرور بسته‌بندی شده‌اند."
+backendLabel = "مجوزهای Backend"
+backendTitle = "مجوزهای شخص ثالث Backend"
+empty = "هیچ وابستگی‌ای یافت نشد."
+frontendDescription = "مجوزهای وابستگی‌های frontend که در build انتشار بسته‌بندی شده‌اند."
+frontendLabel = "مجوزهای Frontend"
+frontendTitle = "مجوزهای شخص ثالث Frontend"
+license = "مجوز"
+listDescription = "فهرست مستقیماً در UI از بسته انتشار یا endpoint مربوط به backend نمایش داده می‌شود."
+listTitle = "وابستگی‌های بسته‌بندی‌شده"
+loadError = "بارگیری مجوزهای شخص ثالث ناموفق بود"
+module = "ماژول"
+version = "نسخه"
+
 [settings.licensingAnalytics]
 audit = "ممیزی"
 plan = "طرح"
@@ -7686,7 +9775,9 @@ memberRemoved = "عضو با موفقیت حذف شد"
 namePlaceholder = "نام تیم را وارد کنید"
 personal = "شخصی"
 removeError = "حذف عضو ناموفق بود"
+renameCancel = "لغو تغییر نام"
 renameError = "تغییر نام تیم ناموفق بود"
+renameSubmit = "ذخیره نام تیم"
 renameSuccess = "نام تیم با موفقیت تغییر کرد"
 
 [team.invitationBanner]
@@ -7702,6 +9793,7 @@ sendButton = "ارسال دعوت‌نامه"
 title = "دعوت عضو تیم"
 
 [team.members]
+actions = "اقدامات عضو"
 emailColumn = "ایمیل"
 empty = "هنوز عضوی در تیم نیست"
 nameColumn = "نام"
@@ -7933,6 +10025,146 @@ title = "آمار تفصیلی"
 unknownEndpoint = "نقطه پایانی ناشناخته"
 visits = "بازدیدها"
 
+[users]
+lastActive = "آخرین فعالیت"
+learnMore = "درباره نقش‌ها و دسترسی بیشتر بدانید."
+locked = "قفل‌شده"
+roleFor = "نقش برای {{name}}"
+rowActions = "اقدامات برای {{name}}"
+showAll = "نمایش همه {{count}}"
+showLess = "نمایش کمتر"
+subtitle2 = "افراد، تیم‌ها و سطوح دسترسی شما."
+suspended = "تعلیق‌شده"
+teamActions = "اقدامات تیم"
+title = "کاربران"
+you = "(شما)"
+
+[users.action]
+deleteTeam = "حذف تیم"
+disableMfa = "بازنشانی MFA"
+move = "انتقال به تیم"
+reinstate = "بازگردانی"
+remove = "حذف از سازمان"
+rename = "تغییر نام تیم"
+resetPw = "بازنشانی رمز عبور"
+suspend = "تعلیق"
+unlock = "باز کردن قفل حساب"
+
+[users.cap]
+addProcessor = "+ پردازشگر"
+approver = "تأیید خط‌مشی"
+editor = "ویرایشگر"
+processor = "پردازشگر"
+
+[users.confirm]
+deleteTeamBody = "تیم {{name}} حذف شود؟ ابتدا تیم باید خالی باشد - اعضای آن را به تیم دیگری منتقل کنید و نباید همچنان مالک هیچ پیکربندی یکپارچه‌سازی باشد."
+deleteTeamTitle = "حذف تیم"
+disableMfaBody = "ثبت‌نام MFA برای {{name}} حذف شود؟ اگر لازم باشد، در ورود بعدی دوباره آن را راه‌اندازی می‌کنند."
+disableMfaTitle = "بازنشانی MFA"
+removeBody = "{{name}} برای همیشه از سازمان حذف شود؟ این کار قابل بازگشت نیست."
+removeTitle = "حذف عضو"
+
+[users.empty]
+description = "تیم خود را دعوت کنید تا همکاری را شروع کنید."
+title = "هنوز عضوی وجود ندارد"
+
+[users.group]
+addToTeam = "افزودن به تیم"
+guestCount = "{{count}} مهمان"
+guests = "مهمانان"
+guestsDesc = "همکاران خارجی، محدود به آنچه به اشتراک گذاشته‌اید. فقط ویرایشگر."
+ledBy = "به رهبری {{owner}}"
+org = "سازمان"
+orgDesc = "مالکانی با اختیار در سراسر سازمان و تأیید خط‌مشی"
+owners = "{{count}} مالک"
+team = "تیم {{name}}"
+teamMeta = "{{count}} نفر"
+
+[users.invite]
+access = "دسترسی"
+action = "دعوت از افراد"
+authOauth = "OAuth2 / SSO"
+authSaml = "SAML 2.0"
+authType = "روش ورود"
+authWeb = "رمز عبور"
+create = "ایجاد حساب"
+createSubtitle = "یک حساب self-hosted با رمز عبور یا SSO ایجاد کنید."
+createTitle = "ایجاد حساب"
+editorDesc = "PDFها را در ویرایشگر Stirling PDF ویرایش کنید. همه این را دریافت می‌کنند."
+email = "آدرس ایمیل"
+emailError = "یک آدرس ایمیل معتبر وارد کنید"
+emailPlaceholder2 = "name@company.com"
+forceChange = "الزام به تغییر رمز عبور در اولین ورود"
+forceMfa = "الزام به راه‌اندازی MFA در اولین ورود"
+method = "نحوه افزودن آن‌ها"
+methodDirect = "ایجاد مستقیم حساب"
+methodEmail = "دعوت با ایمیل"
+password = "رمز عبور"
+passwordError = "رمز عبور باید حداقل ۸ نویسه باشد"
+processorDeferred = "دعوت ارسال شد، اما دسترسی پردازشگر هنوز قابل اعطا نبود - پس از پیوستن آن‌ها، آن را از فهرست اعضا تنظیم کنید."
+processorDesc = "سطح حاکمیت، اجرای پایپ‌لاین‌ها، عامل‌ها و API."
+role = "نقش"
+send2 = "ارسال دعوت‌نامه"
+subtitle2 = "آن‌ها یک ایمیل برای پیوستن به فضای کاری Stirling شما دریافت خواهند کرد."
+team = "تیم"
+title = "دعوت از افراد"
+username = "نام کاربری"
+usernameError = "نام کاربری باید حداقل ۳ نویسه باشد"
+usernamePlaceholder = "jsmith"
+
+[users.loadError]
+description = "در برقراری ارتباط با بک‌اند مشکلی پیش آمد، یا شما دسترسی ندارید. دوباره تلاش کنید."
+title = "امکان بارگیری اعضا نبود"
+
+[users.moveTeam]
+apply = "انتقال"
+team = "تیم"
+title = "انتقال به تیم"
+
+[users.newTeam]
+action = "+ تیم جدید"
+create = "ایجاد تیم"
+emailError = "یک نشانی ایمیل معتبر وارد کنید"
+name = "نام تیم"
+namePlaceholder = "مثلاً مالی"
+nameRequired = "نام تیم الزامی است"
+owner = "مالک تیم"
+ownerFailed = "تیم ایجاد شد، اما امکان دعوت از مالک نبود. یک نفر را از فهرست اعضا تعیین کنید."
+ownerHelper = "هر تیم یک رهبر دارد. او به‌عنوان مالک تیم دعوت می‌شود، Processor برایش فعال است، و می‌تواند بقیه را اضافه کند. بعداً می‌توانید آن را تغییر دهید."
+ownerPlaceholder = "owner@company.com"
+subtitle = "افراد را زیر نظر یک مالک تیم گروه‌بندی کنید که دسترسی آن‌ها را مدیریت می‌کند."
+title = "تیم جدید"
+
+[users.renameTeam]
+apply = "تغییر نام"
+name = "نام تیم"
+title = "تغییر نام تیم"
+
+[users.resetPw]
+apply = "بازنشانی رمز عبور"
+confirm = "تأیید رمز عبور"
+copied = "در کلیپ‌بورد کپی شد"
+copyHint = "اکنون این را کپی کنید - دوباره نمایش داده نخواهد شد."
+email = "ارسال ایمیل به کاربر درباره بازنشانی"
+forceChange = "الزام به تغییر رمز عبور در ورود بعدی"
+generate = "تولید رمز عبور امن"
+includePw = "قرار دادن رمز عبور جدید در ایمیل"
+mismatch = "رمزهای عبور مطابقت ندارند"
+newPassword = "رمز عبور جدید"
+regen = "تولید دوباره"
+title = "بازنشانی رمز عبور"
+tooShort = "رمز عبور باید حداقل ۸ نویسه باشد"
+
+[users.role]
+guest = "مهمان"
+member = "عضو"
+orgOwner = "مالک سازمان"
+teamOwner = "مالک تیم"
+
+[users.team]
+grantProcessor = "اعطای Processor به تیم"
+revokeProcessor = "لغو Processor از تیم"
+
 [validateSignature]
 date = "تاریخ"
 downloadCsv = "دانلود CSV"
@@ -8057,13 +10289,22 @@ zoomOut = "کوچک‌نمایی"
 [viewer.attachments]
 addAttachment = "افزودن پیوست"
 close = "بستن پیوست‌ها"
+closeSidebar = "بستن نوار کناری پیوست‌ها"
+download = "دانلود پیوست"
 empty = "در این سند هیچ پیوستی وجود ندارد"
 loading = "در حال بارگذاری پیوست‌ها..."
 noDocument = "برای مشاهدهٔ پیوست‌های آن، یک PDF باز کنید."
 noMatch = "هیچ پیوستی با جستجوی شما مطابقت ندارد"
 noSupport = "پشتیبانی از پیوست در این نمایشگر در دسترس نیست."
+retry = "تلاش دوباره"
 searchPlaceholder = "جستجوی پیوست‌ها"
 title = "پیوست‌ها"
+
+[viewer.bookmarks]
+bookmarkTitle = "عنوان نشانک"
+closeSidebar = "بستن نوار کناری نشانک‌ها"
+collapseAll = "جمع کردن همه نشانک‌ها"
+expandAll = "باز کردن همه نشانک‌ها"
 
 [viewer.comments]
 addComment = "افزودن نظر"
@@ -8075,6 +10316,7 @@ clearAll = "پاک کردن همهٔ نظرها"
 clearAllDescription = "این کار نظرها و پاسخ‌ها را از نوار کناری حذف می‌کند در حالی‌که هر حاشیه‌نویسی پیوست‌شده در سند باقی می‌ماند."
 clearAllTitle = "همهٔ نظرها پاک شوند؟"
 close = "بستن نظرات"
+closeSidebar = "بستن نوار کناری دیدگاه‌ها"
 deleteAnnotationAndComment = "حذف حاشیه‌نویسی و نظر"
 deleteDescription = "این حاشیه‌نویسی یک نظر پیوست دارد. می‌توانید فقط نظر را از نوار کناری حذف کنید و حاشیه‌نویسی را نگه دارید، یا همه را حذف کنید."
 deleteTitle = "حذف حاشیه‌نویسی از نظرات؟"
@@ -8106,6 +10348,11 @@ title = "فیلدهای فرم"
 unsavedBadge = "ذخیره‌نشده"
 unsavedDesc = "تغییرات ذخیره‌نشده دارید"
 
+[viewer.layers]
+closeSidebar = "بستن نوار کناری لایه‌ها"
+hideAll = "پنهان کردن همه لایه‌ها"
+showAll = "نمایش همه لایه‌ها"
+
 [viewer.link]
 delete = "حذف لینک"
 
@@ -8135,6 +10382,9 @@ resultsOf = "از {{total}}"
 
 [viewer.signature]
 delete = "حذف امضا"
+
+[viewer.thumbnails]
+closeSidebar = "بستن نوار کناری بندانگشتی‌ها"
 
 [viewPdf]
 tags = "مشاهده،خواندن،حاشیه‌نویسی،متن،تصویر"
@@ -8562,6 +10812,7 @@ loading = "در حال بارگذاری افراد..."
 locked = "قفل‌شده"
 lockedBadge = "قفل‌شده"
 loginRequired = "ابتدا حالت لاگین را فعال کنید"
+memberActions = "اقدامات عضو"
 noMembersFound = "عضوی یافت نشد"
 role = "نقش"
 searchMembers = "جستجوی اعضا..."
@@ -8571,6 +10822,7 @@ unlockAccount = "باز کردن قفل حساب"
 unlockUserError = "باز کردن قفل حساب کاربری ناموفق بود"
 unlockUserSuccess = "قفل حساب کاربری با موفقیت باز شد"
 user = "کاربر"
+userInfo = "اطلاعات کاربر"
 
 [workspace.people.actions]
 upgrade = "ارتقا"
@@ -8716,6 +10968,7 @@ removeMemberError = "حذف کاربر از تیم ناموفق بود"
 removeMemberSuccess = "کاربر از تیم حذف شد"
 renameTeamLabel = "تغییر نام تیم"
 system = "سیستم"
+teamActions = "اقدامات تیم"
 teamName = "نام تیم"
 teamNotFound = "تیم پیدا نشد"
 title = "تیم‌ها"

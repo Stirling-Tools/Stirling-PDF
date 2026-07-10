@@ -1,15 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  ActionIcon,
-  Box,
-  Button,
-  Group,
-  Menu,
-  Modal,
-  SegmentedControl,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Box, Group, Menu, Modal, Stack, Text } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { Button } from "@app/ui/Button";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import DrawIcon from "@mui/icons-material/Draw";
 import OpenWithIcon from "@mui/icons-material/OpenWith";
@@ -363,11 +356,10 @@ export default function SignControlsPanel({
       <Menu withinPortal position="bottom" shadow="md" width="target">
         <Menu.Target>
           <Button
-            variant="default"
+            variant="secondary"
             fullWidth
-            justify="space-between"
+            justify="between"
             rightSection={<KeyboardArrowDownIcon sx={{ fontSize: "1.1rem" }} />}
-            styles={{ label: { flex: 1, overflow: "hidden" } }}
             aria-label={t(
               "certSign.collab.signRequest.changeSignature",
               "Change signature",
@@ -396,10 +388,10 @@ export default function SignControlsPanel({
                 <Group gap="sm" wrap="nowrap" justify="space-between">
                   {renderSavedSignaturePreview(sig)}
                   <ActionIcon
-                    component="div"
-                    size="xs"
-                    color="red"
-                    variant="subtle"
+                    as="div"
+                    size="sm"
+                    accent="danger"
+                    variant="tertiary"
                     onClick={(e) => {
                       e.stopPropagation();
                       removeSignature(sig.id);
@@ -441,7 +433,7 @@ export default function SignControlsPanel({
         fullWidth
         value={placementMode ? "place" : "move"}
         onChange={(value) => onPlacementModeChange(value === "place")}
-        data={[
+        options={[
           {
             value: "place",
             label: (
@@ -466,16 +458,15 @@ export default function SignControlsPanel({
           },
         ]}
         size="xs"
-        radius="xl"
-        aria-label={t(
+        ariaLabel={t(
           "certSign.collab.signRequest.mode.title",
           "Sign or move mode",
         )}
       />
 
       <Button
-        variant="light"
-        color="red"
+        variant="tertiary"
+        accent="danger"
         leftSection={<DeleteOutlineIcon sx={{ fontSize: "1.1rem" }} />}
         onClick={onDeleteSelected}
         disabled={!hasSelectedAnnotation}
