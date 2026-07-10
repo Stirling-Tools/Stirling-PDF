@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.PolicyStore;
+import stirling.software.proprietary.util.SecretMasker;
 
 /**
  * Builds the Sources overview: every persisted source the caller's team owns, shown exactly once,
@@ -104,13 +105,18 @@ public class SourceOverviewService {
         return referenceCount == 0 ? "unused" : "active";
     }
 
-    /** Generic key/value view of the source's config - works for any source type. */
+    /**
+     * Generic key/value view of the source's config - works for any source type. Secret-bearing
+     * options (e.g. an S3 secret access key) are redacted, not omitted, so the overview still shows
+     * that a credential is configured.
+     */
     private static List<SourceView.DetailRow> configRows(Source source) {
-        return source.options().entrySet().stream()
+        Map<String, Object> masked = SecretMasker.mask(source.options());
+        return source.options().keySet().stream()
                 .map(
-                        entry ->
+                        key ->
                                 new SourceView.DetailRow(
-                                        humanize(entry.getKey()), String.valueOf(entry.getValue())))
+                                        humanize(key), String.valueOf(masked.get(key))))
                 .toList();
     }
 

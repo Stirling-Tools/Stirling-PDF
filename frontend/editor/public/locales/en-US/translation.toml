@@ -7246,6 +7246,11 @@ operations_one = "Operation ({{count}})"
 operations_other = "Operations ({{count}})"
 output = "Output"
 removeStep = "Remove operation"
+s3Configure = "Configure"
+s3Done = "Done"
+s3ModalTitle = "Amazon S3 output"
+s3NotConfigured = "Not configured"
+s3PrefixHelp = "Outputs are uploaded under this key prefix."
 save = "Save changes"
 scheduleEvery = "Run every"
 sources = "Sources"
@@ -7265,6 +7270,7 @@ confirm = "Delete"
 title = "Delete pipeline?"
 
 [portal.pipelines.detail]
+clearHistory = "Clear history"
 delete = "Delete pipeline"
 run = "Run now"
 
@@ -7282,12 +7288,19 @@ total = "Pipelines"
 [portal.pipelines.output]
 folder = "Write to folder"
 inline = "Return files"
+s3 = "Write to Amazon S3"
 
 [portal.pipelines.run]
+allProcessed_one = "Nothing to run: the source's {{count}} document has already been processed."
+allProcessed_other = "Nothing to run: all {{count}} documents in the sources have already been processed."
 completed_one = "Run completed."
 completed_other = "All {{count}} runs completed."
 empty = "Nothing to run: the sources had no documents to process."
 failed = "Run failed: {{error}}"
+historyCleared = "History cleared. The next run reprocesses everything currently in the sources."
+inFlight = "Nothing new to run: documents are still being processed from an earlier run."
+parked_one = "Nothing to run: {{count}} document failed previously and is parked. Fix the cause, then clear history to retry it."
+parked_other = "Nothing to run: {{count}} documents failed previously and are parked. Fix the cause, then clear history to retry them."
 running = "Run started; still in progress."
 timeout = "Run is taking longer than expected; it may still finish in the background."
 
@@ -7973,6 +7986,42 @@ label = "Folder depth"
 [portal.sources.types.folder.fields.recursive.options]
 all = "Include subfolders"
 top = "Top level only"
+
+[portal.sources.types.s3]
+description = "Pull documents from an Amazon S3 or S3-compatible bucket."
+label = "Amazon S3"
+
+[portal.sources.types.s3.fields.accessKeyId]
+label = "Access key ID"
+
+[portal.sources.types.s3.fields.bucket]
+label = "Bucket"
+placeholder = "my-company-inbox"
+
+[portal.sources.types.s3.fields.endpoint]
+helperText = "Leave blank for Amazon S3. Set to use an S3-compatible service such as MinIO."
+label = "Custom endpoint"
+placeholder = "https://s3.example.com"
+
+[portal.sources.types.s3.fields.mode]
+helperText = "Consume removes each object from the bucket once every policy has processed it."
+label = "Read mode"
+
+[portal.sources.types.s3.fields.mode.options]
+consume = "Consume: process each object once"
+snapshot = "Snapshot: re-read the bucket every run"
+
+[portal.sources.types.s3.fields.prefix]
+helperText = "Only objects whose keys start with this prefix are processed."
+label = "Key prefix"
+placeholder = "incoming/"
+
+[portal.sources.types.s3.fields.region]
+label = "Region"
+placeholder = "us-east-1"
+
+[portal.sources.types.s3.fields.secretAccessKey]
+label = "Secret access key"
 
 [portal.sources.types.unknown]
 label = "Source"
