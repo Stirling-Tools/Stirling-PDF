@@ -46,6 +46,17 @@
   border-color: var(--color-search-border-hover);
 }
 
+/* The icon / placeholder / ⌘K live inside the shared Button's label, so the
+   label must fill the button for the placeholder's flex:1 to push ⌘K to the
+   far right (otherwise the label is content-width and everything left-packs). */
+.portal-header__search .mantine-Button-inner {
+  width: 100%;
+}
+.portal-header__search .mantine-Button-label {
+  flex: 1;
+  gap: 0.5rem;
+}
+
 .portal-header__search-placeholder {
   flex: 1 1 auto;
   text-align: left;
@@ -104,9 +115,7 @@
 }
 
 .portal-header__tier-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
+  --sui-btn-py: 0.3125rem;
   padding: 0.3125rem 0.625rem;
   font-size: 0.75rem;
   color: var(--color-text-2);

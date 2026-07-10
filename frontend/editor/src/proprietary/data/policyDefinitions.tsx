@@ -2,7 +2,7 @@
  * Static preset definitions for Policies — the categories, their editable
  * settings fields, scope labels, and the default tool pipeline each category
  * seeds a new policy with. Runtime activity + stats are derived live from the
- * user's real files (see policyLiveData), not defined here.
+ * user's real files, not defined here.
  */
 
 import LayersIcon from "@mui/icons-material/Layers";

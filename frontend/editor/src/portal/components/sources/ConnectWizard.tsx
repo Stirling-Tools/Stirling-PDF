@@ -11,15 +11,16 @@ import {
 } from "@app/ui";
 import { errorMessage } from "@portal/api/http";
 import { createSource, type Source } from "@portal/api/sources";
+import { creatableSourceTypes } from "@portal/components/sources/creatableSourceTypes";
 import {
-  CREATABLE_SOURCE_TYPES,
   defaultOptions,
   sourceTypeMeta,
   type CreatableSourceType,
 } from "@portal/components/sources/sourceTypes";
 import "@portal/views/Sources.css";
 
-const DEFAULT_TYPE = CREATABLE_SOURCE_TYPES[0];
+const OFFERED_TYPES = creatableSourceTypes();
+const DEFAULT_TYPE = OFFERED_TYPES[0];
 
 /** Wizard steps. Editing skips type selection (the type is fixed once created). */
 type StepId = "type" | "configure" | "review";
@@ -35,9 +36,9 @@ interface ConnectWizardProps {
   source?: Source;
 }
 
-/** The creatable-type metadata for a source's stored type, falling back to folder. */
+/** The creatable-type metadata for a source's stored type, falling back to the first offered. */
 function typeFor(type: string | undefined): CreatableSourceType {
-  return CREATABLE_SOURCE_TYPES.find((t) => t.type === type) ?? DEFAULT_TYPE;
+  return OFFERED_TYPES.find((t) => t.type === type) ?? DEFAULT_TYPE;
 }
 
 /** Source options coerced to strings for the form, defaulted from the type's fields. */
@@ -199,7 +200,7 @@ export function ConnectWizard({
 
       {stepId === "type" && (
         <div className="portal-sources__type-grid">
-          {CREATABLE_SOURCE_TYPES.map((ct) => (
+          {OFFERED_TYPES.map((ct) => (
             <Button
               key={ct.type}
               variant="tertiary"
@@ -251,6 +252,7 @@ export function ConnectWizard({
                 />
               ) : (
                 <Input
+                  type={field.control === "password" ? "password" : undefined}
                   value={options[field.key] ?? ""}
                   placeholder={
                     field.placeholderKey ? t(field.placeholderKey) : undefined
@@ -280,7 +282,11 @@ export function ConnectWizard({
               <StatTile
                 key={field.key}
                 label={t(field.labelKey)}
-                value={options[field.key] || "—"}
+                value={
+                  field.control === "password" && options[field.key]
+                    ? "********"
+                    : options[field.key] || "—"
+                }
               />
             ))}
           </div>

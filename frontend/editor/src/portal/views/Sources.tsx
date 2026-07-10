@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, EmptyState, Modal, Skeleton } from "@app/ui";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
+import { SourcesIcon } from "@portal/components/icons";
 import { errorMessage } from "@portal/api/http";
 import {
   createSource,
@@ -29,7 +30,7 @@ export function Sources() {
   const [version, setVersion] = useState(0);
   const state = useAsync<SourcesResponse>(() => fetchSources(), [version]);
   const { data, loading } = state;
-  const { isLoading, isEmpty } = useSectionFlags(state);
+  const { isLoading } = useSectionFlags(state);
   const refetch = useCallback(() => setVersion((v) => v + 1), []);
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -43,6 +44,10 @@ export function Sources() {
 
   const sources = data?.sources ?? [];
   const expanded = sources.find((s) => s.id === expandedId) ?? null;
+  // Empty once the fetch settles with no sources (or fails → no data). Gates
+  // both the KPI strip and the empty panel so no placeholder stat boxes sit
+  // above an empty page.
+  const showEmpty = !isLoading && sources.length === 0;
 
   // The 30-day sparkline series lives off the list endpoint; fetch it for the one
   // expanded row only (empty while collapsed, so no request fires).
@@ -146,7 +151,7 @@ export function Sources() {
 
       {pageError && <Banner tone="danger" description={pageError} />}
 
-      <KpiStrip data={data} loading={loading} />
+      {!showEmpty && <KpiStrip data={data} loading={loading} />}
 
       {isLoading && (
         <div className="portal-sources__table-skeleton" aria-hidden>
@@ -156,19 +161,23 @@ export function Sources() {
         </div>
       )}
 
-      {isEmpty && (
+      {showEmpty && (
         <EmptyState
+          icon={<SourcesIcon size={28} />}
           title={t("portal.sources.empty.title")}
           description={t("portal.sources.empty.description")}
           actions={
-            <Button onClick={openCreate}>
+            <Button
+              onClick={openCreate}
+              leftSection={<span aria-hidden>+</span>}
+            >
               {t("portal.sources.actions.connectSource")}
             </Button>
           }
         />
       )}
 
-      {!isLoading && !isEmpty && sources.length > 0 && (
+      {!isLoading && sources.length > 0 && (
         <SourcesTable
           sources={sources}
           expandedId={expandedId}

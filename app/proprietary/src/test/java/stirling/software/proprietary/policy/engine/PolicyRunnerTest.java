@@ -1,5 +1,6 @@
 package stirling.software.proprietary.policy.engine;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -30,6 +31,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.input.ResolveContext;
 import stirling.software.proprietary.policy.input.ResolvedInput;
+import stirling.software.proprietary.policy.ledger.InProcessProcessedLedger;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
@@ -83,6 +85,42 @@ class PolicyRunnerTest {
         // Ledger hygiene still runs: rows recorded for a generator policy's folder outputs
         // are pruned by its own sweeps rather than accumulating until the policy is deleted.
         verify(processedLedger).deleteUnseen(eq("p1"), anyLong());
+    }
+
+    @Test
+    void reportsWhatTheSweepSkippedSoAnEmptyTriggerExplainsItself() throws Exception {
+        InProcessProcessedLedger ledger = new InProcessProcessedLedger();
+        PolicyRunner reporting =
+                new PolicyRunner(
+                        policyEngine,
+                        List.of(folderSource),
+                        sourceStore,
+                        new InProcessSourceDocCounter(),
+                        ledger);
+        InputSpec spec = InputSpec.folder("/in");
+        Policy policy = policy(List.of(spec));
+        // One file already processed at its current version, one parked by a failed run.
+        ledger.claim("p1", "/in/done.pdf", "g1", null);
+        ledger.settle("p1", "/in/done.pdf", "g1", null, true);
+        ledger.claim("p1", "/in/failed.pdf", "g2", null);
+        ledger.settle("p1", "/in/failed.pdf", "g2", null, false);
+        when(folderSource.supports(spec)).thenReturn(true);
+        when(folderSource.resolve(eq(spec), any()))
+                .thenAnswer(
+                        invocation -> {
+                            ResolveContext ctx = invocation.getArgument(1);
+                            ctx.reportPresent(List.of("/in/done.pdf", "/in/failed.pdf"));
+                            // Both are at their settled versions, so neither claims.
+                            return List.of();
+                        });
+
+        SweepOutcome outcome = reporting.run(policy);
+
+        assertTrue(outcome.runIds().isEmpty());
+        assertEquals(2, outcome.filesListed());
+        assertEquals(1, outcome.alreadyProcessed());
+        assertEquals(1, outcome.parked());
+        assertEquals(0, outcome.inFlight());
     }
 
     @Test

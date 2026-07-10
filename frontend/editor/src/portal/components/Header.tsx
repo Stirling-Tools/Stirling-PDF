@@ -52,15 +52,18 @@ function TierSwitcher() {
         <Button
           type="button"
           variant="quiet"
+          justify="start"
           className="portal-header__tier-btn"
+          leftSection={
+            <span
+              className="portal-header__tier-dot"
+              style={{ background: info.dotColor }}
+              aria-hidden
+            />
+          }
+          rightSection={<ChevronDownIcon size={14} />}
         >
-          <span
-            className="portal-header__tier-dot"
-            style={{ background: info.dotColor }}
-            aria-hidden
-          />
           <span className="portal-header__tier-label">{info.label}</span>
-          <ChevronDownIcon size={14} />
         </Button>
       </Dropdown.Trigger>
       <Dropdown.Menu width="12rem">

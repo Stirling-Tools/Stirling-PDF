@@ -54,7 +54,7 @@ export function SegmentedControl<T extends string>({
   value,
   onChange,
   accent = "default",
-  size = "md",
+  size = "sm",
   variant = "primary",
   fullWidth = false,
   disabled = false,
@@ -72,11 +72,10 @@ export function SegmentedControl<T extends string>({
     .filter(Boolean)
     .join(" ");
 
-  // Drive Mantine's indicator/label colour vars from the accent palette.
   const accentVars =
-    variant === "primary"
-      ? { "--sc-color": "var(--_solid)", "--sc-label-color": "var(--_on)" }
-      : { "--sc-color": "var(--_tint)", "--sc-label-color": "var(--_text)" };
+    variant === "secondary"
+      ? { "--sc-color": "var(--_tint)", "--sc-label-color": "var(--_text)" }
+      : {};
 
   return (
     <MantineSegmentedControl
