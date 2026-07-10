@@ -243,10 +243,8 @@ tasks:
 
   typecheck:_run:
     internal: true
-    env:
-      CI: '{{ .CI | default "false" }}'
     cmds:
-      - '{{ if eq .CI "true" }}npx tsc{{ else }}npx tsgo{{ end }} --noEmit --project {{.PROJECT}}'
+      - 'npx tsc --noEmit --project {{.PROJECT}}'
 
   typecheck:core:
     desc: "Typecheck core build variant"
