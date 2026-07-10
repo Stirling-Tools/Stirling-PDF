@@ -3,22 +3,15 @@ import { useTranslation } from "react-i18next";
 import { Banner, Button, Select } from "@app/ui";
 import { errorMessage } from "@portal/api/http";
 import {
-  createIntegration,
   fetchS3Connections,
   type IntegrationConfig,
 } from "@portal/api/integrations";
-import {
-  EMPTY_S3_CONNECTION,
-  S3ConnectionForm,
-  s3ConnectionFormValid,
-  s3ConnectionRequestConfig,
-  type S3ConnectionFormValues,
-} from "@portal/components/sources/S3ConnectionForm";
+import { S3ConnectionModal } from "@portal/components/sources/S3ConnectionModal";
 
 /**
- * Selects a stored S3 connection by id, with an inline "create new" path that
- * saves the connection immediately (so validation - schema, SSRF, credentials -
- * fails here in the form, and the parent only ever sees a real connection id).
+ * Selects a stored S3 connection by id. Creating a new one opens the shared
+ * connection modal (saved immediately and validated backend-side), so the
+ * parent only ever sees a real connection id.
  */
 interface S3ConnectionPickerProps {
   value: string;
@@ -33,9 +26,7 @@ export function S3ConnectionPicker({
   const [connections, setConnections] = useState<IntegrationConfig[] | null>(
     null,
   );
-  const [creating, setCreating] = useState(false);
-  const [form, setForm] = useState<S3ConnectionFormValues>(EMPTY_S3_CONNECTION);
-  const [saving, setSaving] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -52,28 +43,6 @@ export function S3ConnectionPicker({
     };
   }, []);
 
-  async function saveNewConnection() {
-    if (saving || !s3ConnectionFormValid(form)) return;
-    setSaving(true);
-    setError(null);
-    try {
-      const created = await createIntegration({
-        integrationType: "S3",
-        name: form.name.trim(),
-        scope: "TEAM",
-        config: s3ConnectionRequestConfig(form),
-      });
-      setConnections((list) => [...(list ?? []), created]);
-      onChange(String(created.id));
-      setCreating(false);
-      setForm(EMPTY_S3_CONNECTION);
-    } catch (e) {
-      setError(errorMessage(e));
-    } finally {
-      setSaving(false);
-    }
-  }
-
   return (
     <div className="portal-sources__connection-picker">
       <Select
@@ -85,36 +54,18 @@ export function S3ConnectionPicker({
         }))}
         onChange={(selected) => onChange(selected ?? "")}
       />
-      {!creating && (
-        <Button variant="tertiary" size="sm" onClick={() => setCreating(true)}>
-          {t("portal.connections.picker.createNew")}
-        </Button>
-      )}
-      {creating && (
-        <div className="portal-sources__connection-create">
-          <S3ConnectionForm values={form} onChange={setForm} />
-          {error && <Banner tone="danger" description={error} />}
-          <div className="portal-sources__connection-create-actions">
-            <Button
-              variant="tertiary"
-              size="sm"
-              disabled={saving}
-              onClick={() => setCreating(false)}
-            >
-              {t("portal.connections.picker.cancel")}
-            </Button>
-            <Button
-              size="sm"
-              loading={saving}
-              disabled={!s3ConnectionFormValid(form)}
-              onClick={() => void saveNewConnection()}
-            >
-              {t("portal.connections.picker.save")}
-            </Button>
-          </div>
-        </div>
-      )}
-      {!creating && error && <Banner tone="danger" description={error} />}
+      <Button variant="tertiary" size="sm" onClick={() => setModalOpen(true)}>
+        {t("portal.connections.picker.createNew")}
+      </Button>
+      {error && <Banner tone="danger" description={error} />}
+      <S3ConnectionModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSaved={(created) => {
+          setConnections((list) => [...(list ?? []), created]);
+          onChange(String(created.id));
+        }}
+      />
     </div>
   );
 }

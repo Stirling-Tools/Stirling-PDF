@@ -6470,10 +6470,18 @@ description = "GA components are available on Pay-as-you-go; a few Beta componen
 title = "Some components need a paid plan"
 
 [portal.connections]
+createTitle = "New S3 connection"
 delete = "Delete"
 edit = "Edit"
 editTitle = "Edit S3 connection"
-title = "S3 connections"
+subtitle = "Reusable S3 credentials that sources and pipeline outputs connect to."
+
+[portal.connections.actions]
+new = "New connection"
+
+[portal.connections.empty]
+description = "Add an S3 connection to reuse the same bucket and credentials across sources and pipeline outputs."
+title = "No connections yet"
 
 [portal.connections.picker]
 cancel = "Cancel"
@@ -6484,6 +6492,11 @@ save = "Save connection"
 [portal.connections.s3.fields]
 name = "Connection name"
 namePlaceholder = "e.g. Claims bucket"
+
+[portal.connections.table]
+bucket = "Bucket"
+name = "Name"
+region = "Region"
 
 [portal.docs.authentication]
 codeCaption = "every request"
@@ -7940,33 +7953,32 @@ primaryNav = "Primary navigation"
 switchApp = "Switch app"
 
 [portal.sources]
-subtitle = "Reusable input connections that feed documents into Stirling. Configure a connection once, then reference it from any number of policies. Click a row for its config and which policies use it."
+subtitle = "Reusable input connections that feed documents into Stirling. Configure a source once, then reference it from any number of pipelines."
 title = "Sources"
 
 [portal.sources.actions]
 agentBuilder = "Agent Builder"
 connectSource = "Connect source"
 
+[portal.sources.builder]
+back = "Back to sources"
+cancel = "Cancel"
+create = "Create source"
+createTitle = "Connect a source"
+delete = "Delete"
+editTitle = "Edit source"
+enabled = "Enabled"
+save = "Save changes"
+
+[portal.sources.tabs]
+connections = "Connections"
+sources = "Sources"
+
 [portal.sources.delete]
 body = "Delete \"{{name}}\"? This can't be undone. Policies that reference it would need to be updated."
 cancel = "Cancel"
 confirm = "Delete"
 title = "Delete source?"
-
-[portal.sources.detail]
-closeAriaLabel = "Close detail"
-delete = "Delete source"
-docs24h = "Last 24h"
-docs30d = "Last 30 days"
-docsTotal = "Total seen"
-docsTrend = "Documents over the last 30 days"
-documents = "Documents"
-edit = "Edit"
-notReferenced = "Not referenced by any policy, so it's safe to delete."
-pause = "Pause"
-resume = "Resume"
-subtitle = "{{type}} · {{status}}"
-usedBy = "Used by"
 
 [portal.sources.empty]
 description = "Connect a folder (and, soon, cloud storage) so your policies have somewhere to pull documents from."
@@ -7983,6 +7995,7 @@ disabled = "Disabled"
 unused = "Unused"
 
 [portal.sources.table]
+documents = "Documents"
 source = "Source"
 status = "Status"
 usedBy = "Policies"
@@ -8067,21 +8080,9 @@ label = "Secret access key"
 label = "Source"
 
 [portal.sources.wizard]
-back = "Back"
-cancel = "Cancel"
-continue = "Continue"
-editTitle = "Edit source"
 name = "Name"
 namePlaceholder = "e.g. Claims intake"
-save = "Save changes"
-subtitle = "Step {{current}} of {{total}} · {{label}}"
-title = "Connect a source"
 type = "Type"
-
-[portal.sources.wizard.steps]
-chooseType = "Choose type"
-configure = "Configure"
-review = "Review & connect"
 
 [portal.usage]
 managePayment = "Manage Payment"

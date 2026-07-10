@@ -51,14 +51,9 @@ const meta: Meta<typeof SourcesTable> = {
   title: "Portal/Sources/SourcesTable",
   component: SourcesTable,
   parameters: { layout: "padded" },
-  args: { sources: SOURCES, expandedId: null, onRowClick: () => {} },
+  args: { sources: SOURCES, onRowClick: () => {} },
 };
 export default meta;
 type Story = StoryObj<typeof SourcesTable>;
 
 export const Default: Story = {};
-
-/** A row with an open detail panel rotates its caret. */
-export const RowExpanded: Story = {
-  args: { expandedId: SOURCES[0].id },
-};

@@ -516,3 +516,23 @@
   display: flex;
   gap: 0.25rem;
 }
+
+.portal-sources__connections-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.portal-sources__connections-sub {
+  color: var(--color-text-4);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.portal-sources__connections-actions {
+  display: inline-flex;
+  gap: 0.25rem;
+  justify-content: flex-end;
+}
