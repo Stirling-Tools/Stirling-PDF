@@ -6262,7 +6262,7 @@ bodyBefore = "Set"
 title = "Stripe not configured"
 
 [portal.billing.enterpriseUpsell]
-cta = "Build your Enterprise quote"
+cta = "Explore Enterprise"
 description = "Committed volume discounts, air-gapped deployment, custom MSA and security reviews, and 3rd-party distributor partnerships."
 eyebrow = "Volume discount · 1M+ PDFs"
 title = "Stirling Enterprise"
