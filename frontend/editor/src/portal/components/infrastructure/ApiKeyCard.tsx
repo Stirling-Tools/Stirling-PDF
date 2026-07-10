@@ -24,29 +24,33 @@ export function ApiKeyCard({
     <Card padding="default" className="portal-infra__key">
       <Button
         variant="tertiary"
+        fullWidth
+        justify="between"
         className="portal-infra__key-head"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
+        rightSection={
+          <span className="portal-infra__key-head-right">
+            <Chip size="sm" accent={KEY_SCOPE_TONE[apiKey.scope]}>
+              {apiKey.scope === "personal" || !apiKey.teamName
+                ? t(KEY_SCOPE_LABEL[apiKey.scope])
+                : `${t(KEY_SCOPE_LABEL[apiKey.scope])} · ${apiKey.teamName}`}
+            </Chip>
+            <StatusBadge tone={KEY_TONE[apiKey.status]} size="sm">
+              {t(KEY_LABEL[apiKey.status])}
+            </StatusBadge>
+            <span
+              className={"portal-infra__chevron" + (open ? " is-open" : "")}
+              aria-hidden
+            >
+              ›
+            </span>
+          </span>
+        }
       >
         <span className="portal-infra__key-id">
           <span className="portal-infra__cell-strong">{apiKey.name}</span>
           <code className="portal-infra__cell-code">{apiKey.prefix}</code>
-        </span>
-        <span className="portal-infra__key-head-right">
-          <Chip size="sm" accent={KEY_SCOPE_TONE[apiKey.scope]}>
-            {apiKey.scope === "personal" || !apiKey.teamName
-              ? t(KEY_SCOPE_LABEL[apiKey.scope])
-              : `${t(KEY_SCOPE_LABEL[apiKey.scope])} · ${apiKey.teamName}`}
-          </Chip>
-          <StatusBadge tone={KEY_TONE[apiKey.status]} size="sm">
-            {t(KEY_LABEL[apiKey.status])}
-          </StatusBadge>
-          <span
-            className={"portal-infra__chevron" + (open ? " is-open" : "")}
-            aria-hidden
-          >
-            ›
-          </span>
         </span>
       </Button>
 

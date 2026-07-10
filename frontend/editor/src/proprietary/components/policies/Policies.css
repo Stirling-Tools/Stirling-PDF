@@ -171,7 +171,8 @@
 .pol-row-label {
   flex: 1;
   min-width: 0;
-  font-size: 0.8125rem;
+  /* Match a normal `sm` button label so icon-bearing rows aren't smaller. */
+  font-size: 0.875rem;
   font-weight: 500;
   color: var(--color-text-1);
 }
