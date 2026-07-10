@@ -60,7 +60,9 @@ import stirling.software.proprietary.policy.model.PolicyRunView;
 import stirling.software.proprietary.policy.overview.PoliciesOverviewResponse;
 import stirling.software.proprietary.policy.overview.PolicyOverviewService;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
+import stirling.software.proprietary.policy.source.EditorSource;
 import stirling.software.proprietary.policy.source.SourceAccessGuard;
+import stirling.software.proprietary.policy.source.SourceDocCounter;
 import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.policy.trigger.PolicyTrigger;
@@ -86,6 +88,7 @@ public class PolicyController {
     private final PolicyStore policyStore;
     private final SourceStore sourceStore;
     private final SourceAccessGuard sourceAccessGuard;
+    private final SourceDocCounter docCounter;
     private final PolicyValidator policyValidator;
     private final PolicyAccessGuard policyAccessGuard;
     private final PolicyManagementAuthority policyManagementAuthority;
@@ -112,9 +115,10 @@ public class PolicyController {
             throws IOException {
         requireRunnable(definition);
         PolicyInputs inputs = toInputs(files);
-        String runId =
-                policyRunner.runAdHoc(definition, inputs, PolicyProgressListener.NOOP).runId();
-        return ResponseEntity.accepted().body(new JobResponse<>(true, runId, null));
+        PolicyRunHandle handle =
+                policyRunner.runAdHoc(definition, inputs, PolicyProgressListener.NOOP);
+        recordEditorDocs(inputs);
+        return ResponseEntity.accepted().body(new JobResponse<>(true, handle.runId(), null));
     }
 
     @PostMapping(value = "/run/stream", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -136,6 +140,7 @@ public class PolicyController {
         emitter.onError(e -> log.warn("Policy run SSE emitter error", e));
 
         PolicyRunHandle handle = policyRunner.runAdHoc(definition, inputs, streamListener(emitter));
+        recordEditorDocs(inputs);
         // whenComplete runs on the worker thread after the run finishes, so the terminal event
         // never races the step events.
         handle.completion()
@@ -490,6 +495,17 @@ public class PolicyController {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Pipeline definition has no steps");
         }
+    }
+
+    /**
+     * Ad-hoc runs (AI / one-off pipelines) are still editor activity, so their supplied documents
+     * feed the same virtual editor source as stored editor policies, counted against the caller's
+     * team. A run with no primary documents (generator pipeline) records nothing.
+     */
+    private void recordEditorDocs(PolicyInputs inputs) {
+        docCounter.record(
+                EditorSource.counterKey(sourceAccessGuard.currentTeamId()),
+                inputs.primary().size());
     }
 
     /**

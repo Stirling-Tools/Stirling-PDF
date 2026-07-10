@@ -2,7 +2,10 @@ import { useTranslation } from "react-i18next";
 import { ActionIcon, Button } from "@app/ui";
 import type { SourceView } from "@portal/api/sources";
 import { SourceDetailPanel } from "@portal/components/sources/SourceDetailPanel";
-import { sourceTypeMeta } from "@portal/components/sources/sourceTypes";
+import {
+  EDITOR_SOURCE_TYPE,
+  sourceTypeMeta,
+} from "@portal/components/sources/sourceTypes";
 import "@portal/views/Sources.css";
 import CloseIcon from "@mui/icons-material/Close";
 
@@ -33,6 +36,8 @@ export function SourceDetailCard({
   const { t } = useTranslation();
   const meta = sourceTypeMeta(source.type);
   const paused = source.status === "disabled";
+  // The editor is a built-in source: it has no instance name and can't be edited/paused/deleted.
+  const isEditor = source.type === EDITOR_SOURCE_TYPE;
   return (
     <section className="portal-sources__expanded">
       <header className="portal-sources__expanded-head">
@@ -43,7 +48,9 @@ export function SourceDetailCard({
           {meta.icon}
         </span>
         <div>
-          <h2 className="portal-sources__expanded-title">{source.name}</h2>
+          <h2 className="portal-sources__expanded-title">
+            {isEditor ? t(meta.labelKey) : source.name}
+          </h2>
           <span className="portal-sources__expanded-sub">
             {t("portal.sources.detail.subtitle", {
               type: t(meta.labelKey),
@@ -63,38 +70,39 @@ export function SourceDetailCard({
 
       <SourceDetailPanel source={source} docSeries={docSeries} />
 
-      {readOnly ? (
-        <p className="portal-sources__muted portal-sources__detail-readonly">
-          {t("portal.sources.detail.apiKeyReadOnly")}
-        </p>
-      ) : (
-        <div className="portal-sources__detail-actions">
-          <Button
-            variant="secondary"
-            disabled={busy}
-            onClick={() => onEdit(source)}
-          >
-            {t("portal.sources.detail.edit")}
-          </Button>
-          <Button
-            variant="secondary"
-            disabled={busy}
-            onClick={() => onTogglePause(source)}
-          >
-            {paused
-              ? t("portal.sources.detail.resume")
-              : t("portal.sources.detail.pause")}
-          </Button>
-          <Button
-            accent="danger"
-            variant="secondary"
-            disabled={busy}
-            onClick={() => onDelete(source)}
-          >
-            {t("portal.sources.detail.delete")}
-          </Button>
-        </div>
-      )}
+      {!isEditor &&
+        (readOnly ? (
+          <p className="portal-sources__muted portal-sources__detail-readonly">
+            {t("portal.sources.detail.apiKeyReadOnly")}
+          </p>
+        ) : (
+          <div className="portal-sources__detail-actions">
+            <Button
+              variant="secondary"
+              disabled={busy}
+              onClick={() => onEdit(source)}
+            >
+              {t("portal.sources.detail.edit")}
+            </Button>
+            <Button
+              variant="secondary"
+              disabled={busy}
+              onClick={() => onTogglePause(source)}
+            >
+              {paused
+                ? t("portal.sources.detail.resume")
+                : t("portal.sources.detail.pause")}
+            </Button>
+            <Button
+              accent="danger"
+              variant="secondary"
+              disabled={busy}
+              onClick={() => onDelete(source)}
+            >
+              {t("portal.sources.detail.delete")}
+            </Button>
+          </div>
+        ))}
     </section>
   );
 }

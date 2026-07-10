@@ -6250,7 +6250,7 @@ bodyBefore = "Set"
 title = "Stripe not configured"
 
 [portal.billing.enterpriseUpsell]
-cta = "Build your Enterprise quote"
+cta = "Explore Enterprise"
 description = "Committed volume discounts, air-gapped deployment, custom MSA and security reviews, and 3rd-party distributor partnerships."
 eyebrow = "Volume discount · 1M+ PDFs"
 title = "Stirling Enterprise"
@@ -6315,18 +6315,21 @@ managedTitle = "Managed in Stripe"
 update = "Update"
 
 [portal.billing.pdfsProcessed]
-emptyPeriod = "No metered processing yet this period."
+emptyPeriod = "No processing yet this period."
 eyebrow = "PDFs processed this period"
 legendValue_one = "{{formatted}} PDFs"
 legendValue_other = "{{formatted}} PDFs"
-segbarAriaLabel = "Metered PDFs split by category"
+segbarAriaLabel = "PDFs split by category"
 segmentAgentsDesc = "AI agent actions"
 segmentAgentsLabel = "Agents"
 segmentApiDesc = "Direct API requests"
 segmentApiLabel = "API"
 segmentAutomationDesc = "Automations & pipelines"
 segmentAutomationLabel = "Automation"
-unit = "metered PDFs"
+sizeMultiplier = "{{formatted}} PDFs used a size multiplier"
+summary = "{{unique}} unique · {{units}} meter units · {{avg}} avg per PDF"
+summaryNoRate = "{{unique}} unique · {{units}} meter units"
+unit = "PDFs"
 
 [portal.billing.spendLimit]
 adjustLimit = "Adjust limit"
@@ -6355,6 +6358,8 @@ label = "Projected to exceed."
 
 [portal.billing.spendThisMonth]
 eyebrow = "Spend this month"
+freeRemaining_one = "{{formatted}} free PDF remaining"
+freeRemaining_other = "{{formatted}} free PDFs remaining"
 processed_one = "{{formattedCount}} PDF processed."
 processed_other = "{{formattedCount}} PDFs processed."
 processedWithRate_one = "{{formattedCount}} PDF processed, at {{rate}} each."
@@ -6738,8 +6743,63 @@ description = "This view hit an unexpected error. Try again, or pick another sec
 retry = "Try again"
 title = "Something went wrong on this page"
 
+[portal.home.download]
+back = "Back"
+body = "Download the desktop app or self-host the server."
+done = "Done"
+guide = "Open the {{name}} guide"
+openInBrowser = "Open in browser instead"
+sectionDesktop = "Desktop app"
+sectionSelfHosted = "Self-hosted"
+title = "Install the Stirling PDF Editor"
+
+[portal.home.download.docker]
+detailBody = "Run the official image on your server."
+note = "Opens at :8080. Default login: admin / stirling."
+tagline = "Run the server in a container"
+title = "Docker"
+variantFat = "Fat"
+variantLite = "Ultra-Lite"
+variantStandard = "Standard"
+
+[portal.home.download.kubernetes]
+detailBody = "Install the official Helm chart."
+note = "Add a PVC for /configs to persist settings."
+tagline = "Deploy to a cluster with Helm"
+title = "Kubernetes"
+
+[portal.home.download.linux]
+detailBody = "Native builds for your distribution."
+guideBtn = "View Linux install options"
+note = "AppImage, .deb and .rpm builds are available for common distros."
+tagline = "Native desktop app for your distro"
+title = "Linux"
+
+[portal.home.download.mac]
+altLabel = "Or via Homebrew"
+detailBody = "Run the installer, or use Homebrew."
+downloadBtn = "Download for macOS"
+tagline = "Native app for Apple silicon and Intel"
+title = "macOS"
+
+[portal.home.download.manual]
+detailBody = "Run the .jar on a bare metal server."
+downloadBtn = "Download the .jar"
+note = "Requires Java 21+. Opens at :8080; default login admin / stirling."
+runLabel = "Then run it"
+tagline = "Run the .jar on a bare metal server"
+title = "Manual server setup"
+
+[portal.home.download.windows]
+altLabel = "Or via winget"
+detailBody = "Run the installer, or use a package manager."
+downloadBtn = "Download installer"
+tagline = "Native app for Microsoft Windows"
+title = "Windows"
+
 [portal.home.editor]
 activeUsers = "{{n}} active"
+install = "Install the editor"
 invite = "Invite teammates"
 name = "Stirling PDF Editor"
 open = "Open in browser"
@@ -6755,12 +6815,6 @@ afternoon = "Good afternoon"
 evening = "Good evening"
 morning = "Good morning"
 
-[portal.home.onboarding]
-dismiss = "Dismiss setup"
-notStarted = "Not started"
-progress = "{{done}} of {{total}} done"
-title = "Finish setting up"
-
 [portal.home.onboarding.enterprise]
 body = "Org-wide SSO + SCIM + RBAC, committed volume pricing, and air-gapped deployment."
 cta = "Start Trial"
@@ -6769,18 +6823,16 @@ lead = "For 250+ employees."
 tag = "Enterprise"
 
 [portal.home.onboarding.steps.editor]
-blurb = "Deploy the desktop app, free forever."
-title = "Download the PDF Editor"
+blurb = "Install the desktop app or self-host"
+title = "Download the editor"
+
+[portal.home.onboarding.steps.invite]
+blurb = "Bring your team into the secure workspace"
+title = "Invite teammates"
 
 [portal.home.onboarding.steps.policies]
 blurb = "{{active}} active · {{recommended}} recommended"
-chip = "{{active}} active"
-title = "Turn on policies"
-
-[portal.home.onboarding.steps.sources]
-blurb = "{{connected}} connected · every PDF governed where it lands"
-chip = "{{connected}} connected"
-title = "Connect your sources"
+title = "Confirm your policies"
 
 [portal.home.quickActions]
 subtitle = "Top tasks for today"
@@ -7182,26 +7234,6 @@ settings = "Settings"
 sources = "Sources"
 usage = "Usage & Billing"
 users = "Users"
-
-[portal.notifications]
-markAllRead = "Mark all read"
-title = "Notifications"
-viewAll = "View all"
-
-[portal.notifications.ariaLabel]
-none = "Notifications, no unread"
-unread_one = "Notifications, {{count}} unread"
-unread_other = "Notifications, {{count}} unread"
-
-[portal.notifications.count]
-allRead = "all read"
-loading = "loading"
-new_one = "{{count}} new"
-new_other = "{{count}} new"
-
-[portal.notifications.empty]
-description = "No new notifications."
-title = "You're all caught up"
 
 [portal.pipelines]
 subtitle = "Every automated document pipeline on the backend: an ordered chain of operations over a set of sources, run on a trigger. Click a row for its steps and sources."
@@ -7883,26 +7915,11 @@ admin = "Admin"
 [portal.settings.sections]
 account-link = "Account link"
 
-[portal.shell.header]
-accountFallback = "Account"
-accountMenu = "Account menu"
-darkMode = "Dark mode"
-lightMode = "Light mode"
-search = "Search"
-searchPlaceholder = "Search…"
-signOut = "Sign out"
-switchToDark = "Switch to dark theme"
-switchToLight = "Switch to light theme"
-
 [portal.shell.sidebar]
 appEditor = "Editor"
 appProcessor = "Processor"
 brandSuffix = "Stirling Processor"
-docsCount = "{{docs}} docs"
 linkAccount = "Link Stirling account"
-planEditor = "Editor plan"
-planEnterprise = "Enterprise plan"
-planProcessor = "Processor plan"
 primaryNav = "Primary navigation"
 switchApp = "Switch app"
 
@@ -7963,7 +7980,9 @@ usedBy = "Policies"
 label = "API key"
 
 [portal.sources.types.editor]
+description = "Documents your team has processed in the editor, across policy and AI runs."
 label = "Editor"
+noPolicies = "No policies run from the editor yet."
 
 [portal.sources.types.folder]
 description = "Watch a directory on the server for new documents."
@@ -8120,14 +8139,11 @@ unlimited = "{{used}} · Unlimited"
 
 [portal.welcome]
 ariaLabel = "Welcome to Stirling PDF"
-badge = "Open-source"
-installEditor = "Install the Editor"
-inviteTeammates = "Invite teammates"
+install = "Install the editor"
+invite = "Invite teammates"
 openInBrowser = "Open in browser"
-perks = "Free forever · Self-hostable"
-subtitle = "The world's most secure PDF Editor is free for teams of all sizes. Includes 60+ PDF operations and SSO."
-title = "Welcome to"
-titleAccent = "Stirling PDF"
+productName = "PDF Editor"
+stats = "30M downloads · 60+ PDF operations · Free forever"
 
 [printFile]
 title = "Print File"
@@ -8929,6 +8945,12 @@ dismiss = "Dismiss"
 intro = "Enable user authentication, team management, and workspace features for your organization."
 learnMore = "Learn more in documentation"
 title = "For System Administrators"
+
+[settings.general.loginLanding]
+description = "Choose which app opens when you sign in to Stirling Cloud."
+editor = "Editor"
+processor = "Processor"
+title = "After signing in"
 
 [settings.general.mode]
 fullscreen = "Fullscreen"
