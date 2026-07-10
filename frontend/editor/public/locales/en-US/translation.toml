@@ -7937,7 +7937,6 @@ description = "Pull documents from an Amazon S3 or S3-compatible bucket."
 label = "Amazon S3"
 
 [portal.sources.types.s3.fields.accessKeyId]
-helperText = "Leave blank, along with the secret access key, to use the server's own AWS credentials."
 label = "Access key ID"
 
 [portal.sources.types.s3.fields.bucket]

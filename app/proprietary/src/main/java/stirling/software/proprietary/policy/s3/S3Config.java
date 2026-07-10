@@ -6,8 +6,9 @@ import java.util.Map;
 
 /**
  * Connection settings shared by the S3 input source and output sink, parsed from a spec's options
- * map. Credentials are both-or-neither; when absent the server's own AWS credential chain is used.
- * {@code snapshot} is input-only and ignored by the sink.
+ * map. Credentials are required: there is deliberately no fallback to the server's own AWS
+ * credential chain, so user-supplied config can never borrow the host's identity. {@code snapshot}
+ * is input-only and ignored by the sink.
  */
 public record S3Config(
         String bucket,
@@ -41,10 +42,9 @@ public record S3Config(
         String endpoint = validEndpoint(trimmed(options.get(ENDPOINT_OPTION)));
         String accessKeyId = trimmed(options.get(ACCESS_KEY_ID_OPTION));
         String secretAccessKey = trimmed(options.get(SECRET_ACCESS_KEY_OPTION));
-        if ((accessKeyId == null) != (secretAccessKey == null)) {
+        if (accessKeyId == null || secretAccessKey == null) {
             throw new IllegalArgumentException(
-                    "s3 config requires 'accessKeyId' and 'secretAccessKey' together, or neither"
-                            + " to use the server's own AWS credentials");
+                    "s3 config requires an 'accessKeyId' and 'secretAccessKey'");
         }
         String mode = trimmed(options.get(MODE_OPTION));
         if (mode != null && !MODE_CONSUME.equals(mode) && !MODE_SNAPSHOT.equals(mode)) {

@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -137,7 +138,7 @@ class S3InputSourceTest {
     @Test
     void snapshotReadsStatelesslyEverySweep() throws IOException {
         listingReturns(object("doc.pdf", "\"etag-1\""));
-        InputSpec spec = new InputSpec("s3", Map.of("bucket", BUCKET, "mode", "snapshot"));
+        InputSpec spec = new InputSpec("s3", options(Map.of("mode", "snapshot")));
 
         List<ResolvedInput> first = source.resolve(spec, ctx);
         first.get(0).onComplete().accept(true);
@@ -219,9 +220,14 @@ class S3InputSourceTest {
 
     @Test
     void validateRejectsBadConfig() {
+        // No bucket.
         assertThrows(
                 IllegalArgumentException.class,
                 () -> source.validate(new InputSpec("s3", Map.of())));
+        // Credentials are required, never the server's own identity - together and individually.
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> source.validate(new InputSpec("s3", Map.of("bucket", BUCKET))));
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -230,20 +236,13 @@ class S3InputSourceTest {
                                         "s3", Map.of("bucket", BUCKET, "accessKeyId", "AKIA"))));
         assertThrows(
                 IllegalArgumentException.class,
-                () ->
-                        source.validate(
-                                new InputSpec("s3", Map.of("bucket", BUCKET, "mode", "sideways"))));
+                () -> source.validate(new InputSpec("s3", options(Map.of("mode", "sideways")))));
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                         source.validate(
                                 new InputSpec(
-                                        "s3",
-                                        Map.of(
-                                                "bucket",
-                                                BUCKET,
-                                                "endpoint",
-                                                "ftp://example.com"))));
+                                        "s3", options(Map.of("endpoint", "ftp://example.com")))));
     }
 
     @Test
@@ -251,13 +250,20 @@ class S3InputSourceTest {
         when(s3Client.listObjectsV2(any(ListObjectsV2Request.class)))
                 .thenThrow(SdkClientException.create("connection refused"));
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> source.validate(new InputSpec("s3", Map.of("bucket", BUCKET))));
+        assertThrows(IllegalArgumentException.class, () -> source.validate(spec()));
     }
 
     private static InputSpec spec() {
-        return new InputSpec("s3", Map.of("bucket", BUCKET));
+        return new InputSpec("s3", options(Map.of()));
+    }
+
+    /** The required options (bucket + credentials) plus any extras under test. */
+    private static Map<String, Object> options(Map<String, Object> extra) {
+        Map<String, Object> options = new HashMap<>(extra);
+        options.put("bucket", BUCKET);
+        options.put("accessKeyId", "AKIAEXAMPLE");
+        options.put("secretAccessKey", "shh");
+        return options;
     }
 
     private static S3Object object(String key, String eTag) {

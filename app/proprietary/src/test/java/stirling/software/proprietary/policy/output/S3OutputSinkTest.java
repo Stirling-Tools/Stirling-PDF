@@ -182,10 +182,7 @@ class S3OutputSinkTest {
                             return PutObjectResponse.builder().eTag(quotedMd5("data")).build();
                         });
 
-        sink.deliver(
-                DELIVERY,
-                List.of(output("doc.pdf", "data")),
-                new OutputSpec("s3", Map.of("bucket", BUCKET, "prefix", "processed")));
+        sink.deliver(DELIVERY, List.of(output("doc.pdf", "data")), spec("processed"));
 
         assertEquals("processed/doc.pdf", puts.get(0).key());
     }
@@ -195,6 +192,10 @@ class S3OutputSinkTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> sink.validate(new OutputSpec("s3", Map.of())));
+        // Credentials are required, never the server's own identity.
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> sink.validate(new OutputSpec("s3", Map.of("bucket", BUCKET))));
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -211,7 +212,21 @@ class S3OutputSinkTest {
     }
 
     private static OutputSpec spec() {
-        return new OutputSpec("s3", Map.of("bucket", BUCKET, "prefix", "processed/"));
+        return spec("processed/");
+    }
+
+    private static OutputSpec spec(String prefix) {
+        return new OutputSpec(
+                "s3",
+                Map.of(
+                        "bucket",
+                        BUCKET,
+                        "prefix",
+                        prefix,
+                        "accessKeyId",
+                        "AKIAEXAMPLE",
+                        "secretAccessKey",
+                        "shh"));
     }
 
     private static String identity(String key) {

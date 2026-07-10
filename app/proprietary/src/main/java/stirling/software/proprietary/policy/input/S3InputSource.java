@@ -38,8 +38,8 @@ import software.amazon.awssdk.services.s3.model.S3Object;
  * version gate come from {@link S3Identities}, so the steady-state sweep never downloads content.
  * Options (see {@link S3Config}): "bucket" (required), "region" (default us-east-1), "prefix" (only
  * keys starting with it are read), "endpoint" (S3-compatible stores such as MinIO; path-style
- * addressing is used automatically), "accessKeyId" and "secretAccessKey" (both or neither; when
- * absent the server's own AWS credential chain is used), and "mode" which is "consume" (default: a
+ * addressing is used automatically), "accessKeyId" and "secretAccessKey" (required; requests are
+ * never signed with the server's own AWS identity), and "mode" which is "consume" (default: a
  * processed object is deleted once every policy that claimed it has settled successfully and it is
  * still the version that ran; failures stay in place and are not retried until they change) or
  * "snapshot" (stateless, every run sees the full set). Keys ending in "/" (folder placeholders) and

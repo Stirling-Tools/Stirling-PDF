@@ -352,8 +352,8 @@ export function PipelineBuilder() {
   const s3OutputValid =
     outputMode !== "s3" ||
     (outputS3.bucket.trim() !== "" &&
-      (outputS3.accessKeyId.trim() === "") ===
-        (outputS3.secretAccessKey.trim() === ""));
+      outputS3.accessKeyId.trim() !== "" &&
+      outputS3.secretAccessKey.trim() !== "");
   const outputValid =
     (outputMode !== "folder" || outputDirectory.trim() !== "") && s3OutputValid;
   const canSave =
@@ -1043,9 +1043,7 @@ export function PipelineBuilder() {
           </FormField>
           <FormField
             label={t("portal.sources.types.s3.fields.accessKeyId.label")}
-            helperText={t(
-              "portal.sources.types.s3.fields.accessKeyId.helperText",
-            )}
+            required
           >
             <Input
               value={outputS3.accessKeyId}
@@ -1054,6 +1052,7 @@ export function PipelineBuilder() {
           </FormField>
           <FormField
             label={t("portal.sources.types.s3.fields.secretAccessKey.label")}
+            required
           >
             <Input
               type="password"

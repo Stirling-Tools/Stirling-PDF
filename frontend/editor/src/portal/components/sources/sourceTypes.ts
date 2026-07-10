@@ -165,12 +165,13 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
         key: "accessKeyId",
         labelKey: "portal.sources.types.s3.fields.accessKeyId.label",
         control: "text",
-        helperTextKey: "portal.sources.types.s3.fields.accessKeyId.helperText",
+        required: true,
       },
       {
         key: "secretAccessKey",
         labelKey: "portal.sources.types.s3.fields.secretAccessKey.label",
         control: "password",
+        required: true,
       },
       {
         key: "endpoint",

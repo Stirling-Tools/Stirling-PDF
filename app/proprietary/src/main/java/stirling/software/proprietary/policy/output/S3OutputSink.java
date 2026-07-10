@@ -184,6 +184,10 @@ public class S3OutputSink implements PolicyOutputSink {
             } catch (S3Exception e) {
                 forgetRecorded(delivery, identity, predictedGate);
                 if (conditionalPuts && e.statusCode() == 412) {
+                    // Known edge: if our own PUT succeeded server-side but the response was lost
+                    // and the SDK retried, that retry 412s here too - we then upload under the
+                    // next name, leaving the first object row-less (claimable, single duplicate).
+                    // Requires a response-lost network flake at exactly this moment; accepted.
                     log.debug("Output key {} taken concurrently; re-picking", identity);
                     continue;
                 }

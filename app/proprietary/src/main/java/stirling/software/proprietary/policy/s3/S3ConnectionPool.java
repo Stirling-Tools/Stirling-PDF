@@ -15,7 +15,6 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.cluster.s3.S3Clients;
 
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.regions.Region;
@@ -26,9 +25,11 @@ import software.amazon.awssdk.services.s3.S3Configuration;
 /**
  * Long-lived {@link S3Client}s for policy S3 sources and sinks, one per distinct {@link S3Config},
  * closed at shutdown. An edited spec simply maps to a new entry, and a stale entry costs nothing
- * (the URL-connection HTTP client holds no pooled sockets or threads). Endpoints are guarded
- * against private addresses before a client is ever built, since they come from portal users rather
- * than the operator.
+ * (the URL-connection HTTP client holds no pooled sockets or threads). Clients sign exclusively
+ * with the spec's own credentials - there is deliberately no fallback to the server's AWS
+ * credential chain, so user-supplied config can never borrow the host's identity. Endpoints are
+ * guarded against private addresses before a client is ever built, since they come from portal
+ * users rather than the operator.
  */
 @Service
 @ConditionalOnBooleanProperty(name = "policies.enabled")
@@ -90,17 +91,13 @@ public class S3ConnectionPool {
                         .serviceConfiguration(
                                 S3Configuration.builder()
                                         .pathStyleAccessEnabled(config.endpoint() != null)
-                                        .build());
+                                        .build())
+                        .credentialsProvider(
+                                StaticCredentialsProvider.create(
+                                        AwsBasicCredentials.create(
+                                                config.accessKeyId(), config.secretAccessKey())));
         if (config.endpoint() != null) {
             builder.endpointOverride(URI.create(config.endpoint()));
-        }
-        if (config.accessKeyId() != null) {
-            builder.credentialsProvider(
-                    StaticCredentialsProvider.create(
-                            AwsBasicCredentials.create(
-                                    config.accessKeyId(), config.secretAccessKey())));
-        } else {
-            builder.credentialsProvider(DefaultCredentialsProvider.create());
         }
         return builder.build();
     }
