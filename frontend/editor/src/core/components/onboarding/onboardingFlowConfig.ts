@@ -158,13 +158,6 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
     hero: { type: "dual-icon" },
     buttons: [
       {
-        key: "desktop-back",
-        type: "icon",
-        icon: "chevron-left",
-        group: "left",
-        action: "prev",
-      },
-      {
         key: "desktop-skip",
         type: "button",
         label: "onboarding.buttons.skipForNow",

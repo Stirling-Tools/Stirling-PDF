@@ -86,7 +86,6 @@ export const SLIDE_DEFINITIONS: Record<SlideId, SlideDefinition> = {
       DesktopInstallSlide({ osLabel, osUrl, osOptions, onDownloadUrlChange }),
     hero: { type: "dual-icon" },
     buttons: [
-      { ...BACK_BUTTON, key: "desktop-back" },
       {
         key: "desktop-skip",
         type: "button",

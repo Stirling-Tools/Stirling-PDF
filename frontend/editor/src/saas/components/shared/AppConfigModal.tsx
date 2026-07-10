@@ -10,6 +10,7 @@ import LocalIcon from "@app/components/shared/LocalIcon";
 import Overview from "@app/components/shared/config/configSections/Overview";
 import { createSaasConfigNavSections } from "@app/components/shared/config/saasConfigNavSections";
 import { NavKey } from "@app/components/shared/config/types";
+import { consumePendingSettingsNav } from "@app/utils/appSettings";
 import { stripBasePath, withBasePath } from "@app/constants/app";
 import { COOKIE_CONSENT_SCROLL_SHARD } from "@app/hooks/useCookieConsent";
 import "@app/components/shared/AppConfigModal.css";
@@ -31,6 +32,14 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [active, setActive] = useState<NavKey>("overview");
   const [notice, setNotice] = useState<string | null>(null);
+
+  // The modal mounts lazily on first open, so a synchronous `appConfig:navigate`
+  // dispatched by the opener can arrive before the listener below is attached.
+  // Consume any section stashed by openAppSettings on mount to land on it.
+  useEffect(() => {
+    const pending = consumePendingSettingsNav();
+    if (pending) setActive(pending);
+  }, []);
 
   // Check if user can access billing features (non-anonymous users only)
   const isAnonymous = user ? isUserAnonymous(user) : false;
@@ -122,8 +131,9 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({ opened, onClose }) => {
         isDev,
         isAnonymous,
         t,
+        onRequestClose: onClose,
       }),
-    [openLogoutConfirm, isDev, isAnonymous, t],
+    [openLogoutConfirm, isDev, isAnonymous, t, onClose],
   );
 
   const activeLabel = useMemo(() => {

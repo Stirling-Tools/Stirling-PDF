@@ -180,6 +180,7 @@ export function useOnboardingOrchestrator(
   );
   const [isPaused, setIsPaused] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [manuallyStarted, setManuallyStarted] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(-1);
   const migrationDone = useRef(false);
   const initialIndexSet = useRef(false);
@@ -286,23 +287,9 @@ export function useOnboardingOrchestrator(
   useEffect(() => {
     if (configLoading || !adminStatusResolved) return;
 
-    // If there are no steps to show, mark initialized/completed baseline
-    if (activeFlow.length === 0) {
-      setCurrentStepIndex(0);
-      initialIndexSet.current = true;
-      return;
-    }
 
-    // If onboarding has been completed, don't show it
-    if (isOnboardingCompleted()) {
-      setCurrentStepIndex(activeFlow.length);
-      initialIndexSet.current = true;
-      return;
-    }
-
-    // Start from the beginning
     if (!initialIndexSet.current) {
-      setCurrentStepIndex(0);
+      setCurrentStepIndex(activeFlow.length);
       initialIndexSet.current = true;
     }
   }, [activeFlow, configLoading, adminStatusResolved]);
@@ -323,6 +310,7 @@ export function useOnboardingOrchestrator(
     !isPaused &&
     !isComplete &&
     isInitialized &&
+    manuallyStarted &&
     currentStep !== null;
   const isLoading =
     configLoading ||
@@ -386,6 +374,7 @@ export function useOnboardingOrchestrator(
       if (index !== -1) {
         setCurrentStepIndex(index);
         setIsPaused(false);
+        setManuallyStarted(true);
       }
     },
     [activeFlow],

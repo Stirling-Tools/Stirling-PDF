@@ -4938,11 +4938,11 @@ text = "Decide how you want the text output formatted:"
 title = "Output"
 
 [onboarding]
-activeFiles = "The <strong>Active Files</strong> view shows all of the PDFs you have loaded into the tool, and allows you to select which ones to process."
+activeFiles = "The <strong>Active Files</strong> view shows all of the PDFs you have loaded into the tool."
 allTools = "This is the <strong>Tools</strong> panel, where you can browse and select from all available PDF tools."
 close = "Close"
 cropSettings = "Now that we've selected the file we want crop, we can configure the Crop tool to choose the area that we want to crop the PDF to."
-fileCheckbox = "Clicking one of the files selects it for processing. You can select multiple files for batch operations."
+fileCheckbox = "Files on the workbench are selected for processing. You can select multiple files for batch operations using the left files sidebar."
 fileReplacement = "The modified file will replace the original file in the Workbench automatically, allowing you to easily run it through more tools."
 filesButton = "The <strong>Files</strong> button on the Quick Access bar allows you to upload PDFs to use the tools on."
 fileSources = "You can upload new files or access recent files from here. For the tour, we'll just use a sample file."
@@ -4963,6 +4963,26 @@ next = "Next →"
 showMeAround = "Show me around"
 skipForNow = "Skip for now"
 skipTheTour = "Skip the tour"
+
+[onboarding.checklist]
+title = "Set up Stirling PDF"
+dismiss = "Dismiss"
+
+[onboarding.checklist.downloadDesktop]
+title = "Download Stirling for Desktop"
+description = "Run Stirling natively on your machine"
+
+[onboarding.checklist.inviteTeam]
+title = "Invite team members"
+description = "Collaborate with your team"
+
+[onboarding.checklist.takeTour]
+title = "Take the tour"
+description = "See how Stirling works in a quick walkthrough"
+
+[onboarding.checklist.shareAnalytics]
+title = "Share anonymous usage data"
+description = "Help improve Stirling"
 
 [onboarding.desktopInstall]
 body = "Stirling works best as a desktop app. You can use it offline, access documents faster, and make edits locally on your computer."

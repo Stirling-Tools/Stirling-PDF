@@ -7,7 +7,6 @@ import { AppShell } from "@portal/components/AppShell";
 import { AssistantMount } from "@portal/components/AssistantMount";
 import { SearchModal } from "@portal/components/SearchModal";
 import { SettingsModal } from "@portal/components/SettingsModal";
-import PortalOnboarding from "@portal/components/onboarding/PortalOnboarding";
 import { ViewRouter } from "@portal/ViewRouter";
 
 /**
@@ -82,7 +81,6 @@ export function PortalChrome() {
       <AssistantMount />
       <SearchModal />
       <SettingsHost />
-      <PortalOnboarding />
     </>
   );
 }

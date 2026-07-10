@@ -46,6 +46,7 @@ import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerMo
 import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
 import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
 import { DeleteFilesDialog } from "@app/components/filesPage/DeleteFilesDialog";
+import { SidebarChecklistSlot } from "@app/components/shared/SidebarChecklistSlot";
 import {
   deleteServerFile,
   type DeleteScope,
@@ -1143,6 +1144,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           onClose={() => setDeleteTarget(null)}
           onConfirm={handleConfirmSidebarDelete}
         />
+
+        {/* Getting-started checklist, floating above the footer (SaaS only). */}
+        <SidebarChecklistSlot collapsed={collapsed} />
 
         {/* Bottom bar: user name + settings */}
         <Tooltip

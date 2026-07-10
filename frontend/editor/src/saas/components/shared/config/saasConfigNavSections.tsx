@@ -9,6 +9,7 @@ import GeneralSection from "@app/components/shared/config/configSections/General
 import PasswordSecurity from "@app/components/shared/config/configSections/PasswordSecurity";
 import ApiKeys from "@app/components/shared/config/configSections/ApiKeys";
 import McpSection from "@app/components/shared/config/configSections/McpSection";
+import HelpSection from "@app/components/shared/config/configSections/HelpSection";
 import LegalSection from "@app/components/shared/config/configSections/LegalSection";
 import {
   createCloudBillingSection,
@@ -21,6 +22,8 @@ interface CreateSaasConfigNavSectionsOptions {
   isDev?: boolean;
   isAnonymous?: boolean;
   t: TFunction<"translation", undefined>;
+  /** Close the settings modal — the Help tours need it to start the tour. */
+  onRequestClose?: () => void;
 }
 
 function ensurePreferencesSection(
@@ -140,6 +143,37 @@ function appendMcpSection(
   );
 }
 
+function appendHelpSection(
+  sections: ConfigNavSection[],
+  t: TFunction<"translation", undefined>,
+  onRequestClose: () => void,
+): ConfigNavSection[] {
+  const hasHelp = sections.some((section) =>
+    section.items.some((item) => item.key === "help"),
+  );
+
+  if (hasHelp) {
+    return sections;
+  }
+
+  return [
+    ...sections,
+    {
+      title: t("settings.help.title", "Help"),
+      items: [
+        {
+          key: "help" as const,
+          label: t("settings.help.label", "Tours"),
+          icon: "help-rounded",
+          component: (
+            <HelpSection isAdmin={false} onRequestClose={onRequestClose} />
+          ),
+        },
+      ],
+    },
+  ];
+}
+
 // Legal links (privacy policy, terms, etc.). Shown to anonymous users too —
 // it's public information.
 function appendLegalSection(
@@ -173,7 +207,12 @@ function appendLegalSection(
 export function createSaasConfigNavSections(
   Overview: OverviewComponent,
   onLogoutClick: () => void,
-  { isDev = false, isAnonymous = false, t }: CreateSaasConfigNavSectionsOptions,
+  {
+    isDev = false,
+    isAnonymous = false,
+    t,
+    onRequestClose = () => {},
+  }: CreateSaasConfigNavSectionsOptions,
 ): ConfigNavSection[] {
   const baseSections = createCoreConfigNavSections(false, false, false);
 
@@ -227,6 +266,7 @@ export function createSaasConfigNavSections(
     sections = appendBillingSection(sections, t);
   }
 
+  sections = appendHelpSection(sections, t, onRequestClose);
   sections = appendLegalSection(sections, t);
 
   if (isDev) {
