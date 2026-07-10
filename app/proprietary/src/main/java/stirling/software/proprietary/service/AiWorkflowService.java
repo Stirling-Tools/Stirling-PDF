@@ -156,33 +156,42 @@ public class AiWorkflowService {
             throws IOException {
         validateRequest(request);
 
-        // Key by opaque file id, not filename. Filenames aren't guaranteed unique across an
-        // upload (users can rotate the same 'scan.pdf' twice), and the engine identifies files
-        // by id in every response shape that asks Java to look a file up again.
-        Map<String, MultipartFile> filesById = new LinkedHashMap<>();
-        List<AiFile> files = new ArrayList<>();
-        for (AiWorkflowFileInput fileInput : request.getFileInputs()) {
-            MultipartFile multipartFile = fileInput.getFileInput();
-            AiFile aiFile =
-                    new AiFile(
-                            fileIdStrategy.idFor(multipartFile),
-                            multipartFile.getOriginalFilename());
-            filesById.put(aiFile.getId(), multipartFile);
-            files.add(aiFile);
-        }
+        // One AI orchestration = one automation run. Scope a run id (on whichever thread runs
+        // orchestrate — request thread for sync, stream-executor for streaming) so every tool
+        // sub-step it dispatches via PolicyExecutor → InternalApiClient groups into one charge.
+        try (stirling.software.common.service.AutomationRunContext.Scope ignored =
+                stirling.software.common.service.AutomationRunContext.open(
+                        java.util.UUID.randomUUID().toString())) {
 
-        WorkflowTurnRequest initialRequest = new WorkflowTurnRequest();
-        initialRequest.setUserMessage(request.getUserMessage().trim());
-        initialRequest.setFiles(files);
-        initialRequest.setConversationHistory(new ArrayList<>(request.getConversationHistory()));
-        initialRequest.setEnabledEndpoints(endpointResolver.getEnabledEndpointUrls());
-        listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.ANALYZING));
+            // Key by opaque file id, not filename. Filenames aren't guaranteed unique across an
+            // upload (users can rotate the same 'scan.pdf' twice), and the engine identifies files
+            // by id in every response shape that asks Java to look a file up again.
+            Map<String, MultipartFile> filesById = new LinkedHashMap<>();
+            List<AiFile> files = new ArrayList<>();
+            for (AiWorkflowFileInput fileInput : request.getFileInputs()) {
+                MultipartFile multipartFile = fileInput.getFileInput();
+                AiFile aiFile =
+                        new AiFile(
+                                fileIdStrategy.idFor(multipartFile),
+                                multipartFile.getOriginalFilename());
+                filesById.put(aiFile.getId(), multipartFile);
+                files.add(aiFile);
+            }
 
-        WorkflowState state = new WorkflowState.Pending(initialRequest);
-        while (state instanceof WorkflowState.Pending pending) {
-            state = advance(pending.request(), filesById, listener);
+            WorkflowTurnRequest initialRequest = new WorkflowTurnRequest();
+            initialRequest.setUserMessage(request.getUserMessage().trim());
+            initialRequest.setFiles(files);
+            initialRequest.setConversationHistory(
+                    new ArrayList<>(request.getConversationHistory()));
+            initialRequest.setEnabledEndpoints(endpointResolver.getEnabledEndpointUrls());
+            listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.ANALYZING));
+
+            WorkflowState state = new WorkflowState.Pending(initialRequest);
+            while (state instanceof WorkflowState.Pending pending) {
+                state = advance(pending.request(), filesById, listener);
+            }
+            return ((WorkflowState.Terminal) state).response();
         }
-        return ((WorkflowState.Terminal) state).response();
     }
 
     private WorkflowState advance(

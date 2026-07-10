@@ -71,6 +71,18 @@ public class PipelineProcessor {
 
     PipelineResult runPipelineAgainstFiles(List<Resource> outputFiles, PipelineConfig config)
             throws Exception {
+        // One pipeline execution = one automation run. Scope a run id so every tool sub-step
+        // dispatched via InternalApiClient groups into a single charge on the SaaS billing side
+        // (see AutomationRunContext); pipeline steps run synchronously on this thread.
+        try (stirling.software.common.service.AutomationRunContext.Scope ignored =
+                stirling.software.common.service.AutomationRunContext.open(
+                        java.util.UUID.randomUUID().toString())) {
+            return runPipelineAgainstFilesInternal(outputFiles, config);
+        }
+    }
+
+    private PipelineResult runPipelineAgainstFilesInternal(
+            List<Resource> outputFiles, PipelineConfig config) throws Exception {
         PipelineResult result = new PipelineResult();
 
         ByteArrayOutputStream logStream = new ByteArrayOutputStream();

@@ -33,6 +33,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.service.AutomationRunContext;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.security.database.repository.UserRepository;
@@ -284,13 +285,18 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
         request.setAttribute(ATTR_INPUT_BYTES, totalInputBytes);
         request.setAttribute(ATTR_TOOL_ID, resolveToolId(request));
 
+        // Automation-run correlation id set by the orchestrator (pipeline / policy / AI-workflow)
+        // and propagated by InternalApiClient. Null for a direct one-off call → its own charge.
+        String headerRunId = request.getHeader(AutomationRunContext.RUN_ID_HEADER);
+        String runId = (headerRunId != null && !headerRunId.isBlank()) ? headerRunId : null;
         ChargeContext ctx =
                 new ChargeContext(
                         currentUser.getId(),
                         currentUser.getTeam() == null ? null : currentUser.getTeam().getId(),
                         determineSource(request, auth),
                         ProcessType.SINGLE_TOOL,
-                        category);
+                        category,
+                        runId);
 
         ChargeOutcome outcome;
         try {

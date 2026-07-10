@@ -199,63 +199,79 @@ public class PolicyEngine {
             PolicyProgressListener listener,
             CompletableFuture<PolicyRun> completion) {
         String runId = run.getRunId();
-        try {
-            run.markRunning();
-            PolicyExecutionResult result =
-                    stepExecutor.execute(run.getDefinition(), inputs, listener);
-            OutputSpec output = run.getDefinition().output();
-            List<ResultFile> outputs =
-                    sinkFor(output)
-                            .deliver(
-                                    new OutputDelivery(runId, run.getPolicyId()),
-                                    result.files(),
-                                    output);
-            taskManager.setMultipleFileResults(runId, outputs);
-            taskManager.setComplete(runId);
-            run.complete(outputs);
-        } catch (PolicyInputRequiredException e) {
-            // Expected path: suspend rather than fail. Persist intermediates as fileIds so the run
-            // can resume after this worker thread is gone.
-            WaitState wait = suspend(e);
-            run.waitForInput(wait);
-            taskManager.addNote(runId, "Waiting for input: " + e.getMessage());
-        } catch (InternalApiTimeoutException e) {
-            String message = toolTimeoutMessage(e);
-            log.error(
-                    "Policy run {} timed out on {}: {}",
-                    runId,
-                    e.getEndpointPath(),
-                    e.getMessage());
-            run.fail(message);
-            taskManager.setError(runId, message);
-        } catch (RestClientResponseException e) {
-            // A downstream tool call returned an error status. When it's a structured entitlement
-            // response (401/402 with a JSON `error` sentinel), surface that code onto the run so
-            // the
-            // client can react — e.g. pop the usage-limit modal — instead of only seeing a generic
-            // failure. We don't interpret the code here (that would couple this module to the saas
-            // billing layer); we just pass it through for the client to map. Other statuses fall
-            // through to the generic failure below.
-            String code = DownstreamEntitlementError.extractCode(e);
-            if (code != null) {
-                log.info("Policy run {} blocked by downstream entitlement gate ({})", runId, code);
-                String message = "Usage limit reached";
-                run.failWithCode(message, code, DownstreamEntitlementError.extractSubscribed(e));
-                taskManager.setError(runId, message);
-            } else {
-                String message = "Policy run failed: " + e.getMessage();
-                log.error("Policy run {} failed (downstream HTTP error)", runId, e);
+        // One policy run = one automation run. Scope the run id on this worker thread (the async
+        // hop already happened) so every tool sub-step dispatched via InternalApiClient groups into
+        // a single charge, and two separate policy runs on the same document stay distinct charges.
+        try (stirling.software.common.service.AutomationRunContext.Scope runScope =
+                stirling.software.common.service.AutomationRunContext.open(runId)) {
+            try {
+                run.markRunning();
+                PolicyExecutionResult result =
+                        stepExecutor.execute(run.getDefinition(), inputs, listener);
+                OutputSpec output = run.getDefinition().output();
+                List<ResultFile> outputs =
+                        sinkFor(output)
+                                .deliver(
+                                        new OutputDelivery(runId, run.getPolicyId()),
+                                        result.files(),
+                                        output);
+                taskManager.setMultipleFileResults(runId, outputs);
+                taskManager.setComplete(runId);
+                run.complete(outputs);
+            } catch (PolicyInputRequiredException e) {
+                // Expected path: suspend rather than fail. Persist intermediates as fileIds so the
+                // run
+                // can resume after this worker thread is gone.
+                WaitState wait = suspend(e);
+                run.waitForInput(wait);
+                taskManager.addNote(runId, "Waiting for input: " + e.getMessage());
+            } catch (InternalApiTimeoutException e) {
+                String message = toolTimeoutMessage(e);
+                log.error(
+                        "Policy run {} timed out on {}: {}",
+                        runId,
+                        e.getEndpointPath(),
+                        e.getMessage());
                 run.fail(message);
                 taskManager.setError(runId, message);
+            } catch (RestClientResponseException e) {
+                // A downstream tool call returned an error status. When it's a structured
+                // entitlement
+                // response (401/402 with a JSON `error` sentinel), surface that code onto the run
+                // so
+                // the
+                // client can react — e.g. pop the usage-limit modal — instead of only seeing a
+                // generic
+                // failure. We don't interpret the code here (that would couple this module to the
+                // saas
+                // billing layer); we just pass it through for the client to map. Other statuses
+                // fall
+                // through to the generic failure below.
+                String code = DownstreamEntitlementError.extractCode(e);
+                if (code != null) {
+                    log.info(
+                            "Policy run {} blocked by downstream entitlement gate ({})",
+                            runId,
+                            code);
+                    String message = "Usage limit reached";
+                    run.failWithCode(
+                            message, code, DownstreamEntitlementError.extractSubscribed(e));
+                    taskManager.setError(runId, message);
+                } else {
+                    String message = "Policy run failed: " + e.getMessage();
+                    log.error("Policy run {} failed (downstream HTTP error)", runId, e);
+                    run.fail(message);
+                    taskManager.setError(runId, message);
+                }
+            } catch (Exception e) {
+                String message = "Policy run failed: " + e.getMessage();
+                log.error("Policy run {} failed", runId, e);
+                run.fail(message);
+                taskManager.setError(runId, message);
+            } finally {
+                // Always resolve so stream/await callers unblock.
+                completion.complete(run);
             }
-        } catch (Exception e) {
-            String message = "Policy run failed: " + e.getMessage();
-            log.error("Policy run {} failed", runId, e);
-            run.fail(message);
-            taskManager.setError(runId, message);
-        } finally {
-            // Always resolve so stream/await callers unblock.
-            completion.complete(run);
         }
     }
 
