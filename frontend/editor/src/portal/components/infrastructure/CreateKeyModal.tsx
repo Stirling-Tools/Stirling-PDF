@@ -124,7 +124,10 @@ export function CreateKeyModal({
               {PERMISSION_OPTS.map((p) => (
                 <Checkbox
                   key={p}
-                  label={p}
+                  label={t(
+                    `portal.infrastructure.apiKeyPermission.${p.toLowerCase()}`,
+                    p,
+                  )}
                   checked={perms.includes(p)}
                   onChange={() => togglePerm(p)}
                 />
