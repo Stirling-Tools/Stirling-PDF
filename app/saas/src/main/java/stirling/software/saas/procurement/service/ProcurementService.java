@@ -24,6 +24,7 @@ import stirling.software.saas.procurement.license.EnterpriseLicenseService;
 import stirling.software.saas.procurement.license.LicenseEntitlements;
 import stirling.software.saas.procurement.model.ProcurementDeal;
 import stirling.software.saas.procurement.model.ProcurementQuote;
+import stirling.software.saas.procurement.model.QuoteDetails;
 import stirling.software.saas.procurement.pricing.ProcurementPricingService;
 import stirling.software.saas.procurement.pricing.QuoteBreakdown;
 import stirling.software.saas.procurement.pricing.QuoteConfig;
@@ -163,7 +164,7 @@ public class ProcurementService {
 
     /** Price a quote config server-side and persist it as a draft against the team's deal. */
     @Transactional
-    public ProcurementQuote buildQuote(Long teamId, QuoteConfig cfg, String businessName) {
+    public ProcurementQuote buildQuote(Long teamId, QuoteConfig cfg, QuoteDetails details) {
         ProcurementDeal deal =
                 dealRepo.findByTeamId(teamId).orElseGet(() -> new ProcurementDeal(teamId));
         if (ProcurementDeal.STAGE_LIVE.equals(deal.getStage())) {
@@ -193,7 +194,16 @@ public class ProcurementService {
         quote.setIndemnification(cfg.indemnification());
         quote.setTraining(cfg.training());
         quote.setQbr(cfg.qbr());
-        quote.setBusinessName(businessName);
+        quote.setBusinessName(details.businessName());
+        quote.setContactName(details.contactName());
+        quote.setContactEmail(details.contactEmail());
+        quote.setAddressLine1(details.addressLine1());
+        quote.setAddressLine2(details.addressLine2());
+        quote.setCity(details.city());
+        quote.setRegion(details.region());
+        quote.setPostalCode(details.postalCode());
+        quote.setPoNumber(details.poNumber());
+        quote.setTaxId(details.taxId());
         quote.setAnnualNetMinor(breakdown.annualNetMinor());
         quote.setTcvMinor(breakdown.tcvMinor());
         quote.setRenewalAnnualMinor(breakdown.renewalAnnualNetMinor());

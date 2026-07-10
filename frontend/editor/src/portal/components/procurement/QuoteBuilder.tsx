@@ -66,6 +66,15 @@ export function QuoteBuilder({
       training: false,
       qbr: false,
       businessName: "",
+      contactName: "",
+      contactEmail: "",
+      addressLine1: "",
+      addressLine2: "",
+      city: "",
+      region: "",
+      postalCode: "",
+      poNumber: "",
+      taxId: "",
     },
   );
   // A seeded quote carries a volume but no user count, so treat it as manually set.
@@ -277,15 +286,99 @@ export function QuoteBuilder({
             title={t("portal.procurement.builder.s3Title")}
             sub={t("portal.procurement.builder.s3Sub")}
           >
-            <Field label={t("portal.procurement.builder.businessName")}>
+            <div className="portal-qb__row">
+              <Field label={t("portal.procurement.builder.businessName")}>
+                <input
+                  placeholder={t(
+                    "portal.procurement.builder.businessNamePlaceholder",
+                  )}
+                  value={cfg.businessName}
+                  onChange={(e) => set("businessName", e.target.value)}
+                />
+              </Field>
+              <Field label={t("portal.procurement.builder.contactName")}>
+                <input
+                  placeholder={t(
+                    "portal.procurement.builder.contactNamePlaceholder",
+                  )}
+                  value={cfg.contactName ?? ""}
+                  onChange={(e) => set("contactName", e.target.value)}
+                />
+              </Field>
+            </div>
+            <Field label={t("portal.procurement.builder.contactEmail")}>
               <input
+                type="email"
                 placeholder={t(
-                  "portal.procurement.builder.businessNamePlaceholder",
+                  "portal.procurement.builder.contactEmailPlaceholder",
                 )}
-                value={cfg.businessName}
-                onChange={(e) => set("businessName", e.target.value)}
+                value={cfg.contactEmail ?? ""}
+                onChange={(e) => set("contactEmail", e.target.value)}
               />
             </Field>
+            <Field label={t("portal.procurement.builder.addressLine1")}>
+              <input
+                placeholder={t(
+                  "portal.procurement.builder.addressLine1Placeholder",
+                )}
+                value={cfg.addressLine1 ?? ""}
+                onChange={(e) => set("addressLine1", e.target.value)}
+              />
+            </Field>
+            <Field label={t("portal.procurement.builder.addressLine2")}>
+              <input
+                placeholder={t(
+                  "portal.procurement.builder.addressLine2Placeholder",
+                )}
+                value={cfg.addressLine2 ?? ""}
+                onChange={(e) => set("addressLine2", e.target.value)}
+              />
+            </Field>
+            <div className="portal-qb__row">
+              <Field label={t("portal.procurement.builder.city")}>
+                <input
+                  placeholder={t("portal.procurement.builder.cityPlaceholder")}
+                  value={cfg.city ?? ""}
+                  onChange={(e) => set("city", e.target.value)}
+                />
+              </Field>
+              <Field label={t("portal.procurement.builder.region")}>
+                <input
+                  placeholder={t(
+                    "portal.procurement.builder.regionPlaceholder",
+                  )}
+                  value={cfg.region ?? ""}
+                  onChange={(e) => set("region", e.target.value)}
+                />
+              </Field>
+              <Field label={t("portal.procurement.builder.postalCode")}>
+                <input
+                  placeholder={t(
+                    "portal.procurement.builder.postalCodePlaceholder",
+                  )}
+                  value={cfg.postalCode ?? ""}
+                  onChange={(e) => set("postalCode", e.target.value)}
+                />
+              </Field>
+            </div>
+            <div className="portal-qb__row">
+              <Field label={t("portal.procurement.builder.poNumber")}>
+                <input
+                  placeholder={t(
+                    "portal.procurement.builder.poNumberPlaceholder",
+                  )}
+                  value={cfg.poNumber ?? ""}
+                  onChange={(e) => set("poNumber", e.target.value)}
+                />
+              </Field>
+              <Field label={t("portal.procurement.builder.taxId")}>
+                <input
+                  placeholder={t("portal.procurement.builder.taxIdPlaceholder")}
+                  value={cfg.taxId ?? ""}
+                  onChange={(e) => set("taxId", e.target.value)}
+                />
+              </Field>
+            </div>
             <label className="portal-qb__eula">
               <input
                 type="checkbox"

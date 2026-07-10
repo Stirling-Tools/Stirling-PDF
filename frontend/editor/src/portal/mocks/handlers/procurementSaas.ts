@@ -32,6 +32,15 @@ interface Cfg {
   training: boolean;
   qbr: boolean;
   businessName?: string;
+  contactName?: string;
+  contactEmail?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  city?: string;
+  region?: string;
+  postalCode?: string;
+  poNumber?: string;
+  taxId?: string;
 }
 
 let deal: typeof EMPTY | (Record<string, unknown> & { latestQuote: unknown }) =
@@ -175,6 +184,15 @@ function priceQuote(cfg: Cfg) {
       training: cfg.training,
       qbr: cfg.qbr,
       businessName: cfg.businessName ?? "",
+      contactName: cfg.contactName ?? "",
+      contactEmail: cfg.contactEmail ?? "",
+      addressLine1: cfg.addressLine1 ?? "",
+      addressLine2: cfg.addressLine2 ?? "",
+      city: cfg.city ?? "",
+      region: cfg.region ?? "",
+      postalCode: cfg.postalCode ?? "",
+      poNumber: cfg.poNumber ?? "",
+      taxId: cfg.taxId ?? "",
     },
   };
 }

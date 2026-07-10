@@ -121,6 +121,37 @@ public class ProcurementQuote implements Serializable {
     @Column(name = "business_name", length = 255)
     private String businessName;
 
+    // Buyer/AP details captured on the quote's "Your details" step. All optional — they never gate
+    // quote generation; they flow onto the Stripe customer (name + bill-to address) and the invoice
+    // (PO number + tax id as invoice custom fields), and seed the builder on a re-edit. Country and
+    // currency are intentionally out of scope for now.
+    @Column(name = "contact_name", length = 255)
+    private String contactName;
+
+    @Column(name = "contact_email", length = 255)
+    private String contactEmail;
+
+    @Column(name = "address_line1", length = 255)
+    private String addressLine1;
+
+    @Column(name = "address_line2", length = 255)
+    private String addressLine2;
+
+    @Column(name = "city", length = 128)
+    private String city;
+
+    @Column(name = "region", length = 128)
+    private String region;
+
+    @Column(name = "postal_code", length = 32)
+    private String postalCode;
+
+    @Column(name = "po_number", length = 128)
+    private String poNumber;
+
+    @Column(name = "tax_id", length = 64)
+    private String taxId;
+
     @Column(name = "valid_until")
     private LocalDate validUntil;
 

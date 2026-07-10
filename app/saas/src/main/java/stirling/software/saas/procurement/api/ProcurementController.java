@@ -32,6 +32,7 @@ import stirling.software.proprietary.security.repository.TeamMembershipRepositor
 import stirling.software.saas.procurement.config.ProcurementConfigurationProperties;
 import stirling.software.saas.procurement.model.ProcurementDeal;
 import stirling.software.saas.procurement.model.ProcurementQuote;
+import stirling.software.saas.procurement.model.QuoteDetails;
 import stirling.software.saas.procurement.pricing.ProcurementPricingService;
 import stirling.software.saas.procurement.pricing.QuoteConfig;
 import stirling.software.saas.procurement.pricing.QuoteLineItem;
@@ -89,7 +90,17 @@ public class ProcurementController {
             boolean training,
             boolean qbr,
             String currency,
-            String businessName) {
+            String businessName,
+            // Buyer / AP details (all optional). Country + currency intentionally out of scope.
+            String contactName,
+            String contactEmail,
+            String addressLine1,
+            String addressLine2,
+            String city,
+            String region,
+            String postalCode,
+            String poNumber,
+            String taxId) {
         QuoteConfig toConfig() {
             return new QuoteConfig(
                     volume,
@@ -103,6 +114,20 @@ public class ProcurementController {
                     training,
                     qbr,
                     currency);
+        }
+
+        QuoteDetails toDetails() {
+            return new QuoteDetails(
+                    businessName,
+                    contactName,
+                    contactEmail,
+                    addressLine1,
+                    addressLine2,
+                    city,
+                    region,
+                    postalCode,
+                    poNumber,
+                    taxId);
         }
     }
 
@@ -141,7 +166,16 @@ public class ProcurementController {
             boolean training,
             boolean qbr,
             String currency,
-            String businessName) {}
+            String businessName,
+            String contactName,
+            String contactEmail,
+            String addressLine1,
+            String addressLine2,
+            String city,
+            String region,
+            String postalCode,
+            String poNumber,
+            String taxId) {}
 
     /** Trial setup captured before the trial starts: deployment target + seat count. */
     public record StartTrialRequest(String deployment, int users) {}
@@ -239,7 +273,7 @@ public class ProcurementController {
         return ResponseEntity.ok(
                 toQuote(
                         procurement.buildQuote(
-                                teamId, request.toConfig(), request.businessName())));
+                                teamId, request.toConfig(), request.toDetails())));
     }
 
     // Issue + accept are Supabase edge functions (they own Stripe): issue-procurement-quote turns a
@@ -384,7 +418,16 @@ public class ProcurementController {
                         q.isTraining(),
                         q.isQbr(),
                         q.getCurrency(),
-                        q.getBusinessName()));
+                        q.getBusinessName(),
+                        q.getContactName(),
+                        q.getContactEmail(),
+                        q.getAddressLine1(),
+                        q.getAddressLine2(),
+                        q.getCity(),
+                        q.getRegion(),
+                        q.getPostalCode(),
+                        q.getPoNumber(),
+                        q.getTaxId()));
     }
 
     private List<QuoteLineItem> parseLineItems(String json) {

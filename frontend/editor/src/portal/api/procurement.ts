@@ -351,6 +351,22 @@ export interface QuoteConfigInput {
   qbr: boolean;
   /** Buyer's company name — shown on the quote/agreement and remembered when re-editing. */
   businessName: string;
+  // Buyer / AP details (all optional). They flow onto the Stripe customer (name + bill-to address)
+  // and the invoice (PO number + tax id as custom fields). Country + currency are out of scope.
+  /** Signatory / main contact name. */
+  contactName?: string;
+  /** Contact email (billing / signatory). */
+  contactEmail?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  city?: string;
+  /** State / province / region. */
+  region?: string;
+  postalCode?: string;
+  /** Purchase-order number, shown on the invoice for AP matching. */
+  poNumber?: string;
+  /** VAT / Tax ID, shown on the invoice. */
+  taxId?: string;
 }
 
 export function fetchSnapshot(): Promise<ProcurementSnapshot> {
