@@ -6,7 +6,13 @@ import type {
   ElementType,
   ReactNode,
 } from "react";
-import { CONTROL_HEIGHT } from "@app/ui/controlSizes";
+import {
+  CONTROL_HEIGHT,
+  CONTROL_PADDING,
+  type ControlFontSize,
+  type ControlPadding,
+  resolveFontSize,
+} from "@app/ui/controlSizes";
 import "@app/ui/Button.css";
 
 /** primary=solid, secondary=outlined, tertiary=ghost (tinted hover), quiet=plain (no bg, hovers to text colour). */
@@ -22,6 +28,12 @@ export type ButtonAccent =
   | "success"
   | "warning";
 export type ButtonSize = "sm" | "md" | "lg" | "xl";
+/**
+ * Relative label-size scale, applied on top of the `size`-derived base. `md`
+ * leaves the base unchanged; other values scale it up/down. Unset inherits
+ * Mantine's size default, so existing buttons are unchanged.
+ */
+export type ButtonFontSize = ControlFontSize;
 /** `between` pins leftSection/label/rightSection to left/center/right (toolbar rows). */
 export type ButtonJustify = "center" | "start" | "end" | "between";
 export type ButtonShape = "default" | "circle" | "pill";
@@ -30,6 +42,14 @@ type ButtonOwnProps = {
   variant?: ButtonVariant;
   accent?: ButtonAccent;
   size?: ButtonSize;
+  /** Label size relative to `size`. Defaults to the `size`-derived value. */
+  fontSize?: ButtonFontSize;
+  /** Padding override for both axes */
+  p?: ControlPadding;
+  /** Horizontal-padding override  */
+  px?: ControlPadding;
+  /** Vertical-padding override  */
+  py?: ControlPadding;
   justify?: ButtonJustify;
   shape?: ButtonShape;
   /** Alternative to children; use one or the other. */
@@ -102,7 +122,11 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
     {
       variant = "primary",
       accent = "default",
-      size = "md",
+      size = "sm",
+      fontSize,
+      p,
+      px,
+      py,
       justify = "center",
       shape = "default",
       text,
@@ -123,7 +147,15 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
   ) {
     const label = text ?? children;
     const hasLabel = label != null && label !== false && label !== "";
-    const iconOnly = !hasLabel && (!!leftSection || !!rightSection || loading);
+    // A labelless button collapses to a square icon-only button — but never when
+    // `fullWidth` is set (it must span its container, e.g. a loading execute
+    // button whose label is momentarily absent while files hydrate).
+    const iconOnly =
+      !hasLabel && !fullWidth && (!!leftSection || !!rightSection || loading);
+
+    // px/py override p for their axis; each stays undefined (= size default) if unset.
+    const padX = px ?? p;
+    const padY = py ?? p;
 
     // Sections flank a label → spread them without requiring justify="between".
     const effectiveJustify =
@@ -191,6 +223,20 @@ const ButtonRoot = forwardRef<HTMLButtonElement, ButtonProps>(
         style={{
           ...(accentVars as CSSProperties),
           ...({ "--button-height": CONTROL_HEIGHT[size] } as CSSProperties),
+          // Relative label size, scaled off the `size` base (unset → Mantine default).
+          ...(fontSize
+            ? ({
+                "--button-fz": resolveFontSize(size, fontSize),
+              } as CSSProperties)
+            : {}),
+          // Padding overrides (inline to beat Mantine's size-based value).
+          // px → Mantine's own var; py → our --sui-btn-py (Mantine has no vertical padding).
+          ...(padX
+            ? ({ "--button-padding-x": CONTROL_PADDING[padX] } as CSSProperties)
+            : {}),
+          ...(padY
+            ? ({ "--sui-btn-py": CONTROL_PADDING[padY] } as CSSProperties)
+            : {}),
           // Icon-only: zero the size padding inline so the lone icon centres.
           ...(iconOnly ? ({ "--button-padding-x": "0" } as CSSProperties) : {}),
           ...style,

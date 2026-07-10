@@ -6,9 +6,8 @@ import { apiClient } from "@portal/api/http";
  * A "pipeline" in the portal IS a backend policy (PolicyController, Policy.java):
  * an ordered chain of tool steps with input sources, a trigger, and an output
  * destination. This surface lists EVERY backend policy (the user-facing Policies
- * page builds only a friendly subset of the same records). Like Sources, it calls
- * the REAL Stirling API base `/api/v1/policies`, so dropping MSW points these exact
- * calls at the live backend.
+ * page builds only a friendly subset of the same records). Like Sources, it
+ * calls the real Stirling API base `/api/v1/policies`.
  */
 
 /** One tool invocation in a pipeline. `operation` is a Stirling endpoint path. */
@@ -29,6 +28,9 @@ export interface OutputSpec {
   type: string;
   options: Record<string, unknown>;
 }
+
+/** The output destinations the pipeline builder can offer. */
+export type PipelineOutputMode = "inline" | "folder" | "s3";
 
 /**
  * The stored policy record: the create/update body (`id` blank on create) and what
@@ -151,12 +153,26 @@ export async function fetchTriggers(): Promise<TriggerInfo[]> {
 }
 
 /**
- * POST /api/v1/policies/{id}/trigger: run the pipeline now against its configured
- * sources, regardless of the enabled flag. Returns the ids of the runs started
- * (empty when the sources yielded no work); poll {@link fetchRun} for each.
+ * What a manual trigger found and started. Mirrors the backend `SweepOutcome`:
+ * when `runIds` is empty, the counts say why - no files listed, all already
+ * processed at their current version, parked by a failed run, or still in
+ * flight from an earlier sweep.
  */
-export async function triggerPipeline(id: string): Promise<string[]> {
-  return apiClient.local.json<string[]>(
+export interface TriggerOutcome {
+  runIds: string[];
+  filesListed: number;
+  alreadyProcessed: number;
+  parked: number;
+  inFlight: number;
+}
+
+/**
+ * POST /api/v1/policies/{id}/trigger: run the pipeline now against its configured
+ * sources, regardless of the enabled flag. Returns the runs started plus what the
+ * sweep skipped; poll {@link fetchRun} for each run id.
+ */
+export async function triggerPipeline(id: string): Promise<TriggerOutcome> {
+  return apiClient.local.json<TriggerOutcome>(
     `/api/v1/policies/${encodeURIComponent(id)}/trigger`,
     { method: "POST" },
   );

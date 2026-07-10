@@ -508,19 +508,19 @@ export default function Login() {
                   size="sm"
                   fw={600}
                   ta="center"
-                  style={{ color: "var(--text-always-dark)" }}
+                  style={{ color: "var(--text-primary)" }}
                 >
                   {t("login.defaultCredentials", "Default Login Credentials")}
                 </Text>
                 <Text
                   size="sm"
                   ta="center"
-                  style={{ color: "var(--text-always-dark)" }}
+                  style={{ color: "var(--text-primary)" }}
                 >
                   <Text
                     component="span"
                     fw={600}
-                    style={{ color: "var(--text-always-dark)" }}
+                    style={{ color: "var(--text-primary)" }}
                   >
                     {t("login.username", "Username")}:
                   </Text>{" "}
@@ -529,12 +529,12 @@ export default function Login() {
                 <Text
                   size="sm"
                   ta="center"
-                  style={{ color: "var(--text-always-dark)" }}
+                  style={{ color: "var(--text-primary)" }}
                 >
                   <Text
                     component="span"
                     fw={600}
-                    style={{ color: "var(--text-always-dark)" }}
+                    style={{ color: "var(--text-primary)" }}
                   >
                     {t("login.password", "Password")}:
                   </Text>{" "}
@@ -544,7 +544,7 @@ export default function Login() {
                   size="xs"
                   ta="center"
                   mt="xs"
-                  style={{ color: "var(--text-always-dark-muted)" }}
+                  style={{ color: "var(--text-muted)" }}
                 >
                   {t(
                     "login.changePasswordWarning",

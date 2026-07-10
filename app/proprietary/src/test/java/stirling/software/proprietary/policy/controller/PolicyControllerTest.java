@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
@@ -34,15 +36,21 @@ import stirling.software.proprietary.policy.engine.PolicyRunHandle;
 import stirling.software.proprietary.policy.engine.PolicyRunRegistry;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.PolicyValidator;
+import stirling.software.proprietary.policy.engine.SweepOutcome;
+import stirling.software.proprietary.policy.ledger.ProcessedLedger;
+import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunView;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
+import stirling.software.proprietary.policy.source.EditorSource;
 import stirling.software.proprietary.policy.source.SourceAccessGuard;
+import stirling.software.proprietary.policy.source.SourceDocCounter;
 import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
+import stirling.software.proprietary.util.SecretMasker;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("PolicyController")
@@ -53,6 +61,7 @@ class PolicyControllerTest {
     @Mock private stirling.software.proprietary.policy.store.PolicyStore policyStore;
     @Mock private SourceStore sourceStore;
     @Mock private SourceAccessGuard sourceAccessGuard;
+    @Mock private SourceDocCounter docCounter;
     @Mock private PolicyValidator policyValidator;
     @Mock private PolicyAccessGuard policyAccessGuard;
     @Mock private PolicyManagementAuthority policyManagementAuthority;
@@ -61,6 +70,8 @@ class PolicyControllerTest {
     @Mock
     private stirling.software.proprietary.policy.overview.PolicyOverviewService
             policyOverviewService;
+
+    @Mock private ProcessedLedger processedLedger;
 
     @Mock private TempFileManager tempFileManager;
     @Mock private JobOwnershipService jobOwnershipService;
@@ -84,11 +95,13 @@ class PolicyControllerTest {
                         policyStore,
                         sourceStore,
                         sourceAccessGuard,
+                        docCounter,
                         policyValidator,
                         policyAccessGuard,
                         policyManagementAuthority,
                         policyTriggerManager,
                         policyOverviewService,
+                        processedLedger,
                         policyTriggers,
                         applicationProperties,
                         tempFileManager,
@@ -124,6 +137,17 @@ class PolicyControllerTest {
         return new Policy(id, "name", "owner", true, null, List.of(), List.of(), null, teamId);
     }
 
+    private static Policy s3OutputPolicy(String id, String secret) {
+        OutputSpec output =
+                new OutputSpec(
+                        "s3",
+                        Map.of(
+                                "bucket", "outbox",
+                                "accessKeyId", "AKIAEXAMPLE",
+                                "secretAccessKey", secret));
+        return new Policy(id, "name", "owner", true, null, List.of(), List.of(), output, 1L);
+    }
+
     private static PolicyRunHandle handle(String runId) {
         PolicyRun run = new PolicyRun(runId, null, definitionWithStep());
         return new PolicyRunHandle(runId, CompletableFuture.completedFuture(run));
@@ -144,6 +168,18 @@ class PolicyControllerTest {
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
             assertThat(response.getBody().getJobId()).isEqualTo("run-1");
+        }
+
+        @Test
+        @DisplayName("feeds the editor source, scoped to the caller's team")
+        void adHocRunFeedsTheEditorSource() throws Exception {
+            when(policyRunner.runAdHoc(any(), any(), eq(PolicyProgressListener.NOOP)))
+                    .thenReturn(handle("run-1"));
+            when(sourceAccessGuard.currentTeamId()).thenReturn(3L);
+
+            controller.run(definitionWithStep(), new PolicyRunFiles());
+
+            verify(docCounter).record(EditorSource.counterKey(3L), 0L);
         }
 
         @Test
@@ -260,6 +296,27 @@ class PolicyControllerTest {
         }
 
         @Test
+        @DisplayName("saving the sentinel back keeps the stored output secret")
+        void saveRestoresOutputSecrets() {
+            applicationProperties.getSecurity().setEnableLogin(false);
+            Policy existing = s3OutputPolicy("p1", "shh");
+            when(policyStore.get("p1")).thenReturn(Optional.of(existing));
+            when(policyAccessGuard.canAccess(existing)).thenReturn(true);
+            when(policyStore.save(any())).thenAnswer(i -> i.getArgument(0));
+
+            ResponseEntity<Policy> response =
+                    controller.savePolicy(s3OutputPolicy("p1", SecretMasker.REDACTED));
+
+            ArgumentCaptor<Policy> stored = ArgumentCaptor.forClass(Policy.class);
+            verify(policyStore).save(stored.capture());
+            assertThat(stored.getValue().output().options().get("secretAccessKey"))
+                    .isEqualTo("shh");
+            // The save response is masked again; only the store sees the real value.
+            assertThat(response.getBody().output().options().get("secretAccessKey"))
+                    .isEqualTo(SecretMasker.REDACTED);
+        }
+
+        @Test
         @DisplayName("forbidden when login enabled and caller cannot edit")
         void forbidden() {
             applicationProperties.getSecurity().setEnableLogin(true);
@@ -360,6 +417,20 @@ class PolicyControllerTest {
         }
 
         @Test
+        @DisplayName("getPolicy returns output secrets as the redaction sentinel")
+        void getMasksOutputSecrets() {
+            Policy p = s3OutputPolicy("a", "shh");
+            when(policyStore.get("a")).thenReturn(Optional.of(p));
+            when(policyAccessGuard.canAccess(p)).thenReturn(true);
+
+            Policy read = controller.getPolicy("a").getBody();
+
+            assertThat(read.output().options().get("secretAccessKey"))
+                    .isEqualTo(SecretMasker.REDACTED);
+            assertThat(read.output().options().get("bucket")).isEqualTo("outbox");
+        }
+
+        @Test
         @DisplayName("getPolicy returns 404 when not accessible")
         void getNotAccessible() {
             Policy p = policy("a", 1L);
@@ -398,6 +469,7 @@ class PolicyControllerTest {
             ResponseEntity<Void> response = controller.deletePolicy("a");
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+            verify(processedLedger).clearPolicy("a");
             verify(policyTriggerManager).notifyPoliciesChanged();
         }
 
@@ -423,6 +495,53 @@ class PolicyControllerTest {
             when(policyManagementAuthority.canEditPolicies()).thenReturn(false);
 
             assertThatThrownBy(() -> controller.deletePolicy("a"))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .satisfies(
+                            e ->
+                                    assertThat(((ResponseStatusException) e).getStatusCode())
+                                            .isEqualTo(HttpStatus.FORBIDDEN));
+        }
+    }
+
+    @Nested
+    @DisplayName("clearProcessedHistory")
+    class ClearProcessedHistory {
+
+        @Test
+        @DisplayName("clears an accessible policy's history")
+        void clears() {
+            applicationProperties.getSecurity().setEnableLogin(false);
+            Policy p = policy("a", 1L);
+            when(policyStore.get("a")).thenReturn(Optional.of(p));
+            when(policyAccessGuard.canAccess(p)).thenReturn(true);
+
+            ResponseEntity<Void> response = controller.clearProcessedHistory("a");
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+            verify(processedLedger).clearPolicy("a");
+        }
+
+        @Test
+        @DisplayName("returns 404 when policy is not accessible")
+        void notAccessible() {
+            applicationProperties.getSecurity().setEnableLogin(false);
+            Policy p = policy("a", 1L);
+            when(policyStore.get("a")).thenReturn(Optional.of(p));
+            when(policyAccessGuard.canAccess(p)).thenReturn(false);
+
+            ResponseEntity<Void> response = controller.clearProcessedHistory("a");
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+            verify(processedLedger, never()).clearPolicy(any());
+        }
+
+        @Test
+        @DisplayName("forbidden when login enabled and caller cannot edit")
+        void forbidden() {
+            applicationProperties.getSecurity().setEnableLogin(true);
+            when(policyManagementAuthority.canEditPolicies()).thenReturn(false);
+
+            assertThatThrownBy(() -> controller.clearProcessedHistory("a"))
                     .isInstanceOf(ResponseStatusException.class)
                     .satisfies(
                             e ->
@@ -484,17 +603,18 @@ class PolicyControllerTest {
         }
 
         @Test
-        @DisplayName("trigger runs an accessible policy against its sources and returns run ids")
+        @DisplayName("trigger runs an accessible policy against its sources and returns the sweep")
         void triggersRun() {
             Policy p = policy("a", 1L);
             when(policyStore.get("a")).thenReturn(Optional.of(p));
             when(policyAccessGuard.canAccess(p)).thenReturn(true);
-            when(policyRunner.run(p)).thenReturn(List.of("run-a", "run-b"));
+            SweepOutcome outcome = new SweepOutcome(List.of("run-a", "run-b"), 3, 1, 0, 0);
+            when(policyRunner.run(p)).thenReturn(outcome);
 
-            ResponseEntity<List<String>> response = controller.trigger("a");
+            ResponseEntity<SweepOutcome> response = controller.trigger("a");
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
-            assertThat(response.getBody()).containsExactly("run-a", "run-b");
+            assertThat(response.getBody()).isEqualTo(outcome);
         }
 
         @Test

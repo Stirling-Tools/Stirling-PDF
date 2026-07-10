@@ -1,11 +1,10 @@
-/** Mock quick-action catalogue for the ⌘K search palette. */
+/**
+ * Mock quick-action catalogue for the ⌘K search palette. The QuickAction type
+ * lives in api/search.ts (the backend contract); this module only builds fake
+ * data for Storybook and tests.
+ */
 
-export interface QuickAction {
-  group: "Jump to" | "Create" | "Theme";
-  label: string;
-  /** Keyboard hint shown to the right. */
-  hint: string;
-}
+import type { QuickAction } from "@portal/api/search";
 
 export const QUICK_ACTIONS: QuickAction[] = [
   { group: "Jump to", label: "Home", hint: "G H" },

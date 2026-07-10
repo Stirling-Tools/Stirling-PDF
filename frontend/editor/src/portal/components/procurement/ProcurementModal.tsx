@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import "@portal/views/Procurement.css";
 
 /** Keep keyboard focus inside an open dialog: focus it on open and wrap Tab at the edges. */
@@ -58,6 +59,7 @@ export function ProcurementModal({
   subtitle?: string;
   children: React.ReactNode;
 }) {
+  const { t } = useTranslation();
   const trapRef = useFocusTrap(open);
 
   useEffect(() => {
@@ -86,7 +88,7 @@ export function ProcurementModal({
           type="button"
           className="portal-procmodal__close"
           onClick={onClose}
-          aria-label="Close"
+          aria-label={t("portal.procurement.modal.close")}
         >
           ✕
         </button>
