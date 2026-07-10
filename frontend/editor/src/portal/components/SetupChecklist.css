@@ -17,9 +17,9 @@
   display: grid;
   grid-template-columns: auto 1fr;
   align-items: center;
-  gap: 1rem;
+  gap: 0.875rem;
   width: 100%;
-  padding: 1rem 1.5rem;
+  padding: 0.6875rem 1.25rem;
   border: none;
   border-top: 1px solid var(--color-border-light);
   background: transparent;
@@ -38,12 +38,12 @@
 .portal-setup__num {
   display: grid;
   place-items: center;
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 1.5rem;
+  height: 1.5rem;
   flex-shrink: 0;
   border-radius: 50%;
   border: 1px solid var(--color-border-input);
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--color-text-4);
 }
@@ -54,13 +54,12 @@
   min-width: 0;
 }
 .portal-setup__text strong {
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--color-text-1);
 }
 .portal-setup__text span {
-  margin-top: 0.0625rem;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   line-height: 1.4;
   color: var(--color-text-4);
 }
@@ -72,7 +71,7 @@
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
-  padding: 1rem 1.5rem;
+  padding: 0.75rem 1.25rem;
   border-top: 1px solid var(--color-border-light);
   background: linear-gradient(
     90deg,

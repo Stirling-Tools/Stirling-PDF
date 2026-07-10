@@ -2,7 +2,8 @@ import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
 import { EDITOR_URL } from "@portal/auth/editorUrl";
-import { EditorIcon, ExternalLinkIcon } from "@portal/components/icons";
+import { ExternalLinkIcon } from "@portal/components/icons";
+import markDark from "@app/assets/brand/modern-logo/StirlingPDFLogoNoTextDark.svg";
 import "@portal/components/WelcomeBanner.css";
 
 /* ──────────────────────────────────────────────────────────────────────── */
@@ -33,7 +34,7 @@ export function WelcomeBanner({ footer }: WelcomeBannerProps) {
       <div className="portal-welcome__header">
         <div className="portal-welcome__brand">
           <span className="portal-welcome__mark" aria-hidden>
-            <EditorIcon size={20} />
+            <img src={markDark} alt="" />
           </span>
           <div className="portal-welcome__brand-text">
             <span className="portal-welcome__product">

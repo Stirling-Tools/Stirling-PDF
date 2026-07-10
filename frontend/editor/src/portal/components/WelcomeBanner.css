@@ -17,7 +17,7 @@
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
-  padding: 1.125rem 1.5rem;
+  padding: 0.875rem 1.25rem;
   background: #16213e;
 }
 
@@ -31,12 +31,12 @@
 .portal-welcome__mark {
   display: grid;
   place-items: center;
-  width: 2rem;
-  height: 2rem;
   flex-shrink: 0;
-  border-radius: 0.5rem;
-  color: #fff;
-  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+}
+.portal-welcome__mark img {
+  display: block;
+  height: 1.75rem;
+  width: auto;
 }
 
 .portal-welcome__brand-text {

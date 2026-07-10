@@ -1,0 +1,11 @@
+.portal-download__options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Full-width, left-aligned platform buttons. */
+.portal-download__options button {
+  width: 100%;
+  justify-content: flex-start;
+}

@@ -6892,6 +6892,13 @@ description = "This view hit an unexpected error. Try again, or pick another sec
 retry = "Try again"
 title = "Something went wrong on this page"
 
+[portal.home.download]
+body = "Install the desktop app for your platform, or self-host."
+linux = "Linux"
+mac = "macOS"
+title = "Download the editor"
+windows = "Windows"
+
 [portal.home.editor]
 activeUsers = "{{n}} active"
 invite = "Invite teammates"

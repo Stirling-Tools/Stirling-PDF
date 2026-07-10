@@ -1,10 +1,11 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
-import { useView, type ViewId } from "@portal/contexts/ViewContext";
+import { useView } from "@portal/contexts/ViewContext";
 import { useAsync } from "@portal/hooks/useAsync";
 import { fetchPolicies, type PoliciesResponse } from "@portal/api/policies";
+import { DownloadEditorModal } from "@portal/components/DownloadEditorModal";
 import "@portal/components/SetupChecklist.css";
 
 /* ──────────────────────────────────────────────────────────────────────── */
@@ -54,8 +55,7 @@ interface Step {
   id: string;
   title: string;
   blurb: string;
-  /** The in-app surface this step opens. */
-  view: ViewId;
+  onClick: () => void;
 }
 
 /**
@@ -69,6 +69,7 @@ export function SetupChecklist() {
   const { t } = useTranslation();
   const { tier } = useTier();
   const { setActiveView } = useView();
+  const [downloadOpen, setDownloadOpen] = useState(false);
 
   // Only the policies step shows live numbers; sources was dropped from the
   // top-three to match the simplified marketing card.
@@ -82,7 +83,8 @@ export function SetupChecklist() {
         id: "editor",
         title: t("portal.home.onboarding.steps.editor.title"),
         blurb: t("portal.home.onboarding.steps.editor.blurb"),
-        view: "editor",
+        // Downloads are per-OS, so open a picker modal rather than route away.
+        onClick: () => setDownloadOpen(true),
       },
       {
         id: "policies",
@@ -91,16 +93,16 @@ export function SetupChecklist() {
           active,
           recommended,
         }),
-        view: "policies",
+        onClick: () => setActiveView("policies"),
       },
       {
         id: "invite",
         title: t("portal.home.onboarding.steps.invite.title"),
         blurb: t("portal.home.onboarding.steps.invite.blurb"),
-        view: "users",
+        onClick: () => setActiveView("users"),
       },
     ],
-    [t, active, recommended],
+    [t, active, recommended, setActiveView],
   );
 
   return (
@@ -111,7 +113,7 @@ export function SetupChecklist() {
             <button
               type="button"
               className="portal-setup__row"
-              onClick={() => setActiveView(s.view)}
+              onClick={s.onClick}
             >
               <span className="portal-setup__num" aria-hidden>
                 {i + 1}
@@ -126,6 +128,11 @@ export function SetupChecklist() {
       </ol>
 
       <EnterpriseRung paying={tier !== "free"} />
+
+      <DownloadEditorModal
+        open={downloadOpen}
+        onClose={() => setDownloadOpen(false)}
+      />
     </div>
   );
 }
