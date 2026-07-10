@@ -6259,11 +6259,6 @@ body = "Your payment went through. We're switching on metered processing across 
 hint = "Please keep this window open."
 title = "Activating your Processor plan..."
 
-[portal.billing.checkout.notConfigured]
-bodyAfter = "in the portal env to enable in-app checkout."
-bodyBefore = "Set"
-title = "Stripe not configured"
-
 [portal.billing.enterpriseUpsell]
 cta = "Explore Enterprise"
 description = "Committed volume discounts, air-gapped deployment, custom MSA and security reviews, and 3rd-party distributor partnerships."
