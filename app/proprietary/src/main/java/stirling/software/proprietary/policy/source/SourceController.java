@@ -1,6 +1,7 @@
 package stirling.software.proprietary.policy.source;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.http.HttpStatus;
@@ -29,6 +30,7 @@ import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
+import stirling.software.proprietary.util.SecretMasker;
 
 /**
  * CRUD for persisted, reusable input connections plus the Sources overview for the admin portal. A
@@ -65,11 +67,16 @@ public class SourceController {
     }
 
     @GetMapping("/{sourceId}")
-    @Operation(summary = "Get a source by id")
+    @Operation(
+            summary = "Get a source by id",
+            description =
+                    "Secret-bearing options are returned as a redaction sentinel, never their"
+                            + " stored values; an edit that sends the sentinel back keeps them.")
     public ResponseEntity<Source> get(@PathVariable String sourceId) {
         return sourceStore
                 .get(sourceId)
                 .filter(sourceAccessGuard::canAccess)
+                .map(SourceController::withMaskedSecrets)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -97,7 +104,7 @@ public class SourceController {
                             + " matching source type.")
     public ResponseEntity<Source> save(@RequestBody Source source) {
         requireSourceEditingAllowed();
-        Source owned = resolveOwnership(source);
+        Source owned = withStoredSecrets(resolveOwnership(source));
         try {
             validateConfig(owned);
         } catch (IllegalArgumentException e) {
@@ -107,7 +114,7 @@ public class SourceController {
         // An edited folder source can change which directory needs watching, so re-sync trigger
         // registrations now instead of waiting for the next reconcile.
         policyTriggerManager.notifyPoliciesChanged();
-        return ResponseEntity.ok(saved);
+        return ResponseEntity.ok(withMaskedSecrets(saved));
     }
 
     @DeleteMapping("/{sourceId}")
@@ -167,6 +174,42 @@ public class SourceController {
                 source.enabled(),
                 owner,
                 teamId);
+    }
+
+    private static Source withOptions(Source source, Map<String, Object> options) {
+        return new Source(
+                source.id(),
+                source.name(),
+                source.type(),
+                options,
+                source.enabled(),
+                source.owner(),
+                source.teamId());
+    }
+
+    /** Secrets never leave the server: reads return the redaction sentinel in their place. */
+    private static Source withMaskedSecrets(Source source) {
+        return withOptions(source, SecretMasker.mask(source.options()));
+    }
+
+    /**
+     * An edit that round-trips a masked read sends secrets back as the sentinel; restore them from
+     * the stored source so saving without re-typing keeps them (validation then runs against the
+     * real values).
+     */
+    private Source withStoredSecrets(Source incoming) {
+        if (incoming.id() == null || incoming.id().isBlank()) {
+            return incoming;
+        }
+        return sourceStore
+                .get(incoming.id())
+                .map(
+                        existing ->
+                                withOptions(
+                                        incoming,
+                                        SecretMasker.restoreRedacted(
+                                                incoming.options(), existing.options())))
+                .orElse(incoming);
     }
 
     /** Validate the config against the bean that handles the source's type, as the engine will. */

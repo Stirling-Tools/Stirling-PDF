@@ -14,8 +14,8 @@ import org.junit.jupiter.api.Test;
  * Unit tests for {@link SecretMasker}.
  *
  * <p>Assumptions: - Key matching is case-insensitive via the pattern in SENSITIVE. - If the key
- * matches a sensitive pattern, the value is replaced with "***REDACTED***". - Nested maps and lists
- * are searched recursively. - Null maps and null values are ignored or returned as null. -
+ * matches a sensitive pattern, the value is replaced with SecretMasker.REDACTED. - Nested maps and
+ * lists are searched recursively. - Null maps and null values are ignored or returned as null. -
  * Non-sensitive keys/values remain unchanged.
  */
 class SecretMaskerTest {
@@ -40,7 +40,7 @@ class SecretMaskerTest {
 
             Map<String, Object> result = SecretMasker.mask(input);
 
-            assertEquals("***REDACTED***", result.get("password"));
+            assertEquals(SecretMasker.REDACTED, result.get("password"));
             assertEquals("john", result.get("username"));
         }
 
@@ -55,9 +55,37 @@ class SecretMaskerTest {
 
             Map<String, Object> result = SecretMasker.mask(input);
 
-            assertEquals("***REDACTED***", result.get("Api-Key"));
-            assertEquals("***REDACTED***", result.get("TOKEN"));
+            assertEquals(SecretMasker.REDACTED, result.get("Api-Key"));
+            assertEquals(SecretMasker.REDACTED, result.get("TOKEN"));
             assertEquals("keepme", result.get("normal"));
+        }
+
+        @Test
+        @DisplayName("restoreRedacted swaps sentinels for stored values, leaves the rest")
+        void restoreRedactedRoundTripsAnEdit() {
+            Map<String, Object> stored =
+                    Map.of("secretAccessKey", "shh", "accessKeyId", "AKIAEXAMPLE");
+            Map<String, Object> incoming =
+                    Map.of(
+                            "secretAccessKey", SecretMasker.REDACTED,
+                            "accessKeyId", "AKIA-NEW",
+                            "bucket", "inbox");
+
+            Map<String, Object> merged = SecretMasker.restoreRedacted(incoming, stored);
+
+            assertEquals("shh", merged.get("secretAccessKey"));
+            assertEquals("AKIA-NEW", merged.get("accessKeyId"));
+            assertEquals("inbox", merged.get("bucket"));
+        }
+
+        @Test
+        @DisplayName("restoreRedacted leaves a sentinel with no stored counterpart in place")
+        void restoreRedactedWithoutStoredValueStaysSentinel() {
+            Map<String, Object> merged =
+                    SecretMasker.restoreRedacted(
+                            Map.of("secretAccessKey", SecretMasker.REDACTED), Map.of());
+
+            assertEquals(SecretMasker.REDACTED, merged.get("secretAccessKey"));
         }
 
         @Test
@@ -70,7 +98,7 @@ class SecretMaskerTest {
 
             Map<String, Object> result = SecretMasker.mask(input);
 
-            assertEquals("***REDACTED***", result.get("secretAccessKey"));
+            assertEquals(SecretMasker.REDACTED, result.get("secretAccessKey"));
             // Access key ids are username-like, not secrets.
             assertEquals("AKIAEXAMPLE", result.get("accessKeyId"));
         }
@@ -92,9 +120,9 @@ class SecretMaskerTest {
             Map<String, Object> result = SecretMasker.mask(input);
 
             Map<String, Object> outer = (Map<String, Object>) result.get("outer");
-            assertEquals("***REDACTED***", outer.get("jwt"));
+            assertEquals(SecretMasker.REDACTED, outer.get("jwt"));
             Map<String, Object> inner = (Map<String, Object>) outer.get("inner");
-            assertEquals("***REDACTED***", inner.get("secret"));
+            assertEquals(SecretMasker.REDACTED, inner.get("secret"));
             assertEquals("ok", inner.get("other"));
         }
 
@@ -113,7 +141,7 @@ class SecretMaskerTest {
 
             List<?> list = (List<?>) result.get("list");
             Map<String, Object> first = (Map<String, Object>) list.get(0);
-            assertEquals("***REDACTED***", first.get("token"));
+            assertEquals(SecretMasker.REDACTED, first.get("token"));
             Map<String, Object> second = (Map<String, Object>) list.get(1);
             assertEquals("john", second.get("username"));
             assertEquals("stringValue", list.get(2));
@@ -185,7 +213,8 @@ class SecretMaskerTest {
             Map<String, Object> outer = (Map<String, Object>) result.get("outer");
             assertTrue(outer.containsKey(null), "Null key should be preserved");
             assertEquals("plainText", outer.get(null), "Value for null key must not be masked");
-            assertEquals("***REDACTED***", outer.get("password"), "Sensitive keys must be masked");
+            assertEquals(
+                    SecretMasker.REDACTED, outer.get("password"), "Sensitive keys must be masked");
         }
     }
 }
