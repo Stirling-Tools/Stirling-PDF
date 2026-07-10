@@ -38,6 +38,14 @@ vi.mock("@portal/api/sources", () => ({
   deleteSource: (id: string) => deleteSource(id),
 }));
 
+// The connections panel and the wizard's picker fetch stored S3 connections.
+vi.mock("@portal/api/integrations", () => ({
+  fetchS3Connections: () => Promise.resolve([]),
+  createIntegration: () => Promise.reject(new Error("not stubbed")),
+  updateIntegration: () => Promise.reject(new Error("not stubbed")),
+  deleteIntegration: () => Promise.reject(new Error("not stubbed")),
+}));
+
 const RESPONSE: SourcesResponse = {
   kpis: [
     { value: 2, description: "" },

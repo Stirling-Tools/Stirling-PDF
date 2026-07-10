@@ -23,6 +23,13 @@ vi.mock("@portal/api/sources", () => ({
   createSource: (...args: unknown[]) => createSource(...args),
 }));
 
+const fetchS3Connections = vi.fn();
+const createIntegration = vi.fn();
+vi.mock("@portal/api/integrations", () => ({
+  fetchS3Connections: () => fetchS3Connections(),
+  createIntegration: (...args: unknown[]) => createIntegration(...args),
+}));
+
 /** Step through the folder-source flow: choose type -> configure -> review. */
 function stepToReview() {
   // Step 0: folder is the default-selected type. Continue.
@@ -39,6 +46,9 @@ function stepToReview() {
 describe("ConnectWizard", () => {
   beforeEach(() => {
     createSource.mockReset();
+    fetchS3Connections.mockReset();
+    fetchS3Connections.mockResolvedValue([]);
+    createIntegration.mockReset();
   });
 
   it("creates a folder source with the configured options", async () => {
@@ -74,8 +84,9 @@ describe("ConnectWizard", () => {
     });
   });
 
-  it("creates an s3 source with a masked secret in review", async () => {
+  it("creates an s3 source by creating a connection inline", async () => {
     createSource.mockResolvedValue({ id: "src-2" });
+    createIntegration.mockResolvedValue({ id: 12, name: "Claims bucket" });
 
     renderWithMantine(
       <ConnectWizard open onClose={vi.fn()} onCreated={vi.fn()} />,
@@ -85,36 +96,68 @@ describe("ConnectWizard", () => {
     fireEvent.click(screen.getByText("portal.sources.types.s3.label"));
     fireEvent.click(screen.getByText("portal.sources.wizard.continue"));
 
-    // Step 1: name, bucket, credentials. The secret renders as a password
-    // input, so it is not part of the textbox roles.
-    const inputs = screen.getAllByRole("textbox") as HTMLInputElement[];
-    fireEvent.change(inputs[0], { target: { value: "Claims bucket" } });
-    fireEvent.change(inputs[1], { target: { value: "claims-inbox" } });
-    fireEvent.change(inputs[4], { target: { value: "AKIAEXAMPLE" } });
-    const secret = document.querySelector(
-      'input[type="password"]',
-    ) as HTMLInputElement;
-    fireEvent.change(secret, { target: { value: "shh-secret" } });
+    // Name the source (the wizard's own field), then create a connection
+    // inline - it is saved immediately (validated backend-side) and selected.
+    fireEvent.change(screen.getByLabelText(/portal\.sources\.wizard\.name/), {
+      target: { value: "Claims intake" },
+    });
+    fireEvent.click(
+      await screen.findByText("portal.connections.picker.createNew"),
+    );
+    // Target the connection form by label, not position - a Mantine Select in
+    // the picker also carries an input role and would shift index-based queries.
+    fireEvent.change(
+      screen.getByLabelText(/portal\.connections\.s3\.fields\.name/),
+      {
+        target: { value: "Claims bucket" },
+      },
+    );
+    fireEvent.change(
+      screen.getByLabelText(
+        /portal\.sources\.types\.s3\.fields\.bucket\.label/,
+      ),
+      { target: { value: "claims-inbox" } },
+    );
+    fireEvent.change(
+      screen.getByLabelText(
+        /portal\.sources\.types\.s3\.fields\.accessKeyId\.label/,
+      ),
+      { target: { value: "AKIAEXAMPLE" } },
+    );
+    fireEvent.change(
+      screen.getByLabelText(
+        /portal\.sources\.types\.s3\.fields\.secretAccessKey\.label/,
+      ),
+      { target: { value: "shh-secret" } },
+    );
+    fireEvent.click(screen.getByText("portal.connections.picker.save"));
+
+    await waitFor(() => {
+      expect(createIntegration).toHaveBeenCalledWith({
+        integrationType: "S3",
+        name: "Claims bucket",
+        scope: "TEAM",
+        config: {
+          bucket: "claims-inbox",
+          region: "us-east-1",
+          endpoint: "",
+          accessKeyId: "AKIAEXAMPLE",
+          secretAccessKey: "shh-secret",
+        },
+      });
+    });
+
     fireEvent.click(screen.getByText("portal.sources.wizard.continue"));
-
-    // Step 2: the secret is masked in review, never echoed.
-    expect(screen.queryByText("shh-secret")).not.toBeInTheDocument();
-    expect(screen.getByText("********")).toBeInTheDocument();
-
     fireEvent.click(screen.getByText("portal.sources.actions.connectSource"));
     await waitFor(() => {
       expect(createSource).toHaveBeenCalledTimes(1);
     });
     expect(createSource).toHaveBeenCalledWith({
-      name: "Claims bucket",
+      name: "Claims intake",
       type: "s3",
       options: {
-        bucket: "claims-inbox",
-        region: "us-east-1",
+        connectionId: "12",
         prefix: "",
-        accessKeyId: "AKIAEXAMPLE",
-        secretAccessKey: "shh-secret",
-        endpoint: "",
         mode: "consume",
       },
       enabled: true,

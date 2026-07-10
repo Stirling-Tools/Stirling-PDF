@@ -50,6 +50,7 @@ import {
 } from "@portal/api/pipelines";
 import { clearProcessedHistory } from "@portal/api/policies";
 import { availableOutputModes } from "@portal/components/pipelines/outputModes";
+import { S3ConnectionPicker } from "@portal/components/sources/S3ConnectionPicker";
 import { fetchSources, type SourceView } from "@portal/api/sources";
 import { EDITOR_SOURCE_TYPE } from "@portal/components/sources/sourceTypes";
 import { useAsync } from "@portal/hooks/useAsync";
@@ -64,23 +65,15 @@ type OutputMode = PipelineOutputMode;
 /** New pipelines (and specs of unoffered types) start on the first offered destination. */
 const DEFAULT_OUTPUT_MODE = availableOutputModes()[0];
 
-/** The s3 output's connection fields, mirrored from the OutputSpec options. */
+/** The s3 output's options: a stored connection reference plus the per-use prefix. */
 interface S3OutputOptions {
-  bucket: string;
-  region: string;
+  connectionId: string;
   prefix: string;
-  endpoint: string;
-  accessKeyId: string;
-  secretAccessKey: string;
 }
 
 const EMPTY_S3_OUTPUT: S3OutputOptions = {
-  bucket: "",
-  region: "us-east-1",
+  connectionId: "",
   prefix: "",
-  endpoint: "",
-  accessKeyId: "",
-  secretAccessKey: "",
 };
 type ScheduleUnit = "MINUTES" | "HOURS" | "DAYS";
 
@@ -133,18 +126,12 @@ function parseOutput(output: OutputSpec | undefined): {
     };
   }
   if (output?.type === "s3") {
-    const option = (key: keyof S3OutputOptions, fallback = "") =>
-      String(output.options?.[key] ?? fallback);
     return {
       mode: "s3",
       directory: "",
       s3: {
-        bucket: option("bucket"),
-        region: option("region", "us-east-1"),
-        prefix: option("prefix"),
-        endpoint: option("endpoint"),
-        accessKeyId: option("accessKeyId"),
-        secretAccessKey: option("secretAccessKey"),
+        connectionId: String(output.options?.connectionId ?? ""),
+        prefix: String(output.options?.prefix ?? ""),
       },
     };
   }
@@ -356,10 +343,7 @@ export function PipelineBuilder() {
   const scheduleCountValid =
     triggerType !== "schedule" || Number(scheduleCount) > 0;
   const s3OutputValid =
-    outputMode !== "s3" ||
-    (outputS3.bucket.trim() !== "" &&
-      outputS3.accessKeyId.trim() !== "" &&
-      outputS3.secretAccessKey.trim() !== "");
+    outputMode !== "s3" || outputS3.connectionId.trim() !== "";
   const outputValid =
     (outputMode !== "folder" || outputDirectory.trim() !== "") && s3OutputValid;
   const canSave =
@@ -778,11 +762,13 @@ export function PipelineBuilder() {
                 <span
                   className={
                     "portal-builder__s3-summary" +
-                    (outputS3.bucket ? "" : " is-unset")
+                    (outputS3.connectionId ? "" : " is-unset")
                   }
                 >
-                  {outputS3.bucket
-                    ? `s3://${outputS3.bucket}/${outputS3.prefix}`
+                  {outputS3.connectionId
+                    ? t("portal.pipelines.composer.s3ConfiguredSummary", {
+                        prefix: outputS3.prefix || "/",
+                      })
                     : t("portal.pipelines.composer.s3NotConfigured")}
                 </span>
                 <Button
@@ -1021,20 +1007,17 @@ export function PipelineBuilder() {
       >
         <div className="portal-builder__s3-fields">
           <FormField
-            label={t("portal.sources.types.s3.fields.bucket.label")}
+            label={t("portal.sources.types.s3.fields.connection.label")}
+            helperText={t(
+              "portal.sources.types.s3.fields.connection.helperText",
+            )}
             required
           >
-            <Input
-              value={outputS3.bucket}
-              placeholder="my-company-inbox"
-              onChange={(e) => setS3Field("bucket", e.target.value)}
-            />
-          </FormField>
-          <FormField label={t("portal.sources.types.s3.fields.region.label")}>
-            <Input
-              value={outputS3.region}
-              placeholder="us-east-1"
-              onChange={(e) => setS3Field("region", e.target.value)}
+            <S3ConnectionPicker
+              value={outputS3.connectionId}
+              onChange={(connectionId) =>
+                setS3Field("connectionId", connectionId)
+              }
             />
           </FormField>
           <FormField
@@ -1045,35 +1028,6 @@ export function PipelineBuilder() {
               value={outputS3.prefix}
               placeholder="processed/"
               onChange={(e) => setS3Field("prefix", e.target.value)}
-            />
-          </FormField>
-          <FormField
-            label={t("portal.sources.types.s3.fields.accessKeyId.label")}
-            required
-          >
-            <Input
-              value={outputS3.accessKeyId}
-              onChange={(e) => setS3Field("accessKeyId", e.target.value)}
-            />
-          </FormField>
-          <FormField
-            label={t("portal.sources.types.s3.fields.secretAccessKey.label")}
-            required
-          >
-            <Input
-              type="password"
-              value={outputS3.secretAccessKey}
-              onChange={(e) => setS3Field("secretAccessKey", e.target.value)}
-            />
-          </FormField>
-          <FormField
-            label={t("portal.sources.types.s3.fields.endpoint.label")}
-            helperText={t("portal.sources.types.s3.fields.endpoint.helperText")}
-          >
-            <Input
-              value={outputS3.endpoint}
-              placeholder="https://s3.example.com"
-              onChange={(e) => setS3Field("endpoint", e.target.value)}
             />
           </FormField>
         </div>

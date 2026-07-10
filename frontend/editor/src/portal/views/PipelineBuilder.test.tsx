@@ -50,6 +50,13 @@ vi.mock("@portal/api/policies", () => ({
   clearProcessedHistory: (id: string) => clearProcessedHistory(id),
 }));
 
+const fetchS3Connections = vi.fn();
+const createIntegration = vi.fn();
+vi.mock("@portal/api/integrations", () => ({
+  fetchS3Connections: () => fetchS3Connections(),
+  createIntegration: (...args: unknown[]) => createIntegration(...args),
+}));
+
 // One editable tool, Compress, so the picker and step settings have something to render.
 vi.mock("@app/contexts/ToolRegistryContext", () => {
   const compress = {
@@ -149,6 +156,9 @@ describe("PipelineBuilder", () => {
     fetchRun.mockResolvedValue({ status: "COMPLETED" });
     clearProcessedHistory.mockReset();
     clearProcessedHistory.mockResolvedValue(undefined);
+    fetchS3Connections.mockReset();
+    fetchS3Connections.mockResolvedValue([]);
+    createIntegration.mockReset();
   });
 
   it("builds a new pipeline: name it, add a tool, and save", async () => {
@@ -177,7 +187,8 @@ describe("PipelineBuilder", () => {
     expect(await screen.findByText("pipelines list")).toBeInTheDocument();
   });
 
-  it("saves an s3 output with its connection options", async () => {
+  it("saves an s3 output referencing an inline-created connection", async () => {
+    createIntegration.mockResolvedValue({ id: 12, name: "Claims bucket" });
     renderBuilder("/processor/pipelines/new");
 
     fireEvent.change(await screen.findByRole("textbox"), {
@@ -185,8 +196,8 @@ describe("PipelineBuilder", () => {
     });
     fireEvent.click(screen.getByLabelText("portal.pipelines.output.s3"));
 
-    // With s3 selected but no bucket, saving is blocked and the summary reads
-    // unconfigured; the connection fields live behind the Configure modal.
+    // With s3 selected but no connection, saving is blocked and the summary
+    // reads unconfigured; the connection lives behind the Configure modal.
     expect(
       screen.getByText("portal.pipelines.composer.create").closest("button"),
     ).toBeDisabled();
@@ -195,21 +206,54 @@ describe("PipelineBuilder", () => {
     ).toBeInTheDocument();
     fireEvent.click(screen.getByText("portal.pipelines.composer.s3Configure"));
 
-    // Textboxes: name, then the modal's bucket, region, prefix, access key id,
-    // endpoint; the secret renders as a password input outside the textbox role.
-    const inputs = screen.getAllByRole("textbox") as HTMLInputElement[];
-    fireEvent.change(inputs[1], { target: { value: "claims-processed" } });
-    fireEvent.change(inputs[3], { target: { value: "processed/" } });
-    fireEvent.change(inputs[4], { target: { value: "AKIAEXAMPLE" } });
-    const secret = document.querySelector(
-      'input[type="password"]',
-    ) as HTMLInputElement;
-    fireEvent.change(secret, { target: { value: "shh-secret" } });
+    // No connections exist: create one inline from the picker. Target fields by
+    // label, not position - the picker's Mantine Select also carries an input
+    // role and would shift index-based queries.
+    fireEvent.click(
+      await screen.findByText("portal.connections.picker.createNew"),
+    );
+    fireEvent.change(
+      screen.getByLabelText(/portal\.connections\.s3\.fields\.name/),
+      { target: { value: "Claims bucket" } },
+    );
+    fireEvent.change(
+      screen.getByLabelText(
+        /portal\.sources\.types\.s3\.fields\.bucket\.label/,
+      ),
+      { target: { value: "claims-processed" } },
+    );
+    fireEvent.change(
+      screen.getByLabelText(
+        /portal\.sources\.types\.s3\.fields\.accessKeyId\.label/,
+      ),
+      { target: { value: "AKIAEXAMPLE" } },
+    );
+    fireEvent.change(
+      screen.getByLabelText(
+        /portal\.sources\.types\.s3\.fields\.secretAccessKey\.label/,
+      ),
+      { target: { value: "shh-secret" } },
+    );
+    fireEvent.click(screen.getByText("portal.connections.picker.save"));
+    await waitFor(() => expect(createIntegration).toHaveBeenCalledTimes(1));
+    // The inline create form closes once the connection is saved and selected.
+    await waitFor(() =>
+      expect(
+        screen.queryByText("portal.connections.picker.save"),
+      ).not.toBeInTheDocument(),
+    );
+
+    fireEvent.change(
+      screen.getByLabelText(
+        /portal\.sources\.types\.s3\.fields\.prefix\.label/,
+      ),
+      { target: { value: "processed/" } },
+    );
     fireEvent.click(screen.getByText("portal.pipelines.composer.s3Done"));
 
     // The summary now shows the configured destination.
     expect(
-      screen.getByText("s3://claims-processed/processed/"),
+      screen.getByText("portal.pipelines.composer.s3ConfiguredSummary"),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
 
@@ -219,12 +263,8 @@ describe("PipelineBuilder", () => {
         output: {
           type: "s3",
           options: {
-            bucket: "claims-processed",
-            region: "us-east-1",
+            connectionId: "12",
             prefix: "processed/",
-            endpoint: "",
-            accessKeyId: "AKIAEXAMPLE",
-            secretAccessKey: "shh-secret",
           },
         },
       }),

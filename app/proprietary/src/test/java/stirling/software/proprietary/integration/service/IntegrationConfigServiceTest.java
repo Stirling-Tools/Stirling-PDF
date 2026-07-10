@@ -13,9 +13,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
@@ -52,7 +52,58 @@ class IntegrationConfigServiceTest {
     @Mock
     private stirling.software.proprietary.access.repository.ResourceGrantRepository grantRepository;
 
-    @InjectMocks private IntegrationConfigService service;
+    @Mock private IntegrationConfigValidator validator;
+    @Mock private IntegrationConfigUsageCheck usageCheck;
+
+    private IntegrationConfigService service;
+
+    @BeforeEach
+    void setUp() {
+        service =
+                new IntegrationConfigService(
+                        repository,
+                        ownership,
+                        secretMasker,
+                        grantRepository,
+                        List.of(validator),
+                        List.of(usageCheck));
+    }
+
+    @Test
+    void createRejectsAConfigItsTypeValidatorRefuses() {
+        when(secretMasker.sanitize(any())).thenReturn(Map.of());
+        when(validator.type()).thenReturn(IntegrationType.API);
+        org.mockito.Mockito.doThrow(new IllegalArgumentException("api config needs a 'url'"))
+                .when(validator)
+                .validate(any());
+
+        assertThatThrownBy(
+                        () ->
+                                service.create(
+                                        request(IntegrationType.API, OwnerScope.USER, null),
+                                        user(7)))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(
+                        e ->
+                                assertThat(((ResponseStatusException) e).getStatusCode())
+                                        .isEqualTo(HttpStatus.BAD_REQUEST));
+    }
+
+    @Test
+    void deleteRefusedWhileAnythingStillReferencesTheConfig() {
+        IntegrationConfig cfg = config(9L);
+        when(repository.findById(9L)).thenReturn(Optional.of(cfg));
+        when(ownership.canManage(any(), eq(cfg), any())).thenReturn(true);
+        when(usageCheck.usagesOf(9L)).thenReturn(List.of("source 'Claims intake'"));
+
+        assertThatThrownBy(() -> service.delete(9L, user(7)))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(
+                        e ->
+                                assertThat(((ResponseStatusException) e).getStatusCode())
+                                        .isEqualTo(HttpStatus.CONFLICT));
+        verify(repository, org.mockito.Mockito.never()).delete(any(IntegrationConfig.class));
+    }
 
     @Test
     void createDelegatesOwnershipAndSanitizesConfig() {

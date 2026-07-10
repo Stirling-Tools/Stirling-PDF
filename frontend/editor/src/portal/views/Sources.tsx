@@ -20,6 +20,7 @@ import { KpiStrip } from "@portal/components/sources/KpiStrip";
 import { SourcesTable } from "@portal/components/sources/SourcesTable";
 import { SourceDetailCard } from "@portal/components/sources/SourceDetailCard";
 import { ConnectWizard } from "@portal/components/sources/ConnectWizard";
+import { S3ConnectionsPanel } from "@portal/components/sources/S3ConnectionsPanel";
 import "@portal/views/Sources.css";
 
 export function Sources() {
@@ -198,6 +199,8 @@ export function Sources() {
           busy={mutating}
         />
       )}
+
+      {!isLoading && <S3ConnectionsPanel />}
 
       <ConnectWizard
         open={wizardOpen}

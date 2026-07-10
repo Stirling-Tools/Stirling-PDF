@@ -6469,6 +6469,22 @@ title = "No components available"
 description = "GA components are available on Pay-as-you-go; a few Beta components are enterprise-only. Locked cards show an upgrade nudge."
 title = "Some components need a paid plan"
 
+[portal.connections]
+delete = "Delete"
+edit = "Edit"
+editTitle = "Edit S3 connection"
+title = "S3 connections"
+
+[portal.connections.picker]
+cancel = "Cancel"
+createNew = "New connection..."
+placeholder = "Select a connection"
+save = "Save connection"
+
+[portal.connections.s3.fields]
+name = "Connection name"
+namePlaceholder = "e.g. Claims bucket"
+
 [portal.docs.authentication]
 codeCaption = "every request"
 eyebrow = "GETTING STARTED"
@@ -7279,6 +7295,7 @@ operations_other = "Operations ({{count}})"
 output = "Output"
 removeStep = "Remove operation"
 s3Configure = "Configure"
+s3ConfiguredSummary = "Connection selected - uploads under {{prefix}}"
 s3Done = "Done"
 s3ModalTitle = "Amazon S3 output"
 s3NotConfigured = "Not configured"
@@ -8016,6 +8033,10 @@ label = "Access key ID"
 [portal.sources.types.s3.fields.bucket]
 label = "Bucket"
 placeholder = "my-company-inbox"
+
+[portal.sources.types.s3.fields.connection]
+helperText = "The stored connection holding the bucket and credentials. Reused by every source and pipeline output that references it."
+label = "Connection"
 
 [portal.sources.types.s3.fields.endpoint]
 helperText = "Leave blank for Amazon S3. Set to use an S3-compatible service such as MinIO."

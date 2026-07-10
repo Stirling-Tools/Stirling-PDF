@@ -12,6 +12,7 @@ import {
 import { errorMessage } from "@portal/api/http";
 import { createSource, type Source } from "@portal/api/sources";
 import { creatableSourceTypes } from "@portal/components/sources/creatableSourceTypes";
+import { S3ConnectionPicker } from "@portal/components/sources/S3ConnectionPicker";
 import {
   defaultOptions,
   sourceTypeMeta,
@@ -239,7 +240,14 @@ export function ConnectWizard({
               }
               required={field.required}
             >
-              {field.control === "select" ? (
+              {field.control === "s3Connection" ? (
+                <S3ConnectionPicker
+                  value={options[field.key] ?? ""}
+                  onChange={(connectionId) =>
+                    setOptions((o) => ({ ...o, [field.key]: connectionId }))
+                  }
+                />
+              ) : field.control === "select" ? (
                 <Select
                   value={options[field.key] ?? ""}
                   options={(field.options ?? []).map((o) => ({
