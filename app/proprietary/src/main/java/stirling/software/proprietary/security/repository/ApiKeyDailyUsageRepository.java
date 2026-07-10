@@ -1,5 +1,6 @@
 package stirling.software.proprietary.security.repository;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -32,6 +33,21 @@ public interface ApiKeyDailyUsageRepository
             "SELECT u.count FROM ApiKeyDailyUsage u "
                     + "WHERE u.apiKeyId = :apiKeyId AND u.epochDay = :epochDay")
     Long countForDay(@Param("apiKeyId") Long apiKeyId, @Param("epochDay") long epochDay);
+
+    /** Batched today-count for many keys in one query (avoids N+1 when listing keys). */
+    @Query(
+            "SELECT u.apiKeyId AS apiKeyId, u.count AS total FROM ApiKeyDailyUsage u "
+                    + "WHERE u.apiKeyId IN :ids AND u.epochDay = :epochDay")
+    List<ApiKeyUsageSum> countForDayByIds(
+            @Param("ids") Collection<Long> ids, @Param("epochDay") long epochDay);
+
+    /** Batched trailing-window sum for many keys in one query. */
+    @Query(
+            "SELECT u.apiKeyId AS apiKeyId, SUM(u.count) AS total FROM ApiKeyDailyUsage u "
+                    + "WHERE u.apiKeyId IN :ids AND u.epochDay >= :fromDayInclusive "
+                    + "GROUP BY u.apiKeyId")
+    List<ApiKeyUsageSum> sumSinceByIds(
+            @Param("ids") Collection<Long> ids, @Param("fromDayInclusive") long fromDayInclusive);
 
     void deleteByApiKeyId(Long apiKeyId);
 

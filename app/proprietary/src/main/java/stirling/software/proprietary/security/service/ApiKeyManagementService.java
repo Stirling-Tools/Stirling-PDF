@@ -4,8 +4,10 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -86,13 +88,40 @@ public class ApiKeyManagementService {
                     .forEach(visible::add);
         }
 
+        // Batch usage for all visible keys into two queries rather than two-per-key (avoids N+1).
+        long today = Instant.now().atZone(ZoneOffset.UTC).toLocalDate().toEpochDay();
+        List<Long> ids = visible.stream().map(ApiKey::getId).toList();
+        Map<Long, Long> todayById = new HashMap<>();
+        Map<Long, Long> monthById = new HashMap<>();
+        if (!ids.isEmpty()) {
+            usageRepository
+                    .countForDayByIds(ids, today)
+                    .forEach(r -> todayById.put(r.getApiKeyId(), r.getTotal()));
+            usageRepository
+                    .sumSinceByIds(ids, today - (MONTH_WINDOW_DAYS - 1))
+                    .forEach(r -> monthById.put(r.getApiKeyId(), r.getTotal()));
+        }
+
         List<PortalApiKeyDto> keys =
-                visible.stream().map(k -> toDto(caller, k, isManager, teamName)).toList();
+                visible.stream()
+                        .map(
+                                k ->
+                                        toDto(
+                                                caller,
+                                                k,
+                                                teamName,
+                                                zeroIfNull(todayById.get(k.getId())),
+                                                zeroIfNull(monthById.get(k.getId()))))
+                        .toList();
         return PortalApiKeysResponse.builder()
                 .keys(keys)
                 .canCreateTeamKeys(isManager && teamId != null)
                 .teamName(teamName)
                 .build();
+    }
+
+    private static long zeroIfNull(Long value) {
+        return value == null ? 0L : value;
     }
 
     /** Create a key and return its one-time secret. */
@@ -151,7 +180,7 @@ public class ApiKeyManagementService {
                                 .build());
 
         return CreatedApiKeyDto.builder()
-                .key(toDto(caller, saved, policyAuthority.canEditPolicies(), teamName))
+                .key(toDto(caller, saved, teamName, 0L, 0L))
                 .secret(rawKey)
                 .build();
     }
@@ -230,10 +259,8 @@ public class ApiKeyManagementService {
                         });
     }
 
-    private PortalApiKeyDto toDto(User caller, ApiKey key, boolean isManager, String teamName) {
-        long today = Instant.now().atZone(ZoneOffset.UTC).toLocalDate().toEpochDay();
-        Long todayCount = usageRepository.countForDay(key.getId(), today);
-        long usageMonth = usageRepository.sumSince(key.getId(), today - (MONTH_WINDOW_DAYS - 1));
+    private PortalApiKeyDto toDto(
+            User caller, ApiKey key, String teamName, long usageToday, long usageMonth) {
         return PortalApiKeyDto.builder()
                 .id(String.valueOf(key.getId()))
                 .name(key.getName())
@@ -247,7 +274,7 @@ public class ApiKeyManagementService {
                                 ? "Never"
                                 : LAST_USED_FORMAT.format(key.getLastUsedAt()))
                 .status(key.isActive() ? "active" : "revoked")
-                .usageToday(todayCount == null ? 0 : todayCount)
+                .usageToday(usageToday)
                 .usageMonth(usageMonth)
                 .canManage(canManage(caller, key))
                 .build();
