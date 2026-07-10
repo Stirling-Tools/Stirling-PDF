@@ -184,6 +184,40 @@ class JobServiceTest {
     }
 
     @Test
+    void joinOrOpen_nullRunId_neverJoins(@TempDir Path tmp) throws IOException {
+        // A standalone call (no run id) opens its own charge even when content matches an open
+        // job — run-scoped grouping only joins within the same automation run.
+        UUID existingId = UUID.randomUUID();
+        Path input = givenFile(tmp, "in.bin");
+        detector.willMatch(
+                input, new LineageMatch(existingId, ArtifactKind.INPUT, LocalDateTime.now()));
+
+        JobContext standalone =
+                new JobContext(
+                        42L, 100L, JobSource.API, ProcessType.SINGLE_TOOL, 1L, 10); // null runId
+        JoinOrOpenResult result = service.joinOrOpen(standalone, List.of(input));
+
+        assertThat(result.disposition()).isEqualTo(JoinOrOpenResult.Disposition.OPENED);
+        verify(jobRepo, never()).findById(existingId);
+    }
+
+    @Test
+    void joinOrOpen_opened_setsRunIdAndDocCountAndFingerprint(@TempDir Path tmp)
+            throws IOException {
+        // Two input files, no match → one fresh charge with doc_count = input-file count (2),
+        // the run id stamped, and a non-null fingerprint (used for unique-PDF counting).
+        Path a = givenFile(tmp, "a.bin");
+        Path b = givenFile(tmp, "b.bin");
+
+        JoinOrOpenResult result = service.joinOrOpen(ctx(42L, 100L, 10), List.of(a, b));
+
+        assertThat(result.disposition()).isEqualTo(JoinOrOpenResult.Disposition.OPENED);
+        assertThat(result.job().getDocCount()).isEqualTo(2);
+        assertThat(result.job().getRunId()).isEqualTo("test-run");
+        assertThat(result.job().getDocumentFingerprint()).isNotNull();
+    }
+
+    @Test
     void joinOrOpen_emptyInputs_throws() {
         assertThatThrownBy(() -> service.joinOrOpen(ctx(42L, 100L, 10), List.of()))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -297,8 +331,10 @@ class JobServiceTest {
     // --- helpers --------------------------------------------------------------------------------
 
     private static JobContext ctx(long userId, long teamId, int stepLimit) {
+        // Lineage joins are scoped to an automation run, so the join scenarios below run inside a
+        // run id. The standalone (null run id) path is covered by joinOrOpen_nullRunId_neverJoins.
         return new JobContext(
-                userId, teamId, JobSource.WEB, ProcessType.SINGLE_TOOL, 1L, stepLimit);
+                userId, teamId, JobSource.WEB, ProcessType.SINGLE_TOOL, 1L, stepLimit, "test-run");
     }
 
     private static ProcessingJob openJob(

@@ -7,6 +7,7 @@ black = "Чорний"
 blue = "Синій"
 cancel = "Скасувати"
 chooseFile = "Вибрати файл"
+clear = "Очистити"
 close = "Закрити"
 comingSoon = "Незабаром"
 confirm = "Підтвердити"
@@ -87,6 +88,7 @@ processingCompleteMultiple = "{{count}} файлів готово."
 property = "Властивість"
 quickPosition = "Швидке розташування"
 red = "Червоний"
+remove = "Видалити"
 reset = "Скинути"
 review = "Огляд"
 save = "Зберегти"
@@ -180,6 +182,7 @@ addMoreFiles = "Додати ще файли..."
 attachments = "Виберіть вкладення"
 info = "Виберіть файли для додавання до вашого PDF. Ці файли буде вбудовано й вони будуть доступні через панель вкладень PDF."
 placeholder = "Виберіть файли..."
+removeFile = "Видалити файл"
 selectedFiles = "Вибрані файли"
 submit = "Додати вкладення"
 
@@ -1628,6 +1631,9 @@ title = "Бажаєте покращити Stirling PDF?"
 tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
 
 [annotation]
+alignCenter = "Вирівняти по центру"
+alignLeft = "Вирівняти ліворуч"
+alignRight = "Вирівняти праворуч"
 annotationStyle = "Стиль анотації"
 backgroundColor = "Колір фону"
 borderOff = "Рамка: вимкнено"
@@ -2531,6 +2537,7 @@ title = "Загальне правило"
 
 [certSign.source]
 device = "Цей пристрій"
+noOtherSources = "Інші джерела сертифікатів недоступні."
 server = "Сервер"
 stepTitle = "Джерело сертифіката"
 upload = "Завантажити"
@@ -2805,6 +2812,7 @@ back = "Назад"
 cancel = "Скасувати"
 close = "Закрити"
 collapse = "Згорнути"
+confirm = "Підтвердити"
 continue = "Продовжити"
 copied = "Скопійовано!"
 copy = "Копіювати"
@@ -3595,7 +3603,9 @@ makeCopy = "Створити копію"
 mobileShort = "Мобільні"
 mobileUpload = "Мобільне завантаження"
 mobileUploadNotAvailable = "Мобільне завантаження не ввімкнено"
+moreOptions = "Більше параметрів"
 myFiles = "Мої файли"
+nextFile = "Наступний файл"
 noFiles = "Немає доступних файлів"
 noFilesFound = "За вашим запитом файлів не знайдено"
 noRecentFiles = "Недавніх файлів не знайдено"
@@ -3605,6 +3615,7 @@ openInFileEditor = "Відкрити в редакторі файлів"
 openInPageEditor = "Відкрити в редакторі сторінок"
 owner = "Власник"
 ownerUnknown = "Невідомо"
+previousFile = "Попередній файл"
 recent = "Недавні"
 removeBoth = "Видалити в обох місцях"
 removeFilePrompt = "Цей файл збережено на цьому пристрої та на вашому сервері. Де ви хочете його видалити?"
@@ -3680,7 +3691,9 @@ workbench = "Робоча область"
 
 [fileSidebar]
 addFiles = "Додати файли"
+addingFiles = "Додавання файлів…"
 collapse = "Згорнути бічну панель"
+customizeGroups = "Налаштувати групи"
 dropHint = "Відкрийте файли, щоб почати"
 dropToAdd = "Drop files to add"
 expand = "Розгорнути бічну панель"
@@ -3693,8 +3706,11 @@ noFiles = "Файлів ще немає"
 openFileManager = "Відкрити файловий менеджер"
 openFromComputer = "Відкрити з комп’ютера"
 openSettings = "Відкрити налаштування"
+other = "Інше"
+recent = "Нещодавні"
 search = "Пошук"
 searchPlaceholder = "Пошук файлів..."
+viewAll = "Переглянути всі файли ({{count}})"
 
 [fileSidebar.fileItem]
 closeViewer = "Закрити переглядач"
@@ -3706,6 +3722,23 @@ updateOnServer = "Update on server"
 uploadToServer = "Upload to server"
 versionHistory = "Version history"
 
+[fileSidebar.groupsModal]
+add = "Додати"
+addLabel = "Додати мітку…"
+categoryIconAria = "Виберіть іконку для {{name}}"
+createCategory = "Створити категорію"
+delete = "Видалити категорію"
+done = "Готово"
+hide = "Приховати категорію"
+newCategory = "Назва нової категорії…"
+removeLabel = "Видалити {{name}}"
+rename = "Перейменувати"
+reset = "Скинути до стандартних налаштувань"
+search = "Пошук міток…"
+show = "Показати категорію"
+subtitle = "Групуйте файли в батьківські категорії. Додавайте наявні або нові мітки до категорії, перейменовуйте її або створюйте власну. Файли, які не належать до жодної з ваших категорій, відображаються в розділі «Інше»."
+title = "Категорії бічної панелі"
+
 [filesPage]
 addToWorkspace = "Додати до робочої області"
 addToWorkspaceCount = "Додати {{count}} до робочої області"
@@ -3715,6 +3748,7 @@ backToFolder = "Назад до {{folder}}"
 backToMyFiles = "Назад до «Мої файли»"
 breadcrumbs = "Шлях до папки"
 cancel = "Скасувати"
+classification = "Класифікація"
 clearSearch = "Очистити пошук"
 clearSelection = "Очистити вибір"
 closeDetails = "Закрити відомості"
@@ -3874,10 +3908,10 @@ uploadFilesFailedDetail = "Не вдалося завантажити файли
 added = "Додано"
 count = "Файли"
 folder = "Папка"
+labels = "Мітки"
 modified = "Змінено"
 name = "Назва"
 size = "Розмір"
-toolHistory = "Історія інструментів"
 toolHistoryAtVersion = "Сукупний ланцюжок інструментів"
 totalSize = "Загальний розмір"
 type = "Тип"
@@ -4614,10 +4648,10 @@ welcomeTitle = "Вас запросили!"
 [landing]
 addFiles = "Додати файли"
 heroSubtitle = "Перетягніть або додайте наявний PDF, щоб почати."
-heroTitle = "Stirling PDF"
 mobileUpload = "Завантажити з мобільного"
 openFromComputer = "Відкрити з комп’ютера"
 uploadFromComputer = "Завантажити з комп’ютера"
+workbenchEmptyStateHero = "Перетягніть PDF будь-куди"
 
 [language]
 direction = "ltr"
@@ -4930,6 +4964,7 @@ title = "Вивід"
 [onboarding]
 activeFiles = "Вигляд <strong>Активні файли</strong> показує всі PDF, завантажені до інструменту, і дозволяє вибрати, які з них обробляти."
 allTools = "This is the <strong>All Tools</strong> panel, where you can browse and select from all available PDF tools."
+close = "Закрити"
 cropSettings = "Тепер, коли ми вибрали файл, який хочемо обрізати, можемо налаштувати інструмент Обрізка, щоб вибрати область, до якої слід обрізати PDF."
 fileCheckbox = "Клацання по файлу позначає його для обробки. Можна вибрати кілька файлів для пакетних операцій."
 fileReplacement = "Змінений файл автоматично замінить оригінал у Робочій області, що дозволить легко пропустити його через інші інструменти."
@@ -4955,6 +4990,7 @@ skipTheTour = "Пропустити тур"
 
 [onboarding.desktopInstall]
 body = "Stirling найкраще працює як настільний додаток. Ви можете працювати офлайн, швидше отримувати доступ до документів і редагувати їх локально на своєму комп’ютері."
+selectOs = "Виберіть операційну систему"
 title = "Завантажити"
 titleWithOs = "Завантажити для {{osLabel}}"
 
@@ -5566,7 +5602,9 @@ viewLabel = "Редактор PDF"
 
 [pdfTextEditor.actions]
 applyChanges = "Застосувати зміни"
+clearText = "Очистити текст"
 downloadCopy = "Завантажити копію"
+moreOptions = "Більше параметрів"
 reset = "Скинути зміни"
 
 [pdfTextEditor.badges]
@@ -5942,6 +5980,16 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
+[policies.docType]
+Contracts = "Договори"
+"Financial reports" = "Фінансові звіти"
+"HR records" = "Кадрові записи"
+Insurance = "Страхування"
+Invoices = "Рахунки-фактури"
+"Legal filings" = "Юридичні подання"
+"Medical / PHI" = "Медичні / PHI"
+"Tax documents" = "Податкові документи"
+
 [policies.enforcement]
 applying = "Застосовуємо {{names}}"
 applyingProgress = "Застосовуємо {{names}} ({{done}} з {{total}})"
@@ -5963,8 +6011,94 @@ export = "Застосування перед експортом"
 input = "Застосування під час імпорту"
 print = "Застосування перед друком"
 
+[policies.field]
+accessLog = "Журнал доступу"
+archiveAfter = "Архівувати після"
+auditTrail = "Аудиторський слід"
+belowThreshold = "Нижче порога"
+destination = "Призначення"
+frameworks = "Фреймворки"
+immutableHold = "Незмінне утримання"
+keepFor = "Зберігати протягом"
+minConfidence = "Мін. впевненість"
+notify = "Сповіщати під час маршрутизації"
+onViolation = "У разі невідповідності"
+webhookUrl = "Webhook URL"
+
+[policies.fieldOption.archiveAfter]
+"1 year" = "1 рік"
+"30 days" = "30 днів"
+"90 days" = "90 днів"
+Never = "Ніколи"
+
+[policies.fieldOption.belowThreshold]
+"Flag for review" = "Позначити для перевірки"
+Hold = "Утримати"
+"Route to bucket" = "Маршрутизувати в bucket"
+
+[policies.fieldOption.destination]
+Documents = "Документи"
+"S3 bucket" = "S3 bucket"
+SharePoint = "SharePoint"
+Webhook = "Webhook"
+
+[policies.fieldOption.frameworks]
+FedRAMP = "FedRAMP"
+GDPR = "GDPR"
+HIPAA = "HIPAA"
+"ISO 27001" = "ISO 27001"
+"PCI DSS" = "PCI DSS"
+"SOC 2" = "SOC 2"
+
+[policies.fieldOption.keepFor]
+"1 year" = "1 рік"
+"3 years" = "3 роки"
+"30 days" = "30 днів"
+"7 years" = "7 років"
+Indefinite = "Безстроково"
+
+[policies.fieldOption.minConfidence]
+"60%" = "60%"
+"70%" = "70%"
+"80%" = "80%"
+"90%" = "90%"
+"95%" = "95%"
+
+[policies.fieldOption.onViolation]
+"Auto-redact PHI" = "Автоматично приховати PHI"
+"Block export" = "Заблокувати експорт"
+"Flag for review" = "Позначити для перевірки"
+"Quarantine document" = "Помістити документ у карантин"
+
 [policies.fields]
 selectedCount = "{{count}} selected"
+
+[policies.labels]
+add = "Додати"
+addPlaceholder = "Додати мітку…"
+customNote = "Налаштовано для вашої команди."
+defaultNote = "Використовується вбудоване стандартне значення, спільне для вашої команди."
+duplicate = "\"{{name}}\" уже існує."
+edit = "Редагувати мітки"
+empty = "Міток ще немає."
+export = "Експорт JSON"
+iconAria = "Виберіть іконку для {{name}}"
+import = "Імпорт JSON"
+importError = "Не вдалося імпортувати цей файл."
+managedNote = "Командними мітками керує керівник вашої команди."
+modalSubtitle = "Спільно для всієї вашої команди. Класифікатор вибирає мітки, що відповідають кожному документу."
+modalTitle = "Мітки класифікації"
+pickIcon = "Використати іконку {{label}}"
+removeAria = "Видалити {{name}}"
+resetToDefault = "Скинути до стандартного"
+saveForTeam = "Зберегти для команди"
+saving = "Збереження…"
+sectionLabel = "Мітки класифікації"
+startFromScratch = "Почати з нуля"
+teamCount = "командні мітки"
+tooLong = "Мітки можуть містити щонайбільше {{max}} символів."
+ungrouped = "Без групи"
+view = "Переглянути мітки"
 
 [policies.pii]
 account = "Номери рахунків (позначені)"
@@ -5977,17 +6111,30 @@ placeholder = "Select PII types"
 routing = "Маршрутні номери США (ABA)"
 ssn = "Номери соціального страхування"
 
+[policies.settings]
+noneExport = "Наразі під час експорту не виконується жодна політика."
+noneUpload = "Наразі під час завантаження не виконується жодна політика."
+onExport = "Під час експорту"
+onUpload = "Під час завантаження"
+reorderHandle = "Перетягніть, щоб змінити порядок"
+runOrderDesc = "Коли на одному тригері виконується кілька політик, вони виконуються в цьому порядку — кожна на вихідних даних попередньої політики. Перетягніть, щоб змінити порядок."
+title = "Налаштування політик"
+
 [policies.sidebar]
 activeCount = "{{count}} active"
-infoAriaLabel = "What is a policy?"
 infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
 loading = "Loading…"
+optionsAriaLabel = "Параметри політики"
+policySettings = "Налаштування політик"
 railAriaLabel = "{{label}} policy — {{status}}"
 railSuffixActive = " (Active)"
 railSuffixPaused = " (Paused)"
+retryFailed = "Повторити невдалі політики ({{count}})"
+rowProgress = "Оброблено файлів: {{completed}} з {{total}}"
 setUp = "Set up"
 title = "Policies"
 upgradeToEnterprise = "Upgrade to enterprise"
+whatIsPolicy = "Що таке політика?"
 
 [policies.status]
 active = "Active"
@@ -6047,6 +6194,1933 @@ sourcesLabel = "Sources"
 stepOf = "Step {{step}} of {{total}}"
 toolChainDesc = "Configure the tools this policy runs on each document."
 typesSelected = "{{count}} types selected"
+
+[policy]
+badgeEnforcing = "{{name}} застосовується..."
+badgeRan = "Політика {{name}} виконана для цього файлу"
+blockingAction = "{{action}} заблоковано під час застосування політики, зачекайте..."
+dismiss = "Закрити накладення"
+enforcingTitle = "Застосування політики..."
+viewAnyway = "Переглянути файл (політика ще застосовується)"
+
+[portal]
+comingSoon = "Незабаром"
+
+[portal.accountLink.card]
+billingNote = "Автоматична обробка списується з гаманця вашої організації."
+eyebrow = "Прив’язка облікового запису"
+linkButton = "Прив’язати ваш обліковий запис Stirling"
+linked = "Прив’язано"
+linkedAs = "Прив’язано як {{name}}."
+linkedGeneric = "Цей екземпляр прив’язано."
+notLinked = "Не прив’язано"
+title = "Прив’язати цю організацію до її облікового запису Stirling"
+unlink = "Відв’язати"
+
+[portal.accountLink.card.error]
+title = "Не вдалося прив’язати"
+
+[portal.accountLink.card.loginNotConfigured]
+after = "щоб увімкнути прив’язку облікового запису до розміщеного облікового запису Stirling. У режимі розробки можна імітувати вхід із діалогового вікна прив’язки."
+before = "Налаштуйте"
+title = "Вхід SaaS не налаштовано"
+
+[portal.accountLink.gate]
+action = "Прив’язати обліковий запис"
+description = "Прив’яжіть обліковий запис Stirling цієї організації, щоб використовувати платні функції."
+title = "Прив’яжіть, щоб розблокувати"
+titleFeature = "Прив’яжіть, щоб розблокувати {{feature}}"
+
+[portal.accountLink.instances]
+active = "Активний"
+revoke = "Відкликати"
+revoked = "Відкликано"
+unnamed = "Безіменний екземпляр"
+
+[portal.accountLink.instances.columns]
+instance = "Екземпляр"
+lastSeen = "Востаннє помічено"
+linked = "Прив’язано"
+status = "Статус"
+
+[portal.accountLink.instances.empty]
+description = "Прив’яжіть обліковий запис цієї організації, а потім зареєструйте свої self-hosted екземпляри, щоб бачити їх тут."
+title = "Немає прив’язаних екземплярів"
+
+[portal.accountLink.instances.time]
+daysAgo_one = "{{count}} дн. тому"
+daysAgo_other = "{{count}} дн. тому"
+hoursAgo_one = "{{count}} год тому"
+hoursAgo_other = "{{count}} год тому"
+justNow = "щойно"
+minutesAgo_one = "{{count}} хв тому"
+minutesAgo_other = "{{count}} хв тому"
+never = "ніколи"
+
+[portal.accountLink.modal]
+linkSubtitle = "Увійдіть в обліковий запис, з якого має виставлятися рахунок за цей сервер."
+linkTitle = "Прив’язати ваш обліковий запис Stirling"
+reauthSubtitle = "Ваш сеанс завершився — знову увійдіть у свій обліковий запис Stirling. Ваш екземпляр залишиться прив’язаним."
+reauthTitle = "Увійдіть знову"
+simulateSignIn = "Імітувати вхід (dev)"
+
+[portal.accountLink.modal.loginNotConfigured]
+after = "щоб увімкнути прив’язку в застосунку до розміщеного облікового запису Stirling."
+and = "і"
+before = "Налаштуйте"
+title = "Вхід SaaS не налаштовано"
+
+[portal.accountLink.panel]
+instancesSub = "Кожен self-hosted екземпляр, зареєстрований у цій організації. Відкличте облікові дані, щоб негайно вимкнути його автоматичний доступ."
+instancesTitle = "Прив’язані екземпляри"
+revokeError = "Не вдалося відкликати екземпляр"
+sub = "Прив’яжіть цю self-hosted організацію до її облікового запису Stirling, щоб автоматична обробка списувалася з гаманця вашої організації."
+
+[portal.accountLink.panel.loadError]
+forbidden = "Лише власник команди може переглядати прив’язані екземпляри організації."
+generic = "Не вдалося завантажити прив’язані екземпляри команди. Спробуйте ще раз за мить."
+title = "Не вдалося завантажити прив’язані екземпляри"
+
+[portal.accountLink.state]
+free = "План Editor"
+subscribed = "План Processor"
+unlinked = "Не прив’язано"
+
+[portal.agentBuilder]
+bootstrapFromDocument = "Ініціалізувати з документа"
+sectionsAriaLabel = "Розділи конструктора агентів"
+selectorAriaLabel = "Агенти"
+subtitle = "Проєктуйте, тестуйте й запускайте AI-агентів, які класифікують, витягують дані з ваших документів і маршрутизують їх. Визначайте сценарії, обмежуйте доступ до інструментів, запускайте еталонний набір і публікуйте версію."
+title = "Конструктор агентів"
+
+[portal.agentBuilder.bootstrap]
+cancel = "Скасувати"
+dropzoneText = "Виберіть зразок документа (PDF або зображення)"
+lead = "Додайте зразок документа, і ми запропонуємо сценарії та схему витягання, які ви зможете уточнити. Нічого не публікується, доки ви це не переглянете."
+submit = "Ініціалізувати агента"
+subtitle = "Створіть нового агента на основі одного репрезентативного файлу"
+title = "Ініціалізація з документа"
+
+[portal.agentBuilder.empty]
+description = "Ініціалізуйте агента зі зразка документа, щоб створити його сценарії та схему витягання, а потім уточніть і опублікуйте."
+title = "Агентів ще немає"
+
+[portal.agentBuilder.evals]
+casesPassing = "Успішні випадки"
+columnCase = "Випадок оцінювання"
+columnLatency = "Затримка"
+columnResult = "Результат"
+fail = "невдача"
+goldenSetPassRate = "Частка успішних для еталонного набору"
+latencyMs = "{{ms}} мс"
+notRun = "не запускалося"
+pass = "успіх"
+passRate = "Частка успішних"
+runEvals = "Запустити оцінювання"
+
+[portal.agentBuilder.evals.empty]
+description = "Оцінювання перетворюють ваші сценарії на повторюваний еталонний набір. Оновіть план, щоб відстежувати частку успішних з часом і блокувати публікації на її основі."
+title = "Еталонного набору ще немає"
+
+[portal.agentBuilder.kpi]
+acrossGoldenSets = "за еталонними наборами"
+activeAgents = "Активні агенти"
+avgPassRate = "Середня частка успішних оцінювань"
+fleetWide = "по всьому парку"
+latestPublished = "Остання опублікована"
+scenarios = "Сценарії"
+testCases = "тестові випадки"
+totalDescription_one = "{{count}} загалом"
+totalDescription_other = "{{count}} загалом"
+
+[portal.agentBuilder.scenarios]
+add = "Додати"
+addScenario = "Додати сценарій"
+enable = "Увімкнути"
+expectationLabel = "Очікувана поведінка"
+expectationPlaceholder = "Що має зробити агент"
+inEval = "в оцінюванні"
+mute = "Вимкнути звук"
+muted = "вимкнено"
+nameLabel = "Назва"
+namePlaceholder = "напр. ескалація відповідності"
+
+[portal.agentBuilder.tabs]
+evals = "Оцінювання"
+scenarios = "Сценарії"
+tools = "Інструменти"
+versions = "Версії"
+
+[portal.agentBuilder.tools]
+broadAccess = "Широкий доступ"
+deniedHint = "Вибрані інструменти заблоковано. Усе інше залишається доступним для виклику."
+deniedTools = "Заборонені інструменти"
+governanceGate = "Керування інструментами доступне на плані Enterprise."
+restricted = "Обмежено"
+restrictedAccess = "Обмежений доступ до інструментів"
+restrictedDescription = "Дозволити всі інструменти, крім тих, які ви забороните нижче."
+
+[portal.agentBuilder.versions]
+current = "поточна"
+historyGate = "Повна історія версій і відкат доступні на плані Enterprise."
+publish = "Опублікувати"
+rollBack = "Відкотити"
+
+[portal.assistant]
+close = "Закрити помічника"
+error = "Не вдалося зв’язатися з помічником."
+errorWithDetail = "Не вдалося зв’язатися з помічником: {{detail}}"
+inputAriaLabel = "Запитайте помічника"
+inputPlaceholder = "Запитайте про Stirling…"
+open = "Відкрити помічника"
+send = "Надіслати"
+title = "Помічник"
+tryAsking = "Спробуйте запитати"
+typing = "Друкує"
+
+[portal.auth]
+loading = "Завантаження"
+redirectingToEditor = "Перенаправлення до редактора..."
+
+[portal.billing.checkout]
+noClientSecret = "Edge-функція не повернула client_secret."
+subtitle = "Додайте картку, щоб продовжити після безкоштовного гранту плану Editor. Stripe подбає про решту."
+title = "Увімкнути план Processor"
+
+[portal.billing.checkout.activationSlow]
+body = "Ваш платіж успішний, але активація триває трохи довше, ніж зазвичай. Вона ввімкнеться автоматично — закрийте це вікно, і незабаром вона з’явиться тут."
+close = "Закрити"
+title = "Майже готово"
+
+[portal.billing.checkout.error]
+title = "Не вдалося розпочати checkout"
+
+[portal.billing.checkout.finalizing]
+body = "Ваш платіж пройшов. Ми вмикаємо обробку за лічильником у ваших прив’язаних екземплярах — зазвичай це займає кілька секунд."
+hint = "Будь ласка, залиште це вікно відкритим."
+title = "Активація вашого плану Processor..."
+
+[portal.billing.checkout.notConfigured]
+bodyAfter = "у portal env, щоб увімкнути checkout у застосунку."
+bodyBefore = "Налаштуйте"
+title = "Stripe не налаштовано"
+
+[portal.billing.enterpriseUpsell]
+cta = "Сформувати вашу пропозицію Enterprise"
+description = "Знижки за гарантовані обсяги, ізольоване розгортання, індивідуальні MSA та перевірки безпеки, а також партнерства зі сторонніми дистриб’юторами."
+eyebrow = "Знижка за обсяг · 1M+ PDF"
+title = "Stirling Enterprise"
+
+[portal.billing.freeEditors]
+activeThisMonth = "Активні цього місяця"
+cost = "Вартість"
+editorsDeployed = "Розгорнуті редактори"
+inviteTeammates = "Запросити колег"
+pdfsEdited = "Відредаговано PDF"
+subtitle = "Розгортайте будь-де для всієї вашої команди."
+title = "Безкоштовні PDF-редактори"
+
+[portal.billing.freePlan]
+checkoutErrorTitle = "Не вдалося розпочати checkout"
+currentPlan = "Поточний план"
+freeForever = "Безкоштовно назавжди"
+noTeamResolved = "Для вашого гаманця ще не визначено команду — оновіть і спробуйте ще раз."
+ownerOnly = "Лише власник команди може ввімкнути план Processor."
+planName = "Editor"
+ssoIncluded = "SSO включено"
+switchOnProcessor = "Увімкнути Processor →"
+unlimitedUsers = "Необмежена кількість користувачів"
+
+[portal.billing.invoices]
+columnAmount = "Сума"
+columnDate = "Дата"
+columnDescription = "Опис"
+columnPdfsProcessed = "Оброблено PDF"
+columnStatus = "Статус"
+descriptionFallback = "Рахунок"
+downloadAriaLabel = "Завантажити рахунок {{number}} як PDF"
+emptyDescription = "Коли ваша команда оформить підписку й завершиться перший цикл, ваші рахунки з’являться тут."
+emptyTitle = "Рахунків ще немає"
+fetchLimitNote_one = "Показано {{count}} ваш останній рахунок. Старіші рахунки є в порталі Stripe."
+fetchLimitNote_other = "Показано {{count}} ваших останніх рахунків. Старіші рахунки є в порталі Stripe."
+loadError = "Не вдалося завантажити рахунки: {{error}}"
+pdfLink = "PDF ↓"
+showAll_one = "Показати всі {{count}}"
+showAll_other = "Показати всі {{count}}"
+showFewer_one = "Показати менше (перші {{count}})"
+showFewer_other = "Показати менше (перші {{count}})"
+showMostRecent_one = "Показати {{count}} останній"
+showMostRecent_other = "Показати {{count}} останніх"
+title = "Історія рахунків"
+viewAriaLabel = "Переглянути рахунок {{number}} у Stripe"
+viewLink = "Переглянути ↗"
+
+[portal.billing.linkPrompt]
+cta = "Прив’язати обліковий запис Stirling"
+description = "Ручне редагування PDF — перегляд, підписання, об’єднання, розділення, водяні знаки, стиснення, конвертація, ручний OCR — завжди безкоштовне, незалежно від прив’язки. Прив’яжіть, щоб отримати 500 безкоштовних PDF для обробки за лічильником (автоматизація, AI та API); коли знадобиться більше, увімкніть план Processor і платіть лише за те, що використовуєте."
+title = "Прив’яжіть ваш обліковий запис Stirling"
+
+[portal.billing.paymentMethod]
+billedMonthly = "Щомісячне виставлення рахунків"
+cardEnding = "{{brand}} закінчується на {{last4}}"
+cardFallback = "Картка"
+expiresBilledMonthly = "Дійсна до {{expiry}} · щомісячне виставлення рахунків"
+eyebrow = "Спосіб оплати"
+managedSub = "Дані вашої картки та платіжні дані безпечно зберігаються в клієнтському порталі Stripe."
+managedTitle = "Керується в Stripe"
+update = "Оновити"
+
+[portal.billing.pdfsProcessed]
+emptyPeriod = "У цьому періоді ще немає обробки за лічильником."
+eyebrow = "PDF, оброблені в цьому періоді"
+legendValue_one = "{{formatted}} PDF"
+legendValue_other = "{{formatted}} PDF"
+segbarAriaLabel = "PDF за лічильником, розділені за категоріями"
+segmentAgentsDesc = "Дії AI-агентів"
+segmentAgentsLabel = "Агенти"
+segmentApiDesc = "Прямі API-запити"
+segmentApiLabel = "API"
+segmentAutomationDesc = "Автоматизації та конвеєри"
+segmentAutomationLabel = "Автоматизація"
+unit = "PDF за лічильником"
+
+[portal.billing.spendLimit]
+adjustLimit = "Змінити ліміт"
+cancel = "Скасувати"
+capControlNote = "Зміни застосовуються негайно — підвищуйте або знижуйте межу будь-коли."
+capSuffix = "/ місяць"
+capSuffixWithDocs = "/ місяць · ≈ {{documents}} документів"
+displaySub = "Вам виставляють рахунок лише за автоматично оброблене — ніколи понад межу."
+editTitle = "Установіть місячну межу"
+eyebrow = "Ліміт витрат"
+guardrailBody = "жорстка межа — вам ніколи не виставлять рахунок понад неї. На межі обробка за лічильником призупиняється (необмежене редагування PDF продовжує працювати), доки ви її не підвищите або цикл не скинеться. Нічого не втрачається."
+guardrailLabel = "Ваш запобіжник:"
+noCap = "без обмеження"
+pctUsed = "використано {{pct}}%"
+remaining = "залишилося {{amount}}"
+save = "Зберегти ліміт"
+saveError = "Не вдалося зберегти ліміт"
+thisPeriodUncapped = "{{amount}} за цей період · без обмеження"
+usedThisMonth = "{{amount}} використано цього місяця"
+useSuggested = "Використати запропоноване · {{amount}} / місяць"
+
+[portal.billing.spendLimit.projection]
+body_one = "За {{rate}}/день ви досягнете межі приблизно за {{count}} день (~{{monthEnd}} кінець місяця). Запропонований ліміт ~{{suggested}}."
+body_other = "За {{rate}}/день ви досягнете межі приблизно за {{count}} днів (~{{monthEnd}} кінець місяця). Запропонований ліміт ~{{suggested}}."
+label = "Прогнозується перевищення."
+
+[portal.billing.spendThisMonth]
+eyebrow = "Витрати цього місяця"
+processed_one = "Оброблено {{formattedCount}} PDF."
+processed_other = "Оброблено {{formattedCount}} PDF."
+processedWithRate_one = "Оброблено {{formattedCount}} PDF, по {{rate}} за кожен."
+processedWithRate_other = "Оброблено {{formattedCount}} PDF, по {{rate}} за кожен."
+
+[portal.billing.subscribedPlan.capWarn]
+approachingBody = "Підвищте його зараз, щоб автоматична обробка ніколи не призупинялася."
+approachingTitle = "Ви використали {{pct}}% свого місячного ліміту витрат"
+raiseLimit = "Підвищити ліміт"
+reachedBody = "Обробку за лічильником призупинено, доки ви не підвищите ліміт або цикл не скинеться. Необмежене редагування PDF продовжує працювати."
+reachedTitle = "Досягнуто місячного ліміту витрат"
+
+[portal.billing.subscribedPlan.portalError]
+title = "Не вдалося відкрити портал Stripe"
+
+[portal.billing.walletMeter]
+capSuffix_one = "з {{allowance}} безкоштовних PDF використано"
+capSuffix_other = "з {{allowance}} безкоштовних PDF використано"
+eyebrow = "Пробний період Processor"
+statusLabel_one = "залишилося {{remaining}}"
+statusLabel_other = "залишилося {{remaining}}"
+sub = "Користуйтеся PDF Editor безкоштовно. Платіть за автоматичну обробку PDF."
+title_one = "Обробіть {{allowance}} PDF безкоштовно"
+title_other = "Обробіть {{allowance}} PDF безкоштовно"
+titleWithRate_one = "Обробіть {{allowance}} PDF безкоштовно, потім {{rate}}/PDF"
+titleWithRate_other = "Обробіть {{allowance}} PDF безкоштовно, потім {{rate}}/PDF"
+
+[portal.catalogue.card]
+lockedAriaLabel = "Заблоковано"
+openAriaLabel = "Відкрити компонент {{name}}"
+
+[portal.catalogue.detail]
+addToProject = "Додати до проєкту"
+ariaLabel = "Відомості про компонент"
+tabsAriaLabel = "Розділи відомостей про компонент"
+upgradeToUnlock = "Оновіть план, щоб розблокувати"
+
+[portal.catalogue.detail.code]
+install = "Встановлення"
+usage = "Використання"
+
+[portal.catalogue.detail.locked]
+description = "{{name}} включено з плану {{tier}}. Оновіть план, щоб вбудувати його."
+title = "Недоступно у вашому плані"
+
+[portal.catalogue.detail.preview]
+badge = "Live preview"
+note = "Інтерактивна sandbox відображається тут"
+
+[portal.catalogue.detail.pricing]
+note = "За лічильником за {{unit}}. Використання понад щомісячну безкоштовну квоту виставляється на ваш обліковий запис і деталізується в Usage & Billing."
+
+[portal.catalogue.detail.stats]
+billedOn = "Оплачується за"
+embeds30d = "Вбудовування (30 дн.)"
+freeQuota = "Безкоштовна квота"
+freeQuotaValue = "{{amount}} / міс."
+maturity = "Зрілість"
+none = "Немає"
+perAction = "За дію"
+price = "Ціна"
+
+[portal.catalogue.detail.tabs]
+code = "Код"
+overview = "Огляд"
+pricing = "Ціни"
+props = "Props / API"
+
+[portal.catalogue.props]
+optional = "необов’язково"
+required = "обов’язково"
+
+[portal.catalogue.props.columns]
+description = "Опис"
+name = "Prop"
+required = "Обов’язково"
+type = "Тип"
+
+[portal.catalogue.summary]
+componentsGa = "Компоненти GA"
+componentSpendMtd = "Витрати на компоненти (MTD)"
+embedsThisMonth = "Вбудовувань цього місяця"
+inBeta = "У beta"
+
+[portal.components.billingUnit]
+approval = "схвалення"
+check = "перевірка"
+event = "подія"
+render = "рендеринг"
+review = "перегляд"
+session = "сеанс"
+signature = "підпис"
+
+[portal.components.maturity]
+beta = "Beta"
+ga = "GA"
+
+[portal.componentsView]
+subtitle = "Вбудовувані SDK-віджети, які ви додаєте у власний застосунок — переглядач, процес e-sign, панель AI-перевірки. Кожен оплачується за дію. Натисніть картку, щоб переглянути встановлення, використання та props."
+title = "Компоненти"
+
+[portal.componentsView.empty]
+description = "Не вдалося завантажити каталог компонентів. Спробуйте ще раз незабаром."
+title = "Немає доступних компонентів"
+
+[portal.componentsView.lockedBanner]
+description = "Компоненти GA доступні на Pay-as-you-go; кілька компонентів Beta доступні лише для Enterprise. Заблоковані картки показують пропозицію оновлення."
+title = "Деяким компонентам потрібен платний план"
+
+[portal.docs.authentication]
+codeCaption = "кожен запит"
+eyebrow = "ПОЧАТОК РОБОТИ"
+lead = "Усі запити автентифікуються за допомогою bearer token. Ключі мають область дії для середовища й ніколи не завершуються, якщо їх не ротувати."
+liveKey = "Production-ключі — оплачувані, з обмеженням швидкості відповідно до вашого плану."
+testKey = "Sandbox-ключі — безкоштовні, повертають синтетичні fixtures."
+title = "Автентифікація"
+
+[portal.docs.components]
+codeCaption = "вбудувати переглядач"
+eyebrow = "КОМПОНЕНТИ"
+lead = "Вбудовуваний UI для черг перевірки та інспекції документів. Використовуйте власні стилі або надану тему."
+title = "Готові переглядачі"
+
+[portal.docs.endpoints]
+eyebrow = "API REFERENCE"
+fieldCount_one = "{{count}} поле"
+fieldCount_other = "{{count}} полів"
+filterAll = "Усі"
+filterAriaLabel = "Фільтрувати endpoints за вертикаллю"
+lead = "Кожен тип документа — це typed endpoint. POST файл і отримайте JSON, перевірений за схемою. Фільтруйте за вертикаллю нижче."
+title = "Endpoints"
+
+[portal.docs.errors]
+codeCaption = "422 Unprocessable Entity"
+eyebrow = "API REFERENCE"
+lead = "Помилки повертають стабільний машинозчитуваний код і повідомлення для людини. Тіло 4xx завжди містить request_id для підтримки."
+title = "Помилки"
+
+[portal.docs.nav]
+ariaLabel = "Документація"
+
+[portal.docs.nav.empty]
+description = "Не вдалося завантажити індекс документації."
+title = "Документація недоступна"
+
+[portal.docs.quickstart]
+eyebrow = "ПОЧАТОК РОБОТИ"
+lead = "Надішліть свій перший документ на typed endpoint і отримайте структурований JSON у три кроки. Без навчання моделі й prompt engineering."
+title = "Quickstart"
+
+[portal.docs.quickstart.callout]
+bodyAfterLink = "для рецептів copy-paste."
+bodyBeforeLink = "підключіть той самий виклик до конвеєра, щоб зв’язати валідацію, приховування та доставку — або надайте його агенту через MCP. Див."
+label = "Далі:"
+link = "Playbooks"
+
+[portal.docs.quickstart.step1]
+body = "Створіть scoped key на вкладці Infrastructure. Ключі мають обмеження швидкості й необов’язковий IP allowlist. Експортуйте його у ваш shell:"
+title = "Випустіть API-ключ"
+
+[portal.docs.quickstart.step2]
+body = "POST файл на будь-який typed endpoint. Endpoint визначає схему, яку ви отримаєте у відповідь — тут це витягач рахунків-фактур."
+snippetCaption = "витягти рахунок-фактуру"
+title = "Надішліть документ"
+
+[portal.docs.quickstart.step3]
+body = "Кожна відповідь перевіряється за схемою endpoint, з оцінкою впевненості та походженням для кожного поля."
+codeCaption = "200 OK"
+title = "Прочитайте структурований результат"
+
+[portal.docs.rateLimits]
+burst = "Burst"
+codeCaption = "429 Too Many Requests"
+concurrency = "Паралельність"
+eyebrow = "ПОЧАТОК РОБОТИ"
+lead = "Ліміти масштабуються відповідно до вашого плану. Відповідь 429 містить заголовок Retry-After; SDK автоматично виконують back off."
+requestsPerMinute = "Запити / хвилину"
+title = "Обмеження швидкості та квоти"
+
+[portal.docs.recipes]
+cloneButton = "Клонувати рецепт"
+eyebrow = "PLAYBOOKS"
+lead = "Наскрізні шаблони, що зв’язують джерела, операції та призначення. Кожен відповідає конвеєру, який можна клонувати."
+title = "Рецепти"
+
+[portal.docs.sdks]
+eyebrow = "SDKS"
+lead = "Клієнти first-party з типізованими відповідями, автоматичними повторними спробами та потоковими завантаженнями. Усі відстежують той самий каталог endpoints."
+title = "Офіційні SDK"
+
+[portal.docs.sdks.status]
+beta = "Beta"
+deprecated = "Застаріло"
+
+[portal.docs.skills]
+eyebrow = "SKILLS"
+lead = "Вбудовані іменовані можливості, які ваш агент викликає як один інструмент. Кожна навичка — це детермінований ланцюг операцій із прикріпленими оцінюваннями."
+title = "Навички агента"
+
+[portal.docs.webhooks]
+codeCaption = "document.processed"
+eyebrow = "API REFERENCE"
+lead = "Підпишіться на події document.processed, pipeline.completed і quota.threshold. Payloads підписуються за допомогою HMAC-SHA256."
+title = "Webhooks"
+
+[portal.docs.webhooks.callout]
+afterHelper = "helper."
+beforeHelper = "header із вашим signing secret, перш ніж довіряти payload. SDK постачають"
+beforeSignature = "Перевірте"
+
+[portal.documents]
+exportCsv = "Експорт CSV"
+search = "Пошук за назвою файлу, ID..."
+subtitle = "Кожен документ, оброблений вашою організацією, з повним записом обробки. Доступ до вмісту надається за запитом."
+title = "Документи"
+
+[portal.documents.audit]
+approved = "Схвалено"
+archived = "Архівовано"
+elevation = "Підвищення доступу"
+empty = "Подій ще не зафіксовано."
+extracted = "Оброблено"
+flagged = "Потребує перевірки"
+ingested = "Прийнято"
+reviewed = "На розгляді"
+
+[portal.documents.drawer]
+sectionsAriaLabel = "Розділи відомостей про документ"
+
+[portal.documents.drawer.tabs]
+audit = "Аудит"
+extractions = "Витягнення"
+overview = "Огляд"
+
+[portal.documents.elevation]
+requestAccess = "Запитати доступ"
+
+[portal.documents.elevation.active]
+description = "Тимчасове надання — доступ журналюється та обмежений у часі."
+descriptionFourEyes = "Тимчасове надання — колегу-рецензента сповіщено (four-eyes)."
+title = "Доступ спливає через {{time}}"
+
+[portal.documents.elevation.gated]
+description = "Вміст захищено політикою zero-standing-access. Запит запускає обмежене в часі надання доступу."
+descriptionFourEyes = "Вміст захищено політикою zero-standing-access. Запит запускає обмежене в часі надання доступу та сповіщає колегу-рецензента (four-eyes)."
+title = "Конфіденційний документ"
+
+[portal.documents.extractions]
+empty = "З цього документа не було витягнуто жодних полів."
+masked = "Витягнуті поля приховано. Запитайте тимчасовий доступ, щоб переглянути вміст цього документа."
+
+[portal.documents.extractions.columns]
+confidence = "Впевненість"
+field = "Поле"
+value = "Значення"
+
+[portal.documents.filters]
+all = "Усі"
+ariaLabel = "Фільтрувати документи за статусом"
+flagged = "Позначені"
+inReview = "На розгляді"
+processed = "Оброблено"
+
+[portal.documents.overview]
+action = "Конвеєр / Дія"
+product = "Продукт"
+received = "Час"
+status = "Статус"
+type = "Тип"
+user = "Користувач"
+
+[portal.documents.queue.empty]
+description = "Коли джерела подаватимуть документи у ваші конвеєри, вони з’являться тут для перевірки."
+title = "У черзі немає документів"
+
+[portal.documents.status]
+error = "Помилка"
+flagged = "Потребує перевірки"
+inReview = "На розгляді"
+processed = "Оброблено"
+
+[portal.documents.table]
+auto = "Авто"
+editorAction = "Редактор"
+empty = "Жоден документ не відповідає цьому фільтру."
+rowActions = "Дії рядка"
+sensitiveLabel = "Конфіденційно"
+sensitiveTitle = "Конфіденційно — потрібен доступ"
+
+[portal.documents.table.columns]
+action = "Конвеєр / Дія"
+document = "Документ"
+product = "Продукт"
+status = "Статус"
+time = "Час"
+user = "Користувач"
+
+[portal.editorAdmin]
+subtitle = "Розгортайте Stirling PDF Editor, підключайте самостійно розміщені екземпляри до своєї організації та керуйте активним парком — цілями, станом, обліковими даними й офлайн-активацією в одному місці."
+title = "Розгортання Редактора"
+
+[portal.editorAdmin.health.columns]
+activeUsers = "Активні користувачі"
+host = "Host"
+lastSeen = "Остання активність"
+region = "Регіон"
+status = "Статус"
+version = "Версія"
+
+[portal.editorAdmin.health.empty]
+description = "Розгорніть ціль і підключіть її, щоб бачити тут актуальний стан екземпляра."
+title = "Екземпляри не звітують"
+
+[portal.editorAdmin.offlineActivation]
+enterpriseTag = "Enterprise"
+generateButton = "Згенерувати офлайн-пакет"
+lockCopy = "Офлайн- та локальна активація є частиною Enterprise."
+subtitle = "Згенеруйте підписаний пакет активації для офлайн- або локального встановлення без вихідного мережевого шляху. Перенесіть його на екземпляр і застосуйте під час першого налаштування."
+talkToSales = "Зв’язатися з відділом продажів"
+title = "Ізольована активація"
+
+[portal.editorAdmin.offlineActivation.readyBanner]
+description = "{{file}} підписано та готово до перенесення. Він активує один екземпляр і спливає через 14 днів."
+title = "Пакет готовий"
+
+[portal.editorAdmin.pairing]
+generated = "Згенеровано ✓"
+generateNewCode = "Згенерувати новий код"
+lockCopy = "Підготовка через IaC є частиною Enterprise."
+rotate = "Ротувати"
+talkToSales = "Зв’язатися з відділом продажів"
+
+[portal.editorAdmin.sections.health]
+sub = "Кожен екземпляр Редактора, що звітує, — версія, регіон, статус, остання активність і активні користувачі."
+title = "Стан екземплярів"
+
+[portal.editorAdmin.sections.pairing]
+sub = "Підключіть самостійно розміщений редактор до цієї організації. Згенеруйте токен, передайте короткий код або налаштуйте через IaC."
+title = "Підключення"
+
+[portal.editorAdmin.sections.targets]
+sub = "Де працює Редактор. Скопіюйте фрагмент, щоб запустити самостійно розміщений екземпляр, або використайте Managed Cloud без операційного супроводу."
+title = "Цілі розгортання"
+
+[portal.editorAdmin.serviceToken]
+currentToken = "Поточний токен"
+lastRotated = "Остання ротація"
+rotateButton = "Ротувати сервісний токен"
+subtitle = "Екземпляри автентифікуються в організації за допомогою цих облікових даних. Ротуйте їх за розкладом або негайно після підозри на витік."
+title = "Сервісний токен"
+
+[portal.editorAdmin.serviceToken.rotatedBanner]
+description = "Видано новий токен. Оновіть STIRLING_SERVICE_TOKEN кожного самостійно розміщеного екземпляра протягом 24-годинного пільгового вікна, інакше вони перейдуть офлайн."
+title = "Ротуйте активні екземпляри"
+
+[portal.editorAdmin.status]
+degraded = "Погіршений"
+healthy = "Справний"
+offline = "Офлайн"
+pairing = "Підключення"
+
+[portal.editorAdmin.targets]
+instanceCount_one = "{{count}} екземпляр"
+instanceCount_other = "{{count}} екземпляри"
+talkToSales = "Зв’язатися з відділом продажів"
+upgradePlan = "Оновити план"
+
+[portal.editorAdmin.targets.lock]
+enterprise = "Локальне та самостійне розміщення Kubernetes є частиною Enterprise."
+paid = "Самостійне розміщення з Docker і Kubernetes відкривається на платному плані."
+
+[portal.editorAdmin.targets.state]
+available = "Доступно"
+locked = "Заблоковано"
+running = "Працює"
+
+[portal.errorBoundary]
+description = "У цьому поданні сталася неочікувана помилка. Спробуйте ще раз або виберіть інший розділ на бічній панелі."
+retry = "Спробувати ще раз"
+title = "На цій сторінці щось пішло не так"
+
+[portal.home.editor]
+activeUsers = "{{n}} активних"
+invite = "Запросити колег"
+name = "Stirling PDF Editor"
+open = "Відкрити в браузері"
+updated = "оновлено {{time}}"
+
+[portal.home.editor.target]
+cloud = "Managed Cloud"
+docker = "Самостійне розміщення · Docker"
+kubernetes = "Самостійне розміщення · Kubernetes"
+
+[portal.home.greeting]
+afternoon = "Добрий день"
+evening = "Добрий вечір"
+morning = "Доброго ранку"
+
+[portal.home.onboarding]
+dismiss = "Закрити налаштування"
+notStarted = "Не розпочато"
+progress = "{{done}} з {{total}} виконано"
+title = "Завершіть налаштування"
+
+[portal.home.onboarding.enterprise]
+body = "SSO + SCIM + RBAC для всієї організації, погоджене ціноутворення за обсягом та ізольоване розгортання."
+cta = "Почати пробний період"
+ctaQuote = "Отримати пропозицію"
+lead = "Для 250+ співробітників."
+tag = "Enterprise"
+
+[portal.home.onboarding.steps.editor]
+blurb = "Розгорніть настільний застосунок, безкоштовно назавжди."
+title = "Завантажте PDF Editor"
+
+[portal.home.onboarding.steps.policies]
+blurb = "{{active}} активних · {{recommended}} рекомендовано"
+chip = "{{active}} активних"
+title = "Увімкніть політики"
+
+[portal.home.onboarding.steps.sources]
+blurb = "{{connected}} підключено · кожен PDF керується там, де він потрапляє"
+chip = "{{connected}} підключено"
+title = "Підключіть джерела"
+
+[portal.home.quickActions]
+subtitle = "Головні завдання на сьогодні"
+title = "Швидкі дії"
+
+[portal.home.quickActions.buildPipeline]
+blurb = "3-кроковий конструктор над бібліотекою типізованих операцій"
+title = "Створити конвеєр"
+
+[portal.home.quickActions.connectSource]
+blurb = "S3, агенти, webhooks, відстежувані папки"
+title = "Підключити джерело"
+
+[portal.home.quickActions.issueApiKey]
+blurb = "Ключ з областю дії, обмеженнями швидкості та списком дозволених IP"
+title = "Видати ключ API"
+
+[portal.infrastructure]
+manageEditorDeployment = "Керувати розгортанням Редактора"
+sectionsAriaLabel = "Розділи інфраструктури"
+subtitle = "Розгортання, облікові дані, стан безпеки, сховище та журнал аудиту для вашого робочого простору Stirling."
+title = "Інфраструктура"
+
+[portal.infrastructure.apiKeys]
+createKey = "Створити ключ"
+heading = "Ключі API"
+subheading = "Облікові дані з областю дії, обмеженнями швидкості для кожного ключа, дозволами та списками дозволених IP."
+
+[portal.infrastructure.apiKeys.card]
+allowedIps = "Дозволені IP"
+anyIp = "Будь-який IP (без списку дозволених)"
+created = "Створено"
+lastUsed = "Останнє використання"
+permissions = "Дозволи"
+rateLimit = "Обмеження швидкості"
+rateLimitValue = "{{value}} зап./хв"
+usageMonth = "Використання цього місяця"
+usageToday = "Використання сьогодні"
+
+[portal.infrastructure.apiKeys.empty]
+description = "Створіть ключ з областю дії, щоб почати викликати Stirling API."
+title = "Ключів API ще немає"
+
+[portal.infrastructure.audit]
+filterAriaLabel = "Фільтрувати події аудиту за категорією"
+heading = "Журнали аудиту"
+latencyValue = "{{value}} мс"
+noEventsInCategory = "У цій категорії немає подій."
+subheading = "Кожна подія автентифікації, конфігурації та обробки у вашому робочому просторі."
+
+[portal.infrastructure.audit.columns]
+actor = "Виконавець"
+event = "Подія"
+latency = "Затримка"
+status = "Статус"
+target = "Ресурс"
+timestamp = "Позначка часу"
+
+[portal.infrastructure.audit.empty]
+description = "Активність робочого простору з’являтиметься тут у міру виникнення."
+title = "Немає подій аудиту"
+
+[portal.infrastructure.audit.export]
+cancel = "Скасувати"
+error = "Не вдалося експортувати. Спробуйте ще раз."
+exportButton = "Експорт"
+exporting = "Експортування…"
+fieldsLegend = "Стовпці"
+format = "Формат"
+open = "Експорт"
+subtitle = "Завантажте події аудиту як CSV або JSON. Виберіть, які стовпці включити."
+title = "Експортувати журнал аудиту"
+
+[portal.infrastructure.audit.export.fields]
+date = "Дата"
+documentName = "Назва документа"
+ipAddress = "IP-адреса"
+outcome = "Результат"
+tool = "Інструмент"
+username = "Ім’я користувача"
+
+[portal.infrastructure.audit.filters]
+all = "Усі"
+auth = "Автентифікація"
+config = "Конфігурація"
+elevation = "Підвищення доступу"
+processing = "Обробка"
+security = "Безпека"
+
+[portal.infrastructure.audit.forbidden]
+description = "Журнал аудиту доступний керівникам команд і адміністраторам. Попросіть доступ у керівника команди або адміністратора."
+title = "У вас немає доступу"
+
+[portal.infrastructure.audit.metrics]
+config = "Конфігурація"
+elevation = "Підвищення доступу"
+processing = "Обробка"
+totalEvents = "Усього подій · 24 год"
+
+[portal.infrastructure.createKey]
+cancel = "Скасувати"
+createKey = "Створити ключ"
+done = "Готово"
+ipAllowlistHelper = "Діапазони CIDR, розділені комами. Залиште порожнім, щоб дозволити будь-який IP."
+ipAllowlistLabel = "Список дозволених IP"
+keyNameLabel = "Назва ключа"
+keyNamePlaceholder = "напр. Production · ingest"
+permissionsLabel = "Дозволи"
+secretKeyCaption = "Секретний ключ"
+secretWarning = "Збережіть це в менеджері секретів. Stirling зберігає лише хеш — відновити його пізніше неможливо."
+subtitle = "Обмежте ключ мінімально необхідною областю. Ви можете ротувати або відкликати його будь-коли."
+subtitleCreated = "Скопіюйте цей секрет зараз — його більше не буде показано."
+title = "Створити ключ API"
+titleCreated = "Ключ створено"
+
+[portal.infrastructure.deployments]
+msValue = "{{value}} мс"
+throughputValue = "{{value}}/хв"
+
+[portal.infrastructure.deployments.deployColumns]
+deployedBy = "Розгорнув"
+environment = "Середовище"
+product = "Продукт"
+status = "Статус"
+version = "Версія"
+when = "Коли"
+
+[portal.infrastructure.deployments.recent]
+heading = "Останні розгортання"
+subheading = "Останні випуски в продуктах і середовищах."
+
+[portal.infrastructure.deployments.regionColumns]
+instances = "Екземпляри"
+latency = "Затримка"
+load = "Навантаження"
+p99 = "P99"
+region = "Регіон"
+status = "Статус"
+throughput = "Пропускна здатність"
+uptime = "Час безвідмовної роботи"
+version = "Версія"
+
+[portal.infrastructure.deployments.regions]
+heading = "Регіони"
+subheading = "Поточний стан кожного розгорнутого регіону Stirling — затримка, навантаження та версія випуску."
+
+[portal.infrastructure.deployments.regions.empty]
+description = "Розгорнуті регіони з’являться тут після підготовки вашого робочого простору."
+title = "Регіони не розгорнуто"
+
+[portal.infrastructure.models]
+heading = "Моделі"
+msValue = "{{value}} мс"
+subheading = "Каталог моделей і маршрутизація, що забезпечують обробку документів у вашому робочому просторі."
+
+[portal.infrastructure.models.byom]
+description = "Зареєструйте локальну або самостійно розміщену модель і закріпіть її за регіоном для обробки з урахуванням резидентності даних."
+title = "Власна модель"
+
+[portal.infrastructure.models.catalogue]
+heading = "Каталог"
+sub = "Керовані моделі, доступні вашому робочому простору, з актуальною затримкою та вартістю."
+subEnterprise = "Керовані, власні та локальні моделі — з доступним закріпленням за регіонами."
+
+[portal.infrastructure.models.catalogue.empty]
+description = "Моделі в каталозі вашого робочого простору з’являться тут."
+title = "Немає доступних моделей"
+
+[portal.infrastructure.models.columns]
+cost = "Вартість"
+latency = "Затримка"
+load = "Навантаження"
+model = "Модель"
+status = "Статус"
+type = "Тип"
+version = "Версія"
+
+[portal.infrastructure.models.metrics]
+activeModels = "Активні моделі"
+avgLatency = "Середня затримка"
+included = "Включено"
+monthlySpend = "Щомісячні витрати на моделі"
+
+[portal.infrastructure.models.routing]
+empty = "Правила маршрутизації не налаштовано."
+heading = "Правила маршрутизації"
+sub = "Яка модель обробляє кожну операцію. Типове правило застосовується, коли не збігається жодне вужче правило."
+subLocked = "Спрямовуйте операції до конкретних моделей — доступно на платних планах."
+
+[portal.infrastructure.models.routing.lockedBanner]
+description = "Оновіться до Pro, щоб керувати тим, яка модель обробляє кожну операцію та тип документа."
+title = "Маршрутизація моделей — платна функція"
+
+[portal.infrastructure.models.routingColumns]
+default = "Типово"
+docType = "Тип документа"
+modelForAria = "Модель для {{operation}}"
+operation = "Операція"
+routedTo = "Спрямовано до"
+
+[portal.infrastructure.security.access.byok]
+description = "Надайте ключ із власного KMS. Stirling шифрує ним, але все ще може читати."
+label = "Власний ключ (BYOK)"
+
+[portal.infrastructure.security.access.hyok]
+description = "Ключі ніколи не залишають ваш KMS. Stirling зберігає лише шифротекст."
+label = "Зберігайте власний ключ (HYOK)"
+
+[portal.infrastructure.security.access.stirling]
+description = "Stirling керує ключами шифрування. Найпростіше — нуль операцій із ключами з вашого боку."
+label = "Ключі, що зберігаються Stirling"
+
+[portal.infrastructure.security.accessPolicy]
+heading = "Політика доступу до документів"
+subheading = "Керує тим, хто може розшифровувати оброблені документи в стані спокою."
+
+[portal.infrastructure.security.attestations]
+heading = "Підтвердження відповідності"
+noReport = "Звіт недоступний"
+subheading = "Стан аудиту за кожним фреймворком, зі звітами щодо підтверджених контролів."
+viewReport = "Переглянути звіт →"
+
+[portal.infrastructure.security.compliance]
+heading = "Відповідність вимогам"
+subheading = "Підтвердження та сертифікації, що охоплюють платформу Stirling."
+
+[portal.infrastructure.security.empty]
+description = "Конфігурація безпеки вашого робочого простору з’явиться тут."
+title = "Стан безпеки недоступний"
+
+[portal.infrastructure.security.hyokBanner]
+description = "З HYOK ключі шифрування ніколи не залишають ваш KMS. Stirling зберігає й обробляє лише шифротекст, який ви можете відкликати будь-коли."
+title = "Stirling не може розшифрувати ваші документи"
+
+[portal.infrastructure.security.ipAllowlist]
+empty = "Діапазони IP не налаштовано — дозволено всі IP."
+heading = "Список дозволених IP"
+sub = "Доступ до API обмежено цими діапазонами CIDR."
+subLocked = "Обмежте доступ до API відомими діапазонами IP — доступно на платних планах."
+
+[portal.infrastructure.security.ipAllowlist.lockedBanner]
+description = "Оновіться до Pro, щоб обмежити доступ до API конкретними мережами."
+title = "Списки дозволених IP — платна функція"
+
+[portal.infrastructure.security.ipColumns]
+added = "Додано"
+addedBy = "Додав"
+cidr = "CIDR"
+label = "Мітка"
+
+[portal.infrastructure.security.keyManagement]
+algorithm = "Algorithm"
+heading = "Керування ключами шифрування"
+keyId = "Ідентифікатор ключа"
+lastRotated = "Остання ротація"
+rotateKey = "Ротувати ключ"
+rotationPolicy = "Політика ротації"
+subheading = "Зберігання ключів, що шифрують документи в стані спокою — хто може розшифровувати та як ключі ротуються."
+
+[portal.infrastructure.security.managedBanner]
+description = "Зберігання власних ключів BYOK і HYOK доступне на Enterprise. Оновіться, щоб надавати ключі з власного KMS."
+title = "На вашому плані ключами керує Stirling"
+
+[portal.infrastructure.security.residency.apac]
+description = "ap-southeast-1"
+label = "Азійсько-Тихоокеанський регіон"
+
+[portal.infrastructure.security.residency.eu]
+description = "eu-west-1 · межа даних GDPR"
+label = "Європейський Союз"
+
+[portal.infrastructure.security.residency.us]
+description = "us-east-1 · us-west-2"
+label = "Сполучені Штати"
+
+[portal.infrastructure.security.residencyHeader]
+heading = "Резидентність даних"
+subheading = "Де документи зберігаються та обробляються."
+
+[portal.infrastructure.storage]
+gbValue = "{{value}} GB"
+percentUsed = "{{value}} використано"
+
+[portal.infrastructure.storage.empty]
+description = "Підключене сховище та використання з’являться тут."
+title = "Сховище не налаштовано"
+
+[portal.infrastructure.storage.lifecycle]
+active = "Активно"
+activeRange = "0–{{value}} дн."
+archived = "Архівовано"
+coldStorage = "холодне сховище"
+deleted = "Видалено"
+never = "ніколи"
+purged = "очищено"
+
+[portal.infrastructure.storage.providers]
+connect = "Підключити"
+connected = "Підключено"
+heading = "Підключені провайдери"
+subheading = "Куди записуються оброблені артефакти."
+
+[portal.infrastructure.storage.retention]
+heading = "Зберігання"
+subheading = "Як довго артефакти зберігаються перед видаленням за життєвим циклом."
+windowLabel = "Типове вікно зберігання"
+
+[portal.infrastructure.storage.retentionOption]
+days_one = "{{count}} день"
+days_other = "{{count}} днів"
+never = "Ніколи не видаляти"
+
+[portal.infrastructure.storage.totalUsage]
+heading = "Загальне використання"
+progressLabel = "Використано сховища"
+subheading = "Сховище, використане всіма підключеними провайдерами."
+
+[portal.infrastructure.tabs]
+apiKeys = "Ключі API"
+audit = "Журнали аудиту"
+deployments = "Розгортання"
+models = "Моделі"
+security = "Безпека"
+storage = "Сховище"
+
+[portal.nav]
+agent-builder = "Конструктор агентів"
+components = "Компоненти"
+docs = "Документація для розробників"
+documents = "Документи"
+editor = "Редактор"
+home = "Головна"
+infrastructure = "Інфраструктура"
+pipelines = "Конвеєри"
+policies = "Політики"
+procurement = "Закупівлі"
+settings = "Налаштування"
+sources = "Джерела"
+usage = "Використання та оплата"
+users = "Користувачі"
+
+[portal.notifications]
+markAllRead = "Позначити всі як прочитані"
+title = "Сповіщення"
+viewAll = "Переглянути всі"
+
+[portal.notifications.ariaLabel]
+none = "Сповіщення, немає непрочитаних"
+unread_one = "Сповіщення, {{count}} непрочитане"
+unread_other = "Сповіщення, {{count}} непрочитаних"
+
+[portal.notifications.count]
+allRead = "усі прочитані"
+loading = "завантаження"
+new_one = "{{count}} нове"
+new_other = "{{count}} нових"
+
+[portal.notifications.empty]
+description = "Немає нових сповіщень."
+title = "У вас усе переглянуто"
+
+[portal.pipelines]
+subtitle = "Кожен автоматизований конвеєр документів на backend: упорядкований ланцюг операцій над набором джерел, що запускається тригером. Натисніть рядок, щоб переглянути його кроки та джерела."
+title = "Конвеєри"
+
+[portal.pipelines.actions]
+newPipeline = "Новий конвеєр"
+
+[portal.pipelines.builder]
+addStep = "Додати інструмент"
+back = "Назад до конвеєрів"
+discard = "Відхилити зміни"
+enabled = "Увімкнено"
+keepEditing = "Продовжити редагування"
+needsUpload = "Потрібен завантажений файл"
+noToolMatches = "Жоден інструмент не відповідає вашому пошуку."
+pipelineSettings = "Налаштування конвеєра"
+searchTools = "Пошук інструментів"
+selectToolBody = "Додайте інструмент, щоб створити конвеєр."
+selectToolTitle = "Інструментів ще немає"
+toolSettings = "Налаштування інструмента"
+unknownStep = "Нерозпізнана операція, залишено як є."
+unsavedBody = "У вас є незбережені зміни. Зберегти їх перед виходом чи відхилити?"
+unsavedTitle = "Незбережені зміни"
+uploadUnsupported = "Завантажені файли поки не підтримуються в конвеєрах, тому ці кроки не можна зберегти: {{tools}}."
+usesDefaults = "Запускається з типовими налаштуваннями"
+
+[portal.pipelines.composer]
+addTool = "Додати інструмент"
+cancel = "Скасувати"
+chainEmpty = "Додайте інструмент, щоб почати створювати конвеєр."
+create = "Створити конвеєр"
+directory = "Вихідна папка"
+directoryHelp = "Абсолютний шлях на сервері. Має бути в межах налаштованих дозволених папок."
+editingUnsupported = "Відображення цих параметрів інструмента для редагування поки не підтримується."
+moveDown = "Перемістити вниз"
+moveUp = "Перемістити вгору"
+name = "Назва"
+namePlaceholder = "напр. Redaction sweep"
+noSources = "Джерела ще не підключено. Конвеєр усе одно може запускатися для файлів, переданих йому напряму."
+noToolSettings = "Цей інструмент не має налаштовуваних параметрів."
+operations_one = "Операція ({{count}})"
+operations_other = "Операції ({{count}})"
+output = "Вивід"
+removeStep = "Вилучити операцію"
+save = "Зберегти зміни"
+scheduleEvery = "Запускати кожні"
+sources = "Джерела"
+sourcesLoading = "Завантаження джерел..."
+trigger = "Тригер"
+triggerManual = "Лише вручну"
+
+[portal.pipelines.composer.unit]
+days = "днів"
+hours = "годин"
+minutes = "хвилин"
+
+[portal.pipelines.delete]
+body = "Видалити \"{{name}}\"? Цю дію не можна скасувати."
+cancel = "Скасувати"
+confirm = "Видалити"
+title = "Видалити конвеєр?"
+
+[portal.pipelines.detail]
+delete = "Видалити конвеєр"
+run = "Запустити зараз"
+
+[portal.pipelines.empty]
+action = "Створити конвеєр"
+description = "Створіть свій перший конвеєр: виберіть джерела, для яких він запускається, з’єднайте операції та виберіть, куди надходитиме вивід."
+title = "Конвеєрів ще немає"
+
+[portal.pipelines.kpi]
+active = "Активні"
+paused = "Призупинені"
+total = "Конвеєри"
+
+[portal.pipelines.output]
+folder = "Записати в папку"
+inline = "Повернути файли"
+
+[portal.pipelines.run]
+completed_one = "Запуск завершено."
+completed_other = "Усі {{count}} запусків завершено."
+empty = "Немає чого запускати: джерела не мали документів для обробки."
+failed = "Запуск не вдався: {{error}}"
+running = "Запуск розпочато; ще виконується."
+timeout = "Запуск триває довше, ніж очікувалося; він може ще завершитися у фоновому режимі."
+
+[portal.pipelines.status]
+active = "Активний"
+paused = "Призупинений"
+
+[portal.pipelines.table]
+name = "Конвеєр"
+sources = "Джерела"
+status = "Статус"
+steps = "Кроки"
+
+[portal.pipelines.trigger]
+folder-watch = "Відстеження папки"
+manual = "Вручну"
+schedule = "За розкладом"
+
+[portal.policies]
+subtitle = "Постійні автоматизації, що застосовують конвеєр інструментів до кожного документа. Кожна політика спрацьовує під час завантаження або експорту, запускає свій ланцюг інструментів і зберігає примусово оброблену версію поруч з оригіналом."
+title = "Політики"
+
+[portal.policies.card]
+comingSoon = "Оновити до Enterprise"
+notSetUp = "Не налаштовано"
+
+[portal.policies.categories.compliance]
+desc = "Забезпечуйте вимоги HIPAA, GDPR, SOC 2 або FedRAMP для кожного документа."
+label = "Відповідність вимогам"
+
+[portal.policies.categories.ingestion]
+desc = "Класифікуйте документи, витягуйте структуровані дані, застосовуйте правила іменування та нормалізуйте сторінки."
+label = "Приймання"
+
+[portal.policies.categories.retention]
+desc = "Встановлюйте, як довго зберігати документи, коли архівувати та коли видаляти."
+label = "Зберігання"
+
+[portal.policies.categories.routing]
+desc = "Автоматично спрямовуйте документи до правильної команди, папки або системи."
+label = "Маршрутизація"
+
+[portal.policies.categories.security]
+desc = "Виявляйте PII, редагуйте, вилучайте активний вміст і додавайте водяні знаки до документів."
+label = "Безпека"
+
+[portal.policies.config]
+scopeAll = "Усі документи"
+
+[portal.policies.config.compliance]
+summary = "Перевіряє документи на відповідність нормативним фреймворкам перед тим, як вони залишать систему."
+
+[portal.policies.config.compliance.fields]
+accessLog = "Журнал доступу"
+auditTrail = "Аудиторський слід"
+frameworks = "Фреймворки"
+onViolation = "Коли не відповідає вимогам"
+
+[portal.policies.config.compliance.rules]
+0 = "Сканування фреймворка"
+1 = "Примусова дія"
+2 = "Аудиторський слід"
+
+[portal.policies.config.ingestion]
+summary = "Класифікує документи, витягує структуровані дані, застосовує іменування та нормалізує сторінки."
+
+[portal.policies.config.ingestion.fields]
+belowThreshold = "Нижче порога"
+minConfidence = "Мін. впевненість"
+
+[portal.policies.config.ingestion.rules]
+0 = "Класифікувати"
+1 = "Витягнути"
+2 = "Назвати"
+3 = "Нормалізувати"
+
+[portal.policies.config.retention]
+summary = "Застосовує правила щодо того, як довго зберігаються документи, коли архівуються та коли видаляються."
+
+[portal.policies.config.retention.fields]
+archiveAfter = "Архівувати після"
+immutableHold = "Незмінне утримання"
+keepFor = "Зберігати протягом"
+
+[portal.policies.config.retention.rules]
+0 = "Утримання зберігання"
+1 = "Автоархівація"
+2 = "Блокування видалення"
+
+[portal.policies.config.routing]
+summary = "Спрямовує документи до правильного місця призначення на основі типу та класифікації."
+
+[portal.policies.config.routing.fields]
+destination = "Місце призначення"
+notify = "Сповіщати під час маршрутизації"
+webhookUrl = "Webhook URL"
+
+[portal.policies.config.routing.rules]
+0 = "Автокласифікація"
+1 = "Спрямувати до папки"
+2 = "Сповістити через webhook"
+
+[portal.policies.config.security]
+summary = "Виявляє та редагує PII, вилучає активний вміст (JavaScript) і додає водяні знаки до документів."
+
+[portal.policies.config.security.rules]
+0 = "Редагувати PII"
+1 = "Видалити JavaScript"
+2 = "Водяний знак"
+
+[portal.policies.detail]
+enforces = "Застосовує"
+onEveryExport = "Під час кожного експорту"
+onEveryUpload = "Під час кожного завантаження"
+outputAsNewFile = "як новий файл"
+outputAsNewVersion = "як нову версію"
+recentActivity = "Остання активність"
+retry = "Повторити"
+showLess = "Показати менше"
+showMore = "Показати більше"
+sources = "Джерела"
+
+[portal.policies.detail.actions]
+clearHistory = "Очистити історію обробки"
+delete = "Видалити"
+editSettings = "Редагувати налаштування"
+pause = "Призупинити"
+resume = "Відновити"
+runNow = "Запустити зараз"
+
+[portal.policies.detail.clearHistory]
+body = "Ця політика забуде кожен файл, який вона вже обробила, і повторно обробить усе, що зараз є в її джерелах, під час наступного запуску. Самі файли не змінюються. Цю дію не можна скасувати."
+cancel = "Скасувати"
+confirm = "Очистити історію"
+title = "Очистити історію обробки?"
+
+[portal.policies.detail.emptyActivity]
+description = "Документи з’являться тут після запуску цієї політики."
+title = "Активності ще немає"
+
+[portal.policies.endpoints]
+addWatermark = "Водяний знак"
+autoRedact = "Редагувати PII"
+compressPdf = "Стиснути"
+flatten = "Звести"
+ocrPdf = "OCR"
+sanitizePdf = "Видалити JavaScript"
+
+[portal.policies.offline]
+description = "Ваші політики збережено, і вони з’являться після відновлення з’єднання."
+retry = "Повторити"
+title = "Backend недоступний"
+
+[portal.policies.stats]
+activeFor = "Активна"
+dataProcessed = "Оброблено даних"
+docsEnforced = "Оброблено документів"
+
+[portal.policies.status]
+active = "Активна"
+paused = "Призупинена"
+
+[portal.policies.summary.active]
+description = "Застосовується під час завантаження/експорту"
+label = "Активні політики"
+
+[portal.policies.summary.categories]
+description = "Доступні для налаштування"
+label = "Категорії"
+
+[portal.policies.summary.docsEnforced]
+description = "У межах активних політик"
+label = "Оброблено документів"
+
+[portal.policies.summary.paused]
+description = "Налаштовано, але не запускається"
+label = "Призупинено"
+
+[portal.policies.wizard.actions]
+back = "Назад"
+cancel = "Скасувати"
+continue = "Продовжити"
+enablePolicy = "Увімкнути політику"
+saveChanges = "Зберегти зміни"
+
+[portal.policies.wizard.capability.compress]
+desc = "Стискає документ до меншого розміру файлу."
+label = "Зменшити розмір файлу"
+
+[portal.policies.wizard.capability.flatten]
+desc = "Об’єднує поля форм і анотації зі сторінкою, щоб їх не можна було редагувати."
+label = "Звести документ"
+
+[portal.policies.wizard.capability.ocr]
+desc = "Запускає OCR, щоб відскановані сторінки стали текстом, який можна виділяти та шукати."
+label = "Зробити текст доступним для пошуку"
+
+[portal.policies.wizard.capability.redact]
+desc = "Знаходить і зафарбовує конфіденційні дані — як-от номери соціального страхування та карток — щоб їх не можна було прочитати."
+label = "Редагувати конфіденційну інформацію"
+
+[portal.policies.wizard.capability.sanitize]
+desc = "Видаляє прихований JavaScript, щоб нічого не запускалося автоматично під час відкриття документа."
+label = "Видалити активний вміст"
+
+[portal.policies.wizard.capability.watermark]
+desc = "Наносить видиму позначку (наприклад, «Конфіденційно») на кожну сторінку."
+label = "Застосувати водяний знак"
+
+[portal.policies.wizard.errors]
+noTools = "Спочатку увімкніть принаймні один інструмент у робочому процесі."
+saveFailed = "Не вдалося зберегти політику. Спробуйте ще раз."
+
+[portal.policies.wizard.output]
+heading = "Вивід і запуск"
+
+[portal.policies.wizard.output.filenameRule]
+autoNumber = "Автонумерація"
+label = "Правило імені файлу"
+placeholder = "Текст для додавання (необов’язково)"
+prefix = "Префікс"
+suffix = "Суфікс"
+
+[portal.policies.wizard.output.outputAs]
+label = "Виводити як"
+newFile = "Новий файл"
+newVersion = "Нова версія"
+
+[portal.policies.wizard.output.runOn]
+export = "Експорт"
+helper = "Коли спрацьовує політика: під час завантаження або перед експортом."
+label = "Запускати під час"
+upload = "Завантаження"
+
+[portal.policies.wizard.settings]
+heading = "Налаштування"
+
+[portal.policies.wizard.sources]
+heading = "Джерела"
+loading = "Завантаження джерел…"
+
+[portal.policies.wizard.tabs]
+ariaLabel = "Кроки налаштування"
+settings = "Налаштування"
+workflow = "Дії"
+
+[portal.policies.wizard.title]
+edit = "Редагувати політику {{category}}"
+setUp = "Налаштувати політику {{category}}"
+
+[portal.policies.wizard.workflow]
+description = "Виберіть, що ця політика робить із кожним документом, який обробляє."
+
+[portal.policySummary]
+activeSummary = "{{active}} / {{total}} активні"
+noRule = "Ще не застосовано жодного правила"
+subtitle = "Постійні автоматизації, через які проходить кожен документ, незалежно від того, який конвеєр його обробляє."
+title = "Що запускається для ваших PDF"
+
+[portal.policySummary.action]
+comingSoon = "Перейти на Enterprise"
+configure = "Налаштувати"
+setUp = "Налаштувати"
+
+[portal.policySummary.column]
+activeRule = "Активне правило"
+policy = "Політика"
+status = "Статус"
+
+[portal.policySummary.empty]
+description = "Після налаштування політик категорії з’являться тут."
+title = "Політик ще немає"
+
+[portal.policySummary.state]
+active = "Активна"
+off = "Вимкнено"
+soon = "Незабаром"
+
+[portal.processingStatus]
+managePlan = "Керувати планом"
+volumeSuffix = "PDF оброблено · останні 30 днів"
+
+[portal.procurement]
+reset = "Скинути закупівлю (демо)"
+subtitle = "Оцініть, укладіть контракт і підключіть свою команду. Кожен документ в одному місці."
+title = "Закупівля"
+
+[portal.procurement.action]
+download = "Завантажити"
+pay = "Сплатити зараз"
+request = "Запитати"
+sign = "Переглянути й підписати"
+upload = "Завантажити"
+
+[portal.procurement.agreement]
+agreeCta = "Погодитися й підписатися"
+confirm = "Я прочитав(-ла) і погоджуюся з Stirling Enterprise Agreement."
+eyebrow = "Угода"
+intro = "Одна об’єднана угода охоплює вашу угоду: Master Service Agreement, Order Form, EULA та Data Processing Agreement. Перегляньте її, а потім погодьтеся прийняти пропозицію в зобов’язану підписку."
+title = "Перегляньте вашу корпоративну угоду"
+
+[portal.procurement.builder]
+addons = "Додатки"
+back = "Назад"
+businessName = "Назва компанії"
+businessNamePlaceholder = "Ваша компанія"
+continue = "Продовжити"
+country = "Країна"
+countryEuro = "Єврозона (EUR €)"
+countryUK = "Велика Британія (GBP £)"
+countryUS = "Сполучені Штати (USD $)"
+eula = "Я прочитав(-ла) і погоджуюся зі Stirling Enterprise EULA. Вона регулює угоду, створену з цієї пропозиції."
+generate = "Створити пропозицію"
+included = "Включено"
+indemnification = "Відшкодування за IP"
+indemnificationSub = "Ми захищаємо від прийнятних претензій щодо IP відповідно до EULA"
+offlineLicense = "Офлайн / ізольована ліцензія"
+offlineLicenseSub = "Файл ліцензії для завантаження для ізольованого self-hosted екземпляра"
+qbr = "Щоквартальні бізнес-огляди"
+qbrSub = "Ваш SE щокварталу переглядає використання та roadmap"
+running = "{{annual}} / рік · {{years}}-річний {{tcv}}"
+s1Sub = "Ваша команда та PDF, які ви плануєте обробляти щороку."
+s1Title = "Скільки ви оброблятимете?"
+s2Sub = "Довші терміни знижують тариф; ваш рівень сервісу визначає підтримку."
+s2Title = "Зобов’язання та сервіс"
+s3Sub = "Для пропозиції та угоди, яку вона створює."
+s3Title = "Ваші дані"
+serviceLevel = "Рівень сервісу"
+slDedicated = "Виділений"
+slDedicatedSub = "4 робочі години · виділений менеджер облікового запису · +30%"
+slPriority = "Пріоритетний"
+slPrioritySub = "Того ж робочого дня · призначений CSM · +15%"
+slStandard = "Стандартний"
+slStandardSub = "Наступного робочого дня · спільний CSM · включено"
+stepOf = "Крок {{n}} з {{total}}"
+term = "Термін"
+termDiscount = "Застосовано знижку {{pct}}% за багаторічне зобов’язання"
+title = "Створіть свою пропозицію"
+training = "Підключення та навчання"
+trainingSub = "Живі сесії, щоб ваша команда швидко почала роботу"
+users = "Усього користувачів"
+usersPlaceholder = "наприклад, 250"
+volEstimated = "Оцінено на основі {{count}} користувачів (~2,000 PDF кожен, включно з автоматизацією). Змініть, якщо знаєте точніше."
+volManual = "Використовується ваше значення. Переоцініть на основі розміру команди в будь-який час."
+volNoUsers = "Не впевнені? Введіть розмір вашої команди, і ми оцінимо його."
+volume = "Річний обсяг PDF"
+volumePlaceholder = "наприклад, 1,000,000"
+years_one = "{{count}} рік"
+years_other = "{{count}} років"
+
+[portal.procurement.docs]
+count_one = "{{count}} документ"
+count_other = "{{count}} документів"
+done = "Готово"
+here = "Ви тут"
+hide = "Приховати"
+optional = "Необов’язково"
+paidAddon = "Платний додаток"
+show = "Показати"
+subtitle = "Усе, що вам потрібно на кожному кроці шляху, відображається в міру просування угоди."
+supportingSubtitle = "SOC 2, перевірки безпеки, податкові форми та інше — готові, коли ваша команда безпеки або закупівель попросить. Деякі мають одноразову плату."
+supportingTitle = "Підтримка вашої оцінки"
+title = "Документи"
+upcoming = "Майбутні"
+
+[portal.procurement.error]
+title = "Щось пішло не так"
+
+[portal.procurement.hero]
+company = "Ваша корпоративна угода"
+ctaAgreement = "Переглянути й підписати угоду"
+ctaLive = "Ви вже працюєте"
+ctaPayment = "Додати платіж"
+ctaQuote = "Переглянути вашу пропозицію"
+ctaTrial = "Створити пропозицію"
+eyebrow = "Корпоративна закупівля"
+inviteTeammates = "Запросити колег"
+keyDocs = "Ключові документи"
+nextStep = "Наступний крок: {{action}}"
+notStarted = "Не розпочато"
+open = "Відкрити закупівлю"
+scheduleCall = "Запланувати дзвінок"
+setup1Sub = "Запросіть своїх колег"
+setup1Title = "Розгорнути PDF Editor"
+setup2Sub = "Увімкніть обробку в редакторах та інших джерелах"
+setup2Title = "Підключити PDF Processor"
+setup3Sub = "Увімкніть Security, Compliance, Routing або Retention, коли вони вам потрібні"
+setup3Title = "Додати рекомендовані політики"
+
+[portal.procurement.journey]
+daysLeft_one = "Залишився {{count}} день"
+daysLeft_other = "Залишилося {{count}} днів"
+engineerLabel = "Ваш solutions engineer"
+eyebrow = "Ваше впровадження"
+live = "Ви вже працюєте в Stirling Enterprise"
+nextStep = "Наступний крок: {{action}}"
+subtitle = "Ваш solutions engineer супроводжує кожен крок. Одна наступна дія за раз; повний список нижче."
+title = "Від trial до запуску — один керований шлях"
+trialTitle = "Enterprise trial"
+
+[portal.procurement.journeySteps.agreement]
+blurb = "Один підпис охоплює MSA, order form, EULA та DPA."
+gatingAction = "Перегляньте та підпишіть вашу угоду"
+label = "Угода"
+
+[portal.procurement.journeySteps.implementation]
+blurb = "Підготуйте ваш робочий простір і виконайте go-live playbook."
+gatingAction = "Підготовка вашого робочого простору"
+label = "Впровадження"
+
+[portal.procurement.journeySteps.payment]
+blurb = "Сплатіть карткою, банківським переказом або за purchase order."
+gatingAction = "Підтвердьте платіж"
+label = "Платіж"
+
+[portal.procurement.journeySteps.quote]
+blurb = "Перегляньте ціни за зобов’язаним обсягом і термін контракту."
+gatingAction = "Прийміть вашу пропозицію"
+label = "Пропозиція"
+
+[portal.procurement.journeySteps.trial]
+blurb = "Оцініть Stirling на ваших документах і робочих процесах."
+gatingAction = "Створіть вашу пропозицію"
+label = "Trial"
+
+[portal.procurement.license]
+copied = "Скопійовано"
+copy = "Копіювати ключ"
+downloadError = "Поки що не вдалося створити офлайн-файл ліцензії — спробуйте ще раз за мить."
+downloadOffline = "Завантажити офлайн-ліцензію (.lic)"
+hint = "Вставте цей ключ у self-hosted екземпляр, щоб активувати його, або збережіть для своїх записів. Зберігайте його безпечно."
+label = "Ваш ліцензійний ключ"
+
+[portal.procurement.link]
+cta = "Прив’язати обліковий запис"
+description = "Закупівля працює через ваш прив’язаний обліковий запис Stirling: так ми надаємо trial, оцінюємо вашу пропозицію та запускаємо білінг. Прив’яжіть обліковий запис, щоб почати."
+eyebrow = "Enterprise"
+title = "Прив’яжіть ваш обліковий запис, щоб почати"
+
+[portal.procurement.live]
+description = "Ваша підписка активна, і ліцензію видано. Вашу команду підготовлено, і білінг розпочато."
+eyebrow = "Live"
+title = "Ви вже працюєте в Stirling Enterprise"
+
+[portal.procurement.locked]
+description = "Trial-ключі, пропозиції за зобов’язаним обсягом, угода з одним підписом, оплата та ваш реєстр документів — усе буде тут після початку корпоративної оцінки."
+eyebrow = "Лише Enterprise"
+talkToSales = "Зв’язатися з відділом продажів"
+title = "Шлях закупівлі відкривається з Enterprise"
+
+[portal.procurement.milestone]
+accept = "Прийняти й продовжити"
+description = "Завантажте PDF, щоб поділитися ним із командою, поверніться, щоб прийняти, коли будете готові, або внесіть зміни."
+download = "Завантажити PDF"
+downloadError = "Поки що не вдалося завантажити PDF пропозиції — спробуйте ще раз за мить."
+edit = "Редагувати пропозицію"
+eyebrow = "Пропозиція {{number}}"
+perYear = " / рік"
+preparedFor = "Підготовлено для {{company}}"
+tcv = "{{value}} загальна вартість контракту"
+title = "Ваша пропозиція готова"
+
+[portal.procurement.modal]
+cancel = "Скасувати"
+chooseFile = "Вибрати файл"
+close = "Закрити"
+downloadBody = "Ваше завантаження незабаром почнеться."
+downloadCta = "Завантажити"
+downloadTitle = "Завантажити"
+noFile = "Файл не вибрано"
+payBody = "Сплатіть ваш зобов’язаний контракт карткою або банківським переказом через Stripe. Ваш робочий простір буде підготовлено, щойно платіж пройде."
+payCta = "Продовжити до Stripe"
+payTitle = "Підтвердити платіж"
+requestBodyFree = "Ми створюємо це на вимогу. Підтвердьте, і ваш solutions engineer незабаром надішле це вам."
+requestBodyPaid = "Це платний додаток. Підтвердьте, і ваш solutions engineer оцінить обсяг і надішле документи."
+requestCta = "Запитати"
+requestTitle = "Запитати цей документ"
+signBody = "Відкриває Stirling Enterprise Agreement для електронного підпису: один підпис охоплює MSA, order form, EULA та DPA. Ми автоматично ставимо зустрічний підпис, і ви переходите до оплати."
+signCta = "Відкрити для підпису"
+signTitle = "Перегляньте та підпишіть вашу угоду"
+uploadBody = "Надішліть нам ваш PO, і ми виставимо рахунок за вашими умовами. Перетягніть PDF або виберіть файл нижче."
+uploadCta = "Завантажити purchase order"
+uploadTitle = "Завантажте ваш purchase order"
+
+[portal.procurement.payment]
+description = "Вашу пропозицію прийнято, і ваша ліцензія вже активна — ваша команда може почати одразу. Сплатіть перший рахунок, коли будете готові; ви можете сплатити або завантажити його тут, без email."
+downloadInvoice = "Завантажити рахунок"
+simulate = "Імітувати отримання платежу (демо)"
+title = "Підписку створено"
+viewInvoice = "Переглянути й сплатити рахунок"
+
+[portal.procurement.schedule]
+fallback = "Не вдалося завантажити планувальник."
+fallbackLink = "Відкрити планування в новій вкладці"
+subtitle = "Ваш solutions engineer проведе вашу команду через впровадження. Виберіть зручний час."
+title = "Запланувати дзвінок"
+
+[portal.procurement.status]
+action = "Потрібна дія"
+available = "Доступно"
+complete = "Завершено"
+pending = "Очікує"
+request = "За запитом"
+
+[portal.procurement.trial]
+body = "Продовження додає 7 днів і повідомляє вашого solutions engineer."
+bodyMaxed = "Ви використали всі продовження — зверніться до вашого solutions engineer, якщо вам потрібно більше часу."
+cancel = "Скасувати trial"
+extend = "Продовжити на 7 днів"
+maxed = "Ліміт вичерпано"
+subtitle = "Ваш безкоштовний trial триває до {{date}}. Картка не потрібна."
+title = "Enterprise trial"
+
+[portal.procurement.upsell]
+homeBadge = "Enterprise"
+homeBody = "Ціни за зобов’язаним обсягом, загальноорганізаційні SSO + SCIM + RBAC, 90-денний незмінний аудит і виділений SE."
+homeCta = "Почати Trial →"
+homeHeadline = "Обробляйте мільйони PDF."
+
+[portal.recentActivity]
+title = "Нещодавня активність"
+viewAll = "Переглянути все"
+
+[portal.recentActivity.empty]
+description = "Запуски конвеєрів, розгортання та події агентів з’являться тут."
+title = "Тут поки нічого немає"
+
+[portal.search]
+ariaLabel = "Пошук"
+placeholder = "Пошук у Stirling — endpoints, конвеєри, документи…"
+
+[portal.search.empty]
+noActionsDescription = "Швидкі дії з’являться тут, коли стануть доступними."
+noActionsTitle = "Немає швидких дій"
+noMatches = "Немає збігів для «{{query}}»"
+noMatchesDescription = "Спробуйте інше ключове слово або перегляньте каталог."
+
+[portal.settings.groups]
+admin = "Адміністратор"
+
+[portal.settings.sections]
+account-link = "Прив’язка облікового запису"
+
+[portal.shell.header]
+accountFallback = "Обліковий запис"
+accountMenu = "Меню облікового запису"
+darkMode = "Темний режим"
+lightMode = "Світлий режим"
+search = "Пошук"
+searchPlaceholder = "Пошук…"
+signOut = "Вийти"
+switchToDark = "Перемкнути на темну тему"
+switchToLight = "Перемкнути на світлу тему"
+
+[portal.shell.sidebar]
+appEditor = "Редактор"
+appProcessor = "Обробник"
+brandSuffix = "Stirling Processor"
+docsCount = "{{docs}} документів"
+linkAccount = "Прив’язати обліковий запис Stirling"
+planEditor = "План Editor"
+planEnterprise = "План Enterprise"
+planProcessor = "План Processor"
+primaryNav = "Основна навігація"
+switchApp = "Перемкнути застосунок"
+
+[portal.sources]
+subtitle = "Багаторазові вхідні підключення, які передають документи в Stirling. Налаштуйте підключення один раз, а потім посилайтеся на нього з будь-якої кількості політик. Натисніть рядок, щоб переглянути його конфігурацію та політики, які його використовують."
+title = "Джерела"
+
+[portal.sources.actions]
+agentBuilder = "Agent Builder"
+connectSource = "Підключити джерело"
+
+[portal.sources.delete]
+body = "Видалити «{{name}}»? Цю дію не можна скасувати. Політики, які посилаються на нього, потрібно буде оновити."
+cancel = "Скасувати"
+confirm = "Видалити"
+title = "Видалити джерело?"
+
+[portal.sources.detail]
+closeAriaLabel = "Закрити деталі"
+delete = "Видалити джерело"
+docs24h = "Останні 24 год"
+docs30d = "Останні 30 днів"
+docsTotal = "Усього побачено"
+docsTrend = "Документи за останні 30 днів"
+documents = "Документи"
+edit = "Редагувати"
+notReferenced = "Не використовується жодною політикою, тому його безпечно видалити."
+pause = "Призупинити"
+resume = "Відновити"
+subtitle = "{{type}} · {{status}}"
+usedBy = "Використовується"
+
+[portal.sources.empty]
+description = "Підключіть папку (а незабаром — і cloud storage), щоб ваші політики мали звідки отримувати документи."
+title = "Джерела ще не підключено"
+
+[portal.sources.kpi]
+inUse = "Використовується"
+total = "Підключення"
+unused = "Не використовується"
+
+[portal.sources.status]
+active = "Активне"
+disabled = "Вимкнене"
+unused = "Не використовується"
+
+[portal.sources.table]
+source = "Джерело"
+status = "Статус"
+usedBy = "Політики"
+
+[portal.sources.types.editor]
+label = "Редактор"
+
+[portal.sources.types.folder]
+description = "Відстежувати каталог на сервері для нових документів."
+label = "Папка"
+
+[portal.sources.types.folder.fields.directory]
+helperText = "Абсолютний шлях, який Stirling відстежує для файлів на обробку."
+label = "Шлях до каталогу"
+placeholder = "/data/incoming"
+
+[portal.sources.types.folder.fields.identity]
+helperText = "Перевірка вмісту читає кожен змінений файл, тому перейменування й торкання файлів, які не змінюють вміст, не обробляються повторно."
+label = "Виявлення змін"
+
+[portal.sources.types.folder.fields.identity.options]
+hash = "Розмір, дата та перевірка вмісту"
+stat = "Розмір і дата зміни"
+
+[portal.sources.types.folder.fields.mode]
+label = "Режим читання"
+
+[portal.sources.types.folder.fields.mode.options]
+consume = "Consume: обробляти кожен файл один раз"
+snapshot = "Snapshot: перечитувати папку під час кожного запуску"
+
+[portal.sources.types.folder.fields.recursive]
+label = "Глибина папки"
+
+[portal.sources.types.folder.fields.recursive.options]
+all = "Включити підпапки"
+top = "Лише верхній рівень"
+
+[portal.sources.types.unknown]
+label = "Джерело"
+
+[portal.sources.wizard]
+back = "Назад"
+cancel = "Скасувати"
+continue = "Продовжити"
+editTitle = "Редагувати джерело"
+name = "Назва"
+namePlaceholder = "наприклад, Прийом заяв"
+save = "Зберегти зміни"
+subtitle = "Крок {{current}} з {{total}} · {{label}}"
+title = "Підключити джерело"
+type = "Тип"
+
+[portal.sources.wizard.steps]
+chooseType = "Вибрати тип"
+configure = "Налаштувати"
+review = "Переглянути й підключити"
+
+[portal.usage]
+managePayment = "Керувати платежем"
+subtitle = "Споживання, рахунки та керування планом для кожного PDF, за який Stirling виставив рахунок, в одній консолі."
+title = "Використання та білінг"
+
+[portal.usage.error]
+loadWallet = "Не вдалося завантажити гаманець"
+openStripePortal = "Не вдалося відкрити Stripe portal"
+walletUnavailable = "Гаманець недоступний: {{status}} {{statusText}}"
+
+[portal.usage.sessionExpired]
+action = "Увійти знову"
+body = "Сеанс вашого облікового запису Stirling закінчився. Увійдіть знову, щоб переглянути білінг — ваш екземпляр залишається прив’язаним."
+title = "Сеанс закінчився"
+
+[portal.users]
+title = "Користувачі"
+
+[portal.users.roles]
+subtitle = "Кожна роль існує в кожному плані — те, що кожна може робити, фіксовано для всієї організації."
+title = "Ролі"
+
+[portal.users.roles.admin]
+label = "Адміністратор (власник організації)"
+summary = "Повне керування робочим простором, налаштуваннями та учасниками."
+
+[portal.users.roles.admin.permissions]
+0 = "Керувати користувачами, командами та ролями"
+1 = "Керувати всіма інтеграціями, включно з підключеннями S3"
+2 = "Надавати або відкликати доступ до порталу"
+3 = "Усе, що може Team Owner"
+
+[portal.users.roles.guest]
+label = "Гість"
+summary = "Обмежений або лише веб-доступ; не може мати особисті конфігурації."
+
+[portal.users.roles.guest.permissions]
+0 = "Лише веб / демо-використання"
+1 = "Немає API-ключів або інтеграцій"
+2 = "Немає доступу до порталу"
+3 = "Лише читання там, де надано спільний доступ"
+
+[portal.users.roles.member]
+label = "Учасник"
+summary = "Звичайний користувач — працює зі спільними ресурсами та власними конфігураціями."
+
+[portal.users.roles.member.permissions]
+0 = "Використовувати редактор і спільні інтеграції"
+1 = "Створювати особисті конфігурації API та MCP"
+2 = "Бачити конфігурації команди, якими з ним поділилися"
+3 = "Без керування S3 або робочим простором"
+
+[portal.users.roles.team_owner]
+label = "Власник команди"
+summary = "Володіє командою — керує ресурсами її учасників і спільними конфігураціями."
+
+[portal.users.roles.team_owner.permissions]
+0 = "Створювати й керувати підключеннями S3 команди"
+1 = "Керувати конфігураціями інтеграцій, що належать команді"
+2 = "Доступ до порталу через стандартну політику"
+3 = "Усе, що може Учасник"
+
+[portal.welcome]
+ariaLabel = "Вітаємо в Stirling PDF"
+badge = "Open-source"
+installEditor = "Установити Редактор"
+inviteTeammates = "Запросити колег"
+openInBrowser = "Відкрити в браузері"
+perks = "Безкоштовно назавжди · Можна self-host"
+subtitle = "Найбезпечніший PDF Editor у світі безкоштовний для команд будь-якого розміру. Включає понад 60 операцій із PDF та SSO."
+title = "Вітаємо в"
+titleAccent = "Stirling PDF"
 
 [printFile]
 title = "Роздрукувати файл"
@@ -6934,6 +9008,21 @@ manage = "Manage"
 description = "Policies and legal information for this service."
 title = "Legal Documents"
 
+[settings.licenses]
+backendDescription = "Ліцензії для залежностей backend, включених до цього сервера."
+backendLabel = "Ліцензії Backend"
+backendTitle = "Ліцензії сторонніх компонентів Backend"
+empty = "Залежностей не знайдено."
+frontendDescription = "Ліцензії для залежностей frontend, включених у release build."
+frontendLabel = "Ліцензії Frontend"
+frontendTitle = "Ліцензії сторонніх компонентів Frontend"
+license = "Ліцензія"
+listDescription = "Список показується безпосередньо в UI з release bundle або endpoint backend."
+listTitle = "Включені залежності"
+loadError = "Не вдалося завантажити ліцензії сторонніх компонентів"
+module = "Модуль"
+version = "Версія"
+
 [settings.licensingAnalytics]
 audit = "Аудит"
 plan = "План"
@@ -7686,7 +9775,9 @@ memberRemoved = "Учасника успішно видалено"
 namePlaceholder = "Введіть назву команди"
 personal = "Особисте"
 removeError = "Не вдалося видалити учасника"
+renameCancel = "Скасувати перейменування"
 renameError = "Не вдалося перейменувати команду"
+renameSubmit = "Зберегти назву команди"
 renameSuccess = "Команду успішно перейменовано"
 
 [team.invitationBanner]
@@ -7702,6 +9793,7 @@ sendButton = "Надіслати запрошення"
 title = "Запросити учасника команди"
 
 [team.members]
+actions = "Дії учасника"
 emailColumn = "Електронна пошта"
 empty = "Поки що немає учасників команди"
 nameColumn = "Ім’я"
@@ -7933,6 +10025,146 @@ title = "Детальна статистика"
 unknownEndpoint = "Невідома кінцева точка"
 visits = "Відвідування"
 
+[users]
+lastActive = "Остання активність"
+learnMore = "Дізнатися більше про ролі та доступ."
+locked = "Заблоковано"
+roleFor = "Роль для {{name}}"
+rowActions = "Дії для {{name}}"
+showAll = "Показати всі {{count}}"
+showLess = "Показати менше"
+subtitle2 = "Ваші люди, команди та рівні доступу."
+suspended = "Призупинено"
+teamActions = "Дії команди"
+title = "Користувачі"
+you = "(ви)"
+
+[users.action]
+deleteTeam = "Видалити команду"
+disableMfa = "Скинути MFA"
+move = "Перемістити до команди"
+reinstate = "Відновити"
+remove = "Видалити з організації"
+rename = "Перейменувати команду"
+resetPw = "Скинути пароль"
+suspend = "Призупинити"
+unlock = "Розблокувати обліковий запис"
+
+[users.cap]
+addProcessor = "+ Processor"
+approver = "Схвалює політику"
+editor = "Редактор"
+processor = "Обробник"
+
+[users.confirm]
+deleteTeamBody = "Видалити команду {{name}}? Спершу команда має бути порожньою — перемістіть її учасників до іншої команди, і вона не повинна все ще володіти жодними конфігураціями інтеграцій."
+deleteTeamTitle = "Видалити команду"
+disableMfaBody = "Видалити реєстрацію MFA для {{name}}? Якщо потрібно, вони налаштують її знову під час наступного входу."
+disableMfaTitle = "Скинути MFA"
+removeBody = "Назавжди видалити {{name}} з організації? Цю дію не можна скасувати."
+removeTitle = "Видалити учасника"
+
+[users.empty]
+description = "Запросіть свою команду, щоб почати співпрацю."
+title = "Учасників ще немає"
+
+[users.group]
+addToTeam = "Додати до команди"
+guestCount = "{{count}} гість"
+guests = "Гості"
+guestsDesc = "Зовнішні співробітники, обмежені тим, чим ви поділилися. Лише Редактор."
+ledBy = "під керівництвом {{owner}}"
+org = "Організація"
+orgDesc = "Власники з повноваженнями на рівні всієї організації та схваленням політик"
+owners = "{{count}} власник"
+team = "Команда {{name}}"
+teamMeta = "{{count}} людей"
+
+[users.invite]
+access = "Доступ"
+action = "Запросити людей"
+authOauth = "OAuth2 / SSO"
+authSaml = "SAML 2.0"
+authType = "Спосіб входу"
+authWeb = "Пароль"
+create = "Створити обліковий запис"
+createSubtitle = "Створіть self-hosted обліковий запис із паролем або SSO."
+createTitle = "Створити обліковий запис"
+editorDesc = "Редагуйте PDF у Stirling PDF Editor. Це отримує кожен."
+email = "Email-адреса"
+emailError = "Введіть дійсну email-адресу"
+emailPlaceholder2 = "name@company.com"
+forceChange = "Вимагати зміну пароля під час першого входу"
+forceMfa = "Вимагати налаштування MFA під час першого входу"
+method = "Як їх додати"
+methodDirect = "Створити обліковий запис напряму"
+methodEmail = "Запросити електронною поштою"
+password = "Пароль"
+passwordError = "Пароль має містити щонайменше 8 символів"
+processorDeferred = "Запрошення надіслано, але доступ до Processor поки не вдалося надати — установіть його зі списку після їхнього приєднання."
+processorDesc = "Поверхня керування, запуск конвеєрів, агенти та API."
+role = "Роль"
+send2 = "Надіслати запрошення"
+subtitle2 = "Вони отримають електронний лист, щоб приєднатися до вашого робочого простору Stirling."
+team = "Команда"
+title = "Запросити людей"
+username = "Ім’я користувача"
+usernameError = "Ім’я користувача має містити щонайменше 3 символи"
+usernamePlaceholder = "jsmith"
+
+[users.loadError]
+description = "Сталася помилка під час звернення до бекенду, або у вас немає доступу. Спробуйте ще раз."
+title = "Не вдалося завантажити учасників"
+
+[users.moveTeam]
+apply = "Перемістити"
+team = "Команда"
+title = "Перемістити до команди"
+
+[users.newTeam]
+action = "+ Нова команда"
+create = "Створити команду"
+emailError = "Введіть дійсну адресу електронної пошти"
+name = "Назва команди"
+namePlaceholder = "напр. Фінанси"
+nameRequired = "Назва команди обов’язкова"
+owner = "Власник команди"
+ownerFailed = "Команду створено, але власника не вдалося запросити. Призначте його зі списку."
+ownerHelper = "У кожної команди є керівник. Його буде запрошено як власника команди з увімкненим Processor, і він зможе додати решту. Пізніше можна перепризначити."
+ownerPlaceholder = "owner@company.com"
+subtitle = "Об’єднуйте людей у команду під керівництвом власника команди, який керує їхнім доступом."
+title = "Нова команда"
+
+[users.renameTeam]
+apply = "Перейменувати"
+name = "Назва команди"
+title = "Перейменувати команду"
+
+[users.resetPw]
+apply = "Скинути пароль"
+confirm = "Підтвердьте пароль"
+copied = "Скопійовано в буфер обміну"
+copyHint = "Скопіюйте це зараз — більше це не буде показано."
+email = "Повідомити користувача електронною поштою про скидання"
+forceChange = "Вимагати зміну пароля під час наступного входу"
+generate = "Згенерувати безпечний пароль"
+includePw = "Додати новий пароль до електронного листа"
+mismatch = "Паролі не збігаються"
+newPassword = "Новий пароль"
+regen = "Згенерувати повторно"
+title = "Скинути пароль"
+tooShort = "Пароль має містити щонайменше 8 символів"
+
+[users.role]
+guest = "Гість"
+member = "Учасник"
+orgOwner = "Власник організації"
+teamOwner = "Власник команди"
+
+[users.team]
+grantProcessor = "Надати Processor команді"
+revokeProcessor = "Відкликати Processor у команди"
+
 [validateSignature]
 date = "Дата"
 downloadCsv = "Завантажити CSV"
@@ -8057,13 +10289,22 @@ zoomOut = "Зменшити"
 [viewer.attachments]
 addAttachment = "Додати вкладення"
 close = "Закрити вкладення"
+closeSidebar = "Закрити бічну панель вкладень"
+download = "Завантажити вкладення"
 empty = "У цьому документі немає вкладень"
 loading = "Завантаження вкладень..."
 noDocument = "Відкрийте PDF, щоб переглянути його вкладення."
 noMatch = "Немає вкладень, що відповідають вашому запиту"
 noSupport = "Підтримка вкладень недоступна для цього переглядача."
+retry = "Повторити"
 searchPlaceholder = "Пошук вкладень"
 title = "Вкладення"
+
+[viewer.bookmarks]
+bookmarkTitle = "Назва закладки"
+closeSidebar = "Закрити бічну панель закладок"
+collapseAll = "Згорнути всі закладки"
+expandAll = "Розгорнути всі закладки"
 
 [viewer.comments]
 addComment = "Додати коментар"
@@ -8075,6 +10316,7 @@ clearAll = "Очистити всі коментарі"
 clearAllDescription = "Це видалить коментарі та відповіді з бічної панелі, зберігши будь-які прикріплені анотації в документі."
 clearAllTitle = "Очистити всі коментарі?"
 close = "Закрити коментарі"
+closeSidebar = "Закрити бічну панель коментарів"
 deleteAnnotationAndComment = "Видалити анотацію і коментар"
 deleteDescription = "Ця анотація має пов’язаний коментар. Ви можете прибрати лише коментар із бічної панелі, зберігши анотацію, або видалити все."
 deleteTitle = "Прибрати анотацію з коментарів?"
@@ -8106,6 +10348,11 @@ title = "Поля форми"
 unsavedBadge = "Не збережено"
 unsavedDesc = "У вас є незбережені зміни"
 
+[viewer.layers]
+closeSidebar = "Закрити бічну панель шарів"
+hideAll = "Приховати всі шари"
+showAll = "Показати всі шари"
+
 [viewer.link]
 delete = "Видалити посилання"
 
@@ -8135,6 +10382,9 @@ resultsOf = "з {{total}}"
 
 [viewer.signature]
 delete = "Видалити підпис"
+
+[viewer.thumbnails]
+closeSidebar = "Закрити бічну панель мініатюр"
 
 [viewPdf]
 tags = "перегляд,читання,анотації,текст,зображення"
@@ -8562,6 +10812,7 @@ loading = "Завантаження учасників..."
 locked = "заблоковано"
 lockedBadge = "Заблоковано"
 loginRequired = "Спочатку увімкніть режим входу"
+memberActions = "Дії з учасником"
 noMembersFound = "Учасників не знайдено"
 role = "Роль"
 searchMembers = "Пошук учасників..."
@@ -8571,6 +10822,7 @@ unlockAccount = "Розблокувати обліковий запис"
 unlockUserError = "Не вдалося розблокувати обліковий запис користувача"
 unlockUserSuccess = "Обліковий запис користувача успішно розблоковано"
 user = "Користувач"
+userInfo = "Інформація про користувача"
 
 [workspace.people.actions]
 upgrade = "Оновити"
@@ -8716,6 +10968,7 @@ removeMemberError = "Не вдалося вилучити користувача
 removeMemberSuccess = "Користувача вилучено з команди"
 renameTeamLabel = "Перейменувати команду"
 system = "Система"
+teamActions = "Дії з командою"
 teamName = "Назва команди"
 teamNotFound = "Команду не знайдено"
 title = "Команди"

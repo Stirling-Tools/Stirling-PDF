@@ -35,7 +35,11 @@ class WalletSnapshotResponseTest {
                 /* spendUnitsThisPeriod= */ 12,
                 new CategoryBreakdown(5, 4, 3),
                 List.of(new MemberRow("u1", "Ann", "ann@example.com", 8)),
-                List.of(new ActivityRow(1L, "api", "API usage", "2026-06-02T10:00", 4)));
+                List.of(new ActivityRow(1L, "api", "API usage", "2026-06-02T10:00", 4)),
+                /* categoryDocs= */ new CategoryBreakdown(3, 2, 1),
+                /* docsProcessedThisPeriod= */ 6,
+                /* uniquePdfsThisPeriod= */ 5,
+                /* sizeMultiplierPdfsThisPeriod= */ 2);
     }
 
     @Test
@@ -107,7 +111,11 @@ class WalletSnapshotResponseTest {
                         0,
                         new CategoryBreakdown(0, 0, 0),
                         List.of(),
-                        List.of());
+                        List.of(),
+                        new CategoryBreakdown(0, 0, 0),
+                        0,
+                        0,
+                        0);
 
         assertThat(free.billableLimit()).isNull();
         assertThat(free.pricePerDocMinor()).isNull();

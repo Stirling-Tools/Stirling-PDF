@@ -144,14 +144,37 @@ function buildKpis(views: SourceView[]): SourceKpi[] {
   ];
 }
 
+/** The built-in editor source's demo throughput, mirroring the backend's per-team counters. */
+const editorDocs = { total: 8230, last24h: 42, last30d: 1680 };
+
+/** The always-present editor row, pinned first and never editable/deletable. */
+function editorView(): SourceView {
+  return {
+    id: "editor",
+    name: "Editor",
+    type: "editor",
+    status: "active",
+    referenceCount: 2,
+    referencingPolicies: [
+      { id: "pol_security", name: "Security Policy" },
+      { id: "pol_redaction", name: "Redaction Policy" },
+    ],
+    config: [],
+    docsTotal: editorDocs.total,
+    docs24h: editorDocs.last24h,
+    docs30d: editorDocs.last30d,
+  };
+}
+
 function buildOverview(): SourcesResponse {
-  const views = store
+  const persisted = store
     .map((s) => toSourceView(s, refsFor(s.id)))
     .sort(
       (a, b) =>
         b.referenceCount - a.referenceCount || a.name.localeCompare(b.name),
     );
-  return { kpis: buildKpis(views), sources: views };
+  // KPIs describe the configured connections; the built-in editor is pinned first but not counted.
+  return { kpis: buildKpis(persisted), sources: [editorView(), ...persisted] };
 }
 
 export const sourcesHandlers = [
@@ -169,6 +192,9 @@ export const sourcesHandlers = [
 
   http.get("/api/v1/sources/:id/document-counts", async ({ params }) => {
     await delay(120);
+    if (params.id === "editor") {
+      return HttpResponse.json(sampleDailySeries(editorDocs.last30d / 30));
+    }
     const source = store.find((s) => s.id === params.id);
     if (!source) return new HttpResponse(null, { status: 404 });
     return HttpResponse.json(docsFor(source.id).daily);
@@ -195,6 +221,12 @@ export const sourcesHandlers = [
   http.delete("/api/v1/sources/:id", async ({ params }) => {
     await delay(120);
     const id = String(params.id);
+    if (id === "editor") {
+      return HttpResponse.json(
+        { detail: "The editor is a built-in source and cannot be deleted" },
+        { status: 400 },
+      );
+    }
     const source = store.find((s) => s.id === id);
     if (!source) return new HttpResponse(null, { status: 404 });
     const refs = refsFor(id);
