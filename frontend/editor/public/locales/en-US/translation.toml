@@ -6909,12 +6909,6 @@ afternoon = "Good afternoon"
 evening = "Good evening"
 morning = "Good morning"
 
-[portal.home.onboarding]
-dismiss = "Dismiss setup"
-notStarted = "Not started"
-progress = "{{done}} of {{total}} done"
-title = "Finish setting up"
-
 [portal.home.onboarding.enterprise]
 body = "Org-wide SSO + SCIM + RBAC, committed volume pricing, and air-gapped deployment."
 cta = "Start Trial"
@@ -6923,18 +6917,16 @@ lead = "For 250+ employees."
 tag = "Enterprise"
 
 [portal.home.onboarding.steps.editor]
-blurb = "Deploy the desktop app, free forever."
-title = "Download the PDF Editor"
+blurb = "Install the desktop app or self-host"
+title = "Download the editor"
+
+[portal.home.onboarding.steps.invite]
+blurb = "Bring your team into the secure workspace"
+title = "Invite teammates"
 
 [portal.home.onboarding.steps.policies]
 blurb = "{{active}} active · {{recommended}} recommended"
-chip = "{{active}} active"
-title = "Turn on policies"
-
-[portal.home.onboarding.steps.sources]
-blurb = "{{connected}} connected · every PDF governed where it lands"
-chip = "{{connected}} connected"
-title = "Connect your sources"
+title = "Confirm your policies"
 
 [portal.home.quickActions]
 subtitle = "Top tasks for today"
@@ -8116,14 +8108,9 @@ summary = "Owns a team — manages its members' resources and shared configs."
 
 [portal.welcome]
 ariaLabel = "Welcome to Stirling PDF"
-badge = "Open-source"
-installEditor = "Install the Editor"
-inviteTeammates = "Invite teammates"
 openInBrowser = "Open in browser"
-perks = "Free forever · Self-hostable"
-subtitle = "The world's most secure PDF Editor is free for teams of all sizes. Includes 60+ PDF operations and SSO."
-title = "Welcome to"
-titleAccent = "Stirling PDF"
+productName = "PDF Editor"
+stats = "30M downloads · 60+ PDF operations · Free forever"
 
 [printFile]
 title = "Print File"

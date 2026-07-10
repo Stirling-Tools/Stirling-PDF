@@ -1,47 +1,10 @@
 /* ──────────────────────────────────────────────────────────────────────── */
-/*  "Finish setting up" checklist (welcome-hero footer)                      */
+/*  Getting-started steps (home-hero body)                                   */
 /* ──────────────────────────────────────────────────────────────────────── */
 
 .portal-setup {
   display: flex;
   flex-direction: column;
-}
-
-.portal-setup__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.6875rem 1.25rem 0.1875rem;
-}
-
-.portal-setup__eyebrow {
-  font-size: 0.625rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--color-text-5);
-}
-
-/* Progress counter doubles as the dismiss affordance. */
-.portal-setup__dismiss {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  padding: 0.1875rem 0.4375rem;
-  border: none;
-  border-radius: var(--radius-md);
-  background: transparent;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: var(--color-text-5);
-  cursor: pointer;
-  transition:
-    color var(--motion-fast),
-    background var(--motion-fast);
-}
-.portal-setup__dismiss:hover {
-  color: var(--color-text-2);
-  background: var(--color-bg-hover);
 }
 
 .portal-setup__list {
@@ -52,39 +15,37 @@
 
 .portal-setup__row {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr;
   align-items: center;
-  gap: 0.875rem;
+  gap: 1rem;
   width: 100%;
-  padding: 0.875rem 1.25rem;
+  padding: 1rem 1.5rem;
   border: none;
   border-top: 1px solid var(--color-border-light);
   background: transparent;
   text-align: left;
+  cursor: pointer;
   transition: background var(--motion-fast);
 }
 .portal-setup__item:first-child .portal-setup__row {
   border-top: none;
 }
-.portal-setup__row.is-interactive {
-  cursor: pointer;
-}
-.portal-setup__row.is-interactive:hover {
+.portal-setup__row:hover {
   background: var(--color-bg-hover);
 }
-.portal-setup__row:disabled {
-  cursor: default;
-}
 
-.portal-setup__dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
+/* Numbered step marker */
+.portal-setup__num {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
   flex-shrink: 0;
-  background: var(--color-border-input);
-}
-.portal-setup__dot.is-done {
-  background: var(--color-green);
+  border-radius: 50%;
+  border: 1px solid var(--color-border-input);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-4);
 }
 
 .portal-setup__text {
@@ -93,50 +54,15 @@
   min-width: 0;
 }
 .portal-setup__text strong {
-  font-size: 0.84375rem;
+  font-size: 0.9375rem;
   font-weight: 600;
   color: var(--color-text-1);
 }
 .portal-setup__text span {
   margin-top: 0.0625rem;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   line-height: 1.4;
   color: var(--color-text-4);
-}
-
-.portal-setup__chip {
-  flex-shrink: 0;
-  padding: 0.125rem 0.5625rem;
-  border-radius: var(--radius-pill);
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: var(--color-text-5);
-  background: var(--color-bg-hover);
-}
-.portal-setup__chip.is-done {
-  color: var(--color-green-dark);
-  background: var(--color-green-light);
-}
-
-/* Loading skeleton */
-.portal-setup__row.is-loading {
-  border-top: 1px solid var(--color-border-light);
-}
-.portal-setup__skel {
-  height: 0.75rem;
-  width: 60%;
-  border-radius: var(--radius-sm);
-  background: var(--color-bg-muted);
-  animation: portalSetupPulse 1.2s ease-in-out infinite;
-}
-@keyframes portalSetupPulse {
-  0%,
-  100% {
-    opacity: 0.5;
-  }
-  50% {
-    opacity: 1;
-  }
 }
 
 /* ── Enterprise upsell rung ── */
@@ -146,7 +72,7 @@
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
-  padding: 0.875rem 1.25rem;
+  padding: 1rem 1.5rem;
   border-top: 1px solid var(--color-border-light);
   background: linear-gradient(
     90deg,
