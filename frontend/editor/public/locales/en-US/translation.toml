@@ -7182,26 +7182,6 @@ sources = "Sources"
 usage = "Usage & Billing"
 users = "Users"
 
-[portal.notifications]
-markAllRead = "Mark all read"
-title = "Notifications"
-viewAll = "View all"
-
-[portal.notifications.ariaLabel]
-none = "Notifications, no unread"
-unread_one = "Notifications, {{count}} unread"
-unread_other = "Notifications, {{count}} unread"
-
-[portal.notifications.count]
-allRead = "all read"
-loading = "loading"
-new_one = "{{count}} new"
-new_other = "{{count}} new"
-
-[portal.notifications.empty]
-description = "No new notifications."
-title = "You're all caught up"
-
 [portal.pipelines]
 subtitle = "Every automated document pipeline on the backend: an ordered chain of operations over a set of sources, run on a trigger. Click a row for its steps and sources."
 title = "Pipelines"
@@ -7868,12 +7848,6 @@ admin = "Admin"
 
 [portal.settings.sections]
 account-link = "Account link"
-
-[portal.shell.header]
-darkMode = "Dark mode"
-lightMode = "Light mode"
-switchToDark = "Switch to dark theme"
-switchToLight = "Switch to light theme"
 
 [portal.shell.sidebar]
 appEditor = "Editor"
