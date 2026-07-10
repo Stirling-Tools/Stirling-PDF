@@ -25,8 +25,9 @@ const dockerCmd = (tag: string) =>
 const HELM = `helm repo add stirling-pdf https://stirling-tools.github.io/Stirling-PDF/
 helm repo update
 helm install stirling-pdf stirling-pdf/stirling-pdf-chart \\\n  --namespace stirling-pdf --create-namespace`;
+const JAR_URL = "https://files.stirlingpdf.com/Stirling-PDF-with-login.jar";
 const JAR =
-  "java -Xmx2g -jar Stirling-PDF.jar\n# then open http://localhost:8080";
+  "java -Xmx2g -jar Stirling-PDF-with-login.jar\n# then open http://localhost:8080";
 
 const GUIDES = {
   windows: "https://docs.stirlingpdf.com/Installation/Windows%20Installation/",
@@ -187,6 +188,16 @@ export function DownloadEditorModal({ open, onClose }: Props) {
       case "manual":
         return (
           <>
+            <Button
+              variant="primary"
+              leftSection={<DownloadRounded sx={{ fontSize: 16 }} />}
+              onClick={() => openUrl(JAR_URL)}
+            >
+              {t("portal.home.download.manual.downloadBtn")}
+            </Button>
+            <p className="portal-install__eyebrow">
+              {t("portal.home.download.manual.runLabel")}
+            </p>
             <CodeBlock code={JAR} lang="bash" />
             {note("manual")}
             {guideLink("manual")}
