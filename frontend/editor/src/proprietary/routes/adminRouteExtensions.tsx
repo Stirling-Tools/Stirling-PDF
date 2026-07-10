@@ -9,16 +9,12 @@ import { PORTAL_BASENAME } from "@app/routes/portalBasename";
 // GHA when the portal or AI layers change). Vite replaces the env with a literal at
 // build time, so when it's off the dynamic import below is tree-shaken out and the
 // portal chunk isn't emitted. PortalApp stays module-level so it isn't recreated on
-// each render. Mocks start first so the worker is ready before the portal's first
-// fetch.
+// each render.
 const includePortal =
   import.meta.env.VITE_INCLUDE_PORTAL === "true" || import.meta.env.DEV;
 
 const PortalApp = includePortal
   ? lazy(async () => {
-      const { startPortalMocksIfEnabled } =
-        await import("@portal/mocks/startIfEnabled");
-      await startPortalMocksIfEnabled();
       const m = await import("@portal/PortalApp");
       return { default: m.PortalApp };
     })
