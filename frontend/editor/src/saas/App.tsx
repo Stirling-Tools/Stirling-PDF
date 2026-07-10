@@ -21,6 +21,7 @@ import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
 import OnboardingBootstrap from "@app/components/OnboardingBootstrap";
 import SignupRequiredBootstrap from "@app/components/SignupRequiredBootstrap";
 import UsageLimitModalHost from "@app/components/UsageLimitModalHost";
+import { SaasLoginLandingRedirect } from "@app/components/SaasLoginLandingRedirect";
 
 // Import global styles
 import "@app/styles/tailwind.css";
@@ -94,6 +95,7 @@ export default function App() {
             >
               <AppLayout>
                 <NonAuthBootstraps />
+                <SaasLoginLandingRedirect />
                 <Routes>
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />

@@ -9043,6 +9043,12 @@ intro = "Enable user authentication, team management, and workspace features for
 learnMore = "Learn more in documentation"
 title = "For System Administrators"
 
+[settings.general.loginLanding]
+description = "Choose which app opens when you sign in to Stirling Cloud."
+editor = "Editor"
+processor = "Processor"
+title = "After signing in"
+
 [settings.general.mode]
 fullscreen = "Fullscreen"
 sidebar = "Sidebar"
