@@ -7965,10 +7965,6 @@ editTitle = "Edit source"
 enabled = "Enabled"
 save = "Save changes"
 
-[portal.sources.tabs]
-connections = "Connections"
-sources = "Sources"
-
 [portal.sources.delete]
 body = "Delete \"{{name}}\"? This can't be undone. Policies that reference it would need to be updated."
 cancel = "Cancel"
@@ -7994,6 +7990,10 @@ documents = "Documents"
 source = "Source"
 status = "Status"
 usedBy = "Policies"
+
+[portal.sources.tabs]
+connections = "Connections"
+sources = "Sources"
 
 [portal.sources.types.editor]
 description = "Documents your team has processed in the editor, across policy and AI runs."
