@@ -122,6 +122,39 @@ describe("Sources view", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows the editor as a built-in source with no edit, pause, or delete actions", async () => {
+    fetchSources.mockResolvedValue({
+      kpis: [],
+      sources: [
+        {
+          id: "editor",
+          name: "Editor",
+          type: "editor",
+          status: "active",
+          referenceCount: 1,
+          referencingPolicies: [{ id: "pol-1", name: "Redaction" }],
+          config: [],
+          docsTotal: 8230,
+          docs24h: 42,
+          docs30d: 1680,
+        },
+      ],
+    } satisfies SourcesResponse);
+
+    renderView();
+
+    // The editor row is labelled from its type (i18n keys are returned verbatim here).
+    fireEvent.click(
+      await screen.findByText("portal.sources.types.editor.label"),
+    );
+
+    // Detail opens, but none of the mutate actions are offered for the built-in source.
+    await screen.findByText("portal.sources.detail.documents");
+    expect(screen.queryByText("portal.sources.detail.edit")).toBeNull();
+    expect(screen.queryByText("portal.sources.detail.pause")).toBeNull();
+    expect(screen.queryByText("portal.sources.detail.delete")).toBeNull();
+  });
+
   it("pauses a source by re-saving it with enabled flipped off", async () => {
     fetchSources.mockResolvedValue(RESPONSE);
     fetchSource.mockResolvedValue({

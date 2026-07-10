@@ -45,7 +45,9 @@ import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunView;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
+import stirling.software.proprietary.policy.source.EditorSource;
 import stirling.software.proprietary.policy.source.SourceAccessGuard;
+import stirling.software.proprietary.policy.source.SourceDocCounter;
 import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
 import stirling.software.proprietary.util.SecretMasker;
@@ -59,6 +61,7 @@ class PolicyControllerTest {
     @Mock private stirling.software.proprietary.policy.store.PolicyStore policyStore;
     @Mock private SourceStore sourceStore;
     @Mock private SourceAccessGuard sourceAccessGuard;
+    @Mock private SourceDocCounter docCounter;
     @Mock private PolicyValidator policyValidator;
     @Mock private PolicyAccessGuard policyAccessGuard;
     @Mock private PolicyManagementAuthority policyManagementAuthority;
@@ -92,6 +95,7 @@ class PolicyControllerTest {
                         policyStore,
                         sourceStore,
                         sourceAccessGuard,
+                        docCounter,
                         policyValidator,
                         policyAccessGuard,
                         policyManagementAuthority,
@@ -164,6 +168,18 @@ class PolicyControllerTest {
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
             assertThat(response.getBody().getJobId()).isEqualTo("run-1");
+        }
+
+        @Test
+        @DisplayName("feeds the editor source, scoped to the caller's team")
+        void adHocRunFeedsTheEditorSource() throws Exception {
+            when(policyRunner.runAdHoc(any(), any(), eq(PolicyProgressListener.NOOP)))
+                    .thenReturn(handle("run-1"));
+            when(sourceAccessGuard.currentTeamId()).thenReturn(3L);
+
+            controller.run(definitionWithStep(), new PolicyRunFiles());
+
+            verify(docCounter).record(EditorSource.counterKey(3L), 0L);
         }
 
         @Test
