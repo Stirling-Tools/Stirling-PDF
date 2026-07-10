@@ -4,10 +4,10 @@ import { Button, Checkbox, FormField, Input, Modal, Select } from "@app/ui";
 import {
   createMember,
   fetchUsers,
-  inviteMember,
   ROLE_LABEL,
   type AuthType,
 } from "@portal/api/users";
+import { usersBackend } from "@app/portal/usersBackend";
 import { createGrant } from "@portal/api/access";
 import { errorMessage } from "@portal/api/http";
 import type { Team } from "@portal/api/teams";
@@ -41,9 +41,10 @@ interface InviteMemberModalProps {
 type InviteRole = "member" | "admin";
 type Mode = "email" | "direct";
 
-const ROLE_SELECT_OPTIONS: { value: InviteRole; label: string }[] = [
-  { value: "member", label: ROLE_LABEL.member },
-  { value: "admin", label: ROLE_LABEL.admin },
+// Values hold i18n keys; resolved with t() where the select renders.
+const ROLE_SELECT_OPTIONS: { value: InviteRole; labelKey: string }[] = [
+  { value: "member", labelKey: ROLE_LABEL.member },
+  { value: "admin", labelKey: ROLE_LABEL.admin },
 ];
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -117,9 +118,11 @@ export function InviteMemberModal({
   }, [email, username, password]);
 
   // Drop the "admin" (Org Owner) option where it can't be assigned (SaaS).
-  const roleOptions = adminRole
-    ? ROLE_SELECT_OPTIONS
-    : ROLE_SELECT_OPTIONS.filter((o) => o.value !== "admin");
+  const roleOptions = (
+    adminRole
+      ? ROLE_SELECT_OPTIONS
+      : ROLE_SELECT_OPTIONS.filter((o) => o.value !== "admin")
+  ).map((o) => ({ value: o.value, label: t(o.labelKey) }));
 
   const authTypeOptions: { value: AuthType; label: string }[] = [
     { value: "WEB", label: t("users.invite.authWeb", "Password") },
@@ -209,7 +212,11 @@ export function InviteMemberModal({
       let processorApplied = true;
       if (mode === "email") {
         if (!emailValid) return;
-        const result = await inviteMember(email.trim(), role, teamNum);
+        const result = await usersBackend.inviteMember(
+          email.trim(),
+          role,
+          teamNum,
+        );
         if (result?.error || result?.errors) {
           setSubmitError(result.error ?? result.errors ?? null);
           return;

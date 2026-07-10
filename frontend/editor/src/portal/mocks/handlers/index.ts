@@ -8,8 +8,8 @@ import { infrastructureHandlers } from "@portal/mocks/handlers/infrastructure";
 import { procurementHandlers } from "@portal/mocks/handlers/procurement";
 import { procurementSaasHandlers } from "@portal/mocks/handlers/procurementSaas";
 import { docsHandlers } from "@portal/mocks/handlers/docs";
-import { settingsHandlers } from "@portal/mocks/handlers/settings";
 import { usersHandlers } from "@portal/mocks/handlers/users";
+import { teamSaasHandlers } from "@portal/mocks/handlers/teamSaas";
 import { agentsHandlers } from "@portal/mocks/handlers/agents";
 import { policiesHandlers } from "@portal/mocks/handlers/policies";
 import { documentsHandlers } from "@portal/mocks/handlers/documents";
@@ -28,8 +28,8 @@ export const handlers = [
   ...docsHandlers,
   ...procurementHandlers,
   ...procurementSaasHandlers,
-  ...settingsHandlers,
   ...usersHandlers,
+  ...teamSaasHandlers,
   ...agentsHandlers,
   ...policiesHandlers,
   ...documentsHandlers,
@@ -38,32 +38,6 @@ export const handlers = [
   ...linkHandlers,
 ];
 
-/**
- * The handlers safe to run when the portal shares an origin with the editor.
- * Three groups are excluded because their routes overlap endpoints the editor
- * itself calls, so mocking them breaks the host app:
- *   - authHandlers: /api/v1/auth/*, /api/v1/proprietary/ui-data/login (logs the
- *     editor out; the portal uses the editor's real session instead)
- *   - policiesHandlers + pipelinesHandlers: both /api/v1/policies* (the editor's
- *     own policies feature)
- * Everything kept is portal-only. `handlers` above is still the full set.
- */
-export const embeddedDataHandlers = [
-  ...notificationsHandlers,
-  ...assistantHandlers,
-  ...searchHandlers,
-  ...sourcesHandlers,
-  ...infrastructureHandlers,
-  ...docsHandlers,
-  ...procurementHandlers,
-  ...settingsHandlers,
-  ...usersHandlers,
-  ...agentsHandlers,
-  ...documentsHandlers,
-  ...sdkComponentsHandlers,
-  ...editorDeployHandlers,
-  ...linkHandlers,
-];
-
 export { resetNotificationsStore } from "@portal/mocks/handlers/notifications";
 export { resetProcurementStore } from "@portal/mocks/handlers/procurement";
+export { resetTeamSaasStore } from "@portal/mocks/handlers/teamSaas";

@@ -1,8 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { ActionIcon } from "@app/ui";
 import { useTheme } from "@portal/contexts/ThemeContext";
-import { SunIcon, MoonIcon } from "@portal/components/icons";
-import { MocksToggle } from "@portal/components/MocksToggle";
 import "@portal/components/Header.css";
 
 function ThemeToggle() {
@@ -34,7 +32,6 @@ export function Header() {
   return (
     <header className="portal-header">
       <div className="portal-header__right">
-        <MocksToggle />
         <ThemeToggle />
       </div>
     </header>

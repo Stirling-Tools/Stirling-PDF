@@ -1,3 +1,4 @@
+import type { TFunction } from "i18next";
 import type { AvatarTone, ChipAccent } from "@app/ui";
 import type { Member, RoleId } from "@portal/api/users";
 import { ROLE_TONE } from "@portal/api/users";
@@ -23,8 +24,14 @@ export function chipAccentForRole(role: RoleId): ChipAccent {
 }
 
 /** Seats used / limit as display copy; null limit → "Unlimited". */
-export function seatsLabel(used: number, limit: number | null): string {
-  return limit === null ? `${used} · Unlimited` : `${used} / ${limit}`;
+export function seatsLabel(
+  t: TFunction,
+  used: number,
+  limit: number | null,
+): string {
+  return limit === null
+    ? t("portal.users.seats.unlimited", { used })
+    : t("portal.users.seats.limited", { used, limit });
 }
 
 /**

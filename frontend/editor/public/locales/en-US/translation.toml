@@ -5937,48 +5937,11 @@ keyDescription = "Paste the license key from your email"
 success = "License Activated!"
 successMessage = "Your license has been successfully activated. You can now close this window."
 
-[policies]
-deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
-deleteConfirmTitle = "Delete {{label}} policy?"
-
 [policies.activity]
-enforced = "enforced"
-enforcing = "Enforcing..."
-failed = "Enforcement failed"
 outputsUnavailable = "Policy outputs are no longer available to download."
 partialOutputsUnavailable = "Some policy outputs are no longer available to download."
-retrying = "Busy, retrying..."
 runNotFound = "The enforcement run could no longer be found."
-step = "step {{current}}/{{total}}"
 timedOut = "Enforcement timed out before the run could finish."
-
-[policies.catalog]
-compliance = "Compliance"
-ingestion = "Ingestion"
-retention = "Retention"
-routing = "Routing"
-security = "Security"
-
-[policies.detail]
-close = "Close"
-editSettings = "Edit Settings"
-enforces = "Enforces"
-managedByOrg = "Managed by your organization. Contact a team leader to change this policy."
-noActivityDescription = "Documents will appear here once this policy runs."
-noActivityTitle = "No activity yet"
-onEveryUpload = "On every upload"
-originalsNote = "Originals stay untouched • Enforced version saved alongside"
-pause = "Pause"
-recentActivity = "Recent Activity"
-resume = "Resume"
-retry = "Retry"
-showLess = "Show less"
-showMore = "Show more"
-statActive = "Active"
-statDataProcessed = "Data processed"
-statDocsEnforced = "Docs enforced"
-statusActive = "Active"
-statusPaused = "Paused"
 
 [policies.enforcement]
 applying = "Applying {{names}}"
@@ -5989,20 +5952,54 @@ failureBody = "{{failures}} of {{total}} file(s) couldn't be processed and were 
 failureTitle = "Exported without full enforcement"
 printPolicyAppliedBody = "This PDF was updated to meet a policy. Review the changes, then print again."
 printPolicyAppliedTitle = "Policy applied before printing"
-queued = "+{{count}} queued"
 successTitle = "{{names}} applied"
 summaryMore = "{{first}}, {{second}} and {{more}} more"
 summaryTwo = "{{first}} and {{second}}"
 
-[policies.enforcement.triggerVerb]
-convert = "Enforcing before convert"
-default = "Enforcing"
-export = "Enforcing before export"
-input = "Enforcing on import"
-print = "Enforcing before print"
+[policies.fieldOption.archiveAfter]
+"1 year" = "1 year"
+"30 days" = "30 days"
+"90 days" = "90 days"
+Never = "Never"
 
-[policies.fields]
-selectedCount = "{{count}} selected"
+[policies.fieldOption.belowThreshold]
+"Flag for review" = "Flag for review"
+Hold = "Hold"
+"Route to bucket" = "Route to bucket"
+
+[policies.fieldOption.destination]
+Documents = "Documents"
+"S3 bucket" = "S3 bucket"
+SharePoint = "SharePoint"
+Webhook = "Webhook"
+
+[policies.fieldOption.frameworks]
+FedRAMP = "FedRAMP"
+GDPR = "GDPR"
+HIPAA = "HIPAA"
+"ISO 27001" = "ISO 27001"
+"PCI DSS" = "PCI DSS"
+"SOC 2" = "SOC 2"
+
+[policies.fieldOption.keepFor]
+"1 year" = "1 year"
+"3 years" = "3 years"
+"30 days" = "30 days"
+"7 years" = "7 years"
+Indefinite = "Indefinite"
+
+[policies.fieldOption.minConfidence]
+"60%" = "60%"
+"70%" = "70%"
+"80%" = "80%"
+"90%" = "90%"
+"95%" = "95%"
+
+[policies.fieldOption.onViolation]
+"Auto-redact PHI" = "Auto-redact PHI"
+"Block export" = "Block export"
+"Flag for review" = "Flag for review"
+"Quarantine document" = "Quarantine document"
 
 [policies.labels]
 add = "Add"
@@ -6041,90 +6038,6 @@ phone = "Phone numbers"
 placeholder = "Select PII types"
 routing = "US routing numbers (ABA)"
 ssn = "Social Security numbers"
-
-[policies.settings]
-noneExport = "No policies currently run on export."
-noneUpload = "No policies currently run on upload."
-onExport = "On export"
-onUpload = "On upload"
-reorderHandle = "Drag to reorder"
-runOrderDesc = "When more than one policy runs on the same trigger, they run in this order — each on the previous policy's output. Drag to reorder."
-title = "Policy settings"
-
-[policies.sidebar]
-activeCount = "{{count}} active"
-infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
-loading = "Loading…"
-optionsAriaLabel = "Policy options"
-policySettings = "Policy settings"
-railAriaLabel = "{{label}} policy — {{status}}"
-railSuffixActive = " (Active)"
-railSuffixPaused = " (Paused)"
-retryFailed = "Retry failed policies ({{count}})"
-rowProgress = "{{completed}} of {{total}} files processed"
-setUp = "Set up"
-title = "Policies"
-upgradeToEnterprise = "Upgrade to enterprise"
-whatIsPolicy = "What is a policy?"
-
-[policies.status]
-active = "Active"
-paused = "Paused"
-setup = "Set up"
-
-[policies.toolConfig]
-enableAriaLabel = "Enable {{tool}}"
-infoAriaLabel = "What does {{tool}} do?"
-
-[policies.toolConfig.info]
-redact = "Automatically finds and blacks out sensitive details — like Social Security and card numbers — so they can't be read in the document."
-sanitize = "Removes hidden JavaScript from the file, so nothing can run automatically when someone opens it."
-watermark = "Stamps a visible mark (e.g. \"Confidential\") across every page."
-
-[policies.wizard]
-allDocTypesDescription = "Enable the Classification policy to filter by document type."
-allDocTypesTitle = "All document types"
-back = "Back"
-builderDesc = "Build the sequence of tools this policy runs on each document."
-clear = "Clear"
-close = "Close"
-continue = "Continue"
-docTypesLabel = "Document types"
-edit = "Edit"
-editTitle = "Edit {{label}} Policy"
-enablePolicy = "Enable Policy"
-filenameAutoNumber = "Auto-number"
-filenamePositionAria = "Filename position"
-filenamePrefix = "Prefix"
-filenameSuffix = "Suffix"
-filenameTextAria = "Filename text"
-filenameTextPlaceholder = "Text to add (optional)"
-lockedDescription = "Contact a team leader to change this policy."
-lockedTitle = "Managed by your organization"
-maxRetriesLabel = "Max retries"
-noToolsError = "Add at least one configured tool to the workflow first."
-outputAsLabel = "Output as"
-outputFilenameSubhead = "Output filename"
-outputModeAria = "Output mode"
-outputNewFile = "New file"
-outputNewVersion = "New version"
-outputRetriesLabel = "Output & retries"
-outputSubhead = "Output"
-retryDelayAria = "Retry delay minutes"
-retryDelayLabel = "Retry delay (min)"
-runOnExport = "Export"
-runOnLabel = "Run on"
-runOnSubhead = "Run on"
-runOnUpload = "Upload"
-saveChanges = "Save Changes"
-saveError = "Couldn't save the policy. Please try again."
-setupClassification = "Set up Classification"
-setupTitle = "Set up {{label}} Policy"
-sourcesDesc = "Choose where this policy runs and which document types it applies to."
-sourcesLabel = "Sources"
-stepOf = "Step {{step}} of {{total}}"
-toolChainDesc = "Configure the tools this policy runs on each document."
-typesSelected = "{{count}} types selected"
 
 [policy]
 badgeEnforcing = "{{name}} enforcing..."
@@ -6526,6 +6439,19 @@ componentSpendMtd = "Component spend (MTD)"
 embedsThisMonth = "Embeds this month"
 inBeta = "In beta"
 
+[portal.components.billingUnit]
+approval = "approval"
+check = "check"
+event = "event"
+render = "render"
+review = "review"
+session = "session"
+signature = "signature"
+
+[portal.components.maturity]
+beta = "Beta"
+ga = "GA"
+
 [portal.componentsView]
 subtitle = "Embeddable SDK widgets you drop into your own app — a viewer, an e-sign flow, an AI review panel. Each is metered per action. Click a card for install, usage and props."
 title = "Components"
@@ -6646,7 +6572,14 @@ subtitle = "Every document your org has processed, with its full processing reco
 title = "Documents"
 
 [portal.documents.audit]
+approved = "Approved"
+archived = "Archived"
+elevation = "Elevation"
 empty = "No events recorded yet."
+extracted = "Processed"
+flagged = "Needs Review"
+ingested = "Ingested"
+reviewed = "In Review"
 
 [portal.documents.drawer]
 sectionsAriaLabel = "Document detail sections"
@@ -6694,8 +6627,16 @@ type = "Type"
 user = "User"
 
 [portal.documents.queue.empty]
+connectSource = "Connect a source"
+createPipeline = "Create a pipeline"
 description = "As sources feed documents into your pipelines they'll appear here for review."
 title = "No documents in the queue"
+
+[portal.documents.status]
+error = "Error"
+flagged = "Needs Review"
+inReview = "In Review"
+processed = "Processed"
 
 [portal.documents.table]
 auto = "Auto"
@@ -6770,6 +6711,12 @@ title = "Service token"
 [portal.editorAdmin.serviceToken.rotatedBanner]
 description = "A new token was issued. Update each self-hosted instance's STIRLING_SERVICE_TOKEN within the 24h grace window or they'll drop offline."
 title = "Rotate running instances"
+
+[portal.editorAdmin.status]
+degraded = "Degraded"
+healthy = "Healthy"
+offline = "Offline"
+pairing = "Pairing"
 
 [portal.editorAdmin.targets]
 instanceCount_one = "{{count}} instance"
@@ -6857,6 +6804,12 @@ sectionsAriaLabel = "Infrastructure sections"
 subtitle = "Deployments, credentials, security posture, storage, and the audit trail for your Stirling workspace."
 title = "Infrastructure"
 
+# Fixed-enum label maps rendered via t(MAP[value]) in the infrastructure tabs.
+[portal.infrastructure.apiKeyPermission]
+admin = "Admin"
+read = "Read"
+write = "Write"
+
 [portal.infrastructure.apiKeys]
 createKey = "Create key"
 heading = "API keys"
@@ -6876,6 +6829,11 @@ usageToday = "Usage today"
 [portal.infrastructure.apiKeys.empty]
 description = "Create a scoped key to start calling the Stirling API."
 title = "No API keys yet"
+
+[portal.infrastructure.attestationLabel]
+attested = "Attested"
+inScope = "In scope"
+notApplicable = "N/A"
 
 [portal.infrastructure.audit]
 filterAriaLabel = "Filter audit events by category"
@@ -6933,6 +6891,24 @@ elevation = "Elevation"
 processing = "Processing"
 totalEvents = "Total events · 24h"
 
+[portal.infrastructure.auditCatLabel]
+auth = "Auth"
+config = "Config"
+elevation = "Elevation"
+processing = "Processing"
+security = "Security"
+
+[portal.infrastructure.auditStatusLabel]
+danger = "Error"
+info = "Info"
+success = "Success"
+warning = "Warning"
+
+[portal.infrastructure.certLabel]
+certified = "Certified"
+inProgress = "In progress"
+notStarted = "Not started"
+
 [portal.infrastructure.createKey]
 cancel = "Cancel"
 createKey = "Create key"
@@ -6948,6 +6924,12 @@ subtitle = "Scope the key to the minimum it needs. You can rotate or revoke at a
 subtitleCreated = "Copy this secret now — it won't be shown again."
 title = "Create API key"
 titleCreated = "Key created"
+
+[portal.infrastructure.deployLabel]
+live = "Live"
+queued = "Queued"
+rolledBack = "Rolled back"
+rolling = "Rolling out"
 
 [portal.infrastructure.deployments]
 msValue = "{{value}} ms"
@@ -6984,6 +6966,16 @@ subheading = "Live health for every deployed Stirling region — latency, load, 
 description = "Deployed regions appear here once your workspace is provisioned."
 title = "No regions deployed"
 
+[portal.infrastructure.keyLabel]
+active = "Active"
+revoked = "Revoked"
+rotateSoon = "Rotate soon"
+
+[portal.infrastructure.modelLabel]
+active = "Active"
+degraded = "Degraded"
+disabled = "Disabled"
+
 [portal.infrastructure.models]
 heading = "Models"
 msValue = "{{value}} ms"
@@ -7011,6 +7003,10 @@ status = "Status"
 type = "Type"
 version = "Version"
 
+[portal.infrastructure.models.cost]
+perCall = "{{price}}/call"
+perThousand = "{{price}}/1k"
+
 [portal.infrastructure.models.metrics]
 activeModels = "Active models"
 avgLatency = "Avg latency"
@@ -7033,6 +7029,17 @@ docType = "Document type"
 modelForAria = "Model for {{operation}}"
 operation = "Operation"
 routedTo = "Routed to"
+
+[portal.infrastructure.modelTypeLabel]
+classification = "Classification"
+extraction = "Extraction"
+llm = "LLM"
+ocr = "OCR"
+
+[portal.infrastructure.regionLabel]
+degraded = "Degraded"
+down = "Down"
+healthy = "Healthy"
 
 [portal.infrastructure.security.access.byok]
 description = "Supply a key from your own KMS. Stirling encrypts with it but can still read."
@@ -7159,14 +7166,6 @@ models = "Models"
 security = "Security"
 storage = "Storage"
 
-[portal.mocks.label]
-off = "Mocks OFF"
-on = "Mocks ON"
-
-[portal.mocks.tooltip]
-off = "Mock data OFF — fetch calls go to the real network. Click to re-enable mocks (reloads the page)."
-on = "Mock data ON — fetch calls are intercepted by MSW. Click to switch to the real network (reloads the page)."
-
 [portal.nav]
 agent-builder = "Agent Builder"
 components = "Components"
@@ -7271,6 +7270,7 @@ run = "Run now"
 
 [portal.pipelines.empty]
 action = "Create a pipeline"
+connectSource = "Connect a source"
 description = "Create your first pipeline: pick the sources it runs over, chain the operations, and choose where output goes."
 title = "No pipelines yet"
 
@@ -7311,8 +7311,92 @@ subtitle = "Standing automations that enforce a tool pipeline on every document.
 title = "Policies"
 
 [portal.policies.card]
-comingSoon = "Coming soon"
+comingSoon = "Upgrade to Enterprise"
 notSetUp = "Not set up"
+
+[portal.policies.categories.compliance]
+desc = "Enforce HIPAA, GDPR, SOC 2, or FedRAMP requirements on every document."
+label = "Compliance"
+
+[portal.policies.categories.ingestion]
+desc = "Classify documents, extract structured data, enforce naming conventions, and normalize pages."
+label = "Ingestion"
+
+[portal.policies.categories.retention]
+desc = "Set how long documents are kept, when to archive, and when to delete."
+label = "Retention"
+
+[portal.policies.categories.routing]
+desc = "Auto-route documents to the right team, folder, or system."
+label = "Routing"
+
+[portal.policies.categories.security]
+desc = "Detect PII, redact, strip active content, and watermark documents."
+label = "Security"
+
+[portal.policies.config]
+scopeAll = "All documents"
+
+[portal.policies.config.compliance]
+summary = "Validates documents against regulatory frameworks before they leave the system."
+
+[portal.policies.config.compliance.fields]
+accessLog = "Access log"
+auditTrail = "Audit trail"
+frameworks = "Frameworks"
+onViolation = "When non-compliant"
+
+[portal.policies.config.compliance.rules]
+0 = "Framework scan"
+1 = "Enforce action"
+2 = "Audit trail"
+
+[portal.policies.config.ingestion]
+summary = "Classifies documents, extracts structured data, enforces naming, and normalizes pages."
+
+[portal.policies.config.ingestion.fields]
+belowThreshold = "Below threshold"
+minConfidence = "Min confidence"
+
+[portal.policies.config.ingestion.rules]
+0 = "Classify"
+1 = "Extract"
+2 = "Name"
+3 = "Normalize"
+
+[portal.policies.config.retention]
+summary = "Enforces how long documents are kept, when to archive, and when to delete."
+
+[portal.policies.config.retention.fields]
+archiveAfter = "Archive after"
+immutableHold = "Immutable hold"
+keepFor = "Keep for"
+
+[portal.policies.config.retention.rules]
+0 = "Retention hold"
+1 = "Auto-archive"
+2 = "Deletion block"
+
+[portal.policies.config.routing]
+summary = "Routes documents to the right destination based on type and classification."
+
+[portal.policies.config.routing.fields]
+destination = "Destination"
+notify = "Notify on route"
+webhookUrl = "Webhook URL"
+
+[portal.policies.config.routing.rules]
+0 = "Auto-classify"
+1 = "Route to folder"
+2 = "Webhook notify"
+
+[portal.policies.config.security]
+summary = "Detects and redacts PII, strips active content (JavaScript), and watermarks documents."
+
+[portal.policies.config.security.rules]
+0 = "Redact PII"
+1 = "Remove JavaScript"
+2 = "Watermark"
 
 [portal.policies.detail]
 enforces = "Enforces"
@@ -7334,9 +7418,23 @@ pause = "Pause"
 resume = "Resume"
 runNow = "Run now"
 
+[portal.policies.detail.clearHistory]
+body = "This policy will forget every file it has already processed and reprocess everything currently in its sources on the next run. The files themselves are not changed. This cannot be undone."
+cancel = "Cancel"
+confirm = "Clear history"
+title = "Clear processed history?"
+
 [portal.policies.detail.emptyActivity]
 description = "Documents will appear here once this policy runs."
 title = "No activity yet"
+
+[portal.policies.endpoints]
+addWatermark = "Watermark"
+autoRedact = "Redact PII"
+compressPdf = "Compress"
+flatten = "Flatten"
+ocrPdf = "OCR"
+sanitizePdf = "Remove JavaScript"
 
 [portal.policies.offline]
 description = "Your policies are saved and will appear once the connection is restored."
@@ -7375,14 +7473,29 @@ continue = "Continue"
 enablePolicy = "Enable policy"
 saveChanges = "Save changes"
 
-[portal.policies.wizard.docTypes]
-allDescription = "Set up an Ingestion (classification) policy to narrow this to specific document types."
-allTitle = "All document types"
-clear = "Clear"
-heading = "Document types"
-narrow = "Narrow"
-selected_one = "{{count}} selected"
-selected_other = "{{count}} selected"
+[portal.policies.wizard.capability.compress]
+desc = "Compresses the document to a smaller file size."
+label = "Reduce file size"
+
+[portal.policies.wizard.capability.flatten]
+desc = "Merges form fields and annotations into the page so they can't be edited."
+label = "Flatten the document"
+
+[portal.policies.wizard.capability.ocr]
+desc = "Runs OCR so scanned pages become selectable, searchable text."
+label = "Make text searchable"
+
+[portal.policies.wizard.capability.redact]
+desc = "Finds and blacks out sensitive details — like Social Security and card numbers — so they can't be read."
+label = "Redact sensitive information"
+
+[portal.policies.wizard.capability.sanitize]
+desc = "Removes hidden JavaScript so nothing can run automatically when the document is opened."
+label = "Strip active content"
+
+[portal.policies.wizard.capability.watermark]
+desc = "Stamps a visible mark (e.g. “Confidential”) across every page."
+label = "Apply a watermark"
 
 [portal.policies.wizard.errors]
 noTools = "Enable at least one tool in the workflow first."
@@ -7403,11 +7516,6 @@ label = "Output as"
 newFile = "New file"
 newVersion = "New version"
 
-[portal.policies.wizard.output.retries]
-delayLabel = "Retry delay (min)"
-heading = "Retries"
-maxLabel = "Max retries"
-
 [portal.policies.wizard.output.runOn]
 export = "Export"
 helper = "When the policy fires: on upload, or before export."
@@ -7418,22 +7526,20 @@ upload = "Upload"
 heading = "Settings"
 
 [portal.policies.wizard.sources]
-emptyDescription = "Connect a source on the Sources page first, then attach it to a policy here."
-emptyTitle = "No sources available"
 heading = "Sources"
 loading = "Loading sources…"
 
 [portal.policies.wizard.tabs]
 ariaLabel = "Setup steps"
 settings = "Settings"
-workflow = "Workflow"
+workflow = "Actions"
 
 [portal.policies.wizard.title]
 edit = "Edit {{category}} policy"
 setUp = "Set up {{category}} policy"
 
 [portal.policies.wizard.workflow]
-description = "The sequence of tools this policy runs on each document. Each tool is a Stirling endpoint; toggle the ones this policy should enforce."
+description = "Choose what this policy does to every document it processes."
 
 [portal.policySummary]
 activeSummary = "{{active}} / {{total}} active"
@@ -7442,7 +7548,7 @@ subtitle = "Standing automations every document passes through, regardless of wh
 title = "What runs on your PDFs"
 
 [portal.policySummary.action]
-comingSoon = "Coming soon"
+comingSoon = "Upgrade to Enterprise"
 configure = "Configure"
 setUp = "Set up"
 
@@ -7465,7 +7571,6 @@ managePlan = "Manage plan"
 volumeSuffix = "PDFs processed · last 30 days"
 
 [portal.procurement]
-reset = "Reset procurement (demo)"
 subtitle = "Get your team evaluated, contracted, and onboarded. Every document in one place."
 title = "Procurement"
 
@@ -7485,23 +7590,42 @@ title = "Review your enterprise agreement"
 
 [portal.procurement.builder]
 addons = "Add-ons"
+addressLine1 = "Address line 1"
+addressLine1Placeholder = "500 Howard St"
+addressLine2 = "Address line 2"
+addressLine2Placeholder = "Suite, floor, building"
 back = "Back"
 businessName = "Business name"
 businessNamePlaceholder = "Your company"
+city = "City"
+cityPlaceholder = "San Francisco"
+contactEmail = "Contact email"
+contactEmailPlaceholder = "jane@acme.com"
+contactName = "Contact name"
+contactNamePlaceholder = "Jane Doe"
 continue = "Continue"
-country = "Country"
-countryEuro = "Eurozone (EUR €)"
-countryUK = "United Kingdom (GBP £)"
-countryUS = "United States (USD $)"
 eula = "I have read and agree to the Stirling Enterprise EULA. It governs the agreement generated from this quote."
 generate = "Generate quote"
 included = "Included"
 indemnification = "IP indemnification"
 indemnificationSub = "We defend qualifying IP claims, per the EULA"
-offlineLicense = "Offline / air-gapped licence"
-offlineLicenseSub = "A downloadable licence file for an air-gapped self-hosted instance"
+pdfSize = "PDF size"
+poNumber = "PO number"
+poNumberPlaceholder = "Optional"
+postalCode = "Postal code"
+postalCodePlaceholder = "94105"
+posture = "Governance"
+posture_count = "~{{count}} policies"
+posture_essentials = "Essentials"
+posture_essentialsSub = "Classification + Sharing — the defaults"
+posture_governed = "Governed"
+posture_governedSub = "Adds Security and Routing"
+posture_regulated = "Regulated"
+posture_regulatedSub = "Every category — Compliance, Retention, Ingestion"
 qbr = "Quarterly business reviews"
 qbrSub = "Your SE reviews usage and roadmap each quarter"
+region = "State / region"
+regionPlaceholder = "California"
 running = "{{annual}} / yr · {{years}}-yr {{tcv}}"
 s1Sub = "Your team, and the PDFs you expect to run each year."
 # Step 1 — volume
@@ -7513,13 +7637,21 @@ s3Sub = "For the quote and the agreement it generates."
 # Step 3 — details
 s3Title = "Your details"
 serviceLevel = "Service level"
+size_compact = "Compact"
+size_compactSub = "Mostly text, under 1 MB"
+size_heavy = "Heavy"
+size_heavySub = "Scanned or image-heavy, 5 MB+"
+size_standard = "Standard"
+size_standardSub = "Mixed text and images, 1 to 5 MB"
 slDedicated = "Dedicated"
-slDedicatedSub = "4 business hours · dedicated account manager · +30%"
+slDedicatedSub = "4 business hours · dedicated SE / CSM · +$30,000/yr"
 slPriority = "Priority"
-slPrioritySub = "Same business day · named CSM · +15%"
+slPrioritySub = "Same business day · named CSM · included"
 slStandard = "Standard"
 slStandardSub = "Next business day · shared CSM · included"
 stepOf = "Step {{n}} of {{total}}"
+taxId = "VAT / Tax ID"
+taxIdPlaceholder = "Optional"
 term = "Term"
 termDiscount = "{{pct}}% multi-year commitment discount applied"
 title = "Build your quote"
@@ -7555,14 +7687,13 @@ title = "Something went wrong"
 
 [portal.procurement.hero]
 company = "Your enterprise deal"
-ctaAgreement = "Review & sign agreement"
 ctaLive = "You're live"
 ctaPayment = "Add payment"
 ctaQuote = "Review your quote"
 ctaTrial = "Build your quote"
 eyebrow = "Enterprise procurement"
 inviteTeammates = "Invite teammates"
-keyDocs = "Key documents"
+licenseKey = "Licence key"
 nextStep = "Next step: {{action}}"
 notStarted = "Not started"
 open = "Open procurement"
@@ -7585,6 +7716,31 @@ subtitle = "Your solutions engineer is on every step. One next action at a time;
 title = "From trial to live, one guided path"
 trialTitle = "Enterprise trial"
 
+[portal.procurement.journeySteps.agreement]
+blurb = "One signature covers MSA, order form, EULA and DPA."
+gatingAction = "Review and sign your agreement"
+label = "Agreement"
+
+[portal.procurement.journeySteps.implementation]
+blurb = "Provision your workspace and run the go-live playbook."
+gatingAction = "Provisioning your workspace"
+label = "Implementation"
+
+[portal.procurement.journeySteps.payment]
+blurb = "Pay by card, bank transfer, or against a purchase order."
+gatingAction = "Confirm payment"
+label = "Payment"
+
+[portal.procurement.journeySteps.quote]
+blurb = "Review committed-volume pricing and contract term."
+gatingAction = "Accept your quote"
+label = "Quote"
+
+[portal.procurement.journeySteps.trial]
+blurb = "Evaluate Stirling against your documents and workflows."
+gatingAction = "Build your quote"
+label = "Trial"
+
 [portal.procurement.license]
 copied = "Copied"
 copy = "Copy key"
@@ -7592,6 +7748,9 @@ downloadError = "Could not generate the offline licence file just yet — please
 downloadOffline = "Download offline licence (.lic)"
 hint = "Paste this key into a self-hosted instance to activate it, or keep it for your records. Keep it safe."
 label = "Your licence key"
+subtitle = "Activate a self-hosted instance with this key, or keep it for your records."
+title = "Your licence key"
+trialFileHint = "This is your trial licence file. Once your agreement is in place, come back and download it again — unlike the online licence key, the .lic file won't update on its own."
 
 [portal.procurement.link]
 cta = "Link account"
@@ -7611,16 +7770,9 @@ talkToSales = "Talk to sales"
 title = "The procurement track opens with Enterprise"
 
 [portal.procurement.milestone]
-accept = "Accept & continue"
-description = "Download the PDF to share it with your team, come back to accept when you're ready, or make changes."
 download = "Download PDF"
 downloadError = "Could not download the quote PDF just yet — please try again in a moment."
 edit = "Edit quote"
-eyebrow = "Quote {{number}}"
-perYear = " / yr"
-preparedFor = "Prepared for {{company}}"
-tcv = "{{value}} total contract value"
-title = "Your quote is ready"
 
 [portal.procurement.modal]
 cancel = "Cancel"
@@ -7647,7 +7799,6 @@ uploadTitle = "Upload your purchase order"
 [portal.procurement.payment]
 description = "Your quote is accepted and your licence is already active — your team can start right away. Pay the first invoice when you're ready; you can pay or download it here, no email needed."
 downloadInvoice = "Download invoice"
-simulate = "Simulate payment received (demo)"
 title = "Subscription created"
 viewInvoice = "View & pay invoice"
 
@@ -7656,6 +7807,21 @@ fallback = "Couldn't load the scheduler."
 fallbackLink = "Open scheduling in a new tab"
 subtitle = "Your solutions engineer will walk your team through the rollout. Pick a time that suits you."
 title = "Schedule a call"
+
+[portal.procurement.setup]
+airgap = "Air-gapped"
+airgapSub = "Fully offline, isolated network. Includes a downloadable licence file."
+cloud = "Cloud"
+cloudSub = "Fully managed by Stirling. Nothing for you to run."
+deployment = "Where will you run Stirling?"
+seats = "Team size"
+seatsHint = "Roughly how many people will use it. You can refine this when you build your quote."
+seatsPlaceholder = "e.g. 250"
+selfhost = "Self-hosted"
+selfhostSub = "Run it in your own cloud or data centre."
+start = "Start trial"
+subtitle = "Tell us how you plan to run Stirling so we can tailor your trial and quote. No card required."
+title = "Set up your trial"
 
 [portal.procurement.status]
 action = "Action needed"
@@ -7697,122 +7863,11 @@ noActionsTitle = "No quick actions"
 noMatches = "No matches for \"{{query}}\""
 noMatchesDescription = "Try a different keyword or browse the catalogue."
 
-[portal.settings]
-ariaLabel = "Settings"
-cancel = "Cancel"
-enterpriseBadge = "Enterprise"
-footerNote = "Changes apply to this workspace."
-saveChanges = "Save changes"
-
-[portal.settings.appearance]
-themeSub = "Choose how the portal looks on this device."
-themeTitle = "Theme"
-
-[portal.settings.appearance.dark]
-hint = "Dim surfaces"
-label = "Dark"
-
-[portal.settings.appearance.light]
-hint = "Bright surfaces"
-label = "Light"
-
-[portal.settings.authentication]
-sessionTimeout = "Session timeout"
-sessionTimeoutHelper = "Members re-authenticate after this idle period."
-sub = "Organisation-wide authentication controls."
-title = "Sign-in policy"
-
-[portal.settings.authentication.mfa]
-description = "Require every member to complete MFA at sign-in."
-label = "Enforce two-factor (MFA)"
-
-[portal.settings.authentication.scim]
-description = "Sync members and roles from your directory."
-label = "SCIM provisioning"
-
-[portal.settings.authentication.sso]
-description = "Federate sign-in through your identity provider."
-label = "Single sign-on (SAML)"
-
-[portal.settings.authentication.timeout]
-1440 = "24 hours"
-240 = "4 hours"
-480 = "8 hours"
-60 = "1 hour"
-720 = "12 hours"
-
-[portal.settings.earlyAccess]
-sub = "Opt into features still in preview."
-title = "Preview features"
-
 [portal.settings.groups]
-account = "Account"
 admin = "Admin"
-workspace = "Workspace"
-
-[portal.settings.notifications]
-sub = "Pick which events reach your inbox."
-title = "Email notifications"
-
-[portal.settings.notifications.pipeline-failures]
-description = "A run errors out or a step times out."
-label = "Pipeline failures"
-
-[portal.settings.notifications.pipeline-success]
-description = "Every successful pipeline run finishes."
-label = "Pipeline completions"
-
-[portal.settings.notifications.product-updates]
-description = "New operations, sources, and release notes."
-label = "Product updates"
-
-[portal.settings.notifications.security-alerts]
-description = "New API keys, sign-ins, or permission changes."
-label = "Security alerts"
-
-[portal.settings.notifications.usage-alerts]
-description = "You approach a plan limit or rate cap."
-label = "Usage & quota alerts"
-
-[portal.settings.notifications.weekly-digest]
-description = "A Monday summary of volume and health."
-label = "Weekly digest"
-
-[portal.settings.profile]
-accountFallback = "Account"
-changePhoto = "Change photo"
-email = "Email"
-emailHelper = "Used for sign-in and notification delivery."
-emailPlaceholder = "you@company.com"
-fullName = "Full name"
-namePlaceholder = "Your name"
 
 [portal.settings.sections]
 account-link = "Account link"
-appearance = "Appearance"
-authentication = "Authentication"
-early-access = "Early access"
-general = "General"
-notifications = "Notifications"
-profile = "Profile"
-sessions = "Active sessions"
-
-[portal.settings.sessions]
-revoke = "Revoke"
-sub = "Devices currently signed in to this account."
-thisDevice = "This device"
-title = "Active sessions"
-
-[portal.settings.workspace]
-manageBilling = "Manage billing"
-nameLabel = "Workspace name"
-namePlaceholder = "Workspace name"
-plan = "Plan"
-regionEnterpriseSuffix = "{{region}} · Enterprise"
-regionHelper = "Where documents are processed and stored at rest."
-regionLabel = "Data residency region"
-seats = "Seats"
-seatsUsed = "{{used}} of {{total}} used"
 
 [portal.shell.header]
 darkMode = "Dark mode"
@@ -7948,11 +8003,60 @@ title = "Session expired"
 [portal.users]
 title = "Users"
 
+[portal.users.roles]
+subtitle = "Every role exists on every plan — what each one can do is fixed across the org."
+title = "Roles"
+
+[portal.users.roles.admin]
+label = "Admin (Org owner)"
+summary = "Full governance over the workspace, settings and members."
+
+[portal.users.roles.admin.permissions]
+0 = "Manage users, teams and roles"
+1 = "Manage all integrations incl. S3 connections"
+2 = "Grant or revoke portal access"
+3 = "Everything Team Owner can do"
+
+[portal.users.roles.guest]
+label = "Guest"
+summary = "Limited or web-only access; cannot hold personal configs."
+
+[portal.users.roles.guest.permissions]
+0 = "Web-only / demo usage"
+1 = "No API keys or integrations"
+2 = "No portal access"
+3 = "Read-only where shared"
+
+[portal.users.roles.member]
+label = "Member"
+summary = "Regular user — works with shared resources and their own configs."
+
+[portal.users.roles.member.permissions]
+0 = "Use the editor and shared integrations"
+1 = "Create personal API & MCP configs"
+2 = "See team configs shared with them"
+3 = "No S3 or workspace management"
+
+[portal.users.roles.team_owner]
+label = "Team owner"
+summary = "Owns a team — manages its members' resources and shared configs."
+
+[portal.users.roles.team_owner.permissions]
+0 = "Create & manage the team's S3 connections"
+1 = "Manage team-owned integration configs"
+2 = "Portal access via the default policy"
+3 = "Everything Member can do"
+
+[portal.users.seats]
+limited = "{{used}} / {{limit}}"
+unlimited = "{{used}} · Unlimited"
+
 [portal.welcome]
 ariaLabel = "Welcome to Stirling PDF"
 badge = "Open-source"
 installEditor = "Install the Editor"
 inviteTeammates = "Invite teammates"
+openInBrowser = "Open in browser"
 perks = "Free forever · Self-hostable"
 subtitle = "The world's most secure PDF Editor is free for teams of all sizes. Includes 60+ PDF operations and SSO."
 title = "Welcome to"
@@ -9876,11 +9980,13 @@ title = "Users"
 you = "(you)"
 
 [users.action]
+cancelInvite = "Cancel invitation"
 deleteTeam = "Delete team"
 disableMfa = "Reset MFA"
 move = "Move to team"
 reinstate = "Reinstate"
 remove = "Remove from org"
+removeTeam = "Remove from team"
 rename = "Rename team"
 resetPw = "Reset password"
 suspend = "Suspend"
@@ -9893,11 +9999,14 @@ editor = "Editor"
 processor = "Processor"
 
 [users.confirm]
+cancelInviteBody = "Cancel the invitation to {{email}}? They won't be able to join with the current link."
+cancelInviteTitle = "Cancel invitation"
 deleteTeamBody = "Delete the {{name}} team? The team must be empty first - move its members to another team, and it can't still own any integration configs."
 deleteTeamTitle = "Delete team"
 disableMfaBody = "Remove {{name}}'s MFA enrolment? They'll set it up again on next login if required."
 disableMfaTitle = "Reset MFA"
 removeBody = "Permanently remove {{name}} from the organization? This cannot be undone."
+removeTeamBody = "Remove {{name}} from the team? They keep their account but lose access to this team's resources."
 removeTitle = "Remove member"
 
 [users.empty]
@@ -9947,6 +10056,14 @@ title = "Invite people"
 username = "Username"
 usernameError = "Username must be at least 3 characters"
 usernamePlaceholder = "jsmith"
+
+[users.invites]
+by = "Invited by {{who}}"
+cancel = "Cancel"
+count = "{{count}} pending"
+desc = "Invited people who haven't joined yet. They hold a seat until they accept."
+expires = "Expires"
+title = "Pending invitations"
 
 [users.loadError]
 description = "Something went wrong reaching the backend, or you don't have access. Try again."

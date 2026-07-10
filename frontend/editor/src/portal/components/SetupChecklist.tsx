@@ -18,10 +18,17 @@ const EDITOR_DOWNLOAD_URL = "https://stirling.com/download";
 
 /**
  * Enterprise on-ramp rung. The CTA differs by tier: free orgs start a guided
- * trial, subscribed (paying) orgs jump straight to a quote — both land in the
- * procurement flow.
+ * trial, subscribed (paying) orgs jump straight to a quote — both open the
+ * procurement flow. When {@code onStart} is given the CTA opens the flow's setup
+ * modal over Home; otherwise it falls back to navigating to the procurement view.
  */
-function EnterpriseRung({ paying }: { paying: boolean }) {
+function EnterpriseRung({
+  paying,
+  onStart,
+}: {
+  paying: boolean;
+  onStart?: () => void;
+}) {
   const { t } = useTranslation();
   const { setActiveView } = useView();
   return (
@@ -38,7 +45,7 @@ function EnterpriseRung({ paying }: { paying: boolean }) {
       <Button
         variant="secondary"
         size="sm"
-        onClick={() => setActiveView("procurement")}
+        onClick={onStart ?? (() => setActiveView("procurement"))}
         rightSection={<span aria-hidden>→</span>}
       >
         {t(
@@ -77,7 +84,13 @@ interface Step {
  * (the same data the Policies / Sources pages show). The header doubles as a
  * dismiss control; the Enterprise rung persists regardless.
  */
-export function SetupChecklist() {
+export function SetupChecklist({
+  onStartEnterprise,
+}: {
+  /** Start the enterprise flow in place (opens the setup modal over Home). Falls back to
+   * navigating to the procurement view when omitted (e.g. in isolated stories). */
+  onStartEnterprise?: () => void;
+} = {}) {
   const { t } = useTranslation();
   const { tier } = useTier();
   const { setActiveView } = useView();
@@ -212,7 +225,7 @@ export function SetupChecklist() {
         </>
       )}
 
-      <EnterpriseRung paying={tier !== "free"} />
+      <EnterpriseRung paying={tier !== "free"} onStart={onStartEnterprise} />
     </div>
   );
 }
