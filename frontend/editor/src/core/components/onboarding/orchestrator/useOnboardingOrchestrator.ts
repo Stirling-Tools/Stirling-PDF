@@ -287,7 +287,6 @@ export function useOnboardingOrchestrator(
   useEffect(() => {
     if (configLoading || !adminStatusResolved) return;
 
-
     if (!initialIndexSet.current) {
       setCurrentStepIndex(activeFlow.length);
       initialIndexSet.current = true;

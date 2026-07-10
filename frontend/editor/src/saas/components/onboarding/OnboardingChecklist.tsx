@@ -141,7 +141,10 @@ export function OnboardingChecklist() {
         void apiClient
           .post("/api/v1/settings/update-enable-analytics", formData)
           .catch((error) => {
-            console.error("[OnboardingChecklist] analytics update failed", error);
+            console.error(
+              "[OnboardingChecklist] analytics update failed",
+              error,
+            );
           });
       }
       closeAnalytics();

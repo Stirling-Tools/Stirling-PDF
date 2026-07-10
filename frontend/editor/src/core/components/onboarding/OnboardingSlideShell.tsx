@@ -149,7 +149,11 @@ export default function OnboardingSlideShell({
                 size="md"
                 aria-label={t("common.close", "Close")}
               >
-                <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
+                <LocalIcon
+                  icon="close-rounded"
+                  width="1.1rem"
+                  height="1.1rem"
+                />
               </ActionIcon>
             )}
           </div>
