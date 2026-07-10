@@ -1,7 +1,18 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { EmptyState, Input, Skeleton, Tabs, type TabItem } from "@app/ui";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import {
+  Button,
+  EmptyState,
+  Input,
+  Skeleton,
+  Tabs,
+  type TabItem,
+} from "@app/ui";
 import type { DocumentStatus, ReviewDocument } from "@portal/api/documents";
+import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
+import { DocumentsIcon } from "@portal/components/icons";
 import { ReviewQueueTable } from "@portal/components/documents/ReviewQueueTable";
 import { DocumentDrawer } from "@portal/components/documents/DocumentDrawer";
 
@@ -40,6 +51,7 @@ function SearchIcon() {
  */
 export function ReviewQueue({ documents, loading }: ReviewQueueProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<QueueFilter>("all");
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -94,24 +106,28 @@ export function ReviewQueue({ documents, loading }: ReviewQueueProps) {
 
   return (
     <div className="portal-documents__queue">
-      <div className="portal-documents__toolbar">
-        <Tabs<QueueFilter>
-          items={filterItems}
-          activeKey={filter}
-          onChange={setFilter}
-          variant="pill"
-          ariaLabel={t("portal.documents.filters.ariaLabel")}
-        />
-        <Input
-          className="portal-documents__search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={t("portal.documents.search")}
-          aria-label={t("portal.documents.search")}
-          leadingIcon={<SearchIcon />}
-          inputSize="sm"
-        />
-      </div>
+      {/* The filter pills + search are counters over the list, so hide them when
+          the list is empty — the empty state stands alone. */}
+      {!isLoading && !isEmpty && (
+        <div className="portal-documents__toolbar">
+          <Tabs<QueueFilter>
+            items={filterItems}
+            activeKey={filter}
+            onChange={setFilter}
+            variant="pill"
+            ariaLabel={t("portal.documents.filters.ariaLabel")}
+          />
+          <Input
+            className="portal-documents__search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={t("portal.documents.search")}
+            aria-label={t("portal.documents.search")}
+            leadingIcon={<SearchIcon />}
+            inputSize="sm"
+          />
+        </div>
+      )}
 
       {isLoading && (
         <div className="portal-documents__table-skeleton" aria-hidden>
@@ -123,8 +139,31 @@ export function ReviewQueue({ documents, loading }: ReviewQueueProps) {
 
       {isEmpty && (
         <EmptyState
+          icon={<DocumentsIcon size={28} />}
           title={t("portal.documents.queue.empty.title")}
           description={t("portal.documents.queue.empty.description")}
+          actions={
+            <>
+              <Button
+                onClick={() =>
+                  navigate(`${toPortalPath(VIEW_PATHS.pipelines)}/new`)
+                }
+                leftSection={
+                  <AddRoundedIcon style={{ fontSize: "1.125rem" }} />
+                }
+              >
+                {t("portal.documents.queue.empty.createPipeline")}
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() =>
+                  navigate(`${toPortalPath(VIEW_PATHS.sources)}?new`)
+                }
+              >
+                {t("portal.documents.queue.empty.connectSource")}
+              </Button>
+            </>
+          }
         />
       )}
 

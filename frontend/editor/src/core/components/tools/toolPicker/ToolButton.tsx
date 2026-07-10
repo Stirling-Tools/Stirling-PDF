@@ -240,6 +240,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
       variant="tertiary"
       accent="neutral"
       size="sm"
+      p="none"
       fullWidth
       justify="start"
       className="tool-button"
@@ -264,6 +265,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
       variant="tertiary"
       accent="neutral"
       size="sm"
+      p="sm"
       fullWidth
       justify="start"
       className="tool-button"
@@ -284,6 +286,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
       accent="neutral"
       onClick={() => handleClick(id)}
       size="sm"
+      p="sm"
       fullWidth
       justify="start"
       className="tool-button"

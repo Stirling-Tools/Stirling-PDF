@@ -370,22 +370,5 @@ export const mantineTheme = createTheme({
         },
       },
     },
-
-    SegmentedControl: {
-      styles: {
-        root: {
-          backgroundColor: "var(--bg-muted)",
-          border: "1px solid var(--border-subtle)",
-        },
-        control: {
-          color: "var(--text-secondary)",
-          "&[dataActive]": {
-            backgroundColor: "var(--bg-surface)",
-            color: "var(--text-primary)",
-            boxShadow: "var(--shadow-sm)",
-          },
-        },
-      },
-    },
   },
 });

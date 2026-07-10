@@ -442,10 +442,10 @@
   --gray-800: 218 222 245;
   --gray-900: 238 241 252;
 
-  /* Dark semantic colors for Tailwind */
-  --surface: 19 23 41;
-  --background: 9 11 24;
-  --border: 28 35 64;
+  /* Dark semantic colors for Tailwind — aligned with portal tokens.css */
+  --surface: 21 28 46; /* #151c2e — portal --color-surface */
+  --background: 9 12 20; /* #090c14 — portal --color-bg */
+  --border: 40 50 72; /* #283248 — portal --color-border */
 
   /* Dark theme Mantine colors */
   --color-red-50: #2d1b1b;
@@ -524,14 +524,18 @@
   --color-yellow-800: #fef08a;
   --color-yellow-900: #fef9c3;
 
-  /* Dark theme semantic colors — deep navy/indigo palette */
-  --bg-surface: #131729;
-  --bg-raised: #0d1020;
-  --bg-muted: #0d1020;
-  --bg-background: #090b18;
-  --bg-toolbar: #090b18;
-  --bg-file-manager: #090b18;
-  --bg-file-list: #131729;
+  /* Dark theme semantic colors — deep navy/indigo palette, aligned with portal
+     tokens.css so the editor and portal (Processor) dark modes don't drift.
+     Chrome surfaces (--bg-toolbar, --bg-file-manager) sit at the portal's
+     sidebar level (#0d1120) so the left/right sidebars lift off the darker
+     canvas (--bg-background) instead of blending into it. */
+  --bg-surface: #151c2e; /* portal --color-surface */
+  --bg-raised: #0d1120; /* portal --color-bg-alt */
+  --bg-muted: #0d1120;
+  --bg-background: #090c14; /* portal --color-bg */
+  --bg-toolbar: #0d1120; /* portal --color-sidebar-bg — lifted off the canvas */
+  --bg-file-manager: #0d1120; /* portal --color-sidebar-bg */
+  --bg-file-list: #151c2e; /* portal --color-surface */
   --btn-open-file: #4f8ef5;
   --text-primary: #e8eaf6;
   --text-secondary: #9299b0;
@@ -540,11 +544,11 @@
   --text-always-dark: #1f2937;
   --text-always-dark-muted: #6b7280;
   --border-subtle: rgba(255, 255, 255, 0.05);
-  --border-default: #1c2340;
-  --border-strong: #2d3560;
-  --border-hover: #3a4680;
-  --hover-bg: #181d38;
-  --active-bg: #232a50;
+  --border-default: #1e2840; /* portal --color-border-light */
+  --border-strong: #283248; /* portal --color-border */
+  --border-hover: #3d4f6a; /* portal --color-border-hover */
+  --hover-bg: #1c2640; /* portal --color-bg-hover */
+  --active-bg: #243044; /* portal --color-bg-muted */
   --automation-entry-hover-bg: var(--color-gray-200);
 
   /* Icon colors for dark mode */
@@ -615,7 +619,7 @@
   --header-selected-bg: #2040a0;
   --header-selected-fg: #ffffff;
   /* file card background (dark) */
-  --file-card-bg: #0d1020;
+  --file-card-bg: #0d1120;
   --accordion-item-bg: #1c2340; /* accordion item background - more distinguishable */
 
   /* shadows */
