@@ -63,6 +63,7 @@ labels:
     files:
       - 'app/core/src/main/resources/static/.*'
       - 'app/proprietary/src/main/resources/static/.*'
+      - 'app/saas/src/main/resources/static/.*'
       - 'frontend/**'
       - 'frontend/.*'
       - 'frontend/**/.*'
@@ -83,6 +84,7 @@ labels:
       - 'app/common/src/main/java/.*.java'
       - 'app/proprietary/src/main/java/.*.java'
       - 'app/core/src/main/java/.*.java'
+      - 'app/saas/src/main/java/.*.java'
 
   - label: 'Back End'
     files:
@@ -153,6 +155,7 @@ labels:
       - 'app/common/src/test/.*'
       - 'app/proprietary/src/test/.*'
       - 'app/core/src/test/.*'
+      - 'app/saas/src/test/.*'
       - 'testing/.*'
       - '.github/workflows/scorecards.yml'
       - 'exampleYmlFiles/test_cicd.yml'
@@ -171,3 +174,4 @@ labels:
       - 'app/common/build.gradle'
       - 'app/proprietary/build.gradle'
       - 'app/core/build.gradle'
+      - 'app/saas/build.gradle'
