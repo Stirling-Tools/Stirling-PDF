@@ -7727,7 +7727,6 @@ managePlan = "Manage plan"
 volumeSuffix = "PDFs processed · last 30 days"
 
 [portal.procurement]
-reset = "Reset procurement (demo)"
 subtitle = "Get your team evaluated, contracted, and onboarded. Every document in one place."
 title = "Procurement"
 
@@ -7747,23 +7746,42 @@ title = "Review your enterprise agreement"
 
 [portal.procurement.builder]
 addons = "Add-ons"
+addressLine1 = "Address line 1"
+addressLine1Placeholder = "500 Howard St"
+addressLine2 = "Address line 2"
+addressLine2Placeholder = "Suite, floor, building"
 back = "Back"
 businessName = "Business name"
 businessNamePlaceholder = "Your company"
+city = "City"
+cityPlaceholder = "San Francisco"
+contactEmail = "Contact email"
+contactEmailPlaceholder = "jane@acme.com"
+contactName = "Contact name"
+contactNamePlaceholder = "Jane Doe"
 continue = "Continue"
-country = "Country"
-countryEuro = "Eurozone (EUR €)"
-countryUK = "United Kingdom (GBP £)"
-countryUS = "United States (USD $)"
 eula = "I have read and agree to the Stirling Enterprise EULA. It governs the agreement generated from this quote."
 generate = "Generate quote"
 included = "Included"
 indemnification = "IP indemnification"
 indemnificationSub = "We defend qualifying IP claims, per the EULA"
-offlineLicense = "Offline / air-gapped licence"
-offlineLicenseSub = "A downloadable licence file for an air-gapped self-hosted instance"
+pdfSize = "PDF size"
+poNumber = "PO number"
+poNumberPlaceholder = "Optional"
+postalCode = "Postal code"
+postalCodePlaceholder = "94105"
+posture = "Governance"
+posture_count = "~{{count}} policies"
+posture_essentials = "Essentials"
+posture_essentialsSub = "Classification + Sharing — the defaults"
+posture_governed = "Governed"
+posture_governedSub = "Adds Security and Routing"
+posture_regulated = "Regulated"
+posture_regulatedSub = "Every category — Compliance, Retention, Ingestion"
 qbr = "Quarterly business reviews"
 qbrSub = "Your SE reviews usage and roadmap each quarter"
+region = "State / region"
+regionPlaceholder = "California"
 running = "{{annual}} / yr · {{years}}-yr {{tcv}}"
 s1Sub = "Your team, and the PDFs you expect to run each year."
 # Step 1 — volume
@@ -7775,13 +7793,21 @@ s3Sub = "For the quote and the agreement it generates."
 # Step 3 — details
 s3Title = "Your details"
 serviceLevel = "Service level"
+size_compact = "Compact"
+size_compactSub = "Mostly text, under 1 MB"
+size_heavy = "Heavy"
+size_heavySub = "Scanned or image-heavy, 5 MB+"
+size_standard = "Standard"
+size_standardSub = "Mixed text and images, 1 to 5 MB"
 slDedicated = "Dedicated"
-slDedicatedSub = "4 business hours · dedicated account manager · +30%"
+slDedicatedSub = "4 business hours · dedicated SE / CSM · +$30,000/yr"
 slPriority = "Priority"
-slPrioritySub = "Same business day · named CSM · +15%"
+slPrioritySub = "Same business day · named CSM · included"
 slStandard = "Standard"
 slStandardSub = "Next business day · shared CSM · included"
 stepOf = "Step {{n}} of {{total}}"
+taxId = "VAT / Tax ID"
+taxIdPlaceholder = "Optional"
 term = "Term"
 termDiscount = "{{pct}}% multi-year commitment discount applied"
 title = "Build your quote"
@@ -7817,14 +7843,13 @@ title = "Something went wrong"
 
 [portal.procurement.hero]
 company = "Your enterprise deal"
-ctaAgreement = "Review & sign agreement"
 ctaLive = "You're live"
 ctaPayment = "Add payment"
 ctaQuote = "Review your quote"
 ctaTrial = "Build your quote"
 eyebrow = "Enterprise procurement"
 inviteTeammates = "Invite teammates"
-keyDocs = "Key documents"
+licenseKey = "Licence key"
 nextStep = "Next step: {{action}}"
 notStarted = "Not started"
 open = "Open procurement"
@@ -7872,56 +7897,6 @@ blurb = "Evaluate Stirling against your documents and workflows."
 gatingAction = "Build your quote"
 label = "Trial"
 
-[portal.procurement.keyDocs]
-oneTimeFee = " · one-time {{amount}}"
-subtitle = "Everything for each stage of your rollout, in one place."
-title = "Key documents"
-
-[portal.procurement.keyDocs.docs.baa]
-name = "Business Associate Agreement"
-sub = "HIPAA · available on request"
-
-[portal.procurement.keyDocs.docs.bankTransfer]
-name = "Bank transfer instructions"
-sub = "Wire details for your AP team"
-
-[portal.procurement.keyDocs.docs.coi]
-name = "Certificate of Insurance"
-sub = "Cyber + E&O · current policy"
-
-[portal.procurement.keyDocs.docs.formalQuote]
-name = "Formal quote"
-sub = "Built to your volume, term, and service level"
-
-[portal.procurement.keyDocs.docs.msa]
-name = "Master Services Agreement"
-sub = "One signature - MSA, order form, EULA, and DPA combined"
-
-[portal.procurement.keyDocs.docs.purchaseOrder]
-name = "Purchase order"
-sub = "Issuing a PO? Upload it and we invoice against it"
-
-[portal.procurement.keyDocs.docs.securityReview]
-name = "Custom security review"
-sub = "We complete your questionnaire and join your review call"
-
-[portal.procurement.keyDocs.docs.soc2]
-name = "SOC 2 Type II report"
-sub = "Audited · NDA-gated"
-
-[portal.procurement.keyDocs.docs.w9]
-name = "IRS Form W-9"
-sub = "Stirling PDF Inc."
-
-[portal.procurement.keyDocs.groups]
-evaluation = "Supporting your evaluation"
-yourDeal = "Your deal"
-
-[portal.procurement.keyDocs.status]
-action = "Action needed"
-available = "Download"
-request = "Request"
-
 [portal.procurement.license]
 copied = "Copied"
 copy = "Copy key"
@@ -7929,6 +7904,9 @@ downloadError = "Could not generate the offline licence file just yet — please
 downloadOffline = "Download offline licence (.lic)"
 hint = "Paste this key into a self-hosted instance to activate it, or keep it for your records. Keep it safe."
 label = "Your licence key"
+subtitle = "Activate a self-hosted instance with this key, or keep it for your records."
+title = "Your licence key"
+trialFileHint = "This is your trial licence file. Once your agreement is in place, come back and download it again — unlike the online licence key, the .lic file won't update on its own."
 
 [portal.procurement.link]
 cta = "Link account"
@@ -7948,16 +7926,9 @@ talkToSales = "Talk to sales"
 title = "The procurement track opens with Enterprise"
 
 [portal.procurement.milestone]
-accept = "Accept & continue"
-description = "Download the PDF to share it with your team, come back to accept when you're ready, or make changes."
 download = "Download PDF"
 downloadError = "Could not download the quote PDF just yet — please try again in a moment."
 edit = "Edit quote"
-eyebrow = "Quote {{number}}"
-perYear = " / yr"
-preparedFor = "Prepared for {{company}}"
-tcv = "{{value}} total contract value"
-title = "Your quote is ready"
 
 [portal.procurement.modal]
 cancel = "Cancel"
@@ -7984,7 +7955,6 @@ uploadTitle = "Upload your purchase order"
 [portal.procurement.payment]
 description = "Your quote is accepted and your licence is already active — your team can start right away. Pay the first invoice when you're ready; you can pay or download it here, no email needed."
 downloadInvoice = "Download invoice"
-simulate = "Simulate payment received (demo)"
 title = "Subscription created"
 viewInvoice = "View & pay invoice"
 
@@ -7993,6 +7963,21 @@ fallback = "Couldn't load the scheduler."
 fallbackLink = "Open scheduling in a new tab"
 subtitle = "Your solutions engineer will walk your team through the rollout. Pick a time that suits you."
 title = "Schedule a call"
+
+[portal.procurement.setup]
+airgap = "Air-gapped"
+airgapSub = "Fully offline, isolated network. Includes a downloadable licence file."
+cloud = "Cloud"
+cloudSub = "Fully managed by Stirling. Nothing for you to run."
+deployment = "Where will you run Stirling?"
+seats = "Team size"
+seatsHint = "Roughly how many people will use it. You can refine this when you build your quote."
+seatsPlaceholder = "e.g. 250"
+selfhost = "Self-hosted"
+selfhostSub = "Run it in your own cloud or data centre."
+start = "Start trial"
+subtitle = "Tell us how you plan to run Stirling so we can tailor your trial and quote. No card required."
+title = "Set up your trial"
 
 [portal.procurement.status]
 action = "Action needed"
