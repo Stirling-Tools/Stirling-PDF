@@ -276,4 +276,25 @@ public interface PersistentAuditEventRepository extends JpaRepository<Persistent
             @Param("source") String source,
             @Param("excludeType") String excludeType,
             @Param("since") Instant since);
+
+    // Team-scoped (SaaS) variants: same free-UI counts, constrained to a team's member principals.
+    @Query(
+            "SELECT COUNT(e) FROM PersistentAuditEvent e "
+                    + "WHERE e.type IN :types AND e.source = :source "
+                    + "AND e.principal IN :principals AND e.timestamp > :since")
+    long countByTypeInAndSourceAndPrincipalInAndTimestampAfter(
+            @Param("types") List<String> types,
+            @Param("source") String source,
+            @Param("principals") List<String> principals,
+            @Param("since") Instant since);
+
+    @Query(
+            "SELECT COUNT(DISTINCT e.principal) FROM PersistentAuditEvent e "
+                    + "WHERE e.source = :source AND e.type <> :excludeType "
+                    + "AND e.principal IN :principals AND e.timestamp > :since")
+    long countDistinctPrincipalsBySourceExcludingTypeAndPrincipalInAfter(
+            @Param("source") String source,
+            @Param("excludeType") String excludeType,
+            @Param("principals") List<String> principals,
+            @Param("since") Instant since);
 }
