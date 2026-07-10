@@ -265,7 +265,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
       variant="tertiary"
       accent="neutral"
       size="sm"
-      p="sm"
+      p="none"
       fullWidth
       justify="start"
       className="tool-button"
