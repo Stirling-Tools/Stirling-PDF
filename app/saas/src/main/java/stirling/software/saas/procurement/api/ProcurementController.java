@@ -271,9 +271,7 @@ public class ProcurementController {
         Long teamId = requireLeader(auth);
         if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         return ResponseEntity.ok(
-                toQuote(
-                        procurement.buildQuote(
-                                teamId, request.toConfig(), request.toDetails())));
+                toQuote(procurement.buildQuote(teamId, request.toConfig(), request.toDetails())));
     }
 
     // Issue + accept are Supabase edge functions (they own Stripe): issue-procurement-quote turns a

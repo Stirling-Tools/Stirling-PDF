@@ -545,7 +545,10 @@ function estimateVolume(users: number): number {
 // Client mirror of the server pricing curve (ProcurementPricingService / quotePricing). The server
 // is authoritative; this only drives the live footer estimate. Minor units (cents); the meter
 // rounds to whole dollars, exactly like the backend, so the preview matches the issued quote.
-function previewAnnualMinor(cfg: QuoteConfigInput): number {
+// Exported for the pricing-parity test, which pins this client estimate to the mock and the
+// server's published fixtures so a rate-card change can't silently desync the footer from the
+// issued quote. This copy stays non-authoritative — the backend prices the real quote.
+export function previewAnnualMinor(cfg: QuoteConfigInput): number {
   const LIST = 0.01;
   const FLOOR = 0.005;
   const runVol = Math.max(0, cfg.volume) * Math.max(1, cfg.intensity);

@@ -50,7 +50,8 @@ let seq = 0;
 const TERM = [0, 0.03, 0.05, 0.06, 0.07]; // meter-only, 1..5 years
 
 // Mirror of ProcurementPricingService (D71): run-based curve, flat priced needs, USD.
-function priceQuote(cfg: Cfg) {
+// Exported for the pricing-parity test (see pricingParity.test.ts).
+export function priceQuote(cfg: Cfg) {
   const LIST = 0.01;
   const FLOOR = 0.005;
   const intensity = Math.max(1, cfg.intensity || 4);
