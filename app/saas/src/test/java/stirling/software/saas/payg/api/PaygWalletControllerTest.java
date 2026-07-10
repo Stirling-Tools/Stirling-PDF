@@ -127,9 +127,11 @@ class PaygWalletControllerTest {
     }
 
     private void stubEmptyLedgerReads(long teamId) {
-        when(ledgerRepo.sumPeriodAmountByCategory(
+        when(ledgerRepo.sumPeriodByCategoryWithDocs(
                         eq(teamId), eq(LedgerEntryType.DEBIT), any(), any()))
                 .thenReturn(List.of());
+        when(ledgerRepo.periodUsageAnalytics(eq(teamId), eq(LedgerEntryType.DEBIT), any(), any()))
+                .thenReturn(List.<Object[]>of(new Object[] {0L, 0L, 0L}));
         when(ledgerRepo.findTop20ByTeamIdOrderByIdDesc(teamId)).thenReturn(List.of());
     }
 
@@ -187,12 +189,17 @@ class PaygWalletControllerTest {
         when(shadowRepo.sumPaidUnits(eq(99L), any(), any())).thenReturn(312L);
         when(billingService.estimateBillMinor(any(), eq(312L))).thenReturn(Optional.of(624L));
         when(entitlementService.getSnapshot(99L)).thenReturn(snapshot(312L, 1250L));
-        when(ledgerRepo.sumPeriodAmountByCategory(eq(99L), eq(LedgerEntryType.DEBIT), any(), any()))
+        // [category, units, docs]: units scale with size, docs = input-file count.
+        when(ledgerRepo.sumPeriodByCategoryWithDocs(
+                        eq(99L), eq(LedgerEntryType.DEBIT), any(), any()))
                 .thenReturn(
                         List.of(
-                                new Object[] {BillingCategory.API, 110L},
-                                new Object[] {BillingCategory.AI, 200L},
-                                new Object[] {BillingCategory.AUTOMATION, 2L}));
+                                new Object[] {BillingCategory.API, 110L, 90L},
+                                new Object[] {BillingCategory.AI, 200L, 50L},
+                                new Object[] {BillingCategory.AUTOMATION, 2L, 2L}));
+        // [docsProcessed, uniquePdfs, sizeMultiplierPdfs] — single-row aggregate as List<Object[]>
+        when(ledgerRepo.periodUsageAnalytics(eq(99L), eq(LedgerEntryType.DEBIT), any(), any()))
+                .thenReturn(List.<Object[]>of(new Object[] {142L, 120L, 30L}));
         when(ledgerRepo.findTop20ByTeamIdOrderByIdDesc(99L)).thenReturn(List.of());
 
         ResponseEntity<WalletSnapshotResponse> resp =
@@ -214,6 +221,13 @@ class PaygWalletControllerTest {
         assertThat(body.categoryBreakdown().api()).isEqualTo(110);
         assertThat(body.categoryBreakdown().ai()).isEqualTo(200);
         assertThat(body.categoryBreakdown().automation()).isEqualTo(2);
+        // Count dimension is surfaced separately from the size-scaled units.
+        assertThat(body.categoryDocs().api()).isEqualTo(90);
+        assertThat(body.categoryDocs().ai()).isEqualTo(50);
+        assertThat(body.categoryDocs().automation()).isEqualTo(2);
+        assertThat(body.docsProcessedThisPeriod()).isEqualTo(142);
+        assertThat(body.uniquePdfsThisPeriod()).isEqualTo(120);
+        assertThat(body.sizeMultiplierPdfsThisPeriod()).isEqualTo(30);
         assertThat(body.stripeSubscriptionId()).isEqualTo("sub_test_99");
         // Member role → ledger never queried per-user.
         verify(ledgerRepo, never()).sumPeriodAmountForMember(any(), any(), any(), any(), any());

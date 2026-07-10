@@ -51,6 +51,17 @@ public interface HashLineageDetector {
     Optional<LineageMatch> detect(Long userId, Set<LineageSignature> signatures);
 
     /**
+     * Run-scoped detect: as {@link #detect(Long, Set)} but only matches open jobs belonging to the
+     * automation run {@code runId}, so lineage joins never cross runs (two separate runs on
+     * identical bytes stay distinct charges). The default ignores {@code runId} (for simple test
+     * doubles); the production detector overrides it to scope the store lookup.
+     */
+    default Optional<LineageMatch> detect(
+            Long userId, String runId, Set<LineageSignature> signatures) {
+        return detect(userId, signatures);
+    }
+
+    /**
      * Same as {@link #record(UUID, Path, ArtifactKind)} but operating on pre-computed signatures.
      * Empty {@code signatures} is a no-op.
      */

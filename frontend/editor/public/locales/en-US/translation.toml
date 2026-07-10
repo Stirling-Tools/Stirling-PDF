@@ -6315,18 +6315,21 @@ managedTitle = "Managed in Stripe"
 update = "Update"
 
 [portal.billing.pdfsProcessed]
-emptyPeriod = "No metered processing yet this period."
+emptyPeriod = "No processing yet this period."
 eyebrow = "PDFs processed this period"
 legendValue_one = "{{formatted}} PDFs"
 legendValue_other = "{{formatted}} PDFs"
-segbarAriaLabel = "Metered PDFs split by category"
+segbarAriaLabel = "PDFs split by category"
 segmentAgentsDesc = "AI agent actions"
 segmentAgentsLabel = "Agents"
 segmentApiDesc = "Direct API requests"
 segmentApiLabel = "API"
 segmentAutomationDesc = "Automations & pipelines"
 segmentAutomationLabel = "Automation"
-unit = "metered PDFs"
+sizeMultiplier = "{{formatted}} PDFs used a size multiplier"
+summary = "{{unique}} unique · {{units}} meter units · {{avg}} avg per PDF"
+summaryNoRate = "{{unique}} unique · {{units}} meter units"
+unit = "PDFs"
 
 [portal.billing.spendLimit]
 adjustLimit = "Adjust limit"
@@ -6355,6 +6358,8 @@ label = "Projected to exceed."
 
 [portal.billing.spendThisMonth]
 eyebrow = "Spend this month"
+freeRemaining_one = "{{formatted}} free PDF remaining"
+freeRemaining_other = "{{formatted}} free PDFs remaining"
 processed_one = "{{formattedCount}} PDF processed."
 processed_other = "{{formattedCount}} PDFs processed."
 processedWithRate_one = "{{formattedCount}} PDF processed, at {{rate}} each."

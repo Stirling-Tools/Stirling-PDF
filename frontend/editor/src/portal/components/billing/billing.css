@@ -116,6 +116,13 @@
   margin: 0 0 1rem;
 }
 
+/* Free grant still offsetting spend — reads as a positive credit note, pulled up
+   under the "PDFs processed" line. */
+.portal-billing__free-remaining {
+  color: var(--color-green-600, var(--color-green));
+  margin-top: -0.5rem;
+}
+
 .portal-billing__skeleton {
   display: flex;
   flex-direction: column;
