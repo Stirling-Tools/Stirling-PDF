@@ -359,6 +359,10 @@ export const BookmarkSidebar = ({
 
     setIsSavingBookmark(true);
     setAddBookmarkError(null);
+    // Capture the page the user is currently viewing so we can restore it
+    // once the rebuilt document (returned by edit-table-of-contents) loads -
+    // otherwise the freshly mounted embedpdf document defaults to page 1.
+    const pageToRestore = getScrollState?.()?.currentPage ?? null;
     try {
       // Convert existing PDF bookmarks (from embedpdf) to the backend's
       // payload shape, then append the new one.
@@ -414,6 +418,22 @@ export const BookmarkSidebar = ({
         setActiveFileId(outputFileIds[0]);
       }
 
+      // Restore the reading position on the new document. The embedpdf
+      // scroll plugin re-initializes for the swapped-in file and defaults
+      // to page 1 until told otherwise, so poll briefly until the new
+      // document reports pages and then scroll back to where we were.
+      if (pageToRestore && pageToRestore > 1) {
+        const maxAttempts = 30;
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+          const totalPages = getScrollState?.()?.totalPages ?? 0;
+          if (totalPages > 0) {
+            scrollActions.scrollToPage(pageToRestore, "instant");
+            break;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 50));
+        }
+      }
+
       // Reset form. The cache is keyed by documentCacheKey (== fileId);
       // the new fileId triggers our document-switch effect, which
       // resets state and re-fetches once the embedpdf bookmark
@@ -437,6 +457,8 @@ export const BookmarkSidebar = ({
     setActiveFileId,
     activeEntry.bookmarks,
     handleFallbackToTool,
+    getScrollState,
+    scrollActions,
   ]);
 
   const bookmarksWithIds = useMemo(() => {
