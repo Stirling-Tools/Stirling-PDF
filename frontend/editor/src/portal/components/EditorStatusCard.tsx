@@ -141,26 +141,16 @@ export function EditorStatusCard({ footer, hideChips }: EditorStatusCardProps) {
                   {t("portal.home.editor.name")}
                 </span>
                 {!hideChips && (
-                  <>
-                    <button
-                      type="button"
-                      className="portal-editor-hero__chip"
-                      onClick={() => setActiveView("users")}
-                    >
-                      <UsersIcon size={13} />
-                      {t("portal.home.editor.activeUsers", {
-                        n: view.activeUsers,
-                      })}
-                    </button>
-                    <button
-                      type="button"
-                      className="portal-editor-hero__chip"
-                      onClick={() => setActiveView("users")}
-                    >
-                      <UserPlusIcon size={13} />
-                      {t("portal.home.editor.invite")}
-                    </button>
-                  </>
+                  <button
+                    type="button"
+                    className="portal-editor-hero__chip"
+                    onClick={() => setActiveView("users")}
+                  >
+                    <UsersIcon size={13} />
+                    {t("portal.home.editor.activeUsers", {
+                      n: view.activeUsers,
+                    })}
+                  </button>
                 )}
               </div>
               <div className="portal-editor-hero__meta">
@@ -177,6 +167,17 @@ export function EditorStatusCard({ footer, hideChips }: EditorStatusCardProps) {
         </div>
 
         <div className="portal-editor-hero__action">
+          {!hideChips && (
+            <button
+              type="button"
+              className="portal-editor-hero__icon-btn"
+              onClick={() => setActiveView("users")}
+              aria-label={t("portal.home.editor.invite")}
+              title={t("portal.home.editor.invite")}
+            >
+              <UserPlusIcon size={16} />
+            </button>
+          )}
           <button
             type="button"
             className="portal-editor-hero__icon-btn"
