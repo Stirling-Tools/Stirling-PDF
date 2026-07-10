@@ -6893,11 +6893,62 @@ retry = "Try again"
 title = "Something went wrong on this page"
 
 [portal.home.download]
-body = "Install the desktop app for your platform, or self-host."
-linux = "Linux"
-mac = "macOS"
-title = "Download the editor"
-windows = "Windows"
+back = "Back"
+body = "Download the desktop app or self-host the server."
+guide = "Open the {{name}} guide"
+openInBrowser = "Open in browser instead"
+sectionDesktop = "Desktop app"
+sectionSelfHosted = "Self-hosted"
+title = "Install the Stirling PDF Editor"
+
+[portal.home.download.docker]
+detailBody = "Run the official image on your server."
+note = "Opens at :8080. Default login: admin / stirling."
+tagline = "Run the server in a container"
+title = "Docker"
+variantFat = "Fat"
+variantLite = "Ultra-Lite"
+variantStandard = "Standard"
+
+[portal.home.download.kubernetes]
+detailBody = "Install the official Helm chart."
+note = "Add a PVC for /configs to persist settings."
+tagline = "Deploy to a cluster with Helm"
+title = "Kubernetes"
+
+[portal.home.download.linux]
+detailBody = "Native builds for your distribution."
+guideBtn = "View Linux install options"
+note = "AppImage, .deb and .rpm builds are available for common distros."
+tagline = "Native desktop app for your distro"
+title = "Linux"
+
+[portal.home.download.mac]
+altLabel = "Or via Homebrew"
+detailBody = "Run the installer, or use Homebrew."
+downloadBtn = "Download for macOS"
+tagline = "Native app for Apple silicon and Intel"
+title = "macOS"
+
+[portal.home.download.managed]
+cta = "Open deployment settings"
+detailBody = "Pre-configure and lock the app across a fleet."
+note = "Manage fleet-wide config, pinning and device pairing from the Editor deployment page."
+tagline = "Pre-configure and lock the app across a fleet"
+title = "Managed deployment"
+
+[portal.home.download.manual]
+detailBody = "Run the .jar on a bare metal server."
+note = "Requires Java 21+. Opens at :8080; default login admin / stirling."
+tagline = "Run the .jar on a bare metal server"
+title = "Manual server setup"
+
+[portal.home.download.windows]
+altLabel = "Or via winget"
+detailBody = "Run the installer, or use a package manager."
+downloadBtn = "Download installer"
+tagline = "Native app for Microsoft Windows"
+title = "Windows"
 
 [portal.home.editor]
 activeUsers = "{{n}} active"

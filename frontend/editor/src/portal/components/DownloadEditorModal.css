@@ -1,11 +1,114 @@
-.portal-download__options {
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Install-the-editor modal                                                 */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+.portal-install__list {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-/* Full-width, left-aligned platform buttons. */
-.portal-download__options button {
+.portal-install__section {
+  margin: 0.75rem 0 0.125rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-5);
+}
+.portal-install__section:first-child {
+  margin-top: 0;
+}
+
+.portal-install__option {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.875rem;
   width: 100%;
-  justify-content: flex-start;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--motion-fast),
+    background var(--motion-fast);
+}
+.portal-install__option:hover {
+  border-color: var(--color-border-input);
+  background: var(--color-bg-hover);
+}
+
+.portal-install__option-icon {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: 0.625rem;
+  color: var(--color-blue);
+  background: var(--color-blue-light);
+}
+
+.portal-install__option-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.portal-install__option-text strong {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+.portal-install__option-text span {
+  font-size: 0.8125rem;
+  color: var(--color-text-4);
+}
+.portal-install__option-chevron {
+  color: var(--color-text-5);
+  flex-shrink: 0;
+}
+
+/* ── Detail pane ── */
+.portal-install__detail {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.875rem;
+}
+.portal-install__detail .sui-btn {
+  width: 100%;
+}
+
+.portal-install__eyebrow {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-5);
+}
+.portal-install__note {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-text-4);
+}
+.portal-install__guide {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-blue);
+  cursor: pointer;
+}
+.portal-install__guide:hover {
+  text-decoration: underline;
 }
