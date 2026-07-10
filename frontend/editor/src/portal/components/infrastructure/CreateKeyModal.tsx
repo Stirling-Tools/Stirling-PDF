@@ -110,7 +110,7 @@ export function CreateKeyModal({
       }
       footer={
         created ? (
-          <Button variant="primary" accent="premium" onClick={close}>
+          <Button variant="primary" onClick={close}>
             {t("portal.infrastructure.createKey.done")}
           </Button>
         ) : (
@@ -120,7 +120,6 @@ export function CreateKeyModal({
             </Button>
             <Button
               variant="primary"
-              accent="premium"
               disabled={name.trim() === "" || submitting}
               onClick={createKey}
             >
