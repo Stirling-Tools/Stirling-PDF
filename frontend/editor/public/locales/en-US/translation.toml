@@ -7465,7 +7465,6 @@ managePlan = "Manage plan"
 volumeSuffix = "PDFs processed · last 30 days"
 
 [portal.procurement]
-reset = "Reset procurement (demo)"
 subtitle = "Get your team evaluated, contracted, and onboarded. Every document in one place."
 title = "Procurement"
 
@@ -7495,13 +7494,13 @@ included = "Included"
 indemnification = "IP indemnification"
 indemnificationSub = "We defend qualifying IP claims, per the EULA"
 posture = "Policy posture"
+posture_count = "~{{count}} policies"
 posture_essentials = "Essentials"
 posture_essentialsSub = "Classification + Sharing — the defaults"
 posture_governed = "Governed"
 posture_governedSub = "Adds Security and Routing"
 posture_regulated = "Regulated"
 posture_regulatedSub = "Every category — Compliance, Retention, Ingestion"
-posture_count = "~{{count}} policies"
 qbr = "Quarterly business reviews"
 qbrSub = "Your SE reviews usage and roadmap each quarter"
 running = "{{annual}} / yr · {{years}}-yr {{tcv}}"
@@ -7557,7 +7556,6 @@ title = "Something went wrong"
 
 [portal.procurement.hero]
 company = "Your enterprise deal"
-ctaAgreement = "Review & sign agreement"
 ctaLive = "You're live"
 ctaPayment = "Add payment"
 ctaQuote = "Review your quote"
@@ -7616,16 +7614,9 @@ talkToSales = "Talk to sales"
 title = "The procurement track opens with Enterprise"
 
 [portal.procurement.milestone]
-accept = "Accept & continue"
-description = "Download the PDF to share it with your team, come back to accept when you're ready, or make changes."
 download = "Download PDF"
 downloadError = "Could not download the quote PDF just yet — please try again in a moment."
 edit = "Edit quote"
-eyebrow = "Quote {{number}}"
-perYear = " / yr"
-preparedFor = "Prepared for {{company}}"
-tcv = "{{value}} total contract value"
-title = "Your quote is ready"
 
 [portal.procurement.modal]
 cancel = "Cancel"
@@ -7652,7 +7643,6 @@ uploadTitle = "Upload your purchase order"
 [portal.procurement.payment]
 description = "Your quote is accepted and your licence is already active — your team can start right away. Pay the first invoice when you're ready; you can pay or download it here, no email needed."
 downloadInvoice = "Download invoice"
-simulate = "Simulate payment received (demo)"
 title = "Subscription created"
 viewInvoice = "View & pay invoice"
 

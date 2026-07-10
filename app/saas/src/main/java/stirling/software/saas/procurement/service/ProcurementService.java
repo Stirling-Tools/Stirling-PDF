@@ -311,6 +311,11 @@ public class ProcurementService {
      * deployment isn't air-gapped, so the controller can 404 rather than leak that a licence
      * exists. The certificate is generated on demand by Keygen (from whatever licence the deal
      * currently holds — trial or committed annual) and never stored.
+     *
+     * <p>By design a team can self-select air-gapped at trial and download a real signed .lic
+     * before paying — that's bounded: the trial licence carries {@code expiry = trialEndsAt}, so
+     * the file the verifier accepts self-expires at trial end. The buyer must re-download after
+     * provisioning to get the committed-term file (the portal warns about this).
      */
     @Transactional(readOnly = true)
     public Optional<String> offlineLicenseFile(Long teamId) {
