@@ -25,7 +25,7 @@ export function ApiKeyCard({ apiKey }: { apiKey: ApiKey }) {
         </span>
         <span className="portal-infra__key-head-right">
           <StatusBadge tone={KEY_TONE[apiKey.status]} size="sm">
-            {KEY_LABEL[apiKey.status]}
+            {t(KEY_LABEL[apiKey.status])}
           </StatusBadge>
           <span
             className={"portal-infra__chevron" + (open ? " is-open" : "")}
@@ -72,7 +72,10 @@ export function ApiKeyCard({ apiKey }: { apiKey: ApiKey }) {
               <dd className="portal-infra__chips">
                 {apiKey.permissions.map((p) => (
                   <Chip key={p} size="sm">
-                    {p}
+                    {t(
+                      `portal.infrastructure.apiKeyPermission.${p.toLowerCase()}`,
+                      p,
+                    )}
                   </Chip>
                 ))}
               </dd>

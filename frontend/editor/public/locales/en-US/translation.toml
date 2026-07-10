@@ -5943,24 +5943,6 @@ partialOutputsUnavailable = "Some policy outputs are no longer available to down
 runNotFound = "The enforcement run could no longer be found."
 timedOut = "Enforcement timed out before the run could finish."
 
-[policies.detail]
-enforces = "Enforces"
-onEveryUpload = "On every upload"
-recentActivity = "Recent Activity"
-retry = "Retry"
-showLess = "Show less"
-showMore = "Show more"
-
-[policies.docType]
-Contracts = "Contracts"
-"Financial reports" = "Financial reports"
-"HR records" = "HR records"
-Insurance = "Insurance"
-Invoices = "Invoices"
-"Legal filings" = "Legal filings"
-"Medical / PHI" = "Medical / PHI"
-"Tax documents" = "Tax documents"
-
 [policies.enforcement]
 applying = "Applying {{names}}"
 applyingProgress = "Applying {{names}} ({{done}} of {{total}})"
@@ -5973,20 +5955,6 @@ printPolicyAppliedTitle = "Policy applied before printing"
 successTitle = "{{names}} applied"
 summaryMore = "{{first}}, {{second}} and {{more}} more"
 summaryTwo = "{{first}} and {{second}}"
-
-[policies.field]
-accessLog = "Access log"
-archiveAfter = "Archive after"
-auditTrail = "Audit trail"
-belowThreshold = "Below threshold"
-destination = "Destination"
-frameworks = "Frameworks"
-immutableHold = "Immutable hold"
-keepFor = "Keep for"
-minConfidence = "Min confidence"
-notify = "Notify on route"
-onViolation = "When non-compliant"
-webhookUrl = "Webhook URL"
 
 [policies.fieldOption.archiveAfter]
 "1 year" = "1 year"
@@ -6060,9 +6028,16 @@ tooLong = "Labels can be at most {{max}} characters."
 ungrouped = "Ungrouped"
 view = "View labels"
 
-[policies.status]
-active = "Active"
-paused = "Paused"
+[policies.pii]
+account = "Account numbers (labelled)"
+card = "Credit / debit cards"
+email = "Email addresses"
+fieldLabel = "PII to redact"
+iban = "IBANs"
+phone = "Phone numbers"
+placeholder = "Select PII types"
+routing = "US routing numbers (ABA)"
+ssn = "Social Security numbers"
 
 [policy]
 badgeEnforcing = "{{name}} enforcing..."
@@ -6652,6 +6627,8 @@ type = "Type"
 user = "User"
 
 [portal.documents.queue.empty]
+connectSource = "Connect a source"
+createPipeline = "Create a pipeline"
 description = "As sources feed documents into your pipelines they'll appear here for review."
 title = "No documents in the queue"
 
@@ -6827,6 +6804,12 @@ sectionsAriaLabel = "Infrastructure sections"
 subtitle = "Deployments, credentials, security posture, storage, and the audit trail for your Stirling workspace."
 title = "Infrastructure"
 
+# Fixed-enum label maps rendered via t(MAP[value]) in the infrastructure tabs.
+[portal.infrastructure.apiKeyPermission]
+admin = "Admin"
+read = "Read"
+write = "Write"
+
 [portal.infrastructure.apiKeys]
 createKey = "Create key"
 heading = "API keys"
@@ -6846,6 +6829,11 @@ usageToday = "Usage today"
 [portal.infrastructure.apiKeys.empty]
 description = "Create a scoped key to start calling the Stirling API."
 title = "No API keys yet"
+
+[portal.infrastructure.attestationLabel]
+attested = "Attested"
+inScope = "In scope"
+notApplicable = "N/A"
 
 [portal.infrastructure.audit]
 filterAriaLabel = "Filter audit events by category"
@@ -6903,6 +6891,24 @@ elevation = "Elevation"
 processing = "Processing"
 totalEvents = "Total events · 24h"
 
+[portal.infrastructure.auditCatLabel]
+auth = "Auth"
+config = "Config"
+elevation = "Elevation"
+processing = "Processing"
+security = "Security"
+
+[portal.infrastructure.auditStatusLabel]
+danger = "Error"
+info = "Info"
+success = "Success"
+warning = "Warning"
+
+[portal.infrastructure.certLabel]
+certified = "Certified"
+inProgress = "In progress"
+notStarted = "Not started"
+
 [portal.infrastructure.createKey]
 cancel = "Cancel"
 createKey = "Create key"
@@ -6918,6 +6924,12 @@ subtitle = "Scope the key to the minimum it needs. You can rotate or revoke at a
 subtitleCreated = "Copy this secret now — it won't be shown again."
 title = "Create API key"
 titleCreated = "Key created"
+
+[portal.infrastructure.deployLabel]
+live = "Live"
+queued = "Queued"
+rolledBack = "Rolled back"
+rolling = "Rolling out"
 
 [portal.infrastructure.deployments]
 msValue = "{{value}} ms"
@@ -6954,6 +6966,16 @@ subheading = "Live health for every deployed Stirling region — latency, load, 
 description = "Deployed regions appear here once your workspace is provisioned."
 title = "No regions deployed"
 
+[portal.infrastructure.keyLabel]
+active = "Active"
+revoked = "Revoked"
+rotateSoon = "Rotate soon"
+
+[portal.infrastructure.modelLabel]
+active = "Active"
+degraded = "Degraded"
+disabled = "Disabled"
+
 [portal.infrastructure.models]
 heading = "Models"
 msValue = "{{value}} ms"
@@ -6981,6 +7003,10 @@ status = "Status"
 type = "Type"
 version = "Version"
 
+[portal.infrastructure.models.cost]
+perCall = "{{price}}/call"
+perThousand = "{{price}}/1k"
+
 [portal.infrastructure.models.metrics]
 activeModels = "Active models"
 avgLatency = "Avg latency"
@@ -7003,6 +7029,17 @@ docType = "Document type"
 modelForAria = "Model for {{operation}}"
 operation = "Operation"
 routedTo = "Routed to"
+
+[portal.infrastructure.modelTypeLabel]
+classification = "Classification"
+extraction = "Extraction"
+llm = "LLM"
+ocr = "OCR"
+
+[portal.infrastructure.regionLabel]
+degraded = "Degraded"
+down = "Down"
+healthy = "Healthy"
 
 [portal.infrastructure.security.access.byok]
 description = "Supply a key from your own KMS. Stirling encrypts with it but can still read."
@@ -7233,6 +7270,7 @@ run = "Run now"
 
 [portal.pipelines.empty]
 action = "Create a pipeline"
+connectSource = "Connect a source"
 description = "Create your first pipeline: pick the sources it runs over, chain the operations, and choose where output goes."
 title = "No pipelines yet"
 
@@ -7273,7 +7311,7 @@ subtitle = "Standing automations that enforce a tool pipeline on every document.
 title = "Policies"
 
 [portal.policies.card]
-comingSoon = "Coming soon"
+comingSoon = "Upgrade to Enterprise"
 notSetUp = "Not set up"
 
 [portal.policies.categories.compliance]
@@ -7380,6 +7418,12 @@ pause = "Pause"
 resume = "Resume"
 runNow = "Run now"
 
+[portal.policies.detail.clearHistory]
+body = "This policy will forget every file it has already processed and reprocess everything currently in its sources on the next run. The files themselves are not changed. This cannot be undone."
+cancel = "Cancel"
+confirm = "Clear history"
+title = "Clear processed history?"
+
 [portal.policies.detail.emptyActivity]
 description = "Documents will appear here once this policy runs."
 title = "No activity yet"
@@ -7429,14 +7473,29 @@ continue = "Continue"
 enablePolicy = "Enable policy"
 saveChanges = "Save changes"
 
-[portal.policies.wizard.docTypes]
-allDescription = "Set up an Ingestion (classification) policy to narrow this to specific document types."
-allTitle = "All document types"
-clear = "Clear"
-heading = "Document types"
-narrow = "Narrow"
-selected_one = "{{count}} selected"
-selected_other = "{{count}} selected"
+[portal.policies.wizard.capability.compress]
+desc = "Compresses the document to a smaller file size."
+label = "Reduce file size"
+
+[portal.policies.wizard.capability.flatten]
+desc = "Merges form fields and annotations into the page so they can't be edited."
+label = "Flatten the document"
+
+[portal.policies.wizard.capability.ocr]
+desc = "Runs OCR so scanned pages become selectable, searchable text."
+label = "Make text searchable"
+
+[portal.policies.wizard.capability.redact]
+desc = "Finds and blacks out sensitive details — like Social Security and card numbers — so they can't be read."
+label = "Redact sensitive information"
+
+[portal.policies.wizard.capability.sanitize]
+desc = "Removes hidden JavaScript so nothing can run automatically when the document is opened."
+label = "Strip active content"
+
+[portal.policies.wizard.capability.watermark]
+desc = "Stamps a visible mark (e.g. “Confidential”) across every page."
+label = "Apply a watermark"
 
 [portal.policies.wizard.errors]
 noTools = "Enable at least one tool in the workflow first."
@@ -7457,11 +7516,6 @@ label = "Output as"
 newFile = "New file"
 newVersion = "New version"
 
-[portal.policies.wizard.output.retries]
-delayLabel = "Retry delay (min)"
-heading = "Retries"
-maxLabel = "Max retries"
-
 [portal.policies.wizard.output.runOn]
 export = "Export"
 helper = "When the policy fires: on upload, or before export."
@@ -7472,22 +7526,20 @@ upload = "Upload"
 heading = "Settings"
 
 [portal.policies.wizard.sources]
-emptyDescription = "Connect a source on the Sources page first, then attach it to a policy here."
-emptyTitle = "No sources available"
 heading = "Sources"
 loading = "Loading sources…"
 
 [portal.policies.wizard.tabs]
 ariaLabel = "Setup steps"
 settings = "Settings"
-workflow = "Workflow"
+workflow = "Actions"
 
 [portal.policies.wizard.title]
 edit = "Edit {{category}} policy"
 setUp = "Set up {{category}} policy"
 
 [portal.policies.wizard.workflow]
-description = "The sequence of tools this policy runs on each document. Each tool is a Stirling endpoint; toggle the ones this policy should enforce."
+description = "Choose what this policy does to every document it processes."
 
 [portal.policySummary]
 activeSummary = "{{active}} / {{total}} active"
@@ -7496,7 +7548,7 @@ subtitle = "Standing automations every document passes through, regardless of wh
 title = "What runs on your PDFs"
 
 [portal.policySummary.action]
-comingSoon = "Coming soon"
+comingSoon = "Upgrade to Enterprise"
 configure = "Configure"
 setUp = "Set up"
 
@@ -7664,6 +7716,56 @@ blurb = "Evaluate Stirling against your documents and workflows."
 gatingAction = "Build your quote"
 label = "Trial"
 
+[portal.procurement.keyDocs]
+oneTimeFee = " · one-time {{amount}}"
+subtitle = "Everything for each stage of your rollout, in one place."
+title = "Key documents"
+
+[portal.procurement.keyDocs.docs.baa]
+name = "Business Associate Agreement"
+sub = "HIPAA · available on request"
+
+[portal.procurement.keyDocs.docs.bankTransfer]
+name = "Bank transfer instructions"
+sub = "Wire details for your AP team"
+
+[portal.procurement.keyDocs.docs.coi]
+name = "Certificate of Insurance"
+sub = "Cyber + E&O · current policy"
+
+[portal.procurement.keyDocs.docs.formalQuote]
+name = "Formal quote"
+sub = "Built to your volume, term, and service level"
+
+[portal.procurement.keyDocs.docs.msa]
+name = "Master Services Agreement"
+sub = "One signature - MSA, order form, EULA, and DPA combined"
+
+[portal.procurement.keyDocs.docs.purchaseOrder]
+name = "Purchase order"
+sub = "Issuing a PO? Upload it and we invoice against it"
+
+[portal.procurement.keyDocs.docs.securityReview]
+name = "Custom security review"
+sub = "We complete your questionnaire and join your review call"
+
+[portal.procurement.keyDocs.docs.soc2]
+name = "SOC 2 Type II report"
+sub = "Audited · NDA-gated"
+
+[portal.procurement.keyDocs.docs.w9]
+name = "IRS Form W-9"
+sub = "Stirling PDF Inc."
+
+[portal.procurement.keyDocs.groups]
+evaluation = "Supporting your evaluation"
+yourDeal = "Your deal"
+
+[portal.procurement.keyDocs.status]
+action = "Action needed"
+available = "Download"
+request = "Request"
+
 [portal.procurement.license]
 copied = "Copied"
 copy = "Copy key"
@@ -7776,122 +7878,11 @@ noActionsTitle = "No quick actions"
 noMatches = "No matches for \"{{query}}\""
 noMatchesDescription = "Try a different keyword or browse the catalogue."
 
-[portal.settings]
-ariaLabel = "Settings"
-cancel = "Cancel"
-enterpriseBadge = "Enterprise"
-footerNote = "Changes apply to this workspace."
-saveChanges = "Save changes"
-
-[portal.settings.appearance]
-themeSub = "Choose how the portal looks on this device."
-themeTitle = "Theme"
-
-[portal.settings.appearance.dark]
-hint = "Dim surfaces"
-label = "Dark"
-
-[portal.settings.appearance.light]
-hint = "Bright surfaces"
-label = "Light"
-
-[portal.settings.authentication]
-sessionTimeout = "Session timeout"
-sessionTimeoutHelper = "Members re-authenticate after this idle period."
-sub = "Organisation-wide authentication controls."
-title = "Sign-in policy"
-
-[portal.settings.authentication.mfa]
-description = "Require every member to complete MFA at sign-in."
-label = "Enforce two-factor (MFA)"
-
-[portal.settings.authentication.scim]
-description = "Sync members and roles from your directory."
-label = "SCIM provisioning"
-
-[portal.settings.authentication.sso]
-description = "Federate sign-in through your identity provider."
-label = "Single sign-on (SAML)"
-
-[portal.settings.authentication.timeout]
-1440 = "24 hours"
-240 = "4 hours"
-480 = "8 hours"
-60 = "1 hour"
-720 = "12 hours"
-
-[portal.settings.earlyAccess]
-sub = "Opt into features still in preview."
-title = "Preview features"
-
 [portal.settings.groups]
-account = "Account"
 admin = "Admin"
-workspace = "Workspace"
-
-[portal.settings.notifications]
-sub = "Pick which events reach your inbox."
-title = "Email notifications"
-
-[portal.settings.notifications.pipeline-failures]
-description = "A run errors out or a step times out."
-label = "Pipeline failures"
-
-[portal.settings.notifications.pipeline-success]
-description = "Every successful pipeline run finishes."
-label = "Pipeline completions"
-
-[portal.settings.notifications.product-updates]
-description = "New operations, sources, and release notes."
-label = "Product updates"
-
-[portal.settings.notifications.security-alerts]
-description = "New API keys, sign-ins, or permission changes."
-label = "Security alerts"
-
-[portal.settings.notifications.usage-alerts]
-description = "You approach a plan limit or rate cap."
-label = "Usage & quota alerts"
-
-[portal.settings.notifications.weekly-digest]
-description = "A Monday summary of volume and health."
-label = "Weekly digest"
-
-[portal.settings.profile]
-accountFallback = "Account"
-changePhoto = "Change photo"
-email = "Email"
-emailHelper = "Used for sign-in and notification delivery."
-emailPlaceholder = "you@company.com"
-fullName = "Full name"
-namePlaceholder = "Your name"
 
 [portal.settings.sections]
 account-link = "Account link"
-appearance = "Appearance"
-authentication = "Authentication"
-early-access = "Early access"
-general = "General"
-notifications = "Notifications"
-profile = "Profile"
-sessions = "Active sessions"
-
-[portal.settings.sessions]
-revoke = "Revoke"
-sub = "Devices currently signed in to this account."
-thisDevice = "This device"
-title = "Active sessions"
-
-[portal.settings.workspace]
-manageBilling = "Manage billing"
-nameLabel = "Workspace name"
-namePlaceholder = "Workspace name"
-plan = "Plan"
-regionEnterpriseSuffix = "{{region}} · Enterprise"
-regionHelper = "Where documents are processed and stored at rest."
-regionLabel = "Data residency region"
-seats = "Seats"
-seatsUsed = "{{used}} of {{total}} used"
 
 [portal.shell.header]
 accountFallback = "Account"
@@ -8079,6 +8070,10 @@ summary = "Owns a team — manages its members' resources and shared configs."
 1 = "Manage team-owned integration configs"
 2 = "Portal access via the default policy"
 3 = "Everything Member can do"
+
+[portal.users.seats]
+limited = "{{used}} / {{limit}}"
+unlimited = "{{used}} · Unlimited"
 
 [portal.welcome]
 ariaLabel = "Welcome to Stirling PDF"
@@ -10009,11 +10004,13 @@ title = "Users"
 you = "(you)"
 
 [users.action]
+cancelInvite = "Cancel invitation"
 deleteTeam = "Delete team"
 disableMfa = "Reset MFA"
 move = "Move to team"
 reinstate = "Reinstate"
 remove = "Remove from org"
+removeTeam = "Remove from team"
 rename = "Rename team"
 resetPw = "Reset password"
 suspend = "Suspend"
@@ -10026,11 +10023,14 @@ editor = "Editor"
 processor = "Processor"
 
 [users.confirm]
+cancelInviteBody = "Cancel the invitation to {{email}}? They won't be able to join with the current link."
+cancelInviteTitle = "Cancel invitation"
 deleteTeamBody = "Delete the {{name}} team? The team must be empty first - move its members to another team, and it can't still own any integration configs."
 deleteTeamTitle = "Delete team"
 disableMfaBody = "Remove {{name}}'s MFA enrolment? They'll set it up again on next login if required."
 disableMfaTitle = "Reset MFA"
 removeBody = "Permanently remove {{name}} from the organization? This cannot be undone."
+removeTeamBody = "Remove {{name}} from the team? They keep their account but lose access to this team's resources."
 removeTitle = "Remove member"
 
 [users.empty]
@@ -10080,6 +10080,14 @@ title = "Invite people"
 username = "Username"
 usernameError = "Username must be at least 3 characters"
 usernamePlaceholder = "jsmith"
+
+[users.invites]
+by = "Invited by {{who}}"
+cancel = "Cancel"
+count = "{{count}} pending"
+desc = "Invited people who haven't joined yet. They hold a seat until they accept."
+expires = "Expires"
+title = "Pending invitations"
 
 [users.loadError]
 description = "Something went wrong reaching the backend, or you don't have access. Try again."

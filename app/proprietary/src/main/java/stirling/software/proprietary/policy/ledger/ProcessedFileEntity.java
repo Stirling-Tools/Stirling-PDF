@@ -10,6 +10,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
@@ -25,7 +26,15 @@ import lombok.Setter;
  * violation rather than a silent merge.
  */
 @Entity
-@Table(name = "policy_processed_files")
+@Table(
+        name = "policy_processed_files",
+        indexes = {
+            // presence cleanup: delete this policy's rows unseen since the sweep began
+            @Index(name = "idx_processed_files_policy_seen", columnList = "policy_id, last_seen"),
+            // cross-policy deletion consensus: existsByIdentityHashAndStatusNot filters
+            // identity_hash on its own, so it cannot ride the (policy_id, identity_hash) PK
+            @Index(name = "idx_processed_files_identity", columnList = "identity_hash")
+        })
 @IdClass(ProcessedFileId.class)
 @NoArgsConstructor
 @Getter
