@@ -63,6 +63,29 @@
   color: rgba(255, 255, 255, 0.55);
 }
 
+/* Header action group: icon buttons + the CTA. */
+.portal-welcome__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.portal-welcome__icon-btn {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  cursor: pointer;
+  transition: background var(--motion-fast);
+}
+.portal-welcome__icon-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
 /* White CTA on the dark header, matching the marketing card. */
 .portal-welcome__header .portal-welcome__cta.sui-btn {
   background: #ffffff;

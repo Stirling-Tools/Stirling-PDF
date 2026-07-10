@@ -8163,6 +8163,8 @@ summary = "Owns a team — manages its members' resources and shared configs."
 
 [portal.welcome]
 ariaLabel = "Welcome to Stirling PDF"
+install = "Install the editor"
+invite = "Invite teammates"
 openInBrowser = "Open in browser"
 productName = "PDF Editor"
 stats = "30M downloads · 60+ PDF operations · Free forever"

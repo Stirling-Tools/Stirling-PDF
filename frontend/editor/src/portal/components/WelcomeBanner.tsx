@@ -1,8 +1,15 @@
 import type { ReactNode } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
+import { useView } from "@portal/contexts/ViewContext";
 import { EDITOR_URL } from "@portal/auth/editorUrl";
-import { ExternalLinkIcon } from "@portal/components/icons";
+import {
+  DownloadIcon,
+  ExternalLinkIcon,
+  UserPlusIcon,
+} from "@portal/components/icons";
+import { DownloadEditorModal } from "@portal/components/DownloadEditorModal";
 import markDark from "@app/assets/brand/modern-logo/StirlingPDFLogoNoTextDark.svg";
 import "@portal/components/WelcomeBanner.css";
 
@@ -25,6 +32,8 @@ interface WelcomeBannerProps {
 
 export function WelcomeBanner({ footer }: WelcomeBannerProps) {
   const { t } = useTranslation();
+  const { setActiveView } = useView();
+  const [installOpen, setInstallOpen] = useState(false);
 
   return (
     <section
@@ -45,19 +54,44 @@ export function WelcomeBanner({ footer }: WelcomeBannerProps) {
             </span>
           </div>
         </div>
-        <Button
-          variant="primary"
-          className="portal-welcome__cta"
-          leftSection={<ExternalLinkIcon size={15} />}
-          onClick={() => {
-            window.location.href = EDITOR_URL;
-          }}
-        >
-          {t("portal.welcome.openInBrowser")}
-        </Button>
+        <div className="portal-welcome__actions">
+          <button
+            type="button"
+            className="portal-welcome__icon-btn"
+            onClick={() => setActiveView("users")}
+            aria-label={t("portal.welcome.invite")}
+            title={t("portal.welcome.invite")}
+          >
+            <UserPlusIcon size={16} />
+          </button>
+          <button
+            type="button"
+            className="portal-welcome__icon-btn"
+            onClick={() => setInstallOpen(true)}
+            aria-label={t("portal.welcome.install")}
+            title={t("portal.welcome.install")}
+          >
+            <DownloadIcon size={16} />
+          </button>
+          <Button
+            variant="primary"
+            className="portal-welcome__cta"
+            leftSection={<ExternalLinkIcon size={15} />}
+            onClick={() => {
+              window.location.href = EDITOR_URL;
+            }}
+          >
+            {t("portal.welcome.openInBrowser")}
+          </Button>
+        </div>
       </div>
 
       {footer && <div className="portal-welcome__footer">{footer}</div>}
+
+      <DownloadEditorModal
+        open={installOpen}
+        onClose={() => setInstallOpen(false)}
+      />
     </section>
   );
 }
