@@ -1,3 +1,4 @@
+import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
@@ -30,20 +31,23 @@ function csvCell(value: string): string {
 }
 
 /** Flatten the visible columns to CSV, matching the on-screen table. */
-function toCsv(docs: ReviewDocument[]): string {
+function toCsv(docs: ReviewDocument[], t: TFunction): string {
   const header = [
-    "Document",
-    "Product",
-    "Pipeline / Action",
-    "User",
-    "Status",
-    "Time",
+    t("portal.documents.table.columns.document"),
+    t("portal.documents.table.columns.product"),
+    t("portal.documents.table.columns.action"),
+    t("portal.documents.table.columns.user"),
+    t("portal.documents.table.columns.status"),
+    t("portal.documents.table.columns.time"),
   ];
   const lines = [header.map(csvCell).join(",")];
   for (const d of docs) {
-    const action = d.product === "Editor" || !d.action ? "Editor" : d.action;
+    const action =
+      d.product === "Editor" || !d.action
+        ? t("portal.documents.table.editorAction")
+        : d.action;
     const status =
-      DOCUMENT_STATUS_LABEL[d.status] +
+      t(DOCUMENT_STATUS_LABEL[d.status]) +
       (d.status === "in-review" && d.reviewer ? ` · ${d.reviewer}` : "");
     lines.push(
       [d.name, d.product, action, d.user || "", status, d.time]
@@ -66,7 +70,7 @@ export function Documents() {
   const documents = state.data?.documents ?? [];
 
   function exportCsv() {
-    const blob = new Blob([toCsv(documents)], {
+    const blob = new Blob([toCsv(documents, t)], {
       type: "text/csv;charset=utf-8",
     });
     const url = URL.createObjectURL(blob);
