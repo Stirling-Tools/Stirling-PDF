@@ -1,8 +1,17 @@
 import { describe, expect, test } from "vitest";
 import {
+  isToolEndpoint,
   objectToFormData,
   type ToolApiParams,
 } from "@app/hooks/tools/shared/toolApiMapping";
+
+describe("isToolEndpoint", () => {
+  test("accepts a generated endpoint and rejects an unknown path", () => {
+    expect(isToolEndpoint("/api/v1/misc/compress-pdf")).toBe(true);
+    expect(isToolEndpoint("/api/v1/misc/not-a-real-tool")).toBe(false);
+    expect(isToolEndpoint("")).toBe(false);
+  });
+});
 
 describe("objectToFormData", () => {
   test("serializes primitive fields to string form values", () => {

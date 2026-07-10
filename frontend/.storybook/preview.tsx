@@ -19,10 +19,39 @@ import { UIProvider } from "@portal/contexts/UIContext";
 import { SuiProvider } from "@portal/theme/SuiProvider";
 import { handlers } from "@portal/mocks/handlers";
 import { configureSupabase } from "@proprietary/auth/supabase/supabaseClient";
+import i18next from "i18next";
+import { initReactI18next } from "react-i18next";
+import { parse as parseToml } from "smol-toml";
+// Load the real English copy so stories render human text, not raw keys. Bundled
+// synchronously via ?raw so it's present on the very first render (no async flash).
+// eslint-disable-next-line no-restricted-imports -- Storybook-only: read the public i18n asset; no @-alias covers editor/public/.
+import enTranslationToml from "../editor/public/locales/en-US/translation.toml?raw";
 
 import "@mantine/core/styles.css";
 import "@core/tokens/tokens.css";
 import "@core/tokens/base.css";
+
+// Storybook-only: init react-i18next with the real English resources parsed from
+// the app's TOML, so t(key) renders the shipped copy (e.g. "No sources connected
+// yet") rather than the raw key. Falls back to an empty bundle if parsing ever
+// fails, so a malformed TOML can't take the whole Storybook down.
+function parseEnTranslation(): Record<string, unknown> {
+  try {
+    return parseToml(enTranslationToml) as Record<string, unknown>;
+  } catch {
+    return {};
+  }
+}
+
+if (!i18next.isInitialized) {
+  void i18next.use(initReactI18next).init({
+    lng: "en",
+    fallbackLng: "en",
+    resources: { en: { translation: parseEnTranslation() } },
+    interpolation: { escapeValue: false },
+    react: { useSuspense: false },
+  });
+}
 
 // Start MSW once. Storybook runs in a browser so this uses the service worker.
 initialize({ onUnhandledRequest: "bypass" }, handlers);

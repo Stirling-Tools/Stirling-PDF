@@ -14,6 +14,7 @@ const EMPTY = {
   trialEndsAt: null,
   trialExtensionsUsed: 0,
   licensed: false,
+  licenseKey: null,
   latestQuote: null,
 };
 
@@ -24,6 +25,7 @@ interface Cfg {
   indemnification: boolean;
   training: boolean;
   qbr: boolean;
+  offlineLicense: boolean;
   currency: string;
   businessName?: string;
 }
@@ -48,8 +50,9 @@ function priceQuote(cfg: Cfg) {
     withInd * TERM[Math.min(Math.max(cfg.termYears, 1), 5) - 1],
   );
   const qbr = cfg.qbr ? 800_000 : 0;
+  const offline = cfg.offlineLicense ? 1_200_000 : 0;
   const training = cfg.training ? 750_000 : 0;
-  const annualNetMinor = withInd - disc + qbr;
+  const annualNetMinor = withInd - disc + qbr + offline;
   const tcvMinor = annualNetMinor * cfg.termYears + training;
 
   type Kind = "RECURRING" | "ONE_TIME" | "DISCOUNT" | "INCLUDED";
@@ -96,6 +99,13 @@ function priceQuote(cfg: Cfg) {
       kind: "RECURRING",
       amountMinor: qbr,
     });
+  if (offline > 0)
+    lines.push({
+      key: "offline-license",
+      label: "Offline / air-gapped licence",
+      kind: "RECURRING",
+      amountMinor: offline,
+    });
   if (disc > 0)
     lines.push({
       key: "multi-year",
@@ -132,6 +142,7 @@ function priceQuote(cfg: Cfg) {
       indemnification: cfg.indemnification,
       training: cfg.training,
       qbr: cfg.qbr,
+      offlineLicense: cfg.offlineLicense,
       currency: cfg.currency || "USD",
       businessName: cfg.businessName ?? "",
     },
@@ -154,6 +165,7 @@ export const procurementSaasHandlers = [
       trialEndsAt: new Date(now + 14 * 86_400_000).toISOString(),
       trialExtensionsUsed: 0,
       licensed: true,
+      licenseKey: "MOCK-TRIAL-KEY-0001",
       latestQuote: null,
     };
     return HttpResponse.json(deal);
@@ -192,8 +204,19 @@ export const procurementSaasHandlers = [
     if (d.dealId) {
       d.stage = "active";
       d.licensed = true;
+      d.licenseKey = "MOCK-ENTERPRISE-KEY-0001";
     }
     return HttpResponse.json(deal);
+  }),
+  http.get(`${SAAS}/api/v1/procurement/license/file`, () => {
+    const q = (deal as { latestQuote: { config?: Cfg } | null }).latestQuote;
+    if (!q?.config?.offlineLicense) {
+      return new HttpResponse(null, { status: 404 });
+    }
+    return new HttpResponse(
+      "-----BEGIN LICENSE FILE-----\nmock-offline-license\n-----END LICENSE FILE-----\n",
+      { headers: { "Content-Type": "text/plain" } },
+    );
   }),
   http.post(`${SAAS}/api/v1/procurement/reset`, () => {
     resetProcurementSaasStore();

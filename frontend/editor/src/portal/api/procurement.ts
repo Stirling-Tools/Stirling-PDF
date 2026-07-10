@@ -1,28 +1,189 @@
 import { apiClient } from "@portal/api/http";
 import { getSupabaseClient } from "@app/auth/supabase/supabaseClient";
 import type { Tier } from "@portal/contexts/TierContext";
-import type {
-  DealStage,
-  DocAction,
-  ProcurementResponse,
-} from "@portal/mocks/procurement";
 
-export type {
-  Deal,
-  DealStage,
-  DocAction,
-  DocStatus,
-  JourneyStep,
-  LedgerDoc,
-  LedgerGroup,
-  ProcurementResponse,
-  QuoteInfo,
-  SolutionsEngineer,
-  SupportingCategory,
-  SupportingGroup,
-  TrialInfo,
-} from "@portal/mocks/procurement";
-export { JOURNEY } from "@portal/mocks/procurement";
+/*
+ * Procurement models the enterprise commercial journey, trial → quote →
+ * agreement → payment → implementation, plus the paperwork ledger that rides
+ * alongside it. The journey is enterprise-only; free/pro tiers receive a
+ * minimal locked payload the view renders as an upgrade prompt.
+ */
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Journey stages                                                           */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+/**
+ * The five-stage enterprise journey. The id is the contract value the backend
+ * advances; the labels below are the buyer-facing stage names (Agreement and
+ * Payment read more plainly than the internal `security` / `procurement`).
+ */
+export type DealStage =
+  | "trial"
+  | "quote"
+  | "security"
+  | "procurement"
+  | "active";
+
+export interface JourneyStep {
+  stage: DealStage;
+  /** Buyer-facing stage name. */
+  label: string;
+  /** One-line description of what happens at this stage. */
+  blurb: string;
+  /**
+   * Label for the single action that advances this stage. The current stage
+   * surfaces its gating action; `active` is terminal (provisioning).
+   */
+  gatingAction: string;
+}
+
+/** Ordered journey definition, the stepper renders this verbatim. */
+/** `label`/`blurb`/`gatingAction` values are i18n keys — render with t(). */
+export const JOURNEY: JourneyStep[] = [
+  {
+    stage: "trial",
+    label: "portal.procurement.journeySteps.trial.label",
+    blurb: "portal.procurement.journeySteps.trial.blurb",
+    gatingAction: "portal.procurement.journeySteps.trial.gatingAction",
+  },
+  {
+    stage: "quote",
+    label: "portal.procurement.journeySteps.quote.label",
+    blurb: "portal.procurement.journeySteps.quote.blurb",
+    gatingAction: "portal.procurement.journeySteps.quote.gatingAction",
+  },
+  {
+    stage: "security",
+    label: "portal.procurement.journeySteps.agreement.label",
+    blurb: "portal.procurement.journeySteps.agreement.blurb",
+    gatingAction: "portal.procurement.journeySteps.agreement.gatingAction",
+  },
+  {
+    stage: "procurement",
+    label: "portal.procurement.journeySteps.payment.label",
+    blurb: "portal.procurement.journeySteps.payment.blurb",
+    gatingAction: "portal.procurement.journeySteps.payment.gatingAction",
+  },
+  {
+    stage: "active",
+    label: "portal.procurement.journeySteps.implementation.label",
+    blurb: "portal.procurement.journeySteps.implementation.blurb",
+    gatingAction: "portal.procurement.journeySteps.implementation.gatingAction",
+  },
+];
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Deal header                                                              */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+export interface SolutionsEngineer {
+  name: string;
+  title: string;
+  email: string;
+}
+
+export interface TrialInfo {
+  /** License key seeded for the evaluation. */
+  key: string;
+  /** ISO date the trial began. */
+  startedOn: string;
+  /** ISO date the trial expires. */
+  endsOn: string;
+  /** Whole days remaining (derived in the fixture for a stable demo number). */
+  daysLeft: number;
+  extensionsUsed: number;
+  maxExtensions: number;
+}
+
+export interface QuoteInfo {
+  number: string;
+  /** Annual contract value, in USD. */
+  amount: number;
+  /** Contract term, e.g. "12 months". */
+  term: string;
+  /** ISO date the quote expires. */
+  validUntil: string;
+}
+
+export interface Deal {
+  company: string;
+  currentStage: DealStage;
+  engineer: SolutionsEngineer;
+  trial: TrialInfo;
+  quote: QuoteInfo;
+}
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Document ledger + supporting pool                                        */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Lifecycle of a single document.
+ *   available: ready to grab now (download/sign/pay/upload as the action says)
+ *   action:   waiting on the buyer to act (the gating paperwork of a stage)
+ *   pending:  issued, awaiting the other side / a system step
+ *   request:  not generated yet; the buyer asks for it (some carry a fee)
+ *   complete: done, kept for the record
+ */
+export type DocStatus =
+  | "available"
+  | "action"
+  | "pending"
+  | "request"
+  | "complete";
+
+/** What pressing the document's button does. */
+export type DocAction = "download" | "sign" | "pay" | "upload" | "request";
+
+export interface LedgerDoc {
+  id: string;
+  name: string;
+  /** Sub-line describing what the document is / what it covers. */
+  sub: string;
+  status: DocStatus;
+  action: DocAction;
+  /** Buyer-skippable paperwork (e.g. paid onboarding). */
+  optional?: boolean;
+  /** One-off fee in USD when the document/service is a paid add-on. */
+  fee?: number;
+}
+
+/** Document ledger grouped by the journey stage the paperwork belongs to. */
+export interface LedgerGroup {
+  stage: DealStage;
+  /** Buyer-facing stage name (matches JourneyStep.label). */
+  label: string;
+  docs: LedgerDoc[];
+}
+
+/** Categories the stage-agnostic supporting pool is grouped under. */
+export type SupportingCategory =
+  | "security"
+  | "legal"
+  | "corporate"
+  | "procurement";
+
+export interface SupportingGroup {
+  category: SupportingCategory;
+  label: string;
+  docs: LedgerDoc[];
+}
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Full procurement payload                                                 */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+export interface ProcurementResponse {
+  tier: Tier;
+  /** True only for enterprise, gates the whole journey + ledger. */
+  unlocked: boolean;
+  /** Present only when unlocked. */
+  deal: Deal | null;
+  journey: JourneyStep[];
+  ledger: LedgerGroup[];
+  supporting: SupportingGroup[];
+}
 
 /** GET /v1/procurement?tier=…, the deal, journey, ledger and supporting pool. */
 export async function fetchProcurement(
@@ -149,6 +310,8 @@ export interface ProcurementSnapshot {
   trialEndsAt: string | null;
   trialExtensionsUsed: number;
   licensed: boolean;
+  /** The team's Keygen licence key (present once licensed); shown in the portal to copy/install. */
+  licenseKey: string | null;
   latestQuote: QuoteResult | null;
 }
 
@@ -161,6 +324,8 @@ export interface QuoteConfigInput {
   indemnification: boolean;
   training: boolean;
   qbr: boolean;
+  /** Offline / air-gapped licence file — a paid add-on. */
+  offlineLicense: boolean;
   currency: string;
   /** Buyer's company name — shown on the quote/agreement and remembered when re-editing. */
   businessName: string;
@@ -168,6 +333,14 @@ export interface QuoteConfigInput {
 
 export function fetchSnapshot(): Promise<ProcurementSnapshot> {
   return apiClient.saas.json<ProcurementSnapshot>("/api/v1/procurement");
+}
+
+/**
+ * Download the offline / air-gapped licence file (.lic) as text. Only available when the paid
+ * offline add-on was purchased; the server 404s (→ throws) otherwise.
+ */
+export function fetchLicenseFile(): Promise<string> {
+  return apiClient.saas.text("/api/v1/procurement/license/file");
 }
 
 export function startTrial(): Promise<ProcurementSnapshot> {

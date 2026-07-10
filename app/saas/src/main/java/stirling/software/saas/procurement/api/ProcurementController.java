@@ -2,9 +2,12 @@ package stirling.software.saas.procurement.api;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -12,6 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,16 +25,16 @@ import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.enumeration.TeamRole;
+import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
-import stirling.software.saas.model.TeamMembership;
+import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.saas.procurement.config.ProcurementConfigurationProperties;
 import stirling.software.saas.procurement.model.ProcurementDeal;
 import stirling.software.saas.procurement.model.ProcurementQuote;
 import stirling.software.saas.procurement.pricing.QuoteConfig;
 import stirling.software.saas.procurement.pricing.QuoteLineItem;
 import stirling.software.saas.procurement.service.ProcurementService;
-import stirling.software.saas.repository.TeamMembershipRepository;
 import stirling.software.saas.util.AuthenticationUtils;
 
 /**
@@ -72,24 +76,28 @@ public class ProcurementController {
     public record QuoteRequest(
             long volume,
             int users,
+            int intensity, // policy posture (runs/PDF): 2 / 4 / 7; 0 → default Governed
             String deployment,
             int termYears,
             String serviceLevel,
             boolean indemnification,
             boolean training,
             boolean qbr,
+            boolean offlineLicense,
             String currency,
             String businessName) {
         QuoteConfig toConfig() {
             return new QuoteConfig(
                     volume,
                     users,
+                    intensity,
                     deployment,
                     termYears,
                     serviceLevel,
                     indemnification,
                     training,
                     qbr,
+                    offlineLicense,
                     currency);
         }
     }
@@ -115,12 +123,14 @@ public class ProcurementController {
     public record QuoteConfigEcho(
             long volume,
             int users,
+            int intensity,
             String deployment,
             int termYears,
             String serviceLevel,
             boolean indemnification,
             boolean training,
             boolean qbr,
+            boolean offlineLicense,
             String currency,
             String businessName) {}
 
@@ -131,6 +141,7 @@ public class ProcurementController {
             String trialEndsAt,
             int trialExtensionsUsed,
             boolean licensed,
+            String licenseKey,
             QuoteResponse latestQuote) {}
 
     // ---- endpoints ----------------------------------------------------------
@@ -143,21 +154,49 @@ public class ProcurementController {
     @GetMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<SnapshotResponse> snapshot(Authentication auth) {
-        Long teamId = resolveTeam(auth);
-        if (teamId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        Optional<TeamMembership> membership = primaryMembership(auth);
+        if (membership.isEmpty()) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        Long teamId = membership.get().getTeam().getId();
+        // The licence key is the team's secret entitlement — leader-only. Members still see the
+        // journey (stage, trial, quote) but the key is withheld; the .lic file is likewise gated.
+        boolean leader = membership.get().getRole() == TeamRole.LEADER;
         return ResponseEntity.ok(
-                procurement.getDeal(teamId).map(this::toSnapshot).orElse(EMPTY_SNAPSHOT));
+                procurement.getDeal(teamId).map(d -> toSnapshot(d, leader)).orElse(EMPTY_SNAPSHOT));
     }
 
     private static final SnapshotResponse EMPTY_SNAPSHOT =
-            new SnapshotResponse(null, null, null, null, 0, false, null);
+            new SnapshotResponse(null, null, null, null, 0, false, null, null);
+
+    /**
+     * Download the offline / air-gapped licence file (.lic) for the team, when the paid offline
+     * add-on was purchased. 404 when there's no licence or the add-on wasn't taken — we don't leak
+     * that a licence exists to a team without the add-on.
+     */
+    @GetMapping("/license/file")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<String> licenseFile(Authentication auth) {
+        // Leader-only: the offline .lic is the team's portable entitlement, not a member artefact.
+        Long teamId = requireLeader(auth);
+        if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        return procurement
+                .offlineLicenseFile(teamId)
+                .<ResponseEntity<String>>map(
+                        cert ->
+                                ResponseEntity.ok()
+                                        .header(
+                                                HttpHeaders.CONTENT_DISPOSITION,
+                                                "attachment; filename=\"stirling-enterprise.lic\"")
+                                        .contentType(MediaType.TEXT_PLAIN)
+                                        .body(cert))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
 
     @PostMapping("/trial/start")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<SnapshotResponse> startTrial(Authentication auth) {
         Long teamId = requireLeader(auth);
         if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        return ResponseEntity.ok(toSnapshot(procurement.startTrial(teamId)));
+        return ResponseEntity.ok(toSnapshot(procurement.startTrial(teamId), true));
     }
 
     @PostMapping("/trial/extend")
@@ -166,7 +205,7 @@ public class ProcurementController {
         Long teamId = requireLeader(auth);
         if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         try {
-            return ResponseEntity.ok(toSnapshot(procurement.extendTrial(teamId)));
+            return ResponseEntity.ok(toSnapshot(procurement.extendTrial(teamId), true));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
@@ -197,8 +236,26 @@ public class ProcurementController {
         Long teamId = requireLeader(auth);
         if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         try {
-            return ResponseEntity.ok(toSnapshot(procurement.startAgreement(teamId)));
+            return ResponseEntity.ok(toSnapshot(procurement.startAgreement(teamId), true));
         } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+    }
+
+    /**
+     * Provision on accept: upgrade the team's licence to the committed annual term, valid
+     * immediately. Called server-side by the accept edge function (ROLE_ADMIN via X-API-Key) once
+     * the subscription + invoice exist, so the buyer is licensed the moment they accept — the deal
+     * stays in the payment step until the invoice settles. Idempotent.
+     */
+    @PostMapping("/provision")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> provision(@RequestParam("teamId") long teamId) {
+        try {
+            procurement.provisionLicense(teamId);
+            return ResponseEntity.ok().build();
+        } catch (IllegalStateException e) {
+            log.warn("[procurement] provision rejected team={}: {}", teamId, e.getMessage());
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
     }
@@ -214,7 +271,7 @@ public class ProcurementController {
         Long teamId = requireLeader(auth);
         if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         try {
-            return ResponseEntity.ok(toSnapshot(procurement.markLive(teamId)));
+            return ResponseEntity.ok(toSnapshot(procurement.markLive(teamId), true));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
@@ -233,34 +290,31 @@ public class ProcurementController {
 
     // ---- helpers ------------------------------------------------------------
 
-    /**
-     * Resolve the caller's team from their primary membership; null when unauthenticated/teamless.
-     */
-    private Long resolveTeam(Authentication auth) {
+    /** The caller's primary team membership; empty when unauthenticated/teamless. */
+    private Optional<TeamMembership> primaryMembership(Authentication auth) {
         User user;
         try {
             user = AuthenticationUtils.getCurrentUser(auth, userRepository);
         } catch (SecurityException e) {
-            return null;
+            return Optional.empty();
         }
-        List<TeamMembership> rows = memberRepo.findPrimaryMembership(user.getId());
-        return rows.isEmpty() ? null : rows.get(0).getTeam().getId();
+        return memberRepo.findPrimaryMembership(user.getId()).stream().findFirst();
     }
 
     /** Team id only when the caller is the team leader; null otherwise (commercial actions). */
     private Long requireLeader(Authentication auth) {
-        User user;
-        try {
-            user = AuthenticationUtils.getCurrentUser(auth, userRepository);
-        } catch (SecurityException e) {
-            return null;
-        }
-        List<TeamMembership> rows = memberRepo.findPrimaryMembership(user.getId());
-        if (rows.isEmpty() || rows.get(0).getRole() != TeamRole.LEADER) return null;
-        return rows.get(0).getTeam().getId();
+        return primaryMembership(auth)
+                .filter(m -> m.getRole() == TeamRole.LEADER)
+                .map(m -> m.getTeam().getId())
+                .orElse(null);
     }
 
-    private SnapshotResponse toSnapshot(ProcurementDeal deal) {
+    /**
+     * Build the snapshot for a deal. {@code includeLicenseKey} is true only for the team leader; a
+     * member sees {@code licensed} but not the key itself (see {@link #snapshot}). Mutation
+     * endpoints are leader-gated, so they always pass true.
+     */
+    private SnapshotResponse toSnapshot(ProcurementDeal deal, boolean includeLicenseKey) {
         QuoteResponse latest =
                 procurement.quotesForDeal(deal.getDealId()).stream()
                         .findFirst()
@@ -273,6 +327,7 @@ public class ProcurementController {
                 str(deal.getTrialEndsAt()),
                 deal.getTrialExtensionsUsed(),
                 deal.getLicenseRef() != null,
+                includeLicenseKey ? deal.getLicenseRef() : null,
                 latest);
     }
 
@@ -291,12 +346,14 @@ public class ProcurementController {
                 new QuoteConfigEcho(
                         q.getVolume(),
                         0,
+                        q.getIntensity(),
                         q.getDeployment(),
                         q.getTermYears(),
                         q.getServiceLevel(),
                         q.isIndemnification(),
                         q.isTraining(),
                         q.isQbr(),
+                        q.isOfflineLicense(),
                         q.getCurrency(),
                         q.getBusinessName()));
     }

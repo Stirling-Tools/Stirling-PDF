@@ -77,70 +77,76 @@ function SideModal({
 // ── Key documents ────────────────────────────────────────────────────────────
 type DocStatus = "available" | "action" | "request";
 interface DocRow {
-  name: string;
-  sub: string;
+  nameKey: string;
+  subKey: string;
   status: DocStatus;
   fee?: number;
 }
-const STAGE_DOCS: { group: string; docs: DocRow[] }[] = [
+// Static demo catalogue for the pilot; the copy lives in the locale under
+// portal.procurement.keyDocs and is resolved via t() at render time.
+const STAGE_DOCS: { groupKey: string; docs: DocRow[] }[] = [
   {
-    group: "Your deal",
+    groupKey: "portal.procurement.keyDocs.groups.yourDeal",
     docs: [
       {
-        name: "Formal quote",
-        sub: "Built to your volume, term, and service level",
+        nameKey: "portal.procurement.keyDocs.docs.formalQuote.name",
+        subKey: "portal.procurement.keyDocs.docs.formalQuote.sub",
         status: "available",
       },
       {
-        name: "Master Services Agreement",
-        sub: "One signature — MSA, order form, EULA, and DPA combined",
+        nameKey: "portal.procurement.keyDocs.docs.msa.name",
+        subKey: "portal.procurement.keyDocs.docs.msa.sub",
         status: "action",
       },
       {
-        name: "Bank transfer instructions",
-        sub: "Wire details for your AP team",
+        nameKey: "portal.procurement.keyDocs.docs.bankTransfer.name",
+        subKey: "portal.procurement.keyDocs.docs.bankTransfer.sub",
         status: "available",
       },
       {
-        name: "Purchase order",
-        sub: "Issuing a PO? Upload it and we invoice against it",
+        nameKey: "portal.procurement.keyDocs.docs.purchaseOrder.name",
+        subKey: "portal.procurement.keyDocs.docs.purchaseOrder.sub",
         status: "request",
       },
     ],
   },
   {
-    group: "Supporting your evaluation",
+    groupKey: "portal.procurement.keyDocs.groups.evaluation",
     docs: [
       {
-        name: "SOC 2 Type II report",
-        sub: "Audited · NDA-gated",
+        nameKey: "portal.procurement.keyDocs.docs.soc2.name",
+        subKey: "portal.procurement.keyDocs.docs.soc2.sub",
         status: "available",
       },
       {
-        name: "Custom security review",
-        sub: "We complete your questionnaire and join your review call",
+        nameKey: "portal.procurement.keyDocs.docs.securityReview.name",
+        subKey: "portal.procurement.keyDocs.docs.securityReview.sub",
         status: "request",
         fee: 5000,
       },
       {
-        name: "Business Associate Agreement",
-        sub: "HIPAA · available on request",
+        nameKey: "portal.procurement.keyDocs.docs.baa.name",
+        subKey: "portal.procurement.keyDocs.docs.baa.sub",
         status: "request",
         fee: 2500,
       },
-      { name: "IRS Form W-9", sub: "Stirling PDF Inc.", status: "available" },
       {
-        name: "Certificate of Insurance",
-        sub: "Cyber + E&O · current policy",
+        nameKey: "portal.procurement.keyDocs.docs.w9.name",
+        subKey: "portal.procurement.keyDocs.docs.w9.sub",
+        status: "available",
+      },
+      {
+        nameKey: "portal.procurement.keyDocs.docs.coi.name",
+        subKey: "portal.procurement.keyDocs.docs.coi.sub",
         status: "available",
       },
     ],
   },
 ];
 const STATUS_LABEL: Record<DocStatus, string> = {
-  available: "Download",
-  action: "Action needed",
-  request: "Request",
+  available: "portal.procurement.keyDocs.status.available",
+  action: "portal.procurement.keyDocs.status.action",
+  request: "portal.procurement.keyDocs.status.request",
 };
 
 export function KeyDocumentsModal({
@@ -150,31 +156,36 @@ export function KeyDocumentsModal({
   open: boolean;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <SideModal
       open={open}
       onClose={onClose}
-      title="Key documents"
-      subtitle="Everything for each stage of your rollout, in one place."
+      title={t("portal.procurement.keyDocs.title")}
+      subtitle={t("portal.procurement.keyDocs.subtitle")}
     >
       {STAGE_DOCS.map((g) => (
-        <div key={g.group} className="portal-docs__group">
-          <div className="portal-docs__group-title">{g.group}</div>
+        <div key={g.groupKey} className="portal-docs__group">
+          <div className="portal-docs__group-title">{t(g.groupKey)}</div>
           <ul className="portal-docs__list">
             {g.docs.map((d) => (
-              <li key={d.name} className="portal-docs__row">
+              <li key={d.nameKey} className="portal-docs__row">
                 <div className="portal-docs__row-text">
-                  <span className="portal-docs__row-name">{d.name}</span>
+                  <span className="portal-docs__row-name">{t(d.nameKey)}</span>
                   <span className="portal-docs__row-sub">
-                    {d.sub}
-                    {d.fee ? ` · one-time $${d.fee.toLocaleString()}` : ""}
+                    {t(d.subKey)}
+                    {d.fee
+                      ? t("portal.procurement.keyDocs.oneTimeFee", {
+                          amount: `$${d.fee.toLocaleString()}`,
+                        })
+                      : ""}
                   </span>
                 </div>
                 <span
                   className="portal-docs__row-action"
                   data-status={d.status}
                 >
-                  {STATUS_LABEL[d.status]}
+                  {t(STATUS_LABEL[d.status])}
                 </span>
               </li>
             ))}
