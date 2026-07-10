@@ -4976,6 +4976,7 @@ pinButton = "You can use the <strong>Pin</strong> button if you'd rather your fi
 results = "After the tool has finished running, the <strong>Review</strong> step will show a preview of the results in this panel, and allow you to undo the operation or download the file. "
 runButton = "Once the tool has been configured, this button allows you to run the tool on all the selected PDFs."
 selectCropTool = "Let's select the <strong>Crop</strong> tool to demonstrate how to use one of the tools."
+stepOf = "Step {{current}} of {{total}}"
 toolInterface = "This is the <strong>Crop</strong> tool interface. As you can see, there's not much there because we haven't added any PDF files to work with yet."
 workbench = "This is the <strong>Workbench</strong> - the main area where you view and edit your PDFs."
 wrapUp = "You're all set! You can replay this tour anytime - just open <strong>Settings</strong> and find it here in the <strong>Tours</strong> section under Help."
@@ -4989,24 +4990,24 @@ skipForNow = "Skip for now"
 skipTheTour = "Skip the tour"
 
 [onboarding.checklist]
-title = "Set up Stirling PDF"
 dismiss = "Dismiss"
+title = "Set up Stirling PDF"
 
 [onboarding.checklist.downloadDesktop]
-title = "Download Stirling for Desktop"
 description = "Run Stirling natively on your machine"
+title = "Download Stirling for Desktop"
 
 [onboarding.checklist.inviteTeam]
-title = "Invite team members"
 description = "Collaborate with your team"
-
-[onboarding.checklist.takeTour]
-title = "Take the tour"
-description = "See how Stirling works in a quick walkthrough"
+title = "Invite team members"
 
 [onboarding.checklist.shareAnalytics]
-title = "Share anonymous usage data"
 description = "Help improve Stirling"
+title = "Share anonymous usage data"
+
+[onboarding.checklist.takeTour]
+description = "See how Stirling works in a quick walkthrough"
+title = "Take the tour"
 
 [onboarding.desktopInstall]
 body = "Stirling works best as a desktop app. You can use it offline, access documents faster, and make edits locally on your computer."
