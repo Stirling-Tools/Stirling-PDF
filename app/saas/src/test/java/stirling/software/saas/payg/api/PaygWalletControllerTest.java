@@ -131,7 +131,7 @@ class PaygWalletControllerTest {
                         eq(teamId), eq(LedgerEntryType.DEBIT), any(), any()))
                 .thenReturn(List.of());
         when(ledgerRepo.periodUsageAnalytics(eq(teamId), eq(LedgerEntryType.DEBIT), any(), any()))
-                .thenReturn(new Object[] {0L, 0L, 0L});
+                .thenReturn(List.<Object[]>of(new Object[] {0L, 0L, 0L}));
         when(ledgerRepo.findTop20ByTeamIdOrderByIdDesc(teamId)).thenReturn(List.of());
     }
 
@@ -197,9 +197,9 @@ class PaygWalletControllerTest {
                                 new Object[] {BillingCategory.API, 110L, 90L},
                                 new Object[] {BillingCategory.AI, 200L, 50L},
                                 new Object[] {BillingCategory.AUTOMATION, 2L, 2L}));
-        // [docsProcessed, uniquePdfs, sizeMultiplierPdfs]
+        // [docsProcessed, uniquePdfs, sizeMultiplierPdfs] — single-row aggregate as List<Object[]>
         when(ledgerRepo.periodUsageAnalytics(eq(99L), eq(LedgerEntryType.DEBIT), any(), any()))
-                .thenReturn(new Object[] {142L, 120L, 30L});
+                .thenReturn(List.<Object[]>of(new Object[] {142L, 120L, 30L}));
         when(ledgerRepo.findTop20ByTeamIdOrderByIdDesc(99L)).thenReturn(List.of());
 
         ResponseEntity<WalletSnapshotResponse> resp =

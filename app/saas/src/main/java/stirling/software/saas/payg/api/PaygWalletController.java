@@ -249,9 +249,10 @@ public class PaygWalletController {
 
     private UsageAnalytics buildUsageAnalytics(
             Long teamId, LocalDateTime periodStart, LocalDateTime periodEnd) {
-        Object[] row =
+        List<Object[]> rows =
                 ledgerRepo.periodUsageAnalytics(
                         teamId, LedgerEntryType.DEBIT, periodStart, periodEnd);
+        Object[] row = rows.isEmpty() ? null : rows.get(0);
         return new UsageAnalytics(analyticsInt(row, 0), analyticsInt(row, 1), analyticsInt(row, 2));
     }
 

@@ -44,6 +44,11 @@ public interface WalletLedgerRepository extends JpaRepository<WalletLedgerEntry,
      * fingerprints (a file hit by N operations counts once); {@code sizeMultiplierPdfs} sums the
      * input files on charges where the size multiplier kicked in (units billed &gt; input files).
      * DEBIT + non-null category only.
+     *
+     * <p>Returns a single-element {@code List} (aggregate-only query → always one row). Declared as
+     * {@code List<Object[]>} rather than {@code Object[]}: Spring Data treats an {@code Object[]}
+     * return as a <em>collection</em> and hands back {@code Object[]{ row }}, so the caller would
+     * read the columns one level too deep — take {@code get(0)}.
      */
     @Query(
             "SELECT COALESCE(SUM(e.docCount), 0) AS docs,"
@@ -56,7 +61,7 @@ public interface WalletLedgerRepository extends JpaRepository<WalletLedgerEntry,
                     + " AND e.billingCategory IS NOT NULL"
                     + " AND e.occurredAt >= :periodStart"
                     + " AND e.occurredAt < :periodEnd")
-    Object[] periodUsageAnalytics(
+    List<Object[]> periodUsageAnalytics(
             @Param("teamId") Long teamId,
             @Param("entryType") LedgerEntryType entryType,
             @Param("periodStart") LocalDateTime periodStart,
