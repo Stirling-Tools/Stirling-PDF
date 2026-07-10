@@ -6958,6 +6958,12 @@ sectionsAriaLabel = "Infrastructure sections"
 subtitle = "Deployments, credentials, security posture, storage, and the audit trail for your Stirling workspace."
 title = "Infrastructure"
 
+# Fixed-enum label maps rendered via t(MAP[value]) in the infrastructure tabs.
+[portal.infrastructure.apiKeyPermission]
+admin = "Admin"
+read = "Read"
+write = "Write"
+
 [portal.infrastructure.apiKeys]
 createKey = "Create key"
 heading = "API keys"
@@ -6977,6 +6983,11 @@ usageToday = "Usage today"
 [portal.infrastructure.apiKeys.empty]
 description = "Create a scoped key to start calling the Stirling API."
 title = "No API keys yet"
+
+[portal.infrastructure.attestationLabel]
+attested = "Attested"
+inScope = "In scope"
+notApplicable = "N/A"
 
 [portal.infrastructure.audit]
 filterAriaLabel = "Filter audit events by category"
@@ -7034,6 +7045,24 @@ elevation = "Elevation"
 processing = "Processing"
 totalEvents = "Total events · 24h"
 
+[portal.infrastructure.auditCatLabel]
+auth = "Auth"
+config = "Config"
+elevation = "Elevation"
+processing = "Processing"
+security = "Security"
+
+[portal.infrastructure.auditStatusLabel]
+danger = "Error"
+info = "Info"
+success = "Success"
+warning = "Warning"
+
+[portal.infrastructure.certLabel]
+certified = "Certified"
+inProgress = "In progress"
+notStarted = "Not started"
+
 [portal.infrastructure.createKey]
 cancel = "Cancel"
 createKey = "Create key"
@@ -7049,6 +7078,12 @@ subtitle = "Scope the key to the minimum it needs. You can rotate or revoke at a
 subtitleCreated = "Copy this secret now — it won't be shown again."
 title = "Create API key"
 titleCreated = "Key created"
+
+[portal.infrastructure.deployLabel]
+live = "Live"
+queued = "Queued"
+rolledBack = "Rolled back"
+rolling = "Rolling out"
 
 [portal.infrastructure.deployments]
 msValue = "{{value}} ms"
@@ -7085,6 +7120,16 @@ subheading = "Live health for every deployed Stirling region — latency, load, 
 description = "Deployed regions appear here once your workspace is provisioned."
 title = "No regions deployed"
 
+[portal.infrastructure.keyLabel]
+active = "Active"
+revoked = "Revoked"
+rotateSoon = "Rotate soon"
+
+[portal.infrastructure.modelLabel]
+active = "Active"
+degraded = "Degraded"
+disabled = "Disabled"
+
 [portal.infrastructure.models]
 heading = "Models"
 msValue = "{{value}} ms"
@@ -7112,6 +7157,10 @@ status = "Status"
 type = "Type"
 version = "Version"
 
+[portal.infrastructure.models.cost]
+perCall = "{{price}}/call"
+perThousand = "{{price}}/1k"
+
 [portal.infrastructure.models.metrics]
 activeModels = "Active models"
 avgLatency = "Avg latency"
@@ -7134,6 +7183,17 @@ docType = "Document type"
 modelForAria = "Model for {{operation}}"
 operation = "Operation"
 routedTo = "Routed to"
+
+[portal.infrastructure.modelTypeLabel]
+classification = "Classification"
+extraction = "Extraction"
+llm = "LLM"
+ocr = "OCR"
+
+[portal.infrastructure.regionLabel]
+degraded = "Degraded"
+down = "Down"
+healthy = "Healthy"
 
 [portal.infrastructure.security.access.byok]
 description = "Supply a key from your own KMS. Stirling encrypts with it but can still read."
@@ -7809,6 +7869,56 @@ blurb = "Evaluate Stirling against your documents and workflows."
 gatingAction = "Build your quote"
 label = "Trial"
 
+[portal.procurement.keyDocs]
+oneTimeFee = " · one-time {{amount}}"
+subtitle = "Everything for each stage of your rollout, in one place."
+title = "Key documents"
+
+[portal.procurement.keyDocs.docs.baa]
+name = "Business Associate Agreement"
+sub = "HIPAA · available on request"
+
+[portal.procurement.keyDocs.docs.bankTransfer]
+name = "Bank transfer instructions"
+sub = "Wire details for your AP team"
+
+[portal.procurement.keyDocs.docs.coi]
+name = "Certificate of Insurance"
+sub = "Cyber + E&O · current policy"
+
+[portal.procurement.keyDocs.docs.formalQuote]
+name = "Formal quote"
+sub = "Built to your volume, term, and service level"
+
+[portal.procurement.keyDocs.docs.msa]
+name = "Master Services Agreement"
+sub = "One signature - MSA, order form, EULA, and DPA combined"
+
+[portal.procurement.keyDocs.docs.purchaseOrder]
+name = "Purchase order"
+sub = "Issuing a PO? Upload it and we invoice against it"
+
+[portal.procurement.keyDocs.docs.securityReview]
+name = "Custom security review"
+sub = "We complete your questionnaire and join your review call"
+
+[portal.procurement.keyDocs.docs.soc2]
+name = "SOC 2 Type II report"
+sub = "Audited · NDA-gated"
+
+[portal.procurement.keyDocs.docs.w9]
+name = "IRS Form W-9"
+sub = "Stirling PDF Inc."
+
+[portal.procurement.keyDocs.groups]
+evaluation = "Supporting your evaluation"
+yourDeal = "Your deal"
+
+[portal.procurement.keyDocs.status]
+action = "Action needed"
+available = "Download"
+request = "Request"
+
 [portal.procurement.license]
 copied = "Copied"
 copy = "Copy key"
@@ -8113,6 +8223,10 @@ summary = "Owns a team — manages its members' resources and shared configs."
 1 = "Manage team-owned integration configs"
 2 = "Portal access via the default policy"
 3 = "Everything Member can do"
+
+[portal.users.seats]
+limited = "{{used}} / {{limit}}"
+unlimited = "{{used}} · Unlimited"
 
 [portal.welcome]
 ariaLabel = "Welcome to Stirling PDF"
