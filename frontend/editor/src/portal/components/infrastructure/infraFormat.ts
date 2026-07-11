@@ -133,6 +133,7 @@ export const AUDIT_CAT_LABEL: Record<AuditCategory, string> = {
   auth: "portal.infrastructure.auditCatLabel.auth",
   config: "portal.infrastructure.auditCatLabel.config",
   elevation: "portal.infrastructure.auditCatLabel.elevation",
+  policy: "portal.infrastructure.auditCatLabel.policy",
   processing: "portal.infrastructure.auditCatLabel.processing",
   security: "portal.infrastructure.auditCatLabel.security",
 };
@@ -141,6 +142,7 @@ export const AUDIT_CAT_TONE: Record<AuditCategory, StatusTone> = {
   auth: "info",
   config: "neutral",
   elevation: "purple",
+  policy: "purple",
   processing: "success",
   security: "warning",
 };

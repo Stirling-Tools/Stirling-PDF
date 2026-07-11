@@ -195,6 +195,7 @@ export type AuditCategory =
   | "auth"
   | "config"
   | "elevation"
+  | "policy"
   | "processing"
   | "security";
 
@@ -213,6 +214,7 @@ export interface AuditEvent {
 
 export interface AuditSummary {
   totalEvents: number;
+  policy: number;
   processing: number;
   elevation: number;
   config: number;

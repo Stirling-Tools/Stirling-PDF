@@ -910,6 +910,7 @@ export function auditLogFor(tier: Tier): AuditLogResponse {
   // (PortalInfraAuditService) computes it - so mocks and real data reconcile.
   const summary: AuditSummary = {
     totalEvents: events.length,
+    policy: events.filter((e) => e.category === "policy").length,
     processing: events.filter((e) => e.category === "processing").length,
     elevation: events.filter((e) => e.category === "elevation").length,
     config: events.filter((e) => e.category === "config").length,

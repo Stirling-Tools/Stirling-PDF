@@ -1,19 +1,23 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { AuthShell } from "@app/auth/ui/AuthShell";
 import LoginRightCarousel from "@app/auth/ui/LoginRightCarousel";
 import { buildDefaultLoginSlides } from "@app/auth/ui/loginSlides";
 import SpringLoginForm from "@app/auth/ui/SpringLoginForm";
 import { useSpringLogin } from "@app/auth/ui/useSpringLogin";
+import { withBasePath } from "@app/constants/app";
 import "@app/auth/ui/auth-theme.css";
 import "@app/auth/ui/auth.css";
 import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 /**
- * Full-screen login shown by the portal's auth gate. Renders the same screen as
- * the editor: the shared AuthShell + carousel, with the form body and Spring
- * auth wiring from @app/auth/ui (SpringLoginForm + useSpringLogin). The gate
- * handles "already logged in", so this only needs to collect credentials.
+ * Full-screen login shown by the portal's auth gate. Renders the shared
+ * AuthShell + carousel with the Spring form/auth wiring from @app/auth/ui.
+ *
+ * It follows the user's light/dark theme (AuthShell is theme-aware — the same
+ * screen the editor login uses; passing both logo variants keeps the header
+ * readable in either mode). The gate handles "already logged in", so this only
+ * needs to collect credentials.
  */
 export function LoginScreen() {
   const { t } = useTranslation();
@@ -22,16 +26,6 @@ export function LoginScreen() {
     () => buildDefaultLoginSlides((key, fallback) => t(key, fallback)),
     [t],
   );
-
-  // Auth pages render in light mode (the shared screen uses light-only tokens).
-  useEffect(() => {
-    const html = document.documentElement;
-    const previous = html.getAttribute("data-mantine-color-scheme");
-    html.setAttribute("data-mantine-color-scheme", "light");
-    return () => {
-      if (previous) html.setAttribute("data-mantine-color-scheme", previous);
-    };
-  }, []);
 
   return (
     <AuthShell
@@ -43,7 +37,11 @@ export function LoginScreen() {
         />
       }
     >
-      <SpringLoginForm state={login} logoSrc={loginHeader} />
+      <SpringLoginForm
+        state={login}
+        logoSrc={loginHeader}
+        logoDarkSrc={withBasePath("/modern-logo/LoginDarkModeHeader.svg")}
+      />
     </AuthShell>
   );
 }
