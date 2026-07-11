@@ -47,6 +47,22 @@ public class SettingsController {
         return ResponseEntity.ok(Map.of("message", "Updated"));
     }
 
+    @AutoJobPostMapping(
+            value = "/desktop/update-enable-analytics",
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @Hidden
+    public ResponseEntity<Map<String, Object>> updateDesktopAnalytics(@RequestParam Boolean enabled)
+            throws IOException {
+        if (!Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("message", "This setting is only available in the desktop app"));
+        }
+
+        GeneralUtils.saveKeyToSettings("system.enableAnalytics", enabled);
+        applicationProperties.getSystem().setEnableAnalytics(enabled);
+        return ResponseEntity.ok(Map.of("message", "Updated"));
+    }
+
     @GetMapping("/get-endpoints-status")
     @Hidden
     public ResponseEntity<Map<String, Boolean>> getDisabledEndpoints() {

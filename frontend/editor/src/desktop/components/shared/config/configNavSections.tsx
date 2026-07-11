@@ -9,6 +9,7 @@ import {
 } from "@app/components/shared/config/cloudConfigNavSections";
 import { connectionModeService } from "@app/services/connectionModeService";
 import { authService } from "@app/services/authService";
+import PrivacySection from "@app/components/shared/config/configSections/PrivacySection";
 
 export type {
   ConfigNavSection,
@@ -76,7 +77,20 @@ export const useConfigNavSections = (
     const legalSection = sections.find((section) =>
       section.items.some((item) => item.key === "legal"),
     );
-    if (legalSection) result.push(legalSection);
+    if (legalSection) {
+      result.push({
+        ...legalSection,
+        items: [
+          {
+            key: "privacy",
+            label: t("settings.privacy.title", "Privacy"),
+            icon: "shield-rounded",
+            component: <PrivacySection />,
+          },
+          ...legalSection.items,
+        ],
+      });
+    }
     return result;
   }
 

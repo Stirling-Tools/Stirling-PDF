@@ -9150,6 +9150,14 @@ title = "Policies & Privacy"
 [settings.preferences]
 title = "Preferences"
 
+[settings.privacy]
+title = "Privacy"
+
+[settings.privacy.analytics]
+description = "Share anonymous usage data to help improve Stirling PDF. File contents and personal information are never collected."
+error = "Could not update the analytics preference."
+label = "Usage analytics"
+
 [settings.search]
 placeholder = "Search settings pages..."
 
