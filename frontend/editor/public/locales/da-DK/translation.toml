@@ -5980,16 +5980,6 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
-[policies.docType]
-contracts = "Kontrakter"
-financialReports = "Finansrapporter"
-hrRecords = "HR-registreringer"
-insurance = "Forsikring"
-invoices = "Fakturaer"
-legalFilings = "Juridiske indleveringer"
-medicalPhi = "Medicinsk / PHI"
-taxDocuments = "Skattedokumenter"
-
 [policies.enforcement]
 applying = "Anvender {{names}}"
 applyingProgress = "Anvender {{names}} ({{done}} af {{total}})"
@@ -6024,51 +6014,6 @@ minConfidence = "Min. tillid"
 notify = "Giv besked ved routing"
 onViolation = "Når ikke-kompatibel"
 webhookUrl = "Webhook URL"
-
-[policies.fieldOption.archiveAfter]
-never = "Aldrig"
-ninetyDays = "90 dage"
-oneYear = "1 år"
-thirtyDays = "30 dage"
-
-[policies.fieldOption.belowThreshold]
-flagForReview = "Markér til gennemgang"
-hold = "Tilbagehold"
-routeToBucket = "Route til bucket"
-
-[policies.fieldOption.destination]
-documents = "Dokumenter"
-s3Bucket = "S3 bucket"
-sharePoint = "SharePoint"
-webhook = "Webhook"
-
-[policies.fieldOption.frameworks]
-fedramp = "FedRAMP"
-gdpr = "GDPR"
-hipaa = "HIPAA"
-iso27001 = "ISO 27001"
-pciDss = "PCI DSS"
-soc2 = "SOC 2"
-
-[policies.fieldOption.keepFor]
-indefinite = "På ubestemt tid"
-oneYear = "1 år"
-sevenYears = "7 år"
-thirtyDays = "30 dage"
-threeYears = "3 år"
-
-[policies.fieldOption.minConfidence]
-p60 = "60%"
-p70 = "70%"
-p80 = "80%"
-p90 = "90%"
-p95 = "95%"
-
-[policies.fieldOption.onViolation]
-autoRedactPhi = "Auto-rediger PHI"
-blockExport = "Bloker eksport"
-flagForReview = "Markér til gennemgang"
-quarantineDocument = "Sæt dokument i karantæne"
 
 [policies.fields]
 selectedCount = "{{count}} selected"
@@ -6202,6 +6147,44 @@ blockingAction = "{{action}} blokeret under håndhævelse af politik, vent venli
 dismiss = "Afvis overlay"
 enforcingTitle = "Håndhæver politik..."
 viewAnyway = "Vis fil (politik håndhæves stadig)"
+
+[policyOption]
+autoRedactPhi = "Auto-rediger PHI"
+blockExport = "Bloker eksport"
+contracts = "Kontrakter"
+documents = "Dokumenter"
+fedramp = "FedRAMP"
+financialReports = "Finansrapporter"
+flagForReview = "Markér til gennemgang"
+gdpr = "GDPR"
+hipaa = "HIPAA"
+hold = "Tilbagehold"
+hrRecords = "HR-registreringer"
+indefinite = "På ubestemt tid"
+insurance = "Forsikring"
+invoices = "Fakturaer"
+iso27001 = "ISO 27001"
+legalFilings = "Juridiske indleveringer"
+medicalPhi = "Medicinsk / PHI"
+never = "Aldrig"
+ninetyDays = "90 dage"
+oneYear = "1 år"
+p60 = "60%"
+p70 = "70%"
+p80 = "80%"
+p90 = "90%"
+p95 = "95%"
+pciDss = "PCI DSS"
+quarantineDocument = "Sæt dokument i karantæne"
+routeToBucket = "Route til bucket"
+s3Bucket = "S3 bucket"
+sevenYears = "7 år"
+sharePoint = "SharePoint"
+soc2 = "SOC 2"
+taxDocuments = "Skattedokumenter"
+thirtyDays = "30 dage"
+threeYears = "3 år"
+webhook = "Webhook"
 
 [portal]
 comingSoon = "Kommer snart"

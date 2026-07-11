@@ -5980,16 +5980,6 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
-[policies.docType]
-contracts = "Contratos"
-financialReports = "Informes financieros"
-hrRecords = "Registros de RR. HH."
-insurance = "Seguros"
-invoices = "Facturas"
-legalFilings = "Presentaciones legales"
-medicalPhi = "Médico / PHI"
-taxDocuments = "Documentos fiscales"
-
 [policies.enforcement]
 applying = "Aplicando {{names}}"
 applyingProgress = "Aplicando {{names}} ({{done}} de {{total}})"
@@ -6024,51 +6014,6 @@ minConfidence = "Confianza mín."
 notify = "Notificar al enrutar"
 onViolation = "Cuando no cumple"
 webhookUrl = "Webhook URL"
-
-[policies.fieldOption.archiveAfter]
-never = "Nunca"
-ninetyDays = "90 días"
-oneYear = "1 año"
-thirtyDays = "30 días"
-
-[policies.fieldOption.belowThreshold]
-flagForReview = "Marcar para revisión"
-hold = "Retener"
-routeToBucket = "Enrutar al bucket"
-
-[policies.fieldOption.destination]
-documents = "Documentos"
-s3Bucket = "S3 bucket"
-sharePoint = "SharePoint"
-webhook = "Webhook"
-
-[policies.fieldOption.frameworks]
-fedramp = "FedRAMP"
-gdpr = "GDPR"
-hipaa = "HIPAA"
-iso27001 = "ISO 27001"
-pciDss = "PCI DSS"
-soc2 = "SOC 2"
-
-[policies.fieldOption.keepFor]
-indefinite = "Indefinido"
-oneYear = "1 año"
-sevenYears = "7 años"
-thirtyDays = "30 días"
-threeYears = "3 años"
-
-[policies.fieldOption.minConfidence]
-p60 = "60%"
-p70 = "70%"
-p80 = "80%"
-p90 = "90%"
-p95 = "95%"
-
-[policies.fieldOption.onViolation]
-autoRedactPhi = "Censurar PHI automáticamente"
-blockExport = "Bloquear exportación"
-flagForReview = "Marcar para revisión"
-quarantineDocument = "Poner documento en cuarentena"
 
 [policies.fields]
 selectedCount = "{{count}} selected"
@@ -6202,6 +6147,44 @@ blockingAction = "{{action}} bloqueada mientras se aplica la política, espera..
 dismiss = "Descartar superposición"
 enforcingTitle = "Aplicando política..."
 viewAnyway = "Ver archivo (la política aún se está aplicando)"
+
+[policyOption]
+autoRedactPhi = "Censurar PHI automáticamente"
+blockExport = "Bloquear exportación"
+contracts = "Contratos"
+documents = "Documentos"
+fedramp = "FedRAMP"
+financialReports = "Informes financieros"
+flagForReview = "Marcar para revisión"
+gdpr = "GDPR"
+hipaa = "HIPAA"
+hold = "Retener"
+hrRecords = "Registros de RR. HH."
+indefinite = "Indefinido"
+insurance = "Seguros"
+invoices = "Facturas"
+iso27001 = "ISO 27001"
+legalFilings = "Presentaciones legales"
+medicalPhi = "Médico / PHI"
+never = "Nunca"
+ninetyDays = "90 días"
+oneYear = "1 año"
+p60 = "60%"
+p70 = "70%"
+p80 = "80%"
+p90 = "90%"
+p95 = "95%"
+pciDss = "PCI DSS"
+quarantineDocument = "Poner documento en cuarentena"
+routeToBucket = "Enrutar al bucket"
+s3Bucket = "S3 bucket"
+sevenYears = "7 años"
+sharePoint = "SharePoint"
+soc2 = "SOC 2"
+taxDocuments = "Documentos fiscales"
+thirtyDays = "30 días"
+threeYears = "3 años"
+webhook = "Webhook"
 
 [portal]
 comingSoon = "Próximamente"

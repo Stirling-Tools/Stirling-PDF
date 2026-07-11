@@ -5980,16 +5980,6 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
-[policies.docType]
-contracts = "قراردادها"
-financialReports = "گزارش‌های مالی"
-hrRecords = "سوابق منابع انسانی"
-insurance = "بیمه"
-invoices = "فاکتورها"
-legalFilings = "پرونده‌های حقوقی"
-medicalPhi = "پزشکی / PHI"
-taxDocuments = "اسناد مالیاتی"
-
 [policies.enforcement]
 applying = "در حال اعمال {{names}}"
 applyingProgress = "در حال اعمال {{names}} ({{done}} از {{total}})"
@@ -6024,51 +6014,6 @@ minConfidence = "حداقل اطمینان"
 notify = "اعلان هنگام مسیریابی"
 onViolation = "هنگام عدم انطباق"
 webhookUrl = "URL Webhook"
-
-[policies.fieldOption.archiveAfter]
-never = "هرگز"
-ninetyDays = "۹۰ روز"
-oneYear = "۱ سال"
-thirtyDays = "۳۰ روز"
-
-[policies.fieldOption.belowThreshold]
-flagForReview = "علامت‌گذاری برای بازبینی"
-hold = "نگه داشتن"
-routeToBucket = "مسیریابی به bucket"
-
-[policies.fieldOption.destination]
-documents = "اسناد"
-s3Bucket = "S3 bucket"
-sharePoint = "SharePoint"
-webhook = "Webhook"
-
-[policies.fieldOption.frameworks]
-fedramp = "FedRAMP"
-gdpr = "GDPR"
-hipaa = "HIPAA"
-iso27001 = "ISO 27001"
-pciDss = "PCI DSS"
-soc2 = "SOC 2"
-
-[policies.fieldOption.keepFor]
-indefinite = "نامحدود"
-oneYear = "۱ سال"
-sevenYears = "۷ سال"
-thirtyDays = "۳۰ روز"
-threeYears = "۳ سال"
-
-[policies.fieldOption.minConfidence]
-p60 = "60%"
-p70 = "70%"
-p80 = "80%"
-p90 = "90%"
-p95 = "95%"
-
-[policies.fieldOption.onViolation]
-autoRedactPhi = "حذف خودکار PHI"
-blockExport = "مسدود کردن خروجی"
-flagForReview = "علامت‌گذاری برای بازبینی"
-quarantineDocument = "قرنطینه کردن سند"
 
 [policies.fields]
 selectedCount = "{{count}} selected"
@@ -6202,6 +6147,44 @@ blockingAction = "{{action}} هنگام اعمال خط‌مشی مسدود شد
 dismiss = "بستن پوشش"
 enforcingTitle = "در حال اعمال خط‌مشی..."
 viewAnyway = "مشاهده فایل (خط‌مشی همچنان در حال اعمال است)"
+
+[policyOption]
+autoRedactPhi = "حذف خودکار PHI"
+blockExport = "مسدود کردن خروجی"
+contracts = "قراردادها"
+documents = "اسناد"
+fedramp = "FedRAMP"
+financialReports = "گزارش‌های مالی"
+flagForReview = "علامت‌گذاری برای بازبینی"
+gdpr = "GDPR"
+hipaa = "HIPAA"
+hold = "نگه داشتن"
+hrRecords = "سوابق منابع انسانی"
+indefinite = "نامحدود"
+insurance = "بیمه"
+invoices = "فاکتورها"
+iso27001 = "ISO 27001"
+legalFilings = "پرونده‌های حقوقی"
+medicalPhi = "پزشکی / PHI"
+never = "هرگز"
+ninetyDays = "۹۰ روز"
+oneYear = "۱ سال"
+p60 = "60%"
+p70 = "70%"
+p80 = "80%"
+p90 = "90%"
+p95 = "95%"
+pciDss = "PCI DSS"
+quarantineDocument = "قرنطینه کردن سند"
+routeToBucket = "مسیریابی به bucket"
+s3Bucket = "S3 bucket"
+sevenYears = "۷ سال"
+sharePoint = "SharePoint"
+soc2 = "SOC 2"
+taxDocuments = "اسناد مالیاتی"
+thirtyDays = "۳۰ روز"
+threeYears = "۳ سال"
+webhook = "Webhook"
 
 [portal]
 comingSoon = "به‌زودی"

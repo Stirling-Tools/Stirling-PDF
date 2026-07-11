@@ -380,7 +380,13 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
         key: "keepFor",
         type: "select",
         value: "sevenYears",
-        options: ["thirtyDays", "oneYear", "threeYears", "sevenYears", "indefinite"],
+        options: [
+          "thirtyDays",
+          "oneYear",
+          "threeYears",
+          "sevenYears",
+          "indefinite",
+        ],
       },
       {
         label: "portal.policies.config.retention.fields.archiveAfter",

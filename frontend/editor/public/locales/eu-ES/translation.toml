@@ -5980,16 +5980,6 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
-[policies.docType]
-contracts = "Kontratuak"
-financialReports = "Finantza-txostenak"
-hrRecords = "Giza baliabideen erregistroak"
-insurance = "Aseguruak"
-invoices = "Fakturak"
-legalFilings = "Legezko aurkezpenak"
-medicalPhi = "Medikua / PHI"
-taxDocuments = "Zerga-dokumentuak"
-
 [policies.enforcement]
 applying = "{{names}} aplikatzen"
 applyingProgress = "{{names}} aplikatzen ({{done}}/{{total}})"
@@ -6024,51 +6014,6 @@ minConfidence = "Gutxieneko konfiantza"
 notify = "Jakinarazi bideratzean"
 onViolation = "Betetzen ez denean"
 webhookUrl = "Webhook URL"
-
-[policies.fieldOption.archiveAfter]
-never = "Inoiz ez"
-ninetyDays = "90 egun"
-oneYear = "1 urte"
-thirtyDays = "30 egun"
-
-[policies.fieldOption.belowThreshold]
-flagForReview = "Markatu berrikusteko"
-hold = "Eutsi"
-routeToBucket = "Bideratu bucket-era"
-
-[policies.fieldOption.destination]
-documents = "Dokumentuak"
-s3Bucket = "S3 bucket"
-sharePoint = "SharePoint"
-webhook = "Webhook"
-
-[policies.fieldOption.frameworks]
-fedramp = "FedRAMP"
-gdpr = "GDPR"
-hipaa = "HIPAA"
-iso27001 = "ISO 27001"
-pciDss = "PCI DSS"
-soc2 = "SOC 2"
-
-[policies.fieldOption.keepFor]
-indefinite = "Mugagabe"
-oneYear = "1 urte"
-sevenYears = "7 urte"
-thirtyDays = "30 egun"
-threeYears = "3 urte"
-
-[policies.fieldOption.minConfidence]
-p60 = "60%"
-p70 = "70%"
-p80 = "80%"
-p90 = "90%"
-p95 = "95%"
-
-[policies.fieldOption.onViolation]
-autoRedactPhi = "Automatikoki ezkutatu PHI"
-blockExport = "Blokeatu esportazioa"
-flagForReview = "Markatu berrikusteko"
-quarantineDocument = "Jarri dokumentua berrogeialdian"
 
 [policies.fields]
 selectedCount = "{{count}} selected"
@@ -6202,6 +6147,44 @@ blockingAction = "{{action}} blokeatuta politika betearazten den bitartean; itxa
 dismiss = "Baztertu gainjartzea"
 enforcingTitle = "Politika betearazten..."
 viewAnyway = "Ikusi fitxategia (politika oraindik betearazten ari da)"
+
+[policyOption]
+autoRedactPhi = "Automatikoki ezkutatu PHI"
+blockExport = "Blokeatu esportazioa"
+contracts = "Kontratuak"
+documents = "Dokumentuak"
+fedramp = "FedRAMP"
+financialReports = "Finantza-txostenak"
+flagForReview = "Markatu berrikusteko"
+gdpr = "GDPR"
+hipaa = "HIPAA"
+hold = "Eutsi"
+hrRecords = "Giza baliabideen erregistroak"
+indefinite = "Mugagabe"
+insurance = "Aseguruak"
+invoices = "Fakturak"
+iso27001 = "ISO 27001"
+legalFilings = "Legezko aurkezpenak"
+medicalPhi = "Medikua / PHI"
+never = "Inoiz ez"
+ninetyDays = "90 egun"
+oneYear = "1 urte"
+p60 = "60%"
+p70 = "70%"
+p80 = "80%"
+p90 = "90%"
+p95 = "95%"
+pciDss = "PCI DSS"
+quarantineDocument = "Jarri dokumentua berrogeialdian"
+routeToBucket = "Bideratu bucket-era"
+s3Bucket = "S3 bucket"
+sevenYears = "7 urte"
+sharePoint = "SharePoint"
+soc2 = "SOC 2"
+taxDocuments = "Zerga-dokumentuak"
+thirtyDays = "30 egun"
+threeYears = "3 urte"
+webhook = "Webhook"
 
 [portal]
 comingSoon = "Laster"

@@ -5980,16 +5980,6 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
-[policies.docType]
-contracts = "Pogodbe"
-financialReports = "Finančna poročila"
-hrRecords = "Kadrovske evidence"
-insurance = "Zavarovanje"
-invoices = "Računi"
-legalFilings = "Pravne vloge"
-medicalPhi = "Medicinsko / PHI"
-taxDocuments = "Davčni dokumenti"
-
 [policies.enforcement]
 applying = "Uveljavljanje {{names}}"
 applyingProgress = "Uveljavljanje {{names}} ({{done}} od {{total}})"
@@ -6024,51 +6014,6 @@ minConfidence = "Najm. zaupanje"
 notify = "Obvesti ob usmerjanju"
 onViolation = "Ob neskladnosti"
 webhookUrl = "Webhook URL"
-
-[policies.fieldOption.archiveAfter]
-never = "Nikoli"
-ninetyDays = "90 dni"
-oneYear = "1 leto"
-thirtyDays = "30 dni"
-
-[policies.fieldOption.belowThreshold]
-flagForReview = "Označi za pregled"
-hold = "Zadrži"
-routeToBucket = "Usmeri v vedro"
-
-[policies.fieldOption.destination]
-documents = "Dokumenti"
-s3Bucket = "S3 bucket"
-sharePoint = "SharePoint"
-webhook = "Webhook"
-
-[policies.fieldOption.frameworks]
-fedramp = "FedRAMP"
-gdpr = "GDPR"
-hipaa = "HIPAA"
-iso27001 = "ISO 27001"
-pciDss = "PCI DSS"
-soc2 = "SOC 2"
-
-[policies.fieldOption.keepFor]
-indefinite = "Nedoločeno"
-oneYear = "1 leto"
-sevenYears = "7 let"
-thirtyDays = "30 dni"
-threeYears = "3 leta"
-
-[policies.fieldOption.minConfidence]
-p60 = "60%"
-p70 = "70%"
-p80 = "80%"
-p90 = "90%"
-p95 = "95%"
-
-[policies.fieldOption.onViolation]
-autoRedactPhi = "Samodejno prekrij PHI"
-blockExport = "Blokiraj izvoz"
-flagForReview = "Označi za pregled"
-quarantineDocument = "Daj dokument v karanteno"
 
 [policies.fields]
 selectedCount = "{{count}} selected"
@@ -6202,6 +6147,44 @@ blockingAction = "{{action}} je blokirano med uveljavljanjem pravilnika, počaka
 dismiss = "Opusti prekrivanje"
 enforcingTitle = "Uveljavljanje pravilnika..."
 viewAnyway = "Prikaži datoteko (pravilnik se še uveljavlja)"
+
+[policyOption]
+autoRedactPhi = "Samodejno prekrij PHI"
+blockExport = "Blokiraj izvoz"
+contracts = "Pogodbe"
+documents = "Dokumenti"
+fedramp = "FedRAMP"
+financialReports = "Finančna poročila"
+flagForReview = "Označi za pregled"
+gdpr = "GDPR"
+hipaa = "HIPAA"
+hold = "Zadrži"
+hrRecords = "Kadrovske evidence"
+indefinite = "Nedoločeno"
+insurance = "Zavarovanje"
+invoices = "Računi"
+iso27001 = "ISO 27001"
+legalFilings = "Pravne vloge"
+medicalPhi = "Medicinsko / PHI"
+never = "Nikoli"
+ninetyDays = "90 dni"
+oneYear = "1 leto"
+p60 = "60%"
+p70 = "70%"
+p80 = "80%"
+p90 = "90%"
+p95 = "95%"
+pciDss = "PCI DSS"
+quarantineDocument = "Daj dokument v karanteno"
+routeToBucket = "Usmeri v vedro"
+s3Bucket = "S3 bucket"
+sevenYears = "7 let"
+sharePoint = "SharePoint"
+soc2 = "SOC 2"
+taxDocuments = "Davčni dokumenti"
+thirtyDays = "30 dni"
+threeYears = "3 leta"
+webhook = "Webhook"
 
 [portal]
 comingSoon = "Kmalu na voljo"

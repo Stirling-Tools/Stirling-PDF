@@ -5980,16 +5980,6 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
-[policies.docType]
-contracts = "合約"
-financialReports = "財務報告"
-hrRecords = "人資紀錄"
-insurance = "保險"
-invoices = "發票"
-legalFilings = "法律申報文件"
-medicalPhi = "醫療 / PHI"
-taxDocuments = "稅務文件"
-
 [policies.enforcement]
 applying = "正在套用 {{names}}"
 applyingProgress = "正在套用 {{names}}（{{done}} / {{total}}）"
@@ -6024,51 +6014,6 @@ minConfidence = "最低信心度"
 notify = "路由時通知"
 onViolation = "不符合規範時"
 webhookUrl = "Webhook URL"
-
-[policies.fieldOption.archiveAfter]
-never = "永不"
-ninetyDays = "90 天"
-oneYear = "1 年"
-thirtyDays = "30 天"
-
-[policies.fieldOption.belowThreshold]
-flagForReview = "標記以供審查"
-hold = "保留"
-routeToBucket = "路由到 bucket"
-
-[policies.fieldOption.destination]
-documents = "文件"
-s3Bucket = "S3 bucket"
-sharePoint = "SharePoint"
-webhook = "Webhook"
-
-[policies.fieldOption.frameworks]
-fedramp = "FedRAMP"
-gdpr = "GDPR"
-hipaa = "HIPAA"
-iso27001 = "ISO 27001"
-pciDss = "PCI DSS"
-soc2 = "SOC 2"
-
-[policies.fieldOption.keepFor]
-indefinite = "無限期"
-oneYear = "1 年"
-sevenYears = "7 年"
-thirtyDays = "30 天"
-threeYears = "3 年"
-
-[policies.fieldOption.minConfidence]
-p60 = "60%"
-p70 = "70%"
-p80 = "80%"
-p90 = "90%"
-p95 = "95%"
-
-[policies.fieldOption.onViolation]
-autoRedactPhi = "自動遮蔽 PHI"
-blockExport = "封鎖匯出"
-flagForReview = "標記以供審查"
-quarantineDocument = "隔離文件"
 
 [policies.fields]
 selectedCount = "{{count}} selected"
@@ -6202,6 +6147,44 @@ blockingAction = "強制執行政策時已封鎖 {{action}}，請稍候..."
 dismiss = "關閉覆蓋層"
 enforcingTitle = "正在強制執行政策..."
 viewAnyway = "檢視檔案（政策仍在強制執行）"
+
+[policyOption]
+autoRedactPhi = "自動遮蔽 PHI"
+blockExport = "封鎖匯出"
+contracts = "合約"
+documents = "文件"
+fedramp = "FedRAMP"
+financialReports = "財務報告"
+flagForReview = "標記以供審查"
+gdpr = "GDPR"
+hipaa = "HIPAA"
+hold = "保留"
+hrRecords = "人資紀錄"
+indefinite = "無限期"
+insurance = "保險"
+invoices = "發票"
+iso27001 = "ISO 27001"
+legalFilings = "法律申報文件"
+medicalPhi = "醫療 / PHI"
+never = "永不"
+ninetyDays = "90 天"
+oneYear = "1 年"
+p60 = "60%"
+p70 = "70%"
+p80 = "80%"
+p90 = "90%"
+p95 = "95%"
+pciDss = "PCI DSS"
+quarantineDocument = "隔離文件"
+routeToBucket = "路由到 bucket"
+s3Bucket = "S3 bucket"
+sevenYears = "7 年"
+sharePoint = "SharePoint"
+soc2 = "SOC 2"
+taxDocuments = "稅務文件"
+thirtyDays = "30 天"
+threeYears = "3 年"
+webhook = "Webhook"
 
 [portal]
 comingSoon = "即將推出"

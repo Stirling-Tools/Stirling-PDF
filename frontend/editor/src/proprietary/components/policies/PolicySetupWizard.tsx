@@ -696,7 +696,7 @@ export function PolicySetupWizard({
                               : [...prev, dt],
                           )
                         }
-                        label={t(`policies.docType.${dt}`, dt)}
+                        label={t(`policyOption.${dt}`, dt)}
                       />
                     ))}
                   </div>

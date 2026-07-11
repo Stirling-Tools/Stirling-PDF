@@ -5980,16 +5980,6 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
-[policies.docType]
-contracts = "Conarthaí"
-financialReports = "Tuarascálacha airgeadais"
-hrRecords = "Taifid AD"
-insurance = "Árachas"
-invoices = "Sonraisc"
-legalFilings = "Comhdúcháin dlí"
-medicalPhi = "Leighis / PHI"
-taxDocuments = "Doiciméid chánach"
-
 [policies.enforcement]
 applying = "Á chur {{names}} i bhfeidhm"
 applyingProgress = "Á chur {{names}} i bhfeidhm ({{done}} as {{total}})"
@@ -6024,51 +6014,6 @@ minConfidence = "Muinín íosta"
 notify = "Cuir ar an eolas ar ródú"
 onViolation = "Nuair nach bhfuil sé comhlíontach"
 webhookUrl = "Webhook URL"
-
-[policies.fieldOption.archiveAfter]
-never = "Riamh"
-ninetyDays = "90 lá"
-oneYear = "1 bhliain"
-thirtyDays = "30 lá"
-
-[policies.fieldOption.belowThreshold]
-flagForReview = "Marcáil le hathbhreithniú"
-hold = "Coinnigh"
-routeToBucket = "Ródaigh chuig bucket"
-
-[policies.fieldOption.destination]
-documents = "Doiciméid"
-s3Bucket = "S3 bucket"
-sharePoint = "SharePoint"
-webhook = "Webhook"
-
-[policies.fieldOption.frameworks]
-fedramp = "FedRAMP"
-gdpr = "GDPR"
-hipaa = "HIPAA"
-iso27001 = "ISO 27001"
-pciDss = "PCI DSS"
-soc2 = "SOC 2"
-
-[policies.fieldOption.keepFor]
-indefinite = "Gan teorainn"
-oneYear = "1 bhliain"
-sevenYears = "7 mbliana"
-thirtyDays = "30 lá"
-threeYears = "3 bliana"
-
-[policies.fieldOption.minConfidence]
-p60 = "60%"
-p70 = "70%"
-p80 = "80%"
-p90 = "90%"
-p95 = "95%"
-
-[policies.fieldOption.onViolation]
-autoRedactPhi = "Ceil PHI go huathoibríoch"
-blockExport = "Blocáil easpórtáil"
-flagForReview = "Marcáil le hathbhreithniú"
-quarantineDocument = "Cuir doiciméad i gcoraintín"
 
 [policies.fields]
 selectedCount = "{{count}} selected"
@@ -6202,6 +6147,44 @@ blockingAction = "Cuireadh bac ar {{action}} agus polasaí á chur i bhfeidhm, f
 dismiss = "Dún forleagan"
 enforcingTitle = "Polasaí á chur i bhfeidhm..."
 viewAnyway = "Amharc ar chomhad (polasaí fós á chur i bhfeidhm)"
+
+[policyOption]
+autoRedactPhi = "Ceil PHI go huathoibríoch"
+blockExport = "Blocáil easpórtáil"
+contracts = "Conarthaí"
+documents = "Doiciméid"
+fedramp = "FedRAMP"
+financialReports = "Tuarascálacha airgeadais"
+flagForReview = "Marcáil le hathbhreithniú"
+gdpr = "GDPR"
+hipaa = "HIPAA"
+hold = "Coinnigh"
+hrRecords = "Taifid AD"
+indefinite = "Gan teorainn"
+insurance = "Árachas"
+invoices = "Sonraisc"
+iso27001 = "ISO 27001"
+legalFilings = "Comhdúcháin dlí"
+medicalPhi = "Leighis / PHI"
+never = "Riamh"
+ninetyDays = "90 lá"
+oneYear = "1 bhliain"
+p60 = "60%"
+p70 = "70%"
+p80 = "80%"
+p90 = "90%"
+p95 = "95%"
+pciDss = "PCI DSS"
+quarantineDocument = "Cuir doiciméad i gcoraintín"
+routeToBucket = "Ródaigh chuig bucket"
+s3Bucket = "S3 bucket"
+sevenYears = "7 mbliana"
+sharePoint = "SharePoint"
+soc2 = "SOC 2"
+taxDocuments = "Doiciméid chánach"
+thirtyDays = "30 lá"
+threeYears = "3 bliana"
+webhook = "Webhook"
 
 [portal]
 comingSoon = "Ag teacht go luath"

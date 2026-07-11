@@ -5980,16 +5980,6 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
-[policies.docType]
-contracts = "Smlouvy"
-financialReports = "Finanční zprávy"
-hrRecords = "HR záznamy"
-insurance = "Pojištění"
-invoices = "Faktury"
-legalFilings = "Právní podání"
-medicalPhi = "Zdravotní / PHI"
-taxDocuments = "Daňové dokumenty"
-
 [policies.enforcement]
 applying = "Probíhá použití {{names}}"
 applyingProgress = "Probíhá použití {{names}} ({{done}} z {{total}})"
@@ -6024,51 +6014,6 @@ minConfidence = "Min. spolehlivost"
 notify = "Upozornit při směrování"
 onViolation = "Při nesouladu"
 webhookUrl = "Webhook URL"
-
-[policies.fieldOption.archiveAfter]
-never = "Nikdy"
-ninetyDays = "90 dní"
-oneYear = "1 rok"
-thirtyDays = "30 dní"
-
-[policies.fieldOption.belowThreshold]
-flagForReview = "Označit ke kontrole"
-hold = "Zadržet"
-routeToBucket = "Směrovat do bucketu"
-
-[policies.fieldOption.destination]
-documents = "Dokumenty"
-s3Bucket = "S3 bucket"
-sharePoint = "SharePoint"
-webhook = "Webhook"
-
-[policies.fieldOption.frameworks]
-fedramp = "FedRAMP"
-gdpr = "GDPR"
-hipaa = "HIPAA"
-iso27001 = "ISO 27001"
-pciDss = "PCI DSS"
-soc2 = "SOC 2"
-
-[policies.fieldOption.keepFor]
-indefinite = "Neurčitě"
-oneYear = "1 rok"
-sevenYears = "7 let"
-thirtyDays = "30 dní"
-threeYears = "3 roky"
-
-[policies.fieldOption.minConfidence]
-p60 = "60%"
-p70 = "70%"
-p80 = "80%"
-p90 = "90%"
-p95 = "95%"
-
-[policies.fieldOption.onViolation]
-autoRedactPhi = "Automaticky redigovat PHI"
-blockExport = "Blokovat export"
-flagForReview = "Označit ke kontrole"
-quarantineDocument = "Umístit dokument do karantény"
 
 [policies.fields]
 selectedCount = "{{count}} selected"
@@ -6202,6 +6147,44 @@ blockingAction = "{{action}} je blokováno během vynucování zásady, počkejt
 dismiss = "Zavřít překryvnou vrstvu"
 enforcingTitle = "Vynucování zásady..."
 viewAnyway = "Zobrazit soubor (zásada se stále vynucuje)"
+
+[policyOption]
+autoRedactPhi = "Automaticky redigovat PHI"
+blockExport = "Blokovat export"
+contracts = "Smlouvy"
+documents = "Dokumenty"
+fedramp = "FedRAMP"
+financialReports = "Finanční zprávy"
+flagForReview = "Označit ke kontrole"
+gdpr = "GDPR"
+hipaa = "HIPAA"
+hold = "Zadržet"
+hrRecords = "HR záznamy"
+indefinite = "Neurčitě"
+insurance = "Pojištění"
+invoices = "Faktury"
+iso27001 = "ISO 27001"
+legalFilings = "Právní podání"
+medicalPhi = "Zdravotní / PHI"
+never = "Nikdy"
+ninetyDays = "90 dní"
+oneYear = "1 rok"
+p60 = "60%"
+p70 = "70%"
+p80 = "80%"
+p90 = "90%"
+p95 = "95%"
+pciDss = "PCI DSS"
+quarantineDocument = "Umístit dokument do karantény"
+routeToBucket = "Směrovat do bucketu"
+s3Bucket = "S3 bucket"
+sevenYears = "7 let"
+sharePoint = "SharePoint"
+soc2 = "SOC 2"
+taxDocuments = "Daňové dokumenty"
+thirtyDays = "30 dní"
+threeYears = "3 roky"
+webhook = "Webhook"
 
 [portal]
 comingSoon = "Již brzy"
