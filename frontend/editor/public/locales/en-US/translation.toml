@@ -4647,7 +4647,6 @@ welcomeTitle = "You've been invited!"
 
 [landing]
 addFiles = "Add Files"
-heroSubtitle = "Drop in or add an existing PDF to get started."
 mobileUpload = "Upload from Mobile"
 openFromComputer = "Open from computer"
 uploadFromComputer = "Upload from computer"
@@ -4962,11 +4961,11 @@ text = "Decide how you want the text output formatted:"
 title = "Output"
 
 [onboarding]
-activeFiles = "The <strong>Active Files</strong> view shows all of the PDFs you have loaded into the tool, and allows you to select which ones to process."
+activeFiles = "The <strong>Active Files</strong> view shows all of the PDFs you have loaded into the tool."
 allTools = "This is the <strong>Tools</strong> panel, where you can browse and select from all available PDF tools."
 close = "Close"
 cropSettings = "Now that we've selected the file we want crop, we can configure the Crop tool to choose the area that we want to crop the PDF to."
-fileCheckbox = "Clicking one of the files selects it for processing. You can select multiple files for batch operations."
+fileCheckbox = "Files on the workbench are selected for processing. You can select multiple files for batch operations using the left files sidebar."
 fileReplacement = "The modified file will replace the original file in the Workbench automatically, allowing you to easily run it through more tools."
 filesButton = "The <strong>Files</strong> button on the Quick Access bar allows you to upload PDFs to use the tools on."
 fileSources = "You can upload new files or access recent files from here. For the tour, we'll just use a sample file."
@@ -4976,6 +4975,7 @@ pinButton = "You can use the <strong>Pin</strong> button if you'd rather your fi
 results = "After the tool has finished running, the <strong>Review</strong> step will show a preview of the results in this panel, and allow you to undo the operation or download the file. "
 runButton = "Once the tool has been configured, this button allows you to run the tool on all the selected PDFs."
 selectCropTool = "Let's select the <strong>Crop</strong> tool to demonstrate how to use one of the tools."
+stepOf = "Step {{current}} of {{total}}"
 toolInterface = "This is the <strong>Crop</strong> tool interface. As you can see, there's not much there because we haven't added any PDF files to work with yet."
 workbench = "This is the <strong>Workbench</strong> - the main area where you view and edit your PDFs."
 wrapUp = "You're all set! You can replay this tour anytime - just open <strong>Settings</strong> and find it here in the <strong>Tours</strong> section under Help."
@@ -4987,6 +4987,26 @@ next = "Next →"
 showMeAround = "Show me around"
 skipForNow = "Skip for now"
 skipTheTour = "Skip the tour"
+
+[onboarding.checklist]
+dismiss = "Dismiss"
+title = "Set up Stirling PDF"
+
+[onboarding.checklist.downloadDesktop]
+description = "Run Stirling natively on your machine"
+title = "Download Stirling for Desktop"
+
+[onboarding.checklist.inviteTeam]
+description = "Collaborate with your team"
+title = "Invite team members"
+
+[onboarding.checklist.shareAnalytics]
+description = "Help improve Stirling"
+title = "Share anonymous usage data"
+
+[onboarding.checklist.takeTour]
+description = "See how Stirling works in a quick walkthrough"
+title = "Take the tour"
 
 [onboarding.desktopInstall]
 body = "Stirling works best as a desktop app. You can use it offline, access documents faster, and make edits locally on your computer."
@@ -5004,6 +5024,11 @@ adminBodyLoginEnabled = "As an admin, you can manage users, configure settings, 
 adminTitle = "Admin Overview"
 userBody = "Invite teammates, assign roles, and keep your documents organized in one secure workspace. Enable login mode whenever you're ready to grow beyond solo use."
 userTitle = "Plan Overview"
+
+[onboarding.processorIntro]
+body = "Stirling now runs <strong>Policies</strong> — automated rules that classify, secure, and process every document as it arrives. Set them up and monitor runs in the <strong>Processor</strong>."
+cta = "Check out the Processor"
+title = "Check out the Stirling Processor"
 
 [onboarding.saas.freeEditor]
 freeLine = "The editor is now <free>completely free</free>."

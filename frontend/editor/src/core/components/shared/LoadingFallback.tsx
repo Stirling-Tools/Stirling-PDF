@@ -10,7 +10,9 @@ export function LoadingFallback() {
         alignItems: "center",
         height: "100vh",
         fontSize: "18px",
-        color: "#666",
+        // Theme-aware so the splash follows light/dark instead of forcing white.
+        backgroundColor: "var(--mantine-color-body)",
+        color: "var(--mantine-color-text)",
       }}
     >
       Loading...

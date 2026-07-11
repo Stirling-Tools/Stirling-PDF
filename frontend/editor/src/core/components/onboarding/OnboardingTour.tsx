@@ -6,7 +6,7 @@
  * when the tour is open but onboarding is inactive.
  */
 
-import React from "react";
+import React, { type ReactNode } from "react";
 import { TourProvider, useTour, type StepType } from "@reactour/tour";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
@@ -14,6 +14,19 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CheckIcon from "@mui/icons-material/Check";
 import type { TFunction } from "i18next";
 import i18n from "@app/i18n";
+
+/**
+ * Renders tour copy that uses <strong> for emphasis as real React elements,
+ * so there is no raw-HTML injection surface (avoids dangerouslySetInnerHTML).
+ * Any other markup is shown as plain text.
+ */
+export function renderTourContent(content: string): ReactNode {
+  return content.split(/(<strong>.*?<\/strong>)/g).map((part, index) => {
+    const match = part.match(/^<strong>(.*?)<\/strong>$/);
+    if (match) return <strong key={index}>{match[1]}</strong>;
+    return <React.Fragment key={index}>{part}</React.Fragment>;
+  });
+}
 
 /**
  * TourContent - Controls the tour visibility
@@ -49,12 +62,14 @@ interface CloseArgs {
 
 interface OnboardingTourProps {
   tourSteps: StepType[];
-  tourType: "admin" | "tools" | "whatsnew";
+  // Open tour id (see tourRegistry.ts); "admin" gets the dark mask.
+  tourType: string;
   isRTL: boolean;
   t: TFunction;
   isOpen: boolean;
   onAdvance: (args: AdvanceArgs) => void;
   onClose: (args: CloseArgs) => void;
+  dimBackground?: boolean;
 }
 
 export default function OnboardingTour({
@@ -65,6 +80,7 @@ export default function OnboardingTour({
   isOpen,
   onAdvance,
   onClose,
+  dimBackground = true,
 }: OnboardingTourProps) {
   if (!isOpen) return null;
 
@@ -98,6 +114,11 @@ export default function OnboardingTour({
           padding: "20px",
           boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
           maxWidth: "400px",
+        }),
+        maskWrapper: (base) => ({
+          ...base,
+          // 0 = no dim: the page stays fully visible behind the popover.
+          opacity: dimBackground ? 0.7 : 0,
         }),
         maskArea: (base) => ({
           ...base,
@@ -162,10 +183,9 @@ export default function OnboardingTour({
           </ActionIcon>
         ),
         Content: ({ content }: { content: string }) => (
-          <div
-            style={{ paddingRight: "16px" }}
-            dangerouslySetInnerHTML={{ __html: content }}
-          />
+          <div style={{ paddingRight: "16px" }}>
+            {renderTourContent(content)}
+          </div>
         ),
       }}
     >
