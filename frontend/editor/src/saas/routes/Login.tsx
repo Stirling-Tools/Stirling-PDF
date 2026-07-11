@@ -20,6 +20,7 @@ import ErrorMessage from "@app/auth/ui/ErrorMessage";
 import EmailPasswordForm from "@app/routes/login/EmailPasswordForm";
 import OAuthButtons from "@app/routes/login/OAuthButtons";
 import LoggedInState from "@app/routes/login/LoggedInState";
+import { markLoginLandingPending } from "@app/utils/loginLanding";
 import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 export default function Login() {
@@ -166,7 +167,10 @@ export default function Login() {
         setError(error.message);
       } else if (data.user) {
         console.log("[Login] Email sign in successful");
-        // User will be redirected by the auth state change
+        // Fresh login with no explicit destination: let the role-based landing
+        // redirect route team leads to the processor. User is redirected by the
+        // auth state change.
+        if (!nextPath) markLoginLandingPending();
       }
     } catch (err) {
       console.error("[Login] Unexpected error]:", err);

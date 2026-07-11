@@ -67,8 +67,8 @@ export function PolicySummary() {
             {policyIcon(entry.category.icon)}
           </span>
           <div className="portal-policysum__cat-text">
-            <strong>{entry.category.label}</strong>
-            <span>{entry.category.desc}</span>
+            <strong>{t(entry.category.label)}</strong>
+            <span>{t(entry.category.desc)}</span>
           </div>
         </div>
       ),
@@ -92,7 +92,7 @@ export function PolicySummary() {
       render: ({ entry, state }) => (
         <span className="portal-policysum__rule">
           {state === "active"
-            ? entry.config.summary
+            ? t(entry.config.summary)
             : t("portal.policySummary.noRule")}
         </span>
       ),
