@@ -1,12 +1,12 @@
 build: &build
   - build.gradle
-  - app/(common|core|proprietary)/build.gradle
+  - app/(common|core|proprietary|saas)/build.gradle
   - Taskfile.yml
   - .taskfiles/backend.yml
 
 openapi: &openapi
   - *build
-  - app/(common|core|proprietary)/src/main/java/**
+  - app/(common|core|proprietary|saas)/src/main/java/**
 
 docker-base: &docker-base
   - docker/base/Dockerfile
@@ -23,9 +23,9 @@ docker: &docker
   - *docker-base
 
 project: &project
-  - app/(common|core|proprietary)/src/(main|test)/java/**
+  - app/(common|core|proprietary|saas)/src/(main|test)/java/**
   - *build
-  - "app/(common|core|proprietary)/src/(main|test)/resources/**/!(messages_*.properties|*.md)*"
+  - "app/(common|core|proprietary|saas)/src/(main|test)/resources/**/!(messages_*.properties|*.md)*"
   - exampleYmlFiles/**
   - gradle/**
   - libs/**
@@ -82,7 +82,7 @@ tauri: &tauri
 # tool surfaces it generates models from.
 engine: &engine
   - engine/**
-  - app/(common|core|proprietary)/src/main/java/**
+  - app/(common|core|proprietary|saas)/src/main/java/**
   - .github/workflows/ai-engine.yml
   - Taskfile.yml
   - .taskfiles/engine.yml
