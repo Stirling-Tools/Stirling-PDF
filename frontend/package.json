@@ -83,6 +83,7 @@
     "web-vitals": "^5.1.0"
   },
   "scripts": {
+    "docs:sync": "tsx editor/scripts/sync-portal-docs.mts",
     "update:minor": "node scripts/update-minor.js",
     "update:major": "npx npm-check-updates -u && npm install",
     "update:interactive": "npx npm-check-updates -i",

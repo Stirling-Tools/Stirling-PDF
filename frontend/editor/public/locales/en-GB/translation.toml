@@ -6603,6 +6603,10 @@ title = "No components available"
 description = "GA components are available on Pay-as-you-go; a few Beta components are enterprise-only. Locked cards show an upgrade nudge."
 title = "Some components need a paid plan"
 
+[portal.docs]
+browse = "Browse docs"
+viewSource = "View source on GitHub"
+
 [portal.docs.authentication]
 codeCaption = "every request"
 eyebrow = "GETTING STARTED"
@@ -6687,6 +6691,11 @@ title = "Official SDKs"
 [portal.docs.sdks.status]
 beta = "Beta"
 deprecated = "Deprecated"
+
+[portal.docs.search]
+empty = "No matching docs"
+placeholder = "Search docs"
+results = "{{count}} results"
 
 [portal.docs.skills]
 eyebrow = "SKILLS"
@@ -7246,7 +7255,7 @@ storage = "Storage"
 [portal.nav]
 agent-builder = "Agent Builder"
 components = "Components"
-docs = "Developer Docs"
+docs = "Documentation"
 documents = "Documents"
 editor = "Editor"
 home = "Home"

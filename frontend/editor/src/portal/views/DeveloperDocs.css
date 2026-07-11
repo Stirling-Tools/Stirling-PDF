@@ -1,74 +1,239 @@
+/* Full-height docs surface: the sidebar and reading pane each scroll on their
+   own inside the portal shell's scroll container, so a 70+ item nav no longer
+   drags the whole page around. */
 .portal-docs {
   display: grid;
-  grid-template-columns: 15rem minmax(0, 1fr);
-  gap: 2rem;
-  padding: 1.5rem;
-  max-width: 84rem;
-  margin: 0 auto;
-  align-items: start;
+  grid-template-columns: 16rem minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
 
-@media (max-width: 60rem) {
-  .portal-docs {
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
-  }
+.portal-docs--empty {
+  display: block;
+  padding: 3rem 1.5rem;
 }
 
-/* ── Left nav ──────────────────────────────────────────────────────────── */
+/* ── Left nav (own scroll column) ──────────────────────────────────────── */
 
 .portal-docs__sidebar {
-  position: sticky;
-  top: 1.5rem;
-  align-self: start;
-}
-
-@media (max-width: 60rem) {
-  .portal-docs__sidebar {
-    position: static;
-  }
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto;
+  border-right: 1px solid var(--color-border-light);
+  padding: 1.25rem 0.75rem;
 }
 
 .portal-docs__nav {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 0.25rem;
+}
+
+/* Search */
+.portal-docs__search {
+  margin-bottom: 0.75rem;
+}
+
+.portal-docs__search-box {
+  position: relative;
+}
+
+.portal-docs__search-icon {
+  position: absolute;
+  left: 0.625rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.9375rem;
+  color: var(--color-text-4);
+  pointer-events: none;
+}
+
+.portal-docs__search-input {
+  width: 100%;
+  padding: 0.4rem 0.6rem 0.4rem 1.9rem;
+  font-size: 0.8125rem;
+  color: var(--color-text-1);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  outline: none;
+}
+
+.portal-docs__search-input:focus {
+  border-color: var(--color-blue);
+}
+
+.portal-docs__nav-empty {
+  font-size: 0.8125rem;
+  color: var(--color-text-4);
+  padding: 0.5rem;
+  margin: 0;
+}
+
+/* ── Search results ────────────────────────────────────────────────────── */
+
+.portal-docs__results {
+  margin-top: 0.5rem;
+}
+
+.portal-docs__results-count {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--color-text-4);
+  padding: 0 0.5rem 0.5rem;
+}
+
+.portal-docs__results-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Hairline divider between results for clear, calm separation. */
+.portal-docs__results-list li + li {
+  border-top: 1px solid var(--color-border-light);
+}
+
+.portal-docs__result {
+  height: auto;
+  padding: 0.5rem;
+  border-radius: 0;
+}
+
+.portal-docs__result:hover,
+.portal-docs__result.is-active {
+  background: var(--color-bg-hover);
+}
+
+.portal-docs__result-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  width: 100%;
+  min-width: 0;
+  text-align: left;
+  white-space: normal;
+}
+
+/* Title + section share one line; the title truncates before the section. */
+.portal-docs__result-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.portal-docs__result-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+  line-height: 1.3;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.portal-docs__result-section {
+  flex-shrink: 0;
+  font-size: 0.6875rem;
+  color: var(--color-text-4);
+}
+
+.portal-docs__result-snippet {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--color-text-4);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Subtle match emphasis — coloured text, not a filled block. */
+.portal-docs__hl {
+  color: var(--color-blue);
+  font-weight: 600;
+  background: none;
 }
 
 .portal-docs__nav-group {
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
+  gap: 0.0625rem;
 }
 
+/* Section label: shared typography for the static Overview label and the
+   collapsible accordion headers below. */
 .portal-docs__nav-head {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  padding: 0.4rem 0.5rem 0.2rem;
   font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--color-text-4);
-  padding: 0 0.5rem;
 }
 
-.portal-docs__nav-icon {
-  display: inline-flex;
+/* Collapsible section header (Overview stays a static label). */
+.portal-docs__nav-head--button:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-2);
+}
+
+.portal-docs__nav-head-main {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  width: 1.125rem;
-  height: 1.125rem;
-  font-size: 0.6875rem;
-  border-radius: var(--radius-sm);
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.portal-docs__nav-headlabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-docs__nav-chevron {
+  font-size: 0.625rem;
+  color: var(--color-text-4);
+  transition: transform var(--motion-fast);
+}
+
+.portal-docs__nav-chevron.is-open {
+  transform: rotate(90deg);
+}
+
+.portal-docs__nav-count {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--color-text-4);
   background: var(--color-bg-subtle);
-  color: var(--color-text-3);
+  border-radius: var(--radius-pill);
+  padding: 0.05rem 0.4rem;
+}
+
+/* Space consecutive sections apart (not before the first). */
+.portal-docs__nav-group + .portal-docs__nav-group {
+  margin-top: 0.4rem;
+}
+
+/* Nested sub-sections: indented under their parent with a guide line. */
+.portal-docs__nav-children {
+  margin: 0.125rem 0 0.25rem 0.85rem;
+  padding-left: 0.4rem;
+  border-left: 1px solid var(--color-border-light);
+  display: flex;
+  flex-direction: column;
+  gap: 0.0625rem;
 }
 
 .portal-docs__nav-list {
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin: 0 0 0.375rem;
+  padding: 0 0 0 0.6rem;
   display: flex;
   flex-direction: column;
   gap: 0.0625rem;
@@ -80,7 +245,7 @@
   justify-content: space-between;
   gap: 0.5rem;
   width: 100%;
-  padding: 0.375rem 0.5rem;
+  padding: 0.35rem 0.5rem;
   border: none;
   background: transparent;
   border-radius: var(--radius-md);
@@ -110,10 +275,64 @@
   white-space: nowrap;
 }
 
-/* ── Content shell ─────────────────────────────────────────────────────── */
+/* Mobile-only nav toggle (a drawer button); hidden on desktop. */
+.portal-docs__nav-toggle {
+  display: none;
+}
+
+/* ── Reading pane (own scroll column) ──────────────────────────────────── */
 
 .portal-docs__content {
   min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto;
+  padding: 1.5rem 2rem 4rem;
+}
+
+.portal-docs__content-inner {
+  max-width: 52rem;
+  margin: 0 auto;
+}
+
+/* ── Small screens: nav collapses into a drawer above the content ──────── */
+
+@media (max-width: 60rem) {
+  .portal-docs {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto minmax(0, 1fr);
+  }
+
+  .portal-docs__nav-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.75rem 1rem 0;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-text-1);
+    background: var(--color-bg-subtle);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+  }
+
+  .portal-docs__sidebar {
+    display: none;
+    height: auto;
+    max-height: 60vh;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border-light);
+  }
+
+  .portal-docs__sidebar.is-open {
+    display: block;
+  }
+
+  .portal-docs__content {
+    padding: 1.25rem 1.25rem 3rem;
+  }
 }
 
 .portal-docs__section {
@@ -522,4 +741,161 @@
   font-family: var(--font-mono, monospace);
   font-size: 0.75rem;
   color: var(--color-text-4);
+}
+
+/* ── Markdown content ──────────────────────────────────────────────────── */
+
+.portal-docs__md {
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--color-text-2);
+}
+
+.portal-docs__md h1,
+.portal-docs__md h2,
+.portal-docs__md h3,
+.portal-docs__md h4 {
+  color: var(--color-text-1);
+  font-weight: 650;
+  line-height: 1.25;
+  margin: 1.75rem 0 0.75rem;
+}
+
+.portal-docs__md h2 {
+  font-size: 1.3125rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.portal-docs__md h3 {
+  font-size: 1.0625rem;
+}
+
+.portal-docs__md h4 {
+  font-size: 0.9375rem;
+}
+
+.portal-docs__md > :first-child {
+  margin-top: 0;
+}
+
+.portal-docs__md p,
+.portal-docs__md ul,
+.portal-docs__md ol {
+  margin: 0 0 0.875rem;
+}
+
+.portal-docs__md li {
+  margin: 0.25rem 0;
+}
+
+.portal-docs__md a {
+  color: var(--color-blue);
+  text-decoration: none;
+}
+
+.portal-docs__md a:hover {
+  text-decoration: underline;
+}
+
+.portal-docs__md code {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.85em;
+  background: var(--color-bg-subtle);
+  padding: 0.1em 0.35em;
+  border-radius: var(--radius-sm);
+}
+
+.portal-docs__md blockquote {
+  margin: 0 0 0.875rem;
+  padding: 0.125rem 0.875rem;
+  border-left: 3px solid var(--color-blue);
+  background: var(--color-bg-subtle);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  color: var(--color-text-3);
+}
+
+.portal-docs__md blockquote p {
+  margin: 0.5rem 0;
+}
+
+.portal-docs__md-img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-light);
+}
+
+.portal-docs__md hr {
+  border: none;
+  border-top: 1px solid var(--color-border-light);
+  margin: 1.5rem 0;
+}
+
+.portal-docs__md-pre {
+  position: relative;
+  margin: 0 0 0.875rem;
+}
+
+.portal-docs__md-pre pre {
+  margin: 0;
+  padding: 0.875rem 4rem 0.875rem 0.875rem;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.portal-docs__md-pre pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+}
+
+.portal-docs__md-copy {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+}
+
+.portal-docs__md-tablewrap {
+  overflow-x: auto;
+  margin: 0 0 0.875rem;
+}
+
+.portal-docs__md-tablewrap table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.8125rem;
+}
+
+.portal-docs__md-tablewrap th,
+.portal-docs__md-tablewrap td {
+  border: 1px solid var(--color-border-light);
+  padding: 0.4rem 0.625rem;
+  text-align: left;
+}
+
+.portal-docs__md-tablewrap th {
+  background: var(--color-bg-subtle);
+  font-weight: 600;
+}
+
+.portal-docs__source {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border-light);
+  font-size: 0.8125rem;
+}
+
+.portal-docs__source a {
+  color: var(--color-text-3);
+  text-decoration: none;
+}
+
+.portal-docs__source a:hover {
+  color: var(--color-blue);
+  text-decoration: underline;
 }
