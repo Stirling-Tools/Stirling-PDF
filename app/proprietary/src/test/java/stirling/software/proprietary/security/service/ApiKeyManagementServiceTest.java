@@ -21,6 +21,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.proprietary.model.Team;
@@ -47,6 +48,7 @@ class ApiKeyManagementServiceTest {
     @Mock private TeamRepository teamRepository;
     @Mock private UserService userService;
     @Mock private PolicyManagementAuthority policyAuthority;
+    @Mock private ApiKeyLegacyMigrator legacyMigrator;
     @InjectMocks private ApiKeyManagementService service;
 
     private User caller;
@@ -105,8 +107,9 @@ class ApiKeyManagementServiceTest {
 
         service.listVisibleKeys();
 
+        // Migration insert is isolated in its own transaction (ApiKeyLegacyMigrator).
         ArgumentCaptor<ApiKey> saved = ArgumentCaptor.forClass(ApiKey.class);
-        verify(apiKeyRepository).save(saved.capture());
+        verify(legacyMigrator).insertMigratedKey(saved.capture());
         ApiKey migrated = saved.getValue();
         assertThat(migrated.getScope()).isEqualTo(ApiKeyScope.PERSONAL);
         assertThat(migrated.getOwnerUserId()).isEqualTo(1L);
@@ -124,7 +127,7 @@ class ApiKeyManagementServiceTest {
 
         service.listVisibleKeys();
 
-        verify(apiKeyRepository, never()).save(any());
+        verify(legacyMigrator, never()).insertMigratedKey(any());
     }
 
     // ---- personal isolation -------------------------------------------------
@@ -333,5 +336,24 @@ class ApiKeyManagementServiceTest {
 
         assertThatThrownBy(() -> service.revokeKey(32L))
                 .isInstanceOf(ResponseStatusException.class);
+    }
+
+    @Test
+    @DisplayName("a leader of another team cannot revoke this team's key, and gets 404 not 403")
+    void revokeCrossTeamKeyNotFound() {
+        // Caller is a leader (canEditPolicies) but of a DIFFERENT team than the target key.
+        when(apiKeyRepository.findById(40L))
+                .thenReturn(Optional.of(teamKey(40, 5L, ApiKeyScope.TEAM_MEMBERS)));
+        when(policyAuthority.canEditPolicies()).thenReturn(true);
+        when(policyAuthority.currentUserTeamId()).thenReturn(6L);
+
+        assertThatThrownBy(() -> service.revokeKey(40L))
+                .isInstanceOf(ResponseStatusException.class)
+                // 404 (not 403) so a caller can't probe other teams' key ids.
+                .satisfies(
+                        e ->
+                                assertThat(((ResponseStatusException) e).getStatusCode())
+                                        .isEqualTo(HttpStatus.NOT_FOUND));
+        verify(apiKeyRepository, never()).save(any());
     }
 }

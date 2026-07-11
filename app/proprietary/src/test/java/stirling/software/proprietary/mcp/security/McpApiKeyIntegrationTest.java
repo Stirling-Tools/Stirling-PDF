@@ -26,7 +26,10 @@ import stirling.software.proprietary.mcp.tools.StirlingConvertTool;
 import stirling.software.proprietary.mcp.tools.StirlingMiscTool;
 import stirling.software.proprietary.mcp.tools.StirlingPagesTool;
 import stirling.software.proprietary.mcp.tools.StirlingSecurityTool;
+import stirling.software.proprietary.security.model.ApiKeyAccess;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.service.ApiKeyAuthenticationService;
+import stirling.software.proprietary.security.service.ApiKeyAuthenticationService.ApiKeyAuthentication;
 import stirling.software.proprietary.security.service.UserService;
 
 /**
@@ -38,6 +41,7 @@ import stirling.software.proprietary.security.service.UserService;
 class McpApiKeyIntegrationTest {
 
     private static final String VALID_KEY = "stirling-test-key-abc123";
+    private static final String PROCESSING_KEY = "stirling-test-processing-xyz";
 
     @LocalServerPort private int port;
     private final HttpClient http = HttpClient.newHttpClient();
@@ -80,6 +84,16 @@ class McpApiKeyIntegrationTest {
                 postMcp(
                         b -> b.header("X-API-KEY", "not-a-real-key"),
                         "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"ping\"}");
+        assertThat(response.statusCode()).isEqualTo(401);
+    }
+
+    @Test
+    void processingOnlyKey_isRejectedWith401() throws Exception {
+        // A shared/team (processing-only) key must not reach MCP tools as the owner.
+        HttpResponse<String> response =
+                postMcp(
+                        b -> b.header("X-API-KEY", PROCESSING_KEY),
+                        "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}");
         assertThat(response.statusCode()).isEqualTo(401);
     }
 
@@ -132,16 +146,38 @@ class McpApiKeyIntegrationTest {
             return props;
         }
 
+        // Still a constructor dependency of McpSecurityConfig (used by the OAuth chain); the
+        // api-key chain now authenticates through ApiKeyAuthenticationService instead.
         @Bean
         UserService userService() {
-            UserService mock = org.mockito.Mockito.mock(UserService.class);
+            return org.mockito.Mockito.mock(UserService.class);
+        }
+
+        @Bean
+        ApiKeyAuthenticationService apiKeyAuthenticationService() {
+            ApiKeyAuthenticationService mock =
+                    org.mockito.Mockito.mock(ApiKeyAuthenticationService.class);
             User account = org.mockito.Mockito.mock(User.class);
             org.mockito.Mockito.when(account.isEnabled()).thenReturn(true);
             org.mockito.Mockito.when(account.getUsername()).thenReturn("alice");
-            org.mockito.Mockito.when(mock.getUserByApiKey(org.mockito.ArgumentMatchers.anyString()))
+            org.mockito.Mockito.when(mock.authenticate(org.mockito.ArgumentMatchers.anyString()))
                     .thenReturn(Optional.empty());
-            org.mockito.Mockito.when(mock.getUserByApiKey(VALID_KEY))
-                    .thenReturn(Optional.of(account));
+            org.mockito.Mockito.when(mock.authenticate(VALID_KEY))
+                    .thenReturn(
+                            Optional.of(
+                                    new ApiKeyAuthentication(
+                                            account,
+                                            null,
+                                            java.util.List.of(),
+                                            ApiKeyAccess.FULL)));
+            org.mockito.Mockito.when(mock.authenticate(PROCESSING_KEY))
+                    .thenReturn(
+                            Optional.of(
+                                    new ApiKeyAuthentication(
+                                            account,
+                                            "Team key (sk_proc)",
+                                            java.util.List.of(),
+                                            ApiKeyAccess.PROCESSING)));
             return mock;
         }
     }

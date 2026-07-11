@@ -23,7 +23,7 @@ const meta: Meta<typeof ApiKeyCard> = {
   title: "Portal/Infrastructure/ApiKeyCard",
   component: ApiKeyCard,
   parameters: { layout: "padded" },
-  args: { onRevoke: (id: string) => console.log("revoke", id) },
+  args: { onRevoke: (key: ApiKey) => console.log("revoke", key.id) },
   decorators: [
     (S) => (
       <div style={{ maxWidth: "44rem" }}>

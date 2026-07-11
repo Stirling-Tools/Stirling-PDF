@@ -148,15 +148,16 @@ public class UserService implements UserServiceInterface {
     }
 
     public Authentication getAuthentication(String apiKey) {
-        Optional<User> user = getUserByApiKey(apiKey);
-        if (user.isEmpty()) {
-            throw new UsernameNotFoundException("API key is not valid");
-        }
-        // Convert the user into an Authentication object
-        return new UsernamePasswordAuthenticationToken( // principal (typically the user)
-                user, // credentials (we don't expose the password or API key here)
-                null, // user's authorities (roles/permissions)
-                getAuthorities(user.get()));
+        // Resolve through the shared service so a processing/team key authenticates with its
+        // capped authorities (never the owner's full admin rights), matching the auth filters.
+        var resolved =
+                apiKeyAuthenticationService
+                        .authenticate(apiKey)
+                        .orElseThrow(() -> new UsernameNotFoundException("API key is not valid"));
+        return new UsernamePasswordAuthenticationToken(
+                resolved.user(), // principal
+                null, // credentials (we don't expose the password or API key here)
+                resolved.authorities()); // capped authorities honouring the key's access level
     }
 
     private Collection<? extends GrantedAuthority> getAuthorities(User user) {

@@ -65,6 +65,7 @@ public class ApiKeyManagementService {
     private final TeamRepository teamRepository;
     private final UserService userService;
     private final PolicyManagementAuthority policyAuthority;
+    private final ApiKeyLegacyMigrator legacyMigrator;
 
     /** All keys the caller may see, plus whether they may mint team keys. */
     @Transactional
@@ -242,7 +243,9 @@ public class ApiKeyManagementService {
             return;
         }
         try {
-            apiKeyRepository.save(
+            // Insert in its own transaction so a concurrent-insert clash can't poison this
+            // listing transaction (see ApiKeyLegacyMigrator).
+            legacyMigrator.insertMigratedKey(
                     ApiKey.builder()
                             .name("Default key")
                             .keyHash(hash)

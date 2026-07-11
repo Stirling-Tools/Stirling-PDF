@@ -37,10 +37,12 @@ import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.AuthorityRepository;
 import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
 import stirling.software.proprietary.security.database.repository.UserRepository;
+import stirling.software.proprietary.security.model.ApiKeyAccess;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamRepository;
+import stirling.software.proprietary.security.service.ApiKeyAuthenticationService.ApiKeyAuthentication;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 import stirling.software.proprietary.storage.repository.FileShareAccessRepository;
 import stirling.software.proprietary.storage.repository.FileShareRepository;
@@ -100,7 +102,11 @@ class UserServiceMoreTest {
         void getAuthenticationValid() {
             User u = user("api");
             u.addAuthority(new Authority("ROLE_USER", u));
-            when(apiKeyAuthenticationService.resolveUser("k")).thenReturn(Optional.of(u));
+            when(apiKeyAuthenticationService.authenticate("k"))
+                    .thenReturn(
+                            Optional.of(
+                                    new ApiKeyAuthentication(
+                                            u, null, u.getAuthorities(), ApiKeyAccess.FULL)));
 
             assertThat(userService.getAuthentication("k")).isNotNull();
         }
@@ -108,7 +114,7 @@ class UserServiceMoreTest {
         @Test
         @DisplayName("getAuthentication throws when key is unknown")
         void getAuthenticationInvalid() {
-            when(apiKeyAuthenticationService.resolveUser("bad")).thenReturn(Optional.empty());
+            when(apiKeyAuthenticationService.authenticate("bad")).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> userService.getAuthentication("bad"))
                     .isInstanceOf(UsernameNotFoundException.class);

@@ -20,12 +20,19 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.proprietary.security.model.User;
-import stirling.software.proprietary.security.service.UserService;
+import stirling.software.proprietary.security.model.ApiKeyAccess;
+import stirling.software.proprietary.security.service.ApiKeyAuthenticationService;
+import stirling.software.proprietary.security.service.ApiKeyAuthenticationService.ApiKeyAuthentication;
 
 /**
- * API-key auth for the MCP endpoint: validates a Stirling per-user API key and binds the request to
- * that user with the MCP scopes.
+ * API-key auth for the MCP endpoint: validates a Stirling API key and binds the request to that
+ * user with the MCP scopes.
+ *
+ * <p>Only a full-access key may drive MCP. A processing-only key (every shared team key, plus any
+ * personal key the owner deliberately limited) is confined to the {@code /api} file-processing
+ * allowlist by {@code ApiKeyProcessingScopeInterceptor}; because {@code /mcp} sits outside that
+ * interceptor's path, this filter is where that boundary has to be re-asserted, so it rejects any
+ * key resolved as {@link ApiKeyAccess#PROCESSING}.
  */
 @Slf4j
 public class McpApiKeyAuthFilter extends OncePerRequestFilter {
@@ -35,10 +42,10 @@ public class McpApiKeyAuthFilter extends OncePerRequestFilter {
                     new SimpleGrantedAuthority("SCOPE_mcp.tools.read"),
                     new SimpleGrantedAuthority("SCOPE_mcp.tools.write"));
 
-    private final UserService userService;
+    private final ApiKeyAuthenticationService apiKeyAuthenticationService;
 
-    public McpApiKeyAuthFilter(UserService userService) {
-        this.userService = userService;
+    public McpApiKeyAuthFilter(ApiKeyAuthenticationService apiKeyAuthenticationService) {
+        this.apiKeyAuthenticationService = apiKeyAuthenticationService;
     }
 
     @Override
@@ -54,17 +61,22 @@ public class McpApiKeyAuthFilter extends OncePerRequestFilter {
         if (unauthenticated) {
             String apiKey = extractKey(request);
             if (apiKey != null && !apiKey.isBlank()) {
-                Optional<User> user = userService.getUserByApiKey(apiKey);
-                if (user.isPresent() && user.get().isEnabled()) {
+                Optional<ApiKeyAuthentication> resolved =
+                        apiKeyAuthenticationService.authenticate(apiKey);
+                // Reject a processing-only key: it must not reach MCP tools as the owner.
+                // authenticate()
+                // already rejects inactive keys and disabled owners.
+                if (resolved.isPresent() && resolved.get().access() != ApiKeyAccess.PROCESSING) {
                     UsernamePasswordAuthenticationToken auth =
                             new UsernamePasswordAuthenticationToken(
-                                    user.get().getUsername(), null, MCP_SCOPES);
+                                    resolved.get().user().getUsername(), null, MCP_SCOPES);
                     SecurityContext context = SecurityContextHolder.createEmptyContext();
                     context.setAuthentication(auth);
                     SecurityContextHolder.setContext(context);
                 } else {
                     log.warn(
-                            "MCP access denied: presented API key did not match an active account");
+                            "MCP access denied: presented API key did not match an active"
+                                    + " full-access account");
                 }
             }
         }

@@ -38,6 +38,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.security.service.ApiKeyAuthenticationService;
 import stirling.software.proprietary.security.service.UserService;
 
 /**
@@ -52,6 +53,7 @@ public class McpSecurityConfig {
 
     private final ApplicationProperties applicationProperties;
     private final UserService userService;
+    private final ApiKeyAuthenticationService apiKeyAuthenticationService;
 
     // Reuse the app's CORS config; ObjectProvider so the chain still wires when no CORS bean
     // exists.
@@ -62,9 +64,11 @@ public class McpSecurityConfig {
     public McpSecurityConfig(
             ApplicationProperties applicationProperties,
             @Lazy UserService userService,
+            ApiKeyAuthenticationService apiKeyAuthenticationService,
             ObjectProvider<CorsConfigurationSource> corsConfigurationSource) {
         this.applicationProperties = applicationProperties;
         this.userService = userService;
+        this.apiKeyAuthenticationService = apiKeyAuthenticationService;
         this.corsConfigurationSource = corsConfigurationSource;
     }
 
@@ -138,7 +142,8 @@ public class McpSecurityConfig {
                         AuthorizationFilter.class)
                 // Authenticate before the anonymous filter sets an anonymous token.
                 .addFilterBefore(
-                        new McpApiKeyAuthFilter(userService), AnonymousAuthenticationFilter.class);
+                        new McpApiKeyAuthFilter(apiKeyAuthenticationService),
+                        AnonymousAuthenticationFilter.class);
         return http.build();
     }
 

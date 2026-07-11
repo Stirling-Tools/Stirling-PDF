@@ -6909,6 +6909,15 @@ usageToday = "Usage today"
 description = "Create a scoped key to start calling the Stirling API."
 title = "No API keys yet"
 
+[portal.infrastructure.apiKeys.error]
+load = "Couldn't load your API keys. Please try again."
+
+[portal.infrastructure.apiKeys.revoke]
+body = "Revoke \"{{name}}\"? Any integration still using this key will immediately start receiving 401 errors. This can't be undone."
+cancel = "Cancel"
+confirm = "Revoke key"
+title = "Revoke API key"
+
 [portal.infrastructure.attestationLabel]
 attested = "Attested"
 inScope = "In scope"

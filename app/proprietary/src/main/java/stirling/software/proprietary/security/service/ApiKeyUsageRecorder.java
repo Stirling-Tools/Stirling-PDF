@@ -34,12 +34,27 @@ public class ApiKeyUsageRecorder {
             // race) increments. Separate transactions mean a unique-key clash never rolls back an
             // already-counted request.
             if (writer.increment(apiKeyId, epochDay) == 0
-                    && !writer.tryInsertFirstUse(apiKeyId, epochDay)) {
+                    && !firstUseInserted(apiKeyId, epochDay)) {
                 writer.increment(apiKeyId, epochDay);
             }
             writer.stampLastUsed(apiKeyId);
         } catch (Exception e) {
             log.debug("Failed to record API key usage for id={}", apiKeyId, e);
+        }
+    }
+
+    /**
+     * Whether we inserted the day's first row. A lost insert race can surface either as a {@code
+     * false} return or - when the failed flush marked the REQUIRES_NEW transaction rollback-only,
+     * so its commit throws - as an exception; both mean "someone else inserted", so we treat any
+     * failure as not-inserted and let the caller fall back to an increment rather than dropping the
+     * count.
+     */
+    private boolean firstUseInserted(Long apiKeyId, long epochDay) {
+        try {
+            return writer.tryInsertFirstUse(apiKeyId, epochDay);
+        } catch (RuntimeException raced) {
+            return false;
         }
     }
 }

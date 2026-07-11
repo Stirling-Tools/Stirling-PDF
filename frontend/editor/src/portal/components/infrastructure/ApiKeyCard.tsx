@@ -16,7 +16,8 @@ export function ApiKeyCard({
   onRevoke,
 }: {
   apiKey: ApiKey;
-  onRevoke: (id: string) => void;
+  /** Ask to revoke this key; the parent confirms before the destructive call. */
+  onRevoke: (key: ApiKey) => void;
 }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -90,7 +91,7 @@ export function ApiKeyCard({
                 variant="secondary"
                 accent="danger"
                 size="sm"
-                onClick={() => onRevoke(apiKey.id)}
+                onClick={() => onRevoke(apiKey)}
               >
                 {t("portal.infrastructure.apiKeys.card.revoke")}
               </Button>

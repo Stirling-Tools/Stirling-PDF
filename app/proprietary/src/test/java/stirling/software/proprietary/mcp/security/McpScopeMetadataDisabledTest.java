@@ -101,5 +101,14 @@ class McpScopeMetadataDisabledTest {
         UserService userService() {
             return org.mockito.Mockito.mock(UserService.class);
         }
+
+        // Constructor dependency of McpSecurityConfig; unused on the OAuth chain.
+        @Bean
+        stirling.software.proprietary.security.service.ApiKeyAuthenticationService
+                apiKeyAuthenticationService() {
+            return org.mockito.Mockito.mock(
+                    stirling.software.proprietary.security.service.ApiKeyAuthenticationService
+                            .class);
+        }
     }
 }
