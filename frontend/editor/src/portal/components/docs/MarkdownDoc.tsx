@@ -65,8 +65,10 @@ function buildComponents(onNavigate: (docId: string) => void): Components {
         </a>
       );
     },
+    // Eager, not lazy: lazy-loading inside the docs' own scroll container isn't
+    // reliably triggered, and docs pages have only a handful of images.
     img: ({ node: _node, ...props }) => (
-      <img {...props} loading="lazy" className="portal-docs__md-img" />
+      <img {...props} className="portal-docs__md-img" />
     ),
     pre: ({ children }) => {
       const code = isValidElement(children)
