@@ -17,6 +17,9 @@ public class InfraAuditSummary {
     @Schema(description = "Total events in the returned window", example = "40")
     private int totalEvents;
 
+    @Schema(description = "Policy-run events", example = "3")
+    private int policy;
+
     @Schema(description = "Processing-category events", example = "24")
     private int processing;
 
