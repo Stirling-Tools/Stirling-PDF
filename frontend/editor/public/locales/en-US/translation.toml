@@ -6253,13 +6253,28 @@ redirectingToEditor = "Redirecting to the editor..."
 
 [portal.billing.checkout]
 noClientSecret = "Edge function returned no client_secret."
+stepCount = "Step {{step}} of 2"
 subtitle = "Add a card to keep going past your free Editor-plan grant. Stripe handles the rest."
-title = "Turn on the Processor plan"
+title = "Add a payment method"
 
 [portal.billing.checkout.activationSlow]
 body = "Your payment succeeded, but activation is taking a little longer than usual. It'll switch on automatically - close this and it'll appear here shortly."
 close = "Close"
 title = "Almost there"
+
+[portal.billing.checkout.cap]
+back = "Back"
+continue = "Continue to payment"
+error = "Couldn't set your spend limit"
+finePrint = "Invoices post on the 1st. Cancel anytime and revert to the Editor plan; your policies and history stay intact."
+note = "Processing pauses if you reach it. You're never billed past this, and you can change it any time."
+subtitle = "You're billed only for PDFs you process past your first 500 free, never for seats — so your ceiling is yours from day one."
+title = "Set your spend limit"
+
+[portal.billing.checkout.card]
+fields = "Card number · MM / YY · CVC · ZIP"
+label = "Card details"
+note = "Card details collected by Stripe. Stirling never stores PAN or CVC."
 
 [portal.billing.checkout.error]
 title = "Couldn't start checkout"
@@ -6268,11 +6283,6 @@ title = "Couldn't start checkout"
 body = "Your payment went through. We're switching on metered processing across your linked instances - this usually takes a few seconds."
 hint = "Please keep this window open."
 title = "Activating your Processor plan..."
-
-[portal.billing.checkout.notConfigured]
-bodyAfter = "in the portal env to enable in-app checkout."
-bodyBefore = "Set"
-title = "Stripe not configured"
 
 [portal.billing.enterpriseUpsell]
 cta = "Explore Enterprise"
