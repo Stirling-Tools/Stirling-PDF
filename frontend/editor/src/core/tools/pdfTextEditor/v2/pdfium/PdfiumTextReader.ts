@@ -53,12 +53,32 @@ export class PdfiumTextReader {
     const runs: TextRun[] = [];
     const images: ImageObject[] = [];
 
-    // Recurse into form xobjects: InDesign/Quark wrap content in
-    // FPDF_PAGEOBJ_FORM containers and the real text/images only show
-    // up when we descend with FPDFFormObj_GetObject. The identity
-    // transform accumulates each form's matrix so nested objects'
-    // form-local bounds are lifted into page space.
-    walkObjects(m, pagePtr, count, runs, images, doc, page, [], 0, IDENTITY);
+    // ONE text page for the whole walk: FPDFText_LoadPage runs full page
+    // text extraction, so opening it per text object made population
+    // O(objects x page chars) - seconds of frozen UI on dense pages.
+    const textPagePtr = m.FPDFText_LoadPage(pagePtr);
+    try {
+      // Recurse into form xobjects: InDesign/Quark wrap content in
+      // FPDF_PAGEOBJ_FORM containers and the real text/images only show
+      // up when we descend with FPDFFormObj_GetObject. The identity
+      // transform accumulates each form's matrix so nested objects'
+      // form-local bounds are lifted into page space.
+      walkObjects(
+        m,
+        pagePtr,
+        count,
+        runs,
+        images,
+        doc,
+        page,
+        [],
+        0,
+        IDENTITY,
+        textPagePtr,
+      );
+    } finally {
+      m.FPDFText_ClosePage(textPagePtr);
+    }
 
     page.setRuns(runs);
     page.setImages(images);
@@ -94,6 +114,7 @@ function walkObjects(
   path: number[],
   depth: number,
   transform: Affine,
+  textPagePtr: number,
 ): void {
   const MAX_DEPTH = 4;
   const formModule = m as PdfiumWithForms;
@@ -112,7 +133,15 @@ function walkObjects(
     const type = m.FPDFPageObj_GetType(objPtr);
     if (type === FPDF_PAGEOBJ_TEXT) {
       const indexId = [...path, i].join("-");
-      const run = readTextRun(m, doc, page, objPtr, indexId, transform);
+      const run = readTextRun(
+        m,
+        doc,
+        page,
+        objPtr,
+        indexId,
+        transform,
+        textPagePtr,
+      );
       if (run) {
         run.containerPtr = containerPtr;
         run.topLevelContainerPtr = topLevelContainerPtr;
@@ -144,6 +173,7 @@ function walkObjects(
           [...path, i],
           depth + 1,
           childTransform,
+          textPagePtr,
         );
       }
     }
@@ -351,11 +381,15 @@ function readTextRun(
   objPtr: number,
   index: number | string,
   transform: Affine,
+  textPagePtr: number,
 ): TextRun | null {
-  const textPagePtr = m.FPDFText_LoadPage(page.pagePtr);
-  try {
+  {
     const text = readTextObjString(m, textPagePtr, objPtr);
     if (!text || text.length === 0) return null;
+    // Whitespace-only objects (positional space glyphs) would surface as
+    // invisible, selectable, editable ghost runs - skip them. The PDF
+    // objects themselves stay untouched.
+    if (text.trim().length === 0) return null;
 
     const localBounds = readBounds(m, objPtr);
     if (!localBounds) return null;
@@ -397,6 +431,25 @@ function readTextRun(
     // Treat the PDFium font handle pointer as a unique id within the doc.
     const fontId = fontPtr ? `pdf:${fontPtr}` : `pdf:unknown-${index}`;
 
+    // Text render mode (PDF Tr): 0 fill (default), 1/2 stroke variants,
+    // 3 invisible (OCR text layers over scans), 4-7 clipping variants.
+    // Captured so re-emits can re-apply it - otherwise editing invisible
+    // OCR text stamps VISIBLE glyphs over the scan.
+    let renderMode = 0;
+    const rm = (
+      m as unknown as {
+        FPDFTextObj_GetTextRenderMode?: (obj: number) => number;
+      }
+    ).FPDFTextObj_GetTextRenderMode;
+    if (rm) {
+      try {
+        const v = rm(objPtr);
+        if (Number.isInteger(v) && v >= 0 && v <= 7) renderMode = v;
+      } catch {
+        /* keep default */
+      }
+    }
+
     return new TextRun({
       id: `p${page.index}-t${index}`,
       pageIndex: page.index,
@@ -408,9 +461,8 @@ function readTextRun(
       fontSize,
       fill,
       fontSubset: subset,
+      renderMode,
     });
-  } finally {
-    m.FPDFText_ClosePage(textPagePtr);
   }
 }
 

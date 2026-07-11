@@ -75,32 +75,52 @@ export class SetFontFamilyCommand implements Command {
       run.paragraphLineHeight > 0
         ? run.paragraphLineHeight
         : run.fontSize * 1.2;
-    const lines = run.text.split(/\r?\n/);
     // Step lines along the rotated down-axis (sin,-cos) so a rotated paragraph
     // keeps its baseline grid; upright reduces to straight-down Y.
     const rot = rotationFromMatrix(run.matrix);
     const dcos = rot ? rot.cos : 1;
     const dsin = rot ? rot.sin : 0;
+    // Prefer per-line SLOT ranges: run.text joins SOFT-wrapped lines with
+    // separators a \n split can't see, so splitting on \n collapsed every
+    // soft-wrapped paragraph onto one baseline per hard line. Slots also
+    // carry each line's true anchor, preserving indents/centering.
+    const slots = run.paragraphLineSlots;
+    const emitLines: Array<{ text: string; x: number; y: number }> =
+      slots.length > 0
+        ? slots.map((s) => ({
+            text: run.text
+              .slice(
+                Math.max(0, s.startChar),
+                Math.min(run.text.length, s.endChar),
+              )
+              .replace(/[\r\n]+$/, ""),
+            x: s.matrixE,
+            y: s.baselineY,
+          }))
+        : run.text.split(/\r?\n/).map((text, i) => ({
+            text,
+            x: run.matrix.e + i * lineHeight * dsin,
+            y: run.matrix.f - i * lineHeight * dcos,
+          }));
     const lineAnchors: number[] = [];
     const memberFs: number[] = [];
     const leaf: number[] = [];
     const created: number[] = [];
-    for (let i = 0; i < lines.length; i++) {
-      const x = run.matrix.e + i * lineHeight * dsin;
-      const y = run.matrix.f - i * lineHeight * dcos;
-      memberFs.push(y);
-      if (lines[i].length === 0) {
+    for (const line of emitLines) {
+      memberFs.push(line.y);
+      if (line.text.length === 0) {
         lineAnchors.push(0);
         continue;
       }
       const ptrs = emitTextLine({
         doc,
         page,
-        text: lines[i],
-        x,
-        y,
+        text: line.text,
+        x: line.x,
+        y: line.y,
         fontSize: run.fontSize,
         fill: run.fill,
+        renderMode: run.renderMode,
         originalFontPtr: 0, // base-14: never reuse the source font
         fallbackFamily: this.nextFamily,
         // Keep the run's rotation on re-emit (no-op for upright text).
@@ -115,6 +135,10 @@ export class SetFontFamilyCommand implements Command {
       // Nothing emitted (e.g. all-whitespace dropped) - restore and bail.
       this.reinsertOriginals(m, page);
       restoreRun(run, this.prev);
+      // Neutralise the command: it still lands in history, and a revert
+      // with `prev` set would reinsert the originals a SECOND time
+      // (double-inserted page objects, double paint).
+      this.prev = null;
       return;
     }
 
@@ -137,7 +161,7 @@ export class SetFontFamilyCommand implements Command {
     run.paragraphMemberFs = memberFs;
     run.paragraphLeafPtrs = leaf;
     run.paragraphLeafContainers = leaf.map(() => 0);
-    if (lines.length > 1) {
+    if (emitLines.length > 1) {
       run.paragraphLineHeight = lineHeight;
     }
     run.containerPtr = 0;

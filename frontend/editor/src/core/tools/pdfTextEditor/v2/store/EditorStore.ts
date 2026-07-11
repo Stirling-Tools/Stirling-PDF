@@ -110,8 +110,12 @@ export class EditorStore {
   private doc: EditorDocument | null;
   private state: EditorViewState;
   private listeners: Set<(s: EditorViewState) => void>;
-  /** Undo-stack depth at the last save; the doc is dirty when it differs. */
-  private savedUndoDepth = 0;
+  /**
+   * The undo-stack TOP at the last save; the doc is dirty when the current
+   * top is a different command object. Depth comparison lied after
+   * save -> undo -> new edit (same depth, different state).
+   */
+  private savedTop: Command | null = null;
   /** True when edits were baked into the stream (e.g. grouping-mode switch). */
   private bakedDirty = false;
   /** Monotonic token so a superseded async load can detect it lost the race. */
@@ -237,7 +241,7 @@ export class EditorStore {
       PdfiumTextReader.populate(doc, page, mode);
     }
     this.history.clear();
-    this.savedUndoDepth = 0;
+    this.savedTop = null;
     this.bakedDirty = wasDirty;
     this.selection.clear();
     const pages: PageSnapshot[] = this.state.pages.map((p) => {
@@ -271,7 +275,7 @@ export class EditorStore {
     resetCharcodeCaches();
     this.doc = doc;
     this.history.clear();
-    this.savedUndoDepth = 0;
+    this.savedTop = null;
     this.bakedDirty = false;
     this.selection.clear();
     this._pendingPasswordFile = null;
@@ -291,7 +295,7 @@ export class EditorStore {
     this.disposeDocumentIfAny();
     resetCharcodeCaches();
     this.history.clear();
-    this.savedUndoDepth = 0;
+    this.savedTop = null;
     this.bakedDirty = false;
     this.selection.clear();
     this._pendingPasswordFile = null;
@@ -303,7 +307,7 @@ export class EditorStore {
   markSaved(): void {
     // Break the coalesce burst so a post-save keystroke is a new dirtying step.
     this.history.breakCoalescing();
-    this.savedUndoDepth = this.history.size().undo;
+    this.savedTop = this.history.peekUndo();
     this.bakedDirty = false;
     this.patch({ dirty: false });
   }
@@ -380,14 +384,15 @@ export class EditorStore {
   }
 
   /**
-   * Document-level dirty bit. Derived from the undo-stack depth relative
-   * to the last save (plus a baked-edit flag) rather than per-page
-   * `page.dirty`, because a command's revert can't clear `page.dirty` -
-   * so undoing every edit must still report the doc as clean.
+   * Document-level dirty bit. Derived from the undo-stack TOP identity
+   * relative to the last save (plus a baked-edit flag) rather than
+   * per-page `page.dirty`, because a command's revert can't clear
+   * `page.dirty` - so undoing every edit must still report the doc as
+   * clean.
    */
   private isDirty(): boolean {
     if (!this.doc) return false;
-    return this.bakedDirty || this.history.size().undo !== this.savedUndoDepth;
+    return this.bakedDirty || this.history.peekUndo() !== this.savedTop;
   }
 
   private patch(partial: Partial<EditorViewState>): void {

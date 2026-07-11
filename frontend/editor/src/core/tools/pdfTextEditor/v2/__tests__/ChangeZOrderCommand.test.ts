@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { ChangeZOrderCommand } from "@app/tools/pdfTextEditor/v2/commands/ChangeZOrderCommand";
 import { Page } from "@app/tools/pdfTextEditor/v2/model/Page";
 import { ImageObject } from "@app/tools/pdfTextEditor/v2/model/ImageObject";
+import { TextRun } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
 
 /**
@@ -107,5 +108,38 @@ describe("ChangeZOrderCommand", () => {
 
     expect(objs).toEqual([7, 9, 42]);
     expect(page.revision).toBe(rev0);
+  });
+
+  it("send-to-back moves a NON-CONTIGUOUS member group whose bottom sits at index 0", () => {
+    // Run leaf objects M1=5, M2=9 at page indices [0, 2] with unrelated X=7
+    // between them: [M1, X, M2]. A blanket `bottomIdx===0` no-op guard wrongly
+    // skipped this; the whole group must land at the back -> [M1, M2, X].
+    const page = new Page({ index: 0, pagePtr: 1, width: 100, height: 100 });
+    const run = new TextRun({
+      id: "run1",
+      pageIndex: 0,
+      pdfiumObjPtr: 5,
+      bounds: { x: 0, y: 0, width: 10, height: 10 },
+      matrix: { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 },
+      text: "hi",
+      fontId: "base14:Helvetica",
+      fontSize: 12,
+      fill: { r: 0, g: 0, b: 0, a: 255 },
+      fontSubset: false,
+    });
+    run.paragraphLeafPtrs = [5, 9];
+    run.paragraphLeafContainers = [0, 0];
+    page.setRuns([run]);
+    const objs = [5, 7, 9];
+    const doc = fakeDoc(objs, page);
+
+    new ChangeZOrderCommand({
+      pageIndex: 0,
+      runId: "run1",
+      mode: "to-back",
+    }).apply(doc);
+
+    expect(objs).toEqual([5, 9, 7]); // both members now under X
+    expect(page.needsGenerateContent).toBe(true);
   });
 });

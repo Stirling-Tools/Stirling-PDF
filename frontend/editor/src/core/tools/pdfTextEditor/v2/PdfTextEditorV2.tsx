@@ -23,6 +23,7 @@ import { PageStage } from "@app/tools/pdfTextEditor/v2/components/PageStage";
 import { InsertImageCommand } from "@app/tools/pdfTextEditor/v2/commands/InsertImageCommand";
 import { InsertTextCommand } from "@app/tools/pdfTextEditor/v2/commands/InsertTextCommand";
 import { DisplayTransform } from "@app/tools/pdfTextEditor/v2/model/DisplayTransform";
+import { jpegExifOrientation } from "@app/tools/pdfTextEditor/v2/util/jpegOrientation";
 import { MergeRunsCommand } from "@app/tools/pdfTextEditor/v2/commands/MergeRunsCommand";
 import { UngroupParagraphCommand } from "@app/tools/pdfTextEditor/v2/commands/UngroupParagraphCommand";
 import { exportToBlob } from "@app/tools/pdfTextEditor/v2/util/exportPdf";
@@ -78,7 +79,11 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
   // Pending save-risk warning (signatures/XFA) shown before the actual save.
   const [saveRisks, setSaveRisks] = useState<SaveRisks | null>(null);
   // docPtr the user already acknowledged risks for, so we don't re-nag.
-  const ackedRiskDocRef = useRef<number | null>(null);
+  // Keyed by document OBJECT identity + the acked risk SET: the raw docPtr
+  // is allocator-reused across documents (a later doc could inherit the
+  // ack), and a risk that APPEARS after the first ack (e.g. chars dropped
+  // by a later edit) must re-warn.
+  const ackedRiskRef = useRef<{ doc: object; sig: string } | null>(null);
 
   const doSave = useCallback(async () => {
     if (!store.document || savingRef.current) return;
@@ -88,7 +93,7 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
       // Yield once so React can paint the disabled/saving state before the
       // synchronous PDFium serialize blocks the main thread.
       await new Promise((resolve) => setTimeout(resolve, 0));
-      const { blob, filename } = exportToBlob(store.document);
+      const { blob, filename } = exportToBlob(store.document, openedFileName);
       downloadBlob(blob, filename);
       store.markSaved();
     } catch (err) {
@@ -98,25 +103,33 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
     } finally {
       savingRef.current = false;
     }
-  }, [store]);
+  }, [store, openedFileName]);
 
   const handleSave = useCallback(async () => {
     const doc = store.document;
     if (!doc || savingRef.current) return;
-    // Warn once per document if the save would damage signatures/XFA.
-    if (ackedRiskDocRef.current !== doc.docPtr) {
-      const risks = detectSaveRisks(doc);
-      if (hasSaveRisks(risks)) {
+    // Re-evaluate on EVERY save: the ack only covers the exact risk set
+    // the user saw. A new risk appearing later must warn again.
+    const risks = detectSaveRisks(doc);
+    if (hasSaveRisks(risks)) {
+      const sig = JSON.stringify(risks);
+      const acked = ackedRiskRef.current;
+      if (!acked || acked.doc !== doc || acked.sig !== sig) {
         setSaveRisks(risks);
         return;
       }
-      ackedRiskDocRef.current = doc.docPtr;
     }
     await doSave();
   }, [store, doSave]);
 
   const handleConfirmSaveRisk = useCallback(() => {
-    if (store.document) ackedRiskDocRef.current = store.document.docPtr;
+    const doc = store.document;
+    if (doc) {
+      ackedRiskRef.current = {
+        doc,
+        sig: JSON.stringify(detectSaveRisks(doc)),
+      };
+    }
     setSaveRisks(null);
     void doSave();
   }, [store, doSave]);
@@ -150,6 +163,10 @@ export default function PdfTextEditorV2(_props: BaseToolProps) {
       if (file.type === "image/jpeg") {
         try {
           jpegBytes = new Uint8Array(await file.arrayBuffer());
+          // The <img> decode above APPLIES EXIF orientation; the raw bytes
+          // don't. Passing rotated bytes through embedded phone photos
+          // sideways with swapped aspect - use the upright bitmap instead.
+          if (jpegExifOrientation(jpegBytes) !== 1) jpegBytes = undefined;
         } catch {
           jpegBytes = undefined; // fall back to the bitmap path
         }

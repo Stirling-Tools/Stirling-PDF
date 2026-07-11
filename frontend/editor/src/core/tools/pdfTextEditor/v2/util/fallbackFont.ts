@@ -4,6 +4,7 @@ import type { RGBA } from "@app/tools/pdfTextEditor/v2/types";
 import { FontRef } from "@app/tools/pdfTextEditor/v2/model/FontRef";
 import { parseTrueTypeCmap } from "@app/tools/pdfTextEditor/v2/charcode/CmapResolver";
 import { writeUtf16 } from "@app/services/pdfiumService";
+import { BASE_PATH } from "@app/constants/app";
 
 /**
  * Client-side Unicode fallback font.
@@ -19,7 +20,9 @@ import { writeUtf16 } from "@app/services/pdfiumService";
  * old drop behaviour - so this is strictly additive (Latin edits are byte-for-
  * byte unchanged; only the previously-broken non-Latin path improves).
  */
-const FALLBACK_FONT_URL = "/fonts/NotoSans-Regular.ttf";
+// BASE_PATH-prefixed: a bare "/fonts/..." 404s on subpath deployments
+// (context-path / RUN_SUBPATH installs), permanently disabling the fallback.
+const FALLBACK_FONT_URL = `${BASE_PATH}/fonts/NotoSans-Regular.ttf`;
 const FALLBACK_FONT_ID = "__v2_unicode_fallback";
 // FPDF_FONT_TRUETYPE; the trailing `true` makes it a composite (CID) font so
 // FPDFText_SetText can address Unicode code points beyond 255.
@@ -57,10 +60,16 @@ export function preloadFallbackFontBytes(): Promise<Uint8Array | null> {
   bytesPromise = (async () => {
     try {
       const res = await fetch(FALLBACK_FONT_URL);
-      if (!res.ok) return null;
+      if (!res.ok) {
+        // Don't cache the failure: a transient 404/503 would otherwise
+        // disable the Unicode fallback for the whole session.
+        bytesPromise = null;
+        return null;
+      }
       cachedBytes = new Uint8Array(await res.arrayBuffer());
       return cachedBytes;
     } catch {
+      bytesPromise = null;
       return null;
     }
   })();

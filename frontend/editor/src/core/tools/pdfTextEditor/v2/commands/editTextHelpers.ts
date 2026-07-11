@@ -251,6 +251,13 @@ interface CreatedTextOptions {
   /** Base-14 family used when `originalFontPtr` is zero. Defaults to Helvetica. */
   fallbackFamily?: string;
   /**
+   * The source run's PDF text render mode (Tr). When set and non-zero,
+   * every emitted object gets it re-applied - without this, re-emitting
+   * INVISIBLE (mode 3) OCR text stamps visible glyphs over the scan, and
+   * stroke-mode text silently turns filled.
+   */
+  renderMode?: number;
+  /**
    * The run's on-page rotation (normalised cos/sin of its text matrix). When
    * set, every emitted object is rotated about the line anchor (opts.x, opts.y)
    * so an edit keeps the run's orientation instead of forcing it upright.
@@ -284,10 +291,25 @@ function measureCtx(): CanvasRenderingContext2D | null {
 }
 
 /**
- * Measure the natural advance width of `s` in CSS pixels for the given
- * Helvetica variant + point size, then convert to PDF points (1pt =
- * 1px at 1.0 canvas scale - the canvas API uses CSS pixels which
- * correspond 1:1 with points when the font size is given in pt).
+ * Map a base-14 PostScript name to a CSS font spec the browser actually
+ * has. PS names ("Times-Roman", "Courier-BoldOblique") are not CSS
+ * families, so using them verbatim measured the default fallback font.
+ */
+export function cssFontSpecFor(fontFamily: string, sizePx: number): string {
+  const f = fontFamily.toLowerCase();
+  const bold = f.includes("bold") ? "bold " : "";
+  const italic = f.includes("italic") || f.includes("oblique") ? "italic " : "";
+  let stack = "Helvetica, Arial, sans-serif";
+  if (f.startsWith("times")) stack = "'Times New Roman', Times, serif";
+  else if (f.startsWith("courier")) stack = "'Courier New', Courier, monospace";
+  return `${italic}${bold}${sizePx}px ${stack}`;
+}
+
+/**
+ * Measure the natural advance width of `s` in PDF points. The canvas is
+ * sized in px on purpose: a `${n}px` font measured in px returns the same
+ * NUMBER as an n-pt font measured in pt (advance scales linearly), whereas
+ * a `${n}pt` font returns CSS px = 4/3x the point width.
  */
 function measureAdvancePt(
   text: string,
@@ -296,7 +318,7 @@ function measureAdvancePt(
 ): number {
   const ctx = measureCtx();
   if (!ctx) return text.length * fontSizePt * 0.5;
-  ctx.font = `${fontSizePt}pt ${fontFamily}`;
+  ctx.font = cssFontSpecFor(fontFamily, fontSizePt);
   return ctx.measureText(text).width;
 }
 
@@ -595,6 +617,30 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     if (rot) {
       for (const p of ptrs) {
         if (p) rotateObjectAbout(m, p, opts.x, opts.y, rot.cos, rot.sin);
+      }
+    }
+    // Every successful emit path funnels through here, so this is the one
+    // choke point to re-apply the source run's render mode (Tr) - new
+    // objects default to fill mode 0.
+    const mode = opts.renderMode ?? 0;
+    if (mode !== 0) {
+      const setMode = (
+        m as unknown as {
+          FPDFTextObj_SetTextRenderMode?: (
+            obj: number,
+            mode: number,
+          ) => boolean;
+        }
+      ).FPDFTextObj_SetTextRenderMode;
+      if (setMode) {
+        for (const p of ptrs) {
+          if (!p) continue;
+          try {
+            setMode(p, mode);
+          } catch {
+            /* best-effort */
+          }
+        }
       }
     }
     return ptrs;
@@ -961,7 +1007,18 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
           pc.font,
           size,
         );
-        if (!ptr) continue;
+        if (!ptr) {
+          // CreateTextObj failed mid-word. Tear down every per-char object
+          // already emitted, exactly like the setCharcodesOn failure below -
+          // leaving them would double-render the word when the fall-through
+          // re-emits it.
+          for (const p of ptrs) {
+            perCharBranchPtrs.delete(p);
+            removeAndDestroyObject(m, opts.page.pagePtr, p);
+          }
+          ptrs.length = 0;
+          break;
+        }
         const ok = setCharcodesOn(m, ptr, pc.charcodes);
         if (!ok) {
           // Couldn't set charcodes - rare but possible. Tear down the
@@ -970,7 +1027,10 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
           // ptrs on the page would double-render the word (the fall-through
           // re-emits it) and leak them.
           removeAndDestroyObject(m, opts.page.pagePtr, ptr);
-          for (const p of ptrs) removeAndDestroyObject(m, opts.page.pagePtr, p);
+          for (const p of ptrs) {
+            perCharBranchPtrs.delete(p);
+            removeAndDestroyObject(m, opts.page.pagePtr, p);
+          }
           ptrs.length = 0;
           break;
         }
@@ -1014,6 +1074,12 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         perCharBranchPtrs.add(ptr);
       }
       if (ptrs.length === opts.text.length) return withRotation(ptrs);
+      // Any other incomplete outcome: destroy the partial emit before the
+      // fall-through path re-renders the word.
+      for (const p of ptrs) {
+        perCharBranchPtrs.delete(p);
+        removeAndDestroyObject(m, opts.page.pagePtr, p);
+      }
     }
     // fall through to the normal path if per-char attempt didn't work
   }
@@ -1027,9 +1093,8 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
 
   // Per-chunk emit (split on ANY whitespace run). After each emit we
   // read the actual right edge from PDFium so the next chunk's x is
-  // exact - canvas measureText uses the browser's Helvetica fallback
-  // (often Liberation Sans) which overestimates Helvetica's advance by
-  // 15-20% and would leave huge gaps between chunks otherwise.
+  // exact; canvas measurement only feeds the inter-chunk gaps and the
+  // no-ink fallback.
   const chunks = splitIntoWordChunks(opts.text, family, size) as WordChunk[] & {
     leadingGapPt?: number;
   };
@@ -1037,14 +1102,27 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
   let cursor = opts.x + (chunks.leadingGapPt ?? 0);
   for (const chunk of chunks) {
     if (chunk.text.length > 0) {
-      const ptr = emitWord(chunk.text, cursor);
-      if (!ptr) continue;
-      const measured = measureObjRightEdgePt(m, ptr);
+      // Recurse per word (a chunk has no whitespace, so this hits the
+      // fast path incl. the per-char backend branch - previously only
+      // whole whitespace-free inserts got per-char font resolution and
+      // multi-word text degraded straight to the fallback family).
+      // Rotation stays undefined here: the outer withRotation rotates
+      // every collected ptr about the LINE anchor exactly once.
+      const wordPtrs = emitTextLine({
+        ...opts,
+        text: chunk.text,
+        x: cursor,
+        rotation: undefined,
+      });
+      if (wordPtrs.length === 0) continue;
+      let rightEdge = 0;
+      for (const p of wordPtrs)
+        rightEdge = Math.max(rightEdge, measureObjRightEdgePt(m, p));
       cursor =
-        measured > cursor
-          ? measured
+        rightEdge > cursor
+          ? rightEdge
           : cursor + measureAdvancePt(chunk.text, family, size);
-      ptrs.push(ptr);
+      ptrs.push(...wordPtrs);
     }
     cursor += chunk.gapAfterPt;
   }

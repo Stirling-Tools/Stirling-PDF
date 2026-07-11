@@ -67,6 +67,12 @@ export class TextRun {
   fontSize: number;
   fill: RGBA;
   fontSubset: boolean;
+  /**
+   * PDF text render mode (Tr): 0 fill, 1/2 stroke variants, 3 invisible
+   * (OCR layers over scans), 4-7 clipping. Re-emits re-apply it so
+   * editing invisible text never stamps visible glyphs onto a scan.
+   */
+  renderMode: number;
   /** True when the run has uncommitted mutation. */
   dirty: boolean;
   /**
@@ -197,6 +203,7 @@ export class TextRun {
     this.fontSize = init.fontSize;
     this.fill = init.fill;
     this.fontSubset = init.fontSubset;
+    this.renderMode = init.renderMode ?? 0;
     this.dirty = false;
     this.mergedFromPtrs = [];
     this.mergedFromTexts = [];
@@ -229,6 +236,7 @@ export class TextRun {
       fontSize: this.fontSize,
       fill: { ...this.fill },
       fontSubset: this.fontSubset,
+      renderMode: this.renderMode || undefined,
       paragraphLineHeight: this.paragraphLineHeight,
       paragraphLineCount: this.paragraphMemberPtrs.length || undefined,
       locked: this.locked || undefined,

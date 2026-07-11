@@ -48,6 +48,11 @@ export class HistoryStack {
     return { undo: this.undoStack.length, redo: this.redoStack.length };
   }
 
+  /** The command a plain undo would revert next (null when empty). */
+  peekUndo(): Command | null {
+    return this.undoStack[this.undoStack.length - 1] ?? null;
+  }
+
   execute(cmd: Command, doc: EditorDocument): void {
     cmd.apply(doc);
     const key = cmd.coalesceKey?.() ?? null;

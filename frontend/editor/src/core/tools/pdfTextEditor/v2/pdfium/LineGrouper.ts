@@ -212,10 +212,14 @@ export class LineGrouper {
         // PDFium-reported bounds.x is the leftmost glyph edge (after side
         // bearings) so the visible gap runs wider. 0.4 calibrates so a
         // 2-space typed gap reads back as 2 spaces after the round trip.
+        // floor(+0.25) instead of round: JUSTIFIED text stretches single
+        // spaces to ~1.2-1.7x, which round() turned into phantom double
+        // spaces baked into run.text (corrupting find + re-emits). A real
+        // 2-space gap (~2x) still reads back as 2.
         const spaceWidth = 0.4 * Math.max(prev.fontSize, 4);
         const extraSpaces =
           gap > 0.2 * Math.max(prev.fontSize, 4)
-            ? Math.max(1, Math.round(gap / Math.max(1, spaceWidth)))
+            ? Math.max(1, Math.floor(gap / Math.max(1, spaceWidth) + 0.25))
             : 0;
         const prevEndsInSpace = /\s/.test(prevTail);
         const curStartsWithSpace = /\s/.test(curHead);

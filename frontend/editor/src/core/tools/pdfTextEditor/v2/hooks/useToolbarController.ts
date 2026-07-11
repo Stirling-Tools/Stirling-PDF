@@ -6,6 +6,7 @@ import {
   type ZOrderMode,
 } from "@app/tools/pdfTextEditor/v2/commands/ChangeZOrderCommand";
 import { EditTextCommand } from "@app/tools/pdfTextEditor/v2/commands/EditTextCommand";
+import { CompositeCommand } from "@app/tools/pdfTextEditor/v2/commands/CompositeCommand";
 import { MoveTextRunCommand } from "@app/tools/pdfTextEditor/v2/commands/MoveTextRunCommand";
 import { SetImageTransformCommand } from "@app/tools/pdfTextEditor/v2/commands/SetImageTransformCommand";
 import { SetLockCommand } from "@app/tools/pdfTextEditor/v2/commands/SetLockCommand";
@@ -330,20 +331,28 @@ export function useToolbarController(
           case "lower":
             return s.toLowerCase();
           case "title":
+            // \p{L}/u instead of \b\w: ASCII word chars mis-cased accented
+            // and non-Latin letters ("elan" with acute became "eLan").
             return s.replace(
-              /\b\w[\w']*/g,
-              (w) => w[0].toUpperCase() + w.slice(1).toLowerCase(),
+              /(^|[^\p{L}\p{N}'])([\p{L}\p{N}][\p{L}\p{N}']*)/gu,
+              (_m, sep: string, w: string) =>
+                sep + w[0].toUpperCase() + w.slice(1).toLowerCase(),
             );
           case "sentence":
-            return s.replace(/(^\s*\w|[.!?]\s+\w)/g, (m) => m.toUpperCase());
+            return s.replace(/(^\s*\p{L}|[.!?]\s+\p{L})/gu, (m) =>
+              m.toUpperCase(),
+            );
         }
       };
+      // One composite = one undo step for the whole selection, and locked
+      // runs are exempt like every other bulk mutation.
+      const cmds: EditTextCommand[] = [];
       for (const p of doc.loadedPages()) {
         for (const r of p.runs) {
-          if (!selIds.has(r.id)) continue;
+          if (!selIds.has(r.id) || r.locked) continue;
           const next = transform(r.text);
           if (next === r.text) continue;
-          store.dispatch(
+          cmds.push(
             new EditTextCommand({
               pageIndex: p.index,
               runId: r.id,
@@ -352,6 +361,8 @@ export function useToolbarController(
           );
         }
       }
+      if (cmds.length === 1) store.dispatch(cmds[0]);
+      else if (cmds.length > 1) store.dispatch(new CompositeCommand(cmds));
     },
     [store],
   );

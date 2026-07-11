@@ -7,6 +7,7 @@ import {
   counterPageRotation,
   rotateObjectAbout,
 } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
+import { imageMatrixBounds } from "@app/tools/pdfTextEditor/v2/model/affine";
 import {
   embedBitmapImageOnPage,
   embedJpegImageOnPage,
@@ -156,12 +157,17 @@ export class InsertImageCommand implements Command {
       id: imageId,
       pageIndex: page.index,
       pdfiumObjPtr: newObjPtr,
-      bounds: {
-        x: this.x,
-        y: this.y,
-        width: this.width,
-        height: this.height,
-      },
+      // On a /Rotate page the counter-rotated object's real AABB has
+      // swapped width/height vs the pre-rotation rect - storing the raw
+      // rect misplaced the selection handles until reload.
+      bounds: rot
+        ? imageMatrixBounds(matrix)
+        : {
+            x: this.x,
+            y: this.y,
+            width: this.width,
+            height: this.height,
+          },
       matrix,
     });
     page.setImages([...page.images, created]);

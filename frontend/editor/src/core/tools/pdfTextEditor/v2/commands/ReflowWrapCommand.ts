@@ -138,10 +138,26 @@ export class ReflowWrapCommand implements Command {
 
     this.prev = snapshotRun(run);
 
-    const lines: Word[][] = [[]];
-    const lineIsHardStart: boolean[] = [false];
+    // Blank lines BEFORE the first word have no glyphs, so topBaseline (the
+    // highest glyph) is already the first CONTENT line. Treating them as
+    // in-loop breaks pushed the content one lineHeight down on EVERY reflow
+    // (cumulative drift). Model them as virtual lines above the anchor:
+    // the content stays put and the blanks live in the text/slots only.
+    const leadingBreaks = hardBreaks.get(0) ?? 0;
+    if (leadingBreaks > 0) hardBreaks.delete(0);
+    const virtualTop = topBaseline + leadingBreaks * lineHeight;
+    const lines: Word[][] = [];
+    const lineIsHardStart: boolean[] = [];
+    for (let k = 0; k < leadingBreaks; k++) {
+      lines.push([]);
+      lineIsHardStart.push(true);
+    }
+    lines.push([]);
+    // After a leading blank the content line starts at a HARD break, or the
+    // rebuilt text would join the blank and the content with a space.
+    lineIsHardStart.push(leadingBreaks > 0);
     let cursorX = startX;
-    let lineIdx = 0;
+    let lineIdx = lines.length - 1;
     let cumNonWs = 0;
     for (const w of words) {
       const width = w.right - w.x;
@@ -151,6 +167,9 @@ export class ReflowWrapCommand implements Command {
       );
       const breakCount = hardBreaks.get(cumNonWs) ?? 0;
       const hardBreakHere = breakCount > 0;
+      // Consume the entry: a following word contributing zero non-ws chars
+      // (a standalone space object) must not re-apply the same break.
+      if (hardBreakHere) hardBreaks.delete(cumNonWs);
       const widthBreak =
         cursorX > startX && cursorX + width > startX + maxWidth;
       if (hardBreakHere || widthBreak) {
@@ -167,7 +186,7 @@ export class ReflowWrapCommand implements Command {
         cursorX = startX;
       }
       const targetX = cursorX;
-      const targetBaseline = topBaseline - lineIdx * lineHeight;
+      const targetBaseline = virtualTop - lineIdx * lineHeight;
       const dx = targetX - w.x;
       const dy = targetBaseline - w.baseline;
       if (Math.abs(dx) > 0.001 || Math.abs(dy) > 0.001) {
@@ -187,13 +206,22 @@ export class ReflowWrapCommand implements Command {
       cursorX = targetX + width + spaceWidth;
       cumNonWs += wordNonWs;
     }
+    // Hard breaks AFTER the last word (Enter at paragraph end) were never
+    // reached by the loop, so blur silently deleted the trailing blank
+    // lines. Emit them as empty lines below the content.
+    const trailingBreaks = hardBreaks.get(cumNonWs) ?? 0;
+    for (let k = 0; k < trailingBreaks; k++) {
+      lineIdx += 1;
+      lines.push([]);
+      lineIsHardStart.push(true);
+    }
 
     rebuildRunFromLines(
       run,
       lines,
       lineIsHardStart,
       startX,
-      topBaseline,
+      virtualTop,
       lineHeight,
       fontSize,
       this.prev.text,

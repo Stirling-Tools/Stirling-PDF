@@ -353,7 +353,19 @@ export function TextRunOverlay({
             )
           : undefined
       }
+      onPaste={(e) => {
+        // Paste as PLAIN TEXT. Rich HTML (coloured spans, images) renders
+        // in the contentEditable but can never survive into the PDF - the
+        // overlay would lie about what gets saved.
+        e.preventDefault();
+        const text = e.clipboardData?.getData("text/plain");
+        if (text) document.execCommand("insertText", false, text);
+      }}
       onPointerDown={(e) => {
+        // Ctrl+Shift+drag is the marquee multi-select gesture. Bail BEFORE
+        // stopPropagation so the stage's MarqueeSelector receives it -
+        // claiming it here silently MOVED the run instead.
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey) return;
         e.stopPropagation();
         // Locked runs are inert: no select, no drag, no edit. They
         // remain visible (the PDFium bitmap renders the source glyphs)

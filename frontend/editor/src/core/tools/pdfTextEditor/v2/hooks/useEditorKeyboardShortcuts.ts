@@ -3,6 +3,7 @@ import type { EditorStore } from "@app/tools/pdfTextEditor/v2/store/EditorStore"
 import {
   findVisiblePageIndex,
   isFocusInContentEditable,
+  isFocusInFormField,
   pageElements,
 } from "@app/tools/pdfTextEditor/v2/util/dom";
 
@@ -48,8 +49,14 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
     function onMetaKey(e: KeyboardEvent) {
       const meta = e.ctrlKey || e.metaKey;
       if (!meta) return;
-      switch (e.key) {
+      // Normalise: with Shift or CapsLock the letter arrives UPPERCASE, so
+      // matching e.key verbatim made every Shift-modified shortcut
+      // (Ctrl+Shift+Z redo, Ctrl+Shift+V paste-plain, Ctrl+Shift+G) dead
+      // and CapsLock leaked Ctrl+S to the browser's save-page dialog.
+      switch (e.key.toLowerCase()) {
         case "z":
+          // Form fields (Find/Replace/password) keep their NATIVE undo.
+          if (isFocusInFormField()) return;
           // Blur an active editable before history so the overlay sync
           // effect can rewrite the DOM from the reverted model.
           if (isFocusInContentEditable())
@@ -63,6 +70,7 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
           }
           return;
         case "y":
+          if (isFocusInFormField()) return;
           if (isFocusInContentEditable())
             (document.activeElement as HTMLElement | null)?.blur();
           e.preventDefault();
@@ -70,11 +78,18 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
           return;
         case "s":
           e.preventDefault();
+          // Commit the in-progress edit first: blur bakes the pending
+          // text + wrap reflow, otherwise the download misses them.
+          if (isFocusInContentEditable())
+            (document.activeElement as HTMLElement | null)?.blur();
           onSave();
           return;
         case "d":
-          if (store.selection.value.runIds.length === 0) return;
+          // No focus guard: duplicate must work while a run's editable is
+          // focused. Always claim the key - leaking it opens the browser
+          // bookmark dialog mid-session.
           e.preventDefault();
+          if (store.selection.value.runIds.length === 0) return;
           onDuplicate();
           return;
         case "a":

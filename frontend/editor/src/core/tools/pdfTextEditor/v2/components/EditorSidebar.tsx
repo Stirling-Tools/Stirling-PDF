@@ -343,14 +343,19 @@ function FontsHelp() {
           </Text>
           <Text size="xs" c="dimmed">
             <Text span fw={600} c="dimmed">
-              Existing text
+              {t("pdfTextEditorV2.fonts.help.existingLabel", "Existing text")}
             </Text>{" "}
-            always edits in its original font.{" "}
+            {t(
+              "pdfTextEditorV2.fonts.help.existingBody",
+              "always edits in its original font.",
+            )}{" "}
             <Text span fw={600} c="dimmed">
-              New characters
+              {t("pdfTextEditorV2.fonts.help.newLabel", "New characters")}
             </Text>{" "}
-            you type keep the original font only when that font includes them -
-            otherwise they fall back to a standard font (Helvetica).
+            {t(
+              "pdfTextEditorV2.fonts.help.newBody",
+              "you type keep the original font only when that font includes them - otherwise they fall back to a standard font (Helvetica).",
+            )}
           </Text>
           <Stack gap={4}>
             <FontsHelpRow

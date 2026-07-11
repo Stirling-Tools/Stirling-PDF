@@ -11,9 +11,11 @@ import {
   familyOf,
   flipBold,
   flipItalic,
+  helveticaWith,
   isBoldFamily,
   isItalicFamily,
 } from "@app/tools/pdfTextEditor/v2/util/fontFamily";
+import { CompositeCommand } from "@app/tools/pdfTextEditor/v2/commands/CompositeCommand";
 
 /**
  * Bundle of callbacks that operate on the current selection. Centralising
@@ -23,7 +25,12 @@ import {
 export function useSelectionActions(store: EditorStore) {
   const forEachSelectedRun = useCallback(
     (
-      visit: (run: { id: string; pageIndex: number; fontId: string }) => void,
+      visit: (run: {
+        id: string;
+        pageIndex: number;
+        fontId: string;
+        fill: { r: number; g: number; b: number; a: number };
+      }) => void,
     ) => {
       const sel = store.selection.value;
       const doc = store.document;
@@ -32,7 +39,10 @@ export function useSelectionActions(store: EditorStore) {
       const selIds = new Set(sel.runIds);
       for (const page of doc.loadedPages()) {
         for (const run of page.runs) {
-          if (selIds.has(run.id)) visit(run);
+          // Locked runs are selectable (Ctrl+A/marquee) but must not
+          // mutate - the overlay blocks direct edits, and these bulk
+          // paths previously bypassed the lock entirely.
+          if (selIds.has(run.id) && !run.locked) visit(run);
         }
       }
     },
@@ -63,7 +73,9 @@ export function useSelectionActions(store: EditorStore) {
           new SetColourCommand({
             pageIndex: run.pageIndex,
             runId: run.id,
-            nextFill: fill,
+            // The picker edits RGB only; keep each run's OWN alpha so
+            // recolouring semi-transparent text doesn't force it opaque.
+            nextFill: { ...fill, a: run.fill.a },
           }),
         ),
       );
@@ -96,9 +108,12 @@ export function useSelectionActions(store: EditorStore) {
       // Bold so the user CAN actually bold their text. Earlier this
       // path silently no-op'd and the Bold button appeared dead.
       const isOn = isBoldFamily(run.fontId);
+      // Preserve the OTHER style axis in the wholesale fallback: bolding an
+      // italic embedded font must land on Helvetica-BoldOblique, not strip
+      // the italic.
       const next =
         flipBold(familyOf(run.fontId), !isOn) ??
-        (isOn ? "Helvetica" : "Helvetica-Bold");
+        helveticaWith(!isOn, isItalicFamily(run.fontId));
       store.dispatch(
         new SetFontFamilyCommand({
           pageIndex: run.pageIndex,
@@ -116,7 +131,7 @@ export function useSelectionActions(store: EditorStore) {
       const isOn = isItalicFamily(run.fontId);
       const next =
         flipItalic(familyOf(run.fontId), !isOn) ??
-        (isOn ? "Helvetica" : "Helvetica-Oblique");
+        helveticaWith(isBoldFamily(run.fontId), !isOn);
       store.dispatch(
         new SetFontFamilyCommand({
           pageIndex: run.pageIndex,
@@ -132,10 +147,14 @@ export function useSelectionActions(store: EditorStore) {
     const doc = store.document;
     if (!doc) return;
     if (sel.runIds.length === 0 && sel.imageIds.length === 0) return;
+    // Collect one command per object but dispatch them as ONE composite:
+    // a 30-object delete must be a single undo step, not 30. Locked
+    // objects stay selectable but are never mutated.
+    const cmds: Array<DeleteObjectCommand | DeleteImageCommand> = [];
     for (const page of doc.loadedPages()) {
       for (const run of page.runs) {
-        if (sel.runIds.includes(run.id)) {
-          store.dispatch(
+        if (sel.runIds.includes(run.id) && !run.locked) {
+          cmds.push(
             new DeleteObjectCommand({
               pageIndex: run.pageIndex,
               runId: run.id,
@@ -144,8 +163,8 @@ export function useSelectionActions(store: EditorStore) {
         }
       }
       for (const img of page.images) {
-        if (sel.imageIds.includes(img.id)) {
-          store.dispatch(
+        if (sel.imageIds.includes(img.id) && !img.locked) {
+          cmds.push(
             new DeleteImageCommand({
               pageIndex: img.pageIndex,
               imageId: img.id,
@@ -154,6 +173,8 @@ export function useSelectionActions(store: EditorStore) {
         }
       }
     }
+    if (cmds.length === 1) store.dispatch(cmds[0]);
+    else if (cmds.length > 1) store.dispatch(new CompositeCommand(cmds));
     store.selection.clear();
   }, [store]);
 

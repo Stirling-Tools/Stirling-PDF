@@ -31,6 +31,20 @@ import { getActiveCharcodeStrategy } from "@app/tools/pdfTextEditor/v2/charcode/
 /** Cache: per (fontPtr, char) → charcode integer (or null = missing). */
 const charCache = new Map<string, number | null>();
 
+/**
+ * Expiry timestamps for TRANSIENT-failure nulls (network error, backend
+ * down, serialize hiccup). Without a TTL one flaky request permanently
+ * forced Helvetica for those chars for the whole session. Genuine
+ * "font lacks this char" answers stay permanent (no entry here).
+ */
+const negativeUntil = new Map<string, number>();
+const NEGATIVE_TTL_MS = 30_000;
+
+function setTransientNull(key: string): void {
+  charCache.set(key, null);
+  negativeUntil.set(key, Date.now() + NEGATIVE_TTL_MS);
+}
+
 /** Track in-flight prefetches so we don't double-fire. */
 const inFlight = new Set<string>();
 
@@ -104,6 +118,14 @@ export class BackendResolver implements CharcodeResolver {
       }
       const code = charCache.get(key);
       if (code === null) {
+        // A transient-failure null past its TTL becomes a cache miss so
+        // the prefetch below retries it.
+        const until = negativeUntil.get(key);
+        if (until !== undefined && Date.now() >= until) {
+          charCache.delete(key);
+          negativeUntil.delete(key);
+          cacheMisses.push(ch);
+        }
         missing.push(ch);
         continue;
       }
@@ -166,12 +188,12 @@ function maybeAutoPrefetch(
             "[v2.charcode] backend auto-prefetch: editor document unavailable",
           );
         }
-        for (const ch of chars) charCache.set(cacheKey(fontPtr, ch), null);
+        for (const ch of chars) setTransientNull(cacheKey(fontPtr, ch));
         return;
       }
       const bytes = PdfiumSave.serialize(doc);
       if (!bytes || bytes.byteLength === 0) {
-        for (const ch of chars) charCache.set(cacheKey(fontPtr, ch), null);
+        for (const ch of chars) setTransientNull(cacheKey(fontPtr, ch));
         return;
       }
       const pdfBase64 = uint8ToBase64(bytes);
@@ -199,7 +221,13 @@ function maybeAutoPrefetch(
             json && !json.error && json.charcodes && json.charcodes.length > 0
               ? json.charcodes[0]
               : null;
-          charCache.set(cacheKey(perCharFont, ch), code);
+          if (code === null && (!json || json.error)) {
+            // Network failure / backend error: retry after the TTL. Only a
+            // real "encoded 0 of N" answer is a permanent miss.
+            setTransientNull(cacheKey(perCharFont, ch));
+          } else {
+            charCache.set(cacheKey(perCharFont, ch), code);
+          }
           // Stop the per-keystroke prefetch storm. resolve() looks this char up
           // under the QUERIED font (the run's own/borrowed handle), not
           // perCharFont. When they differ - a borrowed font that isn't the one
@@ -220,9 +248,10 @@ function maybeAutoPrefetch(
       if (typeof console !== "undefined") {
         console.warn("[v2.charcode] backend prefetch threw:", err);
       }
-      // Poison the cache so we don't retry the same chars in a tight
-      // loop; the HUD event below surfaces the real reason.
-      for (const ch of chars) charCache.set(cacheKey(fontPtr, ch), null);
+      // Negative-cache with TTL so we don't retry the same chars in a
+      // tight loop but DO recover once the backend is reachable again;
+      // the HUD event below surfaces the real reason.
+      for (const ch of chars) setTransientNull(cacheKey(fontPtr, ch));
       // Lazy-import charcodeRegistry to avoid the cyclic
       // BackendResolver ↔ charcodeRegistry module init.
       try {
@@ -674,6 +703,7 @@ function cacheKey(fontPtr: number, ch: string): string {
 /** Test-only: clear the per-char cache. */
 export function _clearBackendCacheForTests(): void {
   charCache.clear();
+  negativeUntil.clear();
   inFlight.clear();
 }
 
@@ -686,6 +716,7 @@ export function _clearBackendCacheForTests(): void {
  */
 export function resetBackendResolverCaches(): void {
   charCache.clear();
+  negativeUntil.clear();
   inFlight.clear();
   prewarmedPages.clear();
   fontForCharCache.clear();

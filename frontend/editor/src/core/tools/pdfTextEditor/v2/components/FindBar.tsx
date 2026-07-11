@@ -4,6 +4,7 @@ import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import CloseIcon from "@mui/icons-material/Close";
 import { EditTextCommand } from "@app/tools/pdfTextEditor/v2/commands/EditTextCommand";
+import { CompositeCommand } from "@app/tools/pdfTextEditor/v2/commands/CompositeCommand";
 import type { EditorStore } from "@app/tools/pdfTextEditor/v2/store/EditorStore";
 import type {
   PageSnapshot,
@@ -90,12 +91,23 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
     focusMatch(idx);
   }, [activeIndex, matches.length, focusMatch]);
 
-  // Scroll the very first match into view as the user types.
+  // Scroll the very first match into view when the QUERY changes - and
+  // only then. `matches` also recomputes on every document edit (page
+  // snapshots refresh), and resetting to match #1 + stealing selection/
+  // scroll on each keystroke elsewhere was hostile.
+  const lastQueryRef = useRef("");
   useEffect(() => {
-    setActiveIndex(0);
-    setReplaceCount(null);
-    if (matches.length > 0) focusMatch(0);
-  }, [matches, focusMatch]);
+    if (lastQueryRef.current !== query) {
+      lastQueryRef.current = query;
+      setActiveIndex(0);
+      setReplaceCount(null);
+      if (matches.length > 0) focusMatch(0);
+    } else if (activeIndex >= matches.length && matches.length > 0) {
+      // Matches shrank under the current index (an edit removed some);
+      // clamp without stealing focus.
+      setActiveIndex(0);
+    }
+  }, [query, matches, focusMatch, activeIndex]);
 
   /**
    * Replace the CURRENT match (case-insensitive substring) with the
@@ -111,7 +123,9 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
     const m = matches[activeIndex];
     if (!m) return;
     const re = caseInsensitiveLiteral(query);
-    const updated = m.run.text.replace(re, replace);
+    // Function replacement: a plain string interprets $-sequences
+    // ($&, $$, $') as regex replacement patterns.
+    const updated = m.run.text.replace(re, () => replace);
     if (updated === m.run.text) return;
     store.dispatch(
       new EditTextCommand({
@@ -136,10 +150,11 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
     if (!query || matches.length === 0) return;
     const re = caseInsensitiveLiteral(query);
     let n = 0;
+    const cmds: EditTextCommand[] = [];
     for (const m of matches) {
-      const updated = m.run.text.replace(re, replace);
+      const updated = m.run.text.replace(re, () => replace);
       if (updated === m.run.text) continue;
-      store.dispatch(
+      cmds.push(
         new EditTextCommand({
           pageIndex: m.pageIndex,
           runId: m.runId,
@@ -148,6 +163,9 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
       );
       n += 1;
     }
+    // One composite = "Undo undoes the whole Replace all".
+    if (cmds.length === 1) store.dispatch(cmds[0]);
+    else if (cmds.length > 1) store.dispatch(new CompositeCommand(cmds));
     setReplaceCount(n);
   }, [query, replace, matches, store]);
 
@@ -221,7 +239,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
                 current: activeIndex + 1,
                 total: matches.length,
               })}
-          {replaceCount !== null && matches.length === 0
+          {replaceCount !== null
             ? t("pdfTextEditorV2.find.replaced", " · {{count}} replaced", {
                 count: replaceCount,
               })
@@ -232,6 +250,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
           variant="tertiary"
           onClick={prev}
           disabled={matches.length === 0}
+          aria-label={t("pdfTextEditorV2.find.previous", "Previous match")}
           data-testid="v2-find-prev"
         >
           ↑
@@ -241,6 +260,7 @@ export function FindBar({ store, pages, onClose }: FindBarProps) {
           variant="tertiary"
           onClick={next}
           disabled={matches.length === 0}
+          aria-label={t("pdfTextEditorV2.find.next", "Next match")}
           data-testid="v2-find-next"
         >
           ↓

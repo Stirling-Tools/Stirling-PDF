@@ -134,15 +134,18 @@ export function PageStage() {
           if (dragCountRef.current === 0) setDraggingFile(false);
         }}
         onDrop={(e) => {
+          // ALWAYS claim the drop: without preventDefault the browser
+          // navigates the tab to the dropped file, discarding the editor
+          // (and any unsaved edits) - even for non-PDF files.
+          e.preventDefault();
+          dragCountRef.current = 0;
+          setDraggingFile(false);
           const files = e.dataTransfer?.files;
           if (!files || files.length === 0) return;
           const pdf = Array.from(files).find(
             (f) => f.type === "application/pdf" || /\.pdf$/i.test(f.name),
           );
           if (!pdf) return;
-          e.preventDefault();
-          dragCountRef.current = 0;
-          setDraggingFile(false);
           // Replacing the open document discards in-progress edits - confirm
           // first when dirty, so an accidental drop can't silently lose work.
           if (

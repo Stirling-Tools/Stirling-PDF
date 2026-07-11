@@ -11,6 +11,7 @@ import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDoc
 export class PdfiumSave {
   static serialize(doc: EditorDocument): Uint8Array {
     const m = doc.module;
+    const failedPages: number[] = [];
     for (const page of doc.loadedPages()) {
       try {
         // Always force a flush before save - the deferred flag may be
@@ -21,8 +22,16 @@ export class PdfiumSave {
         page.flushGenerate(m);
         page.clearDirty();
       } catch {
-        /* best-effort */
+        failedPages.push(page.index + 1);
       }
+    }
+    if (failedPages.length > 0) {
+      // A swallowed flush failure would serialize the page's stale
+      // pre-edit content while the UI reports a successful save.
+      throw new Error(
+        `Could not apply edits on page${failedPages.length > 1 ? "s" : ""} ` +
+          `${failedPages.join(", ")}; save aborted so no edits are silently lost.`,
+      );
     }
 
     const writerPtr = m.PDFiumExt_OpenFileWriter();

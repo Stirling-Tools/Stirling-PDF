@@ -1,5 +1,6 @@
 import type { Command } from "@app/tools/pdfTextEditor/v2/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/v2/model/EditorDocument";
+import { collectMemberPtrs } from "@app/tools/pdfTextEditor/v2/commands/editTextHelpers";
 
 export type ZOrderMode =
   | "to-front" // top of stack (rendered last, on top of everything)
@@ -24,8 +25,12 @@ interface InsertAtModule {
  * binding isn't exposed by this PDFium build the command becomes a
  * no-op (a diagnostic warning is logged on each attempt).
  *
- * Revert restores the object to its original index by the inverse
- * remove+insert. The original index is captured on apply.
+ * Merged/paragraph runs are backed by MULTIPLE page objects; the whole
+ * member group moves as a contiguous block (relative paint order kept).
+ * Moving only the anchor lifted one word and left the rest behind.
+ *
+ * Revert restores every member to its original index by the inverse
+ * remove+insert. The original indices are captured on apply.
  */
 export class ChangeZOrderCommand implements Command {
   readonly type = "change-z-order";
@@ -33,9 +38,8 @@ export class ChangeZOrderCommand implements Command {
   private readonly runId: string | null;
   private readonly imageId: string | null;
   private readonly mode: ZOrderMode;
-  private prevIndex: number;
-  private nextIndex: number;
-  private targetPtr: number;
+  /** Member ptrs at their pre-apply indices, ascending. */
+  private memberPrev: Array<{ ptr: number; idx: number }>;
 
   constructor(opts: {
     pageIndex: number;
@@ -47,9 +51,7 @@ export class ChangeZOrderCommand implements Command {
     this.runId = opts.runId ?? null;
     this.imageId = opts.imageId ?? null;
     this.mode = opts.mode;
-    this.prevIndex = -1;
-    this.nextIndex = -1;
-    this.targetPtr = 0;
+    this.memberPrev = [];
   }
 
   apply(doc: EditorDocument): void {
@@ -64,38 +66,54 @@ export class ChangeZOrderCommand implements Command {
       }
       return;
     }
-    const ptr = this.resolveTargetPtr(page);
-    if (!ptr) return;
-    this.targetPtr = ptr;
+    const ptrs = this.resolveMemberPtrs(page);
+    if (ptrs.size === 0) return;
     const total = m.FPDFPage_CountObjects(page.pagePtr);
-    let currentIdx = -1;
+    // Locate every member at page level, ascending by index. Members
+    // nested inside form XObjects don't appear here (known limitation).
+    const located: Array<{ ptr: number; idx: number }> = [];
     for (let i = 0; i < total; i++) {
-      if (m.FPDFPage_GetObject(page.pagePtr, i) === ptr) {
-        currentIdx = i;
-        break;
-      }
+      const o = m.FPDFPage_GetObject(page.pagePtr, i);
+      if (ptrs.has(o)) located.push({ ptr: o, idx: i });
     }
-    if (currentIdx < 0) return;
-    let target: number;
+    if (located.length === 0 || located.length === total) return;
+    const k = located.length;
+    const bottomIdx = located[0].idx;
+    const topIdx = located[k - 1].idx;
+    // The group is only "already in place" when it is contiguous AND at the
+    // target edge - a member group is not always content-stream-contiguous
+    // (spatial grouping can interleave unrelated objects), so a per-mode
+    // endpoint check is needed. A blanket `insertAt === bottomIdx` wrongly
+    // treated any group whose bottom member sat at index 0 as already-at-back.
+    const contiguous = topIdx - bottomIdx === k - 1;
+    let insertAt: number;
     switch (this.mode) {
       case "to-front":
-        target = total - 1;
+        if (contiguous && topIdx === total - 1) return; // already at front
+        insertAt = total - k;
         break;
       case "to-back":
-        target = 0;
+        if (contiguous && bottomIdx === 0) return; // already at back
+        insertAt = 0;
         break;
       case "forward":
-        target = Math.min(total - 1, currentIdx + 1);
+        // Land just above the object that sat directly above the group's top.
+        if (topIdx >= total - 1) return;
+        insertAt = topIdx + 2 - k;
         break;
       case "backward":
-        target = Math.max(0, currentIdx - 1);
+        // Land just below the object that sat directly below the group's bottom.
+        if (bottomIdx <= 0) return;
+        insertAt = bottomIdx - 1;
         break;
     }
-    if (target === currentIdx) return;
-    this.prevIndex = currentIdx;
-    this.nextIndex = target;
-    m.FPDFPage_RemoveObject(page.pagePtr, ptr);
-    ext.FPDFPage_InsertObjectAtIndex(page.pagePtr, ptr, target);
+    this.memberPrev = located;
+    for (const { ptr } of located) {
+      m.FPDFPage_RemoveObject(page.pagePtr, ptr);
+    }
+    located.forEach(({ ptr }, j) => {
+      ext.FPDFPage_InsertObjectAtIndex!(page.pagePtr, ptr, insertAt + j);
+    });
     // markDirty() bumps the revision so PageView re-renders the bitmap, and
     // markNeedsGenerate() regenerates the content stream so the new paint order
     // shows on screen AND survives save. A bare `dirty = true` did neither, so a
@@ -105,32 +123,35 @@ export class ChangeZOrderCommand implements Command {
   }
 
   revert(doc: EditorDocument): void {
-    if (this.prevIndex < 0 || this.nextIndex < 0 || !this.targetPtr) return;
+    if (this.memberPrev.length === 0) return;
     const page = doc.page(this.pageIndex);
     const m = doc.module;
     const ext = m as unknown as InsertAtModule;
     if (!ext.FPDFPage_InsertObjectAtIndex) return;
-    m.FPDFPage_RemoveObject(page.pagePtr, this.targetPtr);
-    ext.FPDFPage_InsertObjectAtIndex(
-      page.pagePtr,
-      this.targetPtr,
-      this.prevIndex,
-    );
+    for (const { ptr } of this.memberPrev) {
+      m.FPDFPage_RemoveObject(page.pagePtr, ptr);
+    }
+    // Re-inserting in ascending original index order reconstructs the
+    // exact pre-apply list.
+    for (const { ptr, idx } of this.memberPrev) {
+      ext.FPDFPage_InsertObjectAtIndex(page.pagePtr, ptr, idx);
+    }
     page.markDirty();
     page.markNeedsGenerate();
   }
 
-  private resolveTargetPtr(
+  private resolveMemberPtrs(
     page: import("@app/tools/pdfTextEditor/v2/model/Page").Page,
-  ): number {
+  ): Set<number> {
     if (this.runId) {
       const run = page.runs.find((r) => r.id === this.runId);
-      return run?.pdfiumObjPtr ?? 0;
+      if (!run) return new Set();
+      return new Set(collectMemberPtrs(run).filter((p) => p !== 0));
     }
     if (this.imageId) {
       const img = page.images.find((i) => i.id === this.imageId);
-      return img?.pdfiumObjPtr ?? 0;
+      return img?.pdfiumObjPtr ? new Set([img.pdfiumObjPtr]) : new Set();
     }
-    return 0;
+    return new Set();
   }
 }

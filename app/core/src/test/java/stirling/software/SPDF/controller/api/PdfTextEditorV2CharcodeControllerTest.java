@@ -155,15 +155,17 @@ class PdfTextEditorV2CharcodeControllerTest {
     }
 
     @Test
-    void unknownFontNameFallsBackToFirstMatch() throws Exception {
+    void unknownFontNameReportsNoFontInsteadOfWrongFont() throws Exception {
         PdfTextEditorV2CharcodeController controller = controller();
-        // A name that matches no font on the page must NOT error - it falls back
-        // to the legacy first-font-with-the-char behaviour.
+        // A name that matches no font on the page must NOT silently encode
+        // against a different font: the frontend writes the returned charcodes
+        // into the NAMED font's text object, so a first-match fallback would
+        // bake wrong glyphs. It must report failure so the caller falls back.
         EncodeCharcodesResponse body =
                 controller.encodeCharcodes(twoFontRequest("DoesNotExist")).getBody();
         assertThat(body).isNotNull();
-        assertThat(body.getError()).isNull();
-        assertThat(body.getCharcodes()).hasSize(1);
+        assertThat(body.getError()).contains("no font");
+        assertThat(body.getCharcodes()).isNull();
     }
 
     @Test

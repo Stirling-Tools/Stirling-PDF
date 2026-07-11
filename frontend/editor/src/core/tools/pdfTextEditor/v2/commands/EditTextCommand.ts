@@ -105,6 +105,8 @@ export class EditTextCommand implements Command {
   private createdPtrs: number[] = [];
   private newTextPtr = 0;
   private revertLines: RevertLine[] = [];
+  /** Rotation of the run when apply() snapshotted it; re-applied on revert. */
+  private revertRotation: { cos: number; sin: number } | null = null;
   /** Set when the apply path took the partial-edit (LCS) shortcut. */
   private partialPlan: PartialEditPlan | null = null;
   private partialInsertedPtrs: number[] = [];
@@ -370,6 +372,7 @@ export class EditTextCommand implements Command {
       canReuseFont && run.pdfiumObjPtr ? safeGetFont(m, run.pdfiumObjPtr) : 0;
 
     this.revertLines = snapshotRevertLines(run, this.prevText ?? "");
+    this.revertRotation = rotationFromMatrix(run.matrix) ?? null;
 
     // Detach any cover rect that a PRIOR overlay edit left on the page.
     // The previous EditTextCommand instance recorded its own coverRectPtr
@@ -451,6 +454,7 @@ export class EditTextCommand implements Command {
         y,
         fontSize: run.fontSize,
         fill: run.fill,
+        renderMode: run.renderMode,
         originalFontPtr,
         originalFontSubset: run.fontSubset,
         fallbackFamily,
@@ -588,6 +592,7 @@ export class EditTextCommand implements Command {
             y: rem.y,
             fontSize: rem.fontSize,
             fill: run.fill,
+            renderMode: run.renderMode,
             originalFontPtr: 0,
             fallbackFamily,
           });
@@ -792,6 +797,9 @@ export class EditTextCommand implements Command {
         fill: line.fill,
         originalFontPtr: 0,
         fallbackFamily: revertFallback,
+        // Keep the run's original orientation - without this, undoing an
+        // edit on a rotated run scattered its text axis-aligned.
+        rotation: this.revertRotation ?? undefined,
       });
       if (ptrs.length === 0) continue;
       lineAnchorPtrs.push(ptrs[0]);
@@ -899,6 +907,7 @@ export class EditTextCommand implements Command {
           y,
           fontSize: run.fontSize,
           fill: run.fill,
+          renderMode: run.renderMode,
           originalFontPtr: 0,
           fallbackFamily,
         });
@@ -1039,6 +1048,7 @@ export class EditTextCommand implements Command {
           y,
           fontSize: run.fontSize,
           fill: run.fill,
+          renderMode: run.renderMode,
           originalFontPtr: 0,
           fallbackFamily,
         });
@@ -1116,6 +1126,7 @@ export class EditTextCommand implements Command {
             y: line.baselineY,
             fontSize: line.fontSize,
             fill: run.fill,
+            renderMode: run.renderMode,
             originalFontPtr: 0,
             fallbackFamily,
           });

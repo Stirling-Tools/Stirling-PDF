@@ -8,6 +8,18 @@ export function isFocusInContentEditable(): boolean {
 }
 
 /**
+ * True when focus is in a FORM field (Find/Replace/password inputs) as
+ * opposed to a run's contenteditable. Form fields keep their native
+ * editing shortcuts (Ctrl+Z etc); contenteditables route to the editor.
+ */
+export function isFocusInFormField(): boolean {
+  const el = document.activeElement as HTMLElement | null;
+  if (!el) return false;
+  const tag = el.tagName;
+  return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+}
+
+/**
  * Find the page index whose midpoint is closest to the viewport's vertical
  * centre. Returns 0 when no `[data-testid="v2-page-N"]` elements are
  * mounted. Used by zoom-target picking, page rotation, and page nav.

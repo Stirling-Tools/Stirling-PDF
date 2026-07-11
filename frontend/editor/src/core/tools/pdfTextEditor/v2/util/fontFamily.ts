@@ -49,6 +49,16 @@ function base14Name(root: Base14Root, bold: boolean, italic: boolean): string {
 }
 
 /**
+ * The Helvetica variant for a bold/italic combo. Used as the wholesale
+ * fallback when flipping style on a non-base-14 (embedded) family, so
+ * toggling one axis PRESERVES the other (bolding italic text lands on
+ * Helvetica-BoldOblique, not plain Helvetica-Bold).
+ */
+export function helveticaWith(bold: boolean, italic: boolean): string {
+  return base14Name("Helvetica", bold, italic);
+}
+
+/**
  * Map a base-14 family to its bold variant (or back), preserving the current
  * italic/oblique state. Returns null if the family isn't base-14.
  */

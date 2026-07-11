@@ -5,6 +5,7 @@ import type {
   TextRun,
 } from "@app/tools/pdfTextEditor/v2/model/TextRun";
 import {
+  cssFontSpecFor,
   emitTextLine,
   isVerifiedPerCharPtr,
   measureObjRightEdgePt,
@@ -497,7 +498,9 @@ function measureWhitespaceAdvancePt(
   if (!_wsMeasureCanvas) _wsMeasureCanvas = document.createElement("canvas");
   const ctx = _wsMeasureCanvas.getContext("2d");
   if (!ctx) return text.length * fontSizePt * 0.27;
-  ctx.font = `${fontSizePt}pt ${fontFamily}`;
+  // px on purpose: an n-px font measured in px returns the same number as
+  // an n-pt font in pt; `${n}pt` would inflate the result by 4/3.
+  ctx.font = cssFontSpecFor(fontFamily, fontSizePt);
   return ctx.measureText(text).width;
 }
 
@@ -820,6 +823,7 @@ export function applyPartialEditPlan(
           y: emitY,
           fontSize: run.fontSize,
           fill: run.fill,
+          renderMode: run.renderMode,
           originalFontPtr: modFontPtr,
           originalFontSubset: run.fontSubset,
           fallbackFamily,
@@ -925,6 +929,7 @@ export function applyPartialEditPlan(
         y: emitY,
         fontSize: run.fontSize,
         fill: run.fill,
+        renderMode: run.renderMode,
         originalFontPtr: borrowedFontPtr,
         originalFontSubset: run.fontSubset,
         fallbackFamily,
@@ -983,6 +988,7 @@ export function applyPartialEditPlan(
           y: emitY,
           fontSize: run.fontSize,
           fill: run.fill,
+          renderMode: run.renderMode,
           originalFontPtr: 0,
           fallbackFamily,
         });
@@ -1383,6 +1389,7 @@ export function applyParagraphEditPlan(
           y: slot.baselineY,
           fontSize: slot.fontSize,
           fill: run.fill,
+          renderMode: run.renderMode,
           originalFontPtr: reuseFontPtr,
           originalFontSubset: slot.fontSubset,
           fallbackFamily,

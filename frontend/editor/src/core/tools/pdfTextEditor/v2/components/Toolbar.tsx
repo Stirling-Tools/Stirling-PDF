@@ -199,7 +199,7 @@ export function Toolbar({
         onChange={(value) => {
           if (value) onChangeFontFamily(value);
         }}
-        disabled={disabled}
+        disabled={disabled || !hasRunSelection}
       />
       <NumberInput
         size="xs"
@@ -211,7 +211,7 @@ export function Toolbar({
           const next = typeof value === "number" ? value : Number(value);
           if (Number.isFinite(next) && next > 0) onChangeFontSize(next);
         }}
-        disabled={disabled || state.fontSize === null}
+        disabled={disabled || !hasRunSelection || state.fontSize === null}
         aria-label={t("pdfTextEditorV2.toolbar.fontSize", "Font size")}
         data-testid="v2-font-size"
       />
@@ -223,7 +223,9 @@ export function Toolbar({
           if (!next) return;
           if (parseCssColor(next)) onChangeFill(next);
         }}
-        disabled={disabled || !state.fill}
+        // Enabled for MIXED fills (state.fill null) on purpose: picking a
+        // colour is the only way to unify a multi-colour selection.
+        disabled={disabled || !hasRunSelection}
         aria-label={t("pdfTextEditorV2.toolbar.fontColour", "Font colour")}
         data-testid="v2-colour"
       />
@@ -232,7 +234,7 @@ export function Toolbar({
           variant={state.bold ? "primary" : "tertiary"}
           size="sm"
           onClick={onToggleBold}
-          disabled={disabled}
+          disabled={disabled || !hasRunSelection}
           aria-label={t("pdfTextEditorV2.toolbar.bold", "Bold")}
           data-testid="v2-bold"
           leftSection={<FormatBoldIcon fontSize="small" />}
@@ -243,7 +245,7 @@ export function Toolbar({
           variant={state.italic ? "primary" : "tertiary"}
           size="sm"
           onClick={onToggleItalic}
-          disabled={disabled}
+          disabled={disabled || !hasRunSelection}
           aria-label={t("pdfTextEditorV2.toolbar.italic", "Italic")}
           data-testid="v2-italic"
           leftSection={<FormatItalicIcon fontSize="small" />}

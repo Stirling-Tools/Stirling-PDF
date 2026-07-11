@@ -71,6 +71,8 @@ export interface TextRunSnapshot {
   fill: RGBA;
   /** True if PDFium says the source PDF subsetted this run's font */
   fontSubset: boolean;
+  /** PDF text render mode (Tr). 0/absent = normal fill; 3 = invisible. */
+  renderMode?: number;
   /** > 0 when this run represents a multi-line paragraph. */
   paragraphLineHeight?: number;
   /** Member-line count when paragraph (== 1 implies a single line). */
