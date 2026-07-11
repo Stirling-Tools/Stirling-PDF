@@ -182,7 +182,13 @@ const TSCONFIG_MAP: Record<BuildMode, string> = {
   prototypes: "./tsconfig.prototypes.vite.json",
 };
 
-export default defineConfig(async ({ mode }) => {
+export default defineConfig(async ({ mode, command }) => {
+  // Dev-only browser-tab label (worktree folder basename) surfaced by the
+  // top-level dev tasks so concurrent worktrees have distinguishable tabs.
+  // Only injected during `vite` (dev serve) — never baked into a production
+  // build — and carries only the folder name, no path/host/user info.
+  const devWorktreeLabel =
+    command === "serve" ? (process.env.STIRLING_DEV_LABEL ?? "") : "";
   // Load env files relative to this config (frontend/editor/), regardless of
   // where the build was invoked from. The previous `process.cwd()` worked when
   // this file lived at frontend/, but after the editor was moved under
@@ -250,6 +256,9 @@ export default defineConfig(async ({ mode }) => {
         };
 
   return {
+    define: {
+      __DEV_WORKTREE_LABEL__: JSON.stringify(devWorktreeLabel),
+    },
     plugins: [
       react(),
       ...(runSubpath ? [subpathBareRedirectPlugin(runSubpath)] : []),

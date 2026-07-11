@@ -32,3 +32,10 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+/**
+ * Dev-only worktree folder basename injected by vite.config at dev-serve time
+ * (empty string in production builds). Used to prefix the browser tab title so
+ * concurrent worktrees are distinguishable.
+ */
+declare const __DEV_WORKTREE_LABEL__: string;
