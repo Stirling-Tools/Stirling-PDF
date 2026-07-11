@@ -111,6 +111,14 @@ public class InternalApiClient {
         // step inside a policy run must bill as AUTOMATION, not AI). Set unconditionally because
         // every caller of this dispatcher is an automation surface by design.
         headers.add(AUTOMATION_HEADER, "true");
+        // Propagate the current automation run id (set by the orchestrator around its dispatch
+        // loop) so the PAYG interceptor groups every sub-step of this one run into a single charge,
+        // and never merges two separate runs that happen to touch identical bytes. Absent → the
+        // receiving call is treated as standalone. See AutomationRunContext.
+        String runId = AutomationRunContext.current();
+        if (runId != null && !runId.isEmpty()) {
+            headers.add(AutomationRunContext.RUN_ID_HEADER, runId);
+        }
 
         // A no-file ai/tools call (e.g. create-pdf-from-html-agent) sends only string params, so
         // without this RestTemplate would use urlencoded instead of the multipart the controller
