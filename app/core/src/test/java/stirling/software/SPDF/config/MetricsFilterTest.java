@@ -1,5 +1,6 @@
 package stirling.software.SPDF.config;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -28,10 +29,32 @@ class MetricsFilterTest {
     @BeforeEach
     void setUp() {
         registry = new SimpleMeterRegistry();
+        MetricsConfig metricsConfig = new MetricsConfig();
+        registry.config().meterFilter(metricsConfig.meterFilter());
+        registry.config().meterFilter(metricsConfig.sessionCardinalityLimit());
+        registry.config().meterFilter(metricsConfig.uriCardinalityLimit());
         filter = new MetricsFilter(registry);
         request = mock(HttpServletRequest.class);
         response = mock(HttpServletResponse.class);
         chain = mock(FilterChain.class);
+    }
+
+    @Test
+    @DisplayName("bounds counters created from unique sessions")
+    void boundsUniqueSessionCounters() {
+        for (int index = 0; index <= MetricsConfig.MAX_SESSION_TAG_VALUES; index++) {
+            registry.counter(
+                            "http.requests",
+                            "session",
+                            "session-" + index,
+                            "method",
+                            "POST",
+                            "uri",
+                            "/api/v1/general/rotate-pdf")
+                    .increment();
+        }
+
+        assertEquals(MetricsConfig.MAX_SESSION_TAG_VALUES, registry.getMeters().size());
     }
 
     @Nested

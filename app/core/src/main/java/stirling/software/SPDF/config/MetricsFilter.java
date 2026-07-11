@@ -2,6 +2,7 @@ package stirling.software.SPDF.config;
 
 import java.io.IOException;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.common.util.RequestUriUtils;
 
 @Component
+@ConditionalOnBooleanProperty(name = "metrics.enabled")
 @RequiredArgsConstructor
 public class MetricsFilter extends OncePerRequestFilter {
 
