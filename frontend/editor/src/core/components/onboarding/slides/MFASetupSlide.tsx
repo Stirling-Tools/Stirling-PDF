@@ -23,7 +23,7 @@ import { accountService } from "@app/services/accountService";
 import { useAccountLogout } from "@app/extensions/accountLogout";
 import { useAuth } from "@app/auth/UseSession";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import { BASE_PATH } from "@app/constants/app";
+import { BASE_PATH, withBasePath } from "@app/constants/app";
 import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
 import { MfaSetupResponse } from "@app/responses/Mfa/MfaResponse";
 
@@ -84,7 +84,7 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
   }, [fetchMfaSetup]);
 
   const redirectToLogin = useCallback(() => {
-    window.location.assign("/login");
+    window.location.assign(withBasePath("/login"));
   }, []);
 
   const onLogout = useCallback(async () => {
