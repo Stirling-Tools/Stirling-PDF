@@ -6898,6 +6898,7 @@ heading = "API keys"
 subheading = "Personal and team-scoped credentials, each with its own usage tracking."
 
 [portal.infrastructure.apiKeys.card]
+access = "Access"
 created = "Created"
 lastUsed = "Last used"
 revoke = "Revoke key"
@@ -6990,6 +6991,12 @@ inProgress = "In progress"
 notStarted = "Not started"
 
 [portal.infrastructure.createKey]
+accessFull = "Full access"
+accessFullHelp = "Acts as you, including account and admin endpoints. Personal keys only — full access can't be shared."
+accessLabel = "Access"
+accessProcessing = "Processing only"
+accessProcessingHelp = "Limited to the file/PDF processing endpoints. Can't touch account, team, or admin settings."
+accessTeamNote = "Shared keys are always processing-only, so they can't carry account powers."
 cancel = "Cancel"
 createKey = "Create key"
 done = "Done"
@@ -7051,6 +7058,10 @@ subheading = "Live health for every deployed Stirling region — latency, load, 
 [portal.infrastructure.deployments.regions.empty]
 description = "Deployed regions appear here once your workspace is provisioned."
 title = "No regions deployed"
+
+[portal.infrastructure.keyAccessLabel]
+full = "Full access"
+processing = "Processing only"
 
 [portal.infrastructure.keyLabel]
 active = "Active"
@@ -7976,6 +7987,7 @@ confirm = "Delete"
 title = "Delete source?"
 
 [portal.sources.detail]
+apiKeyAccess = "Access"
 apiKeyLastUsed = "Last used"
 apiKeyPrefix = "Key prefix"
 apiKeyReadOnly = "Managed in Infrastructure → API keys. Shown here for visibility and usage only."

@@ -3,6 +3,7 @@ import { Button, Card, Chip, StatusBadge } from "@app/ui";
 import { useTranslation } from "react-i18next";
 import type { ApiKey } from "@portal/api/infrastructure";
 import {
+  KEY_ACCESS_LABEL,
   KEY_LABEL,
   KEY_SCOPE_LABEL,
   KEY_SCOPE_TONE,
@@ -57,6 +58,10 @@ export function ApiKeyCard({
       {open && (
         <div className="portal-infra__key-body">
           <dl className="portal-infra__kv">
+            <div>
+              <dt>{t("portal.infrastructure.apiKeys.card.access")}</dt>
+              <dd>{t(KEY_ACCESS_LABEL[apiKey.access])}</dd>
+            </div>
             <div>
               <dt>{t("portal.infrastructure.apiKeys.card.created")}</dt>
               <dd>{apiKey.created}</dd>

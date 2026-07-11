@@ -13,6 +13,8 @@ public record PortalApiKeyDto(
         String prefix,
         /** "personal" | "team-lead" | "team-members". */
         String scope,
+        /** "full" (acts as owner) | "processing" (file/PDF endpoints only). */
+        String access,
         /** Team name for a team-scoped key, else null. */
         String teamName,
         String created,

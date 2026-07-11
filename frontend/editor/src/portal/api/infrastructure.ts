@@ -52,12 +52,20 @@ export type ApiKeyStatus = "active" | "revoked";
  */
 export type ApiKeyScope = "personal" | "team-lead" | "team-members";
 
+/**
+ * How much power a key carries. {@code full} acts as its owner (account + admin);
+ * {@code processing} is confined to the file/PDF endpoints. Shared (team) keys are
+ * always {@code processing}. Mirrors the backend {@code ApiKeyAccess}.
+ */
+export type ApiKeyAccess = "full" | "processing";
+
 export interface ApiKey {
   id: string;
   name: string;
   /** Non-secret leading fragment, e.g. "sk_a3f81b2c". */
   prefix: string;
   scope: ApiKeyScope;
+  access: ApiKeyAccess;
   /** Team name for a team-scoped key, else null. */
   teamName: string | null;
   created: string;
@@ -317,6 +325,7 @@ export async function fetchApiKeys(): Promise<ApiKeysResponse> {
 export async function createApiKey(body: {
   name: string;
   scope: ApiKeyScope;
+  access: ApiKeyAccess;
 }): Promise<CreatedApiKey> {
   const opts = { method: "POST" as const, body };
   return apiClient.saas.isConfigured()

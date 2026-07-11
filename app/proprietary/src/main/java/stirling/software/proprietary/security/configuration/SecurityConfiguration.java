@@ -57,6 +57,7 @@ import stirling.software.proprietary.security.oauth2.TauriAuthorizationRequestRe
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticationFailureHandler;
 import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticationSuccessHandler;
 import stirling.software.proprietary.security.saml2.CustomSaml2ResponseAuthenticationConverter;
+import stirling.software.proprietary.security.service.ApiKeyAuthenticationService;
 import stirling.software.proprietary.security.service.CustomOAuth2UserService;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
@@ -484,12 +485,14 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+    public JwtAuthenticationFilter jwtAuthenticationFilter(
+            ApiKeyAuthenticationService apiKeyAuthenticationService) {
         return new JwtAuthenticationFilter(
                 jwtService,
                 userService,
                 userDetailsService,
                 jwtAuthenticationEntryPoint,
-                securityProperties);
+                securityProperties,
+                apiKeyAuthenticationService);
     }
 }

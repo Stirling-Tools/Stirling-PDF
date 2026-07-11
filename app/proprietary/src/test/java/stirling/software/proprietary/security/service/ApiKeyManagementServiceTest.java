@@ -30,6 +30,7 @@ import stirling.software.proprietary.model.api.apikey.PortalApiKeysResponse;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKey;
+import stirling.software.proprietary.security.model.ApiKeyAccess;
 import stirling.software.proprietary.security.model.ApiKeyScope;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.ApiKeyDailyUsageRepository;
@@ -170,7 +171,8 @@ class ApiKeyManagementServiceTest {
     @Test
     @DisplayName("any user can create a personal key and gets a one-time secret")
     void createPersonalKey() {
-        CreatedApiKeyDto created = service.createKey(new CreateApiKeyRequest("My key", "personal"));
+        CreatedApiKeyDto created =
+                service.createKey(new CreateApiKeyRequest("My key", "personal", null));
 
         assertThat(created.secret()).startsWith("sk_");
         ArgumentCaptor<ApiKey> saved = ArgumentCaptor.forClass(ApiKey.class);
@@ -184,7 +186,10 @@ class ApiKeyManagementServiceTest {
     @DisplayName("rejects an over-long key name")
     void rejectsLongName() {
         String longName = "a".repeat(101);
-        assertThatThrownBy(() -> service.createKey(new CreateApiKeyRequest(longName, "personal")))
+        assertThatThrownBy(
+                        () ->
+                                service.createKey(
+                                        new CreateApiKeyRequest(longName, "personal", null)))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("characters or fewer");
         verify(apiKeyRepository, never()).save(any());
@@ -199,7 +204,7 @@ class ApiKeyManagementServiceTest {
         assertThatThrownBy(
                         () ->
                                 service.createKey(
-                                        new CreateApiKeyRequest("One too many", "personal")))
+                                        new CreateApiKeyRequest("One too many", "personal", null)))
                 .isInstanceOf(ResponseStatusException.class);
         verify(apiKeyRepository, never()).save(any());
     }
@@ -212,7 +217,7 @@ class ApiKeyManagementServiceTest {
         assertThatThrownBy(
                         () ->
                                 service.createKey(
-                                        new CreateApiKeyRequest("Team key", "team-members")))
+                                        new CreateApiKeyRequest("Team key", "team-members", null)))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("team leader");
         verify(apiKeyRepository, never()).save(any());
@@ -227,12 +232,49 @@ class ApiKeyManagementServiceTest {
         team.setName("Acme");
         when(teamRepository.findById(5L)).thenReturn(Optional.of(team));
 
-        service.createKey(new CreateApiKeyRequest("Team key", "team-members"));
+        service.createKey(new CreateApiKeyRequest("Team key", "team-members", null));
 
         ArgumentCaptor<ApiKey> saved = ArgumentCaptor.forClass(ApiKey.class);
         verify(apiKeyRepository).save(saved.capture());
         assertThat(saved.getValue().getScope()).isEqualTo(ApiKeyScope.TEAM_MEMBERS);
         assertThat(saved.getValue().getTeamId()).isEqualTo(5L);
+        // A shared key is always processing-only, so it can never carry account powers.
+        assertThat(saved.getValue().getAccess()).isEqualTo(ApiKeyAccess.PROCESSING);
+    }
+
+    @Test
+    @DisplayName("a team key can't request full access (full access can't be shared)")
+    void teamKeyCannotRequestFullAccess() {
+        // Rejected at access-parse time, before any team-manager/team-id lookup.
+        assertThatThrownBy(
+                        () ->
+                                service.createKey(
+                                        new CreateApiKeyRequest(
+                                                "Team full", "team-members", "full")))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("processing-only");
+        verify(apiKeyRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("a personal key can be limited to processing-only")
+    void personalKeyCanBeProcessingOnly() {
+        service.createKey(new CreateApiKeyRequest("Limited", "personal", "processing"));
+
+        ArgumentCaptor<ApiKey> saved = ArgumentCaptor.forClass(ApiKey.class);
+        verify(apiKeyRepository).save(saved.capture());
+        assertThat(saved.getValue().getScope()).isEqualTo(ApiKeyScope.PERSONAL);
+        assertThat(saved.getValue().getAccess()).isEqualTo(ApiKeyAccess.PROCESSING);
+    }
+
+    @Test
+    @DisplayName("a personal key defaults to full access (acts as the owner)")
+    void personalKeyDefaultsToFullAccess() {
+        service.createKey(new CreateApiKeyRequest("Default", "personal", null));
+
+        ArgumentCaptor<ApiKey> saved = ArgumentCaptor.forClass(ApiKey.class);
+        verify(apiKeyRepository).save(saved.capture());
+        assertThat(saved.getValue().getAccess()).isEqualTo(ApiKeyAccess.FULL);
     }
 
     @Test
@@ -245,7 +287,7 @@ class ApiKeyManagementServiceTest {
         team.setName("Acme");
         when(teamRepository.findById(5L)).thenReturn(Optional.of(team));
 
-        service.createKey(new CreateApiKeyRequest("Admin team key", "team-members"));
+        service.createKey(new CreateApiKeyRequest("Admin team key", "team-members", null));
 
         ArgumentCaptor<ApiKey> saved = ArgumentCaptor.forClass(ApiKey.class);
         verify(apiKeyRepository).save(saved.capture());

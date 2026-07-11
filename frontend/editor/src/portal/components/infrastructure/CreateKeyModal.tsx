@@ -12,6 +12,7 @@ import {
 } from "@app/ui";
 import {
   createApiKey,
+  type ApiKeyAccess,
   type ApiKeyScope,
   type CreatedApiKey,
 } from "@portal/api/infrastructure";
@@ -36,13 +37,26 @@ export function CreateKeyModal({
   const { t } = useTranslation();
   const [name, setName] = useState("");
   const [scope, setScope] = useState<ApiKeyScope>("personal");
+  const [access, setAccess] = useState<ApiKeyAccess>("full");
   const [created, setCreated] = useState<CreatedApiKey | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // A shared (team) key can only ever be processing-only; full access is never sharable.
+  const isTeamScope = scope !== "personal";
+  const effectiveAccess: ApiKeyAccess = isTeamScope ? "processing" : access;
+
+  function changeScope(next: ApiKeyScope) {
+    setScope(next);
+    if (next !== "personal") {
+      setAccess("processing");
+    }
+  }
+
   function reset() {
     setName("");
     setScope("personal");
+    setAccess("full");
     setCreated(null);
     setSubmitting(false);
     setError(null);
@@ -58,7 +72,11 @@ export function CreateKeyModal({
     setSubmitting(true);
     setError(null);
     try {
-      const result = await createApiKey({ name: name.trim(), scope });
+      const result = await createApiKey({
+        name: name.trim(),
+        scope,
+        access: effectiveAccess,
+      });
       setCreated(result);
       onCreated();
     } catch (e) {
@@ -69,6 +87,19 @@ export function CreateKeyModal({
   }
 
   const teamLabel = teamName ?? t("portal.infrastructure.createKey.yourTeam");
+  const accessOptions: RadioOption<ApiKeyAccess>[] = [
+    {
+      value: "full",
+      label: t("portal.infrastructure.createKey.accessFull"),
+      description: t("portal.infrastructure.createKey.accessFullHelp"),
+      disabled: isTeamScope,
+    },
+    {
+      value: "processing",
+      label: t("portal.infrastructure.createKey.accessProcessing"),
+      description: t("portal.infrastructure.createKey.accessProcessingHelp"),
+    },
+  ];
   const scopeOptions: RadioOption<ApiKeyScope>[] = [
     {
       value: "personal",
@@ -163,12 +194,28 @@ export function CreateKeyModal({
               <RadioGroup<ApiKeyScope>
                 name="apiKeyScope"
                 value={scope}
-                onChange={setScope}
+                onChange={changeScope}
                 options={scopeOptions}
               />
               {!canCreateTeamKeys && (
                 <p className="portal-infra__muted">
                   {t("portal.infrastructure.createKey.teamScopeLeaderOnly")}
+                </p>
+              )}
+            </div>
+          </FormField>
+
+          <FormField label={t("portal.infrastructure.createKey.accessLabel")}>
+            <div className="portal-infra__stack">
+              <RadioGroup<ApiKeyAccess>
+                name="apiKeyAccess"
+                value={effectiveAccess}
+                onChange={setAccess}
+                options={accessOptions}
+              />
+              {isTeamScope && (
+                <p className="portal-infra__muted">
+                  {t("portal.infrastructure.createKey.accessTeamNote")}
                 </p>
               )}
             </div>

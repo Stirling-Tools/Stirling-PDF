@@ -26,6 +26,7 @@ import stirling.software.proprietary.model.api.apikey.PortalApiKeysResponse;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKey;
+import stirling.software.proprietary.security.model.ApiKeyAccess;
 import stirling.software.proprietary.security.model.ApiKeyScope;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.ApiKeyDailyUsageRepository;
@@ -154,6 +155,7 @@ public class ApiKeyManagementService {
                             + " active API keys; revoke one before creating another");
         }
         ApiKeyScope scope = parseScope(request.scope());
+        ApiKeyAccess access = parseAccess(request.access(), scope);
 
         Long teamId = null;
         String teamName = null;
@@ -181,6 +183,7 @@ public class ApiKeyManagementService {
                                 .ownerUserId(caller.getId())
                                 .teamId(teamId)
                                 .scope(scope)
+                                .access(access)
                                 .enabled(true)
                                 .createdAt(Instant.now())
                                 .build());
@@ -247,6 +250,7 @@ public class ApiKeyManagementService {
                             .ownerUserId(user.getId())
                             .teamId(null)
                             .scope(ApiKeyScope.PERSONAL)
+                            .access(ApiKeyAccess.FULL)
                             .enabled(true)
                             .createdAt(Instant.now())
                             .build());
@@ -285,6 +289,7 @@ public class ApiKeyManagementService {
                 .name(key.getName())
                 .prefix(key.getPrefix())
                 .scope(scopeLabel(key.getScope()))
+                .access(accessLabel(key.getAccess()))
                 .teamName(key.getScope().isTeamScoped() ? teamName : null)
                 .created(
                         key.getCreatedAt() == null ? "" : CREATED_FORMAT.format(key.getCreatedAt()))
@@ -306,6 +311,39 @@ public class ApiKeyManagementService {
             case TEAM_LEAD -> "team-lead";
             case TEAM_MEMBERS -> "team-members";
         };
+    }
+
+    private static String accessLabel(ApiKeyAccess access) {
+        return access == ApiKeyAccess.PROCESSING ? "processing" : "full";
+    }
+
+    /**
+     * Resolve the requested access level, enforcing that a shared (team) key can only ever be
+     * processing-only - full access acts as the owner and must not be handed to a team. A personal
+     * key defaults to full (matching the legacy single key) unless the creator limits it.
+     */
+    private static ApiKeyAccess parseAccess(String raw, ApiKeyScope scope) {
+        ApiKeyAccess requested = null;
+        if (raw != null && !raw.isBlank()) {
+            requested =
+                    switch (raw.trim().toLowerCase(Locale.ROOT)) {
+                        case "full" -> ApiKeyAccess.FULL;
+                        case "processing", "processing-only", "processingonly" ->
+                                ApiKeyAccess.PROCESSING;
+                        default ->
+                                throw new ResponseStatusException(
+                                        HttpStatus.BAD_REQUEST, "Unknown access: " + raw);
+                    };
+        }
+        if (scope.isTeamScoped()) {
+            if (requested == ApiKeyAccess.FULL) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "A shared team key must be processing-only; full access can't be shared");
+            }
+            return ApiKeyAccess.PROCESSING;
+        }
+        return requested == null ? ApiKeyAccess.FULL : requested;
     }
 
     private static ApiKeyScope parseScope(String raw) {

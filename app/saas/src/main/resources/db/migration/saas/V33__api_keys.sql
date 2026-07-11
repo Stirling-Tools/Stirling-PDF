@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS api_keys (
     owner_user_id BIGINT       NOT NULL,
     team_id       BIGINT,
     scope         VARCHAR(32) NOT NULL,
+    access        VARCHAR(20) NOT NULL DEFAULT 'FULL',
     enabled       BOOLEAN     NOT NULL DEFAULT TRUE,
     created_at    TIMESTAMPTZ NOT NULL,
     last_used_at  TIMESTAMPTZ,

@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKey;
-import stirling.software.proprietary.security.model.ApiKeyScope;
+import stirling.software.proprietary.security.model.ApiKeyAccess;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.ApiKeyRepository;
 
@@ -72,29 +72,28 @@ public class ApiKeyAuthenticationService {
             usageRecorder.record(key.getId());
             return Optional.of(
                     new ApiKeyAuthentication(
-                            owner,
-                            auditLabel(key),
-                            authoritiesFor(owner, key),
-                            key.getScope().isTeamScoped()));
+                            owner, auditLabel(key), authoritiesFor(owner, key), key.getAccess()));
         }
 
-        // Legacy single per-user key: keep working, always personal to its user.
+        // Legacy single per-user key: keep working, always a full-access personal key for its user.
         return userRepository
                 .findByApiKey(rawKey)
                 .filter(User::isEnabled)
-                .map(user -> new ApiKeyAuthentication(user, null, user.getAuthorities(), false));
+                .map(
+                        user ->
+                                new ApiKeyAuthentication(
+                                        user, null, user.getAuthorities(), ApiKeyAccess.FULL));
     }
 
     /**
-     * Authorities the resolved key authenticates with. A PERSONAL key is the owner using their own
-     * credential, so it carries the owner's authorities unchanged. A TEAM key is a SHARED
-     * credential (visible to leaders or all members), so it must never confer admin: the owner's
-     * authorities are capped below {@code ROLE_ADMIN}, falling back to {@code ROLE_USER}. This
-     * blocks the escalation where an admin-owned team key would hand admin rights to everyone who
-     * can see it.
+     * Authorities the resolved key authenticates with. A FULL key is the owner using their own
+     * credential, so it carries the owner's authorities unchanged. A PROCESSING key is restricted
+     * to the file/PDF endpoints (and is the only kind that can be shared as a team key); as defence
+     * in depth behind {@code ApiKeyProcessingScopeInterceptor} it can never carry admin, so the
+     * owner's authorities are capped below {@code ROLE_ADMIN}, falling back to {@code ROLE_USER}.
      */
     private static Collection<? extends GrantedAuthority> authoritiesFor(User owner, ApiKey key) {
-        if (key.getScope() == ApiKeyScope.PERSONAL) {
+        if (key.getAccess() != ApiKeyAccess.PROCESSING) {
             return owner.getAuthorities();
         }
         String adminRole = Role.ADMIN.getRoleId();
@@ -135,11 +134,12 @@ public class ApiKeyAuthenticationService {
 
     /**
      * A resolved key: the user, an optional processor-feed label, the authorities to run as, and
-     * whether it is a shared team key (which must not confer team-leader powers).
+     * how much power the key carries (a PROCESSING key is confined to file/PDF endpoints and never
+     * confers team-leader powers).
      */
     public record ApiKeyAuthentication(
             User user,
             String auditLabel,
             Collection<? extends GrantedAuthority> authorities,
-            boolean teamScoped) {}
+            ApiKeyAccess access) {}
 }

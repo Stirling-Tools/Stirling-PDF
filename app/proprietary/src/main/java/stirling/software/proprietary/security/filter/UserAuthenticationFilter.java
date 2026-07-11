@@ -116,7 +116,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                                     user,
                                     apiKey,
                                     resolved.get().authorities(),
-                                    resolved.get().teamScoped());
+                                    resolved.get().access());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     if (resolved.get().auditLabel() != null) {
                         MDC.put(API_KEY_LABEL_MDC, resolved.get().auditLabel());

@@ -33,8 +33,9 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.AuthenticationType;
-import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.exception.AuthenticationFailureException;
+import stirling.software.proprietary.security.service.ApiKeyAuthenticationService;
+import stirling.software.proprietary.security.service.ApiKeyAuthenticationService.ApiKeyAuthentication;
 import stirling.software.proprietary.security.service.CustomUserDetailsService;
 import stirling.software.proprietary.security.service.JwtServiceInterface;
 import stirling.software.proprietary.security.service.UserService;
@@ -48,6 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final CustomUserDetailsService userDetailsService;
     private final AuthenticationEntryPoint authenticationEntryPoint;
     private final ApplicationProperties.Security securityProperties;
+    private final ApiKeyAuthenticationService apiKeyAuthenticationService;
 
     @Override
     protected void doFilterInternal(
@@ -131,9 +133,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             if (apiKey != null && !apiKey.isBlank()) {
                 try {
-                    Optional<User> user = userService.getUserByApiKey(apiKey);
+                    // Resolve through the shared service so a team/processing key gets its capped
+                    // authorities and access flag - resolving via the owner here would hand a
+                    // shared
+                    // key the owner's full (admin) rights and bypass the processing-scope boundary.
+                    Optional<ApiKeyAuthentication> resolved =
+                            apiKeyAuthenticationService.authenticate(apiKey);
 
-                    if (user.isEmpty()) {
+                    if (resolved.isEmpty()) {
                         handleAuthenticationFailure(
                                 request,
                                 response,
@@ -143,7 +150,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     authentication =
                             new ApiKeyAuthenticationToken(
-                                    user.get(), apiKey, user.get().getAuthorities());
+                                    resolved.get().user(),
+                                    apiKey,
+                                    resolved.get().authorities(),
+                                    resolved.get().access());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     return true;
                 } catch (AuthenticationException e) {

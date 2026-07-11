@@ -65,10 +65,12 @@ describe("CreateKeyModal", () => {
       screen.getByText("sk_live_demo_key_rotate_in_prod"),
     ).toBeInTheDocument();
     await waitFor(() => expect(onCreated).toHaveBeenCalled());
-    // Personal is the default scope when the leader doesn't pick a team scope.
+    // Personal is the default scope when the leader doesn't pick a team scope,
+    // and a personal key defaults to full access.
     expect(createApiKey).toHaveBeenCalledWith({
       name: "Production ingest",
       scope: "personal",
+      access: "full",
     });
   });
 

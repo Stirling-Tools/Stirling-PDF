@@ -62,6 +62,15 @@ public class ApiKey implements Serializable {
     @Column(name = "scope", nullable = false)
     private ApiKeyScope scope;
 
+    /**
+     * How much power the key carries; a shared (team) key is always {@link
+     * ApiKeyAccess#PROCESSING}.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "access", nullable = false)
+    @Builder.Default
+    private ApiKeyAccess access = ApiKeyAccess.FULL;
+
     @Column(name = "enabled", nullable = false)
     private boolean enabled;
 

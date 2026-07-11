@@ -35,7 +35,7 @@ public class TeamSecurityExpressions {
 
     /** Whether the current authenticated user is a {@code LEADER} of the given team. */
     public boolean isTeamLeader(Long teamId) {
-        if (isSharedTeamApiKey()) {
+        if (isProcessingApiKey()) {
             return false;
         }
         User currentUser = getCurrentUser();
@@ -50,7 +50,7 @@ public class TeamSecurityExpressions {
 
     /** Whether the current authenticated user is a {@code LEADER} of their own team. */
     public boolean isCurrentUserTeamLeader() {
-        if (isSharedTeamApiKey()) {
+        if (isProcessingApiKey()) {
             return false;
         }
         User currentUser = getCurrentUser();
@@ -64,14 +64,16 @@ public class TeamSecurityExpressions {
     }
 
     /**
-     * A shared team key must never authenticate with team-leader powers: it acts at the level of the
-     * least-privileged member who can use it. Team-leadership isn't a {@code GrantedAuthority} on
-     * SaaS (it's a membership-role lookup on the acting owner), so the owner-strips in {@code
-     * ApiKeyAuthenticationService} can't cap it - the token's team-scope flag does.
+     * A processing-only API key (which every shared team key is) must never authenticate with
+     * team-leader powers. Team-leadership isn't a {@code GrantedAuthority} on SaaS (it's a
+     * membership-role lookup on the acting owner), so the owner-strips in {@code
+     * ApiKeyAuthenticationService} can't cap it - the token's access flag does. Defence in depth
+     * behind {@code ApiKeyProcessingScopeInterceptor}, which already blocks such a key from the
+     * team endpoints entirely.
      */
-    private boolean isSharedTeamApiKey() {
+    private boolean isProcessingApiKey() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return auth instanceof ApiKeyAuthenticationToken token && token.isTeamScoped();
+        return auth instanceof ApiKeyAuthenticationToken token && token.isProcessingOnly();
     }
 
     /** The current authenticated user's team id, or {@code null} if unauthenticated / teamless. */

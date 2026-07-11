@@ -9,38 +9,51 @@ public class ApiKeyAuthenticationToken extends AbstractAuthenticationToken {
 
     private final Object principal;
     private Object credentials;
-    // True when the resolving key is team-scoped (shared). Such a key must never confer team-leader
-    // powers - it acts at the level of the least-privileged member who can use it.
-    private final boolean teamScoped;
+    // How much power the resolving key carries. A PROCESSING key is restricted to the file/PDF
+    // endpoints (enforced by ApiKeyProcessingScopeInterceptor) and never confers team-leader
+    // powers,
+    // regardless of the owner's role - so a shared key is safe.
+    private final ApiKeyAccess access;
 
     public ApiKeyAuthenticationToken(String apiKey) {
         super((Collection<? extends GrantedAuthority>) null);
         this.principal = null;
         this.credentials = apiKey;
-        this.teamScoped = false;
+        this.access = ApiKeyAccess.FULL;
         setAuthenticated(false);
     }
 
     public ApiKeyAuthenticationToken(
             Object principal, String apiKey, Collection<? extends GrantedAuthority> authorities) {
-        this(principal, apiKey, authorities, false);
+        this(principal, apiKey, authorities, ApiKeyAccess.FULL);
     }
 
     public ApiKeyAuthenticationToken(
             Object principal,
             String apiKey,
             Collection<? extends GrantedAuthority> authorities,
-            boolean teamScoped) {
+            ApiKeyAccess access) {
         super(authorities);
         this.principal = principal; // principal can be a UserDetails object
         this.credentials = apiKey;
-        this.teamScoped = teamScoped;
+        this.access = access == null ? ApiKeyAccess.FULL : access;
         super.setAuthenticated(true); // this authentication is trusted
     }
 
-    /** Whether this token came from a shared team key (never grants team-leader authority). */
-    public boolean isTeamScoped() {
-        return teamScoped;
+    /**
+     * How much power this key carries (FULL acts as owner; PROCESSING is file/PDF endpoints only).
+     */
+    public ApiKeyAccess getAccess() {
+        return access;
+    }
+
+    /**
+     * Whether this key is restricted to file/PDF processing endpoints - true for every shared team
+     * key and for any personal key the owner chose to limit. Such a key never confers team-leader
+     * or admin powers.
+     */
+    public boolean isProcessingOnly() {
+        return access != null && access.isProcessingOnly();
     }
 
     @Override

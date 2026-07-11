@@ -207,6 +207,7 @@ describe("Sources view", () => {
           name: "Production ingest",
           prefix: "sk_a3f81b2c",
           scope: "personal",
+          access: "full",
           teamName: null,
           created: "2026-03-02",
           lastUsed: "2026-07-10 09:14",

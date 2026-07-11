@@ -21,7 +21,10 @@ import {
   type ApiKey,
   type ApiKeysResponse,
 } from "@portal/api/infrastructure";
-import { KEY_SCOPE_LABEL } from "@portal/components/infrastructure/infraFormat";
+import {
+  KEY_ACCESS_LABEL,
+  KEY_SCOPE_LABEL,
+} from "@portal/components/infrastructure/infraFormat";
 import { AgentBuilderAction } from "@portal/components/sources/AgentBuilderAction";
 import { KpiStrip } from "@portal/components/sources/KpiStrip";
 import { SourcesTable } from "@portal/components/sources/SourcesTable";
@@ -48,6 +51,10 @@ function apiKeyToSourceRow(k: ApiKey, t: TFunction): SourceView {
     referencingPolicies: [],
     config: [
       { label: t("portal.sources.detail.apiKeyScope"), value: scope },
+      {
+        label: t("portal.sources.detail.apiKeyAccess"),
+        value: t(KEY_ACCESS_LABEL[k.access]),
+      },
       { label: t("portal.sources.detail.apiKeyPrefix"), value: k.prefix },
       { label: t("portal.sources.detail.apiKeyLastUsed"), value: k.lastUsed },
     ],
