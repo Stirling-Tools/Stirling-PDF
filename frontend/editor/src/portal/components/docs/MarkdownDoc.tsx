@@ -1,10 +1,21 @@
-import { isValidElement, useState } from "react";
+import { isValidElement, useState, type ReactNode } from "react";
 import ReactMarkdown, {
   defaultUrlTransform,
   type Components,
 } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Button } from "@app/ui";
+import { slugify } from "@portal/docs/headings";
+
+/** Flatten a heading's React children to plain text for its anchor id. */
+function childText(node: ReactNode): string {
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(childText).join("");
+  if (isValidElement(node)) {
+    return childText((node.props as { children?: ReactNode }).children);
+  }
+  return "";
+}
 
 // Keep our internal `doc:` scheme; sanitize every other URL as react-markdown
 // would by default (it strips unknown protocols, which would kill doc: links).
@@ -39,6 +50,8 @@ function CopyButton({ text }: { text: string }) {
 
 function buildComponents(onNavigate: (docId: string) => void): Components {
   return {
+    h2: ({ children }) => <h2 id={slugify(childText(children))}>{children}</h2>,
+    h3: ({ children }) => <h3 id={slugify(childText(children))}>{children}</h3>,
     a: ({ href, children }) => {
       if (href?.startsWith("doc:")) {
         const id = href.slice(4);

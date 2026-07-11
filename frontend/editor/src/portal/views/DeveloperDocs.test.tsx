@@ -37,7 +37,9 @@ describe("DeveloperDocs — markdown browser over the generated manifest", () =>
     expect(
       screen.queryByRole("button", { name: "Kubernetes Guide" }),
     ).not.toBeInTheDocument();
-    expect(screen.getByText(/Benefits of Stirling PDF/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/locally hosted web application/i),
+    ).toBeInTheDocument();
   });
 
   it("expands a collapsible section when its header is clicked", () => {
@@ -60,7 +62,7 @@ describe("DeveloperDocs — markdown browser over the generated manifest", () =>
     fireEvent.click(hits[0]);
     await waitFor(() =>
       expect(
-        screen.queryByText(/Benefits of Stirling PDF/i),
+        screen.queryByText(/locally hosted web application/i),
       ).not.toBeInTheDocument(),
     );
   });
@@ -71,7 +73,7 @@ describe("DeveloperDocs — markdown browser over the generated manifest", () =>
     fireEvent.click(screen.getByRole("link", { name: /Migration Guide/i }));
     await waitFor(() =>
       expect(
-        screen.queryByText(/Benefits of Stirling PDF/i),
+        screen.queryByText(/locally hosted web application/i),
       ).not.toBeInTheDocument(),
     );
   });

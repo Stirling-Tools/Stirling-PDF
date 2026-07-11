@@ -6702,6 +6702,9 @@ eyebrow = "SKILLS"
 lead = "Bundled, named capabilities your agent invokes as a single tool. Each skill is a deterministic op chain with evals attached."
 title = "Agent skills"
 
+[portal.docs.toc]
+title = "On this page"
+
 [portal.docs.webhooks]
 codeCaption = "document.processed"
 eyebrow = "API REFERENCE"

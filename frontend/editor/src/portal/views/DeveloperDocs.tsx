@@ -5,7 +5,9 @@ import { Button, EmptyState } from "@app/ui";
 import { DocsNav } from "@portal/components/docs/DocsNav";
 import { DocsSearch } from "@portal/components/docs/DocsSearch";
 import { DocsSection } from "@portal/components/docs/DocsSection";
+import { DocsToc } from "@portal/components/docs/DocsToc";
 import { MarkdownDoc } from "@portal/components/docs/MarkdownDoc";
+import { extractHeadings } from "@portal/docs/headings";
 import {
   allDocs,
   firstDocId,
@@ -53,6 +55,11 @@ export function DeveloperDocs() {
     () => nav.find((s) => s.items.some((i) => i.id === activeId)),
     [nav, activeId],
   );
+  // "On this page" headings for the current doc.
+  const headings = useMemo(
+    () => (doc ? extractHeadings(doc.markdown) : []),
+    [doc],
+  );
 
   // Navigating closes the mobile drawer, clears the search, and resets the pane.
   const onSelect = useCallback(
@@ -79,8 +86,10 @@ export function DeveloperDocs() {
     );
   }
 
+  const hasToc = headings.length > 0;
+
   return (
-    <div className="portal-docs">
+    <div className={"portal-docs" + (hasToc ? " portal-docs--with-toc" : "")}>
       <Button
         variant="tertiary"
         className="portal-docs__nav-toggle"
@@ -120,6 +129,12 @@ export function DeveloperDocs() {
           </DocsSection>
         </div>
       </main>
+
+      {hasToc && (
+        <aside className="portal-docs__toc-col">
+          <DocsToc headings={headings} scrollRef={contentRef} />
+        </aside>
+      )}
     </div>
   );
 }
