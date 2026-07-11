@@ -2,7 +2,7 @@
 Feature: API Keys management API
 
     Tests for the portal API-keys REST API, which lets a user mint, list, and
-    revoke named API keys - personal or team-scoped.
+    revoke named personal API keys.
 
     Endpoints (all @EnterpriseEndpoint, JWT/ROLE required):
     - GET    /api/v1/proprietary/ui-data/infrastructure/api-keys        (list)
@@ -14,7 +14,7 @@ Feature: API Keys management API
     requests must always be rejected with 401.
 
     The legacy single per-user key (the global API key) must keep working so no
-    key created before multi-key support is ever lost or exposed to a team.
+    key created before multi-key support is ever lost.
 
     Admin credentials: username=admin, password=stirling
     Global API key: 123456789
@@ -41,13 +41,13 @@ Feature: API Keys management API
     @positive
     Scenario: Admin can create a personal API key
         Given I am logged in as admin
-        When I send a JSON POST request to "/api/v1/proprietary/ui-data/infrastructure/api-keys" with JWT authentication and body '{"name": "bdd_personal_key", "scope": "personal"}'
+        When I send a JSON POST request to "/api/v1/proprietary/ui-data/infrastructure/api-keys" with JWT authentication and body '{"name": "bdd_personal_key"}'
         Then the response status code should be one of "200, 403"
 
     @negative
     Scenario: Creating a key without a name is rejected
         Given I am logged in as admin
-        When I send a JSON POST request to "/api/v1/proprietary/ui-data/infrastructure/api-keys" with JWT authentication and body '{"name": "", "scope": "personal"}'
+        When I send a JSON POST request to "/api/v1/proprietary/ui-data/infrastructure/api-keys" with JWT authentication and body '{"name": ""}'
         Then the response status code should be one of "400, 403"
 
     @negative

@@ -23,14 +23,7 @@ const K = "portal.infrastructure.createKey";
 function renderModal(props: Partial<ComponentProps<typeof CreateKeyModal>>) {
   return render(
     <MantineProvider>
-      <CreateKeyModal
-        open
-        onClose={() => {}}
-        onCreated={() => {}}
-        canCreateTeamKeys
-        teamName="Acme Corp"
-        {...props}
-      />
+      <CreateKeyModal open onClose={() => {}} onCreated={() => {}} {...props} />
     </MantineProvider>,
   );
 }
@@ -65,17 +58,6 @@ describe("CreateKeyModal", () => {
       screen.getByText("sk_live_demo_key_rotate_in_prod"),
     ).toBeInTheDocument();
     await waitFor(() => expect(onCreated).toHaveBeenCalled());
-    // Personal is the default scope when the leader doesn't pick a team scope,
-    // and a personal key defaults to full access.
-    expect(createApiKey).toHaveBeenCalledWith({
-      name: "Production ingest",
-      scope: "personal",
-      access: "full",
-    });
-  });
-
-  it("disables team scopes when the caller cannot create team keys", () => {
-    renderModal({ canCreateTeamKeys: false, teamName: null });
-    expect(screen.getByText(`${K}.teamScopeLeaderOnly`)).toBeInTheDocument();
+    expect(createApiKey).toHaveBeenCalledWith({ name: "Production ingest" });
   });
 });

@@ -1,8 +1,6 @@
 import type { TFunction } from "i18next";
 import type { ChipAccent, StatusTone } from "@app/ui";
 import type {
-  ApiKeyAccess,
-  ApiKeyScope,
   ApiKeyStatus,
   AttestationStatus,
   AuditCategory,
@@ -62,25 +60,6 @@ export const KEY_TONE: Record<ApiKeyStatus, StatusTone> = {
 export const KEY_LABEL: Record<ApiKeyStatus, string> = {
   active: "portal.infrastructure.keyLabel.active",
   revoked: "portal.infrastructure.keyLabel.revoked",
-};
-
-// Scope chip labels (i18n keys), resolved via t(KEY_SCOPE_LABEL[value]).
-export const KEY_SCOPE_LABEL: Record<ApiKeyScope, string> = {
-  personal: "portal.infrastructure.keyScopeLabel.personal",
-  "team-lead": "portal.infrastructure.keyScopeLabel.teamLead",
-  "team-members": "portal.infrastructure.keyScopeLabel.teamMembers",
-};
-
-export const KEY_SCOPE_TONE: Record<ApiKeyScope, ChipAccent> = {
-  personal: "default",
-  "team-lead": "premium",
-  "team-members": "brand",
-};
-
-// Access labels (i18n keys), resolved via t(KEY_ACCESS_LABEL[value]).
-export const KEY_ACCESS_LABEL: Record<ApiKeyAccess, string> = {
-  full: "portal.infrastructure.keyAccessLabel.full",
-  processing: "portal.infrastructure.keyAccessLabel.processing",
 };
 
 export const CERT_TONE: Record<CertStatus, StatusTone> = {

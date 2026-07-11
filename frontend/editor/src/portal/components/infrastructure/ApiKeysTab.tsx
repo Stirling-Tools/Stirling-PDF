@@ -95,8 +95,6 @@ export function ApiKeysTab() {
       <CreateKeyModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        canCreateTeamKeys={data?.canCreateTeamKeys ?? false}
-        teamName={data?.teamName ?? null}
         onCreated={reload}
       />
 

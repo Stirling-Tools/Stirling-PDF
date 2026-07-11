@@ -426,8 +426,7 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
         userService.trackApiKeyFirstUse(user);
 
         ApiKeyAuthenticationToken authToken =
-                new ApiKeyAuthenticationToken(
-                        user, apiKey, resolved.get().authorities(), resolved.get().access());
+                new ApiKeyAuthenticationToken(user, apiKey, resolved.get().authorities());
         SecurityContextHolder.getContext().setAuthentication(authToken);
         if (resolved.get().auditLabel() != null) {
             MDC.put(ApiKeyAuthenticationService.AUDIT_LABEL_MDC_KEY, resolved.get().auditLabel());

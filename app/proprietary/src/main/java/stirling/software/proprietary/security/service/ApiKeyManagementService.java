@@ -3,10 +3,8 @@ package stirling.software.proprietary.security.service;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import org.springframework.dao.DataIntegrityViolationException;
@@ -18,29 +16,22 @@ import org.springframework.web.server.ResponseStatusException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.model.api.apikey.CreateApiKeyRequest;
 import stirling.software.proprietary.model.api.apikey.CreatedApiKeyDto;
 import stirling.software.proprietary.model.api.apikey.PortalApiKeyDto;
 import stirling.software.proprietary.model.api.apikey.PortalApiKeysResponse;
-import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKey;
-import stirling.software.proprietary.security.model.ApiKeyAccess;
-import stirling.software.proprietary.security.model.ApiKeyScope;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.ApiKeyDailyUsageRepository;
 import stirling.software.proprietary.security.repository.ApiKeyRepository;
-import stirling.software.proprietary.security.repository.TeamRepository;
 
 /**
- * Portal-facing CRUD for named API keys: lists what the caller may see, creates personal or
- * team-scoped keys, and revokes them. Team scoping reuses {@link PolicyManagementAuthority} (a team
- * leader on SaaS, a global admin self-hosted) so it can't drift from the policy/source rules.
+ * Portal-facing CRUD for named, personal API keys: lists, creates, and revokes the caller's own
+ * keys. Every key belongs to exactly one user and authenticates as that user; there is no sharing.
  *
- * <p>Personal keys are strictly owner-only. Every pre-existing single {@code users.apiKey} is
- * lazily represented as a PERSONAL key owned by that user, so historic keys can never surface to a
- * team.
+ * <p>Every pre-existing single {@code users.apiKey} is lazily represented as a key owned by that
+ * user, so historic keys list uniformly.
  */
 @Slf4j
 @Service
@@ -62,35 +53,19 @@ public class ApiKeyManagementService {
     private final ApiKeyRepository apiKeyRepository;
     private final ApiKeyDailyUsageRepository usageRepository;
     private final UserRepository userRepository;
-    private final TeamRepository teamRepository;
     private final UserService userService;
-    private final PolicyManagementAuthority policyAuthority;
     private final ApiKeyLegacyMigrator legacyMigrator;
 
-    /** All keys the caller may see, plus whether they may mint team keys. */
+    /** All keys the caller owns. */
     @Transactional
     public PortalApiKeysResponse listVisibleKeys() {
         User caller = requireCaller();
         migrateLegacyKey(caller);
 
-        boolean isManager = isTeamKeyManager();
-        Long teamId = policyAuthority.currentUserTeamId();
-        String teamName = teamId == null ? null : teamNameFor(teamId);
+        List<ApiKey> visible =
+                apiKeyRepository.findByOwnerUserIdOrderByCreatedAtDesc(caller.getId());
 
-        List<ApiKey> visible = new ArrayList<>();
-        // Personal keys: only the caller's own.
-        apiKeyRepository.findByOwnerUserIdOrderByCreatedAtDesc(caller.getId()).stream()
-                .filter(k -> k.getScope() == ApiKeyScope.PERSONAL)
-                .forEach(visible::add);
-        // Team keys: members see TEAM_MEMBERS; only managers additionally see TEAM_LEAD.
-        if (teamId != null) {
-            apiKeyRepository.findByTeamIdOrderByCreatedAtDesc(teamId).stream()
-                    .filter(k -> k.getScope().isTeamScoped())
-                    .filter(k -> k.getScope() == ApiKeyScope.TEAM_MEMBERS || isManager)
-                    .forEach(visible::add);
-        }
-
-        // Batch usage for all visible keys into two queries rather than two-per-key (avoids N+1).
+        // Batch usage for all keys into three queries rather than two-per-key (avoids N+1).
         long today = Instant.now().atZone(ZoneOffset.UTC).toLocalDate().toEpochDay();
         List<Long> ids = visible.stream().map(ApiKey::getId).toList();
         Map<Long, Long> todayById = new HashMap<>();
@@ -113,25 +88,19 @@ public class ApiKeyManagementService {
                         .map(
                                 k ->
                                         toDto(
-                                                caller,
                                                 k,
-                                                teamName,
                                                 zeroIfNull(todayById.get(k.getId())),
                                                 zeroIfNull(monthById.get(k.getId())),
                                                 zeroIfNull(totalById.get(k.getId()))))
                         .toList();
-        return PortalApiKeysResponse.builder()
-                .keys(keys)
-                .canCreateTeamKeys(isManager && teamId != null)
-                .teamName(teamName)
-                .build();
+        return PortalApiKeysResponse.builder().keys(keys).build();
     }
 
     private static long zeroIfNull(Long value) {
         return value == null ? 0L : value;
     }
 
-    /** Create a key and return its one-time secret. */
+    /** Create a personal key and return its one-time secret. */
     @Transactional
     public CreatedApiKeyDto createKey(CreateApiKeyRequest request) {
         User caller = requireCaller();
@@ -155,24 +124,6 @@ public class ApiKeyManagementService {
                             + MAX_ACTIVE_KEYS_PER_USER
                             + " active API keys; revoke one before creating another");
         }
-        ApiKeyScope scope = parseScope(request.scope());
-        ApiKeyAccess access = parseAccess(request.access(), scope);
-
-        Long teamId = null;
-        String teamName = null;
-        if (scope.isTeamScoped()) {
-            if (!isTeamKeyManager()) {
-                throw new ResponseStatusException(
-                        HttpStatus.FORBIDDEN,
-                        "Team API keys can only be created by a team leader or an admin");
-            }
-            teamId = policyAuthority.currentUserTeamId();
-            if (teamId == null) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "No team is available to scope this key to");
-            }
-            teamName = teamNameFor(teamId);
-        }
 
         String rawKey = ApiKeyHasher.generateRawKey();
         ApiKey saved =
@@ -182,20 +133,14 @@ public class ApiKeyManagementService {
                                 .keyHash(ApiKeyHasher.hash(rawKey))
                                 .prefix(ApiKeyHasher.displayPrefix(rawKey))
                                 .ownerUserId(caller.getId())
-                                .teamId(teamId)
-                                .scope(scope)
-                                .access(access)
                                 .enabled(true)
                                 .createdAt(Instant.now())
                                 .build());
 
-        return CreatedApiKeyDto.builder()
-                .key(toDto(caller, saved, teamName, 0L, 0L, 0L))
-                .secret(rawKey)
-                .build();
+        return CreatedApiKeyDto.builder().key(toDto(saved, 0L, 0L, 0L)).secret(rawKey).build();
     }
 
-    /** Soft-revoke a key the caller manages; also clears the legacy column if it is that key. */
+    /** Soft-revoke a key the caller owns; also clears the legacy column if it is that key. */
     @Transactional
     public void revokeKey(Long id) {
         User caller = requireCaller();
@@ -204,8 +149,8 @@ public class ApiKeyManagementService {
                         .findById(id)
                         .orElseThrow(
                                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No key"));
-        if (!canManage(caller, key)) {
-            // Not-found rather than forbidden so a caller can't probe other teams' key ids.
+        if (!key.getOwnerUserId().equals(caller.getId())) {
+            // Not-found rather than forbidden so a caller can't probe other users' key ids.
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No key");
         }
         key.setEnabled(false);
@@ -214,25 +159,7 @@ public class ApiKeyManagementService {
         clearLegacyColumnIfMatches(key);
     }
 
-    /**
-     * Team keys are managed by a team leader (the SaaS rule) or an admin (either flavor) - an admin
-     * is effectively a leader for this purpose, which the SaaS team-leader-only check misses.
-     */
-    private boolean isTeamKeyManager() {
-        return policyAuthority.canEditPolicies() || userService.isCurrentUserAdmin();
-    }
-
-    /** Whether the caller may revoke a given key. */
-    private boolean canManage(User caller, ApiKey key) {
-        if (key.getScope() == ApiKeyScope.PERSONAL) {
-            return key.getOwnerUserId().equals(caller.getId());
-        }
-        return isTeamKeyManager()
-                && key.getTeamId() != null
-                && key.getTeamId().equals(policyAuthority.currentUserTeamId());
-    }
-
-    /** Represent a user's pre-existing single key as a PERSONAL row so it lists uniformly. */
+    /** Represent a user's pre-existing single key as a row so it lists uniformly. */
     private void migrateLegacyKey(User user) {
         String legacy = user.getApiKey();
         if (legacy == null || legacy.isBlank()) {
@@ -251,9 +178,6 @@ public class ApiKeyManagementService {
                             .keyHash(hash)
                             .prefix(ApiKeyHasher.displayPrefix(legacy))
                             .ownerUserId(user.getId())
-                            .teamId(null)
-                            .scope(ApiKeyScope.PERSONAL)
-                            .access(ApiKeyAccess.FULL)
                             .enabled(true)
                             .createdAt(Instant.now())
                             .build());
@@ -280,20 +204,11 @@ public class ApiKeyManagementService {
                         });
     }
 
-    private PortalApiKeyDto toDto(
-            User caller,
-            ApiKey key,
-            String teamName,
-            long usageToday,
-            long usageMonth,
-            long usageTotal) {
+    private PortalApiKeyDto toDto(ApiKey key, long usageToday, long usageMonth, long usageTotal) {
         return PortalApiKeyDto.builder()
                 .id(String.valueOf(key.getId()))
                 .name(key.getName())
                 .prefix(key.getPrefix())
-                .scope(scopeLabel(key.getScope()))
-                .access(accessLabel(key.getAccess()))
-                .teamName(key.getScope().isTeamScoped() ? teamName : null)
                 .created(
                         key.getCreatedAt() == null ? "" : CREATED_FORMAT.format(key.getCreatedAt()))
                 .lastUsed(
@@ -304,67 +219,7 @@ public class ApiKeyManagementService {
                 .usageToday(usageToday)
                 .usageMonth(usageMonth)
                 .usageTotal(usageTotal)
-                .canManage(canManage(caller, key))
                 .build();
-    }
-
-    private static String scopeLabel(ApiKeyScope scope) {
-        return switch (scope) {
-            case PERSONAL -> "personal";
-            case TEAM_LEAD -> "team-lead";
-            case TEAM_MEMBERS -> "team-members";
-        };
-    }
-
-    private static String accessLabel(ApiKeyAccess access) {
-        return access == ApiKeyAccess.PROCESSING ? "processing" : "full";
-    }
-
-    /**
-     * Resolve the requested access level, enforcing that a shared (team) key can only ever be
-     * processing-only - full access acts as the owner and must not be handed to a team. A personal
-     * key defaults to full (matching the legacy single key) unless the creator limits it.
-     */
-    private static ApiKeyAccess parseAccess(String raw, ApiKeyScope scope) {
-        ApiKeyAccess requested = null;
-        if (raw != null && !raw.isBlank()) {
-            requested =
-                    switch (raw.trim().toLowerCase(Locale.ROOT)) {
-                        case "full" -> ApiKeyAccess.FULL;
-                        case "processing", "processing-only", "processingonly" ->
-                                ApiKeyAccess.PROCESSING;
-                        default ->
-                                throw new ResponseStatusException(
-                                        HttpStatus.BAD_REQUEST, "Unknown access: " + raw);
-                    };
-        }
-        if (scope.isTeamScoped()) {
-            if (requested == ApiKeyAccess.FULL) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "A shared team key must be processing-only; full access can't be shared");
-            }
-            return ApiKeyAccess.PROCESSING;
-        }
-        return requested == null ? ApiKeyAccess.FULL : requested;
-    }
-
-    private static ApiKeyScope parseScope(String raw) {
-        if (raw == null || raw.isBlank()) {
-            return ApiKeyScope.PERSONAL;
-        }
-        return switch (raw.trim().toLowerCase(Locale.ROOT)) {
-            case "personal" -> ApiKeyScope.PERSONAL;
-            case "team-lead", "team_lead", "teamlead" -> ApiKeyScope.TEAM_LEAD;
-            case "team-members", "team_members", "teammembers", "team" -> ApiKeyScope.TEAM_MEMBERS;
-            default ->
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST, "Unknown scope: " + raw);
-        };
-    }
-
-    private String teamNameFor(Long teamId) {
-        return teamRepository.findById(teamId).map(Team::getName).orElse(null);
     }
 
     private User requireCaller() {

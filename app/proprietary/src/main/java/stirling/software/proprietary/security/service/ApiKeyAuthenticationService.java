@@ -2,21 +2,16 @@ package stirling.software.proprietary.security.service;
 
 import java.time.Instant;
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
-import stirling.software.common.model.enumeration.Role;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKey;
-import stirling.software.proprietary.security.model.ApiKeyAccess;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.ApiKeyRepository;
 
@@ -26,8 +21,8 @@ import stirling.software.proprietary.security.repository.ApiKeyRepository;
  * bean cycle.
  *
  * <p>Resolution order: the multi-key {@code api_keys} table first (by hash), then the legacy
- * per-user {@code users.apiKey} column. Legacy keys therefore keep working unchanged and are always
- * treated as personal to their user.
+ * per-user {@code users.apiKey} column. Legacy keys therefore keep working unchanged. Every key is
+ * personal and authenticates as its owner with the owner's authorities.
  */
 @Service
 @RequiredArgsConstructor
@@ -51,9 +46,7 @@ public class ApiKeyAuthenticationService {
 
     /**
      * Resolve a raw key, recording usage as a side effect. Returns the owning user, a display label
-     * for the resolved key ({@code null} for the legacy per-user key), and the authorities the
-     * request should run with - which for a team key are capped below admin (see {@link
-     * #authoritiesFor}).
+     * for the resolved key ({@code null} for the legacy per-user key), and the owner's authorities.
      */
     public Optional<ApiKeyAuthentication> authenticate(String rawKey) {
         if (rawKey == null || rawKey.isBlank()) {
@@ -71,40 +64,14 @@ public class ApiKeyAuthenticationService {
             }
             usageRecorder.record(key.getId());
             return Optional.of(
-                    new ApiKeyAuthentication(
-                            owner, auditLabel(key), authoritiesFor(owner, key), key.getAccess()));
+                    new ApiKeyAuthentication(owner, auditLabel(key), owner.getAuthorities()));
         }
 
-        // Legacy single per-user key: keep working, always a full-access personal key for its user.
+        // Legacy single per-user key: keep working, always a personal key for its user.
         return userRepository
                 .findByApiKey(rawKey)
                 .filter(User::isEnabled)
-                .map(
-                        user ->
-                                new ApiKeyAuthentication(
-                                        user, null, user.getAuthorities(), ApiKeyAccess.FULL));
-    }
-
-    /**
-     * Authorities the resolved key authenticates with. A FULL key is the owner using their own
-     * credential, so it carries the owner's authorities unchanged. A PROCESSING key is restricted
-     * to the file/PDF endpoints (and is the only kind that can be shared as a team key); as defence
-     * in depth behind {@code ApiKeyProcessingScopeInterceptor} it can never carry admin, so the
-     * owner's authorities are capped below {@code ROLE_ADMIN}, falling back to {@code ROLE_USER}.
-     */
-    private static Collection<? extends GrantedAuthority> authoritiesFor(User owner, ApiKey key) {
-        if (key.getAccess() != ApiKeyAccess.PROCESSING) {
-            return owner.getAuthorities();
-        }
-        String adminRole = Role.ADMIN.getRoleId();
-        List<GrantedAuthority> capped =
-                owner.getAuthorities().stream()
-                        .filter(a -> !adminRole.equals(a.getAuthority()))
-                        .collect(Collectors.toList());
-        if (capped.isEmpty()) {
-            capped.add(new SimpleGrantedAuthority(Role.USER.getRoleId()));
-        }
-        return capped;
+                .map(user -> new ApiKeyAuthentication(user, null, user.getAuthorities()));
     }
 
     /** "Production ingest (sk_a1b2c3d4)" - shown against API-sourced docs in the processor feed. */
@@ -133,13 +100,8 @@ public class ApiKeyAuthenticationService {
     }
 
     /**
-     * A resolved key: the user, an optional processor-feed label, the authorities to run as, and
-     * how much power the key carries (a PROCESSING key is confined to file/PDF endpoints and never
-     * confers team-leader powers).
+     * A resolved key: the user, an optional processor-feed label, and the authorities to run as.
      */
     public record ApiKeyAuthentication(
-            User user,
-            String auditLabel,
-            Collection<? extends GrantedAuthority> authorities,
-            ApiKeyAccess access) {}
+            User user, String auditLabel, Collection<? extends GrantedAuthority> authorities) {}
 }

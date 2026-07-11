@@ -11,12 +11,6 @@ public record PortalApiKeyDto(
         String id,
         String name,
         String prefix,
-        /** "personal" | "team-lead" | "team-members". */
-        String scope,
-        /** "full" (acts as owner) | "processing" (file/PDF endpoints only). */
-        String access,
-        /** Team name for a team-scoped key, else null. */
-        String teamName,
         String created,
         String lastUsed,
         /** "active" | "revoked". */
@@ -24,6 +18,4 @@ public record PortalApiKeyDto(
         long usageToday,
         long usageMonth,
         /** Lifetime request count for the key. */
-        long usageTotal,
-        /** Whether the current caller may revoke this key. */
-        boolean canManage) {}
+        long usageTotal) {}

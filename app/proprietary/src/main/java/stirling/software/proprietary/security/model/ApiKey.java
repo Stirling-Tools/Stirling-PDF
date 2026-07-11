@@ -12,18 +12,17 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * A named API key belonging to a user (and optionally scoped to a team). The raw secret is shown
- * once at creation and never stored; only its SHA-256 hash is persisted, so a leaked database row
- * cannot be replayed. Distinct from the legacy single {@code users.apiKey} column, which stays a
- * per-user personal key for backward compatibility.
+ * A named, personal API key belonging to a user. The raw secret is shown once at creation and never
+ * stored; only its SHA-256 hash is persisted, so a leaked database row cannot be replayed. Distinct
+ * from the legacy single {@code users.apiKey} column, which stays a per-user key for backward
+ * compatibility and is lazily represented here.
  */
 @Entity
 @Table(
         name = "api_keys",
         indexes = {
             @Index(name = "idx_api_key_hash", columnList = "key_hash", unique = true),
-            @Index(name = "idx_api_key_owner", columnList = "owner_user_id"),
-            @Index(name = "idx_api_key_team", columnList = "team_id")
+            @Index(name = "idx_api_key_owner", columnList = "owner_user_id")
         })
 @Getter
 @Setter
@@ -50,26 +49,9 @@ public class ApiKey implements Serializable {
     @Column(name = "prefix", nullable = false, length = 32)
     private String prefix;
 
-    /** The user who created and owns the key; a team key still authenticates as this user. */
+    /** The user who created and owns the key; the key authenticates as this user. */
     @Column(name = "owner_user_id", nullable = false)
     private Long ownerUserId;
-
-    /** Team the key is scoped to, or null for a personal key. */
-    @Column(name = "team_id")
-    private Long teamId;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "scope", nullable = false)
-    private ApiKeyScope scope;
-
-    /**
-     * How much power the key carries; a shared (team) key is always {@link
-     * ApiKeyAccess#PROCESSING}.
-     */
-    @Enumerated(EnumType.STRING)
-    @Column(name = "access", nullable = false)
-    @Builder.Default
-    private ApiKeyAccess access = ApiKeyAccess.FULL;
 
     @Column(name = "enabled", nullable = false)
     private boolean enabled;

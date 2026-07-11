@@ -97,11 +97,7 @@ describe("Sources view", () => {
     createSource.mockReset();
     deleteSource.mockReset();
     fetchApiKeys.mockReset();
-    fetchApiKeys.mockResolvedValue({
-      keys: [],
-      canCreateTeamKeys: false,
-      teamName: null,
-    });
+    fetchApiKeys.mockResolvedValue({ keys: [] });
   });
 
   it("surfaces the inline 409 message when deleting a referenced source", async () => {
@@ -206,20 +202,14 @@ describe("Sources view", () => {
           id: "7",
           name: "Production ingest",
           prefix: "sk_a3f81b2c",
-          scope: "personal",
-          access: "full",
-          teamName: null,
           created: "2026-03-02",
           lastUsed: "2026-07-10 09:14",
           status: "active",
           usageToday: 12,
           usageMonth: 340,
           usageTotal: 5000,
-          canManage: true,
         },
       ],
-      canCreateTeamKeys: false,
-      teamName: null,
     });
 
     renderView();

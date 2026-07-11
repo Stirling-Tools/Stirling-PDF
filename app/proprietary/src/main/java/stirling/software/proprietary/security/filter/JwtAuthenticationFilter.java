@@ -150,10 +150,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     authentication =
                             new ApiKeyAuthenticationToken(
-                                    resolved.get().user(),
-                                    apiKey,
-                                    resolved.get().authorities(),
-                                    resolved.get().access());
+                                    resolved.get().user(), apiKey, resolved.get().authorities());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     return true;
                 } catch (AuthenticationException e) {

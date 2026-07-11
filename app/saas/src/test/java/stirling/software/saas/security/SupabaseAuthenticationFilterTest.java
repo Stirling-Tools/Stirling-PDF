@@ -30,7 +30,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
 
-import stirling.software.proprietary.security.model.ApiKeyAccess;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.User;
@@ -100,7 +99,7 @@ class SupabaseAuthenticationFilterTest {
                         Optional.of(
                                 new stirling.software.proprietary.security.service
                                         .ApiKeyAuthenticationService.ApiKeyAuthentication(
-                                        user, null, user.getAuthorities(), ApiKeyAccess.FULL)));
+                                        user, null, user.getAuthorities())));
 
         request.setRequestURI("/api/v1/something");
         request.setMethod("POST");

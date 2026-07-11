@@ -20,8 +20,6 @@ import org.springframework.security.core.GrantedAuthority;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKey;
-import stirling.software.proprietary.security.model.ApiKeyAccess;
-import stirling.software.proprietary.security.model.ApiKeyScope;
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.ApiKeyRepository;
@@ -50,7 +48,6 @@ class ApiKeyAuthenticationServiceTest {
                 .keyHash(ApiKeyHasher.hash("raw-" + id))
                 .prefix("sk_demo0000")
                 .ownerUserId(ownerId)
-                .scope(ApiKeyScope.PERSONAL)
                 .enabled(enabled)
                 .revokedAt(revoked)
                 .createdAt(Instant.now())
@@ -118,42 +115,8 @@ class ApiKeyAuthenticationServiceTest {
     }
 
     @Test
-    @DisplayName("a team key drops admin from the acting authorities (shared credential)")
-    void teamKeyCapsAdminAuthority() {
-        String raw = "raw-team";
-        User owner = user(7, true);
-        owner.addAuthority(new Authority(Role.ADMIN.getRoleId(), owner));
-        ApiKey teamKey =
-                ApiKey.builder()
-                        .id(5L)
-                        .name("Team key")
-                        .keyHash(ApiKeyHasher.hash(raw))
-                        .prefix("sk_demo0000")
-                        .ownerUserId(7L)
-                        .teamId(3L)
-                        .scope(ApiKeyScope.TEAM_MEMBERS)
-                        .access(ApiKeyAccess.PROCESSING)
-                        .enabled(true)
-                        .createdAt(Instant.now())
-                        .build();
-        when(apiKeyRepository.findByKeyHash(ApiKeyHasher.hash(raw)))
-                .thenReturn(Optional.of(teamKey));
-        when(userRepository.findById(7L)).thenReturn(Optional.of(owner));
-
-        var result = service.authenticate(raw);
-
-        assertThat(result).isPresent();
-        List<String> auths =
-                result.get().authorities().stream().map(GrantedAuthority::getAuthority).toList();
-        assertThat(auths).doesNotContain(Role.ADMIN.getRoleId()).contains(Role.USER.getRoleId());
-        // Marked processing-only so SaaS team-leader checks (a membership lookup, not an authority)
-        // won't treat this shared key as a leader, and the endpoint boundary confines it to tools.
-        assertThat(result.get().access()).isEqualTo(ApiKeyAccess.PROCESSING);
-    }
-
-    @Test
-    @DisplayName("a personal key keeps the owner's authorities (owner acts as self)")
-    void personalKeyKeepsOwnerAuthorities() {
+    @DisplayName("a key authenticates with its owner's authorities (owner acts as self)")
+    void keyKeepsOwnerAuthorities() {
         String raw = "raw-6";
         User owner = user(8, true);
         owner.addAuthority(new Authority(Role.ADMIN.getRoleId(), owner));
@@ -166,38 +129,6 @@ class ApiKeyAuthenticationServiceTest {
         List<String> auths =
                 result.get().authorities().stream().map(GrantedAuthority::getAuthority).toList();
         assertThat(auths).contains(Role.ADMIN.getRoleId());
-        // A default personal key is full-access, so it keeps the owner's full role.
-        assertThat(result.get().access()).isEqualTo(ApiKeyAccess.FULL);
-    }
-
-    @Test
-    @DisplayName("a personal processing-only key drops admin (cap keys on access, not scope)")
-    void personalProcessingKeyCapsAdmin() {
-        String raw = "raw-proc";
-        User owner = user(9, true);
-        owner.addAuthority(new Authority(Role.ADMIN.getRoleId(), owner));
-        ApiKey procKey =
-                ApiKey.builder()
-                        .id(9L)
-                        .name("Limited")
-                        .keyHash(ApiKeyHasher.hash(raw))
-                        .prefix("sk_demo0000")
-                        .ownerUserId(9L)
-                        .scope(ApiKeyScope.PERSONAL)
-                        .access(ApiKeyAccess.PROCESSING)
-                        .enabled(true)
-                        .createdAt(Instant.now())
-                        .build();
-        when(apiKeyRepository.findByKeyHash(ApiKeyHasher.hash(raw)))
-                .thenReturn(Optional.of(procKey));
-        when(userRepository.findById(9L)).thenReturn(Optional.of(owner));
-
-        var result = service.authenticate(raw);
-
-        List<String> auths =
-                result.get().authorities().stream().map(GrantedAuthority::getAuthority).toList();
-        assertThat(auths).doesNotContain(Role.ADMIN.getRoleId()).contains(Role.USER.getRoleId());
-        assertThat(result.get().access()).isEqualTo(ApiKeyAccess.PROCESSING);
     }
 
     @Test

@@ -6898,7 +6898,6 @@ heading = "API keys"
 subheading = "Personal and team-scoped credentials, each with its own usage tracking."
 
 [portal.infrastructure.apiKeys.card]
-access = "Access"
 created = "Created"
 lastUsed = "Last used"
 revoke = "Revoke key"
@@ -6906,7 +6905,7 @@ usageMonth = "Usage this month"
 usageToday = "Usage today"
 
 [portal.infrastructure.apiKeys.empty]
-description = "Create a scoped key to start calling the Stirling API."
+description = "Create a key to start calling the Stirling API."
 title = "No API keys yet"
 
 [portal.infrastructure.apiKeys.error]
@@ -7000,32 +6999,17 @@ inProgress = "In progress"
 notStarted = "Not started"
 
 [portal.infrastructure.createKey]
-accessFull = "Full access"
-accessFullHelp = "Acts as you, including account and admin endpoints. Personal keys only — full access can't be shared."
-accessLabel = "Access"
-accessProcessing = "Processing only"
-accessProcessingHelp = "Limited to the file/PDF processing endpoints. Can't touch account, team, or admin settings."
-accessTeamNote = "Shared keys are always processing-only, so they can't carry account powers."
 cancel = "Cancel"
 createKey = "Create key"
 done = "Done"
 keyNameLabel = "Key name"
 keyNamePlaceholder = "e.g. Production ingest"
-scopeLabel = "Scope"
-scopePersonal = "Personal"
-scopePersonalHelp = "Only you can see and use this key."
-scopeTeamLead = "Team leaders"
-scopeTeamLeadHelp = "Visible to leaders of {{team}} only."
-scopeTeamMembers = "Team members"
-scopeTeamMembersHelp = "Visible to everyone in {{team}}."
 secretKeyCaption = "Secret key"
 secretWarning = "Store this in a secrets manager. Stirling only ever stores a hash, so there is no way to recover it later."
-subtitle = "Scope the key to the minimum it needs. You can revoke it at any time."
+subtitle = "Give the key a name so you can recognise it later. You can revoke it at any time."
 subtitleCreated = "Copy this secret now — it won't be shown again."
-teamScopeLeaderOnly = "Team-scoped keys need team-leader or admin rights and a team to scope them to."
 title = "Create API key"
 titleCreated = "Key created"
-yourTeam = "your team"
 
 [portal.infrastructure.deployLabel]
 live = "Live"
@@ -7068,18 +7052,9 @@ subheading = "Live health for every deployed Stirling region — latency, load, 
 description = "Deployed regions appear here once your workspace is provisioned."
 title = "No regions deployed"
 
-[portal.infrastructure.keyAccessLabel]
-full = "Full access"
-processing = "Processing only"
-
 [portal.infrastructure.keyLabel]
 active = "Active"
 revoked = "Revoked"
-
-[portal.infrastructure.keyScopeLabel]
-personal = "Personal"
-teamLead = "Team leaders"
-teamMembers = "Team members"
 
 [portal.infrastructure.modelLabel]
 active = "Active"
@@ -7996,11 +7971,9 @@ confirm = "Delete"
 title = "Delete source?"
 
 [portal.sources.detail]
-apiKeyAccess = "Access"
 apiKeyLastUsed = "Last used"
 apiKeyPrefix = "Key prefix"
 apiKeyReadOnly = "Managed in Infrastructure → API keys. Shown here for visibility and usage only."
-apiKeyScope = "Scope"
 closeAriaLabel = "Close detail"
 delete = "Delete source"
 docs24h = "Last 24h"

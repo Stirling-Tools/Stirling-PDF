@@ -21,10 +21,6 @@ import {
   type ApiKey,
   type ApiKeysResponse,
 } from "@portal/api/infrastructure";
-import {
-  KEY_ACCESS_LABEL,
-  KEY_SCOPE_LABEL,
-} from "@portal/components/infrastructure/infraFormat";
 import { AgentBuilderAction } from "@portal/components/sources/AgentBuilderAction";
 import { KpiStrip } from "@portal/components/sources/KpiStrip";
 import { SourcesTable } from "@portal/components/sources/SourcesTable";
@@ -38,10 +34,6 @@ import "@portal/views/Sources.css";
  * usage stats but is never a policy input (type "apikey" has no edit/create path).
  */
 function apiKeyToSourceRow(k: ApiKey, t: TFunction): SourceView {
-  const scope =
-    k.scope === "personal" || !k.teamName
-      ? t(KEY_SCOPE_LABEL[k.scope])
-      : `${t(KEY_SCOPE_LABEL[k.scope])} · ${k.teamName}`;
   return {
     id: `apikey:${k.id}`,
     name: k.name,
@@ -50,11 +42,6 @@ function apiKeyToSourceRow(k: ApiKey, t: TFunction): SourceView {
     referenceCount: 0,
     referencingPolicies: [],
     config: [
-      { label: t("portal.sources.detail.apiKeyScope"), value: scope },
-      {
-        label: t("portal.sources.detail.apiKeyAccess"),
-        value: t(KEY_ACCESS_LABEL[k.access]),
-      },
       { label: t("portal.sources.detail.apiKeyPrefix"), value: k.prefix },
       { label: t("portal.sources.detail.apiKeyLastUsed"), value: k.lastUsed },
     ],
@@ -277,8 +264,6 @@ export function Sources() {
       <CreateKeyModal
         open={apiKeyModalOpen}
         onClose={() => setApiKeyModalOpen(false)}
-        canCreateTeamKeys={apiKeyState.data?.canCreateTeamKeys ?? false}
-        teamName={apiKeyState.data?.teamName ?? null}
         onCreated={refetch}
       />
 

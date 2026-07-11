@@ -16,6 +16,4 @@ public interface ApiKeyRepository extends JpaRepository<ApiKey, Long> {
     boolean existsByKeyHash(String keyHash);
 
     List<ApiKey> findByOwnerUserIdOrderByCreatedAtDesc(Long ownerUserId);
-
-    List<ApiKey> findByTeamIdOrderByCreatedAtDesc(Long teamId);
 }

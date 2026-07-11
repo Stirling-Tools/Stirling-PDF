@@ -168,61 +168,45 @@ const API_KEYS_ALL: ApiKey[] = [
     id: "key-1",
     name: "Production · ingest",
     prefix: "sk_a3f81b2c",
-    scope: "personal",
-    access: "full",
-    teamName: null,
     created: "2026-03-02",
     lastUsed: "2026-07-10 09:14",
     status: "active",
     usageToday: 84210,
     usageMonth: 2410933,
     usageTotal: 2410933,
-    canManage: true,
   },
   {
     id: "key-2",
-    name: "Team · shared ingest",
+    name: "Nightly batch",
     prefix: "sk_77be0f42",
-    scope: "team-members",
-    access: "processing",
-    teamName: "Acme Corp",
     created: "2026-01-18",
     lastUsed: "2026-07-10 08:33",
     status: "active",
     usageToday: 6120,
     usageMonth: 188400,
     usageTotal: 188400,
-    canManage: true,
   },
   {
     id: "key-3",
-    name: "Ops · leaders only",
+    name: "CI pipeline",
     prefix: "sk_d9013ab7",
-    scope: "team-lead",
-    access: "processing",
-    teamName: "Acme Corp",
     created: "2025-08-09",
     lastUsed: "2026-07-04 17:02",
     status: "active",
     usageToday: 0,
     usageMonth: 14200,
     usageTotal: 14200,
-    canManage: true,
   },
   {
     id: "key-4",
     name: "Sandbox · webhook tester",
     prefix: "sk_2c4a91de",
-    scope: "personal",
-    access: "full",
-    teamName: null,
     created: "2026-05-30",
     lastUsed: "Never",
     status: "revoked",
     usageToday: 0,
     usageMonth: 0,
     usageTotal: 0,
-    canManage: true,
   },
 ];
 
@@ -233,7 +217,7 @@ export function apiKeysFor(tier: Tier): ApiKeysResponse {
       : tier === "pro"
         ? API_KEYS_ALL.slice(0, 3)
         : API_KEYS_ALL;
-  return { keys, canCreateTeamKeys: tier !== "free", teamName: "Acme Corp" };
+  return { keys };
 }
 
 /* ──────────────────────────────────────────────────────────────────────── */

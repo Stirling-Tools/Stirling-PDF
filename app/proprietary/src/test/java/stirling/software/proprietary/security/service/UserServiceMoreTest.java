@@ -37,7 +37,6 @@ import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.AuthorityRepository;
 import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
 import stirling.software.proprietary.security.database.repository.UserRepository;
-import stirling.software.proprietary.security.model.ApiKeyAccess;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
@@ -103,10 +102,7 @@ class UserServiceMoreTest {
             User u = user("api");
             u.addAuthority(new Authority("ROLE_USER", u));
             when(apiKeyAuthenticationService.authenticate("k"))
-                    .thenReturn(
-                            Optional.of(
-                                    new ApiKeyAuthentication(
-                                            u, null, u.getAuthorities(), ApiKeyAccess.FULL)));
+                    .thenReturn(Optional.of(new ApiKeyAuthentication(u, null, u.getAuthorities())));
 
             assertThat(userService.getAuthentication("k")).isNotNull();
         }

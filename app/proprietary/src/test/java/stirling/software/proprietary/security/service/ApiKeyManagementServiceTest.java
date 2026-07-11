@@ -21,22 +21,16 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.model.api.apikey.CreateApiKeyRequest;
 import stirling.software.proprietary.model.api.apikey.CreatedApiKeyDto;
 import stirling.software.proprietary.model.api.apikey.PortalApiKeysResponse;
-import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKey;
-import stirling.software.proprietary.security.model.ApiKeyAccess;
-import stirling.software.proprietary.security.model.ApiKeyScope;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.ApiKeyDailyUsageRepository;
 import stirling.software.proprietary.security.repository.ApiKeyRepository;
-import stirling.software.proprietary.security.repository.TeamRepository;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ApiKeyManagementService")
@@ -45,9 +39,7 @@ class ApiKeyManagementServiceTest {
     @Mock private ApiKeyRepository apiKeyRepository;
     @Mock private ApiKeyDailyUsageRepository usageRepository;
     @Mock private UserRepository userRepository;
-    @Mock private TeamRepository teamRepository;
     @Mock private UserService userService;
-    @Mock private PolicyManagementAuthority policyAuthority;
     @Mock private ApiKeyLegacyMigrator legacyMigrator;
     @InjectMocks private ApiKeyManagementService service;
 
@@ -63,8 +55,8 @@ class ApiKeyManagementServiceTest {
                 .when(userService.findByUsernameIgnoreCase("alice"))
                 .thenReturn(Optional.of(caller));
         lenient().when(apiKeyRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-        lenient().when(usageRepository.countForDay(any(), anyLong())).thenReturn(0L);
-        lenient().when(usageRepository.sumSince(any(), anyLong())).thenReturn(0L);
+        lenient().when(usageRepository.countForDayByIds(any(), anyLong())).thenReturn(List.of());
+        lenient().when(usageRepository.sumSinceByIds(any(), anyLong())).thenReturn(List.of());
     }
 
     private ApiKey personalKey(long id, long ownerId) {
@@ -74,21 +66,6 @@ class ApiKeyManagementServiceTest {
                 .keyHash("hash" + id)
                 .prefix("sk_demo0000")
                 .ownerUserId(ownerId)
-                .scope(ApiKeyScope.PERSONAL)
-                .enabled(true)
-                .createdAt(Instant.now())
-                .build();
-    }
-
-    private ApiKey teamKey(long id, long teamId, ApiKeyScope scope) {
-        return ApiKey.builder()
-                .id(id)
-                .name("Team key " + id)
-                .keyHash("hash" + id)
-                .prefix("sk_demo0000")
-                .ownerUserId(99L)
-                .teamId(teamId)
-                .scope(scope)
                 .enabled(true)
                 .createdAt(Instant.now())
                 .build();
@@ -97,12 +74,11 @@ class ApiKeyManagementServiceTest {
     // ---- migration safety ---------------------------------------------------
 
     @Test
-    @DisplayName("an existing legacy key migrates to a PERSONAL, owner-only row - never a team")
+    @DisplayName("an existing legacy key migrates to an owner-only row")
     void legacyKeyMigratesAsPersonal() {
         caller.setApiKey("legacy-raw-key");
         when(apiKeyRepository.existsByKeyHash(ApiKeyHasher.hash("legacy-raw-key")))
                 .thenReturn(false);
-        when(policyAuthority.currentUserTeamId()).thenReturn(null);
         when(apiKeyRepository.findByOwnerUserIdOrderByCreatedAtDesc(1L)).thenReturn(List.of());
 
         service.listVisibleKeys();
@@ -111,9 +87,7 @@ class ApiKeyManagementServiceTest {
         ArgumentCaptor<ApiKey> saved = ArgumentCaptor.forClass(ApiKey.class);
         verify(legacyMigrator).insertMigratedKey(saved.capture());
         ApiKey migrated = saved.getValue();
-        assertThat(migrated.getScope()).isEqualTo(ApiKeyScope.PERSONAL);
         assertThat(migrated.getOwnerUserId()).isEqualTo(1L);
-        assertThat(migrated.getTeamId()).isNull();
     }
 
     @Test
@@ -122,7 +96,6 @@ class ApiKeyManagementServiceTest {
         caller.setApiKey("legacy-raw-key");
         when(apiKeyRepository.existsByKeyHash(ApiKeyHasher.hash("legacy-raw-key")))
                 .thenReturn(true);
-        when(policyAuthority.currentUserTeamId()).thenReturn(null);
         when(apiKeyRepository.findByOwnerUserIdOrderByCreatedAtDesc(1L)).thenReturn(List.of());
 
         service.listVisibleKeys();
@@ -133,68 +106,48 @@ class ApiKeyManagementServiceTest {
     // ---- personal isolation -------------------------------------------------
 
     @Test
-    @DisplayName("listing scopes personal keys to the caller by owner id")
+    @DisplayName("listing scopes keys to the caller by owner id")
     void personalKeysScopedToOwner() {
-        when(policyAuthority.currentUserTeamId()).thenReturn(null);
         when(apiKeyRepository.findByOwnerUserIdOrderByCreatedAtDesc(1L))
                 .thenReturn(List.of(personalKey(10, 1L)));
 
         PortalApiKeysResponse res = service.listVisibleKeys();
 
-        assertThat(res.keys())
-                .singleElement()
-                .satisfies(k -> assertThat(k.scope()).isEqualTo("personal"));
+        assertThat(res.keys()).singleElement().satisfies(k -> assertThat(k.id()).isEqualTo("10"));
         // Isolation: the query is keyed by the caller's id, never a broad scan.
         verify(apiKeyRepository).findByOwnerUserIdOrderByCreatedAtDesc(1L);
-    }
-
-    @Test
-    @DisplayName("a member sees TEAM_MEMBERS keys but not TEAM_LEAD keys")
-    void memberSeesTeamMembersNotTeamLead() {
-        when(policyAuthority.canEditPolicies()).thenReturn(false);
-        when(policyAuthority.currentUserTeamId()).thenReturn(5L);
-        when(apiKeyRepository.findByOwnerUserIdOrderByCreatedAtDesc(1L)).thenReturn(List.of());
-        when(apiKeyRepository.findByTeamIdOrderByCreatedAtDesc(5L))
-                .thenReturn(
-                        List.of(
-                                teamKey(20, 5L, ApiKeyScope.TEAM_LEAD),
-                                teamKey(21, 5L, ApiKeyScope.TEAM_MEMBERS)));
-        Team team = new Team();
-        team.setName("Acme");
-        lenient().when(teamRepository.findById(5L)).thenReturn(Optional.of(team));
-
-        PortalApiKeysResponse res = service.listVisibleKeys();
-
-        assertThat(res.keys()).singleElement().satisfies(k -> assertThat(k.id()).isEqualTo("21"));
-        assertThat(res.canCreateTeamKeys()).isFalse();
     }
 
     // ---- creation -----------------------------------------------------------
 
     @Test
-    @DisplayName("any user can create a personal key and gets a one-time secret")
+    @DisplayName("a user creates a personal key and gets a one-time secret")
     void createPersonalKey() {
-        CreatedApiKeyDto created =
-                service.createKey(new CreateApiKeyRequest("My key", "personal", null));
+        CreatedApiKeyDto created = service.createKey(new CreateApiKeyRequest("My key"));
 
         assertThat(created.secret()).startsWith("sk_");
         ArgumentCaptor<ApiKey> saved = ArgumentCaptor.forClass(ApiKey.class);
         verify(apiKeyRepository).save(saved.capture());
-        assertThat(saved.getValue().getScope()).isEqualTo(ApiKeyScope.PERSONAL);
-        assertThat(saved.getValue().getTeamId()).isNull();
         assertThat(saved.getValue().getOwnerUserId()).isEqualTo(1L);
+        assertThat(saved.getValue().getName()).isEqualTo("My key");
     }
 
     @Test
     @DisplayName("rejects an over-long key name")
     void rejectsLongName() {
         String longName = "a".repeat(101);
-        assertThatThrownBy(
-                        () ->
-                                service.createKey(
-                                        new CreateApiKeyRequest(longName, "personal", null)))
+        assertThatThrownBy(() -> service.createKey(new CreateApiKeyRequest(longName)))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("characters or fewer");
+        verify(apiKeyRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("rejects a blank key name")
+    void rejectsBlankName() {
+        assertThatThrownBy(() -> service.createKey(new CreateApiKeyRequest("  ")))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("required");
         verify(apiKeyRepository, never()).save(any());
     }
 
@@ -204,104 +157,15 @@ class ApiKeyManagementServiceTest {
         when(apiKeyRepository.findByOwnerUserIdOrderByCreatedAtDesc(1L))
                 .thenReturn(java.util.Collections.nCopies(50, personalKey(100, 1L)));
 
-        assertThatThrownBy(
-                        () ->
-                                service.createKey(
-                                        new CreateApiKeyRequest("One too many", "personal", null)))
+        assertThatThrownBy(() -> service.createKey(new CreateApiKeyRequest("One too many")))
                 .isInstanceOf(ResponseStatusException.class);
         verify(apiKeyRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("creating a team key without leader rights is forbidden")
-    void createTeamKeyRequiresLeader() {
-        when(policyAuthority.canEditPolicies()).thenReturn(false);
-
-        assertThatThrownBy(
-                        () ->
-                                service.createKey(
-                                        new CreateApiKeyRequest("Team key", "team-members", null)))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("team leader");
-        verify(apiKeyRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("a leader creates a team key scoped to their own team")
-    void createTeamKeyAsLeader() {
-        when(policyAuthority.canEditPolicies()).thenReturn(true);
-        when(policyAuthority.currentUserTeamId()).thenReturn(5L);
-        Team team = new Team();
-        team.setName("Acme");
-        when(teamRepository.findById(5L)).thenReturn(Optional.of(team));
-
-        service.createKey(new CreateApiKeyRequest("Team key", "team-members", null));
-
-        ArgumentCaptor<ApiKey> saved = ArgumentCaptor.forClass(ApiKey.class);
-        verify(apiKeyRepository).save(saved.capture());
-        assertThat(saved.getValue().getScope()).isEqualTo(ApiKeyScope.TEAM_MEMBERS);
-        assertThat(saved.getValue().getTeamId()).isEqualTo(5L);
-        // A shared key is always processing-only, so it can never carry account powers.
-        assertThat(saved.getValue().getAccess()).isEqualTo(ApiKeyAccess.PROCESSING);
-    }
-
-    @Test
-    @DisplayName("a team key can't request full access (full access can't be shared)")
-    void teamKeyCannotRequestFullAccess() {
-        // Rejected at access-parse time, before any team-manager/team-id lookup.
-        assertThatThrownBy(
-                        () ->
-                                service.createKey(
-                                        new CreateApiKeyRequest(
-                                                "Team full", "team-members", "full")))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("processing-only");
-        verify(apiKeyRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("a personal key can be limited to processing-only")
-    void personalKeyCanBeProcessingOnly() {
-        service.createKey(new CreateApiKeyRequest("Limited", "personal", "processing"));
-
-        ArgumentCaptor<ApiKey> saved = ArgumentCaptor.forClass(ApiKey.class);
-        verify(apiKeyRepository).save(saved.capture());
-        assertThat(saved.getValue().getScope()).isEqualTo(ApiKeyScope.PERSONAL);
-        assertThat(saved.getValue().getAccess()).isEqualTo(ApiKeyAccess.PROCESSING);
-    }
-
-    @Test
-    @DisplayName("a personal key defaults to full access (acts as the owner)")
-    void personalKeyDefaultsToFullAccess() {
-        service.createKey(new CreateApiKeyRequest("Default", "personal", null));
-
-        ArgumentCaptor<ApiKey> saved = ArgumentCaptor.forClass(ApiKey.class);
-        verify(apiKeyRepository).save(saved.capture());
-        assertThat(saved.getValue().getAccess()).isEqualTo(ApiKeyAccess.FULL);
-    }
-
-    @Test
-    @DisplayName("an admin who is not a team leader can still create a team key")
-    void adminCanCreateTeamKey() {
-        when(policyAuthority.canEditPolicies()).thenReturn(false);
-        when(userService.isCurrentUserAdmin()).thenReturn(true);
-        when(policyAuthority.currentUserTeamId()).thenReturn(5L);
-        Team team = new Team();
-        team.setName("Acme");
-        when(teamRepository.findById(5L)).thenReturn(Optional.of(team));
-
-        service.createKey(new CreateApiKeyRequest("Admin team key", "team-members", null));
-
-        ArgumentCaptor<ApiKey> saved = ArgumentCaptor.forClass(ApiKey.class);
-        verify(apiKeyRepository).save(saved.capture());
-        assertThat(saved.getValue().getScope()).isEqualTo(ApiKeyScope.TEAM_MEMBERS);
-        assertThat(saved.getValue().getTeamId()).isEqualTo(5L);
     }
 
     // ---- revocation ---------------------------------------------------------
 
     @Test
-    @DisplayName("owner revokes their personal key and the legacy column is cleared")
+    @DisplayName("owner revokes their key and the legacy column is cleared")
     void revokePersonalClearsLegacy() {
         caller.setApiKey("legacy-raw-key");
         ApiKey legacyRow = personalKey(30, 1L);
@@ -318,42 +182,17 @@ class ApiKeyManagementServiceTest {
     }
 
     @Test
-    @DisplayName("a non-owner cannot revoke someone else's personal key")
-    void revokeForeignPersonalKeyForbidden() {
+    @DisplayName(
+            "a non-owner cannot revoke someone else's key (404, not 403, so ids can't be probed)")
+    void revokeForeignKeyForbidden() {
         when(apiKeyRepository.findById(31L)).thenReturn(Optional.of(personalKey(31, 999L)));
 
         assertThatThrownBy(() -> service.revokeKey(31L))
-                .isInstanceOf(ResponseStatusException.class);
-        verify(apiKeyRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("a non-leader cannot revoke a team key")
-    void revokeTeamKeyRequiresLeader() {
-        when(apiKeyRepository.findById(32L))
-                .thenReturn(Optional.of(teamKey(32, 5L, ApiKeyScope.TEAM_MEMBERS)));
-        when(policyAuthority.canEditPolicies()).thenReturn(false);
-
-        assertThatThrownBy(() -> service.revokeKey(32L))
-                .isInstanceOf(ResponseStatusException.class);
-    }
-
-    @Test
-    @DisplayName("a leader of another team cannot revoke this team's key, and gets 404 not 403")
-    void revokeCrossTeamKeyNotFound() {
-        // Caller is a leader (canEditPolicies) but of a DIFFERENT team than the target key.
-        when(apiKeyRepository.findById(40L))
-                .thenReturn(Optional.of(teamKey(40, 5L, ApiKeyScope.TEAM_MEMBERS)));
-        when(policyAuthority.canEditPolicies()).thenReturn(true);
-        when(policyAuthority.currentUserTeamId()).thenReturn(6L);
-
-        assertThatThrownBy(() -> service.revokeKey(40L))
                 .isInstanceOf(ResponseStatusException.class)
-                // 404 (not 403) so a caller can't probe other teams' key ids.
                 .satisfies(
                         e ->
-                                assertThat(((ResponseStatusException) e).getStatusCode())
-                                        .isEqualTo(HttpStatus.NOT_FOUND));
+                                assertThat(((ResponseStatusException) e).getStatusCode().value())
+                                        .isEqualTo(404));
         verify(apiKeyRepository, never()).save(any());
     }
 }

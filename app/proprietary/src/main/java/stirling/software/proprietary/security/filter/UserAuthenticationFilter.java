@@ -113,10 +113,7 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
                     User user = resolved.get().user();
                     authentication =
                             new ApiKeyAuthenticationToken(
-                                    user,
-                                    apiKey,
-                                    resolved.get().authorities(),
-                                    resolved.get().access());
+                                    user, apiKey, resolved.get().authorities());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     if (resolved.get().auditLabel() != null) {
                         MDC.put(API_KEY_LABEL_MDC, resolved.get().auditLabel());

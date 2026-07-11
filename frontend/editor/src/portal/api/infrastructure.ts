@@ -45,29 +45,11 @@ export interface RecentDeployment {
 
 export type ApiKeyStatus = "active" | "revoked";
 
-/**
- * Who a key belongs to and who can see it. Personal keys are owner-only; team
- * keys are visible to a team's leaders ({@code team-lead}) or all its members
- * ({@code team-members}). Mirrors the backend {@code ApiKeyScope}.
- */
-export type ApiKeyScope = "personal" | "team-lead" | "team-members";
-
-/**
- * How much power a key carries. {@code full} acts as its owner (account + admin);
- * {@code processing} is confined to the file/PDF endpoints. Shared (team) keys are
- * always {@code processing}. Mirrors the backend {@code ApiKeyAccess}.
- */
-export type ApiKeyAccess = "full" | "processing";
-
 export interface ApiKey {
   id: string;
   name: string;
   /** Non-secret leading fragment, e.g. "sk_a3f81b2c". */
   prefix: string;
-  scope: ApiKeyScope;
-  access: ApiKeyAccess;
-  /** Team name for a team-scoped key, else null. */
-  teamName: string | null;
   created: string;
   /** Formatted last-use time, or "Never". */
   lastUsed: string;
@@ -78,16 +60,10 @@ export interface ApiKey {
   usageMonth: number;
   /** Lifetime request count. */
   usageTotal: number;
-  /** Whether the current user may revoke this key. */
-  canManage: boolean;
 }
 
 export interface ApiKeysResponse {
   keys: ApiKey[];
-  /** True when the caller (a team leader / admin) may mint team-scoped keys. */
-  canCreateTeamKeys: boolean;
-  /** The team team-scoped keys would belong to, or null. */
-  teamName: string | null;
 }
 
 /** Returned once on creation: the listed row plus the plaintext secret, shown once. */
@@ -314,7 +290,7 @@ export async function fetchDeployments(
 
 const API_KEYS_PATH = "/api/v1/proprietary/ui-data/infrastructure/api-keys";
 
-/** GET the caller's visible API keys; SaaS or local, scoped server-side per user/team. */
+/** GET the caller's personal API keys; SaaS or local, scoped server-side per user. */
 export async function fetchApiKeys(): Promise<ApiKeysResponse> {
   return apiClient.saas.isConfigured()
     ? apiClient.saas.json<ApiKeysResponse>(API_KEYS_PATH)
@@ -324,8 +300,6 @@ export async function fetchApiKeys(): Promise<ApiKeysResponse> {
 /** POST a new key; the response carries the one-time secret. */
 export async function createApiKey(body: {
   name: string;
-  scope: ApiKeyScope;
-  access: ApiKeyAccess;
 }): Promise<CreatedApiKey> {
   const opts = { method: "POST" as const, body };
   return apiClient.saas.isConfigured()
@@ -333,7 +307,7 @@ export async function createApiKey(body: {
     : apiClient.local.json<CreatedApiKey>(API_KEYS_PATH, opts);
 }
 
-/** DELETE (revoke) a key the caller manages. */
+/** DELETE (revoke) a key the caller owns. */
 export async function revokeApiKey(id: string): Promise<void> {
   const path = `${API_KEYS_PATH}/${encodeURIComponent(id)}`;
   const opts = { method: "DELETE" as const };

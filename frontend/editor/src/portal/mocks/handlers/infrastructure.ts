@@ -42,25 +42,18 @@ export const infrastructureHandlers = [
       await delay(120);
       const body = (await request.json().catch(() => ({}))) as {
         name?: string;
-        scope?: string;
       };
-      const scope = (body.scope ?? "personal") as
-        | "personal"
-        | "team-lead"
-        | "team-members";
       return HttpResponse.json({
         key: {
           id: `key-${Date.now()}`,
           name: body.name ?? "New key",
           prefix: "sk_demo0000",
-          scope,
-          teamName: scope === "personal" ? null : "Acme Corp",
           created: "2026-07-10",
           lastUsed: "Never",
           status: "active",
           usageToday: 0,
           usageMonth: 0,
-          canManage: true,
+          usageTotal: 0,
         },
         secret: "sk_live_demo_key_rotate_in_prod",
       });

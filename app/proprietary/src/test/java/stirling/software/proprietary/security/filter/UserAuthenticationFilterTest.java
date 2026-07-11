@@ -27,7 +27,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionInformation;
 
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.proprietary.security.model.ApiKeyAccess;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.ApiKeyAuthenticationService;
@@ -111,10 +110,7 @@ class UserAuthenticationFilterTest {
                     .thenReturn(
                             Optional.of(
                                     new ApiKeyAuthentication(
-                                            user,
-                                            "Prod (sk_demo0000)",
-                                            user.getAuthorities(),
-                                            ApiKeyAccess.FULL)));
+                                            user, "Prod (sk_demo0000)", user.getAuthorities())));
             when(userService.usernameExistsIgnoreCase("api-user")).thenReturn(true);
             when(userService.isUserDisabled("api-user")).thenReturn(false);
             when(sessionPersistentRegistry.getAllSessions(any(), anyBoolean()))

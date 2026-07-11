@@ -20,7 +20,7 @@ type Story = StoryObj<typeof ApiKeysTab>;
 
 export const Default: Story = {};
 
-const EMPTY = { keys: [], canCreateTeamKeys: false, teamName: null };
+const EMPTY = { keys: [] };
 
 export const Loading: Story = {
   parameters: {

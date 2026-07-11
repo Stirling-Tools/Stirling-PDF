@@ -21,7 +21,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import stirling.software.common.model.enumeration.TeamRole;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.model.TeamMembership;
-import stirling.software.proprietary.security.model.ApiKeyAccess;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
@@ -119,26 +118,11 @@ class TeamSecurityExpressionsTest {
     }
 
     @Test
-    void sharedTeamApiKeyNeverLeadsEvenIfOwnerIsLeader() {
-        // Owner genuinely leads the team, but the request came in on a processing-only (shared)
-        // key.
+    void apiKeyOfALeaderStillLeads() {
+        // A key acts as the owner; if they lead the team, the key leads.
         SecurityContextHolder.getContext()
                 .setAuthentication(
-                        new ApiKeyAuthenticationToken(
-                                leaderUser(), "sk_shared", List.of(), ApiKeyAccess.PROCESSING));
-
-        // Denied without consulting membership - a shared key must not confer team-leader powers.
-        assertFalse(expressions().isCurrentUserTeamLeader());
-        assertFalse(expressions().isTeamLeader(TEAM_ID));
-    }
-
-    @Test
-    void personalApiKeyOfALeaderStillLeads() {
-        // A full-access (non-shared) key acts as the owner; if they lead, the key leads.
-        SecurityContextHolder.getContext()
-                .setAuthentication(
-                        new ApiKeyAuthenticationToken(
-                                leaderUser(), "sk_personal", List.of(), ApiKeyAccess.FULL));
+                        new ApiKeyAuthenticationToken(leaderUser(), "sk_personal", List.of()));
         when(membershipRepository.findByTeamIdAndUserId(TEAM_ID, USER_ID))
                 .thenReturn(Optional.of(membershipWithRole(TeamRole.LEADER)));
 
