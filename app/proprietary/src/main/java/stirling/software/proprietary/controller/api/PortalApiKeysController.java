@@ -19,9 +19,9 @@ import stirling.software.proprietary.model.api.apikey.PortalApiKeysResponse;
 import stirling.software.proprietary.security.service.ApiKeyManagementService;
 
 /**
- * Real backing for the portal Infrastructure → API Keys tab: list/create/revoke named keys, scoped
- * personal or to the caller's team. Replaces the former portal-only mock endpoint. Not gated behind
- * an Enterprise license - API keys are a core auth feature available on every self-hosted instance.
+ * Real backing for the portal Infrastructure → API Keys tab: list/create/revoke named, personal API
+ * keys. Replaces the former portal-only mock endpoint. Not gated behind an Enterprise license - API
+ * keys are a core auth feature available on every self-hosted instance.
  */
 @ProprietaryUiDataApi
 @RequiredArgsConstructor
@@ -31,10 +31,7 @@ public class PortalApiKeysController {
 
     // tier accepted for endpoint symmetry with the other infra tabs; ignored here.
     @GetMapping("/infrastructure/api-keys")
-    @Operation(
-            summary = "List API keys",
-            description =
-                    "Keys the caller may see: their personal keys plus any team keys in scope.")
+    @Operation(summary = "List API keys", description = "The caller's personal API keys.")
     public ResponseEntity<PortalApiKeysResponse> list(
             @RequestParam(value = "tier", required = false) String tier) {
         return ResponseEntity.ok(apiKeyManagementService.listVisibleKeys());
@@ -43,15 +40,13 @@ public class PortalApiKeysController {
     @PostMapping("/infrastructure/api-keys")
     @Operation(
             summary = "Create an API key",
-            description =
-                    "Mints a personal or team-scoped key and returns its one-time secret. Team keys"
-                            + " require team-leader rights.")
+            description = "Mints a personal key and returns its one-time secret.")
     public ResponseEntity<CreatedApiKeyDto> create(@RequestBody CreateApiKeyRequest request) {
         return ResponseEntity.ok(apiKeyManagementService.createKey(request));
     }
 
     @DeleteMapping("/infrastructure/api-keys/{id}")
-    @Operation(summary = "Revoke an API key", description = "Disables a key the caller manages.")
+    @Operation(summary = "Revoke an API key", description = "Disables a key the caller owns.")
     public ResponseEntity<Void> revoke(@PathVariable("id") Long id) {
         apiKeyManagementService.revokeKey(id);
         return ResponseEntity.noContent().build();

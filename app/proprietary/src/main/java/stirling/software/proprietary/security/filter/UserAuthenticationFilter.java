@@ -71,8 +71,13 @@ public class UserAuthenticationFilter extends OncePerRequestFilter {
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        // Start each request clean so a pooled thread can't inherit a prior request's key label.
-        MDC.remove(API_KEY_LABEL_MDC);
+        // Start each request clean so a pooled thread can't inherit a prior request's key label -
+        // but keep a label an upstream filter (JwtAuthenticationFilter) already set for a request
+        // it API-key-authenticated, otherwise per-key attribution is lost on the JWT path.
+        if (!(SecurityContextHolder.getContext().getAuthentication()
+                instanceof ApiKeyAuthenticationToken)) {
+            MDC.remove(API_KEY_LABEL_MDC);
+        }
 
         if (!loginEnabledValue) {
             // If login is not enabled, just pass all requests without authentication

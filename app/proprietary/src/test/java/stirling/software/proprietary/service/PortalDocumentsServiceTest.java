@@ -70,4 +70,18 @@ class PortalDocumentsServiceTest {
         assertThat(doc.getProduct()).isEqualTo("API");
         assertThat(doc.getSource()).isEqualTo("API integration");
     }
+
+    @Test
+    void apiDocumentIsAttributedToItsNamedKey() {
+        PortalReviewDocumentDto doc =
+                onlyDoc(
+                        "{\"path\":\"/api/v1/misc/compress-pdf\",\"__origin\":\"API\","
+                                + "\"__apiKeyLabel\":\"Production ingest (sk_demo0000)\","
+                                + "\"files\":[{\"name\":\"a.pdf\",\"type\":\"application/pdf\"}],"
+                                + "\"statusCode\":200}");
+
+        // The specific key label surfaces as the source; product stays "API".
+        assertThat(doc.getProduct()).isEqualTo("API");
+        assertThat(doc.getSource()).isEqualTo("API key · Production ingest (sk_demo0000)");
+    }
 }

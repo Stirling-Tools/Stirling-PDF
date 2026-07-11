@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.Optional;
 
+import org.slf4j.MDC;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -55,6 +56,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+        // Start clean so a pooled thread can't inherit a prior request's key label. This filter
+        // runs before UserAuthenticationFilter, so in JWT mode it owns the API-key label lifecycle.
+        MDC.remove(ApiKeyAuthenticationService.AUDIT_LABEL_MDC_KEY);
         if (!jwtService.isJwtEnabled()) {
             filterChain.doFilter(request, response);
             return;
@@ -133,10 +137,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             if (apiKey != null && !apiKey.isBlank()) {
                 try {
-                    // Resolve through the shared service so a team/processing key gets its capped
-                    // authorities and access flag - resolving via the owner here would hand a
-                    // shared
-                    // key the owner's full (admin) rights and bypass the processing-scope boundary.
+                    // Resolve through the shared service so the multi-key table (then the legacy
+                    // per-user key) is consulted and per-key usage is recorded; the key runs as its
+                    // owner. It also yields a per-key label for the processor's document
+                    // attribution.
                     Optional<ApiKeyAuthentication> resolved =
                             apiKeyAuthenticationService.authenticate(apiKey);
 
@@ -152,6 +156,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             new ApiKeyAuthenticationToken(
                                     resolved.get().user(), apiKey, resolved.get().authorities());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
+                    if (resolved.get().auditLabel() != null) {
+                        MDC.put(
+                                ApiKeyAuthenticationService.AUDIT_LABEL_MDC_KEY,
+                                resolved.get().auditLabel());
+                    }
                     return true;
                 } catch (AuthenticationException e) {
                     handleAuthenticationFailure(

@@ -148,8 +148,8 @@ public class UserService implements UserServiceInterface {
     }
 
     public Authentication getAuthentication(String apiKey) {
-        // Resolve through the shared service so a processing/team key authenticates with its
-        // capped authorities (never the owner's full admin rights), matching the auth filters.
+        // Resolve through the shared service (multi-key table, then the legacy per-user column).
+        // The key runs as its owner with the owner's authorities.
         var resolved =
                 apiKeyAuthenticationService
                         .authenticate(apiKey)
@@ -157,7 +157,7 @@ public class UserService implements UserServiceInterface {
         return new UsernamePasswordAuthenticationToken(
                 resolved.user(), // principal
                 null, // credentials (we don't expose the password or API key here)
-                resolved.authorities()); // capped authorities honouring the key's access level
+                resolved.authorities()); // the owner's authorities
     }
 
     private Collection<? extends GrantedAuthority> getAuthorities(User user) {

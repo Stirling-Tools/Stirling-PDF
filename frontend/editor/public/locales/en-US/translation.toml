@@ -6895,7 +6895,7 @@ title = "Infrastructure"
 [portal.infrastructure.apiKeys]
 createKey = "Create key"
 heading = "API keys"
-subheading = "Personal and team-scoped credentials, each with its own usage tracking."
+subheading = "Personal credentials, each with its own usage tracking."
 
 [portal.infrastructure.apiKeys.card]
 created = "Created"
