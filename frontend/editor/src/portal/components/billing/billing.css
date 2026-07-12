@@ -119,7 +119,7 @@
 /* Free grant still offsetting spend — reads as a positive credit note, pulled up
    under the "PDFs processed" line. */
 .portal-billing__free-remaining {
-  color: var(--color-green-600, var(--color-green));
+  color: var(--color-green);
   margin-top: -0.5rem;
 }
 
@@ -171,7 +171,7 @@
 }
 
 .portal-billing__error {
-  color: var(--color-red, #b91c1c);
+  color: var(--color-red, var(--color-red-dark));
   font-size: 0.875rem;
   margin: 0.5rem 0;
 }
@@ -228,11 +228,7 @@
 
 .portal-billing__meter-fill {
   height: 100%;
-  background: linear-gradient(
-    90deg,
-    var(--color-blue, #0a8bff),
-    var(--color-purple, #8b5cf6)
-  );
+  background: linear-gradient(90deg, var(--color-blue), var(--color-purple));
   border-radius: 999px;
   transition: width 200ms ease;
 }
@@ -308,28 +304,28 @@
   border-radius: 999px;
 }
 .payg-status[data-state="FULL"] {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--color-green-light);
+  color: var(--color-green-dark);
 }
 .payg-status[data-state="FULL"] .payg-status__dot {
-  background: #22c55e;
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18);
+  background: var(--color-green);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-green) 18%, transparent);
 }
 .payg-status[data-state="WARNED"] {
-  background: #fef3c7;
-  color: #a16207;
+  background: var(--color-amber-light);
+  color: var(--color-amber-dark);
 }
 .payg-status[data-state="WARNED"] .payg-status__dot {
-  background: #eab308;
-  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.2);
+  background: var(--color-amber);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-amber) 20%, transparent);
 }
 .payg-status[data-state="DEGRADED"] {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--color-red-light);
+  color: var(--color-red-dark);
 }
 .payg-status[data-state="DEGRADED"] .payg-status__dot {
-  background: #ef4444;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+  background: var(--color-red);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-red) 20%, transparent);
 }
 
 /* Segmented usage bar */
@@ -347,13 +343,13 @@
   transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .payg-bar__fill[data-state="FULL"] {
-  background: linear-gradient(90deg, #0a8bff, #38bdf8);
+  background: var(--color-blue);
 }
 .payg-bar__fill[data-state="WARNED"] {
-  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  background: var(--color-amber);
 }
 .payg-bar__fill[data-state="DEGRADED"] {
-  background: linear-gradient(90deg, #dc2626, #f87171);
+  background: var(--color-red);
 }
 
 /* ── Plan card (free state) ─────────────────────────────────────────────── */
@@ -394,7 +390,7 @@
 
 .portal-billing__plan-features li::before {
   content: "✓";
-  color: var(--color-green, #10b981);
+  color: var(--color-green);
   position: absolute;
   left: 0;
   font-weight: 600;
@@ -457,15 +453,15 @@
 }
 
 .portal-billing__breakdown-fill--blue {
-  background: #0a8bff;
+  background: var(--color-blue);
 }
 
 .portal-billing__breakdown-fill--purple {
-  background: #8b5cf6;
+  background: var(--color-purple);
 }
 
 .portal-billing__breakdown-fill--teal {
-  background: #06b6d4;
+  background: var(--color-cat-extraction);
 }
 
 /* ── Cap control ────────────────────────────────────────────────────────── */
@@ -570,10 +566,10 @@
    Same class names + structure so the visual is identical to the SaaS Plan
    page; when the shared-component move lands, these dedupe to one stylesheet. */
 .scc {
-  --scc-accent: #0a8bff;
-  --scc-accent-text: #0a8bff;
-  --scc-accent-soft: rgba(10, 139, 255, 0.12);
-  --scc-accent-border: rgba(10, 139, 255, 0.25);
+  --scc-accent: var(--color-blue);
+  --scc-accent-text: var(--color-blue);
+  --scc-accent-soft: color-mix(in srgb, var(--color-blue) 12%, transparent);
+  --scc-accent-border: color-mix(in srgb, var(--color-blue) 25%, transparent);
   --scc-chip-bg: var(--color-bg-muted, #f8fafc);
   --scc-chip-border: var(--color-border, #e2e8f0);
   --scc-text-primary: var(--color-text-1, #0f172a);
@@ -585,11 +581,11 @@
   gap: 14px;
   margin-top: 0.75rem;
 }
-[data-mantine-color-scheme="dark"] .scc {
-  --scc-accent-text: #66b8ff;
-  --scc-accent-soft: rgba(10, 139, 255, 0.16);
-  --scc-chip-bg: #272d35;
-  --scc-chip-border: #3d444e;
+[data-theme="dark"] .scc {
+  --scc-accent-text: var(--color-blue);
+  --scc-accent-soft: color-mix(in srgb, var(--color-blue) 16%, transparent);
+  --scc-chip-bg: var(--color-bg-muted);
+  --scc-chip-border: var(--color-border);
 }
 
 .scc-row {
@@ -736,9 +732,9 @@
   white-space: nowrap;
 }
 .portal-billing__role-pill[data-leader="true"] {
-  background: rgba(10, 139, 255, 0.12);
-  color: #0a8bff;
-  border: 1px solid rgba(10, 139, 255, 0.25);
+  background: color-mix(in srgb, var(--color-blue) 12%, transparent);
+  color: var(--color-blue);
+  border: 1px solid color-mix(in srgb, var(--color-blue) 25%, transparent);
 }
 .portal-billing__role-pill[data-leader="false"] {
   background: var(--color-bg-muted);
@@ -768,10 +764,10 @@
   margin-bottom: 8px;
 }
 .portal-billing__planhead-lbl--free {
-  color: #10b981;
+  color: var(--color-green);
 }
 .portal-billing__planhead-lbl--meter {
-  color: #0a8bff;
+  color: var(--color-blue);
 }
 .portal-billing__planhead-title {
   margin: 0;
@@ -839,7 +835,7 @@
 
 .portal-billing__invoice-link:focus-visible {
   outline: none;
-  border-color: var(--color-blue, #0a8bff);
+  border-color: var(--color-blue);
   background: var(--color-bg-muted, #f1f5f9);
 }
 
@@ -953,6 +949,12 @@
   align-items: flex-start;
   gap: 1rem;
 }
+/* Keep the CTA on one line at its natural width — in the narrow subscribed
+   column it was shrinking and clipping its label. */
+.portal-billing__enterprise-head > .sui-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
 /* Bare variant — embeds in another card's column without its own surface. */
 .portal-billing__enterprise-bare {
   display: block;
@@ -988,13 +990,13 @@
   height: 100%;
 }
 .portal-billing__segbar-seg--blue {
-  background: #0a8bff;
+  background: var(--color-blue);
 }
 .portal-billing__segbar-seg--purple {
-  background: #8b5cf6;
+  background: var(--color-purple);
 }
 .portal-billing__segbar-seg--teal {
-  background: #06b6d4;
+  background: var(--color-cat-extraction);
 }
 .portal-billing__seglegend {
   display: flex;
@@ -1016,13 +1018,13 @@
   flex-shrink: 0;
 }
 .portal-billing__dot--blue {
-  background: #0a8bff;
+  background: var(--color-blue);
 }
 .portal-billing__dot--purple {
-  background: #8b5cf6;
+  background: var(--color-purple);
 }
 .portal-billing__dot--teal {
-  background: #06b6d4;
+  background: var(--color-cat-extraction);
 }
 .portal-billing__seglegend-label {
   font-weight: 600;
