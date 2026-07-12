@@ -1,4 +1,4 @@
-/* COMPAT — legacy token names (editor --bg-*/--text-* and SUI/portal --color-*) aliased onto the canonical --c-* set so existing files keep working. :root:root (0,2,0) out-ranks the legacy blocks; aliases are theme-agnostic. */
+/* COMPAT — legacy token names (editor --bg-/--text-, SUI/portal --color-) aliased onto the canonical --c- set so existing files keep working. :root:root (0,2,0) out-ranks the legacy blocks; aliases are theme-agnostic. */
 
 :root:root {
   /* ── Canvas (darkest / centre) ── */
