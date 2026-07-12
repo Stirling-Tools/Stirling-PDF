@@ -546,3 +546,38 @@
 .portal-policies__detail-stats .sui-stat + .sui-stat {
   border-left: 1px solid var(--color-border-light);
 }
+
+/* ── Catalogue table (replaces the stacked category cards) ──────────────── */
+.portal-policies__cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.portal-policies__cell-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+  min-width: 0;
+}
+
+.portal-policies__rulechips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3125rem;
+}
+
+.portal-policies__muted {
+  font-size: 0.8125rem;
+  color: var(--color-text-3);
+}
+
+.portal-policies__docs {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+  font-variant-numeric: tabular-nums;
+}
+/* The .pcat-badge icon styles live with the PolicyCategoryIcon component
+   (PolicyCategoryIcon.css) so the Home policy summary picks them up too. */

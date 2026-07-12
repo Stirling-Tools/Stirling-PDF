@@ -27,8 +27,8 @@ import {
 import { fetchSources } from "@portal/api/sources";
 import { useAsync } from "@portal/hooks/useAsync";
 import { PolicyFieldRow } from "@portal/components/policies/PolicyFieldRow";
-import { policyIcon } from "@portal/components/policies/policyIcons";
-import { sourceTypeMeta } from "@portal/components/sources/sourceTypes";
+import { PolicyCategoryBadge } from "@portal/components/policies/PolicyCategoryIcon";
+import { SourceTypeIcon } from "@portal/components/sources/SourceTypeIcon";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig";
 import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
@@ -310,9 +310,7 @@ function PolicySetupWizardBody({
       width="lg"
       title={
         <span className="portal-policies__wizard-title">
-          <span className="portal-policies__cat-icon" aria-hidden>
-            {policyIcon(category.icon)}
-          </span>
+          <PolicyCategoryBadge category={category} />
           {isEdit
             ? t("portal.policies.wizard.title.edit", {
                 category: t(category.label),
@@ -496,7 +494,7 @@ function PolicySetupWizardBody({
                   onClick={() => toggleSource(src.id)}
                 >
                   <span className="portal-policies__source-icon" aria-hidden>
-                    {sourceTypeMeta(src.type).icon}
+                    <SourceTypeIcon type={src.type} />
                   </span>
                   <span className="portal-policies__source-text">
                     <span className="portal-policies__source-label">
