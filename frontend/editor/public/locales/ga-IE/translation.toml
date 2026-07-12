@@ -356,6 +356,7 @@ text = "Rialaíonn na ceadanna seo cad is féidir le húsáideoirí a dhéanamh 
 title = "Athrú Ceadanna"
 
 [addStamp]
+preview = "Preview Stamp"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -1842,6 +1843,15 @@ export = "Easpórtáil"
 accessDenied = "Rochtain diúltaithe"
 insufficientPermissions = "Níl cead agat an gníomh seo a dhéanamh."
 
+[auth.callback]
+completing = "Completing authentication"
+invalidToken = "OAuth login failed - invalid token."
+missingToken = "OAuth login failed - no token received."
+oauthFailed = "OAuth login failed. Please try again."
+pleaseWait = "Please wait while we finish signing you in."
+signedOut = "You have been signed out. Please sign in again."
+windowMayClose = "You can close this window once it completes."
+
 [auth.displayName]
 guest = "Aoi"
 user = "Úsáideoir"
@@ -2824,6 +2834,7 @@ next = "Ar Aghaidh"
 preview = "Réamhamharc"
 previous = "Roimhe Seo"
 refresh = "Athnuaigh"
+remaining = "Remaining"
 retry = "Bain triail eile as"
 save = "Sábháil"
 
@@ -4072,10 +4083,17 @@ discord = "Discord"
 issues = "GitHub"
 
 [formFill]
+allSaved = "All saved"
+extractCsvError = "Failed to extract CSV"
+extractXlsxError = "Failed to extract XLSX"
 flattenAfterFilling = "Cothromaigh tar éis líonadh"
+requiredAbbreviation = "req"
+requiredFieldsError = "Please fill in all required fields"
 rescanFields = "Athscan na réimsí"
 rescanFormFields = "Athscan réimsí an fhoirme"
 save = "Sábháil"
+saveShortcut = "Ctrl+S to save"
+unsavedChanges = "Unsaved changes"
 
 [formFill.sidebar]
 close = "Dún an barra taoibh"
@@ -4647,7 +4665,6 @@ welcomeTitle = "Tugadh cuireadh duit!"
 
 [landing]
 addFiles = "Cuir Comhaid Leis"
-heroSubtitle = "Scaoil isteach nó cuir PDF atá ann cheana leis chun tosú."
 mobileUpload = "Uaslódáil ó Shoghluaiste"
 openFromComputer = "Oscail ón ríomhaire"
 uploadFromComputer = "Uaslódáil ón ríomhaire"
@@ -4976,6 +4993,7 @@ pinButton = "Is féidir leat an cnaipe <strong>Pionnáil</strong> a úsáid más
 results = "Tar éis don uirlis rith, taispeánfaidh an chéim <strong>Athbhreithnithe</strong> réamhamharc de na torthaí sa phainéal seo, agus ligfidh sé duit an oibríocht a chealú nó an comhad a íoslódáil."
 runButton = "Nuair a bheidh an uirlis cumraithe, ligfidh an cnaipe seo duit an uirlis a rith ar na PDFanna roghnaithe go léir."
 selectCropTool = "Roghnaímis an uirlis <strong>Bearradh</strong> chun a léiriú conas ceann de na huirlisí a úsáid."
+stepOf = "Step {{current}} of {{total}}"
 toolInterface = "Seo comhéadan na huirlise <strong>Bearradh</strong>. Mar a fheiceann tú, níl mórán ann fós mar nár chuir muid aon chomhaid PDF leis le hoibriú leo go fóill."
 workbench = "Seo é an <strong>Binse Oibre</strong> - an príomhlimistéar ina bhfeiceann agus ina n-eagraíonn tú do PDFanna."
 wrapUp = "Tá gach rud réidh agat! D'fhoghlaim tú faoin bpríomhlimistéir den aip agus conas iad a úsáid. Cliceáil an cnaipe <strong>Cabhair</strong> aon uair is mian leat an turas seo a fheiceáil arís."
@@ -4988,6 +5006,26 @@ showMeAround = "Taispeáin timpeall dom"
 skipForNow = "Scipeáil faoi láthair"
 skipTheTour = "Scipeáil an turas"
 
+[onboarding.checklist]
+dismiss = "Dismiss"
+title = "Set up Stirling PDF"
+
+[onboarding.checklist.downloadDesktop]
+description = "Run Stirling natively on your machine"
+title = "Download Stirling for Desktop"
+
+[onboarding.checklist.inviteTeam]
+description = "Collaborate with your team"
+title = "Invite team members"
+
+[onboarding.checklist.shareAnalytics]
+description = "Help improve Stirling"
+title = "Share anonymous usage data"
+
+[onboarding.checklist.takeTour]
+description = "See how Stirling works in a quick walkthrough"
+title = "Take the tour"
+
 [onboarding.desktopInstall]
 body = "Oibríonn Stirling is fearr mar aip deisce. Is féidir leat é a úsáid as líne, rochtain níos tapúla a fháil ar dhoiciméid, agus eagarthóireacht a dhéanamh go háitiúil ar do ríomhaire."
 selectOs = "Roghnaigh córas oibriúcháin"
@@ -4996,7 +5034,21 @@ titleWithOs = "Íoslódáil do {{osLabel}}"
 
 [onboarding.mfa]
 authenticationCode = "Cód fíordheimhnithe"
+description = "Secure your account by linking an authenticator app. Scan the QR code or enter the setup key, then confirm the 6-digit code to finish."
+enable = "Enable MFA"
+enableError = "Unable to enable two-factor authentication. Check the code and try again."
+enterCode = "Enter the 6-digit code from your app."
+enterCodeError = "Enter the authentication code to continue."
+logout = "Logout"
+openAuthenticator = "Open Google Authenticator, Authy, or 1Password."
 qrCodeLoading = "Cód QR á ghiniúint…"
+regenerateQrCode = "Regenerate QR code"
+scanQrCode = "Scan the QR code or enter the setup key below."
+setupError = "Unable to start two-factor setup. Please try again."
+setupKey = "Setup key (manual entry)"
+stepByStep = "Step-by-step"
+success = "MFA has been enabled. You can now continue."
+title = "Multi-Factor Authentication Setup"
 
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Nuair a chumasaíonn tú mód logála isteach, is féidir leat úsáideoirí a bhainistiú, socruithe a chumrú, agus sláinte an fhreastalaí a mheas. Faigheann an chéad <strong>{{freeTierLimit}}</strong> duine ar do fhreastalaí Stirling saor in aisce."
@@ -5004,6 +5056,11 @@ adminBodyLoginEnabled = "Mar riarthóir, is féidir leat úsáideoirí a bhainis
 adminTitle = "Forbhreathnú Riarthóra"
 userBody = "Tabhair cuireadh do chomhoibrithe, sann róil, agus coinnigh do dhoiciméid eagraithe in aon spás oibre slán amháin. Cumasaigh mód logála isteach aon uair is mian leat dul thar úsáid aonair."
 userTitle = "Forbhreathnú Plean"
+
+[onboarding.processorIntro]
+body = "Stirling now runs <strong>Policies</strong> — automated rules that classify, secure, and process every document as it arrives. Set them up and monitor runs in the <strong>Processor</strong>."
+cta = "Check out the Processor"
+title = "Check out the Stirling Processor"
 
 [onboarding.saas.freeEditor]
 freeLine = "The editor is now <free>completely free</free>."
@@ -5937,48 +5994,11 @@ keyDescription = "Greamaigh an eochair cheadúnais ó do ríomhphost"
 success = "Ceadúnas Gníomhachtaithe!"
 successMessage = "Tá do cheadúnas gníomhachtaithe go rathúil. Is féidir leat an fhuinneog seo a dhúnadh anois."
 
-[policies]
-deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
-deleteConfirmTitle = "Delete {{label}} policy?"
-
 [policies.activity]
-enforced = "curtha i bhfeidhm"
-enforcing = "Á chur i bhfeidhm..."
-failed = "Theip ar an bhforfheidhmiú"
 outputsUnavailable = "Níl aschuir na beartais ar fáil le híoslódáil a thuilleadh."
 partialOutputsUnavailable = "Níl cuid d'aschuir na beartais ar fáil le híoslódáil a thuilleadh."
-retrying = "Gnóthach, ag iarraidh arís..."
 runNotFound = "Ní raibh an rith forfheidhmithe le fáil a thuilleadh."
-step = "céim {{current}}/{{total}}"
 timedOut = "Chuaigh an forfheidhmiú thar am sular fhéad an rith críochnú."
-
-[policies.catalog]
-compliance = "Compliance"
-ingestion = "Ingestion"
-retention = "Retention"
-routing = "Routing"
-security = "Security"
-
-[policies.detail]
-close = "Dún"
-editSettings = "Edit Settings"
-enforces = "Enforces"
-managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
-noActivityDescription = "Documents will appear here once this policy runs."
-noActivityTitle = "No activity yet"
-onEveryUpload = "On every upload"
-originalsNote = "Originals stay untouched • Enforced version saved alongside"
-pause = "Pause"
-recentActivity = "Recent Activity"
-resume = "Resume"
-retry = "Retry"
-showLess = "Show less"
-showMore = "Show more"
-statActive = "Active"
-statDataProcessed = "Data processed"
-statDocsEnforced = "Docs enforced"
-statusActive = "Active"
-statusPaused = "Paused"
 
 [policies.enforcement]
 applying = "Á chur {{names}} i bhfeidhm"
@@ -5989,34 +6009,9 @@ failureBody = "Níor próiseáladh {{failures}} as {{total}} comhad agus easpór
 failureTitle = "Easpórtáladh gan fhorfheidhmiú iomlán"
 printPolicyAppliedBody = "Nuashonraíodh an PDF seo chun beartas a chomhlíonadh. Athbhreithnigh na hathruithe, ansin priontáil arís."
 printPolicyAppliedTitle = "Beartas curtha i bhfeidhm roimh phriontáil"
-queued = "+{{count}} sa scuaine"
 successTitle = "Cuireadh {{names}} i bhfeidhm"
 summaryMore = "{{first}}, {{second}} agus {{more}} eile"
 summaryTwo = "{{first}} agus {{second}}"
-
-[policies.enforcement.triggerVerb]
-convert = "Forfheidhmiú roimh thiontú"
-default = "Forfheidhmiú"
-export = "Forfheidhmiú roimh easpórtáil"
-input = "Forfheidhmiú ar iompórtáil"
-print = "Forfheidhmiú roimh phriontáil"
-
-[policies.field]
-accessLog = "Loga rochtana"
-archiveAfter = "Cartlannaigh tar éis"
-auditTrail = "Rian iniúchta"
-belowThreshold = "Faoi bhun na tairsí"
-destination = "Ceann scríbe"
-frameworks = "Creataí"
-immutableHold = "Coinneáil dho-athraithe"
-keepFor = "Coinnigh ar feadh"
-minConfidence = "Muinín íosta"
-notify = "Cuir ar an eolas ar ródú"
-onViolation = "Nuair nach bhfuil sé comhlíontach"
-webhookUrl = "Webhook URL"
-
-[policies.fields]
-selectedCount = "{{count}} selected"
 
 [policies.labels]
 add = "Cuir leis"
@@ -6056,90 +6051,6 @@ placeholder = "Select PII types"
 routing = "Uimhreacha ródaithe SAM (ABA)"
 ssn = "Uimhreacha Slándála Sóisialta"
 
-[policies.settings]
-noneExport = "Níl aon pholasaithe ag rith ar easpórtáil faoi láthair."
-noneUpload = "Níl aon pholasaithe ag rith ar uaslódáil faoi láthair."
-onExport = "Ar easpórtáil"
-onUpload = "Ar uaslódáil"
-reorderHandle = "Tarraing chun athordú"
-runOrderDesc = "Nuair a ritheann níos mó ná polasaí amháin ar an truicear céanna, ritheann siad san ord seo — gach ceann ar aschur an pholasaí roimhe. Tarraing chun athordú."
-title = "Socruithe polasaí"
-
-[policies.sidebar]
-activeCount = "{{count}} active"
-infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
-loading = "Loading…"
-optionsAriaLabel = "Roghanna polasaí"
-policySettings = "Socruithe polasaí"
-railAriaLabel = "{{label}} policy — {{status}}"
-railSuffixActive = " (Active)"
-railSuffixPaused = " (Paused)"
-retryFailed = "Atriail polasaithe ar theip orthu ({{count}})"
-rowProgress = "{{completed}} as {{total}} comhad próiseáilte"
-setUp = "Set up"
-title = "Policies"
-upgradeToEnterprise = "Upgrade to enterprise"
-whatIsPolicy = "Cad is polasaí ann?"
-
-[policies.status]
-active = "Active"
-paused = "Paused"
-setup = "Set up"
-
-[policies.toolConfig]
-enableAriaLabel = "Enable {{tool}}"
-infoAriaLabel = "What does {{tool}} do?"
-
-[policies.toolConfig.info]
-redact = "Aimsíonn agus dubháilann sé sonraí íogaire go huathoibríoch — amhail uimhreacha Slándála Sóisialta agus uimhreacha cárta — ionas nach féidir iad a léamh sa cháipéis."
-sanitize = "Baineann sé JavaScript folaithe den chomhad, ionas nach rithfidh aon rud go huathoibríoch nuair a osclaíonn duine é."
-watermark = "Stampálann sé marc infheicthe (m.sh. \"Confidential\") trasna gach leathanaigh."
-
-[policies.wizard]
-allDocTypesDescription = "Enable the Classification policy to filter by document type."
-allDocTypesTitle = "All document types"
-back = "Back"
-builderDesc = "Build the sequence of tools this policy runs on each document."
-clear = "Clear"
-close = "Dún"
-continue = "Continue"
-docTypesLabel = "Document types"
-edit = "Edit"
-editTitle = "Edit {{label}} Policy"
-enablePolicy = "Enable Policy"
-filenameAutoNumber = "Auto-number"
-filenamePositionAria = "Filename position"
-filenamePrefix = "Prefix"
-filenameSuffix = "Suffix"
-filenameTextAria = "Filename text"
-filenameTextPlaceholder = "Text to add (optional)"
-lockedDescription = "Contact a team leader to change this policy."
-lockedTitle = "Managed by your organisation"
-maxRetriesLabel = "Max retries"
-noToolsError = "Add at least one configured tool to the workflow first."
-outputAsLabel = "Output as"
-outputFilenameSubhead = "Output filename"
-outputModeAria = "Output mode"
-outputNewFile = "New file"
-outputNewVersion = "New version"
-outputRetriesLabel = "Output & retries"
-outputSubhead = "Output"
-retryDelayAria = "Retry delay minutes"
-retryDelayLabel = "Retry delay (min)"
-runOnExport = "Export"
-runOnLabel = "Run on"
-runOnSubhead = "Run on"
-runOnUpload = "Upload"
-saveChanges = "Save Changes"
-saveError = "Couldn't save the policy. Please try again."
-setupClassification = "Set up Classification"
-setupTitle = "Set up {{label}} Policy"
-sourcesDesc = "Choose where this policy runs and which document types it applies to."
-sourcesLabel = "Sources"
-stepOf = "Step {{step}} of {{total}}"
-toolChainDesc = "Configure the tools this policy runs on each document."
-typesSelected = "{{count}} types selected"
-
 [policy]
 badgeEnforcing = "{{name}} á chur i bhfeidhm..."
 badgeRan = "Rith polasaí {{name}} ar an gcomhad seo"
@@ -6151,6 +6062,7 @@ viewAnyway = "Amharc ar chomhad (polasaí fós á chur i bhfeidhm)"
 [policyOption]
 autoRedactPhi = "Ceil PHI go huathoibríoch"
 blockExport = "Blocáil easpórtáil"
+ccpa = "CCPA"
 contracts = "Conarthaí"
 documents = "Doiciméid"
 fedramp = "FedRAMP"
@@ -6367,6 +6279,7 @@ redirectingToEditor = "Á atreorú chuig an eagarthóir..."
 
 [portal.billing.checkout]
 noClientSecret = "D’fhill Edge function gan client_secret."
+stepCount = "Step {{step}} of 2"
 subtitle = "Cuir cárta leis chun leanúint ar aghaidh thar do dheontas saor in aisce ar phlean Editor. Láimhseálann Stripe an chuid eile."
 title = "Cuir an plean Processor ar siúl"
 
@@ -6375,6 +6288,20 @@ body = "D’éirigh le d’íocaíocht, ach tá an gníomhachtú ag glacadh beag
 close = "Dún"
 title = "Beagnach ann"
 
+[portal.billing.checkout.cap]
+back = "Back"
+continue = "Continue to payment"
+error = "Couldn't set your spend limit"
+finePrint = "Invoices post on the 1st. Cancel anytime and revert to the Editor plan; your policies and history stay intact."
+note = "Processing pauses if you reach it. You're never billed past this, and you can change it any time."
+subtitle = "You're billed only for PDFs you process past your first 500 free, never for seats — so your ceiling is yours from day one."
+title = "Set your spend limit"
+
+[portal.billing.checkout.card]
+fields = "Card number · MM / YY · CVC · ZIP"
+label = "Card details"
+note = "Card details collected by Stripe. Stirling never stores PAN or CVC."
+
 [portal.billing.checkout.error]
 title = "Níorbh fhéidir checkout a thosú"
 
@@ -6382,11 +6309,6 @@ title = "Níorbh fhéidir checkout a thosú"
 body = "Chuaigh d’íocaíocht tríd. Táimid ag cur próiseáil mhéadraithe ar siúl ar fud d’áiseanna nasctha - de ghnáth tógann sé seo cúpla soicind."
 hint = "Coinnigh an fhuinneog seo oscailte, le do thoil."
 title = "Do phlean Processor á ghníomhachtú..."
-
-[portal.billing.checkout.notConfigured]
-bodyAfter = "i portal env chun checkout in-app a chumasú."
-bodyBefore = "Socraigh"
-title = "Níl Stripe cumraithe"
 
 [portal.billing.enterpriseUpsell]
 cta = "Tóg do luachan Enterprise"
@@ -6465,6 +6387,9 @@ segmentApiDesc = "Iarratais dhíreacha API"
 segmentApiLabel = "API"
 segmentAutomationDesc = "Uathoibrithe & píblínte"
 segmentAutomationLabel = "Uathoibriú"
+sizeMultiplier = "{{formatted}} PDFs used a size multiplier"
+summary = "{{unique}} unique · {{units}} meter units · {{avg}} avg per PDF"
+summaryNoRate = "{{unique}} unique · {{units}} meter units"
 unit = "PDFs méadraithe"
 
 [portal.billing.spendLimit]
@@ -6494,6 +6419,8 @@ label = "Réamh-mheasta go sárófar í."
 
 [portal.billing.spendThisMonth]
 eyebrow = "Caiteachas an mhí seo"
+freeRemaining_one = "{{formatted}} free PDF remaining"
+freeRemaining_other = "{{formatted}} free PDFs remaining"
 processed_one = "{{formattedCount}} PDF próiseáilte."
 processed_other = "{{formattedCount}} PDFs próiseáilte."
 processedWithRate_one = "{{formattedCount}} PDF próiseáilte, ar {{rate}} an ceann."
@@ -6766,6 +6693,8 @@ type = "Cineál"
 user = "Úsáideoir"
 
 [portal.documents.queue.empty]
+connectSource = "Connect a source"
+createPipeline = "Create a pipeline"
 description = "De réir mar a sheolann foinsí doiciméid isteach i do phíblínte, taispeánfar anseo iad le hathbhreithniú."
 title = "Níl aon doiciméid sa scuaine"
 
@@ -6875,8 +6804,63 @@ description = "Bhuail an radharc seo earráid gan choinne. Bain triail eile as, 
 retry = "Bain triail eile as"
 title = "Chuaigh rud éigin mícheart ar an leathanach seo"
 
+[portal.home.download]
+back = "Back"
+body = "Download the desktop app or self-host the server."
+done = "Done"
+guide = "Open the {{name}} guide"
+openInBrowser = "Open in browser instead"
+sectionDesktop = "Desktop app"
+sectionSelfHosted = "Self-hosted"
+title = "Install the Stirling PDF Editor"
+
+[portal.home.download.docker]
+detailBody = "Run the official image on your server."
+note = "Opens at :8080. Default login: admin / stirling."
+tagline = "Run the server in a container"
+title = "Docker"
+variantFat = "Fat"
+variantLite = "Ultra-Lite"
+variantStandard = "Standard"
+
+[portal.home.download.kubernetes]
+detailBody = "Install the official Helm chart."
+note = "Add a PVC for /configs to persist settings."
+tagline = "Deploy to a cluster with Helm"
+title = "Kubernetes"
+
+[portal.home.download.linux]
+detailBody = "Native builds for your distribution."
+guideBtn = "View Linux install options"
+note = "AppImage, .deb and .rpm builds are available for common distros."
+tagline = "Native desktop app for your distro"
+title = "Linux"
+
+[portal.home.download.mac]
+altLabel = "Or via Homebrew"
+detailBody = "Run the installer, or use Homebrew."
+downloadBtn = "Download for macOS"
+tagline = "Native app for Apple silicon and Intel"
+title = "macOS"
+
+[portal.home.download.manual]
+detailBody = "Run the .jar on a bare metal server."
+downloadBtn = "Download the .jar"
+note = "Requires Java 21+. Opens at :8080; default login admin / stirling."
+runLabel = "Then run it"
+tagline = "Run the .jar on a bare metal server"
+title = "Manual server setup"
+
+[portal.home.download.windows]
+altLabel = "Or via winget"
+detailBody = "Run the installer, or use a package manager."
+downloadBtn = "Download installer"
+tagline = "Native app for Microsoft Windows"
+title = "Windows"
+
 [portal.home.editor]
 activeUsers = "{{n}} gníomhach"
+install = "Install the editor"
 invite = "Tabhair cuireadh do chomhghleacaithe"
 name = "Stirling PDF Editor"
 open = "Oscail sa bhrabhsálaí"
@@ -6892,12 +6876,6 @@ afternoon = "Tráthnóna maith"
 evening = "Oíche mhaith"
 morning = "Maidin mhaith"
 
-[portal.home.onboarding]
-dismiss = "Dún an socrú"
-notStarted = "Gan tosú"
-progress = "{{done}} as {{total}} déanta"
-title = "Críochnaigh an socrú"
-
 [portal.home.onboarding.enterprise]
 body = "SSO + SCIM + RBAC ar fud na heagraíochta, praghsáil toirte tiomanta, agus imscaradh air-gapped."
 cta = "Tosaigh Triail"
@@ -6909,15 +6887,13 @@ tag = "Enterprise"
 blurb = "Imscar an aip deisce, saor in aisce go deo."
 title = "Íoslódáil an PDF Editor"
 
+[portal.home.onboarding.steps.invite]
+blurb = "Bring your team into the secure workspace"
+title = "Invite teammates"
+
 [portal.home.onboarding.steps.policies]
 blurb = "{{active}} gníomhach · {{recommended}} molta"
-chip = "{{active}} gníomhach"
 title = "Cuir beartais ar siúl"
-
-[portal.home.onboarding.steps.sources]
-blurb = "{{connected}} ceangailte · gach PDF rialaithe san áit a dtagann sé i dtír"
-chip = "{{connected}} ceangailte"
-title = "Ceangail do chuid foinsí"
 
 [portal.home.quickActions]
 subtitle = "Príomhthascanna don lá inniu"
@@ -6941,6 +6917,11 @@ sectionsAriaLabel = "Rannáin bhonneagair"
 subtitle = "Imscarthaí, dintiúir, seasamh slándála, stóráil, agus an rian iniúchta do do spás oibre Stirling."
 title = "Bonneagar"
 
+[portal.infrastructure.apiKeyPermission]
+admin = "Admin"
+read = "Read"
+write = "Write"
+
 [portal.infrastructure.apiKeys]
 createKey = "Cruthaigh eochair"
 heading = "Eochracha API"
@@ -6960,6 +6941,11 @@ usageToday = "Úsáid inniu"
 [portal.infrastructure.apiKeys.empty]
 description = "Cruthaigh eochair scóipithe chun tosú ag glaoch ar an Stirling API."
 title = "Níl aon eochracha API fós"
+
+[portal.infrastructure.attestationLabel]
+attested = "Attested"
+inScope = "In scope"
+notApplicable = "N/A"
 
 [portal.infrastructure.audit]
 filterAriaLabel = "Scag imeachtaí iniúchta de réir catagóire"
@@ -7004,6 +6990,7 @@ all = "Uile"
 auth = "Auth"
 config = "Cumraíocht"
 elevation = "Ardú"
+policy = "Policy"
 processing = "Próiseáil"
 security = "Slándáil"
 
@@ -7013,9 +7000,28 @@ title = "Níl rochtain agat"
 
 [portal.infrastructure.audit.metrics]
 config = "Cumraíocht"
-elevation = "Ardú"
+policy = "Policy"
 processing = "Próiseáil"
 totalEvents = "Imeachtaí iomlána · 24h"
+
+[portal.infrastructure.auditCatLabel]
+auth = "Auth"
+config = "Config"
+elevation = "Elevation"
+policy = "Policy"
+processing = "Processing"
+security = "Security"
+
+[portal.infrastructure.auditStatusLabel]
+danger = "Error"
+info = "Info"
+success = "Success"
+warning = "Warning"
+
+[portal.infrastructure.certLabel]
+certified = "Certified"
+inProgress = "In progress"
+notStarted = "Not started"
 
 [portal.infrastructure.createKey]
 cancel = "Cealaigh"
@@ -7032,6 +7038,12 @@ subtitle = "Scóipigh an eochair chuig an íosmhéid a theastaíonn uaithi. Is f
 subtitleCreated = "Cóipeáil an rún seo anois — ní thaispeánfar arís é."
 title = "Cruthaigh eochair API"
 titleCreated = "Eochair cruthaithe"
+
+[portal.infrastructure.deployLabel]
+live = "Live"
+queued = "Queued"
+rolledBack = "Rolled back"
+rolling = "Rolling out"
 
 [portal.infrastructure.deployments]
 msValue = "{{value}} ms"
@@ -7068,6 +7080,16 @@ subheading = "Sláinte bheo do gach réigiún Stirling imscartha — foighne, ua
 description = "Taispeánfar réigiúin imscartha anseo nuair a bheidh do spás oibre soláthraithe."
 title = "Níl aon réigiúin imscartha"
 
+[portal.infrastructure.keyLabel]
+active = "Active"
+revoked = "Revoked"
+rotateSoon = "Rotate soon"
+
+[portal.infrastructure.modelLabel]
+active = "Active"
+degraded = "Degraded"
+disabled = "Disabled"
+
 [portal.infrastructure.models]
 heading = "Samhlacha"
 msValue = "{{value}} ms"
@@ -7095,6 +7117,10 @@ status = "Stádas"
 type = "Cineál"
 version = "Leagan"
 
+[portal.infrastructure.models.cost]
+perCall = "{{price}}/call"
+perThousand = "{{price}}/1k"
+
 [portal.infrastructure.models.metrics]
 activeModels = "Samhlacha gníomhacha"
 avgLatency = "Meánfhoighne"
@@ -7117,6 +7143,17 @@ docType = "Cineál doiciméid"
 modelForAria = "Samhail do {{operation}}"
 operation = "Oibríocht"
 routedTo = "Ródaithe chuig"
+
+[portal.infrastructure.modelTypeLabel]
+classification = "Classification"
+extraction = "Extraction"
+llm = "LLM"
+ocr = "OCR"
+
+[portal.infrastructure.regionLabel]
+degraded = "Degraded"
+down = "Down"
+healthy = "Healthy"
 
 [portal.infrastructure.security.access.byok]
 description = "Soláthair eochair ó do KMS féin. Criptíonn Stirling léi ach is féidir leis léamh fós."
@@ -7259,26 +7296,6 @@ sources = "Foinsí"
 usage = "Úsáid & Billeáil"
 users = "Úsáideoirí"
 
-[portal.notifications]
-markAllRead = "Marcáil gach rud léite"
-title = "Fógraí"
-viewAll = "Féach ar gach rud"
-
-[portal.notifications.ariaLabel]
-none = "Fógraí, gan aon rud gan léamh"
-unread_one = "Fógraí, {{count}} gan léamh"
-unread_other = "Fógraí, {{count}} gan léamh"
-
-[portal.notifications.count]
-allRead = "gach rud léite"
-loading = "á luchtú"
-new_one = "{{count}} nua"
-new_other = "{{count}} nua"
-
-[portal.notifications.empty]
-description = "Níl aon fhógraí nua ann."
-title = "Tá tú suas chun dáta"
-
 [portal.pipelines]
 subtitle = "Gach píblíne doiciméad uathoibrithe ar an inneall cúil: slabhra ordaithe oibríochtaí thar shraith foinsí, á rith ar thruicear. Cliceáil ró le haghaidh a céimeanna agus a foinsí."
 title = "Píblínte"
@@ -7323,6 +7340,11 @@ operations_one = "Oibríocht ({{count}})"
 operations_other = "Oibríochtaí ({{count}})"
 output = "Aschur"
 removeStep = "Bain oibríocht"
+s3Configure = "Configure"
+s3Done = "Done"
+s3ModalTitle = "Amazon S3 output"
+s3NotConfigured = "Not configured"
+s3PrefixHelp = "Outputs are uploaded under this key prefix."
 save = "Sábháil athruithe"
 scheduleEvery = "Rith gach"
 sources = "Foinsí"
@@ -7342,11 +7364,13 @@ confirm = "Scrios"
 title = "Scrios píblíne?"
 
 [portal.pipelines.detail]
+clearHistory = "Clear history"
 delete = "Scrios píblíne"
 run = "Rith anois"
 
 [portal.pipelines.empty]
 action = "Cruthaigh píblíne"
+connectSource = "Connect a source"
 description = "Cruthaigh do chéad phíblíne: roghnaigh na foinsí a ritheann sí orthu, slabhraigh na hoibríochtaí, agus roghnaigh cá dtéann an t-aschur."
 title = "Níl aon phíblínte fós"
 
@@ -7358,12 +7382,19 @@ total = "Píblínte"
 [portal.pipelines.output]
 folder = "Scríobh chuig fillteán"
 inline = "Tabhair comhaid ar ais"
+s3 = "Write to Amazon S3"
 
 [portal.pipelines.run]
+allProcessed_one = "Nothing to run: the source's {{count}} document has already been processed."
+allProcessed_other = "Nothing to run: all {{count}} documents in the sources have already been processed."
 completed_one = "Rith críochnaithe."
 completed_other = "Críochnaíodh gach {{count}} rith."
 empty = "Níl aon rud le rith: ní raibh aon doiciméid le próiseáil ag na foinsí."
 failed = "Theip ar an rith: {{error}}"
+historyCleared = "History cleared. The next run reprocesses everything currently in the sources."
+inFlight = "Nothing new to run: documents are still being processed from an earlier run."
+parked_one = "Nothing to run: {{count}} document failed previously and is parked. Fix the cause, then clear history to retry it."
+parked_other = "Nothing to run: {{count}} documents failed previously and are parked. Fix the cause, then clear history to retry them."
 running = "Tosaíodh an rith; tá sé fós ar siúl."
 timeout = "Tá an rith ag glacadh níos faide ná mar a bhíothas ag súil leis; d’fhéadfadh sé críochnú sa chúlra fós."
 
@@ -7647,7 +7678,6 @@ managePlan = "Bainistigh plean"
 volumeSuffix = "PDFs próiseáilte · 30 lá anuas"
 
 [portal.procurement]
-reset = "Athshocraigh soláthar (taispeántas)"
 subtitle = "Faigh do fhoireann measúnaithe, conraithe agus ionduchtaithe. Gach cáipéis in aon áit amháin."
 title = "Soláthar"
 
@@ -7667,23 +7697,42 @@ title = "Athbhreithnigh do chomhaontú enterprise"
 
 [portal.procurement.builder]
 addons = "Breiseáin"
+addressLine1 = "Address line 1"
+addressLine1Placeholder = "500 Howard St"
+addressLine2 = "Address line 2"
+addressLine2Placeholder = "Suite, floor, building"
 back = "Ar ais"
 businessName = "Ainm gnó"
 businessNamePlaceholder = "Do chuideachta"
+city = "City"
+cityPlaceholder = "San Francisco"
+contactEmail = "Contact email"
+contactEmailPlaceholder = "jane@acme.com"
+contactName = "Contact name"
+contactNamePlaceholder = "Jane Doe"
 continue = "Lean ar aghaidh"
-country = "Tír"
-countryEuro = "Limistéar an euro (EUR €)"
-countryUK = "An Ríocht Aontaithe (GBP £)"
-countryUS = "Stáit Aontaithe Mheiriceá (USD $)"
 eula = "Tá Stirling Enterprise EULA léite agam agus aontaím leis. Rialaíonn sé an comhaontú a ghintear ón luachan seo."
 generate = "Gin luachan"
 included = "San áireamh"
 indemnification = "Slánaíocht IP"
 indemnificationSub = "Cosnaímid éilimh cháilitheacha IP, de réir an EULA"
-offlineLicense = "Ceadúnas as líne / air-gapped"
-offlineLicenseSub = "Comhad ceadúnais in-íoslódáilte le haghaidh instance self-hosted air-gapped"
+pdfSize = "PDF size"
+poNumber = "PO number"
+poNumberPlaceholder = "Optional"
+postalCode = "Postal code"
+postalCodePlaceholder = "94105"
+posture = "Governance"
+posture_count = "~{{count}} policies"
+posture_essentials = "Essentials"
+posture_essentialsSub = "Classification + Sharing — the defaults"
+posture_governed = "Governed"
+posture_governedSub = "Adds Security and Routing"
+posture_regulated = "Regulated"
+posture_regulatedSub = "Every category — Compliance, Retention, Ingestion"
 qbr = "Athbhreithnithe gnó ráithiúla"
 qbrSub = "Déanann do SE athbhreithniú ar úsáid agus treochlár gach ráithe"
+region = "State / region"
+regionPlaceholder = "California"
 running = "{{annual}} / bl · {{years}} bl {{tcv}}"
 s1Sub = "D’fhoireann, agus na PDFs a bhfuil súil agat a rith gach bliain."
 s1Title = "Cé mhéad a phróiseálfaidh tú?"
@@ -7692,6 +7741,12 @@ s2Title = "Tiomantas agus seirbhís"
 s3Sub = "Don luachan agus don chomhaontú a ghineann sé."
 s3Title = "Do shonraí"
 serviceLevel = "Leibhéal seirbhíse"
+size_compact = "Compact"
+size_compactSub = "Mostly text, under 1 MB"
+size_heavy = "Heavy"
+size_heavySub = "Scanned or image-heavy, 5 MB+"
+size_standard = "Standard"
+size_standardSub = "Mixed text and images, 1 to 5 MB"
 slDedicated = "Tiomnaithe"
 slDedicatedSub = "4 huaire gnó · bainisteoir cuntais tiomnaithe · +30%"
 slPriority = "Tosaíocht"
@@ -7699,6 +7754,8 @@ slPrioritySub = "An lá gnó céanna · CSM ainmnithe · +15%"
 slStandard = "Caighdeánach"
 slStandardSub = "An chéad lá gnó eile · CSM comhroinnte · san áireamh"
 stepOf = "Céim {{n}} as {{total}}"
+taxId = "VAT / Tax ID"
+taxIdPlaceholder = "Optional"
 term = "Téarma"
 termDiscount = "Cuireadh lascaine tiomantais ilbhliantúil {{pct}}% i bhfeidhm"
 title = "Tóg do luachan"
@@ -7734,14 +7791,13 @@ title = "Chuaigh rud éigin mícheart"
 
 [portal.procurement.hero]
 company = "Do mhargadh enterprise"
-ctaAgreement = "Athbhreithnigh & sínigh comhaontú"
 ctaLive = "Tá tú beo"
 ctaPayment = "Cuir íocaíocht leis"
 ctaQuote = "Athbhreithnigh do luachan"
 ctaTrial = "Tóg do luachan"
 eyebrow = "Soláthar enterprise"
 inviteTeammates = "Tabhair cuireadh do chomhpháirtithe foirne"
-keyDocs = "Príomhcháipéisí"
+licenseKey = "Licence key"
 nextStep = "An chéad chéim eile: {{action}}"
 notStarted = "Gan tosú"
 open = "Oscail soláthar"
@@ -7796,6 +7852,9 @@ downloadError = "Níorbh fhéidir an comhad ceadúnais as líne a ghiniúint fó
 downloadOffline = "Íoslódáil ceadúnas as líne (.lic)"
 hint = "Greamaigh an eochair seo isteach in instance self-hosted chun é a ghníomhachtú, nó coinnigh í do do thaifid. Coinnigh slán í."
 label = "D’eochair cheadúnais"
+subtitle = "Activate a self-hosted instance with this key, or keep it for your records."
+title = "Your licence key"
+trialFileHint = "This is your trial licence file. Once your agreement is in place, come back and download it again — unlike the online licence key, the .lic file won't update on its own."
 
 [portal.procurement.link]
 cta = "Nasc cuntas"
@@ -7815,16 +7874,9 @@ talkToSales = "Labhair le díolacháin"
 title = "Osclaíonn rian an tsoláthair le Enterprise"
 
 [portal.procurement.milestone]
-accept = "Glac & lean ar aghaidh"
-description = "Íoslódáil an PDF chun é a roinnt le d’fhoireann, tar ar ais chun glacadh leis nuair atá tú réidh, nó déan athruithe."
 download = "Íoslódáil PDF"
 downloadError = "Níorbh fhéidir an PDF luachana a íoslódáil fós — bain triail eile as ar ball."
 edit = "Cuir luachan in eagar"
-eyebrow = "Luachan {{number}}"
-perYear = " / bl"
-preparedFor = "Ullmhaithe do {{company}}"
-tcv = "luach iomlán conartha {{value}}"
-title = "Tá do luachan réidh"
 
 [portal.procurement.modal]
 cancel = "Cealaigh"
@@ -7851,7 +7903,6 @@ uploadTitle = "Uaslódáil d’ordú ceannaigh"
 [portal.procurement.payment]
 description = "Glacadh le do luachan agus tá do cheadúnas gníomhach cheana — is féidir le d’fhoireann tosú láithreach. Íoc an chéad sonrasc nuair atá tú réidh; is féidir leat é a íoc nó a íoslódáil anseo, gan ríomhphost de dhíth."
 downloadInvoice = "Íoslódáil sonrasc"
-simulate = "Insamhail íocaíocht faighte (taispeántas)"
 title = "Cruthaíodh síntiús"
 viewInvoice = "Féach & íoc sonrasc"
 
@@ -7860,6 +7911,21 @@ fallback = "Níorbh fhéidir an sceidealóir a lódáil."
 fallbackLink = "Oscail sceidealú i gcluaisín nua"
 subtitle = "Treoróidh d’innealtóir réiteach d’fhoireann tríd an gcur i bhfeidhm. Roghnaigh am a oireann duit."
 title = "Sceideal glao"
+
+[portal.procurement.setup]
+airgap = "Air-gapped"
+airgapSub = "Fully offline, isolated network. Includes a downloadable licence file."
+cloud = "Cloud"
+cloudSub = "Fully managed by Stirling. Nothing for you to run."
+deployment = "Where will you run Stirling?"
+seats = "Team size"
+seatsHint = "Roughly how many people will use it. You can refine this when you build your quote."
+seatsPlaceholder = "e.g. 250"
+selfhost = "Self-hosted"
+selfhostSub = "Run it in your own cloud or data centre."
+start = "Start trial"
+subtitle = "Tell us how you plan to run Stirling so we can tailor your trial and quote. No card required."
+title = "Set up your trial"
 
 [portal.procurement.status]
 action = "Gníomh de dhíth"
@@ -7907,26 +7973,11 @@ admin = "Riarachán"
 [portal.settings.sections]
 account-link = "Nasc cuntais"
 
-[portal.shell.header]
-accountFallback = "Cuntas"
-accountMenu = "Roghchlár cuntais"
-darkMode = "Mód dorcha"
-lightMode = "Mód geal"
-search = "Cuardaigh"
-searchPlaceholder = "Cuardaigh…"
-signOut = "Sínigh amach"
-switchToDark = "Athraigh go téama dorcha"
-switchToLight = "Athraigh go téama geal"
-
 [portal.shell.sidebar]
 appEditor = "Eagarthóir"
 appProcessor = "Próiseálaí"
 brandSuffix = "Stirling Processor"
-docsCount = "{{docs}} cháipéis"
 linkAccount = "Nasc cuntas Stirling"
-planEditor = "Plean Eagarthóra"
-planEnterprise = "Plean Enterprise"
-planProcessor = "Plean Próiseálaí"
 primaryNav = "Príomh-nascleanúint"
 switchApp = "Athraigh aip"
 
@@ -7979,7 +8030,9 @@ status = "Stádas"
 usedBy = "Beartais"
 
 [portal.sources.types.editor]
+description = "Documents your team has processed in the editor, across policy and AI runs."
 label = "Eagarthóir"
+noPolicies = "No policies run from the editor yet."
 
 [portal.sources.types.folder]
 description = "Faire ar chomhadlann ar an bhfreastalaí le haghaidh cáipéisí nua."
@@ -8011,6 +8064,42 @@ label = "Doimhneacht fillteáin"
 [portal.sources.types.folder.fields.recursive.options]
 all = "Cuir fofhillteáin san áireamh"
 top = "Barrleibhéal amháin"
+
+[portal.sources.types.s3]
+description = "Pull documents from an Amazon S3 or S3-compatible bucket."
+label = "Amazon S3"
+
+[portal.sources.types.s3.fields.accessKeyId]
+label = "Access key ID"
+
+[portal.sources.types.s3.fields.bucket]
+label = "Bucket"
+placeholder = "my-company-inbox"
+
+[portal.sources.types.s3.fields.endpoint]
+helperText = "Leave blank for Amazon S3. Set to use an S3-compatible service such as MinIO."
+label = "Custom endpoint"
+placeholder = "https://s3.example.com"
+
+[portal.sources.types.s3.fields.mode]
+helperText = "Consume removes each object from the bucket once every policy has processed it."
+label = "Read mode"
+
+[portal.sources.types.s3.fields.mode.options]
+consume = "Consume: process each object once"
+snapshot = "Snapshot: re-read the bucket every run"
+
+[portal.sources.types.s3.fields.prefix]
+helperText = "Only objects whose keys start with this prefix are processed."
+label = "Key prefix"
+placeholder = "incoming/"
+
+[portal.sources.types.s3.fields.region]
+label = "Region"
+placeholder = "us-east-1"
+
+[portal.sources.types.s3.fields.secretAccessKey]
+label = "Secret access key"
 
 [portal.sources.types.unknown]
 label = "Foinse"
@@ -8090,16 +8179,17 @@ summary = "Is leis/léi foireann — bainistíonn sé/sí acmhainní a ball agus
 2 = "Rochtain portal tríd an mbeartas réamhshocraithe"
 3 = "Gach rud is féidir le Ball a dhéanamh"
 
+[portal.users.seats]
+limited = "{{used}} / {{limit}}"
+unlimited = "{{used}} · Unlimited"
+
 [portal.welcome]
 ariaLabel = "Fáilte go Stirling PDF"
-badge = "Open-source"
-installEditor = "Suiteáil an tEagarthóir"
-inviteTeammates = "Tabhair cuireadh do chomhpháirtithe foirne"
+install = "Install the editor"
+invite = "Invite teammates"
 openInBrowser = "Oscail sa bhrabhsálaí"
-perks = "Saor go deo · Self-hostable"
-subtitle = "Tá an PDF Editor is sláine ar domhan saor in aisce d’fhoirne de gach méid. Áirítear 60+ oibríocht PDF agus SSO."
-title = "Fáilte go"
-titleAccent = "Stirling PDF"
+productName = "PDF Editor"
+stats = "30M downloads · 60+ PDF operations · Free forever"
 
 [printFile]
 title = "Priontáil Comhad"
@@ -8902,6 +8992,12 @@ intro = "Cumasaigh fíordheimhniú úsáideoirí, bainistíocht foirne, agus gn�
 learnMore = "Tuilleadh eolais sa doiciméadú"
 title = "Do Riarthóirí Córais"
 
+[settings.general.loginLanding]
+description = "Choose which app opens when you sign in to Stirling Cloud."
+editor = "Editor"
+processor = "Processor"
+title = "After signing in"
+
 [settings.general.mode]
 fullscreen = "Lánscáileán"
 sidebar = "Barra taoibh"
@@ -9109,6 +9205,11 @@ connections = "Naisc"
 security = "Slándáil"
 telegram = "Telegram"
 title = "Slándáil agus Fíordheimhniú"
+
+[settings.signOut]
+confirm = "Are you sure you want to sign out?"
+submit = "Sign out"
+title = "Sign out"
 
 [settings.team]
 title = "Foireann"
@@ -9726,6 +9827,9 @@ uploadButton = "Uaslódáil chuig an bhfreastalaí"
 title = "Stirling-PDF Survey"
 
 [swagger]
+clickHere = "click here"
+fallback = "If it didn't open automatically,"
+opening = "Opening Swagger UI in a new tab..."
 tags = "api,doiciméadú,swagger,críochphointí,forbairt"
 title = "Doiciméadú API"
 
@@ -10019,11 +10123,13 @@ title = "Úsáideoirí"
 you = "(tusa)"
 
 [users.action]
+cancelInvite = "Cancel invitation"
 deleteTeam = "Scrios foireann"
 disableMfa = "Athshocraigh MFA"
 move = "Bog chuig foireann"
 reinstate = "Athbhunaigh"
 remove = "Bain ón eagraíocht"
+removeTeam = "Remove from team"
 rename = "Athainmnigh foireann"
 resetPw = "Athshocraigh pasfhocal"
 suspend = "Cuir ar fionraí"
@@ -10036,11 +10142,14 @@ editor = "Eagarthóir"
 processor = "Próiseálaí"
 
 [users.confirm]
+cancelInviteBody = "Cancel the invitation to {{email}}? They won't be able to join with the current link."
+cancelInviteTitle = "Cancel invitation"
 deleteTeamBody = "Scrios an fhoireann {{name}}? Caithfidh an fhoireann a bheith folamh ar dtús - bog a baill chuig foireann eile, agus ní féidir léi aon chumraíochtaí comhtháthaithe a bheith fós ina húinéireacht."
 deleteTeamTitle = "Scrios foireann"
 disableMfaBody = "Bain clárú MFA {{name}}? Socróidh siad arís é ar an gcéad logáil isteach eile má tá gá leis."
 disableMfaTitle = "Athshocraigh MFA"
 removeBody = "Bain {{name}} go buan ón eagraíocht? Ní féidir é seo a chealú."
+removeTeamBody = "Remove {{name}} from the team? They keep their account but lose access to this team's resources."
 removeTitle = "Bain ball"
 
 [users.empty]
@@ -10090,6 +10199,14 @@ title = "Tabhair cuireadh do dhaoine"
 username = "Ainm úsáideora"
 usernameError = "Caithfidh an t-ainm úsáideora a bheith 3 charachtar ar a laghad"
 usernamePlaceholder = "jsmith"
+
+[users.invites]
+by = "Invited by {{who}}"
+cancel = "Cancel"
+count = "{{count}} pending"
+desc = "Invited people who haven't joined yet. They hold a seat until they accept."
+expires = "Expires"
+title = "Pending invitations"
 
 [users.loadError]
 description = "Chuaigh rud éigin mícheart agus an backend á bhaint amach, nó níl rochtain agat. Bain triail eile as."
@@ -10281,9 +10398,11 @@ title = "Iatáin"
 
 [viewer.bookmarks]
 bookmarkTitle = "Teideal an leabharmhairc"
+bookmarkTitleRequired = "Bookmark title is required"
 closeSidebar = "Dún barra taoibh na leabharmharcanna"
 collapseAll = "Laghdaigh gach leabharmharc"
 expandAll = "Leathnaigh gach leabharmharc"
+searchPlaceholder = "Search bookmarks"
 
 [viewer.comments]
 addComment = "Cuir trácht leis"

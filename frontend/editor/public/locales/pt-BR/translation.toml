@@ -356,6 +356,7 @@ text = "Essas permissões controlam o que os usuários podem fazer com o PDF. S�
 title = "Alterar Permissões"
 
 [addStamp]
+preview = "Preview Stamp"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -1842,6 +1843,15 @@ export = "Exportar"
 accessDenied = "Acesso negado"
 insufficientPermissions = "Você não tem permissão para executar esta ação."
 
+[auth.callback]
+completing = "Completing authentication"
+invalidToken = "OAuth login failed - invalid token."
+missingToken = "OAuth login failed - no token received."
+oauthFailed = "OAuth login failed. Please try again."
+pleaseWait = "Please wait while we finish signing you in."
+signedOut = "You have been signed out. Please sign in again."
+windowMayClose = "You can close this window once it completes."
+
 [auth.displayName]
 guest = "Convidado"
 user = "Usuário"
@@ -2824,6 +2834,7 @@ next = "Próximo"
 preview = "Pré-visualização"
 previous = "Anterior"
 refresh = "Atualizar"
+remaining = "Remaining"
 retry = "Tentar novamente"
 save = "Salvar"
 
@@ -4072,10 +4083,17 @@ discord = "Discord"
 issues = "GitHub"
 
 [formFill]
+allSaved = "All saved"
+extractCsvError = "Failed to extract CSV"
+extractXlsxError = "Failed to extract XLSX"
 flattenAfterFilling = "Achatar após o preenchimento"
+requiredAbbreviation = "req"
+requiredFieldsError = "Please fill in all required fields"
 rescanFields = "Escanear campos novamente"
 rescanFormFields = "Escanear campos do formulário novamente"
 save = "Salvar"
+saveShortcut = "Ctrl+S to save"
+unsavedChanges = "Unsaved changes"
 
 [formFill.sidebar]
 close = "Fechar barra lateral"
@@ -4647,7 +4665,6 @@ welcomeTitle = "Você foi convidado!"
 
 [landing]
 addFiles = "Adicionar arquivos"
-heroSubtitle = "Solte ou adicione um PDF existente para começar."
 mobileUpload = "Enviar do celular"
 openFromComputer = "Abrir do computador"
 uploadFromComputer = "Fazer upload do computador"
@@ -4976,6 +4993,7 @@ pinButton = "Você pode usar o botão <strong>Fixar</strong> se preferir que seu
 results = "Após a ferramenta terminar, a etapa de <strong>Revisão</strong> mostrará uma prévia dos resultados neste painel, e permitirá desfazer a operação ou baixar o arquivo. "
 runButton = "Depois que a ferramenta for configurada, este botão permite executar a ferramenta em todos os PDFs selecionados."
 selectCropTool = "Vamos selecionar a ferramenta de <strong>Recortar</strong> para demonstrar como usar uma das ferramentas."
+stepOf = "Step {{current}} of {{total}}"
 toolInterface = "Esta é a interface da ferramenta de <strong>Recortar</strong>. Como você pode ver, não há muito aqui porque ainda não adicionamos nenhum arquivo PDF para trabalhar."
 workbench = "Este é o <strong>Workbench</strong> — a área principal onde você visualiza e edita seus PDFs."
 wrapUp = "Tudo pronto! Você aprendeu sobre as áreas principais do app e como usá-las. Clique no botão <strong>Ajuda</strong> quando quiser para ver este tour novamente."
@@ -4988,6 +5006,26 @@ showMeAround = "Me mostre por aí"
 skipForNow = "Pular por enquanto"
 skipTheTour = "Pular o tour"
 
+[onboarding.checklist]
+dismiss = "Dismiss"
+title = "Set up Stirling PDF"
+
+[onboarding.checklist.downloadDesktop]
+description = "Run Stirling natively on your machine"
+title = "Download Stirling for Desktop"
+
+[onboarding.checklist.inviteTeam]
+description = "Collaborate with your team"
+title = "Invite team members"
+
+[onboarding.checklist.shareAnalytics]
+description = "Help improve Stirling"
+title = "Share anonymous usage data"
+
+[onboarding.checklist.takeTour]
+description = "See how Stirling works in a quick walkthrough"
+title = "Take the tour"
+
 [onboarding.desktopInstall]
 body = "O Stirling funciona melhor como app desktop. Você pode usá-lo offline, acessar documentos mais rápido e fazer edições localmente no computador."
 selectOs = "Selecionar sistema operacional"
@@ -4996,7 +5034,21 @@ titleWithOs = "Download para {{osLabel}}"
 
 [onboarding.mfa]
 authenticationCode = "Código de autenticação"
+description = "Secure your account by linking an authenticator app. Scan the QR code or enter the setup key, then confirm the 6-digit code to finish."
+enable = "Enable MFA"
+enableError = "Unable to enable two-factor authentication. Check the code and try again."
+enterCode = "Enter the 6-digit code from your app."
+enterCodeError = "Enter the authentication code to continue."
+logout = "Logout"
+openAuthenticator = "Open Google Authenticator, Authy, or 1Password."
 qrCodeLoading = "Gerando seu código QR…"
+regenerateQrCode = "Regenerate QR code"
+scanQrCode = "Scan the QR code or enter the setup key below."
+setupError = "Unable to start two-factor setup. Please try again."
+setupKey = "Setup key (manual entry)"
+stepByStep = "Step-by-step"
+success = "MFA has been enabled. You can now continue."
+title = "Multi-Factor Authentication Setup"
 
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Depois de ativar o modo de login, você poderá gerenciar usuários, configurar as configurações e monitorar a integridade do servidor. As primeiras <strong>{{freeTierLimit}}</strong> pessoas no seu servidor usam o Stirling gratuitamente."
@@ -5004,6 +5056,11 @@ adminBodyLoginEnabled = "Como admin, você pode gerenciar usuários, configurar 
 adminTitle = "Visão geral do admin"
 userBody = "Convide colegas, atribua funções e mantenha seus documentos organizados em um espaço de trabalho seguro. Ative o modo de login quando estiver pronto para ir além do uso individual."
 userTitle = "Visão geral do plano"
+
+[onboarding.processorIntro]
+body = "Stirling now runs <strong>Policies</strong> — automated rules that classify, secure, and process every document as it arrives. Set them up and monitor runs in the <strong>Processor</strong>."
+cta = "Check out the Processor"
+title = "Check out the Stirling Processor"
 
 [onboarding.saas.freeEditor]
 freeLine = "The editor is now <free>completely free</free>."
@@ -5937,48 +5994,11 @@ keyDescription = "Cole a chave de licença do seu e-mail"
 success = "Licença ativada!"
 successMessage = "Sua licença foi ativada com sucesso. Agora você pode fechar esta janela."
 
-[policies]
-deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
-deleteConfirmTitle = "Delete {{label}} policy?"
-
 [policies.activity]
-enforced = "aplicada"
-enforcing = "Aplicando..."
-failed = "Falha na aplicação"
 outputsUnavailable = "Os resultados da política não estão mais disponíveis para download."
 partialOutputsUnavailable = "Alguns resultados da política não estão mais disponíveis para download."
-retrying = "Ocupado, tentando novamente..."
 runNotFound = "A execução da aplicação não pôde mais ser encontrada."
-step = "etapa {{current}}/{{total}}"
 timedOut = "A aplicação atingiu o tempo limite antes que a execução fosse concluída."
-
-[policies.catalog]
-compliance = "Compliance"
-ingestion = "Ingestion"
-retention = "Retention"
-routing = "Routing"
-security = "Security"
-
-[policies.detail]
-close = "Fechar"
-editSettings = "Edit Settings"
-enforces = "Enforces"
-managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
-noActivityDescription = "Documents will appear here once this policy runs."
-noActivityTitle = "No activity yet"
-onEveryUpload = "On every upload"
-originalsNote = "Originals stay untouched • Enforced version saved alongside"
-pause = "Pause"
-recentActivity = "Recent Activity"
-resume = "Resume"
-retry = "Retry"
-showLess = "Show less"
-showMore = "Show more"
-statActive = "Active"
-statDataProcessed = "Data processed"
-statDocsEnforced = "Docs enforced"
-statusActive = "Active"
-statusPaused = "Paused"
 
 [policies.enforcement]
 applying = "Aplicando {{names}}"
@@ -5989,34 +6009,9 @@ failureBody = "{{failures}} de {{total}} arquivo(s) não puderam ser processados
 failureTitle = "Exportado sem aplicação completa"
 printPolicyAppliedBody = "Este PDF foi atualizado para atender a uma política. Revise as alterações e imprima novamente."
 printPolicyAppliedTitle = "Política aplicada antes da impressão"
-queued = "+{{count}} na fila"
 successTitle = "{{names}} aplicadas"
 summaryMore = "{{first}}, {{second}} e mais {{more}}"
 summaryTwo = "{{first}} e {{second}}"
-
-[policies.enforcement.triggerVerb]
-convert = "Aplicando políticas antes de converter"
-default = "Aplicando políticas"
-export = "Aplicando políticas antes de exportar"
-input = "Aplicando políticas ao importar"
-print = "Aplicando políticas antes de imprimir"
-
-[policies.field]
-accessLog = "Log de acesso"
-archiveAfter = "Arquivar após"
-auditTrail = "Trilha de auditoria"
-belowThreshold = "Abaixo do limite"
-destination = "Destino"
-frameworks = "Frameworks"
-immutableHold = "Retenção imutável"
-keepFor = "Manter por"
-minConfidence = "Confiança mín."
-notify = "Notificar no roteamento"
-onViolation = "Quando não conforme"
-webhookUrl = "Webhook URL"
-
-[policies.fields]
-selectedCount = "{{count}} selected"
 
 [policies.labels]
 add = "Adicionar"
@@ -6056,90 +6051,6 @@ placeholder = "Select PII types"
 routing = "Números de roteamento bancário dos EUA (ABA)"
 ssn = "Números de Seguro Social (SSN)"
 
-[policies.settings]
-noneExport = "Nenhuma política é executada atualmente na exportação."
-noneUpload = "Nenhuma política é executada atualmente no upload."
-onExport = "Na exportação"
-onUpload = "No upload"
-reorderHandle = "Arraste para reordenar"
-runOrderDesc = "Quando mais de uma política é executada no mesmo acionador, elas são executadas nesta ordem — cada uma sobre a saída da política anterior. Arraste para reordenar."
-title = "Configurações de política"
-
-[policies.sidebar]
-activeCount = "{{count}} active"
-infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
-loading = "Loading…"
-optionsAriaLabel = "Opções de política"
-policySettings = "Configurações de política"
-railAriaLabel = "{{label}} policy — {{status}}"
-railSuffixActive = " (Active)"
-railSuffixPaused = " (Paused)"
-retryFailed = "Tentar novamente políticas com falha ({{count}})"
-rowProgress = "{{completed}} de {{total}} arquivos processados"
-setUp = "Set up"
-title = "Policies"
-upgradeToEnterprise = "Upgrade to enterprise"
-whatIsPolicy = "O que é uma política?"
-
-[policies.status]
-active = "Active"
-paused = "Paused"
-setup = "Set up"
-
-[policies.toolConfig]
-enableAriaLabel = "Enable {{tool}}"
-infoAriaLabel = "What does {{tool}} do?"
-
-[policies.toolConfig.info]
-redact = "Localiza e oculta automaticamente informações confidenciais — como números de Seguro Social e de cartão — para que não possam ser lidas no documento."
-sanitize = "Remove JavaScript oculto do arquivo, para que nada seja executado automaticamente quando alguém o abrir."
-watermark = "Aplica uma marca visível (por exemplo, \"Confidencial\") em todas as páginas."
-
-[policies.wizard]
-allDocTypesDescription = "Enable the Classification policy to filter by document type."
-allDocTypesTitle = "All document types"
-back = "Back"
-builderDesc = "Build the sequence of tools this policy runs on each document."
-clear = "Clear"
-close = "Fechar"
-continue = "Continue"
-docTypesLabel = "Document types"
-edit = "Edit"
-editTitle = "Edit {{label}} Policy"
-enablePolicy = "Enable Policy"
-filenameAutoNumber = "Auto-number"
-filenamePositionAria = "Filename position"
-filenamePrefix = "Prefix"
-filenameSuffix = "Suffix"
-filenameTextAria = "Filename text"
-filenameTextPlaceholder = "Text to add (optional)"
-lockedDescription = "Contact a team leader to change this policy."
-lockedTitle = "Managed by your organisation"
-maxRetriesLabel = "Max retries"
-noToolsError = "Add at least one configured tool to the workflow first."
-outputAsLabel = "Output as"
-outputFilenameSubhead = "Output filename"
-outputModeAria = "Output mode"
-outputNewFile = "New file"
-outputNewVersion = "New version"
-outputRetriesLabel = "Output & retries"
-outputSubhead = "Output"
-retryDelayAria = "Retry delay minutes"
-retryDelayLabel = "Retry delay (min)"
-runOnExport = "Export"
-runOnLabel = "Run on"
-runOnSubhead = "Run on"
-runOnUpload = "Upload"
-saveChanges = "Save Changes"
-saveError = "Couldn't save the policy. Please try again."
-setupClassification = "Set up Classification"
-setupTitle = "Set up {{label}} Policy"
-sourcesDesc = "Choose where this policy runs and which document types it applies to."
-sourcesLabel = "Sources"
-stepOf = "Step {{step}} of {{total}}"
-toolChainDesc = "Configure the tools this policy runs on each document."
-typesSelected = "{{count}} types selected"
-
 [policy]
 badgeEnforcing = "{{name}} aplicando..."
 badgeRan = "A política {{name}} foi executada neste arquivo"
@@ -6151,6 +6062,7 @@ viewAnyway = "Ver arquivo (política ainda sendo aplicada)"
 [policyOption]
 autoRedactPhi = "Redigir PHI automaticamente"
 blockExport = "Bloquear exportação"
+ccpa = "CCPA"
 contracts = "Contratos"
 documents = "Documentos"
 fedramp = "FedRAMP"
@@ -6367,6 +6279,7 @@ redirectingToEditor = "Redirecionando para o editor..."
 
 [portal.billing.checkout]
 noClientSecret = "A função Edge não retornou client_secret."
+stepCount = "Step {{step}} of 2"
 subtitle = "Adicione um cartão para continuar além da concessão gratuita do plano Editor. O Stripe cuida do resto."
 title = "Ativar o plano Processor"
 
@@ -6375,6 +6288,20 @@ body = "Seu pagamento foi aprovado, mas a ativação está demorando um pouco ma
 close = "Fechar"
 title = "Quase lá"
 
+[portal.billing.checkout.cap]
+back = "Back"
+continue = "Continue to payment"
+error = "Couldn't set your spend limit"
+finePrint = "Invoices post on the 1st. Cancel anytime and revert to the Editor plan; your policies and history stay intact."
+note = "Processing pauses if you reach it. You're never billed past this, and you can change it any time."
+subtitle = "You're billed only for PDFs you process past your first 500 free, never for seats — so your ceiling is yours from day one."
+title = "Set your spend limit"
+
+[portal.billing.checkout.card]
+fields = "Card number · MM / YY · CVC · ZIP"
+label = "Card details"
+note = "Card details collected by Stripe. Stirling never stores PAN or CVC."
+
 [portal.billing.checkout.error]
 title = "Não foi possível iniciar o checkout"
 
@@ -6382,11 +6309,6 @@ title = "Não foi possível iniciar o checkout"
 body = "Seu pagamento foi processado. Estamos ativando o processamento medido nas suas instâncias vinculadas — isso geralmente leva alguns segundos."
 hint = "Mantenha esta janela aberta."
 title = "Ativando seu plano Processor..."
-
-[portal.billing.checkout.notConfigured]
-bodyAfter = "no env do portal para habilitar o checkout no aplicativo."
-bodyBefore = "Defina"
-title = "Stripe não configurado"
 
 [portal.billing.enterpriseUpsell]
 cta = "Monte sua cotação Enterprise"
@@ -6465,6 +6387,9 @@ segmentApiDesc = "Solicitações diretas de API"
 segmentApiLabel = "API"
 segmentAutomationDesc = "Automações e pipelines"
 segmentAutomationLabel = "Automação"
+sizeMultiplier = "{{formatted}} PDFs used a size multiplier"
+summary = "{{unique}} unique · {{units}} meter units · {{avg}} avg per PDF"
+summaryNoRate = "{{unique}} unique · {{units}} meter units"
 unit = "PDFs medidos"
 
 [portal.billing.spendLimit]
@@ -6494,6 +6419,8 @@ label = "Projetado para exceder."
 
 [portal.billing.spendThisMonth]
 eyebrow = "Gasto este mês"
+freeRemaining_one = "{{formatted}} free PDF remaining"
+freeRemaining_other = "{{formatted}} free PDFs remaining"
 processed_one = "{{formattedCount}} PDF processado."
 processed_other = "{{formattedCount}} PDFs processados."
 processedWithRate_one = "{{formattedCount}} PDF processado, a {{rate}} cada."
@@ -6766,6 +6693,8 @@ type = "Tipo"
 user = "Usuário"
 
 [portal.documents.queue.empty]
+connectSource = "Connect a source"
+createPipeline = "Create a pipeline"
 description = "À medida que as fontes enviarem documentos para seus pipelines, eles aparecerão aqui para revisão."
 title = "Nenhum documento na fila"
 
@@ -6875,8 +6804,63 @@ description = "Esta visualização encontrou um erro inesperado. Tente novamente
 retry = "Tentar novamente"
 title = "Algo deu errado nesta página"
 
+[portal.home.download]
+back = "Back"
+body = "Download the desktop app or self-host the server."
+done = "Done"
+guide = "Open the {{name}} guide"
+openInBrowser = "Open in browser instead"
+sectionDesktop = "Desktop app"
+sectionSelfHosted = "Self-hosted"
+title = "Install the Stirling PDF Editor"
+
+[portal.home.download.docker]
+detailBody = "Run the official image on your server."
+note = "Opens at :8080. Default login: admin / stirling."
+tagline = "Run the server in a container"
+title = "Docker"
+variantFat = "Fat"
+variantLite = "Ultra-Lite"
+variantStandard = "Standard"
+
+[portal.home.download.kubernetes]
+detailBody = "Install the official Helm chart."
+note = "Add a PVC for /configs to persist settings."
+tagline = "Deploy to a cluster with Helm"
+title = "Kubernetes"
+
+[portal.home.download.linux]
+detailBody = "Native builds for your distribution."
+guideBtn = "View Linux install options"
+note = "AppImage, .deb and .rpm builds are available for common distros."
+tagline = "Native desktop app for your distro"
+title = "Linux"
+
+[portal.home.download.mac]
+altLabel = "Or via Homebrew"
+detailBody = "Run the installer, or use Homebrew."
+downloadBtn = "Download for macOS"
+tagline = "Native app for Apple silicon and Intel"
+title = "macOS"
+
+[portal.home.download.manual]
+detailBody = "Run the .jar on a bare metal server."
+downloadBtn = "Download the .jar"
+note = "Requires Java 21+. Opens at :8080; default login admin / stirling."
+runLabel = "Then run it"
+tagline = "Run the .jar on a bare metal server"
+title = "Manual server setup"
+
+[portal.home.download.windows]
+altLabel = "Or via winget"
+detailBody = "Run the installer, or use a package manager."
+downloadBtn = "Download installer"
+tagline = "Native app for Microsoft Windows"
+title = "Windows"
+
 [portal.home.editor]
 activeUsers = "{{n}} ativos"
+install = "Install the editor"
 invite = "Convidar colegas de equipe"
 name = "Stirling PDF Editor"
 open = "Abrir no navegador"
@@ -6892,12 +6876,6 @@ afternoon = "Boa tarde"
 evening = "Boa noite"
 morning = "Bom dia"
 
-[portal.home.onboarding]
-dismiss = "Dispensar configuração"
-notStarted = "Não iniciado"
-progress = "{{done}} de {{total}} concluídos"
-title = "Concluir configuração"
-
 [portal.home.onboarding.enterprise]
 body = "SSO + SCIM + RBAC em toda a organização, preços por volume comprometido e implantação air-gapped."
 cta = "Iniciar teste"
@@ -6909,15 +6887,13 @@ tag = "Enterprise"
 blurb = "Implante o aplicativo desktop, grátis para sempre."
 title = "Baixe o PDF Editor"
 
+[portal.home.onboarding.steps.invite]
+blurb = "Bring your team into the secure workspace"
+title = "Invite teammates"
+
 [portal.home.onboarding.steps.policies]
 blurb = "{{active}} ativas · {{recommended}} recomendadas"
-chip = "{{active}} ativas"
 title = "Ativar políticas"
-
-[portal.home.onboarding.steps.sources]
-blurb = "{{connected}} conectadas · todo PDF governado onde quer que chegue"
-chip = "{{connected}} conectadas"
-title = "Conecte suas fontes"
 
 [portal.home.quickActions]
 subtitle = "Principais tarefas de hoje"
@@ -6941,6 +6917,11 @@ sectionsAriaLabel = "Seções de infraestrutura"
 subtitle = "Implantações, credenciais, postura de segurança, armazenamento e a trilha de auditoria do seu workspace Stirling."
 title = "Infraestrutura"
 
+[portal.infrastructure.apiKeyPermission]
+admin = "Admin"
+read = "Read"
+write = "Write"
+
 [portal.infrastructure.apiKeys]
 createKey = "Criar chave"
 heading = "Chaves de API"
@@ -6960,6 +6941,11 @@ usageToday = "Uso hoje"
 [portal.infrastructure.apiKeys.empty]
 description = "Crie uma chave com escopo para começar a chamar a Stirling API."
 title = "Ainda não há chaves de API"
+
+[portal.infrastructure.attestationLabel]
+attested = "Attested"
+inScope = "In scope"
+notApplicable = "N/A"
 
 [portal.infrastructure.audit]
 filterAriaLabel = "Filtrar eventos de auditoria por categoria"
@@ -7004,6 +6990,7 @@ all = "Todos"
 auth = "Auth"
 config = "Config"
 elevation = "Elevação"
+policy = "Policy"
 processing = "Processamento"
 security = "Segurança"
 
@@ -7013,9 +7000,28 @@ title = "Você não tem acesso"
 
 [portal.infrastructure.audit.metrics]
 config = "Config"
-elevation = "Elevação"
+policy = "Policy"
 processing = "Processamento"
 totalEvents = "Total de eventos · 24 h"
+
+[portal.infrastructure.auditCatLabel]
+auth = "Auth"
+config = "Config"
+elevation = "Elevation"
+policy = "Policy"
+processing = "Processing"
+security = "Security"
+
+[portal.infrastructure.auditStatusLabel]
+danger = "Error"
+info = "Info"
+success = "Success"
+warning = "Warning"
+
+[portal.infrastructure.certLabel]
+certified = "Certified"
+inProgress = "In progress"
+notStarted = "Not started"
 
 [portal.infrastructure.createKey]
 cancel = "Cancelar"
@@ -7032,6 +7038,12 @@ subtitle = "Defina o escopo da chave para o mínimo necessário. Você pode rota
 subtitleCreated = "Copie este segredo agora — ele não será exibido novamente."
 title = "Criar chave de API"
 titleCreated = "Chave criada"
+
+[portal.infrastructure.deployLabel]
+live = "Live"
+queued = "Queued"
+rolledBack = "Rolled back"
+rolling = "Rolling out"
 
 [portal.infrastructure.deployments]
 msValue = "{{value}} ms"
@@ -7068,6 +7080,16 @@ subheading = "Integridade ao vivo de cada região Stirling implantada — latên
 description = "As regiões implantadas aparecerão aqui assim que seu workspace for provisionado."
 title = "Nenhuma região implantada"
 
+[portal.infrastructure.keyLabel]
+active = "Active"
+revoked = "Revoked"
+rotateSoon = "Rotate soon"
+
+[portal.infrastructure.modelLabel]
+active = "Active"
+degraded = "Degraded"
+disabled = "Disabled"
+
 [portal.infrastructure.models]
 heading = "Modelos"
 msValue = "{{value}} ms"
@@ -7095,6 +7117,10 @@ status = "Status"
 type = "Tipo"
 version = "Versão"
 
+[portal.infrastructure.models.cost]
+perCall = "{{price}}/call"
+perThousand = "{{price}}/1k"
+
 [portal.infrastructure.models.metrics]
 activeModels = "Modelos ativos"
 avgLatency = "Latência média"
@@ -7117,6 +7143,17 @@ docType = "Tipo de documento"
 modelForAria = "Modelo para {{operation}}"
 operation = "Operação"
 routedTo = "Roteado para"
+
+[portal.infrastructure.modelTypeLabel]
+classification = "Classification"
+extraction = "Extraction"
+llm = "LLM"
+ocr = "OCR"
+
+[portal.infrastructure.regionLabel]
+degraded = "Degraded"
+down = "Down"
+healthy = "Healthy"
 
 [portal.infrastructure.security.access.byok]
 description = "Forneça uma chave do seu próprio KMS. O Stirling criptografa com ela, mas ainda consegue ler."
@@ -7259,26 +7296,6 @@ sources = "Fontes"
 usage = "Uso e faturamento"
 users = "Usuários"
 
-[portal.notifications]
-markAllRead = "Marcar todas como lidas"
-title = "Notificações"
-viewAll = "Ver tudo"
-
-[portal.notifications.ariaLabel]
-none = "Notificações, nenhuma não lida"
-unread_one = "Notificações, {{count}} não lida"
-unread_other = "Notificações, {{count}} não lidas"
-
-[portal.notifications.count]
-allRead = "todas lidas"
-loading = "carregando"
-new_one = "{{count}} nova"
-new_other = "{{count}} novas"
-
-[portal.notifications.empty]
-description = "Nenhuma nova notificação."
-title = "Você está em dia"
-
 [portal.pipelines]
 subtitle = "Cada pipeline automatizado de documentos no backend: uma cadeia ordenada de operações sobre um conjunto de fontes, executada por um gatilho. Clique em uma linha para ver suas etapas e fontes."
 title = "Pipelines"
@@ -7323,6 +7340,11 @@ operations_one = "Operação ({{count}})"
 operations_other = "Operações ({{count}})"
 output = "Saída"
 removeStep = "Remover operação"
+s3Configure = "Configure"
+s3Done = "Done"
+s3ModalTitle = "Amazon S3 output"
+s3NotConfigured = "Not configured"
+s3PrefixHelp = "Outputs are uploaded under this key prefix."
 save = "Salvar alterações"
 scheduleEvery = "Executar a cada"
 sources = "Fontes"
@@ -7342,11 +7364,13 @@ confirm = "Excluir"
 title = "Excluir pipeline?"
 
 [portal.pipelines.detail]
+clearHistory = "Clear history"
 delete = "Excluir pipeline"
 run = "Executar agora"
 
 [portal.pipelines.empty]
 action = "Criar um pipeline"
+connectSource = "Connect a source"
 description = "Crie seu primeiro pipeline: escolha as fontes em que ele é executado, encadeie as operações e escolha para onde vai a saída."
 title = "Ainda não há pipelines"
 
@@ -7358,12 +7382,19 @@ total = "Pipelines"
 [portal.pipelines.output]
 folder = "Gravar na pasta"
 inline = "Retornar arquivos"
+s3 = "Write to Amazon S3"
 
 [portal.pipelines.run]
+allProcessed_one = "Nothing to run: the source's {{count}} document has already been processed."
+allProcessed_other = "Nothing to run: all {{count}} documents in the sources have already been processed."
 completed_one = "Execução concluída."
 completed_other = "Todas as {{count}} execuções concluídas."
 empty = "Nada para executar: as fontes não tinham documentos para processar."
 failed = "Falha na execução: {{error}}"
+historyCleared = "History cleared. The next run reprocesses everything currently in the sources."
+inFlight = "Nothing new to run: documents are still being processed from an earlier run."
+parked_one = "Nothing to run: {{count}} document failed previously and is parked. Fix the cause, then clear history to retry it."
+parked_other = "Nothing to run: {{count}} documents failed previously and are parked. Fix the cause, then clear history to retry them."
 running = "Execução iniciada; ainda em andamento."
 timeout = "A execução está demorando mais do que o esperado; ela ainda pode terminar em segundo plano."
 
@@ -7647,7 +7678,6 @@ managePlan = "Gerenciar plano"
 volumeSuffix = "PDFs processados · últimos 30 dias"
 
 [portal.procurement]
-reset = "Redefinir compras (demo)"
 subtitle = "Faça sua equipe ser avaliada, contratada e integrada. Todos os documentos em um só lugar."
 title = "Compras"
 
@@ -7667,23 +7697,42 @@ title = "Revise seu acordo enterprise"
 
 [portal.procurement.builder]
 addons = "Complementos"
+addressLine1 = "Address line 1"
+addressLine1Placeholder = "500 Howard St"
+addressLine2 = "Address line 2"
+addressLine2Placeholder = "Suite, floor, building"
 back = "Voltar"
 businessName = "Nome da empresa"
 businessNamePlaceholder = "Sua empresa"
+city = "City"
+cityPlaceholder = "San Francisco"
+contactEmail = "Contact email"
+contactEmailPlaceholder = "jane@acme.com"
+contactName = "Contact name"
+contactNamePlaceholder = "Jane Doe"
 continue = "Continuar"
-country = "País"
-countryEuro = "Zona do euro (EUR €)"
-countryUK = "Reino Unido (GBP £)"
-countryUS = "Estados Unidos (USD $)"
 eula = "Li e concordo com a EULA Stirling Enterprise. Ela rege o acordo gerado a partir desta cotação."
 generate = "Gerar cotação"
 included = "Incluído"
 indemnification = "Indenização por propriedade intelectual"
 indemnificationSub = "Defendemos reivindicações de propriedade intelectual qualificadas, conforme a EULA"
-offlineLicense = "Licença offline / air-gapped"
-offlineLicenseSub = "Um arquivo de licença baixável para uma instância self-hosted air-gapped"
+pdfSize = "PDF size"
+poNumber = "PO number"
+poNumberPlaceholder = "Optional"
+postalCode = "Postal code"
+postalCodePlaceholder = "94105"
+posture = "Governance"
+posture_count = "~{{count}} policies"
+posture_essentials = "Essentials"
+posture_essentialsSub = "Classification + Sharing — the defaults"
+posture_governed = "Governed"
+posture_governedSub = "Adds Security and Routing"
+posture_regulated = "Regulated"
+posture_regulatedSub = "Every category — Compliance, Retention, Ingestion"
 qbr = "Revisões de negócios trimestrais"
 qbrSub = "Seu SE revisa uso e roadmap a cada trimestre"
+region = "State / region"
+regionPlaceholder = "California"
 running = "{{annual}} / ano · {{years}} anos {{tcv}}"
 s1Sub = "Sua equipe e os PDFs que você espera executar a cada ano."
 s1Title = "Quanto você vai processar?"
@@ -7692,6 +7741,12 @@ s2Title = "Compromisso e serviço"
 s3Sub = "Para a cotação e o acordo que ela gera."
 s3Title = "Seus dados"
 serviceLevel = "Nível de serviço"
+size_compact = "Compact"
+size_compactSub = "Mostly text, under 1 MB"
+size_heavy = "Heavy"
+size_heavySub = "Scanned or image-heavy, 5 MB+"
+size_standard = "Standard"
+size_standardSub = "Mixed text and images, 1 to 5 MB"
 slDedicated = "Dedicado"
 slDedicatedSub = "4 horas úteis · gerente de conta dedicado · +30%"
 slPriority = "Prioritário"
@@ -7699,6 +7754,8 @@ slPrioritySub = "Mesmo dia útil · CSM nomeado · +15%"
 slStandard = "Padrão"
 slStandardSub = "Próximo dia útil · CSM compartilhado · incluído"
 stepOf = "Etapa {{n}} de {{total}}"
+taxId = "VAT / Tax ID"
+taxIdPlaceholder = "Optional"
 term = "Prazo"
 termDiscount = "Desconto de {{pct}}% por compromisso de vários anos aplicado"
 title = "Monte sua cotação"
@@ -7734,14 +7791,13 @@ title = "Algo deu errado"
 
 [portal.procurement.hero]
 company = "Sua negociação enterprise"
-ctaAgreement = "Revisar e assinar acordo"
 ctaLive = "Você está no ar"
 ctaPayment = "Adicionar pagamento"
 ctaQuote = "Revisar sua cotação"
 ctaTrial = "Montar sua cotação"
 eyebrow = "Compras Enterprise"
 inviteTeammates = "Convidar colegas de equipe"
-keyDocs = "Documentos principais"
+licenseKey = "Licence key"
 nextStep = "Próxima etapa: {{action}}"
 notStarted = "Não iniciado"
 open = "Abrir compras"
@@ -7796,6 +7852,9 @@ downloadError = "Ainda não foi possível gerar o arquivo de licença offline �
 downloadOffline = "Baixar licença offline (.lic)"
 hint = "Cole esta chave em uma instância self-hosted para ativá-la ou guarde-a para seus registros. Mantenha-a segura."
 label = "Sua chave de licença"
+subtitle = "Activate a self-hosted instance with this key, or keep it for your records."
+title = "Your licence key"
+trialFileHint = "This is your trial licence file. Once your agreement is in place, come back and download it again — unlike the online licence key, the .lic file won't update on its own."
 
 [portal.procurement.link]
 cta = "Vincular conta"
@@ -7815,16 +7874,9 @@ talkToSales = "Falar com vendas"
 title = "A trilha de compras abre com Enterprise"
 
 [portal.procurement.milestone]
-accept = "Aceitar e continuar"
-description = "Baixe o PDF para compartilhá-lo com sua equipe, volte para aceitar quando estiver pronto ou faça alterações."
 download = "Baixar PDF"
 downloadError = "Ainda não foi possível baixar o PDF da cotação — tente novamente em instantes."
 edit = "Editar cotação"
-eyebrow = "Cotação {{number}}"
-perYear = " / ano"
-preparedFor = "Preparado para {{company}}"
-tcv = "{{value}} de valor total do contrato"
-title = "Sua cotação está pronta"
 
 [portal.procurement.modal]
 cancel = "Cancelar"
@@ -7851,7 +7903,6 @@ uploadTitle = "Fazer upload da sua ordem de compra"
 [portal.procurement.payment]
 description = "Sua cotação foi aceita e sua licença já está ativa — sua equipe pode começar imediatamente. Pague a primeira fatura quando estiver pronto; você pode pagar ou baixá-la aqui, sem precisar de email."
 downloadInvoice = "Baixar fatura"
-simulate = "Simular pagamento recebido (demo)"
 title = "Assinatura criada"
 viewInvoice = "Ver e pagar fatura"
 
@@ -7860,6 +7911,21 @@ fallback = "Não foi possível carregar o agendador."
 fallbackLink = "Abrir agendamento em uma nova aba"
 subtitle = "Seu engenheiro de soluções guiará sua equipe durante a implantação. Escolha um horário que seja adequado para você."
 title = "Agendar uma chamada"
+
+[portal.procurement.setup]
+airgap = "Air-gapped"
+airgapSub = "Fully offline, isolated network. Includes a downloadable licence file."
+cloud = "Cloud"
+cloudSub = "Fully managed by Stirling. Nothing for you to run."
+deployment = "Where will you run Stirling?"
+seats = "Team size"
+seatsHint = "Roughly how many people will use it. You can refine this when you build your quote."
+seatsPlaceholder = "e.g. 250"
+selfhost = "Self-hosted"
+selfhostSub = "Run it in your own cloud or data centre."
+start = "Start trial"
+subtitle = "Tell us how you plan to run Stirling so we can tailor your trial and quote. No card required."
+title = "Set up your trial"
 
 [portal.procurement.status]
 action = "Ação necessária"
@@ -7907,26 +7973,11 @@ admin = "Admin"
 [portal.settings.sections]
 account-link = "Vínculo de conta"
 
-[portal.shell.header]
-accountFallback = "Conta"
-accountMenu = "Menu da conta"
-darkMode = "Modo escuro"
-lightMode = "Modo claro"
-search = "Pesquisar"
-searchPlaceholder = "Pesquisar…"
-signOut = "Sair"
-switchToDark = "Alternar para tema escuro"
-switchToLight = "Alternar para tema claro"
-
 [portal.shell.sidebar]
 appEditor = "Editor"
 appProcessor = "Processor"
 brandSuffix = "Stirling Processor"
-docsCount = "{{docs}} docs"
 linkAccount = "Vincular conta Stirling"
-planEditor = "Plano Editor"
-planEnterprise = "Plano Enterprise"
-planProcessor = "Plano Processor"
 primaryNav = "Navegação principal"
 switchApp = "Alternar app"
 
@@ -7979,7 +8030,9 @@ status = "Status"
 usedBy = "Políticas"
 
 [portal.sources.types.editor]
+description = "Documents your team has processed in the editor, across policy and AI runs."
 label = "Editor"
+noPolicies = "No policies run from the editor yet."
 
 [portal.sources.types.folder]
 description = "Monitore um diretório no servidor em busca de novos documentos."
@@ -8011,6 +8064,42 @@ label = "Profundidade da pasta"
 [portal.sources.types.folder.fields.recursive.options]
 all = "Incluir subpastas"
 top = "Somente nível superior"
+
+[portal.sources.types.s3]
+description = "Pull documents from an Amazon S3 or S3-compatible bucket."
+label = "Amazon S3"
+
+[portal.sources.types.s3.fields.accessKeyId]
+label = "Access key ID"
+
+[portal.sources.types.s3.fields.bucket]
+label = "Bucket"
+placeholder = "my-company-inbox"
+
+[portal.sources.types.s3.fields.endpoint]
+helperText = "Leave blank for Amazon S3. Set to use an S3-compatible service such as MinIO."
+label = "Custom endpoint"
+placeholder = "https://s3.example.com"
+
+[portal.sources.types.s3.fields.mode]
+helperText = "Consume removes each object from the bucket once every policy has processed it."
+label = "Read mode"
+
+[portal.sources.types.s3.fields.mode.options]
+consume = "Consume: process each object once"
+snapshot = "Snapshot: re-read the bucket every run"
+
+[portal.sources.types.s3.fields.prefix]
+helperText = "Only objects whose keys start with this prefix are processed."
+label = "Key prefix"
+placeholder = "incoming/"
+
+[portal.sources.types.s3.fields.region]
+label = "Region"
+placeholder = "us-east-1"
+
+[portal.sources.types.s3.fields.secretAccessKey]
+label = "Secret access key"
 
 [portal.sources.types.unknown]
 label = "Fonte"
@@ -8090,16 +8179,17 @@ summary = "Possui uma equipe — gerencia os recursos e configurações comparti
 2 = "Acesso ao portal pela política padrão"
 3 = "Tudo que o Membro pode fazer"
 
+[portal.users.seats]
+limited = "{{used}} / {{limit}}"
+unlimited = "{{used}} · Unlimited"
+
 [portal.welcome]
 ariaLabel = "Bem-vindo ao Stirling PDF"
-badge = "Open-source"
-installEditor = "Instalar o Editor"
-inviteTeammates = "Convidar colegas de equipe"
+install = "Install the editor"
+invite = "Invite teammates"
 openInBrowser = "Abrir no navegador"
-perks = "Grátis para sempre · Self-hostable"
-subtitle = "O PDF Editor mais seguro do mundo é gratuito para equipes de todos os tamanhos. Inclui mais de 60 operações de PDF e SSO."
-title = "Bem-vindo ao"
-titleAccent = "Stirling PDF"
+productName = "PDF Editor"
+stats = "30M downloads · 60+ PDF operations · Free forever"
 
 [printFile]
 title = "Imprimir arquivo"
@@ -8902,6 +8992,12 @@ intro = "Enable user authentication, team management, and workspace features for
 learnMore = "Learn more in documentation"
 title = "For System Administrators"
 
+[settings.general.loginLanding]
+description = "Choose which app opens when you sign in to Stirling Cloud."
+editor = "Editor"
+processor = "Processor"
+title = "After signing in"
+
 [settings.general.mode]
 fullscreen = "Fullscreen"
 sidebar = "Sidebar"
@@ -9109,6 +9205,11 @@ connections = "Connections"
 security = "Security"
 telegram = "Telegram"
 title = "Security & Authentication"
+
+[settings.signOut]
+confirm = "Are you sure you want to sign out?"
+submit = "Sign out"
+title = "Sign out"
 
 [settings.team]
 title = "Team"
@@ -9726,6 +9827,9 @@ uploadButton = "Upload to Server"
 title = "Stirling-PDF Survey"
 
 [swagger]
+clickHere = "click here"
+fallback = "If it didn't open automatically,"
+opening = "Opening Swagger UI in a new tab..."
 tags = "api,documentation,swagger,endpoints,development"
 title = "API Documentation"
 
@@ -10019,11 +10123,13 @@ title = "Usuários"
 you = "(você)"
 
 [users.action]
+cancelInvite = "Cancel invitation"
 deleteTeam = "Excluir equipe"
 disableMfa = "Redefinir MFA"
 move = "Mover para equipe"
 reinstate = "Reintegrar"
 remove = "Remover da organização"
+removeTeam = "Remove from team"
 rename = "Renomear equipe"
 resetPw = "Redefinir senha"
 suspend = "Suspender"
@@ -10036,11 +10142,14 @@ editor = "Editor"
 processor = "Processor"
 
 [users.confirm]
+cancelInviteBody = "Cancel the invitation to {{email}}? They won't be able to join with the current link."
+cancelInviteTitle = "Cancel invitation"
 deleteTeamBody = "Excluir a equipe {{name}}? A equipe deve estar vazia primeiro - mova seus membros para outra equipe, e ela não pode ainda possuir nenhuma configuração de integração."
 deleteTeamTitle = "Excluir equipe"
 disableMfaBody = "Remover o cadastro de MFA de {{name}}? A pessoa configurará novamente no próximo login, se necessário."
 disableMfaTitle = "Redefinir MFA"
 removeBody = "Remover permanentemente {{name}} da organização? Isso não pode ser desfeito."
+removeTeamBody = "Remove {{name}} from the team? They keep their account but lose access to this team's resources."
 removeTitle = "Remover membro"
 
 [users.empty]
@@ -10090,6 +10199,14 @@ title = "Convidar pessoas"
 username = "Nome de usuário"
 usernameError = "O nome de usuário deve ter pelo menos 3 caracteres"
 usernamePlaceholder = "jsmith"
+
+[users.invites]
+by = "Invited by {{who}}"
+cancel = "Cancel"
+count = "{{count}} pending"
+desc = "Invited people who haven't joined yet. They hold a seat until they accept."
+expires = "Expires"
+title = "Pending invitations"
 
 [users.loadError]
 description = "Algo deu errado ao acessar o backend, ou você não tem acesso. Tente novamente."
@@ -10281,9 +10398,11 @@ title = "Attachments"
 
 [viewer.bookmarks]
 bookmarkTitle = "Título do marcador"
+bookmarkTitleRequired = "Bookmark title is required"
 closeSidebar = "Fechar barra lateral de marcadores"
 collapseAll = "Recolher todos os marcadores"
 expandAll = "Expandir todos os marcadores"
+searchPlaceholder = "Search bookmarks"
 
 [viewer.comments]
 addComment = "Add comment"

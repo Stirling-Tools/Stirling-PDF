@@ -356,6 +356,7 @@ text = "Izin ini mengontrol apa yang dapat dilakukan pengguna dengan PDF. Paling
 title = "Ganti Perizinan"
 
 [addStamp]
+preview = "Preview Stamp"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -1842,6 +1843,15 @@ export = "Ekspor"
 accessDenied = "Akses Ditolak"
 insufficientPermissions = "Anda tidak memiliki izin untuk melakukan tindakan ini."
 
+[auth.callback]
+completing = "Completing authentication"
+invalidToken = "OAuth login failed - invalid token."
+missingToken = "OAuth login failed - no token received."
+oauthFailed = "OAuth login failed. Please try again."
+pleaseWait = "Please wait while we finish signing you in."
+signedOut = "You have been signed out. Please sign in again."
+windowMayClose = "You can close this window once it completes."
+
 [auth.displayName]
 guest = "Tamu"
 user = "Pengguna"
@@ -2824,6 +2834,7 @@ next = "Berikutnya"
 preview = "Pratinjau"
 previous = "Sebelumnya"
 refresh = "Muat Ulang"
+remaining = "Remaining"
 retry = "Coba Lagi"
 save = "Simpan"
 
@@ -4072,10 +4083,17 @@ discord = "Discord"
 issues = "GitHub"
 
 [formFill]
+allSaved = "All saved"
+extractCsvError = "Failed to extract CSV"
+extractXlsxError = "Failed to extract XLSX"
 flattenAfterFilling = "Ratakan setelah mengisi"
+requiredAbbreviation = "req"
+requiredFieldsError = "Please fill in all required fields"
 rescanFields = "Pindai ulang bidang"
 rescanFormFields = "Pindai ulang bidang formulir"
 save = "Simpan"
+saveShortcut = "Ctrl+S to save"
+unsavedChanges = "Unsaved changes"
 
 [formFill.sidebar]
 close = "Tutup bilah sisi"
@@ -4647,7 +4665,6 @@ welcomeTitle = "Anda telah diundang!"
 
 [landing]
 addFiles = "Tambahkan File"
-heroSubtitle = "Seret dan letakkan atau tambahkan PDF yang sudah ada untuk memulai."
 mobileUpload = "Unggah dari Ponsel"
 openFromComputer = "Buka dari komputer"
 uploadFromComputer = "Unggah dari komputer"
@@ -4976,6 +4993,7 @@ pinButton = "Anda dapat menggunakan tombol <strong>Pin</strong> jika Anda ingin 
 results = "Setelah alat selesai dijalankan, langkah <strong>Review</strong> akan menampilkan pratinjau hasil di panel ini, dan memungkinkan Anda membatalkan operasi atau mengunduh file. "
 runButton = "Setelah alat dikonfigurasi, tombol ini memungkinkan Anda menjalankan alat pada semua PDF yang dipilih."
 selectCropTool = "Mari pilih alat <strong>Crop</strong> untuk mendemonstrasikan cara menggunakan salah satu alat."
+stepOf = "Step {{current}} of {{total}}"
 toolInterface = "Ini adalah antarmuka alat <strong>Crop</strong>. Seperti yang Anda lihat, belum banyak karena kita belum menambahkan file PDF untuk dikerjakan."
 workbench = "Ini adalah <strong>Workbench</strong> - area utama tempat Anda melihat dan mengedit PDF."
 wrapUp = "Selesai! Anda telah mempelajari area utama aplikasi dan cara menggunakannya. Klik tombol <strong>Bantuan</strong> kapan saja untuk melihat tur ini lagi."
@@ -4988,6 +5006,26 @@ showMeAround = "Tunjukkan saya"
 skipForNow = "Lewati dulu"
 skipTheTour = "Lewati tur"
 
+[onboarding.checklist]
+dismiss = "Dismiss"
+title = "Set up Stirling PDF"
+
+[onboarding.checklist.downloadDesktop]
+description = "Run Stirling natively on your machine"
+title = "Download Stirling for Desktop"
+
+[onboarding.checklist.inviteTeam]
+description = "Collaborate with your team"
+title = "Invite team members"
+
+[onboarding.checklist.shareAnalytics]
+description = "Help improve Stirling"
+title = "Share anonymous usage data"
+
+[onboarding.checklist.takeTour]
+description = "See how Stirling works in a quick walkthrough"
+title = "Take the tour"
+
 [onboarding.desktopInstall]
 body = "Stirling paling baik digunakan sebagai aplikasi desktop. Anda dapat menggunakannya offline, mengakses dokumen lebih cepat, dan mengedit secara lokal di komputer Anda."
 selectOs = "Pilih sistem operasi"
@@ -4996,7 +5034,21 @@ titleWithOs = "Unduh untuk {{osLabel}}"
 
 [onboarding.mfa]
 authenticationCode = "Kode autentikasi"
+description = "Secure your account by linking an authenticator app. Scan the QR code or enter the setup key, then confirm the 6-digit code to finish."
+enable = "Enable MFA"
+enableError = "Unable to enable two-factor authentication. Check the code and try again."
+enterCode = "Enter the 6-digit code from your app."
+enterCodeError = "Enter the authentication code to continue."
+logout = "Logout"
+openAuthenticator = "Open Google Authenticator, Authy, or 1Password."
 qrCodeLoading = "Membuat kode QR Anda…"
+regenerateQrCode = "Regenerate QR code"
+scanQrCode = "Scan the QR code or enter the setup key below."
+setupError = "Unable to start two-factor setup. Please try again."
+setupKey = "Setup key (manual entry)"
+stepByStep = "Step-by-step"
+success = "MFA has been enabled. You can now continue."
+title = "Multi-Factor Authentication Setup"
 
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Setelah Anda mengaktifkan mode login, Anda dapat mengelola pengguna, mengonfigurasi pengaturan, dan memantau kesehatan server. <strong>{{freeTierLimit}}</strong> orang pertama di server Anda dapat menggunakan Stirling gratis."
@@ -5004,6 +5056,11 @@ adminBodyLoginEnabled = "Sebagai admin, Anda dapat mengelola pengguna, mengonfig
 adminTitle = "Ringkasan Admin"
 userBody = "Undang rekan, tetapkan peran, dan jaga dokumen Anda tetap teratur dalam satu workspace yang aman. Aktifkan mode login kapan pun Anda siap berkembang dari penggunaan solo."
 userTitle = "Ringkasan Paket"
+
+[onboarding.processorIntro]
+body = "Stirling now runs <strong>Policies</strong> — automated rules that classify, secure, and process every document as it arrives. Set them up and monitor runs in the <strong>Processor</strong>."
+cta = "Check out the Processor"
+title = "Check out the Stirling Processor"
 
 [onboarding.saas.freeEditor]
 freeLine = "The editor is now <free>completely free</free>."
@@ -5937,48 +5994,11 @@ keyDescription = "Tempel kunci lisensi dari email Anda"
 success = "Lisensi Diaktifkan!"
 successMessage = "Lisensi Anda berhasil diaktifkan. Anda sekarang dapat menutup jendela ini."
 
-[policies]
-deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
-deleteConfirmTitle = "Delete {{label}} policy?"
-
 [policies.activity]
-enforced = "diterapkan"
-enforcing = "Menegakkan..."
-failed = "Penegakan gagal"
 outputsUnavailable = "Output kebijakan tidak lagi tersedia untuk diunduh."
 partialOutputsUnavailable = "Beberapa output kebijakan tidak lagi tersedia untuk diunduh."
-retrying = "Sibuk, mencoba lagi..."
 runNotFound = "Proses penegakan tidak dapat ditemukan lagi."
-step = "langkah {{current}}/{{total}}"
 timedOut = "Penegakan mencapai batas waktu sebelum proses selesai."
-
-[policies.catalog]
-compliance = "Compliance"
-ingestion = "Ingestion"
-retention = "Retention"
-routing = "Routing"
-security = "Security"
-
-[policies.detail]
-close = "Tutup"
-editSettings = "Edit Settings"
-enforces = "Enforces"
-managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
-noActivityDescription = "Documents will appear here once this policy runs."
-noActivityTitle = "No activity yet"
-onEveryUpload = "On every upload"
-originalsNote = "Originals stay untouched • Enforced version saved alongside"
-pause = "Pause"
-recentActivity = "Recent Activity"
-resume = "Resume"
-retry = "Retry"
-showLess = "Show less"
-showMore = "Show more"
-statActive = "Active"
-statDataProcessed = "Data processed"
-statDocsEnforced = "Docs enforced"
-statusActive = "Active"
-statusPaused = "Paused"
 
 [policies.enforcement]
 applying = "Menerapkan {{names}}"
@@ -5989,34 +6009,9 @@ failureBody = "{{failures}} dari {{total}} file tidak dapat diproses dan diekspo
 failureTitle = "Diekspor tanpa penegakan penuh"
 printPolicyAppliedBody = "PDF ini diperbarui agar memenuhi kebijakan. Tinjau perubahan, lalu cetak lagi."
 printPolicyAppliedTitle = "Kebijakan diterapkan sebelum mencetak"
-queued = "+{{count}} dalam antrean"
 successTitle = "{{names}} diterapkan"
 summaryMore = "{{first}}, {{second}} dan {{more}} lainnya"
 summaryTwo = "{{first}} dan {{second}}"
-
-[policies.enforcement.triggerVerb]
-convert = "Menegakkan sebelum konversi"
-default = "Menegakkan"
-export = "Menegakkan sebelum ekspor"
-input = "Menegakkan saat impor"
-print = "Menegakkan sebelum mencetak"
-
-[policies.field]
-accessLog = "Log akses"
-archiveAfter = "Arsipkan setelah"
-auditTrail = "Jejak audit"
-belowThreshold = "Di bawah ambang batas"
-destination = "Tujuan"
-frameworks = "Frameworks"
-immutableHold = "Penahanan immutable"
-keepFor = "Simpan selama"
-minConfidence = "Keyakinan min"
-notify = "Beri tahu saat dirutekan"
-onViolation = "Saat tidak patuh"
-webhookUrl = "Webhook URL"
-
-[policies.fields]
-selectedCount = "{{count}} selected"
 
 [policies.labels]
 add = "Tambah"
@@ -6056,90 +6051,6 @@ placeholder = "Select PII types"
 routing = "Nomor routing AS (ABA)"
 ssn = "Nomor Social Security"
 
-[policies.settings]
-noneExport = "Saat ini tidak ada kebijakan yang berjalan saat ekspor."
-noneUpload = "Saat ini tidak ada kebijakan yang berjalan saat upload."
-onExport = "Saat ekspor"
-onUpload = "Saat upload"
-reorderHandle = "Seret untuk menyusun ulang"
-runOrderDesc = "Saat lebih dari satu kebijakan berjalan pada pemicu yang sama, kebijakan berjalan dalam urutan ini — masing-masing pada keluaran kebijakan sebelumnya. Seret untuk menyusun ulang."
-title = "Pengaturan kebijakan"
-
-[policies.sidebar]
-activeCount = "{{count}} active"
-infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
-loading = "Loading…"
-optionsAriaLabel = "Opsi kebijakan"
-policySettings = "Pengaturan kebijakan"
-railAriaLabel = "{{label}} policy — {{status}}"
-railSuffixActive = " (Active)"
-railSuffixPaused = " (Paused)"
-retryFailed = "Coba lagi kebijakan yang gagal ({{count}})"
-rowProgress = "{{completed}} dari {{total}} file diproses"
-setUp = "Set up"
-title = "Policies"
-upgradeToEnterprise = "Upgrade to enterprise"
-whatIsPolicy = "Apa itu kebijakan?"
-
-[policies.status]
-active = "Active"
-paused = "Paused"
-setup = "Set up"
-
-[policies.toolConfig]
-enableAriaLabel = "Enable {{tool}}"
-infoAriaLabel = "What does {{tool}} do?"
-
-[policies.toolConfig.info]
-redact = "Secara otomatis menemukan dan menghitamkan detail sensitif — seperti nomor Social Security dan kartu — agar tidak dapat dibaca di dokumen."
-sanitize = "Menghapus JavaScript tersembunyi dari file, sehingga tidak ada yang berjalan otomatis saat seseorang membukanya."
-watermark = "Mencap tanda yang terlihat (mis. \"Confidential\") di setiap halaman."
-
-[policies.wizard]
-allDocTypesDescription = "Enable the Classification policy to filter by document type."
-allDocTypesTitle = "All document types"
-back = "Back"
-builderDesc = "Build the sequence of tools this policy runs on each document."
-clear = "Clear"
-close = "Tutup"
-continue = "Continue"
-docTypesLabel = "Document types"
-edit = "Edit"
-editTitle = "Edit {{label}} Policy"
-enablePolicy = "Enable Policy"
-filenameAutoNumber = "Auto-number"
-filenamePositionAria = "Filename position"
-filenamePrefix = "Prefix"
-filenameSuffix = "Suffix"
-filenameTextAria = "Filename text"
-filenameTextPlaceholder = "Text to add (optional)"
-lockedDescription = "Contact a team leader to change this policy."
-lockedTitle = "Managed by your organisation"
-maxRetriesLabel = "Max retries"
-noToolsError = "Add at least one configured tool to the workflow first."
-outputAsLabel = "Output as"
-outputFilenameSubhead = "Output filename"
-outputModeAria = "Output mode"
-outputNewFile = "New file"
-outputNewVersion = "New version"
-outputRetriesLabel = "Output & retries"
-outputSubhead = "Output"
-retryDelayAria = "Retry delay minutes"
-retryDelayLabel = "Retry delay (min)"
-runOnExport = "Export"
-runOnLabel = "Run on"
-runOnSubhead = "Run on"
-runOnUpload = "Upload"
-saveChanges = "Save Changes"
-saveError = "Couldn't save the policy. Please try again."
-setupClassification = "Set up Classification"
-setupTitle = "Set up {{label}} Policy"
-sourcesDesc = "Choose where this policy runs and which document types it applies to."
-sourcesLabel = "Sources"
-stepOf = "Step {{step}} of {{total}}"
-toolChainDesc = "Configure the tools this policy runs on each document."
-typesSelected = "{{count}} types selected"
-
 [policy]
 badgeEnforcing = "{{name}} sedang diterapkan..."
 badgeRan = "Kebijakan {{name}} berjalan pada file ini"
@@ -6151,6 +6062,7 @@ viewAnyway = "Lihat file (kebijakan masih diterapkan)"
 [policyOption]
 autoRedactPhi = "Redaksi otomatis PHI"
 blockExport = "Blokir ekspor"
+ccpa = "CCPA"
 contracts = "Kontrak"
 documents = "Dokumen"
 fedramp = "FedRAMP"
@@ -6367,6 +6279,7 @@ redirectingToEditor = "Mengalihkan ke editor..."
 
 [portal.billing.checkout]
 noClientSecret = "Edge function mengembalikan no client_secret."
+stepCount = "Step {{step}} of 2"
 subtitle = "Tambahkan kartu untuk terus melampaui jatah gratis paket Editor Anda. Stripe menangani sisanya."
 title = "Aktifkan paket Processor"
 
@@ -6375,6 +6288,20 @@ body = "Pembayaran Anda berhasil, tetapi aktivasi memerlukan waktu sedikit lebih
 close = "Tutup"
 title = "Hampir selesai"
 
+[portal.billing.checkout.cap]
+back = "Back"
+continue = "Continue to payment"
+error = "Couldn't set your spend limit"
+finePrint = "Invoices post on the 1st. Cancel anytime and revert to the Editor plan; your policies and history stay intact."
+note = "Processing pauses if you reach it. You're never billed past this, and you can change it any time."
+subtitle = "You're billed only for PDFs you process past your first 500 free, never for seats — so your ceiling is yours from day one."
+title = "Set your spend limit"
+
+[portal.billing.checkout.card]
+fields = "Card number · MM / YY · CVC · ZIP"
+label = "Card details"
+note = "Card details collected by Stripe. Stirling never stores PAN or CVC."
+
 [portal.billing.checkout.error]
 title = "Tidak dapat memulai checkout"
 
@@ -6382,11 +6309,6 @@ title = "Tidak dapat memulai checkout"
 body = "Pembayaran Anda berhasil. Kami mengaktifkan pemrosesan bermeter di seluruh instans tertaut Anda - biasanya memerlukan beberapa detik."
 hint = "Harap biarkan jendela ini tetap terbuka."
 title = "Mengaktifkan paket Processor Anda..."
-
-[portal.billing.checkout.notConfigured]
-bodyAfter = "di env portal untuk mengaktifkan checkout dalam aplikasi."
-bodyBefore = "Atur"
-title = "Stripe belum dikonfigurasi"
 
 [portal.billing.enterpriseUpsell]
 cta = "Buat penawaran Enterprise Anda"
@@ -6465,6 +6387,9 @@ segmentApiDesc = "Permintaan API langsung"
 segmentApiLabel = "API"
 segmentAutomationDesc = "Otomatisasi & pipeline"
 segmentAutomationLabel = "Otomatisasi"
+sizeMultiplier = "{{formatted}} PDFs used a size multiplier"
+summary = "{{unique}} unique · {{units}} meter units · {{avg}} avg per PDF"
+summaryNoRate = "{{unique}} unique · {{units}} meter units"
 unit = "PDF bermeter"
 
 [portal.billing.spendLimit]
@@ -6494,6 +6419,8 @@ label = "Diproyeksikan melebihi."
 
 [portal.billing.spendThisMonth]
 eyebrow = "Pengeluaran bulan ini"
+freeRemaining_one = "{{formatted}} free PDF remaining"
+freeRemaining_other = "{{formatted}} free PDFs remaining"
 processed_one = "{{formattedCount}} PDF diproses."
 processed_other = "{{formattedCount}} PDF diproses."
 processedWithRate_one = "{{formattedCount}} PDF diproses, dengan {{rate}} masing-masing."
@@ -6766,6 +6693,8 @@ type = "Jenis"
 user = "Pengguna"
 
 [portal.documents.queue.empty]
+connectSource = "Connect a source"
+createPipeline = "Create a pipeline"
 description = "Saat sumber memasukkan dokumen ke pipeline Anda, dokumen akan muncul di sini untuk ditinjau."
 title = "Tidak ada dokumen dalam antrean"
 
@@ -6875,8 +6804,63 @@ description = "Tampilan ini mengalami error tak terduga. Coba lagi, atau pilih b
 retry = "Coba lagi"
 title = "Terjadi kesalahan pada halaman ini"
 
+[portal.home.download]
+back = "Back"
+body = "Download the desktop app or self-host the server."
+done = "Done"
+guide = "Open the {{name}} guide"
+openInBrowser = "Open in browser instead"
+sectionDesktop = "Desktop app"
+sectionSelfHosted = "Self-hosted"
+title = "Install the Stirling PDF Editor"
+
+[portal.home.download.docker]
+detailBody = "Run the official image on your server."
+note = "Opens at :8080. Default login: admin / stirling."
+tagline = "Run the server in a container"
+title = "Docker"
+variantFat = "Fat"
+variantLite = "Ultra-Lite"
+variantStandard = "Standard"
+
+[portal.home.download.kubernetes]
+detailBody = "Install the official Helm chart."
+note = "Add a PVC for /configs to persist settings."
+tagline = "Deploy to a cluster with Helm"
+title = "Kubernetes"
+
+[portal.home.download.linux]
+detailBody = "Native builds for your distribution."
+guideBtn = "View Linux install options"
+note = "AppImage, .deb and .rpm builds are available for common distros."
+tagline = "Native desktop app for your distro"
+title = "Linux"
+
+[portal.home.download.mac]
+altLabel = "Or via Homebrew"
+detailBody = "Run the installer, or use Homebrew."
+downloadBtn = "Download for macOS"
+tagline = "Native app for Apple silicon and Intel"
+title = "macOS"
+
+[portal.home.download.manual]
+detailBody = "Run the .jar on a bare metal server."
+downloadBtn = "Download the .jar"
+note = "Requires Java 21+. Opens at :8080; default login admin / stirling."
+runLabel = "Then run it"
+tagline = "Run the .jar on a bare metal server"
+title = "Manual server setup"
+
+[portal.home.download.windows]
+altLabel = "Or via winget"
+detailBody = "Run the installer, or use a package manager."
+downloadBtn = "Download installer"
+tagline = "Native app for Microsoft Windows"
+title = "Windows"
+
 [portal.home.editor]
 activeUsers = "{{n}} aktif"
+install = "Install the editor"
 invite = "Undang rekan tim"
 name = "Stirling PDF Editor"
 open = "Buka di browser"
@@ -6892,12 +6876,6 @@ afternoon = "Selamat siang"
 evening = "Selamat malam"
 morning = "Selamat pagi"
 
-[portal.home.onboarding]
-dismiss = "Abaikan pengaturan"
-notStarted = "Belum dimulai"
-progress = "{{done}} dari {{total}} selesai"
-title = "Selesaikan pengaturan"
-
 [portal.home.onboarding.enterprise]
 body = "SSO + SCIM + RBAC seluruh organisasi, harga volume berkomitmen, dan penerapan air-gapped."
 cta = "Mulai Uji Coba"
@@ -6909,15 +6887,13 @@ tag = "Enterprise"
 blurb = "Terapkan aplikasi desktop, gratis selamanya."
 title = "Download PDF Editor"
 
+[portal.home.onboarding.steps.invite]
+blurb = "Bring your team into the secure workspace"
+title = "Invite teammates"
+
 [portal.home.onboarding.steps.policies]
 blurb = "{{active}} aktif · {{recommended}} direkomendasikan"
-chip = "{{active}} aktif"
 title = "Aktifkan kebijakan"
-
-[portal.home.onboarding.steps.sources]
-blurb = "{{connected}} terhubung · setiap PDF diatur di tempatnya berada"
-chip = "{{connected}} terhubung"
-title = "Hubungkan sumber Anda"
 
 [portal.home.quickActions]
 subtitle = "Tugas utama untuk hari ini"
@@ -6941,6 +6917,11 @@ sectionsAriaLabel = "Bagian infrastruktur"
 subtitle = "Penerapan, kredensial, postur keamanan, penyimpanan, dan jejak audit untuk workspace Stirling Anda."
 title = "Infrastruktur"
 
+[portal.infrastructure.apiKeyPermission]
+admin = "Admin"
+read = "Read"
+write = "Write"
+
 [portal.infrastructure.apiKeys]
 createKey = "Buat kunci"
 heading = "API key"
@@ -6960,6 +6941,11 @@ usageToday = "Penggunaan hari ini"
 [portal.infrastructure.apiKeys.empty]
 description = "Buat kunci terbatas untuk mulai memanggil Stirling API."
 title = "Belum ada API key"
+
+[portal.infrastructure.attestationLabel]
+attested = "Attested"
+inScope = "In scope"
+notApplicable = "N/A"
 
 [portal.infrastructure.audit]
 filterAriaLabel = "Filter peristiwa audit berdasarkan kategori"
@@ -7004,6 +6990,7 @@ all = "Semua"
 auth = "Auth"
 config = "Konfigurasi"
 elevation = "Eskalasi"
+policy = "Policy"
 processing = "Pemrosesan"
 security = "Keamanan"
 
@@ -7013,9 +7000,28 @@ title = "Anda tidak memiliki akses"
 
 [portal.infrastructure.audit.metrics]
 config = "Konfigurasi"
-elevation = "Eskalasi"
+policy = "Policy"
 processing = "Pemrosesan"
 totalEvents = "Total peristiwa · 24 jam"
+
+[portal.infrastructure.auditCatLabel]
+auth = "Auth"
+config = "Config"
+elevation = "Elevation"
+policy = "Policy"
+processing = "Processing"
+security = "Security"
+
+[portal.infrastructure.auditStatusLabel]
+danger = "Error"
+info = "Info"
+success = "Success"
+warning = "Warning"
+
+[portal.infrastructure.certLabel]
+certified = "Certified"
+inProgress = "In progress"
+notStarted = "Not started"
 
 [portal.infrastructure.createKey]
 cancel = "Batal"
@@ -7032,6 +7038,12 @@ subtitle = "Batasi kunci ke minimum yang dibutuhkan. Anda dapat merotasi atau me
 subtitleCreated = "Salin rahasia ini sekarang — tidak akan ditampilkan lagi."
 title = "Buat API key"
 titleCreated = "Kunci dibuat"
+
+[portal.infrastructure.deployLabel]
+live = "Live"
+queued = "Queued"
+rolledBack = "Rolled back"
+rolling = "Rolling out"
 
 [portal.infrastructure.deployments]
 msValue = "{{value}} ms"
@@ -7068,6 +7080,16 @@ subheading = "Kesehatan langsung untuk setiap region Stirling yang diterapkan �
 description = "Region yang diterapkan muncul di sini setelah workspace Anda disediakan."
 title = "Tidak ada region yang diterapkan"
 
+[portal.infrastructure.keyLabel]
+active = "Active"
+revoked = "Revoked"
+rotateSoon = "Rotate soon"
+
+[portal.infrastructure.modelLabel]
+active = "Active"
+degraded = "Degraded"
+disabled = "Disabled"
+
 [portal.infrastructure.models]
 heading = "Model"
 msValue = "{{value}} ms"
@@ -7095,6 +7117,10 @@ status = "Status"
 type = "Jenis"
 version = "Versi"
 
+[portal.infrastructure.models.cost]
+perCall = "{{price}}/call"
+perThousand = "{{price}}/1k"
+
 [portal.infrastructure.models.metrics]
 activeModels = "Model aktif"
 avgLatency = "Latensi rata-rata"
@@ -7117,6 +7143,17 @@ docType = "Jenis dokumen"
 modelForAria = "Model untuk {{operation}}"
 operation = "Operasi"
 routedTo = "Dirutekan ke"
+
+[portal.infrastructure.modelTypeLabel]
+classification = "Classification"
+extraction = "Extraction"
+llm = "LLM"
+ocr = "OCR"
+
+[portal.infrastructure.regionLabel]
+degraded = "Degraded"
+down = "Down"
+healthy = "Healthy"
 
 [portal.infrastructure.security.access.byok]
 description = "Sediakan kunci dari KMS Anda sendiri. Stirling mengenkripsi dengannya tetapi masih dapat membaca."
@@ -7259,26 +7296,6 @@ sources = "Sumber"
 usage = "Penggunaan & Penagihan"
 users = "Pengguna"
 
-[portal.notifications]
-markAllRead = "Tandai semua dibaca"
-title = "Notifikasi"
-viewAll = "Lihat semua"
-
-[portal.notifications.ariaLabel]
-none = "Notifikasi, tidak ada yang belum dibaca"
-unread_one = "Notifikasi, {{count}} belum dibaca"
-unread_other = "Notifikasi, {{count}} belum dibaca"
-
-[portal.notifications.count]
-allRead = "semua dibaca"
-loading = "memuat"
-new_one = "{{count}} baru"
-new_other = "{{count}} baru"
-
-[portal.notifications.empty]
-description = "Tidak ada notifikasi baru."
-title = "Anda sudah mengikuti semua"
-
 [portal.pipelines]
 subtitle = "Setiap pipeline dokumen otomatis di backend: rantai operasi terurut pada sekumpulan sumber, dijalankan pada trigger. Klik baris untuk melihat langkah dan sumbernya."
 title = "Pipeline"
@@ -7323,6 +7340,11 @@ operations_one = "Operasi ({{count}})"
 operations_other = "Operasi ({{count}})"
 output = "Output"
 removeStep = "Hapus operasi"
+s3Configure = "Configure"
+s3Done = "Done"
+s3ModalTitle = "Amazon S3 output"
+s3NotConfigured = "Not configured"
+s3PrefixHelp = "Outputs are uploaded under this key prefix."
 save = "Simpan perubahan"
 scheduleEvery = "Jalankan setiap"
 sources = "Sumber"
@@ -7342,11 +7364,13 @@ confirm = "Hapus"
 title = "Hapus pipeline?"
 
 [portal.pipelines.detail]
+clearHistory = "Clear history"
 delete = "Hapus pipeline"
 run = "Jalankan sekarang"
 
 [portal.pipelines.empty]
 action = "Buat pipeline"
+connectSource = "Connect a source"
 description = "Buat pipeline pertama Anda: pilih sumber yang dijalankannya, rangkai operasi, dan pilih tempat output dituju."
 title = "Belum ada pipeline"
 
@@ -7358,12 +7382,19 @@ total = "Pipeline"
 [portal.pipelines.output]
 folder = "Tulis ke folder"
 inline = "Kembalikan file"
+s3 = "Write to Amazon S3"
 
 [portal.pipelines.run]
+allProcessed_one = "Nothing to run: the source's {{count}} document has already been processed."
+allProcessed_other = "Nothing to run: all {{count}} documents in the sources have already been processed."
 completed_one = "Jalankan selesai."
 completed_other = "Semua {{count}} proses berjalan selesai."
 empty = "Tidak ada yang dijalankan: sumber tidak memiliki dokumen untuk diproses."
 failed = "Proses berjalan gagal: {{error}}"
+historyCleared = "History cleared. The next run reprocesses everything currently in the sources."
+inFlight = "Nothing new to run: documents are still being processed from an earlier run."
+parked_one = "Nothing to run: {{count}} document failed previously and is parked. Fix the cause, then clear history to retry it."
+parked_other = "Nothing to run: {{count}} documents failed previously and are parked. Fix the cause, then clear history to retry them."
 running = "Proses berjalan dimulai; masih berlangsung."
 timeout = "Proses berjalan memakan waktu lebih lama dari yang diharapkan; mungkin masih selesai di latar belakang."
 
@@ -7647,7 +7678,6 @@ managePlan = "Kelola paket"
 volumeSuffix = "PDF diproses · 30 hari terakhir"
 
 [portal.procurement]
-reset = "Reset pengadaan (demo)"
 subtitle = "Buat tim Anda dievaluasi, dikontrak, dan di-onboard. Setiap dokumen di satu tempat."
 title = "Pengadaan"
 
@@ -7667,23 +7697,42 @@ title = "Tinjau perjanjian enterprise Anda"
 
 [portal.procurement.builder]
 addons = "Add-on"
+addressLine1 = "Address line 1"
+addressLine1Placeholder = "500 Howard St"
+addressLine2 = "Address line 2"
+addressLine2Placeholder = "Suite, floor, building"
 back = "Kembali"
 businessName = "Nama bisnis"
 businessNamePlaceholder = "Perusahaan Anda"
+city = "City"
+cityPlaceholder = "San Francisco"
+contactEmail = "Contact email"
+contactEmailPlaceholder = "jane@acme.com"
+contactName = "Contact name"
+contactNamePlaceholder = "Jane Doe"
 continue = "Lanjutkan"
-country = "Negara"
-countryEuro = "Eurozone (EUR €)"
-countryUK = "United Kingdom (GBP £)"
-countryUS = "United States (USD $)"
 eula = "Saya telah membaca dan menyetujui Stirling Enterprise EULA. Ini mengatur perjanjian yang dihasilkan dari penawaran ini."
 generate = "Buat penawaran"
 included = "Termasuk"
 indemnification = "Indemnifikasi IP"
 indemnificationSub = "Kami membela klaim IP yang memenuhi syarat, sesuai EULA"
-offlineLicense = "Lisensi offline / air-gapped"
-offlineLicenseSub = "File lisensi yang dapat didownload untuk instance self-hosted air-gapped"
+pdfSize = "PDF size"
+poNumber = "PO number"
+poNumberPlaceholder = "Optional"
+postalCode = "Postal code"
+postalCodePlaceholder = "94105"
+posture = "Governance"
+posture_count = "~{{count}} policies"
+posture_essentials = "Essentials"
+posture_essentialsSub = "Classification + Sharing — the defaults"
+posture_governed = "Governed"
+posture_governedSub = "Adds Security and Routing"
+posture_regulated = "Regulated"
+posture_regulatedSub = "Every category — Compliance, Retention, Ingestion"
 qbr = "Tinjauan bisnis triwulanan"
 qbrSub = "SE Anda meninjau penggunaan dan roadmap setiap kuartal"
+region = "State / region"
+regionPlaceholder = "California"
 running = "{{annual}} / thn · {{years}} thn {{tcv}}"
 s1Sub = "Tim Anda, dan PDF yang Anda perkirakan akan dijalankan setiap tahun."
 s1Title = "Berapa banyak yang akan Anda proses?"
@@ -7692,6 +7741,12 @@ s2Title = "Komitmen dan layanan"
 s3Sub = "Untuk penawaran dan perjanjian yang dihasilkannya."
 s3Title = "Detail Anda"
 serviceLevel = "Level layanan"
+size_compact = "Compact"
+size_compactSub = "Mostly text, under 1 MB"
+size_heavy = "Heavy"
+size_heavySub = "Scanned or image-heavy, 5 MB+"
+size_standard = "Standard"
+size_standardSub = "Mixed text and images, 1 to 5 MB"
 slDedicated = "Dedicated"
 slDedicatedSub = "4 jam kerja · manajer akun khusus · +30%"
 slPriority = "Priority"
@@ -7699,6 +7754,8 @@ slPrioritySub = "Hari kerja yang sama · CSM bernama · +15%"
 slStandard = "Standard"
 slStandardSub = "Hari kerja berikutnya · CSM bersama · termasuk"
 stepOf = "Langkah {{n}} dari {{total}}"
+taxId = "VAT / Tax ID"
+taxIdPlaceholder = "Optional"
 term = "Jangka waktu"
 termDiscount = "Diskon komitmen multi-tahun {{pct}}% diterapkan"
 title = "Buat penawaran Anda"
@@ -7734,14 +7791,13 @@ title = "Terjadi kesalahan"
 
 [portal.procurement.hero]
 company = "Kesepakatan enterprise Anda"
-ctaAgreement = "Tinjau & tanda tangani perjanjian"
 ctaLive = "Anda sudah live"
 ctaPayment = "Tambahkan pembayaran"
 ctaQuote = "Tinjau penawaran Anda"
 ctaTrial = "Buat penawaran Anda"
 eyebrow = "Pengadaan enterprise"
 inviteTeammates = "Undang rekan tim"
-keyDocs = "Dokumen utama"
+licenseKey = "Licence key"
 nextStep = "Langkah berikutnya: {{action}}"
 notStarted = "Belum dimulai"
 open = "Buka pengadaan"
@@ -7796,6 +7852,9 @@ downloadError = "Belum dapat membuat file lisensi offline — silakan coba lagi 
 downloadOffline = "Download lisensi offline (.lic)"
 hint = "Tempel kunci ini ke instance self-hosted untuk mengaktifkannya, atau simpan untuk catatan Anda. Jaga tetap aman."
 label = "Kunci lisensi Anda"
+subtitle = "Activate a self-hosted instance with this key, or keep it for your records."
+title = "Your licence key"
+trialFileHint = "This is your trial licence file. Once your agreement is in place, come back and download it again — unlike the online licence key, the .lic file won't update on its own."
 
 [portal.procurement.link]
 cta = "Tautkan akun"
@@ -7815,16 +7874,9 @@ talkToSales = "Bicara dengan sales"
 title = "Jalur pengadaan terbuka dengan Enterprise"
 
 [portal.procurement.milestone]
-accept = "Terima & lanjutkan"
-description = "Download PDF untuk membagikannya dengan tim Anda, kembali untuk menerima saat Anda siap, atau buat perubahan."
 download = "Download PDF"
 downloadError = "Belum dapat mendownload PDF penawaran — silakan coba lagi sebentar lagi."
 edit = "Edit penawaran"
-eyebrow = "Penawaran {{number}}"
-perYear = " / thn"
-preparedFor = "Disiapkan untuk {{company}}"
-tcv = "{{value}} total nilai kontrak"
-title = "Penawaran Anda siap"
 
 [portal.procurement.modal]
 cancel = "Batal"
@@ -7851,7 +7903,6 @@ uploadTitle = "Upload purchase order Anda"
 [portal.procurement.payment]
 description = "Penawaran Anda diterima dan lisensi Anda sudah aktif — tim Anda dapat langsung mulai. Bayar invoice pertama saat Anda siap; Anda dapat membayar atau mendownloadnya di sini, tanpa perlu email."
 downloadInvoice = "Download invoice"
-simulate = "Simulasikan pembayaran diterima (demo)"
 title = "Langganan dibuat"
 viewInvoice = "Lihat & bayar invoice"
 
@@ -7860,6 +7911,21 @@ fallback = "Tidak dapat memuat scheduler."
 fallbackLink = "Buka penjadwalan di tab baru"
 subtitle = "Engineer solusi Anda akan memandu tim Anda melalui rollout. Pilih waktu yang sesuai untuk Anda."
 title = "Jadwalkan panggilan"
+
+[portal.procurement.setup]
+airgap = "Air-gapped"
+airgapSub = "Fully offline, isolated network. Includes a downloadable licence file."
+cloud = "Cloud"
+cloudSub = "Fully managed by Stirling. Nothing for you to run."
+deployment = "Where will you run Stirling?"
+seats = "Team size"
+seatsHint = "Roughly how many people will use it. You can refine this when you build your quote."
+seatsPlaceholder = "e.g. 250"
+selfhost = "Self-hosted"
+selfhostSub = "Run it in your own cloud or data centre."
+start = "Start trial"
+subtitle = "Tell us how you plan to run Stirling so we can tailor your trial and quote. No card required."
+title = "Set up your trial"
 
 [portal.procurement.status]
 action = "Perlu tindakan"
@@ -7907,26 +7973,11 @@ admin = "Admin"
 [portal.settings.sections]
 account-link = "Tautan akun"
 
-[portal.shell.header]
-accountFallback = "Akun"
-accountMenu = "Menu akun"
-darkMode = "Mode gelap"
-lightMode = "Mode terang"
-search = "Cari"
-searchPlaceholder = "Cari…"
-signOut = "Keluar"
-switchToDark = "Beralih ke tema gelap"
-switchToLight = "Beralih ke tema terang"
-
 [portal.shell.sidebar]
 appEditor = "Editor"
 appProcessor = "Processor"
 brandSuffix = "Stirling Processor"
-docsCount = "{{docs}} dokumen"
 linkAccount = "Tautkan akun Stirling"
-planEditor = "Paket Editor"
-planEnterprise = "Paket Enterprise"
-planProcessor = "Paket Processor"
 primaryNav = "Navigasi utama"
 switchApp = "Ganti aplikasi"
 
@@ -7979,7 +8030,9 @@ status = "Status"
 usedBy = "Kebijakan"
 
 [portal.sources.types.editor]
+description = "Documents your team has processed in the editor, across policy and AI runs."
 label = "Editor"
+noPolicies = "No policies run from the editor yet."
 
 [portal.sources.types.folder]
 description = "Pantau direktori di server untuk dokumen baru."
@@ -8011,6 +8064,42 @@ label = "Kedalaman folder"
 [portal.sources.types.folder.fields.recursive.options]
 all = "Sertakan subfolder"
 top = "Hanya level teratas"
+
+[portal.sources.types.s3]
+description = "Pull documents from an Amazon S3 or S3-compatible bucket."
+label = "Amazon S3"
+
+[portal.sources.types.s3.fields.accessKeyId]
+label = "Access key ID"
+
+[portal.sources.types.s3.fields.bucket]
+label = "Bucket"
+placeholder = "my-company-inbox"
+
+[portal.sources.types.s3.fields.endpoint]
+helperText = "Leave blank for Amazon S3. Set to use an S3-compatible service such as MinIO."
+label = "Custom endpoint"
+placeholder = "https://s3.example.com"
+
+[portal.sources.types.s3.fields.mode]
+helperText = "Consume removes each object from the bucket once every policy has processed it."
+label = "Read mode"
+
+[portal.sources.types.s3.fields.mode.options]
+consume = "Consume: process each object once"
+snapshot = "Snapshot: re-read the bucket every run"
+
+[portal.sources.types.s3.fields.prefix]
+helperText = "Only objects whose keys start with this prefix are processed."
+label = "Key prefix"
+placeholder = "incoming/"
+
+[portal.sources.types.s3.fields.region]
+label = "Region"
+placeholder = "us-east-1"
+
+[portal.sources.types.s3.fields.secretAccessKey]
+label = "Secret access key"
 
 [portal.sources.types.unknown]
 label = "Sumber"
@@ -8090,16 +8179,17 @@ summary = "Memiliki tim — mengelola sumber daya anggota dan konfigurasi bersam
 2 = "Akses portal melalui kebijakan default"
 3 = "Semua yang dapat dilakukan Anggota"
 
+[portal.users.seats]
+limited = "{{used}} / {{limit}}"
+unlimited = "{{used}} · Unlimited"
+
 [portal.welcome]
 ariaLabel = "Selamat datang di Stirling PDF"
-badge = "Open-source"
-installEditor = "Instal Editor"
-inviteTeammates = "Undang rekan tim"
+install = "Install the editor"
+invite = "Invite teammates"
 openInBrowser = "Buka di browser"
-perks = "Gratis selamanya · Dapat self-host"
-subtitle = "PDF Editor paling aman di dunia gratis untuk tim dari semua ukuran. Termasuk 60+ operasi PDF dan SSO."
-title = "Selamat datang di"
-titleAccent = "Stirling PDF"
+productName = "PDF Editor"
+stats = "30M downloads · 60+ PDF operations · Free forever"
 
 [printFile]
 title = "Cetak File"
@@ -8902,6 +8992,12 @@ intro = "Aktifkan autentikasi pengguna, manajemen tim, dan fitur ruang kerja unt
 learnMore = "Pelajari lebih lanjut di dokumentasi"
 title = "Untuk Administrator Sistem"
 
+[settings.general.loginLanding]
+description = "Choose which app opens when you sign in to Stirling Cloud."
+editor = "Editor"
+processor = "Processor"
+title = "After signing in"
+
 [settings.general.mode]
 fullscreen = "Layar penuh"
 sidebar = "Bilah sisi"
@@ -9109,6 +9205,11 @@ connections = "Koneksi"
 security = "Keamanan"
 telegram = "Telegram"
 title = "Keamanan & Autentikasi"
+
+[settings.signOut]
+confirm = "Are you sure you want to sign out?"
+submit = "Sign out"
+title = "Sign out"
 
 [settings.team]
 title = "Tim"
@@ -9726,6 +9827,9 @@ uploadButton = "Unggah ke Server"
 title = "Stirling-PDF Survey"
 
 [swagger]
+clickHere = "click here"
+fallback = "If it didn't open automatically,"
+opening = "Opening Swagger UI in a new tab..."
 tags = "api,dokumentasi,swagger,endpoint,pengembangan"
 title = "Dokumentasi API"
 
@@ -10019,11 +10123,13 @@ title = "Pengguna"
 you = "(Anda)"
 
 [users.action]
+cancelInvite = "Cancel invitation"
 deleteTeam = "Hapus tim"
 disableMfa = "Reset MFA"
 move = "Pindahkan ke tim"
 reinstate = "Aktifkan kembali"
 remove = "Hapus dari org"
+removeTeam = "Remove from team"
 rename = "Rename tim"
 resetPw = "Reset password"
 suspend = "Tangguhkan"
@@ -10036,11 +10142,14 @@ editor = "Editor"
 processor = "Processor"
 
 [users.confirm]
+cancelInviteBody = "Cancel the invitation to {{email}}? They won't be able to join with the current link."
+cancelInviteTitle = "Cancel invitation"
 deleteTeamBody = "Hapus tim {{name}}? Tim harus kosong terlebih dahulu - pindahkan anggotanya ke tim lain, dan tidak boleh masih memiliki konfigurasi integrasi apa pun."
 deleteTeamTitle = "Hapus tim"
 disableMfaBody = "Hapus pendaftaran MFA {{name}}? Mereka akan menyiapkannya lagi saat login berikutnya jika diperlukan."
 disableMfaTitle = "Reset MFA"
 removeBody = "Hapus {{name}} secara permanen dari organisasi? Tindakan ini tidak dapat dibatalkan."
+removeTeamBody = "Remove {{name}} from the team? They keep their account but lose access to this team's resources."
 removeTitle = "Hapus anggota"
 
 [users.empty]
@@ -10090,6 +10199,14 @@ title = "Undang orang"
 username = "Nama pengguna"
 usernameError = "Nama pengguna harus minimal 3 karakter"
 usernamePlaceholder = "jsmith"
+
+[users.invites]
+by = "Invited by {{who}}"
+cancel = "Cancel"
+count = "{{count}} pending"
+desc = "Invited people who haven't joined yet. They hold a seat until they accept."
+expires = "Expires"
+title = "Pending invitations"
 
 [users.loadError]
 description = "Terjadi kesalahan saat menghubungi backend, atau Anda tidak memiliki akses. Coba lagi."
@@ -10281,9 +10398,11 @@ title = "Lampiran"
 
 [viewer.bookmarks]
 bookmarkTitle = "Judul bookmark"
+bookmarkTitleRequired = "Bookmark title is required"
 closeSidebar = "Tutup bilah sisi bookmark"
 collapseAll = "Ciutkan semua bookmark"
 expandAll = "Luaskan semua bookmark"
+searchPlaceholder = "Search bookmarks"
 
 [viewer.comments]
 addComment = "Tambahkan komentar"

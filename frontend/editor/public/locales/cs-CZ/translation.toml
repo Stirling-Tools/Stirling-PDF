@@ -356,6 +356,7 @@ text = "Tato oprávnění určují, co mohou uživatelé s PDF dělat. Nejlépe 
 title = "Změnit oprávnění"
 
 [addStamp]
+preview = "Preview Stamp"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -1842,6 +1843,15 @@ export = "Export"
 accessDenied = "Přístup odepřen"
 insufficientPermissions = "Nemáte oprávnění k provedení této akce."
 
+[auth.callback]
+completing = "Completing authentication"
+invalidToken = "OAuth login failed - invalid token."
+missingToken = "OAuth login failed - no token received."
+oauthFailed = "OAuth login failed. Please try again."
+pleaseWait = "Please wait while we finish signing you in."
+signedOut = "You have been signed out. Please sign in again."
+windowMayClose = "You can close this window once it completes."
+
 [auth.displayName]
 guest = "Host"
 user = "Uživatel"
@@ -2824,6 +2834,7 @@ next = "Další"
 preview = "Náhled"
 previous = "Předchozí"
 refresh = "Obnovit"
+remaining = "Remaining"
 retry = "Zkusit znovu"
 save = "Save"
 
@@ -4072,10 +4083,17 @@ discord = "Discord"
 issues = "GitHub"
 
 [formFill]
+allSaved = "All saved"
+extractCsvError = "Failed to extract CSV"
+extractXlsxError = "Failed to extract XLSX"
 flattenAfterFilling = "Zploštit po vyplnění"
+requiredAbbreviation = "req"
+requiredFieldsError = "Please fill in all required fields"
 rescanFields = "Znovu detekovat pole"
 rescanFormFields = "Znovu detekovat pole formuláře"
 save = "Uložit"
+saveShortcut = "Ctrl+S to save"
+unsavedChanges = "Unsaved changes"
 
 [formFill.sidebar]
 close = "Zavřít postranní panel"
@@ -4647,7 +4665,6 @@ welcomeTitle = "Byli jste pozváni!"
 
 [landing]
 addFiles = "Přidat soubory"
-heroSubtitle = "Pro začátek přetáhněte nebo přidejte existující PDF."
 mobileUpload = "Nahrát z mobilu"
 openFromComputer = "Otevřít z počítače"
 uploadFromComputer = "Nahrát z počítače"
@@ -4976,6 +4993,7 @@ pinButton = "Můžete použít tlačítko <strong>Připnout</strong>, pokud chce
 results = "Po dokončení nástroje zobrazí krok <strong>Kontrola</strong> v tomto panelu náhled výsledků a umožní vám operaci vrátit nebo soubor stáhnout."
 runButton = "Jakmile je nástroj nakonfigurován, tímto tlačítkem jej spustíte na všech vybraných PDF."
 selectCropTool = "Vyberme nástroj <strong>Oříznout</strong>, abychom ukázali, jak nástroje používat."
+stepOf = "Step {{current}} of {{total}}"
 toolInterface = "Toto je rozhraní nástroje <strong>Oříznout</strong>. Jak vidíte, zatím tu toho moc není, protože jsme ještě nepřidali žádné PDF k úpravám."
 workbench = "Toto je <strong>Pracovní plocha</strong> – hlavní oblast, kde prohlížíte a upravujete svá PDF."
 wrapUp = "Máte hotovo! Seznámili jste se s hlavními oblastmi aplikace a jejich použitím. Kdykoli klikněte na tlačítko <strong>Nápověda</strong> a prohlídku si zobrazíte znovu."
@@ -4988,6 +5006,26 @@ showMeAround = "Proveďte mě"
 skipForNow = "Zatím přeskočit"
 skipTheTour = "Přeskočit průvodce"
 
+[onboarding.checklist]
+dismiss = "Dismiss"
+title = "Set up Stirling PDF"
+
+[onboarding.checklist.downloadDesktop]
+description = "Run Stirling natively on your machine"
+title = "Download Stirling for Desktop"
+
+[onboarding.checklist.inviteTeam]
+description = "Collaborate with your team"
+title = "Invite team members"
+
+[onboarding.checklist.shareAnalytics]
+description = "Help improve Stirling"
+title = "Share anonymous usage data"
+
+[onboarding.checklist.takeTour]
+description = "See how Stirling works in a quick walkthrough"
+title = "Take the tour"
+
 [onboarding.desktopInstall]
 body = "Stirling nejlépe funguje jako desktopová aplikace. Můžete ji používat offline, rychleji přistupovat k dokumentům a provádět úpravy lokálně ve svém počítači."
 selectOs = "Vyberte operační systém"
@@ -4996,7 +5034,21 @@ titleWithOs = "Stáhnout pro {{osLabel}}"
 
 [onboarding.mfa]
 authenticationCode = "Ověřovací kód"
+description = "Secure your account by linking an authenticator app. Scan the QR code or enter the setup key, then confirm the 6-digit code to finish."
+enable = "Enable MFA"
+enableError = "Unable to enable two-factor authentication. Check the code and try again."
+enterCode = "Enter the 6-digit code from your app."
+enterCodeError = "Enter the authentication code to continue."
+logout = "Logout"
+openAuthenticator = "Open Google Authenticator, Authy, or 1Password."
 qrCodeLoading = "Generování vašeho QR kódu…"
+regenerateQrCode = "Regenerate QR code"
+scanQrCode = "Scan the QR code or enter the setup key below."
+setupError = "Unable to start two-factor setup. Please try again."
+setupKey = "Setup key (manual entry)"
+stepByStep = "Step-by-step"
+success = "MFA has been enabled. You can now continue."
+title = "Multi-Factor Authentication Setup"
 
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Po povolení režimu přihlášení můžete spravovat uživatele, konfigurovat nastavení a sledovat stav serveru. Prvních <strong>{{freeTierLimit}}</strong> uživatelů na vašem serveru může Stirling používat zdarma."
@@ -5004,6 +5056,11 @@ adminBodyLoginEnabled = "Jako správce můžete spravovat uživatele, konfigurov
 adminTitle = "Přehled pro správce"
 userBody = "Pozvěte kolegy, přiřazujte role a udržujte dokumenty uspořádané v jednom zabezpečeném prostoru. Režim přihlášení zapněte, jakmile budete chtít růst nad rámec sólo použití."
 userTitle = "Přehled plánu"
+
+[onboarding.processorIntro]
+body = "Stirling now runs <strong>Policies</strong> — automated rules that classify, secure, and process every document as it arrives. Set them up and monitor runs in the <strong>Processor</strong>."
+cta = "Check out the Processor"
+title = "Check out the Stirling Processor"
 
 [onboarding.saas.freeEditor]
 freeLine = "The editor is now <free>completely free</free>."
@@ -5937,48 +5994,11 @@ keyDescription = "Paste the license key from your email"
 success = "License Activated!"
 successMessage = "Your license has been successfully activated. You can now close this window."
 
-[policies]
-deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
-deleteConfirmTitle = "Delete {{label}} policy?"
-
 [policies.activity]
-enforced = "vynuceno"
-enforcing = "Probíhá vynucování..."
-failed = "Vynucení selhalo"
 outputsUnavailable = "Výstupy zásad již nejsou k dispozici ke stažení."
 partialOutputsUnavailable = "Některé výstupy zásad již nejsou k dispozici ke stažení."
-retrying = "Zaneprázdněno, opakuji..."
 runNotFound = "Běh vynucení již nelze najít."
-step = "krok {{current}}/{{total}}"
 timedOut = "Časový limit vynucení vypršel dříve, než se běh mohl dokončit."
-
-[policies.catalog]
-compliance = "Compliance"
-ingestion = "Ingestion"
-retention = "Retention"
-routing = "Routing"
-security = "Security"
-
-[policies.detail]
-close = "Zavřít"
-editSettings = "Edit Settings"
-enforces = "Enforces"
-managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
-noActivityDescription = "Documents will appear here once this policy runs."
-noActivityTitle = "No activity yet"
-onEveryUpload = "On every upload"
-originalsNote = "Originals stay untouched • Enforced version saved alongside"
-pause = "Pause"
-recentActivity = "Recent Activity"
-resume = "Resume"
-retry = "Retry"
-showLess = "Show less"
-showMore = "Show more"
-statActive = "Active"
-statDataProcessed = "Data processed"
-statDocsEnforced = "Docs enforced"
-statusActive = "Active"
-statusPaused = "Paused"
 
 [policies.enforcement]
 applying = "Probíhá použití {{names}}"
@@ -5989,34 +6009,9 @@ failureBody = "{{failures}} z {{total}} souborů se nepodařilo zpracovat a byly
 failureTitle = "Exportováno bez úplného vynucení"
 printPolicyAppliedBody = "Tento soubor PDF byl upraven tak, aby vyhověl zásadě. Zkontrolujte změny a poté znovu vytiskněte."
 printPolicyAppliedTitle = "Zásada použita před tiskem"
-queued = "+{{count}} ve frontě"
 successTitle = "{{names}} použito"
 summaryMore = "{{first}}, {{second}} a dalších {{more}}"
 summaryTwo = "{{first}} a {{second}}"
-
-[policies.enforcement.triggerVerb]
-convert = "Vynucování před převodem"
-default = "Vynucování"
-export = "Vynucování před exportem"
-input = "Vynucování při importu"
-print = "Vynucování před tiskem"
-
-[policies.field]
-accessLog = "Protokol přístupů"
-archiveAfter = "Archivovat po"
-auditTrail = "Auditní stopa"
-belowThreshold = "Pod prahem"
-destination = "Cíl"
-frameworks = "Frameworks"
-immutableHold = "Neměnné zadržení"
-keepFor = "Uchovat po dobu"
-minConfidence = "Min. spolehlivost"
-notify = "Upozornit při směrování"
-onViolation = "Při nesouladu"
-webhookUrl = "Webhook URL"
-
-[policies.fields]
-selectedCount = "{{count}} selected"
 
 [policies.labels]
 add = "Přidat"
@@ -6056,90 +6051,6 @@ placeholder = "Select PII types"
 routing = "Směrovací čísla v USA (ABA)"
 ssn = "Čísla sociálního zabezpečení"
 
-[policies.settings]
-noneExport = "Při exportu aktuálně neběží žádné zásady."
-noneUpload = "Při nahrávání aktuálně neběží žádné zásady."
-onExport = "Při exportu"
-onUpload = "Při nahrávání"
-reorderHandle = "Přetažením změňte pořadí"
-runOrderDesc = "Když se při stejné spouštěcí události spustí více než jedna zásada, běží v tomto pořadí — každá na výstupu předchozí zásady. Přetažením změňte pořadí."
-title = "Nastavení zásad"
-
-[policies.sidebar]
-activeCount = "{{count}} active"
-infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
-loading = "Loading…"
-optionsAriaLabel = "Možnosti zásad"
-policySettings = "Nastavení zásad"
-railAriaLabel = "{{label}} policy — {{status}}"
-railSuffixActive = " (Active)"
-railSuffixPaused = " (Paused)"
-retryFailed = "Opakovat neúspěšné zásady ({{count}})"
-rowProgress = "Zpracováno {{completed}} z {{total}} souborů"
-setUp = "Set up"
-title = "Policies"
-upgradeToEnterprise = "Upgrade to enterprise"
-whatIsPolicy = "Co je zásada?"
-
-[policies.status]
-active = "Active"
-paused = "Paused"
-setup = "Set up"
-
-[policies.toolConfig]
-enableAriaLabel = "Enable {{tool}}"
-infoAriaLabel = "What does {{tool}} do?"
-
-[policies.toolConfig.info]
-redact = "Automaticky najde a začerní citlivé údaje — například čísla sociálního zabezpečení a karet — aby je v dokumentu nešlo přečíst."
-sanitize = "Odstraní skrytý JavaScript ze souboru, aby se při otevření někým nic nespouštělo automaticky."
-watermark = "Označí viditelnou značkou (např. \"Důvěrné\") přes každou stránku."
-
-[policies.wizard]
-allDocTypesDescription = "Enable the Classification policy to filter by document type."
-allDocTypesTitle = "All document types"
-back = "Back"
-builderDesc = "Build the sequence of tools this policy runs on each document."
-clear = "Clear"
-close = "Zavřít"
-continue = "Continue"
-docTypesLabel = "Document types"
-edit = "Edit"
-editTitle = "Edit {{label}} Policy"
-enablePolicy = "Enable Policy"
-filenameAutoNumber = "Auto-number"
-filenamePositionAria = "Filename position"
-filenamePrefix = "Prefix"
-filenameSuffix = "Suffix"
-filenameTextAria = "Filename text"
-filenameTextPlaceholder = "Text to add (optional)"
-lockedDescription = "Contact a team leader to change this policy."
-lockedTitle = "Managed by your organisation"
-maxRetriesLabel = "Max retries"
-noToolsError = "Add at least one configured tool to the workflow first."
-outputAsLabel = "Output as"
-outputFilenameSubhead = "Output filename"
-outputModeAria = "Output mode"
-outputNewFile = "New file"
-outputNewVersion = "New version"
-outputRetriesLabel = "Output & retries"
-outputSubhead = "Output"
-retryDelayAria = "Retry delay minutes"
-retryDelayLabel = "Retry delay (min)"
-runOnExport = "Export"
-runOnLabel = "Run on"
-runOnSubhead = "Run on"
-runOnUpload = "Upload"
-saveChanges = "Save Changes"
-saveError = "Couldn't save the policy. Please try again."
-setupClassification = "Set up Classification"
-setupTitle = "Set up {{label}} Policy"
-sourcesDesc = "Choose where this policy runs and which document types it applies to."
-sourcesLabel = "Sources"
-stepOf = "Step {{step}} of {{total}}"
-toolChainDesc = "Configure the tools this policy runs on each document."
-typesSelected = "{{count}} types selected"
-
 [policy]
 badgeEnforcing = "{{name}} se vynucuje..."
 badgeRan = "Na tomto souboru proběhla zásada {{name}}"
@@ -6151,6 +6062,7 @@ viewAnyway = "Zobrazit soubor (zásada se stále vynucuje)"
 [policyOption]
 autoRedactPhi = "Automaticky redigovat PHI"
 blockExport = "Blokovat export"
+ccpa = "CCPA"
 contracts = "Smlouvy"
 documents = "Dokumenty"
 fedramp = "FedRAMP"
@@ -6367,6 +6279,7 @@ redirectingToEditor = "Přesměrování do editoru..."
 
 [portal.billing.checkout]
 noClientSecret = "Edge funkce nevrátila client_secret."
+stepCount = "Step {{step}} of 2"
 subtitle = "Přidejte kartu, abyste mohli pokračovat po vyčerpání bezplatného grantu plánu Editor. O zbytek se postará Stripe."
 title = "Zapnout plán Processor"
 
@@ -6375,6 +6288,20 @@ body = "Platba proběhla úspěšně, ale aktivace trvá o něco déle než obvy
 close = "Zavřít"
 title = "Už jsme skoro hotovi"
 
+[portal.billing.checkout.cap]
+back = "Back"
+continue = "Continue to payment"
+error = "Couldn't set your spend limit"
+finePrint = "Invoices post on the 1st. Cancel anytime and revert to the Editor plan; your policies and history stay intact."
+note = "Processing pauses if you reach it. You're never billed past this, and you can change it any time."
+subtitle = "You're billed only for PDFs you process past your first 500 free, never for seats — so your ceiling is yours from day one."
+title = "Set your spend limit"
+
+[portal.billing.checkout.card]
+fields = "Card number · MM / YY · CVC · ZIP"
+label = "Card details"
+note = "Card details collected by Stripe. Stirling never stores PAN or CVC."
+
 [portal.billing.checkout.error]
 title = "Nepodařilo se spustit checkout"
 
@@ -6382,11 +6309,6 @@ title = "Nepodařilo se spustit checkout"
 body = "Vaše platba proběhla. Zapínáme měřené zpracování ve vašich propojených instancích – obvykle to trvá několik sekund."
 hint = "Nechte prosím toto okno otevřené."
 title = "Aktivace plánu Processor..."
-
-[portal.billing.checkout.notConfigured]
-bodyAfter = "v env portálu pro povolení checkoutu v aplikaci."
-bodyBefore = "Nastavte"
-title = "Stripe není nakonfigurován"
 
 [portal.billing.enterpriseUpsell]
 cta = "Vytvořit nabídku Enterprise"
@@ -6465,6 +6387,9 @@ segmentApiDesc = "Přímé API požadavky"
 segmentApiLabel = "API"
 segmentAutomationDesc = "Automatizace a pipelines"
 segmentAutomationLabel = "Automatizace"
+sizeMultiplier = "{{formatted}} PDFs used a size multiplier"
+summary = "{{unique}} unique · {{units}} meter units · {{avg}} avg per PDF"
+summaryNoRate = "{{unique}} unique · {{units}} meter units"
 unit = "měřené PDFs"
 
 [portal.billing.spendLimit]
@@ -6494,6 +6419,8 @@ label = "Očekává se překročení."
 
 [portal.billing.spendThisMonth]
 eyebrow = "Výdaje tento měsíc"
+freeRemaining_one = "{{formatted}} free PDF remaining"
+freeRemaining_other = "{{formatted}} free PDFs remaining"
 processed_one = "Zpracováno {{formattedCount}} PDF."
 processed_other = "Zpracováno {{formattedCount}} PDFs."
 processedWithRate_one = "Zpracováno {{formattedCount}} PDF, za {{rate}} za kus."
@@ -6766,6 +6693,8 @@ type = "Typ"
 user = "Uživatel"
 
 [portal.documents.queue.empty]
+connectSource = "Connect a source"
+createPipeline = "Create a pipeline"
 description = "Jakmile zdroje předají dokumenty do vašich pipeline, zobrazí se zde ke kontrole."
 title = "Ve frontě nejsou žádné dokumenty"
 
@@ -6875,8 +6804,63 @@ description = "V tomto zobrazení došlo k neočekávané chybě. Zkuste to znov
 retry = "Zkusit znovu"
 title = "Na této stránce se něco pokazilo"
 
+[portal.home.download]
+back = "Back"
+body = "Download the desktop app or self-host the server."
+done = "Done"
+guide = "Open the {{name}} guide"
+openInBrowser = "Open in browser instead"
+sectionDesktop = "Desktop app"
+sectionSelfHosted = "Self-hosted"
+title = "Install the Stirling PDF Editor"
+
+[portal.home.download.docker]
+detailBody = "Run the official image on your server."
+note = "Opens at :8080. Default login: admin / stirling."
+tagline = "Run the server in a container"
+title = "Docker"
+variantFat = "Fat"
+variantLite = "Ultra-Lite"
+variantStandard = "Standard"
+
+[portal.home.download.kubernetes]
+detailBody = "Install the official Helm chart."
+note = "Add a PVC for /configs to persist settings."
+tagline = "Deploy to a cluster with Helm"
+title = "Kubernetes"
+
+[portal.home.download.linux]
+detailBody = "Native builds for your distribution."
+guideBtn = "View Linux install options"
+note = "AppImage, .deb and .rpm builds are available for common distros."
+tagline = "Native desktop app for your distro"
+title = "Linux"
+
+[portal.home.download.mac]
+altLabel = "Or via Homebrew"
+detailBody = "Run the installer, or use Homebrew."
+downloadBtn = "Download for macOS"
+tagline = "Native app for Apple silicon and Intel"
+title = "macOS"
+
+[portal.home.download.manual]
+detailBody = "Run the .jar on a bare metal server."
+downloadBtn = "Download the .jar"
+note = "Requires Java 21+. Opens at :8080; default login admin / stirling."
+runLabel = "Then run it"
+tagline = "Run the .jar on a bare metal server"
+title = "Manual server setup"
+
+[portal.home.download.windows]
+altLabel = "Or via winget"
+detailBody = "Run the installer, or use a package manager."
+downloadBtn = "Download installer"
+tagline = "Native app for Microsoft Windows"
+title = "Windows"
+
 [portal.home.editor]
 activeUsers = "{{n}} aktivních"
+install = "Install the editor"
 invite = "Pozvat členy týmu"
 name = "Stirling PDF Editor"
 open = "Otevřít v prohlížeči"
@@ -6892,12 +6876,6 @@ afternoon = "Dobré odpoledne"
 evening = "Dobrý večer"
 morning = "Dobré ráno"
 
-[portal.home.onboarding]
-dismiss = "Zavřít nastavení"
-notStarted = "Nezahájeno"
-progress = "{{done}} z {{total}} hotovo"
-title = "Dokončete nastavení"
-
 [portal.home.onboarding.enterprise]
 body = "SSO + SCIM + RBAC v rámci organizace, závazkové objemové ceny a nasazení v izolované síti."
 cta = "Zahájit zkušební verzi"
@@ -6909,15 +6887,13 @@ tag = "Enterprise"
 blurb = "Nasaďte desktopovou aplikaci, navždy zdarma."
 title = "Stáhnout PDF Editor"
 
+[portal.home.onboarding.steps.invite]
+blurb = "Bring your team into the secure workspace"
+title = "Invite teammates"
+
 [portal.home.onboarding.steps.policies]
 blurb = "{{active}} aktivních · {{recommended}} doporučeno"
-chip = "{{active}} aktivních"
 title = "Zapnout zásady"
-
-[portal.home.onboarding.steps.sources]
-blurb = "{{connected}} připojeno · každý PDF je řízen tam, kam dorazí"
-chip = "{{connected}} připojeno"
-title = "Připojte své zdroje"
 
 [portal.home.quickActions]
 subtitle = "Hlavní úkoly na dnešek"
@@ -6941,6 +6917,11 @@ sectionsAriaLabel = "Sekce infrastruktury"
 subtitle = "Nasazení, přihlašovací údaje, bezpečnostní postoj, úložiště a auditní stopa pro váš pracovní prostor Stirling."
 title = "Infrastruktura"
 
+[portal.infrastructure.apiKeyPermission]
+admin = "Admin"
+read = "Read"
+write = "Write"
+
 [portal.infrastructure.apiKeys]
 createKey = "Vytvořit klíč"
 heading = "API klíče"
@@ -6960,6 +6941,11 @@ usageToday = "Využití dnes"
 [portal.infrastructure.apiKeys.empty]
 description = "Vytvořte klíč s vymezeným rozsahem a začněte volat Stirling API."
 title = "Zatím žádné API klíče"
+
+[portal.infrastructure.attestationLabel]
+attested = "Attested"
+inScope = "In scope"
+notApplicable = "N/A"
 
 [portal.infrastructure.audit]
 filterAriaLabel = "Filtrovat auditní události podle kategorie"
@@ -7004,6 +6990,7 @@ all = "Vše"
 auth = "Ověření"
 config = "Konfigurace"
 elevation = "Zvýšení oprávnění"
+policy = "Policy"
 processing = "Zpracování"
 security = "Zabezpečení"
 
@@ -7013,9 +7000,28 @@ title = "Nemáte přístup"
 
 [portal.infrastructure.audit.metrics]
 config = "Konfigurace"
-elevation = "Zvýšení oprávnění"
+policy = "Policy"
 processing = "Zpracování"
 totalEvents = "Celkem událostí · 24 h"
+
+[portal.infrastructure.auditCatLabel]
+auth = "Auth"
+config = "Config"
+elevation = "Elevation"
+policy = "Policy"
+processing = "Processing"
+security = "Security"
+
+[portal.infrastructure.auditStatusLabel]
+danger = "Error"
+info = "Info"
+success = "Success"
+warning = "Warning"
+
+[portal.infrastructure.certLabel]
+certified = "Certified"
+inProgress = "In progress"
+notStarted = "Not started"
 
 [portal.infrastructure.createKey]
 cancel = "Zrušit"
@@ -7032,6 +7038,12 @@ subtitle = "Omezte rozsah klíče na minimum, které potřebuje. Můžete jej kd
 subtitleCreated = "Zkopírujte si toto tajemství nyní — znovu se nezobrazí."
 title = "Vytvořit API klíč"
 titleCreated = "Klíč vytvořen"
+
+[portal.infrastructure.deployLabel]
+live = "Live"
+queued = "Queued"
+rolledBack = "Rolled back"
+rolling = "Rolling out"
 
 [portal.infrastructure.deployments]
 msValue = "{{value}} ms"
@@ -7068,6 +7080,16 @@ subheading = "Živý stav každého nasazeného regionu Stirling — latence, za
 description = "Nasazené regiony se zde zobrazí, jakmile bude váš pracovní prostor zřízen."
 title = "Žádné regiony nejsou nasazeny"
 
+[portal.infrastructure.keyLabel]
+active = "Active"
+revoked = "Revoked"
+rotateSoon = "Rotate soon"
+
+[portal.infrastructure.modelLabel]
+active = "Active"
+degraded = "Degraded"
+disabled = "Disabled"
+
 [portal.infrastructure.models]
 heading = "Modely"
 msValue = "{{value}} ms"
@@ -7095,6 +7117,10 @@ status = "Stav"
 type = "Typ"
 version = "Verze"
 
+[portal.infrastructure.models.cost]
+perCall = "{{price}}/call"
+perThousand = "{{price}}/1k"
+
 [portal.infrastructure.models.metrics]
 activeModels = "Aktivní modely"
 avgLatency = "Průměrná latence"
@@ -7117,6 +7143,17 @@ docType = "Typ dokumentu"
 modelForAria = "Model pro {{operation}}"
 operation = "Operace"
 routedTo = "Směrováno na"
+
+[portal.infrastructure.modelTypeLabel]
+classification = "Classification"
+extraction = "Extraction"
+llm = "LLM"
+ocr = "OCR"
+
+[portal.infrastructure.regionLabel]
+degraded = "Degraded"
+down = "Down"
+healthy = "Healthy"
 
 [portal.infrastructure.security.access.byok]
 description = "Poskytněte klíč z vlastního KMS. Stirling s ním šifruje, ale stále může číst."
@@ -7259,26 +7296,6 @@ sources = "Zdroje"
 usage = "Využití a fakturace"
 users = "Uživatelé"
 
-[portal.notifications]
-markAllRead = "Označit vše jako přečtené"
-title = "Oznámení"
-viewAll = "Zobrazit vše"
-
-[portal.notifications.ariaLabel]
-none = "Oznámení, žádná nepřečtená"
-unread_one = "Oznámení, {{count}} nepřečtené"
-unread_other = "Oznámení, {{count}} nepřečtených"
-
-[portal.notifications.count]
-allRead = "vše přečteno"
-loading = "načítání"
-new_one = "{{count}} nové"
-new_other = "{{count}} nových"
-
-[portal.notifications.empty]
-description = "Žádná nová oznámení."
-title = "Vše máte vyřízeno"
-
 [portal.pipelines]
 subtitle = "Každá automatizovaná dokumentová pipeline na backendu: seřazený řetězec operací nad sadou zdrojů, spuštěný triggerem. Klikněte na řádek pro zobrazení jejích kroků a zdrojů."
 title = "Pipeline"
@@ -7323,6 +7340,11 @@ operations_one = "Operace ({{count}})"
 operations_other = "Operace ({{count}})"
 output = "Výstup"
 removeStep = "Odebrat operaci"
+s3Configure = "Configure"
+s3Done = "Done"
+s3ModalTitle = "Amazon S3 output"
+s3NotConfigured = "Not configured"
+s3PrefixHelp = "Outputs are uploaded under this key prefix."
 save = "Uložit změny"
 scheduleEvery = "Spustit každých"
 sources = "Zdroje"
@@ -7342,11 +7364,13 @@ confirm = "Smazat"
 title = "Smazat pipeline?"
 
 [portal.pipelines.detail]
+clearHistory = "Clear history"
 delete = "Smazat pipeline"
 run = "Spustit nyní"
 
 [portal.pipelines.empty]
 action = "Vytvořit pipeline"
+connectSource = "Connect a source"
 description = "Vytvořte svou první pipeline: vyberte zdroje, nad kterými běží, zřetězte operace a zvolte, kam půjde výstup."
 title = "Zatím žádné pipeline"
 
@@ -7358,12 +7382,19 @@ total = "Pipeline"
 [portal.pipelines.output]
 folder = "Zapsat do složky"
 inline = "Vrátit soubory"
+s3 = "Write to Amazon S3"
 
 [portal.pipelines.run]
+allProcessed_one = "Nothing to run: the source's {{count}} document has already been processed."
+allProcessed_other = "Nothing to run: all {{count}} documents in the sources have already been processed."
 completed_one = "Běh dokončen."
 completed_other = "Všech {{count}} běhů dokončeno."
 empty = "Není co spustit: zdroje neměly žádné dokumenty ke zpracování."
 failed = "Běh selhal: {{error}}"
+historyCleared = "History cleared. The next run reprocesses everything currently in the sources."
+inFlight = "Nothing new to run: documents are still being processed from an earlier run."
+parked_one = "Nothing to run: {{count}} document failed previously and is parked. Fix the cause, then clear history to retry it."
+parked_other = "Nothing to run: {{count}} documents failed previously and are parked. Fix the cause, then clear history to retry them."
 running = "Běh zahájen; stále probíhá."
 timeout = "Běh trvá déle, než se očekávalo; může se stále dokončit na pozadí."
 
@@ -7647,7 +7678,6 @@ managePlan = "Spravovat plán"
 volumeSuffix = "PDFs zpracováno · posledních 30 dní"
 
 [portal.procurement]
-reset = "Resetovat pořízení (demo)"
 subtitle = "Nechte svůj tým vyhodnotit, uzavřít smlouvu a zahájit používání. Každý dokument na jednom místě."
 title = "Pořízení"
 
@@ -7667,23 +7697,42 @@ title = "Zkontrolujte svou enterprise smlouvu"
 
 [portal.procurement.builder]
 addons = "Doplňky"
+addressLine1 = "Address line 1"
+addressLine1Placeholder = "500 Howard St"
+addressLine2 = "Address line 2"
+addressLine2Placeholder = "Suite, floor, building"
 back = "Zpět"
 businessName = "Název firmy"
 businessNamePlaceholder = "Vaše společnost"
+city = "City"
+cityPlaceholder = "San Francisco"
+contactEmail = "Contact email"
+contactEmailPlaceholder = "jane@acme.com"
+contactName = "Contact name"
+contactNamePlaceholder = "Jane Doe"
 continue = "Pokračovat"
-country = "Země"
-countryEuro = "Eurozóna (EUR €)"
-countryUK = "Spojené království (GBP £)"
-countryUS = "Spojené státy (USD $)"
 eula = "Přečetl(a) jsem si Stirling Enterprise EULA a souhlasím s ní. Řídí smlouvu vygenerovanou z této nabídky."
 generate = "Vygenerovat nabídku"
 included = "Zahrnuto"
 indemnification = "Odškodnění za IP nároky"
 indemnificationSub = "Bráníme kvalifikované IP nároky podle EULA"
-offlineLicense = "Offline / air-gapped licence"
-offlineLicenseSub = "Stažitelný licenční soubor pro air-gapped self-hosted instanci"
+pdfSize = "PDF size"
+poNumber = "PO number"
+poNumberPlaceholder = "Optional"
+postalCode = "Postal code"
+postalCodePlaceholder = "94105"
+posture = "Governance"
+posture_count = "~{{count}} policies"
+posture_essentials = "Essentials"
+posture_essentialsSub = "Classification + Sharing — the defaults"
+posture_governed = "Governed"
+posture_governedSub = "Adds Security and Routing"
+posture_regulated = "Regulated"
+posture_regulatedSub = "Every category — Compliance, Retention, Ingestion"
 qbr = "Čtvrtletní obchodní hodnocení"
 qbrSub = "Váš SE každý kvartál zkontroluje používání a roadmapu"
+region = "State / region"
+regionPlaceholder = "California"
 running = "{{annual}} / rok · {{years}}leté {{tcv}}"
 s1Sub = "Váš tým a PDFs, které očekáváte zpracovat každý rok."
 s1Title = "Kolik toho budete zpracovávat?"
@@ -7692,6 +7741,12 @@ s2Title = "Závazek a služba"
 s3Sub = "Pro nabídku a smlouvu, kterou vygeneruje."
 s3Title = "Vaše údaje"
 serviceLevel = "Úroveň služby"
+size_compact = "Compact"
+size_compactSub = "Mostly text, under 1 MB"
+size_heavy = "Heavy"
+size_heavySub = "Scanned or image-heavy, 5 MB+"
+size_standard = "Standard"
+size_standardSub = "Mixed text and images, 1 to 5 MB"
 slDedicated = "Dedikovaná"
 slDedicatedSub = "4 pracovní hodiny · dedikovaný account manager · +30 %"
 slPriority = "Prioritní"
@@ -7699,6 +7754,8 @@ slPrioritySub = "Stejný pracovní den · jmenovaný CSM · +15 %"
 slStandard = "Standardní"
 slStandardSub = "Následující pracovní den · sdílený CSM · zahrnuto"
 stepOf = "Krok {{n}} z {{total}}"
+taxId = "VAT / Tax ID"
+taxIdPlaceholder = "Optional"
 term = "Období"
 termDiscount = "Uplatněna sleva {{pct}} % za víceletý závazek"
 title = "Sestavte svou nabídku"
@@ -7734,14 +7791,13 @@ title = "Něco se pokazilo"
 
 [portal.procurement.hero]
 company = "Vaše enterprise dohoda"
-ctaAgreement = "Zkontrolovat a podepsat smlouvu"
 ctaLive = "Jste live"
 ctaPayment = "Přidat platbu"
 ctaQuote = "Zkontrolovat nabídku"
 ctaTrial = "Sestavit nabídku"
 eyebrow = "Enterprise pořízení"
 inviteTeammates = "Pozvat členy týmu"
-keyDocs = "Klíčové dokumenty"
+licenseKey = "Licence key"
 nextStep = "Další krok: {{action}}"
 notStarted = "Nezahájeno"
 open = "Otevřít pořízení"
@@ -7796,6 +7852,9 @@ downloadError = "Offline licenční soubor zatím nešlo vygenerovat — zkuste 
 downloadOffline = "Stáhnout offline licenci (.lic)"
 hint = "Vložte tento klíč do self-hosted instance pro její aktivaci, nebo si ho ponechte pro své záznamy. Uchovejte ho v bezpečí."
 label = "Váš licenční klíč"
+subtitle = "Activate a self-hosted instance with this key, or keep it for your records."
+title = "Your licence key"
+trialFileHint = "This is your trial licence file. Once your agreement is in place, come back and download it again — unlike the online licence key, the .lic file won't update on its own."
 
 [portal.procurement.link]
 cta = "Propojit účet"
@@ -7815,16 +7874,9 @@ talkToSales = "Kontaktovat prodej"
 title = "Proces pořízení se otevírá s Enterprise"
 
 [portal.procurement.milestone]
-accept = "Přijmout a pokračovat"
-description = "Stáhněte PDF a sdílejte ho se svým týmem, vraťte se přijmout nabídku, až budete připraveni, nebo proveďte změny."
 download = "Stáhnout PDF"
 downloadError = "PDF nabídky zatím nešlo stáhnout — zkuste to prosím za chvíli znovu."
 edit = "Upravit nabídku"
-eyebrow = "Nabídka {{number}}"
-perYear = " / rok"
-preparedFor = "Připraveno pro {{company}}"
-tcv = "{{value}} celková hodnota smlouvy"
-title = "Vaše nabídka je připravena"
 
 [portal.procurement.modal]
 cancel = "Zrušit"
@@ -7851,7 +7903,6 @@ uploadTitle = "Nahrát nákupní objednávku"
 [portal.procurement.payment]
 description = "Vaše nabídka je přijata a vaše licence je už aktivní — váš tým může začít hned. Zaplaťte první fakturu, až budete připraveni; můžete ji zaplatit nebo stáhnout zde, bez nutnosti e-mailu."
 downloadInvoice = "Stáhnout fakturu"
-simulate = "Simulovat přijetí platby (demo)"
 title = "Předplatné vytvořeno"
 viewInvoice = "Zobrazit a zaplatit fakturu"
 
@@ -7860,6 +7911,21 @@ fallback = "Plánovač se nepodařilo načíst."
 fallbackLink = "Otevřít plánování v nové kartě"
 subtitle = "Váš solutions engineer provede váš tým zavedením. Vyberte čas, který vám vyhovuje."
 title = "Naplánovat hovor"
+
+[portal.procurement.setup]
+airgap = "Air-gapped"
+airgapSub = "Fully offline, isolated network. Includes a downloadable licence file."
+cloud = "Cloud"
+cloudSub = "Fully managed by Stirling. Nothing for you to run."
+deployment = "Where will you run Stirling?"
+seats = "Team size"
+seatsHint = "Roughly how many people will use it. You can refine this when you build your quote."
+seatsPlaceholder = "e.g. 250"
+selfhost = "Self-hosted"
+selfhostSub = "Run it in your own cloud or data centre."
+start = "Start trial"
+subtitle = "Tell us how you plan to run Stirling so we can tailor your trial and quote. No card required."
+title = "Set up your trial"
 
 [portal.procurement.status]
 action = "Vyžadována akce"
@@ -7907,26 +7973,11 @@ admin = "Admin"
 [portal.settings.sections]
 account-link = "Propojení účtu"
 
-[portal.shell.header]
-accountFallback = "Účet"
-accountMenu = "Nabídka účtu"
-darkMode = "Tmavý režim"
-lightMode = "Světlý režim"
-search = "Hledat"
-searchPlaceholder = "Hledat…"
-signOut = "Odhlásit se"
-switchToDark = "Přepnout na tmavé téma"
-switchToLight = "Přepnout na světlé téma"
-
 [portal.shell.sidebar]
 appEditor = "Editor"
 appProcessor = "Processor"
 brandSuffix = "Stirling Processor"
-docsCount = "{{docs}} dok."
 linkAccount = "Propojit účet Stirling"
-planEditor = "Plán Editor"
-planEnterprise = "Plán Enterprise"
-planProcessor = "Plán Processor"
 primaryNav = "Primární navigace"
 switchApp = "Přepnout aplikaci"
 
@@ -7979,7 +8030,9 @@ status = "Stav"
 usedBy = "Zásady"
 
 [portal.sources.types.editor]
+description = "Documents your team has processed in the editor, across policy and AI runs."
 label = "Editor"
+noPolicies = "No policies run from the editor yet."
 
 [portal.sources.types.folder]
 description = "Sledovat adresář na serveru pro nové dokumenty."
@@ -8011,6 +8064,42 @@ label = "Hloubka složky"
 [portal.sources.types.folder.fields.recursive.options]
 all = "Zahrnout podsložky"
 top = "Pouze nejvyšší úroveň"
+
+[portal.sources.types.s3]
+description = "Pull documents from an Amazon S3 or S3-compatible bucket."
+label = "Amazon S3"
+
+[portal.sources.types.s3.fields.accessKeyId]
+label = "Access key ID"
+
+[portal.sources.types.s3.fields.bucket]
+label = "Bucket"
+placeholder = "my-company-inbox"
+
+[portal.sources.types.s3.fields.endpoint]
+helperText = "Leave blank for Amazon S3. Set to use an S3-compatible service such as MinIO."
+label = "Custom endpoint"
+placeholder = "https://s3.example.com"
+
+[portal.sources.types.s3.fields.mode]
+helperText = "Consume removes each object from the bucket once every policy has processed it."
+label = "Read mode"
+
+[portal.sources.types.s3.fields.mode.options]
+consume = "Consume: process each object once"
+snapshot = "Snapshot: re-read the bucket every run"
+
+[portal.sources.types.s3.fields.prefix]
+helperText = "Only objects whose keys start with this prefix are processed."
+label = "Key prefix"
+placeholder = "incoming/"
+
+[portal.sources.types.s3.fields.region]
+label = "Region"
+placeholder = "us-east-1"
+
+[portal.sources.types.s3.fields.secretAccessKey]
+label = "Secret access key"
 
 [portal.sources.types.unknown]
 label = "Zdroj"
@@ -8090,16 +8179,17 @@ summary = "Vlastní tým — spravuje prostředky jeho členů a sdílené konfi
 2 = "Přístup k portálu přes výchozí zásadu"
 3 = "Vše, co může člen"
 
+[portal.users.seats]
+limited = "{{used}} / {{limit}}"
+unlimited = "{{used}} · Unlimited"
+
 [portal.welcome]
 ariaLabel = "Vítejte ve Stirling PDF"
-badge = "Open-source"
-installEditor = "Nainstalovat Editor"
-inviteTeammates = "Pozvat členy týmu"
+install = "Install the editor"
+invite = "Invite teammates"
 openInBrowser = "Otevřít v prohlížeči"
-perks = "Navždy zdarma · Self-hostable"
-subtitle = "Nejbezpečnější PDF Editor na světě je zdarma pro týmy všech velikostí. Zahrnuje 60+ PDF operací a SSO."
-title = "Vítejte v"
-titleAccent = "Stirling PDF"
+productName = "PDF Editor"
+stats = "30M downloads · 60+ PDF operations · Free forever"
 
 [printFile]
 title = "Tisk souboru"
@@ -8902,6 +8992,12 @@ intro = "Povolte ověřování uživatelů, správu týmů a funkce pracovního 
 learnMore = "Více v dokumentaci"
 title = "Pro správce systému"
 
+[settings.general.loginLanding]
+description = "Choose which app opens when you sign in to Stirling Cloud."
+editor = "Editor"
+processor = "Processor"
+title = "After signing in"
+
 [settings.general.mode]
 fullscreen = "Celá obrazovka"
 sidebar = "Postranní panel"
@@ -9109,6 +9205,11 @@ connections = "Připojení"
 security = "Zabezpečení"
 telegram = "Telegram"
 title = "Zabezpečení a ověřování"
+
+[settings.signOut]
+confirm = "Are you sure you want to sign out?"
+submit = "Sign out"
+title = "Sign out"
 
 [settings.team]
 title = "Tým"
@@ -9726,6 +9827,9 @@ uploadButton = "Nahrát na server"
 title = "Stirling-PDF Survey"
 
 [swagger]
+clickHere = "click here"
+fallback = "If it didn't open automatically,"
+opening = "Opening Swagger UI in a new tab..."
 tags = "api,dokumentace,swagger,endpointy,vývoj"
 title = "API Dokumentace"
 
@@ -10019,11 +10123,13 @@ title = "Uživatelé"
 you = "(vy)"
 
 [users.action]
+cancelInvite = "Cancel invitation"
 deleteTeam = "Odstranit tým"
 disableMfa = "Resetovat MFA"
 move = "Přesunout do týmu"
 reinstate = "Obnovit"
 remove = "Odebrat z org."
+removeTeam = "Remove from team"
 rename = "Přejmenovat tým"
 resetPw = "Resetovat heslo"
 suspend = "Pozastavit"
@@ -10036,11 +10142,14 @@ editor = "Editor"
 processor = "Processor"
 
 [users.confirm]
+cancelInviteBody = "Cancel the invitation to {{email}}? They won't be able to join with the current link."
+cancelInviteTitle = "Cancel invitation"
 deleteTeamBody = "Odstranit tým {{name}}? Tým musí být nejprve prázdný – přesuňte jeho členy do jiného týmu a nesmí stále vlastnit žádné integrační konfigurace."
 deleteTeamTitle = "Odstranit tým"
 disableMfaBody = "Odebrat MFA registraci uživatele {{name}}? Pokud je vyžadována, nastaví ji znovu při příštím přihlášení."
 disableMfaTitle = "Resetovat MFA"
 removeBody = "Trvale odebrat {{name}} z organizace? Tuto akci nelze vrátit zpět."
+removeTeamBody = "Remove {{name}} from the team? They keep their account but lose access to this team's resources."
 removeTitle = "Odebrat člena"
 
 [users.empty]
@@ -10090,6 +10199,14 @@ title = "Pozvat osoby"
 username = "Uživatelské jméno"
 usernameError = "Uživatelské jméno musí mít alespoň 3 znaky"
 usernamePlaceholder = "jsmith"
+
+[users.invites]
+by = "Invited by {{who}}"
+cancel = "Cancel"
+count = "{{count}} pending"
+desc = "Invited people who haven't joined yet. They hold a seat until they accept."
+expires = "Expires"
+title = "Pending invitations"
 
 [users.loadError]
 description = "Při spojení s backendem došlo k chybě, nebo nemáte přístup. Zkuste to znovu."
@@ -10281,9 +10398,11 @@ title = "Přílohy"
 
 [viewer.bookmarks]
 bookmarkTitle = "Název záložky"
+bookmarkTitleRequired = "Bookmark title is required"
 closeSidebar = "Zavřít postranní panel záložek"
 collapseAll = "Sbalit všechny záložky"
 expandAll = "Rozbalit všechny záložky"
+searchPlaceholder = "Search bookmarks"
 
 [viewer.comments]
 addComment = "Přidat komentář"
