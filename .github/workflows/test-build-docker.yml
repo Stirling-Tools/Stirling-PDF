@@ -13,7 +13,7 @@ on:
         type: string
         default: "false"
       depot_cores:
-        description: "Depot runner vCPU count for the main image-build matrix (runs a local Gradle build). Override for benchmarking."
+        description: "Depot runner vCPU count for the image-build matrix's local docker-build path (base-image change only). The common Depot remote-build path uses a fixed small runner. Override for benchmarking."
         required: false
         type: string
         default: "8"
@@ -30,23 +30,18 @@ jobs:
   pick:
     uses: ./.github/workflows/_runner-pick.yml
 
-  # TODO: extract a pre-matrix `prepare` job that runs once and produces
-  # shared artifacts for the three matrix entries below to consume:
-  #   1. `task backend:build` — currently runs 3× in parallel with
-  #      identical env (DISABLE_ADDITIONAL_FEATURES=true,
-  #      STIRLING_PDF_DESKTOP_UI=false). Build once, upload the JAR as an
-  #      artifact, matrix entries download.
-  #   2. The base-image `docker build` (gated on docker-base-changed) —
-  #      currently runs 3× in parallel against the same Dockerfile and
-  #      context. Build once, `docker save` to an artifact, matrix entries
-  #      `docker load` before the embedded build.
-  # Saves ~2 full backend builds + 2 base-image builds per PR that touches
-  # docker. May also be reusable from backend-build.yml's jdk-25 +
-  # spring-security=true matrix entry if `task backend:build` and
-  # `task backend:build:ci` produce equivalent JARs (verify before wiring).
+  # Each matrix entry builds its image from source *inside* Docker
+  # (`gradle clean build -PbuildWithFrontend=true`), so this job does not run
+  # a runner-side `task backend:build` — that only duplicated backend-build's
+  # core-flavor tests and fed nothing into the image. Remaining dedup: when
+  # docker-base-changed, the base image is rebuilt once per matrix entry (3×)
+  # rather than once shared.
   test-build-docker-images:
     needs: pick
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || format('depot-ubuntu-24.04-{0}', inputs.depot_cores || '8') }}
+    # Only the local docker-build paths (base-image change, fork fallback)
+    # compile on the runner and need cores; the common Depot path builds the
+    # image remotely, so a small 2-core orchestration runner is enough there.
+    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || format('depot-ubuntu-24.04-{0}', inputs.docker-base-changed == 'true' && inputs.depot_cores || '2') }}
     permissions:
       contents: read
       id-token: write
@@ -92,38 +87,6 @@ jobs:
           sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /usr/local/share/boost
           docker system prune -af || true
           echo "Disk space after cleanup:" && df -h
-
-      - name: Set up JDK 25
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
-        with:
-          java-version: "25"
-          distribution: "temurin"
-
-      - name: Cache Gradle dependency artifacts
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: |
-            ~/.gradle/wrapper
-            ~/.gradle/caches/modules-2/files-2.1
-            ~/.gradle/caches/modules-2/metadata-2.*
-          key: gradle-deps-${{ runner.os }}-jdk-25-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties', '**/*.gradle', '**/*.gradle.kts', 'settings.gradle', 'settings.gradle.kts', 'gradle/libs.versions.toml') }}
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
-        with:
-          gradle-version: 9.6.0
-          cache-disabled: true
-
-      - name: Install Task
-        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
-      - name: Build application
-        run: task backend:build
-        env:
-          MAVEN_USER: ${{ secrets.MAVEN_USER }}
-          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
-          MAVEN_PUBLIC_URL: ${{ secrets.MAVEN_PUBLIC_URL }}
-          DISABLE_ADDITIONAL_FEATURES: true
-          STIRLING_PDF_DESKTOP_UI: false
 
       - name: Set up Depot CLI
         if: env.USE_DEPOT == 'true'
@@ -204,18 +167,6 @@ jobs:
             BASE_IMAGE=${{ steps.build-params.outputs.base_image }}
           provenance: true
           sbom: true
-
-      - name: Upload Reports
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: reports-docker-${{ matrix.artifact-suffix }}
-          path: |
-            build/reports/tests/
-            build/test-results/
-            build/reports/problems/
-          retention-days: 3
-          if-no-files-found: warn
 
   test-build-unoserver-image:
     needs: pick
