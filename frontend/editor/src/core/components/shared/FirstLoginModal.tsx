@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Modal, Stack, Text, PasswordInput, Alert } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import ErrorIcon from "@mui/icons-material/ErrorRounded";
+import InfoIcon from "@mui/icons-material/InfoRounded";
 import { accountService } from "@app/services/accountService";
 import { alert } from "@app/components/toast";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
@@ -124,7 +125,7 @@ export default function FirstLoginModal({
       <form onSubmit={handleSubmit}>
         <Stack gap="md">
           <Alert
-            icon={<LocalIcon icon="info-rounded" width="1rem" height="1rem" />}
+            icon={<InfoIcon sx={{ fontSize: "1rem" }} />}
             title={t("firstLogin.welcomeTitle", "Welcome!")}
             color="blue"
           >
@@ -144,7 +145,7 @@ export default function FirstLoginModal({
           {error && (
             <Alert
               icon={
-                <LocalIcon icon="error-rounded" width="1rem" height="1rem" />
+                <ErrorIcon sx={{ fontSize: "1rem" }} />
               }
               title={t("firstLogin.error", "Error")}
               color="red"

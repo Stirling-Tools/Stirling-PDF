@@ -6,7 +6,7 @@ import {
   Text,
   Select,
 } from "@mantine/core";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import DownloadIcon from "@mui/icons-material/DownloadRounded";
 import { useTranslation } from "react-i18next";
 import { SPLIT_METHODS } from "@app/constants/splitConstants";
 import { SplitParameters } from "@app/hooks/tools/split/useSplitParameters";
@@ -211,7 +211,7 @@ const SplitSettings = ({
         size="sm"
         style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
       >
-        <LocalIcon icon="download-rounded" width="2rem" height="2rem" />
+        <DownloadIcon sx={{ fontSize: "2rem" }} />
         {t(
           "autoSplitPDF.dividerDownload2",
           "Download 'Auto Splitter Divider (with instructions).pdf'",

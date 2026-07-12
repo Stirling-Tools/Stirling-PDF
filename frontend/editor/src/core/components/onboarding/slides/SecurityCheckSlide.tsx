@@ -1,7 +1,7 @@
 import React from "react";
 import { Select } from "@mantine/core";
 import { SlideConfig } from "@app/types/types";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import ErrorIcon from "@mui/icons-material/Error";
 import { UNIFIED_CIRCLE_CONFIG } from "@app/components/onboarding/slides/unifiedBackgroundConfig";
 import i18n from "@app/i18n";
 import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
@@ -22,11 +22,8 @@ export default function SecurityCheckSlide({
       <div className={styles.securitySlideContent}>
         <div className={styles.securityCard}>
           <div className={styles.securityAlertRow}>
-            <LocalIcon
-              icon="error"
-              width={20}
-              height={20}
-              style={{ color: "#F04438", flexShrink: 0 }}
+            <ErrorIcon
+              sx={{ color: "#F04438", flexShrink: 0, fontSize: 20 }}
             />
             <span>
               {i18n.t(

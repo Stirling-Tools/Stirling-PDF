@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { Modal, Text, Group } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import licenseService from "@app/services/licenseService";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
@@ -281,7 +281,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
               onClick={navigation.goBack}
               aria-label={t("common.back", "Back")}
             >
-              <LocalIcon icon="arrow-back" width={20} height={20} />
+              <ArrowBackIcon sx={{ fontSize: 20 }} />
             </ActionIcon>
           )}
           <Text fw={600} size="lg">

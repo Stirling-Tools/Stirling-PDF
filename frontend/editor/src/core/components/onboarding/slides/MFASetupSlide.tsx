@@ -22,7 +22,7 @@ import { UNIFIED_CIRCLE_CONFIG } from "@app/components/onboarding/slides/unified
 import { accountService } from "@app/services/accountService";
 import { useAccountLogout } from "@app/extensions/accountLogout";
 import { useAuth } from "@app/auth/UseSession";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import ErrorIcon from "@mui/icons-material/Error";
 import { BASE_PATH, withBasePath } from "@app/constants/app";
 import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
 import { MfaSetupResponse } from "@app/responses/Mfa/MfaResponse";
@@ -198,7 +198,7 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
 
           {mfaError && (
             <Alert
-              icon={<LocalIcon icon="error" width={16} height={16} />}
+              icon={<ErrorIcon sx={{ fontSize: 16 }} />}
               color="red"
               variant="light"
             >

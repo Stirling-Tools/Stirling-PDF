@@ -6,7 +6,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import CommentIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import AddCommentIcon from "@mui/icons-material/AddCommentOutlined";
 import OpenInNewIcon from "@mui/icons-material/OpenInNewRounded";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import LinkIcon from "@mui/icons-material/Link";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import type { FirstLinkTarget } from "@app/components/viewer/useAnnotationMenuHandlers";
@@ -142,7 +142,7 @@ export function LinkButton({
             size="md"
             onClick={() => setOpen((o) => !o)}
           >
-            <LocalIcon icon="link" width="1.25rem" height="1.25rem" />
+            <LinkIcon sx={{ fontSize: "1.25rem" }} />
           </ActionIcon>
         </Tooltip>
       </Popover.Target>
