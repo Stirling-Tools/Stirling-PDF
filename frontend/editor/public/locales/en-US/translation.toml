@@ -356,6 +356,7 @@ text = "These permissions control what users can do with the PDF. Most effective
 title = "Change Permissions"
 
 [addStamp]
+preview = "Preview Stamp"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -1842,6 +1843,15 @@ export = "Export"
 accessDenied = "Access Denied"
 insufficientPermissions = "You do not have permission to perform this action."
 
+[auth.callback]
+completing = "Completing authentication"
+invalidToken = "OAuth login failed - invalid token."
+missingToken = "OAuth login failed - no token received."
+oauthFailed = "OAuth login failed. Please try again."
+pleaseWait = "Please wait while we finish signing you in."
+signedOut = "You have been signed out. Please sign in again."
+windowMayClose = "You can close this window once it completes."
+
 [auth.displayName]
 guest = "Guest"
 user = "User"
@@ -2824,6 +2834,7 @@ next = "Next"
 preview = "Preview"
 previous = "Previous"
 refresh = "Refresh"
+remaining = "Remaining"
 retry = "Retry"
 save = "Save"
 
@@ -4072,10 +4083,17 @@ discord = "Discord"
 issues = "GitHub"
 
 [formFill]
+allSaved = "All saved"
+extractCsvError = "Failed to extract CSV"
+extractXlsxError = "Failed to extract XLSX"
 flattenAfterFilling = "Flatten after filling"
+requiredAbbreviation = "req"
+requiredFieldsError = "Please fill in all required fields"
 rescanFields = "Re-scan fields"
 rescanFormFields = "Re-scan form fields"
 save = "Save"
+saveShortcut = "Ctrl+S to save"
+unsavedChanges = "Unsaved changes"
 
 [formFill.sidebar]
 close = "Close sidebar"
@@ -5016,7 +5034,21 @@ titleWithOs = "Download for {{osLabel}}"
 
 [onboarding.mfa]
 authenticationCode = "Authentication code"
+description = "Secure your account by linking an authenticator app. Scan the QR code or enter the setup key, then confirm the 6-digit code to finish."
+enable = "Enable MFA"
+enableError = "Unable to enable two-factor authentication. Check the code and try again."
+enterCode = "Enter the 6-digit code from your app."
+enterCodeError = "Enter the authentication code to continue."
+logout = "Logout"
+openAuthenticator = "Open Google Authenticator, Authy, or 1Password."
 qrCodeLoading = "Generating your QR code…"
+regenerateQrCode = "Regenerate QR code"
+scanQrCode = "Scan the QR code or enter the setup key below."
+setupError = "Unable to start two-factor setup. Please try again."
+setupKey = "Setup key (manual entry)"
+stepByStep = "Step-by-step"
+success = "MFA has been enabled. You can now continue."
+title = "Multi-Factor Authentication Setup"
 
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Once you enable login mode, you can manage users, configure settings, and monitor server health. The first <strong>{{freeTierLimit}}</strong> people on your server get to use Stirling free of charge."
@@ -9190,6 +9222,11 @@ security = "Security"
 telegram = "Telegram"
 title = "Security & Authentication"
 
+[settings.signOut]
+confirm = "Are you sure you want to sign out?"
+submit = "Sign out"
+title = "Sign out"
+
 [settings.team]
 title = "Team"
 
@@ -9806,6 +9843,9 @@ uploadButton = "Upload to Server"
 title = "Stirling-PDF Survey"
 
 [swagger]
+clickHere = "click here"
+fallback = "If it didn't open automatically,"
+opening = "Opening Swagger UI in a new tab..."
 tags = "api,documentation,swagger,endpoints,development"
 title = "API Documentation"
 
@@ -10374,9 +10414,11 @@ title = "Attachments"
 
 [viewer.bookmarks]
 bookmarkTitle = "Bookmark title"
+bookmarkTitleRequired = "Bookmark title is required"
 closeSidebar = "Close bookmarks sidebar"
 collapseAll = "Collapse all bookmarks"
 expandAll = "Expand all bookmarks"
+searchPlaceholder = "Search bookmarks"
 
 [viewer.comments]
 addComment = "Add comment"
