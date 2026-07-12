@@ -296,7 +296,7 @@
 
 [data-mantine-color-scheme="dark"] {
   /* Inverted dark gray scale — RGB channels for Tailwind's rgb(var(--gray-N)). */
-  --gray-50: 10 10 11; /* zinc-950 */
+  --gray-50: 15 15 16; /* zinc-950 */
   --gray-100: 16 16 18; /* zinc-900 */
   --gray-200: 24 24 27; /* zinc-800 */
   --gray-300: 42 42 46; /* zinc-650 */
@@ -309,7 +309,7 @@
 
   /* Dark semantic channels for Tailwind. */
   --surface: 24 24 27; /* zinc-800 */
-  --background: 10 10 11; /* zinc-950 */
+  --background: 15 15 16; /* zinc-950 */
   --border: 42 42 46; /* zinc-650 */
 
   /* Dark theme Mantine colors */

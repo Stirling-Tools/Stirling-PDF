@@ -67,7 +67,7 @@ const dark: MantineColorsTuple = [
   "#2a2a2e", // dark-4  — elevated surface / selected bg (zinc-650)
   "#202023", // dark-5  — card / panel surface (zinc-775)
   "#18181b", // dark-6  — toolbar / sidebar bg (zinc-800)
-  "#0a0a0b", // dark-7  — page background (zinc-950)
+  "#0f0f10", // dark-7  — page background (zinc-950)
   "#070708", // dark-8  — deeper than the reachable surfaces
   "#050506", // dark-9  — deepest
 ];
