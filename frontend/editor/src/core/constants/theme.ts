@@ -5,14 +5,19 @@ export type ThemeMode = "light" | "dark" | "system";
 // The concrete light/dark base applied to Mantine + the neutral ramp.
 export type ColorScheme = "light" | "dark";
 
+// blue-500 (matches --p-blue-500 in primitives.css). Kept as a JS literal — not
+// a CSS var() — because it's stored verbatim as the accent and parsed by
+// deriveAccessiblePrimary; a var() string couldn't be parsed or persisted.
+const BLUE_500 = "#3b82f6";
+
 // lightPrimary/darkPrimary hold either a colour (tints surfaces) or this sentinel (neutral surfaces + blue buttons; ThemeProvider maps it to DEFAULT_ACCENT_COLOR and flags data-accent="default").
 export const DEFAULT_ACCENT = "default";
-export const DEFAULT_ACCENT_COLOR = "#3b82f6"; // blue-500 — buttons in the default theme
+export const DEFAULT_ACCENT_COLOR = BLUE_500; // buttons in the default theme
 
-// 14 curated mid-tone accents filling the 3×5 grid alongside the "Default" cell. Literal hex: the picker stores the value verbatim and deriveAccessiblePrimary parses it.
+// 14 curated mid-tone accents filling the 3×5 grid alongside the "Default" cell. Literal hex (see BLUE_500): the picker stores the value verbatim and deriveAccessiblePrimary parses it, so CSS var() refs can't be used here.
 export const THEME_ACCENT_PRESETS = [
   // blues → purples (one purple trimmed so the grid leaves room for Default)
-  "#3b82f6", // blue
+  BLUE_500, // blue
   "#6366f1", // indigo
   "#8b5cf6", // violet
   "#d946ef", // fuchsia
