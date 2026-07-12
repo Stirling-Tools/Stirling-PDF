@@ -8,6 +8,8 @@ import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useIsMobile } from "@app/hooks/useIsMobile";
+import AddIcon from "@mui/icons-material/Add";
+import QrCodeRoundedIcon from "@mui/icons-material/QrCodeRounded";
 
 type LandingActionsProps = {
   fileInputRef: React.RefObject<HTMLInputElement | null>;
@@ -53,8 +55,7 @@ export function LandingActions({
           variant="secondary"
           className="landing-btn-secondary"
           leftSection={
-            <LocalIcon
-              icon="add"
+            <AddIcon
               width="1rem"
               height="1rem"
               className="text-[var(--accent-interactive)]"
@@ -80,11 +81,7 @@ export function LandingActions({
                 onMobileUploadClick();
               }}
             >
-              <LocalIcon
-                icon="qr-code-rounded"
-                width="1.25rem"
-                height="1.25rem"
-              />
+              <QrCodeRoundedIcon width="1.25rem" height="1.25rem" />
             </ActionIcon>
           </Tooltip>
         )}

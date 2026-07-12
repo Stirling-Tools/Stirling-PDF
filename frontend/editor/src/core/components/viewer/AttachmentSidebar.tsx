@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Box, ScrollArea, Text, Loader, Stack, TextInput } from "@mantine/core";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useViewer } from "@app/contexts/ViewerContext";
@@ -11,6 +10,10 @@ import DownloadIcon from "@mui/icons-material/DownloadRounded";
 import { useTranslation } from "react-i18next";
 import "@app/components/viewer/SidebarBase.css";
 import "@app/components/viewer/AttachmentSidebar.css";
+import AddIcon from "@mui/icons-material/Add";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import SearchIcon from "@mui/icons-material/Search";
 
 interface AttachmentSidebarProps {
   visible: boolean;
@@ -392,7 +395,7 @@ export const AttachmentSidebar = ({
             )}
             title={t("viewer.attachments.close", "Close attachments")}
           >
-            <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
+            <CloseRoundedIcon width="1.1rem" height="1.1rem" />
           </ActionIcon>
         </Box>
       </div>
@@ -409,9 +412,7 @@ export const AttachmentSidebar = ({
             "Search attachments",
           )}
           onChange={(event) => setSearchTerm(event.currentTarget.value)}
-          leftSection={
-            <LocalIcon icon="search" width="1.1rem" height="1.1rem" />
-          }
+          leftSection={<SearchIcon width="1.1rem" height="1.1rem" />}
           size="xs"
         />
       </Box>
@@ -453,7 +454,7 @@ export const AttachmentSidebar = ({
                 aria-label={t("viewer.attachments.retry", "Retry")}
                 onClick={requestReload}
               >
-                <LocalIcon icon="refresh" />
+                <RefreshIcon />
               </ActionIcon>
             </Stack>
           )}
@@ -475,8 +476,7 @@ export const AttachmentSidebar = ({
 
           {showEmptyState && (
             <Stack align="center" gap="sm" py="lg">
-              <LocalIcon
-                icon="attachment-rounded"
+              <AttachmentIcon
                 width="2rem"
                 height="2rem"
                 style={{ color: "var(--mantine-color-dimmed)" }}
@@ -491,9 +491,7 @@ export const AttachmentSidebar = ({
                 variant="secondary"
                 size="sm"
                 onClick={handleAddAttachment}
-                leftSection={
-                  <LocalIcon icon="add" width="1rem" height="1rem" />
-                }
+                leftSection={<AddIcon width="1rem" height="1rem" />}
               >
                 {t("viewer.attachments.addAttachment", "Add attachment")}
               </Button>
@@ -508,9 +506,7 @@ export const AttachmentSidebar = ({
                 fullWidth
                 justify="start"
                 onClick={handleAddAttachment}
-                leftSection={
-                  <LocalIcon icon="add" width="0.9rem" height="0.9rem" />
-                }
+                leftSection={<AddIcon width="0.9rem" height="0.9rem" />}
                 style={{ marginBottom: "var(--space-xs)" }}
               >
                 {t("viewer.attachments.addAttachment", "Add attachment")}

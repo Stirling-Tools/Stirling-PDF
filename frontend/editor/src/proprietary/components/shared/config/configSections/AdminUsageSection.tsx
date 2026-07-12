@@ -9,11 +9,13 @@ import usageAnalyticsService, {
 } from "@app/services/usageAnalyticsService";
 import UsageAnalyticsChart from "@app/components/shared/config/configSections/usage/UsageAnalyticsChart";
 import UsageAnalyticsTable from "@app/components/shared/config/configSections/usage/UsageAnalyticsTable";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import EnterpriseRequiredBanner from "@app/components/shared/config/EnterpriseRequiredBanner";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import InfoIcon from "@mui/icons-material/Info";
+import RefreshIcon from "@mui/icons-material/Refresh";
 
 const AdminUsageSection: React.FC = () => {
   const { t } = useTranslation();
@@ -279,7 +281,7 @@ const AdminUsageSection: React.FC = () => {
       {/* Info banner about usage analytics and audit relationship */}
       {loginEnabled && hasEnterpriseLicense && (
         <Alert
-          icon={<LocalIcon icon="info" width="1.2rem" height="1.2rem" />}
+          icon={<InfoIcon width="1.2rem" height="1.2rem" />}
           title={t("usage.aboutUsageAnalytics", "About Usage Analytics")}
           color="cyan"
           variant="light"
@@ -297,11 +299,7 @@ const AdminUsageSection: React.FC = () => {
                 size="sm"
                 onClick={() => navigate("/settings/adminSecurity")}
                 rightSection={
-                  <LocalIcon
-                    icon="arrow-forward"
-                    width="0.9rem"
-                    height="0.9rem"
-                  />
+                  <ArrowForwardIcon width="0.9rem" height="0.9rem" />
                 }
               >
                 {t("usage.configureSettings", "Configure Analytics Settings")}
@@ -311,11 +309,7 @@ const AdminUsageSection: React.FC = () => {
                 size="sm"
                 onClick={() => navigate("/settings/adminSecurity#auditLogging")}
                 rightSection={
-                  <LocalIcon
-                    icon="arrow-forward"
-                    width="0.9rem"
-                    height="0.9rem"
-                  />
+                  <ArrowForwardIcon width="0.9rem" height="0.9rem" />
                 }
               >
                 {t("usage.viewAuditLogs", "View Audit Logs")}
@@ -355,9 +349,7 @@ const AdminUsageSection: React.FC = () => {
               />
               <Button
                 variant="secondary"
-                leftSection={
-                  <LocalIcon icon="refresh" width="1rem" height="1rem" />
-                }
+                leftSection={<RefreshIcon width="1rem" height="1rem" />}
                 onClick={handleRefresh}
                 loading={loading}
                 disabled={showDemoData}

@@ -8,7 +8,6 @@ import {
   useWorkbenchBarButtons,
   WorkbenchBarButtonWithAction,
 } from "@app/hooks/useWorkbenchBarButtons";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { SearchInterface } from "@app/components/viewer/SearchInterface";
 import ViewerAnnotationControls from "@app/components/viewer/ViewerAnnotationControls";
@@ -27,6 +26,15 @@ import LayersIcon from "@mui/icons-material/Layers";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import StopIcon from "@mui/icons-material/Stop";
 import { useViewerReadAloud } from "@app/components/viewer/useViewerReadAloud";
+import AttachmentRoundedIcon from "@mui/icons-material/AttachmentRounded";
+import BookmarkAddRoundedIcon from "@mui/icons-material/BookmarkAddRounded";
+import CommentIcon from "@mui/icons-material/Comment";
+import EditIcon from "@mui/icons-material/Edit";
+import PanToolRoundedIcon from "@mui/icons-material/PanToolRounded";
+import RotateLeftIcon from "@mui/icons-material/RotateLeft";
+import RotateRightIcon from "@mui/icons-material/RotateRight";
+import SearchIcon from "@mui/icons-material/Search";
+import ViewListIcon from "@mui/icons-material/ViewList";
 
 export function useViewerWorkbenchBarButtons(
   isRulerActive?: boolean,
@@ -176,7 +184,7 @@ export function useViewerWorkbenchBarButtons(
                     aria-label={searchLabel}
                     onClick={viewer.searchInterfaceActions.toggle}
                   >
-                    <LocalIcon icon="search" width="1rem" height="1rem" />
+                    <SearchIcon width="1rem" height="1rem" />
                   </ActionIcon>
                 </div>
               </Popover.Target>
@@ -194,7 +202,7 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-pan-mode",
-        icon: <LocalIcon icon="pan-tool-rounded" width="1rem" height="1rem" />,
+        icon: <PanToolRoundedIcon width="1rem" height="1rem" />,
         tooltip:
           !isPanning && pendingCount > 0 && redactionActiveType !== null
             ? applyRedactionsLabel
@@ -236,7 +244,7 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-rotate-left",
-        icon: <LocalIcon icon="rotate-left" width="1rem" height="1rem" />,
+        icon: <RotateLeftIcon width="1rem" height="1rem" />,
         tooltip: rotateLeftLabel,
         ariaLabel: rotateLeftLabel,
         section: "top" as const,
@@ -247,7 +255,7 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-rotate-right",
-        icon: <LocalIcon icon="rotate-right" width="1rem" height="1rem" />,
+        icon: <RotateRightIcon width="1rem" height="1rem" />,
         tooltip: rotateRightLabel,
         ariaLabel: rotateRightLabel,
         section: "top" as const,
@@ -258,7 +266,7 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-toggle-sidebar",
-        icon: <LocalIcon icon="view-list" width="1rem" height="1rem" />,
+        icon: <ViewListIcon width="1rem" height="1rem" />,
         tooltip: sidebarLabel,
         ariaLabel: sidebarLabel,
         section: "top" as const,
@@ -270,13 +278,7 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-toggle-bookmarks",
-        icon: (
-          <LocalIcon
-            icon="bookmark-add-rounded"
-            width="1.25rem"
-            height="1.25rem"
-          />
-        ),
+        icon: <BookmarkAddRoundedIcon width="1.25rem" height="1.25rem" />,
         tooltip: bookmarkLabel,
         ariaLabel: bookmarkLabel,
         section: "top" as const,
@@ -288,13 +290,7 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-toggle-attachments",
-        icon: (
-          <LocalIcon
-            icon="attachment-rounded"
-            width="1.25rem"
-            height="1.25rem"
-          />
-        ),
+        icon: <AttachmentRoundedIcon width="1.25rem" height="1.25rem" />,
         tooltip: attachmentLabel,
         ariaLabel: attachmentLabel,
         section: "top" as const,
@@ -322,7 +318,7 @@ export function useViewerWorkbenchBarButtons(
         : []),
       {
         id: "viewer-toggle-comments",
-        icon: <LocalIcon icon="comment" width="1rem" height="1rem" />,
+        icon: <CommentIcon width="1rem" height="1rem" />,
         tooltip: commentsLabel,
         ariaLabel: commentsLabel,
         section: "top" as const,
@@ -474,7 +470,7 @@ export function useViewerWorkbenchBarButtons(
               aria-pressed={isAnnotationsActive}
               aria-label={annotationsLabel}
             >
-              <LocalIcon icon="edit" width="1rem" height="1rem" />
+              <EditIcon width="1rem" height="1rem" />
             </ActionIcon>
           </Tooltip>
         ),

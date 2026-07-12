@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Box, TextInput, Text, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { LocalIcon } from "@app/components/shared/LocalIcon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { ViewerContext } from "@app/contexts/ViewerContext";
+import CloseIcon from "@mui/icons-material/Close";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 
 interface SearchInterfaceProps {
   visible: boolean;
@@ -206,7 +208,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
           onClick={handleCloseClick}
           aria-label={t("viewer.search.close", "Close search")}
         >
-          <LocalIcon icon="close" width="1rem" height="1rem" />
+          <CloseIcon width="1rem" height="1rem" />
         </ActionIcon>
       </Group>
 
@@ -230,7 +232,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
                 onClick={handleClearSearch}
                 aria-label={t("viewer.search.clear", "Clear search")}
               >
-                <LocalIcon icon="close" width="0.875rem" height="0.875rem" />
+                <CloseIcon width="0.875rem" height="0.875rem" />
               </ActionIcon>
             )
           }
@@ -282,7 +284,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
             disabled={!resultInfo || resultInfo.currentIndex <= 1}
             aria-label={t("viewer.search.previous", "Previous result")}
           >
-            <LocalIcon icon="keyboard-arrow-up" width="1rem" height="1rem" />
+            <KeyboardArrowUpIcon width="1rem" height="1rem" />
           </ActionIcon>
           <ActionIcon
             variant="tertiary"
@@ -293,7 +295,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
             }
             aria-label={t("viewer.search.next", "Next result")}
           >
-            <LocalIcon icon="keyboard-arrow-down" width="1rem" height="1rem" />
+            <KeyboardArrowDownIcon width="1rem" height="1rem" />
           </ActionIcon>
         </Group>
       </Group>

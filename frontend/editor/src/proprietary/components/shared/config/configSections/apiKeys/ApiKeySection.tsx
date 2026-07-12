@@ -61,9 +61,7 @@ export default function ApiKeySection({
             variant="secondary"
             accent="neutral"
             onClick={() => onCopy(publicKey, "public")}
-            leftSection={
-              <ContentCopyIcon sx={{ fontSize: 14 }} />
-            }
+            leftSection={<ContentCopyIcon sx={{ fontSize: 14 }} />}
             style={{
               marginLeft: 12,
             }}
@@ -78,9 +76,7 @@ export default function ApiKeySection({
             variant="secondary"
             accent="neutral"
             onClick={onRefresh}
-            leftSection={
-              <RefreshIcon sx={{ fontSize: 14 }} />
-            }
+            leftSection={<RefreshIcon sx={{ fontSize: 14 }} />}
             style={{
               marginLeft: 8,
             }}

@@ -35,6 +35,8 @@ import {
 } from "@app/hooks/tools/sign/useSavedSignatures";
 import { SavedSignaturesSection } from "@app/components/tools/sign/SavedSignaturesSection";
 import { buildSignaturePreview } from "@app/utils/signaturePreview";
+import PauseCircleRoundedIcon from "@mui/icons-material/PauseCircleRounded";
+import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 
 type SignatureDrafts = {
   canvas?: string;
@@ -1126,9 +1128,7 @@ const SignSettings = ({
             aria-label={translate("mode.pause", "Pause placement")}
             onClick={handlePausePlacement}
             disabled={disabled || !onDeactivateSignature}
-            leftSection={
-              <LocalIcon icon="pause-circle-rounded" width={20} height={20} />
-            }
+            leftSection={<PauseCircleRoundedIcon width={20} height={20} />}
           >
             {translate("mode.pause", "Pause placement")}
           </Button>
@@ -1142,9 +1142,7 @@ const SignSettings = ({
             disabled={
               disabled || !isCurrentTypeReady || !onActivateSignaturePlacement
             }
-            leftSection={
-              <LocalIcon icon="play-arrow-rounded" width={20} height={20} />
-            }
+            leftSection={<PlayArrowRoundedIcon width={20} height={20} />}
           >
             {translate("mode.resume", "Resume placement")}
           </Button>

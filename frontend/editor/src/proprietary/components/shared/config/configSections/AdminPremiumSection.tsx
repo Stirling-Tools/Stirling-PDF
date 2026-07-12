@@ -12,7 +12,6 @@ import {
   List,
 } from "@mantine/core";
 import { alert } from "@app/components/toast";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
 import { useRestartServer } from "@app/components/shared/config/useRestartServer";
 import { useAdminSettings } from "@app/hooks/useAdminSettings";
@@ -21,6 +20,7 @@ import PendingBadge from "@app/components/shared/config/PendingBadge";
 import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
+import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 
 interface PremiumSettingsData {
   key?: string;
@@ -116,7 +116,7 @@ export default function AdminPremiumSection() {
             "admin.settings.premium.movedFeatures.title",
             "Premium Features Distributed",
           )}
-          icon={<LocalIcon icon="info-rounded" width="1rem" height="1rem" />}
+          icon={<InfoRoundedIcon width="1rem" height="1rem" />}
         >
           <Text size="sm">
             {t(

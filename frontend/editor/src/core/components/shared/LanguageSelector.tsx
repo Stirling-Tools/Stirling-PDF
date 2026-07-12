@@ -264,9 +264,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
               accent="neutral"
               size="sm"
               data-testid="language-selector-button"
-              leftSection={
-                <LanguageIcon sx={{ fontSize: "1.5rem" }} />
-              }
+              leftSection={<LanguageIcon sx={{ fontSize: "1.5rem" }} />}
             >
               <span className={styles.languageText}>{currentLanguage}</span>
             </Button>

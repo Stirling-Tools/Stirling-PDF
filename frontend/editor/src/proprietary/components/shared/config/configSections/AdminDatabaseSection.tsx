@@ -34,11 +34,18 @@ import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 import EditableSecretField from "@app/components/shared/EditableSecretField";
 import apiClient from "@app/services/apiClient";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import databaseManagementService, {
   DatabaseBackupFile,
 } from "@app/services/databaseManagementService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
+import BackupIcon from "@mui/icons-material/Backup";
+import DeleteIcon from "@mui/icons-material/Delete";
+import DownloadIcon from "@mui/icons-material/Download";
+import InfoIcon from "@mui/icons-material/Info";
+import PlayCircleIcon from "@mui/icons-material/PlayCircle";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import UploadIcon from "@mui/icons-material/Upload";
+import WarningIcon from "@mui/icons-material/Warning";
 
 interface DatabaseSettingsData {
   enableCustomDatabase?: boolean;
@@ -771,7 +778,7 @@ export default function AdminDatabaseSection() {
 
           {!isEmbeddedH2 && (
             <Alert
-              icon={<LocalIcon icon="info" width="1.2rem" height="1.2rem" />}
+              icon={<InfoIcon width="1.2rem" height="1.2rem" />}
               color="yellow"
               radius="md"
             >
@@ -794,7 +801,7 @@ export default function AdminDatabaseSection() {
               <Stack gap="md">
                 <Group justify="space-between" align="center">
                   <Group gap="xs">
-                    <LocalIcon icon="backup" width="1.4rem" height="1.4rem" />
+                    <BackupIcon width="1.4rem" height="1.4rem" />
                     <Text fw={600}>
                       {t(
                         "admin.settings.database.manageBackups",
@@ -805,18 +812,14 @@ export default function AdminDatabaseSection() {
                   <Group gap="xs">
                     <Button
                       variant="secondary"
-                      leftSection={
-                        <LocalIcon icon="refresh" width="1rem" height="1rem" />
-                      }
+                      leftSection={<RefreshIcon width="1rem" height="1rem" />}
                       onClick={loadBackupData}
                       disabled={!loginEnabled || !isEmbeddedH2}
                     >
                       {t("admin.settings.database.refresh", "Refresh")}
                     </Button>
                     <Button
-                      leftSection={
-                        <LocalIcon icon="upload" width="1rem" height="1rem" />
-                      }
+                      leftSection={<UploadIcon width="1rem" height="1rem" />}
                       onClick={handleCreateBackup}
                       loading={creatingBackup}
                       disabled={!loginEnabled || !isEmbeddedH2}
@@ -854,11 +857,7 @@ export default function AdminDatabaseSection() {
                       loading={importingUpload}
                       disabled={!loginEnabled || !isEmbeddedH2}
                       leftSection={
-                        <LocalIcon
-                          icon="play-circle"
-                          width="1rem"
-                          height="1rem"
-                        />
+                        <PlayCircleIcon width="1rem" height="1rem" />
                       }
                     >
                       {t(
@@ -940,11 +939,7 @@ export default function AdminDatabaseSection() {
                                   {downloadingFile === backup.fileName ? (
                                     <Loader size="xs" />
                                   ) : (
-                                    <LocalIcon
-                                      icon="download"
-                                      width="1rem"
-                                      height="1rem"
-                                    />
+                                    <DownloadIcon width="1rem" height="1rem" />
                                   )}
                                 </ActionIcon>
                               </Tooltip>
@@ -969,11 +964,7 @@ export default function AdminDatabaseSection() {
                                   {importingBackupFile === backup.fileName ? (
                                     <Loader size="xs" />
                                   ) : (
-                                    <LocalIcon
-                                      icon="backup"
-                                      width="1rem"
-                                      height="1rem"
-                                    />
+                                    <BackupIcon width="1rem" height="1rem" />
                                   )}
                                 </ActionIcon>
                               </Tooltip>
@@ -999,11 +990,7 @@ export default function AdminDatabaseSection() {
                                   {deletingFile === backup.fileName ? (
                                     <Loader size="xs" />
                                   ) : (
-                                    <LocalIcon
-                                      icon="delete"
-                                      width="1rem"
-                                      height="1rem"
-                                    />
+                                    <DeleteIcon width="1rem" height="1rem" />
                                   )}
                                 </ActionIcon>
                               </Tooltip>
@@ -1041,7 +1028,7 @@ export default function AdminDatabaseSection() {
             <Alert
               color="red"
               variant="light"
-              icon={<LocalIcon icon="warning" width="1.2rem" height="1.2rem" />}
+              icon={<WarningIcon width="1.2rem" height="1.2rem" />}
             >
               <Text fw={600}>
                 {t(
@@ -1110,7 +1097,7 @@ export default function AdminDatabaseSection() {
             <Alert
               color="red"
               variant="light"
-              icon={<LocalIcon icon="warning" width="1.2rem" height="1.2rem" />}
+              icon={<WarningIcon width="1.2rem" height="1.2rem" />}
             >
               <Text fw={600}>
                 {t(

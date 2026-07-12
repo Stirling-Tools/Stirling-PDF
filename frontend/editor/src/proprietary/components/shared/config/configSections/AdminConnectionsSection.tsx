@@ -15,7 +15,6 @@ import {
   Collapse,
 } from "@mantine/core";
 import { alert } from "@app/components/toast";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
 import { useRestartServer } from "@app/components/shared/config/useRestartServer";
 import { useAdminSettings } from "@app/hooks/useAdminSettings";
@@ -31,6 +30,7 @@ import {
 import apiClient from "@app/services/apiClient";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
+import QrCodeRoundedIcon from "@mui/icons-material/QrCodeRounded";
 
 interface FeedbackFlags {
   noValidDocument?: boolean;
@@ -640,11 +640,7 @@ export default function AdminConnectionsSection() {
         <Paper withBorder p="md" radius="md">
           <Stack gap="md">
             <Group gap="xs" align="center">
-              <LocalIcon
-                icon="qr-code-rounded"
-                width="1.25rem"
-                height="1.25rem"
-              />
+              <QrCodeRoundedIcon width="1.25rem" height="1.25rem" />
               <Text fw={600} size="sm">
                 {t(
                   "admin.settings.connections.mobileScanner.label",

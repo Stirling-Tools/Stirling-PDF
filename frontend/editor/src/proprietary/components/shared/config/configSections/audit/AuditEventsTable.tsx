@@ -22,6 +22,7 @@ import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import { useAuditFilters } from "@app/hooks/useAuditFilters";
 import AuditFiltersForm from "@app/components/shared/config/configSections/audit/AuditFiltersForm";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import SearchIcon from "@mui/icons-material/Search";
 
 interface AuditEventsTableProps {
   loginEnabled?: boolean;
@@ -403,8 +404,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                       <Table.Td colSpan={totalColumns}>
                         <Group justify="center" py="xl">
                           <Stack align="center" gap={0}>
-                            <LocalIcon
-                              icon="search"
+                            <SearchIcon
                               width="2rem"
                               height="2rem"
                               style={{ opacity: 0.4 }}

@@ -2,13 +2,15 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Box, Card, Divider, Group, Stack, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { BookmarkNode } from "@app/utils/editTableOfContents";
 import ErrorNotification from "@app/components/tools/shared/ErrorNotification";
 import ResultsPreview from "@app/components/tools/shared/ResultsPreview";
 import BookmarkEditor from "@app/components/tools/editTableOfContents/BookmarkEditor";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { downloadFromUrl } from "@app/services/downloadService";
+import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
+import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
+import RotateLeftIcon from "@mui/icons-material/RotateLeft";
 
 export interface EditTableOfContentsWorkbenchViewData {
   bookmarks: BookmarkNode[];
@@ -150,7 +152,7 @@ const EditTableOfContentsWorkbenchView = ({
             <Divider />
             <Group justify="flex-end">
               <Button
-                leftSection={<LocalIcon icon="menu-book-rounded" />}
+                leftSection={<MenuBookRoundedIcon />}
                 onClick={onExecute}
                 disabled={isExecuteDisabled}
                 loading={isExecuting}
@@ -201,7 +203,7 @@ const EditTableOfContentsWorkbenchView = ({
               <Group justify="flex-end" gap="sm">
                 {downloadUrl && (
                   <Button
-                    leftSection={<LocalIcon icon="download-rounded" />}
+                    leftSection={<DownloadRoundedIcon />}
                     onClick={() =>
                       downloadFromUrl(
                         downloadUrl,
@@ -214,7 +216,7 @@ const EditTableOfContentsWorkbenchView = ({
                 )}
                 <Button
                   variant="secondary"
-                  leftSection={<LocalIcon icon="rotate-left" />}
+                  leftSection={<RotateLeftIcon />}
                   onClick={onUndo}
                   disabled={isExecuting}
                 >

@@ -9,12 +9,14 @@ import {
   NumberInput,
 } from "@mantine/core";
 import { AddStampParameters } from "@app/components/tools/addStamp/useAddStampParameters";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import styles from "@app/components/tools/addStamp/StampPreview.module.css";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
+import OpacityIcon from "@mui/icons-material/Opacity";
+import RotateRightRoundedIcon from "@mui/icons-material/RotateRightRounded";
+import ZoomInMapRoundedIcon from "@mui/icons-material/ZoomInMapRounded";
 
 interface StampPositionFormattingSettingsProps {
   parameters: AddStampParameters;
@@ -90,11 +92,7 @@ const StampPositionFormattingSettings = ({
             className="flex-1"
             onClick={() => onParameterChange("_activePill", "rotation")}
           >
-            <LocalIcon
-              icon="rotate-right-rounded"
-              width="1.1rem"
-              height="1.1rem"
-            />
+            <RotateRightRoundedIcon width="1.1rem" height="1.1rem" />
           </ActionIcon>
         </Tooltip>
         <Tooltip
@@ -109,7 +107,7 @@ const StampPositionFormattingSettings = ({
             className="flex-1"
             onClick={() => onParameterChange("_activePill", "opacity")}
           >
-            <LocalIcon icon="opacity" width="1.1rem" height="1.1rem" />
+            <OpacityIcon width="1.1rem" height="1.1rem" />
           </ActionIcon>
         </Tooltip>
         <Tooltip
@@ -132,11 +130,7 @@ const StampPositionFormattingSettings = ({
             className="flex-1"
             onClick={() => onParameterChange("_activePill", "fontSize")}
           >
-            <LocalIcon
-              icon="zoom-in-map-rounded"
-              width="1.1rem"
-              height="1.1rem"
-            />
+            <ZoomInMapRoundedIcon width="1.1rem" height="1.1rem" />
           </ActionIcon>
         </Tooltip>
       </div>

@@ -4,8 +4,12 @@ import {
   useWorkbenchBarButtons,
   WorkbenchBarButtonWithAction,
 } from "@app/hooks/useWorkbenchBarButtons";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import PageSelectByNumberButton from "@app/components/pageEditor/PageSelectByNumberButton";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import DownloadIcon from "@mui/icons-material/Download";
+import SaveIcon from "@mui/icons-material/Save";
+import SelectAllIcon from "@mui/icons-material/SelectAll";
+import CropSquareIcon from "@mui/icons-material/CropSquare";
 
 interface PageEditorWorkbenchBarButtonsParams {
   totalPages: number;
@@ -64,7 +68,7 @@ export function usePageEditorWorkbenchBarButtons(
     return [
       {
         id: "page-select-all",
-        icon: <LocalIcon icon="select-all" width="1.5rem" height="1.5rem" />,
+        icon: <SelectAllIcon width="1.5rem" height="1.5rem" />,
         tooltip: selectAllLabel,
         ariaLabel: selectAllLabel,
         section: "top" as const,
@@ -75,13 +79,7 @@ export function usePageEditorWorkbenchBarButtons(
       },
       {
         id: "page-deselect-all",
-        icon: (
-          <LocalIcon
-            icon="crop-square-outline"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <CropSquareIcon width="1.5rem" height="1.5rem" />,
         tooltip: deselectAllLabel,
         ariaLabel: deselectAllLabel,
         section: "top" as const,
@@ -113,13 +111,7 @@ export function usePageEditorWorkbenchBarButtons(
       },
       {
         id: "page-delete-selected",
-        icon: (
-          <LocalIcon
-            icon="delete-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <DeleteOutlineRoundedIcon width="1.5rem" height="1.5rem" />,
         tooltip: deleteSelectedLabel,
         ariaLabel: deleteSelectedLabel,
         section: "top" as const,
@@ -130,7 +122,7 @@ export function usePageEditorWorkbenchBarButtons(
       },
       {
         id: "page-export-selected",
-        icon: <LocalIcon icon="download" width="1.5rem" height="1.5rem" />,
+        icon: <DownloadIcon width="1.5rem" height="1.5rem" />,
         tooltip: exportSelectedLabel,
         ariaLabel: exportSelectedLabel,
         section: "top" as const,
@@ -141,7 +133,7 @@ export function usePageEditorWorkbenchBarButtons(
       },
       {
         id: "page-save-changes",
-        icon: <LocalIcon icon="save" width="1.5rem" height="1.5rem" />,
+        icon: <SaveIcon width="1.5rem" height="1.5rem" />,
         tooltip: saveChangesLabel,
         ariaLabel: saveChangesLabel,
         section: "top" as const,

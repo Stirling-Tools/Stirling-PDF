@@ -11,13 +11,18 @@ import {
   TextInput,
   Tooltip,
 } from "@mantine/core";
-import { LocalIcon } from "@app/components/shared/LocalIcon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import {
   SavedSignature,
   SavedSignatureType,
 } from "@app/hooks/tools/sign/useSavedSignatures";
 import type { StorageType } from "@app/services/signatureStorageService";
+import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
+import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
+import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
+import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 
 interface SavedSignaturesSectionProps {
   signatures: SavedSignature[];
@@ -276,7 +281,7 @@ export const SavedSignaturesSection = ({
           {groupedSignatures.personal.length > 0 && activePersonalSignature && (
             <Stack gap="xs">
               <Group gap="xs">
-                <LocalIcon icon="person-rounded" width={18} height={18} />
+                <PersonRoundedIcon width={18} height={18} />
                 <Text fw={600} size="sm">
                   {translate("saved.personalHeading", "Personal Signatures")}
                 </Text>
@@ -308,11 +313,7 @@ export const SavedSignaturesSection = ({
                     }
                     disabled={disabled || activePersonalIndex === 0}
                   >
-                    <LocalIcon
-                      icon="chevron-left-rounded"
-                      width={18}
-                      height={18}
-                    />
+                    <ChevronLeftRoundedIcon width={18} height={18} />
                   </ActionIcon>
                   <ActionIcon
                     variant="secondary"
@@ -331,11 +332,7 @@ export const SavedSignaturesSection = ({
                         groupedSignatures.personal.length - 1
                     }
                   >
-                    <LocalIcon
-                      icon="chevron-right-rounded"
-                      width={18}
-                      height={18}
-                    />
+                    <ChevronRightRoundedIcon width={18} height={18} />
                   </ActionIcon>
                 </Group>
               </Group>
@@ -356,11 +353,7 @@ export const SavedSignaturesSection = ({
                         onClick={() => onUseSignature(activePersonalSignature)}
                         disabled={disabled}
                       >
-                        <LocalIcon
-                          icon="check-circle-outline-rounded"
-                          width={18}
-                          height={18}
-                        />
+                        <CheckCircleOutlineRoundedIcon width={18} height={18} />
                       </ActionIcon>
                       <Tooltip label={translate("saved.delete", "Remove")}>
                         <ActionIcon
@@ -372,11 +365,7 @@ export const SavedSignaturesSection = ({
                           }
                           disabled={disabled}
                         >
-                          <LocalIcon
-                            icon="delete-outline-rounded"
-                            width={18}
-                            height={18}
-                          />
+                          <DeleteOutlineRoundedIcon width={18} height={18} />
                         </ActionIcon>
                       </Tooltip>
                     </Group>
@@ -406,7 +395,7 @@ export const SavedSignaturesSection = ({
           {groupedSignatures.shared.length > 0 && activeSharedSignature && (
             <Stack gap="xs">
               <Group gap="xs">
-                <LocalIcon icon="groups-rounded" width={18} height={18} />
+                <GroupsRoundedIcon width={18} height={18} />
                 <Text fw={600} size="sm">
                   {translate("saved.sharedHeading", "Shared Signatures")}
                 </Text>
@@ -438,11 +427,7 @@ export const SavedSignaturesSection = ({
                     }
                     disabled={disabled || activeSharedIndex === 0}
                   >
-                    <LocalIcon
-                      icon="chevron-left-rounded"
-                      width={18}
-                      height={18}
-                    />
+                    <ChevronLeftRoundedIcon width={18} height={18} />
                   </ActionIcon>
                   <ActionIcon
                     variant="secondary"
@@ -457,11 +442,7 @@ export const SavedSignaturesSection = ({
                       activeSharedIndex >= groupedSignatures.shared.length - 1
                     }
                   >
-                    <LocalIcon
-                      icon="chevron-right-rounded"
-                      width={18}
-                      height={18}
-                    />
+                    <ChevronRightRoundedIcon width={18} height={18} />
                   </ActionIcon>
                 </Group>
               </Group>
@@ -482,11 +463,7 @@ export const SavedSignaturesSection = ({
                         onClick={() => onUseSignature(activeSharedSignature)}
                         disabled={disabled}
                       >
-                        <LocalIcon
-                          icon="check-circle-outline-rounded"
-                          width={18}
-                          height={18}
-                        />
+                        <CheckCircleOutlineRoundedIcon width={18} height={18} />
                       </ActionIcon>
                       {isAdmin && (
                         <Tooltip label={translate("saved.delete", "Remove")}>
@@ -499,11 +476,7 @@ export const SavedSignaturesSection = ({
                             }
                             disabled={disabled}
                           >
-                            <LocalIcon
-                              icon="delete-outline-rounded"
-                              width={18}
-                              height={18}
-                            />
+                            <DeleteOutlineRoundedIcon width={18} height={18} />
                           </ActionIcon>
                         </Tooltip>
                       )}
@@ -571,11 +544,7 @@ export const SavedSignaturesSection = ({
                       }
                       disabled={disabled || activeLocalStorageIndex === 0}
                     >
-                      <LocalIcon
-                        icon="chevron-left-rounded"
-                        width={18}
-                        height={18}
-                      />
+                      <ChevronLeftRoundedIcon width={18} height={18} />
                     </ActionIcon>
                     <ActionIcon
                       variant="secondary"
@@ -594,11 +563,7 @@ export const SavedSignaturesSection = ({
                           groupedSignatures.localStorage.length - 1
                       }
                     >
-                      <LocalIcon
-                        icon="chevron-right-rounded"
-                        width={18}
-                        height={18}
-                      />
+                      <ChevronRightRoundedIcon width={18} height={18} />
                     </ActionIcon>
                   </Group>
                 </Group>
@@ -621,8 +586,7 @@ export const SavedSignaturesSection = ({
                           }
                           disabled={disabled}
                         >
-                          <LocalIcon
-                            icon="check-circle-outline-rounded"
+                          <CheckCircleOutlineRoundedIcon
                             width={18}
                             height={18}
                           />
@@ -637,11 +601,7 @@ export const SavedSignaturesSection = ({
                             }
                             disabled={disabled}
                           >
-                            <LocalIcon
-                              icon="delete-outline-rounded"
-                              width={18}
-                              height={18}
-                            />
+                            <DeleteOutlineRoundedIcon width={18} height={18} />
                           </ActionIcon>
                         </Tooltip>
                       </Group>

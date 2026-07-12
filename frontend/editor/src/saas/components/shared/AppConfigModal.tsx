@@ -22,6 +22,7 @@ import {
   Z_INDEX_OVER_FULLSCREEN_SURFACE,
   Z_INDEX_OVER_SETTINGS_MODAL,
 } from "@app/styles/zIndex";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 
 interface AppConfigModalProps {
   opened: boolean;
@@ -290,7 +291,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
                   onClick={onClose}
                   aria-label={t("common.close", "Close")}
                 >
-                  <LocalIcon icon="close-rounded" width={18} height={18} />
+                  <CloseRoundedIcon width={18} height={18} />
                 </ActionIcon>
               </div>
               <div className="modal-body">{activeComponent}</div>

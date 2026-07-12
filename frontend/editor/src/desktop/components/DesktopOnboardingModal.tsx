@@ -4,7 +4,6 @@ import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import CloseIcon from "@mui/icons-material/Close";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import AnimatedSlideBackground from "@app/components/onboarding/slides/AnimatedSlideBackground";
 import OnboardingStepper from "@app/components/onboarding/OnboardingStepper";
 import { SetupWizard } from "@app/components/SetupWizard";
@@ -12,6 +11,8 @@ import WelcomeSlide from "@app/components/onboarding/slides/WelcomeSlide";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
 import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
 import { connectionModeService } from "@app/services/connectionModeService";
+import LoginIcon from "@mui/icons-material/Login";
+import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 
 const ONBOARDING_KEY = "stirling-desktop-onboarding-seen";
 
@@ -125,19 +126,13 @@ export function DesktopOnboardingModal() {
           <div className={styles.heroLogo} key={`logo-${step}`}>
             <div className={styles.heroLogoCircle}>
               {step === 0 ? (
-                <LocalIcon
-                  icon="rocket-launch"
+                <RocketLaunchIcon
                   width={64}
                   height={64}
                   className={styles.heroIcon}
                 />
               ) : (
-                <LocalIcon
-                  icon="login"
-                  width={64}
-                  height={64}
-                  className={styles.heroIcon}
-                />
+                <LoginIcon width={64} height={64} className={styles.heroIcon} />
               )}
             </div>
           </div>

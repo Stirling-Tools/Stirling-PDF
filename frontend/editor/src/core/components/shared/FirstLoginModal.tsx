@@ -144,9 +144,7 @@ export default function FirstLoginModal({
 
           {error && (
             <Alert
-              icon={
-                <ErrorIcon sx={{ fontSize: "1rem" }} />
-              }
+              icon={<ErrorIcon sx={{ fontSize: "1rem" }} />}
               title={t("firstLogin.error", "Error")}
               color="red"
             >

@@ -140,9 +140,7 @@ function FirstLoginForm({
 
             {error && (
               <Alert
-                icon={
-                  <ErrorIcon sx={{ fontSize: "1rem" }} />
-                }
+                icon={<ErrorIcon sx={{ fontSize: "1rem" }} />}
                 color="red"
                 variant="light"
               >

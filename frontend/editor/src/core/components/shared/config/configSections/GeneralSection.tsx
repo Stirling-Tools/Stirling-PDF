@@ -27,7 +27,6 @@ import type {
   ViewerZoomSetting,
 } from "@app/services/preferencesService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { updateService, UpdateSummary } from "@app/services/updateService";
 import UpdateModal from "@app/components/shared/UpdateModal";
 import type {
@@ -37,6 +36,10 @@ import type {
   DesktopInstallCanInstall,
 } from "@app/components/shared/UpdateModal";
 import { useFrontendVersionInfo } from "@app/hooks/useFrontendVersionInfo";
+import AdminPanelSettingsRoundedIcon from "@mui/icons-material/AdminPanelSettingsRounded";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
+import SystemUpdateAltRoundedIcon from "@mui/icons-material/SystemUpdateAltRounded";
 
 const DEFAULT_AUTO_UNZIP_FILE_LIMIT = 4;
 const BANNER_DISMISSED_KEY = "stirlingpdf_features_banner_dismissed";
@@ -201,12 +204,11 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
             onClick={handleDismissBanner}
             aria-label={t("settings.general.enableFeatures.dismiss", "Dismiss")}
           >
-            <LocalIcon icon="close-rounded" width="1rem" height="1rem" />
+            <CloseRoundedIcon width="1rem" height="1rem" />
           </ActionIcon>
           <Stack gap="sm">
             <Group gap="xs">
-              <LocalIcon
-                icon="admin-panel-settings-rounded"
+              <AdminPanelSettingsRoundedIcon
                 width="1.2rem"
                 height="1.2rem"
                 style={{ color: "var(--mantine-color-blue-6)" }}
@@ -350,11 +352,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                   loading={checkingUpdate}
                   disabled={!currentVersion}
                   leftSection={
-                    <LocalIcon
-                      icon="refresh-rounded"
-                      width="1rem"
-                      height="1rem"
-                    />
+                    <RefreshRoundedIcon width="1rem" height="1rem" />
                   }
                 >
                   {t(
@@ -372,11 +370,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                     }
                     onClick={() => setUpdateModalOpened(true)}
                     leftSection={
-                      <LocalIcon
-                        icon="system-update-alt-rounded"
-                        width="1rem"
-                        height="1rem"
-                      />
+                      <SystemUpdateAltRoundedIcon width="1rem" height="1rem" />
                     }
                   >
                     {t("settings.general.updates.viewDetails", "View Details")}

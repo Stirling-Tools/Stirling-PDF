@@ -22,9 +22,7 @@ export default function SecurityCheckSlide({
       <div className={styles.securitySlideContent}>
         <div className={styles.securityCard}>
           <div className={styles.securityAlertRow}>
-            <ErrorIcon
-              sx={{ color: "#F04438", flexShrink: 0, fontSize: 20 }}
-            />
+            <ErrorIcon sx={{ color: "#F04438", flexShrink: 0, fontSize: 20 }} />
             <span>
               {i18n.t(
                 "onboarding.securityCheck.message",

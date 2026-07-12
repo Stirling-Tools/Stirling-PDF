@@ -12,6 +12,10 @@ import {
 import { useTranslation } from "react-i18next";
 import auditService, { AuditStats } from "@app/services/auditService";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import AnalyticsIcon from "@mui/icons-material/Analytics";
+import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import GroupIcon from "@mui/icons-material/Group";
+import SpeedIcon from "@mui/icons-material/Speed";
 
 interface AuditStatsCardsProps {
   loginEnabled?: boolean;
@@ -146,7 +150,7 @@ const AuditStatsCards: React.FC<AuditStatsCardsProps> = ({
             <Text size="sm" c="dimmed">
               {t("audit.stats.totalEvents", "Total Events")}
             </Text>
-            <LocalIcon icon="analytics" width="1.2rem" height="1.2rem" />
+            <AnalyticsIcon width="1.2rem" height="1.2rem" />
           </Group>
           <Text size="xl" fw={700}>
             {stats.totalEvents.toLocaleString()}
@@ -179,11 +183,7 @@ const AuditStatsCards: React.FC<AuditStatsCardsProps> = ({
             <Text size="sm" c="dimmed">
               {t("audit.stats.successRate", "Success Rate")}
             </Text>
-            <LocalIcon
-              icon="check-circle-rounded"
-              width="1.2rem"
-              height="1.2rem"
-            />
+            <CheckCircleRoundedIcon width="1.2rem" height="1.2rem" />
           </Group>
           <Text size="xl" fw={700}>
             {stats.successRate.toFixed(1)}%
@@ -221,7 +221,7 @@ const AuditStatsCards: React.FC<AuditStatsCardsProps> = ({
             <Text size="sm" c="dimmed">
               {t("audit.stats.activeUsers", "Active Users")}
             </Text>
-            <LocalIcon icon="group" width="1.2rem" height="1.2rem" />
+            <GroupIcon width="1.2rem" height="1.2rem" />
           </Group>
           <Text size="xl" fw={700}>
             {stats.uniqueUsers}
@@ -253,7 +253,7 @@ const AuditStatsCards: React.FC<AuditStatsCardsProps> = ({
             <Text size="sm" c="dimmed">
               {t("audit.stats.avgLatency", "Avg Latency")}
             </Text>
-            <LocalIcon icon="speed" width="1.2rem" height="1.2rem" />
+            <SpeedIcon width="1.2rem" height="1.2rem" />
           </Group>
           <Text size="xl" fw={700}>
             {stats.avgLatencyMs > 0

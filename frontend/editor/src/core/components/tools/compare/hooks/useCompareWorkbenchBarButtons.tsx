@@ -6,6 +6,9 @@ import { alert } from "@app/components/toast";
 import type { ToastLocation } from "@app/components/toast/types";
 import type { WorkbenchBarButtonWithAction } from "@app/hooks/useWorkbenchBarButtons";
 import { useIsMobile } from "@app/hooks/useIsMobile";
+import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
+import ZoomInIcon from "@mui/icons-material/ZoomIn";
+import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 
 type Pane = "base" | "comparison";
 
@@ -82,7 +85,7 @@ export const useCompareWorkbenchBarButtons = ({
       },
       {
         id: "compare-zoom-out",
-        icon: <LocalIcon icon="zoom-out" width="1.5rem" height="1.5rem" />,
+        icon: <ZoomOutIcon width="1.5rem" height="1.5rem" />,
         tooltip: t("compare.actions.zoomOut", "Zoom out"),
         ariaLabel: t("compare.actions.zoomOut", "Zoom out"),
         section: "top",
@@ -102,7 +105,7 @@ export const useCompareWorkbenchBarButtons = ({
       },
       {
         id: "compare-zoom-in",
-        icon: <LocalIcon icon="zoom-in" width="1.5rem" height="1.5rem" />,
+        icon: <ZoomInIcon width="1.5rem" height="1.5rem" />,
         tooltip: t("compare.actions.zoomIn", "Zoom in"),
         ariaLabel: t("compare.actions.zoomIn", "Zoom in"),
         section: "top",
@@ -122,9 +125,7 @@ export const useCompareWorkbenchBarButtons = ({
       },
       {
         id: "compare-reset-view",
-        icon: (
-          <LocalIcon icon="refresh-rounded" width="1.5rem" height="1.5rem" />
-        ),
+        icon: <RefreshRoundedIcon width="1.5rem" height="1.5rem" />,
         tooltip: t("compare.actions.resetView", "Reset zoom and pan"),
         ariaLabel: t("compare.actions.resetView", "Reset zoom and pan"),
         section: "top",

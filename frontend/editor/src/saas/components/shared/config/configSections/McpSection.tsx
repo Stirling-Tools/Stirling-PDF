@@ -18,6 +18,9 @@ import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { openAppSettings } from "@app/utils/appSettings";
 import { useAuth } from "@app/auth/UseSession";
 import { isUserAnonymous } from "@app/auth/supabase";
+import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
+import KeyRoundedIcon from "@mui/icons-material/KeyRounded";
+import SmartToyRoundedIcon from "@mui/icons-material/SmartToyRounded";
 
 /** Strip a single trailing slash so we can safely append paths. */
 function trimTrailingSlash(url: string): string {
@@ -149,7 +152,7 @@ export default function McpSection() {
         <div>
           <Group gap="sm" align="center">
             <ThemeIcon variant="light" size="lg" radius="md">
-              <LocalIcon icon="smart-toy-rounded" width={22} height={22} />
+              <SmartToyRoundedIcon width={22} height={22} />
             </ThemeIcon>
             <Text fw={600} size="lg">
               {t("config.mcp.title", "MCP Server")}
@@ -261,9 +264,7 @@ export default function McpSection() {
             <Alert
               variant="light"
               color="blue"
-              icon={
-                <LocalIcon icon="info-rounded" width="1rem" height="1rem" />
-              }
+              icon={<InfoRoundedIcon width="1rem" height="1rem" />}
             >
               <Group
                 justify="space-between"
@@ -281,9 +282,7 @@ export default function McpSection() {
                   size="sm"
                   variant="secondary"
                   style={{ flexShrink: 0 }}
-                  leftSection={
-                    <LocalIcon icon="key-rounded" width={14} height={14} />
-                  }
+                  leftSection={<KeyRoundedIcon width={14} height={14} />}
                   onClick={() => openAppSettings("api-keys")}
                 >
                   {t("config.mcp.viewApiKeys", "View API keys")}

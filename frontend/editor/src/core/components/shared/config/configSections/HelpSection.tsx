@@ -41,9 +41,7 @@ const HelpSection: React.FC<HelpSectionProps> = ({
             <Button
               variant="secondary"
               size="sm"
-              leftSection={
-                <BuildOutlinedIcon sx={{ fontSize: "1rem" }} />
-              }
+              leftSection={<BuildOutlinedIcon sx={{ fontSize: "1rem" }} />}
               onClick={() => startTour("tools")}
             >
               {t("settings.help.toolsTour.start", "Start")}
@@ -66,9 +64,7 @@ const HelpSection: React.FC<HelpSectionProps> = ({
               <Button
                 variant="secondary"
                 size="sm"
-                leftSection={
-                  <PersonIcon sx={{ fontSize: "1rem" }} />
-                }
+                leftSection={<PersonIcon sx={{ fontSize: "1rem" }} />}
                 onClick={() => startTour("admin")}
               >
                 {t("settings.help.adminTour.start", "Start")}

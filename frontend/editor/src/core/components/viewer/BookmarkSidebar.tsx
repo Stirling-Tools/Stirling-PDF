@@ -23,6 +23,12 @@ import { useTranslation } from "react-i18next";
 import BookmarksIcon from "@mui/icons-material/BookmarksRounded";
 import "@app/components/viewer/SidebarBase.css";
 import "@app/components/viewer/BookmarkSidebar.css";
+import AddIcon from "@mui/icons-material/Add";
+import BookmarkAddRoundedIcon from "@mui/icons-material/BookmarkAddRounded";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import SearchIcon from "@mui/icons-material/Search";
+import UnfoldLessIcon from "@mui/icons-material/UnfoldLess";
+import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
 
 interface BookmarkSidebarProps {
   visible: boolean;
@@ -705,11 +711,7 @@ export const BookmarkSidebar = ({
                     "Expand all bookmarks",
                   )}
                 >
-                  <LocalIcon
-                    icon="unfold-more"
-                    width="1.1rem"
-                    height="1.1rem"
-                  />
+                  <UnfoldMoreIcon width="1.1rem" height="1.1rem" />
                 </ActionIcon>
               ) : (
                 <ActionIcon
@@ -725,11 +727,7 @@ export const BookmarkSidebar = ({
                     "Collapse all bookmarks",
                   )}
                 >
-                  <LocalIcon
-                    icon="unfold-less"
-                    width="1.1rem"
-                    height="1.1rem"
-                  />
+                  <UnfoldLessIcon width="1.1rem" height="1.1rem" />
                 </ActionIcon>
               )}
             </>
@@ -748,7 +746,7 @@ export const BookmarkSidebar = ({
               "Close bookmarks sidebar",
             )}
           >
-            <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
+            <CloseRoundedIcon width="1.1rem" height="1.1rem" />
           </ActionIcon>
         </Box>
       </div>
@@ -765,9 +763,7 @@ export const BookmarkSidebar = ({
             "Search bookmarks",
           )}
           onChange={(event) => setSearchTerm(event.currentTarget.value)}
-          leftSection={
-            <LocalIcon icon="search" width="1.1rem" height="1.1rem" />
-          }
+          leftSection={<SearchIcon width="1.1rem" height="1.1rem" />}
           size="xs"
         />
       </Box>
@@ -817,8 +813,7 @@ export const BookmarkSidebar = ({
           )}
           {showEmptyState && !isAddingBookmark && (
             <Stack align="center" gap="sm" py="lg">
-              <LocalIcon
-                icon="bookmark-add-rounded"
+              <BookmarkAddRoundedIcon
                 width="2rem"
                 height="2rem"
                 style={{ color: "var(--mantine-color-dimmed)" }}
@@ -830,9 +825,7 @@ export const BookmarkSidebar = ({
                 variant="tertiary"
                 size="sm"
                 onClick={handleOpenAddBookmark}
-                leftSection={
-                  <LocalIcon icon="add" width="1rem" height="1rem" />
-                }
+                leftSection={<AddIcon width="1rem" height="1rem" />}
               >
                 Add bookmark
               </Button>
@@ -916,9 +909,7 @@ export const BookmarkSidebar = ({
                   fullWidth
                   justify="start"
                   onClick={handleOpenAddBookmark}
-                  leftSection={
-                    <LocalIcon icon="add" width="0.9rem" height="0.9rem" />
-                  }
+                  leftSection={<AddIcon width="0.9rem" height="0.9rem" />}
                   style={{ marginBottom: "var(--space-xs)" }}
                 >
                   Add bookmark
@@ -959,8 +950,7 @@ export const BookmarkSidebar = ({
             style={{ width: "100%" }}
           >
             <Group gap="xs" justify="center" wrap="nowrap">
-              <LocalIcon
-                icon="bookmark-add-rounded"
+              <BookmarkAddRoundedIcon
                 width="0.95rem"
                 height="0.95rem"
                 style={{ color: "var(--mantine-color-blue-5)" }}

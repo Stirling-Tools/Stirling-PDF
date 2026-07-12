@@ -4,9 +4,9 @@ import { Button } from "@app/ui/Button";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import auditService from "@app/services/auditService";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { useAuditFilters } from "@app/hooks/useAuditFilters";
 import AuditFiltersForm from "@app/components/shared/config/configSections/audit/AuditFiltersForm";
+import DownloadIcon from "@mui/icons-material/Download";
 
 interface AuditExportSectionProps {
   loginEnabled?: boolean;
@@ -244,9 +244,7 @@ const AuditExportSection: React.FC<AuditExportSectionProps> = ({
         {/* Export Button */}
         <Group justify="flex-end">
           <Button
-            leftSection={
-              <LocalIcon icon="download" width="1rem" height="1rem" />
-            }
+            leftSection={<DownloadIcon width="1rem" height="1rem" />}
             onClick={handleExport}
             loading={exporting}
             disabled={!loginEnabled || exporting}

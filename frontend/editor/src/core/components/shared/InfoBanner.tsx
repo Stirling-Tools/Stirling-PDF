@@ -4,6 +4,7 @@ import { Button, type ButtonVariant, type ButtonAccent } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 
 type InfoBannerTone = "info" | "warning";
 
@@ -230,8 +231,7 @@ export const InfoBanner: React.FC<InfoBannerProps> = ({
               aria-label={t("infoBanner.dismiss", "Dismiss")}
               style={closeIconColor ? { color: closeIconColor } : undefined}
             >
-              <LocalIcon
-                icon="close-rounded"
+              <CloseRoundedIcon
                 width={compact ? "0.85rem" : "1rem"}
                 height={compact ? "0.85rem" : "1rem"}
               />

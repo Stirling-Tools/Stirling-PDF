@@ -20,6 +20,8 @@ import {
   Provider,
   ProviderField,
 } from "@app/components/shared/config/configSections/providerDefinitions";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 
 interface ProviderCardProps {
   provider: Provider;
@@ -234,13 +236,9 @@ export default function ProviderCard({
               }
               rightSection={
                 expanded ? (
-                  <LocalIcon icon="close-rounded" width="1rem" height="1rem" />
+                  <CloseRoundedIcon width="1rem" height="1rem" />
                 ) : isConfigured ? (
-                  <LocalIcon
-                    icon="expand-more-rounded"
-                    width="1rem"
-                    height="1rem"
-                  />
+                  <ExpandMoreRoundedIcon width="1rem" height="1rem" />
                 ) : undefined
               }
             >

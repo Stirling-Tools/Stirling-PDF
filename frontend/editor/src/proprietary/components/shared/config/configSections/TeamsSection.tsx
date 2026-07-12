@@ -21,7 +21,6 @@ import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import GroupIcon from "@mui/icons-material/Group";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert } from "@app/components/toast";
 import { teamService, Team } from "@app/services/teamService";
 import {
@@ -32,6 +31,10 @@ import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import TeamDetailsSection from "@app/components/shared/config/configSections/TeamDetailsSection";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
+import GroupAddIcon from "@mui/icons-material/GroupAdd";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 
 export default function TeamsSection() {
   const { t } = useTranslation();
@@ -391,11 +394,7 @@ export default function TeamsSection() {
                           "Team actions",
                         )}
                       >
-                        <LocalIcon
-                          icon="more-vert"
-                          width="1rem"
-                          height="1rem"
-                        />
+                        <MoreVertIcon width="1rem" height="1rem" />
                       </ActionIcon>
                     </Menu.Target>
                     <Menu.Dropdown
@@ -403,11 +402,7 @@ export default function TeamsSection() {
                     >
                       <Menu.Item
                         leftSection={
-                          <LocalIcon
-                            icon="visibility"
-                            width="1rem"
-                            height="1rem"
-                          />
+                          <VisibilityIcon width="1rem" height="1rem" />
                         }
                         onClick={() => setViewingTeamId(team.id)}
                         disabled={!loginEnabled}
@@ -415,18 +410,14 @@ export default function TeamsSection() {
                         {t("workspace.teams.viewTeam", "View Team")}
                       </Menu.Item>
                       <Menu.Item
-                        leftSection={
-                          <GroupIcon sx={{ fontSize: "1rem" }} />
-                        }
+                        leftSection={<GroupIcon sx={{ fontSize: "1rem" }} />}
                         onClick={() => openAddMemberModal(team)}
                         disabled={!loginEnabled}
                       >
                         {t("workspace.teams.addMember")}
                       </Menu.Item>
                       <Menu.Item
-                        leftSection={
-                          <EditIcon sx={{ fontSize: "1rem" }} />
-                        }
+                        leftSection={<EditIcon sx={{ fontSize: "1rem" }} />}
                         onClick={() => openRenameModal(team)}
                         disabled={!loginEnabled}
                       >
@@ -435,9 +426,7 @@ export default function TeamsSection() {
                       <Menu.Divider />
                       <Menu.Item
                         color="red"
-                        leftSection={
-                          <DeleteIcon sx={{ fontSize: "1rem" }} />
-                        }
+                        leftSection={<DeleteIcon sx={{ fontSize: "1rem" }} />}
                         onClick={() => handleDeleteTeam(team)}
                         disabled={!loginEnabled || team.name === "Internal"}
                       >
@@ -480,8 +469,7 @@ export default function TeamsSection() {
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">
-              <LocalIcon
-                icon="group-add"
+              <GroupAddIcon
                 width="3rem"
                 height="3rem"
                 style={{ color: "var(--mantine-color-gray-6)" }}
@@ -540,8 +528,7 @@ export default function TeamsSection() {
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">
-              <LocalIcon
-                icon="edit"
+              <EditIcon
                 width="3rem"
                 height="3rem"
                 style={{ color: "var(--mantine-color-gray-6)" }}
@@ -606,8 +593,7 @@ export default function TeamsSection() {
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">
-              <LocalIcon
-                icon="person-add"
+              <PersonAddIcon
                 width="3rem"
                 height="3rem"
                 style={{ color: "var(--mantine-color-gray-6)" }}

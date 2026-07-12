@@ -113,9 +113,7 @@ const AddAttachmentsSettings = ({
                     </Text>
                   </Group>
                   <DSButton
-                    leftSection={
-                      <CloseIcon sx={{ fontSize: 14 }} />
-                    }
+                    leftSection={<CloseIcon sx={{ fontSize: 14 }} />}
                     aria-label={t(
                       "AddAttachmentsRequest.removeFile",
                       "Remove file",

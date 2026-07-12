@@ -7,7 +7,7 @@ import {
   SSOProviderConfig,
 } from "@app/services/connectionModeService";
 import { connectionModeService } from "@app/services/connectionModeService";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
 
 interface ServerSelectionProps {
   onSelect: (config: ServerConfig) => void;
@@ -270,13 +270,7 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({
           <Alert
             variant="light"
             color="orange"
-            icon={
-              <LocalIcon
-                icon="warning-rounded"
-                width="1.25rem"
-                height="1.25rem"
-              />
-            }
+            icon={<WarningRoundedIcon width="1.25rem" height="1.25rem" />}
             title={t(
               "setup.server.error.securityDisabled.title",
               "Login Not Enabled",

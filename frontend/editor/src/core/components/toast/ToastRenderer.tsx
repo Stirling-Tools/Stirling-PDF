@@ -6,6 +6,7 @@ import { LocalIcon } from "@app/components/shared/LocalIcon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Button } from "@app/ui/Button";
 import "@app/components/toast/ToastRenderer.css";
+import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 
 const locationToClass: Record<ToastLocation, string> = {
   "top-left": "toast-container--top-left",
@@ -115,7 +116,7 @@ export default function ToastRenderer() {
                         }}
                         className={`toast-button toast-expand-button ${t.isExpanded ? "toast-expand-button--expanded" : ""}`}
                       >
-                        <LocalIcon icon="expand-more-rounded" />
+                        <ExpandMoreRoundedIcon />
                       </ActionIcon>
                     )}
                     <ActionIcon

@@ -36,6 +36,18 @@ import UpdateSeatsButton from "@app/components/shared/UpdateSeatsButton";
 import { useLicense } from "@app/contexts/LicenseContext";
 import ChangeUserPasswordModal from "@app/components/shared/ChangeUserPasswordModal";
 import { useAuth } from "@app/auth/UseSession";
+import CloseIcon from "@mui/icons-material/Close";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import InfoIcon from "@mui/icons-material/Info";
+import KeyIcon from "@mui/icons-material/Key";
+import LockIcon from "@mui/icons-material/Lock";
+import LockOpenIcon from "@mui/icons-material/LockOpen";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import PersonOffIcon from "@mui/icons-material/PersonOff";
+import SearchIcon from "@mui/icons-material/Search";
+import HowToRegOutlinedIcon from "@mui/icons-material/HowToRegOutlined";
 
 export default function PeopleSection() {
   const { t } = useTranslation();
@@ -559,7 +571,7 @@ export default function PeopleSection() {
       <Group justify="space-between">
         <TextInput
           placeholder={t("workspace.people.searchMembers")}
-          leftSection={<LocalIcon icon="search" width="1rem" height="1rem" />}
+          leftSection={<SearchIcon width="1rem" height="1rem" />}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.currentTarget.value)}
           style={{ maxWidth: 300 }}
@@ -573,9 +585,7 @@ export default function PeopleSection() {
           withArrow
         >
           <Button
-            leftSection={
-              <LocalIcon icon="person-add" width="1rem" height="1rem" />
-            }
+            leftSection={<PersonAddIcon width="1rem" height="1rem" />}
             onClick={handleAddMembersClick}
             disabled={
               !loginEnabled ||
@@ -787,7 +797,7 @@ export default function PeopleSection() {
                         size="sm"
                         aria-label={t("workspace.people.userInfo", "User info")}
                       >
-                        <LocalIcon icon="info" width="1rem" height="1rem" />
+                        <InfoIcon width="1rem" height="1rem" />
                       </ActionIcon>
                     </Tooltip>
 
@@ -803,11 +813,7 @@ export default function PeopleSection() {
                               "Member actions",
                             )}
                           >
-                            <LocalIcon
-                              icon="more-vert"
-                              width="1rem"
-                              height="1rem"
-                            />
+                            <MoreVertIcon width="1rem" height="1rem" />
                           </ActionIcon>
                         </Menu.Target>
                         <Menu.Dropdown
@@ -816,11 +822,7 @@ export default function PeopleSection() {
                           {!isCurrentUser(user) && (
                             <Menu.Item
                               leftSection={
-                                <LocalIcon
-                                  icon="edit"
-                                  width="1rem"
-                                  height="1rem"
-                                />
+                                <EditIcon width="1rem" height="1rem" />
                               }
                               onClick={() => openEditModal(user)}
                               disabled={!loginEnabled}
@@ -834,11 +836,7 @@ export default function PeopleSection() {
                           {!isCurrentUser(user) && (
                             <Menu.Item
                               leftSection={
-                                <LocalIcon
-                                  icon="lock"
-                                  width="1rem"
-                                  height="1rem"
-                                />
+                                <LockIcon width="1rem" height="1rem" />
                               }
                               onClick={() => openChangePasswordModal(user)}
                               disabled={!loginEnabled}
@@ -853,14 +851,9 @@ export default function PeopleSection() {
                             <Menu.Item
                               leftSection={
                                 user.enabled ? (
-                                  <LocalIcon
-                                    icon="person-off"
-                                    width="1rem"
-                                    height="1rem"
-                                  />
+                                  <PersonOffIcon width="1rem" height="1rem" />
                                 ) : (
-                                  <LocalIcon
-                                    icon="person-check"
+                                  <HowToRegOutlinedIcon
                                     width="1rem"
                                     height="1rem"
                                   />
@@ -877,11 +870,7 @@ export default function PeopleSection() {
                           {!isCurrentUser(user) && isLockedUser(user) && (
                             <Menu.Item
                               leftSection={
-                                <LocalIcon
-                                  icon="lock-open"
-                                  width="1rem"
-                                  height="1rem"
-                                />
+                                <LockOpenIcon width="1rem" height="1rem" />
                               }
                               onClick={() => handleUnlockUser(user)}
                               disabled={!loginEnabled}
@@ -898,11 +887,7 @@ export default function PeopleSection() {
                               <Menu.Item
                                 color="red"
                                 leftSection={
-                                  <LocalIcon
-                                    icon="key"
-                                    width="1rem"
-                                    height="1rem"
-                                  />
+                                  <KeyIcon width="1rem" height="1rem" />
                                 }
                                 onClick={async () => {
                                   try {
@@ -953,11 +938,7 @@ export default function PeopleSection() {
                               <Menu.Item
                                 color="red"
                                 leftSection={
-                                  <LocalIcon
-                                    icon="delete"
-                                    width="1rem"
-                                    height="1rem"
-                                  />
+                                  <DeleteIcon width="1rem" height="1rem" />
                                 }
                                 onClick={() => handleDeleteUser(user)}
                                 disabled={!loginEnabled}
@@ -1015,13 +996,12 @@ export default function PeopleSection() {
               zIndex: 1,
             }}
           >
-            <LocalIcon icon="close" width="1.25rem" height="1.25rem" />
+            <CloseIcon width="1.25rem" height="1.25rem" />
           </ActionIcon>
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">
-              <LocalIcon
-                icon="edit"
+              <EditIcon
                 width="3rem"
                 height="3rem"
                 style={{ color: "var(--mantine-color-gray-6)" }}

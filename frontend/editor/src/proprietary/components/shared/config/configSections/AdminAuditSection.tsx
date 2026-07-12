@@ -32,7 +32,8 @@ import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import EnterpriseRequiredBanner from "@app/components/shared/config/EnterpriseRequiredBanner";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import InfoIcon from "@mui/icons-material/Info";
 
 const AdminAuditSection: React.FC = () => {
   const { t } = useTranslation();
@@ -161,7 +162,7 @@ const AdminAuditSection: React.FC = () => {
       {/* Info banner about audit settings */}
       {isEnabled && (
         <Alert
-          icon={<LocalIcon icon="info" width="1.2rem" height="1.2rem" />}
+          icon={<InfoIcon width="1.2rem" height="1.2rem" />}
           title={t("audit.configureAudit", "Configure Audit Logging")}
           color="blue"
           variant="light"
@@ -177,13 +178,7 @@ const AdminAuditSection: React.FC = () => {
               variant="secondary"
               size="sm"
               onClick={() => navigate("/settings/adminSecurity#auditLogging")}
-              rightSection={
-                <LocalIcon
-                  icon="arrow-forward"
-                  width="0.9rem"
-                  height="0.9rem"
-                />
-              }
+              rightSection={<ArrowForwardIcon width="0.9rem" height="0.9rem" />}
             >
               {t("audit.goToSettings", "Go to Audit Settings")}
             </Button>

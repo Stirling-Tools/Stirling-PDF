@@ -18,6 +18,10 @@ import {
   BookmarkNode,
   createBookmarkNode,
 } from "@app/utils/editTableOfContents";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import BookmarkAddRoundedIcon from "@mui/icons-material/BookmarkAddRounded";
+import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
+import SubdirectoryArrowRightRoundedIcon from "@mui/icons-material/SubdirectoryArrowRightRounded";
 
 interface BookmarkEditorProps {
   bookmarks: BookmarkNode[];
@@ -283,7 +287,7 @@ export default function BookmarkEditor({
                     "Add child bookmark",
                   )}
                 >
-                  <LocalIcon icon="subdirectory-arrow-right-rounded" />
+                  <SubdirectoryArrowRightRoundedIcon />
                 </ActionIcon>
               </Tooltip>
               <Tooltip
@@ -304,7 +308,7 @@ export default function BookmarkEditor({
                     "Add sibling bookmark",
                   )}
                 >
-                  <LocalIcon icon="add-rounded" />
+                  <AddRoundedIcon />
                 </ActionIcon>
               </Tooltip>
               <Tooltip
@@ -326,7 +330,7 @@ export default function BookmarkEditor({
                     "Remove bookmark",
                   )}
                 >
-                  <LocalIcon icon="delete-rounded" />
+                  <DeleteRoundedIcon />
                 </ActionIcon>
               </Tooltip>
             </Group>
@@ -410,7 +414,7 @@ export default function BookmarkEditor({
         </div>
         <Button
           variant="secondary"
-          leftSection={<LocalIcon icon="bookmark-add-rounded" />}
+          leftSection={<BookmarkAddRoundedIcon />}
           onMouseDown={(e) => {
             e.preventDefault();
             handleAddTopLevel();
@@ -427,10 +431,7 @@ export default function BookmarkEditor({
       {bookmarks.length === 0 ? (
         <Paper withBorder radius="md" ta="center" py="xl">
           <Stack gap="xs" align="center" px="lg">
-            <LocalIcon
-              icon="bookmark-add-rounded"
-              style={{ fontSize: "2.25rem" }}
-            />
+            <BookmarkAddRoundedIcon style={{ fontSize: "2.25rem" }} />
             <Text fw={600}>
               {t("editTableOfContents.editor.empty.title", "No bookmarks yet")}
             </Text>
@@ -442,7 +443,7 @@ export default function BookmarkEditor({
             </Text>
             <Button
               variant="tertiary"
-              leftSection={<LocalIcon icon="add-rounded" />}
+              leftSection={<AddRoundedIcon />}
               onMouseDown={(e) => {
                 e.preventDefault();
                 handleAddTopLevel();

@@ -12,7 +12,6 @@ import {
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { EmailStage } from "@app/components/shared/stripeCheckout/stages/EmailStage";
 import { validateEmail } from "@app/components/shared/stripeCheckout/utils/checkoutUtils";
 import { getClickablePaperStyle } from "@app/components/shared/stripeCheckout/utils/cardStyles";
@@ -25,6 +24,9 @@ import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import licenseService from "@app/services/licenseService";
 import { useLicense } from "@app/contexts/LicenseContext";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 
 interface StaticCheckoutModalProps {
   opened: boolean;
@@ -247,9 +249,7 @@ const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({
             <Alert
               variant="light"
               color="blue"
-              icon={
-                <LocalIcon icon="info-rounded" width="1rem" height="1rem" />
-              }
+              icon={<InfoRoundedIcon width="1rem" height="1rem" />}
             >
               <Stack gap="sm">
                 <Text size="sm" fw={600}>
@@ -271,13 +271,7 @@ const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({
               <Alert
                 variant="light"
                 color="green"
-                icon={
-                  <LocalIcon
-                    icon="check-circle-rounded"
-                    width="1rem"
-                    height="1rem"
-                  />
-                }
+                icon={<CheckCircleRoundedIcon width="1rem" height="1rem" />}
                 title={t(
                   "plan.static.licenseActivation.success",
                   "License Activated!",
@@ -367,7 +361,7 @@ const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({
               onClick={handleGoBack}
               aria-label={t("common.back", "Back")}
             >
-              <LocalIcon icon="arrow-back" width={20} height={20} />
+              <ArrowBackIcon width={20} height={20} />
             </ActionIcon>
           )}
           <Text fw={600} size="lg">

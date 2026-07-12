@@ -15,7 +15,6 @@ import {
   List,
 } from "@mantine/core";
 import { alert } from "@app/components/toast";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
 import { useRestartServer } from "@app/components/shared/config/useRestartServer";
 import { useAdminSettings } from "@app/hooks/useAdminSettings";
@@ -25,6 +24,7 @@ import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStic
 import apiClient from "@app/services/apiClient";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
+import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 
 interface McpAuthData {
   mode?: string;
@@ -473,7 +473,7 @@ export default function AdminMcpSection() {
           variant="light"
           color="blue"
           title={t("admin.settings.mcp.guide.title", "Connect an MCP client")}
-          icon={<LocalIcon icon="info-rounded" width="1rem" height="1rem" />}
+          icon={<InfoRoundedIcon width="1rem" height="1rem" />}
         >
           <Stack gap={6}>
             <List size="xs" type="ordered" spacing={4}>

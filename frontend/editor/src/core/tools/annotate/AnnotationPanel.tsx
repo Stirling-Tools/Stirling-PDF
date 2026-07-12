@@ -32,6 +32,12 @@ import type {
 import type { ViewerContextType } from "@app/contexts/ViewerContext";
 import type { SignParameters } from "@app/hooks/tools/sign/useSignParameters";
 import type { BuildToolOptionsExtras } from "@app/tools/annotate/useAnnotationStyleState";
+import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
+import FormatAlignCenterIcon from "@mui/icons-material/FormatAlignCenter";
+import FormatAlignLeftIcon from "@mui/icons-material/FormatAlignLeft";
+import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
+import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
+import TouchAppRoundedIcon from "@mui/icons-material/TouchAppRounded";
 
 interface StyleState {
   inkColor: string;
@@ -646,11 +652,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                       size="md"
                       aria-label={t("annotation.alignLeft", "Align left")}
                     >
-                      <LocalIcon
-                        icon="format-align-left"
-                        width={18}
-                        height={18}
-                      />
+                      <FormatAlignLeftIcon width={18} height={18} />
                     </ActionIcon>
                     <ActionIcon
                       variant={
@@ -660,11 +662,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                       size="md"
                       aria-label={t("annotation.alignCenter", "Align center")}
                     >
-                      <LocalIcon
-                        icon="format-align-center"
-                        width={18}
-                        height={18}
-                      />
+                      <FormatAlignCenterIcon width={18} height={18} />
                     </ActionIcon>
                     <ActionIcon
                       variant={
@@ -674,11 +672,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                       size="md"
                       aria-label={t("annotation.alignRight", "Align right")}
                     >
-                      <LocalIcon
-                        icon="format-align-right"
-                        width={18}
-                        height={18}
-                      />
+                      <FormatAlignRightIcon width={18} height={18} />
                     </ActionIcon>
                   </Group>
                 </Box>
@@ -1194,9 +1188,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
             onClick={() => {
               activateAnnotationTool("select");
             }}
-            leftSection={
-              <LocalIcon icon="touch-app-rounded" width={20} height={20} />
-            }
+            leftSection={<TouchAppRoundedIcon width={20} height={20} />}
           >
             {t("annotation.selectAndMove", "Select and Edit")}
           </Button>
@@ -1218,7 +1210,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                     disabled={isApplyingChanges}
                     aria-label={t("annotation.moreActions", "More actions")}
                   >
-                    <LocalIcon icon="more-horiz" width={20} height={20} />
+                    <MoreHorizIcon width={20} height={20} />
                   </ActionIcon>
                 </Tooltip>
               </Menu.Target>
@@ -1226,9 +1218,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                 <Menu.Item
                   color="red"
                   disabled={isClearingDocumentAnnotations || isApplyingChanges}
-                  leftSection={
-                    <LocalIcon icon="delete-rounded" width={18} height={18} />
-                  }
+                  leftSection={<DeleteRoundedIcon width={18} height={18} />}
                   onClick={() => setIsClearDocumentModalOpen(true)}
                 >
                   {t(
@@ -1327,9 +1317,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
               accent="danger"
               loading={isClearingDocumentAnnotations}
               disabled={isApplyingChanges}
-              leftSection={
-                <LocalIcon icon="delete-rounded" width={18} height={18} />
-              }
+              leftSection={<DeleteRoundedIcon width={18} height={18} />}
               onClick={() => void handleConfirmClearDocumentAnnotations()}
             >
               {t("annotation.clearDocumentAnnotationsConfirm", "Clear all")}

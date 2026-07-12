@@ -9,6 +9,7 @@ import styles from "@app/components/fileEditor/FileEditor.module.css";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { openFilesFromDisk } from "@app/services/openFilesFromDisk";
+import AddIcon from "@mui/icons-material/Add";
 
 interface AddFileCardProps {
   onFileSelect: (files: File[]) => void;
@@ -125,8 +126,7 @@ const AddFileCard = ({
                 onClick={handleOpenFilesModal}
                 onMouseEnter={() => setIsUploadHover(false)}
               >
-                <LocalIcon
-                  icon="add"
+                <AddIcon
                   width="1.5rem"
                   height="1.5rem"
                   className="text-[var(--accent-interactive)]"

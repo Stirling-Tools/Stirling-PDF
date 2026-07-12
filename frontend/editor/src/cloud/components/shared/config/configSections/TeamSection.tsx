@@ -13,9 +13,14 @@ import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import apiClient from "@app/services/apiClient";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
+import EditIcon from "@mui/icons-material/Edit";
+import LogoutIcon from "@mui/icons-material/Logout";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 
 const TeamSection: React.FC = () => {
   const { t } = useTranslation();
@@ -238,7 +243,7 @@ const TeamSection: React.FC = () => {
                   disabled={!newTeamName.trim()}
                   aria-label={t("team.renameSubmit", "Save team name")}
                 >
-                  <LocalIcon icon="check" width="1rem" height="1rem" />
+                  <CheckIcon width="1rem" height="1rem" />
                 </ActionIcon>
                 <ActionIcon
                   variant="tertiary"
@@ -246,7 +251,7 @@ const TeamSection: React.FC = () => {
                   disabled={renamingTeam}
                   aria-label={t("team.renameCancel", "Cancel rename")}
                 >
-                  <LocalIcon icon="close" width="1rem" height="1rem" />
+                  <CloseIcon width="1rem" height="1rem" />
                 </ActionIcon>
               </Group>
             ) : (
@@ -261,7 +266,7 @@ const TeamSection: React.FC = () => {
                     onClick={handleStartRename}
                     aria-label={t("team.editName", "Edit team name")}
                   >
-                    <LocalIcon icon="edit" width="1rem" height="1rem" />
+                    <EditIcon width="1rem" height="1rem" />
                   </ActionIcon>
                 )}
                 {isTeamLeader && (
@@ -288,9 +293,7 @@ const TeamSection: React.FC = () => {
               variant="secondary"
               size="sm"
               onClick={handleLeaveTeam}
-              leftSection={
-                <LocalIcon icon="logout" width="1rem" height="1rem" />
-              }
+              leftSection={<LogoutIcon width="1rem" height="1rem" />}
             >
               {t("team.leaveButton", "Leave Team")}
             </Button>
@@ -455,19 +458,14 @@ const TeamSection: React.FC = () => {
                                   "Member actions",
                                 )}
                               >
-                                <LocalIcon
-                                  icon="more-vert"
-                                  width="1rem"
-                                  height="1rem"
-                                />
+                                <MoreVertIcon width="1rem" height="1rem" />
                               </ActionIcon>
                             </Menu.Target>
                             <Menu.Dropdown>
                               <Menu.Item
                                 color="red"
                                 leftSection={
-                                  <LocalIcon
-                                    icon="person-remove"
+                                  <PersonRemoveIcon
                                     width="1rem"
                                     height="1rem"
                                   />
@@ -522,11 +520,7 @@ const TeamSection: React.FC = () => {
                               "Cancel invitation",
                             )}
                           >
-                            <LocalIcon
-                              icon="close"
-                              width="1rem"
-                              height="1rem"
-                            />
+                            <CloseIcon width="1rem" height="1rem" />
                           </ActionIcon>
                         </Table.Td>
                       )}

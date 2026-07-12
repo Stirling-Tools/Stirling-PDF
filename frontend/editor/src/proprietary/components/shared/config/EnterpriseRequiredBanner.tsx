@@ -20,9 +20,7 @@ export default function EnterpriseRequiredBanner({
 
   return (
     <Alert
-      icon={
-        <WorkspacePremiumIcon sx={{ fontSize: 20 }} />
-      }
+      icon={<WorkspacePremiumIcon sx={{ fontSize: 20 }} />}
       title={t(
         "admin.settings.enterpriseRequired.title",
         "Enterprise License Required",

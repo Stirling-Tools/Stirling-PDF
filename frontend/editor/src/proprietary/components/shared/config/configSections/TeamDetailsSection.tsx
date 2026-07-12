@@ -17,7 +17,6 @@ import {
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert } from "@app/components/toast";
 import { teamService, Team } from "@app/services/teamService";
 import {
@@ -26,6 +25,16 @@ import {
 } from "@app/services/userManagementService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import ChangeUserPasswordModal from "@app/components/shared/ChangeUserPasswordModal";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import DeleteIcon from "@mui/icons-material/Delete";
+import InfoIcon from "@mui/icons-material/Info";
+import LockIcon from "@mui/icons-material/Lock";
+import LockOpenIcon from "@mui/icons-material/LockOpen";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 
 interface TeamDetailsSectionProps {
   teamId: number;
@@ -369,7 +378,7 @@ export default function TeamDetailsSection({
           onClick={onBack}
           aria-label={t("common.back", "Back")}
         >
-          <LocalIcon icon="arrow-back" width="1.2rem" height="1.2rem" />
+          <ArrowBackIcon width="1.2rem" height="1.2rem" />
         </ActionIcon>
         <div style={{ flex: 1 }}>
           <Text fw={600} size="lg">
@@ -393,9 +402,7 @@ export default function TeamDetailsSection({
           zIndex={Z_INDEX_OVER_CONFIG_MODAL}
         >
           <Button
-            leftSection={
-              <LocalIcon icon="person-add" width="1rem" height="1rem" />
-            }
+            leftSection={<PersonAddIcon width="1rem" height="1rem" />}
             onClick={() => setAddMemberModalOpened(true)}
             disabled={
               team.name === "Internal" ||
@@ -573,7 +580,7 @@ export default function TeamDetailsSection({
                             "User info",
                           )}
                         >
-                          <LocalIcon icon="info" width="1rem" height="1rem" />
+                          <InfoIcon width="1rem" height="1rem" />
                         </ActionIcon>
                       </Tooltip>
 
@@ -587,11 +594,7 @@ export default function TeamDetailsSection({
                               "Member actions",
                             )}
                           >
-                            <LocalIcon
-                              icon="more-vert"
-                              width="1rem"
-                              height="1rem"
-                            />
+                            <MoreVertIcon width="1rem" height="1rem" />
                           </ActionIcon>
                         </Menu.Target>
                         <Menu.Dropdown
@@ -599,11 +602,7 @@ export default function TeamDetailsSection({
                         >
                           <Menu.Item
                             leftSection={
-                              <LocalIcon
-                                icon="swap-horiz"
-                                width="1rem"
-                                height="1rem"
-                              />
+                              <SwapHorizIcon width="1rem" height="1rem" />
                             }
                             onClick={() => openChangeTeamModal(user)}
                             disabled={processing || team.name === "Internal"}
@@ -615,11 +614,7 @@ export default function TeamDetailsSection({
                           </Menu.Item>
                           <Menu.Item
                             leftSection={
-                              <LocalIcon
-                                icon="lock"
-                                width="1rem"
-                                height="1rem"
-                              />
+                              <LockIcon width="1rem" height="1rem" />
                             }
                             onClick={() => openChangePasswordModal(user)}
                             disabled={processing}
@@ -632,11 +627,7 @@ export default function TeamDetailsSection({
                           {isLockedUser(user) && (
                             <Menu.Item
                               leftSection={
-                                <LocalIcon
-                                  icon="lock-open"
-                                  width="1rem"
-                                  height="1rem"
-                                />
+                                <LockOpenIcon width="1rem" height="1rem" />
                               }
                               onClick={() => handleUnlockUser(user)}
                               disabled={processing}
@@ -651,8 +642,7 @@ export default function TeamDetailsSection({
                             team.name !== "Default" && (
                               <Menu.Item
                                 leftSection={
-                                  <LocalIcon
-                                    icon="person-remove"
+                                  <PersonRemoveIcon
                                     width="1rem"
                                     height="1rem"
                                   />
@@ -670,11 +660,7 @@ export default function TeamDetailsSection({
                           <Menu.Item
                             color="red"
                             leftSection={
-                              <LocalIcon
-                                icon="delete"
-                                width="1rem"
-                                height="1rem"
-                              />
+                              <DeleteIcon width="1rem" height="1rem" />
                             }
                             onClick={() => handleDeleteUser(user)}
                             disabled={processing || team.name === "Internal"}
@@ -723,13 +709,12 @@ export default function TeamDetailsSection({
               zIndex: 1,
             }}
           >
-            <LocalIcon icon="close-rounded" />
+            <CloseRoundedIcon />
           </ActionIcon>
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">
-              <LocalIcon
-                icon="person-add"
+              <PersonAddIcon
                 width="3rem"
                 height="3rem"
                 style={{ color: "var(--mantine-color-gray-6)" }}
@@ -806,13 +791,12 @@ export default function TeamDetailsSection({
               zIndex: 1,
             }}
           >
-            <LocalIcon icon="close-rounded" />
+            <CloseRoundedIcon />
           </ActionIcon>
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
             <Stack gap="md" align="center">
-              <LocalIcon
-                icon="swap-horiz"
+              <SwapHorizIcon
                 width="3rem"
                 height="3rem"
                 style={{ color: "var(--mantine-color-gray-6)" }}

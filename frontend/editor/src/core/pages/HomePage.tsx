@@ -25,7 +25,6 @@ import RightSidebar from "@app/components/tools/RightSidebar";
 import Workbench from "@app/components/layout/Workbench";
 import FileSidebar from "@app/components/shared/FileSidebar";
 import FileManager from "@app/components/FileManager";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import AppConfigModal from "@app/components/shared/AppConfigModalLazy";
 import { getStartupNavigationAction } from "@app/utils/homePageNavigation";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
@@ -40,6 +39,9 @@ import type { FileSidebarProps } from "@app/components/shared/FileSidebar";
 
 import { Button } from "@app/ui/Button";
 import "@app/pages/HomePage.css";
+import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
+import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
+import AutoModeOutlinedIcon from "@mui/icons-material/AutoModeOutlined";
 
 const SIDEBAR_COLLAPSED_STORAGE_KEY = "stirling.fileSidebarCollapsed";
 
@@ -446,11 +448,7 @@ export default function HomePage() {
                     }
                   }}
                 >
-                  <LocalIcon
-                    icon="automation-outline"
-                    width="1.5rem"
-                    height="1.5rem"
-                  />
+                  <AutoModeOutlinedIcon width="1.5rem" height="1.5rem" />
                   <span className="mobile-bottom-button-label">
                     {t("quickAccess.automate", "Automate")}
                   </span>
@@ -462,11 +460,7 @@ export default function HomePage() {
                 aria-label={t("home.mobile.openFiles", "Open files")}
                 onClick={() => navigate("/files")}
               >
-                <LocalIcon
-                  icon="folder-rounded"
-                  width="1.5rem"
-                  height="1.5rem"
-                />
+                <FolderRoundedIcon width="1.5rem" height="1.5rem" />
                 <span className="mobile-bottom-button-label">
                   {t("quickAccess.files", "Files")}
                 </span>
@@ -477,11 +471,7 @@ export default function HomePage() {
                 aria-label={t("quickAccess.config", "Config")}
                 onClick={() => setConfigModalOpen(true)}
               >
-                <LocalIcon
-                  icon="settings-rounded"
-                  width="1.5rem"
-                  height="1.5rem"
-                />
+                <SettingsRoundedIcon width="1.5rem" height="1.5rem" />
                 <span className="mobile-bottom-button-label">
                   {t("quickAccess.config", "Config")}
                 </span>

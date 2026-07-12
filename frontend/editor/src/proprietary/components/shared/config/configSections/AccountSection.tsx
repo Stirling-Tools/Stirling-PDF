@@ -445,9 +445,7 @@ const AccountSection: React.FC = () => {
             <Group gap="sm" wrap="wrap">
               {!mfaEnabled ? (
                 <Button
-                  leftSection={
-                    <CheckCircleOutlinedIcon />
-                  }
+                  leftSection={<CheckCircleOutlinedIcon />}
                   onClick={handleStartMfaSetup}
                   loading={mfaLoading}
                   disabled={changeButtonDisabled}
@@ -498,9 +496,7 @@ const AccountSection: React.FC = () => {
 
             {passwordError && (
               <Alert
-                icon={
-                  <ErrorIcon sx={{ fontSize: "1rem" }} />
-                }
+                icon={<ErrorIcon sx={{ fontSize: "1rem" }} />}
                 color="red"
                 variant="light"
               >
@@ -621,9 +617,7 @@ const AccountSection: React.FC = () => {
             )}
             {mfaError && (
               <Alert
-                icon={
-                  <ErrorIcon sx={{ fontSize: "1rem" }} />
-                }
+                icon={<ErrorIcon sx={{ fontSize: "1rem" }} />}
                 color="red"
                 variant="light"
               >
@@ -679,9 +673,7 @@ const AccountSection: React.FC = () => {
             </Text>
             {mfaError && (
               <Alert
-                icon={
-                  <ErrorIcon sx={{ fontSize: "1rem" }} />
-                }
+                icon={<ErrorIcon sx={{ fontSize: "1rem" }} />}
                 color="red"
                 variant="light"
               >
@@ -735,9 +727,7 @@ const AccountSection: React.FC = () => {
 
             {usernameError && (
               <Alert
-                icon={
-                  <ErrorIcon sx={{ fontSize: "1rem" }} />
-                }
+                icon={<ErrorIcon sx={{ fontSize: "1rem" }} />}
                 color="red"
                 variant="light"
               >

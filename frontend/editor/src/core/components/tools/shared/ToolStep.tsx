@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useMemo } from "react";
 import { Text, Stack, Flex, Divider } from "@mantine/core";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { TooltipTip } from "@app/types/tips";
 import {
@@ -11,6 +10,9 @@ import {
   createReviewToolStep,
   ReviewToolStepProps,
 } from "@app/components/tools/shared/ReviewToolStep";
+import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
+import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
+import InfoOutlineRoundedIcon from "@mui/icons-material/InfoOutlineRounded";
 
 interface ToolStepContextType {
   visibleStepCount: number;
@@ -60,8 +62,7 @@ const renderTooltipTitle = (
           <Text fw={400} size="sm">
             {title}
           </Text>
-          <LocalIcon
-            icon="info-outline-rounded"
+          <InfoOutlineRoundedIcon
             width="1.25rem"
             height="1.25rem"
             style={{ color: "var(--icon-files-color)" }}
@@ -134,8 +135,7 @@ const ToolStep = ({
           </Flex>
 
           {isCollapsed ? (
-            <LocalIcon
-              icon="chevron-right-rounded"
+            <ChevronRightRoundedIcon
               width="1.2rem"
               height="1.2rem"
               style={{
@@ -144,8 +144,7 @@ const ToolStep = ({
               }}
             />
           ) : (
-            <LocalIcon
-              icon="expand-more-rounded"
+            <ExpandMoreRoundedIcon
               width="1.2rem"
               height="1.2rem"
               style={{

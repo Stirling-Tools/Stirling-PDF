@@ -3,8 +3,14 @@ import { useTranslation } from "react-i18next";
 import { Alert, Divider, Stack, Switch, Text, Tooltip } from "@mantine/core";
 import { Button as DSButton } from "@app/ui/Button";
 import { FilePicker } from "@app/ui/FilePicker";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { BookmarkNode } from "@app/utils/editTableOfContents";
+import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
+import ContentPasteRoundedIcon from "@mui/icons-material/ContentPasteRounded";
+import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
+import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
+import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
+import PictureAsPdfRoundedIcon from "@mui/icons-material/PictureAsPdfRounded";
+import UploadRoundedIcon from "@mui/icons-material/UploadRounded";
 
 interface EditTableOfContentsSettingsProps {
   bookmarks: BookmarkNode[];
@@ -82,7 +88,7 @@ export default function EditTableOfContentsSettings({
       <Stack gap="sm">
         <DSButton
           variant="secondary"
-          leftSection={<LocalIcon icon="folder-rounded" />}
+          leftSection={<FolderRoundedIcon />}
           onClick={onSelectFiles}
           fullWidth
         >
@@ -103,7 +109,7 @@ export default function EditTableOfContentsSettings({
         >
           <DSButton
             variant="secondary"
-            leftSection={<LocalIcon icon="picture-as-pdf-rounded" />}
+            leftSection={<PictureAsPdfRoundedIcon />}
             onClick={onLoadFromPdf}
             loading={isLoading}
             disabled={disabled || !selectedFileName}
@@ -117,7 +123,7 @@ export default function EditTableOfContentsSettings({
           accept="application/json"
           disabled={disabled}
           variant="secondary"
-          leftSection={<LocalIcon icon="upload-rounded" />}
+          leftSection={<UploadRoundedIcon />}
           fullWidth
         >
           {t("editTableOfContents.actions.importJson", "Import JSON")}
@@ -135,7 +141,7 @@ export default function EditTableOfContentsSettings({
         >
           <DSButton
             variant="secondary"
-            leftSection={<LocalIcon icon="content-paste-rounded" />}
+            leftSection={<ContentPasteRoundedIcon />}
             onClick={onImportClipboard}
             disabled={disabled || !canReadClipboard}
             fullWidth
@@ -149,11 +155,7 @@ export default function EditTableOfContentsSettings({
       </Stack>
 
       {loadError && (
-        <Alert
-          color="red"
-          radius="md"
-          icon={<LocalIcon icon="error-outline-rounded" />}
-        >
+        <Alert color="red" radius="md" icon={<ErrorOutlineRoundedIcon />}>
           {loadError}
         </Alert>
       )}
@@ -169,7 +171,7 @@ export default function EditTableOfContentsSettings({
       <Stack gap="sm">
         <DSButton
           variant="secondary"
-          leftSection={<LocalIcon icon="download-rounded" />}
+          leftSection={<DownloadRoundedIcon />}
           onClick={onExportJson}
           disabled={disabled || bookmarks.length === 0}
           fullWidth
@@ -189,7 +191,7 @@ export default function EditTableOfContentsSettings({
         >
           <DSButton
             variant="secondary"
-            leftSection={<LocalIcon icon="content-copy-rounded" />}
+            leftSection={<ContentCopyRoundedIcon />}
             onClick={onExportClipboard}
             disabled={disabled || bookmarks.length === 0 || !canWriteClipboard}
             fullWidth

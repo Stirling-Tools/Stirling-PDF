@@ -100,9 +100,7 @@ const ToolSearch = ({
       }
       icon={
         iconOverride ??
-        (hideIcon ? undefined : (
-          <SearchIcon sx={{ fontSize: "1.25rem" }} />
-        ))
+        (hideIcon ? undefined : <SearchIcon sx={{ fontSize: "1.25rem" }} />)
       }
       iconClickable={!!iconOverride}
       autoComplete="off"

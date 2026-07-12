@@ -18,6 +18,10 @@ import { LicenseInfo } from "@app/services/licenseService";
 import licenseService from "@app/services/licenseService";
 import { useLicense } from "@app/contexts/LicenseContext";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
+import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
+import UploadFileRoundedIcon from "@mui/icons-material/UploadFileRounded";
+import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
 
 interface LicenseKeySectionProps {
   currentLicenseInfo?: LicenseInfo;
@@ -136,7 +140,7 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
           <Alert
             variant="light"
             color="blue"
-            icon={<LocalIcon icon="info-rounded" width="1rem" height="1rem" />}
+            icon={<InfoRoundedIcon width="1rem" height="1rem" />}
           >
             <Text size="sm">
               {t(
@@ -151,9 +155,7 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
             <Alert
               variant="light"
               color="red"
-              icon={
-                <LocalIcon icon="warning-rounded" width="1rem" height="1rem" />
-              }
+              icon={<WarningRoundedIcon width="1rem" height="1rem" />}
               title={t(
                 "admin.settings.premium.key.overwriteWarning.title",
                 "⚠️ Warning: Existing License Detected",
@@ -187,13 +189,7 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
             <Alert
               variant="light"
               color="green"
-              icon={
-                <LocalIcon
-                  icon="check-circle-rounded"
-                  width="1rem"
-                  height="1rem"
-                />
-              }
+              icon={<CheckCircleRoundedIcon width="1rem" height="1rem" />}
             >
               <Stack gap="xs">
                 <Text size="sm" fw={500}>
@@ -299,11 +295,7 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
                     disabled={!loginEnabled || savingLicense}
                     variant="secondary"
                     leftSection={
-                      <LocalIcon
-                        icon="upload-file-rounded"
-                        width="1rem"
-                        height="1rem"
-                      />
+                      <UploadFileRoundedIcon width="1rem" height="1rem" />
                     }
                   >
                     {licenseFile

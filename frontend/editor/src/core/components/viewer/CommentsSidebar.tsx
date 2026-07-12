@@ -36,6 +36,10 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useAnnotation as useAnnotationContext } from "@app/contexts/AnnotationContext";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { compareEntriesByVisualOrder } from "@app/components/viewer/commentsSidebarOrder";
+import AddIcon from "@mui/icons-material/Add";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import CommentIcon from "@mui/icons-material/Comment";
+import TouchAppRoundedIcon from "@mui/icons-material/TouchAppRounded";
 
 const SIDEBAR_WIDTH = "18rem";
 
@@ -696,8 +700,7 @@ export function CommentsSidebar({
           gap: "0.5rem",
         }}
       >
-        <LocalIcon
-          icon="comment"
+        <CommentIcon
           width="1.25rem"
           height="1.25rem"
           style={{ color: "var(--mantine-color-dimmed)", flexShrink: 0 }}
@@ -715,7 +718,7 @@ export function CommentsSidebar({
                 aria-label={t("viewer.comments.addComment", "Add comment")}
                 onClick={handleAddComment}
               >
-                <LocalIcon icon="add" width="1.25rem" height="1.25rem" />
+                <AddIcon width="1.25rem" height="1.25rem" />
               </ActionIcon>
             </Tooltip>
             <Menu position="bottom-end" withArrow>
@@ -760,7 +763,7 @@ export function CommentsSidebar({
             )}
             title={t("viewer.comments.close", "Close comments")}
           >
-            <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
+            <CloseRoundedIcon width="1.1rem" height="1.1rem" />
           </ActionIcon>
         )}
       </div>
@@ -768,8 +771,7 @@ export function CommentsSidebar({
         <Stack p="sm" gap="md">
           {totalCount === 0 ? (
             <Stack align="center" gap="sm" py="lg">
-              <LocalIcon
-                icon="comment"
+              <CommentIcon
                 width="2rem"
                 height="2rem"
                 style={{ color: "var(--mantine-color-dimmed)" }}
@@ -787,11 +789,7 @@ export function CommentsSidebar({
                   size="sm"
                   onClick={handleCancelPlacingComment}
                   leftSection={
-                    <LocalIcon
-                      icon="touch-app-rounded"
-                      width="1rem"
-                      height="1rem"
-                    />
+                    <TouchAppRoundedIcon width="1rem" height="1rem" />
                   }
                 >
                   {t(
@@ -804,9 +802,7 @@ export function CommentsSidebar({
                   variant="tertiary"
                   size="sm"
                   onClick={handleAddComment}
-                  leftSection={
-                    <LocalIcon icon="add" width="1rem" height="1rem" />
-                  }
+                  leftSection={<AddIcon width="1rem" height="1rem" />}
                 >
                   {t("viewer.comments.addComment", "Add comment")}
                 </Button>
@@ -823,11 +819,7 @@ export function CommentsSidebar({
                   justify="start"
                   onClick={handleCancelPlacingComment}
                   leftSection={
-                    <LocalIcon
-                      icon="touch-app-rounded"
-                      width="0.9rem"
-                      height="0.9rem"
-                    />
+                    <TouchAppRoundedIcon width="0.9rem" height="0.9rem" />
                   }
                   style={{ paddingInline: 6 }}
                 >
@@ -843,9 +835,7 @@ export function CommentsSidebar({
                   fullWidth
                   justify="start"
                   onClick={handleAddComment}
-                  leftSection={
-                    <LocalIcon icon="add" width="0.9rem" height="0.9rem" />
-                  }
+                  leftSection={<AddIcon width="0.9rem" height="0.9rem" />}
                   style={{ paddingInline: 6 }}
                 >
                   {t("viewer.comments.addComment", "Add comment")}

@@ -12,7 +12,9 @@ import {
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import auditService from "@app/services/auditService";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import ErrorIcon from "@mui/icons-material/Error";
+import WarningIcon from "@mui/icons-material/Warning";
 
 interface AuditClearDataSectionProps {
   loginEnabled?: boolean;
@@ -72,9 +74,7 @@ const AuditClearDataSection: React.FC<AuditClearDataSectionProps> = ({
       <Stack gap="lg">
         <Alert
           color="green"
-          icon={
-            <LocalIcon icon="check-circle" width="1.2rem" height="1.2rem" />
-          }
+          icon={<CheckCircleIcon width="1.2rem" height="1.2rem" />}
           title={t("audit.clearData.success", "Success")}
           onClose={() => setSuccess(false)}
           closeButtonLabel="Close alert"
@@ -94,7 +94,7 @@ const AuditClearDataSection: React.FC<AuditClearDataSectionProps> = ({
       <Stack gap="lg">
         <Alert
           color="orange"
-          icon={<LocalIcon icon="warning" width="1.2rem" height="1.2rem" />}
+          icon={<WarningIcon width="1.2rem" height="1.2rem" />}
           title={t(
             "audit.clearData.confirmTitle",
             "Please confirm you want to delete",
@@ -165,7 +165,7 @@ const AuditClearDataSection: React.FC<AuditClearDataSectionProps> = ({
             {error && (
               <Alert
                 color="red"
-                icon={<LocalIcon icon="error" width="1.2rem" height="1.2rem" />}
+                icon={<ErrorIcon width="1.2rem" height="1.2rem" />}
               >
                 {error}
               </Alert>
@@ -202,7 +202,7 @@ const AuditClearDataSection: React.FC<AuditClearDataSectionProps> = ({
     <Stack gap="lg">
       <Alert
         color="red"
-        icon={<LocalIcon icon="warning" width="1.2rem" height="1.2rem" />}
+        icon={<WarningIcon width="1.2rem" height="1.2rem" />}
         title={t("audit.clearData.warning1", "This action cannot be undone")}
       >
         <Text size="sm">
