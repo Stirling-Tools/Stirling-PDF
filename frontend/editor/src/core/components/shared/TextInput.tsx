@@ -1,7 +1,7 @@
 import React, { forwardRef } from "react";
 import { useTranslation } from "react-i18next";
+import CloseIcon from "@mui/icons-material/Close";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import styles from "@app/components/shared/textInput/TextInput.module.css";
 
 /**
@@ -117,7 +117,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
             onClick={handleClear}
             aria-label={t("textInput.clear", "Clear input")}
           >
-            <LocalIcon icon="close-rounded" width="1.25rem" height="1.25rem" />
+            <CloseIcon sx={{ fontSize: "1.25rem" }} />
           </ActionIcon>
         )}
       </div>

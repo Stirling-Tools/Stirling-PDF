@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { PasswordInput, Group, Tooltip, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import EditIcon from "@mui/icons-material/Edit";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import LocalIcon from "@app/components/shared/LocalIcon";
 
 interface EditableSecretFieldProps {
   label?: string;
@@ -99,7 +99,7 @@ export default function EditableSecretField({
                 "Edit secret value",
               )}
             >
-              <LocalIcon icon="edit" width="1rem" height="1rem" />
+              <EditIcon sx={{ fontSize: "1rem" }} />
             </ActionIcon>
           </Tooltip>
         </Group>

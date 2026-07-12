@@ -5,8 +5,10 @@
  */
 import { Stack, Text, Group, ScrollArea, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import AddIcon from "@mui/icons-material/Add";
+import CloseIcon from "@mui/icons-material/Close";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { AddAttachmentsParameters } from "@app/hooks/tools/addAttachments/useAddAttachmentsParameters";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { Button as DSButton } from "@app/ui/Button";
 interface AddAttachmentsSettingsProps {
@@ -51,7 +53,7 @@ const AddAttachmentsSettings = ({
           as="label"
           htmlFor="attachments-input"
           disabled={disabled}
-          leftSection={<LocalIcon icon="add" width="14" height="14" />}
+          leftSection={<AddIcon sx={{ fontSize: 14 }} />}
         >
           {parameters.attachments?.length > 0
             ? t("AddAttachmentsRequest.addMoreFiles", "Add more files...")
@@ -112,7 +114,7 @@ const AddAttachmentsSettings = ({
                   </Group>
                   <DSButton
                     leftSection={
-                      <LocalIcon icon="close-rounded" width="14" height="14" />
+                      <CloseIcon sx={{ fontSize: 14 }} />
                     }
                     aria-label={t(
                       "AddAttachmentsRequest.removeFile",
@@ -167,11 +169,12 @@ const AddAttachmentsSettings = ({
                 sidebarTooltip={true}
                 pinOnClick={true}
               >
-                <LocalIcon
-                  icon="info-outline-rounded"
-                  width="1.25rem"
-                  height="1.25rem"
-                  style={{ color: "var(--icon-files-color)", cursor: "help" }}
+                <InfoOutlinedIcon
+                  sx={{
+                    color: "var(--icon-files-color)",
+                    cursor: "help",
+                    fontSize: "1.25rem",
+                  }}
                 />
               </Tooltip>
             </Group>

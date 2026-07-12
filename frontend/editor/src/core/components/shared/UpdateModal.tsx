@@ -16,7 +16,7 @@ import {
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import CloseIcon from "@mui/icons-material/Close";
 import { useTranslation } from "react-i18next";
 import {
   updateService,
@@ -278,7 +278,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
               variant="tertiary"
               aria-label={t("update.closeModal", "Close update modal")}
             >
-              <LocalIcon icon="close-rounded" width={20} height={20} />
+              <CloseIcon sx={{ fontSize: 20 }} />
             </ActionIcon>
           )}
         </Group>

@@ -9,6 +9,8 @@ import { Badge, Modal, Text, Tooltip, Group } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import CloseIcon from "@mui/icons-material/Close";
+import WarningIcon from "@mui/icons-material/Warning";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useConfigNavSections } from "@app/components/shared/config/configNavSections";
 import {
@@ -353,12 +355,10 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                               </Badge>
                             )}
                             {showPlanWarning && (
-                              <LocalIcon
-                                icon="warning-rounded"
-                                width={14}
-                                height={14}
-                                style={{
+                              <WarningIcon
+                                sx={{
                                   color: "var(--mantine-color-orange-7)",
+                                  fontSize: 14,
                                 }}
                               />
                             )}
@@ -416,7 +416,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                   aria-label={t("settings.close", "Close")}
                   data-autofocus
                 >
-                  <LocalIcon icon="close-rounded" width={18} height={18} />
+                  <CloseIcon sx={{ fontSize: 18 }} />
                 </ActionIcon>
               </Group>
             </div>

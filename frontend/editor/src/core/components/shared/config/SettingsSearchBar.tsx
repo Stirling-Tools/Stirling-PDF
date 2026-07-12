@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useCallback } from "react";
 import { Select, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import SearchIcon from "@mui/icons-material/Search";
 import { NavKey, VALID_NAV_KEYS } from "@app/components/shared/config/types";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import type {
@@ -210,7 +210,7 @@ export const SettingsSearchBar: React.FC<SettingsSearchBarProps> = ({
       onSearchChange={setSearchValue}
       onChange={handleSearchNavigation}
       placeholder={t("settings.search.placeholder", "Search settings pages...")}
-      leftSection={<LocalIcon icon="search-rounded" width={16} height={16} />}
+      leftSection={<SearchIcon sx={{ fontSize: 16 }} />}
       aria-label={t("navbar.search", "Search")}
       nothingFoundMessage={t("search.noResults", "No results found")}
       searchable

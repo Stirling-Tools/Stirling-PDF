@@ -2,7 +2,7 @@ import React from "react";
 import { Anchor, Group, Paper, Stack, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useFooterInfo } from "@app/hooks/useFooterInfo";
 import { useCookieConsent } from "@app/hooks/useCookieConsent";
@@ -88,7 +88,7 @@ const LegalSection: React.FC = () => {
     >
       <Group gap={6} wrap="nowrap">
         {link.label}
-        <LocalIcon icon="open-in-new-rounded" width="0.9rem" height="0.9rem" />
+        <OpenInNewIcon sx={{ fontSize: "0.9rem" }} />
       </Group>
     </Anchor>
   );
