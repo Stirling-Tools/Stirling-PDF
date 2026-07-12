@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
+import CloseRounded from "@mui/icons-material/CloseRounded";
 import { Button } from "@app/ui";
 import type { ProcurementSnapshot } from "@portal/api/procurement";
 import { CalendlyInline } from "@portal/components/procurement/CalendlyInline";
@@ -60,7 +61,7 @@ function SideModal({
           onClick={onClose}
           aria-label={t("portal.procurement.modal.close")}
         >
-          ✕
+          <CloseRounded style={{ fontSize: "1.2rem" }} />
         </button>
         <div className="portal-sidemodal__header">
           <h3 className="portal-sidemodal__title">{title}</h3>

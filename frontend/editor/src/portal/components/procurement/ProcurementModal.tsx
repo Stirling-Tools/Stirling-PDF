@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
+import CloseRounded from "@mui/icons-material/CloseRounded";
 import "@portal/views/Procurement.css";
 
 /** Keep keyboard focus inside an open dialog: focus it on open and wrap Tab at the edges. */
@@ -90,7 +91,7 @@ export function ProcurementModal({
           onClick={onClose}
           aria-label={t("portal.procurement.modal.close")}
         >
-          ✕
+          <CloseRounded style={{ fontSize: "1.2rem" }} />
         </button>
         <div className="portal-procmodal__header">
           <h2 className="portal-procmodal__title">{title}</h2>
