@@ -25,6 +25,17 @@ describe("extractHeadings", () => {
     ]);
   });
 
+  it("de-duplicates repeated heading text into unique slugs", () => {
+    const md = ["## What Changed", "### What Changed", "## What Changed"].join(
+      "\n",
+    );
+    expect(extractHeadings(md).map((h) => h.slug)).toEqual([
+      "what-changed",
+      "what-changed-1",
+      "what-changed-2",
+    ]);
+  });
+
   it("ignores headings inside fenced code and strips inline marks", () => {
     const md = ["```", "## not a heading", "```", "## `Code` and *em*"].join(
       "\n",

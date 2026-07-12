@@ -5,7 +5,7 @@ import ReactMarkdown, {
 } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Button } from "@app/ui";
-import { slugify } from "@portal/docs/headings";
+import { makeSlugger } from "@portal/docs/headings";
 
 /** Flatten a heading's React children to plain text for its anchor id. */
 function childText(node: ReactNode): string {
@@ -48,10 +48,13 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-function buildComponents(onNavigate: (docId: string) => void): Components {
+function buildComponents(
+  onNavigate: (docId: string) => void,
+  slug: (text: string) => string,
+): Components {
   return {
-    h2: ({ children }) => <h2 id={slugify(childText(children))}>{children}</h2>,
-    h3: ({ children }) => <h3 id={slugify(childText(children))}>{children}</h3>,
+    h2: ({ children }) => <h2 id={slug(childText(children))}>{children}</h2>,
+    h3: ({ children }) => <h3 id={slug(childText(children))}>{children}</h3>,
     a: ({ href, children }) => {
       if (href?.startsWith("doc:")) {
         const id = href.slice(4);
@@ -111,12 +114,15 @@ export function MarkdownDoc({
   markdown: string;
   onNavigate: (docId: string) => void;
 }) {
+  // A fresh de-duping slugger per render; react-markdown invokes h2/h3 in
+  // document order, so ids line up with the TOC's extractHeadings slugs.
+  const slug = makeSlugger();
   return (
     <div className="portal-docs__md">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         urlTransform={urlTransform}
-        components={buildComponents(onNavigate)}
+        components={buildComponents(onNavigate, slug)}
       >
         {markdown}
       </ReactMarkdown>
