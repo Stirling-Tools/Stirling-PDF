@@ -34,6 +34,7 @@ export const VALID_NAV_KEYS = [
   "adminMcp",
   "help",
   "legal",
+  "privacy",
   "backendThirdPartyLicenses",
   "frontendThirdPartyLicenses",
   "payg",
