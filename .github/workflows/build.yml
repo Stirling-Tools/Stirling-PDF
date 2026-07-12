@@ -171,6 +171,14 @@ jobs:
       pull-requests: write
     uses: ./.github/workflows/tauri-build.yml
     secrets: inherit
+    with:
+      # PR smoke build: Linux only (fastest to compile), unsigned, deb only.
+      # Skips rpm + the slow/flaky AppImage pass and all signing/notarization.
+      # The full signed multi-OS matrix runs on release (multiOSReleases.yml).
+      platform: linux
+      sign: false
+      linux_bundles: deb
+      build_appimage: false
 
   ai-engine:
     if: needs.files-changed.outputs.engine == 'true'

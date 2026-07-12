@@ -21,6 +21,16 @@ on:
         required: false
         type: boolean
         default: true
+      linux_bundles:
+        description: "Linux bundle targets for the deb/rpm step (e.g. 'deb,rpm' or just 'deb'). PR smoke builds pass 'deb' to skip the slower rpm packaging."
+        required: false
+        type: string
+        default: "deb,rpm"
+      build_appimage:
+        description: "Build the Linux AppImage in its own pass. PR smoke builds pass false - AppImage (linuxdeploy) is slow and chronically flaky (#6127), and is not needed to validate the desktop bundle compiles."
+        required: false
+        type: boolean
+        default: true
   workflow_dispatch:
     inputs:
       platform:
@@ -389,7 +399,7 @@ jobs:
           # Linux: build deb+rpm only here. AppImage runs in its own
           # continue-on-error step below so its persistent linuxdeploy
           # failure (#6127 onwards) does not tank deb/rpm uploads.
-          args: ${{ matrix.platform == 'ubuntu-22.04' && '--bundles deb,rpm' || matrix.args }}
+          args: ${{ matrix.platform == 'ubuntu-22.04' && format('--bundles {0}', inputs.linux_bundles) || matrix.args }}
 
       - name: Build Tauri app (unsigned)
         if: ${{ !inputs.sign }}
@@ -409,12 +419,12 @@ jobs:
           # Linux: build deb+rpm only here. AppImage runs in its own
           # continue-on-error step below so its persistent linuxdeploy
           # failure (#6127 onwards) does not tank deb/rpm uploads.
-          args: ${{ matrix.platform == 'ubuntu-22.04' && '--bundles deb,rpm' || matrix.args }}
+          args: ${{ matrix.platform == 'ubuntu-22.04' && format('--bundles {0}', inputs.linux_bundles) || matrix.args }}
 
       # AppImage is decoupled so its linuxdeploy run gets a fresh process
       # (rpm scratch state torn down) and its failure can't tank deb/rpm.
       - name: Build Tauri app (Linux AppImage)
-        if: matrix.platform == 'ubuntu-22.04'
+        if: matrix.platform == 'ubuntu-22.04' && inputs.build_appimage
         continue-on-error: true
         uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
         env:
