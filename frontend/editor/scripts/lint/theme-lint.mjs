@@ -13,19 +13,23 @@
 //
 // Structural black / white / transparent (shadows, scrims) are always allowed.
 
-import { readFileSync, readdirSync, lstatSync } from "node:fs";
-import { relative, resolve, join, sep } from "node:path";
+import { readFileSync, readdirSync } from "node:fs";
+import { relative, resolve, join } from "node:path";
 
 const THEME = resolve(process.cwd(), "editor/src/core/theme");
 const PRIMITIVES = "editor/src/core/theme/primitives.css";
 
-function readWithin(file) {
-  const abs = resolve(file);
-  if (abs !== THEME && !abs.startsWith(THEME + sep)) {
-    throw new Error(`refusing to read outside theme dir: ${file}`);
-  }
-  return readFileSync(abs, "utf8");
-}
+// Fixed list of theme CSS files to check, so every read takes a constant path
+// (no directory-listing feeding into a file read). readdir is used only to fail
+// if a new .css is added without being registered — coverage can't silently
+// lapse — but its output is never passed to readFileSync.
+const THEME_FILES = [
+  "primitives.css",
+  "colors.css",
+  "compat.css",
+  "dimensions.css",
+  "index.css",
+];
 
 // ── colour helpers ─────────────────────────────────────────────────────────
 const HEX_RE = /#[0-9a-fA-F]{3,8}\b/g;
@@ -58,16 +62,6 @@ function isStructuralColor(norm) {
 function isStructuralName(name) {
   return /^(?:white|black|transparent)$/i.test(name.trim());
 }
-function walk(dir, exts, out = []) {
-  for (const name of readdirSync(dir)) {
-    const p = join(dir, name);
-    const st = lstatSync(p); // lstat: don't follow symlinks out of the tree
-    if (st.isSymbolicLink()) continue;
-    if (st.isDirectory()) walk(p, exts, out);
-    else if (exts.some((e) => name.endsWith(e))) out.push(p);
-  }
-  return out;
-}
 function stripComments(text) {
   return text.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "));
 }
@@ -78,10 +72,23 @@ function check() {
   const primitiveValues = new Map();
   const lineOf = (text, index) => text.slice(0, index).split("\n").length;
 
-  for (const file of walk(THEME, [".css"])) {
-    const rel = relative(process.cwd(), file);
+  // Fail if a theme .css exists that isn't registered above (readdir is only
+  // compared here — never used to build a path passed to readFileSync).
+  const known = new Set(THEME_FILES);
+  for (const name of readdirSync(THEME)) {
+    if (name.endsWith(".css") && !known.has(name)) {
+      violations.push({
+        file: relative(process.cwd(), join(THEME, name)),
+        line: 1,
+        msg: `unregistered theme CSS — add "${name}" to THEME_FILES in theme-lint.mjs`,
+      });
+    }
+  }
+
+  for (const name of THEME_FILES) {
+    const rel = relative(process.cwd(), join(THEME, name));
     const isPrimitives = rel === PRIMITIVES;
-    const text = stripComments(readWithin(file));
+    const text = stripComments(readFileSync(join(THEME, name), "utf8"));
 
     for (const re of [HEX_RE, FUNC_RE]) {
       re.lastIndex = 0;
@@ -140,8 +147,8 @@ function check() {
 
 // ── contrast report (warn-only): resolve --c-* per theme, check legibility ───
 function reportContrast() {
-  const primitivesCss = readWithin(join(THEME, "primitives.css"));
-  const colorsCss = readWithin(join(THEME, "colors.css"));
+  const primitivesCss = readFileSync(join(THEME, "primitives.css"), "utf8");
+  const colorsCss = readFileSync(join(THEME, "colors.css"), "utf8");
   const primitives = {};
   for (const m of primitivesCss.matchAll(
     /(--p-[a-z0-9-]+)\s*:\s*(#[0-9a-fA-F]{3,8})\s*;/g,
