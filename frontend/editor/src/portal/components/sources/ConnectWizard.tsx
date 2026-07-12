@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import CheckRounded from "@mui/icons-material/CheckRounded";
 import {
   Banner,
   Button,
@@ -14,9 +15,9 @@ import { createSource, type Source } from "@portal/api/sources";
 import { creatableSourceTypes } from "@portal/components/sources/creatableSourceTypes";
 import {
   defaultOptions,
-  sourceTypeMeta,
   type CreatableSourceType,
 } from "@portal/components/sources/sourceTypes";
+import { SourceTypeIcon } from "@portal/components/sources/SourceTypeIcon";
 import "@portal/views/Sources.css";
 
 const OFFERED_TYPES = creatableSourceTypes();
@@ -191,7 +192,11 @@ export function ConnectWizard({
             }
           >
             <span className="portal-sources__step-mark">
-              {i < stepIndex ? "✓" : i + 1}
+              {i < stepIndex ? (
+                <CheckRounded style={{ fontSize: "0.9rem" }} />
+              ) : (
+                i + 1
+              )}
             </span>
             {stepLabels[id]}
           </li>
@@ -211,7 +216,7 @@ export function ConnectWizard({
               onClick={() => chooseType(ct)}
             >
               <span className="portal-sources__type-icon" aria-hidden>
-                {sourceTypeMeta(ct.type).icon}
+                <SourceTypeIcon type={ct.type} />
               </span>
               <span className="portal-sources__type-name">
                 {t(ct.labelKey)}

@@ -1,5 +1,8 @@
-import { useState } from "react";
+import { useState, type ComponentType, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
+import ArrowForwardRounded from "@mui/icons-material/ArrowForwardRounded";
+import CloudRounded from "@mui/icons-material/CloudRounded";
+import StorageRounded from "@mui/icons-material/StorageRounded";
 import {
   Button,
   Card,
@@ -20,13 +23,13 @@ import {
 import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
 import { pct } from "@portal/components/infrastructure/infraFormat";
 
-const PROVIDER_GLYPH: Record<
+const PROVIDER_ICON: Record<
   StorageConfig["providers"][number]["kind"],
-  string
+  ComponentType<{ style?: CSSProperties }>
 > = {
-  stirling: "◆",
-  s3: "▣",
-  azure: "▤",
+  stirling: StorageRounded,
+  s3: CloudRounded,
+  azure: CloudRounded,
 };
 
 /** Storage fills past this fraction of quota are surfaced in red. */
@@ -143,35 +146,38 @@ export function StorageTab() {
             sub={t("portal.infrastructure.storage.providers.subheading")}
           />
           <ul className="portal-infra__providers">
-            {data.providers.map((p) => (
-              <li key={p.id} className="portal-infra__provider">
-                <span className="portal-infra__provider-glyph" aria-hidden>
-                  {PROVIDER_GLYPH[p.kind]}
-                </span>
-                <span className="portal-infra__provider-text">
-                  <span className="portal-infra__cell-strong">{p.name}</span>
-                  <span className="portal-infra__muted">{p.detail}</span>
-                </span>
-                {p.connected ? (
-                  <span className="portal-infra__provider-meta">
-                    <span className="portal-infra__mono">
-                      {t("portal.infrastructure.storage.gbValue", {
-                        value: p.usedGb,
-                      })}
-                    </span>
-                    <StatusBadge tone="success" size="sm">
-                      {t("portal.infrastructure.storage.providers.connected")}
-                    </StatusBadge>
+            {data.providers.map((p) => {
+              const ProviderIcon = PROVIDER_ICON[p.kind];
+              return (
+                <li key={p.id} className="portal-infra__provider">
+                  <span className="portal-infra__provider-glyph" aria-hidden>
+                    <ProviderIcon style={{ fontSize: "1.2rem" }} />
                   </span>
-                ) : (
-                  // TODO(backend): launch the provider OAuth/credential flow,
-                  // then POST /v1/infrastructure/storage/providers/{id}/connect
-                  <Button variant="secondary" size="sm">
-                    {t("portal.infrastructure.storage.providers.connect")}
-                  </Button>
-                )}
-              </li>
-            ))}
+                  <span className="portal-infra__provider-text">
+                    <span className="portal-infra__cell-strong">{p.name}</span>
+                    <span className="portal-infra__muted">{p.detail}</span>
+                  </span>
+                  {p.connected ? (
+                    <span className="portal-infra__provider-meta">
+                      <span className="portal-infra__mono">
+                        {t("portal.infrastructure.storage.gbValue", {
+                          value: p.usedGb,
+                        })}
+                      </span>
+                      <StatusBadge tone="success" size="sm">
+                        {t("portal.infrastructure.storage.providers.connected")}
+                      </StatusBadge>
+                    </span>
+                  ) : (
+                    // TODO(backend): launch the provider OAuth/credential flow,
+                    // then POST /v1/infrastructure/storage/providers/{id}/connect
+                    <Button variant="secondary" size="sm">
+                      {t("portal.infrastructure.storage.providers.connect")}
+                    </Button>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </Card>
 
@@ -205,7 +211,7 @@ export function StorageTab() {
               </span>
             </div>
             <span className="portal-infra__lifecycle-arrow" aria-hidden>
-              →
+              <ArrowForwardRounded style={{ fontSize: "1.2rem" }} />
             </span>
             <div className="portal-infra__lifecycle-stage">
               <span className="portal-infra__lifecycle-dot" />
@@ -217,7 +223,7 @@ export function StorageTab() {
               </span>
             </div>
             <span className="portal-infra__lifecycle-arrow" aria-hidden>
-              →
+              <ArrowForwardRounded style={{ fontSize: "1.2rem" }} />
             </span>
             <div className="portal-infra__lifecycle-stage">
               <span className="portal-infra__lifecycle-dot" />

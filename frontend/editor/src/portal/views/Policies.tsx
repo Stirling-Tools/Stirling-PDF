@@ -17,7 +17,7 @@ import {
   type PolicySetupResult,
 } from "@portal/api/policies";
 import { CatalogueSummary } from "@portal/components/policies/CatalogueSummary";
-import { PolicyCategoryCard } from "@portal/components/policies/PolicyCategoryCard";
+import { PolicyCatalogueTable } from "@portal/components/policies/PolicyCatalogueTable";
 import { PolicyDetailPanel } from "@portal/components/policies/PolicyDetailPanel";
 import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
 import "@portal/views/Policies.css";
@@ -151,15 +151,7 @@ export function Policies() {
       )}
 
       {!isLoading && !fetchError && (
-        <div className="portal-policies__grid">
-          {displayCatalogue.map((entry) => (
-            <PolicyCategoryCard
-              key={entry.category.id}
-              entry={entry}
-              onOpen={openEntry}
-            />
-          ))}
-        </div>
+        <PolicyCatalogueTable entries={displayCatalogue} onOpen={openEntry} />
       )}
 
       <PolicyDetailPanel

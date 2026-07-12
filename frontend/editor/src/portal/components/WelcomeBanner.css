@@ -18,7 +18,7 @@
   gap: 1rem;
   flex-wrap: wrap;
   padding: 0.875rem 1.25rem;
-  background: #16213e;
+  background: var(--color-hero-navy);
 }
 
 .portal-welcome__brand {
@@ -90,7 +90,7 @@
 .portal-welcome__header .portal-welcome__cta.sui-btn {
   background: #ffffff;
   border-color: #ffffff;
-  color: #16213e;
+  color: var(--color-hero-navy);
 }
 .portal-welcome__header .portal-welcome__cta.sui-btn:hover {
   background: rgba(255, 255, 255, 0.88);

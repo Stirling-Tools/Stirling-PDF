@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { ActionIcon, Button } from "@app/ui";
 import type { SourceView } from "@portal/api/sources";
 import { SourceDetailPanel } from "@portal/components/sources/SourceDetailPanel";
+import { SourceTypeIcon } from "@portal/components/sources/SourceTypeIcon";
 import {
   EDITOR_SOURCE_TYPE,
   sourceTypeMeta,
@@ -42,7 +43,7 @@ export function SourceDetailCard({
           className={`portal-sources__type-dot portal-sources__type-dot--${meta.accent}`}
           aria-hidden
         >
-          {meta.icon}
+          <SourceTypeIcon type={source.type} />
         </span>
         <div>
           <h2 className="portal-sources__expanded-title">

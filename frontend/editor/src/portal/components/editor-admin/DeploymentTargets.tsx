@@ -1,7 +1,20 @@
 import { useTranslation } from "react-i18next";
+import CloudQueueRounded from "@mui/icons-material/CloudQueueRounded";
+import HubRounded from "@mui/icons-material/HubRounded";
+import Inventory2Rounded from "@mui/icons-material/Inventory2Rounded";
 import { Button, Card, CodeBlock, StatusBadge } from "@app/ui";
-import { TARGET_META, type DeploymentTarget } from "@portal/api/editorDeploy";
+import {
+  TARGET_META,
+  type DeploymentTarget,
+  type TargetKind,
+} from "@portal/api/editorDeploy";
 import { useTier } from "@portal/contexts/TierContext";
+
+const TARGET_ICON: Record<TargetKind, typeof CloudQueueRounded> = {
+  cloud: CloudQueueRounded,
+  docker: Inventory2Rounded,
+  kubernetes: HubRounded,
+};
 
 const STATE_BADGE_TONE: Record<
   DeploymentTarget["state"],
@@ -36,6 +49,7 @@ export function DeploymentTargets({ targets, onUpgrade }: Props) {
     <div className="portal-editor__targets">
       {targets.map((target) => {
         const meta = TARGET_META[target.kind];
+        const Icon = TARGET_ICON[target.kind];
         const locked = target.state === "locked";
         return (
           <Card
@@ -48,7 +62,7 @@ export function DeploymentTargets({ targets, onUpgrade }: Props) {
                 className={`portal-editor__target-icon portal-editor__target-icon--${meta.tone}`}
                 aria-hidden
               >
-                {meta.icon}
+                <Icon style={{ fontSize: "1.2rem" }} />
               </span>
               <div className="portal-editor__target-titles">
                 <h3 className="portal-editor__target-name">{target.label}</h3>

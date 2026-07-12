@@ -181,8 +181,26 @@
 }
 
 .portal-editor__pairing-icon {
-  font-size: 1.125rem;
-  line-height: 1.4;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+}
+
+.portal-editor__pairing-icon--blue {
+  background: var(--color-blue-light);
+  color: var(--color-blue);
+}
+.portal-editor__pairing-icon--purple {
+  background: var(--color-purple-light);
+  color: var(--color-purple);
+}
+.portal-editor__pairing-icon--green {
+  background: var(--color-green-light);
+  color: var(--color-green);
 }
 
 .portal-editor__pairing-titles {

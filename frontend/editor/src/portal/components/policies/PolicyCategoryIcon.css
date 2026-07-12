@@ -1,0 +1,43 @@
+/* Tinted rounded icon badge for a policy category — colour comes from the
+   category tone. Lives with the component so every consumer (the Policies table
+   and the Home policy summary) gets the styling without importing a view CSS. */
+.pcat-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-lg);
+}
+
+.pcat-badge svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  display: block;
+}
+
+.pcat-badge--blue {
+  background: var(--color-blue-light);
+  color: var(--color-blue);
+}
+.pcat-badge--purple {
+  background: var(--color-purple-light);
+  color: var(--color-purple);
+}
+.pcat-badge--green {
+  background: var(--color-green-light);
+  color: var(--color-green-dark);
+}
+.pcat-badge--amber {
+  background: var(--color-amber-light);
+  color: var(--color-amber-dark);
+}
+.pcat-badge--red {
+  background: var(--color-red-light);
+  color: var(--color-red);
+}
+.pcat-badge--neutral {
+  background: var(--color-bg-muted);
+  color: var(--color-text-3);
+}

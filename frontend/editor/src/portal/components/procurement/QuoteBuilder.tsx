@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import CheckRounded from "@mui/icons-material/CheckRounded";
 import { Button } from "@app/ui";
 import {
   DocumentsIcon,
@@ -526,7 +527,7 @@ function AddOn({
       onClick={onClick}
     >
       <span className="portal-qb__addon-box" aria-hidden>
-        {on ? "✓" : ""}
+        {on ? <CheckRounded style={{ fontSize: "0.85rem" }} /> : ""}
       </span>
       <span>
         <span className="portal-qb__addon-title">{title}</span>

@@ -35,7 +35,11 @@ export function EnterpriseUpsell({ bare = false }: Props) {
             )}
           </p>
         </div>
-        <Button size="sm" onClick={() => setActiveView("procurement")}>
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => setActiveView("procurement")}
+        >
           {t("portal.billing.enterpriseUpsell.cta", "Explore Enterprise")}
         </Button>
       </div>

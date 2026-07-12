@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import KeyboardArrowRightRounded from "@mui/icons-material/KeyboardArrowRightRounded";
 import {
   Chip,
   StatusBadge,
@@ -12,6 +13,7 @@ import {
   EDITOR_SOURCE_TYPE,
   sourceTypeMeta,
 } from "@portal/components/sources/sourceTypes";
+import { SourceTypeIcon } from "@portal/components/sources/SourceTypeIcon";
 import "@portal/views/Sources.css";
 
 const STATUS_TONE: Record<SourceStatus, StatusTone> = {
@@ -49,7 +51,7 @@ export function SourcesTable({
                 className={`portal-sources__type-dot portal-sources__type-dot--${meta.accent}`}
                 aria-hidden
               >
-                {meta.icon}
+                <SourceTypeIcon type={s.type} />
               </span>
               <div className="portal-sources__name-text">
                 <strong>{isEditor ? t(meta.labelKey) : s.name}</strong>
@@ -102,7 +104,7 @@ export function SourcesTable({
             }
             aria-hidden
           >
-            ▸
+            <KeyboardArrowRightRounded style={{ fontSize: "1.2rem" }} />
           </span>
         ),
       },
