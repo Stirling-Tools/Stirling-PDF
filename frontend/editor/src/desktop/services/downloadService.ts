@@ -1,3 +1,4 @@
+import path from "path";
 import type {
   DownloadRequest,
   DownloadResult,
@@ -13,11 +14,15 @@ export async function downloadFile(
   request: DownloadRequest,
 ): Promise<DownloadResult> {
   if (request.localPath) {
-    const result = await saveToLocalPath(request.data, request.localPath);
+    const normalizedPath = path.normalize(request.localPath);
+    if (normalizedPath.includes("..")) {
+      throw new Error("Invalid file path: path traversal detected");
+    }
+    const result = await saveToLocalPath(request.data, normalizedPath);
     if (!result.success) {
       throw new Error(result.error || "Failed to save file");
     }
-    return { savedPath: request.localPath };
+    return { savedPath: normalizedPath };
   }
 
   const savePath = await showSaveDialog(request.filename);
