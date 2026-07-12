@@ -107,7 +107,9 @@ function CheckIcon({
   className?: string;
   style?: React.CSSProperties;
 }) {
-  return <MuiCheckIcon className={className} style={style} sx={{ fontSize: 14 }} />;
+  return (
+    <MuiCheckIcon className={className} style={style} sx={{ fontSize: 14 }} />
+  );
 }
 
 function getSidebarFileIcon(ext: string): React.ReactElement {
