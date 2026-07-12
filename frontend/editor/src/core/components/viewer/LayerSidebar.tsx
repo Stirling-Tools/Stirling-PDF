@@ -350,7 +350,7 @@ export function LayerSidebar({
                 onClick={showAll}
                 disabled={allVisible || isApplying}
                 aria-label={t("viewer.layers.showAll", "Show all layers")}
-                title="Show all"
+                title={t("viewer.layers.showAll", "Show all layers")}
               >
                 <VisibilityIcon sx={{ fontSize: "1rem" }} />
               </ActionIcon>
@@ -360,7 +360,7 @@ export function LayerSidebar({
                 onClick={hideAll}
                 disabled={allHidden || isApplying}
                 aria-label={t("viewer.layers.hideAll", "Hide all layers")}
-                title="Hide all"
+                title={t("viewer.layers.hideAll", "Hide all layers")}
               >
                 <VisibilityOffIcon sx={{ fontSize: "1rem" }} />
               </ActionIcon>
@@ -372,7 +372,7 @@ export function LayerSidebar({
             size="sm"
             onClick={toggleLayerSidebar}
             aria-label={t("viewer.layers.closeSidebar", "Close layers sidebar")}
-            title="Close layers"
+            title={t("viewer.layers.closeSidebar", "Close layers sidebar")}
           >
             <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
           </ActionIcon>

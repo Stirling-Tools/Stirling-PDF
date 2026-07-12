@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Button } from "@app/ui/Button";
+import { useTranslation } from "react-i18next";
 import "@app/ui/CodeBlock.css";
 
 export type CodeLang =
@@ -33,6 +34,7 @@ export function CodeBlock({
   maxHeight = 400,
   className,
 }: CodeBlockProps) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
   async function copy() {
@@ -64,7 +66,9 @@ export function CodeBlock({
             onClick={copy}
             aria-label="Copy code"
           >
-            {copied ? "Copied" : "Copy"}
+            {copied
+              ? t("common.copied", "Copied!")
+              : t("common.copy", "Copy")}
           </Button>
         )}
       </div>
