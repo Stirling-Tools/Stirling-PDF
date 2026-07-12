@@ -15,7 +15,7 @@
   align-items: center;
   gap: 1.25rem;
   padding: 1rem 1.25rem;
-  background: #16213e;
+  background: var(--color-hero-navy);
 }
 
 .portal-editor-hero__logo {
@@ -123,7 +123,7 @@
 .portal-editor-hero__action .portal-editor-hero__cta.sui-btn {
   background: #ffffff;
   border-color: #ffffff;
-  color: #16213e;
+  color: var(--color-hero-navy);
 }
 .portal-editor-hero__action .portal-editor-hero__cta.sui-btn:hover {
   background: rgba(255, 255, 255, 0.88);

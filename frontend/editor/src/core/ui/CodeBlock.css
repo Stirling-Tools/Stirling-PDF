@@ -51,7 +51,8 @@
   transition: background var(--motion-fast);
 }
 .sui-code__copy:hover {
-  background: rgba(255, 255, 255, 0.05);
+  /* Subtle tint that reads on both the light and dark code surfaces. */
+  background: color-mix(in srgb, var(--code-text) 8%, transparent);
 }
 .sui-code__pre {
   margin: 0;
