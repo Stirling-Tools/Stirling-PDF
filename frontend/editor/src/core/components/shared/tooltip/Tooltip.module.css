@@ -22,18 +22,18 @@
 
 /* Pinned tooltip indicator */
 .tooltip-container.pinned {
-  border-color: var(--primary-color, #3b82f6);
+  border-color: var(--primary-color, var(--c-primary));
   box-shadow:
     0 0.625rem 0.9375rem -0.1875rem rgba(0, 0, 0, 0.1),
     0 0.25rem 0.375rem -0.125rem rgba(0, 0, 0, 0.05),
-    0 0 0 0.125rem rgba(59, 130, 246, 0.1);
+    0 0 0 0.125rem color-mix(in srgb, var(--c-primary) 10%, transparent);
 }
 
 /* Pinned tooltip header */
 .tooltip-container.pinned .tooltip-header {
-  background-color: var(--primary-color, #3b82f6);
+  background-color: var(--primary-color, var(--c-primary));
   color: white;
-  border-color: var(--primary-color, #3b82f6);
+  border-color: var(--primary-color, var(--c-primary));
 }
 
 /* Close button */
@@ -64,8 +64,8 @@
 }
 
 .tooltip-pin-button:hover {
-  background-color: #ef4444 !important;
-  border-color: #ef4444 !important;
+  background-color: var(--c-danger) !important;
+  border-color: var(--c-danger) !important;
 }
 
 .tooltip-pin-button:focus,
@@ -121,19 +121,22 @@
 
 /* Link styling within tooltips */
 .tooltip-body a {
-  color: var(--link-color, #3b82f6) !important;
+  color: var(--link-color, var(--c-primary)) !important;
   text-decoration: underline;
-  text-decoration-color: var(--link-underline-color, rgba(59, 130, 246, 0.3));
+  text-decoration-color: var(
+    --link-underline-color,
+    color-mix(in srgb, var(--c-primary) 30%, transparent)
+  );
   transition:
     color 0.2s ease,
     text-decoration-color 0.2s ease;
 }
 
 .tooltip-body a:hover {
-  color: var(--link-hover-color, #2563eb) !important;
+  color: var(--link-hover-color, var(--c-primary-hover)) !important;
   text-decoration-color: var(
     --link-hover-underline-color,
-    rgba(37, 99, 235, 0.5)
+    color-mix(in srgb, var(--c-primary-hover) 50%, transparent)
   );
 }
 
@@ -147,16 +150,19 @@
 
 /* Ensure links maintain their styling */
 .tooltip-container .tooltip-body a {
-  color: var(--link-color, #3b82f6) !important;
+  color: var(--link-color, var(--c-primary)) !important;
   text-decoration: underline;
-  text-decoration-color: var(--link-underline-color, rgba(59, 130, 246, 0.3));
+  text-decoration-color: var(
+    --link-underline-color,
+    color-mix(in srgb, var(--c-primary) 30%, transparent)
+  );
 }
 
 .tooltip-container .tooltip-body a:hover {
-  color: var(--link-hover-color, #2563eb) !important;
+  color: var(--link-hover-color, var(--c-primary-hover)) !important;
   text-decoration-color: var(
     --link-hover-underline-color,
-    rgba(37, 99, 235, 0.5)
+    color-mix(in srgb, var(--c-primary-hover) 50%, transparent)
   );
 }
 

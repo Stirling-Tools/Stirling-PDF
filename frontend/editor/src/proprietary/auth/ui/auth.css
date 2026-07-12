@@ -580,19 +580,19 @@
 
 /* Field-level error styles */
 .auth-field-error {
-  color: #dc2626;
+  color: var(--c-danger);
   font-size: 0.6875rem; /* 11px */
   margin-top: 0.125rem; /* 2px */
   line-height: 1.1;
 }
 
 .auth-input-error {
-  border-color: #dc2626 !important;
+  border-color: var(--c-danger) !important;
 }
 
 .auth-input-error:focus {
-  border-color: #dc2626 !important;
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+  border-color: var(--c-danger) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-danger) 10%, transparent) !important;
 }
 
 /* Shared auth styles extracted from inline */

@@ -525,7 +525,7 @@
 }
 
 .file-sidebar-section-btn:focus-visible {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid var(--c-primary);
   outline-offset: 1px;
 }
 
@@ -627,7 +627,7 @@
 }
 
 .file-sidebar-bottom-bar[role="button"]:focus-visible {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid var(--c-primary);
   outline-offset: -2px;
 }
 

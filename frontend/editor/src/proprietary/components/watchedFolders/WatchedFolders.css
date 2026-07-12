@@ -42,7 +42,7 @@
   transform: translateY(-2px);
   border-color: color-mix(
     in srgb,
-    var(--c-primary, #6366f1) 35%,
+    var(--c-primary) 35%,
     var(--c-border-subtle)
   );
   box-shadow:
@@ -51,25 +51,21 @@
 }
 
 .wf-card:focus-visible {
-  outline: 2px solid var(--c-primary, #6366f1);
+  outline: 2px solid var(--c-primary);
   outline-offset: 2px;
 }
 
 .wf-card.is-drop-target {
-  background: color-mix(
-    in srgb,
-    var(--c-primary, #6366f1) 10%,
-    var(--c-surface)
-  );
-  box-shadow: 0 0 0 2px var(--c-primary, #6366f1);
-  border-color: var(--c-primary, #6366f1);
+  background: color-mix(in srgb, var(--c-primary) 10%, var(--c-surface));
+  box-shadow: 0 0 0 2px var(--c-primary);
+  border-color: var(--c-primary);
 }
 
 /* Dragging a file the folder already contains — signal it's a no-op, not an add. */
 .wf-card.is-already-member {
-  background: color-mix(in srgb, #f59e0b 8%, var(--c-surface));
-  box-shadow: 0 0 0 2px #f59e0b;
-  border-color: #f59e0b;
+  background: color-mix(in srgb, var(--p-amber-500) 8%, var(--c-surface));
+  box-shadow: 0 0 0 2px var(--p-amber-500);
+  border-color: var(--p-amber-500);
 }
 
 .wf-card-drag-message {
@@ -180,13 +176,9 @@
 }
 
 .wf-new-tile:hover {
-  border-color: var(--c-primary, #6366f1);
-  color: var(--c-primary, #6366f1);
-  background: color-mix(
-    in srgb,
-    var(--c-primary, #6366f1) 6%,
-    var(--c-surface)
-  );
+  border-color: var(--c-primary);
+  color: var(--c-primary);
+  background: color-mix(in srgb, var(--c-primary) 6%, var(--c-surface));
 }
 
 .wf-new-tile-icon {
@@ -196,8 +188,8 @@
   width: 3rem;
   height: 3rem;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--c-primary, #6366f1) 12%, transparent);
-  color: var(--c-primary, #6366f1);
+  background: color-mix(in srgb, var(--c-primary) 12%, transparent);
+  color: var(--c-primary);
 }
 
 .wf-empty {
@@ -218,8 +210,8 @@
   width: 5rem;
   height: 5rem;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--c-primary, #6366f1) 12%, transparent);
-  color: var(--c-primary, #6366f1);
+  background: color-mix(in srgb, var(--c-primary) 12%, transparent);
+  color: var(--c-primary);
   margin-bottom: 0.25rem;
 }
 

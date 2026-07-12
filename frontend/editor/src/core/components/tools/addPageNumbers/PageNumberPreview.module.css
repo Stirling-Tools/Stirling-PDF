@@ -106,7 +106,7 @@
 .gridTileSelected,
 .gridTileHovered {
   border: 2px solid var(--mantine-primary-color-filled, #3b82f6);
-  background-color: rgba(59, 130, 246, 0.2);
+  background-color: color-mix(in srgb, var(--c-primary) 20%, transparent);
 }
 
 /* Preview header */

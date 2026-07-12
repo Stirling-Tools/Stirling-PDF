@@ -258,8 +258,8 @@
   margin: 0.75rem 0 0;
   padding: 0.5rem 0.75rem;
   border-radius: 8px;
-  background: color-mix(in srgb, var(--sui-danger, #dc2626) 12%, transparent);
-  color: var(--sui-danger, #dc2626);
+  background: color-mix(in srgb, var(--c-danger) 12%, transparent);
+  color: var(--c-danger);
   font-size: 0.85rem;
 }
 

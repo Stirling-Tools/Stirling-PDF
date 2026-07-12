@@ -235,7 +235,7 @@
 /* Unsupported file indicator */
 .unsupportedPill {
   margin-left: 1.75rem;
-  background: #6b7280;
+  background: var(--p-gray-500);
   color: white;
   padding: 4px 8px;
   border-radius: 12px;
@@ -315,7 +315,7 @@
 }
 
 :global([data-mantine-color-scheme="dark"]) .meta {
-  color: #6b7280; /* subtitle text */
+  color: var(--p-gray-500); /* subtitle text */
 }
 
 /* Light mode selected header stroke override */

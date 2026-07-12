@@ -16,7 +16,7 @@
   min-width: 16rem;
   background-color: #ffffff;
   color: #000000;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--c-border);
   border-radius: 0.5rem;
   box-shadow:
     0 10px 15px -3px rgba(0, 0, 0, 0.1),

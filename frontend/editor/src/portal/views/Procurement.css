@@ -515,10 +515,10 @@
 .portal-proc__field input,
 .portal-proc__field select {
   padding: 0.45rem 0.6rem;
-  border: 1px solid var(--c-border, #eae8e3);
+  border: 1px solid var(--c-border);
   border-radius: 0.5rem;
   font-size: 0.875rem;
-  background: var(--color-bg-elevated, #fff);
+  background: var(--c-input-bg);
   color: var(--c-text);
 }
 .portal-proc__builder-addons {
@@ -543,7 +543,7 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  border-bottom: 1px solid var(--c-border, #eae8e3);
+  border-bottom: 1px solid var(--c-border);
   padding-bottom: 0.5rem;
 }
 .portal-proc__quote-number {
@@ -565,7 +565,7 @@
   padding: 0.4rem 0;
   font-size: 0.8125rem;
   color: var(--c-text-muted);
-  border-bottom: 1px solid var(--c-border-subtle, #f0eee9);
+  border-bottom: 1px solid var(--c-border-subtle);
 }
 .portal-proc__quote-lines li[data-kind="DISCOUNT"] {
   color: var(--color-success, #0f7b6c);
@@ -1122,7 +1122,7 @@
 .portal-proc__license {
   margin-top: 1.25rem;
   padding: 1rem;
-  border: 1px solid var(--c-border, rgba(0, 0, 0, 0.1));
+  border: 1px solid var(--c-border);
   border-radius: 0.6rem;
   background: var(--color-surface-2, rgba(0, 0, 0, 0.02));
 }

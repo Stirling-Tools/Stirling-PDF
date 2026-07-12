@@ -454,11 +454,11 @@
 }
 .payg-gate[data-enabled="true"] .payg-gate__chip {
   background: rgba(34, 197, 94, 0.16);
-  color: #22c55e;
+  color: var(--p-green-500);
 }
 .payg-gate[data-enabled="false"] .payg-gate__chip {
   background: rgba(239, 68, 68, 0.16);
-  color: #f87171;
+  color: var(--p-red-400);
 }
 .payg-gate__label {
   font-size: 0.8125rem;
@@ -481,11 +481,11 @@
   background: var(--c-surface-sunken);
 }
 .payg-gate__tag[data-variant="pause"] {
-  color: #dc2626;
+  color: var(--c-danger);
   background: rgba(239, 68, 68, 0.12);
 }
 [data-mantine-color-scheme="dark"] .payg-gate__tag[data-variant="pause"] {
-  color: #f87171;
+  color: var(--c-danger);
   background: rgba(239, 68, 68, 0.18);
 }
 

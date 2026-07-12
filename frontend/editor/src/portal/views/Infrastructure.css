@@ -107,7 +107,7 @@
 .portal-infra__export-error {
   margin: 0;
   font-size: 0.8125rem;
-  color: var(--color-danger, #e5484d);
+  color: var(--c-danger);
 }
 
 .portal-infra__export-actions {

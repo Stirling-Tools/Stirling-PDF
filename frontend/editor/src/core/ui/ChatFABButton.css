@@ -85,7 +85,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #22c55e;
+  background: var(--p-green-500);
   animation: chat-fab-pulse 1.5s ease-in-out infinite;
 }
 
@@ -109,7 +109,7 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #22c55e;
+  background: var(--p-green-500);
   display: flex;
   align-items: center;
   justify-content: center;

@@ -4,22 +4,22 @@
   align-items: center;
   justify-content: center;
   padding: 50px 20px;
-  background: #f5f5f5;
+  background: var(--c-bg);
   font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
     Arial, sans-serif;
 }
 
 .card {
-  background: #ffffff;
+  background: var(--c-surface);
   border-radius: 12px;
   padding: 40px;
   max-width: 420px;
   width: 100%;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   text-align: center;
-  color: #1a1a1a;
-  border: 1px solid #e5e7eb;
+  color: var(--c-text);
+  border: 1px solid var(--c-border-subtle);
 }
 
 .icon {
@@ -28,32 +28,32 @@
 }
 
 .iconSuccess {
-  color: #2e7d32;
+  color: var(--c-success);
 }
 
 .iconError {
-  color: #d32f2f;
+  color: var(--c-danger);
 }
 
 .iconNeutral {
-  color: #4b5563;
+  color: var(--c-text-muted);
 }
 
 .title {
   font-size: 24px;
   font-weight: 600;
   margin-bottom: 12px;
-  color: #1a1a1a;
+  color: var(--c-text);
 }
 
 .message {
-  color: #666;
+  color: var(--c-text-muted);
   line-height: 1.6;
   font-size: 15px;
 }
 
 .loadingExtra {
-  color: #6b7280;
+  color: var(--c-text-subtle);
   margin-top: 12px;
   font-size: 14px;
 }
