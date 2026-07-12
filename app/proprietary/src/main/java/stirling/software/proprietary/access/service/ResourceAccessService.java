@@ -1,5 +1,6 @@
 package stirling.software.proprietary.access.service;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -40,6 +41,58 @@ public class ResourceAccessService {
     /** Whether the user may use the portal / processor. */
     public boolean canAccessPortal(User user) {
         return canUseResource(ResourceType.PORTAL, "", null, portalDefaultPolicy, user);
+    }
+
+    /**
+     * Bulk equivalent of {@link #canAccessPortal} for a whole roster: fetches the PORTAL grant list
+     * ONCE and reuses the caller's already-computed set of team-leader user ids, so resolving a
+     * 1000-user roster costs one grant query instead of ~2 per user. The precedence mirrors {@link
+     * #canUseResource} exactly for the portal's (owner-less) case: admin, then an explicit grant on
+     * any of the user's principals, then the configured default policy. {@code teamLeaderUserIds}
+     * MUST be the complete set of users holding a LEADER membership (what {@code
+     * teamLeadLookup.isAnyTeamLeader} answers per user), or the ADMINS_AND_TEAM_LEADS default would
+     * diverge from the authoritative single-user check.
+     *
+     * @return the ids of the users who may access the portal
+     */
+    public Set<Long> usersWithPortalAccess(Collection<User> users, Set<Long> teamLeaderUserIds) {
+        Set<PrincipalRef> grantedPrincipals = new HashSet<>();
+        for (ResourceGrant g :
+                grantRepository.findByResourceTypeAndResourceId(ResourceType.PORTAL, "")) {
+            if (permissionSatisfies(g.getPermission(), AccessPermission.USE)) {
+                grantedPrincipals.add(new PrincipalRef(g.getPrincipalType(), g.getPrincipalId()));
+            }
+        }
+        Set<Long> leaderIds = teamLeaderUserIds == null ? Set.of() : teamLeaderUserIds;
+        Set<Long> allowed = new HashSet<>();
+        for (User user : users) {
+            if (user != null
+                    && user.getId() != null
+                    && hasPortalAccess(user, grantedPrincipals, leaderIds)) {
+                allowed.add(user.getId());
+            }
+        }
+        return allowed;
+    }
+
+    private boolean hasPortalAccess(
+            User user, Set<PrincipalRef> grantedPrincipals, Set<Long> leaderIds) {
+        if (isAdmin(user)) {
+            return true;
+        }
+        for (PrincipalRef principal : principalResolver.principalsOf(user)) {
+            if (grantedPrincipals.contains(principal)) {
+                return true;
+            }
+        }
+        if (portalDefaultPolicy == null) {
+            return false;
+        }
+        return switch (portalDefaultPolicy) {
+            case ORG_ALL -> principalResolver.allowsDeploymentWideAccess();
+            case ADMINS_AND_TEAM_LEADS -> leaderIds.contains(user.getId());
+            case EXPLICIT_ONLY -> false;
+        };
     }
 
     /** Whether the user may use a resource, falling back to its default policy. */

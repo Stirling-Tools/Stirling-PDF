@@ -3,7 +3,6 @@ package stirling.software.proprietary.controller.api;
 import static stirling.software.common.util.ProviderUtils.validateProvider;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -45,7 +44,6 @@ import stirling.software.proprietary.security.config.EnterpriseEndpoint;
 import stirling.software.proprietary.security.database.repository.SessionRepository;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.Authority;
-import stirling.software.proprietary.security.model.SessionEntity;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.dto.AdminUserSummary;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
@@ -169,16 +167,9 @@ public class ProprietaryUIDataController {
         boolean isFirstTimeSetup = false;
         boolean showDefaultCredentials = false;
 
-        List<User> allUsers = userRepository.findAll();
-        List<User> realUsers =
-                allUsers.stream()
-                        .filter(
-                                user ->
-                                        !Role.INTERNAL_API_USER
-                                                .getRoleId()
-                                                .equals(user.getUsername()))
-                        .toList();
-        long userCount = realUsers.size();
+        // Count real users without materializing the whole table (this is a public endpoint hit
+        // on every login-page load); the internal API user is excluded by username.
+        long userCount = userRepository.countByUsernameNot(Role.INTERNAL_API_USER.getRoleId());
 
         if (userCount == 0) {
             isFirstTimeSetup = true;
@@ -265,92 +256,70 @@ public class ProprietaryUIDataController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get admin settings data")
     public ResponseEntity<AdminSettingsData> getAdminSettingsData(Authentication authentication) {
-        List<User> allUsers = userRepository.findAllWithTeam();
-        Iterator<User> iterator = allUsers.iterator();
+        List<User> allUsers = userRepository.findAllWithTeamAndAuthorities();
         Map<String, String> roleDetails = Role.getAllRoleDetails();
+
+        // Drop internal accounts (the API user and the internal team) up front, in memory - the
+        // roster never shows them. roleDetails loses the internal-api role only if such a user
+        // exists, matching the previous behaviour.
+        boolean hasInternalApiUser = false;
+        List<User> visibleUsers = new ArrayList<>(allUsers.size());
+        for (User user : allUsers) {
+            if (user == null) {
+                continue;
+            }
+            if (isInternalApiUser(user)) {
+                hasInternalApiUser = true;
+                continue;
+            }
+            if (user.getTeam() != null
+                    && TeamService.INTERNAL_TEAM_NAME.equals(user.getTeam().getName())) {
+                continue;
+            }
+            visibleUsers.add(user);
+        }
+        if (hasInternalApiUser) {
+            roleDetails.remove(Role.INTERNAL_API_USER.getRoleId());
+        }
+
+        // Settings for every user in ONE query (mfaSecret masked), not a per-user load.
+        Map<Long, Map<String, String>> settingsByUserId =
+                loadSettingsByUserId(visibleUsers.stream().map(User::getId).toList());
+
+        // Session activity for the whole roster in TWO grouped queries, not one per user. Active =
+        // a non-expired session seen within the inactivity window; this is a read, so timed-out
+        // sessions merely display as inactive and are left for SessionScheduled to persist-expire.
+        int maxInactiveInterval = sessionPersistentRegistry.getMaxInactiveInterval();
+        Instant activeCutoff = Instant.now().minusSeconds(maxInactiveInterval);
+        Map<String, Instant> lastRequestByPrincipal = new HashMap<>();
+        for (Object[] row : sessionRepository.findLatestRequestPerPrincipal()) {
+            if (row[0] != null) {
+                lastRequestByPrincipal.put((String) row[0], (Instant) row[1]);
+            }
+        }
+        Set<String> activePrincipals =
+                new HashSet<>(sessionRepository.findActivePrincipalsSince(activeCutoff));
 
         Map<String, Boolean> userSessions = new HashMap<>();
         Map<String, Date> userLastRequest = new HashMap<>();
         Map<String, Map<String, String>> userSettings = new HashMap<>();
         int activeUsers = 0;
         int disabledUsers = 0;
-
-        while (iterator.hasNext()) {
-            User user = iterator.next();
-            if (user != null) {
-                String username = user.getUsername();
-                boolean shouldRemove = false;
-
-                // Check if user is an INTERNAL_API_USER
-                for (Authority authority : user.getAuthorities()) {
-                    if (authority.getAuthority().equals(Role.INTERNAL_API_USER.getRoleId())) {
-                        shouldRemove = true;
-                        roleDetails.remove(Role.INTERNAL_API_USER.getRoleId());
-                        break;
-                    }
-                }
-
-                // Check if user is part of the Internal team
-                if (user.getTeam() != null
-                        && TeamService.INTERNAL_TEAM_NAME.equals(user.getTeam().getName())) {
-                    shouldRemove = true;
-                }
-
-                if (shouldRemove) {
-                    iterator.remove();
-                    continue;
-                }
-
-                // Session status and last request time
-                int maxInactiveInterval = sessionPersistentRegistry.getMaxInactiveInterval();
-                boolean hasActiveSession = false;
-                Date lastRequest = null;
-                Optional<SessionEntity> latestSession =
-                        sessionPersistentRegistry.findLatestSession(username);
-
-                if (latestSession.isPresent()) {
-                    SessionEntity sessionEntity = latestSession.get();
-                    Instant lastAccessedTime =
-                            Optional.ofNullable(sessionEntity.getLastRequest())
-                                    .orElse(Instant.EPOCH);
-                    Instant now = Instant.now();
-                    Instant expirationTime =
-                            lastAccessedTime.plus(maxInactiveInterval, ChronoUnit.SECONDS);
-
-                    if (now.isAfter(expirationTime)) {
-                        sessionPersistentRegistry.expireSession(sessionEntity.getSessionId());
-                    } else {
-                        hasActiveSession = !sessionEntity.isExpired();
-                    }
-                    lastRequest = Date.from(lastAccessedTime);
-                } else {
-                    lastRequest = new Date(0);
-                }
-
-                User userWithSettings =
-                        userRepository.findByIdWithSettings(user.getId()).orElse(user);
-
-                // Mask mfaSecret if present in settings
-                Map<String, String> originalSettings = userWithSettings.getSettings();
-                Map<String, String> settingsCopy =
-                        originalSettings != null
-                                ? new HashMap<>(originalSettings)
-                                : new HashMap<>();
-                if (settingsCopy.containsKey("mfaSecret")) {
-                    settingsCopy.put("mfaSecret", "********");
-                }
-                userSettings.put(username, settingsCopy);
-                userSessions.put(username, hasActiveSession);
-                userLastRequest.put(username, lastRequest);
-
-                if (hasActiveSession) activeUsers++;
-                if (!user.isEnabled()) disabledUsers++;
-            }
+        for (User user : visibleUsers) {
+            String username = user.getUsername();
+            boolean hasActiveSession = activePrincipals.contains(username);
+            Instant lastRequest = lastRequestByPrincipal.get(username);
+            userSessions.put(username, hasActiveSession);
+            userLastRequest.put(
+                    username, lastRequest != null ? Date.from(lastRequest) : new Date(0));
+            userSettings.put(username, maskSecrets(settingsByUserId.get(user.getId())));
+            if (hasActiveSession) activeUsers++;
+            if (!user.isEnabled()) disabledUsers++;
         }
 
         // Sort users by active status and last request date
         List<User> sortedUsers =
-                allUsers.stream()
+                visibleUsers.stream()
                         .sorted(
                                 (u1, u2) -> {
                                     boolean u1Active = userSessions.get(u1.getUsername());
@@ -380,11 +349,13 @@ public class ProprietaryUIDataController {
         int licenseMaxUsers = licenseSettingsService.getSettings().getLicenseMaxUsers();
         boolean premiumEnabled = applicationProperties.getPremium().isEnabled();
 
-        // Convert User entities to AdminUserSummary DTOs to exclude sensitive fields
+        // Portal access for the whole roster in one grant query, reusing the leader set.
         Set<Long> leaderUserIds = leaderUserIds();
+        Set<Long> portalAccessUserIds =
+                resourceAccessService.usersWithPortalAccess(sortedUsers, leaderUserIds);
         List<AdminUserSummary> userSummaries =
                 sortedUsers.stream()
-                        .map(user -> convertUserToSummary(user, leaderUserIds))
+                        .map(user -> convertUserToSummary(user, leaderUserIds, portalAccessUserIds))
                         .toList();
 
         AdminSettingsData data = new AdminSettingsData();
@@ -393,7 +364,7 @@ public class ProprietaryUIDataController {
         data.setRoleDetails(roleDetails);
         data.setUserSessions(userSessions);
         data.setUserLastRequest(userLastRequest);
-        data.setTotalUsers(allUsers.size());
+        data.setTotalUsers(visibleUsers.size());
         data.setActiveUsers(activeUsers);
         data.setDisabledUsers(disabledUsers);
         data.setTeams(allTeams);
@@ -516,7 +487,9 @@ public class ProprietaryUIDataController {
         }
 
         List<User> teamUsers = userRepository.findAllByTeamId(id);
-        List<User> allUsers = userRepository.findAllWithTeam();
+        // Fetch authorities alongside team so the "available users" list doesn't N+1 on the eager
+        // authorities collection while filtering/serializing.
+        List<User> allUsers = userRepository.findAllWithTeamAndAuthorities();
         List<User> availableUsers =
                 allUsers.stream()
                         .filter(
@@ -575,17 +548,50 @@ public class ProprietaryUIDataController {
                 .collect(Collectors.toSet());
     }
 
+    /** Whether the user holds the internal-API authority (never shown in the roster). */
+    private boolean isInternalApiUser(User user) {
+        for (Authority authority : user.getAuthorities()) {
+            if (Role.INTERNAL_API_USER.getRoleId().equals(authority.getAuthority())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Assemble per-user settings maps from the flat (id, key, value) rows of one bulk query. */
+    private Map<Long, Map<String, String>> loadSettingsByUserId(List<Long> userIds) {
+        Map<Long, Map<String, String>> byUser = new HashMap<>();
+        if (userIds.isEmpty()) {
+            return byUser;
+        }
+        for (Object[] row : userRepository.findSettingsByUserIds(userIds)) {
+            byUser.computeIfAbsent((Long) row[0], id -> new HashMap<>())
+                    .put((String) row[1], (String) row[2]);
+        }
+        return byUser;
+    }
+
+    /** Copy a settings map with mfaSecret masked; null-safe. */
+    private Map<String, String> maskSecrets(Map<String, String> settings) {
+        Map<String, String> copy = settings != null ? new HashMap<>(settings) : new HashMap<>();
+        if (copy.containsKey("mfaSecret")) {
+            copy.put("mfaSecret", "********");
+        }
+        return copy;
+    }
+
     /**
      * Convert User entity to AdminUserSummary DTO, excluding sensitive fields like password and
-     * apiKey.
+     * apiKey. Portal access is resolved once for the whole roster (see {@link
+     * ResourceAccessService#usersWithPortalAccess}) and passed in, rather than a per-user query.
      */
-    private AdminUserSummary convertUserToSummary(User user, Set<Long> leaderUserIds) {
+    private AdminUserSummary convertUserToSummary(
+            User user, Set<Long> leaderUserIds, Set<Long> portalAccessUserIds) {
         AdminUserSummary summary = new AdminUserSummary();
         summary.setId(user.getId());
         summary.setTeamLead(leaderUserIds.contains(user.getId()));
-        // Authoritative portal access, same call /me uses, so the roster honors the configured
-        // policy instead of the frontend guessing from role/team-leadership.
-        summary.setPortalAccess(resourceAccessService.canAccessPortal(user));
+        // Authoritative portal access, same policy /me uses, resolved in bulk for the roster.
+        summary.setPortalAccess(portalAccessUserIds.contains(user.getId()));
         summary.setUsername(user.getUsername());
         summary.setEmail(user.getUsername()); // Use username as email for consistency
         summary.setRoleName(user.getRoleName());

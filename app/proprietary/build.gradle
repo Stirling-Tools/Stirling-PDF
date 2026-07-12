@@ -89,6 +89,7 @@ dependencies {
     testImplementation "org.testcontainers:testcontainers:${testcontainersMinioVersion}"
     testImplementation "org.testcontainers:minio:${testcontainersMinioVersion}"
     testImplementation "org.testcontainers:localstack:${testcontainersMinioVersion}"
+    testImplementation "org.testcontainers:postgresql:${testcontainersMinioVersion}"
     testImplementation "org.testcontainers:junit-jupiter:${testcontainersMinioVersion}"
 }
 

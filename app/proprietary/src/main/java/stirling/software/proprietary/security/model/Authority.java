@@ -11,6 +11,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -19,7 +20,11 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "authorities")
+@Table(
+        name = "authorities",
+        // authorities is loaded by user_id for every user (roster, login); index the FK so the
+        // EAGER/batched authority load is a seek, not a scan.
+        indexes = @Index(name = "idx_authorities_user_id", columnList = "user_id"))
 @Getter
 @Setter
 public class Authority implements GrantedAuthority, Serializable {

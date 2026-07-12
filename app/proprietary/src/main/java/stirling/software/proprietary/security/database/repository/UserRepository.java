@@ -1,11 +1,13 @@
 package stirling.software.proprietary.security.database.repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -42,6 +44,22 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query(value = "SELECT u FROM User u LEFT JOIN FETCH u.team")
     List<User> findAllWithTeam();
+
+    /**
+     * Every user with team AND authorities pre-fetched in one round-trip. Used by the admin roster,
+     * which reads both for every user; fetching them here collapses the eager-authorities N+1
+     * (DISTINCT dedupes the collection-join fan-out).
+     */
+    @EntityGraph(attributePaths = {"team", "authorities"})
+    @Query("SELECT DISTINCT u FROM User u")
+    List<User> findAllWithTeamAndAuthorities();
+
+    /**
+     * Every ({@code userId}, key, value) settings triple for the given users, so the roster can
+     * load all user settings in one query instead of a per-user {@code findByIdWithSettings}.
+     */
+    @Query("SELECT u.id, KEY(s), VALUE(s) FROM User u JOIN u.settings s WHERE u.id IN :ids")
+    List<Object[]> findSettingsByUserIds(@Param("ids") Collection<Long> ids);
 
     @Query(
             "SELECT u FROM User u JOIN FETCH u.authorities JOIN FETCH u.team WHERE u.team.id = :teamId")

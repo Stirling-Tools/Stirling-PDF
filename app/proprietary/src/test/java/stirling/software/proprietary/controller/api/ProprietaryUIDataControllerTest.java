@@ -3,7 +3,6 @@ package stirling.software.proprietary.controller.api;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -93,7 +92,7 @@ class ProprietaryUIDataControllerTest {
 
     @Test
     void loginDataFlagsFirstTimeSetupWhenNoUsers() {
-        when(userRepository.findAll()).thenReturn(Collections.emptyList());
+        when(userRepository.countByUsernameNot(Role.INTERNAL_API_USER.getRoleId())).thenReturn(0L);
 
         ResponseEntity<LoginData> response = controller.getLoginData();
 
