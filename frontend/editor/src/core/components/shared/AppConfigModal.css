@@ -212,8 +212,8 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--modal-content-bg);
-  border-top: 1px solid var(--modal-header-border);
+  background: var(--c-surface);
+  border-top: 1px solid var(--c-border-subtle);
   padding: 1rem 2rem;
   margin: 0 -2rem;
   margin-bottom: -1rem;

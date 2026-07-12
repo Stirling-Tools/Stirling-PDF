@@ -17,7 +17,7 @@
   width: 15px;
   height: 15px;
   border-radius: 4px;
-  color: var(--text-secondary);
+  color: var(--c-text-muted);
   background: color-mix(in srgb, currentColor 16%, transparent);
   pointer-events: auto;
 }

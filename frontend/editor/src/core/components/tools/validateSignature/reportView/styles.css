@@ -44,7 +44,7 @@
 .simulated-page {
   width: min(820px, 100%);
   min-height: 1040px;
-  background-color: var(--bg-raised) !important;
+  background-color: var(--c-surface-raised) !important;
   box-shadow: 0 12px 32px var(--shadow-color) !important;
   border-radius: 12px !important;
   padding: 48px 56px !important;
@@ -52,7 +52,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  color: var(--text-primary) !important;
+  color: var(--c-text) !important;
 }
 
 /* Container for the interactive report view */
@@ -60,19 +60,19 @@
   width: 100%;
   height: 100%;
   /* Match Active Files/Page Editor background */
-  background: var(--bg-background) !important;
+  background: var(--c-bg) !important;
   padding: 32px 24px 48px;
   overflow-y: auto;
 }
 
 /* Keep field blocks stable colors across themes */
 .field-value {
-  border: 1px solid var(--border-default) !important;
-  background-color: var(--bg-raised) !important;
+  border: 1px solid var(--c-border) !important;
+  background-color: var(--c-surface-raised) !important;
 }
 
 .field-container {
-  color: var(--text-primary) !important;
+  color: var(--c-text) !important;
 }
 
 /* Thumbnail preview styles */

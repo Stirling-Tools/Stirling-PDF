@@ -19,14 +19,14 @@
   margin: 0;
   font-size: 1.375rem;
   font-weight: 650;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-agents__sub {
   margin: 0.25rem 0 0;
   font-size: 0.8125rem;
   line-height: 1.5;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
   max-width: 46rem;
 }
 
@@ -60,8 +60,8 @@
   gap: 0.5rem;
   text-align: left;
   padding: 0.75rem 0.875rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius-lg);
   cursor: pointer;
   transition:
@@ -70,13 +70,13 @@
 }
 
 .portal-agents__selector-item:hover {
-  background: var(--color-bg-hover);
+  background: var(--c-hover);
 }
 
 .portal-agents__selector-item.is-selected {
-  border-color: var(--color-blue);
+  border-color: var(--c-primary);
   background: var(--color-blue-light);
-  box-shadow: 0 0 0 1px var(--color-blue) inset;
+  box-shadow: 0 0 0 1px var(--c-primary) inset;
 }
 
 .portal-agents__selector-main {
@@ -89,13 +89,13 @@
 .portal-agents__selector-name {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-agents__selector-role {
   font-size: 0.6875rem;
   line-height: 1.4;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .portal-agents__selector-meta {
@@ -110,7 +110,7 @@
 .portal-agents__version-tag {
   font-family: var(--font-mono);
   font-size: 0.6875rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 /* ──────────────────────────────────────────────────────────────────────── */
@@ -118,8 +118,8 @@
 /* ──────────────────────────────────────────────────────────────────────── */
 
 .portal-agents__builder {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   padding: 1.25rem;
@@ -139,12 +139,12 @@
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-agents__builder-sub {
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .portal-agents__builder-meta {
@@ -156,7 +156,7 @@
 
 .portal-agents__builder-model {
   background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border-light);
+  border: 1px solid var(--c-border-subtle);
   border-radius: var(--radius-md);
   padding: 0.125rem 0.375rem;
 }
@@ -178,7 +178,7 @@
   font-size: 0.6875rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
   font-weight: 600;
 }
 
@@ -191,18 +191,18 @@
 .portal-agents__hint {
   margin: 0;
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .portal-agents__muted {
   font-size: 0.8125rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .portal-agents__mono {
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
 }
 
 .portal-agents__stat-grid {
@@ -227,12 +227,12 @@
   align-items: baseline;
   justify-content: space-between;
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .portal-agents__bar-head strong {
   font-size: 0.8125rem;
-  color: var(--color-text-1);
+  color: var(--c-text);
   font-family: var(--font-mono);
 }
 
@@ -256,7 +256,7 @@
   gap: 0.75rem;
   padding: 0.75rem 0.875rem;
   background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border-light);
+  border: 1px solid var(--c-border-subtle);
   border-radius: var(--radius-md);
 }
 
@@ -276,13 +276,13 @@
 .portal-agents__scenario-head strong {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-agents__scenario-expect {
   font-size: 0.75rem;
   line-height: 1.45;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .portal-agents__scenario-add {
@@ -290,7 +290,7 @@
   flex-direction: column;
   gap: 0.625rem;
   padding-top: 0.25rem;
-  border-top: 1px dashed var(--color-border-light);
+  border-top: 1px dashed var(--c-border-subtle);
 }
 
 .portal-agents__scenario-form {
@@ -317,7 +317,7 @@
   gap: 1rem;
   padding: 0.875rem 1rem;
   background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border-light);
+  border: 1px solid var(--c-border-subtle);
   border-radius: var(--radius-md);
 }
 
@@ -353,7 +353,7 @@
   gap: 0.75rem;
   padding: 0.75rem 0.875rem;
   background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border-light);
+  border: 1px solid var(--c-border-subtle);
   border-radius: var(--radius-md);
 }
 
@@ -372,18 +372,18 @@
 
 .portal-agents__version-tag {
   font-size: 0.8125rem;
-  color: var(--color-text-1);
+  color: var(--c-text);
   font-weight: 600;
 }
 
 .portal-agents__version-note {
   font-size: 0.8125rem;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
 }
 
 .portal-agents__version-meta {
   font-size: 0.6875rem;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
 }
 
 .portal-agents__version-actions {
@@ -404,7 +404,7 @@
   margin: 0;
   font-size: 0.875rem;
   line-height: 1.55;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
 }
 
 .portal-agents__dropzone {
@@ -415,7 +415,7 @@
   padding: 1.75rem 1rem;
   text-align: center;
   background: var(--color-bg-subtle);
-  border: 1px dashed var(--color-border);
+  border: 1px dashed var(--c-border);
   border-radius: var(--radius-lg);
   cursor: pointer;
   transition:
@@ -424,7 +424,7 @@
 }
 
 .portal-agents__dropzone:hover {
-  border-color: var(--color-blue);
+  border-color: var(--c-primary);
   background: var(--color-blue-light);
 }
 
@@ -442,12 +442,12 @@
 
 .portal-agents__dropzone-icon {
   font-size: 1.5rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .portal-agents__dropzone-text {
   font-size: 0.8125rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .portal-agents__dialog-footer {

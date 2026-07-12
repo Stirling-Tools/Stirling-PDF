@@ -997,7 +997,7 @@ export function LocalEmbedPDF({
                     <Viewport
                       documentId={documentId}
                       style={{
-                        backgroundColor: "var(--bg-background)",
+                        backgroundColor: "var(--c-bg)",
                         height: "100%",
                         width: "100%",
                         maxHeight: "100%",

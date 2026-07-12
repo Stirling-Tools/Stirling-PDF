@@ -129,7 +129,7 @@ const AddFileCard = ({
                   icon="add"
                   width="1.5rem"
                   height="1.5rem"
-                  className="text-[var(--accent-interactive)]"
+                  className="text-[var(--c-primary)]"
                 />
                 <span>{t("landing.addFiles", "Add Files")}</span>
               </Button>
@@ -161,7 +161,7 @@ const AddFileCard = ({
                 icon={icons.uploadIconName}
                 width="1.25rem"
                 height="1.25rem"
-                style={{ color: "var(--accent-interactive)", flexShrink: 0 }}
+                style={{ color: "var(--c-primary)", flexShrink: 0 }}
               />
               {isUploadHover && (
                 <span
@@ -181,7 +181,7 @@ const AddFileCard = ({
 
           {/* Instruction Text */}
           <span
-            className="text-[var(--accent-interactive)]"
+            className="text-[var(--c-primary)]"
             style={{
               fontSize: ".8rem",
               textAlign: "center",

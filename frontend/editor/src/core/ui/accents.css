@@ -2,12 +2,12 @@
  * accents derive from --color-* tokens (auto dark), neutral/brand/ai are explicit. */
 
 .sui-acc-default {
-  --_solid: var(--color-blue);
-  --_solid-hover: var(--color-blue-dark);
+  --_solid: var(--c-primary);
+  --_solid-hover: var(--c-primary-hover);
   --_on: #ffffff;
-  --_text: var(--color-blue-dark);
+  --_text: var(--c-primary-hover);
   --_bd: var(--color-blue-border);
-  --_tint: color-mix(in srgb, var(--color-blue) 12%, transparent);
+  --_tint: color-mix(in srgb, var(--c-primary) 12%, transparent);
 }
 
 html[data-app-theme="custom"] .sui-acc-default {

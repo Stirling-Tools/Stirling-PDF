@@ -291,7 +291,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
           <Box
             style={{
               border:
-                "1px solid var(--border-subtle, var(--mantine-color-default-border))",
+                "1px solid var(--c-border-subtle, var(--mantine-color-default-border))",
               borderRadius: 12,
               padding: "24px 28px",
               background:
@@ -493,10 +493,10 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                       style={{
                         borderTop:
                           idx === 0
-                            ? "1px solid var(--border-subtle, var(--mantine-color-default-border))"
+                            ? "1px solid var(--c-border-subtle, var(--mantine-color-default-border))"
                             : undefined,
                         borderBottom:
-                          "1px solid var(--border-subtle, var(--mantine-color-default-border))",
+                          "1px solid var(--c-border-subtle, var(--mantine-color-default-border))",
                         padding: "10px 12px",
                       }}
                     >
@@ -576,10 +576,10 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                       style={{
                         borderTop:
                           index === 0
-                            ? "1px solid var(--border-subtle, var(--mantine-color-default-border))"
+                            ? "1px solid var(--c-border-subtle, var(--mantine-color-default-border))"
                             : undefined,
                         borderBottom:
-                          "1px solid var(--border-subtle, var(--mantine-color-default-border))",
+                          "1px solid var(--c-border-subtle, var(--mantine-color-default-border))",
                       }}
                     >
                       <Group
@@ -656,7 +656,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                           pb="sm"
                           style={{
                             borderTop:
-                              "1px solid var(--border-subtle, var(--mantine-color-default-border))",
+                              "1px solid var(--c-border-subtle, var(--mantine-color-default-border))",
                           }}
                         >
                           <Stack gap="sm" mt="sm">
@@ -749,7 +749,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
             <Box
               style={{
                 border:
-                  "1px solid var(--border-subtle, var(--mantine-color-default-border))",
+                  "1px solid var(--c-border-subtle, var(--mantine-color-default-border))",
                 borderRadius: 12,
                 padding: "16px 20px",
               }}
@@ -834,7 +834,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
       <Box
         style={{
           borderTop:
-            "1px solid var(--border-subtle, var(--mantine-color-default-border))",
+            "1px solid var(--c-border-subtle, var(--mantine-color-default-border))",
           padding: "16px 28px",
           flexShrink: 0,
         }}

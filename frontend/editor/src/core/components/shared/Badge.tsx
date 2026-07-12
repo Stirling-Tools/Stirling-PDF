@@ -79,7 +79,7 @@ const Badge: React.FC<BadgeProps> = ({
 
     // Default styling
     return {
-      background: "var(--tool-header-badge-bg)",
+      background: "var(--c-surface-raised)",
       color: "var(--tool-header-badge-text)",
     };
   };

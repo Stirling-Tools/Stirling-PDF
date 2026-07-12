@@ -30,11 +30,11 @@
 }
 
 .text-divider.subcategory .text-divider__rule {
-  background-color: var(--tool-subcategory-rule-color);
+  background-color: var(--c-border-subtle);
 }
 
 .text-divider.subcategory .text-divider__label {
-  color: var(--tool-subcategory-text-color);
+  color: var(--c-text-subtle);
   text-transform: uppercase;
   font-weight: 600;
 }

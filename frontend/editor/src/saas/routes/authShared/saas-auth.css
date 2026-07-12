@@ -25,9 +25,9 @@
 }
 
 [data-mantine-color-scheme="dark"] .auth-dropdown {
-  background-color: var(--bg-surface);
-  color: var(--text-primary);
-  border-color: var(--border-default);
+  background-color: var(--c-surface);
+  color: var(--c-text);
+  border-color: var(--c-border);
   box-shadow: var(--shadow-md);
 }
 
@@ -44,7 +44,7 @@
 }
 
 [data-mantine-color-scheme="dark"] .auth-dropdown-item {
-  color: var(--text-primary);
+  color: var(--c-text);
 }
 
 .auth-guest-button {

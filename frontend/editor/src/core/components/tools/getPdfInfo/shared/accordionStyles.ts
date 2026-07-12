@@ -5,7 +5,7 @@ type AccordionStyles = Partial<Record<AccordionStylesNames, CSSProperties>>;
 
 export const pdfInfoAccordionStyles: AccordionStyles = {
   item: {
-    backgroundColor: "var(--accordion-item-bg)",
+    backgroundColor: "var(--c-surface-raised)",
   },
   control: {
     backgroundColor: "transparent",

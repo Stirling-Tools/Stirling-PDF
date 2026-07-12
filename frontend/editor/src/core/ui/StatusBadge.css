@@ -39,9 +39,9 @@
 }
 
 .sui-status--neutral {
-  color: var(--color-text-3);
-  background: var(--color-bg-muted);
-  border-color: var(--color-border-light);
+  color: var(--c-text-subtle);
+  background: var(--c-surface-sunken);
+  border-color: var(--c-border-subtle);
 }
 .sui-status--success {
   color: var(--color-green);
@@ -59,7 +59,7 @@
   border-color: var(--color-red-border);
 }
 .sui-status--info {
-  color: var(--color-blue);
+  color: var(--c-primary);
   background: var(--color-blue-light);
   border-color: var(--color-blue-border);
 }

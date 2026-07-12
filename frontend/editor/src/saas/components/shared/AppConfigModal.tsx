@@ -130,13 +130,13 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
 
   const colors = useMemo(
     () => ({
-      navBg: "var(--modal-nav-bg)",
-      sectionTitle: "var(--modal-nav-section-title)",
+      navBg: "var(--c-bg-raised)",
+      sectionTitle: "var(--c-text-subtle)",
       navItem: "var(--modal-nav-item)",
       navItemActive: "var(--modal-nav-item-active)",
-      navItemActiveBg: "var(--modal-nav-item-active-bg)",
-      contentBg: "var(--modal-content-bg)",
-      headerBorder: "var(--modal-header-border)",
+      navItemActiveBg: "var(--c-primary-subtle)",
+      contentBg: "var(--c-surface)",
+      headerBorder: "var(--c-border-subtle)",
     }),
     [],
   );

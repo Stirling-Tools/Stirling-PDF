@@ -10,11 +10,11 @@
   --upm-accent-soft: rgba(10, 139, 255, 0.08);
   --upm-success: #10b981;
   --upm-radius: 18px;
-  --upm-card-bg: var(--bg-surface);
-  --upm-border: var(--border-default);
-  --upm-divider: var(--border-subtle);
-  --upm-text: var(--text-primary);
-  --upm-muted: var(--text-muted);
+  --upm-card-bg: var(--c-surface);
+  --upm-border: var(--c-border);
+  --upm-divider: var(--c-border-subtle);
+  --upm-text: var(--c-text);
+  --upm-muted: var(--c-text-subtle);
 }
 [data-mantine-color-scheme="dark"] .upm {
   --upm-card-bg: #1c2340;

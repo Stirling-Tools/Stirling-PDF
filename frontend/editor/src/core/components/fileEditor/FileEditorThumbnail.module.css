@@ -75,7 +75,7 @@
   box-shadow: var(--shadow-md);
   overflow: hidden;
   position: relative;
-  background: var(--bg-surface);
+  background: var(--c-surface);
   transition:
     box-shadow 0.15s ease,
     transform 0.2s ease;
@@ -91,7 +91,7 @@
   height: 100%;
   object-fit: contain;
   border-radius: 12px;
-  background: var(--bg-surface);
+  background: var(--c-surface);
   display: block;
   position: relative;
   z-index: 1;
@@ -115,7 +115,7 @@
 .fileName {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--c-text);
   line-height: var(--file-name-line-height);
   height: calc(var(--file-name-lines) * var(--file-name-line-height));
   margin: 0;
@@ -149,7 +149,7 @@
 
 .fileMeta {
   font-size: 11px;
-  color: var(--text-secondary);
+  color: var(--c-text-muted);
   line-height: var(--file-meta-line-height);
   height: var(--file-meta-line-height);
   overflow: hidden;
@@ -268,7 +268,7 @@
   bottom: 6px;
   right: 6px;
   cursor: grab;
-  color: var(--text-secondary);
+  color: var(--c-text-muted);
   opacity: 0;
   transition: opacity 0.15s ease;
   pointer-events: none;

@@ -17,8 +17,8 @@ export interface TierInfo {
 export const TIER_INFO: Record<Tier, TierInfo> = {
   // Matches SaaS branding (editor/cloud Payg + PaygFree): the always-free
   // manual-tools tier is "Editor plan"; the metered tier is "Processor plan".
-  free: { label: "Editor plan", dotColor: "var(--color-text-4)" },
-  pro: { label: "Processor plan", dotColor: "var(--color-blue)" },
+  free: { label: "Editor plan", dotColor: "var(--c-text-subtle)" },
+  pro: { label: "Processor plan", dotColor: "var(--c-primary)" },
   enterprise: { label: "Enterprise plan", dotColor: "var(--color-purple)" },
 };
 

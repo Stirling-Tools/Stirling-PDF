@@ -3,13 +3,13 @@
   flex-direction: column;
   height: 100%;
   width: 100%;
-  background-color: var(--bg-background);
+  background-color: var(--c-bg);
 }
 
 .mobile-toggle {
   padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid var(--border-subtle);
-  background: var(--bg-toolbar);
+  border-bottom: 1px solid var(--c-border-subtle);
+  background: var(--c-bg-raised);
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
@@ -47,8 +47,8 @@
   gap: 0.25rem;
   padding: 0.2rem;
   border-radius: 9999px;
-  background: var(--bg-background);
-  border: 1px solid var(--border-subtle);
+  background: var(--c-bg);
+  border: 1px solid var(--c-border-subtle);
 }
 
 .mobile-toggle-button {
@@ -57,7 +57,7 @@
   padding: 0.4rem 0.9rem;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   background: transparent;
   transition:
     background 0.2s ease,
@@ -71,12 +71,12 @@
 
 .mobile-toggle-button.active {
   background: var(--primary-surface, rgba(34, 139, 230, 0.12));
-  color: var(--text-primary);
+  color: var(--c-text);
 }
 
 .mobile-toggle-hint {
   font-size: 0.7rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   text-align: center;
 }
 
@@ -134,8 +134,8 @@
   align-items: center;
   justify-content: space-around;
   padding: 0.5rem;
-  border-top: 1px solid var(--border-subtle);
-  background: var(--bg-toolbar);
+  border-top: 1px solid var(--c-border-subtle);
+  background: var(--c-bg-raised);
   gap: 0.5rem;
   position: relative;
   z-index: 10;
@@ -152,7 +152,7 @@
   padding: 0.5rem;
   border: none;
   background: transparent;
-  color: var(--text-primary);
+  color: var(--c-text);
   cursor: pointer;
   border-radius: 0.5rem;
   transition: background 0.2s ease;
@@ -176,5 +176,5 @@
 .mobile-bottom-button-label {
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
 }

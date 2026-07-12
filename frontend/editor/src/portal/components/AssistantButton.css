@@ -11,7 +11,7 @@
   color: #fff;
   background: linear-gradient(
     135deg,
-    var(--color-blue) 0%,
+    var(--c-primary) 0%,
     var(--color-purple) 100%
   );
   box-shadow:

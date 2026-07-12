@@ -5,9 +5,9 @@
   width: 100%;
   height: 100%;
   /* Use Mantine variables in the editor; fall back to shared tokens in storybook */
-  background: var(--mantine-color-body, var(--color-surface, #ffffff));
+  background: var(--mantine-color-body, var(--c-surface, #ffffff));
   border-radius: 16px;
-  border: 1px solid var(--border-subtle, var(--color-border, #e3e8ee));
+  border: 1px solid var(--c-border-subtle, var(--c-border, #e3e8ee));
   box-shadow:
     0 8px 32px rgba(15, 23, 42, 0.14),
     0 2px 8px rgba(15, 23, 42, 0.06);

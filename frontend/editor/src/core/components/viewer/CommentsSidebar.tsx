@@ -679,8 +679,8 @@ export function CommentsSidebar({
         top: 0,
         bottom: 0,
         width: SIDEBAR_WIDTH,
-        backgroundColor: "var(--bg-file-manager)",
-        borderLeft: "1px solid var(--border-subtle)",
+        backgroundColor: "var(--c-bg)",
+        borderLeft: "1px solid var(--c-border-subtle)",
         zIndex: 998,
         display: "flex",
         flexDirection: "column",
@@ -690,7 +690,7 @@ export function CommentsSidebar({
       <div
         style={{
           padding: "0.75rem 1rem",
-          borderBottom: "1px solid var(--border-subtle)",
+          borderBottom: "1px solid var(--c-border-subtle)",
           display: "flex",
           alignItems: "center",
           gap: "0.5rem",
@@ -869,7 +869,7 @@ export function CommentsSidebar({
                     <Box
                       mb="xs"
                       style={{
-                        borderBottom: "1px solid var(--border-subtle)",
+                        borderBottom: "1px solid var(--c-border-subtle)",
                       }}
                     />
                     <Stack gap="sm">
@@ -902,9 +902,9 @@ export function CommentsSidebar({
                             style={{
                               border: selectedAnnotationIds.has(id)
                                 ? "1px solid var(--mantine-color-blue-3)"
-                                : "1px solid var(--border-subtle)",
+                                : "1px solid var(--c-border-subtle)",
                               borderRadius: 8,
-                              backgroundColor: "var(--bg-raised)",
+                              backgroundColor: "var(--c-surface-raised)",
                             }}
                           >
                             <Group

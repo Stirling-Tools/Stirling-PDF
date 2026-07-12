@@ -13,11 +13,11 @@
  * here act as a typed reference and as a fallback for any slot Mantine reads
  * before the inline vars are applied. */
 .sui-mantine-wrapper {
-  --input-bg: var(--color-surface);
-  --input-bd: var(--color-border-input);
-  --input-bd-focus: var(--color-blue);
+  --input-bg: var(--c-surface);
+  --input-bd: var(--c-border);
+  --input-bd-focus: var(--c-primary);
   --input-radius: var(--radius-md);
-  --input-color: var(--color-text-1);
+  --input-color: var(--c-text);
   --input-placeholder-color: var(--color-text-placeholder);
   --input-height-sm: 1.75rem;
   --input-height-md: 2.25rem;
@@ -31,7 +31,7 @@
 /* SUI focus ring — matches .sui-input:focus-within */
 .sui-mantine-wrapper[data-focused],
 .sui-mantine-wrapper:focus-within {
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-blue) 16%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--c-primary) 16%, transparent);
 }
 
 /* Error state */
@@ -55,7 +55,7 @@
 /* Pills match SUI's Chip component: small rounded tags. */
 .sui-mantine-pill {
   background: var(--color-blue-light) !important;
-  color: var(--color-blue-dark) !important;
+  color: var(--c-primary-hover) !important;
   border: 1px solid var(--color-blue-border) !important;
   border-radius: var(--radius-sm) !important;
   font-size: 0.75rem !important;
@@ -69,26 +69,26 @@
 
 /* ---- NumberInput controls (increment/decrement buttons) ---- */
 .sui-mantine-control {
-  border-color: var(--color-border-input) !important;
-  color: var(--color-text-3) !important;
+  border-color: var(--c-border) !important;
+  color: var(--c-text-subtle) !important;
 }
 
 .sui-mantine-control:hover {
-  background: var(--color-bg-hover) !important;
-  color: var(--color-text-1) !important;
+  background: var(--c-hover) !important;
+  color: var(--c-text) !important;
 }
 
 /* ---- Select: hide Mantine's right-section clear button border ---- */
 .sui-mantine-wrapper .mantine-Select-section {
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 /* ---- Slider ---- */
 .sui-mantine-slider {
-  --slider-color: var(--color-blue);
-  --slider-track-bg: var(--color-border);
-  --slider-thumb-color: var(--color-surface);
-  --slider-thumb-bd: var(--color-blue);
+  --slider-color: var(--c-primary);
+  --slider-track-bg: var(--c-border);
+  --slider-thumb-color: var(--c-surface);
+  --slider-thumb-bd: var(--c-primary);
 }
 
 .sui-mantine-slider:focus-within {
@@ -97,13 +97,13 @@
 
 /* Thumb focus ring matches SUI */
 .sui-mantine-slider .mantine-Slider-thumb:focus-visible {
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-blue) 16%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--c-primary) 16%, transparent);
   outline: none;
 }
 
 /* Mark labels use SUI text tokens */
 .sui-mantine-slider .mantine-Slider-markLabel {
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
   font-size: 0.75rem;
 }
 
@@ -112,7 +112,7 @@
  * SuiProvider syncs forceColorScheme to SUI theme, so
  * [data-mantine-color-scheme="dark"] === [data-theme="dark"] in practice. ---- */
 [data-mantine-color-scheme="dark"] .sui-mantine-wrapper {
-  --input-bg: var(--color-surface);
-  --input-bd: var(--color-border-input);
-  --input-color: var(--color-text-1);
+  --input-bg: var(--c-surface);
+  --input-bd: var(--c-border);
+  --input-color: var(--c-text);
 }

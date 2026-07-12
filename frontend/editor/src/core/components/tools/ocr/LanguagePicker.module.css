@@ -5,9 +5,9 @@
   flex-direction: row;
   align-items: center; /* Center align items vertically */
   height: 32px;
-  border: 1px solid var(--border-default);
+  border: 1px solid var(--c-border);
   background-color: var(--mantine-color-white); /* Use Mantine color variable */
-  color: var(--text-secondary);
+  color: var(--c-text-muted);
   border-radius: var(--radius-sm);
   padding: 4px 8px;
   font-size: 13px;
@@ -23,7 +23,7 @@
 }
 
 .languagePicker:hover {
-  border-color: var(--border-strong);
+  border-color: var(--c-border-strong);
   background-color: var(
     --mantine-color-gray-0
   ); /* Light gray on hover for light mode */
@@ -43,7 +43,7 @@
 
 .languagePickerIcon {
   font-size: 16px;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   margin-left: auto;
   display: flex;
   align-items: center; /* Center the icon vertically */
@@ -51,7 +51,7 @@
 
 .languagePickerDropdown {
   background-color: var(--mantine-color-white); /* Use Mantine color variable */
-  border: 1px solid var(--border-default);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius-sm);
   padding: 4px;
 }
@@ -66,7 +66,7 @@
   cursor: pointer;
   border-radius: var(--radius-xs);
   font-size: 13px;
-  color: var(--text-primary);
+  color: var(--c-text);
   transition: background-color 0.2s ease;
 }
 
@@ -110,7 +110,7 @@
 
 .languagePickerScrollArea {
   max-height: 180px;
-  border-bottom: 1px solid var(--border-default);
+  border-bottom: 1px solid var(--c-border);
   padding-bottom: 8px;
 }
 

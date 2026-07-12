@@ -9,8 +9,8 @@
   display: flex;
   height: 100vh;
   overflow: hidden;
-  background: var(--color-bg);
-  color: var(--color-text-2);
+  background: var(--c-bg);
+  color: var(--c-text-muted);
 }
 
 .portal-shell__main {

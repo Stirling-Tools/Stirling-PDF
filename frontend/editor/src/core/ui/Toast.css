@@ -16,8 +16,8 @@
   align-items: flex-start;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-left-width: 3px;
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
@@ -25,7 +25,7 @@
 }
 
 .sui-toast--info {
-  border-left-color: var(--color-blue);
+  border-left-color: var(--c-primary);
 }
 .sui-toast--success {
   border-left-color: var(--color-green);
@@ -44,10 +44,10 @@
 }
 .sui-toast__title {
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 .sui-toast__desc {
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
   margin-top: 0.125rem;
   line-height: 1.45;
 }

@@ -5,8 +5,8 @@
   width: 23.75rem;
   height: 32.5rem;
   max-height: calc(100vh - 7rem);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-lg);
   display: flex;
@@ -25,7 +25,7 @@
   color: var(--color-text-on-accent);
   background: linear-gradient(
     135deg,
-    var(--color-blue) 0%,
+    var(--c-primary) 0%,
     var(--color-purple) 100%
   );
 }
@@ -90,16 +90,16 @@
   padding: 0.4375rem 0.625rem;
   font-size: 0.8125rem;
   text-align: left;
-  color: var(--color-text-2);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  color: var(--c-text-muted);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius-md);
   transition:
     border-color var(--motion-fast),
     background var(--motion-fast);
 }
 .portal-assistant__suggestion:hover {
-  background: var(--color-bg-hover);
+  background: var(--c-hover);
   border-color: var(--color-blue-border);
 }
 
@@ -115,16 +115,16 @@
 
 .portal-assistant__bubble--user {
   align-self: flex-end;
-  background: var(--color-blue);
+  background: var(--c-primary);
   color: var(--color-text-on-accent);
   border-bottom-right-radius: 0.25rem;
 }
 
 .portal-assistant__bubble--assistant {
   align-self: flex-start;
-  background: var(--color-surface);
-  color: var(--color-text-2);
-  border: 1px solid var(--color-border);
+  background: var(--c-surface);
+  color: var(--c-text-muted);
+  border: 1px solid var(--c-border);
   border-bottom-left-radius: 0.25rem;
 }
 
@@ -137,7 +137,7 @@
   width: 0.375rem;
   height: 0.375rem;
   border-radius: 50%;
-  background: var(--color-text-5);
+  background: var(--c-text-subtle);
   animation: pulse 1.2s ease-in-out infinite;
 }
 .portal-assistant__typing span:nth-child(2) {
@@ -152,8 +152,8 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.625rem 0.75rem;
-  border-top: 1px solid var(--color-border);
-  background: var(--color-surface);
+  border-top: 1px solid var(--c-border);
+  background: var(--c-surface);
 }
 
 .portal-assistant__input {
@@ -161,15 +161,15 @@
   font: inherit;
   font-size: 0.8125rem;
   background: transparent;
-  border: 1px solid var(--color-border-input);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius-md);
   padding: 0.4375rem 0.625rem;
-  color: var(--color-text-1);
+  color: var(--c-text);
   outline: none;
   transition: border-color var(--motion-fast);
 }
 .portal-assistant__input:focus {
-  border-color: var(--color-blue);
+  border-color: var(--c-primary);
 }
 
 .portal-assistant__send {

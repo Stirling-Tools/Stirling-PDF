@@ -3,8 +3,8 @@
   flex-direction: column;
   width: 100%;
   height: 100%;
-  background: var(--bg-background);
-  color: var(--text-primary);
+  background: var(--c-bg);
+  color: var(--c-text);
   overflow: hidden;
 }
 
@@ -22,8 +22,8 @@
   gap: 1rem;
   min-height: 48px;
   padding: 0 0.75rem;
-  border-bottom: 1px solid var(--border-subtle);
-  background: var(--bg-toolbar);
+  border-bottom: 1px solid var(--c-border-subtle);
+  background: var(--c-bg-raised);
   flex-shrink: 0;
 }
 
@@ -52,7 +52,7 @@
   border: none;
   padding: 0.25rem 0.5rem;
   border-radius: 0.375rem;
-  color: var(--text-secondary);
+  color: var(--c-text-muted);
   cursor: pointer;
   font-size: inherit;
   font-weight: 500;
@@ -66,17 +66,17 @@
 }
 
 .files-page-breadcrumb:hover {
-  background: var(--hover-bg);
-  color: var(--text-primary);
+  background: var(--c-hover);
+  color: var(--c-text);
 }
 
 .files-page-breadcrumb.is-current {
-  color: var(--text-primary);
-  background: var(--hover-bg);
+  color: var(--c-text);
+  background: var(--c-hover);
 }
 
 .files-page-breadcrumb-sep {
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   font-size: 1rem !important;
   width: 1rem;
   height: 1rem;
@@ -88,8 +88,8 @@
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
   border-radius: 999px;
   padding: 0.2rem 0.75rem;
   /* Fills its grid cell; the cell's minmax(...) clamps to a sensible range. */
@@ -102,7 +102,7 @@
   border: none;
   outline: none;
   flex: 1;
-  color: var(--text-primary);
+  color: var(--c-text);
   font-size: 0.9rem;
 }
 
@@ -116,8 +116,8 @@
 .files-page-tree {
   width: 17rem;
   flex-shrink: 0;
-  border-right: 1px solid var(--border-subtle);
-  background: var(--bg-toolbar);
+  border-right: 1px solid var(--c-border-subtle);
+  background: var(--c-bg-raised);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -135,7 +135,7 @@
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
 }
 
 /* Tree node styles moved to FolderTreePanel.css - that's where the
@@ -156,8 +156,8 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.55rem 1.25rem;
-  border-bottom: 1px solid var(--border-subtle);
-  background: var(--bg-background);
+  border-bottom: 1px solid var(--c-border-subtle);
+  background: var(--c-bg);
   flex-shrink: 0;
   flex-wrap: wrap;
   min-height: 3rem;
@@ -165,7 +165,7 @@
 
 .files-page-toolbar-info {
   font-size: 0.85rem;
-  color: var(--text-secondary);
+  color: var(--c-text-muted);
   font-weight: 500;
 }
 
@@ -178,7 +178,7 @@
 }
 
 .files-page-toolbar-info span {
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
 }
 
 .files-page-toolbar-actions {
@@ -226,7 +226,7 @@
 .files-page-toolbar-divider {
   width: 1px;
   height: 1.4rem;
-  background: var(--border-subtle);
+  background: var(--c-border-subtle);
   margin: 0 0.15rem;
 }
 
@@ -264,7 +264,7 @@
   padding: 1.25rem;
   position: relative;
   scrollbar-width: thin;
-  scrollbar-color: var(--border-subtle) transparent;
+  scrollbar-color: var(--c-border-subtle) transparent;
 }
 
 .files-page-content::-webkit-scrollbar {
@@ -273,14 +273,14 @@
 }
 
 .files-page-content::-webkit-scrollbar-thumb {
-  background: var(--border-subtle);
+  background: var(--c-border-subtle);
   border-radius: 999px;
   border: 2px solid transparent;
   background-clip: content-box;
 }
 
 .files-page-content::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: var(--c-text-subtle);
   background-clip: content-box;
 }
 
@@ -288,7 +288,7 @@
 .folder-tree-panel-inner,
 .files-page-details-body {
   scrollbar-width: thin;
-  scrollbar-color: var(--border-subtle) transparent;
+  scrollbar-color: var(--c-border-subtle) transparent;
 }
 
 .files-page-tree-list::-webkit-scrollbar,
@@ -300,7 +300,7 @@
 .files-page-tree-list::-webkit-scrollbar-thumb,
 .folder-tree-panel-inner::-webkit-scrollbar-thumb,
 .files-page-details-body::-webkit-scrollbar-thumb {
-  background: var(--border-subtle);
+  background: var(--c-border-subtle);
   border-radius: 999px;
 }
 
@@ -313,10 +313,10 @@
 .files-page-list {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--c-border-subtle);
   border-radius: 0.6rem;
   overflow: hidden;
-  background: var(--bg-surface);
+  background: var(--c-surface);
 }
 
 .files-page-list-row {
@@ -325,7 +325,7 @@
   gap: 0.5rem;
   align-items: center;
   padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--c-border-subtle);
   cursor: pointer;
   font-size: 0.9rem;
   transition: background-color 0.12s ease;
@@ -336,8 +336,8 @@
 }
 
 .files-page-list-row.is-header {
-  background: var(--bg-toolbar);
-  color: var(--text-muted);
+  background: var(--c-bg-raised);
+  color: var(--c-text-subtle);
   text-transform: uppercase;
   font-size: 0.72rem;
   letter-spacing: 0.05em;
@@ -356,33 +356,29 @@
 }
 
 .files-page-list-row.is-header [data-sortable="true"]:hover {
-  background: var(--hover-bg);
-  color: var(--text-primary);
+  background: var(--c-hover);
+  color: var(--c-text);
 }
 
 .files-page-list-row:not(.is-header):hover {
-  background: var(--hover-bg);
+  background: var(--c-hover);
 }
 
 .files-page-list-row.is-selected {
-  background: var(--hover-bg);
+  background: var(--c-hover);
 }
 
 .files-page-list-row.is-drop-target {
-  background: color-mix(
-    in srgb,
-    var(--accent-interactive, #6366f1) 12%,
-    transparent
-  );
-  box-shadow: inset 0 0 0 1px var(--accent-interactive, #6366f1);
+  background: color-mix(in srgb, var(--c-primary, #6366f1) 12%, transparent);
+  box-shadow: inset 0 0 0 1px var(--c-primary, #6366f1);
 }
 
 .files-page-card {
   position: relative;
   display: flex;
   flex-direction: column;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
   border-radius: 0.85rem;
   overflow: hidden;
   cursor: pointer;
@@ -397,8 +393,8 @@
   transform: translateY(-2px);
   border-color: color-mix(
     in srgb,
-    var(--accent-interactive, #6366f1) 35%,
-    var(--border-subtle)
+    var(--c-primary, #6366f1) 35%,
+    var(--c-border-subtle)
   );
   box-shadow:
     0 4px 6px -1px rgba(0, 0, 0, 0.08),
@@ -406,16 +402,16 @@
 }
 
 .files-page-card:focus-visible {
-  outline: 2px solid var(--accent-interactive, #6366f1);
+  outline: 2px solid var(--c-primary, #6366f1);
   outline-offset: 2px;
 }
 
 .files-page-card.is-selected {
-  border-color: var(--accent-interactive, #6366f1);
+  border-color: var(--c-primary, #6366f1);
   box-shadow:
-    0 0 0 2px var(--accent-interactive, #6366f1),
+    0 0 0 2px var(--c-primary, #6366f1),
     0 6px 18px -6px
-      color-mix(in srgb, var(--accent-interactive, #6366f1) 35%, transparent);
+      color-mix(in srgb, var(--c-primary, #6366f1) 35%, transparent);
 }
 
 .files-page-card.is-folder {
@@ -426,8 +422,8 @@
   aspect-ratio: 4 / 3;
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--text-muted) 5%, var(--bg-surface)),
-    var(--bg-surface)
+    color-mix(in srgb, var(--c-text-subtle) 5%, var(--c-surface)),
+    var(--c-surface)
   );
   display: flex;
   align-items: center;
@@ -452,7 +448,7 @@
   flex-direction: column;
   align-items: center;
   gap: 0.4rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -472,13 +468,13 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: var(--text-primary);
+  color: var(--c-text);
   letter-spacing: -0.005em;
 }
 
 .files-page-card-meta {
   font-size: 0.76rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -488,7 +484,7 @@
    the user can tell which folder each hit lives in without navigating. */
 .files-page-card-path {
   font-size: 0.72rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -517,8 +513,8 @@
 /* Style the Mantine checkbox so it reads as a soft pill rather than a
    bare form control. */
 .files-page-card-selector :where(.mantine-Checkbox-input) {
-  background: var(--bg-surface);
-  border-color: var(--border-subtle);
+  background: var(--c-surface);
+  border-color: var(--c-border-subtle);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
 }
 
@@ -536,26 +532,26 @@
    Use stronger specificity + !important to win over Mantine's
    variant=filled inline styles. */
 .files-page-card .files-page-card-actions button.mantine-ActionIcon-root {
-  background-color: var(--bg-raised, var(--bg-surface)) !important;
-  color: var(--text-primary) !important;
-  border: 1px solid var(--border-default, var(--border-subtle)) !important;
+  background-color: var(--c-surface-raised, var(--c-surface)) !important;
+  color: var(--c-text) !important;
+  border: 1px solid var(--c-border, var(--c-border-subtle)) !important;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(6px);
 }
 
 .files-page-card .files-page-card-actions button.mantine-ActionIcon-root:hover {
-  background-color: var(--hover-bg) !important;
+  background-color: var(--c-hover) !important;
 }
 
 /* Row-view kebab: same high-contrast treatment so it's readable
    against selected (tinted) and in-workspace rows. */
 .files-page-list-row .mantine-ActionIcon-root[aria-label$="actions"] {
-  color: var(--text-secondary);
+  color: var(--c-text-muted);
 }
 
 .files-page-list-row .mantine-ActionIcon-root[aria-label$="actions"]:hover {
-  background-color: var(--hover-bg) !important;
-  color: var(--text-primary);
+  background-color: var(--c-hover) !important;
+  color: var(--c-text);
 }
 
 .files-page-card-origin {
@@ -615,7 +611,7 @@
   border-color: color-mix(
     in srgb,
     var(--mantine-color-teal-6, #10b981) 35%,
-    var(--border-subtle)
+    var(--c-border-subtle)
   );
 }
 
@@ -687,11 +683,11 @@
 .files-page-card.is-drop-target {
   background: color-mix(
     in srgb,
-    var(--accent-interactive, #6366f1) 10%,
-    var(--bg-surface)
+    var(--c-primary, #6366f1) 10%,
+    var(--c-surface)
   );
-  box-shadow: 0 0 0 2px var(--accent-interactive, #6366f1);
-  border-color: var(--accent-interactive, #6366f1);
+  box-shadow: 0 0 0 2px var(--c-primary, #6366f1);
+  border-color: var(--c-primary, #6366f1);
 }
 
 @keyframes files-page-skeleton-pulse {
@@ -707,9 +703,9 @@
   display: block;
   background: linear-gradient(
     90deg,
-    color-mix(in srgb, var(--text-muted) 12%, transparent) 25%,
-    color-mix(in srgb, var(--text-muted) 22%, transparent) 50%,
-    color-mix(in srgb, var(--text-muted) 12%, transparent) 75%
+    color-mix(in srgb, var(--c-text-subtle) 12%, transparent) 25%,
+    color-mix(in srgb, var(--c-text-subtle) 22%, transparent) 50%,
+    color-mix(in srgb, var(--c-text-subtle) 12%, transparent) 75%
   );
   background-size: 200% 100%;
   animation: files-page-skeleton-pulse 1.4s ease-in-out infinite;
@@ -718,14 +714,14 @@
 
 .files-page-skeleton-card {
   pointer-events: none;
-  border-color: var(--border-subtle);
+  border-color: var(--c-border-subtle);
   box-shadow: none;
 }
 
 .files-page-skeleton-card:hover {
   transform: none;
   box-shadow: none;
-  border-color: var(--border-subtle);
+  border-color: var(--c-border-subtle);
 }
 
 .files-page-skeleton-row {
@@ -743,7 +739,7 @@
   justify-content: center;
   height: 100%;
   gap: 0.75rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   padding: 4rem 1.5rem;
   text-align: center;
 }
@@ -755,25 +751,21 @@
   width: 5rem;
   height: 5rem;
   border-radius: 50%;
-  background: color-mix(
-    in srgb,
-    var(--accent-interactive, #6366f1) 12%,
-    transparent
-  );
-  color: var(--accent-interactive, #6366f1);
+  background: color-mix(in srgb, var(--c-primary, #6366f1) 12%, transparent);
+  color: var(--c-primary, #6366f1);
   margin-bottom: 0.25rem;
 }
 
 .files-page-empty-title {
   font-size: 1.15rem;
-  color: var(--text-primary);
+  color: var(--c-text);
   font-weight: 600;
   letter-spacing: -0.01em;
 }
 
 .files-page-empty-hint {
   font-size: 0.9rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   max-width: 30rem;
   line-height: 1.5;
 }
@@ -797,8 +789,8 @@
 .files-page-details {
   width: 22rem;
   flex-shrink: 0;
-  border-left: 1px solid var(--border-subtle);
-  background: var(--bg-toolbar);
+  border-left: 1px solid var(--c-border-subtle);
+  background: var(--c-bg-raised);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -817,7 +809,7 @@
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
 }
 
 .files-page-details-header strong {
@@ -846,8 +838,8 @@
   flex-direction: column;
   gap: 0.4rem;
   padding: 0.6rem 1.1rem;
-  border-top: 1px solid var(--border-subtle);
-  background: var(--bg-toolbar);
+  border-top: 1px solid var(--c-border-subtle);
+  background: var(--c-bg-raised);
 }
 
 /* Collapsible "File info" header (size/type/dates). */
@@ -857,11 +849,11 @@
   justify-content: space-between;
   width: 100%;
   padding: 0.4rem 0.6rem;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
   border-radius: 0.5rem;
   cursor: pointer;
-  color: var(--text-secondary, var(--text-primary));
+  color: var(--c-text-muted, var(--c-text));
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -878,8 +870,8 @@
   /* Compact fixed height (was a tall 4:3 box that dominated the panel and
      pushed the action buttons off the bottom). */
   height: 6.5rem;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
   border-radius: 0.6rem;
   display: flex;
   align-items: center;
@@ -911,8 +903,8 @@
   gap: 0.55rem;
   font-size: 0.85rem;
   padding: 0.65rem 0.75rem;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
   border-radius: 0.5rem;
 }
 
@@ -923,12 +915,12 @@
 }
 
 .files-page-details-field-label {
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   font-size: 0.78rem;
 }
 
 .files-page-details-field-value {
-  color: var(--text-primary);
+  color: var(--c-text);
   text-align: right;
   word-break: break-word;
   font-weight: 500;
@@ -939,8 +931,8 @@
   flex-direction: column;
   gap: 0.3rem;
   padding: 0.5rem 0.6rem;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
   border-radius: 0.5rem;
 }
 
@@ -948,7 +940,7 @@
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
 }
 
 /* Filename chip next to the title - "PDF", "DOCX", etc.
@@ -959,9 +951,9 @@
   align-items: center;
   padding: 0.12rem 0.5rem;
   border-radius: 0.4rem;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-secondary, var(--text-primary));
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
+  color: var(--c-text-muted, var(--c-text));
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -980,8 +972,8 @@
   flex-direction: column;
   gap: 0.4rem;
   padding: 0.55rem 0.7rem 0.7rem;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
   border-radius: 0.5rem;
 }
 .files-page-details-version-timeline-label {
@@ -991,12 +983,12 @@
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
 }
 .files-page-details-version-timeline-count {
   margin-left: auto;
   font-weight: 600;
-  color: var(--text-secondary, var(--text-muted));
+  color: var(--c-text-muted, var(--c-text-subtle));
   text-transform: none;
   letter-spacing: 0;
 }
@@ -1026,27 +1018,27 @@
   width: 0.55rem;
   height: 0.55rem;
   border-radius: 50%;
-  background: var(--bg-toolbar);
-  border: 2px solid var(--border-strong, var(--border-subtle));
+  background: var(--c-bg-raised);
+  border: 2px solid var(--c-border-strong, var(--c-border-subtle));
   z-index: 1;
   flex-shrink: 0;
 }
 .files-page-details-version-timeline-rail-dot.is-active {
-  background: var(--accent-interactive, #6366f1);
-  border-color: var(--accent-interactive, #6366f1);
+  background: var(--c-primary, #6366f1);
+  border-color: var(--c-primary, #6366f1);
   box-shadow: 0 0 0 3px
-    color-mix(in srgb, var(--accent-interactive, #6366f1) 25%, transparent);
+    color-mix(in srgb, var(--c-primary, #6366f1) 25%, transparent);
 }
 .files-page-details-version-timeline-rail-dot.is-ellipsis {
   width: 0.35rem;
   height: 0.35rem;
-  background: var(--text-muted);
+  background: var(--c-text-subtle);
   border-color: transparent;
 }
 .files-page-details-version-timeline-rail-line {
   width: 2px;
   flex: 1;
-  background: var(--border-subtle);
+  background: var(--c-border-subtle);
   min-height: 0.6rem;
   margin-top: 2px;
 }
@@ -1062,11 +1054,7 @@
 }
 .files-page-details-version-timeline-row.is-active
   .files-page-details-version-timeline-body {
-  background: color-mix(
-    in srgb,
-    var(--accent-interactive, #6366f1) 10%,
-    transparent
-  );
+  background: color-mix(in srgb, var(--c-primary, #6366f1) 10%, transparent);
 }
 .files-page-details-version-timeline-summary {
   appearance: none;
@@ -1084,11 +1072,11 @@
 }
 .files-page-details-version-timeline-summary:hover
   .files-page-details-version-timeline-chevron {
-  color: var(--text-primary);
+  color: var(--c-text);
 }
 .files-page-details-version-timeline-delta {
   font-size: 0.82rem;
-  color: var(--text-primary);
+  color: var(--c-text);
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
@@ -1099,30 +1087,30 @@
 }
 .files-page-details-version-timeline-delta.is-origin {
   font-weight: 400;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   font-style: italic;
 }
 .files-page-details-version-timeline-delta-plus {
-  color: var(--accent-interactive, #6366f1);
+  color: var(--c-primary, #6366f1);
   font-weight: 700;
 }
 .files-page-details-version-timeline-spacer {
   flex: 1;
 }
 .files-page-details-version-timeline-chevron {
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   transition: transform 0.15s ease;
 }
 .files-page-details-version-timeline-chevron.is-expanded {
   transform: rotate(180deg);
-  color: var(--text-primary);
+  color: var(--c-text);
 }
 .files-page-details-version-timeline-meta-line {
   display: flex;
   align-items: center;
   gap: 0.35rem;
   font-size: 0.7rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
 }
 .files-page-details-version-timeline-expanded {
   display: flex;
@@ -1130,7 +1118,7 @@
   gap: 0.4rem;
   margin-top: 0.45rem;
   padding-top: 0.5rem;
-  border-top: 1px dashed var(--border-subtle);
+  border-top: 1px dashed var(--c-border-subtle);
 }
 .files-page-details-version-timeline-toolchain {
   display: flex;
@@ -1139,7 +1127,7 @@
 }
 .files-page-details-version-timeline-toolchain-label {
   font-size: 0.65rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -1147,12 +1135,12 @@
 .files-page-details-version-timeline-collapse-btn {
   appearance: none;
   background: none;
-  border: 1px dashed var(--border-subtle);
+  border: 1px dashed var(--c-border-subtle);
   border-radius: 0.3rem;
   padding: 0.25rem 0.5rem;
   margin: 0.1rem 0;
   font-size: 0.72rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   cursor: pointer;
   text-align: left;
   transition:
@@ -1161,8 +1149,8 @@
 }
 .files-page-details-version-timeline-ellipsis-btn:hover,
 .files-page-details-version-timeline-collapse-btn:hover {
-  color: var(--text-primary);
-  border-color: var(--border-strong, var(--text-muted));
+  color: var(--c-text);
+  border-color: var(--c-border-strong, var(--c-text-subtle));
 }
 .files-page-details-version-timeline-collapse-btn {
   align-self: flex-start;
@@ -1172,12 +1160,8 @@
 .files-page-drop-overlay {
   position: absolute;
   inset: 1rem;
-  background: color-mix(
-    in srgb,
-    var(--accent-interactive, #6366f1) 14%,
-    var(--bg-background)
-  );
-  border: 2px dashed var(--accent-interactive, #6366f1);
+  background: color-mix(in srgb, var(--c-primary, #6366f1) 14%, var(--c-bg));
+  border: 2px dashed var(--c-primary, #6366f1);
   border-radius: 1rem;
   display: flex;
   flex-direction: column;
@@ -1185,7 +1169,7 @@
   justify-content: center;
   gap: 1rem;
   pointer-events: none;
-  color: var(--accent-interactive, #6366f1);
+  color: var(--c-primary, #6366f1);
   font-weight: 600;
   font-size: 1.1rem;
   z-index: 10;
@@ -1200,38 +1184,30 @@
   width: 4.5rem;
   height: 4.5rem;
   border-radius: 50%;
-  background: color-mix(
-    in srgb,
-    var(--accent-interactive, #6366f1) 30%,
-    transparent
-  );
+  background: color-mix(in srgb, var(--c-primary, #6366f1) 30%, transparent);
 }
 
 .files-page-drop-overlay-icon svg {
   font-size: 2.5rem !important;
-  color: var(--bg-background);
+  color: var(--c-bg);
 }
 
 .files-page-drop-overlay-sub {
   font-size: 0.85rem;
   font-weight: 500;
-  color: color-mix(
-    in srgb,
-    var(--accent-interactive, #6366f1) 80%,
-    var(--text-secondary)
-  );
+  color: color-mix(in srgb, var(--c-primary, #6366f1) 80%, var(--c-text-muted));
 }
 
 @keyframes files-page-drop-overlay-pulse {
   0%,
   100% {
-    border-color: var(--accent-interactive, #6366f1);
+    border-color: var(--c-primary, #6366f1);
     transform: scale(1);
   }
   50% {
     border-color: color-mix(
       in srgb,
-      var(--accent-interactive, #6366f1) 60%,
+      var(--c-primary, #6366f1) 60%,
       transparent
     );
     transform: scale(1.005);

@@ -8,8 +8,8 @@
   align-content: flex-start;
   min-height: 40px;
   padding: 0 8px;
-  background-color: var(--bg-toolbar);
-  border-bottom: 1px solid var(--border-subtle);
+  background-color: var(--c-bg-raised);
+  border-bottom: 1px solid var(--c-border-subtle);
   flex-shrink: 0;
   z-index: 50;
 }
@@ -33,7 +33,7 @@
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--c-text-muted);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -44,8 +44,8 @@
 }
 
 .workbench-bar-view-btn:hover {
-  background-color: var(--hover-bg);
-  color: var(--text-primary);
+  background-color: var(--c-hover);
+  color: var(--c-text);
 }
 
 .workbench-bar-view-btn.active {
@@ -54,17 +54,17 @@
 }
 
 .workbench-bar-view-btn.workbench-bar-back-btn {
-  color: var(--text-primary);
+  color: var(--c-text);
   font-weight: 600;
 }
 
 .workbench-bar-view-btn.workbench-bar-back-btn:hover {
   background-color: color-mix(
     in srgb,
-    var(--accent-interactive, #4a90e2) 12%,
+    var(--c-primary, #4a90e2) 12%,
     transparent
   );
-  color: var(--accent-interactive, #4a90e2);
+  color: var(--c-primary, #4a90e2);
 }
 
 .workbench-bar-view-btn svg {
@@ -106,7 +106,7 @@
   flex: 0 0 100%;
   height: auto;
   padding: 4px 0;
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--c-border-subtle);
   justify-content: flex-start;
   overflow-x: auto;
   overflow-y: hidden;
@@ -138,7 +138,7 @@
  * Tight 24px hit-box and no hover background: these are quiet toolbar icons —
  * hover feedback comes from the icon colour darkening, not a bg tint. */
 .workbench-bar-action-icon {
-  color: var(--text-secondary) !important;
+  color: var(--c-text-muted) !important;
   /* min-* too: Mantine's ActionIcon sets min-width/min-height from --ai-size
    * (36px), which floors the width and defeats the 24px clamp. */
   width: 24px !important;
@@ -155,7 +155,7 @@
 }
 
 .workbench-bar-action-icon:hover {
-  color: var(--text-primary) !important;
+  color: var(--c-text) !important;
 }
 
 .workbench-bar-action-icon[data-variant="filled"] {
@@ -181,7 +181,7 @@
 .workbench-bar-divider {
   width: 1px;
   height: 16px;
-  background-color: var(--border-subtle);
+  background-color: var(--c-border-subtle);
   margin: 0 4px;
 }
 
@@ -200,7 +200,7 @@
 .viewer-inline-controls__page {
   font-size: 12px;
   font-weight: 500;
-  color: var(--text-secondary);
+  color: var(--c-text-muted);
   min-width: 3rem;
   text-align: center;
   white-space: nowrap;
@@ -214,7 +214,7 @@
 
 .viewer-inline-controls__zoom-pct {
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   min-width: 2.5rem;
   text-align: right;
   white-space: nowrap;

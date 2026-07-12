@@ -24,7 +24,7 @@
 
 .sui-field__help {
   font-size: 0.6875rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   line-height: 1.45;
 }
 

@@ -3,18 +3,18 @@
   align-items: center;
   gap: var(--space-2);
   padding: 0 var(--space-2);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-input);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius-md);
-  color: var(--color-text-1);
+  color: var(--c-text);
   transition:
     border-color var(--motion-fast),
     box-shadow var(--motion-fast);
 }
 
 .sui-input:focus-within {
-  border-color: var(--color-blue);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-blue) 16%, transparent);
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--c-primary) 16%, transparent);
 }
 
 .sui-input--sm {
@@ -61,6 +61,6 @@
 .sui-input__icon {
   display: inline-flex;
   align-items: center;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   flex-shrink: 0;
 }

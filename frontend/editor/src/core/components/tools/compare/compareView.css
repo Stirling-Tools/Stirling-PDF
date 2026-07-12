@@ -5,18 +5,18 @@
 .compare-dropdown-sticky {
   position: sticky;
   z-index: 2;
-  background: var(--compare-page-label-bg);
+  background: var(--c-surface-sunken);
   color: var(--compare-page-label-fg);
   font-size: 0.75rem;
   padding: 0.25rem 0.5rem;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--c-border-subtle);
   pointer-events: none;
 }
 
 [data-mantine-color-scheme="dark"] .compare-dropdown-sticky {
-  background: var(--compare-page-label-bg);
+  background: var(--c-surface-sunken);
   color: var(--compare-page-label-fg);
-  border-bottom: 1px solid var(--border-default);
+  border-bottom: 1px solid var(--c-border);
 }
 .compare-workbench {
   display: flex;
@@ -91,9 +91,9 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  background: var(--bg-toolbar);
+  background: var(--c-bg-raised);
   backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--border-default);
+  border-bottom: 1px solid var(--c-border);
   padding: 0.5rem;
   margin: -0.5rem -0.5rem 0.5rem -0.5rem;
 }
@@ -168,17 +168,17 @@
 
 /* Style the dropdown container */
 .compare-changes-select .mantine-Combobox-dropdown {
-  border: 1px solid var(--border-subtle) !important;
+  border: 1px solid var(--c-border-subtle) !important;
   border-radius: 8px !important;
   box-shadow: var(--shadow-md) !important;
-  background-color: var(--bg-surface) !important;
+  background-color: var(--c-surface) !important;
 }
 
 .compare-changes-select--comparison .mantine-Combobox-dropdown {
-  border: 1px solid var(--border-subtle) !important;
+  border: 1px solid var(--c-border-subtle) !important;
   border-radius: 8px !important;
   box-shadow: var(--shadow-md) !important;
-  background-color: var(--bg-surface) !important;
+  background-color: var(--c-surface) !important;
 }
 
 /* Custom scrollbar for ScrollArea */
@@ -187,18 +187,18 @@
 }
 
 .compare-changes-select .mantine-ScrollArea-viewport::-webkit-scrollbar-track {
-  background: var(--bg-muted) !important;
+  background: var(--c-surface-sunken) !important;
   border-radius: 3px !important;
 }
 
 .compare-changes-select .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb {
-  background: var(--border-strong) !important;
+  background: var(--c-border-strong) !important;
   border-radius: 3px !important;
 }
 
 .compare-changes-select
   .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted) !important;
+  background: var(--c-text-subtle) !important;
 }
 
 .compare-changes-select--comparison
@@ -208,19 +208,19 @@
 
 .compare-changes-select--comparison
   .mantine-ScrollArea-viewport::-webkit-scrollbar-track {
-  background: var(--bg-muted) !important;
+  background: var(--c-surface-sunken) !important;
   border-radius: 3px !important;
 }
 
 .compare-changes-select--comparison
   .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb {
-  background: var(--border-strong) !important;
+  background: var(--c-border-strong) !important;
   border-radius: 3px !important;
 }
 
 .compare-changes-select--comparison
   .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted) !important;
+  background: var(--c-text-subtle) !important;
 }
 
 /* Style the dropdown options */
@@ -246,21 +246,21 @@
 .compare-changes-select .mantine-Combobox-search {
   font-size: 0.875rem !important;
   padding: 8px 12px !important;
-  border-bottom: 1px solid var(--border-subtle) !important;
+  border-bottom: 1px solid var(--c-border-subtle) !important;
 }
 
 .compare-changes-select--comparison .mantine-Combobox-search {
   font-size: 0.875rem !important;
   padding: 8px 12px !important;
-  border-bottom: 1px solid var(--border-subtle) !important;
+  border-bottom: 1px solid var(--c-border-subtle) !important;
 }
 
 .compare-changes-select .mantine-Combobox-search::placeholder {
-  color: var(--text-muted) !important;
+  color: var(--c-text-subtle) !important;
 }
 
 .compare-changes-select--comparison .mantine-Combobox-search::placeholder {
-  color: var(--text-muted) !important;
+  color: var(--c-text-subtle) !important;
 }
 
 /* Style the chevron - ensure proper coloring */
@@ -357,10 +357,10 @@
 
 .compare-diff-page__canvas {
   position: relative;
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--c-border-strong);
   border-radius: 0.75rem;
   overflow: hidden;
-  background-color: var(--bg-surface);
+  background-color: var(--c-surface);
   width: 100%;
 }
 
@@ -381,7 +381,7 @@
   margin-right: auto;
   max-width: 100%;
   background-color: #fff; /* ensure stable white backing during load */
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--c-border-subtle);
   will-change: transform;
 }
 
@@ -403,7 +403,7 @@
   display: inline-block;
   padding: 2px 8px;
   border-radius: 8px;
-  background-color: var(--compare-page-label-bg);
+  background-color: var(--c-surface-sunken);
   color: var(--compare-page-label-fg);
 }
 
@@ -432,7 +432,7 @@
 }
 .compare-dropdown-option__page {
   font-size: 0.7rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
 }
 .compare-dropdown-option__text {
   display: -webkit-box;
@@ -446,11 +446,11 @@
 /* Non-sticky in-flow group headers; sticky handled by floating header */
 .compare-dropdown-group {
   position: static;
-  background: var(--compare-page-label-bg);
+  background: var(--c-surface-sunken);
   color: var(--compare-page-label-fg);
   font-size: 0.75rem;
   padding: 0.25rem 0.5rem;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--c-border-subtle);
 }
 
 .compare-dropdown-group.compare-dropdown-group--hidden {
@@ -462,14 +462,14 @@
 }
 
 [data-mantine-color-scheme="dark"] .compare-dropdown-group {
-  background: var(--compare-page-label-bg);
+  background: var(--c-surface-sunken);
   color: var(--compare-page-label-fg);
-  border-bottom: 1px solid var(--border-default);
+  border-bottom: 1px solid var(--c-border);
 }
 
 /* Light grey rendering flag next to page labels in the dropdown */
 .compare-dropdown-rendering-flag {
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   margin-left: 0.25rem;
 }
 
@@ -489,7 +489,7 @@
   position: sticky;
   top: 0;
   z-index: 2;
-  background: var(--bg-background);
+  background: var(--c-bg);
   padding: 0.25rem 0;
 }
 

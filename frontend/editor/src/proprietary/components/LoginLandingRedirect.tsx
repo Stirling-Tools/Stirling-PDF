@@ -107,7 +107,7 @@ export function LoginLandingRedirect() {
           position: "fixed",
           inset: 0,
           zIndex: Z_INDEX_SIGN_IN_MODAL,
-          background: "var(--bg-surface)",
+          background: "var(--c-surface)",
         }}
       >
         <LoadingFallback />

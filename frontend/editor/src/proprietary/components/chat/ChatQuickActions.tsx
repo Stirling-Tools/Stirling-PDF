@@ -52,7 +52,7 @@ function QuickActionCard({ action }: { action: QuickAction }) {
           sx={{
             fontSize: 18,
             transform: "rotate(-90deg)",
-            color: "var(--text-muted)",
+            color: "var(--c-text-subtle)",
           }}
         />
       </Group>

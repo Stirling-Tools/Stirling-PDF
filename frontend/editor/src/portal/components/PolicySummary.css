@@ -4,20 +4,20 @@
   justify-content: space-between;
   gap: 0.75rem;
   padding: 1rem 1.125rem 0.875rem;
-  border-bottom: 1px solid var(--color-border-light);
+  border-bottom: 1px solid var(--c-border-subtle);
 }
 
 .portal-policysum__title {
   margin: 0;
   font-size: 0.9375rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-policysum__sub {
   margin: 0.125rem 0 0;
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   max-width: 34rem;
 }
 
@@ -36,7 +36,7 @@
   flex: none;
   border-radius: var(--radius-md);
   background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border-light);
+  border: 1px solid var(--c-border-subtle);
   font-size: 0.9375rem;
 }
 
@@ -49,17 +49,17 @@
 .portal-policysum__cat-text strong {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-policysum__cat-text span {
   font-size: 0.6875rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .portal-policysum__rule {
   font-size: 0.75rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .portal-policysum__loading {

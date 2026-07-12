@@ -28,7 +28,7 @@
   text-transform: uppercase;
   padding-bottom: 0.5rem;
   font-size: 0.75rem;
-  color: var(--tool-subcategory-text-color);
+  color: var(--c-text-subtle);
   /* Align the text with tool labels to account for icon gutter */
   padding-left: 1rem;
 }
@@ -44,14 +44,14 @@
   text-transform: uppercase;
   font-weight: 600;
   font-size: 0.75rem;
-  color: var(--tool-subcategory-text-color);
+  color: var(--c-text-subtle);
   white-space: nowrap;
   overflow: visible;
 }
 
 .tool-subcategory-row-rule {
   height: 1px;
-  background-color: var(--tool-subcategory-rule-color);
+  background-color: var(--c-border-subtle);
   flex: 1 1 auto;
 }
 

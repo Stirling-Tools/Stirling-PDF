@@ -15,7 +15,7 @@
   border-color: var(--color-green-border);
 }
 .sui-method--post {
-  color: var(--color-blue);
+  color: var(--c-primary);
   background: var(--color-blue-light);
   border-color: var(--color-blue-border);
 }

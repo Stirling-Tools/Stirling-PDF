@@ -249,10 +249,10 @@
 }
 
 .oauth-button-vertical:hover:not(:disabled) {
-  background-color: var(--hover-bg);
+  background-color: var(--c-hover);
   box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.12);
   transform: translateY(-1px);
-  border-color: var(--border-default);
+  border-color: var(--c-border);
 }
 
 .oauth-button-vertical-tinted {
@@ -417,7 +417,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-muted);
+  background: var(--c-surface-sunken);
   border: 1px solid var(--auth-input-border-light-only);
 }
 
@@ -764,15 +764,15 @@
 }
 
 [data-mantine-color-scheme="dark"] .oauth-button-fullwidth {
-  background-color: var(--bg-surface);
-  color: var(--text-primary);
-  border-color: var(--border-default);
+  background-color: var(--c-surface);
+  color: var(--c-text);
+  border-color: var(--c-border);
   box-shadow: none;
 }
 
 [data-mantine-color-scheme="dark"]
   .oauth-button-fullwidth:hover:not(:disabled) {
-  background-color: var(--bg-raised);
+  background-color: var(--c-surface-raised);
   box-shadow: none;
 }
 
@@ -847,14 +847,14 @@
 }
 
 [data-mantine-color-scheme="dark"] .oauth-button-fullwidth {
-  background-color: var(--bg-surface);
-  color: var(--text-primary);
-  border-color: var(--border-default);
+  background-color: var(--c-surface);
+  color: var(--c-text);
+  border-color: var(--c-border);
   box-shadow: none;
 }
 
 [data-mantine-color-scheme="dark"]
   .oauth-button-fullwidth:hover:not(:disabled) {
-  background-color: var(--bg-raised);
+  background-color: var(--c-surface-raised);
   box-shadow: none;
 }

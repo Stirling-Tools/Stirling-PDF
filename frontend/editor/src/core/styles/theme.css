@@ -189,7 +189,7 @@
   /* Colors for tooltips */
   --tooltip-header-bg: var(--p-blue-700);
   --tooltip-header-color: white;
-  --tooltip-border: var(--border-default);
+  --tooltip-border: var(--c-border);
 
   /* Inactive icon colors for light mode */
   --icon-inactive-bg: var(--p-gray-400);
@@ -203,7 +203,7 @@
   --pdf-selection-ring: color-mix(in srgb, var(--p-blue-500) 18%, transparent);
 
   /* container */
-  --landing-button-bg: var(--bg-surface);
+  --landing-button-bg: var(--c-surface);
   --landing-button-border: var(--p-blue-400);
   --landing-button-hover-bg: var(--p-gray-50);
 
@@ -270,7 +270,7 @@
   --code-com-color: var(--p-gray-500); /* gray-500 */
 
   /* Compare page label chip (light mode): slightly lighter than surrounding rows */
-  --compare-page-label-fg: var(--text-secondary);
+  --compare-page-label-fg: var(--c-text-muted);
 
   /* Status indicator dot ring shadow */
   --status-dot-ring: 0 0 0 2px rgba(0, 0, 0, 0.08);
@@ -409,9 +409,9 @@
   --icon-inactive-color: var(--p-gray-500);
 
   /* Dark mode tooltip colors */
-  --tooltip-header-bg: var(--bg-raised);
-  --tooltip-header-color: var(--text-primary);
-  --tooltip-border: var(--border-default);
+  --tooltip-header-bg: var(--c-surface-raised);
+  --tooltip-header-color: var(--c-text);
+  --tooltip-border: var(--c-border);
 
   --text-brand-accent: var(--p-red-500);
 
@@ -425,7 +425,7 @@
   --landing-doc-shadow-front-idle:
     0 8px 30px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.4),
     0 0 0 1px rgba(255, 255, 255, 0.04);
-  --landing-button-hover-bg: var(--bg-raised);
+  --landing-button-hover-bg: var(--c-surface-raised);
 
   /* selected file header colors for dark */
   --header-selected-bg: var(--p-blue-700);
@@ -448,9 +448,11 @@
 
   /* dark background for cards */
   --bulk-card-border: var(
-    --border-default
+    --c-border
   ); /* default border for cards and buttons */
-  --bulk-card-hover-border: var(--border-strong); /* stronger border on hover */
+  --bulk-card-hover-border: var(
+    --c-border-strong
+  ); /* stronger border on hover */
 
   /* Config Modal colors (dark mode) */
   --modal-nav-item: var(--p-gray-300);
@@ -468,7 +470,7 @@
   --code-com-color: var(--p-gray-500); /* muted gray-blue */
 
   /* Compare page label chip (dark mode): slightly darker than surrounding rows */
-  --compare-page-label-fg: var(--text-secondary);
+  --compare-page-label-fg: var(--c-text-muted);
 
   /* Status indicator dot ring shadow (dark) */
   --status-dot-ring: 0 0 0 2px rgba(255, 255, 255, 0.15);

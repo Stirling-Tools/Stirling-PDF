@@ -11,8 +11,8 @@ body,
 #root {
   margin: 0;
   padding: 0;
-  background: var(--color-bg);
-  color: var(--color-text-2);
+  background: var(--c-bg);
+  color: var(--c-text-muted);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -29,7 +29,7 @@ button {
 }
 
 a {
-  color: var(--color-blue);
+  color: var(--c-primary);
   text-decoration: none;
 }
 a:hover {

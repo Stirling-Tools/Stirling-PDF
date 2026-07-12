@@ -34,7 +34,7 @@
   transition: transform var(--motion-base);
 }
 .sui-toggle input:checked + .sui-toggle__track {
-  background: var(--color-blue);
+  background: var(--c-primary);
 }
 .sui-toggle input:checked + .sui-toggle__track .sui-toggle__thumb {
   transform: translateX(1rem);
@@ -65,14 +65,14 @@
 .sui-toggle__label {
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
 }
 .sui-toggle__desc {
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .sui-toggle input:focus-visible + .sui-toggle__track {
-  outline: 2px solid var(--color-blue);
+  outline: 2px solid var(--c-primary);
   outline-offset: 2px;
 }

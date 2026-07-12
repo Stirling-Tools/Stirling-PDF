@@ -8,8 +8,8 @@
   top: calc(100% + var(--space-1));
   min-width: 12rem;
   padding: var(--space-1);
-  background: var(--color-dropdown-bg);
-  border: 1px solid var(--color-dropdown-border);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   z-index: var(--z-dropdown);
@@ -34,7 +34,7 @@
   width: 100%;
   text-align: left;
   font-size: 0.8125rem;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
   border-radius: var(--radius-sm);
   /* Explicit button reset: hosts without a global button reset (e.g. the
      editor) would otherwise show the UA's buttonface background and border. */
@@ -48,12 +48,12 @@
 }
 
 .sui-dd__item:hover:not(.is-disabled) {
-  background: var(--color-dropdown-hover);
-  color: var(--color-text-1);
+  background: var(--c-hover);
+  color: var(--c-text);
 }
 
 .sui-dd__item.is-active {
-  background: var(--color-nav-active);
+  background: var(--c-primary-subtle);
   color: var(--color-nav-active-text);
   font-weight: 500;
 }
@@ -73,11 +73,11 @@
   margin-left: auto;
   font-family: var(--font-mono);
   font-size: 0.6875rem;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
 }
 
 .sui-dd__divider {
   height: 1px;
-  background: var(--color-divider);
+  background: var(--c-border-subtle);
   margin: var(--space-1) 0;
 }

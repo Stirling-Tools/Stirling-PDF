@@ -430,7 +430,7 @@ const TeamSection: React.FC = () => {
                         style={
                           member.role !== "LEADER"
                             ? {
-                                backgroundColor: "var(--tool-header-badge-bg)",
+                                backgroundColor: "var(--c-surface-raised)",
                                 color: "var(--tool-header-badge-text)",
                               }
                             : undefined

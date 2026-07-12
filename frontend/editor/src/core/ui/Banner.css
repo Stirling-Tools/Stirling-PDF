@@ -11,28 +11,28 @@
 
 .sui-banner--info {
   background: var(--color-blue-light);
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
   border-color: var(--color-blue-border);
 }
 .sui-banner--success {
   background: var(--color-green-light);
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
   border-color: var(--color-green-border);
 }
 .sui-banner--warning {
   background: var(--color-amber-light);
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
   border-color: var(--color-amber-border);
 }
 .sui-banner--danger {
   background: var(--color-red-light);
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
   border-color: var(--color-red-border);
 }
 .sui-banner--neutral {
   background: var(--color-bg-subtle);
-  color: var(--color-text-2);
-  border-color: var(--color-border);
+  color: var(--c-text-muted);
+  border-color: var(--c-border);
 }
 
 .sui-banner__icon {
@@ -45,7 +45,7 @@
 }
 
 .sui-banner--info .sui-banner__icon {
-  color: var(--color-blue);
+  color: var(--c-primary);
 }
 .sui-banner--success .sui-banner__icon {
   color: var(--color-green);
@@ -63,10 +63,10 @@
 }
 .sui-banner__title {
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 .sui-banner__desc {
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
   margin-top: 0.125rem;
 }
 

@@ -28,13 +28,13 @@ const styles = {
   },
   local: {
     background:
-      "color-mix(in srgb, var(--text-muted, #6b7280) 16%, transparent)",
-    color: "var(--text-secondary)",
+      "color-mix(in srgb, var(--c-text-subtle, #6b7280) 16%, transparent)",
+    color: "var(--c-text-muted)",
   },
   cloud: {
     background:
-      "color-mix(in srgb, var(--accent-interactive, #6366f1) 16%, transparent)",
-    color: "var(--accent-interactive, #6366f1)",
+      "color-mix(in srgb, var(--c-primary, #6366f1) 16%, transparent)",
+    color: "var(--c-primary, #6366f1)",
   },
   shared: {
     background:

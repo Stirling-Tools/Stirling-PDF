@@ -1,8 +1,8 @@
 .portal-sidebar {
   width: 15rem;
   height: 100vh;
-  background: var(--color-sidebar-bg);
-  border-right: 1px solid var(--color-sidebar-border);
+  background: var(--c-bg-raised);
+  border-right: 1px solid var(--c-border);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -17,7 +17,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  border-bottom: 1px solid var(--color-sidebar-divider);
+  border-bottom: 1px solid var(--c-border-subtle);
 }
 
 /* Stirling Processor wordmark (theme-switched in Sidebar.tsx); matches the
@@ -54,13 +54,13 @@
 
 .portal-sidebar__divider {
   height: 1px;
-  background: var(--color-sidebar-divider);
+  background: var(--c-border-subtle);
   margin: 0.25rem 0;
 }
 
 /* Footer */
 .portal-sidebar__footer {
-  border-top: 1px solid var(--color-sidebar-divider);
+  border-top: 1px solid var(--c-border-subtle);
   padding: 0.5rem 0.625rem 0.75rem;
   display: flex;
   flex-direction: column;

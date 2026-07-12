@@ -995,7 +995,7 @@ export default function MobileScannerPage() {
     <Box
       style={{
         minHeight: "100dvh",
-        background: "var(--bg-background)",
+        background: "var(--c-bg)",
         display: "flex",
         flexDirection: "column",
       }}
@@ -1004,8 +1004,8 @@ export default function MobileScannerPage() {
       <Box
         p="md"
         style={{
-          background: "var(--bg-toolbar)",
-          borderBottom: "1px solid var(--border-subtle)",
+          background: "var(--c-bg-raised)",
+          borderBottom: "1px solid var(--c-border-subtle)",
         }}
       >
         <Group gap="sm" align="center">
@@ -1025,7 +1025,7 @@ export default function MobileScannerPage() {
             background: loadingStatus.includes("✗")
               ? "var(--mantine-color-red-1)"
               : "var(--mantine-color-blue-1)",
-            borderBottom: "1px solid var(--border-subtle)",
+            borderBottom: "1px solid var(--c-border-subtle)",
             fontSize: "0.85rem",
             fontFamily: "monospace",
             textAlign: "center",
@@ -1231,8 +1231,8 @@ export default function MobileScannerPage() {
           {/* Controls bar - fixed at bottom */}
           <Box
             style={{
-              backgroundColor: "var(--bg-toolbar)",
-              borderTop: "1px solid var(--border-subtle)",
+              backgroundColor: "var(--c-bg-raised)",
+              borderTop: "1px solid var(--c-border-subtle)",
               padding: "0.75rem 1rem",
             }}
           >
@@ -1372,8 +1372,8 @@ export default function MobileScannerPage() {
           {/* Controls bar - fixed at bottom */}
           <Box
             style={{
-              backgroundColor: "var(--bg-toolbar)",
-              borderTop: "1px solid var(--border-subtle)",
+              backgroundColor: "var(--c-bg-raised)",
+              borderTop: "1px solid var(--c-border-subtle)",
               padding: "0.75rem 1rem",
             }}
           >
@@ -1401,7 +1401,7 @@ export default function MobileScannerPage() {
       )}
 
       {capturedImages.length > 0 && (
-        <Box p="sm" style={{ borderTop: "1px solid var(--border-subtle)" }}>
+        <Box p="sm" style={{ borderTop: "1px solid var(--c-border-subtle)" }}>
           <Group justify="space-between" mb="sm">
             <Text size="sm" fw={600}>
               {t("mobileScanner.batchImages", "Batch")} ({capturedImages.length}
@@ -1442,7 +1442,7 @@ export default function MobileScannerPage() {
                   height: "80px",
                   borderRadius: "var(--radius-sm)",
                   overflow: "hidden",
-                  border: "2px solid var(--border-subtle)",
+                  border: "2px solid var(--c-border-subtle)",
                 }}
               >
                 <img

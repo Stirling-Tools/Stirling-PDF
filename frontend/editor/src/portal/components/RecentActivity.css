@@ -8,27 +8,27 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.875rem 1rem;
-  border-bottom: 1px solid var(--color-border-light);
+  border-bottom: 1px solid var(--c-border-subtle);
 }
 
 .portal-activity__title {
   margin: 0;
   font-size: 0.9375rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-activity__more {
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--color-blue);
+  color: var(--c-primary);
   padding: 0.25rem 0.5rem;
   border-radius: var(--radius-sm);
   transition: background var(--motion-fast);
 }
 
 .portal-activity__more:hover {
-  background: var(--color-bg-hover);
+  background: var(--c-hover);
 }
 
 .portal-activity__list {
@@ -41,7 +41,7 @@
   display: flex;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--color-border-light);
+  border-bottom: 1px solid var(--c-border-subtle);
   transition: background var(--motion-fast);
 }
 
@@ -50,7 +50,7 @@
 }
 
 .portal-activity__item:hover {
-  background: var(--color-bg-hover);
+  background: var(--c-hover);
 }
 
 .portal-activity__rail {
@@ -74,17 +74,17 @@
 .portal-activity__action {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-activity__time {
   font-size: 0.6875rem;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
 }
 
 .portal-activity__subject {
   font-size: 0.75rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
   margin-top: 0.0625rem;
 }
 
@@ -98,7 +98,7 @@
 
 .portal-activity__detail {
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   font-family: var(--font-mono);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -111,7 +111,7 @@
 }
 
 .portal-activity__item--skeleton .portal-activity__rail {
-  background: var(--color-border-light);
+  background: var(--c-border-subtle);
 }
 
 .portal-activity__skel {
@@ -119,9 +119,9 @@
   border-radius: var(--radius-pill);
   background: linear-gradient(
     90deg,
-    var(--color-bg-muted) 0%,
-    var(--color-bg-hover) 50%,
-    var(--color-bg-muted) 100%
+    var(--c-surface-sunken) 0%,
+    var(--c-hover) 50%,
+    var(--c-surface-sunken) 100%
   );
   background-size: 200% 100%;
   animation: shimmer 1.4s linear infinite;

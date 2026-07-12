@@ -53,7 +53,7 @@ const PageSelectionInput = ({
         </Tooltip>
         {typeof advancedOpened === "boolean" && (
           <Flex align="center" gap="xs">
-            <Text size="sm" c="var(--text-secondary)">
+            <Text size="sm" c="var(--c-text-muted)">
               {t("bulkSelection.advanced.title", "Advanced")}
             </Text>
             <Switch

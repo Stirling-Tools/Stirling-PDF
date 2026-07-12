@@ -845,7 +845,7 @@ export default function FileManagerView() {
               fontSize: "0.95rem",
               fontWeight: 600,
               padding: "0.25rem 0.5rem",
-              color: "var(--text-primary)",
+              color: "var(--c-text)",
             }}
           >
             {currentTab === "local"
@@ -992,8 +992,8 @@ export default function FileManagerView() {
             padding: "0.6rem 1.25rem",
             background:
               "color-mix(in srgb, var(--mantine-color-red-6, #e03131) 12%, transparent)",
-            color: "var(--text-primary)",
-            borderBottom: "1px solid var(--border-subtle)",
+            color: "var(--c-text)",
+            borderBottom: "1px solid var(--c-border-subtle)",
             fontSize: "0.85rem",
             display: "flex",
             justifyContent: "space-between",
@@ -1083,15 +1083,15 @@ export default function FileManagerView() {
                     style={{
                       background:
                         currentTab === tab.id
-                          ? "var(--hover-bg)"
+                          ? "var(--c-hover)"
                           : "transparent",
                       border: "none",
                       borderRadius: "0.3rem",
                       padding: "0.2rem 0.6rem",
                       color:
                         currentTab === tab.id
-                          ? "var(--text-primary)"
-                          : "var(--text-muted)",
+                          ? "var(--c-text)"
+                          : "var(--c-text-subtle)",
                       fontWeight: currentTab === tab.id ? 500 : 400,
                       fontSize: "0.75rem",
                       cursor: "pointer",
@@ -1662,7 +1662,7 @@ const SearchField = React.forwardRef<
   const { t } = useTranslation();
   return (
     <div className="files-page-search">
-      <SearchIcon fontSize="small" style={{ color: "var(--text-muted)" }} />
+      <SearchIcon fontSize="small" style={{ color: "var(--c-text-subtle)" }} />
       <input
         ref={ref}
         type="text"

@@ -4,8 +4,8 @@
 
 .portal-editor-hero {
   border-radius: var(--radius-xl);
-  border: 1px solid var(--color-border-input);
-  background: var(--color-surface);
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
@@ -141,5 +141,5 @@
 
 /* Attached footer strip (setup checklist). */
 .portal-editor-hero__footer {
-  border-top: 1px solid var(--color-border-light);
+  border-top: 1px solid var(--c-border-subtle);
 }

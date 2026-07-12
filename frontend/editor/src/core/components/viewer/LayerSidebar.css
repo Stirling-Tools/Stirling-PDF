@@ -38,16 +38,12 @@
 }
 
 .layer-item:hover {
-  background: color-mix(in srgb, var(--text-primary) 6%, var(--bg-toolbar));
-  border-color: color-mix(
-    in srgb,
-    var(--text-primary) 14%,
-    var(--border-subtle)
-  );
+  background: color-mix(in srgb, var(--c-text) 6%, var(--c-bg-raised));
+  border-color: color-mix(in srgb, var(--c-text) 14%, var(--c-border-subtle));
 }
 
 .layer-item:active {
-  background: color-mix(in srgb, var(--text-primary) 10%, var(--bg-toolbar));
+  background: color-mix(in srgb, var(--c-text) 10%, var(--c-bg-raised));
 }
 
 .layer-item__expand-btn {
@@ -58,7 +54,7 @@
   width: 1.25rem;
   height: 1.25rem;
   cursor: pointer;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   opacity: 0.7;
   transition: opacity 0.15s ease;
 }
@@ -78,16 +74,20 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--text-primary);
+  color: var(--c-text);
   line-height: 1.4;
   cursor: pointer;
   user-select: none;
 }
 
 .layer-item--hidden .layer-item__label {
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   text-decoration: line-through;
-  text-decoration-color: color-mix(in srgb, var(--text-muted) 60%, transparent);
+  text-decoration-color: color-mix(
+    in srgb,
+    var(--c-text-subtle) 60%,
+    transparent
+  );
 }
 
 /* Children Container */
@@ -97,7 +97,7 @@
   gap: 0.125rem;
   margin-top: 0.125rem;
   border-left: 2px solid
-    color-mix(in srgb, var(--border-subtle) 60%, transparent);
+    color-mix(in srgb, var(--c-border-subtle) 60%, transparent);
   margin-left: 0.875rem;
   padding-left: 0.25rem;
 }
@@ -105,8 +105,8 @@
 /* Footer with Apply button */
 .layer-sidebar__footer {
   padding: 0.625rem 0.875rem;
-  background: var(--bg-toolbar);
-  border-top: 1px solid var(--border-subtle);
+  background: var(--c-bg-raised);
+  border-top: 1px solid var(--c-border-subtle);
 }
 
 /* Dirty indicator badge */

@@ -49,7 +49,7 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   padding: 0 0.5rem;
 }
 
@@ -62,7 +62,7 @@
   font-size: 0.6875rem;
   border-radius: var(--radius-sm);
   background: var(--color-bg-subtle);
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .portal-docs__nav-list {
@@ -85,7 +85,7 @@
   background: transparent;
   border-radius: var(--radius-md);
   font-size: 0.8125rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
   cursor: pointer;
   text-align: left;
   transition:
@@ -94,13 +94,13 @@
 }
 
 .portal-docs__nav-link:hover {
-  background: var(--color-bg-hover);
-  color: var(--color-text-1);
+  background: var(--c-hover);
+  color: var(--c-text);
 }
 
 .portal-docs__nav-link.is-active {
   background: var(--color-blue-light);
-  color: var(--color-blue);
+  color: var(--c-primary);
   font-weight: 600;
 }
 
@@ -126,7 +126,7 @@
   font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: var(--color-blue);
+  color: var(--c-primary);
 }
 
 .portal-docs__section-title {
@@ -134,7 +134,7 @@
   font-size: 1.75rem;
   font-weight: 700;
   line-height: 1.15;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-docs__section-lead {
@@ -142,13 +142,13 @@
   max-width: 46rem;
   font-size: 0.9375rem;
   line-height: 1.6;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .portal-docs__callout {
   font-size: 0.875rem;
   line-height: 1.55;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
 }
 
 .portal-docs__callout code {
@@ -183,7 +183,7 @@
   width: 1.75rem;
   height: 1.75rem;
   border-radius: var(--radius-pill);
-  background: var(--color-blue);
+  background: var(--c-primary);
   color: var(--color-text-on-accent);
   font-size: 0.8125rem;
   font-weight: 700;
@@ -200,14 +200,14 @@
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-docs__step-body p {
   margin: 0;
   font-size: 0.875rem;
   line-height: 1.55;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .portal-docs__snippet {
@@ -229,7 +229,7 @@
   align-items: center;
   gap: 0.75rem;
   font-size: 0.875rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 /* ── Rate limits ───────────────────────────────────────────────────────── */
@@ -248,14 +248,14 @@
 
 .portal-docs__limit-label {
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   margin-bottom: 0.25rem;
 }
 
 .portal-docs__limit-value {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 /* ── Endpoint reference ────────────────────────────────────────────────── */
@@ -269,7 +269,7 @@
 .portal-docs__endpoint-group {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--color-border-light);
+  border: 1px solid var(--c-border-subtle);
   border-radius: var(--radius-lg);
   overflow: hidden;
 }
@@ -281,9 +281,9 @@
   padding: 0.625rem 0.875rem;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
   background: var(--color-bg-subtle);
-  border-bottom: 1px solid var(--color-border-light);
+  border-bottom: 1px solid var(--c-border-subtle);
 }
 
 .portal-docs__endpoint-dot {
@@ -297,7 +297,7 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.5rem 0.875rem;
-  border-top: 1px solid var(--color-border-light);
+  border-top: 1px solid var(--c-border-subtle);
   font-size: 0.8125rem;
 }
 
@@ -308,12 +308,12 @@
 .portal-docs__endpoint-path {
   font-family: var(--font-mono, monospace);
   font-size: 0.8125rem;
-  color: var(--color-text-1);
+  color: var(--c-text);
   min-width: 11rem;
 }
 
 .portal-docs__endpoint-name {
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -323,7 +323,7 @@
 
 .portal-docs__endpoint-fields {
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   white-space: nowrap;
 }
 
@@ -346,7 +346,7 @@
   align-items: center;
   gap: 0.75rem;
   font-size: 0.875rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 /* ── SDK grid ──────────────────────────────────────────────────────────── */
@@ -378,7 +378,7 @@
   margin: 0;
   font-size: 0.9375rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
   flex: 1;
 }
 
@@ -415,7 +415,7 @@
   margin: 0;
   font-size: 0.8125rem;
   line-height: 1.5;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 /* ── Playbooks ─────────────────────────────────────────────────────────── */
@@ -436,14 +436,14 @@
   margin: 0 0 0.375rem;
   font-size: 1rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-docs__playbook-blurb {
   margin: 0 0 0.875rem;
   font-size: 0.8125rem;
   line-height: 1.5;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .portal-docs__playbook-flow {
@@ -461,7 +461,7 @@
 }
 
 .portal-docs__playbook-arrow {
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   font-size: 0.75rem;
 }
 
@@ -508,18 +508,18 @@
   margin: 0;
   font-size: 0.9375rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-docs__skill-blurb {
   margin: 0 0 0.625rem;
   font-size: 0.8125rem;
   line-height: 1.5;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .portal-docs__skill-ops {
   font-family: var(--font-mono, monospace);
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }

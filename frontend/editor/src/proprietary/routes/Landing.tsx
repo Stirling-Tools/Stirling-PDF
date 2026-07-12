@@ -146,7 +146,7 @@ export default function Landing() {
             border: "1px solid rgba(37, 99, 235, 0.2)",
           }}
         >
-          <p style={{ margin: "0 0 0.75rem 0", color: "var(--text-primary)" }}>
+          <p style={{ margin: "0 0 0.75rem 0", color: "var(--c-text)" }}>
             {t(
               "backendStartup.unreachable",
               "The application cannot currently connect to the backend. Verify the backend status and network connectivity, then try again.",

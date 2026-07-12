@@ -8,10 +8,10 @@
   --payg-gap: 20px;
   /* Cards sit ON the modal content bg; in light that's white-on-white so we
      lean on border + shadow. Tokens are overridden per scheme below. */
-  --payg-card-bg: var(--bg-surface);
-  --payg-card-border: var(--border-default);
-  --payg-inset-bg: var(--bg-raised);
-  --payg-divider: var(--border-subtle);
+  --payg-card-bg: var(--c-surface);
+  --payg-card-border: var(--c-border);
+  --payg-inset-bg: var(--c-surface-raised);
+  --payg-divider: var(--c-border-subtle);
 }
 
 /* Dark mode: modal content bg is #131729 (--bg-surface), so lift cards above it */
@@ -29,12 +29,12 @@
   font-size: 1.35rem;
   font-weight: 700;
   letter-spacing: -0.01em;
-  color: var(--text-primary);
+  color: var(--c-text);
 }
 .payg-header__subtitle {
   margin-top: 4px;
   font-size: 0.875rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
 }
 .payg-role-pill {
   display: inline-flex;
@@ -52,9 +52,9 @@
   border: 1px solid rgba(10, 139, 255, 0.25);
 }
 .payg-role-pill[data-leader="false"] {
-  background: var(--bg-muted);
-  color: var(--text-muted);
-  border: 1px solid var(--border-default);
+  background: var(--c-surface-sunken);
+  color: var(--c-text-subtle);
+  border: 1px solid var(--c-border);
 }
 
 /* ── Plan header: free-vs-metered split (shared by free + subscribed) ──── */
@@ -73,7 +73,7 @@
 }
 .payg-planhead__eyebrow {
   font-size: 0.78rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
 }
 .payg-planhead__split {
   display: grid;
@@ -110,14 +110,14 @@
   margin: 0;
   font-size: 1.05rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--c-text);
   letter-spacing: -0.01em;
   line-height: 1.25;
 }
 .payg-planhead__body {
   margin: 5px 0 0;
   font-size: 0.85rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   line-height: 1.5;
 }
 @media (max-width: 640px) {
@@ -147,11 +147,11 @@
 .payg-card__title {
   font-size: 0.95rem;
   font-weight: 650;
-  color: var(--text-primary);
+  color: var(--c-text);
 }
 .payg-card__subtitle {
   font-size: 0.8125rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   margin-top: 2px;
 }
 
@@ -202,7 +202,7 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
 }
 .payg-hero__figure {
   display: flex;
@@ -215,12 +215,12 @@
   font-weight: 750;
   line-height: 1;
   letter-spacing: -0.03em;
-  color: var(--text-primary);
+  color: var(--c-text);
   font-variant-numeric: tabular-nums;
 }
 .payg-hero__cap {
   font-size: 1rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   font-variant-numeric: tabular-nums;
 }
 .payg-hero__meta {
@@ -229,10 +229,10 @@
   flex-wrap: wrap;
   gap: 6px 18px;
   font-size: 0.8125rem;
-  color: var(--text-secondary);
+  color: var(--c-text-muted);
 }
 .payg-hero__meta-dot {
-  color: var(--border-strong);
+  color: var(--c-border-strong);
 }
 .payg-hero__credit {
   display: inline-flex;
@@ -331,7 +331,7 @@
   margin-top: 18px;
   height: 10px;
   border-radius: 999px;
-  background: var(--bg-muted);
+  background: var(--c-surface-sunken);
   overflow: hidden;
   position: relative;
 }
@@ -365,10 +365,10 @@
   font: inherit;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--c-text-muted);
 }
 .payg-help__toggle:hover {
-  color: var(--text-primary);
+  color: var(--c-text);
 }
 .payg-help__chevron {
   transition: transform 0.15s ease;
@@ -381,10 +381,10 @@
   padding: 12px 14px;
   border-radius: 10px;
   border: 1px solid var(--payg-card-border);
-  background: var(--bg-muted);
+  background: var(--c-surface-sunken);
   font-size: 0.8125rem;
   line-height: 1.45;
-  color: var(--text-secondary);
+  color: var(--c-text-muted);
 }
 .payg-help__panel ul {
   margin: 0;
@@ -409,12 +409,12 @@
 }
 .payg-preview__main {
   font-size: 0.875rem;
-  color: var(--text-primary);
+  color: var(--c-text);
   font-weight: 550;
 }
 .payg-preview__note {
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   margin-top: 1px;
 }
 
@@ -463,7 +463,7 @@
 .payg-gate__label {
   font-size: 0.8125rem;
   line-height: 1.35;
-  color: var(--text-primary);
+  color: var(--c-text);
   flex: 1;
 }
 .payg-gate__tag {
@@ -477,8 +477,8 @@
   white-space: nowrap;
 }
 .payg-gate__tag[data-variant="on"] {
-  color: var(--text-muted);
-  background: var(--bg-muted);
+  color: var(--c-text-subtle);
+  background: var(--c-surface-sunken);
 }
 .payg-gate__tag[data-variant="pause"] {
   color: #dc2626;
@@ -515,11 +515,11 @@
 .payg-member__name {
   font-size: 0.875rem;
   font-weight: 550;
-  color: var(--text-primary);
+  color: var(--c-text);
 }
 .payg-member__email {
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
 }
 .payg-member__usage {
   text-align: right;
@@ -527,7 +527,7 @@
 }
 .payg-member__usage-num {
   font-size: 0.8125rem;
-  color: var(--text-primary);
+  color: var(--c-text);
   font-variant-numeric: tabular-nums;
 }
 .payg-member__minibar {
@@ -570,27 +570,27 @@
 }
 .payg-activity__label {
   font-size: 0.8438rem;
-  color: var(--text-primary);
+  color: var(--c-text);
   flex: 1;
 }
 .payg-activity__ts {
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
 }
 .payg-activity__kind {
   font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--text-muted);
-  background: var(--bg-muted);
+  color: var(--c-text-subtle);
+  background: var(--c-surface-sunken);
   padding: 2px 8px;
   border-radius: 999px;
 }
 .payg-activity__units {
   font-size: 0.8125rem;
   font-weight: 650;
-  color: var(--text-primary);
+  color: var(--c-text);
   font-variant-numeric: tabular-nums;
   min-width: 58px;
   text-align: right;
@@ -614,10 +614,10 @@
 .payg-stripe__title {
   font-size: 0.9375rem;
   font-weight: 650;
-  color: var(--text-primary);
+  color: var(--c-text);
 }
 .payg-stripe__subtitle {
   font-size: 0.8125rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   margin-top: 2px;
 }

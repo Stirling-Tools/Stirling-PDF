@@ -4,7 +4,7 @@
   gap: var(--space-2);
   cursor: pointer;
   font-size: 0.8125rem;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
 }
 
 .sui-check--disabled {
@@ -25,8 +25,8 @@
   height: 1rem;
   margin-top: 0.0625rem;
   border-radius: var(--radius-xs);
-  border: 1.5px solid var(--color-border-hover);
-  background: var(--color-surface);
+  border: 1.5px solid var(--c-border-strong);
+  background: var(--c-surface);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -37,13 +37,13 @@
 }
 
 .sui-check__input:focus-visible + .sui-check__box {
-  outline: 2px solid var(--color-blue);
+  outline: 2px solid var(--c-primary);
   outline-offset: 2px;
 }
 
 .sui-check__input:checked + .sui-check__box {
-  background: var(--color-blue);
-  border-color: var(--color-blue);
+  background: var(--c-primary);
+  border-color: var(--c-primary);
   color: var(--color-text-on-accent);
 }
 
@@ -55,8 +55,8 @@
 }
 
 .sui-check--mixed .sui-check__box {
-  background: var(--color-blue);
-  border-color: var(--color-blue);
+  background: var(--c-primary);
+  border-color: var(--c-primary);
 }
 .sui-check--mixed .sui-check__tick {
   opacity: 0;
@@ -78,7 +78,7 @@
 .sui-check__icon {
   display: inline-flex;
   align-items: center;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   flex-shrink: 0;
 }
 .sui-check__text {
@@ -86,10 +86,10 @@
   flex-direction: column;
 }
 .sui-check__label {
-  color: var(--color-text-1);
+  color: var(--c-text);
   font-weight: 500;
 }
 .sui-check__desc {
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }

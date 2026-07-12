@@ -20,7 +20,7 @@ const STATUS_COLOUR: Record<AuditStatus, string> = {
   success: "var(--color-green)",
   warning: "var(--color-amber)",
   danger: "var(--color-red)",
-  info: "var(--color-blue)",
+  info: "var(--c-primary)",
 };
 
 /** How many of the most recent audit events the home card shows. */

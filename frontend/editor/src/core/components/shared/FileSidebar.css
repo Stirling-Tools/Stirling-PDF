@@ -1,8 +1,8 @@
 /* ========== FILE SIDEBAR ========== */
 
 .file-sidebar {
-  background-color: var(--bg-toolbar);
-  border-right: 1px solid var(--border-subtle);
+  background-color: var(--c-bg-raised);
+  border-right: 1px solid var(--c-border-subtle);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -43,7 +43,7 @@
   background-color: color-mix(
     in srgb,
     var(--mantine-color-blue-6, #3b82f6) 12%,
-    var(--bg-toolbar)
+    var(--c-bg-raised)
   );
 }
 
@@ -75,11 +75,11 @@
 /* Icons stay left-aligned during animation; overflow:hidden on inner clips text naturally */
 
 .file-sidebar-header:hover {
-  background-color: var(--hover-bg);
+  background-color: var(--c-hover);
 }
 
 .file-sidebar-menu-icon {
-  color: var(--text-muted) !important;
+  color: var(--c-text-subtle) !important;
   font-size: 18px !important;
   flex-shrink: 0;
 }
@@ -129,11 +129,11 @@
 }
 
 .file-sidebar-search-row:not(.active):hover {
-  background-color: var(--hover-bg);
+  background-color: var(--c-hover);
 }
 
 .file-sidebar-search-icon {
-  color: var(--text-muted) !important;
+  color: var(--c-text-subtle) !important;
   font-size: 18px !important;
   flex-shrink: 0;
 }
@@ -148,19 +148,19 @@
   border: none;
   outline: none;
   font-size: 14px;
-  color: var(--text-primary);
+  color: var(--c-text);
   margin-left: 12px;
   min-width: 0;
 }
 
 .file-sidebar-search-input::placeholder {
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
 }
 
 .file-sidebar-search-label {
   margin-left: 12px;
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--c-text-muted);
 }
 
 /* ---- Scrollable content ---- */
@@ -199,7 +199,7 @@
 }
 
 .file-sidebar-action-row:hover {
-  background-color: var(--hover-bg);
+  background-color: var(--c-hover);
 }
 
 .file-sidebar-action-row.disabled {
@@ -212,7 +212,7 @@
 }
 
 .file-sidebar-action-icon {
-  color: var(--text-muted) !important;
+  color: var(--c-text-subtle) !important;
   font-size: 18px !important;
   flex-shrink: 0;
   display: inline-flex;
@@ -234,7 +234,7 @@
 .file-sidebar-action-label {
   margin-left: 12px;
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--c-text-muted);
   white-space: nowrap;
 }
 
@@ -253,7 +253,7 @@
 }
 
 .file-sidebar-cloud-row:not(.disabled):hover {
-  background-color: var(--hover-bg);
+  background-color: var(--c-hover);
 }
 
 .file-sidebar-cloud-row.disabled {
@@ -320,19 +320,19 @@
   border: none;
   background: transparent;
   cursor: pointer;
-  color: var(--text-default, var(--color-text-1));
+  color: var(--text-default, var(--c-text));
   border-radius: 0;
   font-size: 13px;
   font-weight: 600;
   text-align: left;
 }
 .file-sidebar-group-header:hover {
-  background: var(--hover-bg, var(--color-bg-hover));
+  background: var(--c-hover, var(--c-hover));
 }
 
 .file-sidebar-group-icon {
   flex: none;
-  color: var(--text-muted, var(--color-text-3));
+  color: var(--c-text-subtle, var(--c-text-subtle));
 }
 
 .file-sidebar-group-label {
@@ -347,7 +347,7 @@
   flex: none;
   font-size: 11px;
   font-weight: 500;
-  color: var(--text-muted, var(--color-text-3));
+  color: var(--c-text-subtle, var(--c-text-subtle));
 }
 
 /* Full-width, flat rows: no inset, no radius, so the hover/selected highlight
@@ -363,7 +363,7 @@
 }
 /* Hover reads neutral (not the default blue tint); selected stays blue. */
 .file-sidebar-group-items .file-sidebar-file-item:hover:not(.selected) {
-  background-color: var(--color-bg-hover, rgba(120, 120, 120, 0.1));
+  background-color: var(--c-hover, rgba(120, 120, 120, 0.1));
 }
 /* A plain circle where the selected check sits — on hover, and blue when selected. */
 .file-sidebar-group-items .file-sidebar-file-checkbox-hover,
@@ -413,7 +413,7 @@
   border: none;
   background: transparent;
   cursor: pointer;
-  color: var(--color-blue, #2563eb);
+  color: var(--c-primary, #2563eb);
   font-size: 12px;
   font-weight: 500;
   border-radius: 6px;
@@ -424,7 +424,7 @@
   display: none;
 }
 .file-sidebar-view-all:hover {
-  background: var(--color-bg-hover, rgba(120, 120, 120, 0.1));
+  background: var(--c-hover, rgba(120, 120, 120, 0.1));
 }
 
 .file-sidebar-file-list::-webkit-scrollbar {
@@ -438,11 +438,11 @@
   border-radius: 2px;
 }
 .file-sidebar-file-list::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: var(--c-text-subtle);
 }
 
 .file-sidebar-section-divider {
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--c-border-subtle);
   margin: 10px 14px 6px 14px;
 }
 
@@ -457,7 +457,7 @@
 
 .file-sidebar-section-header {
   position: relative;
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--c-border-subtle);
   padding-top: 10px;
   margin-top: 4px;
   flex-shrink: 0;
@@ -467,7 +467,7 @@
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.02em;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   text-transform: uppercase;
 }
 
@@ -481,7 +481,7 @@
   align-items: center;
   justify-content: space-between;
   font-size: 11px;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   margin-bottom: 4px;
 }
 .file-sidebar-bulk-add-count {
@@ -490,19 +490,19 @@
 .file-sidebar-bulk-add-track {
   height: 3px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--color-blue, #3b82f6) 15%, transparent);
+  background: color-mix(in srgb, var(--c-primary, #3b82f6) 15%, transparent);
   overflow: hidden;
 }
 .file-sidebar-bulk-add-bar {
   height: 100%;
   border-radius: 999px;
-  background: var(--color-blue, #3b82f6);
+  background: var(--c-primary, #3b82f6);
   transition: width 0.15s ease-out;
 }
 
 .file-sidebar-section-count {
   font-size: 11px;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
 }
 
 .file-sidebar-section-btn {
@@ -515,7 +515,7 @@
   background: transparent;
   border-radius: 4px;
   cursor: pointer;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   padding: 0;
   outline: none;
   transition:
@@ -530,8 +530,8 @@
 }
 
 .file-sidebar-section-btn:hover {
-  background-color: var(--hover-bg);
-  color: var(--text-primary);
+  background-color: var(--c-hover);
+  color: var(--c-text);
 }
 
 .file-sidebar-section-btn-external {
@@ -576,7 +576,7 @@
   align-items: center;
   gap: 8px;
   padding: 8px 10px;
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--c-border-subtle);
   flex-shrink: 0;
   min-height: 48px;
 }
@@ -615,7 +615,7 @@
   flex: 1;
   font-size: 13px;
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--c-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -623,7 +623,7 @@
 }
 
 .file-sidebar-bottom-bar[role="button"]:hover {
-  background-color: var(--hover-bg);
+  background-color: var(--c-hover);
 }
 
 .file-sidebar-bottom-bar[role="button"]:focus-visible {
@@ -638,7 +638,7 @@
   width: 28px;
   height: 28px;
   border-radius: 6px;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   padding: 0;
   flex-shrink: 0;
   margin-left: auto;

@@ -31,7 +31,7 @@
 
 .rightCol {
   width: 8rem;
-  border-left: 0.0625rem solid var(--border-default);
+  border-left: 0.0625rem solid var(--c-border);
   padding-left: 0.75rem;
   display: flex;
   flex-direction: column;
@@ -47,15 +47,15 @@
   width: 100%;
   border-radius: 1.25rem;
   border: 0.0625rem solid var(--bulk-card-border);
-  background-color: var(--bulk-card-bg);
-  color: var(--text-primary);
+  background-color: var(--c-surface);
+  color: var(--c-text);
   transition: all 0.2s ease;
   min-height: 2rem;
 }
 
 .operatorChip:hover:not(:disabled) {
   border-color: var(--bulk-card-hover-border);
-  background-color: var(--hover-bg);
+  background-color: var(--c-hover);
   transform: translateY(-0.0625rem);
   box-shadow: var(--shadow-sm);
 }
@@ -71,15 +71,15 @@
 }
 
 :global([data-mantine-color-scheme="dark"]) .operatorChip {
-  background-color: var(--bulk-card-bg);
+  background-color: var(--c-surface);
   border-color: var(--bulk-card-border);
-  color: var(--text-primary);
+  color: var(--c-text);
 }
 
 :global([data-mantine-color-scheme="dark"]) .operatorChip:hover:not(:disabled) {
-  background-color: var(--hover-bg);
+  background-color: var(--c-hover);
   border-color: var(--bulk-card-hover-border);
-  color: var(--text-primary);
+  color: var(--c-text);
 }
 
 .dropdownHeader {
@@ -87,7 +87,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem;
-  border-bottom: 0.0625rem solid var(--border-default);
+  border-bottom: 0.0625rem solid var(--c-border);
   margin-bottom: 0.5rem;
 }
 
@@ -111,7 +111,7 @@
 }
 
 .chevron {
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
 }
 
 /* Icon-based chevrons */
@@ -151,13 +151,13 @@
 .selectedList {
   max-height: 8rem;
   overflow: auto;
-  background-color: var(--bg-raised);
-  border: 0.0625rem solid var(--border-default);
+  background-color: var(--c-surface-raised);
+  border: 0.0625rem solid var(--c-border);
   border-radius: 0.75rem;
   padding: 0.5rem 0.75rem;
   margin-top: 0.5rem;
   min-width: 24rem;
-  color: var(--text-primary);
+  color: var(--c-text);
 }
 
 .selectedText {
@@ -175,7 +175,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem;
-  border-bottom: 0.0625rem solid var(--border-default);
+  border-bottom: 0.0625rem solid var(--c-border);
   margin-bottom: 0.5rem;
 }
 
@@ -193,26 +193,26 @@
 }
 
 .advancedItem:hover {
-  background-color: var(--hover-bg);
+  background-color: var(--c-hover);
 }
 
 :global([data-mantine-color-scheme="dark"]) .advancedItem:hover {
-  background-color: var(--hover-bg);
+  background-color: var(--c-hover);
 }
 
 .advancedCard {
-  background-color: var(--bulk-card-bg);
+  background-color: var(--c-surface);
   border: none;
   border-radius: 0.75rem;
   padding: 0.25rem;
   margin-bottom: 0.5rem;
   width: 100%;
   box-sizing: border-box;
-  color: var(--text-primary);
+  color: var(--c-text);
 }
 
 :global([data-mantine-color-scheme="dark"]) .advancedCard {
-  background-color: var(--bulk-card-bg);
+  background-color: var(--c-surface);
 }
 
 .inputGroup {
@@ -230,20 +230,20 @@
 
 /* Style inputs and buttons within advanced cards to match bg-raised */
 .advancedCard :global(.mantine-NumberInput-input) {
-  background-color: var(--bg-raised) !important;
-  border-color: var(--border-default) !important;
-  color: var(--text-primary) !important;
+  background-color: var(--c-surface-raised) !important;
+  border-color: var(--c-border) !important;
+  color: var(--c-text) !important;
 }
 
 .advancedCard :global(.mantine-Button-root) {
-  background-color: var(--bg-raised) !important;
-  border-color: var(--border-default) !important;
-  color: var(--text-primary) !important;
+  background-color: var(--c-surface-raised) !important;
+  border-color: var(--c-border) !important;
+  color: var(--c-text) !important;
 }
 
 .advancedCard :global(.mantine-Button-root:hover) {
-  background-color: var(--hover-bg) !important;
-  border-color: var(--border-strong) !important;
+  background-color: var(--c-hover) !important;
+  border-color: var(--c-border-strong) !important;
 }
 
 /* Error helper text above the input */
@@ -254,8 +254,8 @@
 
 /* Compact error container for inline tool settings */
 .errorCompact {
-  background-color: var(--bg-raised);
-  border: 0.0625rem solid var(--border-default);
+  background-color: var(--c-surface-raised);
+  border: 0.0625rem solid var(--c-border);
   border-radius: 0.75rem;
   padding: 0.5rem 0.75rem;
   margin-top: 0.5rem;
@@ -273,7 +273,7 @@
 
 /* Dark-mode adjustments */
 :global([data-mantine-color-scheme="dark"]) .selectedList {
-  background-color: var(--bg-raised);
+  background-color: var(--c-surface-raised);
 }
 
 /* Small screens: allow the section to shrink instead of enforcing a large min width */
@@ -290,16 +290,16 @@
 .panelContainer {
   max-height: 95vh;
   overflow: auto;
-  background-color: var(--bulk-panel-bg);
-  color: var(--text-primary);
+  background-color: var(--c-surface);
+  color: var(--c-text);
   border-radius: 0.5rem;
 }
 
 /* Override Mantine Popover dropdown background */
 :global(.mantine-Popover-dropdown) {
-  background-color: var(--bulk-panel-bg) !important;
+  background-color: var(--c-surface) !important;
   border-color: var(--bulk-card-border) !important;
-  color: var(--text-primary) !important;
+  color: var(--c-text) !important;
 }
 
 /* Override Mantine Switch outline */

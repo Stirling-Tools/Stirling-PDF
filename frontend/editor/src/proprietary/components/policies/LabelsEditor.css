@@ -20,15 +20,15 @@
   padding: 0.4rem 0.6rem;
   font-size: 0.8125rem;
   font-family: inherit;
-  color: var(--color-text-1);
-  background: var(--color-surface);
-  border: 1px solid var(--border-default);
+  color: var(--c-text);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius-md);
   outline: none;
   transition: border-color var(--motion-fast);
 }
 .labels-add-input:focus {
-  border-color: var(--color-blue);
+  border-color: var(--c-primary);
 }
 .labels-add-error {
   margin: 0;
@@ -38,7 +38,7 @@
 .labels-empty {
   margin: 0;
   font-size: 0.8125rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 /* ---- Chip grid (chips themselves are the shared @app/ui/LabelChip) ---- */
@@ -61,15 +61,15 @@
   border: none;
   border-radius: var(--radius-md);
   background: transparent;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
   cursor: pointer;
   transition:
     background var(--motion-fast),
     color var(--motion-fast);
 }
 .labels-icon-pick:hover {
-  background: var(--color-bg-hover);
-  color: var(--color-text-1);
+  background: var(--c-hover);
+  color: var(--c-text);
 }
 .labels-icon-option {
   display: inline-flex;
@@ -80,19 +80,19 @@
   border: none;
   background: transparent;
   border-radius: var(--radius-md);
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
   cursor: pointer;
   transition:
     background var(--motion-fast),
     color var(--motion-fast);
 }
 .labels-icon-option:hover {
-  background: var(--color-bg-hover);
-  color: var(--color-text-1);
+  background: var(--c-hover);
+  color: var(--c-text);
 }
 .labels-icon-option.is-selected {
   background: var(--color-blue-light);
-  color: var(--color-blue);
+  color: var(--c-primary);
 }
 
 /* ---- Section summary (Edit-Settings card) ---- */
@@ -105,11 +105,11 @@
   display: flex;
   gap: var(--space-3);
   font-size: 0.8125rem;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
 }
 .labels-summary-note {
   font-size: 0.75rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 /* ---- Fat modal ---- */
@@ -164,7 +164,7 @@
   cursor: pointer;
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--color-text-1, inherit);
+  color: var(--c-text, inherit);
 }
 .labels-group-name {
   flex: 1;
@@ -173,11 +173,11 @@
 .labels-group-count {
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--color-text-3, rgba(128, 128, 128, 0.9));
+  color: var(--c-text-subtle, rgba(128, 128, 128, 0.9));
 }
 .labels-group-ungrouped {
   margin: 0;
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--color-text-2, inherit);
+  color: var(--c-text-muted, inherit);
 }

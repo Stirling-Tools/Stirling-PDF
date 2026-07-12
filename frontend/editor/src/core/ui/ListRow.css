@@ -6,20 +6,20 @@
   padding: 0.7rem 0.875rem;
   text-align: left;
   background: transparent;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 .sui-listrow--divider {
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--c-border);
 }
 .sui-listrow--interactive {
   cursor: pointer;
   transition: background var(--motion-fast);
 }
 .sui-listrow--interactive:hover {
-  background: var(--color-bg-hover);
+  background: var(--c-hover);
 }
 .sui-listrow--interactive:focus-visible {
-  outline: 0.125rem solid var(--color-blue);
+  outline: 0.125rem solid var(--c-primary);
   outline-offset: -0.125rem;
 }
 
@@ -32,8 +32,8 @@
   border-radius: var(--radius-md);
   flex-shrink: 0;
   margin-top: 0.05rem;
-  color: var(--color-text-4);
-  background: var(--color-bg-muted);
+  color: var(--c-text-subtle);
+  background: var(--c-surface-sunken);
 }
 .sui-listrow__leading[data-tone="success"] {
   color: var(--color-green);
@@ -48,8 +48,8 @@
   background: color-mix(in srgb, var(--color-red) 14%, transparent);
 }
 .sui-listrow__leading[data-tone="info"] {
-  color: var(--color-blue);
-  background: color-mix(in srgb, var(--color-blue) 14%, transparent);
+  color: var(--c-primary);
+  background: color-mix(in srgb, var(--c-primary) 14%, transparent);
 }
 .sui-listrow__leading[data-tone="purple"] {
   color: var(--color-purple);
@@ -65,19 +65,19 @@
 .sui-listrow__title {
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--color-text-1);
+  color: var(--c-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .sui-listrow__desc {
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   margin-top: 0.125rem;
 }
 .sui-listrow__meta {
   font-size: 0.6875rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   margin-top: 0.125rem;
 }
 .sui-listrow__trailing {

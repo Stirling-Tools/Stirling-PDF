@@ -16,7 +16,7 @@
 }
 
 .containerBorder {
-  border: 1px solid var(--border-default, #333);
+  border: 1px solid var(--c-border, #333);
 }
 
 /* Page thumbnail styles */
@@ -116,14 +116,14 @@
 
 .divider {
   height: 1px;
-  background-color: var(--border-default, #333);
+  background-color: var(--c-border, #333);
   margin-bottom: 8px;
 }
 
 .previewLabel {
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--c-text);
   text-align: center;
 }
 

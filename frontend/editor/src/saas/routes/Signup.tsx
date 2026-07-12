@@ -260,7 +260,7 @@ export default function Signup() {
             cursor: "pointer",
             fontSize: "1rem",
             fontWeight: 700,
-            color: "var(--text-primary)",
+            color: "var(--c-text)",
           }}
         >
           {isSigningUp

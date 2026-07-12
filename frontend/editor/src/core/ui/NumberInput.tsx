@@ -7,11 +7,11 @@ import { useInputAria } from "@app/ui/ariaForwarding";
 import "@app/ui/MantineForms.css";
 
 const SUI_INPUT_VARS = {
-  "--input-bg": "var(--color-surface)",
-  "--input-bd": "var(--color-border-input)",
-  "--input-bd-focus": "var(--color-blue)",
+  "--input-bg": "var(--c-surface)",
+  "--input-bd": "var(--c-border)",
+  "--input-bd-focus": "var(--c-primary)",
   "--input-radius": "var(--radius-md)",
-  "--input-color": "var(--color-text-1)",
+  "--input-color": "var(--c-text)",
   "--input-placeholder-color": "var(--color-text-placeholder)",
   "--input-height-sm": "1.75rem",
   "--input-height-md": "2.25rem",

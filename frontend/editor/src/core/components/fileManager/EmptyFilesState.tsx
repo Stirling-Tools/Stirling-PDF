@@ -81,7 +81,7 @@ const EmptyFilesState: React.FC = () => {
             variant="tertiary"
             aria-label={t("emptyFilesState.upload", "Upload")}
             style={{
-              backgroundColor: "var(--bg-file-manager)",
+              backgroundColor: "var(--c-bg)",
               color: "var(--landing-button-color)",
               border: "1px solid var(--landing-button-border)",
               borderRadius: isUploadHover ? "2rem" : "1rem",
@@ -103,7 +103,7 @@ const EmptyFilesState: React.FC = () => {
               icon={icons.uploadIconName}
               width="1.25rem"
               height="1.25rem"
-              style={{ color: "var(--accent-interactive)" }}
+              style={{ color: "var(--c-primary)" }}
             />
             {isUploadHover && (
               <span style={{ marginLeft: ".5rem" }}>
@@ -115,7 +115,7 @@ const EmptyFilesState: React.FC = () => {
 
         {/* Instruction Text */}
         <span
-          className="text-[var(--accent-interactive)]"
+          className="text-[var(--c-primary)]"
           style={{ fontSize: ".8rem", textAlign: "center" }}
         >
           {terminology.dropFilesHere}

@@ -63,7 +63,7 @@
 
 /* Action styles */
 .actionRow:hover {
-  background: var(--hover-bg);
+  background: var(--c-hover);
 }
 
 .actionDanger {
@@ -72,7 +72,7 @@
 
 .actionsDivider {
   height: 1px;
-  background: var(--border-default);
+  background: var(--c-border);
   margin: 4px 0;
 }
 

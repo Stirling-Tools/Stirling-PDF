@@ -443,7 +443,7 @@ export default function Login() {
             border: "1px solid rgba(37, 99, 235, 0.2)",
           }}
         >
-          <p style={{ margin: "0 0 0.75rem 0", color: "var(--text-primary)" }}>
+          <p style={{ margin: "0 0 0.75rem 0", color: "var(--c-text)" }}>
             {t(
               "backendStartup.unreachable",
               "The application cannot currently connect to the backend. Verify the backend status and network connectivity, then try again.",
@@ -521,33 +521,25 @@ export default function Login() {
                   size="sm"
                   fw={600}
                   ta="center"
-                  style={{ color: "var(--text-primary)" }}
+                  style={{ color: "var(--c-text)" }}
                 >
                   {t("login.defaultCredentials", "Default Login Credentials")}
                 </Text>
-                <Text
-                  size="sm"
-                  ta="center"
-                  style={{ color: "var(--text-primary)" }}
-                >
+                <Text size="sm" ta="center" style={{ color: "var(--c-text)" }}>
                   <Text
                     component="span"
                     fw={600}
-                    style={{ color: "var(--text-primary)" }}
+                    style={{ color: "var(--c-text)" }}
                   >
                     {t("login.username", "Username")}:
                   </Text>{" "}
                   admin
                 </Text>
-                <Text
-                  size="sm"
-                  ta="center"
-                  style={{ color: "var(--text-primary)" }}
-                >
+                <Text size="sm" ta="center" style={{ color: "var(--c-text)" }}>
                   <Text
                     component="span"
                     fw={600}
-                    style={{ color: "var(--text-primary)" }}
+                    style={{ color: "var(--c-text)" }}
                   >
                     {t("login.password", "Password")}:
                   </Text>{" "}
@@ -557,7 +549,7 @@ export default function Login() {
                   size="xs"
                   ta="center"
                   mt="xs"
-                  style={{ color: "var(--text-muted)" }}
+                  style={{ color: "var(--c-text-subtle)" }}
                 >
                   {t(
                     "login.changePasswordWarning",

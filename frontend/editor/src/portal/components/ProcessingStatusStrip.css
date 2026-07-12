@@ -4,8 +4,8 @@
   align-items: center;
   gap: 0.625rem;
   padding: 0.625rem 0.875rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius-md);
 }
 
@@ -15,7 +15,7 @@
   gap: 0.4375rem;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-statusstrip__dot {
@@ -25,16 +25,16 @@
 }
 
 .portal-statusstrip__sep {
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
 }
 
 .portal-statusstrip__volume {
   font-size: 0.8125rem;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .portal-statusstrip__volume strong {
-  color: var(--color-text-1);
+  color: var(--c-text);
   font-weight: 600;
 }
 

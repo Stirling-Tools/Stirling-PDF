@@ -8,7 +8,7 @@
   /* Match the right-rail toolbar background so dark-mode doesn't show a
      lighter card behind the chat, and so the agent-card → pill morph
      doesn't flash a different colour mid-transition. */
-  background: var(--bg-toolbar);
+  background: var(--c-bg-raised);
 }
 
 .chat-panel--embedded {
@@ -31,7 +31,7 @@
   flex: 1;
   min-width: 0;
   padding: 0.4rem 0.75rem 0.4rem 0.4rem;
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--c-border-subtle);
   border-radius: 9999px;
   background: var(--mantine-color-body);
   cursor: pointer;
@@ -103,7 +103,7 @@
   border-color: color-mix(
     in srgb,
     var(--mantine-color-blue-5) 60%,
-    var(--border-subtle)
+    var(--c-border-subtle)
   );
 }
 
@@ -111,7 +111,7 @@
   border-color: color-mix(
     in srgb,
     var(--mantine-color-blue-4) 55%,
-    var(--border-subtle)
+    var(--c-border-subtle)
   );
 }
 
@@ -119,14 +119,14 @@
    so it doesn't read as a clashing lighter card on the dark toolbar. */
 [data-mantine-color-scheme="dark"] .chat-panel__agent-pill {
   background: transparent;
-  border-color: var(--border-subtle);
+  border-color: var(--c-border-subtle);
 }
 
 /* The default tertiary accent is blue — use the surface text colour instead so
    the pill label and close icon don't look like interactive links. Overrides
    the Mantine button colour var the shared Button sets inline. */
 .chat-panel__header .sui-btn--tertiary {
-  --button-color: var(--text-primary) !important;
+  --button-color: var(--c-text) !important;
 }
 
 [data-mantine-color-scheme="dark"] .chat-panel__agent-pill:hover {
@@ -146,7 +146,7 @@
 [data-mantine-color-scheme="dark"] .chat-panel-input {
   background: transparent;
   box-shadow:
-    0 0 0 1px var(--border-subtle),
+    0 0 0 1px var(--c-border-subtle),
     0 6px 16px rgba(0, 0, 0, 0.25);
 }
 
@@ -162,7 +162,7 @@
 
 [data-mantine-color-scheme="dark"] .chat-quick-action:hover {
   background: rgba(255, 255, 255, 0.04);
-  border-color: var(--border-subtle);
+  border-color: var(--c-border-subtle);
 }
 
 .chat-panel__agent-pill-label {
@@ -271,8 +271,8 @@
 
 .chat-file-pill--more {
   background: transparent;
-  border: 1px dashed var(--border-subtle);
-  color: var(--text-muted);
+  border: 1px dashed var(--c-border-subtle);
+  color: var(--c-text-subtle);
   cursor: pointer;
   padding: 0.2rem 0.55rem;
 }
@@ -285,7 +285,7 @@
   display: block;
   width: 100%;
   padding: 0.6rem 0.75rem;
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--c-border-subtle);
   border-radius: 0.65rem;
   background: var(--mantine-color-body);
   transition:
@@ -365,7 +365,7 @@
   align-items: center;
   gap: 0.45rem;
   flex-shrink: 0;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
 }
 
 .chat-panel-disclaimer__icon {
@@ -377,7 +377,7 @@
 .chat-panel-disclaimer--banner {
   margin: 0.35rem 0.75rem 0;
   padding: 0.6rem 0.75rem;
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--c-border-subtle);
   border-radius: 0.65rem;
   background: var(--mantine-color-gray-light);
   font-size: 0.78rem;
@@ -440,7 +440,7 @@
   border: none;
   border-radius: 0.375rem;
   background: transparent;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   cursor: pointer;
   transition:
     background 100ms ease-out,
@@ -458,7 +458,7 @@
 
 .chat-message-timestamp {
   font-size: 0.7rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   padding: 0 0.25rem;
   white-space: nowrap;
 }
@@ -526,11 +526,11 @@
   line-height: 1.35;
   background: linear-gradient(
     90deg,
-    var(--text-muted) 0%,
-    var(--text-muted) 40%,
+    var(--c-text-subtle) 0%,
+    var(--c-text-subtle) 40%,
     var(--mantine-color-text) 50%,
-    var(--text-muted) 60%,
-    var(--text-muted) 100%
+    var(--c-text-subtle) 60%,
+    var(--c-text-subtle) 100%
   );
   background-size: 200% 100%;
   background-clip: text;
@@ -548,7 +548,7 @@
   height: 20px;
   flex-shrink: 0;
   overflow: hidden;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   animation: chat-phase-pulse 1.6s ease-in-out infinite;
 }
 
@@ -603,7 +603,7 @@
   align-items: center;
   padding: 0.1rem 0.25rem 0.1rem 0.1rem;
   border-radius: 0.35rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   transition: background 120ms ease-out;
 }
 
@@ -640,7 +640,7 @@
   min-width: 1.1rem;
   text-align: right;
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   font-variant-numeric: tabular-nums;
 }
 
@@ -652,7 +652,7 @@
   height: 18px;
   flex-shrink: 0;
   overflow: hidden;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
 }
 
 .chat-completed-log__tool-name {
@@ -676,8 +676,8 @@
   .chat-progress-live__label {
     animation: none;
     background: none;
-    -webkit-text-fill-color: var(--text-muted);
-    color: var(--text-muted);
+    -webkit-text-fill-color: var(--c-text-subtle);
+    color: var(--c-text-subtle);
   }
   .chat-progress-live__phase-icon {
     animation: none;

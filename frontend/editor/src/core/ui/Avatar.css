@@ -70,6 +70,6 @@
   background: var(--grad-red-btn);
 }
 .sui-avatar--neutral {
-  background: var(--color-bg-muted);
-  color: var(--color-text-2);
+  background: var(--c-surface-sunken);
+  color: var(--c-text-muted);
 }

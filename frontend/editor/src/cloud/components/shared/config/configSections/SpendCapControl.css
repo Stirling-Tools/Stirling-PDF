@@ -13,8 +13,8 @@
   --scc-accent-text: #0a8bff;
   --scc-accent-soft: rgba(10, 139, 255, 0.12);
   --scc-accent-border: rgba(10, 139, 255, 0.25);
-  --scc-chip-bg: var(--bg-muted);
-  --scc-chip-border: var(--border-default);
+  --scc-chip-bg: var(--c-surface-sunken);
+  --scc-chip-border: var(--c-border);
   /* Consistent vertical rhythm between the control row, the estimate, and any
      note — without it the blocks sit flush. */
   display: flex;
@@ -47,7 +47,7 @@
   border-radius: 999px;
   border: 1px solid var(--scc-chip-border);
   background: var(--scc-chip-bg);
-  color: var(--text-secondary);
+  color: var(--c-text-muted);
   font: inherit;
   font-size: 0.85rem;
   font-weight: 600;
@@ -59,8 +59,8 @@
     background 0.12s ease;
 }
 .scc-chip:hover:not(:disabled) {
-  color: var(--text-primary);
-  border-color: var(--border-strong);
+  color: var(--c-text);
+  border-color: var(--c-border-strong);
 }
 .scc-chip[data-selected="true"] {
   background: var(--scc-accent-soft);
@@ -90,7 +90,7 @@
     background 0.12s ease;
 }
 .scc-custom:hover {
-  border-color: var(--border-strong);
+  border-color: var(--c-border-strong);
 }
 .scc-custom[data-active="true"] {
   border-style: solid;
@@ -98,7 +98,7 @@
   background: var(--scc-accent-soft);
 }
 .scc-custom__symbol {
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   font-size: 0.85rem;
   font-weight: 600;
 }
@@ -111,14 +111,14 @@
   border: none;
   outline: none;
   background: transparent;
-  color: var(--text-primary);
+  color: var(--c-text);
   font: inherit;
   font-size: 0.85rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 .scc-custom__input::placeholder {
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   font-weight: 600;
 }
 .scc-custom:disabled,
@@ -148,17 +148,17 @@
 .scc-estimate__main {
   font-size: 0.875rem;
   font-weight: 550;
-  color: var(--text-primary);
+  color: var(--c-text);
 }
 .scc-estimate__sub {
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   margin-top: 1px;
 }
 
 /* Quiet helper line (e.g. "Shown in USD — change later in your currency"). */
 .scc-note {
   font-size: 0.8125rem;
-  color: var(--text-muted);
+  color: var(--c-text-subtle);
   line-height: 1.45;
 }

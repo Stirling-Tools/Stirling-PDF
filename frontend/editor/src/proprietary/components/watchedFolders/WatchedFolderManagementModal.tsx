@@ -58,7 +58,7 @@ function SectionLabel({ children }: { children: string }) {
       tt="uppercase"
       style={{
         letterSpacing: "0.06em",
-        color: "var(--tool-subcategory-text-color)",
+        color: "var(--c-text-subtle)",
         marginBottom: "0.5rem",
       }}
     >
@@ -330,7 +330,7 @@ export function WatchedFolderManagementModal({
           style={{
             width: "28rem",
             flexShrink: 0,
-            borderRight: "0.0625rem solid var(--border-subtle)",
+            borderRight: "0.0625rem solid var(--c-border-subtle)",
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",
@@ -439,7 +439,7 @@ export function WatchedFolderManagementModal({
                       style={{
                         marginLeft: "0.75rem",
                         paddingLeft: "0.75rem",
-                        borderLeft: "2px solid var(--border-subtle)",
+                        borderLeft: "2px solid var(--c-border-subtle)",
                       }}
                     >
                       <Box
@@ -532,7 +532,7 @@ export function WatchedFolderManagementModal({
                     style={{
                       padding: "0.5rem 0.75rem",
                       borderRadius: "var(--mantine-radius-sm)",
-                      border: `0.0625rem solid ${outputDirName ? "var(--mantine-color-green-filled)" : "var(--border-subtle)"}`,
+                      border: `0.0625rem solid ${outputDirName ? "var(--mantine-color-green-filled)" : "var(--c-border-subtle)"}`,
                       backgroundColor: outputDirName
                         ? "var(--mantine-color-green-light)"
                         : "transparent",
@@ -628,7 +628,7 @@ export function WatchedFolderManagementModal({
                     gap: "0.35rem",
                     padding: "0.25rem 0",
                     width: "100%",
-                    color: "var(--tool-subcategory-text-color)",
+                    color: "var(--c-text-subtle)",
                     fontSize: "0.7rem",
                     fontWeight: 600,
                     letterSpacing: "0.06em",
@@ -810,7 +810,7 @@ export function WatchedFolderManagementModal({
           <div
             style={{
               padding: "1rem 1.5rem",
-              borderTop: "0.0625rem solid var(--border-subtle)",
+              borderTop: "0.0625rem solid var(--c-border-subtle)",
               flexShrink: 0,
             }}
           >

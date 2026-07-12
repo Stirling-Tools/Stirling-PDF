@@ -201,7 +201,7 @@ export function FileDetailsPanel({
                 <img src={single.thumbnailUrl} alt="" />
               ) : (
                 <PictureAsPdfIcon
-                  style={{ fontSize: "3rem", color: "var(--text-muted)" }}
+                  style={{ fontSize: "3rem", color: "var(--c-text-subtle)" }}
                 />
               )}
             </div>

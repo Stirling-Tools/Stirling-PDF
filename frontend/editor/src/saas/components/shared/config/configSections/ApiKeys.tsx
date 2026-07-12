@@ -74,8 +74,8 @@ export default function ApiKeys() {
           radius="md"
           p={18}
           style={{
-            background: "var(--api-keys-card-bg)",
-            border: "1px solid var(--api-keys-card-border)",
+            background: "var(--c-surface)",
+            border: "1px solid var(--c-border)",
             boxShadow: "0 2px 8px var(--api-keys-card-shadow)",
           }}
         >
@@ -111,8 +111,8 @@ export default function ApiKeys() {
             style={{
               padding: 18,
               borderRadius: 12,
-              background: "var(--api-keys-card-bg)",
-              border: "1px solid var(--api-keys-card-border)",
+              background: "var(--c-surface)",
+              border: "1px solid var(--c-border)",
               boxShadow: "0 2px 8px var(--api-keys-card-shadow)",
             }}
           >

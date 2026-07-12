@@ -1,5 +1,5 @@
 .sui-collapsible {
-  border: 1px solid var(--color-border-light);
+  border: 1px solid var(--c-border-subtle);
   border-radius: 0.5625rem;
   overflow: hidden;
 }
@@ -10,7 +10,7 @@
   gap: 0.5rem;
   width: 100%;
   padding: 0.75rem 0.875rem;
-  background: var(--color-surface);
+  background: var(--c-surface);
   border: none;
   cursor: pointer;
   text-align: left;
@@ -18,7 +18,7 @@
 }
 
 .sui-collapsible__head:hover {
-  background: var(--color-bg-hover);
+  background: var(--c-hover);
 }
 
 .sui-collapsible__head-main {
@@ -39,7 +39,7 @@
 }
 
 .sui-collapsible__chevron {
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
   transition: transform 0.2s ease;
 }
 
