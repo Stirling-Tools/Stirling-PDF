@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import "@app/ui/Collapsible.css";
 
 export interface CollapsibleProps {
@@ -40,21 +41,11 @@ export function Collapsible({
         <span className="sui-collapsible__head-main">{header}</span>
         <span className="sui-collapsible__head-end">
           {aside}
-          <svg
+          <KeyboardArrowDownIcon
             className="sui-collapsible__chevron"
             data-open={open}
-            viewBox="0 0 24 24"
-            width={16}
-            height={16}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden
-          >
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
+            sx={{ fontSize: 16 }}
+          />
         </span>
       </button>
       <div className="sui-collapsible__body" data-open={open}>

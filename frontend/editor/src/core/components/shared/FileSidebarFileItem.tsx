@@ -11,6 +11,7 @@ import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 import CloudDoneIcon from "@mui/icons-material/CloudDone";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import HistoryIcon from "@mui/icons-material/History";
+import MuiCheckIcon from "@mui/icons-material/Check";
 import type { FileId } from "@app/types/file";
 import { FileDocIcon } from "@app/components/shared/FileDocIcon";
 import {
@@ -106,22 +107,7 @@ function CheckIcon({
   className?: string;
   style?: React.CSSProperties;
 }) {
-  return (
-    <svg
-      className={className}
-      style={style}
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="3"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  );
+  return <MuiCheckIcon className={className} style={style} sx={{ fontSize: 14 }} />;
 }
 
 function getSidebarFileIcon(ext: string): React.ReactElement {

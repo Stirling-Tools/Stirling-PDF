@@ -1,28 +1,11 @@
 import { useTranslation } from "react-i18next";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { Button, Dropdown } from "@app/ui";
 import markLight from "@app/assets/brand/modern-logo/StirlingPDFLogoNoTextLight.svg";
 import markDark from "@app/assets/brand/modern-logo/StirlingPDFLogoNoTextDark.svg";
 import "@app/components/shared/AppSwitch.css";
 
 export type AppSwitchTarget = "editor" | "processor";
-
-function ChevronDownIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={14}
-      height={14}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.75}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polyline points="6 9 12 15 18 9" />
-    </svg>
-  );
-}
 
 interface AppSwitchProps {
   /** The app this switcher is rendered in (shown as active in the menu). */
@@ -62,7 +45,7 @@ export function AppSwitch({
           className="app-switch-btn"
           aria-label={t("portal.shell.sidebar.switchApp", "Switch app")}
         >
-          <ChevronDownIcon />
+          <KeyboardArrowDownIcon sx={{ fontSize: 14 }} />
         </Button>
       </Dropdown.Trigger>
       <Dropdown.Menu width="11rem">

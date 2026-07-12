@@ -1,4 +1,5 @@
 import { forwardRef, type InputHTMLAttributes, type ReactNode } from "react";
+import CheckIcon from "@mui/icons-material/Check";
 import "@app/ui/Checkbox.css";
 
 export interface CheckboxProps extends Omit<
@@ -44,19 +45,10 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
           {...rest}
         />
         <span className="sui-check__box" aria-hidden>
-          <svg
-            viewBox="0 0 16 16"
-            width="10"
-            height="10"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2.5}
-            strokeLinecap="round"
-            strokeLinejoin="round"
+          <CheckIcon
             className="sui-check__tick"
-          >
-            <polyline points="3 8.5 7 12 13 4" />
-          </svg>
+            sx={{ fontSize: 10 }}
+          />
           <span className="sui-check__dash" />
         </span>
         {leadingIcon && (

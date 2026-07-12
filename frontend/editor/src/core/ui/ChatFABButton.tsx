@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes } from "react";
+import CheckIcon from "@mui/icons-material/Check";
 import "@app/ui/ChatFABButton.css";
 
 export interface ChatFABButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -44,21 +45,7 @@ export function ChatFABButton({
       )}
       {showTick && (
         <span className="chat-fab-btn__tick" aria-hidden="true">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width={10}
-            height={10}
-            viewBox="0 0 10 10"
-            fill="none"
-          >
-            <path
-              d="M2 5l2 2 4-4"
-              stroke="#fff"
-              strokeWidth={1.6}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <CheckIcon sx={{ color: "#fff", fontSize: 10 }} />
         </span>
       )}
     </button>

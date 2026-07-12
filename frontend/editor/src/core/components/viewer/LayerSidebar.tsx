@@ -9,6 +9,8 @@ import {
   Tooltip,
 } from "@mantine/core";
 import LayersIcon from "@mui/icons-material/Layers";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
@@ -258,23 +260,9 @@ export function LayerSidebar({
               }}
             >
               {isExpanded ? (
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 12 12"
-                  fill="currentColor"
-                >
-                  <path d="M2 4l4 4 4-4z" />
-                </svg>
+                <ArrowDropDownIcon sx={{ fontSize: 12 }} />
               ) : (
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 12 12"
-                  fill="currentColor"
-                >
-                  <path d="M4 2l4 4-4 4z" />
-                </svg>
+                <ArrowRightIcon sx={{ fontSize: 12 }} />
               )}
             </span>
           ) : (
