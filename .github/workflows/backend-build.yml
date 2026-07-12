@@ -11,6 +11,17 @@ name: Backend build, format check, and coverage
 #                  never any runtime/integration testing)
 on:
   workflow_call:
+    inputs:
+      depot_cores:
+        description: "Depot runner vCPU count (used in runs-on). Override for benchmarking."
+        required: false
+        type: string
+        default: "8"
+      full_backend_matrix:
+        description: "Run the full core/proprietary/saas flavor matrix. Callers pass false on draft PRs to build only the cheapest `core` flavor."
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -24,14 +35,16 @@ jobs:
 
   build:
     needs: pick
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-8' }}
+    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || format('depot-ubuntu-24.04-{0}', inputs.depot_cores || '8') }}
     env:
       DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
     strategy:
       fail-fast: false
       matrix:
         jdk-version: [25]
-        flavor: [core, proprietary, saas]
+        # Draft PRs (full_backend_matrix=false) build only `core` for fast,
+        # cheap feedback; ready PRs / merge queue build all three flavors.
+        flavor: ${{ inputs.full_backend_matrix && fromJSON('["core","proprietary","saas"]') || fromJSON('["core"]') }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3

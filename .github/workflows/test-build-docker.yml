@@ -13,10 +13,15 @@ on:
         type: string
         default: "false"
       depot_cores:
-        description: "Depot runner vCPU count (used in runs-on). Override for benchmarking."
+        description: "Depot runner vCPU count for the main image-build matrix (runs a local Gradle build). Override for benchmarking."
         required: false
         type: string
         default: "8"
+      unoserver_depot_cores:
+        description: "Depot runner vCPU count for the unoserver image job (remote build only, no local Gradle). Override for benchmarking."
+        required: false
+        type: string
+        default: "2"
 
 permissions:
   contents: read
@@ -214,7 +219,11 @@ jobs:
 
   test-build-unoserver-image:
     needs: pick
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || format('depot-ubuntu-24.04-{0}', inputs.depot_cores || '8') }}
+    # This job does no local Gradle build - the image is built on Depot's
+    # remote BuildKit and only `docker run`'d for a smoke test - so the
+    # orchestration runner sits near-idle. A 2-core runner is plenty and
+    # ~4x cheaper. (Fork PRs fall back to local buildx on ubuntu-latest.)
+    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || format('depot-ubuntu-24.04-{0}', inputs.unoserver_depot_cores || '2') }}
     permissions:
       contents: read
       id-token: write

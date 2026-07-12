@@ -10,6 +10,9 @@ name: Build and Test Workflow
 
 on:
   pull_request:
+    # `ready_for_review` is required so flipping a draft to ready re-runs the
+    # heavy suite the draft gates below skip. Keep the other default types.
+    types: [opened, synchronize, reopened, ready_for_review]
     branches: ["main"]
   merge_group:
     branches: ["main"]
@@ -68,13 +71,19 @@ jobs:
       pull-requests: write
     uses: ./.github/workflows/backend-build.yml
     secrets: inherit
+    with:
+      # Draft PRs build+test only the cheapest `core` flavor for fast
+      # feedback (1x runner instead of 3x). Ready PRs and the merge queue
+      # run the full core/proprietary/saas matrix.
+      full_backend_matrix: ${{ github.event.pull_request.draft != true }}
 
   db-migration-test:
     # Boots the current bootJar against H2 fixtures captured from past
     # releases (v2.0.0 / v2.5.0 / v2.10.0) and verifies admin login still
     # works after Hibernate's ddl-auto=update migrates the schema. Gated on
-    # the `project` filter so doc-only PRs skip this ~5-minute job.
-    if: needs.files-changed.outputs.project == 'true'
+    # the `project` filter so doc-only PRs skip this ~5-minute job, and
+    # skipped on draft PRs (re-runs on ready_for_review).
+    if: github.event.pull_request.draft != true && needs.files-changed.outputs.project == 'true'
     needs: [files-changed]
     permissions:
       contents: read
@@ -99,7 +108,7 @@ jobs:
     secrets: inherit
 
   playwright-e2e:
-    if: needs.files-changed.outputs.frontend == 'true'
+    if: github.event.pull_request.draft != true && needs.files-changed.outputs.frontend == 'true'
     needs: [files-changed]
     permissions:
       contents: read
@@ -107,7 +116,7 @@ jobs:
     secrets: inherit
 
   playwright-e2e-live:
-    if: needs.files-changed.outputs.frontend == 'true'
+    if: github.event.pull_request.draft != true && needs.files-changed.outputs.frontend == 'true'
     needs: [files-changed]
     permissions:
       contents: read
@@ -115,7 +124,7 @@ jobs:
     secrets: inherit
 
   playwright-e2e-enterprise:
-    if: needs.files-changed.outputs.proprietary == 'true'
+    if: github.event.pull_request.draft != true && needs.files-changed.outputs.proprietary == 'true'
     needs: [files-changed]
     permissions:
       contents: read
@@ -131,7 +140,7 @@ jobs:
     secrets: inherit
 
   docker-compose-tests:
-    if: needs.files-changed.outputs.project == 'true'
+    if: github.event.pull_request.draft != true && needs.files-changed.outputs.project == 'true'
     needs: [files-changed]
     permissions:
       actions: write
@@ -143,7 +152,7 @@ jobs:
       docker-base-changed: ${{ needs.files-changed.outputs.docker-base }}
 
   test-build-docker-images:
-    if: github.event_name == 'pull_request' && needs.files-changed.outputs.project == 'true'
+    if: github.event.pull_request.draft != true && github.event_name == 'pull_request' && needs.files-changed.outputs.project == 'true'
     needs: [files-changed, build, check-generateOpenApiDocs, check-licence]
     permissions:
       contents: read
@@ -155,7 +164,7 @@ jobs:
       docker-base-changed: ${{ needs.files-changed.outputs.docker-base }}
 
   tauri-build:
-    if: needs.files-changed.outputs.tauri == 'true'
+    if: github.event.pull_request.draft != true && needs.files-changed.outputs.tauri == 'true'
     needs: [files-changed]
     permissions:
       contents: read
