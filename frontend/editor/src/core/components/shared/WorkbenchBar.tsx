@@ -54,7 +54,6 @@ import CloseIcon from "@mui/icons-material/Close";
 import PrintIcon from "@mui/icons-material/Print";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import "@app/components/shared/WorkbenchBar.css";
-import DashboardCustomizeOutlinedIcon from "@mui/icons-material/DashboardCustomizeOutlined";
 
 const SECTION_ORDER: WorkbenchBarSection[] = ["top", "middle", "bottom"];
 
@@ -416,7 +415,13 @@ export default function WorkbenchBar({
           {
             value: "pageEditor" as WorkbenchType,
             label: t("workbenchBar.multiTool", "Multi-Tool"),
-            icon: <DashboardCustomizeOutlinedIcon width="1rem" height="1rem" />,
+            icon: (
+              <LocalIcon
+                icon="dashboard-customize-outline-rounded"
+                width="1rem"
+                height="1rem"
+              />
+            ),
           },
         ]
       : []),

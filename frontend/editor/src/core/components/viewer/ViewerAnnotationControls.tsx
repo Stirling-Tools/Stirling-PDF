@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { AppIcon } from "@app/ui/AppIcon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { ViewerContext } from "@app/contexts/ViewerContext";
@@ -196,11 +196,7 @@ export default function ViewerAnnotationControls({
               : t("workbenchBar.redact", "Redact")
           }
         >
-          <LocalIcon
-            icon="scan-delete-rounded"
-            width="1.25rem"
-            height="1.25rem"
-          />
+          <AppIcon symbol="scan-delete-rounded" size="1.25rem" />
         </ActionIcon>
       </Tooltip>
 
@@ -231,14 +227,13 @@ export default function ViewerAnnotationControls({
             "Toggle Annotations Visibility",
           )}
         >
-          <LocalIcon
-            icon={
+          <AppIcon
+            symbol={
               viewerContext?.isAnnotationsVisible
                 ? "visibility"
                 : "preview-off-rounded"
             }
-            width="1.25rem"
-            height="1.25rem"
+            size="1.25rem"
           />
         </ActionIcon>
       </Tooltip>

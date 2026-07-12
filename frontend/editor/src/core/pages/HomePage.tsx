@@ -41,7 +41,7 @@ import { Button } from "@app/ui/Button";
 import "@app/pages/HomePage.css";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
-import AutoModeOutlinedIcon from "@mui/icons-material/AutoModeOutlined";
+import LocalIcon from "@app/components/shared/LocalIcon";
 
 const SIDEBAR_COLLAPSED_STORAGE_KEY = "stirling.fileSidebarCollapsed";
 
@@ -448,7 +448,11 @@ export default function HomePage() {
                     }
                   }}
                 >
-                  <AutoModeOutlinedIcon width="1.5rem" height="1.5rem" />
+                  <LocalIcon
+                    icon="automation-outline"
+                    width="1.5rem"
+                    height="1.5rem"
+                  />
                   <span className="mobile-bottom-button-label">
                     {t("quickAccess.automate", "Automate")}
                   </span>

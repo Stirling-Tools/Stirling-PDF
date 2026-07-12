@@ -2,9 +2,9 @@ import React from "react";
 import { Group, Paper, Stack, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import BuildOutlinedIcon from "@mui/icons-material/BuildOutlined";
 import PersonIcon from "@mui/icons-material/PersonRounded";
 import { requestStartTour } from "@app/constants/events";
+import LocalIcon from "@app/components/shared/LocalIcon";
 
 interface HelpSectionProps {
   isAdmin: boolean;
@@ -41,7 +41,13 @@ const HelpSection: React.FC<HelpSectionProps> = ({
             <Button
               variant="secondary"
               size="sm"
-              leftSection={<BuildOutlinedIcon sx={{ fontSize: "1rem" }} />}
+              leftSection={
+                <LocalIcon
+                  icon="build-outline-rounded"
+                  width="1rem"
+                  height="1rem"
+                />
+              }
               onClick={() => startTour("tools")}
             >
               {t("settings.help.toolsTour.start", "Start")}

@@ -10,7 +10,7 @@ import { pdfCommentAgentOperationConfig } from "@app/hooks/tools/pdfCommentAgent
 import { asRegistryConfig } from "@app/hooks/tools/shared/toolOperationTypes";
 import PdfCommentAgent from "@app/tools/PdfCommentAgent";
 import { getSynonyms } from "@app/utils/toolSynonyms";
-import AddCommentOutlinedIcon from "@mui/icons-material/AddCommentOutlined";
+import LocalIcon from "@app/components/shared/LocalIcon";
 
 /**
  * Prototype tool registry extension — real implementation.
@@ -26,7 +26,13 @@ export function usePrototypeToolRegistry(): PrototypeToolRegistry {
     () =>
       ({
         pdfCommentAgent: {
-          icon: <AddCommentOutlinedIcon width="1.5rem" height="1.5rem" />,
+          icon: (
+            <LocalIcon
+              icon="add-comment-outline-rounded"
+              width="1.5rem"
+              height="1.5rem"
+            />
+          ),
           name: t("home.pdfCommentAgent.title", "Add AI comments"),
           component: PdfCommentAgent,
           description: t(

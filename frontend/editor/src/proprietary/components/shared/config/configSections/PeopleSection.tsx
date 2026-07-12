@@ -47,7 +47,6 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
 import SearchIcon from "@mui/icons-material/Search";
-import HowToRegOutlinedIcon from "@mui/icons-material/HowToRegOutlined";
 
 export default function PeopleSection() {
   const { t } = useTranslation();
@@ -853,7 +852,8 @@ export default function PeopleSection() {
                                 user.enabled ? (
                                   <PersonOffIcon width="1rem" height="1rem" />
                                 ) : (
-                                  <HowToRegOutlinedIcon
+                                  <LocalIcon
+                                    icon="person-check"
                                     width="1rem"
                                     height="1rem"
                                   />

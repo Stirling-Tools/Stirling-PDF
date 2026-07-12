@@ -1,5 +1,6 @@
 export * from "@app/ui/Button";
 export * from "@app/ui/ActionIcon";
+export * from "@app/ui/AppIcon";
 export * from "@app/ui/FilePicker";
 export * from "@app/ui/SegmentedControl";
 export * from "@app/ui/StatusBadge";

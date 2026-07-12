@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import { Button, Dropdown } from "@app/ui";
+import { AppIcon, Button, Dropdown } from "@app/ui";
 import markLight from "@app/assets/brand/modern-logo/StirlingPDFLogoNoTextLight.svg";
 import markDark from "@app/assets/brand/modern-logo/StirlingPDFLogoNoTextDark.svg";
 import "@app/components/shared/AppSwitch.css";
@@ -45,7 +45,7 @@ export function AppSwitch({
           className="app-switch-btn"
           aria-label={t("portal.shell.sidebar.switchApp", "Switch app")}
         >
-          <KeyboardArrowDownIcon sx={{ fontSize: 14 }} />
+          <AppIcon mui={KeyboardArrowDownIcon} size={14} />
         </Button>
       </Dropdown.Trigger>
       <Dropdown.Menu width="11rem">

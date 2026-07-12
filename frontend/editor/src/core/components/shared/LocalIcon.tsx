@@ -24,6 +24,9 @@ interface LocalIconProps {
   height?: string | number;
   style?: React.CSSProperties;
   className?: string;
+  "aria-hidden"?: boolean;
+  "aria-label"?: string;
+  role?: string;
 }
 
 /**

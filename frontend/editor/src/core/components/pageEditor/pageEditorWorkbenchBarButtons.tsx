@@ -9,7 +9,7 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import DownloadIcon from "@mui/icons-material/Download";
 import SaveIcon from "@mui/icons-material/Save";
 import SelectAllIcon from "@mui/icons-material/SelectAll";
-import CropSquareIcon from "@mui/icons-material/CropSquare";
+import LocalIcon from "@app/components/shared/LocalIcon";
 
 interface PageEditorWorkbenchBarButtonsParams {
   totalPages: number;
@@ -79,7 +79,13 @@ export function usePageEditorWorkbenchBarButtons(
       },
       {
         id: "page-deselect-all",
-        icon: <CropSquareIcon width="1.5rem" height="1.5rem" />,
+        icon: (
+          <LocalIcon
+            icon="crop-square-outline"
+            width="1.5rem"
+            height="1.5rem"
+          />
+        ),
         tooltip: deselectAllLabel,
         ariaLabel: deselectAllLabel,
         section: "top" as const,
