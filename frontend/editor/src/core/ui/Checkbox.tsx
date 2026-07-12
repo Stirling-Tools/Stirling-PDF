@@ -45,10 +45,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
           {...rest}
         />
         <span className="sui-check__box" aria-hidden>
-          <CheckIcon
-            className="sui-check__tick"
-            sx={{ fontSize: 10 }}
-          />
+          <CheckIcon className="sui-check__tick" sx={{ fontSize: 10 }} />
           <span className="sui-check__dash" />
         </span>
         {leadingIcon && (
