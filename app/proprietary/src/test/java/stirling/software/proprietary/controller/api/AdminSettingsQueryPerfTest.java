@@ -35,15 +35,7 @@ import stirling.software.proprietary.security.repository.TeamMembershipRepositor
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.TeamService;
 
-/**
- * Measures the REAL {@link ProprietaryUIDataController#getAdminSettingsData} against a seeded H2
- * database (the engine self-hosted ships) via {@link AdminSettingsPerfHarness}.
- *
- * <p>{@code queryCountDoesNotScaleWithUsers} is the durable regression guard: it fails on the old
- * per-user-loop code (statement count grows ~linearly with the roster) and passes once the loop is
- * collapsed to a constant number of set-based queries. {@code headlineBenchmark} prints wall-clock
- * and statement counts against a large roster for before/after reporting.
- */
+/** Admin roster issues a constant query count regardless of size (H2). */
 @DataJpaTest
 class AdminSettingsQueryPerfTest {
 

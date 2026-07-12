@@ -49,13 +49,7 @@ import stirling.software.proprietary.service.UserLicenseSettingsService;
 
 import tools.jackson.databind.ObjectMapper;
 
-/**
- * Shared seeding + wiring + measurement for the admin-roster query tests, so the H2 (self-hosted)
- * and Postgres (SaaS engine) variants exercise the exact same code path against different
- * databases. The DB-touching collaborators are real; only the non-DB collaborators
- * (license/mail/mfa config) are stubbed, so measured statement counts reflect the real per-request
- * round-trips.
- */
+/** Shared seeding, wiring, and statement-count measurement for the admin-roster query tests. */
 class AdminSettingsPerfHarness {
 
     static final Duration SESSION_TIMEOUT = Duration.ofMinutes(30);
@@ -159,7 +153,7 @@ class AdminSettingsPerfHarness {
             SessionEntity session = new SessionEntity();
             session.setSessionId(UUID.randomUUID().toString());
             session.setPrincipalName(username);
-            // ~30% of sessions are past the timeout -> the old code expired (UPDATEd) them on GET.
+            // ~30% of sessions are past the timeout.
             session.setLastRequest(i % 10 < 3 ? STALE : FRESH);
             session.setExpired(false);
             sessions.add(session);

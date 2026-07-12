@@ -46,18 +46,18 @@ public interface SessionRepository extends JpaRepository<SessionEntity, String> 
                     + "GROUP BY u.username")
     List<Object[]> findLatestSessionByTeamId(@Param("teamId") Long teamId);
 
-    /** Latest request instant per principal across the whole table, in one grouped query. */
+    /** Latest request instant per principal. */
     @Query(
             "SELECT s.principalName, MAX(s.lastRequest) FROM SessionEntity s GROUP BY s.principalName")
     List<Object[]> findLatestRequestPerPrincipal();
 
-    /** Principals with a live (non-expired, within-timeout) session, for the roster active flag. */
+    /** Principals with a live (non-expired, within-window) session. */
     @Query(
             "SELECT DISTINCT s.principalName FROM SessionEntity s "
                     + "WHERE s.expired = false AND s.lastRequest > :cutoff")
     List<String> findActivePrincipalsSince(@Param("cutoff") Instant cutoff);
 
-    /** Bulk-flag timed-out sessions in one UPDATE (replaces the per-session expiry loop). */
+    /** Flag timed-out sessions as expired. */
     @Modifying
     @Transactional
     @Query(
@@ -65,7 +65,7 @@ public interface SessionRepository extends JpaRepository<SessionEntity, String> 
                     + "WHERE s.expired = false AND s.lastRequest < :cutoff")
     int expireOlderThan(@Param("cutoff") Instant cutoff);
 
-    /** Purge long-dead sessions so the table (and its indexes) stay bounded. */
+    /** Purge long-expired sessions to bound table growth. */
     @Modifying
     @Transactional
     @Query("DELETE FROM SessionEntity s WHERE s.expired = true AND s.lastRequest < :cutoff")

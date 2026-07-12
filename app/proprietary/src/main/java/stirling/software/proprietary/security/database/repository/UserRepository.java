@@ -45,19 +45,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query(value = "SELECT u FROM User u LEFT JOIN FETCH u.team")
     List<User> findAllWithTeam();
 
-    /**
-     * Every user with team AND authorities pre-fetched in one round-trip. Used by the admin roster,
-     * which reads both for every user; fetching them here collapses the eager-authorities N+1
-     * (DISTINCT dedupes the collection-join fan-out).
-     */
+    /** All users with team + authorities fetched (DISTINCT dedupes the collection join). */
     @EntityGraph(attributePaths = {"team", "authorities"})
     @Query("SELECT DISTINCT u FROM User u")
     List<User> findAllWithTeamAndAuthorities();
 
-    /**
-     * Every ({@code userId}, key, value) settings triple for the given users, so the roster can
-     * load all user settings in one query instead of a per-user {@code findByIdWithSettings}.
-     */
+    /** (userId, key, value) settings rows for the given users. */
     @Query("SELECT u.id, KEY(s), VALUE(s) FROM User u JOIN u.settings s WHERE u.id IN :ids")
     List<Object[]> findSettingsByUserIds(@Param("ids") Collection<Long> ids);
 

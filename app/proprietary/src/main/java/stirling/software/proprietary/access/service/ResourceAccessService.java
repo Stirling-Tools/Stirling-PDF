@@ -43,18 +43,7 @@ public class ResourceAccessService {
         return canUseResource(ResourceType.PORTAL, "", null, portalDefaultPolicy, user);
     }
 
-    /**
-     * Bulk equivalent of {@link #canAccessPortal} for a whole roster: fetches the PORTAL grant list
-     * ONCE and reuses the caller's already-computed set of team-leader user ids, so resolving a
-     * 1000-user roster costs one grant query instead of ~2 per user. The precedence mirrors {@link
-     * #canUseResource} exactly for the portal's (owner-less) case: admin, then an explicit grant on
-     * any of the user's principals, then the configured default policy. {@code teamLeaderUserIds}
-     * MUST be the complete set of users holding a LEADER membership (what {@code
-     * teamLeadLookup.isAnyTeamLeader} answers per user), or the ADMINS_AND_TEAM_LEADS default would
-     * diverge from the authoritative single-user check.
-     *
-     * @return the ids of the users who may access the portal
-     */
+    /** Portal access for a roster (admin, grant, or default policy). */
     public Set<Long> usersWithPortalAccess(Collection<User> users, Set<Long> teamLeaderUserIds) {
         Set<PrincipalRef> grantedPrincipals = new HashSet<>();
         for (ResourceGrant g :

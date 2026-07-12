@@ -15,12 +15,11 @@ import lombok.Data;
 @Table(
         name = "sessions",
         indexes = {
-            // Per-principal latest-session/activity lookups (roster, team activity) filter and
-            // group by principal_name and read last_request; without this each was a full scan.
+            // per-principal session/activity lookups
             @Index(
                     name = "idx_sessions_principal_last",
                     columnList = "principal_name, last_request"),
-            // Scheduled expiry/purge scans by the expired flag.
+            // scheduled expiry/purge scan
             @Index(name = "idx_sessions_expired", columnList = "expired")
         })
 public class SessionEntity implements Serializable {

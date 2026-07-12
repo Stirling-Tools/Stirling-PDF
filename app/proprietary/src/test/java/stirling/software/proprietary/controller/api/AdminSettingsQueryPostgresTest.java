@@ -28,13 +28,7 @@ import stirling.software.proprietary.security.database.repository.UserRepository
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
 
-/**
- * Runs the exact admin-roster query set against a REAL Postgres (the SaaS engine) via
- * Testcontainers, so the new JPQL (the {@code team+authorities} entity graph, {@code KEY()/VALUE()}
- * over the settings {@code @ElementCollection}, the GROUP BY session aggregates, the bulk
- * expire/purge) and the {@code @Table} index DDL are validated on Postgres, not just H2. Skips when
- * Docker is unavailable.
- */
+/** Admin-roster queries + index DDL on real Postgres (skipped without Docker). */
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Testcontainers(disabledWithoutDocker = true)

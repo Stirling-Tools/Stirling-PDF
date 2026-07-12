@@ -24,12 +24,7 @@ import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
 
-/**
- * The roster resolves portal access in bulk ({@link ResourceAccessService#usersWithPortalAccess})
- * instead of calling {@link ResourceAccessService#canAccessPortal} per user. This asserts the two
- * agree for every user across every default policy - the bulk path must never grant (or deny)
- * access the authoritative single-user check wouldn't, or the roster's access chips would lie.
- */
+/** Bulk portal-access must match per-user canAccessPortal for every policy. */
 @ExtendWith(MockitoExtension.class)
 class ResourceAccessPortalBulkParityTest {
 
@@ -87,13 +82,7 @@ class ResourceAccessPortalBulkParityTest {
         assertParity(DefaultAccessPolicy.EXPLICIT_ONLY);
     }
 
-    /**
-     * SaaS parity: with a resolver that forbids deployment-wide access (like {@code
-     * SaasPrincipalResolver}, whose {@code allowsDeploymentWideAccess()} is the interface default
-     * false), the ORG_ALL default must NOT grant a plain member portal access - otherwise a
-     * tenant's resource would leak to another tenant's users. Bulk and per-user must agree on the
-     * denial.
-     */
+    /** SaaS no-leak: ORG_ALL grants nobody deployment-wide when the resolver forbids it. */
     @Test
     void orgAllDoesNotLeakDeploymentWideWhenResolverForbidsIt() {
         DefaultPrincipalResolver base = new DefaultPrincipalResolver();

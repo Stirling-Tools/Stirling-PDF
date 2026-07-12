@@ -22,8 +22,7 @@ import lombok.Setter;
 @Entity
 @Table(
         name = "authorities",
-        // authorities is loaded by user_id for every user (roster, login); index the FK so the
-        // EAGER/batched authority load is a seek, not a scan.
+        // index the FK: authorities load by user_id
         indexes = @Index(name = "idx_authorities_user_id", columnList = "user_id"))
 @Getter
 @Setter

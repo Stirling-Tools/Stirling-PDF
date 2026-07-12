@@ -167,8 +167,7 @@ public class ProprietaryUIDataController {
         boolean isFirstTimeSetup = false;
         boolean showDefaultCredentials = false;
 
-        // Count real users without materializing the whole table (this is a public endpoint hit
-        // on every login-page load); the internal API user is excluded by username.
+        // Count real users, excluding the internal API user.
         long userCount = userRepository.countByUsernameNot(Role.INTERNAL_API_USER.getRoleId());
 
         if (userCount == 0) {
@@ -259,9 +258,7 @@ public class ProprietaryUIDataController {
         List<User> allUsers = userRepository.findAllWithTeamAndAuthorities();
         Map<String, String> roleDetails = Role.getAllRoleDetails();
 
-        // Drop internal accounts (the API user and the internal team) up front, in memory - the
-        // roster never shows them. roleDetails loses the internal-api role only if such a user
-        // exists, matching the previous behaviour.
+        // Drop the internal API user and internal-team members; the roster never shows them.
         boolean hasInternalApiUser = false;
         List<User> visibleUsers = new ArrayList<>(allUsers.size());
         for (User user : allUsers) {
@@ -282,13 +279,12 @@ public class ProprietaryUIDataController {
             roleDetails.remove(Role.INTERNAL_API_USER.getRoleId());
         }
 
-        // Settings for every user in ONE query (mfaSecret masked), not a per-user load.
+        // All users' settings in one query (mfaSecret masked).
         Map<Long, Map<String, String>> settingsByUserId =
                 loadSettingsByUserId(visibleUsers.stream().map(User::getId).toList());
 
-        // Session activity for the whole roster in TWO grouped queries, not one per user. Active =
-        // a non-expired session seen within the inactivity window; this is a read, so timed-out
-        // sessions merely display as inactive and are left for SessionScheduled to persist-expire.
+        // Active = any non-expired session within the inactivity window; expiry is left to
+        // SessionScheduled.
         int maxInactiveInterval = sessionPersistentRegistry.getMaxInactiveInterval();
         Instant activeCutoff = Instant.now().minusSeconds(maxInactiveInterval);
         Map<String, Instant> lastRequestByPrincipal = new HashMap<>();
@@ -349,7 +345,7 @@ public class ProprietaryUIDataController {
         int licenseMaxUsers = licenseSettingsService.getSettings().getLicenseMaxUsers();
         boolean premiumEnabled = applicationProperties.getPremium().isEnabled();
 
-        // Portal access for the whole roster in one grant query, reusing the leader set.
+        // Resolve portal access for the whole roster.
         Set<Long> leaderUserIds = leaderUserIds();
         Set<Long> portalAccessUserIds =
                 resourceAccessService.usersWithPortalAccess(sortedUsers, leaderUserIds);
@@ -487,8 +483,7 @@ public class ProprietaryUIDataController {
         }
 
         List<User> teamUsers = userRepository.findAllByTeamId(id);
-        // Fetch authorities alongside team so the "available users" list doesn't N+1 on the eager
-        // authorities collection while filtering/serializing.
+        // Fetch authorities + team for the available-users list.
         List<User> allUsers = userRepository.findAllWithTeamAndAuthorities();
         List<User> availableUsers =
                 allUsers.stream()
@@ -581,16 +576,14 @@ public class ProprietaryUIDataController {
     }
 
     /**
-     * Convert User entity to AdminUserSummary DTO, excluding sensitive fields like password and
-     * apiKey. Portal access is resolved once for the whole roster (see {@link
-     * ResourceAccessService#usersWithPortalAccess}) and passed in, rather than a per-user query.
+     * Convert a User to AdminUserSummary (excludes sensitive fields); portal access is passed in.
      */
     private AdminUserSummary convertUserToSummary(
             User user, Set<Long> leaderUserIds, Set<Long> portalAccessUserIds) {
         AdminUserSummary summary = new AdminUserSummary();
         summary.setId(user.getId());
         summary.setTeamLead(leaderUserIds.contains(user.getId()));
-        // Authoritative portal access, same policy /me uses, resolved in bulk for the roster.
+        // Portal access (same policy /me uses).
         summary.setPortalAccess(portalAccessUserIds.contains(user.getId()));
         summary.setUsername(user.getUsername());
         summary.setEmail(user.getUsername()); // Use username as email for consistency
