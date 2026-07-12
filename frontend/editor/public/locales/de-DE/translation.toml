@@ -356,6 +356,7 @@ text = "Diese Berechtigungen kontrollieren, was Benutzer mit der PDF machen kön
 title = "Berechtigungen ändern"
 
 [addStamp]
+preview = "Stempelvorschau"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -1842,6 +1843,15 @@ export = "Export"
 accessDenied = "Zugriff verweigert"
 insufficientPermissions = "Sie haben keine Berechtigung, diese Aktion auszuführen."
 
+[auth.callback]
+completing = "Authentifizierung wird abgeschlossen"
+invalidToken = "OAuth-Anmeldung fehlgeschlagen – ungültiges Token."
+missingToken = "OAuth-Anmeldung fehlgeschlagen – kein Token empfangen."
+oauthFailed = "OAuth-Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut."
+pleaseWait = "Bitte warten Sie, während wir Ihre Anmeldung abschließen."
+signedOut = "Sie wurden abgemeldet. Bitte melden Sie sich erneut an."
+windowMayClose = "Sie können dieses Fenster schließen, sobald der Vorgang abgeschlossen ist."
+
 [auth.displayName]
 guest = "Gast"
 user = "Benutzer"
@@ -2824,6 +2834,7 @@ next = "Weiter"
 preview = "Vorschau"
 previous = "Zurück"
 refresh = "Aktualisieren"
+remaining = "Verbleibend"
 retry = "Wiederholen"
 save = "Save"
 
@@ -4072,10 +4083,17 @@ discord = "Discord"
 issues = "GitHub"
 
 [formFill]
+allSaved = "Alles gespeichert"
+extractCsvError = "CSV konnte nicht extrahiert werden"
+extractXlsxError = "XLSX konnte nicht extrahiert werden"
 flattenAfterFilling = "Nach dem Ausfüllen ebnen"
+requiredAbbreviation = "erf."
+requiredFieldsError = "Bitte füllen Sie alle Pflichtfelder aus"
 rescanFields = "Felder erneut scannen"
 rescanFormFields = "Formularfelder erneut scannen"
 save = "Speichern"
+saveShortcut = "Strg+S zum Speichern"
+unsavedChanges = "Nicht gespeicherte Änderungen"
 
 [formFill.sidebar]
 close = "Seitenleiste schließen"
@@ -4996,7 +5014,21 @@ titleWithOs = "Herunterladen für {{osLabel}}"
 
 [onboarding.mfa]
 authenticationCode = "Authentifizierungscode"
+description = "Schützen Sie Ihr Konto, indem Sie eine Authenticator-App verknüpfen. Scannen Sie den QR-Code oder geben Sie den Einrichtungsschlüssel ein und bestätigen Sie anschließend den sechsstelligen Code."
+enable = "MFA aktivieren"
+enableError = "Die Multi-Faktor-Authentifizierung konnte nicht aktiviert werden. Prüfen Sie den Code und versuchen Sie es erneut."
+enterCode = "Geben Sie den sechsstelligen Code aus Ihrer App ein."
+enterCodeError = "Geben Sie den Authentifizierungscode ein, um fortzufahren."
+logout = "Abmelden"
+openAuthenticator = "Öffnen Sie Google Authenticator, Authy oder 1Password."
 qrCodeLoading = "Ihr QR-Code wird erstellt…"
+regenerateQrCode = "QR-Code neu erstellen"
+scanQrCode = "Scannen Sie den QR-Code oder geben Sie den unten stehenden Einrichtungsschlüssel ein."
+setupError = "Die Einrichtung der Zwei-Faktor-Authentifizierung konnte nicht gestartet werden. Bitte versuchen Sie es erneut."
+setupKey = "Einrichtungsschlüssel (manuelle Eingabe)"
+stepByStep = "Schritt für Schritt"
+success = "MFA wurde aktiviert. Sie können jetzt fortfahren."
+title = "Einrichtung der Multi-Faktor-Authentifizierung"
 
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Sobald Sie den Login-Modus aktivieren, können Sie Nutzer verwalten, Einstellungen konfigurieren und die Servergesundheit überwachen. Die ersten <strong>{{freeTierLimit}}</strong> Personen auf Ihrem Server nutzen Stirling kostenlos."
@@ -9110,6 +9142,11 @@ security = "Sicherheit"
 telegram = "Telegram"
 title = "Sicherheit & Authentifizierung"
 
+[settings.signOut]
+confirm = "Möchten Sie sich wirklich abmelden?"
+submit = "Abmelden"
+title = "Abmelden"
+
 [settings.team]
 title = "Team"
 
@@ -9726,6 +9763,9 @@ uploadButton = "Auf Server hochladen"
 title = "Stirling-PDF Survey"
 
 [swagger]
+clickHere = "hier klicken"
+fallback = "Falls die Seite nicht automatisch geöffnet wurde,"
+opening = "Swagger UI wird in einem neuen Tab geöffnet..."
 tags = "API,Dokumentation,Swagger,Endpunkte,Entwicklung"
 title = "API-Dokumentation"
 
@@ -10281,9 +10321,11 @@ title = "Attachments"
 
 [viewer.bookmarks]
 bookmarkTitle = "Lesezeichentitel"
+bookmarkTitleRequired = "Ein Lesezeichentitel ist erforderlich"
 closeSidebar = "Seitenleiste für Lesezeichen schließen"
 collapseAll = "Alle Lesezeichen einklappen"
 expandAll = "Alle Lesezeichen ausklappen"
+searchPlaceholder = "Lesezeichen durchsuchen"
 
 [viewer.comments]
 addComment = "Kommentar hinzufügen"
