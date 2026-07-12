@@ -15,7 +15,7 @@
   align-items: center;
   gap: 1.25rem;
   padding: 1rem 1.25rem;
-  background: #16213e;
+  background: color-mix(in srgb, var(--c-primary) 22%, var(--p-zinc-950));
 }
 
 .portal-editor-hero__logo {

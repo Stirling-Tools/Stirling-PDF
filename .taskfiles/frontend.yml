@@ -203,6 +203,19 @@ tasks:
     cmds:
       - task: lint:eslint
       - task: lint:dpdm
+      - task: lint:colors
+
+  lint:colors:
+    desc: "Enforce theme tokens — colours in core/theme route through the palette"
+    deps: [install]
+    cmds:
+      - node editor/scripts/lint/theme-lint.mjs
+
+  contrast:
+    desc: "Report low-contrast theme token pairs (warning only, never blocks)"
+    deps: [install]
+    cmds:
+      - node editor/scripts/lint/theme-lint.mjs contrast
 
   lint:eslint:
     desc: "Run ESLint linting"

@@ -34,12 +34,7 @@ export function LandingActions({
         <Button
           className="landing-btn-primary"
           leftSection={
-            <LocalIcon
-              icon={icons.uploadIconName}
-              width="1rem"
-              height="1rem"
-              style={{ color: "white" }}
-            />
+            <LocalIcon icon={icons.uploadIconName} width="1rem" height="1rem" />
           }
           onClick={(e) => {
             e.stopPropagation();
@@ -53,12 +48,7 @@ export function LandingActions({
           variant="secondary"
           className="landing-btn-secondary"
           leftSection={
-            <LocalIcon
-              icon="add"
-              width="1rem"
-              height="1rem"
-              className="text-[var(--accent-interactive)]"
-            />
+            <LocalIcon icon="add" width="1rem" height="1rem" />
           }
           onClick={(e) => {
             e.stopPropagation();

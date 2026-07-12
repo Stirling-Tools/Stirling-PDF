@@ -332,7 +332,7 @@
   max-width: 260px;
   height: calc(310px - 0.5rem);
   margin: 0.5rem auto 0;
-  background: var(--file-card-bg);
+  background: var(--c-bg);
   border: 1.5px solid var(--border-default);
   border-radius: 12px;
   box-shadow: var(--shadow-md);

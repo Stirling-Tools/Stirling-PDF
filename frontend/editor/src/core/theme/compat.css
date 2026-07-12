@@ -1,0 +1,136 @@
+/* COMPAT — legacy token names (editor --bg-*/--text-* and SUI/portal --color-*) aliased onto the canonical --c-* set so existing files keep working. :root:root (0,2,0) out-ranks the legacy blocks; aliases are theme-agnostic. */
+
+:root:root {
+  /* ── Canvas (darkest / centre) ── */
+  --bg-background: var(--c-bg);
+  --bg-file-manager: var(--c-bg);
+  --color-bg: var(--c-bg);
+
+  /* ── Raised chrome — sidebars, toolbars, headers, side nav. ── */
+  --bg-toolbar: var(--c-bg-raised);
+  --color-sidebar-bg: var(--c-bg-raised);
+  --color-header-bg: var(--c-bg-raised);
+  --modal-nav-bg: var(--c-bg-raised);
+  --unsupported-bar-bg: var(--c-bg-raised);
+
+  /* ── Surfaces — cards, modals, dropdowns, popovers ── */
+  --bg-surface: var(--c-surface);
+  --bg-file-list: var(--c-surface);
+  --modal-content-bg: var(--c-surface);
+  --bulk-panel-bg: var(--c-surface);
+  --bulk-card-bg: var(--c-surface);
+  --api-keys-card-bg: var(--c-surface);
+  --color-surface: var(--c-surface);
+  --color-dropdown-bg: var(--c-surface);
+  --information-text-bg: var(--c-surface);
+
+  --bg-raised: var(--c-surface-raised);
+  --file-card-bg: var(--c-surface-raised);
+  --color-surface-alt: var(--c-surface-raised);
+  --landing-inner-paper-bg: var(--c-surface-raised);
+  --accordion-item-bg: var(--c-surface-raised);
+
+  --bg-muted: var(--c-surface-sunken);
+  --color-bg-muted: var(--c-surface-sunken);
+  --tool-panel-search-bg: var(--c-surface-sunken);
+  --compare-page-label-bg: var(--c-surface-sunken);
+
+  /* ── Inputs ── */
+  --input-bg: var(--c-input-bg);
+  --api-keys-input-bg: var(--c-input-bg);
+
+  /* ── Text ── */
+  --text-primary: var(--c-text);
+  --color-text-1: var(--c-text);
+  --color-header-text: var(--c-text);
+  --color-logo-text: var(--c-text);
+  --tools-text-and-icon-color: var(--c-text);
+
+  --text-secondary: var(--c-text-muted);
+  --color-text-2: var(--c-text-muted);
+  --color-nav-hover-text: var(--c-text-muted);
+
+  --text-muted: var(--c-text-subtle);
+  --color-text-3: var(--c-text-subtle);
+  --color-text-4: var(--c-text-subtle);
+  --color-text-5: var(--c-text-subtle);
+  --color-text-6: var(--c-text-subtle);
+  --color-text-muted: var(--c-text-subtle);
+  --color-nav-text: var(--c-text-subtle);
+  --search-text-and-icon-color: var(--c-text-subtle);
+
+  /* ── Borders ── */
+  --border-default: var(--c-border);
+  --color-border: var(--c-border);
+  --color-border-input: var(--c-border);
+
+  --border-subtle: var(--c-border-subtle);
+  --color-border-light: var(--c-border-subtle);
+  --color-divider: var(--c-border-subtle);
+
+  --border-strong: var(--c-border-strong);
+  --border-hover: var(--c-border-strong);
+  --color-border-hover: var(--c-border-strong);
+
+  /* More borders/dividers that were still navy in neutral dark. */
+  --color-header-border: var(--c-border);
+  --color-sidebar-border: var(--c-border);
+  --color-dropdown-border: var(--c-border);
+  --color-search-border: var(--c-border);
+  --tool-header-border: var(--c-border);
+  --tool-panel-search-border-bottom: var(--c-border);
+  --landing-inner-paper-border: var(--c-border);
+  --unsupported-bar-border: var(--c-border);
+  --api-keys-card-border: var(--c-border);
+  --api-keys-input-border: var(--c-border);
+  --color-usage-track: var(--c-border);
+  --color-sidebar-divider: var(--c-border-subtle);
+  --tool-subcategory-rule-color: var(--c-border-subtle);
+  --modal-header-border: var(--c-border-subtle);
+
+  /* ── More surfaces that were still navy in neutral dark ── */
+  --color-bg-alt: var(--c-bg-raised);
+  --color-search-bg: var(--c-surface-sunken);
+  --color-dropdown-hover: var(--c-hover);
+  --tool-header-badge-bg: var(--c-surface-raised);
+  --color-nav-active: var(--c-primary-subtle);
+  --modal-nav-item-active-bg: var(--c-primary-subtle);
+
+  /* ── More text tokens that were still navy in neutral dark ── */
+  --onboarding-title: var(--c-text);
+  --onboarding-body: var(--c-text-muted);
+  --modal-nav-section-title: var(--c-text-subtle);
+  --tool-subcategory-text-color: var(--c-text-subtle);
+  --dropdown-trigger-text-disabled: var(--c-text-subtle);
+  --tool-header-badge-text: var(--c-accent-fg, var(--c-primary));
+  --tooltip-title-bg: color-mix(in srgb, var(--c-primary) 12%, var(--c-surface));
+  --tooltip-title-color: var(--c-text);
+
+  /* ── Interaction states ── */
+  --hover-bg: var(--c-hover);
+  --color-bg-hover: var(--c-hover);
+  --color-nav-hover: var(--c-hover);
+  --automation-entry-hover-bg: var(--c-hover);
+  --active-bg: var(--c-active);
+
+  /* ── Primary / accent — fills/borders use raw --c-primary; text/icon-on-surface uses --c-accent-fg (falls back to --c-primary outside the custom theme). ── */
+  --color-blue: var(--c-primary);
+  --accent-blue: var(--c-primary);
+  --accent-interactive: var(--c-primary);
+  --btn-open-file: var(--c-primary);
+  --card-selected-border: var(--c-primary);
+  --checkbox-checked-bg: var(--c-primary);
+  --color-blue-dark: var(--c-primary-hover);
+  --modal-nav-item-active: var(--c-accent-fg, var(--c-primary));
+  --color-nav-active-text: var(--c-accent-fg, var(--c-primary));
+  --tool-header-text: var(--c-accent-fg, var(--c-primary));
+  --text-instruction: var(--c-accent-fg, var(--c-primary));
+  --landing-button-color: var(--c-accent-fg, var(--c-primary));
+  /* SUI "blue" accent border/light (secondary buttons, chips) — derived from the primary. */
+  --color-blue-border: color-mix(in srgb, var(--c-primary) 38%, var(--c-surface));
+  --color-blue-light: color-mix(in srgb, var(--c-primary) 12%, var(--c-surface));
+
+  /* ── Status ── */
+  --accent-green: var(--c-success);
+  --accent-red: var(--c-danger);
+}

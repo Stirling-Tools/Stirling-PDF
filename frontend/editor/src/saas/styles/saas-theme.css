@@ -2,101 +2,93 @@
 
 :root {
   /* Orange scale (used for warning toasts) */
-  --color-orange-50: #fff4ed;
-  --color-orange-100: #ffe1cc;
-  --color-orange-200: #ffb089;
-  --color-orange-300: #ff7a45;
-  --color-orange-400: #d84a1b;
+  --color-orange-50: var(--p-amber-400);
+  --color-orange-100: var(--p-amber-400);
+  --color-orange-200: var(--p-red-400);
+  --color-orange-300: var(--p-red-400);
+  --color-orange-400: var(--p-red-600);
 
   /* Amber scale (trial/warning emphasis) */
-  --color-amber-50: #fffbeb;
-  --color-amber-100: #fef3c7;
-  --color-amber-200: #fde68a;
-  --color-amber-300: #fcd34d;
-  --color-amber-400: #fbbf24;
-  --color-amber-500: #f59e0b;
-  --color-amber-600: #d97706;
-  --color-amber-700: #b45309;
-  --color-amber-800: #92400e;
-  --color-amber-900: #78350f;
+  --color-amber-50: var(--p-amber-400);
+  --color-amber-100: var(--p-amber-400);
+  --color-amber-200: var(--p-amber-400);
+  --color-amber-300: var(--p-amber-400);
+  --color-amber-400: var(--p-amber-400);
+  --color-amber-500: var(--p-amber-500);
+  --color-amber-600: var(--p-amber-600);
+  --color-amber-700: var(--p-amber-600);
+  --color-amber-800: var(--p-amber-600);
+  --color-amber-900: var(--p-amber-600);
 
   /* Subcategory / divider vars (light) */
-  --tool-subcategory-text-color-light: #9ca3af;
-  --tool-subcategory-rule-color-light: #e5e7eb;
-  --text-divider-rule-color: var(--color-gray-200);
-  --text-divider-label-color: var(--color-gray-400);
-  --text-divider-rule-color-light: var(--color-gray-200);
-  --text-divider-label-color-light: var(--color-gray-400);
+  --tool-subcategory-text-color-light: var(--p-gray-400);
+  --tool-subcategory-rule-color-light: var(--p-gray-200);
 
   /* Auth color vars */
-  --auth-input-bg: #f9fafb;
-  --auth-input-border: #e5e7eb;
-  --auth-input-text: #1f2937;
-  --auth-label-text: #2b3230;
-  --auth-button-bg: #af3434;
+  --auth-input-bg: var(--p-gray-50);
+  --auth-input-border: var(--p-gray-200);
+  --auth-input-text: var(--p-gray-800);
+  --auth-label-text: var(--p-zinc-650);
+  --auth-button-bg: var(--p-red-600);
   --auth-button-text: #ffffff;
-  --auth-magic-button-bg: #af3434;
+  --auth-magic-button-bg: var(--p-red-600);
   --auth-magic-button-text: #ffffff;
 
   /* Light-only auth colors (no dark mode equivalents) used for login/signup */
-  --auth-input-bg-light-only: #f9fafb;
-  --auth-input-border-light-only: #e5e7eb;
-  --auth-input-text-light-only: #1f2937;
-  --auth-label-text-light-only: #2b3230;
-  --auth-button-bg-light-only: #af3434;
+  --auth-input-bg-light-only: var(--p-gray-50);
+  --auth-input-border-light-only: var(--p-gray-200);
+  --auth-input-text-light-only: var(--p-gray-800);
+  --auth-label-text-light-only: var(--p-zinc-650);
+  --auth-button-bg-light-only: var(--p-red-600);
   --auth-button-text-light-only: #ffffff;
-  --auth-magic-button-bg-light-only: #af3434;
+  --auth-magic-button-bg-light-only: var(--p-red-600);
   --auth-magic-button-text-light-only: #ffffff;
   --auth-bg-color-light-only: #ffffff;
   --auth-card-bg-light-only: #ffffff;
-  --auth-text-primary-light-only: #2b3230;
-  --auth-text-secondary-light-only: #1f2937;
-  --auth-border-color-light-only: #e5e7eb;
-  --auth-border-focus-light-only: #cbd5e1;
-  --auth-focus-ring-light-only: rgba(59, 130, 246, 0.15);
+  --auth-text-primary-light-only: var(--p-zinc-650);
+  --auth-text-secondary-light-only: var(--p-gray-800);
+  --auth-border-focus-light-only: var(--p-gray-300);
+  --auth-focus-ring-light-only: color-mix(in srgb, var(--p-blue-500) 15%, transparent);
 
   /* App Config Modal colors (light mode) */
-  --modal-nav-bg: #f5f6f8;
-  --modal-nav-section-title: #6b7280;
-  --modal-nav-item: #374151;
-  --modal-nav-item-active: #0a8bff;
-  --modal-nav-item-active-bg: rgba(10, 139, 255, 0.08);
+  --modal-nav-bg: var(--p-gray-100);
+  --modal-nav-section-title: var(--p-gray-500);
+  --modal-nav-item: var(--p-gray-700);
+  --modal-nav-item-active: var(--p-blue-500);
+  --modal-nav-item-active-bg: color-mix(in srgb, var(--p-blue-500) 8%, transparent);
   --modal-content-bg: #ffffff;
   --modal-header-border: rgba(0, 0, 0, 0.06);
 
   /* API usage progress bar colors (light mode) */
-  --usage-weekly-active: #3b82f6;
-  --usage-bought-active: #14b8a6;
-  --usage-total-used: #3b82f6;
-  --usage-inactive: #e5e7eb;
+  --usage-inactive: var(--p-gray-200);
 
   /* API Keys section colors (light mode) */
   --api-keys-card-bg: #ffffff;
-  --api-keys-card-border: #e0e0e0;
+  --api-keys-card-border: var(--p-gray-200);
   --api-keys-card-shadow: rgba(0, 0, 0, 0.06);
-  --api-keys-input-bg: #f8f8f8;
-  --api-keys-input-border: #e0e0e0;
+  --api-keys-input-bg: var(--p-gray-50);
+  --api-keys-input-border: var(--p-gray-200);
 }
 
 [data-mantine-color-scheme="dark"] {
   /* Compare highlight colors (dark mode) */
-  --spdf-compare-removed-bg: rgba(255, 107, 107, 0.45);
-  --spdf-compare-added-bg: rgba(81, 207, 102, 0.35);
-  --spdf-compare-removed-badge-bg: rgba(255, 59, 48, 0.15);
+  --spdf-compare-removed-bg: color-mix(in srgb, var(--p-red-400) 45%, transparent);
+  --spdf-compare-added-bg: color-mix(in srgb, var(--p-green-500) 35%, transparent);
+  --spdf-compare-removed-badge-bg: color-mix(in srgb, var(--p-red-500) 15%, transparent);
   --spdf-compare-removed-badge-fg: var(--color-red-500);
-  --spdf-compare-added-badge-bg: rgba(52, 199, 89, 0.18);
+  --spdf-compare-added-badge-bg: color-mix(in srgb, var(--p-green-500) 18%, transparent);
   --spdf-compare-added-badge-fg: var(--color-green-500);
-  --spdf-compare-inline-removed-bg: rgba(255, 59, 48, 0.25);
-  --spdf-compare-inline-added-bg: rgba(52, 199, 89, 0.25);
-  --compare-page-label-bg: #0d1020;
-  --compare-page-label-fg: #c2c8e0;
+  --spdf-compare-inline-removed-bg: color-mix(in srgb, var(--p-red-500) 25%, transparent);
+  --spdf-compare-inline-added-bg: color-mix(in srgb, var(--p-green-500) 25%, transparent);
+  --compare-page-label-bg: var(--p-zinc-850);
+  --compare-page-label-fg: var(--p-gray-300);
 
   /* Orange scale (dark mode mirrors light values to match UI) */
-  --color-orange-50: #fff4ed;
-  --color-orange-100: #ffe1cc;
-  --color-orange-200: #ffb089;
-  --color-orange-300: #ff7a45;
-  --color-orange-400: #d84a1b;
+  --color-orange-50: var(--p-amber-400);
+  --color-orange-100: var(--p-amber-400);
+  --color-orange-200: var(--p-red-400);
+  --color-orange-300: var(--p-red-400);
+  --color-orange-400: var(--p-red-600);
 
   /* Auth page colors (dark mode) — mirror proprietary so the auth card themes dark */
   --auth-bg-color-light-only: var(--bg-muted);
@@ -106,9 +98,9 @@
   --auth-input-border-light-only: var(--border-default);
   --auth-input-bg-light-only: var(--bg-raised);
   --auth-input-text-light-only: var(--text-primary);
-  --auth-border-focus-light-only: #3b82f6;
-  --auth-focus-ring-light-only: rgba(59, 130, 246, 0.2);
-  --auth-button-bg-light-only: #af3434;
+  --auth-border-focus-light-only: var(--p-blue-500);
+  --auth-focus-ring-light-only: color-mix(in srgb, var(--p-blue-500) 20%, transparent);
+  --auth-button-bg-light-only: var(--p-red-600);
   --auth-button-text-light-only: #ffffff;
   --auth-magic-button-bg-light-only: var(--bg-raised);
   --auth-magic-button-text-light-only: var(--text-primary);
@@ -116,31 +108,26 @@
   --auth-text-secondary-light-only: var(--text-secondary);
   --text-divider-rule-rgb-light: 229, 231, 235;
   --text-divider-label-rgb-light: 156, 163, 175;
-  --tool-subcategory-rule-color-light: #e5e7eb;
-  --tool-subcategory-text-color-light: #9ca3af;
+  --tool-subcategory-rule-color-light: var(--p-gray-200);
+  --tool-subcategory-text-color-light: var(--p-gray-400);
 
   /* API usage progress bar colors (dark mode) */
-  --usage-weekly-active: #4f8ef5;
-  --usage-bought-active: #34d399;
-  --usage-total-used: #e8eaf6;
-  --usage-inactive: #1c2340;
+  --usage-inactive: var(--p-zinc-650);
 
   /* API Keys section colors (dark mode) */
-  --api-keys-card-bg: #131729;
-  --api-keys-card-border: #1c2340;
+  --api-keys-card-bg: var(--p-zinc-800);
+  --api-keys-card-border: var(--p-zinc-650);
   --api-keys-card-shadow: none;
-  --api-keys-input-bg: #0d1020;
-  --api-keys-input-border: #1c2340;
+  --api-keys-input-bg: var(--p-zinc-850);
+  --api-keys-input-border: var(--p-zinc-650);
 
-  --text-divider-rule-color: var(--tool-subcategory-rule-color);
-  --text-divider-label-color: var(--text-muted);
 
   /* App Config Modal colors (dark mode) */
-  --modal-nav-bg: #0d1020;
-  --modal-nav-section-title: #5b6280;
-  --modal-nav-item: #c2c8e0;
-  --modal-nav-item-active: #4f8ef5;
-  --modal-nav-item-active-bg: rgba(79, 142, 245, 0.15);
-  --modal-content-bg: #131729;
+  --modal-nav-bg: var(--p-zinc-850);
+  --modal-nav-section-title: var(--p-zinc-300);
+  --modal-nav-item: var(--p-gray-300);
+  --modal-nav-item-active: var(--p-blue-500);
+  --modal-nav-item-active-bg: color-mix(in srgb, var(--p-blue-500) 15%, transparent);
+  --modal-content-bg: var(--p-zinc-800);
   --modal-header-border: rgba(255, 255, 255, 0.05);
 }

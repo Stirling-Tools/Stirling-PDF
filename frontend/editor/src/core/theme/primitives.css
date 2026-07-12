@@ -1,0 +1,45 @@
+/* PRIMITIVES — the raw palette (theme-agnostic). The ONE place literal colours live: neutral ramps (gray=light, zinc=dark) + status hues; colors.css and compat.css reference these. */
+
+:root {
+  --p-white: #ffffff;
+  --p-black: #000000;
+  --p-gray-50: #f9fafb;
+  --p-gray-100: #f3f4f6;
+  --p-gray-150: #eef0f2;
+  --p-gray-200: #e5e7eb;
+  --p-gray-250: #e2e8f0;
+  --p-gray-300: #d1d5db;
+  --p-gray-400: #9ca3af;
+  --p-gray-500: #6b7280;
+  --p-gray-600: #4b5563;
+  --p-gray-700: #374151;
+  --p-gray-800: #1f2937;
+  --p-gray-900: #111827;
+  --p-zinc-950: #0a0a0b;
+  --p-zinc-900: #101012;
+  --p-zinc-850: #131315;
+  --p-zinc-800: #18181b;
+  --p-zinc-775: #202023;
+  --p-zinc-750: #1f1f23;
+  --p-zinc-700: #27272a;
+  --p-zinc-650: #2a2a2e;
+  --p-zinc-600: #333338;
+  --p-zinc-500: #3f3f46;
+  --p-zinc-400: #52525b;
+  --p-zinc-300: #71717a;
+  --p-zinc-200: #a1a1aa;
+  --p-zinc-100: #f4f4f5;
+  --p-blue-400: #60a5fa;
+  --p-blue-500: #3b82f6;
+  --p-blue-600: #2563eb;
+  --p-blue-700: #1d4ed8;
+  --p-green-500: #22c55e;
+  --p-green-600: #16a34a;
+  --p-green-700: #15803d;
+  --p-amber-400: #fbbf24;
+  --p-amber-500: #f59e0b;
+  --p-amber-600: #d97706;
+  --p-red-400: #f87171;
+  --p-red-500: #ef4444;
+  --p-red-600: #dc2626;
+}

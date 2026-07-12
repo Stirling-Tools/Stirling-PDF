@@ -18,7 +18,7 @@
   gap: 1rem;
   flex-wrap: wrap;
   padding: 0.875rem 1.25rem;
-  background: #16213e;
+  background: color-mix(in srgb, var(--c-primary) 22%, var(--p-zinc-950));
 }
 
 .portal-welcome__brand {

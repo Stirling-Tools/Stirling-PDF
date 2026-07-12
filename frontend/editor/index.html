@@ -14,6 +14,51 @@
     <link rel="manifest" href="manifest.json" />
 
     <title>Stirling PDF</title>
+
+    <!-- Apply theme + accent before first paint (no FOUC); mirrors ThemeProvider, which then refines it. -->
+    <script>
+      (function () {
+        try {
+          var p = JSON.parse(
+            localStorage.getItem("stirlingpdf_preferences") || "{}",
+          );
+          var mode = p.theme || "system";
+          var scheme =
+            mode === "light"
+              ? "light"
+              : mode === "dark"
+                ? "dark"
+                : window.matchMedia &&
+                    window.matchMedia("(prefers-color-scheme: dark)").matches
+                  ? "dark"
+                  : "light";
+          var stored = scheme === "dark" ? p.darkPrimary : p.lightPrimary;
+          // "default" (or unset) = neutral surfaces + blue buttons; a hex tints.
+          var isDefault = !stored || stored === "default";
+          var accent = isDefault ? "#3b82f6" : stored;
+          var r = document.documentElement;
+          r.setAttribute("data-theme", scheme);
+          r.setAttribute("data-app-theme", "custom");
+          r.setAttribute("data-accent", isDefault ? "default" : "custom");
+          r.setAttribute("data-mantine-color-scheme", scheme);
+          r.style.setProperty("--user-primary", accent);
+          r.style.setProperty("--user-accent-fg", accent);
+          var h = accent.replace("#", "");
+          if (h.length === 3) h = h.replace(/./g, "$&$&");
+          var lum =
+            (0.2126 * parseInt(h.slice(0, 2), 16) +
+              0.7152 * parseInt(h.slice(2, 4), 16) +
+              0.0722 * parseInt(h.slice(4, 6), 16)) /
+            255;
+          r.style.setProperty(
+            "--user-primary-on",
+            lum > 0.7 ? "#000000" : "#ffffff",
+          );
+        } catch (e) {
+          /* first visit / unavailable storage: ThemeProvider handles it */
+        }
+      })();
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>

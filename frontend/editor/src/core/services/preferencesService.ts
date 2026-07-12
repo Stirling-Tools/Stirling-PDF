@@ -2,7 +2,7 @@ import {
   type ToolPanelMode,
   DEFAULT_TOOL_PANEL_MODE,
 } from "@app/constants/toolPanel";
-import { type ThemeMode } from "@app/constants/theme";
+import { type ThemeMode, DEFAULT_ACCENT } from "@app/constants/theme";
 
 export type LogoVariant = "modern" | "classic";
 
@@ -34,6 +34,8 @@ export interface UserPreferences {
   // SaaS-only: team lead's post-login landing app (processor vs editor).
   loginLandingView: LoginLandingView;
   theme: ThemeMode;
+  lightPrimary: string;
+  darkPrimary: string;
   toolPanelModePromptSeen: boolean;
   hasSelectedToolPanelMode: boolean;
   showLegacyToolDescriptions: boolean;
@@ -54,6 +56,8 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   defaultViewerZoom: "auto",
   loginLandingView: "processor",
   theme: "system",
+  lightPrimary: DEFAULT_ACCENT,
+  darkPrimary: DEFAULT_ACCENT,
   toolPanelModePromptSeen: false,
   hasSelectedToolPanelMode: false,
   showLegacyToolDescriptions: false,
@@ -70,6 +74,51 @@ const STORAGE_KEY = "stirlingpdf_preferences";
 
 class PreferencesService {
   private serverDefaults: Partial<UserPreferences> = {};
+
+  constructor() {
+    this.migrateLegacyTheme();
+  }
+
+  // One-time migration from the old theme model (theme: light|dark|midnight|
+  // custom|system + customThemeBase + customThemePrimary) to the new one
+  // (theme: light|dark|system + lightPrimary + darkPrimary). Runs once and
+  // rewrites storage; a no-op for already-migrated or empty preferences.
+  private migrateLegacyTheme(): void {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (!stored) return;
+      const p = JSON.parse(stored) as Record<string, unknown>;
+      const hadLegacy =
+        "customThemeBase" in p ||
+        "customThemePrimary" in p ||
+        p.theme === "custom" ||
+        p.theme === "midnight";
+      if (!hadLegacy) return;
+
+      const legacyBase = p.customThemeBase === "light" ? "light" : "dark";
+      const legacyPrimary =
+        typeof p.customThemePrimary === "string"
+          ? p.customThemePrimary
+          : DEFAULT_ACCENT;
+
+      // midnight → dark; custom → whichever base it was sitting on.
+      if (p.theme === "midnight") p.theme = "dark";
+      else if (p.theme === "custom") p.theme = legacyBase;
+
+      // Seed the customised side from the old primary; the other side gets the default (neutral) theme.
+      if (p.lightPrimary === undefined) {
+        p.lightPrimary = legacyBase === "light" ? legacyPrimary : DEFAULT_ACCENT;
+      }
+      if (p.darkPrimary === undefined) {
+        p.darkPrimary = legacyBase === "dark" ? legacyPrimary : DEFAULT_ACCENT;
+      }
+      delete p.customThemeBase;
+      delete p.customThemePrimary;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(p));
+    } catch (error) {
+      console.error("Error migrating theme preferences:", error);
+    }
+  }
 
   setServerDefaults(defaults: Partial<UserPreferences>): void {
     this.serverDefaults = defaults;

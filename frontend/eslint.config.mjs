@@ -323,5 +323,10 @@ export default defineConfig(
         ...globals.node,
       },
     },
+    rules: {
+      // Standalone node scripts have no bundler, so workspace aliases (@app/*)
+      // don't resolve — relative imports are correct here.
+      "no-restricted-imports": "off",
+    },
   },
 );

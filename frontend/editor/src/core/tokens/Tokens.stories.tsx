@@ -92,8 +92,10 @@ export const Colours: Story = {
       <Group
         heading="Brand & status"
         swatches={[
-          { label: "Blue", varName: "--color-blue" },
-          { label: "Blue dark", varName: "--color-blue-dark" },
+          // The accent — follows the custom light/dark theme colour, not a fixed
+          // blue (maps to --c-primary / --c-primary-hover). Will change the name in a future PR to reflect that it's the chosen accent, not a fixed blue.
+          { label: "Primary", varName: "--color-blue" },
+          { label: "Primary hover", varName: "--color-blue-dark" },
           { label: "Purple", varName: "--color-purple" },
           { label: "Green", varName: "--color-green" },
           { label: "Amber", varName: "--color-amber" },

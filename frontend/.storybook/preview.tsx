@@ -17,6 +17,7 @@ import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
 import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
 import { UIProvider } from "@portal/contexts/UIContext";
 import { SuiProvider } from "@portal/theme/SuiProvider";
+import { deriveAccessiblePrimary } from "@core/utils/customPrimary";
 import { handlers } from "@portal/mocks/handlers";
 import { configureSupabase } from "@proprietary/auth/supabase/supabaseClient";
 import i18next from "i18next";
@@ -29,6 +30,7 @@ import enTranslationToml from "../editor/public/locales/en-US/translation.toml?r
 
 import "@mantine/core/styles.css";
 import "@core/tokens/tokens.css";
+import "@core/theme/index.css";
 import "@core/tokens/base.css";
 
 // Storybook-only: init react-i18next with the real English resources parsed from
@@ -124,6 +126,33 @@ function ThemeBridge({
   return <>{children}</>;
 }
 
+/**
+ * Tints the canvas from the toolbar accent picker (see .storybook/manager.tsx),
+ * exactly like the editor: always `data-app-theme="custom"`, with
+ * --user-primary/-on/-accent-fg derived from the active mode's accent global.
+ */
+function AccentInjector({
+  scheme,
+  accent,
+}: {
+  scheme: "light" | "dark";
+  accent: string;
+}) {
+  useEffect(() => {
+    const root = document.documentElement;
+    root.setAttribute("data-app-theme", "custom");
+    root.setAttribute("data-mantine-color-scheme", scheme);
+    const { primary, onPrimary, accentForeground } = deriveAccessiblePrimary(
+      accent,
+      scheme,
+    );
+    root.style.setProperty("--user-primary", primary);
+    root.style.setProperty("--user-primary-on", onPrimary);
+    root.style.setProperty("--user-accent-fg", accentForeground);
+  }, [scheme, accent]);
+  return null;
+}
+
 const withProviders: Decorator = (Story, context) => {
   const tier = (context.globals.tier as Tier) ?? "pro";
   const linkState =
@@ -135,9 +164,15 @@ const withProviders: Decorator = (Story, context) => {
   // anything that isn't "dark" as light — matching the addon's own
   // `selected || defaultTheme` fallback where defaultTheme is light.
   const colorScheme = context.globals.theme === "dark" ? "dark" : "light";
+  // Each mode has its own accent (set by the toolbar accent picker).
+  const accent =
+    (colorScheme === "dark"
+      ? (context.globals.accentDark as string)
+      : (context.globals.accentLight as string)) ?? "#3b82f6";
   return (
     <MemoryRouter initialEntries={["/"]}>
       <ThemeProvider>
+        <AccentInjector scheme={colorScheme} accent={accent} />
         <ThemeBridge theme={colorScheme}>
           <SuiProvider colorScheme={colorScheme}>
             {/* LinkProvider must wrap TierProvider: TierContext derives its tier
@@ -182,6 +217,10 @@ const preview: Preview = {
     },
   },
   globalTypes: {
+    // Per-mode accent colours, driven by the custom toolbar picker in
+    // .storybook/manager.tsx (no built-in toolbar UI of their own).
+    accentLight: { name: "Accent (light)", defaultValue: "#3b82f6" },
+    accentDark: { name: "Accent (dark)", defaultValue: "#3b82f6" },
     tier: {
       name: "Tier",
       description: "Subscription tier — drives useTier() everywhere",

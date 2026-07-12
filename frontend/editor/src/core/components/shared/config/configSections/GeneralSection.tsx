@@ -11,20 +11,29 @@ import {
   Group,
   Anchor,
   Badge,
+  Popover,
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
+import { ColorInput } from "@app/ui/ColorInput";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
+import { clampAccentChoice } from "@app/utils/customPrimary";
 import { useTranslation } from "react-i18next";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useTheme } from "@app/components/shared/ThemeProvider";
 import LanguageSelector from "@app/components/shared/LanguageSelector";
-import type { ThemeMode } from "@app/constants/theme";
+import {
+  THEME_ACCENT_PRESETS,
+  DEFAULT_ACCENT,
+  DEFAULT_ACCENT_COLOR,
+  type ThemeMode,
+} from "@app/constants/theme";
 import type { ToolPanelMode } from "@app/constants/toolPanel";
-import type {
-  StartupView,
-  ViewerZoomSetting,
+import {
+  DEFAULT_PREFERENCES,
+  type StartupView,
+  type ViewerZoomSetting,
 } from "@app/services/preferencesService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -73,6 +82,200 @@ interface GeneralSectionProps {
   };
   /** Desktop-only: update-mode toggle (prompt/auto/disabled). */
   desktopUpdateMode?: DesktopUpdateModeControl;
+}
+
+/** Accent-colour picker: a swatch trigger opening a 3×5 grid — a "Default" icon cell + 14 accents — plus a "Custom" picker below. */
+function AccentSwatchDropdown({
+  value,
+  onChange,
+  ariaLabel,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  ariaLabel: string;
+}) {
+  const { t } = useTranslation();
+  const [opened, setOpened] = useState(false);
+  const isDefault = value === DEFAULT_ACCENT;
+  // Resolve the "default" sentinel to the blue it maps to so the ColorInput shows a real colour.
+  const asHex = (v: string) => (v === DEFAULT_ACCENT ? DEFAULT_ACCENT_COLOR : v);
+  // Live picker value; committed to preferences only on drag-end (below).
+  const [draft, setDraft] = useState(() => asHex(value));
+  useEffect(() => setDraft(asHex(value)), [value]);
+  return (
+    <Popover
+      opened={opened}
+      onChange={setOpened}
+      position="bottom-end"
+      withinPortal
+      zIndex={Z_INDEX_OVER_CONFIG_MODAL}
+      shadow="md"
+      radius="md"
+      withArrow
+    >
+      <Popover.Target>
+        {/* eslint-disable-next-line no-restricted-syntax -- swatch-trigger control, not a text button; the shared Button's variants/padding don't fit */}
+        <button
+          type="button"
+          aria-label={ariaLabel}
+          aria-haspopup="listbox"
+          onClick={() => setOpened((o) => !o)}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            padding: "0.25rem 0.5rem",
+            borderRadius: "8px",
+            border: "1px solid var(--c-border)",
+            background: "var(--c-input-bg)",
+            cursor: "pointer",
+          }}
+        >
+          {isDefault ? (
+            // Default is not a colour — show the icon chip so the trigger reads as unset, not a hue.
+            <span
+              style={{
+                display: "grid",
+                placeItems: "center",
+                width: "1.25rem",
+                height: "1.25rem",
+                borderRadius: "5px",
+                background: "var(--c-surface-raised)",
+                boxShadow: "inset 0 0 0 1px var(--c-border)",
+              }}
+            >
+              <LocalIcon
+                icon="star-rounded"
+                width="0.875rem"
+                height="0.875rem"
+                style={{ color: "var(--c-text-muted)" }}
+              />
+            </span>
+          ) : (
+            <span
+              style={{
+                width: "1.25rem",
+                height: "1.25rem",
+                borderRadius: "5px",
+                background: value,
+                boxShadow: "inset 0 0 0 1px rgba(0, 0, 0, 0.15)",
+              }}
+            />
+          )}
+          <LocalIcon
+            icon="expand-more-rounded"
+            width="1rem"
+            height="1rem"
+            style={{ color: "var(--c-text-subtle)" }}
+          />
+        </button>
+      </Popover.Target>
+      <Popover.Dropdown p="xs">
+        <div
+          role="radiogroup"
+          aria-label={ariaLabel}
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(5, 1.75rem)",
+            gap: "0.6875rem",
+            justifyContent: "center",
+          }}
+        >
+          {/* Default — an icon chip for the neutral theme (surfaces untinted, blue buttons); stores the sentinel, a separate state from the colour swatches. */}
+          {/* eslint-disable-next-line no-restricted-syntax -- an icon chip, not a text button; the shared Button's variants don't fit */}
+          <button
+            type="button"
+            role="radio"
+            aria-checked={isDefault}
+            aria-label={t("settings.general.themeAccentDefault", "Default")}
+            title={t(
+              "settings.general.themeAccentDefaultHint",
+              "Default theme (recommended)",
+            )}
+            onClick={() => {
+              onChange(DEFAULT_ACCENT);
+              setOpened(false);
+            }}
+            style={{
+              display: "grid",
+              placeItems: "center",
+              width: "1.75rem",
+              height: "1.75rem",
+              padding: 0,
+              borderRadius: "8px",
+              cursor: "pointer",
+              background: "var(--c-surface-raised)",
+              border: "1px solid var(--c-border)",
+              outline: isDefault ? "2px solid var(--c-text)" : "none",
+              outlineOffset: "2px",
+            }}
+          >
+            <LocalIcon
+              icon="star-rounded"
+              width="1.125rem"
+              height="1.125rem"
+              style={{ color: "var(--c-text-muted)" }}
+            />
+          </button>
+          {THEME_ACCENT_PRESETS.map((color) => {
+            const selected = value.toLowerCase() === color.toLowerCase();
+            return (
+              // eslint-disable-next-line no-restricted-syntax -- a colour swatch, not a text button; the shared Button's variants don't fit
+              <button
+                key={color}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                aria-label={color}
+                onClick={() => {
+                  onChange(color);
+                  setOpened(false);
+                }}
+                style={{
+                  width: "1.75rem",
+                  height: "1.75rem",
+                  padding: 0,
+                  border: "none",
+                  borderRadius: "8px",
+                  background: color,
+                  cursor: "pointer",
+                  outline: selected ? "2px solid var(--c-text)" : "none",
+                  outlineOffset: "2px",
+                  boxShadow: "inset 0 0 0 1px rgba(0, 0, 0, 0.12)",
+                }}
+              />
+            );
+          })}
+        </div>
+        {/* Custom colour — below the presets; our ColorInput, clamped off white/grey/black. */}
+        <div
+          style={{
+            marginTop: "0.5rem",
+            paddingTop: "0.5rem",
+            borderTop: "1px solid var(--c-border-subtle)",
+          }}
+        >
+          <Text size="xs" c="dimmed" mb={6}>
+            {t(
+              "settings.general.themeAccentCustomHint",
+              "Custom (defaults recommended)",
+            )}
+          </Text>
+          <ColorInput
+            inputSize="sm"
+            format="hex"
+            withPicker
+            value={draft}
+            onChange={setDraft}
+            onChangeEnd={onChange}
+            clampValue={clampAccentChoice}
+            aria-label={t("settings.general.themeAccentCustom", "Custom colour")}
+            popoverProps={{ withinPortal: false }}
+          />
+        </div>
+      </Popover.Dropdown>
+    </Popover>
+  );
 }
 
 const GeneralSection: React.FC<GeneralSectionProps> = ({
@@ -482,7 +685,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               <Text size="xs" c="dimmed" mt={4}>
                 {t(
                   "settings.general.themeDescription",
-                  "Choose light, dark, or follow your system",
+                  "Choose light, dark, or follow your system so it switches automatically.",
                 )}
               </Text>
             </div>
@@ -505,27 +708,93 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               ]}
             />
           </div>
+
           <div
             style={{
               display: "flex",
-              alignItems: "center",
+              alignItems: "flex-start",
               justifyContent: "space-between",
+              gap: "1rem",
             }}
           >
             <div style={{ flex: 1, minWidth: 0 }}>
               <Text fw={500} size="sm">
-                {t("settings.general.language", "Language")}
+                {t("settings.general.themeAccent", "Accent colour")}
               </Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t(
-                  "settings.general.languageDescription",
-                  "Choose the display language",
+                  "settings.general.themeAccentDescription",
+                  "Buttons, links and highlights follow it, and it subtly tints the app. Light and dark each have their own — System uses whichever is active.",
                 )}
               </Text>
             </div>
-            <LanguageSelector position="bottom-end" offset={6} />
+            <Stack gap="md">
+              <Group gap="sm" wrap="nowrap" align="flex-start" justify="flex-end">
+                <Text size="sm" c="dimmed" style={{ width: "3rem", paddingTop: 4 }}>
+                  {t("settings.general.themeLight", "Light")}
+                </Text>
+                <AccentSwatchDropdown
+                  value={preferences.lightPrimary}
+                  onChange={(val) => updatePreference("lightPrimary", val)}
+                  ariaLabel={t(
+                    "settings.general.themeAccentLight",
+                    "Light mode accent colour",
+                  )}
+                />
+              </Group>
+              <Group gap="sm" wrap="nowrap" align="flex-start" justify="flex-end">
+                <Text size="sm" c="dimmed" style={{ width: "3rem", paddingTop: 4 }}>
+                  {t("settings.general.themeDark", "Dark")}
+                </Text>
+                <AccentSwatchDropdown
+                  value={preferences.darkPrimary}
+                  onChange={(val) => updatePreference("darkPrimary", val)}
+                  ariaLabel={t(
+                    "settings.general.themeAccentDark",
+                    "Dark mode accent colour",
+                  )}
+                />
+              </Group>
+            </Stack>
           </div>
+          <Group justify="flex-end">
+            <Button
+              variant="quiet"
+              size="sm"
+              onClick={() => {
+                setTheme(DEFAULT_PREFERENCES.theme);
+                updatePreference("lightPrimary", DEFAULT_PREFERENCES.lightPrimary);
+                updatePreference("darkPrimary", DEFAULT_PREFERENCES.darkPrimary);
+              }}
+            >
+              {t("settings.general.themeReset", "Restore theme to default")}
+            </Button>
+          </Group>
         </Stack>
+      </Paper>
+
+      {/* Language */}
+      <Paper withBorder p="md" radius="md">
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <Text fw={500} size="sm">
+              {t("settings.general.language", "Language")}
+            </Text>
+            <Text size="xs" c="dimmed" mt={4}>
+              {t(
+                "settings.general.languageDescription",
+                "Choose the display language",
+              )}
+            </Text>
+          </div>
+          <LanguageSelector position="bottom-end" offset={6} />
+        </div>
       </Paper>
 
       <Paper withBorder p="md" radius="md">
