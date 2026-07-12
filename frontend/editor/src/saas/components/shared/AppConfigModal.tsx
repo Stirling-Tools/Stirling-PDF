@@ -308,7 +308,10 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
       >
         <div className="confirm-modal-content">
           <Text>
-            {t("settings.signOut.confirm", "Are you sure you want to sign out?")}
+            {t(
+              "settings.signOut.confirm",
+              "Are you sure you want to sign out?",
+            )}
           </Text>
           <div className="confirm-modal-buttons">
             <Button variant="secondary" onClick={() => setConfirmOpen(false)}>

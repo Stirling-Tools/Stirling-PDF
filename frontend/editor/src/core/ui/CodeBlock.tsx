@@ -66,9 +66,7 @@ export function CodeBlock({
             onClick={copy}
             aria-label="Copy code"
           >
-            {copied
-              ? t("common.copied", "Copied!")
-              : t("common.copy", "Copy")}
+            {copied ? t("common.copied", "Copied!") : t("common.copy", "Copy")}
           </Button>
         )}
       </div>

@@ -280,10 +280,7 @@ export default function MFASetupSlide({
 }: MFASetupSlideProps = {}): SlideConfig {
   return {
     key: "mfa-setup-slide",
-    title: i18n.t(
-      "onboarding.mfa.title",
-      "Multi-Factor Authentication Setup",
-    ),
+    title: i18n.t("onboarding.mfa.title", "Multi-Factor Authentication Setup"),
     body: <MFASetupContent onMfaSetupComplete={onMfaSetupComplete} />,
     background: {
       gradientStops: ["#059669", "#0891B2"], // Green to teal - security/trust colors

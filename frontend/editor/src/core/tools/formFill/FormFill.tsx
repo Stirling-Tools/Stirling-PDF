@@ -247,10 +247,7 @@ const FormFill = (_props: BaseToolProps) => {
 
     if (!validateForm()) {
       setSaveError(
-        t(
-          "formFill.requiredFieldsError",
-          "Please fill in all required fields",
-        ),
+        t("formFill.requiredFieldsError", "Please fill in all required fields"),
       );
       return;
     }
