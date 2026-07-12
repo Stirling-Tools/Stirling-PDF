@@ -8,13 +8,16 @@ import { IconButton, WithTooltip } from "storybook/internal/components";
 // Single source of truth for the 3×5 accent grid. Imported by relative path
 // (not @core) because the Storybook manager bundle doesn't resolve app aliases;
 // constants/theme.ts has no imports of its own, so this stays cheap to bundle.
-import { THEME_ACCENT_PRESETS as PRESETS } from "../editor/src/core/constants/theme";
+import {
+  THEME_ACCENT_PRESETS as PRESETS,
+  DEFAULT_ACCENT_COLOR,
+} from "../editor/src/core/constants/theme";
 
 function AccentPicker() {
   const [globals, updateGlobals] = useGlobals();
   const scheme = globals.theme === "dark" ? "dark" : "light";
   const key = scheme === "dark" ? "accentDark" : "accentLight";
-  const current = (globals[key] as string) || "#3b82f6";
+  const current = (globals[key] as string) || DEFAULT_ACCENT_COLOR;
 
   return (
     <WithTooltip

@@ -18,6 +18,7 @@ import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
 import { UIProvider } from "@portal/contexts/UIContext";
 import { SuiProvider } from "@portal/theme/SuiProvider";
 import { deriveAccessiblePrimary } from "@core/utils/customPrimary";
+import { DEFAULT_ACCENT_COLOR } from "@core/constants/theme";
 import { handlers } from "@portal/mocks/handlers";
 import { configureSupabase } from "@proprietary/auth/supabase/supabaseClient";
 import i18next from "i18next";
@@ -167,7 +168,7 @@ const withProviders: Decorator = (Story, context) => {
   const accent =
     (colorScheme === "dark"
       ? (context.globals.accentDark as string)
-      : (context.globals.accentLight as string)) ?? "#3b82f6";
+      : (context.globals.accentLight as string)) ?? DEFAULT_ACCENT_COLOR;
   return (
     <MemoryRouter initialEntries={["/"]}>
       <ThemeProvider>
@@ -218,8 +219,8 @@ const preview: Preview = {
   globalTypes: {
     // Per-mode accent colours, driven by the custom toolbar picker in
     // .storybook/manager.tsx (no built-in toolbar UI of their own).
-    accentLight: { name: "Accent (light)", defaultValue: "#3b82f6" },
-    accentDark: { name: "Accent (dark)", defaultValue: "#3b82f6" },
+    accentLight: { name: "Accent (light)", defaultValue: DEFAULT_ACCENT_COLOR },
+    accentDark: { name: "Accent (dark)", defaultValue: DEFAULT_ACCENT_COLOR },
     tier: {
       name: "Tier",
       description: "Subscription tier — drives useTier() everywhere",
