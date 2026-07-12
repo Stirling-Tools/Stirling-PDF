@@ -17,6 +17,9 @@ import {
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
+import CloseIcon from "@mui/icons-material/Close";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert } from "@app/components/toast";
 import { userManagementService } from "@app/services/userManagementService";
@@ -374,16 +377,13 @@ export default function InviteMembersModal({
             zIndex: 1,
           }}
         >
-          <LocalIcon icon="close-rounded" />
+          <CloseIcon />
         </ActionIcon>
         <Stack gap="lg" pt="md">
           {/* Header with Icon */}
           <Stack gap="md" align="center">
-            <LocalIcon
-              icon="person-add"
-              width="3rem"
-              height="3rem"
-              style={{ color: "var(--mantine-color-gray-6)" }}
+            <PersonAddIcon
+              sx={{ color: "var(--mantine-color-gray-6)", fontSize: "3rem" }}
             />
             <Text size="xl" fw={600} ta="center">
               {t("workspace.people.inviteMembers.label", "Invite Members")}
@@ -628,11 +628,7 @@ export default function InviteMembersModal({
                           }
                         }}
                       >
-                        <LocalIcon
-                          icon="content-copy"
-                          width="1rem"
-                          height="1rem"
-                        />
+                        <ContentCopyIcon sx={{ fontSize: "1rem" }} />
                       </Button>
                     </Group>
                   </Stack>

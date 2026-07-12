@@ -16,6 +16,11 @@ import {
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
+import AddIcon from "@mui/icons-material/Add";
+import CloseIcon from "@mui/icons-material/Close";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import GroupIcon from "@mui/icons-material/Group";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert } from "@app/components/toast";
 import { teamService, Team } from "@app/services/teamService";
@@ -284,7 +289,7 @@ export default function TeamsSection() {
       {/* Header Actions */}
       <Group justify="flex-end">
         <Button
-          leftSection={<LocalIcon icon="add" width="1rem" height="1rem" />}
+          leftSection={<AddIcon sx={{ fontSize: "1rem" }} />}
           onClick={() => setCreateModalOpened(true)}
           disabled={!loginEnabled}
         >
@@ -411,7 +416,7 @@ export default function TeamsSection() {
                       </Menu.Item>
                       <Menu.Item
                         leftSection={
-                          <LocalIcon icon="group" width="1rem" height="1rem" />
+                          <GroupIcon sx={{ fontSize: "1rem" }} />
                         }
                         onClick={() => openAddMemberModal(team)}
                         disabled={!loginEnabled}
@@ -420,7 +425,7 @@ export default function TeamsSection() {
                       </Menu.Item>
                       <Menu.Item
                         leftSection={
-                          <LocalIcon icon="edit" width="1rem" height="1rem" />
+                          <EditIcon sx={{ fontSize: "1rem" }} />
                         }
                         onClick={() => openRenameModal(team)}
                         disabled={!loginEnabled}
@@ -431,7 +436,7 @@ export default function TeamsSection() {
                       <Menu.Item
                         color="red"
                         leftSection={
-                          <LocalIcon icon="delete" width="1rem" height="1rem" />
+                          <DeleteIcon sx={{ fontSize: "1rem" }} />
                         }
                         onClick={() => handleDeleteTeam(team)}
                         disabled={!loginEnabled || team.name === "Internal"}
@@ -470,7 +475,7 @@ export default function TeamsSection() {
               zIndex: 1,
             }}
           >
-            <LocalIcon icon="close" width="1.25rem" height="1.25rem" />
+            <CloseIcon sx={{ fontSize: "1.25rem" }} />
           </ActionIcon>
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
@@ -530,7 +535,7 @@ export default function TeamsSection() {
               zIndex: 1,
             }}
           >
-            <LocalIcon icon="close" width="1.25rem" height="1.25rem" />
+            <CloseIcon sx={{ fontSize: "1.25rem" }} />
           </ActionIcon>
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
@@ -596,7 +601,7 @@ export default function TeamsSection() {
               zIndex: 1,
             }}
           >
-            <LocalIcon icon="close" width="1.25rem" height="1.25rem" />
+            <CloseIcon sx={{ fontSize: "1.25rem" }} />
           </ActionIcon>
           <Stack gap="lg" pt="md">
             {/* Header with Icon */}
