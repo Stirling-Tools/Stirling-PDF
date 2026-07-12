@@ -6603,6 +6603,10 @@ title = "No components available"
 description = "GA components are available on Pay-as-you-go; a few Beta components are enterprise-only. Locked cards show an upgrade nudge."
 title = "Some components need a paid plan"
 
+[portal.docs]
+browse = "Browse docs"
+viewSource = "View source on GitHub"
+
 [portal.docs.authentication]
 codeCaption = "every request"
 eyebrow = "GETTING STARTED"
@@ -6688,10 +6692,18 @@ title = "Official SDKs"
 beta = "Beta"
 deprecated = "Deprecated"
 
+[portal.docs.search]
+empty = "No matching docs"
+placeholder = "Search docs"
+results = "{{count}} results"
+
 [portal.docs.skills]
 eyebrow = "SKILLS"
 lead = "Bundled, named capabilities your agent invokes as a single tool. Each skill is a deterministic op chain with evals attached."
 title = "Agent skills"
+
+[portal.docs.toc]
+title = "On this page"
 
 [portal.docs.webhooks]
 codeCaption = "document.processed"
@@ -7246,7 +7258,7 @@ storage = "Storage"
 [portal.nav]
 agent-builder = "Agent Builder"
 components = "Components"
-docs = "Developer Docs"
+docs = "Documentation"
 documents = "Documents"
 editor = "Editor"
 home = "Home"

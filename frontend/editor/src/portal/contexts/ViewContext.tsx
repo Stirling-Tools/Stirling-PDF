@@ -28,7 +28,7 @@ export const VIEW_LABELS: Record<ViewId, string> = {
   documents: "Documents",
   infrastructure: "Infrastructure",
   usage: "Usage & Billing",
-  docs: "Developer Docs",
+  docs: "Documentation",
   procurement: "Procurement",
   settings: "Settings",
 };

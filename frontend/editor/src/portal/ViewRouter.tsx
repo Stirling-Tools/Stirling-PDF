@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Home } from "@portal/views/Home";
 import { Users } from "@portal/views/Users";
@@ -10,9 +11,15 @@ import { Policies } from "@portal/views/Policies";
 import { EditorAdmin } from "@portal/views/EditorAdmin";
 import { Infrastructure } from "@portal/views/Infrastructure";
 import { PortalBillingGate } from "@portal/components/billing/PortalBillingGate";
-import { DeveloperDocs } from "@portal/views/DeveloperDocs";
 import { Procurement } from "@portal/views/Procurement";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
+
+// Lazy so the generated docs manifest (bundled JSON) lands in its own chunk.
+const DeveloperDocs = lazy(() =>
+  import("@portal/views/DeveloperDocs").then((m) => ({
+    default: m.DeveloperDocs,
+  })),
+);
 
 // The portal mounts as a route-set under /processor/* in the editor app, so these
 // child routes are relative to that base: strip the leading slash from the
@@ -48,7 +55,14 @@ export function ViewRouter() {
       />
       <Route path={rel(VIEW_PATHS.usage)} element={<PortalBillingGate />} />
       <Route path={rel(VIEW_PATHS.procurement)} element={<Procurement />} />
-      <Route path={rel(VIEW_PATHS.docs)} element={<DeveloperDocs />} />
+      <Route
+        path={rel(VIEW_PATHS.docs)}
+        element={
+          <Suspense fallback={null}>
+            <DeveloperDocs />
+          </Suspense>
+        }
+      />
       {/* Account-link is now a Settings panel; redirect legacy bookmarks home. */}
       <Route
         path="account-link"
