@@ -30,7 +30,7 @@ import {
   getFontStatusColor,
   getFontStatusDescription,
 } from "@app/tools/pdfTextEditor/fontAnalysis";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import ChevronRightIcon from "@mui/icons-material/ChevronRightRounded";
 import { Tooltip as CustomTooltip } from "@app/components/shared/Tooltip";
 
 interface FontStatusPanelProps {
@@ -261,22 +261,12 @@ const FontStatusPanel: React.FC<FontStatusPanelProps> = ({
           </Flex>
 
           {isCollapsed ? (
-            <LocalIcon
-              icon="chevron-right-rounded"
-              width="1.2rem"
-              height="1.2rem"
-              style={{
-                color: "var(--mantine-color-dimmed)",
-              }}
+            <ChevronRightIcon
+              sx={{ color: "var(--mantine-color-dimmed)", fontSize: "1.2rem" }}
             />
           ) : (
-            <LocalIcon
-              icon="expand-more-rounded"
-              width="1.2rem"
-              height="1.2rem"
-              style={{
-                color: "var(--mantine-color-dimmed)",
-              }}
+            <ExpandMoreIcon
+              sx={{ color: "var(--mantine-color-dimmed)", fontSize: "1.2rem" }}
             />
           )}
         </Flex>

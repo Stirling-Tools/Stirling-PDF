@@ -1,7 +1,8 @@
 import React from "react";
 import { Group, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { LocalIcon } from "@app/components/shared/LocalIcon";
+import RedoIcon from "@mui/icons-material/Redo";
+import UndoIcon from "@mui/icons-material/Undo";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 
@@ -45,12 +46,7 @@ export const DrawingControls: React.FC<DrawingControlsProps> = ({
             onClick={onUndo}
             disabled={undoDisabled}
           >
-            <LocalIcon
-              icon="undo"
-              width={20}
-              height={20}
-              style={{ color: "currentColor" }}
-            />
+            <UndoIcon sx={{ color: "currentColor", fontSize: 20 }} />
           </ActionIcon>
         </Tooltip>
       )}
@@ -63,12 +59,7 @@ export const DrawingControls: React.FC<DrawingControlsProps> = ({
             onClick={onRedo}
             disabled={redoDisabled}
           >
-            <LocalIcon
-              icon="redo"
-              width={20}
-              height={20}
-              style={{ color: "currentColor" }}
-            />
+            <RedoIcon sx={{ color: "currentColor", fontSize: 20 }} />
           </ActionIcon>
         </Tooltip>
       )}

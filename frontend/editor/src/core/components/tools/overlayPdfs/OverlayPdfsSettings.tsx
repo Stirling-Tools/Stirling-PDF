@@ -14,7 +14,8 @@ import {
   type OverlayPdfsParameters,
   type OverlayMode,
 } from "@app/hooks/tools/overlayPdfs/useOverlayPdfsParameters";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import AddIcon from "@mui/icons-material/Add";
+import CloseIcon from "@mui/icons-material/CloseRounded";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import styles from "@app/components/tools/overlayPdfs/OverlayPdfsSettings.module.css";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
@@ -187,7 +188,7 @@ export default function OverlayPdfsSettings({
           size="sm"
           onClick={handleOpenOverlayFilesModal}
           disabled={disabled}
-          leftSection={<LocalIcon icon="add" width="14" height="14" />}
+          leftSection={<AddIcon sx={{ fontSize: 14 }} />}
           fullWidth
         >
           {parameters.overlayFiles?.length > 0
@@ -231,11 +232,7 @@ export default function OverlayPdfsSettings({
                         disabled={disabled}
                         aria-label={t("remove", "Remove")}
                       >
-                        <LocalIcon
-                          icon="close-rounded"
-                          width="14"
-                          height="14"
-                        />
+                        <CloseIcon sx={{ fontSize: 14 }} />
                       </ActionIcon>
                     </Group>
                   ))}
