@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Group, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import CheckIcon from "@mui/icons-material/Check";
 import { InfoBanner } from "@app/components/shared/InfoBanner";
 import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
 
@@ -82,11 +82,8 @@ export function TeamInvitationBanner() {
         onClick={handleAccept}
         loading={processing}
         leftSection={
-          <LocalIcon
-            icon="check"
-            width="0.9rem"
-            height="0.9rem"
-            style={{ color: "var(--mantine-color-dark-9)" }}
+          <CheckIcon
+            sx={{ color: "var(--mantine-color-dark-9)", fontSize: "0.9rem" }}
           />
         }
       >

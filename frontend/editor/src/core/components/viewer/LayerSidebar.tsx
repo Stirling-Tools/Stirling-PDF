@@ -14,7 +14,7 @@ import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import CloseIcon from "@mui/icons-material/CloseRounded";
 import { useTranslation } from "react-i18next";
 import { useViewer } from "@app/contexts/ViewerContext";
 import "@app/components/viewer/SidebarBase.css";
@@ -362,7 +362,7 @@ export function LayerSidebar({
             aria-label={t("viewer.layers.closeSidebar", "Close layers sidebar")}
             title={t("viewer.layers.closeSidebar", "Close layers sidebar")}
           >
-            <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
+            <CloseIcon sx={{ fontSize: "1.1rem" }} />
           </ActionIcon>
         </div>
       </div>

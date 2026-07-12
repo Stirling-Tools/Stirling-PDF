@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Button, type ButtonAccent } from "@app/ui/Button";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import CloseIcon from "@mui/icons-material/CloseRounded";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
 import stirlingMark from "@app/assets/brand/modern-logo/logo512.png";
 import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
@@ -149,11 +149,7 @@ export default function OnboardingSlideShell({
                 size="md"
                 aria-label={t("common.close", "Close")}
               >
-                <LocalIcon
-                  icon="close-rounded"
-                  width="1.1rem"
-                  height="1.1rem"
-                />
+                <CloseIcon sx={{ fontSize: "1.1rem" }} />
               </ActionIcon>
             )}
           </div>

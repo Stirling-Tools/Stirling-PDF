@@ -4,7 +4,7 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import CloseIcon from "@mui/icons-material/CloseRounded";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import "@app/components/viewer/SidebarBase.css";
 
@@ -198,7 +198,7 @@ export function ThumbnailSidebar({
                 "Close thumbnails sidebar",
               )}
             >
-              <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
+              <CloseIcon sx={{ fontSize: "1.1rem" }} />
             </ActionIcon>
           </div>
           {/* Thumbnails Container */}

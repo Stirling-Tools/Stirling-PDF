@@ -29,7 +29,6 @@ import FontStatusPanel from "@app/components/tools/pdfTextEditor/FontStatusPanel
 import ToolStep from "@app/components/tools/shared/ToolStep";
 import { usePdfTextEditorTips } from "@app/components/tooltips/usePdfTextEditorTips";
 import { Tooltip } from "@app/components/shared/Tooltip";
-import LocalIcon from "@app/components/shared/LocalIcon";
 
 type GroupingMode = "auto" | "paragraph" | "singleLine";
 
@@ -153,11 +152,7 @@ const PdfTextEditorSidebar = ({ data }: PdfTextEditorSidebarProps) => {
                     size="sm"
                     aria-label={t("pdfTextEditor.title", "PDF Text Editor")}
                   >
-                    <LocalIcon
-                      icon="info-outline-rounded"
-                      width="1.25rem"
-                      height="1.25rem"
-                    />
+                    <InfoOutlinedIcon sx={{ fontSize: "1.25rem" }} />
                   </ActionIcon>
                 </Tooltip>
               </Flex>

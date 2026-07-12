@@ -1,6 +1,6 @@
 import React from "react";
 import { Menu, Loader, Group, Text, Checkbox } from "@mantine/core";
-import { LocalIcon } from "@app/components/shared/LocalIcon";
+import DashboardCustomizeIcon from "@mui/icons-material/DashboardCustomizeRounded";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import AddIcon from "@mui/icons-material/Add";
@@ -182,11 +182,7 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
           {switchingTo === "pageEditor" ? (
             <Loader size="xs" />
           ) : (
-            <LocalIcon
-              icon="dashboard-customize-rounded"
-              width="1.4rem"
-              height="1.4rem"
-            />
+            <DashboardCustomizeIcon sx={{ fontSize: "1.4rem" }} />
           )}
           <span className="ph-no-capture">
             {selectedCount}/{totalCount} files selected

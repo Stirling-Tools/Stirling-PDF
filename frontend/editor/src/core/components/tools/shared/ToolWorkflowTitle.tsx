@@ -1,6 +1,6 @@
 import React from "react";
 import { Flex, Text, Divider } from "@mantine/core";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { Tooltip } from "@app/components/shared/Tooltip";
 
 export interface ToolWorkflowTitleProps {
@@ -27,11 +27,8 @@ export function ToolWorkflowTitle({
         {title}
       </Text>
       {tooltip && (
-        <LocalIcon
-          icon="info-outline-rounded"
-          width="1.25rem"
-          height="1.25rem"
-          style={{ color: "var(--icon-files-color)" }}
+        <InfoOutlinedIcon
+          sx={{ color: "var(--icon-files-color)", fontSize: "1.25rem" }}
         />
       )}
     </Flex>

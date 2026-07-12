@@ -1,6 +1,6 @@
 import { Popover } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import PinEndIcon from "@mui/icons-material/PinEnd";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import BulkSelectionPanel from "@app/components/pageEditor/BulkSelectionPanel";
 
@@ -42,7 +42,7 @@ export default function PageSelectByNumberButton({
                 disabled={disabled || totalPages === 0}
                 aria-label={label}
               >
-                <LocalIcon icon="pin-end" width="1.5rem" height="1.5rem" />
+                <PinEndIcon sx={{ fontSize: "1.5rem" }} />
               </ActionIcon>
             </div>
           </Popover.Target>
