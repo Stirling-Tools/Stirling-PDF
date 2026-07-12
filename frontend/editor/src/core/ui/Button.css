@@ -61,11 +61,14 @@
   background: var(--button-bg, transparent) !important;
 }
 
+/* Disabled buttons in dark read as a muted surface (not a dimmed accent that
+   still looks clickable, and not an invisible transparent pill). Covers every
+   variant so a disabled primary and a disabled secondary look alike. */
+[data-theme="dark"] .sui-btn.mantine-Button-root:disabled:not([data-loading]),
 [data-theme="dark"]
-  .sui-btn--primary.mantine-Button-root:disabled:not([data-loading]),
-[data-theme="dark"]
-  .sui-btn--primary.mantine-Button-root[data-disabled]:not([data-loading]) {
-  background: var(--button-bg);
-  color: var(--button-color);
-  opacity: 0.55;
+  .sui-btn.mantine-Button-root[data-disabled]:not([data-loading]) {
+  background: var(--color-bg-muted);
+  color: var(--color-text-5);
+  border-color: transparent;
+  opacity: 1;
 }
