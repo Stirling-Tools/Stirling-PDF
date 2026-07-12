@@ -98,7 +98,8 @@ function AccentSwatchDropdown({
   const [opened, setOpened] = useState(false);
   const isDefault = value === DEFAULT_ACCENT;
   // Resolve the "default" sentinel to the blue it maps to so the ColorInput shows a real colour.
-  const asHex = (v: string) => (v === DEFAULT_ACCENT ? DEFAULT_ACCENT_COLOR : v);
+  const asHex = (v: string) =>
+    v === DEFAULT_ACCENT ? DEFAULT_ACCENT_COLOR : v;
   // Live picker value; committed to preferences only on drag-end (below).
   const [draft, setDraft] = useState(() => asHex(value));
   useEffect(() => setDraft(asHex(value)), [value]);
@@ -269,7 +270,10 @@ function AccentSwatchDropdown({
             onChange={setDraft}
             onChangeEnd={onChange}
             clampValue={clampAccentChoice}
-            aria-label={t("settings.general.themeAccentCustom", "Custom colour")}
+            aria-label={t(
+              "settings.general.themeAccentCustom",
+              "Custom colour",
+            )}
             popoverProps={{ withinPortal: false }}
           />
         </div>
@@ -729,8 +733,17 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               </Text>
             </div>
             <Stack gap="md">
-              <Group gap="sm" wrap="nowrap" align="flex-start" justify="flex-end">
-                <Text size="sm" c="dimmed" style={{ width: "3rem", paddingTop: 4 }}>
+              <Group
+                gap="sm"
+                wrap="nowrap"
+                align="flex-start"
+                justify="flex-end"
+              >
+                <Text
+                  size="sm"
+                  c="dimmed"
+                  style={{ width: "3rem", paddingTop: 4 }}
+                >
                   {t("settings.general.themeLight", "Light")}
                 </Text>
                 <AccentSwatchDropdown
@@ -742,8 +755,17 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                   )}
                 />
               </Group>
-              <Group gap="sm" wrap="nowrap" align="flex-start" justify="flex-end">
-                <Text size="sm" c="dimmed" style={{ width: "3rem", paddingTop: 4 }}>
+              <Group
+                gap="sm"
+                wrap="nowrap"
+                align="flex-start"
+                justify="flex-end"
+              >
+                <Text
+                  size="sm"
+                  c="dimmed"
+                  style={{ width: "3rem", paddingTop: 4 }}
+                >
                   {t("settings.general.themeDark", "Dark")}
                 </Text>
                 <AccentSwatchDropdown
@@ -763,8 +785,14 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               size="sm"
               onClick={() => {
                 setTheme(DEFAULT_PREFERENCES.theme);
-                updatePreference("lightPrimary", DEFAULT_PREFERENCES.lightPrimary);
-                updatePreference("darkPrimary", DEFAULT_PREFERENCES.darkPrimary);
+                updatePreference(
+                  "lightPrimary",
+                  DEFAULT_PREFERENCES.lightPrimary,
+                );
+                updatePreference(
+                  "darkPrimary",
+                  DEFAULT_PREFERENCES.darkPrimary,
+                );
               }}
             >
               {t("settings.general.themeReset", "Restore theme to default")}

@@ -25,7 +25,6 @@ import { initReactI18next } from "react-i18next";
 import { parse as parseToml } from "smol-toml";
 // Load the real English copy so stories render human text, not raw keys. Bundled
 // synchronously via ?raw so it's present on the very first render (no async flash).
-// eslint-disable-next-line no-restricted-imports -- Storybook-only: read the public i18n asset; no @-alias covers editor/public/.
 import enTranslationToml from "../editor/public/locales/en-US/translation.toml?raw";
 
 import "@mantine/core/styles.css";

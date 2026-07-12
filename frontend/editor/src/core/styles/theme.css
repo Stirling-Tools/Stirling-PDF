@@ -1,17 +1,41 @@
 :root {
   /* Compare highlight colors (same in light/dark) */
-  --spdf-compare-removed-bg: color-mix(in srgb, var(--p-red-400) 45%, transparent); /* #ff6b6b @ 0.45 */
-  --spdf-compare-added-bg: color-mix(in srgb, var(--p-green-500) 35%, transparent); /* #51cf66 @ 0.35 */
+  --spdf-compare-removed-bg: color-mix(
+    in srgb,
+    var(--p-red-400) 45%,
+    transparent
+  ); /* #ff6b6b @ 0.45 */
+  --spdf-compare-added-bg: color-mix(
+    in srgb,
+    var(--p-green-500) 35%,
+    transparent
+  ); /* #51cf66 @ 0.35 */
 
   /* Badge colors for dropdowns */
-  --spdf-compare-removed-badge-bg: color-mix(in srgb, var(--p-red-500) 15%, transparent);
+  --spdf-compare-removed-badge-bg: color-mix(
+    in srgb,
+    var(--p-red-500) 15%,
+    transparent
+  );
   --spdf-compare-removed-badge-fg: var(--p-red-600);
-  --spdf-compare-added-badge-bg: color-mix(in srgb, var(--p-green-500) 18%, transparent);
+  --spdf-compare-added-badge-bg: color-mix(
+    in srgb,
+    var(--p-green-500) 18%,
+    transparent
+  );
   --spdf-compare-added-badge-fg: var(--p-green-700);
 
   /* Inline highlights in summary */
-  --spdf-compare-inline-removed-bg: color-mix(in srgb, var(--p-red-500) 25%, transparent);
-  --spdf-compare-inline-added-bg: color-mix(in srgb, var(--p-green-500) 25%, transparent);
+  --spdf-compare-inline-removed-bg: color-mix(
+    in srgb,
+    var(--p-red-500) 25%,
+    transparent
+  );
+  --spdf-compare-inline-added-bg: color-mix(
+    in srgb,
+    var(--p-green-500) 25%,
+    transparent
+  );
 
   /* File Manager active file colors */
   --file-active-badge-bg: rgba(
@@ -87,11 +111,17 @@
   /* Category colors - consistent across light and dark modes */
   --category-color-removal: var(--p-red-500); /* Red for removal tools */
   --category-color-security: var(--p-amber-500); /* Orange for security tools */
-  --category-color-formatting: var(--p-blue-400); /* Purple for formatting tools */
-  --category-color-extraction: var(--p-blue-500); /* Cyan for extraction tools */
+  --category-color-formatting: var(
+    --p-blue-400
+  ); /* Purple for formatting tools */
+  --category-color-extraction: var(
+    --p-blue-500
+  ); /* Cyan for extraction tools */
   --category-color-signing: var(--p-green-500); /* Green for signing tools */
   --category-color-general: var(--p-blue-500); /* Blue for general tools */
-  --category-color-verification: var(--p-amber-600); /* Orange for verification tools */
+  --category-color-verification: var(
+    --p-amber-600
+  ); /* Orange for verification tools */
   --category-color-automation: var(--p-red-400); /* Pink for automation tools */
   --category-color-developer: var(--p-gray-500); /* Gray for developer tools */
   --category-color-default: var(--p-gray-500); /* Default gray */
@@ -165,7 +195,7 @@
   --icon-inactive-bg: var(--p-gray-400);
   --icon-inactive-color: #ffffff;
 
-/* doubly lighter rule line */
+  /* doubly lighter rule line */
   --text-brand-accent: var(--p-red-600);
 
   /* PDF text selection colors */
@@ -182,7 +212,11 @@
   --landing-drop-inner-paper-border: var(--p-blue-400);
 
   /* landing hero & stack */
-  --landing-hero-gradient: linear-gradient(135deg, var(--p-blue-500) 0%, var(--p-blue-500) 100%);
+  --landing-hero-gradient: linear-gradient(
+    135deg,
+    var(--p-blue-500) 0%,
+    var(--p-blue-500) 100%
+  );
   --landing-stack-w: 224px;
   --landing-stack-h: 176px;
 
@@ -194,14 +228,18 @@
     0 0 0 1px rgba(0, 0, 0, 0.02);
 
   /* selected file header colors */
-  --header-selected-bg: var(--p-blue-500); /* light mode selected header matches dark */
+  --header-selected-bg: var(
+    --p-blue-500
+  ); /* light mode selected header matches dark */
   --header-selected-fg: #ffffff;
 
-/* slightly more blue than dark mode header */
+  /* slightly more blue than dark mode header */
 
   --information-text-color: var(--p-zinc-400);
-/* white background for cards */
-  --bulk-card-border: var(--p-gray-200); /* light gray border for cards and buttons */
+  /* white background for cards */
+  --bulk-card-border: var(
+    --p-gray-200
+  ); /* light gray border for cards and buttons */
   --bulk-card-hover-border: var(--p-gray-300); /* slightly darker on hover */
 
   /* Config Modal colors (light mode) */
@@ -311,11 +349,17 @@
   /* Category colors - same as light mode for consistency */
   --category-color-removal: var(--p-red-500); /* Red for removal tools */
   --category-color-security: var(--p-amber-500); /* Orange for security tools */
-  --category-color-formatting: var(--p-blue-400); /* Purple for formatting tools */
-  --category-color-extraction: var(--p-blue-500); /* Cyan for extraction tools */
+  --category-color-formatting: var(
+    --p-blue-400
+  ); /* Purple for formatting tools */
+  --category-color-extraction: var(
+    --p-blue-500
+  ); /* Cyan for extraction tools */
   --category-color-signing: var(--p-green-500); /* Green for signing tools */
   --category-color-general: var(--p-blue-500); /* Blue for general tools */
-  --category-color-verification: var(--p-amber-600); /* Orange for verification tools */
+  --category-color-verification: var(
+    --p-amber-600
+  ); /* Orange for verification tools */
   --category-color-automation: var(--p-red-400); /* Pink for automation tools */
   --category-color-developer: var(--p-gray-500); /* Gray for developer tools */
   --category-color-default: var(--p-gray-500); /* Default gray */
@@ -402,7 +446,7 @@
 
   --information-text-color: var(--p-blue-400);
 
-/* dark background for cards */
+  /* dark background for cards */
   --bulk-card-border: var(
     --border-default
   ); /* default border for cards and buttons */

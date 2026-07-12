@@ -48,14 +48,22 @@
   --auth-text-primary-light-only: var(--p-zinc-650);
   --auth-text-secondary-light-only: var(--p-gray-800);
   --auth-border-focus-light-only: var(--p-gray-300);
-  --auth-focus-ring-light-only: color-mix(in srgb, var(--p-blue-500) 15%, transparent);
+  --auth-focus-ring-light-only: color-mix(
+    in srgb,
+    var(--p-blue-500) 15%,
+    transparent
+  );
 
   /* App Config Modal colors (light mode) */
   --modal-nav-bg: var(--p-gray-100);
   --modal-nav-section-title: var(--p-gray-500);
   --modal-nav-item: var(--p-gray-700);
   --modal-nav-item-active: var(--p-blue-500);
-  --modal-nav-item-active-bg: color-mix(in srgb, var(--p-blue-500) 8%, transparent);
+  --modal-nav-item-active-bg: color-mix(
+    in srgb,
+    var(--p-blue-500) 8%,
+    transparent
+  );
   --modal-content-bg: #ffffff;
   --modal-header-border: rgba(0, 0, 0, 0.06);
 
@@ -72,14 +80,38 @@
 
 [data-mantine-color-scheme="dark"] {
   /* Compare highlight colors (dark mode) */
-  --spdf-compare-removed-bg: color-mix(in srgb, var(--p-red-400) 45%, transparent);
-  --spdf-compare-added-bg: color-mix(in srgb, var(--p-green-500) 35%, transparent);
-  --spdf-compare-removed-badge-bg: color-mix(in srgb, var(--p-red-500) 15%, transparent);
+  --spdf-compare-removed-bg: color-mix(
+    in srgb,
+    var(--p-red-400) 45%,
+    transparent
+  );
+  --spdf-compare-added-bg: color-mix(
+    in srgb,
+    var(--p-green-500) 35%,
+    transparent
+  );
+  --spdf-compare-removed-badge-bg: color-mix(
+    in srgb,
+    var(--p-red-500) 15%,
+    transparent
+  );
   --spdf-compare-removed-badge-fg: var(--color-red-500);
-  --spdf-compare-added-badge-bg: color-mix(in srgb, var(--p-green-500) 18%, transparent);
+  --spdf-compare-added-badge-bg: color-mix(
+    in srgb,
+    var(--p-green-500) 18%,
+    transparent
+  );
   --spdf-compare-added-badge-fg: var(--color-green-500);
-  --spdf-compare-inline-removed-bg: color-mix(in srgb, var(--p-red-500) 25%, transparent);
-  --spdf-compare-inline-added-bg: color-mix(in srgb, var(--p-green-500) 25%, transparent);
+  --spdf-compare-inline-removed-bg: color-mix(
+    in srgb,
+    var(--p-red-500) 25%,
+    transparent
+  );
+  --spdf-compare-inline-added-bg: color-mix(
+    in srgb,
+    var(--p-green-500) 25%,
+    transparent
+  );
   --compare-page-label-bg: var(--p-zinc-850);
   --compare-page-label-fg: var(--p-gray-300);
 
@@ -99,7 +131,11 @@
   --auth-input-bg-light-only: var(--bg-raised);
   --auth-input-text-light-only: var(--text-primary);
   --auth-border-focus-light-only: var(--p-blue-500);
-  --auth-focus-ring-light-only: color-mix(in srgb, var(--p-blue-500) 20%, transparent);
+  --auth-focus-ring-light-only: color-mix(
+    in srgb,
+    var(--p-blue-500) 20%,
+    transparent
+  );
   --auth-button-bg-light-only: var(--p-red-600);
   --auth-button-text-light-only: #ffffff;
   --auth-magic-button-bg-light-only: var(--bg-raised);
@@ -121,13 +157,16 @@
   --api-keys-input-bg: var(--p-zinc-850);
   --api-keys-input-border: var(--p-zinc-650);
 
-
   /* App Config Modal colors (dark mode) */
   --modal-nav-bg: var(--p-zinc-850);
   --modal-nav-section-title: var(--p-zinc-300);
   --modal-nav-item: var(--p-gray-300);
   --modal-nav-item-active: var(--p-blue-500);
-  --modal-nav-item-active-bg: color-mix(in srgb, var(--p-blue-500) 15%, transparent);
+  --modal-nav-item-active-bg: color-mix(
+    in srgb,
+    var(--p-blue-500) 15%,
+    transparent
+  );
   --modal-content-bg: var(--p-zinc-800);
   --modal-header-border: rgba(255, 255, 255, 0.05);
 }

@@ -77,12 +77,20 @@ html[data-app-theme="custom"] {
   --c-bg-raised: color-mix(in srgb, var(--c-primary) 4%, var(--p-white));
   --c-surface: color-mix(in srgb, var(--c-primary) 3%, var(--p-white));
   --c-surface-raised: color-mix(in srgb, var(--c-primary) 4%, var(--p-white));
-  --c-surface-sunken: color-mix(in srgb, var(--c-primary) 8%, var(--p-gray-100));
+  --c-surface-sunken: color-mix(
+    in srgb,
+    var(--c-primary) 8%,
+    var(--p-gray-100)
+  );
   --c-input-bg: color-mix(in srgb, var(--c-primary) 2%, var(--p-white));
   --c-hover: color-mix(in srgb, var(--c-primary) 9%, var(--p-gray-50));
   --c-active: color-mix(in srgb, var(--c-primary) 13%, var(--p-gray-100));
   --c-border: color-mix(in srgb, var(--c-primary) 14%, var(--p-gray-250));
-  --c-border-subtle: color-mix(in srgb, var(--c-primary) 10%, var(--p-gray-200));
+  --c-border-subtle: color-mix(
+    in srgb,
+    var(--c-primary) 10%,
+    var(--p-gray-200)
+  );
 
   /* Mantine primary ramp (--color-primary-*) derived from --c-primary. */
   --color-primary-50: color-mix(in srgb, var(--c-primary) 12%, var(--p-white));
@@ -98,8 +106,16 @@ html[data-app-theme="custom"] {
   --mantine-primary-color-filled: var(--c-primary);
   --mantine-primary-color-filled-hover: var(--c-primary-hover);
   /* Mantine "light" variant surfaces (chips, subtle buttons, some panels). */
-  --mantine-primary-color-light: color-mix(in srgb, var(--c-primary) 12%, transparent);
-  --mantine-primary-color-light-hover: color-mix(in srgb, var(--c-primary) 18%, transparent);
+  --mantine-primary-color-light: color-mix(
+    in srgb,
+    var(--c-primary) 12%,
+    transparent
+  );
+  --mantine-primary-color-light-hover: color-mix(
+    in srgb,
+    var(--c-primary) 18%,
+    transparent
+  );
   --mantine-primary-color-light-color: var(--c-primary);
 
   /* Brand-tint family — re-derived from --c-primary so legacy accents harmonise to the chosen hue. */
@@ -115,12 +131,36 @@ html[data-app-theme="custom"] {
   --icon-files-color: var(--c-accent-fg);
 
   /* Subtle surface tints (mix with the base surface so they adapt light/dark) */
-  --tool-header-border: color-mix(in srgb, var(--c-primary) 28%, var(--c-surface));
-  --tool-header-badge-bg: color-mix(in srgb, var(--c-primary) 20%, var(--c-surface));
-  --tooltip-title-bg: color-mix(in srgb, var(--c-primary) 12%, var(--c-surface));
-  --landing-inner-paper-bg: color-mix(in srgb, var(--c-primary) 8%, var(--c-surface));
-  --landing-inner-paper-border: color-mix(in srgb, var(--c-primary) 25%, var(--c-surface));
-  --landing-button-border: color-mix(in srgb, var(--c-primary) 22%, var(--c-surface));
+  --tool-header-border: color-mix(
+    in srgb,
+    var(--c-primary) 28%,
+    var(--c-surface)
+  );
+  --tool-header-badge-bg: color-mix(
+    in srgb,
+    var(--c-primary) 20%,
+    var(--c-surface)
+  );
+  --tooltip-title-bg: color-mix(
+    in srgb,
+    var(--c-primary) 12%,
+    var(--c-surface)
+  );
+  --landing-inner-paper-bg: color-mix(
+    in srgb,
+    var(--c-primary) 8%,
+    var(--c-surface)
+  );
+  --landing-inner-paper-border: color-mix(
+    in srgb,
+    var(--c-primary) 25%,
+    var(--c-surface)
+  );
+  --landing-button-border: color-mix(
+    in srgb,
+    var(--c-primary) 22%,
+    var(--c-surface)
+  );
   --landing-hero-gradient: linear-gradient(
     135deg,
     var(--c-primary) 0%,
@@ -129,10 +169,18 @@ html[data-app-theme="custom"] {
 
   /* Translucent state tints */
   --color-nav-active: color-mix(in srgb, var(--c-primary) 12%, transparent);
-  --modal-nav-item-active-bg: color-mix(in srgb, var(--c-primary) 10%, transparent);
+  --modal-nav-item-active-bg: color-mix(
+    in srgb,
+    var(--c-primary) 10%,
+    transparent
+  );
   --pdf-selection-bg: color-mix(in srgb, var(--c-primary) 20%, transparent);
   --pdf-selection-ring: color-mix(in srgb, var(--c-primary) 28%, transparent);
-  --tool-panel-search-bg: color-mix(in srgb, var(--c-primary) 6%, var(--c-surface));
+  --tool-panel-search-bg: color-mix(
+    in srgb,
+    var(--c-primary) 6%,
+    var(--c-surface)
+  );
 }
 
 /* ── DARK — editor dark theme: neutral text/borders/icons + accent-tinted surfaces (default override opts out). After :root so it wins for dark. ── */
@@ -148,13 +196,25 @@ html[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
   --c-bg: color-mix(in srgb, var(--c-primary) 8%, var(--p-zinc-950));
   --c-bg-raised: color-mix(in srgb, var(--c-primary) 9%, var(--p-zinc-850));
   --c-surface: color-mix(in srgb, var(--c-primary) 8%, var(--p-zinc-800));
-  --c-surface-raised: color-mix(in srgb, var(--c-primary) 9%, var(--p-zinc-775));
-  --c-surface-sunken: color-mix(in srgb, var(--c-primary) 8%, var(--p-zinc-900));
+  --c-surface-raised: color-mix(
+    in srgb,
+    var(--c-primary) 9%,
+    var(--p-zinc-775)
+  );
+  --c-surface-sunken: color-mix(
+    in srgb,
+    var(--c-primary) 8%,
+    var(--p-zinc-900)
+  );
   --c-input-bg: color-mix(in srgb, var(--c-primary) 7%, var(--p-zinc-900));
   --c-hover: color-mix(in srgb, var(--c-primary) 12%, var(--p-zinc-750));
   --c-active: color-mix(in srgb, var(--c-primary) 15%, var(--p-zinc-700));
   --c-border: color-mix(in srgb, var(--c-primary) 14%, var(--p-zinc-650));
-  --c-border-subtle: color-mix(in srgb, var(--c-primary) 10%, var(--p-zinc-700));
+  --c-border-subtle: color-mix(
+    in srgb,
+    var(--c-primary) 10%,
+    var(--p-zinc-700)
+  );
 
   /* Dark-tuned status shades (lighter than the light-theme :root values). */
   --c-success: var(--p-green-500);

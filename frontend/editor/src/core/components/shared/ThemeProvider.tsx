@@ -76,9 +76,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   const colorScheme = resolveColorScheme(themeMode, systemScheme);
   // Each base has its own accent; "system" picks by the resolved scheme.
   const primaryInput =
-    colorScheme === "dark"
-      ? preferences.darkPrimary
-      : preferences.lightPrimary;
+    colorScheme === "dark" ? preferences.darkPrimary : preferences.lightPrimary;
 
   // A colour tints surfaces; the "default" sentinel means neutral surfaces + blue buttons (derive from blue, flag data-accent="default" so colors.css skips the tint).
   const isDefaultAccent = primaryInput === DEFAULT_ACCENT;

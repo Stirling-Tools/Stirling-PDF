@@ -107,7 +107,8 @@ class PreferencesService {
 
       // Seed the customised side from the old primary; the other side gets the default (neutral) theme.
       if (p.lightPrimary === undefined) {
-        p.lightPrimary = legacyBase === "light" ? legacyPrimary : DEFAULT_ACCENT;
+        p.lightPrimary =
+          legacyBase === "light" ? legacyPrimary : DEFAULT_ACCENT;
       }
       if (p.darkPrimary === undefined) {
         p.darkPrimary = legacyBase === "dark" ? legacyPrimary : DEFAULT_ACCENT;

@@ -1,4 +1,9 @@
-import { type FocusEventHandler, type CSSProperties, useEffect, useState } from "react";
+import {
+  type FocusEventHandler,
+  type CSSProperties,
+  useEffect,
+  useState,
+} from "react";
 import {
   ColorInput as MantineColorInput,
   type ColorInputProps as MantineColorInputProps,

@@ -10,7 +10,11 @@
   --auth-input-bg-light-only: #ffffff;
   --auth-input-text-light-only: var(--p-gray-900);
   --auth-border-focus-light-only: var(--p-blue-500);
-  --auth-focus-ring-light-only: color-mix(in srgb, var(--p-blue-500) 10%, transparent);
+  --auth-focus-ring-light-only: color-mix(
+    in srgb,
+    var(--p-blue-500) 10%,
+    transparent
+  );
   --auth-button-bg-light-only: var(--p-red-600);
   --auth-button-text-light-only: #ffffff;
   --auth-magic-button-bg-light-only: var(--p-gray-200);
@@ -32,7 +36,11 @@
   --auth-input-bg-light-only: var(--bg-raised);
   --auth-input-text-light-only: var(--text-primary);
   --auth-border-focus-light-only: var(--p-blue-500);
-  --auth-focus-ring-light-only: color-mix(in srgb, var(--p-blue-500) 20%, transparent);
+  --auth-focus-ring-light-only: color-mix(
+    in srgb,
+    var(--p-blue-500) 20%,
+    transparent
+  );
   --auth-button-bg-light-only: var(--p-red-600);
   --auth-button-text-light-only: #ffffff;
   --auth-magic-button-bg-light-only: var(--bg-raised);

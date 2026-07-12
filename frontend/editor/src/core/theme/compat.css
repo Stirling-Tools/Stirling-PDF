@@ -103,7 +103,11 @@
   --tool-subcategory-text-color: var(--c-text-subtle);
   --dropdown-trigger-text-disabled: var(--c-text-subtle);
   --tool-header-badge-text: var(--c-accent-fg, var(--c-primary));
-  --tooltip-title-bg: color-mix(in srgb, var(--c-primary) 12%, var(--c-surface));
+  --tooltip-title-bg: color-mix(
+    in srgb,
+    var(--c-primary) 12%,
+    var(--c-surface)
+  );
   --tooltip-title-color: var(--c-text);
 
   /* ── Interaction states ── */
@@ -127,8 +131,16 @@
   --text-instruction: var(--c-accent-fg, var(--c-primary));
   --landing-button-color: var(--c-accent-fg, var(--c-primary));
   /* SUI "blue" accent border/light (secondary buttons, chips) — derived from the primary. */
-  --color-blue-border: color-mix(in srgb, var(--c-primary) 38%, var(--c-surface));
-  --color-blue-light: color-mix(in srgb, var(--c-primary) 12%, var(--c-surface));
+  --color-blue-border: color-mix(
+    in srgb,
+    var(--c-primary) 38%,
+    var(--c-surface)
+  );
+  --color-blue-light: color-mix(
+    in srgb,
+    var(--c-primary) 12%,
+    var(--c-surface)
+  );
 
   /* ── Status ── */
   --accent-green: var(--c-success);

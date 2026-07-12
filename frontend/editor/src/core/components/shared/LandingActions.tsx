@@ -47,9 +47,7 @@ export function LandingActions({
         <Button
           variant="secondary"
           className="landing-btn-secondary"
-          leftSection={
-            <LocalIcon icon="add" width="1rem" height="1rem" />
-          }
+          leftSection={<LocalIcon icon="add" width="1rem" height="1rem" />}
           onClick={(e) => {
             e.stopPropagation();
             openFilesModal();
