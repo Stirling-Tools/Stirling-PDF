@@ -54,13 +54,7 @@ import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.S3Object;
 import tools.jackson.databind.ObjectMapper;
 
-/**
- * End-to-end test of a connection-backed webhook against a real S3 API (MinIO): a signed delivery
- * is staged by the receiver into the S3 connection's bucket under the reserved per-webhook prefix,
- * then read and consumed by the source (which delegates to {@link S3InputSource}). Proves the
- * durable, multi-node staging model hosted deployments use, through the production S3 client
- * factory.
- */
+/** End-to-end connection-backed webhook against MinIO: stage, read via S3 delegation, consume. */
 @Testcontainers(disabledWithoutDocker = true)
 class WebhookS3ConnectionMinioTest {
 
@@ -112,8 +106,7 @@ class WebhookS3ConnectionMinioTest {
         ApplicationProperties properties = new ApplicationProperties();
         properties.getPolicies().setAllowPrivateS3Endpoints(true);
 
-        // A resolver over a stored S3 connection pointing at MinIO. No SecurityContext in the test,
-        // so the resolver's ownership check is skipped (the delivery path's trust-the-save model).
+        // A resolver over a MinIO S3 connection; no principal here, so ownership is skipped.
         S3ConnectionResolver resolver = resolverFor(minioConnection());
         S3ConnectionPool pool = new S3ConnectionPool(properties);
         S3InputSource s3 = new S3InputSource(pool, resolver);

@@ -20,16 +20,7 @@ import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.policy.webhook.WebhookConfig;
 
-/**
- * Fires policies when a document is delivered to one of their webhook sources. Delivery is push, so
- * the receiver calls {@link #fireForWebhook} the moment it spools a file and the referencing
- * policies run immediately. As with folder-watch, the instant fire is a latency optimisation, not
- * the source of truth: a periodic reconcile ({@code watchReconcileSeconds}) re-runs every webhook
- * policy to cover deliveries that landed while the process was down and any fire that was missed.
- * Redundant runs are harmless because the input source does the claiming.
- *
- * <p>The spool is on local disk, so - like folder-watch - this assumes a single node.
- */
+/** Fires webhook policies on delivery plus a periodic reconcile safety net. */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -37,8 +28,7 @@ import stirling.software.proprietary.policy.webhook.WebhookConfig;
 public class WebhookTrigger implements PolicyTrigger {
 
     static final String TYPE = "webhook";
-    // The webhook source type; equal to the trigger type but a distinct concept (source vs
-    // trigger).
+    // The webhook source type (equals the trigger type but a distinct concept).
     private static final String WEBHOOK_SOURCE_TYPE = "webhook";
 
     private final PolicyStore policyStore;
@@ -98,12 +88,7 @@ public class WebhookTrigger implements PolicyTrigger {
         }
     }
 
-    /**
-     * Run every webhook policy that references the delivered-to source. Called by the receiver
-     * right after it spools a document, so processing starts without waiting for the next
-     * reconcile. A LIGHT sweep: the periodic reconcile does the full-listing pass. Best-effort - a
-     * run failure is logged and the others still fire.
-     */
+    /** Run every webhook policy referencing the delivered-to source (LIGHT, best-effort). */
     public void fireForWebhook(String webhookId) {
         for (Policy policy : policyStore.findByTriggerType(TYPE)) {
             if (!referencesWebhook(policy, webhookId)) {

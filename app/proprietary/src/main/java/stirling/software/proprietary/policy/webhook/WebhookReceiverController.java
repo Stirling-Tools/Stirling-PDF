@@ -38,22 +38,7 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
-/**
- * Public receiver for webhook input sources. External systems POST a document to {@code
- * /api/v1/webhooks/{webhookId}}; the request is authenticated not by a login session but by an
- * HMAC-SHA256 signature of the exact body under the source's signing secret, so this endpoint sits
- * outside the session auth wall (see {@code RequestUriUtils.isPublicAuthEndpoint}). A verified
- * delivery is spooled and the referencing policies are fired immediately.
- *
- * <p>The request body is the raw document bytes, sent with a binary content type - {@code
- * application/pdf} or {@code application/octet-stream} (e.g. {@code curl --data-binary @file.pdf -H
- * 'Content-Type: application/pdf'}). A form content type ({@code
- * application/x-www-form-urlencoded}) is rejected upstream because the container tries to parse the
- * body as form fields. The signature header is {@code sha256=<hex>}. Delivery is rejected before
- * anything is written if the id is unknown (404), the signature is missing or wrong (401), the
- * source is paused (403), or the body is empty (400) or larger than {@code
- * policies.webhookMaxBytes} (413).
- */
+/** Public receiver: HMAC-verifies a signed delivery, stages it, and fires the policies. */
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/webhooks")
@@ -151,11 +136,7 @@ public class WebhookReceiverController {
         }
     }
 
-    /**
-     * Stage a delivery to the webhook's S3 connection under its reserved prefix. Resolved with no
-     * principal - the referencing source's right to use the connection was checked when it was
-     * saved - so a public delivery never needs the caller to hold connection rights.
-     */
+    /** Stage a delivery to the S3 connection (save-time access check trusted). */
     private String stageToConnection(WebhookConfig config, String filename, byte[] body) {
         S3Config s3 =
                 connectionResolver.resolve(
@@ -191,11 +172,7 @@ public class WebhookReceiverController {
         return prefix + "/";
     }
 
-    /**
-     * Read the body into memory, capped at {@code policies.webhookMaxBytes}. Reading one byte past
-     * the limit is enough to reject an over-sized (or unbounded, chunked) delivery with 413 before
-     * it can fill memory or the disk.
-     */
+    /** Read the body into memory, capped at {@code policies.webhookMaxBytes}. */
     private byte[] readBoundedBody(HttpServletRequest request) {
         long maxBytes = applicationProperties.getPolicies().getWebhookMaxBytes();
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();

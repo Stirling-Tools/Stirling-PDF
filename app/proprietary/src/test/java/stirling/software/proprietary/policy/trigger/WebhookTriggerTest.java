@@ -27,10 +27,7 @@ import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
-/**
- * Tests for {@link WebhookTrigger}'s dispatch: a delivery fires only the policies that reference
- * the delivered-to webhook, and validation requires at least one webhook source.
- */
+/** Tests for {@link WebhookTrigger}: fires only policies referencing the delivered-to webhook. */
 @ExtendWith(MockitoExtension.class)
 class WebhookTriggerTest {
 

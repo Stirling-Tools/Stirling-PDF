@@ -234,8 +234,7 @@ export const sourcesHandlers = [
       ? store.find((s) => s.id === incoming.id)
       : undefined;
     const id = existing?.id ?? nextId();
-    // A new webhook has its routing id + signing secret minted server-side, then revealed once on
-    // this create response (the store keeps them; later reads mask the secret).
+    // A new webhook's id + secret are minted server-side and revealed once on this create response.
     let options = incoming.options ?? {};
     if (incoming.type === "webhook" && !existing && !options.webhookId) {
       options = {

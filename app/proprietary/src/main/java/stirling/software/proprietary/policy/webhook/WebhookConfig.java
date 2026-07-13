@@ -2,20 +2,7 @@ package stirling.software.proprietary.policy.webhook;
 
 import java.util.Map;
 
-/**
- * Config for a webhook input source, parsed from a spec's options map. A webhook is a push source:
- * external systems POST documents to a signed URL keyed by {@code webhookId}, and each delivery is
- * verified against {@code signingSecret} before it is staged for the referencing policies. Both
- * {@code webhookId} (the public URL token) and {@code signingSecret} (the HMAC key) are generated
- * server-side on create - a client never supplies them.
- *
- * <p>Where deliveries are staged depends on {@code connectionId}: absent, they go to a node-local
- * spool directory (self-hosted); present, they go to the S3 {@code IntegrationConfig} connection it
- * references, under a reserved per-webhook prefix, so the staging is durable and reachable from any
- * node (the model hosted/SaaS needs). Either way {@code mode} is "consume" (default: a staged
- * document is removed once every policy that claimed it has settled successfully) or "snapshot"
- * (stateless, every run re-reads whatever is currently staged).
- */
+/** Webhook source config: server-minted ids, staging via an S3 connection or the local spool. */
 public record WebhookConfig(
         String webhookId, String signingSecret, Long connectionId, boolean snapshot) {
 
@@ -55,11 +42,7 @@ public record WebhookConfig(
         return connectionId != null;
     }
 
-    /**
-     * The reserved key prefix this webhook's deliveries are staged under inside its connection's
-     * bucket. Server-derived from the (unguessable) id, so two webhooks sharing a connection never
-     * collide and an S3 source pointed at the same bucket won't see another webhook's inbox.
-     */
+    /** Reserved per-webhook staging prefix inside the connection's bucket. */
     public String stagingPrefix() {
         return STAGING_ROOT + "/" + webhookId;
     }

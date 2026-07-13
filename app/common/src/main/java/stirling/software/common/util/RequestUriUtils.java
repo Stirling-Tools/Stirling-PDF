@@ -198,8 +198,7 @@ public class RequestUriUtils {
                 || trimmedUri.startsWith("/readiness")
                 || trimmedUri.startsWith(
                         "/api/v1/mobile-scanner/") // Mobile scanner endpoints (no auth)
-                // Policy webhook source receiver - authenticated per-request by its HMAC signature,
-                // not a login session, so it must bypass the session auth wall.
+                // Webhook receiver: authenticated per-request by HMAC signature, not a session.
                 || trimmedUri.startsWith("/api/v1/webhooks/")
                 || trimmedUri.startsWith("/v1/api-docs")
                 // Workflow participant endpoints - access controlled by share tokens, not login

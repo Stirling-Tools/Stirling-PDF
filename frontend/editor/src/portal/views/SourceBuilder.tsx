@@ -123,8 +123,7 @@ export function SourceBuilder() {
   );
   const canSave = name.trim() !== "" && requiredComplete && !submitting;
 
-  // An existing webhook's delivery URL, shown read-only in the edit view (the secret is not - it
-  // is revealed only once, at creation).
+  // An existing webhook's delivery URL, read-only in edit (the secret is revealed only at creation).
   const editingWebhookId =
     isEdit && sourceState.data?.type === WEBHOOK_SOURCE_TYPE
       ? String(sourceState.data.options?.webhookId ?? "")
@@ -149,8 +148,7 @@ export function SourceBuilder() {
         options,
         enabled,
       });
-      // A new webhook returns its server-minted routing id + signing secret once; reveal them
-      // (with the delivery URL) before leaving so the operator can copy the secret.
+      // A new webhook returns its minted id + secret once; reveal them (with the URL) before leaving.
       if (!isEdit && type.type === WEBHOOK_SOURCE_TYPE) {
         const webhookId = String(saved.options?.webhookId ?? "");
         const secret = String(saved.options?.signingSecret ?? "");

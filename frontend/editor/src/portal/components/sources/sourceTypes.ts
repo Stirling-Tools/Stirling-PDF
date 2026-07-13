@@ -189,9 +189,7 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
     ],
   },
   {
-    // The delivery URL + signing secret are minted server-side on create (revealed once). An S3
-    // connection makes staging durable + multi-node (required in hosted); left blank, deliveries
-    // stage to the server's local disk (self-hosted only).
+    // URL + secret minted server-side (revealed once); an S3 connection makes staging durable, else local disk.
     type: WEBHOOK_SOURCE_TYPE,
     labelKey: "portal.sources.types.webhook.label",
     descriptionKey: "portal.sources.types.webhook.description",

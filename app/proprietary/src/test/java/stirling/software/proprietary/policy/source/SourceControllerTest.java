@@ -70,9 +70,7 @@ class SourceControllerTest {
                         policyGuard,
                         new InProcessSourceDocCounter());
         triggerManager = mock(PolicyTriggerManager.class);
-        // A permissive input source so config validation passes and save can be exercised. Model a
-        // real source's prepareOptionsForSave as a pass-through (a bare mock would return an empty
-        // map for the Map-typed method and wipe the config).
+        // A permissive input source; stub prepareOptionsForSave as a pass-through.
         InputSource folderInput = mock(InputSource.class);
         when(folderInput.supports(any())).thenReturn(true);
         when(folderInput.prepareOptionsForSave(any(), anyBoolean()))

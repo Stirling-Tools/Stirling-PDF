@@ -26,25 +26,7 @@ import stirling.software.proprietary.policy.webhook.WebhookConfig;
 import stirling.software.proprietary.policy.webhook.WebhookIds;
 import stirling.software.proprietary.policy.webhook.WebhookSpool;
 
-/**
- * A push source: documents arrive by signed HTTP POST to {@code /api/v1/webhooks/{webhookId}} and
- * are staged for the referencing policies. Where they are staged depends on the source's config
- * (see {@link WebhookConfig}):
- *
- * <ul>
- *   <li>no {@code connectionId}: a node-local {@link WebhookSpool} directory, read exactly as
- *       {@link FolderInputSource} reads a watched directory (self-hosted);
- *   <li>a {@code connectionId}: the referenced S3 {@code IntegrationConfig} connection, under a
- *       reserved per-webhook prefix - read, claimed, and consumed by delegating to {@link
- *       S3InputSource}, so the durable, multi-node model hosted deployments need is reused, not
- *       reinvented.
- * </ul>
- *
- * <p>Either way the {@link ResolveContext} ledger does the claiming, "mode" is "consume" (default:
- * a staged document is removed once every policy that claimed it has settled successfully) or
- * "snapshot" (stateless), and "webhookId"/"signingSecret" are minted server-side on create. Empty
- * staging reads as "verifiably no files".
- */
+/** Push source: deliveries staged to an S3 connection or the local spool, read via the ledger. */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -55,9 +37,7 @@ public class WebhookInputSource implements InputSource {
 
     private final WebhookSpool spool;
     private final FileReadinessChecker readinessChecker;
-    // Deliveries staged to an S3 connection are read/claimed/consumed exactly like an S3 source, so
-    // that whole path is reused rather than reimplemented; a connection-less webhook uses the
-    // spool.
+    // Connection-backed staging delegates to the S3 source; else the local spool.
     private final S3InputSource s3InputSource;
 
     @Override
@@ -74,16 +54,12 @@ public class WebhookInputSource implements InputSource {
     public void validate(InputSpec spec) {
         WebhookConfig config = WebhookConfig.from(spec.options());
         if (config.usesConnection()) {
-            // Resolves the connection with the caller present, so save fails if their team can't
-            // use it (the ownership check the delivery path then trusts).
+            // Resolve with the caller present so save fails if they can't use the connection.
             s3InputSource.validate(stagingSpec(config));
         }
     }
 
-    /**
-     * The S3 view of a webhook's durable staging: its connection plus the reserved per-webhook
-     * prefix, as an {@code s3} input spec {@link S3InputSource} can resolve directly.
-     */
+    /** The webhook's durable staging as an {@code s3} input spec for {@link S3InputSource}. */
     private static InputSpec stagingSpec(WebhookConfig config) {
         return new InputSpec(
                 "s3",
@@ -96,11 +72,7 @@ public class WebhookInputSource implements InputSource {
                         config.mode()));
     }
 
-    /**
-     * Mint the routing id and signing secret on create, so the delivery URL and its HMAC key are
-     * always server-generated. An edit (or any options that already carry a webhookId) is left
-     * untouched, so the URL a sender is already configured against never changes underneath them.
-     */
+    /** Mint the routing id + signing secret on create; an existing webhook is left untouched. */
     @Override
     public Map<String, Object> prepareOptionsForSave(
             Map<String, Object> options, boolean isCreate) {
@@ -125,16 +97,12 @@ public class WebhookInputSource implements InputSource {
     public List<ResolvedInput> resolve(InputSpec spec, ResolveContext ctx) throws IOException {
         WebhookConfig config = WebhookConfig.from(spec.options());
         if (config.usesConnection()) {
-            // Durable staging: the delivery objects live in the connection's bucket and are read,
-            // claimed, and consumed by the S3 source (no principal here - the save-time check the
-            // resolver trusts already ran).
+            // Durable staging read by the S3 source (no principal; the save-time check is trusted).
             return s3InputSource.resolve(stagingSpec(config), ctx);
         }
         Path dir = spool.dirFor(config.webhookId());
         if (!Files.isDirectory(dir)) {
-            // No deliveries yet (or none since the last consume): a verifiably empty source, so the
-            // sweep may prune ledger rows for files that are gone. Unlike the folder source a
-            // missing directory is normal here, not an unmounted-drive error.
+            // No deliveries yet: verifiably empty (a missing dir is normal here, not an error).
             ctx.reportPresent(List.of());
             return List.of();
         }
@@ -182,13 +150,7 @@ public class WebhookInputSource implements InputSource {
         return work;
     }
 
-    /**
-     * Settle at the claimed version, then remove the spooled file only when it is still that
-     * version and every policy that claimed it has settled DONE - the same consensus delete the
-     * folder and S3 sources use, so a shared webhook feeding several policies keeps a delivery
-     * until all are done and one failure parks it for everyone. A failed run settles ERROR and
-     * never deletes.
-     */
+    /** Settle, then delete when unchanged and every claimant settled DONE (consensus). */
     private static void completeConsumed(
             ResolveContext ctx, String identity, Path file, String claimGate, boolean success) {
         ctx.settle(identity, claimGate, null, success);

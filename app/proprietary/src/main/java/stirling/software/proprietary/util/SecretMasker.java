@@ -20,9 +20,7 @@ public final class SecretMasker {
     private static final Pattern SENSITIVE =
             RegexPatternUtils.getInstance()
                     .getPattern(
-                            // secret[_-]?access[_-]?key and signing[_-]?secret precede plain secret
-                            // so camelCase keys like secretAccessKey and signingSecret (whose inner
-                            // "secret" has no word boundary before/after it) still match.
+                            // specific keys precede plain "secret" so camelCase still matches.
                             "(?i)\\b(password|token|secret[_-]?access[_-]?key|signing[_-]?secret|secret|api[_-]?key|authorization|auth|jwt|cred|cert)\\b");
 
     private SecretMasker() {}

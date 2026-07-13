@@ -34,11 +34,7 @@ import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.webhook.WebhookConfig;
 import stirling.software.proprietary.policy.webhook.WebhookSpool;
 
-/**
- * Tests for {@link WebhookInputSource}: spooled deliveries are read through the ledger like folder
- * files (consume removes them once processed, snapshot stays stateless), a not-yet-created spool is
- * an empty source rather than an error, and options gain a routing id + signing secret on create.
- */
+/** Tests for {@link WebhookInputSource}: ledger-backed read/consume, and id/secret minting. */
 @ExtendWith(MockitoExtension.class)
 class WebhookInputSourceTest {
 
@@ -193,8 +189,7 @@ class WebhookInputSourceTest {
 
         source.validate(spec);
 
-        // Save-time validation defers to the S3 source, which resolves + ownership-checks the
-        // connection (the check the delivery path later trusts).
+        // Save-time validation defers to the S3 source, which ownership-checks the connection.
         verify(s3InputSource).validate(any());
     }
 

@@ -231,11 +231,7 @@ public class SourceController {
                 .validate(spec);
     }
 
-    /**
-     * Let the matching source type populate server-owned config just before persistence (a webhook
-     * mints its routing id and signing secret on create). An unknown type is left untouched; {@link
-     * #validateConfig} then rejects it with a clear message.
-     */
+    /** Let the source type populate server-owned config before persistence. */
     private Source withPreparedOptions(Source source, boolean isCreate) {
         InputSpec spec = source.toInputSpec();
         InputSource input = inputSourceFor(spec).orElse(null);
@@ -243,16 +239,11 @@ public class SourceController {
             return source;
         }
         Map<String, Object> prepared = input.prepareOptionsForSave(source.options(), isCreate);
-        // A source type must return the (possibly augmented) options; if it returns null, keep the
-        // originals rather than let the Source record normalise null to an empty map and wipe
-        // config.
+        // Treat a null return as "unchanged" (else the record wipes config to empty).
         return prepared == null ? source : withOptions(source, prepared);
     }
 
-    /**
-     * Reveal server-minted secrets (a webhook's signing secret) once, on the create response only,
-     * so the operator can copy them; every other read - including an edit - is masked.
-     */
+    /** Reveal a webhook's minted secret once on the create response; other reads mask. */
     private static Source revealOnCreate(Source saved, boolean isCreate) {
         if (isCreate && WEBHOOK_TYPE.equals(saved.type())) {
             return saved;

@@ -9,13 +9,7 @@ import java.util.HexFormat;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-/**
- * HMAC-SHA256 signing scheme for webhook deliveries. The sender signs the exact request body bytes
- * with the source's {@code signingSecret} and presents the result as {@code sha256=<hex>} in the
- * signature header; the receiver recomputes it and compares in constant time. Signing the raw body
- * (rather than form fields) keeps the contract unambiguous - what is signed is exactly what is
- * delivered - and matches how established webhook providers (Stripe, GitHub) sign payloads.
- */
+/** HMAC-SHA256 signing of a webhook delivery's raw body (header sha256=<hex>). */
 public final class WebhookSignatures {
 
     private static final String ALGORITHM = "HmacSHA256";
@@ -23,18 +17,12 @@ public final class WebhookSignatures {
 
     private WebhookSignatures() {}
 
-    /**
-     * The header value a sender should present for {@code body}: {@code sha256=<lowercase hex>}.
-     */
+    /** The header a sender presents for {@code body}: {@code sha256=<lowercase hex>}. */
     public static String sign(String signingSecret, byte[] body) {
         return PREFIX + HexFormat.of().formatHex(hmac(signingSecret, body));
     }
 
-    /**
-     * Whether {@code presented} (a {@code sha256=<hex>} header value, or a bare hex string) is a
-     * valid signature of {@code body} under {@code signingSecret}. Constant-time in the compared
-     * bytes; a malformed or missing header is simply false, never an exception.
-     */
+    /** Whether the presented signature is valid for {@code body}; false on bad input. */
     public static boolean verify(String signingSecret, byte[] body, String presented) {
         if (signingSecret == null || presented == null || body == null) {
             return false;

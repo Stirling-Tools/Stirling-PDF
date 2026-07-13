@@ -31,11 +31,7 @@ import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.trigger.WebhookTrigger;
 import stirling.software.proprietary.policy.webhook.WebhookReceiverController.WebhookDeliveryResponse;
 
-/**
- * Tests for the public webhook receiver: a signature-valid delivery is spooled and fires the
- * trigger; an unknown id, wrong signature, paused source, empty body, or over-sized body is
- * rejected before anything is stored.
- */
+/** Tests for the public webhook receiver: valid delivery spools + fires; bad requests rejected. */
 class WebhookReceiverControllerTest {
 
     private static final String WEBHOOK_ID = "receivertestid12";

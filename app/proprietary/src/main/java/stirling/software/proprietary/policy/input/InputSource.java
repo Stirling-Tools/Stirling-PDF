@@ -23,13 +23,7 @@ public interface InputSource {
     /** Throws {@link IllegalArgumentException} on bad config. Called on save to fail fast. */
     default void validate(InputSpec spec) {}
 
-    /**
-     * Normalise a source's options just before it is persisted, so a source type can populate
-     * server-owned config the client neither supplies nor controls. {@code isCreate} is true only
-     * for a brand-new source (blank id). Runs before {@link #validate}. The default returns the
-     * options unchanged; the webhook source overrides it to mint its routing id and signing secret
-     * on create. Must not mutate the argument.
-     */
+    /** Normalise a source's options before persistence (default no-op); must not mutate the arg. */
     default Map<String, Object> prepareOptionsForSave(
             Map<String, Object> options, boolean isCreate) {
         return options;

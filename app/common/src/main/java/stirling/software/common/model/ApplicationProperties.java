@@ -255,11 +255,7 @@ public class ApplicationProperties {
          */
         private boolean allowPrivateS3Endpoints = false;
 
-        /**
-         * Largest inbound document (bytes) the webhook source receiver will accept in one delivery.
-         * A larger body is rejected with 413 before anything is written to the spool, so an
-         * unauthenticated caller cannot fill the disk. Default 100 MB.
-         */
+        /** Max inbound webhook body (bytes); over it is rejected 413. Default 100 MB. */
         private long webhookMaxBytes = 104857600L;
     }
 

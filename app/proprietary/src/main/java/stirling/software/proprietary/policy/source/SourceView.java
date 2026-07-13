@@ -2,13 +2,7 @@ package stirling.software.proprietary.policy.source;
 
 import java.util.List;
 
-/**
- * One row in the Sources overview: a persisted input connection shown exactly once, with how many
- * policies reference it (and which) and how many documents it has fed into runs ({@code docsTotal}
- * lifetime plus the trailing 24-hour and 30-day windows). {@code webhookPath} is set only for a
- * webhook source - the server-relative delivery path senders POST to - and is null for every other
- * type; the client turns it into an absolute URL.
- */
+/** One Sources-overview row; {@code webhookPath} is a webhook's delivery path, else null. */
 public record SourceView(
         String id,
         String name,
