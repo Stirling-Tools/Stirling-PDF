@@ -552,28 +552,28 @@
 /* Message Styles */
 .error-message {
   padding: 1rem; /* 16px */
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
+  background-color: var(--c-danger-subtle);
+  border: 1px solid color-mix(in srgb, var(--c-danger) 35%, var(--c-surface));
   border-radius: 0.5rem; /* 8px */
   margin-bottom: 1.5rem; /* 24px */
 }
 
 .error-message-text {
-  color: var(--p-red-600);
+  color: var(--c-danger);
   font-size: 0.875rem; /* 14px */
   margin: 0;
 }
 
 .success-message {
   padding: 1rem; /* 16px */
-  background-color: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  background-color: var(--c-success-subtle);
+  border: 1px solid color-mix(in srgb, var(--c-success) 35%, var(--c-surface));
   border-radius: 0.5rem; /* 8px */
   margin-bottom: 1.5rem; /* 24px */
 }
 
 .success-message-text {
-  color: #059669;
+  color: var(--c-success);
   font-size: 0.875rem; /* 14px */
   margin: 0;
 }

@@ -41,6 +41,20 @@ html[data-app-theme="light"] {
 
   --c-success: var(--p-green-600);
   --c-danger: var(--p-red-600);
+  --c-warning: var(--p-amber-600);
+  /* Pale status surfaces (for alert boxes/chips). color-mix on --c-surface so
+     they adapt; defined on :root and cascade to every theme via late binding. */
+  --c-success-subtle: color-mix(
+    in srgb,
+    var(--c-success) 12%,
+    var(--c-surface)
+  );
+  --c-danger-subtle: color-mix(in srgb, var(--c-danger) 12%, var(--c-surface));
+  --c-warning-subtle: color-mix(
+    in srgb,
+    var(--c-warning) 14%,
+    var(--c-surface)
+  );
 }
 
 /* ── MIDNIGHT (original navy) — also the default portal/Storybook dark ────── */
@@ -71,6 +85,7 @@ html[data-app-theme="midnight"] {
 
   --c-success: var(--p-green-500);
   --c-danger: var(--p-red-500);
+  --c-warning: var(--p-amber-500);
 }
 
 /* ── CUSTOM — --user-primary drives every accent + a surface tint (whole app takes the hue); the [data-accent="default"] blocks at the end opt surfaces back to neutral. LIGHT base here, DARK base next. ── */
@@ -225,6 +240,7 @@ html[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
   /* Dark-tuned status shades (lighter than the light-theme :root values). */
   --c-success: var(--p-green-500);
   --c-danger: var(--p-red-400);
+  --c-warning: var(--p-amber-500);
 
   /* Category icon chips → neutral. */
   --icon-tools-bg: var(--c-surface-raised);
