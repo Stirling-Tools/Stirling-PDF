@@ -246,6 +246,14 @@ public class ApplicationProperties {
          * and paused runs are kept regardless of age.
          */
         private int runExpiryMinutes = 30;
+
+        /**
+         * Whether a policy S3 source's custom endpoint may resolve to a loopback, link-local, or
+         * private address. Off by default so a user-supplied endpoint cannot be pointed at internal
+         * services (e.g. the cloud metadata address); enable for a self-hosted MinIO or other
+         * in-network object store.
+         */
+        private boolean allowPrivateS3Endpoints = false;
     }
 
     @Data

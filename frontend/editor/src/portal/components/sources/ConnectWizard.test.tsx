@@ -74,6 +74,53 @@ describe("ConnectWizard", () => {
     });
   });
 
+  it("creates an s3 source with a masked secret in review", async () => {
+    createSource.mockResolvedValue({ id: "src-2" });
+
+    renderWithMantine(
+      <ConnectWizard open onClose={vi.fn()} onCreated={vi.fn()} />,
+    );
+
+    // Step 0: pick the S3 type card.
+    fireEvent.click(screen.getByText("portal.sources.types.s3.label"));
+    fireEvent.click(screen.getByText("portal.sources.wizard.continue"));
+
+    // Step 1: name, bucket, credentials. The secret renders as a password
+    // input, so it is not part of the textbox roles.
+    const inputs = screen.getAllByRole("textbox") as HTMLInputElement[];
+    fireEvent.change(inputs[0], { target: { value: "Claims bucket" } });
+    fireEvent.change(inputs[1], { target: { value: "claims-inbox" } });
+    fireEvent.change(inputs[4], { target: { value: "AKIAEXAMPLE" } });
+    const secret = document.querySelector(
+      'input[type="password"]',
+    ) as HTMLInputElement;
+    fireEvent.change(secret, { target: { value: "shh-secret" } });
+    fireEvent.click(screen.getByText("portal.sources.wizard.continue"));
+
+    // Step 2: the secret is masked in review, never echoed.
+    expect(screen.queryByText("shh-secret")).not.toBeInTheDocument();
+    expect(screen.getByText("********")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("portal.sources.actions.connectSource"));
+    await waitFor(() => {
+      expect(createSource).toHaveBeenCalledTimes(1);
+    });
+    expect(createSource).toHaveBeenCalledWith({
+      name: "Claims bucket",
+      type: "s3",
+      options: {
+        bucket: "claims-inbox",
+        region: "us-east-1",
+        prefix: "",
+        accessKeyId: "AKIAEXAMPLE",
+        secretAccessKey: "shh-secret",
+        endpoint: "",
+        mode: "consume",
+      },
+      enabled: true,
+    });
+  });
+
   it("edits an existing source: prefilled, skips type, submits with its id", async () => {
     createSource.mockResolvedValue({ id: "s1" });
     const onCreated = vi.fn();

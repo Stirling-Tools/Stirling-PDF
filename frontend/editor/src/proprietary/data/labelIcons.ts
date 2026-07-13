@@ -4,7 +4,7 @@
  * Material Symbols names rendered via {@link LocalIcon}.
  *
  * IMPORTANT: each entry is written as an `icon: "…"` literal so the icon-bundler
- * (`scripts/generate-icons.js`, which regex-scans for `icon: "name"`) picks every
+ * (`scripts/generate-icons.js`, which regex-scans for icon literals) picks every
  * one up and bundles it — otherwise a picked icon would fall back to the CDN and
  * render blank offline. After adding/removing entries run `task frontend:prepare:icons`.
  *

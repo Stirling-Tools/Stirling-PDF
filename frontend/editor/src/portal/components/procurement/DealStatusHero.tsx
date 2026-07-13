@@ -1,13 +1,16 @@
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
 import type { ViewId } from "@portal/contexts/ViewContext";
-import { JOURNEY, type ProcurementSnapshot } from "@portal/api/procurement";
+import {
+  FLOW_JOURNEY,
+  type ProcurementSnapshot,
+} from "@portal/api/procurement";
 import { StageStepper } from "@portal/components/procurement/StageStepper";
 import "@portal/views/Procurement.css";
 
 /**
  * The enterprise deal-status hero on Home (procurement lives here, not as a nav tab). Adapts to the
- * deal stage: quick-action chips (trial countdown → manage, key documents, invite teammates,
+ * deal stage: quick-action chips (trial countdown → manage, licence key, invite teammates,
  * schedule a call), a rollout checklist during the trial, and a stage-specific primary CTA that
  * expands the flow into the takeover modal. Matches the marketing prototype.
  */
@@ -16,7 +19,7 @@ export function DealStatusHero({
   busy = false,
   canSchedule,
   onExpand,
-  onKeyDocs,
+  onLicense,
   onInvite,
   onSchedule,
   onManageTrial,
@@ -28,7 +31,7 @@ export function DealStatusHero({
    * "Schedule a call" action only appears when the org has linked its account. */
   canSchedule: boolean;
   onExpand: () => void;
-  onKeyDocs: () => void;
+  onLicense: () => void;
   onInvite: () => void;
   onSchedule: () => void;
   onManageTrial: () => void;
@@ -42,11 +45,9 @@ export function DealStatusHero({
       ? t("portal.procurement.hero.ctaTrial")
       : stage === "quote"
         ? t("portal.procurement.hero.ctaQuote")
-        : stage === "security"
-          ? t("portal.procurement.hero.ctaAgreement")
-          : stage === "procurement"
-            ? t("portal.procurement.hero.ctaPayment")
-            : t("portal.procurement.hero.ctaLive");
+        : stage === "procurement"
+          ? t("portal.procurement.hero.ctaPayment")
+          : t("portal.procurement.hero.ctaLive");
 
   const setupSteps: { title: string; sub: string; view: ViewId }[] = [
     {
@@ -89,13 +90,13 @@ export function DealStatusHero({
               })}
             </button>
           )}
-          {stage !== "active" && (
+          {snapshot.licenseKey && (
             <button
               type="button"
               className="portal-hero__chip portal-hero__chip--action"
-              onClick={onKeyDocs}
+              onClick={onLicense}
             >
-              {t("portal.procurement.hero.keyDocs")}
+              {t("portal.procurement.hero.licenseKey")}
             </button>
           )}
           {stage !== "active" && (
@@ -120,7 +121,7 @@ export function DealStatusHero({
       </div>
 
       <div className="portal-hero__stepper">
-        <StageStepper journey={JOURNEY} currentStage={stage} />
+        <StageStepper journey={FLOW_JOURNEY} currentStage={stage} />
       </div>
 
       {inTrial && (
