@@ -69,3 +69,13 @@ export function useSidebarContext(): SidebarContextValue {
   }
   return context;
 }
+
+/**
+ * Non-throwing variant for shared components that can render outside the
+ * provider (e.g. the core Tooltip reused in the Processor portal, which only
+ * consumes sidebar state when `sidebarTooltip` is set). Returns undefined
+ * instead of throwing.
+ */
+export function useSidebarContextOptional(): SidebarContextValue | undefined {
+  return useContext(SidebarContext);
+}

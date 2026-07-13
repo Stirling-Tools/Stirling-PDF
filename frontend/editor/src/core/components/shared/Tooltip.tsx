@@ -13,7 +13,7 @@ import { addEventListenerWithCleanup } from "@app/utils/genericUtils";
 import { useTooltipPosition } from "@app/hooks/useTooltipPosition";
 import { TooltipTip } from "@app/types/tips";
 import { TooltipContent } from "@app/components/shared/tooltip/TooltipContent";
-import { useSidebarContext } from "@app/contexts/SidebarContext";
+import { useSidebarContextOptional } from "@app/contexts/SidebarContext";
 import { useLogoAssets } from "@app/hooks/useLogoAssets";
 import styles from "@app/components/shared/tooltip/Tooltip.module.css";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
@@ -93,9 +93,11 @@ export const Tooltip: React.FC<TooltipProps> = ({
   }, []);
 
   // Always call the hook unconditionally to satisfy React's rules of hooks.
-  // The context is only used when sidebarTooltip is true.
-  const sidebarContextValue = useSidebarContext();
-  const sidebarContext = sidebarTooltip ? sidebarContextValue : null;
+  // The context is only used when sidebarTooltip is true, and the optional
+  // variant lets this shared tooltip render outside a SidebarProvider (e.g.
+  // the Processor portal).
+  const sidebarContextValue = useSidebarContextOptional();
+  const sidebarContext = sidebarTooltip ? (sidebarContextValue ?? null) : null;
 
   const isControlled = controlledOpen !== undefined;
   const open = (isControlled ? !!controlledOpen : internalOpen) && !disabled;
