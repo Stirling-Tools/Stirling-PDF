@@ -5980,16 +5980,6 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
-[policies.docType]
-Contracts = "Conarthaí"
-"Financial reports" = "Tuarascálacha airgeadais"
-"HR records" = "Taifid AD"
-Insurance = "Árachas"
-Invoices = "Sonraisc"
-"Legal filings" = "Comhdúcháin dlí"
-"Medical / PHI" = "Leighis / PHI"
-"Tax documents" = "Doiciméid chánach"
-
 [policies.enforcement]
 applying = "Á chur {{names}} i bhfeidhm"
 applyingProgress = "Á chur {{names}} i bhfeidhm ({{done}} as {{total}})"
@@ -6024,51 +6014,6 @@ minConfidence = "Muinín íosta"
 notify = "Cuir ar an eolas ar ródú"
 onViolation = "Nuair nach bhfuil sé comhlíontach"
 webhookUrl = "Webhook URL"
-
-[policies.fieldOption.archiveAfter]
-"1 year" = "1 bhliain"
-"30 days" = "30 lá"
-"90 days" = "90 lá"
-Never = "Riamh"
-
-[policies.fieldOption.belowThreshold]
-"Flag for review" = "Marcáil le hathbhreithniú"
-Hold = "Coinnigh"
-"Route to bucket" = "Ródaigh chuig bucket"
-
-[policies.fieldOption.destination]
-Documents = "Doiciméid"
-"S3 bucket" = "S3 bucket"
-SharePoint = "SharePoint"
-Webhook = "Webhook"
-
-[policies.fieldOption.frameworks]
-FedRAMP = "FedRAMP"
-GDPR = "GDPR"
-HIPAA = "HIPAA"
-"ISO 27001" = "ISO 27001"
-"PCI DSS" = "PCI DSS"
-"SOC 2" = "SOC 2"
-
-[policies.fieldOption.keepFor]
-"1 year" = "1 bhliain"
-"3 years" = "3 bliana"
-"30 days" = "30 lá"
-"7 years" = "7 mbliana"
-Indefinite = "Gan teorainn"
-
-[policies.fieldOption.minConfidence]
-"60%" = "60%"
-"70%" = "70%"
-"80%" = "80%"
-"90%" = "90%"
-"95%" = "95%"
-
-[policies.fieldOption.onViolation]
-"Auto-redact PHI" = "Ceil PHI go huathoibríoch"
-"Block export" = "Blocáil easpórtáil"
-"Flag for review" = "Marcáil le hathbhreithniú"
-"Quarantine document" = "Cuir doiciméad i gcoraintín"
 
 [policies.fields]
 selectedCount = "{{count}} selected"
@@ -6202,6 +6147,44 @@ blockingAction = "Cuireadh bac ar {{action}} agus polasaí á chur i bhfeidhm, f
 dismiss = "Dún forleagan"
 enforcingTitle = "Polasaí á chur i bhfeidhm..."
 viewAnyway = "Amharc ar chomhad (polasaí fós á chur i bhfeidhm)"
+
+[policyOption]
+autoRedactPhi = "Ceil PHI go huathoibríoch"
+blockExport = "Blocáil easpórtáil"
+contracts = "Conarthaí"
+documents = "Doiciméid"
+fedramp = "FedRAMP"
+financialReports = "Tuarascálacha airgeadais"
+flagForReview = "Marcáil le hathbhreithniú"
+gdpr = "GDPR"
+hipaa = "HIPAA"
+hold = "Coinnigh"
+hrRecords = "Taifid AD"
+indefinite = "Gan teorainn"
+insurance = "Árachas"
+invoices = "Sonraisc"
+iso27001 = "ISO 27001"
+legalFilings = "Comhdúcháin dlí"
+medicalPhi = "Leighis / PHI"
+never = "Riamh"
+ninetyDays = "90 lá"
+oneYear = "1 bhliain"
+p60 = "60%"
+p70 = "70%"
+p80 = "80%"
+p90 = "90%"
+p95 = "95%"
+pciDss = "PCI DSS"
+quarantineDocument = "Cuir doiciméad i gcoraintín"
+routeToBucket = "Ródaigh chuig bucket"
+s3Bucket = "S3 bucket"
+sevenYears = "7 mbliana"
+sharePoint = "SharePoint"
+soc2 = "SOC 2"
+taxDocuments = "Doiciméid chánach"
+thirtyDays = "30 lá"
+threeYears = "3 bliana"
+webhook = "Webhook"
 
 [portal]
 comingSoon = "Ag teacht go luath"
@@ -8066,10 +8049,6 @@ title = "Seisiún imithe in éag"
 
 [portal.users]
 title = "Úsáideoirí"
-
-[portal.users.roles]
-subtitle = "Tá gach ról ann ar gach plean — tá an méid is féidir le gach ceann a dhéanamh socraithe ar fud na heagraíochta."
-title = "Róil"
 
 [portal.users.roles.admin]
 label = "Riarachán (Úinéir eagraíochta)"

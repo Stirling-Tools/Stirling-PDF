@@ -1,129 +1,31 @@
 import type { ReactNode } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
 import { useView } from "@portal/contexts/ViewContext";
 import { EDITOR_URL } from "@portal/auth/editorUrl";
 import {
   DownloadIcon,
-  UsersIcon,
-  EditorIcon,
   ExternalLinkIcon,
-  SearchIcon,
-  SourcesIcon,
-  PoliciesIcon,
-  SparklesIcon,
-  ComponentsIcon,
-  DocumentsIcon,
-  SettingsIcon,
+  UserPlusIcon,
 } from "@portal/components/icons";
+import { DownloadEditorModal } from "@portal/components/DownloadEditorModal";
+import markDark from "@app/assets/brand/modern-logo/StirlingPDFLogoNoTextDark.svg";
 import "@portal/components/WelcomeBanner.css";
 
 /* ──────────────────────────────────────────────────────────────────────── */
-/*  Editor-card visual                                                       */
+/*  Free-tier welcome hero                                                   */
 /*                                                                           */
-/*  A decorative mock of the deployed PDF Editor reviewing a security        */
-/*  report. Purely presentational — hidden from assistive tech.              */
-/* ──────────────────────────────────────────────────────────────────────── */
-
-const RAIL_ICONS = [
-  SearchIcon,
-  SourcesIcon,
-  PoliciesIcon,
-  EditorIcon,
-  ComponentsIcon,
-  SparklesIcon,
-  DocumentsIcon,
-  SettingsIcon,
-] as const;
-
-function EditorRail() {
-  return (
-    <div className="portal-welcome__rail" aria-hidden>
-      {RAIL_ICONS.map((Icon, i) => (
-        <span key={i} className="portal-welcome__rail-icon">
-          <Icon size={13} />
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function WelcomeEditorCard() {
-  return (
-    <div className="portal-welcome__editor" aria-hidden>
-      <div className="portal-welcome__editor-bar">
-        <div className="portal-welcome__editor-dots">
-          <span />
-          <span />
-          <span />
-        </div>
-        <div className="portal-welcome__editor-file">
-          <EditorIcon size={12} />
-          <span className="portal-welcome__editor-name">
-            Vulnerability Assessment Report CVE-2026-1847.pdf
-          </span>
-          <span className="portal-welcome__editor-sep">·</span>
-          <span className="portal-welcome__editor-pages">18 pages</span>
-        </div>
-        <span className="portal-welcome__editor-page">1 / 18</span>
-      </div>
-
-      <div className="portal-welcome__editor-body">
-        <EditorRail />
-        <div className="portal-welcome__doc">
-          <div className="portal-welcome__doc-eyebrow">
-            <span>SECURITY ASSESSMENT</span>
-            <span className="portal-welcome__doc-critical">CRITICAL</span>
-          </div>
-          <div className="portal-welcome__doc-title">
-            Vulnerability Assessment Report CVE-2026-1847
-          </div>
-          <div className="portal-welcome__doc-divider" />
-          <div className="portal-welcome__doc-meta">
-            <span>
-              <span className="portal-welcome__doc-meta-key">
-                Assessment Date:{" "}
-              </span>
-              February 2026
-            </span>
-            <span>
-              <span className="portal-welcome__doc-meta-key">
-                Classification:{" "}
-              </span>
-              FOUO
-            </span>
-          </div>
-          <div className="portal-welcome__doc-heading">EXECUTIVE SUMMARY</div>
-          <p className="portal-welcome__doc-body">
-            This assessment identifies critical vulnerabilities in the target
-            environment and provides actionable remediation guidance prioritized
-            by risk severity.
-          </p>
-          <div className="portal-welcome__doc-heading">KEY FINDINGS</div>
-          <div className="portal-welcome__doc-finding portal-welcome__doc-finding--critical">
-            <span className="portal-welcome__doc-dot" />3 Critical
-            vulnerabilities identified
-          </div>
-          <div className="portal-welcome__doc-finding portal-welcome__doc-finding--high">
-            <span className="portal-welcome__doc-dot" />7 High-severity issues
-            requiring attention
-          </div>
-        </div>
-        <EditorRail />
-      </div>
-    </div>
-  );
-}
-
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Welcome banner (free-tier hero)                                          */
+/*  A compact product header — brand mark, "PDF Editor" + social-proof       */
+/*  stats, and a single "Open in browser" CTA — over the getting-started      */
+/*  steps (passed in as {@code footer}). Deliberately lean: the onboarding    */
+/*  steps, not marketing copy, are the point of the card.                    */
 /* ──────────────────────────────────────────────────────────────────────── */
 
 interface WelcomeBannerProps {
   /**
-   * Rendered as an attached footer strip inside the banner card (e.g. the
-   * "Finish setting up" checklist). Kept as a slot so the hero stays a pure
-   * presentational shell.
+   * The getting-started steps + enterprise rung, rendered inside the card
+   * below the header. Kept as a slot so the hero stays a presentational shell.
    */
   footer?: ReactNode;
 }
@@ -131,64 +33,65 @@ interface WelcomeBannerProps {
 export function WelcomeBanner({ footer }: WelcomeBannerProps) {
   const { t } = useTranslation();
   const { setActiveView } = useView();
+  const [installOpen, setInstallOpen] = useState(false);
 
   return (
     <section
       className="portal-welcome"
       aria-label={t("portal.welcome.ariaLabel")}
     >
-      <div className="portal-welcome__body">
-        <div className="portal-welcome__canvas" aria-hidden>
-          <div className="portal-welcome__blob portal-welcome__blob--1" />
-          <div className="portal-welcome__blob portal-welcome__blob--2" />
-          <div className="portal-welcome__blob portal-welcome__blob--3" />
-        </div>
-
-        <div className="portal-welcome__text">
-          <span className="portal-welcome__badge">
-            {t("portal.welcome.badge")}
+      <div className="portal-welcome__header">
+        <div className="portal-welcome__brand">
+          <span className="portal-welcome__mark" aria-hidden>
+            <img src={markDark} alt="" />
           </span>
-          <h1 className="portal-welcome__title">
-            {t("portal.welcome.title")}{" "}
-            <span className="portal-welcome__title-accent">
-              {t("portal.welcome.titleAccent")}
+          <div className="portal-welcome__brand-text">
+            <span className="portal-welcome__product">
+              {t("portal.welcome.productName")}
             </span>
-          </h1>
-          <p className="portal-welcome__sub">{t("portal.welcome.subtitle")}</p>
-          <div className="portal-welcome__cta">
-            <Button
-              variant="primary"
-              leftSection={<ExternalLinkIcon size={15} />}
-              onClick={() => {
-                window.location.href = EDITOR_URL;
-              }}
-            >
-              {t("portal.welcome.openInBrowser")}
-            </Button>
-            <Button
-              variant="secondary"
-              leftSection={<DownloadIcon size={15} />}
-              onClick={() => setActiveView("editor")}
-            >
-              {t("portal.welcome.installEditor")}
-            </Button>
-            <Button
-              variant="tertiary"
-              leftSection={<UsersIcon size={15} />}
-              onClick={() => setActiveView("users")}
-            >
-              {t("portal.welcome.inviteTeammates")}
-            </Button>
+            <span className="portal-welcome__stats">
+              {t("portal.welcome.stats")}
+            </span>
           </div>
-          <p className="portal-welcome__perks">{t("portal.welcome.perks")}</p>
         </div>
-
-        <div className="portal-welcome__visual">
-          <WelcomeEditorCard />
+        <div className="portal-welcome__actions">
+          <button
+            type="button"
+            className="portal-welcome__icon-btn"
+            onClick={() => setActiveView("users")}
+            aria-label={t("portal.welcome.invite")}
+            title={t("portal.welcome.invite")}
+          >
+            <UserPlusIcon size={16} />
+          </button>
+          <button
+            type="button"
+            className="portal-welcome__icon-btn"
+            onClick={() => setInstallOpen(true)}
+            aria-label={t("portal.welcome.install")}
+            title={t("portal.welcome.install")}
+          >
+            <DownloadIcon size={16} />
+          </button>
+          <Button
+            variant="primary"
+            className="portal-welcome__cta"
+            leftSection={<ExternalLinkIcon size={15} />}
+            onClick={() => {
+              window.location.href = EDITOR_URL;
+            }}
+          >
+            {t("portal.welcome.openInBrowser")}
+          </Button>
         </div>
       </div>
 
       {footer && <div className="portal-welcome__footer">{footer}</div>}
+
+      <DownloadEditorModal
+        open={installOpen}
+        onClose={() => setInstallOpen(false)}
+      />
     </section>
   );
 }

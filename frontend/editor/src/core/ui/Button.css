@@ -35,7 +35,37 @@
   white-space: normal;
 }
 
+.sui-btn .mantine-Button-label {
+  line-height: 1.4;
+}
+
+/* ---- height: --button-height is a minimum, not a cap ---- */
+/* Single-line content computes to exactly --button-height (same as ActionIcon /
+   SegmentedControl via CONTROL_HEIGHT); taller content (wrapped label, stacked
+   rows) grows the button instead of clipping mid-glyph. Under height:auto the
+   inner's height:100% resolves to auto on its own, so block-level
+   align-content re-centers short content — deliberately NOT flex on the root:
+   that display would out-specificity consumers' own display (e.g. a
+   width:100% list row) and turn them inline-level. */
+.sui-btn.mantine-Button-root {
+  height: auto;
+  min-height: var(--button-height);
+  align-content: center;
+  /* Vertical padding via the `py` prop; Mantine has no --button-padding-y.
+     Default 0 keeps height-driven layout unchanged for every other button. */
+  padding-block: var(--sui-btn-py, 0);
+}
+
 /* no-hover: !important to beat Mantine's own :hover background rule. */
 .sui-btn--no-hover:not(:disabled):not([data-disabled]):hover {
   background: var(--button-bg, transparent) !important;
+}
+
+[data-theme="dark"]
+  .sui-btn--primary.mantine-Button-root:disabled:not([data-loading]),
+[data-theme="dark"]
+  .sui-btn--primary.mantine-Button-root[data-disabled]:not([data-loading]) {
+  background: var(--button-bg);
+  color: var(--button-color);
+  opacity: 0.55;
 }

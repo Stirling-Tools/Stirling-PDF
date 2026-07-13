@@ -173,7 +173,9 @@ public class PaygWalletController {
         int spend = clampToInt(snap.periodSpendUnits());
         Integer limit = snap.periodCapUnits() != null ? clampToInt(snap.periodCapUnits()) : null;
 
-        CategoryBreakdown breakdown = buildBreakdown(teamId, snap.periodStart(), snap.periodEnd());
+        BreakdownPair breakdowns = buildBreakdowns(teamId, snap.periodStart(), snap.periodEnd());
+        UsageAnalytics analytics =
+                buildUsageAnalytics(teamId, snap.periodStart(), snap.periodEnd());
 
         // Estimated bill = paid (Stripe-metered) docs this period × rate — the free portion was
         // already netted out at charge time, so this is the metered total, not spend − grant.
@@ -203,28 +205,61 @@ public class PaygWalletController {
                         noCap,
                         billing.subscriptionId(),
                         spend,
-                        breakdown,
+                        breakdowns.units(),
                         members,
-                        buildActivity(teamId));
+                        buildActivity(teamId),
+                        breakdowns.docs(),
+                        analytics.docsProcessed(),
+                        analytics.uniquePdfs(),
+                        analytics.sizeMultiplierPdfs());
         return ResponseEntity.ok(body);
     }
 
-    private CategoryBreakdown buildBreakdown(
+    /** Per-category size-scaled units + input-file counts for the same window. */
+    private record BreakdownPair(CategoryBreakdown units, CategoryBreakdown docs) {}
+
+    /** Period usage analytics: total input files, unique PDFs, and size-multiplier files. */
+    private record UsageAnalytics(int docsProcessed, int uniquePdfs, int sizeMultiplierPdfs) {}
+
+    private BreakdownPair buildBreakdowns(
             Long teamId, LocalDateTime periodStart, LocalDateTime periodEnd) {
-        Map<BillingCategory, Long> byCategory = new HashMap<>();
+        Map<BillingCategory, Long> units = new HashMap<>();
+        Map<BillingCategory, Long> docs = new HashMap<>();
         for (Object[] row :
-                ledgerRepo.sumPeriodAmountByCategory(
+                ledgerRepo.sumPeriodByCategoryWithDocs(
                         teamId, LedgerEntryType.DEBIT, periodStart, periodEnd)) {
-            if (row.length >= 2
-                    && row[0] instanceof BillingCategory cat
-                    && row[1] instanceof Number n) {
-                byCategory.put(cat, n.longValue());
+            if (row.length >= 3 && row[0] instanceof BillingCategory cat) {
+                if (row[1] instanceof Number u) {
+                    units.put(cat, u.longValue());
+                }
+                if (row[2] instanceof Number d) {
+                    docs.put(cat, d.longValue());
+                }
             }
         }
+        return new BreakdownPair(categoryBreakdown(units), categoryBreakdown(docs));
+    }
+
+    private static CategoryBreakdown categoryBreakdown(Map<BillingCategory, Long> byCategory) {
         return new CategoryBreakdown(
                 clampToInt(byCategory.getOrDefault(BillingCategory.API, 0L)),
                 clampToInt(byCategory.getOrDefault(BillingCategory.AI, 0L)),
                 clampToInt(byCategory.getOrDefault(BillingCategory.AUTOMATION, 0L)));
+    }
+
+    private UsageAnalytics buildUsageAnalytics(
+            Long teamId, LocalDateTime periodStart, LocalDateTime periodEnd) {
+        List<Object[]> rows =
+                ledgerRepo.periodUsageAnalytics(
+                        teamId, LedgerEntryType.DEBIT, periodStart, periodEnd);
+        Object[] row = rows.isEmpty() ? null : rows.get(0);
+        return new UsageAnalytics(analyticsInt(row, 0), analyticsInt(row, 1), analyticsInt(row, 2));
+    }
+
+    private static int analyticsInt(Object[] row, int idx) {
+        return row != null && row.length > idx && row[idx] instanceof Number n
+                ? clampToInt(n.longValue())
+                : 0;
     }
 
     /**
@@ -446,6 +481,10 @@ public class PaygWalletController {
                 0,
                 new CategoryBreakdown(0, 0, 0),
                 List.of(),
-                Collections.emptyList());
+                Collections.emptyList(),
+                new CategoryBreakdown(0, 0, 0),
+                0,
+                0,
+                0);
     }
 }

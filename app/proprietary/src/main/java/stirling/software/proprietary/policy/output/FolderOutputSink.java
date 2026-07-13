@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import org.apache.commons.io.FilenameUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
@@ -82,7 +81,7 @@ public class FolderOutputSink implements PolicyOutputSink {
         List<ResultFile> results = new ArrayList<>();
         for (int i = 0; i < outputs.size(); i++) {
             Resource resource = outputs.get(i);
-            String name = safeName(resource.getFilename(), i);
+            String name = OutputNames.safeName(resource.getFilename(), i);
             Path staged = tmpDir.resolve(UUID.randomUUID().toString());
             String contentHash = stage(resource, staged, delivery.policyId() != null);
             long size = Files.size(staged);
@@ -198,29 +197,14 @@ public class FolderOutputSink implements PolicyOutputSink {
         return Path.of(directory.toString());
     }
 
-    // Strip any directory component / "../" so a crafted output name cannot escape targetDir.
-    private static String safeName(String filename, int index) {
-        if (filename == null || filename.isBlank()) {
-            return "output-" + index;
-        }
-        String name = FilenameUtils.getName(filename);
-        if (name.isBlank() || ".".equals(name) || "..".equals(name)) {
-            return "output-" + index;
-        }
-        return name;
-    }
-
     // Non-colliding path, appending " (n)" before the extension.
     private static Path uniqueTarget(Path dir, String filename) {
         Path candidate = dir.resolve(filename);
         if (!Files.exists(candidate)) {
             return candidate;
         }
-        String base = FilenameUtils.getBaseName(filename);
-        String ext = FilenameUtils.getExtension(filename);
-        String suffix = ext.isEmpty() ? "" : "." + ext;
         for (int n = 1; ; n++) {
-            Path next = dir.resolve(base + " (" + n + ")" + suffix);
+            Path next = dir.resolve(OutputNames.numbered(filename, n));
             if (!Files.exists(next)) {
                 return next;
             }

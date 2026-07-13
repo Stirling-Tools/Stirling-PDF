@@ -23,6 +23,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -32,6 +34,7 @@ import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
@@ -42,14 +45,18 @@ import stirling.software.common.model.job.JobResponse;
 import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
+import stirling.software.proprietary.audit.AuditContext;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.engine.PolicyRunHandle;
 import stirling.software.proprietary.policy.engine.PolicyRunRegistry;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.PolicyValidator;
+import stirling.software.proprietary.policy.engine.SweepOutcome;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
+import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
+import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
@@ -58,12 +65,15 @@ import stirling.software.proprietary.policy.model.PolicyRunView;
 import stirling.software.proprietary.policy.overview.PoliciesOverviewResponse;
 import stirling.software.proprietary.policy.overview.PolicyOverviewService;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
+import stirling.software.proprietary.policy.source.EditorSource;
 import stirling.software.proprietary.policy.source.SourceAccessGuard;
+import stirling.software.proprietary.policy.source.SourceDocCounter;
 import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.policy.trigger.PolicyTrigger;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
 import stirling.software.proprietary.policy.trigger.TriggerInfo;
+import stirling.software.proprietary.util.SecretMasker;
 
 /**
  * Policy CRUD plus pipeline runs (stored or ad-hoc). Runs are async: returns a run id, poll {@code
@@ -83,6 +93,7 @@ public class PolicyController {
     private final PolicyStore policyStore;
     private final SourceStore sourceStore;
     private final SourceAccessGuard sourceAccessGuard;
+    private final SourceDocCounter docCounter;
     private final PolicyValidator policyValidator;
     private final PolicyAccessGuard policyAccessGuard;
     private final PolicyManagementAuthority policyManagementAuthority;
@@ -107,11 +118,13 @@ public class PolicyController {
             @RequestPart("json") PipelineDefinition definition,
             @Valid @ModelAttribute PolicyRunFiles files)
             throws IOException {
+        stampPolicyAudit(definition);
         requireRunnable(definition);
         PolicyInputs inputs = toInputs(files);
-        String runId =
-                policyRunner.runAdHoc(definition, inputs, PolicyProgressListener.NOOP).runId();
-        return ResponseEntity.accepted().body(new JobResponse<>(true, runId, null));
+        PolicyRunHandle handle =
+                policyRunner.runAdHoc(definition, inputs, PolicyProgressListener.NOOP);
+        recordEditorDocs(inputs);
+        return ResponseEntity.accepted().body(new JobResponse<>(true, handle.runId(), null));
     }
 
     @PostMapping(value = "/run/stream", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -125,6 +138,7 @@ public class PolicyController {
             @RequestPart("json") PipelineDefinition definition,
             @Valid @ModelAttribute PolicyRunFiles files)
             throws IOException {
+        stampPolicyAudit(definition);
         requireRunnable(definition);
         PolicyInputs inputs = toInputs(files);
 
@@ -133,6 +147,7 @@ public class PolicyController {
         emitter.onError(e -> log.warn("Policy run SSE emitter error", e));
 
         PolicyRunHandle handle = policyRunner.runAdHoc(definition, inputs, streamListener(emitter));
+        recordEditorDocs(inputs);
         // whenComplete runs on the worker thread after the run finishes, so the terminal event
         // never races the step events.
         handle.completion()
@@ -202,7 +217,7 @@ public class PolicyController {
                             + " assigned; returns the stored policy with its id.")
     public ResponseEntity<Policy> savePolicy(@RequestBody Policy policy) {
         requirePolicyEditingAllowed();
-        Policy owned = resolveOwnership(policy);
+        Policy owned = withStoredOutputSecrets(resolveOwnership(policy));
         requireAccessibleSources(owned);
         try {
             policyValidator.validate(owned);
@@ -213,7 +228,7 @@ public class PolicyController {
         // Re-sync trigger registrations now so a new/changed folder-watch policy starts being
         // watched immediately instead of after the next reconcile sweep.
         policyTriggerManager.notifyPoliciesChanged();
-        return ResponseEntity.ok(saved);
+        return ResponseEntity.ok(withMaskedOutputSecrets(saved));
     }
 
     @PutMapping("/order")
@@ -282,6 +297,50 @@ public class PolicyController {
                 teamId);
     }
 
+    /** Output secrets never leave the server: reads return the redaction sentinel instead. */
+    private static Policy withMaskedOutputSecrets(Policy policy) {
+        return withOutput(
+                policy,
+                new OutputSpec(
+                        policy.output().type(), SecretMasker.mask(policy.output().options())));
+    }
+
+    /**
+     * An edit that round-trips a masked read sends output secrets back as the sentinel; restore
+     * them from the stored policy so saving without re-typing keeps them (validation then runs
+     * against the real values).
+     */
+    private Policy withStoredOutputSecrets(Policy incoming) {
+        if (incoming.id() == null || incoming.id().isBlank()) {
+            return incoming;
+        }
+        return policyStore
+                .get(incoming.id())
+                .map(
+                        existing ->
+                                withOutput(
+                                        incoming,
+                                        new OutputSpec(
+                                                incoming.output().type(),
+                                                SecretMasker.restoreRedacted(
+                                                        incoming.output().options(),
+                                                        existing.output().options()))))
+                .orElse(incoming);
+    }
+
+    private static Policy withOutput(Policy policy, OutputSpec output) {
+        return new Policy(
+                policy.id(),
+                policy.name(),
+                policy.owner(),
+                policy.enabled(),
+                policy.trigger(),
+                policy.sourceIds(),
+                policy.steps(),
+                output,
+                policy.teamId());
+    }
+
     /**
      * Creating, editing, pausing/resuming, and deleting policies requires the editor role for the
      * caller's team — a team leader on SaaS (see {@link PolicyManagementAuthority}); the global
@@ -306,9 +365,14 @@ public class PolicyController {
     @GetMapping
     @Operation(
             summary = "List policies",
-            description = "Lists the policies belonging to the caller's team.")
+            description =
+                    "Lists the policies belonging to the caller's team. Secret-bearing output"
+                            + " options are returned as a redaction sentinel, never their stored"
+                            + " values.")
     public List<Policy> listPolicies() {
-        return policyAccessGuard.visibleFrom(policyStore);
+        return policyAccessGuard.visibleFrom(policyStore).stream()
+                .map(PolicyController::withMaskedOutputSecrets)
+                .toList();
     }
 
     @GetMapping("/overview")
@@ -337,11 +401,17 @@ public class PolicyController {
     }
 
     @GetMapping("/{policyId}")
-    @Operation(summary = "Get a policy by id")
+    @Operation(
+            summary = "Get a policy by id",
+            description =
+                    "Secret-bearing output options are returned as a redaction sentinel, never"
+                            + " their stored values; an edit that sends the sentinel back keeps"
+                            + " them.")
     public ResponseEntity<Policy> getPolicy(@PathVariable String policyId) {
         return policyStore
                 .get(policyId)
                 .filter(policyAccessGuard::canAccess)
+                .map(PolicyController::withMaskedOutputSecrets)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -401,6 +471,7 @@ public class PolicyController {
                                 () ->
                                         new ResponseStatusException(
                                                 HttpStatus.NOT_FOUND, "No policy: " + policyId));
+        stampPolicyAudit(policy.toDefinition());
         PolicyInputs inputs = toInputs(files);
         String runId = policyRunner.runWith(policy, inputs, PolicyProgressListener.NOOP).runId();
         return ResponseEntity.accepted().body(new JobResponse<>(true, runId, null));
@@ -412,9 +483,10 @@ public class PolicyController {
             description =
                     "Pulls the policy's configured sources and runs the pipeline now, regardless of"
                             + " the enabled flag (which only gates automatic triggering). Returns"
-                            + " the ids of the runs started; poll the run-status endpoint for each."
-                            + " Empty when the sources yielded no work to do.")
-    public ResponseEntity<List<String>> trigger(@PathVariable String policyId) {
+                            + " the ids of the runs started (poll the run-status endpoint for each)"
+                            + " plus what the sweep skipped - already-processed, parked-by-failure,"
+                            + " and in-flight counts - so an empty result explains itself.")
+    public ResponseEntity<SweepOutcome> trigger(@PathVariable String policyId) {
         Policy policy =
                 policyStore
                         .get(policyId)
@@ -431,6 +503,42 @@ public class PolicyController {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Pipeline definition has no steps");
         }
+    }
+
+    /**
+     * Stamp this run's policy name and step endpoints onto the current request so the audit aspect
+     * can label the event as the policy it ran (rather than the generic {@code /run} endpoint) and
+     * record which tools it executed. No-op outside a web request.
+     */
+    private static void stampPolicyAudit(PipelineDefinition definition) {
+        if (definition == null
+                || !(RequestContextHolder.getRequestAttributes()
+                        instanceof ServletRequestAttributes attrs)) {
+            return;
+        }
+        HttpServletRequest request = attrs.getRequest();
+        if (definition.name() != null && !definition.name().isBlank()) {
+            request.setAttribute(AuditContext.REQ_ATTR_POLICY_NAME, definition.name());
+        }
+        List<String> steps =
+                definition.steps().stream()
+                        .map(PipelineStep::operation)
+                        .filter(op -> op != null && !op.isBlank())
+                        .toList();
+        if (!steps.isEmpty()) {
+            request.setAttribute(AuditContext.REQ_ATTR_POLICY_STEPS, steps);
+        }
+    }
+
+    /**
+     * Ad-hoc runs (AI / one-off pipelines) are still editor activity, so their supplied documents
+     * feed the same virtual editor source as stored editor policies, counted against the caller's
+     * team. A run with no primary documents (generator pipeline) records nothing.
+     */
+    private void recordEditorDocs(PolicyInputs inputs) {
+        docCounter.record(
+                EditorSource.counterKey(sourceAccessGuard.currentTeamId()),
+                inputs.primary().size());
     }
 
     /**

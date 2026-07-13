@@ -328,7 +328,12 @@ export const BookmarkSidebar = ({
   const handleSubmitAddBookmark = useCallback(async () => {
     const title = newBookmarkTitle.trim();
     if (!title) {
-      setAddBookmarkError("Bookmark title is required");
+      setAddBookmarkError(
+        t(
+          "viewer.bookmarks.bookmarkTitleRequired",
+          "Bookmark title is required",
+        ),
+      );
       return;
     }
     // Resolve the file the viewer is currently displaying. activeFileId
@@ -695,7 +700,10 @@ export const BookmarkSidebar = ({
                     "viewer.bookmarks.expandAll",
                     "Expand all bookmarks",
                   )}
-                  title="Expand all"
+                  title={t(
+                    "viewer.bookmarks.expandAll",
+                    "Expand all bookmarks",
+                  )}
                 >
                   <LocalIcon
                     icon="unfold-more"
@@ -712,7 +720,10 @@ export const BookmarkSidebar = ({
                     "viewer.bookmarks.collapseAll",
                     "Collapse all bookmarks",
                   )}
-                  title="Collapse all"
+                  title={t(
+                    "viewer.bookmarks.collapseAll",
+                    "Collapse all bookmarks",
+                  )}
                 >
                   <LocalIcon
                     icon="unfold-less"
@@ -732,7 +743,10 @@ export const BookmarkSidebar = ({
               "viewer.bookmarks.closeSidebar",
               "Close bookmarks sidebar",
             )}
-            title="Close bookmarks"
+            title={t(
+              "viewer.bookmarks.closeSidebar",
+              "Close bookmarks sidebar",
+            )}
           >
             <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
           </ActionIcon>
@@ -746,7 +760,10 @@ export const BookmarkSidebar = ({
       >
         <TextInput
           value={searchTerm}
-          placeholder="Search bookmarks"
+          placeholder={t(
+            "viewer.bookmarks.searchPlaceholder",
+            "Search bookmarks",
+          )}
           onChange={(event) => setSearchTerm(event.currentTarget.value)}
           leftSection={
             <LocalIcon icon="search" width="1.1rem" height="1.1rem" />
@@ -839,7 +856,10 @@ export const BookmarkSidebar = ({
                 </Text>
                 <TextInput
                   size="xs"
-                  placeholder="Bookmark title"
+                  placeholder={t(
+                    "viewer.bookmarks.bookmarkTitle",
+                    "Bookmark title",
+                  )}
                   aria-label={t(
                     "viewer.bookmarks.bookmarkTitle",
                     "Bookmark title",

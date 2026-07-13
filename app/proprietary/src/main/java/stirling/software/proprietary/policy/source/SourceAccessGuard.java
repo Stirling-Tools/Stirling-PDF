@@ -34,6 +34,13 @@ public class SourceAccessGuard {
 
     /** Team a new source is stamped with: the creator's team. {@code null} when login disabled. */
     public Long teamForNewSource() {
+        return currentTeamId();
+    }
+
+    /**
+     * The current user's team (what scopes their sources), or {@code null} when login is disabled.
+     */
+    public Long currentTeamId() {
         return enforced() ? policyManagementAuthority.currentUserTeamId() : null;
     }
 

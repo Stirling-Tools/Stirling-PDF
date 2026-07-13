@@ -1,17 +1,17 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
 import type { ProcurementSnapshot } from "@portal/api/procurement";
 import { CalendlyInline } from "@portal/components/procurement/CalendlyInline";
+import { LicensePanel } from "@portal/components/procurement/ProcurementStages";
 import { useFocusTrap } from "@portal/components/procurement/ProcurementModal";
 import "@portal/views/Procurement.css";
 
 /**
- * Small centred dialogs that hang off the deal-status hero's quick actions — Key documents, Schedule
- * a call, and trial management. Schedule a call embeds the live Calendly scheduler; Key documents is
- * still mocked for the pilot (static demo data). The shells and wiring are real so the hero behaves
- * like the marketing prototype.
+ * Small centred dialogs that hang off the deal-status hero's quick actions — the licence key,
+ * schedule a call, trial management, and trial setup. Schedule a call embeds the live Calendly
+ * scheduler. The shells and wiring are real so the hero behaves like the marketing prototype.
  */
 
 function SideModal({
@@ -74,124 +74,45 @@ function SideModal({
   );
 }
 
-// ── Key documents ────────────────────────────────────────────────────────────
-type DocStatus = "available" | "action" | "request";
-interface DocRow {
-  nameKey: string;
-  subKey: string;
-  status: DocStatus;
-  fee?: number;
-}
-// Static demo catalogue for the pilot; the copy lives in the locale under
-// portal.procurement.keyDocs and is resolved via t() at render time.
-const STAGE_DOCS: { groupKey: string; docs: DocRow[] }[] = [
-  {
-    groupKey: "portal.procurement.keyDocs.groups.yourDeal",
-    docs: [
-      {
-        nameKey: "portal.procurement.keyDocs.docs.formalQuote.name",
-        subKey: "portal.procurement.keyDocs.docs.formalQuote.sub",
-        status: "available",
-      },
-      {
-        nameKey: "portal.procurement.keyDocs.docs.msa.name",
-        subKey: "portal.procurement.keyDocs.docs.msa.sub",
-        status: "action",
-      },
-      {
-        nameKey: "portal.procurement.keyDocs.docs.bankTransfer.name",
-        subKey: "portal.procurement.keyDocs.docs.bankTransfer.sub",
-        status: "available",
-      },
-      {
-        nameKey: "portal.procurement.keyDocs.docs.purchaseOrder.name",
-        subKey: "portal.procurement.keyDocs.docs.purchaseOrder.sub",
-        status: "request",
-      },
-    ],
-  },
-  {
-    groupKey: "portal.procurement.keyDocs.groups.evaluation",
-    docs: [
-      {
-        nameKey: "portal.procurement.keyDocs.docs.soc2.name",
-        subKey: "portal.procurement.keyDocs.docs.soc2.sub",
-        status: "available",
-      },
-      {
-        nameKey: "portal.procurement.keyDocs.docs.securityReview.name",
-        subKey: "portal.procurement.keyDocs.docs.securityReview.sub",
-        status: "request",
-        fee: 5000,
-      },
-      {
-        nameKey: "portal.procurement.keyDocs.docs.baa.name",
-        subKey: "portal.procurement.keyDocs.docs.baa.sub",
-        status: "request",
-        fee: 2500,
-      },
-      {
-        nameKey: "portal.procurement.keyDocs.docs.w9.name",
-        subKey: "portal.procurement.keyDocs.docs.w9.sub",
-        status: "available",
-      },
-      {
-        nameKey: "portal.procurement.keyDocs.docs.coi.name",
-        subKey: "portal.procurement.keyDocs.docs.coi.sub",
-        status: "available",
-      },
-    ],
-  },
-];
-const STATUS_LABEL: Record<DocStatus, string> = {
-  available: "portal.procurement.keyDocs.status.available",
-  action: "portal.procurement.keyDocs.status.action",
-  request: "portal.procurement.keyDocs.status.request",
-};
-
-export function KeyDocumentsModal({
+// ── Licence key ──────────────────────────────────────────────────────────────
+export function LicenseModal({
   open,
   onClose,
+  licenseKey,
+  offlineAvailable,
+  downloadingLicense,
+  onDownloadOffline,
+  trial = false,
 }: {
   open: boolean;
   onClose: () => void;
+  licenseKey: string;
+  offlineAvailable: boolean;
+  downloadingLicense: boolean;
+  onDownloadOffline: () => void;
+  /** Licence is still the trial one (not yet upgraded on accept) — the downloadable .lic is a
+   * snapshot, so warn that it must be re-downloaded once the agreement is in place. */
+  trial?: boolean;
 }) {
   const { t } = useTranslation();
   return (
     <SideModal
       open={open}
       onClose={onClose}
-      title={t("portal.procurement.keyDocs.title")}
-      subtitle={t("portal.procurement.keyDocs.subtitle")}
+      title={t("portal.procurement.license.title")}
+      subtitle={t("portal.procurement.license.subtitle")}
     >
-      {STAGE_DOCS.map((g) => (
-        <div key={g.groupKey} className="portal-docs__group">
-          <div className="portal-docs__group-title">{t(g.groupKey)}</div>
-          <ul className="portal-docs__list">
-            {g.docs.map((d) => (
-              <li key={d.nameKey} className="portal-docs__row">
-                <div className="portal-docs__row-text">
-                  <span className="portal-docs__row-name">{t(d.nameKey)}</span>
-                  <span className="portal-docs__row-sub">
-                    {t(d.subKey)}
-                    {d.fee
-                      ? t("portal.procurement.keyDocs.oneTimeFee", {
-                          amount: `$${d.fee.toLocaleString()}`,
-                        })
-                      : ""}
-                  </span>
-                </div>
-                <span
-                  className="portal-docs__row-action"
-                  data-status={d.status}
-                >
-                  {t(STATUS_LABEL[d.status])}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
+      <LicensePanel
+        licenseKey={licenseKey}
+        offlineAvailable={offlineAvailable}
+        downloadingLicense={downloadingLicense}
+        onDownloadOffline={onDownloadOffline}
+      />
+      {offlineAvailable && trial && (
+        <p className="portal-proc__license-hint">
+          {t("portal.procurement.license.trialFileHint")}
+        </p>
+      )}
     </SideModal>
   );
 }
@@ -217,6 +138,97 @@ export function ScheduleCallModal({
       wide
     >
       <CalendlyInline email={email} />
+    </SideModal>
+  );
+}
+
+// ── Trial setup ────────────────────────────────────────────────────────────
+const DEPLOYMENTS = ["cloud", "selfhost", "airgap"] as const;
+
+/**
+ * Captured before the trial starts: where the buyer will run Stirling (which drives the deployment
+ * fee and, for air-gapped, the offline licence) and their team size. Both seed the quote builder so
+ * it opens on their real environment; the trial only begins once this is confirmed.
+ */
+export function TrialSetupModal({
+  open,
+  onClose,
+  busy,
+  onConfirm,
+}: {
+  open: boolean;
+  onClose: () => void;
+  busy: boolean;
+  onConfirm: (deployment: string, seats: number) => void;
+}) {
+  const { t } = useTranslation();
+  const [deployment, setDeployment] = useState<string>("cloud");
+  const [seats, setSeats] = useState("");
+
+  // Reset to defaults each time the dialog opens, so a cancelled setup doesn't linger.
+  useEffect(() => {
+    if (open) {
+      setDeployment("cloud");
+      setSeats("");
+    }
+  }, [open]);
+
+  return (
+    <SideModal
+      open={open}
+      onClose={onClose}
+      title={t("portal.procurement.setup.title")}
+      subtitle={t("portal.procurement.setup.subtitle")}
+      footer={
+        <Button
+          variant="primary"
+          accent="premium"
+          loading={busy}
+          onClick={() => onConfirm(deployment, Math.max(0, Number(seats) || 0))}
+        >
+          {t("portal.procurement.setup.start")}
+        </Button>
+      }
+    >
+      <label className="portal-qb__field">
+        <span className="portal-qb__field-label">
+          {t("portal.procurement.setup.deployment")}
+        </span>
+        <div className="portal-qb__opts">
+          {DEPLOYMENTS.map((d) => (
+            <button
+              key={d}
+              type="button"
+              className="portal-qb__opt"
+              data-on={deployment === d || undefined}
+              onClick={() => setDeployment(d)}
+            >
+              <span className="portal-qb__opt-title">
+                {t(`portal.procurement.setup.${d}`)}
+              </span>
+              <span className="portal-qb__opt-sub">
+                {t(`portal.procurement.setup.${d}Sub`)}
+              </span>
+            </button>
+          ))}
+        </div>
+      </label>
+
+      <label className="portal-qb__field">
+        <span className="portal-qb__field-label">
+          {t("portal.procurement.setup.seats")}
+        </span>
+        <input
+          type="number"
+          min={0}
+          placeholder={t("portal.procurement.setup.seatsPlaceholder")}
+          value={seats}
+          onChange={(e) => setSeats(e.target.value)}
+        />
+      </label>
+      <p className="portal-sidemodal__text">
+        {t("portal.procurement.setup.seatsHint")}
+      </p>
     </SideModal>
   );
 }
