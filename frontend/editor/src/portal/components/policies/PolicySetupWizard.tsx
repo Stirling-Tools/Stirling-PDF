@@ -1,5 +1,10 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import CheckIcon from "@mui/icons-material/Check";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
+import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
+import StorageOutlinedIcon from "@mui/icons-material/StorageOutlined";
 import {
   Banner,
   Button,
@@ -28,12 +33,26 @@ import { fetchSources } from "@portal/api/sources";
 import { useAsync } from "@portal/hooks/useAsync";
 import { PolicyFieldRow } from "@portal/components/policies/PolicyFieldRow";
 import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
-import { sourceTypeMeta } from "@portal/components/sources/sourceTypes";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig";
 import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
 import { ClassificationLabelsSection } from "@portal/components/policies/ClassificationLabelsSection";
 import "@portal/views/Policies.css";
+
+/** Outline icon for a source tile, keyed by the backend source `type`. */
+function sourceIcon(type: string): ReactNode {
+  const sx = { fontSize: "1.1rem" } as const;
+  switch (type) {
+    case "editor":
+      return <EditOutlinedIcon sx={sx} />;
+    case "folder":
+      return <FolderOutlinedIcon sx={sx} />;
+    case "s3":
+      return <CloudOutlinedIcon sx={sx} />;
+    default:
+      return <StorageOutlinedIcon sx={sx} />;
+  }
+}
 
 interface PolicySetupWizardProps {
   /** The category being configured, or null when closed. */
@@ -230,7 +249,10 @@ function PolicySetupWizardBody({
     const backendSources = (sourcesAsync.data?.sources ?? []).filter(
       (s) => s.status !== "disabled",
     );
-    const editorSource = {
+    // The editor is always an available source. The backend now returns it as a
+    // virtual source too, so take that when present (avoids a duplicate tile) and
+    // otherwise fall back to a synthetic one; keep it first, selected by default.
+    const editorSource = backendSources.find((s) => s.id === "editor") ?? {
       id: "editor",
       name: t("portal.sources.types.editor.label"),
       type: "editor",
@@ -240,7 +262,7 @@ function PolicySetupWizardBody({
       config: [],
       docsTotal: null,
     };
-    return [editorSource, ...backendSources];
+    return [editorSource, ...backendSources.filter((s) => s.id !== "editor")];
   }, [sourcesAsync.data, t]);
   // Document-type scoping has no UI; preserve any saved scope on edit and
   // default new policies to all document types.
@@ -510,35 +532,38 @@ function PolicySetupWizardBody({
             // to availableSources), so the list is never empty — no "no sources"
             // state exists.
             <div className="portal-policies__sources">
-              {availableSources.map((src) => (
-                // A selectable multi-line tile (icon + name + type + check).
-                // Uses the shared Button (raw <button> is lint-banned); the tile
-                // CSS overrides the Button's fixed height for the two-line layout.
-                <Button
-                  key={src.id}
-                  variant="quiet"
-                  justify="start"
-                  className={
-                    "portal-policies__source" +
-                    (sources.includes(src.id)
-                      ? " portal-policies__source--on"
-                      : "")
-                  }
-                  onClick={() => toggleSource(src.id)}
-                >
-                  <span className="portal-policies__source-icon" aria-hidden>
-                    {sourceTypeMeta(src.type).icon}
-                  </span>
-                  <span className="portal-policies__source-text">
+              {availableSources.map((src) => {
+                const on = sources.includes(src.id);
+                return (
+                  <Button
+                    key={src.id}
+                    variant={on ? "secondary" : "quiet"}
+                    justify="between"
+                    fullWidth
+                    className={
+                      "portal-policies__source" +
+                      (on ? " portal-policies__source--on" : "")
+                    }
+                    // The check keeps its slot when unselected (hidden) so the
+                    // icon + name stay put whether or not the tile is selected.
+                    rightSection={
+                      <CheckIcon
+                        sx={{
+                          fontSize: "1.1rem",
+                          visibility: on ? "visible" : "hidden",
+                        }}
+                      />
+                    }
+                    onClick={() => toggleSource(src.id)}
+                    aria-pressed={on}
+                  >
                     <span className="portal-policies__source-label">
+                      {sourceIcon(src.type)}
                       {src.name}
                     </span>
-                    <span className="portal-policies__source-desc">
-                      {src.type}
-                    </span>
-                  </span>
-                </Button>
-              ))}
+                  </Button>
+                );
+              })}
             </div>
           )}
 
