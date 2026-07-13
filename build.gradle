@@ -224,9 +224,8 @@ subprojects {
         resolutionStrategy.force "org.apache.commons:commons-lang3:${commonsLang3}"
         // CVE-2024-47554: commons-io DoS prevention
         resolutionStrategy.force "commons-io:commons-io:${commonsIoVersion}"
-        // GHSA-72hv-8253-57qq: jackson-core async parser bypasses maxNumberLength (fixed in 2.21.1).
-        // Jackson 2 is transitive-only here (jinjava, opensaml, jjwt request vulnerable versions);
-        // pin the family to the patched line and keep modules aligned.
+        // Jackson 2 is transitive-only here (jinjava, opensaml, jjwt request older versions);
+        // pin the family to a current release and keep modules aligned.
         resolutionStrategy.force "com.fasterxml.jackson.core:jackson-core:${jackson2Version}"
         resolutionStrategy.force "com.fasterxml.jackson.core:jackson-databind:${jackson2Version}"
         resolutionStrategy.force "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jackson2Version}"

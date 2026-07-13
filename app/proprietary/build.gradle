@@ -66,6 +66,11 @@ dependencies {
 
     implementation "com.google.code.gson:gson:${gsonVersion}"
 
+    // jinjava/jjwt transitively request older Jackson 2 versions; declare the current
+    // version directly so it is selected consistently (root build.gradle pins are the fallback).
+    runtimeOnly "com.fasterxml.jackson.core:jackson-core:${jackson2Version}"
+    runtimeOnly "com.fasterxml.jackson.core:jackson-databind:${jackson2Version}"
+
     implementation("com.hubspot.jinjava:jinjava:${jinjavaVersion}") {
         // Compile-time-only annotation artifacts (class-retention annotations, not needed at
         // runtime) whose declared licences (LGPL / none) fail the licence compatibility check.
