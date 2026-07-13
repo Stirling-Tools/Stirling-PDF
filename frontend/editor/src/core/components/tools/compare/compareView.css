@@ -544,7 +544,7 @@
   padding-bottom: 32px;
 }
 .compare-pixel-page {
-  border: 1px solid var(--mantine-color-default-border, var(--p-slate-200));
+  border: 1px solid var(--mantine-color-default-border, var(--p-gray-200));
   border-radius: 8px;
   padding: 12px;
   background: var(--mantine-color-body, #fff);
@@ -562,7 +562,7 @@
 }
 .compare-pixel-triptych figure img {
   display: block;
-  border: 1px solid var(--mantine-color-default-border, var(--p-slate-200));
+  border: 1px solid var(--mantine-color-default-border, var(--p-gray-200));
   background: #fff;
 }
 .compare-pixel-triptych figcaption {
@@ -577,7 +577,7 @@
 .compare-pixel-overlay-img {
   display: block;
   width: 100%;
-  border: 1px solid var(--mantine-color-default-border, var(--p-slate-200));
+  border: 1px solid var(--mantine-color-default-border, var(--p-gray-200));
 }
 .compare-pixel-overlay-top {
   position: absolute;

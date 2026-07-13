@@ -82,7 +82,7 @@
 .search-hit-active {
   background: color-mix(
     in srgb,
-    var(--p-material-blue) 40%,
+    var(--p-blue-500) 40%,
     transparent
   ); /* active blue */
 }

@@ -650,7 +650,7 @@
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  background: var(--p-notion-blue-tint);
+  background: var(--p-tint-blue);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -751,7 +751,7 @@
 }
 .portal-qb__opt[data-on] {
   border-color: var(--p-notion-blue);
-  background: var(--p-notion-blue-tint);
+  background: var(--p-tint-blue);
 }
 .portal-qb__opt-title {
   font-size: 13px;
@@ -784,7 +784,7 @@
 }
 .portal-qb__addon[data-on] {
   border-color: var(--p-notion-blue);
-  background: var(--p-notion-blue-tint);
+  background: var(--p-tint-blue);
 }
 .portal-qb__addon-box {
   width: 18px;
@@ -859,7 +859,7 @@
   border: 1px solid var(--p-notion-paper-2);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 1px 3px color-mix(in srgb, var(--p-slate-900) 6%, transparent);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--p-gray-900) 6%, transparent);
 }
 .portal-qb__paper-head {
   display: flex;
@@ -926,7 +926,7 @@
   margin: 16px 24px 24px;
   padding: 16px 18px;
   border-radius: 10px;
-  background: var(--p-notion-blue-tint);
+  background: var(--p-tint-blue);
   border: 1px solid var(--p-notion-blue-border);
 }
 .portal-qb__total-label {
@@ -1069,8 +1069,7 @@
   background: var(--c-surface);
   border: 1px solid var(--c-border);
   border-radius: 14px;
-  box-shadow: 0 24px 64px
-    color-mix(in srgb, var(--p-slate-900) 28%, transparent);
+  box-shadow: 0 24px 64px color-mix(in srgb, var(--p-gray-900) 28%, transparent);
   padding: 1.5rem 1.5rem 1.75rem;
 }
 .portal-procmodal__close {
@@ -1200,7 +1199,7 @@
 }
 .portal-hero__chip--action:hover {
   background: var(--c-surface);
-  box-shadow: 0 2px 5px color-mix(in srgb, var(--p-slate-900) 10%, transparent);
+  box-shadow: 0 2px 5px color-mix(in srgb, var(--p-gray-900) 10%, transparent);
   transform: translateY(-1px);
 }
 
@@ -1285,8 +1284,7 @@
   background: var(--c-surface);
   border: 1px solid var(--c-border);
   border-radius: 14px;
-  box-shadow: 0 24px 64px
-    color-mix(in srgb, var(--p-slate-900) 28%, transparent);
+  box-shadow: 0 24px 64px color-mix(in srgb, var(--p-gray-900) 28%, transparent);
   padding: 1.35rem 1.4rem 1.4rem;
   max-height: 86vh;
   overflow-y: auto;

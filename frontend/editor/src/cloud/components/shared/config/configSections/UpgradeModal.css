@@ -19,7 +19,7 @@
 [data-mantine-color-scheme="dark"] .upm {
   /* Card/border/divider track the neutral --c-* tokens (base rule); only the
      brand-azure accent tint is tuned for dark. */
-  --upm-accent-soft: color-mix(in srgb, var(--p-azure-560) 14%, transparent);
+  --upm-accent-soft: color-mix(in srgb, var(--p-azure-550) 14%, transparent);
 }
 
 /* Backdrop locks the page and centres the modal. z-index matches

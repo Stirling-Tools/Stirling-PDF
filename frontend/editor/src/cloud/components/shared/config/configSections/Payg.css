@@ -17,7 +17,7 @@
 /* Dark mode: surfaces/borders track the neutral --c-* tokens (set on the base
    rule); only the brand-azure accent tint is tuned brighter for dark. */
 [data-mantine-color-scheme="dark"] .payg {
-  --payg-accent-soft: color-mix(in srgb, var(--p-azure-560) 16%, transparent);
+  --payg-accent-soft: color-mix(in srgb, var(--p-azure-550) 16%, transparent);
 }
 
 /* ── Header ─────────────────────────────────────────────────────────── */
@@ -179,8 +179,8 @@
 .payg-hero[data-state="WARNED"]::before {
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--p-yellow-500) 16%, transparent) 0%,
-    color-mix(in srgb, var(--p-yellow-500) 0%, transparent) 55%
+    color-mix(in srgb, var(--p-amber-400) 16%, transparent) 0%,
+    color-mix(in srgb, var(--p-amber-400) 0%, transparent) 55%
   );
 }
 .payg-hero[data-state="DEGRADED"]::before {
@@ -320,7 +320,7 @@
 }
 .payg-status[data-state="WARNED"] .payg-status__dot {
   background: var(--color-yellow-500);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--p-yellow-500) 20%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--p-amber-400) 20%, transparent);
 }
 .payg-status[data-state="DEGRADED"] {
   background: var(--color-red-100);

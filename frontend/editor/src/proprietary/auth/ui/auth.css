@@ -258,8 +258,8 @@
 .oauth-button-vertical-tinted {
   background: linear-gradient(
     90deg,
-    color-mix(in srgb, var(--oauth-accent) 65%, var(--p-slate-900)) 0 6px,
-    var(--p-slate-900) 6px 100%
+    color-mix(in srgb, var(--oauth-accent) 65%, var(--p-gray-900)) 0 6px,
+    var(--p-gray-900) 6px 100%
   );
 }
 
@@ -313,31 +313,31 @@
 
 .oauth-button-vertical-outline {
   background: transparent;
-  border: 2px solid var(--p-slate-900);
-  color: var(--p-slate-900);
+  border: 2px solid var(--p-gray-900);
+  color: var(--p-gray-900);
   box-shadow: none;
 }
 
 .oauth-button-vertical-outline:hover:not(:disabled) {
-  background: var(--p-slate-900);
+  background: var(--p-gray-900);
   color: var(--p-gray-50);
   box-shadow: 0 0.35rem 0.9rem
-    color-mix(in srgb, var(--p-slate-900) 20%, transparent);
+    color-mix(in srgb, var(--p-gray-900) 20%, transparent);
 }
 
 .oauth-button-vertical-light {
   background: var(--p-gray-50);
-  color: var(--p-slate-900);
-  border: 1px solid color-mix(in srgb, var(--p-slate-900) 12%, transparent);
+  color: var(--p-gray-900);
+  border: 1px solid color-mix(in srgb, var(--p-gray-900) 12%, transparent);
   box-shadow: 0 0.25rem 0.75rem
-    color-mix(in srgb, var(--p-slate-900) 12%, transparent);
+    color-mix(in srgb, var(--p-gray-900) 12%, transparent);
 }
 
 .oauth-button-vertical-light:hover:not(:disabled) {
   background: var(--p-gray-150);
-  color: var(--p-slate-900);
+  color: var(--p-gray-900);
   box-shadow: 0 0.35rem 0.9rem
-    color-mix(in srgb, var(--p-slate-900) 16%, transparent);
+    color-mix(in srgb, var(--p-gray-900) 16%, transparent);
 }
 
 .oauth-button-vertical:disabled {
@@ -433,8 +433,8 @@
 
 .oauth-button-vertical-outline .oauth-icon-wrapper,
 .oauth-button-vertical-light .oauth-icon-wrapper {
-  background: color-mix(in srgb, var(--p-slate-900) 6%, transparent);
-  border-color: color-mix(in srgb, var(--p-slate-900) 14%, transparent);
+  background: color-mix(in srgb, var(--p-gray-900) 6%, transparent);
+  border-color: color-mix(in srgb, var(--p-gray-900) 14%, transparent);
 }
 .oauth-button-right {
   display: flex;

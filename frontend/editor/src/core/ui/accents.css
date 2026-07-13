@@ -49,19 +49,19 @@ html[data-app-theme="custom"] .sui-acc-default {
 
 /* neutral: low-emphasis grey — no palette token, so explicit. */
 .sui-acc-neutral {
-  --_solid: var(--p-slate-600);
-  --_solid-hover: var(--p-slate-700);
+  --_solid: var(--p-gray-600);
+  --_solid-hover: var(--p-gray-700);
   --_on: #ffffff;
-  --_text: var(--p-slate-600);
-  --_bd: var(--p-slate-300);
-  --_tint: color-mix(in srgb, var(--p-slate-600) 10%, transparent);
+  --_text: var(--p-gray-600);
+  --_bd: var(--p-gray-300);
+  --_tint: color-mix(in srgb, var(--p-gray-600) 10%, transparent);
 }
 [data-theme="dark"] .sui-acc-neutral {
-  --_solid: var(--p-slate-500);
-  --_solid-hover: var(--p-slate-600);
-  --_text: var(--p-slate-300);
-  --_bd: var(--p-slate-700);
-  --_tint: color-mix(in srgb, var(--p-slate-400) 16%, transparent);
+  --_solid: var(--p-gray-500);
+  --_solid-hover: var(--p-gray-600);
+  --_text: var(--p-gray-300);
+  --_bd: var(--p-gray-700);
+  --_tint: color-mix(in srgb, var(--p-gray-400) 16%, transparent);
 }
 /* brand: Stirling red — a bespoke brand colour, not part of the token palette. */
 .sui-acc-brand {

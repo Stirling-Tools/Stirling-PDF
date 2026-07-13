@@ -321,7 +321,7 @@
 }
 .payg-status[data-state="WARNED"] .payg-status__dot {
   background: var(--c-warning);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--p-yellow-500) 20%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--p-amber-400) 20%, transparent);
 }
 .payg-status[data-state="DEGRADED"] {
   background: var(--c-danger-subtle);

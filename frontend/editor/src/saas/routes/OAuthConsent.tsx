@@ -229,7 +229,7 @@ export default function OAuthConsent() {
           style={{
             textAlign: "center",
             marginBottom: "1.5rem",
-            color: "#374151",
+            color: "var(--p-gray-700)",
           }}
         >
           {t(
@@ -252,7 +252,7 @@ export default function OAuthConsent() {
     return (
       <AuthLayout>
         {logoBlock}
-        <p style={{ textAlign: "center", color: "#6b7280" }}>
+        <p style={{ textAlign: "center", color: "var(--p-gray-500)" }}>
           {redirecting
             ? t("oauthConsent.redirecting", "Returning you to the app...")
             : t("oauthConsent.loading", "Loading authorization request...")}
@@ -283,7 +283,7 @@ export default function OAuthConsent() {
           fontSize: "1.25rem",
           fontWeight: 700,
           marginBottom: "0.5rem",
-          color: "#111827",
+          color: "var(--p-gray-900)",
         }}
       >
         {t("oauthConsent.title", "Authorize access")}
@@ -292,7 +292,7 @@ export default function OAuthConsent() {
         style={{
           textAlign: "center",
           marginBottom: "1.5rem",
-          color: "#374151",
+          color: "var(--p-gray-700)",
         }}
       >
         {t("oauthConsent.requesting", {
@@ -307,11 +307,11 @@ export default function OAuthConsent() {
           tool as this user, audited as them and counted against their usage. */}
       <div
         style={{
-          border: "1px solid #e5e7eb",
+          border: "1px solid var(--p-gray-200)",
           borderRadius: "0.5rem",
           padding: "1rem 1.25rem",
           marginBottom: "1.5rem",
-          background: "#ffffff",
+          background: "var(--p-white)",
         }}
       >
         <p
@@ -319,7 +319,7 @@ export default function OAuthConsent() {
             fontSize: "0.875rem",
             fontWeight: 600,
             margin: "0 0 0.5rem",
-            color: "#111827",
+            color: "var(--p-gray-900)",
           }}
         >
           {t("oauthConsent.scopesIntro", {
@@ -336,20 +336,23 @@ export default function OAuthConsent() {
             gap: "0.25rem",
           }}
         >
-          <li style={{ fontSize: "0.875rem", color: "#374151" }}>
+          <li style={{ fontSize: "0.875rem", color: "var(--p-gray-700)" }}>
             {t("oauthConsent.access.tools", {
               app: appName,
               defaultValue: `Use your Stirling PDF tools on your behalf - convert, edit, sign, secure and process your documents`,
             })}
           </li>
-          <li style={{ fontSize: "0.875rem", color: "#374151" }}>
+          <li style={{ fontSize: "0.875rem", color: "var(--p-gray-700)" }}>
             {t("oauthConsent.access.actAsYou", {
               app: appName,
               defaultValue: `Act as you - everything ${appName} does runs under your account and counts towards your usage`,
             })}
           </li>
           {scopes.map((scope) => (
-            <li key={scope} style={{ fontSize: "0.875rem", color: "#374151" }}>
+            <li
+              key={scope}
+              style={{ fontSize: "0.875rem", color: "var(--p-gray-700)" }}
+            >
               {scopeDescription(scope)}
             </li>
           ))}
@@ -396,7 +399,7 @@ export default function OAuthConsent() {
           style={{
             textAlign: "center",
             fontSize: "0.8125rem",
-            color: "#9ca3af",
+            color: "var(--p-gray-400)",
             marginTop: "1.25rem",
           }}
         >

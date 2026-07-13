@@ -43,18 +43,15 @@
   --p-red-500: #ef4444;
   --p-red-600: #dc2626;
   /* Extended palette — brand, data-viz, illustration & vendor/OS fixed colours (added by app-wide literal migration) */
-  --p-art-gray: #acacac;
   --p-art-red: #ff4b4b;
   --p-art-red-light: #fca5a5;
   --p-art-red-muted: #c56565;
   --p-art-red-soft: #fc9999;
-  --p-art-red-strong: #d62626;
   --p-azure-300: #66b8ff;
   --p-azure-400: #38bdf8;
   --p-azure-450: #5b9bf7;
   --p-azure-500: #0a8bff;
   --p-azure-550: #4c8bf5;
-  --p-azure-560: #4f8ef5;
   --p-azure-650: #3a7be8;
   --p-blue-200: #93c5fd;
   --p-brand-red: #af3434;
@@ -64,16 +61,13 @@
   --p-brand-red-650: #8e3131;
   --p-brand-red-700: #7a2929;
   --p-brand-red-900: #5a2424;
-  --p-cool-gray-200: #d0dbdc;
   --p-cyan-400: #22d3ee;
   --p-cyan-500: #06b6d4;
   --p-emerald-400: #34d399;
   --p-emerald-500: #10b981;
   --p-emerald-600: #059669;
   --p-flash-yellow: #ffeb3b;
-  --p-gold-500: #ffc107;
   --p-gray-450: #868e96;
-  --p-gray-550: #545454;
   --p-gray-b0: #b0b0b0;
   --p-gray-mid: #808080;
   --p-green-400: #4ade80;
@@ -82,7 +76,6 @@
   --p-indigo-400: #818cf8;
   --p-indigo-500: #6366f1;
   --p-indigo-800: #3730a3;
-  --p-material-blue: #2196f3;
   --p-navy-500: #3b4b6e;
   --p-navy-700: #16213e;
   --p-navy-850: #1a2236;
@@ -92,7 +85,6 @@
   --p-notion-blue: #2383e2;
   --p-notion-blue-border: #b8d5f2;
   --p-notion-blue-strong: #1b6ec2;
-  --p-notion-blue-tint: #eaf2fb;
   --p-notion-border: #e3e1dc;
   --p-notion-border-2: #eae8e3;
   --p-notion-border-cool: #d3d1cb;
@@ -107,16 +99,6 @@
   --p-plum-900: #201a28;
   --p-purple-500: #6c5ce7;
   --p-royal-700: #2040a0;
-  --p-slate-100: #f1f5f9;
-  --p-slate-200: #dee2e6;
-  --p-slate-300: #cbd5e1;
-  --p-slate-400: #94a3b8;
-  --p-slate-50: #e3e8ee;
-  --p-slate-500: #64748b;
-  --p-slate-600: #475569;
-  --p-slate-700: #334155;
-  --p-slate-850: #1f2933;
-  --p-slate-900: #0f172a;
   --p-teal-700: #0f7b6c;
   --p-tint-blue: #eef1fb;
   --p-tint-pink: #fbf4f7;
@@ -132,5 +114,4 @@
   --p-violet-400: #a78bfa;
   --p-violet-500: #8b5cf6;
   --p-violet-600: #7c3aed;
-  --p-yellow-500: #eab308;
 }

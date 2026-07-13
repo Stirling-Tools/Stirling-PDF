@@ -78,19 +78,19 @@
   );
   --fullscreen-shadow-primary: color-mix(
     in srgb,
-    var(--shadow-color, color-mix(in srgb, var(--p-slate-900) 55%, transparent))
+    var(--shadow-color, color-mix(in srgb, var(--p-gray-900) 55%, transparent))
       25%,
     transparent
   );
   --fullscreen-shadow-secondary: color-mix(
     in srgb,
-    var(--shadow-color, color-mix(in srgb, var(--p-slate-900) 35%, transparent))
+    var(--shadow-color, color-mix(in srgb, var(--p-gray-900) 35%, transparent))
       30%,
     transparent
   );
   --fullscreen-shadow-group: color-mix(
     in srgb,
-    var(--shadow-color, color-mix(in srgb, var(--p-slate-900) 45%, transparent))
+    var(--shadow-color, color-mix(in srgb, var(--p-gray-900) 45%, transparent))
       18%,
     transparent
   );
@@ -543,7 +543,7 @@
   border-color: var(--fullscreen-accent-hover);
   box-shadow: var(
     --shadow-xl,
-    0 18px 34px color-mix(in srgb, var(--p-slate-900) 14%, transparent)
+    0 18px 34px color-mix(in srgb, var(--p-gray-900) 14%, transparent)
   );
 }
 
