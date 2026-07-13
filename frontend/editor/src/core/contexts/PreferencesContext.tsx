@@ -72,12 +72,3 @@ export const usePreferences = (): PreferencesContextValue => {
   }
   return context;
 };
-
-/**
- * Non-throwing variant for shared components that can legitimately render
- * outside the provider (e.g. the core Tooltip reused in the Processor portal,
- * which has no PreferencesProvider). Returns undefined instead of throwing so
- * callers can fall back to a default.
- */
-export const usePreferencesOptional = (): PreferencesContextValue | undefined =>
-  useContext(PreferencesContext);
