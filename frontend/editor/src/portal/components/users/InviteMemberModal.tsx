@@ -4,10 +4,10 @@ import { Button, Checkbox, FormField, Input, Modal, Select } from "@app/ui";
 import {
   createMember,
   fetchUsers,
-  inviteMember,
   ROLE_LABEL,
   type AuthType,
 } from "@portal/api/users";
+import { usersBackend } from "@app/portal/usersBackend";
 import { createGrant } from "@portal/api/access";
 import { errorMessage } from "@portal/api/http";
 import type { Team } from "@portal/api/teams";
@@ -212,7 +212,11 @@ export function InviteMemberModal({
       let processorApplied = true;
       if (mode === "email") {
         if (!emailValid) return;
-        const result = await inviteMember(email.trim(), role, teamNum);
+        const result = await usersBackend.inviteMember(
+          email.trim(),
+          role,
+          teamNum,
+        );
         if (result?.error || result?.errors) {
           setSubmitError(result.error ?? result.errors ?? null);
           return;

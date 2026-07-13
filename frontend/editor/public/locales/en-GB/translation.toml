@@ -5984,16 +5984,6 @@ statDocsEnforced = "Docs enforced"
 statusActive = "Active"
 statusPaused = "Paused"
 
-[policies.docType]
-Contracts = "Contracts"
-"Financial reports" = "Financial reports"
-"HR records" = "HR records"
-Insurance = "Insurance"
-Invoices = "Invoices"
-"Legal filings" = "Legal filings"
-"Medical / PHI" = "Medical / PHI"
-"Tax documents" = "Tax documents"
-
 [policies.enforcement]
 applying = "Applying {{names}}"
 applyingProgress = "Applying {{names}} ({{done}} of {{total}})"
@@ -6028,51 +6018,6 @@ minConfidence = "Min confidence"
 notify = "Notify on route"
 onViolation = "When non-compliant"
 webhookUrl = "Webhook URL"
-
-[policies.fieldOption.archiveAfter]
-"1 year" = "1 year"
-"30 days" = "30 days"
-"90 days" = "90 days"
-Never = "Never"
-
-[policies.fieldOption.belowThreshold]
-"Flag for review" = "Flag for review"
-Hold = "Hold"
-"Route to bucket" = "Route to bucket"
-
-[policies.fieldOption.destination]
-Documents = "Documents"
-"S3 bucket" = "S3 bucket"
-SharePoint = "SharePoint"
-Webhook = "Webhook"
-
-[policies.fieldOption.frameworks]
-FedRAMP = "FedRAMP"
-GDPR = "GDPR"
-HIPAA = "HIPAA"
-"ISO 27001" = "ISO 27001"
-"PCI DSS" = "PCI DSS"
-"SOC 2" = "SOC 2"
-
-[policies.fieldOption.keepFor]
-"1 year" = "1 year"
-"3 years" = "3 years"
-"30 days" = "30 days"
-"7 years" = "7 years"
-Indefinite = "Indefinite"
-
-[policies.fieldOption.minConfidence]
-"60%" = "60%"
-"70%" = "70%"
-"80%" = "80%"
-"90%" = "90%"
-"95%" = "95%"
-
-[policies.fieldOption.onViolation]
-"Auto-redact PHI" = "Auto-redact PHI"
-"Block export" = "Block export"
-"Flag for review" = "Flag for review"
-"Quarantine document" = "Quarantine document"
 
 [policies.fields]
 selectedCount = "{{count}} selected"
@@ -6206,6 +6151,44 @@ blockingAction = "{{action}} blocked while enforcing policy, please wait..."
 dismiss = "Dismiss overlay"
 enforcingTitle = "Enforcing policy..."
 viewAnyway = "View file (policy still enforcing)"
+
+[policyOption]
+autoRedactPhi = "Auto-redact PHI"
+blockExport = "Block export"
+contracts = "Contracts"
+documents = "Documents"
+fedramp = "FedRAMP"
+financialReports = "Financial reports"
+flagForReview = "Flag for review"
+gdpr = "GDPR"
+hipaa = "HIPAA"
+hold = "Hold"
+hrRecords = "HR records"
+indefinite = "Indefinite"
+insurance = "Insurance"
+invoices = "Invoices"
+iso27001 = "ISO 27001"
+legalFilings = "Legal filings"
+medicalPhi = "Medical / PHI"
+never = "Never"
+ninetyDays = "90 days"
+oneYear = "1 year"
+p60 = "60%"
+p70 = "70%"
+p80 = "80%"
+p90 = "90%"
+p95 = "95%"
+pciDss = "PCI DSS"
+quarantineDocument = "Quarantine document"
+routeToBucket = "Route to bucket"
+s3Bucket = "S3 bucket"
+sevenYears = "7 years"
+sharePoint = "SharePoint"
+soc2 = "SOC 2"
+taxDocuments = "Tax documents"
+thirtyDays = "30 days"
+threeYears = "3 years"
+webhook = "Webhook"
 
 [portal]
 comingSoon = "Coming soon"
@@ -8070,10 +8053,6 @@ title = "Session expired"
 
 [portal.users]
 title = "Users"
-
-[portal.users.roles]
-subtitle = "Every role exists on every plan — what each one can do is fixed across the organisation."
-title = "Roles"
 
 [portal.users.roles.admin]
 label = "Admin (Org owner)"

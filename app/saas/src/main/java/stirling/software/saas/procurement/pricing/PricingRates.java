@@ -21,7 +21,8 @@ public record PricingRates(
         long selfHostDeployMinor, // flat: self-hosted deployment
         long airgapDeployMinor, // flat: air-gapped deployment
         long qbrAnnualMinor, // flat: quarterly business reviews
-        long trainingOneTimeMinor) { // one-time: onboarding & training
+        long trainingOneTimeMinor, // one-time: onboarding & training
+        double cpiEscalator) { // fixed CPI uplift on the annual fee at each post-term renewal
 
     public static PricingRates defaults() {
         return new PricingRates(
@@ -34,7 +35,8 @@ public record PricingRates(
                 1_200_000, // self-hosted $12,000 / yr
                 3_600_000, // air-gapped $36,000 / yr
                 800_000, // QBRs $8,000 / yr
-                750_000); // onboarding & training $7,500 one-time
+                750_000, // onboarding & training $7,500 one-time
+                0.03); // 3% CPI escalator per renewal (committed term stays flat)
     }
 
     public double termDiscount(int termYears) {
