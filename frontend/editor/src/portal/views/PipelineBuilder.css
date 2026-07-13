@@ -392,3 +392,27 @@
   min-width: 1.5rem;
   min-height: 1.5rem;
 }
+
+.portal-builder__s3-output {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.portal-builder__s3-summary {
+  font-size: 0.8125rem;
+  color: var(--color-text-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-builder__s3-summary.is-unset {
+  color: var(--color-text-4);
+}
+
+.portal-builder__s3-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}

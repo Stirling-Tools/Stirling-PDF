@@ -15,16 +15,24 @@ import "@portal/views/Procurement.css";
 export function ProcurementAgreement({
   quote,
   busy,
+  downloading,
   onAgree,
+  onDownload,
+  onEdit,
 }: {
   quote: QuoteResult;
   busy: boolean;
+  downloading: boolean;
+  /** Accept the quote straight into a committed subscription (this is also the agreement). */
   onAgree: () => void;
+  onDownload: () => void;
+  onEdit: () => void;
 }) {
   const { t } = useTranslation();
   const [checked, setChecked] = useState(false);
   const annual = money(quote.annualNetMinor, quote.currency);
   const tcv = money(quote.tcvMinor, quote.currency);
+  const renewal = money(quote.renewalAnnualNetMinor, quote.currency);
   const years = quote.config.termYears;
 
   return (
@@ -73,7 +81,19 @@ export function ProcurementAgreement({
           ))}
         </ul>
 
-        <h4>3. End-User License Agreement</h4>
+        <h4>3. Term, renewal and annual fee adjustment</h4>
+        <p>
+          This Agreement runs for the committed {years}-year term set out in the
+          Order Form. It then renews automatically for successive one-year terms
+          unless either party gives written notice of non-renewal at least 30
+          days before the end of the then-current term. On each renewal the
+          annual fee increases by {quote.cpiRatePct}%, a fixed CPI adjustment.
+          Based on this quote, the first renewal year would be approximately{" "}
+          <strong>{renewal}</strong> per year; the committed term above is
+          billed at the rate in the Order Form and is not affected.
+        </p>
+
+        <h4>4. End-User License Agreement</h4>
         <p>
           Subject to the terms of this Agreement, Stirling grants Customer a
           non-exclusive, non-transferable right to use the Service for its
@@ -82,7 +102,7 @@ export function ProcurementAgreement({
           Service, and all intellectual property in it, remains Stirling's.
         </p>
 
-        <h4>4. Data Processing Agreement</h4>
+        <h4>5. Data Processing Agreement</h4>
         <p>
           Where Stirling processes personal data on Customer's behalf, it does
           so only on Customer's documented instructions and applies appropriate
@@ -92,7 +112,7 @@ export function ProcurementAgreement({
           reference.
         </p>
 
-        <h4>5. Acceptance</h4>
+        <h4>6. Acceptance</h4>
         <p>
           By agreeing below, Customer accepts this Agreement and the Order Form.
           On acceptance, Stirling will issue the committed annual subscription
@@ -119,6 +139,12 @@ export function ProcurementAgreement({
           onClick={onAgree}
         >
           {t("portal.procurement.agreement.agreeCta")}
+        </Button>
+        <Button variant="secondary" loading={downloading} onClick={onDownload}>
+          {t("portal.procurement.milestone.download")}
+        </Button>
+        <Button variant="tertiary" onClick={onEdit}>
+          {t("portal.procurement.milestone.edit")}
         </Button>
       </div>
     </Card>
