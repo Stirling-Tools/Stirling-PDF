@@ -182,16 +182,44 @@
   );
 }
 
-/* Always-dark code palette. Not theme-switched. */
-:root {
-  --code-bg: var(--p-blue-700);
-  --code-bg-header: var(--p-gray-800);
-  --code-text: var(--p-gray-250);
-  --code-dim: var(--p-gray-500);
-  --code-muted: var(--p-gray-400);
-  --code-border: var(--p-gray-800);
+/* Code palette — theme-aware: a light GitHub-style box in light mode, the dark
+   terminal palette in dark mode. (CodeBlock renders plain text, so only the
+   base colours are load-bearing; the syntax slots are kept for future Shiki. */
+:root,
+[data-theme="light"] {
+  --code-bg: #f6f8fa;
+  --code-bg-alt: #eef1f4;
+  --code-bg-header: #eaeef2;
+  --code-text: #1f2328;
+  --code-dim: #656d76;
+  --code-muted: #8c959f;
+  --code-keyword: #cf222e;
+  --code-string: #0a3069;
+  --code-number: #0550ae;
+  --code-fn: #8250df;
+  --code-type: #953800;
+  --code-property: #0550ae;
+  --code-comment: #6e7781;
+  --code-border: #d0d7de;
   /* Window-chrome traffic-light dots in the code-block header. */
-  --code-dot: var(--p-gray-600);
+  --code-dot: #d0d7de;
+}
+[data-theme="dark"] {
+  --code-bg: #0f172a;
+  --code-bg-alt: #1e293b;
+  --code-bg-header: #1a2332;
+  --code-text: #e2e8f0;
+  --code-dim: #64748b;
+  --code-muted: #94a3b8;
+  --code-keyword: #60a5fa;
+  --code-string: #fbbf24;
+  --code-number: #c084fc;
+  --code-fn: #34d399;
+  --code-type: #f472b6;
+  --code-property: #93c5fd;
+  --code-comment: #475569;
+  --code-border: #1e293b;
+  --code-dot: #475569;
 }
 
 /* Radii / typography / motion / spacing / z-index — theme-stable */

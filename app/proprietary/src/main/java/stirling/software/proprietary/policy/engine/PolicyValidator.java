@@ -52,7 +52,19 @@ public class PolicyValidator {
             InputSpec spec = source.toInputSpec();
             inputSourceFor(spec).validate(spec);
         }
-        outputSinkFor(policy.output()).validate(policy.output());
+        validateOutput(policy.output());
+    }
+
+    /**
+     * Validate an output spec against its sink. Must be called on a request thread (caller's
+     * principal present) so an S3 output's connection is authorization-checked against the caller -
+     * ad-hoc runs are never persisted and so never hit {@link #validate(Policy)}, and the worker
+     * thread that later delivers has no principal, so this is their only access gate.
+     *
+     * @throws IllegalArgumentException if the type is unknown or the config is invalid/inaccessible
+     */
+    public void validateOutput(OutputSpec output) {
+        outputSinkFor(output).validate(output);
     }
 
     private PolicyTrigger triggerFor(TriggerConfig config) {
