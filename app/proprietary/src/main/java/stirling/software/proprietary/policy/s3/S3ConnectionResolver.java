@@ -61,15 +61,17 @@ public class S3ConnectionResolver {
                 connections
                         .findById(connectionId)
                         .filter(cfg -> cfg.getIntegrationType() == IntegrationType.S3)
+                        .filter(this::usableByCurrentUser)
+                        // Existence and access collapse into one error: a caller must not be able
+                        // to tell "no such connection" from "someone else's connection" and
+                        // enumerate ids. The id/name are never echoed.
                         .orElseThrow(
                                 () ->
                                         new IllegalArgumentException(
-                                                "unknown s3 connection: " + connectionId));
+                                                "unknown or inaccessible s3 connection"));
         if (!connection.isEnabled()) {
-            throw new IllegalArgumentException(
-                    "s3 connection '" + connection.getName() + "' is disabled");
+            throw new IllegalArgumentException("s3 connection is disabled");
         }
-        requireUsableByCurrentUser(connection);
         Map<String, Object> merged = new LinkedHashMap<>(connectionConfig(connection));
         copyPerUseOption(options, merged, PREFIX_OPTION);
         copyPerUseOption(options, merged, MODE_OPTION);
@@ -93,17 +95,17 @@ public class S3ConnectionResolver {
         }
     }
 
-    private void requireUsableByCurrentUser(IntegrationConfig connection) {
+    /**
+     * Whether the current caller may use this connection. With no principal - a background sweep or
+     * delivery on a worker thread that carries no {@code SecurityContext} - access is treated as
+     * already established: stored policies are validated with the caller present at save time, and
+     * ad-hoc runs are validated on the request thread before dispatch (see {@code
+     * PolicyValidator#validateOutput}). A missing principal must therefore never be the ONLY thing
+     * standing between a caller and a connection, or the check becomes a confused deputy.
+     */
+    private boolean usableByCurrentUser(IntegrationConfig connection) {
         User user = currentUser();
-        if (user == null) {
-            // Background sweep/delivery, or a login-disabled deployment: access was enforced
-            // when the referencing source/policy was saved by an authenticated team leader.
-            return;
-        }
-        if (!ownership.canUse(ResourceType.INTEGRATION_CONFIG, connection, user)) {
-            throw new IllegalArgumentException(
-                    "you cannot use s3 connection '" + connection.getName() + "'");
-        }
+        return user == null || ownership.canUse(ResourceType.INTEGRATION_CONFIG, connection, user);
     }
 
     // Mirrors ResourceAccessSecurity's principal resolution; null when unauthenticated.

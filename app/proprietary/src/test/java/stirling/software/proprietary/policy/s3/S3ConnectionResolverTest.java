@@ -109,9 +109,18 @@ class S3ConnectionResolverTest {
                         new UsernamePasswordAuthenticationToken(saver, null, java.util.List.of()));
         when(ownership.canUse(any(), any(IntegrationConfig.class), eq(saver))).thenReturn(false);
 
+        // Denied reads the same as unknown and never echoes the connection name, so ids can't be
+        // enumerated by probing.
         assertThrows(
                 IllegalArgumentException.class,
                 () -> resolver().resolve(Map.of("connectionId", 9L)));
+        try {
+            resolver().resolve(Map.of("connectionId", 9L));
+        } catch (IllegalArgumentException e) {
+            org.junit.jupiter.api.Assertions.assertFalse(
+                    e.getMessage().contains("Claims bucket"),
+                    "access-denied error must not leak the connection name");
+        }
     }
 
     @Test
