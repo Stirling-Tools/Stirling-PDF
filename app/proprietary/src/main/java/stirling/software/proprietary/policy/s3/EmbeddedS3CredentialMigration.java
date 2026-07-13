@@ -116,6 +116,9 @@ public class EmbeddedS3CredentialMigration {
             connection.setScope(OwnerScope.TEAM);
             connection.setOwnerTeam(team);
         } else {
+            // No team (teamless self-hosted, or a source whose team was since deleted): server
+            // scope, i.e. admin-owned. An orphaned-team source's non-admin editor would then need
+            // an admin to re-share the connection - acceptable for the narrow orphaned case.
             connection.setScope(OwnerScope.SERVER);
         }
         Map<String, Object> config = new LinkedHashMap<>();

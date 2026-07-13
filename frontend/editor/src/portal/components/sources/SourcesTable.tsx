@@ -121,9 +121,9 @@ export function SourcesTable({ sources, onRowClick }: SourcesTableProps) {
       columns={columns}
       rows={sources}
       rowKey={(s) => s.id}
-      onRowClick={(s) => {
-        if (s.type !== EDITOR_SOURCE_TYPE) onRowClick(s);
-      }}
+      onRowClick={onRowClick}
+      // The virtual editor row has no page to open, so it's inert - not a fake button.
+      isRowInteractive={(s) => s.type !== EDITOR_SOURCE_TYPE}
     />
   );
 }

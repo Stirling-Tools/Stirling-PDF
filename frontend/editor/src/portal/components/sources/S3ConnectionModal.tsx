@@ -72,7 +72,10 @@ export function S3ConnectionModal({
             name: form.name.trim(),
             config: s3ConnectionRequestConfig(form),
           })
-        : await createIntegration({
+        : // TEAM scope suits the team-based portal (the backend defaults the team to the
+          // caller's own). A teamless single-operator self-hosted deployment would need a
+          // USER/SERVER scope choice here - follow-up if the portal ships there.
+          await createIntegration({
             integrationType: "S3",
             name: form.name.trim(),
             scope: "TEAM",

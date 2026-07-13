@@ -84,6 +84,24 @@ describe("SourceBuilder", () => {
     expect(await screen.findByText("sources list")).toBeInTheDocument();
   });
 
+  it("gates the s3 type on a chosen connection", async () => {
+    renderBuilder("/processor/sources/new");
+    fireEvent.change(screen.getByLabelText(/portal\.sources\.wizard\.name/), {
+      target: { value: "Bucket source" },
+    });
+    // Switch to the S3 type: the connection field appears and Create stays
+    // disabled until a connection is chosen (connectionId is required).
+    fireEvent.click(screen.getByText("portal.sources.types.s3.label"));
+    expect(
+      await screen.findByText(
+        "portal.sources.types.s3.fields.connection.label",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("portal.sources.builder.create").closest("button"),
+    ).toBeDisabled();
+  });
+
   it("blocks create until required fields are filled", async () => {
     renderBuilder("/processor/sources/new");
     // Name given but directory (required) still blank -> Create disabled.
