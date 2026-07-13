@@ -177,10 +177,6 @@
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
   --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
 
-  /* Always-dark text (for use on light backgrounds like alerts) - does not change in dark mode */
-  --text-always-dark: var(--p-gray-800);
-  --text-always-dark-muted: var(--p-gray-500);
-
   /* Icon colors for light mode */
   --icon-tools-bg: var(--p-blue-500);
   --icon-tools-color: #ffffff;
@@ -206,10 +202,6 @@
   --landing-button-bg: var(--c-surface);
   --landing-button-border: var(--p-blue-400);
   --landing-button-hover-bg: var(--p-gray-50);
-
-  /* drop state */
-  --landing-drop-inner-paper-bg: var(--p-blue-400);
-  --landing-drop-inner-paper-border: var(--p-blue-400);
 
   /* landing hero & stack */
   --landing-hero-gradient: linear-gradient(
@@ -525,7 +517,7 @@
 
 [data-mantine-color-scheme="dark"] .plan-button:disabled,
 [data-mantine-color-scheme="dark"] .plan-button[data-disabled] {
-  background-color: #6b7280 !important;
+  background-color: var(--p-gray-500) !important;
 }
 
 /* Override the flat multiply blend for a clean, modern semi-transparent overlay */
@@ -571,34 +563,6 @@
     background-color 0.2s ease,
     border-color 0.2s ease;
 }
-/* ── PDF Link Overlay (viewer) ── */
-:root {
-  --link-hover-bg: color-mix(in srgb, var(--p-blue-500) 10%, transparent);
-  --link-hover-border: color-mix(in srgb, var(--p-blue-500) 32%, transparent);
-  --link-hover-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.35),
-    0 1px 4px rgba(10, 139, 255, 0.12);
-  --link-focus-ring: color-mix(in srgb, var(--p-blue-500) 25%, transparent);
-  --link-toolbar-bg: color-mix(in srgb, var(--p-blue-700) 88%, transparent);
-  --link-toolbar-border: rgba(255, 255, 255, 0.1);
-  --link-toolbar-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.16),
-    0 0 0 0.5px rgba(255, 255, 255, 0.05);
-}
-
-[data-mantine-color-scheme="dark"] {
-  --link-hover-bg: color-mix(in srgb, var(--p-blue-500) 14%, transparent);
-  --link-hover-border: color-mix(in srgb, var(--p-blue-500) 38%, transparent);
-  --link-hover-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 1px 4px rgba(79, 142, 245, 0.18);
-  --link-focus-ring: color-mix(in srgb, var(--p-blue-500) 30%, transparent);
-  --link-toolbar-bg: color-mix(in srgb, var(--p-blue-700) 94%, transparent);
-  --link-toolbar-border: rgba(255, 255, 255, 0.07);
-  --link-toolbar-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.35),
-    0 0 0 0.5px rgba(255, 255, 255, 0.04);
-}
-
 /* ── Link hit-area ── */
 .pdf-link-overlay {
   position: absolute;
@@ -722,7 +686,7 @@
 }
 
 .pdf-link-toolbar-btn:hover .pdf-link-toolbar-label {
-  color: #60a5fa; /* Modern blue accent */
+  color: var(--p-blue-400); /* Modern blue accent */
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -732,7 +696,7 @@
 }
 
 .pdf-link-toolbar-btn--delete:hover {
-  background: rgba(239, 68, 68, 0.15);
+  background: color-mix(in srgb, var(--p-red-500) 15%, transparent);
   color: #fca5a5;
 }
 
@@ -756,8 +720,8 @@
 }
 
 .pdf-link-toolbar-btn--delete:hover {
-  background: rgba(239, 68, 68, 0.2);
-  color: #f87171;
+  background: color-mix(in srgb, var(--p-red-500) 20%, transparent);
+  color: var(--p-red-400);
 }
 
 .pdf-link-toolbar-btn--go:hover {
