@@ -72,11 +72,19 @@
   margin-left: 6px;
 }
 .search-hit {
-  background: rgba(255, 235, 59, 0.4); /* yellow highlight */
+  background: color-mix(
+    in srgb,
+    var(--p-flash-yellow) 40%,
+    transparent
+  ); /* yellow highlight */
   border-radius: 2px;
 }
 .search-hit-active {
-  background: rgba(33, 150, 243, 0.4); /* active blue */
+  background: color-mix(
+    in srgb,
+    var(--p-material-blue) 40%,
+    transparent
+  ); /* active blue */
 }
 
 .showjs-root {

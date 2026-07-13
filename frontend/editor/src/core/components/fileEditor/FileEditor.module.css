@@ -48,7 +48,7 @@
 }
 
 .headerResting {
-  background: #3b4b6e; /* dark blue for unselected in light mode */
+  background: var(--p-navy-500); /* dark blue for unselected in light mode */
   color: #ffffff;
   border-bottom: 1px solid var(--c-border);
 }
@@ -229,7 +229,7 @@
 }
 
 .pinned {
-  color: #ffc107 !important;
+  color: var(--p-gold-500) !important;
 }
 
 /* Unsupported file indicator */
@@ -299,7 +299,7 @@
 }
 
 :global([data-mantine-color-scheme="dark"]) .headerResting {
-  background: #0d1020; /* requested default unselected color */
+  background: var(--p-navy-950); /* requested default unselected color */
   color: var(--c-accent-fg); /* var(--p-gray-300) */
   border-bottom-color: var(--c-border); /* #3A4047 */
 }

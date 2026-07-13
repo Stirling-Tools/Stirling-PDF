@@ -243,29 +243,55 @@
 /* Flash/pulse highlight for navigated change */
 @keyframes compare-flash {
   0% {
-    outline: 4px solid rgba(255, 235, 59, 0);
-    box-shadow: 0 0 0 rgba(255, 235, 59, 0);
-    background-color: rgba(255, 235, 59, 0.2) !important;
+    outline: 4px solid color-mix(in srgb, var(--p-flash-yellow) 0%, transparent);
+    box-shadow: 0 0 0 color-mix(in srgb, var(--p-flash-yellow) 0%, transparent);
+    background-color: color-mix(
+      in srgb,
+      var(--p-flash-yellow) 20%,
+      transparent
+    ) !important;
   }
   25% {
-    outline: 4px solid rgba(255, 235, 59, 1);
-    box-shadow: 0 0 20px rgba(255, 235, 59, 0.8);
-    background-color: rgba(255, 235, 59, 0.4) !important;
+    outline: 4px solid
+      color-mix(in srgb, var(--p-flash-yellow) 100%, transparent);
+    box-shadow: 0 0 20px
+      color-mix(in srgb, var(--p-flash-yellow) 80%, transparent);
+    background-color: color-mix(
+      in srgb,
+      var(--p-flash-yellow) 40%,
+      transparent
+    ) !important;
   }
   50% {
-    outline: 4px solid rgba(255, 235, 59, 1);
-    box-shadow: 0 0 30px rgba(255, 235, 59, 0.9);
-    background-color: rgba(255, 235, 59, 0.5) !important;
+    outline: 4px solid
+      color-mix(in srgb, var(--p-flash-yellow) 100%, transparent);
+    box-shadow: 0 0 30px
+      color-mix(in srgb, var(--p-flash-yellow) 90%, transparent);
+    background-color: color-mix(
+      in srgb,
+      var(--p-flash-yellow) 50%,
+      transparent
+    ) !important;
   }
   75% {
-    outline: 4px solid rgba(255, 235, 59, 0.8);
-    box-shadow: 0 0 15px rgba(255, 235, 59, 0.6);
-    background-color: rgba(255, 235, 59, 0.3) !important;
+    outline: 4px solid
+      color-mix(in srgb, var(--p-flash-yellow) 80%, transparent);
+    box-shadow: 0 0 15px
+      color-mix(in srgb, var(--p-flash-yellow) 60%, transparent);
+    background-color: color-mix(
+      in srgb,
+      var(--p-flash-yellow) 30%,
+      transparent
+    ) !important;
   }
   100% {
-    outline: 4px solid rgba(255, 235, 59, 0);
-    box-shadow: 0 0 0 rgba(255, 235, 59, 0);
-    background-color: rgba(255, 235, 59, 0) !important;
+    outline: 4px solid color-mix(in srgb, var(--p-flash-yellow) 0%, transparent);
+    box-shadow: 0 0 0 color-mix(in srgb, var(--p-flash-yellow) 0%, transparent);
+    background-color: color-mix(
+      in srgb,
+      var(--p-flash-yellow) 0%,
+      transparent
+    ) !important;
   }
 }
 
@@ -274,14 +300,18 @@
   z-index: 1000;
   position: relative;
   /* Bonus: temporarily override red/green to yellow during flash for clarity */
-  background-color: rgba(255, 235, 59, 0.5) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--p-flash-yellow) 50%,
+    transparent
+  ) !important;
 }
 
 /* Union overlay for group flash */
 .compare-diff-flash-overlay {
   animation: compare-flash 1.5s ease-in-out 1;
   z-index: 999;
-  background-color: rgba(255, 235, 59, 0.4);
+  background-color: color-mix(in srgb, var(--p-flash-yellow) 40%, transparent);
   pointer-events: none;
   border-radius: 2px;
 }
@@ -514,7 +544,7 @@
   padding-bottom: 32px;
 }
 .compare-pixel-page {
-  border: 1px solid var(--mantine-color-default-border, #dee2e6);
+  border: 1px solid var(--mantine-color-default-border, var(--p-slate-200));
   border-radius: 8px;
   padding: 12px;
   background: var(--mantine-color-body, #fff);
@@ -532,13 +562,13 @@
 }
 .compare-pixel-triptych figure img {
   display: block;
-  border: 1px solid var(--mantine-color-default-border, #dee2e6);
+  border: 1px solid var(--mantine-color-default-border, var(--p-slate-200));
   background: #fff;
 }
 .compare-pixel-triptych figcaption {
   font-size: 11px;
   text-align: center;
-  color: var(--mantine-color-dimmed, #868e96);
+  color: var(--mantine-color-dimmed, var(--p-gray-450));
 }
 .compare-pixel-overlay {
   position: relative;
@@ -547,7 +577,7 @@
 .compare-pixel-overlay-img {
   display: block;
   width: 100%;
-  border: 1px solid var(--mantine-color-default-border, #dee2e6);
+  border: 1px solid var(--mantine-color-default-border, var(--p-slate-200));
 }
 .compare-pixel-overlay-top {
   position: absolute;

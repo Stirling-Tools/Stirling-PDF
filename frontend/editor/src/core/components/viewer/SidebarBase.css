@@ -14,7 +14,11 @@
   box-shadow: -2px 0 16px
     color-mix(
       in srgb,
-      var(--shadow-color, rgba(15, 23, 42, 0.35)) 20%,
+      var(
+          --shadow-color,
+          color-mix(in srgb, var(--p-slate-900) 35%, transparent)
+        )
+        20%,
       transparent
     );
   backdrop-filter: blur(12px);

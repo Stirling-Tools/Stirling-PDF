@@ -325,7 +325,7 @@
   flex-shrink: 0;
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.04),
-    0 4px 14px rgba(15, 23, 42, 0.08);
+    0 4px 14px color-mix(in srgb, var(--p-slate-900) 8%, transparent);
   transition: box-shadow 160ms ease-out;
 }
 

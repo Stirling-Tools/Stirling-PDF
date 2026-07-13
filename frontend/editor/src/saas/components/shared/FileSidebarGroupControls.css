@@ -39,7 +39,10 @@
 
 .fsg-chevron {
   font-size: 1.1rem !important;
-  color: var(--c-text-subtle, rgba(128, 128, 128, 0.9));
+  color: var(
+    --c-text-subtle,
+    color-mix(in srgb, var(--p-gray-mid) 90%, transparent)
+  );
   margin-left: -4px;
 }
 
@@ -56,7 +59,10 @@
 }
 
 .fsg-cat-name:hover {
-  background: var(--c-hover, rgba(128, 128, 128, 0.12));
+  background: var(
+    --c-hover,
+    color-mix(in srgb, var(--p-gray-mid) 12%, transparent)
+  );
 }
 
 .fsg-rename {
@@ -70,11 +76,17 @@
   padding: 2px;
   border-radius: 4px;
   cursor: pointer;
-  color: var(--c-text-subtle, rgba(128, 128, 128, 0.9));
+  color: var(
+    --c-text-subtle,
+    color-mix(in srgb, var(--p-gray-mid) 90%, transparent)
+  );
 }
 
 .fsg-cat-action:hover {
-  background: var(--c-hover, rgba(128, 128, 128, 0.12));
+  background: var(
+    --c-hover,
+    color-mix(in srgb, var(--p-gray-mid) 12%, transparent)
+  );
   color: var(--c-text, inherit);
 }
 
@@ -96,7 +108,10 @@
 .fsg-count {
   font-size: 11px;
   font-weight: 500;
-  color: var(--c-text-subtle, rgba(128, 128, 128, 0.9));
+  color: var(
+    --c-text-subtle,
+    color-mix(in srgb, var(--p-gray-mid) 90%, transparent)
+  );
 }
 
 .fsg-add,
@@ -108,7 +123,11 @@
 
 .fsg-new {
   padding-top: 4px;
-  border-top: 1px solid var(--c-border-subtle, rgba(128, 128, 128, 0.2));
+  border-top: 1px solid
+    var(
+      --c-border-subtle,
+      color-mix(in srgb, var(--p-gray-mid) 20%, transparent)
+    );
 }
 
 .fsg-add-input {
@@ -116,7 +135,11 @@
   min-width: 0;
   padding: 4px 8px;
   font-size: 12px;
-  border: 1px solid var(--c-border-subtle, rgba(128, 128, 128, 0.35));
+  border: 1px solid
+    var(
+      --c-border-subtle,
+      color-mix(in srgb, var(--p-gray-mid) 35%, transparent)
+    );
   border-radius: 6px;
   background: transparent;
   color: var(--c-text, inherit);

@@ -564,7 +564,7 @@
   gap: 0.35rem;
   padding: 0.22rem 0.55rem;
   border-radius: 999px;
-  background: var(--mantine-color-teal-6, #10b981);
+  background: var(--mantine-color-teal-6, var(--p-emerald-500));
   color: #ffffff;
   font-size: 0.68rem;
   font-weight: 700;
@@ -600,7 +600,7 @@
 .files-page-card.is-in-workspace {
   border-color: color-mix(
     in srgb,
-    var(--mantine-color-teal-6, #10b981) 35%,
+    var(--mantine-color-teal-6, var(--p-emerald-500)) 35%,
     var(--c-border-subtle)
   );
 }
@@ -613,7 +613,12 @@
   pointer-events: none;
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--mantine-color-teal-6, #10b981) 6%, transparent) 0%,
+    color-mix(
+        in srgb,
+        var(--mantine-color-teal-6, var(--p-emerald-500)) 6%,
+        transparent
+      )
+      0%,
     transparent 40%
   );
   z-index: 0;
@@ -625,7 +630,7 @@
   gap: 0.3rem;
   padding: 0.12rem 0.5rem;
   border-radius: 999px;
-  background: var(--mantine-color-teal-6, #10b981);
+  background: var(--mantine-color-teal-6, var(--p-emerald-500));
   color: #ffffff;
   font-size: 0.68rem;
   font-weight: 700;
@@ -639,7 +644,7 @@
 .files-page-list-row.is-in-workspace {
   background: color-mix(
     in srgb,
-    var(--mantine-color-teal-6, #10b981) 4%,
+    var(--mantine-color-teal-6, var(--p-emerald-500)) 4%,
     transparent
   );
 }

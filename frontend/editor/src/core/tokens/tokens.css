@@ -93,21 +93,21 @@
   /* Gradients */
   --grad-blue-btn: linear-gradient(
     180deg,
-    #5b9bf7 0%,
-    #4c8bf5 50%,
-    #3a7be8 100%
+    var(--p-azure-450) 0%,
+    var(--p-azure-550) 50%,
+    var(--p-azure-650) 100%
   );
   --grad-purple-btn: linear-gradient(
     180deg,
-    #a78bfa 0%,
-    #8b5cf6 50%,
-    #7c3aed 100%
+    var(--p-violet-400) 0%,
+    var(--p-violet-500) 50%,
+    var(--p-violet-600) 100%
   );
   --grad-green-btn: linear-gradient(
     180deg,
-    #34d399 0%,
-    #10b981 50%,
-    #059669 100%
+    var(--p-emerald-400) 0%,
+    var(--p-emerald-500) 50%,
+    var(--p-emerald-600) 100%
   );
   --grad-amber-btn: linear-gradient(
     180deg,

@@ -1,7 +1,7 @@
 .sui-modal__backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.55);
+  background: color-mix(in srgb, var(--p-slate-900) 55%, transparent);
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -19,7 +19,7 @@
   border: 1px solid var(--c-border);
   border-radius: var(--radius-xl);
   box-shadow:
-    0 1.25rem 3rem rgba(15, 23, 42, 0.35),
+    0 1.25rem 3rem color-mix(in srgb, var(--p-slate-900) 35%, transparent),
     0 0 0 1px var(--c-border-subtle);
   display: flex;
   flex-direction: column;

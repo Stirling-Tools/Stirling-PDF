@@ -173,7 +173,10 @@
 .labels-group-count {
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--c-text-subtle, rgba(128, 128, 128, 0.9));
+  color: var(
+    --c-text-subtle,
+    color-mix(in srgb, var(--p-gray-mid) 90%, transparent)
+  );
 }
 .labels-group-ungrouped {
   margin: 0;

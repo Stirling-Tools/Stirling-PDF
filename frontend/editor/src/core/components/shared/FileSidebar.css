@@ -363,7 +363,10 @@
 }
 /* Hover reads neutral (not the default blue tint); selected stays blue. */
 .file-sidebar-group-items .file-sidebar-file-item:hover:not(.selected) {
-  background-color: var(--c-hover, rgba(120, 120, 120, 0.1));
+  background-color: var(
+    --c-hover,
+    color-mix(in srgb, var(--p-gray-mid) 10%, transparent)
+  );
 }
 /* A plain circle where the selected check sits — on hover, and blue when selected. */
 .file-sidebar-group-items .file-sidebar-file-checkbox-hover,
@@ -424,7 +427,10 @@
   display: none;
 }
 .file-sidebar-view-all:hover {
-  background: var(--c-hover, rgba(120, 120, 120, 0.1));
+  background: var(
+    --c-hover,
+    color-mix(in srgb, var(--p-gray-mid) 10%, transparent)
+  );
 }
 
 .file-sidebar-file-list::-webkit-scrollbar {

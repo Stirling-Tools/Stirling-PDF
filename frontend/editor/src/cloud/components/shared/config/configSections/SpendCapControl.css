@@ -9,10 +9,10 @@
    Payg.css / UpgradeModal.css treatments the control sits beside. */
 
 .scc {
-  --scc-accent: #0a8bff;
-  --scc-accent-text: #0a8bff;
-  --scc-accent-soft: rgba(10, 139, 255, 0.12);
-  --scc-accent-border: rgba(10, 139, 255, 0.25);
+  --scc-accent: var(--p-azure-500);
+  --scc-accent-text: var(--p-azure-500);
+  --scc-accent-soft: color-mix(in srgb, var(--p-azure-500) 12%, transparent);
+  --scc-accent-border: color-mix(in srgb, var(--p-azure-500) 25%, transparent);
   --scc-chip-bg: var(--c-surface-sunken);
   --scc-chip-border: var(--c-border);
   /* Consistent vertical rhythm between the control row, the estimate, and any
@@ -24,8 +24,8 @@
 [data-mantine-color-scheme="dark"] .scc {
   /* Chip surface/border track the neutral --c-* tokens (base rule); only the
      brand-azure accent is tuned brighter for dark. */
-  --scc-accent-text: #66b8ff;
-  --scc-accent-soft: rgba(10, 139, 255, 0.16);
+  --scc-accent-text: var(--p-azure-300);
+  --scc-accent-soft: color-mix(in srgb, var(--p-azure-500) 16%, transparent);
 }
 
 /* ── Inline row: presets · custom · no-cap · (save) ──────────────────── */

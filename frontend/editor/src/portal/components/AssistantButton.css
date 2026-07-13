@@ -15,7 +15,7 @@
     var(--color-purple) 100%
   );
   box-shadow:
-    0 0.5rem 1.25rem rgba(59, 130, 246, 0.35),
+    0 0.5rem 1.25rem color-mix(in srgb, var(--p-blue-500) 35%, transparent),
     inset 0 0.0625rem 0 rgba(255, 255, 255, 0.2);
   transition:
     transform var(--motion-base),
@@ -26,7 +26,7 @@
 .portal-assistant-btn:hover {
   transform: scale(1.08);
   box-shadow:
-    0 0.75rem 1.75rem rgba(59, 130, 246, 0.45),
+    0 0.75rem 1.75rem color-mix(in srgb, var(--p-blue-500) 45%, transparent),
     inset 0 0.0625rem 0 rgba(255, 255, 255, 0.25);
 }
 

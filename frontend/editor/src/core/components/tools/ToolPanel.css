@@ -78,17 +78,20 @@
   );
   --fullscreen-shadow-primary: color-mix(
     in srgb,
-    var(--shadow-color, rgba(15, 23, 42, 0.55)) 25%,
+    var(--shadow-color, color-mix(in srgb, var(--p-slate-900) 55%, transparent))
+      25%,
     transparent
   );
   --fullscreen-shadow-secondary: color-mix(
     in srgb,
-    var(--shadow-color, rgba(15, 23, 42, 0.35)) 30%,
+    var(--shadow-color, color-mix(in srgb, var(--p-slate-900) 35%, transparent))
+      30%,
     transparent
   );
   --fullscreen-shadow-group: color-mix(
     in srgb,
-    var(--shadow-color, rgba(15, 23, 42, 0.45)) 18%,
+    var(--shadow-color, color-mix(in srgb, var(--p-slate-900) 45%, transparent))
+      18%,
     transparent
   );
   --fullscreen-accent-hover: color-mix(
@@ -538,7 +541,10 @@
 .tool-panel__fullscreen-item:hover:not([aria-disabled="true"]):not(:disabled) {
   transform: translateY(-2px);
   border-color: var(--fullscreen-accent-hover);
-  box-shadow: var(--shadow-xl, 0 18px 34px rgba(15, 23, 42, 0.14));
+  box-shadow: var(
+    --shadow-xl,
+    0 18px 34px color-mix(in srgb, var(--p-slate-900) 14%, transparent)
+  );
 }
 
 .tool-panel__fullscreen-item--selected {

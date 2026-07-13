@@ -5,10 +5,10 @@
    user feels like they're filling out one form, not navigating pages. */
 
 .upm {
-  --upm-accent: #0a8bff;
-  --upm-accent-2: #6c5ce7;
-  --upm-accent-soft: rgba(10, 139, 255, 0.08);
-  --upm-success: #10b981;
+  --upm-accent: var(--p-azure-500);
+  --upm-accent-2: var(--p-purple-500);
+  --upm-accent-soft: color-mix(in srgb, var(--p-azure-500) 8%, transparent);
+  --upm-success: var(--p-emerald-500);
   --upm-radius: 18px;
   --upm-card-bg: var(--c-surface);
   --upm-border: var(--c-border);
@@ -19,7 +19,7 @@
 [data-mantine-color-scheme="dark"] .upm {
   /* Card/border/divider track the neutral --c-* tokens (base rule); only the
      brand-azure accent tint is tuned for dark. */
-  --upm-accent-soft: rgba(79, 142, 245, 0.14);
+  --upm-accent-soft: color-mix(in srgb, var(--p-azure-560) 14%, transparent);
 }
 
 /* Backdrop locks the page and centres the modal. z-index matches
@@ -253,7 +253,7 @@
   border-radius: 6px;
 }
 .upm-step__edit:hover {
-  background: rgba(10, 139, 255, 0.12);
+  background: color-mix(in srgb, var(--p-azure-500) 12%, transparent);
 }
 
 /* Placeholder card for the loading / error / mock states — a dashed, centered
@@ -327,7 +327,9 @@
 .upm-confirm__icon {
   font-size: 64px !important;
   color: var(--upm-success);
-  filter: drop-shadow(0 6px 18px rgba(16, 185, 129, 0.35));
+  filter: drop-shadow(
+    0 6px 18px color-mix(in srgb, var(--p-emerald-500) 35%, transparent)
+  );
 }
 .upm-confirm__title {
   margin: 6px 0 0;

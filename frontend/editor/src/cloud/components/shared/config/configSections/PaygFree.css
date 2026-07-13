@@ -145,8 +145,10 @@
   border: 1.5px solid transparent;
   background:
     linear-gradient(var(--payg-card-bg), var(--payg-card-bg)) padding-box,
-    linear-gradient(135deg, var(--payg-accent) 0%, #6c5ce7 100%) border-box;
-  box-shadow: 0 10px 28px -18px rgba(10, 139, 255, 0.4);
+    linear-gradient(135deg, var(--payg-accent) 0%, var(--p-purple-500) 100%)
+      border-box;
+  box-shadow: 0 10px 28px -18px
+    color-mix(in srgb, var(--p-azure-500) 40%, transparent);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -161,7 +163,11 @@
   flex-shrink: 0;
   padding: 10px;
   border-radius: 12px;
-  background: linear-gradient(135deg, var(--payg-accent) 0%, #6c5ce7 100%);
+  background: linear-gradient(
+    135deg,
+    var(--payg-accent) 0%,
+    var(--p-purple-500) 100%
+  );
   color: white !important;
   font-size: 1.7rem !important;
 }
@@ -292,7 +298,7 @@
   font-size: 1rem !important;
 }
 .paygf-explainer__icon--free {
-  color: #10b981;
+  color: var(--p-emerald-500);
 }
 .paygf-explainer__icon--paid {
   color: var(--payg-accent);

@@ -231,7 +231,7 @@
   background: linear-gradient(
     90deg,
     var(--c-primary),
-    var(--color-purple, #8b5cf6)
+    var(--color-purple, var(--p-violet-500))
   );
   border-radius: 999px;
   transition: width 200ms ease;
@@ -313,7 +313,7 @@
 }
 .payg-status[data-state="FULL"] .payg-status__dot {
   background: var(--c-success);
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--p-green-500) 18%, transparent);
 }
 .payg-status[data-state="WARNED"] {
   background: var(--c-warning-subtle);
@@ -321,7 +321,7 @@
 }
 .payg-status[data-state="WARNED"] .payg-status__dot {
   background: var(--c-warning);
-  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.2);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--p-yellow-500) 20%, transparent);
 }
 .payg-status[data-state="DEGRADED"] {
   background: var(--c-danger-subtle);
@@ -329,7 +329,7 @@
 }
 .payg-status[data-state="DEGRADED"] .payg-status__dot {
   background: var(--c-danger);
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--p-red-500) 20%, transparent);
 }
 
 /* Segmented usage bar */
@@ -347,7 +347,7 @@
   transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .payg-bar__fill[data-state="FULL"] {
-  background: linear-gradient(90deg, #0a8bff, #38bdf8);
+  background: linear-gradient(90deg, var(--p-azure-500), var(--p-azure-400));
 }
 .payg-bar__fill[data-state="WARNED"] {
   background: linear-gradient(90deg, var(--p-amber-500), var(--p-amber-400));
@@ -457,15 +457,15 @@
 }
 
 .portal-billing__breakdown-fill--blue {
-  background: #0a8bff;
+  background: var(--p-azure-500);
 }
 
 .portal-billing__breakdown-fill--purple {
-  background: #8b5cf6;
+  background: var(--p-violet-500);
 }
 
 .portal-billing__breakdown-fill--teal {
-  background: #06b6d4;
+  background: var(--p-cyan-500);
 }
 
 /* ── Cap control ────────────────────────────────────────────────────────── */
@@ -570,10 +570,10 @@
    Same class names + structure so the visual is identical to the SaaS Plan
    page; when the shared-component move lands, these dedupe to one stylesheet. */
 .scc {
-  --scc-accent: #0a8bff;
-  --scc-accent-text: #0a8bff;
-  --scc-accent-soft: rgba(10, 139, 255, 0.12);
-  --scc-accent-border: rgba(10, 139, 255, 0.25);
+  --scc-accent: var(--p-azure-500);
+  --scc-accent-text: var(--p-azure-500);
+  --scc-accent-soft: color-mix(in srgb, var(--p-azure-500) 12%, transparent);
+  --scc-accent-border: color-mix(in srgb, var(--p-azure-500) 25%, transparent);
   --scc-chip-bg: var(--c-surface-sunken);
   --scc-chip-border: var(--c-border);
   --scc-text-primary: var(--c-text);
@@ -588,8 +588,8 @@
 [data-mantine-color-scheme="dark"] .scc {
   /* Brand accent lightened for dark legibility; neutral chip bg/border come
      from the adaptive --c-* base rule above. */
-  --scc-accent-text: #66b8ff;
-  --scc-accent-soft: rgba(10, 139, 255, 0.16);
+  --scc-accent-text: var(--p-azure-300);
+  --scc-accent-soft: color-mix(in srgb, var(--p-azure-500) 16%, transparent);
 }
 
 .scc-row {
@@ -736,9 +736,9 @@
   white-space: nowrap;
 }
 .portal-billing__role-pill[data-leader="true"] {
-  background: rgba(10, 139, 255, 0.12);
-  color: #0a8bff;
-  border: 1px solid rgba(10, 139, 255, 0.25);
+  background: color-mix(in srgb, var(--p-azure-500) 12%, transparent);
+  color: var(--p-azure-500);
+  border: 1px solid color-mix(in srgb, var(--p-azure-500) 25%, transparent);
 }
 .portal-billing__role-pill[data-leader="false"] {
   background: var(--c-surface-sunken);
@@ -768,10 +768,10 @@
   margin-bottom: 8px;
 }
 .portal-billing__planhead-lbl--free {
-  color: #10b981;
+  color: var(--p-emerald-500);
 }
 .portal-billing__planhead-lbl--meter {
-  color: #0a8bff;
+  color: var(--p-azure-500);
 }
 .portal-billing__planhead-title {
   margin: 0;
@@ -988,13 +988,13 @@
   height: 100%;
 }
 .portal-billing__segbar-seg--blue {
-  background: #0a8bff;
+  background: var(--p-azure-500);
 }
 .portal-billing__segbar-seg--purple {
-  background: #8b5cf6;
+  background: var(--p-violet-500);
 }
 .portal-billing__segbar-seg--teal {
-  background: #06b6d4;
+  background: var(--p-cyan-500);
 }
 .portal-billing__seglegend {
   display: flex;
@@ -1016,13 +1016,13 @@
   flex-shrink: 0;
 }
 .portal-billing__dot--blue {
-  background: #0a8bff;
+  background: var(--p-azure-500);
 }
 .portal-billing__dot--purple {
-  background: #8b5cf6;
+  background: var(--p-violet-500);
 }
 .portal-billing__dot--teal {
-  background: #06b6d4;
+  background: var(--p-cyan-500);
 }
 .portal-billing__seglegend-label {
   font-weight: 600;

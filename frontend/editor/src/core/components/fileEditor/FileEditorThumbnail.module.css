@@ -183,7 +183,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(220, 38, 38, 0.12);
+  background: color-mix(in srgb, var(--p-red-600) 12%, transparent);
   border-radius: 12px;
   z-index: 2;
   pointer-events: none;

@@ -1,7 +1,7 @@
 .sui-drawer__backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.32);
+  background: color-mix(in srgb, var(--p-slate-900) 32%, transparent);
   z-index: var(--z-drawer);
   animation: fadeIn 0.18s ease both;
 }
@@ -21,13 +21,14 @@
 .sui-drawer--right {
   right: 0;
   border-left: 1px solid var(--c-border);
-  box-shadow: -4px 0 24px rgba(15, 23, 42, 0.12);
+  box-shadow: -4px 0 24px
+    color-mix(in srgb, var(--p-slate-900) 12%, transparent);
 }
 
 .sui-drawer--left {
   left: 0;
   border-right: 1px solid var(--c-border);
-  box-shadow: 4px 0 24px rgba(15, 23, 42, 0.12);
+  box-shadow: 4px 0 24px color-mix(in srgb, var(--p-slate-900) 12%, transparent);
   animation-name: slideInLeft;
 }
 

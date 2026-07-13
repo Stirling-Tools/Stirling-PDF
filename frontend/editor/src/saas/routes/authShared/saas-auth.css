@@ -42,7 +42,7 @@
 
 .auth-guest-button {
   background-color: #ffffff;
-  color: #af3434;
+  color: var(--p-brand-red);
   border: 2px solid currentColor;
 }
 
@@ -86,8 +86,8 @@
 }
 
 .auth-expandable-trigger--active {
-  border-color: #af3434 !important;
-  box-shadow: 0 0 0 3px rgba(175, 52, 52, 0.12);
+  border-color: var(--p-brand-red) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--p-brand-red) 12%, transparent);
 }
 
 /* ── Animated expand/collapse via grid-template-rows ───────────────── */

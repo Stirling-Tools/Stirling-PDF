@@ -60,11 +60,11 @@
 
 .errorBox {
   margin-top: 20px;
-  background: #ffebee;
-  border: 1px solid #ffcdd2;
+  background: var(--p-vendor-red-bg);
+  border: 1px solid var(--p-vendor-red-border);
   border-radius: 8px;
   padding: 16px;
-  color: #c62828;
+  color: var(--p-vendor-red-text);
   font-size: 14px;
   line-height: 1.5;
   word-break: break-word;
@@ -73,23 +73,23 @@
 
 @media (prefers-color-scheme: dark) {
   .page {
-    background: #1a1a1a;
-    color: #e0e0e0;
+    background: var(--p-zinc-800);
+    color: var(--p-gray-200);
   }
 
   .card {
-    background: #2d2d2d;
+    background: var(--p-zinc-600);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     color: var(--p-gray-200);
     border-color: var(--p-gray-700);
   }
 
   .iconSuccess {
-    color: #66bb6a;
+    color: var(--p-vendor-green);
   }
 
   .iconError {
-    color: #ef5350;
+    color: var(--p-vendor-red);
   }
 
   .iconNeutral {
@@ -102,13 +102,13 @@
 
   .message,
   .loadingExtra {
-    color: #b0b0b0;
+    color: var(--p-gray-b0);
   }
 
   .errorBox {
-    background: #3d2020;
-    border: 1px solid #5d3030;
-    color: #ef9a9a;
+    background: var(--p-vendor-red-bg-dark);
+    border: 1px solid var(--p-vendor-red-border-dark);
+    color: var(--p-vendor-red-soft);
   }
 }
 
