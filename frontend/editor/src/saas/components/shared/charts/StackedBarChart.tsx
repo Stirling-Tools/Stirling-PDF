@@ -13,6 +13,7 @@ import {
   createScale,
 } from "@app/components/shared/charts/utils/d3Utils";
 import "@app/components/shared/charts/StackedBarChart.css";
+import { useTranslation } from "react-i18next";
 
 export default function StackedBarChart({
   fractions,
@@ -26,6 +27,7 @@ export default function StackedBarChart({
   animationDurationMs = 900,
   ariaLabel,
 }: StackedBarChartProps) {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const hasAnimatedRef = useRef(false);
@@ -309,7 +311,7 @@ export default function StackedBarChart({
                 outline: "1px solid var(--api-keys-card-border)",
               }}
             />
-            <Text size="sm">Remaining</Text>
+            <Text size="sm">{t("common.remaining", "Remaining")}</Text>
           </Group>
         </Group>
       )}
