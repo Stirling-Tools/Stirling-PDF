@@ -2,8 +2,8 @@
  * The catalog of available policy *definitions* — the policy types, their
  * editable fields, the sources a policy can run over, and the document types
  * scope can be narrowed to. This is the single seam through which definitions
- * reach the UI: components never import the static definitions directly, they
- * read the catalog (via {@link usePolicyCatalog}).
+ * reach consumers: nothing imports the static definitions directly, everything
+ * reads the catalog through {@link loadPolicyCatalog}.
  *
  * Backed by the static `policyDefinitions` today; swap {@link loadPolicyCatalog}
  * for a fetch to move definitions server-side without touching any component.

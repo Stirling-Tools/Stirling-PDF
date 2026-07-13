@@ -300,6 +300,18 @@ class RedactControllerMoreTest {
         }
 
         @Test
+        @DisplayName("null listOfText throws an illegal-argument error before any load")
+        void nullPatternsThrows() throws Exception {
+            RedactPdfRequest request = new RedactPdfRequest();
+            request.setFileInput(pdfFile(new byte[] {1, 2, 3}));
+            request.setListOfText(null);
+
+            assertThatThrownBy(() -> controller.redactPdf(request))
+                    .isInstanceOf(RuntimeException.class);
+            verify(pdfDocumentFactory, never()).load(any(MultipartFile.class));
+        }
+
+        @Test
         @DisplayName("null file input is reported as a failure")
         void nullFileThrows() {
             RedactPdfRequest request = new RedactPdfRequest();

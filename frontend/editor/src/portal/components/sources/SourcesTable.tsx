@@ -8,7 +8,10 @@ import {
   type TableColumn,
 } from "@app/ui";
 import type { SourceStatus, SourceView } from "@portal/api/sources";
-import { sourceTypeMeta } from "@portal/components/sources/sourceTypes";
+import {
+  EDITOR_SOURCE_TYPE,
+  sourceTypeMeta,
+} from "@portal/components/sources/sourceTypes";
 import "@portal/views/Sources.css";
 
 const STATUS_TONE: Record<SourceStatus, StatusTone> = {
@@ -37,6 +40,9 @@ export function SourcesTable({
         header: t("portal.sources.table.source"),
         render: (s) => {
           const meta = sourceTypeMeta(s.type);
+          // The editor is a system source with no instance name: label it from its type and drop
+          // the chip, which would just repeat the name.
+          const isEditor = s.type === EDITOR_SOURCE_TYPE;
           return (
             <div className="portal-sources__name-cell">
               <span
@@ -46,10 +52,12 @@ export function SourcesTable({
                 {meta.icon}
               </span>
               <div className="portal-sources__name-text">
-                <strong>{s.name}</strong>
-                <Chip accent={meta.accent} size="sm">
-                  {t(meta.labelKey)}
-                </Chip>
+                <strong>{isEditor ? t(meta.labelKey) : s.name}</strong>
+                {!isEditor && (
+                  <Chip accent={meta.accent} size="sm">
+                    {t(meta.labelKey)}
+                  </Chip>
+                )}
               </div>
             </div>
           );

@@ -71,6 +71,41 @@ class ScheduleTriggerTest {
     }
 
     @Test
+    void anIntervalMatchingTheSweepPeriodFiresEverySweepDespiteJitter() {
+        Policy policy = scheduled("p1", new Schedule.Every(1, Schedule.Unit.MINUTES));
+        when(policyStore.findByTriggerType("schedule")).thenReturn(List.of(policy));
+
+        Instant t0 = Instant.parse("2026-06-05T10:00:00Z");
+        trigger.sweep(t0); // baseline
+        // The sweep that fires runs a few ms late (scheduler jitter)...
+        trigger.sweep(t0.plusSeconds(60).plusMillis(5));
+        verify(policyRunner, times(1)).run(eq(policy));
+
+        // ...and the next sweep lands exactly on the 60s grid. Anchoring lastFired to the due
+        // time (not the jittered observation) means this must still fire, not alias to skip.
+        trigger.sweep(t0.plusSeconds(120));
+        verify(policyRunner, times(2)).run(eq(policy));
+    }
+
+    @Test
+    void aGapFiresOnceNotOncePerMissedInterval() {
+        Policy policy = scheduled("p1", new Schedule.Every(1, Schedule.Unit.MINUTES));
+        when(policyStore.findByTriggerType("schedule")).thenReturn(List.of(policy));
+
+        Instant t0 = Instant.parse("2026-06-05T10:00:00Z");
+        trigger.sweep(t0); // baseline
+        // Ten minutes of downtime: nine missed due points collapse into one firing.
+        trigger.sweep(t0.plusSeconds(600));
+        verify(policyRunner, times(1)).run(eq(policy));
+
+        // Not due again until a full interval after the latest due point.
+        trigger.sweep(t0.plusSeconds(630));
+        verify(policyRunner, times(1)).run(eq(policy));
+        trigger.sweep(t0.plusSeconds(660));
+        verify(policyRunner, times(2)).run(eq(policy));
+    }
+
+    @Test
     void doesNotFireBeforeTheNextScheduledTime() {
         Policy policy = scheduled("p1", new Schedule.Daily(LocalTime.of(3, 0))); // 03:00 UTC daily
         when(policyStore.findByTriggerType("schedule")).thenReturn(List.of(policy));

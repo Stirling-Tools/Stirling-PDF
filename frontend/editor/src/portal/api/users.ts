@@ -72,6 +72,22 @@ export interface Role {
   tone: "purple" | "blue" | "green" | "amber" | "neutral";
 }
 
+/**
+ * A pending team invitation (SaaS only). Mapped from SaasTeamController's
+ * InvitationDTO; self-hosted has no pending-invite concept (invites create the
+ * account immediately) so the roster's `invitations` list stays empty there.
+ */
+export interface PendingInvitation {
+  /** Backend invitationId, used for cancel. */
+  id: number;
+  /** Invitee email. */
+  email: string;
+  /** Who sent it (inviter email), for context. */
+  invitedBy?: string;
+  /** ISO expiry, if the backend surfaces one. */
+  expiresAt?: string;
+}
+
 /* ──────────────────────────────────────────────────────────────────────── */
 /*  Access controls (tier-scoped)                                            */
 /* ──────────────────────────────────────────────────────────────────────── */
@@ -125,6 +141,8 @@ export interface UsersResponse {
   members: Member[];
   roles: Role[];
   access: AccessControls;
+  /** Pending team invitations (SaaS); undefined/empty on self-hosted. */
+  invitations?: PendingInvitation[];
   /** Whether SMTP is configured (gates emailing passwords/invites). */
   mailEnabled: boolean;
   /** Whether email invites will work: SMTP on AND mail.enableInvites=true. Gates the

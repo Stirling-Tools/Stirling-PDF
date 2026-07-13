@@ -51,7 +51,7 @@ export function PolicyFieldRow({
               size="sm"
               onClick={() => toggle(opt)}
             >
-              {t(`policies.fieldOption.${field.key}.${opt}`, opt)}
+              {t(`policyOption.${opt}`, opt)}
             </Chip>
           ))}
         </div>
@@ -67,7 +67,7 @@ export function PolicyFieldRow({
           value={typeof value === "string" ? value : ""}
           options={(field.options ?? []).map((o) => ({
             value: o,
-            label: t(`policies.fieldOption.${field.key}.${o}`, o),
+            label: t(`policyOption.${o}`, o),
           }))}
           onChange={(value) => onChange(value ?? "")}
         />

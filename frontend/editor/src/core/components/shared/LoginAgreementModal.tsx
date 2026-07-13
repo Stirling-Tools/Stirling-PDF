@@ -16,6 +16,7 @@ import remarkGfm from "remark-gfm";
 import apiClient from "@app/services/apiClient";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useAuth } from "@app/auth/UseSession";
+import { withBasePath } from "@app/constants/app";
 import { Z_INDEX_SIGN_IN_MODAL } from "@app/styles/zIndex";
 
 const ACCEPTED_STORAGE_KEY = "loginAgreementAccepted";
@@ -144,7 +145,7 @@ export default function LoginAgreementModal() {
       } catch {
         /* ignore */
       }
-      window.location.assign("/login");
+      window.location.assign(withBasePath("/login"));
     } else {
       // Anonymous / desktop: best-effort close the window; if that is a no-op (web),
       // reload so the agreement re-blocks until accepted.

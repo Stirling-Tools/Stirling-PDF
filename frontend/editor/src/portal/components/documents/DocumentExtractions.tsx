@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import LockRounded from "@mui/icons-material/LockRounded";
 import { StatusBadge, Table, type TableColumn } from "@app/ui";
 import { type Extraction, type ReviewDocument } from "@portal/api/documents";
 import {
@@ -55,7 +56,7 @@ export function DocumentExtractions({
     return (
       <div className="portal-documents__masked">
         <span className="portal-documents__masked-icon" aria-hidden>
-          🔒
+          <LockRounded style={{ fontSize: "1.5rem" }} />
         </span>
         <p className="portal-documents__masked-text">
           {t("portal.documents.extractions.masked")}

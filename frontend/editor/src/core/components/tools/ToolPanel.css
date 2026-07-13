@@ -511,7 +511,8 @@
   flex-direction: row;
   gap: 0.75rem;
   align-items: flex-start;
-  padding: 0.85rem 0.95rem;
+  --sui-btn-py: 1rem;
+  padding: 1rem 0.95rem;
   border: 1px solid var(--fullscreen-border-subtle-70);
   border-radius: 0.95rem;
   background: var(--fullscreen-bg-item);
@@ -524,6 +525,11 @@
   box-sizing: border-box;
   /* Allow flex children to shrink without forcing horizontal overflow */
   min-width: 0;
+}
+
+.tool-panel__fullscreen-item .mantine-Button-label {
+  gap: 1rem;
+  align-items: flex-start;
 }
 
 .tool-panel__fullscreen-item:focus-visible {

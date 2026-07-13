@@ -400,6 +400,11 @@
   flex-shrink: 0;
 }
 
+/* Pushes the pending-invitation row's expiry + Cancel to the right edge. */
+.portal-users__inv-spacer {
+  flex: 1;
+}
+
 /* Invite modal extras */
 .portal-users__invite-grid {
   display: grid;
