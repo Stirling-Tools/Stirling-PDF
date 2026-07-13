@@ -115,7 +115,10 @@ export function LabelsEditorModal({
                   onClick={onReset}
                   disabled={saving}
                 >
-                  {t("policies.labels.resetToDefault", "Reset to default")}
+                  {t(
+                    "policies.labels.resetToDefault",
+                    "Reset your categories and team defaults",
+                  )}
                 </Button>
               </>
             )}

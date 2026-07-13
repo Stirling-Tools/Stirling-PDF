@@ -12,6 +12,7 @@ import { Modal } from "@app/ui/Modal";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { ClassificationCategoryManager } from "@app/components/policies/ClassificationCategoryManager";
+import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
 import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
 import { useClassificationLabels } from "@app/hooks/useClassificationLabels";
 import { bucketStubsByLabel } from "@app/components/shared/fileSidebarGroupingLogic";
@@ -38,6 +39,7 @@ export function FileSidebarGroupControls({
 }: FileSidebarGroupControlsProps) {
   const { t } = useTranslation();
   const enabled = useClassificationEnabled();
+  const { isTeamLeader } = useSaaSTeam();
   const [open, setOpen] = useState(false);
   const categories = useSyncExternalStore(
     subscribeSidebarCategories,
@@ -114,7 +116,10 @@ export function FileSidebarGroupControls({
               leftSection={<RestartAltIcon sx={{ fontSize: "1rem" }} />}
               onClick={resetSidebarCategories}
             >
-              {t("fileSidebar.groupsModal.reset", "Reset to defaults")}
+              {t(
+                "fileSidebar.groupsModal.reset",
+                "Reset your categories to default",
+              )}
             </Button>
             <Button variant="primary" size="sm" onClick={() => setOpen(false)}>
               {t("fileSidebar.groupsModal.done", "Done")}
@@ -134,6 +139,7 @@ export function FileSidebarGroupControls({
             labelCounts={labelCounts}
             categoryCounts={categoryCounts}
             canHide
+            canManageTeamLabels={isTeamLeader}
             searchable
             labelDisplay={labelDisplay}
           />

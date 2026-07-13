@@ -21,6 +21,7 @@ import {
   type ClassificationLabel,
 } from "@app/data/classificationLabels";
 import {
+  defaultCategories,
   getHiddenLabels,
   getSidebarCategories,
   setHiddenLabels,
@@ -187,9 +188,12 @@ export function ClassificationLabelsSection({
         onImportFile={onImportFile}
         onExport={() => downloadLabels(draft)}
         onReset={() => {
-          // Stage into the draft — reversible until Save, no destructive server call.
+          // Stage the built-in labels + personal categories back into the draft —
+          // reversible until Save, no destructive server call.
           setLocalError(null);
           setDraft(DEFAULT_CLASSIFICATION_LABELS);
+          setDraftCategories(defaultCategories());
+          setDraftHidden([]);
         }}
         onClear={() => {
           setLocalError(null);

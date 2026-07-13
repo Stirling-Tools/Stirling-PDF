@@ -70,6 +70,12 @@ export interface ClassificationCategoryManagerProps {
   categoryCounts?: Map<string, number>;
   /** Offer a per-category hide toggle (editor sidebar groups). */
   canHide?: boolean;
+  /**
+   * Grouping-only surfaces (the editor sidebar): whether this viewer can manage
+   * the team label pool in the processor. Drives the delete-category warning —
+   * team leads are told to delete labels in the processor, others to ask theirs.
+   */
+  canManageTeamLabels?: boolean;
   /** Show a search box that filters categories + labels. */
   searchable?: boolean;
   /** Resolve a label's display name (editor translates via classification.labels.<id>). */
@@ -87,6 +93,7 @@ export function ClassificationCategoryManager({
   labelCounts,
   categoryCounts,
   canHide = false,
+  canManageTeamLabels = false,
   searchable = false,
   labelDisplay,
 }: ClassificationCategoryManagerProps) {
@@ -273,19 +280,19 @@ export function ClassificationCategoryManager({
     setNewCategory("");
   };
 
-  const requestDeleteCategory = (category: SidebarCategory) => {
-    if (canEditLabels) {
-      setConfirmDelete(category);
-      return;
-    }
-    removeCategory(category.id);
-  };
+  const requestDeleteCategory = (category: SidebarCategory) =>
+    setConfirmDelete(category);
   const confirmDeleteCategory = () => {
     const category = confirmDelete;
     if (!category) return;
-    const memberIds = new Set(category.labelKeys);
     removeCategory(category.id);
-    onLabelsChange?.(labels.filter((l) => !memberIds.has(l.id)));
+    // Processor: deleting the category also deletes its labels from the team
+    // pool. Editor (grouping-only): the labels stay in the pool and fall to
+    // "Custom" — only the personal grouping is removed.
+    if (canEditLabels) {
+      const memberIds = new Set(category.labelKeys);
+      onLabelsChange?.(labels.filter((l) => !memberIds.has(l.id)));
+    }
     setConfirmDelete(null);
   };
 
@@ -688,10 +695,14 @@ export function ClassificationCategoryManager({
         open={confirmDelete !== null}
         onClose={() => setConfirmDelete(null)}
         width="sm"
-        title={t(
-          "policies.labels.deleteCategoryTitle",
-          "Delete category and labels?",
-        )}
+        title={
+          canEditLabels
+            ? t(
+                "policies.labels.deleteCategoryTitle",
+                "Delete category and labels?",
+              )
+            : t("policies.labels.deleteGroupingTitle", "Delete category?")
+        }
         footer={
           <div className="labels-footer-right">
             <Button
@@ -712,16 +723,42 @@ export function ClassificationCategoryManager({
           </div>
         }
       >
-        <p>
-          {t(
-            "policies.labels.deleteCategoryBody",
-            'Deleting "{{name}}" also deletes its {{count}} label(s) from your team’s vocabulary. Categories are your own personal grouping, but labels are shared with your whole team. Nothing is saved until you choose Save for team.',
-            {
-              name: confirmDelete?.name ?? "",
-              count: confirmDelete?.labelKeys.length ?? 0,
-            },
-          )}
-        </p>
+        {canEditLabels ? (
+          <p>
+            {t(
+              "policies.labels.deleteCategoryBody",
+              'Deleting "{{name}}" also deletes its {{count}} label(s) from your team’s vocabulary. Categories are your own personal grouping, but labels are shared with your whole team. Nothing is saved until you choose Save for team.',
+              {
+                name: confirmDelete?.name ?? "",
+                count: confirmDelete?.labelKeys.length ?? 0,
+              },
+            )}
+          </p>
+        ) : (
+          <>
+            <p>
+              {t(
+                "policies.labels.deleteGroupingBody",
+                'Deleting "{{name}}" removes your personal grouping. Its {{count}} label(s) aren’t deleted — they stay in the classification pool and move to the “Custom” category.',
+                {
+                  name: confirmDelete?.name ?? "",
+                  count: confirmDelete?.labelKeys.length ?? 0,
+                },
+              )}
+            </p>
+            <p>
+              {canManageTeamLabels
+                ? t(
+                    "policies.labels.deleteGroupingLeadHint",
+                    "To remove these labels for your whole team, open the processor and delete them from the classification pool.",
+                  )
+                : t(
+                    "policies.labels.deleteGroupingMemberHint",
+                    "To remove these labels for your whole team, ask your team lead to delete them from the classification pool.",
+                  )}
+            </p>
+          </>
+        )}
       </Modal>
     </div>
   );
