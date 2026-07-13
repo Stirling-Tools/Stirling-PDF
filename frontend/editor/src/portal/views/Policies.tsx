@@ -75,11 +75,7 @@ export function Policies() {
     // Block setup of an AI-required policy until the engine is confirmed on (so a
     // click during the app-config load can't open a wizard for a disabled
     // feature); a configured policy stays openable so it can be paused/deleted.
-    if (
-      entry.category.requiresAiEngine &&
-      !aiEngineEnabled &&
-      !entry.policy
-    )
+    if (entry.category.requiresAiEngine && !aiEngineEnabled && !entry.policy)
       return;
     if (entry.policy) setDetail(entry);
     else setWizard(entry);

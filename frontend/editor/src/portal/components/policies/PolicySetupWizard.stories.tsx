@@ -8,7 +8,9 @@ import {
 import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
 
 const security = POLICY_CATEGORIES.find((c) => c.id === "security")!;
-const classification = POLICY_CATEGORIES.find((c) => c.id === "classification")!;
+const classification = POLICY_CATEGORIES.find(
+  (c) => c.id === "classification",
+)!;
 
 const meta: Meta<typeof PolicySetupWizard> = {
   title: "Portal/Policies/PolicySetupWizard",

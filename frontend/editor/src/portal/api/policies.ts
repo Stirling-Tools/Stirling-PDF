@@ -301,9 +301,7 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "portal.policies.config.classification.rules.1",
     ],
     scopeLabel: "portal.policies.config.scopeAll",
-    defaultOperations: [
-      { operation: TOOL_ENDPOINTS.classify, parameters: {} },
-    ],
+    defaultOperations: [{ operation: TOOL_ENDPOINTS.classify, parameters: {} }],
     fields: [],
   },
   compliance: {

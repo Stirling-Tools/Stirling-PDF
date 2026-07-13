@@ -235,7 +235,9 @@ function PolicySetupWizardBody({
     // Classification's single tool has no toggle in the workflow step, so keep it
     // enabled unconditionally — otherwise editing a policy whose saved steps
     // somehow lack it would strand submit with no way to re-enable it.
-    return isClassification ? seeded.map((t) => ({ ...t, enabled: true })) : seeded;
+    return isClassification
+      ? seeded.map((t) => ({ ...t, enabled: true }))
+      : seeded;
   });
   const [fieldValues, setFieldValues] = useState(() =>
     resolveFieldValues(entry),

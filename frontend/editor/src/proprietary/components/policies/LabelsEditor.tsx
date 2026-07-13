@@ -73,9 +73,13 @@ const LabelEditorChip = memo(function LabelEditorChip({
       <LabelIconPicker
         value={label.icon}
         onChange={(icon) => onSetIcon(label.id, icon)}
-        ariaLabel={t("policies.labels.iconAria", "Choose an icon for {{name}}", {
-          name: label.name,
-        })}
+        ariaLabel={t(
+          "policies.labels.iconAria",
+          "Choose an icon for {{name}}",
+          {
+            name: label.name,
+          },
+        )}
       />
     );
   return (
@@ -86,15 +90,23 @@ const LabelEditorChip = memo(function LabelEditorChip({
         ? {
             selected,
             onSelectToggle: () => onToggleSelect(label.id),
-            selectAriaLabel: t("policies.labels.selectAria", "Select {{name}}", {
-              name: label.name,
-            }),
+            selectAriaLabel: t(
+              "policies.labels.selectAria",
+              "Select {{name}}",
+              {
+                name: label.name,
+              },
+            ),
           }
         : {
             onRemove: readOnly ? undefined : () => onRemove(label.id),
-            removeAriaLabel: t("policies.labels.removeAria", "Remove {{name}}", {
-              name: label.name,
-            }),
+            removeAriaLabel: t(
+              "policies.labels.removeAria",
+              "Remove {{name}}",
+              {
+                name: label.name,
+              },
+            ),
           })}
     />
   );
