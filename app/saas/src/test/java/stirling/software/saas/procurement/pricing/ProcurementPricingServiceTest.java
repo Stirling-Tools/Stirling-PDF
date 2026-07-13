@@ -18,8 +18,13 @@ class ProcurementPricingServiceTest {
 
     private static QuoteConfig cfg(
             long volume, int intensity, String deployment, int term, String sla) {
+        return cfgSize(volume, intensity, deployment, term, sla, 1.0);
+    }
+
+    private static QuoteConfig cfgSize(
+            long volume, int intensity, String deployment, int term, String sla, double sizeMult) {
         return new QuoteConfig(
-                volume, 0, intensity, deployment, term, sla, false, false, false, false, "USD");
+                volume, 0, intensity, sizeMult, deployment, term, sla, false, false, false, "USD");
     }
 
     @Test
@@ -30,6 +35,7 @@ class ProcurementPricingServiceTest {
 
         assertThat(q.annualNetMinor()).isEqualTo(175_200_000L); // $1,752,000
         assertThat(q.tcvMinor()).isEqualTo(525_600_000L); // $5,256,000
+        assertThat(q.renewalAnnualNetMinor()).isEqualTo(180_456_000L); // $1,752,000 + 3% CPI
         assertThat(lineAmount(q, "support")).isEqualTo(3_000_000L); // dedicated SE/CSM $30K
         assertThat(lineAmount(q, "deployment")).isEqualTo(1_200_000L); // self-hosted $12K
     }
@@ -44,6 +50,41 @@ class ProcurementPricingServiceTest {
         // Cloud + standard: no deployment or support line.
         assertThat(q.lineItems()).noneMatch(l -> l.key().equals("deployment"));
         assertThat(q.lineItems()).noneMatch(l -> l.key().equals("support"));
+    }
+
+    @Test
+    void renewalAppliesCpiEscalatorAfterAFlatTerm() {
+        // The committed term is flat (TCV = annual × years, asserted above). The 3% CPI escalator
+        // describes only the first post-term renewal: annual + one 3% step. It never touches TCV.
+        QuoteBreakdown q = pricing.price(cfg(6_000_000, 4, "cloud", 3, "standard"));
+        assertThat(q.renewalAnnualNetMinor())
+                .isEqualTo(Math.round(q.annualNetMinor() * 1.03)); // 16,527,800 → 17,023,634
+        assertThat(q.tcvMinor()).isEqualTo(q.annualNetMinor() * 3); // renewal is outside the TCV
+        assertThat(pricing.cpiRatePct()).isEqualTo(3);
+        assertThat(pricing.renewalAnnualMinor(q.annualNetMinor()))
+                .isEqualTo(q.renewalAnnualNetMinor()); // stored-quote echo agrees with pricing
+    }
+
+    @Test
+    void fileSizeTierMultipliesTheMeter() {
+        // D93: the size tier scales the per-run rate, so the meter (hence annual/TCV/renewal) grows
+        // while flat fees stay put. Compact (1.0) is the anchor; Standard is ×1.4, Heavy ×2.4.
+        long compact =
+                pricing.price(cfgSize(6_000_000, 4, "cloud", 3, "standard", 1.0)).annualNetMinor();
+        long standard =
+                pricing.price(cfgSize(6_000_000, 4, "cloud", 3, "standard", 1.4)).annualNetMinor();
+        long heavy =
+                pricing.price(cfgSize(6_000_000, 4, "cloud", 3, "standard", 2.4)).annualNetMinor();
+
+        assertThat(compact).isEqualTo(16_527_800L); // == the Northwind anchor (size 1.0)
+        assertThat(standard).isEqualTo(23_138_900L); // rate ×1.4
+        assertThat(compact).isLessThan(standard);
+        assertThat(standard).isLessThan(heavy);
+        // An unknown/tampered multiplier snaps back to 1.0 (no cheaper factor sneaks through).
+        assertThat(
+                        pricing.price(cfgSize(6_000_000, 4, "cloud", 3, "standard", 0.3))
+                                .annualNetMinor())
+                .isEqualTo(compact);
     }
 
     @Test
@@ -104,7 +145,7 @@ class ProcurementPricingServiceTest {
         long base = pricing.price(cfg(6_000_000, 4, "cloud", 3, "standard")).annualNetMinor();
         QuoteConfig c =
                 new QuoteConfig(
-                        6_000_000, 0, 4, "cloud", 3, "standard", true, false, false, false, "USD");
+                        6_000_000, 0, 4, 1.0, "cloud", 3, "standard", true, false, false, "USD");
         QuoteBreakdown q = pricing.price(c);
         assertThat(lineAmount(q, "indemnification")).isEqualTo(Math.round(base * 0.05));
     }
@@ -113,7 +154,7 @@ class ProcurementPricingServiceTest {
     void trainingIsOneTimeOutsideTheAnnual() {
         QuoteConfig withTraining =
                 new QuoteConfig(
-                        6_000_000, 0, 4, "cloud", 3, "standard", false, true, false, false, "USD");
+                        6_000_000, 0, 4, 1.0, "cloud", 3, "standard", false, true, false, "USD");
         QuoteBreakdown q = pricing.price(withTraining);
         long baseAnnual = pricing.price(cfg(6_000_000, 4, "cloud", 3, "standard")).annualNetMinor();
 

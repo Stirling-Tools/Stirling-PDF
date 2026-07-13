@@ -19,7 +19,11 @@ import {
   type PipelineStep,
   type PolicySetupResult,
 } from "@portal/api/policies";
-import type { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
+import type { ToolRegistry, ToolRegistryEntry } from "@app/data/toolsTaxonomy";
+import {
+  deserializeToolStep,
+  serializeStepFromEndpoint,
+} from "@app/hooks/tools/shared/toolAutomation";
 import { fetchSources } from "@portal/api/sources";
 import { useAsync } from "@portal/hooks/useAsync";
 import { PolicyFieldRow } from "@portal/components/policies/PolicyFieldRow";
@@ -121,7 +125,10 @@ const CAPABILITY_META: Record<
   },
 };
 
-function seedTools(entry: CatalogueEntry): ToolState[] {
+function seedTools(
+  entry: CatalogueEntry,
+  registry: Partial<ToolRegistry>,
+): ToolState[] {
   const savedSteps = entry.policy?.steps ?? [];
   const savedByOp = new Map(savedSteps.map((s) => [s.operation, s]));
   // Always use defaultOperations as the canonical list so tools added after a
@@ -135,7 +142,12 @@ function seedTools(entry: CatalogueEntry): ToolState[] {
         : savedSteps.length > 0
           ? false
           : !DISABLED_BY_DEFAULT.has(s.operation),
-      parameters: saved?.parameters ?? s.parameters,
+      // Saved steps are in the backend contract shape; map them back to the UI
+      // shape the config controls edit (e.g. `listOfText` -> `wordsToRedact`).
+      // Presets are already authored in the UI shape, so use them as-is.
+      parameters: saved
+        ? deserializeToolStep(saved, registry).params
+        : s.parameters,
     };
   });
 }
@@ -190,7 +202,9 @@ function PolicySetupWizardBody({
   const isEdit = policy != null;
 
   const [step, setStep] = useState<Step>("workflow");
-  const [tools, setTools] = useState<ToolState[]>(() => seedTools(entry));
+  const [tools, setTools] = useState<ToolState[]>(() =>
+    seedTools(entry, toolRegistry),
+  );
   const [fieldValues, setFieldValues] = useState(() =>
     resolveFieldValues(entry),
   );
@@ -263,10 +277,12 @@ function PolicySetupWizardBody({
     }
     setError(null);
     setSubmitting(true);
-    const steps: PipelineStep[] = enabledTools.map((tl) => ({
-      operation: tl.operation,
-      parameters: tl.parameters,
-    }));
+    // Map each tool's UI-shaped params (e.g. redact's `wordsToRedact`) into the
+    // backend step contract (e.g. `listOfText`) via its `toApiParams`; saving the
+    // UI shape verbatim would drop those fields and the step would run with none.
+    const steps: PipelineStep[] = enabledTools.map((tl) =>
+      serializeStepFromEndpoint(tl.operation, tl.parameters, toolRegistry),
+    );
     try {
       await onSubmit(entry, {
         fieldValues,

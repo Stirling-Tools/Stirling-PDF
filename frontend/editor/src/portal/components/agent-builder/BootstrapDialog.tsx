@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import FileUploadRounded from "@mui/icons-material/FileUploadRounded";
 import { Button, Modal } from "@app/ui";
 import "@portal/views/AgentBuilder.css";
 
@@ -58,7 +59,7 @@ export function BootstrapDialog({ open, onClose }: BootstrapDialogProps) {
             onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
           />
           <span className="portal-agents__dropzone-icon" aria-hidden>
-            ⇪
+            <FileUploadRounded style={{ fontSize: "1.5rem" }} />
           </span>
           <span className="portal-agents__dropzone-text">
             {fileName ?? t("portal.agentBuilder.bootstrap.dropzoneText")}

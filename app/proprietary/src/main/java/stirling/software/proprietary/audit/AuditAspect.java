@@ -142,6 +142,9 @@ public class AuditAspect {
             auditService.addTimingData(
                     auditData, startTime, resp, auditedAnnotation.level(), isHttpRequest);
 
+            // Merge controller-set policy context + the internal-automation marker onto the event.
+            auditService.addAutomationContext(auditData, req);
+
             // Resolve the event type based on annotation and context
             String httpMethod = null;
             String path = null;
