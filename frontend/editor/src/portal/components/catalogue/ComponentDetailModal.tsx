@@ -12,6 +12,7 @@ import {
 } from "@app/ui";
 import {
   type SdkComponent,
+  BILLING_UNIT_LABEL,
   MATURITY_META,
   formatPrice,
 } from "@portal/api/sdkComponents";
@@ -205,7 +206,7 @@ export function ComponentDetailModal({
               />
               <StatTile
                 label={t("portal.catalogue.detail.stats.billedOn")}
-                value={component.pricing.unit}
+                value={t(BILLING_UNIT_LABEL[component.pricing.unit])}
               />
               <StatTile
                 label={t("portal.catalogue.detail.stats.freeQuota")}
@@ -220,7 +221,7 @@ export function ComponentDetailModal({
             </div>
             <p className="portal-components__pricing-note">
               {t("portal.catalogue.detail.pricing.note", {
-                unit: component.pricing.unit,
+                unit: t(BILLING_UNIT_LABEL[component.pricing.unit]),
               })}
             </p>
           </div>

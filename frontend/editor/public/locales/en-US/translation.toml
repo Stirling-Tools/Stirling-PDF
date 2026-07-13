@@ -7415,6 +7415,7 @@ manual = "Manual"
 schedule = "Scheduled"
 
 [portal.policies]
+defaultName = "{{category}} Policy"
 subtitle = "Standing automations that enforce a tool pipeline on every document. Each policy fires on upload or export, runs its tool chain, and saves the enforced version alongside the original."
 title = "Policies"
 
@@ -8124,6 +8125,11 @@ type = "Type"
 chooseType = "Choose type"
 configure = "Configure"
 review = "Review & connect"
+
+[portal.tier]
+enterprise = "Enterprise plan"
+free = "Editor plan"
+pro = "Processor plan"
 
 [portal.usage]
 managePayment = "Manage Payment"
