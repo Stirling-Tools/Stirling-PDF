@@ -5,15 +5,23 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.DataNode;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -24,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.TempFile;
@@ -45,9 +54,78 @@ import stirling.software.common.util.WebResponseUtils;
 @Tag(name = "AI Tools", description = "Dispatchable AI-backed tools.")
 public class CreatePdfAgentController {
 
+    private static final List<String> RESOURCE_ELEMENTS =
+            List.of(
+                    "img",
+                    "image",
+                    "link",
+                    "iframe",
+                    "object",
+                    "embed",
+                    "base",
+                    "source",
+                    "track",
+                    "audio",
+                    "video",
+                    "svg",
+                    "input[type=image]");
+
+    private static final List<String> RESOURCE_ATTRIBUTES =
+            List.of("src", "srcset", "href", "background", "data", "poster", "xlink:href");
+
+    private static final Pattern CSS_IMPORT =
+            Pattern.compile("@import[^;]*;", Pattern.CASE_INSENSITIVE);
+
+    private static final Pattern CSS_URL =
+            Pattern.compile(
+                    "url\\(\\s*(['\"]?)(?!\\s*data:)[^)]*\\1\\s*\\)", Pattern.CASE_INSENSITIVE);
+
     private final TempFileManager tempFileManager;
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final RuntimePathConfig runtimePathConfig;
+    private final ApplicationProperties applicationProperties;
+
+    private static boolean isInlineReference(String value) {
+        String v = value == null ? "" : value.trim().toLowerCase();
+        return v.startsWith("data:") || v.startsWith("#");
+    }
+
+    private static String scrubCss(String css) {
+        if (css == null || css.isEmpty()) {
+            return css;
+        }
+        String withoutImports = CSS_IMPORT.matcher(css).replaceAll("");
+        Matcher matcher = CSS_URL.matcher(withoutImports);
+        return matcher.replaceAll("none");
+    }
+
+    private static String prepareHtmlForRendering(String html) {
+        Document doc = Jsoup.parse(html);
+        doc.outputSettings().prettyPrint(false);
+
+        for (String selector : RESOURCE_ELEMENTS) {
+            doc.select(selector).remove();
+        }
+
+        for (Element element : doc.getAllElements()) {
+            for (String attribute : RESOURCE_ATTRIBUTES) {
+                if (element.hasAttr(attribute) && !isInlineReference(element.attr(attribute))) {
+                    element.removeAttr(attribute);
+                }
+            }
+            if (element.hasAttr("style")) {
+                element.attr("style", scrubCss(element.attr("style")));
+            }
+        }
+
+        for (Element style : doc.select("style")) {
+            String scrubbed = scrubCss(style.data());
+            style.empty();
+            style.appendChild(new DataNode(scrubbed));
+        }
+
+        return doc.outerHtml();
+    }
 
     /**
      * Returns true only when WeasyPrint is definitively unavailable — either the binary could not
@@ -84,14 +162,20 @@ public class CreatePdfAgentController {
             @RequestParam("filename") String filename)
             throws Exception {
 
+        if (!applicationProperties.getAiEngine().isEnabled()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+
+        String preparedHtml = prepareHtmlForRendering(htmlContent);
+
         log.info(
                 "[create-pdf-agent] converting HTML to PDF via WeasyPrint — html_bytes={}",
-                htmlContent.length());
+                preparedHtml.length());
 
         try (TempFile htmlFile = tempFileManager.createManagedTempFile(".html");
                 TempFile pdfFile = tempFileManager.createManagedTempFile(".pdf")) {
 
-            Files.writeString(htmlFile.getPath(), htmlContent, StandardCharsets.UTF_8);
+            Files.writeString(htmlFile.getPath(), preparedHtml, StandardCharsets.UTF_8);
 
             List<String> command = new ArrayList<>();
             command.add(runtimePathConfig.getWeasyPrintPath());
