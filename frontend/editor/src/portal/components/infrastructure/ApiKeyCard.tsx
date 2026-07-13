@@ -23,7 +23,7 @@ export function ApiKeyCard({ apiKey }: { apiKey: ApiKey }) {
         rightSection={
           <span className="portal-infra__key-head-right">
             <StatusBadge tone={KEY_TONE[apiKey.status]} size="sm">
-              {KEY_LABEL[apiKey.status]}
+              {t(KEY_LABEL[apiKey.status])}
             </StatusBadge>
             <span
               className={"portal-infra__chevron" + (open ? " is-open" : "")}

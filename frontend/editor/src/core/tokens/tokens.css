@@ -270,8 +270,29 @@
   --grad-banner: linear-gradient(135deg, #0f172a 0%, #111827 50%, #1a1535 100%);
 }
 
-/* Always-dark code palette. Not theme-switched. */
-:root {
+/* Code palette — theme-aware: a light GitHub-style box in light mode, the dark
+   terminal palette in dark mode. (CodeBlock renders plain text, so only the
+   base colours are load-bearing; the syntax slots are kept for future Shiki. */
+:root,
+[data-theme="light"] {
+  --code-bg: #f6f8fa;
+  --code-bg-alt: #eef1f4;
+  --code-bg-header: #eaeef2;
+  --code-text: #1f2328;
+  --code-dim: #656d76;
+  --code-muted: #8c959f;
+  --code-keyword: #cf222e;
+  --code-string: #0a3069;
+  --code-number: #0550ae;
+  --code-fn: #8250df;
+  --code-type: #953800;
+  --code-property: #0550ae;
+  --code-comment: #6e7781;
+  --code-border: #d0d7de;
+  /* Window-chrome traffic-light dots in the code-block header. */
+  --code-dot: #d0d7de;
+}
+[data-theme="dark"] {
   --code-bg: #0f172a;
   --code-bg-alt: #1e293b;
   --code-bg-header: #1a2332;
@@ -286,12 +307,16 @@
   --code-property: #93c5fd;
   --code-comment: #475569;
   --code-border: #1e293b;
-  /* Window-chrome traffic-light dots in the code-block header. */
   --code-dot: #475569;
 }
 
 /* Radii / typography / motion / spacing / z-index — theme-stable */
 :root {
+  /* Home hero strip navy. Theme-stable by design — the hero keeps this deep
+     navy in both light and dark (it's a branded surface, like the assistant
+     header), so it's defined once here rather than in the light/dark blocks. */
+  --color-hero-navy: #16213e;
+
   --radius-xs: 0.1875rem;
   --radius-sm: 0.25rem;
   --radius-md: 0.375rem;
