@@ -142,8 +142,10 @@ export default function Landing() {
             padding: "1.5rem",
             marginTop: "1rem",
             borderRadius: "0.75rem",
-            backgroundColor: "rgba(37, 99, 235, 0.08)",
-            border: "1px solid rgba(37, 99, 235, 0.2)",
+            backgroundColor:
+              "color-mix(in srgb, var(--p-blue-600) 8%, transparent)",
+            border:
+              "1px solid color-mix(in srgb, var(--p-blue-600) 20%, transparent)",
           }}
         >
           <p style={{ margin: "0 0 0.75rem 0", color: "var(--c-text)" }}>
