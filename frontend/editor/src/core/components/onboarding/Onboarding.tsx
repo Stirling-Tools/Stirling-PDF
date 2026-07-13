@@ -3,6 +3,7 @@ import { type StepType } from "@reactour/tour";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation } from "react-router-dom";
 import { isAuthRoute } from "@app/constants/routes";
+import { withBasePath } from "@app/constants/app";
 import { dispatchTourState } from "@app/constants/events";
 import { useOnboardingOrchestrator } from "@app/components/onboarding/orchestrator/useOnboardingOrchestrator";
 import { useBypassOnboarding } from "@app/components/onboarding/useBypassOnboarding";
@@ -76,7 +77,7 @@ export default function Onboarding() {
   );
 
   const redirectToLogin = useCallback(() => {
-    window.location.assign("/login");
+    window.location.assign(withBasePath("/login"));
   }, []);
 
   const handlePasswordChanged = useCallback(async () => {

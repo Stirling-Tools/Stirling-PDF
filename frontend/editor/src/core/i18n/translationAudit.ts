@@ -99,11 +99,12 @@ export const I18N_PROJECTS: TranslationProject[] = [
       /^portal\.procurement\.journeySteps\./,
       /^portal\.users\.roles\./,
       /^portal\.policies\.(categories|config|endpoints)\./,
-      // Policy field/option/doc-type display copy is looked up with keys
-      // derived from catalogue data (t(`policies.fieldOption.${key}.${opt}`))
-      // in both PolicyFieldRows and the setup wizards — invisible to the
-      // static scan. The raw catalogue value stays the stored fallback.
-      /^policies\.(field|fieldOption|docType)\./,
+      // Policy field labels + option display copy are looked up with keys
+      // derived from catalogue data (t(`policies.field.${key}`),
+      // t(`policyOption.${id}`)) in the PolicyFieldRows and setup wizards —
+      // invisible to the static scan. The raw catalogue value is the fallback.
+      /^policies\.field\./,
+      /^policyOption\./,
     ],
     minUsedKeys: 100,
     minLocaleKeys: 100,
