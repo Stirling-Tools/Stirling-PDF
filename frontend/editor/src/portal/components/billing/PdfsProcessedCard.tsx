@@ -180,15 +180,16 @@ export function PdfsProcessedCard({
             </p>
           ) : null}
         </>
-      ) : meterUnits > 0 ? (
-        // docs == 0 but there are meter units → combined-billing work accrued on a linked
-        // instance that SaaS hasn't billed yet (units-only, no PDF count). Show the pending
-        // units instead of a bare "0 PDFs" headline with a count-less summary + no split.
+      ) : pendingUnits > 0 ? (
+        // docs == 0 but instance-local units have accrued that SaaS hasn't billed yet
+        // (combined-billing, units-only, no PDF count). Surface the pending figure directly
+        // instead of a bare "0 PDFs" headline with a count-less summary + no split. Gated on
+        // pendingUnits (not meterUnits) so the "pending sync" wording is always exact.
         <p className="portal-billing__section-sub">
           {t(
             "portal.billing.pdfsProcessed.unitsPending",
             "{{units}} meter units pending sync from linked instances",
-            { units: meterUnits.toLocaleString() },
+            { count: pendingUnits, units: pendingUnits.toLocaleString() },
           )}
         </p>
       ) : (
