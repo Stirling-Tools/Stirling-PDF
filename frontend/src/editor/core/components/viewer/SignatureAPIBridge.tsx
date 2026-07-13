@@ -3,8 +3,8 @@ import {
   forwardRef,
   useEffect,
   useCallback,
+  useMemo,
   useRef,
-  useState,
 } from "react";
 import { useAnnotationCapability } from "@embedpdf/plugin-annotation/react";
 import {
@@ -18,7 +18,6 @@ import type {
   AnnotationRect,
 } from "@editor/components/viewer/viewerTypes";
 import type { SignParameters } from "@editor/hooks/tools/sign/useSignParameters";
-import { useViewer } from "@editor/contexts/ViewerContext";
 import { useDocumentReady } from "@editor/components/viewer/hooks/useDocumentReady";
 import { usePlacedSignatureTracking } from "@editor/components/viewer/hooks/usePlacedSignatureTracking";
 
@@ -200,27 +199,34 @@ export const SignatureAPIBridge = forwardRef<
     signatureConfig,
     storeImageData,
     isPlacementMode,
-    placementPreviewSize,
+    placementSize,
+    setPlacementSize,
     setSignaturesApplied,
     setSignatureApiReady,
     isApplyingSignatures,
   } = useSignature();
-  const { getZoomState, registerImmediateZoomUpdate } = useViewer();
   const documentReady = useDocumentReady();
-  const [currentZoom, setCurrentZoom] = useState(
-    () => getZoomState()?.currentZoom ?? 1,
-  );
   const lastStampImageRef = useRef<string | null>(null);
+  const placedSignatureIdsRef = useRef(new Set<string>());
+  const signatureSizeKey = useMemo(
+    () =>
+      signatureConfig
+        ? JSON.stringify({
+            signatureType: signatureConfig.signatureType,
+            signatureData: signatureConfig.signatureData,
+            signerName: signatureConfig.signerName,
+            fontFamily: signatureConfig.fontFamily,
+            fontSize: signatureConfig.fontSize,
+            textColor: signatureConfig.textColor,
+            textAlign: signatureConfig.textAlign,
+          })
+        : null,
+    [signatureConfig],
+  );
 
   useEffect(() => {
-    setCurrentZoom(getZoomState()?.currentZoom ?? 1);
-    const unregister = registerImmediateZoomUpdate((percent) => {
-      setCurrentZoom(Math.max(percent / 100, 0.01));
-    });
-    return () => {
-      unregister?.();
-    };
-  }, [getZoomState, registerImmediateZoomUpdate]);
+    placedSignatureIdsRef.current.clear();
+  }, [signatureSizeKey]);
 
   // Runs after the imperative handle is attached, so callers can use it straight away.
   const apiReady = Boolean(annotationApi && documentReady);
@@ -236,18 +242,6 @@ export const SignatureAPIBridge = forwardRef<
       annotationApi.setActiveTool(null);
     }
   }, [isSignMode, annotationApi, documentReady]);
-
-  const cssToPdfSize = useCallback(
-    (size: { width: number; height: number }) => {
-      const zoom = currentZoom || 1;
-      const factor = 1 / zoom;
-      return {
-        width: size.width * factor,
-        height: size.height * factor,
-      };
-    },
-    [currentZoom],
-  );
 
   const applyStampDefaults = useCallback(
     (
@@ -283,48 +277,35 @@ export const SignatureAPIBridge = forwardRef<
         signatureConfig.signatureType === "text" &&
         signatureConfig.signerName
       ) {
-        const textStamp = createTextStampImage(
-          signatureConfig,
-          placementPreviewSize,
-        );
+        const textStamp = createTextStampImage(signatureConfig, placementSize);
         if (textStamp) {
-          const displaySize = placementPreviewSize ?? {
+          const displaySize = placementSize ?? {
             width: textStamp.displayWidth,
             height: textStamp.displayHeight,
           };
-          const pdfSize = cssToPdfSize(displaySize);
           lastStampImageRef.current = textStamp.dataUrl;
           applyStampDefaults(
             textStamp.dataUrl,
             `Text Signature - ${signatureConfig.signerName}`,
-            pdfSize,
+            displaySize,
           );
         }
         return;
       }
 
       if (signatureConfig.signatureData) {
-        const pdfSize = placementPreviewSize
-          ? cssToPdfSize(placementPreviewSize)
-          : undefined;
         lastStampImageRef.current = signatureConfig.signatureData;
         applyStampDefaults(
           signatureConfig.signatureData,
           `Digital Signature - ${signatureConfig.reason || "Document signing"}`,
-          pdfSize,
+          placementSize ?? undefined,
         );
         return;
       }
     } catch (error) {
       console.error("Error preparing signature defaults:", error);
     }
-  }, [
-    annotationApi,
-    signatureConfig,
-    placementPreviewSize,
-    applyStampDefaults,
-    cssToPdfSize,
-  ]);
+  }, [annotationApi, signatureConfig, placementSize, applyStampDefaults]);
 
   // Enable keyboard deletion of selected annotations
   useEffect(() => {
@@ -580,7 +561,7 @@ export const SignatureAPIBridge = forwardRef<
     [
       annotationApi,
       signatureConfig,
-      placementPreviewSize,
+      placementSize,
       applyStampDefaults,
       configureStampDefaults,
     ],
@@ -604,8 +585,19 @@ export const SignatureAPIBridge = forwardRef<
       }
 
       // Mark signatures as not applied when a new signature is placed
-      if (event.type === "create") {
+      const isSignatureStamp =
+        annotation?.type === PdfAnnotationSubtype.STAMP &&
+        isPlacementMode &&
+        signatureConfig !== null;
+
+      if (event.type === "create" && isSignatureStamp) {
         setSignaturesApplied(false);
+        placedSignatureIdsRef.current.add(annotationId);
+      } else if (placedSignatureIdsRef.current.has(annotationId)) {
+        const size = annotation?.rect?.size;
+        if (size?.width > 0 && size?.height > 0) {
+          setPlacementSize({ width: size.width, height: size.height });
+        }
       }
 
       const directData =
@@ -627,7 +619,15 @@ export const SignatureAPIBridge = forwardRef<
     return () => {
       unsubscribe?.();
     };
-  }, [annotationApi, storeImageData, setSignaturesApplied, documentReady]);
+  }, [
+    annotationApi,
+    storeImageData,
+    setSignaturesApplied,
+    setPlacementSize,
+    isPlacementMode,
+    signatureConfig,
+    documentReady,
+  ]);
 
   usePlacedSignatureTracking();
 
@@ -649,7 +649,7 @@ export const SignatureAPIBridge = forwardRef<
   }, [
     isPlacementMode,
     configureStampDefaults,
-    placementPreviewSize,
+    placementSize,
     signatureConfig,
     documentReady,
   ]);
