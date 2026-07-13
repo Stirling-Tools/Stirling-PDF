@@ -31,19 +31,11 @@
 
 .tool-panel-mode-prompt__card--sidebar {
   border: 1px solid
-    color-mix(
-      in srgb,
-      var(--accent-primary, var(--mantine-color-blue-6, #228be6)) 18%,
-      var(--c-border-subtle)
-    );
+    color-mix(in srgb, var(--c-primary) 18%, var(--c-border-subtle));
   background: linear-gradient(
     165deg,
     color-mix(in srgb, var(--c-surface) 96%, transparent),
-    color-mix(
-      in srgb,
-      var(--accent-primary, var(--mantine-color-blue-6, #228be6)) 8%,
-      transparent
-    )
+    color-mix(in srgb, var(--c-primary) 8%, transparent)
   );
 }
 
@@ -92,11 +84,7 @@
 .tool-panel-mode-prompt__sidebar-item {
   height: 0.55rem;
   border-radius: 0.35rem;
-  background: color-mix(
-    in srgb,
-    var(--accent-primary, var(--mantine-color-blue-6, #228be6)) 32%,
-    var(--c-surface-sunken)
-  );
+  background: color-mix(in srgb, var(--c-primary) 32%, var(--c-surface-sunken));
 }
 
 .tool-panel-mode-prompt__sidebar-item--muted {
@@ -209,12 +197,7 @@
 }
 
 .tool-panel-mode-prompt__action:hover {
-  box-shadow: 0 10px 18px
-    color-mix(
-      in srgb,
-      var(--accent-primary, var(--mantine-color-blue-6, #228be6)) 25%,
-      transparent
-    );
+  box-shadow: 0 10px 18px color-mix(in srgb, var(--c-primary) 25%, transparent);
 }
 
 .tool-panel-mode-prompt__maybe-later {

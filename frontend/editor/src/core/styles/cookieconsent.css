@@ -21,7 +21,7 @@
 }
 
 .cc--darkmode .pm-overlay {
-  background: rgba(0, 0, 0, 0.6) !important;
+  background: var(--c-overlay) !important;
 }
 
 /* Buttons — match the shared neutral surface treatment. */
@@ -44,5 +44,5 @@
 
 /* Override any potential conflicts */
 [data-mantine-color-scheme="dark"] #cc-main {
-  color: #ffffff !important;
+  color: var(--c-text) !important;
 }

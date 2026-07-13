@@ -65,12 +65,12 @@
 }
 
 .mobile-toggle-button:focus-visible {
-  outline: 2px solid var(--primary-color, #228be6);
+  outline: 2px solid var(--c-primary);
   outline-offset: 2px;
 }
 
 .mobile-toggle-button.active {
-  background: var(--primary-surface, rgba(34, 139, 230, 0.12));
+  background: var(--c-primary-subtle);
   color: var(--c-text);
 }
 
@@ -165,12 +165,12 @@
 
 @media (hover: hover) and (pointer: fine) {
   .mobile-bottom-button:hover {
-    background: var(--bg-hover, rgba(0, 0, 0, 0.05));
+    background: var(--c-hover);
   }
 }
 
 .mobile-bottom-button:active {
-  background: var(--bg-active, rgba(0, 0, 0, 0.1));
+  background: var(--c-active);
 }
 
 .mobile-bottom-button-label {

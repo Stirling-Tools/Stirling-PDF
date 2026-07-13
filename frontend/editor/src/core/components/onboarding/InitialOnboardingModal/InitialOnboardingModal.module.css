@@ -335,8 +335,8 @@
 }
 
 .v2Badge {
-  background: #dbefff;
-  color: #2a4bff;
+  background: var(--c-primary-tint);
+  color: var(--c-accent-fg);
   padding: 3px 9px;
   border-radius: 6px;
   font-size: 12px;
@@ -521,8 +521,4 @@
 :global([data-mantine-color-scheme="dark"]) .heroTile {
   background: #0f1626;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
-}
-
-:global([data-mantine-color-scheme="dark"]) .divider {
-  background: rgba(255, 255, 255, 0.08);
 }

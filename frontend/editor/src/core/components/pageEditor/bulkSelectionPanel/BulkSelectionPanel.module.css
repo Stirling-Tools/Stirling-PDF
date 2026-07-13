@@ -70,18 +70,6 @@
   cursor: not-allowed;
 }
 
-:global([data-mantine-color-scheme="dark"]) .operatorChip {
-  background-color: var(--c-surface);
-  border-color: var(--bulk-card-border);
-  color: var(--c-text);
-}
-
-:global([data-mantine-color-scheme="dark"]) .operatorChip:hover:not(:disabled) {
-  background-color: var(--c-hover);
-  border-color: var(--bulk-card-hover-border);
-  color: var(--c-text);
-}
-
 .dropdownHeader {
   display: flex;
   justify-content: space-between;
@@ -196,10 +184,6 @@
   background-color: var(--c-hover);
 }
 
-:global([data-mantine-color-scheme="dark"]) .advancedItem:hover {
-  background-color: var(--c-hover);
-}
-
 .advancedCard {
   background-color: var(--c-surface);
   border: none;
@@ -209,10 +193,6 @@
   width: 100%;
   box-sizing: border-box;
   color: var(--c-text);
-}
-
-:global([data-mantine-color-scheme="dark"]) .advancedCard {
-  background-color: var(--c-surface);
 }
 
 .inputGroup {
@@ -269,11 +249,6 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-
-/* Dark-mode adjustments */
-:global([data-mantine-color-scheme="dark"]) .selectedList {
-  background-color: var(--c-surface-raised);
 }
 
 /* Small screens: allow the section to shrink instead of enforcing a large min width */

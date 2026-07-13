@@ -13,11 +13,6 @@
   pointer-events: none;
 }
 
-[data-mantine-color-scheme="dark"] .compare-dropdown-sticky {
-  background: var(--c-surface-sunken);
-  color: var(--compare-page-label-fg);
-  border-bottom: 1px solid var(--c-border);
-}
 .compare-workbench {
   display: flex;
   flex-direction: column;
@@ -328,7 +323,7 @@
   width: 0.75rem;
   height: 0.75rem;
   border-radius: 999px;
-  border: 1px solid rgba(15, 23, 42, 0.15);
+  border: 1px solid var(--c-border);
 }
 
 .compare-summary__stats {
@@ -343,10 +338,10 @@
 }
 
 .compare-summary__segment {
-  border: 1px solid var(--mantine-color-gray-3);
+  border: 1px solid var(--c-border);
   border-radius: 0.5rem;
   padding: 0.75rem;
-  background-color: var(--mantine-color-gray-0);
+  background-color: var(--c-surface);
 }
 
 .compare-diff-page {
@@ -459,12 +454,6 @@
   margin: 0;
   border: 0;
   overflow: hidden;
-}
-
-[data-mantine-color-scheme="dark"] .compare-dropdown-group {
-  background: var(--c-surface-sunken);
-  color: var(--compare-page-label-fg);
-  border-bottom: 1px solid var(--c-border);
 }
 
 /* Light grey rendering flag next to page labels in the dropdown */

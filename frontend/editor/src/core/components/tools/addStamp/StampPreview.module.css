@@ -16,7 +16,7 @@
 }
 
 .containerBorder {
-  border: 1px solid var(--c-border, #333);
+  border: 1px solid var(--c-border);
 }
 
 /* Page thumbnail styles */
@@ -95,7 +95,7 @@
 
 .gridTileSelected,
 .gridTileHovered {
-  border: 2px solid var(--mantine-primary-color-filled, var(--p-blue-500));
+  border: 2px solid var(--c-primary);
 }
 
 /* Preview header */
@@ -105,7 +105,7 @@
 
 .divider {
   height: 1px;
-  background-color: var(--c-border, #333);
+  background-color: var(--c-border);
   margin-bottom: 8px;
 }
 

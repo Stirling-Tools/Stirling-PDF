@@ -119,7 +119,7 @@
 /* Free grant still offsetting spend — reads as a positive credit note, pulled up
    under the "PDFs processed" line. */
 .portal-billing__free-remaining {
-  color: var(--color-green-600, var(--color-green));
+  color: var(--c-success);
   margin-top: -0.5rem;
 }
 
@@ -171,7 +171,7 @@
 }
 
 .portal-billing__error {
-  color: var(--color-red, #b91c1c);
+  color: var(--c-danger);
   font-size: 0.875rem;
   margin: 0.5rem 0;
 }
@@ -394,7 +394,7 @@
 
 .portal-billing__plan-features li::before {
   content: "✓";
-  color: var(--color-green, #10b981);
+  color: var(--c-success);
   position: absolute;
   left: 0;
   font-weight: 600;
@@ -586,10 +586,10 @@
   margin-top: 0.75rem;
 }
 [data-mantine-color-scheme="dark"] .scc {
+  /* Brand accent lightened for dark legibility; neutral chip bg/border come
+     from the adaptive --c-* base rule above. */
   --scc-accent-text: #66b8ff;
   --scc-accent-soft: rgba(10, 139, 255, 0.16);
-  --scc-chip-bg: #272d35;
-  --scc-chip-border: #3d444e;
 }
 
 .scc-row {

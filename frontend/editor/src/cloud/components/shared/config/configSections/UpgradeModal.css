@@ -17,9 +17,8 @@
   --upm-muted: var(--c-text-subtle);
 }
 [data-mantine-color-scheme="dark"] .upm {
-  --upm-card-bg: #1c2340;
-  --upm-border: #2d3560;
-  --upm-divider: #2d3560;
+  /* Card/border/divider track the neutral --c-* tokens (base rule); only the
+     brand-azure accent tint is tuned for dark. */
   --upm-accent-soft: rgba(79, 142, 245, 0.14);
 }
 
@@ -327,7 +326,7 @@
 }
 .upm-confirm__icon {
   font-size: 64px !important;
-  color: #10b981;
+  color: var(--upm-success);
   filter: drop-shadow(0 6px 18px rgba(16, 185, 129, 0.35));
 }
 .upm-confirm__title {

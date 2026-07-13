@@ -49,8 +49,8 @@
 }
 
 .workbench-bar-view-btn.active {
-  background-color: var(--mantine-color-blue-light, rgba(59, 130, 246, 0.12));
-  color: var(--mantine-color-blue-6, var(--p-blue-500));
+  background-color: var(--c-primary-subtle);
+  color: var(--c-accent-fg);
 }
 
 .workbench-bar-view-btn.workbench-bar-back-btn {
@@ -59,12 +59,8 @@
 }
 
 .workbench-bar-view-btn.workbench-bar-back-btn:hover {
-  background-color: color-mix(
-    in srgb,
-    var(--c-primary, #4a90e2) 12%,
-    transparent
-  );
-  color: var(--c-primary, #4a90e2);
+  background-color: color-mix(in srgb, var(--c-primary) 12%, transparent);
+  color: var(--c-accent-fg);
 }
 
 .workbench-bar-view-btn svg {
@@ -159,13 +155,13 @@
 }
 
 .workbench-bar-action-icon[data-variant="filled"] {
-  background: var(--mantine-color-blue-6, var(--p-blue-500)) !important;
-  color: #fff !important;
+  background: var(--c-primary) !important;
+  color: var(--c-text-on-primary) !important;
 }
 
 .workbench-bar-action-icon[data-variant="filled"]:hover {
-  background: var(--mantine-color-blue-7, var(--p-blue-600)) !important;
-  color: #fff !important;
+  background: var(--c-primary-hover) !important;
+  color: var(--c-text-on-primary) !important;
 }
 
 .workbench-bar-action-wrapper {

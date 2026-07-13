@@ -124,7 +124,7 @@
 
 .fsg-add-input:focus {
   outline: none;
-  border-color: var(--color-primary, #4f46e5);
+  border-color: var(--c-primary);
 }
 
 .fsg-footer {

@@ -466,8 +466,8 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--color-primary, #2383e2);
-  background: var(--color-primary-light, #eaf2fb);
+  color: var(--c-primary);
+  background: var(--c-primary-subtle);
   padding: 0.15rem 0.5rem;
   border-radius: 0.375rem;
   margin-bottom: 0.4rem;
@@ -568,7 +568,7 @@
   border-bottom: 1px solid var(--c-border-subtle);
 }
 .portal-proc__quote-lines li[data-kind="DISCOUNT"] {
-  color: var(--color-success, #0f7b6c);
+  color: var(--c-success);
 }
 .portal-proc__quote-total {
   display: flex;
@@ -989,7 +989,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--color-primary, #2383e2);
+  color: var(--c-primary);
 }
 .portal-hero__company {
   display: block;
@@ -1035,8 +1035,8 @@
   width: 0.5rem;
   height: 0.5rem;
   border-radius: 999px;
-  background: var(--color-primary, #2383e2);
-  box-shadow: 0 0 0 3px rgba(35, 131, 226, 0.18);
+  background: var(--c-primary);
+  box-shadow: 0 0 0 3px var(--c-primary-subtle);
 }
 
 /* ── Full-screen takeover modal (procurement flow) ────────────────────────── */
@@ -1049,7 +1049,7 @@
   justify-content: center;
   padding: clamp(0.5rem, 4vh, 3rem) 1rem;
   overflow-y: auto;
-  background: rgba(15, 23, 42, 0.55);
+  background: var(--c-overlay);
   backdrop-filter: blur(6px) saturate(160%);
   -webkit-backdrop-filter: blur(6px) saturate(160%);
   animation: portal-procmodal-fade 0.15s ease-out;
@@ -1270,7 +1270,7 @@
   justify-content: center;
   padding: 1rem;
   overflow-y: auto;
-  background: rgba(15, 23, 42, 0.55);
+  background: var(--c-overlay);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   animation: portal-procmodal-fade 0.15s ease-out;
@@ -1386,8 +1386,8 @@
   background: var(--c-border-subtle);
 }
 .portal-docs__row-action[data-status="action"] {
-  color: var(--color-primary, #2383e2);
-  background: var(--color-primary-light, #eaf2fb);
+  color: var(--c-primary);
+  background: var(--c-primary-subtle);
 }
 .portal-docs__row-action[data-status="request"] {
   color: var(--c-text-subtle);

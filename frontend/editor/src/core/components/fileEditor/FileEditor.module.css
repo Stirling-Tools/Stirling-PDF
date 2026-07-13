@@ -291,11 +291,11 @@
    DARK MODE OVERRIDES
    ========================= */
 :global([data-mantine-color-scheme="dark"]) .card {
-  outline-color: #1c2340; /* deselected stroke */
+  outline-color: var(--c-border); /* deselected stroke (neutral) */
 }
 
 :global([data-mantine-color-scheme="dark"]) .card[data-selected="true"] {
-  outline-color: #2d3560; /* selected stroke (subtle navy) */
+  outline-color: var(--c-primary); /* selected stroke (accent) */
 }
 
 :global([data-mantine-color-scheme="dark"]) .headerResting {
@@ -308,19 +308,6 @@
   background: var(--c-border); /* #3A4047 */
   color: var(--c-accent-fg); /* var(--p-gray-300) */
   border-bottom-color: var(--c-border);
-}
-
-:global([data-mantine-color-scheme="dark"]) .title {
-  color: var(--p-gray-300); /* title text */
-}
-
-:global([data-mantine-color-scheme="dark"]) .meta {
-  color: var(--p-gray-500); /* subtitle text */
-}
-
-/* Light mode selected header stroke override */
-:global([data-mantine-color-scheme="light"]) .card[data-selected="true"] {
-  outline-color: #3b4b6e;
 }
 
 /* =========================

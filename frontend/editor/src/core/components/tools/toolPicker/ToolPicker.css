@@ -12,12 +12,12 @@
 }
 
 .tool-picker-scrollable::-webkit-scrollbar-thumb {
-  background-color: var(--mantine-color-gray-4);
+  background-color: var(--c-border);
   border-radius: 0.1875rem;
 }
 
 .tool-picker-scrollable::-webkit-scrollbar-thumb:hover {
-  background-color: var(--mantine-color-gray-5);
+  background-color: var(--c-border-strong);
 }
 
 .search-input {
@@ -55,13 +55,9 @@
   flex: 1 1 auto;
 }
 
-/* Selected tool highlight — theme-aware via CSS variable */
+/* Selected tool highlight — theme-aware via the adaptive --c-active token */
 :root {
-  --tool-button-selected-bg: var(--mantine-color-gray-2);
-}
-
-[data-mantine-color-scheme="dark"] {
-  --tool-button-selected-bg: var(--mantine-color-dark-4);
+  --tool-button-selected-bg: var(--c-active);
 }
 
 /* Compact tool buttons (padding via the Button `p`/`py` props).

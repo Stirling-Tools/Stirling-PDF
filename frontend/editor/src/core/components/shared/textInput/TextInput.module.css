@@ -69,9 +69,5 @@
 }
 
 .clearButton:hover {
-  background-color: rgba(0, 0, 0, 0.1);
-}
-
-[data-mantine-color-scheme="dark"] .clearButton:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--c-hover);
 }
