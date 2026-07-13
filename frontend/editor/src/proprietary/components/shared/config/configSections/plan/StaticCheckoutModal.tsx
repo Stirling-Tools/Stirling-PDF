@@ -3,14 +3,14 @@ import {
   Modal,
   Text,
   Group,
-  ActionIcon,
   Stack,
   Paper,
   Grid,
   TextInput,
-  Button,
   Alert,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { EmailStage } from "@app/components/shared/stripeCheckout/stages/EmailStage";
@@ -314,7 +314,7 @@ const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({
 
                 <Group justify="space-between">
                   <Button
-                    variant="subtle"
+                    variant="tertiary"
                     onClick={handleClose}
                     disabled={savingLicense}
                   >
@@ -362,7 +362,7 @@ const StaticCheckoutModal: React.FC<StaticCheckoutModalProps> = ({
         <Group gap="sm" wrap="nowrap">
           {canGoBack && (
             <ActionIcon
-              variant="subtle"
+              variant="tertiary"
               size="lg"
               onClick={handleGoBack}
               aria-label={t("common.back", "Back")}

@@ -36,15 +36,19 @@ public class OwnershipService {
         return accessService.canUseResource(
                 type,
                 String.valueOf(resource.getId()),
-                resource.getOwnerUserId(),
+                resource.getOwnerRef(),
                 resource.getDefaultAccess(),
                 user);
     }
 
     /** Whether the user may manage the resource. */
     public boolean canManage(ResourceType type, OwnedResource resource, User user) {
+        // Disabled resources bypass grants for MANAGE too: admin/owner only.
+        if (!resource.isEnabled()) {
+            return isAdmin(user) || isOwner(resource, user);
+        }
         return accessService.canManageResource(
-                type, String.valueOf(resource.getId()), resource.getOwnerUserId(), user);
+                type, String.valueOf(resource.getId()), resource.getOwnerRef(), user);
     }
 
     /**

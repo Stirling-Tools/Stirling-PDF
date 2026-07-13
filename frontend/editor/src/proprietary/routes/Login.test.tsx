@@ -5,10 +5,10 @@ import { BrowserRouter, MemoryRouter } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
 import Login from "@app/routes/Login";
 import { useAuth } from "@app/auth/UseSession";
-import { springAuth } from "@shared/auth/spring/springAuthClient";
+import { springAuth } from "@app/auth/spring/springAuthClient";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import apiClient from "@app/services/apiClient";
-import { configureSpringAuth } from "@shared/auth/config";
+import { configureSpringAuth } from "@app/auth/config";
 import type { AxiosInstance } from "axios";
 
 // Mock i18n to return fallback text
@@ -43,10 +43,10 @@ vi.mock("@app/auth/UseSession", () => ({
 }));
 
 // Mock springAuth; keep the real redirect-path helpers.
-vi.mock("@shared/auth/spring/springAuthClient", async () => {
+vi.mock("@app/auth/spring/springAuthClient", async () => {
   const actual = await vi.importActual<
-    typeof import("@shared/auth/spring/springAuthClient")
-  >("@shared/auth/spring/springAuthClient");
+    typeof import("@app/auth/spring/springAuthClient")
+  >("@app/auth/spring/springAuthClient");
   return {
     ...actual,
     springAuth: {
@@ -326,13 +326,13 @@ describe("Login", () => {
     // Wait for OAuth button to appear
     await waitFor(
       () => {
-        const button = screen.queryByText("Authentik");
+        const button = screen.queryByText(/Authentik/);
         expect(button).toBeTruthy();
       },
       { timeout: 3000 },
     );
 
-    const oauthButton = screen.getByText("Authentik");
+    const oauthButton = screen.getByText(/Authentik/);
     await user.click(oauthButton);
 
     await waitFor(() => {
@@ -372,13 +372,13 @@ describe("Login", () => {
     // Wait for OAuth button to appear (will show 'Mycompany' as label)
     await waitFor(
       () => {
-        const button = screen.queryByText("Mycompany");
+        const button = screen.queryByText(/Mycompany/);
         expect(button).toBeTruthy();
       },
       { timeout: 3000 },
     );
 
-    const oauthButton = screen.getByText("Mycompany");
+    const oauthButton = screen.getByText(/Mycompany/);
     await user.click(oauthButton);
 
     await waitFor(() => {
@@ -419,13 +419,13 @@ describe("Login", () => {
     // Wait for OAuth button to appear
     await waitFor(
       () => {
-        const button = screen.queryByText("OIDC");
+        const button = screen.queryByText(/OIDC/);
         expect(button).toBeTruthy();
       },
       { timeout: 3000 },
     );
 
-    const oauthButton = screen.getByText("OIDC");
+    const oauthButton = screen.getByText(/OIDC/);
     await user.click(oauthButton);
 
     await waitFor(() => {
@@ -761,12 +761,12 @@ describe("Login", () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText("Authentik")).toBeTruthy();
+        expect(screen.getByText(/Authentik/)).toBeTruthy();
       },
       { timeout: 3000 },
     );
 
-    await user.click(screen.getByText("Authentik"));
+    await user.click(screen.getByText(/Authentik/));
 
     await waitFor(() => {
       expect(springAuth.signInWithOAuth).toHaveBeenCalled();

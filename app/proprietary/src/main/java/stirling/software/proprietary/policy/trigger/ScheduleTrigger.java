@@ -99,11 +99,17 @@ public class ScheduleTrigger implements PolicyTrigger {
             // Baseline a newly-seen policy to now so it does not fire immediately.
             Instant last = lastFiredByPolicy.computeIfAbsent(policy.id(), id -> now);
             ZonedDateTime next = config.schedule().nextAfter(last.atZone(config.zone()));
-            if (!next.toInstant().isAfter(now)) {
-                lastFiredByPolicy.put(policy.id(), now);
-                log.info("Scheduled policy {} ({}) is due", policy.id(), policy.name());
-                policyRunner.run(policy);
+            if (next.toInstant().isAfter(now)) {
+                continue;
             }
+            ZonedDateTime later = config.schedule().nextAfter(next);
+            while (!later.toInstant().isAfter(now)) {
+                next = later;
+                later = config.schedule().nextAfter(later);
+            }
+            lastFiredByPolicy.put(policy.id(), next.toInstant());
+            log.info("Scheduled policy {} ({}) is due", policy.id(), policy.name());
+            policyRunner.run(policy);
         }
     }
 

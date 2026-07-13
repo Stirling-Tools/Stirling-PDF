@@ -12,18 +12,13 @@ import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Caches the linked team's entitlement so the request-time gate does not call the SaaS backend on
- * every billable request. Single-slot (one instance = one linked team), TTL-based.
+ * Caches the linked team's entitlement so the request-time gate needn't call SaaS on every billable
+ * request. Single-slot (one instance = one linked team), TTL-based.
  *
- * <p>Fail-open friendly for TRANSPORT failures: {@link #current()} returns the freshest snapshot it
- * has, even if a refresh just failed; it returns {@link Optional#empty()} only when nothing has
- * ever been fetched <i>and</i> the latest refresh failed (the gate treats empty as "unknown →
- * allow").
- *
- * <p>But an AUTHORITATIVE deny (revoked/invalid credential → {@link
- * AccountLinkClient.RevokedException}) is NOT a transport failure: the snapshot is replaced with a
- * {@link EntitlementState#REVOKED} blocked entitlement so the gate stops billable work immediately
- * rather than serving a stale entitled snapshot.
+ * <p>A transport failure fails open — {@link #current()} keeps serving the freshest snapshot it has
+ * and returns {@link Optional#empty()} ("unknown → allow") only when nothing was ever fetched. An
+ * authoritative deny ({@link AccountLinkClient.RevokedException}) does not: the snapshot is
+ * replaced with a {@link EntitlementState#REVOKED} entitlement so the gate blocks immediately.
  */
 @Slf4j
 @Service
@@ -63,9 +58,8 @@ public class EntitlementCache {
      * not linked or the SaaS side is unreachable and we have no prior snapshot.
      */
     public Optional<InstanceEntitlement> current() {
-        // Single-flight: when stale, exactly one thread refreshes (blocking on the SaaS
-        // call) while concurrent callers serve the last snapshot — no thundering herd of
-        // synchronous round-trips on the billable hot path. Safe because the gate fails open.
+        // Single-flight: when stale, exactly one thread refreshes while concurrent callers serve
+        // the last snapshot — no thundering herd of round-trips on the billable hot path.
         if (isStale(snapshot) && refreshing.compareAndSet(false, true)) {
             try {
                 refresh();
@@ -77,16 +71,15 @@ public class EntitlementCache {
     }
 
     private boolean isStale(Snapshot snap) {
-        // fetchedAt is the last *attempt* time (stamped on success AND failure), so a failed
-        // fetch backs off for a full TTL instead of every billable request re-triggering a
-        // blocking round-trip against a dead/slow SaaS endpoint.
+        // fetchedAt is the last *attempt* time (stamped on success and failure), so a failed fetch
+        // backs off a full TTL instead of every request re-triggering a round-trip to a dead SaaS.
         return Duration.between(snap.fetchedAt(), Instant.now()).compareTo(ttl) >= 0;
     }
 
     /**
-     * Pulls a fresh snapshot. Keeps the previous entitlement on a TRANSPORT failure (fail-open) but
-     * still stamps the attempt time so re-fetches throttle to the TTL; on an AUTHORITATIVE deny
-     * (revoked credential) replaces it with a blocked snapshot so the gate stops billable work.
+     * Pulls a fresh snapshot. On a transport failure keeps the previous entitlement but stamps the
+     * attempt time so re-fetches throttle to the TTL; on an authoritative deny replaces it with a
+     * blocked snapshot.
      */
     void refresh() {
         Optional<DeviceCredential> cred = credentialStore.get();
@@ -101,15 +94,15 @@ public class EntitlementCache {
             if (fresh != null) {
                 snapshot = new Snapshot(fresh, Instant.now());
             } else {
-                // Unreachable / server error: keep the last known entitlement (may be null) but
-                // stamp the attempt so we don't hammer SaaS; the gate fails open in the meantime.
+                // Unreachable / server error: keep the last known entitlement but stamp the attempt
+                // so we don't hammer SaaS; the gate fails open meanwhile.
                 log.debug(
                         "Entitlement refresh failed; reusing last known snapshot, backing off a TTL");
                 snapshot = new Snapshot(snapshot.entitlement(), Instant.now());
             }
         } catch (AccountLinkClient.RevokedException e) {
-            // Authoritative deny — credential revoked/invalid. Do NOT fail open: block immediately
-            // rather than serving the stale entitled snapshot until the next unlink.
+            // Authoritative deny — block immediately rather than serving the stale entitled
+            // snapshot.
             log.info(
                     "Entitlement denied (HTTP {}); blocking billable work for the revoked credential",
                     e.status());
@@ -120,5 +113,15 @@ public class EntitlementCache {
     /** Forces a refresh on the next {@link #current()} (e.g. right after linking). */
     public void invalidate() {
         snapshot = new Snapshot(snapshot.entitlement(), Instant.EPOCH);
+    }
+
+    /**
+     * Seeds the cache with an entitlement obtained out-of-band (the sync reply carries a fresh
+     * one), saving a redundant fetch. No-op on null.
+     */
+    public void accept(InstanceEntitlement fresh) {
+        if (fresh != null) {
+            snapshot = new Snapshot(fresh, Instant.now());
+        }
     }
 }

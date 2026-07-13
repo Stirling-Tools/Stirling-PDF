@@ -1,0 +1,103 @@
+/* ──────────────────────────────────────────────────────────────────────── */
+/*  Free-tier welcome hero — compact product header + steps                  */
+/* ──────────────────────────────────────────────────────────────────────── */
+
+.portal-welcome {
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border-light);
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--color-surface);
+}
+
+/* ── Dark product header strip ── */
+.portal-welcome__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.875rem 1.25rem;
+  background: #16213e;
+}
+
+.portal-welcome__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  min-width: 0;
+}
+
+.portal-welcome__mark {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.portal-welcome__mark img {
+  display: block;
+  height: 1.75rem;
+  width: auto;
+}
+
+.portal-welcome__brand-text {
+  display: flex;
+  align-items: baseline;
+  gap: 0.625rem;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.portal-welcome__product {
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #fff;
+}
+
+.portal-welcome__stats {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* Header action group: icon buttons + the CTA. */
+.portal-welcome__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.portal-welcome__icon-btn {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  cursor: pointer;
+  transition: background var(--motion-fast);
+}
+.portal-welcome__icon-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* White CTA on the dark header, matching the marketing card. */
+.portal-welcome__header .portal-welcome__cta.sui-btn {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #16213e;
+}
+.portal-welcome__header .portal-welcome__cta.sui-btn:hover {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(255, 255, 255, 0.88);
+}
+
+/* ── Steps + enterprise (setup checklist) sit directly under the header ── */
+.portal-welcome__footer {
+  background: var(--color-surface);
+}

@@ -11,7 +11,6 @@ from .common import (
     AiFile,
     ArtifactKind,
     ConversationMessage,
-    ConvertMarkdownResponse,
     ExtractedFileText,
     GenerateFileResponse,
     NeedContentResponse,
@@ -61,7 +60,6 @@ type OrchestratorResponse = Annotated[
     | GenerateFileResponse
     | NeedContentResponse
     | NeedIngestResponse
-    | ConvertMarkdownResponse
     | AgentDraftResponse
     | NextExecutionAction
     | UnsupportedCapabilityResponse,

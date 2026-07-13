@@ -1,4 +1,5 @@
-import { Button, Stack, Text } from "@mantine/core";
+import { Stack, Text } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import type { FileState } from "@app/types/file";

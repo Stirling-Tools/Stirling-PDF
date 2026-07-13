@@ -10,8 +10,7 @@
       ],
       "@cloud/*": ["./src/cloud/*"],
       "@proprietary/*": ["./src/proprietary/*"],
-      "@core/*": ["./src/core/*"],
-      "@shared/*": ["../shared/*"]
+      "@core/*": ["./src/core/*"]
     }
   },
   "exclude": [

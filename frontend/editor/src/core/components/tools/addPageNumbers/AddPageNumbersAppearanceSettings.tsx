@@ -27,6 +27,7 @@ const AddPageNumbersAppearanceSettings = ({
   return (
     <Stack gap="md">
       <Tooltip
+        position="left"
         content={t(
           "marginTooltip",
           "Distance between the page number and the edge of the page.",
@@ -56,6 +57,7 @@ const AddPageNumbersAppearanceSettings = ({
       </Tooltip>
 
       <Tooltip
+        position="left"
         content={t(
           "fontSizeTooltip",
           "Size of the page number text in points. Larger numbers create bigger text.",
@@ -73,6 +75,7 @@ const AddPageNumbersAppearanceSettings = ({
       </Tooltip>
 
       <Tooltip
+        position="left"
         content={t(
           "addPageNumbers.zeroPadTooltip",
           "Zero-pad (Bates Stamp) page numbers to this width (e.g. 3 => 001). Set 0 to disable.",
@@ -90,6 +93,7 @@ const AddPageNumbersAppearanceSettings = ({
       </Tooltip>
 
       <Tooltip
+        position="left"
         content={t(
           "fontTypeTooltip",
           "Font family for the page numbers. Choose based on your document style.",
@@ -118,6 +122,7 @@ const AddPageNumbersAppearanceSettings = ({
       </Tooltip>
 
       <Tooltip
+        position="left"
         content={t(
           "customTextTooltip",
           'Optional custom format for page numbers. Use {n} as placeholder for the number. Example: "Page {n}" will show "Page 1", "Page 2", etc.',

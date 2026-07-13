@@ -3,8 +3,15 @@ import { StirlingFile } from "@app/types/fileContext";
 import type { ResponseHandler } from "@app/utils/toolResponseProcessor";
 import { ToolId } from "@app/types/toolId";
 import type { ProcessingProgress } from "@app/hooks/tools/shared/useToolState";
+import type { ToolApiParams, ToolEndpoint } from "@app/types/toolApiTypes";
 
 export type { ProcessingProgress, ResponseHandler };
+
+/**
+ * A tool operation's backend endpoint, checked against the generated ToolEndpoint
+ * set, or `null` when the operation has no backend endpoint.
+ */
+export type ToolOperationEndpoint = ToolEndpoint | null;
 
 export enum ToolType {
   singleFile,
@@ -46,7 +53,7 @@ export interface CustomProcessorResult {
  * 2. Multi-file tools: toolType: multiFile, single API call with all files
  * 3. Complex tools: toolType: custom, customProcessor handles all processing logic
  */
-interface BaseToolOperationConfig<TParams> {
+interface BaseToolOperationConfig<TParams, TEndpoint extends ToolEndpoint> {
   /** Operation identifier for tracking and logging */
   operationType: ToolId;
 
@@ -73,6 +80,20 @@ interface BaseToolOperationConfig<TParams> {
   defaultParameters?: TParams;
 
   /**
+   * Typed frontend params -> backend request model. When a tool provides this,
+   * it is the spec-checked source of truth for the request body and its
+   * buildFormData is derived from it via objectToFormData. Bound to the tool's
+   * endpoint, so a spec rename of that endpoint's model breaks the build here.
+   */
+  toApiParams?(params: TParams): ToolApiParams[TEndpoint];
+
+  /**
+   * Backend request model -> partial frontend params, so a stored API call
+   * can be re-hydrated into this tool's settings UI.
+   */
+  fromApiParams?(apiParams: ToolApiParams[TEndpoint]): Partial<TParams>;
+
+  /**
    * For custom tools: if true, success implies all input files were successfully processed.
    * Use this for tools like Automate or Merge where Many-to-One relationships exist
    * and exact input-output mapping is difficult.
@@ -80,24 +101,30 @@ interface BaseToolOperationConfig<TParams> {
   consumesAllInputs?: boolean;
 }
 
-export interface SingleFileToolOperationConfig<
+interface SingleFileToolBody<
   TParams,
-> extends BaseToolOperationConfig<TParams> {
+  TEndpoint extends ToolEndpoint,
+> extends BaseToolOperationConfig<TParams, TEndpoint> {
   /** This tool processes one file at a time. */
   toolType: ToolType.singleFile;
 
   /** Builds FormData for API request. */
   buildFormData: (params: TParams, file: File) => FormData;
 
-  /** API endpoint for the operation. Can be static string or function for dynamic routing. */
-  endpoint: string | ((params: TParams) => string);
-
   customProcessor?: undefined;
 }
 
-export interface MultiFileToolOperationConfig<
+/** Single-file tool config; see {@link EndpointBinding} for the endpoint/endpoints rule. */
+export type SingleFileToolOperationConfig<
   TParams,
-> extends BaseToolOperationConfig<TParams> {
+  TEndpoint extends ToolEndpoint = ToolEndpoint,
+> = SingleFileToolBody<TParams, TEndpoint> &
+  EndpointBinding<TParams, TEndpoint>;
+
+interface MultiFileToolBody<
+  TParams,
+  TEndpoint extends ToolEndpoint,
+> extends BaseToolOperationConfig<TParams, TEndpoint> {
   /** This tool processes multiple files at once. */
   toolType: ToolType.multiFile;
 
@@ -107,15 +134,18 @@ export interface MultiFileToolOperationConfig<
   /** Builds FormData for API request. */
   buildFormData: (params: TParams, files: File[]) => FormData;
 
-  /** API endpoint for the operation. Can be static string or function for dynamic routing. */
-  endpoint: string | ((params: TParams) => string);
-
   customProcessor?: undefined;
 }
 
+/** Multi-file counterpart of {@link SingleFileToolOperationConfig}. */
+export type MultiFileToolOperationConfig<
+  TParams,
+  TEndpoint extends ToolEndpoint = ToolEndpoint,
+> = MultiFileToolBody<TParams, TEndpoint> & EndpointBinding<TParams, TEndpoint>;
+
 export interface CustomToolOperationConfig<
   TParams,
-> extends BaseToolOperationConfig<TParams> {
+> extends BaseToolOperationConfig<TParams, ToolEndpoint> {
   /** This tool has custom behaviour. */
   toolType: ToolType.custom;
 
@@ -127,6 +157,9 @@ export interface CustomToolOperationConfig<
    * Provide a function when the endpoint depends on runtime parameters.
    */
   endpoint?: string | ((params: TParams) => string | undefined);
+
+  /** `never` so `endpoints` stays readable across the union; custom tools declare no set. */
+  endpoints?: never;
 
   /**
    * Custom processing logic that completely bypasses standard file processing.
@@ -143,10 +176,78 @@ export interface CustomToolOperationConfig<
   ) => Promise<CustomProcessorResult>;
 }
 
-export type ToolOperationConfig<TParams = void> =
-  | SingleFileToolOperationConfig<TParams>
-  | MultiFileToolOperationConfig<TParams>
+export type ToolOperationConfig<
+  TParams = void,
+  TEndpoint extends ToolEndpoint = ToolEndpoint,
+> =
+  | SingleFileToolOperationConfig<TParams, TEndpoint>
+  | MultiFileToolOperationConfig<TParams, TEndpoint>
   | CustomToolOperationConfig<TParams>;
+
+/**
+ * A static `endpoint` declares no set; a dynamic (function) `endpoint` must declare its full
+ * `endpoints` set, which is how findToolByEndpoint maps a stored step back to its tool when the
+ * endpoint-selecting parameter is frontend-only.
+ */
+type EndpointBinding<TParams, TEndpoint extends ToolEndpoint> =
+  | { endpoint: TEndpoint | null; endpoints?: never }
+  | {
+      endpoint: (params: TParams) => TEndpoint | null;
+      endpoints: readonly TEndpoint[];
+    };
+
+/** Union-distributing Omit, so stripping a key from a discriminated config keeps its branches. */
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
+  ? Omit<T, K>
+  : never;
+
+/**
+ * Define a single-file tool's operation config. Infers the endpoint literal from
+ * `endpoint` and binds toApiParams/fromApiParams to that endpoint's request
+ * model, so a mapper cannot silently drift from the generated spec.
+ */
+export function defineSingleFileTool<
+  TParams,
+  const TEndpoint extends ToolEndpoint,
+>(
+  config: DistributiveOmit<
+    SingleFileToolOperationConfig<TParams, TEndpoint>,
+    "toolType"
+  >,
+): SingleFileToolOperationConfig<TParams, TEndpoint> {
+  return {
+    ...config,
+    toolType: ToolType.singleFile,
+  } as SingleFileToolOperationConfig<TParams, TEndpoint>;
+}
+
+/** Multi-file counterpart of {@link defineSingleFileTool}. */
+export function defineMultiFileTool<
+  TParams,
+  const TEndpoint extends ToolEndpoint,
+>(
+  config: DistributiveOmit<
+    MultiFileToolOperationConfig<TParams, TEndpoint>,
+    "toolType"
+  >,
+): MultiFileToolOperationConfig<TParams, TEndpoint> {
+  return {
+    ...config,
+    toolType: ToolType.multiFile,
+  } as MultiFileToolOperationConfig<TParams, TEndpoint>;
+}
+
+/**
+ * Custom-processor counterpart of {@link defineSingleFileTool}, for tools whose
+ * customProcessor owns the API calls and file handling. Rejects fields that
+ * belong to the file-based patterns (e.g. buildFormData) and any property not on
+ * the config, so a stray or stale field is a build error rather than dead weight.
+ */
+export function defineCustomTool<TParams>(
+  config: Omit<CustomToolOperationConfig<TParams>, "toolType">,
+): CustomToolOperationConfig<TParams> {
+  return { ...config, toolType: ToolType.custom };
+}
 
 /**
  * One generic source-of-truth for the props every automation settings component

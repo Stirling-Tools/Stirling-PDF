@@ -1,4 +1,5 @@
-import { Stack, Text, Button, Divider, Paper } from "@mantine/core";
+import { Stack, Text, Divider, Paper } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import AddIcon from "@mui/icons-material/Add";
@@ -57,9 +58,9 @@ export const SessionActionsPanel: React.FC<SessionActionsPanelProps> = ({
         <>
           <Divider />
           <Button
+            variant="secondary"
             leftSection={<AddIcon />}
             onClick={onAddParticipants}
-            variant="light"
             fullWidth
           >
             {t(
@@ -72,7 +73,7 @@ export const SessionActionsPanel: React.FC<SessionActionsPanelProps> = ({
 
           <Button
             leftSection={<CheckCircleIcon />}
-            color={allSigned ? "green.6" : "orange"}
+            accent={allSigned ? "success" : "warning"}
             fullWidth
             onClick={onFinalize}
             loading={finalizing}
@@ -94,7 +95,6 @@ export const SessionActionsPanel: React.FC<SessionActionsPanelProps> = ({
         <>
           <Button
             leftSection={<CheckCircleIcon />}
-            color="blue"
             fullWidth
             onClick={onLoadSignedPdf}
             loading={loadingPdf}

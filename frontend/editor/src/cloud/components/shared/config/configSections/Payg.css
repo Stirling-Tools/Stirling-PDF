@@ -14,14 +14,13 @@
   --payg-divider: var(--border-subtle);
 }
 
-/* Dark mode: the modal content bg is #2a2f36 and so is --bg-surface, so plain
-   cards vanish. Lift cards a shade above the modal and strengthen borders. */
+/* Dark mode: modal content bg is #131729 (--bg-surface), so lift cards above it */
 [data-mantine-color-scheme="dark"] .payg {
-  --payg-card-bg: #313842;
-  --payg-card-border: #3d444e;
-  --payg-inset-bg: #272c33;
-  --payg-accent-soft: rgba(10, 139, 255, 0.16);
-  --payg-divider: #3d444e;
+  --payg-card-bg: #1c2340;
+  --payg-card-border: #2d3560;
+  --payg-inset-bg: #0d1020;
+  --payg-accent-soft: rgba(79, 142, 245, 0.16);
+  --payg-divider: #2d3560;
 }
 
 /* ── Header ─────────────────────────────────────────────────────────── */
@@ -258,16 +257,16 @@
 
 /* Dark mode: the stock default button is a flat slab that disappears into the
    card. Lift it with a soft top-down gradient + brighter border, and warm the
-   hover so the buttons feel tactile against --payg-card-bg (#313842). Driven
+   hover so the buttons feel tactile against --payg-card-bg (#1c2340). Driven
    through Mantine's --button-* vars. The same rule covers disabled buttons
    (Cancel/Update cap before the form is dirty) so they read identically to the
    always-enabled ones — Mantine only fades them via opacity. */
 [data-mantine-color-scheme="dark"]
   .payg
   .mantine-Button-root[data-variant="default"] {
-  --button-bg: linear-gradient(180deg, #3d4651 0%, #353d48 100%);
-  --button-hover: linear-gradient(180deg, #475160 0%, #3d4654 100%);
-  --button-bd: 1px solid #4b5563;
+  --button-bg: linear-gradient(180deg, #232a50 0%, #1c2340 100%);
+  --button-hover: linear-gradient(180deg, #2d3560 0%, #232a50 100%);
+  --button-bd: 1px solid #2d3560;
   --button-color: var(--mantine-color-white);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.04) inset,

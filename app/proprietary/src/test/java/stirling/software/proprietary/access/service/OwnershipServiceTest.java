@@ -3,6 +3,7 @@ package stirling.software.proprietary.access.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
@@ -148,6 +149,27 @@ class OwnershipServiceTest {
 
         assertThat(ownership.canUse(TYPE, r, leader)).isTrue(); // lead of the owning team
         assertThat(ownership.canUse(TYPE, r, user(8))).isFalse(); // not a lead
+    }
+
+    @Test
+    void disabledResourceManageableOnlyByOwnerOrAdmin() {
+        TestResource r = new TestResource(1L);
+        r.setEnabled(false);
+        r.setOwnerUser(user(7));
+
+        assertThat(ownership.canManage(TYPE, r, user(7))).isTrue(); // owner
+        assertThat(ownership.canManage(TYPE, r, user(8))).isFalse(); // would-be MANAGE grantee
+        assertThat(ownership.canManage(TYPE, r, admin(2))).isTrue(); // admin
+        // Grants are bypassed entirely while disabled.
+        verifyNoInteractions(accessService);
+    }
+
+    @Test
+    void enabledResourceManageDelegatesToTheAcl() {
+        TestResource r = new TestResource(1L);
+        when(accessService.canManageResource(any(), any(), any(), any())).thenReturn(true);
+
+        assertThat(ownership.canManage(TYPE, r, user(7))).isTrue();
     }
 
     // ---- helpers ----

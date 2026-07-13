@@ -8,6 +8,9 @@ export const POLICY_TOOL_CHAINS: Record<string, string[]> = {
   // Security: redact PII + watermark + sanitize (strips JS). Which are enabled
   // by default comes from the preset's defaultOperations, not this list.
   security: ["redact", "watermark", "sanitize"],
+  // Classification: a single backend step that classifies the document and
+  // writes the result into its metadata.
+  classification: ["classify"],
 };
 
 /** The configurable tool chain for a category, or null if it has none yet. */

@@ -98,6 +98,13 @@ jobs:
 
       - name: Install Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
+
+      - name: Generate frontend license report (Push only)
+        if: github.event_name == 'push'
+        env:
+          PR_IS_FORK: "false"
+        run: task frontend:licenses:generate
+
       - name: Generate frontend license report (internal PR)
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
         env:
@@ -353,6 +360,7 @@ jobs:
 
       - name: Install Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
+
       - name: Check licenses and generate report
         id: license-check
         run: task backend:licenses:generate || echo "LICENSE_CHECK_FAILED=true" >> $GITHUB_ENV

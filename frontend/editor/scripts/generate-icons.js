@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-const { icons } = require("@iconify-json/material-symbols");
-const fs = require("fs");
-const path = require("path");
+import { icons } from "@iconify-json/material-symbols";
+import fs from "node:fs";
+import path from "node:path";
 
 // Check for verbose flag
 const isVerbose =
@@ -19,7 +19,7 @@ const debug = (message) => {
 // Function to scan codebase for LocalIcon usage
 function scanForUsedIcons() {
   const usedIcons = new Set();
-  const srcDir = path.join(__dirname, "..", "src");
+  const srcDir = path.join(import.meta.dirname, "..", "src");
 
   info("🔍 Scanning codebase for LocalIcon usage...");
 
@@ -140,7 +140,7 @@ async function main() {
 
   // Check if we need to regenerate (compare with existing)
   const outputPath = path.join(
-    __dirname,
+    import.meta.dirname,
     "..",
     "src",
     "assets",
@@ -200,7 +200,7 @@ async function main() {
   }
 
   // Create output directory
-  const outputDir = path.join(__dirname, "..", "src", "assets");
+  const outputDir = path.join(import.meta.dirname, "..", "src", "assets");
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
   }
