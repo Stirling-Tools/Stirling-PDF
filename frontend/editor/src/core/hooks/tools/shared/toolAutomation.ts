@@ -26,10 +26,6 @@ import {
   type ErasedToolParams,
   type RegistryToolOperationConfig,
 } from "@app/hooks/tools/shared/toolOperationTypes";
-import {
-  describeToolOperation,
-  type ToolOperationDescriptor,
-} from "@app/hooks/tools/shared/toolOperationDescriptor";
 
 /**
  * How much of a tool's parameters a UI can edit when composing a backend step:
@@ -182,22 +178,6 @@ export function newWorkingToolStep(
   };
 }
 
-/** Descriptor for a registry entry's (erased) config, or null when it can't round-trip. */
-function descriptorFor(
-  operation: string,
-  config: RegistryToolOperationConfig,
-): ToolOperationDescriptor<ToolEndpoint, ErasedToolParams> | null {
-  if (
-    !isToolEndpoint(operation) ||
-    !config.toApiParams ||
-    !config.fromApiParams ||
-    config.defaultParameters === undefined
-  ) {
-    return null;
-  }
-  return describeToolOperation(operation, config);
-}
-
 /** Serialize a working step into the backend step contract (endpoint + backend parameters). */
 export function serializeToolStep(
   step: WorkingToolStep,
@@ -211,12 +191,9 @@ export function serializeToolStep(
   }
   const merged = { ...(config.defaultParameters ?? {}), ...step.params };
   const operation = resolveEndpoint(config, merged) ?? step.operation;
-  const descriptor = descriptorFor(operation, config);
-  const parameters = descriptor
-    ? (descriptor.toApi(merged) as Record<string, unknown>)
-    : config.toApiParams
-      ? (config.toApiParams(merged) as Record<string, unknown>)
-      : {};
+  const parameters = config.toApiParams
+    ? (config.toApiParams(merged) as Record<string, unknown>)
+    : {};
   return { operation, parameters };
 }
 
@@ -268,15 +245,12 @@ export function deserializeToolStep(
   if (!match) return unmappedStep(step);
   const [toolId, entry] = match;
   const config = entry.operationConfig;
-  const descriptor = config && descriptorFor(step.operation, config);
-  const params: ErasedToolParams = descriptor
-    ? descriptor.fromApi(step.parameters)
-    : config?.fromApiParams
-      ? {
-          ...(config.defaultParameters ?? {}),
-          ...config.fromApiParams(step.parameters as never),
-        }
-      : { ...(config?.defaultParameters ?? {}) };
+  const params: ErasedToolParams = config?.fromApiParams
+    ? {
+        ...(config.defaultParameters ?? {}),
+        ...config.fromApiParams(step.parameters as never),
+      }
+    : { ...(config?.defaultParameters ?? {}) };
   // Validate against the generated endpoint set instead of casting the matched string.
   const operation =
     resolveEndpoint(config, params) ??

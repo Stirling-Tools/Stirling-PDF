@@ -13,20 +13,30 @@ export interface ToolOperationDescriptor<E extends ToolEndpoint, TParams> {
   fromApi(api: ToolApiParams[E]): TParams;
 }
 
-/** Structural subset of a tool's config; separate so `E` is inferred from the endpoint argument. */
-export interface BidirectionalToolConfig<TParams, E extends ToolEndpoint> {
+/**
+ * Structural subset of a tool's config. `CE` is the config's declared endpoint type, inferred from
+ * the `endpoint` field: the literal for static tools, or the whole `ToolEndpoint` union for
+ * dynamic-endpoint tools (whose endpoint is a function typed against the union).
+ */
+export interface BidirectionalToolConfig<TParams, CE extends ToolEndpoint> {
+  endpoint: CE | null | ((params: TParams) => CE | null);
   defaultParameters?: TParams;
-  toApiParams?(params: TParams): ToolApiParams[E];
-  fromApiParams?(api: ToolApiParams[E]): Partial<TParams>;
+  toApiParams?(params: TParams): ToolApiParams[CE];
+  fromApiParams?(api: ToolApiParams[CE]): Partial<TParams>;
 }
 
 /**
  * Pin a config to `endpoint` (passed explicitly, since dynamic-endpoint tools declare `endpoint` as
- * a function). Throws when the mappers or defaults are missing.
+ * a function). `E extends CE` rejects pairing a static tool's config with the wrong endpoint, while
+ * allowing a dynamic tool whose `CE` is the full union. Throws when mappers or defaults are missing.
  */
-export function describeToolOperation<E extends ToolEndpoint, TParams>(
+export function describeToolOperation<
+  E extends CE,
+  CE extends ToolEndpoint,
+  TParams,
+>(
   endpoint: E,
-  config: BidirectionalToolConfig<TParams, E>,
+  config: BidirectionalToolConfig<TParams, CE>,
 ): ToolOperationDescriptor<E, TParams> {
   const { toApiParams, fromApiParams, defaultParameters } = config;
   if (!toApiParams || !fromApiParams || defaultParameters === undefined) {
@@ -37,7 +47,13 @@ export function describeToolOperation<E extends ToolEndpoint, TParams>(
   return {
     endpoint,
     defaultParameters,
-    toApi: (params) => toApiParams(params),
-    fromApi: (api) => ({ ...defaultParameters, ...fromApiParams(api) }),
+    // A dynamic tool's mapper is typed against the union; narrow to this endpoint (sound - the
+    // runtime mapper produces this endpoint's model).
+    toApi: (params) => toApiParams(params) as ToolApiParams[E],
+    fromApi: (api) =>
+      ({
+        ...defaultParameters,
+        ...fromApiParams(api as ToolApiParams[CE]),
+      }) as TParams,
   };
 }
