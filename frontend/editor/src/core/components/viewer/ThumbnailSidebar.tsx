@@ -193,7 +193,10 @@ export function ThumbnailSidebar({
                 "viewer.thumbnails.closeSidebar",
                 "Close thumbnails sidebar",
               )}
-              title="Close thumbnails"
+              title={t(
+                "viewer.thumbnails.closeSidebar",
+                "Close thumbnails sidebar",
+              )}
             >
               <LocalIcon icon="close-rounded" width="1.1rem" height="1.1rem" />
             </ActionIcon>
