@@ -23,6 +23,10 @@ export const freeWallet: Wallet = {
   docsProcessedThisPeriod: 90,
   uniquePdfsThisPeriod: 84,
   sizeMultiplierPdfsThisPeriod: 12,
+  billingMode: "payg",
+  prepaidUnitsRemaining: 0,
+  prepaidUnitsTotal: 0,
+  prepaidExpiresAt: null,
   members: [],
   recent: [],
 };
@@ -50,6 +54,10 @@ export const subscribedWallet: Wallet = {
   docsProcessedThisPeriod: 1750,
   uniquePdfsThisPeriod: 1600,
   sizeMultiplierPdfsThisPeriod: 320,
+  billingMode: "payg",
+  prepaidUnitsRemaining: 0,
+  prepaidUnitsTotal: 0,
+  prepaidExpiresAt: null,
   members: [
     {
       userId: "u1",

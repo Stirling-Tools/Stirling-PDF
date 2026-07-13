@@ -104,4 +104,34 @@ public class PrepaidBundleService {
         }
         return restored;
     }
+
+    /**
+     * Aggregate a team's in-term pools for the wallet snapshot: total remaining + total capacity +
+     * soonest expiry. Includes exhausted-but-in-term pools so the "X of Y used" meter keeps the
+     * right denominator for the term. Returns {@code null} when the team has no in-term bundle.
+     */
+    @Transactional(readOnly = true)
+    public PrepaidSummary summarize(Long teamId) {
+        if (teamId == null) {
+            return null;
+        }
+        List<PrepaidBundle> pools = bundleRepository.findInTerm(teamId, LocalDateTime.now());
+        if (pools.isEmpty()) {
+            return null;
+        }
+        long remaining = 0L;
+        long total = 0L;
+        LocalDateTime soonest = null;
+        for (PrepaidBundle pool : pools) {
+            remaining += pool.getUnitsRemaining();
+            total += pool.getUnitsTotal();
+            if (soonest == null || pool.getExpiresAt().isBefore(soonest)) {
+                soonest = pool.getExpiresAt();
+            }
+        }
+        return new PrepaidSummary(remaining, total, soonest);
+    }
+
+    /** Aggregated prepaid balance for a team's in-term pools. */
+    public record PrepaidSummary(long unitsRemaining, long unitsTotal, LocalDateTime expiresAt) {}
 }

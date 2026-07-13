@@ -136,7 +136,11 @@ function reuseIfEqual(prev: Wallet | null, next: Wallet): Wallet {
     prev.spendUnitsThisPeriod !== next.spendUnitsThisPeriod ||
     prev.docsProcessedThisPeriod !== next.docsProcessedThisPeriod ||
     prev.uniquePdfsThisPeriod !== next.uniquePdfsThisPeriod ||
-    prev.sizeMultiplierPdfsThisPeriod !== next.sizeMultiplierPdfsThisPeriod
+    prev.sizeMultiplierPdfsThisPeriod !== next.sizeMultiplierPdfsThisPeriod ||
+    prev.billingMode !== next.billingMode ||
+    prev.prepaidUnitsRemaining !== next.prepaidUnitsRemaining ||
+    prev.prepaidUnitsTotal !== next.prepaidUnitsTotal ||
+    prev.prepaidExpiresAt !== next.prepaidExpiresAt
   ) {
     return next;
   }
