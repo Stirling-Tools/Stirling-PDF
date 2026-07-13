@@ -80,8 +80,8 @@
   .card {
     background: #2d2d2d;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    color: #e5e7eb;
-    border-color: #374151;
+    color: var(--p-gray-200);
+    border-color: var(--p-gray-700);
   }
 
   .iconSuccess {
@@ -93,11 +93,11 @@
   }
 
   .iconNeutral {
-    color: #9ca3af;
+    color: var(--p-gray-400);
   }
 
   .title {
-    color: #f5f5f5;
+    color: var(--p-zinc-100);
   }
 
   .message,

@@ -50,7 +50,7 @@
 
 .workbench-bar-view-btn.active {
   background-color: var(--mantine-color-blue-light, rgba(59, 130, 246, 0.12));
-  color: var(--mantine-color-blue-6, #3b82f6);
+  color: var(--mantine-color-blue-6, var(--p-blue-500));
 }
 
 .workbench-bar-view-btn.workbench-bar-back-btn {
@@ -159,12 +159,12 @@
 }
 
 .workbench-bar-action-icon[data-variant="filled"] {
-  background: var(--mantine-color-blue-6, #3b82f6) !important;
+  background: var(--mantine-color-blue-6, var(--p-blue-500)) !important;
   color: #fff !important;
 }
 
 .workbench-bar-action-icon[data-variant="filled"]:hover {
-  background: var(--mantine-color-blue-7, #2563eb) !important;
+  background: var(--mantine-color-blue-7, var(--p-blue-600)) !important;
   color: #fff !important;
 }
 

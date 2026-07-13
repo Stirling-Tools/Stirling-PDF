@@ -95,7 +95,7 @@
 
 .gridTileSelected,
 .gridTileHovered {
-  border: 2px solid var(--mantine-primary-color-filled, #3b82f6);
+  border: 2px solid var(--mantine-primary-color-filled, var(--p-blue-500));
 }
 
 /* Preview header */

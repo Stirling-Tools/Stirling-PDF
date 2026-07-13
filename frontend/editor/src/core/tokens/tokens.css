@@ -111,15 +111,15 @@
   );
   --grad-amber-btn: linear-gradient(
     180deg,
-    #fbbf24 0%,
-    #f59e0b 50%,
-    #d97706 100%
+    var(--p-amber-400) 0%,
+    var(--p-amber-500) 50%,
+    var(--p-amber-600) 100%
   );
   --grad-red-btn: linear-gradient(
     180deg,
-    #f87171 0%,
-    #ef4444 50%,
-    #dc2626 100%
+    var(--p-red-400) 0%,
+    var(--p-red-500) 50%,
+    var(--p-red-600) 100%
   );
 }
 
@@ -144,7 +144,7 @@
   --color-amber-border: var(--p-amber-600);
   /* Deeper than the base so it stays distinct (hover shade + amber text on
      dark surfaces). ~7.4:1 on --color-amber-light, passes WCAG AA. Was
-     #fbbf24 — identical to the base — which left Mantine's amber hover a
+     var(--p-amber-400) — identical to the base — which left Mantine's amber hover a
      no-op in dark mode. */
   --color-amber-dark: var(--p-amber-500);
   --color-orange: var(--p-amber-500);
@@ -176,9 +176,9 @@
 
   --grad-blue-btn: linear-gradient(
     180deg,
-    #3b82f6 0%,
-    #2563eb 50%,
-    #1d4ed8 100%
+    var(--p-blue-500) 0%,
+    var(--p-blue-600) 50%,
+    var(--p-blue-700) 100%
   );
 }
 

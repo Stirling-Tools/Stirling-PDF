@@ -309,10 +309,10 @@
 }
 .payg-status[data-state="FULL"] {
   background: #dcfce7;
-  color: #15803d;
+  color: var(--p-green-700);
 }
 .payg-status[data-state="FULL"] .payg-status__dot {
-  background: #22c55e;
+  background: var(--p-green-500);
   box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18);
 }
 .payg-status[data-state="WARNED"] {
@@ -328,7 +328,7 @@
   color: #b91c1c;
 }
 .payg-status[data-state="DEGRADED"] .payg-status__dot {
-  background: #ef4444;
+  background: var(--p-red-500);
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
 }
 
@@ -350,10 +350,10 @@
   background: linear-gradient(90deg, #0a8bff, #38bdf8);
 }
 .payg-bar__fill[data-state="WARNED"] {
-  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  background: linear-gradient(90deg, var(--p-amber-500), var(--p-amber-400));
 }
 .payg-bar__fill[data-state="DEGRADED"] {
-  background: linear-gradient(90deg, #dc2626, #f87171);
+  background: linear-gradient(90deg, var(--p-red-600), var(--p-red-400));
 }
 
 /* ── Plan card (free state) ─────────────────────────────────────────────── */
@@ -1043,7 +1043,7 @@
   color: var(--c-text-subtle);
 }
 .portal-billing__projection strong {
-  color: var(--color-amber, #d97706);
+  color: var(--color-amber, var(--p-amber-600));
 }
 
 /* ── Checkout modal: 2-step (spend limit → payment) ──────────────────── */

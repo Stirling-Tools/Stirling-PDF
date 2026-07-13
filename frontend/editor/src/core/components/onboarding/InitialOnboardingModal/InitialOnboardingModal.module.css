@@ -65,7 +65,7 @@
   font-weight: 500;
   font-size: 15px;
   line-height: 1.5;
-  color: var(--c-text-muted, #1f2937);
+  color: var(--c-text-muted, var(--p-gray-800));
 }
 
 .mfaSlideContent {
@@ -102,7 +102,7 @@
 .mfaSteps {
   margin: 0;
   padding-left: 18px;
-  color: var(--c-text-muted, #1f2937);
+  color: var(--c-text-muted, var(--p-gray-800));
   font-size: 14px;
   line-height: 1.5;
 }
@@ -413,12 +413,12 @@
   flex: 1;
   height: 5px;
   border-radius: 9999px;
-  background: var(--onboarding-step-inactive, #e2e8f0);
+  background: var(--onboarding-step-inactive, var(--p-gray-250));
   transition: background 0.2s ease;
 }
 
 .progressSegDone {
-  background: var(--c-primary, #3b82f6);
+  background: var(--c-primary, var(--p-blue-500));
 }
 
 .divider {

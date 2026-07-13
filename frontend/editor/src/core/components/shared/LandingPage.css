@@ -49,7 +49,7 @@
   width: 128px;
   height: 160px;
   transform-origin: bottom center;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--p-gray-200);
   box-shadow: var(--landing-doc-shadow-back-idle);
 }
 
@@ -103,10 +103,10 @@
 /* Bars — static light colours, never change with theme */
 .landing-bar {
   border-radius: 9999px;
-  background-color: #e5e7eb;
+  background-color: var(--p-gray-200);
 }
 .landing-bar--strong {
-  background-color: #d1d5db;
+  background-color: var(--p-gray-300);
 }
 
 /* ── Action buttons ──────────────────────────────────────── */

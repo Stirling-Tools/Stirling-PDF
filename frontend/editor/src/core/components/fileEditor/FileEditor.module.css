@@ -300,18 +300,18 @@
 
 :global([data-mantine-color-scheme="dark"]) .headerResting {
   background: #0d1020; /* requested default unselected color */
-  color: var(--c-accent-fg); /* #D0D6DC */
+  color: var(--c-accent-fg); /* var(--p-gray-300) */
   border-bottom-color: var(--c-border); /* #3A4047 */
 }
 
 :global([data-mantine-color-scheme="dark"]) .headerSelected {
   background: var(--c-border); /* #3A4047 */
-  color: var(--c-accent-fg); /* #D0D6DC */
+  color: var(--c-accent-fg); /* var(--p-gray-300) */
   border-bottom-color: var(--c-border);
 }
 
 :global([data-mantine-color-scheme="dark"]) .title {
-  color: #d0d6dc; /* title text */
+  color: var(--p-gray-300); /* title text */
 }
 
 :global([data-mantine-color-scheme="dark"]) .meta {

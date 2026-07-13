@@ -344,10 +344,10 @@
   background: linear-gradient(90deg, #0a8bff, #38bdf8);
 }
 .payg-bar__fill[data-state="WARNED"] {
-  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  background: linear-gradient(90deg, var(--p-amber-500), var(--p-amber-400));
 }
 .payg-bar__fill[data-state="DEGRADED"] {
-  background: linear-gradient(90deg, #dc2626, #f87171);
+  background: linear-gradient(90deg, var(--p-red-600), var(--p-red-400));
 }
 
 /* ── "What counts as a document?" expandable help ───────────────────── */

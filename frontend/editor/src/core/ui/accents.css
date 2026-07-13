@@ -83,14 +83,14 @@ html[data-app-theme="custom"] .sui-acc-default {
     135deg,
     #8b5cf6 0%,
     #6366f1 38%,
-    #3b82f6 72%,
+    var(--p-blue-500) 72%,
     #22d3ee 100%
   );
   --_solid-hover: linear-gradient(
     135deg,
     #8b5cf6 0%,
     #6366f1 38%,
-    #3b82f6 72%,
+    var(--p-blue-500) 72%,
     #22d3ee 100%
   );
   --_on: #ffffff;

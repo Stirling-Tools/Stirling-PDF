@@ -266,8 +266,8 @@
 .oauth-button-vertical-tinted:hover:not(:disabled) {
   background: linear-gradient(
     90deg,
-    color-mix(in srgb, var(--oauth-accent) 75%, #111827) 0 6px,
-    #111827 6px 100%
+    color-mix(in srgb, var(--oauth-accent) 75%, var(--p-gray-900)) 0 6px,
+    var(--p-gray-900) 6px 100%
   );
 }
 
@@ -275,7 +275,7 @@
   min-height: 0;
   justify-content: flex-start;
   padding: 0.75rem 1rem; /* 12px 16px */
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--p-gray-300);
   border-radius: 0.75rem; /* 12px */
   background-color: var(--auth-card-bg-light-only);
   font-weight: 500;
@@ -284,7 +284,7 @@
 }
 
 .oauth-button-vertical-legacy:hover:not(:disabled) {
-  background-color: #f3f4f6;
+  background-color: var(--p-gray-100);
   color: var(--auth-text-primary-light-only);
   box-shadow: none;
 }
@@ -320,12 +320,12 @@
 
 .oauth-button-vertical-outline:hover:not(:disabled) {
   background: #0f172a;
-  color: #f8fafc;
+  color: var(--p-gray-50);
   box-shadow: 0 0.35rem 0.9rem rgba(15, 23, 42, 0.2);
 }
 
 .oauth-button-vertical-light {
-  background: #f8fafc;
+  background: var(--p-gray-50);
   color: #0f172a;
   border: 1px solid rgba(15, 23, 42, 0.12);
   box-shadow: 0 0.25rem 0.75rem rgba(15, 23, 42, 0.12);
@@ -559,7 +559,7 @@
 }
 
 .error-message-text {
-  color: #dc2626;
+  color: var(--p-red-600);
   font-size: 0.875rem; /* 14px */
   margin: 0;
 }
@@ -738,7 +738,7 @@
      own padding-block); horizontal stays in the shorthand. */
   --sui-btn-py: 1rem; /* 16px (md) */
   padding: 1rem 1rem; /* 16px */
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--p-gray-300);
   border-radius: 100px;
   background-color: #ffffff;
   font-size: 1rem;
@@ -759,7 +759,7 @@
 }
 
 .oauth-button-fullwidth:hover:not(:disabled) {
-  background-color: #fafafa;
+  background-color: var(--p-gray-50);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
@@ -821,7 +821,7 @@
      own padding-block); horizontal stays in the shorthand. */
   --sui-btn-py: 1rem; /* 16px (md) */
   padding: 1rem 1rem; /* 16px */
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--p-gray-300);
   border-radius: 100px;
   background-color: #ffffff;
   font-size: 1rem;
@@ -842,7 +842,7 @@
 }
 
 .oauth-button-fullwidth:hover:not(:disabled) {
-  background-color: #fafafa;
+  background-color: var(--p-gray-50);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 

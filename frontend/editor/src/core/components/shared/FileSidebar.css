@@ -24,7 +24,7 @@
 
 /* ---- Native file drag-and-drop ---- */
 .file-sidebar[data-file-drag-over] {
-  outline: 2px dashed var(--mantine-color-blue-6, #3b82f6);
+  outline: 2px dashed var(--mantine-color-blue-6, var(--p-blue-500));
   outline-offset: -4px;
 }
 
@@ -42,20 +42,20 @@
   pointer-events: none;
   background-color: color-mix(
     in srgb,
-    var(--mantine-color-blue-6, #3b82f6) 12%,
+    var(--mantine-color-blue-6, var(--p-blue-500)) 12%,
     var(--c-bg-raised)
   );
 }
 
 .file-sidebar-drop-overlay-icon {
-  color: var(--mantine-color-blue-6, #3b82f6) !important;
+  color: var(--mantine-color-blue-6, var(--p-blue-500)) !important;
   font-size: 28px !important;
 }
 
 .file-sidebar-drop-overlay-text {
   font-size: 13px;
   font-weight: 600;
-  color: var(--mantine-color-blue-6, #3b82f6);
+  color: var(--mantine-color-blue-6, var(--p-blue-500));
 }
 
 /* ---- Header ---- */
@@ -413,7 +413,7 @@
   border: none;
   background: transparent;
   cursor: pointer;
-  color: var(--c-primary, #2563eb);
+  color: var(--c-primary, var(--p-blue-600));
   font-size: 12px;
   font-weight: 500;
   border-radius: 6px;
@@ -490,13 +490,17 @@
 .file-sidebar-bulk-add-track {
   height: 3px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--c-primary, #3b82f6) 15%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--c-primary, var(--p-blue-500)) 15%,
+    transparent
+  );
   overflow: hidden;
 }
 .file-sidebar-bulk-add-bar {
   height: 100%;
   border-radius: 999px;
-  background: var(--c-primary, #3b82f6);
+  background: var(--c-primary, var(--p-blue-500));
   transition: width 0.15s ease-out;
 }
 
@@ -587,7 +591,7 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background-color: var(--mantine-color-blue-6, #3b82f6);
+  background-color: var(--mantine-color-blue-6, var(--p-blue-500));
   color: #fff;
   font-size: 12px;
   font-weight: 600;
