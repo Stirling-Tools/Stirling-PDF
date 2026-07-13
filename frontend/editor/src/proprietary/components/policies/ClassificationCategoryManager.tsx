@@ -533,7 +533,10 @@ export function ClassificationCategoryManager({
         open={confirmDelete !== null}
         onClose={() => setConfirmDelete(null)}
         width="sm"
-        title={t("policies.labels.deleteCategoryTitle", "Delete category?")}
+        title={t(
+          "policies.labels.deleteCategoryTitle",
+          "Delete category and labels?",
+        )}
         footer={
           <div className="labels-footer-right">
             <Button
