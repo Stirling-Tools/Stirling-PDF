@@ -302,15 +302,20 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
       <Modal
         opened={confirmOpen}
         onClose={() => setConfirmOpen(false)}
-        title="Sign out"
+        title={t("settings.signOut.title", "Sign out")}
         centered
         zIndex={Z_INDEX_OVER_SETTINGS_MODAL}
       >
         <div className="confirm-modal-content">
-          <Text>Are you sure you want to sign out?</Text>
+          <Text>
+            {t(
+              "settings.signOut.confirm",
+              "Are you sure you want to sign out?",
+            )}
+          </Text>
           <div className="confirm-modal-buttons">
             <Button variant="secondary" onClick={() => setConfirmOpen(false)}>
-              Cancel
+              {t("common.cancel", "Cancel")}
             </Button>
             <Button
               accent="danger"
@@ -324,7 +329,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
                 }
               }}
             >
-              Sign out
+              {t("settings.signOut.submit", "Sign out")}
             </Button>
           </div>
         </div>
