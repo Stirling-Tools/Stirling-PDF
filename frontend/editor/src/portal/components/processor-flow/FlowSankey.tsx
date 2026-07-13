@@ -4,6 +4,7 @@ import { EmptyState } from "@app/ui";
 import type {
   FlowOutcome,
   FlowOutcomeKey,
+  FlowPolicy,
   FlowSource,
 } from "@portal/api/processorFlow";
 import {
@@ -14,19 +15,18 @@ import {
 interface FlowSankeyProps {
   sources: FlowSource[];
   outcomes: FlowOutcome[];
-  activeCount: number;
+  policies: FlowPolicy[];
 }
 
 /**
  * Sankey lens: sources → policies waist → outcomes, ribbon width ∝ 24h volume.
- * Shows a friendly empty state when nothing has flowed yet.
+ * The waist splits into one segment per active policy. Shows a friendly empty
+ * state when nothing has flowed yet.
  */
-export function FlowSankey({
-  sources,
-  outcomes,
-  activeCount,
-}: FlowSankeyProps) {
+export function FlowSankey({ sources, outcomes, policies }: FlowSankeyProps) {
   const { t } = useTranslation();
+  const activePolicies = policies.filter((p) => p.state === "active");
+  const activeCount = activePolicies.length;
 
   const flows = sources.filter((s) => s.docs24h > 0);
   const srcSum = flows.reduce((sum, s) => sum + s.docs24h, 0);
@@ -145,19 +145,31 @@ export function FlowSankey({
     accM += lt[i];
   });
 
-  // Waist node.
-  bars.push(
-    <rect
-      key="waist"
-      x={xM}
-      y={midY}
-      width={midW}
-      height={midH}
-      rx={2}
-      style={{ fill: waistFill }}
-      opacity={0.9}
-    />,
-  );
+  // Waist: one segment per active policy (sized by its 24h runs) so the centre
+  // reads as distinct policies rather than a single bar.
+  const segGap = 4;
+  const nSeg = Math.max(activePolicies.length, 1);
+  const segAvail = midH - (nSeg - 1) * segGap;
+  const polSum = activePolicies.reduce((a, p) => a + p.runs24h, 0);
+  const segPolicies = activePolicies.length ? activePolicies : [null];
+  let segY = midY;
+  segPolicies.forEach((p, i) => {
+    const wgt = p && polSum > 0 ? p.runs24h / polSum : 1 / nSeg;
+    const h = Math.max(2, segAvail * wgt);
+    bars.push(
+      <rect
+        key={"waist" + i}
+        x={xM}
+        y={segY}
+        width={midW}
+        height={h}
+        rx={2}
+        style={{ fill: waistFill }}
+        opacity={0.9}
+      />,
+    );
+    segY += h + segGap;
+  });
   texts.push(
     <text
       key="waist-cap"

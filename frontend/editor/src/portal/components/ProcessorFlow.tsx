@@ -54,6 +54,10 @@ export function ProcessorFlow() {
       `${toPortalPath(VIEW_PATHS.policies)}?setup=${encodeURIComponent(key)}`,
     );
 
+  /** Deep-link to Infrastructure with the audit-log tab open. */
+  const openAuditLog = () =>
+    navigate(`${toPortalPath(VIEW_PATHS.infrastructure)}?tab=audit`);
+
   const sources = data?.sources ?? [];
   const policies = data?.policies ?? [];
   const outcomes = data?.outcomes ?? [];
@@ -140,11 +144,7 @@ export function ProcessorFlow() {
           <Skeleton height="9rem" />
         </div>
       ) : lens === "sankey" ? (
-        <FlowSankey
-          sources={sources}
-          outcomes={outcomes}
-          activeCount={activeCount}
-        />
+        <FlowSankey sources={sources} outcomes={outcomes} policies={policies} />
       ) : (
         <div className="portal-pf__stage" ref={wrapRef}>
           <svg className="portal-pf__wires" aria-hidden>
@@ -168,7 +168,7 @@ export function ProcessorFlow() {
             <FlowOutcomes
               outcomes={outcomes}
               outRefs={outRefs}
-              onOpen={() => setActiveView("infrastructure")}
+              onOpen={openAuditLog}
             />
           </div>
 

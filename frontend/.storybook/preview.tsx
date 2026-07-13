@@ -43,14 +43,30 @@ function parseEnTranslation(): Record<string, unknown> {
   }
 }
 
+const enTranslationResources = parseEnTranslation();
 if (!i18next.isInitialized) {
+  // initImmediate: false → initialise synchronously from the inline resources
+  // (there's no async backend here), so i18next is ready before the first story
+  // renders. Without it the first render can beat init and stick on raw keys.
   void i18next.use(initReactI18next).init({
     lng: "en",
     fallbackLng: "en",
-    resources: { en: { translation: parseEnTranslation() } },
+    resources: { en: { translation: enTranslationResources } },
     interpolation: { escapeValue: false },
     react: { useSuspense: false },
+    initImmediate: false,
   });
+} else {
+  // Something initialised i18next first (e.g. the app's async TOML backend):
+  // inject the shipped English copy synchronously so t() never renders raw keys.
+  i18next.addResourceBundle(
+    "en",
+    "translation",
+    enTranslationResources,
+    true,
+    true,
+  );
+  if (i18next.language !== "en") void i18next.changeLanguage("en");
 }
 
 // Start MSW once. Storybook runs in a browser so this uses the service worker.

@@ -109,10 +109,10 @@ function buildPolicies(
   return POLICY_CATEGORIES.map((cat) => {
     const dp = decoded.find((p) => p.categoryId === cat.id);
     const configured = Boolean(dp?.enabled);
-    const state: FlowPolicyState = cat.comingSoon
-      ? "locked"
-      : configured
-        ? "active"
+    const state: FlowPolicyState = configured
+      ? "active"
+      : cat.comingSoon
+        ? "locked"
         : "off";
     const runs24h = dp
       ? runs.filter((r) => r.policyId === dp.id && r.createdAt >= cutoff).length

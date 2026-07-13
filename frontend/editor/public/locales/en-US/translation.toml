@@ -7695,19 +7695,19 @@ failed = "Failed"
 heading = "Outcomes"
 success = "Delivered"
 
-[portal.processorFlow.sankey]
-waist = "Policies · {{n}} active"
-
-[portal.processorFlow.sankey.empty]
-description = "Connect a source and switch on a policy to watch documents flow through the processor."
-title = "No flow yet"
-
 [portal.processorFlow.policies]
 activeCount = "{{n}} active"
 count = "{{n}} · 24h"
 heading = "Policies"
 setUp = "Set up"
 soon = "Soon"
+
+[portal.processorFlow.sankey]
+waist = "Policies · {{n}} active"
+
+[portal.processorFlow.sankey.empty]
+description = "Connect a source and switch on a policy to watch documents flow through the processor."
+title = "No flow yet"
 
 [portal.processorFlow.sources]
 comingSoonTag = "Connect"

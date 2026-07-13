@@ -37,6 +37,30 @@ export function seedPolicies(): WirePolicy[] {
         },
       },
     },
+    {
+      id: "pol_ingestion_default",
+      name: "Ingestion Policy",
+      owner: "data-eng@acme.com",
+      enabled: true,
+      trigger: null,
+      steps: POLICY_CONFIG.ingestion.defaultOperations,
+      output: {
+        type: "inline",
+        options: {
+          runOn: "upload",
+          mode: "new_version",
+          name: "",
+          position: "suffix",
+          maxRetries: 3,
+          retryDelayMinutes: 5,
+          categoryId: "ingestion",
+          sources: ["src-contracts"],
+          scopeTypes: [],
+          reviewerEmail: "data-eng@acme.com",
+          fieldValues: {},
+        },
+      },
+    },
   ];
 }
 
@@ -46,12 +70,19 @@ const D = 86400000;
 
 /** Seed `PolicyRunView` records that drive the activity feed + stats.
  * 40 delivered + 3 failed within the trailing 24h so the home visualiser shows
- * a lively flow; a tail of older completed runs keeps the lifetime stats real. */
+ * a lively flow; a tail of older completed runs keeps the lifetime stats real.
+ * Runs are split across the two active policies so the Sankey waist divides. */
 export function seedPolicyRuns(): PolicyRunView[] {
+  // Split the throughput across the two active policies (security / ingestion)
+  // so both show a 24h count and the Sankey waist splits into two segments.
+  const policyFor = (i: number, total: number) =>
+    i < Math.round(total * 0.6)
+      ? "pol_security_default"
+      : "pol_ingestion_default";
   // 40 successful runs spread across the last ~13h.
   const delivered = Array.from({ length: 40 }, (_, i) => ({
     runId: `run_ok_${i}`,
-    policyId: "pol_security_default",
+    policyId: policyFor(i, 40),
     status: "COMPLETED" as const,
     currentStep: 2,
     stepCount: 2,
@@ -62,7 +93,7 @@ export function seedPolicyRuns(): PolicyRunView[] {
   // 3 failures within the last few hours.
   const failed = Array.from({ length: 3 }, (_, i) => ({
     runId: `run_fail_${i}`,
-    policyId: "pol_security_default",
+    policyId: policyFor(i, 3),
     status: "FAILED" as const,
     currentStep: 1,
     stepCount: 2,
