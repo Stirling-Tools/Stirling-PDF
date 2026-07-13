@@ -53,11 +53,11 @@ export interface PolicyField {
 export interface PolicyCategory {
   id: string;
   label: string;
-  icon: string;
   tone: "neutral" | "blue" | "purple" | "green" | "amber" | "red";
   desc: string;
   providesClassification?: boolean;
   comingSoon?: boolean;
+  requiresAiEngine?: boolean;
 }
 
 export interface PolicyConfigDef {
@@ -137,6 +137,7 @@ export const TOOL_ENDPOINTS: Record<string, string> = {
   ocr: "/api/v1/misc/ocr-pdf",
   flatten: "/api/v1/misc/flatten",
   compress: "/api/v1/misc/compress-pdf",
+  classify: "/api/v1/ai/tools/classify-and-label",
 };
 
 /** Values are i18n keys — render with t(). */
@@ -147,6 +148,8 @@ export const ENDPOINT_LABELS: Record<string, string> = {
   "/api/v1/misc/ocr-pdf": "portal.policies.endpoints.ocrPdf",
   "/api/v1/misc/flatten": "portal.policies.endpoints.flatten",
   "/api/v1/misc/compress-pdf": "portal.policies.endpoints.compressPdf",
+  "/api/v1/ai/tools/classify-and-label":
+    "portal.policies.endpoints.classifyAndLabel",
 };
 
 export function humanizeEndpoint(
@@ -175,7 +178,6 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
   {
     id: "ingestion",
     label: "portal.policies.categories.ingestion.label",
-    icon: "layers",
     tone: "blue",
     desc: "portal.policies.categories.ingestion.desc",
     providesClassification: true,
@@ -184,14 +186,20 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
   {
     id: "security",
     label: "portal.policies.categories.security.label",
-    icon: "shield",
     tone: "purple",
     desc: "portal.policies.categories.security.desc",
   },
   {
+    id: "classification",
+    label: "portal.policies.categories.classification.label",
+    tone: "blue",
+    desc: "portal.policies.categories.classification.desc",
+    providesClassification: true,
+    requiresAiEngine: true,
+  },
+  {
     id: "compliance",
     label: "portal.policies.categories.compliance.label",
-    icon: "check",
     tone: "amber",
     desc: "portal.policies.categories.compliance.desc",
     comingSoon: true,
@@ -199,7 +207,6 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
   {
     id: "routing",
     label: "portal.policies.categories.routing.label",
-    icon: "route",
     tone: "green",
     desc: "portal.policies.categories.routing.desc",
     comingSoon: true,
@@ -207,7 +214,6 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
   {
     id: "retention",
     label: "portal.policies.categories.retention.label",
-    icon: "schedule",
     tone: "neutral",
     desc: "portal.policies.categories.retention.desc",
     comingSoon: true,
@@ -285,6 +291,18 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
           convertPDFToImage: true,
         },
       },
+    ],
+    fields: [],
+  },
+  classification: {
+    summary: "portal.policies.config.classification.summary",
+    rules: [
+      "portal.policies.config.classification.rules.0",
+      "portal.policies.config.classification.rules.1",
+    ],
+    scopeLabel: "portal.policies.config.scopeAll",
+    defaultOperations: [
+      { operation: TOOL_ENDPOINTS.classify, parameters: {} },
     ],
     fields: [],
   },

@@ -27,11 +27,12 @@ import {
 import { fetchSources } from "@portal/api/sources";
 import { useAsync } from "@portal/hooks/useAsync";
 import { PolicyFieldRow } from "@portal/components/policies/PolicyFieldRow";
-import { policyIcon } from "@portal/components/policies/policyIcons";
+import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
 import { sourceTypeMeta } from "@portal/components/sources/sourceTypes";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig";
 import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
+import { ClassificationLabelsSection } from "@portal/components/policies/ClassificationLabelsSection";
 import "@portal/views/Policies.css";
 
 interface PolicySetupWizardProps {
@@ -123,6 +124,13 @@ const CAPABILITY_META: Record<
     descKey: "portal.policies.wizard.capability.compress.desc",
     descEn: "Compresses the document to a smaller file size.",
   },
+  [TOOL_ENDPOINTS.classify]: {
+    labelKey: "portal.policies.wizard.capability.classify.label",
+    labelEn: "Classify the document",
+    descKey: "portal.policies.wizard.capability.classify.desc",
+    descEn:
+      "Identifies the document's type from your team's labels and tags it, so it files and searches by category.",
+  },
 };
 
 function seedTools(
@@ -200,11 +208,16 @@ function PolicySetupWizardBody({
 
   const { category, config, policy } = entry;
   const isEdit = policy != null;
+  const isClassification = category.id === "classification";
 
   const [step, setStep] = useState<Step>("workflow");
-  const [tools, setTools] = useState<ToolState[]>(() =>
-    seedTools(entry, toolRegistry),
-  );
+  const [tools, setTools] = useState<ToolState[]>(() => {
+    const seeded = seedTools(entry, toolRegistry);
+    // Classification's single tool has no toggle in the workflow step, so keep it
+    // enabled unconditionally — otherwise editing a policy whose saved steps
+    // somehow lack it would strand submit with no way to re-enable it.
+    return isClassification ? seeded.map((t) => ({ ...t, enabled: true })) : seeded;
+  });
   const [fieldValues, setFieldValues] = useState(() =>
     resolveFieldValues(entry),
   );
@@ -311,7 +324,7 @@ function PolicySetupWizardBody({
       title={
         <span className="portal-policies__wizard-title">
           <span className="portal-policies__cat-icon" aria-hidden>
-            {policyIcon(category.icon)}
+            {policyCategoryIcon(category.id)}
           </span>
           {isEdit
             ? t("portal.policies.wizard.title.edit", {
@@ -375,7 +388,25 @@ function PolicySetupWizardBody({
         />
       )}
 
-      {step === "workflow" && (
+      {step === "workflow" && isClassification && (
+        <div className="portal-policies__wizard-section">
+          <p className="portal-policies__wizard-desc">
+            {t(
+              "portal.policies.wizard.classification.description",
+              "Every uploaded document is classified against your team's labels and tagged with the types that fit. Edit the shared label vocabulary the classifier chooses from.",
+            )}
+          </p>
+          <h3 className="portal-policies__wizard-heading">
+            {t(
+              "portal.policies.wizard.classification.labelsHeading",
+              "Classification labels",
+            )}
+          </h3>
+          <ClassificationLabelsSection canConfigure />
+        </div>
+      )}
+
+      {step === "workflow" && !isClassification && (
         <div className="portal-policies__wizard-section">
           <p className="portal-policies__wizard-desc">
             {t(

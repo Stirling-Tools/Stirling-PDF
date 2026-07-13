@@ -8,6 +8,7 @@ import {
 import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
 
 const security = POLICY_CATEGORIES.find((c) => c.id === "security")!;
+const classification = POLICY_CATEGORIES.find((c) => c.id === "classification")!;
 
 const meta: Meta<typeof PolicySetupWizard> = {
   title: "Portal/Policies/PolicySetupWizard",
@@ -44,6 +45,17 @@ export const Edit: Story = {
       category: security,
       config: POLICY_CONFIG.security,
       policy: decorateForStory("security"),
+    },
+  },
+};
+
+/** Classification: the workflow step shows the team label editor, not tool toggles. */
+export const Classification: Story = {
+  args: {
+    entry: {
+      category: classification,
+      config: POLICY_CONFIG.classification,
+      policy: null,
     },
   },
 };

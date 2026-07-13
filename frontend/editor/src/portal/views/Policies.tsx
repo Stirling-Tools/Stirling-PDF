@@ -12,6 +12,7 @@ import {
   savePolicy,
   POLICY_CATEGORIES,
   POLICY_CONFIG,
+  TOOL_ENDPOINTS,
   type CatalogueEntry,
   type PoliciesResponse,
   type PolicySetupResult,
@@ -20,6 +21,8 @@ import { CatalogueSummary } from "@portal/components/policies/CatalogueSummary";
 import { PolicyCategoryCard } from "@portal/components/policies/PolicyCategoryCard";
 import { PolicyDetailPanel } from "@portal/components/policies/PolicyDetailPanel";
 import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
+import { seedTeamLabelsIfEmpty } from "@portal/api/classificationLabels";
+import { useAiEngineEnabled } from "@portal/hooks/useAiEngineEnabled";
 import "@portal/views/Policies.css";
 
 export function Policies() {
@@ -33,6 +36,18 @@ export function Policies() {
   const [wizard, setWizard] = useState<CatalogueEntry | null>(null);
   const [busy, setBusy] = useState(false);
   const [pageError, setPageError] = useState<string | null>(null);
+
+  const { enabled: aiEngineEnabled, loading: aiEngineLoading } =
+    useAiEngineEnabled();
+
+  function isLocked(entry: CatalogueEntry): boolean {
+    return (
+      entry.category.requiresAiEngine === true &&
+      !aiEngineEnabled &&
+      !aiEngineLoading &&
+      !entry.policy
+    );
+  }
 
   const catalogue = data?.catalogue ?? [];
   const refetch = useCallback(() => setVersion((v) => v + 1), []);
@@ -57,6 +72,15 @@ export function Policies() {
         }));
 
   function openEntry(entry: CatalogueEntry) {
+    // Block setup of an AI-required policy until the engine is confirmed on (so a
+    // click during the app-config load can't open a wizard for a disabled
+    // feature); a configured policy stays openable so it can be paused/deleted.
+    if (
+      entry.category.requiresAiEngine &&
+      !aiEngineEnabled &&
+      !entry.policy
+    )
+      return;
     if (entry.policy) setDetail(entry);
     else setWizard(entry);
   }
@@ -67,6 +91,9 @@ export function Policies() {
   ) {
     setPageError(null);
     try {
+      if (result.steps.some((s) => s.operation === TOOL_ENDPOINTS.classify)) {
+        await seedTeamLabelsIfEmpty();
+      }
       await savePolicy(buildWireFromSetup(entry, result));
       setWizard(null);
       setDetail(null);
@@ -157,6 +184,8 @@ export function Policies() {
               key={entry.category.id}
               entry={entry}
               onOpen={openEntry}
+              locked={isLocked(entry)}
+              lockedLabel={t("portal.policies.card.requiresAiEngine")}
             />
           ))}
         </div>

@@ -1,19 +1,28 @@
 import { useTranslation } from "react-i18next";
 import { Card, Chip, StatusBadge } from "@app/ui";
 import type { CatalogueEntry } from "@portal/api/policies";
-import { policyIcon } from "@portal/components/policies/policyIcons";
+import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
 import "@portal/views/Policies.css";
 
 interface PolicyCategoryCardProps {
   entry: CatalogueEntry;
   onOpen: (entry: CatalogueEntry) => void;
+  /** Setup is unavailable (e.g. the AI engine is off): shown, but not openable. */
+  locked?: boolean;
+  /** Chip text explaining why setup is locked (e.g. "Requires AI engine"). */
+  lockedLabel?: string;
 }
 
-export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
+export function PolicyCategoryCard({
+  entry,
+  onOpen,
+  locked = false,
+  lockedLabel,
+}: PolicyCategoryCardProps) {
   const { t } = useTranslation();
   const { category, config, policy } = entry;
   const comingSoon = category.comingSoon === true;
-  const openable = !comingSoon;
+  const openable = !comingSoon && !locked;
   const status = policy?.state.status;
   const enforces = config.rules.map((r) => t(r)).join(" · ");
 
@@ -21,7 +30,7 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
     <Card
       className={
         "portal-policies__card" +
-        (comingSoon ? " portal-policies__card--locked" : "")
+        (comingSoon || locked ? " portal-policies__card--locked" : "")
       }
       interactive={openable}
       onClick={openable ? () => onOpen(entry) : undefined}
@@ -39,7 +48,7 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
       }
     >
       <span className="portal-policies__cat-icon" aria-hidden>
-        {policyIcon(category.icon)}
+        {policyCategoryIcon(category.id)}
       </span>
 
       <div className="portal-policies__card-identity">
@@ -52,6 +61,10 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
       {comingSoon ? (
         <Chip accent="neutral" size="sm">
           {t("portal.policies.card.comingSoon")}
+        </Chip>
+      ) : locked ? (
+        <Chip accent="neutral" size="sm">
+          {lockedLabel ?? t("portal.policies.card.requiresAiEngine")}
         </Chip>
       ) : policy ? (
         <div className="portal-policies__card-meta">

@@ -38,6 +38,7 @@ interface LabelsEditorModalProps {
   readOnly: boolean;
   /** Save (server) or import (file) failure to surface, if any. */
   error: string | null;
+  grouped?: boolean;
 }
 
 export function LabelsEditorModal({
@@ -54,6 +55,7 @@ export function LabelsEditorModal({
   saving,
   readOnly,
   error,
+  grouped = true,
 }: LabelsEditorModalProps) {
   const { t } = useTranslation();
   const fileInput = useRef<HTMLInputElement>(null);
@@ -167,7 +169,7 @@ export function LabelsEditorModal({
           value={draft}
           onChange={onDraftChange}
           readOnly={readOnly}
-          grouped
+          grouped={grouped}
         />
       </div>
     </Modal>
