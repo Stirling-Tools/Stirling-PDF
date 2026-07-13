@@ -1,12 +1,24 @@
+# Editing the top-level PR router (build.yml) or the path-filter config it
+# reads changes how every job is dispatched, so a change to either must run
+# the full matrix - the only way to test a CI-routing change end to end.
+# Pulled into every area filter below (directly, or transitively via *build).
+ci: &ci
+  - .github/workflows/build.yml
+  - .github/config/.files.yaml
+
 build: &build
+  - *ci
   - build.gradle
   - app/(common|core|proprietary|saas)/build.gradle
   - Taskfile.yml
   - .taskfiles/backend.yml
+  - .github/workflows/backend-build.yml
+  - .github/workflows/check-licence.yml
 
 openapi: &openapi
   - *build
   - app/(common|core|proprietary|saas)/src/main/java/**
+  - .github/workflows/check-openapi.yml
 
 docker-base: &docker-base
   - docker/base/Dockerfile
@@ -45,10 +57,16 @@ project: &project
   - .taskfiles/docker.yml
   - scripts/db-migration/**
   - .github/workflows/db-migration-test.yml
+  - .github/workflows/docker-compose-tests.yml
+  - .github/workflows/test-build-docker.yml
 
 frontend: &frontend
+  - *ci
   - frontend/**
   - .github/workflows/testdriver.yml
+  - .github/workflows/frontend-validation.yml
+  - .github/workflows/e2e-stubbed.yml
+  - .github/workflows/e2e-live.yml
   - testing/**
   - docker/**
   - scripts/translations/*.py
@@ -67,6 +85,7 @@ frontend: &frontend
 # Files that affect the Tauri desktop bundle. Gate the multi-OS Tauri build
 # job on changes to any of these.
 tauri: &tauri
+  - *ci
   - frontend/editor/src-tauri/**
   - frontend/editor/src/desktop/**
   - frontend/editor/tsconfig.desktop.vite.json
@@ -81,6 +100,7 @@ tauri: &tauri
 # the engine validation job on changes to engine sources or to the Java
 # tool surfaces it generates models from.
 engine: &engine
+  - *ci
   - engine/**
   - app/(common|core|proprietary|saas)/src/main/java/**
   - .github/workflows/ai-engine.yml
@@ -115,6 +135,7 @@ licenses-backend: &licenses-backend
 # Files that can affect premium / enterprise behaviour. Gate the enterprise
 # Playwright job on changes to any of these on PRs.
 proprietary: &proprietary
+  - *ci
   - app/proprietary/**
   - frontend/editor/src/proprietary/**
   - frontend/editor/src/core/tests/enterprise/**
