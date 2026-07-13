@@ -6240,6 +6240,10 @@ muted = "muted"
 nameLabel = "Name"
 namePlaceholder = "e.g. Compliance escalation"
 
+[portal.agentBuilder.status]
+draft = "Draft"
+published = "Published"
+
 [portal.agentBuilder.tabs]
 evals = "Evals"
 scenarios = "Scenarios"
@@ -6463,7 +6467,7 @@ install = "Install"
 usage = "Usage"
 
 [portal.catalogue.detail.locked]
-description = "{{name}} is included from the {{tier}} plan. Upgrade to embed it."
+description = "{{name}} is included from the {{plan}}. Upgrade to embed it."
 title = "Not available on your plan"
 
 [portal.catalogue.detail.preview]
@@ -7415,6 +7419,7 @@ manual = "Manual"
 schedule = "Scheduled"
 
 [portal.policies]
+defaultName = "{{category}} Policy"
 subtitle = "Standing automations that enforce a tool pipeline on every document. Each policy fires on upload or export, runs its tool chain, and saves the enforced version alongside the original."
 title = "Policies"
 
@@ -8124,6 +8129,11 @@ type = "Type"
 chooseType = "Choose type"
 configure = "Configure"
 review = "Review & connect"
+
+[portal.tier]
+enterprise = "Enterprise plan"
+free = "Editor plan"
+pro = "Processor plan"
 
 [portal.usage]
 managePayment = "Manage Payment"
@@ -10139,6 +10149,19 @@ resetPw = "Reset password"
 suspend = "Suspend"
 unlock = "Unlock account"
 
+[users.activity]
+daysAgo = "{{count}}d ago"
+hoursAgo = "{{count}}h ago"
+justNow = "Just now"
+minutesAgo = "{{count}}m ago"
+monthsAgo_one = "{{count}} month ago"
+monthsAgo_other = "{{count}} months ago"
+never = "Never"
+weeksAgo_one = "{{count}} week ago"
+weeksAgo_other = "{{count}} weeks ago"
+yearsAgo_one = "{{count}} year ago"
+yearsAgo_other = "{{count}} years ago"
+
 [users.cap]
 addProcessor = "+ Processor"
 approver = "Approves policy"
@@ -10209,7 +10232,9 @@ by = "Invited by {{who}}"
 cancel = "Cancel"
 count = "{{count}} pending"
 desc = "Invited people who haven't joined yet. They hold a seat until they accept."
-expires = "Expires"
+expiresInDays_one = "Expires in {{count}} day"
+expiresInDays_other = "Expires in {{count}} days"
+expiresToday = "Expires today"
 title = "Pending invitations"
 
 [users.loadError]
