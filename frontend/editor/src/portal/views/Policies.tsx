@@ -90,7 +90,7 @@ export function Policies() {
       if (result.steps.some((s) => s.operation === TOOL_ENDPOINTS.classify)) {
         await seedTeamLabelsIfEmpty();
       }
-      await savePolicy(buildWireFromSetup(entry, result));
+      await savePolicy(buildWireFromSetup(entry, result, t));
       setWizard(null);
       setDetail(null);
       refetch();
@@ -120,7 +120,7 @@ export function Policies() {
     if (!entry || !policy?.state.backendId) return;
     const enabled = policy.state.status === "paused";
     void runLifecycle(() =>
-      savePolicy(buildWireFromState(entry, policy, enabled)),
+      savePolicy(buildWireFromState(entry, policy, enabled, t)),
     );
   }
 

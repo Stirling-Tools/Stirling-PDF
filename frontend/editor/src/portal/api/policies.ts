@@ -9,6 +9,7 @@
  * approach the editor uses for its own catalogue view.
  */
 
+import type { TFunction } from "i18next";
 import { apiClient } from "@portal/api/http";
 import { fromWirePolicy, toWirePolicy } from "@app/policies/codec";
 import { runsToActivity, runsToStats } from "@app/policies/runs";
@@ -572,17 +573,30 @@ const DEFAULT_RETRY_DELAY = 5;
 // POST /api/v1/policies endpoint. The real backend ignores unknown fields.
 type CatalogueWireBody = WirePolicy & { categoryId: string };
 
+/**
+ * The persisted policy name derived from its category, e.g. "Security Policy".
+ * `category.label` is an i18n key, so translate it before building the name;
+ * otherwise the raw key is persisted and surfaces in the UI (e.g. the Sources
+ * "Used by" pill).
+ */
+function policyDisplayName(entry: CatalogueEntry, t: TFunction): string {
+  return t("portal.policies.defaultName", {
+    category: t(entry.category.label),
+  });
+}
+
 /** Build a wire policy from a setup wizard result. */
 export function buildWireFromSetup(
   entry: CatalogueEntry,
   result: PolicySetupResult,
+  t: TFunction,
   enabled = true,
 ): CatalogueWireBody {
   return {
     categoryId: entry.category.id,
     ...toWirePolicy({
       id: entry.policy?.state.backendId ?? "",
-      name: `${entry.category.label} Policy`,
+      name: policyDisplayName(entry, t),
       enabled,
       categoryId: entry.category.id,
       sources: result.sources,
@@ -605,13 +619,14 @@ export function buildWireFromState(
   entry: CatalogueEntry,
   policy: DecoratedPolicy,
   enabled: boolean,
+  t: TFunction,
 ): CatalogueWireBody {
   const s = policy.state;
   return {
     categoryId: entry.category.id,
     ...toWirePolicy({
       id: s.backendId ?? "",
-      name: `${entry.category.label} Policy`,
+      name: policyDisplayName(entry, t),
       enabled,
       categoryId: entry.category.id,
       sources: s.sources,
