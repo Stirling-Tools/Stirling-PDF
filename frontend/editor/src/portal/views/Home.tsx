@@ -4,6 +4,7 @@ import { useTier } from "@portal/contexts/TierContext";
 import { useView, type ViewId } from "@portal/contexts/ViewContext";
 import { HomeHero } from "@portal/components/HomeHero";
 import { HomeGreeting } from "@portal/components/HomeGreeting";
+import { ProcessorFlow } from "@portal/components/ProcessorFlow";
 import { RecentActivity } from "@portal/components/RecentActivity";
 import { ProcessingStatusStrip } from "@portal/components/ProcessingStatusStrip";
 import { PolicySummary } from "@portal/components/PolicySummary";
@@ -112,6 +113,7 @@ export function Home() {
       {/* Per-tier hero. Its footer is the deal-status hero while a procurement
           deal is underway (a bolt-on to any tier), otherwise the setup checklist. */}
       <HomeHero tier={tier} />
+      <ProcessorFlow />
 
       {/* One unified layout across tiers: real processed-PDF volume, real audit
           activity, quick actions, and the standing-policy summary. */}

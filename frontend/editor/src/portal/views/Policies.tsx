@@ -1,4 +1,5 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, Skeleton } from "@app/ui";
 import { errorMessage } from "@portal/api/http";
@@ -33,6 +34,20 @@ export function Policies() {
   const [wizard, setWizard] = useState<CatalogueEntry | null>(null);
   const [busy, setBusy] = useState(false);
   const [pageError, setPageError] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    const setupId = searchParams.get("setup");
+    if (!setupId || !data) return;
+    const entry = data.catalogue.find((e) => e.category.id === setupId);
+    if (entry && !entry.category.comingSoon) {
+      if (entry.policy) setDetail(entry);
+      else setWizard(entry);
+    }
+    const next = new URLSearchParams(searchParams);
+    next.delete("setup");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, data, setSearchParams]);
 
   const catalogue = data?.catalogue ?? [];
   const refetch = useCallback(() => setVersion((v) => v + 1), []);

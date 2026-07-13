@@ -42,52 +42,44 @@ export function seedPolicies(): WirePolicy[] {
 
 const NOW = Date.now();
 const M = 60000;
-const H = 3600000;
 const D = 86400000;
 
-/** Seed `PolicyRunView` records that drive the activity feed + stats. */
+/** Seed `PolicyRunView` records that drive the activity feed + stats.
+ * 40 delivered + 3 failed within the trailing 24h so the home visualiser shows
+ * a lively flow; a tail of older completed runs keeps the lifetime stats real. */
 export function seedPolicyRuns(): PolicyRunView[] {
-  return [
-    {
-      runId: "run_001",
-      policyId: "pol_security_default",
-      status: "COMPLETED",
-      currentStep: 2,
-      stepCount: 2,
-      error: null,
-      outputs: [{ fileId: "f1", fileName: "Q2-vendor-agreement.pdf" }],
-      createdAt: NOW - 12 * M,
-    },
-    {
-      runId: "run_002",
-      policyId: "pol_security_default",
-      status: "FAILED",
-      currentStep: 1,
-      stepCount: 2,
-      error: "Low-confidence match — routed for review",
-      outputs: [{ fileId: "f2", fileName: "patient-intake-0481.pdf" }],
-      createdAt: NOW - 1 * H,
-    },
-    {
-      runId: "run_003",
-      policyId: "pol_security_default",
-      status: "RUNNING",
-      currentStep: 1,
-      stepCount: 2,
-      error: null,
-      outputs: [{ fileId: "f3", fileName: "invoice-7782.pdf" }],
-      createdAt: NOW - 2 * M,
-    },
-    // Older completed runs for stats
-    ...Array.from({ length: 4818 }, (_, i) => ({
-      runId: `run_old_${i}`,
-      policyId: "pol_security_default",
-      status: "COMPLETED" as const,
-      currentStep: 2,
-      stepCount: 2,
-      error: null,
-      outputs: [] as { fileId: string; fileName: string }[],
-      createdAt: NOW - (34 * D + i * 10 * M),
-    })),
-  ];
+  // 40 successful runs spread across the last ~13h.
+  const delivered = Array.from({ length: 40 }, (_, i) => ({
+    runId: `run_ok_${i}`,
+    policyId: "pol_security_default",
+    status: "COMPLETED" as const,
+    currentStep: 2,
+    stepCount: 2,
+    error: null,
+    outputs: [{ fileId: `f${i}`, fileName: `document-${i + 1}.pdf` }],
+    createdAt: NOW - i * 20 * M,
+  }));
+  // 3 failures within the last few hours.
+  const failed = Array.from({ length: 3 }, (_, i) => ({
+    runId: `run_fail_${i}`,
+    policyId: "pol_security_default",
+    status: "FAILED" as const,
+    currentStep: 1,
+    stepCount: 2,
+    error: "Low-confidence match — routed for review",
+    outputs: [{ fileId: `ff${i}`, fileName: `flagged-${i + 1}.pdf` }],
+    createdAt: NOW - (i + 1) * 90 * M,
+  }));
+  // Older completed runs (>24h) for lifetime stats — excluded from 24h counts.
+  const older = Array.from({ length: 4800 }, (_, i) => ({
+    runId: `run_old_${i}`,
+    policyId: "pol_security_default",
+    status: "COMPLETED" as const,
+    currentStep: 2,
+    stepCount: 2,
+    error: null,
+    outputs: [] as { fileId: string; fileName: string }[],
+    createdAt: NOW - (34 * D + i * 10 * M),
+  }));
+  return [...delivered, ...failed, ...older];
 }
