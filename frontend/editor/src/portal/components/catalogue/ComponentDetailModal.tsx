@@ -16,6 +16,7 @@ import {
   MATURITY_META,
   formatPrice,
 } from "@portal/api/sdkComponents";
+import { TIER_INFO } from "@portal/contexts/TierContext";
 import { ComponentPropsTable } from "@portal/components/catalogue/ComponentPropsTable";
 import "@portal/views/Components.css";
 
@@ -114,7 +115,7 @@ export function ComponentDetailModal({
           title={t("portal.catalogue.detail.locked.title")}
           description={t("portal.catalogue.detail.locked.description", {
             name: component.name,
-            tier: component.minTier,
+            plan: t(TIER_INFO[component.minTier].labelKey),
           })}
         />
       )}
