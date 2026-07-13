@@ -369,8 +369,8 @@
 }
 
 .files-page-list-row.is-drop-target {
-  background: color-mix(in srgb, var(--c-primary, #6366f1) 12%, transparent);
-  box-shadow: inset 0 0 0 1px var(--c-primary, #6366f1);
+  background: color-mix(in srgb, var(--c-primary) 12%, transparent);
+  box-shadow: inset 0 0 0 1px var(--c-primary);
 }
 
 .files-page-card {
@@ -393,7 +393,7 @@
   transform: translateY(-2px);
   border-color: color-mix(
     in srgb,
-    var(--c-primary, #6366f1) 35%,
+    var(--c-primary) 35%,
     var(--c-border-subtle)
   );
   box-shadow:
@@ -402,16 +402,15 @@
 }
 
 .files-page-card:focus-visible {
-  outline: 2px solid var(--c-primary, #6366f1);
+  outline: 2px solid var(--c-primary);
   outline-offset: 2px;
 }
 
 .files-page-card.is-selected {
-  border-color: var(--c-primary, #6366f1);
+  border-color: var(--c-primary);
   box-shadow:
-    0 0 0 2px var(--c-primary, #6366f1),
-    0 6px 18px -6px
-      color-mix(in srgb, var(--c-primary, #6366f1) 35%, transparent);
+    0 0 0 2px var(--c-primary),
+    0 6px 18px -6px color-mix(in srgb, var(--c-primary) 35%, transparent);
 }
 
 .files-page-card.is-folder {
@@ -681,13 +680,9 @@
 }
 
 .files-page-card.is-drop-target {
-  background: color-mix(
-    in srgb,
-    var(--c-primary, #6366f1) 10%,
-    var(--c-surface)
-  );
-  box-shadow: 0 0 0 2px var(--c-primary, #6366f1);
-  border-color: var(--c-primary, #6366f1);
+  background: color-mix(in srgb, var(--c-primary) 10%, var(--c-surface));
+  box-shadow: 0 0 0 2px var(--c-primary);
+  border-color: var(--c-primary);
 }
 
 @keyframes files-page-skeleton-pulse {
@@ -751,8 +746,8 @@
   width: 5rem;
   height: 5rem;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--c-primary, #6366f1) 12%, transparent);
-  color: var(--c-primary, #6366f1);
+  background: color-mix(in srgb, var(--c-primary) 12%, transparent);
+  color: var(--c-primary);
   margin-bottom: 0.25rem;
 }
 
@@ -1024,10 +1019,9 @@
   flex-shrink: 0;
 }
 .files-page-details-version-timeline-rail-dot.is-active {
-  background: var(--c-primary, #6366f1);
-  border-color: var(--c-primary, #6366f1);
-  box-shadow: 0 0 0 3px
-    color-mix(in srgb, var(--c-primary, #6366f1) 25%, transparent);
+  background: var(--c-primary);
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-primary) 25%, transparent);
 }
 .files-page-details-version-timeline-rail-dot.is-ellipsis {
   width: 0.35rem;
@@ -1054,7 +1048,7 @@
 }
 .files-page-details-version-timeline-row.is-active
   .files-page-details-version-timeline-body {
-  background: color-mix(in srgb, var(--c-primary, #6366f1) 10%, transparent);
+  background: color-mix(in srgb, var(--c-primary) 10%, transparent);
 }
 .files-page-details-version-timeline-summary {
   appearance: none;
@@ -1091,7 +1085,7 @@
   font-style: italic;
 }
 .files-page-details-version-timeline-delta-plus {
-  color: var(--c-primary, #6366f1);
+  color: var(--c-primary);
   font-weight: 700;
 }
 .files-page-details-version-timeline-spacer {
@@ -1160,8 +1154,8 @@
 .files-page-drop-overlay {
   position: absolute;
   inset: 1rem;
-  background: color-mix(in srgb, var(--c-primary, #6366f1) 14%, var(--c-bg));
-  border: 2px dashed var(--c-primary, #6366f1);
+  background: color-mix(in srgb, var(--c-primary) 14%, var(--c-bg));
+  border: 2px dashed var(--c-primary);
   border-radius: 1rem;
   display: flex;
   flex-direction: column;
@@ -1169,7 +1163,7 @@
   justify-content: center;
   gap: 1rem;
   pointer-events: none;
-  color: var(--c-primary, #6366f1);
+  color: var(--c-primary);
   font-weight: 600;
   font-size: 1.1rem;
   z-index: 10;
@@ -1184,7 +1178,7 @@
   width: 4.5rem;
   height: 4.5rem;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--c-primary, #6366f1) 30%, transparent);
+  background: color-mix(in srgb, var(--c-primary) 30%, transparent);
 }
 
 .files-page-drop-overlay-icon svg {
@@ -1195,21 +1189,17 @@
 .files-page-drop-overlay-sub {
   font-size: 0.85rem;
   font-weight: 500;
-  color: color-mix(in srgb, var(--c-primary, #6366f1) 80%, var(--c-text-muted));
+  color: color-mix(in srgb, var(--c-primary) 80%, var(--c-text-muted));
 }
 
 @keyframes files-page-drop-overlay-pulse {
   0%,
   100% {
-    border-color: var(--c-primary, #6366f1);
+    border-color: var(--c-primary);
     transform: scale(1);
   }
   50% {
-    border-color: color-mix(
-      in srgb,
-      var(--c-primary, #6366f1) 60%,
-      transparent
-    );
+    border-color: color-mix(in srgb, var(--c-primary) 60%, transparent);
     transform: scale(1.005);
   }
 }

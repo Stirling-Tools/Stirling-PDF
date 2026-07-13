@@ -65,7 +65,7 @@
 
 .folder-tree-panel-resizer:hover,
 .folder-tree-panel-resizer:focus-visible {
-  background: color-mix(in srgb, var(--c-primary, #6366f1) 35%, transparent);
+  background: color-mix(in srgb, var(--c-primary) 35%, transparent);
   outline: none;
 }
 
@@ -126,8 +126,8 @@
 }
 
 .files-page-tree-node.is-drop-target {
-  background: color-mix(in srgb, var(--c-primary, #6366f1) 12%, transparent);
-  box-shadow: inset 0 0 0 1px var(--c-primary, #6366f1);
+  background: color-mix(in srgb, var(--c-primary) 12%, transparent);
+  box-shadow: inset 0 0 0 1px var(--c-primary);
   color: var(--c-text);
 }
 
