@@ -463,6 +463,27 @@ export function recordAgreementSignature(
   );
 }
 
+/** Fetch a static legal document (eula, sla, subprocessors) by id for in-product viewing. */
+export function fetchLegalDocument(docId: string): Promise<AgreementDocument> {
+  return apiClient.saas.json<AgreementDocument>(`/api/v1/legal/${docId}`);
+}
+
+/**
+ * Record a clickwrap consent to a legal document (e.g. the EULA at trial start / quote generation).
+ * Best-effort — never block the flow it accompanies on a consent-logging failure.
+ */
+export function recordLegalConsent(
+  documentId: string,
+  context: string,
+): Promise<void> {
+  return apiClient.saas
+    .json<void>("/api/v1/legal/consent", {
+      method: "POST",
+      body: { documentId, context },
+    })
+    .catch(() => undefined);
+}
+
 // ---- Stripe Quote operations (Supabase edge functions) ---------------------
 // Java has no Stripe SDK, so issuing/accepting the quote and fetching its PDF run in edge functions
 // that own Stripe; they persist results back through SECURITY DEFINER RPCs. The portal invokes them

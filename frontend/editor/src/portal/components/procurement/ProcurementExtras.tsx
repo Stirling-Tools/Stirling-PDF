@@ -1,11 +1,18 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { Button } from "@app/ui";
-import type { ProcurementSnapshot } from "@portal/api/procurement";
+import {
+  fetchLegalDocument,
+  recordLegalConsent,
+  type ProcurementSnapshot,
+} from "@portal/api/procurement";
 import { CalendlyInline } from "@portal/components/procurement/CalendlyInline";
 import { LicensePanel } from "@portal/components/procurement/ProcurementStages";
 import { useFocusTrap } from "@portal/components/procurement/ProcurementModal";
+import { useAsync } from "@portal/hooks/useAsync";
 import "@portal/views/Procurement.css";
 
 /**
@@ -71,6 +78,51 @@ function SideModal({
       </div>
     </div>,
     document.body,
+  );
+}
+
+/**
+ * Reader for a versioned legal document (EULA, SLA exhibit, subprocessors), fetched from the
+ * backend registry and rendered as markdown. Open when {@code docId} is set. Drafts are badged.
+ */
+export function LegalDocumentModal({
+  docId,
+  onClose,
+}: {
+  docId: string | null;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const { data, loading } = useAsync(
+    () => (docId ? fetchLegalDocument(docId) : Promise.resolve(null)),
+    [docId],
+  );
+  return (
+    <SideModal
+      open={docId !== null}
+      onClose={onClose}
+      wide
+      title={data?.displayName ?? t("portal.legal.title")}
+      subtitle={
+        data
+          ? data.status !== "final"
+            ? t("portal.legal.draft", { label: data.versionLabel })
+            : data.versionLabel
+          : undefined
+      }
+    >
+      {loading && (
+        <p className="portal-sidemodal__text">{t("portal.legal.loading")}</p>
+      )}
+      {!loading && !data && (
+        <p className="portal-sidemodal__text">{t("portal.legal.loadError")}</p>
+      )}
+      {data && (
+        <div className="portal-agreement__md">
+          <Markdown remarkPlugins={[remarkGfm]}>{data.markdown}</Markdown>
+        </div>
+      )}
+    </SideModal>
   );
 }
 
@@ -164,72 +216,102 @@ export function TrialSetupModal({
   const { t } = useTranslation();
   const [deployment, setDeployment] = useState<string>("cloud");
   const [seats, setSeats] = useState("");
+  const [eula, setEula] = useState(false);
+  const [legalDoc, setLegalDoc] = useState<string | null>(null);
 
   // Reset to defaults each time the dialog opens, so a cancelled setup doesn't linger.
   useEffect(() => {
     if (open) {
       setDeployment("cloud");
       setSeats("");
+      setEula(false);
     }
   }, [open]);
 
-  return (
-    <SideModal
-      open={open}
-      onClose={onClose}
-      title={t("portal.procurement.setup.title")}
-      subtitle={t("portal.procurement.setup.subtitle")}
-      footer={
-        <Button
-          variant="primary"
-          accent="premium"
-          loading={busy}
-          onClick={() => onConfirm(deployment, Math.max(0, Number(seats) || 0))}
-        >
-          {t("portal.procurement.setup.start")}
-        </Button>
-      }
-    >
-      <label className="portal-qb__field">
-        <span className="portal-qb__field-label">
-          {t("portal.procurement.setup.deployment")}
-        </span>
-        <div className="portal-qb__opts">
-          {DEPLOYMENTS.map((d) => (
-            <button
-              key={d}
-              type="button"
-              className="portal-qb__opt"
-              data-on={deployment === d || undefined}
-              onClick={() => setDeployment(d)}
-            >
-              <span className="portal-qb__opt-title">
-                {t(`portal.procurement.setup.${d}`)}
-              </span>
-              <span className="portal-qb__opt-sub">
-                {t(`portal.procurement.setup.${d}Sub`)}
-              </span>
-            </button>
-          ))}
-        </div>
-      </label>
+  const confirm = () => {
+    void recordLegalConsent("eula", "trial"); // clickwrap consent, best-effort
+    onConfirm(deployment, Math.max(0, Number(seats) || 0));
+  };
 
-      <label className="portal-qb__field">
-        <span className="portal-qb__field-label">
-          {t("portal.procurement.setup.seats")}
-        </span>
-        <input
-          type="number"
-          min={0}
-          placeholder={t("portal.procurement.setup.seatsPlaceholder")}
-          value={seats}
-          onChange={(e) => setSeats(e.target.value)}
-        />
-      </label>
-      <p className="portal-sidemodal__text">
-        {t("portal.procurement.setup.seatsHint")}
-      </p>
-    </SideModal>
+  return (
+    <>
+      <SideModal
+        open={open}
+        onClose={onClose}
+        title={t("portal.procurement.setup.title")}
+        subtitle={t("portal.procurement.setup.subtitle")}
+        footer={
+          <Button
+            variant="primary"
+            accent="premium"
+            loading={busy}
+            disabled={!eula}
+            onClick={confirm}
+          >
+            {t("portal.procurement.setup.start")}
+          </Button>
+        }
+      >
+        <label className="portal-qb__field">
+          <span className="portal-qb__field-label">
+            {t("portal.procurement.setup.deployment")}
+          </span>
+          <div className="portal-qb__opts">
+            {DEPLOYMENTS.map((d) => (
+              <button
+                key={d}
+                type="button"
+                className="portal-qb__opt"
+                data-on={deployment === d || undefined}
+                onClick={() => setDeployment(d)}
+              >
+                <span className="portal-qb__opt-title">
+                  {t(`portal.procurement.setup.${d}`)}
+                </span>
+                <span className="portal-qb__opt-sub">
+                  {t(`portal.procurement.setup.${d}Sub`)}
+                </span>
+              </button>
+            ))}
+          </div>
+        </label>
+
+        <label className="portal-qb__field">
+          <span className="portal-qb__field-label">
+            {t("portal.procurement.setup.seats")}
+          </span>
+          <input
+            type="number"
+            min={0}
+            placeholder={t("portal.procurement.setup.seatsPlaceholder")}
+            value={seats}
+            onChange={(e) => setSeats(e.target.value)}
+          />
+        </label>
+        <p className="portal-sidemodal__text">
+          {t("portal.procurement.setup.seatsHint")}
+        </p>
+
+        <label className="portal-qb__eula">
+          <input
+            type="checkbox"
+            checked={eula}
+            onChange={(e) => setEula(e.target.checked)}
+          />
+          <span>
+            {t("portal.procurement.setup.eula")}{" "}
+            <button
+              type="button"
+              className="portal-legal__link"
+              onClick={() => setLegalDoc("eula")}
+            >
+              {t("portal.procurement.setup.viewEula")}
+            </button>
+          </span>
+        </label>
+      </SideModal>
+      <LegalDocumentModal docId={legalDoc} onClose={() => setLegalDoc(null)} />
+    </>
   );
 }
 

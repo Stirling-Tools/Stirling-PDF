@@ -323,6 +323,34 @@ export const procurementSaasHandlers = [
     resetProcurementSaasStore();
     return HttpResponse.json(EMPTY);
   }),
+  http.get(`${SAAS}/api/v1/legal/:docId`, ({ params }) => {
+    const docId = String(params.docId);
+    const titles: Record<string, string> = {
+      eula: "Stirling EULA & Commercial Terms",
+      sla: "Stirling SLA Exhibit",
+      subprocessors: "Stirling Subprocessors",
+    };
+    if (!(docId in titles)) return new HttpResponse(null, { status: 404 });
+    return HttpResponse.json({
+      docId,
+      version: "1.0.0",
+      versionLabel: `${docId.toUpperCase()} v1.0.0`,
+      displayName: titles[docId],
+      effectiveDate: "2026-07-10",
+      status: "draft",
+      markdown: `# ${titles[docId]}\n\nThis is a mock of the ${docId} document for local development.\n\n## 1. Terms\n\nThe real text is served from the backend legal registry.`,
+    });
+  }),
+  http.post(`${SAAS}/api/v1/legal/consent`, async ({ request }) => {
+    const body = (await request.json().catch(() => ({}))) as Partial<{
+      documentId: string;
+      context: string;
+    }>;
+    if (!body.documentId || !body.context) {
+      return new HttpResponse(null, { status: 400 });
+    }
+    return new HttpResponse(null, { status: 200 });
+  }),
 
   // Stripe Quote edge functions (supabase.functions.invoke → ${url}/functions/v1/{name}).
   http.post(`${SAAS}/functions/v1/issue-procurement-quote`, () => {

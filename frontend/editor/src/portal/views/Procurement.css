@@ -1504,6 +1504,18 @@
   font-size: 0.8125rem;
   margin: 0.5rem 0 0;
 }
+.portal-legal__link {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--color-text-1);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.portal-legal__link:hover {
+  color: var(--color-text-2, var(--color-text-1));
+}
 .portal-proc__reset {
   display: flex;
   justify-content: center;

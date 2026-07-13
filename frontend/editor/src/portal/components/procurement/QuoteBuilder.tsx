@@ -9,9 +9,11 @@ import {
 import { money } from "@portal/components/procurement/format";
 import {
   buildQuote,
+  recordLegalConsent,
   type QuoteConfigInput,
   type QuoteResult,
 } from "@portal/api/procurement";
+import { LegalDocumentModal } from "@portal/components/procurement/ProcurementExtras";
 import "@portal/views/Procurement.css";
 
 const STEPS = ["volume", "plan", "details"] as const;
@@ -80,6 +82,7 @@ export function QuoteBuilder({
   // A seeded quote carries a volume but no user count, so treat it as manually set.
   const [manualVolume, setManualVolume] = useState(initial != null);
   const [eula, setEula] = useState(initial != null);
+  const [legalDoc, setLegalDoc] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   function set<K extends keyof QuoteConfigInput>(k: K, v: QuoteConfigInput[K]) {
@@ -101,7 +104,9 @@ export function QuoteBuilder({
   async function generate() {
     setBusy(true);
     try {
-      onGenerate(await buildQuote(cfg));
+      const quote = await buildQuote(cfg);
+      void recordLegalConsent("eula", "quote"); // clickwrap consent, best-effort
+      onGenerate(quote);
     } finally {
       setBusy(false);
     }
@@ -385,7 +390,16 @@ export function QuoteBuilder({
                 checked={eula}
                 onChange={(e) => setEula(e.target.checked)}
               />
-              <span>{t("portal.procurement.builder.eula")}</span>
+              <span>
+                {t("portal.procurement.builder.eula")}{" "}
+                <button
+                  type="button"
+                  className="portal-legal__link"
+                  onClick={() => setLegalDoc("eula")}
+                >
+                  {t("portal.procurement.builder.viewEula")}
+                </button>
+              </span>
             </label>
           </Step>
         )}
@@ -437,6 +451,7 @@ export function QuoteBuilder({
           )}
         </div>
       </div>
+      <LegalDocumentModal docId={legalDoc} onClose={() => setLegalDoc(null)} />
     </div>
   );
 }
