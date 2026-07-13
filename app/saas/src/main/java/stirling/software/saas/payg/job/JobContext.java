@@ -15,7 +15,8 @@ public record JobContext(
         JobSource source,
         ProcessType processType,
         Long policyId,
-        int stepLimit) {
+        int stepLimit,
+        String runId) {
 
     public JobContext {
         if (ownerUserId == null) {
@@ -33,5 +34,20 @@ public record JobContext(
         if (stepLimit <= 0) {
             throw new IllegalArgumentException("stepLimit must be > 0");
         }
+    }
+
+    /**
+     * Convenience for callers with no automation-run context — a standalone tool call ({@code
+     * runId} = {@code null}, so {@code joinOrOpen} always opens a fresh process rather than
+     * lineage-joining).
+     */
+    public JobContext(
+            Long ownerUserId,
+            Long ownerTeamId,
+            JobSource source,
+            ProcessType processType,
+            Long policyId,
+            int stepLimit) {
+        this(ownerUserId, ownerTeamId, source, processType, policyId, stepLimit, null);
     }
 }
