@@ -51,7 +51,7 @@ const ENTERPRISE_DEAL: Deal = {
 const ENTERPRISE_LEDGER: LedgerGroup[] = [
   {
     stage: "trial",
-    label: "Trial",
+    label: "portal.procurement.journeySteps.trial.label",
     docs: [
       {
         id: "doc-trial-quickstart",
@@ -71,7 +71,7 @@ const ENTERPRISE_LEDGER: LedgerGroup[] = [
   },
   {
     stage: "quote",
-    label: "Quote",
+    label: "portal.procurement.journeySteps.quote.label",
     docs: [
       {
         id: "doc-quote-formal",
@@ -84,7 +84,7 @@ const ENTERPRISE_LEDGER: LedgerGroup[] = [
   },
   {
     stage: "security",
-    label: "Agreement",
+    label: "portal.procurement.journeySteps.agreement.label",
     docs: [
       {
         id: "doc-agreement-enterprise",
@@ -97,7 +97,7 @@ const ENTERPRISE_LEDGER: LedgerGroup[] = [
   },
   {
     stage: "procurement",
-    label: "Payment",
+    label: "portal.procurement.journeySteps.payment.label",
     docs: [
       {
         id: "doc-pay-online",
@@ -124,7 +124,7 @@ const ENTERPRISE_LEDGER: LedgerGroup[] = [
   },
   {
     stage: "active",
-    label: "Implementation",
+    label: "portal.procurement.journeySteps.implementation.label",
     docs: [
       {
         id: "doc-active-playbook",
