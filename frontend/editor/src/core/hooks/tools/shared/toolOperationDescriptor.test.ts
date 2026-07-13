@@ -5,10 +5,9 @@ interface Params {
   a: number;
 }
 
+// A minimal bidirectional mapping that type-checks against the flatten endpoint's model.
 const CONFIG = {
   defaultParameters: { a: 1 } satisfies Params,
-  // A minimal bidirectional mapping for the flatten endpoint (arbitrary choice; the mappers here
-  // just have to be present and type-check against that endpoint's model).
   toApiParams: (p: Params) => ({ renderDpi: p.a }),
   fromApiParams: (api: { renderDpi?: number }) => ({ a: api.renderDpi ?? 0 }),
 };
@@ -22,7 +21,6 @@ describe("describeToolOperation", () => {
 
   test("fromApi merges the mapped values over the defaults", () => {
     const d = describeToolOperation("/api/v1/misc/flatten", CONFIG);
-    // renderDpi maps to `a`; any field the mapper omits keeps its default.
     expect(d.fromApi({ renderDpi: 72 })).toEqual({ a: 72 });
   });
 

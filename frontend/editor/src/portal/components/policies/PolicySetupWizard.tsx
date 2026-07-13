@@ -48,10 +48,7 @@ interface PolicySetupWizardProps {
 
 type Step = "workflow" | "settings";
 
-/**
- * A configurable tool in the workflow step: a typed policy step (tool id + its typed params) plus
- * whether it runs. Discriminated on `toolId`, so `params` is always the right shape for the tool.
- */
+/** A policy step plus whether it runs. */
 type ToolState = PolicyToolStep & { enabled: boolean };
 
 /** Resolve each field's effective value: saved override, else definition default. */
@@ -69,8 +66,7 @@ function resolveFieldValues(
  * round-trips); otherwise the category preset's default chain. Each preset step
  * starts enabled — the user toggles tools off in the workflow.
  */
-// Temporary: tracks which tools start disabled until the catalogue can drive this via
-// a defaultEnabled flag.
+// Temporary until the catalogue carries a defaultEnabled flag.
 const DISABLED_BY_DEFAULT = new Set<PolicyToolId>(["watermark"]);
 
 /**
@@ -127,15 +123,13 @@ const CAPABILITY_META: Record<
 
 function seedTools(entry: CatalogueEntry): ToolState[] {
   const savedSteps = entry.policy?.steps ?? [];
-  // Saved steps are backend wire steps; decode each to a typed policy step, keyed by tool id.
   const savedByTool = new Map<PolicyToolId, PolicyToolStep>();
   for (const wire of savedSteps) {
     const step = policyStepFromWire(wire);
     if (step) savedByTool.set(step.toolId, step);
   }
-  // Always use defaultOperations as the canonical list so tools added after a
-  // policy was first saved still appear when editing. A saved step's params win
-  // (so editing round-trips); otherwise the preset's typed defaults.
+  // defaultOperations is the canonical list (so tools added later still show on edit); a saved
+  // step's params win over the preset.
   return entry.config.defaultOperations.map((preset) => {
     const saved = savedByTool.get(preset.toolId);
     return {
@@ -271,8 +265,6 @@ function PolicySetupWizardBody({
     }
     setError(null);
     setSubmitting(true);
-    // Map each typed policy step to its backend wire step (frontend params ->
-    // the endpoint's request model) via the tool's descriptor.
     const steps: PipelineStep[] = enabledTools.map((tl) =>
       policyStepToWire(tl),
     );

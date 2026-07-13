@@ -132,11 +132,7 @@ export interface CatalogueEntry {
 /*  Endpoint display labels                                                   */
 /* ──────────────────────────────────────────────────────────────────────── */
 
-/**
- * i18n keys for the endpoints policies call, keyed by the generated {@link ToolEndpoint} so a
- * renamed/removed endpoint is a compile error here. Used to label stored steps (whose `operation`
- * is the endpoint path) in the read-only detail view.
- */
+/** i18n keys keyed by {@link ToolEndpoint}; labels stored steps in the detail view. */
 export const ENDPOINT_LABELS: Partial<Record<ToolEndpoint, string>> = {
   "/api/v1/security/auto-redact": "portal.policies.endpoints.autoRedact",
   "/api/v1/security/sanitize-pdf": "portal.policies.endpoints.sanitizePdf",
@@ -254,16 +250,15 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
     ],
     scopeLabel: "portal.policies.config.scopeAll",
     defaultOperations: [
-      // Redact ships with the high-risk PII regexes so it works out of the box; flatten-to-image
-      // so redacted text is truly removed, not just hidden behind a box.
+      // Flatten to image so redactions can't be lifted off.
       policyStep("redact", {
         useRegex: true,
         convertPDFToImage: true,
         wordsToRedact: DEFAULT_PII_PATTERNS,
       }),
-      // Sanitize is fixed to JavaScript removal only (embedded files default on, so turn it off).
+      // JavaScript removal only (embedded-files defaults on).
       policyStep("sanitize", { removeEmbeddedFiles: false }),
-      // convertPDFToImage bakes the watermark in so it can't be stripped.
+      // Bake in via image so it can't be stripped.
       policyStep("watermark", { convertPDFToImage: true }),
     ],
     fields: [],

@@ -54,10 +54,10 @@ describe("policyStep", () => {
       wordsToRedact: ["ssn", "card"],
     });
     expect(step.toolId).toBe("redact");
-    // Overrides applied…
+    // Overrides applied...
     expect(step.params.useRegex).toBe(true);
     expect(step.params.wordsToRedact).toEqual(["ssn", "card"]);
-    // …and untouched fields fall back to the tool's defaults.
+    // ...and untouched fields fall back to the tool's defaults.
     expect(step.params.mode).toBe("automatic");
     expect(step.params.redactColor).toBe("#000000");
   });

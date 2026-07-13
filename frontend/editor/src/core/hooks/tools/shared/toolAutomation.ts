@@ -182,12 +182,7 @@ export function newWorkingToolStep(
   };
 }
 
-/**
- * Build a typed {@link ToolOperationDescriptor} from a registry entry's (erased) config, pinned to
- * `operation` — the shared frontend<->backend conversion primitive. Returns null when the endpoint
- * isn't a known tool endpoint or the tool lacks the bidirectional mappers, so callers fall back to
- * one-directional handling.
- */
+/** Descriptor for a registry entry's (erased) config, or null when it can't round-trip. */
 function descriptorFor(
   operation: string,
   config: RegistryToolOperationConfig,
@@ -216,7 +211,6 @@ export function serializeToolStep(
   }
   const merged = { ...(config.defaultParameters ?? {}), ...step.params };
   const operation = resolveEndpoint(config, merged) ?? step.operation;
-  // Convert through the shared descriptor when the tool round-trips; else map one-directionally.
   const descriptor = descriptorFor(operation, config);
   const parameters = descriptor
     ? (descriptor.toApi(merged) as Record<string, unknown>)
@@ -274,7 +268,6 @@ export function deserializeToolStep(
   if (!match) return unmappedStep(step);
   const [toolId, entry] = match;
   const config = entry.operationConfig;
-  // Convert through the shared descriptor when the tool round-trips; else map one-directionally.
   const descriptor = config && descriptorFor(step.operation, config);
   const params: ErasedToolParams = descriptor
     ? descriptor.fromApi(step.parameters)

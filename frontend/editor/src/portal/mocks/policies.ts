@@ -14,9 +14,8 @@ import type {
 /*  Seed data — real backend wire format                                      */
 /* ──────────────────────────────────────────────────────────────────────── */
 
-// Backend-shaped steps for the seeded Security policy (redact PII + strip JavaScript), mirroring
-// what the security preset persists. Written as literal wire steps so this fixtures module stays
-// independent of the live typed catalogue (@portal/api/policies) and its tool-operation graph.
+// Literal wire steps (not derived from the catalogue) so this fixtures module stays independent of
+// @portal/api/policies and its heavy tool-operation import graph.
 const SECURITY_STEPS: WirePipelineStep[] = [
   {
     operation: "/api/v1/security/auto-redact",
