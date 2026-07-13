@@ -96,14 +96,14 @@ export const PIPELINE_OPS: Record<OpKind, PipelineOp[]> = {
     {
       id: "ocr",
       label: "OCR",
-      icon: "eye",
+      icon: "visibility",
       kind: "ingest",
       desc: "Text-recognize scanned or image-based pages",
     },
     {
       id: "parse",
       label: "Parse",
-      icon: "layout",
+      icon: "dashboard",
       kind: "ingest",
       desc: "Reconstruct reading order and layout structure",
     },
@@ -117,14 +117,14 @@ export const PIPELINE_OPS: Record<OpKind, PipelineOp[]> = {
     {
       id: "bundle-split",
       label: "Bundle split",
-      icon: "grid",
+      icon: "grid-view",
       kind: "ingest",
       desc: "Split a multi-document upload into component documents",
     },
     {
       id: "extract",
       label: "Extract",
-      icon: "sparkles",
+      icon: "auto-awesome",
       kind: "ingest",
       desc: "Pull structured fields from the document into a typed schema",
     },
@@ -168,7 +168,7 @@ export const PIPELINE_OPS: Record<OpKind, PipelineOp[]> = {
     {
       id: "confidence-check",
       label: "Confidence bounds",
-      icon: "activity",
+      icon: "analytics",
       kind: "validate",
       desc: "Gate downstream ops on extraction-confidence thresholds",
     },
@@ -184,7 +184,7 @@ export const PIPELINE_OPS: Record<OpKind, PipelineOp[]> = {
     {
       id: "split",
       label: "Split",
-      icon: "grid",
+      icon: "grid-view",
       kind: "modify",
       desc: "Split a PDF into pages, sections, or by document boundary",
     },
@@ -212,7 +212,7 @@ export const PIPELINE_OPS: Record<OpKind, PipelineOp[]> = {
     {
       id: "crop",
       label: "Crop",
-      icon: "layout",
+      icon: "dashboard",
       kind: "modify",
       desc: "Crop pages to a region or trim margins",
     },
@@ -221,7 +221,7 @@ export const PIPELINE_OPS: Record<OpKind, PipelineOp[]> = {
     {
       id: "redact",
       label: "Redact PII",
-      icon: "eye",
+      icon: "visibility",
       kind: "secure",
       defaultOn: true,
       desc: "Remove or mask PII before the document is stored or released downstream",
@@ -250,7 +250,7 @@ export const PIPELINE_OPS: Record<OpKind, PipelineOp[]> = {
     {
       id: "flatten",
       label: "Flatten + lock",
-      icon: "layout",
+      icon: "dashboard",
       kind: "secure",
       desc: "Flatten forms and annotations to harden the document against tampering",
     },
@@ -350,7 +350,7 @@ export const PIPELINE_OPS: Record<OpKind, PipelineOp[]> = {
     {
       id: "notify",
       label: "Notify",
-      icon: "bell",
+      icon: "notifications",
       kind: "alert",
       desc: "Fire a webhook or email when the pipeline finishes or trips a rule",
     },
@@ -524,7 +524,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "confidence-check",
     label: "Confidence bounds",
-    icon: "activity",
+    icon: "analytics",
     kind: "validate",
     category: "Validation",
     desc: "Gate downstream ops on extraction-confidence thresholds",
@@ -622,7 +622,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "split",
     label: "Split",
-    icon: "grid",
+    icon: "grid-view",
     kind: "modify",
     category: "Removal",
     desc: "Split a PDF into pages, sections, or by document boundary",
@@ -630,7 +630,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "split-chapters",
     label: "Split by chapters",
-    icon: "grid",
+    icon: "grid-view",
     kind: "modify",
     category: "Removal",
     desc: "Split a PDF along bookmark or chapter boundaries",
@@ -638,7 +638,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "split-size",
     label: "Split by size",
-    icon: "grid",
+    icon: "grid-view",
     kind: "modify",
     category: "Removal",
     desc: "Split a PDF when it exceeds a size or page-count threshold",
@@ -646,7 +646,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "auto-split",
     label: "Auto split",
-    icon: "grid",
+    icon: "grid-view",
     kind: "modify",
     category: "Classification",
     desc: "Detect document boundaries and split automatically",
@@ -654,7 +654,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "remove-pages",
     label: "Remove pages",
-    icon: "grid",
+    icon: "grid-view",
     kind: "modify",
     category: "Removal",
     desc: "Drop specified pages from the document",
@@ -662,7 +662,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "remove-blanks",
     label: "Remove blank pages",
-    icon: "grid",
+    icon: "grid-view",
     kind: "modify",
     category: "Removal",
     desc: "Detect and drop blank pages",
@@ -670,7 +670,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "rearrange-pages",
     label: "Rearrange pages",
-    icon: "grid",
+    icon: "grid-view",
     kind: "modify",
     category: "Page Formatting",
     desc: "Reorder pages by a specified sequence",
@@ -686,7 +686,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "crop",
     label: "Crop",
-    icon: "layout",
+    icon: "dashboard",
     kind: "modify",
     category: "Page Formatting",
     desc: "Crop pages to a region or trim margins",
@@ -702,7 +702,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "flatten",
     label: "Flatten",
-    icon: "layout",
+    icon: "dashboard",
     kind: "modify",
     category: "Page Formatting",
     desc: "Flatten forms and annotations into the page content",
@@ -718,7 +718,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "remove-images",
     label: "Remove images",
-    icon: "eye",
+    icon: "visibility",
     kind: "modify",
     category: "Removal",
     desc: "Strip images to reduce file size",
@@ -782,7 +782,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "multi-page-layout",
     label: "Multi-page layout",
-    icon: "grid",
+    icon: "grid-view",
     kind: "modify",
     category: "Advanced Formatting",
     desc: "Combine multiple pages into a single page (n-up)",
@@ -790,7 +790,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "scale-pages",
     label: "Scale pages",
-    icon: "layout",
+    icon: "dashboard",
     kind: "modify",
     category: "Page Formatting",
     desc: "Resize pages to a target dimension",
@@ -934,7 +934,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "ocr",
     label: "OCR",
-    icon: "eye",
+    icon: "visibility",
     kind: "modify",
     category: "Extraction",
     desc: "Optical character recognition on scanned pages",
@@ -942,7 +942,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "extract-images",
     label: "Extract images",
-    icon: "sparkles",
+    icon: "auto-awesome",
     kind: "modify",
     category: "Extraction",
     desc: "Extract embedded images from the PDF",
@@ -950,7 +950,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "extract-bookmarks",
     label: "Extract bookmarks",
-    icon: "sparkles",
+    icon: "auto-awesome",
     kind: "modify",
     category: "Extraction",
     desc: "Extract the bookmark / outline tree",
@@ -958,7 +958,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "extract-scans",
     label: "Extract scans",
-    icon: "sparkles",
+    icon: "auto-awesome",
     kind: "modify",
     category: "Extraction",
     desc: "Detect and extract scanned image regions",
@@ -968,7 +968,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "redact",
     label: "Redact PII",
-    icon: "eye",
+    icon: "visibility",
     kind: "secure",
     category: "Document Security",
     desc: "Remove or mask PII before the document is stored or released",
@@ -984,7 +984,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "auto-redact",
     label: "Auto-redact",
-    icon: "eye",
+    icon: "visibility",
     kind: "secure",
     category: "Document Security",
     desc: "Automatically redact sensitive content based on policy",
@@ -1048,7 +1048,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "flatten-secure",
     label: "Flatten + lock",
-    icon: "layout",
+    icon: "dashboard",
     kind: "secure",
     category: "Document Security",
     desc: "Flatten forms and lock the document against tampering",
@@ -1155,7 +1155,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "schema-extract",
     label: "Schema-aware extract",
-    icon: "sparkles",
+    icon: "auto-awesome",
     kind: "modify",
     category: "Classification",
     desc: "Extract the typed fields the inferred schema declares — not heuristic regexes. Confidence scored per field",
@@ -1187,7 +1187,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "smart-redact",
     label: "Field-aware redact",
-    icon: "eye",
+    icon: "visibility",
     kind: "secure",
     category: "Document Security",
     desc: "Schema-aware PII redaction — targets fields the schema declares as PII, not regex fishing",
@@ -1195,7 +1195,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "field-confidence",
     label: "Field confidence",
-    icon: "activity",
+    icon: "analytics",
     kind: "validate",
     category: "Validation",
     desc: "Per-field confidence scoring backed by the typed schema",
@@ -1203,7 +1203,7 @@ export const LIBRARY_OPS: readonly LibraryOp[] = [
   {
     id: "schema-split",
     label: "Schema-aware split",
-    icon: "grid",
+    icon: "grid-view",
     kind: "modify",
     category: "Classification",
     desc: "Split a multi-doc bundle along schema boundaries",
@@ -1240,13 +1240,13 @@ export const SOURCE_OPTIONS: readonly SourceOption[] = [
   {
     id: "webhook",
     label: "Inbound webhook",
-    icon: "plug",
+    icon: "webhook",
     desc: "Receive documents from another system via webhook",
   },
   {
     id: "s3",
     label: "S3 bucket watch",
-    icon: "server",
+    icon: "storage",
     desc: "Poll an S3 bucket for new files",
   },
   {
@@ -1258,7 +1258,7 @@ export const SOURCE_OPTIONS: readonly SourceOption[] = [
   {
     id: "scheduled",
     label: "Scheduled import",
-    icon: "activity",
+    icon: "schedule",
     desc: "Fetch from SFTP/URL on a schedule",
   },
 ];
@@ -1273,7 +1273,7 @@ export const DESTINATION_OPTIONS: readonly DestinationOption[] = [
   {
     id: "s3",
     label: "S3 bucket",
-    icon: "server",
+    icon: "storage",
     desc: "Write results to an S3 bucket",
   },
   {

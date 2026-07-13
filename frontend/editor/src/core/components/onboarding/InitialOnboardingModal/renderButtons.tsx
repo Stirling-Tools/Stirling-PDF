@@ -28,11 +28,13 @@ export function SlideButtons({
   onAction,
 }: SlideButtonsProps) {
   const { t } = useTranslation();
-  const leftButtons = slideDefinition.buttons.filter(
-    (btn) => btn.group === "left",
+  // Back/icon buttons anchor the left edge; all text actions (skip + primary)
+  // cluster together on the right, matching the onboarding card layout.
+  const backButtons = slideDefinition.buttons.filter(
+    (btn) => btn.type === "icon",
   );
-  const rightButtons = slideDefinition.buttons.filter(
-    (btn) => btn.group === "right",
+  const actionButtons = slideDefinition.buttons.filter(
+    (btn) => btn.type !== "icon",
   );
 
   const resolveButtonLabel = (button: ButtonDefinition) => {
@@ -75,7 +77,7 @@ export function SlideButtons({
       );
     }
 
-    const variant = button.variant ?? "secondary";
+    const isPrimary = (button.variant ?? "secondary") === "primary";
     const label = resolveButtonLabel(button);
 
     return (
@@ -83,28 +85,24 @@ export function SlideButtons({
         key={button.key}
         onClick={() => onAction(button.action)}
         disabled={disabled}
-        variant={variant === "primary" ? "primary" : "secondary"}
-        accent={
-          button.accent ?? (variant === "primary" ? "default" : "neutral")
-        }
+        variant={isPrimary ? "primary" : "quiet"}
+        accent={button.accent ?? (isPrimary ? "default" : "neutral")}
       >
         {label}
       </Button>
     );
   };
 
-  if (leftButtons.length === 0) {
-    return <Group justify="flex-end">{rightButtons.map(renderButton)}</Group>;
-  }
+  const actions = <Group gap={8}>{actionButtons.map(renderButton)}</Group>;
 
-  if (rightButtons.length === 0) {
-    return <Group justify="flex-start">{leftButtons.map(renderButton)}</Group>;
+  if (backButtons.length === 0) {
+    return <Group justify="flex-end">{actions}</Group>;
   }
 
   return (
-    <Group justify="space-between">
-      <Group gap={12}>{leftButtons.map(renderButton)}</Group>
-      <Group gap={12}>{rightButtons.map(renderButton)}</Group>
+    <Group justify="space-between" wrap="nowrap">
+      <Group gap={8}>{backButtons.map(renderButton)}</Group>
+      {actions}
     </Group>
   );
 }
