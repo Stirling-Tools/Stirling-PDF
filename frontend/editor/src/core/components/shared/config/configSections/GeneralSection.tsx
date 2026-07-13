@@ -11,11 +11,11 @@ import {
   Group,
   Anchor,
   Badge,
-  Popover,
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { ColorInput } from "@app/ui/ColorInput";
+import { ColorGridPicker } from "@app/ui/ColorGridPicker";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { clampAccentChoice } from "@app/utils/customPrimary";
 import { useTranslation } from "react-i18next";
@@ -84,7 +84,7 @@ interface GeneralSectionProps {
   desktopUpdateMode?: DesktopUpdateModeControl;
 }
 
-/** Accent-colour picker: a swatch trigger opening a 3×5 grid — a "Default" icon cell + 14 accents — plus a "Custom" picker below. */
+/** Accent-colour picker: a swatch grid (a "Default" icon cell + 14 accents) with a "Custom" picker below, via the shared ColorGridPicker. */
 function AccentSwatchDropdown({
   value,
   onChange,
@@ -95,8 +95,6 @@ function AccentSwatchDropdown({
   ariaLabel: string;
 }) {
   const { t } = useTranslation();
-  const [opened, setOpened] = useState(false);
-  const isDefault = value === DEFAULT_ACCENT;
   // Resolve the "default" sentinel to the blue it maps to so the ColorInput shows a real colour.
   const asHex = (v: string) =>
     v === DEFAULT_ACCENT ? DEFAULT_ACCENT_COLOR : v;
@@ -104,158 +102,25 @@ function AccentSwatchDropdown({
   const [draft, setDraft] = useState(() => asHex(value));
   useEffect(() => setDraft(asHex(value)), [value]);
   return (
-    <Popover
-      opened={opened}
-      onChange={setOpened}
-      position="bottom-end"
-      withinPortal
+    <ColorGridPicker
+      value={value}
+      onChange={onChange}
+      colors={THEME_ACCENT_PRESETS}
+      ariaLabel={ariaLabel}
       zIndex={Z_INDEX_OVER_CONFIG_MODAL}
-      shadow="md"
-      radius="md"
-      withArrow
-    >
-      <Popover.Target>
-        {/* eslint-disable-next-line no-restricted-syntax -- swatch-trigger control, not a text button; the shared Button's variants/padding don't fit */}
-        <button
-          type="button"
-          aria-label={ariaLabel}
-          aria-haspopup="listbox"
-          onClick={() => setOpened((o) => !o)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            padding: "0.25rem 0.5rem",
-            borderRadius: "8px",
-            border: "1px solid var(--c-border)",
-            background: "var(--c-input-bg)",
-            cursor: "pointer",
-          }}
-        >
-          {isDefault ? (
-            // Default is not a colour — show the icon chip so the trigger reads as unset, not a hue.
-            <span
-              style={{
-                display: "grid",
-                placeItems: "center",
-                width: "1.25rem",
-                height: "1.25rem",
-                borderRadius: "5px",
-                background: "var(--c-surface-raised)",
-                boxShadow: "inset 0 0 0 1px var(--c-border)",
-              }}
-            >
-              <LocalIcon
-                icon="star-rounded"
-                width="0.875rem"
-                height="0.875rem"
-                style={{ color: "var(--c-text-muted)" }}
-              />
-            </span>
-          ) : (
-            <span
-              style={{
-                width: "1.25rem",
-                height: "1.25rem",
-                borderRadius: "5px",
-                background: value,
-                boxShadow: "inset 0 0 0 1px rgba(0, 0, 0, 0.15)",
-              }}
-            />
-          )}
-          <LocalIcon
-            icon="expand-more-rounded"
-            width="1rem"
-            height="1rem"
-            style={{ color: "var(--c-text-subtle)" }}
-          />
-        </button>
-      </Popover.Target>
-      <Popover.Dropdown p="xs">
-        <div
-          role="radiogroup"
-          aria-label={ariaLabel}
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(5, 1.75rem)",
-            gap: "0.6875rem",
-            justifyContent: "center",
-          }}
-        >
-          {/* Default — an icon chip for the neutral theme (surfaces untinted, blue buttons); stores the sentinel, a separate state from the colour swatches. */}
-          {/* eslint-disable-next-line no-restricted-syntax -- an icon chip, not a text button; the shared Button's variants don't fit */}
-          <button
-            type="button"
-            role="radio"
-            aria-checked={isDefault}
-            aria-label={t("settings.general.themeAccentDefault", "Default")}
-            title={t(
-              "settings.general.themeAccentDefaultHint",
-              "Default theme (recommended)",
-            )}
-            onClick={() => {
-              onChange(DEFAULT_ACCENT);
-              setOpened(false);
-            }}
-            style={{
-              display: "grid",
-              placeItems: "center",
-              width: "1.75rem",
-              height: "1.75rem",
-              padding: 0,
-              borderRadius: "8px",
-              cursor: "pointer",
-              background: "var(--c-surface-raised)",
-              border: "1px solid var(--c-border)",
-              outline: isDefault ? "2px solid var(--c-text)" : "none",
-              outlineOffset: "2px",
-            }}
-          >
-            <LocalIcon
-              icon="star-rounded"
-              width="1.125rem"
-              height="1.125rem"
-              style={{ color: "var(--c-text-muted)" }}
-            />
-          </button>
-          {THEME_ACCENT_PRESETS.map((color) => {
-            const selected = value.toLowerCase() === color.toLowerCase();
-            return (
-              // eslint-disable-next-line no-restricted-syntax -- a colour swatch, not a text button; the shared Button's variants don't fit
-              <button
-                key={color}
-                type="button"
-                role="radio"
-                aria-checked={selected}
-                aria-label={color}
-                onClick={() => {
-                  onChange(color);
-                  setOpened(false);
-                }}
-                style={{
-                  width: "1.75rem",
-                  height: "1.75rem",
-                  padding: 0,
-                  border: "none",
-                  borderRadius: "8px",
-                  background: color,
-                  cursor: "pointer",
-                  outline: selected ? "2px solid var(--c-text)" : "none",
-                  outlineOffset: "2px",
-                  boxShadow: "inset 0 0 0 1px rgba(0, 0, 0, 0.12)",
-                }}
-              />
-            );
-          })}
-        </div>
-        {/* Custom colour — below the presets; our ColorInput, clamped off white/grey/black. */}
-        <div
-          style={{
-            marginTop: "0.5rem",
-            paddingTop: "0.5rem",
-            borderTop: "1px solid var(--c-border-subtle)",
-          }}
-        >
+      defaultOption={{
+        // Default is not a colour — an icon chip signalling the neutral theme
+        // (surfaces untinted, blue buttons); stores the sentinel.
+        value: DEFAULT_ACCENT,
+        icon: "star-rounded",
+        label: t("settings.general.themeAccentDefault", "Default"),
+        hint: t(
+          "settings.general.themeAccentDefaultHint",
+          "Default theme (recommended)",
+        ),
+      }}
+      footer={
+        <>
           <Text size="xs" c="dimmed" mb={6}>
             {t(
               "settings.general.themeAccentCustomHint",
@@ -276,9 +141,9 @@ function AccentSwatchDropdown({
             )}
             popoverProps={{ withinPortal: false }}
           />
-        </div>
-      </Popover.Dropdown>
-    </Popover>
+        </>
+      }
+    />
   );
 }
 
