@@ -66,6 +66,8 @@ dependencies {
 
     implementation "com.google.code.gson:gson:${gsonVersion}"
 
+    implementation "com.hubspot.jinjava:jinjava:${jinjavaVersion}"
+
     api 'io.micrometer:micrometer-registry-prometheus'
 
     api "io.jsonwebtoken:jjwt-api:${jwtVersion}"
