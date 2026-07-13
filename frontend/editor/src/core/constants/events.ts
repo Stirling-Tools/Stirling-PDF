@@ -29,7 +29,10 @@ export interface UpgradeBannerAlertPayload {
   freeTierLimit?: number;
 }
 
-export type TourType = "admin" | "tools" | "whatsnew";
+// Open string keyed into the tour registry (see tourRegistry.ts). Kept as a
+// named alias so intent is clear at call sites; known ids are "admin", "tools",
+// "whatsnew" but builds/features may register their own.
+export type TourType = string;
 
 export interface StartTourPayload {
   tourType: TourType;

@@ -3,12 +3,14 @@ import { Modal, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useMediaQuery } from "@mantine/hooks";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "@app/auth/UseSession";
 import { isUserAnonymous } from "@app/auth/supabase";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import Overview from "@app/components/shared/config/configSections/Overview";
 import { createSaasConfigNavSections } from "@app/components/shared/config/saasConfigNavSections";
+import { consumePendingSettingsNav } from "@app/utils/appSettings";
 import {
   NavKey,
   type ConfigNavSection,
@@ -46,6 +48,15 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [active, setActive] = useState<NavKey>("overview");
   const [notice, setNotice] = useState<string | null>(null);
+  const location = useLocation();
+
+  // The modal mounts lazily on first open, so a synchronous `appConfig:navigate`
+  // dispatched by the opener can arrive before the listener below is attached.
+  // Consume any section stashed by openAppSettings on mount to land on it.
+  useEffect(() => {
+    const pending = consumePendingSettingsNav();
+    if (pending) setActive(pending);
+  }, []);
 
   // Check if user can access billing features (non-anonymous users only)
   const isAnonymous = user ? isUserAnonymous(user) : false;
@@ -76,13 +87,13 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
       setActive(initialSection);
       return;
     }
-    const match = stripBasePath(window.location.pathname).match(
+    const match = stripBasePath(location.pathname).match(
       /^\/settings\/([^/?#]+)/,
     );
     if (match) {
       setActive(match[1] as NavKey);
     }
-  }, [opened, initialSection]);
+  }, [opened, initialSection, location.pathname]);
 
   // Listen for notice updates (e.g., "Not enough credits..." next to Plan title)
   useEffect(() => {
@@ -188,7 +199,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
         closeOnEscape={!overlayActive}
         closeOnClickOutside={!overlayActive}
       >
-        <div className="modal-container">
+        <div className="modal-container" data-tour="settings-modal">
           {/* Left navigation */}
           <div
             className={`modal-nav ${isMobile ? "mobile" : ""}`}
@@ -220,6 +231,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
                       return (
                         <div
                           key={item.key}
+                          data-tour={`admin-${item.key}-nav`}
                           onClick={() => setActive(item.key)}
                           className={`modal-nav-item ${isMobile ? "mobile" : ""}`}
                           style={{
@@ -290,15 +302,20 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
       <Modal
         opened={confirmOpen}
         onClose={() => setConfirmOpen(false)}
-        title="Sign out"
+        title={t("settings.signOut.title", "Sign out")}
         centered
         zIndex={Z_INDEX_OVER_SETTINGS_MODAL}
       >
         <div className="confirm-modal-content">
-          <Text>Are you sure you want to sign out?</Text>
+          <Text>
+            {t(
+              "settings.signOut.confirm",
+              "Are you sure you want to sign out?",
+            )}
+          </Text>
           <div className="confirm-modal-buttons">
             <Button variant="secondary" onClick={() => setConfirmOpen(false)}>
-              Cancel
+              {t("common.cancel", "Cancel")}
             </Button>
             <Button
               accent="danger"
@@ -312,7 +329,7 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
                 }
               }}
             >
-              Sign out
+              {t("settings.signOut.submit", "Sign out")}
             </Button>
           </div>
         </div>

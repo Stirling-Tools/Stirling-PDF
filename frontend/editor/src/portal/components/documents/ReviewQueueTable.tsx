@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import LockRounded from "@mui/icons-material/LockRounded";
 import { Button, Chip, StatusBadge, Table, type TableColumn } from "@app/ui";
 import {
   classificationTone,
@@ -75,7 +76,7 @@ export function ReviewQueueTable({
                   title={t("portal.documents.table.sensitiveTitle")}
                   aria-label={t("portal.documents.table.sensitiveLabel")}
                 >
-                  🔒
+                  <LockRounded style={{ fontSize: "0.95rem" }} />
                 </span>
               )}
             </div>

@@ -1,0 +1,168 @@
+.card {
+  margin: 0.5rem;
+  padding: 0.625rem 0.75rem 0.6875rem;
+  background: var(--mantine-color-body);
+  border: 1px solid
+    color-mix(in srgb, var(--mantine-color-default-border) 45%, transparent);
+  border-radius: 0.625rem;
+  box-shadow: none;
+}
+
+.titleGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.logo {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
+  border-radius: 0.25rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--mantine-color-text);
+  line-height: 1.2;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  flex-shrink: 0;
+}
+
+.progressCount {
+  font-size: 0.75rem;
+  color: var(--mantine-color-dimmed);
+  font-variant-numeric: tabular-nums;
+}
+
+.chevron {
+  font-size: 0.95rem !important;
+  color: var(--mantine-color-dimmed);
+}
+
+.closeButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border: none;
+  background: transparent;
+  color: var(--mantine-color-dimmed);
+  border-radius: 0.375rem;
+  cursor: pointer;
+}
+
+.closeButton:hover {
+  background: var(--mantine-color-default-hover);
+  color: var(--mantine-color-text);
+}
+
+.closeIcon {
+  font-size: 0.95rem !important;
+}
+
+.completeIcon {
+  font-size: 1.05rem !important;
+  color: var(--mantine-color-blue-6);
+}
+
+.progressTrack {
+  margin-top: 0.5rem;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--mantine-color-default-border);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--mantine-color-blue-6);
+  transition: width 0.25s ease;
+}
+
+.items {
+  display: flex;
+  flex-direction: column;
+  margin-top: 0.5rem;
+}
+
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.375rem 0.25rem;
+  border: none;
+  background: transparent;
+  border-radius: 0.375rem;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+
+.item:hover {
+  background: var(--mantine-color-default-hover);
+}
+
+.itemIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.checkDone {
+  font-size: 1.05rem !important;
+  color: var(--mantine-color-blue-6);
+}
+
+.checkTodo {
+  font-size: 1.05rem !important;
+  color: var(--mantine-color-default-border);
+}
+
+.itemText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.0625rem;
+  min-width: 0;
+}
+
+.itemTitle {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--mantine-color-text);
+  line-height: 1.25;
+}
+
+.itemTitleDone {
+  text-decoration: line-through;
+  color: var(--mantine-color-dimmed);
+  font-weight: 400;
+}
+
+.itemDescription {
+  font-size: 0.75rem;
+  color: var(--mantine-color-dimmed);
+  line-height: 1.25;
+}
+
+.itemDescriptionDone {
+  text-decoration: line-through;
+  opacity: 0.75;
+}

@@ -13,6 +13,7 @@ import {
 import {
   deserializeToolStep,
   getExecutableTools,
+  serializeStepFromEndpoint,
   serializeToolStep,
   stepRequiresUpload,
   type WorkingToolStep,
@@ -195,6 +196,41 @@ describe("serialize/deserialize round-trip", () => {
     expect(back.support).toBe("editable");
     expect(back.operation).toBe("/api/v1/security/auto-redact");
     expect(back.params).toMatchObject({ mode: "automatic" });
+  });
+});
+
+describe("serializeStepFromEndpoint", () => {
+  test("maps a wizard step's UI params to the backend contract, filling defaults", () => {
+    // The shape the policy setup wizard holds: an endpoint plus UI-shaped params
+    // (redact's `wordsToRedact`), with several fields left to their defaults.
+    const api = serializeStepFromEndpoint(
+      "/api/v1/security/auto-redact",
+      { mode: "automatic", useRegex: true, wordsToRedact: ["ssn", "card"] },
+      dynamicRegistry,
+    );
+
+    expect(api.operation).toBe("/api/v1/security/auto-redact");
+    // wordsToRedact -> listOfText (the field the backend actually reads), and the
+    // frontend-only `mode` is dropped.
+    expect(api.parameters).toMatchObject({ listOfText: "ssn\ncard" });
+    expect(api.parameters).not.toHaveProperty("wordsToRedact");
+    expect(api.parameters).not.toHaveProperty("mode");
+    // Fields the wizard never set still get their defaults so the body is complete.
+    expect(api.parameters).toHaveProperty("wholeWordSearch");
+    expect(api.parameters).toHaveProperty("customPadding");
+  });
+
+  test("passes an unmapped endpoint's params through unchanged", () => {
+    expect(
+      serializeStepFromEndpoint(
+        "/api/v1/unknown/thing",
+        { keep: true },
+        dynamicRegistry,
+      ),
+    ).toEqual({
+      operation: "/api/v1/unknown/thing",
+      parameters: { keep: true },
+    });
   });
 });
 

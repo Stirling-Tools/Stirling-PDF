@@ -165,7 +165,13 @@ export const pipelinesHandlers = [
   http.post("/api/v1/policies/:id/trigger", async ({ params }) => {
     if (!store.some((p) => p.id === params.id)) return undefined;
     await delay(120);
-    return HttpResponse.json([`run_${Date.now().toString(36)}`]);
+    return HttpResponse.json({
+      runIds: [`run_${Date.now().toString(36)}`],
+      filesListed: 1,
+      alreadyProcessed: 0,
+      parked: 0,
+      inFlight: 0,
+    });
   }),
 
   // Raw policy by id. Only our pipeline ids are served here; everything else falls
