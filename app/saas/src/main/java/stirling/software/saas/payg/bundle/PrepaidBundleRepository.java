@@ -41,6 +41,19 @@ public interface PrepaidBundleRepository extends JpaRepository<PrepaidBundle, Lo
                     + " ORDER BY b.expiresAt ASC")
     List<PrepaidBundle> findInTerm(@Param("teamId") Long teamId, @Param("now") LocalDateTime now);
 
+    /**
+     * A team's in-term pools (not yet expired), soonest-expiring first, locked — for the refund
+     * restore path. Unlike {@link #findDrawableForUpdate} this includes pools already drawn to zero
+     * (that's exactly where a just-drawn charge's units go back), capped at {@code units_total} by
+     * the caller.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query(
+            "SELECT b FROM PrepaidBundle b WHERE b.teamId = :teamId AND b.expiresAt > :now"
+                    + " ORDER BY b.expiresAt ASC")
+    List<PrepaidBundle> findInTermForUpdate(
+            @Param("teamId") Long teamId, @Param("now") LocalDateTime now);
+
     /** Idempotency guard for the webhook credit — one pool per Stripe payment. */
     Optional<PrepaidBundle> findByStripeRef(String stripeRef);
 }
