@@ -66,7 +66,14 @@ dependencies {
 
     implementation "com.google.code.gson:gson:${gsonVersion}"
 
-    implementation "com.hubspot.jinjava:jinjava:${jinjavaVersion}"
+    implementation("com.hubspot.jinjava:jinjava:${jinjavaVersion}") {
+        // Compile-time-only annotation artifacts (class-retention annotations, not needed at
+        // runtime) whose declared licences (LGPL / none) fail the licence compatibility check.
+        exclude group: 'com.google.code.findbugs', module: 'annotations'
+        exclude group: 'org.derive4j', module: 'derive4j-annotation'
+        exclude group: 'com.hubspot.immutables', module: 'hubspot-style'
+        exclude group: 'com.hubspot.immutables', module: 'immutable-collection-encodings'
+    }
 
     api 'io.micrometer:micrometer-registry-prometheus'
 

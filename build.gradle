@@ -37,6 +37,7 @@ ext {
     gsonVersion = "2.14.0"
     guavaVersion = "33.6.0-jre"
     jinjavaVersion = "2.8.3"
+    jackson2Version = "2.21.2"
     bucket4jVersion = "8.19.0"
     archunitVersion = "1.4.2"
     batikVersion = "1.19"
@@ -223,6 +224,14 @@ subprojects {
         resolutionStrategy.force "org.apache.commons:commons-lang3:${commonsLang3}"
         // CVE-2024-47554: commons-io DoS prevention
         resolutionStrategy.force "commons-io:commons-io:${commonsIoVersion}"
+        // GHSA-72hv-8253-57qq: jackson-core async parser bypasses maxNumberLength (fixed in 2.21.1).
+        // Jackson 2 is transitive-only here (jinjava, opensaml, jjwt request vulnerable versions);
+        // pin the family to the patched line and keep modules aligned.
+        resolutionStrategy.force "com.fasterxml.jackson.core:jackson-core:${jackson2Version}"
+        resolutionStrategy.force "com.fasterxml.jackson.core:jackson-databind:${jackson2Version}"
+        resolutionStrategy.force "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jackson2Version}"
+        resolutionStrategy.force "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${jackson2Version}"
+        resolutionStrategy.force "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jackson2Version}"
         // Keep BouncyCastle modules aligned to avoid runtime linkage errors
         resolutionStrategy.force "org.bouncycastle:bcprov-jdk18on:${bouncycastleVersion}"
         resolutionStrategy.force "org.bouncycastle:bcpkix-jdk18on:${bouncycastleVersion}"
