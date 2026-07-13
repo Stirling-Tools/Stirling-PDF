@@ -95,7 +95,7 @@
   color: var(--c-text-subtle);
 }
 .portal-editor__target-icon--blue {
-  background: var(--color-blue-light);
+  background: var(--c-primary-tint);
   color: var(--c-primary);
 }
 .portal-editor__target-icon--purple {

@@ -435,7 +435,7 @@
   width: 1.75rem;
   height: 1.75rem;
   border-radius: var(--radius-md);
-  background: var(--color-blue-light);
+  background: var(--c-primary-tint);
   color: var(--c-primary);
   font-size: 0.875rem;
 }

@@ -156,7 +156,7 @@
   color: var(--c-primary);
   padding: 0.1875rem 0.5rem;
   border-radius: var(--radius-sm);
-  background: var(--color-blue-light);
+  background: var(--c-primary-tint);
 }
 
 .portal-components__preview-note {

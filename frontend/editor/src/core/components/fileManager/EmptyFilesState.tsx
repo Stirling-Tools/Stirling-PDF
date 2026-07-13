@@ -82,7 +82,7 @@ const EmptyFilesState: React.FC = () => {
             aria-label={t("emptyFilesState.upload", "Upload")}
             style={{
               backgroundColor: "var(--c-bg)",
-              color: "var(--landing-button-color)",
+              color: "var(--c-accent-fg)",
               border: "1px solid var(--landing-button-border)",
               borderRadius: isUploadHover ? "2rem" : "1rem",
               height: "38px",

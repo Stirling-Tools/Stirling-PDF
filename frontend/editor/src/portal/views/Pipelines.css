@@ -60,7 +60,7 @@
   flex-shrink: 0;
   border-radius: var(--radius-md);
   font-size: 0.875rem;
-  background: var(--color-blue-light);
+  background: var(--c-primary-tint);
   color: var(--c-primary);
 }
 

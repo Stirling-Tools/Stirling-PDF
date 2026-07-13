@@ -91,7 +91,7 @@
   color: var(--c-text);
 }
 .labels-icon-option.is-selected {
-  background: var(--color-blue-light);
+  background: var(--c-primary-tint);
   color: var(--c-primary);
 }
 

@@ -392,9 +392,8 @@
   --color-yellow-800: var(--p-amber-400);
   --color-yellow-900: var(--p-amber-400);
 
-  /* Dark theme semantic colours — the neutral zinc ramp. These legacy
-     `--bg-*`/`--text-*` names are shadowed by compat.css (→ --c-*), so this is
-     kept only for any consumer not yet on the semantic tokens. */
+  /* Legacy theme.css/tokens.css definition layer — consumers now use --c-*
+     directly (compat.css was deleted); trimming this layer is a separate cleanup. */
   /* Always-dark text (for use on light backgrounds like alerts) - does not change in dark mode */
   --text-always-dark: var(--p-gray-800);
   --text-always-dark-muted: var(--p-gray-500);

@@ -110,7 +110,7 @@ const AddFileCard = ({
                 variant="tertiary"
                 style={{
                   backgroundColor: "var(--landing-button-bg)",
-                  color: "var(--landing-button-color)",
+                  color: "var(--c-accent-fg)",
                   border: "1px solid var(--landing-button-border)",
                   borderRadius: "2rem",
                   height: "38px",
@@ -140,7 +140,7 @@ const AddFileCard = ({
               title={terminology.uploadFromComputer}
               style={{
                 backgroundColor: "var(--landing-button-bg)",
-                color: "var(--landing-button-color)",
+                color: "var(--c-accent-fg)",
                 border: "1px solid var(--landing-button-border)",
                 borderRadius: "1rem",
                 height: "38px",

@@ -16,8 +16,8 @@
 }
 .sui-method--post {
   color: var(--c-primary);
-  background: var(--color-blue-light);
-  border-color: var(--color-blue-border);
+  background: var(--c-primary-tint);
+  border-color: var(--c-primary-border);
 }
 .sui-method--put {
   color: var(--color-amber-dark);

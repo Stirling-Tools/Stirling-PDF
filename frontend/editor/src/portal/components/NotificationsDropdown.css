@@ -35,7 +35,7 @@
   font-weight: 500;
   color: var(--c-primary);
   padding: 0.125rem 0.375rem;
-  background: var(--color-blue-light);
+  background: var(--c-primary-tint);
   border-radius: var(--radius-pill);
 }
 

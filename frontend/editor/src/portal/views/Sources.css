@@ -75,7 +75,7 @@
   color: var(--c-text-subtle);
 }
 .portal-sources__type-dot--default {
-  background: var(--color-blue-light);
+  background: var(--c-primary-tint);
   color: var(--c-primary);
 }
 .portal-sources__type-dot--premium {
@@ -331,7 +331,7 @@
   color: var(--c-text);
   font-weight: 600;
   border-color: color-mix(in srgb, var(--c-primary) 40%, transparent);
-  background: var(--color-blue-light);
+  background: var(--c-primary-tint);
 }
 
 .portal-sources__step.is-done {
@@ -398,7 +398,7 @@
 
 .portal-sources__type-card.is-selected {
   border-color: var(--c-primary);
-  background: var(--color-blue-light);
+  background: var(--c-primary-tint);
   box-shadow: 0 0 0 1px var(--c-primary) inset;
 }
 

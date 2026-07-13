@@ -336,7 +336,7 @@
 
 .portal-policies__source--on {
   border-color: var(--c-primary);
-  background: var(--color-blue-light);
+  background: var(--c-primary-tint);
 }
 
 .portal-policies__source--on::after {

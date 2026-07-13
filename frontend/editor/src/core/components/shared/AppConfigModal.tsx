@@ -168,7 +168,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
       navBg: "var(--c-bg-raised)",
       sectionTitle: "var(--c-text-subtle)",
       navItem: "var(--modal-nav-item)",
-      navItemActive: "var(--modal-nav-item-active)",
+      navItemActive: "var(--c-accent-fg)",
       navItemActiveBg: "var(--c-primary-subtle)",
       contentBg: "var(--c-surface)",
       headerBorder: "var(--c-border-subtle)",

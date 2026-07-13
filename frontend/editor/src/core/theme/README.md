@@ -17,14 +17,13 @@ Read this before touching colours or theming anywhere in the frontend.
 | File | Role |
 |---|---|
 | `primitives.css` | **The palette.** 41 literal colours (`--p-*`) — one neutral ramp (`--p-gray-*` light, `--p-zinc-*` dark) + status hues (blue/green/amber/red). The ONLY place literals live. |
-| `colors.css` | **Semantic tokens** (`--c-*`), mapped from primitives per theme. This is what you should reference. |
-| `compat.css` | **Legacy-name aliases** → `--c-*`. Lets old files keep their `--bg-surface` / `--color-text-1` / etc. names working. Uses `:root:root` so it out-ranks legacy files. |
+| `colors.css` | **Semantic tokens** (`--c-*`), mapped from primitives per theme. This is what you should reference — always. |
 | `dimensions.css` | Non-colour tokens: spacing, radius, z-index, type, motion. |
 | `index.css` | Barrel that `@import`s the above. Imported by `ThemeProvider` (and Storybook). |
 | `mantineTheme.ts` | Mantine theme object wiring. |
 
-Two **legacy** colour files still exist outside this folder and are being phased out — prefer `--c-*` over their tokens, and don't add to them:
-`core/styles/theme.css` (editor `--bg-*`/`--text-*` vocab) and `core/tokens/tokens.css` (SUI `--color-*` vocab, gradients, code palette). `compat.css` already overrides their surface/text/border tokens, so most of what they define is dead weight.
+The old `compat.css` legacy-alias layer has been **removed** — every component references `--c-*` directly now. Two **legacy** definition files still exist outside this folder and are being phased out — prefer `--c-*` over their tokens, and don't add to them:
+`core/styles/theme.css` (editor `--bg-*`/`--text-*` vocab) and `core/tokens/tokens.css` (SUI `--color-*` vocab, gradients, code palette).
 
 ## Semantic tokens (`--c-*`)
 
@@ -53,7 +52,7 @@ Because the accent is user-chosen, `deriveAccessiblePrimary(pick, base)` clamps 
 - `--user-primary-on` → `--c-text-on-primary`. White by default; flips to **black only for genuinely light picks** (relative-luminance cutoff `0.62`, so saturated amber/green/cyan keep white text).
 - `--user-accent-fg` → `--c-accent-fg`. The accent tuned as a **foreground** (text/icon on the app surface): forced light on dark bases (`L ≥ 0.62`), dark on light (`L ≤ 0.45`), so accent text never goes dark-on-dark.
 
-**Rule of thumb:** a filled control's background uses `--c-primary` with its label on `--c-text-on-primary`; an accent used **as text/icon on a surface** (nav selection, links, tool-header text) uses `--c-accent-fg`. Because `compat.css` (`:root:root`) wins on specificity, accent-as-text legacy tokens are routed there as `var(--c-accent-fg, var(--c-primary))` — the fallback keeps non-custom builds on the raw primary.
+**Rule of thumb:** a filled control's background uses `--c-primary` with its label on `--c-text-on-primary`; an accent used **as text/icon on a surface** (nav selection, links, tool-header text) uses `--c-accent-fg`. `--c-accent-fg` is defined on `:root` as `--c-primary` and overridden in the custom theme with the JS-clamped foreground, so it's safe to reference everywhere (portal/midnight included).
 
 The FAB / logo mark is a deliberate exception: it's pinned to white (`--p-white`), not the on-primary flip — a brand mark, not body text.
 
@@ -71,5 +70,5 @@ App-wide "no hardcoded colours in components" is **not** enforced yet (there are
 - **`--mantine-*` vars are consumed by Mantine at runtime**, not via our `var()`. A source scan can't see their use — never delete them as "unused", and set them (not raw colours) when overriding Mantine.
 - **`--accent-*` (categorical hues) are used dynamically** via `` `var(--accent-${hue})` `` in `utils/accentColors.ts`. A literal search won't find them — don't treat them as unused.
 - **Tailwind consumes some vars** (`--gray-*`, `--color-*`, `--background`, `--border`) via `editor/tailwind.config.js` using `rgb(var(--x))`. That file is outside the usual scan roots — check it before removing those.
-- **Specificity:** `compat.css` uses `:root:root` (0,2,0) to beat legacy files. If a token you set in `colors.css` (`html[data-app-theme="custom"]`, 0,1,1) isn't winning, a `:root:root` or a `[data-mantine-color-scheme]`-compound block is probably overriding it — set it in `compat.css` or the more specific block.
-- **Adding a colour:** put the literal in `primitives.css`, map it to a `--c-*` in `colors.css` if it's a new semantic role, and reference the `--c-*` (or an existing `compat` alias) from components. Don't skip straight to a `--p-*` in a component unless there's genuinely no semantic fit.
+- **Specificity:** the custom theme block is `html[data-app-theme="custom"]` (0,1,1). If a token you set in the base `:root` block (0,1,0) isn't winning under the custom theme, that's expected — set/override it in the custom block (or a more specific one). The legacy `theme.css`/`tokens.css` still define some names; prefer the `--c-*` token so nothing depends on their cascade.
+- **Adding a colour:** put the literal in `primitives.css`, map it to a `--c-*` in `colors.css` if it's a new semantic role, and reference the `--c-*` from components. Don't skip straight to a `--p-*` in a component unless there's genuinely no semantic fit.

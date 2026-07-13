@@ -20,7 +20,7 @@
 }
 .sui-navitem.is-active {
   background: var(--c-primary-subtle);
-  color: var(--color-nav-active-text);
+  color: var(--c-accent-fg);
   font-weight: 500;
 }
 .sui-navitem.is-active:hover {

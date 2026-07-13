@@ -431,7 +431,7 @@ const TeamSection: React.FC = () => {
                           member.role !== "LEADER"
                             ? {
                                 backgroundColor: "var(--c-surface-raised)",
-                                color: "var(--tool-header-badge-text)",
+                                color: "var(--c-accent-fg)",
                               }
                             : undefined
                         }

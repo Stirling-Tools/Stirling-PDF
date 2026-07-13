@@ -23,10 +23,10 @@ const meta: Meta<typeof SetupChecklist> = {
       <div
         style={{
           maxWidth: "60rem",
-          border: "1px solid var(--color-border)",
+          border: "1px solid var(--c-border)",
           borderRadius: "var(--radius-xl)",
           overflow: "hidden",
-          background: "var(--color-surface)",
+          background: "var(--c-surface)",
         }}
       >
         <S />

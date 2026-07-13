@@ -49,7 +49,7 @@
   flex-shrink: 0;
   border-radius: 0.625rem;
   color: var(--c-primary);
-  background: var(--color-blue-light);
+  background: var(--c-primary-tint);
 }
 
 .portal-install__option-text {

@@ -99,7 +99,7 @@
 }
 
 .portal-docs__nav-link.is-active {
-  background: var(--color-blue-light);
+  background: var(--c-primary-tint);
   color: var(--c-primary);
   font-weight: 600;
 }

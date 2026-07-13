@@ -300,13 +300,13 @@
 
 :global([data-mantine-color-scheme="dark"]) .headerResting {
   background: #0d1020; /* requested default unselected color */
-  color: var(--tool-header-text); /* #D0D6DC */
+  color: var(--c-accent-fg); /* #D0D6DC */
   border-bottom-color: var(--c-border); /* #3A4047 */
 }
 
 :global([data-mantine-color-scheme="dark"]) .headerSelected {
   background: var(--c-border); /* #3A4047 */
-  color: var(--tool-header-text); /* #D0D6DC */
+  color: var(--c-accent-fg); /* #D0D6DC */
   border-bottom-color: var(--c-border);
 }
 

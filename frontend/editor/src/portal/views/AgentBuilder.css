@@ -75,7 +75,7 @@
 
 .portal-agents__selector-item.is-selected {
   border-color: var(--c-primary);
-  background: var(--color-blue-light);
+  background: var(--c-primary-tint);
   box-shadow: 0 0 0 1px var(--c-primary) inset;
 }
 
@@ -425,7 +425,7 @@
 
 .portal-agents__dropzone:hover {
   border-color: var(--c-primary);
-  background: var(--color-blue-light);
+  background: var(--c-primary-tint);
 }
 
 .portal-agents__dropzone-input {

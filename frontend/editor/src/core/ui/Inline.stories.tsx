@@ -29,7 +29,7 @@ export const SpaceBetween: Story = {
       style={{
         width: "30rem",
         padding: 12,
-        border: "1px solid var(--color-border)",
+        border: "1px solid var(--c-border)",
         borderRadius: 8,
       }}
     >

@@ -106,7 +106,7 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--c-primary-hover);
-  background: var(--color-blue-light);
+  background: var(--c-primary-tint);
 }
 
 .portal-setup__enterprise-text {

@@ -42,8 +42,8 @@ function Group({ heading, swatches }: { heading: string; swatches: Swatch[] }) {
               alignItems: "center",
               gap: 10,
               padding: 10,
-              background: "var(--color-surface)",
-              border: "1px solid var(--color-border)",
+              background: "var(--c-surface)",
+              border: "1px solid var(--c-border)",
               borderRadius: "var(--radius-md)",
             }}
           >
@@ -53,7 +53,7 @@ function Group({ heading, swatches }: { heading: string; swatches: Swatch[] }) {
                 height: 36,
                 borderRadius: 6,
                 background: `var(${s.varName})`,
-                border: "1px solid var(--color-border)",
+                border: "1px solid var(--c-border)",
                 flexShrink: 0,
               }}
             />
@@ -62,7 +62,7 @@ function Group({ heading, swatches }: { heading: string; swatches: Swatch[] }) {
                 style={{
                   fontSize: 12,
                   fontWeight: 500,
-                  color: "var(--color-text-2)",
+                  color: "var(--c-text-muted)",
                 }}
               >
                 {s.label}
@@ -71,7 +71,7 @@ function Group({ heading, swatches }: { heading: string; swatches: Swatch[] }) {
                 style={{
                   fontSize: 11,
                   fontFamily: "var(--font-mono)",
-                  color: "var(--color-text-4)",
+                  color: "var(--c-text-subtle)",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                 }}
@@ -154,14 +154,14 @@ export const Typography: Story = {
         display: "flex",
         flexDirection: "column",
         gap: 18,
-        color: "var(--color-text-1)",
+        color: "var(--c-text)",
       }}
     >
       <div>
         <div
           style={{
             fontSize: 11,
-            color: "var(--color-text-5)",
+            color: "var(--c-text-subtle)",
             marginBottom: 4,
           }}
         >
@@ -181,7 +181,7 @@ export const Typography: Story = {
         <div
           style={{
             fontSize: 11,
-            color: "var(--color-text-5)",
+            color: "var(--c-text-subtle)",
             marginBottom: 4,
           }}
         >
@@ -193,7 +193,7 @@ export const Typography: Story = {
         <div
           style={{
             fontSize: 11,
-            color: "var(--color-text-5)",
+            color: "var(--c-text-subtle)",
             marginBottom: 4,
           }}
         >
@@ -207,7 +207,7 @@ export const Typography: Story = {
         <div
           style={{
             fontSize: 11,
-            color: "var(--color-text-5)",
+            color: "var(--c-text-subtle)",
             marginBottom: 4,
           }}
         >
@@ -221,7 +221,7 @@ export const Typography: Story = {
         <div
           style={{
             fontSize: 11,
-            color: "var(--color-text-5)",
+            color: "var(--c-text-subtle)",
             marginBottom: 4,
           }}
         >
@@ -240,8 +240,8 @@ export const Motion: Story = {
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       <div
         style={{
-          background: "var(--color-surface)",
-          border: "1px solid var(--color-border)",
+          background: "var(--c-surface)",
+          border: "1px solid var(--c-border)",
           padding: 16,
           borderRadius: 8,
           animation: "fadeInUp 0.25s cubic-bezier(0.4, 0, 0.2, 1) both",

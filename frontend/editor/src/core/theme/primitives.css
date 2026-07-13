@@ -1,4 +1,4 @@
-/* PRIMITIVES — the raw palette (theme-agnostic). The ONE place literal colours live: neutral ramps (gray=light, zinc=dark) + status hues; colors.css and compat.css reference these. */
+/* PRIMITIVES — the raw palette (theme-agnostic). The ONE place literal colours live: neutral ramps (gray=light, zinc=dark) + status hues; colors.css references these. */
 
 :root {
   --p-white: #ffffff;

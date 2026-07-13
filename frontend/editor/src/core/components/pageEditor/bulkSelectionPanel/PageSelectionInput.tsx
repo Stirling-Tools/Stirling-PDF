@@ -44,7 +44,7 @@ const PageSelectionInput = ({
               icon="gpp-maybe-outline-rounded"
               width="1rem"
               height="1rem"
-              style={{ color: "var(--text-instruction)" }}
+              style={{ color: "var(--c-accent-fg)" }}
             />
             <Text>
               {t("bulkSelection.pageSelection.title", "Page Selection")}

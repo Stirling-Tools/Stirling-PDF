@@ -43,8 +43,8 @@
 }
 .sui-tabs--pill .sui-tabs__tab.is-active {
   color: var(--sui-tab-accent, var(--c-primary));
-  background: var(--color-blue-light);
-  border-color: var(--sui-tab-accent, var(--color-blue-border));
+  background: var(--c-primary-tint);
+  border-color: var(--sui-tab-accent, var(--c-primary-border));
   font-weight: 500;
 }
 

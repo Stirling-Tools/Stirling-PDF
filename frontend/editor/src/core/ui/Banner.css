@@ -10,9 +10,9 @@
 }
 
 .sui-banner--info {
-  background: var(--color-blue-light);
+  background: var(--c-primary-tint);
   color: var(--c-text-muted);
-  border-color: var(--color-blue-border);
+  border-color: var(--c-primary-border);
 }
 .sui-banner--success {
   background: var(--color-green-light);

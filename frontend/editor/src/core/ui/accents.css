@@ -6,7 +6,7 @@
   --_solid-hover: var(--c-primary-hover);
   --_on: #ffffff;
   --_text: var(--c-primary-hover);
-  --_bd: var(--color-blue-border);
+  --_bd: var(--c-primary-border);
   --_tint: color-mix(in srgb, var(--c-primary) 12%, transparent);
 }
 

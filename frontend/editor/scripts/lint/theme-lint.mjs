@@ -2,7 +2,7 @@
 // Theme colour lint — guards the theme SYSTEM (core/theme/). Two modes:
 //
 //   node theme-lint.mjs            enforce: literal colours live ONLY in
-//                                  primitives.css; colors/compat/dimensions must
+//                                  primitives.css; colors/dimensions must
 //                                  reference tokens; no duplicate primitives.
 //                                  (blocking)
 //   node theme-lint.mjs contrast   warn-only WCAG contrast report (never blocks)
@@ -26,7 +26,6 @@ const PRIMITIVES = "editor/src/core/theme/primitives.css";
 const THEME_FILES = [
   "primitives.css",
   "colors.css",
-  "compat.css",
   "dimensions.css",
   "index.css",
 ];

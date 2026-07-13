@@ -100,7 +100,7 @@
 }
 .portal-assistant__suggestion:hover {
   background: var(--c-hover);
-  border-color: var(--color-blue-border);
+  border-color: var(--c-primary-border);
 }
 
 .portal-assistant__bubble {

@@ -1,4 +1,4 @@
-/* COLORS — canonical semantic core (~21 --c-* tokens) mapped from primitives.css per theme; compat.css aliases legacy names onto these. Editor: always data-app-theme="custom" + data-mantine-color-scheme=light|dark. Portal/Storybook: data-theme=light|dark → LIGHT/MIDNIGHT. */
+/* COLORS — canonical semantic core (~24 --c-* tokens) mapped from primitives.css per theme; components reference --c-* directly. Editor: always data-app-theme="custom" + data-mantine-color-scheme=light|dark. Portal/Storybook: data-theme=light|dark → LIGHT/MIDNIGHT. */
 /* Surface elevation: --c-bg (canvas) < --c-bg-raised (sidebars) < --c-surface (cards) < --c-surface-raised < --c-surface-sunken; plus --c-input-bg, --c-hover, --c-active, --c-overlay. */
 
 /* ── LIGHT ───────────────────────────────────────────────────────────────── */
@@ -27,6 +27,17 @@ html[data-app-theme="light"] {
   --c-primary: var(--p-blue-500);
   --c-primary-hover: var(--p-blue-600);
   --c-primary-subtle: color-mix(in srgb, var(--p-blue-500) 10%, transparent);
+  /* Primary-tinted surface / border (subtle accent chips, accent outlines). */
+  --c-primary-tint: color-mix(in srgb, var(--c-primary) 12%, var(--c-surface));
+  --c-primary-border: color-mix(
+    in srgb,
+    var(--c-primary) 38%,
+    var(--c-surface)
+  );
+  /* Accent as text/icon on a surface. Universal default (= primary); the custom
+     block overrides it with the JS-clamped foreground. Defined on :root so it
+     cascades to every theme (portal/midnight included). */
+  --c-accent-fg: var(--c-primary);
 
   --c-success: var(--p-green-600);
   --c-danger: var(--p-red-600);
@@ -127,7 +138,7 @@ html[data-app-theme="custom"] {
   --checkbox-checked-bg: var(--c-primary);
   --card-selected-border: var(--c-primary);
 
-  /* Accent-as-text/icon tokens live in compat.css (:root:root wins); only --icon-files-color is owned here. */
+  /* Accent used as text/icon on a surface → --c-accent-fg. */
   --icon-files-color: var(--c-accent-fg);
 
   /* Subtle surface tints (mix with the base surface so they adapt light/dark) */
@@ -139,11 +150,6 @@ html[data-app-theme="custom"] {
   --tool-header-badge-bg: color-mix(
     in srgb,
     var(--c-primary) 20%,
-    var(--c-surface)
-  );
-  --tooltip-title-bg: color-mix(
-    in srgb,
-    var(--c-primary) 12%,
     var(--c-surface)
   );
   --landing-inner-paper-bg: color-mix(

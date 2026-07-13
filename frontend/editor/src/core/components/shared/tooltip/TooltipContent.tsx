@@ -35,7 +35,7 @@ export const TooltipContent: React.FC<TooltipContentProps> = ({
                   <div
                     style={{
                       display: "inline-block",
-                      backgroundColor: "var(--tooltip-title-bg)",
+                      backgroundColor: "var(--c-primary-tint)",
                       color: "var(--c-text)",
                       padding: "6px 12px",
                       borderRadius: "16px",

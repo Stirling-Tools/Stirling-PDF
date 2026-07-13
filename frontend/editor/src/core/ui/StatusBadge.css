@@ -60,8 +60,8 @@
 }
 .sui-status--info {
   color: var(--c-primary);
-  background: var(--color-blue-light);
-  border-color: var(--color-blue-border);
+  background: var(--c-primary-tint);
+  border-color: var(--c-primary-border);
 }
 .sui-status--purple {
   color: var(--color-purple);

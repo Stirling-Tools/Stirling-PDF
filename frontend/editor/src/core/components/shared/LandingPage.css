@@ -123,7 +123,7 @@
   font-weight: 600 !important;
   border-color: var(--landing-button-border, var(--c-border)) !important;
   background-color: var(--landing-button-bg, var(--c-surface)) !important;
-  color: var(--landing-button-color, var(--c-text)) !important;
+  color: var(--c-accent-fg, var(--c-text)) !important;
 }
 .landing-btn-secondary:hover {
   background-color: var(
