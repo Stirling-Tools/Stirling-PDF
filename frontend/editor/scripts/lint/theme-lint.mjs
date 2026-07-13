@@ -14,7 +14,9 @@
 //                                  contexts; `// theme-allow-color` opt-out;
 //                                  exempt PATHS for rendering/vendor/config).
 //                                  Scope: all editor/src. (blocking)
-//   node theme-lint.mjs contrast   warn-only WCAG contrast report (never blocks)
+//   node theme-lint.mjs contrast   enforce: text-on-surface / on-primary pairs
+//                                  clear WCAG AA per theme (default accent).
+//                                  (blocking)
 //
 // Structural black / white / transparent (shadows, scrims) are always allowed.
 
@@ -307,9 +309,10 @@ function reportContrast() {
   }
   console.log(
     warnings
-      ? `⚠ ${warnings} pair(s) below floor — review, not blocking.`
+      ? `✖ ${warnings} pair(s) below floor.`
       : "✓ all pairs clear their floor.",
   );
+  return warnings;
 }
 
 // ── css-colors (blocking): no hardcoded colour in ANY source .css ────────────
@@ -453,8 +456,14 @@ function checkCodeColors() {
 
 // ── CLI ──────────────────────────────────────────────────────────────────────
 if (process.argv.includes("contrast")) {
-  reportContrast();
-  process.exit(0); // never blocks
+  const below = reportContrast();
+  if (below) {
+    console.error(
+      `\nRaise the failing token's lightness (or its surface's) until every pair clears WCAG AA (4.5 normal / 3.0 on-primary).\n`,
+    );
+    process.exit(1);
+  }
+  process.exit(0);
 }
 
 if (process.argv.includes("code-colors")) {

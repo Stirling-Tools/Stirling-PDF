@@ -72,7 +72,7 @@ html[data-app-theme="midnight"] {
 
   --c-text: var(--p-zinc-100);
   --c-text-muted: var(--p-zinc-200);
-  --c-text-subtle: var(--p-zinc-300);
+  --c-text-subtle: var(--p-zinc-250);
   --c-text-on-primary: var(--p-white);
 
   --c-border: var(--p-zinc-650);
@@ -209,7 +209,7 @@ html[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
   /* Neutral text / borders / overlay (not accent-tinted). */
   --c-text: var(--p-zinc-100);
   --c-text-muted: var(--p-zinc-200);
-  --c-text-subtle: var(--p-zinc-300);
+  --c-text-subtle: var(--p-zinc-250);
   --c-border-strong: var(--p-zinc-500);
   --c-overlay: rgba(0, 0, 0, 0.6);
 

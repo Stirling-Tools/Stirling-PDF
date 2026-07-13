@@ -212,9 +212,10 @@ tasks:
       - node editor/scripts/lint/theme-lint.mjs
       - node editor/scripts/lint/theme-lint.mjs css-colors
       - node editor/scripts/lint/theme-lint.mjs code-colors
+      - node editor/scripts/lint/theme-lint.mjs contrast
 
   contrast:
-    desc: "Report low-contrast theme token pairs (warning only, never blocks)"
+    desc: "Check theme token pairs clear WCAG AA contrast per theme"
     deps: [install]
     cmds:
       - node editor/scripts/lint/theme-lint.mjs contrast
