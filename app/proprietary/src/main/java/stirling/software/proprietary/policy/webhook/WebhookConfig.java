@@ -47,7 +47,6 @@ public record WebhookConfig(
         return STAGING_ROOT + "/" + webhookId;
     }
 
-    /** The mode string as the S3 source expects it. */
     public String mode() {
         return snapshot ? MODE_SNAPSHOT : MODE_CONSUME;
     }

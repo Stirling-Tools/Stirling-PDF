@@ -148,7 +148,6 @@ class WebhookS3ConnectionMinioTest {
         byte[] body = "a pdf".getBytes(StandardCharsets.UTF_8);
         String signature = WebhookSignatures.sign(SECRET, body);
 
-        // Deliver: the receiver stages the object into the connection's bucket under the prefix.
         var response = receiver.receive(WEBHOOK_ID, signature, "invoice.pdf", request(body));
         assertThat(response.getStatusCode().value()).isEqualTo(202);
 
@@ -157,7 +156,6 @@ class WebhookS3ConnectionMinioTest {
         // Staged under a unique subfolder so the object basename stays the clean original name.
         assertThat(staged.get(0).key()).endsWith("/invoice.pdf");
 
-        // Read: the webhook source resolves the delivery by delegating to the S3 source.
         List<ResolvedInput> work = inputSource.resolve(webhookSpec(), ctx);
         assertThat(work).hasSize(1);
         assertThat(work.get(0).inputs().primary().get(0).getFilename()).isEqualTo("invoice.pdf");
@@ -165,7 +163,6 @@ class WebhookS3ConnectionMinioTest {
         // In flight: a second sweep claims nothing.
         assertThat(inputSource.resolve(webhookSpec(), ctx)).isEmpty();
 
-        // Consume: a successful run removes the staged object from the bucket.
         work.get(0).onComplete().accept(true);
         assertThat(listUnder(stagingPrefix)).isEmpty();
         assertThat(inputSource.resolve(webhookSpec(), ctx)).isEmpty();

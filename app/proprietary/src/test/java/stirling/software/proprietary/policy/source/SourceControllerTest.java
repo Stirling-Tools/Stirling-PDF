@@ -119,14 +119,12 @@ class SourceControllerTest {
                                         null))
                         .getBody();
 
-        // The create response reveals the server-minted secret + routing id exactly once.
         String secret = String.valueOf(created.options().get("signingSecret"));
         String webhookId = String.valueOf(created.options().get("webhookId"));
         assertNotEquals(SecretMasker.REDACTED, secret);
         assertFalse(secret.isBlank());
         assertFalse(webhookId.isBlank());
 
-        // Every later read masks the secret but keeps the (non-secret) routing id.
         Source read = webhookController.get(created.id()).getBody();
         assertEquals(SecretMasker.REDACTED, read.options().get("signingSecret"));
         assertEquals(webhookId, read.options().get("webhookId"));

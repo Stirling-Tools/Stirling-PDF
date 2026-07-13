@@ -131,7 +131,6 @@ class WebhookInputSourceTest {
         assertFalse(id.isBlank());
         assertFalse(secret.isBlank());
         assertEquals("consume", prepared.get("mode"));
-        // Two creates never collide.
         Map<String, Object> other = source.prepareOptionsForSave(Map.of(), true);
         assertNotEquals(id, other.get(WebhookConfig.WEBHOOK_ID_OPTION).toString());
     }

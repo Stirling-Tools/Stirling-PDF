@@ -121,7 +121,6 @@ describe("SourceBuilder", () => {
       expect.objectContaining({ type: "webhook", name: "Partner uploads" }),
     );
 
-    // The reveal shows the secret + URL and stays put until Done is clicked.
     expect(
       await screen.findByDisplayValue("whsec_topsecret"),
     ).toBeInTheDocument();

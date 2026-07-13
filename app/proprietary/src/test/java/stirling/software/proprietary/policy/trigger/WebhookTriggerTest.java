@@ -73,7 +73,6 @@ class WebhookTriggerTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> trigger.validate(policy("p", webhookTriggerConfig(), List.of())));
-        // A policy that references a webhook source validates.
         trigger.validate(webhookPolicy("p", "whkA"));
     }
 
