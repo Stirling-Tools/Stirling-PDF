@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import { creatableSourceTypes } from "@portal/components/sources/creatableSourceTypes";
 
 describe("creatableSourceTypes (SaaS)", () => {
-  it("never offers folder sources: hosted deployments do not read the server filesystem", () => {
-    expect(creatableSourceTypes().map((t) => t.type)).not.toContain("folder");
+  it("never offers server-local-disk sources (folder, webhook) in hosted deployments", () => {
+    const offered = creatableSourceTypes().map((t) => t.type);
+    expect(offered).not.toContain("folder");
+    expect(offered).not.toContain("webhook");
   });
 
   it("still offers the cloud source types", () => {

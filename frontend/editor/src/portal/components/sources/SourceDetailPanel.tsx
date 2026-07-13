@@ -1,8 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { Chip, StatTile } from "@app/ui";
+import { Button, Chip, StatTile } from "@app/ui";
 import type { SourceView } from "@portal/api/sources";
 import { Sparkline } from "@portal/components/sources/Sparkline";
-import { EDITOR_SOURCE_TYPE } from "@portal/components/sources/sourceTypes";
+import {
+  EDITOR_SOURCE_TYPE,
+  WEBHOOK_SOURCE_TYPE,
+} from "@portal/components/sources/sourceTypes";
 import "@portal/views/Sources.css";
 
 interface SourceDetailPanelProps {
@@ -22,12 +25,39 @@ export function SourceDetailPanel({
 }: SourceDetailPanelProps) {
   const { t } = useTranslation();
   const isEditor = source.type === EDITOR_SOURCE_TYPE;
+  const isWebhook = source.type === WEBHOOK_SOURCE_TYPE;
+  const webhookUrl = source.webhookPath
+    ? `${window.location.origin}${source.webhookPath}`
+    : null;
   return (
     <div className="portal-sources__detail">
       {isEditor && (
         <p className="portal-sources__muted">
           {t("portal.sources.types.editor.description")}
         </p>
+      )}
+
+      {isWebhook && webhookUrl && (
+        <div className="portal-sources__detail-section">
+          <span className="portal-sources__detail-heading">
+            {t("portal.sources.types.webhook.detail.deliveryUrl")}
+          </span>
+          <div className="portal-sources__copy-row">
+            <code className="portal-sources__webhook-url">{webhookUrl}</code>
+            <Button
+              size="sm"
+              variant="tertiary"
+              onClick={() =>
+                webhookUrl && void navigator.clipboard?.writeText(webhookUrl)
+              }
+            >
+              {t("portal.sources.types.webhook.reveal.copy")}
+            </Button>
+          </div>
+          <p className="portal-sources__muted">
+            {t("portal.sources.types.webhook.detail.secretNote")}
+          </p>
+        </div>
       )}
 
       {source.config.length > 0 && (

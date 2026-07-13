@@ -171,6 +171,57 @@ describe("ConnectWizard", () => {
     });
   });
 
+  it("reveals the delivery URL and signing secret once after creating a webhook", async () => {
+    createSource.mockResolvedValue({
+      id: "w1",
+      options: { webhookId: "whk_abc123", signingSecret: "whsec_topsecret" },
+    });
+    const onCreated = vi.fn();
+    const onClose = vi.fn();
+
+    renderWithMantine(
+      <ConnectWizard open onClose={onClose} onCreated={onCreated} />,
+    );
+
+    // Step 0: pick the webhook type card, continue.
+    fireEvent.click(screen.getByText("portal.sources.types.webhook.label"));
+    fireEvent.click(screen.getByText("portal.sources.wizard.continue"));
+
+    // Step 1: only a name is required (mode defaults to consume).
+    fireEvent.change(screen.getAllByRole("textbox")[0], {
+      target: { value: "Partner uploads" },
+    });
+    fireEvent.click(screen.getByText("portal.sources.wizard.continue"));
+
+    // Step 2: submit.
+    fireEvent.click(screen.getByText("portal.sources.actions.connectSource"));
+
+    await waitFor(() => {
+      expect(createSource).toHaveBeenCalledWith({
+        name: "Partner uploads",
+        type: "webhook",
+        options: { mode: "consume" },
+        enabled: true,
+      });
+    });
+
+    // The reveal step shows the secret and the delivery URL; the modal stays open
+    // (onClose not called) until the operator clicks Done.
+    expect(
+      await screen.findByDisplayValue("whsec_topsecret"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByDisplayValue(/\/api\/v1\/webhooks\/whk_abc123$/),
+    ).toBeInTheDocument();
+    expect(onCreated).toHaveBeenCalledTimes(1);
+    expect(onClose).not.toHaveBeenCalled();
+
+    fireEvent.click(
+      screen.getByText("portal.sources.types.webhook.reveal.done"),
+    );
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
   it("renders the inline error message when create fails", async () => {
     createSource.mockRejectedValue(
       new HttpError(400, "Bad Request", {

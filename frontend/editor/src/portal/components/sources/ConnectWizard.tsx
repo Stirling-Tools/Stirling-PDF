@@ -15,6 +15,7 @@ import { creatableSourceTypes } from "@portal/components/sources/creatableSource
 import {
   defaultOptions,
   sourceTypeMeta,
+  WEBHOOK_SOURCE_TYPE,
   type CreatableSourceType,
 } from "@portal/components/sources/sourceTypes";
 import "@portal/views/Sources.css";
@@ -78,6 +79,11 @@ export function ConnectWizard({
   );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Set after a webhook is created: its one-time delivery id + signing secret, shown before close.
+  const [reveal, setReveal] = useState<{
+    webhookId: string;
+    secret: string;
+  } | null>(null);
 
   // Re-seed the form whenever the wizard opens (or its target source changes) so
   // editing prefills the current config and a reopened create starts clean.
@@ -90,6 +96,7 @@ export function ConnectWizard({
     setOptions(optionsFor(ct, source?.options));
     setSubmitting(false);
     setError(null);
+    setReveal(null);
   }, [open, source]);
 
   const stepId = steps[stepIndex];
@@ -120,8 +127,20 @@ export function ConnectWizard({
         options,
         enabled: source?.enabled ?? true,
       };
-      await createSource(isEdit ? { ...fields, id: source.id } : fields);
+      const saved = await createSource(
+        isEdit ? { ...fields, id: source.id } : fields,
+      );
       onCreated();
+      // A new webhook returns its server-minted routing id + signing secret once; reveal them
+      // (with the delivery URL) before closing so the operator can copy the secret.
+      if (!isEdit && type.type === WEBHOOK_SOURCE_TYPE) {
+        const webhookId = String(saved.options?.webhookId ?? "");
+        const secret = String(saved.options?.signingSecret ?? "");
+        if (webhookId && secret) {
+          setReveal({ webhookId, secret });
+          return;
+        }
+      }
       onClose();
     } catch (e) {
       setError(errorMessage(e));
@@ -129,6 +148,15 @@ export function ConnectWizard({
       setSubmitting(false);
     }
   }
+
+  function copy(text: string) {
+    void navigator.clipboard?.writeText(text);
+  }
+
+  const webhookUrl = reveal
+    ? `${window.location.origin}/api/v1/webhooks/${reveal.webhookId}`
+    : "";
+  const revealSecret = reveal ? reveal.secret : "";
 
   const stepLabels: Record<StepId, string> = {
     type: t("portal.sources.wizard.steps.chooseType"),
@@ -142,156 +170,232 @@ export function ConnectWizard({
       onClose={onClose}
       width="lg"
       title={
-        isEdit
-          ? t("portal.sources.wizard.editTitle")
-          : t("portal.sources.wizard.title")
+        reveal
+          ? t("portal.sources.types.webhook.reveal.title")
+          : isEdit
+            ? t("portal.sources.wizard.editTitle")
+            : t("portal.sources.wizard.title")
       }
-      subtitle={t("portal.sources.wizard.subtitle", {
-        current: stepIndex + 1,
-        total: steps.length,
-        label: stepLabels[stepId],
-      })}
+      subtitle={
+        reveal
+          ? undefined
+          : t("portal.sources.wizard.subtitle", {
+              current: stepIndex + 1,
+              total: steps.length,
+              label: stepLabels[stepId],
+            })
+      }
       footer={
-        <div className="portal-sources__wizard-footer">
-          <Button
-            variant="tertiary"
-            size="sm"
-            disabled={submitting}
-            onClick={() =>
-              stepIndex === 0 ? onClose() : setStepIndex((i) => i - 1)
-            }
-          >
-            {stepIndex === 0
-              ? t("portal.sources.wizard.cancel")
-              : t("portal.sources.wizard.back")}
-          </Button>
-          <Button
-            size="sm"
-            onClick={advance}
-            loading={submitting}
-            disabled={!canContinue}
-            rightSection={!isLast ? <span aria-hidden>→</span> : undefined}
-          >
-            {!isLast
-              ? t("portal.sources.wizard.continue")
-              : isEdit
-                ? t("portal.sources.wizard.save")
-                : t("portal.sources.actions.connectSource")}
-          </Button>
-        </div>
+        reveal ? (
+          <div className="portal-sources__wizard-footer">
+            <Button size="sm" onClick={onClose}>
+              {t("portal.sources.types.webhook.reveal.done")}
+            </Button>
+          </div>
+        ) : (
+          <div className="portal-sources__wizard-footer">
+            <Button
+              variant="tertiary"
+              size="sm"
+              disabled={submitting}
+              onClick={() =>
+                stepIndex === 0 ? onClose() : setStepIndex((i) => i - 1)
+              }
+            >
+              {stepIndex === 0
+                ? t("portal.sources.wizard.cancel")
+                : t("portal.sources.wizard.back")}
+            </Button>
+            <Button
+              size="sm"
+              onClick={advance}
+              loading={submitting}
+              disabled={!canContinue}
+              rightSection={!isLast ? <span aria-hidden>→</span> : undefined}
+            >
+              {!isLast
+                ? t("portal.sources.wizard.continue")
+                : isEdit
+                  ? t("portal.sources.wizard.save")
+                  : t("portal.sources.actions.connectSource")}
+            </Button>
+          </div>
+        )
       }
     >
-      <ol className="portal-sources__steps" aria-hidden>
-        {steps.map((id, i) => (
-          <li
-            key={id}
-            className={
-              "portal-sources__step" +
-              (i === stepIndex ? " is-active" : i < stepIndex ? " is-done" : "")
-            }
-          >
-            <span className="portal-sources__step-mark">
-              {i < stepIndex ? "✓" : i + 1}
-            </span>
-            {stepLabels[id]}
-          </li>
-        ))}
-      </ol>
-
-      {stepId === "type" && (
-        <div className="portal-sources__type-grid">
-          {OFFERED_TYPES.map((ct) => (
-            <Button
-              key={ct.type}
-              variant="tertiary"
-              className={
-                "portal-sources__type-card" +
-                (type.type === ct.type ? " is-selected" : "")
-              }
-              onClick={() => chooseType(ct)}
-            >
-              <span className="portal-sources__type-icon" aria-hidden>
-                {sourceTypeMeta(ct.type).icon}
-              </span>
-              <span className="portal-sources__type-name">
-                {t(ct.labelKey)}
-              </span>
-            </Button>
-          ))}
-        </div>
-      )}
-
-      {stepId === "configure" && (
+      {reveal && (
         <div className="portal-sources__wizard-body">
-          <FormField label={t("portal.sources.wizard.name")} required>
-            <Input
-              value={name}
-              placeholder={t("portal.sources.wizard.namePlaceholder")}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </FormField>
-          {type.fields.map((field) => (
-            <FormField
-              key={field.key}
-              label={t(field.labelKey)}
-              helperText={
-                field.helperTextKey ? t(field.helperTextKey) : undefined
-              }
-              required={field.required}
-            >
-              {field.control === "select" ? (
-                <Select
-                  value={options[field.key] ?? ""}
-                  options={(field.options ?? []).map((o) => ({
-                    value: o.value,
-                    label: t(o.labelKey),
-                  }))}
-                  onChange={(value) =>
-                    setOptions((o) => ({ ...o, [field.key]: value ?? "" }))
-                  }
-                />
-              ) : (
-                <Input
-                  type={field.control === "password" ? "password" : undefined}
-                  value={options[field.key] ?? ""}
-                  placeholder={
-                    field.placeholderKey ? t(field.placeholderKey) : undefined
-                  }
-                  onChange={(e) =>
-                    setOptions((o) => ({ ...o, [field.key]: e.target.value }))
-                  }
-                />
-              )}
-            </FormField>
-          ))}
-        </div>
-      )}
-
-      {stepId === "review" && (
-        <div className="portal-sources__wizard-body">
-          <div className="portal-sources__stat-grid">
-            <StatTile
-              label={t("portal.sources.wizard.name")}
-              value={name || "—"}
-            />
-            <StatTile
-              label={t("portal.sources.wizard.type")}
-              value={t(type.labelKey)}
-            />
-            {type.fields.map((field) => (
-              <StatTile
-                key={field.key}
-                label={t(field.labelKey)}
-                value={
-                  field.control === "password" && options[field.key]
-                    ? "********"
-                    : options[field.key] || "—"
-                }
+          <Banner
+            tone="warning"
+            description={t("portal.sources.types.webhook.reveal.secretWarning")}
+          />
+          <FormField label={t("portal.sources.types.webhook.reveal.url")}>
+            <div className="portal-sources__copy-row">
+              <Input
+                value={webhookUrl}
+                readOnly
+                onFocus={(e) => e.currentTarget.select()}
               />
-            ))}
-          </div>
-          {error && <Banner tone="danger" description={error} />}
+              <Button
+                size="sm"
+                variant="tertiary"
+                onClick={() => copy(webhookUrl)}
+              >
+                {t("portal.sources.types.webhook.reveal.copy")}
+              </Button>
+            </div>
+          </FormField>
+          <FormField
+            label={t("portal.sources.types.webhook.reveal.secret")}
+            helperText={t("portal.sources.types.webhook.reveal.secretHelp")}
+          >
+            <div className="portal-sources__copy-row">
+              <Input
+                value={revealSecret}
+                readOnly
+                onFocus={(e) => e.currentTarget.select()}
+              />
+              <Button
+                size="sm"
+                variant="tertiary"
+                onClick={() => copy(revealSecret)}
+              >
+                {t("portal.sources.types.webhook.reveal.copy")}
+              </Button>
+            </div>
+          </FormField>
+          <p className="portal-sources__muted">
+            {t("portal.sources.types.webhook.reveal.usage")}
+          </p>
         </div>
+      )}
+
+      {!reveal && (
+        <>
+          <ol className="portal-sources__steps" aria-hidden>
+            {steps.map((id, i) => (
+              <li
+                key={id}
+                className={
+                  "portal-sources__step" +
+                  (i === stepIndex
+                    ? " is-active"
+                    : i < stepIndex
+                      ? " is-done"
+                      : "")
+                }
+              >
+                <span className="portal-sources__step-mark">
+                  {i < stepIndex ? "✓" : i + 1}
+                </span>
+                {stepLabels[id]}
+              </li>
+            ))}
+          </ol>
+
+          {stepId === "type" && (
+            <div className="portal-sources__type-grid">
+              {OFFERED_TYPES.map((ct) => (
+                <Button
+                  key={ct.type}
+                  variant="tertiary"
+                  className={
+                    "portal-sources__type-card" +
+                    (type.type === ct.type ? " is-selected" : "")
+                  }
+                  onClick={() => chooseType(ct)}
+                >
+                  <span className="portal-sources__type-icon" aria-hidden>
+                    {sourceTypeMeta(ct.type).icon}
+                  </span>
+                  <span className="portal-sources__type-name">
+                    {t(ct.labelKey)}
+                  </span>
+                </Button>
+              ))}
+            </div>
+          )}
+
+          {stepId === "configure" && (
+            <div className="portal-sources__wizard-body">
+              <FormField label={t("portal.sources.wizard.name")} required>
+                <Input
+                  value={name}
+                  placeholder={t("portal.sources.wizard.namePlaceholder")}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </FormField>
+              {type.fields.map((field) => (
+                <FormField
+                  key={field.key}
+                  label={t(field.labelKey)}
+                  helperText={
+                    field.helperTextKey ? t(field.helperTextKey) : undefined
+                  }
+                  required={field.required}
+                >
+                  {field.control === "select" ? (
+                    <Select
+                      value={options[field.key] ?? ""}
+                      options={(field.options ?? []).map((o) => ({
+                        value: o.value,
+                        label: t(o.labelKey),
+                      }))}
+                      onChange={(value) =>
+                        setOptions((o) => ({ ...o, [field.key]: value ?? "" }))
+                      }
+                    />
+                  ) : (
+                    <Input
+                      type={
+                        field.control === "password" ? "password" : undefined
+                      }
+                      value={options[field.key] ?? ""}
+                      placeholder={
+                        field.placeholderKey
+                          ? t(field.placeholderKey)
+                          : undefined
+                      }
+                      onChange={(e) =>
+                        setOptions((o) => ({
+                          ...o,
+                          [field.key]: e.target.value,
+                        }))
+                      }
+                    />
+                  )}
+                </FormField>
+              ))}
+            </div>
+          )}
+
+          {stepId === "review" && (
+            <div className="portal-sources__wizard-body">
+              <div className="portal-sources__stat-grid">
+                <StatTile
+                  label={t("portal.sources.wizard.name")}
+                  value={name || "—"}
+                />
+                <StatTile
+                  label={t("portal.sources.wizard.type")}
+                  value={t(type.labelKey)}
+                />
+                {type.fields.map((field) => (
+                  <StatTile
+                    key={field.key}
+                    label={t(field.labelKey)}
+                    value={
+                      field.control === "password" && options[field.key]
+                        ? "********"
+                        : options[field.key] || "—"
+                    }
+                  />
+                ))}
+              </div>
+              {error && <Banner tone="danger" description={error} />}
+            </div>
+          )}
+        </>
       )}
     </Modal>
   );

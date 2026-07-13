@@ -55,6 +55,18 @@ function seedSources(): StoredSource[] {
       enabled: false,
       owner: "data-eng@acme.com",
     },
+    {
+      id: "src-webhook",
+      name: "Partner uploads",
+      type: "webhook",
+      options: {
+        webhookId: "whk_demo_5f3a9c21b7",
+        signingSecret: "whsec_demo_2b8e1d47a9f60c35",
+        mode: "consume",
+      },
+      enabled: true,
+      owner: "you@acme.com",
+    },
   ];
 }
 
@@ -76,6 +88,7 @@ const docCounts: Record<
   "src-contracts": { total: 12840, last24h: 96, last30d: 2310 },
   "src-archive": { total: 1180, last24h: 0, last30d: 0 },
   "src-legacy": { total: 48600, last24h: 0, last30d: 0 },
+  "src-webhook": { total: 3120, last24h: 24, last30d: 640 },
 };
 
 function docsFor(id: string): {
@@ -96,14 +109,23 @@ function nextId(): string {
   return `src_${Date.now().toString(36)}_${idCounter}`;
 }
 
+/** A demo token for a newly created webhook's server-generated id/secret (mock only). */
+function randomToken(): string {
+  return (
+    Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
+  );
+}
+
 function refsFor(id: string): SourcePolicyRef[] {
   return references[id] ?? [];
 }
 
+/** Mirror the backend's secret redaction so config rows never surface a secret in the overview. */
 function configRows(options: Record<string, unknown>) {
+  const secret = /secret|password|token/i;
   return Object.entries(options).map(([key, value]) => ({
     label: key.charAt(0).toUpperCase() + key.slice(1),
-    value: String(value),
+    value: secret.test(key) ? "********" : String(value),
   }));
 }
 
@@ -120,6 +142,7 @@ function toSourceView(
   refs: SourcePolicyRef[],
 ): SourceView {
   const docs = docsFor(source.id);
+  const webhookId = source.options.webhookId;
   return {
     id: source.id,
     name: source.name,
@@ -131,6 +154,10 @@ function toSourceView(
     docsTotal: docs.total,
     docs24h: docs.last24h,
     docs30d: docs.last30d,
+    webhookPath:
+      source.type === "webhook" && typeof webhookId === "string"
+        ? `/api/v1/webhooks/${webhookId}`
+        : null,
   };
 }
 
@@ -207,8 +234,19 @@ export const sourcesHandlers = [
       ? store.find((s) => s.id === incoming.id)
       : undefined;
     const id = existing?.id ?? nextId();
+    // A new webhook has its routing id + signing secret minted server-side, then revealed once on
+    // this create response (the store keeps them; later reads mask the secret).
+    let options = incoming.options ?? {};
+    if (incoming.type === "webhook" && !existing && !options.webhookId) {
+      options = {
+        ...options,
+        webhookId: `whk_${randomToken()}`,
+        signingSecret: `whsec_${randomToken()}`,
+      };
+    }
     const saved: StoredSource = {
       ...incoming,
+      options,
       id,
       owner: existing?.owner ?? "you@acme.com",
     };

@@ -419,6 +419,28 @@
   gap: 1rem;
 }
 
+/* Read-only value + copy button, e.g. the webhook delivery URL and signing secret. */
+.portal-sources__copy-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.portal-sources__copy-row > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.portal-sources__webhook-url {
+  overflow-x: auto;
+  white-space: nowrap;
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--radius-sm, 0.375rem);
+  background: var(--color-surface-2, rgba(127, 127, 127, 0.12));
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
 .portal-sources__wizard-lead {
   margin: 0;
   font-size: 0.875rem;

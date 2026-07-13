@@ -22,6 +22,9 @@ export interface SourceTypeMeta {
  */
 export const EDITOR_SOURCE_TYPE = "editor";
 
+/** The webhook source type. Its delivery URL + signing secret are minted server-side on create. */
+export const WEBHOOK_SOURCE_TYPE = "webhook";
+
 const SOURCE_TYPE_META: Record<string, SourceTypeMeta> = {
   folder: {
     labelKey: "portal.sources.types.folder.label",
@@ -37,6 +40,11 @@ const SOURCE_TYPE_META: Record<string, SourceTypeMeta> = {
     labelKey: "portal.sources.types.s3.label",
     icon: "☁",
     accent: "brand",
+  },
+  webhook: {
+    labelKey: "portal.sources.types.webhook.label",
+    icon: "↯",
+    accent: "warning",
   },
 };
 
@@ -201,6 +209,34 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
           {
             value: "snapshot",
             labelKey: "portal.sources.types.s3.fields.mode.options.snapshot",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    // The delivery URL and signing secret are generated server-side on create and revealed once,
+    // so the only user-facing config is how deliveries are consumed.
+    type: WEBHOOK_SOURCE_TYPE,
+    labelKey: "portal.sources.types.webhook.label",
+    descriptionKey: "portal.sources.types.webhook.description",
+    fields: [
+      {
+        key: "mode",
+        labelKey: "portal.sources.types.webhook.fields.mode.label",
+        control: "select",
+        defaultValue: "consume",
+        helperTextKey: "portal.sources.types.webhook.fields.mode.helperText",
+        options: [
+          {
+            value: "consume",
+            labelKey:
+              "portal.sources.types.webhook.fields.mode.options.consume",
+          },
+          {
+            value: "snapshot",
+            labelKey:
+              "portal.sources.types.webhook.fields.mode.options.snapshot",
           },
         ],
       },
