@@ -35,6 +35,9 @@ import {
   labelId,
   type ClassificationLabel,
 } from "@app/data/classificationLabels";
+// Owns the grouped-view styling so the manager is self-contained wherever it's
+// mounted (processor labels editor + editor sidebar picker), with no drift.
+import "@app/components/policies/LabelsEditor.css";
 
 const MAX_TEXT_LENGTH = 128;
 const NEW_CATEGORY_ICON = "folder";
