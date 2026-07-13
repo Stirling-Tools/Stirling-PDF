@@ -38,7 +38,8 @@ interface LabelsEditorModalProps {
   readOnly: boolean;
   /** Save (server) or import (file) failure to surface, if any. */
   error: string | null;
-  grouped?: boolean;
+  /** Offer the flat/grouped view toggle + category manager (grouped by default). */
+  groupable?: boolean;
 }
 
 export function LabelsEditorModal({
@@ -55,7 +56,7 @@ export function LabelsEditorModal({
   saving,
   readOnly,
   error,
-  grouped = true,
+  groupable = false,
 }: LabelsEditorModalProps) {
   const { t } = useTranslation();
   const fileInput = useRef<HTMLInputElement>(null);
@@ -169,7 +170,7 @@ export function LabelsEditorModal({
           value={draft}
           onChange={onDraftChange}
           readOnly={readOnly}
-          grouped={grouped}
+          groupable={groupable}
         />
       </div>
     </Modal>

@@ -163,7 +163,7 @@ export function ClassificationLabelsSection({
         saving={saving}
         readOnly={!canConfigure}
         error={localError ?? error}
-        grouped={false}
+        groupable
       />
     </div>
   );

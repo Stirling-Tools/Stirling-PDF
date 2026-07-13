@@ -143,41 +143,65 @@
   gap: var(--space-2);
 }
 
-/* ---- Grouped mode: chips under collapsible parent categories ---- */
+/* ---- View toggle (grouped / flat) ---- */
+.labels-view-toggle {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: var(--space-2);
+}
+
+/* ---- Grouped mode: labels under collapsible parent categories ---- */
 .labels-groups {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-1);
 }
 .labels-group {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
 }
 .labels-group-header {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  border: none;
-  background: transparent;
-  padding: 0;
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--color-text-1, inherit);
+  gap: var(--space-1);
+  min-height: 2rem;
+}
+.labels-group-toggle {
+  flex: none;
+}
+.labels-group-icon {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  color: var(--color-text-2);
 }
 .labels-group-name {
   flex: 1;
+  min-width: 0;
   text-align: left;
+  font-weight: 600;
+}
+.labels-group-rename {
+  flex: 1;
+  min-width: 0;
 }
 .labels-group-count {
   font-size: 0.75rem;
   font-weight: 500;
   color: var(--color-text-3, rgba(128, 128, 128, 0.9));
+  min-width: 1.25rem;
+  text-align: right;
 }
-.labels-group-ungrouped {
-  margin: 0;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--color-text-2, inherit);
+.labels-group-delete {
+  flex: none;
+}
+/* Chips + add-label row indented under the category header. */
+.labels-group-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-1) 0 var(--space-2) 1.9rem;
+}
+.labels-new-category {
+  margin-top: var(--space-2);
 }
