@@ -64,15 +64,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-.files-page-breadcrumb:hover {
-  background: var(--c-hover);
-  color: var(--c-text);
-}
-
+.files-page-breadcrumb:hover,
 .files-page-breadcrumb.is-current {
-  color: var(--c-text);
   background: var(--c-hover);
+  color: var(--c-text);
 }
 
 .files-page-breadcrumb-sep {
@@ -359,11 +354,7 @@
   background: var(--c-hover);
   color: var(--c-text);
 }
-
-.files-page-list-row:not(.is-header):hover {
-  background: var(--c-hover);
-}
-
+.files-page-list-row:not(.is-header):hover,
 .files-page-list-row.is-selected {
   background: var(--c-hover);
 }

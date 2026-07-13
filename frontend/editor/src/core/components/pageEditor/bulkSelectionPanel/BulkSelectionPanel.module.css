@@ -206,15 +206,8 @@
 .applyButton {
   min-width: 4rem;
   flex-shrink: 0;
-}
-
-/* Style inputs and buttons within advanced cards to match bg-raised */
-.advancedCard :global(.mantine-NumberInput-input) {
-  background-color: var(--c-surface-raised) !important;
-  border-color: var(--c-border) !important;
-  color: var(--c-text) !important;
-}
-
+} /* Style inputs and buttons within advanced cards to match bg-raised */
+.advancedCard :global(.mantine-NumberInput-input),
 .advancedCard :global(.mantine-Button-root) {
   background-color: var(--c-surface-raised) !important;
   border-color: var(--c-border) !important;

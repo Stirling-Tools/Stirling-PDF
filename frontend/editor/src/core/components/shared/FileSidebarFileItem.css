@@ -336,10 +336,7 @@
 .file-sidebar-eye-open {
   display: block !important;
 }
-.file-sidebar-eye-closed {
-  display: none !important;
-}
-
+.file-sidebar-eye-closed,
 /* On hover over a viewed item: swap to eye-closed */
 .file-sidebar-file-item.viewed:hover .file-sidebar-eye-open {
   display: none !important;

@@ -745,12 +745,8 @@
 
 [data-theme="dark"] {
   --shadow-color: rgba(0, 0, 0, 0.88);
-}
-
-/* ---- Wordmark light/dark switching (use instead of JS colorScheme checks) ---- */
-.wordmark-dark-only {
-  display: none;
-}
+} /* ---- Wordmark light/dark switching (use instead of JS colorScheme checks) ---- */
+.wordmark-dark-only,
 [data-mantine-color-scheme="dark"] .wordmark-light-only {
   display: none;
 }
@@ -763,9 +759,7 @@
 .theme-img-light-only {
   display: inline;
 }
-.theme-img-dark-only {
-  display: none;
-}
+.theme-img-dark-only,
 [data-mantine-color-scheme="dark"] .theme-img-light-only {
   display: none;
 }

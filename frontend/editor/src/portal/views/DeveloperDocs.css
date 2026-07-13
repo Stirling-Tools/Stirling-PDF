@@ -209,13 +209,7 @@
   line-height: 1.55;
   color: var(--c-text-subtle);
 }
-
-.portal-docs__snippet {
-  display: flex;
-  flex-direction: column;
-  gap: 0.625rem;
-}
-
+.portal-docs__snippet,
 /* ── Auth ──────────────────────────────────────────────────────────────── */
 
 .portal-docs__keytable {

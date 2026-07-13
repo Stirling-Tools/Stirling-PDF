@@ -149,11 +149,7 @@
   padding: 4px;
   outline: none;
 }
-
-.iconButton:focus {
-  outline: none;
-}
-
+.iconButton:focus,
 .iconButton:focus-visible {
   outline: none;
 }
@@ -194,14 +190,7 @@
   text-align: center;
   animation: heroLogoEnter 0.25s ease forwards;
 }
-
-.title {
-  text-align: center;
-  opacity: 0;
-  transform: translateX(24px);
-  animation: bodySlideIn 0.25s ease forwards;
-}
-
+.title,
 .bodyCopy {
   text-align: center;
   opacity: 0;

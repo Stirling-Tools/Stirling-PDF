@@ -405,17 +405,8 @@
   gap: 0.5rem;
   margin-bottom: 0.625rem;
 }
-
-.portal-policies__detail-sep {
-  color: var(--c-text-subtle);
-  font-size: 0.75rem;
-}
-
-.portal-policies__detail-meta {
-  font-size: 0.75rem;
-  color: var(--c-text-subtle);
-}
-
+.portal-policies__detail-sep,
+.portal-policies__detail-meta,
 .portal-policies__enforce-arrow {
   color: var(--c-text-subtle);
   font-size: 0.75rem;

@@ -1,10 +1,7 @@
 /* Cookie Consent Modal Styling - Ensure proper z-index */
 
 /* Ensure cookie consent appears above everything */
-#cc-main {
-  z-index: 999999 !important;
-}
-
+#cc-main,
 /* Additional styling if needed */
 .cm-wrapper,
 .pm-wrapper {

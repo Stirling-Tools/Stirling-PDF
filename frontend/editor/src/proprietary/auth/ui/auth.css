@@ -365,13 +365,7 @@
   gap: 1rem;
   overflow: visible;
 }
-
-.oauth-icon-small {
-  width: 1.75rem; /* 28px */
-  height: 1.75rem; /* 28px */
-  display: block;
-}
-
+.oauth-icon-small,
 .oauth-icon-medium {
   width: 1.75rem; /* 28px */
   height: 1.75rem; /* 28px */
@@ -665,12 +659,8 @@
 .auth-logo-header {
   height: 8rem;
   width: auto;
-}
-
-/* Two logo variants are rendered; show the one matching the active theme. */
-.auth-logo-header--dark {
-  display: none;
-}
+} /* Two logo variants are rendered; show the one matching the active theme. */
+.auth-logo-header--dark,
 [data-mantine-color-scheme="dark"] .auth-logo-header--light {
   display: none;
 }

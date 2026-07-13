@@ -159,16 +159,8 @@
   margin: 0 !important;
   border-top-left-radius: 8px !important;
   border-top-right-radius: 8px !important;
-}
-
-/* Style the dropdown container */
-.compare-changes-select .mantine-Combobox-dropdown {
-  border: 1px solid var(--c-border-subtle) !important;
-  border-radius: 8px !important;
-  box-shadow: var(--shadow-md) !important;
-  background-color: var(--c-surface) !important;
-}
-
+} /* Style the dropdown container */
+.compare-changes-select .mantine-Combobox-dropdown,
 .compare-changes-select--comparison .mantine-Combobox-dropdown {
   border: 1px solid var(--c-border-subtle) !important;
   border-radius: 8px !important;
@@ -216,14 +208,8 @@
 .compare-changes-select--comparison
   .mantine-ScrollArea-viewport::-webkit-scrollbar-thumb:hover {
   background: var(--c-text-subtle) !important;
-}
-
-/* Style the dropdown options */
-.compare-changes-select .mantine-Combobox-option {
-  font-size: 0.875rem !important;
-  padding: 8px 12px !important;
-}
-
+} /* Style the dropdown options */
+.compare-changes-select .mantine-Combobox-option,
 .compare-changes-select--comparison .mantine-Combobox-option {
   font-size: 0.875rem !important;
   padding: 8px 12px !important;
@@ -235,25 +221,14 @@
 
 .compare-changes-select--comparison .mantine-Combobox-option:hover {
   background-color: var(--spdf-compare-added-badge-bg) !important;
-}
-
-/* Style the search input */
-.compare-changes-select .mantine-Combobox-search {
-  font-size: 0.875rem !important;
-  padding: 8px 12px !important;
-  border-bottom: 1px solid var(--c-border-subtle) !important;
-}
-
+} /* Style the search input */
+.compare-changes-select .mantine-Combobox-search,
 .compare-changes-select--comparison .mantine-Combobox-search {
   font-size: 0.875rem !important;
   padding: 8px 12px !important;
   border-bottom: 1px solid var(--c-border-subtle) !important;
 }
-
-.compare-changes-select .mantine-Combobox-search::placeholder {
-  color: var(--c-text-subtle) !important;
-}
-
+.compare-changes-select .mantine-Combobox-search::placeholder,
 .compare-changes-select--comparison .mantine-Combobox-search::placeholder {
   color: var(--c-text-subtle) !important;
 }

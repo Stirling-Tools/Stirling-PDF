@@ -139,11 +139,7 @@
     color-mix(in srgb, var(--c-primary-hover) 50%, transparent)
   );
 }
-
-.tooltip-container .tooltip-body {
-  color: var(--c-text) !important;
-}
-
+.tooltip-container .tooltip-body,
 .tooltip-container .tooltip-body * {
   color: var(--c-text) !important;
 }

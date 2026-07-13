@@ -232,12 +232,7 @@
   font-size: 0.75rem;
   color: var(--c-primary);
 }
-
-.portal-components__prop-desc {
-  font-size: 0.8125rem;
-  color: var(--c-text-subtle);
-}
-
+.portal-components__prop-desc,
 .portal-components__muted {
   font-size: 0.8125rem;
   color: var(--c-text-subtle);

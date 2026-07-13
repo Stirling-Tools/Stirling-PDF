@@ -88,9 +88,7 @@
 .sui-metric__delta--down {
   color: var(--color-red);
 }
-.sui-metric__delta--flat {
-  color: var(--c-text-subtle);
-}
+.sui-metric__delta--flat,
 .sui-metric__desc {
   color: var(--c-text-subtle);
 }
