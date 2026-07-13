@@ -3,8 +3,8 @@ import AddWatermarkSingleStepSettings from "@app/components/tools/addWatermark/A
 import type { AddWatermarkParameters } from "@app/hooks/tools/addWatermark/useAddWatermarkParameters";
 
 interface PolicyWatermarkConfigProps {
-  parameters: Record<string, unknown>;
-  onChange: (parameters: Record<string, unknown>) => void;
+  parameters: AddWatermarkParameters;
+  onChange: (parameters: AddWatermarkParameters) => void;
   disabled?: boolean;
 }
 
@@ -20,7 +20,7 @@ export function PolicyWatermarkConfig({
   disabled,
 }: PolicyWatermarkConfigProps) {
   useEffect(() => {
-    const patch: Record<string, unknown> = {};
+    const patch: Partial<AddWatermarkParameters> = {};
     if (parameters.convertPDFToImage !== true) patch.convertPDFToImage = true;
     // Policies only support text watermarks.
     if (parameters.watermarkType !== "text") patch.watermarkType = "text";
@@ -29,7 +29,7 @@ export function PolicyWatermarkConfig({
 
   return (
     <AddWatermarkSingleStepSettings
-      parameters={parameters as unknown as AddWatermarkParameters}
+      parameters={parameters}
       onParameterChange={(key, value) =>
         onChange({ ...parameters, [key]: value })
       }

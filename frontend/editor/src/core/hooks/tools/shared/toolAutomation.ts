@@ -26,6 +26,10 @@ import {
   type ErasedToolParams,
   type RegistryToolOperationConfig,
 } from "@app/hooks/tools/shared/toolOperationTypes";
+import {
+  describeToolOperation,
+  type ToolOperationDescriptor,
+} from "@app/hooks/tools/shared/toolOperationDescriptor";
 
 /**
  * How much of a tool's parameters a UI can edit when composing a backend step:
@@ -178,6 +182,27 @@ export function newWorkingToolStep(
   };
 }
 
+/**
+ * Build a typed {@link ToolOperationDescriptor} from a registry entry's (erased) config, pinned to
+ * `operation` — the shared frontend<->backend conversion primitive. Returns null when the endpoint
+ * isn't a known tool endpoint or the tool lacks the bidirectional mappers, so callers fall back to
+ * one-directional handling.
+ */
+function descriptorFor(
+  operation: string,
+  config: RegistryToolOperationConfig,
+): ToolOperationDescriptor<ToolEndpoint, ErasedToolParams> | null {
+  if (
+    !isToolEndpoint(operation) ||
+    !config.toApiParams ||
+    !config.fromApiParams ||
+    config.defaultParameters === undefined
+  ) {
+    return null;
+  }
+  return describeToolOperation(operation, config);
+}
+
 /** Serialize a working step into the backend step contract (endpoint + backend parameters). */
 export function serializeToolStep(
   step: WorkingToolStep,
@@ -191,35 +216,14 @@ export function serializeToolStep(
   }
   const merged = { ...(config.defaultParameters ?? {}), ...step.params };
   const operation = resolveEndpoint(config, merged) ?? step.operation;
-  const parameters = config.toApiParams
-    ? (config.toApiParams(merged) as Record<string, unknown>)
-    : {};
-  return { operation, parameters };
-}
-
-/**
- * Serialize a step held as an endpoint path plus frontend-shaped params - the form the policy setup
- * wizard keeps, where params match the tool's UI shape (e.g. redact's `wordsToRedact`) rather than
- * the backend contract - into the backend step contract, mapping params through the tool's
- * `toApiParams` (merged over its defaults, so fields the wizard never set still get their defaults).
- * The endpoint maps to a tool by path, so this works for dynamic-endpoint tools whose config
- * endpoint is a function. Endpoints that map to no known tool pass through unchanged.
- */
-export function serializeStepFromEndpoint(
-  operation: string,
-  params: ErasedToolParams,
-  registry: Partial<ToolRegistry>,
-): ToolApiStep {
-  const match = findToolByEndpoint({ operation, parameters: params }, registry);
-  const config = match?.[1].operationConfig;
-  if (!config) return { operation, parameters: params };
-  const merged = { ...(config.defaultParameters ?? {}), ...params };
-  return {
-    operation: resolveEndpoint(config, merged) ?? operation,
-    parameters: config.toApiParams
+  // Convert through the shared descriptor when the tool round-trips; else map one-directionally.
+  const descriptor = descriptorFor(operation, config);
+  const parameters = descriptor
+    ? (descriptor.toApi(merged) as Record<string, unknown>)
+    : config.toApiParams
       ? (config.toApiParams(merged) as Record<string, unknown>)
-      : {},
-  };
+      : {};
+  return { operation, parameters };
 }
 
 /**
@@ -270,12 +274,16 @@ export function deserializeToolStep(
   if (!match) return unmappedStep(step);
   const [toolId, entry] = match;
   const config = entry.operationConfig;
-  const params: ErasedToolParams = config?.fromApiParams
-    ? {
-        ...(config.defaultParameters ?? {}),
-        ...config.fromApiParams(step.parameters as never),
-      }
-    : { ...(config?.defaultParameters ?? {}) };
+  // Convert through the shared descriptor when the tool round-trips; else map one-directionally.
+  const descriptor = config && descriptorFor(step.operation, config);
+  const params: ErasedToolParams = descriptor
+    ? descriptor.fromApi(step.parameters)
+    : config?.fromApiParams
+      ? {
+          ...(config.defaultParameters ?? {}),
+          ...config.fromApiParams(step.parameters as never),
+        }
+      : { ...(config?.defaultParameters ?? {}) };
   // Validate against the generated endpoint set instead of casting the matched string.
   const operation =
     resolveEndpoint(config, params) ??
