@@ -48,6 +48,17 @@
 .sui-chip__label {
   display: inline-block;
 }
+
+/* Center the label precisely. Mantine sets line-height: var(--pill-height) on
+   the label, which positions the text by its font baseline and reads slightly
+   high; flex-centering with line-height:1 centres the ink in the pill. */
+.sui-chip .mantine-Pill-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  overflow: visible;
+}
 .sui-chip__spinner {
   width: 0.75em;
   height: 0.75em;

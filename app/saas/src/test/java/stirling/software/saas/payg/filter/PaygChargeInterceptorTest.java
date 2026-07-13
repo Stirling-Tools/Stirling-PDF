@@ -434,6 +434,52 @@ class PaygChargeInterceptorTest {
                 .isEqualTo(stirling.software.saas.payg.model.JobSource.PIPELINE);
     }
 
+    @Test
+    void preHandle_runId_honouredOnlyWithAutomationHeader() throws Exception {
+        // An internal dispatch carries BOTH X-Stirling-Automation and X-Stirling-Run-Id, so the
+        // run id flows onto the ChargeContext (sub-steps of one run group into a single charge).
+        authenticateWithApiKey(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
+        org.mockito.ArgumentCaptor<stirling.software.saas.payg.charge.ChargeContext> ctxCaptor =
+                org.mockito.ArgumentCaptor.forClass(
+                        stirling.software.saas.payg.charge.ChargeContext.class);
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+        req.addHeader("X-Stirling-Automation", "true");
+        req.addHeader("X-Stirling-Run-Id", "run-abc");
+
+        interceptor.preHandle(req, new MockHttpServletResponse(), handlerMethodForFakeController());
+
+        verify(chargeService).openProcess(ctxCaptor.capture(), anyList());
+        assertThat(ctxCaptor.getValue().runId()).isEqualTo("run-abc");
+    }
+
+    @Test
+    void preHandle_runIdWithoutAutomationHeader_isIgnored() throws Exception {
+        // A raw external API call that sets X-Stirling-Run-Id on its own must NOT be able to group
+        // charges — the run id is dropped so each call stays its own charge ("charge per API
+        // call").
+        authenticateWithApiKey(makeUser(7L, 42L));
+        UUID jobId = UUID.randomUUID();
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(new ChargeOutcome(jobId, 1, ChargeOutcome.Disposition.OPENED));
+        org.mockito.ArgumentCaptor<stirling.software.saas.payg.charge.ChargeContext> ctxCaptor =
+                org.mockito.ArgumentCaptor.forClass(
+                        stirling.software.saas.payg.charge.ChargeContext.class);
+
+        MockMultipartHttpServletRequest req = newMultipart();
+        req.addFile(new MockMultipartFile("file", "x.pdf", "application/pdf", "abc".getBytes()));
+        req.addHeader("X-Stirling-Run-Id", "run-spoofed");
+
+        interceptor.preHandle(req, new MockHttpServletResponse(), handlerMethodForFakeController());
+
+        verify(chargeService).openProcess(ctxCaptor.capture(), anyList());
+        assertThat(ctxCaptor.getValue().runId()).isNull();
+    }
+
     // --- BillingCategory categorisation + bypass fast-path -------------------------------------
 
     @Test

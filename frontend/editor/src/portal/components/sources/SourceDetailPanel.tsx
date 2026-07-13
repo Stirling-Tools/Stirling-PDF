@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Chip, StatTile } from "@app/ui";
 import type { SourceView } from "@portal/api/sources";
 import { Sparkline } from "@portal/components/sources/Sparkline";
+import { EDITOR_SOURCE_TYPE } from "@portal/components/sources/sourceTypes";
 import "@portal/views/Sources.css";
 
 interface SourceDetailPanelProps {
@@ -20,8 +21,15 @@ export function SourceDetailPanel({
   docSeries,
 }: SourceDetailPanelProps) {
   const { t } = useTranslation();
+  const isEditor = source.type === EDITOR_SOURCE_TYPE;
   return (
     <div className="portal-sources__detail">
+      {isEditor && (
+        <p className="portal-sources__muted">
+          {t("portal.sources.types.editor.description")}
+        </p>
+      )}
+
       {source.config.length > 0 && (
         <div className="portal-sources__stat-grid">
           {source.config.map((row) => (
@@ -36,7 +44,11 @@ export function SourceDetailPanel({
         </span>
         {source.referencingPolicies.length === 0 ? (
           <p className="portal-sources__muted">
-            {t("portal.sources.detail.notReferenced")}
+            {t(
+              isEditor
+                ? "portal.sources.types.editor.noPolicies"
+                : "portal.sources.detail.notReferenced",
+            )}
           </p>
         ) : (
           <div className="portal-sources__chips">

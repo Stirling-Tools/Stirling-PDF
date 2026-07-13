@@ -133,11 +133,17 @@ public class RedactController {
                             + "Users can provide text patterns to redact, with options for regex and whole word matching. "
                             + "Input:PDF Output:PDF Type:SISO")
     public ResponseEntity<Resource> redactPdf(@ModelAttribute RedactPdfRequest request) {
-        String[] listOfText = request.getListOfText().split("\n");
+        String rawListOfText = request.getListOfText();
         boolean useRegex = Boolean.TRUE.equals(request.getUseRegex());
         boolean wholeWordSearchBool = Boolean.TRUE.equals(request.getWholeWordSearch());
 
-        if (listOfText.length == 0 || (listOfText.length == 1 && listOfText[0].trim().isEmpty())) {
+        if (rawListOfText == null || rawListOfText.trim().isEmpty()) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.redaction.no.patterns", "No text patterns provided for redaction");
+        }
+
+        String[] listOfText = rawListOfText.split("\n");
+        if (listOfText.length == 1 && listOfText[0].trim().isEmpty()) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.redaction.no.patterns", "No text patterns provided for redaction");
         }

@@ -116,6 +116,13 @@
   margin: 0 0 1rem;
 }
 
+/* Free grant still offsetting spend — reads as a positive credit note, pulled up
+   under the "PDFs processed" line. */
+.portal-billing__free-remaining {
+  color: var(--color-green-600, var(--color-green));
+  margin-top: -0.5rem;
+}
+
 .portal-billing__skeleton {
   display: flex;
   flex-direction: column;
@@ -1037,4 +1044,98 @@
 }
 .portal-billing__projection strong {
   color: var(--color-amber, #d97706);
+}
+
+/* ── Checkout modal: 2-step (spend limit → payment) ──────────────────── */
+.portal-billing__checkout-cap,
+.portal-billing__checkout-pay {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.portal-billing__checkout-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.portal-billing__checkout-steps {
+  display: flex;
+  gap: 0.375rem;
+  flex: 1;
+}
+.portal-billing__checkout-steps span {
+  height: 4px;
+  flex: 1;
+  border-radius: var(--radius-pill);
+  background: var(--color-border);
+}
+.portal-billing__checkout-steps span.is-done {
+  background: var(--color-blue);
+}
+.portal-billing__checkout-stepcount {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-5);
+  white-space: nowrap;
+}
+
+.portal-billing__checkout-finePrint {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: var(--color-text-5);
+}
+.portal-billing__checkout-cap-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.25rem;
+}
+
+/* Card-form placeholder shown when Stripe isn't configured (Storybook / preview). */
+.portal-billing__card-placeholder {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+.portal-billing__card-placeholder-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-2);
+}
+.portal-billing__card-placeholder-badge {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-5);
+  background: var(--color-bg-code);
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--radius-sm);
+}
+.portal-billing__card-placeholder-field {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem 0.875rem;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--color-text-5);
+}
+.portal-billing__card-placeholder-note {
+  margin: 0;
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  color: var(--color-text-5);
 }
