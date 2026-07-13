@@ -5,9 +5,7 @@ import {
   Text,
   Paper,
   Group,
-  Button,
   Select,
-  SegmentedControl,
   Switch,
   Progress,
   Alert,
@@ -16,6 +14,8 @@ import {
   Spoiler,
   Code,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import {
   useFormDetectionModelStatus,
   FormDetectionState,
@@ -187,7 +187,7 @@ export default function AdminFormDetectionSection() {
                   })
                 }
                 disabled={configBusy || !enabled}
-                data={[
+                options={[
                   {
                     label: t("admin.formDetection.engine.auto", "Auto"),
                     value: "auto",
@@ -316,8 +316,8 @@ export default function AdminFormDetectionSection() {
             <Group>
               {selectedIsActive ? (
                 <Button
-                  color="red"
-                  variant="light"
+                  variant="secondary"
+                  accent="danger"
                   loading={busy}
                   onClick={doUninstall}
                 >
