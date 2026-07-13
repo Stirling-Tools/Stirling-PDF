@@ -208,6 +208,7 @@ export function LabelsEditor({
           hiddenLabels={hiddenLabels}
           onHiddenLabelsChange={onHiddenLabelsChange}
           readOnly={readOnly}
+          searchable
         />
       ) : (
         <div className="labels-chips" role="list">
