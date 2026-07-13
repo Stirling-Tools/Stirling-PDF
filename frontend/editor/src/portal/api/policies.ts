@@ -257,7 +257,7 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
         convertPDFToImage: true,
         wordsToRedact: DEFAULT_PII_PATTERNS,
       }),
-      // JavaScript removal only (embedded-files defaults on).
+      // JavaScript removal only; the tool enables removeEmbeddedFiles by default, so turn it off.
       policyStep("sanitize", { removeEmbeddedFiles: false }),
       // Bake in via image so it can't be stripped.
       policyStep("watermark", { convertPDFToImage: true }),
