@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import FileUploadRounded from "@mui/icons-material/FileUploadRounded";
 import { Button, EmptyState, Skeleton } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
 import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
@@ -41,7 +42,7 @@ export function AgentBuilder() {
         </div>
         <Button
           onClick={() => setBootstrapOpen(true)}
-          leftSection={<span aria-hidden>⇪</span>}
+          leftSection={<FileUploadRounded style={{ fontSize: "1.2rem" }} />}
         >
           {t("portal.agentBuilder.bootstrapFromDocument")}
         </Button>
