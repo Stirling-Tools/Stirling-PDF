@@ -198,6 +198,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
       }}
     >
       <div
+        data-tour="files-modal"
         style={{
           position: "relative",
           height: modalHeight,

@@ -46,6 +46,7 @@ export function AuditTab() {
       key: "elevation",
       label: t("portal.infrastructure.audit.filters.elevation"),
     },
+    { key: "policy", label: t("portal.infrastructure.audit.filters.policy") },
     {
       key: "processing",
       label: t("portal.infrastructure.audit.filters.processing"),
@@ -146,12 +147,12 @@ export function AuditTab() {
             value={data.summary.totalEvents.toLocaleString()}
           />
           <MetricCard
-            label={t("portal.infrastructure.audit.metrics.processing")}
-            value={data.summary.processing.toLocaleString()}
+            label={t("portal.infrastructure.audit.metrics.policy")}
+            value={data.summary.policy.toLocaleString()}
           />
           <MetricCard
-            label={t("portal.infrastructure.audit.metrics.elevation")}
-            value={data.summary.elevation.toLocaleString()}
+            label={t("portal.infrastructure.audit.metrics.processing")}
+            value={data.summary.processing.toLocaleString()}
           />
           <MetricCard
             label={t("portal.infrastructure.audit.metrics.config")}

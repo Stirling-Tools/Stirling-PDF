@@ -99,6 +99,11 @@ export const AGENT_STATUS_TONE: Record<AgentStatus, "success" | "neutral"> = {
   draft: "neutral",
 };
 
+export const AGENT_STATUS_LABEL: Record<AgentStatus, string> = {
+  published: "portal.agentBuilder.status.published",
+  draft: "portal.agentBuilder.status.draft",
+};
+
 /**
  * Catalogue of tools an agent can be granted or denied. Surfaced as the chip
  * palette in restricted mode so the deny list is picked from a known set

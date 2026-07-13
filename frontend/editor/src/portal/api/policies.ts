@@ -9,6 +9,7 @@
  * approach the editor uses for its own catalogue view.
  */
 
+import type { TFunction } from "i18next";
 import { apiClient } from "@portal/api/http";
 import { fromWirePolicy, toWirePolicy } from "@app/policies/codec";
 import { runsToActivity, runsToStats } from "@app/policies/runs";
@@ -207,7 +208,7 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
   {
     id: "retention",
     label: "portal.policies.categories.retention.label",
-    icon: "clock",
+    icon: "schedule",
     tone: "neutral",
     desc: "portal.policies.categories.retention.desc",
     comingSoon: true,
@@ -238,15 +239,15 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
         label: "portal.policies.config.ingestion.fields.minConfidence",
         key: "minConfidence",
         type: "select",
-        value: "80%",
-        options: ["60%", "70%", "80%", "90%", "95%"],
+        value: "p80",
+        options: ["p60", "p70", "p80", "p90", "p95"],
       },
       {
         label: "portal.policies.config.ingestion.fields.belowThreshold",
         key: "belowThreshold",
         type: "select",
-        value: "Flag for review",
-        options: ["Flag for review", "Route to bucket", "Hold"],
+        value: "flagForReview",
+        options: ["flagForReview", "routeToBucket", "hold"],
       },
     ],
   },
@@ -305,19 +306,19 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
         label: "portal.policies.config.compliance.fields.frameworks",
         key: "frameworks",
         type: "chips",
-        value: ["HIPAA"],
-        options: ["HIPAA", "GDPR", "SOC 2", "FedRAMP", "PCI DSS", "ISO 27001"],
+        value: ["hipaa"],
+        options: ["hipaa", "gdpr", "soc2", "fedramp", "pciDss", "iso27001"],
       },
       {
         label: "portal.policies.config.compliance.fields.onViolation",
         key: "onViolation",
         type: "select",
-        value: "Flag for review",
+        value: "flagForReview",
         options: [
-          "Flag for review",
-          "Block export",
-          "Auto-redact PHI",
-          "Quarantine document",
+          "flagForReview",
+          "blockExport",
+          "autoRedactPhi",
+          "quarantineDocument",
         ],
       },
       {
@@ -348,8 +349,8 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
         label: "portal.policies.config.routing.fields.destination",
         key: "destination",
         type: "select",
-        value: "Documents",
-        options: ["Documents", "S3 bucket", "SharePoint", "Webhook"],
+        value: "documents",
+        options: ["documents", "s3Bucket", "sharePoint", "webhook"],
       },
       {
         label: "portal.policies.config.routing.fields.webhookUrl",
@@ -379,15 +380,21 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
         label: "portal.policies.config.retention.fields.keepFor",
         key: "keepFor",
         type: "select",
-        value: "7 years",
-        options: ["30 days", "1 year", "3 years", "7 years", "Indefinite"],
+        value: "sevenYears",
+        options: [
+          "thirtyDays",
+          "oneYear",
+          "threeYears",
+          "sevenYears",
+          "indefinite",
+        ],
       },
       {
         label: "portal.policies.config.retention.fields.archiveAfter",
         key: "archiveAfter",
         type: "select",
-        value: "Never",
-        options: ["30 days", "90 days", "1 year", "Never"],
+        value: "never",
+        options: ["thirtyDays", "ninetyDays", "oneYear", "never"],
       },
       {
         label: "portal.policies.config.retention.fields.immutableHold",
@@ -400,14 +407,14 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
 };
 
 export const POLICY_DOC_TYPES: string[] = [
-  "Contracts",
-  "Invoices",
-  "Tax documents",
-  "HR records",
-  "Insurance",
-  "Medical / PHI",
-  "Legal filings",
-  "Financial reports",
+  "contracts",
+  "invoices",
+  "taxDocuments",
+  "hrRecords",
+  "insurance",
+  "medicalPhi",
+  "legalFilings",
+  "financialReports",
 ];
 
 // ── Client-side catalogue assembly ───────────────────────────────────────────
@@ -550,17 +557,30 @@ const DEFAULT_RETRY_DELAY = 5;
 // POST /api/v1/policies endpoint. The real backend ignores unknown fields.
 type CatalogueWireBody = WirePolicy & { categoryId: string };
 
+/**
+ * The persisted policy name derived from its category, e.g. "Security Policy".
+ * `category.label` is an i18n key, so translate it before building the name;
+ * otherwise the raw key is persisted and surfaces in the UI (e.g. the Sources
+ * "Used by" pill).
+ */
+function policyDisplayName(entry: CatalogueEntry, t: TFunction): string {
+  return t("portal.policies.defaultName", {
+    category: t(entry.category.label),
+  });
+}
+
 /** Build a wire policy from a setup wizard result. */
 export function buildWireFromSetup(
   entry: CatalogueEntry,
   result: PolicySetupResult,
+  t: TFunction,
   enabled = true,
 ): CatalogueWireBody {
   return {
     categoryId: entry.category.id,
     ...toWirePolicy({
       id: entry.policy?.state.backendId ?? "",
-      name: `${entry.category.label} Policy`,
+      name: policyDisplayName(entry, t),
       enabled,
       categoryId: entry.category.id,
       sources: result.sources,
@@ -583,13 +603,14 @@ export function buildWireFromState(
   entry: CatalogueEntry,
   policy: DecoratedPolicy,
   enabled: boolean,
+  t: TFunction,
 ): CatalogueWireBody {
   const s = policy.state;
   return {
     categoryId: entry.category.id,
     ...toWirePolicy({
       id: s.backendId ?? "",
-      name: `${entry.category.label} Policy`,
+      name: policyDisplayName(entry, t),
       enabled,
       categoryId: entry.category.id,
       sources: s.sources,

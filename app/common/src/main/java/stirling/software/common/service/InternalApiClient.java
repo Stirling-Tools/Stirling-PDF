@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.time.Duration;
 import java.util.regex.Pattern;
 
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.FileSystemResource;
@@ -59,6 +60,17 @@ public class InternalApiClient {
      * per-tool {@code @RequiresFeature} annotation.
      */
     public static final String AUTOMATION_HEADER = "X-Stirling-Automation";
+
+    /**
+     * Header carrying the parent policy's name onto each sub-step dispatch, read from MDC key
+     * {@link #POLICY_NAME_MDC_KEY} (set by the policy runner on the worker thread). Lets the audit
+     * layer attribute a tool step to the policy that ran it, instead of showing it as a bare direct
+     * call.
+     */
+    public static final String POLICY_NAME_HEADER = "X-Stirling-Policy-Name";
+
+    /** MDC key the policy runner stamps with the running policy's name; forwarded as a header. */
+    public static final String POLICY_NAME_MDC_KEY = "auditPolicyName";
 
     private final ServletContext servletContext;
     private final UserServiceInterface userService;
@@ -118,6 +130,19 @@ public class InternalApiClient {
         String runId = AutomationRunContext.current();
         if (runId != null && !runId.isEmpty()) {
             headers.add(AutomationRunContext.RUN_ID_HEADER, runId);
+        }
+
+        // Forward the parent policy name (set in MDC by the policy runner) so the audited sub-step
+        // ties back to its policy. Single-line, length-capped: it becomes an HTTP header value.
+        String policyName = MDC.get(POLICY_NAME_MDC_KEY);
+        if (policyName != null && !policyName.isBlank()) {
+            String safe = policyName.replaceAll("[\\r\\n]", " ").trim();
+            if (safe.length() > 200) {
+                safe = safe.substring(0, 200);
+            }
+            if (!safe.isEmpty()) {
+                headers.add(POLICY_NAME_HEADER, safe);
+            }
         }
 
         // A no-file ai/tools call (e.g. create-pdf-from-html-agent) sends only string params, so

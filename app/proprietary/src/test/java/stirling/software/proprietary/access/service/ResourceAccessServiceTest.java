@@ -2,6 +2,7 @@ package stirling.software.proprietary.access.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
@@ -255,6 +256,24 @@ class ResourceAccessServiceTest {
                                 null,
                                 DefaultAccessPolicy.ADMINS_AND_TEAM_LEADS,
                                 user(6)))
+                .isFalse();
+    }
+
+    @Test
+    void teamLeadDefaultOnTeamResourceDeniesForeignTeamsLead() {
+        // Team-owned resource: the default admits only the owning team's leads. A lead of
+        // some other team must be denied even though an unscoped "is any team leader"
+        // check would admit them (lenient stub: the scoped path must never consult it).
+        stubGrants();
+        User foreignLead = user(6);
+        lenient().when(teamLeadLookup.isAnyTeamLeader(foreignLead)).thenReturn(true);
+        assertThat(
+                        service.canUseResource(
+                                TYPE,
+                                RID,
+                                PrincipalRef.team(7L),
+                                DefaultAccessPolicy.ADMINS_AND_TEAM_LEADS,
+                                foreignLead))
                 .isFalse();
     }
 
