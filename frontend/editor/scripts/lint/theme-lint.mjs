@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Theme colour lint — guards the theme SYSTEM (core/theme/). Two modes:
+// Theme colour lint. Modes:
 //
 //   node theme-lint.mjs            enforce: literal colours live ONLY in
 //                                  primitives.css; colors/dimensions must
@@ -8,6 +8,12 @@
 //   node theme-lint.mjs css-colors enforce: NO hardcoded colour in any source
 //                                  .css (primitives.css + generated output.css
 //                                  exempt). Scope: all editor/src. (blocking)
+//   node theme-lint.mjs code-colors enforce: no hardcoded colour in TS/TSX DOM
+//                                  code. Default-deny with layered exemptions
+//                                  (structural; var()/readColor/canvas/pdf-lib
+//                                  contexts; `// theme-allow-color` opt-out;
+//                                  exempt PATHS for rendering/vendor/config).
+//                                  Scope: all editor/src. (blocking)
 //   node theme-lint.mjs contrast   warn-only WCAG contrast report (never blocks)
 //
 // Structural black / white / transparent (shadows, scrims) are always allowed.
@@ -360,10 +366,112 @@ function checkAppCss() {
   return violations;
 }
 
+// ── code-colors (blocking): no NEW hardcoded colour in TS/TSX DOM code ───────
+// TS/TSX can't be zeroed like CSS — canvas/PDF/pdfium rendering, colour maths,
+// colour pickers, vendor brand and self-contained docs legitimately need
+// numeric colour. So this is default-deny with layered exemptions:
+//   1. structural black/white/transparent
+//   2. detected safe CONTEXTS on the line (var()/readColor fallback, canvas
+//      assignment, pdf-lib 0..1 rgb) and an explicit `// theme-allow-color` opt-out
+//   3. exempt PATHS — whole areas where colour literals are inherent
+// Anything else (a raw colour in a normal DOM component) fails. File list from
+// `git ls-files` (no directory walk). Comments and HTML entities are stripped.
+const CODE_EXEMPT_PATH = [
+  /Thumbnail|Overlay|DrawingCanvas|PageEditor|MobileScannerPage/, // canvas/PDF render
+  /[Pp]df|PDF|pixelCompare|\/compare\.ts$|customPrimary|accentColors/,
+  /validateSignature\/outputtedPDFSections|CenteredMessageSection|StatusBadgeSection/,
+  /\/viewer\/|Annotation|useViewerReadAloud|CommentsSidebar|\/constants\/search\.ts$|SignaturePreview/,
+  /ColorPicker|ColorControl|WatchedFolderManagementModal|watchedFolderPresets|fileColors|unifiedBackground|folder\.ts$|policyFolders/, // pickers/palettes as data
+  /OAuthButtons|oauthCallbackHtml/, // vendor brand / self-contained doc
+  /mantineTheme|\/theme\.ts$|toolsTaxonomy|LayoutPreview|PageNumberPreview|CloudStorageIcons/, // theme/config objects
+  /\/onboarding\//, // decorative onboarding illustration gradients
+  /addStamp|addWatermark|\/tooltips\//, // colour params fed to PDF + tooltip prose
+  /UpgradeBanner|AdminPlanSection/, // bespoke marketing/upsell banner palette
+  /\.test\.[jt]sx?$|\.stories\.[jt]sx?$|\/types\//, // tests, stories, type decls
+];
+const CODE_HEX =
+  /#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})(?![0-9a-fA-F])/g;
+const CODE_RGB = /rgba?\(([^)]*)\)/gi;
+const codeStructuralHex = (h) =>
+  /^#(?:000|fff|000f|ffff|000000|ffffff|00000000|ffffffff)$/i.test(h);
+const CODE_SKIP_LINE =
+  /theme-allow-color|var\(\s*--[a-z0-9-]+\s*,|readColor\(|getPropertyValue|\.colors\.[a-z]+\?\.\[|fillStyle|strokeStyle|shadowColor|addColorStop|createLinearGradient|ctx\.|getContext/i;
+function codeStripNonCode(text) {
+  return text
+    .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
+    .replace(
+      /(^|[^:])\/\/[^\n]*/g,
+      (m, p) => p + m.slice(p.length).replace(/[^\n]/g, " "),
+    )
+    .replace(/&#\d+;/g, "     ");
+}
+function codeRgbIsColour(inner) {
+  if (/var\(/.test(inner)) return false;
+  const p = inner
+    .split(/[, /]+/)
+    .map((x) => x.trim())
+    .filter(Boolean);
+  if (!/^\d/.test(p[0] || "")) return false;
+  const nums = p.slice(0, 3).map(Number);
+  if (nums.some((n) => Number.isNaN(n))) return false;
+  if (nums.every((n) => n <= 1)) return false; // pdf-lib rgb(0..1)
+  const k = `${nums[0]},${nums[1]},${nums[2]}`;
+  return k !== "0,0,0" && k !== "255,255,255";
+}
+function checkCodeColors() {
+  const files = execSync("git ls-files -- editor/src", { encoding: "utf8" })
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(
+      (l) =>
+        /\.(ts|tsx)$/.test(l) && !CODE_EXEMPT_PATH.some((re) => re.test(l)),
+    );
+  const violations = [];
+  for (const rel of files) {
+    const raw = readFileSync(rel, "utf8");
+    const rawLines = raw.split("\n");
+    const text = codeStripNonCode(raw);
+    text.split("\n").forEach((line, i) => {
+      // marker lives in a comment (stripped from `line`), so test the raw line
+      if (/theme-allow-color/.test(rawLines[i] || "")) return;
+      if (CODE_SKIP_LINE.test(line)) return;
+      const hits = [];
+      for (const h of line.match(CODE_HEX) || [])
+        if (!codeStructuralHex(h)) hits.push(h);
+      for (const m of line.match(CODE_RGB) || [])
+        if (codeRgbIsColour(m.replace(/rgba?\(|\)/gi, ""))) hits.push(m);
+      for (const h of hits)
+        violations.push({
+          file: rel,
+          line: i + 1,
+          msg: `hardcoded colour ${h} — use a var(--c-*/--p-*) token, or add \`// theme-allow-color <reason>\` if this must be a literal`,
+        });
+    });
+  }
+  return violations;
+}
+
 // ── CLI ──────────────────────────────────────────────────────────────────────
 if (process.argv.includes("contrast")) {
   reportContrast();
   process.exit(0); // never blocks
+}
+
+if (process.argv.includes("code-colors")) {
+  const violations = checkCodeColors();
+  if (violations.length) {
+    console.error(
+      `\n✖ theme-lint code-colors: ${violations.length} hardcoded colour(s) in TS/TSX:\n`,
+    );
+    for (const v of violations)
+      console.error(`  ${v.file}:${v.line}  ${v.msg}`);
+    console.error("");
+    process.exit(1);
+  }
+  console.log(
+    "✓ theme-lint code-colors: no hardcoded colour in TS/TSX DOM code (rendering/vendor/config areas exempt)",
+  );
+  process.exit(0);
 }
 
 if (process.argv.includes("css-colors")) {

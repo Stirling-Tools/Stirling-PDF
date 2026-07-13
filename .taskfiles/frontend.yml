@@ -211,6 +211,7 @@ tasks:
     cmds:
       - node editor/scripts/lint/theme-lint.mjs
       - node editor/scripts/lint/theme-lint.mjs css-colors
+      - node editor/scripts/lint/theme-lint.mjs code-colors
 
   contrast:
     desc: "Report low-contrast theme token pairs (warning only, never blocks)"
