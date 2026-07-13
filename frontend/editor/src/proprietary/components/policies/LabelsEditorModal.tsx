@@ -155,7 +155,7 @@ export function LabelsEditorModal({
           <p className="labels-personal-note">
             {t(
               "policies.labels.personalCategoriesNote",
-              "Labels are shared with your whole team. Categories are your own personal grouping — changing them here won’t change them for anyone else.",
+              "Labels are shared with your whole team. Categories are your own personal grouping. Changing them here won’t change them for anyone else.",
             )}
           </p>
         )}

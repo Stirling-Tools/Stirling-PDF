@@ -739,7 +739,7 @@ export function ClassificationCategoryManager({
             <p>
               {t(
                 "policies.labels.deleteGroupingBody",
-                'Deleting "{{name}}" removes your personal grouping. Its {{count}} label(s) aren’t deleted — they stay in the classification pool and move to the “Custom” category.',
+                'Deleting "{{name}}" removes your personal grouping. Its {{count}} label(s) aren’t deleted. They stay in the classification pool and move to the “Custom” category.',
                 {
                   name: confirmDelete?.name ?? "",
                   count: confirmDelete?.labelKeys.length ?? 0,
