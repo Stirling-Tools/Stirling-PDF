@@ -11,6 +11,19 @@
   max-width: 16rem;
 }
 
+/* Selectable: the whole pill toggles selection. Tint on select is colour-only,
+   so the chip never reflows between states. */
+.sui-labelchip--selectable {
+  cursor: pointer;
+}
+.sui-labelchip--selectable:hover {
+  border-color: var(--color-blue);
+}
+.sui-labelchip--selected {
+  border-color: var(--color-blue);
+  background: var(--color-blue-light);
+}
+
 .sui-labelchip-icon {
   display: inline-flex;
   align-items: center;
@@ -54,4 +67,19 @@
 .sui-labelchip-remove:hover {
   background: var(--color-bg-hover);
   color: var(--color-red);
+}
+
+/* Selection checkbox indicator: same footprint as the remove button so swapping
+   between them never reflows the chip. Decorative — the whole pill is the
+   control, so this isn't focusable. */
+.sui-labelchip-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--color-text-3);
+}
+.sui-labelchip--selected .sui-labelchip-check {
+  color: var(--color-blue);
 }

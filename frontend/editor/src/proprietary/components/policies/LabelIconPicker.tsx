@@ -27,6 +27,24 @@ export function LabelIconPicker({
 }: LabelIconPickerProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  const trigger = (
+    <ActionIcon
+      variant="quiet"
+      className="labels-icon-pick"
+      onClick={() => {
+        setMounted(true);
+        setOpen((o) => !o);
+      }}
+      aria-label={ariaLabel}
+      aria-haspopup="true"
+    >
+      <LocalIcon icon={value || DEFAULT_LABEL_ICON} width="1.15rem" />
+    </ActionIcon>
+  );
+
+  if (!mounted) return trigger;
 
   return (
     <Popover
@@ -39,17 +57,7 @@ export function LabelIconPicker({
       withinPortal
       zIndex={Z_INDEX_AUTOMATE_DROPDOWN}
     >
-      <Popover.Target>
-        <ActionIcon
-          variant="quiet"
-          className="labels-icon-pick"
-          onClick={() => setOpen((o) => !o)}
-          aria-label={ariaLabel}
-          aria-haspopup="true"
-        >
-          <LocalIcon icon={value || DEFAULT_LABEL_ICON} width="1.15rem" />
-        </ActionIcon>
-      </Popover.Target>
+      <Popover.Target>{trigger}</Popover.Target>
       <Popover.Dropdown p="xs" style={{ maxHeight: 280, overflowY: "auto" }}>
         <SimpleGrid cols={10} spacing={4} verticalSpacing={4}>
           {LABEL_ICON_OPTIONS.map((option) => {
