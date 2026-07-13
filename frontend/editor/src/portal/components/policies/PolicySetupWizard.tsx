@@ -213,22 +213,11 @@ function PolicySetupWizardBody({
   );
 
   const sourcesAsync = useAsync(() => fetchSources(), []);
-  const availableSources = useMemo(() => {
-    const backendSources = (sourcesAsync.data?.sources ?? []).filter(
-      (s) => s.status !== "disabled",
-    );
-    const editorSource = {
-      id: "editor",
-      name: t("portal.sources.types.editor.label"),
-      type: "editor",
-      status: "active" as const,
-      referenceCount: 0,
-      referencingPolicies: [],
-      config: [],
-      docsTotal: null,
-    };
-    return [editorSource, ...backendSources];
-  }, [sourcesAsync.data, t]);
+  const availableSources = useMemo(
+    () =>
+      (sourcesAsync.data?.sources ?? []).filter((s) => s.status !== "disabled"),
+    [sourcesAsync.data],
+  );
   // Document-type scoping has no UI; preserve any saved scope on edit and
   // default new policies to all document types.
   const [scopeTypes] = useState<string[]>(policy?.state.scopeTypes ?? []);
@@ -475,9 +464,8 @@ function PolicySetupWizardBody({
               {t("portal.policies.wizard.sources.loading")}
             </p>
           ) : (
-            // The editor is always an available source (unconditionally prepended
-            // to availableSources), so the list is never empty — no "no sources"
-            // state exists.
+            // The backend always returns the editor as a virtual source, so the
+            // loaded list is never empty - no "no sources" state exists.
             <div className="portal-policies__sources">
               {availableSources.map((src) => (
                 // A selectable multi-line tile (icon + name + type + check).
