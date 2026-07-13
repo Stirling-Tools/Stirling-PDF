@@ -4,16 +4,16 @@
 //   node theme-lint.mjs            enforce: literal colours live ONLY in
 //                                  primitives.css; colors/dimensions must
 //                                  reference tokens; no duplicate primitives.
-//                                  (blocking)
+//                                  Scope: core/theme/. (blocking)
+//   node theme-lint.mjs css-colors enforce: NO hardcoded colour in any source
+//                                  .css (primitives.css + generated output.css
+//                                  exempt). Scope: all editor/src. (blocking)
 //   node theme-lint.mjs contrast   warn-only WCAG contrast report (never blocks)
-//
-// Scope is deliberately just core/theme/ — the palette + token layer this PR
-// owns, which is clean, so no baseline file is needed. Enforcing "no hardcoded
-// colours" across the whole app (260+ existing sites) is a separate migration.
 //
 // Structural black / white / transparent (shadows, scrims) are always allowed.
 
 import { readFileSync, readdirSync } from "node:fs";
+import { execSync } from "node:child_process";
 import { relative, resolve, join } from "node:path";
 
 const THEME = resolve(process.cwd(), "editor/src/core/theme");
@@ -306,10 +306,83 @@ function reportContrast() {
   );
 }
 
+// ── css-colors (blocking): no hardcoded colour in ANY source .css ────────────
+// App-wide guard that source CSS routes every colour through the palette. The
+// file list comes from `git ls-files` (a VCS query over tracked, in-repo paths)
+// — never a directory walk feeding a read — so there's no readdir→readFile path.
+// primitives.css (the literal home) and generated output.css are exempt.
+function checkAppCss() {
+  const EXEMPT = /(?:^|\/)(?:primitives\.css|output\.css)$/;
+  const listed = execSync("git ls-files -- editor/src", {
+    encoding: "utf8",
+  })
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l && l.endsWith(".css") && !EXEMPT.test(l));
+
+  const violations = [];
+  const lineOf = (text, index) => text.slice(0, index).split("\n").length;
+  for (const rel of listed) {
+    const text = stripComments(readFileSync(rel, "utf8"));
+    for (const re of [HEX_RE, FUNC_RE]) {
+      re.lastIndex = 0;
+      let m;
+      while ((m = re.exec(text)) !== null) {
+        if (/var\(/i.test(m[0])) continue; // rgb()/color-mix wrapping a token
+        const norm = normalizeColor(m[0]);
+        if (isStructuralColor(norm)) continue;
+        violations.push({
+          file: rel,
+          line: lineOf(text, m.index),
+          msg: `raw colour ${m[0]} — define it in primitives.css and use var(--p-…)`,
+        });
+      }
+    }
+    text.split("\n").forEach((line, i) => {
+      const colon = line.indexOf(":");
+      if (colon < 0 || /[{}]/.test(line)) return;
+      if (!/^\s*(?:--)?[a-z][a-z0-9-]*\s*$/i.test(line.slice(0, colon))) return;
+      const value = line
+        .slice(colon + 1)
+        .replace(/--[a-z0-9-]+/gi, " ")
+        .replace(/url\([^)]*\)/g, " ")
+        .replace(/["'][^"']*["']/g, " ");
+      for (const nm of value.match(NAMED_RE) || []) {
+        if (isStructuralName(nm)) continue;
+        violations.push({
+          file: rel,
+          line: i + 1,
+          msg: `named colour "${nm}" — define it in primitives.css and use var(--p-…)`,
+        });
+      }
+    });
+  }
+  return violations;
+}
+
 // ── CLI ──────────────────────────────────────────────────────────────────────
 if (process.argv.includes("contrast")) {
   reportContrast();
   process.exit(0); // never blocks
+}
+
+if (process.argv.includes("css-colors")) {
+  const violations = checkAppCss();
+  if (violations.length) {
+    console.error(
+      `\n✖ theme-lint css-colors: ${violations.length} hardcoded colour(s) in source CSS:\n`,
+    );
+    for (const v of violations)
+      console.error(`  ${v.file}:${v.line}  ${v.msg}`);
+    console.error(
+      `\nDefine every colour once in core/theme/primitives.css and reference it with var(--p-…).\n`,
+    );
+    process.exit(1);
+  }
+  console.log(
+    "✓ theme-lint css-colors: source CSS is free of hardcoded colour",
+  );
+  process.exit(0);
 }
 
 const violations = check();

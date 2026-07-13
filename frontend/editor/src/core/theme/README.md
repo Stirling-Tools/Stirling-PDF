@@ -10,17 +10,17 @@ Read this before touching colours or theming anywhere in the frontend.
 2. **The only file allowed to contain literal colours is `primitives.css`.** If you need a new hue, add it there first, then reference it.
 3. Structural `black` / `white` / `transparent` (shadows, scrims, overlays) are allowed anywhere.
 4. Colours must adapt to light/dark automatically. If you're reaching for a hardcoded colour "just for dark mode", you're doing it wrong — pick the right `--c-*` token.
-5. `task frontend:lint:colors` enforces rules 1–3 **inside `core/theme/`** (see [Linter](#linter)).
+5. `task frontend:lint:colors` enforces rules 1–3 across **all source CSS** (`primitives.css` + generated `output.css` exempt), and additionally guards the `core/theme/` token layer (see [Linter](#linter)).
 
 ## Files
 
-| File | Role |
-|---|---|
-| `primitives.css` | **The palette.** 41 literal colours (`--p-*`) — one neutral ramp (`--p-gray-*` light, `--p-zinc-*` dark) + status hues (blue/green/amber/red). The ONLY place literals live. |
-| `colors.css` | **Semantic tokens** (`--c-*`), mapped from primitives per theme. This is what you should reference — always. |
-| `dimensions.css` | Non-colour tokens: spacing, radius, z-index, type, motion. |
-| `index.css` | Barrel that `@import`s the above. Imported by `ThemeProvider` (and Storybook). |
-| `mantineTheme.ts` | Mantine theme object wiring. |
+| File              | Role                                                                                                                                                                                                                                                                                                                                                                                    |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `primitives.css`  | **The palette.** All literal colours (`--p-*`): the core neutral ramp (`--p-gray-*` light, `--p-zinc-*` dark) + status hues (blue/green/amber/red), plus an **extended palette** section of fixed brand / data-viz / illustration / vendor-OS colours (azure, Stirling red, violet/indigo, cyan, pink, emerald, slate, navy, Notion paper, art fills, …). The ONLY place literals live. |
+| `colors.css`      | **Semantic tokens** (`--c-*`), mapped from primitives per theme. This is what you should reference — always.                                                                                                                                                                                                                                                                            |
+| `dimensions.css`  | Non-colour tokens: spacing, radius, z-index, type, motion.                                                                                                                                                                                                                                                                                                                              |
+| `index.css`       | Barrel that `@import`s the above. Imported by `ThemeProvider` (and Storybook).                                                                                                                                                                                                                                                                                                          |
+| `mantineTheme.ts` | Mantine theme object wiring.                                                                                                                                                                                                                                                                                                                                                            |
 
 The old `compat.css` legacy-alias layer has been **removed** — every component references `--c-*` directly now. Two **legacy** definition files still exist outside this folder and are being phased out — prefer `--c-*` over their tokens, and don't add to them:
 `core/styles/theme.css` (editor `--bg-*`/`--text-*` vocab) and `core/tokens/tokens.css` (SUI `--color-*` vocab, gradients, code palette).
@@ -60,10 +60,11 @@ The FAB / logo mark is a deliberate exception: it's pinned to white (`--p-white`
 
 One file: `editor/scripts/lint/theme-lint.mjs` (no baseline). Run via `task frontend:lint:colors` (part of `task frontend:lint`).
 
-- **Default (blocking):** enforces "literals only in `primitives.css`; everything else in `core/theme/` references tokens; no duplicate primitives." Scope is deliberately just `core/theme/` — the layer this owns, which is clean.
+- **Default (blocking):** enforces "literals only in `primitives.css`; everything else in `core/theme/` references tokens; no duplicate primitives." Scope: `core/theme/`.
+- **`css-colors` (blocking):** enforces **no hardcoded colour in any source `.css`** across `editor/src` — `primitives.css` (the literal home) and generated `output.css` are the only exemptions. The file list comes from `git ls-files` (not a directory walk), and comments/structural black-white-transparent are ignored.
 - **`node theme-lint.mjs contrast`** (task `frontend:contrast`, non-blocking): WCAG contrast report for text-on-surface / on-primary pairs per theme.
 
-App-wide "no hardcoded colours in components" is **not** enforced yet (there are 260+ legacy sites); that's a separate migration. Don't add new hardcoded colours regardless.
+Both blocking modes run under `task frontend:lint:colors`. Source CSS is at **zero** hardcoded colour; keep it there — add the literal to `primitives.css` and reference `var(--p-…)`. (Colour literals in TS/TSX that drive canvas/PDF/pdfium rendering are out of scope — those APIs take numbers, not CSS vars.)
 
 ## Gotchas
 
