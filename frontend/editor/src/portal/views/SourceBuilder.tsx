@@ -27,10 +27,16 @@ import {
   CREATABLE_SOURCE_TYPES,
   defaultOptions,
   sourceTypeMeta,
+  WEBHOOK_SOURCE_TYPE,
   type CreatableSourceType,
 } from "@portal/components/sources/sourceTypes";
 import { S3ConnectionPicker } from "@portal/components/sources/S3ConnectionPicker";
 import "@portal/views/SourceBuilder.css";
+
+/** Absolute delivery URL a sender POSTs to for a webhook's routing id. */
+function webhookUrl(webhookId: string): string {
+  return `${window.location.origin}/api/v1/webhooks/${webhookId}`;
+}
 
 const OFFERED_TYPES = creatableSourceTypes();
 
@@ -84,6 +90,11 @@ export function SourceBuilder() {
   const [error, setError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  // Set after a webhook is created: its one-time delivery id + signing secret, shown before leaving.
+  const [reveal, setReveal] = useState<{
+    webhookId: string;
+    secret: string;
+  } | null>(null);
 
   // Seed once: immediately for a new source, or after the record loads for edit.
   useEffect(() => {
@@ -112,23 +123,51 @@ export function SourceBuilder() {
   );
   const canSave = name.trim() !== "" && requiredComplete && !submitting;
 
+  // An existing webhook's delivery URL, shown read-only in the edit view (the secret is not - it
+  // is revealed only once, at creation).
+  const editingWebhookId =
+    isEdit && sourceState.data?.type === WEBHOOK_SOURCE_TYPE
+      ? String(sourceState.data.options?.webhookId ?? "")
+      : "";
+  const revealUrl = reveal ? webhookUrl(reveal.webhookId) : "";
+  const revealSecret = reveal ? reveal.secret : "";
+
+  function dismissReveal() {
+    setReveal(null);
+    navigate(listPath);
+  }
+
   async function save() {
     if (!canSave) return;
     setSubmitting(true);
     setError(null);
     try {
-      await createSource({
+      const saved = await createSource({
         id: isEdit ? id : undefined,
         name: name.trim(),
         type: type.type,
         options,
         enabled,
       });
+      // A new webhook returns its server-minted routing id + signing secret once; reveal them
+      // (with the delivery URL) before leaving so the operator can copy the secret.
+      if (!isEdit && type.type === WEBHOOK_SOURCE_TYPE) {
+        const webhookId = String(saved.options?.webhookId ?? "");
+        const secret = String(saved.options?.signingSecret ?? "");
+        if (webhookId && secret) {
+          setReveal({ webhookId, secret });
+          return;
+        }
+      }
       navigate(listPath);
     } catch (e) {
       setError(errorMessage(e));
       setSubmitting(false);
     }
+  }
+
+  function copy(text: string) {
+    void navigator.clipboard?.writeText(text);
   }
 
   async function confirmDelete() {
@@ -290,6 +329,28 @@ export function SourceBuilder() {
           </FormField>
         ))}
 
+        {editingWebhookId && (
+          <FormField
+            label={t("portal.sources.types.webhook.detail.deliveryUrl")}
+            helperText={t("portal.sources.types.webhook.detail.secretNote")}
+          >
+            <div className="portal-source-builder__copy-row">
+              <Input
+                value={webhookUrl(editingWebhookId)}
+                readOnly
+                onFocus={(e) => e.currentTarget.select()}
+              />
+              <Button
+                variant="tertiary"
+                size="sm"
+                onClick={() => copy(webhookUrl(editingWebhookId))}
+              >
+                {t("portal.sources.types.webhook.reveal.copy")}
+              </Button>
+            </div>
+          </FormField>
+        )}
+
         {error && <Banner tone="danger" description={error} />}
       </div>
 
@@ -320,6 +381,69 @@ export function SourceBuilder() {
         }
       >
         <p>{t("portal.sources.delete.body", { name })}</p>
+      </Modal>
+
+      <Modal
+        open={reveal !== null}
+        onClose={dismissReveal}
+        width="md"
+        title={t("portal.sources.types.webhook.reveal.title")}
+        footer={
+          <div className="portal-source-builder__delete-actions">
+            <Button size="sm" onClick={dismissReveal}>
+              {t("portal.sources.types.webhook.reveal.done")}
+            </Button>
+          </div>
+        }
+      >
+        {reveal && (
+          <div className="portal-source-builder__reveal">
+            <Banner
+              tone="warning"
+              description={t(
+                "portal.sources.types.webhook.reveal.secretWarning",
+              )}
+            />
+            <FormField label={t("portal.sources.types.webhook.reveal.url")}>
+              <div className="portal-source-builder__copy-row">
+                <Input
+                  value={revealUrl}
+                  readOnly
+                  onFocus={(e) => e.currentTarget.select()}
+                />
+                <Button
+                  variant="tertiary"
+                  size="sm"
+                  onClick={() => copy(revealUrl)}
+                >
+                  {t("portal.sources.types.webhook.reveal.copy")}
+                </Button>
+              </div>
+            </FormField>
+            <FormField
+              label={t("portal.sources.types.webhook.reveal.secret")}
+              helperText={t("portal.sources.types.webhook.reveal.secretHelp")}
+            >
+              <div className="portal-source-builder__copy-row">
+                <Input
+                  value={revealSecret}
+                  readOnly
+                  onFocus={(e) => e.currentTarget.select()}
+                />
+                <Button
+                  variant="tertiary"
+                  size="sm"
+                  onClick={() => copy(revealSecret)}
+                >
+                  {t("portal.sources.types.webhook.reveal.copy")}
+                </Button>
+              </div>
+            </FormField>
+            <p className="portal-source-builder__muted">
+              {t("portal.sources.types.webhook.reveal.usage")}
+            </p>
+          </div>
+        )}
       </Modal>
     </div>
   );

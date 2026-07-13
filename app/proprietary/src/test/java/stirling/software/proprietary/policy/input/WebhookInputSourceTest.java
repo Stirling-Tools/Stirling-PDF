@@ -6,7 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -21,6 +24,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -42,6 +46,7 @@ class WebhookInputSourceTest {
     private static final String WEBHOOK_ID = "testwebhookid1234";
 
     @Mock private FileReadinessChecker readinessChecker;
+    @Mock private S3InputSource s3InputSource;
 
     @TempDir Path tempDir;
 
@@ -53,7 +58,7 @@ class WebhookInputSourceTest {
     @BeforeEach
     void setUp() {
         spool = new WebhookSpool(tempDir.resolve("spool"));
-        source = new WebhookInputSource(spool, readinessChecker);
+        source = new WebhookInputSource(spool, readinessChecker, s3InputSource);
         ledger = new InProcessProcessedLedger();
         ctx = new RecordingContext();
         lenient().when(readinessChecker.isReady(any())).thenReturn(true);
@@ -144,6 +149,53 @@ class WebhookInputSourceTest {
 
         assertEquals(WEBHOOK_ID, prepared.get("webhookId"));
         assertEquals("keepme", prepared.get("signingSecret"));
+    }
+
+    @Test
+    void aConnectionBackedWebhookDelegatesToTheS3SourceUnderItsReservedPrefix() throws IOException {
+        when(s3InputSource.resolve(any(), any())).thenReturn(List.of());
+        InputSpec spec =
+                new InputSpec(
+                        "webhook",
+                        Map.of(
+                                "webhookId",
+                                WEBHOOK_ID,
+                                "signingSecret",
+                                "secret",
+                                "mode",
+                                "consume",
+                                "connectionId",
+                                7));
+
+        source.resolve(spec, ctx);
+
+        ArgumentCaptor<InputSpec> delegated = ArgumentCaptor.forClass(InputSpec.class);
+        verify(s3InputSource).resolve(delegated.capture(), eq(ctx));
+        InputSpec s3 = delegated.getValue();
+        assertEquals("s3", s3.type());
+        assertEquals(7L, ((Number) s3.options().get("connectionId")).longValue());
+        assertEquals("stirling-webhook/" + WEBHOOK_ID, s3.options().get("prefix"));
+        assertEquals("consume", s3.options().get("mode"));
+    }
+
+    @Test
+    void aConnectionBackedWebhookValidatesTheConnectionThroughTheS3Source() {
+        InputSpec spec =
+                new InputSpec(
+                        "webhook",
+                        Map.of(
+                                "webhookId",
+                                WEBHOOK_ID,
+                                "signingSecret",
+                                "secret",
+                                "connectionId",
+                                7));
+
+        source.validate(spec);
+
+        // Save-time validation defers to the S3 source, which resolves + ownership-checks the
+        // connection (the check the delivery path later trusts).
+        verify(s3InputSource).validate(any());
     }
 
     /** Policy-scoped context backed by the in-process ledger, recording presence reports. */

@@ -3,6 +3,7 @@ package stirling.software.proprietary.policy.webhook;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.http.HttpStatus;
@@ -25,9 +26,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.policy.s3.S3Config;
+import stirling.software.proprietary.policy.s3.S3ConnectionPool;
+import stirling.software.proprietary.policy.s3.S3ConnectionResolver;
 import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.trigger.WebhookTrigger;
+
+import software.amazon.awssdk.core.exception.SdkException;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 /**
  * Public receiver for webhook input sources. External systems POST a document to {@code
@@ -62,6 +71,8 @@ public class WebhookReceiverController {
     private final WebhookSpool spool;
     private final WebhookTrigger webhookTrigger;
     private final ApplicationProperties applicationProperties;
+    private final S3ConnectionResolver connectionResolver;
+    private final S3ConnectionPool connectionPool;
 
     @PostMapping("/{webhookId}")
     @Operation(
@@ -97,16 +108,10 @@ public class WebhookReceiverController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty request body");
         }
 
-        String storedName;
-        try {
-            storedName =
-                    WebhookSpool.displayName(
-                            spool.store(webhookId, filename, body).getFileName().toString());
-        } catch (IOException e) {
-            log.error("Could not spool webhook delivery for {}: {}", webhookId, e.getMessage());
-            throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Could not store delivery");
-        }
+        String storedName =
+                config.usesConnection()
+                        ? stageToConnection(config, filename, body)
+                        : stageToSpool(webhookId, filename, body);
 
         // Fire the referencing policies now; the trigger's reconcile is the safety net.
         webhookTrigger.fireForWebhook(webhookId);
@@ -132,6 +137,58 @@ public class WebhookReceiverController {
             }
         }
         return null;
+    }
+
+    /** Stage a delivery to the node-local spool; returns its display (original) name. */
+    private String stageToSpool(String webhookId, String filename, byte[] body) {
+        try {
+            return WebhookSpool.displayName(
+                    spool.store(webhookId, filename, body).getFileName().toString());
+        } catch (IOException e) {
+            log.error("Could not spool webhook delivery for {}: {}", webhookId, e.getMessage());
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR, "Could not store delivery");
+        }
+    }
+
+    /**
+     * Stage a delivery to the webhook's S3 connection under its reserved prefix. Resolved with no
+     * principal - the referencing source's right to use the connection was checked when it was
+     * saved - so a public delivery never needs the caller to hold connection rights.
+     */
+    private String stageToConnection(WebhookConfig config, String filename, byte[] body) {
+        S3Config s3 =
+                connectionResolver.resolve(
+                        Map.of(
+                                WebhookConfig.CONNECTION_ID_OPTION,
+                                config.connectionId(),
+                                "prefix",
+                                config.stagingPrefix()));
+        S3Client client = connectionPool.clientFor(s3);
+        String key = keyPrefix(s3.prefix()) + WebhookSpool.objectKeySuffix(filename);
+        try {
+            client.putObject(
+                    PutObjectRequest.builder().bucket(s3.bucket()).key(key).build(),
+                    RequestBody.fromBytes(body));
+        } catch (SdkException e) {
+            log.error(
+                    "Could not stage webhook delivery for {} to s3://{}/{}: {}",
+                    config.webhookId(),
+                    s3.bucket(),
+                    key,
+                    e.getMessage());
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR, "Could not store delivery");
+        }
+        return WebhookSpool.objectDisplayName(filename);
+    }
+
+    /** The configured prefix as a key-path prefix ("inbox" and "inbox/" mean the same). */
+    private static String keyPrefix(String prefix) {
+        if (prefix == null || prefix.isEmpty() || prefix.endsWith("/")) {
+            return prefix == null ? "" : prefix;
+        }
+        return prefix + "/";
     }
 
     /**

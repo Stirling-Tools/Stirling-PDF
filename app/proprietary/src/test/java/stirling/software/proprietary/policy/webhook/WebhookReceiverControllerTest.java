@@ -23,6 +23,8 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.policy.s3.S3ConnectionPool;
+import stirling.software.proprietary.policy.s3.S3ConnectionResolver;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
 import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceStore;
@@ -55,7 +57,15 @@ class WebhookReceiverControllerTest {
         spool = new WebhookSpool(tempDir.resolve("spool"));
         trigger = mock(WebhookTrigger.class);
         properties = new ApplicationProperties();
-        controller = new WebhookReceiverController(sourceStore, spool, trigger, properties);
+        // The local-disk tests never touch a connection; mocks stand in for the S3 collaborators.
+        controller =
+                new WebhookReceiverController(
+                        sourceStore,
+                        spool,
+                        trigger,
+                        properties,
+                        mock(S3ConnectionResolver.class),
+                        mock(S3ConnectionPool.class));
     }
 
     private static Source webhookSource(boolean enabled) {

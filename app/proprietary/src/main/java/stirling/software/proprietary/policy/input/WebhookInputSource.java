@@ -28,14 +28,22 @@ import stirling.software.proprietary.policy.webhook.WebhookSpool;
 
 /**
  * A push source: documents arrive by signed HTTP POST to {@code /api/v1/webhooks/{webhookId}} and
- * are staged by {@link WebhookSpool}. This source then reads that per-webhook spool exactly as
- * {@link FolderInputSource} reads a watched directory - each spooled file is a unit of work claimed
- * through the {@link ResolveContext} ledger and tracked in place - so the whole claim/consume model
- * is reused rather than reinvented. Options (see {@link WebhookConfig}): "mode" is "consume"
- * (default: a spooled file is removed once every policy that claimed it has settled successfully)
- * or "snapshot" (stateless, every run re-reads whatever is currently spooled). "webhookId" and
- * "signingSecret" are minted server-side on create, never supplied by the client. An empty or
- * not-yet-created spool means nothing has been delivered, which reads as "verifiably no files".
+ * are staged for the referencing policies. Where they are staged depends on the source's config
+ * (see {@link WebhookConfig}):
+ *
+ * <ul>
+ *   <li>no {@code connectionId}: a node-local {@link WebhookSpool} directory, read exactly as
+ *       {@link FolderInputSource} reads a watched directory (self-hosted);
+ *   <li>a {@code connectionId}: the referenced S3 {@code IntegrationConfig} connection, under a
+ *       reserved per-webhook prefix - read, claimed, and consumed by delegating to {@link
+ *       S3InputSource}, so the durable, multi-node model hosted deployments need is reused, not
+ *       reinvented.
+ * </ul>
+ *
+ * <p>Either way the {@link ResolveContext} ledger does the claiming, "mode" is "consume" (default:
+ * a staged document is removed once every policy that claimed it has settled successfully) or
+ * "snapshot" (stateless), and "webhookId"/"signingSecret" are minted server-side on create. Empty
+ * staging reads as "verifiably no files".
  */
 @Slf4j
 @Service
@@ -47,6 +55,10 @@ public class WebhookInputSource implements InputSource {
 
     private final WebhookSpool spool;
     private final FileReadinessChecker readinessChecker;
+    // Deliveries staged to an S3 connection are read/claimed/consumed exactly like an S3 source, so
+    // that whole path is reused rather than reimplemented; a connection-less webhook uses the
+    // spool.
+    private final S3InputSource s3InputSource;
 
     @Override
     public String type() {
@@ -60,7 +72,28 @@ public class WebhookInputSource implements InputSource {
 
     @Override
     public void validate(InputSpec spec) {
-        WebhookConfig.from(spec.options());
+        WebhookConfig config = WebhookConfig.from(spec.options());
+        if (config.usesConnection()) {
+            // Resolves the connection with the caller present, so save fails if their team can't
+            // use it (the ownership check the delivery path then trusts).
+            s3InputSource.validate(stagingSpec(config));
+        }
+    }
+
+    /**
+     * The S3 view of a webhook's durable staging: its connection plus the reserved per-webhook
+     * prefix, as an {@code s3} input spec {@link S3InputSource} can resolve directly.
+     */
+    private static InputSpec stagingSpec(WebhookConfig config) {
+        return new InputSpec(
+                "s3",
+                Map.of(
+                        WebhookConfig.CONNECTION_ID_OPTION,
+                        config.connectionId(),
+                        "prefix",
+                        config.stagingPrefix(),
+                        "mode",
+                        config.mode()));
     }
 
     /**
@@ -91,6 +124,12 @@ public class WebhookInputSource implements InputSource {
     @Override
     public List<ResolvedInput> resolve(InputSpec spec, ResolveContext ctx) throws IOException {
         WebhookConfig config = WebhookConfig.from(spec.options());
+        if (config.usesConnection()) {
+            // Durable staging: the delivery objects live in the connection's bucket and are read,
+            // claimed, and consumed by the S3 source (no principal here - the save-time check the
+            // resolver trusts already ran).
+            return s3InputSource.resolve(stagingSpec(config), ctx);
+        }
         Path dir = spool.dirFor(config.webhookId());
         if (!Files.isDirectory(dir)) {
             // No deliveries yet (or none since the last consume): a verifiably empty source, so the

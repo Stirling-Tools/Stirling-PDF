@@ -8147,6 +8147,10 @@ label = "Webhook"
 deliveryUrl = "Delivery URL"
 secretNote = "The signing secret is shown once, when the webhook is created. Recreate the source to roll it."
 
+[portal.sources.types.webhook.fields.connection]
+helperText = "Choose an S3 connection to stage deliveries durably (required in hosted). Leave blank on a self-hosted server to stage them on local disk."
+label = "Storage connection"
+
 [portal.sources.types.webhook.fields.mode]
 helperText = "Consume removes each delivered document once every policy has processed it."
 label = "Read mode"

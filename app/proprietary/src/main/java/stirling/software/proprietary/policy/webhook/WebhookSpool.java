@@ -90,6 +90,23 @@ public class WebhookSpool {
         return spoolFileName;
     }
 
+    /**
+     * The object-key suffix for an S3-staged delivery: a unique segment then the sanitised name
+     * ({@code <unique>/<name>}). A subfolder rather than a name prefix so the object's basename -
+     * and thus the resolved input's filename - stays the clean original name, matching the local
+     * spool.
+     */
+    public static String objectKeySuffix(String filename) {
+        return UUID.randomUUID().toString().replace("-", "") + "/" + sanitize(filename);
+    }
+
+    /**
+     * The sanitised display name of a staged delivery (the basename of {@link #objectKeySuffix}).
+     */
+    public static String objectDisplayName(String filename) {
+        return sanitize(filename);
+    }
+
     /** Reduce a client-supplied filename to a safe bare basename; fall back to a default. */
     private static String sanitize(String filename) {
         if (filename == null) {

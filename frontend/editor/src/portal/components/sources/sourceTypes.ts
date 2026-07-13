@@ -22,6 +22,9 @@ export interface SourceTypeMeta {
  */
 export const EDITOR_SOURCE_TYPE = "editor";
 
+/** The webhook source type. Its delivery URL + signing secret are minted server-side on create. */
+export const WEBHOOK_SOURCE_TYPE = "webhook";
+
 const SOURCE_TYPE_META: Record<string, SourceTypeMeta> = {
   folder: {
     labelKey: "portal.sources.types.folder.label",
@@ -37,6 +40,11 @@ const SOURCE_TYPE_META: Record<string, SourceTypeMeta> = {
     labelKey: "portal.sources.types.s3.label",
     icon: "☁",
     accent: "brand",
+  },
+  webhook: {
+    labelKey: "portal.sources.types.webhook.label",
+    icon: "↯",
+    accent: "warning",
   },
 };
 
@@ -175,6 +183,42 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
           {
             value: "snapshot",
             labelKey: "portal.sources.types.s3.fields.mode.options.snapshot",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    // The delivery URL + signing secret are minted server-side on create (revealed once). An S3
+    // connection makes staging durable + multi-node (required in hosted); left blank, deliveries
+    // stage to the server's local disk (self-hosted only).
+    type: WEBHOOK_SOURCE_TYPE,
+    labelKey: "portal.sources.types.webhook.label",
+    descriptionKey: "portal.sources.types.webhook.description",
+    fields: [
+      {
+        key: "connectionId",
+        labelKey: "portal.sources.types.webhook.fields.connection.label",
+        control: "s3Connection",
+        helperTextKey:
+          "portal.sources.types.webhook.fields.connection.helperText",
+      },
+      {
+        key: "mode",
+        labelKey: "portal.sources.types.webhook.fields.mode.label",
+        control: "select",
+        defaultValue: "consume",
+        helperTextKey: "portal.sources.types.webhook.fields.mode.helperText",
+        options: [
+          {
+            value: "consume",
+            labelKey:
+              "portal.sources.types.webhook.fields.mode.options.consume",
+          },
+          {
+            value: "snapshot",
+            labelKey:
+              "portal.sources.types.webhook.fields.mode.options.snapshot",
           },
         ],
       },
