@@ -44,6 +44,9 @@ interface LabelsEditorModalProps {
   /** Controlled (staged) category structure for the grouped view. */
   categories?: SidebarCategory[];
   onCategoriesChange?: (next: SidebarCategory[]) => void;
+  /** Controlled (staged) hidden-label set for the grouped view. */
+  hiddenLabels?: ReadonlySet<string>;
+  onHiddenLabelsChange?: (next: string[]) => void;
 }
 
 export function LabelsEditorModal({
@@ -63,6 +66,8 @@ export function LabelsEditorModal({
   groupable = false,
   categories,
   onCategoriesChange,
+  hiddenLabels,
+  onHiddenLabelsChange,
 }: LabelsEditorModalProps) {
   const { t } = useTranslation();
   const fileInput = useRef<HTMLInputElement>(null);
@@ -187,6 +192,8 @@ export function LabelsEditorModal({
           groupable={groupable}
           categories={categories}
           onCategoriesChange={onCategoriesChange}
+          hiddenLabels={hiddenLabels}
+          onHiddenLabelsChange={onHiddenLabelsChange}
         />
       </div>
     </Modal>

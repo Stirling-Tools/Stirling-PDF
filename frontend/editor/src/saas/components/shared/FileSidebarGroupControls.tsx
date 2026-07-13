@@ -16,9 +16,12 @@ import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
 import { useClassificationLabels } from "@app/hooks/useClassificationLabels";
 import { bucketStubsByLabel } from "@app/components/shared/fileSidebarGroupingLogic";
 import {
+  getHiddenLabels,
   getSidebarCategories,
   resetSidebarCategories,
+  setHiddenLabels,
   setSidebarCategories,
+  subscribeHiddenLabels,
   subscribeSidebarCategories,
 } from "@app/services/fileSidebarCategories";
 import type { ClassificationLabel } from "@app/data/classificationLabels";
@@ -40,6 +43,11 @@ export function FileSidebarGroupControls({
     subscribeSidebarCategories,
     getSidebarCategories,
   );
+  const hiddenLabels = useSyncExternalStore(
+    subscribeHiddenLabels,
+    getHiddenLabels,
+  );
+  const hiddenSet = useMemo(() => new Set(hiddenLabels), [hiddenLabels]);
   // Only fetch the team label set while the picker is open.
   const { teamLabels: labelSet } = useClassificationLabels(open);
 
@@ -121,6 +129,8 @@ export function FileSidebarGroupControls({
             labels={labelSet}
             categories={categories}
             onCategoriesChange={setSidebarCategories}
+            hiddenLabels={hiddenSet}
+            onHiddenLabelsChange={setHiddenLabels}
             labelCounts={labelCounts}
             categoryCounts={categoryCounts}
             canHide

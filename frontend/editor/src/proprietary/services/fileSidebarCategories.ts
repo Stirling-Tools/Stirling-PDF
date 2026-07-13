@@ -21,6 +21,10 @@ export interface SidebarCategory {
 // v2: labelKeys hold label ids (was lower-cased names in v1); bumping discards
 // stale name-keyed prefs so they don't silently stop matching.
 const STORAGE_KEY = "stirling.fileSidebarCategories.v2";
+// Device-local set of label ids the user has hidden from the sidebar grouping —
+// a hidden label forms no group and pulls no files into a category, so files
+// carrying only hidden labels fall under "Other". Personal, like categories.
+const HIDDEN_STORAGE_KEY = "stirling.fileSidebarHiddenLabels.v1";
 
 /** The built-in default, derived from LABEL_FAMILIES. Fresh copy per call (callers may mutate). */
 export function defaultCategories(): SidebarCategory[] {
@@ -94,6 +98,39 @@ export function setSidebarCategories(next: SidebarCategory[]) {
   write(next.map((c) => ({ ...c, labelKeys: [...c.labelKeys] })));
 }
 
+// ---- hidden labels (device-local, shares the categories listener set) ----
+
+function readHiddenStorage(): string[] {
+  try {
+    const raw = localStorage.getItem(HIDDEN_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    return Array.isArray(parsed)
+      ? parsed.filter((k) => typeof k === "string")
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+// Cached so useSyncExternalStore sees a stable reference between writes.
+let effectiveHidden: string[] = readHiddenStorage();
+
+export function getHiddenLabels(): string[] {
+  return effectiveHidden;
+}
+
+/** Replace the hidden-label set (controlled editors stage then commit at once). */
+export function setHiddenLabels(next: string[]) {
+  effectiveHidden = [...new Set(next)];
+  try {
+    localStorage.setItem(HIDDEN_STORAGE_KEY, JSON.stringify(effectiveHidden));
+  } catch {
+    // Quota/private-mode failures degrade to session-only hidden labels.
+  }
+  for (const listener of listeners) listener();
+}
+
 /** A stable id for a newly created custom category. Pure — safe for computing a
  *  next-state array without touching the store. */
 export function makeCustomCategoryId(
@@ -109,6 +146,9 @@ export function subscribeSidebarCategories(listener: () => void) {
     listeners.delete(listener);
   };
 }
+
+/** Hidden labels share the categories listener set, so this is the same subscribe. */
+export const subscribeHiddenLabels = subscribeSidebarCategories;
 
 export function isCustomized(): boolean {
   return stored !== null;
@@ -146,14 +186,16 @@ export function categorizedLabelKeys(
 // which computes the next array and commits it via setSidebarCategories — so
 // there are no per-field mutators here beyond the whole-list setter above.
 
-/** Restore the built-in default and clear the customized flag. */
+/** Restore the built-in default categories and clear any hidden labels. */
 export function resetSidebarCategories() {
   stored = null;
   recompute();
+  effectiveHidden = [];
   try {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(HIDDEN_STORAGE_KEY);
   } catch {
-    // Quota/private-mode failures degrade to session-only categories.
+    // Quota/private-mode failures degrade to session-only prefs.
   }
   for (const listener of listeners) listener();
 }

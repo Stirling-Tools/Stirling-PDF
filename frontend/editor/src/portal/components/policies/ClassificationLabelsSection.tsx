@@ -21,7 +21,9 @@ import {
   type ClassificationLabel,
 } from "@app/data/classificationLabels";
 import {
+  getHiddenLabels,
   getSidebarCategories,
+  setHiddenLabels,
   setSidebarCategories,
   type SidebarCategory,
 } from "@app/services/fileSidebarCategories";
@@ -46,25 +48,32 @@ export function ClassificationLabelsSection({
   const [draftCategories, setDraftCategories] = useState<SidebarCategory[]>(
     () => getSidebarCategories(),
   );
+  const [draftHidden, setDraftHidden] = useState<string[]>(() =>
+    getHiddenLabels(),
+  );
   const [open, setOpen] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
   // Follow server truth; local edits don't touch `teamLabels`, so never clobbered mid-edit.
   useEffect(() => setDraft(teamLabels), [teamLabels]);
 
-  // The category store isn't written until save, so it stays at the baseline
-  // during editing — compare the staged copy against it for dirty state.
+  // The category + hidden-label stores aren't written until save, so they stay
+  // at the baseline during editing — compare the staged copies for dirty state.
   const dirty = useMemo(
     () =>
       JSON.stringify(draft) !== JSON.stringify(teamLabels) ||
       JSON.stringify(draftCategories) !==
-        JSON.stringify(getSidebarCategories()),
-    [draft, teamLabels, draftCategories],
+        JSON.stringify(getSidebarCategories()) ||
+      JSON.stringify(draftHidden) !== JSON.stringify(getHiddenLabels()),
+    [draft, teamLabels, draftCategories, draftHidden],
   );
+
+  const hiddenSet = useMemo(() => new Set(draftHidden), [draftHidden]);
 
   const openModal = () => {
     setDraft(teamLabels);
     setDraftCategories(getSidebarCategories());
+    setDraftHidden(getHiddenLabels());
     setLocalError(null);
     setOpen(true);
   };
@@ -72,6 +81,7 @@ export function ClassificationLabelsSection({
   const close = () => {
     setDraft(teamLabels);
     setDraftCategories(getSidebarCategories());
+    setDraftHidden(getHiddenLabels());
     setLocalError(null);
     setOpen(false);
   };
@@ -102,6 +112,7 @@ export function ClassificationLabelsSection({
     void saveTeam(draft)
       .then(() => {
         setSidebarCategories(draftCategories);
+        setHiddenLabels(draftHidden);
         setOpen(false);
       })
       .catch(() => {});
@@ -192,6 +203,8 @@ export function ClassificationLabelsSection({
         groupable
         categories={draftCategories}
         onCategoriesChange={setDraftCategories}
+        hiddenLabels={hiddenSet}
+        onHiddenLabelsChange={setDraftHidden}
       />
     </div>
   );

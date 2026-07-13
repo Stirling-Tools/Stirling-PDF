@@ -69,6 +69,35 @@
   color: var(--color-red);
 }
 
+/* Hide (eye) toggle — same footprint as remove; sits before it. */
+.sui-labelchip-hide {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-3);
+  cursor: pointer;
+  transition:
+    background var(--motion-fast),
+    color var(--motion-fast);
+}
+.sui-labelchip-hide:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-1);
+}
+
+/* Hidden label: dimmed, and its name struck through, but still fully editable. */
+.sui-labelchip--hidden {
+  opacity: 0.55;
+}
+.sui-labelchip--hidden .sui-labelchip-name {
+  text-decoration: line-through;
+}
+
 /* Selection checkbox indicator: same footprint as the remove button so swapping
    between them never reflows the chip. Decorative — the whole pill is the
    control, so this isn't focusable. */

@@ -157,7 +157,23 @@
   color: var(--color-text-3);
 }
 .labels-search {
-  width: 100%;
+  flex: 1;
+  min-width: 10rem;
+}
+
+/* ---- Manager toolbar: search + Select / bulk actions ---- */
+.labels-group-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.labels-select-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-left: auto;
 }
 
 /* ---- "Add to category" bulk-action popover ---- */

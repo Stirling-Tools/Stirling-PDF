@@ -40,6 +40,7 @@ export function buildLabelGroups(
   labelSet: readonly { id: string; name: string; icon?: string }[],
   t: (key: string, fallback: string) => string,
   categories: SidebarCategory[],
+  hiddenLabels: ReadonlySet<string> = new Set(),
 ): FileSidebarGroup[] | null {
   if (stubs.length === 0) return null;
 
@@ -69,7 +70,9 @@ export function buildLabelGroups(
     if (category.hidden) continue;
     const ids = new Set(category.labelKeys);
     const members = stubs.filter((stub) =>
-      (stub.classificationLabels ?? []).some((labelId) => ids.has(labelId)),
+      (stub.classificationLabels ?? []).some(
+        (labelId) => !hiddenLabels.has(labelId) && ids.has(labelId),
+      ),
     );
     if (members.length === 0) continue;
     visible.push({
@@ -84,7 +87,7 @@ export function buildLabelGroups(
   // A label on a file but not in any category still gets its own group, so nothing is stranded
   // until the user files it into a category.
   for (const [labelId, bucket] of byLabel) {
-    if (inACategory.has(labelId)) continue;
+    if (inACategory.has(labelId) || hiddenLabels.has(labelId)) continue;
     visible.push({
       id: `label:${labelId}`,
       label: labelName(labelId),

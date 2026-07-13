@@ -2,23 +2,27 @@
 // the editor's Files-sidebar category picker and the processor's labels editor,
 // so the two never drift.
 //
-// It groups the label vocabulary under the (device-local, personal) sidebar
-// categories: collapsible categories with their member chips, create / rename /
-// icon / delete-grouping, add-label, and an optional per-category "Select all".
-// Labels in no category surface under a "Custom" group, pinned to the top.
+// Groups the label vocabulary under the (device-local, personal) sidebar
+// categories: collapsible categories with member chips, create / rename / icon /
+// delete-grouping, add-label, per-label + bulk hide, and a Select mode for bulk
+// actions. Labels in no category surface under a "Custom" group, pinned to top.
 //
-// Controlled: `categories` + `onCategoriesChange` are owned by the caller, which
-// decides whether an edit applies live (editor) or is staged until save
-// (processor). Label-vocabulary editing (create / delete team labels, icon
-// pickers, delete-category-also-deletes-its-labels) only appears when
-// `onLabelsChange` is supplied — i.e. in the processor.
+// Controlled: `categories`/`onCategoriesChange` and `hiddenLabels`/
+// `onHiddenLabelsChange` are owned by the caller, which decides whether an edit
+// applies live (editor) or is staged until save (processor). Label-vocabulary
+// editing (create/delete labels, icon pickers, delete-category-also-deletes-its-
+// labels, add-to-category) only appears when `onLabelsChange` is supplied — i.e.
+// the processor. Hiding needs `onHiddenLabelsChange`; both surfaces pass it.
 
 import { useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { Popover } from "@mantine/core";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import ChecklistIcon from "@mui/icons-material/Checklist";
+import CreateNewFolderOutlinedIcon from "@mui/icons-material/CreateNewFolderOutlined";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import { Button } from "@app/ui/Button";
@@ -51,16 +55,14 @@ export interface ClassificationCategoryManagerProps {
   onCategoriesChange: (next: SidebarCategory[]) => void;
   readOnly?: boolean;
   /**
-   * Supply to edit the team vocabulary (create / delete labels, icon pickers).
-   * Absent → grouping-only (the editor sidebar picker): labels are read-only and
-   * a category's chips can only be added/removed from the grouping.
+   * Supply to edit the team vocabulary (create / delete labels, icon pickers,
+   * add-to-category, delete-category-also-deletes-its-labels). Absent →
+   * grouping-only (the editor sidebar picker): labels are read-only.
    */
   onLabelsChange?: (next: ClassificationLabel[]) => void;
-  /** Select mode (processor bulk actions live in the parent toolbar). */
-  selectMode?: boolean;
-  selected?: ReadonlySet<string>;
-  onToggleSelect?: (id: string) => void;
-  onSelectIds?: (ids: string[], select: boolean) => void;
+  /** Controlled hidden-label set + setter — enables per-label + bulk hide. */
+  hiddenLabels?: ReadonlySet<string>;
+  onHiddenLabelsChange?: (next: string[]) => void;
   /** Per-label file counts (editor sidebar). */
   labelCounts?: Map<string, number>;
   /** Per-category header counts (editor: files in category). Defaults to the
@@ -80,10 +82,8 @@ export function ClassificationCategoryManager({
   onCategoriesChange,
   readOnly = false,
   onLabelsChange,
-  selectMode = false,
-  selected,
-  onToggleSelect,
-  onSelectIds,
+  hiddenLabels,
+  onHiddenLabelsChange,
   labelCounts,
   categoryCounts,
   canHide = false,
@@ -92,7 +92,12 @@ export function ClassificationCategoryManager({
 }: ClassificationCategoryManagerProps) {
   const { t } = useTranslation();
   const canEditLabels = !!onLabelsChange;
+  const canHideLabels = !!onHiddenLabelsChange;
 
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(
     () =>
       new Set([CUSTOM_GROUP_ID, categories[0]?.id].filter(Boolean) as string[]),
@@ -108,6 +113,8 @@ export function ClassificationCategoryManager({
 
   const display = (label: ClassificationLabel) =>
     labelDisplay?.(label) ?? label.name;
+  const isHidden = (id: string) => hiddenLabels?.has(id) ?? false;
+
   const idByName = useMemo(() => {
     const map = new Map<string, string>();
     for (const l of labels) {
@@ -117,7 +124,6 @@ export function ClassificationCategoryManager({
     return map;
   }, [labels, labelDisplay]);
 
-  // Member labels per category (present in the vocabulary), and the leftovers.
   const { sections, custom } = useMemo(() => {
     const byId = new Map(labels.map((l) => [l.id, l]));
     const claimed = new Set<string>();
@@ -143,6 +149,32 @@ export function ClassificationCategoryManager({
       return next;
     });
 
+  // ---- selection ----
+  const toggleSelected = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  const selectIds = (ids: string[], select: boolean) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      for (const id of ids) {
+        if (select) next.add(id);
+        else next.delete(id);
+      }
+      return next;
+    });
+  const enterSelectMode = () => {
+    setSelected(new Set());
+    setSelectMode(true);
+  };
+  const exitSelectMode = () => {
+    setSelected(new Set());
+    setSelectMode(false);
+  };
+
   // ---- category transforms (pure over the controlled array) ----
   const patchCategory = (id: string, patch: Partial<SidebarCategory>) =>
     onCategoriesChange(
@@ -158,6 +190,49 @@ export function ClassificationCategoryManager({
           : c,
       ),
     );
+
+  // ---- hidden labels ----
+  const toggleHidden = (id: string) => {
+    const next = new Set(hiddenLabels ?? []);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    onHiddenLabelsChange?.([...next]);
+  };
+  const selectedIds = [...selected];
+  const allSelectedHidden =
+    selectedIds.length > 0 && selectedIds.every((id) => isHidden(id));
+  const hideSelected = () => {
+    const next = new Set(hiddenLabels ?? []);
+    for (const id of selectedIds) {
+      if (allSelectedHidden) next.delete(id);
+      else next.add(id);
+    }
+    onHiddenLabelsChange?.([...next]);
+  };
+
+  // ---- bulk label ops (processor only) ----
+  const deleteSelected = () => {
+    onLabelsChange?.(labels.filter((l) => !selected.has(l.id)));
+    setSelected(new Set());
+  };
+  const addSelectedToCategory = (categoryId: string) =>
+    onCategoriesChange(
+      categories.map((c) =>
+        c.id === categoryId
+          ? { ...c, labelKeys: [...new Set([...c.labelKeys, ...selected])] }
+          : c,
+      ),
+    );
+  const createCategoryWithSelected = (name: string) =>
+    onCategoriesChange([
+      ...categories,
+      {
+        id: makeCustomCategoryId(name, categories),
+        name,
+        icon: NEW_CATEGORY_ICON,
+        labelKeys: [...selected],
+      },
+    ]);
 
   const commitRename = (id: string) => {
     const name = renameDraft.trim();
@@ -198,8 +273,6 @@ export function ClassificationCategoryManager({
     setNewCategory("");
   };
 
-  // Delete a category. In the processor this also removes its member labels from
-  // the vocabulary (confirmed first); grouping-only just drops the grouping.
   const requestDeleteCategory = (category: SidebarCategory) => {
     if (canEditLabels) {
       setConfirmDelete(category);
@@ -250,8 +323,9 @@ export function ClassificationCategoryManager({
           label={name}
           leading={leading}
           count={labelCounts?.get(label.id)}
-          selected={selected?.has(label.id) ?? false}
-          onSelectToggle={() => onToggleSelect?.(label.id)}
+          hidden={isHidden(label.id)}
+          selected={selected.has(label.id)}
+          onSelectToggle={() => toggleSelected(label.id)}
           selectAriaLabel={t("policies.labels.selectAria", "Select {{name}}", {
             name,
           })}
@@ -274,6 +348,15 @@ export function ClassificationCategoryManager({
         label={name}
         leading={leading}
         count={labelCounts?.get(label.id)}
+        hidden={isHidden(label.id)}
+        onToggleHidden={
+          canHideLabels && !readOnly ? () => toggleHidden(label.id) : undefined
+        }
+        hideAriaLabel={
+          isHidden(label.id)
+            ? t("policies.labels.showLabel", "Show {{name}}", { name })
+            : t("policies.labels.hideLabel", "Hide {{name}}", { name })
+        }
         onRemove={onRemove}
         removeAriaLabel={
           categoryId
@@ -295,12 +378,11 @@ export function ClassificationCategoryManager({
   }) => {
     const { id, name, icon, members, category } = opts;
     const memberChips = members.filter((m) => matches(display(m)));
-    // Hide a group entirely when a search matches neither its name nor any member.
     if (q !== "" && !matches(name) && memberChips.length === 0) return null;
     const isOpen = q !== "" || expanded.has(id);
     const memberIds = members.map((m) => m.id);
     const allSelected =
-      memberIds.length > 0 && memberIds.every((mid) => selected?.has(mid));
+      memberIds.length > 0 && memberIds.every((mid) => selected.has(mid));
     return (
       <section key={id} className="labels-group">
         <div className="labels-group-header">
@@ -357,7 +439,7 @@ export function ClassificationCategoryManager({
             <Button
               variant="quiet"
               size="sm"
-              onClick={() => onSelectIds?.(memberIds, !allSelected)}
+              onClick={() => selectIds(memberIds, !allSelected)}
             >
               {allSelected
                 ? t("policies.labels.selectNone", "Clear")
@@ -466,13 +548,83 @@ export function ClassificationCategoryManager({
 
   return (
     <div className="labels-groups">
-      {searchable && (
-        <input
-          className="labels-add-input labels-search"
-          value={query}
-          placeholder={t("policies.labels.search", "Search labels…")}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+      {(searchable || !readOnly) && (
+        <div className="labels-group-toolbar">
+          {searchable && (
+            <input
+              className="labels-add-input labels-search"
+              value={query}
+              placeholder={t("policies.labels.search", "Search labels…")}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          )}
+          {!readOnly &&
+            (selectMode ? (
+              <div className="labels-select-actions">
+                {canEditLabels && (
+                  <Button
+                    variant="tertiary"
+                    accent="danger"
+                    size="sm"
+                    leftSection={
+                      <DeleteOutlineIcon sx={{ fontSize: "1rem" }} />
+                    }
+                    onClick={deleteSelected}
+                    disabled={selected.size === 0}
+                  >
+                    {selected.size > 0
+                      ? t(
+                          "policies.labels.deleteSelectedCount",
+                          "Delete selected ({{count}})",
+                          { count: selected.size },
+                        )
+                      : t("policies.labels.deleteSelected", "Delete selected")}
+                  </Button>
+                )}
+                {canEditLabels && (
+                  <AddToCategoryMenu
+                    categories={categories}
+                    disabled={selected.size === 0}
+                    onAddToCategory={addSelectedToCategory}
+                    onCreateAndAdd={createCategoryWithSelected}
+                  />
+                )}
+                {canHideLabels && (
+                  <Button
+                    variant="tertiary"
+                    size="sm"
+                    leftSection={
+                      allSelectedHidden ? (
+                        <VisibilityIcon sx={{ fontSize: "1rem" }} />
+                      ) : (
+                        <VisibilityOffIcon sx={{ fontSize: "1rem" }} />
+                      )
+                    }
+                    onClick={hideSelected}
+                    disabled={selected.size === 0}
+                  >
+                    {allSelectedHidden
+                      ? t("policies.labels.unhideSelected", "Unhide selected")
+                      : t("policies.labels.hideSelected", "Hide selected")}
+                  </Button>
+                )}
+                <Button variant="tertiary" size="sm" onClick={exitSelectMode}>
+                  {t("policies.labels.done", "Done")}
+                </Button>
+              </div>
+            ) : (
+              labels.length > 0 && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  leftSection={<ChecklistIcon sx={{ fontSize: "1rem" }} />}
+                  onClick={enterSelectMode}
+                >
+                  {t("policies.labels.select", "Select")}
+                </Button>
+              )
+            ))}
+        </div>
       )}
 
       {custom.length > 0 &&
@@ -572,5 +724,105 @@ export function ClassificationCategoryManager({
         </p>
       </Modal>
     </div>
+  );
+}
+
+interface AddToCategoryMenuProps {
+  categories: SidebarCategory[];
+  disabled: boolean;
+  onAddToCategory: (categoryId: string) => void;
+  onCreateAndAdd: (name: string) => void;
+}
+
+/** Select-mode bulk action: add the ticked labels to a category (alphabetical
+ *  list) or a new one. */
+function AddToCategoryMenu({
+  categories,
+  disabled,
+  onAddToCategory,
+  onCreateAndAdd,
+}: AddToCategoryMenuProps) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const sorted = [...categories].sort((a, b) => a.name.localeCompare(b.name));
+
+  const create = () => {
+    const name = newName.trim();
+    if (!name) return;
+    onCreateAndAdd(name);
+    setNewName("");
+    setOpen(false);
+  };
+
+  return (
+    <Popover
+      opened={open}
+      onChange={setOpen}
+      position="bottom-start"
+      withArrow
+      withinPortal
+    >
+      <Popover.Target>
+        <Button
+          variant="tertiary"
+          size="sm"
+          leftSection={
+            <CreateNewFolderOutlinedIcon sx={{ fontSize: "1rem" }} />
+          }
+          disabled={disabled}
+          onClick={() => setOpen((o) => !o)}
+        >
+          {t("policies.labels.addToCategoryAction", "Add to category")}
+        </Button>
+      </Popover.Target>
+      <Popover.Dropdown p="xs" className="labels-addcat-dropdown">
+        <div className="labels-addcat">
+          {sorted.map((c) => (
+            <Button
+              key={c.id}
+              variant="quiet"
+              size="sm"
+              fullWidth
+              justify="start"
+              leftSection={<LocalIcon icon={c.icon} width="1rem" />}
+              onClick={() => {
+                onAddToCategory(c.id);
+                setOpen(false);
+              }}
+            >
+              {c.name}
+            </Button>
+          ))}
+          <div className="labels-add labels-addcat-create">
+            <input
+              className="labels-add-input"
+              value={newName}
+              maxLength={MAX_TEXT_LENGTH}
+              placeholder={t(
+                "policies.labels.newCategory",
+                "New category name…",
+              )}
+              onChange={(e) => setNewName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  create();
+                }
+              }}
+            />
+            <Button
+              variant="secondary"
+              size="sm"
+              leftSection={<AddIcon sx={{ fontSize: "1rem" }} />}
+              onClick={create}
+              disabled={!newName.trim()}
+            >
+              {t("policies.labels.createCategory", "Create category")}
+            </Button>
+          </div>
+        </div>
+      </Popover.Dropdown>
+    </Popover>
   );
 }

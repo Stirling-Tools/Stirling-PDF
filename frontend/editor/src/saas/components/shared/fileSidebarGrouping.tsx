@@ -15,7 +15,9 @@ import { fileStorage } from "@app/services/fileStorage";
 import { readStubClassificationLabels } from "@app/services/fileClassification";
 import { hasInFlightPolicyRuns } from "@app/components/policies/policyRunStore";
 import {
+  getHiddenLabels,
   getSidebarCategories,
+  subscribeHiddenLabels,
   subscribeSidebarCategories,
 } from "@app/services/fileSidebarCategories";
 import { buildLabelGroups } from "@app/components/shared/fileSidebarGroupingLogic";
@@ -112,8 +114,21 @@ export function useFileSidebarGroups(
     subscribeSidebarCategories,
     getSidebarCategories,
   );
+  const hiddenLabels = useSyncExternalStore(
+    subscribeHiddenLabels,
+    getHiddenLabels,
+  );
   return useMemo(
-    () => (enabled ? buildLabelGroups(stubs, labelSet, t, categories) : null),
-    [enabled, stubs, labelSet, t, categories],
+    () =>
+      enabled
+        ? buildLabelGroups(
+            stubs,
+            labelSet,
+            t,
+            categories,
+            new Set(hiddenLabels),
+          )
+        : null,
+    [enabled, stubs, labelSet, t, categories, hiddenLabels],
   );
 }

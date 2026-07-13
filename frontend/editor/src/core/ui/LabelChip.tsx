@@ -2,6 +2,8 @@ import type { KeyboardEvent, ReactNode } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
 import "@app/ui/LabelChip.css";
 
@@ -24,6 +26,12 @@ export interface LabelChipProps {
   selected?: boolean;
   /** Accessible name for the selection checkbox. */
   selectAriaLabel?: string;
+  /** Hidden state — dims the chip and shows an eye-off on the toggle. */
+  hidden?: boolean;
+  /** Show a trailing eye toggle (before remove); called on click. */
+  onToggleHidden?: () => void;
+  /** Accessible name for the hide toggle. */
+  hideAriaLabel?: string;
 }
 
 /**
@@ -42,6 +50,9 @@ export function LabelChip({
   onSelectToggle,
   selected,
   selectAriaLabel,
+  hidden,
+  onToggleHidden,
+  hideAriaLabel,
 }: LabelChipProps) {
   // Selection mode: the whole pill is the toggle (leading must be static — the
   // caller drops the icon picker here to avoid a nested control), with a
@@ -66,7 +77,8 @@ export function LabelChip({
       className={
         "sui-labelchip" +
         (onSelectToggle ? " sui-labelchip--selectable" : "") +
-        (selected ? " sui-labelchip--selected" : "")
+        (selected ? " sui-labelchip--selected" : "") +
+        (hidden ? " sui-labelchip--hidden" : "")
       }
       {...selectProps}
     >
@@ -90,16 +102,35 @@ export function LabelChip({
           )}
         </span>
       ) : (
-        onRemove && (
-          <button
-            type="button"
-            className="sui-labelchip-remove"
-            onClick={onRemove}
-            aria-label={removeAriaLabel ?? `Remove ${label}`}
-          >
-            <CloseIcon sx={{ fontSize: "0.85rem" }} />
-          </button>
-        )
+        <>
+          {onToggleHidden && (
+            <button
+              type="button"
+              className="sui-labelchip-hide"
+              onClick={onToggleHidden}
+              aria-label={
+                hideAriaLabel ?? (hidden ? `Show ${label}` : `Hide ${label}`)
+              }
+              aria-pressed={hidden ?? false}
+            >
+              {hidden ? (
+                <VisibilityOffIcon sx={{ fontSize: "0.95rem" }} />
+              ) : (
+                <VisibilityIcon sx={{ fontSize: "0.95rem" }} />
+              )}
+            </button>
+          )}
+          {onRemove && (
+            <button
+              type="button"
+              className="sui-labelchip-remove"
+              onClick={onRemove}
+              aria-label={removeAriaLabel ?? `Remove ${label}`}
+            >
+              <CloseIcon sx={{ fontSize: "0.85rem" }} />
+            </button>
+          )}
+        </>
       )}
     </span>
   );
