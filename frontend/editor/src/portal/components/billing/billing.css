@@ -308,27 +308,27 @@
   border-radius: 999px;
 }
 .payg-status[data-state="FULL"] {
-  background: #dcfce7;
-  color: var(--p-green-700);
+  background: var(--c-success-subtle);
+  color: var(--c-success);
 }
 .payg-status[data-state="FULL"] .payg-status__dot {
-  background: var(--p-green-500);
+  background: var(--c-success);
   box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18);
 }
 .payg-status[data-state="WARNED"] {
-  background: #fef3c7;
-  color: #a16207;
+  background: var(--c-warning-subtle);
+  color: var(--c-warning);
 }
 .payg-status[data-state="WARNED"] .payg-status__dot {
-  background: #eab308;
+  background: var(--c-warning);
   box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.2);
 }
 .payg-status[data-state="DEGRADED"] {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--c-danger-subtle);
+  color: var(--c-danger);
 }
 .payg-status[data-state="DEGRADED"] .payg-status__dot {
-  background: var(--p-red-500);
+  background: var(--c-danger);
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
 }
 

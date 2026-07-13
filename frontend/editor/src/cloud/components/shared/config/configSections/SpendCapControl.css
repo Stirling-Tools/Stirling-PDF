@@ -24,8 +24,8 @@
 [data-mantine-color-scheme="dark"] .scc {
   /* Chip surface/border track the neutral --c-* tokens (base rule); only the
      brand-azure accent is tuned brighter for dark. */
-  --scc-accent-text: #7ab4ff;
-  --scc-accent-soft: rgba(79, 142, 245, 0.16);
+  --scc-accent-text: #66b8ff;
+  --scc-accent-soft: rgba(10, 139, 255, 0.16);
 }
 
 /* ── Inline row: presets · custom · no-cap · (save) ──────────────────── */

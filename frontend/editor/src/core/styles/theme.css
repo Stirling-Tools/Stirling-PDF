@@ -511,7 +511,7 @@
 /* Lighter grey for disabled plan buttons */
 .plan-button:disabled,
 .plan-button[data-disabled] {
-  background-color: #7e7e7e !important;
+  background-color: var(--p-gray-500) !important;
   color: white;
 }
 
