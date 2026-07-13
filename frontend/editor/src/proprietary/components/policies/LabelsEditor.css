@@ -143,11 +143,42 @@
   gap: var(--space-2);
 }
 
-/* ---- View toggle (grouped / flat) ---- */
+/* ---- View toggle (grouped / flat) — a compact Select ---- */
 .labels-view-toggle {
-  display: inline-flex;
-  gap: 2px;
+  flex: none;
+  width: 8rem;
   margin-left: var(--space-2);
+}
+
+/* ---- Personal-categories note + search ---- */
+.labels-personal-note {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-text-3);
+}
+.labels-search {
+  width: 100%;
+}
+
+/* ---- "Add to category" bulk-action popover ---- */
+.labels-addcat-dropdown {
+  background: var(--color-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+.labels-addcat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 14rem;
+  max-height: 16rem;
+  overflow-y: auto;
+}
+.labels-addcat-create {
+  margin-top: var(--space-1);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-default);
 }
 
 /* ---- Grouped mode: labels under collapsible parent categories ---- */

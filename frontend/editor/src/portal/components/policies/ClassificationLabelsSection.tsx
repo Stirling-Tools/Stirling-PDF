@@ -1,8 +1,9 @@
 // The Classification policy's team-labels control: a summary (count + chips) that
 // opens the fat LabelsEditorModal. Portal counterpart of the editor's
 // ClassificationLabelsSection — reuses the same presentational editor and file
-// helpers but reads/writes through the portal transport and renders labels flat
-// (the grouped view depends on the editor's device-local sidebar categories).
+// helpers but reads/writes team labels through the portal transport. The grouped
+// view's categories are device-local (personal); like the labels, category edits
+// are staged and only committed on "Save for team".
 
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -19,6 +20,11 @@ import {
   DEFAULT_CLASSIFICATION_LABELS,
   type ClassificationLabel,
 } from "@app/data/classificationLabels";
+import {
+  getSidebarCategories,
+  setSidebarCategories,
+  type SidebarCategory,
+} from "@app/services/fileSidebarCategories";
 import { useClassificationLabels } from "@portal/hooks/useClassificationLabels";
 import "@app/components/policies/LabelsEditor.css";
 
@@ -37,19 +43,35 @@ export function ClassificationLabelsSection({
     useClassificationLabels(true);
 
   const [draft, setDraft] = useState<ClassificationLabel[]>(teamLabels);
+  const [draftCategories, setDraftCategories] = useState<SidebarCategory[]>(
+    () => getSidebarCategories(),
+  );
   const [open, setOpen] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
   // Follow server truth; local edits don't touch `teamLabels`, so never clobbered mid-edit.
   useEffect(() => setDraft(teamLabels), [teamLabels]);
 
+  // The category store isn't written until save, so it stays at the baseline
+  // during editing — compare the staged copy against it for dirty state.
   const dirty = useMemo(
-    () => JSON.stringify(draft) !== JSON.stringify(teamLabels),
-    [draft, teamLabels],
+    () =>
+      JSON.stringify(draft) !== JSON.stringify(teamLabels) ||
+      JSON.stringify(draftCategories) !==
+        JSON.stringify(getSidebarCategories()),
+    [draft, teamLabels, draftCategories],
   );
+
+  const openModal = () => {
+    setDraft(teamLabels);
+    setDraftCategories(getSidebarCategories());
+    setLocalError(null);
+    setOpen(true);
+  };
 
   const close = () => {
     setDraft(teamLabels);
+    setDraftCategories(getSidebarCategories());
     setLocalError(null);
     setOpen(false);
   };
@@ -75,9 +97,13 @@ export function ClassificationLabelsSection({
     }
     setLocalError(null);
     // saveTeam surfaces failures via the hook's `error` state; swallow the
-    // rejection so it isn't an unhandled promise.
+    // rejection so it isn't an unhandled promise. Commit the (device-local)
+    // category edits only once the labels have saved.
     void saveTeam(draft)
-      .then(() => setOpen(false))
+      .then(() => {
+        setSidebarCategories(draftCategories);
+        setOpen(false);
+      })
       .catch(() => {});
   };
 
@@ -118,7 +144,7 @@ export function ClassificationLabelsSection({
               variant="secondary"
               size="sm"
               leftSection={<OpenInFullIcon sx={{ fontSize: "1rem" }} />}
-              onClick={() => setOpen(true)}
+              onClick={openModal}
               style={{ alignSelf: "flex-start" }}
             >
               {canConfigure
@@ -164,6 +190,8 @@ export function ClassificationLabelsSection({
         readOnly={!canConfigure}
         error={localError ?? error}
         groupable
+        categories={draftCategories}
+        onCategoriesChange={setDraftCategories}
       />
     </div>
   );

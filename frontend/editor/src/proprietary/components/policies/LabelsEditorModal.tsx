@@ -20,6 +20,7 @@ import { Button } from "@app/ui/Button";
 import { Banner } from "@app/ui/Banner";
 import { LabelsEditor } from "@app/components/policies/LabelsEditor";
 import type { ClassificationLabel } from "@app/data/classificationLabels";
+import type { SidebarCategory } from "@app/services/fileSidebarCategories";
 
 interface LabelsEditorModalProps {
   open: boolean;
@@ -40,6 +41,9 @@ interface LabelsEditorModalProps {
   error: string | null;
   /** Offer the flat/grouped view toggle + category manager (grouped by default). */
   groupable?: boolean;
+  /** Controlled (staged) category structure for the grouped view. */
+  categories?: SidebarCategory[];
+  onCategoriesChange?: (next: SidebarCategory[]) => void;
 }
 
 export function LabelsEditorModal({
@@ -57,6 +61,8 @@ export function LabelsEditorModal({
   readOnly,
   error,
   groupable = false,
+  categories,
+  onCategoriesChange,
 }: LabelsEditorModalProps) {
   const { t } = useTranslation();
   const fileInput = useRef<HTMLInputElement>(null);
@@ -137,6 +143,14 @@ export function LabelsEditorModal({
             description={error}
           />
         )}
+        {groupable && (
+          <p className="labels-personal-note">
+            {t(
+              "policies.labels.personalCategoriesNote",
+              "Labels are shared with your whole team. Categories are your own personal grouping — changing them here won’t change them for anyone else.",
+            )}
+          </p>
+        )}
         {!readOnly && (
           <div className="labels-toolbar">
             <Button
@@ -171,6 +185,8 @@ export function LabelsEditorModal({
           onChange={onDraftChange}
           readOnly={readOnly}
           groupable={groupable}
+          categories={categories}
+          onCategoriesChange={onCategoriesChange}
         />
       </div>
     </Modal>

@@ -83,13 +83,24 @@ function write(next: SidebarCategory[]) {
   for (const listener of listeners) listener();
 }
 
-/** Mutate the current effective list (snapshotting the default on first edit). */
-function mutate(fn: (categories: SidebarCategory[]) => SidebarCategory[]) {
-  write(fn(effective.map((c) => ({ ...c, labelKeys: [...c.labelKeys] }))));
-}
-
 export function getSidebarCategories(): SidebarCategory[] {
   return effective;
+}
+
+/** Replace the whole category list (for controlled editors that stage edits and
+ *  commit the final array at once). Snapshots defensively so later mutation of
+ *  the passed array can't corrupt the store. */
+export function setSidebarCategories(next: SidebarCategory[]) {
+  write(next.map((c) => ({ ...c, labelKeys: [...c.labelKeys] })));
+}
+
+/** A stable id for a newly created custom category. Pure — safe for computing a
+ *  next-state array without touching the store. */
+export function makeCustomCategoryId(
+  name: string,
+  existing: SidebarCategory[],
+): string {
+  return `custom:${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${existing.length}`;
 }
 
 export function subscribeSidebarCategories(listener: () => void) {
@@ -131,59 +142,11 @@ export function categorizedLabelKeys(
 }
 
 // ---- editing ----
+// Category mutations go through the controlled ClassificationCategoryManager,
+// which computes the next array and commits it via setSidebarCategories — so
+// there are no per-field mutators here beyond the whole-list setter above.
 
-/** Create a new empty category; returns its id. */
-export function addCategory(name: string, icon: string): string {
-  const id = `custom:${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${
-    effective.length
-  }`;
-  mutate((categories) => [...categories, { id, name, icon, labelKeys: [] }]);
-  return id;
-}
-
-export function renameCategory(id: string, name: string) {
-  mutate((categories) =>
-    categories.map((c) => (c.id === id ? { ...c, name } : c)),
-  );
-}
-
-export function setCategoryIcon(id: string, icon: string) {
-  mutate((categories) =>
-    categories.map((c) => (c.id === id ? { ...c, icon } : c)),
-  );
-}
-
-export function setCategoryHidden(id: string, hidden: boolean) {
-  mutate((categories) =>
-    categories.map((c) => (c.id === id ? { ...c, hidden } : c)),
-  );
-}
-
-export function deleteCategory(id: string) {
-  mutate((categories) => categories.filter((c) => c.id !== id));
-}
-
-export function addLabelToCategory(id: string, labelId: string) {
-  mutate((categories) =>
-    categories.map((c) =>
-      c.id === id && !c.labelKeys.includes(labelId)
-        ? { ...c, labelKeys: [...c.labelKeys, labelId] }
-        : c,
-    ),
-  );
-}
-
-export function removeLabelFromCategory(id: string, labelId: string) {
-  mutate((categories) =>
-    categories.map((c) =>
-      c.id === id
-        ? { ...c, labelKeys: c.labelKeys.filter((k) => k !== labelId) }
-        : c,
-    ),
-  );
-}
-
-/** Restore the built-in default and clear the customized flag (undoes any prior `mutate`). */
+/** Restore the built-in default and clear the customized flag. */
 export function resetSidebarCategories() {
   stored = null;
   recompute();
