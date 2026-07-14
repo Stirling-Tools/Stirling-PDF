@@ -87,7 +87,9 @@ export function Policies() {
   ) {
     setPageError(null);
     try {
-      if (result.steps.some((s) => s.operation === policyEndpoint("classify"))) {
+      if (
+        result.steps.some((s) => s.operation === policyEndpoint("classify"))
+      ) {
         await seedTeamLabelsIfEmpty();
       }
       await savePolicy(buildWireFromSetup(entry, result, t));

@@ -404,7 +404,7 @@ function PolicySetupWizardBody({
           <p className="portal-policies__wizard-desc">
             {t(
               "portal.policies.wizard.classification.description",
-              "Every uploaded document is classified against your team's labels and tagged with the types that fit. Edit the shared label vocabulary the classifier chooses from.",
+              "Every uploaded document is classified against the built-in labels and tagged with the types that fit. The label set is shared across your whole team.",
             )}
           </p>
           <h3 className="portal-policies__wizard-heading">
@@ -413,7 +413,7 @@ function PolicySetupWizardBody({
               "Classification labels",
             )}
           </h3>
-          <ClassificationLabelsSection canConfigure />
+          <ClassificationLabelsSection />
         </div>
       )}
 

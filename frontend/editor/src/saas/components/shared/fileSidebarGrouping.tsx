@@ -1,4 +1,4 @@
-// Classification override of the Files-sidebar grouping seam: Recent, one group per VISIBLE category (device-local, editable — default from the built-in label families), a standalone group for any label not yet in a category, then Other for files in none of those. Labels are cached on the stub via a lazy metadata backfill so grouping stays cheap.
+// Classification override of the Files-sidebar grouping seam: Recent, one group per VISIBLE category (the fixed, shared label families; each can be hidden device-local), then Other for files in none of those. Labels are cached on the stub via a lazy metadata backfill so grouping stays cheap.
 
 import {
   useEffect,
@@ -10,14 +10,11 @@ import {
 import { useTranslation } from "react-i18next";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
-import { useClassificationLabels } from "@app/hooks/useClassificationLabels";
 import { fileStorage } from "@app/services/fileStorage";
 import { readStubClassificationLabels } from "@app/services/fileClassification";
 import { hasInFlightPolicyRuns } from "@app/components/policies/policyRunStore";
 import {
-  getHiddenLabels,
   getSidebarCategories,
-  subscribeHiddenLabels,
   subscribeSidebarCategories,
 } from "@app/services/fileSidebarCategories";
 import { buildLabelGroups } from "@app/components/shared/fileSidebarGroupingLogic";
@@ -57,7 +54,6 @@ export function useFileSidebarGroups(
   // like core, and don't fetch team labels or backfill from metadata. Gates the
   // whole feature so an AI-off SaaS tenant sees no Recent/Other/category chrome.
   const enabled = useClassificationEnabled();
-  const { teamLabels: labelSet } = useClassificationLabels(enabled);
   const { bumpRevision } = useIndexedDB();
   // Attempted reads keyed by id+lastModified: a re-classified file (new version bumps lastModified) is re-read and leaves "Other" on its own, while a truly-unlabelled file keeps a stable key and is read once.
   const attempted = useRef<Set<string>>(new Set());
@@ -114,21 +110,8 @@ export function useFileSidebarGroups(
     subscribeSidebarCategories,
     getSidebarCategories,
   );
-  const hiddenLabels = useSyncExternalStore(
-    subscribeHiddenLabels,
-    getHiddenLabels,
-  );
   return useMemo(
-    () =>
-      enabled
-        ? buildLabelGroups(
-            stubs,
-            labelSet,
-            t,
-            categories,
-            new Set(hiddenLabels),
-          )
-        : null,
-    [enabled, stubs, labelSet, t, categories, hiddenLabels],
+    () => (enabled ? buildLabelGroups(stubs, t, categories) : null),
+    [enabled, stubs, t, categories],
   );
 }

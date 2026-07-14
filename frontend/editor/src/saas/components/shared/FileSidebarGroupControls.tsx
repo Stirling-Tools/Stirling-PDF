@@ -1,8 +1,7 @@
-// The Files-sidebar category manager: a "tune" button opening a modal that hosts
-// the shared {@link ClassificationCategoryManager} to shape the parent categories
-// your files group under. All device-local (grouping only — it never changes the
-// team's label vocabulary), applied live; files in no visible category fall back
-// to "Other".
+// The Files-sidebar category picker: a "tune" button opening a modal that lists the fixed, shared
+// categories and lets the user show or hide each one in their own sidebar. Device-local and
+// presentational only — it never changes the shared categories or the label vocabulary; files in a
+// hidden (or no) category fall back to "Other".
 
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
@@ -12,25 +11,19 @@ import { Modal } from "@app/ui/Modal";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { ClassificationCategoryManager } from "@app/components/policies/ClassificationCategoryManager";
-import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
 import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
-import { useClassificationLabels } from "@app/hooks/useClassificationLabels";
 import { bucketStubsByLabel } from "@app/components/shared/fileSidebarGroupingLogic";
 import {
-  getHiddenLabels,
   getSidebarCategories,
-  resetSidebarCategories,
-  setHiddenLabels,
-  setSidebarCategories,
-  subscribeHiddenLabels,
+  resetHiddenCategories,
+  setCategoryHidden,
   subscribeSidebarCategories,
 } from "@app/services/fileSidebarCategories";
-import type { ClassificationLabel } from "@app/data/classificationLabels";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import "@app/components/shared/FileSidebarGroupControls.css";
 
 interface FileSidebarGroupControlsProps {
-  /** The files currently listed, for live per-label counts. */
+  /** The files currently listed, for live per-category counts. */
   stubs: StirlingFileStub[];
 }
 
@@ -39,32 +32,15 @@ export function FileSidebarGroupControls({
 }: FileSidebarGroupControlsProps) {
   const { t } = useTranslation();
   const enabled = useClassificationEnabled();
-  const { isTeamLeader } = useSaaSTeam();
   const [open, setOpen] = useState(false);
   const categories = useSyncExternalStore(
     subscribeSidebarCategories,
     getSidebarCategories,
   );
-  const hiddenLabels = useSyncExternalStore(
-    subscribeHiddenLabels,
-    getHiddenLabels,
-  );
-  const hiddenSet = useMemo(() => new Set(hiddenLabels), [hiddenLabels]);
-  // Only fetch the team label set while the picker is open.
-  const { teamLabels: labelSet } = useClassificationLabels(open);
 
-  // Bucketed once and reused for both the per-label and per-category counts below.
-  const byLabel = useMemo(() => bucketStubsByLabel(stubs), [stubs]);
-
-  // Per-label file counts from the same bucketing the sidebar groups use.
-  const labelCounts = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const [key, bucket] of byLabel) counts.set(key, bucket.stubs.length);
-    return counts;
-  }, [byLabel]);
-
-  // Files per category (deduped across its labels).
+  // Files per category (deduped across its labels), from the same bucketing the sidebar groups use.
   const categoryCounts = useMemo(() => {
+    const byLabel = bucketStubsByLabel(stubs);
     const counts = new Map<string, number>();
     for (const category of categories) {
       const ids = new Set<string>();
@@ -76,10 +52,7 @@ export function FileSidebarGroupControls({
       counts.set(category.id, ids.size);
     }
     return counts;
-  }, [byLabel, categories]);
-
-  const labelDisplay = (label: ClassificationLabel) =>
-    t(`classification.labels.${label.id}`, label.name);
+  }, [stubs, categories]);
 
   // Classification off (non-AI SaaS tenant) → no "customize groups" affordance,
   // matching the flat, ungrouped list. (All hooks above run unconditionally.)
@@ -101,12 +74,11 @@ export function FileSidebarGroupControls({
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        width="xl"
-        className="fsg-modal"
+        width="md"
         title={t("fileSidebar.groupsModal.title", "Sidebar categories")}
         subtitle={t(
           "fileSidebar.groupsModal.subtitle",
-          "Group your files into parent categories. Add existing labels to a category, rename it, or create your own. Files in none of your categories appear under “Other”.",
+          "Show or hide categories in the files sidebar.",
         )}
         footer={
           <div className="fsg-footer">
@@ -114,12 +86,9 @@ export function FileSidebarGroupControls({
               variant="tertiary"
               size="sm"
               leftSection={<RestartAltIcon sx={{ fontSize: "1rem" }} />}
-              onClick={resetSidebarCategories}
+              onClick={resetHiddenCategories}
             >
-              {t(
-                "fileSidebar.groupsModal.reset",
-                "Reset your categories to default",
-              )}
+              {t("fileSidebar.groupsModal.reset", "Show all")}
             </Button>
             <Button variant="primary" size="sm" onClick={() => setOpen(false)}>
               {t("fileSidebar.groupsModal.done", "Done")}
@@ -128,20 +97,10 @@ export function FileSidebarGroupControls({
         }
       >
         <div className="fsg-body">
-          {/* Grouping-only (no onLabelsChange): the editor can't edit the team
-              vocabulary. Applied live to the device-local store. */}
           <ClassificationCategoryManager
-            labels={labelSet}
             categories={categories}
-            onCategoriesChange={setSidebarCategories}
-            hiddenLabels={hiddenSet}
-            onHiddenLabelsChange={setHiddenLabels}
-            labelCounts={labelCounts}
-            categoryCounts={categoryCounts}
-            canHide
-            canManageTeamLabels={isTeamLeader}
-            searchable
-            labelDisplay={labelDisplay}
+            onToggleHidden={setCategoryHidden}
+            counts={categoryCounts}
           />
         </div>
       </Modal>
