@@ -120,6 +120,7 @@ public class PolicyController {
             throws IOException {
         stampPolicyAudit(definition);
         requireRunnable(definition);
+        validateAdHocOutput(definition);
         PolicyInputs inputs = toInputs(files);
         PolicyRunHandle handle =
                 policyRunner.runAdHoc(definition, inputs, PolicyProgressListener.NOOP);
@@ -140,6 +141,7 @@ public class PolicyController {
             throws IOException {
         stampPolicyAudit(definition);
         requireRunnable(definition);
+        validateAdHocOutput(definition);
         PolicyInputs inputs = toInputs(files);
 
         SseEmitter emitter =
@@ -527,6 +529,24 @@ public class PolicyController {
                         .toList();
         if (!steps.isEmpty()) {
             request.setAttribute(AuditContext.REQ_ATTR_POLICY_STEPS, steps);
+        }
+    }
+
+    /**
+     * Authorization-check an ad-hoc run's output while the caller's principal is present (this
+     * request thread). The worker thread that later delivers carries no security context, so an S3
+     * output's connection-access check would be skipped there; without this gate a caller could
+     * reference another tenant's connection by id and write to it (confused deputy). Stored
+     * policies are covered by save-time {@link PolicyValidator#validate} instead.
+     */
+    private void validateAdHocOutput(PipelineDefinition definition) {
+        if (definition.output() == null) {
+            return;
+        }
+        try {
+            policyValidator.validateOutput(definition.output());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 

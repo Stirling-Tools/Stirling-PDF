@@ -18,6 +18,7 @@ import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.s3.S3Config;
 import stirling.software.proprietary.policy.s3.S3ConnectionPool;
+import stirling.software.proprietary.policy.s3.S3ConnectionResolver;
 import stirling.software.proprietary.policy.s3.S3Identities;
 
 import software.amazon.awssdk.core.exception.SdkException;
@@ -36,15 +37,14 @@ import software.amazon.awssdk.services.s3.model.S3Object;
  * Reads input files from an Amazon S3 (or S3-compatible) bucket; each listed object is its own unit
  * of work, claimed through the {@link ResolveContext} ledger and tracked in place. Identity and
  * version gate come from {@link S3Identities}, so the steady-state sweep never downloads content.
- * Options (see {@link S3Config}): "bucket" (required), "region" (default us-east-1), "prefix" (only
- * keys starting with it are read), "endpoint" (S3-compatible stores such as MinIO; path-style
- * addressing is used automatically), "accessKeyId" and "secretAccessKey" (required; requests are
- * never signed with the server's own AWS identity), and "mode" which is "consume" (default: a
- * processed object is deleted once every policy that claimed it has settled successfully and it is
- * still the version that ran; failures stay in place and are not retried until they change) or
- * "snapshot" (stateless, every run sees the full set). Keys ending in "/" (folder placeholders) and
- * keys with a dot-prefixed path segment are never picked up, mirroring the folder source's
- * hidden-file rule.
+ * Options: "connectionId" references the stored S3 connection (an {@code IntegrationConfig} owning
+ * bucket, region, endpoint, and credentials - resolved by {@link S3ConnectionResolver}); "prefix"
+ * (only keys starting with it are read) and "mode" are per-source, where mode is "consume"
+ * (default: a processed object is deleted once every policy that claimed it has settled
+ * successfully and it is still the version that ran; failures stay in place and are not retried
+ * until they change) or "snapshot" (stateless, every run sees the full set). Keys ending in "/"
+ * (folder placeholders) and keys with a dot-prefixed path segment are never picked up, mirroring
+ * the folder source's hidden-file rule.
  */
 @Slf4j
 @Service
@@ -55,6 +55,7 @@ public class S3InputSource implements InputSource {
     private static final String TYPE = "s3";
 
     private final S3ConnectionPool connectionPool;
+    private final S3ConnectionResolver connectionResolver;
 
     @Override
     public String type() {
@@ -67,12 +68,12 @@ public class S3InputSource implements InputSource {
     }
 
     /**
-     * Fails fast at save time: bad config shape, a private endpoint without the operator opt-in, or
-     * a bucket the supplied credentials cannot list.
+     * Fails fast at save time: an unknown/disabled/unusable connection, bad config shape, a private
+     * endpoint without the operator opt-in, or a bucket the connection cannot list.
      */
     @Override
     public void validate(InputSpec spec) {
-        S3Config config = S3Config.from(spec.options());
+        S3Config config = connectionResolver.resolve(spec.options());
         try {
             connectionPool.clientFor(config).listObjectsV2(listRequest(config).maxKeys(1).build());
         } catch (SdkException e) {
@@ -89,7 +90,7 @@ public class S3InputSource implements InputSource {
 
     @Override
     public List<ResolvedInput> resolve(InputSpec spec, ResolveContext ctx) throws IOException {
-        S3Config config = S3Config.from(spec.options());
+        S3Config config = connectionResolver.resolve(spec.options());
         S3Client client = connectionPool.clientFor(config);
         // A listing failure propagates so the sweep reads it as "could not list" (which vetoes
         // presence cleanup), never as "verifiably no objects".
