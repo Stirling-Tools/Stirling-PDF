@@ -1,20 +1,18 @@
-package stirling.software.saas.payg.cap;
+package stirling.software.proprietary.policy.controller;
 
 import org.springframework.web.servlet.HandlerMapping;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 /**
- * Policy execute-route namespace under {@code /api/v1/policies}.
+ * Policy execute-route namespace under {@code /api/v1/policies} - the paths that actually run an
+ * automation ({@code /run}, {@code /run/stream}, {@code /{id}/run}, {@code /{id}/trigger}).
  *
- * <p>The policy controllers live in the {@code proprietary} module, which does not depend on {@code
- * saas} and so cannot carry the saas-only {@link RequiresFeature} annotation. As with {@link
- * AiToolRoutes}, the PAYG hot-path recognises the routes by path instead: {@code EntitlementGuard}
- * gates them on {@link stirling.software.saas.payg.model.FeatureGate#AUTOMATION}.
- *
- * <p>Only the execute paths are matched - {@code /run}, {@code /run/stream}, {@code /{id}/run},
- * {@code /{id}/trigger} - so listing/reading policies stays ungated and the UI can still show them
- * and prompt to sign up on use.
+ * <p>Single source of truth for both PAYG entitlement gates, so a caller without billing is blocked
+ * at the start of a run rather than partway through: the saas {@code EntitlementGuard} gates these
+ * on {@code FeatureGate.AUTOMATION}, and the self-hosted account-link {@code
+ * InstanceEntitlementInterceptor} treats them as billable. Read/list policy endpoints are
+ * deliberately excluded so the UI can still show policies and prompt on use.
  */
 public final class PolicyRunRoutes {
 

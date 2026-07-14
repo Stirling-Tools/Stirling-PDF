@@ -1,4 +1,4 @@
-package stirling.software.saas.payg.cap;
+package stirling.software.proprietary.policy.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

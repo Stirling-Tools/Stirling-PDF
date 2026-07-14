@@ -31,11 +31,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.proprietary.policy.controller.PolicyRunRoutes;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.saas.payg.cap.AiToolRoutes;
-import stirling.software.saas.payg.cap.PolicyRunRoutes;
 import stirling.software.saas.payg.cap.RequiresFeature;
 import stirling.software.saas.payg.model.FeatureGate;
 import stirling.software.saas.util.AuthenticationUtils;
