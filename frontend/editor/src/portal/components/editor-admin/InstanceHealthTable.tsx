@@ -15,6 +15,7 @@ import {
   type EditorInstance,
 } from "@portal/api/editorDeploy";
 
+// Deployment target names are product/brand terms, not localised.
 const TARGET_LABEL: Record<EditorInstance["target"], string> = {
   cloud: "Cloud",
   docker: "Docker",
@@ -73,7 +74,7 @@ export function InstanceHealthTable({ instances }: Props) {
           size="sm"
           pulse={i.status === "healthy"}
         >
-          {INSTANCE_STATUS_LABEL[i.status]}
+          {t(INSTANCE_STATUS_LABEL[i.status])}
         </StatusBadge>
       ),
     },

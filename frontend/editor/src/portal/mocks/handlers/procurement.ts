@@ -2,10 +2,12 @@ import { http, HttpResponse, delay } from "msw";
 import type { Tier } from "@portal/contexts/TierContext";
 import {
   JOURNEY,
-  buildProcurement,
-  seedEnterpriseDeal,
   type DealStage,
   type ProcurementResponse,
+} from "@portal/api/procurement";
+import {
+  buildProcurement,
+  seedEnterpriseDeal,
 } from "@portal/mocks/procurement";
 import {
   advanceDeal,

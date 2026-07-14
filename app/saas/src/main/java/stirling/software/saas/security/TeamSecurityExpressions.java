@@ -12,8 +12,8 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.model.enumeration.TeamRole;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.security.service.UserService;
-import stirling.software.saas.repository.TeamMembershipRepository;
 
 /**
  * Security expressions for team-based authorization in saas mode. Wired into
@@ -63,6 +63,12 @@ public class TeamSecurityExpressions {
             return null;
         }
         return currentUser.getTeam().getId();
+    }
+
+    /** The current authenticated user's id, or {@code null} if unauthenticated. */
+    public Long currentUserId() {
+        User currentUser = getCurrentUser();
+        return currentUser == null ? null : currentUser.getId();
     }
 
     /** Whether the current authenticated user is any kind of member of the given team. */

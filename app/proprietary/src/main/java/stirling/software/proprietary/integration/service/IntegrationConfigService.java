@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.proprietary.access.model.DefaultAccessPolicy;
 import stirling.software.proprietary.access.model.OwnerScope;
 import stirling.software.proprietary.access.model.ResourceType;
+import stirling.software.proprietary.access.repository.ResourceGrantRepository;
 import stirling.software.proprietary.access.service.OwnershipService;
 import stirling.software.proprietary.access.service.SecretMasker;
 import stirling.software.proprietary.integration.dto.IntegrationConfigRequest;
@@ -41,6 +42,11 @@ public class IntegrationConfigService {
     private final IntegrationConfigRepository repository;
     private final OwnershipService ownership;
     private final SecretMasker secretMasker;
+    private final ResourceGrantRepository grantRepository;
+    // Bean-discovered extension points: features that understand a type contribute its config
+    // schema and report what still references a config, without this module depending on them.
+    private final List<IntegrationConfigValidator> validators;
+    private final List<IntegrationConfigUsageCheck> usageChecks;
 
     // ---- commands ----
 
@@ -49,6 +55,13 @@ public class IntegrationConfigService {
         OwnerScope scope = request.scope() == null ? OwnerScope.USER : request.scope();
         IntegrationConfig cfg = new IntegrationConfig();
         cfg.setIntegrationType(require(request.integrationType(), "integrationType"));
+        // S3 is infrastructure, not self-serve: no personal S3 for regular users. TEAM/SERVER
+        // scopes are already restricted to admins/team owners by assignOwnership.
+        if (cfg.getIntegrationType() == IntegrationType.S3
+                && scope == OwnerScope.USER
+                && !ownership.isAdmin(currentUser)) {
+            throw forbidden("S3 connections can only be created by administrators or team owners");
+        }
         cfg.setName(require(request.name(), "name"));
         cfg.setEnabled(request.enabled() == null || request.enabled());
         cfg.setLocked(request.locked() != null && request.locked());
@@ -57,13 +70,21 @@ public class IntegrationConfigService {
                         ? DefaultAccessPolicy.EXPLICIT_ONLY
                         : request.defaultAccess());
 
+        // TEAM scope may omit the team id: default to the caller's own team so clients (the
+        // portal) need not know it. assignOwnership still enforces admin-or-leader of that team.
+        Long ownerTeamId = request.ownerTeamId();
+        if (ownerTeamId == null && scope == OwnerScope.TEAM && currentUser.getTeam() != null) {
+            ownerTeamId = currentUser.getTeam().getId();
+        }
         ownership.assignOwnership(
                 cfg,
                 scope,
-                request.ownerTeamId(),
+                ownerTeamId,
                 currentUser,
                 () -> lockedServerExists(cfg.getIntegrationType()));
-        cfg.setConfig(writeJson(secretMasker.sanitize(request.config())));
+        Map<String, Object> config = secretMasker.sanitize(request.config());
+        validateConfig(cfg.getIntegrationType(), config);
+        cfg.setConfig(writeJson(config));
         return repository.save(cfg);
     }
 
@@ -92,8 +113,10 @@ public class IntegrationConfigService {
             cfg.setDefaultAccess(request.defaultAccess());
         }
         if (request.config() != null) {
-            cfg.setConfig(
-                    writeJson(secretMasker.merge(readJson(cfg.getConfig()), request.config())));
+            Map<String, Object> merged =
+                    secretMasker.merge(readJson(cfg.getConfig()), request.config());
+            validateConfig(cfg.getIntegrationType(), merged);
+            cfg.setConfig(writeJson(merged));
         }
         return repository.save(cfg);
     }
@@ -104,6 +127,17 @@ public class IntegrationConfigService {
         if (!ownership.canManage(TYPE, cfg, currentUser)) {
             throw forbidden("You cannot manage this integration");
         }
+        // Refuse to pull a connection out from under whatever still references it.
+        List<String> usages =
+                usageChecks.stream()
+                        .flatMap(check -> check.usagesOf(cfg.getId()).stream())
+                        .toList();
+        if (!usages.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "Integration is in use by: " + String.join(", ", usages));
+        }
+        // Drop grants sharing this config so they do not dangle as dead rows.
+        grantRepository.deleteByResourceTypeAndResourceId(TYPE, String.valueOf(cfg.getId()));
         repository.delete(cfg);
     }
 
@@ -176,6 +210,19 @@ public class IntegrationConfigService {
     }
 
     // ---- integration-specific glue ----
+
+    /** Runs every registered validator for the type; unknown types save free-form. */
+    private void validateConfig(IntegrationType type, Map<String, Object> config) {
+        for (IntegrationConfigValidator validator : validators) {
+            if (validator.type() == type) {
+                try {
+                    validator.validate(config == null ? Map.of() : config);
+                } catch (IllegalArgumentException e) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+                }
+            }
+        }
+    }
 
     /** A non-admin can't create a personal config of a type an admin has locked at server scope. */
     private boolean lockedServerExists(IntegrationType type) {

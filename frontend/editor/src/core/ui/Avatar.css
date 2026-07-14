@@ -3,12 +3,19 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-text-on-accent);
   font-family: var(--font-sans);
-  letter-spacing: 0.01em;
   overflow: hidden;
   flex-shrink: 0;
+}
+
+/* line-height:1 + centred tracking keeps initials optically centred at small sizes. */
+.sui-avatar__initials {
+  display: block;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-indent: 0.02em;
 }
 
 .sui-avatar--interactive {

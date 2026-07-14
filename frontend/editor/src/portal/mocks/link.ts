@@ -1,5 +1,6 @@
 /**
- * Account-link fixtures and the types api/link.ts shares with them.
+ * Account-link fixtures. Types live in api/link.ts (the backend contract);
+ * this module only builds fake data for Storybook and tests.
  *
  * "Mode A" combined billing: a self-hosted instance links the org's SaaS account
  * so its unattended calls bill against the org wallet. Two surfaces:
@@ -11,61 +12,17 @@
  *   - TEAM-WIDE management: the SaaS backend (`GET /instances`,
  *     `POST /instances/{id}/revoke`), called with the admin's JWT.
  *
- * api/link.ts imports the types; the MSW handlers in mocks/handlers/link.ts serve
- * this fixture data over the intercepted apiClient.local.json() calls. Components never reach
- * into this module directly. Once the real backend is wired the handlers stop
- * being registered and these fixtures can be deleted (or kept as test seeds).
+ * The MSW handlers in mocks/handlers/link.ts serve this fixture data over the
+ * intercepted apiClient.local.json() calls. Components never reach into this
+ * module directly. Once the real backend is wired the handlers stop being
+ * registered and these fixtures can be deleted (or kept as test seeds).
  */
 
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  Local backend — link / status / unlink (this instance)                   */
-/* ──────────────────────────────────────────────────────────────────────── */
-
-/** Body for POST /api/v1/account-link/link — the SaaS JWT + optional name. */
-export interface LinkInstanceRequest {
-  /** Admin's SaaS session JWT, obtained via the hosted-login popup. */
-  supabaseJwt: string;
-  /** Optional label for this instance. */
-  name?: string;
-}
-
-/** Link status for this instance (GET /api/v1/account-link/status). */
-export interface LinkStatus {
-  linked: boolean;
-  /** Display name the local backend stored at link time; null when unset. */
-  name: string | null;
-}
-
-/**
- * Locally-accrued usage not yet reported to SaaS (GET /api/v1/account-link/usage).
- * The portal adds this on top of the SaaS-synced spend so "current usage"
- * includes work done since the last daily sync. Per-category unsynced units for
- * the current period; all zero when metering is off or nothing is pending.
- */
-export interface LocalUsage {
-  /** ISO timestamp of the current period start; null when unknown (not yet synced). */
-  periodStart: string | null;
-  apiUnsyncedUnits: number;
-  aiUnsyncedUnits: number;
-  automationUnsyncedUnits: number;
-  totalUnsyncedUnits: number;
-}
-
-/* ──────────────────────────────────────────────────────────────────────── */
-/*  SaaS backend — team-wide instance management                             */
-/* ──────────────────────────────────────────────────────────────────────── */
-
-/** A linked instance row (GET /api/v1/account-link/instances). */
-export interface LinkedInstanceRow {
-  instanceId: number;
-  deviceId: string;
-  name: string | null;
-  /** ISO timestamp the instance was registered. */
-  createdAt: string | null;
-  /** ISO timestamp the instance last presented its credential; null if never. */
-  lastSeenAt: string | null;
-  revoked: boolean;
-}
+import type {
+  LinkStatus,
+  LinkedInstanceRow,
+  LocalUsage,
+} from "@portal/api/link";
 
 /* ──────────────────────────────────────────────────────────────────────── */
 /*  Mock store — link/unlink/revoke mutate this so the surface feels live     */

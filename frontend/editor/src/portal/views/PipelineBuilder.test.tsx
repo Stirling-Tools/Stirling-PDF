@@ -7,7 +7,7 @@ import {
 } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import type { Policy } from "@portal/api/pipelines";
+import type { Policy, TriggerOutcome } from "@portal/api/pipelines";
 import type { ToolRegistryCatalog } from "@app/contexts/ToolRegistryContext";
 import type { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import { PipelineBuilder } from "@portal/views/PipelineBuilder";
@@ -43,6 +43,18 @@ vi.mock("@portal/api/pipelines", () => ({
 const fetchSources = vi.fn();
 vi.mock("@portal/api/sources", () => ({
   fetchSources: () => fetchSources(),
+}));
+
+const clearProcessedHistory = vi.fn();
+vi.mock("@portal/api/policies", () => ({
+  clearProcessedHistory: (id: string) => clearProcessedHistory(id),
+}));
+
+const fetchS3Connections = vi.fn();
+const createIntegration = vi.fn();
+vi.mock("@portal/api/integrations", () => ({
+  fetchS3Connections: () => fetchS3Connections(),
+  createIntegration: (...args: unknown[]) => createIntegration(...args),
 }));
 
 // One editable tool, Compress, so the picker and step settings have something to render.
@@ -100,13 +112,27 @@ const POLICY: Policy = {
   output: { type: "inline", options: {} },
 };
 
+function outcome(overrides: Partial<TriggerOutcome>): TriggerOutcome {
+  return {
+    runIds: [],
+    filesListed: 0,
+    alreadyProcessed: 0,
+    parked: 0,
+    inFlight: 0,
+    ...overrides,
+  };
+}
+
 function renderBuilder(initial: string) {
   return render(
     <MemoryRouter initialEntries={[initial]}>
       <Routes>
-        <Route path="/portal/pipelines/new" element={<PipelineBuilder />} />
-        <Route path="/portal/pipelines/:id" element={<PipelineBuilder />} />
-        <Route path="/portal/pipelines" element={<div>pipelines list</div>} />
+        <Route path="/processor/pipelines/new" element={<PipelineBuilder />} />
+        <Route path="/processor/pipelines/:id" element={<PipelineBuilder />} />
+        <Route
+          path="/processor/pipelines"
+          element={<div>pipelines list</div>}
+        />
       </Routes>
     </MemoryRouter>,
   );
@@ -126,12 +152,17 @@ describe("PipelineBuilder", () => {
     fetchSources.mockResolvedValue({ kpis: [], sources: [] });
     savePipeline.mockResolvedValue({});
     deletePipeline.mockResolvedValue(undefined);
-    triggerPipeline.mockResolvedValue(["run-1"]);
+    triggerPipeline.mockResolvedValue(outcome({ runIds: ["run-1"] }));
     fetchRun.mockResolvedValue({ status: "COMPLETED" });
+    clearProcessedHistory.mockReset();
+    clearProcessedHistory.mockResolvedValue(undefined);
+    fetchS3Connections.mockReset();
+    fetchS3Connections.mockResolvedValue([]);
+    createIntegration.mockReset();
   });
 
   it("builds a new pipeline: name it, add a tool, and save", async () => {
-    renderBuilder("/portal/pipelines/new");
+    renderBuilder("/processor/pipelines/new");
 
     // The name field is the only textbox before the picker opens.
     fireEvent.change(await screen.findByRole("textbox"), {
@@ -156,8 +187,82 @@ describe("PipelineBuilder", () => {
     expect(await screen.findByText("pipelines list")).toBeInTheDocument();
   });
 
+  it("saves an s3 output referencing an inline-created connection", async () => {
+    createIntegration.mockResolvedValue({ id: 12, name: "Claims bucket" });
+    renderBuilder("/processor/pipelines/new");
+
+    fireEvent.change(await screen.findByRole("textbox"), {
+      target: { value: "Bucket to bucket" },
+    });
+    fireEvent.click(screen.getByLabelText("portal.pipelines.output.s3"));
+
+    // With s3 selected but no connection chosen, saving is blocked. The
+    // connection picker + prefix are inline (no modal), like the folder output.
+    expect(
+      screen.getByText("portal.pipelines.composer.create").closest("button"),
+    ).toBeDisabled();
+
+    // No connections exist: create one inline from the picker. Target fields by
+    // label, not position - the picker's Mantine Select also carries an input
+    // role and would shift index-based queries.
+    fireEvent.click(
+      await screen.findByText("portal.connections.picker.createNew"),
+    );
+    fireEvent.change(
+      screen.getByLabelText(/portal\.connections\.s3\.fields\.name/),
+      { target: { value: "Claims bucket" } },
+    );
+    fireEvent.change(
+      screen.getByLabelText(
+        /portal\.sources\.types\.s3\.fields\.bucket\.label/,
+      ),
+      { target: { value: "claims-processed" } },
+    );
+    fireEvent.change(
+      screen.getByLabelText(
+        /portal\.sources\.types\.s3\.fields\.accessKeyId\.label/,
+      ),
+      { target: { value: "AKIAEXAMPLE" } },
+    );
+    fireEvent.change(
+      screen.getByLabelText(
+        /portal\.sources\.types\.s3\.fields\.secretAccessKey\.label/,
+      ),
+      { target: { value: "shh-secret" } },
+    );
+    fireEvent.click(screen.getByText("portal.connections.picker.save"));
+    await waitFor(() => expect(createIntegration).toHaveBeenCalledTimes(1));
+    // The connection modal closes once saved and the connection is selected.
+    await waitFor(() =>
+      expect(
+        screen.queryByText("portal.connections.picker.save"),
+      ).not.toBeInTheDocument(),
+    );
+
+    fireEvent.change(
+      screen.getByLabelText(
+        /portal\.sources\.types\.s3\.fields\.prefix\.label/,
+      ),
+      { target: { value: "processed/" } },
+    );
+    fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
+
+    await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
+    expect(savePipeline).toHaveBeenCalledWith(
+      expect.objectContaining({
+        output: {
+          type: "s3",
+          options: {
+            connectionId: "12",
+            prefix: "processed/",
+          },
+        },
+      }),
+    );
+  });
+
   it("runs an existing pipeline and reports success", async () => {
-    renderBuilder("/portal/pipelines/plc-1");
+    renderBuilder("/processor/pipelines/plc-1");
 
     fireEvent.click(await screen.findByText("portal.pipelines.detail.run"));
 
@@ -167,8 +272,47 @@ describe("PipelineBuilder", () => {
     ).toBeInTheDocument();
   });
 
+  it("explains an empty trigger when files are parked by a failed run", async () => {
+    triggerPipeline.mockResolvedValue(outcome({ filesListed: 2, parked: 2 }));
+    renderBuilder("/processor/pipelines/plc-1");
+
+    fireEvent.click(await screen.findByText("portal.pipelines.detail.run"));
+
+    expect(
+      await screen.findByText("portal.pipelines.run.parked"),
+    ).toBeInTheDocument();
+  });
+
+  it("explains an empty trigger when everything is already processed", async () => {
+    triggerPipeline.mockResolvedValue(
+      outcome({ filesListed: 3, alreadyProcessed: 3 }),
+    );
+    renderBuilder("/processor/pipelines/plc-1");
+
+    fireEvent.click(await screen.findByText("portal.pipelines.detail.run"));
+
+    expect(
+      await screen.findByText("portal.pipelines.run.allProcessed"),
+    ).toBeInTheDocument();
+  });
+
+  it("clears processed history from the header and confirms", async () => {
+    renderBuilder("/processor/pipelines/plc-1");
+
+    fireEvent.click(
+      await screen.findByText("portal.pipelines.detail.clearHistory"),
+    );
+
+    await waitFor(() =>
+      expect(clearProcessedHistory).toHaveBeenCalledWith("plc-1"),
+    );
+    expect(
+      await screen.findByText("portal.pipelines.run.historyCleared"),
+    ).toBeInTheDocument();
+  });
+
   it("blocks saving a step that needs an uploaded file", async () => {
-    renderBuilder("/portal/pipelines/new");
+    renderBuilder("/processor/pipelines/new");
 
     fireEvent.change(await screen.findByRole("textbox"), {
       target: { value: "Watermarked" },
@@ -187,7 +331,7 @@ describe("PipelineBuilder", () => {
   });
 
   it("deletes an existing pipeline after confirmation", async () => {
-    renderBuilder("/portal/pipelines/plc-1");
+    renderBuilder("/processor/pipelines/plc-1");
 
     fireEvent.click(await screen.findByText("portal.pipelines.detail.delete"));
     fireEvent.click(await screen.findByText("portal.pipelines.delete.confirm"));
@@ -197,7 +341,7 @@ describe("PipelineBuilder", () => {
   });
 
   it("prompts to save or discard when leaving with unsaved edits", async () => {
-    renderBuilder("/portal/pipelines/new");
+    renderBuilder("/processor/pipelines/new");
 
     fireEvent.change(await screen.findByRole("textbox"), {
       target: { value: "Draft" },
@@ -212,7 +356,7 @@ describe("PipelineBuilder", () => {
   });
 
   it("leaves immediately when there are no unsaved edits", async () => {
-    renderBuilder("/portal/pipelines/new");
+    renderBuilder("/processor/pipelines/new");
 
     await screen.findByRole("textbox");
     fireEvent.click(screen.getByText("portal.pipelines.composer.cancel"));

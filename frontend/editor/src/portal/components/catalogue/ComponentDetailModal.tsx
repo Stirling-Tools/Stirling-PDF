@@ -12,9 +12,11 @@ import {
 } from "@app/ui";
 import {
   type SdkComponent,
+  BILLING_UNIT_LABEL,
   MATURITY_META,
   formatPrice,
 } from "@portal/api/sdkComponents";
+import { TIER_INFO } from "@portal/contexts/TierContext";
 import { ComponentPropsTable } from "@portal/components/catalogue/ComponentPropsTable";
 import "@portal/views/Components.css";
 
@@ -75,7 +77,7 @@ export function ComponentDetailModal({
         <span className="portal-components__modal-title">
           {component.name}
           <StatusBadge tone={maturity.tone} size="sm" showDot={false}>
-            {maturity.label}
+            {t(maturity.label)}
           </StatusBadge>
         </span>
       }
@@ -84,7 +86,7 @@ export function ComponentDetailModal({
         unlocked ? (
           <div className="portal-components__modal-footer">
             <span className="portal-components__price">
-              {formatPrice(component.pricing)}
+              {formatPrice(component.pricing, t)}
             </span>
             <Button
               size="sm"
@@ -113,7 +115,7 @@ export function ComponentDetailModal({
           title={t("portal.catalogue.detail.locked.title")}
           description={t("portal.catalogue.detail.locked.description", {
             name: component.name,
-            tier: component.minTier,
+            plan: t(TIER_INFO[component.minTier].labelKey),
           })}
         />
       )}
@@ -155,11 +157,11 @@ export function ComponentDetailModal({
             <div className="portal-components__stat-grid">
               <StatTile
                 label={t("portal.catalogue.detail.stats.maturity")}
-                value={maturity.label}
+                value={t(maturity.label)}
               />
               <StatTile
                 label={t("portal.catalogue.detail.stats.price")}
-                value={formatPrice(component.pricing)}
+                value={formatPrice(component.pricing, t)}
               />
               <StatTile
                 label={t("portal.catalogue.detail.stats.freeQuota")}
@@ -201,11 +203,11 @@ export function ComponentDetailModal({
             <div className="portal-components__stat-grid">
               <StatTile
                 label={t("portal.catalogue.detail.stats.perAction")}
-                value={formatPrice(component.pricing)}
+                value={formatPrice(component.pricing, t)}
               />
               <StatTile
                 label={t("portal.catalogue.detail.stats.billedOn")}
-                value={component.pricing.unit}
+                value={t(BILLING_UNIT_LABEL[component.pricing.unit])}
               />
               <StatTile
                 label={t("portal.catalogue.detail.stats.freeQuota")}
@@ -220,7 +222,7 @@ export function ComponentDetailModal({
             </div>
             <p className="portal-components__pricing-note">
               {t("portal.catalogue.detail.pricing.note", {
-                unit: component.pricing.unit,
+                unit: t(BILLING_UNIT_LABEL[component.pricing.unit]),
               })}
             </p>
           </div>

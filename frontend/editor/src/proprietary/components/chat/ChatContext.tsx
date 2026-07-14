@@ -162,6 +162,11 @@ interface AiWorkflowResultFile {
   fileId: string;
   fileName: string;
   contentType: string;
+  /**
+   * Index into the files we sent that this output was derived from, or null/undefined when it has
+   * no single source (merge, generated file). Used to replace that input in place as a new version.
+   */
+  sourceIndex?: number | null;
 }
 
 interface AiWorkflowResponse {
@@ -432,9 +437,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
   // Import the files produced by an AI workflow result into FileContext.
   //
-  // If the workflow produced the same number of outputs as inputs, map each output to its
-  // corresponding input as a new version in the same chain. Otherwise (merge, split, etc.)
-  // add the outputs as new root files.
+  // Each output carries a sourceIndex telling us which input it came from. An input that produced
+  // exactly one output is replaced in place as a new version of that file; everything else (merge,
+  // split, generated files, or an input that produced nothing) is added as a fresh root and leaves
+  // the original files untouched — we never remove or deselect a file the workflow didn't clearly
+  // transform 1:1.
   const importResultFile = useCallback(
     async (
       result: AiWorkflowResponse,
@@ -456,27 +463,43 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       const files = await Promise.all(descriptors.map(downloadFile));
 
       if (sourceStubs.length > 0) {
-        // Always consume the inputs so merge/split inputs are removed from the workbench.
-        // For 1:1 operations (rotate, compress) the outputs carry the version chain; for
-        // merge/split they're fresh roots.
         const operation: ToolOperation = {
           toolId: "ai-workflow",
           timestamp: Date.now(),
         };
-        const isVersionMapping = files.length === sourceStubs.length;
-        const stubs = files.map((file, i) =>
-          isVersionMapping
-            ? createChildStub(sourceStubs[i], operation, file)
-            : createNewStirlingFileStub(file),
-        );
+        // Resolve each output to the input it came from (sourceIndex, from the backend).
+        const sourceForOutput = descriptors.map((descriptor) => {
+          const idx = descriptor.sourceIndex;
+          return typeof idx === "number" && idx >= 0 && idx < sourceStubs.length
+            ? sourceStubs[idx]
+            : null;
+        });
+        // Only replace a source in place when it maps to exactly one output (a clean 1:1 transform).
+        // A split (one input → many outputs) or a source shared by several outputs stays a set of
+        // fresh roots so we don't collapse them onto one version chain.
+        const outputsPerSource = new Map<StirlingFileStub["id"], number>();
+        for (const source of sourceForOutput) {
+          if (source) {
+            outputsPerSource.set(
+              source.id,
+              (outputsPerSource.get(source.id) ?? 0) + 1,
+            );
+          }
+        }
+        const consumedIds: StirlingFileStub["id"][] = [];
+        const stubs = files.map((file, i) => {
+          const source = sourceForOutput[i];
+          if (source && outputsPerSource.get(source.id) === 1) {
+            consumedIds.push(source.id);
+            return createChildStub(source, operation, file);
+          }
+          return createNewStirlingFileStub(file);
+        });
         const stirlingFiles = files.map((file, i) =>
           createStirlingFile(file, stubs[i].id),
         );
-        await fileActions.consumeFiles(
-          sourceStubs.map((s) => s.id),
-          stirlingFiles,
-          stubs,
-        );
+        // Consume only the inputs we actually versioned; unrelated files are left in place.
+        await fileActions.consumeFiles(consumedIds, stirlingFiles, stubs);
       } else {
         // No inputs: pass raw files so addFiles assigns consistent IDs. Pre-assigning stub IDs
         // here would cause a fileId mismatch in filesRef, making getFiles() clone the file

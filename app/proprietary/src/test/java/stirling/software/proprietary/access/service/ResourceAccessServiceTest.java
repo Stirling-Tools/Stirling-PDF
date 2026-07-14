@@ -1,20 +1,23 @@
 package stirling.software.proprietary.access.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import stirling.software.proprietary.access.model.AccessPermission;
 import stirling.software.proprietary.access.model.DefaultAccessPolicy;
+import stirling.software.proprietary.access.model.PrincipalRef;
 import stirling.software.proprietary.access.model.PrincipalType;
 import stirling.software.proprietary.access.model.ResourceGrant;
 import stirling.software.proprietary.access.model.ResourceType;
@@ -32,13 +35,20 @@ class ResourceAccessServiceTest {
     @Mock private ResourceGrantRepository grantRepository;
     @Mock private TeamLeadLookup teamLeadLookup;
 
-    @InjectMocks private ResourceAccessService service;
+    private ResourceAccessService service;
 
     @BeforeEach
-    void setPortalDefault() throws Exception {
+    void setUp() throws Exception {
+        service = newService(new DefaultPrincipalResolver());
+    }
+
+    private ResourceAccessService newService(PrincipalResolver resolver) throws Exception {
+        ResourceAccessService s =
+                new ResourceAccessService(grantRepository, teamLeadLookup, resolver);
         Field f = ResourceAccessService.class.getDeclaredField("portalDefaultPolicy");
         f.setAccessible(true);
-        f.set(service, DefaultAccessPolicy.ADMINS_AND_TEAM_LEADS);
+        f.set(s, DefaultAccessPolicy.ADMINS_AND_TEAM_LEADS);
+        return s;
     }
 
     // ---- owner / admin short-circuits ----
@@ -55,15 +65,56 @@ class ResourceAccessServiceTest {
     void ownerMayUseEvenWithExplicitOnly() {
         assertThat(
                         service.canUseResource(
-                                TYPE, RID, 5L, DefaultAccessPolicy.EXPLICIT_ONLY, user(5)))
+                                TYPE,
+                                RID,
+                                PrincipalRef.user(5L),
+                                DefaultAccessPolicy.EXPLICIT_ONLY,
+                                user(5)))
                 .isTrue();
     }
 
     @Test
     void nullUserIsAlwaysDenied() {
-        assertThat(service.canUseResource(TYPE, RID, 5L, DefaultAccessPolicy.ORG_ALL, null))
+        assertThat(
+                        service.canUseResource(
+                                TYPE,
+                                RID,
+                                PrincipalRef.user(5L),
+                                DefaultAccessPolicy.ORG_ALL,
+                                null))
                 .isFalse();
-        assertThat(service.canManageResource(TYPE, RID, 5L, null)).isFalse();
+        assertThat(service.canManageResource(TYPE, RID, PrincipalRef.user(5L), null)).isFalse();
+    }
+
+    // ---- owner refs ----
+
+    @Test
+    void teamOwnerRefAllowsLeaderOfThatTeam() {
+        User leader = userInTeam(5, 7);
+        when(teamLeadLookup.isLeaderOfTeam(leader, 7L)).thenReturn(true);
+        assertThat(
+                        service.canUseResource(
+                                TYPE,
+                                RID,
+                                PrincipalRef.team(7L),
+                                DefaultAccessPolicy.EXPLICIT_ONLY,
+                                leader))
+                .isTrue();
+        assertThat(service.canManageResource(TYPE, RID, PrincipalRef.team(7L), leader)).isTrue();
+    }
+
+    @Test
+    void teamOwnerRefDeniesPlainTeamMember() {
+        stubGrants();
+        User member = userInTeam(5, 7);
+        assertThat(
+                        service.canUseResource(
+                                TYPE,
+                                RID,
+                                PrincipalRef.team(7L),
+                                DefaultAccessPolicy.EXPLICIT_ONLY,
+                                member))
+                .isFalse();
     }
 
     // ---- explicit grants ----
@@ -124,13 +175,58 @@ class ResourceAccessServiceTest {
         assertThat(service.canManageResource(TYPE, RID, null, user(5))).isTrue();
     }
 
+    // ---- upsert semantics ----
+
+    @Test
+    void grantOverwritesPermissionEvenDowngrading() {
+        // Upsert key is (type, resourceId, principalType, principalId); permission is overwritten.
+        ResourceGrant existing = grant(PrincipalType.USER, 5L, AccessPermission.MANAGE);
+        stubGrants(existing);
+        when(grantRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        ResourceGrant saved =
+                service.grant(TYPE, RID, PrincipalType.USER, 5L, AccessPermission.USE, null);
+
+        assertThat(saved).isSameAs(existing);
+        assertThat(saved.getPermission()).isEqualTo(AccessPermission.USE);
+    }
+
+    // ---- granted resource ids ----
+
+    @Test
+    void grantedResourceIdsCollectsAcrossAllPrincipals() {
+        when(grantRepository.findByResourceTypeAndPrincipalTypeAndPrincipalId(
+                        TYPE, PrincipalType.USER, 5L))
+                .thenReturn(List.of(grantOn("a")));
+        when(grantRepository.findByResourceTypeAndPrincipalTypeAndPrincipalId(
+                        TYPE, PrincipalType.TEAM, 7L))
+                .thenReturn(List.of(grantOn("b")));
+
+        assertThat(service.grantedResourceIds(TYPE, userInTeam(5, 7)))
+                .containsExactlyInAnyOrder("a", "b");
+    }
+
     // ---- default policies ----
 
     @Test
-    void orgAllDefaultAllowsAnyUser() {
+    void orgAllDefaultAllowsAnyUserWhenDeploymentWide() {
+        // Self-hosted resolver allows deployment-wide access, so ORG_ALL admits anyone.
         stubGrants();
         assertThat(service.canUseResource(TYPE, RID, null, DefaultAccessPolicy.ORG_ALL, user(5)))
                 .isTrue();
+    }
+
+    @Test
+    void orgAllDefaultDeniedWhenNotDeploymentWide() throws Exception {
+        // Mirrors the saas resolver (USER/TEAM only, no deployment-wide access): ORG_ALL must not
+        // leak a resource to a tenant's users, so an ungranted user is denied.
+        ResourceAccessService tenantScoped =
+                newService(u -> u == null ? Set.of() : Set.of(PrincipalRef.user(u.getId())));
+        stubGrants();
+        assertThat(
+                        tenantScoped.canUseResource(
+                                TYPE, RID, null, DefaultAccessPolicy.ORG_ALL, user(5)))
+                .isFalse();
     }
 
     @Test
@@ -163,6 +259,24 @@ class ResourceAccessServiceTest {
                 .isFalse();
     }
 
+    @Test
+    void teamLeadDefaultOnTeamResourceDeniesForeignTeamsLead() {
+        // Team-owned resource: the default admits only the owning team's leads. A lead of
+        // some other team must be denied even though an unscoped "is any team leader"
+        // check would admit them (lenient stub: the scoped path must never consult it).
+        stubGrants();
+        User foreignLead = user(6);
+        lenient().when(teamLeadLookup.isAnyTeamLeader(foreignLead)).thenReturn(true);
+        assertThat(
+                        service.canUseResource(
+                                TYPE,
+                                RID,
+                                PrincipalRef.team(7L),
+                                DefaultAccessPolicy.ADMINS_AND_TEAM_LEADS,
+                                foreignLead))
+                .isFalse();
+    }
+
     // ---- portal convenience (default policy ADMINS_AND_TEAM_LEADS) ----
 
     @Test
@@ -191,6 +305,12 @@ class ResourceAccessServiceTest {
         g.setPrincipalType(type);
         g.setPrincipalId(principalId);
         g.setPermission(permission);
+        return g;
+    }
+
+    private ResourceGrant grantOn(String resourceId) {
+        ResourceGrant g = grant(PrincipalType.USER, 5L, AccessPermission.USE);
+        g.setResourceId(resourceId);
         return g;
     }
 

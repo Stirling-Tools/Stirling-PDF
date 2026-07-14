@@ -1,6 +1,5 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { NavKey } from "@app/components/shared/config/types";
 import HotkeysSection from "@app/components/shared/config/configSections/HotkeysSection";
 import GeneralSection from "@app/components/shared/config/configSections/GeneralSection";
 import HelpSection from "@app/components/shared/config/configSections/HelpSection";
@@ -9,22 +8,14 @@ import {
   BackendThirdPartyLicensesSection,
   FrontendThirdPartyLicensesSection,
 } from "@app/components/shared/config/configSections/ThirdPartyLicensesSection";
+import type {
+  ConfigNavItem,
+  ConfigNavSection,
+} from "@app/components/shared/config/types";
 
-export interface ConfigNavItem {
-  key: NavKey;
-  label: string;
-  icon: string;
-  component: React.ReactNode;
-  disabled?: boolean;
-  disabledTooltip?: string;
-  badge?: string;
-  badgeColor?: string;
-}
-
-export interface ConfigNavSection {
-  title: string;
-  items: ConfigNavItem[];
-}
+// Re-exported for the many existing importers; the definitions live in
+// config/types so type-only consumers don't pull the section tree in.
+export type { ConfigNavItem, ConfigNavSection };
 
 export interface ConfigColors {
   navBg: string;

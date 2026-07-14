@@ -140,6 +140,22 @@
   --color-gray-800: #1f2937;
   --color-gray-900: #111827;
 
+  /* Categorical accents (sidebar groups, file-type icons, badges). One hue per
+     token; the dark block overrides each with a LIGHTER shade for contrast on
+     dark backgrounds. JS consumers go through utils/accentColors.ts. */
+  --accent-green: #16a34a;
+  --accent-blue: #2563eb;
+  --accent-red: #dc2626;
+  --accent-orange: #ea580c;
+  --accent-purple: #9333ea;
+  --accent-teal: #0d9488;
+  --accent-pink: #db2777;
+  --accent-amber: #d97706;
+  --accent-indigo: #4f46e5;
+  --accent-cyan: #0891b2;
+  --accent-violet: #7c3aed;
+  --accent-gray: #6b7280;
+
   /* Spacing system */
   --space-xs: 4px;
   --space-sm: 8px;
@@ -426,10 +442,10 @@
   --gray-800: 218 222 245;
   --gray-900: 238 241 252;
 
-  /* Dark semantic colors for Tailwind */
-  --surface: 19 23 41;
-  --background: 9 11 24;
-  --border: 28 35 64;
+  /* Dark semantic colors for Tailwind — aligned with portal tokens.css */
+  --surface: 21 28 46; /* #151c2e — portal --color-surface */
+  --background: 9 12 20; /* #090c14 — portal --color-bg */
+  --border: 40 50 72; /* #283248 — portal --color-border */
 
   /* Dark theme Mantine colors */
   --color-red-50: #2d1b1b;
@@ -453,6 +469,20 @@
   --color-gray-700: #d1d5db;
   --color-gray-800: #e5e7eb;
   --color-gray-900: #f3f4f6;
+
+  /* Categorical accents: lighter shades of the same hues, for contrast on dark. */
+  --accent-green: #4ade80;
+  --accent-blue: #60a5fa;
+  --accent-red: #f87171;
+  --accent-orange: #fb923c;
+  --accent-purple: #c084fc;
+  --accent-teal: #2dd4bf;
+  --accent-pink: #f472b6;
+  --accent-amber: #fbbf24;
+  --accent-indigo: #818cf8;
+  --accent-cyan: #22d3ee;
+  --accent-violet: #a78bfa;
+  --accent-gray: #9ca3af;
 
   /* Category colors - same as light mode for consistency */
   --category-color-removal: #ef4444; /* Red for removal tools */
@@ -494,14 +524,18 @@
   --color-yellow-800: #fef08a;
   --color-yellow-900: #fef9c3;
 
-  /* Dark theme semantic colors — deep navy/indigo palette */
-  --bg-surface: #131729;
-  --bg-raised: #0d1020;
-  --bg-muted: #0d1020;
-  --bg-background: #090b18;
-  --bg-toolbar: #090b18;
-  --bg-file-manager: #090b18;
-  --bg-file-list: #131729;
+  /* Dark theme semantic colors — deep navy/indigo palette, aligned with portal
+     tokens.css so the editor and portal (Processor) dark modes don't drift.
+     Chrome surfaces (--bg-toolbar, --bg-file-manager) sit at the portal's
+     sidebar level (#0d1120) so the left/right sidebars lift off the darker
+     canvas (--bg-background) instead of blending into it. */
+  --bg-surface: #151c2e; /* portal --color-surface */
+  --bg-raised: #0d1120; /* portal --color-bg-alt */
+  --bg-muted: #0d1120;
+  --bg-background: #090c14; /* portal --color-bg */
+  --bg-toolbar: #0d1120; /* portal --color-sidebar-bg — lifted off the canvas */
+  --bg-file-manager: #0d1120; /* portal --color-sidebar-bg */
+  --bg-file-list: #151c2e; /* portal --color-surface */
   --btn-open-file: #4f8ef5;
   --text-primary: #e8eaf6;
   --text-secondary: #9299b0;
@@ -510,11 +544,11 @@
   --text-always-dark: #1f2937;
   --text-always-dark-muted: #6b7280;
   --border-subtle: rgba(255, 255, 255, 0.05);
-  --border-default: #1c2340;
-  --border-strong: #2d3560;
-  --border-hover: #3a4680;
-  --hover-bg: #181d38;
-  --active-bg: #232a50;
+  --border-default: #1e2840; /* portal --color-border-light */
+  --border-strong: #283248; /* portal --color-border */
+  --border-hover: #3d4f6a; /* portal --color-border-hover */
+  --hover-bg: #1c2640; /* portal --color-bg-hover */
+  --active-bg: #243044; /* portal --color-bg-muted */
   --automation-entry-hover-bg: var(--color-gray-200);
 
   /* Icon colors for dark mode */
@@ -585,7 +619,7 @@
   --header-selected-bg: #2040a0;
   --header-selected-fg: #ffffff;
   /* file card background (dark) */
-  --file-card-bg: #0d1020;
+  --file-card-bg: #0d1120;
   --accordion-item-bg: #1c2340; /* accordion item background - more distinguishable */
 
   /* shadows */

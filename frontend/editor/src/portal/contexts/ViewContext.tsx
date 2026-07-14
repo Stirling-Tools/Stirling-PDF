@@ -61,7 +61,7 @@ export const VIEW_PATHS: Record<ViewId, string> = {
  */
 export { PORTAL_BASENAME };
 
-/** Logical view path -> full app path (e.g. "/users" -> "/portal/users"). */
+/** Logical view path -> full app path (e.g. "/users" -> "/processor/users"). */
 export function toPortalPath(viewPath: string): string {
   return `${PORTAL_BASENAME}${viewPath === "/" ? "" : viewPath}`;
 }

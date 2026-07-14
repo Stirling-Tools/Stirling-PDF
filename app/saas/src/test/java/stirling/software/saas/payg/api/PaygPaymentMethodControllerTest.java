@@ -24,15 +24,15 @@ import org.springframework.security.oauth2.jwt.Jwt;
 
 import stirling.software.common.model.enumeration.TeamRole;
 import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
-import stirling.software.saas.model.TeamMembership;
+import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.saas.payg.api.PaygPaymentMethodController.PaymentMethodResponse;
 import stirling.software.saas.payg.policy.PaygTeamExtensions;
 import stirling.software.saas.payg.repository.PaygTeamExtensionsRepository;
 import stirling.software.saas.payg.stripe.StripePaymentMethodDao;
 import stirling.software.saas.payg.stripe.StripePaymentMethodDao.CardSummary;
-import stirling.software.saas.repository.TeamMembershipRepository;
 import stirling.software.saas.security.EnhancedJwtAuthenticationToken;
 
 /**

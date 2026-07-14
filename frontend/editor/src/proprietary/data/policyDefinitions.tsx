@@ -2,7 +2,7 @@
  * Static preset definitions for Policies — the categories, their editable
  * settings fields, scope labels, and the default tool pipeline each category
  * seeds a new policy with. Runtime activity + stats are derived live from the
- * user's real files (see policyLiveData), not defined here.
+ * user's real files, not defined here.
  */
 
 import LayersIcon from "@mui/icons-material/Layers";
@@ -16,6 +16,7 @@ import PublicIcon from "@mui/icons-material/Public";
 import CloudIcon from "@mui/icons-material/Cloud";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
+import LabelOutlinedIcon from "@mui/icons-material/LabelOutlined";
 import type {
   PolicyCategory,
   PolicyConfigDef,
@@ -41,6 +42,14 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
     label: "Security",
     icon: <ShieldIcon sx={ICON_SX} />,
     desc: "Detect PII, encrypt, verify authenticity, control access, and certify documents.",
+  },
+  {
+    id: "classification",
+    label: "Classification",
+    icon: <LabelOutlinedIcon sx={ICON_SX} />,
+    desc: "Identify each document's type on upload and tag its metadata for filing and search.",
+    // Needs the AI engine to classify; hidden from the policy list when it's off.
+    requiresAiEngine: true,
   },
   {
     id: "compliance",
@@ -155,15 +164,15 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
         label: "Min confidence",
         key: "minConfidence",
         type: "select",
-        value: "80%",
-        options: ["60%", "70%", "80%", "90%", "95%"],
+        value: "p80",
+        options: ["p60", "p70", "p80", "p90", "p95"],
       },
       {
         label: "Below threshold",
         key: "belowThreshold",
         type: "select",
-        value: "Flag for review",
-        options: ["Flag for review", "Route to bucket", "Hold"],
+        value: "flagForReview",
+        options: ["flagForReview", "routeToBucket", "hold"],
       },
     ],
   },
@@ -204,6 +213,16 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
     // output naming + retries are set in the wizard.
     fields: [],
   },
+  classification: {
+    summary:
+      "Classifies every uploaded document and writes the result to its metadata.",
+    rules: ["Classify", "Tag metadata"],
+    // Single backend step: classify the document via the AI engine and store the
+    // result in the document's StirlingPDFClassification metadata field.
+    defaultOperations: [{ operation: "classify", parameters: {} }],
+    scopeLabel: "All PDFs on this device",
+    fields: [],
+  },
   compliance: {
     summary:
       "Validates documents against regulatory frameworks before they leave the system.",
@@ -218,27 +237,27 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
         label: "Frameworks",
         key: "frameworks",
         type: "chips",
-        value: ["HIPAA"],
+        value: ["hipaa"],
         options: [
-          "HIPAA",
-          "GDPR",
-          "SOC 2",
-          "FedRAMP",
-          "PCI DSS",
-          "CCPA",
-          "ISO 27001",
+          "hipaa",
+          "gdpr",
+          "soc2",
+          "fedramp",
+          "pciDss",
+          "ccpa",
+          "iso27001",
         ],
       },
       {
         label: "When non-compliant",
         key: "onViolation",
         type: "select",
-        value: "Flag for review",
+        value: "flagForReview",
         options: [
-          "Flag for review",
-          "Block export",
-          "Auto-redact PHI",
-          "Quarantine document",
+          "flagForReview",
+          "blockExport",
+          "autoRedactPhi",
+          "quarantineDocument",
         ],
       },
       { label: "Audit trail", key: "auditTrail", type: "toggle", value: true },
@@ -256,8 +275,8 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
         label: "Destination",
         key: "destination",
         type: "select",
-        value: "Documents",
-        options: ["Documents", "S3 bucket", "SharePoint", "Webhook"],
+        value: "documents",
+        options: ["documents", "s3Bucket", "sharePoint", "webhook"],
       },
       { label: "Webhook URL", key: "webhookUrl", type: "text", value: "" },
       { label: "Notify on route", key: "notify", type: "toggle", value: false },
@@ -274,15 +293,21 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
         label: "Keep for",
         key: "keepFor",
         type: "select",
-        value: "7 years",
-        options: ["30 days", "1 year", "3 years", "7 years", "Indefinite"],
+        value: "sevenYears",
+        options: [
+          "thirtyDays",
+          "oneYear",
+          "threeYears",
+          "sevenYears",
+          "indefinite",
+        ],
       },
       {
         label: "Archive after",
         key: "archiveAfter",
         type: "select",
-        value: "Never",
-        options: ["30 days", "90 days", "1 year", "Never"],
+        value: "never",
+        options: ["thirtyDays", "ninetyDays", "oneYear", "never"],
       },
       {
         label: "Immutable hold",
@@ -336,12 +361,12 @@ export const POLICY_SOURCES: PolicySource[] = [
 
 /** Document types selectable when narrowing scope (gated behind classification). */
 export const POLICY_DOC_TYPES: string[] = [
-  "Contracts",
-  "Invoices",
-  "Tax documents",
-  "HR records",
-  "Insurance",
-  "Medical / PHI",
-  "Legal filings",
-  "Financial reports",
+  "contracts",
+  "invoices",
+  "taxDocuments",
+  "hrRecords",
+  "insurance",
+  "medicalPhi",
+  "legalFilings",
+  "financialReports",
 ];

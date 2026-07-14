@@ -15,7 +15,7 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
   const comingSoon = category.comingSoon === true;
   const openable = !comingSoon;
   const status = policy?.state.status;
-  const enforces = config.rules.join(" · ");
+  const enforces = config.rules.map((r) => t(r)).join(" · ");
 
   return (
     <Card
@@ -43,7 +43,7 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
       </span>
 
       <div className="portal-policies__card-identity">
-        <h2 className="portal-policies__card-title">{category.label}</h2>
+        <h2 className="portal-policies__card-title">{t(category.label)}</h2>
         {enforces && (
           <span className="portal-policies__card-enforces">{enforces}</span>
         )}

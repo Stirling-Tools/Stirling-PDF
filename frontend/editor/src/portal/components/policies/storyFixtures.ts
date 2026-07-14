@@ -8,11 +8,10 @@ import { runsToActivity, runsToStats } from "@app/policies/runs";
 import {
   POLICY_CATEGORIES,
   POLICY_CONFIG,
-  seedPolicies,
-  seedPolicyRuns,
   type DecoratedPolicy,
   type PolicyState,
-} from "@portal/mocks/policies";
+} from "@portal/api/policies";
+import { seedPolicies, seedPolicyRuns } from "@portal/mocks/policies";
 
 export { POLICY_CATEGORIES, POLICY_CONFIG };
 

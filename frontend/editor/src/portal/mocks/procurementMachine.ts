@@ -17,7 +17,7 @@ import {
   type LedgerDoc,
   type LedgerGroup,
   type SupportingGroup,
-} from "@portal/mocks/procurement";
+} from "@portal/api/procurement";
 
 export interface ProcurementStore {
   deal: Deal;

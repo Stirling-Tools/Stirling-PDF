@@ -10,6 +10,8 @@ const SAAS = "http://saas.mock";
 const EMPTY = {
   dealId: null,
   stage: null,
+  deployment: "cloud",
+  seats: 0,
   trialStartedAt: null,
   trialEndsAt: null,
   trialExtensionsUsed: 0,
@@ -20,40 +22,78 @@ const EMPTY = {
 
 interface Cfg {
   volume: number;
+  users?: number;
+  intensity: number;
+  sizeMult: number;
+  deployment: string;
   serviceLevel: string;
   termYears: number;
   indemnification: boolean;
   training: boolean;
   qbr: boolean;
-  offlineLicense: boolean;
-  currency: string;
   businessName?: string;
+  contactName?: string;
+  contactEmail?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  city?: string;
+  region?: string;
+  postalCode?: string;
+  poNumber?: string;
+  taxId?: string;
 }
 
 let deal: typeof EMPTY | (Record<string, unknown> & { latestQuote: unknown }) =
   EMPTY;
 let seq = 0;
 
-const SLA: Record<string, number> = {
-  standard: 0,
-  priority: 0.15,
-  dedicated: 0.3,
-};
-const TERM = [0, 0.05, 0.1, 0.12, 0.15];
+const TERM = [0, 0.03, 0.05, 0.06, 0.07]; // meter-only, 1..5 years
 
-function priceQuote(cfg: Cfg) {
-  const perPdf = cfg.volume >= 5_000_000 ? 3 : cfg.volume >= 1_000_000 ? 4 : 5;
-  const usage = Math.round(cfg.volume * perPdf);
-  const withSla = Math.round(usage * (1 + (SLA[cfg.serviceLevel] ?? 0)));
-  const withInd = cfg.indemnification ? Math.round(withSla * 1.05) : withSla;
-  const disc = Math.round(
-    withInd * TERM[Math.min(Math.max(cfg.termYears, 1), 5) - 1],
-  );
+// Mirror of ProcurementPricingService (D71): run-based curve, flat priced needs, USD.
+// Exported for the pricing-parity test (see pricingParity.test.ts).
+export function priceQuote(cfg: Cfg) {
+  const LIST = 0.01;
+  const FLOOR = 0.005;
+  const intensity = Math.max(1, cfg.intensity || 4);
+  const runVol = Math.max(0, cfg.volume) * intensity;
+  const volDisc =
+    runVol > 1_000_000
+      ? Math.min(0.5, 0.06 * Math.log2(runVol / 1_000_000))
+      : 0;
+  // File-size tier (D93) scales the rate after the floor; snap to a known multiplier.
+  const sizeMult = [1.0, 1.4, 2.4].includes(cfg.sizeMult) ? cfg.sizeMult : 1.0;
+  const rate = Math.max(FLOOR, LIST * (1 - volDisc)) * sizeMult;
+  const termDisc = TERM[Math.min(Math.max(cfg.termYears, 1), 5) - 1];
+  const annualBase = Math.round(runVol * rate) * 100; // whole $ → minor
+  const meterNet = Math.round(runVol * rate * (1 - termDisc)) * 100;
+  const termDiscount = meterNet - annualBase; // <= 0
+  const support = cfg.serviceLevel === "dedicated" ? 3_000_000 : 0;
+  const deploy =
+    cfg.deployment === "airgap"
+      ? 3_600_000
+      : cfg.deployment === "selfhost"
+        ? 1_200_000
+        : 0;
+  const indemnity = cfg.indemnification ? Math.round(meterNet * 0.05) : 0;
   const qbr = cfg.qbr ? 800_000 : 0;
-  const offline = cfg.offlineLicense ? 1_200_000 : 0;
   const training = cfg.training ? 750_000 : 0;
-  const annualNetMinor = withInd - disc + qbr + offline;
+  const annualNetMinor = meterNet + support + deploy + indemnity + qbr;
   const tcvMinor = annualNetMinor * cfg.termYears + training;
+
+  const posture =
+    intensity === 2
+      ? "Essentials"
+      : intensity === 7
+        ? "Regulated"
+        : intensity === 4
+          ? "Governed"
+          : `${intensity}-policy`;
+  const deployName =
+    cfg.deployment === "airgap"
+      ? "Air-gapped"
+      : cfg.deployment === "selfhost"
+        ? "Self-hosted"
+        : "Stirling Cloud";
 
   type Kind = "RECURRING" | "ONE_TIME" | "DISCOUNT" | "INCLUDED";
   const lines: {
@@ -64,33 +104,44 @@ function priceQuote(cfg: Cfg) {
   }[] = [
     {
       key: "usage",
-      label: "PDF processing",
+      label: `PDF processing — ${cfg.volume.toLocaleString()} PDFs/yr at $${(rate * intensity).toFixed(4)}/PDF (${posture} posture)`,
       kind: "RECURRING",
-      amountMinor: usage,
+      amountMinor: annualBase,
     },
     {
       key: "seats",
-      label: "Unlimited users + SSO / SCIM / RBAC",
+      label: "Unlimited users + SSO / SCIM / RBAC / audit",
       kind: "INCLUDED",
       amountMinor: 0,
     },
   ];
-  if (withSla !== usage)
+  if (termDiscount < 0)
     lines.push({
-      key: "service-level",
-      label:
-        cfg.serviceLevel === "dedicated"
-          ? "Dedicated service level"
-          : "Priority service level",
-      kind: "RECURRING",
-      amountMinor: withSla - usage,
+      key: "multi-year",
+      label: `${cfg.termYears}-year commitment`,
+      kind: "DISCOUNT",
+      amountMinor: termDiscount,
     });
-  if (withInd !== withSla)
+  if (support > 0)
+    lines.push({
+      key: "support",
+      label: "Dedicated SE / CSM",
+      kind: "RECURRING",
+      amountMinor: support,
+    });
+  if (deploy > 0)
+    lines.push({
+      key: "deployment",
+      label: `${deployName} deployment`,
+      kind: "RECURRING",
+      amountMinor: deploy,
+    });
+  if (indemnity > 0)
     lines.push({
       key: "indemnification",
       label: "IP indemnification",
       kind: "RECURRING",
-      amountMinor: withInd - withSla,
+      amountMinor: indemnity,
     });
   if (qbr > 0)
     lines.push({
@@ -98,20 +149,6 @@ function priceQuote(cfg: Cfg) {
       label: "Quarterly business reviews",
       kind: "RECURRING",
       amountMinor: qbr,
-    });
-  if (offline > 0)
-    lines.push({
-      key: "offline-license",
-      label: "Offline / air-gapped licence",
-      kind: "RECURRING",
-      amountMinor: offline,
-    });
-  if (disc > 0)
-    lines.push({
-      key: "multi-year",
-      label: `${cfg.termYears}-year commitment`,
-      kind: "DISCOUNT",
-      amountMinor: -disc,
     });
   if (training > 0)
     lines.push({
@@ -126,25 +163,37 @@ function priceQuote(cfg: Cfg) {
     quoteId: seq,
     quoteNumber: `QT-DEMO-${String(seq).padStart(4, "0")}`,
     status: "draft",
-    currency: cfg.currency || "USD",
+    currency: "USD",
     annualNetMinor,
     tcvMinor,
+    renewalAnnualNetMinor: Math.round(annualNetMinor * 1.03), // +3% CPI on renewal
+    cpiRatePct: 3,
     lineItems: lines,
     validUntil: "2026-07-31",
     stripeQuoteId: null,
     invoiceUrl: null,
+    invoicePdf: null,
     config: {
       volume: cfg.volume,
       users: 0,
-      deployment: "cloud",
+      intensity,
+      sizeMult,
+      deployment: cfg.deployment || "cloud",
       termYears: cfg.termYears,
       serviceLevel: cfg.serviceLevel,
       indemnification: cfg.indemnification,
       training: cfg.training,
       qbr: cfg.qbr,
-      offlineLicense: cfg.offlineLicense,
-      currency: cfg.currency || "USD",
       businessName: cfg.businessName ?? "",
+      contactName: cfg.contactName ?? "",
+      contactEmail: cfg.contactEmail ?? "",
+      addressLine1: cfg.addressLine1 ?? "",
+      addressLine2: cfg.addressLine2 ?? "",
+      city: cfg.city ?? "",
+      region: cfg.region ?? "",
+      postalCode: cfg.postalCode ?? "",
+      poNumber: cfg.poNumber ?? "",
+      taxId: cfg.taxId ?? "",
     },
   };
 }
@@ -156,11 +205,20 @@ export function resetProcurementSaasStore() {
 
 export const procurementSaasHandlers = [
   http.get(`${SAAS}/api/v1/procurement`, () => HttpResponse.json(deal)),
-  http.post(`${SAAS}/api/v1/procurement/trial/start`, () => {
+  http.post(`${SAAS}/api/v1/procurement/trial/start`, async ({ request }) => {
+    const body = (await request.json().catch(() => ({}))) as Partial<{
+      deployment: string;
+      users: number;
+    }>;
+    const allowed = ["cloud", "selfhost", "airgap"];
     const now = Date.now();
     deal = {
       dealId: 1,
       stage: "trial",
+      deployment: allowed.includes(body.deployment ?? "")
+        ? body.deployment
+        : "cloud",
+      seats: Math.max(0, Number(body.users) || 0),
       trialStartedAt: new Date(now).toISOString(),
       trialEndsAt: new Date(now + 14 * 86_400_000).toISOString(),
       trialExtensionsUsed: 0,
@@ -210,7 +268,8 @@ export const procurementSaasHandlers = [
   }),
   http.get(`${SAAS}/api/v1/procurement/license/file`, () => {
     const q = (deal as { latestQuote: { config?: Cfg } | null }).latestQuote;
-    if (!q?.config?.offlineLicense) {
+    // Offline .lic is available only for an air-gapped deployment (matches the Java backend).
+    if (q?.config?.deployment !== "airgap") {
       return new HttpResponse(null, { status: 404 });
     }
     return new HttpResponse(
@@ -237,16 +296,18 @@ export const procurementSaasHandlers = [
     const q = (deal as { latestQuote: Record<string, unknown> | null })
       .latestQuote;
     const invoiceUrl = "https://invoice.stripe.com/i/mock_procurement";
+    const invoicePdf = "https://invoice.stripe.com/i/mock_procurement/pdf";
     if (q) {
       q.status = "accepted";
       q.invoiceUrl = invoiceUrl;
+      q.invoicePdf = invoicePdf;
       (deal as Record<string, unknown>).stage = "procurement";
     }
     return HttpResponse.json({
       status: "accepted",
       subscriptionId: "sub_mock_procurement",
       invoiceUrl,
-      invoicePdf: "https://invoice.stripe.com/i/mock_procurement/pdf",
+      invoicePdf,
     });
   }),
   http.post(`${SAAS}/functions/v1/get-procurement-quote-pdf`, () => {

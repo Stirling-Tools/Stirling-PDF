@@ -5,6 +5,7 @@ import { Documents } from "@portal/views/Documents";
 import { Pipelines } from "@portal/views/Pipelines";
 import { PipelineBuilder } from "@portal/views/PipelineBuilder";
 import { Sources } from "@portal/views/Sources";
+import { SourceBuilder } from "@portal/views/SourceBuilder";
 import { AgentBuilder } from "@portal/views/AgentBuilder";
 import { Policies } from "@portal/views/Policies";
 import { Components } from "@portal/views/Components";
@@ -15,7 +16,7 @@ import { DeveloperDocs } from "@portal/views/DeveloperDocs";
 import { Procurement } from "@portal/views/Procurement";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 
-// The portal mounts as a route-set under /portal/* in the editor app, so these
+// The portal mounts as a route-set under /processor/* in the editor app, so these
 // child routes are relative to that base: strip the leading slash from the
 // logical VIEW_PATHS, and home is the index route. Redirects use toPortalPath
 // so they resolve to the portal, not the editor root.
@@ -36,6 +37,14 @@ export function ViewRouter() {
         element={<PipelineBuilder />}
       />
       <Route path={rel(VIEW_PATHS.sources)} element={<Sources />} />
+      <Route
+        path={`${rel(VIEW_PATHS.sources)}/new`}
+        element={<SourceBuilder />}
+      />
+      <Route
+        path={`${rel(VIEW_PATHS.sources)}/:id`}
+        element={<SourceBuilder />}
+      />
       <Route
         path={rel(VIEW_PATHS["agent-builder"])}
         element={<AgentBuilder />}

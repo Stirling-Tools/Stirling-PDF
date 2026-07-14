@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FilenameUtils;
@@ -27,6 +28,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.AutomationRunContext;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.InternalApiTimeoutException;
@@ -156,33 +158,41 @@ public class AiWorkflowService {
             throws IOException {
         validateRequest(request);
 
-        // Key by opaque file id, not filename. Filenames aren't guaranteed unique across an
-        // upload (users can rotate the same 'scan.pdf' twice), and the engine identifies files
-        // by id in every response shape that asks Java to look a file up again.
-        Map<String, MultipartFile> filesById = new LinkedHashMap<>();
-        List<AiFile> files = new ArrayList<>();
-        for (AiWorkflowFileInput fileInput : request.getFileInputs()) {
-            MultipartFile multipartFile = fileInput.getFileInput();
-            AiFile aiFile =
-                    new AiFile(
-                            fileIdStrategy.idFor(multipartFile),
-                            multipartFile.getOriginalFilename());
-            filesById.put(aiFile.getId(), multipartFile);
-            files.add(aiFile);
-        }
+        // One AI orchestration = one automation run. Scope a run id (on whichever thread runs
+        // orchestrate — request thread for sync, stream-executor for streaming) so every tool
+        // sub-step it dispatches via PolicyExecutor → InternalApiClient groups into one charge.
+        try (AutomationRunContext.Scope ignored =
+                AutomationRunContext.open(UUID.randomUUID().toString())) {
 
-        WorkflowTurnRequest initialRequest = new WorkflowTurnRequest();
-        initialRequest.setUserMessage(request.getUserMessage().trim());
-        initialRequest.setFiles(files);
-        initialRequest.setConversationHistory(new ArrayList<>(request.getConversationHistory()));
-        initialRequest.setEnabledEndpoints(endpointResolver.getEnabledEndpointUrls());
-        listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.ANALYZING));
+            // Key by opaque file id, not filename. Filenames aren't guaranteed unique across an
+            // upload (users can rotate the same 'scan.pdf' twice), and the engine identifies files
+            // by id in every response shape that asks Java to look a file up again.
+            Map<String, MultipartFile> filesById = new LinkedHashMap<>();
+            List<AiFile> files = new ArrayList<>();
+            for (AiWorkflowFileInput fileInput : request.getFileInputs()) {
+                MultipartFile multipartFile = fileInput.getFileInput();
+                AiFile aiFile =
+                        new AiFile(
+                                fileIdStrategy.idFor(multipartFile),
+                                multipartFile.getOriginalFilename());
+                filesById.put(aiFile.getId(), multipartFile);
+                files.add(aiFile);
+            }
 
-        WorkflowState state = new WorkflowState.Pending(initialRequest);
-        while (state instanceof WorkflowState.Pending pending) {
-            state = advance(pending.request(), filesById, listener);
+            WorkflowTurnRequest initialRequest = new WorkflowTurnRequest();
+            initialRequest.setUserMessage(request.getUserMessage().trim());
+            initialRequest.setFiles(files);
+            initialRequest.setConversationHistory(
+                    new ArrayList<>(request.getConversationHistory()));
+            initialRequest.setEnabledEndpoints(endpointResolver.getEnabledEndpointUrls());
+            listener.onProgress(AiWorkflowProgressEvent.of(AiWorkflowPhase.ANALYZING));
+
+            WorkflowState state = new WorkflowState.Pending(initialRequest);
+            while (state instanceof WorkflowState.Pending pending) {
+                state = advance(pending.request(), filesById, listener);
+            }
+            return ((WorkflowState.Terminal) state).response();
         }
-        return ((WorkflowState.Terminal) state).response();
     }
 
     private WorkflowState advance(
@@ -404,6 +414,7 @@ public class AiWorkflowService {
                     buildCompletedResponse(
                             response.getRationale(),
                             result.files(),
+                            result.origins(),
                             inputFileNames(filesById),
                             result.report()));
         } catch (InternalApiTimeoutException e) {
@@ -465,7 +476,8 @@ public class AiWorkflowService {
                     }
                 };
         return new WorkflowState.Terminal(
-                buildCompletedResponse(response.getSummary(), List.of(resource), List.of(), null));
+                buildCompletedResponse(
+                        response.getSummary(), List.of(resource), null, List.of(), null));
     }
 
     @SuppressWarnings("unchecked")
@@ -523,7 +535,11 @@ public class AiWorkflowService {
 
             return new WorkflowState.Terminal(
                     buildCompletedResponse(
-                            summary, result.files(), inputFileNames(filesById), result.report()));
+                            summary,
+                            result.files(),
+                            result.origins(),
+                            inputFileNames(filesById),
+                            result.report()));
         } catch (InternalApiTimeoutException e) {
             log.error("Plan step on tool {} timed out: {}", e.getEndpointPath(), e.getMessage());
             return new WorkflowState.Terminal(
@@ -612,19 +628,35 @@ public class AiWorkflowService {
     private AiWorkflowResponse buildCompletedResponse(
             String summary,
             List<Resource> resultFiles,
+            List<Integer> origins,
             List<String> inputFileNames,
             JsonNode report)
             throws IOException {
         // Store every output file individually so each gets its own Stirling file ID and the
         // frontend can add them as independent variants without going through a zip.
-        boolean preserveInputNames = inputFileNames.size() == resultFiles.size();
+        // Count outputs per source so only a clean 1:1 transform (one output for a source) reuses
+        // the input's name; a split (one input → many outputs) keeps each entry's own name.
+        Map<Integer, Long> outputsPerOrigin =
+                origins == null
+                        ? Map.of()
+                        : origins.stream()
+                                .filter(o -> o != null)
+                                .collect(Collectors.groupingBy(o -> o, Collectors.counting()));
         List<AiWorkflowResultFile> descriptors = new ArrayList<>();
         for (int i = 0; i < resultFiles.size(); i++) {
             Resource resource = resultFiles.get(i);
             String responseName = resource.getFilename();
-            String inputName = preserveInputNames ? inputFileNames.get(i) : null;
-            // Prefer the input name only for 1:1 operations where the output keeps the same
-            // extension (rotate, compress, etc.). For converters and other extension-changing
+            // The output's source input (from the executor), used both to name it and to tell the
+            // client which file to version in place.
+            Integer origin = origins != null && i < origins.size() ? origins.get(i) : null;
+            boolean uniqueOrigin =
+                    origin != null && outputsPerOrigin.getOrDefault(origin, 0L) == 1L;
+            String inputName =
+                    uniqueOrigin && origin >= 0 && origin < inputFileNames.size()
+                            ? inputFileNames.get(origin)
+                            : null;
+            // Prefer the source input's name only for 1:1 operations where the output keeps the
+            // same extension (rotate, compress, etc.). For converters and other extension-changing
             // tools, the response filename from Content-Disposition is authoritative.
             String name;
             if (inputName != null
@@ -644,7 +676,11 @@ public class AiWorkflowService {
             try (java.io.InputStream is = resource.getInputStream()) {
                 fileId = fileStorage.storeInputStream(is, name).fileId();
             }
-            descriptors.add(new AiWorkflowResultFile(fileId, name, contentType));
+            // Only expose the source when this is a clean 1:1 transform, so the client can treat a
+            // present sourceIndex as "replace that input in place" without further disambiguation.
+            descriptors.add(
+                    new AiWorkflowResultFile(
+                            fileId, name, contentType, uniqueOrigin ? origin : null));
         }
 
         AiWorkflowResponse completed = new AiWorkflowResponse();

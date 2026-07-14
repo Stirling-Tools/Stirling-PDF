@@ -6,6 +6,7 @@ import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
 import {
   buildWireFromSetup,
   buildWireFromState,
+  clearProcessedHistory,
   deletePolicy,
   fetchPolicies,
   savePolicy,
@@ -35,6 +36,10 @@ export function Policies() {
 
   const catalogue = data?.catalogue ?? [];
   const refetch = useCallback(() => setVersion((v) => v + 1), []);
+  // The catalogue cards are always shown (they're the "configure a policy" CTAs),
+  // but the summary strip is pure stat boxes: hide it until at least one policy
+  // is configured so a fresh workspace doesn't show a row of zeros.
+  const hasPolicies = !!data && data.summary.active + data.summary.paused > 0;
 
   const displayCatalogue: CatalogueEntry[] =
     catalogue.length > 0
@@ -62,7 +67,7 @@ export function Policies() {
   ) {
     setPageError(null);
     try {
-      await savePolicy(buildWireFromSetup(entry, result));
+      await savePolicy(buildWireFromSetup(entry, result, t));
       setWizard(null);
       setDetail(null);
       refetch();
@@ -92,13 +97,18 @@ export function Policies() {
     if (!entry || !policy?.state.backendId) return;
     const enabled = policy.state.status === "paused";
     void runLifecycle(() =>
-      savePolicy(buildWireFromState(entry, policy, enabled)),
+      savePolicy(buildWireFromState(entry, policy, enabled, t)),
     );
   }
 
   function handleDelete() {
     const id = detail?.policy?.state.backendId;
     if (id) void runLifecycle(() => deletePolicy(id));
+  }
+
+  function handleClearHistory() {
+    const id = detail?.policy?.state.backendId;
+    if (id) void runLifecycle(() => clearProcessedHistory(id));
   }
 
   function handleEdit() {
@@ -117,7 +127,7 @@ export function Policies() {
 
       {pageError && <Banner tone="danger" description={pageError} />}
 
-      <CatalogueSummary data={data} loading={loading} />
+      {hasPolicies && <CatalogueSummary data={data} loading={loading} />}
 
       {isLoading && (
         <div className="portal-policies__grid" aria-hidden>
@@ -159,6 +169,7 @@ export function Policies() {
         onEdit={handleEdit}
         onTogglePause={handleTogglePause}
         onDelete={handleDelete}
+        onClearHistory={handleClearHistory}
       />
 
       <PolicySetupWizard

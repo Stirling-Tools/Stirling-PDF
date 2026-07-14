@@ -50,6 +50,23 @@ class SecretMaskerTest {
     }
 
     @Test
+    void mergeDropsKeysAbsentFromIncoming() {
+        // PUT/replace semantics: a key removed in the edit is removed from storage.
+        Map<String, Object> stored = new java.util.LinkedHashMap<>();
+        stored.put("bucket", "b");
+        stored.put("endpoint", "https://old");
+        stored.put("secretKey", "REAL");
+        Map<String, Object> incoming = new java.util.LinkedHashMap<>();
+        incoming.put("bucket", "b");
+        incoming.put("secretKey", SecretMasker.MASK);
+
+        Map<String, Object> merged = masker.merge(stored, incoming);
+
+        assertThat(merged).doesNotContainKey("endpoint");
+        assertThat(merged.get("secretKey")).isEqualTo("REAL"); // masked secret retained
+    }
+
+    @Test
     void sanitizeDropsBlankSecretsOnCreate() {
         Map<String, Object> incoming = new LinkedHashMap<>();
         incoming.put("bucket", "b");

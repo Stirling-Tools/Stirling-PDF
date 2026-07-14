@@ -3,6 +3,7 @@ import { PortalAuthBoundary } from "@portal/auth/PortalAuthBoundary";
 import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
 import { SuiProvider } from "@portal/theme/SuiProvider";
 import { PortalProviders } from "@portal/PortalProviders";
+import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
 // Reset + typography, scoped to .portal-scope below.
 import "@portal/theme/base.css";
 
@@ -17,11 +18,11 @@ function ThemedSuiProvider({ children }: { children: ReactNode }) {
 }
 
 /**
- * The portal, mounted as a route-set under /portal/* inside the editor app (via
- * the admin-route seam). It supplies its own providers and its own i18next
+ * The portal, mounted as a route-set under /processor/* inside the editor app
+ * (via the admin-route seam). It supplies its own providers and its own i18next
  * instance (the `portal` namespace), but NOT a router — the editor's
  * <BrowserRouter> is the one and only router; the portal's routes are relative
- * to the /portal mount (see ViewRouter).
+ * to the /processor mount (see ViewRouter).
  *
  * The provider stack itself is a per-flavor seam (see {@link PortalProviders}):
  * self-hosted mounts the account-link layer, SaaS does not.
@@ -32,9 +33,13 @@ export function PortalApp() {
       <ThemedSuiProvider>
         {/* Scopes base.css to the portal so it doesn't restyle the host editor. */}
         <div className="portal-scope">
-          <PortalAuthBoundary>
-            <PortalProviders />
-          </PortalAuthBoundary>
+          {/* Tool registry is read by portal views (e.g. the policy setup
+              wizard); mount it above the per-flavor provider split. */}
+          <ToolRegistryProvider>
+            <PortalAuthBoundary>
+              <PortalProviders />
+            </PortalAuthBoundary>
+          </ToolRegistryProvider>
         </div>
       </ThemedSuiProvider>
     </ThemeProvider>

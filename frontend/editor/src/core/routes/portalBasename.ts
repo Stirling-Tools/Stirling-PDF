@@ -4,4 +4,4 @@
  * mount point without importing portal code — build flavors that ship no
  * portal (core, desktop, prototypes) must never resolve @portal.
  */
-export const PORTAL_BASENAME = "/portal";
+export const PORTAL_BASENAME = "/processor";
