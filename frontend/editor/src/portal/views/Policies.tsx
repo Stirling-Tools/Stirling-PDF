@@ -12,11 +12,11 @@ import {
   savePolicy,
   POLICY_CATEGORIES,
   POLICY_CONFIG,
-  TOOL_ENDPOINTS,
   type CatalogueEntry,
   type PoliciesResponse,
   type PolicySetupResult,
 } from "@portal/api/policies";
+import { policyEndpoint } from "@app/policies/operations";
 import { CatalogueSummary } from "@portal/components/policies/CatalogueSummary";
 import { PolicyCategoryCard } from "@portal/components/policies/PolicyCategoryCard";
 import { PolicyDetailPanel } from "@portal/components/policies/PolicyDetailPanel";
@@ -87,7 +87,7 @@ export function Policies() {
   ) {
     setPageError(null);
     try {
-      if (result.steps.some((s) => s.operation === TOOL_ENDPOINTS.classify)) {
+      if (result.steps.some((s) => s.operation === policyEndpoint("classify"))) {
         await seedTeamLabelsIfEmpty();
       }
       await savePolicy(buildWireFromSetup(entry, result, t));

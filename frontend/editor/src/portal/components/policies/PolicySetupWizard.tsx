@@ -18,22 +18,23 @@ import {
 } from "@app/ui";
 import { SettingsRow } from "@app/ui/SettingsRow";
 import {
-  TOOL_ENDPOINTS,
   humanizeEndpoint,
   type CatalogueEntry,
   type PipelineStep,
   type PolicySetupResult,
 } from "@portal/api/policies";
-import type { ToolRegistry, ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import {
-  deserializeToolStep,
-  serializeStepFromEndpoint,
-} from "@app/hooks/tools/shared/toolAutomation";
+  policyEndpoint,
+  policyStepFromWire,
+  policyStepToWire,
+  type PolicyParams,
+  type PolicyToolId,
+  type PolicyToolStep,
+} from "@app/policies/operations";
 import { fetchSources } from "@portal/api/sources";
 import { useAsync } from "@portal/hooks/useAsync";
 import { PolicyFieldRow } from "@portal/components/policies/PolicyFieldRow";
 import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
-import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig";
 import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
 import { ClassificationLabelsSection } from "@portal/components/policies/ClassificationLabelsSection";
@@ -67,12 +68,8 @@ interface PolicySetupWizardProps {
 
 type Step = "workflow" | "settings";
 
-/** A configurable tool in the workflow step: whether it runs + its params. */
-interface ToolState {
-  operation: string;
-  enabled: boolean;
-  parameters: Record<string, unknown>;
-}
+/** A policy step plus whether it runs. */
+type ToolState = PolicyToolStep & { enabled: boolean };
 
 /** Resolve each field's effective value: saved override, else definition default. */
 function resolveFieldValues(
@@ -89,9 +86,8 @@ function resolveFieldValues(
  * round-trips); otherwise the category preset's default chain. Each preset step
  * starts enabled — the user toggles tools off in the workflow.
  */
-// Temporary: tracks which tools start disabled until the tool registry lands in
-// the portal and can drive this via registry metadata or a defaultEnabled flag.
-const DISABLED_BY_DEFAULT = new Set(["/api/v1/security/add-watermark"]);
+// Temporary until the catalogue carries a defaultEnabled flag.
+const DISABLED_BY_DEFAULT = new Set<PolicyToolId>(["watermark"]);
 
 /**
  * Policy-facing framing for each capability a policy can include. Labels and
@@ -101,49 +97,49 @@ const DISABLED_BY_DEFAULT = new Set(["/api/v1/security/add-watermark"]);
  * the humanised endpoint name with no description.
  */
 const CAPABILITY_META: Record<
-  string,
+  PolicyToolId,
   { labelKey: string; labelEn: string; descKey: string; descEn: string }
 > = {
-  [TOOL_ENDPOINTS.redact]: {
+  redact: {
     labelKey: "portal.policies.wizard.capability.redact.label",
     labelEn: "Redact sensitive information",
     descKey: "portal.policies.wizard.capability.redact.desc",
     descEn:
       "Finds and blacks out sensitive details — like Social Security and card numbers — so they can't be read.",
   },
-  [TOOL_ENDPOINTS.sanitize]: {
+  sanitize: {
     labelKey: "portal.policies.wizard.capability.sanitize.label",
     labelEn: "Strip active content",
     descKey: "portal.policies.wizard.capability.sanitize.desc",
     descEn:
       "Removes hidden JavaScript so nothing can run automatically when the document is opened.",
   },
-  [TOOL_ENDPOINTS.watermark]: {
+  watermark: {
     labelKey: "portal.policies.wizard.capability.watermark.label",
     labelEn: "Apply a watermark",
     descKey: "portal.policies.wizard.capability.watermark.desc",
     descEn: "Stamps a visible mark (e.g. “Confidential”) across every page.",
   },
-  [TOOL_ENDPOINTS.ocr]: {
+  ocr: {
     labelKey: "portal.policies.wizard.capability.ocr.label",
     labelEn: "Make text searchable",
     descKey: "portal.policies.wizard.capability.ocr.desc",
     descEn: "Runs OCR so scanned pages become selectable, searchable text.",
   },
-  [TOOL_ENDPOINTS.flatten]: {
+  flatten: {
     labelKey: "portal.policies.wizard.capability.flatten.label",
     labelEn: "Flatten the document",
     descKey: "portal.policies.wizard.capability.flatten.desc",
     descEn:
       "Merges form fields and annotations into the page so they can't be edited.",
   },
-  [TOOL_ENDPOINTS.compress]: {
+  compress: {
     labelKey: "portal.policies.wizard.capability.compress.label",
     labelEn: "Reduce file size",
     descKey: "portal.policies.wizard.capability.compress.desc",
     descEn: "Compresses the document to a smaller file size.",
   },
-  [TOOL_ENDPOINTS.classify]: {
+  classify: {
     labelKey: "portal.policies.wizard.capability.classify.label",
     labelEn: "Classify the document",
     descKey: "portal.policies.wizard.capability.classify.desc",
@@ -152,29 +148,24 @@ const CAPABILITY_META: Record<
   },
 };
 
-function seedTools(
-  entry: CatalogueEntry,
-  registry: Partial<ToolRegistry>,
-): ToolState[] {
+function seedTools(entry: CatalogueEntry): ToolState[] {
   const savedSteps = entry.policy?.steps ?? [];
-  const savedByOp = new Map(savedSteps.map((s) => [s.operation, s]));
-  // Always use defaultOperations as the canonical list so tools added after a
-  // policy was first saved still appear when editing.
-  return entry.config.defaultOperations.map((s) => {
-    const saved = savedByOp.get(s.operation);
+  const savedByTool = new Map<PolicyToolId, PolicyToolStep>();
+  for (const wire of savedSteps) {
+    const step = policyStepFromWire(wire);
+    if (step) savedByTool.set(step.toolId, step);
+  }
+  // defaultOperations is the canonical list (so tools added later still show on edit); a saved
+  // step's params win over the preset.
+  return entry.config.defaultOperations.map((preset) => {
+    const saved = savedByTool.get(preset.toolId);
     return {
-      operation: s.operation,
+      ...(saved ?? preset),
       enabled: saved
         ? true
         : savedSteps.length > 0
           ? false
-          : !DISABLED_BY_DEFAULT.has(s.operation),
-      // Saved steps are in the backend contract shape; map them back to the UI
-      // shape the config controls edit (e.g. `listOfText` -> `wordsToRedact`).
-      // Presets are already authored in the UI shape, so use them as-is.
-      parameters: saved
-        ? deserializeToolStep(saved, registry).params
-        : s.parameters,
+          : !DISABLED_BY_DEFAULT.has(preset.toolId),
     };
   });
 }
@@ -212,18 +203,6 @@ function PolicySetupWizardBody({
   onSubmit: (entry: CatalogueEntry, result: PolicySetupResult) => Promise<void>;
 }) {
   const { t } = useTranslation();
-  const { allTools: toolRegistry } = useToolRegistry();
-
-  // Portal tool operations are endpoint paths (/api/v1/…), not short registry IDs.
-  // Build a reverse map so we can look up icons and display names by endpoint.
-  const registryByEndpoint = useMemo(() => {
-    const map = new Map<string, ToolRegistryEntry>();
-    for (const entry of Object.values(toolRegistry)) {
-      const ep = (entry as ToolRegistryEntry).operationConfig?.endpoint;
-      if (typeof ep === "string") map.set(ep, entry as ToolRegistryEntry);
-    }
-    return map;
-  }, [toolRegistry]);
 
   const { category, config, policy } = entry;
   const isEdit = policy != null;
@@ -231,7 +210,7 @@ function PolicySetupWizardBody({
 
   const [step, setStep] = useState<Step>("workflow");
   const [tools, setTools] = useState<ToolState[]>(() => {
-    const seeded = seedTools(entry, toolRegistry);
+    const seeded = seedTools(entry);
     // Classification's single tool has no toggle in the workflow step, so keep it
     // enabled unconditionally — otherwise editing a policy whose saved steps
     // somehow lack it would strand submit with no way to re-enable it.
@@ -293,9 +272,20 @@ function PolicySetupWizardBody({
 
   const enabledTools = useMemo(() => tools.filter((tl) => tl.enabled), [tools]);
 
-  function patchTool(operation: string, patch: Partial<ToolState>) {
+  function setToolEnabled(toolId: PolicyToolId, enabled: boolean) {
     setTools((prev) =>
-      prev.map((tl) => (tl.operation === operation ? { ...tl, ...patch } : tl)),
+      prev.map((tl) => (tl.toolId === toolId ? { ...tl, enabled } : tl)),
+    );
+  }
+
+  function setToolParams<Id extends PolicyToolId>(
+    toolId: Id,
+    params: PolicyParams<Id>,
+  ) {
+    setTools((prev) =>
+      prev.map((tl) =>
+        tl.toolId === toolId ? ({ ...tl, params } as ToolState) : tl,
+      ),
     );
   }
 
@@ -314,11 +304,8 @@ function PolicySetupWizardBody({
     }
     setError(null);
     setSubmitting(true);
-    // Map each tool's UI-shaped params (e.g. redact's `wordsToRedact`) into the
-    // backend step contract (e.g. `listOfText`) via its `toApiParams`; saving the
-    // UI shape verbatim would drop those fields and the step would run with none.
     const steps: PipelineStep[] = enabledTools.map((tl) =>
-      serializeStepFromEndpoint(tl.operation, tl.parameters, toolRegistry),
+      policyStepToWire(tl),
     );
     try {
       await onSubmit(entry, {
@@ -441,20 +428,16 @@ function PolicySetupWizardBody({
           <Card padding="none">
             <div className="portal-policies__capabilities">
               {tools.map((tl) => {
-                const meta = CAPABILITY_META[tl.operation];
+                const meta = CAPABILITY_META[tl.toolId];
                 const label = meta
                   ? t(meta.labelKey, meta.labelEn)
-                  : (registryByEndpoint.get(tl.operation)?.name ??
-                    humanizeEndpoint(tl.operation, t));
+                  : humanizeEndpoint(policyEndpoint(tl.toolId), t);
                 const description = meta
                   ? t(meta.descKey, meta.descEn)
                   : undefined;
-                const hasConfig =
-                  tl.operation === TOOL_ENDPOINTS.redact ||
-                  tl.operation === TOOL_ENDPOINTS.watermark;
                 return (
                   <div
-                    key={tl.operation}
+                    key={tl.toolId}
                     className="portal-policies__capability"
                     data-on={tl.enabled || undefined}
                   >
@@ -466,27 +449,27 @@ function PolicySetupWizardBody({
                           size="sm"
                           checked={tl.enabled}
                           onChange={(checked) =>
-                            patchTool(tl.operation, { enabled: checked })
+                            setToolEnabled(tl.toolId, checked)
                           }
                           label=""
                         />
                       }
                     />
-                    {tl.enabled && hasConfig && (
+                    {tl.enabled && (
                       <div className="portal-policies__capability-config">
-                        {tl.operation === TOOL_ENDPOINTS.redact && (
+                        {tl.toolId === "redact" && (
                           <PolicyRedactConfig
-                            parameters={tl.parameters}
-                            onChange={(parameters) =>
-                              patchTool(tl.operation, { parameters })
+                            parameters={tl.params}
+                            onChange={(params) =>
+                              setToolParams("redact", params)
                             }
                           />
                         )}
-                        {tl.operation === TOOL_ENDPOINTS.watermark && (
+                        {tl.toolId === "watermark" && (
                           <PolicyWatermarkConfig
-                            parameters={tl.parameters}
-                            onChange={(parameters) =>
-                              patchTool(tl.operation, { parameters })
+                            parameters={tl.params}
+                            onChange={(params) =>
+                              setToolParams("watermark", params)
                             }
                           />
                         )}
@@ -530,9 +513,8 @@ function PolicySetupWizardBody({
               {t("portal.policies.wizard.sources.loading")}
             </p>
           ) : (
-            // The editor is always an available source (unconditionally prepended
-            // to availableSources), so the list is never empty — no "no sources"
-            // state exists.
+            // The backend always returns the editor as a virtual source, so the
+            // loaded list is never empty - no "no sources" state exists.
             <div className="portal-policies__sources">
               {availableSources.map((src) => {
                 const on = sources.includes(src.id);
