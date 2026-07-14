@@ -324,4 +324,13 @@ export default defineConfig(
       },
     },
   },
+  // Storybook's MANAGER is bundled by esbuild with no alias resolution (only the
+  // preview/Vite bundle resolves @app/@core/etc). manager.tsx must therefore
+  // import editor code relatively — an alias would fail the manager build.
+  {
+    files: [".storybook/manager.tsx"],
+    rules: {
+      "no-restricted-imports": "off",
+    },
+  },
 );
