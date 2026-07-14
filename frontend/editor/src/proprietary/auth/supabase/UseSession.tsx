@@ -185,7 +185,22 @@ export function SupabaseAuthProvider({
         },
       )
       .catch(() => {
-        // Backend unreachable or /me unsupported: keep the claim fallback.
+        // Backend unreachable or /me unsupported: resolve portalAccess to the
+        // role-based fallback so gates awaiting it don't hang on a spinner.
+        // Collapsed `portalAccess` already used this fallback, so consumers that
+        // read it are unaffected.
+        if (cancelled) return;
+        setSession((prev) =>
+          prev && prev.user.portalAccess === undefined
+            ? {
+                ...prev,
+                user: {
+                  ...prev.user,
+                  portalAccess: isAdminRole(prev.user.role),
+                },
+              }
+            : prev,
+        );
       });
     return () => {
       cancelled = true;
