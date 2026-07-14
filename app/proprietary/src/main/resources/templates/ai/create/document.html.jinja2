@@ -1,3 +1,4 @@
+{%- autoescape true -%}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -175,18 +176,18 @@
     color: var(--color-label);
   }
 </style>
-{%- if doc.style %}
+{%- if style_primary or style_background or style_body %}
 <style>
   :root {
-    {%- if doc.style.primary_color %}
-    --color-primary: {{ doc.style.primary_color }};
+    {%- if style_primary %}
+    --color-primary: {{ style_primary }};
     {%- endif %}
-    {%- if doc.style.background_color %}
-    --color-bg: {{ doc.style.background_color }};
+    {%- if style_background %}
+    --color-bg: {{ style_background }};
     {%- endif %}
-    {%- if doc.style.body_text_color %}
-    --color-body: {{ doc.style.body_text_color }};
-    --color-label: {{ doc.style.body_text_color }};
+    {%- if style_body %}
+    --color-body: {{ style_body }};
+    --color-label: {{ style_body }};
     {%- endif %}
   }
 </style>
@@ -195,16 +196,16 @@
 <body>
 
 <div class="doc-header">
-  <div class="doc-title">{{ doc.title }}</div>
-  {%- if doc.subtitle %}
-  <div class="doc-subtitle">{{ doc.subtitle }}</div>
+  <div class="doc-title">{{ title }}</div>
+  {%- if subtitle %}
+  <div class="doc-subtitle">{{ subtitle }}</div>
   {%- endif %}
-  {%- if doc.reference_number %}
-  <div class="doc-reference">{{ doc.reference_number }}</div>
+  {%- if reference_number %}
+  <div class="doc-reference">{{ reference_number }}</div>
   {%- endif %}
 </div>
 
-{%- for section in doc.sections %}
+{%- for section in sections %}
 
 {%- if section.type == "text" %}
 <section>
@@ -212,8 +213,8 @@
   <h2>{{ section.heading }}</h2>
   {%- endif %}
   <div class="text-body">
-    {%- for para in section.body.split('\n\n') %}
-    <p>{{ para | replace('\n', ' ') }}</p>
+    {%- for para in section.paragraphs %}
+    <p>{{ para }}</p>
     {%- endfor %}
   </div>
 </section>
@@ -225,10 +226,10 @@
   {%- endif %}
   <table class="kv-table">
     <tbody>
-      {%- for label, value in section.pairs %}
+      {%- for pair in section.pairs %}
       <tr>
-        <td class="kv-label">{{ label }}</td>
-        <td class="kv-value">{{ value }}</td>
+        <td class="kv-label">{{ pair.label }}</td>
+        <td class="kv-value">{{ pair.value }}</td>
       </tr>
       {%- endfor %}
     </tbody>
@@ -299,3 +300,4 @@
 
 </body>
 </html>
+{%- endautoescape %}
