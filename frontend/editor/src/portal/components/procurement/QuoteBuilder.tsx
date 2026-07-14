@@ -40,12 +40,15 @@ const SIZE_TIERS = [
 export function QuoteBuilder({
   deployment,
   seats = 0,
+  email,
   initial,
   onGenerate,
 }: {
   deployment: string;
   /** Seat count from the trial setup; seeds the users field + volume estimate on a fresh quote. */
   seats?: number;
+  /** Linked-account email; prefills the contact email on a fresh quote's details step. */
+  email?: string | null;
   /** Seed the builder from an existing quote's config (re-editing a quote). */
   initial?: QuoteConfigInput;
   /** Called with the priced DRAFT quote; the parent issues it as a Stripe Quote. */
@@ -69,7 +72,7 @@ export function QuoteBuilder({
       qbr: false,
       businessName: "",
       contactName: "",
-      contactEmail: "",
+      contactEmail: email ?? "",
       addressLine1: "",
       addressLine2: "",
       city: "",

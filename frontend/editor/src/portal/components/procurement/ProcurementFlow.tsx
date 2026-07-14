@@ -115,6 +115,7 @@ export function ProcurementFlow({
               <QuoteBuilder
                 deployment={data?.deployment ?? "cloud"}
                 seats={data?.seats ?? 0}
+                email={scheduleEmail}
                 initial={latest?.config}
                 onGenerate={onGenerate}
               />

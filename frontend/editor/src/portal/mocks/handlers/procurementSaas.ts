@@ -316,6 +316,20 @@ export const procurementSaasHandlers = [
       headers: { "Content-Type": "application/pdf" },
     });
   }),
+  http.get(`${SAAS}/api/v1/procurement/agreement/document/pdf`, () => {
+    // The unsigned agreement PDF is available once a quote exists.
+    if (!(deal as { latestQuote: unknown }).latestQuote) {
+      return new HttpResponse(null, { status: 404 });
+    }
+    const pdf =
+      "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n" +
+      "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n" +
+      "3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 120]>>endobj\n" +
+      "trailer<</Root 1 0 R>>\n%%EOF";
+    return new HttpResponse(pdf, {
+      headers: { "Content-Type": "application/pdf" },
+    });
+  }),
   http.post(`${SAAS}/api/v1/procurement/go-live`, () => {
     const d = deal as Record<string, unknown>;
     if (d.dealId) {

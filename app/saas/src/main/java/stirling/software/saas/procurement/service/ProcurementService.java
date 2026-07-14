@@ -283,6 +283,18 @@ public class ProcurementService {
     }
 
     /**
+     * The current (unsigned) agreement rendered to PDF, for download at the sign step. Empty when
+     * there's no quote yet or the render runtime is unavailable. The signed PDF (with the signature
+     * block filled) is a separate artifact recorded at signing (see {@link #latestSignature}).
+     */
+    @Transactional(readOnly = true)
+    public Optional<byte[]> agreementDocumentPdf(Long teamId) {
+        return currentQuote(teamId)
+                .map(q -> agreementAssembler.assemble(q, null))
+                .map(a -> agreementPdfRenderer.tryRender(a.markdown()));
+    }
+
+    /**
      * Record a signed enterprise agreement: assemble the final document, hash it, render + store
      * the PDF (best-effort), and persist an immutable signature pinned to the exact document
      * version. Does not itself accept the quote into a subscription — the caller proceeds to accept

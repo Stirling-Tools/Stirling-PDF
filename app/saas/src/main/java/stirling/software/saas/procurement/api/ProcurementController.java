@@ -402,6 +402,29 @@ public class ProcurementController {
     }
 
     /**
+     * Download the current (unsigned) agreement as a PDF — the document shown at the sign step. 404
+     * when there's no quote yet or the render runtime is unavailable.
+     */
+    @GetMapping("/agreement/document/pdf")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<byte[]> agreementDocumentPdf(Authentication auth) {
+        Long teamId = requireLeader(auth);
+        if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        return procurement
+                .agreementDocumentPdf(teamId)
+                .<ResponseEntity<byte[]>>map(
+                        pdf ->
+                                ResponseEntity.ok()
+                                        .header(
+                                                HttpHeaders.CONTENT_DISPOSITION,
+                                                "attachment;"
+                                                        + " filename=\"stirling-enterprise-agreement.pdf\"")
+                                        .contentType(MediaType.APPLICATION_PDF)
+                                        .body(pdf))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    /**
      * Provision on accept: upgrade the team's licence to the committed annual term, valid
      * immediately. Called server-side by the accept edge function (ROLE_ADMIN via X-API-Key) once
      * the subscription + invoice exist, so the buyer is licensed the moment they accept — the deal

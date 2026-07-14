@@ -475,6 +475,11 @@ export function fetchSignedAgreementPdf(): Promise<Blob> {
   return apiClient.saas.blob("/api/v1/procurement/agreement/signature/pdf");
 }
 
+/** Download the current (unsigned) enterprise-agreement PDF — the document shown at the sign step. */
+export function fetchAgreementPdf(): Promise<Blob> {
+  return apiClient.saas.blob("/api/v1/procurement/agreement/document/pdf");
+}
+
 /**
  * Record a clickwrap consent to a legal document (e.g. the EULA at trial start / quote generation).
  * Best-effort — never block the flow it accompanies on a consent-logging failure.

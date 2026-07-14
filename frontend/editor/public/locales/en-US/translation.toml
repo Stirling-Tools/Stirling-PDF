@@ -7703,7 +7703,9 @@ upload = "Upload"
 [portal.procurement.agreement]
 agreeCta = "Agree & subscribe"
 confirm = "I have read and agree to this Agreement, and I represent that I am authorized to sign it on behalf of the organization named above."
+downloadAgreement = "Agreement"
 downloadError = "Could not download the signed agreement. Please try again."
+downloadQuote = "Quote"
 draftBadge = "Draft — for review"
 eyebrow = "Agreement"
 intro = "One combined agreement covers your deal: Master Service Agreement, Order Form, EULA, and Data Processing Agreement. Review it, then agree to accept the quote into a committed subscription."
@@ -7923,7 +7925,6 @@ talkToSales = "Talk to sales"
 title = "The procurement track opens with Enterprise"
 
 [portal.procurement.milestone]
-download = "Download PDF"
 downloadError = "Could not download the quote PDF just yet — please try again in a moment."
 edit = "Edit quote"
 
