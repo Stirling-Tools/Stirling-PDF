@@ -387,17 +387,16 @@ public class ProcurementController {
         Long teamId = requireLeader(auth);
         if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         return procurement
-                .latestSignature(teamId)
-                .filter(s -> s.getPdf() != null)
+                .signedAgreementPdf(teamId)
                 .<ResponseEntity<byte[]>>map(
-                        s ->
+                        pdf ->
                                 ResponseEntity.ok()
                                         .header(
                                                 HttpHeaders.CONTENT_DISPOSITION,
                                                 "attachment;"
                                                         + " filename=\"stirling-enterprise-agreement.pdf\"")
                                         .contentType(MediaType.APPLICATION_PDF)
-                                        .body(s.getPdf()))
+                                        .body(pdf))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
@@ -521,7 +520,7 @@ public class ProcurementController {
                 deal.getTrialExtensionsUsed(),
                 deal.getLicenseRef() != null,
                 includeLicenseKey ? deal.getLicenseRef() : null,
-                procurement.downloadableAgreementLabel(deal.getDealId()).orElse(null),
+                procurement.signedAgreementLabel(deal.getDealId()).orElse(null),
                 latest);
     }
 

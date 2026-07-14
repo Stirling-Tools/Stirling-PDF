@@ -355,8 +355,34 @@ public class ProcurementService {
      * snapshot polls this, so it deliberately avoids loading the PDF bytes).
      */
     @Transactional(readOnly = true)
-    public Optional<String> downloadableAgreementLabel(Long dealId) {
-        return signatureRepo.findDownloadableLabels(dealId).stream().findFirst();
+    public Optional<String> signedAgreementLabel(Long dealId) {
+        return signatureRepo.findSignedLabels(dealId).stream().findFirst();
+    }
+
+    /**
+     * The signed agreement as a PDF for download: the artifact stored at signing, or — if the
+     * render runtime was unavailable then — re-rendered now from the signature's details. Empty
+     * when the team has no signature or the render runtime is still unavailable.
+     */
+    @Transactional(readOnly = true)
+    public Optional<byte[]> signedAgreementPdf(Long teamId) {
+        return latestSignature(teamId)
+                .flatMap(
+                        sig -> {
+                            if (sig.getPdf() != null) return Optional.of(sig.getPdf());
+                            return quoteRepo
+                                    .findById(sig.getQuoteId())
+                                    .map(
+                                            q ->
+                                                    agreementAssembler.assemble(
+                                                            q,
+                                                            new AgreementSigning(
+                                                                    sig.getCustomerLegalName(),
+                                                                    sig.getSignatoryName(),
+                                                                    sig.getSignatoryTitle(),
+                                                                    sig.isAuthorityConfirmed())))
+                                    .map(a -> agreementPdfRenderer.tryRender(a.markdown()));
+                        });
     }
 
     private static String sha256(String s) {

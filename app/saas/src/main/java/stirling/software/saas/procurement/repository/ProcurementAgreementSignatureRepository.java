@@ -17,12 +17,13 @@ public interface ProcurementAgreementSignatureRepository
     Optional<ProcurementAgreementSignature> findFirstByQuoteIdOrderBySignedAtDesc(Long quoteId);
 
     /**
-     * Version labels of a deal's signatures that have a stored PDF, newest first. Projects just the
-     * label column so the frequently-polled snapshot never loads the PDF bytes.
+     * Version labels of a deal's signatures, newest first. Projects just the label column so the
+     * frequently-polled snapshot never loads the PDF bytes. A signature means the agreement is
+     * signed; the PDF is resolved (stored or re-rendered) at download time.
      */
     @Query(
             "SELECT s.documentLabel FROM ProcurementAgreementSignature s"
-                    + " WHERE s.dealId = :dealId AND s.pdf IS NOT NULL"
+                    + " WHERE s.dealId = :dealId"
                     + " ORDER BY s.signedAt DESC")
-    List<String> findDownloadableLabels(@Param("dealId") Long dealId);
+    List<String> findSignedLabels(@Param("dealId") Long dealId);
 }
