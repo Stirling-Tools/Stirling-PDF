@@ -3,6 +3,7 @@ package stirling.software.proprietary.classification;
 import java.io.InputStream;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
@@ -27,6 +28,9 @@ public class ClassificationLabelProvider {
 
     private final List<ClassificationLabel> labels;
 
+    // Explicit @Autowired: the class has a second (private) constructor for tests, so Spring
+    // can't infer which to use without it.
+    @Autowired
     public ClassificationLabelProvider(ObjectMapper objectMapper) {
         this(load(objectMapper));
     }
