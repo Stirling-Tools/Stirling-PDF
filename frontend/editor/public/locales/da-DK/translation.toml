@@ -6521,63 +6521,6 @@ title_other = "Behandl {{allowance}} PDFs gratis"
 titleWithRate_one = "Behandl {{allowance}} PDFs gratis, derefter {{rate}}/PDF"
 titleWithRate_other = "Behandl {{allowance}} PDFs gratis, derefter {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Låst"
-openAriaLabel = "Åbn {{name}}-komponent"
-
-[portal.catalogue.detail]
-addToProject = "Føj til projekt"
-ariaLabel = "Komponentdetalje"
-tabsAriaLabel = "Komponentdetaljesektioner"
-upgradeToUnlock = "Opgrader for at låse op"
-
-[portal.catalogue.detail.code]
-install = "Installér"
-usage = "Brug"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} er inkluderet fra {{tier}}-planen. Opgrader for at indlejre den."
-title = "Ikke tilgængelig på din plan"
-
-[portal.catalogue.detail.preview]
-badge = "Live preview"
-note = "Interaktiv sandbox renderes her"
-
-[portal.catalogue.detail.pricing]
-note = "Måles pr. {{unit}}. Brug ud over den månedlige gratis kvote faktureres til din konto og specificeres under Brug og fakturering."
-
-[portal.catalogue.detail.stats]
-billedOn = "Faktureres på"
-embeds30d = "Indlejringer (30d)"
-freeQuota = "Gratis kvote"
-freeQuotaValue = "{{amount}} / md."
-maturity = "Modenhed"
-none = "Ingen"
-perAction = "Pr. handling"
-price = "Pris"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "Oversigt"
-pricing = "Priser"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "valgfri"
-required = "påkrævet"
-
-[portal.catalogue.props.columns]
-description = "Beskrivelse"
-name = "Prop"
-required = "Påkrævet"
-type = "Type"
-
-[portal.catalogue.summary]
-componentsGa = "Komponenter GA"
-componentSpendMtd = "Komponentforbrug (MTD)"
-embedsThisMonth = "Indlejringer denne måned"
-inBeta = "I beta"
-
 [portal.components.billingUnit]
 approval = "godkendelse"
 check = "kontrol"
@@ -6590,18 +6533,6 @@ signature = "signatur"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Indlejrbare SDK-widgets, du kan lægge ind i din egen app — en viewer, et e-sign-flow, et AI-gennemgangspanel. Hver måles pr. handling. Klik på et kort for installation, brug og props."
-title = "Komponenter"
-
-[portal.componentsView.empty]
-description = "Komponentkataloget kunne ikke indlæses. Prøv igen om lidt."
-title = "Ingen komponenter tilgængelige"
-
-[portal.componentsView.lockedBanner]
-description = "GA-komponenter er tilgængelige på Pay-as-you-go; nogle få Beta-komponenter er kun til enterprise. Låste kort viser en opgraderingsopfordring."
-title = "Nogle komponenter kræver en betalt plan"
 
 [portal.docs.authentication]
 codeCaption = "hver forespørgsel"
