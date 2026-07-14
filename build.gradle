@@ -43,6 +43,17 @@ ext {
     jwtVersion = "0.13.0"
     awsSdkVersion = "2.44.12"
     testcontainersMinioVersion = "1.21.4"
+    // Security CVE overrides for Spring Boot 4 BOM-managed transitives
+    nettyVersion = "4.2.15.Final"
+    jackson2Version = "2.22.0"
+    // jackson-annotations ships 2-component versions (2.22, not 2.22.0)
+    jackson2AnnotationsVersion = "2.22"
+    // Jackson 3 (tools.jackson) used by Spring Boot 4; 3.1.4 patches CVE-2026-54512..54518
+    jackson3Version = "3.1.4"
+    postgresqlVersion = "42.7.11"
+    // velocity-engine-core 2.3 (via shib-velocity SAML stack) shades a vulnerable
+    // commons-io 2.8.0 (CVE-2024-47554) into its jar; 2.4.1 no longer shades it
+    velocityVersion = "2.4.1"
     // junit-platform-launcher version managed by Spring Boot BOM
     modernJavaVersion = 25
 }
@@ -222,10 +233,33 @@ subprojects {
         resolutionStrategy.force "org.apache.commons:commons-lang3:${commonsLang3}"
         // CVE-2024-47554: commons-io DoS prevention
         resolutionStrategy.force "commons-io:commons-io:${commonsIoVersion}"
+        // CVE-2024-47554: velocity-engine-core 2.3 shades commons-io 2.8.0; 2.4.1 unshades it
+        resolutionStrategy.force "org.apache.velocity:velocity-engine-core:${velocityVersion}"
         // Keep BouncyCastle modules aligned to avoid runtime linkage errors
         resolutionStrategy.force "org.bouncycastle:bcprov-jdk18on:${bouncycastleVersion}"
         resolutionStrategy.force "org.bouncycastle:bcpkix-jdk18on:${bouncycastleVersion}"
         resolutionStrategy.force "org.bouncycastle:bcutil-jdk18on:${bouncycastleVersion}"
+        resolutionStrategy.eachDependency { details ->
+            // Netty 4.2.x: CVE-2026-44249/45416/45673/45674/47244/47691/48043/50010/50020/50560
+            // /42579/42580/42581/42583/42584/42585/42587/41417 - force 4.2.15.Final across all modules
+            if (details.requested.group == "io.netty") {
+                details.useVersion nettyVersion
+                details.because "CVE-2026 netty fixes (>=4.2.15.Final)"
+            }
+            // Jackson 2.x: CVE-2026-54512/54513/54514/54515/54516/54517/54518 - force 2.22.0.
+            // jackson-annotations uses 2-component versions (2.22), unlike core/databind (2.22.0).
+            if (details.requested.group.startsWith("com.fasterxml.jackson")) {
+                details.useVersion(details.requested.name == "jackson-annotations"
+                    ? jackson2AnnotationsVersion : jackson2Version)
+                details.because "CVE-2026-54512..54518 jackson 2.x fixes (>=2.22.0)"
+            }
+            // Jackson 3 (tools.jackson) ships with Spring Boot 4; same CVE-2026-54512..54518
+            // family is fixed in 3.1.4 (stays in Spring Boot's 3.1.x line).
+            if (details.requested.group.startsWith("tools.jackson")) {
+                details.useVersion jackson3Version
+                details.because "CVE-2026-54512..54518 jackson 3.x fixes (>=3.1.4)"
+            }
+        }
     }
 
     dependencyManagement {
@@ -235,6 +269,8 @@ subprojects {
         dependencies {
             // Override BOM-managed commons-lang3 for CVE-2025-48924 fix
             dependency "org.apache.commons:commons-lang3:$commonsLang3"
+            // CVE-2026-42198: Spring Boot 4 BOM pins postgresql 42.7.10; override to patched 42.7.11
+            dependency "org.postgresql:postgresql:$postgresqlVersion"
         }
     }
 
