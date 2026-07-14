@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.core.io.FileSystemResource;
@@ -40,6 +41,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.cluster.JobStore;
+import stirling.software.common.cluster.JobStoreEntry;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.job.JobResponse;
 import stirling.software.common.service.JobOwnershipService;
@@ -104,6 +107,8 @@ public class PolicyController {
     private final ApplicationProperties applicationProperties;
     private final TempFileManager tempFileManager;
     private final JobOwnershipService jobOwnershipService;
+    // Shared job store: lets the run endpoints see runs that executed on other nodes.
+    private final JobStore jobStore;
 
     @PostMapping(value = "/run", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
@@ -174,10 +179,19 @@ public class PolicyController {
             description = "Returns the current status, step cursor, and output files of a run.")
     public ResponseEntity<PolicyRunView> status(@PathVariable String runId) {
         PolicyRun run = runRegistry.get(runId);
-        if (run == null) {
-            return ResponseEntity.notFound().build();
+        if (run != null) {
+            return ResponseEntity.ok(PolicyRunView.of(run));
         }
-        return ResponseEntity.ok(PolicyRunView.of(run));
+        // Not local: read the run's shared projection so any node can serve its status.
+        if (ownedByCurrentUser(runId)) {
+            Optional<JobStoreEntry> entry = jobStore.get(runId);
+            if (entry.isPresent()
+                    && entry.get().resultMeta() != null
+                    && entry.get().resultMeta().containsKey("policyId")) {
+                return ResponseEntity.ok(PolicyRunView.ofEntry(entry.get()));
+            }
+        }
+        return ResponseEntity.notFound().build();
     }
 
     @GetMapping("/runs")
@@ -190,11 +204,26 @@ public class PolicyController {
                             + " collected, rather than orphaned on the backend. Ad-hoc runs (no"
                             + " policy id) are excluded.")
     public List<PolicyRunView> listRuns() {
-        return runRegistry.all().stream()
+        // Local runs first (they carry live step state); keyed by runId to dedupe shared entries.
+        Map<String, PolicyRunView> byRunId = new LinkedHashMap<>();
+        runRegistry.all().stream()
                 .filter(run -> run.getPolicyId() != null)
                 .filter(run -> ownedByCurrentUser(run.getRunId()))
-                .map(PolicyRunView::of)
-                .toList();
+                .forEach(run -> byRunId.put(run.getRunId(), PolicyRunView.of(run)));
+        // Then runs from other nodes, read from the shared job store.
+        for (JobStoreEntry entry : jobStore.all()) {
+            if (byRunId.containsKey(entry.jobId())) {
+                continue;
+            }
+            Map<String, String> meta = entry.resultMeta();
+            if (meta == null || !meta.containsKey("policyId")) {
+                continue; // ad-hoc job, not a stored-policy run
+            }
+            if (ownedByCurrentUser(entry.jobId())) {
+                byRunId.put(entry.jobId(), PolicyRunView.ofEntry(entry));
+            }
+        }
+        return List.copyOf(byRunId.values());
     }
 
     /**

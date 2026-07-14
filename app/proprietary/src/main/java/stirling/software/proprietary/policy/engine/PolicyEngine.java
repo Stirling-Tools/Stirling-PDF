@@ -136,6 +136,10 @@ public class PolicyEngine {
         // ownership check passes. No-op when security is off.
         String runId = jobOwnershipService.createScopedJobKey(UUID.randomUUID().toString());
         taskManager.createTask(runId);
+        // Tag the shared job entry with the policy id so peers can list it as a policy run.
+        if (policyId != null) {
+            taskManager.putMetadata(runId, "policyId", policyId);
+        }
         PolicyRun run = new PolicyRun(runId, policyId, definition);
         registry.register(run);
         CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
