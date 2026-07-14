@@ -10,7 +10,10 @@
   display: flex;
   align-items: center;
   gap: 0.75rem; /* 12px */
-  margin: 0.375rem 0 0.5rem; /* 6px 0 8px */
+  /* Center "or" between the last OAuth button and the input box: the larger top
+     margin balances the field label + input that sit below the smaller bottom
+     margin, so the gap to the button ≈ the gap to the input. */
+  margin: 2.25rem 0 0.75rem; /* 36px top, 12px bottom */
 }
 
 .auth-or-divider__rule {
@@ -35,6 +38,15 @@
   font-size: 0.875rem; /* 14px */
   color: var(--auth-label-text-light-only);
   font-weight: 500;
+}
+
+/* Normalize the Mantine inputs used by the login/signup forms so they match the
+   OAuth buttons and submit CTA: same height, radius, and font size. */
+.auth-fields .mantine-Input-input {
+  min-height: 2.625rem; /* 42px */
+  height: 2.625rem;
+  border-radius: 0.625rem; /* 10px */
+  font-size: 0.9375rem; /* 15px */
 }
 
 .auth-input {
@@ -182,7 +194,13 @@
   min-height: 3.5rem; /* 56px */
 }
 .oauth-button-fullwidth.sui-btn.mantine-Button-root {
-  border-radius: 100px;
+  border-radius: 0.625rem; /* 10px */
+  min-height: 0;
+}
+
+/* Match the submit CTA's corners to the OAuth buttons and inputs (10px). */
+.auth-submit.sui-btn.mantine-Button-root {
+  border-radius: 0.625rem; /* 10px */
 }
 
 .oauth-button-icon {
@@ -376,6 +394,12 @@
   width: 1.75rem; /* 28px */
   height: 1.75rem; /* 28px */
   display: block;
+}
+
+/* Fullwidth OAuth rows use a smaller icon so button height matches the inputs. */
+.oauth-button-fullwidth .oauth-icon-medium {
+  width: 1.25rem; /* 20px */
+  height: 1.25rem; /* 20px */
 }
 
 .oauth-icon-tiny {
@@ -635,6 +659,25 @@
   color: var(--auth-text-primary-light-only);
 }
 
+/* "Don't have an account? Sign up" row beneath the login form. */
+.auth-signup-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem; /* 6px */
+  margin-top: 1.5rem; /* 24px */
+  font-size: 0.875rem; /* 14px */
+  color: var(--auth-label-text-light-only);
+}
+
+.auth-signup-link.sui-btn.mantine-Button-root {
+  padding: 0;
+  min-height: 0;
+  height: auto;
+  font-size: 0.875rem; /* 14px */
+  font-weight: 700;
+}
+
 /* Email login button - red CTA style matching SaaS version */
 .auth-cta-button {
   background-color: #af3434 !important;
@@ -663,7 +706,7 @@
 }
 
 .auth-logo-header {
-  height: 8rem;
+  height: 6.5rem; /* 104px */
   width: auto;
 }
 
@@ -736,12 +779,12 @@
   justify-content: center;
   /* Vertical padding via the shared Button's --sui-btn-py (beats the Button's
      own padding-block); horizontal stays in the shorthand. */
-  --sui-btn-py: 1rem; /* 16px (md) */
-  padding: 1rem 1rem; /* 16px */
+  --sui-btn-py: 0.625rem; /* 10px */
+  padding: 0.625rem 1rem; /* 10px 16px */
   border: 1px solid #d1d5db;
-  border-radius: 100px;
+  border-radius: 0.625rem; /* 10px */
   background-color: #ffffff;
-  font-size: 1rem;
+  font-size: 0.9375rem; /* 15px */
   font-weight: 600;
   color: #000000;
   cursor: pointer;
@@ -810,51 +853,4 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-}
-
-.oauth-button-fullwidth {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /* Vertical padding via the shared Button's --sui-btn-py (beats the Button's
-     own padding-block); horizontal stays in the shorthand. */
-  --sui-btn-py: 1rem; /* 16px (md) */
-  padding: 1rem 1rem; /* 16px */
-  border: 1px solid #d1d5db;
-  border-radius: 100px;
-  background-color: #ffffff;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #000000;
-  cursor: pointer;
-  gap: 0.5rem;
-  box-shadow: 0 0.125rem 0.375rem rgba(0, 0, 0, 0.04);
-  transition:
-    background-color 150ms ease,
-    box-shadow 150ms ease,
-    border-color 150ms ease;
-}
-
-.oauth-button-fullwidth:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.oauth-button-fullwidth:hover:not(:disabled) {
-  background-color: #fafafa;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-[data-mantine-color-scheme="dark"] .oauth-button-fullwidth {
-  background-color: var(--bg-surface);
-  color: var(--text-primary);
-  border-color: var(--border-default);
-  box-shadow: none;
-}
-
-[data-mantine-color-scheme="dark"]
-  .oauth-button-fullwidth:hover:not(:disabled) {
-  background-color: var(--bg-raised);
-  box-shadow: none;
 }

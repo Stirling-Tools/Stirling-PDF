@@ -4713,6 +4713,7 @@ login = "Login"
 magicLinkSent = "Magic link sent to {{email}}! Check your email and click the link to sign in."
 mfaCode = "Authentication Code"
 mfaRequired = "Two-factor code required"
+noAccount = "Don't have an account?"
 or = "Or"
 password = "Password"
 passwordChangedSuccess = "Password changed successfully! Please sign in with your new password."
@@ -4736,21 +4737,6 @@ useEmailInstead = "Login with email"
 useMagicLink = "Use magic link instead"
 username = "Username"
 youAreLoggedIn = "You are logged in!"
-
-[login.slides.edit]
-alt = "Edit PDFs"
-subtitle = "With over a dozen tools to help you redact, sign, read and manipulate PDFs, you will be sure to find what you are looking for."
-title = "Edit PDFs to display/secure the information you want"
-
-[login.slides.overview]
-alt = "Stirling PDF overview"
-subtitle = "A privacy-first cloud suite for PDFs that lets you convert, sign, redact, and manage documents, along with 50+ other powerful tools."
-title = "Your one-stop-shop for all your PDF needs."
-
-[login.slides.secure]
-alt = "Secure PDFs"
-subtitle = "Add passwords, redact content, and manage certificates with ease."
-title = "Protect sensitive information in your PDFs"
 
 [margin]
 large = "Large"

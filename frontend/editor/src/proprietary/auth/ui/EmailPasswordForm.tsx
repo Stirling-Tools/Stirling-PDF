@@ -130,7 +130,10 @@ export default function EmailPasswordForm({
           (requiresMfa && !mfaCode.trim())
         }
         fullWidth
+        size="lg"
+        fontSize="sm"
         loading={isSubmitting}
+        className="auth-submit"
         // Stirling-red brand CTA; the brand accent sets the colour inline so the
         // host app's Mantine primaryColor can't win (editor vs portal differ).
         accent="brand"
