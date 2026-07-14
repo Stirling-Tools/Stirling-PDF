@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { StatusBadge, Tabs, type TabItem } from "@app/ui";
-import { type Agent, AGENT_STATUS_TONE } from "@portal/api/agents";
+import {
+  type Agent,
+  AGENT_STATUS_LABEL,
+  AGENT_STATUS_TONE,
+} from "@portal/api/agents";
 import { ScenariosPanel } from "@portal/components/agent-builder/ScenariosPanel";
 import { ToolsPanel } from "@portal/components/agent-builder/ToolsPanel";
 import { EvalsPanel } from "@portal/components/agent-builder/EvalsPanel";
@@ -52,7 +56,7 @@ export function AgentBuilderPanel({
         </div>
         <div className="portal-agents__builder-meta">
           <StatusBadge tone={AGENT_STATUS_TONE[agent.status]} size="sm">
-            {agent.status}
+            {t(AGENT_STATUS_LABEL[agent.status])}
           </StatusBadge>
           <code className="portal-agents__builder-version">
             {agent.version}

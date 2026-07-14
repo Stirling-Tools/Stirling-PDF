@@ -30,7 +30,7 @@ export function Pipelines() {
   const openCreate = () =>
     navigate(`${toPortalPath(VIEW_PATHS.pipelines)}/new`);
   const connectSource = () =>
-    navigate(`${toPortalPath(VIEW_PATHS.sources)}?new`);
+    navigate(`${toPortalPath(VIEW_PATHS.sources)}/new`);
   // A row opens that pipeline's own page (view / edit / run / delete live there).
   const openPipeline = (pipeline: PipelineView) =>
     navigate(`${toPortalPath(VIEW_PATHS.pipelines)}/${pipeline.id}`);

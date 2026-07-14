@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import KeyboardArrowRightRounded from "@mui/icons-material/KeyboardArrowRightRounded";
+import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import {
   Chip,
   StatusBadge,
@@ -24,16 +24,11 @@ const STATUS_TONE: Record<SourceStatus, StatusTone> = {
 
 interface SourcesTableProps {
   sources: SourceView[];
-  /** Id of the row whose detail panel is open, drives the caret state. */
-  expandedId: string | null;
+  /** Opens a source's own page. Not called for the virtual editor row. */
   onRowClick: (source: SourceView) => void;
 }
 
-export function SourcesTable({
-  sources,
-  expandedId,
-  onRowClick,
-}: SourcesTableProps) {
+export function SourcesTable({ sources, onRowClick }: SourcesTableProps) {
   const { t } = useTranslation();
   const columns = useMemo<TableColumn<SourceView>[]>(
     () => [
@@ -79,6 +74,18 @@ export function SourcesTable({
         ),
       },
       {
+        key: "docs",
+        header: t("portal.sources.table.documents"),
+        align: "right",
+        render: (s) => (
+          <span
+            className={s.docsTotal === 0 ? "portal-sources__muted" : undefined}
+          >
+            {s.docsTotal.toLocaleString()}
+          </span>
+        ),
+      },
+      {
         key: "referenceCount",
         header: t("portal.sources.table.usedBy"),
         align: "right",
@@ -93,23 +100,20 @@ export function SourcesTable({
         ),
       },
       {
-        key: "expand",
+        key: "open",
         header: "",
         align: "right",
         width: "2.5rem",
-        render: (s) => (
-          <span
-            className={
-              "portal-sources__caret" + (expandedId === s.id ? " is-open" : "")
-            }
-            aria-hidden
-          >
-            <KeyboardArrowRightRounded style={{ fontSize: "1.2rem" }} />
-          </span>
-        ),
+        // The editor source has no page to open, so it shows no chevron.
+        render: (s) =>
+          s.type === EDITOR_SOURCE_TYPE ? null : (
+            <span className="portal-sources__caret" aria-hidden>
+              <ChevronRightRoundedIcon style={{ fontSize: "1.25rem" }} />
+            </span>
+          ),
       },
     ],
-    [expandedId, t],
+    [t],
   );
 
   return (
@@ -119,6 +123,8 @@ export function SourcesTable({
       rows={sources}
       rowKey={(s) => s.id}
       onRowClick={onRowClick}
+      // The virtual editor row has no page to open, so it's inert - not a fake button.
+      isRowInteractive={(s) => s.type !== EDITOR_SOURCE_TYPE}
     />
   );
 }
