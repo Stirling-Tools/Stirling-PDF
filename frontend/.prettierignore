@@ -11,6 +11,7 @@ editor/public/vendor/
 editor/public/mockServiceWorker.js
 # Auto-generated OG/social-preview metadata (scripts/generate-og-metadata.mjs); regenerated verbatim.
 editor/public/og-metadata.json
+editor/public/og-metadata.saas.json
 editor/src/core/data/ogImageMap.json
 editor/public/pdfjs*/
 editor/public/js/thirdParty/

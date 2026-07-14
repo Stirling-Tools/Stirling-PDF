@@ -108,7 +108,7 @@ export default function Signup() {
       "app.description",
       "The Free Adobe Acrobat alternative (10M+ Downloads)",
     ),
-    ogImage: `${baseUrl}/og_images/home.png`,
+    ogImage: `${baseUrl}/og_images/app.png`,
     ogUrl: `${window.location.origin}${window.location.pathname}`,
   });
 
