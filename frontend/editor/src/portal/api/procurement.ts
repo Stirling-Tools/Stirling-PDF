@@ -332,6 +332,8 @@ export interface ProcurementSnapshot {
   licensed: boolean;
   /** The team's Keygen licence key (present once licensed); shown in the portal to copy/install. */
   licenseKey: string | null;
+  /** Version label of the signed agreement PDF available to download (e.g. "SEA v0.9.1"), else null. */
+  agreementSignedVersion: string | null;
   latestQuote: QuoteResult | null;
 }
 
@@ -466,6 +468,11 @@ export function recordAgreementSignature(
 /** Fetch a static legal document (eula, sla, subprocessors) by id for in-product viewing. */
 export function fetchLegalDocument(docId: string): Promise<AgreementDocument> {
   return apiClient.saas.json<AgreementDocument>(`/api/v1/legal/${docId}`);
+}
+
+/** Download the stored, signed enterprise-agreement PDF for the team (post-signing). */
+export function fetchSignedAgreementPdf(): Promise<Blob> {
+  return apiClient.saas.blob("/api/v1/procurement/agreement/signature/pdf");
 }
 
 /**

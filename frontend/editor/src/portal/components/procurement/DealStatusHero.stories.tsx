@@ -12,6 +12,7 @@ const base: ProcurementSnapshot = {
   trialExtensionsUsed: 0,
   licensed: false,
   licenseKey: null,
+  agreementSignedVersion: null,
   latestQuote: null,
 };
 

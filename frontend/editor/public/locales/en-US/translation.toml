@@ -7703,6 +7703,7 @@ upload = "Upload"
 [portal.procurement.agreement]
 agreeCta = "Agree & subscribe"
 confirm = "I have read and agree to this Agreement, and I represent that I am authorized to sign it on behalf of the organization named above."
+downloadError = "Could not download the signed agreement. Please try again."
 draftBadge = "Draft — for review"
 eyebrow = "Agreement"
 intro = "One combined agreement covers your deal: Master Service Agreement, Order Form, EULA, and Data Processing Agreement. Review it, then agree to accept the quote into a committed subscription."
@@ -7929,6 +7930,7 @@ uploadTitle = "Upload your purchase order"
 
 [portal.procurement.payment]
 description = "Your quote is accepted and your licence is already active — your team can start right away. Pay the first invoice when you're ready; you can pay or download it here, no email needed."
+downloadAgreement = "Download signed agreement"
 downloadInvoice = "Download invoice"
 title = "Subscription created"
 viewInvoice = "View & pay invoice"

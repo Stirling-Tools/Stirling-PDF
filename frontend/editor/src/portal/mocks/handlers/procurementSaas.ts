@@ -17,6 +17,7 @@ const EMPTY = {
   trialExtensionsUsed: 0,
   licensed: false,
   licenseKey: null,
+  agreementSignedVersion: null,
   latestQuote: null,
 };
 
@@ -292,6 +293,8 @@ export const procurementSaasHandlers = [
       if (!body.signatoryName || !body.authorityConfirmed) {
         return new HttpResponse(null, { status: 400 });
       }
+      // Surface the signed agreement for download on the payment/live stage.
+      (deal as Record<string, unknown>).agreementSignedVersion = "SEA v0.9.1";
       return HttpResponse.json({
         signatureId: 1,
         versionLabel: "SEA v0.9.1",
@@ -299,6 +302,20 @@ export const procurementSaasHandlers = [
       });
     },
   ),
+  http.get(`${SAAS}/api/v1/procurement/agreement/signature/pdf`, () => {
+    const signed = (deal as { agreementSignedVersion?: string })
+      .agreementSignedVersion;
+    if (!signed) return new HttpResponse(null, { status: 404 });
+    // A minimal one-page PDF so the browser download works in mock mode.
+    const pdf =
+      "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n" +
+      "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n" +
+      "3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 120]>>endobj\n" +
+      "trailer<</Root 1 0 R>>\n%%EOF";
+    return new HttpResponse(pdf, {
+      headers: { "Content-Type": "application/pdf" },
+    });
+  }),
   http.post(`${SAAS}/api/v1/procurement/go-live`, () => {
     const d = deal as Record<string, unknown>;
     if (d.dealId) {

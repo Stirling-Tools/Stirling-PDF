@@ -62,6 +62,8 @@ export function ProcurementFlow({
     onAgree,
     onDownloadPdf,
     onDownloadOfflineLicense,
+    downloadingAgreement,
+    onDownloadSignedAgreement,
   } = controller;
 
   return (
@@ -139,10 +141,19 @@ export function ProcurementFlow({
               <PaymentStageCard
                 invoiceUrl={latest.invoiceUrl}
                 invoicePdf={latest.invoicePdf ?? invoicePdf}
+                signedAgreementVersion={data?.agreementSignedVersion}
+                downloadingAgreement={downloadingAgreement}
+                onDownloadSignedAgreement={onDownloadSignedAgreement}
               />
             )}
 
-            {!editing && stage === "active" && <LiveStageCard />}
+            {!editing && stage === "active" && (
+              <LiveStageCard
+                signedAgreementVersion={data?.agreementSignedVersion}
+                downloadingAgreement={downloadingAgreement}
+                onDownloadSignedAgreement={onDownloadSignedAgreement}
+              />
+            )}
           </>
         )}
       </ProcurementModal>

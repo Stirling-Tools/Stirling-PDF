@@ -194,6 +194,8 @@ public class ProcurementController {
             int trialExtensionsUsed,
             boolean licensed,
             String licenseKey,
+            // Version label of the signed agreement PDF available for download, else null.
+            String agreementSignedVersion,
             QuoteResponse latestQuote) {}
 
     /** The filled agreement for review: registry metadata + the rendered markdown body. */
@@ -236,7 +238,7 @@ public class ProcurementController {
     }
 
     private static final SnapshotResponse EMPTY_SNAPSHOT =
-            new SnapshotResponse(null, null, null, 0, null, null, 0, false, null, null);
+            new SnapshotResponse(null, null, null, 0, null, null, 0, false, null, null, null);
 
     /**
      * Download the offline / air-gapped licence file (.lic) for the team — available for an
@@ -496,6 +498,7 @@ public class ProcurementController {
                 deal.getTrialExtensionsUsed(),
                 deal.getLicenseRef() != null,
                 includeLicenseKey ? deal.getLicenseRef() : null,
+                procurement.downloadableAgreementLabel(deal.getDealId()).orElse(null),
                 latest);
     }
 

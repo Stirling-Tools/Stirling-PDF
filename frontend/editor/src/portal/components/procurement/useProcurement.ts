@@ -7,6 +7,7 @@ import {
   extendTrial,
   fetchLicenseFile,
   fetchQuotePdf,
+  fetchSignedAgreementPdf,
   fetchSnapshot,
   issueQuote,
   resetProcurement,
@@ -40,6 +41,7 @@ export interface ProcurementController {
   busy: boolean;
   downloading: boolean;
   downloadingLicense: boolean;
+  downloadingAgreement: boolean;
   error: string | null;
   setError: (e: string | null) => void;
   open: boolean;
@@ -59,6 +61,8 @@ export interface ProcurementController {
   onAgree: () => void;
   onDownloadPdf: () => Promise<void>;
   onDownloadOfflineLicense: () => Promise<void>;
+  /** Download the stored signed enterprise agreement (available once signed). */
+  onDownloadSignedAgreement: () => Promise<void>;
 }
 
 export function useProcurement(autoOpen = false): ProcurementController {
@@ -75,6 +79,7 @@ export function useProcurement(autoOpen = false): ProcurementController {
   const [editing, setEditing] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [downloadingLicense, setDownloadingLicense] = useState(false);
+  const [downloadingAgreement, setDownloadingAgreement] = useState(false);
   const [invoicePdf, setInvoicePdf] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [extra, setExtra] = useState<ProcurementExtra>(null);
@@ -176,6 +181,26 @@ export function useProcurement(autoOpen = false): ProcurementController {
     }
   }
 
+  async function onDownloadSignedAgreement() {
+    setDownloadingAgreement(true);
+    try {
+      const blob = await fetchSignedAgreementPdf();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "stirling-enterprise-agreement.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (e) {
+      console.error("[procurement] signed agreement download failed", e);
+      setError(t("portal.procurement.agreement.downloadError"));
+    } finally {
+      setDownloadingAgreement(false);
+    }
+  }
+
   // A deep link (/procurement) opens the flow when a deal is already underway; if there's no deal
   // yet it must NOT silently start a trial — leave the modal closed so the Start-trial CTA shows.
   useEffect(() => {
@@ -194,6 +219,7 @@ export function useProcurement(autoOpen = false): ProcurementController {
     busy,
     downloading,
     downloadingLicense,
+    downloadingAgreement,
     error,
     setError,
     open,
@@ -211,5 +237,6 @@ export function useProcurement(autoOpen = false): ProcurementController {
     onAgree,
     onDownloadPdf,
     onDownloadOfflineLicense,
+    onDownloadSignedAgreement,
   };
 }

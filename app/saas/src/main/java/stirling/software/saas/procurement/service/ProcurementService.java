@@ -337,6 +337,16 @@ public class ProcurementService {
                                         deal.getDealId()));
     }
 
+    /**
+     * The version label of the deal's latest signed agreement that has a downloadable PDF, if any.
+     * Used to surface the "download signed agreement" action only when a file actually exists (the
+     * snapshot polls this, so it deliberately avoids loading the PDF bytes).
+     */
+    @Transactional(readOnly = true)
+    public Optional<String> downloadableAgreementLabel(Long dealId) {
+        return signatureRepo.findDownloadableLabels(dealId).stream().findFirst();
+    }
+
     private static String sha256(String s) {
         try {
             byte[] digest =
