@@ -40,6 +40,9 @@ public class RuntimePathConfig {
     // Tesseract data path
     private final String tessDataPath;
 
+    // Auto Form Detection model directory
+    private final String formDetectionModelPath;
+
     private final List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> unoServerEndpoints;
 
     // Pipeline paths
@@ -129,6 +132,22 @@ public class RuntimePathConfig {
         }
 
         log.info("Using Tesseract data path: {}", this.tessDataPath);
+
+        // Auto Form Detection model directory (kept under <configs> so it survives
+        // restarts/updates)
+        String configuredModelDir =
+                properties.getFormDetection() != null
+                        ? properties.getFormDetection().getModelDir()
+                        : null;
+        this.formDetectionModelPath =
+                StringUtils.isNotBlank(configuredModelDir)
+                        ? configuredModelDir
+                        : Path.of(
+                                        InstallationPathConfig.getConfigPath(),
+                                        "models",
+                                        "form-detection")
+                                .toString();
+        log.info("Using Auto Form Detection model path: {}", this.formDetectionModelPath);
 
         ApplicationProperties.ProcessExecutor processExecutor = properties.getProcessExecutor();
         int libreOfficeLimit = 1;

@@ -367,6 +367,13 @@ aiEngine:
   url: http://localhost:5001 # URL of the Python AI engine
   timeoutSeconds: 120 # Timeout in seconds for AI engine requests
 
+formDetection:
+  enabled: true # Master on/off switch for the Auto Form Detection feature
+  executionMode: auto # Where detection runs: 'auto' (browser first, server fallback), 'browser' (in-browser WASM only, PDF never leaves the device), or 'server' (backend inference)
+  activeModelId: "" # Id of the installed Auto Form Detection model (set automatically after an admin installs one)
+  modelDir: "" # Optional override directory for downloaded .onnx models; blank uses <configs>/models/form-detection
+  preinstalledModelDir: "" # Read-only dir of models baked into the image (Docker pre-downloads FFDNet-S here); seeded into the model dir on startup. Blank disables.
+
 policies:
   # Folder automations can read from and write to the directories you allow here, so treat this as a
   # security boundary. Leave allowedFolderRoots empty (default) to disable folder sources/outputs

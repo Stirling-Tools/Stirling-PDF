@@ -30,6 +30,7 @@ import { addWatermarkOperationConfig } from "@app/hooks/tools/addWatermark/useAd
 import { addStampOperationConfig } from "@app/components/tools/addStamp/useAddStampOperation";
 import { addAttachmentsOperationConfig } from "@app/hooks/tools/addAttachments/useAddAttachmentsOperation";
 import { unlockPdfFormsOperationConfig } from "@app/hooks/tools/unlockPdfForms/useUnlockPdfFormsOperation";
+import { autoFormDetectionOperationConfig } from "@app/hooks/tools/autoFormDetection/useAutoFormDetectionOperation";
 import { singleLargePageOperationConfig } from "@app/hooks/tools/singleLargePage/useSingleLargePageOperation";
 import { ocrOperationConfig } from "@app/hooks/tools/ocr/useOCROperation";
 import { convertOperationConfig } from "@app/hooks/tools/convert/useConvertOperation";
@@ -464,6 +465,39 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
         supportsAutomate: false,
         synonyms: ["form", "fill", "fillable", "input", "field", "acroform"],
+      },
+      autoFormDetection: {
+        icon: (
+          <LocalIcon
+            icon="document-scanner-outline-rounded"
+            width="1.5rem"
+            height="1.5rem"
+          />
+        ),
+        name: t("home.autoFormDetection.title", "Auto Form Detection"),
+        component: lazy(
+          () => import("@app/tools/autoFormDetection/AutoFormDetection"),
+        ),
+        description: t(
+          "home.autoFormDetection.desc",
+          "Automatically detect form fields with AI and make your PDF fillable.",
+        ),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.GENERAL,
+        maxFiles: 1,
+        endpoints: ["form-detection"],
+        operationConfig: asRegistryConfig(autoFormDetectionOperationConfig),
+        synonyms: [
+          "form",
+          "detect",
+          "fillable",
+          "acroform",
+          "ai",
+          "fields",
+          "auto",
+        ],
+        automationSettings: null,
+        supportsAutomate: false,
       },
       changePermissions: {
         icon: <LocalIcon icon="lock-outline" width="1.5rem" height="1.5rem" />,
