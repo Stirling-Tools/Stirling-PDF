@@ -48,10 +48,61 @@ export function ProcurementAgreement({
   const [signing, setSigning] = useState(false);
   const [downloadingMsa, setDownloadingMsa] = useState(false);
   const [error, setError] = useState(false);
+  const [downloadError, setDownloadError] = useState(false);
   const docRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * Fall back to the browser's print-to-PDF when the server can't render the agreement — the
+   * WeasyPrint pipeline isn't available in every environment (e.g. local dev), and the buyer must
+   * still be able to keep a copy of the draft. Prints the already-rendered agreement body from a
+   * hidden iframe so it isn't popup-blocked. Returns false if the document isn't in the DOM yet.
+   */
+  const printDraftFallback = (): boolean => {
+    const body = docRef.current?.querySelector(
+      ".portal-agreement__md",
+    )?.innerHTML;
+    if (!body) return false;
+    const iframe = document.createElement("iframe");
+    iframe.setAttribute("aria-hidden", "true");
+    iframe.style.cssText =
+      "position:fixed;right:0;bottom:0;width:0;height:0;border:0;";
+    document.body.appendChild(iframe);
+    const cw = iframe.contentWindow;
+    const cd = iframe.contentDocument ?? cw?.document;
+    if (!cw || !cd) {
+      iframe.remove();
+      return false;
+    }
+    const draftNotice =
+      doc && doc.status !== "final"
+        ? `<p class="draft">${t("portal.procurement.agreement.draftBadge")}</p>`
+        : "";
+    cd.open();
+    cd.write(
+      `<!doctype html><html><head><meta charset="utf-8">` +
+        `<title>stirling-enterprise-agreement</title><style>` +
+        `body{font:14px/1.6 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;` +
+        `color:#111;max-width:44rem;margin:2rem auto;padding:0 1.5rem;}` +
+        `h1,h2,h3{line-height:1.3;}table{border-collapse:collapse;width:100%;}` +
+        `td,th{border:1px solid #ccc;padding:6px 8px;text-align:left;}` +
+        `.draft{color:#b45309;font-weight:600;font-size:12px;text-transform:uppercase;` +
+        `letter-spacing:.04em;margin-bottom:1.25rem;}</style></head><body>` +
+        `${draftNotice}${body}</body></html>`,
+    );
+    cd.close();
+    const print = () => {
+      cw.focus();
+      cw.print();
+      setTimeout(() => iframe.remove(), 1000);
+    };
+    if (cd.readyState === "complete") setTimeout(print, 100);
+    else cw.addEventListener("load", print);
+    return true;
+  };
 
   const downloadMsa = async () => {
     setDownloadingMsa(true);
+    setDownloadError(false);
     try {
       const blob = await fetchAgreementPdf();
       const url = URL.createObjectURL(blob);
@@ -63,7 +114,8 @@ export function ProcurementAgreement({
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } catch {
-      setError(true);
+      // Server render unavailable — keep the buyer whole with the browser print fallback.
+      if (!printDraftFallback()) setDownloadError(true);
     } finally {
       setDownloadingMsa(false);
     }
@@ -191,6 +243,11 @@ export function ProcurementAgreement({
       {error && (
         <p className="portal-proc__error">
           {t("portal.procurement.agreement.signError")}
+        </p>
+      )}
+      {downloadError && (
+        <p className="portal-proc__error">
+          {t("portal.procurement.agreement.downloadDraftError")}
         </p>
       )}
 
