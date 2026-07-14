@@ -10,18 +10,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.policy.model.Policy;
 
-import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
 /**
  * Durable {@link PolicyStore} backed by JPA; the runtime store. Policies are persisted as JSON via
  * {@link PolicyEntity}, with scalar columns kept in sync for querying.
  */
-@Slf4j
 @Service
 @RequiredArgsConstructor
 @ConditionalOnBooleanProperty(name = "policies.enabled")
@@ -101,30 +98,23 @@ public class JpaPolicyStore implements PolicyStore {
 
     @Override
     public Optional<Policy> get(String id) {
-        return repository.findById(id).flatMap(this::toPolicy);
+        return repository.findById(id).map(this::toPolicy);
     }
 
     @Override
     public List<Policy> all() {
-        return repository.findAllOrdered().stream()
-                .map(this::toPolicy)
-                .flatMap(Optional::stream)
-                .toList();
+        return repository.findAllOrdered().stream().map(this::toPolicy).toList();
     }
 
     @Override
     public List<Policy> findByTeam(Long teamId) {
-        return repository.findByTeam(teamId).stream()
-                .map(this::toPolicy)
-                .flatMap(Optional::stream)
-                .toList();
+        return repository.findByTeam(teamId).stream().map(this::toPolicy).toList();
     }
 
     @Override
     public List<Policy> findByTriggerType(String triggerType) {
         return repository.findByTriggerTypeAndEnabledTrue(triggerType).stream()
                 .map(this::toPolicy)
-                .flatMap(Optional::stream)
                 .toList();
     }
 
@@ -137,22 +127,7 @@ public class JpaPolicyStore implements PolicyStore {
         return true;
     }
 
-    /**
-     * Deserialize one stored row, isolating failures so a single bad row can't take down a whole
-     * listing
-     */
-    private Optional<Policy> toPolicy(PolicyEntity entity) {
-        try {
-            return Optional.of(objectMapper.readValue(entity.getPolicyJson(), Policy.class));
-        } catch (JacksonException e) {
-            log.error(
-                    "Skipping unreadable policy id={} team={}: stored policy_json could not be"
-                            + " parsed (likely an undecryptable credential-encryption key mismatch"
-                            + " or a corrupt row). {}",
-                    entity.getId(),
-                    entity.getTeamId(),
-                    e.getMessage());
-            return Optional.empty();
-        }
+    private Policy toPolicy(PolicyEntity entity) {
+        return objectMapper.readValue(entity.getPolicyJson(), Policy.class);
     }
 }
