@@ -107,7 +107,7 @@ describe("injectOg (build-time prerender)", () => {
     const out = injectOg(
       TEMPLATE,
       {
-        image: "/og_images/app.png",
+        image: "/og_images/saas/app.png",
         title: "Stirling - Edit any PDF. Govern every PDF.",
         ogTitle: "Edit any PDF. Govern every PDF.",
         description: "d",

@@ -33,7 +33,7 @@ const DEFAULT_IMAGE_BASENAME = "home";
 // `home` overrides the site default (served at `/app`); the rest are extra
 // marketing landing routes prerendered so their links unfurl with bespoke art.
 const SAAS_DEFAULT = {
-  image: "/og_images/app.png",
+  image: "/og_images/saas/app.png",
   title: "Stirling - Edit any PDF. Govern every PDF.",
   ogTitle: "Edit any PDF. Govern every PDF.",
   description:
@@ -41,14 +41,14 @@ const SAAS_DEFAULT = {
 };
 const SAAS_ROUTE_OVERRIDES = {
   "/processor": {
-    image: "/og_images/app-processor.png",
+    image: "/og_images/saas/app-processor.png",
     title: "Stirling Processor - Govern every PDF your organization touches",
     ogTitle: "Govern every PDF your organization touches",
     description:
       "Redaction, retention, and encryption policies enforced everywhere PDFs enter your org. Distribute the free Editor anywhere. 1¢ per PDF.",
   },
   "/editor": {
-    image: "/og_images/app-editor.png",
+    image: "/og_images/saas/app-editor.png",
     title: "Stirling - The world's most secure PDF editor",
     ogTitle: "The world's most secure PDF editor",
     description:
@@ -219,10 +219,11 @@ for (const [routePath, entry] of Object.entries(SAAS_ROUTE_OVERRIDES)) {
   saasManifest.byTool[routePath] = entry;
   saasManifest.byPath[routePath] = routePath;
 }
-const saasImages = [SAAS_DEFAULT, ...Object.values(SAAS_ROUTE_OVERRIDES)].map(
-  (e) => e.image.replace(/^\/og_images\/|\.png$/g, ""),
-);
-const missingSaasImages = saasImages.filter((b) => !images.has(b));
+// SaaS card art lives in the saas/ subdir (outside the root images scan), so
+// check the files on disk directly.
+const missingSaasImages = [SAAS_DEFAULT, ...Object.values(SAAS_ROUTE_OVERRIDES)]
+  .map((e) => e.image)
+  .filter((img) => !fs.existsSync(path.join(ROOT, "public" + img)));
 if (missingSaasImages.length)
   console.warn(
     `\nWARNING: SaaS OG cards reference missing images: ${missingSaasImages.join(", ")}`,
@@ -286,7 +287,7 @@ for (const id of missing) {
       : "regular";
   console.log(`  ${kind.padEnd(8)} ${id.padEnd(20)} ${canonicalPath(id)}`);
 }
-const used = new Set([...Object.values(ogImageMap), ...saasImages]);
+const used = new Set(Object.values(ogImageMap));
 const orphans = [...images]
   .filter((i) => !used.has(i) && i !== DEFAULT_IMAGE_BASENAME)
   .sort();
