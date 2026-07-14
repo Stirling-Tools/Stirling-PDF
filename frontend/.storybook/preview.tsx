@@ -26,7 +26,7 @@ import { initReactI18next } from "react-i18next";
 import { parse as parseToml } from "smol-toml";
 // Load the real English copy so stories render human text, not raw keys. Bundled
 // synchronously via ?raw so it's present on the very first render (no async flash).
-import enTranslationToml from "../editor/public/locales/en-US/translation.toml?raw";
+import enTranslationToml from "@public/locales/en-US/translation.toml?raw";
 
 import "@mantine/core/styles.css";
 import "@core/tokens/tokens.css";
