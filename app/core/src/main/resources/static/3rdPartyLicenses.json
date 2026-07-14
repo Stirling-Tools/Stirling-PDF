@@ -8,10 +8,24 @@
             "moduleLicenseUrl": "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"
         },
         {
+            "moduleName": "ch.qos.logback:logback-classic",
+            "moduleUrl": "http://www.qos.ch",
+            "moduleVersion": "1.5.34",
+            "moduleLicense": "LGPL-2.1-only",
+            "moduleLicenseUrl": "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"
+        },
+        {
             "moduleName": "ch.qos.logback:logback-core",
             "moduleUrl": "http://www.qos.ch",
             "moduleVersion": "1.5.32",
             "moduleLicense": "GNU Lesser General Public License",
+            "moduleLicenseUrl": "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"
+        },
+        {
+            "moduleName": "ch.qos.logback:logback-core",
+            "moduleUrl": "http://www.qos.ch",
+            "moduleVersion": "1.5.34",
+            "moduleLicense": "LGPL-2.1-only",
             "moduleLicenseUrl": "https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html"
         },
         {
@@ -66,35 +80,35 @@
         {
             "moduleName": "com.fasterxml.jackson.core:jackson-core",
             "moduleUrl": "https://github.com/FasterXML/jackson-core",
-            "moduleVersion": "2.21.2",
+            "moduleVersion": "2.21.4",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "com.fasterxml.jackson.core:jackson-databind",
             "moduleUrl": "https://github.com/FasterXML/jackson",
-            "moduleVersion": "2.21.2",
+            "moduleVersion": "2.21.4",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml",
             "moduleUrl": "https://github.com/FasterXML/jackson-dataformats-text",
-            "moduleVersion": "2.21.2",
+            "moduleVersion": "2.21.4",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "com.fasterxml.jackson.datatype:jackson-datatype-jsr310",
             "moduleUrl": "https://github.com/FasterXML/jackson-modules-java8/jackson-datatype-jsr310",
-            "moduleVersion": "2.21.2",
+            "moduleVersion": "2.21.4",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "com.fasterxml.jackson:jackson-bom",
             "moduleUrl": "https://github.com/FasterXML/jackson-bom",
-            "moduleVersion": "2.21.2",
+            "moduleVersion": "2.21.4",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -128,7 +142,7 @@
         {
             "moduleName": "com.github.ben-manes.caffeine:caffeine",
             "moduleUrl": "https://github.com/ben-manes/caffeine",
-            "moduleVersion": "3.2.3",
+            "moduleVersion": "3.2.4",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -196,7 +210,7 @@
         {
             "moduleName": "com.google.errorprone:error_prone_annotations",
             "moduleUrl": "https://errorprone.info/error_prone_annotations",
-            "moduleVersion": "2.48.0",
+            "moduleVersion": "2.49.0",
             "moduleLicense": "Apache 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -286,14 +300,14 @@
         {
             "moduleName": "com.nimbusds:nimbus-jose-jwt",
             "moduleUrl": "https://connect2id.com",
-            "moduleVersion": "10.4",
+            "moduleVersion": "10.9",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "com.nimbusds:oauth2-oidc-sdk",
             "moduleUrl": "https://bitbucket.org/connect2id/oauth-2.0-sdk-with-openid-connect-extensions",
-            "moduleVersion": "11.26.1",
+            "moduleVersion": "11.37.2",
             "moduleLicense": "Apache License, version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.html"
         },
@@ -384,14 +398,14 @@
         {
             "moduleName": "com.sun.xml.bind:jaxb-core",
             "moduleUrl": "https://www.eclipse.org",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.0.7",
             "moduleLicense": "GNU General Public License, version 2 with the GNU Classpath Exception",
             "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
         },
         {
             "moduleName": "com.sun.xml.bind:jaxb-core",
             "moduleUrl": "https://www.eclipse.org",
-            "moduleVersion": "4.0.7",
+            "moduleVersion": "4.0.9",
             "moduleLicense": "GNU General Public License, version 2 with the GNU Classpath Exception",
             "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
         },
@@ -405,7 +419,7 @@
         {
             "moduleName": "com.sun.xml.bind:jaxb-impl",
             "moduleUrl": "https://www.eclipse.org",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.0.9",
             "moduleLicense": "GNU General Public License, version 2 with the GNU Classpath Exception",
             "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
         },
@@ -632,7 +646,7 @@
         {
             "moduleName": "commons-codec:commons-codec",
             "moduleUrl": "https://commons.apache.org/proper/commons-codec/",
-            "moduleVersion": "1.19.0",
+            "moduleVersion": "1.21.0",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -706,197 +720,197 @@
         {
             "moduleName": "io.lettuce:lettuce-core",
             "moduleUrl": "https://github.com/redis/lettuce",
-            "moduleVersion": "6.8.2.RELEASE",
+            "moduleVersion": "7.5.2.RELEASE",
             "moduleLicense": "MIT",
             "moduleLicenseUrl": "https://github.com/redis/lettuce/blob/main/LICENSE"
         },
         {
             "moduleName": "io.micrometer:micrometer-commons",
             "moduleUrl": "https://github.com/micrometer-metrics/micrometer",
-            "moduleVersion": "1.16.5",
+            "moduleVersion": "1.17.0",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "io.micrometer:micrometer-core",
             "moduleUrl": "https://github.com/micrometer-metrics/micrometer",
-            "moduleVersion": "1.16.5",
+            "moduleVersion": "1.17.0",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "io.micrometer:micrometer-jakarta9",
             "moduleUrl": "https://github.com/micrometer-metrics/micrometer",
-            "moduleVersion": "1.16.5",
+            "moduleVersion": "1.17.0",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "io.micrometer:micrometer-observation",
             "moduleUrl": "https://github.com/micrometer-metrics/micrometer",
-            "moduleVersion": "1.16.5",
+            "moduleVersion": "1.17.0",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "io.micrometer:micrometer-registry-prometheus",
             "moduleUrl": "https://github.com/micrometer-metrics/micrometer",
-            "moduleVersion": "1.16.5",
+            "moduleVersion": "1.17.0",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "io.netty:netty-buffer",
             "moduleUrl": "https://netty.io/",
-            "moduleVersion": "4.2.12.Final",
+            "moduleVersion": "4.2.15.Final",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "io.netty:netty-codec",
             "moduleUrl": "https://netty.io/",
-            "moduleVersion": "4.2.12.Final",
+            "moduleVersion": "4.2.15.Final",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "io.netty:netty-codec-base",
             "moduleUrl": "https://netty.io/",
-            "moduleVersion": "4.2.12.Final",
+            "moduleVersion": "4.2.15.Final",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "io.netty:netty-codec-compression",
             "moduleUrl": "https://netty.io/",
-            "moduleVersion": "4.2.12.Final",
+            "moduleVersion": "4.2.15.Final",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "io.netty:netty-codec-dns",
             "moduleUrl": "https://netty.io/",
-            "moduleVersion": "4.2.12.Final",
+            "moduleVersion": "4.2.15.Final",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "io.netty:netty-codec-http",
             "moduleUrl": "https://netty.io/",
-            "moduleVersion": "4.2.12.Final",
+            "moduleVersion": "4.2.15.Final",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "io.netty:netty-codec-http2",
             "moduleUrl": "https://netty.io/",
-            "moduleVersion": "4.2.12.Final",
+            "moduleVersion": "4.2.15.Final",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "io.netty:netty-codec-marshalling",
             "moduleUrl": "https://netty.io/",
-            "moduleVersion": "4.2.12.Final",
+            "moduleVersion": "4.2.15.Final",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "io.netty:netty-codec-protobuf",
             "moduleUrl": "https://netty.io/",
-            "moduleVersion": "4.2.12.Final",
+            "moduleVersion": "4.2.15.Final",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "io.netty:netty-common",
             "moduleUrl": "https://netty.io/",
-            "moduleVersion": "4.2.12.Final",
+            "moduleVersion": "4.2.15.Final",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "io.netty:netty-handler",
             "moduleUrl": "https://netty.io/",
-            "moduleVersion": "4.2.12.Final",
+            "moduleVersion": "4.2.15.Final",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "io.netty:netty-resolver",
             "moduleUrl": "https://netty.io/",
-            "moduleVersion": "4.2.12.Final",
+            "moduleVersion": "4.2.15.Final",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "io.netty:netty-resolver-dns",
             "moduleUrl": "https://netty.io/",
-            "moduleVersion": "4.2.12.Final",
+            "moduleVersion": "4.2.15.Final",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "io.netty:netty-transport",
             "moduleUrl": "https://netty.io/",
-            "moduleVersion": "4.2.12.Final",
+            "moduleVersion": "4.2.15.Final",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "io.netty:netty-transport-classes-epoll",
             "moduleUrl": "https://netty.io/",
-            "moduleVersion": "4.2.12.Final",
+            "moduleVersion": "4.2.15.Final",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "io.netty:netty-transport-native-unix-common",
             "moduleUrl": "https://netty.io/",
-            "moduleVersion": "4.2.12.Final",
+            "moduleVersion": "4.2.15.Final",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "io.projectreactor:reactor-core",
             "moduleUrl": "https://github.com/reactor/reactor-core",
-            "moduleVersion": "3.8.5",
+            "moduleVersion": "3.8.6",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "io.prometheus:prometheus-metrics-config",
-            "moduleVersion": "1.4.3",
+            "moduleVersion": "1.5.1",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "io.prometheus:prometheus-metrics-core",
-            "moduleVersion": "1.4.3",
+            "moduleVersion": "1.5.1",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "io.prometheus:prometheus-metrics-exposition-formats",
-            "moduleVersion": "1.4.3",
+            "moduleVersion": "1.5.1",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "io.prometheus:prometheus-metrics-exposition-textformats",
-            "moduleVersion": "1.4.3",
+            "moduleVersion": "1.5.1",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "io.prometheus:prometheus-metrics-model",
-            "moduleVersion": "1.4.3",
+            "moduleVersion": "1.5.1",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "io.prometheus:prometheus-metrics-tracer-common",
-            "moduleVersion": "1.4.3",
+            "moduleVersion": "1.5.1",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -1036,7 +1050,7 @@
         {
             "moduleName": "jakarta.xml.bind:jakarta.xml.bind-api",
             "moduleUrl": "https://www.eclipse.org",
-            "moduleVersion": "4.0.4",
+            "moduleVersion": "4.0.5",
             "moduleLicense": "GNU General Public License, version 2 with the GNU Classpath Exception",
             "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
         },
@@ -1063,7 +1077,7 @@
         },
         {
             "moduleName": "net.bytebuddy:byte-buddy",
-            "moduleVersion": "1.17.8",
+            "moduleVersion": "1.18.10",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -1090,25 +1104,25 @@
         },
         {
             "moduleName": "net.shibboleth:shib-networking",
-            "moduleVersion": "9.1.6",
+            "moduleVersion": "9.2.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "net.shibboleth:shib-security",
-            "moduleVersion": "9.1.6",
+            "moduleVersion": "9.2.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "net.shibboleth:shib-support",
-            "moduleVersion": "9.1.6",
+            "moduleVersion": "9.2.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "net.shibboleth:shib-velocity",
-            "moduleVersion": "9.1.6",
+            "moduleVersion": "9.2.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -1150,13 +1164,6 @@
         {
             "moduleName": "org.apache.commons:commons-lang3",
             "moduleUrl": "https://commons.apache.org/proper/commons-lang/",
-            "moduleVersion": "3.19.0",
-            "moduleLicense": "Apache-2.0",
-            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
-        },
-        {
-            "moduleName": "org.apache.commons:commons-lang3",
-            "moduleUrl": "https://commons.apache.org/proper/commons-lang/",
             "moduleVersion": "3.20.0",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
@@ -1184,25 +1191,25 @@
         },
         {
             "moduleName": "org.apache.httpcomponents.client5:httpclient5",
-            "moduleVersion": "5.5.2",
+            "moduleVersion": "5.6.1",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.apache.httpcomponents.client5:httpclient5-cache",
-            "moduleVersion": "5.5.2",
+            "moduleVersion": "5.6.1",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.apache.httpcomponents.core5:httpcore5",
-            "moduleVersion": "5.3.6",
+            "moduleVersion": "5.4.2",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.apache.httpcomponents.core5:httpcore5-h2",
-            "moduleVersion": "5.3.6",
+            "moduleVersion": "5.4.2",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -1333,22 +1340,29 @@
         {
             "moduleName": "org.apache.santuario:xmlsec",
             "moduleUrl": "https://www.apache.org/",
-            "moduleVersion": "3.0.5",
+            "moduleVersion": "3.0.6",
+            "moduleLicense": "Apache-2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.apache.santuario:xmlsec",
+            "moduleUrl": "https://www.apache.org/",
+            "moduleVersion": "4.0.4",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.apache.tomcat.embed:tomcat-embed-el",
             "moduleUrl": "https://tomcat.apache.org/",
-            "moduleVersion": "11.0.21",
+            "moduleVersion": "11.0.22",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.apache.velocity:velocity-engine-core",
             "moduleUrl": "https://www.apache.org/",
-            "moduleVersion": "2.3",
-            "moduleLicense": "Apache License, Version 2.0",
+            "moduleVersion": "2.4.1",
+            "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
@@ -1496,13 +1510,6 @@
             "moduleLicenseUrl": "https://www.bouncycastle.org/licence.html"
         },
         {
-            "moduleName": "org.checkerframework:checker-qual",
-            "moduleUrl": "https://checkerframework.org/",
-            "moduleVersion": "3.52.0",
-            "moduleLicense": "The MIT License",
-            "moduleLicenseUrl": "http://opensource.org/licenses/MIT"
-        },
-        {
             "moduleName": "org.commonmark:commonmark",
             "moduleVersion": "0.28.0",
             "moduleLicense": "BSD-2-Clause",
@@ -1516,10 +1523,10 @@
         },
         {
             "moduleName": "org.cryptacular:cryptacular",
-            "moduleUrl": "http://www.cryptacular.org",
-            "moduleVersion": "1.2.6",
+            "moduleUrl": "https://www.cryptacular.org",
+            "moduleVersion": "1.3.0",
             "moduleLicense": "GNU Lesser General Public License",
-            "moduleLicenseUrl": "http://www.gnu.org/licenses/lgpl-3.0.txt"
+            "moduleLicenseUrl": "https://www.gnu.org/licenses/lgpl-3.0.txt"
         },
         {
             "moduleName": "org.eclipse.angus:angus-activation",
@@ -1538,266 +1545,278 @@
         {
             "moduleName": "org.eclipse.jetty.compression:jetty-compression-common",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty.compression:jetty-compression-gzip",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty.compression:jetty-compression-server",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty.ee11.websocket:jetty-ee11-websocket-jakarta-client",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty.ee11.websocket:jetty-ee11-websocket-jakarta-common",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty.ee11.websocket:jetty-ee11-websocket-jakarta-server",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty.ee11.websocket:jetty-ee11-websocket-jetty-server",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty.ee11.websocket:jetty-ee11-websocket-servlet",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty.ee11:jetty-ee11-annotations",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty.ee11:jetty-ee11-plus",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty.ee11:jetty-ee11-servlet",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty.ee11:jetty-ee11-webapp",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty.ee:jetty-ee-webapp",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty.http2:jetty-http2-common",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty.http2:jetty-http2-hpack",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty.http2:jetty-http2-server",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty.websocket:jetty-websocket-core-client",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty.websocket:jetty-websocket-core-common",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty.websocket:jetty-websocket-core-server",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty.websocket:jetty-websocket-jetty-api",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty.websocket:jetty-websocket-jetty-common",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty.websocket:jetty-websocket-jetty-server",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty:jetty-alpn-client",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty:jetty-alpn-java-server",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty:jetty-alpn-server",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty:jetty-annotations",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty:jetty-client",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty:jetty-http",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty:jetty-io",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty:jetty-plus",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty:jetty-security",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty:jetty-server",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty:jetty-session",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty:jetty-util",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
             "moduleName": "org.eclipse.jetty:jetty-xml",
             "moduleUrl": "https://jetty.org/",
-            "moduleVersion": "12.1.8",
+            "moduleVersion": "12.1.10",
             "moduleLicense": "EPL-2.0",
             "moduleLicenseUrl": "https://www.eclipse.org/legal/epl-2.0/"
         },
         {
+            "moduleName": "org.flywaydb:flyway-core",
+            "moduleVersion": "12.4.0",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://github.com/flyway/flyway/blob/main/README.txt"
+        },
+        {
+            "moduleName": "org.flywaydb:flyway-database-postgresql",
+            "moduleVersion": "12.4.0",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://github.com/flyway/flyway/blob/main/README.txt"
+        },
+        {
             "moduleName": "org.glassfish.jaxb:jaxb-core",
             "moduleUrl": "https://www.eclipse.org",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.0.9",
             "moduleLicense": "GNU General Public License, version 2 with the GNU Classpath Exception",
             "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
         },
         {
             "moduleName": "org.glassfish.jaxb:jaxb-runtime",
             "moduleUrl": "https://www.eclipse.org",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.0.9",
             "moduleLicense": "GNU General Public License, version 2 with the GNU Classpath Exception",
             "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
         },
         {
             "moduleName": "org.glassfish.jaxb:txw2",
             "moduleUrl": "https://eclipse-ee4j.github.io/jaxb-ri/",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.0.9",
             "moduleLicense": "GNU General Public License, version 2 with the GNU Classpath Exception",
             "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
         },
@@ -1811,23 +1830,30 @@
         {
             "moduleName": "org.hibernate.models:hibernate-models",
             "moduleUrl": "https://github.com/hibernate/hibernate-models",
-            "moduleVersion": "1.0.1",
-            "moduleLicense": "Apache License Version 2.0",
-            "moduleLicenseUrl": "http://www.apache.org/licenses/"
+            "moduleVersion": "1.1.1",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.hibernate.orm:hibernate-core",
-            "moduleUrl": "https://hibernate.org/orm/releases/7.2",
-            "moduleVersion": "7.2.12.Final",
+            "moduleUrl": "https://hibernate.org/orm/releases/7.4",
+            "moduleVersion": "7.4.1.Final",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.hibernate.orm:hibernate-platform",
+            "moduleUrl": "https://hibernate.org/orm",
+            "moduleVersion": "7.4.1.Final",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.hibernate.validator:hibernate-validator",
             "moduleUrl": "https://hibernate.org/validator",
-            "moduleVersion": "9.0.1.Final",
-            "moduleLicense": "Apache License 2.0",
-            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+            "moduleVersion": "9.1.0.Final",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.jboss.logging:jboss-logging",
@@ -1858,13 +1884,6 @@
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
-            "moduleName": "org.latencyutils:LatencyUtils",
-            "moduleUrl": "http://latencyutils.github.io/LatencyUtils/",
-            "moduleVersion": "2.0.3",
-            "moduleLicense": "Public Domain, per Creative Commons CC0",
-            "moduleLicenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/"
-        },
-        {
             "moduleName": "org.locationtech.jts:jts-core",
             "moduleVersion": "1.18.1",
             "moduleLicense": "Eclipse Public License, Version 2.0",
@@ -1879,109 +1898,102 @@
         },
         {
             "moduleName": "org.opensaml:opensaml-core-api",
-            "moduleVersion": "5.1.6",
+            "moduleVersion": "5.2.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.opensaml:opensaml-core-impl",
-            "moduleVersion": "5.1.6",
+            "moduleVersion": "5.2.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.opensaml:opensaml-messaging-api",
-            "moduleVersion": "5.1.6",
+            "moduleVersion": "5.2.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.opensaml:opensaml-profile-api",
-            "moduleVersion": "5.1.6",
+            "moduleVersion": "5.2.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.opensaml:opensaml-saml-api",
-            "moduleVersion": "5.1.6",
+            "moduleVersion": "5.2.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.opensaml:opensaml-saml-impl",
-            "moduleVersion": "5.1.6",
+            "moduleVersion": "5.2.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.opensaml:opensaml-security-api",
-            "moduleVersion": "5.1.6",
+            "moduleVersion": "5.2.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.opensaml:opensaml-security-impl",
-            "moduleVersion": "5.1.6",
+            "moduleVersion": "5.2.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.opensaml:opensaml-soap-api",
-            "moduleVersion": "5.1.6",
+            "moduleVersion": "5.2.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.opensaml:opensaml-soap-impl",
-            "moduleVersion": "5.1.6",
+            "moduleVersion": "5.2.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.opensaml:opensaml-storage-api",
-            "moduleVersion": "5.1.6",
+            "moduleVersion": "5.2.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.opensaml:opensaml-xmlsec-api",
-            "moduleVersion": "5.1.6",
+            "moduleVersion": "5.2.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.opensaml:opensaml-xmlsec-impl",
-            "moduleVersion": "5.1.6",
+            "moduleVersion": "5.2.2",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.ow2.asm:asm",
             "moduleUrl": "http://asm.ow2.org",
-            "moduleVersion": "9.9.1",
+            "moduleVersion": "9.10",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.ow2.asm:asm-commons",
             "moduleUrl": "http://asm.ow2.org",
-            "moduleVersion": "9.9.1",
+            "moduleVersion": "9.10",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "org.ow2.asm:asm-tree",
             "moduleUrl": "http://asm.ow2.org",
-            "moduleVersion": "9.9.1",
+            "moduleVersion": "9.10",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
-        },
-        {
-            "moduleName": "org.postgresql:postgresql",
-            "moduleUrl": "https://jdbc.postgresql.org/",
-            "moduleVersion": "42.7.10",
-            "moduleLicense": "BSD-2-Clause",
-            "moduleLicenseUrl": "https://jdbc.postgresql.org/about/license.html"
         },
         {
             "moduleName": "org.postgresql:postgresql",
@@ -2025,14 +2037,14 @@
         {
             "moduleName": "org.slf4j:jul-to-slf4j",
             "moduleUrl": "http://www.slf4j.org",
-            "moduleVersion": "2.0.17",
+            "moduleVersion": "2.0.18",
             "moduleLicense": "MIT",
             "moduleLicenseUrl": "https://opensource.org/license/mit"
         },
         {
             "moduleName": "org.slf4j:slf4j-api",
             "moduleUrl": "http://www.slf4j.org",
-            "moduleVersion": "2.0.17",
+            "moduleVersion": "2.0.18",
             "moduleLicense": "MIT",
             "moduleLicenseUrl": "https://opensource.org/license/mit"
         },
@@ -2064,517 +2076,524 @@
         {
             "moduleName": "org.springframework.boot:spring-boot",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-actuator",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-actuator-autoconfigure",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-autoconfigure",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-cache",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-data-commons",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-data-jpa",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-data-redis",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-devtools",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-health",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-hibernate",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-http-converter",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-jackson",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-jdbc",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-jetty",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-jpa",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-mail",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-micrometer-metrics",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-micrometer-observation",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-netty",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-persistence",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-security",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-security-oauth2-client",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-security-oauth2-resource-server",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-servlet",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-sql",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-starter",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-starter-actuator",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-starter-aspectj",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-starter-cache",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-starter-data-jpa",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-starter-data-redis",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-starter-jackson",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-starter-jdbc",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-starter-jetty",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-starter-jetty-runtime",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-starter-logging",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-starter-mail",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-starter-micrometer-metrics",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-starter-oauth2-resource-server",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-starter-security",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-starter-security-oauth2-client",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-starter-webmvc",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-transaction",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-validation",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-web-server",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.boot:spring-boot-webmvc",
             "moduleUrl": "https://spring.io/projects/spring-boot",
-            "moduleVersion": "4.0.6",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.data:spring-data-commons",
             "moduleUrl": "https://spring.io/projects/spring-data",
-            "moduleVersion": "4.0.5",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.data:spring-data-jpa",
             "moduleUrl": "https://projects.spring.io/spring-data-jpa",
-            "moduleVersion": "4.0.5",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.data:spring-data-keyvalue",
-            "moduleVersion": "4.0.5",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.data:spring-data-redis",
             "moduleUrl": "https://spring.io/projects/spring-data-redis",
-            "moduleVersion": "4.0.5",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.security:spring-security-config",
             "moduleUrl": "https://spring.io/projects/spring-security",
-            "moduleVersion": "7.0.5",
+            "moduleVersion": "7.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.security:spring-security-core",
             "moduleUrl": "https://spring.io/projects/spring-security",
-            "moduleVersion": "7.0.5",
+            "moduleVersion": "7.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.security:spring-security-crypto",
             "moduleUrl": "https://spring.io/projects/spring-security",
-            "moduleVersion": "7.0.5",
+            "moduleVersion": "7.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.security:spring-security-oauth2-client",
             "moduleUrl": "https://spring.io/projects/spring-security",
-            "moduleVersion": "7.0.5",
+            "moduleVersion": "7.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.security:spring-security-oauth2-core",
             "moduleUrl": "https://spring.io/projects/spring-security",
-            "moduleVersion": "7.0.5",
+            "moduleVersion": "7.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.security:spring-security-oauth2-jose",
             "moduleUrl": "https://spring.io/projects/spring-security",
-            "moduleVersion": "7.0.5",
+            "moduleVersion": "7.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.security:spring-security-oauth2-resource-server",
             "moduleUrl": "https://spring.io/projects/spring-security",
-            "moduleVersion": "7.0.5",
+            "moduleVersion": "7.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.security:spring-security-saml2-service-provider",
             "moduleUrl": "https://spring.io/projects/spring-security",
-            "moduleVersion": "7.0.5",
+            "moduleVersion": "7.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.security:spring-security-web",
             "moduleUrl": "https://spring.io/projects/spring-security",
-            "moduleVersion": "7.0.5",
+            "moduleVersion": "7.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework.session:spring-session-core",
             "moduleUrl": "https://spring.io/projects/spring-session",
-            "moduleVersion": "4.0.3",
+            "moduleVersion": "4.1.0",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework:spring-aop",
             "moduleUrl": "https://github.com/spring-projects/spring-framework",
-            "moduleVersion": "7.0.7",
+            "moduleVersion": "7.0.8",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework:spring-aspects",
             "moduleUrl": "https://github.com/spring-projects/spring-framework",
-            "moduleVersion": "7.0.7",
+            "moduleVersion": "7.0.8",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework:spring-beans",
             "moduleUrl": "https://github.com/spring-projects/spring-framework",
-            "moduleVersion": "7.0.7",
+            "moduleVersion": "7.0.8",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework:spring-context",
             "moduleUrl": "https://github.com/spring-projects/spring-framework",
-            "moduleVersion": "7.0.7",
+            "moduleVersion": "7.0.8",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework:spring-context-support",
             "moduleUrl": "https://github.com/spring-projects/spring-framework",
-            "moduleVersion": "7.0.7",
+            "moduleVersion": "7.0.8",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework:spring-core",
             "moduleUrl": "https://github.com/spring-projects/spring-framework",
-            "moduleVersion": "7.0.7",
+            "moduleVersion": "7.0.8",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework:spring-expression",
             "moduleUrl": "https://github.com/spring-projects/spring-framework",
-            "moduleVersion": "7.0.7",
+            "moduleVersion": "7.0.8",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework:spring-jdbc",
             "moduleUrl": "https://github.com/spring-projects/spring-framework",
-            "moduleVersion": "7.0.7",
+            "moduleVersion": "7.0.8",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "org.springframework:spring-messaging",
+            "moduleUrl": "https://github.com/spring-projects/spring-framework",
+            "moduleVersion": "7.0.8",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework:spring-orm",
             "moduleUrl": "https://github.com/spring-projects/spring-framework",
-            "moduleVersion": "7.0.7",
+            "moduleVersion": "7.0.8",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework:spring-oxm",
             "moduleUrl": "https://github.com/spring-projects/spring-framework",
-            "moduleVersion": "7.0.7",
+            "moduleVersion": "7.0.8",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework:spring-tx",
             "moduleUrl": "https://github.com/spring-projects/spring-framework",
-            "moduleVersion": "7.0.7",
+            "moduleVersion": "7.0.8",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework:spring-web",
             "moduleUrl": "https://github.com/spring-projects/spring-framework",
-            "moduleVersion": "7.0.7",
+            "moduleVersion": "7.0.8",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         {
             "moduleName": "org.springframework:spring-webmvc",
             "moduleUrl": "https://github.com/spring-projects/spring-framework",
-            "moduleVersion": "7.0.7",
+            "moduleVersion": "7.0.8",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
         },
@@ -2652,7 +2671,7 @@
         {
             "moduleName": "org.yaml:snakeyaml",
             "moduleUrl": "https://bitbucket.org/snakeyaml/snakeyaml",
-            "moduleVersion": "2.5",
+            "moduleVersion": "2.6",
             "moduleLicense": "Apache License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -2886,21 +2905,21 @@
         {
             "moduleName": "tools.jackson.core:jackson-core",
             "moduleUrl": "https://github.com/FasterXML/jackson-core",
-            "moduleVersion": "3.1.2",
+            "moduleVersion": "3.1.4",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "tools.jackson.core:jackson-databind",
             "moduleUrl": "https://github.com/FasterXML/jackson",
-            "moduleVersion": "3.1.2",
+            "moduleVersion": "3.1.4",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
             "moduleName": "tools.jackson:jackson-bom",
             "moduleUrl": "https://github.com/FasterXML/jackson-bom",
-            "moduleVersion": "3.1.2",
+            "moduleVersion": "3.1.4",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
