@@ -13,6 +13,11 @@ import jakarta.servlet.http.HttpServletRequest;
  * on {@code FeatureGate.AUTOMATION}, and the self-hosted account-link {@code
  * InstanceEntitlementInterceptor} treats them as billable. Read/list policy endpoints are
  * deliberately excluded so the UI can still show policies and prompt on use.
+ *
+ * <p>This is the sole gate between an unentitled caller and a billable run, so the match is exact
+ * (not a loose suffix) and segment-anchored. {@code PolicyRunRoutesTest} asserts it against every
+ * mapping on {@code PolicyController}, so a new execute route that isn't classified here fails the
+ * build rather than silently running for free.
  */
 public final class PolicyRunRoutes {
 
@@ -27,17 +32,54 @@ public final class PolicyRunRoutes {
     public static boolean matches(HttpServletRequest request) {
         Object pattern = request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
         String path = pattern instanceof String s ? s : request.getRequestURI();
+        String rel = relativeToBase(path);
+        return rel != null && isExecuteRoute(rel);
+    }
+
+    /**
+     * The path relative to {@code /api/v1/policies}, or null if the request isn't under that base.
+     * Segment-anchored (the char after the base must be {@code /} or end-of-string) so a sibling
+     * like {@code /api/v1/policies-x/...} never matches; tolerates a leading context path.
+     */
+    private static String relativeToBase(String path) {
         if (path == null) {
-            return false;
+            return null;
         }
         int base = path.indexOf(BASE);
         if (base < 0) {
+            return null;
+        }
+        int end = base + BASE.length();
+        if (end < path.length() && path.charAt(end) != '/') {
+            return null;
+        }
+        return path.substring(end);
+    }
+
+    /**
+     * The execute routes only: {@code /run}, {@code /run/stream}, and the single-segment {@code
+     * /{id}/run} / {@code /{id}/trigger} (template or concrete id). Read/list/CRUD routes - {@code
+     * /run/{runId}}, {@code /runs}, {@code /overview}, {@code /triggers}, {@code /{id}}, {@code
+     * /order}, {@code /{id}/processed-history}, the base list/create - are all excluded.
+     */
+    private static boolean isExecuteRoute(String rel) {
+        return rel.equals("/run")
+                || rel.equals("/run/stream")
+                || isSingleIdRoute(rel, "run")
+                || isSingleIdRoute(rel, "trigger");
+    }
+
+    /**
+     * True for exactly {@code /{oneSegment}/<verb>} (the id being a template or a concrete value).
+     */
+    private static boolean isSingleIdRoute(String rel, String verb) {
+        String suffix = "/" + verb;
+        if (!rel.endsWith(suffix)) {
             return false;
         }
-        // Relative to the controller base: "/run", "/run/stream", "/{policyId}/run",
-        // "/{policyId}/trigger". endsWith("/run") also matches the ad-hoc "/run"; the GET status
-        // route "/run/{runId}" and the "/runs" list end differently and are left ungated.
-        String rel = path.substring(base + BASE.length());
-        return rel.equals("/run/stream") || rel.endsWith("/run") || rel.endsWith("/trigger");
+        String idSegment = rel.substring(0, rel.length() - suffix.length());
+        return idSegment.length() > 1
+                && idSegment.charAt(0) == '/'
+                && idSegment.indexOf('/', 1) < 0;
     }
 }
