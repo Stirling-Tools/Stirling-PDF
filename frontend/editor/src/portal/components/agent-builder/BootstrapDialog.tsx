@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import FileUploadRounded from "@mui/icons-material/FileUploadRounded";
 import { Button, Modal } from "@app/ui";
 import "@portal/views/AgentBuilder.css";
 
@@ -37,7 +38,7 @@ export function BootstrapDialog({ open, onClose }: BootstrapDialogProps) {
       subtitle={t("portal.agentBuilder.bootstrap.subtitle")}
       footer={
         <div className="portal-agents__dialog-footer">
-          <Button variant="ghost" size="sm" onClick={close}>
+          <Button variant="tertiary" size="sm" onClick={close}>
             {t("portal.agentBuilder.bootstrap.cancel")}
           </Button>
           <Button size="sm" onClick={bootstrap} disabled={!fileName}>
@@ -58,7 +59,7 @@ export function BootstrapDialog({ open, onClose }: BootstrapDialogProps) {
             onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
           />
           <span className="portal-agents__dropzone-icon" aria-hidden>
-            ⇪
+            <FileUploadRounded style={{ fontSize: "1.5rem" }} />
           </span>
           <span className="portal-agents__dropzone-text">
             {fileName ?? t("portal.agentBuilder.bootstrap.dropzoneText")}

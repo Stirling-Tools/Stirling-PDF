@@ -1,16 +1,17 @@
 import type { StatusTone } from "@app/ui";
 
-/** Format a 0–1 confidence fraction as a whole-percent string. */
-export function confidencePct(n: number): string {
+/**
+ * Format a 0–1 confidence fraction as a whole-percent string. `null`/`undefined`
+ * (no extraction data) renders as an em-free dash.
+ */
+export function confidencePct(n: number | null | undefined): string {
+  if (n == null) return "-";
   return `${Math.round(n * 100)}%`;
 }
 
-/**
- * Tone for a confidence value. The bands match the review thresholds: below
- * 60% is unreliable (danger), 60–85% warrants a glance (warning), above is
- * trusted (success).
- */
-export function confidenceTone(n: number): StatusTone {
+/** Tone for a confidence value: <60% danger, 60-85% warning, above success, none neutral. */
+export function confidenceTone(n: number | null | undefined): StatusTone {
+  if (n == null) return "neutral";
   if (n < 0.6) return "danger";
   if (n < 0.85) return "warning";
   return "success";

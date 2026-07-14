@@ -56,7 +56,7 @@ export function GettingStartedSection({
         </li>
       </ol>
 
-      <Card className="portal-docs__callout" accent="blue" padding="loose">
+      <Card className="portal-docs__callout" accent="default" padding="loose">
         <strong>{t("portal.docs.quickstart.callout.label")}</strong>{" "}
         {t("portal.docs.quickstart.callout.bodyBeforeLink")}{" "}
         <em>{t("portal.docs.quickstart.callout.link")}</em>{" "}

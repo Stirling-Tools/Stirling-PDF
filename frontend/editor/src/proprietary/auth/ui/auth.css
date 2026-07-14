@@ -172,6 +172,19 @@
   align-items: center;
 }
 
+/* These OAuth buttons are shared <Button>s. Pin their pill shape + height so the
+   auth styling wins over the design-system Button base regardless of CSS load
+   order — Storybook injects the Button/Mantine CSS after auth.css (the app loads
+   it before), which otherwise flips these single-class rules to the Button's
+   defaults (rounded-rect + 36px). Higher specificity keeps both identical. */
+.oauth-button-vertical.sui-btn.mantine-Button-root {
+  border-radius: 999px;
+  min-height: 3.5rem; /* 56px */
+}
+.oauth-button-fullwidth.sui-btn.mantine-Button-root {
+  border-radius: 100px;
+}
+
 .oauth-button-icon {
   width: 3.75rem; /* 60px */
   height: 3.75rem; /* 60px */
@@ -214,7 +227,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.875rem 1.5rem; /* 14px 24px */
+  /* Vertical padding is driven by the shared Button's --sui-btn-py so it beats
+     the Button's own padding-block; horizontal stays in the shorthand. */
+  --sui-btn-py: 1rem; /* 16px (md) */
+  padding: 1rem 1.5rem; /* 16px 24px */
   border: 1px solid var(--auth-input-border-light-only);
   border-radius: 999px;
   background-color: var(--auth-card-bg-light-only);
@@ -707,6 +723,64 @@
   min-height: 0;
 }
 
+.oauth-container-fullwidth {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.oauth-button-fullwidth {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Vertical padding via the shared Button's --sui-btn-py (beats the Button's
+     own padding-block); horizontal stays in the shorthand. */
+  --sui-btn-py: 1rem; /* 16px (md) */
+  padding: 1rem 1rem; /* 16px */
+  border: 1px solid #d1d5db;
+  border-radius: 100px;
+  background-color: #ffffff;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #000000;
+  cursor: pointer;
+  gap: 0.5rem;
+  box-shadow: 0 0.125rem 0.375rem rgba(0, 0, 0, 0.04);
+  transition:
+    background-color 150ms ease,
+    box-shadow 150ms ease,
+    border-color 150ms ease;
+}
+
+.oauth-button-fullwidth:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.oauth-button-fullwidth:hover:not(:disabled) {
+  background-color: #fafafa;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+[data-mantine-color-scheme="dark"] .oauth-button-fullwidth {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  border-color: var(--border-default);
+  box-shadow: none;
+}
+
+[data-mantine-color-scheme="dark"]
+  .oauth-button-fullwidth:hover:not(:disabled) {
+  background-color: var(--bg-raised);
+  box-shadow: none;
+}
+
+/* ── Dark-mode icon inversion for monochrome OAuth logos ────────────── */
+[data-mantine-color-scheme="dark"] .oauth-icon--github {
+  filter: invert(1);
+}
+
 /* ── Icon+label group — keeps icons vertically aligned across buttons ── */
 .oauth-btn-group {
   display: inline-flex;
@@ -743,7 +817,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 1rem;
+  /* Vertical padding via the shared Button's --sui-btn-py (beats the Button's
+     own padding-block); horizontal stays in the shorthand. */
+  --sui-btn-py: 1rem; /* 16px (md) */
+  padding: 1rem 1rem; /* 16px */
   border: 1px solid #d1d5db;
   border-radius: 100px;
   background-color: #ffffff;

@@ -62,7 +62,17 @@ jobs:
           # .test-state/playwright/coverage-pw/ for the post-process step
           # to aggregate. Chromium-only - other engines silently skip.
           PW_COVERAGE: "1"
+          PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results.json
         run: task e2e:live
+      - name: Flag flaky tests
+        # Runs regardless of the test outcome: a flaky test (passed on retry)
+        # leaves the step green, so this is the only place it surfaces. Emits
+        # ::warning:: annotations + a job summary; never fails the job.
+        if: always()
+        working-directory: frontend
+        run: npx tsx editor/scripts/report-flaky-tests.mts "$PLAYWRIGHT_JSON_OUTPUT_FILE"
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results.json
       - name: Generate JaCoCo report from e2e:live .exec
         if: always()
         id: live-coverage

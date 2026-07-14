@@ -16,11 +16,10 @@
 /* global document, getComputedStyle */ // used inside page.evaluate (browser context)
 
 import fs from "node:fs/promises";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createRequire } from "node:module";
 
-const require = createRequire(import.meta.url);
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "..");
 
@@ -69,11 +68,14 @@ export const THEME = {
 };
 
 // ---- icon resolution (material-symbols via iconify) ------------------------
-function resolveIcon(icon) {
+async function resolveIcon(icon) {
   if (!icon) return "";
   if (icon.trim().startsWith("<svg")) return icon; // raw svg passed through
-  const { getIconData, iconToSVG } = require("@iconify/utils");
-  const set = require("@iconify-json/material-symbols/icons.json");
+  const { getIconData, iconToSVG } = await import("@iconify/utils");
+  const { default: set } = await import(
+    "@iconify-json/material-symbols/icons.json",
+    { with: { type: "json" } }
+  );
   const data = getIconData(set, icon);
   if (!data) throw new Error(`icon not found in material-symbols: "${icon}"`);
   const { attributes, body } = iconToSVG(data);
@@ -148,7 +150,7 @@ const escapeHtml = (s) =>
 let _browser = null;
 async function getBrowser() {
   if (_browser) return _browser;
-  const puppeteer = require("puppeteer");
+  const { default: puppeteer } = await import("puppeteer");
   _browser = await puppeteer.launch({
     headless: "new",
     args: ["--no-sandbox"],
@@ -163,7 +165,7 @@ export async function renderOgCard({
   outFile,
   theme = THEME,
 }) {
-  const iconSvg = resolveIcon(icon);
+  const iconSvg = await resolveIcon(icon);
   const html = await buildHtml({ name, description, iconSvg, theme });
   const browser = await getBrowser();
   const page = await browser.newPage();
@@ -230,7 +232,7 @@ const kebab = (id) => id.replace(/([A-Z])/g, "-$1").toLowerCase();
 
 // English name/description live next to each tool as the `t(key, fallback)` default.
 function readRegistryStrings() {
-  const src = require("node:fs").readFileSync(
+  const src = readFileSync(
     path.join(ROOT, "src/core/data/useTranslatedToolRegistry.tsx"),
     "utf8",
   );
@@ -268,7 +270,7 @@ export async function generateMissing(theme = THEME) {
 // Each tool's app icon lives as `icon="<material-symbol>"` just before its
 // `name: t("home.<id>.title", …)`. Pair each title with the closest preceding icon.
 function readRegistryIcons() {
-  const src = require("node:fs").readFileSync(
+  const src = readFileSync(
     path.join(ROOT, "src/core/data/useTranslatedToolRegistry.tsx"),
     "utf8",
   );
@@ -288,25 +290,26 @@ function readRegistryIcons() {
   return byId;
 }
 
-function iconExists(name) {
+async function iconExists(name) {
   if (!name) return false;
   try {
-    const { getIconData } = require("@iconify/utils");
-    return !!getIconData(
-      require("@iconify-json/material-symbols/icons.json"),
-      name,
+    const { getIconData } = await import("@iconify/utils");
+    const { default: set } = await import(
+      "@iconify-json/material-symbols/icons.json",
+      { with: { type: "json" } }
     );
+    return !!getIconData(set, name);
   } catch {
     return false;
   }
 }
 
 // First candidate that resolves; also tries dropping a "-rounded" suffix.
-function firstResolvableIcon(candidates) {
+async function firstResolvableIcon(candidates) {
   for (const c of candidates) {
-    if (iconExists(c)) return c;
+    if (await iconExists(c)) return c;
     const alt = c && c.replace(/-rounded$/, "");
-    if (alt && alt !== c && iconExists(alt)) return alt;
+    if (alt && alt !== c && (await iconExists(alt))) return alt;
   }
   return "description-outline";
 }
@@ -324,14 +327,14 @@ export async function generateAll(theme = THEME) {
   const { titles, descs } = readRegistryStrings();
   const regIcons = readRegistryIcons();
   const ogMap = JSON.parse(
-    require("node:fs").readFileSync(
-      path.join(ROOT, "src/core/data/ogImageMap.json"),
-      "utf8",
-    ),
+    readFileSync(path.join(ROOT, "src/core/data/ogImageMap.json"), "utf8"),
   );
   const results = [];
   for (const [id, basename] of Object.entries(ogMap)) {
-    const icon = firstResolvableIcon([regIcons[id], MISSING_TOOL_ICONS[id]]);
+    const icon = await firstResolvableIcon([
+      regIcons[id],
+      MISSING_TOOL_ICONS[id],
+    ]);
     await renderOgCard({
       name: titles[id] || humanizeId(id),
       description: descs[id] || "",

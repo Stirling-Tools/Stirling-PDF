@@ -10,7 +10,6 @@ import { renderMarkdown } from "@app/components/viewer/nonpdf/MarkdownRenderer";
 import { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import {
-  ActionIcon,
   Box,
   Collapse,
   Group,
@@ -19,8 +18,9 @@ import {
   Stack,
   Text,
   Textarea,
-  UnstyledButton,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import BuildOutlinedIcon from "@mui/icons-material/BuildOutlined";
@@ -266,7 +266,10 @@ function CompletedProgressLogDropdown({
 
   return (
     <div className="chat-completed-log">
-      <UnstyledButton
+      <Button
+        type="button"
+        variant="tertiary"
+        hover={false}
         className="chat-completed-log__toggle"
         onClick={() => setExpanded((v) => !v)}
         aria-expanded={expanded}
@@ -281,7 +284,7 @@ function CompletedProgressLogDropdown({
             {label}
           </Text>
         </Group>
-      </UnstyledButton>
+      </Button>
       <Collapse in={expanded}>
         <ol className="chat-completed-log__tools">
           {toolSteps.map((step, i) => {
@@ -333,14 +336,16 @@ function ChatMessageBubble({
 
   const actions = (
     <div className="chat-message-actions">
-      <button
+      <ActionIcon
         type="button"
+        variant="tertiary"
         className={`chat-message-action-btn${copied ? " chat-message-action-btn--active" : ""}`}
         onClick={handleCopy}
         title={t("chat.actions.copy", "Copy message")}
+        aria-label={t("chat.actions.copy", "Copy message")}
       >
         <ContentCopyIcon sx={{ fontSize: 13 }} />
-      </button>
+      </ActionIcon>
       <span className="chat-message-timestamp">
         {formatRelativeTime(timestamp, t)}
       </span>
@@ -551,9 +556,6 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
       <div className="chat-panel-input">
         <ActionIcon
           className="chat-panel-input__send"
-          variant="filled"
-          color="blue"
-          radius="xl"
           size="sm"
           onClick={() => handleSend()}
           disabled={!input.trim() || isLoading}

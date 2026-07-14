@@ -124,12 +124,12 @@ export function ActionModal({
       subtitle={copy.subtitle}
       footer={
         <div className="portal-proc__modal-actions">
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="tertiary" onClick={onClose}>
             {t("portal.procurement.modal.cancel")}
           </Button>
           <Button
-            variant="gradient"
-            accent="purple"
+            variant="primary"
+            accent="premium"
             loading={submitting}
             disabled={needsFile && !file}
             onClick={submit}
@@ -150,7 +150,7 @@ export function ActionModal({
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           />
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             onClick={() => fileRef.current?.click()}
           >

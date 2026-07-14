@@ -1,0 +1,183 @@
+/* Classification-labels editor: add box, chip grid, icon picker, and the
+   summary/modal chrome around them. */
+
+.labels-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: 0;
+}
+
+/* ---- Add box ---- */
+.labels-add {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.labels-add-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  color: var(--color-text-1);
+  background: var(--color-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: border-color var(--motion-fast);
+}
+.labels-add-input:focus {
+  border-color: var(--color-blue);
+}
+.labels-add-error {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-red);
+}
+.labels-empty {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-3);
+}
+
+/* ---- Chip grid (chips themselves are the shared @app/ui/LabelChip) ---- */
+.labels-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1_5);
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* ---- Icon picker (trigger + popover options) ---- */
+.labels-icon-pick {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-2);
+  cursor: pointer;
+  transition:
+    background var(--motion-fast),
+    color var(--motion-fast);
+}
+.labels-icon-pick:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-1);
+}
+.labels-icon-option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-md);
+  color: var(--color-text-2);
+  cursor: pointer;
+  transition:
+    background var(--motion-fast),
+    color var(--motion-fast);
+}
+.labels-icon-option:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-1);
+}
+.labels-icon-option.is-selected {
+  background: var(--color-blue-light);
+  color: var(--color-blue);
+}
+
+/* ---- Section summary (Edit-Settings card) ---- */
+.labels-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.labels-summary-stats {
+  display: flex;
+  gap: var(--space-3);
+  font-size: 0.8125rem;
+  color: var(--color-text-2);
+}
+.labels-summary-note {
+  font-size: 0.75rem;
+  color: var(--color-text-3);
+}
+
+/* ---- Fat modal ---- */
+.labels-modal {
+  width: min(1100px, 94vw);
+  max-width: min(1100px, 94vw);
+}
+.labels-modal-body {
+  max-height: min(70vh, 640px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-height: 0;
+}
+.labels-toolbar {
+  display: flex;
+  gap: var(--space-2);
+}
+.labels-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+}
+.labels-footer-left,
+.labels-footer-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* ---- Grouped mode: chips under collapsible parent categories ---- */
+.labels-groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.labels-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.labels-group-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-1, inherit);
+}
+.labels-group-name {
+  flex: 1;
+  text-align: left;
+}
+.labels-group-count {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-3, rgba(128, 128, 128, 0.9));
+}
+.labels-group-ungrouped {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-2, inherit);
+}

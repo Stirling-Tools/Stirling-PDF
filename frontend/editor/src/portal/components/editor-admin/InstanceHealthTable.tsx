@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import {
   Card,
   Chip,
+  type ChipAccent,
   EmptyState,
   StatusBadge,
   Table,
@@ -14,10 +15,18 @@ import {
   type EditorInstance,
 } from "@portal/api/editorDeploy";
 
+// Deployment target names are product/brand terms, not localised.
 const TARGET_LABEL: Record<EditorInstance["target"], string> = {
   cloud: "Cloud",
   docker: "Docker",
   kubernetes: "K8s",
+};
+
+/** Map the target palette tone onto the shared Chip accent set. */
+const TARGET_CHIP_ACCENT: Record<"neutral" | "blue" | "purple", ChipAccent> = {
+  neutral: "neutral",
+  blue: "default",
+  purple: "premium",
 };
 
 interface Props {
@@ -36,7 +45,10 @@ export function InstanceHealthTable({ instances }: Props) {
         <div className="portal-editor__cell-stack">
           <span className="portal-editor__cell-strong">{i.host}</span>
           <span className="portal-editor__cell-muted">
-            <Chip size="sm" tone={TARGET_META[i.target].tone}>
+            <Chip
+              size="sm"
+              accent={TARGET_CHIP_ACCENT[TARGET_META[i.target].tone]}
+            >
               {TARGET_LABEL[i.target]}
             </Chip>
           </span>
@@ -62,7 +74,7 @@ export function InstanceHealthTable({ instances }: Props) {
           size="sm"
           pulse={i.status === "healthy"}
         >
-          {INSTANCE_STATUS_LABEL[i.status]}
+          {t(INSTANCE_STATUS_LABEL[i.status])}
         </StatusBadge>
       ),
     },

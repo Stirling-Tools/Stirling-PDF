@@ -1,35 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useOnboarding } from "@app/contexts/OnboardingContext";
-import { useAuth } from "@app/auth/UseSession";
-import SaasOnboardingModal from "@app/components/onboarding/SaasOnboardingModal";
 
-const STORAGE_KEY = "saas_onboarding_seen";
 const ONBOARDING_SESSION_BLOCK_KEY = "stirling-onboarding-session-active";
 
 /**
- * SaaS-only bootstrap to clear deferred tour requests, mark tool panel prompt as completed,
- * and show SaaS-specific onboarding on first login.
+ * SaaS-only bootstrap to clear deferred tour requests and mark the tool panel
+ * prompt / core intro onboarding as completed.
+ *
+ * First-load auto-display is disabled: the SaaS onboarding modal no longer
+ * appears on first login. The modal component (SaasOnboardingModal) is retained
+ * for explicit/manual triggering, but nothing opens it automatically here.
  */
 export default function OnboardingBootstrap() {
   const { preferences, updatePreference } = usePreferences();
   const { clearPendingTourRequest, setStartAfterToolModeSelection } =
     useOnboarding();
-  const { user, loading } = useAuth();
-  const [showModal, setShowModal] = useState(false);
-
-  // Show the onboarding modal once on first login, after the user has loaded.
-  useEffect(() => {
-    const hasSeenOnboarding = localStorage.getItem(STORAGE_KEY) === "true";
-    if (user && !hasSeenOnboarding && !loading && !showModal) {
-      setShowModal(true);
-    }
-  }, [user, loading, showModal]);
-
-  const handleClose = () => {
-    localStorage.setItem(STORAGE_KEY, "true");
-    setShowModal(false);
-  };
 
   // Keep existing logic to disable core onboarding flags
   useEffect(() => {
@@ -69,8 +55,5 @@ export default function OnboardingBootstrap() {
     setStartAfterToolModeSelection,
   ]);
 
-  // Only render modal when it should be shown to avoid running hooks unnecessarily
-  return showModal ? (
-    <SaasOnboardingModal opened={showModal} onClose={handleClose} />
-  ) : null;
+  return null;
 }

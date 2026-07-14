@@ -80,6 +80,12 @@ tasks:
       OPEN: '{{.OPEN | default ""}}'
     env:
       BACKEND_URL: '{{.BACKEND_URL}}'
+      # Dev-only browser-tab label so concurrent worktrees are distinguishable.
+      # Only the worktree folder basename (e.g. "wt1") is exposed — never the
+      # full path, hostname, or user. Consumed at dev-serve time by vite.config
+      # and dropped from production builds.
+      STIRLING_DEV_LABEL:
+        sh: basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
     cmds:
       - npx vite editor --mode {{.MODE}} --port {{.PORT}}{{if .OPEN}} --open{{end}}
 
@@ -395,6 +401,23 @@ tasks:
   # ============================================================
   # Code Generation
   # ============================================================
+
+  tool-models:
+    desc: "Generate tool API types from the Java OpenAPI spec"
+    deps: [install, ":backend:swagger"]
+    cmds:
+      - npx tsx editor/scripts/generate-tool-api-types.mts --spec ../SwaggerDoc.json --output editor/src/core/types/toolApiTypes.ts
+    sources:
+      - editor/scripts/generate-tool-api-types.mts
+      - ../SwaggerDoc.json
+    generates:
+      - editor/src/core/types/toolApiTypes.ts
+
+  tool-models:check:
+    desc: "Fail if committed tool API types are out of date"
+    deps: [install, ":backend:swagger"]
+    cmds:
+      - npx tsx editor/scripts/generate-tool-api-types.mts --spec ../SwaggerDoc.json --output editor/src/core/types/toolApiTypes.ts --check
 
   licenses:generate:
     desc: "Generate frontend license report"

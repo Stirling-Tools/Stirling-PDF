@@ -1,6 +1,10 @@
 import { useTranslation } from "react-i18next";
 import { Button, StatusBadge } from "@app/ui";
-import { type Agent, AGENT_STATUS_TONE } from "@portal/api/agents";
+import {
+  type Agent,
+  AGENT_STATUS_LABEL,
+  AGENT_STATUS_TONE,
+} from "@portal/api/agents";
 import "@portal/views/AgentBuilder.css";
 
 interface VersionsPanelProps {
@@ -52,7 +56,7 @@ export function VersionsPanel({ agent, historyUnlocked }: VersionsPanelProps) {
                     {v.version}
                   </code>
                   <StatusBadge tone={AGENT_STATUS_TONE[v.status]} size="sm">
-                    {v.status}
+                    {t(AGENT_STATUS_LABEL[v.status])}
                   </StatusBadge>
                   {isCurrent && (
                     <StatusBadge tone="info" size="sm" showDot={false}>
@@ -69,7 +73,7 @@ export function VersionsPanel({ agent, historyUnlocked }: VersionsPanelProps) {
                 {v.status === "draft" && (
                   <Button
                     size="sm"
-                    variant="outline"
+                    variant="secondary"
                     onClick={() => publish(v.version)}
                   >
                     {t("portal.agentBuilder.versions.publish")}
@@ -78,7 +82,7 @@ export function VersionsPanel({ agent, historyUnlocked }: VersionsPanelProps) {
                 {v.status === "published" && !isCurrent && (
                   <Button
                     size="sm"
-                    variant="ghost"
+                    variant="tertiary"
                     onClick={() => rollback(v.version)}
                   >
                     {t("portal.agentBuilder.versions.rollBack")}

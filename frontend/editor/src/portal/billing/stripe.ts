@@ -71,7 +71,7 @@ async function invoke<T>(
   const supabase = getSupabaseClient();
   if (!supabase) {
     throw new StripeFunctionError(
-      "SaaS Supabase not configured — set VITE_SAAS_SUPABASE_URL.",
+      "SaaS Supabase not configured — set VITE_SUPABASE_URL.",
       "unconfigured",
     );
   }

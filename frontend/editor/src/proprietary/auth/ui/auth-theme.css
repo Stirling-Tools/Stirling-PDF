@@ -39,8 +39,8 @@
   --auth-magic-button-text-light-only: var(--text-primary);
   --auth-text-primary-light-only: var(--text-primary);
   --auth-text-secondary-light-only: var(--text-secondary);
-  --text-divider-rule-rgb-light: 58, 64, 71;
-  --text-divider-label-rgb-light: 107, 114, 128;
+  --text-divider-rule-rgb-light: 28, 35, 64;
+  --text-divider-label-rgb-light: 91, 98, 128;
   --tool-subcategory-rule-color-light: var(--border-default);
   --tool-subcategory-text-color-light: var(--text-secondary);
 }

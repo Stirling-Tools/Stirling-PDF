@@ -1,6 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { type Agent, AGENT_STATUS_TONE } from "@portal/api/agents";
-import { StatusBadge } from "@app/ui";
+import {
+  type Agent,
+  AGENT_STATUS_LABEL,
+  AGENT_STATUS_TONE,
+} from "@portal/api/agents";
+import { Button, StatusBadge } from "@app/ui";
 import "@portal/views/AgentBuilder.css";
 
 interface AgentSelectorProps {
@@ -22,9 +26,11 @@ export function AgentSelector({
       aria-label={t("portal.agentBuilder.selectorAriaLabel")}
     >
       {agents.map((a) => (
-        <button
+        <Button
           key={a.id}
-          type="button"
+          variant="tertiary"
+          justify="start"
+          fullWidth
           className={
             "portal-agents__selector-item" +
             (a.id === selectedId ? " is-selected" : "")
@@ -38,11 +44,11 @@ export function AgentSelector({
           </span>
           <span className="portal-agents__selector-meta">
             <StatusBadge tone={AGENT_STATUS_TONE[a.status]} size="sm">
-              {a.status}
+              {t(AGENT_STATUS_LABEL[a.status])}
             </StatusBadge>
             <code className="portal-agents__selector-version">{a.version}</code>
           </span>
-        </button>
+        </Button>
       ))}
     </nav>
   );

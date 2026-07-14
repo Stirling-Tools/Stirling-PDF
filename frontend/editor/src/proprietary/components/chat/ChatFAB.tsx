@@ -1,4 +1,10 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useCallback,
+} from "react";
 import {
   createTheme,
   MantineProvider,
@@ -68,6 +74,13 @@ export function ChatFAB() {
   }, [isLoading]);
 
   const overlayRef = useRef<HTMLDivElement>(null);
+  // Separate bounds element inset by FAB_GAP_PX — react-rnd enforces this
+  // during both drag and resize, keeping the panel off the overlay edges.
+  const [boundsEl, setBoundsEl] = useState<HTMLDivElement | null>(null);
+  const boundsRef = useCallback(
+    (el: HTMLDivElement | null) => setBoundsEl(el),
+    [],
+  );
   const [rndPos, setRndPos] = useState<{ x: number; y: number } | null>(null);
   const [rndSize, setRndSize] = useState({
     width: PANEL_WIDTH_PX,
@@ -102,8 +115,7 @@ export function ChatFAB() {
     const pos = getDefaultPos();
     if (pos) setRndPos(pos);
   }, [enabled]);
-
-  // bounds="parent" only clamps during active drag/resize; ResizeObserver keeps position valid when the overlay changes size.
+  // ResizeObserver keeps position valid when the overlay changes size (e.g. window resize, sidebar toggle).
   useEffect(() => {
     if (!enabled) return;
     const el = overlayRef.current;
@@ -170,6 +182,8 @@ export function ChatFAB() {
       className="chat-fab-overlay"
       style={{ zIndex: Z_INDEX_CHAT_FAB_OVERLAY }}
     >
+      {/* Inset boundary element — react-rnd uses this to constrain drag+resize */}
+      <div ref={boundsRef} className="chat-fab-bounds" />
       {/* Trigger button — fades out while panel is open */}
       <ChatFABButton
         className={`chat-fab-trigger${isOpen ? " chat-fab-trigger--hidden" : ""}`}
@@ -185,19 +199,19 @@ export function ChatFAB() {
         }}
         aria-label={t("chat.fab.open", "Open Stirling AI assistant")}
         aria-expanded={isOpen}
-        isLoading={isLoading}
+        loading={isLoading}
         showTick={hasUnviewedResult && !isLoading}
       />
 
       {/* Draggable / resizable panel */}
-      {rndPos !== null && (
+      {rndPos !== null && boundsEl !== null && (
         <Rnd
           className="chat-fab-panel-rnd"
           position={rndPos}
           size={rndSize}
           minWidth={PANEL_MIN_WIDTH_PX}
           minHeight={PANEL_MIN_HEIGHT_PX}
-          bounds="parent"
+          bounds={boundsEl}
           enableResizing={true}
           // Drag from the header; cancel keeps buttons inside it clickable
           dragHandleClassName="chat-panel__header"

@@ -98,8 +98,8 @@ export function LinkedInstancesTable({
       render: (i) =>
         i.revoked ? null : (
           <Button
-            variant="outline"
-            accent="red"
+            variant="secondary"
+            accent="danger"
             size="sm"
             loading={revokingId === i.instanceId}
             onClick={() => onRevoke(i)}

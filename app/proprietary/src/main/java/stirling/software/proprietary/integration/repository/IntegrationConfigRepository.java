@@ -18,4 +18,13 @@ public interface IntegrationConfigRepository extends JpaRepository<IntegrationCo
     List<IntegrationConfig> findByOwnerTeam(Team ownerTeam);
 
     List<IntegrationConfig> findByScope(OwnerScope scope);
+
+    // Nested path: OwnedResource has a getOwnerTeamId() convenience getter but no such persistent
+    // attribute, so the plain "...OwnerTeamId" derivation resolves to a phantom property and throws
+    // UnknownPathException. The underscore forces the real ownerTeam.id association path.
+    boolean existsByOwnerTeam_Id(Long teamId);
+
+    void deleteByOwnerUser(User ownerUser);
+
+    void deleteByOwnerTeam_Id(Long teamId);
 }

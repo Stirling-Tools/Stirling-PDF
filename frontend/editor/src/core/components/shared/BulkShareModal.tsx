@@ -3,13 +3,13 @@ import {
   Modal,
   Stack,
   Text,
-  Button,
   Group,
   Alert,
   TextInput,
   Paper,
   Select,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import LinkIcon from "@mui/icons-material/Link";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import { useTranslation } from "react-i18next";
@@ -243,8 +243,8 @@ const BulkShareModal: React.FC<BulkShareModalProps> = ({
                 label={t("storageShare.linkLabel", "Share link")}
                 rightSection={
                   <Button
-                    variant="subtle"
-                    size="xs"
+                    variant="tertiary"
+                    size="sm"
                     leftSection={
                       <ContentCopyRoundedIcon style={{ fontSize: 16 }} />
                     }
@@ -297,7 +297,7 @@ const BulkShareModal: React.FC<BulkShareModalProps> = ({
         </Paper>
 
         <Group justify="flex-end" gap="sm">
-          <Button variant="default" onClick={onClose} disabled={isWorking}>
+          <Button variant="secondary" onClick={onClose} disabled={isWorking}>
             {t("cancel", "Cancel")}
           </Button>
           <Button

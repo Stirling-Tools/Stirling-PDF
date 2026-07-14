@@ -11,6 +11,7 @@
 # production
 /build
 /dist
+/dist-portal
 /storybook-static
 
 /editor/build

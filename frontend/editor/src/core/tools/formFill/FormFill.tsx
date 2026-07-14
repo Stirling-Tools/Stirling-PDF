@@ -15,7 +15,6 @@ import React, {
   useMemo,
 } from "react";
 import {
-  Button,
   Text,
   Alert,
   Switch,
@@ -23,9 +22,10 @@ import {
   ScrollArea,
   Progress,
   Tooltip,
-  ActionIcon,
   SegmentedControl,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { isAxiosError } from "axios";
 import {
@@ -177,7 +177,7 @@ const FormFill = (_props: BaseToolProps) => {
       setTimeout(() => URL.revokeObjectURL(url), 250);
     } catch (err) {
       console.error("[FormFill] CSV extraction failed:", err);
-      setSaveError("Failed to extract CSV");
+      setSaveError(t("formFill.extractCsvError", "Failed to extract CSV"));
     } finally {
       setExtracting(false);
     }
@@ -196,7 +196,7 @@ const FormFill = (_props: BaseToolProps) => {
       setTimeout(() => URL.revokeObjectURL(url), 250);
     } catch (err) {
       console.error("[FormFill] XLSX extraction failed:", err);
-      setSaveError("Failed to extract XLSX");
+      setSaveError(t("formFill.extractXlsxError", "Failed to extract XLSX"));
     } finally {
       setExtracting(false);
     }
@@ -219,7 +219,9 @@ const FormFill = (_props: BaseToolProps) => {
     if (!currentFile || !isStirlingFile(currentFile)) return;
 
     if (!validateForm()) {
-      setSaveError("Please fill in all required fields");
+      setSaveError(
+        t("formFill.requiredFieldsError", "Please fill in all required fields"),
+      );
       return;
     }
 
@@ -486,7 +488,7 @@ const FormFill = (_props: BaseToolProps) => {
                   <div className={styles.primaryActions}>
                     <Button
                       leftSection={<SaveIcon sx={{ fontSize: 14 }} />}
-                      size="xs"
+                      size="sm"
                       onClick={handleSave}
                       loading={saving}
                       disabled={!formState.isDirty && !flattenChanged}
@@ -500,7 +502,7 @@ const FormFill = (_props: BaseToolProps) => {
                       position="bottom"
                     >
                       <ActionIcon
-                        variant="light"
+                        variant="secondary"
                         size="md"
                         onClick={handleRefresh}
                         aria-label={t(
@@ -515,34 +517,31 @@ const FormFill = (_props: BaseToolProps) => {
 
                   <div className={styles.secondaryActions}>
                     <Button
-                      variant="light"
-                      color="blue"
+                      variant="secondary"
                       leftSection={<FileDownloadIcon sx={{ fontSize: 14 }} />}
                       loading={extracting}
                       onClick={handleExtractJson}
-                      size="xs"
+                      size="sm"
                     >
                       JSON
                     </Button>
 
                     <Button
-                      variant="light"
-                      color="blue"
+                      variant="secondary"
                       leftSection={<FileDownloadIcon sx={{ fontSize: 14 }} />}
                       loading={extracting}
                       onClick={handleExtractCsv}
-                      size="xs"
+                      size="sm"
                     >
                       CSV
                     </Button>
 
                     <Button
-                      variant="light"
-                      color="blue"
+                      variant="secondary"
                       leftSection={<FileDownloadIcon sx={{ fontSize: 14 }} />}
                       loading={extracting}
                       onClick={handleExtractXlsx}
-                      size="xs"
+                      size="sm"
                     >
                       XLSX
                     </Button>
@@ -620,7 +619,9 @@ const FormFill = (_props: BaseToolProps) => {
                               {field.label || field.name}
                             </span>
                             {field.required && (
-                              <span className={styles.fieldRequired}>req</span>
+                              <span className={styles.fieldRequired}>
+                                {t("formFill.requiredAbbreviation", "req")}
+                              </span>
                             )}
                           </div>
 
@@ -662,10 +663,10 @@ const FormFill = (_props: BaseToolProps) => {
                   <span className={styles.unsavedDot} />
                 )}
                 {formState.isDirty || flattenChanged
-                  ? "Unsaved changes"
-                  : "All saved"}
+                  ? t("formFill.unsavedChanges", "Unsaved changes")
+                  : t("formFill.allSaved", "All saved")}
               </span>
-              <span>Ctrl+S to save</span>
+              <span>{t("formFill.saveShortcut", "Ctrl+S to save")}</span>
             </div>
           )}
         </>

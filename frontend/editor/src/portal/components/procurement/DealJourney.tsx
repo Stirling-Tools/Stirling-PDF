@@ -79,18 +79,18 @@ export function DealJourney({
             {isTerminal
               ? t("portal.procurement.journey.live")
               : t("portal.procurement.journey.nextStep", {
-                  action: currentStep?.gatingAction ?? "",
+                  action: currentStep ? t(currentStep.gatingAction) : "",
                 })}
           </span>
         </div>
         {!isTerminal && currentStep && (
           <Button
-            variant="gradient"
-            accent="purple"
+            variant="primary"
+            accent="premium"
             loading={advancing}
             onClick={() => onAdvance(currentStage)}
           >
-            {currentStep.gatingAction}
+            {t(currentStep.gatingAction)}
           </Button>
         )}
       </div>

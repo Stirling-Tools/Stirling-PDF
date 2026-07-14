@@ -54,4 +54,15 @@ public abstract class OwnedResource {
     public Long getOwnerTeamId() {
         return ownerTeam != null ? ownerTeam.getId() : null;
     }
+
+    /** Owner as a principal ref; null when server-owned (admin-only ownership). */
+    public PrincipalRef getOwnerRef() {
+        if (getOwnerUserId() != null) {
+            return PrincipalRef.user(getOwnerUserId());
+        }
+        if (getOwnerTeamId() != null) {
+            return PrincipalRef.team(getOwnerTeamId());
+        }
+        return null;
+    }
 }

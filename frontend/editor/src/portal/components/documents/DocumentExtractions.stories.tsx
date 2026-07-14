@@ -6,9 +6,6 @@ import "@portal/views/Documents.css";
 const ALL = documentsFor("enterprise");
 const NON_SENSITIVE = ALL.find((d) => !d.sensitive)!;
 const SENSITIVE = ALL.find((d) => d.sensitive)!;
-const NO_AMOUNT = ALL.find((d) =>
-  d.extractions.some((e) => e.confidence === 0),
-)!;
 
 const meta: Meta<typeof DocumentExtractions> = {
   title: "Portal/Documents/DocumentExtractions",
@@ -26,13 +23,8 @@ const meta: Meta<typeof DocumentExtractions> = {
 export default meta;
 type Story = StoryObj<typeof DocumentExtractions>;
 
-/** Per-field table with mixed confidence tones. */
+/** No extraction data exists yet - the table shows its empty state. */
 export const Default: Story = {};
-
-/** A field that failed to extract sits at 0% confidence. */
-export const LowConfidence: Story = {
-  args: { doc: NO_AMOUNT },
-};
 
 /** Sensitive doc with no active grant — content stays masked. */
 export const Masked: Story = {

@@ -13,9 +13,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
@@ -49,7 +49,61 @@ class IntegrationConfigServiceTest {
     @Mock private OwnershipService ownership;
     @Mock private SecretMasker secretMasker;
 
-    @InjectMocks private IntegrationConfigService service;
+    @Mock
+    private stirling.software.proprietary.access.repository.ResourceGrantRepository grantRepository;
+
+    @Mock private IntegrationConfigValidator validator;
+    @Mock private IntegrationConfigUsageCheck usageCheck;
+
+    private IntegrationConfigService service;
+
+    @BeforeEach
+    void setUp() {
+        service =
+                new IntegrationConfigService(
+                        repository,
+                        ownership,
+                        secretMasker,
+                        grantRepository,
+                        List.of(validator),
+                        List.of(usageCheck));
+    }
+
+    @Test
+    void createRejectsAConfigItsTypeValidatorRefuses() {
+        when(secretMasker.sanitize(any())).thenReturn(Map.of());
+        when(validator.type()).thenReturn(IntegrationType.API);
+        org.mockito.Mockito.doThrow(new IllegalArgumentException("api config needs a 'url'"))
+                .when(validator)
+                .validate(any());
+
+        assertThatThrownBy(
+                        () ->
+                                service.create(
+                                        request(IntegrationType.API, OwnerScope.USER, null),
+                                        user(7)))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(
+                        e ->
+                                assertThat(((ResponseStatusException) e).getStatusCode())
+                                        .isEqualTo(HttpStatus.BAD_REQUEST));
+    }
+
+    @Test
+    void deleteRefusedWhileAnythingStillReferencesTheConfig() {
+        IntegrationConfig cfg = config(9L);
+        when(repository.findById(9L)).thenReturn(Optional.of(cfg));
+        when(ownership.canManage(any(), eq(cfg), any())).thenReturn(true);
+        when(usageCheck.usagesOf(9L)).thenReturn(List.of("source 'Claims intake'"));
+
+        assertThatThrownBy(() -> service.delete(9L, user(7)))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(
+                        e ->
+                                assertThat(((ResponseStatusException) e).getStatusCode())
+                                        .isEqualTo(HttpStatus.CONFLICT));
+        verify(repository, org.mockito.Mockito.never()).delete(any(IntegrationConfig.class));
+    }
 
     @Test
     void createDelegatesOwnershipAndSanitizesConfig() {
@@ -58,9 +112,9 @@ class IntegrationConfigServiceTest {
         User user = user(7);
 
         IntegrationConfig created =
-                service.create(request(IntegrationType.S3, OwnerScope.USER, null), user);
+                service.create(request(IntegrationType.API, OwnerScope.USER, null), user);
 
-        assertThat(created.getIntegrationType()).isEqualTo(IntegrationType.S3);
+        assertThat(created.getIntegrationType()).isEqualTo(IntegrationType.API);
         assertThat(created.getName()).isEqualTo("name");
         verify(ownership)
                 .assignOwnership(eq(created), eq(OwnerScope.USER), isNull(), eq(user), any());
@@ -154,6 +208,60 @@ class IntegrationConfigServiceTest {
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(e -> ((ResponseStatusException) e).getStatusCode())
                 .isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    // ---- S3 type policy ----
+
+    @Test
+    void s3PersonalCreateForbiddenForRegularUser() {
+        User user = user(7);
+        when(ownership.isAdmin(user)).thenReturn(false);
+
+        assertThatThrownBy(
+                        () ->
+                                service.create(
+                                        request(IntegrationType.S3, OwnerScope.USER, null), user))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                .isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    void s3PersonalCreateAllowedForAdmin() {
+        when(secretMasker.sanitize(any())).thenReturn(Map.of("bucket", "b"));
+        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        User admin = user(1);
+        when(ownership.isAdmin(admin)).thenReturn(true);
+
+        IntegrationConfig created =
+                service.create(request(IntegrationType.S3, OwnerScope.USER, null), admin);
+
+        assertThat(created.getIntegrationType()).isEqualTo(IntegrationType.S3);
+    }
+
+    @Test
+    void s3TeamScopeCreateDelegatesLeadershipToOwnership() {
+        // TEAM scope skips the personal-S3 gate; assignOwnership enforces admin/team-owner.
+        when(secretMasker.sanitize(any())).thenReturn(Map.of("bucket", "b"));
+        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        User leader = user(7);
+
+        IntegrationConfig created =
+                service.create(request(IntegrationType.S3, OwnerScope.TEAM, 3L), leader);
+
+        verify(ownership)
+                .assignOwnership(eq(created), eq(OwnerScope.TEAM), eq(3L), eq(leader), any());
+    }
+
+    @Test
+    void mcpPersonalCreateAllowedForRegularUser() {
+        when(secretMasker.sanitize(any())).thenReturn(Map.of("token", "t"));
+        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        IntegrationConfig created =
+                service.create(request(IntegrationType.MCP, OwnerScope.USER, null), user(7));
+
+        assertThat(created.getIntegrationType()).isEqualTo(IntegrationType.MCP);
     }
 
     // ---- helpers ----

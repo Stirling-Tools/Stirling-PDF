@@ -1,7 +1,17 @@
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import {
+  fireEvent,
+  render as baseRender,
+  screen,
+} from "@testing-library/react";
+import { MantineProvider } from "@mantine/core";
 import { ErrorBoundary } from "@portal/components/ErrorBoundary";
+
+const render = (
+  ui: Parameters<typeof baseRender>[0],
+  options?: Parameters<typeof baseRender>[1],
+) => baseRender(ui, { wrapper: MantineProvider, ...options });
 
 // Deterministic i18n: return the key so assertions don't depend on the async
 // TOML backend ever loading. Mirrors the editor's test setup convention.

@@ -83,7 +83,7 @@ export function convertToFolderScanningConfig(
         endpoint = endpointConfig;
       } else if (typeof endpointConfig === "function") {
         try {
-          endpoint = endpointConfig(op.parameters);
+          endpoint = endpointConfig(op.parameters) ?? undefined;
         } catch (error) {
           console.warn(
             `Failed to resolve dynamic endpoint for operation "${op.operation}". ` +

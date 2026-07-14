@@ -15,7 +15,7 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
   const comingSoon = category.comingSoon === true;
   const openable = !comingSoon;
   const status = policy?.state.status;
-  const enforces = config.rules.join(" · ");
+  const enforces = config.rules.map((r) => t(r)).join(" · ");
 
   return (
     <Card
@@ -43,14 +43,14 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
       </span>
 
       <div className="portal-policies__card-identity">
-        <h2 className="portal-policies__card-title">{category.label}</h2>
+        <h2 className="portal-policies__card-title">{t(category.label)}</h2>
         {enforces && (
           <span className="portal-policies__card-enforces">{enforces}</span>
         )}
       </div>
 
       {comingSoon ? (
-        <Chip tone="neutral" size="sm">
+        <Chip accent="neutral" size="sm">
           {t("portal.policies.card.comingSoon")}
         </Chip>
       ) : policy ? (
@@ -82,7 +82,7 @@ export function PolicyCategoryCard({ entry, onOpen }: PolicyCategoryCardProps) {
           </StatusBadge>
         </div>
       ) : (
-        <Chip tone="blue" size="sm">
+        <Chip accent="default" size="sm">
           {t("portal.policies.card.notSetUp")}
         </Chip>
       )}

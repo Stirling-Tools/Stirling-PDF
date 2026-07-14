@@ -1,4 +1,5 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { CarouselDots } from "@app/ui/CarouselDots";
 import bgDefault from "@app/assets/login/LoginBackgroundPanel.png";
 
 export type ImageSlide = {
@@ -195,38 +196,21 @@ function LoginRightCarousel({
       ))}
 
       {/* Dot navigation */}
-      <div
+      <CarouselDots
+        tone="onImage"
+        count={totalSlides}
+        activeIndex={index}
+        onSelect={setIndex}
+        label="Slides"
         style={{
           position: "absolute",
           bottom: 16,
           left: 0,
           right: 0,
-          display: "flex",
           justifyContent: "center",
-          gap: 10,
           zIndex: 2,
         }}
-      >
-        {Array.from({ length: totalSlides }).map((_, i) => (
-          <button
-            key={i}
-            aria-label={`Go to slide ${i + 1}`}
-            onClick={() => setIndex(i)}
-            style={{
-              width: "10px",
-              height: "12px",
-              borderRadius: "50%",
-              border: "none",
-              cursor: "pointer",
-              backgroundColor:
-                i === index ? "#ffffff" : "rgba(255,255,255,0.5)",
-              boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
-              display: "block",
-              flexShrink: 0,
-            }}
-          />
-        ))}
-      </div>
+      />
     </div>
   );
 }

@@ -43,6 +43,7 @@ jobs:
       docker-base: ${{ steps.changes.outputs.docker-base }}
       tauri: ${{ steps.changes.outputs.tauri }}
       engine: ${{ steps.changes.outputs.engine }}
+      generated-models: ${{ steps.changes.outputs.generated-models }}
       proprietary: ${{ steps.changes.outputs.proprietary }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
@@ -171,6 +172,20 @@ jobs:
     uses: ./.github/workflows/ai-engine.yml
     secrets: inherit
 
+  # The generated frontend types and engine tool models are both derived from
+  # the Java OpenAPI spec. This job regenerates and diffs them; it boots the
+  # backend, so it is gated on the narrow generated-models filter (spec source,
+  # generators, generated files, generation tasks) rather than the broad
+  # frontend filter, so a CSS-only PR does not pay for a backend build.
+  generated-models:
+    if: needs.files-changed.outputs.generated-models == 'true'
+    needs: [files-changed]
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/check-generated-models.yml
+    secrets: inherit
+
   pre-commit:
     needs: [files-changed]
     permissions:
@@ -228,6 +243,7 @@ jobs:
       - test-build-docker-images
       - tauri-build
       - ai-engine
+      - generated-models
       - pre-commit
       - dependency-review
     runs-on: ubuntu-latest
@@ -253,6 +269,7 @@ jobs:
             test-build-docker-images=${{ needs.test-build-docker-images.result }}
             tauri-build=${{ needs.tauri-build.result }}
             ai-engine=${{ needs.ai-engine.result }}
+            generated-models=${{ needs.generated-models.result }}
             pre-commit=${{ needs.pre-commit.result }}
             dependency-review=${{ needs.dependency-review.result }}
         run: |

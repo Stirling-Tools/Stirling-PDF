@@ -46,7 +46,7 @@ export function ModelsTab() {
       render: (m) => (
         <div className="portal-infra__cell-stack">
           <span className="portal-infra__cell-strong">{m.name}</span>
-          <Chip tone="neutral" size="sm">
+          <Chip accent="neutral" size="sm">
             {MODEL_PROVIDER_LABEL[m.provider]}
           </Chip>
         </div>
@@ -56,8 +56,8 @@ export function ModelsTab() {
       key: "type",
       header: t("portal.infrastructure.models.columns.type"),
       render: (m) => (
-        <Chip tone={MODEL_TYPE_TONE[m.type]} size="sm">
-          {MODEL_TYPE_LABEL[m.type]}
+        <Chip accent={MODEL_TYPE_TONE[m.type]} size="sm">
+          {t(MODEL_TYPE_LABEL[m.type])}
         </Chip>
       ),
     },
@@ -70,7 +70,7 @@ export function ModelsTab() {
           size="sm"
           pulse={m.status === "active"}
         >
-          {MODEL_LABEL[m.status]}
+          {t(MODEL_LABEL[m.status])}
         </StatusBadge>
       ),
     },
@@ -101,7 +101,7 @@ export function ModelsTab() {
       align: "right",
       render: (m) => (
         <span className="portal-infra__mono">
-          {modelCost(m.cost, m.costUnit)}
+          {modelCost(t, m.cost, m.costUnit)}
         </span>
       ),
     },
@@ -134,7 +134,7 @@ export function ModelsTab() {
         <div className="portal-infra__cell-stack">
           <span className="portal-infra__cell-strong">{r.operation}</span>
           {r.isDefault && (
-            <Chip tone="blue" size="sm">
+            <Chip accent="default" size="sm">
               {t("portal.infrastructure.models.routingColumns.default")}
             </Chip>
           )}

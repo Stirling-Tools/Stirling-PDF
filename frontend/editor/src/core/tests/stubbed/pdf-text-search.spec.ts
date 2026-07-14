@@ -1,7 +1,10 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import path from "path";
 
-const SAMPLE_PDF = path.join(__dirname, "../test-fixtures/sample.pdf");
+const SAMPLE_PDF = path.join(
+  import.meta.dirname,
+  "../test-fixtures/sample.pdf",
+);
 
 /**
  * The reader/viewer exposes an in-PDF text search via CustomSearchLayer.

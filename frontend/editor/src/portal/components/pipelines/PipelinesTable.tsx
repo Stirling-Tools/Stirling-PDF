@@ -1,5 +1,7 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import AccountTreeRounded from "@mui/icons-material/AccountTreeRounded";
+import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import {
   Chip,
   StatusBadge,
@@ -16,16 +18,11 @@ const STATUS_TONE: Record<PipelineStatus, StatusTone> = {
 
 interface PipelinesTableProps {
   pipelines: PipelineView[];
-  /** Id of the row whose detail panel is open, drives the caret state. */
-  expandedId: string | null;
+  /** A row opens that pipeline's own page. */
   onRowClick: (pipeline: PipelineView) => void;
 }
 
-export function PipelinesTable({
-  pipelines,
-  expandedId,
-  onRowClick,
-}: PipelinesTableProps) {
+export function PipelinesTable({ pipelines, onRowClick }: PipelinesTableProps) {
   const { t } = useTranslation();
   const columns = useMemo<TableColumn<PipelineView>[]>(
     () => [
@@ -35,11 +32,11 @@ export function PipelinesTable({
         render: (p) => (
           <div className="portal-pipelines__name-cell">
             <span className="portal-pipelines__pipe-dot" aria-hidden>
-              ⛓
+              <AccountTreeRounded style={{ fontSize: "1.2rem" }} />
             </span>
             <div className="portal-pipelines__name-text">
               <strong>{p.name}</strong>
-              <Chip tone="neutral" size="sm">
+              <Chip accent="neutral" size="sm">
                 {t(`portal.pipelines.trigger.${p.trigger}`, {
                   defaultValue: p.trigger,
                 })}
@@ -90,24 +87,18 @@ export function PipelinesTable({
         ),
       },
       {
-        key: "expand",
+        key: "open",
         header: "",
         align: "right",
         width: "2.5rem",
-        render: (p) => (
-          <span
-            className={
-              "portal-pipelines__caret" +
-              (expandedId === p.id ? " is-open" : "")
-            }
-            aria-hidden
-          >
-            ▸
+        render: () => (
+          <span className="portal-pipelines__caret" aria-hidden>
+            <ChevronRightRoundedIcon style={{ fontSize: "1.25rem" }} />
           </span>
         ),
       },
     ],
-    [expandedId, t],
+    [t],
   );
 
   return (

@@ -1,5 +1,6 @@
 """Agent modules for Stirling AI reasoning flows."""
 
+from .document_classifier import DocumentClassifierAgent
 from .execution import ExecutionPlanningAgent
 from .orchestrator import OrchestratorAgent
 from .pdf_create import PdfCreateAgent
@@ -9,6 +10,7 @@ from .pdf_review import PdfReviewAgent
 from .user_spec import UserSpecAgent
 
 __all__ = [
+    "DocumentClassifierAgent",
     "ExecutionPlanningAgent",
     "OrchestratorAgent",
     "PdfCreateAgent",

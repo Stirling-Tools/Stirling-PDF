@@ -67,8 +67,8 @@ export function PolicySummary() {
             {policyIcon(entry.category.icon)}
           </span>
           <div className="portal-policysum__cat-text">
-            <strong>{entry.category.label}</strong>
-            <span>{entry.category.desc}</span>
+            <strong>{t(entry.category.label)}</strong>
+            <span>{t(entry.category.desc)}</span>
           </div>
         </div>
       ),
@@ -92,7 +92,7 @@ export function PolicySummary() {
       render: ({ entry, state }) => (
         <span className="portal-policysum__rule">
           {state === "active"
-            ? entry.config.summary
+            ? t(entry.config.summary)
             : t("portal.policySummary.noRule")}
         </span>
       ),
@@ -105,7 +105,7 @@ export function PolicySummary() {
       render: ({ state }) => {
         if (state === "locked") {
           return (
-            <Button size="sm" variant="ghost" onClick={goToPolicies}>
+            <Button size="sm" variant="tertiary" onClick={goToPolicies}>
               {t("portal.policySummary.action.comingSoon")}
             </Button>
           );
@@ -113,7 +113,7 @@ export function PolicySummary() {
         return (
           <Button
             size="sm"
-            variant={state === "active" ? "ghost" : "outline"}
+            variant={state === "active" ? "tertiary" : "secondary"}
             onClick={goToPolicies}
           >
             {state === "active"

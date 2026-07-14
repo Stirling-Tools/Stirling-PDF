@@ -4,7 +4,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import stirling.software.proprietary.access.service.DefaultPrincipalResolver;
 import stirling.software.proprietary.access.service.DefaultTeamLeadLookup;
+import stirling.software.proprietary.access.service.PrincipalResolver;
 import stirling.software.proprietary.access.service.TeamLeadLookup;
 
 /** Access-layer bean wiring. */
@@ -16,5 +18,12 @@ public class AccessConfig {
     @ConditionalOnMissingBean(TeamLeadLookup.class)
     TeamLeadLookup defaultTeamLeadLookup() {
         return new DefaultTeamLeadLookup();
+    }
+
+    /** USER/TEAM projection unless another bean is defined (e.g. the saas resolver). */
+    @Bean
+    @ConditionalOnMissingBean(PrincipalResolver.class)
+    PrincipalResolver defaultPrincipalResolver() {
+        return new DefaultPrincipalResolver();
     }
 }

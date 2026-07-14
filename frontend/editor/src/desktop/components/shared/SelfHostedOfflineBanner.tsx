@@ -1,14 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
-import {
-  Paper,
-  Group,
-  Text,
-  ActionIcon,
-  UnstyledButton,
-  Popover,
-  List,
-  ScrollArea,
-} from "@mantine/core";
+import { Paper, Group, Text, Popover, List, ScrollArea } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
@@ -260,7 +253,8 @@ export function SelfHostedOfflineBanner() {
             width={260}
           >
             <Popover.Target>
-              <UnstyledButton
+              <Button
+                variant="tertiary"
                 onClick={() => setExpanded((e) => !e)}
                 style={{
                   color: BANNER_LINK,
@@ -279,7 +273,7 @@ export function SelfHostedOfflineBanner() {
                       "selfHosted.offline.showTools",
                       "View unavailable tools ▾",
                     )}
-              </UnstyledButton>
+              </Button>
             </Popover.Target>
             <Popover.Dropdown p="xs">
               <ScrollArea.Autosize mah={300}>
@@ -293,8 +287,8 @@ export function SelfHostedOfflineBanner() {
           </Popover>
         )}
         <ActionIcon
-          variant="subtle"
-          size="xs"
+          variant="tertiary"
+          size="sm"
           onClick={() => setDismissed(true)}
           aria-label={t("close", "Close")}
           style={{ color: BANNER_TEXT }}

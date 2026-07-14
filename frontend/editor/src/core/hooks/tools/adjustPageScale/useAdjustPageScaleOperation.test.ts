@@ -1,5 +1,9 @@
-import { describe, expect, it } from "vitest";
-import { buildAdjustPageScaleFormData } from "@app/hooks/tools/adjustPageScale/adjustPageScaleFormData";
+import { describe, expect, it, test } from "vitest";
+import {
+  adjustPageScaleFromApiParams,
+  adjustPageScaleToApiParams,
+  buildAdjustPageScaleFormData,
+} from "@app/hooks/tools/adjustPageScale/adjustPageScaleFormData";
 import {
   defaultParameters,
   PageSize,
@@ -47,5 +51,22 @@ describe("buildAdjustPageScaleFormData", () => {
     const file = stubFile();
     const formData = buildAdjustPageScaleFormData(defaultParameters, file);
     expect(formData.get("fileInput")).toBe(file);
+  });
+});
+
+describe("adjustPageScale mappers", () => {
+  test("round-trips backend params", () => {
+    const api = adjustPageScaleToApiParams({
+      ...defaultParameters,
+      scaleFactor: 1.5,
+      pageSize: PageSize.A4,
+      orientation: "LANDSCAPE",
+    });
+    const roundTripped = adjustPageScaleToApiParams({
+      ...defaultParameters,
+      ...adjustPageScaleFromApiParams(api),
+    });
+
+    expect(roundTripped).toEqual(api);
   });
 });

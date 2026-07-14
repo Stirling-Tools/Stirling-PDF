@@ -1,4 +1,5 @@
 import { http, HttpResponse, delay } from "msw";
+import type { LinkInstanceRequest } from "@portal/api/link";
 import {
   getLocalStatus,
   getLocalUsage,
@@ -6,7 +7,6 @@ import {
   listInstances,
   revokeInstance,
   unlinkLocal,
-  type LinkInstanceRequest,
 } from "@portal/mocks/link";
 
 /**

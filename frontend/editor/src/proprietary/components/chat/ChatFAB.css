@@ -7,6 +7,14 @@
   overflow: hidden;
 }
 
+/* Bounds element — inset by FAB_GAP_PX, used as react-rnd drag+resize limit ── */
+
+.chat-fab-bounds {
+  position: absolute;
+  inset: 16px;
+  pointer-events: none;
+}
+
 /* FAB trigger button ─────────────────────────────────────────────────────── */
 
 .chat-fab-trigger {

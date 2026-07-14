@@ -68,7 +68,7 @@ export function ScenariosPanel({ agent }: ScenariosPanelProps) {
             </div>
             <Button
               size="sm"
-              variant="ghost"
+              variant="tertiary"
               onClick={() => toggleEnabled(s.id)}
             >
               {s.enabled
@@ -80,7 +80,7 @@ export function ScenariosPanel({ agent }: ScenariosPanelProps) {
       </ul>
 
       <div className="portal-agents__scenario-add">
-        <Chip tone="blue" size="sm">
+        <Chip accent="default" size="sm">
           {t("portal.agentBuilder.scenarios.addScenario")}
         </Chip>
         <div className="portal-agents__scenario-form">

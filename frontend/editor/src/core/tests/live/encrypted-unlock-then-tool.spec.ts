@@ -7,7 +7,7 @@ import {
 } from "@app/tests/helpers/ui-helpers";
 import path from "path";
 
-const FIXTURES_DIR = path.join(__dirname, "../test-fixtures");
+const FIXTURES_DIR = path.join(import.meta.dirname, "../test-fixtures");
 const ENCRYPTED_PDF = path.join(FIXTURES_DIR, "encrypted.pdf");
 const SAMPLE_PDF = path.join(FIXTURES_DIR, "sample.pdf");
 

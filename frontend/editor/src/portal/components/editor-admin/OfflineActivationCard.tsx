@@ -30,7 +30,7 @@ export function OfflineActivationCard({ available, onUpgrade }: Props) {
   }
 
   return (
-    <Card padding="default" accent="purple" className="portal-editor__panel">
+    <Card padding="default" accent="premium" className="portal-editor__panel">
       <div className="portal-editor__panel-head">
         <div>
           <h3 className="portal-editor__panel-title">
@@ -51,8 +51,8 @@ export function OfflineActivationCard({ available, onUpgrade }: Props) {
             {t("portal.editorAdmin.offlineActivation.lockCopy")}
           </p>
           <Button
-            variant="outline"
-            accent="purple"
+            variant="secondary"
+            accent="premium"
             size="sm"
             onClick={onUpgrade}
           >
@@ -75,8 +75,8 @@ export function OfflineActivationCard({ available, onUpgrade }: Props) {
           )}
           <div className="portal-editor__panel-actions">
             <Button
-              variant="outline"
-              accent="purple"
+              variant="secondary"
+              accent="premium"
               loading={generating}
               onClick={generate}
             >

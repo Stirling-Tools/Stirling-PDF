@@ -22,8 +22,8 @@ import {
   DEPLOY_LABEL,
   DEPLOY_TONE,
   pct,
+  REGION_LABEL,
   REGION_TONE,
-  titleCase,
 } from "@portal/components/infrastructure/infraFormat";
 
 export function DeploymentsTab() {
@@ -79,7 +79,7 @@ export function DeploymentsTab() {
           size="sm"
           pulse={r.status === "healthy"}
         >
-          {titleCase(r.status)}
+          {t(REGION_LABEL[r.status])}
         </StatusBadge>
       ),
     },
@@ -141,11 +141,11 @@ export function DeploymentsTab() {
       header: t("portal.infrastructure.deployments.deployColumns.environment"),
       render: (d) => (
         <Chip
-          tone={
+          accent={
             d.environment === "production"
-              ? "blue"
+              ? "default"
               : d.environment === "canary"
-                ? "purple"
+                ? "premium"
                 : "neutral"
           }
           size="sm"
@@ -164,7 +164,7 @@ export function DeploymentsTab() {
       header: t("portal.infrastructure.deployments.deployColumns.status"),
       render: (d) => (
         <StatusBadge tone={DEPLOY_TONE[d.status]} size="sm">
-          {DEPLOY_LABEL[d.status]}
+          {t(DEPLOY_LABEL[d.status])}
         </StatusBadge>
       ),
     },

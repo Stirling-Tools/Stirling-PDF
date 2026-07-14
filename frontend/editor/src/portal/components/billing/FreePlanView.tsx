@@ -56,7 +56,8 @@ export function FreePlanView({ wallet, unsynced, onSubscribed }: Props) {
 
   const switchOnAction = isLeader ? (
     <Button
-      variant="gradient"
+      variant="primary"
+      accent="premium"
       onClick={openCheckout}
       disabled={wallet.teamId == null}
     >
@@ -128,6 +129,8 @@ export function FreePlanView({ wallet, unsynced, onSubscribed }: Props) {
           onClose={() => setModalOpen(false)}
           teamId={wallet.teamId}
           currency={currency}
+          pricePerDocMinor={wallet.pricePerDocMinor}
+          initialCapUsd={wallet.capUsd}
           onComplete={() => onSubscribed?.() ?? Promise.resolve(false)}
         />
       )}
