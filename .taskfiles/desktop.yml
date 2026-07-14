@@ -78,6 +78,16 @@ tasks:
     cmds:
       - npx tauri build --bundles nsis --config '{"bundle":{"createUpdaterArtifacts":false}}'
 
+  build:msi:
+    desc: "Build Tauri desktop MSI installer with bundled JRE (Windows)"
+    deps: [prepare]
+    dir: editor
+    platforms: [windows]
+    cmds:
+      # prepare -> jlink (real bundled JRE) + jar + frontend + provisioner.
+      # No updater artifacts, so no signing key is required for a local MSI.
+      - npx tauri build --bundles msi --config '{"bundle":{"createUpdaterArtifacts":false}}'
+
   build:dev:linux:
     desc: "Build Tauri desktop AppImage (Linux)"
     deps: [prepare]
@@ -194,7 +204,12 @@ tasks:
       # `desktop:build` run `jlink:clean` first to force a fresh build.
       - cmd: chmod -R u+w runtime/jre
         platforms: [linux, darwin]
-      - cmd: powershell -NoProfile -Command "Get-ChildItem -Recurse runtime/jre | ForEach-Object { $_.IsReadOnly = $false }"
+      # Single-quote the PowerShell so go-task's POSIX shell passes $_ and $false
+      # through literally. With double quotes it expands $_ to the task path and
+      # $false to empty, so read-only never clears and the next incremental build
+      # dies with "Permission denied (os error 13)" staging the JRE. -File keeps
+      # it to FileInfo (only files carry a settable IsReadOnly).
+      - cmd: powershell -NoProfile -Command 'Get-ChildItem -Recurse -Force -File runtime/jre | ForEach-Object { $_.IsReadOnly = $false }'
         platforms: [windows]
     status:
       - test -f runtime/jre/release

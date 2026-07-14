@@ -5,6 +5,12 @@ import { StirlingFileStub, StirlingFile } from "@app/types/fileContext";
 import { FileId } from "@app/types/fileContext";
 import apiClient from "@app/services/apiClient";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import {
+  pruneMissingRecentFiles,
+  reconcileServerBackedRecents,
+  hasLocalRecord,
+} from "@app/services/pruneMissingRecentFiles";
+import { desktopFileLinkingSupported } from "@app/services/desktopFileLink";
 
 interface StoredFileResponse {
   id: number;
@@ -105,7 +111,10 @@ export const useFileManager = () => {
       }
 
       // Load only leaf files metadata (processed files that haven't been used as input for other tools)
-      const stirlingFileStubs = await fileStorage.getLeafStirlingFileStubs();
+      // On desktop, drop entries whose linked file no longer exists on disk.
+      const stirlingFileStubs = await pruneMissingRecentFiles(
+        await fileStorage.getLeafStirlingFileStubs(),
+      );
       const remoteIdSet = new Set(
         stirlingFileStubs
           .map((stub) => stub.remoteStorageId)
@@ -133,7 +142,21 @@ export const useFileManager = () => {
             }
           });
 
-          const updatedLocalStubs = stirlingFileStubs.map((stub) => {
+          // Desktop: a server-uploaded recent whose local disk original was
+          // deleted drops its local copy, becoming a pure server file — it
+          // leaves recents but stays under My Files, downloadable. Gated on the
+          // server confirming it holds the file, so the last copy is never lost.
+          let localStubs = stirlingFileStubs;
+          const demotedIds = await reconcileServerBackedRecents(
+            stirlingFileStubs,
+            (id) => serverMap.has(id),
+          );
+          if (demotedIds.length > 0) {
+            const removedSet = new Set(demotedIds);
+            localStubs = stirlingFileStubs.filter((s) => !removedSet.has(s.id));
+          }
+
+          const updatedLocalStubs = localStubs.map((stub) => {
             if (!stub.remoteStorageId) {
               return stub;
             }
@@ -351,8 +374,15 @@ export const useFileManager = () => {
         }
       }
 
+      // Desktop recents show only files with a local IndexedDB record; files
+      // that live ONLY on the server (ephemeral server-/shared- stubs, no IDB
+      // row) belong in the My Files view, not here.
+      const recentStubs = desktopFileLinkingSupported
+        ? combinedStubs.filter(hasLocalRecord)
+        : combinedStubs;
+
       // For now, only regular files - drafts will be handled separately in the future
-      const sortedFiles = combinedStubs.sort(
+      const sortedFiles = recentStubs.sort(
         (a, b) => (b.lastModified || 0) - (a.lastModified || 0),
       );
 

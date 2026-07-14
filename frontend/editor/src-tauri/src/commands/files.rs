@@ -1,5 +1,6 @@
 use crate::utils::add_log;
 use std::sync::Mutex;
+use tauri_plugin_opener::OpenerExt;
 
 // Store the opened file paths globally (supports multiple files)
 static OPENED_FILES: Mutex<Vec<String>> = Mutex::new(Vec::new());
@@ -41,4 +42,42 @@ pub async fn pop_opened_files() -> Result<Vec<String>, String> {
     opened_files.clear();
     add_log(format!("📂 Returning and clearing {} opened file(s)", all_files.len()));
     Ok(all_files)
+}
+
+// Report whether a path still exists on disk (used to prune stale recent files).
+#[tauri::command]
+pub fn path_exists(path: String) -> bool {
+    std::path::Path::new(&path).exists()
+}
+
+// Reveal a file in the OS file manager (Explorer/Finder), highlighting it.
+#[tauri::command]
+pub async fn reveal_in_file_manager(app: tauri::AppHandle, path: String) -> Result<(), String> {
+    app.opener()
+        .reveal_item_in_dir(&path)
+        .map_err(|e| e.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+
+    #[test]
+    fn path_exists_tracks_real_disk_state() {
+        let file = std::env::temp_dir()
+            .join(format!("stirling_path_exists_{}.tmp", std::process::id()));
+        let path = file.to_string_lossy().to_string();
+
+        // Absent before creation.
+        assert!(!path_exists(path.clone()));
+
+        // Present once written.
+        writeln!(std::fs::File::create(&file).unwrap(), "x").unwrap();
+        assert!(path_exists(path.clone()));
+
+        // Gone again after deletion (the case that prunes a recent).
+        std::fs::remove_file(&file).unwrap();
+        assert!(!path_exists(path));
+    }
 }

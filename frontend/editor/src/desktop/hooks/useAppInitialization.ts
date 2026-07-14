@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useOpenedFile } from "@app/hooks/useOpenedFile";
 import { fileOpenService } from "@app/services/fileOpenService";
+import { fileStorage } from "@app/services/fileStorage";
 import { useFileManagement } from "@app/contexts/file/fileHooks";
 import { createQuickKey } from "@app/types/fileContext";
 
@@ -80,12 +81,18 @@ export function useAppInitialization(): void {
           );
 
           const addedFiles = await addFiles(filesArray, { selectFiles: true });
-          addedFiles.forEach((file) => {
-            const localFilePath = quickKeyToPath.get(file.quickKey);
-            if (localFilePath) {
+          await Promise.all(
+            addedFiles.map(async (file) => {
+              const localFilePath = quickKeyToPath.get(file.quickKey);
+              if (!localFilePath) return;
               updateStirlingFileStub(file.fileId, { localFilePath });
-            }
-          });
+              // Persist too: addFiles stored the record before we knew the path,
+              // so the disk link would otherwise be lost on reload.
+              await fileStorage.updateFileMetadata(file.fileId, {
+                localFilePath,
+              });
+            }),
+          );
 
           console.log(
             `[Desktop] ${loadedFiles.length} opened file(s) added to FileContext`,

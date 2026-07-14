@@ -29,6 +29,7 @@ export interface StoredStirlingFileRecord extends BaseFileMetadata {
   thumbnail?: string;
   thumbnailStoredAt?: number; // Epoch ms - sliding 30-day TTL
   url?: string; // For compatibility with existing components
+  localFilePath?: string; // Original disk path (desktop) - persisted so recents stay disk-linked across reloads
   // Cached classification labels — mirrors the stub field so the sidebar can
   // group by label without re-reading PDF bytes, and it survives versioning.
   // See StirlingFileStub.classificationLabels.
@@ -132,6 +133,7 @@ class FileStorageService {
       data: arrayBuffer,
       thumbnail: stub.thumbnailUrl,
       thumbnailStoredAt: stub.thumbnailUrl ? Date.now() : undefined,
+      localFilePath: stub.localFilePath,
       isLeaf: stub.isLeaf ?? true,
       remoteStorageId: stub.remoteStorageId,
       remoteStorageUpdatedAt: stub.remoteStorageUpdatedAt,
@@ -262,6 +264,7 @@ class FileStorageService {
           lastModified: record.lastModified,
           quickKey: record.quickKey,
           thumbnailUrl: fresh ? record.thumbnail : undefined,
+          localFilePath: record.localFilePath,
           isLeaf: record.isLeaf,
           remoteStorageId: record.remoteStorageId,
           remoteStorageUpdatedAt: record.remoteStorageUpdatedAt,
@@ -322,6 +325,7 @@ class FileStorageService {
               lastModified: record.lastModified,
               quickKey: record.quickKey,
               thumbnailUrl: fresh ? record.thumbnail : undefined,
+              localFilePath: record.localFilePath,
               isLeaf: record.isLeaf,
               remoteStorageId: record.remoteStorageId,
               remoteStorageUpdatedAt: record.remoteStorageUpdatedAt,
@@ -414,6 +418,7 @@ class FileStorageService {
               lastModified: record.lastModified,
               quickKey: record.quickKey,
               thumbnailUrl: fresh ? record.thumbnail : undefined,
+              localFilePath: record.localFilePath,
               isLeaf: record.isLeaf,
               remoteStorageId: record.remoteStorageId,
               remoteStorageUpdatedAt: record.remoteStorageUpdatedAt,

@@ -19,6 +19,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import CloudDoneIcon from "@mui/icons-material/CloudDone";
 import LinkIcon from "@mui/icons-material/Link";
+import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import { useTranslation } from "react-i18next";
 import { getFileSize, getFileDate } from "@app/utils/fileUtils";
 import { FileId, StirlingFileStub } from "@app/types/fileContext";
@@ -35,6 +36,10 @@ import ShareManagementModal from "@app/components/shared/ShareManagementModal";
 import apiClient from "@app/services/apiClient";
 import { absoluteWithBasePath } from "@app/constants/app";
 import { alert } from "@app/components/toast";
+import {
+  desktopFileLinkingSupported,
+  revealPathInFileManager,
+} from "@app/services/desktopFileLink";
 
 interface FileListItemProps {
   file: StirlingFileStub;
@@ -365,6 +370,18 @@ const FileListItem: React.FC<FileListItemProps> = ({
                   }}
                 >
                   {t("fileManager.download", "Download")}
+                </Menu.Item>
+              )}
+
+              {desktopFileLinkingSupported && file.localFilePath && (
+                <Menu.Item
+                  leftSection={<FolderOpenIcon style={{ fontSize: 16 }} />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void revealPathInFileManager(file.localFilePath!);
+                  }}
+                >
+                  {t("fileManager.showInFolder", "Show in folder")}
                 </Menu.Item>
               )}
 
