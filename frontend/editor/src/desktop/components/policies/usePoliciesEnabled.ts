@@ -1,19 +1,13 @@
-import { POLICIES_ENABLED } from "@app/constants/featureFlags";
-import { useConfirmedSaaSMode } from "@app/hooks/useConfirmedSaaSMode";
+import { useSaasAppConfig } from "@app/hooks/useSaasAppConfig";
 
 /**
  * Desktop shadow: policy runs execute + bill via the cloud (POST
- * /api/v1/policies/.../run hits the SaaS backend), so the feature must stay
- * off in local ("disconnected") and self-hosted modes — otherwise the
- * auto-run controller would fire policy runs against a backend that doesn't
- * serve them.
- *
- * Pessimistic SaaS-mode check (starts false): this gate controls whether
- * PolicyAutoRunController mounts, and that fires GET /api/v1/policies on
- * mount. useSaaSMode()'s optimistic-true default would leak that request
- * against the local/self-hosted backend on cold start before the mode
- * resolves.
+ * /api/v1/policies/.../run hits the SaaS backend), so the flag must come from
+ * the SaaS backend's app-config, not the local bundled one. useSaasAppConfig()
+ * returns null outside SaaS mode, so policies stay off in local/self-hosted -
+ * which also stops the auto-run controller from firing GET /api/v1/policies at
+ * a backend that doesn't serve it - and the cloud keeps the on/off switch.
  */
 export function usePoliciesEnabled(): boolean {
-  return POLICIES_ENABLED && useConfirmedSaaSMode();
+  return Boolean(useSaasAppConfig()?.paygEnabled);
 }

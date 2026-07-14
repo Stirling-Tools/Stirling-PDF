@@ -57,7 +57,7 @@ import stirling.software.proprietary.service.DownstreamEntitlementError;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(name = "policies.enabled")
+@ConditionalOnBooleanProperty(name = "payg.enabled")
 public class PolicyEngine {
 
     // Admission weight for one run. Weighted heavy: a run chains many tools and holds intermediate

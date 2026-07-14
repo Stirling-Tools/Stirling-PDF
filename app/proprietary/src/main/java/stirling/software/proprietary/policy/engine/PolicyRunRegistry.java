@@ -29,7 +29,7 @@ import stirling.software.proprietary.policy.model.PolicyRun;
  */
 @Slf4j
 @Service
-@ConditionalOnBooleanProperty(name = "policies.enabled")
+@ConditionalOnBooleanProperty(name = "payg.enabled")
 public class PolicyRunRegistry {
 
     private final Map<String, PolicyRun> runs = new ConcurrentHashMap<>();

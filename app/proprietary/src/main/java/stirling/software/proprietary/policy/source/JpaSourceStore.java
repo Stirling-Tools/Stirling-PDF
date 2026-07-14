@@ -19,7 +19,7 @@ import tools.jackson.databind.ObjectMapper;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(name = "policies.enabled")
+@ConditionalOnBooleanProperty(name = "payg.enabled")
 public class JpaSourceStore implements SourceStore {
 
     private final SourceRepository repository;

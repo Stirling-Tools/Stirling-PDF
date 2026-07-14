@@ -24,7 +24,7 @@ import org.springframework.stereotype.Service;
  * table stays bounded (~one row per source per active hour, for at most 30 days).
  */
 @Service
-@ConditionalOnBooleanProperty(name = "policies.enabled")
+@ConditionalOnBooleanProperty(name = "payg.enabled")
 public class JpaSourceDocCounter implements SourceDocCounter {
 
     private final SourceDocCountRepository countRepository;

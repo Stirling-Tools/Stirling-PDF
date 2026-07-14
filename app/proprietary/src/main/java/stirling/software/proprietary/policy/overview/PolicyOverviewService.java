@@ -29,7 +29,7 @@ import stirling.software.proprietary.policy.store.PolicyStore;
  */
 @Service
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(name = "policies.enabled")
+@ConditionalOnBooleanProperty(name = "payg.enabled")
 public class PolicyOverviewService {
 
     private final PolicyStore policyStore;

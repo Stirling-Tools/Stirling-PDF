@@ -85,7 +85,7 @@ import stirling.software.proprietary.util.SecretMasker;
 @Hidden
 @RequiredArgsConstructor
 @Tag(name = "Policies", description = "Run tool pipelines on the backend")
-@ConditionalOnBooleanProperty(name = "policies.enabled")
+@ConditionalOnBooleanProperty(name = "payg.enabled")
 public class PolicyController {
 
     private final PolicyRunner policyRunner;

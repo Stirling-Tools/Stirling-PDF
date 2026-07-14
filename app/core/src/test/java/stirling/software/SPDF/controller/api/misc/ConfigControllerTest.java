@@ -52,7 +52,8 @@ class ConfigControllerTest {
                         userService,
                         showAdmin,
                         licenseService,
-                        mock(stirling.software.SPDF.config.ExternalAppDepConfig.class));
+                        mock(stirling.software.SPDF.config.ExternalAppDepConfig.class),
+                        false);
     }
 
     @Test

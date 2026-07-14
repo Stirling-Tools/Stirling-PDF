@@ -32,7 +32,7 @@ import tools.jackson.databind.ObjectMapper;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(name = "policies.enabled")
+@ConditionalOnBooleanProperty(name = "payg.enabled")
 public class ScheduleTrigger implements PolicyTrigger {
 
     private static final String TYPE = "schedule";

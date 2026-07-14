@@ -41,7 +41,7 @@ import stirling.software.proprietary.policy.model.OutputSpec;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(name = "policies.enabled")
+@ConditionalOnBooleanProperty(name = "payg.enabled")
 public class FolderOutputSink implements PolicyOutputSink {
 
     static final String TYPE = FolderAccessGuard.FOLDER_TYPE;

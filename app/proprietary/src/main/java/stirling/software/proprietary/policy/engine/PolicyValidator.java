@@ -25,7 +25,7 @@ import stirling.software.proprietary.policy.trigger.PolicyTrigger;
  */
 @Service
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(name = "policies.enabled")
+@ConditionalOnBooleanProperty(name = "payg.enabled")
 public class PolicyValidator {
 
     private final List<PolicyTrigger> triggers;

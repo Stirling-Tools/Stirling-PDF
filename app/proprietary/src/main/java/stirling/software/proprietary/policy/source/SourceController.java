@@ -43,7 +43,7 @@ import stirling.software.proprietary.util.SecretMasker;
 @Hidden
 @RequiredArgsConstructor
 @Tag(name = "Sources", description = "Reusable policy input connections")
-@ConditionalOnBooleanProperty(name = "policies.enabled")
+@ConditionalOnBooleanProperty(name = "payg.enabled")
 public class SourceController {
 
     private final SourceStore sourceStore;

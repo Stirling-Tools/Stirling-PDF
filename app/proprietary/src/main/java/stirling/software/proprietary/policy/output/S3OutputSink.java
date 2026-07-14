@@ -54,7 +54,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(name = "policies.enabled")
+@ConditionalOnBooleanProperty(name = "payg.enabled")
 public class S3OutputSink implements PolicyOutputSink {
 
     private static final String TYPE = "s3";

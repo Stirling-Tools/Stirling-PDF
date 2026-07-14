@@ -42,7 +42,7 @@ import stirling.software.proprietary.policy.model.PolicyInputs;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(name = "policies.enabled")
+@ConditionalOnBooleanProperty(name = "payg.enabled")
 public class FolderInputSource implements InputSource {
 
     private static final String TYPE = FolderAccessGuard.FOLDER_TYPE;

@@ -39,7 +39,7 @@ import tools.jackson.databind.ObjectMapper;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-@ConditionalOnBooleanProperty(name = "policies.enabled")
+@ConditionalOnBooleanProperty(name = "payg.enabled")
 public class S3ConnectionResolver {
 
     static final String CONNECTION_ID_OPTION = "connectionId";

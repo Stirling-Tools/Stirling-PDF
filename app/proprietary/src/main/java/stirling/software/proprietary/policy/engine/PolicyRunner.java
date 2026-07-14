@@ -35,7 +35,7 @@ import stirling.software.proprietary.policy.source.SourceStore;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(name = "policies.enabled")
+@ConditionalOnBooleanProperty(name = "payg.enabled")
 public class PolicyRunner {
 
     private final PolicyEngine policyEngine;

@@ -44,7 +44,7 @@ import tools.jackson.databind.ObjectMapper;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(name = "policies.enabled")
+@ConditionalOnBooleanProperty(name = "payg.enabled")
 public class EmbeddedS3CredentialMigration {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();

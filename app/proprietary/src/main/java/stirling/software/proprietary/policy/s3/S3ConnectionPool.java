@@ -32,7 +32,7 @@ import software.amazon.awssdk.services.s3.S3Configuration;
  * users rather than the operator.
  */
 @Service
-@ConditionalOnBooleanProperty(name = "policies.enabled")
+@ConditionalOnBooleanProperty(name = "payg.enabled")
 public class S3ConnectionPool {
 
     private final ApplicationProperties applicationProperties;

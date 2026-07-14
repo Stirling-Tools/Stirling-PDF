@@ -23,7 +23,7 @@ import stirling.software.proprietary.policy.store.PolicyStore;
  */
 @Component
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(name = "policies.enabled")
+@ConditionalOnBooleanProperty(name = "payg.enabled")
 public class PolicyAccessGuard {
 
     private final UserServiceInterface userService;

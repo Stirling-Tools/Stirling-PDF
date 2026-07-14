@@ -297,7 +297,6 @@ jobs:
                 - /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/storage:/storage:rw
               environment:
                 DISABLE_ADDITIONAL_FEATURES: "false"
-                POLICIES_ENABLED: "true"
                 STIRLING_BILLING_ACCOUNT_LINK_ENABLED: "true"
                 SECURITY_ENABLELOGIN: "true"
                 SECURITY_INITIALLOGIN_USERNAME: "${{ secrets.TEST_LOGIN_USERNAME }}"

@@ -30,7 +30,7 @@ import stirling.software.proprietary.policy.source.SourceStore;
  * defended: an operator who roots an allowlist on a symlink to a sensitive location is trusted.
  */
 @Component
-@ConditionalOnBooleanProperty(name = "policies.enabled")
+@ConditionalOnBooleanProperty(name = "payg.enabled")
 public class FolderAccessGuard {
 
     public static final String FOLDER_TYPE = "folder";

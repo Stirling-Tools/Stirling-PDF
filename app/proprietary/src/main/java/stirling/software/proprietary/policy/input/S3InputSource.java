@@ -49,7 +49,7 @@ import software.amazon.awssdk.services.s3.model.S3Object;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(name = "policies.enabled")
+@ConditionalOnBooleanProperty(name = "payg.enabled")
 public class S3InputSource implements InputSource {
 
     private static final String TYPE = "s3";

@@ -24,7 +24,7 @@ import stirling.software.proprietary.util.SecretMasker;
  */
 @Service
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(name = "policies.enabled")
+@ConditionalOnBooleanProperty(name = "payg.enabled")
 public class SourceOverviewService {
 
     private final SourceStore sourceStore;

@@ -50,7 +50,7 @@ import stirling.software.proprietary.policy.store.PolicyStore;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(name = "policies.enabled")
+@ConditionalOnBooleanProperty(name = "payg.enabled")
 public class FolderWatchTrigger implements PolicyTrigger {
 
     private static final String TYPE = "folder-watch";

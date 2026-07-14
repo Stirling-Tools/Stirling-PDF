@@ -21,7 +21,7 @@ import stirling.software.proprietary.integration.service.IntegrationConfigValida
  */
 @Component
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(name = "policies.enabled")
+@ConditionalOnBooleanProperty(name = "payg.enabled")
 public class S3IntegrationValidator implements IntegrationConfigValidator {
 
     private final ApplicationProperties applicationProperties;
