@@ -14,10 +14,8 @@ import {
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import { ColorInput } from "@app/ui/ColorInput";
 import { ColorGridPicker } from "@app/ui/ColorGridPicker";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
-import { clampAccentChoice } from "@app/utils/customPrimary";
 import { useTranslation } from "react-i18next";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
@@ -26,7 +24,6 @@ import LanguageSelector from "@app/components/shared/LanguageSelector";
 import {
   THEME_ACCENT_PRESETS,
   DEFAULT_ACCENT,
-  DEFAULT_ACCENT_COLOR,
   type ThemeMode,
 } from "@app/constants/theme";
 import type { ToolPanelMode } from "@app/constants/toolPanel";
@@ -84,7 +81,7 @@ interface GeneralSectionProps {
   desktopUpdateMode?: DesktopUpdateModeControl;
 }
 
-/** Accent-colour picker: a swatch grid (a "Default" icon cell + 14 accents) with a "Custom" picker below, via the shared ColorGridPicker. */
+/** Accent-colour picker: a swatch grid — a "Default" icon cell + the accent presets — via the shared ColorGridPicker. */
 function AccentSwatchDropdown({
   value,
   onChange,
@@ -95,12 +92,6 @@ function AccentSwatchDropdown({
   ariaLabel: string;
 }) {
   const { t } = useTranslation();
-  // Resolve the "default" sentinel to the blue it maps to so the ColorInput shows a real colour.
-  const asHex = (v: string) =>
-    v === DEFAULT_ACCENT ? DEFAULT_ACCENT_COLOR : v;
-  // Live picker value; committed to preferences only on drag-end (below).
-  const [draft, setDraft] = useState(() => asHex(value));
-  useEffect(() => setDraft(asHex(value)), [value]);
   return (
     <ColorGridPicker
       value={value}
@@ -119,30 +110,6 @@ function AccentSwatchDropdown({
           "Default theme (recommended)",
         ),
       }}
-      footer={
-        <>
-          <Text size="xs" c="dimmed" mb={6}>
-            {t(
-              "settings.general.themeAccentCustomHint",
-              "Custom (defaults recommended)",
-            )}
-          </Text>
-          <ColorInput
-            inputSize="sm"
-            format="hex"
-            withPicker
-            value={draft}
-            onChange={setDraft}
-            onChangeEnd={onChange}
-            clampValue={clampAccentChoice}
-            aria-label={t(
-              "settings.general.themeAccentCustom",
-              "Custom colour",
-            )}
-            popoverProps={{ withinPortal: false }}
-          />
-        </>
-      }
     />
   );
 }
