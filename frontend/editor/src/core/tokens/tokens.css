@@ -224,6 +224,11 @@
 
 /* Radii / typography / motion / spacing / z-index — theme-stable */
 :root {
+  /* Home hero strip navy. Theme-stable by design — the white hero CTA keeps
+     this deep navy text in both light and dark (branded surface). The hero
+     background itself is accent-responsive (see EditorStatusCard/WelcomeBanner). */
+  --color-hero-navy: #16213e;
+
   /* 4-px grid spacing scale (rem so it tracks font-size changes). Use these
      in layout primitives + component CSS instead of bare 0.5rem / 0.75rem. */
   --space-0_5: 0.125rem;
