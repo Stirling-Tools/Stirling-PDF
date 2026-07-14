@@ -11,7 +11,7 @@ import { IconButton, WithTooltip } from "storybook/internal/components";
 import {
   THEME_ACCENT_PRESETS as PRESETS,
   DEFAULT_ACCENT_COLOR,
-} from "../editor/src/core/constants/theme";
+} from "@core/constants/theme";
 
 function AccentPicker() {
   const [globals, updateGlobals] = useGlobals();
