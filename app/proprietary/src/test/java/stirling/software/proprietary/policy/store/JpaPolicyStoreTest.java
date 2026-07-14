@@ -128,6 +128,38 @@ class JpaPolicyStoreTest {
     }
 
     @Test
+    void findByTeamSkipsUnreadableRowsInsteadOfThrowing() {
+        Policy good =
+                new Policy(
+                        "good",
+                        "ours",
+                        "alice",
+                        true,
+                        null,
+                        List.of(),
+                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                        OutputSpec.inline(),
+                        9L);
+        // A row whose policy_json can't be parsed — e.g. ciphertext the lenient converter handed
+        // back undecrypted because this instance's credential-encryption key differs from the one
+        // that wrote it. It must not take down the whole listing.
+        when(repository.findByTeam(9L))
+                .thenReturn(List.of(corruptEntity("broken", 9L), entityFor(good)));
+
+        List<Policy> mine = store.findByTeam(9L);
+
+        assertEquals(1, mine.size());
+        assertEquals("good", mine.get(0).id());
+    }
+
+    @Test
+    void getReturnsEmptyForAnUnreadableRow() {
+        when(repository.findById("broken")).thenReturn(Optional.of(corruptEntity("broken", 9L)));
+
+        assertTrue(store.get("broken").isEmpty());
+    }
+
+    @Test
     void findByTriggerTypeUsesTheEnabledQuery() {
         Policy policy =
                 new Policy(
@@ -155,6 +187,18 @@ class JpaPolicyStoreTest {
 
         when(repository.existsById("missing")).thenReturn(false);
         assertFalse(store.delete("missing"));
+    }
+
+    /** A row whose stored JSON is unparseable (stands in for undecryptable ciphertext). */
+    private PolicyEntity corruptEntity(String id, Long teamId) {
+        PolicyEntity entity = new PolicyEntity();
+        entity.setId(id);
+        entity.setName("broken");
+        entity.setOwner("alice");
+        entity.setEnabled(true);
+        entity.setTeamId(teamId);
+        entity.setPolicyJson("xUVPr5sVzAA0cTNMx1TXV35JWXMWld5lbPQp8NL");
+        return entity;
     }
 
     private PolicyEntity entityFor(Policy policy) {
