@@ -588,10 +588,10 @@
 
 /* ══ Quote builder — copied from the marketing prototype (tight density) ═════ */
 .portal-qb {
-  background: #ffffff;
-  border: 1px solid #e3e1dc;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 14px;
-  box-shadow: inset 0 0 0 1px #eae8e3;
+  box-shadow: inset 0 0 0 1px var(--color-border-light);
   overflow: hidden;
 }
 .portal-qb__head {
@@ -599,7 +599,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 18px 24px 14px;
-  border-bottom: 1px solid #f0eee9;
+  border-bottom: 1px solid var(--color-border-light);
   background: linear-gradient(
     180deg,
     rgba(35, 131, 226, 0.055) 0%,
@@ -610,13 +610,13 @@
   margin: 0;
   font-size: 16px;
   font-weight: 700;
-  color: #37352f;
+  color: var(--color-text-1);
 }
 .portal-qb__stepchip {
   font-size: 11px;
   font-weight: 700;
-  color: #9b9a97;
-  background: #f5f4f1;
+  color: var(--color-text-4);
+  background: var(--color-bg-muted);
   padding: 3px 10px;
   border-radius: 999px;
 }
@@ -629,7 +629,7 @@
   flex: 1;
   height: 6px;
   border-radius: 999px;
-  background: #f0eee9;
+  background: var(--color-bg-muted);
   transition: background 0.3s;
 }
 .portal-qb__progress span[data-on] {
@@ -650,7 +650,7 @@
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  background: #eaf2fb;
+  background: rgba(35, 131, 226, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -660,11 +660,11 @@
 .portal-qb__intro-title {
   font-size: 15px;
   font-weight: 700;
-  color: #37352f;
+  color: var(--color-text-1);
 }
 .portal-qb__intro-sub {
   font-size: 12.5px;
-  color: #9b9a97;
+  color: var(--color-text-4);
   margin-top: 1px;
 }
 .portal-qb__field {
@@ -675,7 +675,7 @@
   display: block;
   font-size: 12px;
   font-weight: 600;
-  color: #787774;
+  color: var(--color-text-3);
   margin-bottom: 6px;
 }
 .portal-qb__field input,
@@ -685,11 +685,11 @@
   padding: 9px 11px;
   font-size: 13.5px;
   border-radius: 8px;
-  border: 1px solid #e3e1dc;
+  border: 1px solid var(--color-border-input);
   font-family: inherit;
   outline: none;
-  background: #fff;
-  color: #37352f;
+  background: var(--color-surface);
+  color: var(--color-text-1);
 }
 .portal-qb__row {
   display: flex;
@@ -703,7 +703,7 @@
 .portal-qb__hint {
   margin: 7px 0 0;
   font-size: 11.5px;
-  color: #9b9a97;
+  color: var(--color-text-4);
   line-height: 1.4;
 }
 .portal-qb__pills {
@@ -716,9 +716,9 @@
   font-size: 13px;
   font-weight: 600;
   border-radius: 8px;
-  border: 1px solid #e3e1dc;
-  background: #fff;
-  color: #37352f;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-1);
   cursor: pointer;
 }
 .portal-qb__pills button[data-on] {
@@ -742,8 +742,8 @@
   min-width: 150px;
   padding: 12px 14px;
   border-radius: 9px;
-  border: 1px solid #e3e1dc;
-  background: #fff;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -751,19 +751,19 @@
 }
 .portal-qb__opt[data-on] {
   border-color: #2383e2;
-  background: #eaf2fb;
+  background: rgba(35, 131, 226, 0.12);
 }
 .portal-qb__opt-title {
   font-size: 13px;
   font-weight: 700;
-  color: #37352f;
+  color: var(--color-text-1);
 }
 .portal-qb__opt[data-on] .portal-qb__opt-title {
   color: #1b6ec2;
 }
 .portal-qb__opt-sub {
   font-size: 11.5px;
-  color: #9b9a97;
+  color: var(--color-text-4);
   line-height: 1.4;
 }
 .portal-qb__addons {
@@ -777,27 +777,27 @@
   gap: 11px;
   padding: 11px 13px;
   border-radius: 9px;
-  border: 1px solid #e3e1dc;
-  background: #fff;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
   cursor: pointer;
   text-align: left;
 }
 .portal-qb__addon[data-on] {
   border-color: #2383e2;
-  background: #eaf2fb;
+  background: rgba(35, 131, 226, 0.12);
 }
 .portal-qb__addon-box {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
   border-radius: 5px;
-  border: 1px solid #d3d1cb;
+  border: 1px solid var(--color-border-input);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 12px;
   color: transparent;
-  background: #fff;
+  background: var(--color-surface);
 }
 .portal-qb__addon[data-on] .portal-qb__addon-box {
   background: #2383e2;
@@ -808,12 +808,12 @@
   display: block;
   font-size: 13px;
   font-weight: 600;
-  color: #37352f;
+  color: var(--color-text-1);
 }
 .portal-qb__addon-sub {
   display: block;
   font-size: 11.5px;
-  color: #9b9a97;
+  color: var(--color-text-4);
   margin-top: 1px;
 }
 .portal-qb__eula {
@@ -822,10 +822,10 @@
   gap: 10px;
   padding: 12px;
   border-radius: 9px;
-  border: 1px solid #f0eee9;
-  background: #f5f4f1;
+  border: 1px solid var(--color-border-light);
+  background: var(--color-bg-muted);
   font-size: 12.5px;
-  color: #37352f;
+  color: var(--color-text-1);
   line-height: 1.5;
   cursor: pointer;
 }
@@ -835,12 +835,12 @@
   justify-content: space-between;
   gap: 12px;
   padding: 14px 24px;
-  border-top: 1px solid #f0eee9;
+  border-top: 1px solid var(--color-border-light);
   flex-wrap: wrap;
 }
 .portal-qb__running {
   font-size: 11.5px;
-  color: #9b9a97;
+  color: var(--color-text-4);
 }
 .portal-qb__foot-btns {
   display: flex;
