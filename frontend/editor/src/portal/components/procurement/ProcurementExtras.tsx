@@ -140,6 +140,7 @@ export function DocumentsModal({
   agreementVersion,
   downloadingAgreement,
   onDownloadAgreement,
+  onViewAgreement,
   quoteAvailable,
   downloadingQuote,
   onDownloadQuote,
@@ -151,6 +152,8 @@ export function DocumentsModal({
   agreementVersion?: string | null;
   downloadingAgreement?: boolean;
   onDownloadAgreement: () => void;
+  /** Jump to the agreement/sign stage in the flow (used before it's signed). */
+  onViewAgreement: () => void;
   quoteAvailable: boolean;
   downloadingQuote?: boolean;
   onDownloadQuote: () => void;
@@ -182,7 +185,14 @@ export function DocumentsModal({
                     onClick: onDownloadAgreement,
                     loading: downloadingAgreement,
                   }
-                : { unavailable: t("portal.procurement.documents.laterSigned") }
+                : quoteAvailable
+                  ? {
+                      label: t("portal.procurement.documents.view"),
+                      onClick: onViewAgreement,
+                    }
+                  : {
+                      unavailable: t("portal.procurement.documents.laterQuote"),
+                    }
             }
           />
           <DocItem

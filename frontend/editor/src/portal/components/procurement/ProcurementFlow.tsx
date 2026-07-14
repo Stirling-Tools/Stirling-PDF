@@ -203,6 +203,11 @@ export function ProcurementFlow({
         agreementVersion={data?.agreementSignedVersion}
         downloadingAgreement={downloadingAgreement}
         onDownloadAgreement={onDownloadSignedAgreement}
+        onViewAgreement={() => {
+          setExtra(null);
+          setEditing(false);
+          setOpen(true);
+        }}
         quoteAvailable={isIssued}
         downloadingQuote={downloading}
         onDownloadQuote={onDownloadPdf}
