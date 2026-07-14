@@ -93,8 +93,11 @@
   width: 1.75rem;
   height: 1.75rem;
   border-radius: var(--radius-md);
-  font-size: 0.875rem;
-  font-weight: 600;
+  flex-shrink: 0;
+}
+.portal-home__quick-icon svg {
+  width: 1.05rem;
+  height: 1.05rem;
 }
 
 .portal-home__quick-text {
@@ -116,8 +119,12 @@
 }
 
 .portal-home__quick-arrow {
-  font-size: 0.875rem;
+  display: inline-flex;
   color: var(--color-text-5);
+}
+.portal-home__quick-arrow svg {
+  width: 1rem;
+  height: 1rem;
 }
 
 .portal-home__quick-row:hover .portal-home__quick-arrow {

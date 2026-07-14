@@ -9,9 +9,12 @@
  * approach the editor uses for its own catalogue view.
  */
 
+import type { TFunction } from "i18next";
 import { apiClient } from "@portal/api/http";
 import { fromWirePolicy, toWirePolicy } from "@app/policies/codec";
 import { runsToActivity, runsToStats } from "@app/policies/runs";
+import { policyStep, type PolicyToolStep } from "@app/policies/operations";
+import type { ToolEndpoint } from "@app/types/toolApiTypes";
 import type {
   PolicyDecodedState,
   PolicyRunView,
@@ -65,7 +68,7 @@ export interface PolicyConfigDef {
   rules: string[];
   scopeLabel: string;
   fields: PolicyField[];
-  defaultOperations: WirePipelineStep[];
+  defaultOperations: PolicyToolStep[];
 }
 
 export interface PolicyState {
@@ -127,20 +130,11 @@ export interface CatalogueEntry {
 }
 
 /* ──────────────────────────────────────────────────────────────────────── */
-/*  Tool → endpoint registry                                                  */
+/*  Endpoint display labels                                                   */
 /* ──────────────────────────────────────────────────────────────────────── */
 
-export const TOOL_ENDPOINTS: Record<string, string> = {
-  redact: "/api/v1/security/auto-redact",
-  sanitize: "/api/v1/security/sanitize-pdf",
-  watermark: "/api/v1/security/add-watermark",
-  ocr: "/api/v1/misc/ocr-pdf",
-  flatten: "/api/v1/misc/flatten",
-  compress: "/api/v1/misc/compress-pdf",
-};
-
-/** Values are i18n keys — render with t(). */
-export const ENDPOINT_LABELS: Record<string, string> = {
+/** i18n keys keyed by {@link ToolEndpoint}; labels stored steps in the detail view. */
+export const ENDPOINT_LABELS: Partial<Record<ToolEndpoint, string>> = {
   "/api/v1/security/auto-redact": "portal.policies.endpoints.autoRedact",
   "/api/v1/security/sanitize-pdf": "portal.policies.endpoints.sanitizePdf",
   "/api/v1/security/add-watermark": "portal.policies.endpoints.addWatermark",
@@ -153,7 +147,8 @@ export function humanizeEndpoint(
   path: string,
   t: (key: string) => string,
 ): string {
-  if (ENDPOINT_LABELS[path]) return t(ENDPOINT_LABELS[path]);
+  const label = ENDPOINT_LABELS[path as ToolEndpoint];
+  if (label) return t(label);
   const last = path.split("/").filter(Boolean).pop() ?? path;
   return last
     .replace(/-/g, " ")
@@ -229,10 +224,7 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "portal.policies.config.ingestion.rules.3",
     ],
     scopeLabel: "portal.policies.config.scopeAll",
-    defaultOperations: [
-      { operation: TOOL_ENDPOINTS.ocr, parameters: {} },
-      { operation: TOOL_ENDPOINTS.flatten, parameters: {} },
-    ],
+    defaultOperations: [policyStep("ocr"), policyStep("flatten")],
     fields: [
       {
         label: "portal.policies.config.ingestion.fields.minConfidence",
@@ -259,32 +251,16 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
     ],
     scopeLabel: "portal.policies.config.scopeAll",
     defaultOperations: [
-      {
-        operation: TOOL_ENDPOINTS.redact,
-        parameters: {
-          mode: "automatic",
-          useRegex: true,
-          convertPDFToImage: true,
-          wordsToRedact: DEFAULT_PII_PATTERNS,
-        },
-      },
-      {
-        operation: TOOL_ENDPOINTS.sanitize,
-        parameters: {
-          removeJavaScript: true,
-          removeEmbeddedFiles: false,
-          removeMetadata: false,
-          removeLinks: false,
-          removeFonts: false,
-        },
-      },
-      {
-        operation: TOOL_ENDPOINTS.watermark,
-        // convertPDFToImage bakes the watermark in so it can't be stripped
-        parameters: {
-          convertPDFToImage: true,
-        },
-      },
+      // Flatten to image so redactions can't be lifted off.
+      policyStep("redact", {
+        useRegex: true,
+        convertPDFToImage: true,
+        wordsToRedact: DEFAULT_PII_PATTERNS,
+      }),
+      // JavaScript removal only; the tool enables removeEmbeddedFiles by default, so turn it off.
+      policyStep("sanitize", { removeEmbeddedFiles: false }),
+      // Bake in via image so it can't be stripped.
+      policyStep("watermark", { convertPDFToImage: true }),
     ],
     fields: [],
   },
@@ -296,10 +272,7 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "portal.policies.config.compliance.rules.2",
     ],
     scopeLabel: "portal.policies.config.scopeAll",
-    defaultOperations: [
-      { operation: TOOL_ENDPOINTS.sanitize, parameters: {} },
-      { operation: TOOL_ENDPOINTS.flatten, parameters: {} },
-    ],
+    defaultOperations: [policyStep("sanitize"), policyStep("flatten")],
     fields: [
       {
         label: "portal.policies.config.compliance.fields.frameworks",
@@ -342,7 +315,7 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "portal.policies.config.routing.rules.2",
     ],
     scopeLabel: "portal.policies.config.scopeAll",
-    defaultOperations: [{ operation: TOOL_ENDPOINTS.compress, parameters: {} }],
+    defaultOperations: [policyStep("compress")],
     fields: [
       {
         label: "portal.policies.config.routing.fields.destination",
@@ -373,7 +346,7 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "portal.policies.config.retention.rules.2",
     ],
     scopeLabel: "portal.policies.config.scopeAll",
-    defaultOperations: [{ operation: TOOL_ENDPOINTS.compress, parameters: {} }],
+    defaultOperations: [policyStep("compress")],
     fields: [
       {
         label: "portal.policies.config.retention.fields.keepFor",
@@ -556,17 +529,30 @@ const DEFAULT_RETRY_DELAY = 5;
 // POST /api/v1/policies endpoint. The real backend ignores unknown fields.
 type CatalogueWireBody = WirePolicy & { categoryId: string };
 
+/**
+ * The persisted policy name derived from its category, e.g. "Security Policy".
+ * `category.label` is an i18n key, so translate it before building the name;
+ * otherwise the raw key is persisted and surfaces in the UI (e.g. the Sources
+ * "Used by" pill).
+ */
+function policyDisplayName(entry: CatalogueEntry, t: TFunction): string {
+  return t("portal.policies.defaultName", {
+    category: t(entry.category.label),
+  });
+}
+
 /** Build a wire policy from a setup wizard result. */
 export function buildWireFromSetup(
   entry: CatalogueEntry,
   result: PolicySetupResult,
+  t: TFunction,
   enabled = true,
 ): CatalogueWireBody {
   return {
     categoryId: entry.category.id,
     ...toWirePolicy({
       id: entry.policy?.state.backendId ?? "",
-      name: `${entry.category.label} Policy`,
+      name: policyDisplayName(entry, t),
       enabled,
       categoryId: entry.category.id,
       sources: result.sources,
@@ -589,13 +575,14 @@ export function buildWireFromState(
   entry: CatalogueEntry,
   policy: DecoratedPolicy,
   enabled: boolean,
+  t: TFunction,
 ): CatalogueWireBody {
   const s = policy.state;
   return {
     categoryId: entry.category.id,
     ...toWirePolicy({
       id: s.backendId ?? "",
-      name: `${entry.category.label} Policy`,
+      name: policyDisplayName(entry, t),
       enabled,
       categoryId: entry.category.id,
       sources: s.sources,
