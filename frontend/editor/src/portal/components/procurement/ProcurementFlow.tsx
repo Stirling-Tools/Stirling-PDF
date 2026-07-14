@@ -5,6 +5,7 @@ import { useLinkedAccountEmail } from "@portal/hooks/useLinkedAccountEmail";
 import { FLOW_JOURNEY } from "@portal/api/procurement";
 import { ProcurementAgreement } from "@portal/components/procurement/ProcurementAgreement";
 import {
+  DocumentsModal,
   LicenseModal,
   ScheduleCallModal,
   TrialManageModal,
@@ -196,6 +197,18 @@ export function ProcurementFlow({
           }}
         />
       )}
+      <DocumentsModal
+        open={extra === "documents"}
+        onClose={() => setExtra(null)}
+        agreementVersion={data?.agreementSignedVersion}
+        downloadingAgreement={downloadingAgreement}
+        onDownloadAgreement={onDownloadSignedAgreement}
+        quoteAvailable={isIssued}
+        downloadingQuote={downloading}
+        onDownloadQuote={onDownloadPdf}
+        invoiceUrl={latest?.invoiceUrl}
+        invoicePdf={latest?.invoicePdf ?? invoicePdf}
+      />
     </>
   );
 }

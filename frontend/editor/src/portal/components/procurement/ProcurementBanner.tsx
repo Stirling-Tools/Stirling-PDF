@@ -26,6 +26,7 @@ export function ControlledDealStatusHero({
       onInvite={() => setActiveView("users")}
       onSchedule={() => controller.setExtra("schedule")}
       onManageTrial={() => controller.setExtra("trial")}
+      onDocuments={() => controller.setExtra("documents")}
       onNavigate={setActiveView}
     />
   );

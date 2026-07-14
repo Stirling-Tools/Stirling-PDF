@@ -21,7 +21,8 @@ export type ProcurementExtra =
   | "license"
   | "schedule"
   | "trial"
-  | "setup";
+  | "setup"
+  | "documents";
 
 /**
  * Owns the procurement deal state and actions shared by the Home hero footer

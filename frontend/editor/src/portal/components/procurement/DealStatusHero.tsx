@@ -23,6 +23,7 @@ export function DealStatusHero({
   onInvite,
   onSchedule,
   onManageTrial,
+  onDocuments,
   onNavigate,
 }: {
   snapshot: ProcurementSnapshot;
@@ -35,6 +36,8 @@ export function DealStatusHero({
   onInvite: () => void;
   onSchedule: () => void;
   onManageTrial: () => void;
+  /** Open the Documents reference (agreement, quote, invoice, EULA, SLA, subprocessors). */
+  onDocuments: () => void;
   onNavigate: (view: ViewId) => void;
 }) {
   const { t } = useTranslation();
@@ -117,6 +120,13 @@ export function DealStatusHero({
               {t("portal.procurement.hero.scheduleCall")}
             </button>
           )}
+          <button
+            type="button"
+            className="portal-hero__chip portal-hero__chip--action"
+            onClick={onDocuments}
+          >
+            {t("portal.procurement.hero.documents")}
+          </button>
         </div>
       </div>
 

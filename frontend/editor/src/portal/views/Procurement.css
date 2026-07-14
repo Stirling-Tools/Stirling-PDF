@@ -1516,6 +1516,45 @@
 .portal-legal__link:hover {
   color: var(--color-text-2, var(--color-text-1));
 }
+.portal-docmodal {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.portal-docmodal__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.portal-docmodal__row:last-child {
+  border-bottom: none;
+}
+.portal-docmodal__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+.portal-docmodal__name {
+  font-weight: 650;
+  font-size: 0.875rem;
+  color: var(--color-text-1);
+}
+.portal-docmodal__sub {
+  font-size: 0.75rem;
+  color: var(--color-text-4, var(--color-text-3));
+}
+.portal-docmodal__later {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: var(--color-text-5, var(--color-text-4));
+  white-space: nowrap;
+}
 .portal-proc__reset {
   display: flex;
   justify-content: center;
