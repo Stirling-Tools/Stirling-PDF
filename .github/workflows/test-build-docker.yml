@@ -12,6 +12,11 @@ on:
         required: false
         type: string
         default: "false"
+      dockerfiles-changed:
+        description: "Whether any Dockerfile changed (forwarded from files-changed). Gates the slow arm64 build leg."
+        required: false
+        type: string
+        default: "false"
       depot_cores:
         description: "Depot runner vCPU count (used in runs-on). Override for benchmarking."
         required: false
@@ -146,13 +151,22 @@ jobs:
         # GITHUB_EVENT_NAME is already provided by the runner.
         env:
           DOCKER_BASE_CHANGED: ${{ inputs.docker-base-changed }}
+          DOCKERFILES_CHANGED: ${{ inputs.dockerfiles-changed }}
         run: |
           if [ "$GITHUB_EVENT_NAME" = "pull_request" ] && [ "$DOCKER_BASE_CHANGED" = "true" ]; then
+            # Base Dockerfile changed: build against the locally-built base,
+            # which only exists for amd64.
             echo "base_image=stirling-pdf-base:pr-test" >> "$GITHUB_OUTPUT"
             echo "platforms=linux/amd64" >> "$GITHUB_OUTPUT"
-          else
+          elif [ "$DOCKERFILES_CHANGED" = "true" ]; then
+            # A Dockerfile changed: also verify the arm64 build (slow QEMU leg).
             echo "base_image=stirlingtools/stirling-pdf-base:latest" >> "$GITHUB_OUTPUT"
             echo "platforms=linux/amd64,linux/arm64/v8" >> "$GITHUB_OUTPUT"
+          else
+            # No Dockerfile change: amd64 only. arm64 is exercised on the base
+            # image publish and on release, not on every code PR.
+            echo "base_image=stirlingtools/stirling-pdf-base:latest" >> "$GITHUB_OUTPUT"
+            echo "platforms=linux/amd64" >> "$GITHUB_OUTPUT"
           fi
 
       # Base-changed PRs build the embedded image with the local docker driver
