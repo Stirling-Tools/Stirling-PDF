@@ -3,7 +3,6 @@ import {
   forwardRef,
   useEffect,
   useCallback,
-  useMemo,
   useRef,
 } from "react";
 import { useAnnotationCapability } from "@embedpdf/plugin-annotation/react";
@@ -189,25 +188,18 @@ export const SignatureAPIBridge = forwardRef<
   const documentReady = useDocumentReady();
   const lastStampImageRef = useRef<string | null>(null);
   const placedSignatureIdsRef = useRef(new Set<string>());
-  const signatureSizeKey = useMemo(
-    () =>
-      signatureConfig
-        ? JSON.stringify({
-            signatureType: signatureConfig.signatureType,
-            signatureData: signatureConfig.signatureData,
-            signerName: signatureConfig.signerName,
-            fontFamily: signatureConfig.fontFamily,
-            fontSize: signatureConfig.fontSize,
-            textColor: signatureConfig.textColor,
-            textAlign: signatureConfig.textAlign,
-          })
-        : null,
-    [signatureConfig],
-  );
 
   useEffect(() => {
     placedSignatureIdsRef.current.clear();
-  }, [signatureSizeKey]);
+  }, [
+    signatureConfig?.signatureType,
+    signatureConfig?.signatureData,
+    signatureConfig?.signerName,
+    signatureConfig?.fontFamily,
+    signatureConfig?.fontSize,
+    signatureConfig?.textColor,
+    signatureConfig?.textAlign,
+  ]);
 
   // When entering sign mode, deactivate any active annotation tool immediately.
   // Only signature-specific tools (signatureInk, stamp) should be usable.

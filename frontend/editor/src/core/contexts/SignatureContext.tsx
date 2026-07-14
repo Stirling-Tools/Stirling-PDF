@@ -68,19 +68,17 @@ const initialState: SignatureState = {
   placementPreviewSize: null,
 };
 
-const getSignatureSizeKey = (config: SignParameters | null): string | null => {
-  if (!config) return null;
-
-  return JSON.stringify({
-    signatureType: config.signatureType,
-    signatureData: config.signatureData,
-    signerName: config.signerName,
-    fontFamily: config.fontFamily,
-    fontSize: config.fontSize,
-    textColor: config.textColor,
-    textAlign: config.textAlign,
-  });
-};
+const hasSameSignatureAppearance = (
+  previous: SignParameters | null,
+  next: SignParameters | null,
+): boolean =>
+  previous?.signatureType === next?.signatureType &&
+  previous?.signatureData === next?.signatureData &&
+  previous?.signerName === next?.signerName &&
+  previous?.fontFamily === next?.fontFamily &&
+  previous?.fontSize === next?.fontSize &&
+  previous?.textColor === next?.textColor &&
+  previous?.textAlign === next?.textAlign;
 
 // Provider component
 export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
@@ -97,11 +95,9 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
     setState((prev) => ({
       ...prev,
       signatureConfig: config,
-      placementSize:
-        getSignatureSizeKey(prev.signatureConfig) ===
-        getSignatureSizeKey(config)
-          ? prev.placementSize
-          : null,
+      placementSize: hasSameSignatureAppearance(prev.signatureConfig, config)
+        ? prev.placementSize
+        : null,
     }));
   }, []);
 
