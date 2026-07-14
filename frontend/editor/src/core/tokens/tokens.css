@@ -182,20 +182,53 @@
   );
 }
 
-/* Always-dark code palette. Not theme-switched. */
-:root {
-  --code-bg: var(--p-blue-700);
+/* Code palette — theme-aware: a light GitHub-style box in light mode, the dark
+   terminal palette in dark mode. (CodeBlock renders plain text, so only the
+   base colours are load-bearing; the syntax slots are kept for future Shiki. */
+:root,
+[data-theme="light"] {
+  --code-bg: var(--p-gray-50);
+  --code-bg-alt: var(--p-gray-150);
+  --code-bg-header: var(--p-gray-150);
+  --code-text: var(--p-gray-900);
+  --code-dim: var(--p-gray-500);
+  --code-muted: var(--p-gray-400);
+  --code-keyword: var(--p-red-600);
+  --code-string: var(--p-code-string);
+  --code-number: var(--p-blue-600);
+  --code-fn: var(--p-violet-600);
+  --code-type: var(--p-code-type);
+  --code-property: var(--p-blue-600);
+  --code-comment: var(--p-gray-500);
+  --code-border: var(--p-gray-300);
+  /* Window-chrome traffic-light dots in the code-block header. */
+  --code-dot: var(--p-gray-300);
+}
+[data-theme="dark"] {
+  --code-bg: var(--p-gray-900);
+  --code-bg-alt: var(--p-gray-800);
   --code-bg-header: var(--p-gray-800);
   --code-text: var(--p-gray-250);
   --code-dim: var(--p-gray-500);
   --code-muted: var(--p-gray-400);
+  --code-keyword: var(--p-blue-400);
+  --code-string: var(--p-amber-400);
+  --code-number: var(--p-violet-400);
+  --code-fn: var(--p-emerald-400);
+  --code-type: var(--p-pink-500);
+  --code-property: var(--p-blue-200);
+  --code-comment: var(--p-gray-600);
   --code-border: var(--p-gray-800);
-  /* Window-chrome traffic-light dots in the code-block header. */
   --code-dot: var(--p-gray-600);
 }
 
 /* Radii / typography / motion / spacing / z-index — theme-stable */
 :root {
+  /* Home hero strip navy. Theme-stable by design — the white hero CTA keeps
+     this deep navy text in both light and dark (branded surface). The hero
+     background itself is accent-responsive (see EditorStatusCard/WelcomeBanner). */
+  --color-hero-navy: var(--p-navy-700);
+
   /* 4-px grid spacing scale (rem so it tracks font-size changes). Use these
      in layout primitives + component CSS instead of bare 0.5rem / 0.75rem. */
   --space-0_5: 0.125rem;

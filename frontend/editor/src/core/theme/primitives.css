@@ -115,4 +115,7 @@
   --p-violet-400: #a78bfa;
   --p-violet-500: #8b5cf6;
   --p-violet-600: #7c3aed;
+  /* Code/syntax palette (light-mode string/type slots; other code colours reuse the ramp) */
+  --p-code-string: #0a3069;
+  --p-code-type: #953800;
 }
