@@ -16,12 +16,10 @@ import {
   type PoliciesResponse,
   type PolicySetupResult,
 } from "@portal/api/policies";
-import { policyEndpoint } from "@app/policies/operations";
 import { CatalogueSummary } from "@portal/components/policies/CatalogueSummary";
 import { PolicyCategoryCard } from "@portal/components/policies/PolicyCategoryCard";
 import { PolicyDetailPanel } from "@portal/components/policies/PolicyDetailPanel";
 import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
-import { seedTeamLabelsIfEmpty } from "@portal/api/classificationLabels";
 import { useAiEngineEnabled } from "@portal/hooks/useAiEngineEnabled";
 import "@portal/views/Policies.css";
 
@@ -87,11 +85,6 @@ export function Policies() {
   ) {
     setPageError(null);
     try {
-      if (
-        result.steps.some((s) => s.operation === policyEndpoint("classify"))
-      ) {
-        await seedTeamLabelsIfEmpty();
-      }
       await savePolicy(buildWireFromSetup(entry, result, t));
       setWizard(null);
       setDetail(null);
