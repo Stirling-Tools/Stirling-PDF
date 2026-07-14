@@ -66,10 +66,6 @@ class ConfigControllerMoreTest {
     }
 
     private ConfigController newController() {
-        return newController(false);
-    }
-
-    private ConfigController newController(boolean paygEnabled) {
         return new ConfigController(
                 applicationProperties,
                 applicationContext,
@@ -78,8 +74,7 @@ class ConfigControllerMoreTest {
                 userService,
                 showAdmin,
                 licenseService,
-                externalAppDepConfig,
-                paygEnabled);
+                externalAppDepConfig);
     }
 
     @SuppressWarnings("unchecked")
@@ -116,18 +111,6 @@ class ConfigControllerMoreTest {
             assertThat(body).containsEntry("license", "ENTERPRISE");
             assertThat(body).containsEntry("serverCertificateEnabled", true);
             assertThat(body).containsKey("timestampTsaPresets");
-        }
-
-        @Test
-        @DisplayName("surfaces paygEnabled from the payg.enabled flag (both states)")
-        void surfacesPaygEnabled() {
-            HttpServletRequest request = mock(HttpServletRequest.class);
-
-            Map<String, Object> off = bodyOf(newController(false).getAppConfig(request));
-            assertThat(off).containsEntry("paygEnabled", false);
-
-            Map<String, Object> on = bodyOf(newController(true).getAppConfig(request));
-            assertThat(on).containsEntry("paygEnabled", true);
         }
 
         @Test

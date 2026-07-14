@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -24,7 +23,6 @@ import stirling.software.proprietary.util.SecretMasker;
  */
 @Service
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(name = "payg.enabled")
 public class SourceOverviewService {
 
     private final SourceStore sourceStore;

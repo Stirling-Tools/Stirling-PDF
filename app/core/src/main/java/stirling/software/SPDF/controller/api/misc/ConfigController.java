@@ -42,10 +42,6 @@ public class ConfigController {
     private final stirling.software.common.service.LicenseServiceInterface licenseService;
     private final stirling.software.SPDF.config.ExternalAppDepConfig externalAppDepConfig;
 
-    // Whether pay-as-you-go metering is active (raw property, on only where runs are billed).
-    // Surfaced as `paygEnabled` so the frontend enables policies only against a metered backend.
-    private final boolean paygEnabled;
-
     public ConfigController(
             ApplicationProperties applicationProperties,
             ApplicationContext applicationContext,
@@ -58,9 +54,7 @@ public class ConfigController {
                     ShowAdminInterface showAdmin,
             @org.springframework.beans.factory.annotation.Autowired(required = false)
                     stirling.software.common.service.LicenseServiceInterface licenseService,
-            stirling.software.SPDF.config.ExternalAppDepConfig externalAppDepConfig,
-            @org.springframework.beans.factory.annotation.Value("${payg.enabled:false}")
-                    boolean paygEnabled) {
+            stirling.software.SPDF.config.ExternalAppDepConfig externalAppDepConfig) {
         this.applicationProperties = applicationProperties;
         this.applicationContext = applicationContext;
         this.endpointConfiguration = endpointConfiguration;
@@ -69,7 +63,6 @@ public class ConfigController {
         this.showAdmin = showAdmin;
         this.licenseService = licenseService;
         this.externalAppDepConfig = externalAppDepConfig;
-        this.paygEnabled = paygEnabled;
     }
 
     /**
@@ -344,10 +337,6 @@ public class ConfigController {
 
             // AI Engine settings
             configData.put("aiEngineEnabled", applicationProperties.getAiEngine().isEnabled());
-
-            // PAYG metering active (payg.enabled). Gates the policy + sources subsystem, so the
-            // frontend never surfaces policies against a backend that won't serve them.
-            configData.put("paygEnabled", paygEnabled);
 
             // Timestamp TSA settings — single source of truth for presets + admin URLs
             ApplicationProperties.Security.Timestamp tsConfig =

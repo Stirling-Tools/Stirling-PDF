@@ -2,7 +2,6 @@ package stirling.software.proprietary.policy.engine;
 
 import java.util.List;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -25,7 +24,6 @@ import stirling.software.proprietary.policy.trigger.PolicyTrigger;
  */
 @Service
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(name = "payg.enabled")
 public class PolicyValidator {
 
     private final List<PolicyTrigger> triggers;
