@@ -74,3 +74,16 @@ export const subscribedWallet: Wallet = {
   ],
   recent: [],
 };
+
+/**
+ * Subscribed team currently drawing on a prepaid bundle — {@code billingMode:
+ * "prepaid"} with a mid-drawn pool (78k of 120k left) expiring in-term. Drives the
+ * prepaid-capacity card + the "Prepaid year" chip.
+ */
+export const prepaidWallet: Wallet = {
+  ...subscribedWallet,
+  billingMode: "prepaid",
+  prepaidUnitsRemaining: 78000,
+  prepaidUnitsTotal: 120000,
+  prepaidExpiresAt: "2027-03-01",
+};

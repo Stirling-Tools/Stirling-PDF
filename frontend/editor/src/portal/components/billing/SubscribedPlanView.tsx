@@ -7,6 +7,7 @@ import type { LocalUsage } from "@portal/api/link";
 import { useStripePortal } from "@portal/hooks/useStripePortal";
 import { FreePdfEditorsCard } from "@portal/components/billing/FreePdfEditorsCard";
 import { PdfsProcessedCard } from "@portal/components/billing/PdfsProcessedCard";
+import { PrepaidCapacityCard } from "@portal/components/billing/PrepaidCapacityCard";
 import { SpendThisMonthCard } from "@portal/components/billing/SpendThisMonthCard";
 import { SpendLimitCard } from "@portal/components/billing/SpendLimitCard";
 import { PaymentMethodCard } from "@portal/components/billing/PaymentMethodCard";
@@ -99,6 +100,8 @@ export function SubscribedPlanView({
       )}
 
       <FreePdfEditorsCard />
+
+      <PrepaidCapacityCard wallet={wallet} />
 
       <PdfsProcessedCard wallet={wallet} unsynced={unsynced} />
 

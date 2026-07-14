@@ -1,7 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse } from "msw";
 import { SubscribedPlanView } from "@portal/components/billing/SubscribedPlanView";
-import { subscribedWallet } from "@portal/components/billing/walletFixtures";
+import {
+  prepaidWallet,
+  subscribedWallet,
+} from "@portal/components/billing/walletFixtures";
 import "@portal/components/billing/billing.css";
 
 const card = http.get("*/api/v1/payg/payment-method", () =>
@@ -83,3 +86,6 @@ export const ApproachingCap: Story = {
     },
   },
 };
+
+/** Drawing on a prepaid bundle — surfaces the prepaid-capacity card. */
+export const WithPrepaid: Story = { args: { wallet: prepaidWallet } };

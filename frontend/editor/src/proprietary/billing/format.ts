@@ -88,6 +88,60 @@ export function formatPeriodDate(
   }
 }
 
+// ─── Prepaid bundle pricing ─────────────────────────────────────────────────
+
+/**
+ * "12 months for the price of 10" — months granted vs paid. Mirrors the backend
+ * {@code PrepaidPurchaseService} (units × rate × 10/12) and the Stripe coupon, so
+ * the calculator's live estimate matches the server quote the buyer pays.
+ */
+export const PREPAID_MONTHS_GRANTED = 12;
+export const PREPAID_MONTHS_PAID = 10;
+
+/**
+ * Prepaid pool capacity in size-scaled meter units for a monthly PDF volume at a
+ * given posture (runs/PDF) and file-size tier, over the 12-month term. Size folds
+ * into the units — a bigger PDF simply draws more — so a flat per-unit price still
+ * reproduces the demo's size-weighted total ("comes out in the wash with usage").
+ */
+export function bundleCapacityUnits(
+  monthlyVolume: number,
+  postureMult: number,
+  sizeMult: number,
+  monthsGranted: number = PREPAID_MONTHS_GRANTED,
+): number {
+  if (monthlyVolume <= 0 || postureMult <= 0 || sizeMult <= 0) return 0;
+  return Math.round(monthlyVolume * postureMult * sizeMult * monthsGranted);
+}
+
+/** Undiscounted "worth" of a pool in minor units (units × rate); null when the rate is unknown. */
+export function bundleListMinor(
+  units: number,
+  ratePerUnitMinor: number | null | undefined,
+): number | null {
+  const rate =
+    ratePerUnitMinor != null && ratePerUnitMinor > 0 ? ratePerUnitMinor : null;
+  return rate != null ? Math.round(units * rate) : null;
+}
+
+/**
+ * Discounted price of a prepaid pool in minor units: units × rate × paid/granted.
+ * Mirror of the backend quote + the Stripe coupon. Null when the rate is unknown
+ * (the caller hides the figure and falls back to the server quote).
+ */
+export function bundlePriceMinor(
+  units: number,
+  ratePerUnitMinor: number | null | undefined,
+  monthsPaid: number = PREPAID_MONTHS_PAID,
+  monthsGranted: number = PREPAID_MONTHS_GRANTED,
+): number | null {
+  const rate =
+    ratePerUnitMinor != null && ratePerUnitMinor > 0 ? ratePerUnitMinor : null;
+  return rate != null
+    ? Math.round((units * rate * monthsPaid) / monthsGranted)
+    : null;
+}
+
 export type MeterState = "FULL" | "WARNED" | "DEGRADED";
 
 /** Warn (≥80%) / degrade (≥100%) band for a usage meter; mirrors the BE thresholds. */

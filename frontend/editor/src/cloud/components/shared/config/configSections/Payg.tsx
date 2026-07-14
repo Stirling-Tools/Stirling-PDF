@@ -16,7 +16,7 @@
  *     V1 — so it shows a real empty state, not fabricated rows
  */
 import React, { useState } from "react";
-import { Group, Stack, Text } from "@mantine/core";
+import { Alert, Badge, Group, Stack, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useRenderCount } from "@app/hooks/useRenderCount";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
@@ -26,14 +26,20 @@ import HelpOutlineIcon from "@mui/icons-material/HelpOutlineRounded";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMoreRounded";
 import BoltIcon from "@mui/icons-material/BoltRounded";
 import AllInclusiveIcon from "@mui/icons-material/AllInclusiveRounded";
+import SavingsIcon from "@mui/icons-material/SavingsOutlined";
 import { alert as showToast } from "@app/components/toast";
+import {
+  PrepaidCapacityMeterPanel,
+  prepaidSnapshotFromWallet,
+} from "@app/components/shared/config/configSections/usageMeters";
+import BundleCheckoutModal from "@app/components/shared/config/configSections/BundleCheckoutModal";
 // Relative (not @app/*) so the co-located CSS + sibling component resolve directly.
 // eslint-disable-next-line no-restricted-imports
 import "./Payg.css";
 // eslint-disable-next-line no-restricted-imports
 import SpendCapControl from "./SpendCapControl";
 import { useTranslation } from "react-i18next";
-import type { Wallet } from "@app/hooks/useWallet";
+import type { BundleQuote, Wallet } from "@app/hooks/useWallet";
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -54,6 +60,14 @@ interface PaygProps {
    * don't need to wrap in try/catch.
    */
   onOpenPortal?: () => Promise<void>;
+  /**
+   * Server-price a prepaid-bundle purchase; provided by {@code Plan} →
+   * {@code useWallet} for the leader view. When omitted (member view) the
+   * prepaid purchase / top-up CTAs are hidden.
+   */
+  quoteBundle?: (units: number) => Promise<BundleQuote>;
+  /** Refetch the wallet after a completed bundle purchase (leader view). */
+  onBought?: () => void;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -665,6 +679,95 @@ function StripePortalLink({
   );
 }
 
+// ─── Prepaid bundle ───────────────────────────────────────────────────────
+
+function daysUntil(iso: string | null): number | null {
+  if (!iso) return null;
+  const end = new Date(iso).getTime();
+  if (Number.isNaN(end)) return null;
+  return Math.ceil((end - Date.now()) / 86_400_000);
+}
+
+/**
+ * Contextual nudge when prepaid capacity is running low, exhausted, or its term
+ * is nearly up (the demo's "top up to keep processing" strip). Leader-only CTA —
+ * members can't buy. Returns null when nothing needs saying.
+ */
+function PrepaidBanner({
+  snap,
+  canBuy,
+  onTopUp,
+}: {
+  snap: NonNullable<ReturnType<typeof prepaidSnapshotFromWallet>>;
+  canBuy: boolean;
+  onTopUp: () => void;
+}) {
+  const { t } = useTranslation();
+  const pctLeft = snap.total > 0 ? (snap.remaining / snap.total) * 100 : 0;
+  const days = daysUntil(snap.expiresAt);
+  const exhausted = snap.remaining <= 0;
+  const low = !exhausted && pctLeft <= 20;
+  const expiringSoon = days != null && days >= 0 && days <= 30;
+  if (!exhausted && !low && !expiringSoon) return null;
+
+  const message = exhausted
+    ? t(
+        "payg.prepaid.banner.exhausted",
+        "Your prepaid capacity is used up — metered billing has resumed. Top up to keep the discount.",
+      )
+    : low
+      ? t(
+          "payg.prepaid.banner.low",
+          "You're down to {{pct}}% of your prepaid capacity. Top up any time to keep processing uninterrupted.",
+          { pct: Math.max(1, Math.round(pctLeft)) },
+        )
+      : t(
+          "payg.prepaid.banner.expiring",
+          "Your prepaid year ends in {{days}} days. Unused capacity expires — top up to start a fresh year.",
+          { days },
+        );
+
+  return (
+    <Alert color={exhausted ? "red" : "yellow"} variant="light">
+      <Group justify="space-between" align="center" wrap="nowrap">
+        <span>{message}</span>
+        {canBuy && (
+          <Button variant="secondary" onClick={onTopUp}>
+            {t("payg.prepaid.banner.topUp", "Top up")}
+          </Button>
+        )}
+      </Group>
+    </Alert>
+  );
+}
+
+/** Leader CTA to buy prepaid capacity when the team holds none yet. */
+function PrepaidBuyCard({ onBuy }: { onBuy: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <div className="payg-stripe">
+      <div>
+        <div className="payg-stripe__title">
+          {t("payg.prepaid.buyCard.title", "Prepay a year, save two months")}
+        </div>
+        <div className="payg-stripe__subtitle">
+          {t(
+            "payg.prepaid.buyCard.subtitle",
+            "Pre-buy a discounted pool of processing. Used before metered billing, outside your spend cap.",
+          )}
+        </div>
+      </div>
+      <Button
+        onClick={onBuy}
+        rightSection={<SavingsIcon sx={{ fontSize: 16 }} />}
+        variant="secondary"
+      >
+        {t("payg.prepaid.buyCard.cta", "Prepay a year")}
+      </Button>
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────
 
 const Payg: React.FC<PaygProps> = ({
@@ -672,10 +775,16 @@ const Payg: React.FC<PaygProps> = ({
   wallet,
   onSaveCap,
   onOpenPortal,
+  quoteBundle,
+  onBought,
 }) => {
   useRenderCount(role === "LEADER" ? "PaygLeader" : "PaygMember");
   const { t } = useTranslation();
   const isLeader = role === "LEADER";
+  const [bundleOpen, setBundleOpen] = useState(false);
+  const prepaid = prepaidSnapshotFromWallet(wallet);
+  // Leaders with a working quote fn + a resolved team can buy / top up.
+  const canBuy = isLeader && !!quoteBundle && wallet.teamId != null;
 
   const fmt = (iso: string) =>
     new Date(iso).toLocaleDateString(undefined, {
@@ -686,6 +795,14 @@ const Payg: React.FC<PaygProps> = ({
   return (
     <div className="payg">
       <Stack gap="md">
+        {prepaid && (
+          <PrepaidBanner
+            snap={prepaid}
+            canBuy={canBuy}
+            onTopUp={() => setBundleOpen(true)}
+          />
+        )}
+
         {/* The modal chrome already renders the section title ("Billing &
             usage"), so we lead with the descriptive subtitle + role pill. */}
         <div className="payg-planhead">
@@ -700,11 +817,18 @@ const Payg: React.FC<PaygProps> = ({
                 },
               )}
             </span>
-            <span className="payg-role-pill" data-leader={isLeader}>
-              {isLeader
-                ? t("payg.role.leader", "Team owner")
-                : t("payg.role.member", "Member")}
-            </span>
+            <Group gap="xs" wrap="nowrap">
+              {wallet.billingMode === "prepaid" && (
+                <Badge color="blue" variant="light" radius="sm">
+                  {t("payg.prepaid.chip", "Prepaid year")}
+                </Badge>
+              )}
+              <span className="payg-role-pill" data-leader={isLeader}>
+                {isLeader
+                  ? t("payg.role.leader", "Team owner")
+                  : t("payg.role.member", "Member")}
+              </span>
+            </Group>
           </div>
 
           <div className="payg-planhead__split">
@@ -751,6 +875,35 @@ const Payg: React.FC<PaygProps> = ({
 
         <UsageHero wallet={wallet} />
 
+        {prepaid && (
+          <div className="payg-card">
+            <Stack gap="sm">
+              <div>
+                <div className="payg-card__title">
+                  {t("payg.prepaid.card.title", "Prepaid capacity")}
+                </div>
+                <div className="payg-card__subtitle">
+                  {t(
+                    "payg.prepaid.card.subtitle",
+                    "Used before metered billing and outside your spend cap.",
+                  )}
+                </div>
+              </div>
+              <PrepaidCapacityMeterPanel snap={prepaid} />
+              {canBuy && (
+                <Group justify="flex-end">
+                  <Button
+                    variant="secondary"
+                    onClick={() => setBundleOpen(true)}
+                  >
+                    {t("payg.prepaid.card.topUp", "Top up")}
+                  </Button>
+                </Group>
+              )}
+            </Stack>
+          </div>
+        )}
+
         {isLeader ? (
           <CapEditor
             capUsd={wallet.capUsd}
@@ -767,12 +920,32 @@ const Payg: React.FC<PaygProps> = ({
           <MemberUsage members={wallet.members} />
         )}
 
+        {!prepaid && canBuy && (
+          <PrepaidBuyCard onBuy={() => setBundleOpen(true)} />
+        )}
+
         {SHOW_ACTIVITY_FEED && <ActivityFeed recent={wallet.recent} />}
 
         {isLeader && onOpenPortal && (
           <StripePortalLink onOpenPortal={onOpenPortal} />
         )}
       </Stack>
+
+      {canBuy && wallet.teamId != null && quoteBundle && (
+        <BundleCheckoutModal
+          open={bundleOpen}
+          teamId={wallet.teamId}
+          pricePerDocMinor={wallet.pricePerDocMinor}
+          currency={wallet.currency}
+          quoteBundle={quoteBundle}
+          topUp={!!prepaid}
+          onClose={() => setBundleOpen(false)}
+          onComplete={() => {
+            setBundleOpen(false);
+            onBought?.();
+          }}
+        />
+      )}
     </div>
   );
 };
@@ -787,17 +960,25 @@ export interface PaygLeaderProps {
   onSaveCap?: (capUsd: number | null) => Promise<void> | void;
   /** See {@link PaygProps#onOpenPortal}. */
   onOpenPortal?: () => Promise<void>;
+  /** See {@link PaygProps#quoteBundle}. */
+  quoteBundle?: (units: number) => Promise<BundleQuote>;
+  /** See {@link PaygProps#onBought}. */
+  onBought?: () => void;
 }
 export const PaygLeader: React.FC<PaygLeaderProps> = ({
   wallet,
   onSaveCap,
   onOpenPortal,
+  quoteBundle,
+  onBought,
 }) => (
   <Payg
     role="LEADER"
     wallet={wallet}
     onSaveCap={onSaveCap}
     onOpenPortal={onOpenPortal}
+    quoteBundle={quoteBundle}
+    onBought={onBought}
   />
 );
 export const PaygMember: React.FC<{ wallet: Wallet }> = ({ wallet }) => (

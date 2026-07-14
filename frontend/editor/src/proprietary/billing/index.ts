@@ -5,6 +5,7 @@ export type {
   WalletMember,
   WalletCategoryBreakdown,
   WalletActivityRow,
+  BundleQuote,
 } from "@app/billing/types";
 export {
   DEFAULT_CAP_PRESETS,
@@ -14,6 +15,11 @@ export {
   docCapForMoney,
   formatPeriodDate,
   meterState,
+  PREPAID_MONTHS_GRANTED,
+  PREPAID_MONTHS_PAID,
+  bundleCapacityUnits,
+  bundleListMinor,
+  bundlePriceMinor,
   type MeterState,
 } from "@app/billing/format";
 export { MeterBar } from "@app/billing/MeterBar";

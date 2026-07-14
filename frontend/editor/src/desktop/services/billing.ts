@@ -15,6 +15,7 @@
 import { supabase } from "@app/auth/supabase";
 import { authService } from "@app/services/authService";
 import type {
+  BundleCheckoutParams,
   CheckoutParams,
   CheckoutSession,
   PortalParams,
@@ -22,6 +23,7 @@ import type {
 } from "@cloud/services/billing";
 
 export type {
+  BundleCheckoutParams,
   CheckoutParams,
   CheckoutSession,
   PortalParams,
@@ -113,6 +115,46 @@ export async function createPortalSession(
     throw new Error(data?.error ?? "Portal session response missing url");
   }
   return { url: data.url };
+}
+
+/**
+ * Create a one-time Stripe Checkout Session for a prepaid bundle via the
+ * {@code create-payg-bundle-checkout} edge function, routed through Tauri
+ * (explicit bearer, deep-link callback). The capacity + price live on the
+ * server-issued quote ticket ({@code quote_id}); only its id crosses the wire.
+ */
+export async function createBundleCheckoutSession(
+  params: BundleCheckoutParams,
+): Promise<CheckoutSession> {
+  const token = await requireToken();
+
+  const { data, error } = await supabase.functions.invoke<{
+    client_secret?: string;
+    url?: string;
+    mock?: boolean;
+  }>("create-payg-bundle-checkout", {
+    headers: { Authorization: `Bearer ${token}` },
+    body: {
+      team_id: params.teamId,
+      quote_id: params.quoteId,
+      success_url: DESKTOP_BILLING_RETURN_URL,
+      cancel_url: DESKTOP_BILLING_RETURN_URL,
+    },
+  });
+
+  if (error) {
+    throw error;
+  }
+  if (data?.client_secret) {
+    return {
+      clientSecret: data.client_secret,
+      mock: Boolean(data.mock) || data.client_secret.startsWith("cs_mock_"),
+    };
+  }
+  if (data?.url) {
+    return { url: data.url };
+  }
+  throw new Error("Edge function returned no client_secret");
 }
 
 /**

@@ -32,6 +32,34 @@ export interface WalletActivityRow {
   docUnits: number;
 }
 
+/**
+ * A server-priced prepaid-bundle quote — the response of {@code POST
+ * /api/v1/payg/bundle/quote}. Money fields are minor units of {@link currency}
+ * and null when the per-unit rate hasn't resolved (free team pre-checkout);
+ * {@link quoteId} is the ticket the checkout edge function reads. Mirrors the
+ * backend {@code PaygBundleController.QuoteResponse}.
+ */
+export interface BundleQuote {
+  quoteId: number;
+  /** Prepaid capacity purchased (size-scaled meter units). */
+  units: number;
+  currency: string;
+  /** Per-unit rate (minor units; may be fractional); null when unknown. */
+  unitAmountMinor: number | null;
+  /** Undiscounted worth (units × rate); null when the rate is unknown. */
+  listAmountMinor: number | null;
+  /** Discounted price actually charged (units × rate × paid/granted); null when unknown. */
+  totalAmountMinor: number | null;
+  /** listAmountMinor − totalAmountMinor; null when unknown. */
+  savingsMinor: number | null;
+  /** Months of capacity granted (12). */
+  monthsGranted: number;
+  /** Months actually paid for (10). */
+  monthsPaid: number;
+  /** ISO local date-time the ticket lapses. */
+  expiresAt: string;
+}
+
 export interface Wallet {
   /** Caller's primary team_id; null on the synthetic empty snapshot for team-less callers. */
   teamId: number | null;

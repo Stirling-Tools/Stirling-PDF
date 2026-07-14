@@ -31,8 +31,16 @@ import {
 const Plan: React.FC = () => {
   useRenderCount("Plan");
   const { t } = useTranslation();
-  const { wallet, loading, error, markSubscribed, updateCap, openPortal } =
-    useWallet();
+  const {
+    wallet,
+    loading,
+    error,
+    markSubscribed,
+    updateCap,
+    openPortal,
+    quoteBundle,
+    refetch,
+  } = useWallet();
 
   // Stable callback so PaygFreeLeader's React.memo doesn't see a new prop
   // identity on every Plan render (e.g. loading flips false→true→false on
@@ -78,6 +86,8 @@ const Plan: React.FC = () => {
         wallet={wallet}
         onSaveCap={updateCap}
         onOpenPortal={openPortal}
+        quoteBundle={quoteBundle}
+        onBought={() => void refetch()}
       />
     ) : (
       <PaygMember wallet={wallet} />

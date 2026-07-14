@@ -7,7 +7,12 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useWallet, type Wallet } from "@app/hooks/useWallet";
-import { currencySymbol, MeterBar, meterState } from "@app/billing";
+import {
+  currencySymbol,
+  formatPeriodDate,
+  MeterBar,
+  meterState,
+} from "@app/billing";
 import "@app/components/shared/config/configSections/Payg.css";
 import "@app/components/shared/config/configSections/PaygFree.css";
 
@@ -135,6 +140,76 @@ export function SpendCapMeterPanel({ snap }: { snap: SpendCapSnapshot }) {
             {t("payg.spendCapMeter.resets", "Resets each billing period")}
           </span>
         </>
+      }
+    />
+  );
+}
+
+// ─── Prepaid bundle capacity meter ──────────────────────────────────────────
+
+export interface PrepaidSnapshot {
+  /** Prepaid units still available across the team's in-term pools. */
+  remaining: number;
+  /** Total capacity of in-term pools — the "X of Y" denominator. */
+  total: number;
+  /** ISO date the soonest pool expires; null when no bundle. */
+  expiresAt: string | null;
+}
+
+/**
+ * Derive the prepaid-capacity snapshot from a wallet. Returns null when the team
+ * holds no in-term bundle ({@code prepaidUnitsTotal === 0}) so callers can skip
+ * the card entirely rather than render an empty meter.
+ */
+export function prepaidSnapshotFromWallet(
+  wallet: Wallet | null,
+): PrepaidSnapshot | null {
+  if (!wallet || wallet.prepaidUnitsTotal <= 0) return null;
+  return {
+    remaining: wallet.prepaidUnitsRemaining,
+    total: wallet.prepaidUnitsTotal,
+    expiresAt: wallet.prepaidExpiresAt,
+  };
+}
+
+/**
+ * Prepaid capacity meter. The bar fills as the pool is drawn down ({@code used =
+ * total − remaining}), so it WARNs when the pool is running low and DEGRADEs once
+ * exhausted — same bands as the free/cap meters. Prepaid is consumed ahead of the
+ * meter and outside the spend cap, so it reads as its own dimension.
+ */
+export function PrepaidCapacityMeterPanel({ snap }: { snap: PrepaidSnapshot }) {
+  const { t } = useTranslation();
+  const used = Math.max(0, snap.total - snap.remaining);
+  const { state, pct } = meterState(used, snap.total);
+  const stateLabel =
+    state === "DEGRADED"
+      ? t("payg.prepaid.state.exhausted", "Used up")
+      : state === "WARNED"
+        ? t("payg.prepaid.state.low", "Running low")
+        : t("payg.prepaid.state.healthy", "Plenty left");
+
+  return (
+    <MeterBar
+      state={state}
+      pct={pct}
+      figure={snap.remaining.toLocaleString()}
+      capSuffix={t(
+        "payg.prepaid.meter.capSuffix",
+        "of {{total}} prepaid PDFs",
+        {
+          total: snap.total.toLocaleString(),
+        },
+      )}
+      statusLabel={stateLabel}
+      meta={
+        snap.expiresAt ? (
+          <span>
+            {t("payg.prepaid.meter.expires", "Expires {{date}}", {
+              date: formatPeriodDate(snap.expiresAt, { year: true }),
+            })}
+          </span>
+        ) : undefined
       }
     />
   );
