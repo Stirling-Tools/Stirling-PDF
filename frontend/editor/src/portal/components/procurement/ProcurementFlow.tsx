@@ -209,7 +209,7 @@ export function ProcurementFlow({
           setEditing(false);
           setOpen(true);
         }}
-        quoteAvailable={isIssued}
+        quoteAvailable={!!latest?.stripeQuoteId}
         downloadingQuote={downloading}
         onDownloadQuote={onDownloadPdf}
         invoiceUrl={latest?.invoiceUrl}
