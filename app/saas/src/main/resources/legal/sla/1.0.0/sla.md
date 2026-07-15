@@ -1,6 +1,6 @@
 # SLA Exhibit — Stirling Enterprise Agreement
 
-Referenced by the Order Form's service-level row and MSA Section 5.2. One document, three tiers; the Order Form's tier selection determines the applicable column. Uptime is a target, not a credited commitment: no service credits apply at any tier. Tiers differentiate support response, channels, and people.
+Referenced by the Order Form's service-level row and MSA §5.2. One document, three tiers; the Order Form's tier selection determines the applicable column. Uptime is a target, not a credited commitment: no service credits apply at any tier. Tiers differentiate support response, channels, and people.
 
 ## 1. Availability
 

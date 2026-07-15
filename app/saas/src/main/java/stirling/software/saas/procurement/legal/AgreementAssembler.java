@@ -167,7 +167,7 @@ public class AgreementAssembler {
         row(sb, "Standard terms", "SSO, SCIM, RBAC, and audit logs included.");
 
         sb.append(
-                "\n**Itemized services menu (included as elected):** Self-hosted deployment $12,000/yr"
+                "\n**Itemized services menu (include as elected):** Self-hosted deployment $12,000/yr"
                         + " · Air-gapped deployment $36,000/yr · Dedicated SE/CSM $30,000/yr · Enhanced IP"
                         + " Protection (patent coverage, Section 7.3) 5% of committed processing fees ·"
                         + " Onboarding & training $7,500 one-time · Quarterly business reviews $8,000/yr."

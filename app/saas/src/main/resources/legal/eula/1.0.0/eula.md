@@ -1,5 +1,7 @@
 # Stirling EULA & Commercial Terms
 
+This document fills the EULA slot the website Terms of Service §5 already contemplates ("If a separate end-user license (EULA) accompanies software, that license governs to the extent of any conflict"). It carries the commercial terms of the actual product: the PDF Process meter, spend limits, prepaid capacity, the free allotment, trials, self-hosted licensing, and AI features. For customers under a signed Stirling Enterprise Agreement, that agreement controls.
+
 **Effective:** {{version_date}} · **Version:** {{version}}
 
 ## 1. Agreement; precedence
