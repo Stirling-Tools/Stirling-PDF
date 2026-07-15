@@ -3670,6 +3670,12 @@ uploadSelected = "Upload Files"
 uploadToServer = "Upload to Server"
 versionHistory = "Version history"
 
+[fileOpen]
+
+[fileOpen.accessDenied]
+body = "Windows blocked access to this file, which can happen when opening an attachment straight from Outlook. Save the file to your computer first, then open it in Stirling PDF."
+title = "Couldn't open \"{{fileName}}\""
+
 [files]
 addFiles = "Add files"
 created = "Created"
