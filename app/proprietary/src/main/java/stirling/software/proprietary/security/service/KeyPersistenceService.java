@@ -23,9 +23,11 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
@@ -51,6 +53,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
     private final ApplicationProperties.Security.Jwt jwtProperties;
     private final Cache verifyingKeyCache;
     private final JwtSigningKeyRepository keyRepository;
+    private final boolean clusterEnabled;
 
     // kid -> KeyPair; safe to cache since key material is immutable.
     private final Map<String, KeyPair> keyPairCache = new ConcurrentHashMap<>();
@@ -60,10 +63,12 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
     public KeyPersistenceService(
             ApplicationProperties applicationProperties,
             CacheManager cacheManager,
-            JwtSigningKeyRepository keyRepository) {
+            JwtSigningKeyRepository keyRepository,
+            @Value("${cluster.enabled:false}") boolean clusterEnabled) {
         this.jwtProperties = applicationProperties.getSecurity().getJwt();
         this.verifyingKeyCache = cacheManager.getCache("verifyingKeys");
         this.keyRepository = keyRepository;
+        this.clusterEnabled = clusterEnabled;
     }
 
     @PostConstruct
@@ -78,6 +83,40 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
         } catch (Exception e) {
             log.error("Failed to initialize keystore, generating a fresh keypair", e);
             generateAndStoreKeypair();
+        }
+    }
+
+    /**
+     * Cluster convergence: adopt the newest signing key in the shared DB as this node's active key.
+     * Runs on every node so a key a peer just minted becomes the shared active signer within one
+     * interval, keeping cluster rotation equivalent to single-node. Cluster-only: a single node
+     * always holds its own newest key, so this is skipped entirely off-cluster.
+     */
+    @Scheduled(fixedDelayString = "${stirling.security.jwt.activeKeyReloadMs:300000}")
+    public void reloadActiveKeyFromDb() {
+        if (!clusterEnabled || !isKeystoreEnabled()) {
+            return;
+        }
+        try {
+            Optional<JwtSigningKeyEntity> newestOpt =
+                    keyRepository.findFirstByOrderByCreatedAtDesc();
+            if (newestOpt.isEmpty()) {
+                return;
+            }
+            JwtSigningKeyEntity newest = newestOpt.get();
+            JwtVerificationKey current = activeKey;
+            if (current != null && newest.getKeyId().equals(current.getKeyId())) {
+                return;
+            }
+            JwtVerificationKey adopted =
+                    new JwtVerificationKey(newest.getKeyId(), newest.getVerifyingKey());
+            verifyingKeyCache.put(newest.getKeyId(), adopted);
+            activeKey = adopted;
+            log.info(
+                    "Adopted newest JWT signing key {} from the shared DB as active",
+                    newest.getKeyId());
+        } catch (Exception e) {
+            log.warn("Could not reload active JWT key from the shared DB: {}", e.getMessage());
         }
     }
 

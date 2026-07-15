@@ -56,8 +56,9 @@ class KeyPersistenceServiceInterfaceTest {
         lenient().when(security.getJwt()).thenReturn(jwtConfig);
         lenient().when(jwtConfig.isEnableKeystore()).thenReturn(true);
         lenient().when(keyRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        // clusterEnabled=true so the convergence-reload path is exercised.
         keyPersistenceService =
-                new KeyPersistenceService(applicationProperties, cacheManager, keyRepository);
+                new KeyPersistenceService(applicationProperties, cacheManager, keyRepository, true);
     }
 
     private JwtSigningKeyEntity entityFrom(String keyId) {
@@ -131,5 +132,50 @@ class KeyPersistenceServiceInterfaceTest {
 
         assertEquals(1, stale.size());
         assertEquals("old-key", stale.get(0).getKeyId());
+    }
+
+    @Test
+    void reloadAdoptsTheNewestKeyAPeerMinted() {
+        // Boot with our own key active, then a peer mints a newer one in the shared DB.
+        when(keyRepository.count()).thenReturn(1L);
+        when(keyRepository.findAllByOrderByCreatedAtDesc())
+                .thenReturn(List.of(entityFrom("jwt-key-local-old")));
+        keyPersistenceService.initializeKeystore();
+        assertEquals("jwt-key-local-old", keyPersistenceService.getActiveKey().getKeyId());
+
+        when(keyRepository.findFirstByOrderByCreatedAtDesc())
+                .thenReturn(Optional.of(entityFrom("jwt-key-peer-new")));
+
+        keyPersistenceService.reloadActiveKeyFromDb();
+
+        // Converged: this node now signs with the peer's newer key.
+        assertEquals("jwt-key-peer-new", keyPersistenceService.getActiveKey().getKeyId());
+    }
+
+    @Test
+    void reloadDoesNothingOffCluster() {
+        KeyPersistenceService singleNode =
+                new KeyPersistenceService(
+                        applicationProperties, cacheManager, keyRepository, false);
+
+        singleNode.reloadActiveKeyFromDb();
+
+        // Off-cluster the DB is never consulted for convergence.
+        verify(keyRepository, org.mockito.Mockito.never()).findFirstByOrderByCreatedAtDesc();
+    }
+
+    @Test
+    void reloadIsANoOpWhenAlreadyHoldingTheNewestKey() {
+        when(keyRepository.count()).thenReturn(1L);
+        when(keyRepository.findAllByOrderByCreatedAtDesc())
+                .thenReturn(List.of(entityFrom("jwt-key-current")));
+        keyPersistenceService.initializeKeystore();
+
+        when(keyRepository.findFirstByOrderByCreatedAtDesc())
+                .thenReturn(Optional.of(entityFrom("jwt-key-current")));
+
+        keyPersistenceService.reloadActiveKeyFromDb();
+
+        assertEquals("jwt-key-current", keyPersistenceService.getActiveKey().getKeyId());
     }
 }
