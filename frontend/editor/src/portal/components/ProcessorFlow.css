@@ -122,7 +122,7 @@
   height: auto;
   width: 100%;
   text-align: left;
-  background: var(--color-bg-subtle);
+  background: var(--color-bg);
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-md);
   transition:
@@ -206,7 +206,7 @@
   flex: none;
   width: 18rem;
   padding: 0.75rem;
-  background: var(--color-bg-subtle);
+  background: var(--color-bg);
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);

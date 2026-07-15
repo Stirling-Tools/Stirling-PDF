@@ -52,12 +52,10 @@ export type FlowPolicyState = "active" | "off" | "locked";
  * same order the Policies page shows, including the coming-soon categories.
  */
 export interface FlowPolicy {
-  /** Category id (also the lane key for the flow animation). */
+  /** Category id (also the lane key for the flow animation + its icon). */
   key: string;
   /** i18n key for the category label. */
   labelKey: string;
-  /** Material Symbols icon name (from the catalogue). */
-  icon: string;
   state: FlowPolicyState;
   configured: boolean;
   runs24h: number;
@@ -120,7 +118,6 @@ function buildPolicies(
     return {
       key: cat.id,
       labelKey: cat.label,
-      icon: cat.icon,
       state,
       configured,
       runs24h,

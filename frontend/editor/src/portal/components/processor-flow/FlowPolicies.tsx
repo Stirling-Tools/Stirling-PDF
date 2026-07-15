@@ -1,9 +1,8 @@
 import { type RefObject } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
 import type { FlowPolicy } from "@portal/api/processorFlow";
-import { ICON_SIZE } from "@portal/components/processor-flow/flowTypes";
 
 interface FlowPoliciesProps {
   policies: FlowPolicy[];
@@ -46,7 +45,7 @@ export function FlowPolicies({
             }}
           >
             <span className="portal-pf__policy-icon" aria-hidden>
-              <LocalIcon icon={policy.icon} width={ICON_SIZE} />
+              {policyCategoryIcon(policy.key, { fontSize: "1.125rem" })}
             </span>
             <span className="portal-pf__policy-label">
               {t(policy.labelKey)}

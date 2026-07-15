@@ -31,6 +31,10 @@ const SECURITY_STEPS: WirePipelineStep[] = [
   },
 ];
 
+const CLASSIFICATION_STEPS: WirePipelineStep[] = [
+  { operation: "/api/v1/ai/tools/classify-and-label", parameters: {} },
+];
+
 export function seedPolicies(): WirePolicy[] {
   return [
     {
@@ -58,12 +62,12 @@ export function seedPolicies(): WirePolicy[] {
       },
     },
     {
-      id: "pol_ingestion_default",
-      name: "Ingestion Policy",
+      id: "pol_classification_default",
+      name: "Classification Policy",
       owner: "data-eng@acme.com",
       enabled: true,
       trigger: null,
-      steps: POLICY_CONFIG.ingestion.defaultOperations,
+      steps: CLASSIFICATION_STEPS,
       output: {
         type: "inline",
         options: {
@@ -73,7 +77,7 @@ export function seedPolicies(): WirePolicy[] {
           position: "suffix",
           maxRetries: 3,
           retryDelayMinutes: 5,
-          categoryId: "ingestion",
+          categoryId: "classification",
           sources: ["src-contracts"],
           scopeTypes: [],
           reviewerEmail: "data-eng@acme.com",
@@ -93,12 +97,12 @@ const D = 86400000;
  * a lively flow; a tail of older completed runs keeps the lifetime stats real.
  * Runs are split across the two active policies so the Sankey waist divides. */
 export function seedPolicyRuns(): PolicyRunView[] {
-  // Split the throughput across the two active policies (security / ingestion)
+  // Split the throughput across the two active policies (security / classification)
   // so both show a 24h count and the Sankey waist splits into two segments.
   const policyFor = (i: number, total: number) =>
     i < Math.round(total * 0.6)
       ? "pol_security_default"
-      : "pol_ingestion_default";
+      : "pol_classification_default";
   // 40 successful runs spread across the last ~13h.
   const delivered = Array.from({ length: 40 }, (_, i) => ({
     runId: `run_ok_${i}`,
