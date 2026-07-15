@@ -5,7 +5,9 @@
 //                                  primitives.css; colors/compat/dimensions must
 //                                  reference tokens; no duplicate primitives.
 //                                  (blocking)
-//   node theme-lint.mjs contrast   warn-only WCAG contrast report (never blocks)
+//   node theme-lint.mjs contrast   warn-only WCAG contrast report — the fixed
+//                                  --c-* pairs plus the status-tone text/fill
+//                                  pairs from tokens.css (never blocks)
 //
 // Scope is deliberately just core/theme/ — the palette + token layer this PR
 // owns, which is clean, so no baseline file is needed. Enforcing "no hardcoded
@@ -65,6 +67,94 @@ function isStructuralName(name) {
 function stripComments(text) {
   return text.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "));
 }
+
+// ── shared colour math + token resolution (used by contrast report + tone guard)
+function readPrimitives(css) {
+  const primitives = {};
+  for (const m of css.matchAll(/(--p-[a-z0-9-]+)\s*:\s*(#[0-9a-fA-F]{3,8})\s*;/g))
+    primitives[m[1]] = m[2];
+  return primitives;
+}
+function hexToRgb(h) {
+  h = h.replace("#", "");
+  if (h.length === 3)
+    h = h
+      .split("")
+      .map((c) => c + c)
+      .join("");
+  return {
+    r: parseInt(h.slice(0, 2), 16),
+    g: parseInt(h.slice(2, 4), 16),
+    b: parseInt(h.slice(4, 6), 16),
+    a: 1,
+  };
+}
+const over = (f, b) => ({
+  r: f.r * f.a + b.r * (1 - f.a),
+  g: f.g * f.a + b.g * (1 - f.a),
+  b: f.b * f.a + b.b * (1 - f.a),
+  a: 1,
+});
+const mix = (a, b, p) => ({
+  r: (a.r * p + b.r * (100 - p)) / 100,
+  g: (a.g * p + b.g * (100 - p)) / 100,
+  b: (a.b * p + b.b * (100 - p)) / 100,
+  a: 1,
+});
+// Resolve any token value: hex, rgb(a), var(--x[, fallback]) (--p-* → palette,
+// else the theme map), or color-mix(in srgb, A n%, B|transparent).
+function resolveColorValue(v, t, primitives, seen) {
+  if (v == null) return null;
+  v = v.trim();
+  let m;
+  if (v.startsWith("#")) return hexToRgb(v);
+  if ((m = v.match(/^rgba?\(([^)]+)\)$/))) {
+    const n = m[1]
+      .split(/[,/\s]+/)
+      .map(Number)
+      .filter((x) => !Number.isNaN(x));
+    return { r: n[0], g: n[1], b: n[2], a: n[3] ?? 1 };
+  }
+  if ((m = v.match(/^var\(\s*(--[a-z0-9-]+)\s*(?:,\s*([\s\S]+))?\)$/))) {
+    return resolveColorVar(m[1], m[2], t, primitives, seen);
+  }
+  if ((m = v.match(/^color-mix\(in srgb,\s*(.+?)\s+(\d+)%\s*,\s*(.+)\)$/))) {
+    const a = resolveColorValue(m[1], t, primitives, seen);
+    if (!a) return null;
+    if (m[3].trim() === "transparent") return { ...a, a: +m[2] / 100 };
+    const b = resolveColorValue(m[3].trim(), t, primitives, seen);
+    return b ? mix(a, b, +m[2]) : null;
+  }
+  return null;
+}
+function resolveColorVar(name, fallback, t, primitives, seen) {
+  if (name.startsWith("--p-")) {
+    return primitives[name]
+      ? hexToRgb(primitives[name])
+      : fallback
+        ? resolveColorValue(fallback, t, primitives, seen)
+        : null;
+  }
+  if (!seen.has(name) && t[name] !== undefined) {
+    const next = new Set(seen).add(name);
+    const r = resolveColorValue(t[name], t, primitives, next);
+    if (r) return r;
+  }
+  return fallback ? resolveColorValue(fallback, t, primitives, seen) : null;
+}
+const relativeLuminance = ({ r, g, b }) => {
+  const f = (v) => {
+    v /= 255;
+    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+};
+const contrastRatio = (a, b) => {
+  const [hi, lo] = [relativeLuminance(a), relativeLuminance(b)].sort(
+    (x, y) => y - x,
+  );
+  return (hi + 0.05) / (lo + 0.05);
+};
 
 // ── enforce: literals only in primitives.css, no duplicate primitives ────────
 function check() {
@@ -149,11 +239,7 @@ function check() {
 function reportContrast() {
   const primitivesCss = readFileSync(join(THEME, "primitives.css"), "utf8");
   const colorsCss = readFileSync(join(THEME, "colors.css"), "utf8");
-  const primitives = {};
-  for (const m of primitivesCss.matchAll(
-    /(--p-[a-z0-9-]+)\s*:\s*(#[0-9a-fA-F]{3,8})\s*;/g,
-  ))
-    primitives[m[1]] = m[2];
+  const primitives = readPrimitives(primitivesCss);
   const blocks = [];
   for (const m of colorsCss.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
     const decls = {};
@@ -189,82 +275,8 @@ function reportContrast() {
   };
   const flatten = (list) =>
     Object.assign({ ...SEED }, ...list.map((b) => b.decls));
-  const hexToRgb = (h) => {
-    h = h.replace("#", "");
-    if (h.length === 3)
-      h = h
-        .split("")
-        .map((c) => c + c)
-        .join("");
-    return {
-      r: parseInt(h.slice(0, 2), 16),
-      g: parseInt(h.slice(2, 4), 16),
-      b: parseInt(h.slice(4, 6), 16),
-      a: 1,
-    };
-  };
-  const over = (f, b) => ({
-    r: f.r * f.a + b.r * (1 - f.a),
-    g: f.g * f.a + b.g * (1 - f.a),
-    b: f.b * f.a + b.b * (1 - f.a),
-    a: 1,
-  });
-  const mix = (a, b, p) => ({
-    r: (a.r * p + b.r * (100 - p)) / 100,
-    g: (a.g * p + b.g * (100 - p)) / 100,
-    b: (a.b * p + b.b * (100 - p)) / 100,
-    a: 1,
-  });
-  // Resolve any token value: hex, rgb(a), var(--x[, fallback]) (--p-* → palette,
-  // else the theme map/seed), or color-mix(in srgb, A n%, B|transparent).
-  function resolveValue(v, t, seen) {
-    if (v == null) return null;
-    v = v.trim();
-    let m;
-    if (v.startsWith("#")) return hexToRgb(v);
-    if ((m = v.match(/^rgba?\(([^)]+)\)$/))) {
-      const n = m[1]
-        .split(/[,/\s]+/)
-        .map(Number)
-        .filter((x) => !Number.isNaN(x));
-      return { r: n[0], g: n[1], b: n[2], a: n[3] ?? 1 };
-    }
-    if ((m = v.match(/^var\(\s*(--[a-z0-9-]+)\s*(?:,\s*([\s\S]+))?\)$/))) {
-      return resolveVar(m[1], m[2], t, seen);
-    }
-    if ((m = v.match(/^color-mix\(in srgb,\s*(.+?)\s+(\d+)%\s*,\s*(.+)\)$/))) {
-      const a = resolveValue(m[1], t, seen);
-      if (!a) return null;
-      if (m[3].trim() === "transparent") return { ...a, a: +m[2] / 100 };
-      const b = resolveValue(m[3].trim(), t, seen);
-      return b ? mix(a, b, +m[2]) : null;
-    }
-    return null;
-  }
-  function resolveVar(name, fallback, t, seen) {
-    if (name.startsWith("--p-")) {
-      return primitives[name]
-        ? hexToRgb(primitives[name])
-        : fallback
-          ? resolveValue(fallback, t, seen)
-          : null;
-    }
-    if (!seen.has(name) && t[name] !== undefined) {
-      const next = new Set(seen).add(name);
-      const r = resolveValue(t[name], t, next);
-      if (r) return r;
-    }
-    return fallback ? resolveValue(fallback, t, seen) : null;
-  }
   const resolve = (token, t) =>
-    resolveValue(t[token] ?? null, t, new Set([token]));
-  const lum = ({ r, g, b }) => {
-    const f = (v) => {
-      v /= 255;
-      return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
-    };
-    return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
-  };
+    resolveColorValue(t[token] ?? null, t, primitives, new Set([token]));
   const contrast = (t1, t2, t) => {
     const surface = resolve("--c-surface", t);
     let a = resolve(t1, t);
@@ -272,8 +284,7 @@ function reportContrast() {
     if (!a || !b || !surface) return null;
     if (a.a < 1) a = over(a, surface);
     if (b.a < 1) b = over(b, surface);
-    const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x);
-    return (hi + 0.05) / (lo + 0.05);
+    return contrastRatio(a, b);
   };
   const PAIRS = [
     ["--c-text", "--c-surface", 4.5],
@@ -307,23 +318,131 @@ function reportContrast() {
   );
 }
 
+// ── status-tone text on its own fill ─────────────────────────────────────────
+// The StatusBadge / Banner "tone" vocabulary pairs a text colour --color-{hue}
+// with a fill --color-{hue}-light (and a --color-{hue}-border), hand-authored
+// PER THEME in core/tokens/tokens.css. A copy-paste can alias the fill to the
+// text colour (fg == bg → invisible label), which the --c-* report never sees.
+// Two thresholds: anything below TONE_INVISIBLE (near-invisible) BLOCKS the
+// build; the softer WCAG floor (TONE_FLOOR) is advisory in the report, since
+// clearing full AA can need a badge-palette restyle beyond the token layer.
+const TOKENS_CSS = resolve(process.cwd(), "editor/src/core/tokens/tokens.css");
+const TONE_FLOOR = 3.0; // WCAG AA for large/bold UI text; badge labels are bold.
+// Below this the text is nearly the same tone as its fill — the original
+// "invisible badge" bug class. Called out distinctly so it can't hide among the
+// merely-marginal tones in the report.
+const TONE_INVISIBLE = 1.6;
+// Compute the contrast of every --color-{hue} text on its own --color-{hue}-light
+// fill, per theme. Returns [{ theme, base, fill, ratio|null }] — no printing, so
+// both the warn-only report and the blocking guard can share it.
+function toneContrastResults() {
+  const primitives = readPrimitives(
+    readFileSync(join(THEME, "primitives.css"), "utf8"),
+  );
+  // Strip comments first: a selector's captured prefix can otherwise include a
+  // preceding comment that mentions data-theme="dark", misclassifying the block.
+  const css = stripComments(readFileSync(TOKENS_CSS, "utf8"));
+  const isDark = (sel) => /data-theme="dark"|color-scheme="dark"/.test(sel);
+  const lightTones = {};
+  const darkTones = {};
+  for (const m of css.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
+    const target = isDark(m[1]) ? darkTones : lightTones;
+    for (const d of m[2].matchAll(/(--color-[a-z0-9-]+)\s*:\s*([^;]+);/g))
+      target[d[1]] = d[2].trim();
+  }
+  // Dark only overrides the tones it redefines; unspecified ones inherit light.
+  const themes = { light: lightTones, dark: { ...lightTones, ...darkTones } };
+  const white = { r: 255, g: 255, b: 255, a: 1 };
+  const results = [];
+  for (const [theme, t] of Object.entries(themes)) {
+    const bases = Object.keys(t)
+      .map((k) => /^(--color-[a-z]+)-light$/.exec(k)?.[1])
+      .filter((base) => base && t[base] !== undefined);
+    for (const base of bases) {
+      const fill = `${base}-light`;
+      const fg = resolveColorValue(t[base], t, primitives, new Set([base]));
+      const bg = resolveColorValue(t[fill], t, primitives, new Set([fill]));
+      const ratio =
+        fg && bg
+          ? contrastRatio(fg.a < 1 ? over(fg, bg) : fg, bg.a < 1 ? over(bg, white) : bg)
+          : null;
+      results.push({ theme, base, fill, ratio });
+    }
+  }
+  return results;
+}
+
+function reportToneContrast() {
+  const results = toneContrastResults();
+  let warnings = 0;
+  let invisible = 0;
+  console.log("tone-contrast report: text on its own -light fill\n");
+  let theme = "";
+  for (const { theme: th, base, fill, ratio } of results) {
+    if (th !== theme) {
+      theme = th;
+      console.log(`  ${theme}`);
+    }
+    if (ratio == null) {
+      console.log(`    ?      ${base} on ${fill} (unresolved)`);
+      continue;
+    }
+    // ✖ = near-invisible (blocks CI), ⚠ = below the WCAG floor (warn only).
+    const mark = ratio < TONE_INVISIBLE ? "✖ " : ratio < TONE_FLOOR ? "⚠ " : "  ";
+    if (ratio < TONE_INVISIBLE) invisible++;
+    else if (ratio < TONE_FLOOR) warnings++;
+    console.log(
+      `    ${mark}${ratio.toFixed(2).padStart(5)}  (floor ${TONE_FLOOR}, blocks <${TONE_INVISIBLE})  ${base} on ${fill}`,
+    );
+  }
+  const parts = [];
+  if (invisible) parts.push(`✖ ${invisible} near-invisible (<${TONE_INVISIBLE}:1)`);
+  if (warnings) parts.push(`⚠ ${warnings} below the ${TONE_FLOOR} floor`);
+  console.log(
+    parts.length
+      ? `\n${parts.join(", ")}. ✖ blocks the build; ⚠ is advisory.\n`
+      : "\n✓ all tones clear the floor.\n",
+  );
+}
+
 // ── CLI ──────────────────────────────────────────────────────────────────────
 if (process.argv.includes("contrast")) {
   reportContrast();
+  reportToneContrast();
   process.exit(0); // never blocks
 }
 
 const violations = check();
-if (violations.length) {
-  console.error(
-    `\n✖ theme-lint: ${violations.length} raw/duplicate colour(s) in core/theme/:\n`,
-  );
-  for (const v of violations) console.error(`  ${v.file}:${v.line}  ${v.msg}`);
-  console.error(
-    `\nDefine every colour once in core/theme/primitives.css and reference it with var(--p-…).\n`,
-  );
+// Block status tones whose text is near-invisible on its own fill (< 1.6:1) in
+// either theme. The softer WCAG floor (3.0) stays advisory in the report; only
+// the "you literally can't read it" band fails the build.
+const toneViolations = toneContrastResults().filter(
+  (r) => r.ratio != null && r.ratio < TONE_INVISIBLE,
+);
+if (violations.length || toneViolations.length) {
+  if (violations.length) {
+    console.error(
+      `\n✖ theme-lint: ${violations.length} raw/duplicate colour(s) in core/theme/:\n`,
+    );
+    for (const v of violations) console.error(`  ${v.file}:${v.line}  ${v.msg}`);
+    console.error(
+      `\nDefine every colour once in core/theme/primitives.css and reference it with var(--p-…).\n`,
+    );
+  }
+  if (toneViolations.length) {
+    console.error(
+      `\n✖ theme-lint: ${toneViolations.length} status tone(s) below the ${TONE_INVISIBLE}:1 legibility floor (text nearly invisible on its own fill):\n`,
+    );
+    for (const v of toneViolations)
+      console.error(
+        `  ${v.base} on ${v.fill} — ${v.ratio.toFixed(2)}:1 in ${v.theme} theme`,
+      );
+    console.error(
+      `\nGive --color-{hue}-light a paler/darker tint in core/tokens/tokens.css so the label is legible.\n`,
+    );
+  }
   process.exit(1);
 }
 console.log(
-  "✓ theme-lint: core/theme colours all route through the primitive palette",
+  "✓ theme-lint: core/theme colours route through the primitive palette; status tones clear the legibility floor",
 );
