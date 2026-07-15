@@ -26,7 +26,7 @@ jobs:
 
   docker-compose-tests:
     needs: pick
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || format('depot-ubuntu-24.04-{0}', inputs.depot_cores || '4') }}
+    runs-on: ${{ needs.pick.outputs.use_depot == 'true' && format('depot-ubuntu-24.04-{0}', inputs.depot_cores || '4') || 'ubuntu-latest' }}
     permissions:
       actions: write
       contents: read
