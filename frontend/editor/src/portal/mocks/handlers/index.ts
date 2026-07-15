@@ -1,7 +1,6 @@
 import { assistantHandlers } from "@portal/mocks/handlers/assistant";
 import { authHandlers } from "@portal/mocks/handlers/auth";
 import { notificationsHandlers } from "@portal/mocks/handlers/notifications";
-import { searchHandlers } from "@portal/mocks/handlers/search";
 import { pipelinesHandlers } from "@portal/mocks/handlers/pipelines";
 import { sourcesHandlers } from "@portal/mocks/handlers/sources";
 import { infrastructureHandlers } from "@portal/mocks/handlers/infrastructure";
@@ -22,7 +21,6 @@ export const handlers = [
   ...authHandlers,
   ...notificationsHandlers,
   ...assistantHandlers,
-  ...searchHandlers,
   ...pipelinesHandlers,
   ...sourcesHandlers,
   ...infrastructureHandlers,

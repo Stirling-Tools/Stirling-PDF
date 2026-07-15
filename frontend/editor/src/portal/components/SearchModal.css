@@ -68,3 +68,7 @@
   font-size: 0.6875rem;
   color: var(--color-text-5);
 }
+
+.portal-search__item--active {
+  background: var(--color-bg-hover);
+}

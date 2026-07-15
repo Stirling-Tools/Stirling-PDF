@@ -21,8 +21,9 @@ import type { StirlingFileStub } from "@app/types/fileContext";
 import type { ToolId } from "@app/types/toolId";
 import { SETTINGS_SEARCH_INDEX } from "@app/data/settingsSearchIndex";
 import { SETTINGS_SECTION_REGISTRY } from "@app/data/settingsSectionRegistry";
+import { PROCESSOR_SEARCH_INDEX } from "@app/data/processorSearchIndex";
 
-export type SuperSearchGroupId = "files" | "tools" | "settings";
+export type SuperSearchGroupId = "files" | "tools" | "settings" | "processor";
 
 export interface SuperSearchResult {
   /** Stable unique key across all groups. */
@@ -46,7 +47,12 @@ export interface SuperSearchGroup {
 /** Per-group result caps so the dropdown stays scannable. */
 const GROUP_LIMIT = 6;
 /** Group display order in the dropdown. */
-const GROUP_ORDER: SuperSearchGroupId[] = ["files", "tools", "settings"];
+const GROUP_ORDER: SuperSearchGroupId[] = [
+  "files",
+  "tools",
+  "settings",
+  "processor",
+];
 
 export interface UseSuperSearchResult {
   /** Non-empty groups, in display order. */
@@ -244,24 +250,56 @@ export function useSuperSearch(
       .slice(0, GROUP_LIMIT);
   }, [trimmed, config, t, openSettings]);
 
+  // --- Processor (admin portal) results ------------------------------------
+  const processorResults = useMemo<SuperSearchResult[]>(() => {
+    if (!trimmed || PROCESSOR_SEARCH_INDEX.length === 0) return [];
+    // The portal is an admin surface; mirror the settings modal's admin gate
+    // (a login-disabled single-user deployment has a full-access operator).
+    const isAdmin = config?.isAdmin ?? false;
+    const loginEnabled = config?.enableLogin ?? false;
+    if (!(isAdmin || !loginEnabled)) return [];
+    return rankByFuzzy(PROCESSOR_SEARCH_INDEX, trimmed, [
+      (e) => t(e.labelKey, e.labelFallback),
+      (e) => e.labelFallback,
+      (e) => e.keywords?.join(" ") ?? "",
+    ])
+      .slice(0, GROUP_LIMIT)
+      .map(({ item, score }) => ({
+        key: `processor:${item.id}`,
+        group: "processor" as const,
+        title: t(item.labelKey, item.labelFallback),
+        iconName: "grid-view-rounded",
+        score,
+        onSelect: () => {
+          if (item.externalUrl) {
+            window.open(item.externalUrl, "_blank", "noopener,noreferrer");
+          } else {
+            navigate(item.path);
+          }
+        },
+      }));
+  }, [trimmed, config, t, navigate]);
+
   // --- Assemble ----------------------------------------------------------
   const groups = useMemo<SuperSearchGroup[]>(() => {
     const byId: Record<SuperSearchGroupId, SuperSearchResult[]> = {
       files: fileResults,
       tools: toolResults,
       settings: settingsResults,
+      processor: processorResults,
     };
     const labels: Record<SuperSearchGroupId, string> = {
       files: t("superSearch.group.files", "Files"),
       tools: t("superSearch.group.tools", "Tools"),
       settings: t("superSearch.group.settings", "Settings"),
+      processor: t("superSearch.group.processor", "Processor"),
     };
     return GROUP_ORDER.map((id) => ({
       id,
       label: labels[id],
       results: byId[id],
     })).filter((g) => g.results.length > 0);
-  }, [fileResults, toolResults, settingsResults, t]);
+  }, [fileResults, toolResults, settingsResults, processorResults, t]);
 
   const flatResults = useMemo(() => groups.flatMap((g) => g.results), [groups]);
 

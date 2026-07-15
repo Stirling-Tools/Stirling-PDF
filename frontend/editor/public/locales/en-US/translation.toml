@@ -7987,13 +7987,12 @@ title = "Nothing here yet"
 
 [portal.search]
 ariaLabel = "Search"
-placeholder = "Search Stirling — endpoints, pipelines, docs…"
+goTo = "Go to"
+placeholder = "Search the portal…"
 
 [portal.search.empty]
-noActionsDescription = "Quick actions will appear here once they're available."
-noActionsTitle = "No quick actions"
 noMatches = "No matches for \"{{query}}\""
-noMatchesDescription = "Try a different keyword or browse the catalogue."
+noMatchesDescription = "Try a different keyword."
 
 [portal.settings.groups]
 admin = "Admin"
@@ -9855,6 +9854,7 @@ placeholder = "Search files, tools and settings…"
 
 [superSearch.group]
 files = "Files"
+processor = "Processor"
 settings = "Settings"
 tools = "Tools"
 
