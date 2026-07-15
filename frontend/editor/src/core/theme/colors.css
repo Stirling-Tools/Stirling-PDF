@@ -62,15 +62,13 @@ html[data-app-theme="midnight"] {
   --c-danger: var(--p-red-500);
 }
 
-/* ── CUSTOM — --user-primary drives every accent + a surface tint (whole app takes the hue); the [data-accent="default"] blocks at the end opt surfaces back to neutral. LIGHT base here, DARK base next. ── */
+/* ── Base accent — fixed default (blue buttons); [data-accent="default"] blocks at the end keep surfaces neutral. LIGHT base here, DARK base next. ── */
 html[data-app-theme="custom"] {
-  --c-primary: var(--user-primary, var(--p-blue-500));
+  --c-primary: var(--p-blue-500);
   --c-primary-hover: color-mix(in srgb, var(--c-primary) 85%, var(--p-black));
   --c-primary-subtle: color-mix(in srgb, var(--c-primary) 14%, transparent);
-  /* Foreground on the filled primary — contrast-picked in JS (flips white/black). */
-  --c-text-on-primary: var(--user-primary-on, var(--p-white));
-  /* Accent as text/icon on a surface — JS lightness-clamped for legibility; fills/borders keep raw --c-primary. */
-  --c-accent-fg: var(--user-accent-fg, var(--c-primary));
+  --c-text-on-primary: var(--p-white);
+  --c-accent-fg: var(--c-primary);
 
   /* Primary-tinted surfaces (light base). Neutralised by the default override. */
   --c-bg: color-mix(in srgb, var(--c-primary) 7%, var(--p-gray-50));
