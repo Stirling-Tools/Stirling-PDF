@@ -1,4 +1,4 @@
--- Policy engine schema (gated by policies.enabled): persisted policies and the reusable input
+-- Policy engine schema: persisted policies and the reusable input
 -- connections ("sources") they reference by id. The whole policy/source lives as JSON in the
 -- *_json column (authoritative on read); the scalar columns are denormalized copies for querying,
 -- notably team_id so a caller's team can be loaded without scanning every team's rows. owner and

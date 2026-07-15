@@ -7,7 +7,6 @@ import {
   PoliciesIcon,
   PipelinesIcon,
   DocumentsIcon,
-  ComponentsIcon,
   InfrastructureIcon,
   UsageIcon,
   DocsIcon,
@@ -34,7 +33,6 @@ export const GROUP_OPERATIONAL: NavEntry[] = [
   { id: "policies", icon: <PoliciesIcon /> },
   { id: "pipelines", icon: <PipelinesIcon /> },
   { id: "documents", icon: <DocumentsIcon /> },
-  { id: "components", icon: <ComponentsIcon /> },
 ];
 
 export const GROUP_PLATFORM: NavEntry[] = [
