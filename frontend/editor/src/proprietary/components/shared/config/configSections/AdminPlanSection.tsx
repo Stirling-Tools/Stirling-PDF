@@ -1,141 +1,116 @@
-import React, { useState, useCallback, useEffect, useMemo } from "react";
-import { Divider, Loader, Alert } from "@mantine/core";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Divider } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { usePlans } from "@app/hooks/usePlans";
-import licenseService, {
-  PlanTierGroup,
-  mapLicenseToTier,
-} from "@app/services/licenseService";
-import { useCheckout } from "@app/contexts/CheckoutContext";
+import { useNavigate } from "react-router-dom";
+import { mapLicenseToTier } from "@app/services/licenseService";
+import usageAnalyticsService from "@app/services/usageAnalyticsService";
 import { useLicense } from "@app/contexts/LicenseContext";
-import AvailablePlansSection from "@app/components/shared/config/configSections/plan/AvailablePlansSection";
-import StaticPlanSection from "@app/components/shared/config/configSections/plan/StaticPlanSection";
+import { useAuth } from "@app/auth/context";
+import WorkspacePlanSnapshot, {
+  type WorkspacePlanSnapshotRow,
+} from "@app/components/shared/config/WorkspacePlanSnapshot";
 import LicenseKeySection from "@app/components/shared/config/configSections/plan/LicenseKeySection";
-import { alert } from "@app/components/toast";
 import { InfoBanner } from "@app/components/shared/InfoBanner";
 import { useLicenseAlert } from "@app/hooks/useLicenseAlert";
-import {
-  getPreferredCurrency,
-  setCachedCurrency,
-} from "@app/utils/currencyDetection";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@core/components/shared/config/LoginRequiredBanner";
-import { isSupabaseConfigured } from "@app/services/supabaseClient";
+import { PORTAL_USAGE_PATH } from "@app/routes/portalBasename";
 
-const AdminPlanSection: React.FC = () => {
-  const { t, i18n } = useTranslation();
-  const { loginEnabled, validateLoginEnabled } = useLoginRequired();
-  const { openCheckout } = useCheckout();
+interface AdminPlanSectionProps {
+  /** Closes the settings modal before deep-linking to the portal. */
+  onRequestClose?: () => void;
+}
+
+/**
+ * "Plan" settings page. Plan management and billing now live in the PDF
+ * Processor (portal); this page is a read-only mirror of the workspace's plan
+ * and usage that deep-links out to the portal's Usage & Billing view. The
+ * self-hosted license key still lives here so admins can activate/rotate keys.
+ */
+const AdminPlanSection: React.FC<AdminPlanSectionProps> = ({
+  onRequestClose,
+}) => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { loginEnabled } = useLoginRequired();
   const { licenseInfo } = useLicense();
-  const [currency, setCurrency] = useState<string>(() => {
-    // Initialize with auto-detected currency on first render
-    return getPreferredCurrency(i18n.language);
-  });
-  const [useStaticVersion, setUseStaticVersion] = useState(false);
-  const { plans, loading, error, refetch } = usePlans(currency);
+  const { portalAccess } = useAuth();
   const licenseAlert = useLicenseAlert();
 
-  // Check if we should use static version
+  const [operations, setOperations] = useState<number | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+
   useEffect(() => {
-    // Only use static version if Supabase is not configured or there's an error
-    // Stripe key is not required - hosted checkout works without it
-    if (!isSupabaseConfigured || error) {
-      setUseStaticVersion(true);
-    }
-  }, [error]);
-
-  const currencyOptions = [
-    { value: "gbp", label: "British pound (GBP, £)" },
-    { value: "usd", label: "US dollar (USD, $)" },
-    { value: "eur", label: "Euro (EUR, €)" },
-    { value: "cny", label: "Chinese yuan (CNY, ¥)" },
-    { value: "inr", label: "Indian rupee (INR, ₹)" },
-    { value: "brl", label: "Brazilian real (BRL, R$)" },
-    { value: "idr", label: "Indonesian rupiah (IDR, Rp)" },
-  ];
-
-  const handleManageClick = useCallback(async () => {
-    // Block access if login is disabled
-    if (!validateLoginEnabled()) {
-      return;
-    }
-
-    try {
-      // Only allow PRO or ENTERPRISE licenses to access billing portal
-      if (!licenseInfo?.licenseType || licenseInfo.licenseType === "NORMAL") {
-        throw new Error(
-          "No valid license found. Please purchase a license before accessing the billing portal.",
-        );
-      }
-
-      if (!licenseInfo?.licenseKey) {
-        throw new Error("License key missing. Please contact support.");
-      }
-
-      // Create billing portal session with license key
-      const response = await licenseService.createBillingPortalSession(
-        window.location.href,
-        licenseInfo.licenseKey,
-      );
-
-      // Open billing portal in new tab
-      window.open(response.url, "_blank");
-    } catch (error: unknown) {
-      console.error("Failed to open billing portal:", error);
-      alert({
-        alertType: "error",
-        title: t("billing.portal.error", "Failed to open billing portal"),
-        body:
-          (error instanceof Error ? error.message : undefined) ||
-          "Please try again or contact support.",
+    let cancelled = false;
+    setStatsLoading(true);
+    usageAnalyticsService
+      .getEndpointStatistics()
+      .then((res) => {
+        if (!cancelled) setOperations(res.totalVisits);
+      })
+      .catch(() => {
+        if (!cancelled) setOperations(null);
+      })
+      .finally(() => {
+        if (!cancelled) setStatsLoading(false);
       });
-    }
-  }, [licenseInfo, t, validateLoginEnabled]);
-
-  const handleCurrencyChange = useCallback((newCurrency: string) => {
-    setCurrency(newCurrency);
-    // Persist user's manual selection to localStorage
-    setCachedCurrency(newCurrency);
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const handleUpgradeClick = useCallback(
-    (planGroup: PlanTierGroup) => {
-      // Block access if login is disabled
-      if (!validateLoginEnabled()) {
-        return;
-      }
+  const tier = mapLicenseToTier(licenseInfo);
+  const tierLabel =
+    tier === "enterprise"
+      ? t("plan.enterprise.name", "Enterprise")
+      : tier === "server"
+        ? t("plan.server.name", "Server")
+        : t("plan.free.name", "Free");
 
-      // Only allow upgrades for server and enterprise tiers
-      if (planGroup.tier === "free") {
-        return;
-      }
+  // Fall back to the free-tier limit only on the free tier — server/enterprise
+  // are unlimited unless the licence pins an explicit seat count, so we must not
+  // show them the free cap of 5.
+  const seatLimit =
+    licenseInfo?.maxUsers ??
+    (tier === "free" ? (licenseAlert.freeTierLimit ?? null) : null);
+  const totalUsers = licenseAlert.totalUsers;
 
-      // Prevent free tier users from directly accessing enterprise (must have server first)
-      const currentTier = mapLicenseToTier(licenseInfo);
-      if (currentTier === "free" && planGroup.tier === "enterprise") {
-        alert({
-          alertType: "warning",
-          title: t("plan.enterprise.requiresServer", "Server Plan Required"),
-          body: t(
-            "plan.enterprise.requiresServerMessage",
-            "Please upgrade to the Server plan first before upgrading to Enterprise.",
-          ),
-        });
-        return;
-      }
-
-      // Use checkout context to open checkout modal
-      openCheckout(planGroup.tier, {
-        currency,
-        onSuccess: () => {
-          // Refetch plans after successful payment
-          // License context will auto-update
-          refetch();
-        },
-      });
-    },
-    [openCheckout, currency, refetch, licenseInfo, t, validateLoginEnabled],
+  const rows: WorkspacePlanSnapshotRow[] = useMemo(
+    () => [
+      {
+        label: t("plan.snapshot.users", "Users"),
+        value: totalUsers != null ? totalUsers.toLocaleString() : "—",
+        sub:
+          seatLimit != null
+            ? t("plan.snapshot.ofSeats", "of {{count}} seats", {
+                count: seatLimit,
+              })
+            : t("plan.snapshot.unlimitedSeats", "Unlimited seats"),
+      },
+      {
+        label: t("plan.snapshot.operations", "Operations run"),
+        value: operations != null ? operations.toLocaleString() : "—",
+        sub: t("plan.snapshot.acrossTools", "Across all tools"),
+      },
+      {
+        label: t("plan.snapshot.deployment", "Deployment"),
+        value: t("plan.snapshot.selfHosted", "Self-hosted"),
+        sub: t("plan.snapshot.yourInfrastructure", "Your infrastructure"),
+      },
+      {
+        label: t("plan.snapshot.audit", "Audit logging"),
+        value:
+          tier === "enterprise" ? t("plan.snapshot.enabled", "Enabled") : "—",
+        sub: t("plan.snapshot.enterpriseFeature", "Enterprise feature"),
+      },
+    ],
+    [t, totalUsers, seatLimit, operations, tier],
   );
+
+  const handleManage = useCallback(() => {
+    onRequestClose?.();
+    navigate(PORTAL_USAGE_PATH);
+  }, [navigate, onRequestClose]);
 
   const shouldShowLicenseWarning =
     licenseAlert.active && licenseAlert.audience === "admin";
@@ -147,53 +122,6 @@ const AdminPlanSection: React.FC = () => {
     }
     return licenseAlert.totalUsers.toLocaleString();
   }, [licenseAlert.totalUsers, licenseAlert.freeTierLimit, t]);
-
-  const scrollToPlans = useCallback(() => {
-    const el = document.getElementById("available-plans-section");
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  }, []);
-
-  // Show static version if Stripe is not configured or there's an error
-  if (useStaticVersion) {
-    return <StaticPlanSection currentLicenseInfo={licenseInfo ?? undefined} />;
-  }
-
-  // Early returns after all hooks are called
-  if (loading) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          padding: "2rem 0",
-        }}
-      >
-        <Loader size="lg" />
-      </div>
-    );
-  }
-
-  if (error) {
-    // Fallback to static version on error
-    return <StaticPlanSection currentLicenseInfo={licenseInfo ?? undefined} />;
-  }
-
-  if (!plans || plans.length === 0) {
-    return (
-      <Alert
-        color="yellow"
-        title={t("admin.settings.plan.noData.title", "No data available")}
-      >
-        {t(
-          "admin.settings.plan.noData.message",
-          "Plans data is not available at the moment.",
-        )}
-      </Alert>
-    );
-  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
@@ -211,9 +139,13 @@ const AdminPlanSection: React.FC = () => {
             total: formattedUserCount,
             limit: licenseAlert.freeTierLimit,
           })}
-          buttonText={t("plan.licenseWarning.cta", "See plans")}
+          // Only offer the CTA when there's a portal to send them to; without
+          // portal access /processor/usage doesn't resolve.
+          buttonText={
+            portalAccess ? t("plan.licenseWarning.cta", "See plans") : undefined
+          }
           buttonIcon="upgrade-rounded"
-          onButtonClick={scrollToPlans}
+          onButtonClick={portalAccess ? handleManage : undefined}
           dismissible={false}
           minHeight={68}
           background="#FFF4E6"
@@ -225,15 +157,24 @@ const AdminPlanSection: React.FC = () => {
         />
       )}
 
-      <AvailablePlansSection
-        plans={plans}
-        currentLicenseInfo={licenseInfo}
-        onUpgradeClick={handleUpgradeClick}
-        onManageClick={handleManageClick}
-        currency={currency}
-        onCurrencyChange={handleCurrencyChange}
-        currencyOptions={currencyOptions}
-        loginEnabled={loginEnabled}
+      <WorkspacePlanSnapshot
+        bannerTitle={t("plan.snapshot.readOnly.title", "Read-only snapshot")}
+        bannerMessage={t(
+          "plan.snapshot.readOnly.body",
+          "Plan and usage are governed in the PDF Processor. This mirrors the workspace's current state.",
+        )}
+        currentPlanLabel={t("plan.snapshot.currentPlan", "Current plan")}
+        tierLabel={tierLabel}
+        statusLabel={t("plan.snapshot.active", "Active")}
+        rows={rows}
+        ctaLabel={t("plan.snapshot.manageCta", "Manage in Usage & Billing")}
+        canManage={portalAccess}
+        onManage={handleManage}
+        cannotManageHint={t(
+          "plan.snapshot.readOnlyHint",
+          "This is read-only, ask a workspace admin to make changes.",
+        )}
+        loading={statsLoading}
       />
 
       <Divider />

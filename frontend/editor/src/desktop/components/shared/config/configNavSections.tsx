@@ -100,13 +100,13 @@ export const useConfigNavSections = (
   result.push(connectionModeSection);
 
   // Plan & Billing and Team sections only when authenticated in SaaS mode.
-  // These are the SHARED cloud sections — the wallet-driven PAYG Plan
-  // (dashboard + spend cap) and the team management UI — so a desktop SaaS
+  // These are the SHARED cloud sections — the read-only plan/usage snapshot
+  // (deep-links to the portal) and the team management UI — so a desktop SaaS
   // user sees the same Plan / billing / team experience as the web app.
   if (isSaasMode && isAuthenticated) {
     result.push({
       title: t("settings.planBilling.title", "Plan & Billing"),
-      items: [createCloudPlanNavItem(t)],
+      items: [createCloudPlanNavItem(t, onRequestClose)],
     });
     result.push({
       title: t("settings.team.title", "Team"),
