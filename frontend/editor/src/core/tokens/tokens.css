@@ -26,24 +26,56 @@
 
   /* Brand / status */
   --color-purple: var(--p-blue-400);
-  --color-purple-light: color-mix(in srgb, var(--p-blue-400) 13%, var(--p-white));
-  --color-purple-border: color-mix(in srgb, var(--p-blue-400) 40%, var(--p-white));
+  --color-purple-light: color-mix(
+    in srgb,
+    var(--p-blue-400) 13%,
+    var(--p-white)
+  );
+  --color-purple-border: color-mix(
+    in srgb,
+    var(--p-blue-400) 40%,
+    var(--p-white)
+  );
   --color-purple-dark: var(--p-blue-600);
   --color-green: var(--p-green-500);
-  --color-green-light: color-mix(in srgb, var(--p-green-500) 13%, var(--p-white));
-  --color-green-border: color-mix(in srgb, var(--p-green-500) 40%, var(--p-white));
+  --color-green-light: color-mix(
+    in srgb,
+    var(--p-green-500) 13%,
+    var(--p-white)
+  );
+  --color-green-border: color-mix(
+    in srgb,
+    var(--p-green-500) 40%,
+    var(--p-white)
+  );
   --color-green-dark: var(--p-green-600);
   --color-red: var(--p-red-500);
   --color-red-light: color-mix(in srgb, var(--p-red-500) 13%, var(--p-white));
   --color-red-border: color-mix(in srgb, var(--p-red-500) 40%, var(--p-white));
   --color-red-dark: var(--p-red-600);
   --color-amber: var(--p-amber-500);
-  --color-amber-light: color-mix(in srgb, var(--p-amber-500) 15%, var(--p-white));
-  --color-amber-border: color-mix(in srgb, var(--p-amber-500) 42%, var(--p-white));
+  --color-amber-light: color-mix(
+    in srgb,
+    var(--p-amber-500) 15%,
+    var(--p-white)
+  );
+  --color-amber-border: color-mix(
+    in srgb,
+    var(--p-amber-500) 42%,
+    var(--p-white)
+  );
   --color-amber-dark: var(--p-amber-600);
   --color-orange: var(--p-amber-600);
-  --color-orange-light: color-mix(in srgb, var(--p-amber-600) 15%, var(--p-white));
-  --color-orange-border: color-mix(in srgb, var(--p-amber-600) 42%, var(--p-white));
+  --color-orange-light: color-mix(
+    in srgb,
+    var(--p-amber-600) 15%,
+    var(--p-white)
+  );
+  --color-orange-border: color-mix(
+    in srgb,
+    var(--p-amber-600) 42%,
+    var(--p-white)
+  );
   --color-orange-dark: var(--p-red-600);
 
   /* Category accents (theme-stable) */
@@ -132,7 +164,11 @@
   --color-purple-border: var(--p-zinc-600);
   --color-purple-dark: var(--p-blue-400);
   --color-green: var(--p-green-500);
-  --color-green-light: color-mix(in srgb, var(--p-green-500) 20%, var(--p-zinc-900));
+  --color-green-light: color-mix(
+    in srgb,
+    var(--p-green-500) 20%,
+    var(--p-zinc-900)
+  );
   --color-green-border: var(--p-green-700);
   --color-green-dark: var(--p-green-500);
   --color-red: var(--p-red-400);
@@ -140,7 +176,11 @@
   --color-red-border: var(--p-red-600);
   --color-red-dark: var(--p-red-500);
   --color-amber: var(--p-amber-400);
-  --color-amber-light: color-mix(in srgb, var(--p-amber-500) 20%, var(--p-zinc-900));
+  --color-amber-light: color-mix(
+    in srgb,
+    var(--p-amber-500) 20%,
+    var(--p-zinc-900)
+  );
   --color-amber-border: var(--p-amber-600);
   /* Deeper than the base so it stays distinct (hover shade + amber text on
      dark surfaces). ~7.4:1 on --color-amber-light, passes WCAG AA. Was
@@ -148,7 +188,11 @@
      no-op in dark mode. */
   --color-amber-dark: var(--p-amber-500);
   --color-orange: var(--p-amber-500);
-  --color-orange-light: color-mix(in srgb, var(--p-amber-600) 30%, var(--p-zinc-900));
+  --color-orange-light: color-mix(
+    in srgb,
+    var(--p-amber-600) 30%,
+    var(--p-zinc-900)
+  );
   --color-orange-border: var(--p-red-600);
   --color-orange-dark: var(--p-amber-400);
 

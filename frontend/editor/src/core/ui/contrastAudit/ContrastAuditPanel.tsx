@@ -67,7 +67,8 @@ export function ContrastAuditPanel() {
   const copyList = () => {
     const header = "ratio\tfg\tbg\tcount\tcomponent";
     const lines = shown.map(
-      (f) => `${f.ratio.toFixed(2)}\t${f.fg}\t${f.bg}\t${f.count}\t${f.storyTitle}`,
+      (f) =>
+        `${f.ratio.toFixed(2)}\t${f.fg}\t${f.bg}\t${f.count}\t${f.storyTitle}`,
     );
     copyToClipboard([header, ...lines].join("\n"), () => {
       setCopied(true);
@@ -176,7 +177,9 @@ export function ContrastAuditPanel() {
           />
         </label>
         <span style={{ opacity: 0.6 }}>
-          <strong style={{ color: "var(--c-text, #111)" }}>{shown.length}</strong>{" "}
+          <strong style={{ color: "var(--c-text, #111)" }}>
+            {shown.length}
+          </strong>{" "}
           shown · {findings.length} found
         </span>
         <button
@@ -192,18 +195,20 @@ export function ContrastAuditPanel() {
       <div style={{ margin: "6px 0 12px", fontSize: 13 }}>
         {status === "idle" && (
           <span style={{ opacity: 0.7 }}>
-            Click “Scan stories” — it steps through each story in the frame below
-            and lists every text element whose colour is too close to its fill,
-            deduped per component + colour pair.
+            Click “Scan stories” — it steps through each story in the frame
+            below and lists every text element whose colour is too close to its
+            fill, deduped per component + colour pair.
           </span>
         )}
         {status === "failed" && (
           <span style={{ color: "var(--color-red, #dc2626)" }}>
-            Scan couldn’t start — the Storybook preview didn’t boot in time. Check
-            the console and try again.
+            Scan couldn’t start — the Storybook preview didn’t boot in time.
+            Check the console and try again.
           </span>
         )}
-        {(status === "scanning" || status === "done" || status === "stopped") && (
+        {(status === "scanning" ||
+          status === "done" ||
+          status === "stopped") && (
           <div>
             <div
               style={{

@@ -18,7 +18,9 @@ function fallbackCopy(text: string, onDone: () => void): void {
 
 export function copyToClipboard(text: string, onDone: () => void): void {
   if (navigator.clipboard?.writeText) {
-    navigator.clipboard.writeText(text).then(onDone, () => fallbackCopy(text, onDone));
+    navigator.clipboard
+      .writeText(text)
+      .then(onDone, () => fallbackCopy(text, onDone));
   } else {
     fallbackCopy(text, onDone);
   }

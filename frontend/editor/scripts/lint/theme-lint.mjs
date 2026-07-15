@@ -71,7 +71,9 @@ function stripComments(text) {
 // ── shared colour math + token resolution (used by contrast report + tone guard)
 function readPrimitives(css) {
   const primitives = {};
-  for (const m of css.matchAll(/(--p-[a-z0-9-]+)\s*:\s*(#[0-9a-fA-F]{3,8})\s*;/g))
+  for (const m of css.matchAll(
+    /(--p-[a-z0-9-]+)\s*:\s*(#[0-9a-fA-F]{3,8})\s*;/g,
+  ))
     primitives[m[1]] = m[2];
   return primitives;
 }
@@ -364,7 +366,10 @@ function toneContrastResults() {
       const bg = resolveColorValue(t[fill], t, primitives, new Set([fill]));
       const ratio =
         fg && bg
-          ? contrastRatio(fg.a < 1 ? over(fg, bg) : fg, bg.a < 1 ? over(bg, white) : bg)
+          ? contrastRatio(
+              fg.a < 1 ? over(fg, bg) : fg,
+              bg.a < 1 ? over(bg, white) : bg,
+            )
           : null;
       results.push({ theme, base, fill, ratio });
     }
@@ -388,7 +393,8 @@ function reportToneContrast() {
       continue;
     }
     // ✖ = near-invisible (blocks CI), ⚠ = below the WCAG floor (warn only).
-    const mark = ratio < TONE_INVISIBLE ? "✖ " : ratio < TONE_FLOOR ? "⚠ " : "  ";
+    const mark =
+      ratio < TONE_INVISIBLE ? "✖ " : ratio < TONE_FLOOR ? "⚠ " : "  ";
     if (ratio < TONE_INVISIBLE) invisible++;
     else if (ratio < TONE_FLOOR) warnings++;
     console.log(
@@ -396,7 +402,8 @@ function reportToneContrast() {
     );
   }
   const parts = [];
-  if (invisible) parts.push(`✖ ${invisible} near-invisible (<${TONE_INVISIBLE}:1)`);
+  if (invisible)
+    parts.push(`✖ ${invisible} near-invisible (<${TONE_INVISIBLE}:1)`);
   if (warnings) parts.push(`⚠ ${warnings} below the ${TONE_FLOOR} floor`);
   console.log(
     parts.length
@@ -424,7 +431,8 @@ if (violations.length || toneViolations.length) {
     console.error(
       `\n✖ theme-lint: ${violations.length} raw/duplicate colour(s) in core/theme/:\n`,
     );
-    for (const v of violations) console.error(`  ${v.file}:${v.line}  ${v.msg}`);
+    for (const v of violations)
+      console.error(`  ${v.file}:${v.line}  ${v.msg}`);
     console.error(
       `\nDefine every colour once in core/theme/primitives.css and reference it with var(--p-…).\n`,
     );

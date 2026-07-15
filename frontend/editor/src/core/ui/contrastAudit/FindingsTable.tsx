@@ -32,7 +32,10 @@ export function FindingsTable({ rows }: { rows: Finding[] }) {
             >
               {f.ratio.toFixed(2)}
               {f.count > 1 && (
-                <span style={{ opacity: 0.6, fontWeight: 400 }}> ×{f.count}</span>
+                <span style={{ opacity: 0.6, fontWeight: 400 }}>
+                  {" "}
+                  ×{f.count}
+                </span>
               )}
             </td>
             <td style={{ ...cell, whiteSpace: "nowrap" }}>
