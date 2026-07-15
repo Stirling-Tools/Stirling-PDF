@@ -5,6 +5,7 @@ import { StirlingFileStub, StirlingFile } from "@app/types/fileContext";
 import { FileId } from "@app/types/fileContext";
 import apiClient from "@app/services/apiClient";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { captureException } from "@app/services/analytics";
 
 interface StoredFileResponse {
   id: number;
@@ -33,6 +34,7 @@ interface AccessedShareLinkResponse {
 
 export const useFileManager = () => {
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const indexedDB = useIndexedDB();
   const { config } = useAppConfig();
 
@@ -99,6 +101,11 @@ export const useFileManager = () => {
 
   const loadRecentFiles = useCallback(async (): Promise<StirlingFileStub[]> => {
     setLoading(true);
+    setLoadError(false);
+    // Track whether any part of the load failed so callers can distinguish a
+    // failed/partial load from a genuinely empty history instead of silently
+    // falling through to an empty list.
+    let encounteredError = false;
     try {
       if (!indexedDB) {
         return [];
@@ -122,6 +129,10 @@ export const useFileManager = () => {
             {
               suppressErrorToast: true,
               skipAuthRedirect: true,
+              // Metadata listing, not a file transfer — bound the wait so a
+              // stalled connection surfaces as an error/retry instead of an
+              // indefinite "Loading files..." spinner.
+              timeout: 30000,
             } as any,
           );
           const serverFiles = Array.isArray(response.data) ? response.data : [];
@@ -242,6 +253,8 @@ export const useFileManager = () => {
 
           combinedStubs = [...updatedLocalStubs, ...serverStubs];
         } catch (error) {
+          encounteredError = true;
+          captureException(error, { context: "loadRecentFiles.serverFiles" });
           console.warn("Failed to load server files:", error);
         }
 
@@ -252,6 +265,8 @@ export const useFileManager = () => {
             >("/api/v1/storage/share-links/accessed", {
               suppressErrorToast: true,
               skipAuthRedirect: true,
+              // Bound the wait — see server-files fetch above.
+              timeout: 30000,
             } as any);
             const sharedLinks = Array.isArray(sharedResponse.data)
               ? sharedResponse.data
@@ -346,6 +361,8 @@ export const useFileManager = () => {
 
             combinedStubs = [...combinedStubs, ...sharedStubs];
           } catch (error) {
+            encounteredError = true;
+            captureException(error, { context: "loadRecentFiles.shareLinks" });
             console.warn("Failed to load shared links:", error);
           }
         }
@@ -358,9 +375,12 @@ export const useFileManager = () => {
 
       return sortedFiles;
     } catch (error) {
+      encounteredError = true;
+      captureException(error, { context: "loadRecentFiles" });
       console.error("Failed to load recent files:", error);
       return [];
     } finally {
+      setLoadError(encounteredError);
       setLoading(false);
     }
   }, [
@@ -505,6 +525,7 @@ export const useFileManager = () => {
 
   return {
     loading,
+    loadError,
     convertToFile,
     loadRecentFiles,
     handleRemoveFile,

@@ -38,3 +38,21 @@ export function trackEditorOperation(toolId: string, fileCount: number): void {
     if (DEV) console.warn("[analytics] trackEditorOperation failed", error);
   }
 }
+
+/**
+ * Report a caught error to PostHog so otherwise-swallowed failures become
+ * visible as `$exception` events instead of vanishing into a console.warn.
+ */
+export function captureException(
+  error: unknown,
+  context?: Record<string, unknown>,
+): void {
+  try {
+    if (!canCapture()) return;
+    const normalized =
+      error instanceof Error ? error : new Error(String(error));
+    posthog.captureException(normalized, context);
+  } catch (captureError) {
+    if (DEV) console.warn("[analytics] captureException failed", captureError);
+  }
+}

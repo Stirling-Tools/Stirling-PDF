@@ -42,6 +42,7 @@ interface FileManagerContextValue {
   fileGroups: Map<FileId, StirlingFileStub[]>;
   loadedHistoryFiles: Map<FileId, StirlingFileStub[]>;
   isLoading: boolean;
+  loadError: boolean;
   activeFileIds: FileId[];
 
   // Handlers
@@ -96,6 +97,7 @@ interface FileManagerProviderProps {
   modalHeight: string;
   refreshRecentFiles: () => Promise<void>;
   isLoading: boolean;
+  loadError: boolean;
   activeFileIds: FileId[];
   maxSelectable?: number | null;
 }
@@ -115,6 +117,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
   modalHeight,
   refreshRecentFiles,
   isLoading,
+  loadError,
   activeFileIds,
   maxSelectable = null,
 }) => {
@@ -1089,6 +1092,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
       fileGroups,
       loadedHistoryFiles,
       isLoading,
+      loadError,
       activeFileIds,
 
       // Handlers
@@ -1131,6 +1135,7 @@ export const FileManagerProvider: React.FC<FileManagerProviderProps> = ({
       fileGroups,
       loadedHistoryFiles,
       isLoading,
+      loadError,
       activeFileIds,
       handleSourceChange,
       handleStorageFilterChange,

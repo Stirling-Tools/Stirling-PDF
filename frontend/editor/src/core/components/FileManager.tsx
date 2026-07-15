@@ -42,7 +42,8 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  const { loadRecentFiles, handleRemoveFile, loading } = useFileManager();
+  const { loadRecentFiles, handleRemoveFile, loading, loadError } =
+    useFileManager();
   const { actions: fileActions } = useFileActions();
 
   // Get active file IDs from FileContext to show which files are already loaded
@@ -240,6 +241,7 @@ const FileManager: React.FC<FileManagerProps> = ({ selectedTool }) => {
             modalHeight={modalHeight}
             refreshRecentFiles={refreshRecentFiles}
             isLoading={loading}
+            loadError={loadError}
             activeFileIds={activeFileIds}
           >
             {isMobile ? <MobileLayout /> : <DesktopLayout />}
