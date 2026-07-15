@@ -2,18 +2,26 @@ package stirling.software.saas.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -169,6 +177,82 @@ class SupabaseAuthenticationFilterTest {
         verify(teamService, never()).getOrCreateDefaultTeam();
         assertThat(SecurityContextHolder.getContext().getAuthentication())
                 .isInstanceOf(EnhancedJwtAuthenticationToken.class);
+    }
+
+    @Test
+    void concurrentFirstLoginCreatesUserExactlyOnce() throws Exception {
+        // Reproduces the first-login stampede: a brand-new user's SPA fires many
+        // authenticated requests in parallel before the local row exists. Without the
+        // per-Supabase-id provisioning lock every request would attempt the INSERT and all
+        // but one would hit the users_supabase_auth_id_key unique constraint. The lock must
+        // collapse this to a single create while every request still authenticates.
+        UUID supabaseId = UUID.randomUUID();
+        Jwt jwt = jwtFor(supabaseId, "frank@example.com", false, "google");
+        when(jwtDecoder.decode("token")).thenReturn(jwt);
+        when(supabaseUserService.getUser(supabaseId))
+                .thenReturn(supabaseUserMatching(supabaseId, "frank@example.com", false));
+
+        // findBySupabaseId reflects the real DB: empty until the winning save commits, then
+        // returns the created row for every subsequent (and re-checked) lookup.
+        AtomicReference<User> created = new AtomicReference<>();
+        when(userService.findBySupabaseId(supabaseId))
+                .thenAnswer(inv -> Optional.ofNullable(created.get()));
+        when(userService.saveUser(any(User.class)))
+                .thenAnswer(
+                        inv -> {
+                            User u = inv.getArgument(0);
+                            created.set(u);
+                            return u;
+                        });
+
+        int threads = 16;
+        ExecutorService pool = Executors.newFixedThreadPool(threads);
+        try {
+            CountDownLatch ready = new CountDownLatch(threads);
+            CountDownLatch go = new CountDownLatch(1);
+            List<Future<Boolean>> results = new ArrayList<>();
+            for (int i = 0; i < threads; i++) {
+                results.add(
+                        pool.submit(
+                                () -> {
+                                    MockHttpServletRequest req = new MockHttpServletRequest();
+                                    req.setRequestURI("/api/v1/something");
+                                    req.setMethod("POST");
+                                    req.addHeader("Authorization", "Bearer token");
+                                    SecurityContextHolder.clearContext();
+                                    ready.countDown();
+                                    go.await();
+                                    filter.doFilter(
+                                            req,
+                                            new MockHttpServletResponse(),
+                                            new MockFilterChain());
+                                    boolean authed =
+                                            SecurityContextHolder.getContext().getAuthentication()
+                                                    instanceof EnhancedJwtAuthenticationToken;
+                                    SecurityContextHolder.clearContext();
+                                    return authed;
+                                }));
+            }
+            assertThat(ready.await(5, TimeUnit.SECONDS)).isTrue();
+            go.countDown();
+
+            int authenticated = 0;
+            for (Future<Boolean> f : results) {
+                if (Boolean.TRUE.equals(f.get(10, TimeUnit.SECONDS))) {
+                    authenticated++;
+                }
+            }
+            assertThat(authenticated)
+                    .as("every concurrent request authenticates")
+                    .isEqualTo(threads);
+        } finally {
+            pool.shutdownNow();
+        }
+
+        // The guard collapses the stampede to a single create; the losers reuse the row.
+        verify(userService, times(1)).saveUser(any(User.class));
+        verify(supabaseUserService, times(1)).createSupabaseUser(eq(supabaseId), any(), eq(false));
+        verify(saasTeamService, times(1)).ensurePersonalTeam(any(User.class));
     }
 
     @Test

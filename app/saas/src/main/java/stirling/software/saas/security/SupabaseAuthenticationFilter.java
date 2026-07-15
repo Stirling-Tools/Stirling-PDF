@@ -17,6 +17,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.locks.Lock;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.Authentication;
@@ -30,6 +31,8 @@ import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthen
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.google.common.util.concurrent.Striped;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -59,6 +62,13 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
 
     public static final String BEARER_PREFIX = "Bearer ";
     public static final String ANON_PREFIX = "anon_";
+
+    // Per-Supabase-id provisioning locks for the first-login create path (see
+    // getOrCreateUser). Striped so memory stays fixed regardless of how many users are
+    // seen; distinct ids only contend on a hash collision, which is harmless. The
+    // fast path for already-provisioned users never acquires one.
+    private static final int PROVISIONING_LOCK_STRIPES = 256;
+    private final Striped<Lock> provisioningLocks = Striped.lock(PROVISIONING_LOCK_STRIPES);
 
     private final TeamService teamService;
     private final UserService userService;
@@ -222,18 +232,33 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
             // If not present, the JWT references a Supabase user this server hasn't synced.
             SupabaseUser supabaseUser = supabaseUserService.getUser(supabaseId);
 
-            // Resolve to a local User by supabase_id.
+            // Fast path: an already-provisioned user is resolved with a single indexed
+            // lookup and no locking, so returning users see no behaviour or latency change.
             Optional<User> linkedUser = userService.findBySupabaseId(supabaseId);
             if (linkedUser.isPresent()) {
-                User user = linkedUser.get();
-                if (ANONYMOUS.toString().equalsIgnoreCase(user.getAuthenticationType())
-                        && !supabaseUser.isAnonymous()) {
-                    user = upgradeAnonymousUser(user, supabaseUser, jwt);
-                }
-                return user;
+                return resolveExistingUser(linkedUser.get(), supabaseUser, jwt);
             }
 
-            return createUser(jwt, supabaseId, email, appMetadata);
+            // First-login slow path. A freshly signed-in user (notably an auto-anonymous
+            // guest) has no local row yet, and the SPA fires many authenticated requests in
+            // parallel the instant a token exists — all would miss the lookup above and race
+            // to INSERT the same supabase_auth_id, so all but one hit the unique constraint
+            // (Postgres 23505). Serialise provisioning per Supabase id within this instance
+            // and re-check under the lock: the first request creates the row, the rest find
+            // it and reuse it, so no duplicate INSERT is even attempted. The create path in
+            // createUser() keeps its own catch as a backstop for the rarer cross-instance
+            // race, where two nodes each get the very first request at the same moment.
+            Lock lock = provisioningLocks.get(supabaseId);
+            lock.lock();
+            try {
+                Optional<User> recheck = userService.findBySupabaseId(supabaseId);
+                if (recheck.isPresent()) {
+                    return resolveExistingUser(recheck.get(), supabaseUser, jwt);
+                }
+                return createUser(jwt, supabaseId, email, appMetadata);
+            } finally {
+                lock.unlock();
+            }
         } catch (UserNotFoundException e) {
             throw new InvalidBearerTokenException("User not found", e);
         } catch (InvalidBearerTokenException e) {
@@ -245,6 +270,19 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
             log.error("Failed to process user authentication for {}", supabaseId, e);
             throw new AuthenticationFailureException("Failed to process user authentication", e);
         }
+    }
+
+    /**
+     * Resolve an already-linked local user, upgrading a still-anonymous row to the real
+     * provider/email once the Supabase account is no longer anonymous. Shared by the fast-path
+     * lookup and the under-lock re-check so both resolve identically.
+     */
+    private User resolveExistingUser(User user, SupabaseUser supabaseUser, Jwt jwt) {
+        if (ANONYMOUS.toString().equalsIgnoreCase(user.getAuthenticationType())
+                && !supabaseUser.isAnonymous()) {
+            return upgradeAnonymousUser(user, supabaseUser, jwt);
+        }
+        return user;
     }
 
     /** Promote a local anonymous user to the real provider+email carried on the JWT. */

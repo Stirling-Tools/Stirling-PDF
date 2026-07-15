@@ -514,7 +514,11 @@ class SupabaseAuthenticationFilterMoreTest {
 
             User winner = newUser("winner@example.com");
             winner.setSupabaseId(supabaseId);
+            // Fast-path miss, then a miss on the under-lock re-check too — i.e. a
+            // cross-instance race the in-instance lock can't cover — so createUser is
+            // attempted; its INSERT loses and the catch fetches the committed winner.
             when(userService.findBySupabaseId(supabaseId))
+                    .thenReturn(Optional.empty())
                     .thenReturn(Optional.empty())
                     .thenReturn(Optional.of(winner));
             when(userService.saveUser(any(User.class)))
