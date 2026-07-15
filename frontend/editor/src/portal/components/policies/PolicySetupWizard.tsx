@@ -23,6 +23,7 @@ import {
   type PipelineStep,
   type PolicySetupResult,
 } from "@portal/api/policies";
+import { HttpError, errorMessage } from "@portal/api/http";
 import {
   policyEndpoint,
   policyStepFromWire,
@@ -31,6 +32,7 @@ import {
   type PolicyToolId,
   type PolicyToolStep,
 } from "@app/policies/operations";
+import { isPolicyStepConfigured } from "@app/policies/stepValidity";
 import { fetchSources } from "@portal/api/sources";
 import { useAsync } from "@portal/hooks/useAsync";
 import { PolicyFieldRow } from "@portal/components/policies/PolicyFieldRow";
@@ -271,6 +273,12 @@ function PolicySetupWizardBody({
   const [error, setError] = useState<string | null>(null);
 
   const enabledTools = useMemo(() => tools.filter((tl) => tl.enabled), [tools]);
+  // Mirrors the backend's save-time step validation: while any enabled
+  // capability is missing required config, save stays disabled.
+  const hasMisconfiguredTool = useMemo(
+    () => enabledTools.some((tl) => !isPolicyStepConfigured(tl)),
+    [enabledTools],
+  );
 
   function setToolEnabled(toolId: PolicyToolId, enabled: boolean) {
     setTools((prev) =>
@@ -321,9 +329,12 @@ function PolicySetupWizardBody({
         retryDelayMinutes,
         steps,
       });
-    } catch {
+    } catch (e) {
       setSubmitting(false);
-      setError(t("portal.policies.wizard.errors.saveFailed"));
+      // The backend validates at save (PolicyValidator) and returns a specific
+      // reason — show it rather than a generic failure when we have one.
+      const detail = e instanceof HttpError ? errorMessage(e) : null;
+      setError(detail ?? t("portal.policies.wizard.errors.saveFailed"));
     }
   }
 
@@ -357,6 +368,7 @@ function PolicySetupWizardBody({
               size="sm"
               style={{ marginLeft: "auto" }}
               onClick={() => setStep("settings")}
+              disabled={hasMisconfiguredTool}
             >
               {t("portal.policies.wizard.actions.continue")}
             </Button>
@@ -370,7 +382,12 @@ function PolicySetupWizardBody({
               >
                 {t("portal.policies.wizard.actions.back")}
               </Button>
-              <Button size="sm" onClick={submit} loading={submitting}>
+              <Button
+                size="sm"
+                onClick={submit}
+                loading={submitting}
+                disabled={hasMisconfiguredTool}
+              >
                 {isEdit
                   ? t("portal.policies.wizard.actions.saveChanges")
                   : t("portal.policies.wizard.actions.enablePolicy")}
