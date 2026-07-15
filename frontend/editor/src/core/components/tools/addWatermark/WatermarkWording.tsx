@@ -11,12 +11,16 @@ interface WatermarkWordingProps {
     value: AddWatermarkParameters[K],
   ) => void;
   disabled?: boolean;
+  /** Render a visible label with a required asterisk (e.g. in policies, where
+   * empty text is refused at save). */
+  requireText?: boolean;
 }
 
 const WatermarkWording = ({
   parameters,
   onParameterChange,
   disabled = false,
+  requireText = false,
 }: WatermarkWordingProps) => {
   const { t } = useTranslation();
 
@@ -29,6 +33,12 @@ const WatermarkWording = ({
   return (
     <Stack gap="sm">
       <TextInput
+        label={
+          requireText
+            ? t("watermark.settings.text.label", "Watermark text")
+            : undefined
+        }
+        withAsterisk={requireText}
         placeholder={t(
           "watermark.settings.text.placeholder",
           "Enter watermark text",

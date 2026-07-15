@@ -275,10 +275,21 @@ function PolicySetupWizardBody({
   const enabledTools = useMemo(() => tools.filter((tl) => tl.enabled), [tools]);
   // Mirrors the backend's save-time step validation: while any enabled
   // capability is missing required config, save stays disabled.
-  const hasMisconfiguredTool = useMemo(
-    () => enabledTools.some((tl) => !isPolicyStepConfigured(tl)),
+  const misconfiguredTool = useMemo(
+    () => enabledTools.find((tl) => !isPolicyStepConfigured(tl)) ?? null,
     [enabledTools],
   );
+  const hasMisconfiguredTool = misconfiguredTool !== null;
+  // Hover/focus hint on the gated buttons naming what still needs config —
+  // a bare disabled button explains nothing.
+  const gateHint = misconfiguredTool
+    ? t("portal.policies.wizard.finishConfiguring", {
+        capability: t(
+          CAPABILITY_META[misconfiguredTool.toolId].labelKey,
+          CAPABILITY_META[misconfiguredTool.toolId].labelEn,
+        ),
+      })
+    : undefined;
 
   function setToolEnabled(toolId: PolicyToolId, enabled: boolean) {
     setTools((prev) =>
@@ -364,14 +375,15 @@ function PolicySetupWizardBody({
             {t("portal.policies.wizard.actions.cancel")}
           </Button>
           {step === "workflow" ? (
-            <Button
-              size="sm"
-              style={{ marginLeft: "auto" }}
-              onClick={() => setStep("settings")}
-              disabled={hasMisconfiguredTool}
-            >
-              {t("portal.policies.wizard.actions.continue")}
-            </Button>
+            <span title={gateHint} style={{ marginLeft: "auto" }}>
+              <Button
+                size="sm"
+                onClick={() => setStep("settings")}
+                disabled={hasMisconfiguredTool}
+              >
+                {t("portal.policies.wizard.actions.continue")}
+              </Button>
+            </span>
           ) : (
             <>
               <Button
@@ -382,16 +394,18 @@ function PolicySetupWizardBody({
               >
                 {t("portal.policies.wizard.actions.back")}
               </Button>
-              <Button
-                size="sm"
-                onClick={submit}
-                loading={submitting}
-                disabled={hasMisconfiguredTool}
-              >
-                {isEdit
-                  ? t("portal.policies.wizard.actions.saveChanges")
-                  : t("portal.policies.wizard.actions.enablePolicy")}
-              </Button>
+              <span title={gateHint}>
+                <Button
+                  size="sm"
+                  onClick={submit}
+                  loading={submitting}
+                  disabled={hasMisconfiguredTool}
+                >
+                  {isEdit
+                    ? t("portal.policies.wizard.actions.saveChanges")
+                    : t("portal.policies.wizard.actions.enablePolicy")}
+                </Button>
+              </span>
             </>
           )}
         </div>
