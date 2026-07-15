@@ -19,6 +19,7 @@ import {
   listWindowsCertificates,
   Pkcs11LibraryInfo,
 } from "@app/services/hardwareSigningService";
+import { MacKeychainPicker } from "@app/components/tools/certSign/MacKeychainPicker";
 
 interface HardwareCertificateSettingsProps {
   parameters: CertSignParameters;
@@ -35,6 +36,8 @@ const HardwareCertificateSettings = ({
 }: HardwareCertificateSettingsProps) => {
   const { t } = useTranslation();
   const isWindowsStore = parameters.certType === "WINDOWS_STORE";
+  const isMacKeychain = parameters.certType === "MACOS_KEYCHAIN";
+  const isPkcs11 = parameters.certType === "PKCS11";
 
   const [certs, setCerts] = useState<HardwareCertificateInfo[]>([]);
   const [loading, setLoading] = useState(false);
@@ -43,15 +46,20 @@ const HardwareCertificateSettings = ({
   const [libraries, setLibraries] = useState<Pkcs11LibraryInfo[]>([]);
   const [librarySelection, setLibrarySelection] = useState<string>("");
   const [customLibrary, setCustomLibrary] = useState<string>("");
-  const [supported, setSupported] = useState({ windows: true, pkcs11: true });
+  const [supported, setSupported] = useState({
+    windows: true,
+    pkcs11: true,
+    macosKeychain: false,
+  });
   const [capsReady, setCapsReady] = useState(false);
 
-  const selectKind = (kind: "WINDOWS_STORE" | "PKCS11") => {
+  const selectKind = (kind: "WINDOWS_STORE" | "MACOS_KEYCHAIN" | "PKCS11") => {
     if (parameters.certType === kind) {
       return;
     }
     onParameterChange("certType", kind);
     onParameterChange("alias", undefined);
+    onParameterChange("macosIdentity", undefined);
     setCerts([]);
     setError(null);
   };
@@ -132,13 +140,22 @@ const HardwareCertificateSettings = ({
         setSupported({
           windows: caps.windowsStoreSupported,
           pkcs11: caps.pkcs11Supported,
+          macosKeychain: caps.macosKeychainSupported,
         });
-        // Non-Windows (mac/Linux) has no Windows store; default the device to the USB-token path.
         if (
           !caps.windowsStoreSupported &&
           parameters.certType === "WINDOWS_STORE"
         ) {
-          onParameterChange("certType", "PKCS11");
+          onParameterChange(
+            "certType",
+            caps.macosKeychainSupported ? "MACOS_KEYCHAIN" : "PKCS11",
+          );
+        }
+        if (
+          !caps.macosKeychainSupported &&
+          parameters.certType === "MACOS_KEYCHAIN"
+        ) {
+          onParameterChange("certType", caps.pkcs11Supported ? "PKCS11" : "");
         }
         setCapsReady(true);
         setLibraries(caps.detectedLibraries);
@@ -300,8 +317,8 @@ const HardwareCertificateSettings = ({
             {t("certSign.format.windowsStore", "Windows certificate store")}
           </Button>
           <Button
-            variant={!isWindowsStore ? "primary" : "secondary"}
-            accent={!isWindowsStore ? "success" : "default"}
+            variant={isPkcs11 ? "primary" : "secondary"}
+            accent={isPkcs11 ? "success" : "default"}
             onClick={() => selectKind("PKCS11")}
             disabled={disabled || loading}
             style={{
@@ -317,7 +334,49 @@ const HardwareCertificateSettings = ({
           </Button>
         </div>
       )}
-      {isWindowsStore ? (
+      {supported.macosKeychain && supported.pkcs11 && (
+        <div style={{ display: "flex", gap: "4px" }}>
+          <Button
+            variant={isMacKeychain ? "primary" : "secondary"}
+            accent={isMacKeychain ? "success" : "default"}
+            onClick={() => selectKind("MACOS_KEYCHAIN")}
+            disabled={disabled || loading}
+            style={{
+              flex: 1,
+              fontSize: "11px",
+              minHeight: 40,
+              height: "auto",
+              whiteSpace: "normal",
+              lineHeight: 1.15,
+            }}
+          >
+            {t("certSign.format.macosKeychain", "System Keychain")}
+          </Button>
+          <Button
+            variant={isPkcs11 ? "primary" : "secondary"}
+            accent={isPkcs11 ? "success" : "default"}
+            onClick={() => selectKind("PKCS11")}
+            disabled={disabled || loading}
+            style={{
+              flex: 1,
+              fontSize: "11px",
+              minHeight: 40,
+              height: "auto",
+              whiteSpace: "normal",
+              lineHeight: 1.15,
+            }}
+          >
+            {t("certSign.format.pkcs11", "USB Token")}
+          </Button>
+        </div>
+      )}
+      {isMacKeychain ? (
+        <MacKeychainPicker
+          parameters={parameters}
+          onParameterChange={onParameterChange}
+          disabled={disabled || loading}
+        />
+      ) : isWindowsStore ? (
         <>
           <Text size="sm" c="dimmed">
             {t(

@@ -6,4 +6,8 @@ target/
 /gen/schemas
 /runtime/
 
+# Built by `task desktop:keychain-helper`; do not commit the binary
+/sidecar/keychain-helper
+/binaries/keychain-helper-*
+
 **/stirling_thumbnail_handler.dll

@@ -2486,17 +2486,21 @@ stepTitle = "This device"
 failed = "An error occurred while processing signatures."
 
 [certSign.format]
+macosKeychain = "System Keychain"
 pkcs11 = "USB Token"
 windowsStore = "Windows certificate store"
 
 [certSign.hardware]
 certificate = "Certificate"
+chooseKeychainCertificate = "Choose certificate…"
 customLibrary = "Custom driver path…"
 driver = "PKCS#11 driver"
 driverPath = "Driver library path"
 driverPathPlaceholder = "Full path to your PKCS#11 driver (.dll, .so or .dylib)"
 expired = "expired"
 expires = "expires"
+issuer = "Issuer"
+keychainHint = "Use the macOS certificate picker to select a signing certificate from your Keychain."
 listCerts = "List certificates"
 loading = "Reading certificates…"
 noCerts = "No signing certificates found"

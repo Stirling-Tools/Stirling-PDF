@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.model.api.security.HardwareCertificateInfo;
 import stirling.software.SPDF.model.api.security.HardwareSigningCapabilities;
 import stirling.software.SPDF.model.api.security.HardwareSigningCapabilities.Pkcs11LibraryInfo;
+import stirling.software.SPDF.service.keychain.MacKeychainHelper;
 import stirling.software.common.util.ExceptionUtils;
 
 /**
@@ -54,6 +55,7 @@ public class HardwareKeyStoreService {
 
     public static final String SOURCE_WINDOWS_STORE = "WINDOWS_STORE";
     public static final String SOURCE_PKCS11 = "PKCS11";
+    public static final String SOURCE_MACOS_KEYCHAIN = "MACOS_KEYCHAIN";
 
     private static final String WINDOWS_KEYSTORE_TYPE = "Windows-MY";
     private static final String MSCAPI_PROVIDER = "SunMSCAPI";
@@ -91,6 +93,32 @@ public class HardwareKeyStoreService {
 
     public boolean isWindows() {
         return System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("win");
+    }
+
+    public boolean isMac() {
+        return System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("mac");
+    }
+
+    /** True only in the Tauri macOS app with the keychain helper configured. */
+    public boolean macosKeychainSupported() {
+        return isTauriDesktop() && isMac() && MacKeychainHelper.helperConfigured();
+    }
+
+    private boolean isTauriDesktop() {
+        return Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"));
+    }
+
+    public void assertMacosKeychainAvailable(HttpServletRequest request) {
+        assertLocalDesktop(request);
+        if (!macosKeychainSupported()) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.macosKeychainUnavailable",
+                    "macOS Keychain signing is only available in the Stirling PDF macOS app");
+        }
+    }
+
+    public Provider macosKeychainProvider() {
+        return stirling.software.SPDF.service.keychain.MacKeychainKeyStore.provider();
     }
 
     private boolean windowsStoreSupported() {
@@ -144,13 +172,14 @@ public class HardwareKeyStoreService {
     public HardwareSigningCapabilities capabilities() {
         boolean desktop = isDesktop();
         if (!desktop) {
-            return new HardwareSigningCapabilities(false, "", false, false, List.of());
+            return new HardwareSigningCapabilities(false, "", false, false, false, List.of());
         }
         return new HardwareSigningCapabilities(
                 true,
                 System.getProperty("os.name", ""),
                 windowsStoreSupported(),
                 pkcs11Supported(),
+                macosKeychainSupported(),
                 detectPkcs11Libraries());
     }
 

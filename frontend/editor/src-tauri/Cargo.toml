@@ -1,3 +1,9 @@
+# keychain-helper lives in the stirling-keychain member so this package has a
+# single binary and `cargo run` / `tauri build` stay unambiguous.
+[workspace]
+members = [".", "keychain"]
+resolver = "2"
+
 [package]
 name = "stirling-pdf"
 version = "0.1.0"
@@ -7,6 +13,7 @@ license = ""
 repository = ""
 edition = "2021"
 rust-version = "1.77.2"
+default-run = "stirling-pdf"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -46,6 +53,8 @@ urlencoding = "2.1"
 sha2 = "0.11"
 base64 = "0.22"
 rand = "0.9"
+
+stirling-keychain = { path = "keychain" }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.10"

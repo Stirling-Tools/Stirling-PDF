@@ -3,15 +3,24 @@ import {
   useBaseParameters,
   BaseParametersHook,
 } from "@app/hooks/tools/shared/useBaseParameters";
+import type { MacosSigningIdentity } from "@app/services/macosKeychainService";
 
 export interface CertSignParameters extends BaseParameters {
   // Where the signing certificate comes from:
   //  MANUAL = upload a keystore file, AUTO = server certificate,
-  //  DEVICE = a certificate held on this machine (Windows store or USB PKCS#11 token, desktop only).
+  //  DEVICE = a certificate held on this machine (Windows store, macOS Keychain, or USB PKCS#11 token, desktop only).
   signMode: "MANUAL" | "AUTO" | "DEVICE";
   // For MANUAL this is the uploaded file format; for DEVICE it is the hardware kind
-  // (WINDOWS_STORE or PKCS11). Hardware kinds are only offered in the desktop app.
-  certType: "" | "PEM" | "PKCS12" | "PFX" | "JKS" | "WINDOWS_STORE" | "PKCS11";
+  // (WINDOWS_STORE, MACOS_KEYCHAIN or PKCS11). Hardware kinds are only offered in the desktop app.
+  certType:
+    | ""
+    | "PEM"
+    | "PKCS12"
+    | "PFX"
+    | "JKS"
+    | "WINDOWS_STORE"
+    | "MACOS_KEYCHAIN"
+    | "PKCS11";
   privateKeyFile?: File;
   certFile?: File;
   p12File?: File;
@@ -22,6 +31,7 @@ export interface CertSignParameters extends BaseParameters {
   alias?: string;
   pkcs11LibraryPath?: string;
   pkcs11Slot?: number;
+  macosIdentity?: MacosSigningIdentity;
 
   // Signature appearance options
   showSignature: boolean;
@@ -72,6 +82,8 @@ export const useCertSignParameters = (): CertSignParametersHook => {
           return !!params.jksFile;
         case "WINDOWS_STORE":
           // Need a chosen certificate from the Windows store.
+          return !!params.alias;
+        case "MACOS_KEYCHAIN":
           return !!params.alias;
         case "PKCS11":
           // Need a driver library and a chosen certificate on the token.
