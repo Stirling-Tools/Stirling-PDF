@@ -18,11 +18,6 @@ export type ChooseMacosSigningIdentityResult =
   | { status: "cancelled" }
   | { status: "error"; message: string };
 
-/** SHA-256 hex of cert DER — only identity handle Cert Sign accepts for macOS Keychain. */
-export function isSha256IdentityHash(value: string | undefined | null): boolean {
-  return typeof value === "string" && /^[0-9A-Fa-f]{64}$/.test(value.replace(/\s/g, ""));
-}
-
 export function isMacosKeychainAvailable(): boolean {
   return false;
 }

@@ -40,8 +40,7 @@ public final class MacKeychainHelper {
     }
 
     public static List<Certificate> loadCertificateChain(String identityHash) throws Exception {
-        String normalized = requireSha256IdentityHash(identityHash);
-        String json = runHelper("get-chain", normalized);
+        String json = runHelper("get-chain", identityHash);
         JsonNode root = MAPPER.readTree(json);
         JsonNode certs = root.get("certificatesDerBase64");
         if (certs == null || !certs.isArray() || certs.isEmpty()) {
@@ -60,9 +59,8 @@ public final class MacKeychainHelper {
 
     public static byte[] sign(String identityHash, String jcaAlgorithm, byte[] message)
             throws Exception {
-        String normalized = requireSha256IdentityHash(identityHash);
         ProcessBuilder builder =
-                new ProcessBuilder(helperPath(), "sign", normalized, jcaAlgorithm);
+                new ProcessBuilder(helperPath(), "sign", normalizeHash(identityHash), jcaAlgorithm);
         builder.redirectErrorStream(true);
         Process process = builder.start();
         process.getOutputStream().write(message);
@@ -79,7 +77,8 @@ public final class MacKeychainHelper {
     }
 
     private static String runHelper(String command, String identityHash) throws Exception {
-        ProcessBuilder builder = new ProcessBuilder(helperPath(), command, identityHash);
+        ProcessBuilder builder =
+                new ProcessBuilder(helperPath(), command, normalizeHash(identityHash));
         builder.redirectErrorStream(true);
         Process process = builder.start();
         byte[] stdout = readAll(process.getInputStream());
@@ -101,27 +100,6 @@ public final class MacKeychainHelper {
                     "macOS Keychain signing is only available in the Stirling PDF macOS app");
         }
         return path;
-    }
-
-    /**
-     * Identity handles must be SHA-256 hex of the certificate DER (64 chars). Older SHA-1
-     * handles from Apple's {@code security find-identity} / a previous picker are rejected —
-     * the UI should ask the user to choose the certificate again.
-     */
-    static String requireSha256IdentityHash(String value) {
-        String normalized = normalizeHash(value);
-        if (normalized.length() == 64 && normalized.chars().allMatch(MacKeychainHelper::isHex)) {
-            return normalized;
-        }
-        throw ExceptionUtils.createIllegalArgumentException(
-                "error.macosKeychainIdentityStale",
-                "The selected keychain certificate is out of date. Choose the certificate again.");
-    }
-
-    private static boolean isHex(int codePoint) {
-        return (codePoint >= '0' && codePoint <= '9')
-                || (codePoint >= 'A' && codePoint <= 'F')
-                || (codePoint >= 'a' && codePoint <= 'f');
     }
 
     private static String normalizeHash(String value) {

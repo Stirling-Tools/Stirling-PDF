@@ -33,27 +33,11 @@ fn normalize_hash(value: &str) -> String {
     value.replace(' ', "").to_uppercase()
 }
 
-fn is_sha256_hex(value: &str) -> bool {
-    value.len() == 64 && value.bytes().all(|b| b.is_ascii_hexdigit())
-}
-
-/// SHA-256 of the certificate DER — the only identity handle we accept.
-/// Must match the ObjC picker (`picker.m`) so get-chain / sign resolve the same cert.
+/// SHA-256 of the certificate DER — must match the ObjC picker (`picker.m`).
 pub fn certificate_sha256_hex(certificate: &SecCertificate) -> Result<String> {
     let der = certificate.to_der();
     let digest = Sha256::digest(&der);
     Ok(digest.iter().map(|byte| format!("{byte:02X}")).collect())
-}
-
-fn require_sha256_identity_hash(value: &str) -> Result<String> {
-    let normalized = normalize_hash(value);
-    if is_sha256_hex(&normalized) {
-        return Ok(normalized);
-    }
-    Err(KeychainError::Message(
-        "Invalid keychain identity handle (expected SHA-256). Choose the certificate again in Cert Sign."
-            .to_string(),
-    ))
 }
 
 fn read_c_string(value: *mut std::os::raw::c_char) -> String {
@@ -97,7 +81,7 @@ pub fn choose_signing_identity() -> Result<ChooseIdentityResponse> {
 }
 
 fn find_identity_by_hash(target_hash: &str) -> Result<SecIdentity> {
-    let normalized = require_sha256_identity_hash(target_hash)?;
+    let normalized = normalize_hash(target_hash);
     // Limit defaults to 1; without Limit::All only the first identity is considered.
     let results = ItemSearchOptions::new()
         .class(ItemClass::identity())
