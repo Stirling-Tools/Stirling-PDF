@@ -111,18 +111,24 @@ pub fn find_keychain_helper_path(app: &tauri::AppHandle) -> Option<std::path::Pa
         }
     }
 
-    let manifest_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    for profile in ["debug", "release"] {
-        let candidate = manifest_dir
-            .join("target")
-            .join(profile)
-            .join("keychain-helper");
-        if candidate.is_file() {
-            return Some(candidate);
+    // Prefer the active Cargo target dir (tauri/cargo may redirect away from
+    // src-tauri/target via CARGO_TARGET_DIR).
+    let target_dirs = [
+        std::env::var_os("CARGO_TARGET_DIR").map(std::path::PathBuf::from),
+        Some(std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("target")),
+    ];
+    for target_dir in target_dirs.into_iter().flatten() {
+        for profile in ["debug", "release"] {
+            let candidate = target_dir.join(profile).join("keychain-helper");
+            if candidate.is_file() {
+                return Some(candidate);
+            }
         }
     }
 
-    let staged = manifest_dir.join("sidecar").join("keychain-helper");
+    let staged = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("sidecar")
+        .join("keychain-helper");
     if staged.is_file() {
         return Some(staged);
     }

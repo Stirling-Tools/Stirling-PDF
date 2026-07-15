@@ -3,6 +3,7 @@ import type {
   ChooseMacosSigningIdentityResult,
   MacosSigningIdentity,
 } from "@core/services/macosKeychainService";
+export { isSha256IdentityHash } from "@core/services/macosKeychainService";
 
 export function isMacosKeychainAvailable(): boolean {
   return true;
