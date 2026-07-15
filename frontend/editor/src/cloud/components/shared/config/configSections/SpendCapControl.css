@@ -22,10 +22,10 @@
   gap: 14px;
 }
 [data-mantine-color-scheme="dark"] .scc {
-  --scc-accent-text: #66b8ff;
-  --scc-accent-soft: rgba(10, 139, 255, 0.16);
-  --scc-chip-bg: #272d35;
-  --scc-chip-border: #3d444e;
+  --scc-accent-text: #7ab4ff;
+  --scc-accent-soft: rgba(79, 142, 245, 0.16);
+  --scc-chip-bg: #1c2340;
+  --scc-chip-border: #2d3560;
 }
 
 /* ── Inline row: presets · custom · no-cap · (save) ──────────────────── */

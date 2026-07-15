@@ -32,8 +32,7 @@
     "paths": {
       "@app/*": ["./src/desktop/*", "./src/proprietary/*", "./src/core/*"],
       "@proprietary/*": ["./src/proprietary/*"],
-      "@core/*": ["./src/core/*"],
-      "@shared/*": ["../shared/*"]
+      "@core/*": ["./src/core/*"]
     },
     // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
     // "typeRoots": [],                                  /* Specify multiple folders that act like './node_modules/@types'. */

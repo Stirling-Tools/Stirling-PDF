@@ -2,6 +2,7 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "license": "SEE LICENSE IN https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/refs/heads/main/proprietary/LICENSE",
   "proxy": "http://localhost:8080",
   "dependencies": {
@@ -137,6 +138,7 @@
     "eslint": "^10.0.2",
     "fake-indexeddb": "^6.2.5",
     "jsdom": "^27.0.0",
+    "json-schema-to-typescript": "^15.0.4",
     "license-checker": "^25.0.1",
     "msw": "^2.14.6",
     "msw-storybook-addon": "^2.0.7",
@@ -173,7 +175,7 @@
   },
   "msw": {
     "workerDirectory": [
-      "portal/public"
+      "editor/public"
     ]
   }
 }

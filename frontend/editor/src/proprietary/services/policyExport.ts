@@ -70,6 +70,7 @@ function activeExportPolicies(): ExportPolicy[] {
         s.configured &&
         s.status === "active" &&
         s.backendId &&
+        (s.sources.length === 0 || s.sources.includes("editor")) &&
         s.runOn === "export",
     )
     .map(([id, s]) => ({

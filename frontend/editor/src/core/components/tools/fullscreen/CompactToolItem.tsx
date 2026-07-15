@@ -15,6 +15,7 @@ import {
   useToolMeta,
   getDisabledLabel,
 } from "@app/components/tools/fullscreen/shared";
+import { Button } from "@app/ui/Button";
 
 interface CompactToolItemProps {
   id: string;
@@ -53,27 +54,31 @@ const CompactToolItem: React.FC<CompactToolItemProps> = ({
     iconNode = tool.icon;
   }
 
+  const iconElement = tool.icon ? (
+    <span
+      className={iconClasses}
+      aria-hidden
+      style={{
+        background: iconBg,
+        ...getIconStyle(),
+      }}
+    >
+      {iconNode}
+    </span>
+  ) : undefined;
+
   const compactButton = (
-    <button
-      type="button"
+    <Button
+      variant="tertiary"
+      justify="start"
+      fullWidth
       className={`tool-panel__fullscreen-list-item ${getItemClasses(false)} ${isSelected ? "tool-panel__fullscreen-list-item--selected" : ""} ${!disabled ? "tool-panel__fullscreen-list-item--with-star" : ""}`}
       onClick={onClick}
       aria-disabled={disabled}
       disabled={disabled}
       data-tour={`tool-button-${id}`}
+      leftSection={iconElement}
     >
-      {tool.icon ? (
-        <span
-          className={iconClasses}
-          aria-hidden
-          style={{
-            background: iconBg,
-            ...getIconStyle(),
-          }}
-        >
-          {iconNode}
-        </span>
-      ) : null}
       <span className="tool-panel__fullscreen-list-body">
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <Text className="tool-panel__fullscreen-name">{tool.name}</Text>
@@ -93,7 +98,7 @@ const CompactToolItem: React.FC<CompactToolItemProps> = ({
           />
         </div>
       )}
-    </button>
+    </Button>
   );
 
   const { key: disabledKey, fallback: disabledFallback } =

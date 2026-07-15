@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Button, Group, Text, Stack } from "@mantine/core";
+import { Group, Text, Stack } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import HistoryIcon from "@mui/icons-material/History";
 import { useTranslation } from "react-i18next";
 import { useFileManagerContext } from "@app/contexts/FileManagerContext";
@@ -77,6 +78,7 @@ const EmptyFilesState: React.FC = () => {
           onMouseLeave={() => setIsUploadHover(false)}
         >
           <Button
+            variant="tertiary"
             aria-label={t("emptyFilesState.upload", "Upload")}
             style={{
               backgroundColor: "var(--bg-file-manager)",

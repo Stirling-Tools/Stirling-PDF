@@ -8,7 +8,7 @@ import {
 import { createFileFromApiResponse } from "@app/utils/fileResponseUtils";
 import {
   useToolOperation,
-  ToolType,
+  defineCustomTool,
   CustomProcessorResult,
 } from "@app/hooks/tools/shared/useToolOperation";
 import {
@@ -300,8 +300,7 @@ export const convertProcessor = async (
 };
 
 // Static configuration object
-export const convertOperationConfig = {
-  toolType: ToolType.custom,
+export const convertOperationConfig = defineCustomTool({
   customProcessor: convertProcessor, // Can't use callback version here
   operationType: "convert",
   defaultParameters,
@@ -311,7 +310,7 @@ export const convertOperationConfig = {
       params.toExtension === "pdfx" ? "pdfa" : params.toExtension;
     return getEndpointUrl(params.fromExtension, actualToExtension) ?? undefined;
   },
-} as const;
+});
 
 export const useConvertOperation = (parameters?: ConvertParameters) => {
   const { t } = useTranslation();

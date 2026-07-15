@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Anchor, Group, Stack, Text, Button, Paper } from "@mantine/core";
+import { Anchor, Group, Stack, Text, Paper } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import ApiKeySection from "@app/components/shared/config/configSections/apiKeys/ApiKeySection";
 import RefreshModal from "@app/components/shared/config/configSections/apiKeys/RefreshModal";
 import useApiKey from "@app/components/shared/config/configSections/apiKeys/hooks/useApiKey";

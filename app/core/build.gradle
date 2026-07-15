@@ -175,6 +175,14 @@ springBoot {
 // Frontend build tasks - only enabled with -PbuildWithFrontend=true
 def buildWithFrontend = project.hasProperty('buildWithFrontend') && project.property('buildWithFrontend') == 'true'
 def buildPrototypes = project.hasProperty('prototypesMode') && project.property('prototypesMode') == 'true'
+// The admin portal ships as a lazy route inside the editor bundle (see
+// proprietary/routes/adminRouteExtensions). -PbuildWithPortal=true includes that
+// chunk via VITE_INCLUDE_PORTAL on the editor build; the deploy GHA sets it when
+// the portal or AI layers change. Building the portal implies building the editor.
+def buildWithPortal = project.hasProperty('buildWithPortal') && project.property('buildWithPortal') == 'true'
+if (buildWithPortal) {
+    buildWithFrontend = true
+}
 // Workspace root holds package.json and node_modules (shared across editor /
 // future portal). Editor-specific paths (src, public, dist, tauri) live one
 // level deeper under frontend/editor/.
@@ -297,9 +305,11 @@ tasks.register('npmBuild', Exec) {
     // Override VITE_API_BASE_URL to use relative paths for production builds
     // This ensures JARs work regardless of how they're deployed (direct, proxied, etc.)
     environment 'VITE_API_BASE_URL', '/'
+    // Include the admin portal's lazy route/chunk in the editor build when requested.
+    environment 'VITE_INCLUDE_PORTAL', (buildWithPortal ? 'true' : 'false')
 
     doFirst {
-        println "Building editor frontend application for production (mode=${frontendMode}, VITE_API_BASE_URL=/)"
+        println "Building editor frontend application for production (mode=${frontendMode}, VITE_API_BASE_URL=/, portal=${buildWithPortal})"
     }
 }
 

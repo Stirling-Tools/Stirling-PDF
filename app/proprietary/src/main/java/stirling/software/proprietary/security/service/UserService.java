@@ -39,6 +39,11 @@ import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.RegexPatternUtils;
+import stirling.software.proprietary.access.model.PrincipalType;
+import stirling.software.proprietary.access.model.ResourceType;
+import stirling.software.proprietary.access.repository.ResourceGrantRepository;
+import stirling.software.proprietary.integration.model.IntegrationConfig;
+import stirling.software.proprietary.integration.repository.IntegrationConfigRepository;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.AuthorityRepository;
 import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
@@ -87,6 +92,9 @@ public class UserService implements UserServiceInterface {
     private final StorageCleanupEntryRepository storageCleanupEntryRepository;
     private final FileShareRepository fileShareRepository;
     private final FileShareAccessRepository fileShareAccessRepository;
+    private final ResourceGrantRepository resourceGrantRepository;
+    private final IntegrationConfigRepository integrationConfigRepository;
+    private final TeamMembershipService teamMembershipService;
 
     @Transactional
     public void processSSOPostLogin(
@@ -248,6 +256,21 @@ public class UserService implements UserServiceInterface {
 
     private void deleteUserRelatedData(User user) {
         log.info("Deleting all associated data for user: {}", user.getUsername());
+
+        // Drop ACL grants held by this user and detach grants they issued
+        resourceGrantRepository.deleteByPrincipalTypeAndPrincipalId(
+                PrincipalType.USER, user.getId());
+        resourceGrantRepository.clearGrantedBy(user);
+
+        // Integration configs owned by this user FK the users row; drop them and their grants
+        for (IntegrationConfig cfg : integrationConfigRepository.findByOwnerUser(user)) {
+            resourceGrantRepository.deleteByResourceTypeAndResourceId(
+                    ResourceType.INTEGRATION_CONFIG, String.valueOf(cfg.getId()));
+        }
+        integrationConfigRepository.deleteByOwnerUser(user);
+
+        // Membership rows and invitation references would dangle once the user row is gone
+        teamMembershipService.deleteAllForUser(user);
 
         // Delete server certificate (non-nullable OneToOne → User)
         userServerCertificateService.deleteUserCertificate(user.getId());
@@ -412,6 +435,7 @@ public class UserService implements UserServiceInterface {
         }
         user.setTeam(team);
         userRepository.save(user);
+        teamMembershipService.syncMembership(user);
         databaseService.exportDatabase();
     }
 
@@ -523,6 +547,7 @@ public class UserService implements UserServiceInterface {
 
         // Save user
         userRepository.save(user);
+        teamMembershipService.syncMembership(user);
 
         // Export database
         databaseService.exportDatabase();

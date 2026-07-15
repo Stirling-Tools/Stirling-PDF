@@ -15,5 +15,12 @@ public enum JobSource {
     /**
      * The Tauri desktop client. Independent of whether it routes to SaaS or a self-hosted backend.
      */
-    DESKTOP_APP
+    DESKTOP_APP,
+    /**
+     * Usage reported by a linked self-hosted instance via the daily sync (combined-billing "Mode
+     * A"). The per-request surface is lost in the aggregate — the instance reports cumulative units
+     * per {@code BillingCategory} — so this just marks the charge as instance-synced. No per-source
+     * step limit is seeded for it; the charge path's fallback applies.
+     */
+    LINKED_INSTANCE
 }

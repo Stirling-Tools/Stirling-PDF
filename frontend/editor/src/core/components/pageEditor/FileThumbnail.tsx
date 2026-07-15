@@ -5,7 +5,9 @@ import React, {
   useMemo,
   useEffect,
 } from "react";
-import { ActionIcon, CheckboxIndicator } from "@mantine/core";
+import { CheckboxIndicator } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
@@ -259,7 +261,7 @@ const FileThumbnail = ({
         {/* Kebab menu */}
         <ActionIcon
           aria-label={t("moreOptions", "More options")}
-          variant="subtle"
+          variant="tertiary"
           className={styles.kebab}
           onClick={(e) => {
             e.stopPropagation();
@@ -277,8 +279,18 @@ const FileThumbnail = ({
           style={{ width: actionsWidth }}
           onClick={(e) => e.stopPropagation()}
         >
-          <button
+          <Button
+            variant="tertiary"
+            justify="start"
+            fullWidth
             className={styles.actionRow}
+            leftSection={
+              isPinned ? (
+                <PushPinIcon fontSize="small" />
+              ) : (
+                <PushPinOutlinedIcon fontSize="small" />
+              )
+            }
             onClick={() => {
               if (actualFile) {
                 if (isPinned) {
@@ -292,38 +304,36 @@ const FileThumbnail = ({
               setShowActions(false);
             }}
           >
-            {isPinned ? (
-              <PushPinIcon fontSize="small" />
-            ) : (
-              <PushPinOutlinedIcon fontSize="small" />
-            )}
-            <span>{isPinned ? t("unpin", "Unpin") : t("pin", "Pin")}</span>
-          </button>
-
-          <button
+            {isPinned ? t("unpin", "Unpin") : t("pin", "Pin")}
+          </Button>
+          <Button
+            variant="tertiary"
+            justify="start"
+            fullWidth
             className={styles.actionRow}
+            leftSection={<DownloadOutlinedIcon fontSize="small" />}
             onClick={() => {
               downloadSelectedFile();
               setShowActions(false);
             }}
           >
-            <DownloadOutlinedIcon fontSize="small" />
-            <span>{terminology.download}</span>
-          </button>
-
+            {terminology.download}
+          </Button>
           <div className={styles.actionsDivider} />
-
-          <button
+          <Button
+            variant="tertiary"
+            justify="start"
+            fullWidth
             className={`${styles.actionRow} ${styles.actionDanger}`}
+            leftSection={<DeleteOutlineIcon fontSize="small" />}
             onClick={() => {
               onDeleteFile(file.id);
               onSetStatus(`Deleted ${file.name}`);
               setShowActions(false);
             }}
           >
-            <DeleteOutlineIcon fontSize="small" />
-            <span>{t("delete", "Delete")}</span>
-          </button>
+            {t("delete", "Delete")}
+          </Button>
         </div>
       )}
 

@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
-import { ActionIcon, Slider, Popover, Select } from "@mantine/core";
+import { Slider, Popover, Select } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { supportedLanguages } from "@app/i18n";
 import { useViewer } from "@app/contexts/ViewerContext";
@@ -169,8 +170,7 @@ export function useViewerWorkbenchBarButtons(
               <Popover.Target>
                 <div style={{ display: "inline-flex" }}>
                   <ActionIcon
-                    variant="subtle"
-                    radius="md"
+                    variant="tertiary"
                     className="workbench-bar-action-icon"
                     disabled={disabled}
                     aria-label={searchLabel}
@@ -198,9 +198,7 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-pan-mode",
-        icon: (
-          <LocalIcon icon="pan-tool-rounded" width="1.25rem" height="1.25rem" />
-        ),
+        icon: <LocalIcon icon="pan-tool-rounded" width="1rem" height="1rem" />,
         tooltip:
           !isPanning && pendingCount > 0 && redactionActiveType !== null
             ? applyRedactionsLabel
@@ -225,7 +223,7 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-ruler",
-        icon: <StraightenIcon sx={{ fontSize: "1.25rem" }} />,
+        icon: <StraightenIcon sx={{ fontSize: "1rem" }} />,
         tooltip: rulerLabel,
         ariaLabel: rulerLabel,
         section: "top" as const,
@@ -242,7 +240,7 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-rotate-left",
-        icon: <LocalIcon icon="rotate-left" width="1.25rem" height="1.25rem" />,
+        icon: <LocalIcon icon="rotate-left" width="1rem" height="1rem" />,
         tooltip: rotateLeftLabel,
         ariaLabel: rotateLeftLabel,
         section: "top" as const,
@@ -253,9 +251,7 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-rotate-right",
-        icon: (
-          <LocalIcon icon="rotate-right" width="1.25rem" height="1.25rem" />
-        ),
+        icon: <LocalIcon icon="rotate-right" width="1rem" height="1rem" />,
         tooltip: rotateRightLabel,
         ariaLabel: rotateRightLabel,
         section: "top" as const,
@@ -266,7 +262,7 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-toggle-sidebar",
-        icon: <LocalIcon icon="view-list" width="1.25rem" height="1.25rem" />,
+        icon: <LocalIcon icon="view-list" width="1rem" height="1rem" />,
         tooltip: sidebarLabel,
         ariaLabel: sidebarLabel,
         section: "top" as const,
@@ -316,7 +312,7 @@ export function useViewerWorkbenchBarButtons(
         ? [
             {
               id: "viewer-toggle-layers",
-              icon: <LayersIcon sx={{ fontSize: "1.25rem" }} />,
+              icon: <LayersIcon sx={{ fontSize: "1rem" }} />,
               tooltip: layersLabel,
               ariaLabel: layersLabel,
               section: "top" as const,
@@ -330,7 +326,7 @@ export function useViewerWorkbenchBarButtons(
         : []),
       {
         id: "viewer-toggle-comments",
-        icon: <LocalIcon icon="comment" width="1.25rem" height="1.25rem" />,
+        icon: <LocalIcon icon="comment" width="1rem" height="1rem" />,
         tooltip: commentsLabel,
         ariaLabel: commentsLabel,
         section: "top" as const,
@@ -367,8 +363,7 @@ export function useViewerWorkbenchBarButtons(
                   portalTarget={document.body}
                 >
                   <ActionIcon
-                    variant={isReadingAloud ? "filled" : "subtle"}
-                    radius="md"
+                    variant={isReadingAloud ? "primary" : "tertiary"}
                     className="workbench-bar-action-icon"
                     disabled={
                       disabled ||
@@ -377,12 +372,11 @@ export function useViewerWorkbenchBarButtons(
                     }
                     aria-label={readAloudLabel}
                     onClick={handleReadAloud}
-                    color={isReadingAloud ? "blue" : undefined}
                   >
                     {isReadingAloud ? (
-                      <StopIcon sx={{ fontSize: "1.25rem" }} />
+                      <StopIcon sx={{ fontSize: "1rem" }} />
                     ) : (
-                      <VolumeUpIcon sx={{ fontSize: "1.25rem" }} />
+                      <VolumeUpIcon sx={{ fontSize: "1rem" }} />
                     )}
                   </ActionIcon>
                 </Tooltip>
@@ -455,8 +449,7 @@ export function useViewerWorkbenchBarButtons(
             portalTarget={document.body}
           >
             <ActionIcon
-              variant={isAnnotationsActive ? "filled" : "subtle"}
-              radius="md"
+              variant={isAnnotationsActive ? "primary" : "tertiary"}
               className="workbench-bar-action-icon"
               onClick={() => {
                 if (disabled || isAnnotationsActive) return;
@@ -483,9 +476,9 @@ export function useViewerWorkbenchBarButtons(
               }}
               disabled={disabled}
               aria-pressed={isAnnotationsActive}
-              color={isAnnotationsActive ? "blue" : undefined}
+              aria-label={annotationsLabel}
             >
-              <LocalIcon icon="edit" width="1.25rem" height="1.25rem" />
+              <LocalIcon icon="edit" width="1rem" height="1rem" />
             </ActionIcon>
           </Tooltip>
         ),
@@ -513,8 +506,7 @@ export function useViewerWorkbenchBarButtons(
             portalTarget={document.body}
           >
             <ActionIcon
-              variant={isFormFillActive ? "filled" : "subtle"}
-              radius="md"
+              variant={isFormFillActive ? "primary" : "tertiary"}
               className="workbench-bar-action-icon"
               onClick={() => {
                 if (disabled) return;
@@ -526,9 +518,9 @@ export function useViewerWorkbenchBarButtons(
               }}
               disabled={disabled}
               aria-pressed={isFormFillActive}
-              color={isFormFillActive ? "blue" : undefined}
+              aria-label={formFillLabel}
             >
-              <TextFieldsIcon sx={{ fontSize: "1.25rem" }} />
+              <TextFieldsIcon sx={{ fontSize: "1rem" }} />
             </ActionIcon>
           </Tooltip>
         ),

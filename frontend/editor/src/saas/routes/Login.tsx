@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase, signInAnonymously } from "@app/auth/supabase";
+import { Button } from "@app/ui/Button";
 import { useAuth } from "@app/auth/UseSession";
 import { useTranslation } from "@app/hooks/useTranslation";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
-import "@shared/auth/ui/auth.css";
+import "@app/auth/ui/auth.css";
 import "@app/routes/authShared/saas-auth.css";
 import {
   absoluteWithBasePath,
@@ -15,11 +16,12 @@ import {
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 
 // Import login components
-import ErrorMessage from "@shared/auth/ui/ErrorMessage";
+import ErrorMessage from "@app/auth/ui/ErrorMessage";
 import EmailPasswordForm from "@app/routes/login/EmailPasswordForm";
 import OAuthButtons from "@app/routes/login/OAuthButtons";
 import LoggedInState from "@app/routes/login/LoggedInState";
-import loginHeader from "@shared/assets/brand/modern-logo/LoginLightModeHeader.svg";
+import { markLoginLandingPending } from "@app/utils/loginLanding";
+import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -165,7 +167,10 @@ export default function Login() {
         setError(error.message);
       } else if (data.user) {
         console.log("[Login] Email sign in successful");
-        // User will be redirected by the auth state change
+        // Fresh login with no explicit destination: let the role-based landing
+        // redirect route team leads to the processor. User is redirected by the
+        // auth state change.
+        if (!nextPath) markLoginLandingPending();
       }
     } catch (err) {
       console.error("[Login] Unexpected error]:", err);
@@ -299,8 +304,8 @@ export default function Login() {
 
         {/* Magic link button + its expandable form as one unit */}
         <div>
-          <button
-            type="button"
+          <Button
+            variant="secondary"
             disabled={isSigningIn}
             onClick={toggleMagicLink}
             className={`oauth-button-fullwidth auth-expandable-trigger ${showMagicLinkForm ? "auth-expandable-trigger--active" : ""}`}
@@ -318,7 +323,7 @@ export default function Login() {
                 {t("login.useMagicLink", "Use magic link")}
               </span>
             </span>
-          </button>
+          </Button>
 
           <div
             className={`auth-expand-grid ${showMagicLinkForm ? "auth-expand-grid--open" : ""}`}
@@ -352,7 +357,7 @@ export default function Login() {
                       }
                       className="auth-input"
                     />
-                    <button
+                    <Button
                       onClick={signInWithMagicLink}
                       disabled={isSigningIn || !magicLinkEmail}
                       className="auth-magic-button"
@@ -360,7 +365,7 @@ export default function Login() {
                       {isSigningIn
                         ? t("login.sending")
                         : t("login.sendMagicLink")}
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>
@@ -370,8 +375,8 @@ export default function Login() {
       </div>
 
       {/* Email & Password button */}
-      <button
-        type="button"
+      <Button
+        variant="secondary"
         disabled={isSigningIn}
         onClick={toggleEmailForm}
         className={`oauth-button-fullwidth auth-expandable-trigger ${showEmailForm ? "auth-expandable-trigger--active" : ""}`}
@@ -381,7 +386,7 @@ export default function Login() {
           <span className="auth-at-icon">@</span>
           <span className="oauth-btn-label">{`${t("login.signInWith", "Sign in with")} email`}</span>
         </span>
-      </button>
+      </Button>
 
       {/* Email form — animated expand */}
       <div
@@ -400,22 +405,22 @@ export default function Login() {
                 isSigningIn ? t("login.loggingIn") : t("login.login")
               }
             />
-            <button
-              type="button"
+            <Button
+              variant="tertiary"
               onClick={() => navigate("/auth/reset")}
               className="auth-link-black"
               style={{ fontSize: "0.8125rem", marginTop: "0.25rem" }}
             >
               {t("login.forgotPassword", "Forgot your password?")}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
 
       {/* Skip */}
       <div style={{ textAlign: "center", margin: "1rem 0" }}>
-        <button
-          type="button"
+        <Button
+          variant="tertiary"
           onClick={handleAnonymousSignIn}
           disabled={isSigningIn}
           style={{
@@ -424,13 +429,13 @@ export default function Login() {
             cursor: "pointer",
             fontSize: "1rem",
             fontWeight: 700,
-            color: "#000000",
+            color: "var(--text-primary)",
           }}
         >
           {isSigningIn
             ? t("login.signingIn", "Signing in...")
             : `${t("signup.skip", "Skip")} →`}
-        </button>
+        </Button>
       </div>
 
       {/* Bottom */}
@@ -441,8 +446,8 @@ export default function Login() {
           paddingTop: "1rem",
         }}
       >
-        <button
-          type="button"
+        <Button
+          variant="tertiary"
           onClick={() => navigate("/signup")}
           style={{
             background: "none",
@@ -453,7 +458,7 @@ export default function Login() {
           }}
         >
           {t("login.createAccount", "Create an account")}
-        </button>
+        </Button>
       </div>
     </AuthLayout>
   );

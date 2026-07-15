@@ -86,6 +86,18 @@ public class TempFileRegistry {
     }
 
     /**
+     * Unregister a temporary directory from the registry.
+     *
+     * @param directory The directory to unregister
+     */
+    public void unregisterDirectory(Path directory) {
+        if (directory != null) {
+            tempDirectories.remove(directory);
+            log.debug("Unregistered temp directory: {}", directory.toString());
+        }
+    }
+
+    /**
      * Register a third-party temporary file that requires special handling.
      *
      * @param file The third-party temp file
