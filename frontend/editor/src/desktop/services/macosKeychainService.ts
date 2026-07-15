@@ -1,15 +1,17 @@
 import { invoke } from "@tauri-apps/api/core";
-import {
+import type {
   ChooseMacosSigningIdentityResult,
   MacosSigningIdentity,
-} from "@app/services/macosKeychainService";
+} from "@core/services/macosKeychainService";
 
 export function isMacosKeychainAvailable(): boolean {
   return true;
 }
 
 export async function chooseMacosSigningIdentity(): Promise<ChooseMacosSigningIdentityResult> {
-  return invoke<ChooseMacosSigningIdentityResult>("choose_macos_signing_identity");
+  return invoke<ChooseMacosSigningIdentityResult>(
+    "choose_macos_signing_identity",
+  );
 }
 
 export type { ChooseMacosSigningIdentityResult, MacosSigningIdentity };

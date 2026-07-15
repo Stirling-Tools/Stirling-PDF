@@ -1,4 +1,4 @@
-import { Alert, Group, Stack, Text } from "@mantine/core";
+import { Alert, Stack, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { CertSignParameters } from "@app/hooks/tools/certSign/useCertSignParameters";
@@ -9,7 +9,10 @@ import {
 
 export interface MacKeychainPickerProps {
   parameters: CertSignParameters;
-  onParameterChange: (key: keyof CertSignParameters, value: any) => void;
+  onParameterChange: <K extends keyof CertSignParameters>(
+    key: K,
+    value: CertSignParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
@@ -63,7 +66,10 @@ export function MacKeychainPicker({
         onClick={() => void chooseCertificate()}
         disabled={disabled}
       >
-        {t("certSign.hardware.chooseKeychainCertificate", "Choose certificate…")}
+        {t(
+          "certSign.hardware.chooseKeychainCertificate",
+          "Choose certificate…",
+        )}
       </Button>
 
       {selected ? (

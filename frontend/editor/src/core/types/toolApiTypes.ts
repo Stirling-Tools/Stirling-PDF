@@ -1178,12 +1178,12 @@ export type SecurityGetInfoOnPdfRequest = Record<string, never>;
 export type SecurityRemoveCertSignRequest = Record<string, never>;
 export interface SignPDFWithCertRequest {
   /**
-   * The alias of the certificate to sign with. Required for WINDOWS_STORE and recommended for PKCS11 tokens holding multiple certificates.
+   * The alias of the certificate to sign with. Required for WINDOWS_STORE, MACOS_KEYCHAIN and recommended for PKCS11 tokens holding multiple certificates.
    */
   alias?: string;
   certFile?: string;
   /**
-   * The type of the digital certificate. WINDOWS_STORE and PKCS11 are hardware-backed and only available in the desktop app.
+   * The type of the digital certificate. WINDOWS_STORE, PKCS11 and MACOS_KEYCHAIN are hardware-backed and only available in the desktop app.
    */
   certType:
     | "PEM"
@@ -1192,7 +1192,8 @@ export interface SignPDFWithCertRequest {
     | "JKS"
     | "SERVER"
     | "WINDOWS_STORE"
-    | "PKCS11";
+    | "PKCS11"
+    | "MACOS_KEYCHAIN";
   jksFile?: string;
   /**
    * The location where the PDF is signed

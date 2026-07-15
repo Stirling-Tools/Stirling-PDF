@@ -25,6 +25,7 @@ export function isMacosKeychainAvailable(): boolean {
 export async function chooseMacosSigningIdentity(): Promise<ChooseMacosSigningIdentityResult> {
   return {
     status: "error",
-    message: "macOS Keychain signing is only available in the Stirling PDF macOS app",
+    message:
+      "macOS Keychain signing is only available in the Stirling PDF macOS app",
   };
 }

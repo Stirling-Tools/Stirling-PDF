@@ -2,7 +2,10 @@ import type { CertSignParameters } from "@app/hooks/tools/certSign/useCertSignPa
 
 export interface MacKeychainPickerProps {
   parameters: CertSignParameters;
-  onParameterChange: (key: keyof CertSignParameters, value: any) => void;
+  onParameterChange: <K extends keyof CertSignParameters>(
+    key: K,
+    value: CertSignParameters[K],
+  ) => void;
   disabled?: boolean;
 }
 
