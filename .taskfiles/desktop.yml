@@ -31,33 +31,9 @@ tasks:
     desc: "Prepare desktop build dependencies"
     deps:
       - jlink
-      - keychain-helper
       - task: ":frontend:prepare"
         vars: { MODE: desktop }
       - provisioner
-
-  # macOS-only: builds the Security.framework helper used by Java PDF signing.
-  keychain-helper:
-    desc: "Build macOS keychain helper sidecar"
-    platforms: [darwin]
-    dir: editor/src-tauri
-    vars:
-      PROFILE: '{{.PROFILE | default "debug"}}'
-    cmds:
-      - |
-        set -euo pipefail
-        TARGET_DIR="$(cargo metadata --format-version 1 --no-deps | python3 -c 'import json,sys; print(json.load(sys.stdin)["target_directory"])')"
-        if [ "{{.PROFILE}}" = "release" ]; then
-          cargo build -p stirling-keychain --bin keychain-helper --release
-          SRC="${TARGET_DIR}/release/keychain-helper"
-        else
-          cargo build -p stirling-keychain --bin keychain-helper
-          SRC="${TARGET_DIR}/debug/keychain-helper"
-        fi
-        mkdir -p sidecar
-        cp -f "$SRC" sidecar/keychain-helper
-        chmod u+w sidecar/keychain-helper
-        echo "Prepared sidecar/keychain-helper ({{.PROFILE}}) from $SRC"
 
   provisioner:
     desc: "Build installer provisioner"
@@ -79,8 +55,6 @@ tasks:
     deps: [prepare]
     dir: editor
     cmds:
-      - task: keychain-helper
-        vars: { PROFILE: release }
       - npx tauri build
 
   build:dev:
@@ -88,8 +62,6 @@ tasks:
     deps: [prepare]
     dir: editor
     cmds:
-      - task: keychain-helper
-        vars: { PROFILE: release }
       - npx tauri build --no-bundle
 
   build:dev:mac:
@@ -97,8 +69,6 @@ tasks:
     deps: [prepare]
     dir: editor
     cmds:
-      - task: keychain-helper
-        vars: { PROFILE: release }
       - npx tauri build --bundles app --config '{"bundle":{"createUpdaterArtifacts":false}}'
 
   build:dev:windows:
@@ -128,8 +98,8 @@ tasks:
     cmds:
       - task: jlink:clean
       - cd src-tauri && cargo clean
+      # keychain-helper is staged by src-tauri/build.rs into sidecar/ on macOS
       - rm -rf dist build src-tauri/sidecar/keychain-helper
-      - rm -f src-tauri/binaries/keychain-helper-*
 
   # ============================================================
   # JLink — Build bundled Java runtime for Tauri

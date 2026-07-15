@@ -1,5 +1,5 @@
-# keychain-helper lives in the stirling-keychain member so this package has a
-# single binary and `cargo run` / `tauri build` stay unambiguous.
+# keychain-helper lives in the stirling-keychain workspace member so this
+# package stays a single binary; build.rs stages it into sidecar/ on macOS.
 [workspace]
 members = [".", "keychain"]
 resolver = "2"
