@@ -39,29 +39,39 @@ function buildRows(wallet: Wallet, t: TFunction): WorkspacePlanSnapshotRow[] {
       : "—";
 
   if (wallet.status === "subscribed") {
+    // Matches the demo's "Processor" mirror card, wired to live wallet figures.
+    const spendSub =
+      wallet.capUsd != null && wallet.capUsd > 0
+        ? t("plan.snapshot.pctOfLimit", "{{pct}}% of {{cap}} limit", {
+            pct: Math.round((wallet.estimatedBillMinor ?? 0) / wallet.capUsd),
+            cap: formatMoneyMajor(wallet.capUsd, currency),
+          })
+        : t("plan.snapshot.noSpendLimit", "No spend limit");
     return [
       {
-        label: t("plan.snapshot.documentsPeriod", "Documents this period"),
+        label: t("plan.snapshot.documentsMonth", "Documents this month"),
         value: wallet.billableUsed.toLocaleString(),
-        sub: t("plan.snapshot.thisBillingPeriod", "This billing period"),
+        sub: t(
+          "plan.snapshot.documentsMetered",
+          "From {{rate}} · scales with size + policies",
+          { rate },
+        ),
       },
       {
-        label: t("plan.snapshot.spendPeriod", "Spend this period"),
+        label: t("plan.snapshot.spendMonth", "Spend this month"),
         value:
           wallet.estimatedBillMinor != null
             ? formatMinor(wallet.estimatedBillMinor, currency)
             : "—",
-        sub:
-          wallet.capUsd != null
-            ? t("plan.snapshot.ofLimit", "of {{cap}} limit", {
-                cap: formatMoneyMajor(wallet.capUsd, currency),
-              })
-            : t("plan.snapshot.noSpendLimit", "No spend limit"),
+        sub: spendSub,
       },
       {
-        label: t("plan.snapshot.perPdfRate", "Per-PDF rate"),
+        label: t("plan.snapshot.startingRate", "Starting rate"),
         value: rate,
-        sub: t("plan.snapshot.scales", "Scales with size + policies"),
+        sub: t(
+          "plan.snapshot.floorScales",
+          "Floor; scales with size + policies",
+        ),
       },
       {
         label: t("plan.snapshot.renews", "Renews"),
@@ -70,7 +80,8 @@ function buildRows(wallet: Wallet, t: TFunction): WorkspacePlanSnapshotRow[] {
     ];
   }
 
-  // Free tier.
+  // Free tier — matches the demo's "Editor" mirror card. "Sources" from the demo
+  // isn't in the wallet, so the fourth cell shows the free grant remaining.
   return [
     {
       label: t("plan.snapshot.documentsMonth", "Documents this month"),
@@ -88,9 +99,11 @@ function buildRows(wallet: Wallet, t: TFunction): WorkspacePlanSnapshotRow[] {
     {
       label: t("plan.snapshot.startingRate", "Starting rate"),
       value: rate,
-      sub: t("plan.snapshot.firstFree", "first {{count}} free", {
-        count: wallet.freeAllowance,
-      }),
+      sub: t(
+        "plan.snapshot.startingRateFree",
+        "From here, scales with file size and policies · first {{count}} free",
+        { count: wallet.freeAllowance },
+      ),
     },
     {
       label: t("plan.snapshot.freeRemaining", "Free remaining"),
