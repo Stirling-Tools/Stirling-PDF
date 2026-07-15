@@ -106,7 +106,10 @@ function scanDoc(
     const large = fs >= 24 || (fs >= 18.66 && bold);
     const floor = large ? 3.0 : 4.5;
     if (ratio >= floor) continue;
-    const text = (el.textContent ?? "").trim().replace(/\s+/g, " ").slice(0, 60);
+    const text = (el.textContent ?? "")
+      .trim()
+      .replace(/\s+/g, " ")
+      .slice(0, 60);
     push({
       ratio,
       floor,
@@ -136,7 +139,15 @@ function loadStory(
       resolve();
     };
     iframe.addEventListener("load", onload);
-    iframe.src = `iframe.html?id=${encodeURIComponent(id)}&globals=theme:${theme}&viewMode=story`;
+    // Build the query via URLSearchParams (encodes every value) and clamp the
+    // theme to a known token — keeps untrusted-looking input out of the URL.
+    const safeTheme = theme === "dark" ? "dark" : "light";
+    const qs = new URLSearchParams({
+      id,
+      globals: `theme:${safeTheme}`,
+      viewMode: "story",
+    });
+    iframe.src = `iframe.html?${qs.toString()}`;
   });
 }
 
@@ -252,7 +263,11 @@ export async function runScan(
   if (stories.length === 0) return "done";
   // Feedback during the (potentially slow, cold) first boot so it doesn't look
   // frozen at 0/N.
-  opts.onProgress({ done: 0, total: stories.length, current: "booting preview…" });
+  opts.onProgress({
+    done: 0,
+    total: stories.length,
+    current: "booting preview…",
+  });
 
   // Boot the preview runtime ONCE, then switch stories in place. The reboot
   // (providers, MSW, i18n) is the expensive part; doing it per story is what
@@ -296,7 +311,8 @@ export async function runScan(
     opts.onFindings(
       [...bySig.values()]
         .sort(
-          (a, b) => a.ratio - b.ratio || a.storyTitle.localeCompare(b.storyTitle),
+          (a, b) =>
+            a.ratio - b.ratio || a.storyTitle.localeCompare(b.storyTitle),
         )
         .slice(0, MAX_ROWS),
     );
