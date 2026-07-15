@@ -56,11 +56,11 @@ export interface PolicyField {
 export interface PolicyCategory {
   id: string;
   label: string;
-  icon: string;
   tone: "neutral" | "blue" | "purple" | "green" | "amber" | "red";
   desc: string;
   providesClassification?: boolean;
   comingSoon?: boolean;
+  requiresAiEngine?: boolean;
 }
 
 export interface PolicyConfigDef {
@@ -133,14 +133,21 @@ export interface CatalogueEntry {
 /*  Endpoint display labels                                                   */
 /* ──────────────────────────────────────────────────────────────────────── */
 
-/** i18n keys keyed by {@link ToolEndpoint}; labels stored steps in the detail view. */
-export const ENDPOINT_LABELS: Partial<Record<ToolEndpoint, string>> = {
+/**
+ * i18n keys keyed by endpoint; labels stored steps in the detail view. Mostly
+ * {@link ToolEndpoint}s, plus the AI classify endpoint, which isn't part of the generated union.
+ */
+export const ENDPOINT_LABELS: Partial<
+  Record<ToolEndpoint | "/api/v1/ai/tools/classify-and-label", string>
+> = {
   "/api/v1/security/auto-redact": "portal.policies.endpoints.autoRedact",
   "/api/v1/security/sanitize-pdf": "portal.policies.endpoints.sanitizePdf",
   "/api/v1/security/add-watermark": "portal.policies.endpoints.addWatermark",
   "/api/v1/misc/ocr-pdf": "portal.policies.endpoints.ocrPdf",
   "/api/v1/misc/flatten": "portal.policies.endpoints.flatten",
   "/api/v1/misc/compress-pdf": "portal.policies.endpoints.compressPdf",
+  "/api/v1/ai/tools/classify-and-label":
+    "portal.policies.endpoints.classifyAndLabel",
 };
 
 export function humanizeEndpoint(
@@ -170,7 +177,6 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
   {
     id: "ingestion",
     label: "portal.policies.categories.ingestion.label",
-    icon: "layers",
     tone: "blue",
     desc: "portal.policies.categories.ingestion.desc",
     providesClassification: true,
@@ -179,14 +185,20 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
   {
     id: "security",
     label: "portal.policies.categories.security.label",
-    icon: "shield",
     tone: "purple",
     desc: "portal.policies.categories.security.desc",
   },
   {
+    id: "classification",
+    label: "portal.policies.categories.classification.label",
+    tone: "blue",
+    desc: "portal.policies.categories.classification.desc",
+    providesClassification: true,
+    requiresAiEngine: true,
+  },
+  {
     id: "compliance",
     label: "portal.policies.categories.compliance.label",
-    icon: "check",
     tone: "amber",
     desc: "portal.policies.categories.compliance.desc",
     comingSoon: true,
@@ -194,7 +206,6 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
   {
     id: "routing",
     label: "portal.policies.categories.routing.label",
-    icon: "route",
     tone: "green",
     desc: "portal.policies.categories.routing.desc",
     comingSoon: true,
@@ -202,7 +213,6 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
   {
     id: "retention",
     label: "portal.policies.categories.retention.label",
-    icon: "schedule",
     tone: "neutral",
     desc: "portal.policies.categories.retention.desc",
     comingSoon: true,
@@ -262,6 +272,16 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       // Bake in via image so it can't be stripped.
       policyStep("watermark", { convertPDFToImage: true }),
     ],
+    fields: [],
+  },
+  classification: {
+    summary: "portal.policies.config.classification.summary",
+    rules: [
+      "portal.policies.config.classification.rules.0",
+      "portal.policies.config.classification.rules.1",
+    ],
+    scopeLabel: "portal.policies.config.scopeAll",
+    defaultOperations: [policyStep("classify")],
     fields: [],
   },
   compliance: {
