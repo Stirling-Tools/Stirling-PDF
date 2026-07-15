@@ -92,7 +92,9 @@ function scanDoc(
 ): void {
   const els = win.document.body.querySelectorAll("*");
   for (const el of els) {
-    if (el instanceof win.SVGElement) continue; // svg uses fill, not color
+    // svg uses `fill`, not `color`; skip by namespace (realm-safe, and avoids
+    // touching win.SVGElement which isn't on the Window type).
+    if (el.namespaceURI === "http://www.w3.org/2000/svg") continue;
     if (!hasDirectText(el)) continue;
     const cs = win.getComputedStyle(el);
     if (!isVisible(el, cs)) continue;
