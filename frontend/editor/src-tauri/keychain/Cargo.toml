@@ -9,7 +9,8 @@ name = "stirling_keychain"
 
 [[bin]]
 name = "keychain-helper"
-path = "src/bin/keychain-helper.rs"
+# Not under src/bin/ — root .gitignore ignores every `bin/` path (Eclipse legacy).
+path = "src/keychain_helper.rs"
 
 [dependencies]
 base64 = "0.22"
