@@ -12,6 +12,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.junit.jupiter.api.Test;
@@ -23,10 +24,13 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.web.multipart.MultipartFile;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.classification.ClassificationLabelProvider;
+import stirling.software.proprietary.classification.HeuristicClassifier;
+import stirling.software.proprietary.classification.HeuristicDocExtractor;
 import stirling.software.proprietary.classification.model.ClassificationLabel;
 import stirling.software.proprietary.service.AiEngineClient;
 import stirling.software.proprietary.service.PdfContentExtractor;
@@ -44,11 +48,21 @@ class ClassifyLabelControllerTest {
     @Mock private PdfContentExtractor pdfContentExtractor;
     @Mock private PdfMetadataService pdfMetadataService;
     @Mock private AiEngineClient aiEngineClient;
+    @Mock private ApplicationProperties applicationProperties;
+    @Mock private ApplicationProperties.AiEngine aiEngine;
+    @Mock private HeuristicClassifier heuristicClassifier;
+    @Mock private HeuristicDocExtractor heuristicDocExtractor;
 
     private final ObjectMapper objectMapper = JsonMapper.builder().build();
     private ClassifyLabelController controller;
 
     private void withLabels(List<ClassificationLabel> labels) {
+        // These tests exercise the AI path: AI on + a non-definitive heuristic makes the cascade
+        // escalate to the engine. The heuristic path is covered by HeuristicClassifierTest.
+        when(applicationProperties.getAiEngine()).thenReturn(aiEngine);
+        when(aiEngine.isEnabled()).thenReturn(true);
+        when(heuristicClassifier.classify(any()))
+                .thenReturn(new HeuristicClassifier.HeuristicResult(List.of(), "none", 0, false));
         controller =
                 new ClassifyLabelController(
                         pdfDocumentFactory,
@@ -58,6 +72,9 @@ class ClassifyLabelControllerTest {
                         aiEngineClient,
                         objectMapper,
                         ClassificationLabelProvider.withLabels(labels),
+                        applicationProperties,
+                        heuristicClassifier,
+                        heuristicDocExtractor,
                         null);
     }
 
@@ -143,6 +160,102 @@ class ClassifyLabelControllerTest {
         verify(aiEngineClient, never()).post(anyString(), anyString(), any());
         verify(pdfMetadataService, never())
                 .setClassificationMetadata(any(PDDocument.class), anyString());
+    }
+
+    @Test
+    void classifyAndLabel_usesHeuristicWhenAiDisabled() throws Exception {
+        // AI disabled: the heuristic path runs, the AI engine is never called, and the heuristic
+        // labels are written in the same {"labels":[...]} shape the AI path produces.
+        when(applicationProperties.getAiEngine()).thenReturn(aiEngine);
+        when(aiEngine.isEnabled()).thenReturn(false);
+        controller =
+                new ClassifyLabelController(
+                        pdfDocumentFactory,
+                        tempFileManager,
+                        pdfContentExtractor,
+                        pdfMetadataService,
+                        aiEngineClient,
+                        objectMapper,
+                        ClassificationLabelProvider.withLabels(
+                                List.of(new ClassificationLabel("invoice", "Invoice", null))),
+                        applicationProperties,
+                        heuristicClassifier,
+                        heuristicDocExtractor,
+                        null);
+
+        PDDocument document = mock(PDDocument.class);
+        MultipartFile file = mock(MultipartFile.class);
+        when(file.getOriginalFilename()).thenReturn("invoice.pdf");
+        when(pdfDocumentFactory.load(any(MultipartFile.class), eq(true))).thenReturn(document);
+        when(heuristicDocExtractor.extract(any(PDDocument.class), eq("invoice.pdf")))
+                .thenReturn(
+                        new HeuristicClassifier.HeuristicDoc(
+                                "invoice.pdf", 1, Map.of(), "", "", ""));
+        when(heuristicClassifier.classify(any()))
+                .thenReturn(
+                        new HeuristicClassifier.HeuristicResult(
+                                List.of("invoice"), "high", 60, true));
+
+        try {
+            controller.classifyAndLabel(file);
+        } catch (Exception ignored) {
+            // WebResponseUtils needs a real temp file; the heuristic + metadata write already ran.
+        }
+
+        verify(aiEngineClient, never()).post(anyString(), anyString(), any());
+        ArgumentCaptor<String> value = ArgumentCaptor.forClass(String.class);
+        verify(pdfMetadataService)
+                .setClassificationMetadata(any(PDDocument.class), value.capture());
+        JsonNode written = objectMapper.readTree(value.getValue());
+        assertThat(written.get("labels").get(0).asText()).isEqualTo("invoice");
+    }
+
+    @Test
+    void classifyAndLabel_skipsAiWhenHeuristicIsHighConfidence() throws Exception {
+        // Cascade cost-saver: AI is on, but the heuristic is high-confidence with a label, so the
+        // engine is never called and the heuristic labels are written.
+        when(applicationProperties.getAiEngine()).thenReturn(aiEngine);
+        when(aiEngine.isEnabled()).thenReturn(true);
+        controller =
+                new ClassifyLabelController(
+                        pdfDocumentFactory,
+                        tempFileManager,
+                        pdfContentExtractor,
+                        pdfMetadataService,
+                        aiEngineClient,
+                        objectMapper,
+                        ClassificationLabelProvider.withLabels(
+                                List.of(new ClassificationLabel("invoice", "Invoice", null))),
+                        applicationProperties,
+                        heuristicClassifier,
+                        heuristicDocExtractor,
+                        null);
+
+        PDDocument document = mock(PDDocument.class);
+        MultipartFile file = mock(MultipartFile.class);
+        when(file.getOriginalFilename()).thenReturn("invoice.pdf");
+        when(pdfDocumentFactory.load(any(MultipartFile.class), eq(true))).thenReturn(document);
+        when(heuristicDocExtractor.extract(any(PDDocument.class), eq("invoice.pdf")))
+                .thenReturn(
+                        new HeuristicClassifier.HeuristicDoc(
+                                "invoice.pdf", 1, Map.of(), "", "", ""));
+        when(heuristicClassifier.classify(any()))
+                .thenReturn(
+                        new HeuristicClassifier.HeuristicResult(
+                                List.of("invoice"), "high", 80, true));
+
+        try {
+            controller.classifyAndLabel(file);
+        } catch (Exception ignored) {
+            // WebResponseUtils needs a real temp file; the metadata write already ran.
+        }
+
+        verify(aiEngineClient, never()).post(anyString(), anyString(), any());
+        ArgumentCaptor<String> value = ArgumentCaptor.forClass(String.class);
+        verify(pdfMetadataService)
+                .setClassificationMetadata(any(PDDocument.class), value.capture());
+        assertThat(objectMapper.readTree(value.getValue()).get("labels").get(0).asText())
+                .isEqualTo("invoice");
     }
 
     @Test

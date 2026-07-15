@@ -1,0 +1,50 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 1328 >>
+stream
+BT /F1 26 Tf 72 740 Td (INVOICE) Tj ET
+BT /F1 13 Tf 72 706 Td (Acme Web Services Ltd) Tj ET
+BT /F1 11 Tf 72 685 Td (123 High Street, London, EC1A 4JQ) Tj ET
+BT /F1 11 Tf 72 666 Td (Invoice Number: INV-2024-0117) Tj ET
+BT /F1 11 Tf 72 647 Td (Invoice Date: 14 March 2024) Tj ET
+BT /F1 11 Tf 72 628 Td (Due Date: 13 April 2024) Tj ET
+BT /F1 11 Tf 72 609 Td (Bill To: Northwind Trading Company) Tj ET
+BT /F1 11 Tf 72 590 Td (45 Commerce Road, Manchester, M1 2AB) Tj ET
+BT /F1 11 Tf 72 571 Td (Description                          Qty    Unit Price    Amount) Tj ET
+BT /F1 11 Tf 72 552 Td (Website hosting \(annual\)              1      £480.00     £480.00) Tj ET
+BT /F1 11 Tf 72 533 Td (Domain renewal example.co.uk          2       £12.50      £25.00) Tj ET
+BT /F1 11 Tf 72 514 Td (Support retainer \(March\)              5       £85.00     £425.00) Tj ET
+BT /F1 11 Tf 72 495 Td (Subtotal: £930.00) Tj ET
+BT /F1 11 Tf 72 476 Td (VAT \(20%\): £186.00) Tj ET
+BT /F1 11 Tf 72 457 Td (Total Due: £1,116.00) Tj ET
+BT /F1 11 Tf 72 438 Td (Payment Terms: Net 30. Please quote the invoice number with your payment.) Tj ET
+BT /F1 11 Tf 72 419 Td (Bank: Barclays  Sort Code: 20-00-00  Account: 12345678) Tj ET
+BT /F1 11 Tf 72 400 Td (VAT Registration Number: GB 123 4567 89) Tj ET
+BT /F1 11 Tf 72 381 Td (Thank you for your business.) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000001621 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1718
+%%EOF

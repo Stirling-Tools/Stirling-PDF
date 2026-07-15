@@ -50,9 +50,9 @@ export function useFileSidebarGroups(
   stubs: StirlingFileStub[],
 ): FileSidebarGroup[] | null {
   const { t } = useTranslation();
-  // Classification off (AI disabled) → no grouping at all: return the flat list
-  // like core, and don't fetch team labels or backfill from metadata. Gates the
-  // whole feature so an AI-off SaaS tenant sees no Recent/Other/category chrome.
+  // Classification unavailable (core) → no grouping: return the flat list and don't
+  // fetch categories or backfill labels. Proprietary/SaaS enable it regardless of AI,
+  // since the classify policy labels files either via the AI engine or the heuristic.
   const enabled = useClassificationEnabled();
   const { bumpRevision } = useIndexedDB();
   // Attempted reads keyed by id+lastModified: a re-classified file (new version bumps lastModified) is re-read and leaves "Other" on its own, while a truly-unlabelled file keeps a stable key and is read once.
@@ -62,7 +62,10 @@ export function useFileSidebarGroups(
   // Bumped to re-attempt a backfill pass that yielded to an active policy wave.
   const [retryTick, setRetryTick] = useState(0);
 
-  // Fallback for files that arrive with labels already in metadata but no policy delivery (imports/shares): read+cache a few per idle pass, yielding while a policy wave is in flight since those stubs get stamped on delivery anyway.
+  // Read the labels the classify policy wrote into a file's metadata and cache them on the stub, a
+  // few per idle pass. Both classify modes (the AI engine and the non-AI heuristic) write that
+  // metadata server-side, so this is the single source of labels. Yields while a policy wave is in
+  // flight, since those stubs get stamped on delivery anyway.
   useEffect(() => {
     if (!enabled) return;
     const pending = stubs
@@ -85,9 +88,9 @@ export function useFileSidebarGroups(
       void (async () => {
         let wrote = false;
         for (const stub of pending) {
-          attempted.current.add(attemptKey(stub));
           const labels = await readStubClassificationLabels(stub);
           if (cancelled) return;
+          attempted.current.add(attemptKey(stub));
           if (labels) {
             const ok = await fileStorage.updateFileMetadata(stub.id as FileId, {
               classificationLabels: labels,

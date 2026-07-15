@@ -26,12 +26,15 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.proprietary.classification.ClassificationLabelProvider;
+import stirling.software.proprietary.classification.HeuristicClassifier;
+import stirling.software.proprietary.classification.HeuristicDocExtractor;
 import stirling.software.proprietary.classification.model.ClassificationLabel;
 import stirling.software.proprietary.model.api.ai.AiPageText;
 import stirling.software.proprietary.service.AiEngineClient;
@@ -39,16 +42,19 @@ import stirling.software.proprietary.service.PdfContentExtractor;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 /**
  * Dispatchable tool that classifies a PDF and writes the result into its metadata.
  *
- * <p>Runs as a Classification-policy pipeline step: it reads a bounded page window, asks the AI
- * engine to classify the document against the built-in label set, and stores the engine's JSON
- * answer — minus the transport-only {@code outcome} field — in the custom Info-dictionary key
- * {@link PdfMetadataService#CLASSIFICATION_KEY}. Returns the labelled PDF. Not intended for direct
- * client use.
+ * <p>Runs as a Classification-policy pipeline step. It always classifies locally first with the
+ * non-AI {@link HeuristicClassifier}; when the AI engine is enabled and the heuristic isn't
+ * high-confidence, it escalates to the engine (reading a bounded page window) so only ambiguous
+ * documents incur the AI call. Either way the label JSON (minus the transport-only {@code outcome}
+ * field) is stored in the custom Info-dictionary key {@link PdfMetadataService#CLASSIFICATION_KEY},
+ * so billing, audit, and the UI can't tell the two apart. Returns the labelled PDF. Not intended
+ * for direct client use.
  */
 @Slf4j
 @Hidden
@@ -69,6 +75,9 @@ public class ClassifyLabelController {
     private final AiEngineClient aiEngineClient;
     private final ObjectMapper objectMapper;
     private final UserServiceInterface userService;
+    private final ApplicationProperties applicationProperties;
+    private final HeuristicClassifier heuristicClassifier;
+    private final HeuristicDocExtractor heuristicDocExtractor;
 
     /**
      * The fixed, built-in vocabulary shared by everyone — see {@link ClassificationLabelProvider}.
@@ -83,6 +92,9 @@ public class ClassifyLabelController {
             AiEngineClient aiEngineClient,
             ObjectMapper objectMapper,
             ClassificationLabelProvider labelProvider,
+            ApplicationProperties applicationProperties,
+            HeuristicClassifier heuristicClassifier,
+            HeuristicDocExtractor heuristicDocExtractor,
             @Autowired(required = false) UserServiceInterface userService) {
         this.pdfDocumentFactory = pdfDocumentFactory;
         this.tempFileManager = tempFileManager;
@@ -91,6 +103,9 @@ public class ClassifyLabelController {
         this.aiEngineClient = aiEngineClient;
         this.objectMapper = objectMapper;
         this.labelProvider = labelProvider;
+        this.applicationProperties = applicationProperties;
+        this.heuristicClassifier = heuristicClassifier;
+        this.heuristicDocExtractor = heuristicDocExtractor;
         this.userService = userService;
     }
 
@@ -110,24 +125,57 @@ public class ClassifyLabelController {
             List<EngineLabel> allowed = resolveAllowedLabels();
             if (allowed.isEmpty()) {
                 // No vocabulary to classify against: pass the file through unlabelled rather than
-                // ask the engine to classify against nothing.
+                // classify against nothing.
                 log.debug("[classify-and-label] {} has no labels; skipping", fileName);
                 return WebResponseUtils.pdfDocToWebResponse(document, fileName, tempFileManager);
             }
 
-            List<AiPageText> pages = extractWindow(document);
-            String requestBody =
-                    objectMapper.writeValueAsString(
-                            new ClassifyEngineRequest(fileName, pages, allowed));
-
-            String userId = userService != null ? userService.getCurrentUsername() : null;
-            String responseJson = aiEngineClient.post(CLASSIFY_ENDPOINT, requestBody, userId);
-
-            pdfMetadataService.setClassificationMetadata(document, toMetadataValue(responseJson));
-            log.debug("[classify-and-label] labelled {} ({} window pages)", fileName, pages.size());
+            // Cascade: always classify locally first (cheap, no AI cost). With the AI engine on,
+            // escalate to it only when the heuristic isn't definitive (high confidence + a label),
+            // so easy docs skip the paid AI call and only ambiguous ones pay for it. AI off →
+            // always
+            // heuristic. Both write the same classification metadata, so billing/audit/UI match.
+            HeuristicClassifier.HeuristicResult heuristic =
+                    heuristicClassifier.classify(heuristicDocExtractor.extract(document, fileName));
+            boolean escalateToAi =
+                    applicationProperties.getAiEngine().isEnabled() && !heuristic.isDefinitive();
+            String metadataValue =
+                    escalateToAi
+                            ? classifyWithAiEngine(document, fileName, allowed)
+                            : toHeuristicMetadata(fileName, heuristic);
+            pdfMetadataService.setClassificationMetadata(document, metadataValue);
 
             return WebResponseUtils.pdfDocToWebResponse(document, fileName, tempFileManager);
         }
+    }
+
+    /** AI path: send a bounded page window to the engine and keep its label JSON verbatim. */
+    private String classifyWithAiEngine(
+            PDDocument document, String fileName, List<EngineLabel> allowed) throws IOException {
+        List<AiPageText> pages = extractWindow(document);
+        String requestBody =
+                objectMapper.writeValueAsString(
+                        new ClassifyEngineRequest(fileName, pages, allowed));
+        String userId = userService != null ? userService.getCurrentUsername() : null;
+        String responseJson = aiEngineClient.post(CLASSIFY_ENDPOINT, requestBody, userId);
+        log.debug("[classify-and-label] AI-labelled {} ({} window pages)", fileName, pages.size());
+        return toMetadataValue(responseJson);
+    }
+
+    /**
+     * Serialize a heuristic result to the same {@code {"labels":[...]}} shape the AI path writes.
+     */
+    private String toHeuristicMetadata(
+            String fileName, HeuristicClassifier.HeuristicResult result) {
+        ObjectNode node = objectMapper.createObjectNode();
+        ArrayNode labels = node.putArray("labels");
+        result.labels().forEach(labels::add);
+        log.debug(
+                "[classify-and-label] heuristic-labelled {} -> {} ({})",
+                fileName,
+                result.labels(),
+                result.confidence());
+        return objectMapper.writeValueAsString(node);
     }
 
     private List<AiPageText> extractWindow(PDDocument document) throws IOException {
