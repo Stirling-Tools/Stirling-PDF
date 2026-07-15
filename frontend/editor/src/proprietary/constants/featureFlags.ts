@@ -21,4 +21,3 @@ export const WATCHED_FOLDERS_ENABLED: boolean = false;
  * `security` profile). The open-source core build keeps it `false`.
  */
 export const POLICIES_ENABLED: boolean = true;
-
