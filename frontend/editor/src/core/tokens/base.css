@@ -16,9 +16,7 @@ body,
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition:
-    background var(--motion-slow),
-    color var(--motion-slow);
+  transition: background var(--motion-slow);
 }
 
 button {

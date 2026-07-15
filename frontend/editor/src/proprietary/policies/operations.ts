@@ -11,9 +11,38 @@ import { addWatermarkOperationConfig } from "@app/hooks/tools/addWatermark/useAd
 import { ocrOperationConfig } from "@app/hooks/tools/ocr/useOCROperation";
 import { flattenOperationConfig } from "@app/hooks/tools/flatten/useFlattenOperation";
 import { compressOperationConfig } from "@app/hooks/tools/compress/useCompressOperation";
-import type { ToolOperationDescriptor } from "@app/hooks/tools/shared/toolOperationDescriptor";
-import type { ToolApiParams, ToolEndpoint } from "@app/types/toolApiTypes";
+import type { ToolEndpoint } from "@app/types/toolApiTypes";
 import type { WirePipelineStep } from "@app/policies/types";
+
+/**
+ * Endpoints for AI-dispatched policy tools. Intentionally NOT part of the generated
+ * {@link ToolEndpoint} union: the backend controllers are `@Hidden` and `/api/v1/ai/tools/` is
+ * deliberately excluded from tool-model generation, so they can't be typed like standard tools.
+ */
+export type AiPolicyEndpoint = "/api/v1/ai/tools/classify-and-label";
+
+/** An AI tool usable in a policy — the AI-endpoint analogue of a standard tool descriptor. */
+export interface AiToolDescriptor<TParams> {
+  readonly endpoint: AiPolicyEndpoint;
+  readonly defaultParameters: TParams;
+  toApi(params: TParams): Record<string, unknown>;
+  fromApi(api: Record<string, unknown>): TParams;
+}
+
+/**
+ * Describe an AI-dispatched policy tool. AI tools carry no tunable parameters today, so params are
+ * empty and the (de)serializers are identity over an empty object.
+ */
+export function describeAiToolOperation(
+  endpoint: AiPolicyEndpoint,
+): AiToolDescriptor<Record<string, never>> {
+  return {
+    endpoint,
+    defaultParameters: {},
+    toApi: () => ({}),
+    fromApi: () => ({}),
+  };
+}
 
 export const POLICY_OPERATIONS = {
   redact: describeToolOperation(
@@ -37,17 +66,13 @@ export const POLICY_OPERATIONS = {
     "/api/v1/misc/compress-pdf",
     compressOperationConfig,
   ),
+  classify: describeAiToolOperation("/api/v1/ai/tools/classify-and-label"),
 } as const;
 
 export type PolicyToolId = keyof typeof POLICY_OPERATIONS;
 
 export type PolicyParams<Id extends PolicyToolId> =
-  (typeof POLICY_OPERATIONS)[Id] extends ToolOperationDescriptor<
-    ToolEndpoint,
-    infer P
-  >
-    ? P
-    : never;
+  (typeof POLICY_OPERATIONS)[Id]["defaultParameters"];
 
 /** Discriminated on `toolId` so `params` matches the tool. */
 export type PolicyToolStep = {
@@ -65,7 +90,10 @@ const TOOL_ID_BY_ENDPOINT = new Map<string, PolicyToolId>(
   POLICY_TOOL_IDS.map((id) => [POLICY_OPERATIONS[id].endpoint, id]),
 );
 
-export function policyEndpoint(toolId: PolicyToolId): ToolEndpoint {
+/** A policy step's endpoint: a standard {@link ToolEndpoint} or an {@link AiPolicyEndpoint}. */
+export type PolicyEndpoint = ToolEndpoint | AiPolicyEndpoint;
+
+export function policyEndpoint(toolId: PolicyToolId): PolicyEndpoint {
   return POLICY_OPERATIONS[toolId].endpoint;
 }
 
@@ -90,19 +118,29 @@ export function policyStepToWire(step: PolicyToolStep): WirePipelineStep {
   return serializeStep(step);
 }
 
+/**
+ * Minimal runtime shape shared by standard tool descriptors and {@link AiToolDescriptor}s — enough
+ * to (de)serialize a step at the wire boundary regardless of how its endpoint is typed.
+ */
+interface PolicyOperation<TParams> {
+  readonly endpoint: string;
+  readonly defaultParameters: TParams;
+  toApi(params: TParams): Record<string, unknown>;
+  fromApi(api: Record<string, unknown>): TParams;
+}
+
 // Generic over the id so `params` stays correlated with the descriptor; TS can't do that through
 // the union, so `op` is widened here (a contained cast at the wire boundary).
 function serializeStep<Id extends PolicyToolId>(step: {
   toolId: Id;
   params: PolicyParams<Id>;
 }): WirePipelineStep {
-  const op = POLICY_OPERATIONS[step.toolId] as ToolOperationDescriptor<
-    ToolEndpoint,
+  const op = POLICY_OPERATIONS[step.toolId] as unknown as PolicyOperation<
     PolicyParams<Id>
   >;
   return {
     operation: op.endpoint,
-    parameters: op.toApi(step.params) as Record<string, unknown>,
+    parameters: op.toApi(step.params),
   };
 }
 
@@ -119,13 +157,10 @@ function deserializeStep<Id extends PolicyToolId>(
   toolId: Id,
   parameters: Record<string, unknown>,
 ): PolicyToolStepOf<Id> {
-  const op = POLICY_OPERATIONS[toolId] as ToolOperationDescriptor<
-    ToolEndpoint,
+  const op = POLICY_OPERATIONS[toolId] as unknown as PolicyOperation<
     PolicyParams<Id>
   >;
   // Wire params are untyped JSON; this is the one point they enter the typed model.
-  const params = op.fromApi(
-    parameters as unknown as ToolApiParams[ToolEndpoint],
-  );
+  const params = op.fromApi(parameters);
   return { toolId, params } as unknown as PolicyToolStepOf<Id>;
 }
