@@ -1,10 +1,13 @@
 package stirling.software.proprietary.security.controller.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -281,6 +284,51 @@ class AdminSettingsControllerTest {
                 ResponseEntity<Map<String, Object>> response = controller.updateSettings(request);
 
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            }
+        }
+
+        @Test
+        @DisplayName("drops a masked ******** secret so a UI round-trip can't overwrite a real key")
+        void dropsMaskedSecretValue() {
+            UpdateSettingsRequest request = new UpdateSettingsRequest();
+            Map<String, Object> settings = new HashMap<>();
+            settings.put("aiEngine.models.apiKey", "********");
+            settings.put("ui.appName", "My App");
+            request.setSettings(settings);
+
+            try (MockedStatic<GeneralUtils> mocked = mockStatic(GeneralUtils.class)) {
+                ResponseEntity<Map<String, Object>> response = controller.updateSettings(request);
+
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+                // The masked secret is stripped; only the real change is persisted.
+                mocked.verify(
+                        () ->
+                                GeneralUtils.updateSettingsTransactional(
+                                        argThat(
+                                                (Map<String, Object> m) ->
+                                                        !m.containsKey("aiEngine.models.apiKey")
+                                                                && m.containsKey("ui.appName"))));
+            }
+        }
+
+        @Test
+        @DisplayName("forwards only aiEngine.* pending keys to the engine live-push")
+        void forwardsOnlyAiEngineKeysToLivePush() {
+            UpdateSettingsRequest request = new UpdateSettingsRequest();
+            Map<String, Object> settings = new HashMap<>();
+            settings.put("aiEngine.models.provider", "ollama");
+            settings.put("ui.appName", "My App");
+            request.setSettings(settings);
+
+            try (MockedStatic<GeneralUtils> mocked = mockStatic(GeneralUtils.class)) {
+                controller.updateSettings(request);
+
+                verify(aiEngineConfigSync)
+                        .pushLiveAfterSave(
+                                argThat(
+                                        (Map<String, Object> m) ->
+                                                m.containsKey("aiEngine.models.provider")
+                                                        && !m.containsKey("ui.appName")));
             }
         }
     }

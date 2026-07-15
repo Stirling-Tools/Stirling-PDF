@@ -22,10 +22,12 @@ import tools.jackson.databind.node.ObjectNode;
  * from the Stirling settings UI. Pushed on processor startup and again live whenever AI settings
  * are saved (so model/RAG/limit changes apply without a restart). The engine applies it live
  * (rebuilds its models) and caches it, so it self-restores on its own reboot. Empty
- * key/baseUrl/model fields mean "keep the engine's own environment credential", so
- * environment-driven deployments (where the engine sets {@code STIRLING_ALLOW_CONFIG_PUSH=false}
- * and rejects the push) stay fully env-controlled. Best-effort and non-blocking: a slow or
- * unreachable engine never delays or fails Stirling startup.
+ * key/baseUrl/model fields mean "keep the engine's own environment credential".
+ *
+ * <p>Gated by {@code aiEngine.pushConfigToEngine} (default true). Environment-driven deployments
+ * pin it false (SaaS does so in application-saas.properties) so the engine stays entirely
+ * env-controlled and the processor never pushes settings-derived config to it. Best-effort and
+ * non-blocking: a slow or unreachable engine never delays or fails Stirling startup.
  */
 @Slf4j
 @Service
@@ -45,6 +47,12 @@ public class AiEngineConfigSync {
         if (!cfg.isEnabled()) {
             return;
         }
+        if (!cfg.isPushConfigToEngine()) {
+            log.debug(
+                    "Skipping AI engine config push: aiEngine.pushConfigToEngine is disabled"
+                            + " (the engine is configured from its own environment)");
+            return;
+        }
         // Engine may still be booting; push on a virtual thread with a few retries so we never
         // block or crash Stirling startup when the engine is slow or briefly unreachable.
         Thread.ofVirtual().name("ai-engine-config-sync").start(() -> pushWithRetries(cfg));
@@ -60,9 +68,11 @@ public class AiEngineConfigSync {
         // Gate on the RUNNING bean: AiEngineClient refuses calls while the bean is disabled, so
         // pushing on a pending-but-not-restarted enable would always fail. The post-restart
         // startup push covers first-time enablement.
+        AiEngine cfg = applicationProperties.getAiEngine();
         if (pendingAiEngine == null
                 || pendingAiEngine.isEmpty()
-                || !applicationProperties.getAiEngine().isEnabled()) {
+                || !cfg.isPushConfigToEngine()
+                || !cfg.isEnabled()) {
             return;
         }
         boolean engineRelevant =
@@ -70,7 +80,7 @@ public class AiEngineConfigSync {
         if (!engineRelevant) {
             return;
         }
-        ObjectNode node = buildConfigNode(applicationProperties.getAiEngine());
+        ObjectNode node = buildConfigNode(cfg);
         pendingAiEngine.forEach((k, v) -> overlayIfEngineRelevant(node, k, v));
         String body = node.toString();
         Thread.ofVirtual().name("ai-engine-config-live-push").start(() -> pushOnce(body));

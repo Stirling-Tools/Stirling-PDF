@@ -312,6 +312,15 @@ public class ApplicationProperties {
         /** Timeout (seconds) for the SSE stream held open by long-running orchestrator runs. */
         private int streamTimeoutSeconds = 1800;
 
+        /**
+         * Whether the processor pushes admin/settings-derived AI config (models, keys, RAG, limits)
+         * to the engine's {@code POST /api/v1/config} on startup and after a save. True lets a
+         * self-hosted admin drive the engine from the UI. Environment-driven deployments pin this
+         * false (SaaS does in application-saas.properties) so the engine stays entirely
+         * env-controlled and the processor never overrides its config.
+         */
+        private boolean pushConfigToEngine = true;
+
         /** Model + provider selection, forwarded to the engine per-request. */
         private Models models = new Models();
 
