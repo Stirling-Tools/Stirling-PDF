@@ -9,6 +9,7 @@ import {
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Text } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { TextInput } from "@app/components/shared/TextInput";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { isMacLike } from "@app/utils/hotkeys";
@@ -186,9 +187,12 @@ export default function SuperSearch() {
                 const index = flatResults.indexOf(result);
                 const active = index === highlight;
                 return (
-                  <button
+                  <Button
                     key={result.key}
                     type="button"
+                    variant="quiet"
+                    justify="start"
+                    fullWidth
                     role="option"
                     aria-selected={active}
                     className={`super-search-item${active ? " active" : ""}`}
@@ -214,7 +218,7 @@ export default function SuperSearch() {
                         </Text>
                       )}
                     </span>
-                  </button>
+                  </Button>
                 );
               })}
             </div>

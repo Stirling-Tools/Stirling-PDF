@@ -2,6 +2,7 @@ import { useEffect, useState, Suspense, lazy } from "react";
 import { useTranslation } from "react-i18next";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { Box, Loader, Center } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useFileState } from "@app/contexts/FileContext";
@@ -248,16 +249,18 @@ export default function Workbench() {
             {/* Reopen tab: a little handle hanging off the bar's bottom-right
                 while the viewer tool row is retracted. */}
             {showReopenTab && (
-              <button
+              <Button
                 type="button"
+                variant="quiet"
                 className={styles.workbenchBarReopenTab}
                 onClick={() => setViewerToolbarCollapsed(false)}
                 aria-expanded={false}
                 aria-label={t("workbenchBar.showToolbar", "Show toolbar")}
                 title={t("workbenchBar.showToolbar", "Show toolbar")}
-              >
-                <KeyboardArrowDownIcon sx={{ fontSize: "1rem" }} />
-              </button>
+                leftSection={
+                  <KeyboardArrowDownIcon sx={{ fontSize: "1rem" }} />
+                }
+              />
             )}
           </div>
         )}
