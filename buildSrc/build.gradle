@@ -1,0 +1,21 @@
+plugins {
+    id 'groovy'
+}
+
+repositories {
+    gradlePluginPortal()
+}
+
+dependencies {
+    implementation localGroovy()
+    implementation gradleApi()
+    implementation 'com.github.jk1:gradle-license-report:3.1.4'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.11.4'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    jvmArgs '--add-opens=java.base/java.lang=ALL-UNNAMED'
+    testLogging.showStandardStreams = true
+}
