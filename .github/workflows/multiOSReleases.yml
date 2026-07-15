@@ -42,7 +42,7 @@ jobs:
   determine-matrix:
     if: ${{ vars.CI_PROFILE != 'lite' }}
     needs: pick
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    runs-on: ${{ needs.pick.outputs.use_depot == 'true' && 'depot-ubuntu-24.04-4' || 'ubuntu-latest' }}
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       version: ${{ steps.versionNumber.outputs.versionNumber }}
@@ -113,7 +113,7 @@ jobs:
 
   build-jars:
     needs: [pick, determine-matrix]
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    runs-on: ${{ needs.pick.outputs.use_depot == 'true' && 'depot-ubuntu-24.04-4' || 'ubuntu-latest' }}
     env:
       DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
     strategy:
@@ -639,7 +639,7 @@ jobs:
 
   collect-and-release:
     needs: [pick, determine-matrix, build, build-jars]
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    runs-on: ${{ needs.pick.outputs.use_depot == 'true' && 'depot-ubuntu-24.04-4' || 'ubuntu-latest' }}
     permissions:
       contents: write
     steps:
