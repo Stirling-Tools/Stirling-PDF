@@ -135,6 +135,17 @@ class WebhookInputSourceTest {
     }
 
     @Test
+    void prepareIgnoresClientSuppliedIdAndSecretOnCreate() {
+        Map<String, Object> prepared =
+                source.prepareOptionsForSave(
+                        Map.of("webhookId", "client-chosen-id", "signingSecret", "weak"), true);
+
+        // The id must be server-minted (unguessable) and the secret server-only.
+        assertNotEquals("client-chosen-id", prepared.get(WebhookConfig.WEBHOOK_ID_OPTION));
+        assertNotEquals("weak", prepared.get(WebhookConfig.SIGNING_SECRET_OPTION));
+    }
+
+    @Test
     void aConnectionBackedWebhookDelegatesToTheS3SourceUnderItsReservedPrefix() throws IOException {
         when(s3InputSource.resolve(any(), any())).thenReturn(List.of());
         InputSpec spec =
@@ -157,7 +168,7 @@ class WebhookInputSourceTest {
         InputSpec s3 = delegated.getValue();
         assertEquals("s3", s3.type());
         assertEquals(7L, ((Number) s3.options().get("connectionId")).longValue());
-        assertEquals("stirling-webhook/" + WEBHOOK_ID, s3.options().get("prefix"));
+        assertEquals("stirling-webhook/" + WEBHOOK_ID + "/", s3.options().get("prefix"));
         assertEquals("consume", s3.options().get("mode"));
     }
 

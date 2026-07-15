@@ -32,9 +32,11 @@ public record WebhookConfig(String webhookId, String signingSecret, Long connect
         return connectionId != null;
     }
 
-    /** Reserved per-webhook staging prefix inside the connection's bucket. */
+    /**
+     * Reserved per-webhook staging prefix (delimiter-terminated) inside the connection's bucket.
+     */
     public String stagingPrefix() {
-        return STAGING_ROOT + "/" + webhookId;
+        return STAGING_ROOT + "/" + webhookId + "/";
     }
 
     private static Long connectionId(Map<String, Object> options) {

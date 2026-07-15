@@ -170,6 +170,26 @@ class WebhookReceiverControllerTest {
         assertTrue(spooledFiles().isEmpty());
     }
 
+    @Test
+    void aDeliveryWithoutAContentLengthIsRejected() {
+        MockHttpServletRequest req =
+                new MockHttpServletRequest("POST", "/api/v1/webhooks/" + WEBHOOK_ID);
+        // No setContent: Content-Length is unknown (-1), which the receiver requires up front so an
+        // unbounded body cannot stream into heap before the signature check.
+        ResponseStatusException ex =
+                assertThrows(
+                        ResponseStatusException.class,
+                        () ->
+                                controller.receive(
+                                        WEBHOOK_ID,
+                                        WebhookSignatures.sign(SECRET, BODY),
+                                        "x.pdf",
+                                        req));
+
+        assertEquals(411, ex.getStatusCode().value());
+        assertTrue(spooledFiles().isEmpty());
+    }
+
     private List<Path> spooledFiles() {
         Path dir = spool.dirFor(WEBHOOK_ID);
         if (!Files.isDirectory(dir)) {

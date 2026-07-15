@@ -79,17 +79,14 @@ public class WebhookInputSource implements InputSource {
         boolean hasId =
                 options.get(WebhookConfig.WEBHOOK_ID_OPTION) != null
                         && !options.get(WebhookConfig.WEBHOOK_ID_OPTION).toString().isBlank();
+        // Edit keeps the stored pair; create always mints a fresh unguessable id + server-only
+        // secret, ignoring client-supplied values so neither can be chosen or made weak.
         if (!isCreate && hasId) {
             return options;
         }
         Map<String, Object> prepared = new LinkedHashMap<>(options);
-        if (!hasId) {
-            prepared.put(WebhookConfig.WEBHOOK_ID_OPTION, WebhookIds.newWebhookId());
-        }
-        Object secret = prepared.get(WebhookConfig.SIGNING_SECRET_OPTION);
-        if (secret == null || secret.toString().isBlank()) {
-            prepared.put(WebhookConfig.SIGNING_SECRET_OPTION, WebhookIds.newSigningSecret());
-        }
+        prepared.put(WebhookConfig.WEBHOOK_ID_OPTION, WebhookIds.newWebhookId());
+        prepared.put(WebhookConfig.SIGNING_SECRET_OPTION, WebhookIds.newSigningSecret());
         return prepared;
     }
 

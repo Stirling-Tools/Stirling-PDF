@@ -1,8 +1,8 @@
 package stirling.software.proprietary.policy.webhook;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Map;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
@@ -172,28 +172,40 @@ public class WebhookReceiverController {
         return prefix + "/";
     }
 
-    /** Read the body into memory, capped at {@code policies.webhookMaxBytes}. */
+    /**
+     * Read the body into an exactly-sized buffer bounded by its declared Content-Length. Rejecting
+     * an unknown or over-cap length up front stops an unauthenticated caller streaming an unbounded
+     * body into heap before the signature can be checked (the HMAC needs the whole body).
+     */
     private byte[] readBoundedBody(HttpServletRequest request) {
         long maxBytes = applicationProperties.getPolicies().getWebhookMaxBytes();
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        byte[] chunk = new byte[8192];
-        long total = 0;
+        long declared = request.getContentLengthLong();
+        if (declared < 0) {
+            throw new ResponseStatusException(
+                    HttpStatus.LENGTH_REQUIRED, "A Content-Length header is required");
+        }
+        if (declared > maxBytes) {
+            throw new ResponseStatusException(
+                    HttpStatus.PAYLOAD_TOO_LARGE,
+                    "Delivery exceeds the " + maxBytes + "-byte limit");
+        }
+        byte[] body = new byte[(int) declared];
+        int total = 0;
         try (InputStream in = request.getInputStream()) {
             int read;
-            while ((read = in.read(chunk)) != -1) {
+            while (total < body.length
+                    && (read = in.read(body, total, body.length - total)) != -1) {
                 total += read;
-                if (total > maxBytes) {
-                    throw new ResponseStatusException(
-                            HttpStatus.PAYLOAD_TOO_LARGE,
-                            "Delivery exceeds the " + maxBytes + "-byte limit");
-                }
-                buffer.write(chunk, 0, read);
+            }
+            if (total == body.length && in.read() != -1) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "Body exceeds the declared Content-Length");
             }
         } catch (IOException e) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Could not read request body");
         }
-        return buffer.toByteArray();
+        return total == body.length ? body : Arrays.copyOf(body, total);
     }
 
     /** The 202 body: the stored (display) name and byte count of an accepted delivery. */
