@@ -8018,7 +8018,6 @@ title = "Sources"
 [portal.sources.actions]
 agentBuilder = "Agent Builder"
 connectSource = "Connect source"
-createApiKey = "Create API key"
 
 [portal.sources.builder]
 back = "Back to sources"
