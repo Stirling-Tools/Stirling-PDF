@@ -62,7 +62,6 @@ function seedSources(): StoredSource[] {
       options: {
         webhookId: "whk_demo_5f3a9c21b7",
         signingSecret: "whsec_demo_2b8e1d47a9f60c35",
-        mode: "consume",
       },
       enabled: true,
       owner: "you@acme.com",

@@ -8151,14 +8151,6 @@ secretNote = "The signing secret is shown once, when the webhook is created. Rec
 helperText = "Choose an S3 connection to stage deliveries durably (required in hosted). Leave blank on a self-hosted server to stage them on local disk."
 label = "Storage connection"
 
-[portal.sources.types.webhook.fields.mode]
-helperText = "Consume removes each delivered document once every policy has processed it."
-label = "Read mode"
-
-[portal.sources.types.webhook.fields.mode.options]
-consume = "Consume: process each delivery once"
-snapshot = "Snapshot: re-read the spool every run"
-
 [portal.sources.types.webhook.reveal]
 copy = "Copy"
 done = "Done"

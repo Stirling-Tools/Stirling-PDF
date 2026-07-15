@@ -201,25 +201,6 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
         helperTextKey:
           "portal.sources.types.webhook.fields.connection.helperText",
       },
-      {
-        key: "mode",
-        labelKey: "portal.sources.types.webhook.fields.mode.label",
-        control: "select",
-        defaultValue: "consume",
-        helperTextKey: "portal.sources.types.webhook.fields.mode.helperText",
-        options: [
-          {
-            value: "consume",
-            labelKey:
-              "portal.sources.types.webhook.fields.mode.options.consume",
-          },
-          {
-            value: "snapshot",
-            labelKey:
-              "portal.sources.types.webhook.fields.mode.options.snapshot",
-          },
-        ],
-      },
     ],
   },
 ];

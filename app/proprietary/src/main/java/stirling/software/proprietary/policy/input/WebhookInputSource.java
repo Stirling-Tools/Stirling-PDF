@@ -69,7 +69,7 @@ public class WebhookInputSource implements InputSource {
                         "prefix",
                         config.stagingPrefix(),
                         "mode",
-                        config.mode()));
+                        "consume"));
     }
 
     /** Mint the routing id + signing secret on create; an existing webhook is left untouched. */
@@ -108,16 +108,6 @@ public class WebhookInputSource implements InputSource {
         }
         Path canonicalDir = FolderIdentities.canonicalDir(dir);
         List<Path> present = listFiles(dir);
-
-        if (config.snapshot()) {
-            List<ResolvedInput> work = new ArrayList<>();
-            for (Path file : present) {
-                if (readinessChecker.isReady(file)) {
-                    work.add(ResolvedInput.of(PolicyInputs.of(List.of(fileResource(file)))));
-                }
-            }
-            return work;
-        }
 
         ctx.reportPresent(
                 present.stream()

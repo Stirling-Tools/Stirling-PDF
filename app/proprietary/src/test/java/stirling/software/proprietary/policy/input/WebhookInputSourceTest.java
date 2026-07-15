@@ -94,17 +94,6 @@ class WebhookInputSourceTest {
     }
 
     @Test
-    void snapshotReReadsEveryRunAndNeverDeletes() throws IOException {
-        Path delivered = spool.store(WEBHOOK_ID, "doc.pdf", "data".getBytes());
-
-        assertEquals(1, source.resolve(spec("snapshot"), ctx).size());
-        List<ResolvedInput> second = source.resolve(spec("snapshot"), ctx);
-        assertEquals(1, second.size());
-        second.get(0).onComplete().accept(true);
-        assertTrue(Files.exists(delivered));
-    }
-
-    @Test
     void nothingDeliveredIsAnEmptySourceNotAnError() throws IOException {
         List<ResolvedInput> work = source.resolve(spec("consume"), ctx);
         assertTrue(work.isEmpty());
@@ -137,8 +126,7 @@ class WebhookInputSourceTest {
 
     @Test
     void prepareLeavesAnExistingWebhookUntouchedOnEdit() {
-        Map<String, Object> existing =
-                Map.of("webhookId", WEBHOOK_ID, "signingSecret", "keepme", "mode", "snapshot");
+        Map<String, Object> existing = Map.of("webhookId", WEBHOOK_ID, "signingSecret", "keepme");
 
         Map<String, Object> prepared = source.prepareOptionsForSave(existing, false);
 

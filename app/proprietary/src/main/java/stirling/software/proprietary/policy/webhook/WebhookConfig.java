@@ -3,15 +3,11 @@ package stirling.software.proprietary.policy.webhook;
 import java.util.Map;
 
 /** Webhook source config: server-minted ids, staging via an S3 connection or the local spool. */
-public record WebhookConfig(
-        String webhookId, String signingSecret, Long connectionId, boolean snapshot) {
+public record WebhookConfig(String webhookId, String signingSecret, Long connectionId) {
 
     public static final String WEBHOOK_ID_OPTION = "webhookId";
     public static final String SIGNING_SECRET_OPTION = "signingSecret";
     public static final String CONNECTION_ID_OPTION = "connectionId";
-    private static final String MODE_OPTION = "mode";
-    private static final String MODE_CONSUME = "consume";
-    private static final String MODE_SNAPSHOT = "snapshot";
 
     /** Reserved key namespace webhook deliveries are staged under in a connection's bucket. */
     private static final String STAGING_ROOT = "stirling-webhook";
@@ -28,13 +24,7 @@ public record WebhookConfig(
         if (signingSecret == null) {
             throw new IllegalArgumentException("webhook config requires a 'signingSecret' option");
         }
-        String mode = trimmed(options.get(MODE_OPTION));
-        if (mode != null && !MODE_CONSUME.equals(mode) && !MODE_SNAPSHOT.equals(mode)) {
-            throw new IllegalArgumentException(
-                    "webhook config 'mode' must be 'consume' or 'snapshot'");
-        }
-        return new WebhookConfig(
-                webhookId, signingSecret, connectionId(options), MODE_SNAPSHOT.equals(mode));
+        return new WebhookConfig(webhookId, signingSecret, connectionId(options));
     }
 
     /** Whether deliveries are staged to a durable S3 connection rather than the local spool. */
@@ -45,10 +35,6 @@ public record WebhookConfig(
     /** Reserved per-webhook staging prefix inside the connection's bucket. */
     public String stagingPrefix() {
         return STAGING_ROOT + "/" + webhookId;
-    }
-
-    public String mode() {
-        return snapshot ? MODE_SNAPSHOT : MODE_CONSUME;
     }
 
     private static Long connectionId(Map<String, Object> options) {
@@ -78,12 +64,6 @@ public record WebhookConfig(
     /** Never prints the signing secret, so an accidental log line cannot leak it. */
     @Override
     public String toString() {
-        return "WebhookConfig[webhookId="
-                + webhookId
-                + ", connectionId="
-                + connectionId
-                + ", snapshot="
-                + snapshot
-                + "]";
+        return "WebhookConfig[webhookId=" + webhookId + ", connectionId=" + connectionId + "]";
     }
 }
