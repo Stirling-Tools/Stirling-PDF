@@ -4,6 +4,10 @@ import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { NavKey, VALID_NAV_KEYS } from "@app/components/shared/config/types";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
+import {
+  buildMatchSnippet,
+  getSettingsSectionContent,
+} from "@app/data/settingsContentSearch";
 import type {
   ConfigNavSection,
   ConfigNavItem,
@@ -24,102 +28,6 @@ interface SettingsSearchOption {
   matchedContext?: string;
 }
 
-const SETTINGS_SEARCH_TRANSLATION_PREFIXES: Partial<Record<string, string[]>> =
-  {
-    general: ["settings.general"],
-    hotkeys: ["settings.hotkeys"],
-    account: ["account"],
-    people: ["settings.workspace"],
-    teams: ["settings.workspace", "settings.team"],
-    "api-keys": ["settings.developer"],
-    connectionMode: ["settings.connection"],
-    planBilling: ["settings.planBilling"],
-    adminGeneral: ["admin.settings.general"],
-    adminFeatures: ["admin.settings.features"],
-    adminEndpoints: ["admin.settings.endpoints"],
-    adminDatabase: ["admin.settings.database"],
-    adminAdvanced: ["admin.settings.advanced"],
-    adminSecurity: ["admin.settings.security"],
-    adminMcp: ["admin.settings.mcp"],
-    adminConnections: [
-      "admin.settings.connections",
-      "admin.settings.mail",
-      "admin.settings.security",
-      "admin.settings.telegram",
-      "admin.settings.premium",
-      "admin.settings.general",
-      "settings.securityAuth",
-      "settings.connection",
-    ],
-    adminPlan: [
-      "settings.planBilling",
-      "admin.settings.premium",
-      "settings.licensingAnalytics",
-    ],
-    adminAudit: ["settings.licensingAnalytics"],
-    adminUsage: ["settings.licensingAnalytics"],
-    adminLegal: ["admin.settings.legal"],
-    adminPrivacy: ["admin.settings.privacy"],
-  };
-
-const getTranslationPrefixesForNavKey = (key: string): string[] => {
-  const explicitPrefixes = SETTINGS_SEARCH_TRANSLATION_PREFIXES[key] ?? [];
-
-  const inferredPrefixes: string[] = [];
-
-  if (key.startsWith("admin")) {
-    const adminSuffix = key.replace(/^admin/, "");
-    const normalizedAdminSuffix =
-      adminSuffix.charAt(0).toLowerCase() + adminSuffix.slice(1);
-    inferredPrefixes.push(`admin.settings.${normalizedAdminSuffix}`);
-  } else {
-    inferredPrefixes.push(`settings.${key}`);
-  }
-
-  return Array.from(new Set([...explicitPrefixes, ...inferredPrefixes]));
-};
-
-const flattenTranslationStrings = (value: unknown): string[] => {
-  if (typeof value === "string") {
-    const trimmed = value.trim();
-    return trimmed ? [trimmed] : [];
-  }
-
-  if (Array.isArray(value)) {
-    return value.flatMap(flattenTranslationStrings);
-  }
-
-  if (value && typeof value === "object") {
-    return Object.values(value as Record<string, unknown>).flatMap(
-      flattenTranslationStrings,
-    );
-  }
-
-  return [];
-};
-
-const buildMatchSnippet = (text: string, query: string): string => {
-  const normalizedText = text.toLocaleLowerCase();
-  const normalizedQuery = query.toLocaleLowerCase();
-  const matchIndex = normalizedText.indexOf(normalizedQuery);
-
-  if (matchIndex === -1) {
-    return text;
-  }
-
-  const maxLength = 84;
-  const contextPadding = 28;
-  const start = Math.max(0, matchIndex - contextPadding);
-  const end = Math.min(text.length, matchIndex + query.length + contextPadding);
-  const snippet = text.slice(start, end);
-
-  if (snippet.length <= maxLength) {
-    return `${start > 0 ? "…" : ""}${snippet}${end < text.length ? "…" : ""}`;
-  }
-
-  return `${start > 0 ? "…" : ""}${snippet.slice(0, maxLength)}${end < text.length ? "…" : ""}`;
-};
-
 export const SettingsSearchBar: React.FC<SettingsSearchBarProps> = ({
   configNavSections,
   onNavigate,
@@ -135,19 +43,12 @@ export const SettingsSearchBar: React.FC<SettingsSearchBarProps> = ({
       section.items
         .filter((item: ConfigNavItem) => !item.disabled)
         .map((item: ConfigNavItem) => {
-          const translationPrefixes = getTranslationPrefixesForNavKey(item.key);
-          const translationContent = translationPrefixes.flatMap((prefix) =>
-            flattenTranslationStrings(
-              t(prefix, { returnObjects: true, defaultValue: {} } as any),
-            ),
-          );
-
           const searchableContent = Array.from(
             new Set([
               item.label,
               section.title,
               `/settings/${item.key}`,
-              ...translationContent,
+              ...getSettingsSectionContent(item.key, t),
             ]),
           );
 

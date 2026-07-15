@@ -24,6 +24,10 @@ import type { ToolRegistry } from "@app/data/toolsTaxonomy";
 import { SETTINGS_SEARCH_INDEX } from "@app/data/settingsSearchIndex";
 import { SETTINGS_SECTION_REGISTRY } from "@app/data/settingsSectionRegistry";
 import {
+  buildMatchSnippet,
+  findSettingsContentMatch,
+} from "@app/data/settingsContentSearch";
+import {
   PROCESSOR_SEARCH_INDEX,
   type ProcessorSearchEntry,
 } from "@app/data/processorSearchIndex";
@@ -195,11 +199,12 @@ export function rankSettingsResults(
     if (s.adminArea && !(isAdmin || !loginEnabled)) return false;
     return true;
   });
-  const sections = rankByFuzzy(visibleSections, trimmed, [
+  const sectionMatches = rankByFuzzy(visibleSections, trimmed, [
     (s) => t(s.labelKey, s.labelFallback),
     (s) => s.labelFallback,
     (s) => s.keywords?.join(" ") ?? "",
-  ]).map(({ item, score }) => ({
+  ]);
+  const sections = sectionMatches.map(({ item, score }) => ({
     key: `setting-section:${item.key}`,
     group: "settings",
     title: t(item.labelKey, item.labelFallback),
@@ -208,7 +213,34 @@ export function rankSettingsResults(
     onSelect: () => openSettings(item.key),
   }));
 
-  return [...rows, ...sections]
+  // Content matches: sections whose rendered copy contains the query (the
+  // in-modal settings search technique), so terms with no curated keyword
+  // ("SMTP", a field label) still find their section. Ranked below every
+  // label/keyword match; 3+ chars so a single letter doesn't match half the
+  // modal.
+  const labelMatchedKeys = new Set(sectionMatches.map(({ item }) => item.key));
+  const contentMatches =
+    trimmed.length < 3
+      ? []
+      : visibleSections
+          .filter((s) => !labelMatchedKeys.has(s.key))
+          .flatMap((s) => {
+            const match = findSettingsContentMatch(s.key, trimmed, t);
+            if (!match) return [];
+            return [
+              {
+                key: `setting-content:${s.key}`,
+                group: "settings",
+                title: t(s.labelKey, s.labelFallback),
+                subtitle: buildMatchSnippet(match, trimmed),
+                iconName: "settings-rounded",
+                score: 20, // below the fuzzy thresholds (30/40)
+                onSelect: () => openSettings(s.key),
+              },
+            ];
+          });
+
+  return [...rows, ...sections, ...contentMatches]
     .sort((a, b) => b.score - a.score)
     .slice(0, GROUP_LIMIT);
 }
