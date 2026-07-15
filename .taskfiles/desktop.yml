@@ -98,8 +98,7 @@ tasks:
     cmds:
       - task: jlink:clean
       - cd src-tauri && cargo clean
-      # keychain-helper is staged by src-tauri/build.rs into sidecar/ on macOS
-      - rm -rf dist build src-tauri/sidecar/keychain-helper
+      - rm -rf dist build
 
   # ============================================================
   # JLink — Build bundled Java runtime for Tauri
