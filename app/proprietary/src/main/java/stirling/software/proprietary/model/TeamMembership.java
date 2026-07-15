@@ -25,10 +25,15 @@ import stirling.software.proprietary.security.model.User;
 @Table(
         name = "team_memberships",
         uniqueConstraints = {@UniqueConstraint(columnNames = {"team_id", "user_id"})},
-        // Distinct names from the saas Flyway idx_team_memberships_* to avoid a ddl-auto collision.
+        // Match the saas migration names so ddl-auto skips them on saas (index already there) and
+        // only creates them on self-hosted, which has no migrations.
         indexes = {
-            @Index(name = "idx_tm_user_role", columnList = "user_id, role"), // leader-set lookups
-            @Index(name = "idx_tm_team_role", columnList = "team_id, role") // per-team member lists
+            @Index(
+                    name = "idx_team_memberships_user_role",
+                    columnList = "user_id, role"), // leader-set lookups
+            @Index(
+                    name = "idx_team_memberships_team_role",
+                    columnList = "team_id, role") // per-team member lists
         })
 @NoArgsConstructor
 @Getter
