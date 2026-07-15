@@ -17,12 +17,21 @@ vi.mock("@app/auth/supabase/supabaseClient", () => ({
 }));
 
 import {
+  createBundleCheckoutSession,
   createCheckoutSession,
   createPortalSession,
   StripeFunctionError,
 } from "@portal/billing/stripe";
 
 const req = { teamId: 1, successUrl: "s", cancelUrl: "c" } as const;
+const bundleReq = {
+  teamId: 1,
+  units: 60000,
+  consented: true,
+  eulaVersion: "2026-07-draft",
+  successUrl: "s",
+  cancelUrl: "c",
+} as const;
 
 beforeEach(() => {
   invoke.mockReset();
@@ -88,6 +97,48 @@ describe("createCheckoutSession", () => {
     const err = await createCheckoutSession(req).catch((e: unknown) => e);
     expect(err).toBeInstanceOf(StripeFunctionError);
     expect((err as StripeFunctionError).code).toBe("unconfigured");
+  });
+});
+
+describe("createBundleCheckoutSession", () => {
+  it("sends units + consent (never a quote id) and maps client_secret", async () => {
+    invoke.mockResolvedValue({
+      data: { client_secret: "cs_bundle" },
+      error: null,
+    });
+    const s = await createBundleCheckoutSession(bundleReq);
+    expect(s.clientSecret).toBe("cs_bundle");
+    expect(s.alreadySubscribed).toBe(false);
+
+    const [name, opts] = invoke.mock.calls[0];
+    expect(name).toBe("create-payg-bundle-checkout");
+    expect(opts.body).toMatchObject({
+      team_id: 1,
+      units: 60000,
+      consented: true,
+      eula_version: "2026-07-draft",
+      redirect_on_completion: "never",
+    });
+    // The quote round-trip is gone — the body must not carry a ticket id.
+    expect(opts.body).not.toHaveProperty("quote_id");
+  });
+
+  it("flags a mock client secret", async () => {
+    invoke.mockResolvedValue({
+      data: { client_secret: "cs_mock_bundle" },
+      error: null,
+    });
+    expect((await createBundleCheckoutSession(bundleReq)).mock).toBe(true);
+  });
+
+  it("throws the edge fn error when neither client_secret nor url is returned", async () => {
+    invoke.mockResolvedValue({
+      data: { success: false, error: "bundle_pricing_not_configured" },
+      error: null,
+    });
+    await expect(createBundleCheckoutSession(bundleReq)).rejects.toThrow(
+      /bundle_pricing_not_configured/,
+    );
   });
 });
 

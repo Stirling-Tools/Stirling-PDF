@@ -1139,3 +1139,150 @@
   line-height: 1.5;
   color: var(--color-text-5);
 }
+
+/* ── Prepaid bundle: buy nudge + top-up + purchase modal ───────────────────── */
+
+/* Slim commit-nudge card shown when the team holds no bundle: title/subtitle
+   left, "Review offer" CTA right. Mirrors the demo's prepay nudge. */
+.portal-billing__prepaid-offer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.portal-billing__prepaid-offer-sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-text-3);
+  max-width: 46ch;
+}
+
+/* Meter card foot: the "used before metered billing" note + a leader Top-up. */
+.portal-billing__prepaid-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+.portal-billing__prepaid-foot .portal-billing__section-sub {
+  margin: 0;
+}
+
+/* Purchase modal — calculator step. */
+.portal-billing__bundle-calc {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.portal-billing__bundle-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.portal-billing__bundle-field-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-2);
+  margin-bottom: 0.375rem;
+}
+.portal-billing__bundle-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem 1.125rem;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-subtle);
+}
+.portal-billing__bundle-summary-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.9375rem;
+}
+.portal-billing__bundle-summary-row strong {
+  font-size: 1rem;
+}
+.portal-billing__bundle-savings {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-style: italic;
+  color: var(--color-text-3);
+}
+.portal-billing__bundle-consent {
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border-light);
+}
+.portal-billing__bundle-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.portal-billing__bundle-confirm-body {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--color-text-2);
+}
+.portal-billing__checkout-loading {
+  display: flex;
+  justify-content: center;
+  padding: 3rem 0;
+}
+.portal-billing__bundle-foot-end {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Activation fork (demo D97): two "how do you want to pay?" door-cards. */
+.portal-billing__door-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 560px) {
+  .portal-billing__door-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.portal-billing__door {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+.portal-billing__door--accent {
+  border-color: var(--color-blue);
+  background: var(--color-blue-subtle, var(--color-bg-subtle));
+}
+.portal-billing__door-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.portal-billing__door-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+.portal-billing__door-badge {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-blue);
+  background: var(--color-surface);
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+.portal-billing__door-sub {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--color-text-3);
+}

@@ -8,6 +8,8 @@ import { WalletMeter } from "@portal/components/billing/WalletMeter";
 import { FreePdfEditorsCard } from "@portal/components/billing/FreePdfEditorsCard";
 import { EnterpriseUpsell } from "@portal/components/billing/EnterpriseUpsell";
 import { StripeCheckoutModal } from "@portal/components/billing/StripeCheckoutModal";
+import { ActivationChoiceModal } from "@portal/components/billing/ActivationChoiceModal";
+import { BundleCheckoutModal } from "@portal/components/billing/BundleCheckoutModal";
 
 interface Props {
   wallet: Wallet;
@@ -32,7 +34,9 @@ function isSaasCurrency(c: string | null): c is SaasCurrency {
  */
 export function FreePlanView({ wallet, unsynced, onSubscribed }: Props) {
   const { t } = useTranslation();
-  const [modalOpen, setModalOpen] = useState(false);
+  // Activation fork (demo D97): choose → the metered checkout (payg) or the
+  // discounted bundle (prepay). Exactly one is open at a time.
+  const [step, setStep] = useState<"choose" | "payg" | "prepay" | null>(null);
   const [missingTeam, setMissingTeam] = useState<string | null>(null);
 
   const isLeader = wallet.role === "leader";
@@ -51,7 +55,7 @@ export function FreePlanView({ wallet, unsynced, onSubscribed }: Props) {
       return;
     }
     setMissingTeam(null);
-    setModalOpen(true);
+    setStep("choose");
   }
 
   const switchOnAction = isLeader ? (
@@ -123,15 +127,38 @@ export function FreePlanView({ wallet, unsynced, onSubscribed }: Props) {
       {/* Volume discount / Enterprise */}
       <EnterpriseUpsell />
 
+      <ActivationChoiceModal
+        open={step === "choose"}
+        onClose={() => setStep(null)}
+        onChoosePayg={() => setStep("payg")}
+        onChoosePrepay={() => setStep("prepay")}
+      />
+
       {wallet.teamId != null && (
         <StripeCheckoutModal
-          open={modalOpen}
-          onClose={() => setModalOpen(false)}
+          open={step === "payg"}
+          onClose={() => setStep(null)}
           teamId={wallet.teamId}
           currency={currency}
           pricePerDocMinor={wallet.pricePerDocMinor}
           initialCapUsd={wallet.capUsd}
           onComplete={() => onSubscribed?.() ?? Promise.resolve(false)}
+        />
+      )}
+
+      {/* Prepay reuses the bundle modal (free team → first-purchase copy, no cap
+          step). On completion the webhook credits the pool AND silently creates
+          the metered subscription off the saved card, so we poll like the payg
+          path to flip the wallet to subscribed. */}
+      {wallet.teamId != null && (
+        <BundleCheckoutModal
+          open={step === "prepay"}
+          onClose={() => setStep(null)}
+          wallet={wallet}
+          onComplete={() => {
+            setStep(null);
+            void onSubscribed?.();
+          }}
         />
       )}
     </div>

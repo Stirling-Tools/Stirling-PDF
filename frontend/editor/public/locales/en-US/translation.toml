@@ -5468,9 +5468,9 @@ low = "You're down to {{pct}}% of your prepaid capacity. Top up any time to keep
 topUp = "Top up"
 
 [payg.prepaid.buyCard]
-cta = "Prepay a year"
-subtitle = "Pre-buy a discounted pool of processing. Used before metered billing, outside your spend cap."
-title = "Prepay a year, save two months"
+cta = "Review offer"
+subtitle = "Prepay a year of PDF processing and get two months free — used before metered billing, outside your spend cap."
+title = "Get 12 months for the price of 10"
 
 [payg.prepaid.calc]
 capacityLabel = "Prepaid capacity"
@@ -6360,6 +6360,19 @@ typing = "Typing"
 loading = "Loading"
 redirectingToEditor = "Redirecting to the editor..."
 
+[portal.billing.activation]
+subtitle = "Same per-PDF rate either way — prepaying just gets you two months free."
+title = "How do you want to pay?"
+
+[portal.billing.activation.payg]
+sub = "Set a monthly limit and pay for what you use."
+title = "Pay as you go"
+
+[portal.billing.activation.prepay]
+badge = "2 months free"
+sub = "One upfront payment. Used before metered billing; unused capacity expires after 12 months."
+title = "Prepay a year"
+
 [portal.billing.checkout]
 noClientSecret = "Edge function returned no client_secret."
 stepCount = "Step {{step}} of 2"
@@ -6480,6 +6493,49 @@ capSuffix = "of {{total}} prepaid PDFs"
 expires = "Expires {{date}}"
 eyebrow = "Prepaid capacity"
 note = "Used before metered billing and outside your spend limit."
+topUp = "Top up"
+
+[portal.billing.prepaid.buy]
+cancel = "Cancel"
+continue = "Continue to payment"
+doneBody = "{{units}} PDFs of prepaid capacity are ready. They're used before metered billing and expire 12 months from today."
+doneTitle = "Your prepaid year is active"
+finish = "Done"
+mockPay = "Complete purchase"
+paidLabel = "Paid today"
+payErrorTitle = "Couldn't start checkout"
+subtitle = "Prepay a year of PDF processing up front at a discount. Prepaid capacity is used before metered billing and sits outside your spend limit; unused capacity expires after 12 months."
+title = "Get 12 months for the price of 10"
+topUpTitle = "Top up prepaid capacity"
+
+[portal.billing.prepaid.calc]
+capacityLabel = "Prepaid capacity"
+capacityValue = "{{units}} PDFs / year"
+enterpriseHint = "Processing at this scale? Talk to us about an enterprise agreement for better rates."
+postureLabel = "Governance posture"
+priceLabel = "One-time price"
+rateUnknown = "We'll show the exact price at checkout."
+savings = "You save {{amount}} — 2 months free."
+sizeLabel = "Typical file size"
+volumeLabel = "PDFs processed / month"
+
+[portal.billing.prepaid.consent]
+label = "I understand that when my prepaid capacity is used up or expires after 12 months, processing automatically continues at the standard metered pay-as-you-go rate (up to my spend limit) unless I cancel, and that I can cancel anytime from the billing portal."
+
+[portal.billing.prepaid.offer]
+cta = "Review offer"
+subtitle = "Prepay a year of PDF processing and get two months free — used before metered billing, outside your spend limit."
+title = "Get 12 months for the price of 10"
+
+[portal.billing.prepaid.posture]
+essentials = "Essentials"
+governed = "Governed"
+regulated = "Regulated"
+
+[portal.billing.prepaid.size]
+compact = "Compact"
+heavy = "Heavy"
+standard = "Standard"
 
 [portal.billing.prepaid.state]
 exhausted = "Used up"

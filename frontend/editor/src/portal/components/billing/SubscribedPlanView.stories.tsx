@@ -67,12 +67,18 @@ const invoices = http.get("*/api/v1/payg/invoices", () =>
 const meta: Meta<typeof SubscribedPlanView> = {
   title: "Portal/Billing/SubscribedPlanView",
   component: SubscribedPlanView,
-  parameters: { layout: "padded", msw: { handlers: [card, invoices] } },
+  parameters: {
+    layout: "padded",
+    msw: { handlers: [card, invoices] },
+  },
 };
 export default meta;
 type Story = StoryObj<typeof SubscribedPlanView>;
 
-/** The full Processor-plan dashboard — leader, within cap. */
+/**
+ * The full Processor-plan dashboard — leader, within cap, no prepaid bundle yet.
+ * Surfaces the "Get 12 months for the price of 10" prepay nudge ("Review offer").
+ */
 export const Leader: Story = { args: { wallet: subscribedWallet } };
 
 /** Approaching the cap — surfaces the over-cap warning banner + projection. */
@@ -87,5 +93,5 @@ export const ApproachingCap: Story = {
   },
 };
 
-/** Drawing on a prepaid bundle — surfaces the prepaid-capacity card. */
+/** Drawing on a prepaid bundle — surfaces the capacity meter + a "Top up" action. */
 export const WithPrepaid: Story = { args: { wallet: prepaidWallet } };

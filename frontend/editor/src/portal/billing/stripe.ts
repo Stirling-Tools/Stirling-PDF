@@ -148,6 +148,57 @@ export async function createCheckoutSession(
   };
 }
 
+interface BundleCheckoutRequest {
+  teamId: number;
+  /** Purchased capacity (size-scaled meter units). Billed quantity × unit_amount + coupon. */
+  units: number;
+  /** Affirmative consent to the prepaid→metered auto-transition (ARL/EULA §7.2). */
+  consented: boolean;
+  /** EULA version the consent is recorded against. */
+  eulaVersion: string;
+  successUrl: string;
+  cancelUrl: string;
+}
+
+/**
+ * Mint a one-time ({@code mode:payment}) Stripe Checkout session for a prepaid
+ * bundle, via the {@code create-payg-bundle-checkout} edge function. The client
+ * sends the sized {@code units} directly — the edge fn bills quantity × unit_amount
+ * + the policy coupon (no server quote ticket; you pay for what you ask for, so
+ * quantity is safe to trust). The pool is credited on the Stripe webhook, never
+ * here. Defaults to embedded Checkout (returns {@code clientSecret}) so the portal
+ * can mount it inline.
+ */
+export async function createBundleCheckoutSession(
+  req: BundleCheckoutRequest,
+): Promise<CheckoutSession> {
+  const res = await invoke<CheckoutResponse>("create-payg-bundle-checkout", {
+    team_id: req.teamId,
+    units: req.units,
+    consented: req.consented,
+    eula_version: req.eulaVersion,
+    success_url: req.successUrl,
+    cancel_url: req.cancelUrl,
+    // Keep the modal open on completion so it can finalise + refetch the wallet
+    // (a redirect would reload the page and skip Stripe's onComplete).
+    redirect_on_completion: "never",
+  });
+  const clientSecret = res.client_secret ?? null;
+  const redirectUrl = res.url ?? null;
+  if (!clientSecret && !redirectUrl) {
+    throw new StripeFunctionError(
+      res.error ??
+        "create-payg-bundle-checkout returned neither client_secret nor URL",
+    );
+  }
+  return {
+    clientSecret,
+    redirectUrl,
+    alreadySubscribed: false,
+    mock: Boolean(res.mock) || clientSecret?.startsWith("cs_mock_") === true,
+  };
+}
+
 /** {@code VITE_STRIPE_PUBLISHABLE_KEY} — the Stripe pk used by embedded Checkout. */
 export function getStripePublishableKey(): string {
   return import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;

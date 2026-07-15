@@ -26,7 +26,6 @@ import HelpOutlineIcon from "@mui/icons-material/HelpOutlineRounded";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMoreRounded";
 import BoltIcon from "@mui/icons-material/BoltRounded";
 import AllInclusiveIcon from "@mui/icons-material/AllInclusiveRounded";
-import SavingsIcon from "@mui/icons-material/SavingsOutlined";
 import { alert as showToast } from "@app/components/toast";
 import {
   PrepaidCapacityMeterPanel,
@@ -65,7 +64,7 @@ interface PaygProps {
    * {@code useWallet} for the leader view. When omitted (member view) the
    * prepaid purchase / top-up CTAs are hidden.
    */
-  quoteBundle?: (units: number) => Promise<BundleQuote>;
+  quoteBundle?: (units: number, eulaVersion: string) => Promise<BundleQuote>;
   /** Refetch the wallet after a completed bundle purchase (leader view). */
   onBought?: () => void;
 }
@@ -741,28 +740,28 @@ function PrepaidBanner({
   );
 }
 
-/** Leader CTA to buy prepaid capacity when the team holds none yet. */
+/**
+ * Prepay nudge for a metered team that holds no bundle yet — mirrors the demo's commit-nudge card
+ * ("Get 12 months for the price of 10" · "Review offer"), slotted right under the usage/limit area.
+ * Leader-only (buying is a commercial action).
+ */
 function PrepaidBuyCard({ onBuy }: { onBuy: () => void }) {
   const { t } = useTranslation();
   return (
     <div className="payg-stripe">
       <div>
         <div className="payg-stripe__title">
-          {t("payg.prepaid.buyCard.title", "Prepay a year, save two months")}
+          {t("payg.prepaid.buyCard.title", "Get 12 months for the price of 10")}
         </div>
         <div className="payg-stripe__subtitle">
           {t(
             "payg.prepaid.buyCard.subtitle",
-            "Pre-buy a discounted pool of processing. Used before metered billing, outside your spend cap.",
+            "Prepay a year of PDF processing and get two months free — used before metered billing, outside your spend cap.",
           )}
         </div>
       </div>
-      <Button
-        onClick={onBuy}
-        rightSection={<SavingsIcon sx={{ fontSize: 16 }} />}
-        variant="secondary"
-      >
-        {t("payg.prepaid.buyCard.cta", "Prepay a year")}
+      <Button onClick={onBuy} variant="secondary">
+        {t("payg.prepaid.buyCard.cta", "Review offer")}
       </Button>
     </div>
   );
@@ -916,12 +915,13 @@ const Payg: React.FC<PaygProps> = ({
           <CapReadOnly capUsd={wallet.capUsd} noCap={wallet.noCap} />
         )}
 
-        {isLeader && wallet.members.length > 0 && (
-          <MemberUsage members={wallet.members} />
-        )}
-
+        {/* Prepay nudge sits right under the spend limit, as in the demo — before member usage. */}
         {!prepaid && canBuy && (
           <PrepaidBuyCard onBuy={() => setBundleOpen(true)} />
+        )}
+
+        {isLeader && wallet.members.length > 0 && (
+          <MemberUsage members={wallet.members} />
         )}
 
         {SHOW_ACTIVITY_FEED && <ActivityFeed recent={wallet.recent} />}
@@ -961,7 +961,7 @@ export interface PaygLeaderProps {
   /** See {@link PaygProps#onOpenPortal}. */
   onOpenPortal?: () => Promise<void>;
   /** See {@link PaygProps#quoteBundle}. */
-  quoteBundle?: (units: number) => Promise<BundleQuote>;
+  quoteBundle?: (units: number, eulaVersion: string) => Promise<BundleQuote>;
   /** See {@link PaygProps#onBought}. */
   onBought?: () => void;
 }
