@@ -38,6 +38,10 @@ const config: StorybookConfig = {
       // modules (e.g. the auth supabase client that moved into proprietary).
       "@proprietary": resolve(__dirname, "../editor/src/proprietary"),
       "@core": resolve(__dirname, "../editor/src/core"),
+      // Public assets (e.g. the en-US translation TOML loaded ?raw by preview.tsx).
+      // No src alias covers public/, so this lets the config use an alias rather
+      // than a relative path.
+      "@public": resolve(__dirname, "../editor/public"),
     };
     // Editor stories import via @app/* (proprietary→core fallback), @core/* and
     // @proprietary/*. Resolve them exactly the way the editor's own build does —

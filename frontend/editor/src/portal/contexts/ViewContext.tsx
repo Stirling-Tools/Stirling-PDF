@@ -11,7 +11,6 @@ export type ViewId =
   | "policies"
   | "pipelines"
   | "documents"
-  | "components"
   | "infrastructure"
   | "usage"
   | "docs"
@@ -27,7 +26,6 @@ export const VIEW_LABELS: Record<ViewId, string> = {
   policies: "Policies",
   pipelines: "Pipelines",
   documents: "Documents",
-  components: "Components",
   infrastructure: "Infrastructure",
   usage: "Usage & Billing",
   docs: "Developer Docs",
@@ -44,7 +42,6 @@ export const VIEW_PATHS: Record<ViewId, string> = {
   policies: "/policies",
   pipelines: "/pipelines",
   documents: "/documents",
-  components: "/components",
   infrastructure: "/infrastructure",
   usage: "/usage",
   docs: "/docs",

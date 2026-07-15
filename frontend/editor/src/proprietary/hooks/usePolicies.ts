@@ -35,8 +35,6 @@ import {
   removePolicy,
 } from "@app/services/policyBackend";
 import { reorderPolicies as reorderBackendPolicies } from "@app/services/policyApi";
-import { seedTeamLabelsIfEmpty } from "@app/services/labelsBackend";
-import { getPolicyToolChain } from "@app/components/policies/policyToolChains";
 import type { PolicyToStore } from "@app/services/policyPipeline";
 import type {
   PoliciesByCategory,
@@ -139,13 +137,6 @@ export function usePolicies() {
     async (id: string, result: PolicyWizardResult) => {
       const category = loadPolicyCatalog().categories.find((c) => c.id === id);
       if (!category) throw new Error(`Unknown policy category: ${id}`);
-      // A policy whose chain classifies runs against the team's stored label set
-      // (the engine has no default). Seed it with the built-in defaults now so
-      // the very first enforced file has a vocabulary to classify against; no-op
-      // if the team already has a set (never clobbers admin edits).
-      if (getPolicyToolChain(id)?.includes("classify")) {
-        await seedTeamLabelsIfEmpty();
-      }
       // One policy per category, ever: reuse any existing backend record.
       const existingBackendId =
         loadPolicies()[id]?.backendId ??
@@ -225,12 +216,6 @@ export function usePolicies() {
     async (id: string, result: PolicyConfigResult) => {
       const category = loadPolicyCatalog().categories.find((c) => c.id === id);
       if (!category) throw new Error(`Unknown policy category: ${id}`);
-      // Seed the team's default label set on first classification-policy setup
-      // (see enablePolicy) — the engine has no default, so the stored set is the
-      // only vocabulary. No-op once the team has any set.
-      if (getPolicyToolChain(id)?.includes("classify")) {
-        await seedTeamLabelsIfEmpty();
-      }
       const current = loadPolicies()[id];
       // One policy per category, ever: reuse the existing backend record (even
       // if the local link was lost) so a save never creates a duplicate.

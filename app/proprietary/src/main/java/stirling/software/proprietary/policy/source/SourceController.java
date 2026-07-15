@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -44,7 +43,6 @@ import stirling.software.proprietary.util.SecretMasker;
 @Hidden
 @RequiredArgsConstructor
 @Tag(name = "Sources", description = "Reusable policy input connections")
-@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class SourceController {
 
     private static final String WEBHOOK_TYPE = "webhook";
