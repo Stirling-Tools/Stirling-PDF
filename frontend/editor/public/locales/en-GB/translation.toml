@@ -7895,8 +7895,6 @@ viewAll = "View all"
 description = "Pipeline runs, deploys and agent events will appear here."
 title = "Nothing here yet"
 
-[portal.search]
-goTo = "Go to"
 
 [portal.settings.groups]
 admin = "Admin"

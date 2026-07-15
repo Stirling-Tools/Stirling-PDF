@@ -1,62 +1,114 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { rankByFuzzy } from "@app/utils/fuzzySearch";
-import type { UseSuperSearchResult } from "@app/hooks/useSuperSearch";
-import { useView, type ViewId } from "@portal/contexts/ViewContext";
+import { useNavigate } from "react-router-dom";
+import { withBasePath } from "@app/constants/app";
+import { getToolUrlPath } from "@app/data/toolsTaxonomy";
+import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import type { ToolId } from "@app/types/toolId";
+import type { ProcessorSearchEntry } from "@app/data/processorSearchIndex";
 import {
-  GROUP_PRIMARY,
-  GROUP_OPERATIONAL,
-  GROUP_PLATFORM,
-  type NavEntry,
-} from "@portal/components/sidebarGroups";
+  assembleSuperSearchGroups,
+  rankProcessorResults,
+  rankSettingsResults,
+  rankToolResults,
+  type SuperSearchGates,
+  type SuperSearchGroupId,
+  type UseSuperSearchResult,
+} from "@app/hooks/useSuperSearch";
+import { useUI } from "@portal/contexts/UIContext";
+import { EDITOR_IS_SAME_APP, EDITOR_URL } from "@portal/auth/editorUrl";
+
+/** Processor pages lead in the portal; the editor bar orders its own first. */
+const PORTAL_GROUP_ORDER: SuperSearchGroupId[] = [
+  "processor",
+  "tools",
+  "settings",
+];
 
 /**
- * The portal's results provider for the shared SuperSearch bar: the sidebar's
- * flavor-aware destinations plus the editor app. The editor's provider is the
- * files/tools/settings/Processor aggregate; this is its portal counterpart.
+ * Tool results live in the editor app, so selecting one is a full page load
+ * there (the editor initialises its tool state from the URL on boot —
+ * client-side routing can't reach that init once mounted).
+ */
+function editorHref(path: string): string {
+  if (EDITOR_IS_SAME_APP) return withBasePath(path);
+  return EDITOR_URL.replace(/\/$/, "") + path;
+}
+
+/**
+ * The portal's results provider for the shared super search bar: the same
+ * sources the editor bar ranks minus files (a file only opens inside the
+ * editor), with Processor pages leading. Only the select actions differ —
+ * tools hand over to the editor, settings opens the portal's settings modal,
+ * Processor pages navigate in-app.
  */
 export function usePortalSearchResults(
   query: string,
   _active: boolean,
 ): UseSuperSearchResult {
   const { t } = useTranslation();
-  const { setActiveView } = useView();
+  const navigate = useNavigate();
+  const { openSettings } = useUI();
+  const { allTools } = useToolRegistry();
+  const { config } = useAppConfig();
 
-  const entries = useMemo<NavEntry[]>(
-    () => [
-      ...GROUP_PRIMARY,
-      ...GROUP_OPERATIONAL,
-      ...GROUP_PLATFORM,
-      { id: "editor" as ViewId, icon: null },
-    ],
-    [],
+  const trimmed = query.trim();
+
+  const openTool = useCallback((id: ToolId) => {
+    window.location.assign(editorHref(getToolUrlPath(id)));
+  }, []);
+
+  const openSettingsSection = useCallback(
+    (section: string) => openSettings(section),
+    [openSettings],
   );
 
-  const groups = useMemo(() => {
-    const q = query.trim();
-    if (!q) return [];
-    const results = rankByFuzzy(entries, q, [
-      (e) => t(`portal.nav.${e.id}`),
-      (e) => e.id,
-    ]).map(({ item, score }) => ({
-      key: `nav:${item.id}`,
-      group: "nav",
-      title: t(`portal.nav.${item.id}`),
-      icon: item.icon ?? undefined,
-      iconName: item.icon ? undefined : "search-rounded",
-      score,
-      onSelect: () => {
-        if (item.externalUrl) {
-          window.open(item.externalUrl, "_blank", "noopener,noreferrer");
-          return;
-        }
-        setActiveView(item.id);
-      },
-    }));
-    return results.length > 0
-      ? [{ id: "nav", label: t("portal.search.goTo", "Go to"), results }]
-      : [];
-  }, [entries, query, t, setActiveView]);
+  const selectProcessorEntry = useCallback(
+    (item: ProcessorSearchEntry) => {
+      if (item.externalUrl) {
+        window.open(item.externalUrl, "_blank", "noopener,noreferrer");
+      } else {
+        navigate(item.path);
+      }
+    },
+    [navigate],
+  );
+
+  const gates = useMemo<SuperSearchGates>(
+    () => ({
+      isAdmin: config?.isAdmin ?? false,
+      loginEnabled: config?.enableLogin ?? false,
+    }),
+    [config],
+  );
+
+  const groups = useMemo(
+    () =>
+      assembleSuperSearchGroups(
+        {
+          tools: rankToolResults(allTools, trimmed, openTool),
+          settings: rankSettingsResults(trimmed, t, gates, openSettingsSection),
+          processor: rankProcessorResults(
+            trimmed,
+            t,
+            gates,
+            selectProcessorEntry,
+          ),
+        },
+        t,
+        PORTAL_GROUP_ORDER,
+      ),
+    [
+      trimmed,
+      allTools,
+      openTool,
+      gates,
+      openSettingsSection,
+      selectProcessorEntry,
+      t,
+    ],
+  );
 
   const flatResults = useMemo(() => groups.flatMap((g) => g.results), [groups]);
 

@@ -7,6 +7,7 @@ import {
   useState,
 } from "react";
 import type React from "react";
+import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
@@ -14,14 +15,18 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { ViewerContext } from "@app/contexts/ViewerContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useFileHandler } from "@app/hooks/useFileHandler";
+import { useFileActions } from "@app/contexts/file/fileHooks";
 import { fileStorage } from "@app/services/fileStorage";
 import { rankByFuzzy, idToWords } from "@app/utils/fuzzySearch";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { ToolId } from "@app/types/toolId";
+import type { ToolRegistry } from "@app/data/toolsTaxonomy";
 import { SETTINGS_SEARCH_INDEX } from "@app/data/settingsSearchIndex";
 import { SETTINGS_SECTION_REGISTRY } from "@app/data/settingsSectionRegistry";
-import { PROCESSOR_SEARCH_INDEX } from "@app/data/processorSearchIndex";
+import {
+  PROCESSOR_SEARCH_INDEX,
+  type ProcessorSearchEntry,
+} from "@app/data/processorSearchIndex";
 
 export type SuperSearchGroupId = "files" | "tools" | "settings" | "processor";
 
@@ -64,35 +69,23 @@ export interface UseSuperSearchResult {
   loadingFiles: boolean;
 }
 
-/**
- * Aggregates the three super-search providers — My Files, Tools, and Settings —
- * into a single ranked, grouped result set, and wires each result's select
- * action (open file → viewer, select tool, deep-link into settings).
- *
- * @param query   current search text
- * @param active  whether the search surface is open; gates the My Files load
- */
-export function useSuperSearch(
-  query: string,
-  active: boolean,
-): UseSuperSearchResult {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const {
-    toolRegistry,
-    handleToolSelect,
-    handleToolSelectForced,
-    toolAvailability,
-  } = useToolWorkflow();
-  const { actions: navActions } = useNavigationActions();
-  const { addFiles } = useFileHandler();
-  const { config } = useAppConfig();
-  // ViewerContext is only present once the viewer subtree mounts; treat as optional.
-  const viewer = useContext(ViewerContext);
+/** Visibility gates shared by the settings and Processor sources. */
+export interface SuperSearchGates {
+  isAdmin: boolean;
+  loginEnabled: boolean;
+}
 
-  const trimmed = query.trim();
+// ---------------------------------------------------------------------------
+// Shared sources. Every host bar (editor workbench, portal shell) builds its
+// results from these, so a query ranks identically everywhere — only the
+// select actions differ (in-app contexts vs cross-app navigation).
+// ---------------------------------------------------------------------------
 
-  // --- My Files store ----------------------------------------------------
+/** Loads the My Files stubs whenever the search surface is open. */
+export function useMyFilesStubs(active: boolean): {
+  stubs: StirlingFileStub[];
+  loadingFiles: boolean;
+} {
   const [stubs, setStubs] = useState<StirlingFileStub[]>([]);
   const [loadingFiles, setLoadingFiles] = useState(false);
   const loadedOnceRef = useRef(false);
@@ -120,20 +113,200 @@ export function useSuperSearch(
     };
   }, [active]);
 
+  return { stubs, loadingFiles };
+}
+
+export function rankFileResults(
+  stubs: StirlingFileStub[],
+  trimmed: string,
+  openFile: (stub: StirlingFileStub) => void | Promise<void>,
+): SuperSearchResult[] {
+  if (!trimmed) return [];
+  return rankByFuzzy(stubs, trimmed, [(s) => s.name])
+    .slice(0, GROUP_LIMIT)
+    .map(({ item, score }) => ({
+      key: `file:${item.id}`,
+      group: "files",
+      title: item.name,
+      iconName: "insert-drive-file-rounded",
+      score,
+      onSelect: () => openFile(item),
+    }));
+}
+
+export function rankToolResults(
+  registry: Partial<ToolRegistry>,
+  trimmed: string,
+  openTool: (id: ToolId) => void,
+): SuperSearchResult[] {
+  if (!trimmed) return [];
+  const entries = Object.entries(registry) as [
+    ToolId,
+    ToolRegistry[ToolId] | undefined,
+  ][];
+  return rankByFuzzy(entries, trimmed, [
+    ([id]) => idToWords(id),
+    ([, v]) => v?.name ?? "",
+    ([, v]) => v?.description ?? "",
+    ([, v]) => v?.synonyms?.join(" ") ?? "",
+  ])
+    .slice(0, GROUP_LIMIT)
+    .map(({ item: [id, tool], score }) => ({
+      key: `tool:${id}`,
+      group: "tools",
+      title: tool?.name ?? id,
+      subtitle: tool?.description,
+      icon: tool?.icon,
+      score,
+      onSelect: () => openTool(id),
+    }));
+}
+
+export function rankSettingsResults(
+  trimmed: string,
+  t: TFunction,
+  gates: SuperSearchGates,
+  openSettings: (section: string, anchor?: string) => void,
+): SuperSearchResult[] {
+  if (!trimmed) return [];
+  const { isAdmin, loginEnabled } = gates;
+
+  // Row-level entries (deep-link with ?focus=) take priority.
+  const rows = rankByFuzzy(SETTINGS_SEARCH_INDEX, trimmed, [
+    (e) => t(e.labelKey, e.labelFallback),
+    (e) => e.labelFallback,
+    (e) => e.keywords?.join(" ") ?? "",
+  ]).map(({ item, score }) => ({
+    key: `setting:${item.section}:${item.anchor}`,
+    group: "settings",
+    title: t(item.labelKey, item.labelFallback),
+    subtitle: t(`settings.${item.section}.title`, item.section),
+    iconName: "settings-rounded",
+    score: score + 1, // nudge rows above bare section matches
+    onSelect: () => openSettings(item.section, item.anchor),
+  }));
+
+  // Section-level entries (whole tab), gated like the modal nav. The registry
+  // resolves per build (core / proprietary / saas / desktop), so this only
+  // ever sees sections the current build's settings modal can actually show.
+  const visibleSections = SETTINGS_SECTION_REGISTRY.filter((s) => {
+    if (s.requiresLogin && !loginEnabled) return false;
+    // Admin-area sections mirror the builder's `isAdmin || !loginEnabled` gate.
+    if (s.adminArea && !(isAdmin || !loginEnabled)) return false;
+    return true;
+  });
+  const sections = rankByFuzzy(visibleSections, trimmed, [
+    (s) => t(s.labelKey, s.labelFallback),
+    (s) => s.labelFallback,
+    (s) => s.keywords?.join(" ") ?? "",
+  ]).map(({ item, score }) => ({
+    key: `setting-section:${item.key}`,
+    group: "settings",
+    title: t(item.labelKey, item.labelFallback),
+    iconName: "settings-rounded",
+    score,
+    onSelect: () => openSettings(item.key),
+  }));
+
+  return [...rows, ...sections]
+    .sort((a, b) => b.score - a.score)
+    .slice(0, GROUP_LIMIT);
+}
+
+export function rankProcessorResults(
+  trimmed: string,
+  t: TFunction,
+  gates: SuperSearchGates,
+  selectEntry: (entry: ProcessorSearchEntry) => void,
+): SuperSearchResult[] {
+  if (!trimmed || PROCESSOR_SEARCH_INDEX.length === 0) return [];
+  // The portal is an admin surface; mirror the settings modal's admin gate
+  // (a login-disabled single-user deployment has a full-access operator).
+  if (!(gates.isAdmin || !gates.loginEnabled)) return [];
+  return rankByFuzzy(PROCESSOR_SEARCH_INDEX, trimmed, [
+    (e) => t(e.labelKey, e.labelFallback),
+    (e) => e.labelFallback,
+    (e) => e.keywords?.join(" ") ?? "",
+  ])
+    .slice(0, GROUP_LIMIT)
+    .map(({ item, score }) => ({
+      key: `processor:${item.id}`,
+      group: "processor",
+      title: t(item.labelKey, item.labelFallback),
+      iconName: "grid-view-rounded",
+      score,
+      onSelect: () => selectEntry(item),
+    }));
+}
+
+/**
+ * Orders the sources into the shared group layout, dropping empties. Hosts
+ * pass their own order so local results lead (the editor puts its own
+ * files/tools first and Processor pages last; the portal the reverse).
+ */
+export function assembleSuperSearchGroups(
+  byId: Partial<Record<SuperSearchGroupId, SuperSearchResult[]>>,
+  t: TFunction,
+  order: SuperSearchGroupId[] = GROUP_ORDER,
+): SuperSearchGroup[] {
+  const labels: Record<SuperSearchGroupId, string> = {
+    files: t("superSearch.group.files", "Files"),
+    tools: t("superSearch.group.tools", "Tools"),
+    settings: t("superSearch.group.settings", "Settings"),
+    processor: t("superSearch.group.processor", "Processor"),
+  };
+  return order
+    .map((id) => ({
+      id,
+      label: labels[id],
+      results: byId[id] ?? [],
+    }))
+    .filter((g) => g.results.length > 0);
+}
+
+/**
+ * The editor's results provider: the shared sources wired to in-app select
+ * actions (open file → viewer, select tool in the workbench, deep-link into
+ * the settings modal, route into the Processor).
+ *
+ * @param query   current search text
+ * @param active  whether the search surface is open; gates the My Files load
+ */
+export function useSuperSearch(
+  query: string,
+  active: boolean,
+): UseSuperSearchResult {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const {
+    toolRegistry,
+    handleToolSelect,
+    handleToolSelectForced,
+    toolAvailability,
+  } = useToolWorkflow();
+  const { actions: navActions } = useNavigationActions();
+  const { actions: fileActions } = useFileActions();
+  const { config } = useAppConfig();
+  // ViewerContext is only present once the viewer subtree mounts; treat as optional.
+  const viewer = useContext(ViewerContext);
+
+  const trimmed = query.trim();
+  const { stubs, loadingFiles } = useMyFilesStubs(active);
+
   // --- Actions -----------------------------------------------------------
   const openFile = useCallback(
     async (stub: StirlingFileStub) => {
       try {
-        const file = await fileStorage.getStirlingFile(stub.id);
-        if (!file) return;
-        await addFiles([file], { selectFiles: true });
+        // The file already lives in storage — load it as a stub so its id and
+        // metadata are preserved (addFiles would persist a duplicate record).
+        await fileActions.addStirlingFileStubs([stub], { selectFiles: true });
         navActions.setWorkbench("viewer");
         viewer?.setActiveFileId?.(stub.id);
       } catch (err) {
         console.error("[SuperSearch] Failed to open file:", stub.name, err);
       }
     },
-    [addFiles, navActions, viewer],
+    [fileActions, navActions, viewer],
   );
 
   const openTool = useCallback(
@@ -163,144 +336,54 @@ export function useSuperSearch(
     [navigate],
   );
 
-  // --- Files results -----------------------------------------------------
-  const fileResults = useMemo<SuperSearchResult[]>(() => {
-    if (!trimmed) return [];
-    return rankByFuzzy(stubs, trimmed, [(s) => s.name])
-      .slice(0, GROUP_LIMIT)
-      .map(({ item, score }) => ({
-        key: `file:${item.id}`,
-        group: "files" as const,
-        title: item.name,
-        iconName: "insert-drive-file-rounded",
-        score,
-        onSelect: () => openFile(item),
-      }));
-  }, [trimmed, stubs, openFile]);
-
-  // --- Tools results -----------------------------------------------------
-  const toolResults = useMemo<SuperSearchResult[]>(() => {
-    if (!trimmed) return [];
-    const entries = Object.entries(toolRegistry) as [
-      ToolId,
-      (typeof toolRegistry)[ToolId],
-    ][];
-    return rankByFuzzy(entries, trimmed, [
-      ([id]) => idToWords(id),
-      ([, v]) => v?.name ?? "",
-      ([, v]) => v?.description ?? "",
-      ([, v]) => v?.synonyms?.join(" ") ?? "",
-    ])
-      .slice(0, GROUP_LIMIT)
-      .map(({ item: [id, tool], score }) => ({
-        key: `tool:${id}`,
-        group: "tools" as const,
-        title: tool?.name ?? id,
-        subtitle: tool?.description,
-        icon: tool?.icon,
-        score,
-        onSelect: () => openTool(id),
-      }));
-  }, [trimmed, toolRegistry, openTool]);
-
-  // --- Settings results --------------------------------------------------
-  const settingsResults = useMemo<SuperSearchResult[]>(() => {
-    if (!trimmed) return [];
-    const isAdmin = config?.isAdmin ?? false;
-    const loginEnabled = config?.enableLogin ?? false;
-
-    // Row-level entries (deep-link with ?focus=) take priority.
-    const rows = rankByFuzzy(SETTINGS_SEARCH_INDEX, trimmed, [
-      (e) => t(e.labelKey, e.labelFallback),
-      (e) => e.labelFallback,
-      (e) => e.keywords?.join(" ") ?? "",
-    ]).map(({ item, score }) => ({
-      key: `setting:${item.section}:${item.anchor}`,
-      group: "settings" as const,
-      title: t(item.labelKey, item.labelFallback),
-      subtitle: t(`settings.${item.section}.title`, item.section),
-      iconName: "settings-rounded",
-      score: score + 1, // nudge rows above bare section matches
-      onSelect: () => openSettings(item.section, item.anchor),
-    }));
-
-    // Section-level entries (whole tab), gated like the modal nav. The registry
-    // resolves per build (core / proprietary / saas / desktop), so this only
-    // ever sees sections the current build's settings modal can actually show.
-    const visibleSections = SETTINGS_SECTION_REGISTRY.filter((s) => {
-      if (s.requiresLogin && !loginEnabled) return false;
-      // Admin-area sections mirror the builder's `isAdmin || !loginEnabled` gate.
-      if (s.adminArea && !(isAdmin || !loginEnabled)) return false;
-      return true;
-    });
-    const sections = rankByFuzzy(visibleSections, trimmed, [
-      (s) => t(s.labelKey, s.labelFallback),
-      (s) => s.labelFallback,
-      (s) => s.keywords?.join(" ") ?? "",
-    ]).map(({ item, score }) => ({
-      key: `setting-section:${item.key}`,
-      group: "settings" as const,
-      title: t(item.labelKey, item.labelFallback),
-      iconName: "settings-rounded",
-      score,
-      onSelect: () => openSettings(item.key),
-    }));
-
-    return [...rows, ...sections]
-      .sort((a, b) => b.score - a.score)
-      .slice(0, GROUP_LIMIT);
-  }, [trimmed, config, t, openSettings]);
-
-  // --- Processor (admin portal) results ------------------------------------
-  const processorResults = useMemo<SuperSearchResult[]>(() => {
-    if (!trimmed || PROCESSOR_SEARCH_INDEX.length === 0) return [];
-    // The portal is an admin surface; mirror the settings modal's admin gate
-    // (a login-disabled single-user deployment has a full-access operator).
-    const isAdmin = config?.isAdmin ?? false;
-    const loginEnabled = config?.enableLogin ?? false;
-    if (!(isAdmin || !loginEnabled)) return [];
-    return rankByFuzzy(PROCESSOR_SEARCH_INDEX, trimmed, [
-      (e) => t(e.labelKey, e.labelFallback),
-      (e) => e.labelFallback,
-      (e) => e.keywords?.join(" ") ?? "",
-    ])
-      .slice(0, GROUP_LIMIT)
-      .map(({ item, score }) => ({
-        key: `processor:${item.id}`,
-        group: "processor" as const,
-        title: t(item.labelKey, item.labelFallback),
-        iconName: "grid-view-rounded",
-        score,
-        onSelect: () => {
-          if (item.externalUrl) {
-            window.open(item.externalUrl, "_blank", "noopener,noreferrer");
-          } else {
-            navigate(item.path);
-          }
-        },
-      }));
-  }, [trimmed, config, t, navigate]);
+  const selectProcessorEntry = useCallback(
+    (item: ProcessorSearchEntry) => {
+      if (item.externalUrl) {
+        window.open(item.externalUrl, "_blank", "noopener,noreferrer");
+      } else {
+        navigate(item.path);
+      }
+    },
+    [navigate],
+  );
 
   // --- Assemble ----------------------------------------------------------
-  const groups = useMemo<SuperSearchGroup[]>(() => {
-    const byId: Record<SuperSearchGroupId, SuperSearchResult[]> = {
-      files: fileResults,
-      tools: toolResults,
-      settings: settingsResults,
-      processor: processorResults,
-    };
-    const labels: Record<SuperSearchGroupId, string> = {
-      files: t("superSearch.group.files", "Files"),
-      tools: t("superSearch.group.tools", "Tools"),
-      settings: t("superSearch.group.settings", "Settings"),
-      processor: t("superSearch.group.processor", "Processor"),
-    };
-    return GROUP_ORDER.map((id) => ({
-      id,
-      label: labels[id],
-      results: byId[id],
-    })).filter((g) => g.results.length > 0);
-  }, [fileResults, toolResults, settingsResults, processorResults, t]);
+  const gates = useMemo<SuperSearchGates>(
+    () => ({
+      isAdmin: config?.isAdmin ?? false,
+      loginEnabled: config?.enableLogin ?? false,
+    }),
+    [config],
+  );
+
+  const groups = useMemo<SuperSearchGroup[]>(
+    () =>
+      assembleSuperSearchGroups(
+        {
+          files: rankFileResults(stubs, trimmed, openFile),
+          tools: rankToolResults(toolRegistry, trimmed, openTool),
+          settings: rankSettingsResults(trimmed, t, gates, openSettings),
+          processor: rankProcessorResults(
+            trimmed,
+            t,
+            gates,
+            selectProcessorEntry,
+          ),
+        },
+        t,
+      ),
+    [
+      stubs,
+      trimmed,
+      openFile,
+      toolRegistry,
+      openTool,
+      gates,
+      openSettings,
+      selectProcessorEntry,
+      t,
+    ],
+  );
 
   const flatResults = useMemo(() => groups.flatMap((g) => g.results), [groups]);
 
