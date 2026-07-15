@@ -20,9 +20,11 @@ import stirling.software.saas.payg.billing.TeamBillingContext;
 import stirling.software.saas.payg.billing.TeamBillingService;
 import stirling.software.saas.payg.bundle.PrepaidPurchaseService.PrepaidQuote;
 
-/** Unit tests for the prepaid-bundle pricing + quote-ticket persistence. */
+/** Unit tests for the prepaid-bundle pricing + quote-ticket persistence (incl. consent capture). */
 @ExtendWith(MockitoExtension.class)
 class PrepaidPurchaseServiceTest {
+
+    private static final String EULA = "eula-2026-07";
 
     @Mock private PrepaidBundleQuoteRepository quoteRepository;
     @Mock private TeamBillingService billingService;
@@ -66,7 +68,7 @@ class PrepaidPurchaseServiceTest {
         stubSave();
         when(billingService.forTeam(42L)).thenReturn(billingWithRate(BigDecimal.valueOf(2), "usd"));
 
-        PrepaidQuote q = service.quote(42L, 120_000L);
+        PrepaidQuote q = service.quote(42L, 120_000L, EULA);
 
         assertThat(q.quoteId()).isEqualTo(555L);
         assertThat(q.units()).isEqualTo(120_000L);
@@ -87,7 +89,7 @@ class PrepaidPurchaseServiceTest {
         // Half-cent per unit; 100,000 units → 50,000 minor list, × 10/12 = 41,667 (HALF_UP).
         when(billingService.forTeam(7L)).thenReturn(billingWithRate(new BigDecimal("0.5"), "gbp"));
 
-        PrepaidQuote q = service.quote(7L, 100_000L);
+        PrepaidQuote q = service.quote(7L, 100_000L, EULA);
 
         assertThat(q.currency()).isEqualTo("gbp");
         assertThat(q.listAmountMinor()).isEqualTo(50_000L);
@@ -101,7 +103,7 @@ class PrepaidPurchaseServiceTest {
         stubSave();
         when(billingService.forTeam(9L)).thenReturn(billingNoRate());
 
-        PrepaidQuote q = service.quote(9L, 50_000L);
+        PrepaidQuote q = service.quote(9L, 50_000L, EULA);
 
         assertThat(q.quoteId()).isEqualTo(555L);
         assertThat(q.currency()).isEqualTo("usd"); // fallback — no Stripe currency yet
@@ -112,13 +114,13 @@ class PrepaidPurchaseServiceTest {
     }
 
     @Test
-    void quote_persistsTicketWithTtlAndInputs() {
+    void quote_persistsTicketWithTtlConsentAndInputs() {
         init();
         stubSave();
         when(billingService.forTeam(11L)).thenReturn(billingWithRate(BigDecimal.valueOf(2), "usd"));
 
         LocalDateTime before = LocalDateTime.now();
-        service.quote(11L, 30_000L);
+        service.quote(11L, 30_000L, EULA);
         LocalDateTime after = LocalDateTime.now();
 
         ArgumentCaptor<PrepaidBundleQuote> saved =
@@ -132,13 +134,28 @@ class PrepaidPurchaseServiceTest {
                 .isBetween(
                         before.plus(PrepaidPurchaseService.QUOTE_TTL).minusSeconds(5),
                         after.plus(PrepaidPurchaseService.QUOTE_TTL).plusSeconds(5));
+        // Consent proof captured at quote time (ARL/EULA §7.2).
+        assertThat(ticket.getConsentedAt()).isBetween(before.minusSeconds(5), after.plusSeconds(5));
+        assertThat(ticket.getEulaVersion()).isEqualTo(EULA);
+        assertThat(ticket.getPriceMinor()).isEqualTo(50_000L); // 30k × 2 × 10/12
+    }
+
+    @Test
+    void quote_withoutConsent_isRejected() {
+        init();
+
+        assertThatThrownBy(() -> service.quote(1L, 5_000L, null))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> service.quote(1L, 5_000L, "  "))
+                .isInstanceOf(IllegalArgumentException.class);
+        verify(quoteRepository, never()).save(any());
     }
 
     @Test
     void quote_belowMinimum_isRejected() {
         init();
 
-        assertThatThrownBy(() -> service.quote(1L, 0L))
+        assertThatThrownBy(() -> service.quote(1L, 0L, EULA))
                 .isInstanceOf(IllegalArgumentException.class);
         verify(quoteRepository, never()).save(any());
     }
@@ -147,7 +164,7 @@ class PrepaidPurchaseServiceTest {
     void quote_aboveMaximum_isRejected() {
         init();
 
-        assertThatThrownBy(() -> service.quote(1L, PrepaidPurchaseService.MAX_UNITS + 1))
+        assertThatThrownBy(() -> service.quote(1L, PrepaidPurchaseService.MAX_UNITS + 1, EULA))
                 .isInstanceOf(IllegalArgumentException.class);
         verify(quoteRepository, never()).save(any());
     }

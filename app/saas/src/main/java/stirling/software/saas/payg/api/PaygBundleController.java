@@ -65,8 +65,13 @@ public class PaygBundleController {
         this.userRepository = Objects.requireNonNull(userRepository, "userRepository");
     }
 
-    /** Requested prepaid capacity in units — the buyer's chosen 12-month pool size. */
-    public record QuoteRequest(@Min(1) long units) {}
+    /**
+     * A bundle purchase request. {@code units} is the chosen 12-month pool size; {@code consented}
+     * + {@code eulaVersion} carry the buyer's affirmative consent (ARL/EULA §7.2) to the
+     * prepaid→metered auto-transition, captured before payment. The quote is refused without
+     * consent.
+     */
+    public record QuoteRequest(@Min(1) long units, boolean consented, String eulaVersion) {}
 
     /**
      * A priced quote for the calculator/checkout. Money fields are minor units of {@link #currency}
@@ -104,8 +109,12 @@ public class PaygBundleController {
         }
         Long teamId = primary.get().getTeam().getId();
 
+        // Consent is captured before payment; no EULA version reaches the service unless the buyer
+        // affirmatively consented, and the service rejects a blank one (400).
+        String consent = req.consented() ? req.eulaVersion() : null;
         try {
-            PrepaidPurchaseService.PrepaidQuote q = purchaseService.quote(teamId, req.units());
+            PrepaidPurchaseService.PrepaidQuote q =
+                    purchaseService.quote(teamId, req.units(), consent);
             return ResponseEntity.ok(toResponse(q));
         } catch (IllegalArgumentException e) {
             log.debug("bundle quote rejected for team {}: {}", teamId, e.getMessage());

@@ -63,6 +63,26 @@ public class PrepaidBundleQuote implements Serializable {
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
 
+    /**
+     * When the leader affirmatively consented (ARL/EULA §7.2) to the prepaid→metered
+     * auto-transition, captured at quote time before payment. NULL = no consent; the checkout edge
+     * fn refuses the session. {@link #eulaVersion} + {@link #priceMinor} record exactly what was
+     * disclosed.
+     */
+    @Column(name = "consented_at")
+    private LocalDateTime consentedAt;
+
+    /** EULA version string shown at consent — proof of the agreed terms. */
+    @Column(name = "eula_version", length = 32)
+    private String eulaVersion;
+
+    /**
+     * One-time price disclosed at consent (minor units of {@link #currency}); null when rate
+     * unknown.
+     */
+    @Column(name = "price_minor")
+    private Long priceMinor;
+
     public PrepaidBundleQuote(Long teamId, long units, String currency, LocalDateTime expiresAt) {
         this.teamId = teamId;
         this.units = units;

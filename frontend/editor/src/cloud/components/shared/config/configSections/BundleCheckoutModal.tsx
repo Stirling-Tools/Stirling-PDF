@@ -18,7 +18,7 @@
  */
 import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { Group, NumberInput, Stack } from "@mantine/core";
+import { Checkbox, Group, NumberInput, Stack } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
@@ -62,6 +62,13 @@ const SIZES: Tier[] = [
 /** Above this yearly capacity the demo routes to enterprise; we just nudge. */
 const ENTERPRISE_CAPACITY_HINT = 1_000_000;
 
+/**
+ * EULA version the prepay consent is recorded against (ARL/EULA §7.2). Legal owns the exact value +
+ * copy; this is a placeholder until the terms are finalised. Sent to the quote endpoint as proof of
+ * what was agreed, and stored on the ticket.
+ */
+const CONSENT_EULA_VERSION = "2026-07-draft";
+
 function multFor(tiers: Tier[], id: string): number {
   return tiers.find((tt) => tt.id === id)?.mult ?? tiers[0].mult;
 }
@@ -81,8 +88,8 @@ interface BundleCheckoutModalProps {
   pricePerDocMinor?: number | null;
   /** Lower-case ISO currency of the rate (e.g. {@code "usd"}). */
   currency?: string | null;
-  /** Server-price + persist a quote ticket for {@code units}; from {@code useWallet}. */
-  quoteBundle: (units: number) => Promise<BundleQuote>;
+  /** Server-price + persist a quote ticket for {@code units}, carrying the consented EULA version. */
+  quoteBundle: (units: number, eulaVersion: string) => Promise<BundleQuote>;
   onClose: () => void;
   /** Fired after a completed purchase; the parent refetches the wallet. */
   onComplete: () => void;
@@ -109,6 +116,8 @@ export default function BundleCheckoutModal({
   const [sizeId, setSizeId] = useState<string>("standard");
   const [quoting, setQuoting] = useState(false);
   const [quote, setQuote] = useState<BundleQuote | null>(null);
+  // Affirmative consent (ARL/EULA §7.2) — must be checked before payment.
+  const [consented, setConsented] = useState(false);
 
   // Hide the config modal behind us while open (same event the upgrade flow uses).
   useEffect(() => {
@@ -138,14 +147,15 @@ export default function BundleCheckoutModal({
   const closeAndReset = () => {
     setStep("calculator");
     setQuote(null);
+    setConsented(false);
     onClose();
   };
 
   const handleContinue = async () => {
-    if (capacity <= 0) return;
+    if (capacity <= 0 || !consented) return;
     setQuoting(true);
     try {
-      const q = await quoteBundle(capacity);
+      const q = await quoteBundle(capacity, CONSENT_EULA_VERSION);
       setQuote(q);
       setStep("checkout");
     } catch (e: unknown) {
@@ -232,6 +242,8 @@ export default function BundleCheckoutModal({
                 priceMinor={priceMinor}
                 savingsMinor={savingsMinor}
                 currency={currency}
+                consented={consented}
+                setConsented={setConsented}
               />
             )}
             {step === "checkout" && quote && (
@@ -258,7 +270,7 @@ export default function BundleCheckoutModal({
                     <Button
                       onClick={handleContinue}
                       loading={quoting}
-                      disabled={capacity <= 0}
+                      disabled={capacity <= 0 || !consented}
                     >
                       {t("payg.upgrade.button.continue", "Continue →")}
                     </Button>
@@ -298,6 +310,8 @@ interface CalculatorStepProps {
   priceMinor: number | null;
   savingsMinor: number | null;
   currency?: string | null;
+  consented: boolean;
+  setConsented: (v: boolean) => void;
 }
 
 function CalculatorStep({
@@ -311,6 +325,8 @@ function CalculatorStep({
   priceMinor,
   savingsMinor,
   currency,
+  consented,
+  setConsented,
 }: CalculatorStepProps) {
   const { t } = useTranslation();
 
@@ -449,6 +465,25 @@ function CalculatorStep({
             )}
           </div>
         )}
+      </div>
+
+      {/* Affirmative consent to the prepaid→metered auto-transition, captured before payment
+          (ARL/EULA §7.2). Conspicuous + un-pre-checked; gates Continue. Exact copy is legal-owned. */}
+      <div
+        style={{
+          marginTop: 16,
+          paddingTop: 14,
+          borderTop: "1px solid var(--upm-divider, rgba(128,128,128,0.2))",
+        }}
+      >
+        <Checkbox
+          checked={consented}
+          onChange={(e) => setConsented(e.currentTarget.checked)}
+          label={t(
+            "payg.prepaid.consent.label",
+            "I understand that when my prepaid capacity is used up or expires after 12 months, processing automatically continues at the standard metered pay-as-you-go rate (up to my spend cap) unless I cancel, and that I can cancel anytime from the billing portal.",
+          )}
+        />
       </div>
     </>
   );

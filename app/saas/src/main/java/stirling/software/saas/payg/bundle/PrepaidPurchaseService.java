@@ -72,11 +72,16 @@ public class PrepaidPurchaseService {
      * Price has synced) — the ticket is still valid because the edge fn prices the checkout from
      * Stripe; the front end falls back to its own wallet rate for display.
      *
+     * <p>The quote IS the purchase intent, so it captures the buyer's affirmative consent (ARL/EULA
+     * §7.2) to the prepaid→metered auto-transition, before payment: {@code consentEulaVersion} is
+     * the EULA version the leader agreed to. We record it + the disclosed price on the ticket as
+     * proof; the checkout edge fn refuses a ticket without consent.
+     *
      * @throws IllegalArgumentException when the requested capacity is outside {@link
-     *     #MIN_UNITS}..{@link #MAX_UNITS}
+     *     #MIN_UNITS}..{@link #MAX_UNITS}, or when consent (a non-blank EULA version) is absent
      */
     @Transactional
-    public PrepaidQuote quote(Long teamId, long requestedUnits) {
+    public PrepaidQuote quote(Long teamId, long requestedUnits, String consentEulaVersion) {
         Objects.requireNonNull(teamId, "teamId");
         if (requestedUnits < MIN_UNITS || requestedUnits > MAX_UNITS) {
             throw new IllegalArgumentException(
@@ -87,6 +92,10 @@ public class PrepaidPurchaseService {
                             + ".."
                             + MAX_UNITS
                             + ")");
+        }
+        if (consentEulaVersion == null || consentEulaVersion.isBlank()) {
+            // Consent must be captured before payment — no ticket without it.
+            throw new IllegalArgumentException("consent (EULA version) is required to purchase");
         }
 
         TeamBillingContext billing = billingService.forTeam(teamId);
@@ -99,8 +108,8 @@ public class PrepaidPurchaseService {
         if (rate != null && rate.signum() > 0) {
             BigDecimal units = BigDecimal.valueOf(requestedUnits);
             // Undiscounted "worth" and the discounted price the buyer pays. Rounded independently
-            // to
-            // the minor unit; savings is the difference so the three figures stay self-consistent.
+            // to the minor unit; savings is the difference so the three figures stay
+            // self-consistent.
             listMinor = rate.multiply(units).setScale(0, RoundingMode.HALF_UP).longValue();
             totalMinor =
                     rate.multiply(units)
@@ -111,9 +120,13 @@ public class PrepaidPurchaseService {
         }
 
         LocalDateTime expiresAt = LocalDateTime.now().plus(QUOTE_TTL);
-        PrepaidBundleQuote saved =
-                quoteRepository.save(
-                        new PrepaidBundleQuote(teamId, requestedUnits, currency, expiresAt));
+        PrepaidBundleQuote ticket =
+                new PrepaidBundleQuote(teamId, requestedUnits, currency, expiresAt);
+        // Proof of consent (ARL/EULA §7.2): version + timestamp + the disclosed price.
+        ticket.setConsentedAt(LocalDateTime.now());
+        ticket.setEulaVersion(consentEulaVersion);
+        ticket.setPriceMinor(totalMinor);
+        PrepaidBundleQuote saved = quoteRepository.save(ticket);
 
         return new PrepaidQuote(
                 saved.getId(),

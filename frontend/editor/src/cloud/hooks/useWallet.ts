@@ -111,12 +111,14 @@ export interface UseWalletResult {
    */
   openPortal: () => Promise<void>;
   /**
-   * Price a prepaid-bundle purchase of {@code units} capacity. Leader-only on the
-   * backend ({@code POST /api/v1/payg/bundle/quote}); returns a short-lived quote
-   * ticket the checkout flow hands to the bundle-checkout edge function. Throws on
-   * a non-2xx (403 for members) so the caller can surface it.
+   * Price a prepaid-bundle purchase of {@code units} capacity, carrying the buyer's
+   * affirmative consent (ARL/EULA §7.2) as the agreed {@code eulaVersion} — captured
+   * before payment in the checkout modal. Leader-only on the backend ({@code POST
+   * /api/v1/payg/bundle/quote}), which refuses a quote without consent; returns a
+   * short-lived quote ticket the checkout flow hands to the bundle-checkout edge
+   * function. Throws on a non-2xx (403 members / 400 no consent).
    */
-  quoteBundle: (units: number) => Promise<BundleQuote>;
+  quoteBundle: (units: number, eulaVersion: string) => Promise<BundleQuote>;
 }
 
 // ─── Implementation ─────────────────────────────────────────────────────
@@ -349,7 +351,7 @@ export function useWallet(): UseWalletResult {
   }, [devPreview, wallet?.teamId]);
 
   const quoteBundle = useCallback(
-    async (units: number): Promise<BundleQuote> => {
+    async (units: number, eulaVersion: string): Promise<BundleQuote> => {
       if (devPreview) {
         // No backend on the dev-preview route — synthesise a quote off the
         // synthesised wallet's rate so the calculator + checkout flow render.
@@ -371,7 +373,11 @@ export function useWallet(): UseWalletResult {
       }
       const res = await apiClient.post<BundleQuote>(
         "/api/v1/payg/bundle/quote",
-        { units },
+        {
+          units,
+          consented: true,
+          eulaVersion,
+        },
       );
       return res.data;
     },

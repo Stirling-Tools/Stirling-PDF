@@ -5498,6 +5498,9 @@ body = "{{units}} PDFs of prepaid capacity are ready. They're used before metere
 paidLabel = "Paid today"
 title = "Your prepaid year is active"
 
+[payg.prepaid.consent]
+label = "I understand that when my prepaid capacity is used up or expires after 12 months, processing automatically continues at the standard metered pay-as-you-go rate (up to my spend cap) unless I cancel, and that I can cancel anytime from the billing portal."
+
 [payg.prepaid.meter]
 capSuffix = "of {{total}} prepaid PDFs"
 expires = "Expires {{date}}"
