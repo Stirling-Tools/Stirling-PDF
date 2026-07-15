@@ -19,6 +19,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
             "stirling.software.saas.billing.repository",
             "stirling.software.saas.ai.repository",
             "stirling.software.saas.payg.repository",
+            "stirling.software.saas.payg.bundle",
             "stirling.software.saas.procurement.repository"
         })
 @EntityScan({
