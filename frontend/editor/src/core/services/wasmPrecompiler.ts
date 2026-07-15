@@ -28,24 +28,53 @@ export const pdfiumWasmModulePromise = new Promise<WebAssembly.Module | null>(
   },
 );
 
+/**
+ * Compile the WASM without streaming by fetching the whole binary first.
+ *
+ * `compileStreaming` requires the response to be served with the
+ * `application/wasm` MIME type and no incompatible `Content-Encoding`. Under the
+ * `tauri://` asset protocol (and behind some proxies) those headers aren't
+ * guaranteed, which makes streaming compilation throw. Fetching the bytes and
+ * compiling them directly sidesteps the MIME/encoding requirement entirely.
+ */
+async function compileFromArrayBuffer(): Promise<WebAssembly.Module | null> {
+  try {
+    const response = await fetch(pdfiumWasmUrl);
+    if (!response.ok) {
+      throw new Error(`Unexpected response ${response.status} for pdfium.wasm`);
+    }
+    const bytes = await response.arrayBuffer();
+    return await WebAssembly.compile(bytes);
+  } catch (err) {
+    console.warn("Eager WASM ArrayBuffer compilation failed:", err);
+    return null;
+  }
+}
+
 export function startEagerWasmCompilation(): void {
   if (compilationStarted) return;
   compilationStarted = true;
 
-  if (
-    typeof WebAssembly === "object" &&
-    typeof WebAssembly.compileStreaming === "function"
-  ) {
+  if (typeof WebAssembly !== "object") {
+    resolvePromise(null);
+    return;
+  }
+
+  // Prefer streaming compilation, but fall back to fetching the bytes and
+  // compiling them directly when streaming isn't available or fails (e.g. wrong
+  // MIME type / content-encoding under the tauri:// protocol). Resolving null on
+  // total failure lets pdfiumService fall back to its own instantiation path.
+  if (typeof WebAssembly.compileStreaming === "function") {
     WebAssembly.compileStreaming(fetch(pdfiumWasmUrl))
       .then(resolvePromise)
       .catch((err) => {
         console.warn(
-          "Eager WASM compilation failed or not supported in this environment:",
+          "Eager WASM streaming compilation failed, falling back to ArrayBuffer:",
           err,
         );
-        resolvePromise(null);
+        compileFromArrayBuffer().then(resolvePromise);
       });
   } else {
-    resolvePromise(null);
+    compileFromArrayBuffer().then(resolvePromise);
   }
 }
