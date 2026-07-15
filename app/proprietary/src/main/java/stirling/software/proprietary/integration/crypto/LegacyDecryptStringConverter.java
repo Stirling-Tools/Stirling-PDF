@@ -20,10 +20,15 @@ public class LegacyDecryptStringConverter implements AttributeConverter<String, 
 
     @Override
     public String convertToEntityAttribute(String dbData) {
+        // Plaintext JSON can never be our Base64 ciphertext ('{' is not in the Base64 alphabet), so
+        // skip the decrypt attempt for it.
+        if (dbData == null || dbData.stripLeading().startsWith("{")) {
+            return dbData;
+        }
         try {
             return CredentialEncryption.decrypt(dbData);
         } catch (IllegalArgumentException | IllegalStateException e) {
-            // Plaintext (JSON never looks like our Base64 ciphertext), or ciphertext we can't read.
+            // Legacy ciphertext we can't read (key we don't hold) - the caller's to reject.
             return dbData;
         }
     }
