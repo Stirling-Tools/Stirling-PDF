@@ -33,9 +33,7 @@ const renderBoundary = (onRetry = vi.fn(), timeoutMs = 1000) => {
   return { onRetry, ...utils };
 };
 
-const wrap = (node: ReactNode) => (
-  <MantineProvider>{node}</MantineProvider>
-);
+const wrap = (node: ReactNode) => <MantineProvider>{node}</MantineProvider>;
 
 describe("PdfEngineBoundary", () => {
   beforeEach(() => {
@@ -65,9 +63,7 @@ describe("PdfEngineBoundary", () => {
 
     // The spinner is replaced by an actionable error state.
     expect(screen.queryByText("Loading PDF Engine...")).toBeNull();
-    expect(
-      screen.getByText("viewer.engineLoadErrorTitle"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("viewer.engineLoadErrorTitle")).toBeInTheDocument();
 
     const retry = screen.getByText("viewer.engineLoadErrorRetry");
     fireEvent.click(retry);
@@ -87,9 +83,7 @@ describe("PdfEngineBoundary", () => {
         </PdfEngineBoundary>,
       ),
     );
-    expect(
-      screen.getByText("viewer.engineLoadErrorTitle"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("viewer.engineLoadErrorTitle")).toBeInTheDocument();
   });
 
   it("renders children once the engine is ready", () => {
