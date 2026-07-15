@@ -221,17 +221,6 @@ export function PoliciesIcon(props: IconProps) {
   );
 }
 
-export function ComponentsIcon(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <rect x="3" y="3" width="7" height="7" rx="1" />
-      <rect x="14" y="3" width="7" height="7" rx="1" />
-      <rect x="3" y="14" width="7" height="7" rx="1" />
-      <rect x="14" y="14" width="7" height="7" rx="1" />
-    </Svg>
-  );
-}
-
 export function AgentBuilderIcon(props: IconProps) {
   return (
     <Svg {...props}>

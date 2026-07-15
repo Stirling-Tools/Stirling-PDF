@@ -6421,63 +6421,6 @@ title_other = "Process {{allowance}} PDFs free"
 titleWithRate_one = "Process {{allowance}} PDFs free, then {{rate}}/PDF"
 titleWithRate_other = "Process {{allowance}} PDFs free, then {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Locked"
-openAriaLabel = "Open {{name}} component"
-
-[portal.catalogue.detail]
-addToProject = "Add to project"
-ariaLabel = "Component detail"
-tabsAriaLabel = "Component detail sections"
-upgradeToUnlock = "Upgrade to unlock"
-
-[portal.catalogue.detail.code]
-install = "Install"
-usage = "Usage"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} is included from the {{plan}}. Upgrade to embed it."
-title = "Not available on your plan"
-
-[portal.catalogue.detail.preview]
-badge = "Live preview"
-note = "Interactive sandbox renders here"
-
-[portal.catalogue.detail.pricing]
-note = "Metered per {{unit}}. Usage beyond the monthly free quota is billed to your account and itemised under Usage & Billing."
-
-[portal.catalogue.detail.stats]
-billedOn = "Billed on"
-embeds30d = "Embeds (30d)"
-freeQuota = "Free quota"
-freeQuotaValue = "{{amount}} / mo"
-maturity = "Maturity"
-none = "None"
-perAction = "Per action"
-price = "Price"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "Overview"
-pricing = "Pricing"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "optional"
-required = "required"
-
-[portal.catalogue.props.columns]
-description = "Description"
-name = "Prop"
-required = "Required"
-type = "Type"
-
-[portal.catalogue.summary]
-componentsGa = "Components GA"
-componentSpendMtd = "Component spend (MTD)"
-embedsThisMonth = "Embeds this month"
-inBeta = "In beta"
-
 [portal.components.billingUnit]
 approval = "approval"
 check = "check"
@@ -6490,18 +6433,6 @@ signature = "signature"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Embeddable SDK widgets you drop into your own app — a viewer, an e-sign flow, an AI review panel. Each is metered per action. Click a card for install, usage and props."
-title = "Components"
-
-[portal.componentsView.empty]
-description = "The component catalogue could not be loaded. Try again shortly."
-title = "No components available"
-
-[portal.componentsView.lockedBanner]
-description = "GA components are available on Pay-as-you-go; a few Beta components are enterprise-only. Locked cards show an upgrade nudge."
-title = "Some components need a paid plan"
 
 [portal.connections]
 createTitle = "New S3 connection"
