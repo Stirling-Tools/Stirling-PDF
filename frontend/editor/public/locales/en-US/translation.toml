@@ -5748,12 +5748,6 @@ cta = "See plans"
 overLimit = "more than {{limit}}"
 title = "Free self-hosted limit reached"
 
-[plan.spendCap]
-cta = "View Spending Limit"
-dismiss = "Not Now"
-message = "You've made the most of this month's cap. That's a load of automation, AI and API work! Bump it up whenever you like to keep going."
-title = "You're on a Roll!"
-
 [plan.server]
 name = "Server"
 
@@ -5795,9 +5789,16 @@ yourInfrastructure = "Your infrastructure"
 body = "Plan and usage are governed in the PDF Processor. This mirrors the workspace's current state."
 title = "Read-only snapshot"
 
+[plan.spendCap]
+cta = "View Spending Limit"
+dismiss = "Not Now"
+message = "You've made the most of this month's cap. That's a load of automation, AI and API work! Bump it up whenever you like to keep going."
+title = "You're on a Roll!"
+
 [plan.tier]
 editor = "Editor"
 processor = "Processor"
+
 [policies.activity]
 outputsUnavailable = "Policy outputs are no longer available to download."
 partialOutputsUnavailable = "Some policy outputs are no longer available to download."
