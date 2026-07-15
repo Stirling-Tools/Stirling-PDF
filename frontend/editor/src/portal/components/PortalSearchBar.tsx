@@ -14,7 +14,7 @@ export function PortalSearchBar() {
     <div className="portal-searchbar">
       <SuperSearch
         useResults={usePortalSearchResults}
-        placeholder={t("portal.search.placeholder", "Search the portal…")}
+        placeholder={t("portal.search.placeholder", "Search Stirling")}
         hint={t("portal.search.hint", "Type to jump to any portal page")}
         inputId="portal-search-input"
       />

@@ -7898,7 +7898,7 @@ title = "Nothing here yet"
 [portal.search]
 goTo = "Go to"
 hint = "Type to jump to any portal page"
-placeholder = "Search the portal…"
+placeholder = "Search Stirling"
 
 [portal.settings.groups]
 admin = "Admin"
