@@ -10,8 +10,9 @@ dependencies {
     implementation localGroovy()
     implementation gradleApi()
     implementation 'com.github.jk1:gradle-license-report:3.1.4'
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.11.4'
+    testImplementation platform('org.junit:junit-bom:6.1.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
