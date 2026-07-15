@@ -33,12 +33,6 @@ interface SuperSearchProps {
    * Processor provider; the portal passes its own destinations provider.
    */
   useResults?: (query: string, active: boolean) => UseSuperSearchResult;
-  /** Override the input placeholder (defaults to the editor copy). */
-  placeholder?: string;
-  /** Override the empty-query hint line (defaults to the editor copy). */
-  hint?: string;
-  /** DOM id for the input — external focus helpers target it. */
-  inputId?: string;
 }
 
 /**
@@ -51,9 +45,6 @@ interface SuperSearchProps {
  */
 export default function SuperSearch({
   useResults = useSuperSearch,
-  placeholder,
-  hint,
-  inputId = "super-search-input",
 }: SuperSearchProps = {}) {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
@@ -190,11 +181,7 @@ export default function SuperSearch({
       >
         {!hasQuery && (
           <div className="super-search-empty">
-            {hint ??
-              t(
-                "superSearch.hint",
-                "Type to search across your files, tools and settings",
-              )}
+            {t("superSearch.hint", "Type to search")}
           </div>
         )}
 
@@ -254,15 +241,12 @@ export default function SuperSearch({
   return (
     <div className="super-search" ref={containerRef} onKeyDown={handleKeyDown}>
       <TextInput
-        id={inputId}
-        name={inputId}
+        id="super-search-input"
+        name="super-search-input"
         ref={inputRef}
         value={query}
         onChange={setQuery}
-        placeholder={
-          placeholder ??
-          t("superSearch.placeholder", "Search files, tools and settings…")
-        }
+        placeholder={t("superSearch.placeholder", "Search Stirling")}
         icon={
           <LocalIcon icon="search-rounded" width="1.1rem" height="1.1rem" />
         }

@@ -7987,8 +7987,6 @@ title = "Nothing here yet"
 
 [portal.search]
 goTo = "Go to"
-hint = "Type to jump to any portal page"
-placeholder = "Search Stirling"
 
 [portal.settings.groups]
 admin = "Admin"
@@ -9845,8 +9843,8 @@ uploadButton = "Upload to Server"
 
 [superSearch]
 ariaLabel = "Super search"
-hint = "Type to search across your files, tools and settings"
-placeholder = "Search files, tools and settings…"
+hint = "Type to search"
+placeholder = "Search Stirling"
 
 [superSearch.group]
 files = "Files"
