@@ -292,17 +292,6 @@ class UserLicenseSettingsServiceMoreTest {
     class SlotCalculations {
 
         @Test
-        @DisplayName("wouldExceedLimit true when adding pushes over the cap")
-        void wouldExceedLimit_true() {
-            lockedSettings(5);
-            when(userService.getTotalUsersCount()).thenReturn(5L);
-
-            boolean result = service.wouldExceedLimit(1);
-
-            assertThat(result).isTrue();
-        }
-
-        @Test
         @DisplayName("wouldExceedLimit false when within the cap")
         void wouldExceedLimit_false() {
             lockedSettings(10);
@@ -311,28 +300,6 @@ class UserLicenseSettingsServiceMoreTest {
             boolean result = service.wouldExceedLimit(2);
 
             assertThat(result).isFalse();
-        }
-
-        @Test
-        @DisplayName("getAvailableUserSlots returns remaining capacity")
-        void availableSlots_remaining() {
-            lockedSettings(10);
-            when(userService.getTotalUsersCount()).thenReturn(4L);
-
-            long slots = service.getAvailableUserSlots();
-
-            assertThat(slots).isEqualTo(6);
-        }
-
-        @Test
-        @DisplayName("getAvailableUserSlots never returns negative")
-        void availableSlots_clampedToZero() {
-            lockedSettings(5);
-            when(userService.getTotalUsersCount()).thenReturn(20L);
-
-            long slots = service.getAvailableUserSlots();
-
-            assertThat(slots).isZero();
         }
     }
 

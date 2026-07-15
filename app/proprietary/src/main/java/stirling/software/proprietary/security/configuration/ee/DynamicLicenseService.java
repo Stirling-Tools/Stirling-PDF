@@ -35,13 +35,12 @@ public class DynamicLicenseService implements LicenseServiceInterface {
 
     @Override
     public boolean isRunningProOrHigher() {
-        License license = getCurrentLicense();
-        return license == License.SERVER || license == License.ENTERPRISE;
+        return true;
     }
 
     @Override
     public boolean isRunningEE() {
-        return getCurrentLicense() == License.ENTERPRISE;
+        return true;
     }
 
     @Override

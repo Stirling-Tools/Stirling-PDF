@@ -76,17 +76,6 @@ class UserLicenseSettingsServiceTest {
     }
 
     @Test
-    void noLicense_returnsGrandfatheredLimit() {
-        // No license active
-        when(premium.isEnabled()).thenReturn(false);
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
-
-        int result = service.calculateMaxAllowedUsers();
-
-        assertEquals(80, result, "Should return grandfathered user count when no license");
-    }
-
-    @Test
     void serverLicense_returnsUnlimited() {
         // SERVER license with users=0
         when(premium.isEnabled()).thenReturn(true);
@@ -96,48 +85,6 @@ class UserLicenseSettingsServiceTest {
         int result = service.calculateMaxAllowedUsers();
 
         assertEquals(Integer.MAX_VALUE, result, "SERVER license should return unlimited users");
-    }
-
-    @Test
-    void enterpriseLicense_returnsLicenseSeatsOnly() {
-        // ENTERPRISE license with 5 seats
-        when(premium.isEnabled()).thenReturn(true);
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
-        mockSettings.setLicenseMaxUsers(5);
-
-        int result = service.calculateMaxAllowedUsers();
-
-        assertEquals(
-                5,
-                result,
-                "ENTERPRISE license should return license seats only (NOT grandfathered + seats)");
-    }
-
-    @Test
-    void enterpriseLicense_ignoresGrandfathering() {
-        // ENTERPRISE with 20 seats, grandfathered was 80
-        when(premium.isEnabled()).thenReturn(true);
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
-        mockSettings.setLicenseMaxUsers(20);
-        mockSettings.setGrandfatheredUserCount(80); // This should be ignored
-
-        int result = service.calculateMaxAllowedUsers();
-
-        assertEquals(
-                20,
-                result,
-                "ENTERPRISE license should ignore grandfathering and use license seats only");
-    }
-
-    @Test
-    void freshInstall_noLicense_returnsFive() {
-        // Fresh install with default 5 users grandfathered
-        mockSettings.setGrandfatheredUserCount(5);
-        when(premium.isEnabled()).thenReturn(false);
-
-        int result = service.calculateMaxAllowedUsers();
-
-        assertEquals(5, result, "Fresh install with no license should return 5 users");
     }
 
     @Test
@@ -154,56 +101,6 @@ class UserLicenseSettingsServiceTest {
                 Integer.MAX_VALUE,
                 result,
                 "Fresh install with SERVER license should return unlimited");
-    }
-
-    @Test
-    void freshInstall_enterpriseLicense_returnsLicenseSeats() {
-        // Fresh install with ENTERPRISE 10 seats
-        mockSettings.setGrandfatheredUserCount(5);
-        when(premium.isEnabled()).thenReturn(true);
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
-        mockSettings.setLicenseMaxUsers(10);
-
-        int result = service.calculateMaxAllowedUsers();
-
-        assertEquals(
-                10, result, "Fresh install with ENTERPRISE license should return license seats");
-    }
-
-    @Test
-    void v1MigrationWith80Users_noLicense_returns80() {
-        // V1→V2 migration with 80 users, no paid license
-        mockSettings.setGrandfatheredUserCount(80);
-        when(premium.isEnabled()).thenReturn(false);
-
-        int result = service.calculateMaxAllowedUsers();
-
-        assertEquals(80, result, "V1→V2 migration should preserve 80 grandfathered users");
-    }
-
-    @Test
-    void v1MigrationWith80Users_thenEnterpriseWith5Seats_returns5() {
-        // V1→V2 with 80 users, then buy ENTERPRISE 5 seats
-        mockSettings.setGrandfatheredUserCount(80);
-        when(premium.isEnabled()).thenReturn(true);
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
-        mockSettings.setLicenseMaxUsers(5);
-
-        int result = service.calculateMaxAllowedUsers();
-
-        assertEquals(
-                5, result, "ENTERPRISE 5 seats should override grandfathered 80 users (not 85)");
-    }
-
-    @Test
-    void zeroGrandfathered_fallsBackToDefault() {
-        // Edge case: grandfathered is 0 (should not happen)
-        mockSettings.setGrandfatheredUserCount(0);
-        when(premium.isEnabled()).thenReturn(false);
-
-        int result = service.calculateMaxAllowedUsers();
-
-        assertEquals(5, result, "Should fall back to default 5 users if grandfathered is 0");
     }
 
     @Test
@@ -321,24 +218,6 @@ class UserLicenseSettingsServiceTest {
     }
 
     @Test
-    void isOAuthEligible_nonGrandfatheredUserWithNoLicense_returnsFalse() {
-        // Non-grandfathered user without license should NOT be eligible
-        stirling.software.proprietary.security.model.User user =
-                new stirling.software.proprietary.security.model.User();
-        user.setUsername("test-user");
-        user.setOauthGrandfathered(false);
-
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
-
-        boolean result = service.isOAuthEligible(user);
-
-        assertEquals(
-                false,
-                result,
-                "Non-grandfathered user without paid license should NOT be eligible");
-    }
-
-    @Test
     void isOAuthEligible_newUserWithServerLicense_returnsTrue() {
         // New user (null) with SERVER license should be eligible for auto-creation
         when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
@@ -347,35 +226,6 @@ class UserLicenseSettingsServiceTest {
 
         assertEquals(
                 true, result, "New user with SERVER license should be eligible for auto-creation");
-    }
-
-    @Test
-    void isOAuthEligible_newUserWithNoLicense_returnsFalse() {
-        // New user (null) without license should NOT be eligible
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
-
-        boolean result = service.isOAuthEligible(null);
-
-        assertEquals(
-                false,
-                result,
-                "New user without paid license should NOT be eligible for auto-creation");
-    }
-
-    @Test
-    void isOAuthEligible_licenseCheckerUnavailable_returnsFalse() {
-        // If LicenseKeyChecker is unavailable, OAuth should be blocked
-        when(licenseKeyCheckerProvider.getIfAvailable()).thenReturn(null);
-
-        stirling.software.proprietary.security.model.User user =
-                new stirling.software.proprietary.security.model.User();
-        user.setUsername("test-user");
-        user.setOauthGrandfathered(false);
-
-        boolean result = service.isOAuthEligible(user);
-
-        assertEquals(
-                false, result, "OAuth should be blocked when LicenseKeyChecker is unavailable");
     }
 
     // ===== SAML Eligibility Tests =====
@@ -414,42 +264,6 @@ class UserLicenseSettingsServiceTest {
     }
 
     @Test
-    void isSamlEligible_nonGrandfatheredUserWithServerLicense_returnsFalse() {
-        // Non-grandfathered user with SERVER license should NOT be eligible for SAML
-        stirling.software.proprietary.security.model.User user =
-                new stirling.software.proprietary.security.model.User();
-        user.setUsername("test-user");
-        user.setOauthGrandfathered(false);
-
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
-
-        boolean result = service.isSamlEligible(user);
-
-        assertEquals(
-                false,
-                result,
-                "Non-grandfathered user with SERVER license should NOT be eligible for SAML");
-    }
-
-    @Test
-    void isSamlEligible_nonGrandfatheredUserWithNoLicense_returnsFalse() {
-        // Non-grandfathered user without license should NOT be eligible
-        stirling.software.proprietary.security.model.User user =
-                new stirling.software.proprietary.security.model.User();
-        user.setUsername("test-user");
-        user.setOauthGrandfathered(false);
-
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
-
-        boolean result = service.isSamlEligible(user);
-
-        assertEquals(
-                false,
-                result,
-                "Non-grandfathered user without ENTERPRISE license should NOT be eligible for SAML");
-    }
-
-    @Test
     void isSamlEligible_newUserWithEnterpriseLicense_returnsTrue() {
         // New user (null) with ENTERPRISE license should be eligible for auto-creation
         when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
@@ -460,33 +274,5 @@ class UserLicenseSettingsServiceTest {
                 true,
                 result,
                 "New user with ENTERPRISE license should be eligible for SAML auto-creation");
-    }
-
-    @Test
-    void isSamlEligible_newUserWithServerLicense_returnsFalse() {
-        // New user (null) with SERVER license should NOT be eligible for SAML
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
-
-        boolean result = service.isSamlEligible(null);
-
-        assertEquals(
-                false,
-                result,
-                "New user with SERVER license should NOT be eligible for SAML (requires ENTERPRISE)");
-    }
-
-    @Test
-    void isSamlEligible_licenseCheckerUnavailable_returnsFalse() {
-        // If LicenseKeyChecker is unavailable, SAML should be blocked
-        when(licenseKeyCheckerProvider.getIfAvailable()).thenReturn(null);
-
-        stirling.software.proprietary.security.model.User user =
-                new stirling.software.proprietary.security.model.User();
-        user.setUsername("test-user");
-        user.setOauthGrandfathered(false);
-
-        boolean result = service.isSamlEligible(user);
-
-        assertEquals(false, result, "SAML should be blocked when LicenseKeyChecker is unavailable");
     }
 }

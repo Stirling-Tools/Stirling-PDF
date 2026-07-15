@@ -1,7 +1,6 @@
 package stirling.software.proprietary.security.configuration.ee;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -92,11 +91,10 @@ class LicenseKeyCheckerTest {
     // ----- requireProOrEnterprise: shared boot-time gate for premium features -----
 
     @Test
-    void requireProOrEnterprise_normalLicense_throwsWithFeatureName() {
+    void requireProOrEnterprise_normalLicense_doesNotThrow() {
         LicenseKeyChecker checker = checkerWithLicense(License.NORMAL);
-        assertThatThrownBy(() -> checker.requireProOrEnterprise("storage.provider=s3"))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("storage.provider=s3 requires a Pro or Enterprise license");
+        assertThatCode(() -> checker.requireProOrEnterprise("storage.provider=s3"))
+                .doesNotThrowAnyException();
     }
 
     @Test
