@@ -16,7 +16,7 @@ path = "src/keychain_helper.rs"
 base64 = "0.22"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-sha1 = "0.10"
+sha2 = "0.10"
 thiserror = "2"
 
 [target.'cfg(target_os = "macos")'.dependencies]

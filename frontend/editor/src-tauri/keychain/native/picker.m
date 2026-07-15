@@ -17,7 +17,9 @@ static char *copy_c_string(NSString *value) {
     return strdup(utf8);
 }
 
-static NSString *certificate_sha1_hex(SecCertificateRef certificate) {
+// SHA-256 over the DER encoding — stable identity handle for picker ↔ helper round-trips.
+// Prefer SHA-256 over SHA-1: this value is used for identity matching before signing.
+static NSString *certificate_sha256_hex(SecCertificateRef certificate) {
     CFDataRef der_data = SecCertificateCopyData(certificate);
     if (der_data == NULL) {
         return nil;
@@ -25,12 +27,12 @@ static NSString *certificate_sha1_hex(SecCertificateRef certificate) {
 
     const UInt8 *bytes = CFDataGetBytePtr(der_data);
     CFIndex length = CFDataGetLength(der_data);
-    unsigned char digest[CC_SHA1_DIGEST_LENGTH];
-    CC_SHA1(bytes, (CC_LONG)length, digest);
+    unsigned char digest[CC_SHA256_DIGEST_LENGTH];
+    CC_SHA256(bytes, (CC_LONG)length, digest);
     CFRelease(der_data);
 
-    NSMutableString *hex = [NSMutableString stringWithCapacity:CC_SHA1_DIGEST_LENGTH * 2];
-    for (int i = 0; i < CC_SHA1_DIGEST_LENGTH; i++) {
+    NSMutableString *hex = [NSMutableString stringWithCapacity:CC_SHA256_DIGEST_LENGTH * 2];
+    for (int i = 0; i < CC_SHA256_DIGEST_LENGTH; i++) {
         [hex appendFormat:@"%02X", digest[i]];
     }
     return hex;
@@ -61,7 +63,7 @@ static void fill_identity_metadata(SecIdentityRef identity, MacIdentityResult *r
         return;
     }
 
-    result->identity_hash = copy_c_string(certificate_sha1_hex(certificate));
+    result->identity_hash = copy_c_string(certificate_sha256_hex(certificate));
 
     CFStringRef summary = SecCertificateCopySubjectSummary(certificate);
     if (summary != NULL) {

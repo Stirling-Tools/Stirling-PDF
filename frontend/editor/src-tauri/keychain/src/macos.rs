@@ -2,7 +2,7 @@ use security_framework::certificate::SecCertificate;
 use security_framework::identity::SecIdentity;
 use security_framework::item::{ItemClass, ItemSearchOptions, Limit, Reference, SearchResult};
 use security_framework::key::Algorithm;
-use sha1::{Digest, Sha1};
+use sha2::{Digest, Sha256};
 
 use crate::{ChooseIdentityResponse, IdentityInfo, KeychainError, Result};
 
@@ -33,9 +33,12 @@ fn normalize_hash(value: &str) -> String {
     value.replace(' ', "").to_uppercase()
 }
 
-pub fn certificate_sha1_hex(certificate: &SecCertificate) -> Result<String> {
+/// SHA-256 of the certificate DER. Must match the ObjC picker fingerprint so the
+/// helper can re-resolve the same Keychain identity for get-chain / sign.
+/// SHA-256 rather than SHA-1: this hash is the identity selection key.
+pub fn certificate_sha256_hex(certificate: &SecCertificate) -> Result<String> {
     let der = certificate.to_der();
-    let digest = Sha1::digest(&der);
+    let digest = Sha256::digest(&der);
     Ok(digest.iter().map(|byte| format!("{byte:02X}")).collect())
 }
 
@@ -46,7 +49,7 @@ fn read_c_string(value: *mut std::os::raw::c_char) -> String {
     unsafe { std::ffi::CStr::from_ptr(value).to_string_lossy().into_owned() }
 }
 
-/// Shows the native macOS identity picker and returns the selected cert SHA-1 hash.
+/// Shows the native macOS identity picker and returns the selected cert SHA-256 hash.
 pub fn choose_signing_identity() -> Result<ChooseIdentityResponse> {
     let raw = unsafe { mac_choose_signing_identity() };
     if raw.cancelled != 0 {
@@ -97,7 +100,7 @@ fn find_identity_by_hash(target_hash: &str) -> Result<SecIdentity> {
         let certificate = identity
             .certificate()
             .map_err(|err| KeychainError::Message(err.to_string()))?;
-        if certificate_sha1_hex(&certificate)? == normalized {
+        if certificate_sha256_hex(&certificate)? == normalized {
             return Ok(identity);
         }
     }
