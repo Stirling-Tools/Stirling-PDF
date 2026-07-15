@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.model.api.ai.Verdict;
+import stirling.software.proprietary.service.AiFeatureGate;
 import stirling.software.proprietary.service.AiToolInputValidator;
 import stirling.software.proprietary.service.MathAuditorOrchestrator;
 
@@ -47,6 +48,7 @@ import stirling.software.proprietary.service.MathAuditorOrchestrator;
 public class MathAuditorAgentController {
 
     private final MathAuditorOrchestrator orchestrator;
+    private final AiFeatureGate aiFeatureGate;
 
     @PostMapping(value = "/math-auditor-agent", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
@@ -77,6 +79,7 @@ public class MathAuditorAgentController {
                                             + " ignored (default: 0.01)")
                     @RequestParam(value = "tolerance", defaultValue = "0.01")
                     BigDecimal tolerance) {
+        aiFeatureGate.requireMathAuditor();
 
         AiToolInputValidator.validatePdfUpload(fileInput);
         if (tolerance.compareTo(BigDecimal.ZERO) < 0) {

@@ -27,6 +27,8 @@ import {
   AiEngineModels,
   AiEngineApiResponse,
   MODEL_SUGGESTIONS,
+  MASKED_SECRET,
+  clampMin,
 } from "@app/components/shared/config/configSections/aiEngineSettings";
 
 export default function AdminAiModelsSection() {
@@ -57,16 +59,22 @@ export default function AdminAiModelsSection() {
     },
     // Save ONLY this page's keys as dot-notation so sibling AI keys are preserved.
     saveTransformer: (s: AiEngineSettingsData) => {
+      const prov = s.models?.provider || "anthropic";
+      const usesBaseUrl = prov === "ollama" || prov === "custom";
+      const usesApiKey = prov !== "ollama";
       const deltaSettings: Record<string, unknown> = {
-        "aiEngine.models.provider": s.models?.provider ?? "anthropic",
+        "aiEngine.models.provider": prov,
         "aiEngine.models.smartModel": s.models?.smartModel ?? "",
         "aiEngine.models.fastModel": s.models?.fastModel ?? "",
-        "aiEngine.models.smartMaxTokens": s.models?.smartMaxTokens ?? 0,
-        "aiEngine.models.fastMaxTokens": s.models?.fastMaxTokens ?? 0,
-        "aiEngine.models.baseUrl": s.models?.baseUrl ?? "",
+        "aiEngine.models.smartMaxTokens": clampMin(s.models?.smartMaxTokens, 1),
+        "aiEngine.models.fastMaxTokens": clampMin(s.models?.fastMaxTokens, 1),
+        // Never send a base URL for a provider that doesn't use one (avoids leaking a
+        // stale value left over from a previous Ollama/Custom selection).
+        "aiEngine.models.baseUrl": usesBaseUrl ? (s.models?.baseUrl ?? "") : "",
       };
-      // Only include the secret when the user typed a new value.
-      if (apiKeyDirty) {
+      // Only include the secret when the user typed a new value AND the current provider
+      // actually uses an API key.
+      if (apiKeyDirty && usesApiKey) {
         deltaSettings["aiEngine.models.apiKey"] = s.models?.apiKey ?? "";
       }
       return { sectionData: {}, deltaSettings };
@@ -179,7 +187,19 @@ export default function AdminAiModelsSection() {
                 { value: "custom", label: "Custom (OpenAI-compatible)" },
               ]}
               value={provider}
-              onChange={(v) => setModels({ provider: v || "anthropic" })}
+              onChange={(v) => {
+                const next = v || "anthropic";
+                const patch: Partial<AiEngineModels> = { provider: next };
+                // Clear fields the new provider doesn't use so a stale hidden value can't
+                // leak into the payload (e.g. an Ollama base URL after switching back to
+                // Anthropic, or an Anthropic key after switching to Ollama).
+                if (next !== "ollama" && next !== "custom") patch.baseUrl = "";
+                if (next === "ollama") {
+                  patch.apiKey = "";
+                  setApiKeyDirty(false);
+                }
+                setModels(patch);
+              }}
               allowDeselect={false}
               comboboxProps={{
                 withinPortal: true,
@@ -293,12 +313,22 @@ export default function AdminAiModelsSection() {
                   "admin.settings.ai.models.apiKey.description",
                   "Leave blank to use the engine's own environment credential. Applies to self-hosted single-engine deployments.",
                 )}
-                value={settings.models?.apiKey || ""}
+                // Show the field blank when a key is already stored (it comes back masked as
+                // "********"): a pre-filled sentinel would corrupt the stored key if the user
+                // appended to it. Only bind the real value once the user starts typing.
+                value={apiKeyDirty ? (settings.models?.apiKey ?? "") : ""}
                 onChange={(e) => {
                   setApiKeyDirty(true);
                   setModels({ apiKey: e.target.value });
                 }}
-                placeholder={apiKeyPlaceholder}
+                placeholder={
+                  !apiKeyDirty && settings.models?.apiKey === MASKED_SECRET
+                    ? t(
+                        "admin.settings.ai.models.apiKey.setPlaceholder",
+                        "Saved - leave blank to keep the current key",
+                      )
+                    : apiKeyPlaceholder
+                }
               />
             )}
 

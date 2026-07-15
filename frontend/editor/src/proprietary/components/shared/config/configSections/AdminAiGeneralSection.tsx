@@ -27,6 +27,7 @@ import {
   AiEngineSettingsData,
   AiEngineFeatures,
   AiEngineApiResponse,
+  clampMin,
 } from "@app/components/shared/config/configSections/aiEngineSettings";
 
 export default function AdminAiGeneralSection() {
@@ -63,9 +64,13 @@ export default function AdminAiGeneralSection() {
       deltaSettings: {
         "aiEngine.enabled": s.enabled ?? false,
         "aiEngine.url": s.url ?? "",
-        "aiEngine.timeoutSeconds": s.timeoutSeconds ?? 0,
-        "aiEngine.longRunningTimeoutSeconds": s.longRunningTimeoutSeconds ?? 0,
-        "aiEngine.streamTimeoutSeconds": s.streamTimeoutSeconds ?? 0,
+        // Timeouts must be >= 1s; a 0 would make every engine call fail/deadlock.
+        "aiEngine.timeoutSeconds": clampMin(s.timeoutSeconds, 1),
+        "aiEngine.longRunningTimeoutSeconds": clampMin(
+          s.longRunningTimeoutSeconds,
+          1,
+        ),
+        "aiEngine.streamTimeoutSeconds": clampMin(s.streamTimeoutSeconds, 1),
         "aiEngine.features.chat": s.features?.chat ?? false,
         "aiEngine.features.documentQuestions":
           s.features?.documentQuestions ?? false,

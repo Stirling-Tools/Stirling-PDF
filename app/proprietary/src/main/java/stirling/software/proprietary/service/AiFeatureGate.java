@@ -40,6 +40,15 @@ public class AiFeatureGate {
         require(features().isDocumentQuestions(), "documentQuestions");
     }
 
+    /**
+     * The orchestrate endpoint is the single entry point behind both the chat assistant and
+     * grounded document questions, so it stays available while either capability is enabled and
+     * only fails closed when both are off (or the engine is disabled).
+     */
+    public void requireConversationalWorkflow() {
+        require(features().isChat() || features().isDocumentQuestions(), "conversation");
+    }
+
     public void requireCreatePdf() {
         require(features().isCreatePdf(), "createPdf");
     }

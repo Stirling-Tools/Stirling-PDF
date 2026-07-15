@@ -5,6 +5,15 @@
 /** Secret fields come back masked as this literal when a value is set. */
 export const MASKED_SECRET = "********";
 
+/**
+ * Coerce a numeric setting to a safe integer at submit time. Mantine's {@code min}/clampBehavior
+ * only guards the input on blur; this guards the actual saved value so a cleared field ("" -> 0),
+ * a transient "-" (-> NaN) or an explicit 0 can never be persisted below {@code min} (a 0 timeout
+ * or concurrency would deadlock the engine).
+ */
+export const clampMin = (value: unknown, min: number): number =>
+  Math.max(min, Math.floor(Number(value) || min));
+
 export interface AiEngineModels {
   provider?: string;
   smartModel?: string;

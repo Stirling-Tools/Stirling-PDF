@@ -51,4 +51,27 @@ class AiFeatureGateTest {
                 assertThrows(ResponseStatusException.class, () -> gate.requireChat());
         assertEquals(HttpStatus.SERVICE_UNAVAILABLE, ex.getStatusCode());
     }
+
+    @Test
+    void conversationalWorkflowAllowedWhileEitherChatOrDocumentQuestionsOn() {
+        // The orchestrate endpoint serves both, so it stays open while either is enabled.
+        props.getAiEngine().getFeatures().setChat(false);
+        props.getAiEngine().getFeatures().setDocumentQuestions(true);
+        assertDoesNotThrow(() -> gate.requireConversationalWorkflow());
+
+        props.getAiEngine().getFeatures().setChat(true);
+        props.getAiEngine().getFeatures().setDocumentQuestions(false);
+        assertDoesNotThrow(() -> gate.requireConversationalWorkflow());
+    }
+
+    @Test
+    void conversationalWorkflowThrows503WhenBothChatAndDocumentQuestionsOff() {
+        props.getAiEngine().getFeatures().setChat(false);
+        props.getAiEngine().getFeatures().setDocumentQuestions(false);
+
+        ResponseStatusException ex =
+                assertThrows(
+                        ResponseStatusException.class, () -> gate.requireConversationalWorkflow());
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, ex.getStatusCode());
+    }
 }

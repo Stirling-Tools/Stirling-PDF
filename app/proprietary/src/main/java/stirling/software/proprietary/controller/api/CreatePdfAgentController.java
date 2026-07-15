@@ -29,6 +29,7 @@ import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
+import stirling.software.proprietary.service.AiFeatureGate;
 
 /**
  * Dispatchable tool that converts an AI-generated HTML string to a PDF via WeasyPrint.
@@ -48,6 +49,7 @@ public class CreatePdfAgentController {
     private final TempFileManager tempFileManager;
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final RuntimePathConfig runtimePathConfig;
+    private final AiFeatureGate aiFeatureGate;
 
     /**
      * Returns true only when WeasyPrint is definitively unavailable — either the binary could not
@@ -83,6 +85,7 @@ public class CreatePdfAgentController {
             @RequestParam("htmlContent") String htmlContent,
             @RequestParam("filename") String filename)
             throws Exception {
+        aiFeatureGate.requireCreatePdf();
 
         log.info(
                 "[create-pdf-agent] converting HTML to PDF via WeasyPrint — html_bytes={}",

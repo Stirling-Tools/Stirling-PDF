@@ -91,6 +91,35 @@ def test_config_push_from_non_local_caller_without_secret_returns_403() -> None:
     assert "STIRLING_ENGINE_SHARED_SECRET" in response.json()["detail"]
 
 
+def test_config_push_from_loopback_with_forwarded_header_returns_403() -> None:
+    """A forwarding header means ``request.client.host`` was (or could be) rewritten by a
+    proxy, so a loopback peer address is NOT trusted without a shared secret. This closes the
+    X-Forwarded-For spoofing / same-host reverse-proxy bypass."""
+    with _client(build_app_settings) as client:  # peer is loopback 127.0.0.1
+        response = client.post(
+            "/api/v1/config",
+            json=_anthropic_push(),
+            headers={"X-Forwarded-For": "127.0.0.1"},
+        )
+    assert response.status_code == 403
+    assert "STIRLING_ENGINE_SHARED_SECRET" in response.json()["detail"]
+
+
+def test_config_push_persist_failure_still_applies_without_500() -> None:
+    """Persistence is best-effort: a non-OSError failure (e.g. a corrupt keyfile raising
+    ValueError) must not turn an already-applied push into a 500 with diverged state."""
+    with _client(build_app_settings) as client:
+        with patch(
+            "stirling.api.routes.config.save_config",
+            side_effect=ValueError("corrupt keyfile"),
+        ):
+            response = client.post("/api/v1/config", json=_anthropic_push())
+        assert response.status_code == 200
+        # The config WAS applied live despite the persist failure.
+        assert app.state.settings.smart_model_name == "claude-haiku-4-5"
+        assert any("could not be persisted" in note for note in response.json()["notes"])
+
+
 def test_config_push_applies_model_and_limits() -> None:
     with _client(build_app_settings) as client:
         response = client.post("/api/v1/config", json=_anthropic_push())

@@ -147,4 +147,48 @@ class AiEngineConfigSyncTest {
 
         verify(aiEngineClient, never()).post(anyString(), anyString(), isNull());
     }
+
+    @Test
+    void startupPushKeepsEnvWhenSectionsUnconfigured() throws Exception {
+        // All defaults, no credentials: the push must NOT override the engine's env-configured
+        // provider/model/embedder, so the identity fields are blanked ("keep env" on the engine).
+        ArgumentCaptor<String> body = ArgumentCaptor.forClass(String.class);
+        sync.pushConfigOnStartup();
+        verify(aiEngineClient, timeout(3000)).post(eq("/api/v1/config"), body.capture(), isNull());
+
+        JsonNode root = JsonMapper.builder().build().readTree(body.getValue());
+        assertEquals("", root.get("models").get("provider").asText());
+        assertEquals("", root.get("models").get("smartModel").asText());
+        assertEquals("", root.get("models").get("fastModel").asText());
+        assertEquals("", root.get("rag").get("embeddingProvider").asText());
+        assertEquals("", root.get("rag").get("embeddingModel").asText());
+    }
+
+    @Test
+    void startupPushSendsProviderWhenChangedFromDefault() throws Exception {
+        // Admin selected a non-default provider (relying on the engine's env key): send it so the
+        // engine actually switches provider, even though no API key was entered in the UI.
+        applicationProperties.getAiEngine().getModels().setProvider("openai");
+
+        ArgumentCaptor<String> body = ArgumentCaptor.forClass(String.class);
+        sync.pushConfigOnStartup();
+        verify(aiEngineClient, timeout(3000)).post(eq("/api/v1/config"), body.capture(), isNull());
+
+        JsonNode models = JsonMapper.builder().build().readTree(body.getValue()).get("models");
+        assertEquals("openai", models.get("provider").asText());
+    }
+
+    @Test
+    void startupPushSendsModelsWhenApiKeyConfigured() throws Exception {
+        // A configured key means the admin is driving models from the UI: send the full section.
+        applicationProperties.getAiEngine().getModels().setApiKey("sk-real-key");
+
+        ArgumentCaptor<String> body = ArgumentCaptor.forClass(String.class);
+        sync.pushConfigOnStartup();
+        verify(aiEngineClient, timeout(3000)).post(eq("/api/v1/config"), body.capture(), isNull());
+
+        JsonNode models = JsonMapper.builder().build().readTree(body.getValue()).get("models");
+        assertEquals("anthropic", models.get("provider").asText());
+        assertEquals("sk-real-key", models.get("apiKey").asText());
+    }
 }

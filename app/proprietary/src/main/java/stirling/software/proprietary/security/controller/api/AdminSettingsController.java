@@ -233,7 +233,7 @@ public class AdminSettingsController {
 
             // If AI settings changed, push them to the engine live so model/RAG/limit changes
             // apply without waiting for a processor restart.
-            maybePushAiEngineLive();
+            maybePushAiEngineLive(settings);
 
             return ResponseEntity.ok(
                     Map.of(
@@ -630,11 +630,23 @@ public class AdminSettingsController {
     }
 
     /**
-     * Forward any pending {@code aiEngine.*} changes to the AI engine immediately. The running bean
-     * overlaid with these pending values is the current settings.yml state; {@link
-     * AiEngineConfigSync} no-ops unless AI is enabled and an engine-relevant key changed.
+     * Forward pending {@code aiEngine.*} changes to the AI engine immediately so model/RAG/limit
+     * changes apply without waiting for a processor restart. {@link AiEngineConfigSync} no-ops
+     * unless AI is enabled and an engine-relevant key changed.
+     *
+     * <p>Only reacts when <em>this</em> save actually changed an {@code aiEngine.*} key, so an
+     * unrelated later save can't re-trigger a redundant push. When it does react, the body is built
+     * from <em>all</em> accumulated pending {@code aiEngine.*} changes: the running bean does not
+     * reflect saved-but-not-yet-restarted values (see {@code updateSettingsTransactional}, which
+     * only writes YAML), so earlier pending changes must ride along to give the engine the complete
+     * current picture.
      */
-    private void maybePushAiEngineLive() {
+    private void maybePushAiEngineLive(Map<String, Object> changedSettings) {
+        boolean aiChangedNow =
+                changedSettings.keySet().stream().anyMatch(k -> k.startsWith("aiEngine."));
+        if (!aiChangedNow) {
+            return;
+        }
         Map<String, Object> aiEnginePending = new HashMap<>();
         for (Map.Entry<String, Object> entry : pendingChanges.entrySet()) {
             if (entry.getKey().startsWith("aiEngine.")) {
@@ -889,13 +901,15 @@ public class AdminSettingsController {
             return true;
         }
 
-        // Substring match for secret-bearing field names. Covers provider credentials such as
+        // Match secret-bearing field names. Covers provider credentials such as
         // aiEngine.models.apiKey and aiEngine.rag.embeddingApiKey (which the exact-name set would
-        // miss) so keys are never returned to the client in cleartext.
+        // miss) so keys are never returned to the client in cleartext. "token" is matched as a
+        // suffix only (botToken, refreshToken, ...) so it does NOT swallow non-secret numeric
+        // fields whose name merely contains the substring (smartMaxTokens, tokenExpiryMinutes).
         return lowerField.contains("password")
                 || lowerField.contains("secret")
                 || lowerField.contains("apikey")
-                || lowerField.contains("token");
+                || lowerField.endsWith("token");
     }
 
     /** Create a masked representation for sensitive fields */

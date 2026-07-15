@@ -14,13 +14,14 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 from stirling.contracts import ConfigPushRequest
 
 FIXTURE = Path(__file__).parent / "fixtures" / "processor_config_push.json"
 
 
-def _load() -> dict:
+def _load() -> dict[str, Any]:
     return json.loads(FIXTURE.read_text(encoding="utf-8"))
 
 

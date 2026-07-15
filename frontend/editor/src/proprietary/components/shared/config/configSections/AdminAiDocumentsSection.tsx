@@ -27,6 +27,8 @@ import {
   AiEngineRag,
   AiEngineApiResponse,
   EMBEDDING_MODEL_SUGGESTIONS,
+  MASKED_SECRET,
+  clampMin,
 } from "@app/components/shared/config/configSections/aiEngineSettings";
 
 export default function AdminAiDocumentsSection() {
@@ -56,15 +58,20 @@ export default function AdminAiDocumentsSection() {
     },
     // Save ONLY this page's keys as dot-notation so sibling AI keys are preserved.
     saveTransformer: (s: AiEngineSettingsData) => {
+      const prov = s.rag?.embeddingProvider || "voyageai";
+      const usesBaseUrl = prov === "ollama" || prov === "custom";
+      const usesApiKey = prov !== "ollama";
       const deltaSettings: Record<string, unknown> = {
-        "aiEngine.rag.embeddingProvider":
-          s.rag?.embeddingProvider ?? "voyageai",
+        "aiEngine.rag.embeddingProvider": prov,
         "aiEngine.rag.embeddingModel": s.rag?.embeddingModel ?? "",
-        "aiEngine.rag.embeddingBaseUrl": s.rag?.embeddingBaseUrl ?? "",
-        "aiEngine.rag.topK": s.rag?.topK ?? 0,
-        "aiEngine.rag.maxSearches": s.rag?.maxSearches ?? 0,
+        // Never send a base URL for a provider that doesn't use one.
+        "aiEngine.rag.embeddingBaseUrl": usesBaseUrl
+          ? (s.rag?.embeddingBaseUrl ?? "")
+          : "",
+        "aiEngine.rag.topK": clampMin(s.rag?.topK, 1),
+        "aiEngine.rag.maxSearches": clampMin(s.rag?.maxSearches, 0),
       };
-      if (embeddingApiKeyDirty) {
+      if (embeddingApiKeyDirty && usesApiKey) {
         deltaSettings["aiEngine.rag.embeddingApiKey"] =
           s.rag?.embeddingApiKey ?? "";
       }
@@ -86,13 +93,15 @@ export default function AdminAiDocumentsSection() {
       await saveSettings();
       setEmbeddingApiKeyDirty(false);
       markSaved();
-      // Engine-facing values are pushed to the AI engine live on save; no restart needed.
+      // Values are pushed to the engine live (the embedder is hot-swapped), but existing
+      // documents were embedded with the previous model and must be re-indexed - so the
+      // toast flags that caveat rather than claiming the change is fully effective.
       alert({
         alertType: "success",
         title: t("admin.settings.ai.saved.title", "AI settings saved"),
         body: t(
-          "admin.settings.ai.saved.body",
-          "Changes are pushed to the AI engine automatically.",
+          "admin.settings.ai.documents.saved.body",
+          "Changes are pushed to the AI engine automatically. If you changed the embedding model, re-index existing documents so search uses the new model.",
         ),
       });
     } catch (_error) {
@@ -191,7 +200,19 @@ export default function AdminAiDocumentsSection() {
                 { value: "custom", label: "Custom (OpenAI-compatible)" },
               ]}
               value={embeddingProvider}
-              onChange={(v) => setRag({ embeddingProvider: v || "voyageai" })}
+              onChange={(v) => {
+                const next = v || "voyageai";
+                const patch: Partial<AiEngineRag> = { embeddingProvider: next };
+                // Clear fields the new provider doesn't use so a stale hidden value can't
+                // leak into the payload.
+                if (next !== "ollama" && next !== "custom")
+                  patch.embeddingBaseUrl = "";
+                if (next === "ollama") {
+                  patch.embeddingApiKey = "";
+                  setEmbeddingApiKeyDirty(false);
+                }
+                setRag(patch);
+              }}
               allowDeselect={false}
               comboboxProps={{
                 withinPortal: true,
@@ -238,12 +259,26 @@ export default function AdminAiDocumentsSection() {
                   "admin.settings.ai.documents.embeddingApiKey.description",
                   "Leave blank to use the engine's own environment credential. Applies to self-hosted single-engine deployments.",
                 )}
-                value={settings.rag?.embeddingApiKey || ""}
+                // Blank when a key is already stored (returned masked as "********") so
+                // appending to the sentinel can't corrupt the saved key.
+                value={
+                  embeddingApiKeyDirty
+                    ? (settings.rag?.embeddingApiKey ?? "")
+                    : ""
+                }
                 onChange={(e) => {
                   setEmbeddingApiKeyDirty(true);
                   setRag({ embeddingApiKey: e.target.value });
                 }}
-                placeholder={embeddingApiKeyPlaceholder}
+                placeholder={
+                  !embeddingApiKeyDirty &&
+                  settings.rag?.embeddingApiKey === MASKED_SECRET
+                    ? t(
+                        "admin.settings.ai.documents.embeddingApiKey.setPlaceholder",
+                        "Saved - leave blank to keep the current key",
+                      )
+                    : embeddingApiKeyPlaceholder
+                }
               />
             )}
 
@@ -325,7 +360,7 @@ export default function AdminAiDocumentsSection() {
           <Text size="xs">
             {t(
               "admin.settings.ai.documents.reindexNote.body",
-              "Changing the embedding model invalidates previously-embedded documents. A full engine restart and re-index of existing documents is required for search to work correctly.",
+              "Changing the embedding model takes effect immediately, but documents indexed with the previous model must be re-indexed for search to return correct results.",
             )}
           </Text>
         </Alert>

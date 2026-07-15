@@ -58,8 +58,23 @@ def _keep(pushed: int | None, current: int) -> int:
     return pushed if pushed is not None else current
 
 
-def _is_loopback_client(request: Request) -> bool:
-    """True when the request originates from the local host (127.0.0.0/8, ::1)."""
+# Headers that indicate a proxy sits in front of us. Their presence means
+# ``request.client.host`` cannot be trusted as the true transport peer: uvicorn's
+# ProxyHeadersMiddleware rewrites the client from ``X-Forwarded-For`` when a proxy is
+# trusted, so a spoofed ``X-Forwarded-For: 127.0.0.1`` would otherwise read as loopback.
+_FORWARDING_HEADERS = ("x-forwarded-for", "x-forwarded-host", "x-real-ip", "forwarded")
+
+
+def _is_direct_loopback_client(request: Request) -> bool:
+    """True only for a *direct* local connection with no proxy in front.
+
+    Used as the sole authorization for config push when no shared secret is set, so it
+    must fail closed the moment a proxy is involved. Any forwarding header present means
+    the peer address may have been rewritten (or the caller is remote-behind-a-proxy), so
+    we refuse to treat it as local and require an explicit shared secret instead.
+    """
+    if any(h in request.headers for h in _FORWARDING_HEADERS):
+        return False
     client = request.client
     if client is None:
         return False
@@ -181,17 +196,23 @@ async def apply_config(request: ConfigPushRequest, http_request: Request) -> Con
         )
     # Secure-by-default for this sensitive endpoint. When a shared secret is set the
     # global middleware has already authenticated the caller (only the processor has the
-    # secret). When NO secret is set, only trust a loopback caller - a remote party must
-    # never be able to push a config unauthenticated, since a pushed base_url/model could
-    # repoint the engine to exfiltrate document content.
-    if not current.engine_shared_secret and not _is_loopback_client(http_request):
+    # secret). When NO secret is set, only trust a *direct* loopback caller - a remote
+    # party must never be able to push a config unauthenticated, since a pushed
+    # base_url/model could repoint the engine to exfiltrate document content. We refuse
+    # the moment any proxy header is present because ``request.client.host`` is then
+    # spoofable (uvicorn rewrites it from X-Forwarded-For behind a trusted proxy), so a
+    # deployment behind a reverse proxy / LB MUST set a shared secret.
+    if not current.engine_shared_secret and not _is_direct_loopback_client(http_request):
         client_host = http_request.client.host if http_request.client else "unknown"
-        logger.warning("Rejected config push from non-local caller %s with no shared secret set", client_host)
+        logger.warning(
+            "Rejected config push from non-local/proxied caller %s with no shared secret set",
+            client_host,
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=(
-                "Config push from a non-local caller requires STIRLING_ENGINE_SHARED_SECRET"
-                " to be set on both the engine and the processor."
+                "Config push from a non-local or proxied caller requires"
+                " STIRLING_ENGINE_SHARED_SECRET to be set on both the engine and the processor."
             ),
         )
 
@@ -220,9 +241,12 @@ async def apply_config(request: ConfigPushRequest, http_request: Request) -> Con
         runtime.documents.embedder = new_embedder
 
     # Persist the applied config (encrypted) so it is restored on the next boot.
+    # Persistence is best-effort: the config is already applied live above, so a persist
+    # failure of ANY kind (bad/corrupt keyfile -> ValueError, disk error -> OSError, etc.)
+    # must never turn a successful apply into a 500 and leave live/reported state diverged.
     try:
         save_config(request)
-    except OSError:
+    except Exception:  # noqa: BLE001 - best-effort persist, never fail the applied push
         logger.warning("Applied AI config but failed to persist the encrypted cache", exc_info=True)
         notes.append("Config applied but could not be persisted; it will not survive an engine restart.")
 

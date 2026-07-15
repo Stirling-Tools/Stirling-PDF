@@ -38,6 +38,7 @@ import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResultFile;
 import stirling.software.proprietary.service.AiEngineClient;
 import stirling.software.proprietary.service.AiEngineEndpointResolver;
+import stirling.software.proprietary.service.AiFeatureGate;
 import stirling.software.proprietary.service.AiWorkflowService;
 
 import tools.jackson.core.JacksonException;
@@ -60,6 +61,7 @@ public class AiEngineController {
     private final TaskManager taskManager;
     private final JobOwnershipService jobOwnershipService;
     private final AiEngineEndpointResolver endpointResolver;
+    private final AiFeatureGate aiFeatureGate;
     private final UserServiceInterface userService;
 
     /**
@@ -77,6 +79,7 @@ public class AiEngineController {
             TaskManager taskManager,
             JobOwnershipService jobOwnershipService,
             AiEngineEndpointResolver endpointResolver,
+            AiFeatureGate aiFeatureGate,
             ApplicationProperties applicationProperties,
             @Autowired(required = false) UserServiceInterface userService) {
         this.aiEngineClient = aiEngineClient;
@@ -86,6 +89,7 @@ public class AiEngineController {
         this.taskManager = taskManager;
         this.jobOwnershipService = jobOwnershipService;
         this.endpointResolver = endpointResolver;
+        this.aiFeatureGate = aiFeatureGate;
         this.userService = userService;
         this.streamTimeoutMs =
                 applicationProperties.getAiEngine().getStreamTimeoutSeconds() * 1000L;
@@ -113,6 +117,7 @@ public class AiEngineController {
                             + " system and downloadable via GET /api/v1/general/files/{fileId}.")
     public AiWorkflowResponse orchestrate(@Valid @ModelAttribute AiWorkflowRequest request)
             throws IOException {
+        aiFeatureGate.requireConversationalWorkflow();
         AiWorkflowResponse result = aiWorkflowService.orchestrate(request);
         registerFileResultAsJob(result);
         return result;
@@ -125,6 +130,7 @@ public class AiEngineController {
                     "Accepts a PDF upload and a user message, returns SSE events with progress"
                             + " updates followed by the final AI workflow result")
     public SseEmitter orchestrateStream(@Valid @ModelAttribute AiWorkflowRequest request) {
+        aiFeatureGate.requireConversationalWorkflow();
         SseEmitter emitter = new SseEmitter(streamTimeoutMs);
 
         emitter.onTimeout(

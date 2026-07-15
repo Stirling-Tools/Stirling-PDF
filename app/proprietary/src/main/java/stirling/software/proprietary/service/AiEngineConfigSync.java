@@ -82,6 +82,7 @@ public class AiEngineConfigSync {
         }
         ObjectNode node = buildConfigNode(cfg);
         pendingAiEngine.forEach((k, v) -> overlayIfEngineRelevant(node, k, v));
+        keepEnvForUnconfiguredIdentity(node);
         String body = node.toString();
         Thread.ofVirtual().name("ai-engine-config-live-push").start(() -> pushOnce(body));
     }
@@ -119,7 +120,9 @@ public class AiEngineConfigSync {
     }
 
     private void pushWithRetries(AiEngine cfg) {
-        String body = buildConfigNode(cfg).toString();
+        ObjectNode node = buildConfigNode(cfg);
+        keepEnvForUnconfiguredIdentity(node);
+        String body = node.toString();
         for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
             try {
                 aiEngineClient.post("/api/v1/config", body, null);
@@ -177,5 +180,60 @@ public class AiEngineConfigSync {
         limits.put("modelMaxConcurrency", l.getModelMaxConcurrency());
 
         return root;
+    }
+
+    // Bean defaults, used to detect whether the admin actually configured a section vs left it at
+    // the built-in defaults, so an unconfigured section can be pushed as "keep the engine's env".
+    private static final AiEngine.Models DEFAULT_MODELS = new AiEngine.Models();
+    private static final AiEngine.Rag DEFAULT_RAG = new AiEngine.Rag();
+
+    private static boolean isBlank(String s) {
+        return s == null || s.isBlank();
+    }
+
+    private static String text(JsonNode section, String field) {
+        return section.path(field).asText("");
+    }
+
+    /**
+     * Blank the provider/model/credential identity of any section the admin hasn't customised so
+     * the push keeps the engine's environment-configured values for it. Empty identity fields mean
+     * "keep env" on the engine side, so a fresh enable or a restart never silently switches an
+     * env-configured engine's provider/model - which would otherwise break auth when the engine was
+     * pointed at a different provider (e.g. Ollama/OpenAI) purely through its environment. Numeric
+     * knobs (token limits, top_k, page/char caps) are left as-is: they equal the engine's own
+     * defaults and don't affect provider auth.
+     */
+    private void keepEnvForUnconfiguredIdentity(ObjectNode root) {
+        if (root.get("models") instanceof ObjectNode models) {
+            boolean configured =
+                    !isBlank(text(models, "apiKey"))
+                            || !isBlank(text(models, "baseUrl"))
+                            || !DEFAULT_MODELS.getProvider().equals(text(models, "provider"))
+                            || !DEFAULT_MODELS.getSmartModel().equals(text(models, "smartModel"))
+                            || !DEFAULT_MODELS.getFastModel().equals(text(models, "fastModel"));
+            if (!configured) {
+                models.put("provider", "");
+                models.put("smartModel", "");
+                models.put("fastModel", "");
+                models.put("apiKey", "");
+                models.put("baseUrl", "");
+            }
+        }
+        if (root.get("rag") instanceof ObjectNode rag) {
+            boolean configured =
+                    !isBlank(text(rag, "embeddingApiKey"))
+                            || !isBlank(text(rag, "embeddingBaseUrl"))
+                            || !DEFAULT_RAG
+                                    .getEmbeddingProvider()
+                                    .equals(text(rag, "embeddingProvider"))
+                            || !DEFAULT_RAG.getEmbeddingModel().equals(text(rag, "embeddingModel"));
+            if (!configured) {
+                rag.put("embeddingProvider", "");
+                rag.put("embeddingModel", "");
+                rag.put("embeddingApiKey", "");
+                rag.put("embeddingBaseUrl", "");
+            }
+        }
     }
 }

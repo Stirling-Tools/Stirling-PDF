@@ -484,6 +484,25 @@ class AdminSettingsControllerTest {
             SettingValueResponse body = (SettingValueResponse) response.getBody();
             assertThat(body.getValue()).isEqualTo("********");
         }
+
+        @Test
+        @DisplayName("masks aiEngine apiKey but NOT the maxTokens numeric fields")
+        void masksApiKeyButNotMaxTokens() {
+            applicationProperties.getAiEngine().getModels().setApiKey("sk-real-key");
+            applicationProperties.getAiEngine().getModels().setSmartMaxTokens(8192);
+
+            // "token" as a substring of maxTokens must not trigger masking (would break the UI
+            // and flip the integer to a "********" string).
+            ResponseEntity<?> tokensResp =
+                    controller.getSettingValue("aiEngine.models.smartMaxTokens");
+            SettingValueResponse tokens = (SettingValueResponse) tokensResp.getBody();
+            assertThat(tokens.getValue()).isEqualTo(8192);
+
+            // The real credential is still masked.
+            ResponseEntity<?> keyResp = controller.getSettingValue("aiEngine.models.apiKey");
+            SettingValueResponse key = (SettingValueResponse) keyResp.getBody();
+            assertThat(key.getValue()).isEqualTo("********");
+        }
     }
 
     @Nested

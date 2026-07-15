@@ -12,6 +12,7 @@ import {
   AiEngineSettingsData,
   AiEngineLimits,
   AiEngineApiResponse,
+  clampMin,
 } from "@app/components/shared/config/configSections/aiEngineSettings";
 
 export default function AdminAiLimitsSection() {
@@ -40,10 +41,13 @@ export default function AdminAiLimitsSection() {
     saveTransformer: (s: AiEngineSettingsData) => ({
       sectionData: {},
       deltaSettings: {
-        "aiEngine.limits.maxPages": s.limits?.maxPages ?? 0,
-        "aiEngine.limits.maxCharacters": s.limits?.maxCharacters ?? 0,
-        "aiEngine.limits.modelMaxConcurrency":
-          s.limits?.modelMaxConcurrency ?? 0,
+        // All must be >= 1; a 0 page/char cap or 0 concurrency breaks or deadlocks the engine.
+        "aiEngine.limits.maxPages": clampMin(s.limits?.maxPages, 1),
+        "aiEngine.limits.maxCharacters": clampMin(s.limits?.maxCharacters, 1),
+        "aiEngine.limits.modelMaxConcurrency": clampMin(
+          s.limits?.modelMaxConcurrency,
+          1,
+        ),
       },
     }),
   });
