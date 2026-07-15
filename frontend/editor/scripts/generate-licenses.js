@@ -2,6 +2,7 @@
 
 import { execSync } from "node:child_process";
 import { existsSync, mkdirSync, writeFileSync, readFileSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { argv } from "node:process";
 
@@ -75,51 +76,53 @@ try {
   }
 
   // Convert license-checker format to array
-  const licenseArray = licenseData.map((dep) => {
-    let licenseType = dep.licenseType;
-    const projectUrl = getProjectUrl(dep.name, dep.link);
+  const licenseArray = await Promise.all(
+    licenseData.map(async (dep) => {
+      let licenseType = dep.licenseType;
+      const projectUrl = await getProjectUrl(dep.name, dep.link);
 
-    // Handle missing or null licenses
-    if (!licenseType || licenseType === null || licenseType === undefined) {
-      licenseType = "Unknown";
-    }
+      // Handle missing or null licenses
+      if (!licenseType || licenseType === null || licenseType === undefined) {
+        licenseType = "Unknown";
+      }
 
-    // Handle empty string licenses
-    if (licenseType === "") {
-      licenseType = "Unknown";
-    }
+      // Handle empty string licenses
+      if (licenseType === "") {
+        licenseType = "Unknown";
+      }
 
-    // Handle array licenses (rare but possible)
-    if (Array.isArray(licenseType)) {
-      licenseType = licenseType.join(" AND ");
-    }
+      // Handle array licenses (rare but possible)
+      if (Array.isArray(licenseType)) {
+        licenseType = licenseType.join(" AND ");
+      }
 
-    // Handle object licenses (fallback)
-    if (typeof licenseType === "object" && licenseType !== null) {
-      licenseType = "Unknown";
-    }
+      // Handle object licenses (fallback)
+      if (typeof licenseType === "object" && licenseType !== null) {
+        licenseType = "Unknown";
+      }
 
-    if (
-      "posthog-js" === dep.name &&
-      licenseType.startsWith("SEE LICENSE IN LICENSE")
-    ) {
-      licenseType =
-        "SEE LICENSE IN LICENSE https://github.com/PostHog/posthog-js/blob/main/LICENSE";
-    }
+      if (
+        "posthog-js" === dep.name &&
+        licenseType.startsWith("SEE LICENSE IN LICENSE")
+      ) {
+        licenseType =
+          "SEE LICENSE IN LICENSE https://github.com/PostHog/posthog-js/blob/main/LICENSE";
+      }
 
-    return {
-      name: dep.name,
-      version:
-        dep.installedVersion ||
-        dep.definedVersion ||
-        dep.remoteVersion ||
-        "unknown",
-      licenseType: licenseType,
-      repository: projectUrl,
-      url: projectUrl,
-      link: projectUrl,
-    };
-  });
+      return {
+        name: dep.name,
+        version:
+          dep.installedVersion ||
+          dep.definedVersion ||
+          dep.remoteVersion ||
+          "unknown",
+        licenseType: licenseType,
+        repository: projectUrl,
+        url: projectUrl,
+        link: projectUrl,
+      };
+    }),
+  );
 
   // Transform to match Java backend format
   const transformedData = {
@@ -282,19 +285,32 @@ function getLicenseUrl(licenseType) {
   return "";
 }
 
-function getProjectUrl(packageName, reportedUrl) {
+async function getProjectUrl(packageName, reportedUrl) {
   const normalizedReportedUrl = normalizeProjectUrl(reportedUrl);
   if (normalizedReportedUrl) return normalizedReportedUrl;
 
+  const packageNamePattern =
+    /^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/i;
+  if (!packageNamePattern.test(packageName)) {
+    throw new Error(`Invalid package name: ${packageName}`);
+  }
+  const npmPackageUrl = `https://www.npmjs.com/package/${packageName}`;
+
   try {
-    const packageManifestPath = path.join(
+    const nodeModulesPath = path.resolve(
       path.dirname(PACKAGE_JSON),
       "node_modules",
+    );
+    const packageManifestPath = path.resolve(
+      nodeModulesPath,
       ...packageName.split("/"),
       "package.json",
     );
+    if (!packageManifestPath.startsWith(`${nodeModulesPath}${path.sep}`)) {
+      throw new Error(`Package path escapes node_modules: ${packageName}`);
+    }
     const packageManifest = JSON.parse(
-      readFileSync(packageManifestPath, "utf8"),
+      await readFile(packageManifestPath, "utf8"),
     );
     const repositoryUrl =
       typeof packageManifest.repository === "string"
@@ -304,10 +320,10 @@ function getProjectUrl(packageName, reportedUrl) {
     return (
       normalizeProjectUrl(repositoryUrl) ||
       normalizeProjectUrl(packageManifest.homepage) ||
-      `https://www.npmjs.com/package/${packageName}`
+      npmPackageUrl
     );
   } catch {
-    return `https://www.npmjs.com/package/${packageName}`;
+    return npmPackageUrl;
   }
 }
 
