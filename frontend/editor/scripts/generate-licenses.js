@@ -77,6 +77,7 @@ try {
   // Convert license-checker format to array
   const licenseArray = licenseData.map((dep) => {
     let licenseType = dep.licenseType;
+    const projectUrl = getProjectUrl(dep.name, dep.link);
 
     // Handle missing or null licenses
     if (!licenseType || licenseType === null || licenseType === undefined) {
@@ -114,9 +115,9 @@ try {
         dep.remoteVersion ||
         "unknown",
       licenseType: licenseType,
-      repository: dep.link,
-      url: dep.link,
-      link: dep.link,
+      repository: projectUrl,
+      url: projectUrl,
+      link: projectUrl,
     };
   });
 
@@ -126,7 +127,7 @@ try {
       const licenseType = Array.isArray(dep.licenseType)
         ? dep.licenseType.join(", ")
         : dep.licenseType || "Unknown";
-      const licenseUrl = dep.link || getLicenseUrl(licenseType);
+      const licenseUrl = getLicenseUrl(licenseType) || dep.link;
 
       return {
         moduleName: dep.name,
@@ -224,6 +225,9 @@ try {
 function getLicenseUrl(licenseType) {
   if (!licenseType || licenseType === "Unknown") return "";
 
+  const explicitLicenseUrl = licenseType.match(/https?:\/\/\S+/)?.[0];
+  if (explicitLicenseUrl) return explicitLicenseUrl;
+
   const licenseUrls = {
     MIT: "https://opensource.org/licenses/MIT",
     "MIT*": "https://opensource.org/licenses/MIT",
@@ -276,6 +280,45 @@ function getLicenseUrl(licenseType) {
 
   // For non-standard licenses, return empty string (will use package link if available)
   return "";
+}
+
+function getProjectUrl(packageName, reportedUrl) {
+  const normalizedReportedUrl = normalizeProjectUrl(reportedUrl);
+  if (normalizedReportedUrl) return normalizedReportedUrl;
+
+  try {
+    const packageManifestPath = path.join(
+      path.dirname(PACKAGE_JSON),
+      "node_modules",
+      ...packageName.split("/"),
+      "package.json",
+    );
+    const packageManifest = JSON.parse(
+      readFileSync(packageManifestPath, "utf8"),
+    );
+    const repositoryUrl =
+      typeof packageManifest.repository === "string"
+        ? packageManifest.repository
+        : packageManifest.repository?.url;
+
+    return (
+      normalizeProjectUrl(repositoryUrl) ||
+      normalizeProjectUrl(packageManifest.homepage) ||
+      `https://www.npmjs.com/package/${packageName}`
+    );
+  } catch {
+    return `https://www.npmjs.com/package/${packageName}`;
+  }
+}
+
+function normalizeProjectUrl(url) {
+  if (!url || url === "n/a") return "";
+
+  return url
+    .replace(/^git\+/, "")
+    .replace(/^git:\/\/github\.com\//, "https://github.com/")
+    .replace(/^github:/, "https://github.com/")
+    .replace(/\.git$/, "");
 }
 
 /**
