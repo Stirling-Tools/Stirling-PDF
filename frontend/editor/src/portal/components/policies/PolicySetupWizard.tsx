@@ -1,5 +1,10 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import CheckIcon from "@mui/icons-material/Check";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
+import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
+import StorageOutlinedIcon from "@mui/icons-material/StorageOutlined";
 import {
   Banner,
   Button,
@@ -29,11 +34,26 @@ import {
 import { fetchSources } from "@portal/api/sources";
 import { useAsync } from "@portal/hooks/useAsync";
 import { PolicyFieldRow } from "@portal/components/policies/PolicyFieldRow";
-import { policyIcon } from "@portal/components/policies/policyIcons";
-import { sourceTypeMeta } from "@portal/components/sources/sourceTypes";
+import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
 import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig";
 import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
+import { ClassificationLabelsSection } from "@portal/components/policies/ClassificationLabelsSection";
 import "@portal/views/Policies.css";
+
+/** Outline icon for a source tile, keyed by the backend source `type`. */
+function sourceIcon(type: string): ReactNode {
+  const sx = { fontSize: "1.1rem" } as const;
+  switch (type) {
+    case "editor":
+      return <EditOutlinedIcon sx={sx} />;
+    case "folder":
+      return <FolderOutlinedIcon sx={sx} />;
+    case "s3":
+      return <CloudOutlinedIcon sx={sx} />;
+    default:
+      return <StorageOutlinedIcon sx={sx} />;
+  }
+}
 
 interface PolicySetupWizardProps {
   /** The category being configured, or null when closed. */
@@ -119,6 +139,13 @@ const CAPABILITY_META: Record<
     descKey: "portal.policies.wizard.capability.compress.desc",
     descEn: "Compresses the document to a smaller file size.",
   },
+  classify: {
+    labelKey: "portal.policies.wizard.capability.classify.label",
+    labelEn: "Classify the document",
+    descKey: "portal.policies.wizard.capability.classify.desc",
+    descEn:
+      "Identifies the document's type from your team's labels and tags it, so it files and searches by category.",
+  },
 };
 
 function seedTools(entry: CatalogueEntry): ToolState[] {
@@ -179,9 +206,18 @@ function PolicySetupWizardBody({
 
   const { category, config, policy } = entry;
   const isEdit = policy != null;
+  const isClassification = category.id === "classification";
 
   const [step, setStep] = useState<Step>("workflow");
-  const [tools, setTools] = useState<ToolState[]>(() => seedTools(entry));
+  const [tools, setTools] = useState<ToolState[]>(() => {
+    const seeded = seedTools(entry);
+    // Classification's single tool has no toggle in the workflow step, so keep it
+    // enabled unconditionally — otherwise editing a policy whose saved steps
+    // somehow lack it would strand submit with no way to re-enable it.
+    return isClassification
+      ? seeded.map((t) => ({ ...t, enabled: true }))
+      : seeded;
+  });
   const [fieldValues, setFieldValues] = useState(() =>
     resolveFieldValues(entry),
   );
@@ -190,11 +226,25 @@ function PolicySetupWizardBody({
   );
 
   const sourcesAsync = useAsync(() => fetchSources(), []);
-  const availableSources = useMemo(
-    () =>
-      (sourcesAsync.data?.sources ?? []).filter((s) => s.status !== "disabled"),
-    [sourcesAsync.data],
-  );
+  const availableSources = useMemo(() => {
+    const backendSources = (sourcesAsync.data?.sources ?? []).filter(
+      (s) => s.status !== "disabled",
+    );
+    // The editor is always an available source. The backend now returns it as a
+    // virtual source too, so take that when present (avoids a duplicate tile) and
+    // otherwise fall back to a synthetic one; keep it first, selected by default.
+    const editorSource = backendSources.find((s) => s.id === "editor") ?? {
+      id: "editor",
+      name: t("portal.sources.types.editor.label"),
+      type: "editor",
+      status: "active" as const,
+      referenceCount: 0,
+      referencingPolicies: [],
+      config: [],
+      docsTotal: null,
+    };
+    return [editorSource, ...backendSources.filter((s) => s.id !== "editor")];
+  }, [sourcesAsync.data, t]);
   // Document-type scoping has no UI; preserve any saved scope on edit and
   // default new policies to all document types.
   const [scopeTypes] = useState<string[]>(policy?.state.scopeTypes ?? []);
@@ -285,7 +335,7 @@ function PolicySetupWizardBody({
       title={
         <span className="portal-policies__wizard-title">
           <span className="portal-policies__cat-icon" aria-hidden>
-            {policyIcon(category.icon)}
+            {policyCategoryIcon(category.id)}
           </span>
           {isEdit
             ? t("portal.policies.wizard.title.edit", {
@@ -349,7 +399,25 @@ function PolicySetupWizardBody({
         />
       )}
 
-      {step === "workflow" && (
+      {step === "workflow" && isClassification && (
+        <div className="portal-policies__wizard-section">
+          <p className="portal-policies__wizard-desc">
+            {t(
+              "portal.policies.wizard.classification.description",
+              "Every uploaded document is classified against the built-in labels and tagged with the types that fit. The label set is shared across your whole team.",
+            )}
+          </p>
+          <h3 className="portal-policies__wizard-heading">
+            {t(
+              "portal.policies.wizard.classification.labelsHeading",
+              "Classification labels",
+            )}
+          </h3>
+          <ClassificationLabelsSection />
+        </div>
+      )}
+
+      {step === "workflow" && !isClassification && (
         <div className="portal-policies__wizard-section">
           <p className="portal-policies__wizard-desc">
             {t(
@@ -448,35 +516,38 @@ function PolicySetupWizardBody({
             // The backend always returns the editor as a virtual source, so the
             // loaded list is never empty - no "no sources" state exists.
             <div className="portal-policies__sources">
-              {availableSources.map((src) => (
-                // A selectable multi-line tile (icon + name + type + check).
-                // Uses the shared Button (raw <button> is lint-banned); the tile
-                // CSS overrides the Button's fixed height for the two-line layout.
-                <Button
-                  key={src.id}
-                  variant="quiet"
-                  justify="start"
-                  className={
-                    "portal-policies__source" +
-                    (sources.includes(src.id)
-                      ? " portal-policies__source--on"
-                      : "")
-                  }
-                  onClick={() => toggleSource(src.id)}
-                >
-                  <span className="portal-policies__source-icon" aria-hidden>
-                    {sourceTypeMeta(src.type).icon}
-                  </span>
-                  <span className="portal-policies__source-text">
+              {availableSources.map((src) => {
+                const on = sources.includes(src.id);
+                return (
+                  <Button
+                    key={src.id}
+                    variant={on ? "secondary" : "quiet"}
+                    justify="between"
+                    fullWidth
+                    className={
+                      "portal-policies__source" +
+                      (on ? " portal-policies__source--on" : "")
+                    }
+                    // The check keeps its slot when unselected (hidden) so the
+                    // icon + name stay put whether or not the tile is selected.
+                    rightSection={
+                      <CheckIcon
+                        sx={{
+                          fontSize: "1.1rem",
+                          visibility: on ? "visible" : "hidden",
+                        }}
+                      />
+                    }
+                    onClick={() => toggleSource(src.id)}
+                    aria-pressed={on}
+                  >
                     <span className="portal-policies__source-label">
+                      {sourceIcon(src.type)}
                       {src.name}
                     </span>
-                    <span className="portal-policies__source-desc">
-                      {src.type}
-                    </span>
-                  </span>
-                </Button>
-              ))}
+                  </Button>
+                );
+              })}
             </div>
           )}
 
