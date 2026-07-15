@@ -1,0 +1,11 @@
+/* Slim strip at the top of the main column hosting the shared search bar. */
+.portal-searchbar {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-2) var(--space-3) 0;
+}
+
+.portal-searchbar .super-search {
+  width: 100%;
+  max-width: 34rem;
+}

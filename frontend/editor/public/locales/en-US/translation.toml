@@ -7986,13 +7986,9 @@ description = "Pipeline runs, deploys and agent events will appear here."
 title = "Nothing here yet"
 
 [portal.search]
-ariaLabel = "Search"
 goTo = "Go to"
+hint = "Type to jump to any portal page"
 placeholder = "Search the portal…"
-
-[portal.search.empty]
-noMatches = "No matches for \"{{query}}\""
-noMatchesDescription = "Try a different keyword."
 
 [portal.settings.groups]
 admin = "Admin"

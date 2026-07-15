@@ -13,7 +13,11 @@ import { Button } from "@app/ui/Button";
 import { TextInput } from "@app/components/shared/TextInput";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { isMacLike } from "@app/utils/hotkeys";
-import { useSuperSearch, SuperSearchResult } from "@app/hooks/useSuperSearch";
+import {
+  useSuperSearch,
+  SuperSearchResult,
+  type UseSuperSearchResult,
+} from "@app/hooks/useSuperSearch";
 import "@app/components/shared/superSearch/SuperSearch.css";
 
 interface DropdownRect {
@@ -22,15 +26,35 @@ interface DropdownRect {
   width: number;
 }
 
+interface SuperSearchProps {
+  /**
+   * Results provider, called as a hook — it MUST be referentially stable for
+   * the component's lifetime. Defaults to the editor's files/tools/settings/
+   * Processor provider; the portal passes its own destinations provider.
+   */
+  useResults?: (query: string, active: boolean) => UseSuperSearchResult;
+  /** Override the input placeholder (defaults to the editor copy). */
+  placeholder?: string;
+  /** Override the empty-query hint line (defaults to the editor copy). */
+  hint?: string;
+  /** DOM id for the input — external focus helpers target it. */
+  inputId?: string;
+}
+
 /**
- * Global "super search": a single entry point that searches across My Files,
- * Tools, and Settings from the (now permanent) top bar. The results hang in a
- * dropdown directly below the input; Cmd/Ctrl+K focuses and opens it.
+ * Global "super search": a single entry point that searches across the host
+ * app's destinations from a persistent bar. The results hang in a dropdown
+ * directly below the input; Cmd/Ctrl+K focuses and opens it.
  *
- * The dropdown is portalled to <body>: the workbench bar's inner wrapper sets
+ * The dropdown is portalled to <body>: the host bar's inner wrapper may set
  * `overflow: hidden`, which would otherwise clip it.
  */
-export default function SuperSearch() {
+export default function SuperSearch({
+  useResults = useSuperSearch,
+  placeholder,
+  hint,
+  inputId = "super-search-input",
+}: SuperSearchProps = {}) {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -41,7 +65,7 @@ export default function SuperSearch() {
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const { groups, flatResults, loadingFiles } = useSuperSearch(query, open);
+  const { groups, flatResults, loadingFiles } = useResults(query, open);
 
   const trimmed = query.trim();
   const hasQuery = trimmed.length > 0;
@@ -166,10 +190,11 @@ export default function SuperSearch() {
       >
         {!hasQuery && (
           <div className="super-search-empty">
-            {t(
-              "superSearch.hint",
-              "Type to search across your files, tools and settings",
-            )}
+            {hint ??
+              t(
+                "superSearch.hint",
+                "Type to search across your files, tools and settings",
+              )}
           </div>
         )}
 
@@ -229,15 +254,15 @@ export default function SuperSearch() {
   return (
     <div className="super-search" ref={containerRef} onKeyDown={handleKeyDown}>
       <TextInput
-        id="super-search-input"
-        name="super-search-input"
+        id={inputId}
+        name={inputId}
         ref={inputRef}
         value={query}
         onChange={setQuery}
-        placeholder={t(
-          "superSearch.placeholder",
-          "Search files, tools and settings…",
-        )}
+        placeholder={
+          placeholder ??
+          t("superSearch.placeholder", "Search files, tools and settings…")
+        }
         icon={
           <LocalIcon icon="search-rounded" width="1.1rem" height="1.1rem" />
         }

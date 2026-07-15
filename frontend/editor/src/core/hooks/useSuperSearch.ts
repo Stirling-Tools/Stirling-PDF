@@ -28,7 +28,8 @@ export type SuperSearchGroupId = "files" | "tools" | "settings" | "processor";
 export interface SuperSearchResult {
   /** Stable unique key across all groups. */
   key: string;
-  group: SuperSearchGroupId;
+  /** Group id — the editor uses SuperSearchGroupId; other hosts use their own. */
+  group: string;
   title: string;
   subtitle?: string;
   /** LocalIcon name (files/settings); tools provide a React node via `icon`. */
@@ -39,7 +40,7 @@ export interface SuperSearchResult {
 }
 
 export interface SuperSearchGroup {
-  id: SuperSearchGroupId;
+  id: string;
   label: string;
   results: SuperSearchResult[];
 }

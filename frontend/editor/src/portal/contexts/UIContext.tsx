@@ -7,11 +7,6 @@ import {
 } from "react";
 
 interface UIContextValue {
-  searchOpen: boolean;
-  openSearch: () => void;
-  closeSearch: () => void;
-  toggleSearch: () => void;
-
   assistantOpen: boolean;
   openAssistant: () => void;
   closeAssistant: () => void;
@@ -47,7 +42,6 @@ interface UIContextValue {
 const UIContext = createContext<UIContextValue | null>(null);
 
 export function UIProvider({ children }: { children: ReactNode }) {
-  const [searchOpen, setSearchOpen] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsInitialSection, setSettingsInitialSection] = useState<
@@ -63,11 +57,6 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<UIContextValue>(
     () => ({
-      searchOpen,
-      openSearch: () => setSearchOpen(true),
-      closeSearch: () => setSearchOpen(false),
-      toggleSearch: () => setSearchOpen((o) => !o),
-
       assistantOpen,
       openAssistant: () => setAssistantOpen(true),
       closeAssistant: () => setAssistantOpen(false),
@@ -108,7 +97,6 @@ export function UIProvider({ children }: { children: ReactNode }) {
       },
     }),
     [
-      searchOpen,
       assistantOpen,
       settingsOpen,
       settingsInitialSection,
