@@ -32,6 +32,7 @@ import stirling.software.proprietary.classification.model.ClassificationLabels;
 import stirling.software.proprietary.classification.store.InProcessClassificationLabelStore;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.service.AiEngineClient;
+import stirling.software.proprietary.service.AiFeatureGate;
 import stirling.software.proprietary.service.PdfContentExtractor;
 
 import tools.jackson.databind.JsonNode;
@@ -49,6 +50,7 @@ class ClassifyLabelControllerTest {
     @Mock private PdfContentExtractor pdfContentExtractor;
     @Mock private PdfMetadataService pdfMetadataService;
     @Mock private AiEngineClient aiEngineClient;
+    @Mock private AiFeatureGate aiFeatureGate;
     @Mock private PolicyManagementAuthority policyManagementAuthority;
 
     private final ObjectMapper objectMapper = JsonMapper.builder().build();
@@ -65,6 +67,7 @@ class ClassifyLabelControllerTest {
                         pdfContentExtractor,
                         pdfMetadataService,
                         aiEngineClient,
+                        aiFeatureGate,
                         objectMapper,
                         null,
                         labelStore,

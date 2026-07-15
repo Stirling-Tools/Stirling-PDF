@@ -7,7 +7,6 @@ import java.util.concurrent.Executor;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +27,7 @@ import jakarta.validation.Valid;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.job.ResultFile;
 import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.service.TaskManager;
@@ -63,12 +63,11 @@ public class AiEngineController {
     private final UserServiceInterface userService;
 
     /**
-     * SSE emitter timeout. Long enough to accommodate multi-gigabyte PDF workflows (OCR on a
+     * SSE emitter timeout in ms. Long enough to accommodate multi-gigabyte PDF workflows (OCR on a
      * 1000-page scan, splitting a huge PDF, etc.) without the emitter completing out from under the
-     * executor. Configurable via {@code stirling.ai.streamTimeoutMs}.
+     * executor. Derived from {@code aiEngine.streamTimeoutSeconds}.
      */
-    @Value("${stirling.ai.streamTimeoutMs:1800000}")
-    private long streamTimeoutMs;
+    private final long streamTimeoutMs;
 
     public AiEngineController(
             AiEngineClient aiEngineClient,
@@ -78,6 +77,7 @@ public class AiEngineController {
             TaskManager taskManager,
             JobOwnershipService jobOwnershipService,
             AiEngineEndpointResolver endpointResolver,
+            ApplicationProperties applicationProperties,
             @Autowired(required = false) UserServiceInterface userService) {
         this.aiEngineClient = aiEngineClient;
         this.aiWorkflowService = aiWorkflowService;
@@ -87,6 +87,8 @@ public class AiEngineController {
         this.jobOwnershipService = jobOwnershipService;
         this.endpointResolver = endpointResolver;
         this.userService = userService;
+        this.streamTimeoutMs =
+                applicationProperties.getAiEngine().getStreamTimeoutSeconds() * 1000L;
     }
 
     private String currentUserId() {

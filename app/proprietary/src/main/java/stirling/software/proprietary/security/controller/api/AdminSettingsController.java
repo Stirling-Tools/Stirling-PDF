@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,6 +46,7 @@ import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.proprietary.security.model.api.admin.SettingValueResponse;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingValueRequest;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingsRequest;
+import stirling.software.proprietary.service.AiEngineConfigSync;
 
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
@@ -58,6 +60,7 @@ public class AdminSettingsController {
     private final ApplicationProperties applicationProperties;
     private final ObjectMapper objectMapper;
     private final ApplicationContext applicationContext;
+    private final AiEngineConfigSync aiEngineConfigSync;
 
     // Track settings that have been modified but not yet applied (require restart)
     private static final ConcurrentHashMap<String, Object> pendingChanges =
@@ -172,6 +175,28 @@ public class AdminSettingsController {
                         .body(Map.of("error", "No settings provided to update"));
             }
 
+            // Work on a mutable copy so the removal below works even if the caller passed an
+            // immutable map, then drop masked sensitive values so a UI round-trip never overwrites
+            // a real secret (e.g. an API key) with the "********" placeholder from the GET
+            // response.
+            settings = new LinkedHashMap<>(settings);
+            settings.entrySet()
+                    .removeIf(
+                            e -> {
+                                if (!"********".equals(e.getValue())) {
+                                    return false;
+                                }
+                                String key = e.getKey();
+                                String leaf =
+                                        key.contains(".")
+                                                ? key.substring(key.lastIndexOf('.') + 1)
+                                                : key;
+                                return isSensitiveFieldWithPath(leaf, key);
+                            });
+            if (settings.isEmpty()) {
+                return ResponseEntity.ok(Map.of("message", "No changed settings to update."));
+            }
+
             // Validate all settings first before applying any changes
             for (Map.Entry<String, Object> entry : settings.entrySet()) {
                 String key = entry.getKey();
@@ -205,6 +230,10 @@ public class AdminSettingsController {
                 log.info("Admin updating setting: {} = {}", key, value);
                 pendingChanges.put(key, value != null ? value : "");
             }
+
+            // If AI settings changed, push them to the engine live so model/RAG/limit changes
+            // apply without waiting for a processor restart.
+            maybePushAiEngineLive();
 
             return ResponseEntity.ok(
                     Map.of(
@@ -600,6 +629,23 @@ public class AdminSettingsController {
         }
     }
 
+    /**
+     * Forward any pending {@code aiEngine.*} changes to the AI engine immediately. The running bean
+     * overlaid with these pending values is the current settings.yml state; {@link
+     * AiEngineConfigSync} no-ops unless AI is enabled and an engine-relevant key changed.
+     */
+    private void maybePushAiEngineLive() {
+        Map<String, Object> aiEnginePending = new HashMap<>();
+        for (Map.Entry<String, Object> entry : pendingChanges.entrySet()) {
+            if (entry.getKey().startsWith("aiEngine.")) {
+                aiEnginePending.put(entry.getKey(), entry.getValue());
+            }
+        }
+        if (!aiEnginePending.isEmpty()) {
+            aiEngineConfigSync.pushLiveAfterSave(aiEnginePending);
+        }
+    }
+
     private Object getSectionData(String sectionName) {
         if (sectionName == null || sectionName.trim().isEmpty()) {
             return null;
@@ -843,8 +889,13 @@ public class AdminSettingsController {
             return true;
         }
 
-        // Check for fields containing 'password' or 'secret'
-        return lowerField.contains("password") || lowerField.contains("secret");
+        // Substring match for secret-bearing field names. Covers provider credentials such as
+        // aiEngine.models.apiKey and aiEngine.rag.embeddingApiKey (which the exact-name set would
+        // miss) so keys are never returned to the client in cleartext.
+        return lowerField.contains("password")
+                || lowerField.contains("secret")
+                || lowerField.contains("apikey")
+                || lowerField.contains("token");
     }
 
     /** Create a masked representation for sensitive fields */

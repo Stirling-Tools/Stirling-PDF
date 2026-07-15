@@ -3,28 +3,20 @@ from __future__ import annotations
 import asyncio
 import logging
 from contextlib import asynccontextmanager
-from typing import Annotated
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Request
 from pydantic_ai import Agent
+from pydantic_ai.models import Model
 from pydantic_ai.models.instrumented import InstrumentationSettings
 
-from stirling.agents import (
-    DocumentClassifierAgent,
-    ExecutionPlanningAgent,
-    OrchestratorAgent,
-    PdfEditAgent,
-    PdfQuestionAgent,
-    UserSpecAgent,
-)
-from stirling.agents.ledger import MathAuditorAgent
-from stirling.agents.pdf_comment import PdfCommentAgent
+from stirling.api.bootstrap import apply_app_state, build_app_state
 from stirling.api.dependencies import enforce_required_user_id
 from stirling.api.engine_auth import EngineSharedSecretMiddleware
 from stirling.api.middleware import UserIdMiddleware
 from stirling.api.routes import (
     agent_capabilities_router,
     agent_draft_router,
+    config_router,
     document_classifier_router,
     document_router,
     execution_router,
@@ -34,10 +26,12 @@ from stirling.api.routes import (
     pdf_edit_router,
     pdf_question_router,
 )
+from stirling.api.routes.config import CONFIG_APPLY_ERRORS, resolve_and_apply
 from stirling.config import AppSettings, load_settings
+from stirling.config.config_cache import load_config
 from stirling.contracts import HealthResponse
-from stirling.documents import DocumentService
-from stirling.services import build_runtime, setup_posthog_tracking
+from stirling.documents import DocumentService, EmbeddingService
+from stirling.services import setup_posthog_tracking
 
 logger = logging.getLogger(__name__)
 
@@ -83,22 +77,52 @@ def _load_startup_settings(fast_api: FastAPI) -> AppSettings:
     return load_settings()
 
 
+def _restore_cached_config(
+    settings: AppSettings,
+) -> tuple[AppSettings, Model | None, Model | None, EmbeddingService | None]:
+    """Restore the last-applied pushed config from the encrypted on-disk cache.
+
+    Returns the effective settings plus the pre-built smart/fast models and
+    embedder to inject into the initial app state. Falls back to the env settings
+    (all-None) when config push is disabled, no cache exists, or the cached config
+    can't be applied (bad/unavailable model) - the cache never crashes boot.
+    """
+    if not settings.allow_config_push:
+        return settings, None, None, None
+    cached = load_config()
+    if cached is None:
+        return settings, None, None, None
+    try:
+        effective, smart_model, fast_model, embedder, notes = resolve_and_apply(settings, cached)
+    except CONFIG_APPLY_ERRORS:
+        logger.warning("Cached AI config could not be applied; falling back to env settings", exc_info=True)
+        return settings, None, None, None
+    logger.info(
+        "Restored cached AI config: smart_model=%s fast_model=%s%s",
+        effective.smart_model_name,
+        effective.fast_model_name,
+        f"; {'; '.join(notes)}" if notes else "",
+    )
+    return effective, smart_model, fast_model, embedder
+
+
 @asynccontextmanager
 async def lifespan(fast_api: FastAPI):
     # Load env vars on startup so we can immediately crash if required env vars aren't set
     settings = _load_startup_settings(fast_api)
-    runtime = build_runtime(settings)
-    fast_api.state.settings = settings
-    fast_api.state.runtime = runtime
-    fast_api.state.orchestrator_agent = OrchestratorAgent(runtime)
-    fast_api.state.pdf_edit_agent = PdfEditAgent(runtime)
-    fast_api.state.pdf_question_agent = PdfQuestionAgent(runtime)
-    fast_api.state.user_spec_agent = UserSpecAgent(runtime)
-    fast_api.state.execution_planning_agent = ExecutionPlanningAgent(runtime)
-    fast_api.state.math_auditor_agent = MathAuditorAgent(runtime)
-    fast_api.state.pdf_comment_agent = PdfCommentAgent(runtime)
-    fast_api.state.document_classifier_agent = DocumentClassifierAgent(runtime)
-    tracer_provider = setup_posthog_tracking(settings)
+    # Precedence: env < persisted cache < live push. Restore the last-applied pushed
+    # config unless config push is disabled (then env is the single source of truth).
+    effective, smart_model, fast_model, embedder = _restore_cached_config(settings)
+    app_state = build_app_state(
+        effective,
+        fast_model=fast_model,
+        smart_model=smart_model,
+        embedder=embedder,
+    )
+    fast_api.state.settings = effective
+    apply_app_state(fast_api.state, app_state)
+    runtime = app_state.runtime
+    tracer_provider = setup_posthog_tracking(effective)
     if tracer_provider:
         Agent.instrument_all(InstrumentationSettings(tracer_provider=tracer_provider))
     reaper_task = asyncio.create_task(
@@ -135,10 +159,18 @@ app.include_router(ledger_router, dependencies=_user_gate)
 app.include_router(pdf_comments_router, dependencies=_user_gate)
 app.include_router(agent_capabilities_router, dependencies=_user_gate)
 app.include_router(document_classifier_router, dependencies=_user_gate)
+# Config push is a system/admin sync from the Java processor with no X-User-Id, so
+# it is guarded by the X-Engine-Auth shared secret (global middleware) and the
+# allow_config_push flag only, deliberately NOT the per-user identity gate.
+app.include_router(config_router)
 
 
 @app.get("/health", response_model=HealthResponse)
-async def healthcheck(settings: Annotated[AppSettings, Depends(load_settings)]) -> HealthResponse:
+async def healthcheck(http_request: Request) -> HealthResponse:
+    # Report the LIVE config (env < cache < push) held on app.state, not the
+    # boot-time env cache, so an admin "Test connection" check shows the model
+    # actually in use after a config push. Falls back to env if state isn't up yet.
+    settings: AppSettings = getattr(http_request.app.state, "settings", None) or load_settings()
     return HealthResponse(
         status="ok",
         smart_model=settings.smart_model_name,

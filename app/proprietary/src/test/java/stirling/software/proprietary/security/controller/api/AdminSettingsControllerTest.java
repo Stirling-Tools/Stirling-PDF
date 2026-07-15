@@ -26,6 +26,7 @@ import stirling.software.common.util.GeneralUtils;
 import stirling.software.proprietary.security.model.api.admin.SettingValueResponse;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingValueRequest;
 import stirling.software.proprietary.security.model.api.admin.UpdateSettingsRequest;
+import stirling.software.proprietary.service.AiEngineConfigSync;
 
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -37,6 +38,7 @@ class AdminSettingsControllerTest {
     private ApplicationProperties applicationProperties;
     private ObjectMapper objectMapper;
     private ApplicationContext applicationContext;
+    private AiEngineConfigSync aiEngineConfigSync;
 
     private AdminSettingsController controller;
 
@@ -45,9 +47,13 @@ class AdminSettingsControllerTest {
         applicationProperties = new ApplicationProperties();
         objectMapper = JsonMapper.builder().build();
         applicationContext = org.mockito.Mockito.mock(ApplicationContext.class);
+        aiEngineConfigSync = org.mockito.Mockito.mock(AiEngineConfigSync.class);
         controller =
                 new AdminSettingsController(
-                        applicationProperties, objectMapper, applicationContext);
+                        applicationProperties,
+                        objectMapper,
+                        applicationContext,
+                        aiEngineConfigSync);
         clearPendingChanges();
     }
 

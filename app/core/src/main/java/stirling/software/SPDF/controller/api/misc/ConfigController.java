@@ -336,7 +336,19 @@ public class ConfigController {
             configData.put("premiumEnabled", applicationProperties.getPremium().isEnabled());
 
             // AI Engine settings
-            configData.put("aiEngineEnabled", applicationProperties.getAiEngine().isEnabled());
+            ApplicationProperties.AiEngine aiEngineConfig = applicationProperties.getAiEngine();
+            configData.put("aiEngineEnabled", aiEngineConfig.isEnabled());
+            // Per-capability flags let the UI hide individual AI tools an admin has turned off.
+            ApplicationProperties.AiEngine.Features aiFeatures = aiEngineConfig.getFeatures();
+            configData.put(
+                    "aiFeatures",
+                    Map.ofEntries(
+                            Map.entry("chat", aiFeatures.isChat()),
+                            Map.entry("documentQuestions", aiFeatures.isDocumentQuestions()),
+                            Map.entry("createPdf", aiFeatures.isCreatePdf()),
+                            Map.entry("mathAuditor", aiFeatures.isMathAuditor()),
+                            Map.entry("pdfComment", aiFeatures.isPdfComment()),
+                            Map.entry("classify", aiFeatures.isClassify())));
 
             // Timestamp TSA settings — single source of truth for presets + admin URLs
             ApplicationProperties.Security.Timestamp tsConfig =

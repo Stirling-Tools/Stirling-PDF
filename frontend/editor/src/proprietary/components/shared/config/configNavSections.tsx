@@ -17,6 +17,10 @@ import AdminPlanSection from "@app/components/shared/config/configSections/Admin
 import AdminFeaturesSection from "@app/components/shared/config/configSections/AdminFeaturesSection";
 import AdminEndpointsSection from "@app/components/shared/config/configSections/AdminEndpointsSection";
 import AdminMcpSection from "@app/components/shared/config/configSections/AdminMcpSection";
+import AdminAiGeneralSection from "@app/components/shared/config/configSections/AdminAiGeneralSection";
+import AdminAiModelsSection from "@app/components/shared/config/configSections/AdminAiModelsSection";
+import AdminAiDocumentsSection from "@app/components/shared/config/configSections/AdminAiDocumentsSection";
+import AdminAiLimitsSection from "@app/components/shared/config/configSections/AdminAiLimitsSection";
 import AdminAuditSection from "@app/components/shared/config/configSections/AdminAuditSection";
 import AdminUsageSection from "@app/components/shared/config/configSections/AdminUsageSection";
 import AdminStorageSharingSection from "@app/components/shared/config/configSections/AdminStorageSharingSection";
@@ -157,6 +161,45 @@ export const useConfigNavSections = (
           label: t("settings.configuration.advanced", "Advanced"),
           icon: "tune-rounded",
           component: <AdminAdvancedSection />,
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
+        },
+      ],
+    });
+
+    // AI
+    sections.push({
+      title: t("settings.ai.title", "AI"),
+      items: [
+        {
+          key: "adminAiGeneral",
+          label: t("settings.ai.general", "General"),
+          icon: "smart-toy-rounded",
+          component: <AdminAiGeneralSection />,
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
+        },
+        {
+          key: "adminAiModels",
+          label: t("settings.ai.models", "Models & Providers"),
+          icon: "psychology-rounded",
+          component: <AdminAiModelsSection />,
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
+        },
+        {
+          key: "adminAiDocuments",
+          label: t("settings.ai.documents", "Documents & RAG"),
+          icon: "description-rounded",
+          component: <AdminAiDocumentsSection />,
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
+        },
+        {
+          key: "adminAiLimits",
+          label: t("settings.ai.limits", "Limits & Performance"),
+          icon: "speed-rounded",
+          component: <AdminAiLimitsSection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
         },
