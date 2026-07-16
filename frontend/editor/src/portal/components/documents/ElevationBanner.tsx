@@ -1,4 +1,6 @@
 import { useTranslation } from "react-i18next";
+import ScheduleRounded from "@mui/icons-material/ScheduleRounded";
+import LockRounded from "@mui/icons-material/LockRounded";
 import { Banner, Button } from "@app/ui";
 import { formatCountdown } from "@portal/components/documents/format";
 
@@ -26,7 +28,7 @@ export function ElevationBanner({
     return (
       <Banner
         tone="success"
-        icon={<span aria-hidden>⏱</span>}
+        icon={<ScheduleRounded style={{ fontSize: "1.1rem" }} />}
         title={t("portal.documents.elevation.active.title", {
           time: formatCountdown(secondsLeft),
         })}
@@ -42,7 +44,7 @@ export function ElevationBanner({
   return (
     <Banner
       tone="warning"
-      icon={<span aria-hidden>🔒</span>}
+      icon={<LockRounded style={{ fontSize: "1.1rem" }} />}
       title={t("portal.documents.elevation.gated.title")}
       description={
         fourEyes

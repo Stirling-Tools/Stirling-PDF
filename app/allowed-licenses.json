@@ -209,6 +209,18 @@
       "moduleLicense": "The W3C License"
     },
     {
+      "moduleName": "com.google.re2j:re2j",
+      "moduleLicense": "Go License"
+    },
+    {
+      "moduleName": "com.hubspot:algebra",
+      "moduleLicense": null
+    },
+    {
+      "moduleName": "com.hubspot.immutables:immutables-exceptions",
+      "moduleLicense": null
+    },
+    {
       "moduleName": ".*",
       "moduleLicense": "UnRar License"
     }
