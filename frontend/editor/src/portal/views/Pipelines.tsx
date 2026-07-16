@@ -22,10 +22,12 @@ export function Pipelines() {
   const { isLoading } = useSectionFlags(state);
 
   const pipelines = data?.pipelines ?? [];
-  // Empty once the fetch settles with no pipelines (or fails → no data). Gates
-  // both the KPI strip and the empty panel so no placeholder stat boxes sit
-  // above an empty page.
+  // Empty once the fetch settles with no pipelines (or fails → no data); gates
+  // the empty panel below.
   const showEmpty = !isLoading && pipelines.length === 0;
+  // The KPI strip is pure stat boxes: show it only once real pipelines exist, so
+  // the loading and empty states don't flash a row of placeholder cards.
+  const hasPipelines = pipelines.length > 0;
 
   const openCreate = () =>
     navigate(`${toPortalPath(VIEW_PATHS.pipelines)}/new`);
@@ -54,7 +56,7 @@ export function Pipelines() {
         </Button>
       </header>
 
-      {!showEmpty && <KpiStrip data={data} loading={loading} />}
+      {hasPipelines && <KpiStrip data={data} loading={loading} />}
 
       {isLoading && (
         <div className="portal-pipelines__table-skeleton" aria-hidden>
