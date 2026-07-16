@@ -57,7 +57,7 @@ export function ModelsTab() {
       header: t("portal.infrastructure.models.columns.type"),
       render: (m) => (
         <Chip accent={MODEL_TYPE_TONE[m.type]} size="sm">
-          {MODEL_TYPE_LABEL[m.type]}
+          {t(MODEL_TYPE_LABEL[m.type])}
         </Chip>
       ),
     },
@@ -70,7 +70,7 @@ export function ModelsTab() {
           size="sm"
           pulse={m.status === "active"}
         >
-          {MODEL_LABEL[m.status]}
+          {t(MODEL_LABEL[m.status])}
         </StatusBadge>
       ),
     },
@@ -101,7 +101,7 @@ export function ModelsTab() {
       align: "right",
       render: (m) => (
         <span className="portal-infra__mono">
-          {modelCost(m.cost, m.costUnit)}
+          {modelCost(t, m.cost, m.costUnit)}
         </span>
       ),
     },

@@ -23,6 +23,7 @@
 
 /* ---- File item ---- */
 .file-sidebar-file-item {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -35,6 +36,31 @@
      geometry stable for unrendered rows. */
   content-visibility: auto;
   contain-intrinsic-size: auto 46px;
+}
+
+.file-sidebar-file-actions {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  pointer-events: none;
+}
+
+.file-sidebar-file-item:hover .file-sidebar-file-actions,
+.file-sidebar-file-item.viewed .file-sidebar-file-actions {
+  pointer-events: auto;
+}
+
+/* Only shrink the name to clear the buttons while they're visible. */
+.file-sidebar-file-info {
+  transition: padding-right 0.12s ease;
+}
+.file-sidebar-file-item:hover .file-sidebar-file-info,
+.file-sidebar-file-item.viewed .file-sidebar-file-info {
+  padding-right: 3.5rem;
 }
 
 .file-sidebar-file-item:hover:not(.selected) {

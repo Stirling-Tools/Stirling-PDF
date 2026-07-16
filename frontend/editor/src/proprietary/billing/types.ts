@@ -60,7 +60,16 @@ export interface Wallet {
   noCap: boolean;
   stripeSubscriptionId: string | null;
   spendUnitsThisPeriod: number;
+  /** Per-category size-scaled meter units (billing quantity). */
   categoryBreakdown: WalletCategoryBreakdown;
+  /** Per-category INPUT-file counts — the count dimension, distinct from the units above. */
+  categoryDocs: WalletCategoryBreakdown;
+  /** Total input files processed this period (Σ doc_count). */
+  docsProcessedThisPeriod: number;
+  /** Distinct input documents this period — a file hit by N operations counts once. */
+  uniquePdfsThisPeriod: number;
+  /** Input files on charges where the size multiplier applied (units billed &gt; input files). */
+  sizeMultiplierPdfsThisPeriod: number;
   /** Populated for the leader view; empty for members / single-seat tenants. */
   members: WalletMember[];
   recent: WalletActivityRow[];

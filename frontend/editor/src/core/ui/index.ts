@@ -11,6 +11,7 @@ export * from "@app/ui/NavItem";
 export * from "@app/ui/PanelHeader";
 export * from "@app/ui/CodeBlock";
 export * from "@app/ui/SectionDivider";
+export * from "@app/ui/CarouselDots";
 export * from "@app/ui/Card";
 export * from "@app/ui/Modal";
 export * from "@app/ui/SettingsShell";

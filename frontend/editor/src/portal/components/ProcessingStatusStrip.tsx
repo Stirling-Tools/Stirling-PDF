@@ -26,7 +26,7 @@ export function ProcessingStatusStrip() {
           style={{ background: TIER_INFO[tier].dotColor }}
           aria-hidden
         />
-        {TIER_INFO[tier].label}
+        {t(TIER_INFO[tier].labelKey)}
       </span>
       <span className="portal-statusstrip__sep" aria-hidden>
         ·

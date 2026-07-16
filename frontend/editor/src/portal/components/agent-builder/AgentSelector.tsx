@@ -1,5 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { type Agent, AGENT_STATUS_TONE } from "@portal/api/agents";
+import {
+  type Agent,
+  AGENT_STATUS_LABEL,
+  AGENT_STATUS_TONE,
+} from "@portal/api/agents";
 import { Button, StatusBadge } from "@app/ui";
 import "@portal/views/AgentBuilder.css";
 
@@ -40,7 +44,7 @@ export function AgentSelector({
           </span>
           <span className="portal-agents__selector-meta">
             <StatusBadge tone={AGENT_STATUS_TONE[a.status]} size="sm">
-              {a.status}
+              {t(AGENT_STATUS_LABEL[a.status])}
             </StatusBadge>
             <code className="portal-agents__selector-version">{a.version}</code>
           </span>
