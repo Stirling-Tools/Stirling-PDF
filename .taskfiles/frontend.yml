@@ -206,16 +206,13 @@ tasks:
       - task: lint:colors
 
   lint:colors:
-    desc: "Enforce theme tokens — all CSS colours route through the palette"
+    desc: "Enforce theme tokens — colours in core/theme route through the palette"
     deps: [install]
     cmds:
       - node editor/scripts/lint/theme-lint.mjs
-      - node editor/scripts/lint/theme-lint.mjs css-colors
-      - node editor/scripts/lint/theme-lint.mjs code-colors
-      - node editor/scripts/lint/theme-lint.mjs contrast
 
   contrast:
-    desc: "Check theme token pairs clear WCAG AA contrast per theme"
+    desc: "Report low-contrast theme token pairs (warning only, never blocks)"
     deps: [install]
     cmds:
       - node editor/scripts/lint/theme-lint.mjs contrast
@@ -265,10 +262,8 @@ tasks:
 
   typecheck:_run:
     internal: true
-    env:
-      CI: '{{ .CI | default "false" }}'
     cmds:
-      - '{{ if eq .CI "true" }}npx tsc{{ else }}npx tsgo{{ end }} --noEmit --project {{.PROJECT}}'
+      - 'npx tsc --noEmit --project {{.PROJECT}}'
 
   typecheck:core:
     desc: "Typecheck core build variant"

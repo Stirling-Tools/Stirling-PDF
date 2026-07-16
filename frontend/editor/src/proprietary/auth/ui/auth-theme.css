@@ -2,13 +2,13 @@
 
 :root {
   /* Auth page colors (light mode) */
-  --auth-bg-color-light-only: var(--c-surface-sunken);
-  --auth-card-bg: var(--c-surface);
-  --auth-card-bg-light-only: var(--c-surface);
+  --auth-bg-color-light-only: var(--p-gray-100);
+  --auth-card-bg: #ffffff;
+  --auth-card-bg-light-only: #ffffff;
   --auth-label-text-light-only: var(--p-gray-700);
   --auth-input-border-light-only: var(--p-gray-300);
-  --auth-input-bg-light-only: var(--c-surface-raised);
-  --auth-input-text-light-only: var(--c-text);
+  --auth-input-bg-light-only: #ffffff;
+  --auth-input-text-light-only: var(--p-gray-900);
   --auth-border-focus-light-only: var(--p-blue-500);
   --auth-focus-ring-light-only: color-mix(
     in srgb,
@@ -19,7 +19,7 @@
   --auth-button-text-light-only: #ffffff;
   --auth-magic-button-bg-light-only: var(--p-gray-200);
   --auth-magic-button-text-light-only: var(--p-gray-700);
-  --auth-text-primary-light-only: var(--c-text);
+  --auth-text-primary-light-only: var(--p-gray-900);
   --auth-text-secondary-light-only: var(--p-gray-500);
   --text-divider-rule-rgb-light: 229, 231, 235;
   --text-divider-label-rgb-light: 156, 163, 175;
@@ -28,20 +28,27 @@
 }
 
 [data-mantine-color-scheme="dark"] {
-  /* Only the vars whose dark value differs from the (now token-based) light base
-     remain here; surfaces/primary text collapse to their --c-* base above. */
-  --auth-label-text-light-only: var(--c-text-muted);
-  --auth-input-border-light-only: var(--c-border);
+  --auth-bg-color-light-only: var(--bg-muted);
+  --auth-card-bg: var(--bg-surface);
+  --auth-card-bg-light-only: var(--bg-surface);
+  --auth-label-text-light-only: var(--text-secondary);
+  --auth-input-border-light-only: var(--border-default);
+  --auth-input-bg-light-only: var(--bg-raised);
+  --auth-input-text-light-only: var(--text-primary);
+  --auth-border-focus-light-only: var(--p-blue-500);
   --auth-focus-ring-light-only: color-mix(
     in srgb,
     var(--p-blue-500) 20%,
     transparent
   );
-  --auth-magic-button-bg-light-only: var(--c-surface-raised);
-  --auth-magic-button-text-light-only: var(--c-text);
-  --auth-text-secondary-light-only: var(--c-text-muted);
+  --auth-button-bg-light-only: var(--p-red-600);
+  --auth-button-text-light-only: #ffffff;
+  --auth-magic-button-bg-light-only: var(--bg-raised);
+  --auth-magic-button-text-light-only: var(--text-primary);
+  --auth-text-primary-light-only: var(--text-primary);
+  --auth-text-secondary-light-only: var(--text-secondary);
   --text-divider-rule-rgb-light: 28, 35, 64;
   --text-divider-label-rgb-light: 91, 98, 128;
-  --tool-subcategory-rule-color-light: var(--c-border);
-  --tool-subcategory-text-color-light: var(--c-text-muted);
+  --tool-subcategory-rule-color-light: var(--border-default);
+  --tool-subcategory-text-color-light: var(--text-secondary);
 }

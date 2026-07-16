@@ -14,21 +14,15 @@ import {
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import { ColorGridPicker } from "@app/ui/ColorGridPicker";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useTheme } from "@app/components/shared/ThemeProvider";
 import LanguageSelector from "@app/components/shared/LanguageSelector";
-import {
-  THEME_ACCENT_PRESETS,
-  DEFAULT_ACCENT,
-  type ThemeMode,
-} from "@app/constants/theme";
+import { type ThemeMode } from "@app/constants/theme";
 import type { ToolPanelMode } from "@app/constants/toolPanel";
 import {
-  DEFAULT_PREFERENCES,
   type StartupView,
   type ViewerZoomSetting,
 } from "@app/services/preferencesService";
@@ -79,39 +73,6 @@ interface GeneralSectionProps {
   };
   /** Desktop-only: update-mode toggle (prompt/auto/disabled). */
   desktopUpdateMode?: DesktopUpdateModeControl;
-}
-
-/** Accent-colour picker: a swatch grid — a "Default" icon cell + the accent presets — via the shared ColorGridPicker. */
-function AccentSwatchDropdown({
-  value,
-  onChange,
-  ariaLabel,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  ariaLabel: string;
-}) {
-  const { t } = useTranslation();
-  return (
-    <ColorGridPicker
-      value={value}
-      onChange={onChange}
-      colors={THEME_ACCENT_PRESETS}
-      ariaLabel={ariaLabel}
-      zIndex={Z_INDEX_OVER_CONFIG_MODAL}
-      defaultOption={{
-        // Default is not a colour — an icon chip signalling the neutral theme
-        // (surfaces untinted, blue buttons); stores the sentinel.
-        value: DEFAULT_ACCENT,
-        icon: "star-rounded",
-        label: t("settings.general.themeAccentDefault", "Default"),
-        hint: t(
-          "settings.general.themeAccentDefaultHint",
-          "Default theme (recommended)",
-        ),
-      }}
-    />
-  );
 }
 
 const GeneralSection: React.FC<GeneralSectionProps> = ({
@@ -544,92 +505,6 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               ]}
             />
           </div>
-
-          <div
-            style={{
-              display: "flex",
-              alignItems: "flex-start",
-              justifyContent: "space-between",
-              gap: "1rem",
-            }}
-          >
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <Text fw={500} size="sm">
-                {t("settings.general.themeAccent", "Accent colour")}
-              </Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t(
-                  "settings.general.themeAccentDescription",
-                  "Buttons, links and highlights follow it, and it subtly tints the app. Light and dark each have their own — System uses whichever is active.",
-                )}
-              </Text>
-            </div>
-            <Stack gap="md">
-              <Group
-                gap="sm"
-                wrap="nowrap"
-                align="flex-start"
-                justify="flex-end"
-              >
-                <Text
-                  size="sm"
-                  c="dimmed"
-                  style={{ width: "3rem", paddingTop: 4 }}
-                >
-                  {t("settings.general.themeLight", "Light")}
-                </Text>
-                <AccentSwatchDropdown
-                  value={preferences.lightPrimary}
-                  onChange={(val) => updatePreference("lightPrimary", val)}
-                  ariaLabel={t(
-                    "settings.general.themeAccentLight",
-                    "Light mode accent colour",
-                  )}
-                />
-              </Group>
-              <Group
-                gap="sm"
-                wrap="nowrap"
-                align="flex-start"
-                justify="flex-end"
-              >
-                <Text
-                  size="sm"
-                  c="dimmed"
-                  style={{ width: "3rem", paddingTop: 4 }}
-                >
-                  {t("settings.general.themeDark", "Dark")}
-                </Text>
-                <AccentSwatchDropdown
-                  value={preferences.darkPrimary}
-                  onChange={(val) => updatePreference("darkPrimary", val)}
-                  ariaLabel={t(
-                    "settings.general.themeAccentDark",
-                    "Dark mode accent colour",
-                  )}
-                />
-              </Group>
-            </Stack>
-          </div>
-          <Group justify="flex-end">
-            <Button
-              variant="quiet"
-              size="sm"
-              onClick={() => {
-                setTheme(DEFAULT_PREFERENCES.theme);
-                updatePreference(
-                  "lightPrimary",
-                  DEFAULT_PREFERENCES.lightPrimary,
-                );
-                updatePreference(
-                  "darkPrimary",
-                  DEFAULT_PREFERENCES.darkPrimary,
-                );
-              }}
-            >
-              {t("settings.general.themeReset", "Restore theme to default")}
-            </Button>
-          </Group>
         </Stack>
       </Paper>
 

@@ -3,7 +3,7 @@
    ========================= */
 
 .card {
-  background: var(--c-surface-raised);
+  background: var(--file-card-bg);
   border-radius: 0.0625rem;
   cursor: pointer;
   transition:
@@ -28,7 +28,7 @@
 /* While dragging */
 .card.dragging,
 .card:global(.dragging) {
-  outline: 1px solid var(--c-border-strong);
+  outline: 1px solid var(--border-strong);
   box-shadow: var(--shadow-md);
   transform: none !important;
 }
@@ -42,15 +42,15 @@
   justify-content: space-between;
   padding: 0 6px;
   user-select: none;
-  background: var(--c-bg-raised);
-  color: var(--c-text);
-  border-bottom: 1px solid var(--c-border);
+  background: var(--bg-toolbar);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-default);
 }
 
 .headerResting {
-  background: var(--p-navy-500); /* dark blue for unselected in light mode */
+  background: #3b4b6e; /* dark blue for unselected in light mode */
   color: #ffffff;
-  border-bottom: 1px solid var(--c-border);
+  border-bottom: 1px solid var(--border-default);
 }
 
 .headerSelected {
@@ -62,20 +62,20 @@
 /* Error highlight (transient) */
 .headerError {
   background: var(--color-red-200);
-  color: var(--c-text);
+  color: var(--text-primary);
   border-bottom: 2px solid var(--color-red-500);
 }
 
 /* Unsupported (but not errored) header appearance */
 .headerUnsupported {
-  background: var(--c-bg-raised); /* neutral gray */
+  background: var(--unsupported-bar-bg); /* neutral gray */
   color: #ffffff;
-  border-bottom: 1px solid var(--c-border);
+  border-bottom: 1px solid var(--unsupported-bar-border);
 }
 
 /* Selected border color in light mode */
 :global([data-mantine-color-scheme="light"]) .card[data-selected="true"] {
-  outline-color: var(--c-primary);
+  outline-color: var(--card-selected-border);
 }
 
 /* Reserve space for checkbox instead of logo */
@@ -117,12 +117,12 @@
 /* -------- Title / Meta -------- */
 .title {
   line-height: 1.2;
-  color: var(--c-text);
+  color: var(--text-primary);
 }
 
 .meta {
   margin-top: 2px;
-  color: var(--c-text-muted);
+  color: var(--text-secondary);
 }
 
 /* -------- Preview area -------- */
@@ -131,7 +131,7 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: var(--c-surface-raised);
+  background: var(--file-card-bg);
 }
 
 .previewPaper {
@@ -142,7 +142,7 @@
   display: grid;
   position: relative;
   overflow: hidden;
-  background: var(--c-surface-raised);
+  background: var(--file-card-bg);
 }
 
 /* Thumbnail fallback */
@@ -152,7 +152,7 @@
   inset: 0;
   display: grid;
   place-items: center;
-  color: var(--c-text-muted);
+  color: var(--text-secondary);
   font-weight: 600;
   font-size: 12px;
 }
@@ -162,7 +162,7 @@
   position: absolute;
   bottom: 6px;
   right: 6px;
-  color: var(--c-text-muted);
+  color: var(--text-secondary);
   z-index: 1;
   cursor: grab;
   display: inline-flex;
@@ -173,12 +173,12 @@
   position: absolute;
   left: 0;
   top: 44px; /* just below header */
-  background: var(--c-bg-raised);
-  border-bottom: 1px solid var(--c-border);
+  background: var(--bg-toolbar);
+  border-bottom: 1px solid var(--border-default);
   z-index: 20;
   overflow: hidden;
   animation: slideDown 140ms ease-out;
-  color: var(--c-text);
+  color: var(--text-primary);
 }
 
 @keyframes slideDown {
@@ -200,13 +200,13 @@
   padding: 12px 16px;
   background: transparent;
   border: none;
-  color: var(--c-text);
+  color: var(--text-primary);
   cursor: pointer;
   text-align: left;
 }
 
 .actionRow:hover {
-  background: var(--c-hover);
+  background: var(--hover-bg);
 }
 
 .actionDanger {
@@ -215,7 +215,7 @@
 
 .actionsDivider {
   height: 1px;
-  background: var(--c-border);
+  background: var(--border-default);
   margin: 4px 0;
 }
 
@@ -229,13 +229,13 @@
 }
 
 .pinned {
-  color: var(--p-amber-400) !important;
+  color: #ffc107 !important;
 }
 
 /* Unsupported file indicator */
 .unsupportedPill {
   margin-left: 1.75rem;
-  background: var(--p-gray-500);
+  background: #6b7280;
   color: white;
   padding: 4px 8px;
   border-radius: 12px;
@@ -291,23 +291,36 @@
    DARK MODE OVERRIDES
    ========================= */
 :global([data-mantine-color-scheme="dark"]) .card {
-  outline-color: var(--c-border); /* deselected stroke (neutral) */
+  outline-color: #1c2340; /* deselected stroke */
 }
 
 :global([data-mantine-color-scheme="dark"]) .card[data-selected="true"] {
-  outline-color: var(--c-primary); /* selected stroke (accent) */
+  outline-color: #2d3560; /* selected stroke (subtle navy) */
 }
 
 :global([data-mantine-color-scheme="dark"]) .headerResting {
-  background: var(--p-navy-950); /* requested default unselected color */
-  color: var(--c-accent-fg); /* var(--p-gray-300) */
-  border-bottom-color: var(--c-border); /* #3A4047 */
+  background: #0d1020; /* requested default unselected color */
+  color: var(--tool-header-text); /* #D0D6DC */
+  border-bottom-color: var(--tool-header-border); /* #3A4047 */
 }
 
 :global([data-mantine-color-scheme="dark"]) .headerSelected {
-  background: var(--c-border); /* #3A4047 */
-  color: var(--c-accent-fg); /* var(--p-gray-300) */
-  border-bottom-color: var(--c-border);
+  background: var(--tool-header-border); /* #3A4047 */
+  color: var(--tool-header-text); /* #D0D6DC */
+  border-bottom-color: var(--tool-header-border);
+}
+
+:global([data-mantine-color-scheme="dark"]) .title {
+  color: #d0d6dc; /* title text */
+}
+
+:global([data-mantine-color-scheme="dark"]) .meta {
+  color: #6b7280; /* subtitle text */
+}
+
+/* Light mode selected header stroke override */
+:global([data-mantine-color-scheme="light"]) .card[data-selected="true"] {
+  outline-color: #3b4b6e;
 }
 
 /* =========================
@@ -320,7 +333,7 @@
   height: calc(310px - 0.5rem);
   margin: 0.5rem auto 0;
   background: var(--c-bg);
-  border: 1.5px solid var(--c-border);
+  border: 1.5px solid var(--border-default);
   border-radius: 12px;
   box-shadow: var(--shadow-md);
   cursor: pointer;
@@ -334,11 +347,11 @@
 .addFileCard:hover {
   box-shadow: var(--shadow-lg);
   transform: translateY(-1px);
-  border-color: var(--c-primary);
+  border-color: var(--accent-interactive);
 }
 
 .addFileCard:focus-visible {
-  outline: 2px solid var(--c-primary);
+  outline: 2px solid var(--accent-interactive);
   outline-offset: 2px;
 }
 
@@ -373,7 +386,7 @@
 }
 
 .addFileCard:hover .addFileText {
-  color: var(--c-text);
+  color: var(--text-primary);
 }
 
 .addFileSubtext {

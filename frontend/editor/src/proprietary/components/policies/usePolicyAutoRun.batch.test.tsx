@@ -47,7 +47,6 @@ const mocks = vi.hoisted(() => ({
   consumeFiles: vi.fn(),
 }));
 
-vi.mock("@app/constants/featureFlags", () => ({ POLICIES_ENABLED: true }));
 vi.mock("@app/contexts/FileContext", () => ({
   useAllFiles: () => ({ fileStubs: mocks.workspace }),
   useFileManagement: () => ({

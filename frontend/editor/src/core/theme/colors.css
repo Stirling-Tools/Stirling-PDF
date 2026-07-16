@@ -1,4 +1,4 @@
-/* COLORS — canonical semantic core (~24 --c-* tokens) mapped from primitives.css per theme; components reference --c-* directly. Editor: always data-app-theme="custom" + data-mantine-color-scheme=light|dark. Portal/Storybook: data-theme=light|dark → LIGHT/MIDNIGHT. */
+/* COLORS — canonical semantic core (~21 --c-* tokens) mapped from primitives.css per theme; compat.css aliases legacy names onto these. Editor: always data-app-theme="custom" + data-mantine-color-scheme=light|dark. Portal/Storybook: data-theme=light|dark → LIGHT/MIDNIGHT. */
 /* Surface elevation: --c-bg (canvas) < --c-bg-raised (sidebars) < --c-surface (cards) < --c-surface-raised < --c-surface-sunken; plus --c-input-bg, --c-hover, --c-active, --c-overlay. */
 
 /* ── LIGHT ───────────────────────────────────────────────────────────────── */
@@ -27,34 +27,9 @@ html[data-app-theme="light"] {
   --c-primary: var(--p-blue-500);
   --c-primary-hover: var(--p-blue-600);
   --c-primary-subtle: color-mix(in srgb, var(--p-blue-500) 10%, transparent);
-  /* Primary-tinted surface / border (subtle accent chips, accent outlines). */
-  --c-primary-tint: color-mix(in srgb, var(--c-primary) 12%, var(--c-surface));
-  --c-primary-border: color-mix(
-    in srgb,
-    var(--c-primary) 38%,
-    var(--c-surface)
-  );
-  /* Accent as text/icon on a surface. Universal default (= primary); the custom
-     block overrides it with the JS-clamped foreground. Defined on :root so it
-     cascades to every theme (portal/midnight included). */
-  --c-accent-fg: var(--c-primary);
 
   --c-success: var(--p-green-600);
   --c-danger: var(--p-red-600);
-  --c-warning: var(--p-amber-600);
-  /* Pale status surfaces (for alert boxes/chips). color-mix on --c-surface so
-     they adapt; defined on :root and cascade to every theme via late binding. */
-  --c-success-subtle: color-mix(
-    in srgb,
-    var(--c-success) 12%,
-    var(--c-surface)
-  );
-  --c-danger-subtle: color-mix(in srgb, var(--c-danger) 12%, var(--c-surface));
-  --c-warning-subtle: color-mix(
-    in srgb,
-    var(--c-warning) 14%,
-    var(--c-surface)
-  );
 }
 
 /* ── MIDNIGHT (original navy) — also the default portal/Storybook dark ────── */
@@ -72,7 +47,7 @@ html[data-app-theme="midnight"] {
 
   --c-text: var(--p-zinc-100);
   --c-text-muted: var(--p-zinc-200);
-  --c-text-subtle: var(--p-zinc-250);
+  --c-text-subtle: var(--p-zinc-300);
   --c-text-on-primary: var(--p-white);
 
   --c-border: var(--p-zinc-650);
@@ -85,18 +60,15 @@ html[data-app-theme="midnight"] {
 
   --c-success: var(--p-green-500);
   --c-danger: var(--p-red-500);
-  --c-warning: var(--p-amber-500);
 }
 
-/* ── CUSTOM — --user-primary drives every accent + a surface tint (whole app takes the hue); the [data-accent="default"] blocks at the end opt surfaces back to neutral. LIGHT base here, DARK base next. ── */
+/* ── Base accent — fixed default (blue buttons); [data-accent="default"] blocks at the end keep surfaces neutral. LIGHT base here, DARK base next. ── */
 html[data-app-theme="custom"] {
-  --c-primary: var(--user-primary, var(--p-blue-500));
+  --c-primary: var(--p-blue-500);
   --c-primary-hover: color-mix(in srgb, var(--c-primary) 85%, var(--p-black));
   --c-primary-subtle: color-mix(in srgb, var(--c-primary) 14%, transparent);
-  /* Foreground on the filled primary — contrast-picked in JS (flips white/black). */
-  --c-text-on-primary: var(--user-primary-on, var(--p-white));
-  /* Accent as text/icon on a surface — JS lightness-clamped for legibility; fills/borders keep raw --c-primary. */
-  --c-accent-fg: var(--user-accent-fg, var(--c-primary));
+  --c-text-on-primary: var(--p-white);
+  --c-accent-fg: var(--c-primary);
 
   /* Primary-tinted surfaces (light base). Neutralised by the default override. */
   --c-bg: color-mix(in srgb, var(--c-primary) 7%, var(--p-gray-50));
@@ -153,7 +125,7 @@ html[data-app-theme="custom"] {
   --checkbox-checked-bg: var(--c-primary);
   --card-selected-border: var(--c-primary);
 
-  /* Accent used as text/icon on a surface → --c-accent-fg. */
+  /* Accent-as-text/icon tokens live in compat.css (:root:root wins); only --icon-files-color is owned here. */
   --icon-files-color: var(--c-accent-fg);
 
   /* Subtle surface tints (mix with the base surface so they adapt light/dark) */
@@ -165,6 +137,11 @@ html[data-app-theme="custom"] {
   --tool-header-badge-bg: color-mix(
     in srgb,
     var(--c-primary) 20%,
+    var(--c-surface)
+  );
+  --tooltip-title-bg: color-mix(
+    in srgb,
+    var(--c-primary) 12%,
     var(--c-surface)
   );
   --landing-inner-paper-bg: color-mix(
@@ -209,7 +186,7 @@ html[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
   /* Neutral text / borders / overlay (not accent-tinted). */
   --c-text: var(--p-zinc-100);
   --c-text-muted: var(--p-zinc-200);
-  --c-text-subtle: var(--p-zinc-250);
+  --c-text-subtle: var(--p-zinc-300);
   --c-border-strong: var(--p-zinc-500);
   --c-overlay: rgba(0, 0, 0, 0.6);
 
@@ -240,7 +217,6 @@ html[data-app-theme="custom"][data-mantine-color-scheme="dark"] {
   /* Dark-tuned status shades (lighter than the light-theme :root values). */
   --c-success: var(--p-green-500);
   --c-danger: var(--p-red-400);
-  --c-warning: var(--p-amber-500);
 
   /* Category icon chips → neutral. */
   --icon-tools-bg: var(--c-surface-raised);
