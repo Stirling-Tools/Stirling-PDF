@@ -20,14 +20,7 @@ import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useTheme } from "@app/components/shared/ThemeProvider";
 import LanguageSelector from "@app/components/shared/LanguageSelector";
-import {
-  type ThemeMode,
-  DEFAULT_ACCENT,
-  THEME_ACCENT_PRESETS,
-  getSystemTheme,
-  resolveColorScheme,
-} from "@app/constants/theme";
-import { ColorGridPicker } from "@app/ui/ColorGridPicker";
+import { type ThemeMode } from "@app/constants/theme";
 import type { ToolPanelMode } from "@app/constants/toolPanel";
 import {
   type StartupView,
@@ -93,11 +86,6 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
   const { preferences, updatePreference } = usePreferences();
   const { config } = useAppConfig();
   const { setTheme, themeMode } = useTheme();
-  // The accent is per-scheme; edit the one for the currently-active base.
-  const accentKey =
-    resolveColorScheme(themeMode, getSystemTheme()) === "dark"
-      ? "darkPrimary"
-      : "lightPrimary";
   const [fileLimitInput, setFileLimitInput] = useState<number | string>(
     preferences.autoUnzipFileLimit,
   );
@@ -515,41 +503,6 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                   value: "system",
                 },
               ]}
-            />
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <Text fw={500} size="sm">
-                {t("settings.general.themeAccent", "Accent colour")}
-              </Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t(
-                  "settings.general.themeAccentDescription",
-                  "Buttons, links and highlights follow it, and it subtly tints the app. Light and dark each have their own. System uses whichever is active.",
-                )}
-              </Text>
-            </div>
-            <ColorGridPicker
-              value={preferences[accentKey]}
-              onChange={(value) => updatePreference(accentKey, value)}
-              colors={THEME_ACCENT_PRESETS}
-              ariaLabel={t("settings.general.themeAccent", "Accent colour")}
-              defaultOption={{
-                value: DEFAULT_ACCENT,
-                icon: "palette-outline",
-                label: t("settings.general.themeAccentDefault", "Default"),
-                hint: t(
-                  "settings.general.themeAccentDefaultHint",
-                  "Default theme (recommended)",
-                ),
-              }}
-              zIndex={Z_INDEX_OVER_CONFIG_MODAL}
             />
           </div>
         </Stack>
