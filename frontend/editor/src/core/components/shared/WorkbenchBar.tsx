@@ -1,6 +1,6 @@
 import React, {
   useCallback,
-  useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useSyncExternalStore,
@@ -446,7 +446,7 @@ export default function WorkbenchBar({
   // Reflow the top row by content width: when the views + globals leave too
   // little room for a usable search, bump the search to its own row
   const barRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const bar = barRef.current;
     if (!bar) return;
     const MIN_SEARCH_WIDTH = 320;
@@ -460,7 +460,12 @@ export default function WorkbenchBar({
       // clientWidth minus the two side clusters, the bar's 16px h-padding and
       // the two 8px column gaps flanking the search.
       const available = bar.clientWidth - viewsWidth - globalsWidth - 16 - 16;
-      bar.dataset.wrapped = String(available < MIN_SEARCH_WIDTH);
+      const wrapped = available < MIN_SEARCH_WIDTH;
+      bar.dataset.wrapped = String(wrapped);
+      bar.style.setProperty(
+        "--workbench-bar-search-offset",
+        wrapped ? "0px" : `${(globalsWidth - viewsWidth) / 2}px`,
+      );
     };
     const ro = new ResizeObserver(measure);
     ro.observe(bar);
@@ -476,7 +481,7 @@ export default function WorkbenchBar({
     <div
       ref={barRef}
       className="workbench-bar"
-      data-wrapped="true"
+      data-wrapped="false"
       data-tour="workbench-bar"
     >
       {/* Left: optional "Back to My Files" + view switcher */}

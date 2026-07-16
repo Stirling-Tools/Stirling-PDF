@@ -12,7 +12,7 @@
   align-items: center;
   align-content: flex-start;
   column-gap: 8px;
-  min-height: 48px;
+  min-height: 38px;
   padding: 0 8px;
   background-color: var(--bg-toolbar);
   border-bottom: 1px solid var(--border-subtle);
@@ -23,16 +23,15 @@
 /* ---- View switcher (left) ---- */
 .workbench-bar-views {
   order: 1;
-  flex: 1 1 0;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
   gap: 2px;
   /* min-width:0 lets it shrink instead of forcing a wrap; overflow clips labels
      on very narrow viewports. */
   min-width: 0;
   overflow: hidden;
-  height: 48px;
+  height: 38px;
   z-index: 0;
 }
 
@@ -40,7 +39,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
+  padding: 2px 8px;
   border: none;
   border-radius: 8px;
   background: transparent;
@@ -100,12 +99,13 @@
 /* Roomy: grows to fill the centre between views and globals. */
 .workbench-bar-search {
   order: 2;
-  flex: 0 1 24rem;
+  flex: 1 1 auto;
   min-width: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 48px;
+  height: 38px;
+  transform: translateX(var(--workbench-bar-search-offset, 0px));
 }
 
 .workbench-bar-search .super-search {
@@ -131,6 +131,7 @@
   flex: 0 0 100%;
   height: auto;
   padding: 4px 0;
+  transform: none;
 }
 
 /* ---- Tool buttons (own full-width row, always below the top row) ---- */
@@ -183,13 +184,13 @@
 /* ---- Right: global buttons (print / download / save / close), row 1 ---- */
 .workbench-bar-globals {
   order: 3;
-  flex: 1 1 0;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   gap: 2px;
   min-width: 0;
-  height: 48px;
+  height: 38px;
+  margin-left: auto;
 }
 
 /* Crowded: globals stays on row 1, moving up beside the views. */
