@@ -27,16 +27,7 @@ const PATHS: Record<string, string> = {
   folder: "M3 7h6l2 2h10v9a1 1 0 01-1 1H4a1 1 0 01-1-1V7z",
 };
 
-const TONE_CLASS: Record<PolicyCategory["tone"], string> = {
-  blue: "pcat-badge--blue",
-  purple: "pcat-badge--purple",
-  green: "pcat-badge--green",
-  amber: "pcat-badge--amber",
-  red: "pcat-badge--red",
-  neutral: "pcat-badge--neutral",
-};
-
-/** A tinted rounded badge holding the category's stroke icon. */
+/** A neutral gray rounded badge holding the category's stroke icon. */
 export function PolicyCategoryBadge({
   category,
 }: {
@@ -44,10 +35,7 @@ export function PolicyCategoryBadge({
 }) {
   const d = PATHS[category.icon] ?? PATHS.file;
   return (
-    <span
-      className={`pcat-badge ${TONE_CLASS[category.tone] ?? TONE_CLASS.neutral}`}
-      aria-hidden
-    >
+    <span className="pcat-badge" aria-hidden>
       <svg viewBox="0 0 24 24" fill="none">
         <path
           d={d}

@@ -3,12 +3,11 @@ import { useTranslation } from "react-i18next";
 import {
   Button,
   Chip,
-  type ChipAccent,
   StatusBadge,
   Table,
   type TableColumn,
 } from "@app/ui";
-import type { CatalogueEntry, PolicyCategory } from "@portal/api/policies";
+import type { CatalogueEntry } from "@portal/api/policies";
 import { PolicyCategoryBadge } from "@portal/components/policies/PolicyCategoryIcon";
 import "@portal/views/Policies.css";
 
@@ -16,16 +15,6 @@ interface PolicyCatalogueTableProps {
   entries: CatalogueEntry[];
   onOpen: (entry: CatalogueEntry) => void;
 }
-
-/** Tint the "enforces" chips with the same hue as the category's icon badge. */
-const TONE_ACCENT: Record<PolicyCategory["tone"], ChipAccent> = {
-  blue: "default",
-  purple: "premium",
-  green: "success",
-  amber: "warning",
-  red: "danger",
-  neutral: "neutral",
-};
 
 /**
  * The policy catalogue as a proper data table (Policy / Enforces / Applies to /
@@ -59,7 +48,7 @@ export function PolicyCatalogueTable({
         render: (entry) => (
           <div className="portal-policies__rulechips">
             {entry.config.rules.map((r) => (
-              <Chip key={r} accent={TONE_ACCENT[entry.category.tone]} size="sm">
+              <Chip key={r} accent="neutral" size="sm">
                 {t(r)}
               </Chip>
             ))}
