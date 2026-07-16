@@ -782,8 +782,12 @@ const Payg: React.FC<PaygProps> = ({
   const isLeader = role === "LEADER";
   const [bundleOpen, setBundleOpen] = useState(false);
   const prepaid = prepaidSnapshotFromWallet(wallet);
-  // Leaders with a working quote fn + a resolved team can buy / top up.
-  const canBuy = isLeader && !!quoteBundle && wallet.teamId != null;
+  // Prepaid buy/top-up is disabled here: this editor path posts the old quote_id contract, which the
+  // now-quote-less create-payg-bundle-checkout edge fn rejects (400/409). The live buy flow lives on
+  // the portal Processor page. This whole editor Plan page is being removed on a separate branch; the
+  // dead quote path (quoteBundle, BundleCheckoutModal/Panel, saas/desktop bundle-session impls) is torn
+  // down with it. Display of an existing prepaid balance still works.
+  const canBuy = false;
 
   const fmt = (iso: string) =>
     new Date(iso).toLocaleDateString(undefined, {

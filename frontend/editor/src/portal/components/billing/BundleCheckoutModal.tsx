@@ -14,18 +14,18 @@ import {
   bundleListMinor,
   bundlePriceMinor,
   formatMinor,
-  type Wallet,
 } from "@app/billing";
+import type { Wallet } from "@portal/api/billing";
 import {
   EmbeddedCheckout,
   EmbeddedCheckoutProvider,
 } from "@stripe/react-stripe-js";
-import type { Stripe } from "@stripe/stripe-js";
 import {
   createBundleCheckoutSession,
   getStripePublishableKey,
+  loadStripeOnce,
 } from "@portal/billing/stripe";
-import { LockIcon } from "@portal/components/icons";
+import { CardPlaceholder } from "@portal/components/billing/CardPlaceholder";
 
 /**
  * Prepaid-bundle purchase modal for the Processor billing page — "12 months for
@@ -71,14 +71,6 @@ function multFor(
   id: string,
 ): number {
   return tiers.find((tt) => tt.id === id)?.mult ?? tiers[0].mult;
-}
-
-let stripePromise: Promise<Stripe | null> | null = null;
-function loadStripeOnce(pk: string): Promise<Stripe | null> {
-  if (stripePromise === null) {
-    stripePromise = import("@stripe/stripe-js").then((m) => m.loadStripe(pk));
-  }
-  return stripePromise;
 }
 
 interface Props {
@@ -519,34 +511,6 @@ function PaymentStep({
           <EmbeddedCheckout />
         </EmbeddedCheckoutProvider>
       )}
-    </div>
-  );
-}
-
-/** Card-form stand-in when no Stripe key is configured (Storybook / preview). */
-function CardPlaceholder() {
-  const { t } = useTranslation();
-  return (
-    <div className="portal-billing__card-placeholder">
-      <div className="portal-billing__card-placeholder-head">
-        <span>{t("portal.billing.checkout.card.label", "Card details")}</span>
-        <span className="portal-billing__card-placeholder-badge">Stripe</span>
-      </div>
-      <div className="portal-billing__card-placeholder-field">
-        <LockIcon size={13} />
-        <span>
-          {t(
-            "portal.billing.checkout.card.fields",
-            "Card number · MM / YY · CVC · ZIP",
-          )}
-        </span>
-      </div>
-      <p className="portal-billing__card-placeholder-note">
-        {t(
-          "portal.billing.checkout.card.note",
-          "Card details collected by Stripe. Stirling never stores PAN or CVC.",
-        )}
-      </p>
     </div>
   );
 }

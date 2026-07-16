@@ -6,14 +6,14 @@ import {
   EmbeddedCheckout,
   EmbeddedCheckoutProvider,
 } from "@stripe/react-stripe-js";
-import type { Stripe } from "@stripe/stripe-js";
 import { updateCap } from "@portal/api/billing";
 import {
   createCheckoutSession,
   getStripePublishableKey,
+  loadStripeOnce,
   type SaasCurrency,
 } from "@portal/billing/stripe";
-import { LockIcon } from "@portal/components/icons";
+import { CardPlaceholder } from "@portal/components/billing/CardPlaceholder";
 
 interface Props {
   open: boolean;
@@ -51,13 +51,6 @@ const DEFAULT_CAP_USD = 100;
  * If the team is already subscribed the edge function short-circuits to a Stripe
  * Customer Portal URL; we open it in a new tab and close.
  */
-let stripePromise: Promise<Stripe | null> | null = null;
-function loadStripeOnce(pk: string): Promise<Stripe | null> {
-  if (stripePromise === null) {
-    stripePromise = import("@stripe/stripe-js").then((m) => m.loadStripe(pk));
-  }
-  return stripePromise;
-}
 
 /** Two-segment progress header: step 1 = spend limit, step 2 = payment. */
 function StepProgress({ step }: { step: 1 | 2 }) {
@@ -120,38 +113,6 @@ function CheckoutActivationSlow({ onClose }: { onClose: () => void }) {
       <Button variant="secondary" onClick={onClose}>
         {t("portal.billing.checkout.activationSlow.close", "Close")}
       </Button>
-    </div>
-  );
-}
-
-/**
- * Placeholder for the card form when no Stripe publishable key is configured
- * (Storybook / preview / mis-config). Mirrors the real embedded form's framing
- * so the step reads correctly without mounting Stripe.
- */
-function CardPlaceholder() {
-  const { t } = useTranslation();
-  return (
-    <div className="portal-billing__card-placeholder">
-      <div className="portal-billing__card-placeholder-head">
-        <span>{t("portal.billing.checkout.card.label", "Card details")}</span>
-        <span className="portal-billing__card-placeholder-badge">Stripe</span>
-      </div>
-      <div className="portal-billing__card-placeholder-field">
-        <LockIcon size={13} />
-        <span>
-          {t(
-            "portal.billing.checkout.card.fields",
-            "Card number · MM / YY · CVC · ZIP",
-          )}
-        </span>
-      </div>
-      <p className="portal-billing__card-placeholder-note">
-        {t(
-          "portal.billing.checkout.card.note",
-          "Card details collected by Stripe. Stirling never stores PAN or CVC.",
-        )}
-      </p>
     </div>
   );
 }
