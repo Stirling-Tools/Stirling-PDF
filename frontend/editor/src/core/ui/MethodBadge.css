@@ -10,7 +10,7 @@
   line-height: 1.4;
 }
 .sui-method--get {
-  color: var(--color-green);
+  color: var(--color-green-dark);
   background: var(--color-green-light);
   border-color: var(--color-green-border);
 }
@@ -25,12 +25,12 @@
   border-color: var(--color-amber-border);
 }
 .sui-method--patch {
-  color: var(--color-purple);
+  color: var(--color-purple-dark);
   background: var(--color-purple-light);
   border-color: var(--color-purple-border);
 }
 .sui-method--delete {
-  color: var(--color-red);
+  color: var(--color-red-dark);
   background: var(--color-red-light);
   border-color: var(--color-red-border);
 }
