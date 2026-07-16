@@ -201,3 +201,6 @@
 - name: "license-review-required"
   color: "EDEDED"
   description: "This PR requires a license review"
+- name: "has conflicts"
+  color: "D93F0B"
+  description: "Pull request has merge conflicts with the base branch"
