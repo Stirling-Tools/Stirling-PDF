@@ -476,7 +476,7 @@ const CASES: Case[] = [
       "LONDON, 4 June 2024 - Kestrel Ltd today announced a $40 million Series B round",
       "led by Meridian Growth, with participation from existing investors.",
       "The funding will accelerate hiring and the launch of Kestrel's audit platform.",
-      "\"Accessibility is still an afterthought in most tooling,\" said CEO N. Okafor.",
+      '"Accessibility is still an afterthought in most tooling," said CEO N. Okafor.',
       "Media contact: press@kestrel.example    Notes to editors: photography available.",
     ],
   },
@@ -523,7 +523,7 @@ const CASES: Case[] = [
       "The solution: digital inspections with automated triage and parts ordering.",
       "The results: downtime fell 34% in six months; audit prep time fell from three",
       "weeks to two days.",
-      "\"It paid for itself in a quarter,\" said the fleet director.",
+      '"It paid for itself in a quarter," said the fleet director.',
     ],
   },
   {

@@ -28,10 +28,7 @@ import {
   markDispatched,
 } from "@app/components/policies/policyRunStore";
 import type { FileId } from "@app/types/file";
-import type {
-  StirlingFile,
-  StirlingFileStub,
-} from "@app/types/fileContext";
+import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
 
 /** The category id of the Classification policy (see policyDefinitions). */
 const CLASSIFICATION_CATEGORY = "classification";
@@ -71,11 +68,11 @@ export function useClientSideClassification(): void {
   // Only when the admin has an active Classification policy - the same gate the AI path uses.
   const active = Boolean(
     policy?.configured &&
-      policy.status === "active" &&
-      policy.backendId &&
-      (!policy.sources ||
-        policy.sources.length === 0 ||
-        policy.sources.includes("editor")),
+    policy.status === "active" &&
+    policy.backendId &&
+    (!policy.sources ||
+      policy.sources.length === 0 ||
+      policy.sources.includes("editor")),
   );
 
   useEffect(() => {

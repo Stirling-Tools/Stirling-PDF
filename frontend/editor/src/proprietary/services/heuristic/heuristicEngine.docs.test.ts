@@ -82,7 +82,11 @@ describe("documents observed lost on upload (engine must label them)", () => {
       "other party that it receives under this agreement.",
       "We are pleased to act for you and look forward to a productive working relationship.",
     ].join("\n");
-    const r = classify("MASTER SERVICES AGREEMENT", body, "service_agreement.pdf");
+    const r = classify(
+      "MASTER SERVICES AGREEMENT",
+      body,
+      "service_agreement.pdf",
+    );
     expect(r.labels[0]).toBe("service-agreement");
   });
 });
