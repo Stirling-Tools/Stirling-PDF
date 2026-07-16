@@ -214,4 +214,42 @@ class SaasUserExtensionServiceTest {
             assertThat(captor.getValue().getApiKeyFirstUsedAt()).isNotNull();
         }
     }
+
+    @Nested
+    @DisplayName("home team")
+    class HomeTeam {
+
+        @Test
+        @DisplayName("getHomeTeamId returns the stored id when a row exists")
+        void existing_returnsId() {
+            SaasUserExtensions ext = new SaasUserExtensions(user);
+            ext.setHomeTeamId(7L);
+            when(repository.findByUserId(USER_ID)).thenReturn(Optional.of(ext));
+
+            assertThat(service.getHomeTeamId(user)).isEqualTo(7L);
+        }
+
+        @Test
+        @DisplayName("getHomeTeamId returns null when no row exists")
+        void missing_returnsNull() {
+            when(repository.findByUserId(USER_ID)).thenReturn(Optional.empty());
+
+            assertThat(service.getHomeTeamId(user)).isNull();
+            verify(repository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("setHomeTeamId writes the id on the existing row and saves")
+        void set_updatesExistingRow() {
+            SaasUserExtensions ext = new SaasUserExtensions(user);
+            when(repository.findByUserId(USER_ID)).thenReturn(Optional.of(ext));
+            when(repository.save(any(SaasUserExtensions.class)))
+                    .thenAnswer(inv -> inv.getArgument(0));
+
+            service.setHomeTeamId(user, 9L);
+
+            assertThat(ext.getHomeTeamId()).isEqualTo(9L);
+            verify(repository).save(ext);
+        }
+    }
 }
