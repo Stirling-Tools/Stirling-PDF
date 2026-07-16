@@ -229,7 +229,6 @@ public class SourceController {
                 .validate(spec);
     }
 
-    /** Let the source type populate server-owned config before persistence. */
     private Source withPreparedOptions(Source source, boolean isCreate) {
         InputSpec spec = source.toInputSpec();
         InputSource input = inputSourceFor(spec).orElse(null);
@@ -237,11 +236,9 @@ public class SourceController {
             return source;
         }
         Map<String, Object> prepared = input.prepareOptionsForSave(source.options(), isCreate);
-        // Treat a null return as "unchanged" (else the record wipes config to empty).
         return prepared == null ? source : withOptions(source, prepared);
     }
 
-    /** Reveal a webhook's minted secret once on the create response; other reads mask. */
     private static Source revealOnCreate(Source saved, boolean isCreate) {
         if (isCreate && WEBHOOK_TYPE.equals(saved.type())) {
             return saved;

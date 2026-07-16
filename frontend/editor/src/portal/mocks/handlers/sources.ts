@@ -108,18 +108,16 @@ function nextId(): string {
   return `src_${Date.now().toString(36)}_${idCounter}`;
 }
 
-/** A demo token for a newly created webhook's server-generated id/secret (mock only). */
 function randomToken(): string {
-  return (
-    Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
-  );
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 function refsFor(id: string): SourcePolicyRef[] {
   return references[id] ?? [];
 }
 
-/** Mirror the backend's secret redaction so config rows never surface a secret in the overview. */
 function configRows(options: Record<string, unknown>) {
   const secret = /secret|password|token/i;
   return Object.entries(options).map(([key, value]) => ({
@@ -233,7 +231,6 @@ export const sourcesHandlers = [
       ? store.find((s) => s.id === incoming.id)
       : undefined;
     const id = existing?.id ?? nextId();
-    // A new webhook's id + secret are minted server-side and revealed once on this create response.
     let options = incoming.options ?? {};
     if (incoming.type === "webhook" && !existing && !options.webhookId) {
       options = {

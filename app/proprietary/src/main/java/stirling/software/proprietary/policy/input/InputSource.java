@@ -23,7 +23,6 @@ public interface InputSource {
     /** Throws {@link IllegalArgumentException} on bad config. Called on save to fail fast. */
     default void validate(InputSpec spec) {}
 
-    /** Normalise a source's options before persistence (default no-op); must not mutate the arg. */
     default Map<String, Object> prepareOptionsForSave(
             Map<String, Object> options, boolean isCreate) {
         return options;

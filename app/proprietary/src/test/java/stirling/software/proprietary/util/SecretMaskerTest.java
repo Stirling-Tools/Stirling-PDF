@@ -111,7 +111,6 @@ class SecretMaskerTest {
             Map<String, Object> result = SecretMasker.mask(input);
 
             assertEquals(SecretMasker.REDACTED, result.get("signingSecret"));
-            // The routing id is a public URL token, not a secret.
             assertEquals("whk_abc", result.get("webhookId"));
         }
 

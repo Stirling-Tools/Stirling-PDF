@@ -27,7 +27,6 @@ import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
-/** Tests for {@link WebhookTrigger}: fires only policies referencing the delivered-to webhook. */
 @ExtendWith(MockitoExtension.class)
 class WebhookTriggerTest {
 
@@ -80,7 +79,6 @@ class WebhookTriggerTest {
         return new TriggerConfig(TYPE, Map.of());
     }
 
-    /** Persist a webhook source with the given routing id and return a policy referencing it. */
     private Policy webhookPolicy(String id, String webhookId) {
         String sourceId =
                 sourceStore

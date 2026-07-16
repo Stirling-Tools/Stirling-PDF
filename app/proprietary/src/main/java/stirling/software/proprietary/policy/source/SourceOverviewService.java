@@ -146,7 +146,6 @@ public class SourceOverviewService {
                 webhookPath(source));
     }
 
-    /** The server-relative delivery path for a webhook source, else null. Never a secret. */
     private static String webhookPath(Source source) {
         if (!"webhook".equals(source.type())) {
             return null;

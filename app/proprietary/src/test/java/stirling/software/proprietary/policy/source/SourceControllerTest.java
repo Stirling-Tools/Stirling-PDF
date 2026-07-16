@@ -28,7 +28,6 @@ import stirling.software.common.util.FileReadinessChecker;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.input.InputSource;
-import stirling.software.proprietary.policy.input.S3InputSource;
 import stirling.software.proprietary.policy.input.WebhookInputSource;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
@@ -70,7 +69,7 @@ class SourceControllerTest {
                         policyGuard,
                         new InProcessSourceDocCounter());
         triggerManager = mock(PolicyTriggerManager.class);
-        // A permissive input source; stub prepareOptionsForSave as a pass-through.
+        // A permissive input source so config validation passes and save can be exercised.
         InputSource folderInput = mock(InputSource.class);
         when(folderInput.supports(any())).thenReturn(true);
         when(folderInput.prepareOptionsForSave(any(), anyBoolean()))
@@ -87,10 +86,7 @@ class SourceControllerTest {
                         properties,
                         List.of(folderInput));
         WebhookInputSource webhookInput =
-                new WebhookInputSource(
-                        new WebhookSpool(tempDir),
-                        mock(FileReadinessChecker.class),
-                        mock(S3InputSource.class));
+                new WebhookInputSource(new WebhookSpool(tempDir), mock(FileReadinessChecker.class));
         webhookController =
                 new SourceController(
                         sourceStore,

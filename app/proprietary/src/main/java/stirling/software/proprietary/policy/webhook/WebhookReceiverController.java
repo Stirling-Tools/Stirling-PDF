@@ -3,7 +3,6 @@ package stirling.software.proprietary.policy.webhook;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
-import java.util.Map;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.http.HttpStatus;
@@ -26,19 +25,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.proprietary.policy.s3.S3Config;
-import stirling.software.proprietary.policy.s3.S3ConnectionPool;
-import stirling.software.proprietary.policy.s3.S3ConnectionResolver;
 import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.trigger.WebhookTrigger;
 
-import software.amazon.awssdk.core.exception.SdkException;
-import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-
-/** Public receiver: HMAC-verifies a signed delivery, stages it, and fires the policies. */
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/webhooks")
@@ -56,8 +46,6 @@ public class WebhookReceiverController {
     private final WebhookSpool spool;
     private final WebhookTrigger webhookTrigger;
     private final ApplicationProperties applicationProperties;
-    private final S3ConnectionResolver connectionResolver;
-    private final S3ConnectionPool connectionPool;
 
     @PostMapping("/{webhookId}")
     @Operation(
@@ -82,7 +70,6 @@ public class WebhookReceiverController {
         WebhookConfig config = WebhookConfig.from(source.options());
         byte[] body = readBoundedBody(request);
         if (!WebhookSignatures.verify(config.signingSecret(), body, signature)) {
-            // Same 401 whether the header was absent or wrong: never confirm a guess.
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid signature");
         }
         if (!source.enabled()) {
@@ -93,12 +80,8 @@ public class WebhookReceiverController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty request body");
         }
 
-        String storedName =
-                config.usesConnection()
-                        ? stageToConnection(config, filename, body)
-                        : stageToSpool(webhookId, filename, body);
+        String storedName = stageToSpool(webhookId, filename, body);
 
-        // Fire the referencing policies now; the trigger's reconcile is the safety net.
         webhookTrigger.fireForWebhook(webhookId);
         log.info(
                 "Accepted webhook delivery '{}' ({} bytes) for {}",
@@ -110,7 +93,6 @@ public class WebhookReceiverController {
                 .body(new WebhookDeliveryResponse(true, storedName, body.length));
     }
 
-    /** The enabled-or-not webhook source whose routing id matches, or null if there is none. */
     private Source findWebhookSource(String webhookId) {
         for (Source source : sourceStore.all()) {
             if (!WEBHOOK_TYPE.equals(source.type())) {
@@ -124,7 +106,6 @@ public class WebhookReceiverController {
         return null;
     }
 
-    /** Stage a delivery to the node-local spool; returns its display (original) name. */
     private String stageToSpool(String webhookId, String filename, byte[] body) {
         try {
             return WebhookSpool.displayName(
@@ -136,47 +117,6 @@ public class WebhookReceiverController {
         }
     }
 
-    /** Stage a delivery to the S3 connection (save-time access check trusted). */
-    private String stageToConnection(WebhookConfig config, String filename, byte[] body) {
-        S3Config s3 =
-                connectionResolver.resolve(
-                        Map.of(
-                                WebhookConfig.CONNECTION_ID_OPTION,
-                                config.connectionId(),
-                                "prefix",
-                                config.stagingPrefix()));
-        S3Client client = connectionPool.clientFor(s3);
-        String key = keyPrefix(s3.prefix()) + WebhookSpool.objectKeySuffix(filename);
-        try {
-            client.putObject(
-                    PutObjectRequest.builder().bucket(s3.bucket()).key(key).build(),
-                    RequestBody.fromBytes(body));
-        } catch (SdkException e) {
-            log.error(
-                    "Could not stage webhook delivery for {} to s3://{}/{}: {}",
-                    config.webhookId(),
-                    s3.bucket(),
-                    key,
-                    e.getMessage());
-            throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Could not store delivery");
-        }
-        return WebhookSpool.objectDisplayName(filename);
-    }
-
-    /** The configured prefix as a key-path prefix ("inbox" and "inbox/" mean the same). */
-    private static String keyPrefix(String prefix) {
-        if (prefix == null || prefix.isEmpty() || prefix.endsWith("/")) {
-            return prefix == null ? "" : prefix;
-        }
-        return prefix + "/";
-    }
-
-    /**
-     * Read the body into an exactly-sized buffer bounded by its declared Content-Length. Rejecting
-     * an unknown or over-cap length up front stops an unauthenticated caller streaming an unbounded
-     * body into heap before the signature can be checked (the HMAC needs the whole body).
-     */
     private byte[] readBoundedBody(HttpServletRequest request) {
         long maxBytes = applicationProperties.getPolicies().getWebhookMaxBytes();
         long declared = request.getContentLengthLong();
@@ -208,6 +148,5 @@ public class WebhookReceiverController {
         return total == body.length ? body : Arrays.copyOf(body, total);
     }
 
-    /** The 202 body: the stored (display) name and byte count of an accepted delivery. */
     public record WebhookDeliveryResponse(boolean accepted, String filename, int bytes) {}
 }

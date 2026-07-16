@@ -23,15 +23,12 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.proprietary.policy.s3.S3ConnectionPool;
-import stirling.software.proprietary.policy.s3.S3ConnectionResolver;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
 import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.trigger.WebhookTrigger;
 import stirling.software.proprietary.policy.webhook.WebhookReceiverController.WebhookDeliveryResponse;
 
-/** Tests for the public webhook receiver: valid delivery spools + fires; bad requests rejected. */
 class WebhookReceiverControllerTest {
 
     private static final String WEBHOOK_ID = "receivertestid12";
@@ -53,15 +50,7 @@ class WebhookReceiverControllerTest {
         spool = new WebhookSpool(tempDir.resolve("spool"));
         trigger = mock(WebhookTrigger.class);
         properties = new ApplicationProperties();
-        // The local-disk tests never touch a connection; mocks stand in for the S3 collaborators.
-        controller =
-                new WebhookReceiverController(
-                        sourceStore,
-                        spool,
-                        trigger,
-                        properties,
-                        mock(S3ConnectionResolver.class),
-                        mock(S3ConnectionPool.class));
+        controller = new WebhookReceiverController(sourceStore, spool, trigger, properties);
     }
 
     private static Source webhookSource(boolean enabled) {
@@ -174,8 +163,6 @@ class WebhookReceiverControllerTest {
     void aDeliveryWithoutAContentLengthIsRejected() {
         MockHttpServletRequest req =
                 new MockHttpServletRequest("POST", "/api/v1/webhooks/" + WEBHOOK_ID);
-        // No setContent: Content-Length is unknown (-1), which the receiver requires up front so an
-        // unbounded body cannot stream into heap before the signature check.
         ResponseStatusException ex =
                 assertThrows(
                         ResponseStatusException.class,

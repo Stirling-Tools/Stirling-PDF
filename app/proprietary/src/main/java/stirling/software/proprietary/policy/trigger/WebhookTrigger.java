@@ -20,7 +20,6 @@ import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.policy.webhook.WebhookConfig;
 
-/** Fires webhook policies on delivery plus a periodic reconcile safety net. */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -28,7 +27,6 @@ import stirling.software.proprietary.policy.webhook.WebhookConfig;
 public class WebhookTrigger implements PolicyTrigger {
 
     static final String TYPE = "webhook";
-    // The webhook source type (equals the trigger type but a distinct concept).
     private static final String WEBHOOK_SOURCE_TYPE = "webhook";
 
     private final PolicyStore policyStore;
@@ -75,7 +73,6 @@ public class WebhookTrigger implements PolicyTrigger {
         reconciler =
                 Executors.newSingleThreadScheduledExecutor(
                         Thread.ofVirtual().name("policy-webhook-reconcile-", 0).factory());
-        // First reconcile runs immediately so deliveries spooled before startup are picked up.
         reconciler.scheduleAtFixedRate(this::safeReconcile, 0, reconcileSeconds, TimeUnit.SECONDS);
         log.info("Webhook trigger started (reconcile every {}s)", reconcileSeconds);
     }
@@ -88,7 +85,6 @@ public class WebhookTrigger implements PolicyTrigger {
         }
     }
 
-    /** Run every webhook policy referencing the delivered-to source (LIGHT, best-effort). */
     public void fireForWebhook(String webhookId) {
         for (Policy policy : policyStore.findByTriggerType(TYPE)) {
             if (!referencesWebhook(policy, webhookId)) {
@@ -120,7 +116,6 @@ public class WebhookTrigger implements PolicyTrigger {
         }
     }
 
-    /** Whether the policy references a webhook source whose routing id is {@code webhookId}. */
     private boolean referencesWebhook(Policy policy, String webhookId) {
         for (String sourceId : policy.sourceIds()) {
             Source source = sourceStore.get(sourceId).orElse(null);

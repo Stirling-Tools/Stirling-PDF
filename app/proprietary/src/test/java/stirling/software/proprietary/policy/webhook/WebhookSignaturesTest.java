@@ -7,7 +7,6 @@ import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.Test;
 
-/** The HMAC-SHA256 webhook signing scheme: correct signatures verify, tampered ones do not. */
 class WebhookSignaturesTest {
 
     private static final String SECRET = "whsec_test_secret";

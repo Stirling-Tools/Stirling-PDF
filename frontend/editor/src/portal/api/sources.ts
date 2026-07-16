@@ -32,7 +32,6 @@ export interface SourceView {
   docsTotal: number;
   docs24h: number;
   docs30d: number;
-  /** Webhook sources only: the server-relative delivery path senders POST to. Null otherwise. */
   webhookPath?: string | null;
 }
 

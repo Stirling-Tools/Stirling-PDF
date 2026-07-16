@@ -8061,16 +8061,13 @@ placeholder = "us-east-1"
 label = "Secret access key"
 
 [portal.sources.types.webhook]
+createNote = "A delivery URL and signing secret are generated when you create this webhook. Senders POST documents to that URL and the referencing policies run on arrival."
 description = "Receive documents by signed HTTP POST from any external system."
 label = "Webhook"
 
 [portal.sources.types.webhook.detail]
 deliveryUrl = "Delivery URL"
 secretNote = "The signing secret is shown once, when the webhook is created. Recreate the source to roll it."
-
-[portal.sources.types.webhook.fields.connection]
-helperText = "Choose an S3 connection to stage deliveries durably (required in hosted). Leave blank on a self-hosted server to stage them on local disk."
-label = "Storage connection"
 
 [portal.sources.types.webhook.reveal]
 copy = "Copy"

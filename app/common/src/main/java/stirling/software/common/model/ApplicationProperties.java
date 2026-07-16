@@ -250,7 +250,6 @@ public class ApplicationProperties {
          */
         private boolean allowPrivateS3Endpoints = false;
 
-        /** Max inbound webhook body (bytes); over it is rejected 413. Default 100 MB. */
         private long webhookMaxBytes = 104857600L;
     }
 

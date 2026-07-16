@@ -189,19 +189,10 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
     ],
   },
   {
-    // URL + secret minted server-side (revealed once); an S3 connection makes staging durable, else local disk.
     type: WEBHOOK_SOURCE_TYPE,
     labelKey: "portal.sources.types.webhook.label",
     descriptionKey: "portal.sources.types.webhook.description",
-    fields: [
-      {
-        key: "connectionId",
-        labelKey: "portal.sources.types.webhook.fields.connection.label",
-        control: "s3Connection",
-        helperTextKey:
-          "portal.sources.types.webhook.fields.connection.helperText",
-      },
-    ],
+    fields: [],
   },
 ];
 

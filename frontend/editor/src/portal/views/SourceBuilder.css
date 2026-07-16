@@ -86,7 +86,6 @@
   gap: 0.5rem;
 }
 
-/* Webhook delivery URL / signing secret: read-only value + copy button. */
 .portal-source-builder__copy-row {
   display: flex;
   gap: 0.5rem;
@@ -108,4 +107,10 @@
   margin: 0;
   font-size: 0.8125rem;
   color: var(--color-text-4);
+}
+
+.portal-source-builder__type-description {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-3);
 }

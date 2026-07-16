@@ -33,7 +33,6 @@ import {
 import { S3ConnectionPicker } from "@portal/components/sources/S3ConnectionPicker";
 import "@portal/views/SourceBuilder.css";
 
-/** Absolute delivery URL a sender POSTs to for a webhook's routing id. */
 function webhookUrl(webhookId: string): string {
   return `${window.location.origin}/api/v1/webhooks/${webhookId}`;
 }
@@ -90,7 +89,6 @@ export function SourceBuilder() {
   const [error, setError] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  // Set after a webhook is created: its one-time delivery id + signing secret, shown before leaving.
   const [reveal, setReveal] = useState<{
     webhookId: string;
     secret: string;
@@ -123,7 +121,6 @@ export function SourceBuilder() {
   );
   const canSave = name.trim() !== "" && requiredComplete && !submitting;
 
-  // An existing webhook's delivery URL, read-only in edit (the secret is revealed only at creation).
   const editingWebhookId =
     isEdit && sourceState.data?.type === WEBHOOK_SOURCE_TYPE
       ? String(sourceState.data.options?.webhookId ?? "")
@@ -148,7 +145,6 @@ export function SourceBuilder() {
         options,
         enabled,
       });
-      // A new webhook returns its minted id + secret once; reveal them (with the URL) before leaving.
       if (!isEdit && type.type === WEBHOOK_SOURCE_TYPE) {
         const webhookId = String(saved.options?.webhookId ?? "");
         const secret = String(saved.options?.signingSecret ?? "");
@@ -289,6 +285,18 @@ export function SourceBuilder() {
               ))}
             </div>
           </FormField>
+        )}
+
+        {!isEdit && (
+          <p className="portal-source-builder__type-description">
+            {t(type.descriptionKey)}
+          </p>
+        )}
+
+        {!isEdit && type.type === WEBHOOK_SOURCE_TYPE && (
+          <p className="portal-source-builder__muted">
+            {t("portal.sources.types.webhook.createNote")}
+          </p>
         )}
 
         {type.fields.map((field) => (
