@@ -84,4 +84,32 @@ describe("Pipelines view", () => {
     fireEvent.click(await screen.findByText("Redaction sweep"));
     expect(await screen.findByText("pipeline page")).toBeInTheDocument();
   });
+
+  it("shows the KPI stat boxes when pipelines exist", async () => {
+    renderView();
+    await screen.findByText("Redaction sweep");
+    expect(screen.getByText("portal.pipelines.kpi.total")).toBeInTheDocument();
+  });
+
+  it("hides the stat boxes and shows create + connect-source CTAs when empty", async () => {
+    fetchPipelines.mockResolvedValue({
+      kpis: [
+        { value: 0, description: "" },
+        { value: 0, description: "" },
+        { value: 0, description: "" },
+      ],
+      pipelines: [],
+    });
+    renderView();
+    expect(
+      await screen.findByText("portal.pipelines.empty.title"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("portal.pipelines.empty.connectSource"),
+    ).toBeInTheDocument();
+    // The KPI strip is gone: no stat-box labels over an empty page.
+    expect(
+      screen.queryByText("portal.pipelines.kpi.total"),
+    ).not.toBeInTheDocument();
+  });
 });

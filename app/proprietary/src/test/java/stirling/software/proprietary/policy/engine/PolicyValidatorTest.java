@@ -83,6 +83,28 @@ class PolicyValidatorTest {
     }
 
     @Test
+    void validateOutputDelegatesToTheSink() {
+        when(outputSink.supports(any())).thenReturn(true);
+        OutputSpec output = new OutputSpec("s3", Map.of("connectionId", 1));
+
+        validator.validateOutput(output);
+
+        verify(outputSink).validate(output);
+    }
+
+    @Test
+    void validateOutputSurfacesAnInaccessibleConnection() {
+        when(outputSink.supports(any())).thenReturn(true);
+        doThrow(new IllegalArgumentException("unknown or inaccessible s3 connection"))
+                .when(outputSink)
+                .validate(any());
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> validator.validateOutput(new OutputSpec("s3", Map.of("connectionId", 1))));
+    }
+
+    @Test
     void rejectsAnUnknownTriggerType() {
         when(trigger.type()).thenReturn("schedule");
 

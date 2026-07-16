@@ -73,6 +73,16 @@ export const JOURNEY: JourneyStep[] = [
   },
 ];
 
+/**
+ * The commercial flow's stepper stages. The real backend collapses quote + agreement into one
+ * accept step (accepting the issued quote is accepting the agreement), so the flow shows one fewer
+ * step than the mock ledger's {@link JOURNEY} — the separate "Agreement" step is dropped. Reuses
+ * JOURNEY's i18n keys.
+ */
+export const FLOW_JOURNEY: JourneyStep[] = JOURNEY.filter(
+  (s) => s.stage !== "security",
+);
+
 /* ──────────────────────────────────────────────────────────────────────── */
 /*  Deal header                                                              */
 /* ──────────────────────────────────────────────────────────────────────── */
@@ -284,12 +294,18 @@ export interface QuoteResult {
   currency: string;
   annualNetMinor: number;
   tcvMinor: number;
+  /** First post-term renewal fee after the CPI escalator; the committed term itself is flat. */
+  renewalAnnualNetMinor: number;
+  /** The fixed CPI escalator applied per renewal, as a whole percent (e.g. 3). */
+  cpiRatePct: number;
   lineItems: QuoteLineItem[];
   validUntil: string | null;
   /** The Stripe Quote id once issued; null while still a local draft. */
   stripeQuoteId: string | null;
   /** Hosted Stripe invoice URL, present once the quote is accepted and the subscription invoice exists. */
   invoiceUrl: string | null;
+  /** Direct PDF link for that invoice; persisted so the download button survives a reload. */
+  invoicePdf: string | null;
   /** The inputs this quote was priced from, so the builder can seed itself on re-edit. */
   config: QuoteConfigInput;
 }
@@ -306,6 +322,10 @@ export interface AcceptResult {
 export interface ProcurementSnapshot {
   dealId: number | null;
   stage: DealStage | null;
+  /** cloud | selfhost | airgap — chosen at the trial-setup step; seeds the quote builder. */
+  deployment: string;
+  /** Seat count captured at trial setup (0 = unspecified); seeds the builder's volume estimate. */
+  seats: number;
   trialStartedAt: string | null;
   trialEndsAt: string | null;
   trialExtensionsUsed: number;
@@ -318,17 +338,35 @@ export interface ProcurementSnapshot {
 export interface QuoteConfigInput {
   volume: number;
   users: number;
+  /** Policy posture (governance) as runs per PDF: Essentials 2, Governed 4, Regulated 7. */
+  intensity: number;
+  /** PDF-size tier multiplier on the rate: Compact 1.0, Standard 1.4, Heavy 2.4. */
+  sizeMult: number;
+  /** cloud | selfhost | airgap — set at the trial; drives the flat deployment fee + offline .lic. */
   deployment: string;
   termYears: number;
   serviceLevel: string;
   indemnification: boolean;
   training: boolean;
   qbr: boolean;
-  /** Offline / air-gapped licence file — a paid add-on. */
-  offlineLicense: boolean;
-  currency: string;
   /** Buyer's company name — shown on the quote/agreement and remembered when re-editing. */
   businessName: string;
+  // Buyer / AP details (all optional). They flow onto the Stripe customer (name + bill-to address)
+  // and the invoice (PO number + tax id as custom fields). Country + currency are out of scope.
+  /** Signatory / main contact name. */
+  contactName?: string;
+  /** Contact email (billing / signatory). */
+  contactEmail?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  city?: string;
+  /** State / province / region. */
+  region?: string;
+  postalCode?: string;
+  /** Purchase-order number, shown on the invoice for AP matching. */
+  poNumber?: string;
+  /** VAT / Tax ID, shown on the invoice. */
+  taxId?: string;
 }
 
 export function fetchSnapshot(): Promise<ProcurementSnapshot> {
@@ -343,10 +381,17 @@ export function fetchLicenseFile(): Promise<string> {
   return apiClient.saas.text("/api/v1/procurement/license/file");
 }
 
-export function startTrial(): Promise<ProcurementSnapshot> {
+/**
+ * Start the trial with the buyer's chosen deployment target and seat count (captured in the setup
+ * step). These seed the quote builder; both remain editable when the quote is built.
+ */
+export function startTrial(
+  deployment: string,
+  seats: number,
+): Promise<ProcurementSnapshot> {
   return apiClient.saas.json<ProcurementSnapshot>(
     "/api/v1/procurement/trial/start",
-    { method: "POST" },
+    { method: "POST", body: { deployment, users: seats } },
   );
 }
 

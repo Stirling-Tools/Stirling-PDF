@@ -15,7 +15,7 @@ import {
   type CatalogueEntry,
   type PoliciesResponse,
 } from "@portal/api/policies";
-import { policyIcon } from "@portal/components/policies/policyIcons";
+import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
 import "@portal/components/PolicySummary.css";
 
 /**
@@ -64,11 +64,11 @@ export function PolicySummary() {
       render: ({ entry }) => (
         <div className="portal-policysum__cat">
           <span className="portal-policysum__icon" aria-hidden>
-            {policyIcon(entry.category.icon)}
+            {policyCategoryIcon(entry.category.id)}
           </span>
           <div className="portal-policysum__cat-text">
-            <strong>{entry.category.label}</strong>
-            <span>{entry.category.desc}</span>
+            <strong>{t(entry.category.label)}</strong>
+            <span>{t(entry.category.desc)}</span>
           </div>
         </div>
       ),
@@ -92,7 +92,7 @@ export function PolicySummary() {
       render: ({ entry, state }) => (
         <span className="portal-policysum__rule">
           {state === "active"
-            ? entry.config.summary
+            ? t(entry.config.summary)
             : t("portal.policySummary.noRule")}
         </span>
       ),

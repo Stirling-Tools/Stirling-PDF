@@ -66,6 +66,10 @@ public class ProcurementQuote implements Serializable {
     @Column(name = "intensity", nullable = false)
     private int intensity = 4;
 
+    /** File-size tier multiplier on the rate (D93): Compact 1.0, Standard 1.4, Heavy 2.4. */
+    @Column(name = "size_mult", nullable = false)
+    private double sizeMult = 1.0;
+
     @Column(name = "deployment", length = 24)
     private String deployment;
 
@@ -84,14 +88,16 @@ public class ProcurementQuote implements Serializable {
     @Column(name = "qbr", nullable = false)
     private boolean qbr;
 
-    @Column(name = "offline_license", nullable = false)
-    private boolean offlineLicense;
-
     @Column(name = "annual_net_minor", nullable = false)
     private long annualNetMinor;
 
     @Column(name = "tcv_minor", nullable = false)
     private long tcvMinor;
+
+    // First post-term renewal fee (annual net + one CPI step), locked at quote time so the buyer's
+    // quoted renewal doesn't drift if the rate card changes later.
+    @Column(name = "renewal_annual_minor", nullable = false)
+    private long renewalAnnualMinor;
 
     @Column(name = "line_items", columnDefinition = "text")
     private String lineItemsJson;
@@ -105,9 +111,46 @@ public class ProcurementQuote implements Serializable {
     @Column(name = "stripe_invoice_url", columnDefinition = "text")
     private String stripeInvoiceUrl;
 
+    // Direct PDF link for that first invoice (Stripe invoice_pdf), set at accept alongside the URL;
+    // persisted so the portal's download button works after a reload, not just in the accept
+    // response.
+    @Column(name = "stripe_invoice_pdf", columnDefinition = "text")
+    private String stripeInvoicePdf;
+
     // Buyer's company name (shown on the quote/agreement); echoed back so an edit remembers it.
     @Column(name = "business_name", length = 255)
     private String businessName;
+
+    // Buyer/AP details captured on the quote's "Your details" step. All optional — they never gate
+    // quote generation; they flow onto the Stripe customer (name + bill-to address) and the invoice
+    // (PO number + tax id as invoice custom fields), and seed the builder on a re-edit. Country and
+    // currency are intentionally out of scope for now.
+    @Column(name = "contact_name", length = 255)
+    private String contactName;
+
+    @Column(name = "contact_email", length = 255)
+    private String contactEmail;
+
+    @Column(name = "address_line1", length = 255)
+    private String addressLine1;
+
+    @Column(name = "address_line2", length = 255)
+    private String addressLine2;
+
+    @Column(name = "city", length = 128)
+    private String city;
+
+    @Column(name = "region", length = 128)
+    private String region;
+
+    @Column(name = "postal_code", length = 32)
+    private String postalCode;
+
+    @Column(name = "po_number", length = 128)
+    private String poNumber;
+
+    @Column(name = "tax_id", length = 64)
+    private String taxId;
 
     @Column(name = "valid_until")
     private LocalDate validUntil;

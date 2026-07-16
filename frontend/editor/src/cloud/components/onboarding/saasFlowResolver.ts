@@ -1,4 +1,8 @@
 import { SlideId } from "@app/components/onboarding/saasOnboardingFlowConfig";
+import {
+  resolveFlowIds,
+  type FlowStep,
+} from "@app/components/onboarding/onboardingSlideTypes";
 
 export interface SaasFlowInputs {
   /** Free-tier wallet with one-time allowance remaining — show the usage meter. */
@@ -13,22 +17,23 @@ export interface SaasFlowInputs {
   hideDesktopInstall?: boolean;
 }
 
+// The SaaS flow as data: free-editor and desktop-install bookend it; the usage
+// meter and team slides slot in when their conditions hold. This is the same
+// "flow = the steps that apply, in order" shape the core flow uses, resolved
+// through the shared {@link resolveFlowIds} helper.
+const SAAS_FLOW: FlowStep<SlideId, SaasFlowInputs>[] = [
+  { id: "free-editor", when: () => true },
+  { id: "usage", when: (input) => input.showUsageSlide },
+  { id: "team", when: (input) => input.showTeamSlide },
+  { id: "desktop-install", when: (input) => !input.hideDesktopInstall },
+];
+
 /**
- * Resolves the SaaS onboarding slide sequence. The free-editor pitch and
- * desktop install bookend the flow; the usage meter and team slides slot in
- * when their conditions hold. When {@link SaasFlowInputs.hideDesktopInstall} is
- * set, the closing desktop-install slide is dropped (used by the desktop app,
- * which has no reason to pitch its own download).
+ * Resolves the SaaS onboarding slide sequence. When
+ * {@link SaasFlowInputs.hideDesktopInstall} is set, the closing desktop-install
+ * slide is dropped (used by the desktop app, which has no reason to pitch its
+ * own download).
  */
-export function resolveSaasFlow({
-  showUsageSlide,
-  showTeamSlide,
-  hideDesktopInstall = false,
-}: SaasFlowInputs): SlideId[] {
-  return [
-    "free-editor",
-    ...(showUsageSlide ? (["usage"] as const) : []),
-    ...(showTeamSlide ? (["team"] as const) : []),
-    ...(hideDesktopInstall ? [] : (["desktop-install"] as const)),
-  ];
+export function resolveSaasFlow(inputs: SaasFlowInputs): SlideId[] {
+  return resolveFlowIds(SAAS_FLOW, inputs);
 }
