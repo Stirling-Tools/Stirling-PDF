@@ -14,6 +14,17 @@ import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
  * Run with: npx vitest run --config .storybook/vitest.config.ts
  */
 export default defineConfig({
+  // Pre-scan every story + the preview up front so Vite discovers and bundles
+  // ALL deps in a single optimize pass. Without this, the huge dep surface of
+  // the story set (embedpdf plugins, @mui icons, etc.) is discovered lazily
+  // mid-run, triggering "optimized dependencies changed, reloading" which tears
+  // down browser test workers and spuriously fails whichever stories were loading.
+  optimizeDeps: {
+    entries: [
+      "editor/src/**/*.stories.@(ts|tsx)",
+      ".storybook/preview.tsx",
+    ],
+  },
   test: {
     projects: [
       {
