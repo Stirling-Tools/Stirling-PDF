@@ -4,12 +4,32 @@
  * only builds seed data for the MSW handlers and tests.
  */
 
-import type { PolicyRunView, WirePolicy } from "@app/policies/types";
-import { POLICY_CONFIG } from "@portal/api/policies";
+import type {
+  PolicyRunView,
+  WirePipelineStep,
+  WirePolicy,
+} from "@app/policies/types";
 
 /* ──────────────────────────────────────────────────────────────────────── */
 /*  Seed data — real backend wire format                                      */
 /* ──────────────────────────────────────────────────────────────────────── */
+
+// Literal wire steps (not derived from the catalogue) so this fixtures module stays independent of
+// @portal/api/policies and its heavy tool-operation import graph.
+const SECURITY_STEPS: WirePipelineStep[] = [
+  {
+    operation: "/api/v1/security/auto-redact",
+    parameters: {
+      listOfText: "",
+      useRegex: true,
+      convertPDFToImage: true,
+    },
+  },
+  {
+    operation: "/api/v1/security/sanitize-pdf",
+    parameters: { removeJavaScript: true },
+  },
+];
 
 export function seedPolicies(): WirePolicy[] {
   return [
@@ -19,7 +39,7 @@ export function seedPolicies(): WirePolicy[] {
       owner: "security@acme.com",
       enabled: true,
       trigger: null,
-      steps: POLICY_CONFIG.security.defaultOperations,
+      steps: SECURITY_STEPS,
       output: {
         type: "inline",
         options: {

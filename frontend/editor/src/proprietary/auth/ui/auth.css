@@ -172,6 +172,19 @@
   align-items: center;
 }
 
+/* These OAuth buttons are shared <Button>s. Pin their pill shape + height so the
+   auth styling wins over the design-system Button base regardless of CSS load
+   order — Storybook injects the Button/Mantine CSS after auth.css (the app loads
+   it before), which otherwise flips these single-class rules to the Button's
+   defaults (rounded-rect + 36px). Higher specificity keeps both identical. */
+.oauth-button-vertical.sui-btn.mantine-Button-root {
+  border-radius: 999px;
+  min-height: 3.5rem; /* 56px */
+}
+.oauth-button-fullwidth.sui-btn.mantine-Button-root {
+  border-radius: 100px;
+}
+
 .oauth-button-icon {
   width: 3.75rem; /* 60px */
   height: 3.75rem; /* 60px */
@@ -214,7 +227,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.875rem 1.5rem; /* 14px 24px */
+  /* Vertical padding is driven by the shared Button's --sui-btn-py so it beats
+     the Button's own padding-block; horizontal stays in the shorthand. */
+  --sui-btn-py: 1rem; /* 16px (md) */
+  padding: 1rem 1.5rem; /* 16px 24px */
   border: 1px solid var(--auth-input-border-light-only);
   border-radius: 999px;
   background-color: var(--auth-card-bg-light-only);
@@ -718,7 +734,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 1rem;
+  /* Vertical padding via the shared Button's --sui-btn-py (beats the Button's
+     own padding-block); horizontal stays in the shorthand. */
+  --sui-btn-py: 1rem; /* 16px (md) */
+  padding: 1rem 1rem; /* 16px */
   border: 1px solid #d1d5db;
   border-radius: 100px;
   background-color: #ffffff;
@@ -798,7 +817,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 1rem;
+  /* Vertical padding via the shared Button's --sui-btn-py (beats the Button's
+     own padding-block); horizontal stays in the shorthand. */
+  --sui-btn-py: 1rem; /* 16px (md) */
+  padding: 1rem 1rem; /* 16px */
   border: 1px solid #d1d5db;
   border-radius: 100px;
   background-color: #ffffff;

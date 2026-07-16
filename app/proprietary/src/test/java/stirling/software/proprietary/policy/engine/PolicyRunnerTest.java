@@ -1,5 +1,6 @@
 package stirling.software.proprietary.policy.engine;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -26,10 +27,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.ByteArrayResource;
 
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.input.ResolveContext;
 import stirling.software.proprietary.policy.input.ResolvedInput;
+import stirling.software.proprietary.policy.ledger.InProcessProcessedLedger;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
@@ -39,6 +42,7 @@ import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
+import stirling.software.proprietary.policy.source.EditorSource;
 import stirling.software.proprietary.policy.source.InProcessSourceDocCounter;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
 import stirling.software.proprietary.policy.source.Source;
@@ -56,6 +60,7 @@ class PolicyRunnerTest {
     @Mock private ProcessedLedger processedLedger;
 
     private final SourceStore sourceStore = new InProcessSourceStore();
+    private final InProcessSourceDocCounter docCounter = new InProcessSourceDocCounter();
     private PolicyRunner runner;
 
     @BeforeEach
@@ -65,7 +70,7 @@ class PolicyRunnerTest {
                         policyEngine,
                         List.of(folderSource),
                         sourceStore,
-                        new InProcessSourceDocCounter(),
+                        docCounter,
                         processedLedger);
     }
 
@@ -83,6 +88,42 @@ class PolicyRunnerTest {
         // Ledger hygiene still runs: rows recorded for a generator policy's folder outputs
         // are pruned by its own sweeps rather than accumulating until the policy is deleted.
         verify(processedLedger).deleteUnseen(eq("p1"), anyLong());
+    }
+
+    @Test
+    void reportsWhatTheSweepSkippedSoAnEmptyTriggerExplainsItself() throws Exception {
+        InProcessProcessedLedger ledger = new InProcessProcessedLedger();
+        PolicyRunner reporting =
+                new PolicyRunner(
+                        policyEngine,
+                        List.of(folderSource),
+                        sourceStore,
+                        new InProcessSourceDocCounter(),
+                        ledger);
+        InputSpec spec = InputSpec.folder("/in");
+        Policy policy = policy(List.of(spec));
+        // One file already processed at its current version, one parked by a failed run.
+        ledger.claim("p1", "/in/done.pdf", "g1", null);
+        ledger.settle("p1", "/in/done.pdf", "g1", null, true);
+        ledger.claim("p1", "/in/failed.pdf", "g2", null);
+        ledger.settle("p1", "/in/failed.pdf", "g2", null, false);
+        when(folderSource.supports(spec)).thenReturn(true);
+        when(folderSource.resolve(eq(spec), any()))
+                .thenAnswer(
+                        invocation -> {
+                            ResolveContext ctx = invocation.getArgument(1);
+                            ctx.reportPresent(List.of("/in/done.pdf", "/in/failed.pdf"));
+                            // Both are at their settled versions, so neither claims.
+                            return List.of();
+                        });
+
+        SweepOutcome outcome = reporting.run(policy);
+
+        assertTrue(outcome.runIds().isEmpty());
+        assertEquals(2, outcome.filesListed());
+        assertEquals(1, outcome.alreadyProcessed());
+        assertEquals(1, outcome.parked());
+        assertEquals(0, outcome.inFlight());
     }
 
     @Test
@@ -255,6 +296,33 @@ class PolicyRunnerTest {
 
         assertSame(handle, runner.runWith(policy, inputs, PolicyProgressListener.NOOP));
         verifyNoInteractions(folderSource);
+    }
+
+    @Test
+    void runWithRecordsSuppliedDocsAgainstTheEditorSourceForThePolicyTeam() {
+        Policy policy =
+                new Policy(
+                        "p1",
+                        "p",
+                        "owner",
+                        true,
+                        null,
+                        List.of(),
+                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                        OutputSpec.inline(),
+                        7L);
+        PolicyInputs inputs =
+                PolicyInputs.of(
+                        List.of(
+                                new ByteArrayResource("a".getBytes()),
+                                new ByteArrayResource("b".getBytes())));
+        when(policyEngine.runPolicy(policy, inputs, PolicyProgressListener.NOOP))
+                .thenReturn(new PolicyRunHandle("r", new CompletableFuture<>()));
+
+        runner.runWith(policy, inputs, PolicyProgressListener.NOOP);
+
+        String key = EditorSource.counterKey(7L);
+        assertEquals(2, docCounter.statsFor(List.of(key)).get(key).total());
     }
 
     /** Persists each spec as a source and returns a policy referencing them by id. */

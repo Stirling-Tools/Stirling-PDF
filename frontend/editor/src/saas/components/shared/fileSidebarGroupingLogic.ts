@@ -2,10 +2,7 @@
 
 import { DEFAULT_LABEL_ICON } from "@app/data/labelIcons";
 import { accentColor, accentCycleColor } from "@app/utils/accentColors";
-import {
-  categorizedLabelKeys,
-  type SidebarCategory,
-} from "@app/services/fileSidebarCategories";
+import type { SidebarCategory } from "@app/services/fileSidebarCategories";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { FileSidebarGroup } from "@core/components/shared/fileSidebarGrouping";
 
@@ -30,36 +27,21 @@ export function bucketStubsByLabel(
 }
 
 /**
- * Pure grouping: Recent (top {@link RECENT_COUNT} by lastModified), then visible groups sorted
- * alphabetically, then Other (files in no visible group) last. Visible groups are the non-hidden
- * {@link SidebarCategory} entries with ≥1 file (a file lands in every category it has a label in),
- * plus a standalone group for any label on a file that isn't in a category yet.
+ * Pure grouping: Recent (top {@link RECENT_COUNT} by lastModified), then one group per VISIBLE
+ * category with ≥1 file (a file lands in every category it has a label in), sorted alphabetically,
+ * then Other (files in no visible category) last. Categories are the fixed, shared set; a category
+ * the user has hidden forms no group, so its files fall to Other.
  */
 export function buildLabelGroups(
   stubs: StirlingFileStub[],
-  labelSet: readonly { id: string; name: string; icon?: string }[],
   t: (key: string, fallback: string) => string,
   categories: SidebarCategory[],
 ): FileSidebarGroup[] | null {
   if (stubs.length === 0) return null;
 
-  // Display name + icon per label id from the effective set; ids no longer in the
-  // set still group, resolving to the id text and the default icon.
-  const nameById = new Map<string, string>();
-  const iconById = new Map<string, string | undefined>();
-  for (const label of labelSet) {
-    nameById.set(label.id, label.name);
-    iconById.set(label.id, label.icon);
-  }
-  const labelName = (id: string) =>
-    t(`classification.labels.${id}`, nameById.get(id) ?? id);
-
   const recent = [...stubs]
     .sort((a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0))
     .slice(0, RECENT_COUNT);
-
-  const byLabel = bucketStubsByLabel(stubs);
-  const inACategory = categorizedLabelKeys(categories);
 
   const visible: Omit<FileSidebarGroup, "color">[] = [];
 
@@ -77,19 +59,6 @@ export function buildLabelGroups(
       label: category.name,
       icon: category.icon,
       stubs: members,
-      defaultExpanded: false,
-    });
-  }
-
-  // A label on a file but not in any category still gets its own group, so nothing is stranded
-  // until the user files it into a category.
-  for (const [labelId, bucket] of byLabel) {
-    if (inACategory.has(labelId)) continue;
-    visible.push({
-      id: `label:${labelId}`,
-      label: labelName(labelId),
-      icon: iconById.get(labelId) ?? DEFAULT_LABEL_ICON,
-      stubs: bucket.stubs,
       defaultExpanded: false,
     });
   }

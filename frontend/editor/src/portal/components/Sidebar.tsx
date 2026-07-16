@@ -3,15 +3,12 @@ import { AppSwitch } from "@app/components/shared/AppSwitch";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useView, type ViewId } from "@portal/contexts/ViewContext";
-import { useTier } from "@portal/contexts/TierContext";
 import { useTheme } from "@portal/contexts/ThemeContext";
 import { useUI } from "@portal/contexts/UIContext";
 import { LinkAccountFooterItem } from "@portal/components/LinkAccountFooterItem";
-import { useAsync } from "@portal/hooks/useAsync";
-import { fetchFleetStats, type FleetStats } from "@portal/api/fleetStats";
 import { EDITOR_URL, EDITOR_IS_SAME_APP } from "@portal/auth/editorUrl";
-import markLight from "@app/assets/brand/modern-logo/StirlingPDFLogoNoTextLight.svg";
-import markDark from "@app/assets/brand/modern-logo/StirlingPDFLogoNoTextDark.svg";
+import wordmarkLight from "@app/assets/brand/modern-logo/StirlingProcessorLogoBlackText.svg";
+import wordmarkDark from "@app/assets/brand/modern-logo/StirlingProcessorLogoWhiteText.svg";
 import { SettingsIcon } from "@portal/components/icons";
 import {
   GROUP_PRIMARY,
@@ -20,36 +17,6 @@ import {
   type NavEntry,
 } from "@portal/components/sidebarGroups";
 import "@portal/components/Sidebar.css";
-
-function UsageFooter() {
-  const { tier } = useTier();
-  const { t } = useTranslation();
-  // Real 30-day processed-PDF count from the fleet-usage endpoint (the same
-  // source as Home's status strip, so the two can't drift). null → "—".
-  const { data, loading } = useAsync<FleetStats>(() => fetchFleetStats(), []);
-  const docs = loading ? undefined : (data?.pdfsProcessed ?? undefined);
-
-  const planLabel =
-    tier === "free"
-      ? t("portal.shell.sidebar.planEditor", "Editor plan")
-      : tier === "pro"
-        ? t("portal.shell.sidebar.planProcessor", "Processor plan")
-        : t("portal.shell.sidebar.planEnterprise", "Enterprise plan");
-
-  return (
-    <div className="portal-sidebar__usage">
-      <div className="portal-sidebar__usage-line">
-        <span className="portal-sidebar__plan">
-          <span className="portal-sidebar__plan-dot" aria-hidden />
-          {planLabel}
-        </span>
-        <span className="portal-sidebar__usage-value">
-          {docs != null ? t("portal.shell.sidebar.docsCount", { docs }) : "—"}
-        </span>
-      </div>
-    </div>
-  );
-}
 
 export function Sidebar() {
   const { activeView, setActiveView } = useView();
@@ -94,16 +61,11 @@ export function Sidebar() {
       aria-label={t("portal.shell.sidebar.primaryNav")}
     >
       <div className="portal-sidebar__logo">
-        <span className="portal-sidebar__brand">
-          <img
-            className="portal-sidebar__brand-mark"
-            src={theme === "dark" ? markDark : markLight}
-            alt="Stirling"
-          />
-          <span className="portal-sidebar__logo-suffix">
-            {t("portal.shell.sidebar.brandSuffix")}
-          </span>
-        </span>
+        <img
+          className="portal-sidebar__wordmark"
+          src={theme === "dark" ? wordmarkDark : wordmarkLight}
+          alt={t("portal.shell.sidebar.brandSuffix")}
+        />
 
         <AppSwitch
           className="portal-sidebar__app-switch"
@@ -135,7 +97,6 @@ export function Sidebar() {
           icon={<SettingsIcon />}
           onClick={() => openSettings()}
         />
-        <UsageFooter />
       </div>
     </aside>
   );

@@ -64,18 +64,23 @@
   --tool-button-selected-bg: var(--mantine-color-dark-4);
 }
 
-/* Compact tool buttons */
+/* Compact tool buttons (padding via the Button `p`/`py` props).
+   List rows hug their content — drop the shared Button's min-height floor
+   so height = icon/label only and rows sit tight against each other. */
 .tool-button {
   font-size: 0.875rem;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-  padding-left: 0.5rem;
 }
 
-.tool-button .sui-btn__label {
+.tool-button.sui-btn.mantine-Button-root {
+  min-height: 0;
+}
+
+.tool-button .mantine-Button-label {
   font-size: 0.84rem;
   font-weight: 500;
-  line-height: 1.2;
+  /* ≥1.4 so the overflow:hidden label box contains glyph descenders (g/y/p);
+     row height is icon-bound (~24px) so this doesn't change row size. */
+  line-height: 1.4;
 }
 
 .tool-button-icon {
@@ -121,13 +126,7 @@
   padding: 0.5rem var(--mantine-spacing-sm) var(--mantine-spacing-sm);
 }
 
-.tool-picker__compact .tool-button {
-  padding-top: 0.65rem;
-  padding-bottom: 0.65rem;
-  height: auto;
-}
-
-.tool-picker__compact .tool-button .sui-btn__label {
+.tool-picker__compact .tool-button .mantine-Button-label {
   align-items: center;
 }
 

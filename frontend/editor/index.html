@@ -14,6 +14,34 @@
     <link rel="manifest" href="manifest.json" />
 
     <title>Stirling PDF</title>
+
+    <!-- Apply theme before first paint (no FOUC); mirrors ThemeProvider, which then refines it. -->
+    <script>
+      (function () {
+        try {
+          var p = JSON.parse(
+            localStorage.getItem("stirlingpdf_preferences") || "{}",
+          );
+          var mode = p.theme || "system";
+          var scheme =
+            mode === "light"
+              ? "light"
+              : mode === "dark"
+                ? "dark"
+                : window.matchMedia &&
+                    window.matchMedia("(prefers-color-scheme: dark)").matches
+                  ? "dark"
+                  : "light";
+          var r = document.documentElement;
+          r.setAttribute("data-theme", scheme);
+          r.setAttribute("data-app-theme", "custom");
+          r.setAttribute("data-accent", "default");
+          r.setAttribute("data-mantine-color-scheme", scheme);
+        } catch (e) {
+          /* first visit / unavailable storage: ThemeProvider handles it */
+        }
+      })();
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
