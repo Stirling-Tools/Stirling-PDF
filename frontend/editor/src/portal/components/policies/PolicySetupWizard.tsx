@@ -284,6 +284,7 @@ function PolicySetupWizardBody({
   // a bare disabled button explains nothing.
   const gateHint = misconfiguredTool
     ? t("portal.policies.wizard.finishConfiguring", {
+        defaultValue: 'Finish configuring "{{capability}}"',
         capability: t(
           CAPABILITY_META[misconfiguredTool.toolId].labelKey,
           CAPABILITY_META[misconfiguredTool.toolId].labelEn,

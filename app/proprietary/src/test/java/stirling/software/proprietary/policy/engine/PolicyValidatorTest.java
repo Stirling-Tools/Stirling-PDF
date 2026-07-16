@@ -146,7 +146,7 @@ class PolicyValidatorTest {
                 withSteps(
                         new PipelineStep(
                                 "/api/v1/security/auto-redact",
-                                Map.of("mode", "automatic", "wordsToRedact", List.of()),
+                                Map.of("useRegex", true, "listOfText", "  "),
                                 Map.of()));
 
         assertThrows(IllegalArgumentException.class, () -> validator.validate(policy));
@@ -165,7 +165,7 @@ class PolicyValidatorTest {
                                 Map.of()),
                         new PipelineStep(
                                 "/api/v1/security/auto-redact",
-                                Map.of("mode", "automatic", "wordsToRedact", List.of("\\d+")),
+                                Map.of("useRegex", true, "listOfText", "\\d{3}-\\d{2}-\\d{4}"),
                                 Map.of()));
 
         validator.validate(policy);
