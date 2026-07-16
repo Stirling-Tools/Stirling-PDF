@@ -526,12 +526,12 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
           >
             <div style={{ flex: 1, minWidth: 0 }}>
               <Text fw={500} size="sm">
-                {t("settings.general.accent", "Accent colour")}
+                {t("settings.general.themeAccent", "Accent colour")}
               </Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t(
-                  "settings.general.accentDescription",
-                  "Tint buttons and highlights. Applies to the current light or dark theme.",
+                  "settings.general.themeAccentDescription",
+                  "Buttons, links and highlights follow it, and it subtly tints the app. Light and dark each have their own. System uses whichever is active.",
                 )}
               </Text>
             </div>
@@ -539,14 +539,14 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               value={preferences[accentKey]}
               onChange={(value) => updatePreference(accentKey, value)}
               colors={THEME_ACCENT_PRESETS}
-              ariaLabel={t("settings.general.accent", "Accent colour")}
+              ariaLabel={t("settings.general.themeAccent", "Accent colour")}
               defaultOption={{
                 value: DEFAULT_ACCENT,
                 icon: "palette-outline",
-                label: t("settings.general.accentDefault", "Default"),
+                label: t("settings.general.themeAccentDefault", "Default"),
                 hint: t(
-                  "settings.general.accentDefaultHint",
-                  "Neutral surfaces with blue buttons",
+                  "settings.general.themeAccentDefaultHint",
+                  "Default theme (recommended)",
                 ),
               }}
               zIndex={Z_INDEX_OVER_CONFIG_MODAL}
