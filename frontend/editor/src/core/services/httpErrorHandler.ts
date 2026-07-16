@@ -12,6 +12,7 @@ import {
   extractAxiosErrorMessage,
 } from "@app/services/httpErrorUtils";
 import { withBasePath } from "@app/constants/app";
+import { captureNetworkError } from "@app/services/analytics";
 
 // Module-scoped state to reduce global variable usage
 const recentSpecialByEndpoint: Record<string, number> = {};
@@ -146,6 +147,17 @@ export async function handleHttpError(error: any): Promise<boolean> {
   }
 
   if (handleSaaSError(error)) return true;
+
+  // Forward the network-failure class — a request that never got a response
+  // (no status) or a 5xx — to error tracking. These otherwise only surface as a
+  // toast, so error tracking never sees them and their real frequency is hidden.
+  if (!status || status >= 500) {
+    captureNetworkError(error, {
+      endpoint: error?.config?.url,
+      method: error?.config?.method,
+      status: status ?? null,
+    });
+  }
 
   // Compute title/body (friendly) from the error object
   const { title, body } = extractAxiosErrorMessage(error);

@@ -172,32 +172,8 @@ export default function Login() {
   const isUserPassAllowed = login.isUserPassAllowed;
   const isSsoOnlyMode = !login.isUserPassAllowed;
 
-  // Periodically probe while backend isn't up so the screen can auto-advance when it comes online
-  useEffect(() => {
-    if (backendProbe.status === "up" || backendProbe.loginDisabled) {
-      return;
-    }
-    const tick = async () => {
-      const result = await backendProbe.probe();
-      if (result.status === "up") {
-        await refetch();
-        if (loginDisabled) {
-          navigate("/", { replace: true });
-        }
-      }
-    };
-    const intervalId = window.setInterval(() => {
-      void tick();
-    }, 5000);
-    return () => window.clearInterval(intervalId);
-  }, [
-    backendProbe.status,
-    backendProbe.loginDisabled,
-    backendProbe.probe,
-    refetch,
-    navigate,
-    loginDisabled,
-  ]);
+  // useBackendProbe auto-polls with backoff, so the screen advances on its own
+  // when the backend comes online; config refetch on "up" is handled below.
 
   // Redirect immediately if user has valid session (JWT already validated by AuthProvider)
   useEffect(() => {
@@ -410,8 +386,20 @@ export default function Login() {
     return <LoggedInState />;
   }
 
-  // If backend isn't ready yet, show a lightweight status screen instead of the form
+  // If backend isn't ready yet, show a lightweight status screen instead of the form.
+  // A booting backend shows a reassuring "starting up" state (the probe auto-refreshes);
+  // a genuinely unreachable backend shows the error with a Retry button.
   if (backendProbe.status !== "up" && !loginDisabled) {
+    const isStarting = backendProbe.status === "starting";
+    const message = isStarting
+      ? t(
+          "backendStartup.startingMessage",
+          "The backend is still starting up. This can take a moment on first launch — this screen will refresh automatically.",
+        )
+      : t(
+          "backendStartup.unreachable",
+          "The application cannot currently connect to the backend. Verify the backend status and network connectivity, then try again.",
+        );
     const handleRetry = async () => {
       const result = await backendProbe.probe();
       if (result.status === "up") {
@@ -444,19 +432,23 @@ export default function Login() {
           }}
         >
           <p style={{ margin: "0 0 0.75rem 0", color: "var(--text-primary)" }}>
-            {t(
-              "backendStartup.unreachable",
-              "The application cannot currently connect to the backend. Verify the backend status and network connectivity, then try again.",
-            )}
+            {message}
           </p>
-          <Button
-            type="button"
-            onClick={handleRetry}
-            className="auth-cta-button px-4 py-[0.75rem] rounded-[0.625rem] text-base font-semibold mt-5 border-0 cursor-pointer"
-            style={{ width: "fit-content" }}
-          >
-            {t("backendStartup.retry", "Retry")}
-          </Button>
+          {isStarting ? (
+            <div
+              className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mt-4"
+              aria-hidden="true"
+            />
+          ) : (
+            <Button
+              type="button"
+              onClick={handleRetry}
+              className="auth-cta-button px-4 py-[0.75rem] rounded-[0.625rem] text-base font-semibold mt-5 border-0 cursor-pointer"
+              style={{ width: "fit-content" }}
+            >
+              {t("backendStartup.retry", "Retry")}
+            </Button>
+          )}
         </div>
       </AuthLayout>
     );

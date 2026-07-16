@@ -38,3 +38,24 @@ export function trackEditorOperation(toolId: string, fileCount: number): void {
     if (DEV) console.warn("[analytics] trackEditorOperation failed", error);
   }
 }
+
+/**
+ * Forward a backend-connectivity failure (no-response network error or 5xx) to
+ * error tracking. These otherwise only ever surface as a toast, so error
+ * tracking never sees them and their true frequency stays invisible.
+ */
+export function captureNetworkError(
+  error: unknown,
+  context: Record<string, unknown> = {},
+): void {
+  try {
+    if (!canCapture()) return;
+    const err = error instanceof Error ? error : new Error(String(error));
+    posthog.captureException(err, {
+      $exception_source: "backend_connectivity",
+      ...context,
+    });
+  } catch (e) {
+    if (DEV) console.warn("[analytics] captureNetworkError failed", error, e);
+  }
+}

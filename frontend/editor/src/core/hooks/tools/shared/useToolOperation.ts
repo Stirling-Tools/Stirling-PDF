@@ -1,5 +1,5 @@
 import { useCallback, useRef, useEffect, useContext } from "react";
-import apiClient from "@app/services/apiClient";
+import { postWithNetworkRetry } from "@app/services/networkRetry";
 import { useTranslation } from "react-i18next";
 import { useFileContext } from "@app/contexts/FileContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
@@ -280,7 +280,7 @@ export const useToolOperation = <TParams>(
               );
             }
 
-            const response = await apiClient.post(endpoint, formData, {
+            const response = await postWithNetworkRetry(endpoint, formData, {
               responseType: "blob",
             });
 
