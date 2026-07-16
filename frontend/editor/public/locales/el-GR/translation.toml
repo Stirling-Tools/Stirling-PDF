@@ -6521,63 +6521,6 @@ title_other = "Επεξεργαστείτε {{allowance}} PDFs δωρεάν"
 titleWithRate_one = "Επεξεργαστείτε {{allowance}} PDFs δωρεάν και μετά {{rate}}/PDF"
 titleWithRate_other = "Επεξεργαστείτε {{allowance}} PDFs δωρεάν και μετά {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Κλειδωμένο"
-openAriaLabel = "Άνοιγμα στοιχείου {{name}}"
-
-[portal.catalogue.detail]
-addToProject = "Προσθήκη στο έργο"
-ariaLabel = "Λεπτομέρειες στοιχείου"
-tabsAriaLabel = "Ενότητες λεπτομερειών στοιχείου"
-upgradeToUnlock = "Αναβαθμίστε για ξεκλείδωμα"
-
-[portal.catalogue.detail.code]
-install = "Εγκατάσταση"
-usage = "Χρήση"
-
-[portal.catalogue.detail.locked]
-description = "Το {{name}} περιλαμβάνεται από το πλάνο {{tier}}. Αναβαθμίστε για να το ενσωματώσετε."
-title = "Δεν είναι διαθέσιμο στο πλάνο σας"
-
-[portal.catalogue.detail.preview]
-badge = "Ζωντανή προεπισκόπηση"
-note = "Το διαδραστικό sandbox αποδίδεται εδώ"
-
-[portal.catalogue.detail.pricing]
-note = "Μετρημένο ανά {{unit}}. Η χρήση πέρα από τη μηνιαία δωρεάν ποσόστωση χρεώνεται στον λογαριασμό σας και αναλύεται στην ενότητα Χρήση & Χρέωση."
-
-[portal.catalogue.detail.stats]
-billedOn = "Χρεώνεται σε"
-embeds30d = "Ενσωματώσεις (30ημ.)"
-freeQuota = "Δωρεάν ποσόστωση"
-freeQuotaValue = "{{amount}} / μήνα"
-maturity = "Ωριμότητα"
-none = "Καμία"
-perAction = "Ανά ενέργεια"
-price = "Τιμή"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "Επισκόπηση"
-pricing = "Τιμολόγηση"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "προαιρετικό"
-required = "απαιτείται"
-
-[portal.catalogue.props.columns]
-description = "Περιγραφή"
-name = "Prop"
-required = "Απαιτείται"
-type = "Τύπος"
-
-[portal.catalogue.summary]
-componentsGa = "Components GA"
-componentSpendMtd = "Δαπάνη components (MTD)"
-embedsThisMonth = "Ενσωματώσεις αυτόν τον μήνα"
-inBeta = "Σε beta"
-
 [portal.components.billingUnit]
 approval = "έγκριση"
 check = "έλεγχος"
@@ -6590,18 +6533,6 @@ signature = "υπογραφή"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Ενσωματώσιμα SDK widgets που τοποθετείτε στη δική σας εφαρμογή — ένας viewer, μια ροή e-sign, ένα πάνελ ελέγχου AI. Κάθε ένα μετριέται ανά ενέργεια. Κάντε κλικ σε μια κάρτα για εγκατάσταση, χρήση και props."
-title = "Components"
-
-[portal.componentsView.empty]
-description = "Δεν ήταν δυνατή η φόρτωση του καταλόγου components. Δοκιμάστε ξανά σύντομα."
-title = "Δεν υπάρχουν διαθέσιμα components"
-
-[portal.componentsView.lockedBanner]
-description = "Τα GA components είναι διαθέσιμα στο Pay-as-you-go. Μερικά Beta components είναι μόνο για enterprise. Οι κλειδωμένες κάρτες εμφανίζουν προτροπή αναβάθμισης."
-title = "Ορισμένα components χρειάζονται πληρωμένο πλάνο"
 
 [portal.docs.authentication]
 codeCaption = "κάθε αίτημα"

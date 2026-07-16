@@ -49,6 +49,7 @@
 .portal-sources__name-text {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 0.25rem;
   min-width: 0;
 }
@@ -366,7 +367,7 @@
 
 .portal-sources__type-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
   gap: 0.625rem;
 }
 
@@ -374,6 +375,17 @@
   .portal-sources__type-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+}
+
+/* The shared Button lays its children out in a flex-row label; force the type
+   tile back to a centred icon-over-label column so the SVG sits above the name
+   with real spacing (not jammed against it). */
+.portal-sources__type-card .mantine-Button-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
 }
 
 .portal-sources__type-card {
@@ -402,9 +414,29 @@
   box-shadow: 0 0 0 1px var(--color-blue) inset;
 }
 
+/* Icon inside the type picker: a plain stroke icon above the label (no badge
+   box — the tinted box read as an extra bordered chip floating on the tile). */
 .portal-sources__type-icon {
-  font-size: 1.25rem;
-  color: var(--color-text-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-3);
+}
+
+.portal-sources__type-card.is-selected .portal-sources__type-icon {
+  color: var(--color-blue);
+}
+
+.portal-sources__type-icon .portal-sources__type-svg {
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+/* Sized to sit centred inside the 1.875rem table badge / picker dot. */
+.portal-sources__type-svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  display: block;
 }
 
 .portal-sources__type-name {

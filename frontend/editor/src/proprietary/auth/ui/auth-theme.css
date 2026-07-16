@@ -2,30 +2,34 @@
 
 :root {
   /* Auth page colors (light mode) */
-  --auth-bg-color: #f3f4f6;
+  --auth-bg-color: var(--p-gray-100);
   --auth-card-bg: #ffffff;
-  --auth-label-text: #374151;
-  --auth-input-border: #d1d5db;
+  --auth-label-text: var(--p-gray-700);
+  --auth-input-border: var(--p-gray-300);
   --auth-input-bg: #ffffff;
-  --auth-input-text: #111827;
-  --auth-border-focus: #3b82f6;
-  --auth-focus-ring: rgba(59, 130, 246, 0.1);
-  --auth-button-bg: #af3434;
+  --auth-input-text: var(--p-gray-900);
+  --auth-border-focus: var(--p-blue-500);
+  --auth-focus-ring: color-mix(in srgb, var(--p-blue-500) 10%, transparent);
+  --auth-button-bg: var(--p-red-600);
   --auth-button-text: #ffffff;
-  --auth-magic-button-bg: #e5e7eb;
-  --auth-magic-button-text: #374151;
-  --auth-text-primary: #111827;
-  --auth-text-secondary: #6b7280;
-  --auth-error-bg: #fef2f2;
-  --auth-error-border: #fecaca;
-  --auth-error-text: #dc2626;
-  --auth-success-bg: #f0fdf4;
-  --auth-success-border: #bbf7d0;
-  --auth-success-text: #059669;
+  --auth-magic-button-bg: var(--p-gray-200);
+  --auth-magic-button-text: var(--p-gray-700);
+  --auth-text-primary: var(--p-gray-900);
+  --auth-text-secondary: var(--p-gray-500);
+  --auth-error-bg: color-mix(in srgb, var(--p-red-500) 8%, transparent);
+  --auth-error-border: color-mix(in srgb, var(--p-red-500) 25%, transparent);
+  --auth-error-text: var(--p-red-600);
+  --auth-success-bg: color-mix(in srgb, var(--p-green-500) 10%, transparent);
+  --auth-success-border: color-mix(
+    in srgb,
+    var(--p-green-500) 30%,
+    transparent
+  );
+  --auth-success-text: var(--p-green-600);
   --text-divider-rule-rgb-light: 229, 231, 235;
   --text-divider-label-rgb-light: 156, 163, 175;
-  --tool-subcategory-rule-color-light: #e5e7eb;
-  --tool-subcategory-text-color-light: #9ca3af;
+  --tool-subcategory-rule-color-light: var(--p-gray-200);
+  --tool-subcategory-text-color-light: var(--p-gray-400);
 }
 
 [data-mantine-color-scheme="dark"] {
@@ -35,20 +39,24 @@
   --auth-input-border: var(--border-default);
   --auth-input-bg: var(--bg-raised);
   --auth-input-text: var(--text-primary);
-  --auth-border-focus: #3b82f6;
-  --auth-focus-ring: rgba(59, 130, 246, 0.2);
-  --auth-button-bg: #af3434;
+  --auth-border-focus: var(--p-blue-500);
+  --auth-focus-ring: color-mix(in srgb, var(--p-blue-500) 20%, transparent);
+  --auth-button-bg: var(--p-red-600);
   --auth-button-text: #ffffff;
   --auth-magic-button-bg: var(--bg-raised);
   --auth-magic-button-text: var(--text-primary);
   --auth-text-primary: var(--text-primary);
   --auth-text-secondary: var(--text-secondary);
-  --auth-error-bg: rgba(239, 68, 68, 0.12);
-  --auth-error-border: rgba(239, 68, 68, 0.35);
-  --auth-error-text: #fca5a5;
-  --auth-success-bg: rgba(34, 197, 94, 0.12);
-  --auth-success-border: rgba(34, 197, 94, 0.35);
-  --auth-success-text: #86efac;
+  --auth-error-bg: color-mix(in srgb, var(--p-red-500) 12%, transparent);
+  --auth-error-border: color-mix(in srgb, var(--p-red-500) 35%, transparent);
+  --auth-error-text: var(--p-red-400);
+  --auth-success-bg: color-mix(in srgb, var(--p-green-500) 12%, transparent);
+  --auth-success-border: color-mix(
+    in srgb,
+    var(--p-green-500) 35%,
+    transparent
+  );
+  --auth-success-text: var(--p-green-500);
   --text-divider-rule-rgb-light: 28, 35, 64;
   --text-divider-label-rgb-light: 91, 98, 128;
   --tool-subcategory-rule-color-light: var(--border-default);

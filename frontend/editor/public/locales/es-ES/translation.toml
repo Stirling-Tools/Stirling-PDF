@@ -6521,63 +6521,6 @@ title_other = "Procesa {{allowance}} PDFs gratis"
 titleWithRate_one = "Procesa {{allowance}} PDFs gratis, luego {{rate}}/PDF"
 titleWithRate_other = "Procesa {{allowance}} PDFs gratis, luego {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Bloqueado"
-openAriaLabel = "Abrir componente {{name}}"
-
-[portal.catalogue.detail]
-addToProject = "Añadir al proyecto"
-ariaLabel = "Detalle del componente"
-tabsAriaLabel = "Secciones de detalle del componente"
-upgradeToUnlock = "Actualiza para desbloquear"
-
-[portal.catalogue.detail.code]
-install = "Instalar"
-usage = "Uso"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} está incluido desde el plan {{tier}}. Actualiza para incrustarlo."
-title = "No disponible en tu plan"
-
-[portal.catalogue.detail.preview]
-badge = "Vista previa en vivo"
-note = "El sandbox interactivo se renderiza aquí"
-
-[portal.catalogue.detail.pricing]
-note = "Medido por {{unit}}. El uso que supere la cuota gratuita mensual se factura a tu cuenta y se detalla en Uso y facturación."
-
-[portal.catalogue.detail.stats]
-billedOn = "Facturado por"
-embeds30d = "Incrustaciones (30 d)"
-freeQuota = "Cuota gratuita"
-freeQuotaValue = "{{amount}} / mes"
-maturity = "Madurez"
-none = "Ninguna"
-perAction = "Por acción"
-price = "Precio"
-
-[portal.catalogue.detail.tabs]
-code = "Código"
-overview = "Resumen"
-pricing = "Precios"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "opcional"
-required = "obligatorio"
-
-[portal.catalogue.props.columns]
-description = "Descripción"
-name = "Prop"
-required = "Obligatorio"
-type = "Tipo"
-
-[portal.catalogue.summary]
-componentsGa = "Componentes GA"
-componentSpendMtd = "Gasto en componentes (MTD)"
-embedsThisMonth = "Incrustaciones este mes"
-inBeta = "En beta"
-
 [portal.components.billingUnit]
 approval = "aprobación"
 check = "comprobación"
@@ -6590,18 +6533,6 @@ signature = "firma"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Widgets SDK incrustables que colocas en tu propia app: un visor, un flujo de firma electrónica, un panel de revisión de IA. Cada uno se mide por acción. Haz clic en una tarjeta para instalación, uso y props."
-title = "Componentes"
-
-[portal.componentsView.empty]
-description = "No se ha podido cargar el catálogo de componentes. Inténtalo de nuevo en breve."
-title = "No hay componentes disponibles"
-
-[portal.componentsView.lockedBanner]
-description = "Los componentes GA están disponibles en pago por uso; algunos componentes Beta son solo para empresas. Las tarjetas bloqueadas muestran un aviso para actualizar."
-title = "Algunos componentes necesitan un plan de pago"
 
 [portal.docs.authentication]
 codeCaption = "cada solicitud"

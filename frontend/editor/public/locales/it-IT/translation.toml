@@ -6521,63 +6521,6 @@ title_other = "Elabora {{allowance}} PDF gratuitamente"
 titleWithRate_one = "Elabora {{allowance}} PDF gratuitamente, poi {{rate}}/PDF"
 titleWithRate_other = "Elabora {{allowance}} PDF gratuitamente, poi {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Bloccato"
-openAriaLabel = "Apri componente {{name}}"
-
-[portal.catalogue.detail]
-addToProject = "Aggiungi al progetto"
-ariaLabel = "Dettaglio componente"
-tabsAriaLabel = "Sezioni dettaglio componente"
-upgradeToUnlock = "Esegui l'upgrade per sbloccare"
-
-[portal.catalogue.detail.code]
-install = "Installazione"
-usage = "Uso"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} è incluso dal piano {{tier}}. Esegui l'upgrade per incorporarlo."
-title = "Non disponibile nel tuo piano"
-
-[portal.catalogue.detail.preview]
-badge = "Anteprima live"
-note = "La sandbox interattiva viene renderizzata qui"
-
-[portal.catalogue.detail.pricing]
-note = "Misurato per {{unit}}. L'uso oltre la quota gratuita mensile viene addebitato al tuo account e dettagliato in Uso e fatturazione."
-
-[portal.catalogue.detail.stats]
-billedOn = "Fatturato su"
-embeds30d = "Incorporamenti (30g)"
-freeQuota = "Quota gratuita"
-freeQuotaValue = "{{amount}} / mese"
-maturity = "Maturità"
-none = "Nessuno"
-perAction = "Per azione"
-price = "Prezzo"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "Panoramica"
-pricing = "Prezzi"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "facoltativo"
-required = "obbligatorio"
-
-[portal.catalogue.props.columns]
-description = "Descrizione"
-name = "Prop"
-required = "Obbligatorio"
-type = "Tipo"
-
-[portal.catalogue.summary]
-componentsGa = "Componenti GA"
-componentSpendMtd = "Spesa componenti (MTD)"
-embedsThisMonth = "Incorporamenti questo mese"
-inBeta = "In beta"
-
 [portal.components.billingUnit]
 approval = "approvazione"
 check = "controllo"
@@ -6590,18 +6533,6 @@ signature = "firma"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Widget SDK incorporabili che inserisci nella tua app — un visualizzatore, un flusso di firma elettronica, un pannello di revisione AI. Ognuno è misurato per azione. Fai clic su una scheda per installazione, uso e props."
-title = "Componenti"
-
-[portal.componentsView.empty]
-description = "Impossibile caricare il catalogo dei componenti. Riprova tra poco."
-title = "Nessun componente disponibile"
-
-[portal.componentsView.lockedBanner]
-description = "I componenti GA sono disponibili con Pay-as-you-go; alcuni componenti Beta sono solo enterprise. Le schede bloccate mostrano un invito all'upgrade."
-title = "Alcuni componenti richiedono un piano a pagamento"
 
 [portal.docs.authentication]
 codeCaption = "ogni richiesta"
