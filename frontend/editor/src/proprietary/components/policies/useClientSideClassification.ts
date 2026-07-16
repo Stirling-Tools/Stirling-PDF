@@ -151,8 +151,8 @@ export function useClientSideClassification(): void {
 /**
  * Classify one file in the browser: wait briefly for a fresh upload's bytes, classify, and meter
  * exactly once per file (dispatch-marked, so a delivery retry after a crash never re-bills).
- * Returns the labels ([] = definitively unlabelled, including unreadable), or null when the
- * file's bytes never became available.
+ * Returns the labels ([] = definitively unlabelled), or null when no verdict could be reached
+ * (bytes never arrived, or the PDF could not be read) - null is retried later, never persisted.
  */
 async function classifyStub(
   fileId: FileId,
@@ -200,13 +200,11 @@ async function classifyStub(
     markDispatched(CLASSIFICATION_CATEGORY, fileId);
     return labels;
   } catch (err) {
-    console.warn(
-      `[Classify] ${fileName}: unreadable, recording a no-label verdict`,
-      err,
-    );
-    // Unreadable PDF: a definitive verdict, recorded so it isn't re-parsed forever.
-    markDispatched(CLASSIFICATION_CATEGORY, fileId);
-    return [];
+    // Extraction failures are environmental as often as they are real corruption (e.g. a
+    // pdf.js/Safari incompatibility): never persist a verdict, so the file retries later
+    // (next session, or a healthier browser) and is metered only when it finally classifies.
+    console.warn(`[Classify] ${fileName}: could not be read, will retry`, err);
+    return null;
   }
 }
 

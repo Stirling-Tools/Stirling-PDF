@@ -197,8 +197,9 @@ describe("useClientSideClassification delivery", () => {
     expect(mocks.meter).not.toHaveBeenCalled();
   });
 
-  it("records [] for an unreadable file instead of looping on it", async () => {
-    // The unreadable path deliberately warns; capture it so the console stays clean.
+  it("leaves an unreadable file undelivered (no verdict, no meter) so it can retry", async () => {
+    // An extraction failure may be environmental (e.g. a browser incompatibility), so it
+    // must never poison the file with a persisted verdict. The read path deliberately warns.
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     mocks.workspace = [stub("corrupt")];
     mocks.classify.mockRejectedValue(new Error("bad pdf"));
@@ -206,16 +207,15 @@ describe("useClientSideClassification delivery", () => {
     renderHook(() => useClientSideClassification());
 
     await waitFor(() =>
-      expect(mocks.updateStirlingFileStub).toHaveBeenCalledWith("corrupt", {
-        classificationLabels: [],
-      }),
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining("corrupt.pdf: could not be read"),
+        expect.any(Error),
+      ),
     );
-    expect(mocks.classify).toHaveBeenCalledTimes(1);
+    expect(mocks.classify).toHaveBeenCalledTimes(1); // claimed: once per session
+    expect(mocks.updateStirlingFileStub).not.toHaveBeenCalled();
+    expect(mocks.updateFileMetadata).not.toHaveBeenCalled();
     expect(mocks.meter).not.toHaveBeenCalled();
-    expect(warn).toHaveBeenCalledWith(
-      expect.stringContaining("corrupt.pdf: unreadable"),
-      expect.any(Error),
-    );
     warn.mockRestore();
   });
 

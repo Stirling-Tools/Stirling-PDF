@@ -74,6 +74,24 @@ function isTextItem(item: unknown): item is TextItem {
   return typeof (item as TextItem).str === "string";
 }
 
+/**
+ * A page's text items, pumped from streamTextContent with a plain reader loop.
+ * pdf.js 5's getTextContent async-iterates a ReadableStream, which Safari/WebKit
+ * doesn't support - it threw on every page there, failing all classification.
+ */
+async function pageTextItems(
+  page: Awaited<ReturnType<PDFDocumentProxy["getPage"]>>,
+): Promise<unknown[]> {
+  const reader = page.streamTextContent().getReader();
+  const items: unknown[] = [];
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    if (Array.isArray(value?.items)) items.push(...value.items);
+  }
+  return items;
+}
+
 /** A page's text (items joined, newline on hasEOL), trimmed and capped. */
 async function pageText(
   pdfDoc: PDFDocumentProxy,
@@ -81,9 +99,9 @@ async function pageText(
 ): Promise<string> {
   if (pageNo < 1 || pageNo > pdfDoc.numPages) return "";
   const page = await pdfDoc.getPage(pageNo);
-  const content = await page.getTextContent();
+  const items = await pageTextItems(page);
   let text = "";
-  for (const item of content.items) {
+  for (const item of items) {
     if (!isTextItem(item)) continue;
     text += item.str;
     text += item.hasEOL ? "\n" : " ";
@@ -98,8 +116,8 @@ async function titleZoneText(pdfDoc: PDFDocumentProxy): Promise<string> {
   if (pdfDoc.numPages < 1) return "";
   const page = await pdfDoc.getPage(1);
   const pageHeight = page.getViewport({ scale: 1 }).height;
-  const content = await page.getTextContent();
-  return titleFromLines(buildLines(content.items), pageHeight);
+  const items = await pageTextItems(page);
+  return titleFromLines(buildLines(items), pageHeight);
 }
 
 /** Group items into lines (break on hasEOL), tracking each line's max font size + baseline y. */
