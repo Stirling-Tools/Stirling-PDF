@@ -20,6 +20,7 @@ import {
 } from "@app/constants/theme";
 // SUI shared design-system tokens (used by @app/ui); key on `data-theme`.
 import "@app/tokens/tokens.css";
+import "@app/theme/index.css";
 
 interface ThemeContextType {
   themeMode: ThemeMode;
@@ -68,12 +69,17 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     return () => media.removeEventListener("change", update);
   }, [themeMode]);
 
-  // The theme preference resolved to a concrete light/dark scheme.
+  // The mode resolved to a concrete light/dark base.
   const colorScheme = resolveColorScheme(themeMode, systemScheme);
 
-  // Mantine drives `data-mantine-color-scheme`; mirror it to `data-theme` for SUI tokens.
+  // Mirror the scheme to <html>. The accent is fixed to the default (neutral
+  // surfaces + blue buttons): data-accent="default" and no --user-* overrides,
+  // so colors.css resolves --c-primary to its static blue fallback.
   useIsomorphicEffect(() => {
-    document.documentElement.setAttribute("data-theme", colorScheme);
+    const root = document.documentElement;
+    root.setAttribute("data-theme", colorScheme);
+    root.setAttribute("data-app-theme", "custom");
+    root.setAttribute("data-accent", "default");
   }, [colorScheme]);
 
   const value = useMemo<ThemeContextType>(

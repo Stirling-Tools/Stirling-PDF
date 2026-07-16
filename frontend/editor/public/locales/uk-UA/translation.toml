@@ -6521,63 +6521,6 @@ title_other = "Обробіть {{allowance}} PDF безкоштовно"
 titleWithRate_one = "Обробіть {{allowance}} PDF безкоштовно, потім {{rate}}/PDF"
 titleWithRate_other = "Обробіть {{allowance}} PDF безкоштовно, потім {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Заблоковано"
-openAriaLabel = "Відкрити компонент {{name}}"
-
-[portal.catalogue.detail]
-addToProject = "Додати до проєкту"
-ariaLabel = "Відомості про компонент"
-tabsAriaLabel = "Розділи відомостей про компонент"
-upgradeToUnlock = "Оновіть план, щоб розблокувати"
-
-[portal.catalogue.detail.code]
-install = "Встановлення"
-usage = "Використання"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} включено з плану {{tier}}. Оновіть план, щоб вбудувати його."
-title = "Недоступно у вашому плані"
-
-[portal.catalogue.detail.preview]
-badge = "Live preview"
-note = "Інтерактивна sandbox відображається тут"
-
-[portal.catalogue.detail.pricing]
-note = "За лічильником за {{unit}}. Використання понад щомісячну безкоштовну квоту виставляється на ваш обліковий запис і деталізується в Usage & Billing."
-
-[portal.catalogue.detail.stats]
-billedOn = "Оплачується за"
-embeds30d = "Вбудовування (30 дн.)"
-freeQuota = "Безкоштовна квота"
-freeQuotaValue = "{{amount}} / міс."
-maturity = "Зрілість"
-none = "Немає"
-perAction = "За дію"
-price = "Ціна"
-
-[portal.catalogue.detail.tabs]
-code = "Код"
-overview = "Огляд"
-pricing = "Ціни"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "необов’язково"
-required = "обов’язково"
-
-[portal.catalogue.props.columns]
-description = "Опис"
-name = "Prop"
-required = "Обов’язково"
-type = "Тип"
-
-[portal.catalogue.summary]
-componentsGa = "Компоненти GA"
-componentSpendMtd = "Витрати на компоненти (MTD)"
-embedsThisMonth = "Вбудовувань цього місяця"
-inBeta = "У beta"
-
 [portal.components.billingUnit]
 approval = "схвалення"
 check = "перевірка"
@@ -6590,18 +6533,6 @@ signature = "підпис"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Вбудовувані SDK-віджети, які ви додаєте у власний застосунок — переглядач, процес e-sign, панель AI-перевірки. Кожен оплачується за дію. Натисніть картку, щоб переглянути встановлення, використання та props."
-title = "Компоненти"
-
-[portal.componentsView.empty]
-description = "Не вдалося завантажити каталог компонентів. Спробуйте ще раз незабаром."
-title = "Немає доступних компонентів"
-
-[portal.componentsView.lockedBanner]
-description = "Компоненти GA доступні на Pay-as-you-go; кілька компонентів Beta доступні лише для Enterprise. Заблоковані картки показують пропозицію оновлення."
-title = "Деяким компонентам потрібен платний план"
 
 [portal.docs.authentication]
 codeCaption = "кожен запит"

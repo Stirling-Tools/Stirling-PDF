@@ -28,7 +28,10 @@ import stirling.software.common.model.enumeration.Role;
 import stirling.software.proprietary.model.Team;
 
 @Entity
-@Table(name = "users")
+@Table(
+        name = "users",
+        // team_id backs Team.users joins, the admin roster fetch, and per-team user counts.
+        indexes = @Index(name = "idx_users_team_id", columnList = "team_id"))
 @NoArgsConstructor
 @Getter
 @Setter
@@ -103,7 +106,6 @@ public class User implements UserDetails, Serializable {
 
     @ElementCollection
     @MapKeyColumn(name = "setting_key")
-    @Lob
     @Column(name = "setting_value", columnDefinition = "text")
     @CollectionTable(name = "user_settings", joinColumns = @JoinColumn(name = "user_id"))
     @JsonIgnore

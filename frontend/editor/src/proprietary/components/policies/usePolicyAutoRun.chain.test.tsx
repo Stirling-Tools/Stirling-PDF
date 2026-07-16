@@ -4,7 +4,6 @@ import { renderHook, act } from "@testing-library/react";
 // Two active upload policies, so the auto-run should CHAIN them: fire the first on
 // the upload, then the second on the first's output. Stub the contexts + network so
 // we can drive the dispatch against the REAL run store.
-vi.mock("@app/constants/featureFlags", () => ({ POLICIES_ENABLED: true }));
 const fileStubs: { id: string; name: string; derivedFromTool?: boolean }[] = [];
 vi.mock("@app/contexts/FileContext", () => ({
   useAllFiles: () => ({ fileStubs }),

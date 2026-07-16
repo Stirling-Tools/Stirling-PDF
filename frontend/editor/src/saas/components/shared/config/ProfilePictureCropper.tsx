@@ -144,7 +144,7 @@ export const ProfilePictureCropper: React.FC<ProfilePictureCropperProps> = ({
     >
       <Stack gap="md">
         {error && (
-          <Alert color="red" title="Error">
+          <Alert color="red" title={t("common.error", "Error")}>
             {error}
           </Alert>
         )}
