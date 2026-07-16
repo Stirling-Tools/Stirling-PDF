@@ -38,9 +38,17 @@
   );
 
   /* File Manager active file colors */
-  --file-active-badge-bg: color-mix(in srgb, var(--p-green-500) 15%, transparent); /* Transparent green for active badge */
+  --file-active-badge-bg: color-mix(
+    in srgb,
+    var(--p-green-500) 15%,
+    transparent
+  ); /* Transparent green for active badge */
   --file-active-badge-fg: var(--p-green-700); /* Green text for active badge */
-  --file-active-badge-border: color-mix(in srgb, var(--p-green-500) 30%, transparent); /* Green border for active badge */
+  --file-active-badge-border: color-mix(
+    in srgb,
+    var(--p-green-500) 30%,
+    transparent
+  ); /* Green border for active badge */
 }
 
 /* CSS variables for Tailwind + Mantine integration */
@@ -579,7 +587,8 @@
   --link-hover-bg: color-mix(in srgb, var(--p-blue-500) 14%, transparent);
   --link-hover-border: color-mix(in srgb, var(--p-blue-500) 38%, transparent);
   --link-hover-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 1px 4px color-mix(in srgb, var(--p-c-4f8ef5) 18%, transparent);
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 1px 4px color-mix(in srgb, var(--p-c-4f8ef5) 18%, transparent);
   --link-focus-ring: color-mix(in srgb, var(--p-blue-500) 30%, transparent);
   --link-toolbar-bg: color-mix(in srgb, var(--p-blue-700) 94%, transparent);
   --link-toolbar-border: rgba(255, 255, 255, 0.07);

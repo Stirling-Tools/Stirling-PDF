@@ -509,7 +509,8 @@ function checkCodeColors() {
     .split("\n")
     .map((l) => l.trim())
     .filter(
-      (l) => /\.(ts|tsx)$/.test(l) && !CODE_EXEMPT_PATH.some((re) => re.test(l)),
+      (l) =>
+        /\.(ts|tsx)$/.test(l) && !CODE_EXEMPT_PATH.some((re) => re.test(l)),
     );
   const violations = [];
   for (const rel of files) {
@@ -545,24 +546,34 @@ if (process.argv.includes("contrast")) {
 if (process.argv.includes("css-colors")) {
   const v = checkAppCss();
   if (v.length) {
-    console.error(`\n✖ theme-lint css-colors: ${v.length} hardcoded colour(s) in source CSS:\n`);
+    console.error(
+      `\n✖ theme-lint css-colors: ${v.length} hardcoded colour(s) in source CSS:\n`,
+    );
     for (const x of v) console.error(`  ${x.file}:${x.line}  ${x.msg}`);
-    console.error(`\nDefine every colour once in core/theme/primitives.css and reference it with var(--p-…).\n`);
+    console.error(
+      `\nDefine every colour once in core/theme/primitives.css and reference it with var(--p-…).\n`,
+    );
     process.exit(1);
   }
-  console.log("✓ theme-lint css-colors: source CSS is free of hardcoded colour");
+  console.log(
+    "✓ theme-lint css-colors: source CSS is free of hardcoded colour",
+  );
   process.exit(0);
 }
 
 if (process.argv.includes("code-colors")) {
   const v = checkCodeColors();
   if (v.length) {
-    console.error(`\n✖ theme-lint code-colors: ${v.length} hardcoded colour(s) in TS/TSX:\n`);
+    console.error(
+      `\n✖ theme-lint code-colors: ${v.length} hardcoded colour(s) in TS/TSX:\n`,
+    );
     for (const x of v) console.error(`  ${x.file}:${x.line}  ${x.msg}`);
     console.error("");
     process.exit(1);
   }
-  console.log("✓ theme-lint code-colors: no hardcoded colour in TS/TSX DOM code (rendering/vendor/config areas exempt)");
+  console.log(
+    "✓ theme-lint code-colors: no hardcoded colour in TS/TSX DOM code (rendering/vendor/config areas exempt)",
+  );
   process.exit(0);
 }
 
