@@ -21,7 +21,9 @@ on:
   push:
     branches:
       - master
+      - main
       - V2-master
+      - testMain
 
 # cancel in-progress jobs if a new job is triggered
 # This is useful to avoid running multiple builds for the same branch if a new commit is pushed
@@ -263,7 +265,8 @@ jobs:
 
       # Standalone unoserver image — versioned independently via
       # docker/unoserver/VERSION. master/V2-master: publish <version>+latest
-      # only when the version is new.
+      # only when the version is new. main/testMain: republish :alpha only
+      # when the source hash differs from the published image's annotation.
       - name: Read unoserver image version
         id: unoserverVersion
         if: env.RUN_UNOSERVER == 'true'
@@ -275,31 +278,80 @@ jobs:
           echo "version=${version}" >> "$GITHUB_OUTPUT"
           echo "Unoserver image version (from file): ${version}"
 
+      - name: Compute unoserver image source hash
+        id: unoserverHash
+        if: env.RUN_UNOSERVER == 'true'
+        run: |
+          set -eu
+          hash=$(cat \
+            docker/unoserver/Dockerfile \
+            docker/unoserver/entrypoint.sh \
+            docker/unoserver/healthcheck.sh \
+            docker/unoserver/VERSION \
+            | sha256sum | cut -d' ' -f1)
+          echo "hash=${hash}" >> "$GITHUB_OUTPUT"
+          echo "Unoserver source hash: ${hash}"
+
       - name: Decide whether to publish unoserver image
         id: unoserverDecision
         if: env.RUN_UNOSERVER == 'true'
         env:
           UNOSERVER_VERSION: ${{ steps.unoserverVersion.outputs.version }}
+          UNOSERVER_HASH: ${{ steps.unoserverHash.outputs.hash }}
           UNOSERVER_IMAGE: ghcr.io/${{ steps.repoowner.outputs.lowercase }}/stirling-unoserver
+          UNOSERVER_HASH_ANNOTATION: org.stirlingpdf.unoserver-source-hash
           FORCE_REBUILD: ${{ inputs.force_unoserver_rebuild }}
           GH_REF: ${{ github.ref }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
           set -eu
           mode="skip"
           tags=""
 
-          case "$GH_REF" in
+          read_published_hash() {
+            local ref="$1"
+            docker buildx imagetools inspect "$ref" --raw 2>/dev/null \
+              | jq -r --arg key "$UNOSERVER_HASH_ANNOTATION" \
+                  '.annotations[$key] // empty' \
+              2>/dev/null || true
+          }
+
+          # Manual dispatch from any branch routes to the :alpha publish path.
+          EFFECTIVE_REF="$GH_REF"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            EFFECTIVE_REF="refs/heads/testMain"
+          fi
+
+          case "$EFFECTIVE_REF" in
             refs/heads/master|refs/heads/V2-master)
               if [ "${FORCE_REBUILD}" = "true" ]; then
-                echo "force_unoserver_rebuild=true - building stable regardless"
+                echo "force_unoserver_rebuild=true — building stable regardless"
                 mode="stable"
                 tags="${UNOSERVER_IMAGE}:${UNOSERVER_VERSION},${UNOSERVER_IMAGE}:latest"
               elif docker manifest inspect "${UNOSERVER_IMAGE}:${UNOSERVER_VERSION}" >/dev/null 2>&1; then
-                echo "stirling-unoserver:${UNOSERVER_VERSION} already on GHCR - skipping"
+                echo "stirling-unoserver:${UNOSERVER_VERSION} already on GHCR — skipping"
               else
-                echo "stirling-unoserver:${UNOSERVER_VERSION} is new - will publish"
+                echo "stirling-unoserver:${UNOSERVER_VERSION} is new — will publish"
                 mode="stable"
                 tags="${UNOSERVER_IMAGE}:${UNOSERVER_VERSION},${UNOSERVER_IMAGE}:latest"
+              fi
+              ;;
+            refs/heads/main|refs/heads/testMain)
+              published_hash=$(read_published_hash "${UNOSERVER_IMAGE}:alpha")
+              if [ "${FORCE_REBUILD}" = "true" ]; then
+                echo "force_unoserver_rebuild=true — rebuilding :alpha regardless"
+                mode="alpha"
+                tags="${UNOSERVER_IMAGE}:alpha"
+              elif [ -n "$published_hash" ] && [ "$published_hash" = "$UNOSERVER_HASH" ]; then
+                echo "Published :alpha source hash matches (${published_hash}) — skipping"
+              else
+                if [ -z "$published_hash" ]; then
+                  echo ":alpha has no source-hash annotation (first publish or pre-tracking image) — will publish"
+                else
+                  echo "Source hash changed (was ${published_hash}, now ${UNOSERVER_HASH}) — will publish"
+                fi
+                mode="alpha"
+                tags="${UNOSERVER_IMAGE}:alpha"
               fi
               ;;
             *)
@@ -321,6 +373,9 @@ jobs:
           cache-from: type=gha,scope=stirling-unoserver
           cache-to: type=gha,mode=max,scope=stirling-unoserver
           tags: ${{ steps.unoserverDecision.outputs.tags }}
+          # Manifest annotation read by the decision step above to detect drift.
+          annotations: |
+            index:org.stirlingpdf.unoserver-source-hash=${{ steps.unoserverHash.outputs.hash }}
           platforms: linux/amd64,linux/arm64/v8
           provenance: true
           sbom: true
