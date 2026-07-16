@@ -43,6 +43,19 @@
   --p-red-500: #ef4444;
   --p-red-600: #dc2626;
 
+  /* Brand-red + ai-accent scales, consumed by core/ui/accents.css. */
+  --p-brand-red-200: #d9a8a8;
+  --p-brand-red-300: #d98a8a;
+  --p-brand-red-650: #8e3131;
+  --p-brand-red-700: #7a2929;
+  --p-brand-red-900: #5a2424;
+  --p-cyan-400: #22d3ee;
+  --p-indigo-200: #c7d2fe;
+  --p-indigo-300: #a5b4fc;
+  --p-indigo-400: #818cf8;
+  --p-indigo-500: #6366f1;
+  --p-indigo-800: #3730a3;
+
   /* Palette entries migrated from literals in consuming files. */
   --p-c-0550ae: #0550ae;
   --p-emerald-600: #059669;
