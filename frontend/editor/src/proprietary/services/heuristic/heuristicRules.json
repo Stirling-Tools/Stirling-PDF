@@ -7203,6 +7203,24 @@
           "pattern": "(19|20)\\d{2}\\s*[-–]\\s*(present|current)\\b",
           "weight": 14,
           "name": "Date range ending in Present"
+        },
+        {
+          "pattern": "^\\s*(work\\s+)?experience\\s*$",
+          "flags": "im",
+          "weight": 12,
+          "name": "Experience section heading"
+        },
+        {
+          "pattern": "^\\s*education\\s*$",
+          "flags": "im",
+          "weight": 10,
+          "name": "Education section heading"
+        },
+        {
+          "pattern": "^\\s*(key\\s+|technical\\s+)?skills\\s*$",
+          "flags": "im",
+          "weight": 8,
+          "name": "Skills section heading"
         }
       ],
       "filenames": [

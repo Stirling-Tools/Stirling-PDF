@@ -1,8 +1,8 @@
 // Heuristic (non-AI) document classifier. Pure string/regex/structural scoring
 // over extracted page text, filename and PDF metadata, keyed to the shared
-// classification vocabulary. Faithful port of the backend HeuristicClassifier.java
-// (which was itself ported from this engine). Rules load lazily from the co-located
-// heuristicRules.json so the 400KB pack is a separate async chunk, not always bundled.
+// classification vocabulary. Ported from the backend HeuristicClassifier.java, plus
+// browser-side hardening (pdf.js whitespace/ligature folding, data-dense English gate).
+// Rules load lazily from heuristicRules.json so the pack is a separate async chunk.
 
 import type {
   HeuristicConfidence,
@@ -279,9 +279,10 @@ const LETTERS = /\p{L}/gu;
 const LATIN_LETTER = /[a-z]/gi;
 const WORD = /[\p{L}']+/gu;
 
-// Java's \s is ASCII-only; match that in the text-segmentation hot paths.
+// ASCII whitespace plus the no-break spaces pdf.js extraction commonly emits,
+// so a phrase split by U+00A0 in a PDF still matches its rule text.
 // eslint-disable-next-line no-control-regex -- vertical tab is intentional ASCII whitespace
-const WHITESPACE = /[\t\n\x0B\f\r ]+/g;
+const WHITESPACE = /[\t\n\x0B\f\r \u00A0\u2007\u202F]+/g;
 
 // Structural signal patterns. Boolean-presence ones stay non-global (safe .test()),
 // counting ones are global (used via countAll). Currency symbols are \u-escaped.
@@ -756,7 +757,13 @@ export function detectEnglish(text: string): EnglishResult {
   if (nonEnglish) return { isEnglish: false, lowText };
 
   const bar = lowText ? 0.03 : 0.045;
-  return { isEnglish: latinRatio >= 0.75 && stopRatio >= bar, lowText };
+  // Data-dense docs (tickets, itineraries, prescriptions) are mostly names and numbers with few
+  // function words in ANY language; reject stop-poor text only on affirmative foreign evidence.
+  const foreignEvidence = bestDistinct >= 3 || bestDia >= 6;
+  return {
+    isEnglish: latinRatio >= 0.75 && (stopRatio >= bar || !foreignEvidence),
+    lowText,
+  };
 }
 
 // -----------------------------------------------------------------------
@@ -837,8 +844,19 @@ function str(v: unknown): string | null {
   return typeof v === "string" ? v : null;
 }
 
+// Curly apostrophes and fi/fl ligatures survive pdf.js extraction in many PDFs;
+// fold them to ASCII so rule phrases authored with ' / fi / fl still match.
+const CURLY_APOSTROPHE = /[\u2018\u2019]/g;
+const LIGATURE_FI = /\uFB01/g;
+const LIGATURE_FL = /\uFB02/g;
+
 function normalize(text: string | null | undefined): string {
-  return nz(text).toLowerCase().replace(WHITESPACE, " ");
+  return nz(text)
+    .toLowerCase()
+    .replace(CURLY_APOSTROPHE, "'")
+    .replace(LIGATURE_FI, "fi")
+    .replace(LIGATURE_FL, "fl")
+    .replace(WHITESPACE, " ");
 }
 
 function damp(count: number): number {
