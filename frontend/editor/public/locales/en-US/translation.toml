@@ -7929,7 +7929,7 @@ confirm = "Delete"
 title = "Delete source?"
 
 [portal.sources.empty]
-description = "Connect a folder (and, soon, cloud storage) so your policies have somewhere to pull documents from."
+description = "Connect a storage location so your policies have somewhere to pull data from."
 title = "No sources connected yet"
 
 [portal.sources.kpi]
