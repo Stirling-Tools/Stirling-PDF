@@ -1,8 +1,10 @@
+import { useEffect } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { AppLayout } from "@app/components/AppLayout";
-import { BannerProvider } from "@app/contexts/BannerContext";
+import { BannerProvider, useBanner } from "@app/contexts/BannerContext";
 import { NavigationProvider } from "@app/contexts/NavigationContext";
 import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
+import { InfoBanner } from "@app/components/shared/InfoBanner";
 
 const meta = {
   title: "Components/AppLayout",
@@ -28,8 +30,47 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const sampleContent = (
+  <div style={{ padding: 24 }}>
+    <h1>Workbench</h1>
+    <p>Tool panels and file previews render in this area.</p>
+  </div>
+);
+
 export const Default: Story = {
   args: {
-    children: <div>App content</div>,
+    children: sampleContent,
   },
+};
+
+// Calls BannerContext's setBanner on mount so the story can exercise
+// AppLayout's height-adjustment behaviour (the child area shrinks to make
+// room for the banner) without adding a banner prop to AppLayout itself.
+function BannerSetter() {
+  const { setBanner } = useBanner();
+  useEffect(() => {
+    setBanner(
+      <InfoBanner
+        icon="info-rounded"
+        title="Heads up"
+        message="This workspace is running in offline mode."
+      />,
+    );
+    return () => setBanner(null);
+  }, [setBanner]);
+  return null;
+}
+
+export const WithBanner: Story = {
+  args: {
+    children: sampleContent,
+  },
+  decorators: [
+    (Story) => (
+      <>
+        <BannerSetter />
+        <Story />
+      </>
+    ),
+  ],
 };

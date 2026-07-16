@@ -1,11 +1,19 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import AdminAuditSection from "@app/components/shared/config/configSections/AdminAuditSection";
+import { AppConfigProvider } from "@app/contexts/AppConfigContext";
+import auditService from "@app/services/auditService";
 
-/**
- * Admin settings page for audit logging: system status, dashboard/events/export/clear-data
- * tabs. Takes no props — without a real login/enterprise config it falls back to demo data
- * so the page has something to show.
- */
+// AdminAuditSection reads its config through useAppConfig()/useLoginRequired()
+// rather than taking props, so variants drive it by wrapping in an
+// AppConfigProvider with a fixed initialConfig (autoFetch off so stories never
+// hit the API). When login is disabled or the license isn't ENTERPRISE the
+// component falls back to hardcoded demo data on its own; the "fully enabled"
+// and "disabled" variants below need a real (enableLogin + ENTERPRISE) config,
+// which makes the component call auditService.getSystemStatus() on mount —
+// each of those stories stubs that call directly (the module exports a plain
+// object, the same seam the component itself calls through) so it never hits
+// the network, and stubs it inside its own decorator so the two variants
+// don't depend on render order.
 const meta = {
   title: "Config/AdminAuditSection",
   component: AdminAuditSection,
@@ -13,4 +21,81 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/**
+ * No login configured yet: falls back to demo data, shows the enterprise
+ * banner, and the dashboard tabs are disabled.
+ */
 export const Default: Story = {};
+
+/** Login is disabled entirely: both the login and enterprise banners show. */
+export const LoginDisabled: Story = {
+  decorators: [
+    (Story) => (
+      <AppConfigProvider
+        autoFetch={false}
+        bootstrapMode="non-blocking"
+        initialConfig={{ enableLogin: false }}
+      >
+        <Story />
+      </AppConfigProvider>
+    ),
+  ],
+};
+
+/**
+ * Login enabled with an ENTERPRISE license: both banners are hidden, the
+ * dashboard tabs are active, and the fetched (mocked) status backs the page
+ * instead of the built-in demo data.
+ */
+export const Enabled: Story = {
+  decorators: [
+    (Story) => {
+      auditService.getSystemStatus = async () => ({
+        enabled: true,
+        level: "INFO",
+        retentionDays: 90,
+        totalEvents: 15234,
+        pdfMetadataEnabled: true,
+        captureFileHash: true,
+        capturePdfAuthor: true,
+        captureOperationResults: true,
+      });
+      return (
+        <AppConfigProvider
+          autoFetch={false}
+          bootstrapMode="non-blocking"
+          initialConfig={{ enableLogin: true, license: "ENTERPRISE" }}
+        >
+          <Story />
+        </AppConfigProvider>
+      );
+    },
+  ],
+};
+
+/** Audit logging itself is turned off server-side: shows the disabled notice instead of the tabs. */
+export const AuditLoggingDisabled: Story = {
+  decorators: [
+    (Story) => {
+      auditService.getSystemStatus = async () => ({
+        enabled: false,
+        level: "OFF",
+        retentionDays: 0,
+        totalEvents: 0,
+        pdfMetadataEnabled: false,
+        captureFileHash: false,
+        capturePdfAuthor: false,
+        captureOperationResults: false,
+      });
+      return (
+        <AppConfigProvider
+          autoFetch={false}
+          bootstrapMode="non-blocking"
+          initialConfig={{ enableLogin: true, license: "ENTERPRISE" }}
+        >
+          <Story />
+        </AppConfigProvider>
+      );
+    },
+  ],
+};
