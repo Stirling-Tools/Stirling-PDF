@@ -62,10 +62,9 @@ export function useFileSidebarGroups(
   // Bumped to re-attempt a backfill pass that yielded to an active policy wave.
   const [retryTick, setRetryTick] = useState(0);
 
-  // Read the labels the classify policy wrote into a file's metadata and cache them on the stub, a
-  // few per idle pass. Both classify modes (the AI engine and the non-AI heuristic) write that
-  // metadata server-side, so this is the single source of labels. Yields while a policy wave is in
-  // flight, since those stubs get stamped on delivery anyway.
+  // Cache the labels the AI classify policy wrote into a file's metadata onto the stub, a few per
+  // idle pass. The non-AI heuristic path stamps labels directly (useClientSideClassification), so
+  // this mainly backfills the AI path and reloaded files. Yields while a policy wave is in flight.
   useEffect(() => {
     if (!enabled) return;
     const pending = stubs
