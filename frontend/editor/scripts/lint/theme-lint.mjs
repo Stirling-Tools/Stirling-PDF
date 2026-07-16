@@ -321,18 +321,10 @@ function reportContrast() {
 }
 
 // ── status-tone text on its own fill ─────────────────────────────────────────
-// The StatusBadge / Banner "tone" vocabulary pairs a text colour --color-{hue}
-// with a fill --color-{hue}-light (and a --color-{hue}-border), hand-authored
-// PER THEME in core/tokens/tokens.css. A copy-paste can alias the fill to the
-// text colour (fg == bg → invisible label), which the --c-* report never sees.
-// Two thresholds: anything below TONE_INVISIBLE (near-invisible) BLOCKS the
-// build; the softer WCAG floor (TONE_FLOOR) is advisory in the report, since
-// clearing full AA can need a badge-palette restyle beyond the token layer.
+// Checks --color-{hue} text against its --color-{hue}-light fill, per theme.
+// Below TONE_INVISIBLE blocks the build; TONE_FLOOR (WCAG AA) is advisory.
 const TOKENS_CSS = resolve(process.cwd(), "editor/src/core/tokens/tokens.css");
-const TONE_FLOOR = 3.0; // WCAG AA for large/bold UI text; badge labels are bold.
-// Below this the text is nearly the same tone as its fill — the original
-// "invisible badge" bug class. Called out distinctly so it can't hide among the
-// merely-marginal tones in the report.
+const TONE_FLOOR = 3.0;
 const TONE_INVISIBLE = 1.6;
 // Compute the contrast of every --color-{hue} text on its own --color-{hue}-light
 // fill, per theme. Returns [{ theme, base, fill, ratio|null }] — no printing, so
@@ -420,9 +412,7 @@ if (process.argv.includes("contrast")) {
 }
 
 const violations = check();
-// Block status tones whose text is near-invisible on its own fill (< 1.6:1) in
-// either theme. The softer WCAG floor (3.0) stays advisory in the report; only
-// the "you literally can't read it" band fails the build.
+// Block near-invisible status tones (< TONE_INVISIBLE) in either theme.
 const toneViolations = toneContrastResults().filter(
   (r) => r.ratio != null && r.ratio < TONE_INVISIBLE,
 );

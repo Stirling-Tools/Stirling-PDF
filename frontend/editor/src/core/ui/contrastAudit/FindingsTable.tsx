@@ -1,6 +1,4 @@
-// Presentational table for the audit results — one row per component + colour
-// pair, worst contrast first. The Text cell renders in the finding's real
-// colours so you can see the (un)readability directly.
+// Audit results table. The Text cell renders in the finding's real colours.
 
 import { type Finding } from "@app/ui/contrastAudit/scan";
 import { cell, swatch } from "@app/ui/contrastAudit/styles";
