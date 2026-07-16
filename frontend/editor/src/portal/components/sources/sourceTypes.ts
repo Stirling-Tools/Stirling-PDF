@@ -11,7 +11,6 @@ import type { ChipAccent } from "@app/ui";
 
 export interface SourceTypeMeta {
   labelKey: string;
-  icon: string;
   accent: ChipAccent;
 }
 
@@ -25,24 +24,20 @@ export const EDITOR_SOURCE_TYPE = "editor";
 const SOURCE_TYPE_META: Record<string, SourceTypeMeta> = {
   folder: {
     labelKey: "portal.sources.types.folder.label",
-    icon: "⛁",
     accent: "default",
   },
   editor: {
     labelKey: "portal.sources.types.editor.label",
-    icon: "✏",
     accent: "success",
   },
   s3: {
     labelKey: "portal.sources.types.s3.label",
-    icon: "☁",
     accent: "brand",
   },
 };
 
 const UNKNOWN_TYPE_META: SourceTypeMeta = {
   labelKey: "portal.sources.types.unknown.label",
-  icon: "◇",
   accent: "neutral",
 };
 

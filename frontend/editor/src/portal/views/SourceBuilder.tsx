@@ -26,9 +26,9 @@ import { creatableSourceTypes } from "@portal/components/sources/creatableSource
 import {
   CREATABLE_SOURCE_TYPES,
   defaultOptions,
-  sourceTypeMeta,
   type CreatableSourceType,
 } from "@portal/components/sources/sourceTypes";
+import { SourceTypeIcon } from "@portal/components/sources/SourceTypeIcon";
 import { S3ConnectionPicker } from "@portal/components/sources/S3ConnectionPicker";
 import "@portal/views/SourceBuilder.css";
 
@@ -228,28 +228,42 @@ export function SourceBuilder() {
 
         {!isEdit && OFFERED_TYPES.length > 1 && (
           <FormField label={t("portal.sources.wizard.type")}>
-            <div className="portal-source-builder__type-grid">
-              {OFFERED_TYPES.map((ct) => (
-                <Button
-                  key={ct.type}
-                  variant="tertiary"
-                  className={
-                    "portal-source-builder__type-card" +
-                    (type.type === ct.type ? " is-selected" : "")
-                  }
-                  onClick={() => chooseType(ct)}
-                >
-                  <span
-                    className="portal-source-builder__type-icon"
-                    aria-hidden
+            <div
+              className="portal-source-builder__type-grid"
+              role="radiogroup"
+              aria-label={t("portal.sources.wizard.type")}
+            >
+              {OFFERED_TYPES.map((ct) => {
+                const selected = type.type === ct.type;
+                return (
+                  <button
+                    key={ct.type}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    className={
+                      "portal-source-builder__type-card" +
+                      (selected ? " is-selected" : "")
+                    }
+                    onClick={() => chooseType(ct)}
                   >
-                    {sourceTypeMeta(ct.type).icon}
-                  </span>
-                  <span className="portal-source-builder__type-name">
-                    {t(ct.labelKey)}
-                  </span>
-                </Button>
-              ))}
+                    <span
+                      className="portal-source-builder__type-icon"
+                      aria-hidden
+                    >
+                      <SourceTypeIcon type={ct.type} />
+                    </span>
+                    <span className="portal-source-builder__type-text">
+                      <span className="portal-source-builder__type-name">
+                        {t(ct.labelKey)}
+                      </span>
+                      <span className="portal-source-builder__type-desc">
+                        {t(ct.descriptionKey)}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </FormField>
         )}

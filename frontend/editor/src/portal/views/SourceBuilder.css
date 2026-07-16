@@ -49,35 +49,86 @@
 }
 
 .portal-source-builder__type-grid {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
   gap: 0.625rem;
-  flex-wrap: wrap;
 }
 
+/* Selectable source-type card: tinted icon badge + name + description, matching
+   the stroke-SVG icons used in the sources table (no raw Unicode glyphs). */
 .portal-source-builder__type-card {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.375rem;
-  min-width: 6rem;
-  padding: 0.875rem 1rem;
-  border: 1px solid var(--color-border-2);
-  border-radius: 0.5rem;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem;
+  text-align: left;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    border-color var(--motion-fast),
+    background var(--motion-fast),
+    box-shadow var(--motion-fast);
 }
 
-.portal-source-builder__type-card.is-selected {
-  border-color: var(--color-accent, var(--color-brand));
+.portal-source-builder__type-card:hover {
+  border-color: var(--color-border-strong, var(--color-border));
   background: var(--color-bg-hover);
 }
 
+.portal-source-builder__type-card:focus-visible {
+  outline: none;
+  border-color: var(--color-blue);
+  box-shadow: 0 0 0 2px var(--color-blue-light);
+}
+
+.portal-source-builder__type-card.is-selected {
+  border-color: var(--color-blue);
+  background: var(--color-blue-light);
+  box-shadow: 0 0 0 1px var(--color-blue) inset;
+}
+
 .portal-source-builder__type-icon {
-  font-size: 1.5rem;
-  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-subtle);
+  color: var(--color-text-3);
+}
+
+.portal-source-builder__type-card.is-selected .portal-source-builder__type-icon {
+  background: color-mix(in srgb, var(--color-blue) 14%, transparent);
+  color: var(--color-blue);
+}
+
+.portal-source-builder__type-icon svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  display: block;
+}
+
+.portal-source-builder__type-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1875rem;
+  min-width: 0;
 }
 
 .portal-source-builder__type-name {
   font-size: 0.8125rem;
-  font-weight: 500;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.portal-source-builder__type-desc {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--color-text-4);
 }
 
 .portal-source-builder__delete-actions {
