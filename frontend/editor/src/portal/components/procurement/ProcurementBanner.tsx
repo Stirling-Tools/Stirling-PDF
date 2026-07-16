@@ -22,7 +22,7 @@ export function ControlledDealStatusHero({
       busy={controller.busy}
       canSchedule={controller.isLinked}
       onExpand={() => controller.setOpen(true)}
-      onKeyDocs={() => controller.setExtra("docs")}
+      onLicense={() => controller.setExtra("license")}
       onInvite={() => setActiveView("users")}
       onSchedule={() => controller.setExtra("schedule")}
       onManageTrial={() => controller.setExtra("trial")}

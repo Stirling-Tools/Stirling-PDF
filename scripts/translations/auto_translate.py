@@ -140,12 +140,14 @@ def extract_untranslated(language_code, batch_size=500, include_existing=False):
     return batch_files
 
 
-def translate_batches(batch_files, language_code, api_key, timeout=600):
-    """Translate all batch files using GPT-5."""
+def translate_batches(
+    batch_files, language_code, api_key, timeout=600, model="gpt-5.5"
+):
+    """Translate all batch files using the given OpenAI model."""
     if not batch_files:
         return []
 
-    print(f"\n🤖 Translating {len(batch_files)} batches using GPT-5...")
+    print(f"\n🤖 Translating {len(batch_files)} batches using {model}...")
     print(f"Timeout: {timeout}s ({timeout // 60} minutes) per batch")
 
     translated_files = []
@@ -154,7 +156,7 @@ def translate_batches(batch_files, language_code, api_key, timeout=600):
         print(f"\n[{i}/{len(batch_files)}] Translating {batch_file}...")
 
         # Always pass API key since it's required
-        cmd = f'python3 scripts/translations/batch_translator.py "{batch_file}" --language {language_code} --api-key "{api_key}"'
+        cmd = f'python3 scripts/translations/batch_translator.py "{batch_file}" --language {language_code} --api-key "{api_key}" --model {model}'
 
         # Run with timeout
         result = subprocess.run(
@@ -308,6 +310,11 @@ Examples:
         action="store_true",
         help="Also retranslate existing keys that match English (default: only translate missing keys)",
     )
+    parser.add_argument(
+        "--model",
+        default="gpt-5.5",
+        help="OpenAI model (default: gpt-5.5; gpt-5.6-sol/terra/luna if your org has 5.6 access)",
+    )
 
     args = parser.parse_args()
 
@@ -322,6 +329,7 @@ Examples:
     print("=" * 60)
     print("Automated Translation Pipeline")
     print(f"Language: {args.language}")
+    print(f"Model: {args.model}")
     print(f"Batch Size: {args.batch_size} entries")
     print("=" * 60)
 
@@ -341,7 +349,7 @@ Examples:
 
         # Step 2: Translate all batches
         translated_files = translate_batches(
-            batch_files, args.language, api_key, args.timeout
+            batch_files, args.language, api_key, args.timeout, args.model
         )
         if translated_files is None:
             sys.exit(1)

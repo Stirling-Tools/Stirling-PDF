@@ -86,4 +86,32 @@ final class PolicySweep implements ResolveContext {
     synchronized Set<String> presentIdentities() {
         return Set.copyOf(present);
     }
+
+    /**
+     * Summarise the sweep from state already in hand (no extra ledger reads): the prefetched rows
+     * were loaded before claiming, and successful claims flipped their entries to PROCESSING, so
+     * what remains DONE or ERROR is exactly what this sweep skipped.
+     */
+    synchronized SweepOutcome outcome(List<String> runIds) {
+        int alreadyProcessed = 0;
+        int parked = 0;
+        int processing = 0;
+        for (String identity : present) {
+            ClaimState state = prefetched.get(identity);
+            if (state == null) {
+                continue;
+            }
+            switch (state.status()) {
+                case DONE -> alreadyProcessed++;
+                case ERROR -> parked++;
+                case PROCESSING, INTERRUPTED -> processing++;
+            }
+        }
+        return new SweepOutcome(
+                runIds,
+                present.size(),
+                alreadyProcessed,
+                parked,
+                Math.max(0, processing - runIds.size()));
+    }
 }

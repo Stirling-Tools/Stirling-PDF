@@ -51,6 +51,15 @@ public class ProcurementDeal implements Serializable {
     @Column(name = "stage", nullable = false, length = 32)
     private String stage = STAGE_TRIAL;
 
+    // Deployment target + seat count captured at trial start (the setup step); they seed the quote
+    // builder so it opens on the buyer's real environment. The quote remains the commercial source
+    // of truth — these are just the starting point, editable when the quote is built.
+    @Column(name = "deployment", nullable = false, length = 16)
+    private String deployment = "cloud";
+
+    @Column(name = "seats", nullable = false)
+    private int seats;
+
     @Column(name = "trial_started_at")
     private LocalDateTime trialStartedAt;
 

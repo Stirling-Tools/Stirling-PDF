@@ -74,6 +74,26 @@ public class WalletLedgerEntry implements Serializable {
     @Column(name = "policy_id")
     private Long policyId;
 
+    /**
+     * Number of input files this entry billed (the count dimension, distinct from size-scaled
+     * {@link #amountUnits}). Denormalised from {@code processing_job.doc_count} so usage analytics
+     * — "PDFs processed" — sum one table. Defaults to 1; system/aggregate entries may leave it 1.
+     *
+     * <p>The {@code columnDefinition} default keeps the ddl-auto ADD COLUMN safe on an
+     * already-populated {@code wallet_ledger} (a bare {@code NOT NULL} add is rejected by Postgres
+     * on a non-empty table).
+     */
+    @Column(name = "doc_count", nullable = false, columnDefinition = "integer not null default 1")
+    private Integer docCount = 1;
+
+    /**
+     * SHA-256 of this entry's input file set; {@code COUNT(DISTINCT ...)} over a period gives
+     * unique PDFs processed. {@code null} for aggregate/system entries (grants, linked-instance
+     * sync) that don't map to a single document set.
+     */
+    @Column(name = "document_fingerprint", length = 64)
+    private String documentFingerprint;
+
     @Column(name = "stripe_event_id", length = 128)
     private String stripeEventId;
 

@@ -62,6 +62,27 @@ public class ProcessingJob implements Serializable {
     @Column(name = "doc_units", nullable = false)
     private Integer docUnits = 0;
 
+    /**
+     * Number of input files this charge represents — the count dimension, kept distinct from {@link
+     * #docUnits} (which scales with file size). A split (1 input → many outputs) stays 1; a merge
+     * (N inputs → 1 output) is N. Fixed at open; joined steps never change it.
+     *
+     * <p>The {@code columnDefinition} default keeps the ddl-auto ADD COLUMN safe on an
+     * already-populated {@code processing_job} (a bare {@code NOT NULL} add is rejected by Postgres
+     * on a non-empty table).
+     */
+    @Column(name = "doc_count", nullable = false, columnDefinition = "integer not null default 1")
+    private Integer docCount = 1;
+
+    /**
+     * Correlation id of the automation run that opened this job ({@code X-Stirling-Run-Id}), or
+     * {@code null} for a standalone tool call. Lineage joins are scoped to a single run id, so two
+     * separate runs never merge even on identical bytes; a null run id never joins (each standalone
+     * call is its own charge).
+     */
+    @Column(name = "run_id", length = 64)
+    private String runId;
+
     @Column(name = "step_count", nullable = false)
     private Integer stepCount = 0;
 

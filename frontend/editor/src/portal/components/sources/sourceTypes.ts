@@ -15,6 +15,13 @@ export interface SourceTypeMeta {
   accent: ChipAccent;
 }
 
+/**
+ * The built-in editor source. It is virtual (never created/edited/deleted like a folder), always
+ * present in the list, and only tracks throughput - so rows of this type render without a config,
+ * a type chip, or edit/pause/delete actions.
+ */
+export const EDITOR_SOURCE_TYPE = "editor";
+
 const SOURCE_TYPE_META: Record<string, SourceTypeMeta> = {
   folder: {
     labelKey: "portal.sources.types.folder.label",
@@ -25,6 +32,11 @@ const SOURCE_TYPE_META: Record<string, SourceTypeMeta> = {
     labelKey: "portal.sources.types.editor.label",
     icon: "✏",
     accent: "success",
+  },
+  s3: {
+    labelKey: "portal.sources.types.s3.label",
+    icon: "☁",
+    accent: "brand",
   },
 };
 
@@ -42,7 +54,7 @@ export function sourceTypeMeta(type: string): SourceTypeMeta {
 export interface SourceFieldDef {
   key: string;
   labelKey: string;
-  control: "text" | "select";
+  control: "text" | "password" | "select" | "s3Connection";
   required?: boolean;
   placeholderKey?: string;
   helperTextKey?: string;
@@ -125,6 +137,44 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
             value: "hash",
             labelKey:
               "portal.sources.types.folder.fields.identity.options.hash",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    type: "s3",
+    labelKey: "portal.sources.types.s3.label",
+    descriptionKey: "portal.sources.types.s3.description",
+    fields: [
+      {
+        key: "connectionId",
+        labelKey: "portal.sources.types.s3.fields.connection.label",
+        control: "s3Connection",
+        required: true,
+        helperTextKey: "portal.sources.types.s3.fields.connection.helperText",
+      },
+      {
+        key: "prefix",
+        labelKey: "portal.sources.types.s3.fields.prefix.label",
+        control: "text",
+        placeholderKey: "portal.sources.types.s3.fields.prefix.placeholder",
+        helperTextKey: "portal.sources.types.s3.fields.prefix.helperText",
+      },
+      {
+        key: "mode",
+        labelKey: "portal.sources.types.s3.fields.mode.label",
+        control: "select",
+        defaultValue: "consume",
+        helperTextKey: "portal.sources.types.s3.fields.mode.helperText",
+        options: [
+          {
+            value: "consume",
+            labelKey: "portal.sources.types.s3.fields.mode.options.consume",
+          },
+          {
+            value: "snapshot",
+            labelKey: "portal.sources.types.s3.fields.mode.options.snapshot",
           },
         ],
       },

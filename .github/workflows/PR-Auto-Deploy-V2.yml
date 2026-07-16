@@ -29,7 +29,7 @@ jobs:
   check-pr:
     if: (github.event_name == 'pull_request' && github.event.action != 'closed') || github.event_name == 'workflow_dispatch'
     needs: pick
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    runs-on: ${{ needs.pick.outputs.use_depot == 'true' && 'depot-ubuntu-24.04-4' || 'ubuntu-latest' }}
     outputs:
       should_deploy: ${{ steps.decide.outputs.should_deploy }}
       is_fork: ${{ steps.resolve.outputs.is_fork }}
@@ -102,7 +102,7 @@ jobs:
 
   deploy-v2-pr:
     needs: [pick, check-pr]
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    runs-on: ${{ needs.pick.outputs.use_depot == 'true' && 'depot-ubuntu-24.04-4' || 'ubuntu-latest' }}
     if: needs.check-pr.outputs.should_deploy == 'true' && (needs.check-pr.outputs.is_fork == 'false' || needs.check-pr.outputs.allow_fork == 'true')
     # Concurrency control - only one deployment per PR at a time
     concurrency:
@@ -114,7 +114,7 @@ jobs:
       pull-requests: write
       id-token: write
     env:
-      USE_DEPOT: ${{ needs.pick.outputs.is_fork != 'true' }}
+      USE_DEPOT: ${{ needs.pick.outputs.use_depot == 'true' }}
       DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
       # Single source of truth for whether this preview embeds the admin portal:
       # drives the image build-arg and the deployment comment.
@@ -256,7 +256,7 @@ jobs:
 
       - name: Build and push V2 image (Docker fork fallback)
         if: env.USE_DEPOT != 'true' && steps.check-image.outputs.exists == 'false'
-        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
           file: ./docker/embedded/Dockerfile
@@ -297,7 +297,6 @@ jobs:
                 - /stirling/V2-PR-${{ needs.check-pr.outputs.pr_number }}/storage:/storage:rw
               environment:
                 DISABLE_ADDITIONAL_FEATURES: "false"
-                POLICIES_ENABLED: "true"
                 STIRLING_BILLING_ACCOUNT_LINK_ENABLED: "true"
                 SECURITY_ENABLELOGIN: "true"
                 SECURITY_INITIALLOGIN_USERNAME: "${{ secrets.TEST_LOGIN_USERNAME }}"
@@ -476,7 +475,7 @@ jobs:
   cleanup-v2-deployment:
     if: github.event.action == 'closed'
     needs: pick
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    runs-on: ${{ needs.pick.outputs.use_depot == 'true' && 'depot-ubuntu-24.04-4' || 'ubuntu-latest' }}
     permissions:
       contents: read
       issues: write

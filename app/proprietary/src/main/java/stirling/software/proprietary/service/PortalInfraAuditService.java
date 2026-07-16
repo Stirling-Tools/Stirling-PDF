@@ -54,6 +54,7 @@ public class PortalInfraAuditService {
                         .limit(RETURN_LIMIT)
                         .toList();
 
+        int policy = (int) events.stream().filter(e -> "policy".equals(e.getCategory())).count();
         int processing =
                 (int) events.stream().filter(e -> "processing".equals(e.getCategory())).count();
         int elevation =
@@ -63,6 +64,7 @@ public class PortalInfraAuditService {
         InfraAuditSummary summary =
                 InfraAuditSummary.builder()
                         .totalEvents(events.size())
+                        .policy(policy)
                         .processing(processing)
                         .elevation(elevation)
                         .config(config)
@@ -84,18 +86,30 @@ public class PortalInfraAuditService {
     private InfraAuditEventDto toDto(PortalAuditEventRow event) {
         Map<String, Object> data = parseData(event);
         String path = asString(data.get("path"));
-        String category = categoryFor(event.type(), path);
+        String policyName = asString(data.get("policyName"));
+        boolean automation = isAutomation(data);
+        // Classify a dispatch by its real run-path URI, not a policyName: the latter can be spoofed
+        // via the X-Stirling-Policy-Name header to make a direct call pose as a policy row.
+        boolean policyDispatch = isPolicyRunPath(path) && !automation;
+        // A dispatch is its own "policy" category so the UI badges it as a policy run, not a
+        // generic processing op; its internal steps keep their real tool category.
+        String category = policyDispatch ? "policy" : categoryFor(event.type(), path);
 
         return InfraAuditEventDto.builder()
                 .id(String.valueOf(event.id()))
                 .timestamp(event.timestamp() == null ? "" : TS_FORMAT.format(event.timestamp()))
                 .category(category)
-                .action(actionFor(event.type(), path))
+                .action(actionFor(event.type(), path, policyName, automation))
                 .actor(event.principal())
-                .target(targetFor(category, path, data))
+                .target(targetFor(category, path, data, policyDispatch))
                 .status(statusFor(event.type(), category, data))
                 .latencyMs(asLong(data.get("latencyMs")))
                 .build();
+    }
+
+    private static boolean isAutomation(Map<String, Object> data) {
+        Object v = data.get("automation");
+        return Boolean.TRUE.equals(v) || "true".equalsIgnoreCase(String.valueOf(v));
     }
 
     private Map<String, Object> parseData(PortalAuditEventRow event) {
@@ -140,7 +154,37 @@ public class PortalInfraAuditService {
                 || p.contains("redact");
     }
 
-    private static String actionFor(String type, String path) {
+    /**
+     * Label for a row. A genuine policy dispatch (a {@code /policies/.../run} request) shows the
+     * policy it ran; an internal pipeline step (automation marker) is flagged so it isn't read as a
+     * direct action. The name is only shown as the action on a real run URI, so a spoofed
+     * X-Stirling-Policy-Name header on a direct tool call can't overwrite its true action.
+     */
+    private static String actionFor(
+            String type, String path, String policyName, boolean automation) {
+        if (!automation && isPolicyRunPath(path)) {
+            // A run with no name (ad-hoc pipeline) still reads better than the "run" endpoint.
+            return policyName != null ? policyName : "Policy run";
+        }
+        String base = baseActionFor(type, path);
+        if (automation) {
+            return policyName != null
+                    ? base + " (policy: " + policyName + ")"
+                    : base + " (automation)";
+        }
+        return base;
+    }
+
+    /**
+     * The pipeline-run endpoints: {@code /policies/run}, {@code /run/stream}, {@code /{id}/run}.
+     */
+    private static boolean isPolicyRunPath(String path) {
+        return path != null
+                && path.contains("/policies/")
+                && (path.endsWith("/run") || path.endsWith("/run/stream"));
+    }
+
+    private static String baseActionFor(String type, String path) {
         AuditEventType t = AuditEventType.fromString(type);
         if (t == null) {
             return prettyTool(path);
@@ -191,7 +235,32 @@ public class PortalInfraAuditService {
         return sb.isEmpty() ? "PDF operation" : sb.toString();
     }
 
-    private static String targetFor(String category, String path, Map<String, Object> data) {
+    /** "Auto Redact, Compress PDF" from the run's step endpoints; first three, then "+N more". */
+    private static String prettyStepList(Object steps) {
+        if (!(steps instanceof List<?> list) || list.isEmpty()) {
+            return null;
+        }
+        int shown = Math.min(3, list.size());
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < shown; i++) {
+            if (i > 0) {
+                sb.append(", ");
+            }
+            sb.append(prettyTool(asString(list.get(i))));
+        }
+        if (list.size() > shown) {
+            sb.append(" +").append(list.size() - shown).append(" more");
+        }
+        return sb.toString();
+    }
+
+    private static String targetFor(
+            String category, String path, Map<String, Object> data, boolean policyDispatch) {
+        if (policyDispatch) {
+            // The run touches no single file at this level; show the tools the policy runs instead.
+            String steps = prettyStepList(data.get("policySteps"));
+            return steps != null ? steps : "Pipeline";
+        }
         if ("auth".equals(category)) {
             // Auth events don't act on a resource; the session is the closest thing.
             return "Web session";

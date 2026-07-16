@@ -12,6 +12,7 @@ export const usersCapabilities: UsersCapabilities = {
   deleteTeam: true,
   renameTeam: true,
   emailInvite: true,
+  manageInvitations: false,
   directCreate: true,
   resetPassword: true,
   unlock: true,
