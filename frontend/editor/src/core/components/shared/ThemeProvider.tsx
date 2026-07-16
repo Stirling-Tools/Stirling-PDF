@@ -15,11 +15,9 @@ import ToastRenderer from "@app/components/toast/ToastRenderer";
 import { ToastPortalBinder } from "@app/components/toast";
 import {
   type ThemeMode,
-  DEFAULT_ACCENT,
   getSystemTheme,
   resolveColorScheme,
 } from "@app/constants/theme";
-import { deriveAccessiblePrimary } from "@app/utils/customPrimary";
 // SUI shared design-system tokens (used by @app/ui); key on `data-theme`.
 import "@app/tokens/tokens.css";
 import "@app/theme/index.css";
@@ -74,34 +72,15 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   // The mode resolved to a concrete light/dark base.
   const colorScheme = resolveColorScheme(themeMode, systemScheme);
 
-  // Each scheme carries its own accent; the sentinel means "neutral default".
-  const accentChoice =
-    colorScheme === "dark" ? preferences.darkPrimary : preferences.lightPrimary;
-
-  // Mirror the scheme + accent to <html>. For a real accent we derive the three
-  // contrast-safe --user-* vars that colors.css consumes (fill, on-fill,
-  // accent-as-text); the default sentinel keeps data-accent="default" and clears
-  // them, so colors.css falls back to its static blue.
+  // Mirror the scheme to <html>. The accent is fixed to the default (neutral
+  // zinc/grey surfaces + blue buttons): data-accent="default" and no --user-*
+  // overrides, so colors.css resolves --c-primary to its static blue.
   useIsomorphicEffect(() => {
     const root = document.documentElement;
     root.setAttribute("data-theme", colorScheme);
     root.setAttribute("data-app-theme", "custom");
-    const userVars = [
-      "--user-primary",
-      "--user-primary-on",
-      "--user-accent-fg",
-    ];
-    if (!accentChoice || accentChoice === DEFAULT_ACCENT) {
-      root.setAttribute("data-accent", "default");
-      userVars.forEach((v) => root.style.removeProperty(v));
-      return;
-    }
-    const derived = deriveAccessiblePrimary(accentChoice, colorScheme);
-    root.setAttribute("data-accent", "custom");
-    root.style.setProperty("--user-primary", derived.primary);
-    root.style.setProperty("--user-primary-on", derived.onPrimary);
-    root.style.setProperty("--user-accent-fg", derived.accentForeground);
-  }, [colorScheme, accentChoice]);
+    root.setAttribute("data-accent", "default");
+  }, [colorScheme]);
 
   const value = useMemo<ThemeContextType>(
     () => ({ themeMode, setTheme }),
