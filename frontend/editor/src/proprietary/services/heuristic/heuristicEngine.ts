@@ -7,10 +7,16 @@
 import type {
   HeuristicConfidence,
   HeuristicDoc,
+  HeuristicExplanation,
   HeuristicResult,
 } from "@app/services/heuristic/types";
 
-export type { HeuristicConfidence, HeuristicDoc, HeuristicResult };
+export type {
+  HeuristicConfidence,
+  HeuristicDoc,
+  HeuristicExplanation,
+  HeuristicResult,
+};
 
 // --- scoring constants (mirror HeuristicClassifier.java) ---
 const ZONE_MULT: Record<string, number> = { title: 2.0, first: 1.35, any: 1.0 };
@@ -526,20 +532,55 @@ interface ScoredLabel {
   label: PreparedLabel;
   score: number;
   distinct: number;
+  /** Rule-hit descriptions, collected only when explain is requested. */
+  signals: string[] | null;
+}
+
+/** Max candidates and per-candidate signals included in an explanation. */
+const EXPLAIN_CANDIDATES = 6;
+const EXPLAIN_SIGNALS = 12;
+
+const fmt = (n: number) => Math.round(n * 10) / 10;
+
+function toExplanation(
+  en: { isEnglish: boolean; lowText: boolean },
+  scored: ScoredLabel[],
+): HeuristicExplanation {
+  return {
+    isEnglish: en.isEnglish,
+    lowText: en.lowText,
+    candidates: scored.slice(0, EXPLAIN_CANDIDATES).map((s) => ({
+      id: s.label.id,
+      emit: s.label.emit,
+      score: fmt(s.score),
+      distinct: s.distinct,
+      signals: (s.signals ?? []).slice(0, EXPLAIN_SIGNALS),
+    })),
+  };
 }
 
 /** Classify a document; returns emitted label ids (primary + secondaries, capped at 5). */
-export function classifyHeuristic(doc: HeuristicDoc): HeuristicResult {
+export function classifyHeuristic(
+  doc: HeuristicDoc,
+  opts?: { explain?: boolean },
+): HeuristicResult {
   if (!PREPARED || !PRIORS) {
     throw new Error(
       "Heuristic rules not loaded; await ensureRulesLoaded() before classifyHeuristic().",
     );
   }
+  const explain = opts?.explain === true;
 
   const en = detectEnglish(doc.allZone);
   // Non-English with real text: honestly out of scope for the English heuristics.
   if (!en.isEnglish && !en.lowText) {
-    return { labels: [], confidence: "none", score: 0, isEnglish: false };
+    return {
+      labels: [],
+      confidence: "none",
+      score: 0,
+      isEnglish: false,
+      ...(explain ? { explain: toExplanation(en, []) } : {}),
+    };
   }
 
   const titleRaw = nz(doc.titleZone);
@@ -557,39 +598,49 @@ export function classifyHeuristic(doc: HeuristicDoc): HeuristicResult {
   for (const label of PREPARED) {
     let score = 0;
     let distinct = 0;
+    const sig: string[] | null = explain ? [] : null;
 
     for (const phrase of label.phrases) {
       let best = 0;
+      let bestZone = "";
       for (const zone of ["title", "first", "any"] as const) {
         const hay =
           zone === "title" ? titleNorm : zone === "first" ? firstNorm : anyNorm;
         const count = countOccurrences(hay, phrase.text);
         if (count === 0) continue;
         const zf = phrase.where === "any" || phrase.where === zone ? 1 : 0.75;
-        best = Math.max(
-          best,
-          phrase.weight * ZONE_MULT[zone] * zf * damp(count),
-        );
+        const value = phrase.weight * ZONE_MULT[zone] * zf * damp(count);
+        if (value > best) {
+          best = value;
+          bestZone = zone;
+        }
       }
       if (best > 0) {
         score += best;
         distinct++;
+        sig?.push(`phrase "${phrase.text}" +${fmt(best)} (${bestZone})`);
       }
     }
 
     for (const rx of label.regexes) {
       let best = 0;
+      let bestZone = "";
       for (const zone of ["title", "first", "any"] as const) {
         const hay =
           zone === "title" ? titleRaw : zone === "first" ? firstRaw : anyRaw;
         const count = countRegex(rx.re, hay);
         if (count === 0) continue;
         const zf = rx.where === "any" || rx.where === zone ? 1 : 0.75;
-        best = Math.max(best, rx.weight * ZONE_MULT[zone] * zf * damp(count));
+        const value = rx.weight * ZONE_MULT[zone] * zf * damp(count);
+        if (value > best) {
+          best = value;
+          bestZone = zone;
+        }
       }
       if (best > 0) {
         score += best;
         distinct++;
+        sig?.push(`regex ${rx.re.source} +${fmt(best)} (${bestZone})`);
       }
     }
 
@@ -597,6 +648,7 @@ export function classifyHeuristic(doc: HeuristicDoc): HeuristicResult {
       if (countRegex(fn.re, fileNameLower) > 0) {
         score += fn.weight;
         distinct++;
+        sig?.push(`filename ${fn.re.source} +${fn.weight}`);
       }
     }
 
@@ -605,12 +657,16 @@ export function classifyHeuristic(doc: HeuristicDoc): HeuristicResult {
       if (countRegex(md.re, value) > 0) {
         score += md.weight;
         distinct++;
+        sig?.push(`metadata(${md.field}) ${md.re.source} +${md.weight}`);
       }
     }
 
     for (const st of label.structural) {
       const value = struct[st.signal] ?? 0;
-      if (value > 0) score += st.weight * value;
+      if (value > 0) {
+        score += st.weight * value;
+        sig?.push(`structural ${st.signal} +${fmt(st.weight * value)}`);
+      }
     }
 
     for (const neg of label.negatives) {
@@ -618,12 +674,20 @@ export function classifyHeuristic(doc: HeuristicDoc): HeuristicResult {
         neg.text != null
           ? countOccurrences(anyNorm, neg.text)
           : countRegex(neg.re, anyRaw);
-      if (count > 0) score -= neg.weight * damp(Math.min(count, 3));
+      if (count > 0) {
+        const value = neg.weight * damp(Math.min(count, 3));
+        score -= value;
+        sig?.push(
+          `negative ${neg.text != null ? `"${neg.text}"` : (neg.re?.source ?? "")} -${fmt(value)}`,
+        );
+      }
     }
 
     if (score > 0) {
-      score *= pagePriorMultiplier(label.id, doc.pageCount);
-      scored.push({ label, score, distinct });
+      const prior = pagePriorMultiplier(label.id, doc.pageCount);
+      if (prior !== 1) sig?.push(`page-prior x${fmt(prior)}`);
+      score *= prior;
+      scored.push({ label, score, distinct, signals: sig });
     }
   }
 
@@ -652,12 +716,14 @@ export function classifyHeuristic(doc: HeuristicDoc): HeuristicResult {
   }
 
   const roundedScore = Math.round(s1);
+  const explanation = explain ? { explain: toExplanation(en, scored) } : {};
   if (top == null || confidence === "none") {
     return {
       labels: [],
       confidence: "none",
       score: roundedScore,
       isEnglish: en.isEnglish,
+      ...explanation,
     };
   }
   // Internal-only winner (book, menu...): suppress output rather than mislabel.
@@ -667,6 +733,7 @@ export function classifyHeuristic(doc: HeuristicDoc): HeuristicResult {
       confidence,
       score: roundedScore,
       isEnglish: en.isEnglish,
+      ...explanation,
     };
   }
 
@@ -683,7 +750,13 @@ export function classifyHeuristic(doc: HeuristicDoc): HeuristicResult {
       labels.push(s.label.id);
     }
   }
-  return { labels, confidence, score: roundedScore, isEnglish: en.isEnglish };
+  return {
+    labels,
+    confidence,
+    score: roundedScore,
+    isEnglish: en.isEnglish,
+    ...explanation,
+  };
 }
 
 /** True when the top match cleared the high-confidence bar. */

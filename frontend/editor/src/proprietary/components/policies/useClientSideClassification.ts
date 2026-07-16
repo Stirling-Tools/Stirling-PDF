@@ -39,6 +39,17 @@ const CLASSIFY_BATCH = 3;
 const FILE_WAIT_TRIES = 20;
 const FILE_WAIT_MS = 250;
 
+/** localStorage flag: set to "true" for a full per-file scoring breakdown in the console. */
+const DEBUG_FLAG = "stirling-classification-debug";
+
+function isClassificationDebug(): boolean {
+  try {
+    return localStorage.getItem(DEBUG_FLAG) === "true";
+  } catch {
+    return false;
+  }
+}
+
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** Schedule work for the browser's idle time (or soon after, as a fallback). */
@@ -103,7 +114,7 @@ export function useClientSideClassification(): void {
           // Re-validate at execution time - another batch may have claimed it since.
           if (claimed.current.has(key)) continue;
           claimed.current.add(key);
-          const labels = await classifyStub(stub.id as FileId);
+          const labels = await classifyStub(stub.id as FileId, stub.name);
           // Bytes never landed (file removed mid-wait): leave undelivered so a
           // reload (or new version) retries; the claim stops churn this session.
           if (labels == null) continue;
@@ -143,19 +154,43 @@ export function useClientSideClassification(): void {
  * Returns the labels ([] = definitively unlabelled, including unreadable), or null when the
  * file's bytes never became available.
  */
-async function classifyStub(fileId: FileId): Promise<string[] | null> {
+async function classifyStub(
+  fileId: FileId,
+  fileName: string,
+): Promise<string[] | null> {
   let file: StirlingFile | null = null;
   for (let i = 0; i < FILE_WAIT_TRIES; i++) {
     file = await fileStorage.getStirlingFile(fileId).catch(() => null);
     if (file) break;
     await delay(FILE_WAIT_MS);
   }
-  if (!file) return null;
+  if (!file) {
+    console.warn(
+      `[Classify] ${fileName}: bytes never arrived in storage; will retry on next load`,
+    );
+    return null;
+  }
+  const debug = isClassificationDebug();
+  const startedAt = performance.now();
   try {
-    const { labels } = await classifyFileHeuristically(file);
+    const result = await classifyFileHeuristically(file, { explain: debug });
+    const { labels } = result;
+    const alreadyMetered = isDispatched(CLASSIFICATION_CATEGORY, fileId);
+    const ms = Math.round(performance.now() - startedAt);
+    const verdict =
+      labels.length > 0
+        ? labels.join(", ")
+        : result.isEnglish
+          ? "no label"
+          : "no label (not English)";
+    console.debug(
+      `[Classify] ${fileName} -> ${verdict} (${result.confidence}, score ${result.score}, ${ms}ms)` +
+        (alreadyMetered ? " [heal: not re-metered]" : ""),
+    );
+    if (debug && result.explain) logExplanation(fileName, result);
     // Meter on the first classification only; a healing re-run of an undelivered
     // result (already dispatched) is not a new billable run.
-    if (!isDispatched(CLASSIFICATION_CATEGORY, fileId)) {
+    if (!alreadyMetered) {
       meterClassificationRun({
         policyName: "Classification",
         documentCount: 1,
@@ -164,9 +199,35 @@ async function classifyStub(fileId: FileId): Promise<string[] | null> {
     }
     markDispatched(CLASSIFICATION_CATEGORY, fileId);
     return labels;
-  } catch {
+  } catch (err) {
+    console.warn(
+      `[Classify] ${fileName}: unreadable, recording a no-label verdict`,
+      err,
+    );
     // Unreadable PDF: a definitive verdict, recorded so it isn't re-parsed forever.
     markDispatched(CLASSIFICATION_CATEGORY, fileId);
     return [];
   }
+}
+
+/** Full scoring breakdown, one collapsed console group per file (debug flag only). */
+function logExplanation(
+  fileName: string,
+  result: Awaited<ReturnType<typeof classifyFileHeuristically>>,
+): void {
+  const ex = result.explain;
+  if (!ex) return;
+  console.groupCollapsed(
+    `[Classify] ${fileName} scoring (english=${ex.isEnglish}, lowText=${ex.lowText})`,
+  );
+  if (ex.candidates.length === 0) {
+    console.log("no label scored above zero");
+  }
+  for (const c of ex.candidates) {
+    console.log(
+      `${c.id}${c.emit ? "" : " (suppressed)"}: score ${c.score}, ${c.distinct} distinct signals`,
+    );
+    for (const s of c.signals) console.log(`  ${s}`);
+  }
+  console.groupEnd();
 }

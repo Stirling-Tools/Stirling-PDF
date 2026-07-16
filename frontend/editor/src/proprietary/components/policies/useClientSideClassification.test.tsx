@@ -198,6 +198,8 @@ describe("useClientSideClassification delivery", () => {
   });
 
   it("records [] for an unreadable file instead of looping on it", async () => {
+    // The unreadable path deliberately warns; capture it so the console stays clean.
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     mocks.workspace = [stub("corrupt")];
     mocks.classify.mockRejectedValue(new Error("bad pdf"));
 
@@ -210,6 +212,11 @@ describe("useClientSideClassification delivery", () => {
     );
     expect(mocks.classify).toHaveBeenCalledTimes(1);
     expect(mocks.meter).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining("corrupt.pdf: unreadable"),
+      expect.any(Error),
+    );
+    warn.mockRestore();
   });
 
   it("skips tool outputs and already-labelled files", async () => {

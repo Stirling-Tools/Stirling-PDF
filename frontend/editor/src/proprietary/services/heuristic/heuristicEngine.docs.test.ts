@@ -29,6 +29,33 @@ function classify(
   return classifyHeuristic(doc);
 }
 
+describe("scoring explanations", () => {
+  const doc: HeuristicDoc = {
+    fileName: "invoice_acme.pdf",
+    pageCount: 1,
+    meta: {},
+    titleZone: "TAX INVOICE",
+    firstZone: "Invoice Number: INV-9 Invoice Total: 950.00",
+    allZone: "Invoice Number: INV-9 Invoice Total: 950.00",
+  };
+
+  it("returns candidates with per-rule signals when requested", () => {
+    const r = classifyHeuristic(doc, { explain: true });
+    expect(r.labels[0]).toBe("invoice");
+    const top = r.explain?.candidates[0];
+    expect(top?.id).toBe("invoice");
+    expect(top?.score).toBeGreaterThan(0);
+    expect(top?.signals.some((s) => s.includes('phrase "tax invoice"'))).toBe(
+      true,
+    );
+    expect(top?.signals.some((s) => s.includes("filename"))).toBe(true);
+  });
+
+  it("omits the explanation by default", () => {
+    expect(classifyHeuristic(doc).explain).toBeUndefined();
+  });
+});
+
 describe("documents observed lost on upload (engine must label them)", () => {
   it("labels a resume", () => {
     const body = [
