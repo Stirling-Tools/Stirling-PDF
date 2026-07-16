@@ -236,9 +236,11 @@ export function SourceBuilder() {
               {OFFERED_TYPES.map((ct) => {
                 const selected = type.type === ct.type;
                 return (
-                  <button
+                  <Button
                     key={ct.type}
-                    type="button"
+                    variant="tertiary"
+                    justify="start"
+                    fullWidth
                     role="radio"
                     aria-checked={selected}
                     className={
@@ -246,13 +248,15 @@ export function SourceBuilder() {
                       (selected ? " is-selected" : "")
                     }
                     onClick={() => chooseType(ct)}
+                    leftSection={
+                      <span
+                        className="portal-source-builder__type-icon"
+                        aria-hidden
+                      >
+                        <SourceTypeIcon type={ct.type} />
+                      </span>
+                    }
                   >
-                    <span
-                      className="portal-source-builder__type-icon"
-                      aria-hidden
-                    >
-                      <SourceTypeIcon type={ct.type} />
-                    </span>
                     <span className="portal-source-builder__type-text">
                       <span className="portal-source-builder__type-name">
                         {t(ct.labelKey)}
@@ -261,7 +265,7 @@ export function SourceBuilder() {
                         {t(ct.descriptionKey)}
                       </span>
                     </span>
-                  </button>
+                  </Button>
                 );
               })}
             </div>

@@ -54,36 +54,34 @@
   gap: 0.625rem;
 }
 
-/* Selectable source-type card: tinted icon badge + name + description, matching
-   the stroke-SVG icons used in the sources table (no raw Unicode glyphs). */
-.portal-source-builder__type-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
+/* Selectable source-type card: the shared Button styled as a bordered tile with
+   a tinted icon badge + name + description, matching the stroke-SVG icons used
+   in the sources table (no raw Unicode glyphs). The compound selectors win over
+   Button's own inline background/border vars. */
+.portal-source-builder__type-grid .portal-source-builder__type-card {
   padding: 0.875rem;
-  text-align: left;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  cursor: pointer;
   transition:
     border-color var(--motion-fast),
     background var(--motion-fast),
     box-shadow var(--motion-fast);
 }
 
-.portal-source-builder__type-card:hover {
+.portal-source-builder__type-grid .portal-source-builder__type-card:hover {
   border-color: var(--color-border-strong, var(--color-border));
   background: var(--color-bg-hover);
 }
 
-.portal-source-builder__type-card:focus-visible {
-  outline: none;
+.portal-source-builder__type-grid
+  .portal-source-builder__type-card:focus-visible {
   border-color: var(--color-blue);
   box-shadow: 0 0 0 2px var(--color-blue-light);
 }
 
-.portal-source-builder__type-card.is-selected {
+.portal-source-builder__type-grid
+  .portal-source-builder__type-card.is-selected {
   border-color: var(--color-blue);
   background: var(--color-blue-light);
   box-shadow: 0 0 0 1px var(--color-blue) inset;
@@ -101,7 +99,8 @@
   color: var(--color-text-3);
 }
 
-.portal-source-builder__type-card.is-selected .portal-source-builder__type-icon {
+.portal-source-builder__type-card.is-selected
+  .portal-source-builder__type-icon {
   background: color-mix(in srgb, var(--color-blue) 14%, transparent);
   color: var(--color-blue);
 }
