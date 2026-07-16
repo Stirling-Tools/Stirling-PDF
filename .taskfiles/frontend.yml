@@ -204,6 +204,19 @@ tasks:
     cmds:
       - task: lint:eslint
       - task: lint:dpdm
+      - task: lint:colors
+
+  lint:colors:
+    desc: "Enforce theme tokens — colours in core/theme route through the palette"
+    deps: [install]
+    cmds:
+      - node editor/scripts/lint/theme-lint.mjs
+
+  contrast:
+    desc: "Report low-contrast theme token pairs (warning only, never blocks)"
+    deps: [install]
+    cmds:
+      - node editor/scripts/lint/theme-lint.mjs contrast
 
   lint:eslint:
     desc: "Run ESLint linting"
@@ -250,10 +263,8 @@ tasks:
 
   typecheck:_run:
     internal: true
-    env:
-      CI: '{{ .CI | default "false" }}'
     cmds:
-      - '{{ if eq .CI "true" }}npx tsc{{ else }}npx tsgo{{ end }} --noEmit --project {{.PROJECT}}'
+      - 'npx tsc --noEmit --project {{.PROJECT}}'
 
   typecheck:core:
     desc: "Typecheck core build variant"

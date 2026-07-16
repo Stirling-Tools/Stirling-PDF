@@ -35,6 +35,7 @@ import stirling.software.proprietary.billing.ContentHasher;
 import stirling.software.proprietary.billing.DocumentUnitCalculator;
 import stirling.software.proprietary.billing.DocumentUnitCalculator.FileSize;
 import stirling.software.proprietary.billing.UnitCalcPolicy;
+import stirling.software.proprietary.policy.controller.PolicyRunRoutes;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 
 /**
@@ -84,7 +85,13 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
                             instanceof ApiKeyAuthenticationToken;
             BillingCategory category = BillableOperationClassifier.categorize(request, apiKey);
             request.setAttribute(ATTR_CATEGORY, category);
-            decision = gate.evaluate(category != BillingCategory.BYPASSED);
+            // A policy run kicks off billable automation, so block it up front when unentitled
+            // rather than after its first tool. It carries no automation header itself (category
+            // BYPASSED), so it's gated here but metered only via its dispatched sub-steps - keeping
+            // the BYPASSED meter category avoids double-counting.
+            boolean billable =
+                    category != BillingCategory.BYPASSED || PolicyRunRoutes.matches(request);
+            decision = gate.evaluate(billable);
         } catch (RuntimeException e) {
             // Fail open: an inability to resolve entitlement (e.g. a DB or SaaS blip) must never
             // turn into a hard block on billable work.

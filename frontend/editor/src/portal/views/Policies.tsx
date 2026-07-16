@@ -35,6 +35,20 @@ export function Policies() {
   const [wizard, setWizard] = useState<CatalogueEntry | null>(null);
   const [busy, setBusy] = useState(false);
   const [pageError, setPageError] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    const setupId = searchParams.get("setup");
+    if (!setupId || !data) return;
+    const entry = data.catalogue.find((e) => e.category.id === setupId);
+    if (entry && !entry.category.comingSoon) {
+      if (entry.policy) setDetail(entry);
+      else setWizard(entry);
+    }
+    const next = new URLSearchParams(searchParams);
+    next.delete("setup");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, data, setSearchParams]);
 
   const { enabled: aiEngineEnabled, loading: aiEngineLoading } =
     useAiEngineEnabled();
@@ -88,7 +102,6 @@ export function Policies() {
 
   // Open a category passed as ?category=<id> (deep link from the super
   // search), then strip the param so back/reload doesn't re-open it.
-  const [searchParams, setSearchParams] = useSearchParams();
   useEffect(() => {
     const categoryId = searchParams.get("category");
     if (categoryId === null || loading) return;
