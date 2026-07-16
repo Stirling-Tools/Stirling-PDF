@@ -6521,63 +6521,6 @@ title_other = "Próiseáil {{allowance}} PDFs saor in aisce"
 titleWithRate_one = "Próiseáil {{allowance}} PDF saor in aisce, ansin {{rate}}/PDF"
 titleWithRate_other = "Próiseáil {{allowance}} PDFs saor in aisce, ansin {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Faoi ghlas"
-openAriaLabel = "Oscail comhpháirt {{name}}"
-
-[portal.catalogue.detail]
-addToProject = "Cuir le tionscadal"
-ariaLabel = "Sonraí comhpháirte"
-tabsAriaLabel = "Rannáin shonraí comhpháirte"
-upgradeToUnlock = "Uasghrádaigh chun díghlasáil"
-
-[portal.catalogue.detail.code]
-install = "Suiteáil"
-usage = "Úsáid"
-
-[portal.catalogue.detail.locked]
-description = "Tá {{name}} san áireamh ón bplean {{tier}} ar aghaidh. Uasghrádaigh chun é a leabú."
-title = "Níl sé ar fáil ar do phlean"
-
-[portal.catalogue.detail.preview]
-badge = "Réamhamharc beo"
-note = "Rindreálfar bosca gainimh idirghníomhach anseo"
-
-[portal.catalogue.detail.pricing]
-note = "Méadraithe in aghaidh {{unit}}. Billeáiltear úsáid thar an gcuóta míosúil saor in aisce ar do chuntas agus mírítear í faoi Úsáid & Billeáil."
-
-[portal.catalogue.detail.stats]
-billedOn = "Billeáilte ar"
-embeds30d = "Leabuithe (30l)"
-freeQuota = "Cuóta saor in aisce"
-freeQuotaValue = "{{amount}} / mí"
-maturity = "Aibíocht"
-none = "Dada"
-perAction = "In aghaidh gnímh"
-price = "Praghas"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "Forbhreathnú"
-pricing = "Praghsáil"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "roghnach"
-required = "riachtanach"
-
-[portal.catalogue.props.columns]
-description = "Cur síos"
-name = "Prop"
-required = "Riachtanach"
-type = "Cineál"
-
-[portal.catalogue.summary]
-componentsGa = "Comhpháirteanna GA"
-componentSpendMtd = "Caiteachas comhpháirte (MTD)"
-embedsThisMonth = "Leabuithe an mhí seo"
-inBeta = "I mBeta"
-
 [portal.components.billingUnit]
 approval = "faomhadh"
 check = "seiceáil"
@@ -6590,18 +6533,6 @@ signature = "síniú"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Giuirléidí SDK inleabaithe a chuireann tú isteach i d’aip féin — breathnóir, sreabhadh e-sign, painéal athbhreithnithe AI. Méadraítear gach ceann in aghaidh gnímh. Cliceáil cárta le haghaidh suiteála, úsáide agus props."
-title = "Comhpháirteanna"
-
-[portal.componentsView.empty]
-description = "Níorbh fhéidir catalóg na gcomhpháirteanna a luchtú. Bain triail eile as gan mhoill."
-title = "Níl aon chomhpháirteanna ar fáil"
-
-[portal.componentsView.lockedBanner]
-description = "Tá comhpháirteanna GA ar fáil ar Pay-as-you-go; tá cúpla comhpháirt Beta don fhiontar amháin. Taispeánann cártaí faoi ghlas leid uasghrádaithe."
-title = "Teastaíonn plean íoctha ó roinnt comhpháirteanna"
 
 [portal.docs.authentication]
 codeCaption = "gach iarratas"

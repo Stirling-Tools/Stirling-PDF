@@ -112,7 +112,7 @@
 /* ── Action buttons ──────────────────────────────────────── */
 .landing-btn-primary {
   background: var(--landing-hero-gradient) !important;
-  color: #ffffff !important;
+  color: var(--c-text-on-primary) !important;
   border: none !important;
   border-radius: 0.75rem !important;
   font-weight: 600 !important;
