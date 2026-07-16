@@ -10,10 +10,6 @@
   border-radius: var(--radius-lg);
   background: var(--color-bg-muted);
   color: var(--color-text-3);
-}
-
-.pcat-badge svg {
-  width: 1.15rem;
-  height: 1.15rem;
-  display: block;
+  /* The shared MUI outline glyph inherits its size from here. */
+  font-size: 1.15rem;
 }

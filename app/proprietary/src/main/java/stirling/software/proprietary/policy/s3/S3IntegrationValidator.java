@@ -3,7 +3,6 @@ package stirling.software.proprietary.policy.s3;
 import java.net.URI;
 import java.util.Map;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
@@ -21,7 +20,6 @@ import stirling.software.proprietary.integration.service.IntegrationConfigValida
  */
 @Component
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class S3IntegrationValidator implements IntegrationConfigValidator {
 
     private final ApplicationProperties applicationProperties;

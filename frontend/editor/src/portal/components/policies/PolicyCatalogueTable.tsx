@@ -1,12 +1,6 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Button,
-  Chip,
-  StatusBadge,
-  Table,
-  type TableColumn,
-} from "@app/ui";
+import { Button, Chip, StatusBadge, Table, type TableColumn } from "@app/ui";
 import type { CatalogueEntry } from "@portal/api/policies";
 import { PolicyCategoryBadge } from "@portal/components/policies/PolicyCategoryIcon";
 import "@portal/views/Policies.css";
@@ -14,6 +8,10 @@ import "@portal/views/Policies.css";
 interface PolicyCatalogueTableProps {
   entries: CatalogueEntry[];
   onOpen: (entry: CatalogueEntry) => void;
+  /** Setup is unavailable (e.g. the AI engine is off): shown, but not openable. */
+  isLocked?: (entry: CatalogueEntry) => boolean;
+  /** Chip text explaining why setup is locked (e.g. "Requires AI engine"). */
+  lockedLabel?: string;
 }
 
 /**
@@ -25,6 +23,8 @@ interface PolicyCatalogueTableProps {
 export function PolicyCatalogueTable({
   entries,
   onOpen,
+  isLocked,
+  lockedLabel,
 }: PolicyCatalogueTableProps) {
   const { t } = useTranslation();
 
@@ -90,6 +90,13 @@ export function PolicyCatalogueTable({
               </Chip>
             );
           }
+          if (isLocked?.(entry)) {
+            return (
+              <Chip accent="neutral" size="sm">
+                {lockedLabel ?? t("portal.policies.card.requiresAiEngine")}
+              </Chip>
+            );
+          }
           if (entry.policy) {
             const paused = entry.policy.state.status === "paused";
             return (
@@ -112,7 +119,7 @@ export function PolicyCatalogueTable({
         },
       },
     ],
-    [t, onOpen],
+    [t, onOpen, isLocked, lockedLabel],
   );
 
   return (
@@ -122,7 +129,9 @@ export function PolicyCatalogueTable({
       rows={entries}
       rowKey={(e) => e.category.id}
       onRowClick={(entry) =>
-        entry.category.comingSoon ? undefined : onOpen(entry)
+        entry.category.comingSoon || isLocked?.(entry)
+          ? undefined
+          : onOpen(entry)
       }
     />
   );

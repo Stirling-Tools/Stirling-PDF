@@ -3,7 +3,6 @@ package stirling.software.proprietary.policy.source;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -43,7 +42,6 @@ import stirling.software.proprietary.util.SecretMasker;
 @Hidden
 @RequiredArgsConstructor
 @Tag(name = "Sources", description = "Reusable policy input connections")
-@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class SourceController {
 
     private final SourceStore sourceStore;

@@ -1,14 +1,14 @@
-// Default classification labels. The SOURCE OF TRUTH is the co-located static
-// JSON (`classificationLabels.json`), imported here and shaped into typed
-// objects — edit THAT file, not this one. This is the ONLY copy of the label
-// data: it seeds a team's editable set and drives the sidebar's grouping,
-// icons, and display names. Neither the backend nor the engine keeps a copy.
+// Classification labels. The SOURCE OF TRUTH is the co-located static JSON
+// (`classificationLabels.json`), imported here and shaped into typed objects —
+// edit THAT file, not this one. It's a fixed, built-in vocabulary shared by
+// everyone (no per-team customization); it drives the sidebar's grouping, icons,
+// and display names.
 //
-// NOTE: this is only the built-in default vocabulary. A team's own
-// (admin-editable) labels live in the backend store and are what the backend
-// sends to the engine per classify request — the engine holds no vocabulary of
-// its own. Edits to a team's set reach Python on the next run, independent of
-// this file.
+// The backend keeps a SECOND copy of this list
+// (`app/proprietary/src/main/resources/classification/classification-labels.json`)
+// which it sends to the engine per classify request (the engine holds no
+// vocabulary of its own). The two copies must not drift — `classificationLabels.drift.test.ts`
+// guards that. When you edit the labels here, update the backend copy too.
 //
 // `labels` is the flat set: each has a stable `id` (slug — the value on the wire,
 // in storage and keyed on) and a human `name` (display, translatable via
