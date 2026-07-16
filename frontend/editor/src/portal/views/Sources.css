@@ -91,6 +91,11 @@
   background: var(--color-amber-light);
   color: var(--color-amber-dark);
 }
+/* Dark: subtle tint + bright icon; amber-light/amber-dark are too close to read. */
+[data-theme="dark"] .portal-sources__type-dot--warning {
+  background: color-mix(in srgb, var(--color-amber) 20%, transparent);
+  color: var(--color-amber);
+}
 .portal-sources__type-dot--danger {
   background: var(--color-red-light);
   color: var(--color-red);
