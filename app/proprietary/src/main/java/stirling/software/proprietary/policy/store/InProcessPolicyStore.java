@@ -36,6 +36,7 @@ public class InProcessPolicyStore implements PolicyStore {
                         policy.sourceIds(),
                         policy.steps(),
                         policy.output(),
+                        policy.outputId(),
                         policy.teamId());
         policies.put(id, stored);
         // Existing policy keeps its position; a new one appends to the end of its team's queue.

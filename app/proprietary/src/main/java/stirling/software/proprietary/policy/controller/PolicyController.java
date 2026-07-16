@@ -61,6 +61,9 @@ import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.model.PolicyRunView;
+import stirling.software.proprietary.policy.output.Output;
+import stirling.software.proprietary.policy.output.OutputAccessGuard;
+import stirling.software.proprietary.policy.output.OutputStore;
 import stirling.software.proprietary.policy.overview.PoliciesOverviewResponse;
 import stirling.software.proprietary.policy.overview.PolicyOverviewService;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
@@ -91,6 +94,8 @@ public class PolicyController {
     private final PolicyStore policyStore;
     private final SourceStore sourceStore;
     private final SourceAccessGuard sourceAccessGuard;
+    private final OutputStore outputStore;
+    private final OutputAccessGuard outputAccessGuard;
     private final SourceDocCounter docCounter;
     private final PolicyValidator policyValidator;
     private final PolicyAccessGuard policyAccessGuard;
@@ -219,6 +224,7 @@ public class PolicyController {
         requirePolicyEditingAllowed();
         Policy owned = withStoredOutputSecrets(resolveOwnership(policy));
         requireAccessibleSources(owned);
+        requireAccessibleOutput(owned);
         try {
             policyValidator.validate(owned);
         } catch (IllegalArgumentException e) {
@@ -262,6 +268,35 @@ public class PolicyController {
     }
 
     /**
+     * A policy's referenced output must resolve to an output in the caller's team, so a client can
+     * neither reference a non-existent output nor reach across teams to write to another team's
+     * destination. The destination config is then validated on this (request) thread so an S3
+     * output's connection is authorization-checked against the caller - the async delivery worker
+     * has no principal. A policy with no reference (inline / editor / one-off) has nothing to
+     * check.
+     */
+    private void requireAccessibleOutput(Policy policy) {
+        String outputId = policy.outputId();
+        if (outputId == null || outputId.isBlank()) {
+            return;
+        }
+        Output output =
+                outputStore
+                        .get(outputId)
+                        .filter(outputAccessGuard::canAccess)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.BAD_REQUEST,
+                                                "Unknown or inaccessible output: " + outputId));
+        try {
+            policyValidator.validateOutput(output.toOutputSpec());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+    }
+
+    /**
      * Assign owner + owning team server-side. Create stamps the current user and their team; update
      * preserves the existing owner and team after verifying the policy belongs to the caller's team
      * — so the client can neither forge ownership/team on create nor reach across teams on update
@@ -294,6 +329,7 @@ public class PolicyController {
                 policy.sourceIds(),
                 policy.steps(),
                 policy.output(),
+                policy.outputId(),
                 teamId);
     }
 
@@ -329,16 +365,7 @@ public class PolicyController {
     }
 
     private static Policy withOutput(Policy policy, OutputSpec output) {
-        return new Policy(
-                policy.id(),
-                policy.name(),
-                policy.owner(),
-                policy.enabled(),
-                policy.trigger(),
-                policy.sourceIds(),
-                policy.steps(),
-                output,
-                policy.teamId());
+        return policy.withOutput(output);
     }
 
     /**

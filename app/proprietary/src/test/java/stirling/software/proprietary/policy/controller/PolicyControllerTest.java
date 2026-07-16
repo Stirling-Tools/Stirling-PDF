@@ -45,6 +45,8 @@ import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunView;
+import stirling.software.proprietary.policy.output.OutputAccessGuard;
+import stirling.software.proprietary.policy.output.OutputStore;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 import stirling.software.proprietary.policy.source.EditorSource;
 import stirling.software.proprietary.policy.source.SourceAccessGuard;
@@ -62,6 +64,8 @@ class PolicyControllerTest {
     @Mock private stirling.software.proprietary.policy.store.PolicyStore policyStore;
     @Mock private SourceStore sourceStore;
     @Mock private SourceAccessGuard sourceAccessGuard;
+    @Mock private OutputStore outputStore;
+    @Mock private OutputAccessGuard outputAccessGuard;
     @Mock private SourceDocCounter docCounter;
     @Mock private PolicyValidator policyValidator;
     @Mock private PolicyAccessGuard policyAccessGuard;
@@ -96,6 +100,8 @@ class PolicyControllerTest {
                         policyStore,
                         sourceStore,
                         sourceAccessGuard,
+                        outputStore,
+                        outputAccessGuard,
                         docCounter,
                         policyValidator,
                         policyAccessGuard,

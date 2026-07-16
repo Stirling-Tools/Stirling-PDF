@@ -57,6 +57,22 @@ vi.mock("@portal/api/integrations", () => ({
   createIntegration: (...args: unknown[]) => createIntegration(...args),
 }));
 
+// The output picker is a flavor seam with its own test; stub it to a button that
+// selects a fixed saved output, keeping this suite focused on the builder.
+vi.mock("@portal/components/outputs/OutputPicker", () => ({
+  OutputPicker: ({
+    value,
+    onChange,
+  }: {
+    value: string;
+    onChange: (id: string) => void;
+  }) => (
+    <button type="button" onClick={() => onChange("out-1")}>
+      {value ? `output:${value}` : "pick output"}
+    </button>
+  ),
+}));
+
 // One editable tool, Compress, so the picker and step settings have something to render.
 vi.mock("@app/contexts/ToolRegistryContext", () => {
   const compress = {
@@ -172,6 +188,9 @@ describe("PipelineBuilder", () => {
     fireEvent.click(screen.getByRole("button", { name: /addTool/ }));
     fireEvent.click(await screen.findByText("Compress"));
 
+    // A pipeline must target a saved output destination; pick one.
+    fireEvent.click(screen.getByText("pick output"));
+
     fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
 
     await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
@@ -179,6 +198,7 @@ describe("PipelineBuilder", () => {
       expect.objectContaining({
         name: "Nightly compress",
         trigger: null,
+        outputId: "out-1",
         steps: [
           expect.objectContaining({ operation: "/api/v1/misc/compress-pdf" }),
         ],
@@ -187,77 +207,25 @@ describe("PipelineBuilder", () => {
     expect(await screen.findByText("pipelines list")).toBeInTheDocument();
   });
 
-  it("saves an s3 output referencing an inline-created connection", async () => {
-    createIntegration.mockResolvedValue({ id: 12, name: "Claims bucket" });
+  it("requires a saved output destination before saving", async () => {
     renderBuilder("/processor/pipelines/new");
 
     fireEvent.change(await screen.findByRole("textbox"), {
-      target: { value: "Bucket to bucket" },
+      target: { value: "Needs a destination" },
     });
-    fireEvent.click(screen.getByLabelText("portal.pipelines.output.s3"));
 
-    // With s3 selected but no connection chosen, saving is blocked. The
-    // connection picker + prefix are inline (no modal), like the folder output.
+    // No output chosen yet: saving is blocked.
     expect(
       screen.getByText("portal.pipelines.composer.create").closest("button"),
     ).toBeDisabled();
 
-    // No connections exist: create one inline from the picker. Target fields by
-    // label, not position - the picker's Mantine Select also carries an input
-    // role and would shift index-based queries.
-    fireEvent.click(
-      await screen.findByText("portal.connections.picker.createNew"),
-    );
-    fireEvent.change(
-      screen.getByLabelText(/portal\.connections\.s3\.fields\.name/),
-      { target: { value: "Claims bucket" } },
-    );
-    fireEvent.change(
-      screen.getByLabelText(
-        /portal\.sources\.types\.s3\.fields\.bucket\.label/,
-      ),
-      { target: { value: "claims-processed" } },
-    );
-    fireEvent.change(
-      screen.getByLabelText(
-        /portal\.sources\.types\.s3\.fields\.accessKeyId\.label/,
-      ),
-      { target: { value: "AKIAEXAMPLE" } },
-    );
-    fireEvent.change(
-      screen.getByLabelText(
-        /portal\.sources\.types\.s3\.fields\.secretAccessKey\.label/,
-      ),
-      { target: { value: "shh-secret" } },
-    );
-    fireEvent.click(screen.getByText("portal.connections.picker.save"));
-    await waitFor(() => expect(createIntegration).toHaveBeenCalledTimes(1));
-    // The connection modal closes once saved and the connection is selected.
-    await waitFor(() =>
-      expect(
-        screen.queryByText("portal.connections.picker.save"),
-      ).not.toBeInTheDocument(),
-    );
+    fireEvent.click(screen.getByText("pick output"));
 
-    fireEvent.change(
-      screen.getByLabelText(
-        /portal\.sources\.types\.s3\.fields\.prefix\.label/,
-      ),
-      { target: { value: "processed/" } },
-    );
+    // Once an output is picked, saving is allowed and sends its id.
     fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
-
     await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
     expect(savePipeline).toHaveBeenCalledWith(
-      expect.objectContaining({
-        output: {
-          type: "s3",
-          options: {
-            connectionId: "12",
-            prefix: "processed/",
-          },
-        },
-      }),
+      expect.objectContaining({ outputId: "out-1" }),
     );
   });
 

@@ -37,6 +37,7 @@ import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.WaitState;
 import stirling.software.proprietary.policy.output.OutputDelivery;
+import stirling.software.proprietary.policy.output.PolicyOutputResolver;
 import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 import stirling.software.proprietary.service.DownstreamEntitlementError;
@@ -72,6 +73,7 @@ public class PolicyEngine {
     private final FileStorage fileStorage;
     private final JobOwnershipService jobOwnershipService;
     private final List<PolicyOutputSink> outputSinks;
+    private final PolicyOutputResolver outputResolver;
     private final ResourceMonitor resourceMonitor;
     private final JobQueue jobQueue;
 
@@ -119,8 +121,13 @@ public class PolicyEngine {
         // the owner owns those outputs.
         String triggeringUser = currentActingPrincipal();
         String fileOwner = triggeringUser != null ? triggeringUser : policy.owner();
+        // Resolve the referenced output destination live (like sourceIds), so a stored policy
+        // delivers to its saved Output rather than the inline default. Unreferenced policies keep
+        // their inline output.
+        PipelineDefinition definition =
+                policy.withOutput(outputResolver.resolve(policy)).toDefinition();
         return submitForPrincipal(
-                policy.owner(), fileOwner, policy.id(), policy.toDefinition(), inputs, listener);
+                policy.owner(), fileOwner, policy.id(), definition, inputs, listener);
     }
 
     private PolicyRunHandle submitForPrincipal(

@@ -29,8 +29,8 @@ export interface OutputSpec {
   options: Record<string, unknown>;
 }
 
-/** The output destinations the pipeline builder can offer. */
-export type PipelineOutputMode = "inline" | "folder" | "s3";
+/** The persistable output destination types (inline "return to caller" isn't one). */
+export type PipelineOutputMode = "folder" | "s3";
 
 /**
  * The stored policy record: the create/update body (`id` blank on create) and what
@@ -46,6 +46,7 @@ export interface Policy {
   sourceIds: string[];
   steps: PipelineStep[];
   output: OutputSpec;
+  outputId?: string | null;
   teamId?: number | null;
 }
 

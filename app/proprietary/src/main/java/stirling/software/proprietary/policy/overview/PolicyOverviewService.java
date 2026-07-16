@@ -14,6 +14,9 @@ import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.TriggerConfig;
+import stirling.software.proprietary.policy.output.Output;
+import stirling.software.proprietary.policy.output.OutputAccessGuard;
+import stirling.software.proprietary.policy.output.OutputStore;
 import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceAccessGuard;
 import stirling.software.proprietary.policy.source.SourceStore;
@@ -32,16 +35,19 @@ public class PolicyOverviewService {
 
     private final PolicyStore policyStore;
     private final SourceStore sourceStore;
+    private final OutputStore outputStore;
     private final PolicyAccessGuard policyAccessGuard;
     private final SourceAccessGuard sourceAccessGuard;
+    private final OutputAccessGuard outputAccessGuard;
 
     public PoliciesOverviewResponse overview() {
         List<Policy> policies = policyAccessGuard.visibleFrom(policyStore);
         Map<String, String> sourceNames = sourceNames();
+        Map<String, String> outputNames = outputNames();
 
         List<PolicyView> views =
                 policies.stream()
-                        .map(policy -> toView(policy, sourceNames))
+                        .map(policy -> toView(policy, sourceNames, outputNames))
                         .sorted(
                                 Comparator.comparing(
                                         PolicyView::name, String.CASE_INSENSITIVE_ORDER))
@@ -59,7 +65,17 @@ public class PolicyOverviewService {
         return names;
     }
 
-    private static PolicyView toView(Policy policy, Map<String, String> sourceNames) {
+    /** Display names for every output the caller's team can see, keyed by output id. */
+    private Map<String, String> outputNames() {
+        Map<String, String> names = new HashMap<>();
+        for (Output output : outputAccessGuard.visibleFrom(outputStore)) {
+            names.put(output.id(), output.name());
+        }
+        return names;
+    }
+
+    private static PolicyView toView(
+            Policy policy, Map<String, String> sourceNames, Map<String, String> outputNames) {
         List<PolicyView.SourceRef> sources =
                 policy.sourceIds().stream()
                         // An unresolved id (source deleted, or not visible) falls back to the id so
@@ -75,8 +91,20 @@ public class PolicyOverviewService {
                 triggerSummary(policy.trigger()),
                 sources,
                 steps,
-                outputSummary(policy.output()),
+                outputSummary(policy, outputNames),
                 policy.owner());
+    }
+
+    /**
+     * A policy that references a saved output shows that destination's display name (falling back
+     * to the id if it's since been deleted or isn't visible); otherwise the inline output's type.
+     */
+    private static String outputSummary(Policy policy, Map<String, String> outputNames) {
+        String outputId = policy.outputId();
+        if (outputId != null && !outputId.isBlank()) {
+            return outputNames.getOrDefault(outputId, outputId);
+        }
+        return outputSummary(policy.output());
     }
 
     /** A null trigger is a manual-only policy; otherwise the trigger's type keys the summary. */

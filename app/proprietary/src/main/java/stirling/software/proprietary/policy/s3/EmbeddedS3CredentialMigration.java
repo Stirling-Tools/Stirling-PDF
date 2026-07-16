@@ -196,15 +196,6 @@ public class EmbeddedS3CredentialMigration {
     }
 
     private static Policy withOutput(Policy policy, OutputSpec output) {
-        return new Policy(
-                policy.id(),
-                policy.name(),
-                policy.owner(),
-                policy.enabled(),
-                policy.trigger(),
-                policy.sourceIds(),
-                policy.steps(),
-                output,
-                policy.teamId());
+        return policy.withOutput(output);
     }
 }

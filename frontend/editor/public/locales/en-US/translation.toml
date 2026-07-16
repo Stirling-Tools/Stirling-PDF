@@ -7150,6 +7150,64 @@ users = "Users"
 platform = "PDF Platform"
 processor = "PDF Processor"
 
+[portal.outputs]
+createTitle = "New output"
+delete = "Delete"
+edit = "Edit"
+editTitle = "Edit output"
+subtitle = "Destinations processed files are delivered to. Connect one here, then pick it from a pipeline."
+
+[portal.outputs.actions]
+new = "New output"
+
+[portal.outputs.empty]
+description = "Connect a destination (a folder or cloud storage) so your pipelines have somewhere to deliver processed files."
+title = "No outputs connected yet"
+
+[portal.outputs.form]
+cancel = "Cancel"
+nameLabel = "Name"
+namePlaceholder = "e.g. Processed archive"
+save = "Save"
+typeLabel = "Type"
+
+[portal.outputs.picker]
+createNew = "New output"
+placeholder = "Choose an output"
+
+[portal.outputs.table]
+name = "Name"
+referencedBy_one = "{{count}} pipeline"
+referencedBy_other = "{{count}} pipelines"
+references = "Used by"
+type = "Type"
+unused = "Unused"
+
+[portal.outputs.types.folder]
+description = "Write processed files to a directory on the server."
+label = "Folder"
+
+[portal.outputs.types.folder.fields.directory]
+helperText = "Absolute path on the server. Must be within the configured allowed folders."
+label = "Output folder"
+placeholder = "/data/processed"
+
+[portal.outputs.types.s3]
+description = "Upload processed files to an Amazon S3 bucket."
+label = "Amazon S3"
+
+[portal.outputs.types.s3.fields.connection]
+helperText = "The stored S3 connection to upload to."
+label = "Connection"
+
+[portal.outputs.types.s3.fields.prefix]
+helperText = "Files are uploaded under this key prefix."
+label = "Prefix"
+placeholder = "processed/"
+
+[portal.outputs.types.unknown]
+label = "Output"
+
 [portal.pipelines]
 subtitle = "Every automated document pipeline on the backend: an ordered chain of operations over a set of sources, run on a trigger. Click a row for its steps and sources."
 title = "Pipelines"
@@ -7181,8 +7239,6 @@ addTool = "Add tool"
 cancel = "Cancel"
 chainEmpty = "Add a tool to start building your pipeline."
 create = "Create pipeline"
-directory = "Output folder"
-directoryHelp = "Absolute path on the server. Must be within the configured allowed folders."
 editingUnsupported = "Displaying these tool params for editing is not supported yet."
 moveDown = "Move down"
 moveUp = "Move up"
@@ -7193,8 +7249,9 @@ noToolSettings = "This tool has no configurable settings."
 operations_one = "Operation ({{count}})"
 operations_other = "Operations ({{count}})"
 output = "Output"
+outputDestination = "Destination"
+outputDestinationHelp = "Where processed files are delivered. Pick a saved output, or create one."
 removeStep = "Remove operation"
-s3PrefixHelp = "Outputs are uploaded under this key prefix."
 save = "Save changes"
 scheduleEvery = "Run every"
 sources = "Sources"
@@ -7228,11 +7285,6 @@ title = "No pipelines yet"
 active = "Active"
 paused = "Paused"
 total = "Pipelines"
-
-[portal.pipelines.output]
-folder = "Write to folder"
-inline = "Return files"
-s3 = "Write to Amazon S3"
 
 [portal.pipelines.run]
 allProcessed_one = "Nothing to run: the source's {{count}} document has already been processed."
@@ -7950,6 +8002,7 @@ usedBy = "Policies"
 
 [portal.sources.tabs]
 connections = "Connections"
+outputs = "Outputs"
 sources = "Sources"
 
 [portal.sources.types.editor]
