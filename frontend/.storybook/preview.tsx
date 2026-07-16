@@ -195,9 +195,6 @@ const preview: Preview = {
       options: {},
       test: "todo",
     },
-    options: {
-      storySort: { order: ["*", "Tools"] },
-    },
   },
   globalTypes: {
     tier: {
