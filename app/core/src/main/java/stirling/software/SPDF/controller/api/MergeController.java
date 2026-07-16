@@ -253,8 +253,8 @@ public class MergeController {
     }
 
     /**
-     * Best-effort check for a PDF file signature. Mirrors PDFium's leniency by scanning the first
-     * 1 KB for the {@code %PDF-} header rather than requiring it at byte 0, so valid PDFs with a
+     * Best-effort check for a PDF file signature. Mirrors PDFium's leniency by scanning the first 1
+     * KB for the {@code %PDF-} header rather than requiring it at byte 0, so valid PDFs with a
      * leading BOM/whitespace aren't misclassified. Used to distinguish "not a PDF at all" (e.g. an
      * image) from a corrupted PDF.
      */
