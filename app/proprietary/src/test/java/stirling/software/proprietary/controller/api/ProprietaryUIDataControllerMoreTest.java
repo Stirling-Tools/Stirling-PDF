@@ -141,7 +141,8 @@ class ProprietaryUIDataControllerMoreTest {
         void singleAdminFirstLogin() {
             User admin = normalUser(1L, "admin");
             admin.setFirstLogin(true);
-            when(userRepository.findAll()).thenReturn(List.of(admin));
+            when(userRepository.countByUsernameNot(Role.INTERNAL_API_USER.getRoleId()))
+                    .thenReturn(1L);
             when(userRepository.findByUsernameIgnoreCase("admin")).thenReturn(Optional.of(admin));
 
             ResponseEntity<LoginData> response = controller.getLoginData();
@@ -154,7 +155,8 @@ class ProprietaryUIDataControllerMoreTest {
         @Test
         @DisplayName("does not flag setup when a normal user exists")
         void normalUserNoSetup() {
-            when(userRepository.findAll()).thenReturn(List.of(normalUser(1L, "bob")));
+            when(userRepository.countByUsernameNot(Role.INTERNAL_API_USER.getRoleId()))
+                    .thenReturn(1L);
 
             ResponseEntity<LoginData> response = controller.getLoginData();
 
@@ -252,11 +254,9 @@ class ProprietaryUIDataControllerMoreTest {
         @DisplayName("aggregates users, teams and license limits")
         void aggregates() {
             User user = normalUser(1L, "bob");
-            when(userRepository.findAllWithTeam())
+            when(userRepository.findAllWithTeamAndAuthorities())
                     .thenReturn(new java.util.ArrayList<>(List.of(user)));
             when(sessionPersistentRegistry.getMaxInactiveInterval()).thenReturn(3600);
-            when(sessionPersistentRegistry.findLatestSession("bob")).thenReturn(Optional.empty());
-            when(userRepository.findByIdWithSettings(1L)).thenReturn(Optional.of(user));
             when(teamRepository.findAll()).thenReturn(List.of());
 
             when(licenseSettingsService.calculateMaxAllowedUsers()).thenReturn(10);
@@ -310,7 +310,7 @@ class ProprietaryUIDataControllerMoreTest {
             team.setName("Engineering");
             when(teamRepository.findById(5L)).thenReturn(Optional.of(team));
             when(userRepository.findAllByTeamId(5L)).thenReturn(List.of());
-            when(userRepository.findAllWithTeam()).thenReturn(List.of());
+            when(userRepository.findAllWithTeamAndAuthorities()).thenReturn(List.of());
             when(sessionRepository.findLatestSessionByTeamId(5L))
                     .thenReturn(Collections.emptyList());
 
