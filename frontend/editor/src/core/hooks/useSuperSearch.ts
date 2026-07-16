@@ -353,11 +353,7 @@ export function useSuperSearch(
 ): UseSuperSearchResult {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const authState = useAuth() as {
-    portalAccess?: boolean;
-    isAdmin?: boolean;
-    role?: string | null;
-  };
+  const authState = useAuth();
   const {
     toolRegistry,
     handleToolSelect,
@@ -496,7 +492,10 @@ export function useSuperSearch(
 
     return assembledGroups.map((group) => ({
       ...group,
-      label: group.id === "processor" ? t("pages", "Pages") : group.label,
+      label:
+        group.id === "processor"
+          ? t("superSearch.group.pages", "Pages")
+          : group.label,
       sectionLabel:
         group.id === "processor"
           ? t("superSearch.group.processor", "Processor")

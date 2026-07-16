@@ -368,7 +368,10 @@ export default function SuperSearch({
 
   const scopeFilters =
     scopes.length > 0 ? (
-      <div className="super-search-filters" aria-label="Search filters">
+      <div
+        className="super-search-filters"
+        aria-label={t("superSearch.filtersAriaLabel", "Search filters")}
+      >
         <Chip
           size="sm"
           accent={activeScopeIds.size === 0 ? "default" : "neutral"}

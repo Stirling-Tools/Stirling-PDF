@@ -9841,11 +9841,13 @@ uploadButton = "Upload to Server"
 [superSearch]
 all = "All"
 ariaLabel = "Super search"
+filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
 
 [superSearch.group]
 files = "Files"
+pages = "Pages"
 processor = "Processor"
 settings = "Settings"
 tools = "Tools"
