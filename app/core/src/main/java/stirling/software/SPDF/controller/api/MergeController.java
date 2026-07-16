@@ -252,6 +252,21 @@ public class MergeController {
         return 0L;
     }
 
+    /**
+     * Best-effort check for a PDF file signature. Mirrors PDFium's leniency by scanning the first
+     * 1 KB for the {@code %PDF-} header rather than requiring it at byte 0, so valid PDFs with a
+     * leading BOM/whitespace aren't misclassified. Used to distinguish "not a PDF at all" (e.g. an
+     * image) from a corrupted PDF.
+     */
+    private static boolean looksLikePdf(File file) {
+        try (InputStream is = Files.newInputStream(file.toPath())) {
+            byte[] head = is.readNBytes(1024);
+            return new String(head, java.nio.charset.StandardCharsets.ISO_8859_1).contains("%PDF-");
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
     private static int indexOfByOriginalFilename(List<MultipartFile> list, String name) {
         for (int i = 0; i < list.size(); i++) {
             MultipartFile f = list.get(i);
@@ -297,7 +312,7 @@ public class MergeController {
         try (TempFile mt = new TempFile(tempFileManager, ".pdf")) {
 
             List<Path> inputPaths = new ArrayList<>(files.length);
-            List<Integer> invalidIndexes = new ArrayList<>();
+            List<String> nonPdfNames = new ArrayList<>();
             for (int index = 0; index < files.length; index++) {
                 MultipartFile multipartFile = files[index];
                 File tempFile = tempFileManager.convertMultipartFileToFile(multipartFile);
@@ -307,8 +322,22 @@ public class MergeController {
                 try (PdfDocument ignored = PdfDocument.open(tempFile.toPath())) {
                 } catch (Exception e) {
                     ExceptionUtils.logException("PDF pre-validate", e);
-                    invalidIndexes.add(index);
+                    // Only inputs that aren't PDFs at all (e.g. images) are rejected here with a
+                    // specific error. A file carrying the %PDF header but failing to open is a
+                    // corrupted PDF; it is left to the merge path below, which surfaces the
+                    // dedicated corrupted-PDF error instead.
+                    if (!looksLikePdf(tempFile)) {
+                        String name = multipartFile.getOriginalFilename();
+                        nonPdfNames.add(
+                                name == null || name.isBlank() ? "file " + (index + 1) : name);
+                    }
                 }
+            }
+
+            // Fail fast on non-PDF inputs with an actionable message instead of letting them reach
+            // the native merge and surface as a generic 500 "merge failed".
+            if (!nonPdfNames.isEmpty()) {
+                throw ExceptionUtils.createPdfFileRequiredException(nonPdfNames);
             }
 
             int[] pageCounts;
@@ -380,7 +409,11 @@ public class MergeController {
             if (outputTempFile != null) {
                 outputTempFile.close();
             }
-            if (ex instanceof IOException && PdfErrorUtils.isCorruptedPdfError((IOException) ex)) {
+            if (ex instanceof IllegalArgumentException) {
+                // Client validation error (e.g. non-PDF input); handled as a 400 upstream.
+                log.warn("Rejected merge request: {}", ex.getMessage());
+            } else if (ex instanceof IOException
+                    && PdfErrorUtils.isCorruptedPdfError((IOException) ex)) {
                 log.warn("Corrupted PDF detected in merge pdf process: {}", ex.getMessage());
             } else {
                 log.error("Error in merge pdf process", ex);
