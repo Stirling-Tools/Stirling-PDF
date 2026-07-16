@@ -30,6 +30,19 @@ html[data-app-theme="light"] {
 
   --c-success: var(--p-green-600);
   --c-danger: var(--p-red-600);
+
+  --c-primary-tint: color-mix(in srgb, var(--c-primary) 14%, var(--c-surface));
+  --c-primary-border: color-mix(
+    in srgb,
+    var(--c-primary) 32%,
+    var(--c-surface)
+  );
+  --c-danger-subtle: color-mix(in srgb, var(--c-danger) 10%, var(--c-surface));
+  --c-success-subtle: color-mix(
+    in srgb,
+    var(--c-success) 10%,
+    var(--c-surface)
+  );
 }
 
 /* ── MIDNIGHT (original navy) — also the default portal/Storybook dark ────── */
@@ -64,11 +77,13 @@ html[data-app-theme="midnight"] {
 
 /* ── Base accent — fixed default (blue buttons); [data-accent="default"] blocks at the end keep surfaces neutral. LIGHT base here, DARK base next. ── */
 html[data-app-theme="custom"] {
-  --c-primary: var(--p-blue-500);
+  /* --user-* are injected by ThemeProvider from the chosen accent (contrast-
+     clamped in customPrimary.ts); absent (default accent) → static blue. */
+  --c-primary: var(--user-primary, var(--p-blue-500));
   --c-primary-hover: color-mix(in srgb, var(--c-primary) 85%, var(--p-black));
   --c-primary-subtle: color-mix(in srgb, var(--c-primary) 14%, transparent);
-  --c-text-on-primary: var(--p-white);
-  --c-accent-fg: var(--c-primary);
+  --c-text-on-primary: var(--user-primary-on, var(--p-white));
+  --c-accent-fg: var(--user-accent-fg, var(--c-primary));
 
   /* Primary-tinted surfaces (light base). Neutralised by the default override. */
   --c-bg: color-mix(in srgb, var(--c-primary) 7%, var(--p-gray-50));

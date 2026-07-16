@@ -991,7 +991,7 @@ export default function FileManagerView() {
           style={{
             padding: "0.6rem 1.25rem",
             background:
-              "color-mix(in srgb, var(--mantine-color-red-6, #e03131) 12%, transparent)",
+              "color-mix(in srgb, var(--mantine-color-red-6) 12%, transparent)",
             color: "var(--c-text)",
             borderBottom: "1px solid var(--c-border-subtle)",
             fontSize: "0.85rem",

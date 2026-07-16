@@ -82,7 +82,7 @@ export function ColorGridPicker({
             cursor: "pointer",
           }}
         >
-          {defaultOption && value === defaultOption.value ? (
+          {isDefault ? (
             <span
               style={{
                 display: "grid",

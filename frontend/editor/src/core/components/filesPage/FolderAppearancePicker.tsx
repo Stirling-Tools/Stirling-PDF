@@ -165,7 +165,7 @@ function IconButton({
           borderRadius: "0.4rem",
           background: selected ? "var(--c-hover)" : "transparent",
           border: selected
-            ? "1px solid var(--c-primary, #6366f1)"
+            ? "1px solid var(--c-primary)"
             : "1px solid transparent",
           cursor: disabled ? "not-allowed" : "pointer",
           padding: 0,

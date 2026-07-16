@@ -3,7 +3,8 @@
 //
 //   node theme-lint.mjs            enforce: literal colours live ONLY in
 //                                  primitives.css; core/theme references tokens;
-//                                  no duplicate primitives. (blocking)
+//                                  no duplicate primitives; every referenced
+//                                  --p-*/--c-* token resolves. (blocking)
 //   node theme-lint.mjs css-colors enforce: NO hardcoded colour in any source
 //                                  .css (primitives.css + generated output.css
 //                                  exempt). Scope: all editor/src. (blocking)
@@ -38,8 +39,156 @@ const THEME_FILES = [
 // ── colour helpers ─────────────────────────────────────────────────────────
 const HEX_RE = /#[0-9a-fA-F]{3,8}\b/g;
 const FUNC_RE = /\b(?:rgba?|hsla?)\(\s*[^)]*\)/g;
-const NAMED_RE =
-  /\b(?:white|black|red|green|blue|orange|yellow|purple|gray|grey|silver|transparent)\b/g;
+// CSS named colours (structural white/black/transparent handled separately).
+// Kept broad so `color: teal`/`navy`/`crimson`/`cyan` can't slip past the gate.
+const NAMED_COLORS = [
+  "aliceblue",
+  "antiquewhite",
+  "aqua",
+  "aquamarine",
+  "azure",
+  "beige",
+  "bisque",
+  "blanchedalmond",
+  "blue",
+  "blueviolet",
+  "brown",
+  "burlywood",
+  "cadetblue",
+  "chartreuse",
+  "chocolate",
+  "coral",
+  "cornflowerblue",
+  "cornsilk",
+  "crimson",
+  "cyan",
+  "darkblue",
+  "darkcyan",
+  "darkgoldenrod",
+  "darkgray",
+  "darkgreen",
+  "darkgrey",
+  "darkkhaki",
+  "darkmagenta",
+  "darkolivegreen",
+  "darkorange",
+  "darkorchid",
+  "darkred",
+  "darksalmon",
+  "darkseagreen",
+  "darkslateblue",
+  "darkslategray",
+  "darkslategrey",
+  "darkturquoise",
+  "darkviolet",
+  "deeppink",
+  "deepskyblue",
+  "dimgray",
+  "dimgrey",
+  "dodgerblue",
+  "firebrick",
+  "floralwhite",
+  "forestgreen",
+  "fuchsia",
+  "gainsboro",
+  "ghostwhite",
+  "gold",
+  "goldenrod",
+  "gray",
+  "green",
+  "greenyellow",
+  "grey",
+  "honeydew",
+  "hotpink",
+  "indianred",
+  "indigo",
+  "ivory",
+  "khaki",
+  "lavender",
+  "lavenderblush",
+  "lawngreen",
+  "lemonchiffon",
+  "lightblue",
+  "lightcoral",
+  "lightcyan",
+  "lightgoldenrodyellow",
+  "lightgray",
+  "lightgreen",
+  "lightgrey",
+  "lightpink",
+  "lightsalmon",
+  "lightseagreen",
+  "lightskyblue",
+  "lightslategray",
+  "lightslategrey",
+  "lightsteelblue",
+  "lightyellow",
+  "lime",
+  "limegreen",
+  "linen",
+  "magenta",
+  "maroon",
+  "mediumaquamarine",
+  "mediumblue",
+  "mediumorchid",
+  "mediumpurple",
+  "mediumseagreen",
+  "mediumslateblue",
+  "mediumspringgreen",
+  "mediumturquoise",
+  "mediumvioletred",
+  "midnightblue",
+  "mintcream",
+  "mistyrose",
+  "moccasin",
+  "navajowhite",
+  "navy",
+  "oldlace",
+  "olive",
+  "olivedrab",
+  "orange",
+  "orangered",
+  "orchid",
+  "palegoldenrod",
+  "palegreen",
+  "paleturquoise",
+  "palevioletred",
+  "papayawhip",
+  "peachpuff",
+  "peru",
+  "pink",
+  "plum",
+  "powderblue",
+  "purple",
+  "rebeccapurple",
+  "red",
+  "rosybrown",
+  "royalblue",
+  "saddlebrown",
+  "salmon",
+  "sandybrown",
+  "seagreen",
+  "seashell",
+  "sienna",
+  "silver",
+  "skyblue",
+  "slateblue",
+  "slategray",
+  "slategrey",
+  "snow",
+  "springgreen",
+  "steelblue",
+  "tan",
+  "teal",
+  "thistle",
+  "tomato",
+  "turquoise",
+  "violet",
+  "wheat",
+  "yellow",
+  "yellowgreen",
+];
+const NAMED_RE = new RegExp(`\\b(?:${NAMED_COLORS.join("|")})\\b`, "g");
 
 function expandHex(hex) {
   let h = hex.slice(1).toLowerCase();
@@ -79,18 +228,14 @@ function readPrimitives(css) {
     primitives[m[1]] = m[2];
   return primitives;
 }
-function hexToRgb(h) {
-  h = h.replace("#", "");
-  if (h.length === 3)
-    h = h
-      .split("")
-      .map((c) => c + c)
-      .join("");
+function hexToRgb(hex) {
+  // expandHex normalises 3/4-digit shorthand to 6/8; parse alpha from 8-digit.
+  const h = expandHex(hex.startsWith("#") ? hex : "#" + hex).slice(1);
   return {
     r: parseInt(h.slice(0, 2), 16),
     g: parseInt(h.slice(2, 4), 16),
     b: parseInt(h.slice(4, 6), 16),
-    a: 1,
+    a: h.length >= 8 ? parseInt(h.slice(6, 8), 16) / 255 : 1,
   };
 }
 const over = (f, b) => ({
@@ -109,7 +254,9 @@ const mix = (a, b, p) => ({
 // else the theme map), or color-mix(in srgb, A n%, B|transparent).
 function resolveColorValue(v, t, primitives, seen) {
   if (v == null) return null;
-  v = v.trim();
+  // Collapse internal whitespace so multi-line values (e.g. a color-mix() split
+  // across lines in tokens.css) match the single-line grammars below.
+  v = v.replace(/\s+/g, " ").trim();
   let m;
   if (v.startsWith("#")) return hexToRgb(v);
   if ((m = v.match(/^rgba?\(([^)]+)\)$/))) {
@@ -122,7 +269,11 @@ function resolveColorValue(v, t, primitives, seen) {
   if ((m = v.match(/^var\(\s*(--[a-z0-9-]+)\s*(?:,\s*([\s\S]+))?\)$/))) {
     return resolveColorVar(m[1], m[2], t, primitives, seen);
   }
-  if ((m = v.match(/^color-mix\(in srgb,\s*(.+?)\s+(\d+)%\s*,\s*(.+)\)$/))) {
+  if (
+    (m = v.match(
+      /^color-mix\(\s*in srgb\s*,\s*(.+?)\s+(\d+)%\s*,\s*(.+?)\s*\)$/,
+    ))
+  ) {
     const a = resolveColorValue(m[1], t, primitives, seen);
     if (!a) return null;
     if (m[3].trim() === "transparent") return { ...a, a: +m[2] / 100 };
@@ -464,7 +615,10 @@ function checkAppCss() {
 // inherent (rendering/vendor/config/tests/stories).
 const CODE_EXEMPT_PATH = [
   /Thumbnail|Overlay|DrawingCanvas|PageEditor|MobileScannerPage/,
-  /[Pp]df|PDF|pixelCompare|\/compare\.ts$|customPrimary|accentColors/,
+  // PDF rendering/drawing surfaces that legitimately carry colour literals —
+  // scoped to specific tool paths, not a blanket "pdf" substring (which used to
+  // exempt most of the app in a PDF product).
+  /pdfTextEditor|pixelCompare|\/compare\.ts$|customPrimary|accentColors/,
   /validateSignature\/outputtedPDFSections|CenteredMessageSection|StatusBadgeSection/,
   /\/viewer\/|Annotation|useViewerReadAloud|CommentsSidebar|\/constants\/search\.ts$|SignaturePreview/,
   /ColorPicker|ColorControl|WatchedFolderManagementModal|watchedFolderPresets|fileColors|unifiedBackground|folder\.ts$|policyFolders/,
@@ -478,10 +632,19 @@ const CODE_EXEMPT_PATH = [
 const CODE_HEX =
   /#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})(?![0-9a-fA-F])/g;
 const CODE_RGB = /rgba?\(([^)]*)\)/gi;
+const CODE_HSL = /hsla?\(([^)]*)\)/gi;
+// NOTE: bare named colours (e.g. 'blue') are intentionally NOT flagged in
+// TS/TSX — they are dominated by legitimate Mantine palette props (`c="red"`,
+// `color="blue"`, which are theme-routed) and provider names ('azure'), so a
+// string match produces mostly false positives. hsl()/hex/rgb() are unambiguous.
 const codeStructuralHex = (h) =>
   /^#(?:000|fff|000f|ffff|000000|ffffff|00000000|ffffffff)$/i.test(h);
+// Line-level skips for contexts where a colour literal is inherent (canvas /
+// pdf-lib drawing, computed-style reads) or explicitly opted out. NOTE: a
+// `var(--x, #hex)` literal fallback is deliberately NOT skipped — the hex in the
+// fallback is still a hardcoded colour and must route through a token.
 const CODE_SKIP_LINE =
-  /theme-allow-color|var\(\s*--[a-z0-9-]+\s*,|readColor\(|getPropertyValue|\.colors\.[a-z]+\?\.\[|fillStyle|strokeStyle|shadowColor|addColorStop|createLinearGradient|ctx\.|getContext/i;
+  /theme-allow-color|readColor\(|getPropertyValue|\.colors\.[a-z]+\?\.\[|fillStyle|strokeStyle|shadowColor|addColorStop|createLinearGradient|ctx\.|getContext/i;
 function codeStripNonCode(text) {
   return text
     .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
@@ -525,6 +688,8 @@ function checkCodeColors() {
         if (!codeStructuralHex(h)) hits.push(h);
       for (const m of line.match(CODE_RGB) || [])
         if (codeRgbIsColour(m.replace(/rgba?\(|\)/gi, ""))) hits.push(m);
+      for (const m of line.match(CODE_HSL) || [])
+        if (!/var\(/.test(m)) hits.push(m);
       for (const h of hits)
         violations.push({
           file: rel,
@@ -534,6 +699,36 @@ function checkCodeColors() {
     });
   }
   return violations;
+}
+
+// ── token-resolution (blocking): every referenced --p-*/--c-* must resolve ────
+// A `var(--p-…)`/`var(--c-…)` with no fallback silently computes to the initial
+// value (transparent/inherited) when the token is undefined, so the colour just
+// disappears — invisible to the literal checks above. Assert every such
+// reference has a definition somewhere (any source .css/.ts/.tsx) or a fallback.
+// Runtime-injected families (--user-*, --mantine-*, --accent-*) are out of scope.
+function checkTokenResolution() {
+  const files = execSync("git ls-files -- editor/src", { encoding: "utf8" })
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => /\.(css|ts|tsx)$/.test(l));
+  const DEF_RE = /(--[a-z0-9-]+)\s*:/gi;
+  // Capture the token and the char that follows it (`,` ⇒ has a fallback).
+  const REF_RE = /var\(\s*(--[a-z0-9-]+)\s*(,|\))/gi;
+  const defined = new Set();
+  const refs = [];
+  const lineOf = (text, index) => text.slice(0, index).split("\n").length;
+  for (const rel of files) {
+    const text = stripComments(readFileSync(rel, "utf8"));
+    for (const m of text.matchAll(DEF_RE)) defined.add(m[1]);
+    for (const m of text.matchAll(REF_RE)) {
+      const [token, next] = [m[1], m[2]];
+      if (!/^--[pc]-/.test(token)) continue; // only our theme tokens
+      if (next === ",") continue; // has a fallback → degrades safely
+      refs.push({ file: rel, line: lineOf(text, m.index), token });
+    }
+  }
+  return refs.filter((r) => !defined.has(r.token));
 }
 
 // ── CLI ──────────────────────────────────────────────────────────────────────
@@ -582,7 +777,21 @@ const violations = check();
 const toneViolations = toneContrastResults().filter(
   (r) => r.ratio != null && r.ratio < TONE_INVISIBLE,
 );
-if (violations.length || toneViolations.length) {
+// Block references to --p-*/--c-* tokens that are defined nowhere (no fallback).
+const unresolvedTokens = checkTokenResolution();
+if (unresolvedTokens.length) {
+  console.error(
+    `\n✖ theme-lint: ${unresolvedTokens.length} reference(s) to undefined --p-*/--c-* token(s) (colour silently drops to transparent/inherited):\n`,
+  );
+  for (const r of unresolvedTokens)
+    console.error(
+      `  ${r.file}:${r.line}  var(${r.token}) — not defined anywhere`,
+    );
+  console.error(
+    `\nDefine the token (primitive in primitives.css, semantic in colors.css) or give the var() a fallback.\n`,
+  );
+}
+if (violations.length || toneViolations.length || unresolvedTokens.length) {
   if (violations.length) {
     console.error(
       `\n✖ theme-lint: ${violations.length} raw/duplicate colour(s) in core/theme/:\n`,

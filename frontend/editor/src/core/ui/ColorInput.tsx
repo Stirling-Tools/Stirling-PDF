@@ -61,30 +61,27 @@ export interface ColorInputProps {
   invalid?: boolean;
 }
 
-type PassthroughProps = Omit<
-  Pick<
-    MantineColorInputProps,
-    | "value"
-    | "onChange"
-    | "onChangeEnd"
-    | "defaultValue"
-    | "format"
-    | "swatches"
-    | "swatchesPerRow"
-    | "withPicker"
-    | "popoverProps"
-    | "placeholder"
-    | "id"
-    | "name"
-    | "aria-label"
-    | "aria-describedby"
-    | "required"
-    | "disabled"
-    | "readOnly"
-    | "onFocus"
-    | "onBlur"
-  >,
-  never
+type PassthroughProps = Pick<
+  MantineColorInputProps,
+  | "value"
+  | "onChange"
+  | "onChangeEnd"
+  | "defaultValue"
+  | "format"
+  | "swatches"
+  | "swatchesPerRow"
+  | "withPicker"
+  | "popoverProps"
+  | "placeholder"
+  | "id"
+  | "name"
+  | "aria-label"
+  | "aria-describedby"
+  | "required"
+  | "disabled"
+  | "readOnly"
+  | "onFocus"
+  | "onBlur"
 >;
 
 /**

@@ -539,19 +539,29 @@
 /* Flash highlight for comment card (e.g. "View comment" from annotation menu) */
 @keyframes comment-card-flash {
   0% {
-    background-color: color-mix(in srgb, var(--p-c-ffeb3b) 0%, transparent);
+    background-color: color-mix(in srgb, var(--p-flash-yellow) 0%, transparent);
     box-shadow: none;
   }
   20% {
-    background-color: color-mix(in srgb, var(--p-c-ffeb3b) 35%, transparent);
-    box-shadow: 0 0 20px color-mix(in srgb, var(--p-c-ffeb3b) 50%, transparent);
+    background-color: color-mix(
+      in srgb,
+      var(--p-flash-yellow) 35%,
+      transparent
+    );
+    box-shadow: 0 0 20px
+      color-mix(in srgb, var(--p-flash-yellow) 50%, transparent);
   }
   50% {
-    background-color: color-mix(in srgb, var(--p-c-ffeb3b) 25%, transparent);
-    box-shadow: 0 0 15px color-mix(in srgb, var(--p-c-ffeb3b) 40%, transparent);
+    background-color: color-mix(
+      in srgb,
+      var(--p-flash-yellow) 25%,
+      transparent
+    );
+    box-shadow: 0 0 15px
+      color-mix(in srgb, var(--p-flash-yellow) 40%, transparent);
   }
   100% {
-    background-color: color-mix(in srgb, var(--p-c-ffeb3b) 0%, transparent);
+    background-color: color-mix(in srgb, var(--p-flash-yellow) 0%, transparent);
     box-shadow: none;
   }
 }

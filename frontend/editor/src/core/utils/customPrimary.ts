@@ -121,8 +121,9 @@ export function deriveAccessiblePrimary(
   base: ColorScheme,
 ): DerivedPrimary {
   const rgb = parseHex(input) ?? parseHex(FALLBACK)!;
-  const { h, s } = rgbToHsl(rgb);
-  let { l } = rgbToHsl(rgb);
+  const { h, s, l: baseL } = rgbToHsl(rgb);
+
+  let l = baseL;
   if (base === "dark" && l < DARK_MIN_L) l = DARK_MIN_L;
   if (base === "light" && l > LIGHT_MAX_L) l = LIGHT_MAX_L;
 
@@ -132,7 +133,7 @@ export function deriveAccessiblePrimary(
   const onPrimary = lum > ON_PRIMARY_DARK_CUTOFF ? "#000000" : "#ffffff";
 
   // Foreground accent: same hue, lightness pushed so it stays legible on the base surface.
-  let fgL = rgbToHsl(rgb).l;
+  let fgL = baseL;
   if (base === "dark") fgL = Math.max(fgL, DARK_FG_MIN_L);
   else fgL = Math.min(fgL, LIGHT_FG_MAX_L);
   const accentForeground = hslToHex(h, s, fgL);
