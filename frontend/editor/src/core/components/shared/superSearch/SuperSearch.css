@@ -3,13 +3,47 @@
   flex: 1 1 auto;
   min-width: 0;
   max-width: 560px;
+  --super-search-input-border: color-mix(
+    in srgb,
+    var(--text-primary) 14%,
+    var(--border-subtle)
+  );
+  --super-search-input-outline: color-mix(
+    in srgb,
+    var(--text-primary) 4%,
+    transparent
+  );
+}
+
+[data-mantine-color-scheme="dark"] .super-search {
+  --super-search-input-border: color-mix(
+    in srgb,
+    var(--text-primary) 12%,
+    var(--border-default)
+  );
+  --super-search-input-outline: color-mix(
+    in srgb,
+    var(--text-primary) 7%,
+    transparent
+  );
+}
+
+.super-search--with-inline-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.super-search-input-row {
+  position: relative;
 }
 
 .super-search input {
   box-sizing: border-box;
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--super-search-input-border);
   border-radius: 8px;
   background-color: var(--bg-muted);
+  box-shadow: 0 0 0 1px var(--super-search-input-outline);
   /* Tighter than the shared TextInput default (8px/14px) for a compact,
      professional bar — height lands in line with the 28px action icons. */
   padding-top: 6px;
@@ -62,17 +96,142 @@
   color: var(--text-muted);
 }
 
+.super-search-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.35rem 0.35rem 0.5rem;
+  margin-bottom: 0.15rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.super-search-filters .sui-chip {
+  user-select: none;
+}
+
+.super-search--with-inline-filters .super-search-filters {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding: 0;
+  margin: 0;
+  border-bottom: 0;
+  scrollbar-width: thin;
+}
+
+.super-search--with-inline-filters .super-search-filters::-webkit-scrollbar {
+  height: 6px;
+}
+
+.super-search--with-inline-filters .super-search-filters .sui-chip {
+  flex-shrink: 0;
+}
+
+.super-search-section + .super-search-section {
+  margin-top: 0.5rem;
+}
+
+.super-search-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.super-search-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-left: -0.65rem;
+  padding: 0.15rem 0.25rem 0.05rem 0;
+}
+
+.super-search-section-header::after {
+  content: "";
+  flex: 1 1 auto;
+  min-width: 1.5rem;
+  height: 1px;
+  background: color-mix(in srgb, var(--text-primary) 12%, var(--border-subtle));
+}
+
+.super-search-section-body {
+  padding: 0.05rem 0.05rem 0.2rem 0;
+}
+
+.super-search-section-toggle.mantine-Button-root {
+  --button-height: auto;
+  --button-padding-x: 0;
+  min-height: 0;
+  padding-block: 0;
+  flex: 0 0 auto;
+}
+
+.super-search-section-toggle.mantine-Button-root:hover,
+.super-search-section-toggle.mantine-Button-root:focus-visible {
+  background: transparent;
+}
+
+.super-search-section-toggle:hover .super-search-section-label {
+  color: var(--text-primary);
+}
+
+.super-search-section-toggle .mantine-Button-inner {
+  align-items: center;
+}
+
+.super-search-section-toggle .mantine-Button-label {
+  text-align: left;
+}
+
+.super-search-section-toggle .mantine-Button-section {
+  margin-inline-start: 0.2rem;
+}
+
+.super-search-section-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  color: var(--text-muted);
+  transition:
+    transform 140ms ease,
+    color 140ms ease;
+}
+
+.super-search-section-toggle:hover .super-search-section-chevron {
+  color: var(--text-secondary);
+}
+
+.super-search-section-chevron--collapsed {
+  transform: rotate(-90deg);
+}
+
 .super-search-group + .super-search-group {
-  margin-top: 0.25rem;
+  margin-top: 0.45rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid color-mix(in srgb, var(--text-primary) 8%, transparent);
+}
+
+.super-search-section-label {
+  padding: 0.18rem 0;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
 }
 
 .super-search-group-label {
-  padding: 0.35rem 0.5rem 0.2rem;
+  padding: 0.35rem 0.15rem 0.18rem 0.85rem;
   font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--text-muted);
+}
+
+.super-search-group-results {
+  padding-left: 1.25rem;
 }
 
 .super-search-item {

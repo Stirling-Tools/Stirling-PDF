@@ -1,11 +1,27 @@
 /* Slim strip at the top of the main column hosting the shared search bar. */
 .portal-searchbar {
   display: flex;
+  align-items: center;
   justify-content: center;
-  padding: var(--space-2) var(--space-3) 0;
+  padding: 0.22rem 1rem;
+  background: var(--color-sidebar-bg);
+  border-bottom: 1px solid var(--color-sidebar-divider);
+  flex-shrink: 0;
 }
 
 .portal-searchbar .super-search {
-  width: 100%;
-  max-width: 34rem;
+  flex: 0 1 24rem;
+  width: min(100%, 24rem);
+  max-width: 24rem;
+}
+
+.portal-searchbar .super-search input {
+  background-color: transparent;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  font-size: 12.5px;
+}
+
+[data-mantine-color-scheme="dark"] .portal-searchbar .super-search input {
+  background-color: transparent;
 }

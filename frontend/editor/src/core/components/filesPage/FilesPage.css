@@ -34,6 +34,33 @@
   gap: 0.5rem;
 }
 
+.files-page-header-search {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.files-page-header-search .super-search {
+  flex: 0 1 24rem;
+  width: min(100%, 24rem);
+  max-width: 24rem;
+}
+
+.files-page-header-search .super-search input {
+  background-color: transparent;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  font-size: 12.5px;
+}
+
+[data-mantine-color-scheme="dark"]
+  .files-page-header-search
+  .super-search
+  input {
+  background-color: transparent;
+}
+
 .files-page-breadcrumbs {
   display: flex;
   align-items: center;

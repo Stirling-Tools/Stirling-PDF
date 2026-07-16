@@ -9839,6 +9839,7 @@ updateButton = "Update on Server"
 uploadButton = "Upload to Server"
 
 [superSearch]
+all = "All"
 ariaLabel = "Super search"
 hint = "Type to search"
 placeholder = "Search Stirling"

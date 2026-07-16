@@ -2,51 +2,71 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { withBasePath } from "@app/constants/app";
+import { PROCESSOR_SEARCH_INDEX } from "@app/data/processorSearchIndex";
 import {
   getToolUrlPath,
   isComingSoonTool,
   type ToolRegistry,
 } from "@app/data/toolsTaxonomy";
-import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { rankByFuzzy } from "@app/utils/fuzzySearch";
-import type { ToolId } from "@app/types/toolId";
-import type { ProcessorSearchEntry } from "@app/data/processorSearchIndex";
+import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import {
   assembleSuperSearchGroups,
-  rankProcessorResults,
   rankSettingsResults,
   rankToolResults,
   type SuperSearchGates,
   type SuperSearchGroup,
   type SuperSearchGroupId,
+  type SuperSearchQueryOptions,
+  type SuperSearchResult,
+  type SuperSearchScope,
   type UseSuperSearchResult,
 } from "@app/hooks/useSuperSearch";
-import { useUI } from "@portal/contexts/UIContext";
-import { useTier } from "@portal/contexts/TierContext";
-import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
+import type { ToolId } from "@app/types/toolId";
+import { rankByFuzzy } from "@app/utils/fuzzySearch";
 import { EDITOR_IS_SAME_APP, EDITOR_URL } from "@portal/auth/editorUrl";
-import { fetchUsers, type Member } from "@portal/api/users";
 import { fetchPolicies, type CatalogueEntry } from "@portal/api/policies";
 import { fetchPipelines, type PipelineView } from "@portal/api/pipelines";
 import { fetchSources, type SourceView } from "@portal/api/sources";
+import { fetchUsers, type Member } from "@portal/api/users";
 import {
-  UsersIcon,
-  PoliciesIcon,
   PipelinesIcon,
+  PoliciesIcon,
   SourcesIcon,
+  UsersIcon,
 } from "@portal/components/icons";
+import { useTier } from "@portal/contexts/TierContext";
+import { useUI } from "@portal/contexts/UIContext";
+import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 
-/** Processor pages lead in the portal; the editor bar orders its own first. */
-const PORTAL_GROUP_ORDER: SuperSearchGroupId[] = [
-  "processor",
-  "tools",
-  "settings",
-];
-
-/** Entity groups cap lower than the shared GROUP_LIMIT — with up to seven
- * groups in the portal dropdown, six rows each stops being scannable. */
+/** Entity groups cap lower than the shared group limit so the portal dropdown
+ * stays scannable when several sections match at once. */
 const ENTITY_GROUP_LIMIT = 4;
+const FOCUSED_ENTITY_GROUP_LIMIT = 8;
+const FOCUSED_SHARED_GROUP_LIMIT = 8;
+const PORTAL_ENTITY_SCOPE_IDS = [
+  "portal-users",
+  "portal-policies",
+  "portal-pipelines",
+  "portal-sources",
+] as const;
+const EDITOR_GROUP_ORDER: SuperSearchGroupId[] = ["tools"];
+const PROCESSOR_GROUP_ORDER: SuperSearchGroupId[] = ["settings"];
+const PROCESSOR_SECTION_LABEL_KEY = "superSearch.group.processor";
+const PROCESSOR_SECTION_LABEL_FALLBACK = "Processor";
+const EDITOR_SECTION_LABEL_KEY = "portal.nav.editor";
+const EDITOR_SECTION_LABEL_FALLBACK = "Editor";
+const VISIBLE_PORTAL_VIEW_IDS = new Set(
+  PROCESSOR_SEARCH_INDEX.map((entry) => entry.id),
+);
+const PORTAL_VIEW_BY_SCOPE_ID = {
+  "portal-users": "users",
+  "portal-policies": "policies",
+  "portal-pipelines": "pipelines",
+  "portal-sources": "sources",
+} as const;
+
+type PortalEntityScopeId = (typeof PORTAL_ENTITY_SCOPE_IDS)[number];
 
 /**
  * Tool results live in the editor app, so selecting one is a full page load
@@ -56,6 +76,10 @@ const ENTITY_GROUP_LIMIT = 4;
 function editorHref(path: string): string {
   if (EDITOR_IS_SAME_APP) return withBasePath(path);
   return EDITOR_URL.replace(/\/$/, "") + path;
+}
+
+function isVisiblePortalScope(scopeId: PortalEntityScopeId): boolean {
+  return VISIBLE_PORTAL_VIEW_IDS.has(PORTAL_VIEW_BY_SCOPE_ID[scopeId]);
 }
 
 interface PortalEntities {
@@ -71,6 +95,115 @@ const NO_ENTITIES: PortalEntities = {
   pipelines: [],
   sources: [],
 };
+
+export function usePortalSearchScopes(): SuperSearchScope[] {
+  const { t } = useTranslation();
+
+  return useMemo(
+    () =>
+      [
+        {
+          id: "portal-policies",
+          label: t("portal.nav.policies"),
+          aliases: ["policy", "policies"],
+        },
+        {
+          id: "portal-pipelines",
+          label: t("portal.nav.pipelines"),
+          aliases: ["pipeline", "pipelines"],
+        },
+        {
+          id: "portal-sources",
+          label: t("portal.nav.sources"),
+          aliases: ["source", "sources"],
+        },
+        {
+          id: "portal-users",
+          label: t("portal.nav.users"),
+          aliases: ["user", "users", "member", "members"],
+        },
+        {
+          id: "tools",
+          label: t("superSearch.group.tools", "Tools"),
+          aliases: ["tool", "tools"],
+        },
+        {
+          id: "settings",
+          label: t("superSearch.group.settings", "Settings"),
+          aliases: ["setting", "settings"],
+        },
+      ].filter((scope) => {
+        const viewId =
+          PORTAL_VIEW_BY_SCOPE_ID[
+            scope.id as keyof typeof PORTAL_VIEW_BY_SCOPE_ID
+          ];
+        return viewId ? VISIBLE_PORTAL_VIEW_IDS.has(viewId) : true;
+      }),
+    [t],
+  );
+}
+
+function policyResultTitle(
+  entry: CatalogueEntry,
+  t: (key: string, options?: Record<string, unknown>) => string,
+) {
+  const category = t(entry.category.label);
+  return entry.policy
+    ? t("portal.policies.defaultName", { category })
+    : category;
+}
+
+export function rankPortalPolicyResults(
+  entries: CatalogueEntry[],
+  trimmed: string,
+  t: (key: string, options?: Record<string, unknown>) => string,
+  openPolicy: (categoryId: string) => void,
+  limit = ENTITY_GROUP_LIMIT,
+): SuperSearchResult[] {
+  return rankByFuzzy(
+    entries.filter((entry) => !entry.category.comingSoon),
+    trimmed,
+    [
+      (entry) => policyResultTitle(entry, t),
+      (entry) => t(entry.category.label),
+      (entry) => t(entry.category.desc),
+    ],
+  )
+    .slice(0, limit)
+    .map(({ item, score }) => ({
+      key: `portal-policy:${item.category.id}`,
+      group: "portal-policies",
+      title: policyResultTitle(item, t),
+      subtitle: t(item.category.desc),
+      icon: <PoliciesIcon />,
+      score,
+      onSelect: () => openPolicy(item.category.id),
+    }));
+}
+
+export function rankPortalPipelineResults(
+  entries: PipelineView[],
+  trimmed: string,
+  excludedIds: ReadonlySet<string>,
+  openPipeline: (pipelineId: string) => void,
+  limit = ENTITY_GROUP_LIMIT,
+): SuperSearchResult[] {
+  return rankByFuzzy(
+    entries.filter((entry) => !excludedIds.has(entry.id)),
+    trimmed,
+    [(entry) => entry.name, (entry) => entry.trigger],
+  )
+    .slice(0, limit)
+    .map(({ item, score }) => ({
+      key: `portal-pipeline:${item.id}`,
+      group: "portal-pipelines",
+      title: item.name,
+      subtitle: item.trigger,
+      icon: <PipelinesIcon />,
+      score,
+      onSelect: () => openPipeline(item.id),
+    }));
+}
 
 /** How long a loaded entity snapshot stays fresh before a reopen refetches. */
 const ENTITY_REFRESH_MS = 30_000;
@@ -103,10 +236,13 @@ function usePortalEntities(enabled: boolean): {
       fetchPipelines(),
       fetchSources(),
     ]).then((settled) => {
-      settled.forEach((r) => {
+      settled.forEach((result) => {
         // Expected on deployments without that endpoint; debug, not noise.
-        if (r.status === "rejected") {
-          console.debug("[PortalSearch] entity source unavailable:", r.reason);
+        if (result.status === "rejected") {
+          console.debug(
+            "[PortalSearch] entity source unavailable:",
+            result.reason,
+          );
         }
       });
       if (cancelled) return;
@@ -131,16 +267,16 @@ function usePortalEntities(enabled: boolean): {
 }
 
 /**
- * The portal's results provider for the shared super search bar: the same
- * sources the editor bar ranks minus files (a file only opens inside the
- * editor), with Processor pages leading and the portal's own entities —
- * users, policies, pipelines, sources — ranked between the pages and the
- * shared groups. Tools hand over to the editor, settings opens the portal's
- * settings modal, everything else navigates in-app.
+ * The portal's results provider for the shared super search bar: files stay
+ * editor-only, portal entity results are grouped under a Processor section,
+ * and the shared tools/settings lanes sit under an Editor section. Portal page
+ * routes themselves stay out of the portal search — once you're in the portal,
+ * the entities are the useful targets.
  */
 export function usePortalSearchResults(
   query: string,
   active: boolean,
+  options?: SuperSearchQueryOptions,
 ): UseSuperSearchResult {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -149,9 +285,38 @@ export function usePortalSearchResults(
   const { config } = useAppConfig();
 
   const trimmed = query.trim();
-  const { entities, loading: loadingEntities } = usePortalEntities(
-    active && trimmed.length > 0,
+  const scopedIds = useMemo(
+    () => new Set(options?.scopeIds ?? []),
+    [options?.scopeIds],
   );
+  const hasScopedSearch = scopedIds.size > 0;
+  const scopeEnabled = useCallback(
+    (scopeId: string) => !hasScopedSearch || scopedIds.has(scopeId),
+    [hasScopedSearch, scopedIds],
+  );
+  const sharedScopeLimit = useCallback(
+    (scopeId: SuperSearchGroupId) =>
+      hasScopedSearch && scopedIds.size === 1 && scopedIds.has(scopeId)
+        ? FOCUSED_SHARED_GROUP_LIMIT
+        : undefined,
+    [hasScopedSearch, scopedIds],
+  );
+  const entityScopeLimit = useCallback(
+    (scopeId: string) =>
+      hasScopedSearch && scopedIds.size === 1 && scopedIds.has(scopeId)
+        ? FOCUSED_ENTITY_GROUP_LIMIT
+        : ENTITY_GROUP_LIMIT,
+    [hasScopedSearch, scopedIds],
+  );
+  const shouldLoadEntities =
+    active &&
+    trimmed.length > 0 &&
+    (!hasScopedSearch ||
+      PORTAL_ENTITY_SCOPE_IDS.some(
+        (scopeId) => scopedIds.has(scopeId) && isVisiblePortalScope(scopeId),
+      ));
+  const { entities, loading: loadingEntities } =
+    usePortalEntities(shouldLoadEntities);
 
   // Match what the editor bar can actually open: drop coming-soon placeholders
   // (no component, no link) — cross-app navigation to one lands on a tool that
@@ -173,17 +338,6 @@ export function usePortalSearchResults(
     [openSettings],
   );
 
-  const selectProcessorEntry = useCallback(
-    (item: ProcessorSearchEntry) => {
-      if (item.externalUrl) {
-        window.open(item.externalUrl, "_blank", "noopener,noreferrer");
-      } else {
-        navigate(item.path);
-      }
-    },
-    [navigate],
-  );
-
   const gates = useMemo<SuperSearchGates | null>(
     () =>
       config
@@ -199,23 +353,26 @@ export function usePortalSearchResults(
     if (!trimmed) return [];
     const groups: SuperSearchGroup[] = [];
 
-    const users = rankByFuzzy(entities.users, trimmed, [
-      (m) => m.name,
-      (m) => m.email,
-    ])
-      .slice(0, ENTITY_GROUP_LIMIT)
-      .map(({ item, score }) => ({
-        key: `portal-user:${item.id}`,
-        group: "portal-users",
-        title: item.name,
-        subtitle: item.email,
-        icon: <UsersIcon />,
-        score,
-        onSelect: () =>
-          navigate(
-            `${toPortalPath(VIEW_PATHS.users)}?member=${encodeURIComponent(item.id)}`,
-          ),
-      }));
+    const users =
+      isVisiblePortalScope("portal-users") && scopeEnabled("portal-users")
+        ? rankByFuzzy(entities.users, trimmed, [
+            (member) => member.name,
+            (member) => member.email,
+          ])
+            .slice(0, entityScopeLimit("portal-users"))
+            .map(({ item, score }) => ({
+              key: `portal-user:${item.id}`,
+              group: "portal-users",
+              title: item.name,
+              subtitle: item.email,
+              icon: <UsersIcon />,
+              score,
+              onSelect: () =>
+                navigate(
+                  `${toPortalPath(VIEW_PATHS.users)}?member=${encodeURIComponent(item.id)}`,
+                ),
+            }))
+        : [];
     if (users.length > 0) {
       groups.push({
         id: "portal-users",
@@ -224,24 +381,19 @@ export function usePortalSearchResults(
       });
     }
 
-    const policies = rankByFuzzy(
-      entities.policies.filter((e) => !e.category.comingSoon),
-      trimmed,
-      [(e) => e.category.label, (e) => e.category.desc],
-    )
-      .slice(0, ENTITY_GROUP_LIMIT)
-      .map(({ item, score }) => ({
-        key: `portal-policy:${item.category.id}`,
-        group: "portal-policies",
-        title: item.category.label,
-        subtitle: item.category.desc,
-        icon: <PoliciesIcon />,
-        score,
-        onSelect: () =>
-          navigate(
-            `${toPortalPath(VIEW_PATHS.policies)}?category=${encodeURIComponent(item.category.id)}`,
-          ),
-      }));
+    const policies =
+      isVisiblePortalScope("portal-policies") && scopeEnabled("portal-policies")
+        ? rankPortalPolicyResults(
+            entities.policies,
+            trimmed,
+            t,
+            (categoryId) =>
+              navigate(
+                `${toPortalPath(VIEW_PATHS.policies)}?category=${encodeURIComponent(categoryId)}`,
+              ),
+            entityScopeLimit("portal-policies"),
+          )
+        : [];
     if (policies.length > 0) {
       groups.push({
         id: "portal-policies",
@@ -250,21 +402,23 @@ export function usePortalSearchResults(
       });
     }
 
-    const pipelines = rankByFuzzy(entities.pipelines, trimmed, [
-      (p) => p.name,
-      (p) => p.trigger,
-    ])
-      .slice(0, ENTITY_GROUP_LIMIT)
-      .map(({ item, score }) => ({
-        key: `portal-pipeline:${item.id}`,
-        group: "portal-pipelines",
-        title: item.name,
-        subtitle: item.trigger,
-        icon: <PipelinesIcon />,
-        score,
-        onSelect: () =>
-          navigate(`${toPortalPath(VIEW_PATHS.pipelines)}/${item.id}`),
-      }));
+    const policyPipelineIds = new Set(
+      entities.policies.flatMap((entry) =>
+        entry.policy?.state.backendId ? [entry.policy.state.backendId] : [],
+      ),
+    );
+    const pipelines =
+      isVisiblePortalScope("portal-pipelines") &&
+      scopeEnabled("portal-pipelines")
+        ? rankPortalPipelineResults(
+            entities.pipelines,
+            trimmed,
+            policyPipelineIds,
+            (pipelineId) =>
+              navigate(`${toPortalPath(VIEW_PATHS.pipelines)}/${pipelineId}`),
+            entityScopeLimit("portal-pipelines"),
+          )
+        : [];
     if (pipelines.length > 0) {
       groups.push({
         id: "portal-pipelines",
@@ -273,21 +427,24 @@ export function usePortalSearchResults(
       });
     }
 
-    const sources = rankByFuzzy(entities.sources, trimmed, [
-      (s) => s.name,
-      (s) => s.type,
-    ])
-      .slice(0, ENTITY_GROUP_LIMIT)
-      .map(({ item, score }) => ({
-        key: `portal-source:${item.id}`,
-        group: "portal-sources",
-        title: item.name,
-        subtitle: item.type,
-        icon: <SourcesIcon />,
-        score,
-        onSelect: () =>
-          navigate(`${toPortalPath(VIEW_PATHS.sources)}/${item.id}`),
-      }));
+    const sources =
+      isVisiblePortalScope("portal-sources") && scopeEnabled("portal-sources")
+        ? rankByFuzzy(entities.sources, trimmed, [
+            (source) => source.name,
+            (source) => source.type,
+          ])
+            .slice(0, entityScopeLimit("portal-sources"))
+            .map(({ item, score }) => ({
+              key: `portal-source:${item.id}`,
+              group: "portal-sources",
+              title: item.name,
+              subtitle: item.type,
+              icon: <SourcesIcon />,
+              score,
+              onSelect: () =>
+                navigate(`${toPortalPath(VIEW_PATHS.sources)}/${item.id}`),
+            }))
+        : [];
     if (sources.length > 0) {
       groups.push({
         id: "portal-sources",
@@ -297,60 +454,76 @@ export function usePortalSearchResults(
     }
 
     return groups;
-  }, [entities, trimmed, t, navigate]);
-
-  // "Editor" as a destination — the way back across the app switch. Ranked
-  // into the Processor group alongside the portal's own pages.
-  const editorDestination = useMemo(() => {
-    if (!trimmed) return [];
-    return rankByFuzzy([null], trimmed, [
-      () => t("portal.nav.editor", "Editor"),
-      () => "editor workspace pdf",
-    ]).map(({ score }) => ({
-      key: "processor:editor",
-      group: "processor",
-      title: t("portal.nav.editor", "Editor"),
-      iconName: "grid-view-rounded",
-      score,
-      onSelect: () => window.location.assign(editorHref("/")),
-    }));
-  }, [trimmed, t]);
+  }, [entities, trimmed, t, navigate, scopeEnabled, entityScopeLimit]);
 
   const groups = useMemo(() => {
-    const shared = assembleSuperSearchGroups(
+    const processorSettingsGroups = assembleSuperSearchGroups(
       {
-        tools: rankToolResults(searchableTools, trimmed, openTool),
-        settings: rankSettingsResults(trimmed, t, gates, openSettingsSection),
-        processor: [
-          ...rankProcessorResults(trimmed, t, gates, selectProcessorEntry),
-          ...editorDestination,
-        ].sort((a, b) => b.score - a.score),
+        settings: scopeEnabled("settings")
+          ? rankSettingsResults(
+              trimmed,
+              t,
+              gates,
+              openSettingsSection,
+              sharedScopeLimit("settings"),
+            )
+          : [],
       },
       t,
-      PORTAL_GROUP_ORDER,
-    );
-    // Entities slot in right after the Processor pages (index -1 + 1 = 0
-    // puts them first when no page matched).
-    const out = [...shared];
-    out.splice(
-      out.findIndex((g) => g.id === "processor") + 1,
-      0,
-      ...entityGroups,
-    );
-    return out;
+      PROCESSOR_GROUP_ORDER,
+    ).map((group) => ({
+      ...group,
+      sectionLabel: t(
+        PROCESSOR_SECTION_LABEL_KEY,
+        PROCESSOR_SECTION_LABEL_FALLBACK,
+      ),
+    }));
+
+    const editorGroups = assembleSuperSearchGroups(
+      {
+        tools: scopeEnabled("tools")
+          ? rankToolResults(
+              searchableTools,
+              trimmed,
+              openTool,
+              sharedScopeLimit("tools"),
+            )
+          : [],
+      },
+      t,
+      EDITOR_GROUP_ORDER,
+    ).map((group) => ({
+      ...group,
+      sectionLabel: t(EDITOR_SECTION_LABEL_KEY, EDITOR_SECTION_LABEL_FALLBACK),
+    }));
+
+    return [
+      ...entityGroups.map((group) => ({
+        ...group,
+        sectionLabel: t(
+          PROCESSOR_SECTION_LABEL_KEY,
+          PROCESSOR_SECTION_LABEL_FALLBACK,
+        ),
+      })),
+      ...processorSettingsGroups,
+      ...editorGroups,
+    ];
   }, [
-    trimmed,
-    searchableTools,
-    openTool,
+    entityGroups,
     gates,
     openSettingsSection,
-    selectProcessorEntry,
-    editorDestination,
-    entityGroups,
+    openTool,
+    scopeEnabled,
+    searchableTools,
+    sharedScopeLimit,
     t,
+    trimmed,
   ]);
 
-  const flatResults = useMemo(() => groups.flatMap((g) => g.results), [groups]);
+  const flatResults = useMemo(
+    () => groups.flatMap((group) => group.results),
+    [groups],
+  );
 
   // loadingFiles doubles as "an async source is still loading" for the
   // dropdown's no-results gate — here that's the entity fetch.

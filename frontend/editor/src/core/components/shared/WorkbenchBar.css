@@ -23,9 +23,10 @@
 /* ---- View switcher (left) ---- */
 .workbench-bar-views {
   order: 1;
-  flex-shrink: 0;
+  flex: 1 1 0;
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 2px;
   /* min-width:0 lets it shrink instead of forcing a wrap; overflow clips labels
      on very narrow viewports. */
@@ -99,12 +100,29 @@
 /* Roomy: grows to fill the centre between views and globals. */
 .workbench-bar-search {
   order: 2;
-  flex: 1 1 auto;
+  flex: 0 1 24rem;
   min-width: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   height: 48px;
+}
+
+.workbench-bar-search .super-search {
+  flex: 0 1 24rem;
+  width: min(100%, 24rem);
+  max-width: 24rem;
+}
+
+.workbench-bar-search .super-search input {
+  background-color: transparent;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  font-size: 12.5px;
+}
+
+[data-mantine-color-scheme="dark"] .workbench-bar-search .super-search input {
+  background-color: transparent;
 }
 
 /* Crowded: drops to its own full-width row between the top row and the tools. */
@@ -165,13 +183,13 @@
 /* ---- Right: global buttons (print / download / save / close), row 1 ---- */
 .workbench-bar-globals {
   order: 3;
-  flex-shrink: 0;
+  flex: 1 1 0;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 2px;
   min-width: 0;
   height: 48px;
-  margin-left: auto;
 }
 
 /* Crowded: globals stays on row 1, moving up beside the views. */

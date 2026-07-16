@@ -910,7 +910,9 @@ export default function FileManagerView() {
           };
           return (
             <>
-              <SuperSearch />
+              <div className="files-page-header-search">
+                <SuperSearch />
+              </div>
               <div className="files-page-header-actions">
                 <Tooltip
                   label={

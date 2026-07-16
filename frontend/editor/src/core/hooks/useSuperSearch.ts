@@ -11,6 +11,7 @@ import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
+import { useAuth } from "@app/auth/UseSession";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { ViewerContext } from "@app/contexts/ViewerContext";
@@ -55,11 +56,21 @@ export interface SuperSearchResult {
 export interface SuperSearchGroup {
   id: string;
   label: string;
+  /** Optional higher-level section label rendered above consecutive groups. */
+  sectionLabel?: string;
   results: SuperSearchResult[];
+}
+
+export interface SuperSearchScope {
+  id: string;
+  label: string;
+  aliases?: string[];
 }
 
 /** Per-group result caps so the dropdown stays scannable. */
 const GROUP_LIMIT = 6;
+/** A scoped search can show more rows because the dropdown only holds one lane. */
+const FOCUSED_GROUP_LIMIT = 8;
 /** Group display order in the dropdown. */
 const GROUP_ORDER: SuperSearchGroupId[] = [
   "files",
@@ -77,6 +88,10 @@ export interface UseSuperSearchResult {
   loadingFiles: boolean;
 }
 
+export interface SuperSearchQueryOptions {
+  scopeIds?: readonly string[];
+}
+
 /**
  * Visibility gates shared by the settings and Processor sources. Hosts pass
  * `null` while the app config is still loading — the rankers treat that as
@@ -86,6 +101,7 @@ export interface UseSuperSearchResult {
 export interface SuperSearchGates {
   isAdmin: boolean;
   loginEnabled: boolean;
+  portalAccessible?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -133,10 +149,11 @@ export function rankFileResults(
   stubs: StirlingFileStub[],
   trimmed: string,
   openFile: (stub: StirlingFileStub) => void | Promise<void>,
+  limit = GROUP_LIMIT,
 ): SuperSearchResult[] {
   if (!trimmed) return [];
   return rankByFuzzy(stubs, trimmed, [(s) => s.name])
-    .slice(0, GROUP_LIMIT)
+    .slice(0, limit)
     .map(({ item, score }) => ({
       key: `file:${item.id}`,
       group: "files",
@@ -151,6 +168,7 @@ export function rankToolResults(
   registry: Partial<ToolRegistry>,
   trimmed: string,
   openTool: (id: ToolId) => void,
+  limit = GROUP_LIMIT,
 ): SuperSearchResult[] {
   if (!trimmed) return [];
   const entries = Object.entries(registry) as [
@@ -163,7 +181,7 @@ export function rankToolResults(
     ([, v]) => v?.description ?? "",
     ([, v]) => v?.synonyms?.join(" ") ?? "",
   ])
-    .slice(0, GROUP_LIMIT)
+    .slice(0, limit)
     .map(({ item: [id, tool], score }) => ({
       key: `tool:${id}`,
       group: "tools",
@@ -180,6 +198,7 @@ export function rankSettingsResults(
   t: TFunction,
   gates: SuperSearchGates | null,
   openSettings: (section: string, anchor?: string) => void,
+  limit = GROUP_LIMIT,
 ): SuperSearchResult[] {
   if (!trimmed) return [];
 
@@ -258,7 +277,7 @@ export function rankSettingsResults(
 
   return [...rows, ...sections, ...contentMatches]
     .sort((a, b) => b.score - a.score)
-    .slice(0, GROUP_LIMIT);
+    .slice(0, limit);
 }
 
 export function rankProcessorResults(
@@ -266,18 +285,24 @@ export function rankProcessorResults(
   t: TFunction,
   gates: SuperSearchGates | null,
   selectEntry: (entry: ProcessorSearchEntry) => void,
+  limit = GROUP_LIMIT,
 ): SuperSearchResult[] {
   if (!trimmed || PROCESSOR_SEARCH_INDEX.length === 0) return [];
-  // The portal is an admin surface; mirror the settings modal's admin gate
-  // (a login-disabled single-user deployment has a full-access operator).
+  // Only offer Processor pages to users who can actually enter that app:
+  // explicit portal access, admin, or single-user mode with login disabled.
   // Null gates (config still loading) stay closed.
-  if (!gates || !(gates.isAdmin || !gates.loginEnabled)) return [];
+  if (
+    !gates ||
+    !(gates.portalAccessible === true || gates.isAdmin || !gates.loginEnabled)
+  ) {
+    return [];
+  }
   return rankByFuzzy(PROCESSOR_SEARCH_INDEX, trimmed, [
     (e) => t(e.labelKey, e.labelFallback),
     (e) => e.labelFallback,
     (e) => e.keywords?.join(" ") ?? "",
   ])
-    .slice(0, GROUP_LIMIT)
+    .slice(0, limit)
     .map(({ item, score }) => ({
       key: `processor:${item.id}`,
       group: "processor",
@@ -324,9 +349,15 @@ export function assembleSuperSearchGroups(
 export function useSuperSearch(
   query: string,
   active: boolean,
+  options?: SuperSearchQueryOptions,
 ): UseSuperSearchResult {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const authState = useAuth() as {
+    portalAccess?: boolean;
+    isAdmin?: boolean;
+    role?: string | null;
+  };
   const {
     toolRegistry,
     handleToolSelect,
@@ -341,6 +372,24 @@ export function useSuperSearch(
 
   const trimmed = query.trim();
   const { stubs, loadingFiles } = useMyFilesStubs(active);
+  const scopedIds = useMemo(
+    () => new Set(options?.scopeIds ?? []),
+    [options?.scopeIds],
+  );
+  const hasScopedSearch = scopedIds.size > 0;
+
+  const scopeEnabled = useCallback(
+    (scopeId: string) => !hasScopedSearch || scopedIds.has(scopeId),
+    [hasScopedSearch, scopedIds],
+  );
+
+  const scopeLimit = useCallback(
+    (scopeId: SuperSearchGroupId) =>
+      hasScopedSearch && scopedIds.size === 1 && scopedIds.has(scopeId)
+        ? FOCUSED_GROUP_LIMIT
+        : GROUP_LIMIT,
+    [hasScopedSearch, scopedIds],
+  );
 
   // --- Actions -----------------------------------------------------------
   const openFile = useCallback(
@@ -401,41 +450,71 @@ export function useSuperSearch(
     () =>
       config
         ? {
-            isAdmin: config.isAdmin ?? false,
+            isAdmin: authState.isAdmin ?? config.isAdmin ?? false,
             loginEnabled: config.enableLogin ?? false,
+            portalAccessible: authState.portalAccess ?? false,
           }
         : null,
-    [config],
+    [authState.isAdmin, authState.portalAccess, config],
   );
 
-  const groups = useMemo<SuperSearchGroup[]>(
-    () =>
-      assembleSuperSearchGroups(
-        {
-          files: rankFileResults(stubs, trimmed, openFile),
-          tools: rankToolResults(toolRegistry, trimmed, openTool),
-          settings: rankSettingsResults(trimmed, t, gates, openSettings),
-          processor: rankProcessorResults(
-            trimmed,
-            t,
-            gates,
-            selectProcessorEntry,
-          ),
-        },
-        t,
-      ),
-    [
-      stubs,
-      trimmed,
-      openFile,
-      toolRegistry,
-      openTool,
-      gates,
-      openSettings,
-      selectProcessorEntry,
+  const groups = useMemo<SuperSearchGroup[]>(() => {
+    const assembledGroups = assembleSuperSearchGroups(
+      {
+        files: scopeEnabled("files")
+          ? rankFileResults(stubs, trimmed, openFile, scopeLimit("files"))
+          : [],
+        tools: scopeEnabled("tools")
+          ? rankToolResults(
+              toolRegistry,
+              trimmed,
+              openTool,
+              scopeLimit("tools"),
+            )
+          : [],
+        settings: scopeEnabled("settings")
+          ? rankSettingsResults(
+              trimmed,
+              t,
+              gates,
+              openSettings,
+              scopeLimit("settings"),
+            )
+          : [],
+        processor: scopeEnabled("processor")
+          ? rankProcessorResults(
+              trimmed,
+              t,
+              gates,
+              selectProcessorEntry,
+              scopeLimit("processor"),
+            )
+          : [],
+      },
       t,
-    ],
-  );
+    );
+
+    return assembledGroups.map((group) => ({
+      ...group,
+      label: group.id === "processor" ? t("pages", "Pages") : group.label,
+      sectionLabel:
+        group.id === "processor"
+          ? t("superSearch.group.processor", "Processor")
+          : t("portal.nav.editor", "Editor"),
+    }));
+  }, [
+    stubs,
+    trimmed,
+    openFile,
+    toolRegistry,
+    openTool,
+    gates,
+    openSettings,
+    selectProcessorEntry,
+    scopeEnabled,
+    scopeLimit,
+    t,
+  ]);
 
   const flatResults = useMemo(() => groups.flatMap((g) => g.results), [groups]);
 

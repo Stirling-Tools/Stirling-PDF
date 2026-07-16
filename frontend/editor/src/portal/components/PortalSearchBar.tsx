@@ -1,5 +1,8 @@
 import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
-import { usePortalSearchResults } from "@portal/hooks/usePortalSearchResults";
+import {
+  usePortalSearchResults,
+  usePortalSearchScopes,
+} from "@portal/hooks/usePortalSearchResults";
 import "@portal/components/PortalSearchBar.css";
 
 /**
@@ -11,11 +14,15 @@ import "@portal/components/PortalSearchBar.css";
  * external focus helpers target.
  */
 export function PortalSearchBar() {
+  const scopes = usePortalSearchScopes();
+
   return (
     <div className="portal-searchbar">
       <SuperSearch
         useResults={usePortalSearchResults}
         inputId="portal-search-input"
+        scopes={scopes}
+        dropdownMinWidth={672}
       />
     </div>
   );

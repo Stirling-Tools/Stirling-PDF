@@ -7387,6 +7387,7 @@ manual = "Manual"
 schedule = "Scheduled"
 
 [portal.policies]
+defaultName = "{{category}} Policy"
 subtitle = "Standing automations that enforce a tool pipeline on every document. Each policy fires on upload or export, runs its tool chain, and saves the enforced version alongside the original."
 title = "Policies"
 
@@ -7894,7 +7895,6 @@ viewAll = "View all"
 [portal.recentActivity.empty]
 description = "Pipeline runs, deploys and agent events will appear here."
 title = "Nothing here yet"
-
 
 [portal.settings.groups]
 admin = "Admin"
@@ -9718,6 +9718,7 @@ updateButton = "Update on Server"
 uploadButton = "Upload to Server"
 
 [superSearch]
+all = "All"
 ariaLabel = "Super search"
 hint = "Type to search"
 placeholder = "Search Stirling"

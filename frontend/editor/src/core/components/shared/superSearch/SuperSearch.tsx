@@ -10,14 +10,21 @@ import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
+import { Chip } from "@app/ui/Chip";
 import { TextInput } from "@app/components/shared/TextInput";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { isMacLike } from "@app/utils/hotkeys";
 import {
   useSuperSearch,
   SuperSearchResult,
+  type SuperSearchQueryOptions,
+  type SuperSearchScope,
   type UseSuperSearchResult,
 } from "@app/hooks/useSuperSearch";
+import {
+  parseSuperSearchQuery,
+  rebuildSuperSearchQuery,
+} from "@app/components/shared/superSearch/superSearchFilters";
 import "@app/components/shared/superSearch/SuperSearch.css";
 
 interface DropdownRect {
@@ -26,18 +33,34 @@ interface DropdownRect {
   width: number;
 }
 
+interface SuperSearchSection {
+  key: string;
+  label?: string;
+  groups: UseSuperSearchResult["groups"];
+}
+
 interface SuperSearchProps {
   /**
    * Results provider, called as a hook — it MUST be referentially stable for
    * the component's lifetime. Defaults to the editor's files/tools/settings/
    * Processor provider; the portal passes its own destinations provider.
    */
-  useResults?: (query: string, active: boolean) => UseSuperSearchResult;
+  useResults?: (
+    query: string,
+    active: boolean,
+    options?: SuperSearchQueryOptions,
+  ) => UseSuperSearchResult;
   /**
    * DOM id for the input — external focus helpers target the default. A host
    * whose bar can coexist with another instance must pass a distinct id.
    */
   inputId?: string;
+  /** Optional scope chips + `scope:` prefixes for host-specific filters. */
+  scopes?: readonly SuperSearchScope[];
+  /** Where to render scope chips when a host enables them. */
+  scopeChipsPlacement?: "dropdown" | "inline";
+  /** Let a host widen the dropdown beyond the input when needed. */
+  dropdownMinWidth?: number;
 }
 
 /**
@@ -51,12 +74,19 @@ interface SuperSearchProps {
 export default function SuperSearch({
   useResults = useSuperSearch,
   inputId = "super-search-input",
+  scopes = [],
+  scopeChipsPlacement = "dropdown",
+  dropdownMinWidth,
 }: SuperSearchProps = {}) {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(0);
   const [rect, setRect] = useState<DropdownRect | null>(null);
+  const [manualScopeIds, setManualScopeIds] = useState<string[]>([]);
+  const [collapsedSectionKeys, setCollapsedSectionKeys] = useState<string[]>(
+    [],
+  );
 
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -68,9 +98,26 @@ export default function SuperSearch({
   // A hook received as a prop is invisible to the rules-of-hooks lint; pinning
   // the first value makes swapping it mid-life structurally impossible.
   const useResultsHook = useRef(useResults).current;
-  const { groups, flatResults, loadingFiles } = useResultsHook(query, open);
+  const parsedQuery = useMemo(
+    () => parseSuperSearchQuery(query, scopes),
+    [query, scopes],
+  );
+  const effectiveScopeIds = useMemo(
+    () =>
+      Array.from(new Set([...parsedQuery.prefixedScopeIds, ...manualScopeIds])),
+    [manualScopeIds, parsedQuery.prefixedScopeIds],
+  );
+  const activeScopeIds = useMemo(
+    () => new Set(effectiveScopeIds),
+    [effectiveScopeIds],
+  );
+  const { groups, flatResults, loadingFiles } = useResultsHook(
+    parsedQuery.query,
+    open,
+    effectiveScopeIds.length > 0 ? { scopeIds: effectiveScopeIds } : undefined,
+  );
 
-  const trimmed = query.trim();
+  const trimmed = parsedQuery.query.trim();
   const hasQuery = trimmed.length > 0;
 
   const listboxId = `${inputId}-listbox`;
@@ -79,12 +126,52 @@ export default function SuperSearch({
     [inputId],
   );
 
+  const sections = useMemo<SuperSearchSection[]>(() => {
+    const out: SuperSearchSection[] = [];
+
+    for (const group of groups) {
+      const current = out[out.length - 1];
+      if (current && current.label === group.sectionLabel) {
+        current.groups.push(group);
+        continue;
+      }
+
+      out.push({
+        key: group.sectionLabel ?? group.id,
+        label: group.sectionLabel,
+        groups: [group],
+      });
+    }
+
+    return out;
+  }, [groups]);
+
+  const visibleSections = useMemo(
+    () =>
+      sections.map((section) => ({
+        ...section,
+        collapsed:
+          section.label != null && collapsedSectionKeys.includes(section.key),
+      })),
+    [collapsedSectionKeys, sections],
+  );
+
+  const visibleFlatResults = useMemo(
+    () =>
+      visibleSections.flatMap((section) =>
+        section.collapsed
+          ? []
+          : section.groups.flatMap((group) => group.results),
+      ),
+    [visibleSections],
+  );
+
   const moveHighlight = useCallback(
     (index: number) => {
       setHighlight(index);
-      highlightKeyRef.current = flatResults[index]?.key ?? null;
+      highlightKeyRef.current = visibleFlatResults[index]?.key ?? null;
     },
-    [flatResults],
+    [visibleFlatResults],
   );
 
   // When results change, follow the highlighted result to its new index; if
@@ -92,7 +179,7 @@ export default function SuperSearch({
   useEffect(() => {
     const key = highlightKeyRef.current;
     if (key) {
-      const index = flatResults.findIndex((r) => r.key === key);
+      const index = visibleFlatResults.findIndex((r) => r.key === key);
       if (index >= 0) {
         setHighlight(index);
         return;
@@ -100,20 +187,33 @@ export default function SuperSearch({
     }
     highlightKeyRef.current = null;
     setHighlight(0);
-  }, [flatResults]);
+  }, [visibleFlatResults]);
 
   const close = useCallback(() => {
     setOpen(false);
     setHighlight(0);
-  }, []);
+    setManualScopeIds([]);
+    setCollapsedSectionKeys([]);
+    setQuery((current) => parseSuperSearchQuery(current, scopes).query);
+  }, [scopes]);
 
   // Position the portalled dropdown directly under the input while open.
   const updateRect = useCallback(() => {
     const el = containerRef.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
-    setRect({ top: r.bottom + 6, left: r.left, width: r.width });
-  }, []);
+    const viewportPadding = 8;
+    const width = Math.min(
+      Math.max(r.width, dropdownMinWidth ?? r.width),
+      window.innerWidth - viewportPadding * 2,
+    );
+    const centeredLeft = r.left - (width - r.width) / 2;
+    const left = Math.min(
+      Math.max(viewportPadding, centeredLeft),
+      window.innerWidth - width - viewportPadding,
+    );
+    setRect({ top: r.bottom + 6, left, width });
+  }, [dropdownMinWidth]);
 
   useLayoutEffect(() => {
     if (!open) return;
@@ -191,18 +291,21 @@ export default function SuperSearch({
       e.preventDefault();
       if (!open) setOpen(true);
       moveHighlight(
-        flatResults.length === 0 ? 0 : (highlight + 1) % flatResults.length,
+        visibleFlatResults.length === 0
+          ? 0
+          : (highlight + 1) % visibleFlatResults.length,
       );
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       moveHighlight(
-        flatResults.length === 0
+        visibleFlatResults.length === 0
           ? 0
-          : (highlight - 1 + flatResults.length) % flatResults.length,
+          : (highlight - 1 + visibleFlatResults.length) %
+              visibleFlatResults.length,
       );
     } else if (e.key === "Enter") {
       e.preventDefault();
-      selectResult(flatResults[highlight]);
+      selectResult(visibleFlatResults[highlight]);
     } else if (e.key === "Escape") {
       e.preventDefault();
       if (hasQuery) {
@@ -216,8 +319,82 @@ export default function SuperSearch({
 
   const shortcutHint = useMemo(() => (isMacLike() ? "⌘K" : "Ctrl+K"), []);
 
+  const toggleScope = useCallback(
+    (scopeId: string) => {
+      if (scopeId === "__all__") {
+        setManualScopeIds([]);
+        if (parsedQuery.prefixTokens.length > 0) {
+          setQuery(parsedQuery.query);
+        }
+        inputRef.current?.focus();
+        return;
+      }
+
+      const hasPrefix = parsedQuery.prefixedScopeIds.includes(scopeId);
+      if (hasPrefix) {
+        setManualScopeIds((current) => current.filter((id) => id !== scopeId));
+        const remainingPrefixScopeIds = new Set(
+          parsedQuery.prefixedScopeIds.filter((id) => id !== scopeId),
+        );
+        setQuery(rebuildSuperSearchQuery(parsedQuery, remainingPrefixScopeIds));
+        inputRef.current?.focus();
+        return;
+      }
+
+      setManualScopeIds((current) =>
+        current.includes(scopeId)
+          ? current.filter((id) => id !== scopeId)
+          : [...current, scopeId],
+      );
+      inputRef.current?.focus();
+    },
+    [parsedQuery],
+  );
+
   const showNoResults =
-    open && hasQuery && !loadingFiles && flatResults.length === 0;
+    open &&
+    !loadingFiles &&
+    flatResults.length === 0 &&
+    (hasQuery || scopes.length > 0);
+
+  const toggleSection = useCallback((sectionKey: string) => {
+    setCollapsedSectionKeys((current) =>
+      current.includes(sectionKey)
+        ? current.filter((key) => key !== sectionKey)
+        : [...current, sectionKey],
+    );
+    inputRef.current?.focus();
+  }, []);
+
+  const scopeFilters =
+    scopes.length > 0 ? (
+      <div className="super-search-filters" aria-label="Search filters">
+        <Chip
+          size="sm"
+          accent={activeScopeIds.size === 0 ? "default" : "neutral"}
+          variant={activeScopeIds.size === 0 ? "primary" : "secondary"}
+          aria-pressed={activeScopeIds.size === 0}
+          onClick={() => toggleScope("__all__")}
+        >
+          {t("superSearch.all", "All")}
+        </Chip>
+        {scopes.map((scope) => {
+          const active = activeScopeIds.has(scope.id);
+          return (
+            <Chip
+              key={scope.id}
+              size="sm"
+              accent={active ? "default" : "neutral"}
+              variant={active ? "primary" : "secondary"}
+              aria-pressed={active}
+              onClick={() => toggleScope(scope.id)}
+            >
+              {scope.label}
+            </Chip>
+          );
+        })}
+      </div>
+    ) : null;
 
   const dropdown =
     open && rect ? (
@@ -230,7 +407,9 @@ export default function SuperSearch({
         // Keep focus on the input when clicking inside the dropdown.
         onMouseDown={(e) => e.preventDefault()}
       >
-        {!hasQuery && (
+        {scopeChipsPlacement === "dropdown" && scopeFilters}
+
+        {!hasQuery && scopes.length === 0 && (
           <div className="super-search-empty">
             {t("superSearch.hint", "Type to search")}
           </div>
@@ -243,88 +422,144 @@ export default function SuperSearch({
         )}
 
         {hasQuery &&
-          groups.map((group) => (
-            <div
-              key={group.id}
-              className="super-search-group"
-              role="group"
-              aria-label={group.label}
-            >
-              <div className="super-search-group-label" aria-hidden="true">
-                {group.label}
-              </div>
-              {group.results.map((result) => {
-                const index = flatResults.indexOf(result);
-                const active = index === highlight;
-                return (
+          visibleSections.map((section) => (
+            <div key={section.key} className="super-search-section">
+              {section.label && (
+                <div className="super-search-section-header">
                   <Button
-                    key={result.key}
-                    id={optionId(index)}
-                    type="button"
+                    className="super-search-section-toggle"
                     variant="quiet"
-                    justify="start"
-                    fullWidth
-                    role="option"
-                    aria-selected={active}
-                    className={`super-search-item${active ? " active" : ""}`}
-                    onMouseEnter={() => moveHighlight(index)}
-                    onClick={() => selectResult(result)}
-                  >
-                    <span className="super-search-item-icon">
-                      {result.icon ?? (
+                    aria-expanded={!section.collapsed}
+                    onClick={() => toggleSection(section.key)}
+                    rightSection={
+                      <span
+                        className={`super-search-section-chevron${
+                          section.collapsed
+                            ? " super-search-section-chevron--collapsed"
+                            : ""
+                        }`}
+                        aria-hidden="true"
+                      >
                         <LocalIcon
-                          icon={result.iconName ?? "search-rounded"}
-                          width="1.1rem"
-                          height="1.1rem"
+                          icon="expand-more-rounded"
+                          width="1rem"
+                          height="1rem"
                         />
-                      )}
-                    </span>
-                    <span className="super-search-item-text">
-                      <span className="super-search-item-title">
-                        {result.title}
                       </span>
-                      {result.subtitle && (
-                        <Text size="xs" c="dimmed" lineClamp={1}>
-                          {result.subtitle}
-                        </Text>
-                      )}
+                    }
+                  >
+                    <span className="super-search-section-label">
+                      {section.label}
                     </span>
                   </Button>
-                );
-              })}
+                </div>
+              )}
+              {!section.collapsed && (
+                <div className="super-search-section-body">
+                  {section.groups.map((group) => (
+                    <div
+                      key={group.id}
+                      className="super-search-group"
+                      role="group"
+                      aria-label={group.label}
+                    >
+                      <div
+                        className="super-search-group-label"
+                        aria-hidden="true"
+                      >
+                        {group.label}
+                      </div>
+                      <div className="super-search-group-results">
+                        {group.results.map((result) => {
+                          const index = visibleFlatResults.indexOf(result);
+                          const active = index === highlight;
+                          return (
+                            <Button
+                              key={result.key}
+                              id={optionId(index)}
+                              type="button"
+                              variant="quiet"
+                              justify="start"
+                              fullWidth
+                              role="option"
+                              aria-selected={active}
+                              className={`super-search-item${active ? " active" : ""}`}
+                              onMouseEnter={() => moveHighlight(index)}
+                              onClick={() => selectResult(result)}
+                            >
+                              <span className="super-search-item-icon">
+                                {result.icon ?? (
+                                  <LocalIcon
+                                    icon={result.iconName ?? "search-rounded"}
+                                    width="1.1rem"
+                                    height="1.1rem"
+                                  />
+                                )}
+                              </span>
+                              <span className="super-search-item-text">
+                                <span className="super-search-item-title">
+                                  {result.title}
+                                </span>
+                                {result.subtitle && (
+                                  <Text size="xs" c="dimmed" lineClamp={1}>
+                                    {result.subtitle}
+                                  </Text>
+                                )}
+                              </span>
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
       </div>
     ) : null;
 
   return (
-    <div className="super-search" ref={containerRef} onKeyDown={handleKeyDown}>
-      <TextInput
-        id={inputId}
-        name={inputId}
-        ref={inputRef}
-        value={query}
-        onChange={setQuery}
-        placeholder={t("superSearch.placeholder", "Search Stirling")}
-        icon={
-          <LocalIcon icon="search-rounded" width="1.1rem" height="1.1rem" />
-        }
-        autoComplete="off"
-        role="combobox"
-        aria-label={t("superSearch.ariaLabel", "Super search")}
-        aria-expanded={open}
-        aria-controls={open ? listboxId : undefined}
-        aria-activedescendant={
-          open && flatResults[highlight] ? optionId(highlight) : undefined
-        }
-        aria-autocomplete="list"
-        onFocus={() => setOpen(true)}
-      />
-      {!open && !hasQuery && (
-        <kbd className="super-search-kbd" aria-hidden="true">
-          {shortcutHint}
-        </kbd>
-      )}
+    <div
+      className={`super-search${
+        scopeChipsPlacement === "inline" && scopes.length > 0
+          ? " super-search--with-inline-filters"
+          : ""
+      }`}
+      ref={containerRef}
+      onKeyDown={handleKeyDown}
+    >
+      <div className="super-search-input-row">
+        <TextInput
+          id={inputId}
+          name={inputId}
+          ref={inputRef}
+          value={query}
+          onChange={setQuery}
+          placeholder={t("superSearch.placeholder", "Search Stirling")}
+          icon={
+            <LocalIcon icon="search-rounded" width="1.1rem" height="1.1rem" />
+          }
+          autoComplete="off"
+          role="combobox"
+          aria-label={t("superSearch.ariaLabel", "Super search")}
+          aria-expanded={open}
+          aria-controls={open ? listboxId : undefined}
+          aria-activedescendant={
+            open && visibleFlatResults[highlight]
+              ? optionId(highlight)
+              : undefined
+          }
+          aria-autocomplete="list"
+          onFocus={() => setOpen(true)}
+        />
+        {!open && !hasQuery && (
+          <kbd className="super-search-kbd" aria-hidden="true">
+            {shortcutHint}
+          </kbd>
+        )}
+      </div>
+      {scopeChipsPlacement === "inline" && scopeFilters}
       {dropdown && createPortal(dropdown, document.body)}
     </div>
   );
