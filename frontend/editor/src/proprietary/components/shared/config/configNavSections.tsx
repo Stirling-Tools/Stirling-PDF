@@ -22,7 +22,7 @@ import AdminUsageSection from "@app/components/shared/config/configSections/Admi
 import AdminStorageSharingSection from "@app/components/shared/config/configSections/AdminStorageSharingSection";
 import ApiKeys from "@app/components/shared/config/configSections/ApiKeys";
 import AccountSection from "@app/components/shared/config/configSections/AccountSection";
-import GeneralSection from "@app/components/shared/config/configSections/GeneralSection";
+import GeneralWithLoginLanding from "@app/components/shared/config/GeneralWithLoginLanding";
 
 /**
  * Hook version of proprietary config nav sections with proper i18n support
@@ -50,7 +50,7 @@ export const useConfigNavSections = (
   if (preferencesSection) {
     preferencesSection.items = preferencesSection.items.map((item) =>
       item.key === "general"
-        ? { ...item, component: <GeneralSection /> }
+        ? { ...item, component: <GeneralWithLoginLanding /> }
         : item,
     );
 

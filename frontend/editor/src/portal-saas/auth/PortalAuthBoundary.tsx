@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from "react";
 import { AuthProvider } from "@app/auth";
 import { useAuth } from "@app/auth/context";
 import { Spinner } from "@app/ui";
+import { withBasePath } from "@app/constants/app";
 import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
 import { EDITOR_URL } from "@portal/auth/editorUrl";
 
@@ -34,7 +35,7 @@ function SaasPortalGate({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!blocked) return;
     // Guest (has a session but anonymous) -> editor; no session -> login.
-    window.location.href = session ? EDITOR_URL : "/login";
+    window.location.href = session ? EDITOR_URL : withBasePath("/login");
   }, [blocked, session]);
   if (loading || blocked) {
     return (

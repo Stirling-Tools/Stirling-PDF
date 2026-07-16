@@ -35,7 +35,6 @@ describe("buildLabelGroups", () => {
         stub("b", ["contract"]),
         stub("c", ["nda", "contract"]),
       ],
-      [],
       t,
       [LEGAL],
     )!;
@@ -44,20 +43,15 @@ describe("buildLabelGroups", () => {
     expect(legal.stubs.map((s) => s.id)).toEqual(["a", "b", "c"]);
   });
 
-  it("gives a label not in any category its own group", () => {
-    const groups = buildLabelGroups(
-      [stub("a", ["weird-one"])],
-      [{ id: "weird-one", name: "Weird one" }],
-      t,
-      [LEGAL],
-    )!;
-    const group = groups.find((g) => g.id === "label:weird-one")!;
-    expect(group.label).toBe("Weird one");
-    expect(group.stubs.map((s) => s.id)).toEqual(["a"]);
+  it("puts a label in no category into Other", () => {
+    const groups = buildLabelGroups([stub("a", ["weird-one"])], t, [LEGAL])!;
+    expect(groups.some((g) => g.id.startsWith("category:"))).toBe(false);
+    expect(groups.at(-1)!.id).toBe("other");
+    expect(groups.at(-1)!.stubs.map((s) => s.id)).toEqual(["a"]);
   });
 
   it("moves a hidden category's files into Other", () => {
-    const groups = buildLabelGroups([stub("a", ["invoice"])], [], t, [
+    const groups = buildLabelGroups([stub("a", ["invoice"])], t, [
       cat("finance", "Financial", ["invoice"], true),
     ])!;
     expect(groups.some((g) => g.id === "category:finance")).toBe(false);
@@ -66,7 +60,7 @@ describe("buildLabelGroups", () => {
   });
 
   it("a file with labels in two categories appears in both", () => {
-    const groups = buildLabelGroups([stub("a", ["nda", "invoice"])], [], t, [
+    const groups = buildLabelGroups([stub("a", ["nda", "invoice"])], t, [
       LEGAL,
       FINANCE,
     ])!;
@@ -82,7 +76,6 @@ describe("buildLabelGroups", () => {
   it("puts unlabelled files in Other at the bottom", () => {
     const groups = buildLabelGroups(
       [stub("a", ["invoice"]), stub("b"), stub("c", [])],
-      [],
       t,
       [FINANCE],
     )!;
@@ -91,7 +84,7 @@ describe("buildLabelGroups", () => {
     expect(other.stubs.map((s) => s.id)).toEqual(["b", "c"]);
   });
 
-  it("orders groups: Recent, groups alphabetically, Other last", () => {
+  it("orders groups: Recent, categories alphabetically, Other last", () => {
     const groups = buildLabelGroups(
       [
         stub("a", ["invoice"]),
@@ -99,20 +92,19 @@ describe("buildLabelGroups", () => {
         stub("c", ["zzz"]),
         stub("d"),
       ],
-      [],
       t,
       [LEGAL, FINANCE],
     )!;
+    // "zzz" is in no category, so its file falls to Other with the unlabelled one.
     expect(groups.map((g) => g.id)).toEqual([
       "recent",
       "category:finance",
       "category:legal",
-      "label:zzz",
       "other",
     ]);
   });
 
   it("returns null for an empty library", () => {
-    expect(buildLabelGroups([], [], t, [LEGAL])).toBeNull();
+    expect(buildLabelGroups([], t, [LEGAL])).toBeNull();
   });
 });
