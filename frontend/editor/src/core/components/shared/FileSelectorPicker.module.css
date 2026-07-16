@@ -224,6 +224,7 @@
 /* ── Individual file row ─────────────────────────── */
 .fileItem {
   width: 100%;
+  --sui-btn-py: 0.625rem;
   padding: 0.625rem 0.875rem;
   display: flex;
   align-items: center;

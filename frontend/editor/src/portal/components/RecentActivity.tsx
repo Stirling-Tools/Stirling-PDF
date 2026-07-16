@@ -111,10 +111,10 @@ export function RecentActivity() {
                 <div className="portal-activity__subject">{event.target}</div>
                 <div className="portal-activity__detail-row">
                   <span className="portal-activity__detail">
-                    {AUDIT_CAT_LABEL[event.category]} · {event.actor}
+                    {t(AUDIT_CAT_LABEL[event.category])} · {event.actor}
                   </span>
                   <StatusBadge tone={AUDIT_TONE[event.status]} size="sm">
-                    {AUDIT_STATUS_LABEL[event.status]}
+                    {t(AUDIT_STATUS_LABEL[event.status])}
                   </StatusBadge>
                 </div>
               </div>

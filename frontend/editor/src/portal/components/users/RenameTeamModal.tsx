@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, FormField, Input, Modal } from "@app/ui";
-import { renameTeam } from "@portal/api/teams";
+import { usersBackend } from "@app/portal/usersBackend";
 import { errorMessage } from "@portal/api/http";
 import "@portal/views/Users.css";
 
@@ -37,7 +37,7 @@ export function RenameTeamModal({
     setSaving(true);
     setError(null);
     try {
-      await renameTeam(teamId, name.trim());
+      await usersBackend.renameTeam(teamId, name.trim());
       onDone();
       onClose();
     } catch (e) {
