@@ -1,6 +1,5 @@
-// The scanning engine: walks each rendered story's DOM comparing text colour to
-// the colour it overlays, and drives Storybook to switch stories in place. No
-// React here — the panel calls runScan() and reacts to its callbacks.
+// Scans each rendered story's DOM (text colour vs. the colour it overlays) and
+// drives Storybook to switch stories in place. The panel calls runScan().
 
 import {
   type Rgb,
@@ -35,21 +34,13 @@ export interface Progress {
   current: string;
 }
 
-export const LOAD_TIMEOUT_MS = 30000; // a cold Storybook boot can be slow
+export const LOAD_TIMEOUT_MS = 30000; // cold Storybook boot can be slow
 export const MAX_ROWS = 600;
-// Wait for a story to signal it has rendered before scanning it (capped so a
-// story that never signals can't stall the scan), plus a small grace after for
-// in-component async (mock fetches) and final layout. A blind fixed delay was
-// too short for data-backed stories in a foreground tab (they were scanned mid
-// spinner → no findings), and too dependent on background-tab timer throttling.
-const RENDER_TIMEOUT_MS = 3000;
-const RENDER_GRACE_MS = 150;
+const RENDER_TIMEOUT_MS = 3000; // cap on waiting for a story's render event
+const RENDER_GRACE_MS = 150; // let async content + layout settle after render
 
-// The background colour an element actually overlays: nearest ancestor with a
-// non-transparent background, compositing translucent layers as we climb.
-// Returns null when a gradient/image sits behind the text — its colour can't be
-// determined statically, so the caller skips it rather than guessing (which is
-// what produced bogus "white-on-white" hits on gradient buttons/avatars).
+// Nearest ancestor background the element overlays, compositing translucent
+// layers. Null when a gradient/image sits behind the text (can't judge it).
 function effectiveBg(el: Element, win: Window): Rgb | null {
   let node: Element | null = el;
   let acc: Rgb | null = null;
@@ -84,7 +75,6 @@ function hasDirectText(el: Element): boolean {
   return false;
 }
 
-// Scan one rendered document for text that fails contrast against its own fill.
 function scanDoc(
   win: Window,
   story: StoryEntry,
@@ -92,14 +82,13 @@ function scanDoc(
 ): void {
   const els = win.document.body.querySelectorAll("*");
   for (const el of els) {
-    // svg uses `fill`, not `color`; skip by namespace (realm-safe, and avoids
-    // touching win.SVGElement which isn't on the Window type).
+    // svg uses `fill`, not `color`; match by namespace (realm-safe).
     if (el.namespaceURI === "http://www.w3.org/2000/svg") continue;
     if (!hasDirectText(el)) continue;
     const cs = win.getComputedStyle(el);
     if (!isVisible(el, cs)) continue;
     const bg = effectiveBg(el, win);
-    if (!bg) continue; // gradient/image backdrop — can't judge statically
+    if (!bg) continue;
     let fg = parseColor(cs.color);
     if (fg.a < 1) fg = over(fg, bg);
     const ratio = contrastRatio(fg, bg);
@@ -141,8 +130,7 @@ function loadStory(
       resolve();
     };
     iframe.addEventListener("load", onload);
-    // Build the query via URLSearchParams (encodes every value) and clamp the
-    // theme to a known token — keeps untrusted-looking input out of the URL.
+    // URLSearchParams encodes each value; theme clamped to a known token.
     const safeTheme = theme === "dark" ? "dark" : "light";
     const qs = new URLSearchParams({
       id,
@@ -153,11 +141,9 @@ function loadStory(
   });
 }
 
-// Storybook preview internals we drive to switch stories WITHOUT reloading the
-// runtime. Calling onSetCurrentStory directly (vs emitting on the channel)
-// re-renders locally and does NOT broadcast, so the audit page (itself a story
-// in the parent preview) isn't navigated away mid-scan. We only *listen* on the
-// channel (never emit), so it stays a safe read.
+// Preview internals used to switch stories without reloading. onSetCurrentStory
+// re-renders locally without broadcasting (so the parent preview isn't
+// navigated); the channel is only listened to, never emitted on.
 interface SbPreview {
   onSetCurrentStory(o: { storyId: string; viewMode: string }): void;
 }
@@ -172,14 +158,8 @@ type SbWindow = Window & {
 
 const RENDER_EVENTS = ["storyRendered", "storyMissing", "storyErrored"];
 
-// Force the selected theme's attributes on the scanned document right before we
-// measure. A story can transiently leave a different scheme on <html> (its own
-// theme decorator runs in an effect, a frame behind the render), which would
-// otherwise resolve token colours to the WRONG theme — e.g. dark --c-text
-// (#f4f4f5) measured against a light background — a phantom "invisible text"
-// finding. Re-asserting here makes every measurement consistently the chosen
-// theme. (setAttribute forces a synchronous style recalc, so reads after it are
-// already correct.)
+// Re-assert the selected theme before measuring, in case a story left a
+// different scheme on <html> (its theme decorator runs a frame late).
 function applyTheme(win: Window, theme: string): void {
   const root = win.document.documentElement;
   root.setAttribute("data-app-theme", "custom");
@@ -188,8 +168,7 @@ function applyTheme(win: Window, theme: string): void {
   root.setAttribute("data-mantine-color-scheme", theme);
 }
 
-// After the iframe's load event the Storybook runtime still boots
-// asynchronously; poll until the preview global appears.
+// The runtime boots asynchronously after the iframe's load event.
 function waitForPreview(win: SbWindow, timeoutMs = 8000): Promise<boolean> {
   return new Promise((resolve) => {
     const start = performance.now();
@@ -202,11 +181,8 @@ function waitForPreview(win: SbWindow, timeoutMs = 8000): Promise<boolean> {
   });
 }
 
-// Switch the already-booted preview to `id` in place and resolve once it has
-// actually rendered — we wait for Storybook's storyRendered/Missing/Errored
-// event (not a blind timer) so data-backed stories are measured with their
-// content, not mid-spinner. A cap prevents a story that never signals from
-// stalling the scan; a short grace after lets in-component async + layout land.
+// Switch to `id` and resolve on the render event (or cap) so data-backed
+// stories are measured with content, not mid-spinner.
 function renderStory(
   preview: SbPreview,
   channel: SbChannel,
@@ -241,8 +217,8 @@ export interface ScanOptions {
 
 export type ScanOutcome = "done" | "stopped" | "failed";
 
-// Orchestrates a full pass: fetch the story index, boot the preview once, then
-// switch through every story, scanning each and streaming deduped findings.
+// Fetch the story index, boot the preview once, then scan each story and stream
+// deduped findings.
 export async function runScan(
   iframe: HTMLIFrameElement,
   opts: ScanOptions,
@@ -263,18 +239,13 @@ export async function runScan(
     );
   }
   if (stories.length === 0) return "done";
-  // Feedback during the (potentially slow, cold) first boot so it doesn't look
-  // frozen at 0/N.
   opts.onProgress({
     done: 0,
     total: stories.length,
     current: "booting preview…",
   });
 
-  // Boot the preview runtime ONCE, then switch stories in place. The reboot
-  // (providers, MSW, i18n) is the expensive part; doing it per story is what
-  // made each one take seconds. Failure-safe: a boot error resolves to "failed"
-  // (idle) rather than rejecting and hanging the scan on "scanning" forever.
+  // Boot once, then switch stories in place (the reboot is the expensive part).
   try {
     await loadStory(iframe, stories[0].id, opts.theme);
   } catch {
@@ -286,10 +257,7 @@ export async function runScan(
   const channel = win.__STORYBOOK_ADDONS_CHANNEL__;
   if (!preview || !channel) return "failed";
 
-  // Dedupe per COMPONENT + colour pair: the same #fg-on-#bg inside one component
-  // collapses to a single row (count = occurrences), while a different colour
-  // pair, or the same pair in another component, stays distinct. Text is not
-  // part of the key (it just samples the first hit).
+  // Dedupe per component + colour pair; count = occurrences.
   const bySig = new Map<string, Finding>();
 
   for (let i = 0; i < stories.length; i++) {
@@ -299,8 +267,7 @@ export async function runScan(
     try {
       await renderStory(preview, channel, story.id);
       if (!win.document?.body) continue;
-      applyTheme(win, opts.theme); // consistent theme at measurement time
-
+      applyTheme(win, opts.theme);
       scanDoc(win, story, (f) => {
         const sig = `${f.storyTitle}|${f.fg}|${f.bg}`;
         const existing = bySig.get(sig);
@@ -308,7 +275,7 @@ export async function runScan(
         else bySig.set(sig, { ...f, count: 1 });
       });
     } catch {
-      // Story failed to render — skip and keep going.
+      // story failed to render — skip
     }
     opts.onFindings(
       [...bySig.values()]

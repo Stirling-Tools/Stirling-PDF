@@ -38,19 +38,9 @@
   );
 
   /* File Manager active file colors */
-  --file-active-badge-bg: rgba(
-    34,
-    197,
-    94,
-    0.15
-  ); /* Transparent green for active badge */
+  --file-active-badge-bg: color-mix(in srgb, var(--p-green-500) 15%, transparent); /* Transparent green for active badge */
   --file-active-badge-fg: var(--p-green-700); /* Green text for active badge */
-  --file-active-badge-border: rgba(
-    34,
-    197,
-    94,
-    0.3
-  ); /* Green border for active badge */
+  --file-active-badge-border: color-mix(in srgb, var(--p-green-500) 30%, transparent); /* Green border for active badge */
 }
 
 /* CSS variables for Tailwind + Mantine integration */
@@ -497,7 +487,7 @@
 }
 
 [data-mantine-color-scheme="dark"] .plan-card [data-size="sm"] {
-  color: rgb(194, 200, 224) !important;
+  color: var(--p-c-c2c8e0) !important;
 }
 
 /* Current plan badge - use light mode green in dark mode */
@@ -507,24 +497,24 @@
 
 /* Plan section button colors */
 .plan-button:not(:disabled):not([data-disabled]) {
-  background-color: #0a8bff !important;
+  background-color: var(--p-azure-500) !important;
 }
 
 [data-mantine-color-scheme="dark"]
   .plan-button:not(:disabled):not([data-disabled]) {
-  background-color: #2040a0 !important;
+  background-color: var(--p-royal-700) !important;
 }
 
 /* Lighter grey for disabled plan buttons */
 .plan-button:disabled,
 .plan-button[data-disabled] {
-  background-color: #7e7e7e !important;
+  background-color: var(--p-c-7e7e7e) !important;
   color: white;
 }
 
 [data-mantine-color-scheme="dark"] .plan-button:disabled,
 [data-mantine-color-scheme="dark"] .plan-button[data-disabled] {
-  background-color: #6b7280 !important;
+  background-color: var(--p-gray-500) !important;
 }
 
 /* Override the flat multiply blend for a clean, modern semi-transparent overlay */
@@ -541,19 +531,19 @@
 /* Flash highlight for comment card (e.g. "View comment" from annotation menu) */
 @keyframes comment-card-flash {
   0% {
-    background-color: rgba(255, 235, 59, 0);
+    background-color: color-mix(in srgb, var(--p-c-ffeb3b) 0%, transparent);
     box-shadow: none;
   }
   20% {
-    background-color: rgba(255, 235, 59, 0.35);
-    box-shadow: 0 0 20px rgba(255, 235, 59, 0.5);
+    background-color: color-mix(in srgb, var(--p-c-ffeb3b) 35%, transparent);
+    box-shadow: 0 0 20px color-mix(in srgb, var(--p-c-ffeb3b) 50%, transparent);
   }
   50% {
-    background-color: rgba(255, 235, 59, 0.25);
-    box-shadow: 0 0 15px rgba(255, 235, 59, 0.4);
+    background-color: color-mix(in srgb, var(--p-c-ffeb3b) 25%, transparent);
+    box-shadow: 0 0 15px color-mix(in srgb, var(--p-c-ffeb3b) 40%, transparent);
   }
   100% {
-    background-color: rgba(255, 235, 59, 0);
+    background-color: color-mix(in srgb, var(--p-c-ffeb3b) 0%, transparent);
     box-shadow: none;
   }
 }
@@ -576,7 +566,7 @@
   --link-hover-border: color-mix(in srgb, var(--p-blue-500) 32%, transparent);
   --link-hover-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.35),
-    0 1px 4px rgba(10, 139, 255, 0.12);
+    0 1px 4px color-mix(in srgb, var(--p-azure-500) 12%, transparent);
   --link-focus-ring: color-mix(in srgb, var(--p-blue-500) 25%, transparent);
   --link-toolbar-bg: color-mix(in srgb, var(--p-blue-700) 88%, transparent);
   --link-toolbar-border: rgba(255, 255, 255, 0.1);
@@ -589,7 +579,7 @@
   --link-hover-bg: color-mix(in srgb, var(--p-blue-500) 14%, transparent);
   --link-hover-border: color-mix(in srgb, var(--p-blue-500) 38%, transparent);
   --link-hover-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 1px 4px rgba(79, 142, 245, 0.18);
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 1px 4px color-mix(in srgb, var(--p-c-4f8ef5) 18%, transparent);
   --link-focus-ring: color-mix(in srgb, var(--p-blue-500) 30%, transparent);
   --link-toolbar-bg: color-mix(in srgb, var(--p-blue-700) 94%, transparent);
   --link-toolbar-border: rgba(255, 255, 255, 0.07);
@@ -721,7 +711,7 @@
 }
 
 .pdf-link-toolbar-btn:hover .pdf-link-toolbar-label {
-  color: #60a5fa; /* Modern blue accent */
+  color: var(--p-blue-400); /* Modern blue accent */
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -731,8 +721,8 @@
 }
 
 .pdf-link-toolbar-btn--delete:hover {
-  background: rgba(239, 68, 68, 0.15);
-  color: #fca5a5;
+  background: color-mix(in srgb, var(--p-red-500) 15%, transparent);
+  color: var(--p-art-red-light);
 }
 
 .pdf-link-toolbar-sep {
@@ -755,8 +745,8 @@
 }
 
 .pdf-link-toolbar-btn--delete:hover {
-  background: rgba(239, 68, 68, 0.2);
-  color: #f87171;
+  background: color-mix(in srgb, var(--p-red-500) 20%, transparent);
+  color: var(--p-red-400);
 }
 
 .pdf-link-toolbar-btn--go:hover {
@@ -810,19 +800,19 @@
 
 /* Modern logo icon */
 .logo-icon-modern__path1 {
-  fill: #acacac;
+  fill: var(--p-c-acacac);
   fill-opacity: 0.3;
 }
 .logo-icon-modern__path2 {
-  fill: #fc9999;
+  fill: var(--p-art-red-soft);
   fill-opacity: 0.5;
 }
 [data-mantine-color-scheme="dark"] .logo-icon-modern__path1 {
-  fill: #e6e6e6;
+  fill: var(--p-c-e6e6e6);
   fill-opacity: 0.4;
 }
 [data-mantine-color-scheme="dark"] .logo-icon-modern__path2 {
-  fill: #e6e6e6;
+  fill: var(--p-c-e6e6e6);
   fill-opacity: 0.7;
 }
 
@@ -831,13 +821,13 @@
   opacity: 0.2;
 }
 .logo-icon-classic__body {
-  fill: #ff4b4b;
+  fill: var(--p-art-red);
 }
 .logo-icon-classic__flap {
-  fill: #545454;
+  fill: var(--p-c-545454);
 }
 .logo-icon-classic__triangle {
-  fill: #d0dbdc;
+  fill: var(--p-c-d0dbdc);
 }
 .logo-icon-classic__s {
   fill: white;
@@ -849,10 +839,10 @@
   fill: white;
 }
 [data-mantine-color-scheme="dark"] .logo-icon-classic__flap {
-  fill: #d3d3d3;
+  fill: var(--p-c-d3d3d3);
 }
 [data-mantine-color-scheme="dark"] .logo-icon-classic__triangle {
-  fill: #d0dbdc;
+  fill: var(--p-c-d0dbdc);
 }
 [data-mantine-color-scheme="dark"] .logo-icon-classic__s {
   fill: var(--mantine-color-body);
@@ -868,11 +858,11 @@
 }
 /* PDF text: dimmed red in light mode, standard red in dark */
 .wordmark__pdf--muted {
-  fill: #d62626;
+  fill: var(--p-c-d62626);
   fill-opacity: 0.7;
 }
 [data-mantine-color-scheme="dark"] .wordmark__pdf--muted {
-  fill: #c56565;
+  fill: var(--p-art-red-muted);
   fill-opacity: 1;
 }
 

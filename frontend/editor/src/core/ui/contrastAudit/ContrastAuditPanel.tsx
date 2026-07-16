@@ -1,9 +1,5 @@
-// Storybook contrast audit (dev/QA tool). Loads every Storybook story — the
-// component library, a proxy for the app surface but ONLY as far as stories
-// exist — in the scan frame below and, for each rendered text element, compares
-// its OWN text colour to the background colour it sits on. No axe, no full a11y
-// tree — just "text colour vs the colour it overlays", deduped per component +
-// colour pair. The heavy lifting lives in ./scan; this is the UI shell.
+// UI shell for the contrast audit (dev/QA tool). Scanning lives in ./scan;
+// coverage is whatever has a Storybook story, not the live app.
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -81,9 +77,7 @@ export function ContrastAuditPanel() {
     : 0;
 
   return (
-    // Own background so the panel is self-consistent — Storybook's canvas isn't
-    // theme-aware here, so without this, light dark-mode text lands on a light
-    // body → invisible.
+    // Own background — Storybook's canvas isn't theme-aware here.
     <div
       style={{
         maxWidth: 1080,

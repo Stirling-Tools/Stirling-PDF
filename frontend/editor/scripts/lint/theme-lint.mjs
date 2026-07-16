@@ -1,21 +1,23 @@
 #!/usr/bin/env node
-// Theme colour lint — guards the theme SYSTEM (core/theme/). Two modes:
+// Theme colour lint — guards the theme system + app-wide colour hygiene. Modes:
 //
 //   node theme-lint.mjs            enforce: literal colours live ONLY in
-//                                  primitives.css; colors/compat/dimensions must
-//                                  reference tokens; no duplicate primitives.
-//                                  (blocking)
-//   node theme-lint.mjs contrast   warn-only WCAG contrast report — the fixed
-//                                  --c-* pairs plus the status-tone text/fill
-//                                  pairs from tokens.css (never blocks)
-//
-// Scope is deliberately just core/theme/ — the palette + token layer this PR
-// owns, which is clean, so no baseline file is needed. Enforcing "no hardcoded
-// colours" across the whole app (260+ existing sites) is a separate migration.
+//                                  primitives.css; core/theme references tokens;
+//                                  no duplicate primitives. (blocking)
+//   node theme-lint.mjs css-colors enforce: NO hardcoded colour in any source
+//                                  .css (primitives.css + generated output.css
+//                                  exempt). Scope: all editor/src. (blocking)
+//   node theme-lint.mjs code-colors enforce: no hardcoded colour in TS/TSX DOM
+//                                  code (default-deny with layered exemptions;
+//                                  `// theme-allow-color` opt-out). (blocking)
+//   node theme-lint.mjs contrast   warn-only WCAG report — fixed --c-* pairs +
+//                                  status-tone text/fill pairs. (The tone gate
+//                                  below 1.6:1 is enforced in the default run.)
 //
 // Structural black / white / transparent (shadows, scrims) are always allowed.
 
 import { readFileSync, readdirSync } from "node:fs";
+import { execSync } from "node:child_process";
 import { relative, resolve, join } from "node:path";
 
 const THEME = resolve(process.cwd(), "editor/src/core/theme");
@@ -321,18 +323,10 @@ function reportContrast() {
 }
 
 // ── status-tone text on its own fill ─────────────────────────────────────────
-// The StatusBadge / Banner "tone" vocabulary pairs a text colour --color-{hue}
-// with a fill --color-{hue}-light (and a --color-{hue}-border), hand-authored
-// PER THEME in core/tokens/tokens.css. A copy-paste can alias the fill to the
-// text colour (fg == bg → invisible label), which the --c-* report never sees.
-// Two thresholds: anything below TONE_INVISIBLE (near-invisible) BLOCKS the
-// build; the softer WCAG floor (TONE_FLOOR) is advisory in the report, since
-// clearing full AA can need a badge-palette restyle beyond the token layer.
+// Checks --color-{hue} text against its --color-{hue}-light fill, per theme.
+// Below TONE_INVISIBLE blocks the build; TONE_FLOOR (WCAG AA) is advisory.
 const TOKENS_CSS = resolve(process.cwd(), "editor/src/core/tokens/tokens.css");
-const TONE_FLOOR = 3.0; // WCAG AA for large/bold UI text; badge labels are bold.
-// Below this the text is nearly the same tone as its fill — the original
-// "invisible badge" bug class. Called out distinctly so it can't hide among the
-// merely-marginal tones in the report.
+const TONE_FLOOR = 3.0;
 const TONE_INVISIBLE = 1.6;
 // Compute the contrast of every --color-{hue} text on its own --color-{hue}-light
 // fill, per theme. Returns [{ theme, base, fill, ratio|null }] — no printing, so
@@ -412,6 +406,135 @@ function reportToneContrast() {
   );
 }
 
+// ── css-colors (blocking): no hardcoded colour in ANY source .css ────────────
+// App-wide guard that source CSS routes every colour through the palette. File
+// list from `git ls-files` (a VCS query, never a directory walk feeding a read).
+// primitives.css (the literal home) and generated output.css are exempt.
+function checkAppCss() {
+  const EXEMPT = /(?:^|\/)(?:primitives\.css|output\.css)$/;
+  const listed = execSync("git ls-files -- editor/src", { encoding: "utf8" })
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l && l.endsWith(".css") && !EXEMPT.test(l));
+
+  const violations = [];
+  const lineOf = (text, index) => text.slice(0, index).split("\n").length;
+  for (const rel of listed) {
+    const text = stripComments(readFileSync(rel, "utf8"));
+    for (const re of [HEX_RE, FUNC_RE]) {
+      re.lastIndex = 0;
+      let m;
+      while ((m = re.exec(text)) !== null) {
+        if (/var\(/i.test(m[0])) continue; // rgb()/color-mix wrapping a token
+        const norm = normalizeColor(m[0]);
+        if (isStructuralColor(norm)) continue;
+        violations.push({
+          file: rel,
+          line: lineOf(text, m.index),
+          msg: `raw colour ${m[0]} — define it in primitives.css and use var(--p-…)`,
+        });
+      }
+    }
+    text.split("\n").forEach((line, i) => {
+      const colon = line.indexOf(":");
+      if (colon < 0 || /[{}]/.test(line)) return;
+      if (!/^\s*(?:--)?[a-z][a-z0-9-]*\s*$/i.test(line.slice(0, colon))) return;
+      const value = line
+        .slice(colon + 1)
+        .replace(/--[a-z0-9-]+/gi, " ")
+        .replace(/url\([^)]*\)/g, " ")
+        .replace(/["'][^"']*["']/g, " ");
+      for (const nm of value.match(NAMED_RE) || []) {
+        if (isStructuralName(nm)) continue;
+        violations.push({
+          file: rel,
+          line: i + 1,
+          msg: `named colour "${nm}" — define it in primitives.css and use var(--p-…)`,
+        });
+      }
+    });
+  }
+  return violations;
+}
+
+// ── code-colors (blocking): no hardcoded colour in TS/TSX DOM code ───────────
+// Default-deny with layered exemptions: structural black/white/transparent;
+// safe contexts on the line (var() fallback, canvas/pdf-lib rgb, an explicit
+// `// theme-allow-color` opt-out); and exempt PATHS where colour literals are
+// inherent (rendering/vendor/config/tests/stories).
+const CODE_EXEMPT_PATH = [
+  /Thumbnail|Overlay|DrawingCanvas|PageEditor|MobileScannerPage/,
+  /[Pp]df|PDF|pixelCompare|\/compare\.ts$|customPrimary|accentColors/,
+  /validateSignature\/outputtedPDFSections|CenteredMessageSection|StatusBadgeSection/,
+  /\/viewer\/|Annotation|useViewerReadAloud|CommentsSidebar|\/constants\/search\.ts$|SignaturePreview/,
+  /ColorPicker|ColorControl|WatchedFolderManagementModal|watchedFolderPresets|fileColors|unifiedBackground|folder\.ts$|policyFolders/,
+  /OAuthButtons|oauthCallbackHtml/,
+  /mantineTheme|\/theme\.ts$|toolsTaxonomy|LayoutPreview|PageNumberPreview|CloudStorageIcons/,
+  /\/onboarding\//,
+  /addStamp|addWatermark|\/tooltips\//,
+  /UpgradeBanner|AdminPlanSection/,
+  /\.test\.[jt]sx?$|\.stories\.[jt]sx?$|\/types\//,
+];
+const CODE_HEX =
+  /#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})(?![0-9a-fA-F])/g;
+const CODE_RGB = /rgba?\(([^)]*)\)/gi;
+const codeStructuralHex = (h) =>
+  /^#(?:000|fff|000f|ffff|000000|ffffff|00000000|ffffffff)$/i.test(h);
+const CODE_SKIP_LINE =
+  /theme-allow-color|var\(\s*--[a-z0-9-]+\s*,|readColor\(|getPropertyValue|\.colors\.[a-z]+\?\.\[|fillStyle|strokeStyle|shadowColor|addColorStop|createLinearGradient|ctx\.|getContext/i;
+function codeStripNonCode(text) {
+  return text
+    .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
+    .replace(
+      /(^|[^:])\/\/[^\n]*/g,
+      (m, p) => p + m.slice(p.length).replace(/[^\n]/g, " "),
+    )
+    .replace(/&#\d+;/g, "     ");
+}
+function codeRgbIsColour(inner) {
+  if (/var\(/.test(inner)) return false;
+  const p = inner
+    .split(/[, /]+/)
+    .map((x) => x.trim())
+    .filter(Boolean);
+  if (!/^\d/.test(p[0] || "")) return false;
+  const nums = p.slice(0, 3).map(Number);
+  if (nums.some((n) => Number.isNaN(n))) return false;
+  if (nums.every((n) => n <= 1)) return false; // pdf-lib rgb(0..1)
+  const k = `${nums[0]},${nums[1]},${nums[2]}`;
+  return k !== "0,0,0" && k !== "255,255,255";
+}
+function checkCodeColors() {
+  const files = execSync("git ls-files -- editor/src", { encoding: "utf8" })
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(
+      (l) => /\.(ts|tsx)$/.test(l) && !CODE_EXEMPT_PATH.some((re) => re.test(l)),
+    );
+  const violations = [];
+  for (const rel of files) {
+    const raw = readFileSync(rel, "utf8");
+    const rawLines = raw.split("\n");
+    const text = codeStripNonCode(raw);
+    text.split("\n").forEach((line, i) => {
+      if (/theme-allow-color/.test(rawLines[i] || "")) return;
+      if (CODE_SKIP_LINE.test(line)) return;
+      const hits = [];
+      for (const h of line.match(CODE_HEX) || [])
+        if (!codeStructuralHex(h)) hits.push(h);
+      for (const m of line.match(CODE_RGB) || [])
+        if (codeRgbIsColour(m.replace(/rgba?\(|\)/gi, ""))) hits.push(m);
+      for (const h of hits)
+        violations.push({
+          file: rel,
+          line: i + 1,
+          msg: `hardcoded colour ${h} — use a var(--c-*/--p-*) token, or add \`// theme-allow-color <reason>\` if it must be a literal`,
+        });
+    });
+  }
+  return violations;
+}
+
 // ── CLI ──────────────────────────────────────────────────────────────────────
 if (process.argv.includes("contrast")) {
   reportContrast();
@@ -419,10 +542,32 @@ if (process.argv.includes("contrast")) {
   process.exit(0); // never blocks
 }
 
+if (process.argv.includes("css-colors")) {
+  const v = checkAppCss();
+  if (v.length) {
+    console.error(`\n✖ theme-lint css-colors: ${v.length} hardcoded colour(s) in source CSS:\n`);
+    for (const x of v) console.error(`  ${x.file}:${x.line}  ${x.msg}`);
+    console.error(`\nDefine every colour once in core/theme/primitives.css and reference it with var(--p-…).\n`);
+    process.exit(1);
+  }
+  console.log("✓ theme-lint css-colors: source CSS is free of hardcoded colour");
+  process.exit(0);
+}
+
+if (process.argv.includes("code-colors")) {
+  const v = checkCodeColors();
+  if (v.length) {
+    console.error(`\n✖ theme-lint code-colors: ${v.length} hardcoded colour(s) in TS/TSX:\n`);
+    for (const x of v) console.error(`  ${x.file}:${x.line}  ${x.msg}`);
+    console.error("");
+    process.exit(1);
+  }
+  console.log("✓ theme-lint code-colors: no hardcoded colour in TS/TSX DOM code (rendering/vendor/config areas exempt)");
+  process.exit(0);
+}
+
 const violations = check();
-// Block status tones whose text is near-invisible on its own fill (< 1.6:1) in
-// either theme. The softer WCAG floor (3.0) stays advisory in the report; only
-// the "you literally can't read it" band fails the build.
+// Block near-invisible status tones (< TONE_INVISIBLE) in either theme.
 const toneViolations = toneContrastResults().filter(
   (r) => r.ratio != null && r.ratio < TONE_INVISIBLE,
 );

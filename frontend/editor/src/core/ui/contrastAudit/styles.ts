@@ -1,6 +1,4 @@
-// Inline styles for the audit panel. It's a dev/QA tool rendered only in
-// Storybook, so it uses plain inline styles (with token fallbacks) rather than
-// a stylesheet — no need to ship CSS for it.
+// Inline styles for the audit panel (dev-only, no shipped stylesheet).
 
 import { type CSSProperties } from "react";
 

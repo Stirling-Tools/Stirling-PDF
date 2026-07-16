@@ -1,5 +1,4 @@
-// Pure colour maths for the contrast audit — no DOM, no React. Kept separate so
-// it's trivially unit-testable and reusable by the scanner.
+// Pure colour maths — no DOM, no React.
 
 export interface Rgb {
   r: number;

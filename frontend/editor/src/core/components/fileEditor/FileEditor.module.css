@@ -48,7 +48,7 @@
 }
 
 .headerResting {
-  background: #3b4b6e; /* dark blue for unselected in light mode */
+  background: var(--p-navy-500); /* dark blue for unselected in light mode */
   color: #ffffff;
   border-bottom: 1px solid var(--border-default);
 }
@@ -229,13 +229,13 @@
 }
 
 .pinned {
-  color: #ffc107 !important;
+  color: var(--p-c-ffc107) !important;
 }
 
 /* Unsupported file indicator */
 .unsupportedPill {
   margin-left: 1.75rem;
-  background: #6b7280;
+  background: var(--p-gray-500);
   color: white;
   padding: 4px 8px;
   border-radius: 12px;
@@ -291,36 +291,36 @@
    DARK MODE OVERRIDES
    ========================= */
 :global([data-mantine-color-scheme="dark"]) .card {
-  outline-color: #1c2340; /* deselected stroke */
+  outline-color: var(--p-c-1c2340); /* deselected stroke */
 }
 
 :global([data-mantine-color-scheme="dark"]) .card[data-selected="true"] {
-  outline-color: #2d3560; /* selected stroke (subtle navy) */
+  outline-color: var(--p-c-2d3560); /* selected stroke (subtle navy) */
 }
 
 :global([data-mantine-color-scheme="dark"]) .headerResting {
-  background: #0d1020; /* requested default unselected color */
-  color: var(--tool-header-text); /* #D0D6DC */
-  border-bottom-color: var(--tool-header-border); /* #3A4047 */
+  background: var(--p-navy-950); /* requested default unselected color */
+  color: var(--tool-header-text); /* #d0d6dc */
+  border-bottom-color: var(--tool-header-border); /* #3a4047 */
 }
 
 :global([data-mantine-color-scheme="dark"]) .headerSelected {
-  background: var(--tool-header-border); /* #3A4047 */
-  color: var(--tool-header-text); /* #D0D6DC */
+  background: var(--tool-header-border); /* #3a4047 */
+  color: var(--tool-header-text); /* #d0d6dc */
   border-bottom-color: var(--tool-header-border);
 }
 
 :global([data-mantine-color-scheme="dark"]) .title {
-  color: #d0d6dc; /* title text */
+  color: var(--p-c-d0d6dc); /* title text */
 }
 
 :global([data-mantine-color-scheme="dark"]) .meta {
-  color: #6b7280; /* subtitle text */
+  color: var(--p-gray-500); /* subtitle text */
 }
 
 /* Light mode selected header stroke override */
 :global([data-mantine-color-scheme="light"]) .card[data-selected="true"] {
-  outline-color: #3b4b6e;
+  outline-color: var(--p-navy-500);
 }
 
 /* =========================
