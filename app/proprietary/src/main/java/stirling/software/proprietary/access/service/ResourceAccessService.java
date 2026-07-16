@@ -214,11 +214,13 @@ public class ResourceAccessService {
         };
     }
 
-    // Portal (no owner) admits any team lead; a team-owned resource admits only that team's
-    // leads; a user-owned resource admits no extra leads.
+    // Portal (no owner) admits the leader of the user's active team; a team-owned resource
+    // admits only that team's leads; a user-owned resource admits no extra leads.
     private boolean matchesTeamLeadDefault(PrincipalRef owner, User user) {
         if (owner == null) {
-            return teamLeadLookup.isAnyTeamLeader(user);
+            return user.getTeam() != null
+                    && user.getTeam().getId() != null
+                    && teamLeadLookup.isLeaderOfTeam(user, user.getTeam().getId());
         }
         return owner.type() == PrincipalType.TEAM
                 && owner.id() != null
