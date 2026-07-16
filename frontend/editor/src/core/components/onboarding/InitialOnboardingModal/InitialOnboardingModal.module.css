@@ -330,20 +330,199 @@
 .welcomeTitleContainer {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 12px;
 }
 
 .v2Badge {
   background: #dbefff;
   color: #2a4bff;
-  padding: 4px 12px;
+  padding: 3px 9px;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
 }
 
 /* Icon styles */
 .heroIcon {
-  color: #000000;
+  color: var(--onboarding-title, #0f172a);
+}
+
+/* ===================================================================== */
+/* Redesigned modal card — branded header, progress, hero panel, footer. */
+/* ===================================================================== */
+
+.card {
+  background: var(--bg-surface);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- header: brand (left) + step pill / close (right) ---- */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.brandLogo {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  object-fit: contain;
+}
+
+.wordmark {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--onboarding-title, #0f172a);
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stepPill {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--onboarding-body, #64748b);
+  background: var(--bg-muted, #f1f5f9);
+  padding: 5px 11px;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+/* ---- segmented progress bar ---- */
+.progressTrack {
+  display: flex;
+  gap: 6px;
+  padding: 0 20px 12px;
+}
+
+.progressSeg {
+  flex: 1;
+  height: 5px;
+  border-radius: 9999px;
+  background: var(--onboarding-step-inactive, #e2e8f0);
+  transition: background 0.2s ease;
+}
+
+.progressSegDone {
+  background: var(--color-blue, #3b82f6);
+}
+
+.divider {
+  height: 1px;
+  background: var(--border-subtle, rgba(15, 23, 42, 0.08));
+}
+
+/* ---- content ---- */
+.content {
+  padding: 18px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  max-height: calc(90vh - 120px);
+}
+
+/* ---- inset hero panel ---- */
+.heroPanel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 128px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: linear-gradient(155deg, #eef1fb 0%, #f6f4fc 55%, #fbf4f7 100%);
+}
+
+.heroArt {
+  position: relative;
+  z-index: 1;
+  animation: heroLogoScale 0.25s ease forwards;
+}
+
+.heroAppIcon {
+  width: 62px;
+  height: 62px;
+  border-radius: 15px;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 20px rgba(15, 23, 42, 0.16));
+}
+
+.heroTile {
+  width: 62px;
+  height: 62px;
+  border-radius: 15px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.14);
+}
+
+/* ---- title + body (left-aligned, clean) ---- */
+.titleNew {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  color: var(--onboarding-title, #0f172a);
+  text-align: left;
+}
+
+.bodyNew {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--onboarding-body, #475569);
+  text-align: left;
+}
+
+/* ---- footer actions ---- */
+.footer {
+  margin-top: 4px;
+}
+
+.footerGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footerEnd {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.footerBetween {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* ---- dark theme surface tuning ---- */
+:global([data-mantine-color-scheme="dark"]) .heroPanel {
+  background: linear-gradient(155deg, #1a2236 0%, #171e30 55%, #201a28 100%);
+}
+
+:global([data-mantine-color-scheme="dark"]) .heroTile {
+  background: #0f1626;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+}
+
+:global([data-mantine-color-scheme="dark"]) .divider {
+  background: rgba(255, 255, 255, 0.08);
 }

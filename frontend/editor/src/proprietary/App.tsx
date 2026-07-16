@@ -17,6 +17,7 @@ import Onboarding from "@app/components/onboarding/Onboarding";
 import WatchedFoldersRegistration from "@app/components/watchedFolders/WatchedFoldersRegistration";
 import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
 import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
+import { LoginLandingRedirect } from "@app/components/LoginLandingRedirect";
 
 // Import global styles
 import "@app/styles/tailwind.css";
@@ -78,6 +79,7 @@ export default function App() {
           element={
             <AppProviders>
               <AppLayout>
+                <LoginLandingRedirect />
                 <Routes>
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
