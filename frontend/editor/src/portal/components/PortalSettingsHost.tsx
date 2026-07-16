@@ -5,6 +5,7 @@ import { AppConfigProvider } from "@app/contexts/AppConfigContext";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import { ThemeProvider } from "@app/components/shared/ThemeProvider";
 import { AuthProvider } from "@app/auth/UseSession";
+import { LicenseProvider } from "@app/contexts/LicenseContext";
 import {
   VALID_NAV_KEYS,
   type ConfigNavSection,
@@ -19,9 +20,11 @@ import { useUI } from "@portal/contexts/UIContext";
  * this host supplies the contexts the settings tree needs: app config, user
  * preferences, the session provider the account sections read (flavor-resolved:
  * Spring on self-hosted, Supabase on SaaS — same underlying session the portal
- * is already signed in with), and the editor ThemeProvider (which also carries
- * the Mantine theme + toasts the sections expect). URL sync is off — the portal
- * owns its own route subtree, so the modal keeps its section purely in state.
+ * is already signed in with), the editor ThemeProvider (which also carries the
+ * Mantine theme + toasts the sections expect), and the license context the
+ * admin Plan section (and its license-key panel) read. URL sync is off — the
+ * portal owns its own route subtree, so the modal keeps its section purely in
+ * state.
  *
  * Everything (providers included) mounts on first open and stays mounted, so
  * the editor theme wiring never runs for portal sessions that never open
@@ -69,13 +72,15 @@ export function PortalSettingsHost() {
       <AuthProvider>
         <PreferencesProvider>
           <ThemeProvider>
-            <AppConfigModalLazy
-              opened={settingsOpen}
-              onClose={closeSettings}
-              urlSync={false}
-              initialSection={initialSection}
-              extraSections={extraSections}
-            />
+            <LicenseProvider>
+              <AppConfigModalLazy
+                opened={settingsOpen}
+                onClose={closeSettings}
+                urlSync={false}
+                initialSection={initialSection}
+                extraSections={extraSections}
+              />
+            </LicenseProvider>
           </ThemeProvider>
         </PreferencesProvider>
       </AuthProvider>
