@@ -36,6 +36,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.InternalApiClient;
+import stirling.software.proprietary.audit.AuditContext;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
@@ -715,6 +716,57 @@ class AuditServiceTest {
             when(jwtService.extractClaimsAllowExpired("tok")).thenReturn(Map.of("authType", "API"));
 
             assertThat(service.captureCurrentOrigin()).isEqualTo("API");
+        }
+    }
+
+    @Nested
+    @DisplayName("addAutomationContext")
+    class AddAutomationContext {
+
+        @Test
+        @DisplayName("caps and strips newlines from a spoofable policy-name header")
+        void capsPolicyNameHeader() {
+            MockHttpServletRequest req =
+                    new MockHttpServletRequest("POST", "/api/v1/misc/compress-pdf");
+            req.addHeader(InternalApiClient.POLICY_NAME_HEADER, "evil\r\nname" + "x".repeat(500));
+            Map<String, Object> data = new HashMap<>();
+
+            service.addAutomationContext(data, req);
+
+            String stored = (String) data.get("policyName");
+            assertThat(stored).hasSize(200);
+            assertThat(stored).doesNotContain("\r").doesNotContain("\n");
+        }
+
+        @Test
+        @DisplayName("caps the number of persisted policy steps")
+        void capsPolicySteps() {
+            MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/policies/run");
+            req.setAttribute(
+                    AuditContext.REQ_ATTR_POLICY_STEPS,
+                    java.util.stream.IntStream.range(0, 100)
+                            .mapToObj(i -> "/api/v1/misc/step-" + i)
+                            .toList());
+            Map<String, Object> data = new HashMap<>();
+
+            service.addAutomationContext(data, req);
+
+            @SuppressWarnings("unchecked")
+            java.util.List<String> stored = (java.util.List<String>) data.get("policySteps");
+            assertThat(stored).hasSize(50);
+        }
+
+        @Test
+        @DisplayName("marks automation from the header")
+        void marksAutomationHeader() {
+            MockHttpServletRequest req =
+                    new MockHttpServletRequest("POST", "/api/v1/misc/compress-pdf");
+            req.addHeader(InternalApiClient.AUTOMATION_HEADER, "true");
+            Map<String, Object> data = new HashMap<>();
+
+            service.addAutomationContext(data, req);
+
+            assertThat(data).containsEntry("automation", Boolean.TRUE);
         }
     }
 

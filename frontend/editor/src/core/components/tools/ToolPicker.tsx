@@ -197,7 +197,7 @@ const ToolPicker = ({
         ) : (
           <>
             {/* All-tools view: favourites + recommended + all subcategories. */}
-            <Stack p="sm" gap="xs">
+            <Stack px="sm" pb="sm" pt={4} gap="xs">
               {favoriteToolItems.length > 0 && (
                 <Box w="100%">
                   <div style={HEADER_TEXT_STYLE}>

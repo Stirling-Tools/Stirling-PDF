@@ -129,6 +129,8 @@ export function FreePlanView({ wallet, unsynced, onSubscribed }: Props) {
           onClose={() => setModalOpen(false)}
           teamId={wallet.teamId}
           currency={currency}
+          pricePerDocMinor={wallet.pricePerDocMinor}
+          initialCapUsd={wallet.capUsd}
           onComplete={() => onSubscribed?.() ?? Promise.resolve(false)}
         />
       )}

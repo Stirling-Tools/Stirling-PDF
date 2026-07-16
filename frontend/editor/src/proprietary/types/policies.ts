@@ -17,9 +17,6 @@ import type {
 /** Lifecycle status of a policy category for the current user/org. */
 export type PolicyStatus = "default" | "active" | "paused";
 
-/** Derived display status for a row/detail (treats a spend-limit hit as paused). */
-export type PolicyRowStatus = "active" | "paused" | "setup";
-
 /** A configurable field within a policy's settings. */
 export type PolicyFieldType = "toggle" | "select" | "chips" | "text";
 
@@ -60,7 +57,7 @@ export interface PolicyCategory {
 
 /**
  * The three-up summary stats shown at the foot of a configured policy's detail,
- * derived live from the user's uploaded files (see policyLiveData).
+ * derived live from the user's uploaded files.
  */
 export interface PolicyStats {
   /** Documents enforced (rendered with toLocaleString). */
@@ -231,6 +228,3 @@ export interface PolicyConfigResult {
   reviewerEmail: string;
   folder: PolicyFolderSettings;
 }
-
-/** Which sub-view of a configured policy's detail panel is showing. */
-export type PolicyDetailView = "detail" | "settings";

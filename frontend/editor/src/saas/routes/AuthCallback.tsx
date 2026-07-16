@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@app/auth/supabase";
 import { Button } from "@app/ui/Button";
 import { withBasePath } from "@app/constants/app";
+import { markLoginLandingPending } from "@app/utils/loginLanding";
 
 interface CallbackState {
   status: "processing" | "success" | "error";
@@ -122,9 +123,16 @@ export default function AuthCallback() {
           }
         }
 
-        // Redirect to the intended destination
-        const destination = next.startsWith("/") ? next : "/";
+        // Redirect to the intended destination. Reject protocol-relative
+        // "//host" values (same guard as Login's `next`) so a crafted callback
+        // URL can't bounce the user off-origin after sign-in.
+        const destination =
+          next.startsWith("/") && !next.startsWith("//") ? next : "/";
         console.log("[Auth Callback Debug] Redirecting to:", destination);
+
+        // Fresh OAuth / magic-link login with no explicit destination: let the
+        // role-based landing redirect route team leads to the processor.
+        if (destination === "/") markLoginLandingPending();
 
         setTimeout(() => navigate(destination, { replace: true }), 1500);
       } catch (err) {

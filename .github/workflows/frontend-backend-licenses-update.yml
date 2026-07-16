@@ -25,7 +25,7 @@ jobs:
   files-changed:
     name: detect what files changed
     needs: pick
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    runs-on: ${{ needs.pick.outputs.use_depot == 'true' && 'depot-ubuntu-24.04-4' || 'ubuntu-latest' }}
     timeout-minutes: 3
     outputs:
       licenses-frontend: ${{ steps.changes.outputs.licenses-frontend }}
@@ -49,7 +49,7 @@ jobs:
     if: needs.files-changed.outputs.licenses-frontend == 'true'
     name: Generate Frontend License Report
     needs: [pick, files-changed]
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    runs-on: ${{ needs.pick.outputs.use_depot == 'true' && 'depot-ubuntu-24.04-4' || 'ubuntu-latest' }}
     permissions:
       contents: write
       pull-requests: write
@@ -320,7 +320,7 @@ jobs:
     if: needs.files-changed.outputs.licenses-backend == 'true'
     needs: [pick, files-changed]
     name: Generate Backend License Report
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    runs-on: ${{ needs.pick.outputs.use_depot == 'true' && 'depot-ubuntu-24.04-4' || 'ubuntu-latest' }}
     permissions:
       contents: write
       pull-requests: write
