@@ -6,13 +6,11 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.stereotype.Component;
 
 import stirling.software.common.configuration.InstallationPathConfig;
 
 @Component
-@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class WebhookSpool {
 
     private static final String SPOOL_DIR = "policy-webhook-spool";

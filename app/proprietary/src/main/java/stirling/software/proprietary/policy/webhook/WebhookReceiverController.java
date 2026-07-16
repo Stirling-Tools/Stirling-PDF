@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -35,7 +34,6 @@ import stirling.software.proprietary.policy.trigger.WebhookTrigger;
 @Hidden
 @RequiredArgsConstructor
 @Tag(name = "Webhooks", description = "Inbound webhook source receiver")
-@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class WebhookReceiverController {
 
     static final String SIGNATURE_HEADER = "X-Stirling-Signature";

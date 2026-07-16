@@ -89,10 +89,10 @@ def _capture_docker_logs_window(start_line, scenario_name):
 
 
 def _check_policies_available():
-    """Probe whether the policies feature (webhook sources) is enabled.
+    """Probe whether webhook sources can be created (proprietary policy feature).
 
     Creates a throwaway webhook source: a 200 with a minted webhookId means the
-    policy input beans are wired (policies.enabled=true). The probe source is
+    webhook beans are present (a proprietary build). The probe source is
     best-effort deleted afterwards.
     """
     try:
@@ -135,8 +135,8 @@ def before_all(context):
     context.policies_available = _check_policies_available()
     if not context.policies_available:
         print(
-            "\n[POLICIES] The policies feature is not enabled in this environment "
-            "(policies.enabled=false). Scenarios tagged @policies/@webhook will be skipped."
+            "\n[POLICIES] Webhook sources are not available in this environment "
+            "(e.g. a core-only build). Scenarios tagged @policies/@webhook will be skipped."
         )
 
 
@@ -153,8 +153,8 @@ def before_scenario(context, scenario):
 
     if _POLICIES_DEPENDENT_TAGS & scenario_tags and not context.policies_available:
         scenario.skip(
-            "Policies feature not enabled in this environment (policies.enabled=false). "
-            "Run against a server with policies.enabled=true to execute these scenarios."
+            "Webhook sources not available in this environment (e.g. a core-only build). "
+            "Run against a proprietary build to execute these scenarios."
         )
         return
 

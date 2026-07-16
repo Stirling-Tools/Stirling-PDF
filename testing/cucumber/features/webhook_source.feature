@@ -1,7 +1,7 @@
 @policies @webhook
 Feature: Webhook input source
-  # Requires the policies feature (policies.enabled=true). Scenarios are skipped
-  # automatically when the server has policies disabled (see environment.py).
+  # Requires the proprietary policy feature (webhook sources). Scenarios are
+  # skipped automatically when webhook sources are unavailable (see environment.py).
   # A webhook source mints a delivery URL + signing secret; senders POST signed
   # documents which are spooled for the referencing policies.
 
