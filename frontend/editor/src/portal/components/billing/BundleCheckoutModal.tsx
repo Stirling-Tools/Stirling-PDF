@@ -453,10 +453,8 @@ function PaymentStep({
     })
       .then((session) => {
         if (cancelled) return;
-        if (session.redirectUrl && !session.clientSecret) {
-          window.open(session.redirectUrl, "_blank", "noopener,noreferrer");
-          return;
-        }
+        // Bundle checkout is embedded-only (the edge fn returns a client_secret, never a redirect
+        // URL), so there's no hosted-redirect branch to handle here.
         setClientSecret(session.clientSecret);
       })
       .catch((e) => {
