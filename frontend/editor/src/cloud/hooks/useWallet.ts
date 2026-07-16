@@ -50,12 +50,6 @@ import apiClient from "@app/services/apiClient";
 import { createPortalSession } from "@app/services/billing";
 import { openExternal } from "@app/platform/openExternal";
 import { getWalletDevPreview } from "@app/hooks/walletDevPreview";
-import {
-  bundleListMinor,
-  bundlePriceMinor,
-  PREPAID_MONTHS_GRANTED,
-  PREPAID_MONTHS_PAID,
-} from "@app/billing";
 import type {
   Wallet,
   WalletStatus,
@@ -63,7 +57,6 @@ import type {
   WalletMember,
   WalletCategoryBreakdown,
   WalletActivityRow,
-  BundleQuote,
 } from "@app/billing";
 
 // ─── Public types ───────────────────────────────────────────────────────
@@ -76,7 +69,6 @@ export type {
   WalletMember,
   WalletCategoryBreakdown,
   WalletActivityRow,
-  BundleQuote,
 };
 
 export interface UseWalletResult {
@@ -110,15 +102,6 @@ export interface UseWalletResult {
    * {@code team_not_subscribed}.
    */
   openPortal: () => Promise<void>;
-  /**
-   * Price a prepaid-bundle purchase of {@code units} capacity, carrying the buyer's
-   * affirmative consent (ARL/EULA §7.2) as the agreed {@code eulaVersion} — captured
-   * before payment in the checkout modal. Leader-only on the backend ({@code POST
-   * /api/v1/payg/bundle/quote}), which refuses a quote without consent; returns a
-   * short-lived quote ticket the checkout flow hands to the bundle-checkout edge
-   * function. Throws on a non-2xx (403 members / 400 no consent).
-   */
-  quoteBundle: (units: number, eulaVersion: string) => Promise<BundleQuote>;
 }
 
 // ─── Implementation ─────────────────────────────────────────────────────
@@ -350,40 +333,6 @@ export function useWallet(): UseWalletResult {
     await openExternal(url);
   }, [devPreview, wallet?.teamId]);
 
-  const quoteBundle = useCallback(
-    async (units: number, eulaVersion: string): Promise<BundleQuote> => {
-      if (devPreview) {
-        // No backend on the dev-preview route — synthesise a quote off the
-        // synthesised wallet's rate so the calculator + checkout flow render.
-        const rate = wallet?.pricePerDocMinor ?? null;
-        const list = bundleListMinor(units, rate);
-        const total = bundlePriceMinor(units, rate);
-        return {
-          quoteId: -1,
-          units,
-          currency: wallet?.currency ?? "usd",
-          unitAmountMinor: rate,
-          listAmountMinor: list,
-          totalAmountMinor: total,
-          savingsMinor: list != null && total != null ? list - total : null,
-          monthsGranted: PREPAID_MONTHS_GRANTED,
-          monthsPaid: PREPAID_MONTHS_PAID,
-          expiresAt: "",
-        };
-      }
-      const res = await apiClient.post<BundleQuote>(
-        "/api/v1/payg/bundle/quote",
-        {
-          units,
-          consented: true,
-          eulaVersion,
-        },
-      );
-      return res.data;
-    },
-    [devPreview, wallet?.pricePerDocMinor, wallet?.currency],
-  );
-
   return {
     wallet,
     loading,
@@ -392,6 +341,5 @@ export function useWallet(): UseWalletResult {
     markSubscribed,
     updateCap,
     openPortal,
-    quoteBundle,
   };
 }

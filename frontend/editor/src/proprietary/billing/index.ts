@@ -5,7 +5,6 @@ export type {
   WalletMember,
   WalletCategoryBreakdown,
   WalletActivityRow,
-  BundleQuote,
 } from "@app/billing/types";
 export {
   DEFAULT_CAP_PRESETS,

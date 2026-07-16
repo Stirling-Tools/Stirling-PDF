@@ -40,22 +40,6 @@ export interface CheckoutSession {
   mock?: boolean;
 }
 
-/**
- * Parameters for {@link createBundleCheckoutSession}, which drives the
- * {@code create-payg-bundle-checkout} edge function. The one-time bundle purchase
- * is priced from a server-issued {@link quoteId} (leader-authorized ticket from
- * {@code POST /api/v1/payg/bundle/quote}) — the edge fn reads the capacity off
- * that ticket, so the client can't dictate the quantity. {@link teamId} is passed
- * for the same reason {@link CheckoutParams} does (the fn runs outside Spring
- * Security).
- */
-export interface BundleCheckoutParams {
-  /** The caller's team id — scopes the purchase. */
-  teamId: number;
-  /** Server-issued quote ticket id from the bundle quote endpoint. */
-  quoteId: number;
-}
-
 /** Result of {@link createPortalSession}. */
 export interface PortalSession {
   /** Stripe Customer Portal URL to send the user to. */
@@ -82,18 +66,6 @@ export async function createCheckoutSession(
 export async function createPortalSession(
   _params: PortalParams,
 ): Promise<PortalSession> {
-  throw new Error("billing: platform impl required");
-}
-
-/**
- * Create a one-time Stripe Checkout Session for a prepaid bundle purchase via the
- * SaaS billing backend (platform impl required). Same return shape as
- * {@link createCheckoutSession} — embedded {@code clientSecret} or hosted
- * {@code url}.
- */
-export async function createBundleCheckoutSession(
-  _params: BundleCheckoutParams,
-): Promise<CheckoutSession> {
   throw new Error("billing: platform impl required");
 }
 

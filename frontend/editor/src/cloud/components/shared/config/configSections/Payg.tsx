@@ -31,14 +31,13 @@ import {
   PrepaidCapacityMeterPanel,
   prepaidSnapshotFromWallet,
 } from "@app/components/shared/config/configSections/usageMeters";
-import BundleCheckoutModal from "@app/components/shared/config/configSections/BundleCheckoutModal";
 // Relative (not @app/*) so the co-located CSS + sibling component resolve directly.
 // eslint-disable-next-line no-restricted-imports
 import "./Payg.css";
 // eslint-disable-next-line no-restricted-imports
 import SpendCapControl from "./SpendCapControl";
 import { useTranslation } from "react-i18next";
-import type { BundleQuote, Wallet } from "@app/hooks/useWallet";
+import type { Wallet } from "@app/hooks/useWallet";
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -59,14 +58,6 @@ interface PaygProps {
    * don't need to wrap in try/catch.
    */
   onOpenPortal?: () => Promise<void>;
-  /**
-   * Server-price a prepaid-bundle purchase; provided by {@code Plan} →
-   * {@code useWallet} for the leader view. When omitted (member view) the
-   * prepaid purchase / top-up CTAs are hidden.
-   */
-  quoteBundle?: (units: number, eulaVersion: string) => Promise<BundleQuote>;
-  /** Refetch the wallet after a completed bundle purchase (leader view). */
-  onBought?: () => void;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -694,12 +685,8 @@ function daysUntil(iso: string | null): number | null {
  */
 function PrepaidBanner({
   snap,
-  canBuy,
-  onTopUp,
 }: {
   snap: NonNullable<ReturnType<typeof prepaidSnapshotFromWallet>>;
-  canBuy: boolean;
-  onTopUp: () => void;
 }) {
   const { t } = useTranslation();
   const pctLeft = snap.total > 0 ? (snap.remaining / snap.total) * 100 : 0;
@@ -728,42 +715,8 @@ function PrepaidBanner({
 
   return (
     <Alert color={exhausted ? "red" : "yellow"} variant="light">
-      <Group justify="space-between" align="center" wrap="nowrap">
-        <span>{message}</span>
-        {canBuy && (
-          <Button variant="secondary" onClick={onTopUp}>
-            {t("payg.prepaid.banner.topUp", "Top up")}
-          </Button>
-        )}
-      </Group>
+      <span>{message}</span>
     </Alert>
-  );
-}
-
-/**
- * Prepay nudge for a metered team that holds no bundle yet — mirrors the demo's commit-nudge card
- * ("Get 12 months for the price of 10" · "Review offer"), slotted right under the usage/limit area.
- * Leader-only (buying is a commercial action).
- */
-function PrepaidBuyCard({ onBuy }: { onBuy: () => void }) {
-  const { t } = useTranslation();
-  return (
-    <div className="payg-stripe">
-      <div>
-        <div className="payg-stripe__title">
-          {t("payg.prepaid.buyCard.title", "Get 12 months for the price of 10")}
-        </div>
-        <div className="payg-stripe__subtitle">
-          {t(
-            "payg.prepaid.buyCard.subtitle",
-            "Prepay a year of PDF processing and get two months free — used before metered billing, outside your spend cap.",
-          )}
-        </div>
-      </div>
-      <Button onClick={onBuy} variant="secondary">
-        {t("payg.prepaid.buyCard.cta", "Review offer")}
-      </Button>
-    </div>
   );
 }
 
@@ -774,20 +727,14 @@ const Payg: React.FC<PaygProps> = ({
   wallet,
   onSaveCap,
   onOpenPortal,
-  quoteBundle,
-  onBought,
 }) => {
   useRenderCount(role === "LEADER" ? "PaygLeader" : "PaygMember");
   const { t } = useTranslation();
   const isLeader = role === "LEADER";
-  const [bundleOpen, setBundleOpen] = useState(false);
   const prepaid = prepaidSnapshotFromWallet(wallet);
-  // Prepaid buy/top-up is disabled here: this editor path posts the old quote_id contract, which the
-  // now-quote-less create-payg-bundle-checkout edge fn rejects (400/409). The live buy flow lives on
-  // the portal Processor page. This whole editor Plan page is being removed on a separate branch; the
-  // dead quote path (quoteBundle, BundleCheckoutModal/Panel, saas/desktop bundle-session impls) is torn
-  // down with it. Display of an existing prepaid balance still works.
-  const canBuy = false;
+  // Read-only prepaid display. The buy/top-up flow lives on the portal Processor page (the
+  // create-payg-bundle-checkout edge fn is driven from there); this editor Plan page only shows an
+  // existing prepaid balance and is slated for removal on a separate branch.
 
   const fmt = (iso: string) =>
     new Date(iso).toLocaleDateString(undefined, {
@@ -798,13 +745,7 @@ const Payg: React.FC<PaygProps> = ({
   return (
     <div className="payg">
       <Stack gap="md">
-        {prepaid && (
-          <PrepaidBanner
-            snap={prepaid}
-            canBuy={canBuy}
-            onTopUp={() => setBundleOpen(true)}
-          />
-        )}
+        {prepaid && <PrepaidBanner snap={prepaid} />}
 
         {/* The modal chrome already renders the section title ("Billing &
             usage"), so we lead with the descriptive subtitle + role pill. */}
@@ -893,16 +834,6 @@ const Payg: React.FC<PaygProps> = ({
                 </div>
               </div>
               <PrepaidCapacityMeterPanel snap={prepaid} />
-              {canBuy && (
-                <Group justify="flex-end">
-                  <Button
-                    variant="secondary"
-                    onClick={() => setBundleOpen(true)}
-                  >
-                    {t("payg.prepaid.card.topUp", "Top up")}
-                  </Button>
-                </Group>
-              )}
             </Stack>
           </div>
         )}
@@ -919,11 +850,6 @@ const Payg: React.FC<PaygProps> = ({
           <CapReadOnly capUsd={wallet.capUsd} noCap={wallet.noCap} />
         )}
 
-        {/* Prepay nudge sits right under the spend limit, as in the demo — before member usage. */}
-        {!prepaid && canBuy && (
-          <PrepaidBuyCard onBuy={() => setBundleOpen(true)} />
-        )}
-
         {isLeader && wallet.members.length > 0 && (
           <MemberUsage members={wallet.members} />
         )}
@@ -934,22 +860,6 @@ const Payg: React.FC<PaygProps> = ({
           <StripePortalLink onOpenPortal={onOpenPortal} />
         )}
       </Stack>
-
-      {canBuy && wallet.teamId != null && quoteBundle && (
-        <BundleCheckoutModal
-          open={bundleOpen}
-          teamId={wallet.teamId}
-          pricePerDocMinor={wallet.pricePerDocMinor}
-          currency={wallet.currency}
-          quoteBundle={quoteBundle}
-          topUp={!!prepaid}
-          onClose={() => setBundleOpen(false)}
-          onComplete={() => {
-            setBundleOpen(false);
-            onBought?.();
-          }}
-        />
-      )}
     </div>
   );
 };
@@ -964,25 +874,17 @@ export interface PaygLeaderProps {
   onSaveCap?: (capUsd: number | null) => Promise<void> | void;
   /** See {@link PaygProps#onOpenPortal}. */
   onOpenPortal?: () => Promise<void>;
-  /** See {@link PaygProps#quoteBundle}. */
-  quoteBundle?: (units: number, eulaVersion: string) => Promise<BundleQuote>;
-  /** See {@link PaygProps#onBought}. */
-  onBought?: () => void;
 }
 export const PaygLeader: React.FC<PaygLeaderProps> = ({
   wallet,
   onSaveCap,
   onOpenPortal,
-  quoteBundle,
-  onBought,
 }) => (
   <Payg
     role="LEADER"
     wallet={wallet}
     onSaveCap={onSaveCap}
     onOpenPortal={onOpenPortal}
-    quoteBundle={quoteBundle}
-    onBought={onBought}
   />
 );
 export const PaygMember: React.FC<{ wallet: Wallet }> = ({ wallet }) => (

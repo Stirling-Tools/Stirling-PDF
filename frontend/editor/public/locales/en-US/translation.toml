@@ -5465,77 +5465,19 @@ chip = "Prepaid year"
 exhausted = "Your prepaid capacity is used up — metered billing has resumed. Top up to keep the discount."
 expiring = "Your prepaid year ends in {{days}} days. Unused capacity expires — top up to start a fresh year."
 low = "You're down to {{pct}}% of your prepaid capacity. Top up any time to keep processing uninterrupted."
-topUp = "Top up"
-
-[payg.prepaid.buyCard]
-cta = "Review offer"
-subtitle = "Prepay a year of PDF processing and get two months free — used before metered billing, outside your spend cap."
-title = "Get 12 months for the price of 10"
-
-[payg.prepaid.calc]
-capacityLabel = "Prepaid capacity"
-capacityValue = "{{units}} PDFs / year"
-enterpriseHint = "Processing at this scale? Talk to us about an enterprise agreement for better rates."
-help = "Estimate your monthly automation/AI/API volume — we'll recommend a 12-month capacity."
-postureLabel = "Governance posture"
-priceLabel = "One-time price"
-rateUnknown = "We'll show the exact price at checkout."
-savings = "You save {{amount}} — 2 months free."
-sizeLabel = "Typical file size"
-title = "Size your year"
-volumeLabel = "PDFs processed / month"
 
 [payg.prepaid.card]
 subtitle = "Used before metered billing and outside your spend cap."
 title = "Prepaid capacity"
-topUp = "Top up"
-
-[payg.prepaid.checkout]
-mockContinue = "Continue with mock purchase"
-
-[payg.prepaid.confirm]
-body = "{{units}} PDFs of prepaid capacity are ready. They're used before metered billing and expire 12 months from today."
-paidLabel = "Paid today"
-title = "Your prepaid year is active"
-
-[payg.prepaid.consent]
-label = "I understand that when my prepaid capacity is used up or expires after 12 months, processing automatically continues at the standard metered pay-as-you-go rate (up to my spend cap) unless I cancel, and that I can cancel anytime from the billing portal."
 
 [payg.prepaid.meter]
 capSuffix = "of {{total}} prepaid PDFs"
 expires = "Expires {{date}}"
 
-[payg.prepaid.modal]
-title = "Prepay a year"
-titleConfirm = "Your year is active"
-titleTopUp = "Top up prepaid capacity"
-
-[payg.prepaid.posture]
-essentials = "Essentials"
-governed = "Governed"
-regulated = "Regulated"
-
-[payg.prepaid.promise]
-body = "Pre-buy a year of processing up front at a discount. Prepaid capacity is used before metered billing and doesn't count toward your spend cap; unused capacity expires after 12 months."
-highlight = "12 months for the price of 10."
-
-[payg.prepaid.quoteError]
-body = "We couldn't build a quote just now. Try again in a moment."
-title = "Couldn't price your bundle"
-
-[payg.prepaid.size]
-compact = "Compact"
-heavy = "Heavy"
-standard = "Standard"
-
 [payg.prepaid.state]
 exhausted = "Used up"
 healthy = "Plenty left"
 low = "Running low"
-
-[payg.prepaid.steps]
-pay = "Pay"
-size = "Size your year"
 
 [payg.role]
 leader = "Team owner"
