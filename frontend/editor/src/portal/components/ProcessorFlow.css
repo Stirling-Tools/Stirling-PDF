@@ -171,12 +171,12 @@
 }
 
 .portal-pf__node--success .portal-pf__node-icon {
-  background: var(--color-green-light);
+  background: color-mix(in srgb, var(--color-green) 14%, transparent);
   color: var(--color-green-dark);
 }
 
 .portal-pf__node--failed .portal-pf__node-icon {
-  background: var(--color-red-light);
+  background: color-mix(in srgb, var(--color-red) 14%, transparent);
   color: var(--color-red-dark);
 }
 
@@ -267,7 +267,7 @@
    then eased back out by the transition above. */
 .portal-pf__policy-icon.is-pulse {
   color: var(--color-green-dark);
-  background-color: var(--color-green-light);
+  background-color: color-mix(in srgb, var(--color-green) 20%, transparent);
   box-shadow: 0 0 8px 1px
     color-mix(in srgb, var(--color-green) 55%, transparent);
 }
