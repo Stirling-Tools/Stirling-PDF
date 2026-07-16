@@ -1,3 +1,4 @@
+import { withBasePath } from "@app/constants/app";
 import { Usage } from "@portal/views/Usage";
 
 /**
@@ -13,7 +14,7 @@ export function PortalBillingGate() {
   return (
     <Usage
       onReauth={() => {
-        window.location.href = "/login";
+        window.location.href = withBasePath("/login");
       }}
     />
   );

@@ -46,6 +46,7 @@ export function AuditTab() {
       key: "elevation",
       label: t("portal.infrastructure.audit.filters.elevation"),
     },
+    { key: "policy", label: t("portal.infrastructure.audit.filters.policy") },
     {
       key: "processing",
       label: t("portal.infrastructure.audit.filters.processing"),
@@ -68,7 +69,7 @@ export function AuditTab() {
       render: (e) => (
         <div className="portal-infra__event">
           <StatusBadge tone={AUDIT_CAT_TONE[e.category]} size="sm">
-            {AUDIT_CAT_LABEL[e.category]}
+            {t(AUDIT_CAT_LABEL[e.category])}
           </StatusBadge>
           <span>{e.action}</span>
         </div>
@@ -89,7 +90,7 @@ export function AuditTab() {
       header: t("portal.infrastructure.audit.columns.status"),
       render: (e) => (
         <StatusBadge tone={AUDIT_TONE[e.status]} size="sm">
-          {AUDIT_STATUS_LABEL[e.status]}
+          {t(AUDIT_STATUS_LABEL[e.status])}
         </StatusBadge>
       ),
     },
@@ -146,12 +147,12 @@ export function AuditTab() {
             value={data.summary.totalEvents.toLocaleString()}
           />
           <MetricCard
-            label={t("portal.infrastructure.audit.metrics.processing")}
-            value={data.summary.processing.toLocaleString()}
+            label={t("portal.infrastructure.audit.metrics.policy")}
+            value={data.summary.policy.toLocaleString()}
           />
           <MetricCard
-            label={t("portal.infrastructure.audit.metrics.elevation")}
-            value={data.summary.elevation.toLocaleString()}
+            label={t("portal.infrastructure.audit.metrics.processing")}
+            value={data.summary.processing.toLocaleString()}
           />
           <MetricCard
             label={t("portal.infrastructure.audit.metrics.config")}

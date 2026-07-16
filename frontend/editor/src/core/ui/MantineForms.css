@@ -24,6 +24,10 @@
   font-size: 0.875rem;
 }
 
+.sui-mantine-wrapper .mantine-Input-input {
+  font-size: 0.875rem;
+}
+
 /* SUI focus ring — matches .sui-input:focus-within */
 .sui-mantine-wrapper[data-focused],
 .sui-mantine-wrapper:focus-within {

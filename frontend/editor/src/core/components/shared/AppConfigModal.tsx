@@ -267,7 +267,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
       styles={{ content: { overflowY: "hidden", overscrollBehavior: "none" } }}
       removeScrollProps={{ shards: [COOKIE_CONSENT_SCROLL_SHARD] }}
     >
-      <div className="modal-container">
+      <div className="modal-container" data-tour="settings-modal">
         {/* Left navigation */}
         <div
           className={`modal-nav ${isMobile ? "mobile" : ""}`}
