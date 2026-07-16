@@ -15,6 +15,7 @@ import {
   type EditorInstance,
 } from "@portal/api/editorDeploy";
 
+// Deployment target names are product/brand terms, not localised.
 const TARGET_LABEL: Record<EditorInstance["target"], string> = {
   cloud: "Cloud",
   docker: "Docker",

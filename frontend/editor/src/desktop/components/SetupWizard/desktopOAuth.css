@@ -13,7 +13,10 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding: 0.75rem 1rem; /* 12px 16px */
+  /* Vertical padding via the shared Button's --sui-btn-py (beats the Button's
+     own padding-block); horizontal stays in the shorthand. */
+  --sui-btn-py: 1rem; /* 16px (md) */
+  padding: 1rem 1rem; /* 16px */
   border: 1px solid var(--auth-input-border-light-only);
   border-radius: 0.75rem; /* 12px */
   background-color: var(--auth-card-bg-light-only);

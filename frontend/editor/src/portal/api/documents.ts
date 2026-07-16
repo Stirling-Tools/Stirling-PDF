@@ -4,8 +4,8 @@ import type { Tier } from "@portal/contexts/TierContext";
 
 export type DocumentStatus = "processed" | "flagged" | "in-review" | "error";
 
-/** Which Stirling product ran the operation. */
-export type ProductType = "API" | "Editor";
+/** Which Stirling product ran the operation. "Automation" = a policy/pipeline run's tool step. */
+export type ProductType = "API" | "Editor" | "Automation";
 
 /** A single field pulled out of the document by extraction. */
 export interface Extraction {
@@ -98,6 +98,7 @@ export const DOCUMENT_STATUS_TONE: Record<DocumentStatus, StatusTone> = {
 export const PRODUCT_CHIP_TONE: Record<ProductType, ChipAccent> = {
   API: "brand",
   Editor: "success",
+  Automation: "warning",
 };
 
 /** Classification chip accent: danger when unclassified, warning when it needs a look. */

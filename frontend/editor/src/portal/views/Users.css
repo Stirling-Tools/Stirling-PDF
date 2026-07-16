@@ -396,8 +396,13 @@
   white-space: nowrap;
 }
 .portal-users__row-role {
-  width: 148px;
+  width: 12.5rem;
   flex-shrink: 0;
+}
+
+/* Pushes the pending-invitation row's expiry + Cancel to the right edge. */
+.portal-users__inv-spacer {
+  flex: 1;
 }
 
 /* Invite modal extras */

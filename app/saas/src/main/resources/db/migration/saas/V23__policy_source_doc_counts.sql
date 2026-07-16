@@ -9,8 +9,8 @@
 --                             instead of scanning a source's whole bucket history - and so the
 --                             hourly buckets can be pruned without losing it.
 --
--- Gated by policies.enabled like the rest of the subsystem; Hibernate ddl-auto would also create
--- these, but the migration keeps the schema explicit for the Flyway-managed deployments.
+-- Hibernate ddl-auto would also create these, but the migration keeps the schema explicit for the
+-- Flyway-managed deployments.
 
 CREATE TABLE IF NOT EXISTS policy_source_doc_counts (
     source_id   VARCHAR(255) NOT NULL,

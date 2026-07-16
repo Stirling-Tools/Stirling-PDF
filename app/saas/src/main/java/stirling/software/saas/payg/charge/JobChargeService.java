@@ -113,7 +113,8 @@ public class JobChargeService {
                         ctx.source(),
                         ctx.processType(),
                         policy.getId(),
-                        stepLimit);
+                        stepLimit,
+                        ctx.runId());
 
         List<Path> paths = inputs.stream().map(JobInput::path).toList();
         JoinOrOpenResult result = jobService.joinOrOpen(jobCtx, paths);
@@ -122,14 +123,23 @@ public class JobChargeService {
             return new ChargeOutcome(result.job().getId(), 0, ChargeOutcome.Disposition.JOINED);
         }
 
+        ProcessingJob job = result.job();
         int units = computeUnits(inputs, policy);
-        result.job().setDocUnits(units);
+        job.setDocUnits(units);
 
         int freeUsed = consumeFreeGrant(ctx, units);
-        recordShadowRow(ctx, result.job().getId(), policy.getId(), units, freeUsed);
-        recordLedgerDebit(ctx, result.job().getId(), policy.getId(), units);
+        recordShadowRow(ctx, job.getId(), policy.getId(), units, freeUsed);
+        // doc_count + fingerprint were set on the fresh job by JobService.openFresh; carry them
+        // onto the ledger DEBIT so usage analytics query one table.
+        recordLedgerDebit(
+                ctx,
+                job.getId(),
+                policy.getId(),
+                units,
+                job.getDocCount(),
+                job.getDocumentFingerprint());
 
-        return new ChargeOutcome(result.job().getId(), units, ChargeOutcome.Disposition.OPENED);
+        return new ChargeOutcome(job.getId(), units, ChargeOutcome.Disposition.OPENED);
     }
 
     /**
@@ -164,12 +174,19 @@ public class JobChargeService {
                         ctx.source(),
                         ctx.processType(),
                         policy.getId(),
-                        stepLimit);
+                        stepLimit,
+                        ctx.runId());
         ProcessingJob job = jobService.open(jobCtx, chargeUnits);
 
         int freeUsed = consumeFreeGrant(ctx, chargeUnits);
         recordShadowRow(ctx, job.getId(), policy.getId(), chargeUnits, freeUsed);
-        recordLedgerDebit(ctx, job.getId(), policy.getId(), chargeUnits);
+        recordLedgerDebit(
+                ctx,
+                job.getId(),
+                policy.getId(),
+                chargeUnits,
+                job.getDocCount(),
+                job.getDocumentFingerprint());
 
         // Close immediately — nothing will lineage-join a standalone job — so the paid portion
         // meters via the same afterCommit hook + idempotency key as a normal process completion.
@@ -216,7 +233,12 @@ public class JobChargeService {
      * Skipped for {@code BYPASSED} / uncategorised calls — manual UI work is never billed.
      */
     private void recordLedgerDebit(
-            ChargeContext ctx, java.util.UUID jobId, Long policyId, int units) {
+            ChargeContext ctx,
+            java.util.UUID jobId,
+            Long policyId,
+            int units,
+            int docCount,
+            String documentFingerprint) {
         BillingCategory category = ctx.billingCategory();
         if (category == null || category == BillingCategory.BYPASSED) {
             return;
@@ -231,6 +253,10 @@ public class JobChargeService {
         entry.setReferenceId(jobId.toString());
         entry.setPolicyId(policyId);
         entry.setBillingCategory(category);
+        // Count dimension + input fingerprint, denormalised from the job for usage analytics
+        // (PDFs processed, unique PDFs, size-multiplier average).
+        entry.setDocCount(docCount);
+        entry.setDocumentFingerprint(documentFingerprint);
         ledgerRepository.save(entry);
     }
 
