@@ -1,8 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { withBasePath } from "@app/constants/app";
-import { getToolUrlPath } from "@app/data/toolsTaxonomy";
+import {
+  getToolUrlPath,
+  isComingSoonTool,
+  type ToolRegistry,
+} from "@app/data/toolsTaxonomy";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { rankByFuzzy } from "@app/utils/fuzzySearch";
@@ -68,25 +72,45 @@ const NO_ENTITIES: PortalEntities = {
   sources: [],
 };
 
+/** How long a loaded entity snapshot stays fresh before a reopen refetches. */
+const ENTITY_REFRESH_MS = 30_000;
+
 /**
- * Loads the portal's searchable entities whenever the search surface opens,
- * then ranking happens client-side per keystroke. allSettled so one failing
- * endpoint (e.g. policies on a backend without them) doesn't drop the rest.
+ * Loads the portal's searchable entities once the user starts typing (not on
+ * bare focus — the user list is not free), then ranking happens client-side
+ * per keystroke. allSettled so one failing endpoint (e.g. policies on a
+ * backend without them) doesn't drop the rest.
  */
-function usePortalEntities(active: boolean): PortalEntities {
+function usePortalEntities(enabled: boolean): {
+  entities: PortalEntities;
+  loading: boolean;
+} {
   const { tier } = useTier();
   const [entities, setEntities] = useState<PortalEntities>(NO_ENTITIES);
+  const [loading, setLoading] = useState(false);
+  const lastFetchedRef = useRef(0);
+  const loadedOnceRef = useRef(false);
 
   useEffect(() => {
-    if (!active) return;
+    if (!enabled) return;
+    if (Date.now() - lastFetchedRef.current < ENTITY_REFRESH_MS) return;
+    lastFetchedRef.current = Date.now();
     let cancelled = false;
+    if (!loadedOnceRef.current) setLoading(true);
     Promise.allSettled([
       fetchUsers(tier),
       fetchPolicies(),
       fetchPipelines(),
       fetchSources(),
-    ]).then(([users, policies, pipelines, sources]) => {
+    ]).then((settled) => {
+      settled.forEach((r) => {
+        // Expected on deployments without that endpoint; debug, not noise.
+        if (r.status === "rejected") {
+          console.debug("[PortalSearch] entity source unavailable:", r.reason);
+        }
+      });
       if (cancelled) return;
+      const [users, policies, pipelines, sources] = settled;
       setEntities({
         users: users.status === "fulfilled" ? users.value.members : [],
         policies:
@@ -95,13 +119,15 @@ function usePortalEntities(active: boolean): PortalEntities {
           pipelines.status === "fulfilled" ? pipelines.value.pipelines : [],
         sources: sources.status === "fulfilled" ? sources.value.sources : [],
       });
+      loadedOnceRef.current = true;
+      setLoading(false);
     });
     return () => {
       cancelled = true;
     };
-  }, [active, tier]);
+  }, [enabled, tier]);
 
-  return entities;
+  return { entities, loading };
 }
 
 /**
@@ -123,7 +149,20 @@ export function usePortalSearchResults(
   const { config } = useAppConfig();
 
   const trimmed = query.trim();
-  const entities = usePortalEntities(active);
+  const { entities, loading: loadingEntities } = usePortalEntities(
+    active && trimmed.length > 0,
+  );
+
+  // Match what the editor bar can actually open: drop coming-soon placeholders
+  // (no component, no link) — cross-app navigation to one lands on a tool that
+  // can't render.
+  const searchableTools = useMemo(() => {
+    const out: Partial<ToolRegistry> = {};
+    for (const [id, tool] of Object.entries(allTools)) {
+      if (tool && !isComingSoonTool(id, tool)) out[id as ToolId] = tool;
+    }
+    return out;
+  }, [allTools]);
 
   const openTool = useCallback((id: ToolId) => {
     window.location.assign(editorHref(getToolUrlPath(id)));
@@ -145,11 +184,14 @@ export function usePortalSearchResults(
     [navigate],
   );
 
-  const gates = useMemo<SuperSearchGates>(
-    () => ({
-      isAdmin: config?.isAdmin ?? false,
-      loginEnabled: config?.enableLogin ?? false,
-    }),
+  const gates = useMemo<SuperSearchGates | null>(
+    () =>
+      config
+        ? {
+            isAdmin: config.isAdmin ?? false,
+            loginEnabled: config.enableLogin ?? false,
+          }
+        : null,
     [config],
   );
 
@@ -169,7 +211,10 @@ export function usePortalSearchResults(
         subtitle: item.email,
         icon: <UsersIcon />,
         score,
-        onSelect: () => navigate(toPortalPath(VIEW_PATHS.users)),
+        onSelect: () =>
+          navigate(
+            `${toPortalPath(VIEW_PATHS.users)}?member=${encodeURIComponent(item.id)}`,
+          ),
       }));
     if (users.length > 0) {
       groups.push({
@@ -192,7 +237,10 @@ export function usePortalSearchResults(
         subtitle: item.category.desc,
         icon: <PoliciesIcon />,
         score,
-        onSelect: () => navigate(toPortalPath(VIEW_PATHS.policies)),
+        onSelect: () =>
+          navigate(
+            `${toPortalPath(VIEW_PATHS.policies)}?category=${encodeURIComponent(item.category.id)}`,
+          ),
       }));
     if (policies.length > 0) {
       groups.push({
@@ -251,17 +299,32 @@ export function usePortalSearchResults(
     return groups;
   }, [entities, trimmed, t, navigate]);
 
+  // "Editor" as a destination — the way back across the app switch. Ranked
+  // into the Processor group alongside the portal's own pages.
+  const editorDestination = useMemo(() => {
+    if (!trimmed) return [];
+    return rankByFuzzy([null], trimmed, [
+      () => t("portal.nav.editor", "Editor"),
+      () => "editor workspace pdf",
+    ]).map(({ score }) => ({
+      key: "processor:editor",
+      group: "processor",
+      title: t("portal.nav.editor", "Editor"),
+      iconName: "grid-view-rounded",
+      score,
+      onSelect: () => window.location.assign(editorHref("/")),
+    }));
+  }, [trimmed, t]);
+
   const groups = useMemo(() => {
     const shared = assembleSuperSearchGroups(
       {
-        tools: rankToolResults(allTools, trimmed, openTool),
+        tools: rankToolResults(searchableTools, trimmed, openTool),
         settings: rankSettingsResults(trimmed, t, gates, openSettingsSection),
-        processor: rankProcessorResults(
-          trimmed,
-          t,
-          gates,
-          selectProcessorEntry,
-        ),
+        processor: [
+          ...rankProcessorResults(trimmed, t, gates, selectProcessorEntry),
+          ...editorDestination,
+        ].sort((a, b) => b.score - a.score),
       },
       t,
       PORTAL_GROUP_ORDER,
@@ -277,16 +340,19 @@ export function usePortalSearchResults(
     return out;
   }, [
     trimmed,
-    allTools,
+    searchableTools,
     openTool,
     gates,
     openSettingsSection,
     selectProcessorEntry,
+    editorDestination,
     entityGroups,
     t,
   ]);
 
   const flatResults = useMemo(() => groups.flatMap((g) => g.results), [groups]);
 
-  return { groups, flatResults, loadingFiles: false };
+  // loadingFiles doubles as "an async source is still loading" for the
+  // dropdown's no-results gate — here that's the entity fetch.
+  return { groups, flatResults, loadingFiles: loadingEntities };
 }

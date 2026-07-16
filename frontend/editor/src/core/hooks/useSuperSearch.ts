@@ -17,7 +17,11 @@ import { ViewerContext } from "@app/contexts/ViewerContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { fileStorage } from "@app/services/fileStorage";
-import { rankByFuzzy, idToWords } from "@app/utils/fuzzySearch";
+import {
+  rankByFuzzy,
+  idToWords,
+  FUZZY_MIN_SCORE,
+} from "@app/utils/fuzzySearch";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { ToolId } from "@app/types/toolId";
 import type { ToolRegistry } from "@app/data/toolsTaxonomy";
@@ -73,7 +77,12 @@ export interface UseSuperSearchResult {
   loadingFiles: boolean;
 }
 
-/** Visibility gates shared by the settings and Processor sources. */
+/**
+ * Visibility gates shared by the settings and Processor sources. Hosts pass
+ * `null` while the app config is still loading — the rankers treat that as
+ * "most restrictive" so gated results can appear once config lands but never
+ * flash open before it.
+ */
 export interface SuperSearchGates {
   isAdmin: boolean;
   loginEnabled: boolean;
@@ -169,18 +178,18 @@ export function rankToolResults(
 export function rankSettingsResults(
   trimmed: string,
   t: TFunction,
-  gates: SuperSearchGates,
+  gates: SuperSearchGates | null,
   openSettings: (section: string, anchor?: string) => void,
 ): SuperSearchResult[] {
   if (!trimmed) return [];
-  const { isAdmin, loginEnabled } = gates;
 
   // Row-level entries (deep-link with ?focus=) take priority.
-  const rows = rankByFuzzy(SETTINGS_SEARCH_INDEX, trimmed, [
+  const rowMatches = rankByFuzzy(SETTINGS_SEARCH_INDEX, trimmed, [
     (e) => t(e.labelKey, e.labelFallback),
     (e) => e.labelFallback,
     (e) => e.keywords?.join(" ") ?? "",
-  ]).map(({ item, score }) => ({
+  ]);
+  const rows = rowMatches.map(({ item, score }) => ({
     key: `setting:${item.section}:${item.anchor}`,
     group: "settings",
     title: t(item.labelKey, item.labelFallback),
@@ -194,9 +203,11 @@ export function rankSettingsResults(
   // resolves per build (core / proprietary / saas / desktop), so this only
   // ever sees sections the current build's settings modal can actually show.
   const visibleSections = SETTINGS_SECTION_REGISTRY.filter((s) => {
-    if (s.requiresLogin && !loginEnabled) return false;
+    // Null gates (config still loading): hide every gated section.
+    if (s.requiresLogin && !(gates?.loginEnabled ?? false)) return false;
     // Admin-area sections mirror the builder's `isAdmin || !loginEnabled` gate.
-    if (s.adminArea && !(isAdmin || !loginEnabled)) return false;
+    if (s.adminArea && !(gates ? gates.isAdmin || !gates.loginEnabled : false))
+      return false;
     return true;
   });
   const sectionMatches = rankByFuzzy(visibleSections, trimmed, [
@@ -217,8 +228,12 @@ export function rankSettingsResults(
   // in-modal settings search technique), so terms with no curated keyword
   // ("SMTP", a field label) still find their section. Ranked below every
   // label/keyword match; 3+ chars so a single letter doesn't match half the
-  // modal.
-  const labelMatchedKeys = new Set(sectionMatches.map(({ item }) => item.key));
+  // modal. Sections already surfaced by a label match — their own or one of
+  // their rows' — are skipped so the same hit isn't listed twice.
+  const labelMatchedKeys = new Set<string>([
+    ...sectionMatches.map(({ item }) => item.key),
+    ...rowMatches.map(({ item }) => item.section),
+  ]);
   const contentMatches =
     trimmed.length < 3
       ? []
@@ -234,7 +249,8 @@ export function rankSettingsResults(
                 title: t(s.labelKey, s.labelFallback),
                 subtitle: buildMatchSnippet(match, trimmed),
                 iconName: "settings-rounded",
-                score: 20, // below the fuzzy thresholds (30/40)
+                // Always below the weakest possible label/keyword match.
+                score: FUZZY_MIN_SCORE - 10,
                 onSelect: () => openSettings(s.key),
               },
             ];
@@ -248,13 +264,14 @@ export function rankSettingsResults(
 export function rankProcessorResults(
   trimmed: string,
   t: TFunction,
-  gates: SuperSearchGates,
+  gates: SuperSearchGates | null,
   selectEntry: (entry: ProcessorSearchEntry) => void,
 ): SuperSearchResult[] {
   if (!trimmed || PROCESSOR_SEARCH_INDEX.length === 0) return [];
   // The portal is an admin surface; mirror the settings modal's admin gate
   // (a login-disabled single-user deployment has a full-access operator).
-  if (!(gates.isAdmin || !gates.loginEnabled)) return [];
+  // Null gates (config still loading) stay closed.
+  if (!gates || !(gates.isAdmin || !gates.loginEnabled)) return [];
   return rankByFuzzy(PROCESSOR_SEARCH_INDEX, trimmed, [
     (e) => t(e.labelKey, e.labelFallback),
     (e) => e.labelFallback,
@@ -380,11 +397,14 @@ export function useSuperSearch(
   );
 
   // --- Assemble ----------------------------------------------------------
-  const gates = useMemo<SuperSearchGates>(
-    () => ({
-      isAdmin: config?.isAdmin ?? false,
-      loginEnabled: config?.enableLogin ?? false,
-    }),
+  const gates = useMemo<SuperSearchGates | null>(
+    () =>
+      config
+        ? {
+            isAdmin: config.isAdmin ?? false,
+            loginEnabled: config.enableLogin ?? false,
+          }
+        : null,
     [config],
   );
 

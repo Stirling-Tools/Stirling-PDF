@@ -103,23 +103,36 @@ export const buildMatchSnippet = (text: string, query: string): string => {
     return text;
   }
 
+  // Lowercasing can change string length in some locales (Turkish İ, ß), so
+  // indices computed on the copy only align with the original when the
+  // lengths match; otherwise snippet the copy itself.
+  const source = normalizedText.length === text.length ? text : normalizedText;
+
   const maxLength = 84;
   const contextPadding = 28;
   const start = Math.max(0, matchIndex - contextPadding);
-  const end = Math.min(text.length, matchIndex + query.length + contextPadding);
-  const snippet = text.slice(start, end);
+  const end = Math.min(
+    source.length,
+    matchIndex + query.length + contextPadding,
+  );
+  const snippet = source.slice(start, end);
 
   if (snippet.length <= maxLength) {
-    return `${start > 0 ? "…" : ""}${snippet}${end < text.length ? "…" : ""}`;
+    return `${start > 0 ? "…" : ""}${snippet}${end < source.length ? "…" : ""}`;
   }
 
-  return `${start > 0 ? "…" : ""}${snippet.slice(0, maxLength)}${end < text.length ? "…" : ""}`;
+  return `${start > 0 ? "…" : ""}${snippet.slice(0, maxLength)}${end < source.length ? "…" : ""}`;
 };
 
 // Flattening every subtree on each keystroke would be wasteful; sections'
 // content is static per language, so cache it and drop the cache on switch.
 const contentCache = new Map<string, string[]>();
 let contentCacheLanguage: string | undefined;
+
+// Locale files load over HTTP after boot, so content computed before the
+// bundle resolves is empty — without this, an early query would cache empty
+// content for the whole session. Cleared whenever a resource bundle lands.
+i18n.on("loaded", () => contentCache.clear());
 
 export function getSettingsSectionContent(key: string, t: TFunction): string[] {
   if (contentCacheLanguage !== i18n.language) {

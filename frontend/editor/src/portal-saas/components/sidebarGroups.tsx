@@ -12,6 +12,8 @@ export type { NavEntry };
  * SaaS pre-release: the Components section isn't shipped there yet, so drop it
  * from the operational nav. Everything else is inherited from the base groups, so
  * new nav items appear in SaaS automatically — only Components is removed here.
+ * Keep the super search index in step: saas/data/processorSearchIndex applies
+ * the same exclusion so search can't offer a section this nav doesn't ship.
  */
 export const GROUP_OPERATIONAL: NavEntry[] = BASE_OPERATIONAL.filter(
   (entry) => entry.id !== "components",

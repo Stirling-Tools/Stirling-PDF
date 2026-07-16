@@ -33,6 +33,11 @@ interface SuperSearchProps {
    * Processor provider; the portal passes its own destinations provider.
    */
   useResults?: (query: string, active: boolean) => UseSuperSearchResult;
+  /**
+   * DOM id for the input — external focus helpers target the default. A host
+   * whose bar can coexist with another instance must pass a distinct id.
+   */
+  inputId?: string;
 }
 
 /**
@@ -45,6 +50,7 @@ interface SuperSearchProps {
  */
 export default function SuperSearch({
   useResults = useSuperSearch,
+  inputId = "super-search-input",
 }: SuperSearchProps = {}) {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
@@ -55,18 +61,46 @@ export default function SuperSearch({
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  // The key of the highlighted result, so async pop-in (entities, file stubs)
+  // can't silently shift the highlight onto a different row.
+  const highlightKeyRef = useRef<string | null>(null);
 
-  const { groups, flatResults, loadingFiles } = useResults(query, open);
+  // A hook received as a prop is invisible to the rules-of-hooks lint; pinning
+  // the first value makes swapping it mid-life structurally impossible.
+  const useResultsHook = useRef(useResults).current;
+  const { groups, flatResults, loadingFiles } = useResultsHook(query, open);
 
   const trimmed = query.trim();
   const hasQuery = trimmed.length > 0;
 
-  // Keep the highlighted index within bounds as results change.
+  const listboxId = `${inputId}-listbox`;
+  const optionId = useCallback(
+    (index: number) => `${inputId}-option-${index}`,
+    [inputId],
+  );
+
+  const moveHighlight = useCallback(
+    (index: number) => {
+      setHighlight(index);
+      highlightKeyRef.current = flatResults[index]?.key ?? null;
+    },
+    [flatResults],
+  );
+
+  // When results change, follow the highlighted result to its new index; if
+  // it's gone, reset to the top.
   useEffect(() => {
-    setHighlight((h) =>
-      flatResults.length === 0 ? 0 : Math.min(h, flatResults.length - 1),
-    );
-  }, [flatResults.length]);
+    const key = highlightKeyRef.current;
+    if (key) {
+      const index = flatResults.findIndex((r) => r.key === key);
+      if (index >= 0) {
+        setHighlight(index);
+        return;
+      }
+    }
+    highlightKeyRef.current = null;
+    setHighlight(0);
+  }, [flatResults]);
 
   const close = useCallback(() => {
     setOpen(false);
@@ -103,21 +137,34 @@ export default function SuperSearch({
     [close],
   );
 
-  // Global Cmd/Ctrl+K to focus + open the search.
+  // Global Cmd/Ctrl+K to focus + open the search. Matched on e.code so it
+  // works on non-Latin keyboard layouts, where e.key isn't "k".
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       const combo =
         (isMacLike() ? e.metaKey : e.ctrlKey) && !e.altKey && !e.shiftKey;
-      if (combo && (e.key === "k" || e.key === "K")) {
-        e.preventDefault();
-        setOpen(true);
-        inputRef.current?.focus();
-        inputRef.current?.select();
-      }
+      if (!combo || e.code !== "KeyK") return;
+      // Leave the shortcut alone while a modal owns the screen — focusing an
+      // input underneath the overlay would strand keyboard focus.
+      const target = e.target as HTMLElement | null;
+      if (target?.closest('[role="dialog"]')) return;
+      e.preventDefault();
+      setOpen(true);
+      inputRef.current?.focus();
+      inputRef.current?.select();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
+
+  // Keep the highlighted row visible when keyboard navigation moves it past
+  // the dropdown's scroll fold.
+  useEffect(() => {
+    if (!open) return;
+    document
+      .getElementById(optionId(highlight))
+      ?.scrollIntoView({ block: "nearest" });
+  }, [open, highlight, optionId]);
 
   // Close on click outside the input or the (portalled) dropdown.
   useEffect(() => {
@@ -137,18 +184,21 @@ export default function SuperSearch({
   }, [open, close]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    // During IME composition (CJK input), Enter commits the composition and
+    // arrows pick candidates — those keystrokes are not for us.
+    if (e.nativeEvent.isComposing) return;
     if (e.key === "ArrowDown") {
       e.preventDefault();
       if (!open) setOpen(true);
-      setHighlight((h) =>
-        flatResults.length === 0 ? 0 : (h + 1) % flatResults.length,
+      moveHighlight(
+        flatResults.length === 0 ? 0 : (highlight + 1) % flatResults.length,
       );
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      setHighlight((h) =>
+      moveHighlight(
         flatResults.length === 0
           ? 0
-          : (h - 1 + flatResults.length) % flatResults.length,
+          : (highlight - 1 + flatResults.length) % flatResults.length,
       );
     } else if (e.key === "Enter") {
       e.preventDefault();
@@ -173,6 +223,7 @@ export default function SuperSearch({
     open && rect ? (
       <div
         ref={dropdownRef}
+        id={listboxId}
         className="super-search-dropdown"
         role="listbox"
         style={{ top: rect.top, left: rect.left, width: rect.width }}
@@ -193,14 +244,22 @@ export default function SuperSearch({
 
         {hasQuery &&
           groups.map((group) => (
-            <div key={group.id} className="super-search-group">
-              <div className="super-search-group-label">{group.label}</div>
+            <div
+              key={group.id}
+              className="super-search-group"
+              role="group"
+              aria-label={group.label}
+            >
+              <div className="super-search-group-label" aria-hidden="true">
+                {group.label}
+              </div>
               {group.results.map((result) => {
                 const index = flatResults.indexOf(result);
                 const active = index === highlight;
                 return (
                   <Button
                     key={result.key}
+                    id={optionId(index)}
                     type="button"
                     variant="quiet"
                     justify="start"
@@ -208,7 +267,7 @@ export default function SuperSearch({
                     role="option"
                     aria-selected={active}
                     className={`super-search-item${active ? " active" : ""}`}
-                    onMouseEnter={() => setHighlight(index)}
+                    onMouseEnter={() => moveHighlight(index)}
                     onClick={() => selectResult(result)}
                   >
                     <span className="super-search-item-icon">
@@ -241,8 +300,8 @@ export default function SuperSearch({
   return (
     <div className="super-search" ref={containerRef} onKeyDown={handleKeyDown}>
       <TextInput
-        id="super-search-input"
-        name="super-search-input"
+        id={inputId}
+        name={inputId}
         ref={inputRef}
         value={query}
         onChange={setQuery}
@@ -251,7 +310,14 @@ export default function SuperSearch({
           <LocalIcon icon="search-rounded" width="1.1rem" height="1.1rem" />
         }
         autoComplete="off"
+        role="combobox"
         aria-label={t("superSearch.ariaLabel", "Super search")}
+        aria-expanded={open}
+        aria-controls={open ? listboxId : undefined}
+        aria-activedescendant={
+          open && flatResults[highlight] ? optionId(highlight) : undefined
+        }
+        aria-autocomplete="list"
         onFocus={() => setOpen(true)}
       />
       {!open && !hasQuery && (

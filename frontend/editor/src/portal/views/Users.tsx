@@ -88,6 +88,27 @@ export function Users() {
     setSearchParams(next, { replace: true });
   }, [searchParams, setSearchParams]);
 
+  // Scroll to and flash the row for ?member=<id> (deep link from the super
+  // search), once the roster has rendered; then strip the param.
+  useEffect(() => {
+    const memberId = searchParams.get("member");
+    if (memberId === null || usersState.loading) return;
+    const row = document.querySelector(
+      `[data-member-id="${CSS.escape(memberId)}"]`,
+    );
+    if (row) {
+      row.scrollIntoView({ block: "center" });
+      row.classList.add("portal-users__row--flash");
+      window.setTimeout(
+        () => row.classList.remove("portal-users__row--flash"),
+        1600,
+      );
+    }
+    const next = new URLSearchParams(searchParams);
+    next.delete("member");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams, usersState.loading]);
+
   // PORTAL grants held by a whole team (principalId = teamId); members inherit these.
   const grantByTeam = useMemo(() => {
     const m = new Map<number, ResourceGrant>();
