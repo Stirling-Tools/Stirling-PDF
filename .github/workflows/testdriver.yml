@@ -35,7 +35,7 @@ jobs:
       DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 
@@ -160,7 +160,7 @@ jobs:
       frontend: ${{ steps.changes.outputs.frontend }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 
@@ -178,7 +178,7 @@ jobs:
     runs-on: ${{ needs.pick.outputs.use_depot == 'true' && 'depot-ubuntu-24.04-4' || 'ubuntu-latest' }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 
@@ -214,7 +214,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 
