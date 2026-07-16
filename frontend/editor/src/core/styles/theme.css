@@ -1032,7 +1032,7 @@
 .wordmark-dark-only {
   display: none;
 }
-[data-mantine-color-scheme="dark"] .wordmark-light-only {
+[data-mantine-color-scheme="dark"] .wordmark {
   display: none;
 }
 [data-mantine-color-scheme="dark"] .wordmark-dark-only {
@@ -1040,15 +1040,15 @@
 }
 
 /* Theme-aware image display utilities */
-/* Use .theme-img-light-only for images to show in light mode only */
+/* Use .theme-img for images to show in light mode only */
 /* Use .theme-img-dark-only for images to show in dark mode only */
-.theme-img-light-only {
+.theme-img {
   display: inline;
 }
 .theme-img-dark-only {
   display: none;
 }
-[data-mantine-color-scheme="dark"] .theme-img-light-only {
+[data-mantine-color-scheme="dark"] .theme-img {
   display: none;
 }
 [data-mantine-color-scheme="dark"] .theme-img-dark-only {
