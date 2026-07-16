@@ -7,7 +7,6 @@ export type ViewId =
   | "editor"
   | "users"
   | "sources"
-  | "agent-builder"
   | "policies"
   | "pipelines"
   | "documents"
@@ -22,7 +21,6 @@ export const VIEW_LABELS: Record<ViewId, string> = {
   editor: "Editor",
   users: "Users",
   sources: "Sources",
-  "agent-builder": "Agent Builder",
   policies: "Policies",
   pipelines: "Pipelines",
   documents: "Documents",
@@ -38,7 +36,6 @@ export const VIEW_PATHS: Record<ViewId, string> = {
   editor: "/editor",
   users: "/users",
   sources: "/sources",
-  "agent-builder": "/agent-builder",
   policies: "/policies",
   pipelines: "/pipelines",
   documents: "/documents",
