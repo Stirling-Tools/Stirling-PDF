@@ -18,37 +18,37 @@ html[data-app-theme="custom"] .sui-acc-default {
   --_on: var(--c-text-on-primary);
 }
 .sui-acc-danger {
-  --_solid: var(--color-red);
-  --_solid-hover: var(--color-red-dark);
-  --_on: #ffffff;
-  --_text: var(--color-red-dark);
-  --_bd: var(--color-red-border);
-  --_tint: color-mix(in srgb, var(--color-red) 12%, transparent);
+  --_solid: var(--p-red-500) !important;
+  --_solid-hover: var(--p-red-600) !important;
+  --_on: #ffffff !important;
+  --_text: var(--p-red-500) !important;
+  --_bd: color-mix(in srgb, var(--p-red-500) 45%, transparent) !important;
+  --_tint: color-mix(in srgb, var(--p-red-500) 12%, transparent) !important;
 }
 .sui-acc-success {
-  --_solid: var(--color-green);
-  --_solid-hover: var(--color-green-dark);
-  --_on: #ffffff;
-  --_text: var(--color-green-dark);
-  --_bd: var(--color-green-border);
-  --_tint: color-mix(in srgb, var(--color-green) 12%, transparent);
+  --_solid: var(--p-green-500) !important;
+  --_solid-hover: var(--p-green-600) !important;
+  --_on: #ffffff !important;
+  --_text: var(--p-green-500) !important;
+  --_bd: color-mix(in srgb, var(--p-green-500) 45%, transparent) !important;
+  --_tint: color-mix(in srgb, var(--p-green-500) 12%, transparent) !important;
 }
 .sui-acc-warning {
-  --_solid: var(--color-amber);
-  --_solid-hover: var(--color-amber-dark);
-  --_on: #ffffff;
-  --_text: var(--color-amber-dark);
-  --_bd: var(--color-amber-border);
-  --_tint: color-mix(in srgb, var(--color-amber) 12%, transparent);
+  --_solid: var(--p-amber-500) !important;
+  --_solid-hover: var(--p-amber-600) !important;
+  --_on: #ffffff !important;
+  --_text: var(--p-amber-500) !important;
+  --_bd: color-mix(in srgb, var(--p-amber-500) 45%, transparent) !important;
+  --_tint: color-mix(in srgb, var(--p-amber-500) 12%, transparent) !important;
 }
 /* premium: purple upgrade CTA — gradient fill (token), violet text/border. */
 .sui-acc-premium {
-  --_solid: var(--grad-purple-btn);
-  --_solid-hover: var(--grad-purple-btn);
-  --_on: #ffffff;
-  --_text: var(--color-purple-dark);
-  --_bd: var(--color-purple-border);
-  --_tint: color-mix(in srgb, var(--color-purple) 12%, transparent);
+  --_solid: var(--grad-purple-btn) !important;
+  --_solid-hover: var(--grad-purple-btn) !important;
+  --_on: #ffffff !important;
+  --_text: var(--p-violet-500) !important;
+  --_bd: color-mix(in srgb, var(--p-violet-500) 45%, transparent) !important;
+  --_tint: color-mix(in srgb, var(--p-violet-500) 12%, transparent) !important;
 }
 
 /* neutral: low-emphasis grey — no palette token, so explicit. */
@@ -81,7 +81,9 @@ html[data-app-theme="custom"] .sui-acc-default {
   --_bd: var(--p-brand-red-900);
   --_tint: color-mix(in srgb, var(--p-brand-red-300) 16%, transparent);
 }
-/* ai: multi-hue gradient for AI features — no single-colour token. */
+/* ai: multi-hue gradient for AI features — no single-colour token. Pinned
+ * (identical light + dark) so the gradient fill and the indigo text/border stay
+ * consistent across themes. */
 .sui-acc-ai {
   --_solid: linear-gradient(
     135deg,
@@ -89,21 +91,16 @@ html[data-app-theme="custom"] .sui-acc-default {
     var(--p-indigo-500) 38%,
     var(--p-blue-500) 72%,
     var(--p-cyan-400) 100%
-  );
+  ) !important;
   --_solid-hover: linear-gradient(
     135deg,
     var(--p-violet-500) 0%,
     var(--p-indigo-500) 38%,
     var(--p-blue-500) 72%,
     var(--p-cyan-400) 100%
-  );
-  --_on: #ffffff;
-  --_text: var(--p-indigo-500);
-  --_bd: var(--p-indigo-200);
-  --_tint: color-mix(in srgb, var(--p-indigo-500) 10%, transparent);
-}
-[data-theme="dark"] .sui-acc-ai {
-  --_text: var(--p-indigo-300);
-  --_bd: var(--p-indigo-800);
-  --_tint: color-mix(in srgb, var(--p-indigo-400) 18%, transparent);
+  ) !important;
+  --_on: #ffffff !important;
+  --_text: var(--p-indigo-500) !important;
+  --_bd: color-mix(in srgb, var(--p-indigo-500) 45%, transparent) !important;
+  --_tint: color-mix(in srgb, var(--p-indigo-500) 12%, transparent) !important;
 }
