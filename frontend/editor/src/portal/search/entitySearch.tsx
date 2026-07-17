@@ -50,11 +50,11 @@ export interface ProcessorEntities {
   sources: SourceView[];
 }
 
-/** Entity groups cap lower than the shared group limit so the dropdown stays
- * scannable when several sections match at once. */
-export const ENTITY_GROUP_LIMIT = 4;
-/** A focused (single-scope) search has the dropdown to itself. */
-const FOCUSED_ENTITY_GROUP_LIMIT = 8;
+/**
+ * How many results each entity ranker computes — the ceiling the dropdown's
+ * "show more" can reveal (the component shows a small initial slice).
+ */
+export const ENTITY_GROUP_LIMIT = 24;
 
 /** How long a fetched entity scope stays fresh before a search refetches it. */
 export const ENTITY_REFRESH_MS = 30_000;
@@ -233,8 +233,6 @@ export function rankPortalPipelineResults(
 export interface BuildEntityGroupsOptions {
   /** Host scope filter; defaults to every scope enabled. */
   scopeEnabled?: (scopeId: string) => boolean;
-  /** The single focused scope, if any — its group gets the larger row cap. */
-  focusedScopeId?: string | null;
 }
 
 /**
@@ -251,10 +249,6 @@ export function buildProcessorEntityGroups(
 ): SuperSearchGroup[] {
   if (!trimmed) return [];
   const scopeEnabled = options.scopeEnabled ?? (() => true);
-  const limitFor = (scopeId: string) =>
-    options.focusedScopeId === scopeId
-      ? FOCUSED_ENTITY_GROUP_LIMIT
-      : ENTITY_GROUP_LIMIT;
   const groups: SuperSearchGroup[] = [];
 
   const includeScope = (scopeId: PortalEntityScopeId) =>
@@ -265,7 +259,7 @@ export function buildProcessorEntityGroups(
         (member) => member.name,
         (member) => member.email,
       ])
-        .slice(0, limitFor("portal-users"))
+        .slice(0, ENTITY_GROUP_LIMIT)
         .map(({ item, score }) => ({
           key: `portal-user:${item.id}`,
           group: "portal-users",
@@ -296,7 +290,7 @@ export function buildProcessorEntityGroups(
           navigate(
             `${toPortalPath(VIEW_PATHS.policies)}?category=${encodeURIComponent(categoryId)}`,
           ),
-        limitFor("portal-policies"),
+        ENTITY_GROUP_LIMIT,
       )
     : [];
   if (policies.length > 0) {
@@ -321,7 +315,7 @@ export function buildProcessorEntityGroups(
         policyPipelineIds,
         (pipelineId) =>
           navigate(`${toPortalPath(VIEW_PATHS.pipelines)}/${pipelineId}`),
-        limitFor("portal-pipelines"),
+        ENTITY_GROUP_LIMIT,
       )
     : [];
   if (pipelines.length > 0) {
@@ -337,7 +331,7 @@ export function buildProcessorEntityGroups(
         (source) => source.name,
         (source) => source.type,
       ])
-        .slice(0, limitFor("portal-sources"))
+        .slice(0, ENTITY_GROUP_LIMIT)
         .map(({ item, score }) => ({
           key: `portal-source:${item.id}`,
           group: "portal-sources",
@@ -359,7 +353,7 @@ export function buildProcessorEntityGroups(
 
   const docs =
     isDocsSearchable() && scopeEnabled(PORTAL_DOCS_SCOPE_ID)
-      ? rankDocsResults(trimmed, navigate, limitFor(PORTAL_DOCS_SCOPE_ID))
+      ? rankDocsResults(trimmed, navigate, ENTITY_GROUP_LIMIT)
       : [];
   if (docs.length > 0) {
     groups.push({

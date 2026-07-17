@@ -9838,6 +9838,8 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+showLess = "Show less"
+showMore = "Show {{count}} more"
 
 [superSearch.group]
 docs = "Docs"

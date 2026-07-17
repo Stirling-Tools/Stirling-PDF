@@ -27,6 +27,9 @@ import {
 } from "@app/components/shared/superSearch/superSearchFilters";
 import "@app/components/shared/superSearch/SuperSearch.css";
 
+/** Rows shown per group before a "show more" toggle reveals the rest. */
+const COLLAPSED_GROUP_SIZE = 5;
+
 interface DropdownRect {
   top: number;
   left: number;
@@ -95,6 +98,8 @@ export default function SuperSearch({
   const [collapsedSectionKeys, setCollapsedSectionKeys] = useState<string[]>(
     [],
   );
+  // Groups the user has expanded past the initial per-group cap ("show more").
+  const [expandedGroupKeys, setExpandedGroupKeys] = useState<string[]>([]);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -164,14 +169,28 @@ export default function SuperSearch({
     [collapsedSectionKeys, sections],
   );
 
+  // How many rows a group currently shows: its full set when expanded, else
+  // the initial cap. A group at exactly cap+1 just shows the extra row rather
+  // than a "show 1 more" toggle.
+  const visibleCountFor = useCallback(
+    (group: UseSuperSearchResult["groups"][number]) =>
+      expandedGroupKeys.includes(group.id) ||
+      group.results.length <= COLLAPSED_GROUP_SIZE + 1
+        ? group.results.length
+        : COLLAPSED_GROUP_SIZE,
+    [expandedGroupKeys],
+  );
+
   const visibleFlatResults = useMemo(
     () =>
       visibleSections.flatMap((section) =>
         section.collapsed
           ? []
-          : section.groups.flatMap((group) => group.results),
+          : section.groups.flatMap((group) =>
+              group.results.slice(0, visibleCountFor(group)),
+            ),
       ),
-    [visibleSections],
+    [visibleSections, visibleCountFor],
   );
 
   const moveHighlight = useCallback(
@@ -202,6 +221,7 @@ export default function SuperSearch({
     setHighlight(0);
     setManualScopeIds([]);
     setCollapsedSectionKeys([]);
+    setExpandedGroupKeys([]);
     setQuery((current) => parseSuperSearchQuery(current, scopes).query);
   }, [scopes]);
 
@@ -374,6 +394,15 @@ export default function SuperSearch({
     inputRef.current?.focus();
   }, []);
 
+  const toggleGroupExpanded = useCallback((groupId: string) => {
+    setExpandedGroupKeys((current) =>
+      current.includes(groupId)
+        ? current.filter((id) => id !== groupId)
+        : [...current, groupId],
+    );
+    inputRef.current?.focus();
+  }, []);
+
   const scopeFilters =
     scopes.length > 0 ? (
       <div
@@ -469,66 +498,88 @@ export default function SuperSearch({
               )}
               {!section.collapsed && (
                 <div className="super-search-section-body">
-                  {section.groups.map((group) => (
-                    <div
-                      key={group.id}
-                      className="super-search-group"
-                      role="group"
-                      aria-label={group.label}
-                    >
-                      {/* A lone group repeating its section's name reads as a
-                          duplicate header — the section title covers it. */}
-                      {group.label !== section.label && (
-                        <div
-                          className="super-search-group-label"
-                          aria-hidden="true"
-                        >
-                          {group.label}
-                        </div>
-                      )}
-                      <div className="super-search-group-results">
-                        {group.results.map((result) => {
-                          const index = visibleFlatResults.indexOf(result);
-                          const active = index === highlight;
-                          return (
-                            <Button
-                              key={result.key}
-                              id={optionId(index)}
-                              type="button"
-                              variant="quiet"
-                              justify="start"
-                              fullWidth
-                              role="option"
-                              aria-selected={active}
-                              className={`super-search-item${active ? " active" : ""}`}
-                              onMouseEnter={() => moveHighlight(index)}
-                              onClick={() => selectResult(result)}
-                            >
-                              <span className="super-search-item-icon">
-                                {result.icon ?? (
-                                  <LocalIcon
-                                    icon={result.iconName ?? "search-rounded"}
-                                    width="1.1rem"
-                                    height="1.1rem"
-                                  />
-                                )}
-                              </span>
-                              <span className="super-search-item-text">
-                                <span className="super-search-item-title">
-                                  {result.title}
+                  {section.groups.map((group) => {
+                    const shownCount = visibleCountFor(group);
+                    const hiddenCount = group.results.length - shownCount;
+                    return (
+                      <div
+                        key={group.id}
+                        className="super-search-group"
+                        role="group"
+                        aria-label={group.label}
+                      >
+                        {/* A lone group repeating its section's name reads as a
+                            duplicate header — the section title covers it. */}
+                        {group.label !== section.label && (
+                          <div
+                            className="super-search-group-label"
+                            aria-hidden="true"
+                          >
+                            {group.label}
+                          </div>
+                        )}
+                        <div className="super-search-group-results">
+                          {group.results.slice(0, shownCount).map((result) => {
+                            const index = visibleFlatResults.indexOf(result);
+                            const active = index === highlight;
+                            return (
+                              <Button
+                                key={result.key}
+                                id={optionId(index)}
+                                type="button"
+                                variant="quiet"
+                                justify="start"
+                                fullWidth
+                                role="option"
+                                aria-selected={active}
+                                className={`super-search-item${active ? " active" : ""}`}
+                                onMouseEnter={() => moveHighlight(index)}
+                                onClick={() => selectResult(result)}
+                              >
+                                <span className="super-search-item-icon">
+                                  {result.icon ?? (
+                                    <LocalIcon
+                                      icon={result.iconName ?? "search-rounded"}
+                                      width="1.1rem"
+                                      height="1.1rem"
+                                    />
+                                  )}
                                 </span>
-                                {result.subtitle && (
-                                  <Text size="xs" c="dimmed" lineClamp={1}>
-                                    {result.subtitle}
-                                  </Text>
-                                )}
-                              </span>
-                            </Button>
-                          );
-                        })}
+                                <span className="super-search-item-text">
+                                  <span className="super-search-item-title">
+                                    {result.title}
+                                  </span>
+                                  {result.subtitle && (
+                                    <Text size="xs" c="dimmed" lineClamp={1}>
+                                      {result.subtitle}
+                                    </Text>
+                                  )}
+                                </span>
+                              </Button>
+                            );
+                          })}
+                        </div>
+                        {(hiddenCount > 0 ||
+                          shownCount > COLLAPSED_GROUP_SIZE) && (
+                          <Button
+                            type="button"
+                            variant="quiet"
+                            justify="start"
+                            className="super-search-show-more"
+                            onClick={() => toggleGroupExpanded(group.id)}
+                          >
+                            {hiddenCount > 0
+                              ? t(
+                                  "superSearch.showMore",
+                                  "Show {{count}} more",
+                                  { count: hiddenCount },
+                                )
+                              : t("superSearch.showLess", "Show less")}
+                          </Button>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

@@ -42,7 +42,6 @@ import {
   type PortalEntityScopeId,
 } from "@portal/search/entitySearch";
 
-const FOCUSED_SHARED_GROUP_LIMIT = 8;
 const EDITOR_GROUP_ORDER: SuperSearchGroupId[] = ["tools"];
 const SETTINGS_GROUP_ORDER: SuperSearchGroupId[] = ["settings"];
 const PROCESSOR_SECTION_LABEL_KEY = "superSearch.group.processor";
@@ -124,12 +123,7 @@ export function usePortalSearchResults(
   const { tier } = useTier();
 
   const trimmed = query.trim();
-  const { scopeEnabled, focusedScopeId } = useSearchScopeFilter(options);
-  const sharedScopeLimit = useCallback(
-    (scopeId: SuperSearchGroupId) =>
-      focusedScopeId === scopeId ? FOCUSED_SHARED_GROUP_LIMIT : undefined,
-    [focusedScopeId],
-  );
+  const { scopeEnabled } = useSearchScopeFilter(options);
   const requestedEntityScopes = useMemo<readonly PortalEntityScopeId[]>(() => {
     if (!active || trimmed.length === 0) return NO_PORTAL_ENTITY_SCOPES;
     const enabled = defaultPortalEntityScopes().filter((scopeId) =>
@@ -199,9 +193,8 @@ export function usePortalSearchResults(
     () =>
       buildProcessorEntityGroups(entities, trimmed, t, navigate, {
         scopeEnabled,
-        focusedScopeId,
       }),
-    [entities, trimmed, t, navigate, scopeEnabled, focusedScopeId],
+    [entities, trimmed, t, navigate, scopeEnabled],
   );
 
   const groups = useMemo(() => {
@@ -209,13 +202,7 @@ export function usePortalSearchResults(
     const settingsGroups = assembleSuperSearchGroups(
       {
         settings: scopeEnabled("settings")
-          ? rankSettingsResults(
-              trimmed,
-              t,
-              gates,
-              openSettingsSection,
-              sharedScopeLimit("settings"),
-            )
+          ? rankSettingsResults(trimmed, t, gates, openSettingsSection)
           : [],
       },
       t,
@@ -231,12 +218,7 @@ export function usePortalSearchResults(
     const editorGroups = assembleSuperSearchGroups(
       {
         tools: scopeEnabled("tools")
-          ? rankToolResults(
-              searchableTools,
-              trimmed,
-              openTool,
-              sharedScopeLimit("tools"),
-            )
+          ? rankToolResults(searchableTools, trimmed, openTool)
           : [],
       },
       t,
@@ -264,7 +246,6 @@ export function usePortalSearchResults(
     openTool,
     scopeEnabled,
     searchableTools,
-    sharedScopeLimit,
     t,
     trimmed,
   ]);

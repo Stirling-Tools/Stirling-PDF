@@ -36,7 +36,6 @@ export function useProcessorEntityGroups(
   t: TFunction,
   navigate: (path: string) => void,
   scopeEnabled: (scopeId: string) => boolean = () => true,
-  focusedScopeId: string | null = null,
 ): SuperSearchGroup[] {
   const [mod, setMod] = useState<EntitySearchModule | null>(null);
   const modRef = useRef<EntitySearchModule | null>(null);
@@ -91,17 +90,6 @@ export function useProcessorEntityGroups(
     if (!mod || !entities || !active || !hasQuery) return NO_GROUPS;
     return mod.buildProcessorEntityGroups(entities, trimmed, t, navigate, {
       scopeEnabled,
-      focusedScopeId,
     });
-  }, [
-    mod,
-    entities,
-    active,
-    hasQuery,
-    trimmed,
-    t,
-    navigate,
-    scopeEnabled,
-    focusedScopeId,
-  ]);
+  }, [mod, entities, active, hasQuery, trimmed, t, navigate, scopeEnabled]);
 }

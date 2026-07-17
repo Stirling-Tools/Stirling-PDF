@@ -64,10 +64,12 @@ export type {
   UseSuperSearchResult,
 };
 
-/** Per-group result caps so the dropdown stays scannable. */
-const GROUP_LIMIT = 6;
-/** A scoped search can show more rows because the dropdown only holds one lane. */
-const FOCUSED_GROUP_LIMIT = 8;
+/**
+ * How many results a ranker computes per group. This is the ceiling the
+ * dropdown can reveal via "show more" — the component shows a small initial
+ * slice per group and expands to the rest on demand.
+ */
+export const GROUP_RESULT_CEILING = 24;
 /** Group display order in the dropdown. */
 const GROUP_ORDER: SuperSearchGroupId[] = [
   "files",
@@ -166,14 +168,11 @@ export function useEditorSearchScopes(): SuperSearchScope[] {
 }
 
 /**
- * Shared scope handling for hosts that accept SuperSearchQueryOptions: which
- * source lanes are enabled, and which single lane (if any) is focused — a
- * focused lane can spend a larger row budget since it has the dropdown to
- * itself.
+ * Shared scope handling for hosts that accept SuperSearchQueryOptions:
+ * which source lanes are enabled for the current chip/prefix selection.
  */
 export function useSearchScopeFilter(options?: SuperSearchQueryOptions): {
   scopeEnabled: (scopeId: string) => boolean;
-  focusedScopeId: string | null;
 } {
   const scopedIds = useMemo(
     () => new Set(options?.scopeIds ?? []),
@@ -184,9 +183,7 @@ export function useSearchScopeFilter(options?: SuperSearchQueryOptions): {
     (scopeId: string) => !hasScopedSearch || scopedIds.has(scopeId),
     [hasScopedSearch, scopedIds],
   );
-  const focusedScopeId =
-    scopedIds.size === 1 ? (scopedIds.values().next().value ?? null) : null;
-  return { scopeEnabled, focusedScopeId };
+  return { scopeEnabled };
 }
 
 // ---------------------------------------------------------------------------
@@ -234,7 +231,7 @@ export function rankFileResults(
   stubs: StirlingFileStub[],
   trimmed: string,
   openFile: (stub: StirlingFileStub) => void | Promise<void>,
-  limit = GROUP_LIMIT,
+  limit = GROUP_RESULT_CEILING,
 ): SuperSearchResult[] {
   if (!trimmed) return [];
   return rankByFuzzy(stubs, trimmed, [(s) => s.name])
@@ -263,7 +260,7 @@ export function rankToolResults(
   registry: Partial<ToolRegistry>,
   trimmed: string,
   openTool: (id: ToolId) => void,
-  limit = GROUP_LIMIT,
+  limit = GROUP_RESULT_CEILING,
 ): SuperSearchResult[] {
   if (!trimmed) return [];
   const entries = Object.entries(registry) as [
@@ -293,7 +290,7 @@ export function rankSettingsResults(
   t: TFunction,
   gates: SuperSearchGates | null,
   openSettings: (section: string, anchor?: string) => void,
-  limit = GROUP_LIMIT,
+  limit = GROUP_RESULT_CEILING,
 ): SuperSearchResult[] {
   if (!trimmed) return [];
 
@@ -390,7 +387,7 @@ export function rankProcessorResults(
   t: TFunction,
   gates: SuperSearchGates | null,
   selectEntry: (entry: ProcessorSearchEntry) => void,
-  limit = GROUP_LIMIT,
+  limit = GROUP_RESULT_CEILING,
 ): SuperSearchResult[] {
   if (!trimmed || PROCESSOR_SEARCH_INDEX.length === 0) return [];
   // Only offer Processor pages to users who can actually enter that app.
@@ -464,13 +461,7 @@ export function useSuperSearch(
 
   const trimmed = query.trim();
   const { stubs, loadingFiles } = useMyFilesStubs(active);
-  const { scopeEnabled, focusedScopeId } = useSearchScopeFilter(options);
-
-  const scopeLimit = useCallback(
-    (scopeId: SuperSearchGroupId) =>
-      focusedScopeId === scopeId ? FOCUSED_GROUP_LIMIT : GROUP_LIMIT,
-    [focusedScopeId],
-  );
+  const { scopeEnabled } = useSearchScopeFilter(options);
 
   // --- Actions -----------------------------------------------------------
   const openFile = useCallback(
@@ -546,40 +537,22 @@ export function useSuperSearch(
     t,
     navigate,
     scopeEnabled,
-    focusedScopeId,
   );
 
   const groups = useMemo<SuperSearchGroup[]>(() => {
     const assembledGroups = assembleSuperSearchGroups(
       {
         files: scopeEnabled("files")
-          ? rankFileResults(stubs, trimmed, openFile, scopeLimit("files"))
+          ? rankFileResults(stubs, trimmed, openFile)
           : [],
         tools: scopeEnabled("tools")
-          ? rankToolResults(
-              toolRegistry,
-              trimmed,
-              openTool,
-              scopeLimit("tools"),
-            )
+          ? rankToolResults(toolRegistry, trimmed, openTool)
           : [],
         settings: scopeEnabled("settings")
-          ? rankSettingsResults(
-              trimmed,
-              t,
-              gates,
-              openSettings,
-              scopeLimit("settings"),
-            )
+          ? rankSettingsResults(trimmed, t, gates, openSettings)
           : [],
         processor: scopeEnabled("processor")
-          ? rankProcessorResults(
-              trimmed,
-              t,
-              gates,
-              selectProcessorEntry,
-              scopeLimit("processor"),
-            )
+          ? rankProcessorResults(trimmed, t, gates, selectProcessorEntry)
           : [],
       },
       t,
@@ -617,7 +590,6 @@ export function useSuperSearch(
     openSettings,
     selectProcessorEntry,
     scopeEnabled,
-    scopeLimit,
     entityGroups,
     t,
   ]);

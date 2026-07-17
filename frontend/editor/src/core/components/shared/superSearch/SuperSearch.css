@@ -177,6 +177,20 @@
   align-items: center;
 }
 
+/* Per-group "show N more" / "show less" toggle. */
+.super-search-show-more.mantine-Button-root {
+  --button-height: auto;
+  min-height: 0;
+  padding: 0.25rem 0.5rem 0.35rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.super-search-show-more.mantine-Button-root:hover,
+.super-search-show-more.mantine-Button-root:focus-visible {
+  background: transparent;
+  color: var(--text-primary);
+}
+
 .super-search-section-toggle .mantine-Button-label {
   text-align: left;
 }
