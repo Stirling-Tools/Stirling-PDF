@@ -237,7 +237,7 @@
 .super-search-item {
   display: flex;
   align-items: center;
-  gap: 0.7rem;
+  gap: 0.5rem;
   width: 100%;
   padding: 0.45rem 0.5rem;
   border: none;
