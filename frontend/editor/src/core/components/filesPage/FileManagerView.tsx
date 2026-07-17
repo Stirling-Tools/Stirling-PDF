@@ -60,6 +60,7 @@ import { FolderId, ROOT_FOLDER_ID } from "@app/types/folder";
 
 import { FileGrid, FilesPageEntry } from "@app/components/filesPage/FileGrid";
 import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
+import { useEditorSearchScopes } from "@app/hooks/useSuperSearch";
 import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
 import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerModal";
 import MobileUploadModal from "@app/components/shared/MobileUploadModal";
@@ -82,6 +83,7 @@ export default function FileManagerView() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const searchScopes = useEditorSearchScopes();
 
   // Hide Shared tab when storageSharingEnabled is false.
   const { sharingEnabled } = useSharingEnabled();
@@ -911,7 +913,7 @@ export default function FileManagerView() {
           return (
             <>
               <div className="files-page-header-search">
-                <SuperSearch />
+                <SuperSearch scopes={searchScopes} />
               </div>
               <div className="files-page-header-actions">
                 <Tooltip

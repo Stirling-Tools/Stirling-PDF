@@ -33,6 +33,7 @@ import { WorkbenchType, isBaseWorkbench } from "@app/types/workbench";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
+import { useEditorSearchScopes } from "@app/hooks/useSuperSearch";
 import ViewerShareButton from "@app/components/viewer/ViewerShareButton";
 import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
@@ -102,6 +103,7 @@ export default function WorkbenchBar({
 }: WorkbenchBarProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const searchScopes = useEditorSearchScopes();
   const returnRoute = useSyncExternalStore(
     subscribeFilesPageReturnRoute,
     getFilesPageReturnRoute,
@@ -536,7 +538,7 @@ export default function WorkbenchBar({
 
       {/* Global super search - always present, even on the homepage */}
       <div className="workbench-bar-search">
-        <SuperSearch />
+        <SuperSearch scopes={searchScopes} />
       </div>
 
       {/* Tool buttons - second row, only rendered when buttons exist. In the

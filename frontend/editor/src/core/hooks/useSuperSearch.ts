@@ -71,6 +71,77 @@ const GROUP_ORDER: SuperSearchGroupId[] = [
 ];
 
 /**
+ * Whether the current user can enter the Processor at all: explicit portal
+ * access, admin, or single-user mode with login disabled. Null gates (config
+ * still loading) stay closed.
+ */
+export function isProcessorGateOpen(gates: SuperSearchGates | null): boolean {
+  return (
+    !!gates &&
+    (gates.portalAccessible === true || gates.isAdmin || !gates.loginEnabled)
+  );
+}
+
+/** The editor's visibility gates, from app config + the session's flags. */
+export function useSuperSearchGates(): SuperSearchGates | null {
+  const authState = useAuth();
+  const { config } = useAppConfig();
+  return useMemo(
+    () =>
+      config
+        ? {
+            isAdmin: authState.isAdmin ?? config.isAdmin ?? false,
+            loginEnabled: config.enableLogin ?? false,
+            portalAccessible: authState.portalAccess ?? false,
+          }
+        : null,
+    [authState.isAdmin, authState.portalAccess, config],
+  );
+}
+
+/**
+ * The editor bar's filter chips — one per source lane. The Processor chip
+ * covers pages and entities together, and only shows when this build ships
+ * the portal and the user can enter it.
+ */
+export function useEditorSearchScopes(): SuperSearchScope[] {
+  const { t } = useTranslation();
+  const gates = useSuperSearchGates();
+  const processorAvailable =
+    PROCESSOR_SEARCH_INDEX.length > 0 && isProcessorGateOpen(gates);
+
+  return useMemo(
+    () => [
+      {
+        id: "files",
+        label: t("superSearch.group.files", "Files"),
+        aliases: ["file", "files"],
+      },
+      {
+        id: "tools",
+        label: t("superSearch.group.tools", "Tools"),
+        aliases: ["tool", "tools"],
+      },
+      {
+        id: "settings",
+        label: t("superSearch.group.settings", "Settings"),
+        aliases: ["setting", "settings"],
+      },
+      ...(processorAvailable
+        ? [
+            {
+              id: "processor",
+              label: t("superSearch.group.processor", "Processor"),
+              aliases: ["processor", "portal", "page", "pages"],
+            },
+          ]
+        : []),
+    ],
+    [t, processorAvailable],
+  );
+}
+
+/**
  * Shared scope handling for hosts that accept SuperSearchQueryOptions: which
  * source lanes are enabled, and which single lane (if any) is focused — a
  * focused lane can spend a larger row budget since it has the dropdown to
@@ -288,15 +359,8 @@ export function rankProcessorResults(
   limit = GROUP_LIMIT,
 ): SuperSearchResult[] {
   if (!trimmed || PROCESSOR_SEARCH_INDEX.length === 0) return [];
-  // Only offer Processor pages to users who can actually enter that app:
-  // explicit portal access, admin, or single-user mode with login disabled.
-  // Null gates (config still loading) stay closed.
-  if (
-    !gates ||
-    !(gates.portalAccessible === true || gates.isAdmin || !gates.loginEnabled)
-  ) {
-    return [];
-  }
+  // Only offer Processor pages to users who can actually enter that app.
+  if (!isProcessorGateOpen(gates)) return [];
   return rankByFuzzy(PROCESSOR_SEARCH_INDEX, trimmed, [
     (e) => t(e.labelKey, e.labelFallback),
     (e) => e.labelFallback,
@@ -353,7 +417,6 @@ export function useSuperSearch(
 ): UseSuperSearchResult {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const authState = useAuth();
   const {
     toolRegistry,
     handleToolSelect,
@@ -362,7 +425,6 @@ export function useSuperSearch(
   } = useToolWorkflow();
   const { actions: navActions } = useNavigationActions();
   const { actions: fileActions } = useFileActions();
-  const { config } = useAppConfig();
   // ViewerContext is only present once the viewer subtree mounts; treat as optional.
   const viewer = useContext(ViewerContext);
 
@@ -439,28 +501,15 @@ export function useSuperSearch(
   );
 
   // --- Assemble ----------------------------------------------------------
-  const gates = useMemo<SuperSearchGates | null>(
-    () =>
-      config
-        ? {
-            isAdmin: authState.isAdmin ?? config.isAdmin ?? false,
-            loginEnabled: config.enableLogin ?? false,
-            portalAccessible: authState.portalAccess ?? false,
-          }
-        : null,
-    [authState.isAdmin, authState.portalAccess, config],
-  );
+  const gates = useSuperSearchGates();
 
   // Processor entities (users, policies, pipelines, sources) join the pages
   // under the Processor section — same gate as the pages group.
-  const processorGateOpen =
-    !!gates &&
-    (gates.portalAccessible === true || gates.isAdmin || !gates.loginEnabled);
   const entityGroups = useProcessorEntityGroups(
     trimmed,
     active &&
       trimmed.length > 0 &&
-      processorGateOpen &&
+      isProcessorGateOpen(gates) &&
       scopeEnabled("processor"),
     t,
     navigate,
