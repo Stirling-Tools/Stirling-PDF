@@ -39,8 +39,7 @@ export const Default: Story = {
   render: () => <ColorPickerDemo />,
 };
 
-/** With the opacity slider shown, as used by annotation tools that support
- * translucent fills (e.g. highlight, watermark). */
+/** With the opacity slider shown, for tools that need translucent fills (e.g. highlight, watermark). */
 export const WithOpacity: Story = {
   render: () => <ColorPickerDemo showOpacity />,
 };

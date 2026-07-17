@@ -10,9 +10,9 @@ import { ToolWorkflowProvider } from "@app/contexts/ToolWorkflowContext";
 import type { SignRequestSummary } from "@app/types/signingSession";
 
 /**
- * Reads server config via AppConfigContext (whether group signing is enabled)
- * and tool selection via ToolWorkflowContext (the "Open shared signing" click
- * target) — matching the provider nesting AppProviders.tsx sets up above it.
+ * SharedSigningLauncher reads server config via AppConfigContext (whether
+ * group signing is enabled) and tool selection via ToolWorkflowContext (the
+ * "Open shared signing" click target), so both must wrap it here.
  */
 function withProviders(groupSigningEnabled: boolean) {
   return function Decorator(Story: () => React.JSX.Element) {

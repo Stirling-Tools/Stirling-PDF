@@ -9,8 +9,8 @@ const meta = {
   parameters: { layout: "fullscreen" },
   // FileSidebar reads file/navigation/viewer/tool-workflow/app-config state
   // directly (useFileState, useNavigationState, useViewer, useToolWorkflow,
-  // useAppConfig, useIndexedDB via FileContextProvider), so it needs the same
-  // provider stack AppProviders.tsx sets up around it in the real app.
+  // useAppConfig, useIndexedDB via FileContextProvider), so it needs the
+  // full provider stack those hooks depend on.
   decorators: [
     (Story) => (
       <AppProviders

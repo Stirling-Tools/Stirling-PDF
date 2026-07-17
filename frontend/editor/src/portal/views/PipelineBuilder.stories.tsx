@@ -24,7 +24,7 @@ const meta: Meta<typeof PipelineBuilder> = {
   component: PipelineBuilder,
   parameters: { layout: "padded" },
   // The builder reads the tool registry (for step labels + settings UIs), so
-  // stories must supply the provider the app mounts in PortalApp.
+  // it needs this provider to render at all.
   decorators: [
     (Story) => (
       <ToolRegistryProvider>

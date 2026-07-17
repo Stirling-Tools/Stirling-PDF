@@ -4,8 +4,8 @@ import { teamService } from "@app/services/teamService";
 import { userManagementService } from "@app/services/userManagementService";
 
 // TeamDetailsSection fetches through these services on mount rather than
-// taking data as props, so the story stubs them directly (the modules export
-// plain objects, so this is the same seam the component itself calls through).
+// taking data as props, so the story stubs the service methods directly
+// instead of passing mock data in.
 teamService.getTeamDetails = async () => ({
   team: { id: 1, name: "Engineering" },
   teamUsers: [
@@ -78,7 +78,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** A team with a mix of active, disabled, and locked members. */
+/** A team with a mix of active and disabled members. */
 export const Default: Story = {};
 
 /** A team with no members yet shows the empty-state row. */

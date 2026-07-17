@@ -12,8 +12,7 @@ const meta = {
   parameters: { layout: "fullscreen" },
   // AppLayout reads the active banner from BannerContext and renders
   // NavigationWarningModal + LoginAgreementModal, which need the navigation
-  // guard (backed by the tool registry) mounted above them — matching the
-  // provider nesting App.tsx sets up around AppLayout.
+  // guard (backed by the tool registry) mounted above them.
   decorators: [
     (Story) => (
       <ToolRegistryProvider>

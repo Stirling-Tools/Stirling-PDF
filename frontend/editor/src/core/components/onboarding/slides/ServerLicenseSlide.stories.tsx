@@ -7,8 +7,8 @@ interface ServerLicenseStageProps {
 }
 
 // ServerLicenseSlide is a factory that returns a SlideConfig (title/body nodes
-// plus background config), not JSX itself, so this stage renders the pieces
-// it produces the same way OnboardingModalSlide does in the real flow.
+// plus background config), not JSX itself, so this stage renders those pieces
+// directly to preview the slide in isolation.
 function ServerLicenseStage({ licenseNotice }: ServerLicenseStageProps) {
   const slide = ServerLicenseSlide({ licenseNotice });
   return (

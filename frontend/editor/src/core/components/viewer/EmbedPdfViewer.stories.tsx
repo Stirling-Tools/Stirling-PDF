@@ -6,8 +6,8 @@ import EmbedPdfViewer from "@app/components/viewer/EmbedPdfViewer";
 // annotation/redaction/form-fill state through ViewerContext, SignatureContext,
 // RedactionContext and FormFillContext — all only available inside the full app
 // provider tree, so pull that in rather than stubbing each context individually.
-// Mirrors AppProviders.stories.tsx's args for skipping the AppConfig network
-// fetch and its blocking-loading gate.
+// Skips the AppConfig network fetch and its blocking-loading gate so the story
+// renders synchronously.
 const meta = {
   title: "Viewer/EmbedPdfViewer",
   component: EmbedPdfViewer,

@@ -7,9 +7,9 @@ import { NavigationProvider } from "@app/contexts/NavigationContext";
 import { ToolWorkflowProvider } from "@app/contexts/ToolWorkflowContext";
 
 /**
- * Reads/writes tool panel mode via ToolWorkflowContext and persists the choice
- * via PreferencesContext — matching the provider nesting AppProviders.tsx sets
- * up above it.
+ * ToolWorkflowProvider reads navigation and tool-registry state on mount, so
+ * NavigationProvider and ToolRegistryProvider must wrap it; PreferencesProvider
+ * backs the persisted tool-panel-mode choice.
  */
 function withProviders(Story: () => ReactElement) {
   return (

@@ -1,11 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { RedactionSelectionMenu } from "@app/components/viewer/RedactionSelectionMenu";
 
-// RedactionSelectionMenu only renders once it has an active document ID
-// (from ActiveDocumentContext) and a selected redaction annotation from the
-// live EmbedPDF redaction plugin. Neither is available outside the real PDF
-// viewer runtime, so outside that context the component's own guard clause
-// makes it render nothing - which is its accurate default/empty state here.
+// RedactionSelectionMenu renders only when there's an active document ID
+// (ActiveDocumentContext) and a selected redaction annotation from the live
+// EmbedPDF redaction plugin. Neither exists in Storybook, so the component's
+// own guard clause renders nothing here - that's its real empty state.
 const meta = {
   title: "Viewer/RedactionSelectionMenu",
   component: RedactionSelectionMenu,

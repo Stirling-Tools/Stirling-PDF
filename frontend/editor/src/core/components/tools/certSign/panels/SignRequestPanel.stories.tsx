@@ -44,8 +44,8 @@ const meta = {
   component: SignRequestPanel,
   parameters: { layout: "padded" },
   // Reads/writes the shared viewer overlay (useSigningOverlay) and adds the
-  // document to active files (useFileActions), so it needs the same
-  // provider stack AppProviders.tsx sets up around it in the real app.
+  // document to active files (useFileActions), so it needs the full
+  // AppProviders stack rather than a minimal test wrapper.
   decorators: [
     (Story) => (
       <AppProviders

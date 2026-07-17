@@ -2,10 +2,9 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import AppConfigModal from "@app/components/shared/AppConfigModal";
 import { AppProviders } from "@app/components/AppProviders";
 
-// AppConfigModal renders section components (GeneralSection, HotkeysSection,
-// etc.) that reach into PreferencesContext, the core ThemeProvider and
-// AppConfigContext — the same provider tree AppProviders sets up around the
-// real app (mirrors Workbench.stories.tsx).
+// The section components (GeneralSection, HotkeysSection, etc.) reach into
+// PreferencesContext, the core ThemeProvider, and AppConfigContext, so the
+// modal needs the full provider tree rather than a lighter-weight stub.
 const meta = {
   title: "Shared/AppConfigModal",
   component: AppConfigModal,

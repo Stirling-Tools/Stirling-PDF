@@ -4,8 +4,8 @@ import { PdfViewerToolbar } from "@app/components/viewer/PdfViewerToolbar";
 
 // Reads page/zoom/spread state off ViewerContext, which only exists inside
 // the full app provider tree, so pull that in rather than stubbing it.
-// Mirrors AppProviders.stories.tsx's args for skipping the AppConfig network
-// fetch and its blocking-loading gate.
+// appConfigProviderProps skip the AppConfig network fetch and its
+// blocking-loading gate, which would otherwise stall the story.
 const meta = {
   title: "Viewer/PdfViewerToolbar",
   component: PdfViewerToolbar,

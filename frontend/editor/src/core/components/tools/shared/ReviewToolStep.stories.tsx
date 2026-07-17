@@ -37,10 +37,9 @@ function makeOperation(
   };
 }
 
-// ReviewToolStep.tsx has no plain component export — createReviewToolStep is a
-// factory that plugs into the step-wizard's `create` callback (see ToolStep's
-// createToolSteps). ToolStep is that same callback shape the real wizard uses,
-// so wire it up the same way to mount the actual review content.
+// createReviewToolStep is a factory, not a plain component — it takes the
+// step-wizard's `create` callback and returns the rendered step. Passing a
+// callback with the same shape here mounts the real review content.
 function ReviewToolStepPreview(props: ReviewToolStepProps) {
   return createReviewToolStep(
     (title, stepProps, children) => (

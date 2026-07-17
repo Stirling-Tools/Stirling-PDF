@@ -16,9 +16,8 @@ const meta: Meta<typeof AccountSection> = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-// AccountSection reads its user through useAuth() and fetches MFA status
-// through accountService on mount rather than taking props, so stories drive
-// those states directly through the same seams the component calls through.
+// AccountSection gets its user from useAuth() and its MFA/account data from
+// accountService on mount rather than via props, so stories set those directly.
 const standardAuth: AuthContextValue = {
   session: null,
   user: {

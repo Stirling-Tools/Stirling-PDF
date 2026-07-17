@@ -5,8 +5,8 @@ import { ViewerInlineControls } from "@app/components/shared/ViewerInlineControl
 // Renders inline in the WorkbenchBar only while the "viewer" workbench is
 // active, and reads zoom state off ViewerContext — both only exist inside the
 // full app provider tree, so pull that in rather than stubbing each context.
-// Mirrors AppProviders.stories.tsx's args for skipping the AppConfig network
-// fetch and its blocking-loading gate.
+// The AppConfig props skip its network fetch and blocking-loading gate so
+// the story renders without a backend.
 const meta = {
   title: "Shared/ViewerInlineControls",
   component: ViewerInlineControls,

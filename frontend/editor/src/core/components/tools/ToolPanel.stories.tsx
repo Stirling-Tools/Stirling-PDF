@@ -6,11 +6,10 @@ const meta = {
   title: "Tools/ToolPanel",
   component: ToolPanel,
   parameters: { layout: "fullscreen" },
-  // ToolPanel reads its tool list/selection from ToolWorkflowContext, which in
-  // turn depends on Navigation/ToolRegistry/Preferences/FileContext — the same
-  // provider stack the app mounts around it, so stories need the same wrapper.
-  // initialConfig + non-blocking bootstrap skip the AppConfig network fetch and
-  // its loading gate so children mount immediately (see AppProviders.stories.tsx).
+  // ToolPanel reads its tool list/selection from ToolWorkflowContext, which
+  // depends on Navigation/ToolRegistry/Preferences/FileContext, so it needs
+  // the full provider stack. initialConfig + non-blocking bootstrap skip the
+  // AppConfig network fetch and its loading gate so children mount immediately.
   decorators: [
     (Story) => (
       <AppProviders

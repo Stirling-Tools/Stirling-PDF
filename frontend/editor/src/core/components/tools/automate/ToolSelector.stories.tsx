@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import ToolSelector from "@app/components/tools/automate/ToolSelector";
 import type { ToolRegistry } from "@app/data/toolsTaxonomy";
 
-// Empty registry, like AutomationCreation.stories.tsx / ToolList.stories.tsx:
 // ToolSelector only mounts ToolButton once a tool is selected or the dropdown
 // is opened with matches, and ToolButton needs Hotkey/ToolWorkflow/AppConfig
 // context the shared preview doesn't mount. Leaving `selectedValue` unset and

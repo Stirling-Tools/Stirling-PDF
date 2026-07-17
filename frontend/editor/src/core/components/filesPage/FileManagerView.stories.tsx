@@ -3,10 +3,10 @@ import FileManagerView from "@app/components/filesPage/FileManagerView";
 import { AppProviders } from "@app/components/AppProviders";
 import { FilesPageProvider } from "@app/contexts/FilesPageContext";
 
-// FileManagerView takes no props at all - every bit of state (files, folders,
-// selection, dialogs) comes from FilesPageContext, which itself leans on
-// FileContext/FolderContext/AppConfigContext. The only way to exercise it is
-// the same provider tree the app wraps around it (mirrors FileManager.stories.tsx).
+// FileManagerView takes no props - all state (files, folders, selection,
+// dialogs) comes from FilesPageContext, which itself leans on
+// FileContext/FolderContext/AppConfigContext. Exercising it requires the
+// same provider tree the app wraps around it.
 const meta = {
   title: "FilesPage/FileManagerView",
   component: FileManagerView,

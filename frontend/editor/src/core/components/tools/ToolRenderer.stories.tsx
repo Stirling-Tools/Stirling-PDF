@@ -7,9 +7,9 @@ import { NavigationProvider } from "@app/contexts/NavigationContext";
 import { ToolWorkflowProvider } from "@app/contexts/ToolWorkflowContext";
 
 /**
- * Looks up the selected tool via ToolWorkflowContext, which in turn reads the
- * tool registry, preferences, and navigation state — matching the provider
- * nesting AppProviders.tsx sets up above it.
+ * ToolWorkflowContext reads the tool registry, preferences, and navigation
+ * state, so all three providers must be present above it for ToolRenderer
+ * to resolve a tool.
  */
 function withProviders(Story: () => ReactElement) {
   return (

@@ -5,9 +5,8 @@ import OnboardingTour from "@app/components/onboarding/OnboardingTour";
 import "@app/components/onboarding/OnboardingTour.css";
 
 /**
- * Sample steps mirroring the shape `getTourSteps` produces: a selector
- * (unused in Storybook since the target elements don't exist on the canvas,
- * so reactour just centers the popover) plus rendered content.
+ * Selectors go unused here since the target elements don't exist on the
+ * canvas, so reactour just centers the popover instead of anchoring to them.
  */
 const SAMPLE_STEPS: StepType[] = [
   {

@@ -5,8 +5,9 @@ import { AttachmentSidebar } from "@app/components/viewer/AttachmentSidebar";
 // Reads useViewer() (toggleAttachmentSidebar, hasAttachmentSupport,
 // attachmentActions) and useToolWorkflow() (handleToolSelectForced), both of
 // which only exist inside the full app provider tree — pull that in rather
-// than stubbing each context. Mirrors AppProviders.stories.tsx's args for
-// skipping the AppConfig network fetch and its blocking-loading gate.
+// than stubbing each context. initialConfig/non-blocking/autoFetch:false skip
+// the AppConfig network fetch and its blocking-loading gate so the story
+// renders without a backend.
 //
 // No EmbedPDF viewer bridge is mounted in Storybook, so hasAttachmentSupport()
 // stays false and the sidebar renders its "unavailable" state regardless of

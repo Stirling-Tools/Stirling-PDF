@@ -22,8 +22,7 @@ const mockFile: StirlingFileStub = {
  * The modal loads its version chain from IndexedDB (empty in Storybook) and
  * dispatches file/navigation actions on add-to-workspace and remove, so it
  * needs FileContext (also supplies IndexedDBContext) and the tool-registry-
- * backed NavigationContext mounted above it, matching AppProviders.tsx's
- * nesting.
+ * backed NavigationContext mounted above it.
  */
 function withProviders(Story: () => ReactElement) {
   return (

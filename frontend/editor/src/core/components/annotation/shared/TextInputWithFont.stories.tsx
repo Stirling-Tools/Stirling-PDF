@@ -62,8 +62,7 @@ export const Default: Story = {
   render: () => <TextInputWithFontDemo />,
 };
 
-/** Without the colour picker or alignment control, as used where those
- * options don't apply to the annotation tool. */
+/** Without the colour picker or alignment control, for tools that don't need them. */
 export const WithoutColorOrAlign: Story = {
   render: () => (
     <TextInputWithFontDemo

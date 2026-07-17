@@ -2,10 +2,9 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { AppProviders } from "@app/components/AppProviders";
 import RightSidebar from "@app/components/tools/RightSidebar";
 
-// RightSidebar reads from ToolWorkflowContext, SidebarContext, ToolRegistryProvider
-// and more — mount the real provider tree rather than stubbing each one
-// individually. Config bootstrap is non-blocking so the story doesn't wait on a
-// network fetch (matches AppProviders.stories.tsx).
+// RightSidebar reads from ToolWorkflowContext, SidebarContext, ToolRegistryProvider,
+// and more, so it's simpler to mount the real provider tree than stub each one.
+// Config bootstrap is non-blocking so the story doesn't wait on a network fetch.
 const meta = {
   title: "Tools/RightSidebar",
   component: RightSidebar,

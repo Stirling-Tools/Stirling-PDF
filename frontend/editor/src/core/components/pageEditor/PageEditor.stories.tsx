@@ -4,8 +4,7 @@ import { AppProviders } from "@app/components/AppProviders";
 
 // PageEditor takes no required props - all of its state (files, navigation
 // guard, page editor document) comes from contexts, which only resolve
-// inside the same provider tree the app wraps around it (mirrors
-// Workbench.stories.tsx).
+// inside the same provider tree the app wraps around it.
 const meta = {
   title: "PageEditor/PageEditor",
   component: PageEditor,

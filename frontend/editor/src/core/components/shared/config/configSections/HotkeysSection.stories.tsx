@@ -8,9 +8,8 @@ import { ToolWorkflowProvider } from "@app/contexts/ToolWorkflowContext";
 import { HotkeyProvider } from "@app/contexts/HotkeyContext";
 
 /**
- * Reads/writes bindings via HotkeyContext, which in turn reads the tool
- * registry and selection state off ToolWorkflowContext — matching the
- * provider nesting AppProviders.tsx sets up above it.
+ * HotkeyContext reads the tool registry and selection state off
+ * ToolWorkflowContext, so both providers must wrap the story.
  */
 function withProviders(Story: () => ReactElement) {
   return (

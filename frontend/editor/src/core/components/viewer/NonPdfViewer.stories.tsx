@@ -8,9 +8,8 @@ import { ToolWorkflowProvider } from "@app/contexts/ToolWorkflowContext";
 
 /**
  * NonPdfViewer reads tool availability (for the "Convert to PDF" action) via
- * ToolWorkflowContext, which in turn reads the tool registry, preferences,
- * and navigation state — matching the provider nesting AppProviders.tsx sets
- * up above it.
+ * ToolWorkflowContext, which depends on the tool registry, preferences, and
+ * navigation providers being mounted above it.
  */
 function withProviders(Story: () => ReactElement) {
   return (

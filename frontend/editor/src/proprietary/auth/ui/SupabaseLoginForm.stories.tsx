@@ -4,8 +4,8 @@ import type { SupabaseLoginState } from "@app/auth/ui/useSupabaseLogin";
 import "@app/auth/ui/auth.css";
 
 /**
- * Supabase counterpart to the Spring login form: SSO buttons + email/password,
- * wired to a {@link SupabaseLoginState} from useSupabaseLogin.
+ * Login form combining SSO buttons and email/password, driven by a
+ * {@link SupabaseLoginState} from useSupabaseLogin.
  */
 const meta: Meta<typeof SupabaseLoginForm> = {
   title: "Auth/Supabase Login Form",

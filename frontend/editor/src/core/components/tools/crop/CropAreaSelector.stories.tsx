@@ -5,11 +5,10 @@ import CropAreaSelector from "@app/components/tools/crop/CropAreaSelector";
 import { Rectangle, PDFBounds } from "@app/utils/cropCoordinates";
 import { mantineTheme } from "@app/theme/mantineTheme";
 
-// CropAreaSelector reads theme.other.crop (overlay/handle colors) defined on the
-// core app's Mantine theme. The Storybook preview only provides the portal's
-// theme, which has no `other.crop`, so nest the core theme here — Mantine merges
-// nested providers with their parent, leaving everything else preview.tsx sets
-// up untouched.
+// CropAreaSelector reads theme.other.crop (overlay/handle colors), which only
+// the core app's Mantine theme defines. Nesting it here supplies that value
+// without disturbing whatever theme wraps the story globally, since Mantine
+// merges nested providers with their parent.
 const pdfBounds: PDFBounds = {
   actualWidth: 595.28,
   actualHeight: 841.89,

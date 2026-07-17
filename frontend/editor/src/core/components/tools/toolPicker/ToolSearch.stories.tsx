@@ -9,9 +9,9 @@ import {
   useToolWorkflow,
 } from "@app/contexts/ToolWorkflowContext";
 
-// ToolSearch is handed `toolRegistry` as a prop, but that registry is only
-// ever built by ToolWorkflowContext, so the same provider nesting
-// AppProviders.tsx sets up above it is needed here to source a real one.
+// ToolSearchDemo below sources toolRegistry via useToolWorkflow(), so
+// ToolWorkflowProvider must be present — and it in turn needs
+// ToolRegistryProvider and NavigationProvider as ancestors to build a real registry.
 function withProviders(Story: () => ReactElement) {
   return (
     <PreferencesProvider>

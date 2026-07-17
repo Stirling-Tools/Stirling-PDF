@@ -5,7 +5,7 @@ import WorkbenchBar from "@app/components/shared/WorkbenchBar";
 // WorkbenchBar reads from FileContext, ToolWorkflowContext, WorkbenchBarContext,
 // NavigationContext and ViewerContext — mount the real provider tree rather than
 // stubbing each one individually. Config bootstrap is non-blocking so the story
-// doesn't wait on a network fetch (matches AppProviders.stories.tsx).
+// doesn't wait on a network fetch.
 const meta = {
   title: "Shared/WorkbenchBar",
   component: WorkbenchBar,

@@ -5,9 +5,8 @@ import { FilesPageProvider } from "@app/contexts/FilesPageContext";
 
 // FolderTreePanel takes no data props of its own - folders, file counts, and
 // the dialog callbacks all come from FilesPageContext/FolderContext, which
-// lean on FileContext/AppConfigContext further up. The only way to exercise
-// it is the same provider tree the app wraps around it (mirrors
-// FileManagerView.stories.tsx).
+// lean on FileContext/AppConfigContext further up. Exercising it requires
+// the full provider tree the app wraps around it.
 const meta = {
   title: "FilesPage/FolderTreePanel",
   component: FolderTreePanel,

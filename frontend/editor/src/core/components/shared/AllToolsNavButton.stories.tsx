@@ -8,9 +8,9 @@ import { NavigationProvider } from "@app/contexts/NavigationContext";
 import { ToolWorkflowProvider } from "@app/contexts/ToolWorkflowContext";
 
 /**
- * Reads/writes tool selection and panel state via ToolWorkflowContext, and the
- * home link href via NavigationContext + the tool registry — matching the
- * provider nesting AppProviders.tsx sets up above it.
+ * The button reads/writes tool selection and panel state via ToolWorkflowContext,
+ * and derives the home link href from NavigationContext plus the tool registry —
+ * all four providers must be present for it to render.
  */
 function withProviders(Story: () => ReactElement) {
   return (

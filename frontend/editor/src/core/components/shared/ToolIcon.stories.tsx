@@ -18,7 +18,7 @@ export const Default: Story = {
   },
 };
 
-/** Visually unavailable state, as used by ToolButton for tools the user can't run. */
+/** Visually unavailable state, for tools the user can't run. */
 export const ReducedOpacity: Story = {
   args: {
     icon: <PictureAsPdfIcon />,
@@ -26,7 +26,7 @@ export const ReducedOpacity: Story = {
   },
 };
 
-/** No right margin, as used inline in RightSidebar. */
+/** No right margin, for inline placement. */
 export const NoMargin: Story = {
   args: {
     icon: <PictureAsPdfIcon />,

@@ -5,8 +5,8 @@ import { BookmarkSidebar } from "@app/components/viewer/BookmarkSidebar";
 // Reads viewer/bookmark state off ViewerContext, plus ToolWorkflowContext and
 // FileContext for the "Add bookmark" flow — all three only exist inside the
 // full app provider tree, so pull that in rather than stubbing each context.
-// Mirrors AppProviders.stories.tsx's args for skipping the AppConfig network
-// fetch and its blocking-loading gate.
+// Config is supplied inline with fetching disabled so the provider skips its
+// network call and blocking-loading gate.
 const meta = {
   title: "Viewer/BookmarkSidebar",
   component: BookmarkSidebar,

@@ -4,16 +4,15 @@ import { AppConfigProvider } from "@app/contexts/AppConfigContext";
 import auditService from "@app/services/auditService";
 
 // AdminAuditSection reads its config through useAppConfig()/useLoginRequired()
-// rather than taking props, so variants drive it by wrapping in an
-// AppConfigProvider with a fixed initialConfig (autoFetch off so stories never
-// hit the API). When login is disabled or the license isn't ENTERPRISE the
-// component falls back to hardcoded demo data on its own; the "fully enabled"
-// and "disabled" variants below need a real (enableLogin + ENTERPRISE) config,
-// which makes the component call auditService.getSystemStatus() on mount —
-// each of those stories stubs that call directly (the module exports a plain
-// object, the same seam the component itself calls through) so it never hits
-// the network, and stubs it inside its own decorator so the two variants
-// don't depend on render order.
+// rather than taking props, so each variant wraps it in an AppConfigProvider
+// with a fixed initialConfig (autoFetch off, so stories never hit the API).
+// Without login enabled + an ENTERPRISE license the component falls back to
+// hardcoded demo data on its own; the "fully enabled" and "disabled" variants
+// below supply that config, which makes the component call
+// auditService.getSystemStatus() on mount, so each stubs that call directly
+// (the module exports a plain object, the seam the component itself calls
+// through) inside its own decorator so the two variants don't depend on
+// render order.
 const meta = {
   title: "Config/AdminAuditSection",
   component: AdminAuditSection,

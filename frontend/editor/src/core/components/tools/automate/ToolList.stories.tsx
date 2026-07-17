@@ -3,10 +3,9 @@ import ToolList from "@app/components/tools/automate/ToolList";
 import type { AutomationTool } from "@app/types/automation";
 import type { ToolRegistry } from "@app/data/toolsTaxonomy";
 
-// Empty registry, like AutomationCreation.stories.tsx: ToolSelector resolves
-// `tool.operation` against it, and an unmatched operation falls back to the
-// search-input display rather than ToolButton (which needs Hotkey/ToolWorkflow
-// context the shared preview doesn't mount).
+// Kept empty: ToolSelector resolves `tool.operation` against this registry, and an
+// unmatched operation falls back to the search-input display rather than ToolButton
+// (which needs Hotkey/ToolWorkflow context this story doesn't mount).
 const emptyToolRegistry: Partial<ToolRegistry> = {};
 
 const configuredTools: AutomationTool[] = [

@@ -30,10 +30,10 @@ const mockFiles: StirlingFileStub[] = [
 ];
 
 /**
- * BulkShareModal reads useFileActions() from FileContext (stood up here since
- * it isn't part of the shared preview decorators) and useAppConfig() to gate
- * share links on `storageShareLinksEnabled` — wrapped per-story to show both
- * the disabled and enabled states.
+ * BulkShareModal reads useFileActions() from FileContext, which isn't part of
+ * the shared preview decorators, so it's provided here for every story.
+ * AppConfig (gating share links on `storageShareLinksEnabled`) is added
+ * per-story instead, since Default and LinksEnabled need different values.
  */
 function withFileContext(Story: () => ReactElement) {
   return (

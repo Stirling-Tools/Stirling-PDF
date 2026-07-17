@@ -9,8 +9,8 @@ import { DEFAULT_RUNTIME_STATE } from "@app/components/onboarding/orchestrator/o
 /**
  * Renders the "interrupt" onboarding modals — slides shown outside the normal
  * step flow (analytics consent, first-login password change, MFA setup, the
- * external server-license notice) — each with dismissal disabled the way
- * {@link Onboarding} actually uses them.
+ * external server-license notice) — each with dismissal disabled, since none
+ * of these can be skipped by the user.
  */
 const meta = {
   title: "Onboarding/Static Onboarding Slide",

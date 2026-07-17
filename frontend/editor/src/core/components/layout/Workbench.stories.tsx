@@ -2,10 +2,9 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import Workbench from "@app/components/layout/Workbench";
 import { AppProviders } from "@app/components/AppProviders";
 
-// Workbench takes no props at all - every bit of state (active files, current
-// view, tool selection, signing overlay, config) comes from contexts, which
-// only resolve inside the same provider tree the app wraps around it (mirrors
-// FileManagerView.stories.tsx).
+// Workbench takes no props - all state (active files, current view, tool
+// selection, signing overlay, config) comes from contexts that only resolve
+// inside the provider tree the app wraps around it.
 const meta = {
   title: "Layout/Workbench",
   component: Workbench,

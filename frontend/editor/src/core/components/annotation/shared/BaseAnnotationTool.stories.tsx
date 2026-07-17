@@ -5,8 +5,7 @@ import { PDFAnnotationProvider } from "@app/components/annotation/providers/PDFA
 import { SignatureProvider } from "@app/contexts/SignatureContext";
 
 // BaseAnnotationTool reads usePDFAnnotation()/useSignature() for undo/redo and
-// placement wiring, neither of which preview.tsx supplies — stub both
-// providers here so the story can mount standalone.
+// placement wiring — stub both providers so the story can mount standalone.
 const StoryProviders = ({ children }: { children: ReactNode }) => (
   <SignatureProvider>
     <PDFAnnotationProvider

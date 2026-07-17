@@ -8,9 +8,8 @@ interface PlanOverviewStageProps {
   loginEnabled?: boolean;
 }
 
-// PlanOverviewSlide is a factory that returns a SlideConfig (title/body nodes
-// plus background config), not JSX itself, so this stage renders the pieces
-// it produces the same way OnboardingModalSlide does in the real flow.
+// PlanOverviewSlide returns a SlideConfig (title/body nodes plus background
+// config) rather than JSX, so this stage has to render those pieces itself.
 function PlanOverviewStage({
   isAdmin,
   licenseNotice,

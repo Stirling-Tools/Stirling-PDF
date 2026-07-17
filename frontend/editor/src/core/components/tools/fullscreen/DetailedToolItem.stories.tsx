@@ -18,10 +18,10 @@ import {
 } from "@app/data/toolsTaxonomy";
 
 // DetailedToolItem reads hotkeys/favourites/availability via useToolMeta, which
-// pulls from HotkeyContext, ToolWorkflowContext and AppConfigContext — the same
-// nesting AppProviders.tsx sets up above it, so all four are needed here too.
-// AppConfigProvider uses autoFetch={false} to skip the network fetch and render
-// synchronously instead of showing a loading state.
+// pulls from HotkeyContext, ToolWorkflowContext and AppConfigContext, so every
+// provider here must be present or those reads fail. AppConfigProvider uses
+// autoFetch={false} to skip the network fetch and render synchronously instead
+// of showing a loading state.
 function withProviders(Story: () => React.JSX.Element) {
   return (
     <PreferencesProvider>

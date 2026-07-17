@@ -4,9 +4,9 @@ import ViewerShareButton from "@app/components/viewer/ViewerShareButton";
 
 // Reads the active file off ViewerContext/FileContext and policy enforcement
 // status off the policy hooks — all only exist inside the full app provider
-// tree, so pull that in rather than stubbing each context. Mirrors
-// AppProviders.stories.tsx's args for skipping the AppConfig network fetch and
-// its blocking-loading gate.
+// tree, so pull that in rather than stubbing each context. Config is passed
+// inline and autoFetch disabled so the story renders without a network call
+// or the blocking-loading gate.
 const meta = {
   title: "Viewer/ViewerShareButton",
   component: ViewerShareButton,
