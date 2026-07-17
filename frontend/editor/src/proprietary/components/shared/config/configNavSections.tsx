@@ -20,6 +20,7 @@ import AdminMcpSection from "@app/components/shared/config/configSections/AdminM
 import AdminAuditSection from "@app/components/shared/config/configSections/AdminAuditSection";
 import AdminUsageSection from "@app/components/shared/config/configSections/AdminUsageSection";
 import AdminStorageSharingSection from "@app/components/shared/config/configSections/AdminStorageSharingSection";
+import AdminFolderAccessSection from "@app/components/shared/config/configSections/AdminFolderAccessSection";
 import ApiKeys from "@app/components/shared/config/configSections/ApiKeys";
 import AccountSection from "@app/components/shared/config/configSections/AccountSection";
 import GeneralWithLoginLanding from "@app/components/shared/config/GeneralWithLoginLanding";
@@ -130,6 +131,14 @@ export const useConfigNavSections = (
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
           badge: t("toolPanel.alpha", "Alpha"),
           badgeColor: "orange",
+        },
+        {
+          key: "adminFolderAccess",
+          label: t("settings.configuration.folderAccess", "Folder Access"),
+          icon: "folder-rounded",
+          component: <AdminFolderAccessSection />,
+          disabled: requiresLogin,
+          disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
         },
         {
           key: "adminEndpoints",

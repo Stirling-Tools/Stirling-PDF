@@ -939,6 +939,19 @@ label = "Regenerate on Startup"
 description = "Number of days the certificate will be valid"
 label = "Certificate Validity (days)"
 
+[admin.settings.folderAccess]
+description = "Directories that folder sources and folder outputs are allowed to read from and write to. This is a security boundary: automations can never be pointed at a server path outside this list."
+securityNote = "Leave this empty to disable folder sources and outputs entirely. Stirling's own configuration directory is always off-limits."
+title = "Folder Access"
+
+[admin.settings.folderAccess.roots]
+add = "Add"
+empty = "No folders allowed. Folder sources and outputs are currently disabled."
+hint = "Enter absolute paths, for example /data/inbox."
+label = "Allowed folder roots"
+placeholder = "/data/inbox"
+remove = "Remove folder root"
+
 [admin.settings.general]
 description = "Configure system-wide application settings including branding and default behavior."
 system = "System"
@@ -8875,6 +8888,7 @@ advanced = "Advanced"
 database = "Database"
 endpoints = "Endpoints"
 features = "Features"
+folderAccess = "Folder Access"
 mcp = "MCP Server"
 storageSharing = "File Storage & Sharing"
 systemSettings = "System Settings"
