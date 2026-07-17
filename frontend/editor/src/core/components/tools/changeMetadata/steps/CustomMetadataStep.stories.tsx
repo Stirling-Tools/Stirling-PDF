@@ -11,6 +11,13 @@ import { CustomMetadataEntry } from "@app/types/metadata";
 const meta = {
   title: "Tools/ChangeMetadata/CustomMetadataStep",
   component: CustomMetadataStep,
+  args: {
+    parameters: defaultParameters,
+    onParameterChange: () => {},
+    addCustomMetadata: () => {},
+    removeCustomMetadata: () => {},
+    updateCustomMetadata: () => {},
+  },
 } satisfies Meta<typeof CustomMetadataStep>;
 export default meta;
 type Story = StoryObj<typeof meta>;

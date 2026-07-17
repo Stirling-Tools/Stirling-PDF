@@ -9,6 +9,10 @@ import {
 const meta = {
   title: "Tools/ChangeMetadata/StandardMetadataStep",
   component: StandardMetadataStep,
+  args: {
+    parameters: defaultParameters,
+    onParameterChange: () => {},
+  },
 } satisfies Meta<typeof StandardMetadataStep>;
 export default meta;
 type Story = StoryObj<typeof meta>;

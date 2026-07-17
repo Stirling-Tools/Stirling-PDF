@@ -6,6 +6,10 @@ const meta = {
   title: "Shared/WetSignature/DrawSignatureCanvas",
   component: DrawSignatureCanvas,
   parameters: { layout: "padded" },
+  args: {
+    signature: null,
+    onChange: () => {},
+  },
 } satisfies Meta<typeof DrawSignatureCanvas>;
 export default meta;
 

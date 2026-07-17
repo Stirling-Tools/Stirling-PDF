@@ -10,6 +10,10 @@ const meta = {
   title: "Tools/ConvertFromCbzSettings",
   component: ConvertFromCbzSettings,
   parameters: { layout: "padded" },
+  args: {
+    parameters: defaultParameters,
+    onParameterChange: () => {},
+  },
 } satisfies Meta<typeof ConvertFromCbzSettings>;
 export default meta;
 type Story = StoryObj<typeof meta>;

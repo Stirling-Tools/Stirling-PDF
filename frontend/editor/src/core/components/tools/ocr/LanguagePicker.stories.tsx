@@ -6,6 +6,10 @@ import LanguagePicker from "@app/components/tools/ocr/LanguagePicker";
 const meta = {
   title: "Tools/OCR/LanguagePicker",
   component: LanguagePicker,
+  args: {
+    value: [],
+    onChange: () => {},
+  },
   parameters: {
     msw: {
       handlers: [

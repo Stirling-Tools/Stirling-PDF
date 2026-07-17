@@ -9,6 +9,10 @@ import {
 const meta = {
   title: "Tools/ExtractImages/ExtractImagesSettings",
   component: ExtractImagesSettings,
+  args: {
+    parameters: defaultParameters,
+    onParameterChange: () => {},
+  },
 } satisfies Meta<typeof ExtractImagesSettings>;
 export default meta;
 

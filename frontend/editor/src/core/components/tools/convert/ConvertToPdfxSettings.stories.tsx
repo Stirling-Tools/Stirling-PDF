@@ -10,6 +10,11 @@ import { StirlingFile } from "@app/types/fileContext";
 const meta = {
   title: "Tools/Convert/ConvertToPdfxSettings",
   component: ConvertToPdfxSettings,
+  args: {
+    parameters: defaultParameters,
+    onParameterChange: () => {},
+    selectedFiles: [],
+  },
 } satisfies Meta<typeof ConvertToPdfxSettings>;
 export default meta;
 

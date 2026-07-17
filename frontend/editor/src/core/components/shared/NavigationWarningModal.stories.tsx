@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, type ReactElement } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import NavigationWarningModal from "@app/components/shared/NavigationWarningModal";
 import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
@@ -50,7 +50,7 @@ function TriggerWarning({
 }
 
 function withProviders(
-  Story: () => JSX.Element,
+  Story: () => ReactElement,
   context: { parameters: { navigationHandlers?: NavigationWarningHandlers } },
 ) {
   return (

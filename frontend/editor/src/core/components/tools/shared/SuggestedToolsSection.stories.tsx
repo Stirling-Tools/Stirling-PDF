@@ -1,11 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import type React from "react";
 import { SuggestedToolsSection } from "@app/components/tools/shared/SuggestedToolsSection";
 import { AppProviders } from "@app/components/AppProviders";
 
 // SuggestedToolsSection reads the tool list via useSuggestedTools, which pulls
 // from NavigationContext and ToolWorkflowContext — mount the real provider
 // tree rather than stubbing each one individually.
-function withProviders(Story: () => JSX.Element) {
+function withProviders(Story: () => React.JSX.Element) {
   return (
     <AppProviders
       appConfigProviderProps={{

@@ -74,7 +74,7 @@ const cloudFile: StirlingFileStub = {
   ...localFile,
   id: createFileId(),
   name: "signed-contract.pdf",
-  remoteStorageId: "remote-file-123",
+  remoteStorageId: 123,
   remoteStorageUpdatedAt: Date.now(),
   remoteOwnedByCurrentUser: true,
 };

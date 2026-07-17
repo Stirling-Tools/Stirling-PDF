@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { ReactElement } from "react";
 import {
   createReviewToolStep,
   ReviewToolStepProps,
@@ -12,8 +13,8 @@ function makeFile(name: string, type = "application/pdf"): File {
 }
 
 function makeOperation(
-  overrides: Partial<ToolOperationHook> = {},
-): ToolOperationHook {
+  overrides: Partial<ToolOperationHook<unknown>> = {},
+): ToolOperationHook<unknown> {
   return {
     files: [],
     thumbnails: [],
@@ -54,7 +55,7 @@ function ReviewToolStepPreview(props: ReviewToolStepProps) {
 // ReviewStepContent reads/writes files via FileContext and renders
 // SuggestedToolsSection, which reads from NavigationContext + ToolWorkflowContext —
 // mount the real provider tree rather than stubbing each one individually.
-function withProviders(Story: () => JSX.Element) {
+function withProviders(Story: () => ReactElement) {
   return (
     <AppProviders
       appConfigProviderProps={{

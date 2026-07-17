@@ -10,6 +10,10 @@ const meta = {
   title: "Tools/Redact/RedactAdvancedSettings",
   component: RedactAdvancedSettings,
   parameters: { layout: "padded" },
+  args: {
+    parameters: defaultParameters,
+    onParameterChange: () => {},
+  },
 } satisfies Meta<typeof RedactAdvancedSettings>;
 export default meta;
 type Story = StoryObj<typeof meta>;

@@ -7,8 +7,7 @@ import FieldBlock from "@app/components/tools/validateSignature/reportView/Field
 // `args`.
 const meta = {
   title: "Tools/ValidateSignature/ReportView/FieldBlock",
-  component: FieldBlock,
-} satisfies Meta<typeof FieldBlock>;
+} satisfies Meta;
 export default meta;
 
 type Story = StoryObj<typeof meta>;

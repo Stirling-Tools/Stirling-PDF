@@ -5,6 +5,10 @@ import WordsToRedactInput from "@app/components/tools/redact/WordsToRedactInput"
 const meta = {
   title: "Tools/Redact/WordsToRedactInput",
   component: WordsToRedactInput,
+  args: {
+    wordsToRedact: [],
+    onWordsChange: () => {},
+  },
 } satisfies Meta<typeof WordsToRedactInput>;
 export default meta;
 type Story = StoryObj<typeof meta>;

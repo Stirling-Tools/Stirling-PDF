@@ -6,6 +6,19 @@ const meta = {
   title: "Annotation/Shared/TextInputWithFont",
   component: TextInputWithFont,
   parameters: { layout: "padded" },
+  args: {
+    text: "Confidential",
+    onTextChange: () => {},
+    fontSize: 24,
+    onFontSizeChange: () => {},
+    fontFamily: "Helvetica",
+    onFontFamilyChange: () => {},
+    label: "Text",
+    placeholder: "Enter text",
+    fontLabel: "Font",
+    fontSizeLabel: "Size",
+    fontSizePlaceholder: "24",
+  },
 } satisfies Meta<typeof TextInputWithFont>;
 export default meta;
 type Story = StoryObj<typeof meta>;

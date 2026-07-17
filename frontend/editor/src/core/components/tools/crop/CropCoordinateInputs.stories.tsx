@@ -7,6 +7,10 @@ const meta = {
   title: "Tools/Crop/CropCoordinateInputs",
   component: CropCoordinateInputs,
   parameters: { layout: "padded" },
+  args: {
+    cropArea: { x: 50, y: 50, width: 300, height: 400 },
+    onCoordinateChange: () => {},
+  },
 } satisfies Meta<typeof CropCoordinateInputs>;
 export default meta;
 type Story = StoryObj<typeof meta>;

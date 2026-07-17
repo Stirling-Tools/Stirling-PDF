@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { FileSelectorPicker } from "@app/components/shared/FileSelectorPicker";
 import { FileContextProvider } from "@app/contexts/FileContext";
@@ -9,7 +10,7 @@ import { FileContextProvider } from "@app/contexts/FileContext";
  * stood up here. The popover starts closed, so no IndexedDB read happens
  * until a story interacts with it.
  */
-function withFileContext(Story: () => JSX.Element) {
+function withFileContext(Story: () => ReactElement) {
   return (
     <FileContextProvider>
       <div style={{ maxWidth: "16rem" }}>

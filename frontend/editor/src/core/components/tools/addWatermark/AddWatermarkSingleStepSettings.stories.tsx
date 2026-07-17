@@ -10,6 +10,10 @@ const meta = {
   title: "Tools/AddWatermark/AddWatermarkSingleStepSettings",
   component: AddWatermarkSingleStepSettings,
   parameters: { layout: "padded" },
+  args: {
+    parameters: defaultParameters,
+    onParameterChange: () => {},
+  },
 } satisfies Meta<typeof AddWatermarkSingleStepSettings>;
 export default meta;
 type Story = StoryObj<typeof meta>;

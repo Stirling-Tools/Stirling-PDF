@@ -6,6 +6,15 @@ const meta = {
   title: "Annotation/DrawingCanvas",
   component: DrawingCanvas,
   parameters: { layout: "padded" },
+  args: {
+    selectedColor: "#000000",
+    penSize: 3,
+    penSizeInput: "3",
+    onColorSwatchClick: () => {},
+    onPenSizeChange: () => {},
+    onPenSizeInputChange: () => {},
+    onSignatureDataChange: () => {},
+  },
 } satisfies Meta<typeof DrawingCanvas>;
 export default meta;
 

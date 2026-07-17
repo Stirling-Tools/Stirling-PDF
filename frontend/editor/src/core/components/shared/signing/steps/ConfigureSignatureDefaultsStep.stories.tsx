@@ -14,6 +14,12 @@ const meta = {
       </div>
     ),
   ],
+  args: {
+    settings: {},
+    onSettingsChange: () => {},
+    onBack: () => {},
+    onNext: () => {},
+  },
 } satisfies Meta<typeof ConfigureSignatureDefaultsStep>;
 export default meta;
 type Story = StoryObj<typeof meta>;

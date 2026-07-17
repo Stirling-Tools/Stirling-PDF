@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactElement } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import ToolSearch from "@app/components/tools/toolPicker/ToolSearch";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
@@ -12,7 +12,7 @@ import {
 // ToolSearch is handed `toolRegistry` as a prop, but that registry is only
 // ever built by ToolWorkflowContext, so the same provider nesting
 // AppProviders.tsx sets up above it is needed here to source a real one.
-function withProviders(Story: () => JSX.Element) {
+function withProviders(Story: () => ReactElement) {
   return (
     <PreferencesProvider>
       <ToolRegistryProvider>
@@ -51,6 +51,12 @@ const meta = {
   title: "Tools/ToolPicker/ToolSearch",
   component: ToolSearch,
   decorators: [withProviders],
+  args: {
+    value: "",
+    onChange: () => {},
+    toolRegistry: {},
+    mode: "filter",
+  },
 } satisfies Meta<typeof ToolSearch>;
 export default meta;
 

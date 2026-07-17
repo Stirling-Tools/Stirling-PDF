@@ -10,6 +10,10 @@ const meta = {
   title: "Tools/CertSign/CertificateFilesSettings",
   component: CertificateFilesSettings,
   parameters: { layout: "padded" },
+  args: {
+    parameters: defaultParameters,
+    onParameterChange: () => {},
+  },
 } satisfies Meta<typeof CertificateFilesSettings>;
 export default meta;
 type Story = StoryObj<typeof meta>;

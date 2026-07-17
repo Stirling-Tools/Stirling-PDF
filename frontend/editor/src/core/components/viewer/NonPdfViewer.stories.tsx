@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { ReactElement } from "react";
 import { NonPdfViewer } from "@app/components/viewer/NonPdfViewer";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
@@ -11,7 +12,7 @@ import { ToolWorkflowProvider } from "@app/contexts/ToolWorkflowContext";
  * and navigation state — matching the provider nesting AppProviders.tsx sets
  * up above it.
  */
-function withProviders(Story: () => JSX.Element) {
+function withProviders(Story: () => ReactElement) {
   return (
     <PreferencesProvider>
       <ToolRegistryProvider>

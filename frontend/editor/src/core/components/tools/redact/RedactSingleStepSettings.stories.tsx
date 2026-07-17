@@ -10,6 +10,10 @@ const meta = {
   title: "Tools/Redact/RedactSingleStepSettings",
   component: RedactSingleStepSettings,
   parameters: { layout: "padded" },
+  args: {
+    parameters: defaultParameters,
+    onParameterChange: () => {},
+  },
 } satisfies Meta<typeof RedactSingleStepSettings>;
 export default meta;
 type Story = StoryObj<typeof meta>;

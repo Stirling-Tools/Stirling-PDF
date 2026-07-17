@@ -57,6 +57,8 @@ function PlacementHarness({
   );
 }
 
+const noopContainerRef = { current: null };
+
 const meta = {
   title: "Viewer/SignaturePlacementOverlay",
   component: SignaturePlacementOverlay,
@@ -69,6 +71,13 @@ const meta = {
       </SignatureProvider>
     ),
   ],
+  // Stories below override render with PlacementHarness, but Storybook's types
+  // still require args to satisfy the component's required props.
+  args: {
+    containerRef: noopContainerRef,
+    isActive: true,
+    signatureConfig: textSignature,
+  },
 } satisfies Meta<typeof SignaturePlacementOverlay>;
 export default meta;
 

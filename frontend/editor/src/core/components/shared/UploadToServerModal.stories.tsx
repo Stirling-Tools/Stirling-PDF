@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import UploadToServerModal from "@app/components/shared/UploadToServerModal";
 import { FileContextProvider } from "@app/contexts/FileContext";
@@ -19,14 +20,14 @@ const mockUploadedFile: StirlingFileStub = {
   ...mockFile,
   id: "file-2" as FileId,
   originalFileId: "file-2" as FileId,
-  remoteStorageId: "remote-file-2",
+  remoteStorageId: 2,
 };
 
 /**
  * The modal dispatches updateStirlingFileStub on upload, so it needs
  * FileContext (also supplies IndexedDBContext) mounted above it.
  */
-function withProviders(Story: () => JSX.Element) {
+function withProviders(Story: () => ReactElement) {
   return (
     <FileContextProvider>
       <Story />

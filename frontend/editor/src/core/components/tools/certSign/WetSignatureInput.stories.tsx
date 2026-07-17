@@ -6,6 +6,16 @@ const meta = {
   title: "Tools/CertSign/WetSignatureInput",
   component: WetSignatureInput,
   parameters: { layout: "padded" },
+  args: {
+    onSignatureDataChange: () => {},
+    onSignatureTypeChange: () => {},
+    onCertTypeChange: () => {},
+    onP12FileChange: () => {},
+    onPasswordChange: () => {},
+    certType: "USER_CERT",
+    p12File: null,
+    password: "",
+  },
 } satisfies Meta<typeof WetSignatureInput>;
 export default meta;
 type Story = StoryObj<typeof meta>;

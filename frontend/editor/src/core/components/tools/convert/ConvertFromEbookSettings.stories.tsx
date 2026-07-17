@@ -9,6 +9,10 @@ import {
 const meta = {
   title: "Tools/Convert/ConvertFromEbookSettings",
   component: ConvertFromEbookSettings,
+  args: {
+    parameters: defaultParameters,
+    onParameterChange: () => {},
+  },
 } satisfies Meta<typeof ConvertFromEbookSettings>;
 export default meta;
 

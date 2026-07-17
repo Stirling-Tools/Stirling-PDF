@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import FileGrid from "@app/components/shared/FileGrid";
 import { FileContextProvider } from "@app/contexts/FileContext";
@@ -11,7 +12,7 @@ import type { FileId } from "@app/types/file";
  * FileContextProvider (which wraps IndexedDBProvider internally) is stood up
  * here.
  */
-function withFileContext(Story: () => JSX.Element) {
+function withFileContext(Story: () => ReactElement) {
   return (
     <FileContextProvider>
       <Story />

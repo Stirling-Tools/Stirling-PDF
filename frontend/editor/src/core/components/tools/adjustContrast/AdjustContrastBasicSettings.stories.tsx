@@ -10,6 +10,10 @@ const meta = {
   title: "Tools/AdjustContrast/AdjustContrastBasicSettings",
   component: AdjustContrastBasicSettings,
   parameters: { layout: "padded" },
+  args: {
+    parameters: defaultParameters,
+    onParameterChange: () => {},
+  },
 } satisfies Meta<typeof AdjustContrastBasicSettings>;
 export default meta;
 type Story = StoryObj<typeof meta>;

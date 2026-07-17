@@ -9,6 +9,10 @@ import {
 const meta = {
   title: "Tools/Convert/ConvertToCbrSettings",
   component: ConvertToCbrSettings,
+  args: {
+    parameters: defaultParameters,
+    onParameterChange: () => {},
+  },
 } satisfies Meta<typeof ConvertToCbrSettings>;
 export default meta;
 

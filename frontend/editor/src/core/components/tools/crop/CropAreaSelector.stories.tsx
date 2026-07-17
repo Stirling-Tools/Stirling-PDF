@@ -10,10 +10,29 @@ import { mantineTheme } from "@app/theme/mantineTheme";
 // theme, which has no `other.crop`, so nest the core theme here — Mantine merges
 // nested providers with their parent, leaving everything else preview.tsx sets
 // up untouched.
+const pdfBounds: PDFBounds = {
+  actualWidth: 595.28,
+  actualHeight: 841.89,
+  thumbnailWidth: 300,
+  thumbnailHeight: 424,
+  offsetX: 0,
+  offsetY: 0,
+  scale: 300 / 595.28,
+};
+
 const meta = {
   title: "Tools/Crop/CropAreaSelector",
   component: CropAreaSelector,
   parameters: { layout: "padded" },
+  // Every story below supplies its own `render`, which ignores these args, but
+  // Storybook's types still require `args` to satisfy CropAreaSelector's
+  // required props.
+  args: {
+    pdfBounds,
+    cropArea: { x: 50, y: 50, width: 300, height: 400 },
+    onCropAreaChange: () => {},
+    children: null,
+  },
   decorators: [
     (Story) => (
       <MantineProvider theme={mantineTheme}>
@@ -24,16 +43,6 @@ const meta = {
 } satisfies Meta<typeof CropAreaSelector>;
 export default meta;
 type Story = StoryObj<typeof meta>;
-
-const pdfBounds: PDFBounds = {
-  actualWidth: 595.28,
-  actualHeight: 841.89,
-  thumbnailWidth: 300,
-  thumbnailHeight: 424,
-  offsetX: 0,
-  offsetY: 0,
-  scale: 300 / 595.28,
-};
 
 function Demo({
   initialCropArea = { x: 50, y: 50, width: 300, height: 400 },

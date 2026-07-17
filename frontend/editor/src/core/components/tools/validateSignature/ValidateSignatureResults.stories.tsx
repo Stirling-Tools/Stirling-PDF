@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import ValidateSignatureResults from "@app/components/tools/validateSignature/ValidateSignatureResults";
 import type { ValidateSignatureOperationHook } from "@app/hooks/tools/validateSignature/useValidateSignatureOperation";
@@ -8,7 +9,7 @@ import { AppProviders } from "@app/components/AppProviders";
 // the tool list via useSuggestedTools — pulling from NavigationContext and
 // ToolWorkflowContext. Mount the real provider tree rather than stubbing each
 // one individually.
-function withProviders(Story: () => JSX.Element) {
+function withProviders(Story: () => ReactElement) {
   return (
     <AppProviders
       appConfigProviderProps={{

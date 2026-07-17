@@ -9,6 +9,10 @@ import {
 const meta = {
   title: "Tools/AddWatermark/WatermarkImageFile",
   component: WatermarkImageFile,
+  args: {
+    parameters: { ...defaultParameters, watermarkType: "image" },
+    onParameterChange: () => {},
+  },
 } satisfies Meta<typeof WatermarkImageFile>;
 export default meta;
 

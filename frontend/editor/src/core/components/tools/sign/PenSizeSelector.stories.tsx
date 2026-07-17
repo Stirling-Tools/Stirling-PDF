@@ -5,6 +5,12 @@ import PenSizeSelector from "@app/components/tools/sign/PenSizeSelector";
 const meta = {
   title: "Tools/Sign/PenSizeSelector",
   component: PenSizeSelector,
+  args: {
+    value: 5,
+    inputValue: "5",
+    onValueChange: () => {},
+    onInputChange: () => {},
+  },
 } satisfies Meta<typeof PenSizeSelector>;
 export default meta;
 type Story = StoryObj<typeof meta>;

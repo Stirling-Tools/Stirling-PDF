@@ -41,6 +41,15 @@ const OverlayPdfsSettingsDemo = (props: {
 const meta = {
   title: "Tools/OverlayPdfs/OverlayPdfsSettings",
   component: OverlayPdfsSettings,
+  args: {
+    parameters: {
+      overlayFiles: [],
+      overlayMode: "SequentialOverlay",
+      overlayPosition: 0,
+      counts: [],
+    },
+    onParameterChange: () => {},
+  },
 } satisfies Meta<typeof OverlayPdfsSettings>;
 export default meta;
 

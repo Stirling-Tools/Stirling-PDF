@@ -8,6 +8,10 @@ const meta = {
   title: "Tools/CertSign/SignatureSettingsInput",
   component: SignatureSettingsInput,
   parameters: { layout: "padded" },
+  args: {
+    value: {},
+    onChange: () => {},
+  },
 } satisfies Meta<typeof SignatureSettingsInput>;
 export default meta;
 type Story = StoryObj<typeof meta>;

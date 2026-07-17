@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { ReactElement } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import AllToolsNavButton from "@app/components/shared/AllToolsNavButton";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
@@ -11,7 +12,7 @@ import { ToolWorkflowProvider } from "@app/contexts/ToolWorkflowContext";
  * home link href via NavigationContext + the tool registry — matching the
  * provider nesting AppProviders.tsx sets up above it.
  */
-function withProviders(Story: () => JSX.Element) {
+function withProviders(Story: () => ReactElement) {
   return (
     <PreferencesProvider>
       <ToolRegistryProvider>
@@ -29,6 +30,10 @@ const meta = {
   title: "Shared/AllToolsNavButton",
   component: AllToolsNavButton,
   decorators: [withProviders],
+  args: {
+    activeButton: "tools",
+    setActiveButton: () => {},
+  },
 } satisfies Meta<typeof AllToolsNavButton>;
 export default meta;
 

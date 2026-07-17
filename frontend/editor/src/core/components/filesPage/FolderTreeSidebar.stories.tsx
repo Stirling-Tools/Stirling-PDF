@@ -1,3 +1,4 @@
+import type React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { FolderTreeSidebar } from "@app/components/filesPage/FolderTreeSidebar";
 import { FileContextProvider } from "@app/contexts/FileContext";
@@ -13,7 +14,7 @@ import { ROOT_FOLDER_ID } from "@app/types/folder";
  * No folders are seeded into IndexedDB, so the tree renders with just the
  * pinned "All files" / "Local" rows - an accurate empty state.
  */
-function withFolderContexts(Story: () => JSX.Element) {
+function withFolderContexts(Story: () => React.JSX.Element) {
   return (
     <FileContextProvider>
       <FolderProvider>

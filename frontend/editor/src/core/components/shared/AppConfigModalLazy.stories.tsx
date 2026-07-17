@@ -31,6 +31,10 @@ const meta = {
   title: "Shared/AppConfigModalLazy",
   component: AppConfigModalLazy,
   parameters: { layout: "fullscreen" },
+  args: {
+    opened: false,
+    onClose: fn(),
+  },
 } satisfies Meta<typeof AppConfigModalLazy>;
 export default meta;
 

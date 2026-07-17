@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import type { ReactElement } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { AppProviders } from "@app/components/AppProviders";
 import { FullscreenToolPanel } from "@app/components/tools/FullscreenToolPanel";
@@ -27,7 +28,7 @@ function ExpandDemo() {
 // Reads/writes toolPanelMode, leftPanelView, readerMode, search, and the tool
 // registry via ToolWorkflowContext, plus useWorkbenchBar and PreferencesContext
 // — mount the real provider tree rather than stubbing each one individually.
-function withProviders(Story: () => JSX.Element) {
+function withProviders(Story: () => ReactElement) {
   return (
     <AppProviders
       appConfigProviderProps={{
@@ -46,6 +47,9 @@ const meta = {
   component: FullscreenToolPanel,
   parameters: { layout: "fullscreen" },
   decorators: [withProviders],
+  args: {
+    geometry: SAMPLE_GEOMETRY,
+  },
 } satisfies Meta<typeof FullscreenToolPanel>;
 export default meta;
 

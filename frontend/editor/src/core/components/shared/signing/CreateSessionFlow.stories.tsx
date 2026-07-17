@@ -33,6 +33,15 @@ const meta = {
   title: "Shared/Signing/CreateSessionFlow",
   component: CreateSessionFlow,
   parameters: { layout: "padded" },
+  args: {
+    selectedFiles: [mockFile],
+    selectedUserIds: [],
+    onSelectedUserIdsChange: () => {},
+    dueDate: "",
+    onDueDateChange: () => {},
+    creating: false,
+    onSubmit: () => {},
+  },
 } satisfies Meta<typeof CreateSessionFlow>;
 export default meta;
 

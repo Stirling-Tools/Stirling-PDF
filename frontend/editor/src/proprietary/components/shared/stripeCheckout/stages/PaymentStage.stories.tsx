@@ -1,5 +1,17 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { PaymentStage } from "@app/components/shared/stripeCheckout/stages/PaymentStage";
+import type { PlanTier } from "@app/services/licenseService";
+
+const serverPlan: PlanTier = {
+  id: "server-monthly",
+  name: "Server",
+  price: 29,
+  currency: "£",
+  period: "month",
+  features: [],
+  highlights: [],
+  lookupKey: "selfhosted:server:monthly",
+};
 
 /**
  * The payment step of the Stripe checkout flow. Renders a loading state while
@@ -25,6 +37,6 @@ export const Default: Story = {};
 export const Redirecting: Story = {
   args: {
     clientSecret: "cs_test_123_secret_abc",
-    selectedPlan: "server",
+    selectedPlan: serverPlan,
   },
 };

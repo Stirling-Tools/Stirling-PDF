@@ -9,6 +9,10 @@ import {
 const meta = {
   title: "Tools/Convert/ConvertFromEmailSettings",
   component: ConvertFromEmailSettings,
+  args: {
+    parameters: defaultParameters,
+    onParameterChange: () => {},
+  },
 } satisfies Meta<typeof ConvertFromEmailSettings>;
 export default meta;
 type Story = StoryObj<typeof meta>;

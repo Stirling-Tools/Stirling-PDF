@@ -9,6 +9,10 @@ import {
 const meta = {
   title: "Tools/ChangeMetadata/DocumentDatesStep",
   component: DocumentDatesStep,
+  args: {
+    parameters: defaultParameters,
+    onParameterChange: () => {},
+  },
 } satisfies Meta<typeof DocumentDatesStep>;
 export default meta;
 type Story = StoryObj<typeof meta>;

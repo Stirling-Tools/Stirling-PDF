@@ -10,6 +10,10 @@ const meta = {
   title: "Tools/CertSign/SignatureAppearanceSettings",
   component: SignatureAppearanceSettings,
   parameters: { layout: "padded" },
+  args: {
+    parameters: defaultParameters,
+    onParameterChange: () => {},
+  },
 } satisfies Meta<typeof SignatureAppearanceSettings>;
 export default meta;
 type Story = StoryObj<typeof meta>;

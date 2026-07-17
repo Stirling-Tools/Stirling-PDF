@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { ReactElement } from "react";
 import BulkShareModal from "@app/components/shared/BulkShareModal";
 import { AppConfigProvider } from "@app/contexts/AppConfigContext";
 import { FileContextProvider } from "@app/contexts/FileContext";
@@ -34,7 +35,7 @@ const mockFiles: StirlingFileStub[] = [
  * share links on `storageShareLinksEnabled` — wrapped per-story to show both
  * the disabled and enabled states.
  */
-function withFileContext(Story: () => JSX.Element) {
+function withFileContext(Story: () => ReactElement) {
   return (
     <FileContextProvider>
       <Story />

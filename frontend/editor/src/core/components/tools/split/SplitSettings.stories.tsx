@@ -11,6 +11,10 @@ const meta = {
   title: "Tools/Split/SplitSettings",
   component: SplitSettings,
   parameters: { layout: "padded" },
+  args: {
+    parameters: defaultParameters,
+    onParameterChange: () => {},
+  },
   decorators: [
     (S) => (
       <div style={{ maxWidth: "24rem" }}>

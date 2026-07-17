@@ -1,3 +1,4 @@
+import type React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import DetailedToolItem from "@app/components/tools/fullscreen/DetailedToolItem";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
@@ -10,13 +11,18 @@ import {
 import { HotkeyProvider } from "@app/contexts/HotkeyContext";
 import { AppConfigProvider } from "@app/contexts/AppConfigContext";
 import type { ToolId } from "@app/types/toolId";
+import {
+  ToolCategoryId,
+  SubcategoryId,
+  type ToolRegistryEntry,
+} from "@app/data/toolsTaxonomy";
 
 // DetailedToolItem reads hotkeys/favourites/availability via useToolMeta, which
 // pulls from HotkeyContext, ToolWorkflowContext and AppConfigContext — the same
 // nesting AppProviders.tsx sets up above it, so all four are needed here too.
 // AppConfigProvider uses autoFetch={false} to skip the network fetch and render
 // synchronously instead of showing a loading state.
-function withProviders(Story: () => JSX.Element) {
+function withProviders(Story: () => React.JSX.Element) {
   return (
     <PreferencesProvider>
       <AppConfigProvider autoFetch={false}>
@@ -57,10 +63,30 @@ function ToolItemDemo({
   );
 }
 
+// Meta-level args are inherited by every story below. The stories themselves
+// use `render` to swap in ToolItemDemo (which pulls a real registry entry),
+// so these values never actually reach DetailedToolItem — they only exist to
+// satisfy the required-props type on StoryAnnotations.
+const mockTool: ToolRegistryEntry = {
+  icon: null,
+  name: "Split",
+  component: null,
+  description: "Split a PDF into multiple files",
+  categoryId: ToolCategoryId.STANDARD_TOOLS,
+  subcategoryId: SubcategoryId.GENERAL,
+  automationSettings: null,
+};
+
 const meta = {
   title: "Tools/Fullscreen/DetailedToolItem",
   component: DetailedToolItem,
   decorators: [withProviders],
+  args: {
+    id: "split",
+    tool: mockTool,
+    isSelected: false,
+    onClick: () => {},
+  },
 } satisfies Meta<typeof DetailedToolItem>;
 export default meta;
 

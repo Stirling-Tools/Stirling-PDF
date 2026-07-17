@@ -3,9 +3,25 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import HardwareCertificateSettings from "@app/components/tools/certSign/HardwareCertificateSettings";
 import { CertSignParameters } from "@app/hooks/tools/certSign/useCertSignParameters";
 
+const baseParameters: CertSignParameters = {
+  signMode: "DEVICE",
+  certType: "WINDOWS_STORE",
+  password: "",
+  showSignature: false,
+  reason: "",
+  location: "",
+  name: "",
+  pageNumber: 1,
+  showLogo: true,
+};
+
 const meta = {
   title: "Tools/CertSign/HardwareCertificateSettings",
   component: HardwareCertificateSettings,
+  args: {
+    parameters: baseParameters,
+    onParameterChange: () => {},
+  },
 } satisfies Meta<typeof HardwareCertificateSettings>;
 export default meta;
 
@@ -33,18 +49,6 @@ const HardwareCertificateSettingsDemo = (props: {
       disabled={props.disabled}
     />
   );
-};
-
-const baseParameters: CertSignParameters = {
-  signMode: "DEVICE",
-  certType: "WINDOWS_STORE",
-  password: "",
-  showSignature: false,
-  reason: "",
-  location: "",
-  name: "",
-  pageNumber: 1,
-  showLogo: true,
 };
 
 export const Default: Story = {

@@ -9,6 +9,10 @@ import {
 const meta = {
   title: "Tools/Compress/CompressSettings",
   component: CompressSettings,
+  args: {
+    parameters: defaultParameters,
+    onParameterChange: () => {},
+  },
 } satisfies Meta<typeof CompressSettings>;
 export default meta;
 

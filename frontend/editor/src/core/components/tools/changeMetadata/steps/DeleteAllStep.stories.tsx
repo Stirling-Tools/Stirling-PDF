@@ -9,6 +9,10 @@ import {
 const meta = {
   title: "Tools/ChangeMetadata/DeleteAllStep",
   component: DeleteAllStep,
+  args: {
+    parameters: defaultParameters,
+    onParameterChange: () => {},
+  },
 } satisfies Meta<typeof DeleteAllStep>;
 export default meta;
 type Story = StoryObj<typeof meta>;

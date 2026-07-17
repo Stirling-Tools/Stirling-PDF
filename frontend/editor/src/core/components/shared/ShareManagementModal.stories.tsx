@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import ShareManagementModal from "@app/components/shared/ShareManagementModal";
 import { AppConfigProvider } from "@app/contexts/AppConfigContext";
@@ -22,7 +23,7 @@ const mockFile: StirlingFileStub = {
  * gate share links on `storageShareLinksEnabled` — wrapped per-story to show
  * both the disabled and enabled states.
  */
-function withFileContext(Story: () => JSX.Element) {
+function withFileContext(Story: () => ReactElement) {
   return (
     <FileContextProvider>
       <Story />

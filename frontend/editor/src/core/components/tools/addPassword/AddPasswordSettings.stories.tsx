@@ -6,6 +6,10 @@ import { AddPasswordParameters } from "@app/hooks/tools/addPassword/useAddPasswo
 const meta = {
   title: "Tools/AddPassword/AddPasswordSettings",
   component: AddPasswordSettings,
+  args: {
+    parameters: { password: "", ownerPassword: "", keyLength: 128 },
+    onParameterChange: () => {},
+  },
 } satisfies Meta<typeof AddPasswordSettings>;
 export default meta;
 

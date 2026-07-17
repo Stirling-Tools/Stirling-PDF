@@ -6,6 +6,13 @@ import { MergeParameters } from "@app/hooks/tools/merge/useMergeParameters";
 const meta = {
   title: "tools/merge/MergeSettings",
   component: MergeSettings,
+  args: {
+    parameters: {
+      removeDigitalSignature: false,
+      generateTableOfContents: false,
+    },
+    onParameterChange: () => {},
+  },
 } satisfies Meta<typeof MergeSettings>;
 
 export default meta;

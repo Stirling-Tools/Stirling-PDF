@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { ReactElement } from "react";
 import BuildRoundedIcon from "@mui/icons-material/BuildRounded";
 import ToolButton from "@app/components/tools/toolPicker/ToolButton";
 import { AppProviders } from "@app/components/AppProviders";
@@ -12,7 +13,7 @@ import type { ToolId } from "@app/types/toolId";
 // ToolButton reads favourites/hotkeys/premium status/navigation via
 // ToolWorkflowContext, HotkeyContext, AppConfigContext and NavigationContext —
 // mount the real provider tree rather than stubbing each one individually.
-function withProviders(Story: () => JSX.Element) {
+function withProviders(Story: () => ReactElement) {
   return (
     <AppProviders
       appConfigProviderProps={{

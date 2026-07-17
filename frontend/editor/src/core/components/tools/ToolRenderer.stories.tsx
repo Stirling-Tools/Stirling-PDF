@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { ReactElement } from "react";
 import ToolRenderer from "@app/components/tools/ToolRenderer";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
@@ -10,7 +11,7 @@ import { ToolWorkflowProvider } from "@app/contexts/ToolWorkflowContext";
  * tool registry, preferences, and navigation state — matching the provider
  * nesting AppProviders.tsx sets up above it.
  */
-function withProviders(Story: () => JSX.Element) {
+function withProviders(Story: () => ReactElement) {
   return (
     <PreferencesProvider>
       <ToolRegistryProvider>

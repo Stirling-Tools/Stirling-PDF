@@ -17,6 +17,10 @@ const meta = {
       </div>
     ),
   ],
+  args: {
+    parameters: defaultParameters,
+    onParameterChange: () => {},
+  },
 } satisfies Meta<typeof PageLayoutAdvancedSettings>;
 export default meta;
 type Story = StoryObj<typeof meta>;

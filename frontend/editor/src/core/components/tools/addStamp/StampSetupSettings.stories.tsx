@@ -10,6 +10,10 @@ const meta = {
   title: "Tools/AddStamp/StampSetupSettings",
   component: StampSetupSettings,
   parameters: { layout: "padded" },
+  args: {
+    parameters: defaultParameters,
+    onParameterChange: () => {},
+  },
 } satisfies Meta<typeof StampSetupSettings>;
 export default meta;
 type Story = StoryObj<typeof meta>;

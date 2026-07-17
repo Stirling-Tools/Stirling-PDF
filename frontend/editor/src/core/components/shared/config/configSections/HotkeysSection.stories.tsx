@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import HotkeysSection from "@app/components/shared/config/configSections/HotkeysSection";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
@@ -11,7 +12,7 @@ import { HotkeyProvider } from "@app/contexts/HotkeyContext";
  * registry and selection state off ToolWorkflowContext — matching the
  * provider nesting AppProviders.tsx sets up above it.
  */
-function withProviders(Story: () => JSX.Element) {
+function withProviders(Story: () => ReactElement) {
   return (
     <PreferencesProvider>
       <ToolRegistryProvider>

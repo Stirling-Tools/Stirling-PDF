@@ -10,6 +10,24 @@ const meta = {
   title: "Tools/CertSign/CertificateSelectionStep",
   component: CertificateSelectionStep,
   parameters: { layout: "padded" },
+  args: {
+    certType: "UPLOAD",
+    onCertTypeChange: () => {},
+    uploadFormat: "PKCS12",
+    onUploadFormatChange: () => {},
+    p12File: null,
+    onP12FileChange: () => {},
+    privateKeyFile: null,
+    onPrivateKeyFileChange: () => {},
+    certFile: null,
+    onCertFileChange: () => {},
+    jksFile: null,
+    onJksFileChange: () => {},
+    password: "",
+    onPasswordChange: () => {},
+    onBack: () => {},
+    onNext: () => {},
+  },
 } satisfies Meta<typeof CertificateSelectionStep>;
 export default meta;
 type Story = StoryObj<typeof meta>;

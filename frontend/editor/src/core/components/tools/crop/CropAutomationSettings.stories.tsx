@@ -10,6 +10,10 @@ const meta = {
   title: "Tools/Crop/CropAutomationSettings",
   component: CropAutomationSettings,
   parameters: { layout: "padded" },
+  args: {
+    parameters: defaultParameters,
+    onParameterChange: () => {},
+  },
 } satisfies Meta<typeof CropAutomationSettings>;
 export default meta;
 type Story = StoryObj<typeof meta>;

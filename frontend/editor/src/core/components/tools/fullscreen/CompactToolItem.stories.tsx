@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import BuildRoundedIcon from "@mui/icons-material/BuildRounded";
 import CompactToolItem from "@app/components/tools/fullscreen/CompactToolItem";
@@ -11,7 +12,7 @@ import {
 // CompactToolItem reads favourites/hotkeys/premium status via useToolMeta,
 // which pulls from ToolWorkflowContext, HotkeyContext and AppConfigContext —
 // mount the real provider tree rather than stubbing each one individually.
-function withProviders(Story: () => JSX.Element) {
+function withProviders(Story: () => ReactElement) {
   return (
     <AppProviders
       appConfigProviderProps={{

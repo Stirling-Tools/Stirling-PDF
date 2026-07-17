@@ -14,6 +14,10 @@ const meta = {
       </div>
     ),
   ],
+  args: {
+    mode: "automatic",
+    onModeChange: () => {},
+  },
 } satisfies Meta<typeof RedactModeSelector>;
 export default meta;
 type Story = StoryObj<typeof meta>;

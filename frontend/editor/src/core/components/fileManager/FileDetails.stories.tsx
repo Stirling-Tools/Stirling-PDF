@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import FileDetails from "@app/components/fileManager/FileDetails";
 import { FileContextProvider } from "@app/contexts/FileContext";
@@ -27,7 +28,7 @@ const mockFile: StirlingFileStub = {
  * preview decorators, so both are stood up here with static mock data.
  */
 function withFileManager(activeFileIds: FileId[]) {
-  return (Story: () => JSX.Element) => (
+  return (Story: () => ReactElement) => (
     <FileContextProvider>
       <FileManagerProvider
         recentFiles={[mockFile]}

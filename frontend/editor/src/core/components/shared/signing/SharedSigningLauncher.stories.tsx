@@ -1,3 +1,4 @@
+import type React from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse } from "msw";
 import SharedSigningLauncher from "@app/components/shared/signing/SharedSigningLauncher";
@@ -14,7 +15,7 @@ import type { SignRequestSummary } from "@app/types/signingSession";
  * target) — matching the provider nesting AppProviders.tsx sets up above it.
  */
 function withProviders(groupSigningEnabled: boolean) {
-  return function Decorator(Story: () => JSX.Element) {
+  return function Decorator(Story: () => React.JSX.Element) {
     return (
       <AppConfigProvider
         autoFetch={false}

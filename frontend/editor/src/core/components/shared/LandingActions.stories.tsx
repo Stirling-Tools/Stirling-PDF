@@ -36,6 +36,15 @@ const meta = {
   title: "Shared/LandingActions",
   component: LandingActions,
   parameters: { layout: "padded" },
+  // Required props are only ever supplied via the per-story render wrappers
+  // below (fileInputRef needs a real ref), but Storybook's types still
+  // require meta-level args to satisfy the component's required props.
+  args: {
+    fileInputRef: { current: null },
+    onUploadClick: fn(),
+    onMobileUploadClick: fn(),
+    onFileSelect: fn(),
+  },
 } satisfies Meta<typeof LandingActions>;
 export default meta;
 

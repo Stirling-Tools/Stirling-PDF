@@ -5,6 +5,7 @@ const meta = {
   title: "Shared/FileDocIcon",
   component: FileDocIcon,
   parameters: { layout: "padded" },
+  args: { variant: "pdf" },
 } satisfies Meta<typeof FileDocIcon>;
 export default meta;
 type Story = StoryObj<typeof meta>;

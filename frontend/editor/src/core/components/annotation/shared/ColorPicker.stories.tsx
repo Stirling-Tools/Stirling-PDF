@@ -6,6 +6,12 @@ const meta = {
   title: "Annotation/Shared/ColorPicker",
   component: ColorPicker,
   parameters: { layout: "fullscreen" },
+  args: {
+    isOpen: true,
+    onClose: () => {},
+    selectedColor: "#cc0000",
+    onColorChange: () => {},
+  },
 } satisfies Meta<typeof ColorPicker>;
 export default meta;
 type Story = StoryObj<typeof meta>;

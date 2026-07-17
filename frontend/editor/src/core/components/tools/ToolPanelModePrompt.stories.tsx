@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import ToolPanelModePrompt from "@app/components/tools/ToolPanelModePrompt";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
@@ -10,7 +11,7 @@ import { ToolWorkflowProvider } from "@app/contexts/ToolWorkflowContext";
  * via PreferencesContext — matching the provider nesting AppProviders.tsx sets
  * up above it.
  */
-function withProviders(Story: () => JSX.Element) {
+function withProviders(Story: () => ReactElement) {
   return (
     <PreferencesProvider>
       <ToolRegistryProvider>

@@ -7,6 +7,10 @@ const meta = {
   title: "Tools/Rotate/RotateAutomationSettings",
   component: RotateAutomationSettings,
   parameters: { layout: "padded" },
+  args: {
+    parameters: { angle: 0 },
+    onParameterChange: () => {},
+  },
 } satisfies Meta<typeof RotateAutomationSettings>;
 export default meta;
 type Story = StoryObj<typeof meta>;

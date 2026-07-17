@@ -5,6 +5,16 @@ import EncryptedPdfUnlockModal from "@app/components/shared/EncryptedPdfUnlockMo
 const meta = {
   title: "Shared/EncryptedPdfUnlockModal",
   component: EncryptedPdfUnlockModal,
+  args: {
+    opened: true,
+    password: "",
+    isProcessing: false,
+    remainingCount: 0,
+    onPasswordChange: () => {},
+    onUnlock: () => {},
+    onUnlockAll: () => {},
+    onSkip: () => {},
+  },
 } satisfies Meta<typeof EncryptedPdfUnlockModal>;
 export default meta;
 type Story = StoryObj<typeof meta>;

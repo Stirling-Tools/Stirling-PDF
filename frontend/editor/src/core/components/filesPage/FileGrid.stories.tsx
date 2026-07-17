@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { ReactElement } from "react";
 import {
   FileGrid,
   type FilesPageEntry,
@@ -55,7 +56,7 @@ const fileEntries: FilesPageEntry[] = [
  * FolderRow call useFolders(), which needs a FolderProvider wired to
  * IndexedDB/auth/app-config context this story doesn't stand up.
  */
-function withFileContext(Story: () => JSX.Element) {
+function withFileContext(Story: () => ReactElement) {
   return (
     <FileContextProvider>
       <Story />

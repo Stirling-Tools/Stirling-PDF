@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
 import { FileContextProvider } from "@app/contexts/FileContext";
@@ -24,7 +25,7 @@ const mockFile: StirlingFileStub = {
  * backed NavigationContext mounted above it, matching AppProviders.tsx's
  * nesting.
  */
-function withProviders(Story: () => JSX.Element) {
+function withProviders(Story: () => ReactElement) {
   return (
     <FileContextProvider>
       <ToolRegistryProvider>

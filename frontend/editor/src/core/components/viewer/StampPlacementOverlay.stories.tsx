@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { createRef, useEffect, useRef } from "react";
 import type { Meta, StoryObj, Decorator } from "@storybook/react-vite";
 import { StampPlacementOverlay } from "@app/components/viewer/StampPlacementOverlay";
 import { SignatureProvider } from "@app/contexts/SignatureContext";
@@ -67,6 +67,13 @@ const meta = {
   component: StampPlacementOverlay,
   parameters: { layout: "padded" },
   decorators: [withProviders],
+  // Actual rendering is handled by StampPlacementOverlayDemo's own containerRef;
+  // these are just placeholder values to satisfy the component's required props.
+  args: {
+    containerRef: createRef<HTMLElement | null>(),
+    isActive: true,
+    signatureConfig: textSignature,
+  },
 } satisfies Meta<typeof StampPlacementOverlay>;
 export default meta;
 

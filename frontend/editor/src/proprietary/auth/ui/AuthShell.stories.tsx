@@ -28,14 +28,14 @@ export const WithRightPanel: Story = {
   args: {
     children: (
       <div>
-        <h2>Sign in</h2>
-        <p>Enter your credentials to continue.</p>
-      </div>
-    ),
-    rightPanel: (
-      <div style={{ padding: "2rem" }}>
-        <h3>Why Stirling PDF?</h3>
-        <p>Fast, secure, self-hostable PDF tooling.</p>
+        <div>
+          <h2>Sign in</h2>
+          <p>Enter your credentials to continue.</p>
+        </div>
+        <div style={{ padding: "2rem" }}>
+          <h3>Why Stirling PDF?</h3>
+          <p>Fast, secure, self-hostable PDF tooling.</p>
+        </div>
       </div>
     ),
   },

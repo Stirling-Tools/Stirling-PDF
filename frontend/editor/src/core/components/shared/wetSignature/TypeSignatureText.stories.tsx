@@ -6,6 +6,17 @@ const meta = {
   title: "Shared/WetSignature/TypeSignatureText",
   component: TypeSignatureText,
   parameters: { layout: "padded" },
+  args: {
+    text: "Jane Doe",
+    fontFamily: "Arial",
+    fontSize: 40,
+    color: "#000000",
+    onTextChange: () => {},
+    onFontFamilyChange: () => {},
+    onFontSizeChange: () => {},
+    onColorChange: () => {},
+    onSignatureChange: () => {},
+  },
 } satisfies Meta<typeof TypeSignatureText>;
 export default meta;
 type Story = StoryObj<typeof meta>;
