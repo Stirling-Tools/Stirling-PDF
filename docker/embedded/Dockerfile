@@ -11,7 +11,7 @@ ARG TASK_VERSION=3.49.1
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl ca-certificates \
     && update-ca-certificates \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && ARCH=$(dpkg --print-architecture) \
     && curl -fsSL "https://github.com/go-task/task/releases/download/v${TASK_VERSION}/task_${TASK_VERSION}_linux_${ARCH}.deb" -o /tmp/task.deb \
