@@ -29,7 +29,6 @@ import {
   UnsavedChangesProvider,
   useUnsavedChanges,
 } from "@app/contexts/UnsavedChangesContext";
-import { SettingsSearchBar } from "@app/components/shared/config/SettingsSearchBar";
 import { stripBasePath, withBasePath } from "@app/constants/app";
 
 interface AppConfigModalProps {
@@ -436,11 +435,6 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                 {activeLabel}
               </Text>
               <Group gap="xs" wrap="nowrap">
-                <SettingsSearchBar
-                  configNavSections={configNavSections}
-                  onNavigate={handleNavigation}
-                  isMobile={isMobile}
-                />
                 <ActionIcon
                   ref={closeButtonRef}
                   variant="tertiary"

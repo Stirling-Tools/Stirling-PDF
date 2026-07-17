@@ -3,9 +3,9 @@ import { NavKey } from "@app/components/shared/config/types";
 /**
  * A single, searchable setting *row* inside the settings modal.
  *
- * The existing in-modal SettingsSearchBar searches section content but can only
- * navigate to a whole section. This index lets the global super search deep-link
- * to an individual control: navigating to `/settings/{section}?focus={anchor}`,
+ * Section-level content matching (settingsContentSearch) only navigates to a
+ * whole section; this index lets the global super search deep-link to an
+ * individual control: navigating to `/settings/{section}?focus={anchor}`,
  * where `anchor` is the DOM `id` placed on that control's row (see
  * AppConfigModal's focus-scroll effect and the `id=` attributes added to the
  * matching section components).

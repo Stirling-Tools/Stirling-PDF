@@ -4840,9 +4840,6 @@ title = "Upload from Mobile"
 tags = "Multi Tool,Multi operation,UI,click drag,front end,client side,interactive,intractable,move,delete,migrate,divide"
 title = "PDF Multi Tool"
 
-[navbar]
-search = "Search"
-
 [oauth.error]
 message = "Authentication was not successful. You can close this window and try again."
 title = "Authentication Failed"
@@ -9014,9 +9011,6 @@ title = "Policies & Privacy"
 
 [settings.preferences]
 title = "Preferences"
-
-[settings.search]
-placeholder = "Search settings pages..."
 
 [settings.security]
 description = "Update your password to keep your account secure."

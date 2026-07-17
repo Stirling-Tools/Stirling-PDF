@@ -195,16 +195,6 @@
   padding-top: 1rem;
 }
 
-.settings-search-select {
-  min-width: 10rem;
-}
-
-.settings-search-option {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-}
-
 .confirm-modal-content {
   display: flex;
   flex-direction: column;
