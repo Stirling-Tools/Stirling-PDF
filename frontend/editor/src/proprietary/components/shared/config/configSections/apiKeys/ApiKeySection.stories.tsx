@@ -9,7 +9,7 @@ const meta: Meta<typeof ApiKeySection> = {
   component: ApiKeySection,
   parameters: { layout: "padded" },
   args: {
-    publicKey: "pk_live_51Hc9x8example1234567890",
+    publicKey: "demo-publishable-key-xxxx",
     copied: null,
     onCopy: () => {},
     onRefresh: () => {},

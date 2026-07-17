@@ -32,7 +32,7 @@ export const Filled: Story = {
         bucket: "my-company-inbox",
         region: "us-east-1",
         endpoint: "",
-        accessKeyId: "AKIAABCDEFGHIJKLMNOP",
+        accessKeyId: "EXAMPLE-ACCESS-KEY-ID",
         secretAccessKey: "••••••••••••••••",
       }}
     />

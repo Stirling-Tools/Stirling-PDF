@@ -36,7 +36,7 @@ export const Default: Story = {};
 
 export const Redirecting: Story = {
   args: {
-    clientSecret: "cs_test_123_secret_abc",
+    clientSecret: "demo-client-secret-xxxx",
     selectedPlan: serverPlan,
   },
 };

@@ -16,7 +16,7 @@ const EXISTING_CONNECTION: IntegrationConfig = {
     bucket: "stirling-archive",
     region: "us-east-1",
     endpoint: "",
-    accessKeyId: "AKIAEXAMPLE",
+    accessKeyId: "EXAMPLE-ACCESS-KEY-ID",
     secretAccessKey: "••••••••",
   },
   canManage: true,
