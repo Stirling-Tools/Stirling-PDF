@@ -59,7 +59,9 @@ interface SuperSearchProps {
   scopes?: readonly SuperSearchScope[];
   /** Where to render scope chips when a host enables them. */
   scopeChipsPlacement?: "dropdown" | "inline";
-  /** Let a host widen the dropdown beyond the input when needed. */
+  /** Dropdown width floor — the results panel needs more room than the
+   * compact input. Defaults shared by every bar; override per host if a
+   * layout can't fit it. */
   dropdownMinWidth?: number;
   /**
    * Extra class for the dropdown. The dropdown is portalled to <body>, so a
@@ -81,7 +83,7 @@ export default function SuperSearch({
   inputId = "super-search-input",
   scopes = [],
   scopeChipsPlacement = "dropdown",
-  dropdownMinWidth,
+  dropdownMinWidth = 760,
   dropdownClassName,
 }: SuperSearchProps = {}) {
   const { t } = useTranslation();
