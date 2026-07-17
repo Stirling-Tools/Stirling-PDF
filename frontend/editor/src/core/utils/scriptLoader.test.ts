@@ -64,4 +64,23 @@ describe("loadScript", () => {
     scriptEl(id).dispatchEvent(new Event("error"));
     await expect(p).rejects.toThrow(/Failed to load script/);
   });
+
+  it("drops the failed tag so a retry re-attempts instead of hanging", async () => {
+    const id = "test-script-retry";
+    const src = "https://example.test/retry.js";
+
+    // First attempt (e.g. a warm-up) fails.
+    const first = loadScript({ src, id });
+    scriptEl(id).dispatchEvent(new Event("error"));
+    await expect(first).rejects.toThrow(/Failed to load script/);
+    // The poisoned tag must be gone — otherwise a retry would attach to a dead tag.
+    expect(document.querySelectorAll(`#${id}`)).toHaveLength(0);
+
+    // Retry (e.g. the modal opening) creates a fresh tag and can now succeed.
+    const second = loadScript({ src, id });
+    expect(document.querySelectorAll(`#${id}`)).toHaveLength(1);
+    scriptEl(id).dispatchEvent(new Event("load"));
+    await expect(second).resolves.toBeUndefined();
+    expect(isScriptLoaded(id)).toBe(true);
+  });
 });

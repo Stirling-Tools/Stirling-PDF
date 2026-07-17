@@ -10,6 +10,9 @@ import { loadScript } from "@app/utils/scriptLoader";
 
 const CALENDLY_SCRIPT = "https://assets.calendly.com/assets/external/widget.js";
 
+// If the embed hasn't loaded within this window, give up and show the fallback link.
+const LOAD_TIMEOUT_MS = 15000;
+
 // Base scheduling link; overridable per-environment without a code change.
 export const CALENDLY_URL: string =
   import.meta.env.VITE_CALENDLY_URL ||
@@ -89,7 +92,23 @@ export function CalendlyInline({
   useEffect(() => {
     let cancelled = false;
     setFailed(false);
-    loadScript({ src: CALENDLY_SCRIPT, id: "calendly-widget-script" })
+
+    // Race the load against a timeout so a request that never settles (a blocked or
+    // black-holed script whose load/error never fires) still surfaces the fallback link
+    // rather than leaving an empty modal open indefinitely.
+    let timer: ReturnType<typeof setTimeout>;
+    const load = new Promise<void>((resolve, reject) => {
+      timer = setTimeout(
+        () => reject(new Error("Calendly load timed out")),
+        LOAD_TIMEOUT_MS,
+      );
+      loadScript({ src: CALENDLY_SCRIPT, id: "calendly-widget-script" }).then(
+        resolve,
+        reject,
+      );
+    });
+
+    load
       .then(() => {
         const el = containerRef.current;
         const calendly = (window as CalendlyWindow).Calendly;
@@ -109,9 +128,12 @@ export function CalendlyInline({
           prefill: email ? { email } : undefined,
         });
       })
-      .catch(() => !cancelled && setFailed(true));
+      .catch(() => !cancelled && setFailed(true))
+      .finally(() => clearTimeout(timer));
+
     return () => {
       cancelled = true;
+      clearTimeout(timer);
     };
   }, [fullUrl, email]);
 

@@ -47,8 +47,12 @@ export function loadScript({
       onLoad?.();
       resolve();
     };
-    const settleError = () => {
+    const settleError = (el: HTMLScriptElement) => {
       pendingScripts.delete(scriptId);
+      // Drop the failed tag so a later retry (e.g. the modal after a warm-up that was
+      // blocked by an extension) creates a fresh one and re-attempts, rather than
+      // attaching to a dead tag whose error event won't fire again and hanging forever.
+      el.remove();
       reject(new Error(`Failed to load script: ${src}`));
     };
 
@@ -71,7 +75,9 @@ export function loadScript({
       existing.addEventListener("load", () => settleLoaded(existing), {
         once: true,
       });
-      existing.addEventListener("error", settleError, { once: true });
+      existing.addEventListener("error", () => settleError(existing), {
+        once: true,
+      });
       return;
     }
 
@@ -81,7 +87,7 @@ export function loadScript({
     script.async = async;
     script.defer = defer;
     script.addEventListener("load", () => settleLoaded(script), { once: true });
-    script.addEventListener("error", settleError, { once: true });
+    script.addEventListener("error", () => settleError(script), { once: true });
     document.head.appendChild(script);
   });
 
