@@ -53,7 +53,7 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'com.github.ben-manes.caffeine:caffeine'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-    api 'io.swagger.core.v3:swagger-core-jakarta:2.2.46'
+    api "io.swagger.core.v3:swagger-core-jakarta:${rootProject.ext.swaggerCoreVersion}"
     implementation "com.bucket4j:bucket4j_jdk17-core:${rootProject.ext.bucket4jVersion}"
     // Lettuce-backed Bucket4j ProxyManager used by ValkeyRateLimitStore for cluster-wide
     // token-bucket rate limiting (parity with in-process Bucket4j semantics; no fixed-window
@@ -84,8 +84,8 @@ dependencies {
     implementation "io.jsonwebtoken:jjwt-api:${rootProject.ext.jwtVersion}"
     runtimeOnly "io.jsonwebtoken:jjwt-impl:${rootProject.ext.jwtVersion}"
     runtimeOnly "io.jsonwebtoken:jjwt-jackson:${rootProject.ext.jwtVersion}"
-    runtimeOnly 'com.h2database:h2:2.3.232' // Don't upgrade h2database - file format incompatible with 2.4.x, would break existing user databases
-    runtimeOnly 'org.postgresql:postgresql:42.7.11'
+    runtimeOnly "com.h2database:h2:${rootProject.ext.h2Version}" // Don't upgrade h2database - file format incompatible with 2.4.x, would break existing user databases
+    runtimeOnly "org.postgresql:postgresql:${rootProject.ext.postgresqlVersion}"
     implementation('com.coveo:saml-client:5.0.0') {
         exclude group: 'org.opensaml', module: 'opensaml-core'
     }

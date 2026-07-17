@@ -2,7 +2,7 @@ plugins {
     id "java"
     id "jacoco"
     id "io.spring.dependency-management" version "1.1.7"
-    id "org.springframework.boot" version "4.0.6"
+    id "org.springframework.boot" version "4.0.7"
     id "org.springdoc.openapi-gradle-plugin" version "1.9.0"
     id "io.swagger.swaggerhub" version "1.3.2"
     id "com.diffplug.spotless" version "8.5.0"
@@ -20,7 +20,7 @@ import org.gradle.api.tasks.testing.Test
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 
 ext {
-    springBootVersion = "4.0.6"
+    springBootVersion = "4.0.7"
     pdfboxVersion = "3.0.7"
     imageioVersion = "3.13.1"
     lombokVersion = "1.18.46"
@@ -29,7 +29,7 @@ ext {
     openSamlVersion = "5.2.1"
     commonmarkVersion = "0.28.0"
     googleJavaFormatVersion = "1.28.0"
-    logback = "1.5.32"
+    logback = "1.5.34"
     commonsIoVersion = "2.22.0"
     commonsLang3 = "3.20.0"
     rhinoVersion = "1.9.1"
@@ -37,7 +37,7 @@ ext {
     gsonVersion = "2.14.0"
     guavaVersion = "33.6.0-jre"
     jinjavaVersion = "2.8.3"
-    jackson2Version = "2.21.2"
+    jackson2Version = "2.21.4"
     bucket4jVersion = "8.19.0"
     archunitVersion = "1.4.2"
     batikVersion = "1.19"
@@ -45,6 +45,15 @@ ext {
     jwtVersion = "0.13.0"
     awsSdkVersion = "2.44.12"
     testcontainersMinioVersion = "1.21.4"
+    h2Version = "2.3.232"
+    errorProneAnnotationsVersion = "2.49.0"
+    swaggerCoreVersion = "2.2.52"
+    commonsCollections4Version = "4.5.0"
+    commonsTextVersion = "1.13.1"
+    httpclient4Version = "4.5.14"
+    jbig2ImageioVersion = "3.0.4"
+    poiVersion = "5.5.1"
+    postgresqlVersion = "42.7.11"
     // junit-platform-launcher version managed by Spring Boot BOM
     modernJavaVersion = 25
 }
@@ -97,6 +106,59 @@ allprojects {
 
     configurations.configureEach {
         exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
+        // Exclude obsolete BouncyCastle modules that must not coexist with the jdk18on family.
+        exclude group: 'org.bouncycastle', module: 'bcpkix-jdk15on'
+        exclude group: 'org.bouncycastle', module: 'bcutil-jdk15on'
+        exclude group: 'org.bouncycastle', module: 'bcmail-jdk15on'
+
+        // Apply the shared version policy to the root report configurations and every subproject.
+        // CVE-2022-25647: prevent the unsafe Gson deserialization version pulled by Tabula.
+        resolutionStrategy.force "com.google.code.gson:gson:${rootProject.ext.gsonVersion}"
+        // CVE-2025-66453: override the vulnerable Rhino version pulled by veraPDF.
+        resolutionStrategy.force "org.mozilla:rhino:${rootProject.ext.rhinoVersion}"
+        // CVE-2025-48924: use the Commons Lang release containing the DoS fix.
+        resolutionStrategy.force "org.apache.commons:commons-lang3:${rootProject.ext.commonsLang3}"
+        // CVE-2024-47554: use the Commons IO release containing the resource-exhaustion fix.
+        resolutionStrategy.force "commons-io:commons-io:${rootProject.ext.commonsIoVersion}"
+        resolutionStrategy.force "com.fasterxml.jackson.core:jackson-core:${rootProject.ext.jackson2Version}"
+        resolutionStrategy.force "com.fasterxml.jackson.core:jackson-databind:${rootProject.ext.jackson2Version}"
+        resolutionStrategy.force "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${rootProject.ext.jackson2Version}"
+        resolutionStrategy.force "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${rootProject.ext.jackson2Version}"
+        resolutionStrategy.force "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${rootProject.ext.jackson2Version}"
+        resolutionStrategy.force "org.bouncycastle:bcprov-jdk18on:${rootProject.ext.bouncycastleVersion}"
+        resolutionStrategy.force "org.bouncycastle:bcpkix-jdk18on:${rootProject.ext.bouncycastleVersion}"
+        resolutionStrategy.force "org.bouncycastle:bcutil-jdk18on:${rootProject.ext.bouncycastleVersion}"
+        resolutionStrategy.force "com.h2database:h2:${rootProject.ext.h2Version}"
+        resolutionStrategy.force "com.google.errorprone:error_prone_annotations:${rootProject.ext.errorProneAnnotationsVersion}"
+        resolutionStrategy.force "io.swagger.core.v3:swagger-annotations-jakarta:${rootProject.ext.swaggerCoreVersion}"
+        resolutionStrategy.force "io.swagger.core.v3:swagger-core-jakarta:${rootProject.ext.swaggerCoreVersion}"
+        resolutionStrategy.force "io.swagger.core.v3:swagger-models-jakarta:${rootProject.ext.swaggerCoreVersion}"
+        resolutionStrategy.force "org.apache.commons:commons-collections4:${rootProject.ext.commonsCollections4Version}"
+        resolutionStrategy.force "org.apache.commons:commons-text:${rootProject.ext.commonsTextVersion}"
+        resolutionStrategy.force "org.apache.httpcomponents:httpclient:${rootProject.ext.httpclient4Version}"
+        resolutionStrategy.force "org.apache.pdfbox:jbig2-imageio:${rootProject.ext.jbig2ImageioVersion}"
+        resolutionStrategy.force "org.apache.poi:poi:${rootProject.ext.poiVersion}"
+        resolutionStrategy.force "org.apache.poi:poi-ooxml:${rootProject.ext.poiVersion}"
+        resolutionStrategy.force "org.apache.poi:poi-ooxml-lite:${rootProject.ext.poiVersion}"
+        resolutionStrategy.force "org.apache.poi:poi-scratchpad:${rootProject.ext.poiVersion}"
+        resolutionStrategy.force "org.postgresql:postgresql:${rootProject.ext.postgresqlVersion}"
+
+        // Preserve the JAXB versions already used by the shipped application in root reports too.
+        resolutionStrategy.force 'javax.xml.bind:jaxb-api:2.3.1'
+        resolutionStrategy.force 'com.sun.xml.bind:jaxb-impl:2.3.9'
+        resolutionStrategy.force 'com.sun.xml.bind:jaxb-core:4.0.7'
+    }
+}
+
+dependencyManagement {
+    dependencies {
+        // Override Spring Boot-managed versions where the application intentionally differs.
+        dependency "com.google.code.gson:gson:${rootProject.ext.gsonVersion}"
+        dependency "org.apache.commons:commons-lang3:${rootProject.ext.commonsLang3}"
+        dependency "com.h2database:h2:${rootProject.ext.h2Version}"
+        dependency 'javax.xml.bind:jaxb-api:2.3.1'
+        dependency 'com.sun.xml.bind:jaxb-impl:2.3.9'
+        dependency 'com.sun.xml.bind:jaxb-core:4.0.7'
     }
 }
 
@@ -206,37 +268,6 @@ subprojects {
         maven { url = "https://build.shibboleth.net/maven/releases" }
     }
 
-    configurations.configureEach {
-        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
-        // Exclude vulnerable BouncyCastle version used in tableau
-        exclude group: 'org.bouncycastle', module: 'bcpkix-jdk15on'
-        exclude group: 'org.bouncycastle', module: 'bcutil-jdk15on'
-        exclude group: 'org.bouncycastle', module: 'bcmail-jdk15on'
-
-        // Security CVE fixes - hardcoded resolution strategy to ensure safe versions
-        // Primary fixes via explicit dependencies in app/core/build.gradle:
-        // - CVE-2022-25647: gson 2.8.9+ (explicit dependency overrides tabula 2.8.7)
-        // - CVE-2025-66453: rhino 1.7.15 (explicit dependency overrides verapdf 1.7.13)
-        // Fallback strategy force declarations for additional safety:
-        resolutionStrategy.force "com.google.code.gson:gson:${rootProject.ext.gsonVersion}"
-        resolutionStrategy.force "org.mozilla:rhino:${rootProject.ext.rhinoVersion}"
-        // CVE-2025-48924: commons-lang3 3.20.0 DoS prevention
-        resolutionStrategy.force "org.apache.commons:commons-lang3:${rootProject.ext.commonsLang3}"
-        // CVE-2024-47554: commons-io DoS prevention
-        resolutionStrategy.force "commons-io:commons-io:${rootProject.ext.commonsIoVersion}"
-        // Jackson 2 is transitive-only here (jinjava, opensaml, jjwt request older versions);
-        // pin the family to a current release and keep modules aligned.
-        resolutionStrategy.force "com.fasterxml.jackson.core:jackson-core:${rootProject.ext.jackson2Version}"
-        resolutionStrategy.force "com.fasterxml.jackson.core:jackson-databind:${rootProject.ext.jackson2Version}"
-        resolutionStrategy.force "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${rootProject.ext.jackson2Version}"
-        resolutionStrategy.force "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${rootProject.ext.jackson2Version}"
-        resolutionStrategy.force "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${rootProject.ext.jackson2Version}"
-        // Keep BouncyCastle modules aligned to avoid runtime linkage errors
-        resolutionStrategy.force "org.bouncycastle:bcprov-jdk18on:${rootProject.ext.bouncycastleVersion}"
-        resolutionStrategy.force "org.bouncycastle:bcpkix-jdk18on:${rootProject.ext.bouncycastleVersion}"
-        resolutionStrategy.force "org.bouncycastle:bcutil-jdk18on:${rootProject.ext.bouncycastleVersion}"
-    }
-
     dependencyManagement {
         imports {
             mavenBom "org.springframework.boot:spring-boot-dependencies:${rootProject.ext.springBootVersion}"
@@ -244,6 +275,8 @@ subprojects {
         dependencies {
             // Override BOM-managed commons-lang3 for CVE-2025-48924 fix
             dependency "org.apache.commons:commons-lang3:${rootProject.ext.commonsLang3}"
+            // Keep existing H2 database files compatible across Spring Boot upgrades.
+            dependency "com.h2database:h2:${rootProject.ext.h2Version}"
         }
     }
 
