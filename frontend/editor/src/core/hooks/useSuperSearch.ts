@@ -1,4 +1,5 @@
 import {
+  createElement,
   useCallback,
   useContext,
   useEffect,
@@ -17,7 +18,9 @@ import { ViewerContext } from "@app/contexts/ViewerContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { fileStorage } from "@app/services/fileStorage";
-import { getFileTypeIcon } from "@app/components/shared/filePreview/getFileTypeIcon";
+import { FileDocIcon } from "@app/components/shared/FileDocIcon";
+import { getFileDocVariant } from "@app/components/shared/filePreview/getFileTypeIcon";
+import { detectFileExtension } from "@app/utils/fileUtils";
 import {
   rankByFuzzy,
   idToWords,
@@ -231,8 +234,16 @@ export function rankFileResults(
       group: "files",
       title: item.name,
       // The file-type doc icon (PDF/image/doc/…) the sidebar and grid use,
-      // rather than a flat generic file glyph.
-      icon: getFileTypeIcon(item, "1.25rem"),
+      // rather than a flat generic file glyph. Sized by height so the portrait
+      // doc shape sits level with the square tool/settings icons instead of
+      // overflowing the row.
+      icon: createElement(FileDocIcon, {
+        variant: getFileDocVariant(
+          detectFileExtension(item.name.toLowerCase()),
+          (item.type ?? "").toLowerCase(),
+        ),
+        style: { height: "1.15rem", width: "auto" },
+      }),
       score,
       onSelect: () => openFile(item),
     }));
