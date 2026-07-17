@@ -61,6 +61,11 @@ interface SuperSearchProps {
   scopeChipsPlacement?: "dropdown" | "inline";
   /** Let a host widen the dropdown beyond the input when needed. */
   dropdownMinWidth?: number;
+  /**
+   * Extra class for the dropdown. The dropdown is portalled to <body>, so a
+   * host's descendant selectors can't reach it — this is the styling hook.
+   */
+  dropdownClassName?: string;
 }
 
 /**
@@ -77,6 +82,7 @@ export default function SuperSearch({
   scopes = [],
   scopeChipsPlacement = "dropdown",
   dropdownMinWidth,
+  dropdownClassName,
 }: SuperSearchProps = {}) {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
@@ -404,7 +410,9 @@ export default function SuperSearch({
       <div
         ref={dropdownRef}
         id={listboxId}
-        className="super-search-dropdown"
+        className={`super-search-dropdown${
+          dropdownClassName ? ` ${dropdownClassName}` : ""
+        }`}
         role="listbox"
         style={{ top: rect.top, left: rect.left, width: rect.width }}
         // Keep focus on the input when clicking inside the dropdown.
@@ -466,12 +474,16 @@ export default function SuperSearch({
                       role="group"
                       aria-label={group.label}
                     >
-                      <div
-                        className="super-search-group-label"
-                        aria-hidden="true"
-                      >
-                        {group.label}
-                      </div>
+                      {/* A lone group repeating its section's name reads as a
+                          duplicate header — the section title covers it. */}
+                      {group.label !== section.label && (
+                        <div
+                          className="super-search-group-label"
+                          aria-hidden="true"
+                        >
+                          {group.label}
+                        </div>
+                      )}
                       <div className="super-search-group-results">
                         {group.results.map((result) => {
                           const index = visibleFlatResults.indexOf(result);

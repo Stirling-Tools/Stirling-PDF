@@ -22,7 +22,8 @@ export function PortalSearchBar() {
         useResults={usePortalSearchResults}
         inputId="portal-search-input"
         scopes={scopes}
-        dropdownMinWidth={672}
+        dropdownMinWidth={760}
+        dropdownClassName="portal-search-dropdown"
       />
     </div>
   );

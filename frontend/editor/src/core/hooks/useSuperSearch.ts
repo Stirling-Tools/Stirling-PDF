@@ -384,6 +384,14 @@ export function useSuperSearch(
 
   const openTool = useCallback(
     (id: ToolId) => {
+      // Link tools have no in-editor UI — selecting one shows a "tool not
+      // found" panel. Open their destination directly, matching how the
+      // editor's tool lists treat them.
+      const link = toolRegistry[id]?.link;
+      if (link) {
+        window.open(link, "_blank", "noopener,noreferrer");
+        return;
+      }
       // Tools whose backend endpoint isn't served in this environment are
       // flagged unavailable; handleToolSelect silently no-ops them. For a
       // search ("take me to Repair") we still want the click to open the
@@ -396,7 +404,7 @@ export function useSuperSearch(
         handleToolSelectForced(id);
       }
     },
-    [handleToolSelect, handleToolSelectForced, toolAvailability],
+    [handleToolSelect, handleToolSelectForced, toolAvailability, toolRegistry],
   );
 
   const openSettings = useCallback(
@@ -484,7 +492,14 @@ export function useSuperSearch(
       t,
     );
 
+    // Section order: Editor first, Settings second, Processor last.
     const processorSection = t("superSearch.group.processor", "Processor");
+    const sectionFor = (groupId: string): string => {
+      if (groupId === "processor") return processorSection;
+      if (groupId === "settings")
+        return t("superSearch.group.settings", "Settings");
+      return t("portal.nav.editor", "Editor");
+    };
     return [
       ...assembledGroups.map((group) => ({
         ...group,
@@ -492,10 +507,7 @@ export function useSuperSearch(
           group.id === "processor"
             ? t("superSearch.group.pages", "Pages")
             : group.label,
-        sectionLabel:
-          group.id === "processor"
-            ? processorSection
-            : t("portal.nav.editor", "Editor"),
+        sectionLabel: sectionFor(group.id),
       })),
       ...entityGroups.map((group) => ({
         ...group,

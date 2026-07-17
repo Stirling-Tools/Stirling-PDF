@@ -25,3 +25,13 @@
 [data-mantine-color-scheme="dark"] .portal-searchbar .super-search input {
   background-color: transparent;
 }
+
+/* The dropdown is portalled to <body>, so it can't inherit portal styling by
+   nesting — this class (passed via dropdownClassName) restyles it with the
+   portal's own surface vocabulary. */
+.portal-search-dropdown.super-search-dropdown {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  padding: 0.5rem;
+}

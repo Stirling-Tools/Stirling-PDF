@@ -44,9 +44,11 @@ import {
 const FOCUSED_ENTITY_GROUP_LIMIT = 8;
 const FOCUSED_SHARED_GROUP_LIMIT = 8;
 const EDITOR_GROUP_ORDER: SuperSearchGroupId[] = ["tools"];
-const PROCESSOR_GROUP_ORDER: SuperSearchGroupId[] = ["settings"];
+const SETTINGS_GROUP_ORDER: SuperSearchGroupId[] = ["settings"];
 const PROCESSOR_SECTION_LABEL_KEY = "superSearch.group.processor";
 const PROCESSOR_SECTION_LABEL_FALLBACK = "Processor";
+const SETTINGS_SECTION_LABEL_KEY = "superSearch.group.settings";
+const SETTINGS_SECTION_LABEL_FALLBACK = "Settings";
 const EDITOR_SECTION_LABEL_KEY = "portal.nav.editor";
 const EDITOR_SECTION_LABEL_FALLBACK = "Editor";
 const NO_PORTAL_ENTITY_SCOPES: readonly PortalEntityScopeId[] = [];
@@ -174,9 +176,20 @@ export function usePortalSearchResults(
     return out;
   }, [allTools]);
 
-  const openTool = useCallback((id: ToolId) => {
-    window.location.assign(editorHref(getToolUrlPath(id)));
-  }, []);
+  const openTool = useCallback(
+    (id: ToolId) => {
+      // Link tools have no in-editor UI — navigating to a tool URL for one
+      // lands on a "tool not found" panel. Open their destination directly,
+      // matching how the editor's tool lists treat them.
+      const tool = allTools[id];
+      if (tool?.link) {
+        window.open(tool.link, "_blank", "noopener,noreferrer");
+        return;
+      }
+      window.location.assign(editorHref(getToolUrlPath(id)));
+    },
+    [allTools],
+  );
 
   const openSettingsSection = useCallback(
     (section: string, anchor?: string) => openSettings(section, anchor),
@@ -204,7 +217,8 @@ export function usePortalSearchResults(
   );
 
   const groups = useMemo(() => {
-    const processorSettingsGroups = assembleSuperSearchGroups(
+    // Section order: Processor first, Settings second, Editor last.
+    const settingsGroups = assembleSuperSearchGroups(
       {
         settings: scopeEnabled("settings")
           ? rankSettingsResults(
@@ -217,12 +231,12 @@ export function usePortalSearchResults(
           : [],
       },
       t,
-      PROCESSOR_GROUP_ORDER,
+      SETTINGS_GROUP_ORDER,
     ).map((group) => ({
       ...group,
       sectionLabel: t(
-        PROCESSOR_SECTION_LABEL_KEY,
-        PROCESSOR_SECTION_LABEL_FALLBACK,
+        SETTINGS_SECTION_LABEL_KEY,
+        SETTINGS_SECTION_LABEL_FALLBACK,
       ),
     }));
 
@@ -252,7 +266,7 @@ export function usePortalSearchResults(
           PROCESSOR_SECTION_LABEL_FALLBACK,
         ),
       })),
-      ...processorSettingsGroups,
+      ...settingsGroups,
       ...editorGroups,
     ];
   }, [
