@@ -14,6 +14,8 @@ export function useProcessorEntityGroups(
   _enabled: boolean,
   _t: TFunction,
   _navigate: (path: string) => void,
+  _scopeEnabled?: (scopeId: string) => boolean,
+  _focusedScopeId?: string | null,
 ): SuperSearchGroup[] {
   return NO_GROUPS;
 }

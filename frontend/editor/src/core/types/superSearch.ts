@@ -62,3 +62,54 @@ export interface SuperSearchGates {
   loginEnabled: boolean;
   portalAccessible?: boolean;
 }
+
+/**
+ * The Processor's entity lanes as scope definitions — ids, the portal view
+ * each targets, chip labels and typed-prefix aliases. Both hosts' chip lists
+ * and the portal's entity module derive from this one list, so the chips
+ * can't drift apart; it lives in the types leaf because the editor's chip
+ * list must not import portal code.
+ */
+export interface PortalEntityScopeDef {
+  id:
+    | "portal-users"
+    | "portal-policies"
+    | "portal-pipelines"
+    | "portal-sources";
+  /** Portal view id the scope targets (visibility check vs the page index). */
+  viewId: string;
+  labelKey: string;
+  labelFallback: string;
+  aliases: readonly string[];
+}
+
+export const PORTAL_ENTITY_SCOPE_DEFS: readonly PortalEntityScopeDef[] = [
+  {
+    id: "portal-users",
+    viewId: "users",
+    labelKey: "portal.nav.users",
+    labelFallback: "Users",
+    aliases: ["user", "users", "member", "members"],
+  },
+  {
+    id: "portal-policies",
+    viewId: "policies",
+    labelKey: "portal.nav.policies",
+    labelFallback: "Policies",
+    aliases: ["policy", "policies"],
+  },
+  {
+    id: "portal-pipelines",
+    viewId: "pipelines",
+    labelKey: "portal.nav.pipelines",
+    labelFallback: "Pipelines",
+    aliases: ["pipeline", "pipelines"],
+  },
+  {
+    id: "portal-sources",
+    viewId: "sources",
+    labelKey: "portal.nav.sources",
+    labelFallback: "Sources",
+    aliases: ["source", "sources"],
+  },
+];

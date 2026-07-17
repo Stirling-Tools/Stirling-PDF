@@ -36,14 +36,15 @@ import {
   type ProcessorSearchEntry,
 } from "@app/data/processorSearchIndex";
 import { useProcessorEntityGroups } from "@app/data/processorEntitySearch";
-import type {
-  SuperSearchGates,
-  SuperSearchGroup,
-  SuperSearchGroupId,
-  SuperSearchQueryOptions,
-  SuperSearchResult,
-  SuperSearchScope,
-  UseSuperSearchResult,
+import {
+  PORTAL_ENTITY_SCOPE_DEFS,
+  type SuperSearchGates,
+  type SuperSearchGroup,
+  type SuperSearchGroupId,
+  type SuperSearchQueryOptions,
+  type SuperSearchResult,
+  type SuperSearchScope,
+  type UseSuperSearchResult,
 } from "@app/types/superSearch";
 
 // Re-exported so existing consumers keep one import site; the definitions
@@ -100,9 +101,9 @@ export function useSuperSearchGates(): SuperSearchGates | null {
 }
 
 /**
- * The editor bar's filter chips — one per source lane. The Processor chip
- * covers pages and entities together, and only shows when this build ships
- * the portal and the user can enter it.
+ * The editor bar's filter chips — one per source lane, granular over the
+ * Processor's contents (pages plus each entity type). Processor lanes only
+ * show when this build ships the portal and the user can enter it.
  */
 export function useEditorSearchScopes(): SuperSearchScope[] {
   const { t } = useTranslation();
@@ -110,8 +111,11 @@ export function useEditorSearchScopes(): SuperSearchScope[] {
   const processorAvailable =
     PROCESSOR_SEARCH_INDEX.length > 0 && isProcessorGateOpen(gates);
 
-  return useMemo(
-    () => [
+  return useMemo(() => {
+    const visibleViewIds = new Set(
+      PROCESSOR_SEARCH_INDEX.map((entry) => entry.id),
+    );
+    return [
       {
         id: "files",
         label: t("superSearch.group.files", "Files"),
@@ -131,14 +135,20 @@ export function useEditorSearchScopes(): SuperSearchScope[] {
         ? [
             {
               id: "processor",
-              label: t("superSearch.group.processor", "Processor"),
-              aliases: ["processor", "portal", "page", "pages"],
+              label: t("superSearch.group.pages", "Pages"),
+              aliases: ["page", "pages", "processor", "portal"],
             },
+            ...PORTAL_ENTITY_SCOPE_DEFS.filter((def) =>
+              visibleViewIds.has(def.viewId),
+            ).map((def) => ({
+              id: def.id,
+              label: t(def.labelKey, def.labelFallback),
+              aliases: [...def.aliases],
+            })),
           ]
         : []),
-    ],
-    [t, processorAvailable],
-  );
+    ];
+  }, [t, processorAvailable]);
 }
 
 /**
@@ -504,15 +514,15 @@ export function useSuperSearch(
   const gates = useSuperSearchGates();
 
   // Processor entities (users, policies, pipelines, sources) join the pages
-  // under the Processor section — same gate as the pages group.
+  // under the Processor section — same access gate as the pages group, each
+  // entity type filterable by its own scope.
   const entityGroups = useProcessorEntityGroups(
     trimmed,
-    active &&
-      trimmed.length > 0 &&
-      isProcessorGateOpen(gates) &&
-      scopeEnabled("processor"),
+    active && trimmed.length > 0 && isProcessorGateOpen(gates),
     t,
     navigate,
+    scopeEnabled,
+    focusedScopeId,
   );
 
   const groups = useMemo<SuperSearchGroup[]>(() => {

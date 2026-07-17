@@ -35,6 +35,8 @@ export function useProcessorEntityGroups(
   enabled: boolean,
   t: TFunction,
   navigate: (path: string) => void,
+  scopeEnabled: (scopeId: string) => boolean = () => true,
+  focusedScopeId: string | null = null,
 ): SuperSearchGroup[] {
   const [mod, setMod] = useState<EntitySearchModule | null>(null);
   const modRef = useRef<EntitySearchModule | null>(null);
@@ -54,11 +56,14 @@ export function useProcessorEntityGroups(
     };
   }, [active]);
 
-  const requestedScopes = useMemo<readonly PortalEntityScopeId[]>(
-    () =>
-      active && hasQuery && mod ? mod.defaultPortalEntityScopes() : NO_SCOPES,
-    [active, hasQuery, mod],
-  );
+  const requestedScopes = useMemo<readonly PortalEntityScopeId[]>(() => {
+    if (!active || !hasQuery || !mod) return NO_SCOPES;
+    return mod.withPortalEntityDependencies(
+      mod
+        .defaultPortalEntityScopes()
+        .filter((scopeId) => scopeEnabled(scopeId)),
+    );
+  }, [active, hasQuery, mod, scopeEnabled]);
 
   const fetchScope = useCallback(
     async (scopeId: PortalEntityScopeId): Promise<PortalEntityItems> => {
@@ -84,6 +89,19 @@ export function useProcessorEntityGroups(
 
   return useMemo(() => {
     if (!mod || !entities || !active || !hasQuery) return NO_GROUPS;
-    return mod.buildProcessorEntityGroups(entities, trimmed, t, navigate);
-  }, [mod, entities, active, hasQuery, trimmed, t, navigate]);
+    return mod.buildProcessorEntityGroups(entities, trimmed, t, navigate, {
+      scopeEnabled,
+      focusedScopeId,
+    });
+  }, [
+    mod,
+    entities,
+    active,
+    hasQuery,
+    trimmed,
+    t,
+    navigate,
+    scopeEnabled,
+    focusedScopeId,
+  ]);
 }

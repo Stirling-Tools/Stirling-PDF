@@ -16,22 +16,21 @@ import {
   useSearchScopeFilter,
 } from "@app/hooks/useSuperSearch";
 import { useScopedFetchCache } from "@app/hooks/useScopedFetchCache";
-import type {
-  SuperSearchGates,
-  SuperSearchGroup,
-  SuperSearchGroupId,
-  SuperSearchQueryOptions,
-  SuperSearchScope,
-  UseSuperSearchResult,
+import {
+  PORTAL_ENTITY_SCOPE_DEFS,
+  type SuperSearchGates,
+  type SuperSearchGroup,
+  type SuperSearchGroupId,
+  type SuperSearchQueryOptions,
+  type SuperSearchScope,
+  type UseSuperSearchResult,
 } from "@app/types/superSearch";
 import type { ToolId } from "@app/types/toolId";
 import { EDITOR_IS_SAME_APP, EDITOR_URL } from "@portal/auth/editorUrl";
 import { useTier } from "@portal/contexts/TierContext";
 import { useUI } from "@portal/contexts/UIContext";
 import {
-  ENTITY_GROUP_LIMIT,
   ENTITY_REFRESH_MS,
-  PORTAL_ENTITY_SCOPE_IDS,
   buildProcessorEntityGroups,
   defaultPortalEntityScopes,
   fetchPortalEntityScope,
@@ -41,7 +40,6 @@ import {
   type PortalEntityScopeId,
 } from "@portal/search/entitySearch";
 
-const FOCUSED_ENTITY_GROUP_LIMIT = 8;
 const FOCUSED_SHARED_GROUP_LIMIT = 8;
 const EDITOR_GROUP_ORDER: SuperSearchGroupId[] = ["tools"];
 const SETTINGS_GROUP_ORDER: SuperSearchGroupId[] = ["settings"];
@@ -63,47 +61,34 @@ function editorHref(path: string): string {
   return EDITOR_URL.replace(/\/$/, "") + path;
 }
 
+/**
+ * The portal bar's filter chips — every lane the editor offers except Files
+ * (files only open in the editor) and Pages (the sidebar covers navigation).
+ * Ordered to match the dropdown's section priority.
+ */
 export function usePortalSearchScopes(): SuperSearchScope[] {
   const { t } = useTranslation();
 
   return useMemo(
-    () =>
-      [
-        {
-          id: "portal-policies",
-          label: t("portal.nav.policies"),
-          aliases: ["policy", "policies"],
-        },
-        {
-          id: "portal-pipelines",
-          label: t("portal.nav.pipelines"),
-          aliases: ["pipeline", "pipelines"],
-        },
-        {
-          id: "portal-sources",
-          label: t("portal.nav.sources"),
-          aliases: ["source", "sources"],
-        },
-        {
-          id: "portal-users",
-          label: t("portal.nav.users"),
-          aliases: ["user", "users", "member", "members"],
-        },
-        {
-          id: "tools",
-          label: t("superSearch.group.tools", "Tools"),
-          aliases: ["tool", "tools"],
-        },
-        {
-          id: "settings",
-          label: t("superSearch.group.settings", "Settings"),
-          aliases: ["setting", "settings"],
-        },
-      ].filter((scope) =>
-        (PORTAL_ENTITY_SCOPE_IDS as readonly string[]).includes(scope.id)
-          ? isVisiblePortalScope(scope.id as PortalEntityScopeId)
-          : true,
-      ),
+    () => [
+      ...PORTAL_ENTITY_SCOPE_DEFS.filter((def) =>
+        isVisiblePortalScope(def.id),
+      ).map((def) => ({
+        id: def.id,
+        label: t(def.labelKey, def.labelFallback),
+        aliases: [...def.aliases],
+      })),
+      {
+        id: "settings",
+        label: t("superSearch.group.settings", "Settings"),
+        aliases: ["setting", "settings"],
+      },
+      {
+        id: "tools",
+        label: t("superSearch.group.tools", "Tools"),
+        aliases: ["tool", "tools"],
+      },
+    ],
     [t],
   );
 }
@@ -134,14 +119,6 @@ export function usePortalSearchResults(
       focusedScopeId === scopeId ? FOCUSED_SHARED_GROUP_LIMIT : undefined,
     [focusedScopeId],
   );
-  const entityScopeLimit = useCallback(
-    (scopeId: string) =>
-      focusedScopeId === scopeId
-        ? FOCUSED_ENTITY_GROUP_LIMIT
-        : ENTITY_GROUP_LIMIT,
-    [focusedScopeId],
-  );
-
   const requestedEntityScopes = useMemo<readonly PortalEntityScopeId[]>(() => {
     if (!active || trimmed.length === 0) return NO_PORTAL_ENTITY_SCOPES;
     const enabled = defaultPortalEntityScopes().filter((scopeId) =>
@@ -211,9 +188,9 @@ export function usePortalSearchResults(
     () =>
       buildProcessorEntityGroups(entities, trimmed, t, navigate, {
         scopeEnabled,
-        limitFor: entityScopeLimit,
+        focusedScopeId,
       }),
-    [entities, trimmed, t, navigate, scopeEnabled, entityScopeLimit],
+    [entities, trimmed, t, navigate, scopeEnabled, focusedScopeId],
   );
 
   const groups = useMemo(() => {

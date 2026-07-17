@@ -1,7 +1,8 @@
 import { PROCESSOR_SEARCH_INDEX } from "@app/data/processorSearchIndex";
-import type {
-  SuperSearchGroup,
-  SuperSearchResult,
+import {
+  PORTAL_ENTITY_SCOPE_DEFS,
+  type SuperSearchGroup,
+  type SuperSearchResult,
 } from "@app/types/superSearch";
 import { rankByFuzzy } from "@app/utils/fuzzySearch";
 import { fetchPolicies, type CatalogueEntry } from "@portal/api/policies";
@@ -25,14 +26,12 @@ import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
  * pull the portal into the main bundle).
  */
 
-export const PORTAL_ENTITY_SCOPE_IDS = [
-  "portal-users",
-  "portal-policies",
-  "portal-pipelines",
-  "portal-sources",
-] as const;
+export const PORTAL_ENTITY_SCOPE_IDS = PORTAL_ENTITY_SCOPE_DEFS.map(
+  (def) => def.id,
+);
 
-export type PortalEntityScopeId = (typeof PORTAL_ENTITY_SCOPE_IDS)[number];
+export type PortalEntityScopeId =
+  (typeof PORTAL_ENTITY_SCOPE_DEFS)[number]["id"];
 
 export type PortalEntityItems =
   | Member[]
@@ -50,16 +49,15 @@ export interface ProcessorEntities {
 /** Entity groups cap lower than the shared group limit so the dropdown stays
  * scannable when several sections match at once. */
 export const ENTITY_GROUP_LIMIT = 4;
+/** A focused (single-scope) search has the dropdown to itself. */
+const FOCUSED_ENTITY_GROUP_LIMIT = 8;
 
 /** How long a fetched entity scope stays fresh before a search refetches it. */
 export const ENTITY_REFRESH_MS = 30_000;
 
-const PORTAL_VIEW_BY_SCOPE_ID = {
-  "portal-users": "users",
-  "portal-policies": "policies",
-  "portal-pipelines": "pipelines",
-  "portal-sources": "sources",
-} as const;
+const PORTAL_VIEW_BY_SCOPE_ID = Object.fromEntries(
+  PORTAL_ENTITY_SCOPE_DEFS.map((def) => [def.id, def.viewId]),
+) as Record<PortalEntityScopeId, string>;
 
 const VISIBLE_PORTAL_VIEW_IDS = new Set(
   PROCESSOR_SEARCH_INDEX.map((entry) => entry.id),
@@ -187,8 +185,8 @@ export function rankPortalPipelineResults(
 export interface BuildEntityGroupsOptions {
   /** Host scope filter; defaults to every entity type enabled. */
   scopeEnabled?: (scopeId: PortalEntityScopeId) => boolean;
-  /** Host row cap per entity group; defaults to ENTITY_GROUP_LIMIT. */
-  limitFor?: (scopeId: PortalEntityScopeId) => number;
+  /** The single focused scope, if any — its group gets the larger row cap. */
+  focusedScopeId?: string | null;
 }
 
 /**
@@ -205,7 +203,10 @@ export function buildProcessorEntityGroups(
 ): SuperSearchGroup[] {
   if (!trimmed) return [];
   const scopeEnabled = options.scopeEnabled ?? (() => true);
-  const limitFor = options.limitFor ?? (() => ENTITY_GROUP_LIMIT);
+  const limitFor = (scopeId: PortalEntityScopeId) =>
+    options.focusedScopeId === scopeId
+      ? FOCUSED_ENTITY_GROUP_LIMIT
+      : ENTITY_GROUP_LIMIT;
   const groups: SuperSearchGroup[] = [];
 
   const includeScope = (scopeId: PortalEntityScopeId) =>
