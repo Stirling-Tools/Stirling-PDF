@@ -113,6 +113,7 @@ public class AgreementAssembler {
         t.put("term_discount_pct", pricing.termDiscountPct(quote.getTermYears()) + "%");
         t.put("sla_tier", slaTier(quote.getServiceLevel()));
         t.put("annual_fee_y1", money(quote.getAnnualNetMinor()));
+        t.put("contract_total", money(quote.getTcvMinor()));
         t.put("elected_or_not", quote.isIndemnification() ? "Elected" : "Not elected");
         t.put("po_number", notBlank(quote.getPoNumber()) ? quote.getPoNumber().trim() : "—");
         t.put(
@@ -149,8 +150,13 @@ public class AgreementAssembler {
                 "{{term_years}} year(s) · term discount {{term_discount_pct}} on committed processing");
         row(sb, "Itemized services", itemizedServices(quote));
         row(sb, "Annual Fee (year 1)", "{{annual_fee_y1}}");
+        row(sb, "Total (paid in advance)", "{{contract_total}}");
         row(sb, "Escalator", "+3% at each anniversary during the Term");
-        row(sb, "Payment", "Annual in advance · net 30 · ACH, wire, or check");
+        row(
+                sb,
+                "Payment",
+                "Full {{term_years}}-year term invoiced in advance on acceptance · net 30 · ACH,"
+                        + " wire, or check");
         row(sb, "Overage", "Committed rate, billed quarterly in arrears");
         row(
                 sb,

@@ -7967,7 +7967,7 @@ eyebrow = "Quote"
 poNumber = "Purchase order: {{po}}"
 renewal = "Renews at {{amount}}/year after the term (+{{pct}}% CPI)"
 subtitle = "Review the figures below and download a copy. Accepting moves you to the enterprise agreement — you won't be charged until it's signed."
-tcv = "{{years}}-year total: {{tcv}}"
+tcv = "{{years}}-year term, paid in full up front: {{tcv}}"
 title = "Review your quote"
 validUntil = "Valid until {{date}}"
 
