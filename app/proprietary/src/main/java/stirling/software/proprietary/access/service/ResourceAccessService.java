@@ -43,8 +43,13 @@ public class ResourceAccessService {
         return canUseResource(ResourceType.PORTAL, "", null, portalDefaultPolicy, user);
     }
 
-    /** Portal access for a roster (admin, grant, or default policy). */
-    public Set<Long> usersWithPortalAccess(Collection<User> users, Set<Long> teamLeaderUserIds) {
+    /**
+     * Portal access for a roster (admin, grant, or default policy). {@code activeTeamLeaderUserIds}
+     * must hold ids of users who lead their own active team — the set the ADMINS_AND_TEAM_LEADS
+     * default admits, matching {@link #canAccessPortal}.
+     */
+    public Set<Long> usersWithPortalAccess(
+            Collection<User> users, Set<Long> activeTeamLeaderUserIds) {
         Set<PrincipalRef> grantedPrincipals = new HashSet<>();
         for (ResourceGrant g :
                 grantRepository.findByResourceTypeAndResourceId(ResourceType.PORTAL, "")) {
@@ -52,7 +57,7 @@ public class ResourceAccessService {
                 grantedPrincipals.add(new PrincipalRef(g.getPrincipalType(), g.getPrincipalId()));
             }
         }
-        Set<Long> leaderIds = teamLeaderUserIds == null ? Set.of() : teamLeaderUserIds;
+        Set<Long> leaderIds = activeTeamLeaderUserIds == null ? Set.of() : activeTeamLeaderUserIds;
         Set<Long> allowed = new HashSet<>();
         for (User user : users) {
             if (user != null
