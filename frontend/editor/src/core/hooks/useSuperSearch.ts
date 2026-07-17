@@ -6,7 +6,6 @@ import {
   useRef,
   useState,
 } from "react";
-import type React from "react";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -36,36 +35,28 @@ import {
   PROCESSOR_SEARCH_INDEX,
   type ProcessorSearchEntry,
 } from "@app/data/processorSearchIndex";
+import { useProcessorEntityGroups } from "@app/data/processorEntitySearch";
+import type {
+  SuperSearchGates,
+  SuperSearchGroup,
+  SuperSearchGroupId,
+  SuperSearchQueryOptions,
+  SuperSearchResult,
+  SuperSearchScope,
+  UseSuperSearchResult,
+} from "@app/types/superSearch";
 
-export type SuperSearchGroupId = "files" | "tools" | "settings" | "processor";
-
-export interface SuperSearchResult {
-  /** Stable unique key across all groups. */
-  key: string;
-  /** Group id — the editor uses SuperSearchGroupId; other hosts use their own. */
-  group: string;
-  title: string;
-  subtitle?: string;
-  /** LocalIcon name (files/settings); tools provide a React node via `icon`. */
-  iconName?: string;
-  icon?: React.ReactNode;
-  score: number;
-  onSelect: () => void | Promise<void>;
-}
-
-export interface SuperSearchGroup {
-  id: string;
-  label: string;
-  /** Optional higher-level section label rendered above consecutive groups. */
-  sectionLabel?: string;
-  results: SuperSearchResult[];
-}
-
-export interface SuperSearchScope {
-  id: string;
-  label: string;
-  aliases?: string[];
-}
+// Re-exported so existing consumers keep one import site; the definitions
+// live in the types leaf (see that module for why).
+export type {
+  SuperSearchGates,
+  SuperSearchGroup,
+  SuperSearchGroupId,
+  SuperSearchQueryOptions,
+  SuperSearchResult,
+  SuperSearchScope,
+  UseSuperSearchResult,
+};
 
 /** Per-group result caps so the dropdown stays scannable. */
 const GROUP_LIMIT = 6;
@@ -79,29 +70,28 @@ const GROUP_ORDER: SuperSearchGroupId[] = [
   "processor",
 ];
 
-export interface UseSuperSearchResult {
-  /** Non-empty groups, in display order. */
-  groups: SuperSearchGroup[];
-  /** All results flattened in display order (for keyboard navigation). */
-  flatResults: SuperSearchResult[];
-  /** True while the My Files store is loading for the first time. */
-  loadingFiles: boolean;
-}
-
-export interface SuperSearchQueryOptions {
-  scopeIds?: readonly string[];
-}
-
 /**
- * Visibility gates shared by the settings and Processor sources. Hosts pass
- * `null` while the app config is still loading — the rankers treat that as
- * "most restrictive" so gated results can appear once config lands but never
- * flash open before it.
+ * Shared scope handling for hosts that accept SuperSearchQueryOptions: which
+ * source lanes are enabled, and which single lane (if any) is focused — a
+ * focused lane can spend a larger row budget since it has the dropdown to
+ * itself.
  */
-export interface SuperSearchGates {
-  isAdmin: boolean;
-  loginEnabled: boolean;
-  portalAccessible?: boolean;
+export function useSearchScopeFilter(options?: SuperSearchQueryOptions): {
+  scopeEnabled: (scopeId: string) => boolean;
+  focusedScopeId: string | null;
+} {
+  const scopedIds = useMemo(
+    () => new Set(options?.scopeIds ?? []),
+    [options?.scopeIds],
+  );
+  const hasScopedSearch = scopedIds.size > 0;
+  const scopeEnabled = useCallback(
+    (scopeId: string) => !hasScopedSearch || scopedIds.has(scopeId),
+    [hasScopedSearch, scopedIds],
+  );
+  const focusedScopeId =
+    scopedIds.size === 1 ? (scopedIds.values().next().value ?? null) : null;
+  return { scopeEnabled, focusedScopeId };
 }
 
 // ---------------------------------------------------------------------------
@@ -368,23 +358,12 @@ export function useSuperSearch(
 
   const trimmed = query.trim();
   const { stubs, loadingFiles } = useMyFilesStubs(active);
-  const scopedIds = useMemo(
-    () => new Set(options?.scopeIds ?? []),
-    [options?.scopeIds],
-  );
-  const hasScopedSearch = scopedIds.size > 0;
-
-  const scopeEnabled = useCallback(
-    (scopeId: string) => !hasScopedSearch || scopedIds.has(scopeId),
-    [hasScopedSearch, scopedIds],
-  );
+  const { scopeEnabled, focusedScopeId } = useSearchScopeFilter(options);
 
   const scopeLimit = useCallback(
     (scopeId: SuperSearchGroupId) =>
-      hasScopedSearch && scopedIds.size === 1 && scopedIds.has(scopeId)
-        ? FOCUSED_GROUP_LIMIT
-        : GROUP_LIMIT,
-    [hasScopedSearch, scopedIds],
+      focusedScopeId === scopeId ? FOCUSED_GROUP_LIMIT : GROUP_LIMIT,
+    [focusedScopeId],
   );
 
   // --- Actions -----------------------------------------------------------
@@ -454,6 +433,21 @@ export function useSuperSearch(
     [authState.isAdmin, authState.portalAccess, config],
   );
 
+  // Processor entities (users, policies, pipelines, sources) join the pages
+  // under the Processor section — same gate as the pages group.
+  const processorGateOpen =
+    !!gates &&
+    (gates.portalAccessible === true || gates.isAdmin || !gates.loginEnabled);
+  const entityGroups = useProcessorEntityGroups(
+    trimmed,
+    active &&
+      trimmed.length > 0 &&
+      processorGateOpen &&
+      scopeEnabled("processor"),
+    t,
+    navigate,
+  );
+
   const groups = useMemo<SuperSearchGroup[]>(() => {
     const assembledGroups = assembleSuperSearchGroups(
       {
@@ -490,17 +484,24 @@ export function useSuperSearch(
       t,
     );
 
-    return assembledGroups.map((group) => ({
-      ...group,
-      label:
-        group.id === "processor"
-          ? t("superSearch.group.pages", "Pages")
-          : group.label,
-      sectionLabel:
-        group.id === "processor"
-          ? t("superSearch.group.processor", "Processor")
-          : t("portal.nav.editor", "Editor"),
-    }));
+    const processorSection = t("superSearch.group.processor", "Processor");
+    return [
+      ...assembledGroups.map((group) => ({
+        ...group,
+        label:
+          group.id === "processor"
+            ? t("superSearch.group.pages", "Pages")
+            : group.label,
+        sectionLabel:
+          group.id === "processor"
+            ? processorSection
+            : t("portal.nav.editor", "Editor"),
+      })),
+      ...entityGroups.map((group) => ({
+        ...group,
+        sectionLabel: processorSection,
+      })),
+    ];
   }, [
     stubs,
     trimmed,
@@ -512,6 +513,7 @@ export function useSuperSearch(
     selectProcessorEntry,
     scopeEnabled,
     scopeLimit,
+    entityGroups,
     t,
   ]);
 

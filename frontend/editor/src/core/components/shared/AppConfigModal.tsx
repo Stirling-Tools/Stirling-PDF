@@ -45,6 +45,8 @@ interface AppConfigModalProps {
   /** Section to land on when opening. Only honoured when urlSync is off (URL
    *  deep links win otherwise). */
   initialSection?: NavKey | null;
+  /** Row anchor to focus when opening on a non-URL host. */
+  initialFocus?: string | null;
   /** Host-specific sections appended after the build's registry sections. */
   extraSections?: ConfigNavSection[];
 }
@@ -64,6 +66,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   onClose,
   urlSync = true,
   initialSection,
+  initialFocus,
   extraSections,
 }) => {
   const { t } = useTranslation();
@@ -151,7 +154,9 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   // straight to an individual setting row).
   useEffect(() => {
     if (!opened) return;
-    const focus = new URLSearchParams(location.search).get("focus");
+    const focus = urlSync
+      ? new URLSearchParams(location.search).get("focus")
+      : initialFocus;
     if (!focus) return;
     let raf = 0;
     // Wait for the (possibly just-switched) section to render before scrolling.
@@ -171,7 +176,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
       window.clearTimeout(timer);
       if (raf) window.cancelAnimationFrame(raf);
     };
-  }, [opened, active, location.search]);
+  }, [opened, active, initialFocus, location.search, urlSync]);
 
   // Backwards-compat: external `appConfig:navigate` events route through the
   // same switchSection path so they get the no-flash treatment too.

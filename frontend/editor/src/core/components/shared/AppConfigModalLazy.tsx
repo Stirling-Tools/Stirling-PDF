@@ -18,6 +18,8 @@ interface AppConfigModalLazyProps {
   urlSync?: boolean;
   /** Section to land on when opening (non-URL hosts). */
   initialSection?: NavKey | null;
+  /** Row anchor to highlight when opening (non-URL hosts). */
+  initialFocus?: string | null;
   /** Host-specific sections appended after the build's registry sections. */
   extraSections?: ConfigNavSection[];
 }
@@ -27,6 +29,7 @@ export default function AppConfigModalLazy({
   onClose,
   urlSync,
   initialSection,
+  initialFocus,
   extraSections,
 }: AppConfigModalLazyProps) {
   const [shouldMount, setShouldMount] = useState(false);
@@ -43,6 +46,7 @@ export default function AppConfigModalLazy({
           onClose={onClose}
           urlSync={urlSync}
           initialSection={initialSection}
+          initialFocus={initialFocus}
           extraSections={extraSections}
         />
       )}

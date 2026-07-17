@@ -19,7 +19,8 @@ interface UIContextValue {
    * modal pick its own default. Cleared back to `null` on close.
    */
   settingsInitialSection: string | null;
-  openSettings: (section?: string) => void;
+  settingsInitialFocus: string | null;
+  openSettings: (section?: string, focus?: string) => void;
   closeSettings: () => void;
 
   /**
@@ -47,6 +48,9 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const [settingsInitialSection, setSettingsInitialSection] = useState<
     string | null
   >(null);
+  const [settingsInitialFocus, setSettingsInitialFocus] = useState<
+    string | null
+  >(null);
   const [linkModalOpen, setLinkModalOpen] = useState(false);
   const [linkModalMode, setLinkModalMode] = useState<"link" | "reauth">("link");
   // When the link modal is opened from inside Settings, remember the section to
@@ -64,13 +68,16 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
       settingsOpen,
       settingsInitialSection,
-      openSettings: (section?: string) => {
+      settingsInitialFocus,
+      openSettings: (section?: string, focus?: string) => {
         setSettingsInitialSection(section ?? null);
+        setSettingsInitialFocus(focus ?? null);
         setSettingsOpen(true);
       },
       closeSettings: () => {
         setSettingsOpen(false);
         setSettingsInitialSection(null);
+        setSettingsInitialFocus(null);
       },
 
       linkModalOpen,
@@ -83,6 +90,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
           setReopenSettingsAfterLink("account-link");
           setSettingsOpen(false);
           setSettingsInitialSection(null);
+          setSettingsInitialFocus(null);
         }
         setLinkModalOpen(true);
       },
@@ -91,6 +99,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
         setLinkModalMode("link");
         if (reopenSettingsAfterLink) {
           setSettingsInitialSection(reopenSettingsAfterLink);
+          setSettingsInitialFocus(null);
           setSettingsOpen(true);
           setReopenSettingsAfterLink(null);
         }
@@ -100,6 +109,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
       assistantOpen,
       settingsOpen,
       settingsInitialSection,
+      settingsInitialFocus,
       linkModalOpen,
       linkModalMode,
       reopenSettingsAfterLink,

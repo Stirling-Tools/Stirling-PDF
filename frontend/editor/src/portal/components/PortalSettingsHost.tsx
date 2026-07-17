@@ -28,7 +28,12 @@ import { useUI } from "@portal/contexts/UIContext";
  * settings.
  */
 export function PortalSettingsHost() {
-  const { settingsOpen, settingsInitialSection, closeSettings } = useUI();
+  const {
+    settingsOpen,
+    settingsInitialSection,
+    settingsInitialFocus,
+    closeSettings,
+  } = useUI();
   const { t } = useTranslation();
   const [everOpened, setEverOpened] = useState(false);
 
@@ -73,6 +78,7 @@ export function PortalSettingsHost() {
             onClose={closeSettings}
             urlSync={false}
             initialSection={initialSection}
+            initialFocus={settingsInitialFocus}
             extraSections={extraSections}
           />
         </ThemeProvider>

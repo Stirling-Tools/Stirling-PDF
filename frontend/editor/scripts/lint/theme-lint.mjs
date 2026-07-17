@@ -16,6 +16,10 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { relative, resolve, join } from "node:path";
 
+// path.relative emits backslashes on Windows; normalise so comparisons against
+// the POSIX-style PRIMITIVES constant hold on every platform.
+const toPosix = (p) => p.replace(/\\/g, "/");
+
 const THEME = resolve(process.cwd(), "editor/src/core/theme");
 const PRIMITIVES = "editor/src/core/theme/primitives.css";
 
@@ -78,7 +82,7 @@ function check() {
   for (const name of readdirSync(THEME)) {
     if (name.endsWith(".css") && !known.has(name)) {
       violations.push({
-        file: relative(process.cwd(), join(THEME, name)),
+        file: toPosix(relative(process.cwd(), join(THEME, name))),
         line: 1,
         msg: `unregistered theme CSS — add "${name}" to THEME_FILES in theme-lint.mjs`,
       });
@@ -86,7 +90,7 @@ function check() {
   }
 
   for (const name of THEME_FILES) {
-    const rel = relative(process.cwd(), join(THEME, name));
+    const rel = toPosix(relative(process.cwd(), join(THEME, name)));
     const isPrimitives = rel === PRIMITIVES;
     const text = stripComments(readFileSync(join(THEME, name), "utf8"));
 
