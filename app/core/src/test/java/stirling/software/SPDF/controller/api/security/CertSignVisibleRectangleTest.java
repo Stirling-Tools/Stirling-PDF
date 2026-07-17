@@ -56,4 +56,18 @@ class CertSignVisibleRectangleTest {
         assertThat(rect.getWidth()).isEqualTo(expectedW);
         assertThat(rect.getHeight()).isEqualTo(expectedH);
     }
+
+    @Test
+    @DisplayName("clamps widget so it stays fully on the page")
+    void clampsToPageBounds() {
+        // x near the right edge with a wide box would overflow without clamping
+        PDRectangle rect =
+                CertSignController.resolveVisibleSignatureRectangle(page(), 0.9, 0.9, 0.3, 0.2);
+
+        assertThat(rect.getWidth()).isEqualTo(0.3f * PAGE_W);
+        assertThat(rect.getHeight()).isEqualTo(0.2f * PAGE_H);
+        assertThat(rect.getLowerLeftX() + rect.getWidth()).isLessThanOrEqualTo(PAGE_W + 0.01f);
+        assertThat(rect.getLowerLeftY()).isGreaterThanOrEqualTo(0f);
+        assertThat(rect.getLowerLeftY() + rect.getHeight()).isLessThanOrEqualTo(PAGE_H + 0.01f);
+    }
 }

@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { materializeFormDataFiles } from "@app/services/materializeFormDataFiles";
 
 // Fast path for localhost binary traffic: moves raw bytes via a Rust command
 // instead of plugin-http's per-byte number-array IPC (~3.5x size bloat).
@@ -96,7 +97,16 @@ export async function fetchViaLocalProxy(
   const outHeaders: Record<string, string> = { ...headers };
   let bodyBytes = new Uint8Array(0);
   if (body !== undefined) {
-    const probe = new Request("http://localhost/", { method: "POST", body });
+    // Fresh File blobs — stale picker/IndexedDB File handles make Request throw
+    // InvalidStateError: "Unable to read form data file".
+    const normalizedBody =
+      typeof FormData !== "undefined" && body instanceof FormData
+        ? await materializeFormDataFiles(body)
+        : body;
+    const probe = new Request("http://localhost/", {
+      method: "POST",
+      body: normalizedBody,
+    });
     bodyBytes = new Uint8Array(await probe.arrayBuffer());
     // Adopt the probe's Content-Type ONLY when the caller didn't set one. This
     // captures the multipart boundary for FormData (executeRequest deletes the

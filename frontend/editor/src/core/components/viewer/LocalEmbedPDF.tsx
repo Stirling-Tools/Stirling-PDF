@@ -141,6 +141,8 @@ interface LocalEmbedPDFProps {
   signaturePlacementData?: string;
   /** Signature type assigned to newly placed previews. */
   signaturePlacementType?: "canvas" | "image" | "text";
+  /** CSS-pixel width÷height lock for place/resize. */
+  signaturePlacementAspectRatio?: number;
   /** Emits the full updated preview array whenever overlays change. */
   onSignaturePreviewsChange?: (previews: SignaturePreview[]) => void;
   /** Imperative handle for reading/clearing/deleting signature previews. */
@@ -171,6 +173,7 @@ export function LocalEmbedPDF({
   signaturePlacementMode = false,
   signaturePlacementData,
   signaturePlacementType,
+  signaturePlacementAspectRatio,
   onSignaturePreviewsChange,
   signatureOverlayApiRef,
 }: LocalEmbedPDFProps) {
@@ -1168,6 +1171,9 @@ export function LocalEmbedPDF({
                                       placementMode={signaturePlacementMode}
                                       placementData={signaturePlacementData}
                                       placementType={signaturePlacementType}
+                                      lockAspectRatio={
+                                        signaturePlacementAspectRatio
+                                      }
                                       onChange={handleSignaturePreviewsChange}
                                       selectedId={selectedSignatureId}
                                       onSelect={setSelectedSignatureId}

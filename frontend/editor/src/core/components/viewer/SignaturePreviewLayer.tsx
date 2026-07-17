@@ -33,6 +33,11 @@ export interface SignaturePreviewLayerProps {
   placementData?: string;
   /** Signature type assigned to newly placed previews. */
   placementType?: "canvas" | "image" | "text";
+  /**
+   * When set, place/resize keep this CSS-pixel width÷height ratio (e.g. 2 = 2:1).
+   * Avoids tall boxes that letterbox the ghost and trigger upside-down baked text.
+   */
+  lockAspectRatio?: number;
   /** Emits the full updated preview array (across all pages) whenever it changes. */
   onChange: (previews: SignaturePreview[]) => void;
   /** Currently selected preview id (managed by the parent layer). */
@@ -51,6 +56,7 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
   placementMode,
   placementData,
   placementType,
+  lockAspectRatio,
   onChange,
   selectedId,
   onSelect,
@@ -73,6 +79,9 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
     (preview) => preview.pageIndex === pageIndex,
   );
 
+  const ghostW = 150;
+  const ghostH = lockAspectRatio ? ghostW / lockAspectRatio : 75;
+
   const handlePlaceClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (isDraggingRef.current) return;
     if (readOnly || !placementMode || !placementData) return;
@@ -80,8 +89,10 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
     const rect = e.currentTarget.getBoundingClientRect();
     // Store as fractions (0–1) of the rendered page so overlays remain correct
     // at any zoom level.
-    const sigWidth = 150 / pageWidth;
-    const sigHeight = 75 / pageHeight;
+    const placeWpx = 150;
+    const placeHpx = lockAspectRatio ? placeWpx / lockAspectRatio : 75;
+    const sigWidth = placeWpx / pageWidth;
+    const sigHeight = placeHpx / pageHeight;
     const rawX = (e.clientX - rect.left) / pageWidth;
     const rawY = (e.clientY - rect.top) / pageHeight;
     const x = Math.max(0, Math.min(rawX - sigWidth / 2, 1 - sigWidth));
@@ -216,13 +227,21 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
                             (moveEvent.clientX - startX) / pageWidth;
                           const deltaY =
                             (moveEvent.clientY - startY) / pageHeight;
+                          const nextX = Math.max(
+                            0,
+                            Math.min(startLeft + deltaX, 1 - preview.width),
+                          );
+                          const nextY = Math.max(
+                            0,
+                            Math.min(startTop + deltaY, 1 - preview.height),
+                          );
                           onChange(
                             previews.map((p) =>
                               p.id === preview.id
                                 ? {
                                     ...p,
-                                    x: startLeft + deltaX,
-                                    y: startTop + deltaY,
+                                    x: nextX,
+                                    y: nextY,
                                   }
                                 : p,
                             ),
@@ -254,7 +273,8 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
                   style={{
                     width: "100%",
                     height: "100%",
-                    objectFit: "contain",
+                    // Locked-aspect boxes match the ghost; fill avoids letterboxing.
+                    objectFit: lockAspectRatio ? "fill" : "contain",
                     pointerEvents: "none",
                   }}
                 />
@@ -332,6 +352,35 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
                             newY = startTop + (startHeight - newHeight);
                           }
 
+                          if (lockAspectRatio && lockAspectRatio > 0) {
+                            // Lock CSS-pixel aspect (w*pageW)/(h*pageH). Tall free-form
+                            // boxes letterboxed the ghost top/bottom and produced
+                            // upside-down baked PDF appearance text in viewers.
+                            const absDx = Math.abs(deltaX);
+                            const absDy = Math.abs(deltaY);
+                            if (absDx >= absDy) {
+                              newHeight =
+                                (newWidth * pageWidth) /
+                                (lockAspectRatio * pageHeight);
+                              if (handle.position.includes("n")) {
+                                newY = startTop + (startHeight - newHeight);
+                              } else {
+                                newY = startTop;
+                              }
+                            } else {
+                              newWidth =
+                                (newHeight * pageHeight * lockAspectRatio) /
+                                pageWidth;
+                              if (handle.position.includes("w")) {
+                                newX = startLeft + (startWidth - newWidth);
+                              } else {
+                                newX = startLeft;
+                              }
+                            }
+                            newWidth = Math.max(minW, newWidth);
+                            newHeight = Math.max(minH, newHeight);
+                          }
+
                           // Keep the box on-page (mirrors the placement clamp).
                           newWidth = Math.min(newWidth, 1);
                           newHeight = Math.min(newHeight, 1);
@@ -385,13 +434,19 @@ export const SignaturePreviewLayer = memo(function SignaturePreviewLayer({
           alt=""
           style={{
             position: "absolute",
-            left: Math.max(0, Math.min(cursorPos.x - 75, pageWidth - 150)),
-            top: Math.max(0, Math.min(cursorPos.y - 37.5, pageHeight - 75)),
-            width: 150,
-            height: 75,
+            left: Math.max(
+              0,
+              Math.min(cursorPos.x - ghostW / 2, pageWidth - ghostW),
+            ),
+            top: Math.max(
+              0,
+              Math.min(cursorPos.y - ghostH / 2, pageHeight - ghostH),
+            ),
+            width: ghostW,
+            height: ghostH,
             opacity: 0.6,
             pointerEvents: "none",
-            objectFit: "contain",
+            objectFit: lockAspectRatio ? "fill" : "contain",
             boxShadow:
               "0 0 0 1px rgba(30, 136, 229, 0.55), 0 6px 18px rgba(30, 136, 229, 0.25)",
             borderRadius: "4px",

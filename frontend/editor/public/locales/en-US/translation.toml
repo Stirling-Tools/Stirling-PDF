@@ -2267,9 +2267,9 @@ title = "Signature Details"
 
 [certSign.appearance.placement]
 clear = "Clear placement (use page number only)"
-hint = "Click on the PDF to place the visible signature box, then drag or resize it. Without a box, only the page number below is used (default corner position)."
+hint = "Click on the PDF to place the visible signature box. After placing, drag or resize it, or use the × on the box to place again. Without a box, only the page number below is used (default corner position)."
 pageOnly = "Used when no signature box is placed — places the default widget at the page corner."
-placed = "Signature box placed on page {{page}}. Drag or resize it on the PDF, or clear it to use the default corner position."
+placed = "Signature box placed on page {{page}}. Drag or resize it on the PDF, or clear / delete it (×) to place again."
 
 [certSign.appearance.tooltip.header]
 title = "About Signature Appearance"

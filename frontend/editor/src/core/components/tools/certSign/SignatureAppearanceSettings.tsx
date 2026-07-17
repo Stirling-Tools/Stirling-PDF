@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Stack, Text, TextInput, NumberInput } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
@@ -12,6 +12,10 @@ import type {
   SignatureOverlayAPI,
   SignaturePreview,
 } from "@app/components/viewer/viewerTypes";
+import {
+  buildCertAppearanceGhostDataUrl,
+  CERT_APPEARANCE_ASPECT_RATIO,
+} from "@app/components/tools/certSign/certAppearanceGhost";
 
 interface SignatureAppearanceSettingsProps {
   parameters: CertSignParameters;
@@ -21,20 +25,10 @@ interface SignatureAppearanceSettingsProps {
   pdfFile?: File | null;
 }
 
-/**
- * Placeholder graphic for certificate placement ghosts / overlays.
- * SignaturePreviewLayer requires an image data URL; the real appearance is drawn by the backend.
- */
-const CERT_PLACEMENT_PLACEHOLDER =
-  "data:image/svg+xml," +
-  encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="50" viewBox="0 0 200 50">
-      <rect width="200" height="50" rx="4" fill="rgb(0,122,204)" fill-opacity="0.12" stroke="rgb(0,122,204)" stroke-width="2"/>
-      <text x="100" y="30" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" fill="rgb(0,122,204)">Digital signature</text>
-    </svg>`,
-  );
-
-function rectToPreview(rect: CertAppearanceRect): SignaturePreview {
+function rectToPreview(
+  rect: CertAppearanceRect,
+  signatureData: string,
+): SignaturePreview {
   return {
     id: "cert-appearance-rect",
     pageIndex: rect.pageIndex,
@@ -42,7 +36,7 @@ function rectToPreview(rect: CertAppearanceRect): SignaturePreview {
     y: rect.y,
     width: rect.width,
     height: rect.height,
-    signatureData: CERT_PLACEMENT_PLACEHOLDER,
+    signatureData,
     signatureType: "image",
     participantName: "Digital signature",
   };
@@ -61,12 +55,15 @@ const SignatureAppearanceSettings = ({
   const overlayApiRef = useRef<SignatureOverlayAPI | null>(null);
 
   const placementActive = parameters.showSignature && !!pdfFile && !disabled;
-
-  // Controlled preview list: at most one box (cert widgets are single-valued).
-  const signaturePreviews = useMemo(() => {
-    if (!parameters.certAppearanceRect) return [];
-    return [rectToPreview(parameters.certAppearanceRect)];
-  }, [parameters.certAppearanceRect]);
+  // Once a box exists, exit click-to-place (ghost follows cursor only before the first click).
+  const hasPlacedBox = parameters.certAppearanceRect != null;
+  const ghostName = parameters.name;
+  const ghostReason = parameters.reason;
+  const ghostLocation = parameters.location;
+  const ghostShowLogo = parameters.showLogo;
+  // Keep latest rect for ghost refreshes without putting coords in effect deps (drag thrash).
+  const placedRectRef = useRef(parameters.certAppearanceRect);
+  placedRectRef.current = parameters.certAppearanceRect;
 
   const handlePreviewsChange = useCallback(
     (previews: SignaturePreview[]) => {
@@ -91,26 +88,43 @@ const SignatureAppearanceSettings = ({
   );
 
   // Drive the shared workbench viewer (same seam as collab SignRequestPanel).
+  // Depend on hasPlacedBox (not rect coordinates) so drag/resize updates params without
+  // re-binding the overlay every pointermove — local EmbedPDF state owns the live box.
+  // Ghost image *does* rebind when Name / Reason / Location / logo change.
   useEffect(() => {
     if (!placementActive || !pdfFile) {
       setOverlay(null);
       return;
     }
 
+    const ghostDataUrl = buildCertAppearanceGhostDataUrl({
+      name: ghostName,
+      reason: ghostReason,
+      location: ghostLocation,
+      showLogo: ghostShowLogo,
+    });
+    const placed = placedRectRef.current;
     setWorkbench("viewer");
     setOverlay({
       file: pdfFile,
-      signaturePreviews,
-      signaturePlacementMode: true,
-      signaturePlacementData: CERT_PLACEMENT_PLACEHOLDER,
+      signaturePreviews:
+        hasPlacedBox && placed ? [rectToPreview(placed, ghostDataUrl)] : [],
+      // Ghost + click-to-place only until the first box is set; then drag / X to change.
+      signaturePlacementMode: !hasPlacedBox,
+      signaturePlacementData: ghostDataUrl,
       signaturePlacementType: "image",
+      signaturePlacementAspectRatio: CERT_APPEARANCE_ASPECT_RATIO,
       onSignaturePreviewsChange: handlePreviewsChange,
       signatureOverlayApiRef: overlayApiRef,
     });
   }, [
     placementActive,
     pdfFile,
-    signaturePreviews,
+    hasPlacedBox,
+    ghostName,
+    ghostReason,
+    ghostLocation,
+    ghostShowLogo,
     handlePreviewsChange,
     setOverlay,
     setWorkbench,
@@ -216,12 +230,12 @@ const SignatureAppearanceSettings = ({
               {parameters.certAppearanceRect
                 ? t(
                     "certSign.appearance.placement.placed",
-                    "Signature box placed on page {{page}}. Drag or resize it on the PDF, or clear it to use the default corner position.",
+                    "Signature box placed on page {{page}}. Drag or resize it on the PDF, or clear / delete it (×) to place again.",
                     { page: parameters.certAppearanceRect.pageIndex + 1 },
                   )
                 : t(
                     "certSign.appearance.placement.hint",
-                    "Click on the PDF to place the visible signature box, then drag or resize it. Without a box, only the page number below is used (default corner position).",
+                    "Click on the PDF to place the visible signature box. After placing, drag or resize it, or use the × on the box to place again. Without a box, only the page number below is used (default corner position).",
                   )}
             </Text>
           ) : null}

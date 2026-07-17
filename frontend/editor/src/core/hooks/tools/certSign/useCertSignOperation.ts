@@ -62,9 +62,12 @@ const withSignatureAppearance = (
 ): CertSignApiParams => {
   if (parameters.showSignature) {
     apiParams.showSignature = true;
-    apiParams.reason = parameters.reason;
-    apiParams.location = parameters.location;
-    apiParams.name = parameters.name;
+    // Always send strings (never omit) — a missing reason binds as null on the
+    // server and PDFBox showText(null) NPEs, which used to return an empty body
+    // that the desktop HTTP client surfaces as a vague "Network Error".
+    apiParams.reason = parameters.reason ?? "";
+    apiParams.location = parameters.location ?? "";
+    apiParams.name = parameters.name ?? "";
     apiParams.showLogo = parameters.showLogo;
 
     // Custom placement: send all four signatureRect* fractions together (all-or-none
