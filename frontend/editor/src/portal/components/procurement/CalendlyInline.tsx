@@ -1,17 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Spinner } from "@app/ui";
 import { loadScript } from "@app/utils/scriptLoader";
 
 /**
  * Inline Calendly scheduler. Lazily loads Calendly's widget.js (only once the embed mounts, i.e. when
- * the modal opens) and initialises an inline widget. Falls back to a plain "open in a new tab" link if
- * the script can't load (offline, blocked, etc.).
+ * the modal opens) and initialises an inline widget. Shows a spinner while the (external, sometimes
+ * slow) script loads, and falls back to a plain "open in a new tab" link if the script can't load
+ * (offline, blocked, etc.). A real load failure fires the script's error event, so the fallback is
+ * shown immediately rather than after a fixed timeout — a slow-but-working connection is never
+ * abandoned, it just spins until the widget arrives.
  */
 
 const CALENDLY_SCRIPT = "https://assets.calendly.com/assets/external/widget.js";
-
-// If the embed hasn't loaded within this window, give up and show the fallback link.
-const LOAD_TIMEOUT_MS = 15000;
 
 // Base scheduling link; overridable per-environment without a code change.
 export const CALENDLY_URL: string =
@@ -86,29 +87,15 @@ export function CalendlyInline({
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const fullUrl = buildUrl(url);
 
   useEffect(() => {
     let cancelled = false;
     setFailed(false);
-
-    // Race the load against a timeout so a request that never settles (a blocked or
-    // black-holed script whose load/error never fires) still surfaces the fallback link
-    // rather than leaving an empty modal open indefinitely.
-    let timer: ReturnType<typeof setTimeout>;
-    const load = new Promise<void>((resolve, reject) => {
-      timer = setTimeout(
-        () => reject(new Error("Calendly load timed out")),
-        LOAD_TIMEOUT_MS,
-      );
-      loadScript({ src: CALENDLY_SCRIPT, id: "calendly-widget-script" }).then(
-        resolve,
-        reject,
-      );
-    });
-
-    load
+    setLoading(true);
+    loadScript({ src: CALENDLY_SCRIPT, id: "calendly-widget-script" })
       .then(() => {
         const el = containerRef.current;
         const calendly = (window as CalendlyWindow).Calendly;
@@ -127,13 +114,11 @@ export function CalendlyInline({
           parentElement: el,
           prefill: email ? { email } : undefined,
         });
+        setLoading(false);
       })
-      .catch(() => !cancelled && setFailed(true))
-      .finally(() => clearTimeout(timer));
-
+      .catch(() => !cancelled && setFailed(true));
     return () => {
       cancelled = true;
-      clearTimeout(timer);
     };
   }, [fullUrl, email]);
 
@@ -149,10 +134,14 @@ export function CalendlyInline({
   }
 
   return (
-    <div
-      ref={containerRef}
-      className="portal-calendly"
-      style={{ minWidth: 320, height }}
-    />
+    <div className="portal-calendly" style={{ minWidth: 320, height }}>
+      {loading && (
+        <div className="portal-calendly__loading">
+          <Spinner size="lg" label={t("portal.procurement.schedule.loading")} />
+        </div>
+      )}
+      {/* Calendly injects its iframe here; the spinner overlays until the widget is initialised. */}
+      <div ref={containerRef} className="portal-calendly__embed" />
+    </div>
   );
 }
