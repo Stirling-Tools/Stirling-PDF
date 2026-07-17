@@ -17,6 +17,7 @@ import { ViewerContext } from "@app/contexts/ViewerContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { fileStorage } from "@app/services/fileStorage";
+import { getFileTypeIcon } from "@app/components/shared/filePreview/getFileTypeIcon";
 import {
   rankByFuzzy,
   idToWords,
@@ -229,7 +230,9 @@ export function rankFileResults(
       key: `file:${item.id}`,
       group: "files",
       title: item.name,
-      iconName: "insert-drive-file-rounded",
+      // The file-type doc icon (PDF/image/doc/…) the sidebar and grid use,
+      // rather than a flat generic file glyph.
+      icon: getFileTypeIcon(item, "1.25rem"),
       score,
       onSelect: () => openFile(item),
     }));
