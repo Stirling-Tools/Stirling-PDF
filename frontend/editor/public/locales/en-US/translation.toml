@@ -7151,25 +7151,33 @@ platform = "PDF Platform"
 processor = "PDF Processor"
 
 [portal.outputs]
-createTitle = "New output"
-delete = "Delete"
-edit = "Edit"
-editTitle = "Edit output"
 subtitle = "Destinations processed files are delivered to. Connect one here, then pick it from a pipeline."
 
 [portal.outputs.actions]
 new = "New output"
 
+[portal.outputs.builder]
+back = "Back to outputs"
+cancel = "Cancel"
+create = "Create output"
+createTitle = "New output"
+delete = "Delete"
+editTitle = "Edit output"
+enabled = "Enabled"
+name = "Name"
+namePlaceholder = "e.g. Processed archive"
+save = "Save changes"
+type = "Type"
+
+[portal.outputs.delete]
+body = "Delete \"{{name}}\"? This can't be undone. Pipelines that reference it would need to be updated."
+cancel = "Cancel"
+confirm = "Delete"
+title = "Delete output?"
+
 [portal.outputs.empty]
 description = "Connect a destination (a folder or cloud storage) so your pipelines have somewhere to deliver processed files."
 title = "No outputs connected yet"
-
-[portal.outputs.form]
-cancel = "Cancel"
-nameLabel = "Name"
-namePlaceholder = "e.g. Processed archive"
-save = "Save"
-typeLabel = "Type"
 
 [portal.outputs.picker]
 createNew = "New output"

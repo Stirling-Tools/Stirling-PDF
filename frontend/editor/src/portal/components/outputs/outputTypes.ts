@@ -1,4 +1,5 @@
 import type { ChipAccent } from "@app/ui";
+import { availableOutputModes } from "@portal/components/pipelines/outputModes";
 
 /**
  * Per-type presentation + create-form metadata for output destinations, mirroring
@@ -101,4 +102,26 @@ export function creatableOutputType(
   type: string,
 ): CreatableOutputType | undefined {
   return CREATABLE_OUTPUT_TYPES[type];
+}
+
+/**
+ * The destination types the builder offers, in display order. Derived from
+ * {@link availableOutputModes} so a deployment that filters the offered modes
+ * (e.g. hosted, no server filesystem) also filters what the builder can create.
+ */
+export function creatableOutputTypes(): CreatableOutputType[] {
+  return availableOutputModes()
+    .map((mode) => CREATABLE_OUTPUT_TYPES[mode])
+    .filter((type): type is CreatableOutputType => type !== undefined);
+}
+
+/** Blank form options for a creatable output type (every field keyed empty). */
+export function defaultOutputOptions(
+  type: CreatableOutputType,
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const field of type.fields) {
+    out[field.key] = "";
+  }
+  return out;
 }

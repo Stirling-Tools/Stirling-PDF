@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import {
   Banner,
   Button,
@@ -11,29 +13,20 @@ import {
   type TableColumn,
 } from "@app/ui";
 import { errorMessage } from "@portal/api/http";
-import {
-  deleteOutput,
-  fetchOutput,
-  fetchOutputs,
-  type Output,
-  type OutputView,
-} from "@portal/api/outputs";
+import { fetchOutputs, type OutputView } from "@portal/api/outputs";
 import { SourcesIcon } from "@portal/components/icons";
 import { outputTypeMeta } from "@portal/components/outputs/outputTypes";
-import { OutputModal } from "@portal/components/outputs/OutputModal";
+import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 
 /**
  * The Outputs tab of the Sources page: persisted output destinations (folder, S3)
- * that policies deliver to, referenced by id. Create/edit go through the shared
- * {@link OutputModal}; deleting one a policy still references returns a 409,
- * surfaced inline. Mirrors {@link ConnectionsTab}.
+ * that policies deliver to, referenced by id. Create/edit open the full-page
+ * {@link OutputBuilder} (create/delete happen there), mirroring how sources work.
  */
 export function OutputsTab() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [outputs, setOutputs] = useState<OutputView[] | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<Output | null>(null);
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
@@ -48,35 +41,9 @@ export function OutputsTab() {
     void refresh();
   }, [refresh]);
 
-  function openCreate() {
-    setEditing(null);
-    setModalOpen(true);
-  }
-
-  async function openEdit(row: OutputView) {
-    setError(null);
-    try {
-      // The overview row carries only display config; fetch the raw record for editing.
-      setEditing(await fetchOutput(row.id));
-      setModalOpen(true);
-    } catch (e) {
-      setError(errorMessage(e));
-    }
-  }
-
-  async function remove(row: OutputView) {
-    if (busy) return;
-    setBusy(true);
-    setError(null);
-    try {
-      await deleteOutput(row.id);
-      await refresh();
-    } catch (e) {
-      setError(errorMessage(e));
-    } finally {
-      setBusy(false);
-    }
-  }
+  const builderPath = toPortalPath(VIEW_PATHS.sources) + "/outputs";
+  const openCreate = () => navigate(`${builderPath}/new`);
+  const openEdit = (row: OutputView) => navigate(`${builderPath}/${row.id}`);
 
   const columns = useMemo<TableColumn<OutputView>[]>(
     () => [
@@ -108,34 +75,18 @@ export function OutputsTab() {
               }),
       },
       {
-        key: "actions",
+        key: "open",
         header: "",
         align: "right",
-        render: (o) => (
-          <span className="portal-sources__connections-actions">
-            <Button
-              variant="tertiary"
-              size="sm"
-              disabled={busy}
-              onClick={() => void openEdit(o)}
-            >
-              {t("portal.outputs.edit")}
-            </Button>
-            <Button
-              variant="tertiary"
-              size="sm"
-              accent="danger"
-              disabled={busy}
-              onClick={() => void remove(o)}
-            >
-              {t("portal.outputs.delete")}
-            </Button>
+        width: "2.5rem",
+        render: () => (
+          <span className="portal-sources__caret" aria-hidden>
+            <ChevronRightRoundedIcon style={{ fontSize: "1.25rem" }} />
           </span>
         ),
       },
     ],
-    // remove/openEdit are stable enough for this admin surface; busy gates them.
-    [t, busy],
+    [t],
   );
 
   const isLoading = outputs === null;
@@ -187,15 +138,9 @@ export function OutputsTab() {
           columns={columns}
           rows={outputs}
           rowKey={(o) => o.id}
+          onRowClick={openEdit}
         />
       )}
-
-      <OutputModal
-        open={modalOpen}
-        output={editing}
-        onClose={() => setModalOpen(false)}
-        onSaved={() => void refresh()}
-      />
     </section>
   );
 }

@@ -7,6 +7,7 @@ import { Pipelines } from "@portal/views/Pipelines";
 import { PipelineBuilder } from "@portal/views/PipelineBuilder";
 import { Sources } from "@portal/views/Sources";
 import { SourceBuilder } from "@portal/views/SourceBuilder";
+import { OutputBuilder } from "@portal/views/OutputBuilder";
 import { Policies } from "@portal/views/Policies";
 import { EditorAdmin } from "@portal/views/EditorAdmin";
 import { Infrastructure } from "@portal/views/Infrastructure";
@@ -45,6 +46,16 @@ export function ViewRouter() {
       <Route
         path={`${rel(VIEW_PATHS.sources)}/new`}
         element={<SourceBuilder />}
+      />
+      {/* Outputs live under the Sources area (Outputs tab), so their builder is
+          routed here too - keeps the Sources nav item active while editing. */}
+      <Route
+        path={`${rel(VIEW_PATHS.sources)}/outputs/new`}
+        element={<OutputBuilder />}
+      />
+      <Route
+        path={`${rel(VIEW_PATHS.sources)}/outputs/:id`}
+        element={<OutputBuilder />}
       />
       <Route
         path={`${rel(VIEW_PATHS.sources)}/:id`}

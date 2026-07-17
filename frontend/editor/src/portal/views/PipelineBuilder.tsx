@@ -326,6 +326,7 @@ export function PipelineBuilder() {
 
   const listPath = toPortalPath(VIEW_PATHS.pipelines);
   const sourcesPath = `${toPortalPath(VIEW_PATHS.sources)}/new`;
+  const outputsPath = `${toPortalPath(VIEW_PATHS.sources)}/outputs/new`;
 
   function close() {
     navigate(listPath);
@@ -341,6 +342,11 @@ export function PipelineBuilder() {
   // this pipeline over doesn't exist yet.
   function goToSources() {
     attemptLeave(sourcesPath);
+  }
+
+  // Same, for the output destination: leave the builder to create a saved output.
+  function goToOutputs() {
+    attemptLeave(outputsPath);
   }
 
   async function save(destination: string) {
@@ -680,7 +686,11 @@ export function PipelineBuilder() {
               helperText={t("portal.pipelines.composer.outputDestinationHelp")}
               required
             >
-              <OutputPicker value={outputId} onChange={setOutputId} />
+              <OutputPicker
+                value={outputId}
+                onChange={setOutputId}
+                onCreateNew={goToOutputs}
+              />
             </FormField>
           </div>
         </div>
