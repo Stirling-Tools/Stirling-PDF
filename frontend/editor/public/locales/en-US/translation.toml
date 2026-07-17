@@ -9840,6 +9840,7 @@ hint = "Type to search"
 placeholder = "Search Stirling"
 
 [superSearch.group]
+docs = "Docs"
 files = "Files"
 pages = "Pages"
 processor = "Processor"

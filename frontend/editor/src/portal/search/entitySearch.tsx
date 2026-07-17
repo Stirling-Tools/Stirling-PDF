@@ -1,6 +1,7 @@
 import { PROCESSOR_SEARCH_INDEX } from "@app/data/processorSearchIndex";
 import {
   PORTAL_ENTITY_SCOPE_DEFS,
+  PORTAL_DOCS_SCOPE_ID,
   type SuperSearchGroup,
   type SuperSearchResult,
 } from "@app/types/superSearch";
@@ -10,6 +11,7 @@ import { fetchPipelines, type PipelineView } from "@portal/api/pipelines";
 import { fetchSources, type SourceView } from "@portal/api/sources";
 import { fetchUsers, type Member } from "@portal/api/users";
 import {
+  DocsIcon,
   PipelinesIcon,
   PoliciesIcon,
   SourcesIcon,
@@ -17,6 +19,8 @@ import {
 } from "@portal/components/icons";
 import type { Tier } from "@portal/contexts/TierContext";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
+import { allDocs, loadDocsNav } from "@portal/docs/manifest/registry";
+import { searchDocs, toPlainText, type SearchDoc } from "@portal/docs/search";
 
 /**
  * The Processor's entity search: users, policies, pipelines and sources,
@@ -66,6 +70,50 @@ const VISIBLE_PORTAL_VIEW_IDS = new Set(
 /** Whether the flavor's portal nav ships the view an entity scope targets. */
 export function isVisiblePortalScope(scopeId: PortalEntityScopeId): boolean {
   return VISIBLE_PORTAL_VIEW_IDS.has(PORTAL_VIEW_BY_SCOPE_ID[scopeId]);
+}
+
+/** Whether this build ships the in-app developer docs (so they're searchable). */
+export function isDocsSearchable(): boolean {
+  return VISIBLE_PORTAL_VIEW_IDS.has("docs");
+}
+
+// The docs manifest is static (bundled JSON), so the full-text index — the
+// plaintext strip over every doc — is built once and reused across queries.
+let docsSearchIndex: SearchDoc[] | null = null;
+function getDocsSearchIndex(): SearchDoc[] {
+  if (!docsSearchIndex) {
+    const sectionLabels = new Map(loadDocsNav().map((s) => [s.id, s.label]));
+    docsSearchIndex = allDocs().map((doc) => ({
+      id: doc.id,
+      title: doc.title,
+      sectionLabel: sectionLabels.get(doc.section) ?? "",
+      text: toPlainText(doc.markdown),
+    }));
+  }
+  return docsSearchIndex;
+}
+
+export function rankDocsResults(
+  trimmed: string,
+  navigate: (path: string) => void,
+  limit = ENTITY_GROUP_LIMIT,
+): SuperSearchResult[] {
+  if (!isDocsSearchable()) return [];
+  return searchDocs(getDocsSearchIndex(), trimmed, limit).map((result) => ({
+    key: `portal-doc:${result.id}`,
+    group: PORTAL_DOCS_SCOPE_ID,
+    title: result.title,
+    // The matched-content snippet (full text is what makes docs worth
+    // searching), falling back to the doc's section when the hit is title-only.
+    subtitle:
+      result.snippet
+        .map((seg) => seg.text)
+        .join("")
+        .trim() || result.sectionLabel,
+    icon: <DocsIcon />,
+    score: result.score,
+    onSelect: () => navigate(`${toPortalPath(VIEW_PATHS.docs)}#${result.id}`),
+  }));
 }
 
 export function withPortalEntityDependencies(
@@ -183,8 +231,8 @@ export function rankPortalPipelineResults(
 }
 
 export interface BuildEntityGroupsOptions {
-  /** Host scope filter; defaults to every entity type enabled. */
-  scopeEnabled?: (scopeId: PortalEntityScopeId) => boolean;
+  /** Host scope filter; defaults to every scope enabled. */
+  scopeEnabled?: (scopeId: string) => boolean;
   /** The single focused scope, if any — its group gets the larger row cap. */
   focusedScopeId?: string | null;
 }
@@ -203,7 +251,7 @@ export function buildProcessorEntityGroups(
 ): SuperSearchGroup[] {
   if (!trimmed) return [];
   const scopeEnabled = options.scopeEnabled ?? (() => true);
-  const limitFor = (scopeId: PortalEntityScopeId) =>
+  const limitFor = (scopeId: string) =>
     options.focusedScopeId === scopeId
       ? FOCUSED_ENTITY_GROUP_LIMIT
       : ENTITY_GROUP_LIMIT;
@@ -306,6 +354,18 @@ export function buildProcessorEntityGroups(
       id: "portal-sources",
       label: t("portal.nav.sources"),
       results: sources,
+    });
+  }
+
+  const docs =
+    isDocsSearchable() && scopeEnabled(PORTAL_DOCS_SCOPE_ID)
+      ? rankDocsResults(trimmed, navigate, limitFor(PORTAL_DOCS_SCOPE_ID))
+      : [];
+  if (docs.length > 0) {
+    groups.push({
+      id: PORTAL_DOCS_SCOPE_ID,
+      label: t("superSearch.group.docs"),
+      results: docs,
     });
   }
 

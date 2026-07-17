@@ -42,6 +42,7 @@ import {
 import { useProcessorEntityGroups } from "@app/data/processorEntitySearch";
 import {
   PORTAL_ENTITY_SCOPE_DEFS,
+  PORTAL_DOCS_SCOPE_ID,
   type SuperSearchGates,
   type SuperSearchGroup,
   type SuperSearchGroupId,
@@ -149,6 +150,15 @@ export function useEditorSearchScopes(): SuperSearchScope[] {
               label: t(def.labelKey, def.labelFallback),
               aliases: [...def.aliases],
             })),
+            ...(visibleViewIds.has("docs")
+              ? [
+                  {
+                    id: PORTAL_DOCS_SCOPE_ID,
+                    label: t("superSearch.group.docs", "Docs"),
+                    aliases: ["doc", "docs", "documentation"],
+                  },
+                ]
+              : []),
           ]
         : []),
     ];

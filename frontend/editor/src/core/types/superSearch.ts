@@ -83,6 +83,13 @@ export interface PortalEntityScopeDef {
   aliases: readonly string[];
 }
 
+/**
+ * The developer-docs scope. Separate from the entity defs above: docs are a
+ * bundled full-text manifest, not a fetched entity list, so they don't ride
+ * the fetch cache — but they get a chip and a results group like the rest.
+ */
+export const PORTAL_DOCS_SCOPE_ID = "portal-docs";
+
 export const PORTAL_ENTITY_SCOPE_DEFS: readonly PortalEntityScopeDef[] = [
   {
     id: "portal-users",
