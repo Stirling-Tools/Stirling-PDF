@@ -26,8 +26,11 @@ import stirling.software.proprietary.policy.store.PolicyStore;
  * the caller).
  *
  * <p>Idempotent by construction: a policy that already carries an {@code outputId} is skipped, so
- * re-runs (and multi-node boots) find nothing to do. Outputs are deduplicated within a team by
- * their type+config, so two policies writing to the same destination share one Output row.
+ * a sequential re-run finds nothing to do. Outputs are deduplicated within a team by their
+ * type+config, so two policies writing to the same destination share one Output row. A concurrent
+ * multi-node boot can at worst create a redundant (unreferenced) Output row, never corrupt a
+ * policy - each node indexes existing outputs before writing, so overlapping runs may each mint
+ * their own row for the same destination.
  */
 @Slf4j
 @Component
