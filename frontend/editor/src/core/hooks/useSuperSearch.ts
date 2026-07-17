@@ -321,8 +321,8 @@ export function rankSettingsResults(
       return false;
     return true;
   });
-  // Result context mirrors the in-modal settings search: the nav group the
-  // section lives under, joined to the match snippet with " · ".
+  // The nav group a section lives under, shown as result context (joined to a
+  // content-match snippet with " · ").
   const groupTitle = (s: (typeof SETTINGS_SECTION_REGISTRY)[number]) =>
     s.groupLabelKey
       ? t(s.groupLabelKey, s.groupLabelFallback ?? "")
@@ -343,12 +343,11 @@ export function rankSettingsResults(
     onSelect: () => openSettings(item.key),
   }));
 
-  // Content matches: sections whose rendered copy contains the query (the
-  // in-modal settings search technique), so terms with no curated keyword
-  // ("SMTP", a field label) still find their section. Ranked below every
-  // label/keyword match; 3+ chars so a single letter doesn't match half the
-  // modal. Sections already surfaced by a label match — their own or one of
-  // their rows' — are skipped so the same hit isn't listed twice.
+  // Content matches: sections whose rendered copy contains the query, so terms
+  // with no curated keyword ("SMTP", a field label) still find their section.
+  // Ranked below every label/keyword match; 3+ chars so a single letter doesn't
+  // match half the modal. Sections already surfaced by a label match — their
+  // own or a row's — are skipped so the same hit isn't listed twice.
   const labelMatchedKeys = new Set<string>([
     ...sectionMatches.map(({ item }) => item.key),
     ...rowMatches.map(({ item }) => item.section),

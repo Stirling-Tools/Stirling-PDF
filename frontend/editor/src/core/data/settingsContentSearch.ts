@@ -7,10 +7,8 @@ import type { TFunction } from "i18next";
  * settings page ("SMTP", "OCR", a field label…) finds that section without a
  * curated keyword.
  *
- * This is the single source for the technique — the in-modal settings search
- * bar and the global super search both build on it. It is intentionally
- * component-free (translation subtrees only) so the always-mounted super
- * search bar can use it without pulling the lazy settings modal into the main
+ * Component-free (translation subtrees only) so the always-mounted super
+ * search can use it without pulling the lazy settings modal into the main
  * bundle.
  */
 
