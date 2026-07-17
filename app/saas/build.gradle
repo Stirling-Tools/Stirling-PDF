@@ -6,7 +6,7 @@ spotless {
     java {
         target 'src/**/java/**/*.java'
         targetExclude 'src/main/java/org/apache/**'
-        googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
+        googleJavaFormat(rootProject.ext.googleJavaFormatVersion).aosp().reorderImports(false)
         suppressLintsFor { setStep('google-java-format') }
 
         importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
@@ -37,9 +37,10 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     api 'org.springframework.boot:spring-boot-starter-webmvc'
     api 'org.springframework.boot:spring-boot-starter-aspectj'
+    implementation 'com.github.ben-manes.caffeine:caffeine'
 
-    api 'org.flywaydb:flyway-core'
+    runtimeOnly 'org.flywaydb:flyway-core'
     runtimeOnly 'org.flywaydb:flyway-database-postgresql'
 
-    testImplementation "com.tngtech.archunit:archunit-junit5:${archunitVersion}"
+    testImplementation "com.tngtech.archunit:archunit-junit5:${rootProject.ext.archunitVersion}"
 }

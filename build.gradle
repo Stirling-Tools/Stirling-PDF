@@ -218,32 +218,32 @@ subprojects {
         // - CVE-2022-25647: gson 2.8.9+ (explicit dependency overrides tabula 2.8.7)
         // - CVE-2025-66453: rhino 1.7.15 (explicit dependency overrides verapdf 1.7.13)
         // Fallback strategy force declarations for additional safety:
-        resolutionStrategy.force "com.google.code.gson:gson:${gsonVersion}"
-        resolutionStrategy.force "org.mozilla:rhino:${rhinoVersion}"
+        resolutionStrategy.force "com.google.code.gson:gson:${rootProject.ext.gsonVersion}"
+        resolutionStrategy.force "org.mozilla:rhino:${rootProject.ext.rhinoVersion}"
         // CVE-2025-48924: commons-lang3 3.20.0 DoS prevention
-        resolutionStrategy.force "org.apache.commons:commons-lang3:${commonsLang3}"
+        resolutionStrategy.force "org.apache.commons:commons-lang3:${rootProject.ext.commonsLang3}"
         // CVE-2024-47554: commons-io DoS prevention
-        resolutionStrategy.force "commons-io:commons-io:${commonsIoVersion}"
+        resolutionStrategy.force "commons-io:commons-io:${rootProject.ext.commonsIoVersion}"
         // Jackson 2 is transitive-only here (jinjava, opensaml, jjwt request older versions);
         // pin the family to a current release and keep modules aligned.
-        resolutionStrategy.force "com.fasterxml.jackson.core:jackson-core:${jackson2Version}"
-        resolutionStrategy.force "com.fasterxml.jackson.core:jackson-databind:${jackson2Version}"
-        resolutionStrategy.force "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jackson2Version}"
-        resolutionStrategy.force "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${jackson2Version}"
-        resolutionStrategy.force "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jackson2Version}"
+        resolutionStrategy.force "com.fasterxml.jackson.core:jackson-core:${rootProject.ext.jackson2Version}"
+        resolutionStrategy.force "com.fasterxml.jackson.core:jackson-databind:${rootProject.ext.jackson2Version}"
+        resolutionStrategy.force "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${rootProject.ext.jackson2Version}"
+        resolutionStrategy.force "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${rootProject.ext.jackson2Version}"
+        resolutionStrategy.force "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${rootProject.ext.jackson2Version}"
         // Keep BouncyCastle modules aligned to avoid runtime linkage errors
-        resolutionStrategy.force "org.bouncycastle:bcprov-jdk18on:${bouncycastleVersion}"
-        resolutionStrategy.force "org.bouncycastle:bcpkix-jdk18on:${bouncycastleVersion}"
-        resolutionStrategy.force "org.bouncycastle:bcutil-jdk18on:${bouncycastleVersion}"
+        resolutionStrategy.force "org.bouncycastle:bcprov-jdk18on:${rootProject.ext.bouncycastleVersion}"
+        resolutionStrategy.force "org.bouncycastle:bcpkix-jdk18on:${rootProject.ext.bouncycastleVersion}"
+        resolutionStrategy.force "org.bouncycastle:bcutil-jdk18on:${rootProject.ext.bouncycastleVersion}"
     }
 
     dependencyManagement {
         imports {
-            mavenBom "org.springframework.boot:spring-boot-dependencies:$springBootVersion"
+            mavenBom "org.springframework.boot:spring-boot-dependencies:${rootProject.ext.springBootVersion}"
         }
         dependencies {
             // Override BOM-managed commons-lang3 for CVE-2025-48924 fix
-            dependency "org.apache.commons:commons-lang3:$commonsLang3"
+            dependency "org.apache.commons:commons-lang3:${rootProject.ext.commonsLang3}"
         }
     }
 
@@ -252,10 +252,10 @@ subprojects {
         implementation 'io.github.pixee:java-security-toolkit:1.2.3'
 
         //tmp for security bumps
-        implementation "ch.qos.logback:logback-core:$logback"
-        implementation "ch.qos.logback:logback-classic:$logback"
-        compileOnly "org.projectlombok:lombok:$lombokVersion"
-        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        implementation "ch.qos.logback:logback-core:${rootProject.ext.logback}"
+        implementation "ch.qos.logback:logback-classic:${rootProject.ext.logback}"
+        compileOnly "org.projectlombok:lombok:${rootProject.ext.lombokVersion}"
+        annotationProcessor "org.projectlombok:lombok:${rootProject.ext.lombokVersion}"
 
         // Jackson 3 (Spring Boot 4 uses tools.jackson)
         implementation 'org.springframework.boot:spring-boot-starter-jackson'
@@ -265,7 +265,7 @@ subprojects {
         testRuntimeOnly 'org.mockito:mockito-inline:5.2.0'
         testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 
-        testImplementation platform("com.squareup.okhttp3:okhttp-bom:${okhttpBomVersion}")
+        testImplementation platform("com.squareup.okhttp3:okhttp-bom:${rootProject.ext.okhttpBomVersion}")
         testImplementation "com.squareup.okhttp3:mockwebserver"
     }
 
@@ -286,6 +286,7 @@ subprojects {
 
     tasks.withType(Test).configureEach {
         useJUnitPlatform()
+        jvmArgs "--enable-native-access=ALL-UNNAMED"
         finalizedBy(jacocoReport)
     }
 

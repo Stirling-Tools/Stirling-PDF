@@ -5,11 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -24,7 +26,14 @@ class FolderIdentitiesTest {
     @Test
     void identityAgreesAcrossASymlinkedAliasOfTheDirectory() throws IOException {
         Path real = Files.createDirectories(tempDir.resolve("real"));
-        Path alias = Files.createSymbolicLink(tempDir.resolve("alias"), real);
+        Path alias;
+        try {
+            alias = Files.createSymbolicLink(tempDir.resolve("alias"), real);
+        } catch (FileSystemException | UnsupportedOperationException exception) {
+            Assumptions.assumeTrue(
+                    false, "Symbolic links are unavailable: " + exception.getMessage());
+            return;
+        }
         Files.writeString(real.resolve("doc.pdf"), "data");
 
         String viaReal =
