@@ -396,6 +396,88 @@ describe("SuperSearch", () => {
     expect(screen.getAllByText("Editor")).toHaveLength(1);
   });
 
+  it("caps a large group behind show-more and expands/collapses it", async () => {
+    const titles = Array.from({ length: 8 }, (_, i) => `Tool ${i + 1}`);
+    const useResults: TestUseResultsHook = (query) => {
+      if (!query.trim()) {
+        return { groups: [], flatResults: [], loadingFiles: false };
+      }
+      const groups: TestGroup[] = [
+        {
+          id: "tools",
+          label: "Tools",
+          results: titles.map((title, i) => makeResult(`tool-${i}`, title)),
+        },
+      ];
+      return {
+        groups,
+        flatResults: groups.flatMap((group) => group.results),
+        loadingFiles: false,
+      };
+    };
+
+    renderSearch(useResults);
+
+    const input = screen.getByRole("combobox");
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: "tool" } });
+
+    await screen.findByText("Tool 1");
+    expect(screen.getByText("Tool 5")).toBeInTheDocument();
+    expect(screen.queryByText("Tool 6")).not.toBeInTheDocument();
+
+    const toggle = screen.getByRole("button", {
+      name: /superSearch\.showMore/,
+    });
+    fireEvent.click(toggle);
+
+    await screen.findByText("Tool 8");
+    expect(
+      screen.getByRole("button", { name: /superSearch\.showLess/ }),
+    ).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /superSearch\.showLess/ }),
+    );
+    await waitFor(() => {
+      expect(screen.queryByText("Tool 6")).not.toBeInTheDocument();
+      expect(screen.getByText("Tool 5")).toBeInTheDocument();
+    });
+  });
+
+  it("shows a cap+1 group in full with no show-more toggle", async () => {
+    const useResults: TestUseResultsHook = (query) => {
+      if (!query.trim()) {
+        return { groups: [], flatResults: [], loadingFiles: false };
+      }
+      const groups: TestGroup[] = [
+        {
+          id: "tools",
+          label: "Tools",
+          results: Array.from({ length: 6 }, (_, i) =>
+            makeResult(`tool-${i}`, `Tool ${i + 1}`),
+          ),
+        },
+      ];
+      return {
+        groups,
+        flatResults: groups.flatMap((group) => group.results),
+        loadingFiles: false,
+      };
+    };
+
+    renderSearch(useResults);
+
+    const input = screen.getByRole("combobox");
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: "tool" } });
+
+    await screen.findByText("Tool 6");
+    expect(
+      screen.queryByRole("button", { name: /superSearch\.show/ }),
+    ).not.toBeInTheDocument();
+  });
+
   it("lets a section collapse and reopen without hiding the other section", async () => {
     const useResults: TestUseResultsHook = (query) => {
       if (!query.trim()) {

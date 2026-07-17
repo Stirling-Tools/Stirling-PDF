@@ -501,6 +501,10 @@ export default function SuperSearch({
                   {section.groups.map((group) => {
                     const shownCount = visibleCountFor(group);
                     const hiddenCount = group.results.length - shownCount;
+                    // Groups within one row of the cap always show everything
+                    // (visibleCountFor's cap+1 exception) — no toggle for them.
+                    const expandable =
+                      group.results.length > COLLAPSED_GROUP_SIZE + 1;
                     return (
                       <div
                         key={group.id}
@@ -559,8 +563,7 @@ export default function SuperSearch({
                             );
                           })}
                         </div>
-                        {(hiddenCount > 0 ||
-                          shownCount > COLLAPSED_GROUP_SIZE) && (
+                        {expandable && (
                           <Button
                             type="button"
                             variant="quiet"

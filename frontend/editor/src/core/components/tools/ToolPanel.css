@@ -282,15 +282,6 @@
   margin-left: auto;
 }
 
-.tool-panel__compact-header-search {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.tool-panel__compact-header-search .search-input-container {
-  width: 100%;
-}
-
 /* Search that separates the Policies section from the Tools list below it. */
 .tool-panel__between-search {
   padding: 0.5rem 0.75rem 0.25rem;

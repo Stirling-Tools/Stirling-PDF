@@ -294,25 +294,9 @@ export function rankSettingsResults(
 ): SuperSearchResult[] {
   if (!trimmed) return [];
 
-  // Row-level entries (deep-link with ?focus=) take priority.
-  const rowMatches = rankByFuzzy(SETTINGS_SEARCH_INDEX, trimmed, [
-    (e) => t(e.labelKey, e.labelFallback),
-    (e) => e.labelFallback,
-    (e) => e.keywords?.join(" ") ?? "",
-  ]);
-  const rows = rowMatches.map(({ item, score }) => ({
-    key: `setting:${item.section}:${item.anchor}`,
-    group: "settings",
-    title: t(item.labelKey, item.labelFallback),
-    subtitle: t(`settings.${item.section}.title`, item.section),
-    iconName: "settings-rounded",
-    score: score + 1, // nudge rows above bare section matches
-    onSelect: () => openSettings(item.section, item.anchor),
-  }));
-
-  // Section-level entries (whole tab), gated like the modal nav. The registry
-  // resolves per build (core / proprietary / saas / desktop), so this only
-  // ever sees sections the current build's settings modal can actually show.
+  // Sections gated like the modal nav. The registry resolves per build
+  // (core / proprietary / saas / desktop), so this only ever sees sections
+  // the current build's settings modal can actually show.
   const visibleSections = SETTINGS_SECTION_REGISTRY.filter((s) => {
     // Null gates (config still loading): hide every gated section.
     if (s.requiresLogin && !(gates?.loginEnabled ?? false)) return false;
@@ -321,6 +305,31 @@ export function rankSettingsResults(
       return false;
     return true;
   });
+  // Row context: the display label of the section the row lives in.
+  const sectionLabelFor = new Map(
+    visibleSections.map((s) => [s.key, t(s.labelKey, s.labelFallback)]),
+  );
+
+  // Row-level entries (deep-link with ?focus=) take priority. Rows for
+  // sections this build/user can't open are dropped with them.
+  const rowMatches = rankByFuzzy(
+    SETTINGS_SEARCH_INDEX.filter((e) => sectionLabelFor.has(e.section)),
+    trimmed,
+    [
+      (e) => t(e.labelKey, e.labelFallback),
+      (e) => e.labelFallback,
+      (e) => e.keywords?.join(" ") ?? "",
+    ],
+  );
+  const rows = rowMatches.map(({ item, score }) => ({
+    key: `setting:${item.section}:${item.anchor}`,
+    group: "settings",
+    title: t(item.labelKey, item.labelFallback),
+    subtitle: sectionLabelFor.get(item.section),
+    iconName: "settings-rounded",
+    score: score + 1, // nudge rows above bare section matches
+    onSelect: () => openSettings(item.section, item.anchor),
+  }));
   // The nav group a section lives under, shown as result context (joined to a
   // content-match snippet with " · ").
   const groupTitle = (s: (typeof SETTINGS_SECTION_REGISTRY)[number]) =>

@@ -696,19 +696,12 @@ export default function FileManagerView() {
   }, [navigate]);
 
   // ─── keyboard shortcuts ─────────────────────────────────────────────────
-  // Focus the super-search input (stable id), used by the "/" shortcut and the
-  // FileSidebar rail Search button.
+  // Focus the super-search input (stable id), used by the "/" shortcut.
   const focusSearch = useCallback(() => {
     (
       document.getElementById("super-search-input") as HTMLInputElement | null
     )?.focus();
   }, []);
-  // External focus trigger (used by the FileSidebar rail Search button).
-  useEffect(() => {
-    window.addEventListener("files-page:focus-search", focusSearch);
-    return () =>
-      window.removeEventListener("files-page:focus-search", focusSearch);
-  }, [focusSearch]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const active = document.activeElement as HTMLElement | null;

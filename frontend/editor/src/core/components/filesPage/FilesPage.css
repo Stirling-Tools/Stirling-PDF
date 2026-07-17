@@ -111,28 +111,6 @@
   flex-shrink: 0;
 }
 
-.files-page-search {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: 999px;
-  padding: 0.2rem 0.75rem;
-  /* Fills its grid cell; the cell's minmax(...) clamps to a sensible range. */
-  width: 100%;
-  min-width: 0;
-}
-
-.files-page-search input {
-  background: transparent;
-  border: none;
-  outline: none;
-  flex: 1;
-  color: var(--text-primary);
-  font-size: 0.9rem;
-}
-
 .files-page-body {
   display: flex;
   flex: 1 1 auto;
@@ -1384,31 +1362,11 @@
     gap: 0.3rem;
     flex-wrap: nowrap;
   }
-  .files-page-search {
-    flex: 1 1 100%;
-  }
   .files-page-breadcrumbs {
     font-size: 0.85rem;
     flex-wrap: nowrap;
     overflow-x: auto;
     min-width: 0;
-  }
-  .files-page-search {
-    /* Shrink hard so the search bar doesn't eat the whole action row.
-       Users still see the icon + a few chars of the placeholder.
-       `overflow: hidden` clips the input's natural intrinsic width so
-       placeholder text never leaks outside the rounded pill. */
-    min-width: 0;
-    flex: 0 1 5.5rem;
-    max-width: 6.5rem;
-    overflow: hidden;
-  }
-  .files-page-search input {
-    /* `min-width: 0` lets flex actually shrink the input below its
-       default ~20-char intrinsic size - without this, the placeholder
-       extends beyond the parent's clip box and bleeds onto neighbours. */
-    min-width: 0;
-    text-overflow: ellipsis;
   }
   /* Upload becomes an icon-only square button on mobile so the action
      row stops getting clipped. Scoped to `.files-page-header-actions`

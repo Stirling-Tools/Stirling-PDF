@@ -1,4 +1,4 @@
-import { useEffect, useState, Suspense, lazy } from "react";
+import { useState, Suspense, lazy } from "react";
 import { useTranslation } from "react-i18next";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { Box, Loader, Center } from "@mantine/core";
@@ -77,14 +77,6 @@ export default function Workbench() {
   // bar, outside the bar's overflow-clipped wrapper. Scoped to the viewer.
   const [viewerToolbarCollapsed, setViewerToolbarCollapsed] = useState(false);
   const showReopenTab = currentView === "viewer" && viewerToolbarCollapsed;
-
-  // Enable bar transitions after first paint so the initial hidden state shows
-  // without animating (landing page on load shouldn't animate the bar up).
-  const [barTransitionEnabled, setBarTransitionEnabled] = useState(false);
-  useEffect(() => {
-    const raf = requestAnimationFrame(() => setBarTransitionEnabled(true));
-    return () => cancelAnimationFrame(raf);
-  }, []);
 
   const handlePreviewClose = () => {
     setPreviewFile(null);
@@ -226,16 +218,13 @@ export default function Workbench() {
       data-tour="workbench"
       style={{ backgroundColor: "var(--bg-background)", minWidth: 0 }}
     >
-      {/* Workbench Bar - animates in/out based on file presence */}
+      {/* Workbench Bar — always visible outside My Files (it hosts the
+          global search), even with no files loaded. */}
       {currentView !== "myFiles" &&
         !customWorkbenchViews.find((v) => v.workbenchId === currentView)
           ?.hideTopControls && (
           <div className={styles.workbenchBarShell}>
-            <div
-              className={styles.workbenchBarWrapper}
-              data-hidden="false"
-              data-no-transition={String(!barTransitionEnabled)}
-            >
+            <div className={styles.workbenchBarWrapper}>
               <div className={styles.workbenchBarInner}>
                 <WorkbenchBar
                   currentView={currentView}

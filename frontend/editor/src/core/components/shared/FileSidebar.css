@@ -114,55 +114,6 @@
   z-index: var(--z-dropdown);
 }
 
-/* ---- Search row ---- */
-.file-sidebar-search-row {
-  display: flex;
-  align-items: center;
-  min-height: 32px;
-  padding: 0 14px;
-  gap: 0;
-  cursor: pointer;
-  border-radius: 4px;
-  margin: 0 4px;
-  flex-shrink: 0;
-  transition: background-color 0.15s ease;
-}
-
-.file-sidebar-search-row:not(.active):hover {
-  background-color: var(--hover-bg);
-}
-
-.file-sidebar-search-icon {
-  color: var(--text-muted) !important;
-  font-size: 18px !important;
-  flex-shrink: 0;
-}
-
-.file-sidebar-search-close {
-  cursor: pointer;
-}
-
-.file-sidebar-search-input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  font-size: 14px;
-  color: var(--text-primary);
-  margin-left: 12px;
-  min-width: 0;
-}
-
-.file-sidebar-search-input::placeholder {
-  color: var(--text-muted);
-}
-
-.file-sidebar-search-label {
-  margin-left: 12px;
-  font-size: 14px;
-  color: var(--text-secondary);
-}
-
 /* ---- Scrollable content ---- */
 /* This is a flex column - action rows are fixed, only the file list scrolls */
 .file-sidebar-scroll {

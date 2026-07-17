@@ -464,9 +464,20 @@ export default function WorkbenchBar({
       const available = bar.clientWidth - viewsWidth - globalsWidth - 16 - 16;
       const wrapped = available < MIN_SEARCH_WIDTH;
       bar.dataset.wrapped = String(wrapped);
+      // Centre the search on the bar rather than its slot — clamped to the
+      // slot's spare width, because the shift is a transform (no layout) and
+      // an unclamped value would paint the pill over the adjacent cluster.
+      const slotEl = bar.querySelector<HTMLElement>(".workbench-bar-search");
+      const pillEl = slotEl?.querySelector<HTMLElement>(".super-search");
+      const slack = Math.max(
+        0,
+        ((slotEl?.offsetWidth ?? 0) - (pillEl?.offsetWidth ?? 0)) / 2,
+      );
+      const centred = (globalsWidth - viewsWidth) / 2;
+      const offset = Math.min(slack, Math.max(-slack, centred));
       bar.style.setProperty(
         "--workbench-bar-search-offset",
-        wrapped ? "0px" : `${(globalsWidth - viewsWidth) / 2}px`,
+        wrapped ? "0px" : `${offset}px`,
       );
     };
     const ro = new ResizeObserver(measure);
