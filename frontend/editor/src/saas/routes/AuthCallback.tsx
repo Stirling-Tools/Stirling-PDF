@@ -4,6 +4,11 @@ import { supabase } from "@app/auth/supabase";
 import { Button } from "@app/ui/Button";
 import { withBasePath } from "@app/constants/app";
 import { markLoginLandingPending } from "@app/utils/loginLanding";
+import { AuthShell } from "@app/auth/ui/AuthShell";
+import ErrorMessage from "@app/auth/ui/ErrorMessage";
+import { Spinner } from "@app/ui/Spinner";
+import "@app/auth/ui/auth.css";
+import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 interface CallbackState {
   status: "processing" | "success" | "error";
@@ -151,19 +156,6 @@ export default function AuthCallback() {
     handleCallback();
   }, [navigate]);
 
-  const getStatusColor = () => {
-    switch (state.status) {
-      case "processing":
-        return "text-blue-600";
-      case "success":
-        return "text-green-600";
-      case "error":
-        return "text-red-600";
-      default:
-        return "text-gray-600";
-    }
-  };
-
   const getTitle = () => {
     switch (state.status) {
       case "processing":
@@ -178,64 +170,66 @@ export default function AuthCallback() {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-100">
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-blue-200/40 blur-3xl"></div>
-        <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-emerald-200/40 blur-3xl"></div>
+    <AuthShell>
+      <div className="auth-logo-block">
+        <img
+          src={loginHeader}
+          alt="Stirling PDF"
+          className="auth-logo-header auth-logo-header--light"
+        />
+        <img
+          src={withBasePath("/modern-logo/LoginDarkModeHeader.svg")}
+          alt="Stirling PDF"
+          className="auth-logo-header auth-logo-header--dark"
+        />
       </div>
 
-      <div
-        className={`w-full max-w-md rounded-2xl bg-white/80 backdrop-blur shadow-xl p-8`}
-      >
-        <div className="text-center">
-          <img
-            src={withBasePath("/modern-logo/StirlingPDFLogoNoTextDark.svg")}
-            alt="Stirling PDF"
-            className="mx-auto mb-5 h-8 opacity-80"
-          />
+      <h1 className="login-title" style={{ textAlign: "center" }}>
+        {getTitle()}
+      </h1>
 
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            {getTitle()}
-          </h1>
-          <p className={`text-base ${getStatusColor()}`}>{state.message}</p>
+      {state.status === "error" ? (
+        <ErrorMessage error={state.message} />
+      ) : (
+        <p className="login-subtitle" style={{ textAlign: "center" }}>
+          {state.message}
+        </p>
+      )}
 
-          {state.status === "processing" && (
-            <div className="mt-6">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <div className="mt-3 h-1 overflow-hidden rounded-full bg-slate-200">
-                <div className="h-full w-1/2 animate-pulse rounded-full bg-blue-500"></div>
-              </div>
-            </div>
-          )}
-
-          {/* Action button - only show if error */}
-          <div className="mt-6 flex items-center justify-center gap-3">
-            {(() => {
-              if (state.status === "error") {
-                return (
-                  <Button
-                    accent="danger"
-                    onClick={() => navigate("/login", { replace: true })}
-                  >
-                    Back to login
-                  </Button>
-                );
-              }
-            })()}
-          </div>
-
-          {import.meta.env.DEV && state.details && (
-            <details className="mt-6 text-left">
-              <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
-                Debug Information
-              </summary>
-              <pre className="mt-2 p-3 bg-gray-100 rounded text-xs overflow-auto">
-                {JSON.stringify(state.details, null, 2)}
-              </pre>
-            </details>
-          )}
+      {state.status === "processing" && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            margin: "1rem 0",
+          }}
+        >
+          <Spinner size="md" />
         </div>
-      </div>
-    </div>
+      )}
+
+      {state.status === "error" && (
+        <div className="auth-section">
+          <Button
+            accent="danger"
+            fullWidth
+            onClick={() => navigate("/login", { replace: true })}
+          >
+            Back to login
+          </Button>
+        </div>
+      )}
+
+      {import.meta.env.DEV && state.details && (
+        <details className="mt-6 text-left">
+          <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
+            Debug Information
+          </summary>
+          <pre className="mt-2 p-3 bg-gray-100 rounded text-xs overflow-auto">
+            {JSON.stringify(state.details, null, 2)}
+          </pre>
+        </details>
+      )}
+    </AuthShell>
   );
 }
