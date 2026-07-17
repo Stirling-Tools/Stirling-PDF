@@ -18,3 +18,17 @@ export const CLASSIFICATION_CATEGORY_ID = "classification";
 export function isClassificationCategory(categoryId: string): boolean {
   return categoryId === CLASSIFICATION_CATEGORY_ID;
 }
+
+/**
+ * Normalise a policy execution order so classification always sits last, keeping
+ * every other category's relative order. The auto-run enforces this at execution
+ * time regardless (see usePolicyAutoRun), but pinning it here — at the point an
+ * order is persisted — means a reorder UI can never store or show classification
+ * anywhere but last, so what the user sees matches when it actually runs.
+ */
+export function pinClassificationLast(orderedCategoryIds: string[]): string[] {
+  return [
+    ...orderedCategoryIds.filter((id) => !isClassificationCategory(id)),
+    ...orderedCategoryIds.filter((id) => isClassificationCategory(id)),
+  ];
+}
