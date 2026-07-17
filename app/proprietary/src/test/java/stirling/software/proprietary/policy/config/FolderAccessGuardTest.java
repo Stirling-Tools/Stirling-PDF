@@ -39,6 +39,17 @@ class FolderAccessGuardTest {
         return new FolderAccessGuard(properties, environment, sourceStore);
     }
 
+    private FolderAccessGuard guardWithStorage(
+            List<String> allowedRoots, boolean storageEnabled, String provider, String basePath) {
+        ApplicationProperties properties = new ApplicationProperties();
+        properties.getPolicies().setAllowedFolderRoots(allowedRoots);
+        ApplicationProperties.Storage storage = properties.getStorage();
+        storage.setEnabled(storageEnabled);
+        storage.setProvider(provider);
+        storage.getLocal().setBasePath(basePath);
+        return new FolderAccessGuard(properties, new StandardEnvironment(), sourceStore);
+    }
+
     @Test
     void permitsAndNormalisesADirectoryWithinAnAllowedRoot() {
         FolderAccessGuard guard = guard(List.of(tempDir.toString()));
@@ -67,6 +78,33 @@ class FolderAccessGuardTest {
     void rejectsEverythingWhenNoRootsAreConfigured() {
         FolderAccessGuard guard = guard(List.of());
         assertThrows(IllegalArgumentException.class, () -> guard.requirePermitted(tempDir));
+    }
+
+    @Test
+    void permitsTheLocalServerStorageDirectoryEvenWithNoConfiguredRoots() {
+        Path storageBase = tempDir.resolve("storage");
+        FolderAccessGuard guard =
+                guardWithStorage(List.of(), true, "local", storageBase.toString());
+        Path within = storageBase.resolve("inbox");
+
+        assertEquals(within.toAbsolutePath().normalize(), guard.requirePermitted(within));
+    }
+
+    @Test
+    void ignoresServerStorageWhenTheStorageFeatureIsDisabled() {
+        Path storageBase = tempDir.resolve("storage");
+        FolderAccessGuard guard =
+                guardWithStorage(List.of(), false, "local", storageBase.toString());
+
+        assertThrows(IllegalArgumentException.class, () -> guard.requirePermitted(storageBase));
+    }
+
+    @Test
+    void ignoresServerStorageWhenTheProviderIsNotLocal() {
+        Path storageBase = tempDir.resolve("storage");
+        FolderAccessGuard guard = guardWithStorage(List.of(), true, "s3", storageBase.toString());
+
+        assertThrows(IllegalArgumentException.class, () -> guard.requirePermitted(storageBase));
     }
 
     @Test

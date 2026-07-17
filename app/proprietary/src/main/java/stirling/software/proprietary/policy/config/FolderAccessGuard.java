@@ -22,6 +22,8 @@ import stirling.software.proprietary.policy.source.SourceStore;
  *   <li>denied entirely under the {@code saas} profile;
  *   <li>Stirling's own config dir always rejected, even if an allowed root were misconfigured to
  *       contain it;
+ *   <li>the local server file-storage directory is always permitted (when that storage provider is
+ *       enabled), so automations can use server storage without the admin listing it;
  *   <li>must resolve within {@code policies.allowedFolderRoots}; none configured means all denied.
  * </ol>
  *
@@ -35,6 +37,7 @@ public class FolderAccessGuard {
 
     private final boolean saasActive;
     private final List<Path> allowedRoots;
+    private final List<Path> impliedRoots;
     private final List<Path> protectedRoots;
     private final SourceStore sourceStore;
 
@@ -45,6 +48,7 @@ public class FolderAccessGuard {
         this.saasActive = Arrays.asList(environment.getActiveProfiles()).contains("saas");
         this.allowedRoots =
                 normalizeAll(applicationProperties.getPolicies().getAllowedFolderRoots());
+        this.impliedRoots = serverStorageRoots(applicationProperties.getStorage());
         this.protectedRoots = List.of(normalize(Path.of(InstallationPathConfig.getConfigPath())));
         this.sourceStore = sourceStore;
     }
@@ -61,6 +65,11 @@ public class FolderAccessGuard {
                 throw new IllegalArgumentException(
                         "folder may not point inside a protected Stirling directory");
             }
+        }
+        // Stirling's own server-storage directory is always permitted, even with no configured
+        // roots, so server storage integrates with folder automations out of the box.
+        if (impliedRoots.stream().anyMatch(normalized::startsWith)) {
+            return normalized;
         }
         if (allowedRoots.isEmpty()) {
             throw new IllegalArgumentException(
@@ -84,6 +93,22 @@ public class FolderAccessGuard {
         boolean writesFolder =
                 policy.output() != null && FOLDER_TYPE.equals(policy.output().type());
         return readsFolder || writesFolder;
+    }
+
+    /**
+     * The local server file-storage directory, when that storage provider is enabled. It is
+     * Stirling-owned and always permitted so folder sources/outputs can use server storage without
+     * the admin adding it to {@code allowedFolderRoots}. S3-backed storage has no local folder.
+     */
+    private static List<Path> serverStorageRoots(ApplicationProperties.Storage storage) {
+        if (!storage.isEnabled() || !"local".equalsIgnoreCase(storage.getProvider())) {
+            return List.of();
+        }
+        String basePath = storage.getLocal().getBasePath();
+        if (basePath == null || basePath.isBlank()) {
+            return List.of();
+        }
+        return List.of(normalize(Path.of(basePath)));
     }
 
     private static List<Path> normalizeAll(List<String> roots) {

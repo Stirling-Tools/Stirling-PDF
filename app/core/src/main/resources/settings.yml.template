@@ -369,9 +369,11 @@ aiEngine:
 
 policies:
   # Folder automations can read from and write to the directories you allow here, so treat this as a
-  # security boundary. Leave allowedFolderRoots empty (default) to disable folder sources/outputs
-  # entirely; list absolute directories to permit folder access only within them. Stirling's own
-  # config directory is always off-limits, and folder access is always disabled in SaaS mode.
+  # security boundary. Leave allowedFolderRoots empty (default) to disable folder sources/outputs,
+  # other than local server file-storage, which is always permitted if it is enabled.
+  # List absolute directories to permit folder access within them.
+  # Stirling's own config directory is always off-limits, and folder access is always
+  # disabled in SaaS mode.
   allowedFolderRoots: [] # e.g. ["/data/inbox", "/data/outbox"]
   scheduleSweepSeconds: 60 # How often (seconds) scheduled policies are checked for being due
   watchReconcileSeconds: 300 # How often (seconds) folder-watch re-syncs watches and re-runs as a safety net for missed events
