@@ -108,9 +108,8 @@ export function buildPolicyBadgeMap(
   // status alone would drop the badge during that async gap.
   for (const run of runs) {
     if (!run.fileId) continue;
-    // Classification is metadata-only and runs fully async — it must never mark
-    // the file "enforcing", which is what blocks viewing/editing. It surfaces
-    // its labels once done instead of gating the file while it runs.
+    // Classification runs async and must never mark the file "enforcing" (that
+    // flag blocks viewing/editing); it only surfaces labels when done.
     if (isClassificationCategory(run.categoryId)) continue;
     const settled =
       run.imported || run.status === "FAILED" || run.status === "CANCELLED";

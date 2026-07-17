@@ -171,11 +171,8 @@ export function usePolicyAutoRun(): void {
               s.sources.includes("editor")) &&
             (s.runOn ?? "upload") === "upload",
         )
-        // Classification always runs LAST, regardless of its configured order:
-        // it's non-blocking and metadata-only, so it must come after every
-        // enforcement policy has finished forking its versions — otherwise it
-        // could let the user in first, then a later enforcement policy would fork
-        // a new version and drop the edits they made in the meantime.
+        // Classification runs last: it's non-blocking, so an enforcement policy
+        // running after it would fork a new version and drop the user's edits.
         .sort(([idA, a], [idB, b]) => {
           const ca = isClassificationCategory(idA) ? 1 : 0;
           const cb = isClassificationCategory(idB) ? 1 : 0;
@@ -345,10 +342,8 @@ export function usePolicyAutoRun(): void {
         continue;
       }
       importing.current.add(run.runId);
-      // Classification is metadata-only: it never forks a version or shows up in
-      // history. Read the labels the classify step wrote and stamp them onto the
-      // file's existing stub in place, leaving the document the user is editing
-      // untouched.
+      // Classification is metadata-only: stamp labels onto the existing stub in
+      // place, no version fork (see importClassificationLabels).
       if (isClassificationCategory(run.categoryId)) {
         void importClassificationLabels(run, {
           updateStirlingFileStub,
@@ -527,17 +522,8 @@ interface ClassificationImportContext {
 }
 
 /**
- * Import a completed classification run's result as metadata only. The classify
- * step returns the document with its labels written into the
- * StirlingPDFClassification key; we read those labels and stamp them onto the
- * file's existing stub (workspace + storage) IN PLACE — no versioned child, no
- * consumeFiles, no history entry. The file the user is viewing/editing is left
- * exactly as it was; only its tags appear.
- *
- * The stub is keyed by the file the run executed on (the leaf of the enforcement
- * chain, since classification always runs last). Later edits inherit the labels
- * through createChildStub / the CONSUME_FILES reducer, just like an enforcement
- * policy's labels do.
+ * Stamp a classification run's labels onto the file's existing stub in place
+ * (workspace + storage) — no versioned child, no history entry, only tags.
  */
 async function importClassificationLabels(
   run: PolicyRunRecord,
@@ -549,10 +535,8 @@ async function importClassificationLabels(
     updateRun(run.runId, { imported: true });
     return;
   }
-  // Read the labels from the returned PDF's metadata. Try each output until one
-  // yields labels; a non-404 failure is transient, so bail without marking
-  // imported and let it retry next tick. A 404 (output aged out) just skips that
-  // output — nothing left to retry, so we settle below.
+  // Read labels from the returned PDF. A non-404 failure is transient — bail and
+  // retry next tick; a 404 (output aged out) just skips that output.
   let labels: string[] | null = null;
   for (const out of run.outputs) {
     try {
@@ -572,9 +556,8 @@ async function importClassificationLabels(
     const ok = await fileStorage.updateFileMetadata(targetId, updates);
     if (ok) ctx.bumpRevision();
   }
-  // Settle the run either way (labels found, none found, or output gone), so it
-  // stops polling/re-importing. No outputFileIds — classification produces no
-  // workspace file, so it never gets a version badge; the labels are the result.
+  // Settle either way so it stops re-importing. No outputFileIds: classification
+  // produces no workspace file, so it gets no version badge.
   updateRun(run.runId, {
     imported: true,
     importedFileIds: run.outputs.map((o) => o.fileId),

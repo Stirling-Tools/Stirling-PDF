@@ -327,9 +327,8 @@ export function usePolicies() {
    * first for an instant re-render; the next reconcile re-reads the server order.
    */
   const reorderPolicies = useCallback((orderedCategoryIds: string[]) => {
-    // Classification is metadata-only and always runs last (see usePolicyAutoRun).
-    // Pin it to the end of any requested order so the persisted + server-side
-    // order matches when it actually runs — a reorder UI can't misplace it.
+    // Pin classification last so the persisted/server order matches execution
+    // (it always runs last — see usePolicyAutoRun).
     const ordered = pinClassificationLast(orderedCategoryIds);
     persistPolicyOrder(ordered);
     const current = loadPolicies();

@@ -2,27 +2,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 
 /**
- * Batch integration test for the policy auto-run orchestration, at the scale the
- * user hit the bug: 61 files uploaded at once, two active upload policies chained.
- * Drives the REAL policyRunStore + the REAL hook effects (dispatch → poll →
- * import → chain), mocking only the IO boundaries (network, storage,
- * thumbnail/stub creation).
- *
- * Classification is forced to run LAST (even though it's configured order 0),
- * because it's metadata-only and non-blocking: the chain is Security →
- * Classification. Security versions in place; Classification only tags.
- *
- * Proves the invariants the user asked for:
- *  - 61 files ⇒ exactly 122 runs (61 security, then 61 classification).
- *  - Security delivers SILENTLY + in place (consumeFiles with { silent: true }),
- *    never adding a second copy — the workspace never grows past 61.
- *  - Classification NEVER forks a version: no consumeFiles, no new file — it just
- *    stamps the labels onto the existing stub (updateStirlingFileStub).
- *  - No runaway: if the loop guard regressed, the run count would blow past 122
- *    (or the test would time out), so an exact 122 is a hard regression gate.
- *  - Closing all files mid-run does NOT re-open them: with the workspace emptied,
- *    security outputs go to storage (persistVersionedOutputs), never re-added to
- *    the workspace via consumeFiles.
+ * Batch integration test (61 files, two chained upload policies) driving the real
+ * store + hook effects, IO mocked. Classification is forced last (see the sort).
  */
 
 const FILE_COUNT = 61;
