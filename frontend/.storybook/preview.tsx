@@ -231,12 +231,10 @@ const preview: Preview = {
       ],
     },
     a11y: {
-      // Run axe automatically against the story root; violations show in the
-      // Accessibility panel. `context` replaced `element` in addon-a11y 9.x.
-      context: "#storybook-root",
-      config: {},
-      options: {},
-      test: "todo",
+      // Run axe against the rendered story; `test: "error"` fails the scan on
+      // any violation. Context is left at the addon default (the document root)
+      // so it resolves under both the Storybook UI and the Vitest browser mount.
+      test: "error",
     },
   },
   globalTypes: {
