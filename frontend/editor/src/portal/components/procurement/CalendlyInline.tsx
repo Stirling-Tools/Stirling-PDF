@@ -40,6 +40,36 @@ function buildUrl(base: string): string {
   return `${base}${sep}hide_event_type_details=1&background_color=${WIDGET_COLORS.background}&text_color=${WIDGET_COLORS.text}&primary_color=${WIDGET_COLORS.primary}`;
 }
 
+// Origins the embed fetches from: the widget script, then the scheduler iframe.
+const CALENDLY_ORIGINS = [
+  "https://assets.calendly.com",
+  "https://calendly.com",
+];
+
+function preconnect(origin: string): void {
+  if (typeof document === "undefined") return;
+  if (document.querySelector(`link[rel="preconnect"][href="${origin}"]`))
+    return;
+  const link = document.createElement("link");
+  link.rel = "preconnect";
+  link.href = origin;
+  link.crossOrigin = "anonymous";
+  document.head.appendChild(link);
+}
+
+/**
+ * Warm the Calendly embed ahead of use: open connections to its origins and start fetching
+ * widget.js, so opening the scheduler initialises near-instantly instead of paying a cold
+ * script + iframe fetch on click. Idempotent and safe to call repeatedly; failures are left
+ * for the modal's own load to surface as the fallback link.
+ */
+export function warmCalendly(): void {
+  CALENDLY_ORIGINS.forEach(preconnect);
+  void loadScript({ src: CALENDLY_SCRIPT, id: "calendly-widget-script" }).catch(
+    () => {},
+  );
+}
+
 export function CalendlyInline({
   url = CALENDLY_URL,
   height = 760,
@@ -63,7 +93,13 @@ export function CalendlyInline({
       .then(() => {
         const el = containerRef.current;
         const calendly = (window as CalendlyWindow).Calendly;
-        if (cancelled || !el || !calendly) return;
+        if (cancelled || !el) return;
+        // Script resolved but the global never materialised (blocked/altered by an
+        // extension, etc.) — show the fallback link rather than an empty modal.
+        if (!calendly) {
+          setFailed(true);
+          return;
+        }
         // Re-init explicitly (rather than relying on widget.js auto-scan) so the widget rebuilds on
         // reopen and whenever the URL or prefill changes.
         el.innerHTML = "";
