@@ -370,7 +370,7 @@ aiEngine:
 policies:
   # Folder automations can read from and write to the directories you allow here, so treat this as a
   # security boundary. Leave allowedFolderRoots empty (default) to disable folder sources/outputs,
-  # other than local server file-storage, which is always permitted if it is enabled.
+  # other than from directories that are always permitted like server file-storage and watched folders.
   # List absolute directories to permit folder access within them.
   # Stirling's own config directory is always off-limits, and folder access is always
   # disabled in SaaS mode.

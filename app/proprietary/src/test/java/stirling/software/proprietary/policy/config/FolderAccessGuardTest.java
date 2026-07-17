@@ -13,6 +13,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.core.env.StandardEnvironment;
 
 import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
@@ -36,7 +37,8 @@ class FolderAccessGuardTest {
         properties.getPolicies().setAllowedFolderRoots(allowedRoots);
         StandardEnvironment environment = new StandardEnvironment();
         environment.setActiveProfiles(activeProfiles);
-        return new FolderAccessGuard(properties, environment, sourceStore);
+        return new FolderAccessGuard(
+                properties, new RuntimePathConfig(properties), environment, sourceStore);
     }
 
     private FolderAccessGuard guardWithStorage(
@@ -47,7 +49,25 @@ class FolderAccessGuardTest {
         storage.setEnabled(storageEnabled);
         storage.setProvider(provider);
         storage.getLocal().setBasePath(basePath);
-        return new FolderAccessGuard(properties, new StandardEnvironment(), sourceStore);
+        return new FolderAccessGuard(
+                properties,
+                new RuntimePathConfig(properties),
+                new StandardEnvironment(),
+                sourceStore);
+    }
+
+    private FolderAccessGuard guardWithWatchedFolder(String watchedDir) {
+        ApplicationProperties properties = new ApplicationProperties();
+        properties
+                .getSystem()
+                .getCustomPaths()
+                .getPipeline()
+                .setWatchedFoldersDirs(List.of(watchedDir));
+        return new FolderAccessGuard(
+                properties,
+                new RuntimePathConfig(properties),
+                new StandardEnvironment(),
+                sourceStore);
     }
 
     @Test
@@ -105,6 +125,15 @@ class FolderAccessGuardTest {
         FolderAccessGuard guard = guardWithStorage(List.of(), true, "s3", storageBase.toString());
 
         assertThrows(IllegalArgumentException.class, () -> guard.requirePermitted(storageBase));
+    }
+
+    @Test
+    void permitsPipelineWatchedFoldersEvenWithNoConfiguredRoots() {
+        Path watched = tempDir.resolve("watched");
+        FolderAccessGuard guard = guardWithWatchedFolder(watched.toString());
+        Path within = watched.resolve("inbox");
+
+        assertEquals(within.toAbsolutePath().normalize(), guard.requirePermitted(within));
     }
 
     @Test
