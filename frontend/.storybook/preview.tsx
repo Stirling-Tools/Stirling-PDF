@@ -276,7 +276,7 @@ const preview: Preview = {
         icon: "globe",
         items: Object.entries(supportedLanguages).map(([value, title]) => ({
           value,
-          title: `${value} — ${title}`,
+          title: `${value} - ${title}`,
         })),
         dynamicTitle: true,
       },
