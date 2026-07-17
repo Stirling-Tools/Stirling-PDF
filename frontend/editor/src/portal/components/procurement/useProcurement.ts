@@ -11,6 +11,7 @@ import {
   fetchSnapshot,
   issueQuote,
   resetProcurement,
+  startAgreement,
   startTrial,
   type ProcurementSnapshot,
   type QuoteResult,
@@ -59,6 +60,8 @@ export interface ProcurementController {
   onExtendTrial: () => void;
   onReset: () => void;
   onGenerate: (draft: QuoteResult) => void;
+  /** Accept the reviewed quote and advance to the agreement step — does NOT charge Stripe. */
+  onAcceptQuote: () => void;
   onAgree: () => void;
   onDownloadPdf: () => Promise<void>;
   onDownloadOfflineLicense: () => Promise<void>;
@@ -129,8 +132,12 @@ export function useProcurement(autoOpen = false): ProcurementController {
       await issueQuote(draft.quoteId);
       setEditing(false);
     });
-  // Quote + agreement are one step now: agreeing accepts the issued quote straight into a
-  // committed subscription (Stripe), and provisioning upgrades the licence server-side.
+  // Accept the reviewed quote: advance to the agreement step only. No Stripe — the buyer can read
+  // and download the plain quote before taking on the legal documents.
+  const onAcceptQuote = () => run(startAgreement);
+
+  // Signing the agreement is the commitment point: it accepts the issued quote into a committed
+  // subscription (Stripe), and provisioning upgrades the licence server-side.
   const onAgree = () =>
     run(async () => {
       if (!latest) return;
@@ -235,6 +242,7 @@ export function useProcurement(autoOpen = false): ProcurementController {
     onExtendTrial,
     onReset,
     onGenerate,
+    onAcceptQuote,
     onAgree,
     onDownloadPdf,
     onDownloadOfflineLicense,

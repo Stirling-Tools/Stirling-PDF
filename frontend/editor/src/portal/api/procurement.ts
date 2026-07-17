@@ -74,14 +74,11 @@ export const JOURNEY: JourneyStep[] = [
 ];
 
 /**
- * The commercial flow's stepper stages. The real backend collapses quote + agreement into one
- * accept step (accepting the issued quote is accepting the agreement), so the flow shows one fewer
- * step than the mock ledger's {@link JOURNEY} — the separate "Agreement" step is dropped. Reuses
- * JOURNEY's i18n keys.
+ * The commercial flow's stepper stages. Quote and Agreement are distinct steps: the buyer reviews
+ * and accepts the quote first (no Stripe), then reviews and signs the enterprise agreement (which
+ * accepts into a committed subscription). The full {@link JOURNEY} is rendered as-is.
  */
-export const FLOW_JOURNEY: JourneyStep[] = JOURNEY.filter(
-  (s) => s.stage !== "security",
-);
+export const FLOW_JOURNEY: JourneyStep[] = JOURNEY;
 
 /* ──────────────────────────────────────────────────────────────────────── */
 /*  Deal header                                                              */

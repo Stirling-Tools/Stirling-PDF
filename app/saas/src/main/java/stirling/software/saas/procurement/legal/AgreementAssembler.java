@@ -114,6 +114,7 @@ public class AgreementAssembler {
         t.put("sla_tier", slaTier(quote.getServiceLevel()));
         t.put("annual_fee_y1", money(quote.getAnnualNetMinor()));
         t.put("elected_or_not", quote.isIndemnification() ? "Elected" : "Not elected");
+        t.put("po_number", notBlank(quote.getPoNumber()) ? quote.getPoNumber().trim() : "—");
         t.put(
                 "customer_signatory",
                 signed && notBlank(signing.signatoryName())
@@ -138,6 +139,7 @@ public class AgreementAssembler {
         sb.append("| Term | Value |\n| --- | --- |\n");
         row(sb, "Customer", "{{customer_legal_name}}");
         row(sb, "Subscription", "Enterprise · {{deployment}}");
+        row(sb, "Purchase order", "{{po_number}}");
         row(sb, "Committed Volume", "{{committed_pdfs_yr}} PDFs / year at the {{posture}} posture");
         row(sb, "Committed rate", "{{rate_per_pdf}} per PDF");
         row(sb, "Service level", "{{sla_tier}} (per SLA Exhibit)");

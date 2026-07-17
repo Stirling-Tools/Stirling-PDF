@@ -17,6 +17,7 @@ import {
   PaymentStageCard,
 } from "@portal/components/procurement/ProcurementStages";
 import { QuoteBuilder } from "@portal/components/procurement/QuoteBuilder";
+import { QuoteReview } from "@portal/components/procurement/QuoteReview";
 import { StageStepper } from "@portal/components/procurement/StageStepper";
 import type { ProcurementController } from "@portal/components/procurement/useProcurement";
 
@@ -60,6 +61,7 @@ export function ProcurementFlow({
     onExtendTrial,
     onReset,
     onGenerate,
+    onAcceptQuote,
     onAgree,
     onDownloadPdf,
     onDownloadOfflineLicense,
@@ -117,27 +119,36 @@ export function ProcurementFlow({
                 seats={data?.seats ?? 0}
                 email={scheduleEmail}
                 initial={latest?.config}
+                eulaAlreadyAgreed={data?.trialStartedAt != null}
                 onGenerate={onGenerate}
               />
             )}
 
-            {/* Quote + agreement are one step: review the itemised quote and the agreement, then
-                accept straight into a committed subscription. Once accepted you can't go back.
-                ("security" is the retired agreement stage — still handled so an older deal that
-                stopped there isn't left blank.) */}
-            {!editing &&
-              isIssued &&
-              (stage === "quote" || stage === "security") &&
-              latest && (
-                <ProcurementAgreement
-                  quote={latest}
-                  busy={busy}
-                  downloading={downloading}
-                  onAgree={onAgree}
-                  onDownload={onDownloadPdf}
-                  onEdit={() => setEditing(true)}
-                />
-              )}
+            {/* Quote step: review and accept the plain quote. Accepting advances to the agreement
+                step only — no Stripe charge yet. */}
+            {!editing && isIssued && stage === "quote" && latest && (
+              <QuoteReview
+                quote={latest}
+                busy={busy}
+                downloading={downloading}
+                onAccept={onAcceptQuote}
+                onDownload={onDownloadPdf}
+                onEdit={() => setEditing(true)}
+              />
+            )}
+
+            {/* Agreement step: review and sign the enterprise agreement. Signing accepts the quote
+                into a committed subscription (Stripe). */}
+            {!editing && stage === "security" && latest && (
+              <ProcurementAgreement
+                quote={latest}
+                busy={busy}
+                downloading={downloading}
+                onAgree={onAgree}
+                onDownload={onDownloadPdf}
+                onEdit={() => setEditing(true)}
+              />
+            )}
 
             {!editing && stage === "procurement" && latest && (
               <PaymentStageCard
