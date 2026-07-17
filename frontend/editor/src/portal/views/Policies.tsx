@@ -18,7 +18,7 @@ import {
   type PolicySetupResult,
 } from "@portal/api/policies";
 import { CatalogueSummary } from "@portal/components/policies/CatalogueSummary";
-import { PolicyCategoryCard } from "@portal/components/policies/PolicyCategoryCard";
+import { PolicyCatalogueTable } from "@portal/components/policies/PolicyCatalogueTable";
 import { PolicyDetailPanel } from "@portal/components/policies/PolicyDetailPanel";
 import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
 import { useAiEngineEnabled } from "@portal/hooks/useAiEngineEnabled";
@@ -53,14 +53,14 @@ export function Policies() {
   const { enabled: aiEngineEnabled, loading: aiEngineLoading } =
     useAiEngineEnabled();
 
-  function isLocked(entry: CatalogueEntry): boolean {
-    return (
+  const isLocked = useCallback(
+    (entry: CatalogueEntry): boolean =>
       entry.category.requiresAiEngine === true &&
       !aiEngineEnabled &&
       !aiEngineLoading &&
-      !entry.policy
-    );
-  }
+      !entry.policy,
+    [aiEngineEnabled, aiEngineLoading],
+  );
 
   const catalogue = data?.catalogue ?? [];
   const refetch = useCallback(() => setVersion((v) => v + 1), []);
@@ -184,17 +184,12 @@ export function Policies() {
       )}
 
       {!isLoading && !fetchError && (
-        <div className="portal-policies__grid">
-          {displayCatalogue.map((entry) => (
-            <PolicyCategoryCard
-              key={entry.category.id}
-              entry={entry}
-              onOpen={openEntry}
-              locked={isLocked(entry)}
-              lockedLabel={t("portal.policies.card.requiresAiEngine")}
-            />
-          ))}
-        </div>
+        <PolicyCatalogueTable
+          entries={displayCatalogue}
+          onOpen={openEntry}
+          isLocked={isLocked}
+          lockedLabel={t("portal.policies.card.requiresAiEngine")}
+        />
       )}
 
       <PolicyDetailPanel

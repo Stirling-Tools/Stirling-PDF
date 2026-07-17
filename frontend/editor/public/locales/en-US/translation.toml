@@ -7515,6 +7515,13 @@ label = "Docs enforced"
 description = "Configured but not firing"
 label = "Paused"
 
+[portal.policies.table]
+appliesTo = "Applies to"
+docs = "Docs enforced"
+enforces = "Enforces"
+policy = "Policy"
+status = "Status"
+
 [portal.policies.wizard.actions]
 back = "Back"
 cancel = "Cancel"
