@@ -4,6 +4,7 @@ import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
 import { policyAccentVar } from "@app/components/policies/policyStatus";
+import { isClassificationCategory } from "@app/data/policyCategories";
 import type { FileItemPolicyRef } from "@app/components/shared/PolicyBadges";
 
 /** How long after a run a badge counts as "recent" (drives the one-off glow).
@@ -107,6 +108,10 @@ export function buildPolicyBadgeMap(
   // status alone would drop the badge during that async gap.
   for (const run of runs) {
     if (!run.fileId) continue;
+    // Classification is metadata-only and runs fully async — it must never mark
+    // the file "enforcing", which is what blocks viewing/editing. It surfaces
+    // its labels once done instead of gating the file while it runs.
+    if (isClassificationCategory(run.categoryId)) continue;
     const settled =
       run.imported || run.status === "FAILED" || run.status === "CANCELLED";
     if (settled && !run.retrying) continue;

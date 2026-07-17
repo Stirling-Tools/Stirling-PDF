@@ -39,6 +39,7 @@ import { dispatchPaygLimitReached } from "@app/services/usageLimitBridge";
 import type { FileId } from "@app/types/file";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import { readClassificationLabelsFromFile } from "@app/services/fileClassification";
+import { isClassificationCategory } from "@app/data/policyCategories";
 import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
 import type { PoliciesByCategory } from "@app/types/policies";
 import { usePolicies } from "@app/hooks/usePolicies";
@@ -170,7 +171,17 @@ export function usePolicyAutoRun(): void {
               s.sources.includes("editor")) &&
             (s.runOn ?? "upload") === "upload",
         )
-        .sort(([, a], [, b]) => (a.order ?? 0) - (b.order ?? 0))
+        // Classification always runs LAST, regardless of its configured order:
+        // it's non-blocking and metadata-only, so it must come after every
+        // enforcement policy has finished forking its versions — otherwise it
+        // could let the user in first, then a later enforcement policy would fork
+        // a new version and drop the edits they made in the meantime.
+        .sort(([idA, a], [idB, b]) => {
+          const ca = isClassificationCategory(idA) ? 1 : 0;
+          const cb = isClassificationCategory(idB) ? 1 : 0;
+          if (ca !== cb) return ca - cb;
+          return (a.order ?? 0) - (b.order ?? 0);
+        })
         .map(([id]) => id),
     [policies],
   );
@@ -334,6 +345,17 @@ export function usePolicyAutoRun(): void {
         continue;
       }
       importing.current.add(run.runId);
+      // Classification is metadata-only: it never forks a version or shows up in
+      // history. Read the labels the classify step wrote and stamp them onto the
+      // file's existing stub in place, leaving the document the user is editing
+      // untouched.
+      if (isClassificationCategory(run.categoryId)) {
+        void importClassificationLabels(run, {
+          updateStirlingFileStub,
+          bumpRevision,
+        }).finally(() => importing.current.delete(run.runId));
+        continue;
+      }
       // Honour the policy's output mode: a new file, or a new version of the
       // input file it ran on (needs that input's stub, still in the workspace).
       const outputMode = policies[run.categoryId]?.outputMode ?? "new_version";
@@ -494,6 +516,69 @@ function categoryForPolicy(
   return Object.entries(policies).find(
     ([, s]) => s.backendId === policyId,
   )?.[0];
+}
+
+interface ClassificationImportContext {
+  updateStirlingFileStub: (
+    fileId: FileId,
+    updates: Partial<StirlingFileStub>,
+  ) => void;
+  bumpRevision: () => void;
+}
+
+/**
+ * Import a completed classification run's result as metadata only. The classify
+ * step returns the document with its labels written into the
+ * StirlingPDFClassification key; we read those labels and stamp them onto the
+ * file's existing stub (workspace + storage) IN PLACE — no versioned child, no
+ * consumeFiles, no history entry. The file the user is viewing/editing is left
+ * exactly as it was; only its tags appear.
+ *
+ * The stub is keyed by the file the run executed on (the leaf of the enforcement
+ * chain, since classification always runs last). Later edits inherit the labels
+ * through createChildStub / the CONSUME_FILES reducer, just like an enforcement
+ * policy's labels do.
+ */
+async function importClassificationLabels(
+  run: PolicyRunRecord,
+  ctx: ClassificationImportContext,
+): Promise<void> {
+  const targetId = run.fileId as FileId;
+  if (!targetId) {
+    // A server-reconciled run with no local input link — nothing to tag.
+    updateRun(run.runId, { imported: true });
+    return;
+  }
+  // Read the labels from the returned PDF's metadata. Try each output until one
+  // yields labels; a non-404 failure is transient, so bail without marking
+  // imported and let it retry next tick. A 404 (output aged out) just skips that
+  // output — nothing left to retry, so we settle below.
+  let labels: string[] | null = null;
+  for (const out of run.outputs) {
+    try {
+      const blob = await downloadPolicyOutput(out.fileId, run.target);
+      const file = new File([blob], out.fileName ?? run.fileName, {
+        type: blob.type || "application/pdf",
+      });
+      labels = await readClassificationLabelsFromFile(file);
+      if (labels && labels.length > 0) break;
+    } catch (err) {
+      if (!isNotFoundError(err)) return; // transient — retry on a later tick.
+    }
+  }
+  if (labels && labels.length > 0) {
+    const updates = { classificationLabels: labels };
+    ctx.updateStirlingFileStub(targetId, updates);
+    const ok = await fileStorage.updateFileMetadata(targetId, updates);
+    if (ok) ctx.bumpRevision();
+  }
+  // Settle the run either way (labels found, none found, or output gone), so it
+  // stops polling/re-importing. No outputFileIds — classification produces no
+  // workspace file, so it never gets a version badge; the labels are the result.
+  updateRun(run.runId, {
+    imported: true,
+    importedFileIds: run.outputs.map((o) => o.fileId),
+  });
 }
 
 /**
