@@ -6521,63 +6521,6 @@ title_other = "Обработайте {{allowance}} PDF бесплатно"
 titleWithRate_one = "Обработайте {{allowance}} PDF бесплатно, затем {{rate}}/PDF"
 titleWithRate_other = "Обработайте {{allowance}} PDF бесплатно, затем {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Заблокировано"
-openAriaLabel = "Открыть компонент {{name}}"
-
-[portal.catalogue.detail]
-addToProject = "Добавить в проект"
-ariaLabel = "Сведения о компоненте"
-tabsAriaLabel = "Разделы сведений о компоненте"
-upgradeToUnlock = "Обновите план, чтобы разблокировать"
-
-[portal.catalogue.detail.code]
-install = "Установка"
-usage = "Использование"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} включён начиная с плана {{tier}}. Обновите план, чтобы встроить его."
-title = "Недоступно на вашем плане"
-
-[portal.catalogue.detail.preview]
-badge = "Live preview"
-note = "Здесь отображается интерактивная песочница"
-
-[portal.catalogue.detail.pricing]
-note = "Тарифицируется за {{unit}}. Использование сверх месячной бесплатной квоты списывается с вашего аккаунта и деталлизируется в разделе Usage & Billing."
-
-[portal.catalogue.detail.stats]
-billedOn = "Тарифицируется по"
-embeds30d = "Встраивания (30 дн.)"
-freeQuota = "Бесплатная квота"
-freeQuotaValue = "{{amount}} / мес."
-maturity = "Зрелость"
-none = "Нет"
-perAction = "За действие"
-price = "Цена"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "Обзор"
-pricing = "Цены"
-props = "Свойства / API"
-
-[portal.catalogue.props]
-optional = "необязательно"
-required = "обязательно"
-
-[portal.catalogue.props.columns]
-description = "Описание"
-name = "Свойство"
-required = "Обязательно"
-type = "Тип"
-
-[portal.catalogue.summary]
-componentsGa = "Компоненты GA"
-componentSpendMtd = "Расходы на компоненты (MTD)"
-embedsThisMonth = "Встраивания в этом месяце"
-inBeta = "В Beta"
-
 [portal.components.billingUnit]
 approval = "утверждение"
 check = "проверка"
@@ -6590,18 +6533,6 @@ signature = "подпись"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Встраиваемые виджеты SDK, которые можно добавить в ваше приложение — просмотрщик, поток e-sign, панель AI-проверки. Каждый тарифицируется за действие. Нажмите карточку, чтобы увидеть установку, использование и свойства."
-title = "Компоненты"
-
-[portal.componentsView.empty]
-description = "Не удалось загрузить каталог компонентов. Попробуйте снова чуть позже."
-title = "Нет доступных компонентов"
-
-[portal.componentsView.lockedBanner]
-description = "Компоненты GA доступны на Pay-as-you-go; некоторые компоненты Beta доступны только для enterprise. Заблокированные карточки показывают подсказку об обновлении."
-title = "Для некоторых компонентов нужен платный план"
 
 [portal.docs.authentication]
 codeCaption = "каждый запрос"

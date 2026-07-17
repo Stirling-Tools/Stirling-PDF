@@ -1,6 +1,5 @@
 package stirling.software.proprietary.policy.engine.steps;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.stereotype.Service;
 
 import stirling.software.proprietary.policy.engine.PolicyStepValidator;
@@ -12,7 +11,6 @@ import stirling.software.proprietary.policy.model.PipelineStep;
  * checked here.
  */
 @Service
-@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class WatermarkStepValidator implements PolicyStepValidator {
 
     private static final String ENDPOINT = "/api/v1/security/add-watermark";

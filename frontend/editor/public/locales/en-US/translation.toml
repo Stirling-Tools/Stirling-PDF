@@ -4702,6 +4702,7 @@ login = "Login"
 magicLinkSent = "Magic link sent to {{email}}! Check your email and click the link to sign in."
 mfaCode = "Authentication Code"
 mfaRequired = "Two-factor code required"
+noAccount = "Don't have an account?"
 or = "Or"
 password = "Password"
 passwordChangedSuccess = "Password changed successfully! Please sign in with your new password."
@@ -4725,21 +4726,6 @@ useEmailInstead = "Login with email"
 useMagicLink = "Use magic link instead"
 username = "Username"
 youAreLoggedIn = "You are logged in!"
-
-[login.slides.edit]
-alt = "Edit PDFs"
-subtitle = "With over a dozen tools to help you redact, sign, read and manipulate PDFs, you will be sure to find what you are looking for."
-title = "Edit PDFs to display/secure the information you want"
-
-[login.slides.overview]
-alt = "Stirling PDF overview"
-subtitle = "A privacy-first cloud suite for PDFs that lets you convert, sign, redact, and manage documents, along with 50+ other powerful tools."
-title = "Your one-stop-shop for all your PDF needs."
-
-[login.slides.secure]
-alt = "Secure PDFs"
-subtitle = "Add passwords, redact content, and manage certificates with ease."
-title = "Protect sensitive information in your PDFs"
 
 [margin]
 large = "Large"
@@ -6421,63 +6407,6 @@ title_other = "Process {{allowance}} PDFs free"
 titleWithRate_one = "Process {{allowance}} PDFs free, then {{rate}}/PDF"
 titleWithRate_other = "Process {{allowance}} PDFs free, then {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Locked"
-openAriaLabel = "Open {{name}} component"
-
-[portal.catalogue.detail]
-addToProject = "Add to project"
-ariaLabel = "Component detail"
-tabsAriaLabel = "Component detail sections"
-upgradeToUnlock = "Upgrade to unlock"
-
-[portal.catalogue.detail.code]
-install = "Install"
-usage = "Usage"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} is included from the {{plan}}. Upgrade to embed it."
-title = "Not available on your plan"
-
-[portal.catalogue.detail.preview]
-badge = "Live preview"
-note = "Interactive sandbox renders here"
-
-[portal.catalogue.detail.pricing]
-note = "Metered per {{unit}}. Usage beyond the monthly free quota is billed to your account and itemised under Usage & Billing."
-
-[portal.catalogue.detail.stats]
-billedOn = "Billed on"
-embeds30d = "Embeds (30d)"
-freeQuota = "Free quota"
-freeQuotaValue = "{{amount}} / mo"
-maturity = "Maturity"
-none = "None"
-perAction = "Per action"
-price = "Price"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "Overview"
-pricing = "Pricing"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "optional"
-required = "required"
-
-[portal.catalogue.props.columns]
-description = "Description"
-name = "Prop"
-required = "Required"
-type = "Type"
-
-[portal.catalogue.summary]
-componentsGa = "Components GA"
-componentSpendMtd = "Component spend (MTD)"
-embedsThisMonth = "Embeds this month"
-inBeta = "In beta"
-
 [portal.components.billingUnit]
 approval = "approval"
 check = "check"
@@ -6490,18 +6419,6 @@ signature = "signature"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Embeddable SDK widgets you drop into your own app — a viewer, an e-sign flow, an AI review panel. Each is metered per action. Click a card for install, usage and props."
-title = "Components"
-
-[portal.componentsView.empty]
-description = "The component catalogue could not be loaded. Try again shortly."
-title = "No components available"
-
-[portal.componentsView.lockedBanner]
-description = "GA components are available on Pay-as-you-go; a few Beta components are enterprise-only. Locked cards show an upgrade nudge."
-title = "Some components need a paid plan"
 
 [portal.connections]
 createTitle = "New S3 connection"
@@ -6531,6 +6448,10 @@ namePlaceholder = "e.g. Claims bucket"
 bucket = "Bucket"
 name = "Name"
 region = "Region"
+
+[portal.docs]
+browse = "Browse docs"
+viewSource = "View source on GitHub"
 
 [portal.docs.authentication]
 codeCaption = "every request"
@@ -6617,10 +6538,18 @@ title = "Official SDKs"
 beta = "Beta"
 deprecated = "Deprecated"
 
+[portal.docs.search]
+empty = "No matching docs"
+placeholder = "Search docs"
+results = "{{count}} results"
+
 [portal.docs.skills]
 eyebrow = "SKILLS"
 lead = "Bundled, named capabilities your agent invokes as a single tool. Each skill is a deterministic op chain with evals attached."
 title = "Agent skills"
+
+[portal.docs.toc]
+title = "On this page"
 
 [portal.docs.webhooks]
 codeCaption = "document.processed"
@@ -7286,7 +7215,7 @@ storage = "Storage"
 [portal.nav]
 agent-builder = "Agent Builder"
 components = "Components"
-docs = "Developer Docs"
+docs = "Documentation"
 documents = "Documents"
 editor = "Editor"
 home = "Home"
@@ -7586,6 +7515,13 @@ label = "Docs enforced"
 description = "Configured but not firing"
 label = "Paused"
 
+[portal.policies.table]
+appliesTo = "Applies to"
+docs = "Docs enforced"
+enforces = "Enforces"
+policy = "Policy"
+status = "Status"
+
 [portal.policies.wizard]
 finishConfiguring = "Finish configuring \"{{capability}}\""
 
@@ -7700,6 +7636,48 @@ soon = "Soon"
 [portal.processingStatus]
 managePlan = "Manage plan"
 volumeSuffix = "PDFs processed · last 30 days"
+
+[portal.processorFlow]
+footnote = "Counts are over the last 24 hours. Flow speed is illustrative."
+liveBadge = "Live"
+stats = "{{connected}} connected · {{processed}} PDFs processed"
+title = "PDF Processor"
+
+[portal.processorFlow.lens]
+ariaLabel = "View mode"
+flow = "Flow"
+sankey = "Sankey"
+
+[portal.processorFlow.outcomes]
+count = "{{n}} · 24h"
+failed = "Failed"
+heading = "Outcomes"
+success = "Delivered"
+
+[portal.processorFlow.policies]
+activeCount = "{{n}} active"
+count = "{{n}} · 24h"
+heading = "Policies"
+setUp = "Set up"
+soon = "Soon"
+
+[portal.processorFlow.sankey]
+waist = "Policies · {{n}} active"
+
+[portal.processorFlow.sankey.empty]
+description = "Connect a source and switch on a policy to watch documents flow through the processor."
+title = "No flow yet"
+
+[portal.processorFlow.sources]
+comingSoonTag = "Connect"
+editor = "Stirling PDF Editor"
+heading = "Sources"
+perDay = "{{n}} / 24h"
+
+[portal.processorFlow.sources.comingSoon]
+apiMcp = "API · MCP"
+cloud = "Drive · Box · S3"
+email = "Email intake"
 
 [portal.procurement]
 subtitle = "Get your team evaluated, contracted, and onboarded. Every document in one place."
@@ -9000,9 +8978,18 @@ languageDescription = "Choose the display language"
 logout = "Log out"
 setAsDefault = "Set as Default"
 theme = "Theme"
+themeAccent = "Accent colour"
+themeAccentCustom = "Custom colour"
+themeAccentCustomHint = "Custom (defaults recommended)"
+themeAccentDark = "Dark mode accent colour"
+themeAccentDefault = "Default"
+themeAccentDefaultHint = "Default theme (recommended)"
+themeAccentDescription = "Buttons, links and highlights follow it, and it subtly tints the app. Light and dark each have their own. System uses whichever is active."
+themeAccentLight = "Light mode accent colour"
 themeDark = "Dark"
-themeDescription = "Choose light, dark, or follow your system"
+themeDescription = "Choose light, dark, or follow your system so it switches automatically."
 themeLight = "Light"
+themeReset = "Restore theme to default"
 themeSystem = "System"
 title = "General"
 user = "User"

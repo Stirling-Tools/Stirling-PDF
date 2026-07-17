@@ -24,11 +24,11 @@ import { initReactI18next } from "react-i18next";
 import { parse as parseToml } from "smol-toml";
 // Load the real English copy so stories render human text, not raw keys. Bundled
 // synchronously via ?raw so it's present on the very first render (no async flash).
-// eslint-disable-next-line no-restricted-imports -- Storybook-only: read the public i18n asset; no @-alias covers editor/public/.
-import enTranslationToml from "../editor/public/locales/en-US/translation.toml?raw";
+import enTranslationToml from "@public/locales/en-US/translation.toml?raw";
 
 import "@mantine/core/styles.css";
 import "@core/tokens/tokens.css";
+import "@core/theme/index.css";
 import "@core/tokens/base.css";
 
 // Storybook-only: init react-i18next with the real English resources parsed from
@@ -43,14 +43,32 @@ function parseEnTranslation(): Record<string, unknown> {
   }
 }
 
+const enTranslationResources = parseEnTranslation();
 if (!i18next.isInitialized) {
+  // initImmediate: false → initialise synchronously from the inline resources
+  // (there's no async backend here), so i18next is ready before the first story
+  // renders. Without it the first render can beat init and stick on raw keys.
   void i18next.use(initReactI18next).init({
-    lng: "en",
-    fallbackLng: "en",
-    resources: { en: { translation: parseEnTranslation() } },
+    lng: "en-US",
+    fallbackLng: "en-US",
+    supportedLngs: ["en-US"],
+    resources: { "en-US": { translation: enTranslationResources } },
     interpolation: { escapeValue: false },
     react: { useSuspense: false },
+    initImmediate: false,
   });
+} else {
+  // Something initialised i18next first (e.g. the app's async TOML backend):
+  // inject the shipped English copy under the resolved language so t() renders
+  // real copy, not raw keys.
+  const lng = i18next.resolvedLanguage || i18next.language || "en-US";
+  i18next.addResourceBundle(
+    lng,
+    "translation",
+    enTranslationResources,
+    true,
+    true,
+  );
 }
 
 // Start MSW once. Storybook runs in a browser so this uses the service worker.
@@ -124,6 +142,20 @@ function ThemeBridge({
   return <>{children}</>;
 }
 
+/**
+ * Sets the theme attributes colors.css needs — always `data-app-theme="custom"`
+ * with the fixed default accent (data-accent="default"), matching the editor.
+ */
+function SchemeSetup({ scheme }: { scheme: "light" | "dark" }) {
+  useEffect(() => {
+    const root = document.documentElement;
+    root.setAttribute("data-app-theme", "custom");
+    root.setAttribute("data-accent", "default");
+    root.setAttribute("data-mantine-color-scheme", scheme);
+  }, [scheme]);
+  return null;
+}
+
 const withProviders: Decorator = (Story, context) => {
   const tier = (context.globals.tier as Tier) ?? "pro";
   const linkState =
@@ -138,6 +170,7 @@ const withProviders: Decorator = (Story, context) => {
   return (
     <MemoryRouter initialEntries={["/"]}>
       <ThemeProvider>
+        <SchemeSetup scheme={colorScheme} />
         <ThemeBridge theme={colorScheme}>
           <SuiProvider colorScheme={colorScheme}>
             {/* LinkProvider must wrap TierProvider: TierContext derives its tier

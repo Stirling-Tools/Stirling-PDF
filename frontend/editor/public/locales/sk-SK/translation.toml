@@ -6521,63 +6521,6 @@ title_other = "Spracujte {{allowance}} PDF zadarmo"
 titleWithRate_one = "Spracujte {{allowance}} PDF zadarmo, potom {{rate}}/PDF"
 titleWithRate_other = "Spracujte {{allowance}} PDF zadarmo, potom {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Zamknuté"
-openAriaLabel = "Otvoriť komponent {{name}}"
-
-[portal.catalogue.detail]
-addToProject = "Pridať do projektu"
-ariaLabel = "Detail komponentu"
-tabsAriaLabel = "Sekcie detailu komponentu"
-upgradeToUnlock = "Prejdite na vyšší plán na odomknutie"
-
-[portal.catalogue.detail.code]
-install = "Inštalácia"
-usage = "Použitie"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} je zahrnuté od plánu {{tier}}. Prejdite na vyšší plán, aby ste ho mohli vložiť."
-title = "Nie je dostupné vo vašom pláne"
-
-[portal.catalogue.detail.preview]
-badge = "Živý náhľad"
-note = "Interaktívny sandbox sa vykreslí tu"
-
-[portal.catalogue.detail.pricing]
-note = "Merané za {{unit}}. Použitie nad mesačnú bezplatnú kvótu sa účtuje na váš účet a je rozpísané v časti Použitie a fakturácia."
-
-[portal.catalogue.detail.stats]
-billedOn = "Účtované podľa"
-embeds30d = "Vloženia (30 d)"
-freeQuota = "Bezplatná kvóta"
-freeQuotaValue = "{{amount}} / mes."
-maturity = "Vyspelosť"
-none = "Žiadne"
-perAction = "Za akciu"
-price = "Cena"
-
-[portal.catalogue.detail.tabs]
-code = "Kód"
-overview = "Prehľad"
-pricing = "Ceny"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "voliteľné"
-required = "povinné"
-
-[portal.catalogue.props.columns]
-description = "Popis"
-name = "Prop"
-required = "Povinné"
-type = "Typ"
-
-[portal.catalogue.summary]
-componentsGa = "Komponenty GA"
-componentSpendMtd = "Výdavky na komponenty (MTD)"
-embedsThisMonth = "Vloženia tento mesiac"
-inBeta = "V beta"
-
 [portal.components.billingUnit]
 approval = "schválenie"
 check = "kontrola"
@@ -6590,18 +6533,6 @@ signature = "podpis"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Vložiteľné SDK widgety, ktoré pridáte do vlastnej aplikácie — prehliadač, tok e-podpisu, panel AI kontroly. Každý je meraný za akciu. Kliknite na kartu pre inštaláciu, použitie a props."
-title = "Komponenty"
-
-[portal.componentsView.empty]
-description = "Katalóg komponentov sa nepodarilo načítať. Skúste to čoskoro znova."
-title = "Nie sú dostupné žiadne komponenty"
-
-[portal.componentsView.lockedBanner]
-description = "Komponenty GA sú dostupné v režime Pay-as-you-go; niekoľko komponentov Beta je iba pre Enterprise. Zamknuté karty zobrazujú výzvu na upgrade."
-title = "Niektoré komponenty vyžadujú platený plán"
 
 [portal.docs.authentication]
 codeCaption = "každá požiadavka"

@@ -36,7 +36,7 @@ import { isPolicyStepConfigured } from "@app/policies/stepValidity";
 import { fetchSources } from "@portal/api/sources";
 import { useAsync } from "@portal/hooks/useAsync";
 import { PolicyFieldRow } from "@portal/components/policies/PolicyFieldRow";
-import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
+import { PolicyCategoryBadge } from "@portal/components/policies/PolicyCategoryIcon";
 import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig";
 import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
 import { ClassificationLabelsSection } from "@portal/components/policies/ClassificationLabelsSection";
@@ -357,9 +357,7 @@ function PolicySetupWizardBody({
       width="lg"
       title={
         <span className="portal-policies__wizard-title">
-          <span className="portal-policies__cat-icon" aria-hidden>
-            {policyCategoryIcon(category.id)}
-          </span>
+          <PolicyCategoryBadge category={category} />
           {isEdit
             ? t("portal.policies.wizard.title.edit", {
                 category: t(category.label),
