@@ -44,7 +44,7 @@ export const Live: Story = {
 export const License: Story = {
   render: () => (
     <LicensePanel
-      licenseKey="STIRLING-ENT-8F2C-9K1M-3XQ7"
+      licenseKey="MOCK-ENTERPRISE-KEY-0001"
       offlineAvailable
       downloadingLicense={false}
       onDownloadOffline={() => {}}
@@ -56,7 +56,7 @@ export const License: Story = {
 export const LicenseOnlineOnly: Story = {
   render: () => (
     <LicensePanel
-      licenseKey="STIRLING-ENT-8F2C-9K1M-3XQ7"
+      licenseKey="MOCK-ENTERPRISE-KEY-0001"
       offlineAvailable={false}
       downloadingLicense={false}
       onDownloadOffline={() => {}}
@@ -68,7 +68,7 @@ export const LicenseOnlineOnly: Story = {
 export const LicenseDownloading: Story = {
   render: () => (
     <LicensePanel
-      licenseKey="STIRLING-ENT-8F2C-9K1M-3XQ7"
+      licenseKey="MOCK-ENTERPRISE-KEY-0001"
       offlineAvailable
       downloadingLicense
       onDownloadOffline={() => {}}

@@ -40,7 +40,7 @@ export const License: Story = {
     <LicenseModal
       open
       onClose={() => {}}
-      licenseKey="STIRLING-ENT-8F2C-9K1M-3XQ7"
+      licenseKey="MOCK-ENTERPRISE-KEY-0001"
       offlineAvailable
       downloadingLicense={false}
       onDownloadOffline={() => {}}
@@ -55,7 +55,7 @@ export const LicenseTrial: Story = {
     <LicenseModal
       open
       onClose={() => {}}
-      licenseKey="STIRLING-TRIAL-4D1A-7Z2K-0PQ9"
+      licenseKey="MOCK-TRIAL-KEY-0001"
       offlineAvailable
       downloadingLicense={false}
       onDownloadOffline={() => {}}
