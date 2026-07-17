@@ -36,6 +36,7 @@ ext {
     okhttpBomVersion = "5.3.2"
     gsonVersion = "2.14.0"
     guavaVersion = "33.6.0-jre"
+    xmlsecVersion = "4.0.4"
     jinjavaVersion = "2.8.3"
     jackson2Version = "2.21.4"
     bucket4jVersion = "8.19.0"
@@ -120,11 +121,16 @@ allprojects {
         resolutionStrategy.force "org.apache.commons:commons-lang3:${rootProject.ext.commonsLang3}"
         // CVE-2024-47554: use the Commons IO release containing the resource-exhaustion fix.
         resolutionStrategy.force "commons-io:commons-io:${rootProject.ext.commonsIoVersion}"
+        // CVE-2023-2976: prevent vulnerable Guava versions from transitive dependencies.
+        resolutionStrategy.force "com.google.guava:guava:${rootProject.ext.guavaVersion}"
+        // CVE-2023-44483: prevent private-key disclosure through XMLSec debug logging.
+        resolutionStrategy.force "org.apache.santuario:xmlsec:${rootProject.ext.xmlsecVersion}"
         resolutionStrategy.force "com.fasterxml.jackson.core:jackson-core:${rootProject.ext.jackson2Version}"
         resolutionStrategy.force "com.fasterxml.jackson.core:jackson-databind:${rootProject.ext.jackson2Version}"
         resolutionStrategy.force "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${rootProject.ext.jackson2Version}"
         resolutionStrategy.force "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${rootProject.ext.jackson2Version}"
         resolutionStrategy.force "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${rootProject.ext.jackson2Version}"
+        // CVE-2024-29857: retain the Bouncy Castle security baseline introduced in 1.78.
         resolutionStrategy.force "org.bouncycastle:bcprov-jdk18on:${rootProject.ext.bouncycastleVersion}"
         resolutionStrategy.force "org.bouncycastle:bcpkix-jdk18on:${rootProject.ext.bouncycastleVersion}"
         resolutionStrategy.force "org.bouncycastle:bcutil-jdk18on:${rootProject.ext.bouncycastleVersion}"
