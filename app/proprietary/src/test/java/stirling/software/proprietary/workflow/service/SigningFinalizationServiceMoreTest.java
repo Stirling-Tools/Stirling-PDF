@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -205,7 +206,11 @@ class SigningFinalizationServiceMoreTest {
                             any(),
                             any(),
                             any(),
-                            anyBoolean()))
+                            anyBoolean(),
+                            isNull(),
+                            isNull(),
+                            isNull(),
+                            isNull()))
                     .thenReturn(signedOut);
 
             byte[] original = singlePagePdf();
@@ -222,7 +227,11 @@ class SigningFinalizationServiceMoreTest {
                             any(),
                             any(),
                             any(),
-                            anyBoolean());
+                            anyBoolean(),
+                            isNull(),
+                            isNull(),
+                            isNull(),
+                            isNull());
         }
 
         @Test
@@ -252,7 +261,11 @@ class SigningFinalizationServiceMoreTest {
                             any(),
                             any(),
                             any(),
-                            anyBoolean()))
+                            anyBoolean(),
+                            isNull(),
+                            isNull(),
+                            isNull(),
+                            isNull()))
                     .thenReturn("ok".getBytes());
 
             service.finalizeDocument(session, singlePagePdf());
@@ -268,7 +281,11 @@ class SigningFinalizationServiceMoreTest {
                             eq("Participant 1"),
                             eq("London"),
                             eq("I approve"),
-                            anyBoolean());
+                            anyBoolean(),
+                            isNull(),
+                            isNull(),
+                            isNull(),
+                            isNull());
         }
     }
 
@@ -300,7 +317,11 @@ class SigningFinalizationServiceMoreTest {
                             any(),
                             any(),
                             any(),
-                            anyBoolean());
+                            anyBoolean(),
+                            isNull(),
+                            isNull(),
+                            isNull(),
+                            isNull());
         }
 
         @Test
@@ -326,7 +347,11 @@ class SigningFinalizationServiceMoreTest {
                             any(),
                             any(),
                             any(),
-                            anyBoolean());
+                            anyBoolean(),
+                            isNull(),
+                            isNull(),
+                            isNull(),
+                            isNull());
         }
 
         @Test
@@ -417,7 +442,11 @@ class SigningFinalizationServiceMoreTest {
                             any(),
                             any(),
                             any(),
-                            anyBoolean()))
+                            anyBoolean(),
+                            isNull(),
+                            isNull(),
+                            isNull(),
+                            isNull()))
                     .thenAnswer(inv -> inv.getArgument(0));
 
             byte[] result = service.finalizeDocument(session, original);
@@ -434,7 +463,11 @@ class SigningFinalizationServiceMoreTest {
                             any(),
                             any(),
                             any(),
-                            anyBoolean());
+                            anyBoolean(),
+                            isNull(),
+                            isNull(),
+                            isNull(),
+                            isNull());
         }
     }
 
@@ -537,7 +570,11 @@ class SigningFinalizationServiceMoreTest {
                             any(),
                             any(),
                             any(),
-                            anyBoolean()))
+                            anyBoolean(),
+                            isNull(),
+                            isNull(),
+                            isNull(),
+                            isNull()))
                     .thenReturn("jks-signed".getBytes());
 
             byte[] result = service.finalizeDocument(session, singlePagePdf());
@@ -609,7 +646,11 @@ class SigningFinalizationServiceMoreTest {
                             any(),
                             any(),
                             any(),
-                            anyBoolean()))
+                            anyBoolean(),
+                            isNull(),
+                            isNull(),
+                            isNull(),
+                            isNull()))
                     .thenReturn("server-signed".getBytes());
 
             byte[] result = service.finalizeDocument(session, singlePagePdf());
@@ -683,7 +724,11 @@ class SigningFinalizationServiceMoreTest {
                             any(),
                             any(),
                             any(),
-                            anyBoolean()))
+                            anyBoolean(),
+                            isNull(),
+                            isNull(),
+                            isNull(),
+                            isNull()))
                     .thenReturn("user-signed".getBytes());
 
             byte[] result = service.finalizeDocument(session, singlePagePdf());
@@ -719,7 +764,11 @@ class SigningFinalizationServiceMoreTest {
                             any(),
                             any(),
                             any(),
-                            anyBoolean()))
+                            anyBoolean(),
+                            isNull(),
+                            isNull(),
+                            isNull(),
+                            isNull()))
                     .thenReturn("ok".getBytes());
 
             byte[] result = service.finalizeDocument(session, singlePagePdf());

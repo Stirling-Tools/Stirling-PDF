@@ -20,6 +20,11 @@ public interface PdfSigningService {
      * @param location location string embedded in the signature
      * @param reason reason string embedded in the signature
      * @param showLogo whether to include the Stirling-PDF logo in the visible signature
+     * @param signatureRectX optional left edge as a page-width fraction (top-left origin); pass
+     *     null with the other rect args for the legacy default widget
+     * @param signatureRectY optional top edge as a page-height fraction (top-left origin)
+     * @param signatureRectWidth optional width as a page-width fraction
+     * @param signatureRectHeight optional height as a page-height fraction
      * @return signed PDF bytes
      * @throws Exception on any signing failure
      */
@@ -32,6 +37,10 @@ public interface PdfSigningService {
             String name,
             String location,
             String reason,
-            boolean showLogo)
+            boolean showLogo,
+            Double signatureRectX,
+            Double signatureRectY,
+            Double signatureRectWidth,
+            Double signatureRectHeight)
             throws Exception;
 }

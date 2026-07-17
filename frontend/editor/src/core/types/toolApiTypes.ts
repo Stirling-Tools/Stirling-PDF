@@ -1232,6 +1232,22 @@ export interface SignPDFWithCertRequest {
    * Whether to visually show the signature in the PDF file
    */
   showSignature?: boolean;
+  /**
+   * Left edge of the visible signature widget, as a fraction of the page width (0–1, top-left origin). Optional; omit all four rectangle fields to use the legacy default placement.
+   */
+  signatureRectX?: number;
+  /**
+   * Top edge of the visible signature widget, as a fraction of the page height (0–1, top-left origin).
+   */
+  signatureRectY?: number;
+  /**
+   * Width of the visible signature widget as a fraction of the page width
+   */
+  signatureRectWidth?: number;
+  /**
+   * Height of the visible signature widget as a fraction of the page height
+   */
+  signatureRectHeight?: number;
 }
 export interface SignatureValidationRequest {
   certFile?: string;

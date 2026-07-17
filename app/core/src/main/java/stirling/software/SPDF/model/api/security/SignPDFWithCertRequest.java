@@ -93,4 +93,36 @@ public class SignPDFWithCertRequest extends PDFFile {
             defaultValue = "true",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean showLogo;
+
+    // Optional widget placement: all four fields must be set together, or all omitted for the
+    // legacy 200×50 pt box at the page origin. Fractions use a top-left origin (wet-signature
+    // aligned); the controller converts to PDF user space (bottom-left).
+    @Schema(
+            description =
+                    "Left edge of the visible signature widget, as a fraction of the page width"
+                            + " (0–1, top-left origin). Optional; omit all four rectangle fields to"
+                            + " use the legacy default placement.",
+            minimum = "0",
+            maximum = "1")
+    private Double signatureRectX;
+
+    @Schema(
+            description =
+                    "Top edge of the visible signature widget, as a fraction of the page height"
+                            + " (0–1, top-left origin).",
+            minimum = "0",
+            maximum = "1")
+    private Double signatureRectY;
+
+    @Schema(
+            description = "Width of the visible signature widget as a fraction of the page width",
+            minimum = "0.01",
+            maximum = "1")
+    private Double signatureRectWidth;
+
+    @Schema(
+            description = "Height of the visible signature widget as a fraction of the page height",
+            minimum = "0.01",
+            maximum = "1")
+    private Double signatureRectHeight;
 }
