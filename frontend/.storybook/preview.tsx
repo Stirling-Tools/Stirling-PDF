@@ -56,13 +56,31 @@ for (const [path, raw] of Object.entries(localeModules)) {
 }
 
 if (!i18next.isInitialized) {
+  // initImmediate: false → initialise synchronously from the inline resources
+  // (there's no async backend here), so i18next is ready before the first story
+  // renders. Without it the first render can beat init and stick on raw keys.
   void i18next.use(initReactI18next).init({
     lng: "en-US",
     fallbackLng: "en-US",
+    supportedLngs: Object.keys(resources),
     resources,
     interpolation: { escapeValue: false },
     react: { useSuspense: false },
+    initImmediate: false,
   });
+} else {
+  // Something initialised i18next first (e.g. the app's async TOML backend):
+  // inject every shipped locale's copy so t() renders real copy, not raw keys,
+  // and the toolbar switcher can still change to any of them.
+  for (const [lng, bundle] of Object.entries(resources)) {
+    i18next.addResourceBundle(
+      lng,
+      "translation",
+      bundle.translation,
+      true,
+      true,
+    );
+  }
 }
 
 // Start MSW once. Storybook runs in a browser so this uses the service worker.

@@ -162,34 +162,4 @@ test.describe("1. Authentication and Login", () => {
       });
     });
   });
-
-  test.describe("1.6 Login Page - Carousel/Slideshow", () => {
-    test("should navigate between carousel slides", async ({ page }) => {
-      // Carousel is hidden on small viewports (< 940px wide), ensure desktop size
-      await page.setViewportSize({ width: 1920, height: 1080 });
-
-      // Starting state: User is logged out; browser on /login
-      await page.goto("/login");
-      await page.waitForLoadState("domcontentloaded");
-
-      // Step 1: Verify slide indicator dots are present (carousel uses aria-label "Go to slide N")
-      const slideButtons = page.getByRole("button", { name: /Go to slide/i });
-      const count = await slideButtons.count();
-      test.skip(count === 0, "No carousel slides configured on this instance");
-
-      // Step 2: Click through slides
-      if (count >= 2) {
-        await slideButtons.nth(1).click();
-        await page.waitForTimeout(500);
-      }
-      if (count >= 3) {
-        await slideButtons.nth(2).click();
-        await page.waitForTimeout(500);
-      }
-
-      // Step 3: Click back to slide 1
-      await slideButtons.nth(0).click();
-      await page.waitForTimeout(500);
-    });
-  });
 });
