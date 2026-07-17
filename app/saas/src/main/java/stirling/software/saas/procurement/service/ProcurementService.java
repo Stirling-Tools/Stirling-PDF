@@ -283,6 +283,18 @@ public class ProcurementService {
     }
 
     /**
+     * The current (unsigned) agreement rendered to PDF, for download at the sign step. Empty when
+     * there's no quote yet or the render runtime is unavailable. The signed PDF (with the signature
+     * block filled) is a separate artifact recorded at signing (see {@link #latestSignature}).
+     */
+    @Transactional(readOnly = true)
+    public Optional<byte[]> agreementDocumentPdf(Long teamId) {
+        return currentQuote(teamId)
+                .map(q -> agreementAssembler.assemble(q, null))
+                .map(a -> agreementPdfRenderer.tryRender(a.markdown()));
+    }
+
+    /**
      * Record a signed enterprise agreement: assemble the final document, hash it, render + store
      * the PDF (best-effort), and persist an immutable signature pinned to the exact document
      * version. Does not itself accept the quote into a subscription — the caller proceeds to accept
@@ -335,6 +347,42 @@ public class ProcurementService {
                         deal ->
                                 signatureRepo.findFirstByDealIdOrderBySignedAtDesc(
                                         deal.getDealId()));
+    }
+
+    /**
+     * The version label of the deal's latest signed agreement that has a downloadable PDF, if any.
+     * Used to surface the "download signed agreement" action only when a file actually exists (the
+     * snapshot polls this, so it deliberately avoids loading the PDF bytes).
+     */
+    @Transactional(readOnly = true)
+    public Optional<String> signedAgreementLabel(Long dealId) {
+        return signatureRepo.findSignedLabels(dealId).stream().findFirst();
+    }
+
+    /**
+     * The signed agreement as a PDF for download: the artifact stored at signing, or — if the
+     * render runtime was unavailable then — re-rendered now from the signature's details. Empty
+     * when the team has no signature or the render runtime is still unavailable.
+     */
+    @Transactional(readOnly = true)
+    public Optional<byte[]> signedAgreementPdf(Long teamId) {
+        return latestSignature(teamId)
+                .flatMap(
+                        sig -> {
+                            if (sig.getPdf() != null) return Optional.of(sig.getPdf());
+                            return quoteRepo
+                                    .findById(sig.getQuoteId())
+                                    .map(
+                                            q ->
+                                                    agreementAssembler.assemble(
+                                                            q,
+                                                            new AgreementSigning(
+                                                                    sig.getCustomerLegalName(),
+                                                                    sig.getSignatoryName(),
+                                                                    sig.getSignatoryTitle(),
+                                                                    sig.isAuthorityConfirmed())))
+                                    .map(a -> agreementPdfRenderer.tryRender(a.markdown()));
+                        });
     }
 
     private static String sha256(String s) {

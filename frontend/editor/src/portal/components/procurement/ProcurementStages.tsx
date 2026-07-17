@@ -9,13 +9,20 @@ import "@portal/views/Procurement.css";
  * a pure presentational view driven by props; ProcurementHome owns the state and the actions.
  */
 
-/** The subscription-created step: pay or download the first invoice. */
+/** The subscription-created step: pay or download the first invoice, and the signed agreement. */
 export function PaymentStageCard({
   invoiceUrl,
   invoicePdf,
+  signedAgreementVersion,
+  downloadingAgreement,
+  onDownloadSignedAgreement,
 }: {
   invoiceUrl?: string | null;
   invoicePdf?: string | null;
+  /** Version label of the signed agreement PDF, if one is available to download. */
+  signedAgreementVersion?: string | null;
+  downloadingAgreement?: boolean;
+  onDownloadSignedAgreement?: () => void;
 }) {
   const { t } = useTranslation();
   return (
@@ -26,7 +33,7 @@ export function PaymentStageCard({
       <p className="portal-proc__subtitle">
         {t("portal.procurement.payment.description")}
       </p>
-      {(invoiceUrl || invoicePdf) && (
+      {(invoiceUrl || invoicePdf || signedAgreementVersion) && (
         <div className="portal-proc__payment-actions">
           {invoiceUrl && (
             <Button
@@ -45,6 +52,15 @@ export function PaymentStageCard({
               {t("portal.procurement.payment.downloadInvoice")}
             </Button>
           )}
+          {signedAgreementVersion && onDownloadSignedAgreement && (
+            <Button
+              variant="secondary"
+              loading={downloadingAgreement}
+              onClick={onDownloadSignedAgreement}
+            >
+              {t("portal.procurement.payment.downloadAgreement")}
+            </Button>
+          )}
         </div>
       )}
     </Card>
@@ -52,7 +68,15 @@ export function PaymentStageCard({
 }
 
 /** The live confirmation once the deal is active. */
-export function LiveStageCard() {
+export function LiveStageCard({
+  signedAgreementVersion,
+  downloadingAgreement,
+  onDownloadSignedAgreement,
+}: {
+  signedAgreementVersion?: string | null;
+  downloadingAgreement?: boolean;
+  onDownloadSignedAgreement?: () => void;
+} = {}) {
   const { t } = useTranslation();
   return (
     <Card padding="loose">
@@ -65,6 +89,17 @@ export function LiveStageCard() {
       <p className="portal-proc__subtitle">
         {t("portal.procurement.live.description")}
       </p>
+      {signedAgreementVersion && onDownloadSignedAgreement && (
+        <div className="portal-proc__payment-actions">
+          <Button
+            variant="secondary"
+            loading={downloadingAgreement}
+            onClick={onDownloadSignedAgreement}
+          >
+            {t("portal.procurement.payment.downloadAgreement")}
+          </Button>
+        </div>
+      )}
     </Card>
   );
 }

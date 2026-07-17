@@ -84,8 +84,10 @@ tasks:
       # Only the worktree folder basename (e.g. "wt1") is exposed — never the
       # full path, hostname, or user. Consumed at dev-serve time by vite.config
       # and dropped from production builds.
+      # Use shell parameter expansion (works in go-task's built-in shell on every
+      # platform) rather than `basename`, which isn't on PATH under Windows PowerShell.
       STIRLING_DEV_LABEL:
-        sh: basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+        sh: dir="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"; echo "${dir##*/}"
     cmds:
       - npx vite editor --mode {{.MODE}} --port {{.PORT}}{{if .OPEN}} --open{{end}}
 

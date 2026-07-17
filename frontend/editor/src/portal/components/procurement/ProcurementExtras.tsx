@@ -1,11 +1,18 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { Button } from "@app/ui";
-import type { ProcurementSnapshot } from "@portal/api/procurement";
+import {
+  fetchLegalDocument,
+  recordLegalConsent,
+  type ProcurementSnapshot,
+} from "@portal/api/procurement";
 import { CalendlyInline } from "@portal/components/procurement/CalendlyInline";
 import { LicensePanel } from "@portal/components/procurement/ProcurementStages";
 import { useFocusTrap } from "@portal/components/procurement/ProcurementModal";
+import { useAsync } from "@portal/hooks/useAsync";
 import "@portal/views/Procurement.css";
 
 /**
@@ -71,6 +78,211 @@ function SideModal({
       </div>
     </div>,
     document.body,
+  );
+}
+
+/**
+ * Reader for a versioned legal document (EULA, SLA exhibit, subprocessors), fetched from the
+ * backend registry and rendered as markdown. Open when {@code docId} is set. Drafts are badged.
+ */
+export function LegalDocumentModal({
+  docId,
+  onClose,
+}: {
+  docId: string | null;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const { data, loading } = useAsync(
+    () => (docId ? fetchLegalDocument(docId) : Promise.resolve(null)),
+    [docId],
+  );
+  return (
+    <SideModal
+      open={docId !== null}
+      onClose={onClose}
+      wide
+      title={data?.displayName ?? t("portal.legal.title")}
+      subtitle={
+        data
+          ? data.status !== "final"
+            ? t("portal.legal.draft", { label: data.versionLabel })
+            : data.versionLabel
+          : undefined
+      }
+    >
+      {loading && (
+        <p className="portal-sidemodal__text">{t("portal.legal.loading")}</p>
+      )}
+      {!loading && !data && (
+        <p className="portal-sidemodal__text">{t("portal.legal.loadError")}</p>
+      )}
+      {data && (
+        <div className="portal-agreement__md">
+          <Markdown remarkPlugins={[remarkGfm]}>{data.markdown}</Markdown>
+        </div>
+      )}
+    </SideModal>
+  );
+}
+
+// ── Documents ────────────────────────────────────────────────────────────────
+/**
+ * The deal's paperwork in one place, reachable throughout the journey (not tied to the current
+ * stage): the enterprise agreement, the quote, the invoice, and the reference documents (EULA, SLA
+ * exhibit, subprocessors). Each row downloads or views the real artifact when it's available, and
+ * reads as "available later" until then. The per-stage download buttons remain the primary path;
+ * this is the secondary, always-on reference.
+ */
+export function DocumentsModal({
+  open,
+  onClose,
+  agreementVersion,
+  downloadingAgreement,
+  onDownloadAgreement,
+  onViewAgreement,
+  quoteAvailable,
+  downloadingQuote,
+  onDownloadQuote,
+  invoiceUrl,
+  invoicePdf,
+}: {
+  open: boolean;
+  onClose: () => void;
+  agreementVersion?: string | null;
+  downloadingAgreement?: boolean;
+  onDownloadAgreement: () => void;
+  /** Jump to the agreement/sign stage in the flow (used before it's signed). */
+  onViewAgreement: () => void;
+  quoteAvailable: boolean;
+  downloadingQuote?: boolean;
+  onDownloadQuote: () => void;
+  invoiceUrl?: string | null;
+  invoicePdf?: string | null;
+}) {
+  const { t } = useTranslation();
+  const [legalDoc, setLegalDoc] = useState<string | null>(null);
+  const invoice = invoiceUrl || invoicePdf || null;
+
+  return (
+    <>
+      <SideModal
+        open={open}
+        onClose={onClose}
+        title={t("portal.procurement.documents.title")}
+        subtitle={t("portal.procurement.documents.subtitle")}
+      >
+        <ul className="portal-docmodal">
+          <DocItem
+            name={t("portal.procurement.documents.agreement")}
+            sub={
+              agreementVersion ?? t("portal.procurement.documents.agreementSub")
+            }
+            action={
+              agreementVersion
+                ? {
+                    label: t("portal.procurement.documents.download"),
+                    onClick: onDownloadAgreement,
+                    loading: downloadingAgreement,
+                  }
+                : quoteAvailable
+                  ? {
+                      label: t("portal.procurement.documents.view"),
+                      onClick: onViewAgreement,
+                    }
+                  : {
+                      unavailable: t("portal.procurement.documents.laterQuote"),
+                    }
+            }
+          />
+          <DocItem
+            name={t("portal.procurement.documents.quote")}
+            sub={t("portal.procurement.documents.quoteSub")}
+            action={
+              quoteAvailable
+                ? {
+                    label: t("portal.procurement.documents.download"),
+                    onClick: onDownloadQuote,
+                    loading: downloadingQuote,
+                  }
+                : { unavailable: t("portal.procurement.documents.laterQuote") }
+            }
+          />
+          <DocItem
+            name={t("portal.procurement.documents.invoice")}
+            sub={t("portal.procurement.documents.invoiceSub")}
+            action={
+              invoice
+                ? {
+                    label: t("portal.procurement.documents.view"),
+                    onClick: () => window.open(invoice, "_blank", "noopener"),
+                  }
+                : {
+                    unavailable: t("portal.procurement.documents.laterInvoice"),
+                  }
+            }
+          />
+          <DocItem
+            name={t("portal.procurement.documents.eula")}
+            sub={t("portal.procurement.documents.eulaSub")}
+            action={{
+              label: t("portal.procurement.documents.view"),
+              onClick: () => setLegalDoc("eula"),
+            }}
+          />
+          <DocItem
+            name={t("portal.procurement.documents.sla")}
+            sub={t("portal.procurement.documents.slaSub")}
+            action={{
+              label: t("portal.procurement.documents.view"),
+              onClick: () => setLegalDoc("sla"),
+            }}
+          />
+          <DocItem
+            name={t("portal.procurement.documents.subprocessors")}
+            sub={t("portal.procurement.documents.subprocessorsSub")}
+            action={{
+              label: t("portal.procurement.documents.view"),
+              onClick: () => setLegalDoc("subprocessors"),
+            }}
+          />
+        </ul>
+      </SideModal>
+      <LegalDocumentModal docId={legalDoc} onClose={() => setLegalDoc(null)} />
+    </>
+  );
+}
+
+/** One row in the Documents list: name + sub on the left, an action button or a muted note. */
+function DocItem({
+  name,
+  sub,
+  action,
+}: {
+  name: string;
+  sub: string;
+  action:
+    | { label: string; onClick: () => void; loading?: boolean }
+    | { unavailable: string };
+}) {
+  return (
+    <li className="portal-docmodal__row">
+      <div className="portal-docmodal__text">
+        <span className="portal-docmodal__name">{name}</span>
+        <span className="portal-docmodal__sub">{sub}</span>
+      </div>
+      {"unavailable" in action ? (
+        <span className="portal-docmodal__later">{action.unavailable}</span>
+      ) : (
+        <Button
+          variant="secondary"
+          loading={action.loading}
+          onClick={action.onClick}
+        >
+          {action.label}
+        </Button>
+      )}
+    </li>
   );
 }
 
@@ -164,72 +376,102 @@ export function TrialSetupModal({
   const { t } = useTranslation();
   const [deployment, setDeployment] = useState<string>("cloud");
   const [seats, setSeats] = useState("");
+  const [eula, setEula] = useState(false);
+  const [legalDoc, setLegalDoc] = useState<string | null>(null);
 
   // Reset to defaults each time the dialog opens, so a cancelled setup doesn't linger.
   useEffect(() => {
     if (open) {
       setDeployment("cloud");
       setSeats("");
+      setEula(false);
     }
   }, [open]);
 
-  return (
-    <SideModal
-      open={open}
-      onClose={onClose}
-      title={t("portal.procurement.setup.title")}
-      subtitle={t("portal.procurement.setup.subtitle")}
-      footer={
-        <Button
-          variant="primary"
-          accent="premium"
-          loading={busy}
-          onClick={() => onConfirm(deployment, Math.max(0, Number(seats) || 0))}
-        >
-          {t("portal.procurement.setup.start")}
-        </Button>
-      }
-    >
-      <label className="portal-qb__field">
-        <span className="portal-qb__field-label">
-          {t("portal.procurement.setup.deployment")}
-        </span>
-        <div className="portal-qb__opts">
-          {DEPLOYMENTS.map((d) => (
-            <button
-              key={d}
-              type="button"
-              className="portal-qb__opt"
-              data-on={deployment === d || undefined}
-              onClick={() => setDeployment(d)}
-            >
-              <span className="portal-qb__opt-title">
-                {t(`portal.procurement.setup.${d}`)}
-              </span>
-              <span className="portal-qb__opt-sub">
-                {t(`portal.procurement.setup.${d}Sub`)}
-              </span>
-            </button>
-          ))}
-        </div>
-      </label>
+  const confirm = () => {
+    void recordLegalConsent("eula", "trial"); // clickwrap consent, best-effort
+    onConfirm(deployment, Math.max(0, Number(seats) || 0));
+  };
 
-      <label className="portal-qb__field">
-        <span className="portal-qb__field-label">
-          {t("portal.procurement.setup.seats")}
-        </span>
-        <input
-          type="number"
-          min={0}
-          placeholder={t("portal.procurement.setup.seatsPlaceholder")}
-          value={seats}
-          onChange={(e) => setSeats(e.target.value)}
-        />
-      </label>
-      <p className="portal-sidemodal__text">
-        {t("portal.procurement.setup.seatsHint")}
-      </p>
-    </SideModal>
+  return (
+    <>
+      <SideModal
+        open={open}
+        onClose={onClose}
+        title={t("portal.procurement.setup.title")}
+        subtitle={t("portal.procurement.setup.subtitle")}
+        footer={
+          <Button
+            variant="primary"
+            accent="premium"
+            loading={busy}
+            disabled={!eula}
+            onClick={confirm}
+          >
+            {t("portal.procurement.setup.start")}
+          </Button>
+        }
+      >
+        <label className="portal-qb__field">
+          <span className="portal-qb__field-label">
+            {t("portal.procurement.setup.deployment")}
+          </span>
+          <div className="portal-qb__opts">
+            {DEPLOYMENTS.map((d) => (
+              <button
+                key={d}
+                type="button"
+                className="portal-qb__opt"
+                data-on={deployment === d || undefined}
+                onClick={() => setDeployment(d)}
+              >
+                <span className="portal-qb__opt-title">
+                  {t(`portal.procurement.setup.${d}`)}
+                </span>
+                <span className="portal-qb__opt-sub">
+                  {t(`portal.procurement.setup.${d}Sub`)}
+                </span>
+              </button>
+            ))}
+          </div>
+        </label>
+
+        <label className="portal-qb__field">
+          <span className="portal-qb__field-label">
+            {t("portal.procurement.setup.seats")}
+          </span>
+          <input
+            type="number"
+            min={0}
+            placeholder={t("portal.procurement.setup.seatsPlaceholder")}
+            value={seats}
+            onChange={(e) => setSeats(e.target.value)}
+          />
+        </label>
+        <p className="portal-sidemodal__text">
+          {t("portal.procurement.setup.seatsHint")}
+        </p>
+
+        <label className="portal-qb__eula">
+          <input
+            type="checkbox"
+            checked={eula}
+            onChange={(e) => setEula(e.target.checked)}
+          />
+          <span>
+            {t("portal.procurement.setup.eula")}{" "}
+            <button
+              type="button"
+              className="portal-legal__link"
+              onClick={() => setLegalDoc("eula")}
+            >
+              {t("portal.procurement.setup.viewEula")}
+            </button>
+          </span>
+        </label>
+      </SideModal>
+      <LegalDocumentModal docId={legalDoc} onClose={() => setLegalDoc(null)} />
+    </>
   );
 }
 

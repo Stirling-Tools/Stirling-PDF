@@ -74,14 +74,11 @@ export const JOURNEY: JourneyStep[] = [
 ];
 
 /**
- * The commercial flow's stepper stages. The real backend collapses quote + agreement into one
- * accept step (accepting the issued quote is accepting the agreement), so the flow shows one fewer
- * step than the mock ledger's {@link JOURNEY} — the separate "Agreement" step is dropped. Reuses
- * JOURNEY's i18n keys.
+ * The commercial flow's stepper stages. Quote and Agreement are distinct steps: the buyer reviews
+ * and accepts the quote first (no Stripe), then reviews and signs the enterprise agreement (which
+ * accepts into a committed subscription). The full {@link JOURNEY} is rendered as-is.
  */
-export const FLOW_JOURNEY: JourneyStep[] = JOURNEY.filter(
-  (s) => s.stage !== "security",
-);
+export const FLOW_JOURNEY: JourneyStep[] = JOURNEY;
 
 /* ──────────────────────────────────────────────────────────────────────── */
 /*  Deal header                                                              */
@@ -332,6 +329,8 @@ export interface ProcurementSnapshot {
   licensed: boolean;
   /** The team's Keygen licence key (present once licensed); shown in the portal to copy/install. */
   licenseKey: string | null;
+  /** Version label of the signed agreement PDF available to download (e.g. "SEA v0.9.1"), else null. */
+  agreementSignedVersion: string | null;
   latestQuote: QuoteResult | null;
 }
 
@@ -461,6 +460,37 @@ export function recordAgreementSignature(
     "/api/v1/procurement/agreement/sign",
     { method: "POST", body: input },
   );
+}
+
+/** Fetch a static legal document (eula, sla, subprocessors) by id for in-product viewing. */
+export function fetchLegalDocument(docId: string): Promise<AgreementDocument> {
+  return apiClient.saas.json<AgreementDocument>(`/api/v1/legal/${docId}`);
+}
+
+/** Download the stored, signed enterprise-agreement PDF for the team (post-signing). */
+export function fetchSignedAgreementPdf(): Promise<Blob> {
+  return apiClient.saas.blob("/api/v1/procurement/agreement/signature/pdf");
+}
+
+/** Download the current (unsigned) enterprise-agreement PDF — the document shown at the sign step. */
+export function fetchAgreementPdf(): Promise<Blob> {
+  return apiClient.saas.blob("/api/v1/procurement/agreement/document/pdf");
+}
+
+/**
+ * Record a clickwrap consent to a legal document (e.g. the EULA at trial start / quote generation).
+ * Best-effort — never block the flow it accompanies on a consent-logging failure.
+ */
+export function recordLegalConsent(
+  documentId: string,
+  context: string,
+): Promise<void> {
+  return apiClient.saas
+    .json<void>("/api/v1/legal/consent", {
+      method: "POST",
+      body: { documentId, context },
+    })
+    .catch(() => undefined);
 }
 
 // ---- Stripe Quote operations (Supabase edge functions) ---------------------

@@ -1,5 +1,7 @@
 # Stirling EULA & Commercial Terms
 
+This document fills the EULA slot the website Terms of Service §5 already contemplates ("If a separate end-user license (EULA) accompanies software, that license governs to the extent of any conflict"). It carries the commercial terms of the actual product: the PDF Process meter, spend limits, prepaid capacity, the free allotment, trials, self-hosted licensing, and AI features. For customers under a signed Stirling Enterprise Agreement, that agreement controls.
+
 **Effective:** {{version_date}} · **Version:** {{version}}
 
 ## 1. Agreement; precedence
@@ -22,11 +24,9 @@ These EULA & Commercial Terms ("EULA") supplement the Stirling Terms of Service 
 
 4.3 **Invoices.** Usage is invoiced monthly on the 1st for the prior cycle, charged to your payment method on file (card or ACH debit). You authorize these charges.
 
-4.4 **Threshold charges.** We may charge your payment method when accrued usage reaches a threshold, rather than only monthly. The applicable threshold is displayed in Usage & Billing before it applies, changes only prospectively with notice in the product, and threshold charges never increase your total usage charges — they only change when accrued usage is collected. Each threshold charge is itemized on your usage statement.
+4.4 **Usage records.** The Processor's audit log is the system of record, subject to Section 4.5. Your Usage & Billing page shows consumption, and a per-file usage statement (name, size, processes, charge) is available for download.
 
-4.5 **Usage records.** The Processor's audit log is the system of record, subject to Section 4.6. Your Usage & Billing page shows consumption, and a per-file usage statement (name, size, processes, charge) is available for download.
-
-4.6 **Billing disputes.** You may dispute a charge or metering record in good faith within sixty (60) days of the invoice or charge date. We will investigate, provide the relevant usage-statement detail, and correct confirmed errors by credit or refund. The audit log is presumptively accurate but not conclusive; reasonable contrary evidence will be considered. Undisputed amounts remain payable.
+4.5 **Billing disputes.** You may dispute a charge or metering record in good faith within sixty (60) days of the invoice or charge date. We will investigate, provide the relevant usage-statement detail, and correct confirmed errors by credit or refund. The audit log is presumptively accurate but not conclusive; reasonable contrary evidence will be considered. Undisputed amounts remain payable.
 
 ## 5. Spend limits
 
@@ -50,7 +50,7 @@ You may revert to the free Editor plan at any time from Usage & Billing. Accrued
 
 ## 8. AI features
 
-The classification, extraction, redaction-assist, and Stirling Agent features use machine-learning models from the providers listed at {{subprocessor_url}}. Currently: **Anthropic** (Claude models), which receives prompts and queries only; and **Voyage AI** (embedding models), which receives extracted text excerpts solely to generate embeddings when you enable Ingestion/RAG features. **Your files are never transmitted to any AI provider.** AI charges are included in the price of whatever runs — there is no separate AI surcharge. Your content is not used to train models, by us or by these providers (verified against our signed provider agreements). AI outputs are probabilistic; review outputs before relying on them where accuracy has legal effect.
+AI features — classification, extraction, redaction-assist, and the Stirling Agent — are optional. They run only when you invoke a feature that uses them, and an administrator can disable them for the workspace; the rest of the Processor works without them. When used, they call machine-learning models from the providers listed at {{subprocessor_url}}. Currently: **Anthropic** (Claude models), which receives prompts and the document text or excerpts needed to perform the requested task; and **Voyage AI** (embedding models), which receives extracted text excerpts solely to generate embeddings when you enable Ingestion/RAG features. Only the document text or excerpts needed for the requested feature are sent — not your whole files — and only when that feature runs. AI charges are included in the price of whatever runs — there is no separate AI surcharge. Your content is not used to train models, by us or by these providers (verified against our signed provider agreements). AI outputs are probabilistic; review outputs before relying on them where accuracy has legal effect.
 
 ## 9. Evaluations and trials
 

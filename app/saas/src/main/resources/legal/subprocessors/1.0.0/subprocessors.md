@@ -2,7 +2,7 @@
 
 Referenced by DPA §C5 and Annex III, and by EULA §8. Changes to this list carry 30 days' notice per DPA §C5. Last updated: {{version_date}}.
 
-Stirling PDF, Inc. uses the following subprocessors to provide the Services. Customer files are processed within Stirling's own infrastructure; **no customer files are transmitted to any AI provider.**
+Stirling PDF, Inc. uses the following subprocessors to provide the Services. Customer files are processed within Stirling's own infrastructure. AI features are optional and can be disabled; where they are used, AI providers receive only the document text or excerpts needed for the requested feature, never whole customer files.
 
 | Subprocessor | Purpose | Data processed | Location |
 | --- | --- | --- | --- |
@@ -10,7 +10,7 @@ Stirling PDF, Inc. uses the following subprocessors to provide the Services. Cus
 | **Stripe** | Payment processing | Billing contact and transaction data. Payment card details go directly to Stripe, which acts as an independent controller for them | United States |
 | **Supabase** | Account and workspace data infrastructure | Account, workspace, and configuration data | United States |
 | **Google** | Transactional and operational email delivery | Names, email addresses, message content of service emails | United States |
-| **Anthropic** | AI models (Claude) powering the Stirling Agent and AI-assisted features | Prompts and queries only — never customer files | United States |
+| **Anthropic** | AI models (Claude) powering the Stirling Agent and AI-assisted features | Prompts and the document text or excerpts needed for the requested feature — never whole files; only where AI features are used | United States |
 | **Voyage AI** | Embedding models for Ingestion/RAG features | Extracted text excerpts, only where the customer enables Ingestion/RAG, solely to generate embeddings — never customer files | United States |
 | **PostHog** | Product telemetry and usage analytics | Pseudonymous usage events and diagnostic data — never file content | European Union (EU-hosted) |
 

@@ -113,7 +113,9 @@ public class AgreementAssembler {
         t.put("term_discount_pct", pricing.termDiscountPct(quote.getTermYears()) + "%");
         t.put("sla_tier", slaTier(quote.getServiceLevel()));
         t.put("annual_fee_y1", money(quote.getAnnualNetMinor()));
+        t.put("contract_total", money(quote.getTcvMinor()));
         t.put("elected_or_not", quote.isIndemnification() ? "Elected" : "Not elected");
+        t.put("po_number", notBlank(quote.getPoNumber()) ? quote.getPoNumber().trim() : "—");
         t.put(
                 "customer_signatory",
                 signed && notBlank(signing.signatoryName())
@@ -138,6 +140,7 @@ public class AgreementAssembler {
         sb.append("| Term | Value |\n| --- | --- |\n");
         row(sb, "Customer", "{{customer_legal_name}}");
         row(sb, "Subscription", "Enterprise · {{deployment}}");
+        row(sb, "Purchase order", "{{po_number}}");
         row(sb, "Committed Volume", "{{committed_pdfs_yr}} PDFs / year at the {{posture}} posture");
         row(sb, "Committed rate", "{{rate_per_pdf}} per PDF");
         row(sb, "Service level", "{{sla_tier}} (per SLA Exhibit)");
@@ -147,8 +150,13 @@ public class AgreementAssembler {
                 "{{term_years}} year(s) · term discount {{term_discount_pct}} on committed processing");
         row(sb, "Itemized services", itemizedServices(quote));
         row(sb, "Annual Fee (year 1)", "{{annual_fee_y1}}");
+        row(sb, "Total (paid in advance)", "{{contract_total}}");
         row(sb, "Escalator", "+3% at each anniversary during the Term");
-        row(sb, "Payment", "Annual in advance · net 30 · ACH, wire, or check");
+        row(
+                sb,
+                "Payment",
+                "Full {{term_years}}-year term invoiced in advance on acceptance · net 30 · ACH,"
+                        + " wire, or check");
         row(sb, "Overage", "Committed rate, billed quarterly in arrears");
         row(
                 sb,
@@ -167,7 +175,7 @@ public class AgreementAssembler {
         row(sb, "Standard terms", "SSO, SCIM, RBAC, and audit logs included.");
 
         sb.append(
-                "\n**Itemized services menu (included as elected):** Self-hosted deployment $12,000/yr"
+                "\n**Itemized services menu (include as elected):** Self-hosted deployment $12,000/yr"
                         + " · Air-gapped deployment $36,000/yr · Dedicated SE/CSM $30,000/yr · Enhanced IP"
                         + " Protection (patent coverage, Section 7.3) 5% of committed processing fees ·"
                         + " Onboarding & training $7,500 one-time · Quarterly business reviews $8,000/yr."

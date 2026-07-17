@@ -7,9 +7,11 @@ import {
   extendTrial,
   fetchLicenseFile,
   fetchQuotePdf,
+  fetchSignedAgreementPdf,
   fetchSnapshot,
   issueQuote,
   resetProcurement,
+  startAgreement,
   startTrial,
   type ProcurementSnapshot,
   type QuoteResult,
@@ -20,7 +22,8 @@ export type ProcurementExtra =
   | "license"
   | "schedule"
   | "trial"
-  | "setup";
+  | "setup"
+  | "documents";
 
 /**
  * Owns the procurement deal state and actions shared by the Home hero footer
@@ -40,6 +43,7 @@ export interface ProcurementController {
   busy: boolean;
   downloading: boolean;
   downloadingLicense: boolean;
+  downloadingAgreement: boolean;
   error: string | null;
   setError: (e: string | null) => void;
   open: boolean;
@@ -56,9 +60,13 @@ export interface ProcurementController {
   onExtendTrial: () => void;
   onReset: () => void;
   onGenerate: (draft: QuoteResult) => void;
+  /** Accept the reviewed quote and advance to the agreement step — does NOT charge Stripe. */
+  onAcceptQuote: () => void;
   onAgree: () => void;
   onDownloadPdf: () => Promise<void>;
   onDownloadOfflineLicense: () => Promise<void>;
+  /** Download the stored signed enterprise agreement (available once signed). */
+  onDownloadSignedAgreement: () => Promise<void>;
 }
 
 export function useProcurement(autoOpen = false): ProcurementController {
@@ -75,6 +83,7 @@ export function useProcurement(autoOpen = false): ProcurementController {
   const [editing, setEditing] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [downloadingLicense, setDownloadingLicense] = useState(false);
+  const [downloadingAgreement, setDownloadingAgreement] = useState(false);
   const [invoicePdf, setInvoicePdf] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [extra, setExtra] = useState<ProcurementExtra>(null);
@@ -123,8 +132,12 @@ export function useProcurement(autoOpen = false): ProcurementController {
       await issueQuote(draft.quoteId);
       setEditing(false);
     });
-  // Quote + agreement are one step now: agreeing accepts the issued quote straight into a
-  // committed subscription (Stripe), and provisioning upgrades the licence server-side.
+  // Accept the reviewed quote: advance to the agreement step only. No Stripe — the buyer can read
+  // and download the plain quote before taking on the legal documents.
+  const onAcceptQuote = () => run(startAgreement);
+
+  // Signing the agreement is the commitment point: it accepts the issued quote into a committed
+  // subscription (Stripe), and provisioning upgrades the licence server-side.
   const onAgree = () =>
     run(async () => {
       if (!latest) return;
@@ -176,6 +189,26 @@ export function useProcurement(autoOpen = false): ProcurementController {
     }
   }
 
+  async function onDownloadSignedAgreement() {
+    setDownloadingAgreement(true);
+    try {
+      const blob = await fetchSignedAgreementPdf();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "stirling-enterprise-agreement.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (e) {
+      console.error("[procurement] signed agreement download failed", e);
+      setError(t("portal.procurement.agreement.downloadError"));
+    } finally {
+      setDownloadingAgreement(false);
+    }
+  }
+
   // A deep link (/procurement) opens the flow when a deal is already underway; if there's no deal
   // yet it must NOT silently start a trial — leave the modal closed so the Start-trial CTA shows.
   useEffect(() => {
@@ -194,6 +227,7 @@ export function useProcurement(autoOpen = false): ProcurementController {
     busy,
     downloading,
     downloadingLicense,
+    downloadingAgreement,
     error,
     setError,
     open,
@@ -208,8 +242,10 @@ export function useProcurement(autoOpen = false): ProcurementController {
     onExtendTrial,
     onReset,
     onGenerate,
+    onAcceptQuote,
     onAgree,
     onDownloadPdf,
     onDownloadOfflineLicense,
+    onDownloadSignedAgreement,
   };
 }

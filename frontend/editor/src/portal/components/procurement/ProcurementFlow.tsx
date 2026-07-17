@@ -5,6 +5,7 @@ import { useLinkedAccountEmail } from "@portal/hooks/useLinkedAccountEmail";
 import { FLOW_JOURNEY } from "@portal/api/procurement";
 import { ProcurementAgreement } from "@portal/components/procurement/ProcurementAgreement";
 import {
+  DocumentsModal,
   LicenseModal,
   ScheduleCallModal,
   TrialManageModal,
@@ -16,6 +17,7 @@ import {
   PaymentStageCard,
 } from "@portal/components/procurement/ProcurementStages";
 import { QuoteBuilder } from "@portal/components/procurement/QuoteBuilder";
+import { QuoteReview } from "@portal/components/procurement/QuoteReview";
 import { StageStepper } from "@portal/components/procurement/StageStepper";
 import type { ProcurementController } from "@portal/components/procurement/useProcurement";
 
@@ -59,9 +61,12 @@ export function ProcurementFlow({
     onExtendTrial,
     onReset,
     onGenerate,
+    onAcceptQuote,
     onAgree,
     onDownloadPdf,
     onDownloadOfflineLicense,
+    downloadingAgreement,
+    onDownloadSignedAgreement,
   } = controller;
 
   return (
@@ -112,37 +117,56 @@ export function ProcurementFlow({
               <QuoteBuilder
                 deployment={data?.deployment ?? "cloud"}
                 seats={data?.seats ?? 0}
+                email={scheduleEmail}
                 initial={latest?.config}
+                eulaAlreadyAgreed={data?.trialStartedAt != null}
                 onGenerate={onGenerate}
               />
             )}
 
-            {/* Quote + agreement are one step: review the itemised quote and the agreement, then
-                accept straight into a committed subscription. Once accepted you can't go back.
-                ("security" is the retired agreement stage — still handled so an older deal that
-                stopped there isn't left blank.) */}
-            {!editing &&
-              isIssued &&
-              (stage === "quote" || stage === "security") &&
-              latest && (
-                <ProcurementAgreement
-                  quote={latest}
-                  busy={busy}
-                  downloading={downloading}
-                  onAgree={onAgree}
-                  onDownload={onDownloadPdf}
-                  onEdit={() => setEditing(true)}
-                />
-              )}
+            {/* Quote step: review and accept the plain quote. Accepting advances to the agreement
+                step only — no Stripe charge yet. */}
+            {!editing && isIssued && stage === "quote" && latest && (
+              <QuoteReview
+                quote={latest}
+                busy={busy}
+                downloading={downloading}
+                onAccept={onAcceptQuote}
+                onDownload={onDownloadPdf}
+                onEdit={() => setEditing(true)}
+              />
+            )}
+
+            {/* Agreement step: review and sign the enterprise agreement. Signing accepts the quote
+                into a committed subscription (Stripe). */}
+            {!editing && stage === "security" && latest && (
+              <ProcurementAgreement
+                quote={latest}
+                busy={busy}
+                downloading={downloading}
+                onAgree={onAgree}
+                onDownload={onDownloadPdf}
+                onEdit={() => setEditing(true)}
+              />
+            )}
 
             {!editing && stage === "procurement" && latest && (
               <PaymentStageCard
                 invoiceUrl={latest.invoiceUrl}
                 invoicePdf={latest.invoicePdf ?? invoicePdf}
+                signedAgreementVersion={data?.agreementSignedVersion}
+                downloadingAgreement={downloadingAgreement}
+                onDownloadSignedAgreement={onDownloadSignedAgreement}
               />
             )}
 
-            {!editing && stage === "active" && <LiveStageCard />}
+            {!editing && stage === "active" && (
+              <LiveStageCard
+                signedAgreementVersion={data?.agreementSignedVersion}
+                downloadingAgreement={downloadingAgreement}
+                onDownloadSignedAgreement={onDownloadSignedAgreement}
+              />
+            )}
           </>
         )}
       </ProcurementModal>
@@ -185,6 +209,23 @@ export function ProcurementFlow({
           }}
         />
       )}
+      <DocumentsModal
+        open={extra === "documents"}
+        onClose={() => setExtra(null)}
+        agreementVersion={data?.agreementSignedVersion}
+        downloadingAgreement={downloadingAgreement}
+        onDownloadAgreement={onDownloadSignedAgreement}
+        onViewAgreement={() => {
+          setExtra(null);
+          setEditing(false);
+          setOpen(true);
+        }}
+        quoteAvailable={!!latest?.stripeQuoteId}
+        downloadingQuote={downloading}
+        onDownloadQuote={onDownloadPdf}
+        invoiceUrl={latest?.invoiceUrl}
+        invoicePdf={latest?.invoicePdf ?? invoicePdf}
+      />
     </>
   );
 }

@@ -194,6 +194,8 @@ public class ProcurementController {
             int trialExtensionsUsed,
             boolean licensed,
             String licenseKey,
+            // Version label of the signed agreement PDF available for download, else null.
+            String agreementSignedVersion,
             QuoteResponse latestQuote) {}
 
     /** The filled agreement for review: registry metadata + the rendered markdown body. */
@@ -236,7 +238,7 @@ public class ProcurementController {
     }
 
     private static final SnapshotResponse EMPTY_SNAPSHOT =
-            new SnapshotResponse(null, null, null, 0, null, null, 0, false, null, null);
+            new SnapshotResponse(null, null, null, 0, null, null, 0, false, null, null, null);
 
     /**
      * Download the offline / air-gapped licence file (.lic) for the team — available for an
@@ -385,17 +387,39 @@ public class ProcurementController {
         Long teamId = requireLeader(auth);
         if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         return procurement
-                .latestSignature(teamId)
-                .filter(s -> s.getPdf() != null)
+                .signedAgreementPdf(teamId)
                 .<ResponseEntity<byte[]>>map(
-                        s ->
+                        pdf ->
                                 ResponseEntity.ok()
                                         .header(
                                                 HttpHeaders.CONTENT_DISPOSITION,
                                                 "attachment;"
                                                         + " filename=\"stirling-enterprise-agreement.pdf\"")
                                         .contentType(MediaType.APPLICATION_PDF)
-                                        .body(s.getPdf()))
+                                        .body(pdf))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Download the current (unsigned) agreement as a PDF — the document shown at the sign step. 404
+     * when there's no quote yet or the render runtime is unavailable.
+     */
+    @GetMapping("/agreement/document/pdf")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<byte[]> agreementDocumentPdf(Authentication auth) {
+        Long teamId = requireLeader(auth);
+        if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        return procurement
+                .agreementDocumentPdf(teamId)
+                .<ResponseEntity<byte[]>>map(
+                        pdf ->
+                                ResponseEntity.ok()
+                                        .header(
+                                                HttpHeaders.CONTENT_DISPOSITION,
+                                                "attachment;"
+                                                        + " filename=\"stirling-enterprise-agreement.pdf\"")
+                                        .contentType(MediaType.APPLICATION_PDF)
+                                        .body(pdf))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
@@ -496,6 +520,7 @@ public class ProcurementController {
                 deal.getTrialExtensionsUsed(),
                 deal.getLicenseRef() != null,
                 includeLicenseKey ? deal.getLicenseRef() : null,
+                procurement.signedAgreementLabel(deal.getDealId()).orElse(null),
                 latest);
     }
 

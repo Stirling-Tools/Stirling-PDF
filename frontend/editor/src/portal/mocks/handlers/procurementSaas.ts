@@ -17,6 +17,7 @@ const EMPTY = {
   trialExtensionsUsed: 0,
   licensed: false,
   licenseKey: null,
+  agreementSignedVersion: null,
   latestQuote: null,
 };
 
@@ -292,6 +293,8 @@ export const procurementSaasHandlers = [
       if (!body.signatoryName || !body.authorityConfirmed) {
         return new HttpResponse(null, { status: 400 });
       }
+      // Surface the signed agreement for download on the payment/live stage.
+      (deal as Record<string, unknown>).agreementSignedVersion = "SEA v0.9.1";
       return HttpResponse.json({
         signatureId: 1,
         versionLabel: "SEA v0.9.1",
@@ -299,6 +302,34 @@ export const procurementSaasHandlers = [
       });
     },
   ),
+  http.get(`${SAAS}/api/v1/procurement/agreement/signature/pdf`, () => {
+    const signed = (deal as { agreementSignedVersion?: string })
+      .agreementSignedVersion;
+    if (!signed) return new HttpResponse(null, { status: 404 });
+    // A minimal one-page PDF so the browser download works in mock mode.
+    const pdf =
+      "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n" +
+      "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n" +
+      "3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 120]>>endobj\n" +
+      "trailer<</Root 1 0 R>>\n%%EOF";
+    return new HttpResponse(pdf, {
+      headers: { "Content-Type": "application/pdf" },
+    });
+  }),
+  http.get(`${SAAS}/api/v1/procurement/agreement/document/pdf`, () => {
+    // The unsigned agreement PDF is available once a quote exists.
+    if (!(deal as { latestQuote: unknown }).latestQuote) {
+      return new HttpResponse(null, { status: 404 });
+    }
+    const pdf =
+      "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n" +
+      "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n" +
+      "3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 120]>>endobj\n" +
+      "trailer<</Root 1 0 R>>\n%%EOF";
+    return new HttpResponse(pdf, {
+      headers: { "Content-Type": "application/pdf" },
+    });
+  }),
   http.post(`${SAAS}/api/v1/procurement/go-live`, () => {
     const d = deal as Record<string, unknown>;
     if (d.dealId) {
@@ -322,6 +353,34 @@ export const procurementSaasHandlers = [
   http.post(`${SAAS}/api/v1/procurement/reset`, () => {
     resetProcurementSaasStore();
     return HttpResponse.json(EMPTY);
+  }),
+  http.get(`${SAAS}/api/v1/legal/:docId`, ({ params }) => {
+    const docId = String(params.docId);
+    const titles: Record<string, string> = {
+      eula: "Stirling EULA & Commercial Terms",
+      sla: "Stirling SLA Exhibit",
+      subprocessors: "Stirling Subprocessors",
+    };
+    if (!(docId in titles)) return new HttpResponse(null, { status: 404 });
+    return HttpResponse.json({
+      docId,
+      version: "1.0.0",
+      versionLabel: `${docId.toUpperCase()} v1.0.0`,
+      displayName: titles[docId],
+      effectiveDate: "2026-07-10",
+      status: "draft",
+      markdown: `# ${titles[docId]}\n\nThis is a mock of the ${docId} document for local development.\n\n## 1. Terms\n\nThe real text is served from the backend legal registry.`,
+    });
+  }),
+  http.post(`${SAAS}/api/v1/legal/consent`, async ({ request }) => {
+    const body = (await request.json().catch(() => ({}))) as Partial<{
+      documentId: string;
+      context: string;
+    }>;
+    if (!body.documentId || !body.context) {
+      return new HttpResponse(null, { status: 400 });
+    }
+    return new HttpResponse(null, { status: 200 });
   }),
 
   // Stripe Quote edge functions (supabase.functions.invoke → ${url}/functions/v1/{name}).

@@ -1,6 +1,6 @@
 # Stirling Enterprise Agreement
 
-One signature executes all three parts of this Agreement: the Master Services Agreement (Part A), the Order Form (Part B), and the Data Processing Addendum (Part C). The Stirling EULA & Commercial Terms is incorporated by reference to the extent stated in Section 9.1.
+One signature executes all three parts: the Master Services Agreement (Part A), the Order Form (Part B), and the Data Processing Addendum (Part C). The Stirling EULA & Commercial Terms is incorporated by reference.
 
 ## Part A — Master Services Agreement
 
@@ -12,7 +12,7 @@ This Master Services Agreement (the "Agreement") is entered into as of {{effecti
 
 1.2 **License grants.** Provider grants Customer, for the Term: (a) a non-exclusive, non-transferable right to access and use the Processor for Customer's internal business operations, up to the Committed Volume; and (b) a non-exclusive right to deploy and distribute the Editor to Customer's authorized users without limit on user count. Open-source components of the Editor remain governed by their own licenses, which control for those components.
 
-1.3 **Deployment.** The Services are delivered via the deployment stated in the Order Form (Stirling Cloud, Self-hosted, or Air-gapped). Self-hosted deployments validate their license and report metering data online; Air-gapped deployments verify a signed activation bundle offline and reconcile usage periodically as described in the Documentation. Customer shall not disable, circumvent, or falsify license validation or usage metering. The metered rate does not vary by deployment; deployment-specific services are priced as line items in the Order Form.
+1.3 **Deployment.** The Services are delivered via the deployment stated in the Order Form (Stirling Cloud, Self-hosted, or Air-gapped). Self-hosted deployments validate their license and report metering data online; Air-gapped deployments verify a signed activation bundle offline and reconcile usage periodically as described in the Documentation. Customer shall not disable, circumvent, or falsify license validation or usage metering. **The metered rate does not vary by deployment**; deployment-specific services are priced as line items in the Order Form.
 
 1.4 **Restrictions.** Customer shall not: resell or provide the Services to third parties as a service bureau; reverse engineer non-open-source components; use the Services to violate law; or exceed the scope of the Order Form other than through Overage (Section 3.4).
 

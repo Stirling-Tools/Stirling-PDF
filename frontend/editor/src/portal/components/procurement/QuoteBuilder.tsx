@@ -9,9 +9,11 @@ import {
 import { money } from "@portal/components/procurement/format";
 import {
   buildQuote,
+  recordLegalConsent,
   type QuoteConfigInput,
   type QuoteResult,
 } from "@portal/api/procurement";
+import { LegalDocumentModal } from "@portal/components/procurement/ProcurementExtras";
 import "@portal/views/Procurement.css";
 
 const STEPS = ["volume", "plan", "details"] as const;
@@ -38,14 +40,23 @@ const SIZE_TIERS = [
 export function QuoteBuilder({
   deployment,
   seats = 0,
+  email,
   initial,
+  eulaAlreadyAgreed = false,
   onGenerate,
 }: {
   deployment: string;
   /** Seat count from the trial setup; seeds the users field + volume estimate on a fresh quote. */
   seats?: number;
+  /** Linked-account email; prefills the contact email on a fresh quote's details step. */
+  email?: string | null;
   /** Seed the builder from an existing quote's config (re-editing a quote). */
   initial?: QuoteConfigInput;
+  /**
+   * The buyer already accepted the EULA (e.g. at trial start). When true, the EULA clickwrap is
+   * hidden here and no consent is recorded at quote time — it's only collected once.
+   */
+  eulaAlreadyAgreed?: boolean;
   /** Called with the priced DRAFT quote; the parent issues it as a Stripe Quote. */
   onGenerate: (quote: QuoteResult) => void;
 }) {
@@ -67,7 +78,7 @@ export function QuoteBuilder({
       qbr: false,
       businessName: "",
       contactName: "",
-      contactEmail: "",
+      contactEmail: email ?? "",
       addressLine1: "",
       addressLine2: "",
       city: "",
@@ -80,11 +91,31 @@ export function QuoteBuilder({
   // A seeded quote carries a volume but no user count, so treat it as manually set.
   const [manualVolume, setManualVolume] = useState(initial != null);
   const [eula, setEula] = useState(initial != null);
+  const [legalDoc, setLegalDoc] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Only surface field errors once the buyer tries to generate — no red fields on first sight.
+  const [showErrors, setShowErrors] = useState(false);
 
   function set<K extends keyof QuoteConfigInput>(k: K, v: QuoteConfigInput[K]) {
     setCfg((c) => ({ ...c, [k]: v }));
   }
+
+  // Required buyer details before a quote can be generated (Order Form / invoice need these).
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+    (cfg.contactEmail ?? "").trim(),
+  );
+  const valid = {
+    businessName: cfg.businessName.trim().length > 0,
+    contactName: (cfg.contactName ?? "").trim().length > 0,
+    contactEmail: emailOk,
+    addressLine1: (cfg.addressLine1 ?? "").trim().length > 0,
+    city: (cfg.city ?? "").trim().length > 0,
+    region: (cfg.region ?? "").trim().length > 0,
+    postalCode: (cfg.postalCode ?? "").trim().length > 0,
+  };
+  const detailsValid = Object.values(valid).every(Boolean);
+  const eulaOk = eulaAlreadyAgreed || eula;
+  const canGenerate = detailsValid && eulaOk;
 
   // Re-editing an existing quote: everything is seeded, so jump to the last step (details) with the
   // agreement pre-accepted — one click re-generates, or Back to change a field. No walking from step 1.
@@ -99,9 +130,17 @@ export function QuoteBuilder({
   // Fully filled → price + hand the draft to the parent to issue as a Stripe Quote (which then shows
   // as the milestone). No separate in-builder preview step.
   async function generate() {
+    if (!canGenerate) {
+      setShowErrors(true);
+      return;
+    }
     setBusy(true);
     try {
-      onGenerate(await buildQuote(cfg));
+      const quote = await buildQuote(cfg);
+      // Record the EULA clickwrap only when it's collected here — i.e. the buyer didn't already
+      // accept it at trial start. Best-effort.
+      if (!eulaAlreadyAgreed) void recordLegalConsent("eula", "quote");
+      onGenerate(quote);
     } finally {
       setBusy(false);
     }
@@ -287,7 +326,11 @@ export function QuoteBuilder({
             sub={t("portal.procurement.builder.s3Sub")}
           >
             <div className="portal-qb__row">
-              <Field label={t("portal.procurement.builder.businessName")}>
+              <Field
+                label={t("portal.procurement.builder.businessName")}
+                required
+                invalid={showErrors && !valid.businessName}
+              >
                 <input
                   placeholder={t(
                     "portal.procurement.builder.businessNamePlaceholder",
@@ -296,7 +339,11 @@ export function QuoteBuilder({
                   onChange={(e) => set("businessName", e.target.value)}
                 />
               </Field>
-              <Field label={t("portal.procurement.builder.contactName")}>
+              <Field
+                label={t("portal.procurement.builder.contactName")}
+                required
+                invalid={showErrors && !valid.contactName}
+              >
                 <input
                   placeholder={t(
                     "portal.procurement.builder.contactNamePlaceholder",
@@ -306,7 +353,11 @@ export function QuoteBuilder({
                 />
               </Field>
             </div>
-            <Field label={t("portal.procurement.builder.contactEmail")}>
+            <Field
+              label={t("portal.procurement.builder.contactEmail")}
+              required
+              invalid={showErrors && !valid.contactEmail}
+            >
               <input
                 type="email"
                 placeholder={t(
@@ -316,7 +367,11 @@ export function QuoteBuilder({
                 onChange={(e) => set("contactEmail", e.target.value)}
               />
             </Field>
-            <Field label={t("portal.procurement.builder.addressLine1")}>
+            <Field
+              label={t("portal.procurement.builder.addressLine1")}
+              required
+              invalid={showErrors && !valid.addressLine1}
+            >
               <input
                 placeholder={t(
                   "portal.procurement.builder.addressLine1Placeholder",
@@ -335,14 +390,22 @@ export function QuoteBuilder({
               />
             </Field>
             <div className="portal-qb__row">
-              <Field label={t("portal.procurement.builder.city")}>
+              <Field
+                label={t("portal.procurement.builder.city")}
+                required
+                invalid={showErrors && !valid.city}
+              >
                 <input
                   placeholder={t("portal.procurement.builder.cityPlaceholder")}
                   value={cfg.city ?? ""}
                   onChange={(e) => set("city", e.target.value)}
                 />
               </Field>
-              <Field label={t("portal.procurement.builder.region")}>
+              <Field
+                label={t("portal.procurement.builder.region")}
+                required
+                invalid={showErrors && !valid.region}
+              >
                 <input
                   placeholder={t(
                     "portal.procurement.builder.regionPlaceholder",
@@ -351,7 +414,11 @@ export function QuoteBuilder({
                   onChange={(e) => set("region", e.target.value)}
                 />
               </Field>
-              <Field label={t("portal.procurement.builder.postalCode")}>
+              <Field
+                label={t("portal.procurement.builder.postalCode")}
+                required
+                invalid={showErrors && !valid.postalCode}
+              >
                 <input
                   placeholder={t(
                     "portal.procurement.builder.postalCodePlaceholder",
@@ -379,14 +446,30 @@ export function QuoteBuilder({
                 />
               </Field>
             </div>
-            <label className="portal-qb__eula">
-              <input
-                type="checkbox"
-                checked={eula}
-                onChange={(e) => setEula(e.target.checked)}
-              />
-              <span>{t("portal.procurement.builder.eula")}</span>
-            </label>
+            {!eulaAlreadyAgreed && (
+              <label className="portal-qb__eula">
+                <input
+                  type="checkbox"
+                  checked={eula}
+                  onChange={(e) => setEula(e.target.checked)}
+                />
+                <span>
+                  {t("portal.procurement.builder.eula")}{" "}
+                  <button
+                    type="button"
+                    className="portal-legal__link"
+                    onClick={() => setLegalDoc("eula")}
+                  >
+                    {t("portal.procurement.builder.viewEula")}
+                  </button>
+                </span>
+              </label>
+            )}
+            {showErrors && !canGenerate && (
+              <p className="portal-qb__error">
+                {t("portal.procurement.builder.completeRequired")}
+              </p>
+            )}
           </Step>
         )}
       </div>
@@ -429,7 +512,6 @@ export function QuoteBuilder({
               variant="primary"
               accent="premium"
               loading={busy}
-              disabled={!eula}
               onClick={generate}
             >
               {t("portal.procurement.builder.generate")}
@@ -437,6 +519,7 @@ export function QuoteBuilder({
           )}
         </div>
       </div>
+      <LegalDocumentModal docId={legalDoc} onClose={() => setLegalDoc(null)} />
     </div>
   );
 }
@@ -470,14 +553,25 @@ function Step({
 
 function Field({
   label,
+  required,
+  invalid,
   children,
 }: {
   label: string;
+  required?: boolean;
+  invalid?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <label className="portal-qb__field">
-      <span className="portal-qb__field-label">{label}</span>
+    <label className="portal-qb__field" data-invalid={invalid || undefined}>
+      <span className="portal-qb__field-label">
+        {label}
+        {required && (
+          <span className="portal-qb__req" aria-hidden>
+            {" *"}
+          </span>
+        )}
+      </span>
       {children}
     </label>
   );

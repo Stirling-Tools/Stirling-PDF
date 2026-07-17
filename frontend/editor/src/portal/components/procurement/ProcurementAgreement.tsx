@@ -5,9 +5,11 @@ import remarkGfm from "remark-gfm";
 import { Button, Card } from "@app/ui";
 import {
   fetchAgreementDocument,
+  fetchAgreementPdf,
   recordAgreementSignature,
   type QuoteResult,
 } from "@portal/api/procurement";
+import { DownloadIcon } from "@portal/components/icons";
 import { useAsync } from "@portal/hooks/useAsync";
 import "@portal/views/Procurement.css";
 
@@ -44,8 +46,32 @@ export function ProcurementAgreement({
   const [confirmed, setConfirmed] = useState(false);
   const [scrolledToEnd, setScrolledToEnd] = useState(false);
   const [signing, setSigning] = useState(false);
+  const [downloadingMsa, setDownloadingMsa] = useState(false);
   const [error, setError] = useState(false);
+  const [downloadError, setDownloadError] = useState(false);
   const docRef = useRef<HTMLDivElement>(null);
+
+  const downloadMsa = async () => {
+    setDownloadingMsa(true);
+    setDownloadError(false);
+    try {
+      const blob = await fetchAgreementPdf();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "stirling-enterprise-agreement.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch {
+      // Surface the failure — the PDF is rendered server-side, so a failure here means the
+      // render service is unavailable rather than something the buyer can retry around.
+      setDownloadError(true);
+    } finally {
+      setDownloadingMsa(false);
+    }
+  };
 
   const onScroll = () => {
     const el = docRef.current;
@@ -171,6 +197,11 @@ export function ProcurementAgreement({
           {t("portal.procurement.agreement.signError")}
         </p>
       )}
+      {downloadError && (
+        <p className="portal-proc__error">
+          {t("portal.procurement.agreement.downloadDraftError")}
+        </p>
+      )}
 
       <div className="portal-proc__payment-actions">
         <Button
@@ -182,8 +213,21 @@ export function ProcurementAgreement({
         >
           {t("portal.procurement.agreement.agreeCta")}
         </Button>
-        <Button variant="secondary" loading={downloading} onClick={onDownload}>
-          {t("portal.procurement.milestone.download")}
+        <Button
+          variant="secondary"
+          leftSection={<DownloadIcon size={15} />}
+          loading={downloadingMsa}
+          onClick={downloadMsa}
+        >
+          {t("portal.procurement.agreement.downloadAgreement")}
+        </Button>
+        <Button
+          variant="secondary"
+          leftSection={<DownloadIcon size={15} />}
+          loading={downloading}
+          onClick={onDownload}
+        >
+          {t("portal.procurement.agreement.downloadQuote")}
         </Button>
         <Button variant="tertiary" onClick={onEdit}>
           {t("portal.procurement.milestone.edit")}
