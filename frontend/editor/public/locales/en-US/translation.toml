@@ -6451,21 +6451,37 @@ title = "Get 12 months for the price of 10"
 topUpTitle = "Top up prepaid capacity"
 
 [portal.billing.prepaid.calc]
+change = "Change"
+deployRow = "Deployment"
+done = "Done"
+downloadQuote = "Download quote (PDF)"
+downloadShare = "share for approval"
 enterpriseHint = "This is enterprise scale — at this volume, enterprise rates beat any self-serve discount. Rate lock, terms, and a quote in minutes."
+governanceRow = "Governance"
+governanceValue = "{{label}} · {{count}} policies"
 handlesLabel = "Your Processor"
 handlesValue = "handles {{volume}} PDFs / mo"
 pipelinesLabel = "Pipelines"
+policiesMeta = "{{count}} policies"
 poolCaption = "One pool of {{credits}} credits for the year. Heavy months borrow from light ones."
-postureLabel = "Governance posture"
 priceLabel = "Your year · 12 months for the price of 10"
 rateUnknown = "We'll show the exact price at checkout."
 savings = "You save {{amount}} — 2 months free."
-sizeLabel = "Typical file size"
+sizingRow = "Sizing"
+sizingValue = "{{label}} · {{desc}}"
 usersHint = "Estimated at ≈ 80 PDFs per user a month of people-driven traffic. Edit the finer settings if you know better."
 usersLabel = "Total users"
 
 [portal.billing.prepaid.consent]
 label = "I understand that when my prepaid capacity is used up or expires after 12 months, processing automatically continues at the standard metered pay-as-you-go rate (up to my spend limit) unless I cancel, and that I can cancel anytime from the billing portal."
+
+[portal.billing.prepaid.deploy]
+cloud = "Stirling Cloud"
+cloudDesc = "Managed by Stirling. Live in minutes."
+cloudValue = "Stirling Cloud · Managed"
+selfhost = "Self-hosted"
+selfhostDesc = "Runs on private infrastructure. Same rate."
+selfhostValue = "Self-hosted · Private infrastructure"
 
 [portal.billing.prepaid.offer]
 cta = "Review offer"
@@ -6474,18 +6490,34 @@ title = "Get 12 months for the price of 10"
 
 [portal.billing.prepaid.pipelines]
 advanced = "Advanced"
+advancedDesc = "Pipelines drive most of your processing."
 none = "None"
+noneDesc = "Not running pipelines yet. Turn them on any time."
 standard = "Standard"
+standardDesc = "A few pipelines re-process arriving PDFs."
 
 [portal.billing.prepaid.posture]
 essentials = "Essentials"
+essentialsDesc = "Classification, the default, plus Sharing"
 governed = "Governed"
+governedDesc = "Adds Security and Routing"
 regulated = "Regulated"
+regulatedDesc = "Every category, incl. Compliance, Retention, Ingestion"
+
+[portal.billing.prepaid.proforma]
+footer = "Proforma for purchase approval. Capacity is billed only once payment is received; valid 30 days."
+heading = "Prepaid processing quote"
+poolLabel = "Prepaid pool"
+poolValue = "{{credits}} credits"
+subheading = "12 months of prepaid PDF processing capacity"
 
 [portal.billing.prepaid.size]
 compact = "Compact"
+compactDesc = "Files under 25 MB, no data charges"
 heavy = "Heavy"
+heavyDesc = "Scanned or image-heavy, routinely 50 MB+"
 standard = "Standard"
+standardDesc = "Mostly small, some scans past 25 MB"
 
 [portal.billing.prepaid.state]
 exhausted = "Used up"

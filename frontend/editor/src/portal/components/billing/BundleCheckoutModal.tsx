@@ -1,14 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Banner,
-  Button,
-  Checkbox,
-  Modal,
-  NumberInput,
-  SegmentedControl,
-  Spinner,
-} from "@app/ui";
+import { Banner, Button, Checkbox, Modal, NumberInput, Spinner } from "@app/ui";
 import {
   BUNDLE_PIPELINE_TIERS,
   BUNDLE_POLICY_POSTURES,
@@ -27,6 +19,7 @@ import {
   loadStripeOnce,
 } from "@portal/billing/stripe";
 import { CardPlaceholder } from "@portal/components/billing/CardPlaceholder";
+import { downloadProformaPdf } from "@portal/components/billing/proformaPdf";
 
 /**
  * Prepaid-bundle purchase modal for the Processor billing page — "12 months for
@@ -243,6 +236,13 @@ interface CalcProps {
   setConsented: (v: boolean) => void;
 }
 
+interface PickerCard {
+  id: string;
+  title: string;
+  meta?: string;
+  desc: string;
+}
+
 function CalculatorStep({
   users,
   setUsers,
@@ -258,53 +258,269 @@ function CalculatorStep({
   setConsented,
 }: CalcProps) {
   const { t } = useTranslation();
-  const postureOptions = [
+  // Deployment is a display-only finer setting (same rate self-serve); expanded
+  // tracks which row's card picker is bloomed (demo: one open at a time).
+  const [deployId, setDeployId] = useState<string>("cloud");
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  const deployCards: PickerCard[] = [
     {
-      value: "essentials",
-      label: t("portal.billing.prepaid.posture.essentials", "Essentials"),
+      id: "cloud",
+      title: t("portal.billing.prepaid.deploy.cloud", "Stirling Cloud"),
+      desc: t(
+        "portal.billing.prepaid.deploy.cloudDesc",
+        "Managed by Stirling. Live in minutes.",
+      ),
     },
     {
-      value: "governed",
-      label: t("portal.billing.prepaid.posture.governed", "Governed"),
-    },
-    {
-      value: "regulated",
-      label: t("portal.billing.prepaid.posture.regulated", "Regulated"),
+      id: "selfhost",
+      title: t("portal.billing.prepaid.deploy.selfhost", "Self-hosted"),
+      desc: t(
+        "portal.billing.prepaid.deploy.selfhostDesc",
+        "Runs on private infrastructure. Same rate.",
+      ),
     },
   ];
-  const sizeOptions = [
+  const sizeCards: PickerCard[] = [
     {
-      value: "compact",
-      label: t("portal.billing.prepaid.size.compact", "Compact"),
+      id: "compact",
+      title: t("portal.billing.prepaid.size.compact", "Compact"),
+      meta: "×1",
+      desc: t(
+        "portal.billing.prepaid.size.compactDesc",
+        "Files under 25 MB, no data charges",
+      ),
     },
     {
-      value: "standard",
-      label: t("portal.billing.prepaid.size.standard", "Standard"),
+      id: "standard",
+      title: t("portal.billing.prepaid.size.standard", "Standard"),
+      meta: "×1.2",
+      desc: t(
+        "portal.billing.prepaid.size.standardDesc",
+        "Mostly small, some scans past 25 MB",
+      ),
     },
-    { value: "heavy", label: t("portal.billing.prepaid.size.heavy", "Heavy") },
+    {
+      id: "heavy",
+      title: t("portal.billing.prepaid.size.heavy", "Heavy"),
+      meta: "×2",
+      desc: t(
+        "portal.billing.prepaid.size.heavyDesc",
+        "Scanned or image-heavy, routinely 50 MB+",
+      ),
+    },
   ];
-  const pipelineOptions = [
+  const postureCards: PickerCard[] = [
     {
-      value: "none",
-      label: t("portal.billing.prepaid.pipelines.none", "None"),
+      id: "essentials",
+      title: t("portal.billing.prepaid.posture.essentials", "Essentials"),
+      meta: t(
+        "portal.billing.prepaid.calc.policiesMeta",
+        "{{count}} policies",
+        {
+          count: 2,
+        },
+      ),
+      desc: t(
+        "portal.billing.prepaid.posture.essentialsDesc",
+        "Classification, the default, plus Sharing",
+      ),
     },
     {
-      value: "standard",
-      label: t("portal.billing.prepaid.pipelines.standard", "Standard"),
+      id: "governed",
+      title: t("portal.billing.prepaid.posture.governed", "Governed"),
+      meta: t(
+        "portal.billing.prepaid.calc.policiesMeta",
+        "{{count}} policies",
+        {
+          count: 4,
+        },
+      ),
+      desc: t(
+        "portal.billing.prepaid.posture.governedDesc",
+        "Adds Security and Routing",
+      ),
     },
     {
-      value: "advanced",
-      label: t("portal.billing.prepaid.pipelines.advanced", "Advanced"),
+      id: "regulated",
+      title: t("portal.billing.prepaid.posture.regulated", "Regulated"),
+      meta: t(
+        "portal.billing.prepaid.calc.policiesMeta",
+        "{{count}} policies",
+        {
+          count: 7,
+        },
+      ),
+      desc: t(
+        "portal.billing.prepaid.posture.regulatedDesc",
+        "Every category, incl. Compliance, Retention, Ingestion",
+      ),
+    },
+  ];
+  const pipelineCards: PickerCard[] = [
+    {
+      id: "none",
+      title: t("portal.billing.prepaid.pipelines.none", "None"),
+      desc: t(
+        "portal.billing.prepaid.pipelines.noneDesc",
+        "Not running pipelines yet. Turn them on any time.",
+      ),
+    },
+    {
+      id: "standard",
+      title: t("portal.billing.prepaid.pipelines.standard", "Standard"),
+      desc: t(
+        "portal.billing.prepaid.pipelines.standardDesc",
+        "A few pipelines re-process arriving PDFs.",
+      ),
+    },
+    {
+      id: "advanced",
+      title: t("portal.billing.prepaid.pipelines.advanced", "Advanced"),
+      desc: t(
+        "portal.billing.prepaid.pipelines.advancedDesc",
+        "Pipelines drive most of your processing.",
+      ),
     },
   ];
 
+  const find = (cards: PickerCard[], id: string) =>
+    cards.find((c) => c.id === id) ?? cards[0];
+  const size = find(sizeCards, sizeId);
+  const posture = find(postureCards, postureId);
+  const pipeline = find(pipelineCards, pipelineId);
+  const policies =
+    BUNDLE_POLICY_POSTURES.find((p) => p.id === postureId)?.policies ?? 0;
+
+  const deployValue =
+    deployId === "cloud"
+      ? t(
+          "portal.billing.prepaid.deploy.cloudValue",
+          "Stirling Cloud · Managed",
+        )
+      : t(
+          "portal.billing.prepaid.deploy.selfhostValue",
+          "Self-hosted · Private infrastructure",
+        );
+  const sizeValue = t(
+    "portal.billing.prepaid.calc.sizingValue",
+    "{{label}} · {{desc}}",
+    { label: size.title, desc: size.desc },
+  );
+  const postureValue = t(
+    "portal.billing.prepaid.calc.governanceValue",
+    "{{label}} · {{count}} policies",
+    { label: posture.title, count: policies },
+  );
+
+  const rows = [
+    {
+      id: "deploy",
+      label: t("portal.billing.prepaid.calc.deployRow", "Deployment"),
+      value: deployValue,
+      cards: deployCards,
+      activeId: deployId,
+      onPick: setDeployId,
+    },
+    {
+      id: "size",
+      label: t("portal.billing.prepaid.calc.sizingRow", "Sizing"),
+      value: sizeValue,
+      cards: sizeCards,
+      activeId: sizeId,
+      onPick: setSizeId,
+    },
+    {
+      id: "posture",
+      label: t("portal.billing.prepaid.calc.governanceRow", "Governance"),
+      value: postureValue,
+      cards: postureCards,
+      activeId: postureId,
+      onPick: setPostureId,
+    },
+    {
+      id: "pipes",
+      label: t("portal.billing.prepaid.calc.pipelinesLabel", "Pipelines"),
+      value: pipeline.title,
+      cards: pipelineCards,
+      activeId: pipelineId,
+      onPick: setPipelineId,
+    },
+  ];
+
+  const canDownload = quote.priceMinor != null && quote.poolCredits > 0;
+  const handleDownload = () => {
+    if (quote.priceMinor == null) return;
+    void downloadProformaPdf({
+      filename: "stirling-prepaid-quote.pdf",
+      heading: t(
+        "portal.billing.prepaid.proforma.heading",
+        "Prepaid processing quote",
+      ),
+      subheading: t(
+        "portal.billing.prepaid.proforma.subheading",
+        "12 months of prepaid PDF processing capacity",
+      ),
+      lines: [
+        {
+          label: t("portal.billing.prepaid.calc.usersLabel", "Total users"),
+          value: users.toLocaleString(),
+        },
+        {
+          label: t("portal.billing.prepaid.calc.deployRow", "Deployment"),
+          value: deployValue,
+        },
+        {
+          label: t("portal.billing.prepaid.calc.sizingRow", "Sizing"),
+          value: sizeValue,
+        },
+        {
+          label: t("portal.billing.prepaid.calc.governanceRow", "Governance"),
+          value: postureValue,
+        },
+        {
+          label: t("portal.billing.prepaid.calc.pipelinesLabel", "Pipelines"),
+          value: pipeline.title,
+        },
+        {
+          label: t(
+            "portal.billing.prepaid.calc.handlesLabel",
+            "Your Processor",
+          ),
+          value: t(
+            "portal.billing.prepaid.calc.handlesValue",
+            "handles {{volume}} PDFs / mo",
+            { volume: quote.provisionedMonthlyVolume.toLocaleString() },
+          ),
+        },
+        {
+          label: t("portal.billing.prepaid.proforma.poolLabel", "Prepaid pool"),
+          value: t(
+            "portal.billing.prepaid.proforma.poolValue",
+            "{{credits}} credits",
+            { credits: quote.poolCredits.toLocaleString() },
+          ),
+        },
+      ],
+      totalLabel: t(
+        "portal.billing.prepaid.calc.priceLabel",
+        "Your year · 12 months for the price of 10",
+      ),
+      totalValue: formatMinor(quote.priceMinor, currency),
+      footer: t(
+        "portal.billing.prepaid.proforma.footer",
+        "Proforma for purchase approval. Capacity is billed only once payment is received; valid 30 days.",
+      ),
+    });
+  };
+
   return (
     <div className="portal-billing__bundle-calc">
-      <div className="portal-billing__bundle-fields">
-        <div className="portal-billing__bundle-field">
-          <div className="portal-billing__bundle-field-label">
-            {t("portal.billing.prepaid.calc.usersLabel", "Total users")}
-          </div>
+      <div className="portal-billing__bundle-field">
+        <div className="portal-billing__bundle-field-label">
+          {t("portal.billing.prepaid.calc.usersLabel", "Total users")}
+        </div>
+        <div className="portal-billing__bundle-users">
           <NumberInput
             value={users}
             onChange={(v) => setUsers(typeof v === "number" ? v : 0)}
@@ -316,89 +532,125 @@ function CalculatorStep({
               "Total users",
             )}
           />
-          <p className="portal-billing__bundle-field-hint">
-            {t(
-              "portal.billing.prepaid.calc.usersHint",
-              "We estimate your volume from your team size — adjust the finer settings below if you know better.",
-            )}
-          </p>
         </div>
-
-        <div className="portal-billing__bundle-field">
-          <div className="portal-billing__bundle-field-label">
-            {t(
-              "portal.billing.prepaid.calc.postureLabel",
-              "Governance posture",
-            )}
-          </div>
-          <SegmentedControl
-            fullWidth
-            options={postureOptions}
-            value={postureId}
-            onChange={setPostureId}
-            ariaLabel={t(
-              "portal.billing.prepaid.calc.postureLabel",
-              "Governance posture",
-            )}
-          />
-        </div>
-
-        <div className="portal-billing__bundle-field">
-          <div className="portal-billing__bundle-field-label">
-            {t("portal.billing.prepaid.calc.sizeLabel", "Typical file size")}
-          </div>
-          <SegmentedControl
-            fullWidth
-            options={sizeOptions}
-            value={sizeId}
-            onChange={setSizeId}
-            ariaLabel={t(
-              "portal.billing.prepaid.calc.sizeLabel",
-              "Typical file size",
-            )}
-          />
-        </div>
-
-        <div className="portal-billing__bundle-field">
-          <div className="portal-billing__bundle-field-label">
-            {t("portal.billing.prepaid.calc.pipelinesLabel", "Pipelines")}
-          </div>
-          <SegmentedControl
-            fullWidth
-            options={pipelineOptions}
-            value={pipelineId}
-            onChange={setPipelineId}
-            ariaLabel={t(
-              "portal.billing.prepaid.calc.pipelinesLabel",
-              "Pipelines",
-            )}
-          />
-        </div>
+        <p className="portal-billing__bundle-field-hint">
+          {t(
+            "portal.billing.prepaid.calc.usersHint",
+            "Estimated at ≈ 80 PDFs per user a month of people-driven traffic. Edit the finer settings if you know better.",
+          )}
+        </p>
       </div>
 
-      <div className="portal-billing__bundle-summary">
-        <div className="portal-billing__bundle-summary-row">
+      {/* Finer settings as progressive-disclosure rows — a "Change" blooms the card picker. */}
+      <div className="portal-billing__bundle-rows">
+        {rows.map((row) => {
+          const open = expanded === row.id;
+          return (
+            <div key={row.id} className="portal-billing__bundle-row">
+              <div
+                role="button"
+                tabIndex={0}
+                className="portal-billing__bundle-row-head"
+                aria-expanded={open}
+                onClick={() => setExpanded(open ? null : row.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setExpanded(open ? null : row.id);
+                  }
+                }}
+              >
+                <span className="portal-billing__bundle-row-label">
+                  {row.label}
+                </span>
+                <span className="portal-billing__bundle-row-value">
+                  {row.value}
+                  <span className="portal-billing__bundle-row-change">
+                    {open
+                      ? t("portal.billing.prepaid.calc.done", "Done")
+                      : t("portal.billing.prepaid.calc.change", "Change")}
+                  </span>
+                </span>
+              </div>
+              {open && (
+                <div className="portal-billing__bundle-row-body">
+                  <div className="portal-billing__bundle-cards">
+                    {row.cards.map((card) => {
+                      const active = card.id === row.activeId;
+                      const pick = () => {
+                        row.onPick(card.id);
+                        setExpanded(null);
+                      };
+                      return (
+                        <div
+                          key={card.id}
+                          role="button"
+                          tabIndex={0}
+                          aria-pressed={active}
+                          className={
+                            "portal-billing__bundle-card" +
+                            (active
+                              ? " portal-billing__bundle-card--active"
+                              : "")
+                          }
+                          onClick={pick}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              pick();
+                            }
+                          }}
+                        >
+                          <span className="portal-billing__bundle-card-head">
+                            <span className="portal-billing__bundle-card-title">
+                              {card.title}
+                            </span>
+                            {card.meta && (
+                              <span className="portal-billing__bundle-card-meta">
+                                {card.meta}
+                              </span>
+                            )}
+                          </span>
+                          <span className="portal-billing__bundle-card-desc">
+                            {card.desc}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Receipt — the sized plan, its price, the credit pool, and a shareable proforma. */}
+      <div className="portal-billing__bundle-receipt">
+        <div className="portal-billing__bundle-receipt-row">
           <span>
             {t("portal.billing.prepaid.calc.handlesLabel", "Your Processor")}
           </span>
           <strong>
             {t(
               "portal.billing.prepaid.calc.handlesValue",
-              "handles {{volume}} PDFs / month",
+              "handles {{volume}} PDFs / mo",
               { volume: quote.provisionedMonthlyVolume.toLocaleString() },
             )}
           </strong>
         </div>
         {quote.priceMinor != null ? (
           <>
-            <div className="portal-billing__bundle-summary-row">
+            <div className="portal-billing__bundle-receipt-row">
               <span>
                 {t(
                   "portal.billing.prepaid.calc.priceLabel",
-                  "One-time price · 12 months for the price of 10",
+                  "Your year · 12 months for the price of 10",
                 )}
               </span>
-              <strong>{formatMinor(quote.priceMinor, currency)}</strong>
+              <strong className="portal-billing__bundle-receipt-price">
+                {formatMinor(quote.priceMinor, currency)}
+              </strong>
             </div>
             {quote.savingsMinor != null && quote.savingsMinor > 0 && (
               <p className="portal-billing__bundle-savings">
@@ -427,15 +679,55 @@ function CalculatorStep({
             )}
           </p>
         )}
-        {quote.overEnterprise && (
-          <p className="portal-billing__bundle-savings">
+        {canDownload && (
+          <div
+            role="button"
+            tabIndex={0}
+            className="portal-billing__bundle-download"
+            onClick={handleDownload}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                handleDownload();
+              }
+            }}
+          >
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" />
+            </svg>
             {t(
-              "portal.billing.prepaid.calc.enterpriseHint",
-              "This is enterprise scale. Talk to us for a committed-volume quote with better rates.",
+              "portal.billing.prepaid.calc.downloadQuote",
+              "Download quote (PDF)",
             )}
-          </p>
+            <span className="portal-billing__bundle-download-share">
+              ·{" "}
+              {t(
+                "portal.billing.prepaid.calc.downloadShare",
+                "share for approval",
+              )}
+            </span>
+          </div>
         )}
       </div>
+
+      {quote.overEnterprise && (
+        <p className="portal-billing__bundle-savings">
+          {t(
+            "portal.billing.prepaid.calc.enterpriseHint",
+            "This is enterprise scale — at this volume, enterprise rates beat any self-serve discount. Rate lock, terms, and a quote in minutes.",
+          )}
+        </p>
+      )}
 
       {/* Affirmative consent to the prepaid→metered auto-transition, captured before
           payment (ARL/EULA §7.2). Un-pre-checked; gates Continue. Copy is legal-owned. */}

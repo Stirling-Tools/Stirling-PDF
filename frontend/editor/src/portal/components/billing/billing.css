@@ -1225,6 +1225,155 @@
   color: var(--color-text-3);
   line-height: 1.45;
 }
+
+/* Users field — compact stepper box (demo D147: hugs its content). */
+.portal-billing__bundle-users {
+  max-width: 12rem;
+}
+
+/* Progressive-disclosure finer settings: summary rows that bloom a card picker. */
+.portal-billing__bundle-rows {
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.portal-billing__bundle-row + .portal-billing__bundle-row {
+  border-top: 1px solid var(--color-border-light);
+}
+.portal-billing__bundle-row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 0.875rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+.portal-billing__bundle-row-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-3);
+}
+.portal-billing__bundle-row-value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+  text-align: right;
+}
+.portal-billing__bundle-row-change {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-blue);
+  flex-shrink: 0;
+}
+.portal-billing__bundle-row-body {
+  padding: 0 0.875rem 0.875rem;
+}
+
+/* Card pickers (deployment / sizing / governance / pipelines). */
+.portal-billing__bundle-cards {
+  display: flex;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+}
+.portal-billing__bundle-card {
+  flex: 1;
+  min-width: 9.5rem;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+.portal-billing__bundle-card--active {
+  border-color: var(--color-blue);
+  box-shadow: inset 0 0 0 1px var(--color-blue);
+}
+.portal-billing__bundle-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.portal-billing__bundle-card-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-text-1);
+}
+.portal-billing__bundle-card--active .portal-billing__bundle-card-title {
+  color: var(--color-blue);
+}
+.portal-billing__bundle-card-meta {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--color-text-5);
+  flex-shrink: 0;
+}
+.portal-billing__bundle-card--active .portal-billing__bundle-card-meta {
+  color: var(--color-blue);
+}
+.portal-billing__bundle-card-desc {
+  margin-top: 0.1875rem;
+  font-size: 0.7188rem;
+  line-height: 1.4;
+  color: var(--color-text-5);
+}
+
+/* Receipt card — "your Processor / your year / pool / download". */
+.portal-billing__bundle-receipt {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem 1.125rem;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-subtle);
+}
+.portal-billing__bundle-receipt-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.875rem;
+  color: var(--color-text-2);
+}
+.portal-billing__bundle-receipt-row strong {
+  font-size: 0.9375rem;
+  color: var(--color-text-1);
+}
+.portal-billing__bundle-receipt-price {
+  color: var(--color-blue) !important;
+}
+.portal-billing__bundle-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  margin-top: 0.25rem;
+  padding: 0.5rem 0 0;
+  border: none;
+  border-top: 1px solid var(--color-border-light);
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-blue);
+  text-align: left;
+}
+.portal-billing__bundle-download-share {
+  color: var(--color-text-5);
+  font-weight: 400;
+}
+
 .portal-billing__bundle-consent {
   padding-top: 1rem;
   border-top: 1px solid var(--color-border-light);
