@@ -23,6 +23,8 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     labelFallback: "Account",
     keywords: ["profile", "email", "password", "user"],
     requiresLogin: true,
+    groupLabelKey: "settings.preferences.title",
+    groupLabelFallback: "Preferences",
   },
   {
     key: "api-keys",
@@ -30,6 +32,8 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     labelFallback: "API Keys",
     keywords: ["api", "token", "developer", "key"],
     requiresLogin: true,
+    groupLabelKey: "settings.developer.title",
+    groupLabelFallback: "Developer",
   },
   // --- Workspace ---
   {
@@ -38,6 +42,8 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     labelFallback: "People",
     keywords: ["members", "users", "invite", "add member", "roles"],
     adminArea: true,
+    groupLabelKey: "settings.workspace.title",
+    groupLabelFallback: "Workspace",
   },
   {
     key: "teams",
@@ -45,6 +51,8 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     labelFallback: "Teams",
     keywords: ["team", "group", "create team"],
     adminArea: true,
+    groupLabelKey: "settings.workspace.title",
+    groupLabelFallback: "Workspace",
   },
   // --- Configuration ---
   {
@@ -53,6 +61,8 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     labelFallback: "System Settings",
     keywords: ["system", "config", "server"],
     adminArea: true,
+    groupLabelKey: "settings.configuration.title",
+    groupLabelFallback: "Configuration",
   },
   {
     key: "adminFeatures",
@@ -60,6 +70,8 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     labelFallback: "Features",
     keywords: ["features", "toggles", "flags"],
     adminArea: true,
+    groupLabelKey: "settings.configuration.title",
+    groupLabelFallback: "Configuration",
   },
   {
     key: "adminStorageSharing",
@@ -67,6 +79,8 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     labelFallback: "File Storage & Sharing",
     keywords: ["storage", "sharing", "files"],
     adminArea: true,
+    groupLabelKey: "settings.configuration.title",
+    groupLabelFallback: "Configuration",
   },
   {
     key: "adminEndpoints",
@@ -74,6 +88,8 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     labelFallback: "Endpoints",
     keywords: ["endpoints", "api", "routes"],
     adminArea: true,
+    groupLabelKey: "settings.configuration.title",
+    groupLabelFallback: "Configuration",
   },
   {
     key: "adminMcp",
@@ -81,6 +97,8 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     labelFallback: "MCP Server",
     keywords: ["mcp", "server", "ai", "model context protocol"],
     adminArea: true,
+    groupLabelKey: "settings.configuration.title",
+    groupLabelFallback: "Configuration",
   },
   {
     key: "adminDatabase",
@@ -88,6 +106,8 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     labelFallback: "Database",
     keywords: ["database", "db", "backup"],
     adminArea: true,
+    groupLabelKey: "settings.configuration.title",
+    groupLabelFallback: "Configuration",
   },
   {
     key: "adminAdvanced",
@@ -95,6 +115,8 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     labelFallback: "Advanced",
     keywords: ["advanced", "expert"],
     adminArea: true,
+    groupLabelKey: "settings.configuration.title",
+    groupLabelFallback: "Configuration",
   },
   // --- Security & Authentication ---
   {
@@ -103,6 +125,8 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     labelFallback: "Security",
     keywords: ["security", "authentication", "auth", "password", "sessions"],
     adminArea: true,
+    groupLabelKey: "settings.securityAuth.title",
+    groupLabelFallback: "Security & Authentication",
   },
   {
     key: "adminConnections",
@@ -110,6 +134,8 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     labelFallback: "Connections",
     keywords: ["connections", "oauth", "sso", "integrations"],
     adminArea: true,
+    groupLabelKey: "settings.securityAuth.title",
+    groupLabelFallback: "Security & Authentication",
   },
   // --- Licensing & Analytics ---
   {
@@ -118,6 +144,8 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     labelFallback: "Plan",
     keywords: ["plan", "license", "billing", "subscription", "enterprise"],
     adminArea: true,
+    groupLabelKey: "settings.licensingAnalytics.title",
+    groupLabelFallback: "Licensing & Analytics",
   },
   {
     key: "adminAudit",
@@ -125,6 +153,8 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     labelFallback: "Audit",
     keywords: ["audit", "logs", "events", "history"],
     adminArea: true,
+    groupLabelKey: "settings.licensingAnalytics.title",
+    groupLabelFallback: "Licensing & Analytics",
   },
   {
     key: "adminUsage",
@@ -132,6 +162,8 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     labelFallback: "Usage Analytics",
     keywords: ["usage", "analytics", "stats", "metrics"],
     adminArea: true,
+    groupLabelKey: "settings.licensingAnalytics.title",
+    groupLabelFallback: "Licensing & Analytics",
   },
   // --- Policies & Privacy ---
   {
@@ -140,6 +172,8 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     labelFallback: "Legal",
     keywords: ["legal", "terms", "agreement"],
     adminArea: true,
+    groupLabelKey: "settings.policiesPrivacy.title",
+    groupLabelFallback: "Policies & Privacy",
   },
   {
     key: "adminPrivacy",
@@ -147,5 +181,7 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     labelFallback: "Privacy",
     keywords: ["privacy", "gdpr", "data"],
     adminArea: true,
+    groupLabelKey: "settings.policiesPrivacy.title",
+    groupLabelFallback: "Policies & Privacy",
   },
 ];

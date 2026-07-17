@@ -26,6 +26,13 @@ export interface SettingsSectionEntry {
   labelKey: string;
   /** English fallback / default for the label. */
   labelFallback: string;
+  /**
+   * The modal nav group this section sits under ("Preferences",
+   * "Configuration", …) — shown as result context, mirroring the in-modal
+   * settings search's "Group · match" line. Same keys the nav builder uses.
+   */
+  groupLabelKey?: string;
+  groupLabelFallback?: string;
   /** Extra English terms to match against (synonyms, related words). */
   keywords?: string[];
   /** Surface only when login mode is on (e.g. account, API keys). */
@@ -45,23 +52,31 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     labelKey: "settings.general.title",
     labelFallback: "General",
     keywords: ["theme", "language", "appearance", "preferences", "startup"],
+    groupLabelKey: "settings.preferences.title",
+    groupLabelFallback: "Preferences",
   },
   {
     key: "hotkeys",
     labelKey: "settings.hotkeys.title",
     labelFallback: "Keyboard Shortcuts",
     keywords: ["hotkey", "shortcut", "keybinding", "keyboard"],
+    groupLabelKey: "settings.preferences.title",
+    groupLabelFallback: "Preferences",
   },
   {
     key: "help",
     labelKey: "settings.help.label",
     labelFallback: "Tours",
     keywords: ["help", "tour", "guide", "support", "docs"],
+    groupLabelKey: "settings.help.title",
+    groupLabelFallback: "Help",
   },
   {
     key: "legal",
     labelKey: "settings.legal.label",
     labelFallback: "Legal",
     keywords: ["legal", "terms", "privacy", "licenses"],
+    groupLabelKey: "settings.legal.title",
+    groupLabelFallback: "Legal",
   },
 ];

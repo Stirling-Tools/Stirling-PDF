@@ -219,6 +219,13 @@ export function rankSettingsResults(
       return false;
     return true;
   });
+  // Result context mirrors the in-modal settings search: the nav group the
+  // section lives under, joined to the match snippet with " · ".
+  const groupTitle = (s: (typeof SETTINGS_SECTION_REGISTRY)[number]) =>
+    s.groupLabelKey
+      ? t(s.groupLabelKey, s.groupLabelFallback ?? "")
+      : undefined;
+
   const sectionMatches = rankByFuzzy(visibleSections, trimmed, [
     (s) => t(s.labelKey, s.labelFallback),
     (s) => s.labelFallback,
@@ -228,6 +235,7 @@ export function rankSettingsResults(
     key: `setting-section:${item.key}`,
     group: "settings",
     title: t(item.labelKey, item.labelFallback),
+    subtitle: groupTitle(item),
     iconName: "settings-rounded",
     score,
     onSelect: () => openSettings(item.key),
@@ -251,12 +259,14 @@ export function rankSettingsResults(
           .flatMap((s) => {
             const match = findSettingsContentMatch(s.key, trimmed, t);
             if (!match) return [];
+            const snippet = buildMatchSnippet(match, trimmed);
+            const group = groupTitle(s);
             return [
               {
                 key: `setting-content:${s.key}`,
                 group: "settings",
                 title: t(s.labelKey, s.labelFallback),
-                subtitle: buildMatchSnippet(match, trimmed),
+                subtitle: group ? `${group} · ${snippet}` : snippet,
                 iconName: "settings-rounded",
                 // Always below the weakest possible label/keyword match.
                 score: FUZZY_MIN_SCORE - 10,
