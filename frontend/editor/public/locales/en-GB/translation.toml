@@ -6627,11 +6627,6 @@ title = "Official SDKs"
 beta = "Beta"
 deprecated = "Deprecated"
 
-[portal.docs.search]
-empty = "No matching docs"
-placeholder = "Search docs"
-results = "{{count}} results"
-
 [portal.docs.skills]
 eyebrow = "SKILLS"
 lead = "Bundled, named capabilities your agent invokes as a single tool. Each skill is a deterministic op chain with evals attached."
