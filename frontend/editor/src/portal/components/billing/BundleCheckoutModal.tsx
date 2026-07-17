@@ -10,9 +10,10 @@ import {
   Spinner,
 } from "@app/ui";
 import {
-  bundleCapacityUnits,
-  bundleListMinor,
-  bundlePriceMinor,
+  BUNDLE_PIPELINE_TIERS,
+  BUNDLE_POLICY_POSTURES,
+  BUNDLE_SIZE_TIERS,
+  computeBundleQuote,
   formatMinor,
 } from "@app/billing";
 import type { Wallet } from "@portal/api/billing";
@@ -31,33 +32,23 @@ import { CardPlaceholder } from "@portal/components/billing/CardPlaceholder";
  * Prepaid-bundle purchase modal for the Processor billing page — "12 months for
  * the price of 10". Three steps inside the shared portal {@link Modal}:
  *
- *   1. Size your year — monthly PDF volume × governance posture × file-size tier
- *      → a recommended 12-month capacity + its discounted price. All local.
- *   2. Pay — one-time Stripe Embedded Checkout. Capacity ({@code units}) is sent
- *      straight to the checkout edge fn (billed quantity × unit_amount + coupon —
- *      no server quote ticket).
+ *   1. Size your year — buyers size the purchase in PEOPLE. Team size drives an
+ *      estimated volume (≈80 PDFs/user/mo), provisioned ~3× above expected; the
+ *      finer settings (governance posture, file size, pipelines) scale it up. All
+ *      local, via the shared {@code computeBundleQuote} brain.
+ *   2. Pay — one-time Stripe Embedded Checkout. The pool ({@code units}) is sent
+ *      straight to the checkout edge fn (billed quantity × unit_amount + coupon).
  *   3. Confirm — brief "your prepaid year is active" beat; the parent refetches
  *      the wallet (the pool lands via the Stripe webhook, never here).
  *
- * Size folds into the units (a bigger PDF draws more), so the flat per-unit rate
- * reproduces the marketing calculator's size-weighted total. The per-unit rate +
- * the 10/12 discount live in {@code @app/billing} helpers shared with the backend.
+ * The pool is denominated in size-folded RUNS — the same currency the meter charges
+ * on consumption — so a flat per-run rate reproduces the marketing calculator's
+ * total. The run-based brain (policy-count posture, pipelines, 1¢/run, 10/12) lives
+ * in {@code @app/billing}, shared with the backend.
  */
 
-/** Governance posture multipliers, mirroring the marketing calculator. */
-const POSTURES = [
-  { id: "essentials", mult: 1.4 },
-  { id: "governed", mult: 2.4 },
-  { id: "regulated", mult: 4.0 },
-] as const;
-/** File-size tier — the "physics" axis. */
-const SIZES = [
-  { id: "compact", mult: 1.0 },
-  { id: "standard", mult: 1.4 },
-  { id: "heavy", mult: 2.4 },
-] as const;
-/** Above this yearly capacity the demo routes to enterprise; we just nudge. */
-const ENTERPRISE_CAPACITY_HINT = 1_000_000;
+/** Default team size the calculator opens on. */
+const DEFAULT_USERS = 25;
 
 /**
  * EULA version the prepay consent is recorded against (ARL/EULA §7.2). Legal owns
@@ -66,17 +57,23 @@ const ENTERPRISE_CAPACITY_HINT = 1_000_000;
  */
 const CONSENT_EULA_VERSION = "2026-07-draft";
 
-function multFor(
-  tiers: readonly { id: string; mult: number }[],
-  id: string,
-): number {
-  return tiers.find((tt) => tt.id === id)?.mult ?? tiers[0].mult;
+function policiesFor(id: string): number {
+  return (
+    BUNDLE_POLICY_POSTURES.find((p) => p.id === id)?.policies ??
+    BUNDLE_POLICY_POSTURES[0].policies
+  );
+}
+function sizeMultFor(id: string): number {
+  return BUNDLE_SIZE_TIERS.find((s) => s.id === id)?.mult ?? 1;
+}
+function pipelineMultFor(id: string): number {
+  return BUNDLE_PIPELINE_TIERS.find((p) => p.id === id)?.mult ?? 1;
 }
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  /** Drives teamId, per-unit rate, currency, and top-up vs first-buy copy. */
+  /** Drives teamId, per-run rate, currency, and top-up vs first-buy copy. */
   wallet: Wallet;
   /** Fired after a completed purchase so the parent can refetch the wallet. */
   onComplete?: () => void;
@@ -97,40 +94,43 @@ export function BundleCheckoutModal({
   const topUp = wallet.prepaidUnitsTotal > 0;
 
   const [phase, setPhase] = useState<Phase>("calc");
-  const [volume, setVolume] = useState(5000);
+  const [users, setUsers] = useState(DEFAULT_USERS);
   const [postureId, setPostureId] = useState<string>("governed");
   const [sizeId, setSizeId] = useState<string>("standard");
+  const [pipelineId, setPipelineId] = useState<string>("none");
   const [consented, setConsented] = useState(false);
 
   // Reset to step 1 whenever the modal closes so re-opening starts fresh.
   useEffect(() => {
     if (!open) {
       setPhase("calc");
-      setVolume(5000);
+      setUsers(DEFAULT_USERS);
       setPostureId("governed");
       setSizeId("standard");
+      setPipelineId("none");
       setConsented(false);
     }
   }, [open]);
 
-  const capacity = useMemo(
+  const quote = useMemo(
     () =>
-      bundleCapacityUnits(
-        volume,
-        multFor(POSTURES, postureId),
-        multFor(SIZES, sizeId),
-      ),
-    [volume, postureId, sizeId],
+      computeBundleQuote({
+        users,
+        posturePolicies: policiesFor(postureId),
+        sizeMult: sizeMultFor(sizeId),
+        pipelineMult: pipelineMultFor(pipelineId),
+        ratePerRunMinor: pricePerDocMinor,
+      }),
+    [users, postureId, sizeId, pipelineId, pricePerDocMinor],
   );
-  const listMinor = bundleListMinor(capacity, pricePerDocMinor);
-  const priceMinor = bundlePriceMinor(capacity, pricePerDocMinor);
-  const savingsMinor =
-    listMinor != null && priceMinor != null ? listMinor - priceMinor : null;
 
   if (!open || teamId == null) return null;
 
+  const canContinue =
+    quote.poolCredits > 0 && consented && !quote.overEnterprise;
+
   function handleContinue() {
-    if (capacity <= 0 || !consented) return;
+    if (!canContinue) return;
     setPhase("pay");
   }
 
@@ -164,7 +164,7 @@ export function BundleCheckoutModal({
         </Button>
         <Button
           accent="premium"
-          disabled={capacity <= 0 || !consented}
+          disabled={!canContinue}
           onClick={handleContinue}
           rightSection={<span aria-hidden>›</span>}
         >
@@ -191,15 +191,15 @@ export function BundleCheckoutModal({
     >
       {phase === "calc" && (
         <CalculatorStep
-          volume={volume}
-          setVolume={setVolume}
+          users={users}
+          setUsers={setUsers}
           postureId={postureId}
           setPostureId={setPostureId}
           sizeId={sizeId}
           setSizeId={setSizeId}
-          capacity={capacity}
-          priceMinor={priceMinor}
-          savingsMinor={savingsMinor}
+          pipelineId={pipelineId}
+          setPipelineId={setPipelineId}
+          quote={quote}
           currency={currency}
           consented={consented}
           setConsented={setConsented}
@@ -207,9 +207,9 @@ export function BundleCheckoutModal({
       )}
       {phase === "pay" && (
         <PaymentStep
-          key={`bundle:${capacity}`}
+          key={`bundle:${quote.poolCredits}`}
           teamId={teamId}
-          units={capacity}
+          units={quote.poolCredits}
           consented={consented}
           eulaVersion={CONSENT_EULA_VERSION}
           onComplete={() => setPhase("done")}
@@ -217,8 +217,8 @@ export function BundleCheckoutModal({
       )}
       {phase === "done" && (
         <ConfirmationStep
-          units={capacity}
-          priceMinor={priceMinor}
+          credits={quote.poolCredits}
+          priceMinor={quote.priceMinor}
           currency={currency}
         />
       )}
@@ -226,33 +226,33 @@ export function BundleCheckoutModal({
   );
 }
 
-// ─── Step 1: calculator ─────────────────────────────────────────────────────
+// ─── Step 1: users-first calculator ──────────────────────────────────────────
 
 interface CalcProps {
-  volume: number;
-  setVolume: (v: number) => void;
+  users: number;
+  setUsers: (v: number) => void;
   postureId: string;
   setPostureId: (v: string) => void;
   sizeId: string;
   setSizeId: (v: string) => void;
-  capacity: number;
-  priceMinor: number | null;
-  savingsMinor: number | null;
+  pipelineId: string;
+  setPipelineId: (v: string) => void;
+  quote: ReturnType<typeof computeBundleQuote>;
   currency: string;
   consented: boolean;
   setConsented: (v: boolean) => void;
 }
 
 function CalculatorStep({
-  volume,
-  setVolume,
+  users,
+  setUsers,
   postureId,
   setPostureId,
   sizeId,
   setSizeId,
-  capacity,
-  priceMinor,
-  savingsMinor,
+  pipelineId,
+  setPipelineId,
+  quote,
   currency,
   consented,
   setConsented,
@@ -283,28 +283,45 @@ function CalculatorStep({
     },
     { value: "heavy", label: t("portal.billing.prepaid.size.heavy", "Heavy") },
   ];
+  const pipelineOptions = [
+    {
+      value: "none",
+      label: t("portal.billing.prepaid.pipelines.none", "None"),
+    },
+    {
+      value: "standard",
+      label: t("portal.billing.prepaid.pipelines.standard", "Standard"),
+    },
+    {
+      value: "advanced",
+      label: t("portal.billing.prepaid.pipelines.advanced", "Advanced"),
+    },
+  ];
 
   return (
     <div className="portal-billing__bundle-calc">
       <div className="portal-billing__bundle-fields">
         <div className="portal-billing__bundle-field">
           <div className="portal-billing__bundle-field-label">
-            {t(
-              "portal.billing.prepaid.calc.volumeLabel",
-              "PDFs processed / month",
-            )}
+            {t("portal.billing.prepaid.calc.usersLabel", "Total users")}
           </div>
           <NumberInput
-            value={volume}
-            onChange={(v) => setVolume(typeof v === "number" ? v : 0)}
+            value={users}
+            onChange={(v) => setUsers(typeof v === "number" ? v : 0)}
             min={0}
-            step={500}
+            step={1}
             allowNegative={false}
             aria-label={t(
-              "portal.billing.prepaid.calc.volumeLabel",
-              "PDFs processed / month",
+              "portal.billing.prepaid.calc.usersLabel",
+              "Total users",
             )}
           />
+          <p className="portal-billing__bundle-field-hint">
+            {t(
+              "portal.billing.prepaid.calc.usersHint",
+              "We estimate your volume from your team size — adjust the finer settings below if you know better.",
+            )}
+          </p>
         </div>
 
         <div className="portal-billing__bundle-field">
@@ -341,39 +358,54 @@ function CalculatorStep({
             )}
           />
         </div>
+
+        <div className="portal-billing__bundle-field">
+          <div className="portal-billing__bundle-field-label">
+            {t("portal.billing.prepaid.calc.pipelinesLabel", "Pipelines")}
+          </div>
+          <SegmentedControl
+            fullWidth
+            options={pipelineOptions}
+            value={pipelineId}
+            onChange={setPipelineId}
+            ariaLabel={t(
+              "portal.billing.prepaid.calc.pipelinesLabel",
+              "Pipelines",
+            )}
+          />
+        </div>
       </div>
 
       <div className="portal-billing__bundle-summary">
         <div className="portal-billing__bundle-summary-row">
           <span>
-            {t("portal.billing.prepaid.calc.capacityLabel", "Prepaid capacity")}
+            {t("portal.billing.prepaid.calc.handlesLabel", "Your Processor")}
           </span>
           <strong>
             {t(
-              "portal.billing.prepaid.calc.capacityValue",
-              "{{units}} PDFs / year",
-              {
-                units: capacity.toLocaleString(),
-              },
+              "portal.billing.prepaid.calc.handlesValue",
+              "handles {{volume}} PDFs / month",
+              { volume: quote.provisionedMonthlyVolume.toLocaleString() },
             )}
           </strong>
         </div>
-        {priceMinor != null ? (
+        {quote.priceMinor != null ? (
           <>
             <div className="portal-billing__bundle-summary-row">
               <span>
-                {t("portal.billing.prepaid.calc.priceLabel", "One-time price")}
+                {t(
+                  "portal.billing.prepaid.calc.priceLabel",
+                  "One-time price · 12 months for the price of 10",
+                )}
               </span>
-              <strong>{formatMinor(priceMinor, currency)}</strong>
+              <strong>{formatMinor(quote.priceMinor, currency)}</strong>
             </div>
-            {savingsMinor != null && savingsMinor > 0 && (
+            {quote.savingsMinor != null && quote.savingsMinor > 0 && (
               <p className="portal-billing__bundle-savings">
                 {t(
                   "portal.billing.prepaid.calc.savings",
                   "You save {{amount}} — 2 months free.",
-                  {
-                    amount: formatMinor(savingsMinor, currency),
-                  },
+                  { amount: formatMinor(quote.savingsMinor, currency) },
                 )}
               </p>
             )}
@@ -386,11 +418,20 @@ function CalculatorStep({
             )}
           </p>
         )}
-        {capacity > ENTERPRISE_CAPACITY_HINT && (
+        {quote.poolCredits > 0 && (
+          <p className="portal-billing__bundle-pool">
+            {t(
+              "portal.billing.prepaid.calc.poolCaption",
+              "One pool of {{credits}} credits for the year. Heavy months borrow from light ones.",
+              { credits: quote.poolCredits.toLocaleString() },
+            )}
+          </p>
+        )}
+        {quote.overEnterprise && (
           <p className="portal-billing__bundle-savings">
             {t(
               "portal.billing.prepaid.calc.enterpriseHint",
-              "Processing at this scale? Talk to us about an enterprise agreement for better rates.",
+              "This is enterprise scale. Talk to us for a committed-volume quote with better rates.",
             )}
           </p>
         )}
@@ -516,11 +557,11 @@ function PaymentStep({
 // ─── Step 3: confirmation ─────────────────────────────────────────────────────
 
 function ConfirmationStep({
-  units,
+  credits,
   priceMinor,
   currency,
 }: {
-  units: number;
+  credits: number;
   priceMinor: number | null;
   currency: string;
 }) {
@@ -530,8 +571,8 @@ function ConfirmationStep({
       <p className="portal-billing__bundle-confirm-body">
         {t(
           "portal.billing.prepaid.buy.doneBody",
-          "{{units}} PDFs of prepaid capacity are ready. They're used before metered billing and expire 12 months from today.",
-          { units: units.toLocaleString() },
+          "{{credits}} credits of prepaid capacity are ready. They're used before metered billing and expire 12 months from today.",
+          { credits: credits.toLocaleString() },
         )}
       </p>
       {priceMinor != null && (

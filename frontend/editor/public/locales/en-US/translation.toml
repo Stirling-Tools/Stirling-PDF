@@ -6440,7 +6440,7 @@ topUp = "Top up"
 [portal.billing.prepaid.buy]
 cancel = "Cancel"
 continue = "Continue to payment"
-doneBody = "{{units}} PDFs of prepaid capacity are ready. They're used before metered billing and expire 12 months from today."
+doneBody = "{{credits}} credits of prepaid capacity are ready. They're used before metered billing and expire 12 months from today."
 doneTitle = "Your prepaid year is active"
 finish = "Done"
 mockPay = "Complete purchase"
@@ -6451,15 +6451,18 @@ title = "Get 12 months for the price of 10"
 topUpTitle = "Top up prepaid capacity"
 
 [portal.billing.prepaid.calc]
-capacityLabel = "Prepaid capacity"
-capacityValue = "{{units}} PDFs / year"
-enterpriseHint = "Processing at this scale? Talk to us about an enterprise agreement for better rates."
+enterpriseHint = "This is enterprise scale. Talk to us for a committed-volume quote with better rates."
+handlesLabel = "Your Processor"
+handlesValue = "handles {{volume}} PDFs / month"
+pipelinesLabel = "Pipelines"
+poolCaption = "One pool of {{credits}} credits for the year. Heavy months borrow from light ones."
 postureLabel = "Governance posture"
-priceLabel = "One-time price"
+priceLabel = "One-time price · 12 months for the price of 10"
 rateUnknown = "We'll show the exact price at checkout."
 savings = "You save {{amount}} — 2 months free."
 sizeLabel = "Typical file size"
-volumeLabel = "PDFs processed / month"
+usersHint = "We estimate your volume from your team size — adjust the finer settings below if you know better."
+usersLabel = "Total users"
 
 [portal.billing.prepaid.consent]
 label = "I understand that when my prepaid capacity is used up or expires after 12 months, processing automatically continues at the standard metered pay-as-you-go rate (up to my spend limit) unless I cancel, and that I can cancel anytime from the billing portal."
@@ -6468,6 +6471,11 @@ label = "I understand that when my prepaid capacity is used up or expires after 
 cta = "Review offer"
 subtitle = "Prepay a year of PDF processing and get two months free — used before metered billing, outside your spend limit."
 title = "Get 12 months for the price of 10"
+
+[portal.billing.prepaid.pipelines]
+advanced = "Advanced"
+none = "None"
+standard = "Standard"
 
 [portal.billing.prepaid.posture]
 essentials = "Essentials"
