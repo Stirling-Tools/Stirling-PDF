@@ -19,6 +19,8 @@ const mocks = vi.hoisted(() => ({
   addFilesCalls: 0,
   stubCounter: 0,
   backendOutCounter: 0,
+  dispatchInFlight: 0,
+  maxDispatchInFlight: 0,
   bumpRevision: vi.fn(),
   runStoredPolicy: vi.fn(),
   getPolicyRun: vi.fn(),
@@ -126,6 +128,8 @@ beforeEach(() => {
   mocks.addFilesCalls = 0;
   mocks.stubCounter = 0;
   mocks.backendOutCounter = 0;
+  mocks.dispatchInFlight = 0;
+  mocks.maxDispatchInFlight = 0;
 
   mocks.workspace = Array.from({ length: FILE_COUNT }, (_, i) => ({
     id: `file-${i}`,
@@ -146,9 +150,17 @@ beforeEach(() => {
   );
 
   // Each dispatch gets a unique run id; the run's single backend output likewise.
-  mocks.runStoredPolicy.mockImplementation(
-    async () => `run-${mocks.stubCounter++}`,
-  );
+  // Takes real time so overlapping dispatches are measurable (the upload window).
+  mocks.runStoredPolicy.mockImplementation(async () => {
+    mocks.dispatchInFlight++;
+    mocks.maxDispatchInFlight = Math.max(
+      mocks.maxDispatchInFlight,
+      mocks.dispatchInFlight,
+    );
+    await new Promise((resolve) => setTimeout(resolve, 2));
+    mocks.dispatchInFlight--;
+    return `run-${mocks.stubCounter++}`;
+  });
   mocks.getPolicyRun.mockImplementation(async (runId: string) => ({
     runId,
     policyId: null,
@@ -222,6 +234,12 @@ describe("policy auto-run — 61-file batch through a Security → Classificatio
     expect(classification).toHaveLength(FILE_COUNT);
     expect(security).toHaveLength(FILE_COUNT);
     expect(latestRuns).toHaveLength(FILE_COUNT * 2);
+  });
+
+  it("bounds concurrent dispatch uploads so polls/downloads keep connections", async () => {
+    await runUntilSettled(FILE_COUNT * 2);
+    expect(mocks.maxDispatchInFlight).toBeGreaterThan(1); // still parallel…
+    expect(mocks.maxDispatchInFlight).toBeLessThanOrEqual(4); // …but windowed
   });
 
   it("versions on Security in place, tags on Classification — workspace never grows past 61", async () => {

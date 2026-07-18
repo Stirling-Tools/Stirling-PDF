@@ -59,6 +59,35 @@ import {
 /** Status poll cadence. */
 const POLL_MS = 2000;
 
+/** First poll fires early so a fresh run shows real progress quickly instead of
+ *  sitting on an indeterminate spinner for a full poll interval. */
+const FIRST_POLL_MS = 500;
+
+/** Max concurrent run-dispatch uploads. Each dispatch POSTs the file's bytes;
+ *  firing a whole drop at once saturates the browser's per-origin connection
+ *  pool, so the status polls and output downloads of already-running files
+ *  queue behind the pending uploads — nothing visibly progresses until every
+ *  upload drains. A small window keeps connections free, so early files run,
+ *  poll, and complete while later ones are still dispatching. */
+const MAX_CONCURRENT_DISPATCHES = 4;
+let dispatchSlotsInUse = 0;
+const dispatchWaiters: Array<() => void> = [];
+
+async function acquireDispatchSlot(): Promise<void> {
+  if (dispatchSlotsInUse < MAX_CONCURRENT_DISPATCHES) {
+    dispatchSlotsInUse++;
+    return;
+  }
+  await new Promise<void>((resolve) => dispatchWaiters.push(resolve));
+}
+
+function releaseDispatchSlot(): void {
+  const next = dispatchWaiters.shift();
+  // Hand the slot straight to the next waiter, else free it.
+  if (next) next();
+  else dispatchSlotsInUse--;
+}
+
 /** The server aborts any single tool step that runs longer than its internal-API
  *  read timeout, then fails the run — so a run can legitimately stay in flight
  *  for up to this long per step. The client must keep polling at least that long,
@@ -854,6 +883,9 @@ async function runPolicyOnFile(
     markDispatched(categoryId, fileId);
     return;
   }
+  // Bounded upload window — see MAX_CONCURRENT_DISPATCHES. Only the POST is
+  // gated; the IDB wait above never holds a slot.
+  await acquireDispatchSlot();
   try {
     const target = resolvePolicyRunTarget();
     const runId = await runStoredPolicy(backendId, [file]);
@@ -875,6 +907,8 @@ async function runPolicyOnFile(
     // the absent run simply won't appear in the activity feed. If the backend did
     // start a run we never recorded, reconcileServerRuns rediscovers it.
     markDispatched(categoryId, fileId);
+  } finally {
+    releaseDispatchSlot();
   }
 }
 
@@ -895,8 +929,10 @@ export async function poll(
   // would quit while a long step is still legitimately running.
   let budgetMs = DEFAULT_STEP_COUNT * STEP_TIMEOUT_MS + POLL_GRACE_MS;
   const startedAt = Date.now();
+  let nextDelayMs = FIRST_POLL_MS;
   while (Date.now() - startedAt < budgetMs) {
-    await delay(POLL_MS);
+    await delay(nextDelayMs);
+    nextDelayMs = POLL_MS;
     let view;
     try {
       view = await getPolicyRun(runId);
