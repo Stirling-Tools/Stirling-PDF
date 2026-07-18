@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { usePageEditor } from "@app/contexts/PageEditorContext";
-import { useFileState } from "@app/contexts/FileContext";
+import { useFileSelector, useFileSelectors } from "@app/contexts/FileContext";
 import { FileId } from "@app/types/file";
 import { useFileColorMap } from "@app/components/pageEditor/hooks/useFileColorMap";
 
@@ -24,7 +24,8 @@ const isPdf = (name?: string | null) =>
   typeof name === "string" && name.toLowerCase().endsWith(".pdf");
 
 export function usePageEditorDropdownState(): PageEditorDropdownState {
-  const { state, selectors } = useFileState();
+  const selectors = useFileSelectors();
+  const selectedFileIds = useFileSelector((s) => s.ui.selectedFileIds);
   const { toggleFileSelection, reorderFiles, fileOrder } = usePageEditor();
 
   const pageEditorFiles = useMemo(() => {
@@ -37,11 +38,11 @@ export function usePageEditorDropdownState(): PageEditorDropdownState {
           fileId,
           name: stub?.name || "",
           versionNumber: stub?.versionNumber,
-          isSelected: state.ui.selectedFileIds.includes(fileId),
+          isSelected: selectedFileIds.includes(fileId),
         };
       })
       .filter((file): file is PageEditorDropdownFile => file !== null);
-  }, [fileOrder, selectors, state.ui.selectedFileIds]);
+  }, [fileOrder, selectors, selectedFileIds]);
 
   const fileColorMap = useFileColorMap(
     pageEditorFiles.map((file) => file.fileId),

@@ -771,6 +771,7 @@ export {
   useFileState,
   useFileActions,
   useFileSelector,
+  useFileSelectors,
   useCurrentFile,
   useFileSelection,
   useFileManagement,

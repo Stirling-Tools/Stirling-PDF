@@ -31,7 +31,10 @@ import { zipFileService } from "@app/services/zipFileService";
 
 import styles from "@app/components/fileEditor/FileEditorThumbnail.module.css";
 import { useFileContext } from "@app/contexts/FileContext";
-import { useFileState } from "@app/contexts/file/fileHooks";
+import {
+  useFileSelector,
+  useFileSelectors,
+} from "@app/contexts/file/fileHooks";
 import { FileId } from "@app/types/file";
 import ToolChain from "@app/components/shared/ToolChain";
 import HoverActionMenu, {
@@ -89,7 +92,7 @@ const FileEditorThumbnail = ({
     actions: fileActions,
     openEncryptedUnlockPrompt,
   } = useFileContext();
-  const { state, selectors } = useFileState();
+  const selectors = useFileSelectors();
   const isMobile = useIsMobile();
 
   const actualFile = useMemo(
@@ -100,7 +103,7 @@ const FileEditorThumbnail = ({
 
   const isZipFile = zipFileService.isZipFileStub(file);
 
-  const hasError = state.ui.errorFileIds.includes(file.id);
+  const hasError = useFileSelector((s) => s.ui.errorFileIds.includes(file.id));
   const pageCount = file.processedFile?.totalPages || 0;
   const {
     isEncrypted,

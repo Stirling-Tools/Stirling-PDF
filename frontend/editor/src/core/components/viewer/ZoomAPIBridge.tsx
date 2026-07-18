@@ -3,7 +3,7 @@ import { useZoom, ZoomMode } from "@embedpdf/plugin-zoom/react";
 import { useSpread, SpreadMode } from "@embedpdf/plugin-spread/react";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
-import { useFileState } from "@app/contexts/FileContext";
+import { useAllFiles } from "@app/contexts/FileContext";
 import {
   determineAutoZoom,
   DEFAULT_FALLBACK_ZOOM,
@@ -36,7 +36,7 @@ function ZoomAPIBridgeInner({ documentId }: { documentId: string }) {
   const { provides: zoom, state: zoomState } = useZoom(documentId);
   const { spreadMode } = useSpread(documentId);
   const { registerBridge, triggerImmediateZoomUpdate } = useViewer();
-  const { selectors } = useFileState();
+  const { fileStubs } = useAllFiles();
 
   const hasSetInitialZoom = useRef(false);
   const lastSpreadMode = useRef(spreadMode ?? SpreadMode.None);
@@ -62,7 +62,7 @@ function ZoomAPIBridgeInner({ documentId }: { documentId: string }) {
     }
   }, []);
 
-  const stubs = selectors.getStirlingFileStubs();
+  const stubs = fileStubs;
   const firstFileStub = stubs[0];
   const firstFileId = firstFileStub?.id;
 

@@ -69,6 +69,16 @@ export function useFileSelector<T>(
 }
 
 /**
+ * Stable selector API with NO state subscription — never re-renders. For
+ * event-time reads (callbacks/effects), which see live state when invoked.
+ * Render-time reads need a reactive hook (useAllFiles/useFileSelector) or
+ * they go stale.
+ */
+export function useFileSelectors() {
+  return useFileStore().selectors;
+}
+
+/**
  * Hook for accessing file state (will re-render on any state change)
  * Use individual selector hooks below for better performance
  */
