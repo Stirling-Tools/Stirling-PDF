@@ -103,7 +103,8 @@ for (const [key, rules] of Object.entries(violations)) {
   const base = baseline[key] || {};
   for (const [id, n] of Object.entries(rules)) {
     if (!(id in base)) regressions.push(`NEW    ${key}  ${id} (x${n})`);
-    else if (n > base[id]) regressions.push(`WORSE  ${key}  ${id} (${base[id]} -> ${n})`);
+    else if (n > base[id])
+      regressions.push(`WORSE  ${key}  ${id} (${base[id]} -> ${n})`);
   }
 }
 
