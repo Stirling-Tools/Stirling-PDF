@@ -6,6 +6,7 @@ const NOW = 1_000_000;
 const labels = new Map([
   ["security", "Security"],
   ["watermark", "Watermark"],
+  ["classification", "Classification"],
 ]);
 
 function run(overrides: Partial<PolicyRunRecord>): PolicyRunRecord {
@@ -174,6 +175,24 @@ describe("buildPolicyBadgeMap — enforcing spinner while a run is in flight", (
   it("skips runs with no input fileId (server-reconciled orphans)", () => {
     const map = buildPolicyBadgeMap(
       [run({ status: "RUNNING", fileId: "", outputFileIds: [] })],
+      [{ id: "in" }],
+      labels,
+      NOW,
+    );
+    expect(enforcingOn(map, "in")).toBe(false);
+  });
+
+  it("never marks a classification run enforcing (it runs fully async)", () => {
+    // Classification is metadata-only, so even mid-run it must not block the
+    // file — no enforcing spinner, no gated actions.
+    const map = buildPolicyBadgeMap(
+      [
+        run({
+          categoryId: "classification",
+          status: "RUNNING",
+          outputFileIds: [],
+        }),
+      ],
       [{ id: "in" }],
       labels,
       NOW,
