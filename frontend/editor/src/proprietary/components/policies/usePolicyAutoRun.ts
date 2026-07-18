@@ -333,19 +333,26 @@ export function usePolicyAutoRun(): void {
   // so the enforced file appears in the app rather than only on the backend.
   useEffect(() => {
     for (const run of runs) {
+      const classification = isClassificationCategory(run.categoryId);
       if (
         run.status !== "COMPLETED" ||
         run.imported ||
-        !run.outputs?.length ||
-        importing.current.has(run.runId)
+        importing.current.has(run.runId) ||
+        // Classification settles even with no outputs (nothing to tag); other
+        // policies need an output to import.
+        (!run.outputs?.length && !classification)
       ) {
         continue;
       }
       importing.current.add(run.runId);
-      // Classification is metadata-only: stamp labels onto the existing stub in
-      // place, no version fork (see importClassificationLabels).
-      if (isClassificationCategory(run.categoryId)) {
-        void importClassificationLabels(run, {
+      // Classification is metadata-only: stamp labels onto the current leaf of
+      // the file it ran on (no version fork). See importClassificationLabels.
+      if (classification) {
+        const targetIds = classificationLabelTargets(
+          run.fileId,
+          fileStubsRef.current,
+        );
+        void importClassificationLabels(run, targetIds, {
           updateStirlingFileStub,
           bumpRevision,
         }).finally(() => importing.current.delete(run.runId));
@@ -521,22 +528,41 @@ interface ClassificationImportContext {
   bumpRevision: () => void;
 }
 
+/** Workspace stubs to tag with a classification run's labels: the file it ran
+ *  on plus any live descendants, so an edit made during the async run (which
+ *  forks a new leaf) still shows the tags. Falls back to the run's own file. */
+export function classificationLabelTargets(
+  runFileId: string,
+  stubs: ReadonlyArray<StirlingFileStub>,
+): FileId[] {
+  const targets = stubs
+    .filter(
+      (s) =>
+        (s.id as string) === runFileId ||
+        s.parentFileId === runFileId ||
+        s.sourceFileIds?.includes(runFileId as FileId),
+    )
+    .map((s) => s.id as FileId);
+  return targets.length > 0 ? targets : [runFileId as FileId];
+}
+
 /**
- * Stamp a classification run's labels onto the file's existing stub in place
- * (workspace + storage) — no versioned child, no history entry, only tags.
+ * Stamp a classification run's labels onto the target stubs in place (workspace
+ * + storage) — no versioned child, no history entry, only tags.
  */
 async function importClassificationLabels(
   run: PolicyRunRecord,
+  targetIds: FileId[],
   ctx: ClassificationImportContext,
 ): Promise<void> {
-  const targetId = run.fileId as FileId;
-  if (!targetId) {
-    // A server-reconciled run with no local input link — nothing to tag.
+  if (targetIds.length === 0) {
+    // Server-reconciled run with no local input link — nothing to tag.
     updateRun(run.runId, { imported: true });
     return;
   }
   // Read labels from the returned PDF. A non-404 failure is transient — bail and
-  // retry next tick; a 404 (output aged out) just skips that output.
+  // retry next tick; a 404 (output aged out) just skips that output. Empty
+  // outputs (nothing to read) fall through and settle the run below.
   let labels: string[] | null = null;
   for (const out of run.outputs) {
     try {
@@ -552,9 +578,12 @@ async function importClassificationLabels(
   }
   if (labels && labels.length > 0) {
     const updates = { classificationLabels: labels };
-    ctx.updateStirlingFileStub(targetId, updates);
-    const ok = await fileStorage.updateFileMetadata(targetId, updates);
-    if (ok) ctx.bumpRevision();
+    let mutated = false;
+    for (const id of targetIds) {
+      ctx.updateStirlingFileStub(id, updates);
+      if (await fileStorage.updateFileMetadata(id, updates)) mutated = true;
+    }
+    if (mutated) ctx.bumpRevision();
   }
   // Settle either way so it stops re-importing. No outputFileIds: classification
   // produces no workspace file, so it gets no version badge.
