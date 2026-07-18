@@ -128,6 +128,13 @@ vi.mock("@app/data/processorSearchIndex", () => ({
       path: "/portal/sources",
       keywords: ["connectors"],
     },
+    {
+      id: "docs",
+      labelKey: "portal.nav.docs",
+      labelFallback: "Documentation",
+      path: "/portal/docs",
+      keywords: ["docs"],
+    },
   ],
 }));
 
@@ -155,6 +162,7 @@ import { fetchSources } from "@portal/api/sources";
 import type { Member, UsersResponse } from "@portal/api/users";
 import { fetchUsers } from "@portal/api/users";
 import {
+  rankDocsResults,
   rankPortalPipelineResults,
   rankPortalPolicyResults,
 } from "@portal/search/entitySearch";
@@ -330,6 +338,18 @@ describe("usePortalSearchResults helpers", () => {
     expect(results.map((result) => result.key)).toEqual([
       "portal-pipeline:custom-pipeline",
     ]);
+  });
+
+  it("full-text searches the bundled docs, not just their titles", () => {
+    const navigate = vi.fn();
+    // "Tesseract" appears in the OCR doc body but in no doc title — a hit
+    // whose snippet contains it proves content search.
+    const results = rankDocsResults("Tesseract", navigate);
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0]?.subtitle).toMatch(/tesseract/i);
+
+    void results[0]?.onSelect();
+    expect(navigate).toHaveBeenCalledWith(expect.stringMatching(/\/docs#./));
   });
 
   it("forwards portal settings row hits with their focus anchor", () => {

@@ -101,9 +101,10 @@ export function useSuperSearchGates(): SuperSearchGates | null {
             isAdmin: authState.isAdmin ?? config.isAdmin ?? false,
             loginEnabled: config.enableLogin ?? false,
             portalAccessible: authState.portalAccess ?? false,
+            isAnonymous: authState.isAnonymous,
           }
         : null,
-    [authState.isAdmin, authState.portalAccess, config],
+    [authState.isAdmin, authState.isAnonymous, authState.portalAccess, config],
   );
 }
 
@@ -302,6 +303,9 @@ export function rankSettingsResults(
     if (s.requiresLogin && !(gates?.loginEnabled ?? false)) return false;
     // Admin-area sections mirror the builder's `isAdmin || !loginEnabled` gate.
     if (s.adminArea && !(gates ? gates.isAdmin || !gates.loginEnabled : false))
+      return false;
+    // Account-bound sections mirror the SaaS builder's `!isAnonymous` gate.
+    if (s.requiresAccount && (gates ? (gates.isAnonymous ?? false) : true))
       return false;
     return true;
   });

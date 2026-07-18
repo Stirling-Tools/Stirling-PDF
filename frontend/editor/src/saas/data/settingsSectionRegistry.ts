@@ -9,10 +9,10 @@ export type { SettingsSectionEntry };
  * cloud Billing (Plan) and Legal. It deliberately does NOT list the self-hosted
  * admin sections, so search never deep-links to a tab the SaaS modal can't show.
  *
- * Entries are left ungated: the login/admin flags the super search reads come
- * from the local backend config and don't reflect SaaS auth, so gating here
- * would be unreliable. SaaS users are authenticated in practice; the anonymous
- * edge is a known Tier-0 simplification.
+ * The local backend's login/admin flags don't reflect SaaS auth, so entries
+ * avoid `requiresLogin`/`adminArea`. Sections the SaaS nav only mounts for a
+ * signed-in account (Team, Plan) carry `requiresAccount`, which the search
+ * gates on the auth seam's `isAnonymous` — the signal the nav itself uses.
  */
 export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
   {
@@ -36,6 +36,7 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     labelKey: "config.team",
     labelFallback: "Team",
     keywords: ["team", "members", "invite", "seats"],
+    requiresAccount: true,
     groupLabelKey: "config.account.overview.title",
     groupLabelFallback: "Account Settings",
   },
@@ -83,6 +84,7 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
       "invoice",
       "wallet",
     ],
+    requiresAccount: true,
     groupLabelKey: "settings.planBilling.title",
     groupLabelFallback: "Plan & Billing",
   },

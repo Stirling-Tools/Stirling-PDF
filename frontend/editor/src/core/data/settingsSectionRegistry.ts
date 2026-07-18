@@ -28,8 +28,8 @@ export interface SettingsSectionEntry {
   labelFallback: string;
   /**
    * The modal nav group this section sits under ("Preferences",
-   * "Configuration", …) — shown as result context, mirroring the in-modal
-   * settings search's "Group · match" line. Same keys the nav builder uses.
+   * "Configuration", …) — shown as result context ("Group · match").
+   * Same keys the nav builder uses.
    */
   groupLabelKey?: string;
   groupLabelFallback?: string;
@@ -43,6 +43,12 @@ export interface SettingsSectionEntry {
    * nav builder's `isAdmin || !loginEnabled` gate.
    */
   adminArea?: boolean;
+  /**
+   * Section only mounts for a signed-in (non-anonymous) account — mirrors the
+   * SaaS nav builder's `!isAnonymous` gate. Distinct from `requiresLogin`,
+   * which keys off the local backend's login mode rather than auth state.
+   */
+  requiresAccount?: boolean;
 }
 
 /** Core (OSS) sections — always present in every build. */

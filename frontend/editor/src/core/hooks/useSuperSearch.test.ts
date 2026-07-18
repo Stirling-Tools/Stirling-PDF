@@ -74,6 +74,13 @@ vi.mock("@app/data/settingsSectionRegistry", () => ({
       requiresLogin: true,
       adminArea: true,
     },
+    {
+      key: "teams",
+      labelKey: "settings.teams.title",
+      labelFallback: "Team",
+      keywords: ["team"],
+      requiresAccount: true,
+    },
   ],
 }));
 
@@ -176,6 +183,38 @@ describe("useSuperSearch helpers", () => {
     const results = rankSettingsResults("admin", t, null, vi.fn());
 
     expect(results).toEqual([]);
+    expect(rankSettingsResults("team", t, null, vi.fn())).toEqual([]);
+  });
+
+  it("hides account-bound settings from anonymous sessions", () => {
+    const anonymous = rankSettingsResults(
+      "team",
+      t,
+      { isAdmin: false, loginEnabled: true, isAnonymous: true },
+      vi.fn(),
+    );
+    expect(anonymous).toEqual([]);
+
+    const signedIn = rankSettingsResults(
+      "team",
+      t,
+      { isAdmin: false, loginEnabled: true, isAnonymous: false },
+      vi.fn(),
+    );
+    expect(signedIn.map((result) => result.key)).toEqual([
+      "setting-section:teams",
+    ]);
+
+    // Hosts that omit the flag (portal, always signed-in) keep the section.
+    const flagless = rankSettingsResults(
+      "team",
+      t,
+      { isAdmin: false, loginEnabled: true },
+      vi.fn(),
+    );
+    expect(flagless.map((result) => result.key)).toEqual([
+      "setting-section:teams",
+    ]);
   });
 
   it("keeps the Processor group closed until gates resolve, then opens it for single-user mode", () => {
