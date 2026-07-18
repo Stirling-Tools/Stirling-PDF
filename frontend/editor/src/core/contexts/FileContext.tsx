@@ -23,7 +23,6 @@ import {
 import {
   FileContextProviderProps,
   FileContextSelectors,
-  FileContextStateValue,
   FileContextActionsValue,
   FileContextActions,
   FileId,
@@ -49,8 +48,9 @@ import {
 } from "@app/contexts/file/fileActions";
 import { FileLifecycleManager } from "@app/contexts/file/lifecycle";
 import {
-  FileStateContext,
+  FileStoreContext,
   FileActionsContext,
+  type FileStateStore,
 } from "@app/contexts/file/contexts";
 import {
   IndexedDBProvider,
@@ -657,14 +657,26 @@ function FileContextInner({
     ],
   );
 
-  // Split context values to minimize re-renders
-  const stateValue = useMemo<FileContextStateValue>(
+  // Subscription store bridge: the context value is STABLE, so consumers only
+  // re-render when the slice they select (via useFileSelector) changes — not on
+  // every state change. Listeners are notified after each committed state.
+  const listenersRef = useRef<Set<() => void>>(new Set());
+  const store = useMemo<FileStateStore>(
     () => ({
-      state,
+      getState: () => stateRef.current,
+      subscribe: (listener) => {
+        listenersRef.current.add(listener);
+        return () => {
+          listenersRef.current.delete(listener);
+        };
+      },
       selectors,
     }),
-    [state, selectors],
+    [selectors],
   );
+  useEffect(() => {
+    for (const listener of listenersRef.current) listener();
+  }, [state]);
 
   const actionsValue = useMemo<FileContextActionsValue>(
     () => ({
@@ -698,7 +710,7 @@ function FileContextInner({
   }, [lifecycleManager]);
 
   return (
-    <FileStateContext.Provider value={stateValue}>
+    <FileStoreContext.Provider value={store}>
       <FileActionsContext.Provider value={actionsValue}>
         {children}
         <ZipWarningModal
@@ -721,7 +733,7 @@ function FileContextInner({
           onSkip={handleUnlockSkip}
         />
       </FileActionsContext.Provider>
-    </FileStateContext.Provider>
+    </FileStoreContext.Provider>
   );
 }
 
@@ -758,6 +770,7 @@ export function FileContextProvider({
 export {
   useFileState,
   useFileActions,
+  useFileSelector,
   useCurrentFile,
   useFileSelection,
   useFileManagement,
