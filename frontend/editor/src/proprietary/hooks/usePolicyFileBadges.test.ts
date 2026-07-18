@@ -186,7 +186,13 @@ describe("buildPolicyBadgeMap — enforcing spinner while a run is in flight", (
     // Classification is metadata-only, so even mid-run it must not block the
     // file — no enforcing spinner, no gated actions.
     const map = buildPolicyBadgeMap(
-      [run({ categoryId: "classification", status: "RUNNING", outputFileIds: [] })],
+      [
+        run({
+          categoryId: "classification",
+          status: "RUNNING",
+          outputFileIds: [],
+        }),
+      ],
       [{ id: "in" }],
       labels,
       NOW,

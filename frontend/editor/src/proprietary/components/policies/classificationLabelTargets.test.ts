@@ -2,8 +2,13 @@ import { describe, it, expect } from "vitest";
 import { classificationLabelTargets } from "@app/components/policies/usePolicyAutoRun";
 import type { StirlingFileStub } from "@app/types/fileContext";
 
-const stub = (s: Partial<StirlingFileStub>): StirlingFileStub =>
-  ({ id: "x", ...s }) as StirlingFileStub;
+// Loosely-typed builder: FileId is a branded string, so accept plain string ids
+// in tests and cast — classificationLabelTargets only reads id/parent/sources.
+const stub = (s: {
+  id: string;
+  parentFileId?: string;
+  sourceFileIds?: string[];
+}): StirlingFileStub => s as unknown as StirlingFileStub;
 
 describe("classificationLabelTargets", () => {
   it("targets the run's own file when it's still the leaf", () => {
