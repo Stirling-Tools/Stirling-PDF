@@ -99,6 +99,14 @@ jobs:
     uses: ./.github/workflows/frontend-validation.yml
     secrets: inherit
 
+  frontend-a11y:
+    if: needs.files-changed.outputs.frontend == 'true'
+    needs: [files-changed]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/frontend-a11y.yml
+    secrets: inherit
+
   playwright-e2e:
     if: needs.files-changed.outputs.frontend == 'true'
     needs: [files-changed]
@@ -244,6 +252,7 @@ jobs:
       - db-migration-test
       - check-generateOpenApiDocs
       - frontend-validation
+      - frontend-a11y
       - playwright-e2e
       - playwright-e2e-live
       - playwright-e2e-enterprise
@@ -270,6 +279,7 @@ jobs:
             db-migration-test=${{ needs.db-migration-test.result }}
             check-generateOpenApiDocs=${{ needs.check-generateOpenApiDocs.result }}
             frontend-validation=${{ needs.frontend-validation.result }}
+            frontend-a11y=${{ needs.frontend-a11y.result }}
             playwright-e2e=${{ needs.playwright-e2e.result }}
             playwright-e2e-live=${{ needs.playwright-e2e-live.result }}
             playwright-e2e-enterprise=${{ needs.playwright-e2e-enterprise.result }}
