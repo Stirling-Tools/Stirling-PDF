@@ -30,6 +30,8 @@ vi.mock("@portal/api/sources", () => ({
 
 const fetchS3Connections = vi.fn();
 vi.mock("@portal/api/integrations", () => ({
+  fetchIntegrations: () => Promise.resolve([]),
+  fetchIntegrationCapabilities: () => Promise.resolve({ customApi: false }),
   fetchS3Connections: () => fetchS3Connections(),
   createIntegration: vi.fn(),
 }));

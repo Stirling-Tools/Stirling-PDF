@@ -37,6 +37,8 @@ import { PolicyFieldRow } from "@portal/components/policies/PolicyFieldRow";
 import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
 import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig";
 import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
+import { PolicyPurviewConfig } from "@portal/components/policies/PolicyPurviewConfig";
+import { PolicyPurviewReadConfig } from "@portal/components/policies/PolicyPurviewReadConfig";
 import { ClassificationLabelsSection } from "@portal/components/policies/ClassificationLabelsSection";
 import "@portal/views/Policies.css";
 
@@ -87,7 +89,13 @@ function resolveFieldValues(
  * starts enabled — the user toggles tools off in the workflow.
  */
 // Temporary until the catalogue carries a defaultEnabled flag.
-const DISABLED_BY_DEFAULT = new Set<PolicyToolId>(["watermark"]);
+// Steps that cannot work until someone configures them, so they start off rather than failing
+// every run of a freshly created policy. Purview needs a tenant connection and a label GUID.
+const DISABLED_BY_DEFAULT = new Set<PolicyToolId>([
+  "watermark",
+  "purviewApplyLabel",
+  "purviewReadLabel",
+]);
 
 /**
  * Policy-facing framing for each capability a policy can include. Labels and
@@ -145,6 +153,27 @@ const CAPABILITY_META: Record<
     descKey: "portal.policies.wizard.capability.classify.desc",
     descEn:
       "Identifies the document's type from your team's labels and tags it, so it files and searches by category.",
+  },
+  purviewApplyLabel: {
+    labelKey: "portal.policies.wizard.capability.purviewApplyLabel.label",
+    labelEn: "Apply a Microsoft Purview sensitivity label",
+    descKey: "portal.policies.wizard.capability.purviewApplyLabel.desc",
+    descEn:
+      "Marks the document with one of your organisation's Purview labels, so Purview-aware tools recognise how sensitive it is.",
+  },
+  purviewReadLabel: {
+    labelKey: "portal.policies.wizard.capability.purviewReadLabel.label",
+    labelEn: "Read the document's Purview label",
+    descKey: "portal.policies.wizard.capability.purviewReadLabel.desc",
+    descEn:
+      "Reports the Purview label a document already carries, so the rest of the policy can act on how sensitive it is.",
+  },
+  externalApiCall: {
+    labelKey: "portal.policies.wizard.capability.externalApiCall.label",
+    labelEn: "Send the document to another system",
+    descKey: "portal.policies.wizard.capability.externalApiCall.desc",
+    descEn:
+      "Hands the document to a system you have connected, and records what it answered.",
   },
 };
 
@@ -470,6 +499,22 @@ function PolicySetupWizardBody({
                             parameters={tl.params}
                             onChange={(params) =>
                               setToolParams("watermark", params)
+                            }
+                          />
+                        )}
+                        {tl.toolId === "purviewApplyLabel" && (
+                          <PolicyPurviewConfig
+                            parameters={tl.params}
+                            onChange={(params) =>
+                              setToolParams("purviewApplyLabel", params)
+                            }
+                          />
+                        )}
+                        {tl.toolId === "purviewReadLabel" && (
+                          <PolicyPurviewReadConfig
+                            parameters={tl.params}
+                            onChange={(params) =>
+                              setToolParams("purviewReadLabel", params)
                             }
                           />
                         )}

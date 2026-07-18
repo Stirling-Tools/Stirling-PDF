@@ -27,6 +27,9 @@ vi.mock("@portal/api/sources", () => ({
 
 const fetchS3Connections = vi.fn();
 vi.mock("@portal/api/integrations", () => ({
+  fetchIntegrations: () => fetchS3Connections(),
+  // Custom-API authoring is a server decision; these tests assert the default view.
+  fetchIntegrationCapabilities: () => Promise.resolve({ customApi: false }),
   fetchS3Connections: () => fetchS3Connections(),
   deleteIntegration: vi.fn(),
 }));

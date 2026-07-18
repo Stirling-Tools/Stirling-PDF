@@ -53,6 +53,9 @@ vi.mock("@portal/api/policies", () => ({
 const fetchS3Connections = vi.fn();
 const createIntegration = vi.fn();
 vi.mock("@portal/api/integrations", () => ({
+  fetchIntegrations: () => fetchS3Connections(),
+  // Custom-API authoring is a server decision; these tests assert the default view.
+  fetchIntegrationCapabilities: () => Promise.resolve({ customApi: false }),
   fetchS3Connections: () => fetchS3Connections(),
   createIntegration: (...args: unknown[]) => createIntegration(...args),
 }));
@@ -209,24 +212,24 @@ describe("PipelineBuilder", () => {
       await screen.findByText("portal.connections.picker.createNew"),
     );
     fireEvent.change(
-      screen.getByLabelText(/portal\.connections\.s3\.fields\.name/),
+      screen.getByLabelText(/portal\.connections\.fields\.name/),
       { target: { value: "Claims bucket" } },
     );
     fireEvent.change(
       screen.getByLabelText(
-        /portal\.sources\.types\.s3\.fields\.bucket\.label/,
+        /portal\.connections\.types\.s3\.fields\.bucket\.label/,
       ),
       { target: { value: "claims-processed" } },
     );
     fireEvent.change(
       screen.getByLabelText(
-        /portal\.sources\.types\.s3\.fields\.accessKeyId\.label/,
+        /portal\.connections\.types\.s3\.fields\.accessKeyId\.label/,
       ),
       { target: { value: "AKIAEXAMPLE" } },
     );
     fireEvent.change(
       screen.getByLabelText(
-        /portal\.sources\.types\.s3\.fields\.secretAccessKey\.label/,
+        /portal\.connections\.types\.s3\.fields\.secretAccessKey\.label/,
       ),
       { target: { value: "shh-secret" } },
     );

@@ -4615,12 +4615,12 @@ hint = "Upload a PNG, JPG, SVG, or other image file to place on the PDF. SVG fil
 label = "Upload Image"
 placeholder = "Select image file"
 
-[imageToPdf]
-tags = "conversion,img,jpg,picture,photo"
-
 [imageToPDF]
 header = "Image to PDF"
 title = "Image to PDF"
+
+[imageToPdf]
+tags = "conversion,img,jpg,picture,photo"
 
 [infoBanner]
 dismiss = "Dismiss"
@@ -6435,18 +6435,79 @@ beta = "Beta"
 ga = "GA"
 
 [portal.connections]
-createTitle = "New S3 connection"
+createTitle = "New connection"
+createTitleFor = "Connect {{name}}"
 delete = "Delete"
 edit = "Edit"
-editTitle = "Edit S3 connection"
-subtitle = "Reusable S3 credentials that sources and pipeline outputs connect to."
+editTitle = "Edit connection"
+subtitle = "Reusable credentials that sources, pipeline outputs and integration steps connect to."
+unsupportedType = "This connection type cannot be edited here."
 
 [portal.connections.actions]
 new = "New connection"
 
+[portal.connections.advanced]
+cta = "Advanced: connect a custom API"
+
+[portal.connections.categories.advanced]
+description = "For a service we do not support yet."
+label = "Advanced"
+
+[portal.connections.categories.audit]
+description = "Record what happened to a document, where your auditors already look."
+label = "Audit & compliance logging"
+
+[portal.connections.categories.notify]
+description = "Tell another system that something happened."
+label = "Notify & workflow"
+
+[portal.connections.categories.security]
+description = "Scan or label a document before it moves on."
+label = "Security & classification"
+
+[portal.connections.categories.signing]
+description = "Send a document out to be signed or notarized."
+label = "E-signature & notarization"
+
+[portal.connections.categories.storage]
+description = "Where processed documents end up - a bucket, a drive, a ticket or a page."
+label = "File & attach"
+
+[portal.connections.commonFields.accessToken]
+helperText = "Stirling stores this encrypted and never shows it again."
+label = "Access token"
+
+[portal.connections.commonFields.apiKey]
+label = "API key"
+
+[portal.connections.commonFields.apiToken]
+label = "API token"
+
+[portal.connections.commonFields.baseUrl]
+helperText = "Steps using this connection can only call paths under this URL, never another host."
+label = "Server URL"
+
+[portal.connections.commonFields.email]
+label = "Email"
+
+[portal.connections.commonFields.password]
+label = "Password"
+
+[portal.connections.commonFields.username]
+label = "Username"
+
+[portal.connections.commonFields.webhookUrl]
+helperText = "Paste the URL the service gave you. Only paths under it can be called."
+label = "Webhook URL"
+
 [portal.connections.empty]
-description = "Add an S3 connection to reuse the same bucket and credentials across sources and pipeline outputs."
+description = "Add a connection to reuse the same credentials across sources, pipeline outputs and integration steps."
 title = "No connections yet"
+
+[portal.connections.fields]
+name = "Connection name"
+namePlaceholder = "e.g. Claims bucket"
+type = "Type"
 
 [portal.connections.picker]
 cancel = "Cancel"
@@ -6454,14 +6515,221 @@ createNew = "New connection..."
 placeholder = "Select a connection"
 save = "Save connection"
 
-[portal.connections.s3.fields]
-name = "Connection name"
-namePlaceholder = "e.g. Claims bucket"
+[portal.connections.picker2]
+back = "Change integration"
+heading = "What do you want to connect?"
+noResultsBody = "We do not support it yet - tell us about it and we will look at adding it."
+noResultsTitle = "Nothing matches \"{{query}}\""
+searchPlaceholder = "Search integrations - try \"sign\", \"ocr\" or a product name"
 
 [portal.connections.table]
-bucket = "Bucket"
+detail = "Details"
 name = "Name"
-region = "Region"
+type = "Type"
+
+[portal.connections.types.api]
+description = "Call any HTTP API from a policy. You choose the URL, authentication and payload."
+label = "Custom API"
+
+[portal.connections.types.api.fields.authType]
+label = "Authentication"
+
+[portal.connections.types.api.fields.authType.options.basic]
+label = "Username and password"
+
+[portal.connections.types.api.fields.authType.options.bearer]
+label = "Bearer token"
+
+[portal.connections.types.api.fields.authType.options.header]
+label = "Token in a custom header"
+
+[portal.connections.types.api.fields.authType.options.none]
+label = "None"
+
+[portal.connections.types.api.fields.authType.options.tokenLogin]
+label = "Log in for a token"
+
+[portal.connections.types.api.fields.baseUrl]
+helperText = "Steps using this connection can only call paths under this URL, never another host."
+label = "Base URL"
+placeholder = "https://api.example.com/v1"
+
+[portal.connections.types.api.fields.headerName]
+label = "Header name"
+placeholder = "X-API-Key"
+
+[portal.connections.types.api.fields.loginPath]
+label = "Login path"
+placeholder = "/auth/login"
+
+[portal.connections.types.api.fields.password]
+label = "Password"
+
+[portal.connections.types.api.fields.resultUrlHosts]
+helperText = "If the API replies with a download link, only these hosts may be fetched. Separate with commas. Leave blank to allow only the base URL's own host."
+label = "Allowed result hosts"
+
+[portal.connections.types.api.fields.token]
+label = "Token"
+
+[portal.connections.types.api.fields.tokenHeaderName]
+label = "Send the token as this header"
+
+[portal.connections.types.api.fields.tokenResponseHeader]
+helperText = "The response header the login call returns the token in, e.g. X-Auth-Token."
+label = "Token response header"
+
+[portal.connections.types.api.fields.username]
+label = "Username"
+
+[portal.connections.types.clamav]
+baseUrlPlaceholder = "http://clamav-rest:9000"
+description = "Scan documents for malware on a server you run - nothing leaves your network."
+label = "ClamAV (self-hosted)"
+
+[portal.connections.types.cloudmersive]
+description = "Virus and content scanning for documents in a policy."
+label = "Cloudmersive"
+
+[portal.connections.types.cloudmersiveadvanced]
+description = "Block documents containing macros, executables, scripts or embedded objects - not just known malware."
+label = "Cloudmersive Advanced Scan"
+
+[portal.connections.types.confluence]
+baseUrlPlaceholder = "https://your-site.atlassian.net/wiki/api/v2"
+description = "Attach processed documents to a Confluence page."
+label = "Confluence"
+
+[portal.connections.types.consigno]
+description = "Send documents to ConsignO Cloud (Notarius) for electronic signature and notarization."
+label = "ConsignO Cloud"
+
+[portal.connections.types.consigno.fields.baseUrl]
+helperText = "Your ConsignO Cloud environment, including /api/v1."
+label = "Server URL"
+placeholder = "https://your-org.consignocloud.com/api/v1"
+
+[portal.connections.types.consigno.fields.clientId]
+label = "API key"
+
+[portal.connections.types.consigno.fields.clientSecret]
+label = "API secret"
+
+[portal.connections.types.consigno.fields.password]
+label = "Password"
+
+[portal.connections.types.consigno.fields.tenantId]
+helperText = "Only needed if your organisation uses tenants."
+label = "Tenant"
+
+[portal.connections.types.consigno.fields.username]
+label = "Username"
+
+[portal.connections.types.discord]
+baseUrlPlaceholder = "https://discord.com/api/webhooks/..."
+description = "Post a message to Discord when a policy processes a document."
+label = "Discord"
+
+[portal.connections.types.elastic]
+baseUrlPlaceholder = "https://your-cluster:9200"
+description = "Index an audit event in Elasticsearch each time a policy handles a document."
+label = "Elasticsearch"
+
+[portal.connections.types.googlechat]
+baseUrlPlaceholder = "https://chat.googleapis.com/v1/spaces/..."
+description = "Post a message to a Google Chat space when a policy runs."
+label = "Google Chat"
+
+[portal.connections.types.jira]
+baseUrlPlaceholder = "https://your-site.atlassian.net"
+description = "Attach processed documents to a Jira issue."
+label = "Jira"
+
+[portal.connections.types.mailgun]
+description = "Email a document or a notification when a policy runs."
+label = "Mailgun"
+
+[portal.connections.types.nextcloud]
+baseUrlPlaceholder = "https://your-server/remote.php/dav"
+description = "File processed documents into Nextcloud."
+label = "Nextcloud"
+
+[portal.connections.types.nextcloud.fields.appPassword]
+label = "App password"
+
+[portal.connections.types.presidio]
+baseUrlPlaceholder = "http://presidio-analyzer:3000"
+description = "Detect personal data in document text using a Presidio server you run."
+label = "Presidio (self-hosted)"
+
+[portal.connections.types.purview]
+description = "Read and apply Microsoft Purview sensitivity labels on PDFs."
+label = "Microsoft Purview"
+
+[portal.connections.types.purview.fields.clientId]
+helperText = "Optional. Only needed to pick labels by name; labelling works without it."
+label = "Application (client) ID"
+
+[portal.connections.types.purview.fields.clientSecret]
+label = "Client secret"
+
+[portal.connections.types.purview.fields.tenantId]
+helperText = "Stamped onto every label as its SiteId, so Purview-aware tools know which organisation applied it."
+label = "Directory (tenant) ID"
+placeholder = "cb46c030-1825-4e81-a295-151c039dbf02"
+
+[portal.connections.types.s3]
+description = "An S3 bucket that sources can read from and pipeline outputs can write to."
+label = "S3 storage"
+
+[portal.connections.types.s3.fields.accessKeyId]
+label = "Access key ID"
+
+[portal.connections.types.s3.fields.bucket]
+label = "Bucket"
+
+[portal.connections.types.s3.fields.endpoint]
+helperText = "Leave blank for AWS. Set this for MinIO or another S3-compatible store."
+label = "Endpoint"
+
+[portal.connections.types.s3.fields.region]
+label = "Region"
+
+[portal.connections.types.s3.fields.secretAccessKey]
+label = "Secret access key"
+
+[portal.connections.types.sendgrid]
+description = "Email a document or a notification when a policy runs."
+label = "SendGrid"
+
+[portal.connections.types.slack]
+description = "Post a message to Slack when a policy processes a document."
+label = "Slack"
+
+[portal.connections.types.splunk]
+baseUrlPlaceholder = "https://your-splunk:8088"
+description = "Send an audit event to Splunk each time a policy handles a document."
+label = "Splunk"
+
+[portal.connections.types.sumologic]
+baseUrlPlaceholder = "https://endpoint.collection.sumologic.com/receiver/v1/http/..."
+description = "Send an audit event to a Sumo Logic HTTP collector."
+label = "Sumo Logic"
+
+[portal.connections.types.teams]
+baseUrlPlaceholder = "https://your-org.webhook.office.com/webhookb2/..."
+description = "Post a message to a Teams channel when a policy runs."
+label = "Microsoft Teams"
+
+[portal.connections.types.webhook]
+baseUrlPlaceholder = "https://example.com/hooks/documents"
+description = "Post each document, or just the details, to a URL you choose."
+label = "Webhook"
+
+[portal.connections.types.zapier]
+baseUrlPlaceholder = "https://hooks.zapier.com/hooks/catch/..."
+description = "Trigger a Zap or Make scenario from a policy."
+label = "Zapier & Make"
 
 [portal.docs]
 browse = "Browse docs"
@@ -6862,7 +7130,6 @@ sectionsAriaLabel = "Infrastructure sections"
 subtitle = "Deployments, credentials, security posture, storage, and the audit trail for your Stirling workspace."
 title = "Infrastructure"
 
-# Fixed-enum label maps rendered via t(MAP[value]) in the infrastructure tabs.
 [portal.infrastructure.apiKeyPermission]
 admin = "Admin"
 read = "Read"
@@ -7425,6 +7692,29 @@ minConfidence = "Min confidence"
 1 = "Extract"
 2 = "Name"
 3 = "Normalize"
+
+[portal.policies.config.purview]
+label = "Apply a Microsoft Purview sensitivity label"
+
+[portal.policies.config.purview.fields]
+connection = "Purview tenant"
+labelId = "Label ID"
+labelIdHelp = "The label's GUID, from the Purview portal. Applying a label writes its metadata onto the PDF; it cannot encrypt, which needs the Microsoft client."
+labelName = "Label name (optional)"
+labelNameHelp = "Recorded alongside the ID so people and tools can recognise the label."
+
+[portal.policies.config.purview.fields.method]
+help = "Purview distinguishes a label a policy applied from one a person chose."
+label = "How the label is recorded"
+privileged = "As chosen by a person"
+standard = "As applied automatically"
+
+[portal.policies.config.purviewRead]
+label = "Read a Microsoft Purview label"
+
+[portal.policies.config.purviewRead.fields]
+connection = "Purview tenant"
+connectionHelp = "Reads the label the document already carries, so later steps can act on it."
 
 [portal.policies.config.retention]
 summary = "Enforces how long documents are kept, when to archive, and when to delete."
@@ -8078,21 +8368,9 @@ top = "Top level only"
 description = "Pull documents from an Amazon S3 or S3-compatible bucket."
 label = "Amazon S3"
 
-[portal.sources.types.s3.fields.accessKeyId]
-label = "Access key ID"
-
-[portal.sources.types.s3.fields.bucket]
-label = "Bucket"
-placeholder = "my-company-inbox"
-
 [portal.sources.types.s3.fields.connection]
 helperText = "The stored connection holding the bucket and credentials. Reused by every source and pipeline output that references it."
 label = "Connection"
-
-[portal.sources.types.s3.fields.endpoint]
-helperText = "Leave blank for Amazon S3. Set to use an S3-compatible service such as MinIO."
-label = "Custom endpoint"
-placeholder = "https://s3.example.com"
 
 [portal.sources.types.s3.fields.mode]
 helperText = "Consume removes each object from the bucket once every policy has processed it."
@@ -8106,13 +8384,6 @@ snapshot = "Snapshot: re-read the bucket every run"
 helperText = "Only objects whose keys start with this prefix are processed."
 label = "Key prefix"
 placeholder = "incoming/"
-
-[portal.sources.types.s3.fields.region]
-label = "Region"
-placeholder = "us-east-1"
-
-[portal.sources.types.s3.fields.secretAccessKey]
-label = "Secret access key"
 
 [portal.sources.types.unknown]
 label = "Source"
@@ -8819,11 +9090,11 @@ label = "Remove XMP Metadata"
 [sanitize.steps]
 settings = "Settings"
 
-[sanitizePdf]
-tags = "clean,secure,safe,remove-threats"
-
 [sanitizePDF]
 title = "Sanitize PDF"
+
+[sanitizePdf]
+tags = "clean,secure,safe,remove-threats"
 
 [scalePages]
 tags = "resize,adjust,scale,page size,resize page,scale page,change size,adjust size,enlarge,shrink page,fit to page,A4,letter size"

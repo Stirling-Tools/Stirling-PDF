@@ -16,6 +16,7 @@ import { classificationHandlers } from "@portal/mocks/handlers/classification";
 import { documentsHandlers } from "@portal/mocks/handlers/documents";
 import { editorDeployHandlers } from "@portal/mocks/handlers/editorDeploy";
 import { linkHandlers } from "@portal/mocks/handlers/link";
+import { integrationsHandlers } from "@portal/mocks/handlers/integrations";
 
 export const handlers = [
   ...authHandlers,
@@ -36,6 +37,7 @@ export const handlers = [
   ...documentsHandlers,
   ...editorDeployHandlers,
   ...linkHandlers,
+  ...integrationsHandlers,
 ];
 
 export { resetNotificationsStore } from "@portal/mocks/handlers/notifications";
