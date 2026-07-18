@@ -83,6 +83,7 @@ frontend: &frontend
   - .taskfiles/frontend.yml
   - .taskfiles/e2e.yml
   - .github/workflows/frontend-validation.yml
+  - .github/workflows/frontend-a11y.yml
   - .github/workflows/e2e-stubbed.yml
   - .github/workflows/e2e-live.yml
 

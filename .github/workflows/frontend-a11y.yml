@@ -1,0 +1,48 @@
+name: Frontend a11y regression gate
+
+# Reusable workflow called from build.yml when frontend sources change.
+# Scans every Storybook story in real Chromium (via the Vitest browser addon)
+# and runs axe against each. Existing violations are grandfathered in
+# .storybook/a11y-baseline.json; the gate fails only on a NEW violation — a
+# story gaining a rule it didn't have, gaining more of one, or a brand-new
+# story with any violation.
+#
+# Kept separate from frontend-validation: the browser scan is slow (~20 min),
+# so it shouldn't sit in the fast lint/type/build signal. Colour-contrast is
+# the bulk of the current baseline and is theme-level (tracked separately);
+# this gate exists to stop NEW regressions landing, not to force those to zero.
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  pick:
+    uses: ./.github/workflows/_runner-pick.yml
+
+  frontend-a11y:
+    needs: pick
+    runs-on: ${{ needs.pick.outputs.use_depot == 'true' && 'depot-ubuntu-24.04-4' || 'ubuntu-latest' }}
+    timeout-minutes: 40
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        with:
+          egress-policy: audit
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install Task
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
+      - name: Install Playwright (chromium only)
+        # Same Chromium the Vitest browser scan drives; task installs npm deps
+        # first (deps: [:frontend:install]).
+        run: task e2e:install -- chromium
+      - name: a11y regression gate
+        run: task frontend:storybook:a11y

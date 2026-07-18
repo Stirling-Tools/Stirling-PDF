@@ -201,6 +201,20 @@ tasks:
       #   task frontend:storybook:test -- Button
       - npx vitest run --config .storybook/vitest.config.ts {{.CLI_ARGS}}
 
+  storybook:a11y:
+    desc: "a11y regression gate: scan stories, fail only on NEW axe violations vs the baseline"
+    deps: [install]
+    cmds:
+      - bash .storybook/a11y-scan.sh
+      - node .storybook/a11y-check.mjs --in .a11y-scan
+
+  storybook:a11y:record:
+    desc: "Re-record the a11y baseline (run after intentionally fixing/adding violations)"
+    deps: [install]
+    cmds:
+      - bash .storybook/a11y-scan.sh
+      - node .storybook/a11y-check.mjs --in .a11y-scan --record
+
   # ============================================================
   # Code quality
   # ============================================================
