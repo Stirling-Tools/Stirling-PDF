@@ -16,6 +16,7 @@ import {
   useReducer,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useMemo,
   useState,
@@ -674,7 +675,9 @@ function FileContextInner({
     }),
     [selectors],
   );
-  useEffect(() => {
+  // Layout effect (not passive): subscribers re-render before the browser
+  // paints, so a state change can never show a frame with stale consumers.
+  useLayoutEffect(() => {
     for (const listener of listenersRef.current) listener();
   }, [state]);
 

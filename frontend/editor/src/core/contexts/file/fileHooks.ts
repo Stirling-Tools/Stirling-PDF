@@ -4,7 +4,7 @@
  * not on every file-state change.
  */
 
-import { useContext, useMemo } from "react";
+import { useContext, useLayoutEffect, useMemo, useRef } from "react";
 import { useSyncExternalStoreWithSelector } from "use-sync-external-store/shim/with-selector.js";
 import {
   FileStoreContext,
@@ -17,8 +17,11 @@ import {
   StirlingFileStub,
   StirlingFile,
   FileContextState,
+  FileContextSelectors,
 } from "@app/types/fileContext";
 import { FileId } from "@app/types/file";
+
+const GUARD_MISUSE = process.env.NODE_ENV !== "production";
 
 /** Shallow equality over object/array slices assembled by selectors. */
 function shallowEqual(a: unknown, b: unknown): boolean {
@@ -68,14 +71,53 @@ export function useFileSelector<T>(
   );
 }
 
+/** Wrap every selector so a call made during render logs loudly (dev/test only).
+ *  Render-time vs event-time isn't statically lintable, so this is the guard. */
+function guardSelectors(
+  selectors: FileContextSelectors,
+  isRendering: () => boolean,
+): FileContextSelectors {
+  const guarded: Record<string, unknown> = {};
+  for (const key of Object.keys(selectors)) {
+    const original = selectors[
+      key as keyof FileContextSelectors
+    ] as unknown as (...args: unknown[]) => unknown;
+    guarded[key] = (...args: unknown[]) => {
+      if (isRendering()) {
+        console.error(
+          `[useFileSelectors] ${key}() was called during render. These reads ` +
+            "don't subscribe, so the UI can go stale — use useFileSelector / " +
+            "useAllFiles / useStirlingFileStub for render-time data.",
+        );
+      }
+      return original(...args);
+    };
+  }
+  return guarded as unknown as FileContextSelectors;
+}
+
 /**
  * Stable selector API with NO state subscription — never re-renders. For
  * event-time reads (callbacks/effects), which see live state when invoked.
  * Render-time reads need a reactive hook (useAllFiles/useFileSelector) or
- * they go stale.
+ * they go stale — calling one during render logs an error outside production.
  */
-export function useFileSelectors() {
-  return useFileStore().selectors;
+export function useFileSelectors(): FileContextSelectors {
+  const { selectors } = useFileStore();
+  // True exactly while this consumer is rendering: set on every render, cleared
+  // by the layout effect once that render commits.
+  const renderPhase = useRef(false);
+  renderPhase.current = GUARD_MISUSE;
+  useLayoutEffect(() => {
+    renderPhase.current = false;
+  });
+  return useMemo(
+    () =>
+      GUARD_MISUSE
+        ? guardSelectors(selectors, () => renderPhase.current)
+        : selectors,
+    [selectors],
+  );
 }
 
 /**

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { ActionIcon } from "@app/ui/ActionIcon";
@@ -6,7 +6,7 @@ import { Tooltip } from "@app/components/shared/Tooltip";
 import { ViewerContext } from "@app/contexts/ViewerContext";
 import { useSignature } from "@app/contexts/SignatureContext";
 import {
-  useFileSelector,
+  useAllFiles,
   useFileSelectors,
   useFileContext,
 } from "@app/contexts/FileContext";
@@ -44,12 +44,8 @@ export default function ViewerAnnotationControls({
 
   // File state for save functionality
   const selectors = useFileSelectors();
-  const fileIds = useFileSelector((s) => s.files.ids);
+  const { files: activeFiles, fileIds } = useAllFiles();
   const { actions: fileActions } = useFileContext();
-  const activeFiles = useMemo(
-    () => selectors.getFiles(fileIds),
-    [selectors, fileIds],
-  );
 
   // Check if we're in sign mode or redaction mode
   const { selectedTool } = useNavigationState();

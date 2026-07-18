@@ -1,10 +1,12 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, act } from "@testing-library/react";
+import { useEffect } from "react";
 import { MantineProvider } from "@mantine/core";
 import { FileContextProvider } from "@app/contexts/FileContext";
 import {
   useAllFiles,
   useFileSelection,
+  useFileSelectors,
   useStirlingFileStub,
   useFileActions,
 } from "@app/contexts/file/fileHooks";
@@ -113,5 +115,52 @@ describe("file hooks — selector subscriptions", () => {
       });
     });
     expect(renders.selection).toBe(before.selection);
+  });
+});
+
+describe("useFileSelectors — render-phase misuse guard", () => {
+  const guardErrors = (spy: ReturnType<typeof vi.spyOn>) =>
+    spy.mock.calls.filter((args) =>
+      String(args[0]).includes("[useFileSelectors]"),
+    );
+
+  function RenderTimeMisuse() {
+    const selectors = useFileSelectors();
+    selectors.getAllFileIds(); // during render — must be flagged
+    return null;
+  }
+
+  function EffectTimeUse() {
+    const selectors = useFileSelectors();
+    useEffect(() => {
+      selectors.getAllFileIds(); // after commit — legitimate
+    }, [selectors]);
+    return null;
+  }
+
+  it("flags a selector invoked during render", () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(
+      <MantineProvider>
+        <FileContextProvider enableUrlSync={false}>
+          <RenderTimeMisuse />
+        </FileContextProvider>
+      </MantineProvider>,
+    );
+    expect(guardErrors(spy).length).toBeGreaterThan(0);
+    spy.mockRestore();
+  });
+
+  it("does not flag selector reads from effects", () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(
+      <MantineProvider>
+        <FileContextProvider enableUrlSync={false}>
+          <EffectTimeUse />
+        </FileContextProvider>
+      </MantineProvider>,
+    );
+    expect(guardErrors(spy)).toHaveLength(0);
+    spy.mockRestore();
   });
 });
