@@ -36,9 +36,28 @@ from stirling.services import setup_posthog_tracking
 logger = logging.getLogger(__name__)
 
 
+# How long the lifespan waits for a background task to finish its current iteration
+# before giving up and cancelling it. See the teardown in :func:`lifespan`.
+_BACKGROUND_TASK_DRAIN_SECONDS = 10
+
+
+async def _sleep_until(stop: asyncio.Event, seconds: float) -> bool:
+    """Wait up to ``seconds``. True if we were asked to stop, False if the interval elapsed.
+
+    Background loops idle here rather than in a bare ``asyncio.sleep`` so shutdown can be
+    cooperative - see :func:`lifespan` for why cancelling them mid-iteration is unsafe.
+    """
+    try:
+        await asyncio.wait_for(stop.wait(), timeout=seconds)
+    except TimeoutError:
+        return False
+    return True
+
+
 async def _run_expired_doc_reaper(
     documents: DocumentService,
     interval_seconds: int,
+    stop: asyncio.Event,
 ) -> None:
     """Periodically delete documents whose ``expires_at`` has passed.
 
@@ -46,11 +65,10 @@ async def _run_expired_doc_reaper(
     for the explicit logout purge: catches sessions that ended without a
     clean logout (tab close, JWT expiry, engine restart). Persistent rows
     (``expires_at`` null, the shape we use for org-shared docs) are never
-    touched. Runs until cancelled by the lifespan teardown.
+    touched. Runs until ``stop`` is set by the lifespan teardown.
     """
     await _reap(documents)
-    while True:
-        await asyncio.sleep(interval_seconds)
+    while not await _sleep_until(stop, interval_seconds):
         await _reap(documents)
 
 
@@ -100,13 +118,16 @@ def _adopt_cached_config_if_changed(fast_api: FastAPI) -> None:
     )
 
 
-async def _run_config_cache_watcher(fast_api: FastAPI, interval_seconds: int) -> None:
+async def _run_config_cache_watcher(
+    fast_api: FastAPI,
+    interval_seconds: int,
+    stop: asyncio.Event,
+) -> None:
     """Poll the shared config cache so every worker converges on the last push.
 
-    Runs until cancelled by the lifespan teardown.
+    Runs until ``stop`` is set by the lifespan teardown.
     """
-    while True:
-        await asyncio.sleep(interval_seconds)
+    while not await _sleep_until(stop, interval_seconds):
         try:
             _adopt_cached_config_if_changed(fast_api)
         except asyncio.CancelledError:
@@ -173,10 +194,12 @@ async def lifespan(fast_api: FastAPI):
     tracer_provider = setup_posthog_tracking(effective)
     if tracer_provider:
         Agent.instrument_all(InstrumentationSettings(tracer_provider=tracer_provider))
+    stop_background = asyncio.Event()
     reaper_task = asyncio.create_task(
         _run_expired_doc_reaper(
             runtime.documents,
             interval_seconds=settings.documents_reaper_interval_seconds,
+            stop=stop_background,
         ),
         name="expired-document-reaper",
     )
@@ -190,14 +213,23 @@ async def lifespan(fast_api: FastAPI):
                 _run_config_cache_watcher(
                     fast_api,
                     interval_seconds=settings.config_cache_poll_interval_seconds,
+                    stop=stop_background,
                 ),
                 name="config-cache-watcher",
             )
         )
     yield
-    for task in background_tasks:
+    # Ask the loops to stop and let the current iteration drain, rather than cancelling
+    # them. Cancelling a reaper that is inside `asyncio.to_thread(self._sync_reap_expired)`
+    # only abandons the await: the worker thread keeps running sqlite calls and the store's
+    # asyncio lock is released as the coroutine unwinds, so the `documents.close()` below
+    # would then close the connection out from under that thread and segfault the native
+    # sqlite-vec extension. Cancellation stays as a backstop for a task that will not stop.
+    stop_background.set()
+    _, pending = await asyncio.wait(background_tasks, timeout=_BACKGROUND_TASK_DRAIN_SECONDS)
+    for task in pending:
+        logger.warning("Background task %s did not stop in time; cancelling", task.get_name())
         task.cancel()
-    for task in background_tasks:
         try:
             await task
         except asyncio.CancelledError:

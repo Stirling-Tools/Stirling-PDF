@@ -7,6 +7,8 @@ populated, then exercise the gate + model-swap behaviour against the in-memory
 
 from __future__ import annotations
 
+import asyncio
+import threading
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from pathlib import Path
@@ -20,6 +22,7 @@ from stirling.api import app
 from stirling.api.app import _adopt_cached_config_if_changed
 from stirling.config import AppSettings, config_cache, load_settings
 from stirling.contracts import ConfigPushRequest
+from stirling.documents import DocumentService
 
 
 @pytest.fixture(autouse=True)
@@ -398,3 +401,26 @@ def test_worker_does_not_rebuild_when_the_cache_is_unchanged() -> None:
         before = app.state.orchestrator_agent
         _adopt_cached_config_if_changed(app)
         assert app.state.orchestrator_agent is before
+
+
+def test_shutdown_drains_background_tasks_instead_of_cancelling_them() -> None:
+    """Shutdown must let an in-flight reaper iteration finish before the store closes.
+
+    Cancelling a reaper parked in ``asyncio.to_thread(self._sync_reap_expired)`` only
+    abandons the await: the worker thread keeps issuing sqlite calls while the store's
+    asyncio lock is released, so the close that follows pulls the connection out from
+    under it and segfaults the native sqlite-vec extension.
+    """
+    reap_finished = threading.Event()
+
+    async def slow_reap(*_args: object, **_kwargs: object) -> int:
+        # Long enough to still be running when the (empty) test body hands back to teardown.
+        await asyncio.sleep(0.2)
+        reap_finished.set()
+        return 0
+
+    with patch.object(DocumentService, "reap_expired", slow_reap):
+        with _client(build_app_settings):
+            pass
+
+    assert reap_finished.is_set(), "teardown cancelled the reaper mid-iteration"
