@@ -12,6 +12,7 @@ import {
 import { ConnectionTypePicker } from "@portal/components/sources/ConnectionTypePicker";
 import { ConnectionForm } from "@portal/components/sources/ConnectionForm";
 import {
+  CREATABLE_CONNECTION_TYPES,
   buildConnectionConfig,
   connectionFormValid,
   connectionFormValues,
@@ -62,9 +63,14 @@ export function ConnectionModal({
   const [mode, setMode] = useState<"pick" | "form">("pick");
   const isEdit = Boolean(connection);
 
-  const available = creatableConnectionTypes(capabilities).filter(
-    (entry) => !fixedTypeId || entry.id === fixedTypeId,
-  );
+  // A pinned slot is an explicit choice, already vetted where it was offered (the S3 field, or the
+  // custom-API operation, which is itself capability-gated). Resolve it from the full catalogue so
+  // the modal always has its form - the open picker still respects capabilities. Filtering the pin
+  // through capabilities is what blanked the modal: the custom-API type is gated, so it dropped out
+  // and left the picker with nothing to show.
+  const available = fixedTypeId
+    ? CREATABLE_CONNECTION_TYPES.filter((entry) => entry.id === fixedTypeId)
+    : creatableConnectionTypes(capabilities);
   // The picker is only worth showing when there is actually a choice - not for a pinned slot
   // (an S3 field on a source) or an edit, where the type is already decided.
   const canPick = !isEdit && !fixedTypeId;
@@ -75,7 +81,10 @@ export function ConnectionModal({
     setError(null);
     if (connection) {
       setMode("form");
-      const existing = connectionTypeOf(connection.integrationType);
+      const existing = connectionTypeOf(
+        connection.integrationType,
+        connection.config,
+      );
       setType(existing ?? null);
       setValues(
         existing
@@ -88,13 +97,14 @@ export function ConnectionModal({
       return;
     }
     // A pinned slot (an S3 field on a source) has nothing to choose, so skip straight to the form.
+    // Stay on the form even if the pin resolves to nothing: the form branch shows a clear
+    // "unsupported type" banner, whereas the picker would render an empty grid - a blank screen.
     const pinned = fixedTypeId ? (available[0] ?? null) : null;
-    setMode(pinned ? "form" : "pick");
+    setMode(fixedTypeId ? "form" : "pick");
     setType(pinned);
     setValues(pinned ? emptyConnectionValues(pinned) : { name: "" });
     // `available` is derived from props each render; depending on it would reseed on every
     // keystroke and wipe the form.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, connection, fixedTypeId, capabilities]);
 
   function pickType(next: CreatableConnectionType) {
@@ -182,14 +192,15 @@ export function ConnectionModal({
           {canPick && (
             // The choice is made in the picker now; this just gets them back to it, so the
             // selection stays visible without a dropdown that duplicates the grid.
-            <button
-              type="button"
+            <Button
+              variant="quiet"
+              size="sm"
               className="portal-sources__connection-back"
+              leftSection={<ArrowBackRoundedIcon fontSize="inherit" />}
               onClick={() => setMode("pick")}
             >
-              <ArrowBackRoundedIcon fontSize="inherit" />
               {t("portal.connections.picker2.back")}
-            </button>
+            </Button>
           )}
 
           {type ? (

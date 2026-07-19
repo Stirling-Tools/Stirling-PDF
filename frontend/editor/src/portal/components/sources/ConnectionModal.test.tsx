@@ -61,7 +61,10 @@ describe("ConnectionModal", () => {
         integrationType: "PURVIEW",
         name: "Corp Purview",
         scope: "TEAM",
-        config: { tenantId: "cb46c030-1825-4e81-a295-151c039dbf02" },
+        config: {
+          presetId: "purview",
+          tenantId: "cb46c030-1825-4e81-a295-151c039dbf02",
+        },
       }),
     );
     expect(onSaved).toHaveBeenCalled();
@@ -201,6 +204,41 @@ describe("ConnectionModal", () => {
     expect(
       screen.getByText("portal.connections.categories.advanced.label"),
     ).toBeInTheDocument();
+  });
+
+  it("pins the custom API form even without capabilities, rather than blanking", async () => {
+    // The pipeline's Custom API step opens this modal pinned to "api" and passes no capabilities
+    // (it has none to hand). Filtering the pin through capabilities dropped the gated custom entry
+    // and left the picker with nothing - a blank screen. A pinned slot is already vetted upstream,
+    // so its form must always render.
+    render(
+      wrap(
+        <ConnectionModal
+          open
+          fixedTypeId="api"
+          onClose={vi.fn()}
+          onSaved={vi.fn()}
+        />,
+      ),
+    );
+
+    // Straight to the api form (its base URL field), not an empty grid.
+    await waitFor(() =>
+      expect(
+        screen.getByLabelText(
+          /portal\.connections\.types\.api\.fields\.baseUrl/,
+          {
+            exact: false,
+          },
+        ),
+      ).toBeInTheDocument(),
+    );
+    // The picker's search box is a tell for the empty-grid state; it must not be here.
+    expect(
+      screen.queryByPlaceholderText(
+        "portal.connections.picker2.searchPlaceholder",
+      ),
+    ).toBeNull();
   });
 
   it("searches across vendor aliases rather than just the label", async () => {

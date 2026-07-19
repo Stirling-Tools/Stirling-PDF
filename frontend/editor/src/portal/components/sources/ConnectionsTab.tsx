@@ -93,7 +93,7 @@ export function ConnectionsTab() {
         key: "type",
         header: t("portal.connections.table.type"),
         render: (c) => {
-          const type = connectionTypeOf(c.integrationType);
+          const type = connectionTypeOf(c.integrationType, c.config);
           return type ? t(type.labelKey) : c.integrationType;
         },
       },

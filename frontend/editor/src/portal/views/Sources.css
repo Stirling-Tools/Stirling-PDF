@@ -658,7 +658,9 @@
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--border-default, rgba(128, 128, 128, 0.35));
   border-radius: var(--radius-sm, 0.375rem);
-  background: var(--surface-default, var(--bg-default, #fff));
+  /* Real theme token with a transparent fallback so it never falls back to opaque white in dark;
+     the border alone is enough to read as an input. */
+  background: var(--color-bg-subtle, transparent);
 }
 
 .portal-conn-picker__search-icon {

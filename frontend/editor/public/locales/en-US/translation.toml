@@ -6348,9 +6348,6 @@ unsupportedType = "This connection type cannot be edited here."
 [portal.connections.actions]
 new = "New connection"
 
-[portal.connections.advanced]
-cta = "Advanced: connect a custom API"
-
 [portal.connections.categories.advanced]
 description = "For a service we do not support yet."
 label = "Advanced"
@@ -6409,7 +6406,6 @@ title = "No connections yet"
 [portal.connections.fields]
 name = "Connection name"
 namePlaceholder = "e.g. Claims bucket"
-type = "Type"
 
 [portal.connections.picker]
 cancel = "Cancel"
@@ -7425,6 +7421,8 @@ newPipeline = "New pipeline"
 [portal.pipelines.builder]
 addStep = "Add tool"
 back = "Back to pipelines"
+chooseAccount = "Choose an account"
+chooseOperation = "Choose what this step does"
 discard = "Discard changes"
 enabled = "Enabled"
 keepEditing = "Keep editing"
@@ -7434,6 +7432,8 @@ pipelineSettings = "Pipeline settings"
 searchTools = "Search tools"
 selectToolBody = "Add a tool to build your pipeline."
 selectToolTitle = "No tools yet"
+sendToSystem = "Send to another system"
+stepsNeedSetup = "These steps still need an operation and an account chosen before saving: {{tools}}."
 toolSettings = "Tool settings"
 unknownStep = "Unrecognized operation, kept as-is."
 unsavedBody = "You have unsaved changes. Save them before leaving, or discard them?"
@@ -7699,6 +7699,183 @@ sanitizePdf = "Remove JavaScript"
 description = "Your policies are saved and will appear once the connection is restored."
 retry = "Retry"
 title = "Backend unavailable"
+
+[portal.policies.operations]
+change = "Change what this step does"
+noResults = "No step matches that. Try a product name, or \"scan\", \"notify\", \"attach\"."
+searchPlaceholder = "Search steps - try \"scan\", \"attach\" or a product name"
+
+[portal.policies.operations.bodyMode]
+binary = "Raw file bytes"
+json = "Inside a JSON payload"
+multipart = "As a file upload (multipart)"
+
+[portal.policies.operations.clamavScan]
+description = "Your own ClamAV server checks the document; nothing leaves your network."
+label = "Scan for viruses (self-hosted)"
+
+[portal.policies.operations.cloudmersiveAdvancedScan]
+description = "Rejects documents carrying macros, executables, scripts or embedded objects."
+label = "Block active content"
+
+[portal.policies.operations.cloudmersiveScan]
+description = "Cloudmersive checks the document and the run stops if it is not clean."
+label = "Scan for viruses"
+
+[portal.policies.operations.confluenceAttach]
+description = "Files the processed document onto a page."
+label = "Attach to a Confluence page"
+
+[portal.policies.operations.consignoSubmit]
+description = "Submits the document to ConsignO Cloud for signing."
+label = "Send for signature (ConsignO)"
+note = "Submits the document. Retrieving the signed copy is not yet supported, because a step cannot pass a result to a later step."
+
+[portal.policies.operations.customApiCall]
+description = "Author the call yourself: path, method, body and response handling."
+label = "Call a custom API"
+
+[portal.policies.operations.discordNotify]
+description = "Tells a channel that the policy handled a document."
+label = "Post a message to Discord"
+
+[portal.policies.operations.elasticIndex]
+description = "Records what the policy did as a searchable document."
+label = "Index an audit event in Elasticsearch"
+
+[portal.policies.operations.fields.bodyMode]
+helperText = "Multipart suits upload APIs; JSON suits APIs that want the file inside a payload; binary sends the raw bytes."
+label = "How to send the document"
+
+[portal.policies.operations.fields.bodyTemplate]
+helperText = "A JSON body sent as-is. {{document.base64}} carries the file; {{document.*}} and {{run.*}} are filled in per document."
+label = "JSON body"
+
+[portal.policies.operations.fields.connection]
+label = "Account"
+
+[portal.policies.operations.fields.domain]
+label = "Mailgun domain"
+placeholder = "mg.acme.com"
+
+[portal.policies.operations.fields.fileFieldName]
+helperText = "The form field the API expects the document under."
+label = "File field name"
+placeholder = "file"
+
+[portal.policies.operations.fields.from]
+label = "From"
+placeholder = "processor@acme.com"
+
+[portal.policies.operations.fields.headers]
+helperText = "A JSON object of header name/value pairs. The connection's credential is added for you."
+label = "Headers"
+
+[portal.policies.operations.fields.index]
+label = "Index"
+placeholder = "stirling-audit"
+
+[portal.policies.operations.fields.issueKey]
+label = "Issue key"
+placeholder = "OPS-42"
+
+[portal.policies.operations.fields.message]
+helperText = "Sent as the message body. {{document.*}} and {{run.*}} are filled in per document."
+label = "Message"
+
+[portal.policies.operations.fields.method]
+label = "Method"
+
+[portal.policies.operations.fields.pageId]
+label = "Page ID"
+placeholder = "66186"
+
+[portal.policies.operations.fields.path]
+helperText = "Appended to the connection's base URL. It can never reach another host."
+label = "Path"
+placeholder = "/v1/scan"
+
+[portal.policies.operations.fields.remotePath]
+helperText = "Where in the drive to write it. {{document.filename}} is filled in per document."
+label = "Destination path"
+placeholder = "Processed/{{document.filename}}"
+
+[portal.policies.operations.fields.responseMode]
+helperText = "Report leaves the document untouched. Replace swaps it for whatever comes back."
+label = "What to do with the reply"
+
+[portal.policies.operations.fields.signerEmail]
+label = "Signer's email"
+placeholder = "signer@acme.com"
+
+[portal.policies.operations.fields.subject]
+label = "Subject"
+placeholder = "Processed: {{document.filename}}"
+
+[portal.policies.operations.fields.text]
+helperText = "Presidio analyses this text. Use {{document.title}} or paste the text you want checked."
+label = "Text to check"
+
+[portal.policies.operations.fields.to]
+label = "To"
+placeholder = "records@acme.com"
+
+[portal.policies.operations.fields.username]
+label = "Nextcloud username"
+placeholder = "svc-stirling"
+
+[portal.policies.operations.googlechatNotify]
+description = "Tells a space that the policy handled a document."
+label = "Post a message to Google Chat"
+
+[portal.policies.operations.jiraAttach]
+description = "Files the processed document onto an issue."
+label = "Attach to a Jira issue"
+
+[portal.policies.operations.mailgunEmail]
+description = "Sends the processed document as an attachment."
+label = "Email the document (Mailgun)"
+
+[portal.policies.operations.nextcloudUpload]
+description = "Writes the processed document into a folder."
+label = "Upload to Nextcloud"
+
+[portal.policies.operations.presidioAnalyze]
+description = "Your own Presidio server reports the personal data it finds."
+label = "Detect personal data"
+note = "Presidio reads text, not files. Give it the text you want checked — the document itself is not uploaded."
+
+[portal.policies.operations.responseMode]
+replace = "Replace the document with the reply"
+report = "Keep the document, record the reply"
+
+[portal.policies.operations.sendgridEmail]
+description = "Sends the processed document as an attachment."
+label = "Email the document (SendGrid)"
+
+[portal.policies.operations.slackNotify]
+description = "Tells a channel that the policy handled a document."
+label = "Post a message to Slack"
+
+[portal.policies.operations.splunkEvent]
+description = "Records what the policy did, where your auditors already look."
+label = "Send an audit event to Splunk"
+
+[portal.policies.operations.sumologicEvent]
+description = "Records what the policy did to an HTTP collector."
+label = "Send an audit event to Sumo Logic"
+
+[portal.policies.operations.teamsNotify]
+description = "Tells a channel that the policy handled a document."
+label = "Post a message to Teams"
+
+[portal.policies.operations.webhookPost]
+description = "Sends the document itself to a URL you choose."
+label = "Post the document to a webhook"
+
+[portal.policies.operations.zapierNotify]
+description = "Hands the run's details to your automation."
+label = "Trigger a Zap or Make scenario"
 
 [portal.policies.stats]
 activeFor = "Active"
@@ -9015,18 +9192,6 @@ title = "Adjust page-scale"
 [scannerEffect]
 tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
 
-[ScannerImageSplit.selectText]
-1 = "Angle Threshold:"
-10 = "Extra padding (in pixels) around each saved photo so edges aren't cut."
-2 = "Tilt (in degrees) needed before we auto-straighten a photo."
-3 = "Tolerance:"
-4 = "How closely a color must match the page background to count as background. Higher = looser, lower = stricter."
-5 = "Minimum Area:"
-6 = "Smallest photo size (in pixels²) we'll keep to avoid tiny fragments."
-7 = "Minimum Contour Area:"
-8 = "Smallest edge/shape we consider when finding photos (filters dust and specks)."
-9 = "Border Size:"
-
 [scannerImageSplit]
 submit = "Extract Image Scans"
 tags = "separate,auto-detect,scans,multi-photo,organize"
@@ -9057,6 +9222,18 @@ useCase4 = "Pull photos from documents"
 whatThisDoes = "What this does"
 whatThisDoesDesc = "Automatically finds and extracts each photo from a scanned page or composite image-no manual cropping."
 whenToUse = "When to use"
+
+[ScannerImageSplit.selectText]
+1 = "Angle Threshold:"
+10 = "Extra padding (in pixels) around each saved photo so edges aren't cut."
+2 = "Tilt (in degrees) needed before we auto-straighten a photo."
+3 = "Tolerance:"
+4 = "How closely a color must match the page background to count as background. Higher = looser, lower = stricter."
+5 = "Minimum Area:"
+6 = "Smallest photo size (in pixels²) we'll keep to avoid tiny fragments."
+7 = "Minimum Contour Area:"
+8 = "Smallest edge/shape we consider when finding photos (filters dust and specks)."
+9 = "Border Size:"
 
 [search]
 noResults = "No results found"

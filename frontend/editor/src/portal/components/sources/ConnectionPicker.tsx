@@ -8,6 +8,7 @@ import {
   type IntegrationType,
 } from "@portal/api/integrations";
 import { ConnectionModal } from "@portal/components/sources/ConnectionModal";
+import { connectionTypeOf } from "@portal/components/sources/connectionTypes";
 
 /**
  * Selects a stored connection of one type by id — an S3 bucket for a source, a Purview tenant for a
@@ -25,6 +26,13 @@ interface ConnectionPickerProps {
   integrationType: IntegrationType;
   /** The catalogue entry used when creating inline; defaults to the type's own. */
   createTypeId: string;
+  /**
+   * The specific vendor this slot wants (e.g. "jira"). Seventeen presets share the "API" backend
+   * type, so filtering on `integrationType` alone offers a Jira step your Slack webhook. When set,
+   * only connections that resolve to this preset are shown - plus any free-form custom API
+   * connection, which can point anywhere and so fits any API operation.
+   */
+  presetId?: string;
 }
 
 export function ConnectionPicker({
@@ -32,6 +40,7 @@ export function ConnectionPicker({
   onChange,
   integrationType,
   createTypeId,
+  presetId,
 }: ConnectionPickerProps) {
   const { t } = useTranslation();
   const [connections, setConnections] = useState<IntegrationConfig[] | null>(
@@ -44,11 +53,18 @@ export function ConnectionPicker({
     let mounted = true;
     fetchIntegrations()
       .then((list) => {
-        if (mounted) {
-          setConnections(
-            list.filter((c) => c.integrationType === integrationType),
-          );
-        }
+        if (!mounted) return;
+        // A connection fits this slot when the backend type matches and, if a vendor is named,
+        // when it is that vendor - or a free-form custom API connection, which points wherever
+        // its base URL says and so serves any API operation.
+        setConnections(
+          list.filter((c) => {
+            if (c.integrationType !== integrationType) return false;
+            if (!presetId) return true;
+            const resolved = connectionTypeOf(c.integrationType, c.config);
+            return resolved?.id === presetId || resolved?.kind === "custom";
+          }),
+        );
       })
       .catch((e) => {
         if (mounted) setError(errorMessage(e));
@@ -56,7 +72,7 @@ export function ConnectionPicker({
     return () => {
       mounted = false;
     };
-  }, [integrationType]);
+  }, [integrationType, presetId]);
 
   return (
     <div className="portal-sources__connection-picker">

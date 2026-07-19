@@ -2,10 +2,13 @@ import { describe, expect, it } from "vitest";
 
 import {
   CREATABLE_CONNECTION_TYPES,
+  PRESET_ID_KEY,
   buildConnectionConfig,
+  connectionFormValues,
+  connectionTypeOf,
   creatableConnectionTypes,
   isFieldVisible,
-} from "./connectionTypes";
+} from "@portal/components/sources/connectionTypes";
 
 const byId = (id: string) => {
   const type = CREATABLE_CONNECTION_TYPES.find((entry) => entry.id === id);
@@ -81,7 +84,10 @@ describe("buildConnectionConfig", () => {
       clientSecret: "",
     });
 
+    // presetId records which preset built this, so a saved connection can be mapped back to the
+    // right form; the blank optional fields are still omitted.
     expect(config).toEqual({
+      presetId: "purview",
       tenantId: "cb46c030-1825-4e81-a295-151c039dbf02",
     });
   });
@@ -127,5 +133,85 @@ describe("isFieldVisible", () => {
 
   it("shows unconditional fields always", () => {
     expect(isFieldVisible(field("baseUrl"), {})).toBe(true);
+  });
+});
+
+describe("resolving a stored connection back to its preset", () => {
+  it("keeps a Discord connection as Discord, not the first API preset", () => {
+    // Seventeen presets share integrationType "API". Matching on that alone returned whichever
+    // came first in the catalogue, so every API connection displayed as Cloudmersive - and the
+    // edit form then rewrote a Discord webhook as a Cloudmersive endpoint on save.
+    const discord = CREATABLE_CONNECTION_TYPES.find((t) => t.id === "discord")!;
+    const config = buildConnectionConfig(discord, {
+      name: "Team Discord",
+      baseUrl: "https://discord.com/api/webhooks/1/abc",
+    });
+
+    expect(connectionTypeOf("API", config)?.id).toBe("discord");
+  });
+
+  it("round-trips an edit without destroying the stored config", () => {
+    const discord = CREATABLE_CONNECTION_TYPES.find((t) => t.id === "discord")!;
+    const url = "https://discord.com/api/webhooks/1/abc";
+    const config = buildConnectionConfig(discord, { name: "d", baseUrl: url });
+
+    const reopened = connectionTypeOf("API", config)!;
+    const values = connectionFormValues(reopened, { name: "d", config });
+
+    expect(buildConnectionConfig(reopened, values).baseUrl).toBe(url);
+  });
+
+  it("recovers a markerless Discord connection from its webhook host", () => {
+    // A connection made before the marker carries no presetId, only its URL. Discord webhooks are
+    // always discord.com, so the host names the vendor - it must not show as "Custom API".
+    const legacy = { baseUrl: "https://discord.com/api/webhooks/1/abc" };
+    expect(connectionTypeOf("API", legacy)?.id).toBe("discord");
+  });
+
+  it("recovers a Teams connection from a webhook subdomain", () => {
+    // Teams posts from a per-tenant subdomain, so the match is on the domain suffix, not the host.
+    const legacy = {
+      baseUrl: "https://acme.webhook.office.com/webhookb2/abc/IncomingWebhook",
+    };
+    expect(connectionTypeOf("API", legacy)?.id).toBe("teams");
+  });
+
+  it("falls back to the free-form entry when the host names no vendor", () => {
+    // Naming a specific vendor would be a guess, and the wrong guess loses data; the custom entry
+    // shows the base URL and auth it really has.
+    const legacy = { baseUrl: "https://api.acme.test/v2", authType: "BEARER" };
+    const resolved = connectionTypeOf("API", legacy)!;
+
+    expect(resolved.kind).toBe("custom");
+    const values = connectionFormValues(resolved, {
+      name: "l",
+      config: legacy,
+    });
+    expect(buildConnectionConfig(resolved, values).baseUrl).toBe(
+      legacy.baseUrl,
+    );
+  });
+
+  it("does not guess between vendors that share a host", () => {
+    // The two Cloudmersive presets both live at api.cloudmersive.com, so a markerless connection
+    // there is genuinely ambiguous - resolve to the safe free-form form, not one of them at random.
+    const legacy = {
+      baseUrl: "https://api.cloudmersive.com",
+      authType: "HEADER",
+    };
+    expect(connectionTypeOf("API", legacy)?.kind).toBe("custom");
+  });
+
+  it("still prefers the marker over the host when both are present", () => {
+    // A webhook preset pointed at a custom relay: the marker is authoritative, not the URL.
+    const config = {
+      [PRESET_ID_KEY]: "slack",
+      baseUrl: "https://discord.com/x",
+    };
+    expect(connectionTypeOf("API", config)?.id).toBe("slack");
+  });
+
+  it("still resolves exactly when only one preset owns the type", () => {
+    expect(connectionTypeOf("PURVIEW", {})?.id).toBe("purview");
   });
 });

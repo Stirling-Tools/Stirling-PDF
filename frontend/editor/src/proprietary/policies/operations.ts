@@ -135,6 +135,8 @@ export const POLICY_OPERATIONS = {
       resultUrlPath: "",
       resultUrlHeader: "",
       responseSelect: "",
+      // A dotted path into the JSON response that must be true, or the step fails: the scan gate.
+      requireTrue: "",
       // JSON objects whose values may reference {{document.*}}, {{classification.*}},
       // {{sensitivityLabel.*}} and {{run.*}}.
       fields: "",
@@ -144,6 +146,11 @@ export const POLICY_OPERATIONS = {
       bodyTemplate: "",
       includeContext: "false",
       includeFile: "true",
+      // Which catalogue entry the operator chose, and their answers to its fields. Persisted so a
+      // saved step reopens on the same operation rather than back at the picker; JSON-encoded to
+      // keep every step parameter a flat string, as `fields` and `headers` already are.
+      operationId: "",
+      operationValues: "",
     },
   ),
 } as const;

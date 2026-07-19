@@ -55,6 +55,12 @@ export interface CreatableConnectionType {
   searchTerms?: string[];
   /** Config baked in rather than asked for — what makes a preset a preset. */
   presetConfig?: Record<string, unknown>;
+  /**
+   * Hostnames that identify this vendor from a stored connection whose `presetId` is absent (one
+   * made before the marker, or through the API). A Discord webhook is always discord.com, so the
+   * URL recovers the vendor with no marker. Matched against the host and any subdomain of it.
+   */
+  identifyHosts?: string[];
   /** True for entries that need admin + the server flag; see the module comment. */
   requiresCustomApi?: boolean;
   fields: ConnectionFieldDef[];
@@ -339,6 +345,7 @@ function apiPreset(spec: {
   preset: Record<string, unknown>;
   fields: ConnectionFieldDef[];
   searchTerms?: string[];
+  identifyHosts?: string[];
 }): CreatableConnectionType {
   return {
     id: spec.id,
@@ -349,6 +356,7 @@ function apiPreset(spec: {
     descriptionKey: `${PREFIX}.${spec.id}.description`,
     searchTerms: spec.searchTerms,
     presetConfig: spec.preset,
+    identifyHosts: spec.identifyHosts,
     fields: spec.fields,
   };
 }
@@ -487,6 +495,7 @@ const API_PRESETS: CreatableConnectionType[] = [
     preset: { authType: "NONE" },
     fields: [field.webhookUrl("slack")],
     searchTerms: ["chat", "notify", "message", "alert"],
+    identifyHosts: ["slack.com"],
   }),
   apiPreset({
     id: "teams",
@@ -494,6 +503,8 @@ const API_PRESETS: CreatableConnectionType[] = [
     preset: { authType: "NONE" },
     fields: [field.webhookUrl("teams")],
     searchTerms: ["microsoft", "chat", "notify", "message", "alert"],
+    // Classic incoming webhooks post from *.webhook.office.com; Workflows from *.logic.azure.com.
+    identifyHosts: ["webhook.office.com", "logic.azure.com"],
   }),
   apiPreset({
     id: "discord",
@@ -501,6 +512,7 @@ const API_PRESETS: CreatableConnectionType[] = [
     preset: { authType: "NONE" },
     fields: [field.webhookUrl("discord")],
     searchTerms: ["chat", "notify", "message"],
+    identifyHosts: ["discord.com", "discordapp.com"],
   }),
   apiPreset({
     id: "googlechat",
@@ -508,6 +520,7 @@ const API_PRESETS: CreatableConnectionType[] = [
     preset: { authType: "NONE" },
     fields: [field.webhookUrl("googlechat")],
     searchTerms: ["google", "chat", "notify", "workspace", "message"],
+    identifyHosts: ["chat.googleapis.com"],
   }),
   apiPreset({
     id: "zapier",
@@ -515,6 +528,7 @@ const API_PRESETS: CreatableConnectionType[] = [
     preset: { authType: "NONE" },
     fields: [field.webhookUrl("zapier")],
     searchTerms: ["make", "automation", "workflow", "trigger", "no-code"],
+    identifyHosts: ["zapier.com"],
   }),
   apiPreset({
     id: "webhook",
@@ -655,11 +669,25 @@ export function presetConnectionTypes(): CreatableConnectionType[] {
  * them *and* where `SecretMasker` can see them — it recurses into nested maps and masks by key name,
  * so a flat `loginBody` string would hand the password back in clear on every read.
  */
+/**
+ * Reserved config key recording which preset created a connection.
+ *
+ * A stored connection only carries an `integrationType`, and most presets share `"API"` - Discord,
+ * Splunk, Jira and fourteen others are all `API`. Without this, mapping a saved connection back to
+ * its preset is guesswork, and guessing wrong means the edit form renders another vendor's fields
+ * and overwrites the config on save. The backend keeps `config` as a free-form map and ignores keys
+ * it does not model, so this rides along without a schema change.
+ */
+export const PRESET_ID_KEY = "presetId";
+
 export function buildConnectionConfig(
   type: CreatableConnectionType,
   values: Record<string, string>,
 ): Record<string, unknown> {
-  const config: Record<string, unknown> = { ...(type.presetConfig ?? {}) };
+  const config: Record<string, unknown> = {
+    ...(type.presetConfig ?? {}),
+    [PRESET_ID_KEY]: type.id,
+  };
   for (const field of type.fields) {
     const raw = values[field.key];
     if (raw === undefined || raw === "") continue;
@@ -685,13 +713,63 @@ export function isFieldVisible(
   return field.visibleWhen.oneOf.includes(current);
 }
 
+/** The hostname of a URL, lowercased, or undefined if it is missing or unparseable. */
+function hostOf(url: unknown): string | undefined {
+  if (typeof url !== "string" || url === "") return undefined;
+  try {
+    return new URL(url).hostname.toLowerCase();
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * The vendor a stored connection points at, recovered from its URL when the `presetId` marker is
+ * absent. Only an unambiguous host wins: two presets sharing a host (the Cloudmersive pair) is
+ * treated as unknown rather than guessed, since guessing wrong would show the wrong form.
+ */
+function presetByHost(host: string): CreatableConnectionType | undefined {
+  const matches = new Set<CreatableConnectionType>();
+  for (const type of CREATABLE_CONNECTION_TYPES) {
+    // Webhook vendors: the operator supplies the URL, so match the vendor's domain and subdomains.
+    for (const sig of type.identifyHosts ?? []) {
+      if (host === sig || host.endsWith(`.${sig}`)) matches.add(type);
+    }
+    // Fixed-host presets: the base URL is baked in, so an exact host match identifies them.
+    if (hostOf(type.presetConfig?.baseUrl) === host) matches.add(type);
+  }
+  return matches.size === 1 ? [...matches][0] : undefined;
+}
+
 /** The type an existing connection was made from, so editing reuses its form. */
 export function connectionTypeOf(
   integrationType: IntegrationType,
+  config?: Record<string, unknown> | null,
 ): CreatableConnectionType | undefined {
-  return CREATABLE_CONNECTION_TYPES.find(
+  const presetId = config?.[PRESET_ID_KEY];
+  if (typeof presetId === "string") {
+    const exact = CREATABLE_CONNECTION_TYPES.find((t) => t.id === presetId);
+    if (exact) return exact;
+  }
+
+  const candidates = CREATABLE_CONNECTION_TYPES.filter(
     (type) => type.integrationType === integrationType,
   );
+  if (candidates.length === 1) return candidates[0];
+
+  // No marker (made before it existed, or through the API): recover the vendor from the URL it
+  // points at, since a Discord webhook is always discord.com and so on. Showing "Custom API" for
+  // something the operator set up as Discord is both confusing and, on save, what rewrote the
+  // webhook as another vendor's endpoint.
+  const host = hostOf(config?.baseUrl);
+  if (host) {
+    const byHost = presetByHost(host);
+    if (byHost && byHost.integrationType === integrationType) return byHost;
+  }
+
+  // Still unknown: fall back to the free-form entry rather than naming a vendor at random. It shows
+  // the base URL and auth the connection actually has, so editing preserves them.
+  return candidates.find((type) => type.kind === "custom") ?? candidates[0];
 }
 
 /** Blank answers for a new connection: the fields' defaults, plus an empty name. */

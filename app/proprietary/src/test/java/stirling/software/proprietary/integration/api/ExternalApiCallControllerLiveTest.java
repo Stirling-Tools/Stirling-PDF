@@ -169,6 +169,29 @@ class ExternalApiCallControllerLiveTest {
                             "{\"error\":\"policy violation\"}".getBytes(StandardCharsets.UTF_8));
                 });
 
+        // Cloudmersive's scan shape: HTTP 200 with the verdict in the body, clean or not.
+        server.createContext(
+                "/v1/clean",
+                exchange -> {
+                    capture(exchange);
+                    respond(
+                            exchange,
+                            200,
+                            "application/json",
+                            "{\"CleanResult\":true}".getBytes(StandardCharsets.UTF_8));
+                });
+        server.createContext(
+                "/v1/infected",
+                exchange -> {
+                    capture(exchange);
+                    respond(
+                            exchange,
+                            200,
+                            "application/json",
+                            "{\"CleanResult\":false,\"FoundViruses\":[{\"VirusName\":\"EICAR\"}]}"
+                                    .getBytes(StandardCharsets.UTF_8));
+                });
+
         server.start();
         baseUrl = "http://127.0.0.1:" + server.getAddress().getPort();
 
@@ -269,6 +292,7 @@ class ExternalApiCallControllerLiveTest {
         private String resultUrlPath;
         private String resultUrlHeader;
         private String responseSelect;
+        private String requireTrue;
         private String fields;
         private String bodyTemplate;
         private String headers;
@@ -304,6 +328,11 @@ class ExternalApiCallControllerLiveTest {
 
         Step responseSelect(String v) {
             responseSelect = v;
+            return this;
+        }
+
+        Step requireTrue(String v) {
+            requireTrue = v;
             return this;
         }
 
@@ -345,6 +374,7 @@ class ExternalApiCallControllerLiveTest {
                     resultUrlPath,
                     resultUrlHeader,
                     responseSelect,
+                    requireTrue,
                     fields,
                     bodyTemplate,
                     headers,
@@ -482,6 +512,41 @@ class ExternalApiCallControllerLiveTest {
                 .isInstanceOf(IOException.class)
                 .hasMessageContaining("HTTP 422")
                 .hasMessageContaining("policy violation");
+    }
+
+    @Test
+    void aCleanVerdictLetsTheDocumentThrough() throws IOException {
+        connection(Map.of());
+
+        // Cloudmersive answers HTTP 200 whether clean or not; the verdict is in the body. A clean
+        // result must pass the document through untouched.
+        ResponseEntity<Resource> response =
+                step().path("/v1/clean").requireTrue("CleanResult").go();
+
+        assertThat(response.getBody().getInputStream().readAllBytes())
+                .startsWith("%PDF".getBytes());
+    }
+
+    @Test
+    void anInfectedVerdictStopsTheRunEvenOnHttp200() {
+        connection(Map.of());
+
+        // The whole security proposition: HTTP 200 with CleanResult=false must NOT sail through.
+        assertThatThrownBy(() -> step().path("/v1/infected").requireTrue("CleanResult").go())
+                .isInstanceOf(IOException.class)
+                .hasMessageContaining("CleanResult")
+                .hasMessageContaining("not true");
+    }
+
+    @Test
+    void aMissingVerdictFieldFailsClosed() {
+        connection(Map.of());
+
+        // /v1/scan answers {"verdict":"clean"} - it has no CleanResult field at all. A gate that
+        // cannot find its verdict must stop the run, not wave the document through.
+        assertThatThrownBy(() -> step().path("/v1/scan").requireTrue("CleanResult").go())
+                .isInstanceOf(IOException.class)
+                .hasMessageContaining("not true");
     }
 
     @Test

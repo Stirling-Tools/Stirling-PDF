@@ -32,13 +32,14 @@ import {
   type PolicyToolStep,
 } from "@app/policies/operations";
 import { fetchSources } from "@portal/api/sources";
+import { fetchIntegrations } from "@portal/api/integrations";
+import { errorMessage } from "@portal/api/http";
 import { useAsync } from "@portal/hooks/useAsync";
 import { PolicyFieldRow } from "@portal/components/policies/PolicyFieldRow";
 import { PolicyCategoryBadge } from "@portal/components/policies/PolicyCategoryIcon";
 import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig";
 import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
 import { PolicyPurviewConfig } from "@portal/components/policies/PolicyPurviewConfig";
-import { PolicyPurviewReadConfig } from "@portal/components/policies/PolicyPurviewReadConfig";
 import { ClassificationLabelsSection } from "@portal/components/policies/ClassificationLabelsSection";
 import "@portal/views/Policies.css";
 
@@ -93,6 +94,14 @@ function resolveFieldValues(
 // every run of a freshly created policy. Purview needs a tenant connection and a label GUID.
 const DISABLED_BY_DEFAULT = new Set<PolicyToolId>([
   "watermark",
+  "purviewApplyLabel",
+  "purviewReadLabel",
+  "externalApiCall",
+]);
+
+// Steps that cannot work without a Purview tenant connection, so they are hidden entirely until one
+// is configured rather than offered as an option that can only fail.
+const PURVIEW_TOOLS = new Set<PolicyToolId>([
   "purviewApplyLabel",
   "purviewReadLabel",
 ]);
@@ -299,7 +308,31 @@ function PolicySetupWizardBody({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const enabledTools = useMemo(() => tools.filter((tl) => tl.enabled), [tools]);
+  const integrationsAsync = useAsync(() => fetchIntegrations(), []);
+  const hasPurviewConnection = useMemo(
+    () =>
+      (integrationsAsync.data ?? []).some(
+        (c) => c.integrationType === "PURVIEW",
+      ),
+    [integrationsAsync.data],
+  );
+
+  // Purview steps only appear once a tenant is connected. An already-enabled one (a saved policy,
+  // or a tenant connected earlier) stays visible so editing a policy never silently drops it.
+  const visibleTools = useMemo(
+    () =>
+      tools.filter(
+        (tl) =>
+          !PURVIEW_TOOLS.has(tl.toolId) || hasPurviewConnection || tl.enabled,
+      ),
+    [tools, hasPurviewConnection],
+  );
+
+  // Derive from the visible list: a hidden step is never submitted (hidden implies disabled).
+  const enabledTools = useMemo(
+    () => visibleTools.filter((tl) => tl.enabled),
+    [visibleTools],
+  );
 
   function setToolEnabled(toolId: PolicyToolId, enabled: boolean) {
     setTools((prev) =>
@@ -350,9 +383,13 @@ function PolicySetupWizardBody({
         retryDelayMinutes,
         steps,
       });
-    } catch {
+    } catch (e) {
       setSubmitting(false);
-      setError(t("portal.policies.wizard.errors.saveFailed"));
+      // Surface the backend's actual reason (e.g. a step missing its account) rather than a
+      // generic failure the operator cannot act on.
+      setError(
+        errorMessage(e) || t("portal.policies.wizard.errors.saveFailed"),
+      );
     }
   }
 
@@ -454,7 +491,7 @@ function PolicySetupWizardBody({
           </p>
           <Card padding="none">
             <div className="portal-policies__capabilities">
-              {tools.map((tl) => {
+              {visibleTools.map((tl) => {
                 const meta = CAPABILITY_META[tl.toolId];
                 const label = meta
                   ? t(meta.labelKey, meta.labelEn)
@@ -505,14 +542,6 @@ function PolicySetupWizardBody({
                             parameters={tl.params}
                             onChange={(params) =>
                               setToolParams("purviewApplyLabel", params)
-                            }
-                          />
-                        )}
-                        {tl.toolId === "purviewReadLabel" && (
-                          <PolicyPurviewReadConfig
-                            parameters={tl.params}
-                            onChange={(params) =>
-                              setToolParams("purviewReadLabel", params)
                             }
                           />
                         )}

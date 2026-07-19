@@ -51,7 +51,9 @@ import tools.jackson.databind.node.ObjectNode;
  *
  * <ul>
  *   <li>{@code report} (default) - the document continues untouched and the API's answer rides
- *       along in {@link AiToolResponseHeaders#TOOL_REPORT}. For call-outs that inspect or notify.
+ *       along in {@link AiToolResponseHeaders#TOOL_REPORT}. For call-outs that inspect or notify. A
+ *       {@code requireTrue} field turns the answer into a gate: the named JSON verdict must be true
+ *       or the step fails, so a scanner's "not clean" actually stops the run.
  *   <li>{@code replace} - the response body <em>becomes</em> the document. For call-outs that
  *       transform. Fails loudly if the API returns JSON or an empty body, instead of silently
  *       dropping the document from the pipeline.
@@ -107,6 +109,7 @@ public class ExternalApiCallController {
             @RequestParam(value = "resultUrlPath", required = false) String resultUrlPath,
             @RequestParam(value = "resultUrlHeader", required = false) String resultUrlHeader,
             @RequestParam(value = "responseSelect", required = false) String responseSelect,
+            @RequestParam(value = "requireTrue", required = false) String requireTrue,
             @RequestParam(value = "fields", required = false) String fields,
             @RequestParam(value = "bodyTemplate", required = false) String bodyTemplate,
             @RequestParam(value = "headers", required = false) String headers,
@@ -162,6 +165,8 @@ public class ExternalApiCallController {
             throw new IOException(
                     "External API returned HTTP " + response.status() + summarise(response));
         }
+
+        enforceVerdict(response, requireTrue);
 
         return MODE_REPLACE.equals(mode)
                 ? replaceDocument(
@@ -434,6 +439,35 @@ public class ExternalApiCallController {
                     "'resultUrlPath' found no URL at '" + resultUrlPath + "' in the response");
         }
         return node.asString();
+    }
+
+    /**
+     * Gate the run on a boolean verdict in the API's JSON answer (e.g. Cloudmersive's {@code
+     * CleanResult}). When {@code requireTrue} names a field - dotted for a nested one - that field
+     * must be JSON {@code true}, or the step fails so the document is parked rather than delivered.
+     * Fail-closed: a missing field, a non-boolean, a false, or a non-JSON body all stop the run.
+     * This is what makes a scanner's "not clean" actually stop the pipeline.
+     */
+    private void enforceVerdict(ExternalApiCaller.Response response, String requireTrue)
+            throws IOException {
+        if (requireTrue == null || requireTrue.isBlank()) {
+            return;
+        }
+        JsonNode node = response.isJson() ? response.bodyAsJson(objectMapper) : null;
+        for (String segment : requireTrue.trim().split("\\.")) {
+            if (node == null) {
+                break;
+            }
+            node = node.get(segment);
+        }
+        if (node == null || !node.asBoolean(false)) {
+            throw new IOException(
+                    "External API verdict '"
+                            + requireTrue.trim()
+                            + "' was not true"
+                            + summarise(response)
+                            + "; the document was not approved, so the run was stopped.");
+        }
     }
 
     /** The document passes through; the API's answer rides in the report header. */

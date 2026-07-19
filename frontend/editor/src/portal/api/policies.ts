@@ -261,9 +261,6 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
     ],
     scopeLabel: "portal.policies.config.scopeAll",
     defaultOperations: [
-      // Read Microsoft's sensitivity classification first, so the controls below can act on how
-      // sensitive the document is (join-don't-beat). Off until a Purview tenant is connected.
-      policyStep("purviewReadLabel"),
       // Flatten to image so redactions can't be lifted off.
       policyStep("redact", {
         useRegex: true,
@@ -295,12 +292,10 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "portal.policies.config.compliance.rules.2",
     ],
     scopeLabel: "portal.policies.config.scopeAll",
-    // Purview labelling is offered here but off until configured: it needs a tenant
-    // connection and a label GUID, which no default can guess.
-    // Purview steps are offered here but off until configured (they need a tenant
-    // connection). Read acts on Microsoft's classification; apply writes ours back.
+    // Apply writes our sensitivity label into the document after it is sanitised and flattened.
+    // Offered only once a Purview tenant is connected (it needs a tenant connection and a label
+    // GUID, which no default can guess), and hidden entirely until then.
     defaultOperations: [
-      policyStep("purviewReadLabel"),
       policyStep("sanitize"),
       policyStep("flatten"),
       policyStep("purviewApplyLabel"),
