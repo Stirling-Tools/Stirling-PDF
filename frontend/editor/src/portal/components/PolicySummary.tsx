@@ -15,7 +15,7 @@ import {
   type CatalogueEntry,
   type PoliciesResponse,
 } from "@portal/api/policies";
-import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
+import { PolicyCategoryBadge } from "@portal/components/policies/PolicyCategoryIcon";
 import "@portal/components/PolicySummary.css";
 
 /**
@@ -63,9 +63,7 @@ export function PolicySummary() {
       header: t("portal.policySummary.column.policy"),
       render: ({ entry }) => (
         <div className="portal-policysum__cat">
-          <span className="portal-policysum__icon" aria-hidden>
-            {policyCategoryIcon(entry.category.id)}
-          </span>
+          <PolicyCategoryBadge category={entry.category} />
           <div className="portal-policysum__cat-text">
             <strong>{t(entry.category.label)}</strong>
             <span>{t(entry.category.desc)}</span>
