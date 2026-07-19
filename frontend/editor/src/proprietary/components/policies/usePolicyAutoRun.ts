@@ -40,6 +40,10 @@ import type { FileId } from "@app/types/file";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import { readClassificationLabelsFromFile } from "@app/services/fileClassification";
 import { isClassificationCategory } from "@app/data/policyCategories";
+import {
+  acquireDispatchSlot,
+  releaseDispatchSlot,
+} from "@app/components/policies/dispatchSemaphore";
 import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
 import type { PoliciesByCategory } from "@app/types/policies";
 import { usePolicies } from "@app/hooks/usePolicies";
@@ -62,31 +66,6 @@ const POLL_MS = 2000;
 /** First poll fires early so a fresh run shows real progress quickly instead of
  *  sitting on an indeterminate spinner for a full poll interval. */
 const FIRST_POLL_MS = 500;
-
-/** Max concurrent run-dispatch uploads. Each dispatch POSTs the file's bytes;
- *  firing a whole drop at once saturates the browser's per-origin connection
- *  pool, so the status polls and output downloads of already-running files
- *  queue behind the pending uploads — nothing visibly progresses until every
- *  upload drains. A small window keeps connections free, so early files run,
- *  poll, and complete while later ones are still dispatching. */
-const MAX_CONCURRENT_DISPATCHES = 4;
-let dispatchSlotsInUse = 0;
-const dispatchWaiters: Array<() => void> = [];
-
-async function acquireDispatchSlot(): Promise<void> {
-  if (dispatchSlotsInUse < MAX_CONCURRENT_DISPATCHES) {
-    dispatchSlotsInUse++;
-    return;
-  }
-  await new Promise<void>((resolve) => dispatchWaiters.push(resolve));
-}
-
-function releaseDispatchSlot(): void {
-  const next = dispatchWaiters.shift();
-  // Hand the slot straight to the next waiter, else free it.
-  if (next) next();
-  else dispatchSlotsInUse--;
-}
 
 /** The server aborts any single tool step that runs longer than its internal-API
  *  read timeout, then fails the run — so a run can legitimately stay in flight
@@ -342,6 +321,7 @@ export function usePolicyAutoRun(): void {
           backendId,
           outputId as FileId,
           run.fileName,
+          true, // chained → jump the dispatch queue ahead of new files
         ).catch(() => {});
       }
     }
@@ -860,6 +840,9 @@ async function runPolicyOnFile(
   backendId: string,
   fileId: FileId,
   fileName: string,
+  // Chained (downstream) dispatch — jumps the dispatch queue so a file mid-chain
+  // finishes its flow before new files start (see acquireDispatchSlot).
+  priority = false,
 ): Promise<void> {
   // A freshly-uploaded file's bytes are written to IndexedDB asynchronously, so
   // its stub can appear in the file list a beat before getStirlingFile resolves
@@ -887,7 +870,7 @@ async function runPolicyOnFile(
   }
   // Bounded upload window — see MAX_CONCURRENT_DISPATCHES. Only the POST is
   // gated; the IDB wait above never holds a slot.
-  await acquireDispatchSlot();
+  await acquireDispatchSlot(priority);
   try {
     const target = resolvePolicyRunTarget();
     const runId = await runStoredPolicy(backendId, [file]);
