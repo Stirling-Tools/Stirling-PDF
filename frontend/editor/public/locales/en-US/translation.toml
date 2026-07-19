@@ -6009,6 +6009,7 @@ ssn = "Social Security numbers"
 [policy]
 badgeEnforcing = "{{name}} enforcing..."
 badgeRan = "{{name}} policy ran on this file"
+badgeRunning = "{{name}} running..."
 blockingAction = "{{action}} blocked while enforcing policy, please wait..."
 dismiss = "Dismiss overlay"
 enforcingTitle = "Enforcing policy..."

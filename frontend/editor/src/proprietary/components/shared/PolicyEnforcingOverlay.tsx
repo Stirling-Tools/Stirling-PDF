@@ -11,6 +11,7 @@ import {
 import { ActionIcon } from "@app/ui/ActionIcon";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import CloseIcon from "@mui/icons-material/Close";
+import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
 import { useTranslation } from "react-i18next";
 
 interface PolicyEnforcingOverlayProps {
@@ -23,6 +24,9 @@ interface PolicyEnforcingOverlayProps {
   /** CSS colour var of the enforcing policy's accent (e.g. `var(--color-orange)`),
    *  so the icon/spinner match that policy's badge instead of a fixed blue. */
   accentVar?: string;
+  /** Category of the enforcing policy — picks its shared icon (shield for
+   *  security, label for classification, …); generic shield when unknown. */
+  categoryId?: string;
 }
 
 /**
@@ -35,6 +39,7 @@ export function PolicyEnforcingOverlay({
   zIndex = 200,
   onDismiss,
   accentVar,
+  categoryId,
 }: PolicyEnforcingOverlayProps) {
   const { t } = useTranslation();
   if (!enforcing) return null;
@@ -87,7 +92,11 @@ export function PolicyEnforcingOverlay({
                 : undefined
             }
           >
-            <ShieldOutlinedIcon style={{ fontSize: 26 }} />
+            {categoryId ? (
+              policyCategoryIcon(categoryId, { fontSize: 26 })
+            ) : (
+              <ShieldOutlinedIcon style={{ fontSize: 26 }} />
+            )}
           </ThemeIcon>
           <Text fw={600} size="sm">
             {t("policy.enforcingTitle", "Enforcing policy…")}

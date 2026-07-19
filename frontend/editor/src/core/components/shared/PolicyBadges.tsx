@@ -1,6 +1,6 @@
 import { Tooltip } from "@mantine/core";
-import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
+import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
 import { useTranslation } from "react-i18next";
 import "@app/components/shared/PolicyBadges.css";
 
@@ -10,20 +10,20 @@ export interface FileItemPolicyRef {
   name: string;
   /** CSS colour for the badge (matches the policy's accent). */
   accentColor: string;
-  /** True only just after the policy was applied — drives the one-off glow, so
-   *  it doesn't replay on every reload of an already-enforced file. */
-  recent: boolean;
-  /** True while the policy run is actively in-flight on this file. */
+  /** True while a BLOCKING policy run is in-flight on this file (gates actions). */
   enforcing?: boolean;
+  /** True while a non-blocking run (e.g. classification) is in-flight — shows
+   *  the same spinner but never gates anything. */
+  background?: boolean;
 }
 
 const MAX_VISIBLE = 3;
 
 /**
- * The canonical policy badge row: one accent-tinted shield per policy that has
- * run on a file, spinning while a run is in flight, glowing briefly after it
- * lands. Every surface that shows per-file policy badges (file sidebar, file
- * editor thumbnails, files page) renders this so they stay identical.
+ * The canonical policy badge row: one accent-tinted category icon per policy
+ * that has run on a file, spinning while a run is in flight. Every surface that
+ * shows per-file policy badges (file sidebar, file editor thumbnails, files
+ * page) renders this so they stay identical.
  */
 export function PolicyBadges({
   policies,
@@ -40,33 +40,40 @@ export function PolicyBadges({
       className={`policy-badges${className ? ` ${className}` : ""}`}
       data-no-select
     >
-      {policies.slice(0, MAX_VISIBLE).map((policy) => (
-        <Tooltip
-          key={policy.id}
-          label={
-            policy.enforcing
-              ? t("policy.badgeEnforcing", "{{name}} enforcing…", {
-                  name: policy.name,
-                })
-              : t("policy.badgeRan", "{{name}} policy ran on this file", {
-                  name: policy.name,
-                })
-          }
-          withArrow
-          position="top"
-        >
-          <span
-            className={`policy-badge${policy.enforcing ? " policy-badge--enforcing" : ""}${policy.recent && !policy.enforcing ? " policy-badge--recent" : ""}`}
-            style={{ color: policy.accentColor }}
+      {policies.slice(0, MAX_VISIBLE).map((policy) => {
+        const running = policy.enforcing || policy.background;
+        return (
+          <Tooltip
+            key={policy.id}
+            label={
+              policy.enforcing
+                ? t("policy.badgeEnforcing", "{{name}} enforcing…", {
+                    name: policy.name,
+                  })
+                : policy.background
+                  ? t("policy.badgeRunning", "{{name}} running…", {
+                      name: policy.name,
+                    })
+                  : t("policy.badgeRan", "{{name}} policy ran on this file", {
+                      name: policy.name,
+                    })
+            }
+            withArrow
+            position="top"
           >
-            {policy.enforcing ? (
-              <AutorenewIcon sx={{ fontSize: "0.7rem" }} />
-            ) : (
-              <ShieldOutlinedIcon sx={{ fontSize: "0.7rem" }} />
-            )}
-          </span>
-        </Tooltip>
-      ))}
+            <span
+              className={`policy-badge${running ? " policy-badge--enforcing" : ""}`}
+              style={{ color: policy.accentColor }}
+            >
+              {running ? (
+                <AutorenewIcon sx={{ fontSize: "0.7rem" }} />
+              ) : (
+                policyCategoryIcon(policy.id, { fontSize: "0.7rem" })
+              )}
+            </span>
+          </Tooltip>
+        );
+      })}
     </span>
   );
 }

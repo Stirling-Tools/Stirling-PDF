@@ -614,11 +614,13 @@ async function importClassificationLabels(
     }
     if (mutated) ctx.bumpRevision();
   }
-  // Settle either way so it stops re-importing. No outputFileIds: classification
-  // produces no workspace file, so it gets no version badge.
+  // Settle either way so it stops re-importing. outputFileIds are the TAGGED
+  // workspace files (no forked version), so their policy badge persists. Safe
+  // to chain-key on: classification is always last, so nothing chains off it.
   updateRun(run.runId, {
     imported: true,
     importedFileIds: run.outputs.map((o) => o.fileId),
+    outputFileIds: labels && labels.length > 0 ? targetIds : [],
   });
 }
 

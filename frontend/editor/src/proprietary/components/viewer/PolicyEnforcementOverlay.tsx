@@ -71,6 +71,7 @@ export function PolicyEnforcementOverlay({ runs }: Props) {
       progress={progress}
       onDismiss={() => setDismissed(true)}
       accentVar={policyAccentVar(inFlight.categoryId)}
+      categoryId={inFlight.categoryId}
     />
   );
 }
