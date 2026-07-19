@@ -201,9 +201,8 @@ class AdminSettingsControllerTest {
         @Test
         @DisplayName("rejects an out-of-range aiEngine numeric with 400")
         void rejectsOutOfRangeAiEngineNumeric() {
-            // The engine rejects the whole push for an out-of-range value, so persisting one
-            // here would block every later push - including the one that fixes it. 0 concurrency
-            // is the worst case: it becomes a semaphore bound that wedges all model calls.
+            // An out-of-range value would make the engine reject every later push, including the
+            // one that fixes it.
             UpdateSettingsRequest request = new UpdateSettingsRequest();
             request.setSettings(Map.of("aiEngine.limits.modelMaxConcurrency", 0));
 

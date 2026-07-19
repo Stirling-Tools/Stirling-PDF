@@ -308,11 +308,8 @@ public class ApplicationProperties {
         private int streamTimeoutSeconds = 1800;
 
         /**
-         * Whether the processor pushes admin/settings-derived AI config (models, keys, RAG, limits)
-         * to the engine's {@code POST /api/v1/config} on startup and after a save. True lets a
-         * self-hosted admin drive the engine from the UI. Environment-driven deployments pin this
-         * false (SaaS does in application-saas.properties) so the engine stays entirely
-         * env-controlled and the processor never overrides its config.
+         * Whether the processor pushes settings-derived AI config to the engine on startup/save.
+         * Pin false for env-driven deployments (SaaS) to keep the engine env-controlled.
          */
         private boolean pushConfigToEngine = true;
 
@@ -343,9 +340,8 @@ public class ApplicationProperties {
             private int fastMaxTokens = 2048;
 
             /**
-             * API key for the selected provider. Secret - masked in the admin API and overridable
-             * by the engine's own provider env var (e.g. ANTHROPIC_API_KEY) in environment-driven
-             * deployments. Empty means the engine falls back to its native env credentials.
+             * API key for the selected provider (secret; masked). Empty means the engine uses its
+             * own env credential (e.g. ANTHROPIC_API_KEY).
              */
             private String apiKey = "";
 

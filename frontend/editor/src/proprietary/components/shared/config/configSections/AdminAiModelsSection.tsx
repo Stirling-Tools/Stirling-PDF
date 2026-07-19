@@ -73,9 +73,8 @@ export default function AdminAiModelsSection() {
         // stale value left over from a previous Ollama/Custom selection).
         "aiEngine.models.baseUrl": usesBaseUrl ? (s.models?.baseUrl ?? "") : "",
       };
-      // Include the secret when the user typed a new value, or when a provider switch
-      // cleared it — that explicit "" is what wipes the previous provider's stored key.
-      // Forced to "" for a provider that has no key field at all.
+      // Send the key when the user typed one or a provider switch cleared it; the explicit
+      // "" wipes the old provider's stored key (and is forced for providers with no key field).
       if (apiKeyDirty) {
         deltaSettings["aiEngine.models.apiKey"] = usesApiKey
           ? (s.models?.apiKey ?? "")
@@ -192,13 +191,11 @@ export default function AdminAiModelsSection() {
                 const next = v || "anthropic";
                 const patch: Partial<AiEngineModels> = { provider: next };
                 // Clear fields the new provider doesn't use so a stale hidden value can't
-                // leak into the payload (e.g. an Ollama base URL after switching back to
-                // Anthropic).
+                // leak into the payload (e.g. an Ollama base URL after switching to Anthropic).
                 if (next !== "ollama" && next !== "custom") patch.baseUrl = "";
                 if (next !== provider) {
-                  // There is only one stored key, and it belongs to the provider it was
-                  // issued for — carrying it across a switch would 401 on every call while
-                  // the field still read "Saved". Clear it and require an explicit re-entry.
+                  // Only one key is stored and it belongs to its provider; carrying it across a
+                  // switch would 401 every call while the field still read "Saved", so clear it.
                   patch.apiKey = "";
                   setApiKeyDirty(true);
                 }
@@ -317,9 +314,8 @@ export default function AdminAiModelsSection() {
                   "admin.settings.ai.models.apiKey.description",
                   "Leave blank to use the engine's own environment credential. Applies to self-hosted single-engine deployments.",
                 )}
-                // Show the field blank when a key is already stored (it comes back masked as
-                // "********"): a pre-filled sentinel would corrupt the stored key if the user
-                // appended to it. Only bind the real value once the user starts typing.
+                // Keep the field blank when a key is already stored (returned masked as "********");
+                // a pre-filled sentinel would corrupt the key on append, so bind the real value only once typed.
                 value={apiKeyDirty ? (settings.models?.apiKey ?? "") : ""}
                 onChange={(e) => {
                   setApiKeyDirty(true);

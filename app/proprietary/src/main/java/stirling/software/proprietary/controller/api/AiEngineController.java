@@ -65,9 +65,8 @@ public class AiEngineController {
     private final UserServiceInterface userService;
 
     /**
-     * SSE emitter timeout in ms. Long enough to accommodate multi-gigabyte PDF workflows (OCR on a
-     * 1000-page scan, splitting a huge PDF, etc.) without the emitter completing out from under the
-     * executor. Derived from {@code aiEngine.streamTimeoutSeconds}.
+     * SSE emitter timeout (ms), long enough for multi-gigabyte PDF workflows without completing out
+     * from under the executor. Derived from {@code aiEngine.streamTimeoutSeconds}.
      */
     private final long streamTimeoutMs;
 
@@ -254,8 +253,7 @@ public class AiEngineController {
                     "Sends a user message to the PDF edit agent which returns a structured plan"
                             + " of tool operations to perform")
     public ResponseEntity<String> pdfEdit(@RequestBody String requestBody) throws IOException {
-        // Same gate as /orchestrate: the edit agent is a model call behind the same
-        // conversational surface, so it must not stay open when both switches are off.
+        // Same gate as /orchestrate: edit agent is a model call on the same conversational surface.
         aiFeatureGate.requireConversationalWorkflow();
         JsonNode parsed = parseJson(requestBody);
         if (!parsed.isObject()) {

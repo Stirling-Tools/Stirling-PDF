@@ -26,11 +26,8 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * The config-push bridge is a self-hosted-only feature: it lets the admin UI drive the engine's
- * model/key/RAG/limit config. Environment-driven deployments pin {@code
- * aiEngine.pushConfigToEngine} false (SaaS does so in application-saas.properties) so the engine
- * stays entirely env-controlled - these tests lock in that the processor stays silent then while
- * still pushing when it is enabled.
+ * Config-push bridge is self-hosted-only. These lock in that the processor stays silent when {@code
+ * aiEngine.pushConfigToEngine} is off (env-driven/SaaS) and pushes when it is on.
  */
 class AiEngineConfigSyncTest {
 
@@ -93,9 +90,8 @@ class AiEngineConfigSyncTest {
 
     @Test
     void startupPushSerialisesTheEngineWireContract() throws Exception {
-        // Distinct values so a dropped/renamed field is detectable. Mirrors
-        // engine/tests/fixtures/processor_config_push.json - keep the two in sync; the engine's
-        // test_config_contract.py validates that same shape on the receiving side.
+        // Distinct values so a dropped/renamed field is detectable. Keep in sync with
+        // engine/tests/fixtures/processor_config_push.json (the engine validates the same shape).
         AiEngine ai = applicationProperties.getAiEngine();
         ai.getModels().setProvider("ollama");
         ai.getModels().setSmartModel("smart-model-x");
@@ -197,9 +193,8 @@ class AiEngineConfigSyncTest {
 
     @Test
     void livePushSendsAnExplicitlyClearedApiKeyRatherThanKeepEnv() throws Exception {
-        // Clearing a leaked key has to reach the engine as a real clear. Blanking the identity
-        // here (the "unconfigured section" path) would tell the engine "keep what you have", so
-        // the revoked key would stay live in the engine's cache indefinitely.
+        // Clearing a leaked key must reach the engine as a real clear; blanking it as "keep env"
+        // would leave the revoked key live in the engine's cache indefinitely.
         ArgumentCaptor<String> body = ArgumentCaptor.forClass(String.class);
         sync.pushLiveAfterSave(mapOf("aiEngine.models.apiKey", ""));
         verify(aiEngineClient, timeout(3000)).post(eq("/api/v1/config"), body.capture(), isNull());

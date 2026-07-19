@@ -36,17 +36,12 @@ from stirling.services import setup_posthog_tracking
 logger = logging.getLogger(__name__)
 
 
-# How long the lifespan waits for a background task to finish its current iteration
-# before giving up and cancelling it. See the teardown in :func:`lifespan`.
+# Seconds the lifespan waits for a background task to drain before cancelling it.
 _BACKGROUND_TASK_DRAIN_SECONDS = 10
 
 
 async def _sleep_until(stop: asyncio.Event, seconds: float) -> bool:
-    """Wait up to ``seconds``. True if we were asked to stop, False if the interval elapsed.
-
-    Background loops idle here rather than in a bare ``asyncio.sleep`` so shutdown can be
-    cooperative - see :func:`lifespan` for why cancelling them mid-iteration is unsafe.
-    """
+    """Wait up to ``seconds``; True if asked to stop, False if the interval elapsed."""
     try:
         await asyncio.wait_for(stop.wait(), timeout=seconds)
     except TimeoutError:
@@ -59,25 +54,14 @@ async def _run_expired_doc_reaper(
     interval_seconds: int,
     stop: asyncio.Event,
 ) -> None:
-    """Periodically delete documents whose ``expires_at`` has passed.
-
-    A reaped collection drops everything rooted at that document. Backstop
-    for the explicit logout purge: catches sessions that ended without a
-    clean logout (tab close, JWT expiry, engine restart). Persistent rows
-    (``expires_at`` null, the shape we use for org-shared docs) are never
-    touched. Runs until ``stop`` is set by the lifespan teardown.
-    """
+    """Backstop purge of documents past ``expires_at``; persistent (null expires_at) rows are never touched."""
     await _reap(documents)
     while not await _sleep_until(stop, interval_seconds):
         await _reap(documents)
 
 
 async def _reap(documents: DocumentService) -> None:
-    """One reaper iteration. Logs the deleted count on success and the full
-    exception with traceback on failure; never re-raises non-cancel errors so
-    a bad iteration doesn't kill the loop. ``asyncio.CancelledError`` is
-    re-raised so the lifespan teardown can cancel the task cleanly.
-    """
+    """One reaper iteration; swallows non-cancel errors so a bad iteration doesn't kill the loop."""
     try:
         deleted = await documents.reap_expired()
         if deleted:
@@ -89,15 +73,9 @@ async def _reap(documents: DocumentService) -> None:
 
 
 def _adopt_cached_config_if_changed(fast_api: FastAPI) -> None:
-    """Re-apply the persisted config when the cache file changed under us.
-
-    A push lands on exactly one uvicorn worker but is persisted to a cache file shared
-    by the whole pool, so this is how the other workers learn about it. Never raises:
-    an unreadable or unbuildable cache leaves this worker on its current config.
-    """
-    # Read the stamp before the payload: if a write lands between the two we record the
-    # older stamp against the newer config and simply re-apply on the next tick, whereas
-    # the other order would record the newer stamp and skip the update forever.
+    """Re-apply the persisted config when the shared cache file changed under us; never raises."""
+    # Read the stamp before the payload: a write landing between the two re-applies next
+    # tick, whereas the reverse order would record the newer stamp and skip forever.
     stamp = cache_stamp()
     if stamp is None or stamp == getattr(fast_api.state, "config_cache_stamp", None):
         return
@@ -123,10 +101,7 @@ async def _run_config_cache_watcher(
     interval_seconds: int,
     stop: asyncio.Event,
 ) -> None:
-    """Poll the shared config cache so every worker converges on the last push.
-
-    Runs until ``stop`` is set by the lifespan teardown.
-    """
+    """Poll the shared config cache so every worker converges on the last push."""
     while not await _sleep_until(stop, interval_seconds):
         try:
             _adopt_cached_config_if_changed(fast_api)
@@ -146,13 +121,7 @@ def _load_startup_settings(fast_api: FastAPI) -> AppSettings:
 def _restore_cached_config(
     settings: AppSettings,
 ) -> tuple[AppSettings, Model | None, Model | None, EmbeddingService | None]:
-    """Restore the last-applied pushed config from the encrypted on-disk cache.
-
-    Returns the effective settings plus the pre-built smart/fast models and
-    embedder to inject into the initial app state. Falls back to the env settings
-    (all-None) when config push is disabled, no cache exists, or the cached config
-    can't be applied (bad/unavailable model) - the cache never crashes boot.
-    """
+    """Restore the last-applied pushed config from the encrypted cache, or env settings on any failure."""
     if not settings.allow_config_push:
         return settings, None, None, None
     cached = load_config()
@@ -176,10 +145,8 @@ def _restore_cached_config(
 async def lifespan(fast_api: FastAPI):
     # Load env vars on startup so we can immediately crash if required env vars aren't set
     settings = _load_startup_settings(fast_api)
-    # Precedence: env < persisted cache < live push. Restore the last-applied pushed
-    # config unless config push is disabled (then env is the single source of truth).
-    # Stamp first so a push that lands mid-boot is re-adopted by the watcher rather
-    # than mistaken for the config we just restored.
+    # Precedence: env < persisted cache < live push. Stamp first so a push landing mid-boot
+    # is re-adopted by the watcher rather than mistaken for the config we just restored.
     fast_api.state.config_cache_stamp = cache_stamp()
     effective, smart_model, fast_model, embedder = _restore_cached_config(settings)
     app_state = build_app_state(
@@ -205,9 +172,8 @@ async def lifespan(fast_api: FastAPI):
     )
     background_tasks = [reaper_task]
     if effective.allow_config_push:
-        # The engine runs a pool of uvicorn workers and a push reaches only one of them.
-        # This is how the rest of the pool picks the config up; without it most requests
-        # would keep running the previous models.
+        # A push reaches only one uvicorn worker; this watcher is how the rest of the
+        # pool picks it up, otherwise most requests keep running the previous models.
         background_tasks.append(
             asyncio.create_task(
                 _run_config_cache_watcher(
@@ -219,12 +185,8 @@ async def lifespan(fast_api: FastAPI):
             )
         )
     yield
-    # Ask the loops to stop and let the current iteration drain, rather than cancelling
-    # them. Cancelling a reaper that is inside `asyncio.to_thread(self._sync_reap_expired)`
-    # only abandons the await: the worker thread keeps running sqlite calls and the store's
-    # asyncio lock is released as the coroutine unwinds, so the `documents.close()` below
-    # would then close the connection out from under that thread and segfault the native
-    # sqlite-vec extension. Cancellation stays as a backstop for a task that will not stop.
+    # Drain the loops rather than cancel: cancelling a reaper mid `to_thread` sqlite call lets
+    # close() pull the connection out from under it and segfault sqlite-vec. Cancel is a backstop.
     stop_background.set()
     _, pending = await asyncio.wait(background_tasks, timeout=_BACKGROUND_TASK_DRAIN_SECONDS)
     for task in pending:
@@ -255,17 +217,15 @@ app.include_router(ledger_router, dependencies=_user_gate)
 app.include_router(pdf_comments_router, dependencies=_user_gate)
 app.include_router(agent_capabilities_router, dependencies=_user_gate)
 app.include_router(document_classifier_router, dependencies=_user_gate)
-# Config push is a system/admin sync from the Java processor with no X-User-Id, so
-# it is guarded by the X-Engine-Auth shared secret (global middleware) and the
-# allow_config_push flag only, deliberately NOT the per-user identity gate.
+# Config push is a system sync with no X-User-Id, so it is guarded by the shared secret
+# and allow_config_push flag only, deliberately NOT the per-user identity gate.
 app.include_router(config_router)
 
 
 @app.get("/health", response_model=HealthResponse)
 async def healthcheck(http_request: Request) -> HealthResponse:
-    # Report the LIVE config (env < cache < push) held on app.state, not the
-    # boot-time env cache, so an admin "Test connection" check shows the model
-    # actually in use after a config push. Falls back to env if state isn't up yet.
+    # Report the LIVE config on app.state, not the boot-time env cache, so an admin
+    # "Test connection" shows the model actually in use after a push. Falls back to env.
     settings: AppSettings = getattr(http_request.app.state, "settings", None) or load_settings()
     return HealthResponse(
         status="ok",

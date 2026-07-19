@@ -21,17 +21,7 @@ def _build_embedder(
     api_key: str | None = None,
     base_url: str | None = None,
 ) -> Embedder:
-    """Construct an :class:`Embedder` for ``model_name``.
-
-    With no explicit ``provider``/``api_key``/``base_url`` this keeps the original
-    behaviour: ``model_name`` is the ``provider:model`` string form (e.g.
-    "voyageai:voyage-4") and credentials come from the provider's native env var.
-
-    With an explicit provider (config-push path) ``model_name`` is the bare model
-    without a prefix. ``voyageai``/``openai`` compose the same string form; the
-    OpenAI-compatible ``ollama``/``custom`` build an OpenAI embedding model against
-    ``base_url`` (Ollama ignores the key but the SDK still needs a non-empty one).
-    """
+    """Construct an :class:`Embedder`; explicit provider/api_key/base_url is the config-push path, else env form."""
     if not provider and not api_key and not base_url:
         return Embedder(model_name)
 

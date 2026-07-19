@@ -23,17 +23,8 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
 
 /**
- * Pushes the admin-configured AI settings (model provider/name, per-provider API key, RAG choices,
- * limits) to the Python engine so a self-hosted deployment can drive the engine's model and API key
- * from the Stirling settings UI. Pushed on processor startup and again live whenever AI settings
- * are saved (so model/RAG/limit changes apply without a restart). The engine applies it live
- * (rebuilds its models) and caches it, so it self-restores on its own reboot. Empty
- * key/baseUrl/model fields mean "keep the engine's own environment credential".
- *
- * <p>Gated by {@code aiEngine.pushConfigToEngine} (default true). Environment-driven deployments
- * pin it false (SaaS does so in application-saas.properties) so the engine stays entirely
- * env-controlled and the processor never pushes settings-derived config to it. Best-effort and
- * non-blocking: a slow or unreachable engine never delays or fails Stirling startup.
+ * Pushes admin-configured AI settings to the engine on startup and after each save; non-blocking
+ * and best-effort. Disabled via {@code aiEngine.pushConfigToEngine} for env-driven deployments.
  */
 @Slf4j
 @Service
@@ -47,8 +38,7 @@ public class AiEngineConfigSync {
     private final AiEngineClient aiEngineClient;
     private final ObjectMapper objectMapper;
 
-    // Single worker so pushes are strictly ordered; see submit(). Virtual threads are always
-    // daemon and unmount on the retry sleeps, so a pending push never holds up shutdown.
+    // Single worker keeps pushes strictly ordered; virtual (daemon) thread never blocks shutdown.
     private final ExecutorService pushExecutor =
             Executors.newSingleThreadExecutor(
                     Thread.ofVirtual().name("ai-engine-config-sync").factory());
@@ -70,24 +60,19 @@ public class AiEngineConfigSync {
                             + " (the engine is configured from its own environment)");
             return;
         }
-        // Engine may still be booting; push off the startup thread with a few retries so we never
-        // block or crash Stirling startup when the engine is slow or briefly unreachable.
+        // Engine may still be booting; push off-thread with retries so startup never blocks.
         submit(() -> pushWithRetries(cfg));
     }
 
     /**
-     * Push AI settings to the engine immediately after an admin save so model/RAG/limit changes
-     * reach the engine without waiting for a processor restart. {@code pendingAiEngine} are the
-     * pending {@code aiEngine.*} dot-notation changes; the running bean overlaid with these is the
-     * current settings.yml state. No-op unless AI is enabled and an engine-relevant key changed.
+     * Push AI settings to the engine after an admin save so changes apply without a restart. No-op
+     * unless AI is enabled and an engine-relevant {@code aiEngine.*} key changed.
      */
     public void pushLiveAfterSave(Map<String, Object> pendingAiEngine) {
-        // The caller has already persisted settings.yml, so nothing in here may propagate: a
-        // failure to build or dispatch the push must not turn a successful save into a 500.
+        // Save already persisted; a build/dispatch failure must not fail the save.
         try {
-            // Gate on the RUNNING bean: AiEngineClient refuses calls while the bean is disabled, so
-            // pushing on a pending-but-not-restarted enable would always fail. The post-restart
-            // startup push covers first-time enablement.
+            // Gate on the running bean: the client refuses calls while disabled, so a pending
+            // enable would always fail here; the post-restart startup push covers first enablement.
             AiEngine cfg = applicationProperties.getAiEngine();
             if (pendingAiEngine == null
                     || pendingAiEngine.isEmpty()
@@ -117,10 +102,8 @@ public class AiEngineConfigSync {
     }
 
     /**
-     * Run a push on the single-threaded executor. Serialising them matters because each push
-     * carries the FULL config and the engine persists whatever lands last: two overlapping pushes
-     * (a double-clicked Save, two admin tabs, or a save racing the startup retries) could otherwise
-     * leave the engine running - and caching - the older of the two.
+     * Run pushes on the single-threaded executor so they stay serialised: each carries the full
+     * config and the engine keeps whatever lands last, so overlapping pushes could leave it stale.
      */
     private void submit(Runnable task) {
         pushExecutor.execute(task);
@@ -140,8 +123,7 @@ public class AiEngineConfigSync {
         }
     }
 
-    // Only models/rag/limits are forwarded to the engine; enabled/url/timeouts/features are
-    // processor-side and don't need a live engine push.
+    // Only models/rag/limits reach the engine; the rest is processor-side.
     private static boolean isEngineRelevantKey(String key) {
         return key.startsWith("aiEngine.models.")
                 || key.startsWith("aiEngine.rag.")
@@ -154,8 +136,7 @@ public class AiEngineConfigSync {
         }
         String[] parts = key.substring("aiEngine.".length()).split("\\.");
         if (parts.length < 2) {
-            // "aiEngine.models." and friends: no leaf to set, and writing at parts[0] would
-            // replace the whole section object with a scalar.
+            // No leaf here; writing at parts[0] would overwrite the whole section with a scalar.
             return;
         }
         ObjectNode parent = node;
@@ -229,8 +210,7 @@ public class AiEngineConfigSync {
         return root;
     }
 
-    // Bean defaults, used to detect whether the admin actually configured a section vs left it at
-    // the built-in defaults, so an unconfigured section can be pushed as "keep the engine's env".
+    // Defaults used to detect whether a section was configured or left at built-in values.
     private static final AiEngine.Models DEFAULT_MODELS = new AiEngine.Models();
     private static final AiEngine.Rag DEFAULT_RAG = new AiEngine.Rag();
 
@@ -243,19 +223,8 @@ public class AiEngineConfigSync {
     }
 
     /**
-     * Blank the provider/model/credential identity of any section the admin hasn't customised so
-     * the push keeps the engine's environment-configured values for it. Empty identity fields mean
-     * "keep env" on the engine side, so a fresh enable or a restart never silently switches an
-     * env-configured engine's provider/model - which would otherwise break auth when the engine was
-     * pointed at a different provider (e.g. Ollama/OpenAI) purely through its environment. Numeric
-     * knobs (token limits, top_k, page/char caps) are left as-is: they equal the engine's own
-     * defaults and don't affect provider auth.
-     *
-     * <p>{@code touchedKeys} are the {@code aiEngine.*} keys the admin just changed. A section
-     * whose identity the admin explicitly edited is never blanked, even when the new value is
-     * empty: clearing a leaked API key back to blank has to reach the engine as a real clear, not
-     * be rewritten into "keep whatever you already have" (which would leave the revoked key live in
-     * the engine's cache indefinitely). Empty on the startup push, where nothing was just edited.
+     * Blank the identity (provider/model/credentials) of unconfigured sections so the push keeps
+     * the engine's env values; edited sections are sent as-is so a cleared key really clears.
      */
     private void keepEnvForUnconfiguredIdentity(ObjectNode root, Set<String> touchedKeys) {
         if (root.get("models") instanceof ObjectNode models) {

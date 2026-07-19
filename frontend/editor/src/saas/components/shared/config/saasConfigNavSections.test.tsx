@@ -15,9 +15,8 @@ function itemKeys(sections: Sections): string[] {
   return sections.flatMap((s) => s.items.map((i) => i.key));
 }
 
-// The admin AI settings pages exist only in the self-hosted proprietary flavor. SaaS builds its
-// settings nav from scratch here, so this locks in that the AI group can never leak into SaaS -
-// if someone later wires the AI sections into the SaaS cascade, this fails loudly.
+// Admin AI settings pages exist only in the self-hosted proprietary flavor; this locks in that
+// the AI group can never leak into the SaaS nav (fails loudly if wired into the SaaS cascade).
 describe("saasConfigNavSections", () => {
   const AI_ITEM_KEYS = [
     "adminAiGeneral",

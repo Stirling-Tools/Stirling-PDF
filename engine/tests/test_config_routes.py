@@ -1,9 +1,4 @@
-"""Tests for the config-push endpoint (POST /api/v1/config).
-
-These drive the real lifespan (via ``with TestClient(app)``) so ``app.state`` is
-populated, then exercise the gate + model-swap behaviour against the in-memory
-"test" runtime built by :func:`build_app_settings`.
-"""
+"""Tests for the config-push endpoint (POST /api/v1/config), driving the real lifespan so app.state is populated."""
 
 from __future__ import annotations
 
@@ -27,8 +22,7 @@ from stirling.documents import DocumentService
 
 @pytest.fixture(autouse=True)
 def _isolate_config_cache(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """Point the encrypted config cache at a per-test tmp dir so persistence never
-    touches the real engine/data dir or leaks between tests."""
+    """Point the encrypted config cache at a per-test tmp dir so persistence never leaks."""
     monkeypatch.setattr(config_cache, "_default_data_dir", lambda: tmp_path)
 
 
@@ -38,11 +32,7 @@ def _client(
     *,
     client_addr: tuple[str, int] = ("127.0.0.1", 12345),
 ) -> Iterator[TestClient]:
-    """Enter a TestClient whose lifespan builds app.state from ``settings_factory``.
-
-    Defaults to a loopback client address so the config endpoint's local-caller gate
-    (which blocks remote unauthenticated pushes) allows the request through.
-    """
+    """Enter a TestClient whose lifespan builds app.state from ``settings_factory``."""
     previous = app.dependency_overrides.get(load_settings)
     app.dependency_overrides[load_settings] = settings_factory
     try:
@@ -96,9 +86,7 @@ def test_config_push_from_non_local_caller_without_secret_returns_403() -> None:
 
 
 def test_config_push_from_loopback_with_forwarded_header_returns_403() -> None:
-    """A forwarding header means ``request.client.host`` was (or could be) rewritten by a
-    proxy, so a loopback peer address is NOT trusted without a shared secret. This closes the
-    X-Forwarded-For spoofing / same-host reverse-proxy bypass."""
+    """A forwarding header means the peer address may be proxy-rewritten, so loopback isn't trusted without a secret."""
     with _client(build_app_settings) as client:  # peer is loopback 127.0.0.1
         response = client.post(
             "/api/v1/config",
@@ -110,8 +98,7 @@ def test_config_push_from_loopback_with_forwarded_header_returns_403() -> None:
 
 
 def test_config_push_persist_failure_still_applies_without_500() -> None:
-    """Persistence is best-effort: a non-OSError failure (e.g. a corrupt keyfile raising
-    ValueError) must not turn an already-applied push into a 500 with diverged state."""
+    """Persistence is best-effort: a persist failure must not turn an already-applied push into a 500."""
     with _client(build_app_settings) as client:
         with patch(
             "stirling.api.routes.config.save_config",
@@ -170,9 +157,7 @@ def test_config_push_unsupported_model_returns_400() -> None:
 
 
 def test_config_push_ollama_embedding_rebuilds_embedder() -> None:
-    """A pushed ollama/custom embedding provider builds an OpenAI-compatible
-    embedder and swaps it onto the reused DocumentService without tearing down
-    the store; the response carries a re-index note."""
+    """A pushed ollama/custom embedding provider swaps the embedder onto the reused store, with a re-index note."""
     with _client(build_app_settings) as client:
         store_before = app.state.runtime.documents
         embedder_before = app.state.runtime.documents.embedder
@@ -216,8 +201,7 @@ def test_config_push_unsupported_embedding_provider_returns_400() -> None:
 
 
 def test_config_push_empty_models_keep_env_value() -> None:
-    """An empty models block keeps the engine's current (env) models but still
-    applies pushed limits."""
+    """An empty models block keeps the engine's env models but still applies pushed limits."""
     with _client(build_app_settings) as client:
         payload = _anthropic_push()
         payload["models"] = {
@@ -238,8 +222,7 @@ def test_config_push_empty_models_keep_env_value() -> None:
 
 
 def test_config_push_ignores_unknown_fields() -> None:
-    """A newer processor pushing fields this engine doesn't know must not 422;
-    unknown fields are ignored and the rest of the push still applies."""
+    """A newer processor pushing unknown fields must not 422; they are ignored and the rest applies."""
     with _client(build_app_settings) as client:
         payload = _anthropic_push()
         payload["futureTopLevelField"] = {"anything": 1}
@@ -283,12 +266,7 @@ def test_boot_proceeds_on_corrupt_cache(tmp_path: Path) -> None:
 
 
 def test_config_push_from_remote_caller_is_allowed_when_secret_is_set() -> None:
-    """The loopback gate is a fallback for the no-secret case only.
-
-    With a shared secret configured the middleware has already authenticated the caller,
-    so the route must NOT additionally demand a loopback peer - otherwise the supported
-    deployment shape (engine in its own container, secret on both sides) could never push.
-    """
+    """The loopback gate is a fallback for the no-secret case only; a remote caller may push once a secret is set."""
 
     def factory() -> AppSettings:
         return build_app_settings().model_copy(update={"engine_shared_secret": "s3cret"})
@@ -311,12 +289,7 @@ def test_config_push_from_remote_caller_is_allowed_when_secret_is_set() -> None:
     ],
 )
 def test_config_push_rejects_out_of_range_numbers(section: str, field: str, value: int) -> None:
-    """Out-of-range numbers are rejected by the contract before anything is applied.
-
-    modelMaxConcurrency is the dangerous one: it becomes an asyncio.Semaphore bound, and 0
-    constructs an already-locked semaphore that would hang every model call - and the push
-    is persisted, so a restart would restore the wedge rather than clear it.
-    """
+    """Out-of-range numbers are rejected by the contract before anything is applied."""
     with _client(build_app_settings) as client:
         payload = _anthropic_push()
         payload[section][field] = value  # type: ignore[index]
@@ -338,12 +311,7 @@ def test_config_push_allows_zero_max_searches() -> None:
 
 
 def test_second_push_keeps_a_colon_bearing_model_name() -> None:
-    """A pushed model name may contain a colon ("llama3.1:8b").
-
-    Once a provider has been pushed the running name is already bare, so a follow-up push
-    that omits the model must keep it verbatim. Stripping the "provider:" prefix a second
-    time would silently truncate it to "8b" and 404 at the provider.
-    """
+    """A pushed model name may contain a colon ("llama3.1:8b") and must survive a follow-up push, not be re-stripped."""
     ollama_push: dict[str, object] = {
         "models": {
             "provider": "ollama",
@@ -377,11 +345,7 @@ def test_second_push_keeps_a_colon_bearing_model_name() -> None:
 
 
 def test_worker_adopts_a_config_pushed_to_a_sibling_worker() -> None:
-    """A push reaches one uvicorn worker; the rest adopt it from the shared cache file.
-
-    Simulates the sibling by writing the cache directly (as the worker that served the
-    push would) and then running one watcher iteration against this worker's app.
-    """
+    """A push reaches one uvicorn worker; the rest adopt it from the shared cache file."""
     with _client(build_app_settings):
         assert app.state.settings.smart_model_name == "test"
 
@@ -394,8 +358,7 @@ def test_worker_adopts_a_config_pushed_to_a_sibling_worker() -> None:
 
 
 def test_worker_does_not_rebuild_when_the_cache_is_unchanged() -> None:
-    """The watcher is a poll, so an unchanged cache must be a no-op rather than a rebuild
-    of the runtime and every agent on every tick."""
+    """The watcher is a poll, so an unchanged cache must be a no-op, not a rebuild every tick."""
     config_cache.save_config(ConfigPushRequest.model_validate(_anthropic_push()))
     with _client(build_app_settings):
         before = app.state.orchestrator_agent
@@ -404,13 +367,7 @@ def test_worker_does_not_rebuild_when_the_cache_is_unchanged() -> None:
 
 
 def test_shutdown_drains_background_tasks_instead_of_cancelling_them() -> None:
-    """Shutdown must let an in-flight reaper iteration finish before the store closes.
-
-    Cancelling a reaper parked in ``asyncio.to_thread(self._sync_reap_expired)`` only
-    abandons the await: the worker thread keeps issuing sqlite calls while the store's
-    asyncio lock is released, so the close that follows pulls the connection out from
-    under it and segfaults the native sqlite-vec extension.
-    """
+    """Shutdown must let the reaper iteration finish before the store closes, else close segfaults sqlite-vec."""
     reap_finished = threading.Event()
 
     async def slow_reap(*_args: object, **_kwargs: object) -> int:

@@ -53,23 +53,14 @@ def _build_anthropic_http_client() -> httpx.AsyncClient:
     )
 
 
-# Placeholder used when no Anthropic key is configured; lets the engine boot so a
-# deployment that only uses another provider (e.g. Ollama via the admin UI / config
-# push) isn't blocked. Anthropic calls then fail with a clear 401 instead.
+# Placeholder when no Anthropic key is set, so a deployment using only another provider
+# (Ollama etc.) can still boot. Anthropic calls then fail with a clear 401 instead.
 _UNCONFIGURED_ANTHROPIC_KEY = "unconfigured"
 _warned_missing_anthropic_key = False
 
 
 def _anthropic_provider(explicit_key: str | None = None) -> AnthropicProvider:
-    """Build the Anthropic provider, tolerating a missing key at startup.
-
-    pydantic-ai's ``AnthropicProvider`` raises at construction when no key is
-    available, which would crash the whole engine at boot even for deployments
-    that never call Anthropic (Ollama/OpenAI-configured, or awaiting a config
-    push that supplies credentials). We fall back to a placeholder key and warn
-    once so startup succeeds; the placeholder only surfaces as a clear
-    provider-side auth error if an Anthropic call is actually made.
-    """
+    """Build the Anthropic provider, tolerating a missing key so an Ollama/OpenAI-only deployment can still boot."""
     http_client = _build_anthropic_http_client()
     key = explicit_key or os.environ.get("ANTHROPIC_API_KEY")
     if key:
@@ -86,14 +77,7 @@ def _anthropic_provider(explicit_key: str | None = None) -> AnthropicProvider:
 
 
 class _NullContentCoercingTransport(httpx.AsyncHTTPTransport):
-    """Coerce assistant ``content: null`` to ``""`` in outgoing OpenAI chat requests.
-
-    OpenAI's schema uses ``content: null`` for assistant messages that carry only
-    tool calls, but Ollama's OpenAI-compatible endpoint rejects it ("invalid message
-    content type: <nil>"), which intermittently breaks multi-turn tool conversations
-    (RAG search + tool-delivered output). Rewriting null -> "" makes them acceptable
-    without changing semantics. Scoped to the ollama/custom clients only.
-    """
+    """Coerce assistant ``content: null`` to ``""`` in outgoing OpenAI requests, which Ollama otherwise rejects."""
 
     async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
         if request.headers.get("content-type", "").startswith("application/json") and request.content:
@@ -209,12 +193,7 @@ def _build_document_store(settings: AppSettings) -> DocumentStore:
 
 
 def _build_documents(settings: AppSettings, embedder: EmbeddingService | None = None) -> DocumentService:
-    """Build the document service used by per-request RAG capabilities.
-
-    ``embedder`` lets a cache-restore boot inject an already-built embedder (e.g.
-    an OpenAI-compatible ollama/custom one whose base_url the plain
-    ``settings.rag_embedding_model`` string can't encode); None builds from settings.
-    """
+    """Build the document service used for RAG; ``embedder`` lets a cache-restore boot inject a pre-built one."""
     if embedder is None:
         logger.info("Documents: embedding_model=%s", settings.rag_embedding_model)
         embedder = EmbeddingService(
@@ -234,15 +213,7 @@ def build_runtime(
     smart_model: Model | None = None,
     embedder: EmbeddingService | None = None,
 ) -> AppRuntime:
-    """Assemble the shared runtime.
-
-    ``documents``/``fast_model``/``smart_model`` let a config-push rebuild reuse
-    the live vector-store connection pool and inject already-built (and already
-    validated) models instead of reconstructing them from the model-name strings.
-    ``embedder`` injects a pre-built embedder when building a fresh document store
-    (cache-restore boot); it is ignored when ``documents`` is supplied. All None
-    (the lifespan path) preserves the original startup behaviour.
-    """
+    """Assemble the shared runtime; the keyword args let a config-push reuse the live store and inject built models."""
     fast = fast_model if fast_model is not None else _build_model(settings.fast_model_name)
     smart = smart_model if smart_model is not None else _build_model(settings.smart_model_name)
     validate_structured_output_support(fast, settings.fast_model_name)
@@ -266,18 +237,7 @@ def _build_model(
     api_key: str | None = None,
     base_url: str | None = None,
 ) -> Model:
-    """Construct a model for ``model_name``.
-
-    With no explicit ``provider``/``api_key``/``base_url`` this keeps the original
-    env-driven behaviour: Anthropic-prefixed names get our keepalive-free httpx
-    client (so workers don't pick up stale pooled connections) and everything
-    else falls back to ``infer_model``.
-
-    When the caller passes an explicit provider (config-push path), ``model_name``
-    is the bare model without a ``provider:`` prefix and credentials come from the
-    call. An empty ``api_key``/``base_url`` is treated as unset so the provider
-    reads its native environment variable (e.g. ANTHROPIC_API_KEY / OPENAI_API_KEY).
-    """
+    """Construct a model for ``model_name``; explicit provider/api_key/base_url is the config-push path, else env."""
     if not provider and not api_key and not base_url:
         if model_name.startswith("anthropic:"):
             bare_name = model_name.removeprefix("anthropic:")
@@ -292,9 +252,8 @@ def _build_model(
         openai_provider = OpenAIProvider(api_key=key) if key else OpenAIProvider()
         return OpenAIChatModel(model_name, provider=openai_provider)
     if provider_name in ("ollama", "custom"):
-        # OpenAI-compatible endpoint. Ollama ignores the key but the SDK still
-        # requires a non-empty one, so default to a harmless placeholder. The custom
-        # http client coerces null assistant content so multi-turn tool calls work.
+        # OpenAI-compatible endpoint. Ollama ignores the key but the SDK needs a non-empty
+        # one, so default to a placeholder; the custom client coerces null assistant content.
         openai_provider = OpenAIProvider(
             base_url=base_url or None,
             api_key=key or "ollama",

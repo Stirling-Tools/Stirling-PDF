@@ -1,14 +1,4 @@
-"""Wire-contract test for the processor -> engine config push.
-
-The Java processor (AiEngineConfigSync.buildConfigNode) serialises the admin AI settings as
-camelCase JSON and POSTs them to /api/v1/config. Because ConfigPushRequest uses extra="ignore"
-(so version skew never 422s), a field the engine can no longer map is silently dropped to its
-default instead of erroring. This test pins the exact camelCase contract: every field in the
-shared fixture must round-trip onto the model, so a rename on either side fails loudly.
-
-The same fixture (tests/fixtures/processor_config_push.json) is the contract the Java
-AiEngineConfigSyncTest asserts its serialiser produces - keep the two in sync.
-"""
+"""Wire-contract test pinning the camelCase processor -> engine config push; keep in sync with the Java test."""
 
 from __future__ import annotations
 
@@ -53,8 +43,7 @@ def test_processor_contract_round_trips_every_field() -> None:
 
 
 def test_processor_contract_has_no_unmapped_keys() -> None:
-    """Guard the fixture itself: every wire key must map to a model field (none silently
-    absorbed by extra="ignore"). If the processor adds a field, extend the contract here."""
+    """Guard the fixture itself: every wire key must map to a model field, none silently absorbed by extra="ignore"."""
     payload = _load()
     expected = {
         "models": {

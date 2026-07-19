@@ -10,10 +10,8 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.AiEngine.Features;
 
 /**
- * Central gate for the per-capability AI feature switches ({@code aiEngine.features.*}). Every AI
- * capability entry point calls the matching {@code require*} method so an admin who turns a feature
- * off in the settings UI gets a clean 503 instead of the request silently reaching the engine. All
- * checks also fail closed when the AI engine itself is disabled.
+ * Central gate for the AI feature switches ({@code aiEngine.features.*}); each {@code require*}
+ * throws 503 when the engine is disabled or the capability is off.
  */
 @Component
 @RequiredArgsConstructor
@@ -33,12 +31,8 @@ public class AiFeatureGate {
     }
 
     /**
-     * The orchestrate and edit-plan endpoints are the shared entry points behind both the chat
-     * assistant and grounded document questions, and neither carries enough context to tell the two
-     * apart, so this gate stays open while either capability is enabled and only fails closed when
-     * both are off (or the engine is disabled). There is deliberately no separate {@code
-     * requireChat}/{@code requireDocumentQuestions}: a gate with no enforceable call site would
-     * imply a per-capability guarantee the server cannot make.
+     * Shared entry point for chat and document questions; open while either is enabled, since a
+     * request can't be attributed to just one. No per-capability gate exists for the same reason.
      */
     public void requireConversationalWorkflow() {
         require(features().isChat() || features().isDocumentQuestions(), "conversation");

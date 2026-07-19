@@ -4,19 +4,13 @@ from pydantic import ConfigDict, Field
 
 from stirling.models import ApiModel
 
-# Tolerate unknown fields so a newer processor pushing a field this engine version
-# doesn't know is ignored rather than rejecting the whole push. Overrides only the
-# ``extra`` policy from ApiModel; the camelCase alias generator is inherited.
+# Tolerate unknown fields so a newer processor pushing an unknown field is ignored rather
+# than rejecting the whole push. Overrides only the extra policy; camelCase aliasing is inherited.
 _TOLERANT = ConfigDict(extra="ignore")
 
 
 class ConfigModelsSection(ApiModel):
-    """Model provider + credentials pushed by the Java processor.
-
-    Field names on the wire are camelCase (``smartModel`` etc.) via the
-    :class:`ApiModel` alias generator. Empty ``provider``/``apiKey``/``baseUrl``
-    or empty model names mean "keep the engine's env-configured value".
-    """
+    """Model provider + credentials pushed by the Java processor; empty fields mean "keep the engine's env value"."""
 
     model_config = _TOLERANT
 
@@ -35,12 +29,10 @@ class ConfigRagSection(ApiModel):
     embedding_provider: str = ""
     embedding_model: str = ""
     embedding_api_key: str = ""
-    # OpenAI-compatible endpoint URL for ollama/custom embedding providers.
-    # Empty keeps the engine's env value, same convention as the other fields.
+    # OpenAI-compatible endpoint URL for ollama/custom embedding providers; empty keeps the env value.
     embedding_base_url: str = ""
     top_k: int | None = Field(default=None, ge=1)
-    # 0 is a legitimate "no retrieval searches" setting - the capability just refuses
-    # further searches - so this one floors at 0, matching the admin UI's own clamp.
+    # 0 is a legitimate "no retrieval searches" setting, so this floors at 0 not 1.
     max_searches: int | None = Field(default=None, ge=0)
 
 
@@ -49,9 +41,8 @@ class ConfigLimitsSection(ApiModel):
 
     max_pages: int | None = Field(default=None, ge=1)
     max_characters: int | None = Field(default=None, ge=1)
-    # Must be >= 1: the value becomes an asyncio.Semaphore bound, and 0 constructs a
-    # permanently locked semaphore that would hang every model call until the cache is
-    # deleted by hand (the push is persisted, so a restart would not clear it).
+    # Must be >= 1: it becomes an asyncio.Semaphore bound, and 0 constructs a permanently locked
+    # semaphore that hangs every model call; the push is persisted so a restart won't clear it.
     model_max_concurrency: int | None = Field(default=None, ge=1)
 
 

@@ -368,7 +368,7 @@ aiEngine:
   timeoutSeconds: 120 # Timeout in seconds for AI engine requests
   longRunningTimeoutSeconds: 600 # Timeout (seconds) for heavy operations like RAG ingestion of large documents
   streamTimeoutSeconds: 1800 # SSE stream timeout (seconds) for long-running orchestrator runs
-  pushConfigToEngine: true # Push admin/settings AI config (models, keys, RAG, limits) to the engine on startup + save. Set false to leave the engine fully env-controlled
+  pushConfigToEngine: true # Push admin AI config to the engine on startup + save; false = engine stays fully env-controlled
   models:
     provider: anthropic # Model provider: 'anthropic', 'openai', 'ollama', or 'custom' (OpenAI-compatible)
     smartModel: claude-haiku-4-5 # High-quality tier model name (no provider prefix)

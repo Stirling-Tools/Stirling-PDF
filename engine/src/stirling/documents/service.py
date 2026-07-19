@@ -58,8 +58,7 @@ class DocumentService:
 
     @embedder.setter
     def embedder(self, value: EmbeddingService) -> None:
-        # Lets a config-push swap the embedding model while keeping the live store
-        # (and its connection pool). Existing vectors need re-indexing afterwards.
+        # Lets a config-push swap the embedding model while keeping the live store; existing vectors need re-indexing.
         self._embedder = value
 
     async def ingest(

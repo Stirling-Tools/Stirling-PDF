@@ -196,10 +196,8 @@ class PdfQuestionAgent:
             files=request.files,
             principals=principals,
         )
-        # Ollama/custom (OpenAI-compatible local) models block tool-calling under a
-        # native json-schema response format, so deliver the structured result via a
-        # tool call instead - otherwise the model never calls the retrieval tools and
-        # answers ungrounded. Real providers keep NativeOutput. See agents.output_mode.
+        # Ollama/custom block tool-calling under native json-schema output, so deliver the
+        # structured result via a tool call or the model answers ungrounded. See agents.output_mode.
         provider = self.runtime.settings.chat_provider
         agent = Agent(
             model=self.runtime.smart_model,

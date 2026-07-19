@@ -72,8 +72,8 @@ export default function AdminAiDocumentsSection() {
         "aiEngine.rag.topK": clampMin(s.rag?.topK, 1),
         "aiEngine.rag.maxSearches": clampMin(s.rag?.maxSearches, 0),
       };
-      // Include the secret when the user typed a new value, or when a provider switch
-      // cleared it — that explicit "" is what wipes the previous provider's stored key.
+      // Send the key when the user typed one, or a provider switch cleared it; the explicit
+      // "" wipes the previous provider's stored key.
       if (embeddingApiKeyDirty) {
         deltaSettings["aiEngine.rag.embeddingApiKey"] = usesApiKey
           ? (s.rag?.embeddingApiKey ?? "")
@@ -97,9 +97,8 @@ export default function AdminAiDocumentsSection() {
       await saveSettings();
       setEmbeddingApiKeyDirty(false);
       markSaved();
-      // Values are pushed to the engine live (the embedder is hot-swapped), but existing
-      // documents were embedded with the previous model and must be re-indexed - so the
-      // toast flags that caveat rather than claiming the change is fully effective.
+      // Pushed to the engine live (the embedder is hot-swapped), but documents embedded with the
+      // previous model must be re-indexed, so the toast flags that caveat.
       alert({
         alertType: "success",
         title: t("admin.settings.ai.saved.title", "AI settings saved"),

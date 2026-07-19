@@ -12,9 +12,8 @@ import org.springframework.web.server.ResponseStatusException;
 import stirling.software.common.model.ApplicationProperties;
 
 /**
- * Every AI capability entry point calls the matching {@code require*} before reaching the engine.
- * These lock in fail-closed behaviour: a 503 when the engine is disabled OR the individual feature
- * flag is off, and a clean pass only when both are on.
+ * Lock in fail-closed gating: a 503 when the engine is disabled or the feature flag is off, and a
+ * clean pass only when both are on.
  */
 class AiFeatureGateTest {
 

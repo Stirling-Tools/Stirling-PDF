@@ -69,9 +69,8 @@ class MathIntentClassifier:
         self._agent: Agent[None, _MathIntentDecision] = Agent(
             model=runtime.fast_model,
             output_type=_MathIntentDecision,
-            # Local models emit valid structured output only intermittently (they
-            # sometimes wrap the JSON in prose); a few extra retries make this
-            # hot-path classifier reliable. No-op for real providers.
+            # Local models emit valid structured output only intermittently; extra
+            # retries make this hot-path classifier reliable. No-op for real providers.
             retries=output_retries(runtime.settings.chat_provider),
             system_prompt=_MATH_INTENT_SYSTEM_PROMPT,
             model_settings=runtime.fast_model_settings,

@@ -1,16 +1,10 @@
 // Shared types + constants for the aiEngine admin settings section.
-// The four AI sub-pages fetch the same GET /section/aiEngine payload but each
-// saves only its own dot-notation keys so sibling keys are preserved.
+// All four sub-pages share one GET /section/aiEngine payload; each saves only its own keys so siblings survive.
 
 /** Secret fields come back masked as this literal when a value is set. */
 export const MASKED_SECRET = "********";
 
-/**
- * Coerce a numeric setting to a safe integer at submit time. Mantine's {@code min}/clampBehavior
- * only guards the input on blur; this guards the actual saved value so a cleared field ("" -> 0),
- * a transient "-" (-> NaN) or an explicit 0 can never be persisted below {@code min} (a 0 timeout
- * or concurrency would deadlock the engine).
- */
+/** Clamp a numeric setting to a safe integer at submit; a persisted 0 timeout/concurrency would deadlock the engine (Mantine's min only guards on blur). */
 export const clampMin = (value: unknown, min: number): number =>
   Math.max(min, Math.floor(Number(value) || min));
 
@@ -52,9 +46,8 @@ export interface AiEngineSettingsData {
   enabled?: boolean;
   url?: string;
   /**
-   * Whether the processor forwards these settings to the engine. Off in env-driven
-   * deployments (SaaS pins it false), in which case a save is persisted but never reaches
-   * the engine — the save toast has to say so rather than promise a live push.
+   * Whether the processor forwards settings to the engine; SaaS pins it false, so a save
+   * persists but never reaches the engine (the toast must say so, not promise a live push).
    */
   pushConfigToEngine?: boolean;
   timeoutSeconds?: number;
@@ -67,9 +60,8 @@ export interface AiEngineSettingsData {
 }
 
 /**
- * Body for the post-save toast. The processor only pushes to the engine when AI is enabled
- * AND config push is on, so claiming a live push unconditionally would be wrong on exactly
- * the deployments where it matters most.
+ * Post-save toast body; the processor pushes only when AI is enabled AND config push is on,
+ * so the message must not promise a live push unconditionally.
  */
 export const savedToastBody = (
   settings: AiEngineSettingsData,

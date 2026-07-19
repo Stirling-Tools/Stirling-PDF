@@ -77,11 +77,7 @@ def test_wrong_key_returns_none(monkeypatch: pytest.MonkeyPatch, tmp_path: Path)
 
 @pytest.mark.skipif(os.name == "nt", reason="POSIX file modes are not enforced on Windows")
 def test_cache_and_keyfile_are_owner_only(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """Both files hold credential material, so neither may land at the umask default.
-
-    The keyfile matters most: it sits beside the ciphertext, so a group/world-readable
-    keyfile hands the provider API key to anyone who can read the engine data dir.
-    """
+    """Both files hold credential material, so neither may land at the umask default."""
     monkeypatch.setattr(config_cache, "_shared_secret", lambda: "")
     config_cache.save_config(_sample(), data_dir=tmp_path)
 
@@ -101,8 +97,7 @@ def test_save_leaves_no_temp_file_behind(monkeypatch: pytest.MonkeyPatch, tmp_pa
 
 
 def test_cache_stamp_tracks_writes(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """cache_stamp is what sibling workers poll, so it must be None before any write and
-    change when the file is rewritten with different content."""
+    """cache_stamp is None before any write and changes when the file is rewritten."""
     monkeypatch.setattr(config_cache, "_shared_secret", lambda: "the-shared-secret")
     assert config_cache.cache_stamp(data_dir=tmp_path) is None
 

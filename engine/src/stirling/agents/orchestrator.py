@@ -41,17 +41,13 @@ class OrchestratorDeps:
     request: OrchestratorRequest
 
 
-# Enum-style routing used for Ollama/custom (OpenAI-compatible local) models. The
-# function-ToolOutput delegates below take no arguments (they read everything from
-# ctx), but local models reliably try to pass the user's message as tool args, which
-# the zero-arg delegate schemas reject. Having the model pick a capability by name and
-# dispatching in Python (via the same _run_* methods used on resume) sidesteps that.
+# Enum routing for Ollama/custom local models: they pass the user message as args to the
+# zero-arg tool delegates below, which reject it, so pick a capability by name and dispatch in Python.
 _RouteCapability = Literal["pdf_edit", "pdf_question", "user_spec", "pdf_review", "pdf_create", "unsupported"]
 
 
 class _RouteDecision(ApiModel):
-    # Local models routinely add stray tool args (the filename, the question echoed back)
-    # and send null for optional fields; tolerate both so routing never fails on cosmetics.
+    # Local models add stray tool args and send null for optional fields; tolerate both.
     model_config = ConfigDict(extra="ignore")
     capability: _RouteCapability
     message: str | None = Field(
@@ -121,8 +117,7 @@ class OrchestratorAgent:
                     description="Return this when none of the delegate outputs fit the request.",
                 ),
             ],
-            # Local models (Ollama/custom) pick a delegate less reliably; give the
-            # routing a few extra validation retries. No-op for real providers.
+            # Local models pick a delegate less reliably; extra retries. No-op for real providers.
             retries=output_retries(runtime.settings.chat_provider),
             deps_type=OrchestratorDeps,
             system_prompt=(
@@ -141,13 +136,10 @@ class OrchestratorAgent:
             ),
             model_settings=runtime.fast_model_settings,
         )
-        # Local models can't drive the zero-arg function-delegate routing above, so
-        # route them by capability name and dispatch in Python instead.
+        # Local models can't drive the zero-arg tool delegates; route by name instead.
         self._route_via_enum = uses_tool_output(runtime.settings.chat_provider)
-        # The router has no tools of its own, so NativeOutput (a direct structured
-        # response) works on Ollama here - unlike tool-using agents, which need
-        # ToolOutput. A single output tool would tempt a local model to answer in
-        # plain text and never call it ("include your response in a tool call").
+        # The router has no tools, so NativeOutput works on Ollama here; a lone output tool
+        # would tempt a local model to answer in plain text and never call it.
         self._router = (
             Agent(
                 model=runtime.fast_model,

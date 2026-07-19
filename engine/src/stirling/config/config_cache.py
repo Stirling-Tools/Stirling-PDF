@@ -1,15 +1,4 @@
-"""Persistent, encrypted cache of the last-applied config-push.
-
-The engine otherwise holds pushed config in RAM only, so a restart reverts to the
-env values until the processor pushes again. We persist the last-applied
-:class:`ConfigPushRequest` to ``<engine data dir>/ai_config_cache.enc`` (Fernet
-encrypted) and reload it on boot so the effective config survives restarts.
-
-Key derivation: when ``STIRLING_ENGINE_SHARED_SECRET`` is set, the Fernet key is
-HKDF-SHA256 over that secret (constant salt/info) so no key material touches disk.
-Otherwise a random Fernet key is generated once and stored in a sibling
-``ai_config_cache.key`` (0600, best-effort) with a one-time warning.
-"""
+"""Persistent, Fernet-encrypted cache of the last-applied config-push, reloaded on boot so it survives restarts."""
 
 from __future__ import annotations
 
@@ -52,12 +41,7 @@ def _derive_key_from_secret(secret: str) -> bytes:
 
 
 def _write_private_bytes(path: Path, payload: bytes) -> None:
-    """Write ``payload`` to ``path`` atomically, owner-only from the moment it exists.
-
-    The temp file is created with 0600 (never the umask default) and then renamed over
-    the target, so a reader never sees a half-written file and the plaintext-adjacent
-    key material is never briefly world-readable. Permissions are a no-op on Windows.
-    """
+    """Write ``payload`` to ``path`` atomically (temp file + rename) and owner-only (0600) from the moment it exists."""
     tmp_path = path.with_name(f"{path.name}.tmp")
     fd = os.open(tmp_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, stat.S_IRUSR | stat.S_IWUSR)
     try:
@@ -107,12 +91,7 @@ def save_config(request: ConfigPushRequest, *, data_dir: Path | None = None) -> 
 
 
 def cache_stamp(*, data_dir: Path | None = None) -> tuple[int, int] | None:
-    """Identify the current cache file as (mtime_ns, size), or None when absent.
-
-    Cheap enough to poll: sibling workers compare this to the stamp they last applied
-    to notice a config pushed to a different worker process. See
-    :func:`stirling.api.app._run_config_cache_watcher`.
-    """
+    """Identify the current cache file as (mtime_ns, size), or None when absent; cheap enough to poll."""
     cache_path = (data_dir or _default_data_dir()) / _CACHE_FILENAME
     try:
         info = cache_path.stat()
@@ -122,11 +101,7 @@ def cache_stamp(*, data_dir: Path | None = None) -> tuple[int, int] | None:
 
 
 def load_config(*, data_dir: Path | None = None) -> ConfigPushRequest | None:
-    """Load + decrypt the persisted pushed config.
-
-    Returns None (never raises) when the cache is absent, corrupt, or was written
-    under a different key, so a bad cache can never crash boot.
-    """
+    """Load + decrypt the persisted config; returns None (never raises) when absent, corrupt, or wrong key."""
     data_dir = data_dir or _default_data_dir()
     cache_path = data_dir / _CACHE_FILENAME
     if not cache_path.exists():

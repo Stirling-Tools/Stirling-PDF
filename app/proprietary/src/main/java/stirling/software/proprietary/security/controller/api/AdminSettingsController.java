@@ -175,10 +175,8 @@ public class AdminSettingsController {
                         .body(Map.of("error", "No settings provided to update"));
             }
 
-            // Work on a mutable copy so the removal below works even if the caller passed an
-            // immutable map, then drop masked sensitive values so a UI round-trip never overwrites
-            // a real secret (e.g. an API key) with the "********" placeholder from the GET
-            // response.
+            // Mutable copy so we can drop masked "********" values: a UI round-trip must not
+            // overwrite a real secret (e.g. an API key) with the placeholder from the GET.
             settings = new LinkedHashMap<>(settings);
             settings.entrySet()
                     .removeIf(
@@ -234,8 +232,7 @@ public class AdminSettingsController {
                 pendingChanges.put(key, value != null ? value : "");
             }
 
-            // If AI settings changed, push them to the engine live so model/RAG/limit changes
-            // apply without waiting for a processor restart.
+            // Push changed AI settings live so model/RAG/limit changes skip the restart.
             maybePushAiEngineLive(settings);
 
             return ResponseEntity.ok(
@@ -636,16 +633,8 @@ public class AdminSettingsController {
     }
 
     /**
-     * Forward pending {@code aiEngine.*} changes to the AI engine immediately so model/RAG/limit
-     * changes apply without waiting for a processor restart. {@link AiEngineConfigSync} no-ops
-     * unless AI is enabled and an engine-relevant key changed.
-     *
-     * <p>Only reacts when <em>this</em> save actually changed an {@code aiEngine.*} key, so an
-     * unrelated later save can't re-trigger a redundant push. When it does react, the body is built
-     * from <em>all</em> accumulated pending {@code aiEngine.*} changes: the running bean does not
-     * reflect saved-but-not-yet-restarted values (see {@code updateSettingsTransactional}, which
-     * only writes YAML), so earlier pending changes must ride along to give the engine the complete
-     * current picture.
+     * Forward pending {@code aiEngine.*} changes to the engine after a save. Sends all accumulated
+     * pending changes, not just this save's: the running bean doesn't reflect unrestarted values.
      */
     private void maybePushAiEngineLive(Map<String, Object> changedSettings) {
         boolean aiChangedNow =
@@ -749,11 +738,8 @@ public class AdminSettingsController {
     }
 
     /**
-     * Minimum accepted value for each bounded {@code aiEngine.*} numeric setting. The engine
-     * rejects out-of-range values for the whole push, so an out-of-range value saved here would
-     * block every later push - including the one that fixes it. The admin UI clamps to the same
-     * floors; this closes the direct-API path. Concurrency in particular must be >= 1: it becomes
-     * an asyncio semaphore bound, and 0 would wedge every model call on the engine.
+     * Minimum accepted value per bounded {@code aiEngine.*} numeric. A saved out-of-range value
+     * would make the engine reject every later push, including the one that fixes it.
      */
     private static final Map<String, Integer> AI_ENGINE_NUMERIC_MINIMUMS =
             Map.of(
@@ -928,9 +914,8 @@ public class AdminSettingsController {
     }
 
     /**
-     * The value to log for a settings key. Secrets are redacted: the admin API is the path a
-     * provider API key, OAuth client secret or mail password travels on, and the response masking
-     * below would be pointless if the same value were written to the log file in cleartext.
+     * Value to log for a settings key, with secrets redacted: API keys, client secrets and mail
+     * passwords travel this path and must not land in the log in cleartext.
      */
     private Object logSafeValue(String key, Object value) {
         String leaf = key.contains(".") ? key.substring(key.lastIndexOf('.') + 1) : key;
@@ -952,11 +937,8 @@ public class AdminSettingsController {
             return true;
         }
 
-        // Match secret-bearing field names. Covers provider credentials such as
-        // aiEngine.models.apiKey and aiEngine.rag.embeddingApiKey (which the exact-name set would
-        // miss) so keys are never returned to the client in cleartext. "token" is matched as a
-        // suffix only (botToken, refreshToken, ...) so it does NOT swallow non-secret numeric
-        // fields whose name merely contains the substring (smartMaxTokens, tokenExpiryMinutes).
+        // Match secret-bearing names (apikey covers provider creds). "token" is a suffix
+        // match only, so it doesn't swallow numeric fields like smartMaxTokens.
         return lowerField.contains("password")
                 || lowerField.contains("secret")
                 || lowerField.contains("apikey")

@@ -1,12 +1,4 @@
-"""Assemble the runtime + every agent into a single swappable bundle.
-
-Both the lifespan startup and the config-push endpoint build the same object
-graph: one :class:`AppRuntime` plus one agent instance per flow, each of which
-captures ``runtime.smart_model``/``runtime.fast_model`` at construction. To change
-models at runtime the whole bundle has to be rebuilt and swapped into
-``app.state`` atomically, which is what :func:`build_app_state` /
-:func:`apply_app_state` exist for.
-"""
+"""Assemble the runtime + agents into one bundle, swapped onto app.state atomically to change models at runtime."""
 
 from __future__ import annotations
 
@@ -53,13 +45,7 @@ def build_app_state(
     smart_model: Model | None = None,
     embedder: EmbeddingService | None = None,
 ) -> AppState:
-    """Build the runtime and every agent from ``settings``.
-
-    The keyword arguments are threaded straight to :func:`build_runtime` so a
-    config-push rebuild can reuse the live document store and inject already
-    validated models (and, on a cache-restore boot, a pre-built embedder); all
-    None reproduces the original startup path.
-    """
+    """Build the runtime and every agent from ``settings``."""
     runtime = build_runtime(
         settings,
         documents=documents,

@@ -32,13 +32,7 @@ _REINDEX_NOTE = (
 
 
 def _strip_provider_prefix(model_name: str) -> str:
-    """Drop a leading ``provider:`` from an env model string ("anthropic:x" -> "x").
-
-    Only used when falling back to a model name that is still env-shaped, i.e. when no
-    provider has been pushed yet. A name that arrived on a push is already bare and may
-    itself contain ``:`` ("llama3.1:8b"), so it must never be passed through here - see
-    the ``current.chat_provider`` guard in :func:`resolve_and_apply`.
-    """
+    """Drop a leading ``provider:`` from an env model string ("anthropic:x" -> "x")."""
     _, sep, rest = model_name.partition(":")
     return rest if sep else model_name
 
@@ -60,21 +54,13 @@ def _keep(pushed: int | None, current: int) -> int:
     return pushed if pushed is not None else current
 
 
-# Headers that indicate a proxy sits in front of us. Their presence means
-# ``request.client.host`` cannot be trusted as the true transport peer: uvicorn's
-# ProxyHeadersMiddleware rewrites the client from ``X-Forwarded-For`` when a proxy is
-# trusted, so a spoofed ``X-Forwarded-For: 127.0.0.1`` would otherwise read as loopback.
+# Presence of any of these means request.client.host may be proxy-rewritten and cannot be
+# trusted as the transport peer, so a spoofed X-Forwarded-For could otherwise read as loopback.
 _FORWARDING_HEADERS = ("x-forwarded-for", "x-forwarded-host", "x-real-ip", "forwarded")
 
 
 def _is_direct_loopback_client(request: Request) -> bool:
-    """True only for a *direct* local connection with no proxy in front.
-
-    Used as the sole authorization for config push when no shared secret is set, so it
-    must fail closed the moment a proxy is involved. Any forwarding header present means
-    the peer address may have been rewritten (or the caller is remote-behind-a-proxy), so
-    we refuse to treat it as local and require an explicit shared secret instead.
-    """
+    """True only for a direct local connection with no proxy; fails closed if any forwarding header is present."""
     if any(h in request.headers for h in _FORWARDING_HEADERS):
         return False
     client = request.client
@@ -90,18 +76,7 @@ def resolve_and_apply(
     current: AppSettings,
     request: ConfigPushRequest,
 ) -> tuple[AppSettings, Model, Model, EmbeddingService | None, list[str]]:
-    """Resolve a pushed config against the running settings.
-
-    Builds and validates the smart/fast models, resolves the scalar overrides,
-    and builds a new embedder when the embedding config changed. Empty/None pushed
-    fields keep the current value. Returns the effective settings, the two built
-    models, an optional new embedder (None when the embedding config is unchanged),
-    and human-readable notes.
-
-    Raises one of :data:`CONFIG_APPLY_ERRORS` if a chosen model/embedder fails to
-    build or validate; callers decide whether that becomes a 400 (HTTP route) or an
-    env fallback (boot). It never swaps any live state - the caller owns that.
-    """
+    """Resolve a pushed config against the running settings; it never swaps live state (the caller does)."""
     models = request.models
     rag = request.rag
     limits = request.limits
@@ -113,8 +88,7 @@ def resolve_and_apply(
     use_explicit_provider = bool(provider or api_key or base_url)
 
     if use_explicit_provider and not current.chat_provider:
-        # First push over an env-configured engine: the running names are still
-        # "provider:model", so strip the prefix before handing them to the pushed provider.
+        # First push over an env engine: running names are still "provider:model", strip the prefix.
         smart_name = models.smart_model or _strip_provider_prefix(current.smart_model_name)
         fast_name = models.fast_model or _strip_provider_prefix(current.fast_model_name)
     elif use_explicit_provider:
@@ -187,15 +161,7 @@ def resolve_and_apply(
 
 
 def apply_to_app(app: Any, request: ConfigPushRequest) -> tuple[AppSettings, list[str]]:
-    """Resolve ``request`` against the app's live settings and swap the bundle in place.
-
-    Rebuilds the runtime and every agent, reusing the existing document store, then swaps
-    the whole bundle onto ``app.state`` so in-flight lookups only ever see one config.
-    Contains no ``await``, so the swap is atomic with respect to the event loop.
-
-    Raises one of :data:`CONFIG_APPLY_ERRORS` if the pushed config cannot be built; live
-    state is left untouched in that case. Shared by the HTTP route and the cache watcher.
-    """
+    """Resolve ``request`` and swap the bundle onto app.state; no await, so the swap is atomic wrt the event loop."""
     current: AppSettings = app.state.settings
     runtime: AppRuntime = app.state.runtime
     effective, smart_model, fast_model, new_embedder, notes = resolve_and_apply(current, request)
@@ -210,22 +176,14 @@ def apply_to_app(app: Any, request: ConfigPushRequest) -> tuple[AppSettings, lis
     # Retune retrieval breadth on the reused store without rebuilding it.
     runtime.documents.default_top_k = effective.rag_default_top_k
     if new_embedder is not None:
-        # Swap the embedder onto the reused DocumentService so we never tear down
-        # the live vector store / connection pool.
+        # Swap the embedder onto the reused DocumentService, never tearing down the live store.
         runtime.documents.embedder = new_embedder
     return effective, notes
 
 
 @router.post("", response_model=ConfigApplyResponse)
 async def apply_config(request: ConfigPushRequest, http_request: Request) -> ConfigApplyResponse:
-    """Apply admin-pushed AI settings by rebuilding the runtime + agents in place.
-
-    Gated by the X-Engine-Auth shared secret (global middleware) plus the
-    ``allow_config_push`` flag. Empty credential/model fields keep the engine's
-    env-configured values. Returns 403 when config push is disabled, 400 (without
-    swapping state) when a chosen model fails to build/validate. On success the
-    config is also persisted (encrypted) so it survives an engine restart.
-    """
+    """Apply admin-pushed AI settings by rebuilding the runtime + agents, persisting so it survives a restart."""
     app = http_request.app
     current: AppSettings = app.state.settings
     if not current.allow_config_push:
@@ -233,14 +191,8 @@ async def apply_config(request: ConfigPushRequest, http_request: Request) -> Con
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Config push is disabled on this deployment (STIRLING_ALLOW_CONFIG_PUSH is false).",
         )
-    # Secure-by-default for this sensitive endpoint. When a shared secret is set the
-    # global middleware has already authenticated the caller (only the processor has the
-    # secret). When NO secret is set, only trust a *direct* loopback caller - a remote
-    # party must never be able to push a config unauthenticated, since a pushed
-    # base_url/model could repoint the engine to exfiltrate document content. We refuse
-    # the moment any proxy header is present because ``request.client.host`` is then
-    # spoofable (uvicorn rewrites it from X-Forwarded-For behind a trusted proxy), so a
-    # deployment behind a reverse proxy / LB MUST set a shared secret.
+    # Secure-by-default: with no shared secret set, only trust a direct loopback caller, since a
+    # pushed base_url/model could repoint the engine to exfiltrate document content.
     if not current.engine_shared_secret and not _is_direct_loopback_client(http_request):
         client_host = http_request.client.host if http_request.client else "unknown"
         logger.warning(
@@ -261,16 +213,11 @@ async def apply_config(request: ConfigPushRequest, http_request: Request) -> Con
         # Reject without touching the running config.
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
-    # Persist the applied config (encrypted) so it is restored on the next boot, and so
-    # sibling worker processes - which never saw this request - can adopt it from the
-    # shared cache file. Persistence is best-effort: the config is already applied live
-    # above, so a persist failure of ANY kind (bad/corrupt keyfile -> ValueError, disk
-    # error -> OSError, etc.) must never turn a successful apply into a 500 and leave
-    # live/reported state diverged.
+    # Persist (encrypted) so the config survives a restart and sibling workers adopt it.
+    # Best-effort: it is already applied live, so a persist failure must never become a 500.
     try:
         save_config(request)
-        # Claim the stamp we just wrote so this worker's own watcher does not
-        # immediately rebuild everything for a config it is already running.
+        # Claim the stamp we just wrote so this worker's watcher does not rebuild for it.
         app.state.config_cache_stamp = cache_stamp()
     except Exception:  # noqa: BLE001 - best-effort persist, never fail the applied push
         logger.warning("Applied AI config but failed to persist the encrypted cache", exc_info=True)
