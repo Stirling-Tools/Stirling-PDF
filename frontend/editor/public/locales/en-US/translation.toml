@@ -4702,6 +4702,7 @@ login = "Login"
 magicLinkSent = "Magic link sent to {{email}}! Check your email and click the link to sign in."
 mfaCode = "Authentication Code"
 mfaRequired = "Two-factor code required"
+noAccount = "Don't have an account?"
 or = "Or"
 password = "Password"
 passwordChangedSuccess = "Password changed successfully! Please sign in with your new password."
@@ -4725,21 +4726,6 @@ useEmailInstead = "Login with email"
 useMagicLink = "Use magic link instead"
 username = "Username"
 youAreLoggedIn = "You are logged in!"
-
-[login.slides.edit]
-alt = "Edit PDFs"
-subtitle = "With over a dozen tools to help you redact, sign, read and manipulate PDFs, you will be sure to find what you are looking for."
-title = "Edit PDFs to display/secure the information you want"
-
-[login.slides.overview]
-alt = "Stirling PDF overview"
-subtitle = "A privacy-first cloud suite for PDFs that lets you convert, sign, redact, and manage documents, along with 50+ other powerful tools."
-title = "Your one-stop-shop for all your PDF needs."
-
-[login.slides.secure]
-alt = "Secure PDFs"
-subtitle = "Add passwords, redact content, and manage certificates with ease."
-title = "Protect sensitive information in your PDFs"
 
 [margin]
 large = "Large"
@@ -6150,90 +6136,6 @@ free = "Editor plan"
 subscribed = "Processor plan"
 unlinked = "Not linked"
 
-[portal.agentBuilder]
-bootstrapFromDocument = "Bootstrap from document"
-sectionsAriaLabel = "Agent builder sections"
-selectorAriaLabel = "Agents"
-subtitle = "Design, test and ship the AI agents that classify, extract from and route your documents. Define scenarios, fence tool access, run a golden set, and publish a version."
-title = "Agent Builder"
-
-[portal.agentBuilder.bootstrap]
-cancel = "Cancel"
-dropzoneText = "Choose a sample document (PDF or image)"
-lead = "Drop a sample document and we'll propose scenarios and an extraction schema you can refine. Nothing is published until you review it."
-submit = "Bootstrap agent"
-subtitle = "Seed a new agent from one representative file"
-title = "Bootstrap from a document"
-
-[portal.agentBuilder.empty]
-description = "Bootstrap an agent from a sample document to seed its scenarios and extraction schema, then refine and publish."
-title = "No agents yet"
-
-[portal.agentBuilder.evals]
-casesPassing = "Cases passing"
-columnCase = "Eval case"
-columnLatency = "Latency"
-columnResult = "Result"
-fail = "fail"
-goldenSetPassRate = "Golden-set pass rate"
-latencyMs = "{{ms}} ms"
-notRun = "not run"
-pass = "pass"
-passRate = "Pass rate"
-runEvals = "Run evals"
-
-[portal.agentBuilder.evals.empty]
-description = "Evals turn your scenarios into a repeatable golden set. Upgrade to capture pass-rate over time and gate publishes on it."
-title = "No golden set yet"
-
-[portal.agentBuilder.kpi]
-acrossGoldenSets = "across golden sets"
-activeAgents = "Active agents"
-avgPassRate = "Avg eval pass rate"
-fleetWide = "fleet-wide"
-latestPublished = "Latest published"
-scenarios = "Scenarios"
-testCases = "test cases"
-totalDescription_one = "{{count}} total"
-totalDescription_other = "{{count}} total"
-
-[portal.agentBuilder.scenarios]
-add = "Add"
-addScenario = "Add scenario"
-enable = "Enable"
-expectationLabel = "Expected behaviour"
-expectationPlaceholder = "What the agent should do"
-inEval = "in eval"
-mute = "Mute"
-muted = "muted"
-nameLabel = "Name"
-namePlaceholder = "e.g. Compliance escalation"
-
-[portal.agentBuilder.status]
-draft = "Draft"
-published = "Published"
-
-[portal.agentBuilder.tabs]
-evals = "Evals"
-scenarios = "Scenarios"
-tools = "Tools"
-versions = "Versions"
-
-[portal.agentBuilder.tools]
-broadAccess = "Broad access"
-deniedHint = "Selected tools are blocked. Everything else stays callable."
-deniedTools = "Denied tools"
-governanceGate = "Tool governance is available on the Enterprise plan."
-restricted = "Restricted"
-restrictedAccess = "Restricted tool access"
-restrictedDescription = "Allow every tool except the ones you deny below."
-
-[portal.agentBuilder.versions]
-current = "current"
-historyGate = "Full version history and rollback are available on the Enterprise plan."
-publish = "Publish"
-rollBack = "Roll back"
-
 [portal.assistant]
 close = "Close assistant"
 error = "Couldn't reach the assistant."
@@ -7533,6 +7435,13 @@ label = "Docs enforced"
 description = "Configured but not firing"
 label = "Paused"
 
+[portal.policies.table]
+appliesTo = "Applies to"
+docs = "Docs enforced"
+enforces = "Enforces"
+policy = "Policy"
+status = "Status"
+
 [portal.policies.wizard.actions]
 back = "Back"
 cancel = "Cancel"
@@ -7644,6 +7553,48 @@ soon = "Soon"
 [portal.processingStatus]
 managePlan = "Manage plan"
 volumeSuffix = "PDFs processed · last 30 days"
+
+[portal.processorFlow]
+footnote = "Counts are over the last 24 hours. Flow speed is illustrative."
+liveBadge = "Live"
+stats = "{{connected}} connected · {{processed}} PDFs processed"
+title = "PDF Processor"
+
+[portal.processorFlow.lens]
+ariaLabel = "View mode"
+flow = "Flow"
+sankey = "Sankey"
+
+[portal.processorFlow.outcomes]
+count = "{{n}} · 24h"
+failed = "Failed"
+heading = "Outcomes"
+success = "Delivered"
+
+[portal.processorFlow.policies]
+activeCount = "{{n}} active"
+count = "{{n}} · 24h"
+heading = "Policies"
+setUp = "Set up"
+soon = "Soon"
+
+[portal.processorFlow.sankey]
+waist = "Policies · {{n}} active"
+
+[portal.processorFlow.sankey.empty]
+description = "Connect a source and switch on a policy to watch documents flow through the processor."
+title = "No flow yet"
+
+[portal.processorFlow.sources]
+comingSoonTag = "Connect"
+editor = "Stirling PDF Editor"
+heading = "Sources"
+perDay = "{{n}} / 24h"
+
+[portal.processorFlow.sources.comingSoon]
+apiMcp = "API · MCP"
+cloud = "Drive · Box · S3"
+email = "Email intake"
 
 [portal.procurement]
 subtitle = "Get your team evaluated, contracted, and onboarded. Every document in one place."
@@ -7957,7 +7908,6 @@ subtitle = "Reusable input connections that feed documents into Stirling. Config
 title = "Sources"
 
 [portal.sources.actions]
-agentBuilder = "Agent Builder"
 connectSource = "Connect source"
 
 [portal.sources.builder]
