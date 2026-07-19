@@ -36,6 +36,7 @@ import {
 import {
   fileContextReducer,
   initialFileContextState,
+  withReducerIdentityGuard,
 } from "@app/contexts/file/FileReducer";
 import { createFileSelectors } from "@app/contexts/file/fileSelectors";
 import {
@@ -76,10 +77,13 @@ function FileContextInner({
   children,
   enablePersistence = true,
 }: FileContextProviderProps) {
-  const [state, dispatch] = useReducer(
-    fileContextReducer,
-    initialFileContextState,
+  // Guarded in dev: warns if a reducer case reallocates a slice without changing
+  // it, which would silently defeat the selector-subscription bail-out.
+  const guardedReducer = useMemo(
+    () => withReducerIdentityGuard(fileContextReducer),
+    [],
   );
+  const [state, dispatch] = useReducer(guardedReducer, initialFileContextState);
 
   // Always call the hook unconditionally to satisfy React's rules of hooks.
   // IndexedDB context is only used when enablePersistence is true.
