@@ -1,9 +1,5 @@
-import React, { useMemo } from "react";
-import { useTranslation } from "react-i18next";
+import React from "react";
 import { AuthShell } from "@app/auth/ui/AuthShell";
-import LoginRightCarousel from "@app/auth/ui/LoginRightCarousel";
-import buildLoginSlides from "@app/components/shared/loginSlides";
-import { useLogoVariant } from "@app/hooks/useLogoVariant";
 import Footer from "@app/components/shared/Footer";
 
 interface AuthLayoutProps {
@@ -11,30 +7,9 @@ interface AuthLayoutProps {
 }
 
 /**
- * Editor login layout. The card shell + carousel now live in shared so the
- * portal renders the identical screen; this wires the editor's logo-variant
- * slides and legal/cookie footer into that shared shell.
+ * Editor login layout. The card shell lives in shared so the portal renders
+ * the identical screen; this wires the editor's legal/cookie footer into it.
  */
 export default function AuthLayout({ children }: AuthLayoutProps) {
-  const { t } = useTranslation();
-  const logoVariant = useLogoVariant();
-  const imageSlides = useMemo(
-    () => buildLoginSlides(logoVariant, t),
-    [logoVariant, t],
-  );
-
-  return (
-    <AuthShell
-      rightPanel={
-        <LoginRightCarousel
-          imageSlides={imageSlides}
-          initialSeconds={5}
-          slideSeconds={8}
-        />
-      }
-      footer={<Footer />}
-    >
-      {children}
-    </AuthShell>
-  );
+  return <AuthShell footer={<Footer />}>{children}</AuthShell>;
 }
