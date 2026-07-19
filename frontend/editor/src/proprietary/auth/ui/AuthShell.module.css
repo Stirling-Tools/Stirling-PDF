@@ -5,7 +5,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: var(--auth-bg-color-light-only);
+  background-color: var(--auth-bg-color);
   padding: 1.5rem 1.5rem 0;
   font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -13,37 +13,23 @@
 }
 
 .authCard {
-  width: min(45rem, 96vw);
-  height: min(50.875rem, 96vh);
-  display: grid;
-  grid-template-columns: 1fr;
+  width: min(26rem, 96vw);
+  max-height: 96vh;
+  padding: 2.5rem 2rem;
+  display: flex;
+  justify-content: center;
   background-color: var(--auth-card-bg);
   border-radius: 1.25rem;
   box-shadow: 0 1.25rem 3.75rem rgba(0, 0, 0, 0.12);
-  overflow: hidden;
-  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
-.authCardTwoColumns {
-  width: min(73.75rem, 96vw);
-  grid-template-columns: 1fr 1fr;
-}
-
-.authLeftPanel {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  overflow: hidden;
-  min-height: 0;
-  height: 100%;
-}
-
-.authLeftPanel::-webkit-scrollbar {
+.authCard::-webkit-scrollbar {
   display: none; /* WebKit browsers (Chrome, Safari, Edge) */
 }
 
 .authContent {
-  max-width: 26.25rem; /* 420px */
+  max-width: 22rem; /* 352px */
   width: 100%;
 }

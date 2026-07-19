@@ -786,22 +786,20 @@
 .wordmark-dark-only {
   display: none;
 }
-[data-mantine-color-scheme="dark"] .wordmark-light-only {
+[data-mantine-color-scheme="dark"] .wordmark {
   display: none;
 }
 [data-mantine-color-scheme="dark"] .wordmark-dark-only {
   display: block;
 }
 
-/* Theme-aware image display utilities: .theme-img-light-only shows in light
-   mode only, .theme-img-dark-only shows in dark mode only. */
-.theme-img-light-only {
+.theme-img {
   display: inline;
 }
 .theme-img-dark-only {
   display: none;
 }
-[data-mantine-color-scheme="dark"] .theme-img-light-only {
+[data-mantine-color-scheme="dark"] .theme-img {
   display: none;
 }
 [data-mantine-color-scheme="dark"] .theme-img-dark-only {
