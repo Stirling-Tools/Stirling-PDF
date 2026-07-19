@@ -18,6 +18,7 @@ import {
   subscribeSidebarCategories,
 } from "@app/services/fileSidebarCategories";
 import { buildLabelGroups } from "@app/components/shared/fileSidebarGroupingLogic";
+import { scheduleIdle } from "@app/utils/scheduleIdle";
 import type { FileId } from "@app/types/file";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { FileSidebarGroup } from "@core/components/shared/fileSidebarGrouping";
@@ -35,16 +36,6 @@ export { FileSidebarGroupControls } from "@app/components/shared/FileSidebarGrou
 const BACKFILL_BATCH = 3;
 /** Recheck delay when the backfill yields to an active policy wave. */
 const BACKFILL_BUSY_RETRY_MS = 4000;
-
-/** Schedule work for the browser's idle time (or soon after, as a fallback). */
-function scheduleIdle(task: () => void): () => void {
-  if (typeof requestIdleCallback === "function") {
-    const handle = requestIdleCallback(task, { timeout: 2000 });
-    return () => cancelIdleCallback(handle);
-  }
-  const timer = window.setTimeout(task, 200);
-  return () => window.clearTimeout(timer);
-}
 
 export function useFileSidebarGroups(
   stubs: StirlingFileStub[],

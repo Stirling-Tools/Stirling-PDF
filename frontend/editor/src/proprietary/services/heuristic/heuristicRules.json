@@ -99,6 +99,12 @@
           "pattern": "invoice",
           "weight": 16,
           "name": "Invoice in PDF title"
+        },
+        {
+          "field": "any",
+          "pattern": "quickbooks|freshbooks|invoice2go|zoho invoice|\\bxero\\b",
+          "weight": 12,
+          "name": "Invoicing software producer"
         }
       ],
       "negatives": [
@@ -1069,7 +1075,14 @@
           "name": "reimbursement filename"
         }
       ],
-      "metadata": [],
+      "metadata": [
+        {
+          "field": "any",
+          "pattern": "\\bconcur\\b|expensify|zoho expense",
+          "weight": 14,
+          "name": "Expense software producer"
+        }
+      ],
       "negatives": [
         {
           "text": "net pay",
@@ -3564,6 +3577,25 @@
         {
           "text": "comments must be received",
           "weight": 12
+        },
+        {
+          "text": "articles of incorporation",
+          "weight": 30,
+          "where": "title"
+        },
+        {
+          "text": "certificate of incorporation",
+          "weight": 28,
+          "where": "title"
+        },
+        {
+          "text": "articles of association",
+          "weight": 26,
+          "where": "title"
+        },
+        {
+          "text": "memorandum of association",
+          "weight": 24
         }
       ],
       "regexes": [
@@ -4188,6 +4220,12 @@
           "pattern": "1040|tax return|self assessment",
           "weight": 12,
           "name": "Return in title"
+        },
+        {
+          "field": "any",
+          "pattern": "turbotax|taxact|h&r block|taxslayer|freetaxusa|taxcalc",
+          "weight": 14,
+          "name": "Tax software producer"
         }
       ],
       "negatives": [
@@ -4482,6 +4520,12 @@
           "pattern": "payslip|pay slip|pay stub|pay advice|salary slip|earnings statement",
           "weight": 14,
           "name": "Payslip in title"
+        },
+        {
+          "field": "any",
+          "pattern": "\\badp\\b|gusto|paychex|paylocity|moorepay|sage payroll",
+          "weight": 14,
+          "name": "Payroll software producer"
         }
       ],
       "negatives": [
@@ -9240,6 +9284,19 @@
         {
           "text": "severity level",
           "weight": 6
+        },
+        {
+          "text": "police report",
+          "weight": 24
+        },
+        {
+          "text": "accident report",
+          "weight": 22,
+          "where": "title"
+        },
+        {
+          "text": "reporting officer",
+          "weight": 20
         }
       ],
       "regexes": [
@@ -11583,6 +11640,30 @@
         {
           "text": "professional certificate",
           "weight": 14
+        },
+        {
+          "text": "certificate of live birth",
+          "weight": 32,
+          "where": "title"
+        },
+        {
+          "text": "certificate of birth",
+          "weight": 30,
+          "where": "title"
+        },
+        {
+          "text": "certificate of marriage",
+          "weight": 30,
+          "where": "title"
+        },
+        {
+          "text": "certificate of death",
+          "weight": 30,
+          "where": "title"
+        },
+        {
+          "text": "registration district",
+          "weight": 16
         }
       ],
       "regexes": [
@@ -15865,6 +15946,10 @@
         {
           "text": "exclusion zone",
           "weight": 12
+        },
+        {
+          "text": "standard operating procedure",
+          "weight": 30
         }
       ],
       "regexes": [
@@ -15902,6 +15987,11 @@
           "pattern": "(^|[^a-z0-9])ms[-_ ]?\\d{2,4}",
           "weight": 15,
           "name": "ms number filename"
+        },
+        {
+          "pattern": "standard[-_ ]?operating[-_ ]?procedure|\\bsop\\b",
+          "weight": 16,
+          "name": "SOP filename"
         }
       ],
       "metadata": [],
@@ -17496,6 +17586,21 @@
         {
           "text": "fold here",
           "weight": 16
+        },
+        {
+          "text": "bill of lading",
+          "weight": 28,
+          "where": "title"
+        },
+        {
+          "text": "air waybill",
+          "weight": 26,
+          "where": "title"
+        },
+        {
+          "text": "waybill",
+          "weight": 22,
+          "where": "title"
         }
       ],
       "regexes": [
@@ -17535,6 +17640,11 @@
           "pattern": "(^|[\\\\/])labels?( ?\\(\\d+\\))?\\.pdf$",
           "weight": 16,
           "name": "label.pdf filename"
+        },
+        {
+          "pattern": "way[-_ ]?bill|bill[-_ ]?of[-_ ]?lading|\\bawb\\b",
+          "weight": 18,
+          "name": "waybill / bill of lading filename"
         }
       ],
       "metadata": [
@@ -22205,8 +22315,8 @@
     "government-notice": [1, 6],
     "hoa-document": [1, 5],
     "legal-notice": [1, 6],
-    "__internal__menu": [1, 8],
-    "__internal__recipe": [1, 6],
+    "menu": [1, 8],
+    "recipe": [1, 6],
     "timesheet": [1, 3],
     "organization-chart": [1, 5],
     "meeting-agenda": [1, 5],
@@ -22231,7 +22341,7 @@
     "technical-drawing": [1, 12],
     "compliance-document": [1, 3],
     "test-report": [1, 4],
-    "__internal__book-ebook": [30, null],
+    "book-ebook": [30, null],
     "thesis": [20, null],
     "regulatory-filing": [12, null],
     "audit-report": [10, null],

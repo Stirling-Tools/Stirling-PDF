@@ -29,6 +29,7 @@ const mocks = vi.hoisted(() => ({
     derivedFromTool?: boolean;
     classificationLabels?: string[];
   }>,
+  configLoading: false,
   updateStirlingFileStub: vi.fn(),
   bumpRevision: vi.fn(),
   getStirlingFile: vi.fn(),
@@ -38,6 +39,9 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@app/constants/featureFlags", () => ({ POLICIES_ENABLED: true }));
+vi.mock("@app/contexts/AppConfigContext", () => ({
+  useAppConfig: () => ({ config: {}, loading: mocks.configLoading }),
+}));
 vi.mock("@app/hooks/useClassificationEnabled", () => ({
   useClassificationEnabled: () => true,
 }));
@@ -102,6 +106,7 @@ describe("useClientSideClassification delivery", () => {
     localStorage.clear();
     resetPolicyRuns();
     mocks.workspace = [];
+    mocks.configLoading = false;
     mocks.updateStirlingFileStub.mockClear();
     mocks.bumpRevision.mockClear();
     mocks.updateFileMetadata.mockClear();
@@ -217,6 +222,27 @@ describe("useClientSideClassification delivery", () => {
     expect(mocks.updateFileMetadata).not.toHaveBeenCalled();
     expect(mocks.meter).not.toHaveBeenCalled();
     warn.mockRestore();
+  });
+
+  it("waits for app-config before classifying (AI flag unknown = possible double-run)", async () => {
+    // While the config loads, aiEnabled reads false even on an AI-on tenant; classifying
+    // then would race the server-side classify policy and double-bill the same files.
+    mocks.configLoading = true;
+    mocks.workspace = [stub("early")];
+    mocks.classify.mockResolvedValue({ labels: ["invoice"] });
+
+    const { rerender } = renderHook(() => useClientSideClassification());
+    await new Promise((r) => setTimeout(r, 50));
+    expect(mocks.classify).not.toHaveBeenCalled();
+
+    // Config resolves (AI stays off): the pending file classifies normally.
+    mocks.configLoading = false;
+    rerender();
+    await waitFor(() =>
+      expect(mocks.updateStirlingFileStub).toHaveBeenCalledWith("early", {
+        classificationLabels: ["invoice"],
+      }),
+    );
   });
 
   it("skips tool outputs and already-labelled files", async () => {

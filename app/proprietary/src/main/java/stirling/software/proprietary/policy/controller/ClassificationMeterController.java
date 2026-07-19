@@ -35,6 +35,9 @@ public class ClassificationMeterController {
     /** Audit step label mirrors the AI classify tool so both paths read alike in the trail. */
     private static final String CLASSIFY_STEP = "/api/v1/ai/tools/classify-and-label";
 
+    /** Client-supplied count cap: the frontend meters one document per call. */
+    private static final int MAX_DOCUMENTS = 10_000;
+
     private final ObjectProvider<ClassificationRunBiller> biller;
 
     public ClassificationMeterController(ObjectProvider<ClassificationRunBiller> biller) {
@@ -52,6 +55,7 @@ public class ClassificationMeterController {
             @RequestBody(required = false) ClassifyMeterRequest body, HttpServletRequest request) {
         int documents = body != null && body.documentCount() != null ? body.documentCount() : 1;
         if (documents < 1) documents = 1;
+        if (documents > MAX_DOCUMENTS) documents = MAX_DOCUMENTS;
         String policyName =
                 body != null && body.policyName() != null && !body.policyName().isBlank()
                         ? body.policyName()

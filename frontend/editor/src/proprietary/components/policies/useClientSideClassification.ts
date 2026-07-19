@@ -15,11 +15,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useAllFiles, useFileManagement } from "@app/contexts/FileContext";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { fileStorage } from "@app/services/fileStorage";
 import { POLICIES_ENABLED } from "@app/constants/featureFlags";
 import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
 import { useAiEngineEnabled } from "@app/hooks/useAiEngineEnabled";
+import { scheduleIdle } from "@app/utils/scheduleIdle";
 import { usePolicies } from "@app/hooks/usePolicies";
 import { classifyFileHeuristically } from "@app/services/heuristic/heuristicClassification";
 import { meterClassificationRun } from "@app/services/classificationMeter";
@@ -52,16 +54,6 @@ function isClassificationDebug(): boolean {
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/** Schedule work for the browser's idle time (or soon after, as a fallback). */
-function scheduleIdle(task: () => void): () => void {
-  if (typeof requestIdleCallback === "function") {
-    const handle = requestIdleCallback(task, { timeout: 2000 });
-    return () => cancelIdleCallback(handle);
-  }
-  const timer = window.setTimeout(task, 200);
-  return () => window.clearTimeout(timer);
-}
-
 export function useClientSideClassification(): void {
   const { fileStubs } = useAllFiles();
   const { updateStirlingFileStub } = useFileManagement();
@@ -69,6 +61,9 @@ export function useClientSideClassification(): void {
   const { policies } = usePolicies();
   const classificationEnabled = useClassificationEnabled();
   const aiEnabled = useAiEngineEnabled();
+  // While app-config loads, aiEnabled reads false even on AI-on tenants; classifying
+  // in that window would double-run (and double-bill) files the server also labels.
+  const { loading: configLoading } = useAppConfig();
   // Files claimed this session, keyed id+lastModified so a new version is retried once. A claim is
   // taken synchronously right before classifying, so overlapping batches never double-classify.
   const claimed = useRef<Set<string>>(new Set());
@@ -87,7 +82,13 @@ export function useClientSideClassification(): void {
   );
 
   useEffect(() => {
-    if (!POLICIES_ENABLED || !classificationEnabled || aiEnabled || !active) {
+    if (
+      !POLICIES_ENABLED ||
+      configLoading ||
+      !classificationEnabled ||
+      aiEnabled ||
+      !active
+    ) {
       return;
     }
     const claimKey = (s: StirlingFileStub) =>
@@ -142,6 +143,7 @@ export function useClientSideClassification(): void {
     active,
     classificationEnabled,
     aiEnabled,
+    configLoading,
     updateStirlingFileStub,
     bumpRevision,
     tick,

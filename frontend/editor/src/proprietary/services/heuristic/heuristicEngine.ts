@@ -397,6 +397,11 @@ export async function ensureRulesLoaded(): Promise<void> {
         PREPARED = prepare(root.labels ?? []);
         PRIORS = loadPriors(root.priors ?? {});
       },
+      (err) => {
+        // A failed chunk load (flaky network) must not poison later attempts.
+        loadPromise = null;
+        throw err;
+      },
     );
   }
   await loadPromise;

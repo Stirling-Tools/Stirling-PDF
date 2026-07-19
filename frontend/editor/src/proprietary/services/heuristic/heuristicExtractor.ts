@@ -33,13 +33,23 @@ export async function extractHeuristicDoc(
       disableStream: true,
     });
     const pageCount = pdfDoc.numPages;
-    const firstZone = await pageText(pdfDoc, 1);
+    let firstZone = "";
+    let titleZone = "";
+    if (pageCount >= 1) {
+      // Page 1 feeds three zones (first, title, window); pump its items once.
+      const page1 = await pdfDoc.getPage(1);
+      const items = await pageTextItems(page1);
+      firstZone = textFromItems(items);
+      titleZone = titleFromLines(
+        buildLines(items),
+        page1.getViewport({ scale: 1 }).height,
+      );
+    }
     const parts: string[] = [];
     for (const pageNo of windowPages(pageCount)) {
-      const text = await pageText(pdfDoc, pageNo);
+      const text = pageNo === 1 ? firstZone : await pageText(pdfDoc, pageNo);
       if (text.length > 0) parts.push(text);
     }
-    const titleZone = await titleZoneText(pdfDoc);
     const meta = await metadata(pdfDoc);
     return {
       fileName,
@@ -99,7 +109,10 @@ async function pageText(
 ): Promise<string> {
   if (pageNo < 1 || pageNo > pdfDoc.numPages) return "";
   const page = await pdfDoc.getPage(pageNo);
-  const items = await pageTextItems(page);
+  return textFromItems(await pageTextItems(page));
+}
+
+function textFromItems(items: readonly unknown[]): string {
   let text = "";
   for (const item of items) {
     if (!isTextItem(item)) continue;
@@ -110,14 +123,6 @@ async function pageText(
   return trimmed.length > PAGE_CHAR_CAP
     ? trimmed.slice(0, PAGE_CHAR_CAP)
     : trimmed;
-}
-
-async function titleZoneText(pdfDoc: PDFDocumentProxy): Promise<string> {
-  if (pdfDoc.numPages < 1) return "";
-  const page = await pdfDoc.getPage(1);
-  const pageHeight = page.getViewport({ scale: 1 }).height;
-  const items = await pageTextItems(page);
-  return titleFromLines(buildLines(items), pageHeight);
 }
 
 /** Group items into lines (break on hasEOL), tracking each line's max font size + baseline y. */
