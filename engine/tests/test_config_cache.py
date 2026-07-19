@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+import stat
 from pathlib import Path
 
 import pytest
@@ -71,3 +73,44 @@ def test_wrong_key_returns_none(monkeypatch: pytest.MonkeyPatch, tmp_path: Path)
     # A different secret derives a different key -> decrypt fails, returns None.
     monkeypatch.setattr(config_cache, "_shared_secret", lambda: "secret-b")
     assert config_cache.load_config(data_dir=tmp_path) is None
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX file modes are not enforced on Windows")
+def test_cache_and_keyfile_are_owner_only(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Both files hold credential material, so neither may land at the umask default.
+
+    The keyfile matters most: it sits beside the ciphertext, so a group/world-readable
+    keyfile hands the provider API key to anyone who can read the engine data dir.
+    """
+    monkeypatch.setattr(config_cache, "_shared_secret", lambda: "")
+    config_cache.save_config(_sample(), data_dir=tmp_path)
+
+    for name in ("ai_config_cache.enc", "ai_config_cache.key"):
+        mode = stat.S_IMODE((tmp_path / name).stat().st_mode)
+        assert mode == 0o600, f"{name} is {oct(mode)}, expected 0o600"
+
+
+def test_save_leaves_no_temp_file_behind(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """The write goes via a temp file + rename so a reader never sees a partial cache."""
+    monkeypatch.setattr(config_cache, "_shared_secret", lambda: "the-shared-secret")
+    config_cache.save_config(_sample(), data_dir=tmp_path)
+    config_cache.save_config(_sample(), data_dir=tmp_path)
+
+    assert not list(tmp_path.glob("*.tmp"))
+    assert config_cache.load_config(data_dir=tmp_path) == _sample()
+
+
+def test_cache_stamp_tracks_writes(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """cache_stamp is what sibling workers poll, so it must be None before any write and
+    change when the file is rewritten with different content."""
+    monkeypatch.setattr(config_cache, "_shared_secret", lambda: "the-shared-secret")
+    assert config_cache.cache_stamp(data_dir=tmp_path) is None
+
+    config_cache.save_config(_sample(), data_dir=tmp_path)
+    first = config_cache.cache_stamp(data_dir=tmp_path)
+    assert first is not None
+
+    bigger = _sample()
+    bigger.models.smart_model = "claude-haiku-4-5-with-a-much-longer-name-so-the-size-differs"
+    config_cache.save_config(bigger, data_dir=tmp_path)
+    assert config_cache.cache_stamp(data_dir=tmp_path) != first

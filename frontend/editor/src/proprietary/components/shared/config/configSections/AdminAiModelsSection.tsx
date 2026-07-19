@@ -29,6 +29,7 @@ import {
   MODEL_SUGGESTIONS,
   MASKED_SECRET,
   clampMin,
+  savedToastBody,
 } from "@app/components/shared/config/configSections/aiEngineSettings";
 
 export default function AdminAiModelsSection() {
@@ -72,10 +73,13 @@ export default function AdminAiModelsSection() {
         // stale value left over from a previous Ollama/Custom selection).
         "aiEngine.models.baseUrl": usesBaseUrl ? (s.models?.baseUrl ?? "") : "",
       };
-      // Only include the secret when the user typed a new value AND the current provider
-      // actually uses an API key.
-      if (apiKeyDirty && usesApiKey) {
-        deltaSettings["aiEngine.models.apiKey"] = s.models?.apiKey ?? "";
+      // Include the secret when the user typed a new value, or when a provider switch
+      // cleared it — that explicit "" is what wipes the previous provider's stored key.
+      // Forced to "" for a provider that has no key field at all.
+      if (apiKeyDirty) {
+        deltaSettings["aiEngine.models.apiKey"] = usesApiKey
+          ? (s.models?.apiKey ?? "")
+          : "";
       }
       return { sectionData: {}, deltaSettings };
     },
@@ -99,10 +103,7 @@ export default function AdminAiModelsSection() {
       alert({
         alertType: "success",
         title: t("admin.settings.ai.saved.title", "AI settings saved"),
-        body: t(
-          "admin.settings.ai.saved.body",
-          "Changes are pushed to the AI engine automatically.",
-        ),
+        body: savedToastBody(settings, t),
       });
     } catch (_error) {
       alert({
@@ -192,11 +193,14 @@ export default function AdminAiModelsSection() {
                 const patch: Partial<AiEngineModels> = { provider: next };
                 // Clear fields the new provider doesn't use so a stale hidden value can't
                 // leak into the payload (e.g. an Ollama base URL after switching back to
-                // Anthropic, or an Anthropic key after switching to Ollama).
+                // Anthropic).
                 if (next !== "ollama" && next !== "custom") patch.baseUrl = "";
-                if (next === "ollama") {
+                if (next !== provider) {
+                  // There is only one stored key, and it belongs to the provider it was
+                  // issued for — carrying it across a switch would 401 on every call while
+                  // the field still read "Saved". Clear it and require an explicit re-entry.
                   patch.apiKey = "";
-                  setApiKeyDirty(false);
+                  setApiKeyDirty(true);
                 }
                 setModels(patch);
               }}

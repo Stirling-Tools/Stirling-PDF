@@ -13,6 +13,7 @@ import {
   AiEngineLimits,
   AiEngineApiResponse,
   clampMin,
+  savedToastBody,
 } from "@app/components/shared/config/configSections/aiEngineSettings";
 
 export default function AdminAiLimitsSection() {
@@ -69,10 +70,7 @@ export default function AdminAiLimitsSection() {
       alert({
         alertType: "success",
         title: t("admin.settings.ai.saved.title", "AI settings saved"),
-        body: t(
-          "admin.settings.ai.saved.body",
-          "Changes are pushed to the AI engine automatically.",
-        ),
+        body: savedToastBody(settings, t),
       });
     } catch (_error) {
       alert({

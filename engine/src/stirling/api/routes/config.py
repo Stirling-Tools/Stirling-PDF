@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import ipaddress
 import logging
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request, status
 from openai import OpenAIError
@@ -10,7 +11,7 @@ from pydantic_ai.models import Model
 
 from stirling.api.bootstrap import apply_app_state, build_app_state
 from stirling.config import AppSettings
-from stirling.config.config_cache import save_config
+from stirling.config.config_cache import cache_stamp, save_config
 from stirling.contracts import ConfigApplyResponse, ConfigPushRequest
 from stirling.documents import EmbeddingService
 from stirling.services import AppRuntime
@@ -33,9 +34,10 @@ _REINDEX_NOTE = (
 def _strip_provider_prefix(model_name: str) -> str:
     """Drop a leading ``provider:`` from an env model string ("anthropic:x" -> "x").
 
-    Only used when falling back to the env-configured name under an explicit
-    pushed provider; a bare pushed name (which may itself contain ``:`` such as
-    "llama3:8b") is used verbatim and never passed through here.
+    Only used when falling back to a model name that is still env-shaped, i.e. when no
+    provider has been pushed yet. A name that arrived on a push is already bare and may
+    itself contain ``:`` ("llama3.1:8b"), so it must never be passed through here - see
+    the ``current.chat_provider`` guard in :func:`resolve_and_apply`.
     """
     _, sep, rest = model_name.partition(":")
     return rest if sep else model_name
@@ -110,9 +112,16 @@ def resolve_and_apply(
     base_url = models.base_url
     use_explicit_provider = bool(provider or api_key or base_url)
 
-    if use_explicit_provider:
+    if use_explicit_provider and not current.chat_provider:
+        # First push over an env-configured engine: the running names are still
+        # "provider:model", so strip the prefix before handing them to the pushed provider.
         smart_name = models.smart_model or _strip_provider_prefix(current.smart_model_name)
         fast_name = models.fast_model or _strip_provider_prefix(current.fast_model_name)
+    elif use_explicit_provider:
+        # A provider was already pushed, so the running names are bare and may legitimately
+        # contain a colon ("llama3.1:8b"). Stripping again would truncate them to "8b".
+        smart_name = models.smart_model or current.smart_model_name
+        fast_name = models.fast_model or current.fast_model_name
     else:
         # No provider/credentials pushed: keep the fully env-driven model strings.
         smart_name = models.smart_model or current.smart_model_name
@@ -177,6 +186,36 @@ def resolve_and_apply(
     return effective, smart_model, fast_model, new_embedder, notes
 
 
+def apply_to_app(app: Any, request: ConfigPushRequest) -> tuple[AppSettings, list[str]]:
+    """Resolve ``request`` against the app's live settings and swap the bundle in place.
+
+    Rebuilds the runtime and every agent, reusing the existing document store, then swaps
+    the whole bundle onto ``app.state`` so in-flight lookups only ever see one config.
+    Contains no ``await``, so the swap is atomic with respect to the event loop.
+
+    Raises one of :data:`CONFIG_APPLY_ERRORS` if the pushed config cannot be built; live
+    state is left untouched in that case. Shared by the HTTP route and the cache watcher.
+    """
+    current: AppSettings = app.state.settings
+    runtime: AppRuntime = app.state.runtime
+    effective, smart_model, fast_model, new_embedder, notes = resolve_and_apply(current, request)
+    new_state = build_app_state(
+        effective,
+        documents=runtime.documents,
+        fast_model=fast_model,
+        smart_model=smart_model,
+    )
+    app.state.settings = effective
+    apply_app_state(app.state, new_state)
+    # Retune retrieval breadth on the reused store without rebuilding it.
+    runtime.documents.default_top_k = effective.rag_default_top_k
+    if new_embedder is not None:
+        # Swap the embedder onto the reused DocumentService so we never tear down
+        # the live vector store / connection pool.
+        runtime.documents.embedder = new_embedder
+    return effective, notes
+
+
 @router.post("", response_model=ConfigApplyResponse)
 async def apply_config(request: ConfigPushRequest, http_request: Request) -> ConfigApplyResponse:
     """Apply admin-pushed AI settings by rebuilding the runtime + agents in place.
@@ -216,39 +255,29 @@ async def apply_config(request: ConfigPushRequest, http_request: Request) -> Con
             ),
         )
 
-    runtime: AppRuntime = app.state.runtime
     try:
-        effective, smart_model, fast_model, new_embedder, notes = resolve_and_apply(current, request)
+        effective, notes = apply_to_app(app, request)
     except CONFIG_APPLY_ERRORS as exc:
         # Reject without touching the running config.
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
-    # Rebuild runtime + every agent, reusing the existing document store, then
-    # swap the whole bundle onto app.state so in-flight lookups see one config.
-    new_state = build_app_state(
-        effective,
-        documents=runtime.documents,
-        fast_model=fast_model,
-        smart_model=smart_model,
-    )
-    app.state.settings = effective
-    apply_app_state(app.state, new_state)
-    # Retune retrieval breadth on the reused store without rebuilding it.
-    runtime.documents.default_top_k = effective.rag_default_top_k
-    if new_embedder is not None:
-        # Swap the embedder onto the reused DocumentService so we never tear down
-        # the live vector store / connection pool.
-        runtime.documents.embedder = new_embedder
-
-    # Persist the applied config (encrypted) so it is restored on the next boot.
-    # Persistence is best-effort: the config is already applied live above, so a persist
-    # failure of ANY kind (bad/corrupt keyfile -> ValueError, disk error -> OSError, etc.)
-    # must never turn a successful apply into a 500 and leave live/reported state diverged.
+    # Persist the applied config (encrypted) so it is restored on the next boot, and so
+    # sibling worker processes - which never saw this request - can adopt it from the
+    # shared cache file. Persistence is best-effort: the config is already applied live
+    # above, so a persist failure of ANY kind (bad/corrupt keyfile -> ValueError, disk
+    # error -> OSError, etc.) must never turn a successful apply into a 500 and leave
+    # live/reported state diverged.
     try:
         save_config(request)
+        # Claim the stamp we just wrote so this worker's own watcher does not
+        # immediately rebuild everything for a config it is already running.
+        app.state.config_cache_stamp = cache_stamp()
     except Exception:  # noqa: BLE001 - best-effort persist, never fail the applied push
         logger.warning("Applied AI config but failed to persist the encrypted cache", exc_info=True)
-        notes.append("Config applied but could not be persisted; it will not survive an engine restart.")
+        notes.append(
+            "Config applied on this worker but could not be persisted; it will not survive an"
+            " engine restart and other workers will not pick it up."
+        )
 
     logger.info(
         "Applied pushed AI config: provider=%s smart_model=%s fast_model=%s top_k=%s",

@@ -725,7 +725,7 @@ body = "Changing the embedding model takes effect immediately, but documents ind
 title = "Re-index required"
 
 [admin.settings.ai.documents.saved]
-body = "Changes are pushed to the AI engine automatically. If you changed the embedding model, re-index existing documents so search uses the new model."
+reindexNote = "If you changed the embedding model, re-index existing documents so search uses the new model."
 
 [admin.settings.ai.documents.topK]
 description = "Number of most-relevant chunks retrieved per search."
@@ -849,6 +849,7 @@ label = "Smart model"
 
 [admin.settings.ai.saved]
 body = "Changes are pushed to the AI engine automatically."
+bodyNoPush = "Settings saved. They will apply the next time the AI engine picks up its configuration."
 title = "AI settings saved"
 
 [admin.settings.badge]

@@ -31,7 +31,7 @@ class AiFeatureGateTest {
     @Test
     void passesWhenEngineEnabledAndFeatureOn() {
         assertDoesNotThrow(() -> gate.requireClassify());
-        assertDoesNotThrow(() -> gate.requireChat());
+        assertDoesNotThrow(() -> gate.requireConversationalWorkflow());
     }
 
     @Test
@@ -48,7 +48,8 @@ class AiFeatureGateTest {
         props.getAiEngine().setEnabled(false); // feature flag still true
 
         ResponseStatusException ex =
-                assertThrows(ResponseStatusException.class, () -> gate.requireChat());
+                assertThrows(
+                        ResponseStatusException.class, () -> gate.requireConversationalWorkflow());
         assertEquals(HttpStatus.SERVICE_UNAVAILABLE, ex.getStatusCode());
     }
 

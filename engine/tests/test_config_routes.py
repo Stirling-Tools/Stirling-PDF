@@ -17,6 +17,7 @@ from conftest import build_app_settings
 from fastapi.testclient import TestClient
 
 from stirling.api import app
+from stirling.api.app import _adopt_cached_config_if_changed
 from stirling.config import AppSettings, config_cache, load_settings
 from stirling.contracts import ConfigPushRequest
 
@@ -276,3 +277,124 @@ def test_boot_proceeds_on_corrupt_cache(tmp_path: Path) -> None:
     with _client(build_app_settings):
         assert app.state.settings.smart_model_name == "test"
         assert app.state.settings.max_pages == 200
+
+
+def test_config_push_from_remote_caller_is_allowed_when_secret_is_set() -> None:
+    """The loopback gate is a fallback for the no-secret case only.
+
+    With a shared secret configured the middleware has already authenticated the caller,
+    so the route must NOT additionally demand a loopback peer - otherwise the supported
+    deployment shape (engine in its own container, secret on both sides) could never push.
+    """
+
+    def factory() -> AppSettings:
+        return build_app_settings().model_copy(update={"engine_shared_secret": "s3cret"})
+
+    with _client(factory, client_addr=("203.0.113.9", 4444)) as client:
+        response = client.post("/api/v1/config", json=_anthropic_push())
+    assert response.status_code == 200
+    assert app.state.settings.smart_model_name == "claude-haiku-4-5"
+
+
+@pytest.mark.parametrize(
+    ("section", "field", "value"),
+    [
+        ("limits", "modelMaxConcurrency", 0),
+        ("limits", "modelMaxConcurrency", -1),
+        ("limits", "maxPages", 0),
+        ("limits", "maxCharacters", 0),
+        ("rag", "topK", 0),
+        ("models", "smartMaxTokens", 0),
+    ],
+)
+def test_config_push_rejects_out_of_range_numbers(section: str, field: str, value: int) -> None:
+    """Out-of-range numbers are rejected by the contract before anything is applied.
+
+    modelMaxConcurrency is the dangerous one: it becomes an asyncio.Semaphore bound, and 0
+    constructs an already-locked semaphore that would hang every model call - and the push
+    is persisted, so a restart would restore the wedge rather than clear it.
+    """
+    with _client(build_app_settings) as client:
+        payload = _anthropic_push()
+        payload[section][field] = value  # type: ignore[index]
+        response = client.post("/api/v1/config", json=payload)
+        assert response.status_code == 422
+        # Nothing was applied: the engine is still on its env config.
+        assert app.state.settings.smart_model_name == "test"
+        assert app.state.settings.max_pages == 200
+
+
+def test_config_push_allows_zero_max_searches() -> None:
+    """0 searches is a legitimate "no retrieval" setting, not an out-of-range value."""
+    with _client(build_app_settings) as client:
+        payload = _anthropic_push()
+        payload["rag"]["maxSearches"] = 0  # type: ignore[index]
+        response = client.post("/api/v1/config", json=payload)
+        assert response.status_code == 200
+        assert app.state.settings.rag_max_searches == 0
+
+
+def test_second_push_keeps_a_colon_bearing_model_name() -> None:
+    """A pushed model name may contain a colon ("llama3.1:8b").
+
+    Once a provider has been pushed the running name is already bare, so a follow-up push
+    that omits the model must keep it verbatim. Stripping the "provider:" prefix a second
+    time would silently truncate it to "8b" and 404 at the provider.
+    """
+    ollama_push: dict[str, object] = {
+        "models": {
+            "provider": "ollama",
+            "smartModel": "llama3.1:8b",
+            "fastModel": "llama3.1:8b",
+            "baseUrl": "http://localhost:11434/v1",
+        },
+        "rag": {},
+        "limits": {},
+    }
+    with _client(build_app_settings) as client:
+        assert client.post("/api/v1/config", json=ollama_push).status_code == 200
+        assert app.state.settings.smart_model_name == "llama3.1:8b"
+
+        # Second push: same provider/base URL, model left empty ("keep what you have").
+        followup: dict[str, object] = {
+            "models": {
+                "provider": "ollama",
+                "smartModel": "",
+                "fastModel": "",
+                "baseUrl": "http://localhost:11434/v1",
+            },
+            "rag": {},
+            "limits": {"maxPages": 42},
+        }
+        response = client.post("/api/v1/config", json=followup)
+        assert response.status_code == 200
+        assert app.state.settings.smart_model_name == "llama3.1:8b"
+        assert app.state.settings.fast_model_name == "llama3.1:8b"
+        assert app.state.settings.max_pages == 42
+
+
+def test_worker_adopts_a_config_pushed_to_a_sibling_worker() -> None:
+    """A push reaches one uvicorn worker; the rest adopt it from the shared cache file.
+
+    Simulates the sibling by writing the cache directly (as the worker that served the
+    push would) and then running one watcher iteration against this worker's app.
+    """
+    with _client(build_app_settings):
+        assert app.state.settings.smart_model_name == "test"
+
+        config_cache.save_config(ConfigPushRequest.model_validate(_anthropic_push()))
+        _adopt_cached_config_if_changed(app)
+
+        assert app.state.settings.smart_model_name == "claude-haiku-4-5"
+        assert app.state.settings.max_pages == 50
+        assert app.state.runtime.documents.default_top_k == 7
+
+
+def test_worker_does_not_rebuild_when_the_cache_is_unchanged() -> None:
+    """The watcher is a poll, so an unchanged cache must be a no-op rather than a rebuild
+    of the runtime and every agent on every tick."""
+    config_cache.save_config(ConfigPushRequest.model_validate(_anthropic_push()))
+    with _client(build_app_settings):
+        before = app.state.orchestrator_agent
+        _adopt_cached_config_if_changed(app)
+        assert app.state.orchestrator_agent is before

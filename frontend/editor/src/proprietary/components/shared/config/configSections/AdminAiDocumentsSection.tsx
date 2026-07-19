@@ -29,6 +29,7 @@ import {
   EMBEDDING_MODEL_SUGGESTIONS,
   MASKED_SECRET,
   clampMin,
+  savedToastBody,
 } from "@app/components/shared/config/configSections/aiEngineSettings";
 
 export default function AdminAiDocumentsSection() {
@@ -71,9 +72,12 @@ export default function AdminAiDocumentsSection() {
         "aiEngine.rag.topK": clampMin(s.rag?.topK, 1),
         "aiEngine.rag.maxSearches": clampMin(s.rag?.maxSearches, 0),
       };
-      if (embeddingApiKeyDirty && usesApiKey) {
-        deltaSettings["aiEngine.rag.embeddingApiKey"] =
-          s.rag?.embeddingApiKey ?? "";
+      // Include the secret when the user typed a new value, or when a provider switch
+      // cleared it — that explicit "" is what wipes the previous provider's stored key.
+      if (embeddingApiKeyDirty) {
+        deltaSettings["aiEngine.rag.embeddingApiKey"] = usesApiKey
+          ? (s.rag?.embeddingApiKey ?? "")
+          : "";
       }
       return { sectionData: {}, deltaSettings };
     },
@@ -99,10 +103,10 @@ export default function AdminAiDocumentsSection() {
       alert({
         alertType: "success",
         title: t("admin.settings.ai.saved.title", "AI settings saved"),
-        body: t(
-          "admin.settings.ai.documents.saved.body",
-          "Changes are pushed to the AI engine automatically. If you changed the embedding model, re-index existing documents so search uses the new model.",
-        ),
+        body: `${savedToastBody(settings, t)} ${t(
+          "admin.settings.ai.documents.saved.reindexNote",
+          "If you changed the embedding model, re-index existing documents so search uses the new model.",
+        )}`,
       });
     } catch (_error) {
       alert({
@@ -207,9 +211,11 @@ export default function AdminAiDocumentsSection() {
                 // leak into the payload.
                 if (next !== "ollama" && next !== "custom")
                   patch.embeddingBaseUrl = "";
-                if (next === "ollama") {
+                if (next !== embeddingProvider) {
+                  // One stored key, issued for one provider: carrying it across a switch
+                  // would 401 while the field still read "Saved". Require a re-entry.
                   patch.embeddingApiKey = "";
-                  setEmbeddingApiKeyDirty(false);
+                  setEmbeddingApiKeyDirty(true);
                 }
                 setRag(patch);
               }}

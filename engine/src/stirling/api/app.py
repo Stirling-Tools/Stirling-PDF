@@ -26,9 +26,9 @@ from stirling.api.routes import (
     pdf_edit_router,
     pdf_question_router,
 )
-from stirling.api.routes.config import CONFIG_APPLY_ERRORS, resolve_and_apply
+from stirling.api.routes.config import CONFIG_APPLY_ERRORS, apply_to_app, resolve_and_apply
 from stirling.config import AppSettings, load_settings
-from stirling.config.config_cache import load_config
+from stirling.config.config_cache import cache_stamp, load_config
 from stirling.contracts import HealthResponse
 from stirling.documents import DocumentService, EmbeddingService
 from stirling.services import setup_posthog_tracking
@@ -68,6 +68,51 @@ async def _reap(documents: DocumentService) -> None:
         raise
     except Exception:
         logger.exception("Document reaper iteration failed; will retry on next interval")
+
+
+def _adopt_cached_config_if_changed(fast_api: FastAPI) -> None:
+    """Re-apply the persisted config when the cache file changed under us.
+
+    A push lands on exactly one uvicorn worker but is persisted to a cache file shared
+    by the whole pool, so this is how the other workers learn about it. Never raises:
+    an unreadable or unbuildable cache leaves this worker on its current config.
+    """
+    # Read the stamp before the payload: if a write lands between the two we record the
+    # older stamp against the newer config and simply re-apply on the next tick, whereas
+    # the other order would record the newer stamp and skip the update forever.
+    stamp = cache_stamp()
+    if stamp is None or stamp == getattr(fast_api.state, "config_cache_stamp", None):
+        return
+    # Claim the stamp up front so a cache we cannot read or apply is not retried every tick.
+    fast_api.state.config_cache_stamp = stamp
+    cached = load_config()
+    if cached is None:
+        return
+    try:
+        effective, _ = apply_to_app(fast_api, cached)
+    except CONFIG_APPLY_ERRORS:
+        logger.warning("Config pushed to another worker could not be applied here", exc_info=True)
+        return
+    logger.info(
+        "Adopted AI config pushed to another worker: smart_model=%s fast_model=%s",
+        effective.smart_model_name,
+        effective.fast_model_name,
+    )
+
+
+async def _run_config_cache_watcher(fast_api: FastAPI, interval_seconds: int) -> None:
+    """Poll the shared config cache so every worker converges on the last push.
+
+    Runs until cancelled by the lifespan teardown.
+    """
+    while True:
+        await asyncio.sleep(interval_seconds)
+        try:
+            _adopt_cached_config_if_changed(fast_api)
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            logger.exception("Config cache watcher iteration failed; will retry on next interval")
 
 
 def _load_startup_settings(fast_api: FastAPI) -> AppSettings:
@@ -112,6 +157,9 @@ async def lifespan(fast_api: FastAPI):
     settings = _load_startup_settings(fast_api)
     # Precedence: env < persisted cache < live push. Restore the last-applied pushed
     # config unless config push is disabled (then env is the single source of truth).
+    # Stamp first so a push that lands mid-boot is re-adopted by the watcher rather
+    # than mistaken for the config we just restored.
+    fast_api.state.config_cache_stamp = cache_stamp()
     effective, smart_model, fast_model, embedder = _restore_cached_config(settings)
     app_state = build_app_state(
         effective,
@@ -132,12 +180,28 @@ async def lifespan(fast_api: FastAPI):
         ),
         name="expired-document-reaper",
     )
+    background_tasks = [reaper_task]
+    if effective.allow_config_push:
+        # The engine runs a pool of uvicorn workers and a push reaches only one of them.
+        # This is how the rest of the pool picks the config up; without it most requests
+        # would keep running the previous models.
+        background_tasks.append(
+            asyncio.create_task(
+                _run_config_cache_watcher(
+                    fast_api,
+                    interval_seconds=settings.config_cache_poll_interval_seconds,
+                ),
+                name="config-cache-watcher",
+            )
+        )
     yield
-    reaper_task.cancel()
-    try:
-        await reaper_task
-    except asyncio.CancelledError:
-        pass
+    for task in background_tasks:
+        task.cancel()
+    for task in background_tasks:
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
     await runtime.documents.close()
     if tracer_provider:
         tracer_provider.shutdown()

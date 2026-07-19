@@ -182,7 +182,7 @@ export const useConfigNavSections = (
         {
           key: "adminAiModels",
           label: t("settings.ai.models", "Models & Providers"),
-          icon: "psychology-rounded",
+          icon: "psychology",
           component: <AdminAiModelsSection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
@@ -190,7 +190,7 @@ export const useConfigNavSections = (
         {
           key: "adminAiDocuments",
           label: t("settings.ai.documents", "Documents & RAG"),
-          icon: "description-rounded",
+          icon: "description",
           component: <AdminAiDocumentsSection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
@@ -198,7 +198,7 @@ export const useConfigNavSections = (
         {
           key: "adminAiLimits",
           label: t("settings.ai.limits", "Limits & Performance"),
-          icon: "speed-rounded",
+          icon: "speed",
           component: <AdminAiLimitsSection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,

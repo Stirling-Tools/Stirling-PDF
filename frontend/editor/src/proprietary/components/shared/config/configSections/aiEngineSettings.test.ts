@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { clampMin } from "@app/components/shared/config/configSections/aiEngineSettings";
+import {
+  clampMin,
+  savedToastBody,
+} from "@app/components/shared/config/configSections/aiEngineSettings";
 
 describe("clampMin", () => {
   it("keeps a valid integer unchanged", () => {
@@ -24,5 +27,31 @@ describe("clampMin", () => {
     expect(clampMin(0, 0)).toBe(0);
     expect(clampMin("", 0)).toBe(0);
     expect(clampMin(4, 0)).toBe(4);
+  });
+});
+
+describe("savedToastBody", () => {
+  // The helper is passed i18next's t(); echo the key back so assertions read clearly.
+  const t = (key: string) => key;
+
+  it("promises a live push only when AI is on and config push is enabled", () => {
+    expect(savedToastBody({ enabled: true, pushConfigToEngine: true }, t)).toBe(
+      "admin.settings.ai.saved.body",
+    );
+    // pushConfigToEngine defaults to true on the backend, so an absent flag still promises it.
+    expect(savedToastBody({ enabled: true }, t)).toBe(
+      "admin.settings.ai.saved.body",
+    );
+  });
+
+  it("does not promise a push the processor will not make", () => {
+    // AI off: pushLiveAfterSave returns early, so nothing reaches the engine.
+    expect(savedToastBody({ enabled: false }, t)).toBe(
+      "admin.settings.ai.saved.bodyNoPush",
+    );
+    // Env-driven deployment (SaaS pins this false): the engine owns its own config.
+    expect(
+      savedToastBody({ enabled: true, pushConfigToEngine: false }, t),
+    ).toBe("admin.settings.ai.saved.bodyNoPush");
   });
 });

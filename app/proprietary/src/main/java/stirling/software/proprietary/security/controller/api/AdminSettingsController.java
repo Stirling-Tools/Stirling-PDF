@@ -213,6 +213,9 @@ public class AdminSettingsController {
 
                 // Validate pipeline path settings
                 String validationError = validatePipelinePathSetting(key, value);
+                if (validationError == null) {
+                    validationError = validateAiEngineNumericSetting(key, value);
+                }
                 if (validationError != null) {
                     return ResponseEntity.badRequest()
                             .body(Map.of("error", HtmlUtils.htmlEscape(validationError)));
@@ -227,7 +230,7 @@ public class AdminSettingsController {
             for (Map.Entry<String, Object> entry : settings.entrySet()) {
                 String key = entry.getKey();
                 Object value = entry.getValue();
-                log.info("Admin updating setting: {} = {}", key, value);
+                log.info("Admin updating setting: {} = {}", key, logSafeValue(key, value));
                 pendingChanges.put(key, value != null ? value : "");
             }
 
@@ -379,7 +382,10 @@ public class AdminSettingsController {
                                                     + HtmlUtils.htmlEscape(fullKey)));
                 }
 
-                log.info("Admin updating section setting: {} = {}", fullKey, value);
+                log.info(
+                        "Admin updating section setting: {} = {}",
+                        fullKey,
+                        logSafeValue(fullKey, value));
                 GeneralUtils.saveKeyToSettings(fullKey, value);
 
                 // Track this as a pending change
@@ -498,7 +504,7 @@ public class AdminSettingsController {
                 }
             }
 
-            log.info("Admin updating single setting: {} = {}", key, value);
+            log.info("Admin updating single setting: {} = {}", key, logSafeValue(key, value));
             GeneralUtils.saveKeyToSettings(key, value);
 
             // Track this as a pending change
@@ -742,6 +748,41 @@ public class AdminSettingsController {
         return true;
     }
 
+    /**
+     * Minimum accepted value for each bounded {@code aiEngine.*} numeric setting. The engine
+     * rejects out-of-range values for the whole push, so an out-of-range value saved here would
+     * block every later push - including the one that fixes it. The admin UI clamps to the same
+     * floors; this closes the direct-API path. Concurrency in particular must be >= 1: it becomes
+     * an asyncio semaphore bound, and 0 would wedge every model call on the engine.
+     */
+    private static final Map<String, Integer> AI_ENGINE_NUMERIC_MINIMUMS =
+            Map.of(
+                    "aiEngine.models.smartMaxTokens", 1,
+                    "aiEngine.models.fastMaxTokens", 1,
+                    "aiEngine.rag.topK", 1,
+                    "aiEngine.rag.maxSearches", 0,
+                    "aiEngine.limits.maxPages", 1,
+                    "aiEngine.limits.maxCharacters", 1,
+                    "aiEngine.limits.modelMaxConcurrency", 1);
+
+    private String validateAiEngineNumericSetting(String key, Object value) {
+        Integer min = AI_ENGINE_NUMERIC_MINIMUMS.get(key);
+        if (min == null || value == null) {
+            return null;
+        }
+        long parsed;
+        if (value instanceof Number number) {
+            parsed = number.longValue();
+        } else {
+            try {
+                parsed = Long.parseLong(value.toString().trim());
+            } catch (NumberFormatException e) {
+                return key + " must be a whole number";
+            }
+        }
+        return parsed < min ? key + " must be at least " + min : null;
+    }
+
     private String validatePipelinePathSetting(String key, Object value) {
         // Validate pipeline path settings
         if (key.startsWith("system.customPaths.pipeline.watchedFoldersDirs")
@@ -884,6 +925,16 @@ public class AdminSettingsController {
         }
 
         return masked;
+    }
+
+    /**
+     * The value to log for a settings key. Secrets are redacted: the admin API is the path a
+     * provider API key, OAuth client secret or mail password travels on, and the response masking
+     * below would be pointless if the same value were written to the log file in cleartext.
+     */
+    private Object logSafeValue(String key, Object value) {
+        String leaf = key.contains(".") ? key.substring(key.lastIndexOf('.') + 1) : key;
+        return isSensitiveFieldWithPath(leaf, key) ? "<redacted>" : value;
     }
 
     /** Check if a field name indicates sensitive data with full path context */

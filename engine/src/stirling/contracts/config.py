@@ -23,8 +23,8 @@ class ConfigModelsSection(ApiModel):
     provider: str = ""
     smart_model: str = ""
     fast_model: str = ""
-    smart_max_tokens: int | None = None
-    fast_max_tokens: int | None = None
+    smart_max_tokens: int | None = Field(default=None, ge=1)
+    fast_max_tokens: int | None = Field(default=None, ge=1)
     api_key: str = ""
     base_url: str = ""
 
@@ -38,16 +38,21 @@ class ConfigRagSection(ApiModel):
     # OpenAI-compatible endpoint URL for ollama/custom embedding providers.
     # Empty keeps the engine's env value, same convention as the other fields.
     embedding_base_url: str = ""
-    top_k: int | None = None
-    max_searches: int | None = None
+    top_k: int | None = Field(default=None, ge=1)
+    # 0 is a legitimate "no retrieval searches" setting - the capability just refuses
+    # further searches - so this one floors at 0, matching the admin UI's own clamp.
+    max_searches: int | None = Field(default=None, ge=0)
 
 
 class ConfigLimitsSection(ApiModel):
     model_config = _TOLERANT
 
-    max_pages: int | None = None
-    max_characters: int | None = None
-    model_max_concurrency: int | None = None
+    max_pages: int | None = Field(default=None, ge=1)
+    max_characters: int | None = Field(default=None, ge=1)
+    # Must be >= 1: the value becomes an asyncio.Semaphore bound, and 0 constructs a
+    # permanently locked semaphore that would hang every model call until the cache is
+    # deleted by hand (the push is persisted, so a restart would not clear it).
+    model_max_concurrency: int | None = Field(default=None, ge=1)
 
 
 class ConfigPushRequest(ApiModel):

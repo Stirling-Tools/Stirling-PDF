@@ -133,6 +133,12 @@ class AppSettings(BaseSettings):
     # credentials, limits) to POST /api/v1/config at startup. Turn this off in
     # environment-driven deployments so the environment is the single source of truth.
     allow_config_push: bool = Field(default=True, validation_alias="STIRLING_ALLOW_CONFIG_PUSH")
+    # How often each worker checks the shared config cache for a push that landed on a
+    # sibling worker. Bounds how long the pool can disagree about the active model.
+    config_cache_poll_interval_seconds: int = Field(
+        default=15,
+        validation_alias="STIRLING_CONFIG_CACHE_POLL_INTERVAL_SECONDS",
+    )
 
 
 def _configure_logging(level_name: str, log_file: str, http_debug: bool) -> None:

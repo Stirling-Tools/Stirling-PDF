@@ -1,6 +1,8 @@
 package stirling.software.proprietary.service;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -9,6 +11,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -190,5 +193,64 @@ class AiEngineConfigSyncTest {
         JsonNode models = JsonMapper.builder().build().readTree(body.getValue()).get("models");
         assertEquals("anthropic", models.get("provider").asText());
         assertEquals("sk-real-key", models.get("apiKey").asText());
+    }
+
+    @Test
+    void livePushSendsAnExplicitlyClearedApiKeyRatherThanKeepEnv() throws Exception {
+        // Clearing a leaked key has to reach the engine as a real clear. Blanking the identity
+        // here (the "unconfigured section" path) would tell the engine "keep what you have", so
+        // the revoked key would stay live in the engine's cache indefinitely.
+        ArgumentCaptor<String> body = ArgumentCaptor.forClass(String.class);
+        sync.pushLiveAfterSave(mapOf("aiEngine.models.apiKey", ""));
+        verify(aiEngineClient, timeout(3000)).post(eq("/api/v1/config"), body.capture(), isNull());
+
+        JsonNode models = JsonMapper.builder().build().readTree(body.getValue()).get("models");
+        assertEquals("", models.get("apiKey").asText());
+        // Identity was NOT blanked wholesale: the provider still travels so the engine applies
+        // the cleared credential against the right provider.
+        assertEquals("anthropic", models.get("provider").asText());
+    }
+
+    @Test
+    void livePushKeepsEnvWhenOnlyANumericKnobChanged() throws Exception {
+        // The admin touched a limit, not the identity, so the engine's env-configured
+        // provider/model must be preserved.
+        ArgumentCaptor<String> body = ArgumentCaptor.forClass(String.class);
+        sync.pushLiveAfterSave(Map.of("aiEngine.limits.maxPages", 42));
+        verify(aiEngineClient, timeout(3000)).post(eq("/api/v1/config"), body.capture(), isNull());
+
+        JsonNode root = JsonMapper.builder().build().readTree(body.getValue());
+        assertEquals("", root.get("models").get("provider").asText());
+        assertEquals("", root.get("models").get("apiKey").asText());
+        assertEquals(42, root.get("limits").get("maxPages").asInt());
+    }
+
+    @Test
+    void livePushIgnoresAMalformedKeyInsteadOfClobberingTheSection() throws Exception {
+        // "aiEngine.models." has no leaf; writing at the section name would replace the whole
+        // models object with a scalar and produce an unparseable push.
+        ArgumentCaptor<String> body = ArgumentCaptor.forClass(String.class);
+        sync.pushLiveAfterSave(mapOf("aiEngine.models.", "junk"));
+        verify(aiEngineClient, timeout(3000)).post(eq("/api/v1/config"), body.capture(), isNull());
+
+        JsonNode models = JsonMapper.builder().build().readTree(body.getValue()).get("models");
+        assertTrue(models.isObject(), "models must still be an object");
+    }
+
+    @Test
+    void livePushNeverThrowsIntoTheCaller() throws Exception {
+        // The caller has already persisted settings.yml, so a push-building failure must not
+        // surface as a failed save. A null value inside the map is enough to break naive code.
+        Map<String, Object> pending = new HashMap<>();
+        pending.put("aiEngine.models.provider", null);
+
+        assertDoesNotThrow(() -> sync.pushLiveAfterSave(pending));
+    }
+
+    /** {@link Map#of} rejects nulls and we need entries with empty/odd values. */
+    private static Map<String, Object> mapOf(String key, Object value) {
+        Map<String, Object> map = new HashMap<>();
+        map.put(key, value);
+        return map;
     }
 }

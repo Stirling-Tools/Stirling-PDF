@@ -199,6 +199,34 @@ class AdminSettingsControllerTest {
         }
 
         @Test
+        @DisplayName("rejects an out-of-range aiEngine numeric with 400")
+        void rejectsOutOfRangeAiEngineNumeric() {
+            // The engine rejects the whole push for an out-of-range value, so persisting one
+            // here would block every later push - including the one that fixes it. 0 concurrency
+            // is the worst case: it becomes a semaphore bound that wedges all model calls.
+            UpdateSettingsRequest request = new UpdateSettingsRequest();
+            request.setSettings(Map.of("aiEngine.limits.modelMaxConcurrency", 0));
+
+            ResponseEntity<Map<String, Object>> response = controller.updateSettings(request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(response.getBody().get("error").toString()).contains("at least 1");
+        }
+
+        @Test
+        @DisplayName("accepts zero maxSearches, which legitimately means no retrieval")
+        void acceptsZeroMaxSearches() {
+            UpdateSettingsRequest request = new UpdateSettingsRequest();
+            request.setSettings(Map.of("aiEngine.rag.maxSearches", 0));
+
+            try (MockedStatic<GeneralUtils> mocked = mockStatic(GeneralUtils.class)) {
+                ResponseEntity<Map<String, Object>> response = controller.updateSettings(request);
+
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            }
+        }
+
+        @Test
         @DisplayName("rejects unknown section prefix with 400")
         void rejectsUnknownSection() {
             UpdateSettingsRequest request = new UpdateSettingsRequest();

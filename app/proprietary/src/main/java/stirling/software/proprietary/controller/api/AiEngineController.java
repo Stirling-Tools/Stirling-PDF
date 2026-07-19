@@ -254,6 +254,9 @@ public class AiEngineController {
                     "Sends a user message to the PDF edit agent which returns a structured plan"
                             + " of tool operations to perform")
     public ResponseEntity<String> pdfEdit(@RequestBody String requestBody) throws IOException {
+        // Same gate as /orchestrate: the edit agent is a model call behind the same
+        // conversational surface, so it must not stay open when both switches are off.
+        aiFeatureGate.requireConversationalWorkflow();
         JsonNode parsed = parseJson(requestBody);
         if (!parsed.isObject()) {
             throw new ResponseStatusException(

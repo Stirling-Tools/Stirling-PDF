@@ -51,12 +51,24 @@ def _derive_key_from_secret(secret: str) -> bytes:
     return base64.urlsafe_b64encode(hkdf.derive(secret.encode("utf-8")))
 
 
-def _chmod_600(path: Path) -> None:
-    # Best-effort owner-only perms; silently ignored where unsupported (e.g. Windows).
+def _write_private_bytes(path: Path, payload: bytes) -> None:
+    """Write ``payload`` to ``path`` atomically, owner-only from the moment it exists.
+
+    The temp file is created with 0600 (never the umask default) and then renamed over
+    the target, so a reader never sees a half-written file and the plaintext-adjacent
+    key material is never briefly world-readable. Permissions are a no-op on Windows.
+    """
+    tmp_path = path.with_name(f"{path.name}.tmp")
+    fd = os.open(tmp_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, stat.S_IRUSR | stat.S_IWUSR)
     try:
-        os.chmod(path, stat.S_IRUSR | stat.S_IWUSR)
-    except OSError:
-        pass
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(payload)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(tmp_path, path)
+    except BaseException:
+        tmp_path.unlink(missing_ok=True)
+        raise
 
 
 def _load_or_create_keyfile(data_dir: Path) -> bytes:
@@ -66,8 +78,7 @@ def _load_or_create_keyfile(data_dir: Path) -> bytes:
         return key_path.read_bytes().strip()
     key = Fernet.generate_key()
     data_dir.mkdir(parents=True, exist_ok=True)
-    key_path.write_bytes(key)
-    _chmod_600(key_path)
+    _write_private_bytes(key_path, key)
     if not _keyfile_warned:
         logger.warning(
             "STIRLING_ENGINE_SHARED_SECRET is not set; encrypting the AI config cache with a local"
@@ -92,7 +103,22 @@ def save_config(request: ConfigPushRequest, *, data_dir: Path | None = None) -> 
     data_dir.mkdir(parents=True, exist_ok=True)
     payload = request.model_dump_json(by_alias=True).encode("utf-8")
     token = _fernet(data_dir).encrypt(payload)
-    (data_dir / _CACHE_FILENAME).write_bytes(token)
+    _write_private_bytes(data_dir / _CACHE_FILENAME, token)
+
+
+def cache_stamp(*, data_dir: Path | None = None) -> tuple[int, int] | None:
+    """Identify the current cache file as (mtime_ns, size), or None when absent.
+
+    Cheap enough to poll: sibling workers compare this to the stamp they last applied
+    to notice a config pushed to a different worker process. See
+    :func:`stirling.api.app._run_config_cache_watcher`.
+    """
+    cache_path = (data_dir or _default_data_dir()) / _CACHE_FILENAME
+    try:
+        info = cache_path.stat()
+    except OSError:
+        return None
+    return (info.st_mtime_ns, info.st_size)
 
 
 def load_config(*, data_dir: Path | None = None) -> ConfigPushRequest | None:

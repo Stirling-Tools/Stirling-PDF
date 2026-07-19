@@ -200,6 +200,10 @@ export default function AdminAiGeneralSection() {
                   onChange={(e) =>
                     setSettings({ ...settings, enabled: e.target.checked })
                   }
+                  aria-label={t(
+                    "admin.settings.ai.general.enabled.label",
+                    "Enable AI",
+                  )}
                 />
                 <PendingBadge show={isFieldPending("enabled")} />
               </Group>
@@ -497,6 +501,8 @@ function FeatureSwitch({
           checked={checked}
           onChange={(e) => onChange(e.target.checked)}
           disabled={disabled}
+          // The visible label is a sibling Text, so the control needs its own name.
+          aria-label={label}
         />
         <PendingBadge show={pending} />
       </Group>

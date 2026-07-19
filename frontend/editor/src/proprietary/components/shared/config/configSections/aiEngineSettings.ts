@@ -51,6 +51,12 @@ export interface AiEngineFeatures {
 export interface AiEngineSettingsData {
   enabled?: boolean;
   url?: string;
+  /**
+   * Whether the processor forwards these settings to the engine. Off in env-driven
+   * deployments (SaaS pins it false), in which case a save is persisted but never reaches
+   * the engine — the save toast has to say so rather than promise a live push.
+   */
+  pushConfigToEngine?: boolean;
   timeoutSeconds?: number;
   longRunningTimeoutSeconds?: number;
   streamTimeoutSeconds?: number;
@@ -59,6 +65,25 @@ export interface AiEngineSettingsData {
   limits?: AiEngineLimits;
   features?: AiEngineFeatures;
 }
+
+/**
+ * Body for the post-save toast. The processor only pushes to the engine when AI is enabled
+ * AND config push is on, so claiming a live push unconditionally would be wrong on exactly
+ * the deployments where it matters most.
+ */
+export const savedToastBody = (
+  settings: AiEngineSettingsData,
+  t: (key: string, fallback: string) => string,
+): string =>
+  settings.enabled && settings.pushConfigToEngine !== false
+    ? t(
+        "admin.settings.ai.saved.body",
+        "Changes are pushed to the AI engine automatically.",
+      )
+    : t(
+        "admin.settings.ai.saved.bodyNoPush",
+        "Settings saved. They will apply the next time the AI engine picks up its configuration.",
+      );
 
 export interface ApiResponseWithPending<T> {
   _pending?: Partial<T>;
