@@ -356,6 +356,7 @@ text = "Disse tilladelser styrer, hvad brugere kan gøre med PDF'en. Mest effekt
 title = "Ændre Tilladelser"
 
 [addStamp]
+preview = "Preview Stamp"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -1842,6 +1843,15 @@ export = "Eksport"
 accessDenied = "Adgang nægtet"
 insufficientPermissions = "Du har ikke tilladelse til at udføre denne handling."
 
+[auth.callback]
+completing = "Completing authentication"
+invalidToken = "OAuth login failed - invalid token."
+missingToken = "OAuth login failed - no token received."
+oauthFailed = "OAuth login failed. Please try again."
+pleaseWait = "Please wait while we finish signing you in."
+signedOut = "You have been signed out. Please sign in again."
+windowMayClose = "You can close this window once it completes."
+
 [auth.displayName]
 guest = "Gæst"
 user = "Bruger"
@@ -2824,6 +2834,7 @@ next = "Næste"
 preview = "Forhåndsvisning"
 previous = "Forrige"
 refresh = "Opdatér"
+remaining = "Remaining"
 retry = "Prøv igen"
 save = "Gem"
 
@@ -3723,19 +3734,8 @@ uploadToServer = "Upload to server"
 versionHistory = "Version history"
 
 [fileSidebar.groupsModal]
-add = "Tilføj"
-addLabel = "Tilføj en etiket…"
-categoryIconAria = "Vælg et ikon for {{name}}"
-createCategory = "Opret kategori"
-delete = "Slet kategori"
 done = "Færdig"
-hide = "Skjul kategori"
-newCategory = "Nyt kategorinavn…"
-removeLabel = "Fjern {{name}}"
-rename = "Omdøb"
 reset = "Nulstil til standarder"
-search = "Søg efter etiketter…"
-show = "Vis kategori"
 subtitle = "Gruppér dine filer i overordnede kategorier. Føj eksisterende eller nye etiketter til en kategori, omdøb den, eller opret din egen. Filer, der ikke er i nogen af dine kategorier, vises under “Andet”."
 title = "Sidebjælkekategorier"
 
@@ -4072,10 +4072,17 @@ discord = "Discord"
 issues = "GitHub"
 
 [formFill]
+allSaved = "All saved"
+extractCsvError = "Failed to extract CSV"
+extractXlsxError = "Failed to extract XLSX"
 flattenAfterFilling = "Fladgør efter udfyldning"
+requiredAbbreviation = "req"
+requiredFieldsError = "Please fill in all required fields"
 rescanFields = "Scan felter igen"
 rescanFormFields = "Scan formularfelter igen"
 save = "Gem"
+saveShortcut = "Ctrl+S to save"
+unsavedChanges = "Unsaved changes"
 
 [formFill.sidebar]
 close = "Luk sidepanel"
@@ -4647,7 +4654,6 @@ welcomeTitle = "Du er blevet inviteret!"
 
 [landing]
 addFiles = "Tilføj filer"
-heroSubtitle = "Træk en PDF ind eller tilføj en eksisterende PDF for at komme i gang."
 mobileUpload = "Upload fra mobil"
 openFromComputer = "Åbn fra computer"
 uploadFromComputer = "Upload fra computer"
@@ -4696,6 +4702,7 @@ login = "Log ind"
 magicLinkSent = "Magisk link sendt til {{email}}! Tjek din e-mail og klik på linket for at logge ind."
 mfaCode = "Godkendelseskode"
 mfaRequired = "Tofaktorkode påkrævet"
+noAccount = "Don't have an account?"
 or = "Eller"
 password = "Adgangskode"
 passwordChangedSuccess = "Adgangskoden blev ændret! Log ind med din nye adgangskode."
@@ -4719,21 +4726,6 @@ useEmailInstead = "Log ind med e-mail"
 useMagicLink = "Brug i stedet magisk link"
 username = "Brugernavn"
 youAreLoggedIn = "Du er logget ind!"
-
-[login.slides.edit]
-alt = "Rediger PDF'er"
-subtitle = "Med over et dusin værktøjer til at redigere, signere, læse og manipulere PDF'er skal du nok finde det, du leder efter."
-title = "Rediger PDF'er for at vise/beskytte de oplysninger, du ønsker"
-
-[login.slides.overview]
-alt = "Stirling PDF oversigt"
-subtitle = "En privacy-first cloud suite til PDF'er, der lader dig konvertere, signere, redigere og administrere dokumenter samt 50+ andre kraftfulde værktøjer."
-title = "Din alt-i-en-løsning til alle dine PDF-behov."
-
-[login.slides.secure]
-alt = "Sikr PDF'er"
-subtitle = "Tilføj adgangskoder, slør indhold, og håndter certifikater nemt."
-title = "Beskyt følsomme oplysninger i dine PDF'er"
 
 [margin]
 large = "Stor"
@@ -4976,6 +4968,7 @@ pinButton = "Du kan bruge knappen <strong>Fastgør</strong>, hvis du hellere vil
 results = "Når værktøjet er færdigt, viser trinnet <strong>Gennemse</strong> en forhåndsvisning af resultaterne i dette panel og giver dig mulighed for at fortryde handlingen eller downloade filen."
 runButton = "Når værktøjet er konfigureret, kan du køre det på alle de valgte PDF'er med denne knap."
 selectCropTool = "Lad os vælge <strong>Beskær</strong>-værktøjet for at demonstrere, hvordan man bruger et af værktøjerne."
+stepOf = "Step {{current}} of {{total}}"
 toolInterface = "Dette er <strong>Beskær</strong>-værktøjets grænseflade. Som du kan se, er der ikke meget at se, fordi vi endnu ikke har tilføjet nogen PDF-filer at arbejde med."
 workbench = "Dette er <strong>Arbejdsbordet</strong> – hovedområdet, hvor du ser og redigerer dine PDF'er."
 wrapUp = "Så er du klar! Du har lært om appens hovedområder og hvordan du bruger dem. Klik på knappen <strong>Hjælp</strong>, når som helst du vil se denne rundtur igen."
@@ -4988,6 +4981,26 @@ showMeAround = "Vis mig rundt"
 skipForNow = "Spring over for nu"
 skipTheTour = "Spring rundvisningen over"
 
+[onboarding.checklist]
+dismiss = "Dismiss"
+title = "Set up Stirling PDF"
+
+[onboarding.checklist.downloadDesktop]
+description = "Run Stirling natively on your machine"
+title = "Download Stirling for Desktop"
+
+[onboarding.checklist.inviteTeam]
+description = "Collaborate with your team"
+title = "Invite team members"
+
+[onboarding.checklist.shareAnalytics]
+description = "Help improve Stirling"
+title = "Share anonymous usage data"
+
+[onboarding.checklist.takeTour]
+description = "See how Stirling works in a quick walkthrough"
+title = "Take the tour"
+
 [onboarding.desktopInstall]
 body = "Stirling fungerer bedst som desktop-app. Du kan bruge den offline, få hurtigere adgang til dokumenter og redigere lokalt på din computer."
 selectOs = "Vælg operativsystem"
@@ -4996,7 +5009,21 @@ titleWithOs = "Download til {{osLabel}}"
 
 [onboarding.mfa]
 authenticationCode = "Godkendelseskode"
+description = "Secure your account by linking an authenticator app. Scan the QR code or enter the setup key, then confirm the 6-digit code to finish."
+enable = "Enable MFA"
+enableError = "Unable to enable two-factor authentication. Check the code and try again."
+enterCode = "Enter the 6-digit code from your app."
+enterCodeError = "Enter the authentication code to continue."
+logout = "Logout"
+openAuthenticator = "Open Google Authenticator, Authy, or 1Password."
 qrCodeLoading = "Genererer din QR-kode…"
+regenerateQrCode = "Regenerate QR code"
+scanQrCode = "Scan the QR code or enter the setup key below."
+setupError = "Unable to start two-factor setup. Please try again."
+setupKey = "Setup key (manual entry)"
+stepByStep = "Step-by-step"
+success = "MFA has been enabled. You can now continue."
+title = "Multi-Factor Authentication Setup"
 
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Når du aktiverer login-tilstand, kan du administrere brugere, konfigurere indstillinger og overvåge serverens tilstand. De første <strong>{{freeTierLimit}}</strong> personer på din server kan bruge Stirling gratis."
@@ -5004,6 +5031,11 @@ adminBodyLoginEnabled = "Som admin kan du administrere brugere, konfigurere inds
 adminTitle = "Admin-overblik"
 userBody = "Invitér teammedlemmer, tildel roller, og hold dine dokumenter organiseret i ét sikkert arbejdsområde. Aktiver login-tilstand, når du er klar til at vokse ud over solo-brug."
 userTitle = "Plan-overblik"
+
+[onboarding.processorIntro]
+body = "Stirling now runs <strong>Policies</strong> — automated rules that classify, secure, and process every document as it arrives. Set them up and monitor runs in the <strong>Processor</strong>."
+cta = "Check out the Processor"
+title = "Check out the Stirling Processor"
 
 [onboarding.saas.freeEditor]
 freeLine = "The editor is now <free>completely free</free>."
@@ -5937,48 +5969,11 @@ keyDescription = "Indsæt licensnøglen fra din e-mail"
 success = "Licens aktiveret!"
 successMessage = "Din licens er aktiveret. Du kan nu lukke dette vindue."
 
-[policies]
-deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
-deleteConfirmTitle = "Delete {{label}} policy?"
-
 [policies.activity]
-enforced = "håndhævet"
-enforcing = "Håndhæver..."
-failed = "Håndhævelsen mislykkedes"
 outputsUnavailable = "Politikoutput er ikke længere tilgængelige til download."
 partialOutputsUnavailable = "Nogle politikoutput er ikke længere tilgængelige til download."
-retrying = "Optaget, prøver igen..."
 runNotFound = "Håndhævelseskørslen kunne ikke længere findes."
-step = "trin {{current}}/{{total}}"
 timedOut = "Håndhævelsen fik timeout, før kørslen kunne afsluttes."
-
-[policies.catalog]
-compliance = "Compliance"
-ingestion = "Ingestion"
-retention = "Retention"
-routing = "Routing"
-security = "Security"
-
-[policies.detail]
-close = "Luk"
-editSettings = "Edit Settings"
-enforces = "Enforces"
-managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
-noActivityDescription = "Documents will appear here once this policy runs."
-noActivityTitle = "No activity yet"
-onEveryUpload = "On every upload"
-originalsNote = "Originals stay untouched • Enforced version saved alongside"
-pause = "Pause"
-recentActivity = "Recent Activity"
-resume = "Resume"
-retry = "Retry"
-showLess = "Show less"
-showMore = "Show more"
-statActive = "Active"
-statDataProcessed = "Data processed"
-statDocsEnforced = "Docs enforced"
-statusActive = "Active"
-statusPaused = "Paused"
 
 [policies.enforcement]
 applying = "Anvender {{names}}"
@@ -5989,61 +5984,16 @@ failureBody = "{{failures}} af {{total}} fil(er) kunne ikke behandles og blev ek
 failureTitle = "Eksporteret uden fuld håndhævelse"
 printPolicyAppliedBody = "Denne PDF blev opdateret for at opfylde en politik. Gennemse ændringerne, og udskriv derefter igen."
 printPolicyAppliedTitle = "Politik anvendt før udskrivning"
-queued = "+{{count}} i kø"
 successTitle = "{{names}} anvendt"
 summaryMore = "{{first}}, {{second}} og {{more}} mere"
 summaryTwo = "{{first}} og {{second}}"
 
-[policies.enforcement.triggerVerb]
-convert = "Håndhæver før konvertering"
-default = "Håndhæver"
-export = "Håndhæver før eksport"
-input = "Håndhæver ved import"
-print = "Håndhæver før udskrivning"
-
-[policies.field]
-accessLog = "Adgangslog"
-archiveAfter = "Arkivér efter"
-auditTrail = "Revisionsspor"
-belowThreshold = "Under tærskel"
-destination = "Destination"
-frameworks = "Frameworks"
-immutableHold = "Uforanderlig tilbageholdelse"
-keepFor = "Behold i"
-minConfidence = "Min. tillid"
-notify = "Giv besked ved routing"
-onViolation = "Når ikke-kompatibel"
-webhookUrl = "Webhook URL"
-
-[policies.fields]
-selectedCount = "{{count}} selected"
-
 [policies.labels]
-add = "Tilføj"
-addPlaceholder = "Tilføj en etiket…"
-customNote = "Tilpasset til dit team."
-defaultNote = "Bruger den indbyggede standard, delt med dit team."
-duplicate = "\"{{name}}\" findes allerede."
-edit = "Rediger etiketter"
-empty = "Ingen etiketter endnu."
-export = "Eksportér JSON"
-iconAria = "Vælg et ikon for {{name}}"
-import = "Importér JSON"
-importError = "Kunne ikke importere den fil."
-managedNote = "Teametiketter administreres af din teamleder."
-modalSubtitle = "Delt med hele dit team. Klassifikatoren vælger de etiketter, der passer til hvert dokument."
-modalTitle = "Klassifikationsetiketter"
-pickIcon = "Brug {{label}}-ikon"
-removeAria = "Fjern {{name}}"
-resetToDefault = "Nulstil til standard"
-saveForTeam = "Gem for team"
-saving = "Gemmer…"
-sectionLabel = "Klassifikationsetiketter"
-startFromScratch = "Start fra bunden"
-teamCount = "teametiketter"
-tooLong = "Etiketter må højst være {{max}} tegn."
-ungrouped = "Ikke grupperet"
-view = "Vis etiketter"
+categoryCount = "categories"
+hideCategory = "Hide category"
+labelCount = "labels"
+sharedNote = "These labels are built in and shared across your whole team."
+showCategory = "Show category"
 
 [policies.pii]
 account = "Kontonumre (mærkede)"
@@ -6056,90 +6006,6 @@ placeholder = "Select PII types"
 routing = "US routingnumre (ABA)"
 ssn = "Social Security-numre"
 
-[policies.settings]
-noneExport = "Ingen politikker kører i øjeblikket ved eksport."
-noneUpload = "Ingen politikker kører i øjeblikket ved upload."
-onExport = "Ved eksport"
-onUpload = "Ved upload"
-reorderHandle = "Træk for at ændre rækkefølge"
-runOrderDesc = "Når mere end én politik kører på den samme trigger, kører de i denne rækkefølge — hver på den forrige politiks output. Træk for at ændre rækkefølge."
-title = "Politikindstillinger"
-
-[policies.sidebar]
-activeCount = "{{count}} active"
-infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
-loading = "Loading…"
-optionsAriaLabel = "Politikindstillinger"
-policySettings = "Politikindstillinger"
-railAriaLabel = "{{label}} policy — {{status}}"
-railSuffixActive = " (Active)"
-railSuffixPaused = " (Paused)"
-retryFailed = "Prøv mislykkede politikker igen ({{count}})"
-rowProgress = "{{completed}} af {{total}} filer behandlet"
-setUp = "Set up"
-title = "Policies"
-upgradeToEnterprise = "Upgrade to enterprise"
-whatIsPolicy = "Hvad er en politik?"
-
-[policies.status]
-active = "Active"
-paused = "Paused"
-setup = "Set up"
-
-[policies.toolConfig]
-enableAriaLabel = "Enable {{tool}}"
-infoAriaLabel = "What does {{tool}} do?"
-
-[policies.toolConfig.info]
-redact = "Finder og maskerer automatisk følsomme oplysninger — som Social Security- og kortnumre — så de ikke kan læses i dokumentet."
-sanitize = "Fjerner skjult JavaScript fra filen, så intet kan køre automatisk, når nogen åbner den."
-watermark = "Sætter et synligt mærke (f.eks. \"Fortroligt\") på hver side."
-
-[policies.wizard]
-allDocTypesDescription = "Enable the Classification policy to filter by document type."
-allDocTypesTitle = "All document types"
-back = "Back"
-builderDesc = "Build the sequence of tools this policy runs on each document."
-clear = "Clear"
-close = "Luk"
-continue = "Continue"
-docTypesLabel = "Document types"
-edit = "Edit"
-editTitle = "Edit {{label}} Policy"
-enablePolicy = "Enable Policy"
-filenameAutoNumber = "Auto-number"
-filenamePositionAria = "Filename position"
-filenamePrefix = "Prefix"
-filenameSuffix = "Suffix"
-filenameTextAria = "Filename text"
-filenameTextPlaceholder = "Text to add (optional)"
-lockedDescription = "Contact a team leader to change this policy."
-lockedTitle = "Managed by your organisation"
-maxRetriesLabel = "Max retries"
-noToolsError = "Add at least one configured tool to the workflow first."
-outputAsLabel = "Output as"
-outputFilenameSubhead = "Output filename"
-outputModeAria = "Output mode"
-outputNewFile = "New file"
-outputNewVersion = "New version"
-outputRetriesLabel = "Output & retries"
-outputSubhead = "Output"
-retryDelayAria = "Retry delay minutes"
-retryDelayLabel = "Retry delay (min)"
-runOnExport = "Export"
-runOnLabel = "Run on"
-runOnSubhead = "Run on"
-runOnUpload = "Upload"
-saveChanges = "Save Changes"
-saveError = "Couldn't save the policy. Please try again."
-setupClassification = "Set up Classification"
-setupTitle = "Set up {{label}} Policy"
-sourcesDesc = "Choose where this policy runs and which document types it applies to."
-sourcesLabel = "Sources"
-stepOf = "Step {{step}} of {{total}}"
-toolChainDesc = "Configure the tools this policy runs on each document."
-typesSelected = "{{count}} types selected"
-
 [policy]
 badgeEnforcing = "{{name}} håndhæves..."
 badgeRan = "{{name}}-politikken kørte på denne fil"
@@ -6151,6 +6017,7 @@ viewAnyway = "Vis fil (politik håndhæves stadig)"
 [policyOption]
 autoRedactPhi = "Auto-rediger PHI"
 blockExport = "Bloker eksport"
+ccpa = "CCPA"
 contracts = "Kontrakter"
 documents = "Dokumenter"
 fedramp = "FedRAMP"
@@ -6269,86 +6136,6 @@ free = "Editor-plan"
 subscribed = "Processor-plan"
 unlinked = "Ikke linket"
 
-[portal.agentBuilder]
-bootstrapFromDocument = "Bootstrap fra dokument"
-sectionsAriaLabel = "Agent Builder-sektioner"
-selectorAriaLabel = "Agenter"
-subtitle = "Design, test og udgiv de AI-agenter, der klassificerer, udtrækker fra og router dine dokumenter. Definér scenarier, afgræns værktøjsadgang, kør et golden set, og udgiv en version."
-title = "Agent Builder"
-
-[portal.agentBuilder.bootstrap]
-cancel = "Annuller"
-dropzoneText = "Vælg et eksempeldokument (PDF eller billede)"
-lead = "Slip et eksempeldokument, så foreslår vi scenarier og et udtræksskema, du kan finpudse. Intet udgives, før du har gennemgået det."
-submit = "Bootstrap agent"
-subtitle = "Start en ny agent fra én repræsentativ fil"
-title = "Bootstrap fra et dokument"
-
-[portal.agentBuilder.empty]
-description = "Bootstrap en agent fra et eksempeldokument for at starte dens scenarier og udtræksskema, og finpuds og udgiv derefter."
-title = "Ingen agenter endnu"
-
-[portal.agentBuilder.evals]
-casesPassing = "Cases bestået"
-columnCase = "Eval-case"
-columnLatency = "Ventetid"
-columnResult = "Resultat"
-fail = "fejl"
-goldenSetPassRate = "Beståelsesrate for golden set"
-latencyMs = "{{ms}} ms"
-notRun = "ikke kørt"
-pass = "bestået"
-passRate = "Beståelsesrate"
-runEvals = "Kør evals"
-
-[portal.agentBuilder.evals.empty]
-description = "Evals gør dine scenarier til et gentageligt golden set. Opgrader for at registrere beståelsesrate over tid og styre udgivelser efter den."
-title = "Intet golden set endnu"
-
-[portal.agentBuilder.kpi]
-acrossGoldenSets = "på tværs af golden sets"
-activeAgents = "Aktive agenter"
-avgPassRate = "Gns. eval-beståelsesrate"
-fleetWide = "på tværs af flåden"
-latestPublished = "Senest udgivet"
-scenarios = "Scenarier"
-testCases = "testcases"
-totalDescription_one = "{{count}} i alt"
-totalDescription_other = "{{count}} i alt"
-
-[portal.agentBuilder.scenarios]
-add = "Tilføj"
-addScenario = "Tilføj scenarie"
-enable = "Aktivér"
-expectationLabel = "Forventet adfærd"
-expectationPlaceholder = "Hvad agenten skal gøre"
-inEval = "i eval"
-mute = "Slå fra"
-muted = "slået fra"
-nameLabel = "Navn"
-namePlaceholder = "f.eks. Compliance-eskalering"
-
-[portal.agentBuilder.tabs]
-evals = "Evals"
-scenarios = "Scenarier"
-tools = "Værktøjer"
-versions = "Versioner"
-
-[portal.agentBuilder.tools]
-broadAccess = "Bred adgang"
-deniedHint = "Valgte værktøjer er blokeret. Alt andet kan stadig kaldes."
-deniedTools = "Afviste værktøjer"
-governanceGate = "Værktøjsstyring er tilgængelig på Enterprise-planen."
-restricted = "Begrænset"
-restrictedAccess = "Begrænset værktøjsadgang"
-restrictedDescription = "Tillad alle værktøjer undtagen dem, du afviser nedenfor."
-
-[portal.agentBuilder.versions]
-current = "aktuel"
-historyGate = "Fuld versionshistorik og rollback er tilgængelige på Enterprise-planen."
-publish = "Udgiv"
-rollBack = "Rul tilbage"
-
 [portal.assistant]
 close = "Luk assistent"
 error = "Kunne ikke nå assistenten."
@@ -6367,6 +6154,7 @@ redirectingToEditor = "Omdirigerer til editoren..."
 
 [portal.billing.checkout]
 noClientSecret = "Edge-funktionen returnerede ingen client_secret."
+stepCount = "Step {{step}} of 2"
 subtitle = "Tilføj et kort for at fortsætte efter din gratis Editor-planbevilling. Stripe håndterer resten."
 title = "Slå Processor-planen til"
 
@@ -6375,6 +6163,20 @@ body = "Din betaling lykkedes, men aktiveringen tager lidt længere end normalt.
 close = "Luk"
 title = "Næsten færdig"
 
+[portal.billing.checkout.cap]
+back = "Back"
+continue = "Continue to payment"
+error = "Couldn't set your spend limit"
+finePrint = "Invoices post on the 1st. Cancel anytime and revert to the Editor plan; your policies and history stay intact."
+note = "Processing pauses if you reach it. You're never billed past this, and you can change it any time."
+subtitle = "You're billed only for PDFs you process past your first 500 free, never for seats — so your ceiling is yours from day one."
+title = "Set your spend limit"
+
+[portal.billing.checkout.card]
+fields = "Card number · MM / YY · CVC · ZIP"
+label = "Card details"
+note = "Card details collected by Stripe. Stirling never stores PAN or CVC."
+
 [portal.billing.checkout.error]
 title = "Kunne ikke starte checkout"
 
@@ -6382,11 +6184,6 @@ title = "Kunne ikke starte checkout"
 body = "Din betaling gik igennem. Vi slår målt behandling til på tværs af dine linkede instanser - det tager normalt et par sekunder."
 hint = "Hold venligst dette vindue åbent."
 title = "Aktiverer din Processor-plan..."
-
-[portal.billing.checkout.notConfigured]
-bodyAfter = "i portal env for at aktivere checkout i appen."
-bodyBefore = "Indstil"
-title = "Stripe er ikke konfigureret"
 
 [portal.billing.enterpriseUpsell]
 cta = "Byg dit Enterprise-tilbud"
@@ -6465,6 +6262,9 @@ segmentApiDesc = "Direkte API-forespørgsler"
 segmentApiLabel = "API"
 segmentAutomationDesc = "Automatiseringer og pipelines"
 segmentAutomationLabel = "Automatisering"
+sizeMultiplier = "{{formatted}} PDFs used a size multiplier"
+summary = "{{unique}} unique · {{units}} meter units · {{avg}} avg per PDF"
+summaryNoRate = "{{unique}} unique · {{units}} meter units"
 unit = "målte PDFs"
 
 [portal.billing.spendLimit]
@@ -6494,6 +6294,8 @@ label = "Forventes at blive overskredet."
 
 [portal.billing.spendThisMonth]
 eyebrow = "Forbrug denne måned"
+freeRemaining_one = "{{formatted}} free PDF remaining"
+freeRemaining_other = "{{formatted}} free PDFs remaining"
 processed_one = "{{formattedCount}} PDF behandlet."
 processed_other = "{{formattedCount}} PDFs behandlet."
 processedWithRate_one = "{{formattedCount}} PDF behandlet, til {{rate}} hver."
@@ -6533,6 +6335,39 @@ signature = "signatur"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
+
+[portal.connections]
+createTitle = "New S3 connection"
+delete = "Delete"
+edit = "Edit"
+editTitle = "Edit S3 connection"
+subtitle = "Reusable S3 credentials that sources and pipeline outputs connect to."
+
+[portal.connections.actions]
+new = "New connection"
+
+[portal.connections.empty]
+description = "Add an S3 connection to reuse the same bucket and credentials across sources and pipeline outputs."
+title = "No connections yet"
+
+[portal.connections.picker]
+cancel = "Cancel"
+createNew = "New connection..."
+placeholder = "Select a connection"
+save = "Save connection"
+
+[portal.connections.s3.fields]
+name = "Connection name"
+namePlaceholder = "e.g. Claims bucket"
+
+[portal.connections.table]
+bucket = "Bucket"
+name = "Name"
+region = "Region"
+
+[portal.docs]
+browse = "Browse docs"
+viewSource = "View source on GitHub"
 
 [portal.docs.authentication]
 codeCaption = "hver forespørgsel"
@@ -6619,10 +6454,18 @@ title = "Officielle SDKs"
 beta = "Beta"
 deprecated = "Forældet"
 
+[portal.docs.search]
+empty = "No matching docs"
+placeholder = "Search docs"
+results = "{{count}} results"
+
 [portal.docs.skills]
 eyebrow = "SKILLS"
 lead = "Medfølgende, navngivne kapabiliteter, som din agent kalder som ét enkelt værktøj. Hver skill er en deterministisk operationskæde med evals tilknyttet."
 title = "Agent-skills"
+
+[portal.docs.toc]
+title = "On this page"
 
 [portal.docs.webhooks]
 codeCaption = "document.processed"
@@ -6697,6 +6540,8 @@ type = "Type"
 user = "Bruger"
 
 [portal.documents.queue.empty]
+connectSource = "Connect a source"
+createPipeline = "Create a pipeline"
 description = "Når kilder sender dokumenter ind i dine pipelines, vises de her til gennemgang."
 title = "Ingen dokumenter i køen"
 
@@ -6806,8 +6651,63 @@ description = "Denne visning ramte en uventet fejl. Prøv igen, eller vælg en a
 retry = "Prøv igen"
 title = "Noget gik galt på denne side"
 
+[portal.home.download]
+back = "Back"
+body = "Download the desktop app or self-host the server."
+done = "Done"
+guide = "Open the {{name}} guide"
+openInBrowser = "Open in browser instead"
+sectionDesktop = "Desktop app"
+sectionSelfHosted = "Self-hosted"
+title = "Install the Stirling PDF Editor"
+
+[portal.home.download.docker]
+detailBody = "Run the official image on your server."
+note = "Opens at :8080. Default login: admin / stirling."
+tagline = "Run the server in a container"
+title = "Docker"
+variantFat = "Fat"
+variantLite = "Ultra-Lite"
+variantStandard = "Standard"
+
+[portal.home.download.kubernetes]
+detailBody = "Install the official Helm chart."
+note = "Add a PVC for /configs to persist settings."
+tagline = "Deploy to a cluster with Helm"
+title = "Kubernetes"
+
+[portal.home.download.linux]
+detailBody = "Native builds for your distribution."
+guideBtn = "View Linux install options"
+note = "AppImage, .deb and .rpm builds are available for common distros."
+tagline = "Native desktop app for your distro"
+title = "Linux"
+
+[portal.home.download.mac]
+altLabel = "Or via Homebrew"
+detailBody = "Run the installer, or use Homebrew."
+downloadBtn = "Download for macOS"
+tagline = "Native app for Apple silicon and Intel"
+title = "macOS"
+
+[portal.home.download.manual]
+detailBody = "Run the .jar on a bare metal server."
+downloadBtn = "Download the .jar"
+note = "Requires Java 21+. Opens at :8080; default login admin / stirling."
+runLabel = "Then run it"
+tagline = "Run the .jar on a bare metal server"
+title = "Manual server setup"
+
+[portal.home.download.windows]
+altLabel = "Or via winget"
+detailBody = "Run the installer, or use a package manager."
+downloadBtn = "Download installer"
+tagline = "Native app for Microsoft Windows"
+title = "Windows"
+
 [portal.home.editor]
 activeUsers = "{{n}} aktive"
+install = "Install the editor"
 invite = "Inviter teammedlemmer"
 name = "Stirling PDF Editor"
 open = "Åbn i browser"
@@ -6823,12 +6723,6 @@ afternoon = "God eftermiddag"
 evening = "God aften"
 morning = "God morgen"
 
-[portal.home.onboarding]
-dismiss = "Afvis opsætning"
-notStarted = "Ikke startet"
-progress = "{{done}} af {{total}} færdig"
-title = "Færdiggør opsætning"
-
 [portal.home.onboarding.enterprise]
 body = "SSO + SCIM + RBAC på organisationsniveau, forpligtende volumenpriser og air-gapped udrulning."
 cta = "Start prøveperiode"
@@ -6840,15 +6734,13 @@ tag = "Enterprise"
 blurb = "Udrul desktopappen, gratis for altid."
 title = "Download PDF Editor"
 
+[portal.home.onboarding.steps.invite]
+blurb = "Bring your team into the secure workspace"
+title = "Invite teammates"
+
 [portal.home.onboarding.steps.policies]
 blurb = "{{active}} aktive · {{recommended}} anbefalede"
-chip = "{{active}} aktive"
 title = "Slå politikker til"
-
-[portal.home.onboarding.steps.sources]
-blurb = "{{connected}} forbundne · hver PDF styres, hvor den lander"
-chip = "{{connected}} forbundne"
-title = "Forbind dine kilder"
 
 [portal.home.quickActions]
 subtitle = "Vigtigste opgaver i dag"
@@ -6872,6 +6764,11 @@ sectionsAriaLabel = "Infrastruktursektorer"
 subtitle = "Udrulninger, legitimationsoplysninger, sikkerhedsstatus, lager og revisionsspor for dit Stirling-arbejdsområde."
 title = "Infrastruktur"
 
+[portal.infrastructure.apiKeyPermission]
+admin = "Admin"
+read = "Read"
+write = "Write"
+
 [portal.infrastructure.apiKeys]
 createKey = "Opret nøgle"
 heading = "API-nøgler"
@@ -6891,6 +6788,11 @@ usageToday = "Forbrug i dag"
 [portal.infrastructure.apiKeys.empty]
 description = "Opret en afgrænset nøgle for at begynde at kalde Stirling API."
 title = "Ingen API-nøgler endnu"
+
+[portal.infrastructure.attestationLabel]
+attested = "Attested"
+inScope = "In scope"
+notApplicable = "N/A"
 
 [portal.infrastructure.audit]
 filterAriaLabel = "Filtrer revisionshændelser efter kategori"
@@ -6935,6 +6837,7 @@ all = "Alle"
 auth = "Godkendelse"
 config = "Konfiguration"
 elevation = "Forhøjet adgang"
+policy = "Policy"
 processing = "Behandling"
 security = "Sikkerhed"
 
@@ -6944,9 +6847,28 @@ title = "Du har ikke adgang"
 
 [portal.infrastructure.audit.metrics]
 config = "Konfiguration"
-elevation = "Forhøjet adgang"
+policy = "Policy"
 processing = "Behandling"
 totalEvents = "Hændelser i alt · 24 t"
+
+[portal.infrastructure.auditCatLabel]
+auth = "Auth"
+config = "Config"
+elevation = "Elevation"
+policy = "Policy"
+processing = "Processing"
+security = "Security"
+
+[portal.infrastructure.auditStatusLabel]
+danger = "Error"
+info = "Info"
+success = "Success"
+warning = "Warning"
+
+[portal.infrastructure.certLabel]
+certified = "Certified"
+inProgress = "In progress"
+notStarted = "Not started"
 
 [portal.infrastructure.createKey]
 cancel = "Annuller"
@@ -6963,6 +6885,12 @@ subtitle = "Afgræns nøglen til det minimum, den behøver. Du kan rotere eller 
 subtitleCreated = "Kopiér denne hemmelighed nu — den vises ikke igen."
 title = "Opret API-nøgle"
 titleCreated = "Nøgle oprettet"
+
+[portal.infrastructure.deployLabel]
+live = "Live"
+queued = "Queued"
+rolledBack = "Rolled back"
+rolling = "Rolling out"
 
 [portal.infrastructure.deployments]
 msValue = "{{value}} ms"
@@ -6999,6 +6927,16 @@ subheading = "Live tilstand for hver udrullet Stirling-region — latens, belast
 description = "Udrullede regioner vises her, når dit arbejdsområde er provisioneret."
 title = "Ingen regioner udrullet"
 
+[portal.infrastructure.keyLabel]
+active = "Active"
+revoked = "Revoked"
+rotateSoon = "Rotate soon"
+
+[portal.infrastructure.modelLabel]
+active = "Active"
+degraded = "Degraded"
+disabled = "Disabled"
+
 [portal.infrastructure.models]
 heading = "Modeller"
 msValue = "{{value}} ms"
@@ -7026,6 +6964,10 @@ status = "Status"
 type = "Type"
 version = "Version"
 
+[portal.infrastructure.models.cost]
+perCall = "{{price}}/call"
+perThousand = "{{price}}/1k"
+
 [portal.infrastructure.models.metrics]
 activeModels = "Aktive modeller"
 avgLatency = "Gns. latens"
@@ -7048,6 +6990,17 @@ docType = "Dokumenttype"
 modelForAria = "Model for {{operation}}"
 operation = "Operation"
 routedTo = "Routet til"
+
+[portal.infrastructure.modelTypeLabel]
+classification = "Classification"
+extraction = "Extraction"
+llm = "LLM"
+ocr = "OCR"
+
+[portal.infrastructure.regionLabel]
+degraded = "Degraded"
+down = "Down"
+healthy = "Healthy"
 
 [portal.infrastructure.security.access.byok]
 description = "Lever en nøgle fra dit eget KMS. Stirling krypterer med den, men kan stadig læse."
@@ -7190,25 +7143,9 @@ sources = "Kilder"
 usage = "Forbrug og fakturering"
 users = "Brugere"
 
-[portal.notifications]
-markAllRead = "Markér alle som læst"
-title = "Notifikationer"
-viewAll = "Vis alle"
-
-[portal.notifications.ariaLabel]
-none = "Notifikationer, ingen ulæste"
-unread_one = "Notifikationer, {{count}} ulæst"
-unread_other = "Notifikationer, {{count}} ulæste"
-
-[portal.notifications.count]
-allRead = "alle læst"
-loading = "indlæser"
-new_one = "{{count}} ny"
-new_other = "{{count}} nye"
-
-[portal.notifications.empty]
-description = "Ingen nye notifikationer."
-title = "Du er helt ajour"
+[portal.nav.section]
+platform = "PDF Platform"
+processor = "PDF Processor"
 
 [portal.pipelines]
 subtitle = "Hver automatiseret dokumentpipeline på backenden: en ordnet kæde af operationer over et sæt kilder, kørt på en trigger. Klik på en række for dens trin og kilder."
@@ -7254,6 +7191,7 @@ operations_one = "Operation ({{count}})"
 operations_other = "Operationer ({{count}})"
 output = "Output"
 removeStep = "Fjern operation"
+s3PrefixHelp = "Outputs are uploaded under this key prefix."
 save = "Gem ændringer"
 scheduleEvery = "Kør hver"
 sources = "Kilder"
@@ -7273,11 +7211,13 @@ confirm = "Slet"
 title = "Slet pipeline?"
 
 [portal.pipelines.detail]
+clearHistory = "Clear history"
 delete = "Slet pipeline"
 run = "Kør nu"
 
 [portal.pipelines.empty]
 action = "Opret en pipeline"
+connectSource = "Connect a source"
 description = "Opret din første pipeline: vælg de kilder, den kører over, kæd operationerne sammen, og vælg, hvor output skal placeres."
 title = "Ingen pipelines endnu"
 
@@ -7289,12 +7229,19 @@ total = "Pipelines"
 [portal.pipelines.output]
 folder = "Skriv til mappe"
 inline = "Returner filer"
+s3 = "Write to Amazon S3"
 
 [portal.pipelines.run]
+allProcessed_one = "Nothing to run: the source's {{count}} document has already been processed."
+allProcessed_other = "Nothing to run: all {{count}} documents in the sources have already been processed."
 completed_one = "Kørsel fuldført."
 completed_other = "Alle {{count}} kørsler fuldført."
 empty = "Intet at køre: kilderne havde ingen dokumenter at behandle."
 failed = "Kørsel mislykkedes: {{error}}"
+historyCleared = "History cleared. The next run reprocesses everything currently in the sources."
+inFlight = "Nothing new to run: documents are still being processed from an earlier run."
+parked_one = "Nothing to run: {{count}} document failed previously and is parked. Fix the cause, then clear history to retry it."
+parked_other = "Nothing to run: {{count}} documents failed previously and are parked. Fix the cause, then clear history to retry them."
 running = "Kørsel startet; stadig i gang."
 timeout = "Kørslen tager længere end forventet; den kan stadig blive færdig i baggrunden."
 
@@ -7314,12 +7261,18 @@ manual = "Manuel"
 schedule = "Planlagt"
 
 [portal.policies]
+defaultName = "{{category}} Policy"
 subtitle = "Faste automatiseringer, der håndhæver en værktøjspipeline på hvert dokument. Hver politik udløses ved upload eller eksport, kører sin værktøjskæde og gemmer den håndhævede version ved siden af originalen."
 title = "Politikker"
 
 [portal.policies.card]
 comingSoon = "Opgrader til Enterprise"
 notSetUp = "Ikke opsat"
+requiresAiEngine = "Requires AI engine"
+
+[portal.policies.categories.classification]
+desc = "Identify each document's type on upload and tag its metadata for filing and search."
+label = "Classification"
 
 [portal.policies.categories.compliance]
 desc = "Håndhæv HIPAA-, GDPR-, SOC 2- eller FedRAMP-krav på hvert dokument."
@@ -7343,6 +7296,13 @@ label = "Sikkerhed"
 
 [portal.policies.config]
 scopeAll = "Alle dokumenter"
+
+[portal.policies.config.classification]
+summary = "Classifies every uploaded document against your team's labels and tags its metadata."
+
+[portal.policies.config.classification.rules]
+0 = "Classify"
+1 = "Tag metadata"
 
 [portal.policies.config.compliance]
 summary = "Validerer dokumenter mod regulatoriske frameworks, før de forlader systemet."
@@ -7438,6 +7398,7 @@ title = "Ingen aktivitet endnu"
 [portal.policies.endpoints]
 addWatermark = "Vandmærke"
 autoRedact = "Rediger PII"
+classifyAndLabel = "Classify"
 compressPdf = "Komprimer"
 flatten = "Udflad"
 ocrPdf = "OCR"
@@ -7473,12 +7434,23 @@ label = "Dokumenter håndhævet"
 description = "Konfigureret, men ikke aktiv"
 label = "Sat på pause"
 
+[portal.policies.table]
+appliesTo = "Applies to"
+docs = "Docs enforced"
+enforces = "Enforces"
+policy = "Policy"
+status = "Status"
+
 [portal.policies.wizard.actions]
 back = "Tilbage"
 cancel = "Annuller"
 continue = "Fortsæt"
 enablePolicy = "Aktivér politik"
 saveChanges = "Gem ændringer"
+
+[portal.policies.wizard.capability.classify]
+desc = "Identifies the document's type from your team's labels and tags it, so it files and searches by category."
+label = "Classify the document"
 
 [portal.policies.wizard.capability.compress]
 desc = "Komprimerer dokumentet til en mindre filstørrelse."
@@ -7503,6 +7475,10 @@ label = "Fjern aktivt indhold"
 [portal.policies.wizard.capability.watermark]
 desc = "Sætter et synligt mærke (f.eks. “Fortroligt”) på hver side."
 label = "Anvend et vandmærke"
+
+[portal.policies.wizard.classification]
+description = "Every uploaded document is classified against the built-in labels and tagged with the types that fit. The label set is shared across your whole team."
+labelsHeading = "Classification labels"
 
 [portal.policies.wizard.errors]
 noTools = "Aktivér først mindst ét værktøj i workflowet."
@@ -7577,8 +7553,49 @@ soon = "Snart"
 managePlan = "Administrer abonnement"
 volumeSuffix = "PDFs behandlet · sidste 30 dage"
 
+[portal.processorFlow]
+footnote = "Counts are over the last 24 hours. Flow speed is illustrative."
+liveBadge = "Live"
+stats = "{{connected}} connected · {{processed}} PDFs processed"
+title = "PDF Processor"
+
+[portal.processorFlow.lens]
+ariaLabel = "View mode"
+flow = "Flow"
+sankey = "Sankey"
+
+[portal.processorFlow.outcomes]
+count = "{{n}} · 24h"
+failed = "Failed"
+heading = "Outcomes"
+success = "Delivered"
+
+[portal.processorFlow.policies]
+activeCount = "{{n}} active"
+count = "{{n}} · 24h"
+heading = "Policies"
+setUp = "Set up"
+soon = "Soon"
+
+[portal.processorFlow.sankey]
+waist = "Policies · {{n}} active"
+
+[portal.processorFlow.sankey.empty]
+description = "Connect a source and switch on a policy to watch documents flow through the processor."
+title = "No flow yet"
+
+[portal.processorFlow.sources]
+comingSoonTag = "Connect"
+editor = "Stirling PDF Editor"
+heading = "Sources"
+perDay = "{{n}} / 24h"
+
+[portal.processorFlow.sources.comingSoon]
+apiMcp = "API · MCP"
+cloud = "Drive · Box · S3"
+email = "Email intake"
+
 [portal.procurement]
-reset = "Nulstil indkøb (demo)"
 subtitle = "Få dit team evalueret, kontraheret og onboardet. Alle dokumenter samlet ét sted."
 title = "Indkøb"
 
@@ -7598,23 +7615,42 @@ title = "Gennemgå din enterprise-aftale"
 
 [portal.procurement.builder]
 addons = "Tilføjelser"
+addressLine1 = "Address line 1"
+addressLine1Placeholder = "500 Howard St"
+addressLine2 = "Address line 2"
+addressLine2Placeholder = "Suite, floor, building"
 back = "Tilbage"
 businessName = "Virksomhedsnavn"
 businessNamePlaceholder = "Din virksomhed"
+city = "City"
+cityPlaceholder = "San Francisco"
+contactEmail = "Contact email"
+contactEmailPlaceholder = "jane@acme.com"
+contactName = "Contact name"
+contactNamePlaceholder = "Jane Doe"
 continue = "Fortsæt"
-country = "Land"
-countryEuro = "Eurozonen (EUR €)"
-countryUK = "Storbritannien (GBP £)"
-countryUS = "USA (USD $)"
 eula = "Jeg har læst og accepterer Stirling Enterprise EULA. Den regulerer den aftale, der genereres ud fra dette tilbud."
 generate = "Generer tilbud"
 included = "Inkluderet"
 indemnification = "IP-skadesløsholdelse"
 indemnificationSub = "Vi forsvarer kvalificerende IP-krav i henhold til EULA"
-offlineLicense = "Offline / air-gapped licens"
-offlineLicenseSub = "En downloadbar licensfil til en air-gapped self-hosted instans"
+pdfSize = "PDF size"
+poNumber = "PO number"
+poNumberPlaceholder = "Optional"
+postalCode = "Postal code"
+postalCodePlaceholder = "94105"
+posture = "Governance"
+posture_count = "~{{count}} policies"
+posture_essentials = "Essentials"
+posture_essentialsSub = "Classification + Sharing — the defaults"
+posture_governed = "Governed"
+posture_governedSub = "Adds Security and Routing"
+posture_regulated = "Regulated"
+posture_regulatedSub = "Every category — Compliance, Retention, Ingestion"
 qbr = "Kvartalsvise forretningsgennemgange"
 qbrSub = "Din SE gennemgår brug og roadmap hvert kvartal"
+region = "State / region"
+regionPlaceholder = "California"
 running = "{{annual}} / år · {{years}} år {{tcv}}"
 s1Sub = "Dit team og de PDFs, I forventer at køre hvert år."
 s1Title = "Hvor meget vil I behandle?"
@@ -7623,6 +7659,12 @@ s2Title = "Forpligtelse og service"
 s3Sub = "Til tilbuddet og den aftale, det genererer."
 s3Title = "Dine oplysninger"
 serviceLevel = "Serviceniveau"
+size_compact = "Compact"
+size_compactSub = "Mostly text, under 1 MB"
+size_heavy = "Heavy"
+size_heavySub = "Scanned or image-heavy, 5 MB+"
+size_standard = "Standard"
+size_standardSub = "Mixed text and images, 1 to 5 MB"
 slDedicated = "Dedikeret"
 slDedicatedSub = "4 arbejdstimer · dedikeret account manager · +30%"
 slPriority = "Prioritet"
@@ -7630,6 +7672,8 @@ slPrioritySub = "Samme arbejdsdag · navngiven CSM · +15%"
 slStandard = "Standard"
 slStandardSub = "Næste arbejdsdag · delt CSM · inkluderet"
 stepOf = "Trin {{n}} af {{total}}"
+taxId = "VAT / Tax ID"
+taxIdPlaceholder = "Optional"
 term = "Periode"
 termDiscount = "{{pct}}% rabat for flerårig forpligtelse anvendt"
 title = "Byg dit tilbud"
@@ -7665,14 +7709,13 @@ title = "Noget gik galt"
 
 [portal.procurement.hero]
 company = "Din enterprise-aftale"
-ctaAgreement = "Gennemgå og underskriv aftale"
 ctaLive = "Du er live"
 ctaPayment = "Tilføj betaling"
 ctaQuote = "Gennemgå dit tilbud"
 ctaTrial = "Byg dit tilbud"
 eyebrow = "Enterprise-indkøb"
 inviteTeammates = "Inviter teammedlemmer"
-keyDocs = "Nøgledokumenter"
+licenseKey = "Licence key"
 nextStep = "Næste trin: {{action}}"
 notStarted = "Ikke startet"
 open = "Åbn indkøb"
@@ -7727,6 +7770,9 @@ downloadError = "Kunne ikke generere offline licensfilen endnu — prøv igen om
 downloadOffline = "Download offline licens (.lic)"
 hint = "Indsæt denne nøgle i en self-hosted instans for at aktivere den, eller gem den til dine optegnelser. Opbevar den sikkert."
 label = "Din licensnøgle"
+subtitle = "Activate a self-hosted instance with this key, or keep it for your records."
+title = "Your licence key"
+trialFileHint = "This is your trial licence file. Once your agreement is in place, come back and download it again — unlike the online licence key, the .lic file won't update on its own."
 
 [portal.procurement.link]
 cta = "Tilknyt konto"
@@ -7746,16 +7792,9 @@ talkToSales = "Tal med salg"
 title = "Indkøbssporet åbner med Enterprise"
 
 [portal.procurement.milestone]
-accept = "Accepter og fortsæt"
-description = "Download PDF'en for at dele den med dit team, kom tilbage for at acceptere, når du er klar, eller foretag ændringer."
 download = "Download PDF"
 downloadError = "Kunne ikke downloade tilbuds-PDF'en endnu — prøv igen om lidt."
 edit = "Rediger tilbud"
-eyebrow = "Tilbud {{number}}"
-perYear = " / år"
-preparedFor = "Udarbejdet til {{company}}"
-tcv = "{{value}} samlet kontraktværdi"
-title = "Dit tilbud er klar"
 
 [portal.procurement.modal]
 cancel = "Annuller"
@@ -7782,7 +7821,6 @@ uploadTitle = "Upload din indkøbsordre"
 [portal.procurement.payment]
 description = "Dit tilbud er accepteret, og din licens er allerede aktiv — dit team kan starte med det samme. Betal den første faktura, når du er klar; du kan betale eller downloade den her, ingen e-mail nødvendig."
 downloadInvoice = "Download faktura"
-simulate = "Simuler modtaget betaling (demo)"
 title = "Abonnement oprettet"
 viewInvoice = "Se og betal faktura"
 
@@ -7791,6 +7829,21 @@ fallback = "Kunne ikke indlæse planlæggeren."
 fallbackLink = "Åbn planlægning i en ny fane"
 subtitle = "Din solutions engineer guider dit team gennem udrulningen. Vælg et tidspunkt, der passer dig."
 title = "Planlæg et opkald"
+
+[portal.procurement.setup]
+airgap = "Air-gapped"
+airgapSub = "Fully offline, isolated network. Includes a downloadable licence file."
+cloud = "Cloud"
+cloudSub = "Fully managed by Stirling. Nothing for you to run."
+deployment = "Where will you run Stirling?"
+seats = "Team size"
+seatsHint = "Roughly how many people will use it. You can refine this when you build your quote."
+seatsPlaceholder = "e.g. 250"
+selfhost = "Self-hosted"
+selfhostSub = "Run it in your own cloud or data centre."
+start = "Start trial"
+subtitle = "Tell us how you plan to run Stirling so we can tailor your trial and quote. No card required."
+title = "Set up your trial"
 
 [portal.procurement.status]
 action = "Handling krævet"
@@ -7838,26 +7891,11 @@ admin = "Admin"
 [portal.settings.sections]
 account-link = "Kontotilknytning"
 
-[portal.shell.header]
-accountFallback = "Konto"
-accountMenu = "Kontomenu"
-darkMode = "Mørk tilstand"
-lightMode = "Lys tilstand"
-search = "Søg"
-searchPlaceholder = "Søg…"
-signOut = "Log ud"
-switchToDark = "Skift til mørkt tema"
-switchToLight = "Skift til lyst tema"
-
 [portal.shell.sidebar]
 appEditor = "Editor"
 appProcessor = "Processor"
 brandSuffix = "Stirling Processor"
-docsCount = "{{docs}} docs"
 linkAccount = "Tilknyt Stirling-konto"
-planEditor = "Editor-abonnement"
-planEnterprise = "Enterprise-abonnement"
-planProcessor = "Processor-abonnement"
 primaryNav = "Primær navigation"
 switchApp = "Skift app"
 
@@ -7866,29 +7904,23 @@ subtitle = "Genanvendelige inputforbindelser, der sender dokumenter ind i Stirli
 title = "Kilder"
 
 [portal.sources.actions]
-agentBuilder = "Agent Builder"
 connectSource = "Forbind kilde"
+
+[portal.sources.builder]
+back = "Back to sources"
+cancel = "Cancel"
+create = "Create source"
+createTitle = "Connect a source"
+delete = "Delete"
+editTitle = "Edit source"
+enabled = "Enabled"
+save = "Save changes"
 
 [portal.sources.delete]
 body = "Slet \"{{name}}\"? Dette kan ikke fortrydes. Politikker, der refererer til den, skal opdateres."
 cancel = "Annuller"
 confirm = "Slet"
 title = "Slet kilde?"
-
-[portal.sources.detail]
-closeAriaLabel = "Luk detaljer"
-delete = "Slet kilde"
-docs24h = "Sidste 24 t."
-docs30d = "Sidste 30 dage"
-docsTotal = "Set i alt"
-docsTrend = "Dokumenter over de sidste 30 dage"
-documents = "Dokumenter"
-edit = "Rediger"
-notReferenced = "Ikke refereret af nogen politik, så den er sikker at slette."
-pause = "Sæt på pause"
-resume = "Genoptag"
-subtitle = "{{type}} · {{status}}"
-usedBy = "Brugt af"
 
 [portal.sources.empty]
 description = "Forbind en mappe (og snart cloud storage), så dine politikker har et sted at hente dokumenter fra."
@@ -7905,12 +7937,19 @@ disabled = "Deaktiveret"
 unused = "Ubrugt"
 
 [portal.sources.table]
+documents = "Documents"
 source = "Kilde"
 status = "Status"
 usedBy = "Politikker"
 
+[portal.sources.tabs]
+connections = "Connections"
+sources = "Sources"
+
 [portal.sources.types.editor]
+description = "Documents your team has processed in the editor, across policy and AI runs."
 label = "Editor"
+noPolicies = "No policies run from the editor yet."
 
 [portal.sources.types.folder]
 description = "Overvåg en mappe på serveren for nye dokumenter."
@@ -7943,25 +7982,58 @@ label = "Mappedybde"
 all = "Medtag undermapper"
 top = "Kun øverste niveau"
 
+[portal.sources.types.s3]
+description = "Pull documents from an Amazon S3 or S3-compatible bucket."
+label = "Amazon S3"
+
+[portal.sources.types.s3.fields.accessKeyId]
+label = "Access key ID"
+
+[portal.sources.types.s3.fields.bucket]
+label = "Bucket"
+placeholder = "my-company-inbox"
+
+[portal.sources.types.s3.fields.connection]
+helperText = "The stored connection holding the bucket and credentials. Reused by every source and pipeline output that references it."
+label = "Connection"
+
+[portal.sources.types.s3.fields.endpoint]
+helperText = "Leave blank for Amazon S3. Set to use an S3-compatible service such as MinIO."
+label = "Custom endpoint"
+placeholder = "https://s3.example.com"
+
+[portal.sources.types.s3.fields.mode]
+helperText = "Consume removes each object from the bucket once every policy has processed it."
+label = "Read mode"
+
+[portal.sources.types.s3.fields.mode.options]
+consume = "Consume: process each object once"
+snapshot = "Snapshot: re-read the bucket every run"
+
+[portal.sources.types.s3.fields.prefix]
+helperText = "Only objects whose keys start with this prefix are processed."
+label = "Key prefix"
+placeholder = "incoming/"
+
+[portal.sources.types.s3.fields.region]
+label = "Region"
+placeholder = "us-east-1"
+
+[portal.sources.types.s3.fields.secretAccessKey]
+label = "Secret access key"
+
 [portal.sources.types.unknown]
 label = "Kilde"
 
 [portal.sources.wizard]
-back = "Tilbage"
-cancel = "Annuller"
-continue = "Fortsæt"
-editTitle = "Rediger kilde"
 name = "Navn"
 namePlaceholder = "f.eks. Skadesmodtagelse"
-save = "Gem ændringer"
-subtitle = "Trin {{current}} af {{total}} · {{label}}"
-title = "Forbind en kilde"
 type = "Type"
 
-[portal.sources.wizard.steps]
-chooseType = "Vælg type"
-configure = "Konfigurer"
-review = "Gennemgå og forbind"
+[portal.tier]
+enterprise = "Enterprise plan"
+free = "Editor plan"
+pro = "Processor plan"
 
 [portal.usage]
 managePayment = "Administrer betaling"
@@ -8021,16 +8093,17 @@ summary = "Ejer et team — administrerer dets medlemmers ressourcer og delte ko
 2 = "Portaladgang via standardpolitikken"
 3 = "Alt, hvad medlem kan gøre"
 
+[portal.users.seats]
+limited = "{{used}} / {{limit}}"
+unlimited = "{{used}} · Unlimited"
+
 [portal.welcome]
 ariaLabel = "Velkommen til Stirling PDF"
-badge = "Open-source"
-installEditor = "Installer Editor"
-inviteTeammates = "Inviter teammedlemmer"
+install = "Install the editor"
+invite = "Invite teammates"
 openInBrowser = "Åbn i browser"
-perks = "Gratis for evigt · Kan hostes selv"
-subtitle = "Verdens mest sikre PDF Editor er gratis for teams i alle størrelser. Inkluderer 60+ PDF-handlinger og SSO."
-title = "Velkommen til"
-titleAccent = "Stirling PDF"
+productName = "PDF Editor"
+stats = "30M downloads · 60+ PDF operations · Free forever"
 
 [printFile]
 title = "Udskriv Fil"
@@ -8817,9 +8890,18 @@ languageDescription = "Vælg visningssprog"
 logout = "Log ud"
 setAsDefault = "Sæt som standard"
 theme = "Tema"
+themeAccent = "Accent colour"
+themeAccentCustom = "Custom colour"
+themeAccentCustomHint = "Custom (defaults recommended)"
+themeAccentDark = "Dark mode accent colour"
+themeAccentDefault = "Default"
+themeAccentDefaultHint = "Default theme (recommended)"
+themeAccentDescription = "Buttons, links and highlights follow it, and it subtly tints the app. Light and dark each have their own. System uses whichever is active."
+themeAccentLight = "Light mode accent colour"
 themeDark = "Mørkt"
 themeDescription = "Skift mellem lyst og mørkt tema"
 themeLight = "Lyst"
+themeReset = "Restore theme to default"
 themeSystem = "System"
 title = "Generelt"
 user = "Bruger"
@@ -8832,6 +8914,12 @@ dismiss = "Afvis"
 intro = "Aktivér brugergodkendelse, teamstyring og arbejdsområdefunktioner for din organisation."
 learnMore = "Læs mere i dokumentationen"
 title = "For systemadministratorer"
+
+[settings.general.loginLanding]
+description = "Choose which app opens when you sign in to Stirling Cloud."
+editor = "Editor"
+processor = "Processor"
+title = "After signing in"
 
 [settings.general.mode]
 fullscreen = "Fuldskærm"
@@ -9040,6 +9128,11 @@ connections = "Forbindelser"
 security = "Sikkerhed"
 telegram = "Telegram"
 title = "Sikkerhed og autentificering"
+
+[settings.signOut]
+confirm = "Are you sure you want to sign out?"
+submit = "Sign out"
+title = "Sign out"
 
 [settings.team]
 title = "Team"
@@ -9657,6 +9750,9 @@ uploadButton = "Upload til server"
 title = "Stirling-PDF Survey"
 
 [swagger]
+clickHere = "click here"
+fallback = "If it didn't open automatically,"
+opening = "Opening Swagger UI in a new tab..."
 tags = "api,documentation,swagger,endpoints,development"
 title = "API-dokumentation"
 
@@ -9950,15 +10046,30 @@ title = "Brugere"
 you = "(dig)"
 
 [users.action]
+cancelInvite = "Cancel invitation"
 deleteTeam = "Slet team"
 disableMfa = "Nulstil MFA"
 move = "Flyt til team"
 reinstate = "Genindsæt"
 remove = "Fjern fra org"
+removeTeam = "Remove from team"
 rename = "Omdøb team"
 resetPw = "Nulstil adgangskode"
 suspend = "Suspender"
 unlock = "Lås konto op"
+
+[users.activity]
+daysAgo = "{{count}}d ago"
+hoursAgo = "{{count}}h ago"
+justNow = "Just now"
+minutesAgo = "{{count}}m ago"
+monthsAgo_one = "{{count}} month ago"
+monthsAgo_other = "{{count}} months ago"
+never = "Never"
+weeksAgo_one = "{{count}} week ago"
+weeksAgo_other = "{{count}} weeks ago"
+yearsAgo_one = "{{count}} year ago"
+yearsAgo_other = "{{count}} years ago"
 
 [users.cap]
 addProcessor = "+ Processor"
@@ -9967,11 +10078,14 @@ editor = "Editor"
 processor = "Processor"
 
 [users.confirm]
+cancelInviteBody = "Cancel the invitation to {{email}}? They won't be able to join with the current link."
+cancelInviteTitle = "Cancel invitation"
 deleteTeamBody = "Slet {{name}}-teamet? Teamet skal først være tomt - flyt dets medlemmer til et andet team, og det må ikke stadig eje integrationskonfigurationer."
 deleteTeamTitle = "Slet team"
 disableMfaBody = "Fjern {{name}}s MFA-tilmelding? De sætter den op igen ved næste login, hvis det kræves."
 disableMfaTitle = "Nulstil MFA"
 removeBody = "Fjern {{name}} permanent fra organisationen? Dette kan ikke fortrydes."
+removeTeamBody = "Remove {{name}} from the team? They keep their account but lose access to this team's resources."
 removeTitle = "Fjern medlem"
 
 [users.empty]
@@ -10021,6 +10135,16 @@ title = "Inviter personer"
 username = "Brugernavn"
 usernameError = "Brugernavnet skal være på mindst 3 tegn"
 usernamePlaceholder = "jsmith"
+
+[users.invites]
+by = "Invited by {{who}}"
+cancel = "Cancel"
+count = "{{count}} pending"
+desc = "Invited people who haven't joined yet. They hold a seat until they accept."
+expiresInDays_one = "Expires in {{count}} day"
+expiresInDays_other = "Expires in {{count}} days"
+expiresToday = "Expires today"
+title = "Pending invitations"
 
 [users.loadError]
 description = "Noget gik galt ved kontakt til backend, eller du har ikke adgang. Prøv igen."
@@ -10212,9 +10336,11 @@ title = "Vedhæftninger"
 
 [viewer.bookmarks]
 bookmarkTitle = "Bogmærketitel"
+bookmarkTitleRequired = "Bookmark title is required"
 closeSidebar = "Luk sidepanelet for bogmærker"
 collapseAll = "Skjul alle bogmærker"
 expandAll = "Udvid alle bogmærker"
+searchPlaceholder = "Search bookmarks"
 
 [viewer.comments]
 addComment = "Tilføj kommentar"

@@ -356,6 +356,7 @@ text = "Bu izinler, kullanıcıların PDF ile neler yapabileceğini kontrol eder
 title = "İzinleri Değiştir"
 
 [addStamp]
+preview = "Preview Stamp"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -1842,6 +1843,15 @@ export = "Dışa Aktar"
 accessDenied = "Erişim Reddedildi"
 insufficientPermissions = "Bu işlemi gerçekleştirmek için izniniz yok."
 
+[auth.callback]
+completing = "Completing authentication"
+invalidToken = "OAuth login failed - invalid token."
+missingToken = "OAuth login failed - no token received."
+oauthFailed = "OAuth login failed. Please try again."
+pleaseWait = "Please wait while we finish signing you in."
+signedOut = "You have been signed out. Please sign in again."
+windowMayClose = "You can close this window once it completes."
+
 [auth.displayName]
 guest = "Konuk"
 user = "Kullanıcı"
@@ -2824,6 +2834,7 @@ next = "Sonraki"
 preview = "Önizleme"
 previous = "Önceki"
 refresh = "Yenile"
+remaining = "Remaining"
 retry = "Yeniden dene"
 save = "Kaydet"
 
@@ -3723,19 +3734,8 @@ uploadToServer = "Upload to server"
 versionHistory = "Version history"
 
 [fileSidebar.groupsModal]
-add = "Ekle"
-addLabel = "Etiket ekle…"
-categoryIconAria = "{{name}} için bir simge seç"
-createCategory = "Kategori oluştur"
-delete = "Kategoriyi sil"
 done = "Bitti"
-hide = "Kategoriyi gizle"
-newCategory = "Yeni kategori adı…"
-removeLabel = "{{name}} etiketini kaldır"
-rename = "Yeniden adlandır"
 reset = "Varsayılanlara sıfırla"
-search = "Etiket ara…"
-show = "Kategoriyi göster"
 subtitle = "Dosyalarınızı üst kategoriler halinde gruplandırın. Bir kategoriye mevcut veya yeni etiketler ekleyin, yeniden adlandırın ya da kendi kategorinizi oluşturun. Kategorilerinizin hiçbirinde olmayan dosyalar “Diğer” altında görünür."
 title = "Kenar çubuğu kategorileri"
 
@@ -4072,10 +4072,17 @@ discord = "Discord"
 issues = "GitHub"
 
 [formFill]
+allSaved = "All saved"
+extractCsvError = "Failed to extract CSV"
+extractXlsxError = "Failed to extract XLSX"
 flattenAfterFilling = "Doldurduktan sonra düzleştir"
+requiredAbbreviation = "req"
+requiredFieldsError = "Please fill in all required fields"
 rescanFields = "Alanları yeniden tara"
 rescanFormFields = "Form alanlarını yeniden tara"
 save = "Kaydet"
+saveShortcut = "Ctrl+S to save"
+unsavedChanges = "Unsaved changes"
 
 [formFill.sidebar]
 close = "Kenar çubuğunu kapat"
@@ -4647,7 +4654,6 @@ welcomeTitle = "Davet edildiniz!"
 
 [landing]
 addFiles = "Dosya Ekle"
-heroSubtitle = "Başlamak için bir PDF bırakın veya mevcut bir PDF ekleyin."
 mobileUpload = "Mobil Cihazdan Yükle"
 openFromComputer = "Bilgisayardan aç"
 uploadFromComputer = "Bilgisayardan yükle"
@@ -4696,6 +4702,7 @@ login = "Giriş"
 magicLinkSent = "Sihirli bağlantı {{email}} adresine gönderildi! Giriş yapmak için e-postanızı kontrol edip bağlantıya tıklayın."
 mfaCode = "Kimlik doğrulama kodu"
 mfaRequired = "İki faktörlü kimlik doğrulama kodu gerekli"
+noAccount = "Don't have an account?"
 or = "Veya"
 password = "Şifre"
 passwordChangedSuccess = "Şifre başarıyla değiştirildi! Lütfen yeni şifrenizle giriş yapın."
@@ -4719,21 +4726,6 @@ useEmailInstead = "E-posta ile giriş yap"
 useMagicLink = "Bunun yerine sihirli bağlantı kullan"
 username = "Kullanıcı adı"
 youAreLoggedIn = "Giriş yaptınız!"
-
-[login.slides.edit]
-alt = "PDF'leri düzenle"
-subtitle = "PDF'leri sansürlemek, imzalamak, okumak ve işlemek için bir düzineden fazla araçla aradığınızı bulacaksınız."
-title = "İstediğiniz bilgiyi göstermek/korumak için PDF'leri düzenleyin"
-
-[login.slides.overview]
-alt = "Stirling PDF genel bakış"
-subtitle = "PDF'ler için gizlilik odaklı bir bulut paketi; belgeleri dönüştürmenize, imzalamanıza, sansürlemenize ve yönetmenize olanak tanır, ayrıca 50+ başka güçlü araçla birlikte gelir."
-title = "PDF ihtiyaçlarınızın tümü için tek adresiniz."
-
-[login.slides.secure]
-alt = "PDF'leri güvenli hale getirin"
-subtitle = "Parola ekleyin, içeriği sansürleyin ve sertifikaları kolayca yönetin."
-title = "PDF'lerinizdeki hassas bilgileri koruyun"
 
 [margin]
 large = "Büyük"
@@ -4976,6 +4968,7 @@ pinButton = "Dosyaların üzerinde araçları çalıştırdıktan sonra aktif ka
 results = "Araç çalışmayı bitirdikten sonra, <strong>Gözden Geçir</strong> adımı bu panelde sonuçların bir önizlemesini gösterir ve işlemi geri almanıza veya dosyayı indirmenize olanak tanır. "
 runButton = "Araç yapılandırıldıktan sonra bu düğme, aracı seçili tüm PDF'lerde çalıştırmanıza olanak tanır."
 selectCropTool = "Araçlardan birinin nasıl kullanılacağını göstermek için <strong>Kırp</strong> aracını seçelim."
+stepOf = "Step {{current}} of {{total}}"
 toolInterface = "Burası <strong>Kırp</strong> aracının arayüzü. Gördüğünüz gibi, üzerinde çalışacak PDF dosyaları henüz eklemediğimiz için pek bir şey yok."
 workbench = "Burası <strong>Çalışma Alanı</strong> - PDF'lerinizi görüntüleyip düzenlediğiniz ana alandır."
 wrapUp = "Her şey hazır! Uygulamanın ana alanlarını ve bunları nasıl kullanacağınızı öğrendiniz. Bu turu tekrar görmek istediğinizde istediğiniz zaman <strong>Yardım</strong> düğmesine tıklayın."
@@ -4988,6 +4981,26 @@ showMeAround = "Bana etrafı göster"
 skipForNow = "Şimdilik atla"
 skipTheTour = "Turu atla"
 
+[onboarding.checklist]
+dismiss = "Dismiss"
+title = "Set up Stirling PDF"
+
+[onboarding.checklist.downloadDesktop]
+description = "Run Stirling natively on your machine"
+title = "Download Stirling for Desktop"
+
+[onboarding.checklist.inviteTeam]
+description = "Collaborate with your team"
+title = "Invite team members"
+
+[onboarding.checklist.shareAnalytics]
+description = "Help improve Stirling"
+title = "Share anonymous usage data"
+
+[onboarding.checklist.takeTour]
+description = "See how Stirling works in a quick walkthrough"
+title = "Take the tour"
+
 [onboarding.desktopInstall]
 body = "Stirling, bir masaüstü uygulaması olarak en iyi şekilde çalışır. Çevrimdışı kullanabilir, belgelere daha hızlı erişebilir ve düzenlemeleri bilgisayarınızda yerel olarak yapabilirsiniz."
 selectOs = "İşletim sistemini seç"
@@ -4996,7 +5009,21 @@ titleWithOs = "{{osLabel}} için indir"
 
 [onboarding.mfa]
 authenticationCode = "Kimlik doğrulama kodu"
+description = "Secure your account by linking an authenticator app. Scan the QR code or enter the setup key, then confirm the 6-digit code to finish."
+enable = "Enable MFA"
+enableError = "Unable to enable two-factor authentication. Check the code and try again."
+enterCode = "Enter the 6-digit code from your app."
+enterCodeError = "Enter the authentication code to continue."
+logout = "Logout"
+openAuthenticator = "Open Google Authenticator, Authy, or 1Password."
 qrCodeLoading = "QR kodunuz oluşturuluyor…"
+regenerateQrCode = "Regenerate QR code"
+scanQrCode = "Scan the QR code or enter the setup key below."
+setupError = "Unable to start two-factor setup. Please try again."
+setupKey = "Setup key (manual entry)"
+stepByStep = "Step-by-step"
+success = "MFA has been enabled. You can now continue."
+title = "Multi-Factor Authentication Setup"
 
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Oturum açma modunu etkinleştirdiğinizde kullanıcıları yönetebilir, ayarları yapılandırabilir ve sunucu sağlığını izleyebilirsiniz. Sunucunuzdaki ilk <strong>{{freeTierLimit}}</strong> kişi Stirling'i ücretsiz kullanır."
@@ -5004,6 +5031,11 @@ adminBodyLoginEnabled = "Bir yönetici olarak kullanıcıları yönetebilir, aya
 adminTitle = "Yönetici Özeti"
 userBody = "Ekip arkadaşlarını davet edin, roller atayın ve belgelerinizi tek bir güvenli çalışma alanında düzenli tutun. Tek başına kullanımdan büyümeye hazır olduğunuzda oturum açma modunu etkinleştirin."
 userTitle = "Plan Özeti"
+
+[onboarding.processorIntro]
+body = "Stirling now runs <strong>Policies</strong> — automated rules that classify, secure, and process every document as it arrives. Set them up and monitor runs in the <strong>Processor</strong>."
+cta = "Check out the Processor"
+title = "Check out the Stirling Processor"
 
 [onboarding.saas.freeEditor]
 freeLine = "The editor is now <free>completely free</free>."
@@ -5937,48 +5969,11 @@ keyDescription = "E-postanızdaki lisans anahtarını yapıştırın"
 success = "Lisans Etkinleştirildi!"
 successMessage = "Lisansınız başarıyla etkinleştirildi. Bu pencereyi şimdi kapatabilirsiniz."
 
-[policies]
-deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
-deleteConfirmTitle = "Delete {{label}} policy?"
-
 [policies.activity]
-enforced = "uygulandı"
-enforcing = "Uygulanıyor..."
-failed = "Uygulama başarısız oldu"
 outputsUnavailable = "Politika çıktıları artık indirilemiyor."
 partialOutputsUnavailable = "Bazı politika çıktıları artık indirilemiyor."
-retrying = "Meşgul, yeniden deneniyor..."
 runNotFound = "Uygulama çalışması artık bulunamıyor."
-step = "adım {{current}}/{{total}}"
 timedOut = "İşlem tamamlanmadan önce uygulama zaman aşımına uğradı."
-
-[policies.catalog]
-compliance = "Compliance"
-ingestion = "Ingestion"
-retention = "Retention"
-routing = "Routing"
-security = "Security"
-
-[policies.detail]
-close = "Kapat"
-editSettings = "Edit Settings"
-enforces = "Enforces"
-managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
-noActivityDescription = "Documents will appear here once this policy runs."
-noActivityTitle = "No activity yet"
-onEveryUpload = "On every upload"
-originalsNote = "Originals stay untouched • Enforced version saved alongside"
-pause = "Pause"
-recentActivity = "Recent Activity"
-resume = "Resume"
-retry = "Retry"
-showLess = "Show less"
-showMore = "Show more"
-statActive = "Active"
-statDataProcessed = "Data processed"
-statDocsEnforced = "Docs enforced"
-statusActive = "Active"
-statusPaused = "Paused"
 
 [policies.enforcement]
 applying = "{{names}} uygulanıyor"
@@ -5989,61 +5984,16 @@ failureBody = "{{total}} dosyadan {{failures}} işlenemedi ve olduğu gibi dış
 failureTitle = "Tam uygulama olmadan dışa aktarıldı"
 printPolicyAppliedBody = "Bu PDF bir politikayı karşılamak için güncellendi. Değişiklikleri gözden geçirin, ardından yeniden yazdırın."
 printPolicyAppliedTitle = "Yazdırmadan önce politika uygulandı"
-queued = "+{{count}} sıraya alındı"
 successTitle = "{{names}} uygulandı"
 summaryMore = "{{first}}, {{second}} ve {{more}} daha"
 summaryTwo = "{{first}} ve {{second}}"
 
-[policies.enforcement.triggerVerb]
-convert = "Dönüştürmeden önce uygulanıyor"
-default = "Uygulanıyor"
-export = "Dışa aktarmadan önce uygulanıyor"
-input = "İçe aktarırken uygulanıyor"
-print = "Yazdırmadan önce uygulanıyor"
-
-[policies.field]
-accessLog = "Erişim günlüğü"
-archiveAfter = "Şundan sonra arşivle"
-auditTrail = "Denetim izi"
-belowThreshold = "Eşik altında"
-destination = "Hedef"
-frameworks = "Çerçeveler"
-immutableHold = "Değiştirilemez tutma"
-keepFor = "Şu kadar süre tut"
-minConfidence = "Min güven"
-notify = "Yönlendirmede bildir"
-onViolation = "Uyumsuz olduğunda"
-webhookUrl = "Webhook URL"
-
-[policies.fields]
-selectedCount = "{{count}} selected"
-
 [policies.labels]
-add = "Ekle"
-addPlaceholder = "Etiket ekle…"
-customNote = "Ekibiniz için özelleştirildi."
-defaultNote = "Ekibinizle paylaşılan yerleşik varsayılan kullanılıyor."
-duplicate = "\"{{name}}\" zaten mevcut."
-edit = "Etiketleri düzenle"
-empty = "Henüz etiket yok."
-export = "JSON dışa aktar"
-iconAria = "{{name}} için bir simge seç"
-import = "JSON içe aktar"
-importError = "Bu dosya içe aktarılamadı."
-managedNote = "Ekip etiketleri ekip lideriniz tarafından yönetilir."
-modalSubtitle = "Tüm ekibinizle paylaşılır. Sınıflandırıcı her belgeye uyan etiketleri seçer."
-modalTitle = "Sınıflandırma etiketleri"
-pickIcon = "{{label}} simgesini kullan"
-removeAria = "{{name}} etiketini kaldır"
-resetToDefault = "Varsayılana sıfırla"
-saveForTeam = "Ekip için kaydet"
-saving = "Kaydediliyor…"
-sectionLabel = "Sınıflandırma etiketleri"
-startFromScratch = "Sıfırdan başla"
-teamCount = "ekip etiketleri"
-tooLong = "Etiketler en fazla {{max}} karakter olabilir."
-ungrouped = "Gruplandırılmamış"
-view = "Etiketleri görüntüle"
+categoryCount = "categories"
+hideCategory = "Hide category"
+labelCount = "labels"
+sharedNote = "These labels are built in and shared across your whole team."
+showCategory = "Show category"
 
 [policies.pii]
 account = "Hesap numaraları (etiketli)"
@@ -6056,90 +6006,6 @@ placeholder = "Select PII types"
 routing = "ABD yönlendirme numaraları (ABA)"
 ssn = "Sosyal Güvenlik numaraları"
 
-[policies.settings]
-noneExport = "Şu anda dışa aktarmada çalışan politika yok."
-noneUpload = "Şu anda yüklemede çalışan politika yok."
-onExport = "Dışa aktarmada"
-onUpload = "Yüklemede"
-reorderHandle = "Yeniden sıralamak için sürükle"
-runOrderDesc = "Aynı tetikleyicide birden fazla politika çalıştığında, bu sırayla çalışırlar — her biri önceki politikanın çıktısı üzerinde. Yeniden sıralamak için sürükleyin."
-title = "Politika ayarları"
-
-[policies.sidebar]
-activeCount = "{{count}} active"
-infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
-loading = "Loading…"
-optionsAriaLabel = "Politika seçenekleri"
-policySettings = "Politika ayarları"
-railAriaLabel = "{{label}} policy — {{status}}"
-railSuffixActive = " (Active)"
-railSuffixPaused = " (Paused)"
-retryFailed = "Başarısız politikaları yeniden dene ({{count}})"
-rowProgress = "{{total}} dosyadan {{completed}} tanesi işlendi"
-setUp = "Set up"
-title = "Policies"
-upgradeToEnterprise = "Upgrade to enterprise"
-whatIsPolicy = "Politika nedir?"
-
-[policies.status]
-active = "Active"
-paused = "Paused"
-setup = "Set up"
-
-[policies.toolConfig]
-enableAriaLabel = "Enable {{tool}}"
-infoAriaLabel = "What does {{tool}} do?"
-
-[policies.toolConfig.info]
-redact = "Belgedeki hassas ayrıntıları — Sosyal Güvenlik ve kart numaraları gibi — otomatik olarak bulur ve okunamayacak şekilde karartır."
-sanitize = "Dosyadan gizli JavaScript'i kaldırır; böylece biri açtığında hiçbir şey otomatik olarak çalışmaz."
-watermark = "Her sayfaya görünür bir işaret (ör. \"Gizli\") basar."
-
-[policies.wizard]
-allDocTypesDescription = "Enable the Classification policy to filter by document type."
-allDocTypesTitle = "All document types"
-back = "Back"
-builderDesc = "Build the sequence of tools this policy runs on each document."
-clear = "Clear"
-close = "Kapat"
-continue = "Continue"
-docTypesLabel = "Document types"
-edit = "Edit"
-editTitle = "Edit {{label}} Policy"
-enablePolicy = "Enable Policy"
-filenameAutoNumber = "Auto-number"
-filenamePositionAria = "Filename position"
-filenamePrefix = "Prefix"
-filenameSuffix = "Suffix"
-filenameTextAria = "Filename text"
-filenameTextPlaceholder = "Text to add (optional)"
-lockedDescription = "Contact a team leader to change this policy."
-lockedTitle = "Managed by your organisation"
-maxRetriesLabel = "Max retries"
-noToolsError = "Add at least one configured tool to the workflow first."
-outputAsLabel = "Output as"
-outputFilenameSubhead = "Output filename"
-outputModeAria = "Output mode"
-outputNewFile = "New file"
-outputNewVersion = "New version"
-outputRetriesLabel = "Output & retries"
-outputSubhead = "Output"
-retryDelayAria = "Retry delay minutes"
-retryDelayLabel = "Retry delay (min)"
-runOnExport = "Export"
-runOnLabel = "Run on"
-runOnSubhead = "Run on"
-runOnUpload = "Upload"
-saveChanges = "Save Changes"
-saveError = "Couldn't save the policy. Please try again."
-setupClassification = "Set up Classification"
-setupTitle = "Set up {{label}} Policy"
-sourcesDesc = "Choose where this policy runs and which document types it applies to."
-sourcesLabel = "Sources"
-stepOf = "Step {{step}} of {{total}}"
-toolChainDesc = "Configure the tools this policy runs on each document."
-typesSelected = "{{count}} types selected"
-
 [policy]
 badgeEnforcing = "{{name}} uygulanıyor..."
 badgeRan = "{{name}} politikası bu dosyada çalıştı"
@@ -6151,6 +6017,7 @@ viewAnyway = "Dosyayı görüntüle (politika hâlâ uygulanıyor)"
 [policyOption]
 autoRedactPhi = "PHI'yi otomatik sansürle"
 blockExport = "Dışa aktarmayı engelle"
+ccpa = "CCPA"
 contracts = "Sözleşmeler"
 documents = "Belgeler"
 fedramp = "FedRAMP"
@@ -6269,86 +6136,6 @@ free = "Editor planı"
 subscribed = "Processor planı"
 unlinked = "Bağlı değil"
 
-[portal.agentBuilder]
-bootstrapFromDocument = "Belgeden başlat"
-sectionsAriaLabel = "Agent Builder bölümleri"
-selectorAriaLabel = "Ajanlar"
-subtitle = "Belgelerinizi sınıflandıran, ayıklayan ve yönlendiren AI ajanlarını tasarlayın, test edin ve yayınlayın. Senaryoları tanımlayın, araç erişimini sınırlayın, bir altın set çalıştırın ve bir sürüm yayınlayın."
-title = "Agent Builder"
-
-[portal.agentBuilder.bootstrap]
-cancel = "İptal"
-dropzoneText = "Örnek bir belge seçin (PDF veya görüntü)"
-lead = "Örnek bir belge bırakın; geliştirebileceğiniz senaryolar ve bir ayıklama şeması önereceğiz. Siz inceleyene kadar hiçbir şey yayınlanmaz."
-submit = "Ajanı başlat"
-subtitle = "Temsili bir dosyadan yeni bir ajanı başlatın"
-title = "Bir belgeden başlat"
-
-[portal.agentBuilder.empty]
-description = "Senaryolarını ve ayıklama şemasını başlatmak için örnek bir belgeden bir ajan oluşturun, ardından geliştirin ve yayınlayın."
-title = "Henüz ajan yok"
-
-[portal.agentBuilder.evals]
-casesPassing = "Geçen vakalar"
-columnCase = "Eval vakası"
-columnLatency = "Gecikme"
-columnResult = "Sonuç"
-fail = "başarısız"
-goldenSetPassRate = "Altın set geçme oranı"
-latencyMs = "{{ms}} ms"
-notRun = "çalıştırılmadı"
-pass = "başarılı"
-passRate = "Geçme oranı"
-runEvals = "Eval'ları çalıştır"
-
-[portal.agentBuilder.evals.empty]
-description = "Eval'lar senaryolarınızı tekrarlanabilir bir altın sete dönüştürür. Geçme oranını zaman içinde yakalamak ve yayınları buna göre kapılamak için yükseltin."
-title = "Henüz altın set yok"
-
-[portal.agentBuilder.kpi]
-acrossGoldenSets = "altın setler genelinde"
-activeAgents = "Aktif ajanlar"
-avgPassRate = "Ort. eval geçme oranı"
-fleetWide = "filo genelinde"
-latestPublished = "Son yayınlanan"
-scenarios = "Senaryolar"
-testCases = "test vakaları"
-totalDescription_one = "toplam {{count}}"
-totalDescription_other = "toplam {{count}}"
-
-[portal.agentBuilder.scenarios]
-add = "Ekle"
-addScenario = "Senaryo ekle"
-enable = "Etkinleştir"
-expectationLabel = "Beklenen davranış"
-expectationPlaceholder = "Ajanın ne yapması gerektiği"
-inEval = "eval'da"
-mute = "Sessize al"
-muted = "sessize alındı"
-nameLabel = "Ad"
-namePlaceholder = "örn. Uyumluluk eskalasyonu"
-
-[portal.agentBuilder.tabs]
-evals = "Eval'lar"
-scenarios = "Senaryolar"
-tools = "Araçlar"
-versions = "Sürümler"
-
-[portal.agentBuilder.tools]
-broadAccess = "Geniş erişim"
-deniedHint = "Seçili araçlar engellenir. Diğer her şey çağrılabilir kalır."
-deniedTools = "Reddedilen araçlar"
-governanceGate = "Araç yönetişimi Enterprise planında mevcuttur."
-restricted = "Kısıtlı"
-restrictedAccess = "Kısıtlı araç erişimi"
-restrictedDescription = "Aşağıda reddettikleriniz dışındaki tüm araçlara izin verin."
-
-[portal.agentBuilder.versions]
-current = "geçerli"
-historyGate = "Tam sürüm geçmişi ve geri alma Enterprise planında mevcuttur."
-publish = "Yayınla"
-rollBack = "Geri al"
-
 [portal.assistant]
 close = "Asistanı kapat"
 error = "Asistana ulaşılamadı."
@@ -6367,6 +6154,7 @@ redirectingToEditor = "Editöre yönlendiriliyor..."
 
 [portal.billing.checkout]
 noClientSecret = "Edge function client_secret döndürmedi."
+stepCount = "Step {{step}} of 2"
 subtitle = "Ücretsiz Editor planı hakkınızı aşarak devam etmek için bir kart ekleyin. Gerisini Stripe halleder."
 title = "Processor planını aç"
 
@@ -6375,6 +6163,20 @@ body = "Ödemeniz başarılı oldu, ancak aktivasyon normalden biraz daha uzun s
 close = "Kapat"
 title = "Neredeyse hazır"
 
+[portal.billing.checkout.cap]
+back = "Back"
+continue = "Continue to payment"
+error = "Couldn't set your spend limit"
+finePrint = "Invoices post on the 1st. Cancel anytime and revert to the Editor plan; your policies and history stay intact."
+note = "Processing pauses if you reach it. You're never billed past this, and you can change it any time."
+subtitle = "You're billed only for PDFs you process past your first 500 free, never for seats — so your ceiling is yours from day one."
+title = "Set your spend limit"
+
+[portal.billing.checkout.card]
+fields = "Card number · MM / YY · CVC · ZIP"
+label = "Card details"
+note = "Card details collected by Stripe. Stirling never stores PAN or CVC."
+
 [portal.billing.checkout.error]
 title = "Checkout başlatılamadı"
 
@@ -6382,11 +6184,6 @@ title = "Checkout başlatılamadı"
 body = "Ödemeniz gerçekleşti. Bağlı örneklerinizde ölçümlü işlemeyi açıyoruz - bu genellikle birkaç saniye sürer."
 hint = "Lütfen bu pencereyi açık tutun."
 title = "Processor planınız etkinleştiriliyor..."
-
-[portal.billing.checkout.notConfigured]
-bodyAfter = "uygulama içi checkout'u etkinleştirmek için portal env içinde ayarlayın."
-bodyBefore = "Ayarla"
-title = "Stripe yapılandırılmamış"
 
 [portal.billing.enterpriseUpsell]
 cta = "Enterprise teklifinizi oluşturun"
@@ -6465,6 +6262,9 @@ segmentApiDesc = "Doğrudan API istekleri"
 segmentApiLabel = "API"
 segmentAutomationDesc = "Otomasyonlar ve pipeline'lar"
 segmentAutomationLabel = "Otomasyon"
+sizeMultiplier = "{{formatted}} PDFs used a size multiplier"
+summary = "{{unique}} unique · {{units}} meter units · {{avg}} avg per PDF"
+summaryNoRate = "{{unique}} unique · {{units}} meter units"
 unit = "ölçümlü PDF'ler"
 
 [portal.billing.spendLimit]
@@ -6494,6 +6294,8 @@ label = "Aşması öngörülüyor."
 
 [portal.billing.spendThisMonth]
 eyebrow = "Bu ayki harcama"
+freeRemaining_one = "{{formatted}} free PDF remaining"
+freeRemaining_other = "{{formatted}} free PDFs remaining"
 processed_one = "{{formattedCount}} PDF işlendi."
 processed_other = "{{formattedCount}} PDF işlendi."
 processedWithRate_one = "{{formattedCount}} PDF işlendi, her biri {{rate}}."
@@ -6533,6 +6335,39 @@ signature = "imza"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
+
+[portal.connections]
+createTitle = "New S3 connection"
+delete = "Delete"
+edit = "Edit"
+editTitle = "Edit S3 connection"
+subtitle = "Reusable S3 credentials that sources and pipeline outputs connect to."
+
+[portal.connections.actions]
+new = "New connection"
+
+[portal.connections.empty]
+description = "Add an S3 connection to reuse the same bucket and credentials across sources and pipeline outputs."
+title = "No connections yet"
+
+[portal.connections.picker]
+cancel = "Cancel"
+createNew = "New connection..."
+placeholder = "Select a connection"
+save = "Save connection"
+
+[portal.connections.s3.fields]
+name = "Connection name"
+namePlaceholder = "e.g. Claims bucket"
+
+[portal.connections.table]
+bucket = "Bucket"
+name = "Name"
+region = "Region"
+
+[portal.docs]
+browse = "Browse docs"
+viewSource = "View source on GitHub"
 
 [portal.docs.authentication]
 codeCaption = "her istek"
@@ -6619,10 +6454,18 @@ title = "Resmi SDK'lar"
 beta = "Beta"
 deprecated = "Kullanımdan kaldırıldı"
 
+[portal.docs.search]
+empty = "No matching docs"
+placeholder = "Search docs"
+results = "{{count}} results"
+
 [portal.docs.skills]
 eyebrow = "BECERİLER"
 lead = "Ajanınızın tek bir araç olarak çağırdığı paketlenmiş, adlandırılmış yetenekler. Her beceri, eval'ları ekli deterministik bir op zinciridir."
 title = "Ajan becerileri"
+
+[portal.docs.toc]
+title = "On this page"
 
 [portal.docs.webhooks]
 codeCaption = "document.processed"
@@ -6697,6 +6540,8 @@ type = "Tür"
 user = "Kullanıcı"
 
 [portal.documents.queue.empty]
+connectSource = "Connect a source"
+createPipeline = "Create a pipeline"
 description = "Kaynaklar belgeleri pipeline'larınıza besledikçe, inceleme için burada görünürler."
 title = "Kuyrukta belge yok"
 
@@ -6806,8 +6651,63 @@ description = "Bu görünüm beklenmeyen bir hatayla karşılaştı. Tekrar dene
 retry = "Tekrar dene"
 title = "Bu sayfada bir şeyler ters gitti"
 
+[portal.home.download]
+back = "Back"
+body = "Download the desktop app or self-host the server."
+done = "Done"
+guide = "Open the {{name}} guide"
+openInBrowser = "Open in browser instead"
+sectionDesktop = "Desktop app"
+sectionSelfHosted = "Self-hosted"
+title = "Install the Stirling PDF Editor"
+
+[portal.home.download.docker]
+detailBody = "Run the official image on your server."
+note = "Opens at :8080. Default login: admin / stirling."
+tagline = "Run the server in a container"
+title = "Docker"
+variantFat = "Fat"
+variantLite = "Ultra-Lite"
+variantStandard = "Standard"
+
+[portal.home.download.kubernetes]
+detailBody = "Install the official Helm chart."
+note = "Add a PVC for /configs to persist settings."
+tagline = "Deploy to a cluster with Helm"
+title = "Kubernetes"
+
+[portal.home.download.linux]
+detailBody = "Native builds for your distribution."
+guideBtn = "View Linux install options"
+note = "AppImage, .deb and .rpm builds are available for common distros."
+tagline = "Native desktop app for your distro"
+title = "Linux"
+
+[portal.home.download.mac]
+altLabel = "Or via Homebrew"
+detailBody = "Run the installer, or use Homebrew."
+downloadBtn = "Download for macOS"
+tagline = "Native app for Apple silicon and Intel"
+title = "macOS"
+
+[portal.home.download.manual]
+detailBody = "Run the .jar on a bare metal server."
+downloadBtn = "Download the .jar"
+note = "Requires Java 21+. Opens at :8080; default login admin / stirling."
+runLabel = "Then run it"
+tagline = "Run the .jar on a bare metal server"
+title = "Manual server setup"
+
+[portal.home.download.windows]
+altLabel = "Or via winget"
+detailBody = "Run the installer, or use a package manager."
+downloadBtn = "Download installer"
+tagline = "Native app for Microsoft Windows"
+title = "Windows"
+
 [portal.home.editor]
 activeUsers = "{{n}} aktif"
+install = "Install the editor"
 invite = "Ekip arkadaşlarını davet et"
 name = "Stirling PDF Editor"
 open = "Tarayıcıda aç"
@@ -6823,12 +6723,6 @@ afternoon = "İyi günler"
 evening = "İyi akşamlar"
 morning = "Günaydın"
 
-[portal.home.onboarding]
-dismiss = "Kurulumu kapat"
-notStarted = "Başlatılmadı"
-progress = "{{total}} öğeden {{done}} tamamlandı"
-title = "Kurulumu tamamlayın"
-
 [portal.home.onboarding.enterprise]
 body = "Kuruluş geneli SSO + SCIM + RBAC, taahhütlü hacim fiyatlandırması ve ağdan izole dağıtım."
 cta = "Denemeyi Başlat"
@@ -6840,15 +6734,13 @@ tag = "Enterprise"
 blurb = "Masaüstü uygulamasını dağıtın, sonsuza kadar ücretsiz."
 title = "PDF Editor'ü indir"
 
+[portal.home.onboarding.steps.invite]
+blurb = "Bring your team into the secure workspace"
+title = "Invite teammates"
+
 [portal.home.onboarding.steps.policies]
 blurb = "{{active}} aktif · {{recommended}} önerilen"
-chip = "{{active}} aktif"
 title = "İlkeleri aç"
-
-[portal.home.onboarding.steps.sources]
-blurb = "{{connected}} bağlı · her PDF ulaştığı yerde yönetilir"
-chip = "{{connected}} bağlı"
-title = "Kaynaklarınızı bağlayın"
 
 [portal.home.quickActions]
 subtitle = "Bugünün başlıca görevleri"
@@ -6872,6 +6764,11 @@ sectionsAriaLabel = "Altyapı bölümleri"
 subtitle = "Stirling çalışma alanınız için dağıtımlar, kimlik bilgileri, güvenlik duruşu, depolama ve denetim izi."
 title = "Altyapı"
 
+[portal.infrastructure.apiKeyPermission]
+admin = "Admin"
+read = "Read"
+write = "Write"
+
 [portal.infrastructure.apiKeys]
 createKey = "Anahtar oluştur"
 heading = "API anahtarları"
@@ -6891,6 +6788,11 @@ usageToday = "Bugünkü kullanım"
 [portal.infrastructure.apiKeys.empty]
 description = "Stirling API'yi çağırmaya başlamak için kapsamlı bir anahtar oluşturun."
 title = "Henüz API anahtarı yok"
+
+[portal.infrastructure.attestationLabel]
+attested = "Attested"
+inScope = "In scope"
+notApplicable = "N/A"
 
 [portal.infrastructure.audit]
 filterAriaLabel = "Denetim etkinliklerini kategoriye göre filtrele"
@@ -6935,6 +6837,7 @@ all = "Tümü"
 auth = "Kimlik doğrulama"
 config = "Yapılandırma"
 elevation = "Yetki yükseltme"
+policy = "Policy"
 processing = "İşleme"
 security = "Güvenlik"
 
@@ -6944,9 +6847,28 @@ title = "Erişiminiz yok"
 
 [portal.infrastructure.audit.metrics]
 config = "Yapılandırma"
-elevation = "Yetki yükseltme"
+policy = "Policy"
 processing = "İşleme"
 totalEvents = "Toplam etkinlik · 24 sa"
+
+[portal.infrastructure.auditCatLabel]
+auth = "Auth"
+config = "Config"
+elevation = "Elevation"
+policy = "Policy"
+processing = "Processing"
+security = "Security"
+
+[portal.infrastructure.auditStatusLabel]
+danger = "Error"
+info = "Info"
+success = "Success"
+warning = "Warning"
+
+[portal.infrastructure.certLabel]
+certified = "Certified"
+inProgress = "In progress"
+notStarted = "Not started"
 
 [portal.infrastructure.createKey]
 cancel = "İptal"
@@ -6963,6 +6885,12 @@ subtitle = "Anahtarı ihtiyaç duyduğu minimum kapsamla sınırlayın. İstedi�
 subtitleCreated = "Bu sırrı şimdi kopyalayın — tekrar gösterilmeyecek."
 title = "API anahtarı oluştur"
 titleCreated = "Anahtar oluşturuldu"
+
+[portal.infrastructure.deployLabel]
+live = "Live"
+queued = "Queued"
+rolledBack = "Rolled back"
+rolling = "Rolling out"
 
 [portal.infrastructure.deployments]
 msValue = "{{value}} ms"
@@ -6999,6 +6927,16 @@ subheading = "Dağıtılmış her Stirling bölgesi için canlı sağlık — ge
 description = "Çalışma alanınız hazırlandıktan sonra dağıtılmış bölgeler burada görünür."
 title = "Dağıtılmış bölge yok"
 
+[portal.infrastructure.keyLabel]
+active = "Active"
+revoked = "Revoked"
+rotateSoon = "Rotate soon"
+
+[portal.infrastructure.modelLabel]
+active = "Active"
+degraded = "Degraded"
+disabled = "Disabled"
+
 [portal.infrastructure.models]
 heading = "Modeller"
 msValue = "{{value}} ms"
@@ -7026,6 +6964,10 @@ status = "Durum"
 type = "Tür"
 version = "Sürüm"
 
+[portal.infrastructure.models.cost]
+perCall = "{{price}}/call"
+perThousand = "{{price}}/1k"
+
 [portal.infrastructure.models.metrics]
 activeModels = "Aktif modeller"
 avgLatency = "Ort. gecikme"
@@ -7048,6 +6990,17 @@ docType = "Belge türü"
 modelForAria = "{{operation}} için model"
 operation = "İşlem"
 routedTo = "Yönlendirildiği yer"
+
+[portal.infrastructure.modelTypeLabel]
+classification = "Classification"
+extraction = "Extraction"
+llm = "LLM"
+ocr = "OCR"
+
+[portal.infrastructure.regionLabel]
+degraded = "Degraded"
+down = "Down"
+healthy = "Healthy"
 
 [portal.infrastructure.security.access.byok]
 description = "Kendi KMS'nizden bir anahtar sağlayın. Stirling bununla şifreler ancak yine de okuyabilir."
@@ -7190,25 +7143,9 @@ sources = "Kaynaklar"
 usage = "Kullanım ve Faturalandırma"
 users = "Kullanıcılar"
 
-[portal.notifications]
-markAllRead = "Tümünü okundu işaretle"
-title = "Bildirimler"
-viewAll = "Tümünü görüntüle"
-
-[portal.notifications.ariaLabel]
-none = "Bildirimler, okunmamış yok"
-unread_one = "Bildirimler, {{count}} okunmamış"
-unread_other = "Bildirimler, {{count}} okunmamış"
-
-[portal.notifications.count]
-allRead = "tümü okundu"
-loading = "yükleniyor"
-new_one = "{{count}} yeni"
-new_other = "{{count}} yeni"
-
-[portal.notifications.empty]
-description = "Yeni bildirim yok."
-title = "Her şey tamam"
+[portal.nav.section]
+platform = "PDF Platform"
+processor = "PDF Processor"
 
 [portal.pipelines]
 subtitle = "Backend üzerindeki her otomatik belge pipeline'ı: bir tetikleyiciyle çalışan, bir kaynak kümesi üzerinde sıralı işlemler zinciri. Adımlarını ve kaynaklarını görmek için bir satıra tıklayın."
@@ -7254,6 +7191,7 @@ operations_one = "İşlem ({{count}})"
 operations_other = "İşlemler ({{count}})"
 output = "Çıktı"
 removeStep = "İşlemi kaldır"
+s3PrefixHelp = "Outputs are uploaded under this key prefix."
 save = "Değişiklikleri kaydet"
 scheduleEvery = "Şu aralıkla çalıştır"
 sources = "Kaynaklar"
@@ -7273,11 +7211,13 @@ confirm = "Sil"
 title = "Pipeline silinsin mi?"
 
 [portal.pipelines.detail]
+clearHistory = "Clear history"
 delete = "Pipeline sil"
 run = "Şimdi çalıştır"
 
 [portal.pipelines.empty]
 action = "Bir pipeline oluştur"
+connectSource = "Connect a source"
 description = "İlk pipeline'ınızı oluşturun: çalışacağı kaynakları seçin, işlemleri zincirleyin ve çıktının nereye gideceğini belirleyin."
 title = "Henüz pipeline yok"
 
@@ -7289,12 +7229,19 @@ total = "Pipelines"
 [portal.pipelines.output]
 folder = "Klasöre yaz"
 inline = "Dosyaları döndür"
+s3 = "Write to Amazon S3"
 
 [portal.pipelines.run]
+allProcessed_one = "Nothing to run: the source's {{count}} document has already been processed."
+allProcessed_other = "Nothing to run: all {{count}} documents in the sources have already been processed."
 completed_one = "Çalıştırma tamamlandı."
 completed_other = "{{count}} çalıştırmanın tümü tamamlandı."
 empty = "Çalıştırılacak bir şey yok: kaynaklarda işlenecek belge yoktu."
 failed = "Çalıştırma başarısız: {{error}}"
+historyCleared = "History cleared. The next run reprocesses everything currently in the sources."
+inFlight = "Nothing new to run: documents are still being processed from an earlier run."
+parked_one = "Nothing to run: {{count}} document failed previously and is parked. Fix the cause, then clear history to retry it."
+parked_other = "Nothing to run: {{count}} documents failed previously and are parked. Fix the cause, then clear history to retry them."
 running = "Çalıştırma başladı; hâlâ devam ediyor."
 timeout = "Çalıştırma beklenenden uzun sürüyor; arka planda yine de tamamlanabilir."
 
@@ -7314,12 +7261,18 @@ manual = "Manuel"
 schedule = "Zamanlanmış"
 
 [portal.policies]
+defaultName = "{{category}} Policy"
 subtitle = "Her belgeye bir araç pipeline'ı uygulayan kalıcı otomasyonlar. Her ilke yükleme veya dışa aktarma sırasında tetiklenir, araç zincirini çalıştırır ve zorunlu sürümü orijinalin yanında kaydeder."
 title = "İlkeler"
 
 [portal.policies.card]
 comingSoon = "Enterprise'a yükselt"
 notSetUp = "Kurulmadı"
+requiresAiEngine = "Requires AI engine"
+
+[portal.policies.categories.classification]
+desc = "Identify each document's type on upload and tag its metadata for filing and search."
+label = "Classification"
 
 [portal.policies.categories.compliance]
 desc = "Her belgede HIPAA, GDPR, SOC 2 veya FedRAMP gereksinimlerini zorunlu kılın."
@@ -7343,6 +7296,13 @@ label = "Güvenlik"
 
 [portal.policies.config]
 scopeAll = "Tüm belgeler"
+
+[portal.policies.config.classification]
+summary = "Classifies every uploaded document against your team's labels and tags its metadata."
+
+[portal.policies.config.classification.rules]
+0 = "Classify"
+1 = "Tag metadata"
 
 [portal.policies.config.compliance]
 summary = "Belgeler sistemden ayrılmadan önce düzenleyici çerçevelere göre doğrular."
@@ -7438,6 +7398,7 @@ title = "Henüz etkinlik yok"
 [portal.policies.endpoints]
 addWatermark = "Filigran"
 autoRedact = "PII'yi karart"
+classifyAndLabel = "Classify"
 compressPdf = "Sıkıştır"
 flatten = "Düzleştir"
 ocrPdf = "OCR"
@@ -7473,12 +7434,23 @@ label = "Uygulanan belgeler"
 description = "Yapılandırıldı ancak tetiklenmiyor"
 label = "Duraklatıldı"
 
+[portal.policies.table]
+appliesTo = "Applies to"
+docs = "Docs enforced"
+enforces = "Enforces"
+policy = "Policy"
+status = "Status"
+
 [portal.policies.wizard.actions]
 back = "Geri"
 cancel = "İptal"
 continue = "Devam"
 enablePolicy = "İlkeyi etkinleştir"
 saveChanges = "Değişiklikleri kaydet"
+
+[portal.policies.wizard.capability.classify]
+desc = "Identifies the document's type from your team's labels and tags it, so it files and searches by category."
+label = "Classify the document"
 
 [portal.policies.wizard.capability.compress]
 desc = "Belgeyi daha küçük bir dosya boyutuna sıkıştırır."
@@ -7503,6 +7475,10 @@ label = "Aktif içeriği çıkar"
 [portal.policies.wizard.capability.watermark]
 desc = "Her sayfanın üzerine görünür bir işaret (örn. “Gizli”) basar."
 label = "Filigran uygula"
+
+[portal.policies.wizard.classification]
+description = "Every uploaded document is classified against the built-in labels and tagged with the types that fit. The label set is shared across your whole team."
+labelsHeading = "Classification labels"
 
 [portal.policies.wizard.errors]
 noTools = "Önce iş akışında en az bir aracı etkinleştirin."
@@ -7577,8 +7553,49 @@ soon = "Yakında"
 managePlan = "Planı yönet"
 volumeSuffix = "İşlenen PDF'ler · son 30 gün"
 
+[portal.processorFlow]
+footnote = "Counts are over the last 24 hours. Flow speed is illustrative."
+liveBadge = "Live"
+stats = "{{connected}} connected · {{processed}} PDFs processed"
+title = "PDF Processor"
+
+[portal.processorFlow.lens]
+ariaLabel = "View mode"
+flow = "Flow"
+sankey = "Sankey"
+
+[portal.processorFlow.outcomes]
+count = "{{n}} · 24h"
+failed = "Failed"
+heading = "Outcomes"
+success = "Delivered"
+
+[portal.processorFlow.policies]
+activeCount = "{{n}} active"
+count = "{{n}} · 24h"
+heading = "Policies"
+setUp = "Set up"
+soon = "Soon"
+
+[portal.processorFlow.sankey]
+waist = "Policies · {{n}} active"
+
+[portal.processorFlow.sankey.empty]
+description = "Connect a source and switch on a policy to watch documents flow through the processor."
+title = "No flow yet"
+
+[portal.processorFlow.sources]
+comingSoonTag = "Connect"
+editor = "Stirling PDF Editor"
+heading = "Sources"
+perDay = "{{n}} / 24h"
+
+[portal.processorFlow.sources.comingSoon]
+apiMcp = "API · MCP"
+cloud = "Drive · Box · S3"
+email = "Email intake"
+
 [portal.procurement]
-reset = "Satın almayı sıfırla (demo)"
 subtitle = "Ekibinizin değerlendirme, sözleşme ve katılım süreçlerini tamamlayın. Her belge tek yerde."
 title = "Satın alma"
 
@@ -7598,23 +7615,42 @@ title = "Enterprise anlaşmanızı inceleyin"
 
 [portal.procurement.builder]
 addons = "Eklentiler"
+addressLine1 = "Address line 1"
+addressLine1Placeholder = "500 Howard St"
+addressLine2 = "Address line 2"
+addressLine2Placeholder = "Suite, floor, building"
 back = "Geri"
 businessName = "İşletme adı"
 businessNamePlaceholder = "Şirketiniz"
+city = "City"
+cityPlaceholder = "San Francisco"
+contactEmail = "Contact email"
+contactEmailPlaceholder = "jane@acme.com"
+contactName = "Contact name"
+contactNamePlaceholder = "Jane Doe"
 continue = "Devam"
-country = "Ülke"
-countryEuro = "Euro Bölgesi (EUR €)"
-countryUK = "Birleşik Krallık (GBP £)"
-countryUS = "Amerika Birleşik Devletleri (USD $)"
 eula = "Stirling Enterprise EULA'yı okudum ve kabul ediyorum. Bu tekliften oluşturulan anlaşmayı yönetir."
 generate = "Teklif oluştur"
 included = "Dahil"
 indemnification = "IP tazminatı"
 indemnificationSub = "EULA uyarınca uygun IP taleplerini savunuruz"
-offlineLicense = "Çevrimdışı / air-gapped lisans"
-offlineLicenseSub = "Air-gapped, kendi sunucusunda barındırılan bir örnek için indirilebilir lisans dosyası"
+pdfSize = "PDF size"
+poNumber = "PO number"
+poNumberPlaceholder = "Optional"
+postalCode = "Postal code"
+postalCodePlaceholder = "94105"
+posture = "Governance"
+posture_count = "~{{count}} policies"
+posture_essentials = "Essentials"
+posture_essentialsSub = "Classification + Sharing — the defaults"
+posture_governed = "Governed"
+posture_governedSub = "Adds Security and Routing"
+posture_regulated = "Regulated"
+posture_regulatedSub = "Every category — Compliance, Retention, Ingestion"
 qbr = "Üç aylık iş değerlendirmeleri"
 qbrSub = "SE'niz her çeyrek kullanım ve yol haritasını inceler"
+region = "State / region"
+regionPlaceholder = "California"
 running = "{{annual}} / yıl · {{years}} yıllık {{tcv}}"
 s1Sub = "Ekibiniz ve her yıl çalıştırmayı beklediğiniz PDF'ler."
 s1Title = "Ne kadar işlem yapacaksınız?"
@@ -7623,6 +7659,12 @@ s2Title = "Taahhüt ve hizmet"
 s3Sub = "Teklif ve oluşturduğu anlaşma için."
 s3Title = "Bilgileriniz"
 serviceLevel = "Hizmet seviyesi"
+size_compact = "Compact"
+size_compactSub = "Mostly text, under 1 MB"
+size_heavy = "Heavy"
+size_heavySub = "Scanned or image-heavy, 5 MB+"
+size_standard = "Standard"
+size_standardSub = "Mixed text and images, 1 to 5 MB"
 slDedicated = "Özel"
 slDedicatedSub = "4 iş saati · özel hesap yöneticisi · +30%"
 slPriority = "Öncelikli"
@@ -7630,6 +7672,8 @@ slPrioritySub = "Aynı iş günü · atanmış CSM · +15%"
 slStandard = "Standart"
 slStandardSub = "Sonraki iş günü · paylaşılan CSM · dahil"
 stepOf = "Adım {{n}} / {{total}}"
+taxId = "VAT / Tax ID"
+taxIdPlaceholder = "Optional"
 term = "Vade"
 termDiscount = "{{pct}}% çok yıllı taahhüt indirimi uygulandı"
 title = "Teklifinizi oluşturun"
@@ -7665,14 +7709,13 @@ title = "Bir şeyler ters gitti"
 
 [portal.procurement.hero]
 company = "Enterprise anlaşmanız"
-ctaAgreement = "Anlaşmayı incele ve imzala"
 ctaLive = "Yayındasınız"
 ctaPayment = "Ödeme ekle"
 ctaQuote = "Teklifinizi inceleyin"
 ctaTrial = "Teklifinizi oluşturun"
 eyebrow = "Enterprise satın alma"
 inviteTeammates = "Takım arkadaşlarını davet et"
-keyDocs = "Önemli belgeler"
+licenseKey = "Licence key"
 nextStep = "Sonraki adım: {{action}}"
 notStarted = "Başlatılmadı"
 open = "Satın almayı aç"
@@ -7727,6 +7770,9 @@ downloadError = "Çevrimdışı lisans dosyası henüz oluşturulamadı — lüt
 downloadOffline = "Çevrimdışı lisansı indir (.lic)"
 hint = "Etkinleştirmek için bu anahtarı kendi sunucunuzda barındırılan bir örneğe yapıştırın veya kayıtlarınız için saklayın. Güvende tutun."
 label = "Lisans anahtarınız"
+subtitle = "Activate a self-hosted instance with this key, or keep it for your records."
+title = "Your licence key"
+trialFileHint = "This is your trial licence file. Once your agreement is in place, come back and download it again — unlike the online licence key, the .lic file won't update on its own."
 
 [portal.procurement.link]
 cta = "Hesabı bağla"
@@ -7746,16 +7792,9 @@ talkToSales = "Satış ekibiyle görüş"
 title = "Satın alma süreci Enterprise ile açılır"
 
 [portal.procurement.milestone]
-accept = "Kabul et ve devam et"
-description = "PDF'yi ekibinizle paylaşmak için indirin, hazır olduğunuzda kabul etmek için geri gelin veya değişiklik yapın."
 download = "PDF indir"
 downloadError = "Teklif PDF'si henüz indirilemedi — lütfen birazdan tekrar deneyin."
 edit = "Teklifi düzenle"
-eyebrow = "Teklif {{number}}"
-perYear = " / yıl"
-preparedFor = "{{company}} için hazırlandı"
-tcv = "{{value}} toplam sözleşme değeri"
-title = "Teklifiniz hazır"
 
 [portal.procurement.modal]
 cancel = "İptal"
@@ -7782,7 +7821,6 @@ uploadTitle = "Satın alma emrinizi yükleyin"
 [portal.procurement.payment]
 description = "Teklifiniz kabul edildi ve lisansınız zaten aktif — ekibiniz hemen başlayabilir. Hazır olduğunuzda ilk faturayı ödeyin; e-posta gerekmeden burada ödeyebilir veya indirebilirsiniz."
 downloadInvoice = "Faturayı indir"
-simulate = "Ödeme alındı simülasyonu yap (demo)"
 title = "Abonelik oluşturuldu"
 viewInvoice = "Faturayı görüntüle ve öde"
 
@@ -7791,6 +7829,21 @@ fallback = "Planlayıcı yüklenemedi."
 fallbackLink = "Planlamayı yeni sekmede aç"
 subtitle = "Çözüm mühendisiniz ekibinize yayına alma sürecinde rehberlik edecek. Size uygun bir zaman seçin."
 title = "Görüşme planla"
+
+[portal.procurement.setup]
+airgap = "Air-gapped"
+airgapSub = "Fully offline, isolated network. Includes a downloadable licence file."
+cloud = "Cloud"
+cloudSub = "Fully managed by Stirling. Nothing for you to run."
+deployment = "Where will you run Stirling?"
+seats = "Team size"
+seatsHint = "Roughly how many people will use it. You can refine this when you build your quote."
+seatsPlaceholder = "e.g. 250"
+selfhost = "Self-hosted"
+selfhostSub = "Run it in your own cloud or data centre."
+start = "Start trial"
+subtitle = "Tell us how you plan to run Stirling so we can tailor your trial and quote. No card required."
+title = "Set up your trial"
 
 [portal.procurement.status]
 action = "Eylem gerekli"
@@ -7838,26 +7891,11 @@ admin = "Yönetici"
 [portal.settings.sections]
 account-link = "Hesap bağlantısı"
 
-[portal.shell.header]
-accountFallback = "Hesap"
-accountMenu = "Hesap menüsü"
-darkMode = "Koyu mod"
-lightMode = "Açık mod"
-search = "Ara"
-searchPlaceholder = "Ara…"
-signOut = "Çıkış yap"
-switchToDark = "Koyu temaya geç"
-switchToLight = "Açık temaya geç"
-
 [portal.shell.sidebar]
 appEditor = "Editor"
 appProcessor = "Processor"
 brandSuffix = "Stirling Processor"
-docsCount = "{{docs}} belge"
 linkAccount = "Stirling hesabını bağla"
-planEditor = "Editor planı"
-planEnterprise = "Enterprise planı"
-planProcessor = "Processor planı"
 primaryNav = "Birincil gezinme"
 switchApp = "Uygulama değiştir"
 
@@ -7866,29 +7904,23 @@ subtitle = "Belgeleri Stirling'e besleyen yeniden kullanılabilir giriş bağlan
 title = "Kaynaklar"
 
 [portal.sources.actions]
-agentBuilder = "Agent Builder"
 connectSource = "Kaynak bağla"
+
+[portal.sources.builder]
+back = "Back to sources"
+cancel = "Cancel"
+create = "Create source"
+createTitle = "Connect a source"
+delete = "Delete"
+editTitle = "Edit source"
+enabled = "Enabled"
+save = "Save changes"
 
 [portal.sources.delete]
 body = "\"{{name}}\" silinsin mi? Bu işlem geri alınamaz. Ona referans veren ilkelerin güncellenmesi gerekir."
 cancel = "İptal"
 confirm = "Sil"
 title = "Kaynak silinsin mi?"
-
-[portal.sources.detail]
-closeAriaLabel = "Ayrıntıyı kapat"
-delete = "Kaynağı sil"
-docs24h = "Son 24 saat"
-docs30d = "Son 30 gün"
-docsTotal = "Toplam görülen"
-docsTrend = "Son 30 gündeki belgeler"
-documents = "Belgeler"
-edit = "Düzenle"
-notReferenced = "Hiçbir ilke tarafından referans verilmiyor, bu yüzden silmek güvenli."
-pause = "Duraklat"
-resume = "Sürdür"
-subtitle = "{{type}} · {{status}}"
-usedBy = "Kullanan"
 
 [portal.sources.empty]
 description = "İlkelerinizin belgeleri alabileceği bir yer olması için bir klasör (ve yakında bulut depolama) bağlayın."
@@ -7905,12 +7937,19 @@ disabled = "Devre dışı"
 unused = "Kullanılmıyor"
 
 [portal.sources.table]
+documents = "Documents"
 source = "Kaynak"
 status = "Durum"
 usedBy = "İlkeler"
 
+[portal.sources.tabs]
+connections = "Connections"
+sources = "Sources"
+
 [portal.sources.types.editor]
+description = "Documents your team has processed in the editor, across policy and AI runs."
 label = "Editor"
+noPolicies = "No policies run from the editor yet."
 
 [portal.sources.types.folder]
 description = "Yeni belgeler için sunucudaki bir dizini izleyin."
@@ -7943,25 +7982,58 @@ label = "Klasör derinliği"
 all = "Alt klasörleri dahil et"
 top = "Yalnızca üst seviye"
 
+[portal.sources.types.s3]
+description = "Pull documents from an Amazon S3 or S3-compatible bucket."
+label = "Amazon S3"
+
+[portal.sources.types.s3.fields.accessKeyId]
+label = "Access key ID"
+
+[portal.sources.types.s3.fields.bucket]
+label = "Bucket"
+placeholder = "my-company-inbox"
+
+[portal.sources.types.s3.fields.connection]
+helperText = "The stored connection holding the bucket and credentials. Reused by every source and pipeline output that references it."
+label = "Connection"
+
+[portal.sources.types.s3.fields.endpoint]
+helperText = "Leave blank for Amazon S3. Set to use an S3-compatible service such as MinIO."
+label = "Custom endpoint"
+placeholder = "https://s3.example.com"
+
+[portal.sources.types.s3.fields.mode]
+helperText = "Consume removes each object from the bucket once every policy has processed it."
+label = "Read mode"
+
+[portal.sources.types.s3.fields.mode.options]
+consume = "Consume: process each object once"
+snapshot = "Snapshot: re-read the bucket every run"
+
+[portal.sources.types.s3.fields.prefix]
+helperText = "Only objects whose keys start with this prefix are processed."
+label = "Key prefix"
+placeholder = "incoming/"
+
+[portal.sources.types.s3.fields.region]
+label = "Region"
+placeholder = "us-east-1"
+
+[portal.sources.types.s3.fields.secretAccessKey]
+label = "Secret access key"
+
 [portal.sources.types.unknown]
 label = "Kaynak"
 
 [portal.sources.wizard]
-back = "Geri"
-cancel = "İptal"
-continue = "Devam"
-editTitle = "Kaynağı düzenle"
 name = "Ad"
 namePlaceholder = "örn. Talep alımı"
-save = "Değişiklikleri kaydet"
-subtitle = "Adım {{current}} / {{total}} · {{label}}"
-title = "Kaynak bağla"
 type = "Tür"
 
-[portal.sources.wizard.steps]
-chooseType = "Tür seç"
-configure = "Yapılandır"
-review = "İncele ve bağla"
+[portal.tier]
+enterprise = "Enterprise plan"
+free = "Editor plan"
+pro = "Processor plan"
 
 [portal.usage]
 managePayment = "Ödemeyi yönet"
@@ -8021,16 +8093,17 @@ summary = "Bir takımın sahibidir — takım üyelerinin kaynaklarını ve payl
 2 = "Varsayılan ilke üzerinden portal erişimi"
 3 = "Üyenin yapabildiği her şey"
 
+[portal.users.seats]
+limited = "{{used}} / {{limit}}"
+unlimited = "{{used}} · Unlimited"
+
 [portal.welcome]
 ariaLabel = "Stirling PDF'ye hoş geldiniz"
-badge = "Açık kaynak"
-installEditor = "Editor'ı yükle"
-inviteTeammates = "Takım arkadaşlarını davet et"
+install = "Install the editor"
+invite = "Invite teammates"
 openInBrowser = "Tarayıcıda aç"
-perks = "Sonsuza kadar ücretsiz · Kendi sunucunuzda barındırılabilir"
-subtitle = "Dünyanın en güvenli PDF Editor'ı, her boyuttaki takım için ücretsizdir. 60+ PDF işlemi ve SSO içerir."
-title = "Hoş geldiniz"
-titleAccent = "Stirling PDF"
+productName = "PDF Editor"
+stats = "30M downloads · 60+ PDF operations · Free forever"
 
 [printFile]
 title = "Dosya Yazdır"
@@ -8817,9 +8890,18 @@ languageDescription = "Görüntüleme dilini seçin"
 logout = "Oturumu kapat"
 setAsDefault = "Varsayılan Yap"
 theme = "Tema"
+themeAccent = "Accent colour"
+themeAccentCustom = "Custom colour"
+themeAccentCustomHint = "Custom (defaults recommended)"
+themeAccentDark = "Dark mode accent colour"
+themeAccentDefault = "Default"
+themeAccentDefaultHint = "Default theme (recommended)"
+themeAccentDescription = "Buttons, links and highlights follow it, and it subtly tints the app. Light and dark each have their own. System uses whichever is active."
+themeAccentLight = "Light mode accent colour"
 themeDark = "Koyu"
 themeDescription = "Açık ve koyu mod arasında geçiş yapın"
 themeLight = "Açık"
+themeReset = "Restore theme to default"
 themeSystem = "System"
 title = "Genel"
 user = "Kullanıcı"
@@ -8832,6 +8914,12 @@ dismiss = "Kapat"
 intro = "Kuruluşunuz için kullanıcı kimlik doğrulaması, ekip yönetimi ve çalışma alanı özelliklerini etkinleştirin."
 learnMore = "Belgelerde daha fazla bilgi edinin"
 title = "Sistem Yöneticileri için"
+
+[settings.general.loginLanding]
+description = "Choose which app opens when you sign in to Stirling Cloud."
+editor = "Editor"
+processor = "Processor"
+title = "After signing in"
 
 [settings.general.mode]
 fullscreen = "Tam ekran"
@@ -9040,6 +9128,11 @@ connections = "Bağlantılar"
 security = "Güvenlik"
 telegram = "Telegram"
 title = "Güvenlik ve Kimlik Doğrulama"
+
+[settings.signOut]
+confirm = "Are you sure you want to sign out?"
+submit = "Sign out"
+title = "Sign out"
 
 [settings.team]
 title = "Takım"
@@ -9657,6 +9750,9 @@ uploadButton = "Sunucuya Yükle"
 title = "Stirling-PDF Survey"
 
 [swagger]
+clickHere = "click here"
+fallback = "If it didn't open automatically,"
+opening = "Opening Swagger UI in a new tab..."
 tags = "api,dokümantasyon,swagger,uç noktalar,geliştirme"
 title = "API Dokümantasyonu"
 
@@ -9950,15 +10046,30 @@ title = "Kullanıcılar"
 you = "(siz)"
 
 [users.action]
+cancelInvite = "Cancel invitation"
 deleteTeam = "Takımı sil"
 disableMfa = "MFA'yı sıfırla"
 move = "Takıma taşı"
 reinstate = "Yeniden etkinleştir"
 remove = "Kuruluştan kaldır"
+removeTeam = "Remove from team"
 rename = "Takımı yeniden adlandır"
 resetPw = "Parolayı sıfırla"
 suspend = "Askıya al"
 unlock = "Hesabın kilidini aç"
+
+[users.activity]
+daysAgo = "{{count}}d ago"
+hoursAgo = "{{count}}h ago"
+justNow = "Just now"
+minutesAgo = "{{count}}m ago"
+monthsAgo_one = "{{count}} month ago"
+monthsAgo_other = "{{count}} months ago"
+never = "Never"
+weeksAgo_one = "{{count}} week ago"
+weeksAgo_other = "{{count}} weeks ago"
+yearsAgo_one = "{{count}} year ago"
+yearsAgo_other = "{{count}} years ago"
 
 [users.cap]
 addProcessor = "+ Processor"
@@ -9967,11 +10078,14 @@ editor = "Editor"
 processor = "Processor"
 
 [users.confirm]
+cancelInviteBody = "Cancel the invitation to {{email}}? They won't be able to join with the current link."
+cancelInviteTitle = "Cancel invitation"
 deleteTeamBody = "{{name}} takımı silinsin mi? Takım önce boş olmalıdır - üyelerini başka bir takıma taşıyın ve hâlâ herhangi bir entegrasyon yapılandırmasına sahip olmamalıdır."
 deleteTeamTitle = "Takımı sil"
 disableMfaBody = "{{name}} adlı kullanıcının MFA kaydı kaldırılsın mı? Gerekliyse bir sonraki girişte tekrar kuracak."
 disableMfaTitle = "MFA'yı sıfırla"
 removeBody = "{{name}} adlı kullanıcı kuruluştan kalıcı olarak kaldırılsın mı? Bu işlem geri alınamaz."
+removeTeamBody = "Remove {{name}} from the team? They keep their account but lose access to this team's resources."
 removeTitle = "Üyeyi kaldır"
 
 [users.empty]
@@ -10021,6 +10135,16 @@ title = "Kişileri davet et"
 username = "Kullanıcı adı"
 usernameError = "Kullanıcı adı en az 3 karakter olmalıdır"
 usernamePlaceholder = "jsmith"
+
+[users.invites]
+by = "Invited by {{who}}"
+cancel = "Cancel"
+count = "{{count}} pending"
+desc = "Invited people who haven't joined yet. They hold a seat until they accept."
+expiresInDays_one = "Expires in {{count}} day"
+expiresInDays_other = "Expires in {{count}} days"
+expiresToday = "Expires today"
+title = "Pending invitations"
 
 [users.loadError]
 description = "Arka uca ulaşılırken bir sorun oluştu veya erişiminiz yok. Tekrar deneyin."
@@ -10212,9 +10336,11 @@ title = "Ekler"
 
 [viewer.bookmarks]
 bookmarkTitle = "Yer imi başlığı"
+bookmarkTitleRequired = "Bookmark title is required"
 closeSidebar = "Yer imleri kenar çubuğunu kapat"
 collapseAll = "Tüm yer imlerini daralt"
 expandAll = "Tüm yer imlerini genişlet"
+searchPlaceholder = "Search bookmarks"
 
 [viewer.comments]
 addComment = "Yorum ekle"

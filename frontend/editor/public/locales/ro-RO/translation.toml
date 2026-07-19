@@ -356,6 +356,7 @@ text = "Aceste permisiuni controlează ce pot face utilizatorii cu PDF-ul. Sunt 
 title = "Schimbă Permisiunile"
 
 [addStamp]
+preview = "Preview Stamp"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -1842,6 +1843,15 @@ export = "Export"
 accessDenied = "Acces refuzat"
 insufficientPermissions = "Nu aveți permisiunea de a efectua această acțiune."
 
+[auth.callback]
+completing = "Completing authentication"
+invalidToken = "OAuth login failed - invalid token."
+missingToken = "OAuth login failed - no token received."
+oauthFailed = "OAuth login failed. Please try again."
+pleaseWait = "Please wait while we finish signing you in."
+signedOut = "You have been signed out. Please sign in again."
+windowMayClose = "You can close this window once it completes."
+
 [auth.displayName]
 guest = "Invitat"
 user = "Utilizator"
@@ -2824,6 +2834,7 @@ next = "Înainte"
 preview = "Previzualizare"
 previous = "Înapoi"
 refresh = "Reîmprospătați"
+remaining = "Remaining"
 retry = "Reîncercați"
 save = "Salvează"
 
@@ -3723,19 +3734,8 @@ uploadToServer = "Upload to server"
 versionHistory = "Version history"
 
 [fileSidebar.groupsModal]
-add = "Adaugă"
-addLabel = "Adaugă o etichetă…"
-categoryIconAria = "Alege o pictogramă pentru {{name}}"
-createCategory = "Creează categorie"
-delete = "Șterge categoria"
 done = "Gata"
-hide = "Ascunde categoria"
-newCategory = "Nume categorie nouă…"
-removeLabel = "Elimină {{name}}"
-rename = "Redenumește"
 reset = "Resetează la valorile implicite"
-search = "Caută etichete…"
-show = "Afișează categoria"
 subtitle = "Grupează fișierele în categorii părinte. Adaugă etichete existente sau noi într-o categorie, redenumește-o sau creează una proprie. Fișierele care nu se află în niciuna dintre categoriile tale apar sub „Altele”."
 title = "Categorii bară laterală"
 
@@ -4072,10 +4072,17 @@ discord = "Discord"
 issues = "GitHub"
 
 [formFill]
+allSaved = "All saved"
+extractCsvError = "Failed to extract CSV"
+extractXlsxError = "Failed to extract XLSX"
 flattenAfterFilling = "Aplatizați după completare"
+requiredAbbreviation = "req"
+requiredFieldsError = "Please fill in all required fields"
 rescanFields = "Rescanați câmpurile"
 rescanFormFields = "Rescanați câmpurile formularului"
 save = "Salvați"
+saveShortcut = "Ctrl+S to save"
+unsavedChanges = "Unsaved changes"
 
 [formFill.sidebar]
 close = "Închideți bara laterală"
@@ -4647,7 +4654,6 @@ welcomeTitle = "Ați fost invitat!"
 
 [landing]
 addFiles = "Adăugați fișiere"
-heroSubtitle = "Trageți și plasați sau adăugați un PDF existent pentru a începe."
 mobileUpload = "Încărcare de pe mobil"
 openFromComputer = "Deschide de pe calculator"
 uploadFromComputer = "Încărcați de pe calculator"
@@ -4696,6 +4702,7 @@ login = "Autentificare"
 magicLinkSent = "Linkul magic a fost trimis la {{email}}! Verificați emailul și faceți clic pe link pentru a vă autentifica."
 mfaCode = "Cod de autentificare"
 mfaRequired = "Este necesar codul de autentificare cu doi factori"
+noAccount = "Don't have an account?"
 or = "Sau"
 password = "Parolă"
 passwordChangedSuccess = "Parola a fost schimbată cu succes! Autentificați-vă cu noua parolă."
@@ -4719,21 +4726,6 @@ useEmailInstead = "Autentificare cu email"
 useMagicLink = "Folosiți link magic în schimb"
 username = "Nume utilizator"
 youAreLoggedIn = "Sunteți autentificat!"
-
-[login.slides.edit]
-alt = "Editați PDF-uri"
-subtitle = "Cu peste o duzină de instrumente pentru a redacta, semna, citi și manipula PDF-uri, veți găsi cu siguranță ceea ce căutați."
-title = "Editați PDF-uri pentru a afișa/proteja informațiile dorite"
-
-[login.slides.overview]
-alt = "Prezentare generală Stirling PDF"
-subtitle = "O suită cloud axată pe confidențialitate pentru PDF-uri, care vă permite să convertiți, semnați, redactați și gestionați documente, plus peste 50 de alte instrumente puternice."
-title = "Un centru unic pentru toate nevoile PDF."
-
-[login.slides.secure]
-alt = "Securizați PDF-uri"
-subtitle = "Adăugați parole, redactați conținut și gestionați certificate cu ușurință."
-title = "Protejați informațiile sensibile din PDF-urile dvs."
 
 [margin]
 large = "Mare"
@@ -4976,6 +4968,7 @@ pinButton = "Puteți folosi butonul <strong>Fixează</strong> dacă preferați c
 results = "După ce instrumentul a terminat rularea, pasul de <strong>Revizuire</strong> va afișa o previzualizare a rezultatelor în acest panou și vă va permite să anulați operațiunea sau să descărcați fișierul."
 runButton = "După ce instrumentul a fost configurat, acest buton vă permite să rulați instrumentul pe toate PDF-urile selectate."
 selectCropTool = "Să selectăm instrumentul <strong>Decupare</strong> pentru a demonstra cum se utilizează unul dintre instrumente."
+stepOf = "Step {{current}} of {{total}}"
 toolInterface = "Aceasta este interfața instrumentului <strong>Decupare</strong>. După cum vedeți, nu este prea mult acolo deoarece încă nu am adăugat fișiere PDF cu care să lucrăm."
 workbench = "Acesta este <strong>Bancul de lucru</strong> - zona principală în care vizualizați și editați PDF-urile."
 wrapUp = "Totul este pregătit! Ați învățat despre zonele principale ale aplicației și cum să le utilizați. Faceți clic pe butonul <strong>Ajutor</strong> oricând doriți pentru a vedea din nou acest tur."
@@ -4988,6 +4981,26 @@ showMeAround = "Arată-mi"
 skipForNow = "Sari peste deocamdată"
 skipTheTour = "Sari peste tur"
 
+[onboarding.checklist]
+dismiss = "Dismiss"
+title = "Set up Stirling PDF"
+
+[onboarding.checklist.downloadDesktop]
+description = "Run Stirling natively on your machine"
+title = "Download Stirling for Desktop"
+
+[onboarding.checklist.inviteTeam]
+description = "Collaborate with your team"
+title = "Invite team members"
+
+[onboarding.checklist.shareAnalytics]
+description = "Help improve Stirling"
+title = "Share anonymous usage data"
+
+[onboarding.checklist.takeTour]
+description = "See how Stirling works in a quick walkthrough"
+title = "Take the tour"
+
 [onboarding.desktopInstall]
 body = "Stirling funcționează cel mai bine ca aplicație desktop. O poți folosi offline, accesezi documentele mai rapid și faci editări local pe computer."
 selectOs = "Selectează sistemul de operare"
@@ -4996,7 +5009,21 @@ titleWithOs = "Descărcare pentru {{osLabel}}"
 
 [onboarding.mfa]
 authenticationCode = "Cod de autentificare"
+description = "Secure your account by linking an authenticator app. Scan the QR code or enter the setup key, then confirm the 6-digit code to finish."
+enable = "Enable MFA"
+enableError = "Unable to enable two-factor authentication. Check the code and try again."
+enterCode = "Enter the 6-digit code from your app."
+enterCodeError = "Enter the authentication code to continue."
+logout = "Logout"
+openAuthenticator = "Open Google Authenticator, Authy, or 1Password."
 qrCodeLoading = "Se generează codul QR…"
+regenerateQrCode = "Regenerate QR code"
+scanQrCode = "Scan the QR code or enter the setup key below."
+setupError = "Unable to start two-factor setup. Please try again."
+setupKey = "Setup key (manual entry)"
+stepByStep = "Step-by-step"
+success = "MFA has been enabled. You can now continue."
+title = "Multi-Factor Authentication Setup"
 
 [onboarding.planOverview]
 adminBodyLoginDisabled = "După ce activezi modul de autentificare, poți gestiona utilizatori, configura setări și monitoriza starea serverului. Primele <strong>{{freeTierLimit}}</strong> persoane de pe serverul tău folosesc Stirling gratuit."
@@ -5004,6 +5031,11 @@ adminBodyLoginEnabled = "Ca admin, poți gestiona utilizatori, configura setări
 adminTitle = "Prezentare admin"
 userBody = "Invite colegi, atribuie roluri și ține documentele organizate într-un spațiu de lucru sigur. Activează modul de autentificare când ești pregătit să treci dincolo de utilizarea solo."
 userTitle = "Prezentare plan"
+
+[onboarding.processorIntro]
+body = "Stirling now runs <strong>Policies</strong> — automated rules that classify, secure, and process every document as it arrives. Set them up and monitor runs in the <strong>Processor</strong>."
+cta = "Check out the Processor"
+title = "Check out the Stirling Processor"
 
 [onboarding.saas.freeEditor]
 freeLine = "The editor is now <free>completely free</free>."
@@ -5937,48 +5969,11 @@ keyDescription = "Lipiți cheia de licență din e-mail"
 success = "Licență activată!"
 successMessage = "Licența a fost activată cu succes. Puteți închide această fereastră."
 
-[policies]
-deleteConfirmBody = "This removes the policy and its workflow. Documents already processed are not affected."
-deleteConfirmTitle = "Delete {{label}} policy?"
-
 [policies.activity]
-enforced = "aplicată"
-enforcing = "Se aplică..."
-failed = "Aplicarea a eșuat"
 outputsUnavailable = "Rezultatele politicii nu mai sunt disponibile pentru descărcare."
 partialOutputsUnavailable = "Unele rezultate ale politicii nu mai sunt disponibile pentru descărcare."
-retrying = "Ocupat, se reîncearcă..."
 runNotFound = "Rularea aplicării nu a mai putut fi găsită."
-step = "pas {{current}}/{{total}}"
 timedOut = "Aplicarea a expirat înainte ca rularea să se finalizeze."
-
-[policies.catalog]
-compliance = "Compliance"
-ingestion = "Ingestion"
-retention = "Retention"
-routing = "Routing"
-security = "Security"
-
-[policies.detail]
-close = "Închide"
-editSettings = "Edit Settings"
-enforces = "Enforces"
-managedByOrg = "Managed by your organisation. Contact a team leader to change this policy."
-noActivityDescription = "Documents will appear here once this policy runs."
-noActivityTitle = "No activity yet"
-onEveryUpload = "On every upload"
-originalsNote = "Originals stay untouched • Enforced version saved alongside"
-pause = "Pause"
-recentActivity = "Recent Activity"
-resume = "Resume"
-retry = "Retry"
-showLess = "Show less"
-showMore = "Show more"
-statActive = "Active"
-statDataProcessed = "Data processed"
-statDocsEnforced = "Docs enforced"
-statusActive = "Active"
-statusPaused = "Paused"
 
 [policies.enforcement]
 applying = "Se aplică {{names}}"
@@ -5989,61 +5984,16 @@ failureBody = "{{failures}} din {{total}} fișier(e) nu au putut fi procesate ș
 failureTitle = "Exportat fără aplicare completă"
 printPolicyAppliedBody = "Acest PDF a fost actualizat pentru a respecta o politică. Revizuiți modificările, apoi imprimați din nou."
 printPolicyAppliedTitle = "Politică aplicată înainte de imprimare"
-queued = "+{{count}} în așteptare"
 successTitle = "{{names}} aplicate"
 summaryMore = "{{first}}, {{second}} și încă {{more}}"
 summaryTwo = "{{first}} și {{second}}"
 
-[policies.enforcement.triggerVerb]
-convert = "Se aplică înainte de conversie"
-default = "Se aplică"
-export = "Se aplică înainte de export"
-input = "Se aplică la import"
-print = "Se aplică înainte de imprimare"
-
-[policies.field]
-accessLog = "Jurnal de acces"
-archiveAfter = "Arhivează după"
-auditTrail = "Pistă de audit"
-belowThreshold = "Sub prag"
-destination = "Destinație"
-frameworks = "Frameworks"
-immutableHold = "Reținere imuabilă"
-keepFor = "Păstrează timp de"
-minConfidence = "Încredere minimă"
-notify = "Notifică la rutare"
-onViolation = "Când nu este conform"
-webhookUrl = "Webhook URL"
-
-[policies.fields]
-selectedCount = "{{count}} selected"
-
 [policies.labels]
-add = "Adaugă"
-addPlaceholder = "Adaugă o etichetă…"
-customNote = "Personalizat pentru echipa ta."
-defaultNote = "Se folosește valoarea implicită integrată, partajată cu echipa ta."
-duplicate = "„{{name}}” există deja."
-edit = "Editează etichetele"
-empty = "Încă nu există etichete."
-export = "Exportă JSON"
-iconAria = "Alege o pictogramă pentru {{name}}"
-import = "Importă JSON"
-importError = "Nu s-a putut importa acel fișier."
-managedNote = "Etichetele echipei sunt gestionate de liderul echipei."
-modalSubtitle = "Partajate cu întreaga ta echipă. Clasificatorul alege etichetele care se potrivesc fiecărui document."
-modalTitle = "Etichete de clasificare"
-pickIcon = "Folosește pictograma {{label}}"
-removeAria = "Elimină {{name}}"
-resetToDefault = "Resetează la implicit"
-saveForTeam = "Salvează pentru echipă"
-saving = "Se salvează…"
-sectionLabel = "Etichete de clasificare"
-startFromScratch = "Începe de la zero"
-teamCount = "etichete de echipă"
-tooLong = "Etichetele pot avea cel mult {{max}} caractere."
-ungrouped = "Negrupate"
-view = "Vezi etichetele"
+categoryCount = "categories"
+hideCategory = "Hide category"
+labelCount = "labels"
+sharedNote = "These labels are built in and shared across your whole team."
+showCategory = "Show category"
 
 [policies.pii]
 account = "Numere de cont (etichetate)"
@@ -6056,90 +6006,6 @@ placeholder = "Select PII types"
 routing = "Numere de rutare din SUA (ABA)"
 ssn = "Numere de securitate socială"
 
-[policies.settings]
-noneExport = "În prezent, nu se execută politici la export."
-noneUpload = "În prezent, nu se execută politici la upload."
-onExport = "La export"
-onUpload = "La upload"
-reorderHandle = "Trage pentru a reordona"
-runOrderDesc = "Când mai multe politici rulează pe același declanșator, acestea rulează în această ordine — fiecare pe rezultatul politicii anterioare. Trage pentru a reordona."
-title = "Setări politici"
-
-[policies.sidebar]
-activeCount = "{{count}} active"
-infoTooltip = "A policy is a fixed set of tools that runs automatically whenever it's triggered — for example when a new document arrives — enforcing rules like redacting PII with no manual steps."
-loading = "Loading…"
-optionsAriaLabel = "Opțiuni politici"
-policySettings = "Setări politici"
-railAriaLabel = "{{label}} policy — {{status}}"
-railSuffixActive = " (Active)"
-railSuffixPaused = " (Paused)"
-retryFailed = "Reîncearcă politicile eșuate ({{count}})"
-rowProgress = "{{completed}} din {{total}} fișiere procesate"
-setUp = "Set up"
-title = "Policies"
-upgradeToEnterprise = "Upgrade to enterprise"
-whatIsPolicy = "Ce este o politică?"
-
-[policies.status]
-active = "Active"
-paused = "Paused"
-setup = "Set up"
-
-[policies.toolConfig]
-enableAriaLabel = "Enable {{tool}}"
-infoAriaLabel = "What does {{tool}} do?"
-
-[policies.toolConfig.info]
-redact = "Găsește automat și acoperă cu negru detalii sensibile — precum numerele de securitate socială și de card — astfel încât să nu poată fi citite în document."
-sanitize = "Elimină JavaScript ascuns din fișier, astfel încât nimic să nu ruleze automat când cineva îl deschide."
-watermark = "Aplică o marcă vizibilă (de ex. \"Confidențial\") pe fiecare pagină."
-
-[policies.wizard]
-allDocTypesDescription = "Enable the Classification policy to filter by document type."
-allDocTypesTitle = "All document types"
-back = "Back"
-builderDesc = "Build the sequence of tools this policy runs on each document."
-clear = "Clear"
-close = "Închide"
-continue = "Continue"
-docTypesLabel = "Document types"
-edit = "Edit"
-editTitle = "Edit {{label}} Policy"
-enablePolicy = "Enable Policy"
-filenameAutoNumber = "Auto-number"
-filenamePositionAria = "Filename position"
-filenamePrefix = "Prefix"
-filenameSuffix = "Suffix"
-filenameTextAria = "Filename text"
-filenameTextPlaceholder = "Text to add (optional)"
-lockedDescription = "Contact a team leader to change this policy."
-lockedTitle = "Managed by your organisation"
-maxRetriesLabel = "Max retries"
-noToolsError = "Add at least one configured tool to the workflow first."
-outputAsLabel = "Output as"
-outputFilenameSubhead = "Output filename"
-outputModeAria = "Output mode"
-outputNewFile = "New file"
-outputNewVersion = "New version"
-outputRetriesLabel = "Output & retries"
-outputSubhead = "Output"
-retryDelayAria = "Retry delay minutes"
-retryDelayLabel = "Retry delay (min)"
-runOnExport = "Export"
-runOnLabel = "Run on"
-runOnSubhead = "Run on"
-runOnUpload = "Upload"
-saveChanges = "Save Changes"
-saveError = "Couldn't save the policy. Please try again."
-setupClassification = "Set up Classification"
-setupTitle = "Set up {{label}} Policy"
-sourcesDesc = "Choose where this policy runs and which document types it applies to."
-sourcesLabel = "Sources"
-stepOf = "Step {{step}} of {{total}}"
-toolChainDesc = "Configure the tools this policy runs on each document."
-typesSelected = "{{count}} types selected"
-
 [policy]
 badgeEnforcing = "{{name}} se aplică..."
 badgeRan = "Politica {{name}} a rulat pe acest fișier"
@@ -6151,6 +6017,7 @@ viewAnyway = "Vezi fișierul (politica încă se aplică)"
 [policyOption]
 autoRedactPhi = "Anonimizează automat PHI"
 blockExport = "Blochează exportul"
+ccpa = "CCPA"
 contracts = "Contracte"
 documents = "Documente"
 fedramp = "FedRAMP"
@@ -6269,86 +6136,6 @@ free = "Plan Editor"
 subscribed = "Plan Processor"
 unlinked = "Neconectat"
 
-[portal.agentBuilder]
-bootstrapFromDocument = "Bootstrap din document"
-sectionsAriaLabel = "Secțiuni Agent Builder"
-selectorAriaLabel = "Agenți"
-subtitle = "Proiectează, testează și livrează agenții AI care clasifică, extrag din și rutează documentele tale. Definește scenarii, limitează accesul la instrumente, rulează un set de referință și publică o versiune."
-title = "Agent Builder"
-
-[portal.agentBuilder.bootstrap]
-cancel = "Anulează"
-dropzoneText = "Alege un document exemplu (PDF sau imagine)"
-lead = "Plasează un document exemplu și vom propune scenarii și o schemă de extragere pe care o poți rafina. Nimic nu este publicat până nu îl revizuiești."
-submit = "Bootstrap agent"
-subtitle = "Inițializează un agent nou dintr-un fișier reprezentativ"
-title = "Bootstrap dintr-un document"
-
-[portal.agentBuilder.empty]
-description = "Fă bootstrap unui agent dintr-un document exemplu pentru a-i inițializa scenariile și schema de extragere, apoi rafinează și publică."
-title = "Încă nu există agenți"
-
-[portal.agentBuilder.evals]
-casesPassing = "Cazuri reușite"
-columnCase = "Caz eval"
-columnLatency = "Latență"
-columnResult = "Rezultat"
-fail = "eșec"
-goldenSetPassRate = "Rată de reușită set de referință"
-latencyMs = "{{ms}} ms"
-notRun = "nerulat"
-pass = "reușit"
-passRate = "Rată de reușită"
-runEvals = "Rulează evals"
-
-[portal.agentBuilder.evals.empty]
-description = "Evals îți transformă scenariile într-un set de referință repetabil. Fă upgrade pentru a captura rata de reușită în timp și a condiționa publicările de aceasta."
-title = "Încă nu există set de referință"
-
-[portal.agentBuilder.kpi]
-acrossGoldenSets = "în seturile de referință"
-activeAgents = "Agenți activi"
-avgPassRate = "Rată medie de reușită eval"
-fleetWide = "la nivelul întregii flote"
-latestPublished = "Ultima publicare"
-scenarios = "Scenarii"
-testCases = "cazuri de test"
-totalDescription_one = "{{count}} în total"
-totalDescription_other = "{{count}} în total"
-
-[portal.agentBuilder.scenarios]
-add = "Adaugă"
-addScenario = "Adaugă scenariu"
-enable = "Activează"
-expectationLabel = "Comportament așteptat"
-expectationPlaceholder = "Ce ar trebui să facă agentul"
-inEval = "în eval"
-mute = "Dezactivează sunetul"
-muted = "fără sunet"
-nameLabel = "Nume"
-namePlaceholder = "de ex. Escaladare conformitate"
-
-[portal.agentBuilder.tabs]
-evals = "Evals"
-scenarios = "Scenarii"
-tools = "Instrumente"
-versions = "Versiuni"
-
-[portal.agentBuilder.tools]
-broadAccess = "Acces larg"
-deniedHint = "Instrumentele selectate sunt blocate. Toate celelalte rămân apelabile."
-deniedTools = "Instrumente refuzate"
-governanceGate = "Guvernanța instrumentelor este disponibilă în planul Enterprise."
-restricted = "Restricționat"
-restrictedAccess = "Acces restricționat la instrumente"
-restrictedDescription = "Permite fiecare instrument, cu excepția celor pe care le refuzi mai jos."
-
-[portal.agentBuilder.versions]
-current = "curentă"
-historyGate = "Istoricul complet al versiunilor și revenirea sunt disponibile în planul Enterprise."
-publish = "Publică"
-rollBack = "Revino"
-
 [portal.assistant]
 close = "Închide asistentul"
 error = "Nu s-a putut contacta asistentul."
@@ -6367,6 +6154,7 @@ redirectingToEditor = "Se redirecționează către editor..."
 
 [portal.billing.checkout]
 noClientSecret = "Funcția Edge nu a returnat client_secret."
+stepCount = "Step {{step}} of 2"
 subtitle = "Adaugă un card pentru a continua după alocarea gratuită a planului Editor. Stripe se ocupă de restul."
 title = "Activează planul Processor"
 
@@ -6375,6 +6163,20 @@ body = "Plata ta a reușit, dar activarea durează puțin mai mult decât de obi
 close = "Închide"
 title = "Aproape gata"
 
+[portal.billing.checkout.cap]
+back = "Back"
+continue = "Continue to payment"
+error = "Couldn't set your spend limit"
+finePrint = "Invoices post on the 1st. Cancel anytime and revert to the Editor plan; your policies and history stay intact."
+note = "Processing pauses if you reach it. You're never billed past this, and you can change it any time."
+subtitle = "You're billed only for PDFs you process past your first 500 free, never for seats — so your ceiling is yours from day one."
+title = "Set your spend limit"
+
+[portal.billing.checkout.card]
+fields = "Card number · MM / YY · CVC · ZIP"
+label = "Card details"
+note = "Card details collected by Stripe. Stirling never stores PAN or CVC."
+
 [portal.billing.checkout.error]
 title = "Nu s-a putut porni checkout-ul"
 
@@ -6382,11 +6184,6 @@ title = "Nu s-a putut porni checkout-ul"
 body = "Plata ta a fost procesată. Activăm procesarea contorizată pentru instanțele tale conectate - de obicei durează câteva secunde."
 hint = "Te rugăm să păstrezi această fereastră deschisă."
 title = "Se activează planul Processor..."
-
-[portal.billing.checkout.notConfigured]
-bodyAfter = "în portal env pentru a activa checkout-ul în aplicație."
-bodyBefore = "Setează"
-title = "Stripe nu este configurat"
 
 [portal.billing.enterpriseUpsell]
 cta = "Creează oferta ta Enterprise"
@@ -6465,6 +6262,9 @@ segmentApiDesc = "Solicitări API directe"
 segmentApiLabel = "API"
 segmentAutomationDesc = "Automatizări și pipelines"
 segmentAutomationLabel = "Automatizare"
+sizeMultiplier = "{{formatted}} PDFs used a size multiplier"
+summary = "{{unique}} unique · {{units}} meter units · {{avg}} avg per PDF"
+summaryNoRate = "{{unique}} unique · {{units}} meter units"
 unit = "PDF-uri contorizate"
 
 [portal.billing.spendLimit]
@@ -6494,6 +6294,8 @@ label = "Se estimează că va fi depășit."
 
 [portal.billing.spendThisMonth]
 eyebrow = "Cheltuieli luna aceasta"
+freeRemaining_one = "{{formatted}} free PDF remaining"
+freeRemaining_other = "{{formatted}} free PDFs remaining"
 processed_one = "{{formattedCount}} PDF procesat."
 processed_other = "{{formattedCount}} PDF-uri procesate."
 processedWithRate_one = "{{formattedCount}} PDF procesat, la {{rate}} fiecare."
@@ -6533,6 +6335,39 @@ signature = "semnătură"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
+
+[portal.connections]
+createTitle = "New S3 connection"
+delete = "Delete"
+edit = "Edit"
+editTitle = "Edit S3 connection"
+subtitle = "Reusable S3 credentials that sources and pipeline outputs connect to."
+
+[portal.connections.actions]
+new = "New connection"
+
+[portal.connections.empty]
+description = "Add an S3 connection to reuse the same bucket and credentials across sources and pipeline outputs."
+title = "No connections yet"
+
+[portal.connections.picker]
+cancel = "Cancel"
+createNew = "New connection..."
+placeholder = "Select a connection"
+save = "Save connection"
+
+[portal.connections.s3.fields]
+name = "Connection name"
+namePlaceholder = "e.g. Claims bucket"
+
+[portal.connections.table]
+bucket = "Bucket"
+name = "Name"
+region = "Region"
+
+[portal.docs]
+browse = "Browse docs"
+viewSource = "View source on GitHub"
 
 [portal.docs.authentication]
 codeCaption = "fiecare solicitare"
@@ -6619,10 +6454,18 @@ title = "SDK-uri oficiale"
 beta = "Beta"
 deprecated = "Depreciat"
 
+[portal.docs.search]
+empty = "No matching docs"
+placeholder = "Search docs"
+results = "{{count}} results"
+
 [portal.docs.skills]
 eyebrow = "SKILLS"
 lead = "Capabilități incluse, denumite, pe care agentul tău le invocă drept un singur instrument. Fiecare skill este un lanț determinist de operațiuni, cu evals atașate."
 title = "Skill-uri agent"
+
+[portal.docs.toc]
+title = "On this page"
 
 [portal.docs.webhooks]
 codeCaption = "document.processed"
@@ -6697,6 +6540,8 @@ type = "Tip"
 user = "Utilizator"
 
 [portal.documents.queue.empty]
+connectSource = "Connect a source"
+createPipeline = "Create a pipeline"
 description = "Pe măsură ce sursele trimit documente în pipeline-urile dvs., acestea vor apărea aici pentru revizuire."
 title = "Nu există documente în coadă"
 
@@ -6806,8 +6651,63 @@ description = "Această vizualizare a întâmpinat o eroare neașteptată. Înce
 retry = "Încercați din nou"
 title = "Ceva nu a mers bine pe această pagină"
 
+[portal.home.download]
+back = "Back"
+body = "Download the desktop app or self-host the server."
+done = "Done"
+guide = "Open the {{name}} guide"
+openInBrowser = "Open in browser instead"
+sectionDesktop = "Desktop app"
+sectionSelfHosted = "Self-hosted"
+title = "Install the Stirling PDF Editor"
+
+[portal.home.download.docker]
+detailBody = "Run the official image on your server."
+note = "Opens at :8080. Default login: admin / stirling."
+tagline = "Run the server in a container"
+title = "Docker"
+variantFat = "Fat"
+variantLite = "Ultra-Lite"
+variantStandard = "Standard"
+
+[portal.home.download.kubernetes]
+detailBody = "Install the official Helm chart."
+note = "Add a PVC for /configs to persist settings."
+tagline = "Deploy to a cluster with Helm"
+title = "Kubernetes"
+
+[portal.home.download.linux]
+detailBody = "Native builds for your distribution."
+guideBtn = "View Linux install options"
+note = "AppImage, .deb and .rpm builds are available for common distros."
+tagline = "Native desktop app for your distro"
+title = "Linux"
+
+[portal.home.download.mac]
+altLabel = "Or via Homebrew"
+detailBody = "Run the installer, or use Homebrew."
+downloadBtn = "Download for macOS"
+tagline = "Native app for Apple silicon and Intel"
+title = "macOS"
+
+[portal.home.download.manual]
+detailBody = "Run the .jar on a bare metal server."
+downloadBtn = "Download the .jar"
+note = "Requires Java 21+. Opens at :8080; default login admin / stirling."
+runLabel = "Then run it"
+tagline = "Run the .jar on a bare metal server"
+title = "Manual server setup"
+
+[portal.home.download.windows]
+altLabel = "Or via winget"
+detailBody = "Run the installer, or use a package manager."
+downloadBtn = "Download installer"
+tagline = "Native app for Microsoft Windows"
+title = "Windows"
+
 [portal.home.editor]
 activeUsers = "{{n}} activi"
+install = "Install the editor"
 invite = "Invitați colegi"
 name = "Stirling PDF Editor"
 open = "Deschideți în browser"
@@ -6823,12 +6723,6 @@ afternoon = "Bună ziua"
 evening = "Bună seara"
 morning = "Bună dimineața"
 
-[portal.home.onboarding]
-dismiss = "Închideți configurarea"
-notStarted = "Neînceput"
-progress = "{{done}} din {{total}} finalizate"
-title = "Finalizați configurarea"
-
 [portal.home.onboarding.enterprise]
 body = "SSO + SCIM + RBAC la nivel de organizație, prețuri pentru volum angajat și implementare air-gapped."
 cta = "Începeți perioada de probă"
@@ -6840,15 +6734,13 @@ tag = "Enterprise"
 blurb = "Implementați aplicația desktop, gratuită pentru totdeauna."
 title = "Descărcați PDF Editor"
 
+[portal.home.onboarding.steps.invite]
+blurb = "Bring your team into the secure workspace"
+title = "Invite teammates"
+
 [portal.home.onboarding.steps.policies]
 blurb = "{{active}} active · {{recommended}} recomandate"
-chip = "{{active}} active"
 title = "Activați politicile"
-
-[portal.home.onboarding.steps.sources]
-blurb = "{{connected}} conectate · fiecare PDF guvernat acolo unde ajunge"
-chip = "{{connected}} conectate"
-title = "Conectați sursele"
 
 [portal.home.quickActions]
 subtitle = "Sarcinile principale pentru astăzi"
@@ -6872,6 +6764,11 @@ sectionsAriaLabel = "Secțiuni de infrastructură"
 subtitle = "Implementări, credențiale, postură de securitate, stocare și jurnalul de audit pentru spațiul dvs. de lucru Stirling."
 title = "Infrastructură"
 
+[portal.infrastructure.apiKeyPermission]
+admin = "Admin"
+read = "Read"
+write = "Write"
+
 [portal.infrastructure.apiKeys]
 createKey = "Creați cheie"
 heading = "Chei API"
@@ -6891,6 +6788,11 @@ usageToday = "Utilizare astăzi"
 [portal.infrastructure.apiKeys.empty]
 description = "Creați o cheie cu domeniu limitat pentru a începe să apelați Stirling API."
 title = "Nu există încă chei API"
+
+[portal.infrastructure.attestationLabel]
+attested = "Attested"
+inScope = "In scope"
+notApplicable = "N/A"
 
 [portal.infrastructure.audit]
 filterAriaLabel = "Filtrați evenimentele de audit după categorie"
@@ -6935,6 +6837,7 @@ all = "Toate"
 auth = "Autentificare"
 config = "Configurare"
 elevation = "Elevare"
+policy = "Policy"
 processing = "Procesare"
 security = "Securitate"
 
@@ -6944,9 +6847,28 @@ title = "Nu aveți acces"
 
 [portal.infrastructure.audit.metrics]
 config = "Configurare"
-elevation = "Elevare"
+policy = "Policy"
 processing = "Procesare"
 totalEvents = "Evenimente totale · 24h"
+
+[portal.infrastructure.auditCatLabel]
+auth = "Auth"
+config = "Config"
+elevation = "Elevation"
+policy = "Policy"
+processing = "Processing"
+security = "Security"
+
+[portal.infrastructure.auditStatusLabel]
+danger = "Error"
+info = "Info"
+success = "Success"
+warning = "Warning"
+
+[portal.infrastructure.certLabel]
+certified = "Certified"
+inProgress = "In progress"
+notStarted = "Not started"
 
 [portal.infrastructure.createKey]
 cancel = "Anulați"
@@ -6963,6 +6885,12 @@ subtitle = "Limitați cheia la minimul necesar. O puteți roti sau revoca oricâ
 subtitleCreated = "Copiați acest secret acum — nu va mai fi afișat."
 title = "Creați cheie API"
 titleCreated = "Cheie creată"
+
+[portal.infrastructure.deployLabel]
+live = "Live"
+queued = "Queued"
+rolledBack = "Rolled back"
+rolling = "Rolling out"
 
 [portal.infrastructure.deployments]
 msValue = "{{value}} ms"
@@ -6999,6 +6927,16 @@ subheading = "Sănătate în timp real pentru fiecare regiune Stirling implement
 description = "Regiunile implementate apar aici după ce spațiul dvs. de lucru este provisionat."
 title = "Nu există regiuni implementate"
 
+[portal.infrastructure.keyLabel]
+active = "Active"
+revoked = "Revoked"
+rotateSoon = "Rotate soon"
+
+[portal.infrastructure.modelLabel]
+active = "Active"
+degraded = "Degraded"
+disabled = "Disabled"
+
 [portal.infrastructure.models]
 heading = "Modele"
 msValue = "{{value}} ms"
@@ -7026,6 +6964,10 @@ status = "Stare"
 type = "Tip"
 version = "Versiune"
 
+[portal.infrastructure.models.cost]
+perCall = "{{price}}/call"
+perThousand = "{{price}}/1k"
+
 [portal.infrastructure.models.metrics]
 activeModels = "Modele active"
 avgLatency = "Latență medie"
@@ -7048,6 +6990,17 @@ docType = "Tip document"
 modelForAria = "Model pentru {{operation}}"
 operation = "Operațiune"
 routedTo = "Rutat către"
+
+[portal.infrastructure.modelTypeLabel]
+classification = "Classification"
+extraction = "Extraction"
+llm = "LLM"
+ocr = "OCR"
+
+[portal.infrastructure.regionLabel]
+degraded = "Degraded"
+down = "Down"
+healthy = "Healthy"
 
 [portal.infrastructure.security.access.byok]
 description = "Furnizați o cheie din propriul KMS. Stirling criptează cu ea, dar poate încă citi."
@@ -7190,25 +7143,9 @@ sources = "Surse"
 usage = "Utilizare și facturare"
 users = "Utilizatori"
 
-[portal.notifications]
-markAllRead = "Marcați toate ca citite"
-title = "Notificări"
-viewAll = "Vizualizați toate"
-
-[portal.notifications.ariaLabel]
-none = "Notificări, niciuna necitită"
-unread_one = "Notificări, {{count}} necitită"
-unread_other = "Notificări, {{count}} necitite"
-
-[portal.notifications.count]
-allRead = "toate citite"
-loading = "se încarcă"
-new_one = "{{count}} nouă"
-new_other = "{{count}} noi"
-
-[portal.notifications.empty]
-description = "Nu există notificări noi."
-title = "Sunteți la zi"
+[portal.nav.section]
+platform = "PDF Platform"
+processor = "PDF Processor"
 
 [portal.pipelines]
 subtitle = "Fiecare pipeline automatizat de documente pe backend: un lanț ordonat de operațiuni peste un set de surse, rulat la un declanșator. Faceți clic pe un rând pentru pașii și sursele sale."
@@ -7254,6 +7191,7 @@ operations_one = "Operațiune ({{count}})"
 operations_other = "Operațiuni ({{count}})"
 output = "Ieșire"
 removeStep = "Eliminați operațiunea"
+s3PrefixHelp = "Outputs are uploaded under this key prefix."
 save = "Salvați modificările"
 scheduleEvery = "Rulați la fiecare"
 sources = "Surse"
@@ -7273,11 +7211,13 @@ confirm = "Ștergeți"
 title = "Ștergeți pipeline-ul?"
 
 [portal.pipelines.detail]
+clearHistory = "Clear history"
 delete = "Ștergeți pipeline-ul"
 run = "Rulați acum"
 
 [portal.pipelines.empty]
 action = "Creați un pipeline"
+connectSource = "Connect a source"
 description = "Creați primul pipeline: alegeți sursele peste care rulează, înlănțuiți operațiunile și alegeți unde ajunge ieșirea."
 title = "Nu există încă pipeline-uri"
 
@@ -7289,12 +7229,19 @@ total = "Pipeline-uri"
 [portal.pipelines.output]
 folder = "Scrieți în folder"
 inline = "Returnați fișiere"
+s3 = "Write to Amazon S3"
 
 [portal.pipelines.run]
+allProcessed_one = "Nothing to run: the source's {{count}} document has already been processed."
+allProcessed_other = "Nothing to run: all {{count}} documents in the sources have already been processed."
 completed_one = "Rulare finalizată."
 completed_other = "Toate cele {{count}} rulări au fost finalizate."
 empty = "Nimic de rulat: sursele nu au avut documente de procesat."
 failed = "Rularea a eșuat: {{error}}"
+historyCleared = "History cleared. The next run reprocesses everything currently in the sources."
+inFlight = "Nothing new to run: documents are still being processed from an earlier run."
+parked_one = "Nothing to run: {{count}} document failed previously and is parked. Fix the cause, then clear history to retry it."
+parked_other = "Nothing to run: {{count}} documents failed previously and are parked. Fix the cause, then clear history to retry them."
 running = "Rularea a început; este încă în desfășurare."
 timeout = "Rularea durează mai mult decât era de așteptat; se poate finaliza în continuare în fundal."
 
@@ -7314,12 +7261,18 @@ manual = "Manual"
 schedule = "Programat"
 
 [portal.policies]
+defaultName = "{{category}} Policy"
 subtitle = "Automatizări permanente care aplică un pipeline de instrumente fiecărui document. Fiecare politică se declanșează la încărcare sau export, rulează lanțul de instrumente și salvează versiunea aplicată alături de original."
 title = "Politici"
 
 [portal.policies.card]
 comingSoon = "Actualizați la Enterprise"
 notSetUp = "Neconfigurat"
+requiresAiEngine = "Requires AI engine"
+
+[portal.policies.categories.classification]
+desc = "Identify each document's type on upload and tag its metadata for filing and search."
+label = "Classification"
 
 [portal.policies.categories.compliance]
 desc = "Aplicați cerințele HIPAA, GDPR, SOC 2 sau FedRAMP fiecărui document."
@@ -7343,6 +7296,13 @@ label = "Securitate"
 
 [portal.policies.config]
 scopeAll = "Toate documentele"
+
+[portal.policies.config.classification]
+summary = "Classifies every uploaded document against your team's labels and tags its metadata."
+
+[portal.policies.config.classification.rules]
+0 = "Classify"
+1 = "Tag metadata"
 
 [portal.policies.config.compliance]
 summary = "Validează documentele față de cadrele de reglementare înainte ca acestea să părăsească sistemul."
@@ -7438,6 +7398,7 @@ title = "Încă nu există activitate"
 [portal.policies.endpoints]
 addWatermark = "Filigran"
 autoRedact = "Redactează PII"
+classifyAndLabel = "Classify"
 compressPdf = "Comprimă"
 flatten = "Aplatizează"
 ocrPdf = "OCR"
@@ -7473,12 +7434,23 @@ label = "Documente aplicate"
 description = "Configurate, dar nu se declanșează"
 label = "În pauză"
 
+[portal.policies.table]
+appliesTo = "Applies to"
+docs = "Docs enforced"
+enforces = "Enforces"
+policy = "Policy"
+status = "Status"
+
 [portal.policies.wizard.actions]
 back = "Înapoi"
 cancel = "Anulează"
 continue = "Continuă"
 enablePolicy = "Activează politica"
 saveChanges = "Salvează modificările"
+
+[portal.policies.wizard.capability.classify]
+desc = "Identifies the document's type from your team's labels and tags it, so it files and searches by category."
+label = "Classify the document"
 
 [portal.policies.wizard.capability.compress]
 desc = "Comprimă documentul la o dimensiune mai mică a fișierului."
@@ -7503,6 +7475,10 @@ label = "Elimină conținutul activ"
 [portal.policies.wizard.capability.watermark]
 desc = "Aplică un marcaj vizibil (de ex. „Confidențial”) pe fiecare pagină."
 label = "Aplică un filigran"
+
+[portal.policies.wizard.classification]
+description = "Every uploaded document is classified against the built-in labels and tagged with the types that fit. The label set is shared across your whole team."
+labelsHeading = "Classification labels"
 
 [portal.policies.wizard.errors]
 noTools = "Activează mai întâi cel puțin un instrument în fluxul de lucru."
@@ -7577,8 +7553,49 @@ soon = "În curând"
 managePlan = "Gestionează planul"
 volumeSuffix = "PDF-uri procesate · ultimele 30 de zile"
 
+[portal.processorFlow]
+footnote = "Counts are over the last 24 hours. Flow speed is illustrative."
+liveBadge = "Live"
+stats = "{{connected}} connected · {{processed}} PDFs processed"
+title = "PDF Processor"
+
+[portal.processorFlow.lens]
+ariaLabel = "View mode"
+flow = "Flow"
+sankey = "Sankey"
+
+[portal.processorFlow.outcomes]
+count = "{{n}} · 24h"
+failed = "Failed"
+heading = "Outcomes"
+success = "Delivered"
+
+[portal.processorFlow.policies]
+activeCount = "{{n}} active"
+count = "{{n}} · 24h"
+heading = "Policies"
+setUp = "Set up"
+soon = "Soon"
+
+[portal.processorFlow.sankey]
+waist = "Policies · {{n}} active"
+
+[portal.processorFlow.sankey.empty]
+description = "Connect a source and switch on a policy to watch documents flow through the processor."
+title = "No flow yet"
+
+[portal.processorFlow.sources]
+comingSoonTag = "Connect"
+editor = "Stirling PDF Editor"
+heading = "Sources"
+perDay = "{{n}} / 24h"
+
+[portal.processorFlow.sources.comingSoon]
+apiMcp = "API · MCP"
+cloud = "Drive · Box · S3"
+email = "Email intake"
+
 [portal.procurement]
-reset = "Resetează achizițiile (demo)"
 subtitle = "Parcurge evaluarea, contractarea și integrarea echipei tale. Fiecare document într-un singur loc."
 title = "Achiziții"
 
@@ -7598,23 +7615,42 @@ title = "Revizuiește acordul enterprise"
 
 [portal.procurement.builder]
 addons = "Suplimente"
+addressLine1 = "Address line 1"
+addressLine1Placeholder = "500 Howard St"
+addressLine2 = "Address line 2"
+addressLine2Placeholder = "Suite, floor, building"
 back = "Înapoi"
 businessName = "Numele firmei"
 businessNamePlaceholder = "Compania ta"
+city = "City"
+cityPlaceholder = "San Francisco"
+contactEmail = "Contact email"
+contactEmailPlaceholder = "jane@acme.com"
+contactName = "Contact name"
+contactNamePlaceholder = "Jane Doe"
 continue = "Continuă"
-country = "Țară"
-countryEuro = "Zona euro (EUR €)"
-countryUK = "Regatul Unit (GBP £)"
-countryUS = "Statele Unite (USD $)"
 eula = "Am citit și sunt de acord cu Stirling Enterprise EULA. Aceasta guvernează acordul generat din această ofertă."
 generate = "Generează oferta"
 included = "Inclus"
 indemnification = "Despăgubire IP"
 indemnificationSub = "Apărăm revendicările IP eligibile, conform EULA"
-offlineLicense = "Licență offline / izolată de rețea"
-offlineLicenseSub = "Un fișier de licență descărcabil pentru o instanță self-hosted izolată de rețea"
+pdfSize = "PDF size"
+poNumber = "PO number"
+poNumberPlaceholder = "Optional"
+postalCode = "Postal code"
+postalCodePlaceholder = "94105"
+posture = "Governance"
+posture_count = "~{{count}} policies"
+posture_essentials = "Essentials"
+posture_essentialsSub = "Classification + Sharing — the defaults"
+posture_governed = "Governed"
+posture_governedSub = "Adds Security and Routing"
+posture_regulated = "Regulated"
+posture_regulatedSub = "Every category — Compliance, Retention, Ingestion"
 qbr = "Evaluări trimestriale de business"
 qbrSub = "SE-ul tău revizuiește utilizarea și foaia de parcurs în fiecare trimestru"
+region = "State / region"
+regionPlaceholder = "California"
 running = "{{annual}} / an · {{years}} ani {{tcv}}"
 s1Sub = "Echipa ta și PDF-urile pe care te aștepți să le rulezi în fiecare an."
 s1Title = "Cât vei procesa?"
@@ -7623,6 +7659,12 @@ s2Title = "Angajament și serviciu"
 s3Sub = "Pentru oferta și acordul pe care îl generează."
 s3Title = "Detaliile tale"
 serviceLevel = "Nivel de serviciu"
+size_compact = "Compact"
+size_compactSub = "Mostly text, under 1 MB"
+size_heavy = "Heavy"
+size_heavySub = "Scanned or image-heavy, 5 MB+"
+size_standard = "Standard"
+size_standardSub = "Mixed text and images, 1 to 5 MB"
 slDedicated = "Dedicat"
 slDedicatedSub = "4 ore lucrătoare · manager de cont dedicat · +30%"
 slPriority = "Prioritar"
@@ -7630,6 +7672,8 @@ slPrioritySub = "Aceeași zi lucrătoare · CSM nominalizat · +15%"
 slStandard = "Standard"
 slStandardSub = "Următoarea zi lucrătoare · CSM partajat · inclus"
 stepOf = "Pasul {{n}} din {{total}}"
+taxId = "VAT / Tax ID"
+taxIdPlaceholder = "Optional"
 term = "Termen"
 termDiscount = "Reducere de {{pct}}% aplicată pentru angajament pe mai mulți ani"
 title = "Construiește oferta"
@@ -7665,14 +7709,13 @@ title = "Ceva nu a mers bine"
 
 [portal.procurement.hero]
 company = "Tranzacția ta enterprise"
-ctaAgreement = "Revizuiește și semnează acordul"
 ctaLive = "Ești activ"
 ctaPayment = "Adaugă plata"
 ctaQuote = "Revizuiește oferta"
 ctaTrial = "Construiește oferta"
 eyebrow = "Achiziții enterprise"
 inviteTeammates = "Invită coechipieri"
-keyDocs = "Documente cheie"
+licenseKey = "Licence key"
 nextStep = "Pasul următor: {{action}}"
 notStarted = "Neînceput"
 open = "Deschide achizițiile"
@@ -7727,6 +7770,9 @@ downloadError = "Fișierul de licență offline nu a putut fi generat încă —
 downloadOffline = "Descarcă licența offline (.lic)"
 hint = "Lipește această cheie într-o instanță self-hosted pentru a o activa sau păstreaz-o pentru evidențele tale. Păstreaz-o în siguranță."
 label = "Cheia ta de licență"
+subtitle = "Activate a self-hosted instance with this key, or keep it for your records."
+title = "Your licence key"
+trialFileHint = "This is your trial licence file. Once your agreement is in place, come back and download it again — unlike the online licence key, the .lic file won't update on its own."
 
 [portal.procurement.link]
 cta = "Conectează contul"
@@ -7746,16 +7792,9 @@ talkToSales = "Discută cu vânzările"
 title = "Traseul de achiziții se deschide cu Enterprise"
 
 [portal.procurement.milestone]
-accept = "Acceptă și continuă"
-description = "Descarcă PDF-ul pentru a-l partaja cu echipa ta, revino să accepți când ești pregătit sau fă modificări."
 download = "Descarcă PDF"
 downloadError = "Oferta PDF nu a putut fi descărcată încă — încearcă din nou peste câteva momente."
 edit = "Editează oferta"
-eyebrow = "Oferta {{number}}"
-perYear = " / an"
-preparedFor = "Pregătită pentru {{company}}"
-tcv = "{{value}} valoare totală a contractului"
-title = "Oferta ta este gata"
 
 [portal.procurement.modal]
 cancel = "Anulează"
@@ -7782,7 +7821,6 @@ uploadTitle = "Încarcă comanda ta de achiziție"
 [portal.procurement.payment]
 description = "Oferta ta este acceptată și licența este deja activă — echipa ta poate începe imediat. Plătește prima factură când ești pregătit; o poți plăti sau descărca aici, fără email."
 downloadInvoice = "Descarcă factura"
-simulate = "Simulează plata primită (demo)"
 title = "Abonament creat"
 viewInvoice = "Vezi și plătește factura"
 
@@ -7791,6 +7829,21 @@ fallback = "Programatorul nu a putut fi încărcat."
 fallbackLink = "Deschide programarea într-o filă nouă"
 subtitle = "Inginerul tău de soluții îți va ghida echipa prin lansare. Alege o oră care ți se potrivește."
 title = "Programează un apel"
+
+[portal.procurement.setup]
+airgap = "Air-gapped"
+airgapSub = "Fully offline, isolated network. Includes a downloadable licence file."
+cloud = "Cloud"
+cloudSub = "Fully managed by Stirling. Nothing for you to run."
+deployment = "Where will you run Stirling?"
+seats = "Team size"
+seatsHint = "Roughly how many people will use it. You can refine this when you build your quote."
+seatsPlaceholder = "e.g. 250"
+selfhost = "Self-hosted"
+selfhostSub = "Run it in your own cloud or data centre."
+start = "Start trial"
+subtitle = "Tell us how you plan to run Stirling so we can tailor your trial and quote. No card required."
+title = "Set up your trial"
 
 [portal.procurement.status]
 action = "Acțiune necesară"
@@ -7838,26 +7891,11 @@ admin = "Admin"
 [portal.settings.sections]
 account-link = "Conectarea contului"
 
-[portal.shell.header]
-accountFallback = "Cont"
-accountMenu = "Meniu cont"
-darkMode = "Mod întunecat"
-lightMode = "Mod luminos"
-search = "Caută"
-searchPlaceholder = "Caută…"
-signOut = "Deconectează-te"
-switchToDark = "Comută la tema întunecată"
-switchToLight = "Comută la tema luminoasă"
-
 [portal.shell.sidebar]
 appEditor = "Editor"
 appProcessor = "Processor"
 brandSuffix = "Stirling Processor"
-docsCount = "{{docs}} doc."
 linkAccount = "Conectează contul Stirling"
-planEditor = "Plan Editor"
-planEnterprise = "Plan Enterprise"
-planProcessor = "Plan Processor"
 primaryNav = "Navigare principală"
 switchApp = "Comută aplicația"
 
@@ -7866,29 +7904,23 @@ subtitle = "Conexiuni de intrare reutilizabile care alimentează documente în S
 title = "Surse"
 
 [portal.sources.actions]
-agentBuilder = "Agent Builder"
 connectSource = "Conectează sursa"
+
+[portal.sources.builder]
+back = "Back to sources"
+cancel = "Cancel"
+create = "Create source"
+createTitle = "Connect a source"
+delete = "Delete"
+editTitle = "Edit source"
+enabled = "Enabled"
+save = "Save changes"
 
 [portal.sources.delete]
 body = "Ștergi \"{{name}}\"? Această acțiune nu poate fi anulată. Politicile care o referențiază ar trebui actualizate."
 cancel = "Anulează"
 confirm = "Șterge"
 title = "Ștergi sursa?"
-
-[portal.sources.detail]
-closeAriaLabel = "Închide detaliile"
-delete = "Șterge sursa"
-docs24h = "Ultimele 24h"
-docs30d = "Ultimele 30 de zile"
-docsTotal = "Total văzute"
-docsTrend = "Documente în ultimele 30 de zile"
-documents = "Documente"
-edit = "Editează"
-notReferenced = "Nu este referențiată de nicio politică, deci poate fi ștearsă în siguranță."
-pause = "Pauză"
-resume = "Reia"
-subtitle = "{{type}} · {{status}}"
-usedBy = "Folosită de"
 
 [portal.sources.empty]
 description = "Conectează un folder (și, în curând, stocare cloud) astfel încât politicile tale să aibă de unde prelua documente."
@@ -7905,12 +7937,19 @@ disabled = "Dezactivat"
 unused = "Nefolosit"
 
 [portal.sources.table]
+documents = "Documents"
 source = "Sursă"
 status = "Stare"
 usedBy = "Politici"
 
+[portal.sources.tabs]
+connections = "Connections"
+sources = "Sources"
+
 [portal.sources.types.editor]
+description = "Documents your team has processed in the editor, across policy and AI runs."
 label = "Editor"
+noPolicies = "No policies run from the editor yet."
 
 [portal.sources.types.folder]
 description = "Monitorizează un director de pe server pentru documente noi."
@@ -7943,25 +7982,58 @@ label = "Adâncime folder"
 all = "Include subfoldere"
 top = "Doar nivelul superior"
 
+[portal.sources.types.s3]
+description = "Pull documents from an Amazon S3 or S3-compatible bucket."
+label = "Amazon S3"
+
+[portal.sources.types.s3.fields.accessKeyId]
+label = "Access key ID"
+
+[portal.sources.types.s3.fields.bucket]
+label = "Bucket"
+placeholder = "my-company-inbox"
+
+[portal.sources.types.s3.fields.connection]
+helperText = "The stored connection holding the bucket and credentials. Reused by every source and pipeline output that references it."
+label = "Connection"
+
+[portal.sources.types.s3.fields.endpoint]
+helperText = "Leave blank for Amazon S3. Set to use an S3-compatible service such as MinIO."
+label = "Custom endpoint"
+placeholder = "https://s3.example.com"
+
+[portal.sources.types.s3.fields.mode]
+helperText = "Consume removes each object from the bucket once every policy has processed it."
+label = "Read mode"
+
+[portal.sources.types.s3.fields.mode.options]
+consume = "Consume: process each object once"
+snapshot = "Snapshot: re-read the bucket every run"
+
+[portal.sources.types.s3.fields.prefix]
+helperText = "Only objects whose keys start with this prefix are processed."
+label = "Key prefix"
+placeholder = "incoming/"
+
+[portal.sources.types.s3.fields.region]
+label = "Region"
+placeholder = "us-east-1"
+
+[portal.sources.types.s3.fields.secretAccessKey]
+label = "Secret access key"
+
 [portal.sources.types.unknown]
 label = "Sursă"
 
 [portal.sources.wizard]
-back = "Înapoi"
-cancel = "Anulează"
-continue = "Continuă"
-editTitle = "Editează sursa"
 name = "Nume"
 namePlaceholder = "de ex. Primire cereri"
-save = "Salvează modificările"
-subtitle = "Pasul {{current}} din {{total}} · {{label}}"
-title = "Conectează o sursă"
 type = "Tip"
 
-[portal.sources.wizard.steps]
-chooseType = "Alege tipul"
-configure = "Configurează"
-review = "Revizuiește și conectează"
+[portal.tier]
+enterprise = "Enterprise plan"
+free = "Editor plan"
+pro = "Processor plan"
 
 [portal.usage]
 managePayment = "Gestionează plata"
@@ -8021,16 +8093,17 @@ summary = "Deține o echipă — gestionează resursele membrilor și configură
 2 = "Acces la portal prin politica implicită"
 3 = "Tot ce poate face un Membru"
 
+[portal.users.seats]
+limited = "{{used}} / {{limit}}"
+unlimited = "{{used}} · Unlimited"
+
 [portal.welcome]
 ariaLabel = "Bun venit la Stirling PDF"
-badge = "Open-source"
-installEditor = "Instalează Editorul"
-inviteTeammates = "Invită coechipieri"
+install = "Install the editor"
+invite = "Invite teammates"
 openInBrowser = "Deschide în browser"
-perks = "Gratuit pentru totdeauna · Self-hostable"
-subtitle = "Cel mai sigur PDF Editor din lume este gratuit pentru echipe de toate dimensiunile. Include peste 60 de operațiuni PDF și SSO."
-title = "Bun venit la"
-titleAccent = "Stirling PDF"
+productName = "PDF Editor"
+stats = "30M downloads · 60+ PDF operations · Free forever"
 
 [printFile]
 title = "Tipărește Fișier"
@@ -8817,9 +8890,18 @@ languageDescription = "Alege limba afișată"
 logout = "Deconectare"
 setAsDefault = "Setează ca implicit"
 theme = "Temă"
+themeAccent = "Accent colour"
+themeAccentCustom = "Custom colour"
+themeAccentCustomHint = "Custom (defaults recommended)"
+themeAccentDark = "Dark mode accent colour"
+themeAccentDefault = "Default"
+themeAccentDefaultHint = "Default theme (recommended)"
+themeAccentDescription = "Buttons, links and highlights follow it, and it subtly tints the app. Light and dark each have their own. System uses whichever is active."
+themeAccentLight = "Light mode accent colour"
 themeDark = "Întunecată"
 themeDescription = "Comută între modul deschis și întunecat"
 themeLight = "Deschisă"
+themeReset = "Restore theme to default"
 themeSystem = "System"
 title = "General"
 user = "Utilizator"
@@ -8832,6 +8914,12 @@ dismiss = "Ignorați"
 intro = "Activați autentificarea utilizatorilor, gestionarea echipei și funcțiile spațiului de lucru pentru organizația dvs."
 learnMore = "Aflați mai multe în documentație"
 title = "Pentru administratorii de sistem"
+
+[settings.general.loginLanding]
+description = "Choose which app opens when you sign in to Stirling Cloud."
+editor = "Editor"
+processor = "Processor"
+title = "After signing in"
 
 [settings.general.mode]
 fullscreen = "Ecran complet"
@@ -9040,6 +9128,11 @@ connections = "Conexiuni"
 security = "Securitate"
 telegram = "Telegram"
 title = "Securitate și autentificare"
+
+[settings.signOut]
+confirm = "Are you sure you want to sign out?"
+submit = "Sign out"
+title = "Sign out"
 
 [settings.team]
 title = "Echipă"
@@ -9657,6 +9750,9 @@ uploadButton = "Încărcați pe server"
 title = "Stirling-PDF Survey"
 
 [swagger]
+clickHere = "click here"
+fallback = "If it didn't open automatically,"
+opening = "Opening Swagger UI in a new tab..."
 tags = "api,documentație,swagger,endpoint-uri,dezvoltare"
 title = "Documentație API"
 
@@ -9950,15 +10046,30 @@ title = "Utilizatori"
 you = "(tu)"
 
 [users.action]
+cancelInvite = "Cancel invitation"
 deleteTeam = "Șterge echipa"
 disableMfa = "Resetează MFA"
 move = "Mută în echipă"
 reinstate = "Reactivează"
 remove = "Elimină din org"
+removeTeam = "Remove from team"
 rename = "Redenumește echipa"
 resetPw = "Resetează parola"
 suspend = "Suspendă"
 unlock = "Deblochează contul"
+
+[users.activity]
+daysAgo = "{{count}}d ago"
+hoursAgo = "{{count}}h ago"
+justNow = "Just now"
+minutesAgo = "{{count}}m ago"
+monthsAgo_one = "{{count}} month ago"
+monthsAgo_other = "{{count}} months ago"
+never = "Never"
+weeksAgo_one = "{{count}} week ago"
+weeksAgo_other = "{{count}} weeks ago"
+yearsAgo_one = "{{count}} year ago"
+yearsAgo_other = "{{count}} years ago"
 
 [users.cap]
 addProcessor = "+ Processor"
@@ -9967,11 +10078,14 @@ editor = "Editor"
 processor = "Processor"
 
 [users.confirm]
+cancelInviteBody = "Cancel the invitation to {{email}}? They won't be able to join with the current link."
+cancelInviteTitle = "Cancel invitation"
 deleteTeamBody = "Ștergi echipa {{name}}? Echipa trebuie să fie mai întâi goală - mută-i membrii într-o altă echipă și nu trebuie să mai dețină configurări de integrare."
 deleteTeamTitle = "Șterge echipa"
 disableMfaBody = "Elimini înscrierea MFA a lui {{name}}? O va configura din nou la următoarea autentificare, dacă este necesar."
 disableMfaTitle = "Resetează MFA"
 removeBody = "Elimini definitiv pe {{name}} din organizație? Această acțiune nu poate fi anulată."
+removeTeamBody = "Remove {{name}} from the team? They keep their account but lose access to this team's resources."
 removeTitle = "Elimină membrul"
 
 [users.empty]
@@ -10021,6 +10135,16 @@ title = "Invită persoane"
 username = "Nume de utilizator"
 usernameError = "Numele de utilizator trebuie să aibă cel puțin 3 caractere"
 usernamePlaceholder = "jsmith"
+
+[users.invites]
+by = "Invited by {{who}}"
+cancel = "Cancel"
+count = "{{count}} pending"
+desc = "Invited people who haven't joined yet. They hold a seat until they accept."
+expiresInDays_one = "Expires in {{count}} day"
+expiresInDays_other = "Expires in {{count}} days"
+expiresToday = "Expires today"
+title = "Pending invitations"
 
 [users.loadError]
 description = "Ceva nu a mers bine la conectarea cu backend-ul sau nu aveți acces. Încercați din nou."
@@ -10212,9 +10336,11 @@ title = "Atașamente"
 
 [viewer.bookmarks]
 bookmarkTitle = "Titlul marcajului"
+bookmarkTitleRequired = "Bookmark title is required"
 closeSidebar = "Închide bara laterală a marcajelor"
 collapseAll = "Restrânge toate marcajele"
 expandAll = "Extinde toate marcajele"
+searchPlaceholder = "Search bookmarks"
 
 [viewer.comments]
 addComment = "Adăugați comentariu"
