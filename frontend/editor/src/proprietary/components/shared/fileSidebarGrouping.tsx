@@ -1,4 +1,5 @@
-// Classification override of the Files-sidebar grouping seam: Recent, one group per VISIBLE category (the fixed, shared label families; each can be hidden device-local), then Other for files in none of those. Labels are cached on the stub via a lazy metadata backfill so grouping stays cheap.
+// Classification override of the Files-sidebar grouping seam: Recent, one group
+// per visible category, then Other. Labels cache onto stubs via a lazy backfill.
 
 import {
   useEffect,
@@ -41,21 +42,18 @@ export function useFileSidebarGroups(
   stubs: StirlingFileStub[],
 ): FileSidebarGroup[] | null {
   const { t } = useTranslation();
-  // Classification unavailable (core) → no grouping: return the flat list and don't
-  // fetch categories or backfill labels. Proprietary/SaaS enable it regardless of AI,
-  // since the classify policy labels files either via the AI engine or the heuristic.
+  // Classification off (core): flat list, no category fetch or backfill.
   const enabled = useClassificationEnabled();
   const { bumpRevision } = useIndexedDB();
-  // Attempted reads keyed by id+lastModified: a re-classified file (new version bumps lastModified) is re-read and leaves "Other" on its own, while a truly-unlabelled file keeps a stable key and is read once.
+  // Reads keyed by id+lastModified, so a new file version is re-read exactly once.
   const attempted = useRef<Set<string>>(new Set());
   const attemptKey = (s: StirlingFileStub) =>
     `${s.id as string}:${s.lastModified ?? 0}`;
   // Bumped to re-attempt a backfill pass that yielded to an active policy wave.
   const [retryTick, setRetryTick] = useState(0);
 
-  // Cache the labels the AI classify policy wrote into a file's metadata onto the stub, a few per
-  // idle pass. The non-AI heuristic path stamps labels directly (useClientSideClassification), so
-  // this mainly backfills the AI path and reloaded files. Yields while a policy wave is in flight.
+  // Backfill labels from file metadata onto stubs, a few per idle pass; yields
+  // while a policy wave is in flight. The heuristic path stamps stubs directly.
   useEffect(() => {
     if (!enabled) return;
     const pending = stubs
@@ -68,7 +66,8 @@ export function useFileSidebarGroups(
     let retryTimer: number | undefined;
     const cancelIdle = scheduleIdle(() => {
       if (cancelled) return;
-      // Deliveries stamp labels during a wave, so reading now is wasted parsing; recheck after it (a timer self-heals when a wave ends without a stubs change).
+      // Reading during a wave is wasted parsing; recheck after it. The timer
+      // self-heals when a wave ends without a stubs change.
       if (hasInFlightPolicyRuns()) {
         retryTimer = window.setTimeout(() => {
           if (!cancelled) setRetryTick((n) => n + 1);

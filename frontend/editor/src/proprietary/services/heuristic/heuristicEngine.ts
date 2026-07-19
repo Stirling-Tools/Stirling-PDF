@@ -1,8 +1,5 @@
-// Heuristic (non-AI) document classifier. Pure string/regex/structural scoring
-// over extracted page text, filename and PDF metadata, keyed to the shared
-// classification vocabulary. Ported from the backend HeuristicClassifier.java, plus
-// browser-side hardening (pdf.js whitespace/ligature folding, data-dense English gate).
-// Rules load lazily from heuristicRules.json so the pack is a separate async chunk.
+// Heuristic (non-AI) document classifier: string/regex/structural scoring over
+// extracted text, filename and metadata. Rules lazy-load as a separate chunk.
 
 import type {
   HeuristicConfidence,
@@ -18,7 +15,7 @@ export type {
   HeuristicResult,
 };
 
-// --- scoring constants (mirror HeuristicClassifier.java) ---
+// --- scoring constants ---
 const ZONE_MULT: Record<string, number> = { title: 2.0, first: 1.35, any: 1.0 };
 const FLOOR = 18;
 const HIGH_SCORE = 45;
@@ -93,13 +90,12 @@ const STOPWORDS = new Set<string>([
 ]);
 
 // Non-Latin scripts end English classification outright when they dominate.
-// Ranges are \u-escaped to preserve the exact Java code points regardless of encoding.
 const SCRIPT_RANGES: RegExp[] = [
   /[一-鿿぀-ヿ]/g, // CJK + Kana
   /[가-힯ᄀ-ᇿ]/g, // Hangul
   /[Ѐ-ӿ]/g, // Cyrillic
   /[؀-ۿݐ-ݿ]/g, // Arabic
-  /[Ͱ-Ϳ]/g, // Greek (Java [Ͱ-Ϳ])
+  /[Ͱ-Ϳ]/g, // Greek
   /[ऀ-ॿ]/g, // Devanagari
   /[֐-׿]/g, // Hebrew
   /[฀-๿]/g, // Thai
@@ -110,7 +106,7 @@ interface LatinProfile {
   dia: RegExp | null;
 }
 
-// Word lists and diacritic classes preserved verbatim from Java (accented chars \u-escaped).
+// Function-word and diacritic profiles for common Latin-script languages.
 const LATIN_PROFILES: LatinProfile[] = [
   {
     words: new Set([
@@ -285,8 +281,7 @@ const LETTERS = /\p{L}/gu;
 const LATIN_LETTER = /[a-z]/gi;
 const WORD = /[\p{L}']+/gu;
 
-// ASCII whitespace plus the no-break spaces pdf.js extraction commonly emits,
-// so a phrase split by U+00A0 in a PDF still matches its rule text.
+// ASCII whitespace plus the no-break spaces pdf.js extraction commonly emits.
 // eslint-disable-next-line no-control-regex -- vertical tab is intentional ASCII whitespace
 const WHITESPACE = /[\t\n\x0B\f\r \u00A0\u2007\u202F]+/g;
 
@@ -407,9 +402,7 @@ export async function ensureRulesLoaded(): Promise<void> {
   await loadPromise;
 }
 
-// -----------------------------------------------------------------------
-// Preparation
-// -----------------------------------------------------------------------
+// --- Preparation ---
 
 function prepare(labels: RawLabel[]): PreparedLabel[] {
   const out: PreparedLabel[] = [];
@@ -511,7 +504,7 @@ function flags(node: RawRule): string {
   return typeof node.flags === "string" ? node.flags : "";
 }
 
-/** Compile a rule regex to a RegExp, or null when it won't compile (mirrors Java). */
+/** Compile a rule regex to a RegExp, or null when it won't compile. */
 export function compileRegex(
   pattern: string | null,
   flagStr: string,
@@ -529,9 +522,7 @@ export function compileRegex(
   }
 }
 
-// -----------------------------------------------------------------------
-// Public API
-// -----------------------------------------------------------------------
+// --- Public API ---
 
 interface ScoredLabel {
   label: PreparedLabel;
@@ -696,7 +687,7 @@ export function classifyHeuristic(
     }
   }
 
-  // Stable sort by score descending (matches Java's stable Comparator.reversed()).
+  // Stable sort by score descending.
   scored.sort((a, b) => b.score - a.score);
 
   const top = scored.length === 0 ? null : scored[0];
@@ -774,9 +765,7 @@ export function isDefinitive(r: HeuristicResult): boolean {
   return isHighConfidence(r) && r.labels.length > 0;
 }
 
-// -----------------------------------------------------------------------
-// English detection
-// -----------------------------------------------------------------------
+// --- English detection ---
 
 interface EnglishResult {
   isEnglish: boolean;
@@ -844,9 +833,7 @@ export function detectEnglish(text: string): EnglishResult {
   };
 }
 
-// -----------------------------------------------------------------------
-// Structural signals
-// -----------------------------------------------------------------------
+// --- Structural signals ---
 
 function computeStructural(doc: HeuristicDoc): Record<string, number> {
   const all = nz(doc.allZone);
@@ -906,9 +893,7 @@ function pagePriorMultiplier(labelId: string, pageCount: number): number {
   return 1;
 }
 
-// -----------------------------------------------------------------------
-// Helpers
-// -----------------------------------------------------------------------
+// --- Helpers ---
 
 function nz(s: string | null | undefined): string {
   return s == null ? "" : s;
@@ -953,7 +938,7 @@ function countOccurrences(haystack: string, needle: string | null): number {
   return count;
 }
 
-// Non-overlapping matches capped at 12 (mirrors Java Matcher.find() loop).
+// Non-overlapping matches capped at 12.
 function countRegex(re: RegExp | null, text: string | null): number {
   if (re == null || text == null || text.length === 0) return 0;
   re.lastIndex = 0;

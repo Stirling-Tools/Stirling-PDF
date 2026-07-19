@@ -6,10 +6,7 @@ import org.springframework.stereotype.Component;
 
 import jakarta.persistence.PostPersist;
 
-/**
- * Publishes a {@link TeamCreatedEvent} when a team is first persisted. JPA builds the listener, so
- * the publisher is bridged in via a static field set by Spring.
- */
+/** Publishes {@link TeamCreatedEvent} on insert; Spring bridges the publisher via a static. */
 @Component
 public class TeamEntityListener {
 

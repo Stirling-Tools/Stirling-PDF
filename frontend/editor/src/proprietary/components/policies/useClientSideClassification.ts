@@ -1,17 +1,5 @@
-/**
- * Client-side classification for non-AI systems. When the AI engine is off, the Classification
- * policy's work runs here in the browser (the heuristic engine) instead of on the server: it labels
- * each new upload, stamps the label onto the file, and meters the run so billing + audit match the
- * AI path. When AI is on this is inert - the server-side policy run classifies (see usePolicyAutoRun).
- *
- * Headless - mount once from PolicyAutoRunController so it runs regardless of the sidebar, matching
- * the AI path's upload trigger. Reads a few files per idle pass so a big library backfills smoothly.
- *
- * Delivery guarantees: a computed result is always written, even if the effect re-fires mid-batch
- * (an upload wave mutates fileStubs constantly); a definitive no-label verdict is persisted as []
- * so it isn't re-tried; and a file whose result was never delivered (crash, reload) is retried on
- * the next load without re-metering.
- */
+// With the AI engine off, the Classification policy runs here in the browser:
+// each upload is labelled by the heuristic engine and metered for billing parity.
 
 import { useEffect, useRef, useState } from "react";
 import { useAllFiles, useFileManagement } from "@app/contexts/FileContext";
@@ -93,8 +81,7 @@ export function useClientSideClassification(): void {
     }
     const claimKey = (s: StirlingFileStub) =>
       `${s.id as string}:${s.lastModified ?? 0}`;
-    // null/undefined labels = never delivered (fresh upload, or a result lost to a crash/reload —
-    // those retry here and heal). [] = definitive no-label verdict; skipped for good.
+    // null labels = never delivered, retried here; [] = definitive no-label verdict.
     const pending = fileStubs
       .filter(
         (s) =>
@@ -150,12 +137,7 @@ export function useClientSideClassification(): void {
   ]);
 }
 
-/**
- * Classify one file in the browser: wait briefly for a fresh upload's bytes, classify, and meter
- * exactly once per file (dispatch-marked, so a delivery retry after a crash never re-bills).
- * Returns the labels ([] = definitively unlabelled), or null when no verdict could be reached
- * (bytes never arrived, or the PDF could not be read) - null is retried later, never persisted.
- */
+/** Classify one file, metering exactly once; null = no verdict, retried later. */
 async function classifyStub(
   fileId: FileId,
   fileName: string,
@@ -202,9 +184,8 @@ async function classifyStub(
     markDispatched(CLASSIFICATION_CATEGORY, fileId);
     return labels;
   } catch (err) {
-    // Extraction failures are environmental as often as they are real corruption (e.g. a
-    // pdf.js/Safari incompatibility): never persist a verdict, so the file retries later
-    // (next session, or a healthier browser) and is metered only when it finally classifies.
+    // Never persist a verdict for an unreadable file - the failure may be
+    // environmental, so it must stay eligible to retry (and meter) later.
     console.warn(`[Classify] ${fileName}: could not be read, will retry`, err);
     return null;
   }

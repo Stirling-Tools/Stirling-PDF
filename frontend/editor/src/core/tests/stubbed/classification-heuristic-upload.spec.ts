@@ -2,13 +2,8 @@ import path from "path";
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import { uploadFiles } from "@app/tests/helpers/ui-helpers";
 
-/**
- * End-to-end regression for in-browser (non-AI) classification of a bulk upload. Ten unlabelled
- * PDFs land at once; every one must be classified by the heuristic engine and grouped - the
- * original delivery raced the upload wave and silently stranded files in "Other" forever.
- * The stubbed backend serves the Classification policy exactly as the backend seeder provisions
- * it, so this also verifies the seeded policy's shape activates the frontend run-gate.
- */
+// A bulk upload must classify every file in the browser and group it - no file
+// may be stranded in "Other" by races between the upload wave and delivery.
 
 test.use({ autoGoto: false });
 

@@ -21,9 +21,8 @@ import stirling.software.proprietary.audit.AuditContext;
 import stirling.software.proprietary.classification.ClassificationRunBiller;
 
 /**
- * Records a client-side (non-AI) classification run. The heuristic classifier runs in the browser
- * when the AI engine is off; this fast, side-effect-only endpoint meters + audits it so both modes
- * bill identically. Does no classification itself; dispatched by the frontend, not for direct use.
+ * Meters + audits a client-side (non-AI) classification run so both classify paths bill
+ * identically. Side-effect only; does no classification itself.
  */
 @Slf4j
 @Hidden
@@ -78,9 +77,7 @@ public class ClassificationMeterController {
         return ResponseEntity.accepted().build();
     }
 
-    /**
-     * Frontend payload: how many docs were classified, plus the policy name for the audit label.
-     */
+    /** Frontend payload: documents classified, plus the policy name for the audit label. */
     public record ClassifyMeterRequest(
             String policyName, Integer documentCount, List<String> labels) {}
 }

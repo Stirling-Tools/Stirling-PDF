@@ -1,5 +1,5 @@
-// pdf.js extraction feeding the heuristic engine. Mirrors HeuristicDocExtractor.java: page-1 text,
-// a first-5 + last-2 page window, Info-dict metadata, and a large-font page-1 "title" zone.
+// pdf.js extraction feeding the engine: page-1 text, a first-5 + last-2 page
+// window, Info-dict metadata, and a large-font page-1 "title" zone.
 
 import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
 import type {
@@ -85,9 +85,8 @@ function isTextItem(item: unknown): item is TextItem {
 }
 
 /**
- * A page's text items, pumped from streamTextContent with a plain reader loop.
- * pdf.js 5's getTextContent async-iterates a ReadableStream, which Safari/WebKit
- * doesn't support - it threw on every page there, failing all classification.
+ * Pump text items with a plain reader loop: Safari/WebKit cannot async-iterate
+ * the ReadableStream behind pdf.js getTextContent.
  */
 async function pageTextItems(
   page: Awaited<ReturnType<PDFDocumentProxy["getPage"]>>,
@@ -150,10 +149,10 @@ function buildLines(items: readonly unknown[]): Line[] {
   return lines;
 }
 
-/** Large-font lines near the top of page 1 approximate the title (mirrors the Java heuristic). */
+/** Large-font lines near the top of page 1 approximate the title. */
 function titleFromLines(lines: Line[], pageHeight: number): string {
   if (lines.length === 0) return "";
-  // pdf.js y is bottom-origin, so the Java's top-origin "yDirAdj < 0.45*H" is "y > 0.55*H".
+  // pdf.js y is bottom-origin: the top 45% of the page is y > 0.55 * height.
   const top = lines.filter((l) => l.y > pageHeight * 0.55);
   const pool = top.length > 0 ? top : lines.slice(0, Math.min(8, lines.length));
   let maxSize = 0;
@@ -176,7 +175,7 @@ function titleFromLines(lines: Line[], pageHeight: number): string {
   return result.length > TITLE_CAP ? result.slice(0, TITLE_CAP) : result;
 }
 
-/** Info-dict fields keyed lowercase to match the engine's metadata rules (and the Java map). */
+/** Info-dict fields keyed lowercase to match the engine's metadata rules. */
 async function metadata(
   pdfDoc: PDFDocumentProxy,
 ): Promise<Record<string, string>> {

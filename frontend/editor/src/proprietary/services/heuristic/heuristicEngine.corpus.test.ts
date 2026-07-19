@@ -1,6 +1,5 @@
-// Broad-corpus accuracy gate for the heuristic engine: one realistic specimen per common document
-// type, asserted on the REAL engine + rules pack. Text is written the way such documents actually
-// read (not keyword-stuffed), so additions to the rules pack are validated against natural prose.
+// Broad-corpus accuracy gate: one realistic, natural-prose specimen per document
+// type, asserted on the real engine + rules pack.
 
 import { beforeAll, describe, expect, it } from "vitest";
 import {
@@ -1158,9 +1157,7 @@ const CASES: Case[] = [
       "Ambas partes firman este contrato en senal de conformidad con sus clausulas.",
     ],
   },
-  // --- extended coverage: every remaining emitted label, the generator-metadata
-  // hints, the bill-of-lading/SOP/vital-record/formation-doc rules, and a German
-  // negative control ---
+  // --- extended coverage: every remaining emitted label + new-rule checks ---
   {
     expect: "remittance-advice",
     file: "remit_20240418.pdf",

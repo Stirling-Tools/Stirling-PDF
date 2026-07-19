@@ -1,5 +1,4 @@
-// Regression corpus for documents observed misclassified or lost in real use. Each case feeds the
-// real engine the text a typical specimen of that document actually contains.
+// Regression cases: each feeds the real engine a typical specimen's actual text.
 
 import { beforeAll, describe, expect, it } from "vitest";
 import {

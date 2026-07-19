@@ -2,13 +2,8 @@ import path from "path";
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import { uploadFiles } from "@app/tests/helpers/ui-helpers";
 
-/**
- * Classification grouping (proprietary). The classify policy writes each file's
- * category into the `StirlingPDFClassification` metadata - via the AI engine or,
- * when AI is off, the non-AI heuristic; the two are indistinguishable here. The
- * file sidebar reads that metadata client-side and groups files by category
- * family. These specs exercise the frontend seam with pre-labelled fixtures.
- */
+// The sidebar groups files by the category in their `StirlingPDFClassification`
+// metadata; these specs exercise that seam with pre-labelled fixtures.
 
 const FIXTURES = path.join(
   import.meta.dirname,

@@ -1,5 +1,4 @@
-// Fidelity gate for the client-side heuristic engine. Cross-checks the same documents the Java
-// port (HeuristicClassifierTest) asserts on, so scoring can't silently drift between the two.
+// Core fidelity cases for the heuristic engine against the real rules pack.
 
 import { beforeAll, describe, expect, it } from "vitest";
 import {

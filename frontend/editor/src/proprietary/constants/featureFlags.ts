@@ -15,9 +15,7 @@
 export const WATCHED_FOLDERS_ENABLED: boolean = false;
 
 /**
- * Policies — automation-backed policy enforcement (the surface that runs the
- * classification policy on upload). Enabled in proprietary/self-hosted and SaaS
- * builds; the backend engine defaults on too (`policies.enabled=true` for the
- * `security` profile). The open-source core build keeps it `false`.
+ * Policy enforcement surface (runs the classification policy on upload).
+ * On for proprietary and SaaS builds; the core build keeps it `false`.
  */
 export const POLICIES_ENABLED: boolean = true;

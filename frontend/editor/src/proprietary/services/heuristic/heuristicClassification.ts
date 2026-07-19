@@ -1,5 +1,4 @@
-// Client-side classification entry point: load the rules, extract the PDF, run the heuristic engine.
-// Used by useClientSideClassification when the AI engine is off. Rejects if the PDF can't be read.
+// Client-side classification entry point: load rules, extract the PDF, classify.
 
 import {
   ensureRulesLoaded,

@@ -1,9 +1,5 @@
-/**
- * Record a client-side (non-AI) classification run against billing + audit. When the AI engine is
- * off the heuristic classifier runs in the browser, so nothing hits the server-side classify route
- * that would otherwise meter it; this fast endpoint restores that parity. Fire-and-forget: never
- * awaited on the UI path and failures are swallowed, so an unbilled meter never blocks the user.
- */
+// Meters an in-browser (non-AI) classification run for billing/audit parity with
+// the server-side classify path. Fire-and-forget; failures never block the user.
 
 import apiClient from "@app/services/apiClient";
 import { getPolicyOutputBaseUrl } from "@app/services/policyOutputBaseUrl";

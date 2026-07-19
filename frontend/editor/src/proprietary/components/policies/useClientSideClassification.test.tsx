@@ -1,10 +1,5 @@
-/**
- * Delivery guarantees of the client-side classification hook, driving the REAL policyRunStore and
- * mocking only IO (storage, the heuristic engine, the meter). The core regression: a result
- * computed while the effect re-fires mid-batch (an upload wave) must still be delivered - the
- * original implementation discarded it after marking the file dispatched, stranding it in "Other"
- * forever.
- */
+// Delivery guarantees of the client-side classification hook, driving the real
+// policyRunStore and mocking only IO (storage, the heuristic engine, the meter).
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
@@ -150,8 +145,8 @@ describe("useClientSideClassification delivery", () => {
     const { rerender } = renderHook(() => useClientSideClassification());
     await waitFor(() => expect(mocks.classify).toHaveBeenCalledTimes(1));
 
-    // A new upload lands mid-classify: fileStubs changes, the effect re-fires and
-    // cancels the in-flight batch. The old implementation discarded a's result here.
+    // A new upload mid-classify re-fires the effect and cancels the in-flight
+    // batch; a's already-computed result must still be delivered.
     mocks.workspace = [stub("a"), stub("b")];
     rerender();
 
@@ -203,8 +198,8 @@ describe("useClientSideClassification delivery", () => {
   });
 
   it("leaves an unreadable file undelivered (no verdict, no meter) so it can retry", async () => {
-    // An extraction failure may be environmental (e.g. a browser incompatibility), so it
-    // must never poison the file with a persisted verdict. The read path deliberately warns.
+    // An extraction failure may be environmental, so it must never poison the
+    // file with a persisted verdict. The read path deliberately warns.
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     mocks.workspace = [stub("corrupt")];
     mocks.classify.mockRejectedValue(new Error("bad pdf"));

@@ -23,8 +23,8 @@ import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.TeamService;
 
 /**
- * Seeds an enabled Classification policy for each team so classification is on by default on a
- * fresh install and for every team created later. Idempotent; skips the internal team.
+ * Seeds an enabled Classification policy per team so classification is on by default. Idempotent;
+ * skips the internal team.
  */
 @Slf4j
 @Component

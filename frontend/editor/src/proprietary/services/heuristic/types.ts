@@ -1,7 +1,6 @@
 // Shared types for the client-side heuristic (non-AI) document classifier.
-// Faithful port of the backend HeuristicClassifier.java records.
 
-/** Input document for the heuristic engine (mirrors Java HeuristicDoc). */
+/** Input document for the heuristic engine. */
 export interface HeuristicDoc {
   fileName: string;
   pageCount: number;
@@ -11,8 +10,7 @@ export interface HeuristicDoc {
   allZone: string;
 }
 
-// "none" mirrors the Java engine's no-match / non-English confidence and must
-// stay a runtime value; dropping it would diverge from HeuristicClassifier.java.
+// "none" = no match or non-English; a real runtime value, not just a type state.
 export type HeuristicConfidence = "none" | "low" | "medium" | "high";
 
 /** One scored candidate label with the rule hits that produced its score (debug only). */

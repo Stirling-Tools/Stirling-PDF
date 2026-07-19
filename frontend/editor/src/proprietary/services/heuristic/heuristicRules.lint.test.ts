@@ -1,6 +1,5 @@
-// Structural lint for the hand-authored rules pack. The engine silently drops or clamps
-// anything malformed (bad regex, unknown zone, over-cap weight, orphan prior), so a typo
-// weakens classification without failing anywhere; this suite makes it fail here instead.
+// Structural lint for the rules pack: the engine silently drops or clamps
+// malformed rules, so authoring mistakes must fail here instead.
 
 import { describe, expect, it } from "vitest";
 import { compileRegex } from "@app/services/heuristic/heuristicEngine";
