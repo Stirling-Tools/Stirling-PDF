@@ -63,10 +63,7 @@ describe("signatureFlattening", () => {
     const sourceBytes = await sourceDocument.save();
 
     const outputBytes = await embedSignatureImages(
-      sourceBytes.buffer.slice(
-        sourceBytes.byteOffset,
-        sourceBytes.byteOffset + sourceBytes.byteLength,
-      ),
+      Uint8Array.from(sourceBytes).buffer,
       [
         {
           pageIndex: 0,
