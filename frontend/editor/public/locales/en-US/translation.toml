@@ -7144,6 +7144,10 @@ sources = "Sources"
 usage = "Usage & Billing"
 users = "Users"
 
+[portal.nav.section]
+platform = "PDF Platform"
+processor = "PDF Processor"
+
 [portal.pipelines]
 subtitle = "Every automated document pipeline on the backend: an ordered chain of operations over a set of sources, run on a trigger. Click a row for its steps and sources."
 title = "Pipelines"
