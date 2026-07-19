@@ -12,7 +12,7 @@ describe("portal demo data seam", () => {
   it("is inert until enabled", async () => {
     expect(
       await resolveDemoResponse(
-        new URL("/v1/agents?tier=pro", window.location.origin),
+        new URL("/v1/notifications", window.location.origin),
         {},
       ),
     ).toBeUndefined();
@@ -22,12 +22,12 @@ describe("portal demo data seam", () => {
   it("answers from the fixture handlers while enabled", async () => {
     await enablePortalDemoData();
     const res = await resolveDemoResponse(
-      new URL("/v1/agents?tier=pro", window.location.origin),
+      new URL("/v1/notifications", window.location.origin),
       {},
     );
     expect(res?.status).toBe(200);
-    const body = (await res?.json()) as { agents: unknown[] };
-    expect(body.agents.length).toBeGreaterThan(0);
+    const body = (await res?.json()) as unknown[];
+    expect(body.length).toBeGreaterThan(0);
   });
 
   it("releases back to the network on disable", async () => {
@@ -35,7 +35,7 @@ describe("portal demo data seam", () => {
     disablePortalDemoData();
     expect(
       await resolveDemoResponse(
-        new URL("/v1/agents?tier=pro", window.location.origin),
+        new URL("/v1/notifications", window.location.origin),
         {},
       ),
     ).toBeUndefined();

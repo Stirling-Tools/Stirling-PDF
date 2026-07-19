@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.MediaTypeFactory;
@@ -41,7 +40,6 @@ import stirling.software.proprietary.policy.model.OutputSpec;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class FolderOutputSink implements PolicyOutputSink {
 
     static final String TYPE = FolderAccessGuard.FOLDER_TYPE;

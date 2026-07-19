@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
@@ -23,7 +22,6 @@ import stirling.software.proprietary.policy.store.PolicyStore;
  */
 @Component
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class PolicyS3ConnectionUsageCheck implements IntegrationConfigUsageCheck {
 
     private final SourceStore sourceStore;

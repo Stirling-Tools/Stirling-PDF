@@ -2,7 +2,7 @@
 
 Coverage:
 1. Section model validation (each section type round-trips correctly)
-2. Jinja rendering (_render produces valid HTML for each section type)
+2. orchestrate() emits the assembled document as structured JSON
 3. _safe_filename produces clean slugs
 4. _make_chunks groups sections correctly by token budget
 5. orchestrate() produces the correct EditPlanResponse via planner + writer mocks
@@ -11,6 +11,8 @@ Coverage:
 """
 
 from __future__ import annotations
+
+import json
 
 import pytest
 from conftest import build_app_settings
@@ -62,37 +64,6 @@ def agent(runtime: AppRuntime) -> PdfCreateAgent:
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────────────────────────
-
-
-def _invoice_doc() -> GeneratedDocument:
-    return GeneratedDocument(
-        title="Invoice",
-        subtitle="Acme Corp",
-        reference_number="Invoice #INV-001",
-        sections=[
-            KeyValueSection(
-                heading="Details",
-                pairs=[("Date", "2026-05-06"), ("Due", "2026-06-06"), ("Currency", "USD")],
-            ),
-            LineItemsSection(
-                heading="Line Items",
-                columns=["Description", "Qty", "Unit Price", "Total"],
-                rows=[
-                    ["Consulting services", "10", "$500.00", "$5,000.00"],
-                    ["Expenses", "1", "$200.00", "$200.00"],
-                ],
-                total_row=["Total", "", "", "$5,200.00"],
-            ),
-            TextSection(
-                heading="Payment Terms",
-                body="Payment is due within 30 days.\n\nPlease reference the invoice number.",
-            ),
-            SignatureSection(
-                heading="Authorised By",
-                signatories=["Jane Smith, CEO", "Bob Jones, CFO"],
-            ),
-        ],
-    )
 
 
 def _simple_meta() -> DocumentMeta:
@@ -197,82 +168,6 @@ def test_generated_document_optional_fields() -> None:
     doc = GeneratedDocument(title="Simple Doc", sections=[TextSection(body="Hello")])
     assert doc.subtitle is None
     assert doc.reference_number is None
-
-
-# ── Jinja rendering ───────────────────────────────────────────────────────────────────────────────
-
-
-def test_render_produces_html(agent: PdfCreateAgent) -> None:
-    doc = _invoice_doc()
-    html = agent._render(doc)
-    assert "<!DOCTYPE html>" in html
-    assert "Invoice" in html
-    assert "INV-001" in html
-
-
-def test_render_includes_all_section_types(agent: PdfCreateAgent) -> None:
-    doc = GeneratedDocument(
-        title="All Sections",
-        sections=[
-            TextSection(body="Some prose text."),
-            KeyValueSection(pairs=[("Key", "Value")]),
-            LineItemsSection(columns=["A", "B"], rows=[["1", "2"]]),
-            BulletListSection(items=["item one"]),
-            SignatureSection(signatories=["Alice"]),
-        ],
-    )
-    html = agent._render(doc)
-    assert "Some prose text." in html
-    assert "Key" in html and "Value" in html
-    assert "<th>" in html
-    assert "item one" in html
-    assert "Alice" in html
-
-
-def test_render_escapes_html_in_content(agent: PdfCreateAgent) -> None:
-    doc = GeneratedDocument(
-        title="XSS Test",
-        sections=[TextSection(body="<script>alert('xss')</script>")],
-    )
-    html = agent._render(doc)
-    assert "<script>" not in html
-    assert "&lt;script&gt;" in html
-
-
-def test_render_total_row_present(agent: PdfCreateAgent) -> None:
-    doc = GeneratedDocument(
-        title="Table",
-        sections=[
-            LineItemsSection(
-                columns=["Item", "Total"],
-                rows=[["Widget", "$10"]],
-                total_row=["Total", "$10"],
-            )
-        ],
-    )
-    html = agent._render(doc)
-    assert "total-row" in html
-
-
-def test_render_no_total_row_skips_tfoot(agent: PdfCreateAgent) -> None:
-    doc = GeneratedDocument(
-        title="Table",
-        sections=[LineItemsSection(columns=["Item"], rows=[["Widget"]])],
-    )
-    html = agent._render(doc)
-    assert "<tfoot>" not in html
-
-
-def test_render_subtitle_and_reference(agent: PdfCreateAgent) -> None:
-    doc = GeneratedDocument(
-        title="My Doc",
-        subtitle="Subtitle Here",
-        reference_number="REF-42",
-        sections=[TextSection(body="Content.")],
-    )
-    html = agent._render(doc)
-    assert "Subtitle Here" in html
-    assert "REF-42" in html
 
 
 # ── _safe_filename ────────────────────────────────────────────────────────────────────────────────
@@ -396,8 +291,9 @@ async def test_orchestrate_returns_plan_step(agent: PdfCreateAgent) -> None:
     assert step.tool == AgentToolId.CREATE_PDF_FROM_HTML_AGENT
     assert isinstance(step.parameters, CreatePdfFromHtmlAgentParams)
     assert step.parameters.filename.endswith(".pdf")
-    assert "<!DOCTYPE html>" in step.parameters.html_content
-    assert "Invoice" in step.parameters.html_content
+    parsed = json.loads(step.parameters.document)
+    assert parsed["title"] == "Invoice"
+    assert parsed["sections"]
 
 
 @pytest.mark.anyio
@@ -468,9 +364,9 @@ async def test_orchestrate_assembles_multiple_chunks(agent: PdfCreateAgent) -> N
         result = await agent.orchestrate(_orchestrator_request("Create a multi-chunk doc"))
 
     assert isinstance(result, EditPlanResponse)
-    html = result.steps[0].parameters.html_content  # type: ignore[union-attr]
-    assert "Introduction text." in html
-    assert "Details" in html
+    document = result.steps[0].parameters.document  # type: ignore[union-attr]
+    assert "Introduction text." in document
+    assert "Details" in document
 
 
 # ── Style inference ───────────────────────────────────────────────────────────────────────────────
@@ -482,7 +378,7 @@ async def test_orchestrate_applies_planner_inferred_style(agent: PdfCreateAgent)
     meta = DocumentMeta(
         title="Styled Doc",
         tone_brief="Professional.",
-        style_primary_color="magenta",
+        style_primary_color="#ff00ff",
     )
     sections = _simple_sections()
     written = _written_sections()
@@ -499,50 +395,35 @@ async def test_orchestrate_applies_planner_inferred_style(agent: PdfCreateAgent)
         result = await agent.orchestrate(_orchestrator_request("Make an invoice, magenta styling"))
 
     assert isinstance(result, EditPlanResponse)
-    html = result.steps[0].parameters.html_content  # type: ignore[union-attr]
-    assert "magenta" in html
+    document = result.steps[0].parameters.document  # type: ignore[union-attr]
+    assert json.loads(document)["style"]["primaryColor"] == "#ff00ff"
 
 
-def test_render_applies_style(agent: PdfCreateAgent) -> None:
-    """DocumentStyle fields are injected as CSS custom properties in the rendered HTML."""
-    doc = GeneratedDocument(
-        title="Styled",
-        sections=[TextSection(body="Content.")],
-        style=DocumentStyle(primary_color="magenta", background_color="#111111"),
-    )
-    html = agent._render(doc)
-    assert "--color-primary: magenta" in html
-    assert "--color-bg: #111111" in html
-
-
-def test_document_style_drops_unsafe_colors() -> None:
-    """Unsafe colours (not named/hex) are dropped, closing the <style> url() injection."""
-    safe = DocumentStyle(primary_color="navy", background_color="#1e3a5f", body_text_color="#fff")
+def test_document_style_keeps_only_six_digit_hex() -> None:
+    """Only #RRGGBB hex is kept; named colours and other formats drop to None."""
+    safe = DocumentStyle(primary_color="#1e3a5f", background_color="#ffffff", body_text_color="#1A1A1A")
     assert (safe.primary_color, safe.background_color, safe.body_text_color) == (
-        "navy",
         "#1e3a5f",
-        "#fff",
+        "#ffffff",
+        "#1A1A1A",
     )
 
-    unsafe = DocumentStyle(
-        primary_color="red; background: url(http://evil.test/steal)",
-        background_color="expression(alert(1))",
-        body_text_color="navy; }",
-    )
-    assert unsafe.primary_color is None
-    assert unsafe.background_color is None
-    assert unsafe.body_text_color is None
+    assert DocumentStyle(primary_color="navy").primary_color is None
+    assert DocumentStyle(primary_color="#fff").primary_color is None
+    assert DocumentStyle(primary_color="#1e3a5f00").primary_color is None
+    assert DocumentStyle(primary_color="rgb(255, 0, 0)").primary_color is None
+    assert DocumentStyle(background_color="teal darken-2").background_color is None
     # A trailing newline must not slip a value through (fullmatch, not $-before-newline).
-    assert DocumentStyle(primary_color="navy\n").primary_color is None
+    assert DocumentStyle(primary_color="#1e3a5f\n").primary_color is None
 
 
 @pytest.mark.anyio
-async def test_orchestrate_drops_unsafe_planner_color(agent: PdfCreateAgent) -> None:
-    """An unsafe colour inferred by the meta planner never reaches the rendered HTML."""
+async def test_orchestrate_drops_non_hex_planner_colour(agent: PdfCreateAgent) -> None:
+    """A non-hex colour inferred by the meta planner is dropped before the document is emitted."""
     meta = DocumentMeta(
         title="Doc",
         tone_brief="Professional.",
-        style_primary_color="blue; background: url(http://evil.test/)",
+        style_primary_color="rgb(0, 0, 255)",
     )
     sections = _simple_sections()
     written = _written_sections()
@@ -559,6 +440,6 @@ async def test_orchestrate_drops_unsafe_planner_color(agent: PdfCreateAgent) -> 
         result = await agent.orchestrate(_orchestrator_request("make it blue"))
 
     assert isinstance(result, EditPlanResponse)
-    html = result.steps[0].parameters.html_content  # type: ignore[union-attr]
-    assert "evil.test" not in html
-    assert "url(" not in html
+    document = result.steps[0].parameters.document  # type: ignore[union-attr]
+    assert "rgb(" not in document
+    assert json.loads(document)["style"]["primaryColor"] is None

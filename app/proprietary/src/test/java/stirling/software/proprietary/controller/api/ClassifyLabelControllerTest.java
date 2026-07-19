@@ -14,7 +14,6 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -27,10 +26,8 @@ import org.springframework.web.multipart.MultipartFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
 import stirling.software.common.util.TempFileManager;
+import stirling.software.proprietary.classification.ClassificationLabelProvider;
 import stirling.software.proprietary.classification.model.ClassificationLabel;
-import stirling.software.proprietary.classification.model.ClassificationLabels;
-import stirling.software.proprietary.classification.store.InProcessClassificationLabelStore;
-import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.service.AiEngineClient;
 import stirling.software.proprietary.service.AiFeatureGate;
 import stirling.software.proprietary.service.PdfContentExtractor;
@@ -43,23 +40,17 @@ import tools.jackson.databind.json.JsonMapper;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class ClassifyLabelControllerTest {
 
-    private static final Long TEAM = 7L;
-
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private TempFileManager tempFileManager;
     @Mock private PdfContentExtractor pdfContentExtractor;
     @Mock private PdfMetadataService pdfMetadataService;
     @Mock private AiEngineClient aiEngineClient;
     @Mock private AiFeatureGate aiFeatureGate;
-    @Mock private PolicyManagementAuthority policyManagementAuthority;
 
     private final ObjectMapper objectMapper = JsonMapper.builder().build();
-    private InProcessClassificationLabelStore labelStore;
     private ClassifyLabelController controller;
 
-    @BeforeEach
-    void setUp() {
-        labelStore = new InProcessClassificationLabelStore();
+    private void withLabels(List<ClassificationLabel> labels) {
         controller =
                 new ClassifyLabelController(
                         pdfDocumentFactory,
@@ -69,9 +60,8 @@ class ClassifyLabelControllerTest {
                         aiEngineClient,
                         aiFeatureGate,
                         objectMapper,
-                        null,
-                        labelStore,
-                        policyManagementAuthority);
+                        ClassificationLabelProvider.withLabels(labels),
+                        null);
     }
 
     private void stubSinglePageDocument() throws Exception {
@@ -101,12 +91,7 @@ class ClassifyLabelControllerTest {
 
     @Test
     void classifyAndLabel_writesClassificationWithoutOutcome() throws Exception {
-        when(policyManagementAuthority.currentUserTeamId()).thenReturn(TEAM);
-        labelStore.save(
-                TEAM,
-                new ClassificationLabels(
-                        List.of(new ClassificationLabel("invoice", "Invoice", null))),
-                "admin");
+        withLabels(List.of(new ClassificationLabel("invoice", "Invoice", null)));
 
         stubSinglePageDocument();
 
@@ -121,16 +106,12 @@ class ClassifyLabelControllerTest {
     }
 
     @Test
-    void classifyAndLabel_sendsTeamLabelIdsAndNames() throws Exception {
-        when(policyManagementAuthority.currentUserTeamId()).thenReturn(TEAM);
-        labelStore.save(
-                TEAM,
-                new ClassificationLabels(
-                        List.of(
-                                new ClassificationLabel("invoice", "Invoice", "receipt-long"),
-                                new ClassificationLabel("contract", "Contract", null),
-                                new ClassificationLabel("timesheet", "Timesheet", null))),
-                "admin");
+    void classifyAndLabel_sendsLabelIdsAndNames() throws Exception {
+        withLabels(
+                List.of(
+                        new ClassificationLabel("invoice", "Invoice", "receipt-long"),
+                        new ClassificationLabel("contract", "Contract", null),
+                        new ClassificationLabel("timesheet", "Timesheet", null)));
 
         stubSinglePageDocument();
 
@@ -155,13 +136,13 @@ class ClassifyLabelControllerTest {
     }
 
     @Test
-    void classifyAndLabel_skipsClassificationWhenNothingStored() throws Exception {
-        when(policyManagementAuthority.currentUserTeamId()).thenReturn(TEAM);
+    void classifyAndLabel_skipsClassificationWhenNoLabels() throws Exception {
+        withLabels(List.of());
 
         stubSinglePageDocument();
 
-        // No team labels stored, and the engine holds no default of its own, so the file is passed
-        // through unlabelled: neither the engine nor the metadata write is invoked.
+        // No vocabulary, and the engine holds no default of its own, so the file is passed through
+        // unlabelled: neither the engine nor the metadata write is invoked.
         verify(aiEngineClient, never()).post(anyString(), anyString(), any());
         verify(pdfMetadataService, never())
                 .setClassificationMetadata(any(PDDocument.class), anyString());

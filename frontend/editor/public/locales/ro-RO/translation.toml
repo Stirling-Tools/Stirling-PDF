@@ -6521,63 +6521,6 @@ title_other = "Procesează gratuit {{allowance}} PDF-uri"
 titleWithRate_one = "Procesează gratuit {{allowance}} PDF, apoi {{rate}}/PDF"
 titleWithRate_other = "Procesează gratuit {{allowance}} PDF-uri, apoi {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Blocat"
-openAriaLabel = "Deschide componenta {{name}}"
-
-[portal.catalogue.detail]
-addToProject = "Adaugă la proiect"
-ariaLabel = "Detalii componentă"
-tabsAriaLabel = "Secțiuni detalii componentă"
-upgradeToUnlock = "Fă upgrade pentru a debloca"
-
-[portal.catalogue.detail.code]
-install = "Instalare"
-usage = "Utilizare"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} este inclus începând cu planul {{tier}}. Fă upgrade pentru a-l încorpora."
-title = "Nu este disponibil în planul tău"
-
-[portal.catalogue.detail.preview]
-badge = "Previzualizare live"
-note = "Sandbox-ul interactiv se redă aici"
-
-[portal.catalogue.detail.pricing]
-note = "Contorizat per {{unit}}. Utilizarea peste cota gratuită lunară este facturată în contul tău și detaliată la Utilizare și facturare."
-
-[portal.catalogue.detail.stats]
-billedOn = "Facturat la"
-embeds30d = "Încorporări (30z)"
-freeQuota = "Cotă gratuită"
-freeQuotaValue = "{{amount}} / lună"
-maturity = "Maturitate"
-none = "Niciuna"
-perAction = "Per acțiune"
-price = "Preț"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "Prezentare generală"
-pricing = "Prețuri"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "opțional"
-required = "obligatoriu"
-
-[portal.catalogue.props.columns]
-description = "Descriere"
-name = "Prop"
-required = "Obligatoriu"
-type = "Tip"
-
-[portal.catalogue.summary]
-componentsGa = "Componente GA"
-componentSpendMtd = "Cheltuieli componente (MTD)"
-embedsThisMonth = "Încorporări luna aceasta"
-inBeta = "În Beta"
-
 [portal.components.billingUnit]
 approval = "aprobare"
 check = "verificare"
@@ -6590,18 +6533,6 @@ signature = "semnătură"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Widgeturi SDK încorporabile pe care le introduci în propria aplicație — un viewer, un flux de semnare electronică, un panou de revizuire AI. Fiecare este contorizat per acțiune. Apasă pe un card pentru instalare, utilizare și props."
-title = "Componente"
-
-[portal.componentsView.empty]
-description = "Catalogul de componente nu a putut fi încărcat. Încearcă din nou în curând."
-title = "Nu există componente disponibile"
-
-[portal.componentsView.lockedBanner]
-description = "Componentele GA sunt disponibile pe Pay-as-you-go; câteva componente Beta sunt doar pentru enterprise. Cardurile blocate afișează un îndemn de upgrade."
-title = "Unele componente necesită un plan plătit"
 
 [portal.docs.authentication]
 codeCaption = "fiecare solicitare"
