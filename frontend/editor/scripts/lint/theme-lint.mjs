@@ -17,7 +17,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { relative, resolve, join } from "node:path";
 
 const THEME = resolve(process.cwd(), "editor/src/core/theme");
-const PRIMITIVES = "editor/src/core/theme/primitives.css";
+const PRIMITIVES = "primitives.css";
 
 // Fixed list of theme CSS files to check, so every read takes a constant path
 // (no directory-listing feeding into a file read). readdir is used only to fail
@@ -87,7 +87,8 @@ function check() {
 
   for (const name of THEME_FILES) {
     const rel = relative(process.cwd(), join(THEME, name));
-    const isPrimitives = rel === PRIMITIVES;
+    // Compare the bare name: `relative()` yields backslashes on Windows.
+    const isPrimitives = name === PRIMITIVES;
     const text = stripComments(readFileSync(join(THEME, name), "utf8"));
 
     for (const re of [HEX_RE, FUNC_RE]) {

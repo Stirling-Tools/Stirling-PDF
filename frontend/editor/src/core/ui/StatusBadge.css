@@ -73,3 +73,15 @@
 .sui-status--purple {
   --sui-status-c: var(--color-purple-dark);
 }
+
+/* Subtle: toned-down dot + plain text, no fill or border. The dot alone
+   carries the tone; the label stays quiet. Last so it beats the tone rules. */
+.sui-status--subtle {
+  background: transparent;
+  border-color: transparent;
+  padding-inline: 0;
+  color: var(--color-text-3);
+}
+.sui-status--subtle .sui-status__dot {
+  background: var(--sui-status-c, var(--color-text-4));
+}

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import {
@@ -26,9 +26,15 @@ interface SourcesTableProps {
   sources: SourceView[];
   /** Opens a source's own page. Not called for the virtual editor row. */
   onRowClick: (source: SourceView) => void;
+  /** Shown when a filter/search leaves no rows. */
+  empty?: ReactNode;
 }
 
-export function SourcesTable({ sources, onRowClick }: SourcesTableProps) {
+export function SourcesTable({
+  sources,
+  onRowClick,
+  empty,
+}: SourcesTableProps) {
   const { t } = useTranslation();
   const columns = useMemo<TableColumn<SourceView>[]>(
     () => [
@@ -64,11 +70,7 @@ export function SourcesTable({ sources, onRowClick }: SourcesTableProps) {
         key: "status",
         header: t("portal.sources.table.status"),
         render: (s) => (
-          <StatusBadge
-            tone={STATUS_TONE[s.status]}
-            size="sm"
-            pulse={s.status === "active"}
-          >
+          <StatusBadge variant="subtle" tone={STATUS_TONE[s.status]} size="sm">
             {t(`portal.sources.status.${s.status}`)}
           </StatusBadge>
         ),
@@ -125,6 +127,7 @@ export function SourcesTable({ sources, onRowClick }: SourcesTableProps) {
       onRowClick={onRowClick}
       // The virtual editor row has no page to open, so it's inert - not a fake button.
       isRowInteractive={(s) => s.type !== EDITOR_SOURCE_TYPE}
+      empty={empty}
     />
   );
 }

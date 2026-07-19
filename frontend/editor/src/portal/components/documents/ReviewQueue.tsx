@@ -5,9 +5,8 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import {
   Button,
   EmptyState,
-  Input,
   Skeleton,
-  Tabs,
+  TableToolbar,
   type TabItem,
 } from "@app/ui";
 import type { DocumentStatus, ReviewDocument } from "@portal/api/documents";
@@ -29,20 +28,6 @@ const FILTER_STATUSES: Record<QueueFilter, DocumentStatus[] | null> = {
 interface ReviewQueueProps {
   documents: ReviewDocument[];
   loading: boolean;
-}
-
-function SearchIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
-      <path
-        d="m20 20-3.5-3.5"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
 }
 
 /**
@@ -106,29 +91,6 @@ export function ReviewQueue({ documents, loading }: ReviewQueueProps) {
 
   return (
     <div className="portal-documents__queue">
-      {/* The filter pills + search are counters over the list, so hide them when
-          the list is empty — the empty state stands alone. */}
-      {!isLoading && !isEmpty && (
-        <div className="portal-documents__toolbar">
-          <Tabs<QueueFilter>
-            items={filterItems}
-            activeKey={filter}
-            onChange={setFilter}
-            variant="pill"
-            ariaLabel={t("portal.documents.filters.ariaLabel")}
-          />
-          <Input
-            className="portal-documents__search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={t("portal.documents.search")}
-            aria-label={t("portal.documents.search")}
-            leadingIcon={<SearchIcon />}
-            inputSize="sm"
-          />
-        </div>
-      )}
-
       {isLoading && (
         <div className="portal-documents__table-skeleton" aria-hidden>
           {Array.from({ length: 6 }).map((_, i) => (
@@ -167,11 +129,25 @@ export function ReviewQueue({ documents, loading }: ReviewQueueProps) {
         />
       )}
 
+      {/* The filter chips + search are counters over the list, so hide them when
+          the list is empty — the empty state stands alone. */}
       {!isLoading && !isEmpty && (
-        <ReviewQueueTable
-          documents={rows}
-          onRowClick={(d) => setSelectedId(d.id)}
-        />
+        <div>
+          <TableToolbar<QueueFilter>
+            attached
+            filters={filterItems}
+            activeFilter={filter}
+            onFilterChange={setFilter}
+            filterAriaLabel={t("portal.documents.filters.ariaLabel")}
+            search={query}
+            onSearchChange={setQuery}
+            searchPlaceholder={t("portal.documents.search")}
+          />
+          <ReviewQueueTable
+            documents={rows}
+            onRowClick={(d) => setSelectedId(d.id)}
+          />
+        </div>
       )}
 
       <DocumentDrawer doc={selected} onClose={() => setSelectedId(null)} />

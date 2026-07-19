@@ -21,6 +21,7 @@ export * from "@app/ui/Stack";
 export * from "@app/ui/Inline";
 export * from "@app/ui/MetricStrip";
 export * from "@app/ui/StatTile";
+export * from "@app/ui/StatBar";
 
 // Feedback
 export * from "@app/ui/Spinner";
@@ -37,6 +38,7 @@ export * from "@app/ui/Tabs";
 export * from "@app/ui/Dropdown";
 export * from "@app/ui/Drawer";
 export * from "@app/ui/Table";
+export * from "@app/ui/TableToolbar";
 
 // Forms
 export * from "@app/ui/FormField";

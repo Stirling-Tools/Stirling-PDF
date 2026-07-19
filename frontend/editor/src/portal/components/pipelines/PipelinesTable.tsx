@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import AccountTreeRounded from "@mui/icons-material/AccountTreeRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
@@ -20,9 +20,15 @@ interface PipelinesTableProps {
   pipelines: PipelineView[];
   /** A row opens that pipeline's own page. */
   onRowClick: (pipeline: PipelineView) => void;
+  /** Shown when a filter/search leaves no rows. */
+  empty?: ReactNode;
 }
 
-export function PipelinesTable({ pipelines, onRowClick }: PipelinesTableProps) {
+export function PipelinesTable({
+  pipelines,
+  onRowClick,
+  empty,
+}: PipelinesTableProps) {
   const { t } = useTranslation();
   const columns = useMemo<TableColumn<PipelineView>[]>(
     () => [
@@ -49,11 +55,7 @@ export function PipelinesTable({ pipelines, onRowClick }: PipelinesTableProps) {
         key: "status",
         header: t("portal.pipelines.table.status"),
         render: (p) => (
-          <StatusBadge
-            tone={STATUS_TONE[p.status]}
-            size="sm"
-            pulse={p.status === "active"}
-          >
+          <StatusBadge variant="subtle" tone={STATUS_TONE[p.status]} size="sm">
             {t(`portal.pipelines.status.${p.status}`)}
           </StatusBadge>
         ),
@@ -108,6 +110,7 @@ export function PipelinesTable({ pipelines, onRowClick }: PipelinesTableProps) {
       rows={pipelines}
       rowKey={(p) => p.id}
       onRowClick={onRowClick}
+      empty={empty}
     />
   );
 }
