@@ -269,7 +269,7 @@ export default function Login() {
   };
 
   return (
-    <AuthLayout isEmailFormExpanded={showEmailForm || showMagicLinkForm}>
+    <AuthLayout>
       {/* Centered logo */}
       <div className="auth-logo-block">
         <img

@@ -31,11 +31,6 @@ vi.mock("@portal/api/integrations", () => ({
   deleteIntegration: vi.fn(),
 }));
 
-// The Agent Builder header action is a flavor seam; stub it to keep the test focused.
-vi.mock("@portal/components/sources/AgentBuilderAction", () => ({
-  AgentBuilderAction: () => null,
-}));
-
 const RESPONSE: SourcesResponse = {
   kpis: [
     { value: 1, description: "" },
