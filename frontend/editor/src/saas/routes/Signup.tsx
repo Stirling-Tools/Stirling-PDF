@@ -182,7 +182,7 @@ export default function Signup() {
   };
 
   return (
-    <AuthLayout isEmailFormExpanded={showEmailForm}>
+    <AuthLayout>
       {/* Centered logo */}
       <div className="auth-logo-block">
         <img
