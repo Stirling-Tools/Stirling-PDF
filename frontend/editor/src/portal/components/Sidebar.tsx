@@ -11,12 +11,17 @@ import wordmarkLight from "@app/assets/brand/modern-logo/StirlingProcessorLogoBl
 import wordmarkDark from "@app/assets/brand/modern-logo/StirlingProcessorLogoWhiteText.svg";
 import { SettingsIcon } from "@portal/components/icons";
 import {
-  GROUP_PRIMARY,
-  GROUP_OPERATIONAL,
+  GROUP_PROCESSOR,
   GROUP_PLATFORM,
   type NavEntry,
+  type NavGroup,
 } from "@portal/components/sidebarGroups";
 import "@portal/components/Sidebar.css";
+
+const NAV_SECTIONS: NavGroup[] = [
+  { labelKey: "portal.nav.section.processor", entries: GROUP_PROCESSOR },
+  { labelKey: "portal.nav.section.platform", entries: GROUP_PLATFORM },
+];
 
 export function Sidebar() {
   const { activeView, setActiveView } = useView();
@@ -76,17 +81,16 @@ export function Sidebar() {
       </div>
 
       <nav className="portal-sidebar__nav">
-        <div className="portal-sidebar__group">
-          {renderGroup(GROUP_PRIMARY)}
-        </div>
-        <div className="portal-sidebar__divider" aria-hidden />
-        <div className="portal-sidebar__group">
-          {renderGroup(GROUP_OPERATIONAL)}
-        </div>
-        <div className="portal-sidebar__divider" aria-hidden />
-        <div className="portal-sidebar__group">
-          {renderGroup(GROUP_PLATFORM)}
-        </div>
+        {NAV_SECTIONS.map((section) => (
+          <section key={section.labelKey} className="portal-sidebar__section">
+            <h2 className="portal-sidebar__section-label">
+              {t(section.labelKey)}
+            </h2>
+            <div className="portal-sidebar__group">
+              {renderGroup(section.entries)}
+            </div>
+          </section>
+        ))}
       </nav>
 
       <div className="portal-sidebar__footer">
