@@ -1,15 +1,16 @@
-import React from "react";
-import { Modal, Stack } from "@mantine/core";
 import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import GroupAddRoundedIcon from "@mui/icons-material/GroupAddRounded";
 import { useTranslation } from "react-i18next";
-import AnimatedSlideBackground from "@app/components/onboarding/slides/AnimatedSlideBackground";
-import OnboardingStepper from "@app/components/onboarding/OnboardingStepper";
-import { renderButtons } from "@app/components/onboarding/renderButtons";
-import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
+import OnboardingSlideShell, {
+  ShellHero,
+  type ShellButton,
+} from "@app/components/onboarding/OnboardingSlideShell";
 import { useSaasOnboardingState } from "@app/components/onboarding/useSaasOnboardingState";
-import { BASE_PATH } from "@app/constants/app";
-import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
+import {
+  type SlideId,
+  type ButtonAction,
+  type ButtonDefinition,
+} from "@app/components/onboarding/saasOnboardingFlowConfig";
 
 interface SaasOnboardingModalProps {
   opened: boolean;
@@ -20,6 +21,7 @@ interface SaasOnboardingModalProps {
    * false (slide shown) so the web (saas) flow is unchanged.
    */
   hideDesktopInstall?: boolean;
+  slideIds?: SlideId[];
 }
 
 export default function SaasOnboardingModal(props: SaasOnboardingModalProps) {
@@ -39,130 +41,45 @@ export default function SaasOnboardingModal(props: SaasOnboardingModalProps) {
     handleButtonAction,
   } = flow;
 
-  const renderHero = () => {
-    if (slideDefinition.hero.type === "dual-icon") {
-      return (
-        <div className={styles.heroIconsContainer}>
-          <div className={styles.iconWrapper}>
-            <img
-              src={`${BASE_PATH}/modern-logo/logo512.png`}
-              alt="Stirling icon"
-              className={styles.downloadIcon}
-            />
-          </div>
-        </div>
-      );
-    }
-
-    if (slideDefinition.hero.type === "logo") {
-      return (
-        <img
-          src={`${BASE_PATH}/modern-logo/logo512.png`}
-          alt="Stirling logo"
-          className={styles.standaloneIcon}
-        />
-      );
-    }
-
-    return (
-      <div className={styles.heroLogoCircle}>
-        {slideDefinition.hero.type === "bolt" && (
-          <BoltRoundedIcon sx={{ fontSize: 64, color: "#000000" }} />
-        )}
-        {slideDefinition.hero.type === "team" && (
-          <GroupAddRoundedIcon sx={{ fontSize: 56, color: "#000000" }} />
-        )}
-      </div>
+  const heroType = slideDefinition.hero.type;
+  const hero =
+    heroType === "dual-icon" || heroType === "logo" ? (
+      <ShellHero appIcon />
+    ) : (
+      <ShellHero>
+        {heroType === "bolt" && <BoltRoundedIcon sx={{ fontSize: 30 }} />}
+        {heroType === "team" && <GroupAddRoundedIcon sx={{ fontSize: 30 }} />}
+      </ShellHero>
     );
+
+  const resolveLabel = (button: ButtonDefinition) => {
+    const label = button.label ?? "";
+    if (!label) return "";
+    const fallback = label.split(".").pop() || label;
+    return t(label, fallback);
   };
 
+  const buttons: ShellButton[] = slideDefinition.buttons.map((button) => ({
+    key: button.key,
+    back: button.type === "icon",
+    label: resolveLabel(button),
+    primary: (button.variant ?? "secondary") === "primary",
+    action: button.action,
+    disabled: button.disabledWhen?.(flowState) ?? false,
+  }));
+
   return (
-    <Modal
+    <OnboardingSlideShell
       opened={props.opened}
+      hero={hero}
+      slideKey={currentSlide.key}
+      title={currentSlide.title}
+      body={currentSlide.body}
+      stepIndex={currentStep}
+      stepCount={totalSteps}
+      buttons={buttons}
+      onAction={(action) => handleButtonAction(action as ButtonAction)}
       onClose={props.onClose}
-      closeOnClickOutside={false}
-      centered
-      size="lg"
-      radius="lg"
-      withCloseButton={false}
-      zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
-      styles={{
-        body: { padding: 0 },
-        content: {
-          overflow: "hidden",
-          border: "none",
-          background: "var(--bg-surface)",
-          maxHeight: "90vh",
-          display: "flex",
-          flexDirection: "column",
-        },
-      }}
-    >
-      <Stack
-        gap={0}
-        className={styles.modalContent}
-        style={{
-          height: "100%",
-          maxHeight: "90vh",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <div className={styles.heroWrapper} style={{ flexShrink: 0 }}>
-          <AnimatedSlideBackground
-            gradientStops={currentSlide.background.gradientStops}
-            circles={currentSlide.background.circles}
-            isActive
-            slideKey={currentSlide.key}
-          />
-          <div className={styles.heroLogo} key={`logo-${currentSlide.key}`}>
-            {renderHero()}
-          </div>
-        </div>
-
-        <div
-          className={styles.modalBody}
-          style={{
-            flex: 1,
-            overflowY: "auto",
-            overflowX: "hidden",
-            WebkitOverflowScrolling: "touch",
-          }}
-        >
-          <Stack gap={16}>
-            <div
-              key={`title-${currentSlide.key}`}
-              className={`${styles.title} ${styles.titleText}`}
-            >
-              {currentSlide.title}
-            </div>
-
-            <div className={styles.bodyText}>
-              <div
-                key={`body-${currentSlide.key}`}
-                className={`${styles.bodyCopy} ${styles.bodyCopyInner}`}
-              >
-                {currentSlide.body}
-              </div>
-              <style>{`div strong{color: var(--onboarding-title); font-weight: 600;}`}</style>
-            </div>
-
-            <OnboardingStepper
-              totalSteps={totalSteps}
-              activeStep={currentStep}
-            />
-
-            <div className={styles.buttonContainer}>
-              {renderButtons({
-                slideDefinition,
-                flowState,
-                onAction: handleButtonAction,
-                t,
-              })}
-            </div>
-          </Stack>
-        </div>
-      </Stack>
-    </Modal>
+    />
   );
 }

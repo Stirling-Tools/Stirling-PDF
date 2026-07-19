@@ -50,7 +50,7 @@ function LinkModalHost() {
 export function PortalProviders() {
   return (
     <LinkProvider initialState="unlinked">
-      <TierProvider initialTier="pro">
+      <TierProvider>
         <UIProvider>
           <AccountLinkProvider>
             <PortalChrome />

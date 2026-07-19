@@ -21,6 +21,15 @@
 .sui-chip--interactive {
   cursor: pointer;
 }
+/* "box-cut" add/placeholder affordance: no fill, dashed outline. */
+.sui-chip--dashed.mantine-Pill-root {
+  background: transparent;
+  border-style: dashed;
+  border-color: var(--_bd);
+}
+.sui-chip--dashed.sui-chip--interactive:hover {
+  background: var(--_tint);
+}
 .sui-chip--loading {
   opacity: 0.6;
   pointer-events: none;
@@ -38,6 +47,17 @@
 }
 .sui-chip__label {
   display: inline-block;
+}
+
+/* Center the label precisely. Mantine sets line-height: var(--pill-height) on
+   the label, which positions the text by its font baseline and reads slightly
+   high; flex-centering with line-height:1 centres the ink in the pill. */
+.sui-chip .mantine-Pill-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  overflow: visible;
 }
 .sui-chip__spinner {
   width: 0.75em;

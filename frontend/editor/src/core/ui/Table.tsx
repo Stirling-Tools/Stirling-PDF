@@ -19,6 +19,12 @@ export interface TableProps<T> {
   rowKey: (row: T) => string;
   /** Makes rows interactive (hover + click + keyboard). */
   onRowClick?: (row: T) => void;
+  /**
+   * Per-row gate for interactivity, checked only when {@link onRowClick} is set. A row for which
+   * this returns false is inert: no click/keyboard, and not announced as a button. Defaults to
+   * all rows interactive.
+   */
+  isRowInteractive?: (row: T) => boolean;
   /** Rendered in place of the body when there are no rows. */
   empty?: ReactNode;
   className?: string;
@@ -35,6 +41,7 @@ export function Table<T>({
   rows,
   rowKey,
   onRowClick,
+  isRowInteractive,
   empty,
   className,
 }: TableProps<T>) {
@@ -66,38 +73,42 @@ export function Table<T>({
               </td>
             </tr>
           ) : (
-            rows.map((row) => (
-              <tr
-                key={rowKey(row)}
-                className={
-                  interactive
-                    ? "sui-table__row sui-table__row--interactive"
-                    : "sui-table__row"
-                }
-                onClick={onRowClick ? () => onRowClick(row) : undefined}
-                tabIndex={interactive ? 0 : undefined}
-                role={interactive ? "button" : undefined}
-                onKeyDown={
-                  interactive
-                    ? (e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          onRowClick?.(row);
+            rows.map((row) => {
+              const rowInteractive =
+                interactive && (isRowInteractive?.(row) ?? true);
+              return (
+                <tr
+                  key={rowKey(row)}
+                  className={
+                    rowInteractive
+                      ? "sui-table__row sui-table__row--interactive"
+                      : "sui-table__row"
+                  }
+                  onClick={rowInteractive ? () => onRowClick?.(row) : undefined}
+                  tabIndex={rowInteractive ? 0 : undefined}
+                  role={rowInteractive ? "button" : undefined}
+                  onKeyDown={
+                    rowInteractive
+                      ? (e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            onRowClick?.(row);
+                          }
                         }
-                      }
-                    : undefined
-                }
-              >
-                {columns.map((c) => (
-                  <td
-                    key={c.key}
-                    className={`sui-table__td sui-table__td--${c.align ?? "left"}`}
-                  >
-                    {c.render(row)}
-                  </td>
-                ))}
-              </tr>
-            ))
+                      : undefined
+                  }
+                >
+                  {columns.map((c) => (
+                    <td
+                      key={c.key}
+                      className={`sui-table__td sui-table__td--${c.align ?? "left"}`}
+                    >
+                      {c.render(row)}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>

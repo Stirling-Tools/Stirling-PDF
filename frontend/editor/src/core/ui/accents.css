@@ -9,6 +9,10 @@
   --_bd: var(--color-blue-border);
   --_tint: color-mix(in srgb, var(--color-blue) 12%, transparent);
 }
+
+html[data-app-theme="custom"] .sui-acc-default {
+  --_on: var(--c-text-on-primary);
+}
 .sui-acc-danger {
   --_solid: var(--color-red);
   --_solid-hover: var(--color-red-dark);

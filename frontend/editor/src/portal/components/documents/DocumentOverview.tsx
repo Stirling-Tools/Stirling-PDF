@@ -13,7 +13,7 @@ export function DocumentOverview({ doc }: { doc: ReviewDocument }) {
       <div className="portal-documents__stat-grid">
         <StatTile
           label={t("portal.documents.overview.status")}
-          value={DOCUMENT_STATUS_LABEL[doc.status]}
+          value={t(DOCUMENT_STATUS_LABEL[doc.status])}
         />
         <StatTile
           label={t("portal.documents.overview.product")}
@@ -22,7 +22,9 @@ export function DocumentOverview({ doc }: { doc: ReviewDocument }) {
         <StatTile
           label={t("portal.documents.overview.action")}
           value={
-            doc.product === "Editor" || !doc.action ? "Editor" : doc.action
+            doc.product === "Editor" || !doc.action
+              ? t("portal.documents.table.editorAction")
+              : doc.action
           }
         />
         <StatTile

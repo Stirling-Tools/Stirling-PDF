@@ -10,6 +10,7 @@ from pydantic_ai import Agent
 from pydantic_ai.models.instrumented import InstrumentationSettings
 
 from stirling.agents import (
+    DocumentClassifierAgent,
     ExecutionPlanningAgent,
     OrchestratorAgent,
     PdfEditAgent,
@@ -24,6 +25,7 @@ from stirling.api.middleware import UserIdMiddleware
 from stirling.api.routes import (
     agent_capabilities_router,
     agent_draft_router,
+    document_classifier_router,
     document_router,
     execution_router,
     ledger_router,
@@ -95,6 +97,7 @@ async def lifespan(fast_api: FastAPI):
     fast_api.state.execution_planning_agent = ExecutionPlanningAgent(runtime)
     fast_api.state.math_auditor_agent = MathAuditorAgent(runtime)
     fast_api.state.pdf_comment_agent = PdfCommentAgent(runtime)
+    fast_api.state.document_classifier_agent = DocumentClassifierAgent(runtime)
     tracer_provider = setup_posthog_tracking(settings)
     if tracer_provider:
         Agent.instrument_all(InstrumentationSettings(tracer_provider=tracer_provider))
@@ -131,6 +134,7 @@ app.include_router(document_router, dependencies=_user_gate)
 app.include_router(ledger_router, dependencies=_user_gate)
 app.include_router(pdf_comments_router, dependencies=_user_gate)
 app.include_router(agent_capabilities_router, dependencies=_user_gate)
+app.include_router(document_classifier_router, dependencies=_user_gate)
 
 
 @app.get("/health", response_model=HealthResponse)

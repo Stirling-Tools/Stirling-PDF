@@ -79,7 +79,7 @@ export function DealJourney({
             {isTerminal
               ? t("portal.procurement.journey.live")
               : t("portal.procurement.journey.nextStep", {
-                  action: currentStep?.gatingAction ?? "",
+                  action: currentStep ? t(currentStep.gatingAction) : "",
                 })}
           </span>
         </div>
@@ -90,7 +90,7 @@ export function DealJourney({
             loading={advancing}
             onClick={() => onAdvance(currentStage)}
           >
-            {currentStep.gatingAction}
+            {t(currentStep.gatingAction)}
           </Button>
         )}
       </div>

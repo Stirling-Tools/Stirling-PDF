@@ -221,29 +221,6 @@ export function PoliciesIcon(props: IconProps) {
   );
 }
 
-export function ComponentsIcon(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <rect x="3" y="3" width="7" height="7" rx="1" />
-      <rect x="14" y="3" width="7" height="7" rx="1" />
-      <rect x="3" y="14" width="7" height="7" rx="1" />
-      <rect x="14" y="14" width="7" height="7" rx="1" />
-    </Svg>
-  );
-}
-
-export function AgentBuilderIcon(props: IconProps) {
-  return (
-    <Svg {...props}>
-      <rect x="3" y="11" width="18" height="10" rx="2" />
-      <circle cx="12" cy="5" r="2" />
-      <path d="M12 7v4" />
-      <line x1="8" y1="16" x2="8" y2="16" />
-      <line x1="16" y1="16" x2="16" y2="16" />
-    </Svg>
-  );
-}
-
 export function ProcurementIcon(props: IconProps) {
   return (
     <Svg {...props}>
@@ -269,6 +246,15 @@ export function LinkIcon(props: IconProps) {
     <Svg {...props}>
       <path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
       <path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+    </Svg>
+  );
+}
+
+export function LockIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect x="3" y="11" width="18" height="11" rx="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
     </Svg>
   );
 }

@@ -155,6 +155,8 @@ The project structure is defined in `engine/pyproject.toml`. Any new dependencie
 
 For a broader explanation of the frontend layering and override architecture, read @frontend/editor/DeveloperGuide.md
 
+Before touching colours or theming (tokens, dark mode, accent colours), read @frontend/editor/src/core/theme/README.md — it explains the palette/`--c-*` token system and the rule that literal colours live only in `primitives.css`.
+
 ```typescript
 // ✅ CORRECT - Use @app/* for all imports
 import { AppLayout } from "@app/components/AppLayout";
@@ -453,6 +455,7 @@ The frontend is organized with a clear separation of concerns:
 
 - **CRITICAL**: Always update translations in `en-US` only - all other languages (including `en-GB`) are handled separately
 - Translation files are located in `frontend/editor/public/locales/`
+- After changing any translation file, run `task pre-commit:fix`
 
 ## Important Notes
 

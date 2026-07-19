@@ -27,6 +27,10 @@ const wallet: Wallet = {
   stripeSubscriptionId: null,
   spendUnitsThisPeriod: 0,
   categoryBreakdown: { api: 0, ai: 0, automation: 0 },
+  categoryDocs: { api: 0, ai: 0, automation: 0 },
+  docsProcessedThisPeriod: 0,
+  uniquePdfsThisPeriod: 0,
+  sizeMultiplierPdfsThisPeriod: 0,
   members: [],
   recent: [],
 };

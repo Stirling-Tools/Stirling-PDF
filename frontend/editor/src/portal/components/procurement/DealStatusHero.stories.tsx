@@ -5,6 +5,8 @@ import type { ProcurementSnapshot } from "@portal/api/procurement";
 const base: ProcurementSnapshot = {
   dealId: 1,
   stage: "trial",
+  deployment: "cloud",
+  seats: 250,
   trialStartedAt: "2026-06-25T00:00:00Z",
   trialEndsAt: "2026-07-09T00:00:00Z",
   trialExtensionsUsed: 0,
@@ -21,7 +23,7 @@ const meta: Meta<typeof DealStatusHero> = {
   args: {
     canSchedule: true,
     onExpand: () => {},
-    onKeyDocs: () => {},
+    onLicense: () => {},
     onInvite: () => {},
     onSchedule: () => {},
     onManageTrial: () => {},

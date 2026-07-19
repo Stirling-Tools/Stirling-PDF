@@ -20,11 +20,11 @@ import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useTheme } from "@app/components/shared/ThemeProvider";
 import LanguageSelector from "@app/components/shared/LanguageSelector";
-import type { ThemeMode } from "@app/constants/theme";
+import { type ThemeMode } from "@app/constants/theme";
 import type { ToolPanelMode } from "@app/constants/toolPanel";
-import type {
-  StartupView,
-  ViewerZoomSetting,
+import {
+  type StartupView,
+  type ViewerZoomSetting,
 } from "@app/services/preferencesService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -482,7 +482,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               <Text size="xs" c="dimmed" mt={4}>
                 {t(
                   "settings.general.themeDescription",
-                  "Choose light, dark, or follow your system",
+                  "Choose light, dark, or follow your system so it switches automatically.",
                 )}
               </Text>
             </div>
@@ -505,27 +505,31 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               ]}
             />
           </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <Text fw={500} size="sm">
-                {t("settings.general.language", "Language")}
-              </Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t(
-                  "settings.general.languageDescription",
-                  "Choose the display language",
-                )}
-              </Text>
-            </div>
-            <LanguageSelector position="bottom-end" offset={6} />
-          </div>
         </Stack>
+      </Paper>
+
+      {/* Language */}
+      <Paper withBorder p="md" radius="md">
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <Text fw={500} size="sm">
+              {t("settings.general.language", "Language")}
+            </Text>
+            <Text size="xs" c="dimmed" mt={4}>
+              {t(
+                "settings.general.languageDescription",
+                "Choose the display language",
+              )}
+            </Text>
+          </div>
+          <LanguageSelector position="bottom-end" offset={6} />
+        </div>
       </Paper>
 
       <Paper withBorder p="md" radius="md">

@@ -89,6 +89,22 @@ export const I18N_PROJECTS: TranslationProject[] = [
       // components/sources/sourceTypes.ts (t(field.labelKey)), invisible to the
       // static scan.
       /^portal\.sources\.types\./,
+      // Portal catalogue copy stored as i18n keys in api/<surface>.ts constants
+      // (label maps, role/policy/journey catalogues) and rendered via
+      // t(constant), invisible to the static scan.
+      /^portal\.documents\.(status|audit)\./,
+      /^portal\.editorAdmin\.status\./,
+      /^portal\.components\.(maturity|billingUnit)\./,
+      /^portal\.home\.(pipelineTemplates|pipelineStages)\./,
+      /^portal\.procurement\.journeySteps\./,
+      /^portal\.users\.roles\./,
+      /^portal\.policies\.(categories|config|endpoints)\./,
+      // Policy field labels + option display copy are looked up with keys
+      // derived from catalogue data (t(`policies.field.${key}`),
+      // t(`policyOption.${id}`)) in the PolicyFieldRows and setup wizards —
+      // invisible to the static scan. The raw catalogue value is the fallback.
+      /^policies\.field\./,
+      /^policyOption\./,
     ],
     minUsedKeys: 100,
     minLocaleKeys: 100,

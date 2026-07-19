@@ -7,11 +7,9 @@ export type ViewId =
   | "editor"
   | "users"
   | "sources"
-  | "agent-builder"
   | "policies"
   | "pipelines"
   | "documents"
-  | "components"
   | "infrastructure"
   | "usage"
   | "docs"
@@ -23,14 +21,12 @@ export const VIEW_LABELS: Record<ViewId, string> = {
   editor: "Editor",
   users: "Users",
   sources: "Sources",
-  "agent-builder": "Agent Builder",
   policies: "Policies",
   pipelines: "Pipelines",
   documents: "Documents",
-  components: "Components",
   infrastructure: "Infrastructure",
   usage: "Usage & Billing",
-  docs: "Developer Docs",
+  docs: "Documentation",
   procurement: "Procurement",
   settings: "Settings",
 };
@@ -40,11 +36,9 @@ export const VIEW_PATHS: Record<ViewId, string> = {
   editor: "/editor",
   users: "/users",
   sources: "/sources",
-  "agent-builder": "/agent-builder",
   policies: "/policies",
   pipelines: "/pipelines",
   documents: "/documents",
-  components: "/components",
   infrastructure: "/infrastructure",
   usage: "/usage",
   docs: "/docs",
@@ -61,7 +55,7 @@ export const VIEW_PATHS: Record<ViewId, string> = {
  */
 export { PORTAL_BASENAME };
 
-/** Logical view path -> full app path (e.g. "/users" -> "/portal/users"). */
+/** Logical view path -> full app path (e.g. "/users" -> "/processor/users"). */
 export function toPortalPath(viewPath: string): string {
   return `${PORTAL_BASENAME}${viewPath === "/" ? "" : viewPath}`;
 }

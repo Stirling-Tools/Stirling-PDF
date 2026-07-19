@@ -15,7 +15,7 @@ jobs:
 
   deploy-v2-on-push:
     needs: pick
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    runs-on: ${{ needs.pick.outputs.use_depot == 'true' && 'depot-ubuntu-24.04-4' || 'ubuntu-latest' }}
     concurrency:
       group: deploy-v2-push-V2
       cancel-in-progress: true
@@ -23,7 +23,7 @@ jobs:
       contents: read
       id-token: write
     env:
-      USE_DEPOT: ${{ needs.pick.outputs.is_fork != 'true' }}
+      USE_DEPOT: ${{ needs.pick.outputs.use_depot == 'true' }}
       DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
 
     steps:
@@ -121,7 +121,7 @@ jobs:
 
       - name: Build and push frontend image (Docker fork fallback)
         if: env.USE_DEPOT != 'true' && steps.check-frontend.outputs.exists == 'false'
-        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
           file: ./docker/frontend/Dockerfile
@@ -150,7 +150,7 @@ jobs:
 
       - name: Build and push backend image (Docker fork fallback)
         if: env.USE_DEPOT != 'true' && steps.check-backend.outputs.exists == 'false'
-        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
           file: ./docker/backend/Dockerfile

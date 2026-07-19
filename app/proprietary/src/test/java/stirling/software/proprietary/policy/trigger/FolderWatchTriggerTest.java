@@ -3,6 +3,7 @@ package stirling.software.proprietary.policy.trigger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -26,6 +27,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
+import stirling.software.proprietary.policy.engine.SweepKind;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
@@ -100,8 +102,8 @@ class FolderWatchTriggerTest {
 
         trigger.runForChangedDirs(Set.of(normalized("/in/a")));
 
-        verify(policyRunner).run(a);
-        verify(policyRunner, never()).run(b);
+        verify(policyRunner).run(a, SweepKind.LIGHT);
+        verify(policyRunner, never()).run(eq(b), any());
     }
 
     @Test
@@ -112,8 +114,8 @@ class FolderWatchTriggerTest {
 
         trigger.runForChangedDirs(Set.of(normalized("/in/a")));
 
-        verify(policyRunner).run(good);
-        verify(policyRunner, never()).run(bad);
+        verify(policyRunner).run(good, SweepKind.LIGHT);
+        verify(policyRunner, never()).run(eq(bad), any());
     }
 
     @Test

@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.proprietary.audit.PortalAuditScope;
 import stirling.software.proprietary.audit.PortalAuditScopeResolver;
-import stirling.software.saas.repository.TeamMembershipRepository;
+import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 
 /** SaaS audit visibility: admins see the server; team LEADERs see their team (by member email). */
 @Component

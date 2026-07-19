@@ -305,6 +305,128 @@
   overflow-y: scroll;
 }
 
+/* --- Grouped list (SaaS: Recent + per-category groups). Inert when the
+   grouping seam returns no groups (OSS/desktop render the flat list). --- */
+.file-sidebar-group + .file-sidebar-group {
+  margin-top: 2px;
+}
+
+.file-sidebar-group-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 5px 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-default, var(--color-text-1));
+  border-radius: 0;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+}
+.file-sidebar-group-header:hover {
+  background: var(--hover-bg, var(--color-bg-hover));
+}
+
+.file-sidebar-group-icon {
+  flex: none;
+  color: var(--text-muted, var(--color-text-3));
+}
+
+.file-sidebar-group-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-sidebar-group-count {
+  flex: none;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted, var(--color-text-3));
+}
+
+/* Full-width, flat rows: no inset, no radius, so the hover/selected highlight
+   bleeds edge to edge. The file content is indented under the group header via
+   the row's own left padding (the background still spans the full width). */
+.file-sidebar-group-items {
+  padding-left: 0;
+}
+.file-sidebar-group-items .file-sidebar-file-item {
+  padding: 5px 10px 5px 1.4rem;
+  gap: 8px;
+  border-radius: 0;
+}
+/* Hover reads neutral (not the default blue tint); selected stays blue. */
+.file-sidebar-group-items .file-sidebar-file-item:hover:not(.selected) {
+  background-color: var(--color-bg-hover, rgba(120, 120, 120, 0.1));
+}
+/* A plain circle where the selected check sits — on hover, and blue when selected. */
+.file-sidebar-group-items .file-sidebar-file-checkbox-hover,
+.file-sidebar-group-items .file-sidebar-file-check {
+  border-radius: 50%;
+}
+
+/* Smaller, tighter icon column in grouped rows (colour left as-is for now). */
+.file-sidebar-group-items .file-sidebar-file-icon-wrapper,
+.file-sidebar-group-items .file-sidebar-file-check,
+.file-sidebar-group-items .file-sidebar-file-checkbox-hover {
+  width: 16px;
+  height: 16px;
+}
+
+/* The processing spinner keeps the file icons' visual size (16px reads too
+   timid for a motion cue) — it overflows the icon column slightly, centered
+   via negative margin so the row layout doesn't shift. */
+.file-sidebar-group-items .file-sidebar-file-spinner {
+  width: 20px;
+  height: 20px;
+  margin: -2px;
+}
+
+/* Row actions take NO width at rest, so the name uses the full row before
+   truncating; they appear on hover (or while viewed / the kebab menu is open),
+   at which point the name truncates to make room. */
+.file-sidebar-group-items .file-sidebar-eye-btn,
+.file-sidebar-group-items .file-sidebar-kebab-btn {
+  display: none;
+}
+.file-sidebar-group-items .file-sidebar-file-item:hover .file-sidebar-eye-btn,
+.file-sidebar-group-items .file-sidebar-file-item:hover .file-sidebar-kebab-btn,
+.file-sidebar-group-items .file-sidebar-kebab-btn[aria-expanded="true"],
+.file-sidebar-group-items .file-sidebar-file-item.viewed .file-sidebar-eye-btn {
+  display: flex;
+}
+
+/* "View all N files →" footer under the groups. */
+.file-sidebar-view-all {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  padding: 6px 8px;
+  margin-top: 4px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--color-blue, #2563eb);
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 6px;
+  text-align: left;
+  overflow: visible;
+}
+.file-sidebar-view-all::before {
+  display: none;
+}
+.file-sidebar-view-all:hover {
+  background: var(--color-bg-hover, rgba(120, 120, 120, 0.1));
+}
+
 .file-sidebar-file-list::-webkit-scrollbar {
   width: 4px;
 }
@@ -328,6 +450,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   padding: 12px 14px 6px 14px;
   margin: 4px 0 0 0;
 }
@@ -346,6 +469,35 @@
   letter-spacing: 0.02em;
   color: var(--text-muted);
   text-transform: uppercase;
+}
+
+/* Slim "Adding files… X/Y" progress row shown during a bulk drop's pre-scan,
+   so a 200-file folder never looks frozen between drop and rows appearing. */
+.file-sidebar-bulk-add {
+  padding: 4px 14px 8px;
+}
+.file-sidebar-bulk-add-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.file-sidebar-bulk-add-count {
+  font-variant-numeric: tabular-nums;
+}
+.file-sidebar-bulk-add-track {
+  height: 3px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-blue, #3b82f6) 15%, transparent);
+  overflow: hidden;
+}
+.file-sidebar-bulk-add-bar {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-blue, #3b82f6);
+  transition: width 0.15s ease-out;
 }
 
 .file-sidebar-section-count {

@@ -29,7 +29,6 @@ import {
 } from "@app/components/policies/enforcementQueue";
 import { ROW_ACCENT } from "@app/components/policies/policyStatus";
 import { alert, updateToast, dismissToast } from "@app/components/toast";
-import { POLICIES_ENABLED } from "@app/constants/featureFlags";
 import i18n from "@app/i18n";
 
 /** Poll cadence + cap for a single export run (≈2.5 min worst case). */
@@ -60,7 +59,6 @@ interface PolicyRunResult {
 
 /** Configured, active policies set to enforce on export (read from the cache). */
 function activeExportPolicies(): ExportPolicy[] {
-  if (!POLICIES_ENABLED) return [];
   const labels = new Map(
     loadPolicyCatalog().categories.map((c) => [c.id, c.label]),
   );

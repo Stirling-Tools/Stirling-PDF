@@ -22,10 +22,12 @@ import {
   downloadFileFromStorage,
   downloadMultipleFiles,
 } from "@app/utils/downloadUtils";
-import ToolChain from "@app/components/shared/ToolChain";
 import ShareManagementModal from "@app/components/shared/ShareManagementModal";
 import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
 import { fileStorage } from "@app/services/fileStorage";
+import { readStubClassificationLabels } from "@app/services/fileClassification";
+import { useLabelName } from "@app/data/labelDisplay";
+import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
 import {
   VersionTimeline,
   DetailField,
@@ -78,6 +80,14 @@ export function FileDetailsPanel({
   // Metadata (size/type/dates) is collapsed by default so the panel stays
   // short and the action buttons keep their pinned footer in view.
   const [fieldsOpen, setFieldsOpen] = useState(false);
+  // Version journey is collapsed by default so the panel stays short.
+  const [versionsOpen, setVersionsOpen] = useState(false);
+  // Document classification read from PDF metadata, plus its (collapsed) section.
+  // Stored as label ids; resolve to display names via the seam.
+  const [classification, setClassification] = useState<string[] | null>(null);
+  const [classificationOpen, setClassificationOpen] = useState(false);
+  const classificationEnabled = useClassificationEnabled();
+  const labelName = useLabelName();
   // Version chain for the selected file; empty for v1 or multi-select.
   const [versionChain, setVersionChain] = useState<StirlingFileStub[]>([]);
   const singleFileForChain = files.length === 1 ? files[0] : null;
@@ -102,6 +112,29 @@ export function FileDetailsPanel({
       cancelled = true;
     };
   }, [singleFileForChain]);
+
+  // Show the file's classification labels: the stub's cached copy when present
+  // (free — no byte load), else read the PDF metadata via the shared service.
+  // Gated on classification being enabled (SaaS + AI): off-feature we never read
+  // the metadata or show the section, so a PDF that happens to carry the
+  // StirlingPDFClassification key never reveals the feature in a build without it.
+  useEffect(() => {
+    setClassification(null);
+    if (!classificationEnabled) return;
+    const stub = singleFileForChain;
+    if (!stub) return;
+    if (stub.classificationLabels && stub.classificationLabels.length > 0) {
+      setClassification(stub.classificationLabels);
+      return;
+    }
+    let cancelled = false;
+    void readStubClassificationLabels(stub).then((labels) => {
+      if (!cancelled && labels) setClassification(labels);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [singleFileForChain, classificationEnabled]);
 
   if (files.length === 0) {
     return null;
@@ -241,17 +274,56 @@ export function FileDetailsPanel({
                 />
               </div>
             )}
-            {single.toolHistory && single.toolHistory.length > 0 && (
-              <div className="files-page-details-tool-history">
-                <div className="files-page-details-tool-history-label">
-                  {t("filesPage.field.toolHistory", "Tool history")}
-                </div>
-                <ToolChain
-                  toolChain={single.toolHistory}
-                  displayStyle="badges"
-                  size="xs"
-                />
-              </div>
+            {classification && (
+              <>
+                <Button
+                  variant="quiet"
+                  fullWidth
+                  justify="between"
+                  className="files-page-details-collapse-toggle"
+                  onClick={() => setClassificationOpen((o) => !o)}
+                  aria-expanded={classificationOpen}
+                  rightSection={
+                    <KeyboardArrowDownIcon
+                      className={`files-page-details-collapse-chevron${
+                        classificationOpen ? " is-open" : ""
+                      }`}
+                      fontSize="small"
+                    />
+                  }
+                >
+                  <span>{t("filesPage.classification", "Classification")}</span>
+                </Button>
+                {classificationOpen && (
+                  <div className="files-page-details-fieldlist">
+                    <div className="files-page-details-field">
+                      <span className="files-page-details-field-label">
+                        {t("filesPage.field.labels", "Labels")}
+                      </span>
+                      <span
+                        className="files-page-details-field-value"
+                        style={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: "0.25rem",
+                          justifyContent: "flex-end",
+                        }}
+                      >
+                        {classification.map((label) => (
+                          <Badge
+                            key={label}
+                            size="xs"
+                            variant="light"
+                            color="orange"
+                          >
+                            {labelName(label)}
+                          </Badge>
+                        ))}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
             {/* Version journey. Each tool run writes a new StirlingFile
                 with the same `originalFileId` and an incremented
@@ -275,12 +347,41 @@ export function FileDetailsPanel({
                   )}
                 </Button>
               ) : (
-                <VersionTimeline
-                  chain={versionChain}
-                  currentId={single.id}
-                  onAddToWorkspace={onAddToWorkspace}
-                  onRemove={onRemove}
-                />
+                <>
+                  <Button
+                    variant="quiet"
+                    fullWidth
+                    justify="between"
+                    className="files-page-details-collapse-toggle"
+                    onClick={() => setVersionsOpen((o) => !o)}
+                    aria-expanded={versionsOpen}
+                    rightSection={
+                      <KeyboardArrowDownIcon
+                        className={`files-page-details-collapse-chevron${
+                          versionsOpen ? " is-open" : ""
+                        }`}
+                        fontSize="small"
+                      />
+                    }
+                  >
+                    <span>
+                      {t(
+                        "filesPage.viewVersionHistory",
+                        "Version journey ({{count}})",
+                        { count: versionChain.length },
+                      )}
+                    </span>
+                  </Button>
+                  {versionsOpen && (
+                    <VersionTimeline
+                      chain={versionChain}
+                      currentId={single.id}
+                      onAddToWorkspace={onAddToWorkspace}
+                      onRemove={onRemove}
+                      hideHeader
+                    />
+                  )}
+                </>
               ))}
           </>
         ) : (
