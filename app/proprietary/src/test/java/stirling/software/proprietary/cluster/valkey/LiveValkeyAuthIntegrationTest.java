@@ -24,7 +24,7 @@ import stirling.software.common.model.ApplicationProperties;
  * the full production bean method {@code valkeyConnectionFactory()} so the parse, credential
  * wiring, and eager-handshake all run exactly as at boot.
  */
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 @EnabledIf("isDockerAvailable")
 class LiveValkeyAuthIntegrationTest {
 

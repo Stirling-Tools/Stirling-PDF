@@ -235,6 +235,7 @@ subprojects {
         resolutionStrategy.force "org.bouncycastle:bcprov-jdk18on:${bouncycastleVersion}"
         resolutionStrategy.force "org.bouncycastle:bcpkix-jdk18on:${bouncycastleVersion}"
         resolutionStrategy.force "org.bouncycastle:bcutil-jdk18on:${bouncycastleVersion}"
+        resolutionStrategy.force "org.apache.santuario:xmlsec:3.0.5"
     }
 
     dependencyManagement {
@@ -285,6 +286,7 @@ subprojects {
     def jacocoReport = tasks.named("jacocoTestReport")
 
     tasks.withType(Test).configureEach {
+        jvmArgs "--enable-native-access=ALL-UNNAMED"
         useJUnitPlatform()
         finalizedBy(jacocoReport)
     }
@@ -297,7 +299,8 @@ subprojects {
             html.required.set(true)
         }
         doLast {
-            def xmlReport = reports.xml.outputLocation.get().asFile
+            def reportBaseDir = layout.buildDirectory.dir("reports/jacoco/test").get().asFile
+            def xmlReport = new File(reportBaseDir, "jacocoTestReport.xml")
             if (!xmlReport.exists()) {
                 logger.lifecycle("Jacoco coverage report not found at ${xmlReport}")
                 return
@@ -376,7 +379,7 @@ subprojects {
             }
             logger.lifecycle(separator)
 
-            def htmlReport = reports.html.outputLocation.get().asFile
+            def htmlReport = new File(reportBaseDir, "html")
             logger.lifecycle("Detailed HTML report available at: ${htmlReport}")
             if (rows.any { it[3] == "FAIL" }) {
                 logger.lifecycle("Some coverage targets were missed. Please review the detailed report above.")
@@ -666,7 +669,7 @@ tasks.register('compileRestartHelper', JavaCompile) {
     source = fileTree(dir: 'scripts', include: 'RestartHelper.java')
     classpath = files()
     destinationDirectory = layout.buildDirectory.dir("restart-helper-classes")
-    def restartMajorVersion = project.ext.modernJavaVersion
+    def restartMajorVersion = rootProject.ext.modernJavaVersion
     def restartCompatibility = JavaVersion.toVersion(restartMajorVersion.toString())
     sourceCompatibility = restartCompatibility
     targetCompatibility = restartCompatibility

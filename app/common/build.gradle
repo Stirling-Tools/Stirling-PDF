@@ -6,7 +6,7 @@ spotless {
     java {
         target 'src/**/java/**/*.java'
         targetExclude 'src/main/java/org/apache/**'
-        googleJavaFormat(googleJavaFormatVersion).aosp().reorderImports(false)
+        googleJavaFormat(rootProject.ext.googleJavaFormatVersion).aosp().reorderImports(false)
         // google-java-format 1.28.0 bundles Guava 32.x which crashes Spotless lint on JDK 24/25
         suppressLintsFor { setStep('google-java-format') }
 
@@ -29,19 +29,19 @@ spotless {
     }
 }
 dependencies {
-    api "com.google.guava:guava:${guavaVersion}"
+    api "com.google.guava:guava:${rootProject.ext.guavaVersion}"
     api 'org.springframework.boot:spring-boot-starter-webmvc'
     api 'org.springframework.boot:spring-boot-starter-aspectj'
     api 'com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20260313.1'
     api 'com.fathzer:javaluator:3.0.6'
     api 'com.posthog.java:posthog:1.2.0'
-    api "org.apache.commons:commons-lang3:${commonsLang3}"
+    api "org.apache.commons:commons-lang3:${rootProject.ext.commonsLang3}"
     api 'com.drewnoakes:metadata-extractor:2.20.0' // Image metadata extractor
     api 'com.vladsch.flexmark:flexmark-html2md-converter:0.64.8'
-    api "org.apache.pdfbox:pdfbox:$pdfboxVersion"
-    api "org.apache.pdfbox:pdfbox-io:$pdfboxVersion"
-    api "org.apache.pdfbox:xmpbox:$pdfboxVersion"
-    api "org.apache.pdfbox:preflight:$pdfboxVersion"
+    api "org.apache.pdfbox:pdfbox:${rootProject.ext.pdfboxVersion}"
+    api "org.apache.pdfbox:pdfbox-io:${rootProject.ext.pdfboxVersion}"
+    api "org.apache.pdfbox:xmpbox:${rootProject.ext.pdfboxVersion}"
+    api "org.apache.pdfbox:preflight:${rootProject.ext.pdfboxVersion}"
     api 'com.github.junrar:junrar:7.5.10' // RAR archive support for CBR files
     api 'jakarta.servlet:jakarta.servlet-api:6.1.0'
     api 'org.snakeyaml:snakeyaml-engine:3.0.1'
@@ -60,7 +60,7 @@ dependencies {
         exclude group: 'com.google.code.gson', module: 'gson'
     }
 
-    api "com.stirling:jpdfium:${jpdfiumVersion}"
+    api "com.stirling:jpdfium:${rootProject.ext.jpdfiumVersion}"
 
     // -PjpdfiumPlatforms=all|<csv of linux-x64,linux-arm64,darwin-x64,darwin-arm64,windows-x64>
     def jpdfiumPlatformsProp = (project.findProperty('jpdfiumPlatforms') ?: 'all').toString().trim()
@@ -75,12 +75,12 @@ dependencies {
     }
     logger.lifecycle("JPDFium native platforms: ${jpdfiumPlatforms.join(', ')}")
     jpdfiumPlatforms.each { platform ->
-        runtimeOnly "com.stirling:jpdfium-natives-${platform}:${jpdfiumVersion}"
+        runtimeOnly "com.stirling:jpdfium-natives-${platform}:${rootProject.ext.jpdfiumVersion}"
     }
 
     // Bucket4j (local in-process token bucket for RateLimitStore default impl)
-    implementation "com.bucket4j:bucket4j_jdk17-core:${bucket4jVersion}"
+    implementation "com.bucket4j:bucket4j_jdk17-core:${rootProject.ext.bucket4jVersion}"
 
     // ArchUnit: enforces module dependency direction (see ArchitectureTest)
-    testImplementation "com.tngtech.archunit:archunit-junit5:${archunitVersion}"
+    testImplementation "com.tngtech.archunit:archunit-junit5:${rootProject.ext.archunitVersion}"
 }

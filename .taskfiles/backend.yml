@@ -15,9 +15,16 @@ version: '3'
 #                  stripping; cmd.exe also requires `.\` (not bare `gradlew.bat`)
 #                  because modern Windows excludes cwd from cmd's search path.
 
+vars:
+  GRADLE: '{{if eq OS "windows"}}cmd /c ".\gradlew.bat"{{else}}./gradlew{{end}}'
+  TEST: '{{.GRADLE}} test --no-daemon'
+  FORMAT: '{{.GRADLE}} spotlessApply'
+  FORMATCHECK: '{{.GRADLE}} spotlessCheck'
+  CLEAN: '{{.GRADLE}} clean'
+
 tasks:
   dev:
-    desc: "Start backend dev server"
+    desc: "Start the backend dev server"
     cmds:
       - task: dev:proprietary
         vars:
@@ -28,7 +35,7 @@ tasks:
           SECURITY_ENABLELOGIN: '{{.SECURITY_ENABLELOGIN}}'
 
   dev:proprietary:
-    desc: "Start backend dev server in proprietary mode"
+    desc: "Start the backend dev server in proprietary mode"
     # `dotenv:` reads from the root Taskfile's directory (".") because this
     # subtaskfile is included with `dir: .`. Local overrides in
     # .env.proprietary.local win over the committed .env.proprietary defaults.
@@ -43,22 +50,16 @@ tasks:
     env:
       SERVER_PORT: '{{.PORT}}'
     cmds:
-      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED={{.AIENGINE_ENABLED}} AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}{{if .SECURITY_ENABLELOGIN}}SECURITY_ENABLELOGIN={{.SECURITY_ENABLELOGIN}} {{end}}cmd /c ".\gradlew.bat :stirling-pdf:bootRun"'
-        platforms: [windows]
-      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED={{.AIENGINE_ENABLED}} AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}{{if .SECURITY_ENABLELOGIN}}SECURITY_ENABLELOGIN={{.SECURITY_ENABLELOGIN}} {{end}}./gradlew :stirling-pdf:bootRun'
-        platforms: [linux, darwin]
+      - '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED={{.AIENGINE_ENABLED}} AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}{{if .SECURITY_ENABLELOGIN}}SECURITY_ENABLELOGIN={{.SECURITY_ENABLELOGIN}} {{end}}{{.GRADLE}} :stirling-pdf:bootRun'
 
   dev:bundled:
-    desc: "Clean + bootRun with frontend bundled into the backend (single :8080 server)"
+    desc: "Start the backend with the frontend bundled into the JAR"
     ignore_error: true
     cmds:
-      - cmd: cmd /c ".\gradlew.bat clean bootRun -PbuildWithFrontend=true"
-        platforms: [windows]
-      - cmd: ./gradlew clean bootRun -PbuildWithFrontend=true
-        platforms: [linux, darwin]
+      - '{{.CLEAN}} bootRun -PbuildWithFrontend=true'
 
   dev:saas:
-    desc: "Start backend in SaaS flavor against Supabase"
+    desc: "Start the backend in SaaS flavor"
     # `dotenv:` reads from the root Taskfile's directory (".") because this
     # subtaskfile is included with `dir: .`.
     dotenv: ['app/.env.saas.local', 'app/.env.saas']
@@ -77,71 +78,104 @@ tasks:
       AIENGINE_ENABLED: '{{.AIENGINE_ENABLED}}'
       AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS}}'
     cmds:
-      - cmd: cmd /c ".\gradlew.bat :stirling-pdf:bootRun {{if .PROFILES}}--args=\"--spring.profiles.include={{.PROFILES}}\"{{end}}"
-        platforms: [windows]
-      - cmd: ./gradlew :stirling-pdf:bootRun {{if .PROFILES}}--args='--spring.profiles.include={{.PROFILES}}'{{end}}
-        platforms: [linux, darwin]
+      - '{{.GRADLE}} :stirling-pdf:bootRun {{if .PROFILES}}--args=\"--spring.profiles.include={{.PROFILES}}\"{{end}}'
 
   build:
-    desc: "Full backend build"
+    desc: "Build the backend"
     cmds:
-      - cmd: cmd /c ".\gradlew.bat clean build"
-        platforms: [windows]
-      - cmd: ./gradlew clean build
-        platforms: [linux, darwin]
+      - '{{.CLEAN}} build'
 
   build:fast:
-    desc: "Build without tests"
+    desc: "Build the backend without running tests"
     cmds:
-      - cmd: cmd /c ".\gradlew.bat clean build -x test"
-        platforms: [windows]
-      - cmd: ./gradlew clean build -x test
-        platforms: [linux, darwin]
+      - '{{.CLEAN}} build -x test'
 
   build:ci:
-    desc: "Build for CI (formatting checked separately)"
+    desc: "Build the backend for CI"
     cmds:
-      - cmd: cmd /c ".\gradlew.bat build -PnoSpotless"
-        platforms: [windows]
-      - cmd: ./gradlew build -PnoSpotless
-        platforms: [linux, darwin]
+      - '{{.GRADLE}} build -PnoSpotless'
+
+  prematrix:*:
+    desc: "Run the backend test matrix"
+    vars:
+      MATRIXNAME: '{{index .MATCH 0}}'
+    cmds:
+      - for:
+          matrix:
+            FLAVOR: ["proprietary", "core", "saas"]
+            LOGIN: ["true", "false"]
+            SEC: ["true", "false"]
+        task: '{{.MATRIXNAME}}:matrix'
+        vars:
+          STIRLING_FLAVOR: '{{.ITEM.FLAVOR}}'
+          SECURITY_ENABLELOGIN: '{{.ITEM.LOGIN}}'
+          DOCKER_ENABLE_SECURITY: '{{.ITEM.SEC}}'
 
   test:
-    desc: "Run backend tests"
+    desc: "Run the backend test matrix"
     cmds:
-      - cmd: cmd /c ".\gradlew.bat test"
-        platforms: [windows]
-      - cmd: ./gradlew test
-        platforms: [linux, darwin]
+      - task: prematrix:test
+
+  test:matrix:
+    internal: true
+    env:
+      SECURITY_ENABLELOGIN: '{{.SECURITY_ENABLELOGIN}}'
+      STIRLING_FLAVOR: '{{.STIRLING_FLAVOR}}'
+      DOCKER_ENABLE_SECURITY: '{{.DOCKER_ENABLE_SECURITY}}'
+    desc: "Run backend tests for one configuration"
+    # Cover the backend with the main build/property combinations that change
+    # Gradle behavior in this repo.
+    cmds:
+      - '{{.TEST}}'
+      - '{{.TEST}} -PbuildWithFrontend=true'
+      - '{{.TEST}} -PprototypesMode=true'
+      - '{{.TEST}} -PbuildWithFrontend=true -PprototypesMode=true'
 
   format:
-    desc: "Auto-fix code formatting"
+    desc: "Run the backend formatting matrix"
     cmds:
-      - cmd: cmd /c ".\gradlew.bat spotlessApply"
-        platforms: [windows]
-      - cmd: ./gradlew spotlessApply
-        platforms: [linux, darwin]
+      - task: prematrix:format
+
+  format:matrix:
+    internal: true
+    desc: "Apply backend formatting for one configuration"
+    env:
+      SECURITY_ENABLELOGIN: '{{.SECURITY_ENABLELOGIN}}'
+      STIRLING_FLAVOR: '{{.STIRLING_FLAVOR}}'
+      DOCKER_ENABLE_SECURITY: '{{.DOCKER_ENABLE_SECURITY}}'
+    cmds:
+      - '{{.FORMAT}}'
+      - '{{.FORMAT}} -PbuildWithFrontend=true'
+      - '{{.FORMAT}} -PprototypesMode=true'
 
   format:check:
-    desc: "Check code formatting"
+    desc: "Check the backend formatting matrix"
     cmds:
-      - cmd: cmd /c ".\gradlew.bat spotlessCheck"
-        platforms: [windows]
-      - cmd: ./gradlew spotlessCheck
-        platforms: [linux, darwin]
+      - task: prematrix:format:check
+
+  format:check:matrix:
+    internal: true
+    desc: "Check backend formatting for one configuration"
+    env:
+      SECURITY_ENABLELOGIN: '{{.SECURITY_ENABLELOGIN}}'
+      STIRLING_FLAVOR: '{{.STIRLING_FLAVOR}}'
+      DOCKER_ENABLE_SECURITY: '{{.DOCKER_ENABLE_SECURITY}}'
+    # Mirror the test matrix so formatting checks use the same backend
+    # configuration variants.
+    cmds:
+      - '{{.FORMATCHECK}}'
+      - '{{.FORMATCHECK}} -PbuildWithFrontend=true'
+      - '{{.FORMATCHECK}} -PprototypesMode=true'
 
   fix:
-    desc: "Auto-fix backend"
+    desc: "Apply backend fixes"
     cmds:
       - task: format
 
   swagger:
-    desc: "Generate OpenAPI docs"
+    desc: "Generate the backend OpenAPI docs"
     cmds:
-      - cmd: cmd /c ".\gradlew.bat :stirling-pdf:copySwaggerDoc"
-        platforms: [windows]
-      - cmd: ./gradlew :stirling-pdf:copySwaggerDoc
-        platforms: [linux, darwin]
+      - '{{.GRADLE}} :stirling-pdf:copySwaggerDoc'
     sources:
       - app/core/src/main/java/**/*.java
       - app/proprietary/src/main/java/**/*.java
@@ -150,40 +184,43 @@ tasks:
       - SwaggerDoc.json
 
   check:
-    desc: "Backend quality gate"
+    desc: "Run the backend quality gate"
     cmds:
       - task: format:check
       - task: test
 
   version:
-    desc: "Print project version"
+    desc: "Print the backend version"
     silent: true
     cmds:
-      - cmd: cmd /c ".\gradlew.bat printVersion --quiet" | tail -1
+      - cmd: pwsh -NoProfile -File scripts/backend-version.ps1
         platforms: [windows]
       - cmd: ./gradlew printVersion --quiet | tail -1
         platforms: [linux, darwin]
 
   licenses:check:
-    desc: "Check dependency licenses"
+    desc: "Check backend dependency licenses"
     cmds:
-      - cmd: cmd /c ".\gradlew.bat checkLicense --no-parallel"
-        platforms: [windows]
-      - cmd: ./gradlew checkLicense --no-parallel
-        platforms: [linux, darwin]
+      - '{{.GRADLE}} checkLicense --no-parallel'
 
   licenses:generate:
-    desc: "Check and generate dependency license report"
+    desc: "Generate the backend dependency license report"
+    env:
+      # Use the SaaS flavor so the license report includes all dependencies.
+      STIRLING_FLAVOR: 'saas'
     cmds:
-      - cmd: cmd /c ".\gradlew.bat checkLicense generateLicenseReport --no-parallel"
-        platforms: [windows]
-      - cmd: ./gradlew checkLicense generateLicenseReport --no-parallel
+      - '{{.GRADLE}} checkLicense generateLicenseReport --no-parallel'
+
+  licenses:generate:copy:
+    desc: "Generate and copy the backend dependency license report"
+    deps: [licenses:generate]
+    cmds:
+      - cmd: cp build/reports/dependency-license/index.json app/core/src/main/resources/static/3rdPartyLicenses.json
         platforms: [linux, darwin]
+      - cmd: powershell -NoProfile -Command "New-Item -ItemType Directory -Force -Path 'app/core/src/main/resources/static' | Out-Null; Copy-Item -Force 'build/reports/dependency-license/index.json' 'app/core/src/main/resources/static/3rdPartyLicenses.json'"
+        platforms: [windows]
 
   clean:
-    desc: "Clean build artifacts"
+    desc: "Clean backend build artifacts"
     cmds:
-      - cmd: cmd /c ".\gradlew.bat clean"
-        platforms: [windows]
-      - cmd: ./gradlew clean
-        platforms: [linux, darwin]
+      - '{{.CLEAN}}'
