@@ -177,23 +177,23 @@ class RequestUriUtilsTest {
     }
 
     @Test
-    void testIsPublicAuthEndpoint_onlyPhoneFacingMobileScannerRoutesArePublic() {
+    void testIsPublicAuthEndpoint_allMobileScannerRoutesArePublic() {
         assertTrue(
                 RequestUriUtils.isPublicAuthEndpoint(
                         "/api/v1/mobile-scanner/validate-session/session-id", ""));
         assertTrue(
                 RequestUriUtils.isPublicAuthEndpoint(
                         "/api/v1/mobile-scanner/upload/session-id", ""));
-        assertFalse(
+        assertTrue(
                 RequestUriUtils.isPublicAuthEndpoint(
                         "/api/v1/mobile-scanner/create-session/session-id", ""));
-        assertFalse(
+        assertTrue(
                 RequestUriUtils.isPublicAuthEndpoint(
                         "/api/v1/mobile-scanner/files/session-id", ""));
-        assertFalse(
+        assertTrue(
                 RequestUriUtils.isPublicAuthEndpoint(
                         "/api/v1/mobile-scanner/download/session-id/file.jpg", ""));
-        assertFalse(
+        assertTrue(
                 RequestUriUtils.isPublicAuthEndpoint(
                         "/api/v1/mobile-scanner/session/session-id", ""));
     }
