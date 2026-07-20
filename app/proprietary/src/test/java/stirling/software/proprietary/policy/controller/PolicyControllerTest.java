@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -193,6 +194,29 @@ class PolicyControllerTest {
                             e ->
                                     assertThat(((ResponseStatusException) e).getStatusCode())
                                             .isEqualTo(HttpStatus.BAD_REQUEST));
+        }
+
+        @Test
+        @DisplayName("rejects an ad-hoc output the caller cannot use, on the request thread")
+        void rejectsUnauthorizedAdHocOutput() {
+            // The confused-deputy guard: an S3 output referencing a connection the caller may not
+            // use is validated here (principal present) and refused before any worker dispatch.
+            PipelineDefinition definition =
+                    new PipelineDefinition(
+                            "pipe",
+                            List.of(new PipelineStep("/api/v1/misc/compress-pdf", null)),
+                            new OutputSpec("s3", Map.of("connectionId", 999)));
+            doThrow(new IllegalArgumentException("unknown or inaccessible s3 connection"))
+                    .when(policyValidator)
+                    .validateOutput(any());
+
+            assertThatThrownBy(() -> controller.run(definition, new PolicyRunFiles()))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .satisfies(
+                            e ->
+                                    assertThat(((ResponseStatusException) e).getStatusCode())
+                                            .isEqualTo(HttpStatus.BAD_REQUEST));
+            verify(policyRunner, never()).runAdHoc(any(), any(), any());
         }
     }
 

@@ -28,7 +28,7 @@ ext {
     springSecuritySamlVersion = "7.0.5"
     openSamlVersion = "5.2.1"
     commonmarkVersion = "0.28.0"
-    googleJavaFormatVersion = "1.28.0"
+    googleJavaFormatVersion = "1.35.0"
     logback = "1.5.32"
     commonsIoVersion = "2.22.0"
     commonsLang3 = "3.20.0"
@@ -36,6 +36,8 @@ ext {
     okhttpBomVersion = "5.3.2"
     gsonVersion = "2.14.0"
     guavaVersion = "33.6.0-jre"
+    jinjavaVersion = "2.8.3"
+    jackson2Version = "2.21.4"
     bucket4jVersion = "8.19.0"
     archunitVersion = "1.4.2"
     batikVersion = "1.19"
@@ -91,7 +93,7 @@ springBoot {
 
 allprojects {
     group = 'stirling.software'
-    version = '2.14.1'
+    version = '2.14.2'
 
     configurations.configureEach {
         exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
@@ -169,6 +171,7 @@ subprojects {
     apply plugin: 'org.springframework.boot'
     apply plugin: 'io.spring.dependency-management'
     apply plugin: 'jacoco'
+    apply from: rootProject.file('gradle/spotless.gradle')
 
     java {
         sourceCompatibility = JavaVersion.VERSION_25
@@ -222,6 +225,13 @@ subprojects {
         resolutionStrategy.force "org.apache.commons:commons-lang3:${commonsLang3}"
         // CVE-2024-47554: commons-io DoS prevention
         resolutionStrategy.force "commons-io:commons-io:${commonsIoVersion}"
+        // Jackson 2 is transitive-only here (jinjava, opensaml, jjwt request older versions);
+        // pin the family to a current release and keep modules aligned.
+        resolutionStrategy.force "com.fasterxml.jackson.core:jackson-core:${jackson2Version}"
+        resolutionStrategy.force "com.fasterxml.jackson.core:jackson-databind:${jackson2Version}"
+        resolutionStrategy.force "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jackson2Version}"
+        resolutionStrategy.force "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${jackson2Version}"
+        resolutionStrategy.force "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jackson2Version}"
         // Keep BouncyCastle modules aligned to avoid runtime linkage errors
         resolutionStrategy.force "org.bouncycastle:bcprov-jdk18on:${bouncycastleVersion}"
         resolutionStrategy.force "org.bouncycastle:bcpkix-jdk18on:${bouncycastleVersion}"

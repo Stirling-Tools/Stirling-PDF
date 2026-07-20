@@ -15,7 +15,7 @@ jobs:
 
   check-generate-openapi-docs:
     needs: pick
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    runs-on: ${{ needs.pick.outputs.use_depot == 'true' && 'depot-ubuntu-24.04-4' || 'ubuntu-latest' }}
     env:
       DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
     steps:
@@ -45,7 +45,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
         with:
-          gradle-version: 9.6.0
+          gradle-version: 9.6.1
           cache-disabled: true
 
       - name: Install Task

@@ -28,6 +28,7 @@ import stirling.software.proprietary.policy.ledger.InProcessProcessedLedger;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.s3.S3ConnectionPool;
+import stirling.software.proprietary.policy.s3.S3TestConnections;
 
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -90,8 +91,8 @@ class S3OutputSinkMinioTest {
         properties.getPolicies().setAllowPrivateS3Endpoints(true);
         S3ConnectionPool pool = new S3ConnectionPool(properties);
         ledger = new InProcessProcessedLedger();
-        sink = new S3OutputSink(pool, ledger);
-        source = new S3InputSource(pool);
+        sink = new S3OutputSink(pool, S3TestConnections.legacyResolver(), ledger);
+        source = new S3InputSource(pool, S3TestConnections.legacyResolver());
     }
 
     @Test

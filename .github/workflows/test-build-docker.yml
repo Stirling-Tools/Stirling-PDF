@@ -12,6 +12,11 @@ on:
         required: false
         type: string
         default: "false"
+      dockerfiles-changed:
+        description: "Whether any Dockerfile changed (forwarded from files-changed). Gates the slow arm64 build leg."
+        required: false
+        type: string
+        default: "false"
       depot_cores:
         description: "Depot runner vCPU count (used in runs-on). Override for benchmarking."
         required: false
@@ -41,12 +46,12 @@ jobs:
   # `task backend:build:ci` produce equivalent JARs (verify before wiring).
   test-build-docker-images:
     needs: pick
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || format('depot-ubuntu-24.04-{0}', inputs.depot_cores || '8') }}
+    runs-on: ${{ needs.pick.outputs.use_depot == 'true' && format('depot-ubuntu-24.04-{0}', inputs.depot_cores || '8') || 'ubuntu-latest' }}
     permissions:
       contents: read
       id-token: write
     env:
-      USE_DEPOT: ${{ needs.pick.outputs.is_fork != 'true' && inputs.docker-base-changed != 'true' }}
+      USE_DEPOT: ${{ needs.pick.outputs.use_depot == 'true' && inputs.docker-base-changed != 'true' }}
       DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
     strategy:
       fail-fast: false
@@ -106,7 +111,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
         with:
-          gradle-version: 9.6.0
+          gradle-version: 9.6.1
           cache-disabled: true
 
       - name: Install Task
@@ -146,13 +151,22 @@ jobs:
         # GITHUB_EVENT_NAME is already provided by the runner.
         env:
           DOCKER_BASE_CHANGED: ${{ inputs.docker-base-changed }}
+          DOCKERFILES_CHANGED: ${{ inputs.dockerfiles-changed }}
         run: |
           if [ "$GITHUB_EVENT_NAME" = "pull_request" ] && [ "$DOCKER_BASE_CHANGED" = "true" ]; then
+            # Base Dockerfile changed: build against the locally-built base,
+            # which only exists for amd64.
             echo "base_image=stirling-pdf-base:pr-test" >> "$GITHUB_OUTPUT"
             echo "platforms=linux/amd64" >> "$GITHUB_OUTPUT"
-          else
+          elif [ "$DOCKERFILES_CHANGED" = "true" ]; then
+            # A Dockerfile changed: also verify the arm64 build (slow QEMU leg).
             echo "base_image=stirlingtools/stirling-pdf-base:latest" >> "$GITHUB_OUTPUT"
             echo "platforms=linux/amd64,linux/arm64/v8" >> "$GITHUB_OUTPUT"
+          else
+            # No Dockerfile change: amd64 only. arm64 is exercised on the base
+            # image publish and on release, not on every code PR.
+            echo "base_image=stirlingtools/stirling-pdf-base:latest" >> "$GITHUB_OUTPUT"
+            echo "platforms=linux/amd64" >> "$GITHUB_OUTPUT"
           fi
 
       # Base-changed PRs build the embedded image with the local docker driver
@@ -214,12 +228,12 @@ jobs:
 
   test-build-unoserver-image:
     needs: pick
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || format('depot-ubuntu-24.04-{0}', inputs.depot_cores || '8') }}
+    runs-on: ${{ needs.pick.outputs.use_depot == 'true' && format('depot-ubuntu-24.04-{0}', inputs.depot_cores || '8') || 'ubuntu-latest' }}
     permissions:
       contents: read
       id-token: write
     env:
-      USE_DEPOT: ${{ needs.pick.outputs.is_fork != 'true' && inputs.docker-base-changed != 'true' }}
+      USE_DEPOT: ${{ needs.pick.outputs.use_depot == 'true' && inputs.docker-base-changed != 'true' }}
       DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
     steps:
       - name: Harden Runner
