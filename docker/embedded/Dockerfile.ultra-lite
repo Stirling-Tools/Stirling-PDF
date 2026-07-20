@@ -2,7 +2,7 @@
 # Single JAR contains both frontend and backend with minimal dependencies
 
 # Stage 1: Build application with embedded frontend
-FROM gradle:9.6.0-jdk25@sha256:e3905233ae349e72016daf8a0e19f085a1dd89ded8ec88b3d8335d3fd0b350f4 AS build
+FROM gradle:9.6.1-jdk25@sha256:d25357611c559203299f3c6673101154156bdd28985858ff6f465fc69bd27ca4 AS build
 
 # Install Node.js and npm for frontend build
 ARG TASK_VERSION=3.49.1
