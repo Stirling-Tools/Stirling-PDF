@@ -40,7 +40,8 @@ public class ParticipantRequestSecurityFilter extends OncePerRequestFilter {
     private static final int MAX_REQUESTS_PER_MINUTE = 20;
     private static final long WINDOW_MS = 60_000L;
 
-    private final ConcurrentHashMap<String, RequestWindow> requestCounts = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, RequestWindow> requestCounts =
+            new ConcurrentHashMap<>();
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
