@@ -1,0 +1,24 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@editor/*": [
+        "../../editor/desktop/*",
+        "../../editor/cloud/*",
+        "../../editor/proprietary/*",
+        "../../editor/core/*"
+      ],
+      "@cloud/*": ["../../editor/cloud/*"],
+      "@proprietary/*": ["../../editor/proprietary/*"],
+      "@core/*": ["../../editor/core/*"]
+    }
+  },
+  "include": [
+    "../../global.d.ts",
+    "../../*.js",
+    "../../*.ts",
+    "../../*.tsx",
+    "../core/setupTests.ts",
+    "."
+  ]
+}

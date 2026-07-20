@@ -128,9 +128,9 @@ updates:
 
   - package-ecosystem: cargo
     directories:
-      - /frontend/editor/src-tauri
-      - /frontend/editor/src-tauri/thumbnail-handler
-      - /frontend/editor/src-tauri/provisioner
+      - /frontend/src-tauri
+      - /frontend/src-tauri/thumbnail-handler
+      - /frontend/src-tauri/provisioner
     schedule:
       interval: "weekly"
     cooldown:

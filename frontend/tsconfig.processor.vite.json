@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "comment": "Path resolution for the portal's vitest project (referenced by vitest.config.ts). Broad include ('src', via the base) so vite-tsconfig-paths rewrites @editor/* in every editor/src file the portal tests pull in (e.g. core/ui), not just the portal layer. The portal's own typecheck uses src/processor/proprietary/tsconfig.json.",
+  "compilerOptions": {
+    "paths": {
+      "@editor/*": ["./src/editor/cloud/*", "./src/editor/proprietary/*", "./src/editor/core/*"],
+      "@processor/*": ["./src/processor/proprietary/*"],
+      "@cloud/*": ["./src/editor/cloud/*"],
+      "@proprietary/*": ["./src/editor/proprietary/*"],
+      "@core/*": ["./src/editor/core/*"]
+    }
+  }
+}

@@ -6,15 +6,15 @@ import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
 
 const srcGlobs = [
-  // The portal layers live under editor/src/portal (base) and
-  // editor/src/portal-saas (saas override), so editor/src/** covers them.
-  "editor/src/**/*.{js,mjs,jsx,ts,tsx}",
+  // The portal layers live under src/processor/proprietary (base) and
+  // src/processor/saas (saas override), so src/** covers them.
+  "src/**/*.{js,mjs,jsx,ts,tsx}",
 ];
 const nodeGlobs = [
   "scripts/**/*.{js,ts,mjs,mts}",
-  "editor/scripts/**/*.{js,ts,mjs,mts}",
+  "scripts/**/*.{js,ts,mjs,mts}",
   // Covers editor/vite.config.ts and editor/vitest.config.ts.
-  "editor/*.config.{js,ts,mjs}",
+  "*.config.{js,ts,mjs}",
   "*.config.{js,ts,mjs}",
   ".storybook/*.{js,ts,mjs,mts,tsx}",
 ];
@@ -23,7 +23,7 @@ const baseRestrictedImportPatterns = [
   {
     regex: "^\\.",
     message:
-      "Use a workspace alias (@app/* for editor, @portal/* for portal) instead of relative imports.",
+      "Use a workspace alias (@editor/* for editor, @processor/* for portal) instead of relative imports.",
   },
   {
     regex: "^src/",
@@ -31,26 +31,26 @@ const baseRestrictedImportPatterns = [
   },
 ];
 
-// Button/SegmentedControl/Chip must come from the shared DS (@app/ui), not Mantine.
-// If no variant fits, extend @app/ui — that layer (editor/src/core/ui) is exempt below.
+// Button/SegmentedControl/Chip must come from the shared DS (@editor/ui), not Mantine.
+// If no variant fits, extend @editor/ui — that layer (src/editor/core/ui) is exempt below.
 const mantineComponentImportRestrictions = [
   {
     selector:
       "ImportDeclaration[source.value='@mantine/core'] > ImportSpecifier[imported.name=/^(Button|ActionIcon|UnstyledButton|CloseButton|FileButton)$/]",
     message:
-      'Use the shared Button (@app/ui/Button) instead of the Mantine button family. variant=primary|secondary|tertiary, accent=default|neutral|brand|ai|premium|danger|success|warning; an icon-only button is `<Button leftSection={…} aria-label="…" />`. If no variant fits, extend the shared Button rather than importing Mantine.',
+      'Use the shared Button (@editor/ui/Button) instead of the Mantine button family. variant=primary|secondary|tertiary, accent=default|neutral|brand|ai|premium|danger|success|warning; an icon-only button is `<Button leftSection={…} aria-label="…" />`. If no variant fits, extend the shared Button rather than importing Mantine.',
   },
   {
     selector:
       "ImportDeclaration[source.value='@mantine/core'] > ImportSpecifier[imported.name='SegmentedControl']",
     message:
-      "Use the shared SegmentedControl (@app/ui/SegmentedControl) instead of Mantine's.",
+      "Use the shared SegmentedControl (@editor/ui/SegmentedControl) instead of Mantine's.",
   },
   {
     selector:
       "ImportDeclaration[source.value='@mantine/core'] > ImportSpecifier[imported.name=/^(Chip|Pill)$/]",
     message:
-      "Use the shared Chip (@app/ui/Chip) instead of Mantine's Chip/Pill.",
+      "Use the shared Chip (@editor/ui/Chip) instead of Mantine's Chip/Pill.",
   },
 ];
 
@@ -59,7 +59,7 @@ const mantineComponentImportRestrictions = [
 const rawButtonSyntaxRestriction = {
   selector: "JSXOpeningElement[name.name='button']",
   message:
-    "Use the shared Button (@app/ui/Button) instead of a raw <button> element. If no variant fits, extend the shared Button.",
+    "Use the shared Button (@editor/ui/Button) instead of a raw <button> element. If no variant fits, extend the shared Button.",
 };
 
 const sharedComponentSyntaxRestrictions = [
@@ -77,11 +77,11 @@ export default defineConfig(
       "playwright-report",
       "storybook-static",
       "test-results",
-      "editor/dist",
-      "editor/public",
-      "editor/src-tauri",
-      "editor/playwright-report",
-      "editor/test-results",
+      "dist",
+      "public",
+      "src-tauri",
+      "playwright-report",
+      "test-results",
     ],
   },
   eslint.configs.recommended,
@@ -117,10 +117,10 @@ export default defineConfig(
     },
   },
   // Desktop-only packages must not be imported from core or proprietary code.
-  // Use the stub/shadow pattern instead: define a stub in editor/src/core/ and override in editor/src/desktop/.
+  // Use the stub/shadow pattern instead: define a stub in src/editor/core/ and override in src/editor/desktop/.
   {
     files: srcGlobs,
-    ignores: ["editor/src/desktop/**"],
+    ignores: ["src/editor/desktop/**"],
     rules: {
       "no-restricted-imports": [
         "error",
@@ -141,10 +141,10 @@ export default defineConfig(
   // saas and desktop leaves, so it must stay platform-portable. It must not
   // reach platform-specific things directly (Supabase, Tauri, raw fetch,
   // window.location, web storage, or import.meta.env.VITE_*) — those arrive via
-  // @app/* seams (services/apiClient, auth/session, platform/openExternal, ...)
+  // @editor/* seams (services/apiClient, auth/session, platform/openExternal, ...)
   // that each leaf provides for its own platform.
   {
-    files: ["editor/src/cloud/**/*.{js,mjs,jsx,ts,tsx}"],
+    files: ["src/editor/cloud/**/*.{js,mjs,jsx,ts,tsx}"],
     rules: {
       "no-restricted-imports": [
         "error",
@@ -154,12 +154,12 @@ export default defineConfig(
             {
               regex: "^@supabase/",
               message:
-                "cloud/ must stay platform-portable. Reach Supabase via an @app/* seam (e.g. @app/auth/supabase, @app/auth/session) provided per-platform in saas/ and desktop/.",
+                "cloud/ must stay platform-portable. Reach Supabase via an @editor/* seam (e.g. @editor/auth/supabase, @editor/auth/session) provided per-platform in saas/ and desktop/.",
             },
             {
               regex: "^@tauri-apps/",
               message:
-                "cloud/ must stay platform-portable. Tauri APIs are desktop-only — reach native features via an @app/* seam (e.g. @app/platform/openExternal).",
+                "cloud/ must stay platform-portable. Tauri APIs are desktop-only — reach native features via an @editor/* seam (e.g. @editor/platform/openExternal).",
             },
           ],
         },
@@ -169,17 +169,17 @@ export default defineConfig(
         {
           name: "fetch",
           message:
-            "cloud/ must not call raw fetch — use @app/services/apiClient so each platform supplies its own transport.",
+            "cloud/ must not call raw fetch — use @editor/services/apiClient so each platform supplies its own transport.",
         },
         {
           name: "localStorage",
           message:
-            "cloud/ must not touch localStorage — use an @app/* storage seam so desktop/web can differ.",
+            "cloud/ must not touch localStorage — use an @editor/* storage seam so desktop/web can differ.",
         },
         {
           name: "sessionStorage",
           message:
-            "cloud/ must not touch sessionStorage — use an @app/* storage seam so desktop/web can differ.",
+            "cloud/ must not touch sessionStorage — use an @editor/* storage seam so desktop/web can differ.",
         },
       ],
       "no-restricted-syntax": [
@@ -189,26 +189,26 @@ export default defineConfig(
           selector:
             "MemberExpression[object.name='window'][property.name='location']",
           message:
-            "cloud/ must not touch window.location — use an @app/* seam (e.g. @app/platform/openExternal) so desktop/web can differ.",
+            "cloud/ must not touch window.location — use an @editor/* seam (e.g. @editor/platform/openExternal) so desktop/web can differ.",
         },
         {
           selector:
             "MemberExpression[property.name='env'][object.type='MetaProperty'][object.meta.name='import'][object.property.name='meta']",
           message:
-            "cloud/ must not read import.meta.env — use @app/constants/app / @app/platform seams so config is supplied per-platform.",
+            "cloud/ must not read import.meta.env — use @editor/constants/app / @editor/platform seams so config is supplied per-platform.",
         },
       ],
     },
   },
   // app code must use shared DS Button/SegmentedControl/Chip; cloud/ covered above.
   {
-    files: ["editor/src/**/*.{js,mjs,jsx,ts,tsx}"],
+    files: ["src/**/*.{js,mjs,jsx,ts,tsx}"],
     ignores: [
-      "editor/src/cloud/**/*.{js,mjs,jsx,ts,tsx}", // covered by cloud/ block above
-      "editor/src/core/ui/**/*.{js,mjs,jsx,ts,tsx}", // the shared DS itself — wraps Mantine/raw elements
+      "src/editor/cloud/**/*.{js,mjs,jsx,ts,tsx}", // covered by cloud/ block above
+      "src/editor/core/ui/**/*.{js,mjs,jsx,ts,tsx}", // the shared DS itself — wraps Mantine/raw elements
       "**/*.stories.{js,mjs,jsx,ts,tsx}", // stories may demo Mantine directly
       "**/*.test.{js,mjs,jsx,ts,tsx}", // tests may use raw elements as fixtures
-      "editor/src/prototypes/**/*.{js,mjs,jsx,ts,tsx}", // not shipped
+      "src/editor/prototypes/**/*.{js,mjs,jsx,ts,tsx}", // not shipped
     ],
     rules: {
       "no-restricted-syntax": ["error", ...sharedComponentSyntaxRestrictions],
@@ -219,9 +219,9 @@ export default defineConfig(
   // Do NOT add ordinary buttons here.
   {
     files: [
-      "editor/src/core/components/shared/FileSelectorPicker.tsx",
-      "editor/src/core/components/filesPage/FileManagerView.tsx",
-      "editor/src/core/pages/HomePage.tsx",
+      "src/editor/core/components/shared/FileSelectorPicker.tsx",
+      "src/editor/core/components/filesPage/FileManagerView.tsx",
+      "src/editor/core/pages/HomePage.tsx",
     ],
     rules: {
       "no-restricted-syntax": "off",
@@ -234,7 +234,7 @@ export default defineConfig(
   // Button in a follow-up PR. Do NOT add other folders to this block.
   {
     files: [
-      "editor/src/portal/components/procurement/**/*.{js,mjs,jsx,ts,tsx}",
+      "src/processor/proprietary/components/procurement/**/*.{js,mjs,jsx,ts,tsx}",
     ],
     rules: {
       "no-restricted-syntax": ["error", ...mantineComponentImportRestrictions],
@@ -246,7 +246,7 @@ export default defineConfig(
   // without heavy overrides. Exempt ONLY the raw-<button> rule — the Mantine
   // import bans stay in force — and migrate these in a follow-up PR.
   {
-    files: ["editor/src/portal/components/users/UsersDirectory.tsx"],
+    files: ["src/processor/proprietary/components/users/UsersDirectory.tsx"],
     rules: {
       "no-restricted-syntax": ["error", ...mantineComponentImportRestrictions],
     },
@@ -259,10 +259,10 @@ export default defineConfig(
   // stay. Migrate these alongside the procurement buttons.
   {
     files: [
-      "editor/src/portal/components/EditorStatusCard.tsx",
-      "editor/src/portal/components/SetupChecklist.tsx",
-      "editor/src/portal/components/WelcomeBanner.tsx",
-      "editor/src/portal/components/DownloadEditorModal.tsx",
+      "src/processor/proprietary/components/EditorStatusCard.tsx",
+      "src/processor/proprietary/components/SetupChecklist.tsx",
+      "src/processor/proprietary/components/WelcomeBanner.tsx",
+      "src/processor/proprietary/components/DownloadEditorModal.tsx",
     ],
     rules: {
       "no-restricted-syntax": ["error", ...mantineComponentImportRestrictions],
@@ -272,35 +272,35 @@ export default defineConfig(
   {
     files: srcGlobs,
     ignores: [
-      "editor/src/core/components/annotation/**/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/components/pageEditor/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/components/pageEditor/commands/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/components/pageEditor/hooks/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/components/shared/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/components/shared/config/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/components/shared/config/configSections/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/components/shared/pageEditor/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/components/tools/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/components/tools/addStamp/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/components/tools/automate/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/components/tools/bookletImposition/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/components/tools/certSign/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/components/tools/pdfTextEditor/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/components/tools/shared/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/components/viewer/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/contexts/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/contexts/file/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/contexts/viewer/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/hooks/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/hooks/signing/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/hooks/tools/adjustContrast/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/hooks/tools/convert/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/hooks/tools/removePassword/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/hooks/tools/shared/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/services/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/tools/annotate/useAnnotationSelection.ts",
-      "editor/src/core/types/*.{js,mjs,jsx,ts,tsx}",
-      "editor/src/core/utils/*.{js,mjs,jsx,ts,tsx}",
+      "src/editor/core/components/annotation/**/*.{js,mjs,jsx,ts,tsx}",
+      "src/editor/core/components/pageEditor/*.{js,mjs,jsx,ts,tsx}",
+      "src/editor/core/components/pageEditor/commands/*.{js,mjs,jsx,ts,tsx}",
+      "src/editor/core/components/pageEditor/hooks/*.{js,mjs,jsx,ts,tsx}",
+      "src/editor/core/components/shared/*.{js,mjs,jsx,ts,tsx}",
+      "src/editor/core/components/shared/config/*.{js,mjs,jsx,ts,tsx}",
+      "src/editor/core/components/shared/config/configSections/*.{js,mjs,jsx,ts,tsx}",
+      "src/editor/core/components/shared/pageEditor/*.{js,mjs,jsx,ts,tsx}",
+      "src/editor/core/components/tools/*.{js,mjs,jsx,ts,tsx}",
+      "src/editor/core/components/tools/addStamp/*.{js,mjs,jsx,ts,tsx}",
+      "src/editor/core/components/tools/automate/*.{js,mjs,jsx,ts,tsx}",
+      "src/editor/core/components/tools/bookletImposition/*.{js,mjs,jsx,ts,tsx}",
+      "src/editor/core/components/tools/certSign/*.{js,mjs,jsx,ts,tsx}",
+      "src/editor/core/components/tools/pdfTextEditor/*.{js,mjs,jsx,ts,tsx}",
+      "src/editor/core/components/tools/shared/*.{js,mjs,jsx,ts,tsx}",
+      "src/editor/core/components/viewer/*.{js,mjs,jsx,ts,tsx}",
+      "src/editor/core/contexts/*.{js,mjs,jsx,ts,tsx}",
+      "src/editor/core/contexts/file/*.{js,mjs,jsx,ts,tsx}",
+      "src/editor/core/contexts/viewer/*.{js,mjs,jsx,ts,tsx}",
+      "src/editor/core/hooks/*.{js,mjs,jsx,ts,tsx}",
+      "src/editor/core/hooks/signing/*.{js,mjs,jsx,ts,tsx}",
+      "src/editor/core/hooks/tools/adjustContrast/*.{js,mjs,jsx,ts,tsx}",
+      "src/editor/core/hooks/tools/convert/*.{js,mjs,jsx,ts,tsx}",
+      "src/editor/core/hooks/tools/removePassword/*.{js,mjs,jsx,ts,tsx}",
+      "src/editor/core/hooks/tools/shared/*.{js,mjs,jsx,ts,tsx}",
+      "src/editor/core/services/*.{js,mjs,jsx,ts,tsx}",
+      "src/editor/core/tools/annotate/useAnnotationSelection.ts",
+      "src/editor/core/types/*.{js,mjs,jsx,ts,tsx}",
+      "src/editor/core/utils/*.{js,mjs,jsx,ts,tsx}",
     ],
     rules: {
       "@typescript-eslint/no-explicit-any": "error",

@@ -6,14 +6,14 @@ import tsconfigPaths from "vite-tsconfig-paths";
  * Storybook 9 ships essentials, interactions, and docs as built-ins, so the
  * addon list is just the extras we want: theme switching + a11y auditing.
  *
- * Story files live next to their components under editor/src/ (which includes
- * the portal layer at editor/src/portal/). MDX docs pages live in
- * editor/src/portal/docs/.
+ * Story files live next to their components under src/editor/ (which includes
+ * the portal layer at src/processor/proprietary/). MDX docs pages live in
+ * src/processor/proprietary/docs/.
  */
 const config: StorybookConfig = {
   stories: [
-    "../editor/src/portal/**/*.mdx",
-    "../editor/src/**/*.stories.@(ts|tsx)",
+    "../src/processor/proprietary/**/*.mdx",
+    "../src/**/*.stories.@(ts|tsx)",
   ],
   addons: ["@storybook/addon-themes", "@storybook/addon-a11y"],
   framework: {
@@ -25,25 +25,25 @@ const config: StorybookConfig = {
   },
   // Serve the MSW worker file from the portal's public dir so Storybook can
   // intercept network calls the same way the dev portal does.
-  staticDirs: ["../editor/public"],
+  staticDirs: ["../public"],
   viteFinal: async (config) => {
-    // Wire the @portal/* alias directly on the Storybook bundler so portal
+    // Wire the @processor/* alias directly on the Storybook bundler so portal
     // story imports resolve without needing the portal's vite config.
     config.resolve = config.resolve ?? {};
     config.resolve.alias = {
       ...(config.resolve.alias ?? {}),
-      "@portal": resolve(__dirname, "../editor/src/portal"),
+      "@processor": resolve(__dirname, "../src/processor/proprietary"),
       // Direct layer aliases so .storybook config files (preview.tsx), which sit
       // outside src/ and so aren't covered by tsconfigPaths, can import layer
       // modules (e.g. the auth supabase client that moved into proprietary).
-      "@proprietary": resolve(__dirname, "../editor/src/proprietary"),
-      "@core": resolve(__dirname, "../editor/src/core"),
+      "@proprietary": resolve(__dirname, "../src/editor/proprietary"),
+      "@core": resolve(__dirname, "../src/editor/core"),
       // Public assets (e.g. the en-US translation TOML loaded ?raw by preview.tsx).
       // No src alias covers public/, so this lets the config use an alias rather
       // than a relative path.
-      "@public": resolve(__dirname, "../editor/public"),
+      "@public": resolve(__dirname, "../public"),
     };
-    // Editor stories import via @app/* (proprietary→core fallback), @core/* and
+    // Editor stories import via @editor/* (proprietary→core fallback), @core/* and
     // @proprietary/*. Resolve them exactly the way the editor's own build does —
     // through vite-tsconfig-paths against the proprietary vite tsconfig — so the
     // shared Storybook can host editor components without duplicating the alias
@@ -52,7 +52,7 @@ const config: StorybookConfig = {
     config.plugins.push(
       tsconfigPaths({
         projects: [
-          resolve(__dirname, "../editor/tsconfig.proprietary.vite.json"),
+          resolve(__dirname, "../tsconfig.proprietary.vite.json"),
         ],
       }),
     );

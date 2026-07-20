@@ -53,11 +53,11 @@ gh pr diff <pr> --name-only        # or: git diff --name-only <base>...HEAD
 Map changed frontend files to URLs generically:
 - **Tools**: a changed `components/tools/<toolDir>/…` or `hooks/tools/<tool>/…` →
   toolId → URL via the repo's own rule `getToolUrlPath` in
-  [toolsTaxonomy.ts:200](frontend/editor/src/core/data/toolsTaxonomy.ts): `/` + the
+  [toolsTaxonomy.ts:200](frontend/src/editor/core/data/toolsTaxonomy.ts): `/` + the
   id kebab-cased (`addPageNumbers` → `/add-page-numbers`).
 - **Pages/routes**: changed `filesPage/*` → `/files`, etc.
 - `--all`: enumerate every tool in the registry instead of just changed ones.
-Write `frontend/editor/screenshots/ui-diff/targets.json` =
+Write `frontend/screenshots/ui-diff/targets.json` =
 `[{ "id":"compress", "url":"/compress", "name":"Compress" }]`. This is what makes
 it generic - the spec never names a tool.
 
@@ -69,12 +69,12 @@ the full viewport - or the `--scope` container if given). Ensure the harness is 
 (node_modules + icons).
 ```
 # after = current head
-cd frontend/editor && PR_SHOT_SIDE=after PR_SHOT_THEME=light \
+cd frontend && PR_SHOT_SIDE=after PR_SHOT_THEME=light \
   npx playwright test --project=stubbed ui-before-after.spec.ts
 # before = base, in an isolated worktree (copy the spec + targets.json in)
 git worktree add ../ba-base origin/<baseRefName>        # or the merge-base
 #   set up its frontend, copy spec + screenshots/ui-diff/targets.json across, then:
-cd ../ba-base/frontend/editor && PR_SHOT_SIDE=before PR_SHOT_THEME=light \
+cd ../ba-base/frontend && PR_SHOT_SIDE=before PR_SHOT_THEME=light \
   npx playwright test --project=stubbed ui-before-after.spec.ts
 #   copy its screenshots/ui-diff/before/ back next to after/. Repeat with
 #   PR_SHOT_THEME=dark if --theme includes dark. Remove worktree when done.
@@ -82,7 +82,7 @@ cd ../ba-base/frontend/editor && PR_SHOT_SIDE=before PR_SHOT_THEME=light \
 
 ### 4. Auto-diff (surface what changed)
 ```
-cd frontend/editor && node <skill>/diff-shots.mjs \
+cd frontend && node <skill>/diff-shots.mjs \
   screenshots/ui-diff/before screenshots/ui-diff/after screenshots/ui-diff
 ```
 Produces `diff-report.json` classifying each view `unchanged | changed | added |

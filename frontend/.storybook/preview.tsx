@@ -13,12 +13,12 @@ import { withThemeByDataAttribute } from "@storybook/addon-themes";
 // classic runtime needs it present even though it's not named in the JSX.
 void React;
 
-import { TierProvider, type Tier } from "@portal/contexts/TierContext";
-import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
-import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
-import { UIProvider } from "@portal/contexts/UIContext";
-import { SuiProvider } from "@portal/theme/SuiProvider";
-import { handlers } from "@portal/mocks/handlers";
+import { TierProvider, type Tier } from "@processor/contexts/TierContext";
+import { LinkProvider, type LinkState } from "@processor/contexts/LinkContext";
+import { ThemeProvider, useTheme } from "@processor/contexts/ThemeContext";
+import { UIProvider } from "@processor/contexts/UIContext";
+import { SuiProvider } from "@processor/theme/SuiProvider";
+import { handlers } from "@processor/mocks/handlers";
 import { configureSupabase } from "@proprietary/auth/supabase/supabaseClient";
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";

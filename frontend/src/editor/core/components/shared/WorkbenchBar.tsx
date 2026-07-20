@@ -1,0 +1,668 @@
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+} from "react";
+import { Group, Loader, Progress, Stack, Text } from "@mantine/core";
+import { Button } from "@editor/ui/Button";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import { SegmentedControl } from "@editor/ui/SegmentedControl";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import {
+  clearFilesPageReturnRoute,
+  getFilesPageReturnRoute,
+  subscribeFilesPageReturnRoute,
+} from "@editor/components/filesPage/filesPageReturnRoute";
+import { useWorkbenchBar } from "@editor/contexts/WorkbenchBarContext";
+import {
+  useFileState,
+  useFileSelection,
+  useFileActions,
+} from "@editor/contexts/FileContext";
+import { isStirlingFile } from "@editor/types/fileContext";
+import { useFileActionTerminology } from "@editor/hooks/useFileActionTerminology";
+import { useFileActionIcons } from "@editor/hooks/useFileActionIcons";
+import { useToolWorkflow } from "@editor/contexts/ToolWorkflowContext";
+import { useNavigationState } from "@editor/contexts/NavigationContext";
+import { ViewerContext, useViewer } from "@editor/contexts/ViewerContext";
+import { WorkbenchType, isBaseWorkbench } from "@editor/types/workbench";
+import { Tooltip } from "@editor/components/shared/Tooltip";
+import LocalIcon from "@editor/components/shared/LocalIcon";
+import ViewerShareButton from "@editor/components/viewer/ViewerShareButton";
+import { useSharingEnabled } from "@editor/hooks/useSharingEnabled";
+import { usePolicyFileBadges } from "@editor/hooks/usePolicyFileBadges";
+import {
+  POLICY_IN_FLIGHT_STATUSES,
+  usePolicyRuns,
+} from "@editor/components/policies/policyRunStore";
+import { downloadFileWithPolicy as downloadFile } from "@editor/services/exportWithPolicy";
+import { enforceExportPolicies } from "@editor/services/policyExport";
+import { downloadFile as downloadRaw } from "@editor/services/downloadService";
+import { alert as showAlert } from "@editor/components/toast";
+import {
+  WorkbenchBarButtonConfig,
+  WorkbenchBarRenderContext,
+  WorkbenchBarSection,
+} from "@editor/types/workbenchBar";
+import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
+import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
+import CloseIcon from "@mui/icons-material/Close";
+import PrintIcon from "@mui/icons-material/Print";
+import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import "@editor/components/shared/WorkbenchBar.css";
+
+const SECTION_ORDER: WorkbenchBarSection[] = ["top", "middle", "bottom"];
+
+interface ViewOption {
+  value: WorkbenchType;
+  label: string;
+  icon: React.ReactNode;
+}
+
+interface WorkbenchBarProps {
+  currentView: WorkbenchType;
+  setCurrentView: (view: WorkbenchType) => void;
+  hasFiles: boolean;
+}
+
+function renderWithTooltip(
+  node: React.ReactNode,
+  tooltip: React.ReactNode | undefined,
+) {
+  if (!tooltip) return node;
+  return (
+    <Tooltip
+      content={tooltip}
+      position="bottom"
+      offset={6}
+      arrow
+      portalTarget={typeof document !== "undefined" ? document.body : undefined}
+    >
+      <div className="workbench-bar-tooltip-wrapper">{node}</div>
+    </Tooltip>
+  );
+}
+
+export default function WorkbenchBar({
+  currentView,
+  setCurrentView,
+  hasFiles,
+}: WorkbenchBarProps) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const returnRoute = useSyncExternalStore(
+    subscribeFilesPageReturnRoute,
+    getFilesPageReturnRoute,
+    () => null,
+  );
+  const handleBackToFiles = useCallback(() => {
+    if (!returnRoute) return;
+    const target = returnRoute.route;
+    clearFilesPageReturnRoute();
+    navigate(target);
+  }, [returnRoute, navigate]);
+  const { buttons, actions, allButtonsDisabled } = useWorkbenchBar();
+  const {
+    pageEditorFunctions,
+    toolPanelMode,
+    leftPanelView,
+    customWorkbenchViews,
+  } = useToolWorkflow();
+  const { selectedTool } = useNavigationState();
+  const isCustomView = !isBaseWorkbench(currentView);
+  const disableForFullscreen =
+    toolPanelMode === "fullscreen" && leftPanelView === "toolPicker";
+  const terminology = useFileActionTerminology();
+  const icons = useFileActionIcons();
+  const { sharingEnabled } = useSharingEnabled();
+  const viewerContext = React.useContext(ViewerContext);
+
+  const { selectors } = useFileState();
+  const { selectedFiles, selectedFileIds } = useFileSelection();
+  const { actions: fileActions } = useFileActions();
+  const activeFiles = selectors.getFiles();
+  const { activeFileId, setActiveFileId } = useViewer();
+  const policyFileBadges = usePolicyFileBadges();
+  // Block print/export while any file the export would touch is under active
+  // policy enforcement: the viewer exports its active file, every other view
+  // exports the selection (or all files when nothing is selected).
+  const exportTargetIds: string[] =
+    currentView === "viewer"
+      ? activeFileId
+        ? [activeFileId]
+        : []
+      : selectedFileIds.length > 0
+        ? selectedFileIds
+        : activeFiles.filter(isStirlingFile).map((f) => f.fileId);
+  const enforcingFileId = exportTargetIds.find((id) =>
+    (policyFileBadges.get(id) ?? []).some((p) => p.enforcing),
+  );
+  const policyEnforcing = enforcingFileId != null;
+  const policyRuns = usePolicyRuns();
+  const enforcingRun = policyEnforcing
+    ? policyRuns.find(
+        (r) =>
+          r.fileId === enforcingFileId &&
+          (POLICY_IN_FLIGHT_STATUSES as readonly string[]).includes(r.status),
+      )
+    : undefined;
+  const enforcingProgress =
+    enforcingRun?.currentStep != null && enforcingRun.stepCount
+      ? Math.round((enforcingRun.currentStep / enforcingRun.stepCount) * 100)
+      : undefined;
+  const makeEnforcingTooltip = (action: string): React.ReactNode => (
+    <Stack gap={6} py={2} w={200}>
+      <Group gap={6} wrap="nowrap">
+        <ShieldOutlinedIcon style={{ fontSize: 13 }} />
+        <Text size="xs" fw={600}>
+          {t(
+            "policy.blockingAction",
+            "{{action}} blocked while enforcing policy, please wait",
+            { action },
+          )}
+        </Text>
+      </Group>
+      {enforcingProgress != null ? (
+        <Progress
+          w="100%"
+          size="xs"
+          radius="xl"
+          value={enforcingProgress}
+          striped
+          animated
+        />
+      ) : (
+        <Loader size="xs" />
+      )}
+    </Stack>
+  );
+  const pageEditorTotalPages = pageEditorFunctions?.totalPages ?? 0;
+  const pageEditorSelectedCount =
+    pageEditorFunctions?.selectedPageIds?.length ?? 0;
+
+  const totalItems = useMemo(() => {
+    if (currentView === "pageEditor") return pageEditorTotalPages;
+    return activeFiles.length;
+  }, [currentView, pageEditorTotalPages, activeFiles.length]);
+
+  const selectedCount = useMemo(() => {
+    if (currentView === "pageEditor") return pageEditorSelectedCount;
+    return selectedFileIds.length;
+  }, [currentView, pageEditorSelectedCount, selectedFileIds.length]);
+
+  const sectionsWithButtons = useMemo(() => {
+    return SECTION_ORDER.map((section) => {
+      const sectionButtons = buttons.filter(
+        (btn) => (btn.section ?? "top") === section && (btn.visible ?? true),
+      );
+      return { section, buttons: sectionButtons };
+    }).filter((entry) => entry.buttons.length > 0);
+  }, [buttons]);
+
+  const handleExportAll = useCallback(
+    async (forceNewFile = false) => {
+      if (currentView === "viewer") {
+        const buffer = await viewerContext?.exportActions?.saveAsCopy?.();
+        if (!buffer) return;
+        const fileToExport =
+          selectedFiles.length > 0 ? selectedFiles[0] : activeFiles[0];
+        if (!fileToExport) return;
+        const stub = isStirlingFile(fileToExport)
+          ? selectors.getStirlingFileStub(fileToExport.fileId)
+          : undefined;
+        try {
+          const result = await downloadFile({
+            data: new Blob([buffer], { type: "application/pdf" }),
+            filename: fileToExport.name,
+            localPath: forceNewFile ? undefined : stub?.localFilePath,
+            fileId: stub?.id,
+          });
+          if (!forceNewFile && !result.cancelled && stub && result.savedPath) {
+            fileActions.updateStirlingFileStub(stub.id, {
+              localFilePath: stub.localFilePath ?? result.savedPath,
+              isDirty: false,
+            });
+          }
+        } catch (error) {
+          console.error("[WorkbenchBar] Failed to export viewer file:", error);
+        }
+        return;
+      }
+
+      if (currentView === "pageEditor") {
+        pageEditorFunctions?.onExportAll?.();
+        return;
+      }
+
+      const filesToExport =
+        selectedFiles.length > 0 ? selectedFiles : activeFiles;
+      const stubs = filesToExport.map((file) =>
+        isStirlingFile(file)
+          ? selectors.getStirlingFileStub(file.fileId)
+          : undefined,
+      );
+
+      // Enforce all files in one batch so the toast shows progress across the
+      // whole set (e.g. "report.pdf (2 of 5)") rather than N invisible solo runs.
+      let enforced: File[];
+      try {
+        enforced = await enforceExportPolicies(
+          filesToExport as File[],
+          stubs.map((s) => s?.id),
+        );
+      } catch {
+        enforced = filesToExport as File[];
+        showAlert({
+          alertType: "warning",
+          title: t("policies.enforcement.exportFailureTitle"),
+          body: t("policies.enforcement.exportFailureBody"),
+        });
+      }
+
+      for (let idx = 0; idx < filesToExport.length; idx++) {
+        const file = filesToExport[idx];
+        const stub = stubs[idx];
+        try {
+          const result = await downloadRaw({
+            data: enforced[idx],
+            filename: file.name,
+            localPath: forceNewFile ? undefined : stub?.localFilePath,
+            fileId: stub?.id,
+          });
+          if (result.cancelled) continue;
+          if (!forceNewFile && stub && result.savedPath) {
+            fileActions.updateStirlingFileStub(stub.id, {
+              localFilePath: stub.localFilePath ?? result.savedPath,
+              isDirty: false,
+            });
+          }
+        } catch (error) {
+          console.error(
+            "[WorkbenchBar] Failed to export file:",
+            file.name,
+            error,
+          );
+        }
+      }
+    },
+    [
+      currentView,
+      selectedFiles,
+      activeFiles,
+      pageEditorFunctions,
+      viewerContext,
+      selectors,
+      fileActions,
+    ],
+  );
+
+  const handlePrint = useCallback(() => {
+    viewerContext?.printActions?.print?.();
+  }, [viewerContext]);
+
+  const handleClose = useCallback(async () => {
+    if (currentView === "fileEditor") {
+      await fileActions.clearAllFiles();
+    } else if (currentView === "viewer") {
+      const file =
+        (activeFileId
+          ? activeFiles.find(
+              (f) => isStirlingFile(f) && f.fileId === activeFileId,
+            )
+          : null) ?? activeFiles[0];
+      const countBeforeRemove = activeFiles.length;
+      if (file && isStirlingFile(file)) {
+        // Pick the next file to show before removing, so the sidebar stays in sync.
+        const remaining = activeFiles.filter(
+          (f) => isStirlingFile(f) && f.fileId !== file.fileId,
+        );
+        const nextFile = remaining.find(isStirlingFile) ?? null;
+        await fileActions.removeFiles([file.fileId], false);
+        if (countBeforeRemove <= 1) {
+          setCurrentView("fileEditor");
+        } else if (nextFile) {
+          setActiveFileId(nextFile.fileId);
+        }
+      } else if (countBeforeRemove <= 1) {
+        setCurrentView("fileEditor");
+      }
+    } else if (currentView === "pageEditor") {
+      pageEditorFunctions?.closePdf?.();
+    }
+  }, [
+    currentView,
+    fileActions,
+    activeFiles,
+    activeFileId,
+    setActiveFileId,
+    pageEditorFunctions,
+    setCurrentView,
+  ]);
+
+  const downloadTooltip = useMemo(() => {
+    if (currentView === "pageEditor")
+      return t("workbenchBar.exportAll", "Export PDF");
+    if (currentView === "viewer") return terminology.download;
+    if (selectedCount > 0) return terminology.downloadSelected;
+    return terminology.downloadAll;
+  }, [currentView, selectedCount, t, terminology]);
+
+  const renderButton = useCallback(
+    (btn: WorkbenchBarButtonConfig) => {
+      const action = actions[btn.id];
+      const disabled = Boolean(
+        btn.disabled || allButtonsDisabled || disableForFullscreen,
+      );
+      const isActive = Boolean(btn.active);
+
+      const triggerAction = () => {
+        if (!disabled) action?.();
+      };
+
+      if (btn.render) {
+        const context: WorkbenchBarRenderContext = {
+          id: btn.id,
+          disabled,
+          allButtonsDisabled,
+          action,
+          triggerAction,
+          active: isActive,
+        };
+        return btn.render(context) ?? null;
+      }
+
+      if (!btn.icon) return null;
+
+      const ariaLabel =
+        btn.ariaLabel ||
+        (typeof btn.tooltip === "string" ? (btn.tooltip as string) : btn.id);
+      const buttonNode = (
+        <ActionIcon
+          variant={isActive ? "primary" : "quiet"}
+          className="workbench-bar-action-icon"
+          onClick={triggerAction}
+          disabled={disabled}
+          aria-label={ariaLabel}
+          aria-pressed={isActive ? true : undefined}
+          hover={isActive ? true : false}
+        >
+          {btn.icon}
+        </ActionIcon>
+      );
+      return renderWithTooltip(buttonNode, btn.tooltip);
+    },
+    [actions, allButtonsDisabled, disableForFullscreen],
+  );
+
+  // View options
+  const viewOptions: ViewOption[] = [
+    {
+      value: "viewer",
+      label: t("workbenchBar.viewer", "Viewer"),
+      icon: <InsertDriveFileOutlinedIcon fontSize="small" />,
+    },
+    {
+      value: "fileEditor",
+      label: t("workbenchBar.activeFiles", "Active Files"),
+      icon: <FolderOutlinedIcon fontSize="small" />,
+    },
+    ...(selectedTool === "multiTool"
+      ? [
+          {
+            value: "pageEditor" as WorkbenchType,
+            label: t("workbenchBar.multiTool", "Multi-Tool"),
+            icon: (
+              <LocalIcon
+                icon="dashboard-customize-outline-rounded"
+                width="1rem"
+                height="1rem"
+              />
+            ),
+          },
+        ]
+      : []),
+    ...customWorkbenchViews
+      .filter((v) => v.data != null)
+      .map((v) => ({
+        value: v.workbenchId,
+        label: v.label,
+        icon: v.icon ?? <InsertDriveFileOutlinedIcon fontSize="small" />,
+      })),
+  ];
+
+  const barRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const bar = barRef.current;
+    if (!bar) return;
+
+    const measure = () => {
+      const viewsEl = bar.querySelector<HTMLElement>(".workbench-bar-views");
+      const globalsEl = bar.querySelector<HTMLElement>(
+        ".workbench-bar-globals",
+      );
+      const centerEl = bar.querySelector<HTMLElement>(".workbench-bar-center");
+
+      const viewsWidth = viewsEl?.offsetWidth ?? 0;
+      const globalsWidth = globalsEl?.offsetWidth ?? 0;
+      const centerChildren = centerEl
+        ? (Array.from(centerEl.children) as HTMLElement[])
+        : [];
+      const centerWidth =
+        centerChildren.reduce((sum, el) => sum + el.offsetWidth, 0) +
+        Math.max(0, centerChildren.length - 1) * 2; // gap: 2px
+
+      const needed = viewsWidth + centerWidth + globalsWidth + 24; // 24px bar padding
+      bar.dataset.wrapped = String(needed > bar.clientWidth);
+    };
+
+    const ro = new ResizeObserver(measure);
+    ro.observe(bar);
+    measure();
+    return () => ro.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={barRef}
+      className="workbench-bar"
+      data-wrapped="true"
+      data-tour="workbench-bar"
+    >
+      {/* Left: optional "Back to My Files" + view switcher */}
+      <div className="workbench-bar-views" data-tour="view-switcher">
+        {returnRoute && hasFiles && (
+          <>
+            <Button
+              variant="tertiary"
+              className="workbench-bar-view-btn workbench-bar-back-btn"
+              onClick={handleBackToFiles}
+              aria-label={t(
+                returnRoute.label
+                  ? "filesPage.backToFolder"
+                  : "filesPage.backToMyFiles",
+                returnRoute.label
+                  ? `Back to ${returnRoute.label}`
+                  : "Back to My Files",
+                { folder: returnRoute.label ?? "" },
+              )}
+              leftSection={<ArrowBackIcon style={{ fontSize: "1.1rem" }} />}
+            >
+              <span className="workbench-bar-view-label">
+                {returnRoute.label
+                  ? t("filesPage.backToFolder", "Back to {{folder}}", {
+                      folder: returnRoute.label,
+                    })
+                  : t("filesPage.backToMyFiles", "Back to My Files")}
+              </span>
+            </Button>
+            <div className="workbench-bar-divider" />
+          </>
+        )}
+        {(hasFiles || isCustomView) && (
+          <SegmentedControl<WorkbenchType>
+            className="workbench-bar-views"
+            size="sm"
+            value={currentView}
+            onChange={setCurrentView}
+            variant="secondary"
+            options={viewOptions.map((opt) => ({
+              value: opt.value,
+              label: (
+                <>
+                  {opt.icon}
+                  <span className="workbench-bar-view-label">{opt.label}</span>
+                </>
+              ),
+            }))}
+          />
+        )}
+      </div>
+
+      {/* Tool buttons - second row, only rendered when buttons exist */}
+      {sectionsWithButtons.length > 0 && (
+        <div className="workbench-bar-center">
+          {sectionsWithButtons.map(
+            ({ section, buttons: sectionButtons }, idx) => (
+              <React.Fragment key={section}>
+                {idx > 0 && <div className="workbench-bar-divider" />}
+                {sectionButtons.map((btn) => {
+                  const content = renderButton(btn);
+                  if (!content) return null;
+                  return (
+                    <div key={btn.id} className="workbench-bar-action-wrapper">
+                      {content}
+                    </div>
+                  );
+                })}
+              </React.Fragment>
+            ),
+          )}
+        </div>
+      )}
+
+      {/* Right: Global buttons - export group left, close anchored right */}
+      <div className="workbench-bar-globals">
+        {/* Share (viewer only; opens the same modal as My Files "Manage sharing") */}
+        {currentView === "viewer" && sharingEnabled && (
+          <ViewerShareButton
+            disabled={
+              totalItems === 0 || allButtonsDisabled || disableForFullscreen
+            }
+          />
+        )}
+
+        {/* Print */}
+        {currentView === "viewer" &&
+          renderWithTooltip(
+            <ActionIcon
+              variant="tertiary"
+              hover={false}
+              className="workbench-bar-action-icon"
+              onClick={handlePrint}
+              disabled={
+                totalItems === 0 ||
+                allButtonsDisabled ||
+                disableForFullscreen ||
+                policyEnforcing
+              }
+              aria-label={t("workbenchBar.print", "Print PDF")}
+            >
+              <PrintIcon sx={{ fontSize: "1rem" }} />
+            </ActionIcon>,
+            policyEnforcing
+              ? makeEnforcingTooltip(t("workbenchBar.print", "Print PDF"))
+              : t("workbenchBar.print", "Print PDF"),
+          )}
+
+        {/* Download (file-level action — not relevant in custom views) */}
+        {!isCustomView &&
+          renderWithTooltip(
+            <ActionIcon
+              variant="tertiary"
+              hover={false}
+              className="workbench-bar-action-icon"
+              onClick={() => handleExportAll()}
+              disabled={
+                disableForFullscreen ||
+                totalItems === 0 ||
+                allButtonsDisabled ||
+                policyEnforcing
+              }
+              aria-label={downloadTooltip}
+            >
+              <LocalIcon
+                icon={icons.downloadIconName}
+                width="1rem"
+                height="1rem"
+              />
+            </ActionIcon>,
+            policyEnforcing
+              ? makeEnforcingTooltip(downloadTooltip)
+              : downloadTooltip,
+          )}
+
+        {/* Save As */}
+        {!isCustomView &&
+          icons.saveAsIconName &&
+          renderWithTooltip(
+            <ActionIcon
+              variant="tertiary"
+              hover={false}
+              className="workbench-bar-action-icon"
+              onClick={() => handleExportAll(true)}
+              disabled={
+                disableForFullscreen ||
+                totalItems === 0 ||
+                allButtonsDisabled ||
+                policyEnforcing
+              }
+              aria-label={t("workbenchBar.saveAs", "Save As")}
+            >
+              <LocalIcon
+                icon={icons.saveAsIconName}
+                width="1rem"
+                height="1rem"
+              />
+            </ActionIcon>,
+            policyEnforcing
+              ? makeEnforcingTooltip(t("workbenchBar.saveAs", "Save As"))
+              : t("workbenchBar.saveAs", "Save As"),
+          )}
+
+        {/* Separator: export group | close */}
+        {!isCustomView && (
+          <div className="workbench-bar-divider workbench-bar-globals-sep" />
+        )}
+
+        {/* Close (context-aware: close all / close viewer file / close page editor) */}
+        {!isCustomView &&
+          renderWithTooltip(
+            <ActionIcon
+              variant="tertiary"
+              hover={false}
+              className="workbench-bar-action-icon"
+              onClick={handleClose}
+              disabled={
+                totalItems === 0 || allButtonsDisabled || disableForFullscreen
+              }
+              aria-label={
+                currentView === "fileEditor"
+                  ? t("workbenchBar.closeAll", "Close All")
+                  : t("workbenchBar.closePdf", "Close PDF")
+              }
+            >
+              <CloseIcon sx={{ fontSize: "1rem" }} />
+            </ActionIcon>,
+            currentView === "fileEditor"
+              ? t("workbenchBar.closeAll", "Close All")
+              : t("workbenchBar.closePdf", "Close PDF"),
+          )}
+      </div>
+    </div>
+  );
+}

@@ -5,15 +5,15 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "paths": {
-      "@app/*": [
-        "../editor/src/desktop/*",
-        "../editor/src/proprietary/*",
-        "../editor/src/core/*"
+      "@editor/*": [
+        "../src/editor/desktop/*",
+        "../src/editor/proprietary/*",
+        "../src/editor/core/*"
       ],
-      "@core/*": ["../editor/src/core/*"],
-      "@proprietary/*": ["../editor/src/proprietary/*"],
-      "@portal/*": ["../editor/src/portal/*"],
-      "@public/*": ["../editor/public/*"]
+      "@core/*": ["../src/editor/core/*"],
+      "@proprietary/*": ["../src/editor/proprietary/*"],
+      "@processor/*": ["../src/processor/proprietary/*"],
+      "@public/*": ["../public/*"]
     },
     "resolveJsonModule": true,
     "esModuleInterop": true,

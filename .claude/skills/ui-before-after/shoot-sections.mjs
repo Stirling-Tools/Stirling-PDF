@@ -1,5 +1,5 @@
 // Render each .tab-section of a montage HTML into its own PNG (the PR-ready image).
-// Run from frontend/editor (so @playwright/test resolves):
+// Run from frontend (so @playwright/test resolves):
 //   node <skill>/shoot-sections.mjs <montage.html> <outDir>
 import path from "node:path";
 import { pathToFileURL } from "node:url";

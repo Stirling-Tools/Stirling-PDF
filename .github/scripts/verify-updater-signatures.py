@@ -15,7 +15,7 @@ from cryptography.exceptions import InvalidSignature
 
 ART_ROOT = Path(sys.argv[1])
 CONF = Path(
-    sys.argv[2] if len(sys.argv) > 2 else "frontend/editor/src-tauri/tauri.conf.json"
+    sys.argv[2] if len(sys.argv) > 2 else "frontend/src-tauri/tauri.conf.json"
 )
 
 

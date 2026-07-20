@@ -1,0 +1,85 @@
+import React from "react";
+import { Tooltip } from "@mantine/core";
+import { ActionIcon } from "@editor/ui/ActionIcon";
+import styles from "@editor/components/shared/HoverActionMenu.module.css";
+import { Z_INDEX_HOVER_ACTION_MENU } from "@editor/styles/zIndex";
+
+export interface HoverAction {
+  id: string;
+  icon: React.ReactNode;
+  label: string;
+  onClick: (e: React.MouseEvent) => void;
+  disabled?: boolean;
+  /** Overrides label in the tooltip — use for rich ReactNode content (e.g. enforcement messages). */
+  tooltip?: React.ReactNode;
+  color?: string;
+  hidden?: boolean;
+  dataTour?: string;
+}
+
+interface HoverActionMenuProps {
+  show: boolean;
+  actions: HoverAction[];
+  position?: "inside" | "outside";
+  className?: string;
+  visibility?: "state" | "cssHover";
+}
+
+const HoverActionMenu: React.FC<HoverActionMenuProps> = ({
+  show,
+  actions,
+  position = "inside",
+  className = "",
+  visibility = "state",
+}) => {
+  const visibleActions = actions.filter((action) => !action.hidden);
+
+  if (visibleActions.length === 0) {
+    return null;
+  }
+
+  const style: React.CSSProperties = { zIndex: Z_INDEX_HOVER_ACTION_MENU };
+  if (visibility === "state") {
+    style.opacity = show ? 1 : 0;
+    style.pointerEvents = show ? "auto" : "none";
+  } else if (show) {
+    // Force visible (e.g. mobile) even when CSS-hover mode is active.
+    style.opacity = 1;
+    style.pointerEvents = "auto";
+  }
+
+  return (
+    <div
+      className={`${styles.hoverMenu} ${position === "outside" ? styles.outside : styles.inside} ${className}`}
+      style={style}
+      data-hover-action-menu="true"
+      data-hover-action-menu-mode={visibility}
+      data-force-visible={show ? "true" : "false"}
+      onMouseDown={(e) => e.stopPropagation()}
+      onMouseUp={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
+    >
+      {visibleActions.map((action) => (
+        <Tooltip key={action.id} label={action.tooltip ?? action.label}>
+          {/* Wrapper keeps the tooltip working when the button is disabled
+              (disabled buttons don't emit the pointer events Tooltip needs). */}
+          <div style={{ display: "inline-flex", alignItems: "center" }}>
+            <ActionIcon
+              size="md"
+              variant="tertiary"
+              disabled={action.disabled}
+              onClick={action.onClick}
+              aria-label={action.label}
+              style={{ color: action.color || "var(--text-secondary)" }}
+              data-tour={action.dataTour}
+            >
+              {action.icon}
+            </ActionIcon>
+          </div>
+        </Tooltip>
+      ))}
+    </div>
+  );
+};
+
+export default HoverActionMenu;

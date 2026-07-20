@@ -217,7 +217,7 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
     )
     parser.add_argument(
         "--locales-dir",
-        default="frontend/editor/public/locales",
+        default="frontend/public/locales",
         help="Path to locales directory",
     )
     parser.add_argument(

@@ -1,0 +1,24 @@
+{
+  "extends": "./tsconfig.proprietary.vite.json",
+  "compilerOptions": {
+    "paths": {
+      "@editor/*": [
+        "./src/editor/desktop/*",
+        "./src/editor/cloud/*",
+        "./src/editor/proprietary/*",
+        "./src/editor/core/*"
+      ],
+      "@cloud/*": ["./src/editor/cloud/*"],
+      "@proprietary/*": ["./src/editor/proprietary/*"],
+      "@core/*": ["./src/editor/core/*"]
+    }
+  },
+  "exclude": [
+    "src/editor/core/**/*.test.ts*",
+    "src/editor/core/**/*.spec.ts*",
+    "src/editor/proprietary/**/*.test.ts*",
+    "src/editor/proprietary/**/*.spec.ts*",
+    "src/editor/cloud/**/*.test.ts*",
+    "src/editor/cloud/**/*.spec.ts*"
+  ]
+}
