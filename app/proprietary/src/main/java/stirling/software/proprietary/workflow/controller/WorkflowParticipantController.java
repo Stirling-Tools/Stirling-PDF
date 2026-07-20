@@ -138,7 +138,8 @@ public class WorkflowParticipantController {
     @Operation(
             summary = "Submit signature (wet signature and/or certificate)",
             description =
-                    "Participants submit their signature data and certificate information for signing")
+                    "Participants submit their signature data and certificate information for"
+                            + " signing")
     @PostMapping(
             value = "/submit-signature",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -477,6 +478,6 @@ public class WorkflowParticipantController {
 
     private ResponseStatusException certificateFileTooLarge() {
         return new ResponseStatusException(
-                HttpStatus.PAYLOAD_TOO_LARGE, "Certificate file exceeds the 5 MiB limit");
+                HttpStatus.CONTENT_TOO_LARGE, "Certificate file exceeds the 5 MiB limit");
     }
 }

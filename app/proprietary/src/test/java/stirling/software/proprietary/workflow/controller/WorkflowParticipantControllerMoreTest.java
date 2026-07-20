@@ -290,7 +290,7 @@ class WorkflowParticipantControllerMoreTest {
             assertThatThrownBy(() -> controller.submitSignature(r))
                     .isInstanceOf(ResponseStatusException.class)
                     .extracting(e -> ((ResponseStatusException) e).getStatusCode())
-                    .isEqualTo(HttpStatus.PAYLOAD_TOO_LARGE);
+                    .isEqualTo(HttpStatus.CONTENT_TOO_LARGE);
 
             verify(certificateFile, org.mockito.Mockito.never()).getBytes();
             verify(participantRepository, org.mockito.Mockito.never()).save(p);

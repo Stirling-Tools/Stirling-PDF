@@ -71,7 +71,7 @@ public class ParticipantRequestSecurityFilter extends OncePerRequestFilter {
             if (contentLength > MAX_MULTIPART_REQUEST_SIZE_BYTES) {
                 writeError(
                         response,
-                        HttpStatus.PAYLOAD_TOO_LARGE,
+                        HttpStatus.CONTENT_TOO_LARGE,
                         "Participant upload exceeds the 16 MiB request limit.");
                 return;
             }

@@ -216,7 +216,7 @@ class MobileScannerControllerTest {
         ResponseEntity<Map<String, Object>> response =
                 controller.uploadFiles("test-session", files);
 
-        assertEquals(HttpStatus.PAYLOAD_TOO_LARGE, response.getStatusCode());
+        assertEquals(HttpStatus.CONTENT_TOO_LARGE, response.getStatusCode());
     }
 
     // --- getSessionFiles tests ---

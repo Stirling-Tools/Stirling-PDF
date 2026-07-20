@@ -50,8 +50,8 @@ import stirling.software.common.service.MobileScannerService.UploadSizeLimitExce
 @Tag(
         name = "Mobile Scanner",
         description =
-                "Endpoints for mobile-to-desktop file transfer via QR code scanning. "
-                        + "Files are temporarily stored and automatically cleaned up after 10 minutes.")
+                "Endpoints for mobile-to-desktop file transfer via QR code scanning. Files are"
+                    + " temporarily stored and automatically cleaned up after 10 minutes.")
 @Hidden
 @Slf4j
 public class MobileScannerController {
@@ -233,7 +233,7 @@ public class MobileScannerController {
             return ResponseEntity.status(HttpStatus.INSUFFICIENT_STORAGE)
                     .body(Map.of("error", e.getMessage()));
         } catch (UploadSizeLimitExceededException e) {
-            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+            return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE)
                     .body(Map.of("error", e.getMessage()));
         } catch (IOException e) {
             log.error("Failed to upload files for session: {}", sessionId, e);
@@ -287,7 +287,8 @@ public class MobileScannerController {
     @Operation(
             summary = "Download a specific file",
             description =
-                    "Download a file that was uploaded to a session. File is automatically deleted after download.")
+                    "Download a file that was uploaded to a session. File is automatically deleted"
+                        + " after download.")
     @ApiResponse(responseCode = "200", description = "File downloaded successfully")
     @ApiResponse(responseCode = "403", description = "Mobile scanner feature not enabled")
     @ApiResponse(responseCode = "404", description = "File or session not found")
