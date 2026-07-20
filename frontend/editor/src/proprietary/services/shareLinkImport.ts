@@ -44,19 +44,15 @@ export async function downloadShareLink(token: string): Promise<{
     suppressErrorToast: true,
     skipAuthRedirect: true,
   });
-  const contentTypeHeader =
+  const contentType =
     (response.headers &&
       (response.headers["content-type"] || response.headers["Content-Type"])) ||
     "";
-  const dispositionHeader =
+  const disposition =
     (response.headers &&
       (response.headers["content-disposition"] ||
         response.headers["Content-Disposition"])) ||
     "";
-  const disposition =
-    typeof dispositionHeader === "string" ? dispositionHeader : "";
-  const contentType =
-    typeof contentTypeHeader === "string" ? contentTypeHeader : "";
   const filename =
     parseContentDispositionFilename(disposition) || "shared-file";
   const blob = response.data as Blob;
