@@ -19,6 +19,7 @@ vi.mock("@app/auth/supabase/supabaseClient", () => ({
 
 import {
   createBundleCheckoutSession,
+  createBundleInvoice,
   createCheckoutSession,
   createPortalSession,
   StripeFunctionError,
@@ -161,6 +162,49 @@ describe("createBundleCheckoutSession", () => {
     await expect(createBundleCheckoutSession(bundleReq)).rejects.toThrow(
       /bundle_pricing_not_configured/,
     );
+  });
+});
+
+describe("createBundleInvoice", () => {
+  it("maps the invoice response and sends quote_id (+ optional po_number)", async () => {
+    invoke.mockResolvedValue({
+      data: {
+        success: true,
+        invoice_id: "in_1",
+        hosted_invoice_url: "https://pay/in_1",
+        invoice_pdf: "https://pdf/in_1",
+        status: "open",
+      },
+      error: null,
+    });
+    const inv = await createBundleInvoice({
+      teamId: 1,
+      quoteId: 7,
+      poNumber: "PO-9",
+    });
+    expect(inv).toEqual({
+      invoiceId: "in_1",
+      hostedInvoiceUrl: "https://pay/in_1",
+      invoicePdf: "https://pdf/in_1",
+      status: "open",
+    });
+    const [name, opts] = invoke.mock.calls[0];
+    expect(name).toBe("create-payg-bundle-invoice");
+    expect(opts.body).toMatchObject({
+      team_id: 1,
+      quote_id: 7,
+      po_number: "PO-9",
+    });
+  });
+
+  it("throws when the edge fn reports failure", async () => {
+    invoke.mockResolvedValue({
+      data: { success: false, error: "bundle_invoice_needs_customer" },
+      error: null,
+    });
+    await expect(
+      createBundleInvoice({ teamId: 1, quoteId: 7 }),
+    ).rejects.toThrow(/bundle_invoice_needs_customer/);
   });
 });
 

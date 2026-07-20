@@ -298,6 +298,64 @@ export async function createBundleCheckoutSession(
   };
 }
 
+interface BundleInvoiceRequest {
+  teamId: number;
+  /** The persisted quote to invoice. */
+  quoteId: number;
+  /** Optional PO number to print on the invoice for the buyer's AP. */
+  poNumber?: string;
+  /** Net terms; defaults to 30 on the server. */
+  daysUntilDue?: number;
+}
+
+/** A raised Stripe invoice — {@code create-payg-bundle-invoice} result. */
+export interface BundleInvoice {
+  invoiceId: string;
+  /** Stripe-hosted page where the buyer pays / downloads the invoice. */
+  hostedInvoiceUrl: string | null;
+  invoicePdf: string | null;
+  status: string | null;
+}
+
+interface BundleInvoiceResponse {
+  success?: boolean;
+  invoice_id?: string;
+  hosted_invoice_url?: string | null;
+  invoice_pdf?: string | null;
+  status?: string | null;
+  error?: string;
+}
+
+/**
+ * Raise a Stripe INVOICE for a prepaid-bundle quote — the bank-transfer / PO route (net terms), via
+ * {@code create-payg-bundle-invoice}. Capacity is credited only when the invoice is PAID (the webhook),
+ * never here. Idempotent per quote server-side. Returns the hosted invoice URL to send the buyer.
+ */
+export async function createBundleInvoice(
+  req: BundleInvoiceRequest,
+): Promise<BundleInvoice> {
+  const res = await invoke<BundleInvoiceResponse>(
+    "create-payg-bundle-invoice",
+    {
+      team_id: req.teamId,
+      quote_id: req.quoteId,
+      ...(req.poNumber ? { po_number: req.poNumber } : {}),
+      ...(req.daysUntilDue != null ? { days_until_due: req.daysUntilDue } : {}),
+    },
+  );
+  if (!res.success || !res.invoice_id) {
+    throw new StripeFunctionError(
+      res.error ?? "create-payg-bundle-invoice failed",
+    );
+  }
+  return {
+    invoiceId: res.invoice_id,
+    hostedInvoiceUrl: res.hosted_invoice_url ?? null,
+    invoicePdf: res.invoice_pdf ?? null,
+    status: res.status ?? null,
+  };
+}
+
 /**
  * {@code VITE_STRIPE_PUBLISHABLE_KEY} — the Stripe pk used by embedded Checkout. Coalesces to "" when
  * unset so the declared `string` return type is honest (Vite substitutes `undefined` for a missing

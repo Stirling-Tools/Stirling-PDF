@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, Checkbox, Modal, NumberInput, Spinner } from "@app/ui";
+import {
+  Banner,
+  Button,
+  Checkbox,
+  Modal,
+  NumberInput,
+  SegmentedControl,
+  Spinner,
+} from "@app/ui";
 import {
   BUNDLE_PIPELINE_TIERS,
   BUNDLE_POLICY_POSTURES,
@@ -15,6 +23,7 @@ import {
 } from "@stripe/react-stripe-js";
 import {
   createBundleCheckoutSession,
+  createBundleInvoice,
   getStripePublishableKey,
   loadStripeOnce,
   StripeFunctionError,
@@ -100,6 +109,8 @@ export function BundleCheckoutModal({
   const [quoteId, setQuoteId] = useState<number | null>(null);
   const [quoteBusy, setQuoteBusy] = useState(false);
   const [quoteError, setQuoteError] = useState<string | null>(null);
+  // How the payment resolved: card = active now; bank = an invoice awaiting payment.
+  const [outcome, setOutcome] = useState<PaymentOutcome | null>(null);
 
   // Reset to step 1 whenever the modal closes so re-opening starts fresh.
   useEffect(() => {
@@ -113,6 +124,7 @@ export function BundleCheckoutModal({
       setQuoteId(null);
       setQuoteBusy(false);
       setQuoteError(null);
+      setOutcome(null);
     }
   }, [open]);
 
@@ -185,7 +197,12 @@ export function BundleCheckoutModal({
 
   const title =
     phase === "done"
-      ? t("portal.billing.prepaid.buy.doneTitle", "Your prepaid year is active")
+      ? outcome?.invoicePending
+        ? t("portal.billing.prepaid.buy.invoiceSentTitle", "Invoice sent")
+        : t(
+            "portal.billing.prepaid.buy.doneTitle",
+            "Your prepaid year is active",
+          )
       : topUp
         ? t("portal.billing.prepaid.buy.topUpTitle", "Top up prepaid capacity")
         : t(
@@ -259,7 +276,10 @@ export function BundleCheckoutModal({
           units={quote.poolCredits}
           consented={consented}
           eulaVersion={CONSENT_EULA_VERSION}
-          onComplete={() => setPhase("done")}
+          onComplete={(o) => {
+            setOutcome(o ?? null);
+            setPhase("done");
+          }}
         />
       )}
       {phase === "done" && (
@@ -267,6 +287,8 @@ export function BundleCheckoutModal({
           credits={quote.poolCredits}
           priceMinor={quote.priceMinor}
           currency={currency}
+          invoicePending={outcome?.invoicePending ?? false}
+          hostedInvoiceUrl={outcome?.hostedInvoiceUrl ?? null}
         />
       )}
     </Modal>
@@ -841,6 +863,12 @@ function CalculatorStep({
 
 // ─── Step 2: Stripe embedded checkout ────────────────────────────────────────
 
+/** How a completed payment step resolved — card is live now; bank is an invoice awaiting payment. */
+interface PaymentOutcome {
+  invoicePending: boolean;
+  hostedInvoiceUrl?: string | null;
+}
+
 function PaymentStep({
   teamId,
   quoteId,
@@ -850,9 +878,70 @@ function PaymentStep({
   onComplete,
 }: {
   teamId: number;
-  /** Preferred: check out against this persisted quote (carries pool + consent). */
+  /** Preferred: check out / invoice against this persisted quote (carries pool + consent). */
   quoteId: number | null;
-  /** Direct-path fallback (used only when quoteId is null, e.g. quote persistence unavailable). */
+  /** Direct-path fallback for the card route when quoteId is null (quote persistence unavailable). */
+  units: number;
+  consented: boolean;
+  eulaVersion: string;
+  onComplete: (outcome?: PaymentOutcome) => void;
+}) {
+  const { t } = useTranslation();
+  // The demo's card-vs-bank fork: card = pay now (embedded checkout); bank = raise an invoice (net
+  // terms) and activate when it's paid.
+  const [method, setMethod] = useState<"card" | "bank">("card");
+  return (
+    <div className="portal-billing__checkout-pay">
+      <SegmentedControl
+        fullWidth
+        options={[
+          {
+            value: "card",
+            label: t("portal.billing.prepaid.pay.card", "Card"),
+          },
+          {
+            value: "bank",
+            label: t("portal.billing.prepaid.pay.bank", "Bank transfer"),
+          },
+        ]}
+        value={method}
+        onChange={(m) => setMethod(m as "card" | "bank")}
+        ariaLabel={t("portal.billing.prepaid.pay.method", "Payment method")}
+      />
+      {method === "card" ? (
+        <CardPay
+          teamId={teamId}
+          quoteId={quoteId}
+          units={units}
+          consented={consented}
+          eulaVersion={eulaVersion}
+          onComplete={() => onComplete()}
+        />
+      ) : (
+        <BankPay
+          teamId={teamId}
+          quoteId={quoteId}
+          onComplete={(hostedInvoiceUrl) =>
+            onComplete({ invoicePending: true, hostedInvoiceUrl })
+          }
+        />
+      )}
+    </div>
+  );
+}
+
+// ─── Step 2a: card (embedded Stripe checkout, pay now) ───────────────────────
+
+function CardPay({
+  teamId,
+  quoteId,
+  units,
+  consented,
+  eulaVersion,
+  onComplete,
+}: {
+  teamId: number;
+  quoteId: number | null;
   units: number;
   consented: boolean;
   eulaVersion: string;
@@ -956,18 +1045,111 @@ function PaymentStep({
   );
 }
 
+// ─── Step 2b: bank transfer (raise an invoice, activate on payment) ──────────
+
+function BankPay({
+  teamId,
+  quoteId,
+  onComplete,
+}: {
+  teamId: number;
+  quoteId: number | null;
+  onComplete: (hostedInvoiceUrl: string | null) => void;
+}) {
+  const { t } = useTranslation();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const generate = async () => {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      // No persisted quote (Storybook / preview / no SaaS backend) → simulate the invoice-sent
+      // outcome so the flow stays demoable without a network.
+      if (quoteId == null) {
+        onComplete(null);
+        return;
+      }
+      const inv = await createBundleInvoice({ teamId, quoteId });
+      onComplete(inv.hostedInvoiceUrl);
+    } catch (e) {
+      if (e instanceof StripeFunctionError && e.code === "unconfigured") {
+        onComplete(null);
+        return;
+      }
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="portal-billing__checkout-bank">
+      {error && (
+        <Banner
+          tone="danger"
+          title={t(
+            "portal.billing.prepaid.buy.invoiceErrorTitle",
+            "Couldn't generate the invoice",
+          )}
+        >
+          {error}
+        </Banner>
+      )}
+      <p className="portal-billing__bundle-field-hint">
+        {t(
+          "portal.billing.prepaid.pay.bankHint",
+          "We'll email a Stripe invoice (net 30). Your prepaid year activates as soon as payment clears.",
+        )}
+      </p>
+      <div className="portal-billing__bundle-foot-end">
+        <Button accent="premium" disabled={busy} onClick={generate}>
+          {t("portal.billing.prepaid.pay.generateInvoice", "Generate invoice")}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Step 3: confirmation ─────────────────────────────────────────────────────
 
 function ConfirmationStep({
   credits,
   priceMinor,
   currency,
+  invoicePending,
+  hostedInvoiceUrl,
 }: {
   credits: number;
   priceMinor: number | null;
   currency: string;
+  invoicePending: boolean;
+  hostedInvoiceUrl: string | null;
 }) {
   const { t } = useTranslation();
+  if (invoicePending) {
+    return (
+      <div className="portal-billing__bundle-confirm">
+        <p className="portal-billing__bundle-confirm-body">
+          {t(
+            "portal.billing.prepaid.buy.invoiceSentBody",
+            "Your invoice is on its way. Your prepaid year activates as soon as payment clears — no need to keep this open.",
+          )}
+        </p>
+        {hostedInvoiceUrl && (
+          <a
+            className="portal-billing__bundle-invoice-link"
+            href={hostedInvoiceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {t("portal.billing.prepaid.buy.viewInvoice", "View invoice")}
+          </a>
+        )}
+      </div>
+    );
+  }
   return (
     <div className="portal-billing__bundle-confirm">
       <p className="portal-billing__bundle-confirm-body">

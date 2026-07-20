@@ -1398,6 +1398,19 @@
   display: flex;
   justify-content: flex-end;
 }
+.portal-billing__checkout-bank {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+}
+.portal-billing__bundle-invoice-link {
+  align-self: flex-start;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-blue);
+  text-decoration: none;
+}
 
 /* Activation fork (demo D97): two "how do you want to pay?" door-cards. */
 .portal-billing__door-grid {

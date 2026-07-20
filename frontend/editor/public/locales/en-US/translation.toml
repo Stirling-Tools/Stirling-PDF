@@ -6443,6 +6443,9 @@ continue = "Continue to payment"
 doneBody = "{{credits}} credits of prepaid capacity are ready. They're used before metered billing and expire 12 months from today."
 doneTitle = "Your prepaid year is active"
 finish = "Done"
+invoiceErrorTitle = "Couldn't generate the invoice"
+invoiceSentBody = "Your invoice is on its way. Your prepaid year activates as soon as payment clears — no need to keep this open."
+invoiceSentTitle = "Invoice sent"
 mockPay = "Complete purchase"
 paidLabel = "Paid today"
 payErrorTitle = "Couldn't start checkout"
@@ -6450,6 +6453,7 @@ quoteErrorTitle = "Couldn't save your quote"
 subtitle = "Pre-buy a year of processing up front at a discount. Prepaid capacity is used before metered billing and doesn't count toward your spend limit; unused capacity expires after 12 months."
 title = "Get 12 months for the price of 10"
 topUpTitle = "Top up prepaid capacity"
+viewInvoice = "View invoice"
 
 [portal.billing.prepaid.calc]
 change = "Change"
@@ -6489,6 +6493,13 @@ selfhostValue = "Self-hosted · Private infrastructure"
 cta = "Review offer"
 subtitle = "Prepay a year of PDF processing and get two months free — used before metered billing, outside your spend limit."
 title = "Get 12 months for the price of 10"
+
+[portal.billing.prepaid.pay]
+bank = "Bank transfer"
+bankHint = "We'll email a Stripe invoice (net 30). Your prepaid year activates as soon as payment clears."
+card = "Card"
+generateInvoice = "Generate invoice"
+method = "Payment method"
 
 [portal.billing.prepaid.pipelines]
 advanced = "Advanced"
