@@ -82,8 +82,17 @@ class UserServerCertificateServiceTest {
 
         String stored = captor.getValue().getKeystorePassword();
         assertThat(stored).startsWith(MetadataEncryptionService.ENC_PREFIX);
-        // The raw predictable prefix must not appear in the stored value
-        assertThat(stored).doesNotContain("stirling-user-cert-");
+        String generatedPassword = encryptionService.decrypt(stored);
+        assertThat(generatedPassword)
+                .hasSize(43)
+                .doesNotStartWith("stirling-user-cert-")
+                .isNotEqualTo("stirling-user-cert-" + user.getId());
+
+        KeyStore keyStore = KeyStore.getInstance("PKCS12");
+        keyStore.load(
+                new ByteArrayInputStream(captor.getValue().getKeystoreData()),
+                generatedPassword.toCharArray());
+        assertThat(keyStore.aliases().hasMoreElements()).isTrue();
     }
 
     // -------------------------------------------------------------------------

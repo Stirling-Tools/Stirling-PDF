@@ -6,27 +6,19 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import stirling.software.common.util.CertificateFileUtils;
+
 /** Shared size and shape validation for workflow credential uploads. */
 public final class WorkflowUploadUtils {
 
-    public static final long MAX_CREDENTIAL_FILE_SIZE_BYTES = 5L * 1024 * 1024;
+    public static final long MAX_CREDENTIAL_FILE_SIZE_BYTES =
+            CertificateFileUtils.MAX_CERTIFICATE_FILE_SIZE_BYTES;
     public static final int MAX_WET_SIGNATURE_DATA_CHARS = 5 * 1024 * 1024;
 
     private WorkflowUploadUtils() {}
 
     public static byte[] readCredentialFile(MultipartFile file) throws IOException {
-        if (file == null || file.isEmpty()) {
-            return null;
-        }
-        if (file.getSize() > MAX_CREDENTIAL_FILE_SIZE_BYTES) {
-            throw credentialFileTooLarge();
-        }
-
-        byte[] bytes = file.getBytes();
-        if (bytes.length > MAX_CREDENTIAL_FILE_SIZE_BYTES) {
-            throw credentialFileTooLarge();
-        }
-        return bytes;
+        return CertificateFileUtils.read(file);
     }
 
     public static void rejectMultipleKeystores(MultipartFile p12File, MultipartFile jksFile) {
@@ -45,11 +37,5 @@ public final class WorkflowUploadUtils {
 
     private static boolean hasContent(MultipartFile file) {
         return file != null && !file.isEmpty();
-    }
-
-    private static ResponseStatusException credentialFileTooLarge() {
-        return new ResponseStatusException(
-                HttpStatus.CONTENT_TOO_LARGE,
-                "Certificate credential file exceeds the 5 MiB limit");
     }
 }

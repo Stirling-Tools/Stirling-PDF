@@ -7,6 +7,7 @@ import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Base64;
 import java.util.Date;
 import java.util.Optional;
 
@@ -43,7 +44,7 @@ import stirling.software.proprietary.workflow.repository.UserServerCertificateRe
 public class UserServerCertificateService {
 
     private static final String KEYSTORE_ALIAS = "stirling-pdf-user-cert";
-    private static final String DEFAULT_PASSWORD_PREFIX = "stirling-user-cert-";
+    private static final int GENERATED_PASSWORD_BYTES = 32;
     private static final int VALIDITY_DAYS = 365;
 
     private final UserServerCertificateRepository certificateRepository;
@@ -135,7 +136,7 @@ public class UserServerCertificateService {
         // Create keystore
         KeyStore keyStore = KeyStore.getInstance("PKCS12");
         keyStore.load(null, null);
-        String password = generateUserPassword(user.getId());
+        String password = generateUserPassword();
         keyStore.setKeyEntry(
                 KEYSTORE_ALIAS,
                 keyPair.getPrivate(),
@@ -251,8 +252,10 @@ public class UserServerCertificateService {
         return certificateRepository.findByUserId(userId);
     }
 
-    /** Generate consistent password for user (based on user ID) */
-    private String generateUserPassword(Long userId) {
-        return DEFAULT_PASSWORD_PREFIX + userId;
+    /** Generate a high-entropy password for a newly created private-key keystore. */
+    private String generateUserPassword() {
+        byte[] passwordBytes = new byte[GENERATED_PASSWORD_BYTES];
+        new SecureRandom().nextBytes(passwordBytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(passwordBytes);
     }
 }

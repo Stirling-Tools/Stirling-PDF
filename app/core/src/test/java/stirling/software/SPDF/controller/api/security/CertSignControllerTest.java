@@ -7,6 +7,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -29,12 +32,14 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 import stirling.software.SPDF.model.api.security.SignPDFWithCertRequest;
 import stirling.software.SPDF.service.HardwareKeyStoreService;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.CertificateFileUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -231,6 +236,26 @@ class CertSignControllerTest {
                         () -> certSignController.signPDFWithCert(request, httpRequest));
 
         assertTrue(exception.getMessage().contains("PKCS12 keystore"));
+    }
+
+    @Test
+    void oversizedCredentialIsRejectedBeforeReadingIt() throws Exception {
+        MultipartFile oversizedKey = mock(MultipartFile.class);
+        when(oversizedKey.isEmpty()).thenReturn(false);
+        when(oversizedKey.getSize())
+                .thenReturn(CertificateFileUtils.MAX_CERTIFICATE_FILE_SIZE_BYTES + 1);
+
+        SignPDFWithCertRequest request = new SignPDFWithCertRequest();
+        request.setCertType("PEM");
+        request.setPrivateKeyFile(oversizedKey);
+
+        ResponseStatusException exception =
+                assertThrows(
+                        ResponseStatusException.class,
+                        () -> certSignController.signPDFWithCert(request, httpRequest));
+
+        assertTrue(exception.getStatusCode().value() == 413);
+        verify(oversizedKey, never()).getBytes();
     }
 
     @Test
