@@ -78,14 +78,15 @@ tasks:
       PORT: '{{.PORT | default "5173"}}'
       BACKEND_URL: '{{.BACKEND_URL | default "http://localhost:8080"}}'
       OPEN: '{{.OPEN | default ""}}'
+      DEV_LABEL:
+        sh: 'root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"; root="${root%/}"; printf "%s\n" "${root##*/}"'
     env:
       BACKEND_URL: '{{.BACKEND_URL}}'
       # Dev-only browser-tab label so concurrent worktrees are distinguishable.
       # Only the worktree folder basename (e.g. "wt1") is exposed — never the
       # full path, hostname, or user. Consumed at dev-serve time by vite.config
       # and dropped from production builds.
-      STIRLING_DEV_LABEL:
-        sh: basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+      STIRLING_DEV_LABEL: '{{.DEV_LABEL}}'
     cmds:
       - npx vite editor --mode {{.MODE}} --port {{.PORT}}{{if .OPEN}} --open{{end}}
 

@@ -2,11 +2,17 @@
 /* Horizontal toolbar at the top of the workbench area. */
 
 .workbench-bar {
+  /* Flex-wrap layout that reflows by content width (measured in JS, which sets
+     data-wrapped). Roomy: row 1 is [views | search | globals] and the tool
+     icons sit on their own full-width row below. Crowded (data-wrapped): the
+     search bumps to its own row, leaving [views | globals] on row 1 and the
+     tools on row 3 — three rows total. `order` drives the reflow. */
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   align-content: flex-start;
-  min-height: 40px;
+  column-gap: 8px;
+  min-height: 38px;
   padding: 0 8px;
   background-color: var(--bg-toolbar);
   border-bottom: 1px solid var(--border-subtle);
@@ -16,12 +22,16 @@
 
 /* ---- View switcher (left) ---- */
 .workbench-bar-views {
+  order: 1;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 2px;
-  flex-shrink: 0;
-  order: 1;
-  height: 40px;
+  /* min-width:0 lets it shrink instead of forcing a wrap; overflow clips labels
+     on very narrow viewports. */
+  min-width: 0;
+  overflow: hidden;
+  height: 38px;
   z-index: 0;
 }
 
@@ -29,7 +39,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
+  padding: 2px 8px;
   border: none;
   border-radius: 8px;
   background: transparent;
@@ -85,53 +95,107 @@
   height: 16px;
 }
 
-/* ---- Center: tool buttons ---- */
-
-/* Single-row: center sits between views and globals */
-.workbench-bar-center {
+/* ---- Super search ---- */
+/* Roomy: grows to fill the centre between views and globals. */
+.workbench-bar-search {
   order: 2;
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  height: 40px;
-  overflow: hidden;
+  height: 38px;
+  transform: translateX(var(--workbench-bar-search-offset, 0px));
 }
 
-/* Two-row: center drops below views+globals */
-.workbench-bar[data-wrapped="true"] .workbench-bar-center {
+.workbench-bar-search .super-search {
+  flex: 0 1 24rem;
+  width: min(100%, 24rem);
+  max-width: 24rem;
+}
+
+.workbench-bar-search .super-search input {
+  background-color: transparent;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  font-size: 12.5px;
+}
+
+[data-mantine-color-scheme="dark"] .workbench-bar-search .super-search input {
+  background-color: transparent;
+}
+
+/* Crowded: drops to its own full-width row between the top row and the tools. */
+.workbench-bar[data-wrapped="true"] .workbench-bar-search {
   order: 3;
   flex: 0 0 100%;
   height: auto;
   padding: 4px 0;
-  border-top: 1px solid var(--border-subtle);
-  justify-content: flex-start;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: thin;
-  -webkit-overflow-scrolling: touch;
-}
-.workbench-bar[data-wrapped="true"] .workbench-bar-center > * {
-  flex-shrink: 0;
+  transform: none;
 }
 
-/* ---- Right: global buttons (theme / language / download) ---- */
+/* ---- Tool buttons (own full-width row, always below the top row) ---- */
+.workbench-bar-center {
+  order: 4;
+  flex: 0 0 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 2px;
+  /* Symmetric side padding leaves room for the retract handle pinned right
+     without knocking the centred tool icons off-centre. */
+  padding: 4px 36px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* Retract / reopen handle for the viewer tool row. */
+.workbench-bar-toolbar-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.workbench-bar-toolbar-handle:hover {
+  color: var(--text-primary);
+  background: var(--hover-bg);
+}
+
+/* Pinned to the right edge of the tool row. */
+.workbench-bar-toolbar-handle-retract {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+}
+
+/* ---- Right: global buttons (print / download / save / close), row 1 ---- */
 .workbench-bar-globals {
+  order: 3;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 2px;
-  flex-shrink: 0;
-  order: 3;
-  height: 40px;
+  min-width: 0;
+  height: 38px;
   margin-left: auto;
 }
 
-/* In two-row mode globals moves to row 1 right side */
+/* Crowded: globals stays on row 1, moving up beside the views. */
 .workbench-bar[data-wrapped="true"] .workbench-bar-globals {
   order: 2;
-  margin-left: auto;
 }
 
 /* Shared action icon style - applies to both center and global buttons.

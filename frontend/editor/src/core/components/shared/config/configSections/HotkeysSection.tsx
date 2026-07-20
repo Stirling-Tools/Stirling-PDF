@@ -146,7 +146,7 @@ const HotkeysSection: React.FC = () => {
 
   return (
     <Stack gap="lg">
-      <div>
+      <div id="setting-hotkeys-search">
         <Text fw={600} size="lg">
           {t("settings.hotkeys.title", "Keyboard Shortcuts")}
         </Text>

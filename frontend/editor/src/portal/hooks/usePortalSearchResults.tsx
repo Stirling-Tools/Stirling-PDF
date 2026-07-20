@@ -1,0 +1,261 @@
+import { useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import { withBasePath } from "@app/constants/app";
+import {
+  getToolUrlPath,
+  isComingSoonTool,
+  type ToolRegistry,
+} from "@app/data/toolsTaxonomy";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
+import {
+  assembleSuperSearchGroups,
+  rankSettingsResults,
+  rankToolResults,
+  useSearchScopeFilter,
+} from "@app/hooks/useSuperSearch";
+import { useScopedFetchCache } from "@app/hooks/useScopedFetchCache";
+import {
+  PORTAL_ENTITY_SCOPE_DEFS,
+  PORTAL_DOCS_SCOPE_ID,
+  type SuperSearchGates,
+  type SuperSearchGroup,
+  type SuperSearchGroupId,
+  type SuperSearchQueryOptions,
+  type SuperSearchScope,
+  type UseSuperSearchResult,
+} from "@app/types/superSearch";
+import type { ToolId } from "@app/types/toolId";
+import { EDITOR_IS_SAME_APP, EDITOR_URL } from "@portal/auth/editorUrl";
+import { useTier } from "@portal/contexts/TierContext";
+import { useUI } from "@portal/contexts/UIContext";
+import {
+  ENTITY_REFRESH_MS,
+  buildProcessorEntityGroups,
+  defaultPortalEntityScopes,
+  fetchPortalEntityScope,
+  isDocsSearchable,
+  isVisiblePortalScope,
+  toProcessorEntities,
+  withPortalEntityDependencies,
+  type PortalEntityScopeId,
+} from "@portal/search/entitySearch";
+
+const EDITOR_GROUP_ORDER: SuperSearchGroupId[] = ["tools"];
+const SETTINGS_GROUP_ORDER: SuperSearchGroupId[] = ["settings"];
+const PROCESSOR_SECTION_LABEL_KEY = "superSearch.group.processor";
+const PROCESSOR_SECTION_LABEL_FALLBACK = "Processor";
+const SETTINGS_SECTION_LABEL_KEY = "superSearch.group.settings";
+const SETTINGS_SECTION_LABEL_FALLBACK = "Settings";
+const EDITOR_SECTION_LABEL_KEY = "portal.nav.editor";
+const EDITOR_SECTION_LABEL_FALLBACK = "Editor";
+const NO_PORTAL_ENTITY_SCOPES: readonly PortalEntityScopeId[] = [];
+
+/**
+ * Tool results live in the editor app, so selecting one is a full page load
+ * there (the editor initialises its tool state from the URL on boot —
+ * client-side routing can't reach that init once mounted).
+ */
+function editorHref(path: string): string {
+  if (EDITOR_IS_SAME_APP) return withBasePath(path);
+  return EDITOR_URL.replace(/\/$/, "") + path;
+}
+
+/**
+ * The portal bar's filter chips — every lane the editor offers except Files
+ * (files only open in the editor) and Pages (the sidebar covers navigation).
+ * Ordered to match the dropdown's section priority.
+ */
+export function usePortalSearchScopes(): SuperSearchScope[] {
+  const { t } = useTranslation();
+
+  return useMemo(
+    () => [
+      ...PORTAL_ENTITY_SCOPE_DEFS.filter((def) =>
+        isVisiblePortalScope(def.id),
+      ).map((def) => ({
+        id: def.id,
+        label: t(def.labelKey, def.labelFallback),
+        aliases: [...def.aliases],
+      })),
+      ...(isDocsSearchable()
+        ? [
+            {
+              id: PORTAL_DOCS_SCOPE_ID,
+              label: t("superSearch.group.docs", "Docs"),
+              aliases: ["doc", "docs", "documentation"],
+            },
+          ]
+        : []),
+      {
+        id: "settings",
+        label: t("superSearch.group.settings", "Settings"),
+        aliases: ["setting", "settings"],
+      },
+      {
+        id: "tools",
+        label: t("superSearch.group.tools", "Tools"),
+        aliases: ["tool", "tools"],
+      },
+    ],
+    [t],
+  );
+}
+
+/**
+ * The portal's results provider for the shared super search bar: files stay
+ * editor-only, portal entity results are grouped under a Processor section,
+ * and the shared tools/settings lanes sit under an Editor section. Portal page
+ * routes themselves stay out of the portal search — once you're in the portal,
+ * the entities are the useful targets.
+ */
+export function usePortalSearchResults(
+  query: string,
+  active: boolean,
+  options?: SuperSearchQueryOptions,
+): UseSuperSearchResult {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { openSettings } = useUI();
+  const { allTools } = useToolRegistry();
+  const { config } = useAppConfig();
+  const { tier } = useTier();
+
+  const trimmed = query.trim();
+  const { scopeEnabled } = useSearchScopeFilter(options);
+  const requestedEntityScopes = useMemo<readonly PortalEntityScopeId[]>(() => {
+    if (!active || trimmed.length === 0) return NO_PORTAL_ENTITY_SCOPES;
+    const enabled = defaultPortalEntityScopes().filter((scopeId) =>
+      scopeEnabled(scopeId),
+    );
+    return withPortalEntityDependencies(enabled);
+  }, [active, scopeEnabled, trimmed]);
+
+  const fetchEntityScope = useCallback(
+    (scopeId: PortalEntityScopeId) => fetchPortalEntityScope(scopeId, tier),
+    [tier],
+  );
+  const { values: entityValues, loading: loadingEntities } =
+    useScopedFetchCache(
+      requestedEntityScopes,
+      fetchEntityScope,
+      ENTITY_REFRESH_MS,
+    );
+  const entities = useMemo(
+    () => toProcessorEntities(entityValues),
+    [entityValues],
+  );
+
+  // Match what the editor bar can actually open: drop coming-soon placeholders
+  // (no component, no link) — cross-app navigation to one lands on a tool that
+  // can't render.
+  const searchableTools = useMemo(() => {
+    const out: Partial<ToolRegistry> = {};
+    for (const [id, tool] of Object.entries(allTools)) {
+      if (tool && !isComingSoonTool(id, tool)) out[id as ToolId] = tool;
+    }
+    return out;
+  }, [allTools]);
+
+  const openTool = useCallback(
+    (id: ToolId) => {
+      // Link tools have no in-editor UI — navigating to a tool URL for one
+      // lands on a "tool not found" panel. Open their destination directly,
+      // matching how the editor's tool lists treat them.
+      const tool = allTools[id];
+      if (tool?.link) {
+        window.open(tool.link, "_blank", "noopener,noreferrer");
+        return;
+      }
+      window.location.assign(editorHref(getToolUrlPath(id)));
+    },
+    [allTools],
+  );
+
+  const openSettingsSection = useCallback(
+    (section: string, anchor?: string) => openSettings(section, anchor),
+    [openSettings],
+  );
+
+  const gates = useMemo<SuperSearchGates | null>(
+    () =>
+      config
+        ? {
+            isAdmin: config.isAdmin ?? false,
+            loginEnabled: config.enableLogin ?? false,
+          }
+        : null,
+    [config],
+  );
+
+  const entityGroups = useMemo<SuperSearchGroup[]>(
+    () =>
+      buildProcessorEntityGroups(entities, trimmed, t, navigate, {
+        scopeEnabled,
+      }),
+    [entities, trimmed, t, navigate, scopeEnabled],
+  );
+
+  const groups = useMemo(() => {
+    // Section order: Processor first, Settings second, Editor last.
+    const settingsGroups = assembleSuperSearchGroups(
+      {
+        settings: scopeEnabled("settings")
+          ? rankSettingsResults(trimmed, t, gates, openSettingsSection)
+          : [],
+      },
+      t,
+      SETTINGS_GROUP_ORDER,
+    ).map((group) => ({
+      ...group,
+      sectionLabel: t(
+        SETTINGS_SECTION_LABEL_KEY,
+        SETTINGS_SECTION_LABEL_FALLBACK,
+      ),
+    }));
+
+    const editorGroups = assembleSuperSearchGroups(
+      {
+        tools: scopeEnabled("tools")
+          ? rankToolResults(searchableTools, trimmed, openTool)
+          : [],
+      },
+      t,
+      EDITOR_GROUP_ORDER,
+    ).map((group) => ({
+      ...group,
+      sectionLabel: t(EDITOR_SECTION_LABEL_KEY, EDITOR_SECTION_LABEL_FALLBACK),
+    }));
+
+    return [
+      ...entityGroups.map((group) => ({
+        ...group,
+        sectionLabel: t(
+          PROCESSOR_SECTION_LABEL_KEY,
+          PROCESSOR_SECTION_LABEL_FALLBACK,
+        ),
+      })),
+      ...settingsGroups,
+      ...editorGroups,
+    ];
+  }, [
+    entityGroups,
+    gates,
+    openSettingsSection,
+    openTool,
+    scopeEnabled,
+    searchableTools,
+    t,
+    trimmed,
+  ]);
+
+  const flatResults = useMemo(
+    () => groups.flatMap((group) => group.results),
+    [groups],
+  );
+
+  // loadingFiles doubles as "an async source is still loading" for the
+  // dropdown's no-results gate — here that's the entity fetch.
+  return { groups, flatResults, loadingFiles: loadingEntities };
+}

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import AppConfigModalLazy from "@app/components/shared/AppConfigModalLazy";
-import { AppConfigProvider } from "@app/contexts/AppConfigContext";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import { ThemeProvider } from "@app/components/shared/ThemeProvider";
 import { AuthProvider } from "@app/auth/UseSession";
@@ -16,19 +15,25 @@ import { useUI } from "@portal/contexts/UIContext";
 /**
  * Mounts the editor's settings modal (the app-wide settings surface) inside the
  * portal. The portal deliberately lives outside the editor's AppProviders, so
- * this host supplies the contexts the settings tree needs: app config, user
- * preferences, the session provider the account sections read (flavor-resolved:
- * Spring on self-hosted, Supabase on SaaS — same underlying session the portal
- * is already signed in with), and the editor ThemeProvider (which also carries
- * the Mantine theme + toasts the sections expect). URL sync is off — the portal
- * owns its own route subtree, so the modal keeps its section purely in state.
+ * this host supplies the contexts the settings tree needs: user preferences,
+ * the session provider the account sections read (flavor-resolved: Spring on
+ * self-hosted, Supabase on SaaS — same underlying session the portal is
+ * already signed in with), and the editor ThemeProvider (which also carries
+ * the Mantine theme + toasts the sections expect). App config comes from
+ * PortalChrome's shared provider. URL sync is off — the portal owns its own
+ * route subtree, so the modal keeps its section purely in state.
  *
  * Everything (providers included) mounts on first open and stays mounted, so
  * the editor theme wiring never runs for portal sessions that never open
  * settings.
  */
 export function PortalSettingsHost() {
-  const { settingsOpen, settingsInitialSection, closeSettings } = useUI();
+  const {
+    settingsOpen,
+    settingsInitialSection,
+    settingsInitialFocus,
+    closeSettings,
+  } = useUI();
   const { t } = useTranslation();
   const [everOpened, setEverOpened] = useState(false);
 
@@ -65,20 +70,19 @@ export function PortalSettingsHost() {
   if (!everOpened) return null;
 
   return (
-    <AppConfigProvider bootstrapMode="non-blocking">
-      <AuthProvider>
-        <PreferencesProvider>
-          <ThemeProvider>
-            <AppConfigModalLazy
-              opened={settingsOpen}
-              onClose={closeSettings}
-              urlSync={false}
-              initialSection={initialSection}
-              extraSections={extraSections}
-            />
-          </ThemeProvider>
-        </PreferencesProvider>
-      </AuthProvider>
-    </AppConfigProvider>
+    <AuthProvider>
+      <PreferencesProvider>
+        <ThemeProvider>
+          <AppConfigModalLazy
+            opened={settingsOpen}
+            onClose={closeSettings}
+            urlSync={false}
+            initialSection={initialSection}
+            initialFocus={settingsInitialFocus}
+            extraSections={extraSections}
+          />
+        </ThemeProvider>
+      </PreferencesProvider>
+    </AuthProvider>
   );
 }

@@ -1,0 +1,37 @@
+/* Slim strip at the top of the main column hosting the shared search bar. */
+.portal-searchbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.22rem 1rem;
+  background: var(--color-sidebar-bg);
+  border-bottom: 1px solid var(--color-sidebar-divider);
+  flex-shrink: 0;
+}
+
+.portal-searchbar .super-search {
+  flex: 0 1 24rem;
+  width: min(100%, 24rem);
+  max-width: 24rem;
+}
+
+.portal-searchbar .super-search input {
+  background-color: transparent;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  font-size: 12.5px;
+}
+
+[data-mantine-color-scheme="dark"] .portal-searchbar .super-search input {
+  background-color: transparent;
+}
+
+/* The dropdown is portalled to <body>, so it can't inherit portal styling by
+   nesting — this class (passed via dropdownClassName) restyles it with the
+   portal's own surface vocabulary. */
+.portal-search-dropdown.super-search-dropdown {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  padding: 0.5rem;
+}

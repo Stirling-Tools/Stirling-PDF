@@ -1,5 +1,8 @@
-import { useEffect, useState, Suspense, lazy } from "react";
+import { useState, Suspense, lazy } from "react";
+import { useTranslation } from "react-i18next";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { Box, Loader, Center } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useFileState } from "@app/contexts/FileContext";
@@ -67,18 +70,13 @@ export default function Workbench() {
   const selectedTool = selectedToolId ? toolRegistry[selectedToolId] : null;
   const { addFiles } = useFileHandler();
   const hasFiles = activeFiles.length > 0;
-  // Custom workbench views (e.g. Watched Folders) manage their own content and may
-  // have no workbench files, but still need the bar's view switcher so users can
-  // navigate back out.
-  const isCustomViewActive = !isBaseWorkbench(currentView);
+  const { t } = useTranslation();
 
-  // Enable bar transitions after first paint so the initial hidden state shows
-  // without animating (landing page on load shouldn't animate the bar up).
-  const [barTransitionEnabled, setBarTransitionEnabled] = useState(false);
-  useEffect(() => {
-    const raf = requestAnimationFrame(() => setBarTransitionEnabled(true));
-    return () => cancelAnimationFrame(raf);
-  }, []);
+  // The viewer's tool row can be retracted to give the document more height.
+  // State lives here (not in WorkbenchBar) so the reopen tab can hang below the
+  // bar, outside the bar's overflow-clipped wrapper. Scoped to the viewer.
+  const [viewerToolbarCollapsed, setViewerToolbarCollapsed] = useState(false);
+  const showReopenTab = currentView === "viewer" && viewerToolbarCollapsed;
 
   const handlePreviewClose = () => {
     setPreviewFile(null);
@@ -220,22 +218,39 @@ export default function Workbench() {
       data-tour="workbench"
       style={{ backgroundColor: "var(--bg-background)", minWidth: 0 }}
     >
-      {/* Workbench Bar - animates in/out based on file presence */}
+      {/* Workbench Bar — always visible outside My Files (it hosts the
+          global search), even with no files loaded. */}
       {currentView !== "myFiles" &&
         !customWorkbenchViews.find((v) => v.workbenchId === currentView)
           ?.hideTopControls && (
-          <div
-            className={styles.workbenchBarWrapper}
-            data-hidden={String(!hasFiles && !isCustomViewActive)}
-            data-no-transition={String(!barTransitionEnabled)}
-          >
-            <div className={styles.workbenchBarInner}>
-              <WorkbenchBar
-                currentView={currentView}
-                setCurrentView={setCurrentView}
-                hasFiles={hasFiles}
-              />
+          <div className={styles.workbenchBarShell}>
+            <div className={styles.workbenchBarWrapper}>
+              <div className={styles.workbenchBarInner}>
+                <WorkbenchBar
+                  currentView={currentView}
+                  setCurrentView={setCurrentView}
+                  hasFiles={hasFiles}
+                  viewerToolbarCollapsed={viewerToolbarCollapsed}
+                  onCollapseViewerToolbar={setViewerToolbarCollapsed}
+                />
+              </div>
             </div>
+            {/* Reopen tab: a little handle hanging off the bar's bottom-right
+                while the viewer tool row is retracted. */}
+            {showReopenTab && (
+              <Button
+                type="button"
+                variant="quiet"
+                className={styles.workbenchBarReopenTab}
+                onClick={() => setViewerToolbarCollapsed(false)}
+                aria-expanded={false}
+                aria-label={t("workbenchBar.showToolbar", "Show toolbar")}
+                title={t("workbenchBar.showToolbar", "Show toolbar")}
+                leftSection={
+                  <KeyboardArrowDownIcon sx={{ fontSize: "1rem" }} />
+                }
+              />
+            )}
           </div>
         )}
 

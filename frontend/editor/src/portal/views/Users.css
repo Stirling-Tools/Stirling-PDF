@@ -349,6 +349,18 @@
 .portal-users__row + .portal-users__row {
   border-top: 1px solid var(--color-border-light);
 }
+/* Deep-link landing flash (?member=<id>). */
+.portal-users__row--flash {
+  animation: portal-users-row-flash 1.6s ease-out;
+}
+@keyframes portal-users-row-flash {
+  from {
+    background: var(--color-bg-hover);
+  }
+  to {
+    background: transparent;
+  }
+}
 .portal-users__row-main {
   display: flex;
   align-items: center;

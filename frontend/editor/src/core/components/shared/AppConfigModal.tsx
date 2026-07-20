@@ -29,7 +29,6 @@ import {
   UnsavedChangesProvider,
   useUnsavedChanges,
 } from "@app/contexts/UnsavedChangesContext";
-import { SettingsSearchBar } from "@app/components/shared/config/SettingsSearchBar";
 import { stripBasePath, withBasePath } from "@app/constants/app";
 
 interface AppConfigModalProps {
@@ -45,6 +44,8 @@ interface AppConfigModalProps {
   /** Section to land on when opening. Only honoured when urlSync is off (URL
    *  deep links win otherwise). */
   initialSection?: NavKey | null;
+  /** Row anchor to focus when opening on a non-URL host. */
+  initialFocus?: string | null;
   /** Host-specific sections appended after the build's registry sections. */
   extraSections?: ConfigNavSection[];
 }
@@ -64,6 +65,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
   onClose,
   urlSync = true,
   initialSection,
+  initialFocus,
   extraSections,
 }) => {
   const { t } = useTranslation();
@@ -145,6 +147,35 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
     },
     [navigate, urlSync],
   );
+
+  // Deep-link: /settings/{section}?focus={anchor} scrolls to and briefly
+  // highlights the matching control (used by the global super search to jump
+  // straight to an individual setting row).
+  useEffect(() => {
+    if (!opened) return;
+    const focus = urlSync
+      ? new URLSearchParams(location.search).get("focus")
+      : initialFocus;
+    if (!focus) return;
+    let raf = 0;
+    // Wait for the (possibly just-switched) section to render before scrolling.
+    const timer = window.setTimeout(() => {
+      raf = window.requestAnimationFrame(() => {
+        const el = document.getElementById(focus);
+        if (!el) return;
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("settings-focus-target");
+        window.setTimeout(
+          () => el.classList.remove("settings-focus-target"),
+          1800,
+        );
+      });
+    }, 150);
+    return () => {
+      window.clearTimeout(timer);
+      if (raf) window.cancelAnimationFrame(raf);
+    };
+  }, [opened, active, initialFocus, location.search, urlSync]);
 
   // Backwards-compat: external `appConfig:navigate` events route through the
   // same switchSection path so they get the no-flash treatment too.
@@ -404,11 +435,6 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                 {activeLabel}
               </Text>
               <Group gap="xs" wrap="nowrap">
-                <SettingsSearchBar
-                  configNavSections={configNavSections}
-                  onNavigate={handleNavigation}
-                  isMobile={isMobile}
-                />
                 <ActionIcon
                   ref={closeButtonRef}
                   variant="tertiary"

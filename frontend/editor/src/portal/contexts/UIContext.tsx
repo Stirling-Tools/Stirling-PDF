@@ -7,11 +7,6 @@ import {
 } from "react";
 
 interface UIContextValue {
-  searchOpen: boolean;
-  openSearch: () => void;
-  closeSearch: () => void;
-  toggleSearch: () => void;
-
   assistantOpen: boolean;
   openAssistant: () => void;
   closeAssistant: () => void;
@@ -24,7 +19,8 @@ interface UIContextValue {
    * modal pick its own default. Cleared back to `null` on close.
    */
   settingsInitialSection: string | null;
-  openSettings: (section?: string) => void;
+  settingsInitialFocus: string | null;
+  openSettings: (section?: string, focus?: string) => void;
   closeSettings: () => void;
 
   /**
@@ -47,10 +43,12 @@ interface UIContextValue {
 const UIContext = createContext<UIContextValue | null>(null);
 
 export function UIProvider({ children }: { children: ReactNode }) {
-  const [searchOpen, setSearchOpen] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsInitialSection, setSettingsInitialSection] = useState<
+    string | null
+  >(null);
+  const [settingsInitialFocus, setSettingsInitialFocus] = useState<
     string | null
   >(null);
   const [linkModalOpen, setLinkModalOpen] = useState(false);
@@ -63,11 +61,6 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<UIContextValue>(
     () => ({
-      searchOpen,
-      openSearch: () => setSearchOpen(true),
-      closeSearch: () => setSearchOpen(false),
-      toggleSearch: () => setSearchOpen((o) => !o),
-
       assistantOpen,
       openAssistant: () => setAssistantOpen(true),
       closeAssistant: () => setAssistantOpen(false),
@@ -75,13 +68,16 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
       settingsOpen,
       settingsInitialSection,
-      openSettings: (section?: string) => {
+      settingsInitialFocus,
+      openSettings: (section?: string, focus?: string) => {
         setSettingsInitialSection(section ?? null);
+        setSettingsInitialFocus(focus ?? null);
         setSettingsOpen(true);
       },
       closeSettings: () => {
         setSettingsOpen(false);
         setSettingsInitialSection(null);
+        setSettingsInitialFocus(null);
       },
 
       linkModalOpen,
@@ -94,6 +90,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
           setReopenSettingsAfterLink("account-link");
           setSettingsOpen(false);
           setSettingsInitialSection(null);
+          setSettingsInitialFocus(null);
         }
         setLinkModalOpen(true);
       },
@@ -102,16 +99,17 @@ export function UIProvider({ children }: { children: ReactNode }) {
         setLinkModalMode("link");
         if (reopenSettingsAfterLink) {
           setSettingsInitialSection(reopenSettingsAfterLink);
+          setSettingsInitialFocus(null);
           setSettingsOpen(true);
           setReopenSettingsAfterLink(null);
         }
       },
     }),
     [
-      searchOpen,
       assistantOpen,
       settingsOpen,
       settingsInitialSection,
+      settingsInitialFocus,
       linkModalOpen,
       linkModalMode,
       reopenSettingsAfterLink,
