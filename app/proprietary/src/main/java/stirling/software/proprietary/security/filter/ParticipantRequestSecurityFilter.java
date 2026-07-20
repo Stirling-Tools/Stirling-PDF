@@ -3,6 +3,7 @@ package stirling.software.proprietary.security.filter;
 import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -18,7 +19,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
 
-/** Protects unauthenticated participant endpoints before multipart requests are parsed. */
+/** Protects workflow participant endpoints before multipart requests are parsed. */
 @Slf4j
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -27,10 +28,15 @@ public class ParticipantRequestSecurityFilter extends OncePerRequestFilter {
     static final long MAX_MULTIPART_REQUEST_SIZE_BYTES = 16L * 1024 * 1024;
 
     private static final String PARTICIPANT_PATH = "/api/v1/workflow/participant/";
+    private static final String AUTHENTICATED_CERTIFICATE_VALIDATION_PATH =
+            "/api/v1/security/cert-sign/validate-certificate";
+    private static final Pattern AUTHENTICATED_SIGN_PATH =
+            Pattern.compile("^/api/v1/security/cert-sign/sign-requests/[^/]+/sign$");
     private static final Set<String> MULTIPART_UPLOAD_PATHS =
             Set.of(
                     PARTICIPANT_PATH + "submit-signature",
-                    PARTICIPANT_PATH + "validate-certificate");
+                    PARTICIPANT_PATH + "validate-certificate",
+                    AUTHENTICATED_CERTIFICATE_VALIDATION_PATH);
     private static final int MAX_REQUESTS_PER_MINUTE = 20;
     private static final long WINDOW_MS = 60_000L;
 
@@ -39,7 +45,8 @@ public class ParticipantRequestSecurityFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !requestPath(request).startsWith(PARTICIPANT_PATH);
+        String path = normalizedRequestPath(request);
+        return !path.startsWith(PARTICIPANT_PATH) && !isAuthenticatedWorkflowUploadPath(path);
     }
 
     @Override
@@ -65,14 +72,14 @@ public class ParticipantRequestSecurityFilter extends OncePerRequestFilter {
                 writeError(
                         response,
                         HttpStatus.LENGTH_REQUIRED,
-                        "Content-Length is required for participant uploads.");
+                        "Content-Length is required for workflow uploads.");
                 return;
             }
             if (contentLength > MAX_MULTIPART_REQUEST_SIZE_BYTES) {
                 writeError(
                         response,
                         HttpStatus.CONTENT_TOO_LARGE,
-                        "Participant upload exceeds the 16 MiB request limit.");
+                        "Workflow upload exceeds the 16 MiB request limit.");
                 return;
             }
         }
@@ -96,17 +103,26 @@ public class ParticipantRequestSecurityFilter extends OncePerRequestFilter {
     }
 
     private boolean isMultipartUploadEndpoint(HttpServletRequest request) {
+        String path = normalizedRequestPath(request);
         return "POST".equalsIgnoreCase(request.getMethod())
-                && MULTIPART_UPLOAD_PATHS.contains(requestPath(request));
+                && (MULTIPART_UPLOAD_PATHS.contains(path)
+                        || AUTHENTICATED_SIGN_PATH.matcher(path).matches());
     }
 
-    private String requestPath(HttpServletRequest request) {
+    private boolean isAuthenticatedWorkflowUploadPath(String path) {
+        return AUTHENTICATED_CERTIFICATE_VALIDATION_PATH.equals(path)
+                || AUTHENTICATED_SIGN_PATH.matcher(path).matches();
+    }
+
+    private String normalizedRequestPath(HttpServletRequest request) {
         String requestUri = request.getRequestURI();
         String contextPath = request.getContextPath();
         if (!contextPath.isEmpty() && requestUri.startsWith(contextPath)) {
-            return requestUri.substring(contextPath.length());
+            requestUri = requestUri.substring(contextPath.length());
         }
-        return requestUri;
+        return requestUri.length() > 1 && requestUri.endsWith("/")
+                ? requestUri.substring(0, requestUri.length() - 1)
+                : requestUri;
     }
 
     private void writeError(HttpServletResponse response, HttpStatus status, String errorMessage)

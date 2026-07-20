@@ -35,6 +35,7 @@ import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepo
 import stirling.software.proprietary.workflow.service.CertificateSubmissionValidator;
 import stirling.software.proprietary.workflow.service.MetadataEncryptionService;
 import stirling.software.proprietary.workflow.service.WorkflowSessionService;
+import stirling.software.proprietary.workflow.util.WorkflowUploadUtils;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -281,7 +282,7 @@ class WorkflowParticipantControllerMoreTest {
             when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
             MultipartFile certificateFile = org.mockito.Mockito.mock(MultipartFile.class);
             when(certificateFile.getSize())
-                    .thenReturn(WorkflowParticipantController.MAX_CERTIFICATE_FILE_SIZE_BYTES + 1);
+                    .thenReturn(WorkflowUploadUtils.MAX_CREDENTIAL_FILE_SIZE_BYTES + 1);
 
             SignatureSubmissionRequest r = request(TOKEN);
             r.setCertType("P12");

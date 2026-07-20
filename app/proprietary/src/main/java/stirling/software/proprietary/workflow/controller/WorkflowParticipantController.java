@@ -44,6 +44,7 @@ import stirling.software.proprietary.workflow.service.CertificateSubmissionValid
 import stirling.software.proprietary.workflow.service.MetadataEncryptionService;
 import stirling.software.proprietary.workflow.service.WorkflowSessionService;
 import stirling.software.proprietary.workflow.util.WorkflowMapper;
+import stirling.software.proprietary.workflow.util.WorkflowUploadUtils;
 
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
@@ -60,8 +61,6 @@ import tools.jackson.databind.ObjectMapper;
 @Tag(name = "Workflow Participant", description = "Participant Action APIs")
 @RequiredArgsConstructor
 public class WorkflowParticipantController {
-
-    static final long MAX_CERTIFICATE_FILE_SIZE_BYTES = 5L * 1024 * 1024;
 
     private final WorkflowSessionService workflowSessionService;
     private final WorkflowParticipantRepository participantRepository;
@@ -338,12 +337,13 @@ public class WorkflowParticipantController {
                     HttpStatus.BAD_REQUEST, "No certificate file provided");
         }
 
-        rejectMultipleCertificateFiles(p12File, jksFile);
+        WorkflowUploadUtils.rejectMultipleKeystores(p12File, jksFile);
 
         byte[] keystoreBytes;
         try {
             keystoreBytes =
-                    readCertificateFile(p12File != null && !p12File.isEmpty() ? p12File : jksFile);
+                    WorkflowUploadUtils.readCredentialFile(
+                            p12File != null && !p12File.isEmpty() ? p12File : jksFile);
         } catch (IOException e) {
             log.error("Error reading certificate file during pre-validation", e);
             return ResponseEntity.ok(
@@ -397,9 +397,9 @@ public class WorkflowParticipantController {
             throws IOException {
         Map<String, Object> metadata = new HashMap<>();
 
-        rejectMultipleCertificateFiles(request.getP12File(), request.getJksFile());
-        byte[] p12Bytes = readCertificateFile(request.getP12File());
-        byte[] jksBytes = readCertificateFile(request.getJksFile());
+        WorkflowUploadUtils.rejectMultipleKeystores(request.getP12File(), request.getJksFile());
+        byte[] p12Bytes = WorkflowUploadUtils.readCredentialFile(request.getP12File());
+        byte[] jksBytes = WorkflowUploadUtils.readCredentialFile(request.getJksFile());
 
         // Validate certificate before storing — throws 400 if invalid, expired, or wrong password
         if (request.getCertType() != null && !"SERVER".equalsIgnoreCase(request.getCertType())) {
@@ -435,10 +435,7 @@ public class WorkflowParticipantController {
 
         // Add wet signatures data if provided - parse once and store as List directly
         if (request.getWetSignaturesData() != null && !request.getWetSignaturesData().isBlank()) {
-            if (request.getWetSignaturesData().length() > 5 * 1024 * 1024) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "Wet signatures data exceeds maximum allowed size");
-            }
+            WorkflowUploadUtils.validateWetSignatureDataSize(request.getWetSignaturesData());
             @SuppressWarnings("unchecked")
             java.util.List<Map<String, Object>> wetSigs =
                     objectMapper.readValue(
@@ -452,32 +449,5 @@ public class WorkflowParticipantController {
         }
 
         return metadata;
-    }
-
-    private void rejectMultipleCertificateFiles(MultipartFile p12File, MultipartFile jksFile) {
-        if (p12File != null && !p12File.isEmpty() && jksFile != null && !jksFile.isEmpty()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Provide only one certificate file");
-        }
-    }
-
-    private byte[] readCertificateFile(MultipartFile certificateFile) throws IOException {
-        if (certificateFile == null || certificateFile.isEmpty()) {
-            return null;
-        }
-        if (certificateFile.getSize() > MAX_CERTIFICATE_FILE_SIZE_BYTES) {
-            throw certificateFileTooLarge();
-        }
-
-        byte[] certificateBytes = certificateFile.getBytes();
-        if (certificateBytes.length > MAX_CERTIFICATE_FILE_SIZE_BYTES) {
-            throw certificateFileTooLarge();
-        }
-        return certificateBytes;
-    }
-
-    private ResponseStatusException certificateFileTooLarge() {
-        return new ResponseStatusException(
-                HttpStatus.CONTENT_TOO_LARGE, "Certificate file exceeds the 5 MiB limit");
     }
 }

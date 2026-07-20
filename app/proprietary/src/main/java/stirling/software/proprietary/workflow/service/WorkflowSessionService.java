@@ -52,6 +52,7 @@ import stirling.software.proprietary.workflow.model.WorkflowSession;
 import stirling.software.proprietary.workflow.model.WorkflowStatus;
 import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepository;
 import stirling.software.proprietary.workflow.repository.WorkflowSessionRepository;
+import stirling.software.proprietary.workflow.util.WorkflowUploadUtils;
 
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.type.TypeReference;
@@ -314,6 +315,25 @@ public class WorkflowSessionService {
         return session;
     }
 
+    /** Retrieves and locks a workflow session for an owner-controlled state transition. */
+    public WorkflowSession getSessionWithParticipantsForOwnerForUpdate(
+            String sessionId, User owner) {
+        WorkflowSession session =
+                workflowSessionRepository
+                        .findBySessionIdForUpdate(sessionId)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND,
+                                                "Workflow session not found: " + sessionId));
+        if (!session.getOwner().equals(owner)) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Not authorized to access this workflow session");
+        }
+        session.getParticipants().size();
+        return session;
+    }
+
     /** Lists all workflow sessions owned by a user. */
     @Transactional(readOnly = true)
     public List<WorkflowSession> listUserSessions(User owner) {
@@ -345,6 +365,11 @@ public class WorkflowSessionService {
     @Transactional
     public void removeParticipant(String sessionId, Long participantId, User owner) {
         WorkflowSession session = getSessionForOwner(sessionId, owner);
+
+        if (!session.isActive()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Cannot remove participants from inactive workflow");
+        }
 
         WorkflowParticipant participant =
                 workflowParticipantRepository
@@ -622,7 +647,7 @@ public class WorkflowSessionService {
         }
 
         // Update status to VIEWED if it was NOTIFIED
-        if (participant.getStatus() == ParticipantStatus.NOTIFIED) {
+        if (session.isActive() && participant.getStatus() == ParticipantStatus.NOTIFIED) {
             participant.setStatus(ParticipantStatus.VIEWED);
             workflowParticipantRepository.save(participant);
         }
@@ -681,6 +706,11 @@ public class WorkflowSessionService {
         WorkflowSession session = getSession(sessionId);
         WorkflowParticipant participant = getParticipantForUser(session, user);
 
+        if (!session.isActive()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Workflow session is no longer active");
+        }
+
         if (participant.getStatus() == ParticipantStatus.SIGNED) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Document already signed by this user");
@@ -689,6 +719,18 @@ public class WorkflowSessionService {
         if (participant.getStatus() == ParticipantStatus.DECLINED) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Cannot sign after declining");
+        }
+
+        WorkflowUploadUtils.validateWetSignatureDataSize(request.getWetSignaturesData());
+        WorkflowUploadUtils.rejectMultipleKeystores(request.getP12File(), request.getJksFile());
+
+        byte[] p12Bytes = readCredentialFile(request.getP12File(), "P12 keystore");
+        byte[] jksBytes = readCredentialFile(request.getJksFile(), "JKS keystore");
+        byte[] privateKeyBytes = null;
+        byte[] certificateBytes = null;
+        if ("PEM".equalsIgnoreCase(request.getCertType())) {
+            privateKeyBytes = readCredentialFile(request.getPrivateKeyFile(), "PEM private key");
+            certificateBytes = readCredentialFile(request.getCertFile(), "PEM certificate");
         }
 
         // Build metadata JSON containing certificate submission and wet signature data
@@ -706,36 +748,15 @@ public class WorkflowSessionService {
         // password
         if (request.getCertType() != null
                 && !"SERVER".equalsIgnoreCase(request.getCertType())
-                && request.getP12File() != null
-                && !request.getP12File().isEmpty()) {
-            try {
-                certificateSubmissionValidator.validateAndExtractInfo(
-                        request.getP12File().getBytes(),
-                        request.getCertType(),
-                        request.getPassword());
-            } catch (ResponseStatusException e) {
-                throw e;
-            } catch (IOException e) {
-                log.error("Failed to read P12 keystore file for validation", e);
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "Failed to process certificate file");
-            }
+                && p12Bytes != null) {
+            certificateSubmissionValidator.validateAndExtractInfo(
+                    p12Bytes, request.getCertType(), request.getPassword());
         }
 
         // Validate an uploaded JKS keystore too (same early rejection as P12/PFX).
-        if ("JKS".equalsIgnoreCase(request.getCertType())
-                && request.getJksFile() != null
-                && !request.getJksFile().isEmpty()) {
-            try {
-                certificateSubmissionValidator.validateAndExtractInfo(
-                        request.getJksFile().getBytes(), "JKS", request.getPassword());
-            } catch (ResponseStatusException e) {
-                throw e;
-            } catch (IOException e) {
-                log.error("Failed to read JKS keystore file for validation", e);
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "Failed to process certificate file");
-            }
+        if ("JKS".equalsIgnoreCase(request.getCertType()) && jksBytes != null) {
+            certificateSubmissionValidator.validateAndExtractInfo(
+                    jksBytes, "JKS", request.getPassword());
         }
 
         // 2. Store certificate submission data
@@ -746,10 +767,7 @@ public class WorkflowSessionService {
             // PEM uploads are a separate private key + certificate, not a keystore. Convert them to
             // a PKCS12 keystore here so finalization signs via the standard PKCS12 path.
             byte[] p12 =
-                    buildPkcs12FromPem(
-                            request.getPrivateKeyFile(),
-                            request.getCertFile(),
-                            request.getPassword());
+                    buildPkcs12FromPem(privateKeyBytes, certificateBytes, request.getPassword());
             // Give PEM the same early validation (expiry, key recovery, test-sign) as uploaded
             // PKCS12/JKS keystores, so an expired or unusable cert is rejected now rather than at
             // finalization.
@@ -761,28 +779,10 @@ public class WorkflowSessionService {
         } else {
             certSubmission.put("certType", request.getCertType());
             // Encrypt the uploaded keystore at rest: PKCS12/PFX → p12Keystore, JKS → jksKeystore.
-            if (request.getP12File() != null && !request.getP12File().isEmpty()) {
-                try {
-                    certSubmission.put(
-                            "p12Keystore",
-                            metadataEncryptionService.encryptBytes(
-                                    request.getP12File().getBytes()));
-                } catch (IOException e) {
-                    log.error("Failed to read P12 keystore file", e);
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST, "Failed to process certificate file");
-                }
-            } else if (request.getJksFile() != null && !request.getJksFile().isEmpty()) {
-                try {
-                    certSubmission.put(
-                            "jksKeystore",
-                            metadataEncryptionService.encryptBytes(
-                                    request.getJksFile().getBytes()));
-                } catch (IOException e) {
-                    log.error("Failed to read JKS keystore file", e);
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_REQUEST, "Failed to process certificate file");
-                }
+            if (p12Bytes != null) {
+                certSubmission.put("p12Keystore", metadataEncryptionService.encryptBytes(p12Bytes));
+            } else if (jksBytes != null) {
+                certSubmission.put("jksKeystore", metadataEncryptionService.encryptBytes(jksBytes));
             }
         }
 
@@ -870,6 +870,11 @@ public class WorkflowSessionService {
         WorkflowSession session = getSession(sessionId);
         WorkflowParticipant participant = getParticipantForUser(session, user);
 
+        if (!session.isActive()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Workflow session is no longer active");
+        }
+
         if (participant.getStatus() == ParticipantStatus.SIGNED) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Cannot decline after signing");
@@ -890,14 +895,19 @@ public class WorkflowSessionService {
      * @throws ResponseStatusException if user is not a participant
      */
     private WorkflowParticipant getParticipantForUser(WorkflowSession session, User user) {
-        return session.getParticipants().stream()
-                .filter(p -> p.getUser() != null && p.getUser().equals(user))
-                .findFirst()
-                .orElseThrow(
-                        () ->
-                                new ResponseStatusException(
-                                        HttpStatus.FORBIDDEN,
-                                        "User is not a participant in this session"));
+        WorkflowParticipant participant =
+                session.getParticipants().stream()
+                        .filter(p -> p.getUser() != null && p.getUser().equals(user))
+                        .findFirst()
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.FORBIDDEN,
+                                                "User is not a participant in this session"));
+        if (participant.isExpired()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Participant access expired");
+        }
+        return participant;
     }
 
     /**
@@ -905,21 +915,21 @@ public class WorkflowSessionService {
      * supplied password) so finalization can sign via the standard PKCS12 path.
      */
     private byte[] buildPkcs12FromPem(
-            MultipartFile privateKeyFile, MultipartFile certFile, String password) {
-        if (privateKeyFile == null
-                || privateKeyFile.isEmpty()
-                || certFile == null
-                || certFile.isEmpty()) {
+            byte[] privateKeyBytes, byte[] certificateBytes, String password) {
+        if (privateKeyBytes == null
+                || privateKeyBytes.length == 0
+                || certificateBytes == null
+                || certificateBytes.length == 0) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "PEM signing requires both a private key file and a certificate file");
         }
         char[] pw = password != null ? password.toCharArray() : new char[0];
         try {
-            PrivateKey privateKey = readPemPrivateKey(privateKeyFile.getBytes(), pw);
+            PrivateKey privateKey = readPemPrivateKey(privateKeyBytes, pw);
             Certificate cert =
                     CertificateFactory.getInstance("X.509")
-                            .generateCertificate(new ByteArrayInputStream(certFile.getBytes()));
+                            .generateCertificate(new ByteArrayInputStream(certificateBytes));
             KeyStore keyStore = KeyStore.getInstance("PKCS12");
             keyStore.load(null, null);
             keyStore.setKeyEntry("alias", privateKey, pw, new Certificate[] {cert});
@@ -933,6 +943,16 @@ public class WorkflowSessionService {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Failed to read PEM certificate — check the key/certificate files and password");
+        }
+    }
+
+    private byte[] readCredentialFile(MultipartFile file, String description) {
+        try {
+            return WorkflowUploadUtils.readCredentialFile(file);
+        } catch (IOException e) {
+            log.error("Failed to read {}", description, e);
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Failed to process certificate credential file");
         }
     }
 

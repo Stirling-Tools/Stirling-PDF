@@ -27,6 +27,7 @@ import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepo
 import stirling.software.proprietary.workflow.service.CertificateSubmissionValidator;
 import stirling.software.proprietary.workflow.service.MetadataEncryptionService;
 import stirling.software.proprietary.workflow.service.WorkflowSessionService;
+import stirling.software.proprietary.workflow.util.WorkflowUploadUtils;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -148,9 +149,7 @@ class WorkflowParticipantValidateCertificateTest {
                         "p12File",
                         "cert.p12",
                         "application/octet-stream",
-                        new byte
-                                [(int) WorkflowParticipantController.MAX_CERTIFICATE_FILE_SIZE_BYTES
-                                        + 1]);
+                        new byte[(int) WorkflowUploadUtils.MAX_CREDENTIAL_FILE_SIZE_BYTES + 1]);
 
         mockMvc.perform(
                         multipart("/api/v1/workflow/participant/validate-certificate")

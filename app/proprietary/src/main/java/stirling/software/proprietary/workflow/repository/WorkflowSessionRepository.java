@@ -4,9 +4,12 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import jakarta.persistence.LockModeType;
 
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
@@ -23,6 +26,11 @@ public interface WorkflowSessionRepository extends JpaRepository<WorkflowSession
     @Query(
             "SELECT ws FROM WorkflowSession ws LEFT JOIN FETCH ws.participants WHERE ws.sessionId = :sessionId")
     Optional<WorkflowSession> findBySessionIdWithParticipants(@Param("sessionId") String sessionId);
+
+    /** Lock a session before finalization so only one request can process it at a time. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT ws FROM WorkflowSession ws WHERE ws.sessionId = :sessionId")
+    Optional<WorkflowSession> findBySessionIdForUpdate(@Param("sessionId") String sessionId);
 
     /** Find all workflow sessions owned by a specific user */
     List<WorkflowSession> findByOwnerOrderByCreatedAtDesc(User owner);
