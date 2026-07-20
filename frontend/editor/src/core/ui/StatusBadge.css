@@ -55,9 +55,8 @@
   background: var(--c-surface-sunken);
   border-color: var(--c-border-subtle);
 }
-/* Accent tones only pick the accent; the base rule builds the fill + border.
-   The `-dark` variants are theme-adaptive (darker in light, brighter in dark),
-   so the text stays legible on the pale fill in both themes. */
+/* Tones only pick the accent; the base rule builds the fill + border. `-dark`
+   is theme-adaptive, so text stays legible on the pale fill in both themes. */
 .sui-status--success {
   --sui-status-c: var(--color-green-dark);
 }

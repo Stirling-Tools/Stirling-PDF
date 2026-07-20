@@ -216,6 +216,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
     runningEE,
     loginEnabled,
     handleCloseSync,
+    config?.showSettingsWhenNoLogin ?? true,
   );
   const configNavSections = useMemo(
     () =>

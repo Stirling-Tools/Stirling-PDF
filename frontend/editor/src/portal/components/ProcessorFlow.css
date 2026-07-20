@@ -1,6 +1,5 @@
-/* Processor-flow visualiser — sources → policies → outcomes. The flow is an
-   SVG overlay measured from the HTML cards: bézier wires underneath, and a
-   rAF-driven particle layer on top (see ProcessorFlow.tsx). */
+/* Processor-flow visualiser: SVG overlay (bézier wires + rAF particle layer)
+   measured from the HTML cards. See ProcessorFlow.tsx. */
 
 .portal-pf {
   --pf-accent: var(--color-green);
