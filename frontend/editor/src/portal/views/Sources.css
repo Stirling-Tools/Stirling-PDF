@@ -379,9 +379,8 @@
   }
 }
 
-/* The shared Button lays its children out in a flex-row label; force the type
-   tile back to a centred icon-over-label column so the SVG sits above the name
-   with real spacing (not jammed against it). */
+/* Override the shared Button's flex-row label to a centred icon-over-label
+   column so the SVG sits above the name with real spacing. */
 .portal-sources__type-card .mantine-Button-label {
   display: flex;
   flex-direction: column;
