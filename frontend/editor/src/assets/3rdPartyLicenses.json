@@ -23,7 +23,7 @@
     },
     {
       "moduleName": "@embedpdf/core",
-      "moduleUrl": "https://www.npmjs.com/package/@embedpdf/core",
+      "moduleUrl": "https://registry.npmjs.org/@embedpdf/core/-/core-2.14.4.tgz",
       "moduleVersion": "2.14.1",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
@@ -184,14 +184,14 @@
     },
     {
       "moduleName": "@emotion/react",
-      "moduleUrl": "https://github.com/emotion-js/emotion/tree/main/packages/react",
+      "moduleUrl": "https://github.com/emotion-js/emotion.git#main",
       "moduleVersion": "11.14.0",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
       "moduleName": "@emotion/styled",
-      "moduleUrl": "https://github.com/emotion-js/emotion/tree/main/packages/styled",
+      "moduleUrl": "https://github.com/emotion-js/emotion.git#main",
       "moduleVersion": "11.14.1",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
@@ -345,7 +345,7 @@
     },
     {
       "moduleName": "autoprefixer",
-      "moduleUrl": "postcss/autoprefixer",
+      "moduleUrl": "https://github.com/postcss/autoprefixer",
       "moduleVersion": "10.4.27",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
@@ -366,7 +366,7 @@
     },
     {
       "moduleName": "globals",
-      "moduleUrl": "sindresorhus/globals",
+      "moduleUrl": "https://github.com/sindresorhus/globals",
       "moduleVersion": "17.5.0",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
@@ -394,7 +394,7 @@
     },
     {
       "moduleName": "license-report",
-      "moduleUrl": "https://github.com/kessler/license-report",
+      "moduleUrl": "https://github.com/bepo65/license-report",
       "moduleVersion": "6.8.2",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
@@ -464,7 +464,7 @@
     },
     {
       "moduleName": "react-markdown",
-      "moduleUrl": "remarkjs/react-markdown",
+      "moduleUrl": "https://github.com/remarkjs/react-markdown",
       "moduleVersion": "9.1.0",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
@@ -492,7 +492,7 @@
     },
     {
       "moduleName": "remark-gfm",
-      "moduleUrl": "remarkjs/remark-gfm",
+      "moduleUrl": "https://github.com/remarkjs/remark-gfm",
       "moduleVersion": "4.0.1",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
