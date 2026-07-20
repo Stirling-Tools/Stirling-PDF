@@ -17,6 +17,8 @@ export interface ProformaDoc {
   filename: string;
   heading: string;
   subheading: string;
+  /** Persisted quote number (e.g. "PB-2026-000123"); omitted when the quote wasn't persisted. */
+  reference?: string;
   lines: ProformaLine[];
   /** The headline total, rendered emphasised under the lines. */
   totalLabel: string;
@@ -45,7 +47,19 @@ export async function downloadProformaPdf(doc: ProformaDoc): Promise<void> {
   page.drawText(doc.heading, { x: left, y, size: 20, font: bold, color: ink });
   y -= 20;
   page.drawText(doc.subheading, { x: left, y, size: 11, font, color: muted });
-  y -= 26;
+  y -= 16;
+  if (doc.reference) {
+    page.drawText(`Quote ${doc.reference}`, {
+      x: left,
+      y,
+      size: 10,
+      font: bold,
+      color: muted,
+    });
+    y -= 14;
+  } else {
+    y -= 4;
+  }
   page.drawLine({
     start: { x: left, y },
     end: { x: right, y },

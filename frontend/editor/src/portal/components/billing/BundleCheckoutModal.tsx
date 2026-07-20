@@ -17,6 +17,9 @@ import {
   createBundleCheckoutSession,
   getStripePublishableKey,
   loadStripeOnce,
+  StripeFunctionError,
+  upsertBundleQuote,
+  type BundleQuote,
 } from "@portal/billing/stripe";
 import { CardPlaceholder } from "@portal/components/billing/CardPlaceholder";
 import { downloadProformaPdf } from "@portal/components/billing/proformaPdf";
@@ -92,6 +95,11 @@ export function BundleCheckoutModal({
   const [sizeId, setSizeId] = useState<string>("standard");
   const [pipelineId, setPipelineId] = useState<string>("none");
   const [consented, setConsented] = useState(false);
+  // The persisted quote id, reused across Download + Continue so both edit ONE quote (rather than
+  // spawning a new one on every click). Null until first persisted (or when there's no SaaS backend).
+  const [quoteId, setQuoteId] = useState<number | null>(null);
+  const [quoteBusy, setQuoteBusy] = useState(false);
+  const [quoteError, setQuoteError] = useState<string | null>(null);
 
   // Reset to step 1 whenever the modal closes so re-opening starts fresh.
   useEffect(() => {
@@ -102,6 +110,9 @@ export function BundleCheckoutModal({
       setSizeId("standard");
       setPipelineId("none");
       setConsented(false);
+      setQuoteId(null);
+      setQuoteBusy(false);
+      setQuoteError(null);
     }
   }, [open]);
 
@@ -120,11 +131,51 @@ export function BundleCheckoutModal({
   if (!open || teamId == null) return null;
 
   const canContinue =
-    quote.poolCredits > 0 && consented && !quote.overEnterprise;
+    quote.poolCredits > 0 && consented && !quote.overEnterprise && !quoteBusy;
 
-  function handleContinue() {
+  // Persist (create or edit) the quote so Download can stamp a real number and Continue can check out
+  // against it. Returns null when there's no SaaS backend (Storybook/preview) — the flow then falls
+  // back to the direct-units checkout + a number-less proforma.
+  async function ensureQuote(): Promise<BundleQuote | null> {
+    if (teamId == null || quote.poolCredits <= 0) return null;
+    try {
+      const q = await upsertBundleQuote({
+        teamId,
+        users,
+        posturePolicies: policiesFor(postureId),
+        sizeMult: sizeMultFor(sizeId),
+        pipelineMult: pipelineMultFor(pipelineId),
+        provisionedMonthlyVolume: quote.provisionedMonthlyVolume,
+        poolCredits: quote.poolCredits,
+        priceMinor: quote.priceMinor,
+        currency,
+        consented,
+        eulaVersion: CONSENT_EULA_VERSION,
+        quoteId: quoteId ?? undefined,
+      });
+      setQuoteId(q.quoteId);
+      setQuoteError(null);
+      return q;
+    } catch (e) {
+      if (e instanceof StripeFunctionError && e.code === "unconfigured") {
+        return null; // no backend (Storybook/preview) — fall back to the direct path
+      }
+      setQuoteError(e instanceof Error ? e.message : String(e));
+      throw e;
+    }
+  }
+
+  async function handleContinue() {
     if (!canContinue) return;
-    setPhase("pay");
+    setQuoteBusy(true);
+    try {
+      await ensureQuote();
+      setPhase("pay");
+    } catch {
+      // Surfaced via the quoteError banner; stay on the calculator.
+    } finally {
+      setQuoteBusy(false);
+    }
   }
 
   function finish() {
@@ -196,15 +247,15 @@ export function BundleCheckoutModal({
           currency={currency}
           consented={consented}
           setConsented={setConsented}
+          ensureQuote={ensureQuote}
+          quoteError={quoteError}
         />
       )}
       {phase === "pay" && (
         <PaymentStep
-          key={`bundle:${quote.poolCredits}`}
+          key={`bundle:${quoteId ?? quote.poolCredits}`}
           teamId={teamId}
-          units={quote.poolCredits}
-          consented={consented}
-          eulaVersion={CONSENT_EULA_VERSION}
+          quoteId={quoteId}
           onComplete={() => setPhase("done")}
         />
       )}
@@ -234,6 +285,10 @@ interface CalcProps {
   currency: string;
   consented: boolean;
   setConsented: (v: boolean) => void;
+  /** Persist (create/edit) the quote; returns it, or null when there's no SaaS backend. */
+  ensureQuote: () => Promise<BundleQuote | null>;
+  /** Last quote-persist error (create/download), surfaced inline. */
+  quoteError: string | null;
 }
 
 interface PickerCard {
@@ -256,12 +311,15 @@ function CalculatorStep({
   currency,
   consented,
   setConsented,
+  ensureQuote,
+  quoteError,
 }: CalcProps) {
   const { t } = useTranslation();
   // Deployment is a display-only finer setting (same rate self-serve); expanded
   // tracks which row's card picker is bloomed (demo: one open at a time).
   const [deployId, setDeployId] = useState<string>("cloud");
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
 
   const deployCards: PickerCard[] = [
     {
@@ -449,73 +507,98 @@ function CalculatorStep({
   ];
 
   const canDownload = quote.priceMinor != null && quote.poolCredits > 0;
-  const handleDownload = () => {
-    if (quote.priceMinor == null) return;
-    void downloadProformaPdf({
-      filename: "stirling-prepaid-quote.pdf",
-      heading: t(
-        "portal.billing.prepaid.proforma.heading",
-        "Prepaid processing quote",
-      ),
-      subheading: t(
-        "portal.billing.prepaid.proforma.subheading",
-        "12 months of prepaid PDF processing capacity",
-      ),
-      lines: [
-        {
-          label: t("portal.billing.prepaid.calc.usersLabel", "Total users"),
-          value: users.toLocaleString(),
-        },
-        {
-          label: t("portal.billing.prepaid.calc.deployRow", "Deployment"),
-          value: deployValue,
-        },
-        {
-          label: t("portal.billing.prepaid.calc.sizingRow", "Sizing"),
-          value: sizeValue,
-        },
-        {
-          label: t("portal.billing.prepaid.calc.governanceRow", "Governance"),
-          value: postureValue,
-        },
-        {
-          label: t("portal.billing.prepaid.calc.pipelinesLabel", "Pipelines"),
-          value: pipeline.title,
-        },
-        {
-          label: t(
-            "portal.billing.prepaid.calc.handlesLabel",
-            "Your Processor",
-          ),
-          value: t(
-            "portal.billing.prepaid.calc.handlesValue",
-            "handles {{volume}} PDFs / mo",
-            { volume: quote.provisionedMonthlyVolume.toLocaleString() },
-          ),
-        },
-        {
-          label: t("portal.billing.prepaid.proforma.poolLabel", "Prepaid pool"),
-          value: t(
-            "portal.billing.prepaid.proforma.poolValue",
-            "{{credits}} credits",
-            { credits: quote.poolCredits.toLocaleString() },
-          ),
-        },
-      ],
-      totalLabel: t(
-        "portal.billing.prepaid.calc.priceLabel",
-        "Your year · 12 months for the price of 10",
-      ),
-      totalValue: formatMinor(quote.priceMinor, currency),
-      footer: t(
-        "portal.billing.prepaid.proforma.footer",
-        "Proforma for purchase approval. Capacity is billed only once payment is received; valid 30 days.",
-      ),
-    });
+  const handleDownload = async () => {
+    if (quote.priceMinor == null || downloading) return;
+    setDownloading(true);
+    try {
+      // Persist first so the proforma carries a real quote number to share for approval; ensureQuote
+      // returns null with no SaaS backend (Storybook/preview) — the PDF then omits the number.
+      const persisted = await ensureQuote();
+      await downloadProformaPdf({
+        filename: "stirling-prepaid-quote.pdf",
+        reference: persisted?.quoteNumber,
+        heading: t(
+          "portal.billing.prepaid.proforma.heading",
+          "Prepaid processing quote",
+        ),
+        subheading: t(
+          "portal.billing.prepaid.proforma.subheading",
+          "12 months of prepaid PDF processing capacity",
+        ),
+        lines: [
+          {
+            label: t("portal.billing.prepaid.calc.usersLabel", "Total users"),
+            value: users.toLocaleString(),
+          },
+          {
+            label: t("portal.billing.prepaid.calc.deployRow", "Deployment"),
+            value: deployValue,
+          },
+          {
+            label: t("portal.billing.prepaid.calc.sizingRow", "Sizing"),
+            value: sizeValue,
+          },
+          {
+            label: t("portal.billing.prepaid.calc.governanceRow", "Governance"),
+            value: postureValue,
+          },
+          {
+            label: t("portal.billing.prepaid.calc.pipelinesLabel", "Pipelines"),
+            value: pipeline.title,
+          },
+          {
+            label: t(
+              "portal.billing.prepaid.calc.handlesLabel",
+              "Your Processor",
+            ),
+            value: t(
+              "portal.billing.prepaid.calc.handlesValue",
+              "handles {{volume}} PDFs / mo",
+              { volume: quote.provisionedMonthlyVolume.toLocaleString() },
+            ),
+          },
+          {
+            label: t(
+              "portal.billing.prepaid.proforma.poolLabel",
+              "Prepaid pool",
+            ),
+            value: t(
+              "portal.billing.prepaid.proforma.poolValue",
+              "{{credits}} credits",
+              { credits: quote.poolCredits.toLocaleString() },
+            ),
+          },
+        ],
+        totalLabel: t(
+          "portal.billing.prepaid.calc.priceLabel",
+          "Your year · 12 months for the price of 10",
+        ),
+        totalValue: formatMinor(quote.priceMinor, currency),
+        footer: t(
+          "portal.billing.prepaid.proforma.footer",
+          "Proforma for purchase approval. Capacity is billed only once payment is received; valid 30 days.",
+        ),
+      });
+    } catch {
+      // Surfaced via the quoteError banner; leave the button re-enabled to retry.
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
     <div className="portal-billing__bundle-calc">
+      {quoteError && (
+        <Banner
+          tone="danger"
+          title={t(
+            "portal.billing.prepaid.buy.quoteErrorTitle",
+            "Couldn't save your quote",
+          )}
+        >
+          {quoteError}
+        </Banner>
+      )}
       <div className="portal-billing__bundle-field">
         <div className="portal-billing__bundle-field-label">
           {t("portal.billing.prepaid.calc.usersLabel", "Total users")}
@@ -683,6 +766,7 @@ function CalculatorStep({
           <div
             role="button"
             tabIndex={0}
+            aria-disabled={downloading}
             className="portal-billing__bundle-download"
             onClick={handleDownload}
             onKeyDown={(e) => {
@@ -705,17 +789,24 @@ function CalculatorStep({
             >
               <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" />
             </svg>
-            {t(
-              "portal.billing.prepaid.calc.downloadQuote",
-              "Download quote (PDF)",
+            {downloading
+              ? t(
+                  "portal.billing.prepaid.calc.downloadPreparing",
+                  "Preparing quote…",
+                )
+              : t(
+                  "portal.billing.prepaid.calc.downloadQuote",
+                  "Download quote (PDF)",
+                )}
+            {!downloading && (
+              <span className="portal-billing__bundle-download-share">
+                ·{" "}
+                {t(
+                  "portal.billing.prepaid.calc.downloadShare",
+                  "share for approval",
+                )}
+              </span>
             )}
-            <span className="portal-billing__bundle-download-share">
-              ·{" "}
-              {t(
-                "portal.billing.prepaid.calc.downloadShare",
-                "share for approval",
-              )}
-            </span>
           </div>
         )}
       </div>
@@ -749,15 +840,12 @@ function CalculatorStep({
 
 function PaymentStep({
   teamId,
-  units,
-  consented,
-  eulaVersion,
+  quoteId,
   onComplete,
 }: {
   teamId: number;
-  units: number;
-  consented: boolean;
-  eulaVersion: string;
+  /** The persisted quote to check out against; null only on the no-backend mock path. */
+  quoteId: number | null;
   onComplete: () => void;
 }) {
   const { t } = useTranslation();
@@ -778,9 +866,9 @@ function PaymentStep({
     setError(null);
     createBundleCheckoutSession({
       teamId,
-      units,
-      consented,
-      eulaVersion,
+      // The persisted quote carries the pool + consent; the edge fn reads them and settles the quote
+      // on payment. (quoteId is always set here when a publishable key is present.)
+      quoteId: quoteId ?? undefined,
       successUrl: window.location.href,
       cancelUrl: window.location.href,
     })
@@ -799,7 +887,7 @@ function PaymentStep({
     return () => {
       cancelled = true;
     };
-  }, [publishableKey, teamId, units, consented, eulaVersion]);
+  }, [publishableKey, teamId, quoteId]);
 
   const stripe = publishableKey ? loadStripeOnce(publishableKey) : null;
 

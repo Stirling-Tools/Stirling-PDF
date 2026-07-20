@@ -88,6 +88,96 @@ async function invoke<T>(
   return data;
 }
 
+/** Call a SECURITY DEFINER public.* RPC with the admin's JWT (same client as {@link invoke}). */
+async function rpc<T>(fn: string, args: Record<string, unknown>): Promise<T> {
+  ensureSaasSupabase();
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    throw new StripeFunctionError(
+      "SaaS Supabase not configured — set VITE_SUPABASE_URL.",
+      "unconfigured",
+    );
+  }
+  const { data, error } = await supabase.rpc(fn, args);
+  if (error) {
+    throw new StripeFunctionError(
+      error.message ?? `RPC ${fn} failed`,
+      (error as { code?: string }).code,
+    );
+  }
+  return data as T;
+}
+
+/** Inputs to {@link upsertBundleQuote} — the sized config + computed figures. */
+export interface BundleQuoteInput {
+  teamId: number;
+  users: number;
+  posturePolicies: number;
+  sizeMult: number;
+  pipelineMult: number;
+  provisionedMonthlyVolume: number;
+  /** Size-folded run-credits = the Stripe line quantity when this quote is paid. */
+  poolCredits: number;
+  /** Discounted total in minor units; null when the per-run rate is unknown. */
+  priceMinor: number | null;
+  currency: string;
+  /** Affirmative consent to the prepaid→metered auto-transition (ARL/EULA §7.2). */
+  consented: boolean;
+  eulaVersion: string;
+  /** When set, edits that existing (unpaid) quote instead of creating a new one. */
+  quoteId?: number;
+}
+
+/** A persisted prepaid-bundle quote (proforma) — {@code payg_upsert_bundle_quote} result. */
+export interface BundleQuote {
+  quoteId: number;
+  quoteNumber: string;
+  status: string;
+  validUntil: string;
+}
+
+interface BundleQuoteRow {
+  quote_id: number;
+  quote_number: string;
+  status: string;
+  valid_until: string;
+}
+
+/**
+ * Create (or edit an unpaid) prepaid-bundle quote via {@code payg_upsert_bundle_quote}. LEADER-gated
+ * server-side. The quote persists the sized config + figures so the buyer can download a numbered
+ * proforma to share for approval and check out against it later; capacity is still credited only on
+ * payment (the webhook), never here.
+ */
+export async function upsertBundleQuote(
+  input: BundleQuoteInput,
+): Promise<BundleQuote> {
+  const rows = await rpc<BundleQuoteRow[]>("payg_upsert_bundle_quote", {
+    p_team_id: input.teamId,
+    p_posture_policies: input.posturePolicies,
+    p_size_mult: input.sizeMult,
+    p_pipeline_mult: input.pipelineMult,
+    p_pool_credits: input.poolCredits,
+    p_users: input.users,
+    p_provisioned_monthly_volume: input.provisionedMonthlyVolume,
+    p_price_minor: input.priceMinor,
+    p_currency: input.currency,
+    p_consented: input.consented,
+    p_eula_version: input.eulaVersion,
+    ...(input.quoteId != null ? { p_quote_id: input.quoteId } : {}),
+  });
+  const row = rows?.[0];
+  if (!row) {
+    throw new StripeFunctionError("payg_upsert_bundle_quote returned no row");
+  }
+  return {
+    quoteId: row.quote_id,
+    quoteNumber: row.quote_number,
+    status: row.status,
+    validUntil: row.valid_until,
+  };
+}
+
 /**
  * Result of {@link createCheckoutSession}. Exactly ONE of {@code clientSecret}
  * or {@code redirectUrl} is set: clientSecret drives embedded Stripe Checkout
@@ -151,35 +241,43 @@ export async function createCheckoutSession(
 
 interface BundleCheckoutRequest {
   teamId: number;
-  /** Purchased capacity (size-scaled meter units). Billed quantity × unit_amount + coupon. */
-  units: number;
-  /** Affirmative consent to the prepaid→metered auto-transition (ARL/EULA §7.2). */
-  consented: boolean;
-  /** EULA version the consent is recorded against. */
-  eulaVersion: string;
   successUrl: string;
   cancelUrl: string;
+  /**
+   * Quote path (preferred): check out against a persisted quote — the edge fn reads its pool +
+   * consent and flips it to paid on the webhook. Supersedes the inline units/consent fields.
+   */
+  quoteId?: number;
+  /** Direct path (fallback): purchased capacity (size-scaled run-credits) sent inline. */
+  units?: number;
+  /** Direct path: affirmative consent to the prepaid→metered auto-transition (ARL/EULA §7.2). */
+  consented?: boolean;
+  /** Direct path: EULA version the consent is recorded against. */
+  eulaVersion?: string;
 }
 
 /**
  * Mint a one-time ({@code mode:payment}) Stripe Checkout session for a prepaid
- * bundle, via the {@code create-payg-bundle-checkout} edge function. The client
- * sends the sized {@code units} directly — the edge fn bills quantity × unit_amount
- * + the policy coupon (no server quote ticket; you pay for what you ask for, so
- * quantity is safe to trust). The pool is credited on the Stripe webhook, never
- * here. Defaults to embedded Checkout (returns {@code clientSecret}) so the portal
- * can mount it inline.
+ * bundle, via the {@code create-payg-bundle-checkout} edge function. Prefer the
+ * {@code quoteId} path (the edge fn reads the pool + consent off the persisted
+ * quote and settles it on payment); the inline {@code units}/consent path remains
+ * for callers without a quote. Either way the pool is credited on the Stripe
+ * webhook, never here. Defaults to embedded Checkout ({@code clientSecret}).
  */
 export async function createBundleCheckoutSession(
   req: BundleCheckoutRequest,
 ): Promise<CheckoutSession> {
   const res = await invoke<CheckoutResponse>("create-payg-bundle-checkout", {
     team_id: req.teamId,
-    units: req.units,
-    consented: req.consented,
-    eula_version: req.eulaVersion,
     success_url: req.successUrl,
     cancel_url: req.cancelUrl,
+    ...(req.quoteId != null
+      ? { quote_id: req.quoteId }
+      : {
+          units: req.units,
+          consented: req.consented,
+          eula_version: req.eulaVersion,
+        }),
     // Keep the modal open on completion so it can finalise + refetch the wallet
     // (a redirect would reload the page and skip Stripe's onComplete).
     redirect_on_completion: "never",
