@@ -114,7 +114,8 @@ export interface UnknownEngineProgressDetail {
 }
 
 export type AnyEngineProgressDetail =
-  EngineProgressDetail | UnknownEngineProgressDetail;
+  | EngineProgressDetail
+  | UnknownEngineProgressDetail;
 
 const KNOWN_ENGINE_PHASES = new Set<string>([
   "whole_doc_read_started",

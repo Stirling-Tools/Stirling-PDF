@@ -11,7 +11,15 @@ export type PdfRenderMode = "normal" | "dark" | "sepia";
 export type StartupView = "tools" | "read" | "automate";
 
 export type ViewerZoomSetting =
-  "auto" | "fitWidth" | "fitPage" | "50" | "75" | "100" | "125" | "150" | "200";
+  | "auto"
+  | "fitWidth"
+  | "fitPage"
+  | "50"
+  | "75"
+  | "100"
+  | "125"
+  | "150"
+  | "200";
 
 // SaaS-only: which app a team lead lands on after signing in. Members can't
 // reach the processor, so this never applies to them.

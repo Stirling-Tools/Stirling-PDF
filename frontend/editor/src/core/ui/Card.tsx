@@ -3,7 +3,11 @@ import "@app/ui/Card.css";
 
 /** Subset of the shared accent dial that has a styled strip (see Card.css). */
 export type CardAccent =
-  "default" | "premium" | "danger" | "success" | "warning";
+  | "default"
+  | "premium"
+  | "danger"
+  | "success"
+  | "warning";
 
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   /** Adds an accent strip on the left edge of the card. */

@@ -42,11 +42,19 @@ export type FilesPageSortMode =
   | "size-desc"
   | "size-asc";
 export type FilesPageOriginFilter =
-  "all" | "local" | "cloud" | "shared-with-me";
+  | "all"
+  | "local"
+  | "cloud"
+  | "shared-with-me";
 
 /** all|local|cloud|recent|shared filter presets. */
 export type FilesPageTab =
-  "all" | "local" | "cloud" | "recent" | "shared" | "sharedByMe";
+  | "all"
+  | "local"
+  | "cloud"
+  | "recent"
+  | "shared"
+  | "sharedByMe";
 
 export interface FolderNameDialogState {
   mode: "new" | "rename" | null;

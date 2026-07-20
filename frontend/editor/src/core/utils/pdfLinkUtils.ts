@@ -22,7 +22,11 @@ import {
 
 export type LinkType = "internal" | "external" | "unknown";
 export type LinkBorderStyle =
-  "solid" | "dashed" | "beveled" | "inset" | "underline";
+  | "solid"
+  | "dashed"
+  | "beveled"
+  | "inset"
+  | "underline";
 export type LinkHighlightMode = "none" | "invert" | "outline" | "push";
 
 export interface PdfLibLink {

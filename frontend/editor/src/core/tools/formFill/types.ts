@@ -48,7 +48,12 @@ export type FormFieldType =
   | "signature";
 
 export type ButtonActionType =
-  "named" | "javascript" | "submitForm" | "resetForm" | "uri" | "none";
+  | "named"
+  | "javascript"
+  | "submitForm"
+  | "resetForm"
+  | "uri"
+  | "none";
 
 export interface ButtonAction {
   type: ButtonActionType;

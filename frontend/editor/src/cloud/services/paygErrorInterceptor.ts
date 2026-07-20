@@ -32,7 +32,9 @@ import {
  * {@code null} when the error is not a PAYG entitlement response.
  */
 export type PaygErrorKind =
-  "FEATURE_DEGRADED" | "PAYG_LIMIT_REACHED" | "SIGNUP_REQUIRED";
+  | "FEATURE_DEGRADED"
+  | "PAYG_LIMIT_REACHED"
+  | "SIGNUP_REQUIRED";
 
 /**
  * Detail payload broadcast on {@code payg:signupRequired} when an anonymous

@@ -166,7 +166,12 @@ export interface StorageConfig {
 /* ──────────────────────────────────────────────────────────────────────── */
 
 export type AuditCategory =
-  "auth" | "config" | "elevation" | "policy" | "processing" | "security";
+  | "auth"
+  | "config"
+  | "elevation"
+  | "policy"
+  | "processing"
+  | "security";
 
 export type AuditStatus = "success" | "warning" | "danger" | "info";
 

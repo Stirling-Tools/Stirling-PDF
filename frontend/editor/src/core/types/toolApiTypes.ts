@@ -729,7 +729,9 @@ export interface OverlayPdfsRequest {
    * The mode of overlaying: 'SequentialOverlay' for sequential application, 'InterleavedOverlay' for round-robin application, 'FixedRepeatOverlay' for fixed repetition based on provided counts
    */
   overlayMode:
-    "SequentialOverlay" | "InterleavedOverlay" | "FixedRepeatOverlay";
+    | "SequentialOverlay"
+    | "InterleavedOverlay"
+    | "FixedRepeatOverlay";
   /**
    * Overlay position 0 is Foregound, 1 is Background
    */
@@ -759,7 +761,13 @@ export interface PdfToPdfARequest {
    * The output format type (PDF/A or PDF/X)
    */
   outputFormat:
-    "pdfa" | "pdfa-1" | "pdfa-2" | "pdfa-2b" | "pdfa-3" | "pdfa-3b" | "pdfx";
+    | "pdfa"
+    | "pdfa-1"
+    | "pdfa-2"
+    | "pdfa-2b"
+    | "pdfa-3"
+    | "pdfa-3b"
+    | "pdfx";
   /**
    * If true, the conversion will fail if the output is not perfectly compliant
    */
@@ -1178,7 +1186,13 @@ export interface SignPDFWithCertRequest {
    * The type of the digital certificate. WINDOWS_STORE and PKCS11 are hardware-backed and only available in the desktop app.
    */
   certType:
-    "PEM" | "PKCS12" | "PFX" | "JKS" | "SERVER" | "WINDOWS_STORE" | "PKCS11";
+    | "PEM"
+    | "PKCS12"
+    | "PFX"
+    | "JKS"
+    | "SERVER"
+    | "WINDOWS_STORE"
+    | "PKCS11";
   jksFile?: string;
   /**
    * The location where the PDF is signed

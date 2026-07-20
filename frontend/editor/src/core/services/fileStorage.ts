@@ -847,7 +847,8 @@ class FileStorageService {
         const getRequest = store.get(fileId);
         getRequest.onsuccess = () => {
           const record = getRequest.result as
-            StoredStirlingFileRecord | undefined;
+            | StoredStirlingFileRecord
+            | undefined;
           if (!record) {
             // Don't commit anything; caller wants false.
             return;

@@ -2,7 +2,12 @@ import type { ReactNode } from "react";
 import "@app/ui/StatusBadge.css";
 
 export type StatusTone =
-  "neutral" | "success" | "warning" | "danger" | "info" | "purple";
+  | "neutral"
+  | "success"
+  | "warning"
+  | "danger"
+  | "info"
+  | "purple";
 
 export type StatusSize = "sm" | "md" | "lg";
 

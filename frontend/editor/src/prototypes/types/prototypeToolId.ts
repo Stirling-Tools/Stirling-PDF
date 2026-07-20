@@ -26,4 +26,6 @@ export type PrototypeRegularToolId =
 export type PrototypeSuperToolId = (typeof PROTOTYPE_SUPER_TOOL_IDS)[number];
 export type PrototypeLinkToolId = (typeof PROTOTYPE_LINK_TOOL_IDS)[number];
 export type PrototypeToolId =
-  PrototypeRegularToolId | PrototypeSuperToolId | PrototypeLinkToolId;
+  | PrototypeRegularToolId
+  | PrototypeSuperToolId
+  | PrototypeLinkToolId;

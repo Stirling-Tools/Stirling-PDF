@@ -28,7 +28,11 @@ export function getFileExtension(name: string): string {
 }
 
 export type DateGroup =
-  "today" | "yesterday" | "thisWeek" | "thisMonth" | "older";
+  | "today"
+  | "yesterday"
+  | "thisWeek"
+  | "thisMonth"
+  | "older";
 
 export const DATE_GROUP_ORDER: DateGroup[] = [
   "today",

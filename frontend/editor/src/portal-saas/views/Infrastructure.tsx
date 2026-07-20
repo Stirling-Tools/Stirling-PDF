@@ -11,7 +11,12 @@ import "@portal/views/Infrastructure.css";
 // header button is dropped. Selection is never one of the coming-soon keys — the
 // Tabs primitive renders them as native-disabled buttons, so onChange can't fire.
 type InfraTab =
-  "api-keys" | "audit" | "deployments" | "security" | "models" | "storage";
+  | "api-keys"
+  | "audit"
+  | "deployments"
+  | "security"
+  | "models"
+  | "storage";
 
 export function Infrastructure() {
   const { t } = useTranslation();

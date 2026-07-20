@@ -38,7 +38,7 @@ function generateSecurePassword() {
   const uint8Array = new Uint8Array(length);
   window.crypto.getRandomValues(uint8Array);
   // To avoid modulo bias, discard values >= 256 - (256 % charsetLength)
-  for (let i = 0; password.length < length;) {
+  for (let i = 0; password.length < length; ) {
     const randomByte = uint8Array[i];
     i++;
     if (randomByte >= Math.floor(256 / charsetLength) * charsetLength) {

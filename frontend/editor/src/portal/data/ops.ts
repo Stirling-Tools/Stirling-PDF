@@ -23,7 +23,12 @@
 
 /** The pipeline-stage taxonomy a chip-row uses for accent colours. */
 export type OpKind =
-  "ingest" | "validate" | "modify" | "secure" | "store" | "alert";
+  | "ingest"
+  | "validate"
+  | "modify"
+  | "secure"
+  | "store"
+  | "alert";
 
 /** Finer-grained groupings shown in the Operations picker. */
 export type OpCategory =

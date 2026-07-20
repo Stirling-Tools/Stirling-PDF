@@ -18,7 +18,8 @@ export interface MetadataExtractionError {
 }
 
 export type MetadataExtractionResponse =
-  MetadataExtractionResult | MetadataExtractionError;
+  | MetadataExtractionResult
+  | MetadataExtractionError;
 
 /**
  * Utility to format PDF date strings to required format (yyyy/MM/dd HH:mm:ss)

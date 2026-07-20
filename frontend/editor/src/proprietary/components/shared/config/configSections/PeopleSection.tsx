@@ -146,7 +146,8 @@ export default function PeopleSection() {
           mfaEnabled:
             (
               adminData.userSettings?.[user.username] as
-                Record<string, unknown> | undefined
+                | Record<string, unknown>
+                | undefined
             )?.mfaEnabled === "true",
         }));
 

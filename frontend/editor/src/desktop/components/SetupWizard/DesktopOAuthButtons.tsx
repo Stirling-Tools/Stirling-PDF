@@ -8,7 +8,12 @@ import { Button } from "@app/ui/Button";
 import "@app/components/SetupWizard/desktopOAuth.css";
 
 type KnownProviderId =
-  "google" | "github" | "keycloak" | "azure" | "apple" | "oidc";
+  | "google"
+  | "github"
+  | "keycloak"
+  | "azure"
+  | "apple"
+  | "oidc";
 export type OAuthProviderId = KnownProviderId | string;
 
 export interface DesktopSSOProvider {

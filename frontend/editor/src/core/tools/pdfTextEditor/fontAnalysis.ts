@@ -4,7 +4,11 @@ import {
 } from "@app/tools/pdfTextEditor/pdfTextEditorTypes";
 
 export type FontStatus =
-  "perfect" | "embedded-subset" | "system-fallback" | "missing" | "unknown";
+  | "perfect"
+  | "embedded-subset"
+  | "system-fallback"
+  | "missing"
+  | "unknown";
 
 export interface FontAnalysis {
   fontId: string;

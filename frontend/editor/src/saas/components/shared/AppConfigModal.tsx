@@ -99,7 +99,8 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
   useEffect(() => {
     const handler = (ev: Event) => {
       const detail = (ev as CustomEvent).detail as
-        { key?: NavKey; notice?: string } | undefined;
+        | { key?: NavKey; notice?: string }
+        | undefined;
       if (detail?.notice && (detail?.key ? detail.key === "plan" : true)) {
         setNotice(detail.notice);
       }
@@ -118,7 +119,8 @@ const AppConfigModal: React.FC<AppConfigModalProps> = ({
   useEffect(() => {
     const handler = (ev: Event) => {
       const detail = (ev as CustomEvent).detail as
-        { open?: boolean } | undefined;
+        | { open?: boolean }
+        | undefined;
       setOverlayActive(Boolean(detail?.open));
     };
     window.addEventListener("appConfig:overlay", handler as EventListener);
