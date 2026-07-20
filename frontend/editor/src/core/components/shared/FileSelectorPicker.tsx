@@ -270,14 +270,12 @@ export function FileSelectorPicker({
               skipAuthRedirect: true,
             } as any,
           );
-          const ct =
-            res.headers?.["content-type"] ||
+          const ct = (res.headers?.["content-type"] ||
             res.headers?.["Content-Type"] ||
-            "";
-          const disp =
-            res.headers?.["content-disposition"] ||
+            "") as string;
+          const disp = (res.headers?.["content-disposition"] ||
             res.headers?.["Content-Disposition"] ||
-            "";
+            "") as string;
           const files = await extractLatestFilesFromBundle(
             res.data as Blob,
             parseContentDispositionFilename(disp) || "shared-file",
@@ -294,14 +292,12 @@ export function FileSelectorPicker({
               skipAuthRedirect: true,
             } as any,
           );
-          const ct =
-            res.headers?.["content-type"] ||
+          const ct = (res.headers?.["content-type"] ||
             res.headers?.["Content-Type"] ||
-            "";
-          const disp =
-            res.headers?.["content-disposition"] ||
+            "") as string;
+          const disp = (res.headers?.["content-disposition"] ||
             res.headers?.["Content-Disposition"] ||
-            "";
+            "") as string;
           const files = await extractLatestFilesFromBundle(
             res.data as Blob,
             parseContentDispositionFilename(disp) || stub.name,
