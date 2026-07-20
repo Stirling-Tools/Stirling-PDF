@@ -24,6 +24,8 @@ const OUTPUT_FILE = path.join(
 // package.json lives at the workspace root (frontend/), not editor/. The
 // script is at frontend/editor/scripts/, so walk up two levels.
 const PACKAGE_JSON = path.join(import.meta.dirname, "..", "..", "package.json");
+const PACKAGE_NAME_PATTERN =
+  /^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/i;
 
 // Ensure the output directory exists
 const outputDir = path.dirname(OUTPUT_FILE);
@@ -74,9 +76,12 @@ try {
     process.exit(1);
   }
 
+  const existingModuleUrls = loadExistingModuleUrls();
+
   // Convert license-checker format to array
   const licenseArray = licenseData.map((dep) => {
     let licenseType = dep.licenseType;
+    const projectUrl = getProjectUrl(dep.name, dep.link, existingModuleUrls);
 
     // Handle missing or null licenses
     if (!licenseType || licenseType === null || licenseType === undefined) {
@@ -114,9 +119,9 @@ try {
         dep.remoteVersion ||
         "unknown",
       licenseType: licenseType,
-      repository: dep.link,
-      url: dep.link,
-      link: dep.link,
+      repository: projectUrl,
+      url: projectUrl,
+      link: projectUrl,
     };
   });
 
@@ -126,7 +131,7 @@ try {
       const licenseType = Array.isArray(dep.licenseType)
         ? dep.licenseType.join(", ")
         : dep.licenseType || "Unknown";
-      const licenseUrl = dep.link || getLicenseUrl(licenseType);
+      const licenseUrl = getLicenseUrl(licenseType) || dep.link;
 
       return {
         moduleName: dep.name,
@@ -224,6 +229,9 @@ try {
 function getLicenseUrl(licenseType) {
   if (!licenseType || licenseType === "Unknown") return "";
 
+  const explicitLicenseUrl = licenseType.match(/https?:\/\/\S+/)?.[0];
+  if (explicitLicenseUrl) return explicitLicenseUrl;
+
   const licenseUrls = {
     MIT: "https://opensource.org/licenses/MIT",
     "MIT*": "https://opensource.org/licenses/MIT",
@@ -276,6 +284,41 @@ function getLicenseUrl(licenseType) {
 
   // For non-standard licenses, return empty string (will use package link if available)
   return "";
+}
+
+function getProjectUrl(packageName, reportedUrl, existingModuleUrls) {
+  if (!PACKAGE_NAME_PATTERN.test(packageName)) {
+    throw new Error(`Invalid package name: ${packageName}`);
+  }
+
+  return (
+    normalizeProjectUrl(reportedUrl) ||
+    normalizeProjectUrl(existingModuleUrls.get(packageName)) ||
+    `https://www.npmjs.com/package/${packageName}`
+  );
+}
+
+function loadExistingModuleUrls() {
+  try {
+    const existingReport = JSON.parse(readFileSync(OUTPUT_FILE, "utf8"));
+    return new Map(
+      (existingReport.dependencies ?? [])
+        .filter((dependency) => dependency.moduleName && dependency.moduleUrl)
+        .map((dependency) => [dependency.moduleName, dependency.moduleUrl]),
+    );
+  } catch {
+    return new Map();
+  }
+}
+
+function normalizeProjectUrl(url) {
+  if (!url || url === "n/a") return "";
+
+  return url
+    .replace(/^git\+/, "")
+    .replace(/^git:\/\/github\.com\//, "https://github.com/")
+    .replace(/^github:/, "https://github.com/")
+    .replace(/\.git$/, "");
 }
 
 /**

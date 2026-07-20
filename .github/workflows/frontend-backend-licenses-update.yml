@@ -299,7 +299,10 @@ jobs:
           base: main
           title: "Update Frontend 3rd Party Licenses"
           body: ${{ env.PR_BODY }}
-          labels: Licenses,github-actions,frontend
+          labels: |
+            Licenses
+            github-actions
+            Front End
           draft: false
           delete-branch: true
           sign-commits: true
@@ -520,7 +523,10 @@ jobs:
           base: main
           title: "Update Backend 3rd Party Licenses"
           body: ${{ env.PR_BODY }}
-          labels: Licenses,github-actions,backend
+          labels: |
+            Licenses
+            github-actions
+            Back End
           delete-branch: true
           sign-commits: true
 
