@@ -1,4 +1,5 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, Skeleton } from "@app/ui";
 import { errorMessage } from "@portal/api/http";
@@ -17,7 +18,7 @@ import {
   type PolicySetupResult,
 } from "@portal/api/policies";
 import { CatalogueSummary } from "@portal/components/policies/CatalogueSummary";
-import { PolicyCategoryCard } from "@portal/components/policies/PolicyCategoryCard";
+import { PolicyCatalogueTable } from "@portal/components/policies/PolicyCatalogueTable";
 import { PolicyDetailPanel } from "@portal/components/policies/PolicyDetailPanel";
 import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
 import { useAiEngineEnabled } from "@portal/hooks/useAiEngineEnabled";
@@ -34,18 +35,32 @@ export function Policies() {
   const [wizard, setWizard] = useState<CatalogueEntry | null>(null);
   const [busy, setBusy] = useState(false);
   const [pageError, setPageError] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    const setupId = searchParams.get("setup");
+    if (!setupId || !data) return;
+    const entry = data.catalogue.find((e) => e.category.id === setupId);
+    if (entry && !entry.category.comingSoon) {
+      if (entry.policy) setDetail(entry);
+      else setWizard(entry);
+    }
+    const next = new URLSearchParams(searchParams);
+    next.delete("setup");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, data, setSearchParams]);
 
   const { enabled: aiEngineEnabled, loading: aiEngineLoading } =
     useAiEngineEnabled();
 
-  function isLocked(entry: CatalogueEntry): boolean {
-    return (
+  const isLocked = useCallback(
+    (entry: CatalogueEntry): boolean =>
       entry.category.requiresAiEngine === true &&
       !aiEngineEnabled &&
       !aiEngineLoading &&
-      !entry.policy
-    );
-  }
+      !entry.policy,
+    [aiEngineEnabled, aiEngineLoading],
+  );
 
   const catalogue = data?.catalogue ?? [];
   const refetch = useCallback(() => setVersion((v) => v + 1), []);
@@ -169,17 +184,12 @@ export function Policies() {
       )}
 
       {!isLoading && !fetchError && (
-        <div className="portal-policies__grid">
-          {displayCatalogue.map((entry) => (
-            <PolicyCategoryCard
-              key={entry.category.id}
-              entry={entry}
-              onOpen={openEntry}
-              locked={isLocked(entry)}
-              lockedLabel={t("portal.policies.card.requiresAiEngine")}
-            />
-          ))}
-        </div>
+        <PolicyCatalogueTable
+          entries={displayCatalogue}
+          onOpen={openEntry}
+          isLocked={isLocked}
+          lockedLabel={t("portal.policies.card.requiresAiEngine")}
+        />
       )}
 
       <PolicyDetailPanel

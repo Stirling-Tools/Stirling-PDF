@@ -69,27 +69,30 @@
   flex-shrink: 0;
   border-radius: var(--radius-md);
   font-size: 0.875rem;
+  color: var(--dot-c, var(--color-text-3));
+  background: color-mix(
+    in srgb,
+    var(--dot-c, var(--color-text-3)) 14%,
+    transparent
+  );
 }
 
+/* Neutral keeps a plain muted surface rather than an accent tint. */
 .portal-sources__type-dot--neutral {
-  background: var(--color-bg-subtle);
+  background: var(--color-bg-muted);
   color: var(--color-text-3);
 }
 .portal-sources__type-dot--default {
-  background: var(--color-blue-light);
-  color: var(--color-blue);
+  --dot-c: var(--color-blue-dark);
 }
 .portal-sources__type-dot--premium {
-  background: var(--color-purple-light);
-  color: var(--color-purple);
+  --dot-c: var(--color-purple-dark);
 }
 .portal-sources__type-dot--success {
-  background: var(--color-green-light);
-  color: var(--color-green-dark);
+  --dot-c: var(--color-green-dark);
 }
 .portal-sources__type-dot--warning {
-  background: var(--color-amber-light);
-  color: var(--color-amber-dark);
+  --dot-c: var(--color-amber-dark);
 }
 /* Dark: subtle tint + bright icon; amber-light/amber-dark are too close to read. */
 [data-theme="dark"] .portal-sources__type-dot--warning {
@@ -97,8 +100,7 @@
   color: var(--color-amber);
 }
 .portal-sources__type-dot--danger {
-  background: var(--color-red-light);
-  color: var(--color-red);
+  --dot-c: var(--color-red-dark);
 }
 
 .portal-sources__muted {
