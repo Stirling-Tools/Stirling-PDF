@@ -55,7 +55,8 @@ export async function downloadShareLink(token: string): Promise<{
     "";
   const disposition =
     typeof dispositionHeader === "string" ? dispositionHeader : "";
-  const contentType = typeof contentTypeHeader === "string" ? contentTypeHeader : "";
+  const contentType =
+    typeof contentTypeHeader === "string" ? contentTypeHeader : "";
   const filename =
     parseContentDispositionFilename(disposition) || "shared-file";
   const blob = response.data as Blob;
