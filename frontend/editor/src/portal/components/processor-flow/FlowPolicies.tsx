@@ -59,7 +59,9 @@ export function FlowPolicies({
             ) : policy.state === "off" ? (
               <Button
                 size="sm"
+                px="sm"
                 py="xs"
+                fontSize="xs"
                 variant="secondary"
                 className="portal-pf__setup"
                 onClick={() => onSetup(policy.key)}
