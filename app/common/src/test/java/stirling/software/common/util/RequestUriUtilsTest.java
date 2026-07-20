@@ -177,6 +177,28 @@ class RequestUriUtilsTest {
     }
 
     @Test
+    void testIsPublicAuthEndpoint_onlyPhoneFacingMobileScannerRoutesArePublic() {
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/validate-session/session-id", ""));
+        assertTrue(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/upload/session-id", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/create-session/session-id", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/files/session-id", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/download/session-id/file.jpg", ""));
+        assertFalse(
+                RequestUriUtils.isPublicAuthEndpoint(
+                        "/api/v1/mobile-scanner/session/session-id", ""));
+    }
+
+    @Test
     void testIsPublicAuthEndpoint_withContextPath() {
         assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/login", "/app"));
     }

@@ -124,6 +124,10 @@ public class WorkflowParticipantController {
                                                 HttpStatus.FORBIDDEN,
                                                 "Invalid or expired participant token"));
 
+        if (participant.isExpired()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Participant access expired");
+        }
+
         return ResponseEntity.ok(WorkflowMapper.toParticipantResponse(participant, false));
     }
 
@@ -212,6 +216,10 @@ public class WorkflowParticipantController {
                                         new ResponseStatusException(
                                                 HttpStatus.FORBIDDEN,
                                                 "Invalid or expired participant token"));
+
+        if (participant.isExpired()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Participant access expired");
+        }
 
         if (participant.hasCompleted()) {
             throw new ResponseStatusException(

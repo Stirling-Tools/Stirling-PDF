@@ -165,6 +165,19 @@ class WorkflowParticipantControllerMoreTest {
                 .isEqualTo(HttpStatus.FORBIDDEN);
     }
 
+    @Test
+    @DisplayName("getParticipantDetails expired token throws 403")
+    void getParticipantDetails_expiredToken() {
+        WorkflowParticipant p = participant(ParticipantStatus.VIEWED);
+        p.setExpiresAt(java.time.LocalDateTime.now().minusDays(1));
+        when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
+
+        assertThatThrownBy(() -> controller.getParticipantDetails(TOKEN))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                .isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
     // -------------------------------------------------------------------------
     // submitSignature
     // -------------------------------------------------------------------------
@@ -257,6 +270,20 @@ class WorkflowParticipantControllerMoreTest {
                     .isInstanceOf(ResponseStatusException.class)
                     .extracting(e -> ((ResponseStatusException) e).getStatusCode())
                     .isEqualTo(HttpStatus.FORBIDDEN);
+        }
+
+        @Test
+        void expiredToken_throwsForbiddenWithoutChangingParticipant() {
+            WorkflowParticipant p = participant(ParticipantStatus.PENDING);
+            p.setExpiresAt(java.time.LocalDateTime.now().minusDays(1));
+            when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
+
+            assertThatThrownBy(() -> controller.declineParticipation(TOKEN, null))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                    .isEqualTo(HttpStatus.FORBIDDEN);
+            assertThat(p.getStatus()).isEqualTo(ParticipantStatus.PENDING);
+            verify(participantRepository, org.mockito.Mockito.never()).save(p);
         }
 
         @Test

@@ -47,6 +47,15 @@ class MobileScannerServiceTest {
         return new MockMultipartFile("file", name, "text/plain", new byte[0]);
     }
 
+    private MultipartFile fileWithReportedSize(String name, long reportedSize) {
+        return new MockMultipartFile("file", name, "text/plain", new byte[] {1}) {
+            @Override
+            public long getSize() {
+                return reportedSize;
+            }
+        };
+    }
+
     @Nested
     @DisplayName("createSession")
     class CreateSession {
@@ -94,6 +103,18 @@ class MobileScannerServiceTest {
         @DisplayName("accepts alphanumeric and hyphen session IDs")
         void acceptsValidChars() {
             assertNotNull(service.createSession("ABC-def-123"));
+        }
+
+        @Test
+        @DisplayName("limits the number of active sessions")
+        void limitsActiveSessions() {
+            for (int index = 0; index < 100; index++) {
+                service.createSession("session-" + index);
+            }
+
+            assertThrows(
+                    MobileScannerService.SessionLimitExceededException.class,
+                    () -> service.createSession("one-too-many"));
         }
     }
 
@@ -156,12 +177,14 @@ class MobileScannerServiceTest {
         }
 
         @Test
-        @DisplayName("auto-creates a session when uploading to an unregistered session ID")
-        void autoCreatesSession() throws IOException {
-            service.uploadFiles("new-session", List.of(file("a.txt", "data")));
+        @DisplayName("rejects uploads to an unregistered session ID")
+        void rejectsUnknownSession() {
+            assertThrows(
+                    MobileScannerService.SessionNotFoundException.class,
+                    () -> service.uploadFiles("new-session", List.of(file("a.txt", "data"))));
 
-            List<FileMetadata> metas = service.getSessionFiles("new-session");
-            assertEquals(1, metas.size());
+            assertTrue(service.getSessionFiles("new-session").isEmpty());
+            assertFalse(Files.exists(tempDir.resolve("new-session")));
         }
 
         @Test
@@ -235,6 +258,56 @@ class MobileScannerServiceTest {
             service.uploadFiles("up6", List.of());
 
             assertTrue(service.getSessionFiles("up6").isEmpty());
+        }
+
+        @Test
+        @DisplayName("limits upload attempts per session")
+        void limitsUploadAttempts() throws IOException {
+            service.createSession("limited");
+            for (int attempt = 0; attempt < 30; attempt++) {
+                service.uploadFiles("limited", List.of());
+            }
+
+            assertThrows(
+                    MobileScannerService.UploadRateLimitExceededException.class,
+                    () -> service.uploadFiles("limited", List.of()));
+        }
+
+        @Test
+        @DisplayName("limits the number of files per session")
+        void limitsFilesPerSession() throws IOException {
+            service.createSession("many-files");
+            for (int index = 0; index < 20; index++) {
+                service.uploadFiles("many-files", List.of(file("file-" + index, "x")));
+            }
+
+            assertThrows(
+                    MobileScannerService.UploadSizeLimitExceededException.class,
+                    () -> service.uploadFiles("many-files", List.of(file("one-too-many", "x"))));
+        }
+
+        @Test
+        @DisplayName("enforces the global temporary storage quota")
+        void enforcesGlobalStorageQuota() throws IOException {
+            long twentyFiveMiB = 25L * 1024 * 1024;
+            for (int sessionIndex = 0; sessionIndex < 5; sessionIndex++) {
+                String sessionId = "quota-" + sessionIndex;
+                service.createSession(sessionId);
+                for (int fileIndex = 0; fileIndex < 4; fileIndex++) {
+                    service.uploadFiles(
+                            sessionId,
+                            List.of(
+                                    fileWithReportedSize(
+                                            "file-" + fileIndex + ".jpg", twentyFiveMiB)));
+                }
+            }
+
+            service.createSession("over-quota");
+            assertThrows(
+                    MobileScannerService.StorageCapacityExceededException.class,
+                    () ->
+                            service.uploadFiles(
+                                    "over-quota", List.of(fileWithReportedSize("extra.jpg", 1))));
         }
     }
 

@@ -34,6 +34,11 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.MobileScannerService;
 import stirling.software.common.service.MobileScannerService.FileMetadata;
+import stirling.software.common.service.MobileScannerService.SessionLimitExceededException;
+import stirling.software.common.service.MobileScannerService.SessionNotFoundException;
+import stirling.software.common.service.MobileScannerService.StorageCapacityExceededException;
+import stirling.software.common.service.MobileScannerService.UploadRateLimitExceededException;
+import stirling.software.common.service.MobileScannerService.UploadSizeLimitExceededException;
 
 /**
  * REST controller for mobile scanner functionality. Allows mobile devices to upload scanned images
@@ -120,6 +125,10 @@ public class MobileScannerController {
         } catch (IllegalArgumentException e) {
             log.warn("Invalid session creation request: {}", e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (SessionLimitExceededException e) {
+            log.warn("Mobile scanner session limit reached");
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -214,6 +223,18 @@ public class MobileScannerController {
         } catch (IllegalArgumentException e) {
             log.warn("Invalid mobile scanner upload request: {}", e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (SessionNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (UploadRateLimitExceededException e) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (StorageCapacityExceededException e) {
+            return ResponseEntity.status(HttpStatus.INSUFFICIENT_STORAGE)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (UploadSizeLimitExceededException e) {
+            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                    .body(Map.of("error", e.getMessage()));
         } catch (IOException e) {
             log.error("Failed to upload files for session: {}", sessionId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

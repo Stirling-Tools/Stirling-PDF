@@ -25,6 +25,12 @@ import lombok.extern.slf4j.Slf4j;
 public class MobileScannerService {
 
     private static final long SESSION_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+    private static final int MAX_ACTIVE_SESSIONS = 100;
+    private static final int MAX_FILES_PER_SESSION = 20;
+    private static final int MAX_UPLOADS_PER_SESSION = 30;
+    private static final long MAX_FILE_SIZE_BYTES = 25L * 1024 * 1024;
+    private static final long MAX_SESSION_STORAGE_BYTES = 100L * 1024 * 1024;
+    private static final long MAX_TOTAL_STORAGE_BYTES = 500L * 1024 * 1024;
     private static final Pattern FILENAME_SANITIZE_PATTERN = Pattern.compile("[^a-zA-Z0-9._-]");
     private static final Pattern SESSION_ID_VALIDATION_PATTERN = Pattern.compile("[a-zA-Z0-9-]+");
     private static final Pattern FILE_EXTENSION_PATTERN = Pattern.compile("[.][^.]+$");
@@ -45,18 +51,22 @@ public class MobileScannerService {
      * @param sessionId Unique session identifier
      * @return SessionInfo with creation time and expiry
      */
-    public SessionInfo createSession(String sessionId) {
+    public synchronized SessionInfo createSession(String sessionId) {
         validateSessionId(sessionId);
+
+        SessionData existingSession = activeSessions.get(sessionId);
+        if (existingSession != null) {
+            return toSessionInfo(existingSession);
+        }
+        if (activeSessions.size() >= MAX_ACTIVE_SESSIONS) {
+            throw new SessionLimitExceededException("Too many active mobile scanner sessions");
+        }
 
         SessionData session = new SessionData(sessionId);
         activeSessions.put(sessionId, session);
 
         log.info("Created mobile scanner session: {}", sessionId);
-        return new SessionInfo(
-                sessionId,
-                session.createdAt,
-                session.createdAt + SESSION_TIMEOUT_MS,
-                SESSION_TIMEOUT_MS);
+        return toSessionInfo(session);
     }
 
     /**
@@ -65,7 +75,7 @@ public class MobileScannerService {
      * @param sessionId Session identifier to validate
      * @return SessionInfo if valid, null if invalid/expired
      */
-    public SessionInfo validateSession(String sessionId) {
+    public synchronized SessionInfo validateSession(String sessionId) {
         SessionData session = activeSessions.get(sessionId);
         if (session == null) {
             return null;
@@ -91,21 +101,29 @@ public class MobileScannerService {
      * @param files Files to upload
      * @throws IOException If file storage fails
      */
-    public void uploadFiles(String sessionId, List<MultipartFile> files) throws IOException {
+    public synchronized void uploadFiles(String sessionId, List<MultipartFile> files)
+            throws IOException {
         validateSessionId(sessionId);
 
-        SessionData session =
-                activeSessions.computeIfAbsent(sessionId, id -> new SessionData(sessionId));
+        SessionData session = activeSessions.get(sessionId);
+        if (session == null) {
+            throw new SessionNotFoundException("Session not found or expired: " + sessionId);
+        }
+        if (System.currentTimeMillis() - session.getLastAccessTime() > SESSION_TIMEOUT_MS) {
+            deleteSession(sessionId);
+            throw new SessionNotFoundException("Session not found or expired: " + sessionId);
+        }
+
+        List<MultipartFile> nonEmptyFiles = files.stream().filter(file -> !file.isEmpty()).toList();
+        session.recordUploadAttempt();
+        validateUploadLimits(session, nonEmptyFiles);
 
         // Create session directory
         Path sessionDir = getSafeSessionDirectory(sessionId);
         Files.createDirectories(sessionDir);
 
         // Save each file
-        for (MultipartFile file : files) {
-            if (file.isEmpty()) {
-                continue;
-            }
+        for (MultipartFile file : nonEmptyFiles) {
 
             String originalFilename = file.getOriginalFilename();
             if (originalFilename == null || originalFilename.isBlank()) {
@@ -156,7 +174,7 @@ public class MobileScannerService {
      * @param sessionId Session identifier
      * @return List of file metadata, or empty list if session doesn't exist
      */
-    public List<FileMetadata> getSessionFiles(String sessionId) {
+    public synchronized List<FileMetadata> getSessionFiles(String sessionId) {
         SessionData session = activeSessions.get(sessionId);
         if (session == null) {
             return List.of();
@@ -173,7 +191,7 @@ public class MobileScannerService {
      * @return File path
      * @throws IOException If file not found or session doesn't exist
      */
-    public Path getFile(String sessionId, String filename) throws IOException {
+    public synchronized Path getFile(String sessionId, String filename) throws IOException {
         SessionData session = activeSessions.get(sessionId);
         if (session == null) {
             throw new IOException("Session not found: " + sessionId);
@@ -196,7 +214,7 @@ public class MobileScannerService {
      * @param sessionId Session identifier
      * @param filename Filename to delete
      */
-    public void deleteFileAfterDownload(String sessionId, String filename) {
+    public synchronized void deleteFileAfterDownload(String sessionId, String filename) {
         try {
             Path filePath = getSafeFilePath(sessionId, filename);
             Files.deleteIfExists(filePath);
@@ -218,7 +236,7 @@ public class MobileScannerService {
      *
      * @param sessionId Session to delete
      */
-    public void deleteSession(String sessionId) {
+    public synchronized void deleteSession(String sessionId) {
         SessionData session = activeSessions.remove(sessionId);
         if (session != null) {
             try {
@@ -253,7 +271,7 @@ public class MobileScannerService {
 
     /** Scheduled cleanup of expired sessions (runs every 5 minutes) */
     @Scheduled(fixedRate = 5 * 60 * 1000)
-    public void cleanupExpiredSessions() {
+    public synchronized void cleanupExpiredSessions() {
         long now = System.currentTimeMillis();
         List<String> expiredSessions = new ArrayList<>();
 
@@ -278,6 +296,47 @@ public class MobileScannerService {
         if (!SESSION_ID_VALIDATION_PATTERN.matcher(sessionId).matches()) {
             throw new IllegalArgumentException("Invalid session ID format");
         }
+    }
+
+    private SessionInfo toSessionInfo(SessionData session) {
+        return new SessionInfo(
+                session.sessionId,
+                session.createdAt,
+                session.getLastAccessTime() + SESSION_TIMEOUT_MS,
+                SESSION_TIMEOUT_MS);
+    }
+
+    private void validateUploadLimits(SessionData session, List<MultipartFile> files)
+            throws UploadSizeLimitExceededException {
+        if (session.getFiles().size() + files.size() > MAX_FILES_PER_SESSION) {
+            throw new UploadSizeLimitExceededException("Too many files in scanner session");
+        }
+
+        long uploadSize = 0;
+        for (MultipartFile file : files) {
+            if (file.getSize() > MAX_FILE_SIZE_BYTES) {
+                throw new UploadSizeLimitExceededException(
+                        "Mobile scanner file exceeds the maximum size");
+            }
+            try {
+                uploadSize = Math.addExact(uploadSize, file.getSize());
+            } catch (ArithmeticException e) {
+                throw new UploadSizeLimitExceededException("Mobile scanner upload is too large");
+            }
+        }
+
+        if (session.getStoredBytes() + uploadSize > MAX_SESSION_STORAGE_BYTES) {
+            throw new UploadSizeLimitExceededException(
+                    "Mobile scanner session storage quota exceeded");
+        }
+        if (getTotalStoredBytes() + uploadSize > MAX_TOTAL_STORAGE_BYTES) {
+            throw new StorageCapacityExceededException(
+                    "Mobile scanner temporary storage quota exceeded");
+        }
+    }
+
+    private long getTotalStoredBytes() {
+        return activeSessions.values().stream().mapToLong(SessionData::getStoredBytes).sum();
     }
 
     private String sanitizeFilename(String filename) {
@@ -399,6 +458,36 @@ public class MobileScannerService {
         }
     }
 
+    public static class SessionNotFoundException extends IOException {
+        public SessionNotFoundException(String message) {
+            super(message);
+        }
+    }
+
+    public static class UploadSizeLimitExceededException extends IOException {
+        public UploadSizeLimitExceededException(String message) {
+            super(message);
+        }
+    }
+
+    public static class StorageCapacityExceededException extends UploadSizeLimitExceededException {
+        public StorageCapacityExceededException(String message) {
+            super(message);
+        }
+    }
+
+    public static class UploadRateLimitExceededException extends IOException {
+        public UploadRateLimitExceededException(String message) {
+            super(message);
+        }
+    }
+
+    public static class SessionLimitExceededException extends IllegalStateException {
+        public SessionLimitExceededException(String message) {
+            super(message);
+        }
+    }
+
     /** Session data tracking */
     private static class SessionData {
         private final String sessionId;
@@ -406,6 +495,8 @@ public class MobileScannerService {
         private final Map<String, Boolean> downloadedFiles = new HashMap<>();
         private final long createdAt;
         private long lastAccessTime;
+        private int uploadAttempts;
+        private long storedBytes;
 
         public SessionData(String sessionId) {
             this.sessionId = sessionId;
@@ -416,6 +507,7 @@ public class MobileScannerService {
         public void addFile(FileMetadata file) {
             files.add(file);
             downloadedFiles.put(file.getFilename(), false);
+            storedBytes += file.getSize();
         }
 
         public List<FileMetadata> getFiles() {
@@ -437,6 +529,18 @@ public class MobileScannerService {
 
         public long getLastAccessTime() {
             return lastAccessTime;
+        }
+
+        public long getStoredBytes() {
+            return storedBytes;
+        }
+
+        public void recordUploadAttempt() throws UploadRateLimitExceededException {
+            if (uploadAttempts >= MAX_UPLOADS_PER_SESSION) {
+                throw new UploadRateLimitExceededException(
+                        "Mobile scanner upload rate limit exceeded");
+            }
+            uploadAttempts++;
         }
     }
 }

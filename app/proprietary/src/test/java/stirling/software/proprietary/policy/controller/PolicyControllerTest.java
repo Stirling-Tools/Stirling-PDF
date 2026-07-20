@@ -154,6 +154,11 @@ class PolicyControllerTest {
         return new PolicyRunHandle(runId, CompletableFuture.completedFuture(run));
     }
 
+    private void mockOwnedRun(String runId) {
+        when(jobOwnershipService.extractJobId(runId)).thenReturn(runId);
+        when(jobOwnershipService.createScopedJobKey(runId)).thenReturn(runId);
+    }
+
     @Nested
     @DisplayName("run (ad-hoc)")
     class Run {
@@ -252,6 +257,7 @@ class PolicyControllerTest {
         @DisplayName("returns the run view when present")
         void found() {
             PolicyRun run = new PolicyRun("run-3", null, definitionWithStep());
+            mockOwnedRun("run-3");
             when(runRegistry.get("run-3")).thenReturn(run);
 
             ResponseEntity<PolicyRunView> response = controller.status("run-3");
@@ -263,11 +269,24 @@ class PolicyControllerTest {
         @Test
         @DisplayName("returns 404 when run is unknown")
         void notFound() {
+            mockOwnedRun("missing");
             when(runRegistry.get("missing")).thenReturn(null);
 
             ResponseEntity<PolicyRunView> response = controller.status("missing");
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        }
+
+        @Test
+        @DisplayName("returns 404 without reading a run owned by another user")
+        void rejectsRunOwnedByAnotherUser() {
+            when(jobOwnershipService.extractJobId("bob:run-3")).thenReturn("run-3");
+            when(jobOwnershipService.createScopedJobKey("run-3")).thenReturn("alice:run-3");
+
+            ResponseEntity<PolicyRunView> response = controller.status("bob:run-3");
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+            verify(runRegistry, never()).get("bob:run-3");
         }
     }
 

@@ -171,6 +171,9 @@ public class PolicyController {
             summary = "Get pipeline run status",
             description = "Returns the current status, step cursor, and output files of a run.")
     public ResponseEntity<PolicyRunView> status(@PathVariable String runId) {
+        if (!ownedByCurrentUser(runId)) {
+            return ResponseEntity.notFound().build();
+        }
         PolicyRun run = runRegistry.get(runId);
         if (run == null) {
             return ResponseEntity.notFound().build();
