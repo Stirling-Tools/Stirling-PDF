@@ -1,0 +1,26 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@editor/*": [
+        "../../editor/saas/*",
+        "../../editor/cloud/*",
+        "../../editor/proprietary/*",
+        "../../editor/core/*"
+      ],
+      "@processor/*": ["../../processor/saas/*", "../../processor/proprietary/*"],
+      "@processor-proprietary/*": ["../../processor/proprietary/*"],
+      "@cloud/*": ["../../editor/cloud/*"],
+      "@proprietary/*": ["../../editor/proprietary/*"],
+      "@core/*": ["../../editor/core/*"]
+    }
+  },
+  "include": [
+    "../../global.d.ts",
+    "../../*.js",
+    "../../*.ts",
+    "../../*.tsx",
+    ".",
+    "../../processor/saas"
+  ]
+}

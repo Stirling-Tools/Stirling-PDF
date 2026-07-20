@@ -1,0 +1,54 @@
+import React from "react";
+import { Group } from "@mantine/core";
+import { Button } from "@editor/ui/Button";
+import { useTranslation } from "react-i18next";
+import { useFileState } from "@editor/contexts/FileContext";
+import { useFileActions } from "@editor/contexts/file/fileHooks";
+import { Z_INDEX_TOAST } from "@editor/styles/zIndex";
+
+interface DismissAllErrorsButtonProps {
+  className?: string;
+}
+
+const DismissAllErrorsButton: React.FC<DismissAllErrorsButtonProps> = ({
+  className,
+}) => {
+  const { t } = useTranslation();
+  const { state } = useFileState();
+  const { actions } = useFileActions();
+
+  // Check if there are any files in error state
+  const hasErrors = state.ui.errorFileIds.length > 0;
+
+  // Don't render if there are no errors
+  if (!hasErrors) {
+    return null;
+  }
+
+  const handleDismissAllErrors = () => {
+    actions.clearAllFileErrors();
+  };
+
+  return (
+    <Group className={className}>
+      <Button
+        variant="secondary"
+        accent="danger"
+        size="sm"
+        onClick={handleDismissAllErrors}
+        style={{
+          position: "absolute",
+          top: "calc(48px + 1rem)", // Sit below the 48px-tall WorkbenchBar (top toolbar)
+          right: "1rem",
+          zIndex: Z_INDEX_TOAST,
+          pointerEvents: "auto",
+        }}
+      >
+        {t("error.dismissAllErrors", "Dismiss All Errors")} (
+        {state.ui.errorFileIds.length})
+      </Button>
+    </Group>
+  );
+};
+
+export default DismissAllErrorsButton;

@@ -10,7 +10,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join, extname, isAbsolute } from "node:path";
 
-const ROOTS = ["editor/src", "shared", "portal/src"];
+const ROOTS = ["src"];
 const SRC_EXT = new Set([
   ".ts",
   ".tsx",
@@ -104,7 +104,7 @@ function varUsed(v) {
 }
 
 const rel = (f) =>
-  f.replace("editor/src/", "").replace("portal/src/", "portal/");
+  f.replace("src/", "");
 // `mantine-*` are the framework's own runtime classes (applied by Mantine, not
 // referenced in our source) — exclude; they can't be validated by source refs.
 const unusedClasses = [...classDef.keys()]
