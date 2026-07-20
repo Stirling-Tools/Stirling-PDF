@@ -7,32 +7,6 @@ bootRun {
     enabled = false
 }
 
-spotless {
-        java {
-        target 'src/**/java/**/*.java'
-        targetExclude 'src/main/java/org/apache/**'
-        googleJavaFormat(rootProject.ext.googleJavaFormatVersion).aosp().reorderImports(false)
-        // google-java-format 1.28.0 bundles Guava 32.x which crashes Spotless lint on JDK 24/25
-        suppressLintsFor { setStep('google-java-format') }
-
-        importOrder("java", "javax", "org", "com", "net", "io", "jakarta", "lombok", "me", "stirling")
-        trimTrailingWhitespace()
-        leadingTabsToSpaces()
-        endWithNewline()
-    }
-    yaml {
-        target '**/*.yml', '**/*.yaml'
-        trimTrailingWhitespace()
-        leadingTabsToSpaces()
-        endWithNewline()
-    }
-    format 'gradle', {
-        target '**/gradle/*.gradle', '**/*.gradle'
-        trimTrailingWhitespace()
-        leadingTabsToSpaces()
-        endWithNewline()
-    }
-}
 dependencies {
     implementation project(':common')
 

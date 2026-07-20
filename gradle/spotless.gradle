@@ -1,0 +1,37 @@
+spotless {
+    java {
+        target 'src/**/java/**/*.java'
+        if (project.name == 'stirling-pdf') {
+            targetExclude 'src/main/resources/static/**', 'src/main/java/org/apache/**'
+        } else {
+            targetExclude 'src/main/java/org/apache/**'
+        }
+
+        // licenseHeaderFile(file('config/license-header.txt')).updateYearWithLatest(true).yearStringFormat('%s')
+        removeUnusedImports()
+        googleJavaFormat(rootProject.ext.googleJavaFormatVersion).aosp().reorderImports(false)
+
+        importOrder('java', 'javax', 'org', 'com', 'net', 'io', 'jakarta', 'lombok', 'me', 'stirling')
+        trimTrailingWhitespace()
+        leadingTabsToSpaces()
+        endWithNewline()
+    }
+    yaml {
+        target '**/*.yml', '**/*.yaml'
+        if (project.name == 'stirling-pdf') {
+            targetExclude 'src/main/resources/static/**'
+        }
+        trimTrailingWhitespace()
+        leadingTabsToSpaces()
+        endWithNewline()
+    }
+    format 'gradle', {
+        target '**/gradle/*.gradle', '**/*.gradle'
+        if (project.name == 'stirling-pdf') {
+            targetExclude 'src/main/resources/static/**'
+        }
+        trimTrailingWhitespace()
+        leadingTabsToSpaces()
+        endWithNewline()
+    }
+}

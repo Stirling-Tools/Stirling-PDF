@@ -299,7 +299,10 @@ jobs:
           base: main
           title: "Update Frontend 3rd Party Licenses"
           body: ${{ env.PR_BODY }}
-          labels: Licenses,github-actions,frontend
+          labels: |
+            Licenses
+            github-actions
+            Front End
           draft: false
           delete-branch: true
           sign-commits: true
@@ -356,7 +359,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
         with:
-          gradle-version: 9.6.0
+          gradle-version: 9.6.1
 
       - name: Install Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
@@ -520,7 +523,10 @@ jobs:
           base: main
           title: "Update Backend 3rd Party Licenses"
           body: ${{ env.PR_BODY }}
-          labels: Licenses,github-actions,backend
+          labels: |
+            Licenses
+            github-actions
+            Back End
           delete-branch: true
           sign-commits: true
 

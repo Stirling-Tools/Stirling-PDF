@@ -6266,6 +6266,8 @@ sizeMultiplier = "{{formatted}} PDFs used a size multiplier"
 summary = "{{unique}} unique · {{units}} meter units · {{avg}} avg per PDF"
 summaryNoRate = "{{unique}} unique · {{units}} meter units"
 unit = "PDFs"
+unitsPending_one = "{{units}} meter unit pending sync from linked instances"
+unitsPending_other = "{{units}} meter units pending sync from linked instances"
 
 [portal.billing.spendLimit]
 adjustLimit = "Adjust limit"
@@ -7143,6 +7145,10 @@ settings = "Settings"
 sources = "Sources"
 usage = "Usage & Billing"
 users = "Users"
+
+[portal.nav.section]
+platform = "PDF Platform"
+processor = "PDF Processor"
 
 [portal.pipelines]
 subtitle = "Every automated document pipeline on the backend: an ordered chain of operations over a set of sources, run on a trigger. Click a row for its steps and sources."
