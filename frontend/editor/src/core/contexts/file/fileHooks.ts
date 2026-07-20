@@ -24,7 +24,7 @@ import { FileId } from "@app/types/file";
 const GUARD_MISUSE = process.env.NODE_ENV !== "production";
 
 /** Shallow equality over object/array slices assembled by selectors. */
-function shallowEqual(a: unknown, b: unknown): boolean {
+export function shallowEqual(a: unknown, b: unknown): boolean {
   if (Object.is(a, b)) return true;
   if (
     typeof a !== "object" ||

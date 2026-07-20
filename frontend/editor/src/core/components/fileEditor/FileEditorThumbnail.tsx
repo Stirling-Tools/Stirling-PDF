@@ -574,7 +574,7 @@ const FileEditorThumbnail = ({
 
               {backgroundPolicy && (
                 <Tooltip
-                  label={t("policy.badgeRunning", "{{name}} running…", {
+                  label={t("policy.badgeRunning", "{{name}} running...", {
                     name: backgroundPolicy.name,
                   })}
                   withArrow

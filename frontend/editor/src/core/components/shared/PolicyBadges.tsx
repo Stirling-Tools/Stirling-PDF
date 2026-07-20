@@ -47,11 +47,11 @@ export function PolicyBadges({
             key={policy.id}
             label={
               policy.enforcing
-                ? t("policy.badgeEnforcing", "{{name}} enforcing…", {
+                ? t("policy.badgeEnforcing", "{{name}} enforcing...", {
                     name: policy.name,
                   })
                 : policy.background
-                  ? t("policy.badgeRunning", "{{name}} running…", {
+                  ? t("policy.badgeRunning", "{{name}} running...", {
                       name: policy.name,
                     })
                   : t("policy.badgeRan", "{{name}} policy ran on this file", {

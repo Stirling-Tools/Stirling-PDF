@@ -779,6 +779,7 @@ export {
   useFileActions,
   useFileSelector,
   useFileSelectors,
+  shallowEqual,
   useCurrentFile,
   useFileSelection,
   useFileManagement,
