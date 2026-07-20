@@ -40,8 +40,7 @@ public class ParticipantRequestSecurityFilter extends OncePerRequestFilter {
     private static final int MAX_REQUESTS_PER_MINUTE = 20;
     private static final long WINDOW_MS = 60_000L;
 
-    // value: [requestCount, windowStartMs]
-    private final ConcurrentHashMap<String, long[]> requestCounts = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, RequestWindow> requestCounts = new ConcurrentHashMap<>();
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -89,17 +88,17 @@ public class ParticipantRequestSecurityFilter extends OncePerRequestFilter {
 
     private boolean rateLimitExceeded(HttpServletRequest request) {
         long now = System.currentTimeMillis();
-        long[] entry =
+        RequestWindow entry =
                 requestCounts.compute(
                         request.getRemoteAddr(),
                         (key, existing) -> {
-                            if (existing == null || now - existing[1] >= WINDOW_MS) {
-                                return new long[] {1, now};
+                            if (existing == null || now - existing.windowStartMs() >= WINDOW_MS) {
+                                return new RequestWindow(1, now);
                             }
-                            existing[0]++;
-                            return existing;
+                            return new RequestWindow(
+                                    existing.requestCount() + 1, existing.windowStartMs());
                         });
-        return entry[0] > MAX_REQUESTS_PER_MINUTE;
+        return entry.requestCount() > MAX_REQUESTS_PER_MINUTE;
     }
 
     private boolean isMultipartUploadEndpoint(HttpServletRequest request) {
@@ -135,6 +134,8 @@ public class ParticipantRequestSecurityFilter extends OncePerRequestFilter {
     @Scheduled(fixedDelay = 300_000)
     public void cleanupExpiredWindows() {
         long cutoff = System.currentTimeMillis() - WINDOW_MS;
-        requestCounts.entrySet().removeIf(entry -> entry.getValue()[1] < cutoff);
+        requestCounts.entrySet().removeIf(entry -> entry.getValue().windowStartMs() < cutoff);
     }
+
+    private record RequestWindow(int requestCount, long windowStartMs) {}
 }
