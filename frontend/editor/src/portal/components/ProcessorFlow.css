@@ -34,7 +34,7 @@
   width: 0.5rem;
   height: 0.5rem;
   border-radius: 50%;
-  background: var(--color-border);
+  background: var(--c-border);
 }
 
 .portal-pf__live--on {
@@ -47,12 +47,12 @@
   margin: 0;
   font-size: 0.9375rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-pf__connected {
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -84,7 +84,7 @@
 
 .portal-pf__wire-path {
   fill: none;
-  stroke: var(--color-border-light);
+  stroke: var(--c-border-subtle);
   stroke-width: 1.25;
 }
 
@@ -113,7 +113,7 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
   margin-bottom: 0.125rem;
 }
 
@@ -122,8 +122,8 @@
   height: auto;
   width: 100%;
   text-align: left;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border-light);
+  background: var(--c-bg);
+  border: 1px solid var(--c-border-subtle);
   border-radius: var(--radius-md);
   transition:
     background var(--motion-fast),
@@ -137,12 +137,12 @@
 }
 
 .portal-pf__node:hover {
-  background: var(--color-bg-hover);
-  border-color: var(--color-border);
+  background: var(--c-hover);
+  border-color: var(--c-border);
 }
 
 .portal-pf__node:focus-visible {
-  outline: 2px solid var(--color-blue);
+  outline: 2px solid var(--c-primary);
   outline-offset: 2px;
 }
 
@@ -161,12 +161,12 @@
   height: 1.75rem;
   border-radius: var(--radius-md);
   font-size: 0.9375rem;
-  background: var(--color-bg-muted);
-  color: var(--color-text-3);
+  background: var(--c-surface-sunken);
+  color: var(--c-text-subtle);
 }
 
 .portal-pf__node--soon .portal-pf__node-icon {
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
   font-weight: 600;
 }
 
@@ -189,7 +189,7 @@
 .portal-pf__node-text strong {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -197,7 +197,7 @@
 
 .portal-pf__node-text span {
   font-size: 0.6875rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 /* ── Policies card (core) ───────────────────────────────────────────────────── */
@@ -206,8 +206,8 @@
   flex: none;
   width: 18rem;
   padding: 0.75rem;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border-light);
+  background: var(--c-bg);
+  border: 1px solid var(--c-border-subtle);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
 }
@@ -230,7 +230,7 @@
 }
 
 .portal-pf__policy + .portal-pf__policy {
-  border-top: 1px solid var(--color-border-light);
+  border-top: 1px solid var(--c-border-subtle);
 }
 
 .portal-pf__policy-line {
@@ -248,7 +248,7 @@
   height: 1.5rem;
   border-radius: 6px;
   font-size: 0.875rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   transition:
     color 0.3s ease,
     background-color 0.3s ease,
@@ -260,7 +260,7 @@
 }
 
 .portal-pf__policy--locked .portal-pf__policy-icon {
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
 }
 
 /* Leading-LED blink: added for 150ms as a particle threads this row's lane,
@@ -276,22 +276,22 @@
   flex: 1 1 auto;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
   min-width: 0;
 }
 
 .portal-pf__policy--active .portal-pf__policy-label {
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-pf__policy--locked .portal-pf__policy-label {
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   font-weight: 500;
 }
 
 .portal-pf__policy-count {
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -300,7 +300,7 @@
   flex: none;
   font-size: 0.6875rem;
   font-weight: 600;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -315,7 +315,7 @@
 .portal-pf__foot {
   margin: 0.875rem 0 0;
   font-size: 0.6875rem;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
 }
 
 .portal-pf__loading {
@@ -338,7 +338,7 @@
 .portal-pf__sankey-label {
   font-size: 12px;
   font-weight: 600;
-  fill: var(--color-text-2);
+  fill: var(--c-text-muted);
   font-variant-numeric: tabular-nums;
 }
 
@@ -347,7 +347,7 @@
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  fill: var(--color-text-5);
+  fill: var(--c-text-subtle);
 }
 
 .portal-pf__sankey-empty {

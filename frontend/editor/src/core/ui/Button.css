@@ -67,8 +67,8 @@
 [data-theme="dark"] .sui-btn.mantine-Button-root:disabled:not([data-loading]),
 [data-theme="dark"]
   .sui-btn.mantine-Button-root[data-disabled]:not([data-loading]) {
-  background: var(--color-bg-muted);
-  color: var(--color-text-5);
+  background: var(--c-surface-sunken);
+  color: var(--c-text-subtle);
   border-color: transparent;
   opacity: 1;
 }

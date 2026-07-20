@@ -191,8 +191,8 @@
 }
 
 .portal-editor__pairing-icon--blue {
-  background: var(--color-blue-light);
-  color: var(--color-blue);
+  background: color-mix( in srgb, var(--c-primary) 12%, var(--c-surface) );
+  color: var(--c-primary);
 }
 .portal-editor__pairing-icon--purple {
   background: var(--color-purple-light);

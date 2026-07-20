@@ -14,25 +14,25 @@ export default function AuthDefaultCredentials() {
           size="sm"
           fw={600}
           ta="center"
-          style={{ color: "var(--text-primary)" }}
+          style={{ color: "var(--c-text)" }}
         >
           {t("login.defaultCredentials", "Default Login Credentials")}
         </Text>
-        <Text size="sm" ta="center" style={{ color: "var(--text-primary)" }}>
+        <Text size="sm" ta="center" style={{ color: "var(--c-text)" }}>
           <Text
             component="span"
             fw={600}
-            style={{ color: "var(--text-primary)" }}
+            style={{ color: "var(--c-text)" }}
           >
             {t("login.username", "Username")}:
           </Text>{" "}
           admin
         </Text>
-        <Text size="sm" ta="center" style={{ color: "var(--text-primary)" }}>
+        <Text size="sm" ta="center" style={{ color: "var(--c-text)" }}>
           <Text
             component="span"
             fw={600}
-            style={{ color: "var(--text-primary)" }}
+            style={{ color: "var(--c-text)" }}
           >
             {t("login.password", "Password")}:
           </Text>{" "}
@@ -42,7 +42,7 @@ export default function AuthDefaultCredentials() {
           size="xs"
           ta="center"
           mt="xs"
-          style={{ color: "var(--text-muted)" }}
+          style={{ color: "var(--c-text-subtle)" }}
         >
           {t(
             "login.changePasswordWarning",
