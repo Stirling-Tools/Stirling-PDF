@@ -171,7 +171,7 @@ app/proprietary/build
 common/build
 proprietary/build
 stirling-pdf/build
-frontend/editor/src-tauri/provisioner/target
+frontend/src-tauri/provisioner/target
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -222,7 +222,7 @@ out/
 *.asc
 
 # Allow test fixture certificates (synthetic, no real credentials)
-!frontend/editor/src/core/tests/test-fixtures/certs/**
+!frontend/src/editor/core/tests/test-fixtures/certs/**
 
 # SSH Keys
 *.pub
@@ -264,7 +264,7 @@ node_modules/
 *compact*.json
 test_batch.json
 *.backup.*.json
-frontend/editor/public/locales/*/translation.backup*.json
+frontend/public/locales/*/translation.backup*.json
 
 # Development/build artifacts
 .gradle-cache/
@@ -289,4 +289,4 @@ docs/type3/signatures/
 *.playwright-mcp.png
 
 # Local screenshot artifacts from *-screenshots.spec.ts
-frontend/editor/screenshots/
+frontend/screenshots/

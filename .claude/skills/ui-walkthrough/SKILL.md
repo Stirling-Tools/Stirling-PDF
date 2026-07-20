@@ -28,13 +28,13 @@ current branch diff. Flags: `--fix`, `--theme light|dark|both` (default both),
 ## What this repo gives you (use it, don't reinvent)
 
 - **Stubbed Playwright project** = backend-free screenshots via `page.route()` mocks.
-  Reference implementation: `frontend/editor/src/core/tests/stubbed/files-page-screenshots.spec.ts`.
+  Reference implementation: `frontend/src/editor/core/tests/stubbed/files-page-screenshots.spec.ts`.
   It already shows the light / **dark** / **RTL** passes, JWT seeding, IndexedDB
   seeding, and dumping PNGs to a `screenshots/<area>/` folder. Copy its shape.
-- Helpers: `frontend/editor/src/core/tests/helpers/ui-helpers.ts`
+- Helpers: `frontend/src/editor/core/tests/helpers/ui-helpers.ts`
   (`uploadFiles`, `openSettings`, `waitForModalOpen`, `dismissTourTooltip`, …)
   and the `stub-test-base` fixtures (`autoGoto`, `seedJwt`, `viewport`).
-- Config: `frontend/editor/playwright.config.ts` (run from `frontend/editor/`).
+- Config: `frontend/playwright.config.ts` (run from `frontend/`).
 - Report template: [report-template.html](report-template.html) - self-contained,
   one big image at a time, a global light/dark slider that flips every shot,
   thumbnail rail, prev/next + arrow keys, and a Findings tab.
@@ -54,13 +54,13 @@ current branch diff. Flags: `--fix`, `--theme light|dark|both` (default both),
 Worktrees have no `node_modules` and no generated icons. From repo root:
 ```
 cd frontend && npm ci                       # or junction main's node_modules (see memory)
-cd frontend/editor && node scripts/generate-icons.js
+cd frontend && node scripts/generate-icons.js
 ```
 Kill any stale dev server first (it serves old modules):
 `Get-NetTCPConnection -LocalPort 5173 -State Listen | %{ Stop-Process -Id $_.OwningProcess -Force }`
 
 ### 3. Write the capture spec
-Create `frontend/editor/src/core/tests/stubbed/<feature>-walkthrough.spec.ts`,
+Create `frontend/src/editor/core/tests/stubbed/<feature>-walkthrough.spec.ts`,
 modeled on `files-page-screenshots.spec.ts`. For each enumerated view:
 - stub the APIs it needs, drive the UI to that state, wait on a real locator
   (not a fixed sleep), `await settle(page)` for Mantine portals, then
@@ -71,7 +71,7 @@ modeled on `files-page-screenshots.spec.ts`. For each enumerated view:
 - Name shots `NN_<view>_<theme>.png` so light/dark pair up by suffix.
 - Prefer **stable test-ids** over translated accessible names (RTL/i18n breaks text locators).
 
-Run it: `cd frontend/editor && npx playwright test --project=stubbed <feature>-walkthrough.spec.ts`.
+Run it: `cd frontend && npx playwright test --project=stubbed <feature>-walkthrough.spec.ts`.
 Add `--project=stubbed-firefox`/`-webkit` only if cross-browser layout matters.
 
 ### 4. Build the report

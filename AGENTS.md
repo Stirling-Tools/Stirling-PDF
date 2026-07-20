@@ -139,10 +139,10 @@ The project structure is defined in `engine/pyproject.toml`. Any new dependencie
 
 #### Environment Variables
 - All `VITE_*` variables must be declared in the appropriate committed env file:
-  - `frontend/editor/.env` — core and shared vars (base, loaded in every mode)
-  - `frontend/editor/.env.proprietary` — proprietary-only vars, e.g. the admin portal's SaaS/account-link keys (layered on top of `.env` in proprietary mode)
-  - `frontend/editor/.env.saas` — SaaS-only vars (layered on top of `.env` in SaaS mode)
-  - `frontend/editor/.env.desktop` — desktop (Tauri)-only vars (layered on top of `.env` in desktop mode)
+  - `frontend/.env` — core and shared vars (base, loaded in every mode)
+  - `frontend/.env.proprietary` — proprietary-only vars, e.g. the admin portal's SaaS/account-link keys (layered on top of `.env` in proprietary mode)
+  - `frontend/.env.saas` — SaaS-only vars (layered on top of `.env` in SaaS mode)
+  - `frontend/.env.desktop` — desktop (Tauri)-only vars (layered on top of `.env` in desktop mode)
 - These files are committed to Git and must not contain private keys
 - Local overrides (API keys, machine-specific settings) go in uncommitted sibling `.env.local` / `.env.saas.local` / `.env.desktop.local` files — Vite automatically layers them on top
 - Never use `|| 'hardcoded-fallback'` inline — put defaults in the committed env files
@@ -153,9 +153,9 @@ The project structure is defined in `engine/pyproject.toml`. Any new dependencie
 #### Import Paths - CRITICAL
 **ALWAYS use `@app/*` for imports.** Do not use `@core/*` or `@proprietary/*` unless explicitly wrapping/extending a lower layer implementation.
 
-For a broader explanation of the frontend layering and override architecture, read @frontend/editor/DeveloperGuide.md
+For a broader explanation of the frontend layering and override architecture, read @frontend/DeveloperGuide.md
 
-Before touching colours or theming (tokens, dark mode, accent colours), read @frontend/editor/src/core/theme/README.md — it explains the palette/`--c-*` token system and the rule that literal colours live only in `primitives.css`.
+Before touching colours or theming (tokens, dark mode, accent colours), read @frontend/src/editor/core/theme/README.md — it explains the palette/`--c-*` token system and the rule that literal colours live only in `primitives.css`.
 
 ```typescript
 // ✅ CORRECT - Use @app/* for all imports
@@ -270,7 +270,7 @@ Frontend designed for **stateful document processing**:
 - No file reloading between tools - performance critical for large PDFs (up to 100GB+)
 
 #### FileContext - Central State Management
-**Location**: `frontend/editor/src/core/contexts/FileContext.tsx`
+**Location**: `frontend/src/editor/core/contexts/FileContext.tsx`
 - **Active files**: Currently loaded PDFs and their variants
 - **Tool navigation**: Current mode (viewer/pageEditor/fileEditor/toolName)
 - **Memory management**: PDF document cleanup, blob URL lifecycle, Web Worker management
@@ -295,7 +295,7 @@ Without cleanup: browser crashes with memory leaks.
 
 **Architecture**: Modular hook-based system with clear separation of concerns:
 
-- **useToolOperation** (`frontend/editor/src/core/hooks/tools/shared/useToolOperation.ts`): Main orchestrator hook
+- **useToolOperation** (`frontend/src/editor/core/hooks/tools/shared/useToolOperation.ts`): Main orchestrator hook
   - Coordinates all tool operations with consistent interface
   - Integrates with FileContext for operation tracking
   - Handles validation, error handling, and UI state management
@@ -383,7 +383,7 @@ return useToolOperation({
 ### Frontend Directory Structure
 The frontend is organized with a clear separation of concerns:
 
-- **`frontend/editor/src/core/`**: Main application code (shared, production-ready components)
+- **`frontend/src/editor/core/`**: Main application code (shared, production-ready components)
   - **`core/components/`**: React components organized by feature
     - `core/components/tools/`: Individual PDF tool implementations
     - `core/components/viewer/`: PDF viewer components
@@ -401,17 +401,17 @@ The frontend is organized with a clear separation of concerns:
   - **`core/data/`**: Static data (tool taxonomy, etc.)
   - **`core/services/`**: Business logic services (PDF processing, storage, etc.)
 
-- **`frontend/editor/src/desktop/`**: Desktop-specific (Tauri) code
-- **`frontend/editor/src/proprietary/`**: Proprietary/licensed features
-- **`frontend/editor/src-tauri/`**: Tauri (Rust) native desktop application code
-- **`frontend/editor/public/`**: Static assets served directly
+- **`frontend/src/editor/desktop/`**: Desktop-specific (Tauri) code
+- **`frontend/src/editor/proprietary/`**: Proprietary/licensed features
+- **`frontend/src-tauri/`**: Tauri (Rust) native desktop application code
+- **`frontend/public/`**: Static assets served directly
   - `public/locales/`: Translation JSON files
 
 ### Component Architecture
-- **Static Assets**: CSS, JS, and resources in `src/main/resources/static/` (legacy) + `frontend/editor/public/` (modern)
+- **Static Assets**: CSS, JS, and resources in `src/main/resources/static/` (legacy) + `frontend/public/` (modern)
 - **Internationalization**:
   - Backend: `messages_*.properties` files
-  - Frontend: JSON files in `frontend/editor/public/locales/` (converted from .properties)
+  - Frontend: JSON files in `frontend/public/locales/` (converted from .properties)
   - Conversion Script: `scripts/convert_properties_to_json.py`
 
 ### Configuration Modes
@@ -436,7 +436,7 @@ The frontend is organized with a clear separation of concerns:
 4. **Code Style**: Spotless enforces Google Java Format automatically (`task backend:format`)
 5. **Translations**:
    - Backend: Use helper scripts in `/scripts` for multi-language updates
-   - Frontend: Update JSON files in `frontend/editor/public/locales/` or use conversion script
+   - Frontend: Update JSON files in `frontend/public/locales/` or use conversion script
 6. **Documentation**: API docs auto-generated and available at `/swagger-ui/index.html`
 
 ## Frontend Architecture Status
@@ -454,7 +454,7 @@ The frontend is organized with a clear separation of concerns:
 ## Translation Rules
 
 - **CRITICAL**: Always update translations in `en-US` only - all other languages (including `en-GB`) are handled separately
-- Translation files are located in `frontend/editor/public/locales/`
+- Translation files are located in `frontend/public/locales/`
 - After changing any translation file, run `task pre-commit:fix`
 
 ## Important Notes

@@ -141,7 +141,7 @@ jobs:
       - name: Cache Rust build
         uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
         with:
-          workspaces: frontend/editor/src-tauri
+          workspaces: frontend/src-tauri
           # Stable key shared across workflows so the nightly warmer.
           # rust-cache still appends OS + rustc + Cargo.lock.
           shared-key: tauri-${{ matrix.name }}
@@ -335,7 +335,7 @@ jobs:
         env:
           KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
         run: |
-          cat > ./frontend/editor/src-tauri/tauri.windows.conf.json <<EOF
+          cat > ./frontend/src-tauri/tauri.windows.conf.json <<EOF
           {
             "bundle": {
               "windows": {
@@ -394,7 +394,7 @@ jobs:
           SM_CODE_SIGNING_CERT_SHA1_HASH: ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}
           CI: true
         with:
-          projectPath: ./frontend/editor
+          projectPath: ./frontend
           tauriScript: npx tauri
           # Linux: build deb+rpm only here (deb-only on minimal smoke builds).
           # AppImage runs in its own continue-on-error step below so its
@@ -414,7 +414,7 @@ jobs:
           VITE_SAAS_BACKEND_API_URL: ${{ secrets.VITE_SAAS_BACKEND_API_URL || 'https://api.stirlingpdf.com' }}
           CI: true
         with:
-          projectPath: ./frontend/editor
+          projectPath: ./frontend
           tauriScript: npx tauri
           # Linux: build deb+rpm only here (deb-only on minimal smoke builds).
           # AppImage runs in its own continue-on-error step below so its
@@ -440,7 +440,7 @@ jobs:
           VITE_SAAS_BACKEND_API_URL: ${{ secrets.VITE_SAAS_BACKEND_API_URL || 'https://api.stirlingpdf.com' }}
           CI: true
         with:
-          projectPath: ./frontend/editor
+          projectPath: ./frontend
           tauriScript: npx tauri
           args: --bundles appimage
 
@@ -458,7 +458,7 @@ jobs:
         if: inputs.sign && matrix.platform == 'macos-15'
         run: |
           echo "🔍 Verifying notarization status..."
-          cd ./frontend/editor/src-tauri/target
+          cd ./frontend/src-tauri/target
           DMG_FILE=$(find . -name "*.dmg" | head -1)
           if [ -n "$DMG_FILE" ]; then
             echo "Found DMG: $DMG_FILE"
@@ -475,7 +475,7 @@ jobs:
           # Absolute dist path so the cd below can't break the copy targets.
           DIST="$GITHUB_WORKSPACE/dist"
           mkdir -p "$DIST"
-          cd ./frontend/editor/src-tauri/target
+          cd ./frontend/src-tauri/target
 
           # Find and rename artifacts based on platform
           if [ "${{ matrix.platform }}" = "windows-latest" ]; then
@@ -565,7 +565,7 @@ jobs:
       - name: Verify build artifacts
         shell: bash
         run: |
-          cd ./frontend/editor/src-tauri/target
+          cd ./frontend/src-tauri/target
 
           # Check for expected artifacts based on platform
           if [ "${{ matrix.platform }}" = "windows-latest" ]; then
@@ -596,7 +596,7 @@ jobs:
       - name: Test artifact sizes
         shell: bash
         run: |
-          cd ./frontend/editor/src-tauri/target
+          cd ./frontend/src-tauri/target
           echo "Artifact sizes for ${{ matrix.name }}:"
           find . -name "*.exe" -o -name "*.dmg" -o -name "*.deb" -o -name "*.rpm" -o -name "*.AppImage" -o -name "*.msi" | while read file; do
             if [ -f "$file" ]; then

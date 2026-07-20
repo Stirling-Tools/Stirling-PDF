@@ -427,7 +427,7 @@ jobs:
         env:
           KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
         run: |
-          cat > ./frontend/editor/src-tauri/tauri.windows.conf.json <<EOF
+          cat > ./frontend/src-tauri/tauri.windows.conf.json <<EOF
           {
             "bundle": {
               "windows": {
@@ -440,7 +440,7 @@ jobs:
           }
           EOF
           echo "Generated tauri.windows.conf.json (alias masked):"
-          sed "s/${KEYPAIR_ALIAS}/***/g" ./frontend/editor/src-tauri/tauri.windows.conf.json
+          sed "s/${KEYPAIR_ALIAS}/***/g" ./frontend/src-tauri/tauri.windows.conf.json
 
       - name: Import release GPG signing key (Linux)
         if: matrix.platform == 'ubuntu-22.04' && env.RELEASE_GPG_PRIVATE_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master')
@@ -488,7 +488,7 @@ jobs:
           SM_CODE_SIGNING_CERT_SHA1_HASH: ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}
           CI: true
         with:
-          projectPath: ./frontend/editor
+          projectPath: ./frontend
           tauriScript: npx tauri
           args: ${{ matrix.args }}
           updaterJsonKeepUniversal: true
@@ -516,7 +516,7 @@ jobs:
           $allSigned = $true
 
           # Check MSI installer (outer wrapper - what users download)
-          $msiFiles = Get-ChildItem -Path "./frontend/editor/src-tauri/target" -Filter "*.msi" -Recurse -File
+          $msiFiles = Get-ChildItem -Path "./frontend/src-tauri/target" -Filter "*.msi" -Recurse -File
           if ($msiFiles.Count -eq 0) {
             Write-Host "[ERROR] No MSI found under target/"
             exit 1
@@ -599,7 +599,7 @@ jobs:
           # Absolute dist path so the cd below can't break the copy targets.
           DIST="$GITHUB_WORKSPACE/dist"
           mkdir -p "$DIST"
-          cd ./frontend/editor/src-tauri/target
+          cd ./frontend/src-tauri/target
 
           echo "=== tauri bundle artifacts ==="
           find . -path "*/bundle/*" \( -name "*.msi" -o -name "*.deb" \
@@ -655,7 +655,7 @@ jobs:
         with:
           sparse-checkout: |
             .github/scripts/verify-updater-signatures.py
-            frontend/editor/src-tauri/tauri.conf.json
+            frontend/src-tauri/tauri.conf.json
           sparse-checkout-cone-mode: false
 
       - name: Download all Tauri artifacts
@@ -800,7 +800,7 @@ jobs:
         run: |
           python3 -m pip install --quiet 'cryptography==44.0.0'
           python3 .github/scripts/verify-updater-signatures.py \
-            ./artifacts/tauri frontend/editor/src-tauri/tauri.conf.json
+            ./artifacts/tauri frontend/src-tauri/tauri.conf.json
 
       # workflow_dispatch path requires platform=='all' so a single-platform
       # dispatch can't overwrite an existing release's full latest.json with a

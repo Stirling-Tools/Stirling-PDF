@@ -91,12 +91,12 @@ frontend: &frontend
 # job on changes to any of these.
 tauri: &tauri
   - *ci
-  - frontend/editor/src-tauri/**
-  - frontend/editor/src/desktop/**
-  - frontend/editor/tsconfig.desktop.vite.json
+  - frontend/src-tauri/**
+  - frontend/src/editor/desktop/**
+  - frontend/tsconfig.desktop.vite.json
   - frontend/package.json
   - frontend/package-lock.json
-  - frontend/editor/vite.config.ts
+  - frontend/vite.config.ts
   - .github/workflows/tauri-build.yml
   - Taskfile.yml
   - .taskfiles/desktop.yml
@@ -120,8 +120,8 @@ engine: &engine
 generated-models: &generated-models
   - *ci
   - *openapi
-  - frontend/editor/scripts/generate-tool-api-types.mts
-  - frontend/editor/src/core/types/toolApiTypes.ts
+  - frontend/scripts/generate-tool-api-types.mts
+  - frontend/src/editor/core/types/toolApiTypes.ts
   - engine/scripts/generate_tool_models.py
   - engine/src/stirling/models/tool_models.py
   - .taskfiles/frontend.yml
@@ -132,7 +132,7 @@ licenses-frontend: &licenses-frontend
   - ".github/workflows/frontend-backend-licenses-update.yml"
   - "frontend/package.json"
   - "frontend/package-lock.json"
-  - "frontend/editor/scripts/generate-licenses.js"
+  - "frontend/scripts/generate-licenses.js"
 
 licenses-backend: &licenses-backend
   - ".github/workflows/frontend-backend-licenses-update.yml"
@@ -143,8 +143,8 @@ licenses-backend: &licenses-backend
 proprietary: &proprietary
   - *ci
   - app/proprietary/**
-  - frontend/editor/src/proprietary/**
-  - frontend/editor/src/core/tests/enterprise/**
+  - frontend/src/editor/proprietary/**
+  - frontend/src/editor/core/tests/enterprise/**
   - testing/compose/docker-compose-keycloak-oauth.yml
   - testing/compose/docker-compose-keycloak-saml.yml
   - testing/compose/keycloak-realm-oauth.json

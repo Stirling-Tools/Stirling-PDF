@@ -21,7 +21,7 @@ vars:
     ':(exclude).devcontainer/*'
     ':(exclude)app/core/src/main/resources/*'
     ':(exclude)app/proprietary/src/main/resources/*'
-    ':(exclude)frontend/editor/public/vendor/*'
+    ':(exclude)frontend/public/vendor/*'
     ':(exclude)*Dockerfile*'
     ':(exclude)*pdfjs*'
     ':(exclude)*thirdParty*'
@@ -39,7 +39,7 @@ vars:
     ':(exclude)*.min.*'
     ':(exclude)*diff.js'
     ':(exclude).github/workflows/*'
-  LOCALE_TOML: 'frontend/editor/public/locales/*/translation.toml'
+  LOCALE_TOML: 'frontend/public/locales/*/translation.toml'
 
   # gitleaks is pinned + checksum-verified by scripts/pre-commit/install_gitleaks.py,
   # which owns the version and caches the binary here.
