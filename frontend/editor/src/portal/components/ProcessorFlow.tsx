@@ -25,25 +25,21 @@ import { FlowOutcomes } from "@portal/components/processor-flow/FlowOutcomes";
 import { FlowSankey } from "@portal/components/processor-flow/FlowSankey";
 import "@portal/components/ProcessorFlow.css";
 
-/**
- * Animated processor visualiser for the home surface: connected sources on the
- * left flow through the standing policies in the middle to their audit outcomes
- * on the right. Two lenses — a live particle flow and a Sankey summary.
- *
- * This module wires the data + gating together; the moving parts live under
- * `processor-flow/`: geometry ({@link useFlowGeometry}), the rAF particle loop
- * ({@link useFlowParticles}), the three columns, and the Sankey. The flow only
- * runs when something is set up AND there's activity; an idle machine stays
- * still (unless {@link DEV_KEEP_FLOWING} forces it while iterating).
- */
-export function ProcessorFlow() {
+/** Home processor visualiser: sources → policies → outcomes, as a live particle
+ *  flow or a Sankey. Data + gating here; moving parts live under `processor-flow/`. */
+interface ProcessorFlowProps {
+  /** Testing seam: render this model directly instead of fetching. Never set in
+   *  the app — used by the Playground story to drive rates/counts from controls. */
+  dataOverride?: ProcessorFlowModel;
+}
+
+export function ProcessorFlow({ dataOverride }: ProcessorFlowProps = {}) {
   const { t } = useTranslation();
   const { setActiveView } = useView();
   const navigate = useNavigate();
-  const { data, loading } = useAsync<ProcessorFlowModel>(
-    () => fetchProcessorFlow(),
-    [],
-  );
+  const fetched = useAsync<ProcessorFlowModel>(() => fetchProcessorFlow(), []);
+  const data = dataOverride ?? fetched.data;
+  const loading = dataOverride ? false : fetched.loading;
 
   const [lens, setLens] = useState<Lens>("flow");
   const isLoading = loading && data === null;
