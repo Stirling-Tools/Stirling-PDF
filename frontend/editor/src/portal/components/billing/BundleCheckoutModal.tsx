@@ -256,6 +256,9 @@ export function BundleCheckoutModal({
           key={`bundle:${quoteId ?? quote.poolCredits}`}
           teamId={teamId}
           quoteId={quoteId}
+          units={quote.poolCredits}
+          consented={consented}
+          eulaVersion={CONSENT_EULA_VERSION}
           onComplete={() => setPhase("done")}
         />
       )}
@@ -841,11 +844,18 @@ function CalculatorStep({
 function PaymentStep({
   teamId,
   quoteId,
+  units,
+  consented,
+  eulaVersion,
   onComplete,
 }: {
   teamId: number;
-  /** The persisted quote to check out against; null only on the no-backend mock path. */
+  /** Preferred: check out against this persisted quote (carries pool + consent). */
   quoteId: number | null;
+  /** Direct-path fallback (used only when quoteId is null, e.g. quote persistence unavailable). */
+  units: number;
+  consented: boolean;
+  eulaVersion: string;
   onComplete: () => void;
 }) {
   const { t } = useTranslation();
@@ -864,14 +874,26 @@ function PaymentStep({
     let cancelled = false;
     setLoading(true);
     setError(null);
-    createBundleCheckoutSession({
-      teamId,
-      // The persisted quote carries the pool + consent; the edge fn reads them and settles the quote
-      // on payment. (quoteId is always set here when a publishable key is present.)
-      quoteId: quoteId ?? undefined,
-      successUrl: window.location.href,
-      cancelUrl: window.location.href,
-    })
+    // Prefer the quote path (the edge fn reads pool + consent off it and settles it on payment). When
+    // quote persistence was unavailable (quoteId null), fall back to sending units + consent inline so
+    // the request is still valid — createBundleCheckoutSession sends quote_id XOR the inline trio.
+    createBundleCheckoutSession(
+      quoteId != null
+        ? {
+            teamId,
+            quoteId,
+            successUrl: window.location.href,
+            cancelUrl: window.location.href,
+          }
+        : {
+            teamId,
+            units,
+            consented,
+            eulaVersion,
+            successUrl: window.location.href,
+            cancelUrl: window.location.href,
+          },
+    )
       .then((session) => {
         if (cancelled) return;
         // Bundle checkout is embedded-only (the edge fn returns a client_secret, never a redirect
@@ -887,7 +909,7 @@ function PaymentStep({
     return () => {
       cancelled = true;
     };
-  }, [publishableKey, teamId, quoteId]);
+  }, [publishableKey, teamId, quoteId, units, consented, eulaVersion]);
 
   const stripe = publishableKey ? loadStripeOnce(publishableKey) : null;
 
