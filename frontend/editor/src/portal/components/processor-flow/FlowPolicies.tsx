@@ -60,7 +60,7 @@ export function FlowPolicies({
               <Button
                 size="sm"
                 py="xs"
-                variant="primary"
+                variant="secondary"
                 className="portal-pf__setup"
                 onClick={() => onSetup(policy.key)}
               >
