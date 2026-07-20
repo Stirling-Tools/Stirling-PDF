@@ -13,6 +13,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
@@ -132,6 +134,25 @@ class WorkflowParticipantControllerMoreTest {
 
             controller.getSessionByToken(TOKEN);
 
+            verify(workflowSessionService, org.mockito.Mockito.never())
+                    .updateParticipantStatus(
+                            org.mockito.ArgumentMatchers.anyLong(),
+                            org.mockito.ArgumentMatchers.any());
+        }
+
+        @ParameterizedTest
+        @EnumSource(
+                value = WorkflowStatus.class,
+                names = {"COMPLETED", "CANCELLED"})
+        void inactiveSession_isReturnedWithoutUpdatingParticipantStatus(
+                WorkflowStatus workflowStatus) {
+            WorkflowParticipant p = participant(ParticipantStatus.PENDING);
+            p.getWorkflowSession().setStatus(workflowStatus);
+            when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
+
+            ResponseEntity<WorkflowSessionResponse> response = controller.getSessionByToken(TOKEN);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             verify(workflowSessionService, org.mockito.Mockito.never())
                     .updateParticipantStatus(
                             org.mockito.ArgumentMatchers.anyLong(),
@@ -342,6 +363,29 @@ class WorkflowParticipantControllerMoreTest {
                     .isInstanceOf(ResponseStatusException.class)
                     .extracting(e -> ((ResponseStatusException) e).getStatusCode())
                     .isEqualTo(HttpStatus.BAD_REQUEST);
+        }
+
+        @ParameterizedTest
+        @EnumSource(
+                value = WorkflowStatus.class,
+                names = {"COMPLETED", "CANCELLED"})
+        void inactiveSession_throwsBadRequestWithoutChangingParticipant(
+                WorkflowStatus workflowStatus) {
+            WorkflowParticipant p = participant(ParticipantStatus.PENDING);
+            p.getWorkflowSession().setStatus(workflowStatus);
+            when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
+
+            assertThatThrownBy(() -> controller.declineParticipation(TOKEN, "reason"))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                    .isEqualTo(HttpStatus.BAD_REQUEST);
+
+            assertThat(p.getStatus()).isEqualTo(ParticipantStatus.PENDING);
+            verify(workflowSessionService, org.mockito.Mockito.never())
+                    .addParticipantNotification(
+                            org.mockito.ArgumentMatchers.anyLong(),
+                            org.mockito.ArgumentMatchers.anyString());
+            verify(participantRepository, org.mockito.Mockito.never()).save(p);
         }
 
         @Test

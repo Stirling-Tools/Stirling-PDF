@@ -95,14 +95,16 @@ public class WorkflowParticipantController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Participant access expired");
         }
 
-        // Mark as viewed if not already
-        if (participant.getStatus() == ParticipantStatus.PENDING
-                || participant.getStatus() == ParticipantStatus.NOTIFIED) {
+        WorkflowSession session = participant.getWorkflowSession();
+
+        // Completed and cancelled workflows remain readable for participants, but immutable.
+        if (session.isActive()
+                && (participant.getStatus() == ParticipantStatus.PENDING
+                        || participant.getStatus() == ParticipantStatus.NOTIFIED)) {
             workflowSessionService.updateParticipantStatus(
                     participant.getId(), ParticipantStatus.VIEWED);
         }
 
-        WorkflowSession session = participant.getWorkflowSession();
         // Strip peer share tokens — a single participant token must not enumerate peer bearer
         // tokens (GHSA-qgg6-mxw4-xg62).
         return ResponseEntity.ok(WorkflowMapper.toResponse(session, null, false));
@@ -226,6 +228,11 @@ public class WorkflowParticipantController {
         if (participant.hasCompleted()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Participant has already completed their action");
+        }
+
+        if (!participant.getWorkflowSession().isActive()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Workflow session is no longer active");
         }
 
         // Update status to DECLINED
