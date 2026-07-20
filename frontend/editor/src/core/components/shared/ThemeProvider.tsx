@@ -73,8 +73,8 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   const colorScheme = resolveColorScheme(themeMode, systemScheme);
 
   // Mirror the scheme to <html>. The accent is fixed to the default (neutral
-  // zinc/grey surfaces + blue buttons): data-accent="default" and no --user-*
-  // overrides, so colors.css resolves --c-primary to its static blue.
+  // surfaces + blue buttons): data-accent="default" and no --user-* overrides,
+  // so colors.css resolves --c-primary to its static blue fallback.
   useIsomorphicEffect(() => {
     const root = document.documentElement;
     root.setAttribute("data-theme", colorScheme);

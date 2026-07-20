@@ -77,13 +77,11 @@ html[data-app-theme="midnight"] {
 
 /* ── Base accent — fixed default (blue buttons); [data-accent="default"] blocks at the end keep surfaces neutral. LIGHT base here, DARK base next. ── */
 html[data-app-theme="custom"] {
-  /* --user-* are injected by ThemeProvider from the chosen accent (contrast-
-     clamped in customPrimary.ts); absent (default accent) → static blue. */
-  --c-primary: var(--user-primary, var(--p-blue-500));
+  --c-primary: var(--p-blue-500);
   --c-primary-hover: color-mix(in srgb, var(--c-primary) 85%, var(--p-black));
   --c-primary-subtle: color-mix(in srgb, var(--c-primary) 14%, transparent);
-  --c-text-on-primary: var(--user-primary-on, var(--p-white));
-  --c-accent-fg: var(--user-accent-fg, var(--c-primary));
+  --c-text-on-primary: var(--p-white);
+  --c-accent-fg: var(--c-primary);
 
   /* Primary-tinted surfaces (light base). Neutralised by the default override. */
   --c-bg: color-mix(in srgb, var(--c-primary) 7%, var(--p-gray-50));
