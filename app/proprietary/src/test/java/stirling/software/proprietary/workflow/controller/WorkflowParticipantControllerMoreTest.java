@@ -17,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.proprietary.security.model.User;
@@ -251,6 +252,52 @@ class WorkflowParticipantControllerMoreTest {
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(p.getStatus()).isEqualTo(ParticipantStatus.SIGNED);
+        }
+
+        @Test
+        void oversizedCertificate_throwsPayloadTooLargeWithoutReadingFile() throws Exception {
+            WorkflowParticipant p = participant(ParticipantStatus.PENDING);
+            when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
+            MultipartFile certificateFile = org.mockito.Mockito.mock(MultipartFile.class);
+            when(certificateFile.getSize())
+                    .thenReturn(WorkflowParticipantController.MAX_CERTIFICATE_FILE_SIZE_BYTES + 1);
+
+            SignatureSubmissionRequest r = request(TOKEN);
+            r.setCertType("P12");
+            r.setP12File(certificateFile);
+
+            assertThatThrownBy(() -> controller.submitSignature(r))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .extracting(e -> ((ResponseStatusException) e).getStatusCode())
+                    .isEqualTo(HttpStatus.PAYLOAD_TOO_LARGE);
+
+            verify(certificateFile, org.mockito.Mockito.never()).getBytes();
+            verify(participantRepository, org.mockito.Mockito.never()).save(p);
+        }
+
+        @Test
+        void certificateFile_isReadOnlyOnceForValidationAndEncryption() throws Exception {
+            WorkflowParticipant p = participant(ParticipantStatus.PENDING);
+            when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
+            when(participantRepository.save(org.mockito.ArgumentMatchers.any()))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+            MultipartFile certificateFile = org.mockito.Mockito.mock(MultipartFile.class);
+            byte[] certificateBytes =
+                    "certificate".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            when(certificateFile.getSize()).thenReturn((long) certificateBytes.length);
+            when(certificateFile.getBytes()).thenReturn(certificateBytes);
+            when(metadataEncryptionService.encryptBytes(certificateBytes)).thenReturn("encrypted");
+
+            SignatureSubmissionRequest r = request(TOKEN);
+            r.setCertType("P12");
+            r.setP12File(certificateFile);
+
+            controller.submitSignature(r);
+
+            verify(certificateFile).getBytes();
+            verify(certificateSubmissionValidator)
+                    .validateAndExtractInfo(certificateBytes, "P12", null);
+            verify(metadataEncryptionService).encryptBytes(certificateBytes);
         }
     }
 

@@ -61,6 +61,8 @@ import tools.jackson.databind.ObjectMapper;
 @RequiredArgsConstructor
 public class WorkflowParticipantController {
 
+    static final long MAX_CERTIFICATE_FILE_SIZE_BYTES = 5L * 1024 * 1024;
+
     private final WorkflowSessionService workflowSessionService;
     private final WorkflowParticipantRepository participantRepository;
     private final ObjectMapper objectMapper;
@@ -328,14 +330,26 @@ public class WorkflowParticipantController {
                     HttpStatus.BAD_REQUEST, "No certificate file provided");
         }
 
-        try {
-            byte[] keystoreBytes = null;
-            if (p12File != null && !p12File.isEmpty()) {
-                keystoreBytes = p12File.getBytes();
-            } else if (jksFile != null && !jksFile.isEmpty()) {
-                keystoreBytes = jksFile.getBytes();
-            }
+        rejectMultipleCertificateFiles(p12File, jksFile);
 
+        byte[] keystoreBytes;
+        try {
+            keystoreBytes =
+                    readCertificateFile(p12File != null && !p12File.isEmpty() ? p12File : jksFile);
+        } catch (IOException e) {
+            log.error("Error reading certificate file during pre-validation", e);
+            return ResponseEntity.ok(
+                    new CertificateValidationResponse(
+                            false,
+                            null,
+                            null,
+                            null,
+                            null,
+                            false,
+                            "Failed to read certificate file"));
+        }
+
+        try {
             CertificateInfo info =
                     certificateSubmissionValidator.validateAndExtractInfo(
                             keystoreBytes, certType, password);
@@ -364,17 +378,6 @@ public class WorkflowParticipantController {
             return ResponseEntity.ok(
                     new CertificateValidationResponse(
                             false, null, null, null, null, false, e.getReason()));
-        } catch (IOException e) {
-            log.error("Error reading certificate file during pre-validation", e);
-            return ResponseEntity.ok(
-                    new CertificateValidationResponse(
-                            false,
-                            null,
-                            null,
-                            null,
-                            null,
-                            false,
-                            "Failed to read certificate file"));
         }
     }
 
@@ -386,14 +389,13 @@ public class WorkflowParticipantController {
             throws IOException {
         Map<String, Object> metadata = new HashMap<>();
 
+        rejectMultipleCertificateFiles(request.getP12File(), request.getJksFile());
+        byte[] p12Bytes = readCertificateFile(request.getP12File());
+        byte[] jksBytes = readCertificateFile(request.getJksFile());
+
         // Validate certificate before storing — throws 400 if invalid, expired, or wrong password
         if (request.getCertType() != null && !"SERVER".equalsIgnoreCase(request.getCertType())) {
-            byte[] keystoreBytes = null;
-            if (request.getP12File() != null && !request.getP12File().isEmpty()) {
-                keystoreBytes = request.getP12File().getBytes();
-            } else if (request.getJksFile() != null && !request.getJksFile().isEmpty()) {
-                keystoreBytes = request.getJksFile().getBytes();
-            }
+            byte[] keystoreBytes = p12Bytes != null ? p12Bytes : jksBytes;
             if (keystoreBytes != null) {
                 certificateSubmissionValidator.validateAndExtractInfo(
                         keystoreBytes, request.getCertType(), request.getPassword());
@@ -413,15 +415,11 @@ public class WorkflowParticipantController {
             certSubmission.put("showLogo", request.getShowLogo());
 
             // Store the certificate keystores encrypted at rest.
-            if (request.getP12File() != null && !request.getP12File().isEmpty()) {
-                certSubmission.put(
-                        "p12Keystore",
-                        metadataEncryptionService.encryptBytes(request.getP12File().getBytes()));
+            if (p12Bytes != null) {
+                certSubmission.put("p12Keystore", metadataEncryptionService.encryptBytes(p12Bytes));
             }
-            if (request.getJksFile() != null && !request.getJksFile().isEmpty()) {
-                certSubmission.put(
-                        "jksKeystore",
-                        metadataEncryptionService.encryptBytes(request.getJksFile().getBytes()));
+            if (jksBytes != null) {
+                certSubmission.put("jksKeystore", metadataEncryptionService.encryptBytes(jksBytes));
             }
 
             metadata.put("certificateSubmission", certSubmission);
@@ -446,5 +444,32 @@ public class WorkflowParticipantController {
         }
 
         return metadata;
+    }
+
+    private void rejectMultipleCertificateFiles(MultipartFile p12File, MultipartFile jksFile) {
+        if (p12File != null && !p12File.isEmpty() && jksFile != null && !jksFile.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Provide only one certificate file");
+        }
+    }
+
+    private byte[] readCertificateFile(MultipartFile certificateFile) throws IOException {
+        if (certificateFile == null || certificateFile.isEmpty()) {
+            return null;
+        }
+        if (certificateFile.getSize() > MAX_CERTIFICATE_FILE_SIZE_BYTES) {
+            throw certificateFileTooLarge();
+        }
+
+        byte[] certificateBytes = certificateFile.getBytes();
+        if (certificateBytes.length > MAX_CERTIFICATE_FILE_SIZE_BYTES) {
+            throw certificateFileTooLarge();
+        }
+        return certificateBytes;
+    }
+
+    private ResponseStatusException certificateFileTooLarge() {
+        return new ResponseStatusException(
+                HttpStatus.PAYLOAD_TOO_LARGE, "Certificate file exceeds the 5 MiB limit");
     }
 }
