@@ -205,6 +205,10 @@ public class ControllerAuditAspect {
                 // Call auditService but with isHttpRequest=true to skip additional timing
                 auditService.addTimingData(data, start, resp, level, true);
 
+                // Merge controller-set policy context + the internal-automation marker (set after
+                // the body ran, so it must happen here rather than with the pre-proceed HTTP data).
+                auditService.addAutomationContext(data, req);
+
                 // Resolve the event type using the unified method
                 AuditEventType eventType =
                         auditService.resolveEventType(

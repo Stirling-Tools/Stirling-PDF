@@ -5,9 +5,9 @@ import {
   useNavigate,
   useSearchParams,
 } from "react-router-dom";
-import { Text, Stack, Alert } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { setPostLoginRedirectPath } from "@app/auth/spring/springAuthClient";
+import { markLoginLandingPending } from "@app/utils/loginLanding";
 import { useAuth } from "@app/auth/UseSession";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useTranslation } from "react-i18next";
@@ -21,6 +21,8 @@ import {
   oauthProviderConfig,
 } from "@app/auth/ui/OAuthButtons";
 import SpringLoginForm from "@app/auth/ui/SpringLoginForm";
+import AuthSignupPrompt from "@app/auth/ui/AuthSignupPrompt";
+import AuthDefaultCredentials from "@app/auth/ui/AuthDefaultCredentials";
 import { useSpringLogin } from "@app/auth/ui/useSpringLogin";
 import LoggedInState from "@app/routes/login/LoggedInState";
 import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
@@ -57,6 +59,9 @@ export default function Login() {
     backendProbe.loginDisabled === true || _enableLogin === false;
   const autoLoginAttempted = useRef(false);
   const autoLoginErrorRecorded = useRef(false);
+  // True once we've observed a signed-out state on this page, so we can tell a
+  // fresh login (arrived signed-out, then signed in) from an already-authed visit.
+  const sawSignedOutRef = useRef(false);
 
   const AUTO_LOGIN_ATTEMPTS_KEY = "stirling_sso_auto_login_attempts";
   const AUTO_LOGIN_ERRORS_KEY = "stirling_sso_auto_login_errors";
@@ -197,13 +202,22 @@ export default function Login() {
 
   // Redirect immediately if user has valid session (JWT already validated by AuthProvider)
   useEffect(() => {
-    if (!loading && session) {
-      const returnPath = resolveReturnPath();
-      console.debug("[Login] User already authenticated, redirecting to home", {
-        returnPath,
-      });
-      navigate(returnPath || "/", { replace: true });
+    if (loading) return;
+    if (!session) {
+      sawSignedOutRef.current = true;
+      return;
     }
+    const returnPath = resolveReturnPath();
+    // Fresh form login (we were signed out on this page) with no explicit
+    // destination: let the role-based landing route processor users. An
+    // already-authed visit to /login never sets the flag.
+    if (sawSignedOutRef.current && !returnPath) {
+      markLoginLandingPending();
+    }
+    console.debug("[Login] User already authenticated, redirecting to home", {
+      returnPath,
+    });
+    navigate(returnPath || "/", { replace: true });
   }, [session, loading, navigate, location.state, searchParams]);
 
   // If backend reports login is disabled, redirect to home (anonymous mode)
@@ -501,59 +515,14 @@ export default function Login() {
           ) : undefined
         }
         footer={
-          isFirstTimeSetup && showDefaultCredentials && isUserPassAllowed ? (
-            <Alert color="blue" variant="light" radius="md" mt="xl">
-              <Stack gap="xs" align="center">
-                <Text
-                  size="sm"
-                  fw={600}
-                  ta="center"
-                  style={{ color: "var(--text-always-dark)" }}
-                >
-                  {t("login.defaultCredentials", "Default Login Credentials")}
-                </Text>
-                <Text
-                  size="sm"
-                  ta="center"
-                  style={{ color: "var(--text-always-dark)" }}
-                >
-                  <Text
-                    component="span"
-                    fw={600}
-                    style={{ color: "var(--text-always-dark)" }}
-                  >
-                    {t("login.username", "Username")}:
-                  </Text>{" "}
-                  admin
-                </Text>
-                <Text
-                  size="sm"
-                  ta="center"
-                  style={{ color: "var(--text-always-dark)" }}
-                >
-                  <Text
-                    component="span"
-                    fw={600}
-                    style={{ color: "var(--text-always-dark)" }}
-                  >
-                    {t("login.password", "Password")}:
-                  </Text>{" "}
-                  stirling
-                </Text>
-                <Text
-                  size="xs"
-                  ta="center"
-                  mt="xs"
-                  style={{ color: "var(--text-always-dark-muted)" }}
-                >
-                  {t(
-                    "login.changePasswordWarning",
-                    "Please change your password after logging in for the first time",
-                  )}
-                </Text>
-              </Stack>
-            </Alert>
-          ) : undefined
+          <>
+            {isFirstTimeSetup &&
+              showDefaultCredentials &&
+              isUserPassAllowed && <AuthDefaultCredentials />}
+            {isUserPassAllowed && (
+              <AuthSignupPrompt onSignUp={() => navigate("/signup")} />
+            )}
+          </>
         }
       />
     </AuthLayout>

@@ -22,7 +22,9 @@ export function DocumentOverview({ doc }: { doc: ReviewDocument }) {
         <StatTile
           label={t("portal.documents.overview.action")}
           value={
-            doc.product === "Editor" || !doc.action ? "Editor" : doc.action
+            doc.product === "Editor" || !doc.action
+              ? t("portal.documents.table.editorAction")
+              : doc.action
           }
         />
         <StatTile

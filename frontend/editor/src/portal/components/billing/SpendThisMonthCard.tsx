@@ -46,6 +46,18 @@ export function SpendThisMonthCard({ wallet }: { wallet: Wallet }) {
               },
             )}
       </p>
+      {wallet.freeRemaining > 0 ? (
+        <p className="portal-billing__section-sub portal-billing__free-remaining">
+          {t(
+            "portal.billing.spendThisMonth.freeRemaining",
+            "{{formatted}} free PDFs remaining",
+            {
+              count: wallet.freeRemaining,
+              formatted: wallet.freeRemaining.toLocaleString(),
+            },
+          )}
+        </p>
+      ) : null}
 
       <div className="portal-billing__spend-foot">
         <EnterpriseUpsell bare />

@@ -32,6 +32,8 @@ import stirling.software.proprietary.security.repository.TeamMembershipRepositor
 import stirling.software.saas.procurement.config.ProcurementConfigurationProperties;
 import stirling.software.saas.procurement.model.ProcurementDeal;
 import stirling.software.saas.procurement.model.ProcurementQuote;
+import stirling.software.saas.procurement.model.QuoteDetails;
+import stirling.software.saas.procurement.pricing.ProcurementPricingService;
 import stirling.software.saas.procurement.pricing.QuoteConfig;
 import stirling.software.saas.procurement.pricing.QuoteLineItem;
 import stirling.software.saas.procurement.service.ProcurementService;
@@ -56,16 +58,19 @@ public class ProcurementController {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final ProcurementService procurement;
+    private final ProcurementPricingService pricing;
     private final TeamMembershipRepository memberRepo;
     private final UserRepository userRepository;
     private final ProcurementConfigurationProperties config;
 
     public ProcurementController(
             ProcurementService procurement,
+            ProcurementPricingService pricing,
             TeamMembershipRepository memberRepo,
             UserRepository userRepository,
             ProcurementConfigurationProperties config) {
         this.procurement = Objects.requireNonNull(procurement);
+        this.pricing = Objects.requireNonNull(pricing);
         this.memberRepo = Objects.requireNonNull(memberRepo);
         this.userRepository = Objects.requireNonNull(userRepository);
         this.config = Objects.requireNonNull(config);
@@ -77,28 +82,52 @@ public class ProcurementController {
             long volume,
             int users,
             int intensity, // policy posture (runs/PDF): 2 / 4 / 7; 0 → default Governed
+            double sizeMult, // PDF-size tier multiplier: 1.0 / 1.4 / 2.4; 0 → no uplift
             String deployment,
             int termYears,
             String serviceLevel,
             boolean indemnification,
             boolean training,
             boolean qbr,
-            boolean offlineLicense,
             String currency,
-            String businessName) {
+            String businessName,
+            // Buyer / AP details (all optional). Country + currency intentionally out of scope.
+            String contactName,
+            String contactEmail,
+            String addressLine1,
+            String addressLine2,
+            String city,
+            String region,
+            String postalCode,
+            String poNumber,
+            String taxId) {
         QuoteConfig toConfig() {
             return new QuoteConfig(
                     volume,
                     users,
                     intensity,
+                    sizeMult,
                     deployment,
                     termYears,
                     serviceLevel,
                     indemnification,
                     training,
                     qbr,
-                    offlineLicense,
                     currency);
+        }
+
+        QuoteDetails toDetails() {
+            return new QuoteDetails(
+                    businessName,
+                    contactName,
+                    contactEmail,
+                    addressLine1,
+                    addressLine2,
+                    city,
+                    region,
+                    postalCode,
+                    poNumber,
+                    taxId);
         }
     }
 
@@ -109,10 +138,15 @@ public class ProcurementController {
             String currency,
             long annualNetMinor,
             long tcvMinor,
+            // First post-term renewal fee after the CPI escalator, and that escalator as a whole
+            // percent — the committed term is flat, so these describe only the auto-renewal.
+            long renewalAnnualNetMinor,
+            int cpiRatePct,
             List<QuoteLineItem> lineItems,
             String validUntil,
             String stripeQuoteId,
             String invoiceUrl,
+            String invoicePdf,
             QuoteConfigEcho config) {}
 
     /**
@@ -124,19 +158,33 @@ public class ProcurementController {
             long volume,
             int users,
             int intensity,
+            double sizeMult,
             String deployment,
             int termYears,
             String serviceLevel,
             boolean indemnification,
             boolean training,
             boolean qbr,
-            boolean offlineLicense,
             String currency,
-            String businessName) {}
+            String businessName,
+            String contactName,
+            String contactEmail,
+            String addressLine1,
+            String addressLine2,
+            String city,
+            String region,
+            String postalCode,
+            String poNumber,
+            String taxId) {}
+
+    /** Trial setup captured before the trial starts: deployment target + seat count. */
+    public record StartTrialRequest(String deployment, int users) {}
 
     public record SnapshotResponse(
             Long dealId,
             String stage,
+            String deployment,
+            int seats,
             String trialStartedAt,
             String trialEndsAt,
             int trialExtensionsUsed,
@@ -165,12 +213,12 @@ public class ProcurementController {
     }
 
     private static final SnapshotResponse EMPTY_SNAPSHOT =
-            new SnapshotResponse(null, null, null, null, 0, false, null, null);
+            new SnapshotResponse(null, null, null, 0, null, null, 0, false, null, null);
 
     /**
-     * Download the offline / air-gapped licence file (.lic) for the team, when the paid offline
-     * add-on was purchased. 404 when there's no licence or the add-on wasn't taken — we don't leak
-     * that a licence exists to a team without the add-on.
+     * Download the offline / air-gapped licence file (.lic) for the team — available for an
+     * air-gapped deployment from the trial licence onward. 404 when there's no licence yet or the
+     * deployment isn't air-gapped, so we don't leak that a licence exists.
      */
     @GetMapping("/license/file")
     @PreAuthorize("isAuthenticated()")
@@ -193,10 +241,15 @@ public class ProcurementController {
 
     @PostMapping("/trial/start")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<SnapshotResponse> startTrial(Authentication auth) {
+    public ResponseEntity<SnapshotResponse> startTrial(
+            @RequestBody(required = false) StartTrialRequest request, Authentication auth) {
         Long teamId = requireLeader(auth);
         if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        return ResponseEntity.ok(toSnapshot(procurement.startTrial(teamId), true));
+        // Body is optional so an older client (no setup step) still starts a cloud trial.
+        String deployment = request != null ? request.deployment() : null;
+        int seats = request != null ? request.users() : 0;
+        return ResponseEntity.ok(
+                toSnapshot(procurement.startTrial(teamId, deployment, seats), true));
     }
 
     @PostMapping("/trial/extend")
@@ -218,9 +271,7 @@ public class ProcurementController {
         Long teamId = requireLeader(auth);
         if (teamId == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         return ResponseEntity.ok(
-                toQuote(
-                        procurement.buildQuote(
-                                teamId, request.toConfig(), request.businessName())));
+                toQuote(procurement.buildQuote(teamId, request.toConfig(), request.toDetails())));
     }
 
     // Issue + accept are Supabase edge functions (they own Stripe): issue-procurement-quote turns a
@@ -323,6 +374,8 @@ public class ProcurementController {
         return new SnapshotResponse(
                 deal.getDealId(),
                 deal.getStage(),
+                deal.getDeployment(),
+                deal.getSeats(),
                 str(deal.getTrialStartedAt()),
                 str(deal.getTrialEndsAt()),
                 deal.getTrialExtensionsUsed(),
@@ -339,23 +392,40 @@ public class ProcurementController {
                 q.getCurrency(),
                 q.getAnnualNetMinor(),
                 q.getTcvMinor(),
+                // Prefer the renewal locked at quote time; fall back to a live projection for
+                // quotes
+                // priced before the column existed.
+                q.getRenewalAnnualMinor() > 0
+                        ? q.getRenewalAnnualMinor()
+                        : pricing.renewalAnnualMinor(q.getAnnualNetMinor()),
+                pricing.cpiRatePct(),
                 parseLineItems(q.getLineItemsJson()),
                 q.getValidUntil() == null ? null : q.getValidUntil().toString(),
                 q.getStripeQuoteId(),
                 q.getStripeInvoiceUrl(),
+                q.getStripeInvoicePdf(),
                 new QuoteConfigEcho(
                         q.getVolume(),
                         0,
                         q.getIntensity(),
+                        q.getSizeMult(),
                         q.getDeployment(),
                         q.getTermYears(),
                         q.getServiceLevel(),
                         q.isIndemnification(),
                         q.isTraining(),
                         q.isQbr(),
-                        q.isOfflineLicense(),
                         q.getCurrency(),
-                        q.getBusinessName()));
+                        q.getBusinessName(),
+                        q.getContactName(),
+                        q.getContactEmail(),
+                        q.getAddressLine1(),
+                        q.getAddressLine2(),
+                        q.getCity(),
+                        q.getRegion(),
+                        q.getPostalCode(),
+                        q.getPoNumber(),
+                        q.getTaxId()));
     }
 
     private List<QuoteLineItem> parseLineItems(String json) {

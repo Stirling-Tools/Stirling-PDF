@@ -5,6 +5,7 @@ import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import KeyboardArrowUpRoundedIcon from "@mui/icons-material/KeyboardArrowUpRounded";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import {
@@ -42,10 +43,16 @@ import {
   type OutputSpec,
   type Policy,
   type PolicyRunView,
+  type PipelineOutputMode,
   type TriggerConfig,
   type TriggerInfo,
+  type TriggerOutcome,
 } from "@portal/api/pipelines";
+import { clearProcessedHistory } from "@portal/api/policies";
+import { availableOutputModes } from "@portal/components/pipelines/outputModes";
+import { S3ConnectionPicker } from "@portal/components/sources/S3ConnectionPicker";
 import { fetchSources, type SourceView } from "@portal/api/sources";
+import { EDITOR_SOURCE_TYPE } from "@portal/components/sources/sourceTypes";
 import { useAsync } from "@portal/hooks/useAsync";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { humanizeOperation } from "@portal/components/pipelines/pipelineOperations";
@@ -53,7 +60,21 @@ import { PipelineStepSettings } from "@portal/components/pipelines/PipelineStepS
 import { ToolPicker } from "@portal/components/pipelines/ToolPicker";
 import "@portal/views/PipelineBuilder.css";
 
-type OutputMode = "inline" | "folder";
+type OutputMode = PipelineOutputMode;
+
+/** New pipelines (and specs of unoffered types) start on the first offered destination. */
+const DEFAULT_OUTPUT_MODE = availableOutputModes()[0];
+
+/** The s3 output's options: a stored connection reference plus the per-use prefix. */
+interface S3OutputOptions {
+  connectionId: string;
+  prefix: string;
+}
+
+const EMPTY_S3_OUTPUT: S3OutputOptions = {
+  connectionId: "",
+  prefix: "",
+};
 type ScheduleUnit = "MINUTES" | "HOURS" | "DAYS";
 
 const SCHEDULE_UNITS: ScheduleUnit[] = ["MINUTES", "HOURS", "DAYS"];
@@ -95,14 +116,26 @@ function parseTrigger(trigger: TriggerConfig | null): {
 function parseOutput(output: OutputSpec | undefined): {
   mode: OutputMode;
   directory: string;
+  s3: S3OutputOptions;
 } {
   if (output?.type === "folder") {
     return {
       mode: "folder",
       directory: String(output.options?.directory ?? ""),
+      s3: EMPTY_S3_OUTPUT,
     };
   }
-  return { mode: "inline", directory: "" };
+  if (output?.type === "s3") {
+    return {
+      mode: "s3",
+      directory: "",
+      s3: {
+        connectionId: String(output.options?.connectionId ?? ""),
+        prefix: String(output.options?.prefix ?? ""),
+      },
+    };
+  }
+  return { mode: DEFAULT_OUTPUT_MODE, directory: "", s3: EMPTY_S3_OUTPUT };
 }
 
 /**
@@ -127,7 +160,12 @@ export function PipelineBuilder() {
     [id],
   );
   const sourcesState = useAsync<SourceView[]>(
-    async () => (await fetchSources()).sources,
+    // The editor is a built-in, client-driven source (it runs on editor upload, not as a pipeline
+    // input), so it's excluded from the sources a pipeline can pull from.
+    async () =>
+      (await fetchSources()).sources.filter(
+        (source) => source.type !== EDITOR_SOURCE_TYPE,
+      ),
     [],
   );
   const triggersState = useAsync<TriggerInfo[]>(
@@ -149,12 +187,14 @@ export function PipelineBuilder() {
   const [triggerType, setTriggerType] = useState<string>(MANUAL);
   const [scheduleCount, setScheduleCount] = useState("1");
   const [scheduleUnit, setScheduleUnit] = useState<ScheduleUnit>("HOURS");
-  const [outputMode, setOutputMode] = useState<OutputMode>("inline");
+  const [outputMode, setOutputMode] = useState<OutputMode>(DEFAULT_OUTPUT_MODE);
   const [outputDirectory, setOutputDirectory] = useState("");
+  const [outputS3, setOutputS3] = useState<S3OutputOptions>(EMPTY_S3_OUTPUT);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [seeded, setSeeded] = useState(false);
   const [running, setRunning] = useState(false);
+  const [clearingHistory, setClearingHistory] = useState(false);
   const [runResult, setRunResult] = useState<RunResult | null>(null);
   const [pendingDelete, setPendingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -186,6 +226,7 @@ export function PipelineBuilder() {
     setScheduleUnit(trigger.unit);
     setOutputMode(output.mode);
     setOutputDirectory(output.directory);
+    setOutputS3(output.s3);
     setSeeded(true);
   }, [isEdit, policyState.data, allTools, seeded]);
 
@@ -286,6 +327,7 @@ export function PipelineBuilder() {
     scheduleUnit,
     outputMode,
     outputDirectory,
+    outputS3,
   });
   const baseline = useRef<string | null>(null);
   useEffect(() => {
@@ -295,7 +337,10 @@ export function PipelineBuilder() {
 
   const scheduleCountValid =
     triggerType !== "schedule" || Number(scheduleCount) > 0;
-  const outputValid = outputMode !== "folder" || outputDirectory.trim() !== "";
+  const s3OutputValid =
+    outputMode !== "s3" || outputS3.connectionId.trim() !== "";
+  const outputValid =
+    (outputMode !== "folder" || outputDirectory.trim() !== "") && s3OutputValid;
   const canSave =
     name.trim() !== "" &&
     scheduleCountValid &&
@@ -332,7 +377,7 @@ export function PipelineBuilder() {
   }
 
   const listPath = toPortalPath(VIEW_PATHS.pipelines);
-  const sourcesPath = `${toPortalPath(VIEW_PATHS.sources)}?new=1`;
+  const sourcesPath = `${toPortalPath(VIEW_PATHS.sources)}/new`;
 
   function close() {
     navigate(listPath);
@@ -357,7 +402,9 @@ export function PipelineBuilder() {
     const output: OutputSpec =
       outputMode === "folder"
         ? { type: "folder", options: { directory: outputDirectory.trim() } }
-        : { type: "inline", options: {} };
+        : outputMode === "s3"
+          ? { type: "s3", options: { ...outputS3 } }
+          : { type: "inline", options: {} };
     const policy: Policy = {
       id: policyState.data?.id ?? undefined,
       name: name.trim(),
@@ -387,15 +434,37 @@ export function PipelineBuilder() {
     return null;
   }
 
+  /** Explain an empty trigger: parked files outrank blander reasons. */
+  function emptySweepResult(outcome: TriggerOutcome): RunResult {
+    if (outcome.parked > 0) {
+      return {
+        tone: "warning",
+        text: t("portal.pipelines.run.parked", { count: outcome.parked }),
+      };
+    }
+    if (outcome.inFlight > 0) {
+      return { tone: "info", text: t("portal.pipelines.run.inFlight") };
+    }
+    if (outcome.alreadyProcessed > 0) {
+      return {
+        tone: "info",
+        text: t("portal.pipelines.run.allProcessed", {
+          count: outcome.alreadyProcessed,
+        }),
+      };
+    }
+    return { tone: "info", text: t("portal.pipelines.run.empty") };
+  }
+
   async function handleRun() {
     if (running || !id) return;
     setRunning(true);
     setRunResult(null);
     try {
-      const runIds = await triggerPipeline(id);
+      const outcome = await triggerPipeline(id);
+      const runIds = outcome.runIds;
       if (runIds.length === 0) {
-        if (mounted.current)
-          setRunResult({ tone: "info", text: t("portal.pipelines.run.empty") });
+        if (mounted.current) setRunResult(emptySweepResult(outcome));
         return;
       }
       const finals = await Promise.all(runIds.map((runId) => awaitRun(runId)));
@@ -425,6 +494,30 @@ export function PipelineBuilder() {
         setRunResult({ tone: "danger", text: errorMessage(e) });
     } finally {
       if (mounted.current) setRunning(false);
+    }
+  }
+
+  /**
+   * Forget which source files this pipeline has processed, so the next sweep
+   * reprocesses everything currently in its sources (the standard retry for a
+   * parked-by-failure file). Does not touch the files themselves.
+   */
+  async function handleClearHistory() {
+    if (clearingHistory || !id) return;
+    setClearingHistory(true);
+    setRunResult(null);
+    try {
+      await clearProcessedHistory(id);
+      if (mounted.current)
+        setRunResult({
+          tone: "success",
+          text: t("portal.pipelines.run.historyCleared"),
+        });
+    } catch (e) {
+      if (mounted.current)
+        setRunResult({ tone: "danger", text: errorMessage(e) });
+    } finally {
+      if (mounted.current) setClearingHistory(false);
     }
   }
 
@@ -493,6 +586,17 @@ export function PipelineBuilder() {
                 }
               >
                 {t("portal.pipelines.detail.run")}
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                loading={clearingHistory}
+                onClick={handleClearHistory}
+                leftSection={
+                  <HistoryRoundedIcon style={{ fontSize: "1.125rem" }} />
+                }
+              >
+                {t("portal.pipelines.detail.clearHistory")}
               </Button>
               <Button
                 variant="secondary"
@@ -630,10 +734,10 @@ export function PipelineBuilder() {
               name="pipeline-output"
               value={outputMode}
               onChange={setOutputMode}
-              options={[
-                { value: "inline", label: t("portal.pipelines.output.inline") },
-                { value: "folder", label: t("portal.pipelines.output.folder") },
-              ]}
+              options={availableOutputModes().map((mode) => ({
+                value: mode,
+                label: t(`portal.pipelines.output.${mode}`),
+              }))}
             />
             {outputMode === "folder" && (
               <FormField
@@ -647,6 +751,33 @@ export function PipelineBuilder() {
                   onChange={(e) => setOutputDirectory(e.target.value)}
                 />
               </FormField>
+            )}
+            {outputMode === "s3" && (
+              <>
+                <FormField
+                  label={t("portal.sources.types.s3.fields.connection.label")}
+                  required
+                >
+                  <S3ConnectionPicker
+                    value={outputS3.connectionId}
+                    onChange={(connectionId) =>
+                      setOutputS3((s) => ({ ...s, connectionId }))
+                    }
+                  />
+                </FormField>
+                <FormField
+                  label={t("portal.sources.types.s3.fields.prefix.label")}
+                  helperText={t("portal.pipelines.composer.s3PrefixHelp")}
+                >
+                  <Input
+                    value={outputS3.prefix}
+                    placeholder="processed/"
+                    onChange={(e) =>
+                      setOutputS3((s) => ({ ...s, prefix: e.target.value }))
+                    }
+                  />
+                </FormField>
+              </>
             )}
           </div>
         </div>

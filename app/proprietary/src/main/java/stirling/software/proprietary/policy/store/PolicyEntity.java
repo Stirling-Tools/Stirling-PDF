@@ -3,6 +3,7 @@ package stirling.software.proprietary.policy.store;
 import java.io.Serializable;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -10,6 +11,8 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import stirling.software.proprietary.integration.crypto.LegacyDecryptStringConverter;
 
 /**
  * JPA row for a {@link stirling.software.proprietary.policy.model.Policy}. The whole policy lives
@@ -55,6 +58,9 @@ public class PolicyEntity implements Serializable {
     @Column(name = "sort_order")
     private Integer sortOrder;
 
+    // Plaintext at rest: the S3 credentials that used to live here now sit in a referenced
+    // IntegrationConfig connection (still encrypted). Decrypts legacy ciphertext on read.
+    @Convert(converter = LegacyDecryptStringConverter.class)
     @Column(name = "policy_json", columnDefinition = "text")
     private String policyJson;
 }
