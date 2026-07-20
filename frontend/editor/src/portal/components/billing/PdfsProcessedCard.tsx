@@ -73,17 +73,15 @@ export function PdfsProcessedCard({
   const perDocs: WalletCategoryBreakdown = wallet.categoryDocs;
   const totalDocs = perDocs.api + perDocs.ai + perDocs.automation;
 
-  // Average cost per PDF in minor currency units — meter units × the per-unit rate,
-  // spread over the input files processed. Shown only when the rate is known (free-tier
-  // and unknown-price snapshots omit the term rather than imply $0.00).
+  // Average cost per PDF in minor currency units — SYNCED units × the per-unit rate,
+  // spread over the (synced) input files. Deliberately excludes combined-billing
+  // pendingUnits: those are units-only (no doc count), so dividing them over synced docs
+  // would inflate the average. Numerator and denominator therefore cover the same
+  // population. Shown only when the rate is known (free-tier / unknown-price omit it).
   const rate = wallet.pricePerDocMinor;
   const showAvgCost = docs > 0 && rate != null;
   const avgCostMinor =
-    rate != null && docs > 0 ? (meterUnits / docs) * rate : 0;
-
-  // Something ran once there are either counted PDFs or metered units (instance-local
-  // unsynced usage is units-only, so it keeps the card out of the empty state).
-  const hasActivity = docs > 0 || meterUnits > 0;
+    rate != null && docs > 0 ? (wallet.spendUnitsThisPeriod / docs) * rate : 0;
 
   return (
     <Card padding="loose">
@@ -100,7 +98,7 @@ export function PdfsProcessedCard({
         </span>
       </div>
 
-      {hasActivity ? (
+      {docs > 0 ? (
         <>
           <p className="portal-billing__section-sub">
             {showAvgCost
@@ -182,6 +180,18 @@ export function PdfsProcessedCard({
             </p>
           ) : null}
         </>
+      ) : pendingUnits > 0 ? (
+        // docs == 0 but instance-local units have accrued that SaaS hasn't billed yet
+        // (combined-billing, units-only, no PDF count). Surface the pending figure directly
+        // instead of a bare "0 PDFs" headline with a count-less summary + no split. Gated on
+        // pendingUnits (not meterUnits) so the "pending sync" wording is always exact.
+        <p className="portal-billing__section-sub">
+          {t(
+            "portal.billing.pdfsProcessed.unitsPending",
+            "{{units}} meter units pending sync from linked instances",
+            { count: pendingUnits, units: pendingUnits.toLocaleString() },
+          )}
+        </p>
       ) : (
         <p className="portal-billing__section-sub">
           {t(
