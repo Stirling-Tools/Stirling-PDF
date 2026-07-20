@@ -196,10 +196,9 @@ public class RequestUriUtils {
                 || trimmedUri.startsWith("/healthz")
                 || trimmedUri.startsWith("/liveness")
                 || trimmedUri.startsWith("/readiness")
-                // Only phone-facing scanner operations are public. Session creation and file
-                // retrieval belong to the authenticated desktop client.
-                || trimmedUri.matches(
-                        "^/api/v1/mobile-scanner/(?:validate-session|upload)/[^/]+/?$")
+                // Mobile scanner sessions are intentionally public so desktop and phone clients
+                // can exchange files without a login round-trip.
+                || trimmedUri.startsWith("/api/v1/mobile-scanner/")
                 || trimmedUri.startsWith("/v1/api-docs")
                 // Workflow participant endpoints - access controlled by share tokens, not login
                 || trimmedUri.startsWith("/api/v1/workflow/participant/")
