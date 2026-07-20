@@ -20,11 +20,7 @@ export interface StripeCheckoutProps {
 }
 
 export type CheckoutStage =
-  | "email"
-  | "plan-selection"
-  | "payment"
-  | "success"
-  | "error";
+  "email" | "plan-selection" | "payment" | "success" | "error";
 
 export type CheckoutState = {
   currentStage: CheckoutStage;

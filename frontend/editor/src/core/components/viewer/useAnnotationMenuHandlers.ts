@@ -54,8 +54,7 @@ const STROKE_COLOR_SUBTYPES = [
 ];
 
 export type FirstLinkTarget =
-  | { type: "uri"; uri: string }
-  | { type: "goto"; pageIndex: number };
+  { type: "uri"; uri: string } | { type: "goto"; pageIndex: number };
 
 interface UseAnnotationMenuHandlersParams {
   annotation: TrackedAnnotation<PdfAnnotationObject> | undefined;

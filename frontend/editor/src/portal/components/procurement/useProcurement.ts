@@ -16,11 +16,7 @@ import {
 } from "@portal/api/procurement";
 
 export type ProcurementExtra =
-  | null
-  | "license"
-  | "schedule"
-  | "trial"
-  | "setup";
+  null | "license" | "schedule" | "trial" | "setup";
 
 /**
  * Owns the procurement deal state and actions shared by the Home hero footer

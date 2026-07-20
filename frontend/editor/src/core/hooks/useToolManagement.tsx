@@ -14,10 +14,7 @@ import { ToolId } from "@app/types/toolId";
 import type { EndpointDisableReason } from "@app/types/endpointAvailability";
 
 export type ToolDisableCause =
-  | "disabledByAdmin"
-  | "missingDependency"
-  | "unknown"
-  | "selfHostedOffline";
+  "disabledByAdmin" | "missingDependency" | "unknown" | "selfHostedOffline";
 
 export interface ToolAvailabilityInfo {
   available: boolean;

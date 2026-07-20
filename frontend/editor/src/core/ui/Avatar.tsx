@@ -2,12 +2,7 @@ import "@app/ui/Avatar.css";
 
 export type AvatarSize = "xs" | "sm" | "md" | "lg";
 export type AvatarTone =
-  | "blue"
-  | "purple"
-  | "green"
-  | "amber"
-  | "red"
-  | "neutral";
+  "blue" | "purple" | "green" | "amber" | "red" | "neutral";
 
 export interface AvatarProps {
   /** Image source. Falls back to initials when missing or load fails. */

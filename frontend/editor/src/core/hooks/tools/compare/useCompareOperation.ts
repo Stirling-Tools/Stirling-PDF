@@ -49,12 +49,7 @@ export const useCompareOperation = (): CompareOperationHook => {
   const cancelledRef = useRef(false);
 
   type OperationStatus =
-    | "idle"
-    | "extracting"
-    | "processing"
-    | "complete"
-    | "cancelled"
-    | "error";
+    "idle" | "extracting" | "processing" | "complete" | "cancelled" | "error";
   const [isLoading, setIsLoading] = useState(false);
   const [statusState, setStatusState] = useState<OperationStatus>("idle");
   const [statusDetailMs, setStatusDetailMs] = useState<number | null>(null);

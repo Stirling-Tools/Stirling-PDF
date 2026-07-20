@@ -184,16 +184,20 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
         skipAuthRedirect: true,
       } as any,
     );
-    const contentType =
+    const contentTypeHeader =
       (response.headers &&
         (response.headers["content-type"] ||
           response.headers["Content-Type"])) ||
       "";
-    const disposition =
+    const dispositionHeader =
       (response.headers &&
         (response.headers["content-disposition"] ||
           response.headers["Content-Disposition"])) ||
       "";
+    const contentType =
+      typeof contentTypeHeader === "string" ? contentTypeHeader : "";
+    const disposition =
+      typeof dispositionHeader === "string" ? dispositionHeader : "";
     const filename =
       parseContentDispositionFilename(disposition) || "server-file";
     const blob = response.data as Blob;
@@ -210,16 +214,20 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
         skipAuthRedirect: true,
       } as any,
     );
-    const contentType =
+    const contentTypeHeader =
       (response.headers &&
         (response.headers["content-type"] ||
           response.headers["Content-Type"])) ||
       "";
-    const disposition =
+    const dispositionHeader =
       (response.headers &&
         (response.headers["content-disposition"] ||
           response.headers["Content-Disposition"])) ||
       "";
+    const contentType =
+      typeof contentTypeHeader === "string" ? contentTypeHeader : "";
+    const disposition =
+      typeof dispositionHeader === "string" ? dispositionHeader : "";
     const filename =
       parseContentDispositionFilename(disposition) || "shared-file";
     const blob = response.data as Blob;

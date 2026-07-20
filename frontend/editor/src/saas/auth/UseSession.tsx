@@ -41,8 +41,7 @@ export function deriveDisplayName(
   if (!user) return null;
   if (user.is_anonymous) return t("auth.displayName.guest", "Guest");
   const metadata = user.user_metadata as
-    | { full_name?: string; name?: string }
-    | undefined;
+    { full_name?: string; name?: string } | undefined;
   return (
     user.username || metadata?.full_name || metadata?.name || user.email || null
   );

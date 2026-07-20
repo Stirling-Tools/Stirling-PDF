@@ -178,14 +178,9 @@ export default function MobileUploadModal({
                 try {
                   file = await convertImageToPdf(file, {
                     imageResolution: config?.mobileScannerImageResolution as
-                      | "full"
-                      | "reduced"
-                      | undefined,
+                      "full" | "reduced" | undefined,
                     pageFormat: config?.mobileScannerPageFormat as
-                      | "keep"
-                      | "A4"
-                      | "letter"
-                      | undefined,
+                      "keep" | "A4" | "letter" | undefined,
                     stretchToFit: config?.mobileScannerStretchToFit,
                   });
                   console.log(

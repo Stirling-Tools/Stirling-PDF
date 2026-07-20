@@ -46,9 +46,7 @@ function getInitialRuntimeState(
     const tourType =
       sessionStorage.getItem(SESSION_TOUR_TYPE) ?? baseState.tourType;
     const selectedRole = sessionStorage.getItem(SESSION_SELECTED_ROLE) as
-      | "admin"
-      | "user"
-      | null;
+      "admin" | "user" | null;
 
     return {
       ...baseState,

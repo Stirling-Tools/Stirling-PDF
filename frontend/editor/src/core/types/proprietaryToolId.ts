@@ -16,6 +16,4 @@ export type ProprietarySuperToolId =
   (typeof PROPRIETARY_SUPER_TOOL_IDS)[number];
 export type ProprietaryLinkToolId = (typeof PROPRIETARY_LINK_TOOL_IDS)[number];
 export type ProprietaryToolId =
-  | ProprietaryRegularToolId
-  | ProprietarySuperToolId
-  | ProprietaryLinkToolId;
+  ProprietaryRegularToolId | ProprietarySuperToolId | ProprietaryLinkToolId;

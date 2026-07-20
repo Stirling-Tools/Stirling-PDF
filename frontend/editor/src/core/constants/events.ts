@@ -13,10 +13,7 @@ export interface ServerLicenseRequestPayload {
 }
 
 export type UpgradeBannerTestScenario =
-  | "friendly"
-  | "urgent-admin"
-  | "urgent-user"
-  | null;
+  "friendly" | "urgent-admin" | "urgent-user" | null;
 
 export interface UpgradeBannerTestPayload {
   scenario: UpgradeBannerTestScenario;

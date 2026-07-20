@@ -9,8 +9,7 @@ import { FolderId } from "@app/types/folder";
 export const FILES_PAGE_DRAG_TYPE = "application/x-stirling-files-page";
 
 export type FilesPageDragPayload =
-  | { kind: "files"; fileIds: FileId[] }
-  | { kind: "folder"; folderId: FolderId };
+  { kind: "files"; fileIds: FileId[] } | { kind: "folder"; folderId: FolderId };
 
 export function serialiseFilesPageDragPayload(
   payload: FilesPageDragPayload,

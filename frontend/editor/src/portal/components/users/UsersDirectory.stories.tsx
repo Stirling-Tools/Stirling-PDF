@@ -212,22 +212,19 @@ const BIG_MEMBERS: Member[] = [
     isSelf: true,
     portalAccess: "admin",
   },
-  ...Array.from(
-    { length: 11 },
-    (_, i): Member => ({
-      id: `big-${i}`,
-      name: `Teammate ${i + 1}`,
-      email: `teammate${i + 1}@acme.com`,
-      role: i === 0 ? "team_owner" : "member",
-      status: "active",
-      lastActive: `${i + 1}h ago`,
-      username: `tm${i + 1}`,
-      teamId: 9,
-      teamName: "Platform",
-      teamLead: i === 0,
-      portalAccess: i === 0 ? "role" : "none",
-    }),
-  ),
+  ...Array.from({ length: 11 }, (_, i): Member => ({
+    id: `big-${i}`,
+    name: `Teammate ${i + 1}`,
+    email: `teammate${i + 1}@acme.com`,
+    role: i === 0 ? "team_owner" : "member",
+    status: "active",
+    lastActive: `${i + 1}h ago`,
+    username: `tm${i + 1}`,
+    teamId: 9,
+    teamName: "Platform",
+    teamLead: i === 0,
+    portalAccess: i === 0 ? "role" : "none",
+  })),
 ];
 
 const TEAMS: Team[] = [

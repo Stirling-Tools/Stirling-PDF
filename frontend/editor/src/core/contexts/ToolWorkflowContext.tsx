@@ -114,8 +114,7 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
 // Ensure a single context instance across HMR to avoid provider/consumer mismatches
 const __GLOBAL_CONTEXT_KEY__ = "__ToolWorkflowContext__";
 const existingContext = (globalThis as any)[__GLOBAL_CONTEXT_KEY__] as
-  | React.Context<ToolWorkflowContextValue | undefined>
-  | undefined;
+  React.Context<ToolWorkflowContextValue | undefined> | undefined;
 const ToolWorkflowContext =
   existingContext ??
   createContext<ToolWorkflowContextValue | undefined>(undefined);

@@ -31,13 +31,7 @@ export type SlideId =
   | "mfa-setup";
 
 export type HeroType =
-  | "rocket"
-  | "dual-icon"
-  | "shield"
-  | "diamond"
-  | "logo"
-  | "lock"
-  | "analytics";
+  "rocket" | "dual-icon" | "shield" | "diamond" | "logo" | "lock" | "analytics";
 
 export type ButtonAction =
   | "next"

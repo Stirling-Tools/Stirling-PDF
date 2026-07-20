@@ -2,25 +2,11 @@ import type { ElementType, ReactNode, HTMLAttributes } from "react";
 import "@app/ui/Stack.css";
 
 export type StackGap =
-  | "0"
-  | "0_5"
-  | "1"
-  | "1_5"
-  | "2"
-  | "3"
-  | "4"
-  | "5"
-  | "6"
-  | "8";
+  "0" | "0_5" | "1" | "1_5" | "2" | "3" | "4" | "5" | "6" | "8";
 
 export type StackAlign = "stretch" | "start" | "center" | "end" | "baseline";
 export type StackJustify =
-  | "start"
-  | "center"
-  | "end"
-  | "between"
-  | "around"
-  | "evenly";
+  "start" | "center" | "end" | "between" | "around" | "evenly";
 
 export interface StackProps extends HTMLAttributes<HTMLElement> {
   /** Token-aligned gap between children (maps to `--space-*`). */

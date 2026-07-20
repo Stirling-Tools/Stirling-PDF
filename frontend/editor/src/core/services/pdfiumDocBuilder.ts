@@ -62,9 +62,7 @@ export class PdfiumFont {
   readonly name: string;
   private _canvas: OffscreenCanvas | HTMLCanvasElement | null = null;
   private _ctx:
-    | CanvasRenderingContext2D
-    | OffscreenCanvasRenderingContext2D
-    | null = null;
+    CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null = null;
 
   constructor(name: string) {
     this.name = name;
@@ -97,8 +95,7 @@ export class PdfiumFont {
   }
 
   private _getCtx():
-    | CanvasRenderingContext2D
-    | OffscreenCanvasRenderingContext2D {
+    CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D {
     if (this._ctx) return this._ctx;
     if (typeof OffscreenCanvas !== "undefined") {
       this._canvas = new OffscreenCanvas(1, 1);

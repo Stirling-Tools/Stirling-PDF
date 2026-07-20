@@ -99,13 +99,7 @@ export function isPdfFile(
 }
 
 export type NonPdfFileType =
-  | "image"
-  | "csv"
-  | "json"
-  | "text"
-  | "markdown"
-  | "html"
-  | "unknown";
+  "image" | "csv" | "json" | "text" | "markdown" | "html" | "unknown";
 
 export const IMAGE_EXTENSIONS = new Set([
   "png",

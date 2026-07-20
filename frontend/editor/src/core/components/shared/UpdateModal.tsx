@@ -39,11 +39,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 
 export type DesktopInstallState =
-  | "idle"
-  | "downloading"
-  | "installing"
-  | "ready-to-restart"
-  | "error";
+  "idle" | "downloading" | "installing" | "ready-to-restart" | "error";
 
 export interface DesktopInstallProgress {
   downloaded: number;

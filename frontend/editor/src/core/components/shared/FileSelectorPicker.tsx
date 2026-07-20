@@ -278,10 +278,12 @@ export function FileSelectorPicker({
             res.headers?.["content-disposition"] ||
             res.headers?.["Content-Disposition"] ||
             "";
+          const contentType = typeof ct === "string" ? ct : "";
+          const disposition = typeof disp === "string" ? disp : "";
           const files = await extractLatestFilesFromBundle(
             res.data as Blob,
-            parseContentDispositionFilename(disp) || "shared-file",
-            ct,
+            parseContentDispositionFilename(disposition) || "shared-file",
+            contentType,
           );
           if (files[0])
             stirlingFile = createStirlingFile(files[0], createFileId());
@@ -302,10 +304,12 @@ export function FileSelectorPicker({
             res.headers?.["content-disposition"] ||
             res.headers?.["Content-Disposition"] ||
             "";
+          const contentType = typeof ct === "string" ? ct : "";
+          const disposition = typeof disp === "string" ? disp : "";
           const files = await extractLatestFilesFromBundle(
             res.data as Blob,
-            parseContentDispositionFilename(disp) || stub.name,
-            ct,
+            parseContentDispositionFilename(disposition) || stub.name,
+            contentType,
           );
           if (files[0])
             stirlingFile = createStirlingFile(files[0], stub.id as FileId);

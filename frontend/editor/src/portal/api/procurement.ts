@@ -19,11 +19,7 @@ import type { Tier } from "@portal/contexts/TierContext";
  * Payment read more plainly than the internal `security` / `procurement`).
  */
 export type DealStage =
-  | "trial"
-  | "quote"
-  | "security"
-  | "procurement"
-  | "active";
+  "trial" | "quote" | "security" | "procurement" | "active";
 
 export interface JourneyStep {
   stage: DealStage;
@@ -137,11 +133,7 @@ export interface Deal {
  *   complete: done, kept for the record
  */
 export type DocStatus =
-  | "available"
-  | "action"
-  | "pending"
-  | "request"
-  | "complete";
+  "available" | "action" | "pending" | "request" | "complete";
 
 /** What pressing the document's button does. */
 export type DocAction = "download" | "sign" | "pay" | "upload" | "request";
@@ -169,10 +161,7 @@ export interface LedgerGroup {
 
 /** Categories the stage-agnostic supporting pool is grouped under. */
 export type SupportingCategory =
-  | "security"
-  | "legal"
-  | "corporate"
-  | "procurement";
+  "security" | "legal" | "corporate" | "procurement";
 
 export interface SupportingGroup {
   category: SupportingCategory;
@@ -274,10 +263,7 @@ export async function requestDocument(
 // ============================================================================
 
 export type QuoteLineItemKind =
-  | "RECURRING"
-  | "ONE_TIME"
-  | "DISCOUNT"
-  | "INCLUDED";
+  "RECURRING" | "ONE_TIME" | "DISCOUNT" | "INCLUDED";
 
 export interface QuoteLineItem {
   key: string;

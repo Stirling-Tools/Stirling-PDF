@@ -1,12 +1,7 @@
 import { apiClient } from "@portal/api/http";
 
 export type NotificationCategory =
-  | "pipeline"
-  | "deploy"
-  | "billing"
-  | "audit"
-  | "agent"
-  | "doc";
+  "pipeline" | "deploy" | "billing" | "audit" | "agent" | "doc";
 
 export interface Notification {
   id: string;

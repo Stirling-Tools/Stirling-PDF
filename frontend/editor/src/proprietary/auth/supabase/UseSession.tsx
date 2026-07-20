@@ -33,8 +33,7 @@ function readRole(user: SbUser): string {
 
 function mapUser(user: SbUser): AuthUser {
   const metadata = user.user_metadata as
-    | { full_name?: string; name?: string; username?: string }
-    | undefined;
+    { full_name?: string; name?: string; username?: string } | undefined;
   return {
     id: user.id,
     email: user.email ?? "",

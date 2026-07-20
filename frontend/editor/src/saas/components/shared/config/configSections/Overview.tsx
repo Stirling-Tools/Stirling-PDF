@@ -569,10 +569,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
                       onClick={() =>
                         handleOAuthUpgrade(
                           provider.id as
-                            | "github"
-                            | "google"
-                            | "apple"
-                            | "azure",
+                            "github" | "google" | "apple" | "azure",
                         )
                       }
                       disabled={isLoading}

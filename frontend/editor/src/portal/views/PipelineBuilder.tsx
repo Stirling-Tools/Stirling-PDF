@@ -99,8 +99,7 @@ function parseTrigger(trigger: TriggerConfig | null): {
   if (!trigger) return { triggerType: MANUAL, count: "1", unit: "HOURS" };
   if (trigger.type === "schedule") {
     const schedule = trigger.options?.schedule as
-      | { type?: string; count?: number; unit?: ScheduleUnit }
-      | undefined;
+      { type?: string; count?: number; unit?: ScheduleUnit } | undefined;
     if (schedule?.type === "every") {
       return {
         triggerType: "schedule",

@@ -12,12 +12,7 @@ import { AuditTab } from "@portal/components/infrastructure/AuditTab";
 import "@portal/views/Infrastructure.css";
 
 type InfraTab =
-  | "deployments"
-  | "api-keys"
-  | "security"
-  | "models"
-  | "storage"
-  | "audit";
+  "deployments" | "api-keys" | "security" | "models" | "storage" | "audit";
 
 const INFRA_TABS: InfraTab[] = [
   "deployments",

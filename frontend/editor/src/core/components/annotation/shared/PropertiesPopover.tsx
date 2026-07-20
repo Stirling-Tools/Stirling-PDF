@@ -38,8 +38,7 @@ export function PropertiesPopover({
   }
 
   const obj = annotation?.object as
-    | (PdfAnnotationObject & AnnotationObjectProps)
-    | undefined;
+    (PdfAnnotationObject & AnnotationObjectProps) | undefined;
 
   // Get current values
   const fontSize = obj?.fontSize ?? 14;

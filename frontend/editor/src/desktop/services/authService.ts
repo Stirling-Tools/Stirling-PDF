@@ -40,10 +40,7 @@ interface OAuthCallbackResult {
 }
 
 export type AuthStatus =
-  | "authenticated"
-  | "unauthenticated"
-  | "refreshing"
-  | "oauth_pending";
+  "authenticated" | "unauthenticated" | "refreshing" | "oauth_pending";
 
 export class AuthService {
   private static instance: AuthService;

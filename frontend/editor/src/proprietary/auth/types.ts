@@ -46,10 +46,7 @@ export interface AuthResponse {
 }
 
 export type AuthChangeEvent =
-  | "SIGNED_IN"
-  | "SIGNED_OUT"
-  | "TOKEN_REFRESHED"
-  | "USER_UPDATED";
+  "SIGNED_IN" | "SIGNED_OUT" | "TOKEN_REFRESHED" | "USER_UPDATED";
 
 /**
  * The unified value exposed by `useAuth()` regardless of backend. The editor's

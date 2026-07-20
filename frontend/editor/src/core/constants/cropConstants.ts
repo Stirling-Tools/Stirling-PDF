@@ -9,12 +9,4 @@ export const DEFAULT_CROP_AREA = {
 } as const;
 
 export type ResizeHandle =
-  | "nw"
-  | "ne"
-  | "sw"
-  | "se"
-  | "n"
-  | "e"
-  | "s"
-  | "w"
-  | null;
+  "nw" | "ne" | "sw" | "se" | "n" | "e" | "s" | "w" | null;

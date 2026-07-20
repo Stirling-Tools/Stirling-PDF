@@ -59,8 +59,7 @@ const AccountSection: React.FC = () => {
 
   const authTypeFromMetadata = useMemo(() => {
     const metadata = user?.app_metadata as
-      | { authType?: string; authenticationType?: string }
-      | undefined;
+      { authType?: string; authenticationType?: string } | undefined;
     return metadata?.authenticationType ?? metadata?.authType;
   }, [user?.app_metadata]);
 

@@ -28,12 +28,7 @@ import {
 } from "@app/services/shareLinkImport";
 
 type ShareLinkStatus =
-  | "loading"
-  | "ready"
-  | "login"
-  | "forbidden"
-  | "notfound"
-  | "error";
+  "loading" | "ready" | "login" | "forbidden" | "notfound" | "error";
 
 export default function ShareLinkPage() {
   const { token } = useParams<{ token: string }>();

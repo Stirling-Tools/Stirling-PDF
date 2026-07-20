@@ -1,13 +1,7 @@
 import { accentColor } from "@app/utils/accentColors";
 
 export type FileDocVariant =
-  | "pdf"
-  | "spreadsheet"
-  | "doc"
-  | "image"
-  | "archive"
-  | "code"
-  | "generic";
+  "pdf" | "spreadsheet" | "doc" | "image" | "archive" | "code" | "generic";
 
 // Theme-adaptive accent per file type (shared palette; see utils/accentColors.ts).
 export const VARIANT_COLORS: Record<FileDocVariant, string> = {

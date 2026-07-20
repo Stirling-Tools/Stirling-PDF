@@ -6,12 +6,7 @@ import type { ButtonVariant } from "@app/ui/Button";
 // Accept both shared DS variants and the legacy Mantine variant names that
 // existing callers still pass, mapping the latter onto the DS equivalents.
 type LegacyVariant =
-  | "outline"
-  | "filled"
-  | "light"
-  | "default"
-  | "subtle"
-  | "gradient";
+  "outline" | "filled" | "light" | "default" | "subtle" | "gradient";
 
 const VARIANT_MAP: Record<LegacyVariant, ButtonVariant> = {
   filled: "primary",

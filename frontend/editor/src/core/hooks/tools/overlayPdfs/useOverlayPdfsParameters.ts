@@ -6,9 +6,7 @@ import {
 } from "@app/hooks/tools/shared/useBaseParameters";
 
 export type OverlayMode =
-  | "SequentialOverlay"
-  | "InterleavedOverlay"
-  | "FixedRepeatOverlay";
+  "SequentialOverlay" | "InterleavedOverlay" | "FixedRepeatOverlay";
 
 export interface OverlayPdfsParameters extends BaseParameters {
   overlayFiles: File[];

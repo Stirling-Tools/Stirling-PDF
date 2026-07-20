@@ -58,12 +58,7 @@ export type StampPreviewStyle = { container: any; item: any };
 
 // Unified per-alphabet preview adjustments
 export type Alphabet =
-  | "roman"
-  | "arabic"
-  | "japanese"
-  | "korean"
-  | "chinese"
-  | "thai";
+  "roman" | "arabic" | "japanese" | "korean" | "chinese" | "thai";
 export type AlphabetTweaks = {
   scale: number;
   rowOffsetRem: [number, number, number];
