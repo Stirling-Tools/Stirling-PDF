@@ -6744,22 +6744,6 @@ title = "Invite teammates"
 blurb = "{{active}} active · {{recommended}} recommended"
 title = "Confirm your policies"
 
-[portal.home.quickActions]
-subtitle = "Top tasks for today"
-title = "Quick actions"
-
-[portal.home.quickActions.buildPipeline]
-blurb = "3-step composer over the typed op library"
-title = "Build a pipeline"
-
-[portal.home.quickActions.connectSource]
-blurb = "S3, agents, webhooks, watched folders"
-title = "Connect a source"
-
-[portal.home.quickActions.issueApiKey]
-blurb = "Scoped key with rate limits and IP allowlist"
-title = "Issue an API key"
-
 [portal.infrastructure]
 manageEditorDeployment = "Manage Editor deployment"
 sectionsAriaLabel = "Infrastructure sections"
@@ -7527,34 +7511,8 @@ setUp = "Set up {{category}} policy"
 [portal.policies.wizard.workflow]
 description = "Choose what this policy does to every document it processes."
 
-[portal.policySummary]
-activeSummary = "{{active}} / {{total}} active"
-noRule = "No rule enforced yet"
-subtitle = "Standing automations every document passes through, regardless of which pipeline handles it."
-title = "What runs on your PDFs"
-
 [portal.policySummary.action]
-comingSoon = "Upgrade to Enterprise"
-configure = "Configure"
 setUp = "Set up"
-
-[portal.policySummary.column]
-activeRule = "Active rule"
-policy = "Policy"
-status = "Status"
-
-[portal.policySummary.empty]
-description = "Once policies are configured, the categories appear here."
-title = "No policies yet"
-
-[portal.policySummary.state]
-active = "Active"
-off = "Off"
-soon = "Soon"
-
-[portal.processingStatus]
-managePlan = "Manage plan"
-volumeSuffix = "PDFs processed · last 30 days"
 
 [portal.processorFlow]
 footnote = "Counts are over the last 24 hours. Flow speed is illustrative."
@@ -7872,14 +7830,6 @@ homeBadge = "Enterprise"
 homeBody = "Committed volume pricing, org-wide SSO + SCIM + RBAC, 90-day immutable audit, and a dedicated SE."
 homeCta = "Start Trial →"
 homeHeadline = "Process millions of PDFs."
-
-[portal.recentActivity]
-title = "Recent activity"
-viewAll = "View all"
-
-[portal.recentActivity.empty]
-description = "Pipeline runs, deploys and agent events will appear here."
-title = "Nothing here yet"
 
 [portal.search]
 ariaLabel = "Search"
