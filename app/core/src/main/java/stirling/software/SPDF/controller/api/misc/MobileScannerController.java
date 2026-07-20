@@ -51,7 +51,7 @@ import stirling.software.common.service.MobileScannerService.UploadSizeLimitExce
         name = "Mobile Scanner",
         description =
                 "Endpoints for mobile-to-desktop file transfer via QR code scanning. Files are"
-                    + " temporarily stored and automatically cleaned up after 10 minutes.")
+                        + " temporarily stored and automatically cleaned up after 10 minutes.")
 @Hidden
 @Slf4j
 public class MobileScannerController {
@@ -288,7 +288,7 @@ public class MobileScannerController {
             summary = "Download a specific file",
             description =
                     "Download a file that was uploaded to a session. File is automatically deleted"
-                        + " after download.")
+                            + " after download.")
     @ApiResponse(responseCode = "200", description = "File downloaded successfully")
     @ApiResponse(responseCode = "403", description = "Mobile scanner feature not enabled")
     @ApiResponse(responseCode = "404", description = "File or session not found")
