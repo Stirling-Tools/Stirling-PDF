@@ -287,7 +287,8 @@ export const mantineTheme = createTheme({
     Tooltip: {
       styles: {
         tooltip: {
-          backgroundColor: "color-mix( in srgb, var(--c-primary) 12%, var(--c-surface) )",
+          backgroundColor:
+            "color-mix( in srgb, var(--c-primary) 12%, var(--c-surface) )",
           color: "var(--c-text)",
           border: "1px solid var(--tooltip-border)",
           fontSize: "0.75rem",

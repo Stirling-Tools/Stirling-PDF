@@ -6,7 +6,7 @@
   --_solid-hover: var(--c-primary-hover);
   --_on: #ffffff;
   --_text: var(--c-primary-hover);
-  --_bd: color-mix( in srgb, var(--c-primary) 38%, var(--c-surface) );
+  --_bd: color-mix(in srgb, var(--c-primary) 38%, var(--c-surface));
   --_tint: color-mix(in srgb, var(--c-primary) 12%, transparent);
 }
 

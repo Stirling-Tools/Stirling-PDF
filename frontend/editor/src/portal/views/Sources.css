@@ -334,7 +334,7 @@
   color: var(--c-text);
   font-weight: 600;
   border-color: color-mix(in srgb, var(--c-primary) 40%, transparent);
-  background: color-mix( in srgb, var(--c-primary) 12%, var(--c-surface) );
+  background: color-mix(in srgb, var(--c-primary) 12%, var(--c-surface));
 }
 
 .portal-sources__step.is-done {
@@ -412,7 +412,7 @@
 
 .portal-sources__type-card.is-selected {
   border-color: var(--c-primary);
-  background: color-mix( in srgb, var(--c-primary) 12%, var(--c-surface) );
+  background: color-mix(in srgb, var(--c-primary) 12%, var(--c-surface));
   box-shadow: 0 0 0 1px var(--c-primary) inset;
 }
 

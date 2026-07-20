@@ -10,30 +10,17 @@ export default function AuthDefaultCredentials() {
   return (
     <Alert color="blue" variant="light" radius="md" mt="xl">
       <Stack gap="xs" align="center">
-        <Text
-          size="sm"
-          fw={600}
-          ta="center"
-          style={{ color: "var(--c-text)" }}
-        >
+        <Text size="sm" fw={600} ta="center" style={{ color: "var(--c-text)" }}>
           {t("login.defaultCredentials", "Default Login Credentials")}
         </Text>
         <Text size="sm" ta="center" style={{ color: "var(--c-text)" }}>
-          <Text
-            component="span"
-            fw={600}
-            style={{ color: "var(--c-text)" }}
-          >
+          <Text component="span" fw={600} style={{ color: "var(--c-text)" }}>
             {t("login.username", "Username")}:
           </Text>{" "}
           admin
         </Text>
         <Text size="sm" ta="center" style={{ color: "var(--c-text)" }}>
-          <Text
-            component="span"
-            fw={600}
-            style={{ color: "var(--c-text)" }}
-          >
+          <Text component="span" fw={600} style={{ color: "var(--c-text)" }}>
             {t("login.password", "Password")}:
           </Text>{" "}
           stirling

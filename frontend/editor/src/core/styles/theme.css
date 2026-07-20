@@ -445,8 +445,12 @@
   --information-text-color: var(--p-blue-400);
 
   /* dark background for cards */
-  --bulk-card-border: var(--c-border); /* default border for cards and buttons */
-  --bulk-card-hover-border: var(--c-border-strong); /* stronger border on hover */
+  --bulk-card-border: var(
+    --c-border
+  ); /* default border for cards and buttons */
+  --bulk-card-hover-border: var(
+    --c-border-strong
+  ); /* stronger border on hover */
 
   /* Config Modal colors (dark mode) */
   --modal-nav-item: var(--p-gray-300);

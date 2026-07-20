@@ -280,7 +280,7 @@
 }
 
 .portal-docs__nav-link.is-active {
-  background: color-mix( in srgb, var(--c-primary) 12%, var(--c-surface) );
+  background: color-mix(in srgb, var(--c-primary) 12%, var(--c-surface));
   color: var(--c-primary);
   font-weight: 600;
 }
