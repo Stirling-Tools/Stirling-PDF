@@ -37,9 +37,17 @@ public class FolderAccessGuard {
 
     public static final String FOLDER_TYPE = "folder";
 
+    /** Reason keys for an implied root, surfaced to the admin UI so it can label each one. */
+    public static final String IMPLIED_SERVER_STORAGE = "serverStorage";
+
+    public static final String IMPLIED_WATCHED_FOLDER = "watchedFolder";
+
+    /** A directory implicitly permitted regardless of {@code allowedFolderRoots}, and why. */
+    public record ImpliedRoot(Path path, String reason) {}
+
     private final boolean saasActive;
     private final List<Path> allowedRoots;
-    private final List<Path> impliedRoots;
+    private final List<ImpliedRoot> impliedRoots;
     private final List<Path> protectedRoots;
     private final SourceStore sourceStore;
 
@@ -71,7 +79,7 @@ public class FolderAccessGuard {
         }
         // Stirling-owned implied roots are always permitted, even with no configured roots, so
         // automations work against them out of the box.
-        if (impliedRoots.stream().anyMatch(normalized::startsWith)) {
+        if (impliedRoots.stream().anyMatch(root -> normalized.startsWith(root.path()))) {
             return normalized;
         }
         if (allowedRoots.isEmpty()) {
@@ -84,6 +92,11 @@ public class FolderAccessGuard {
                     "folder '" + normalized + "' is outside the allowed folder roots");
         }
         return normalized;
+    }
+
+    /** The Stirling-owned directories always permitted, with a reason key for each (read-only). */
+    public List<ImpliedRoot> impliedRoots() {
+        return impliedRoots;
     }
 
     /** Whether this policy touches a folder source/sink, and so is subject to these rules. */
@@ -102,16 +115,19 @@ public class FolderAccessGuard {
      * Stirling-owned directories always permitted regardless of {@code allowedFolderRoots}, so
      * folder automations work against them out of the box.
      */
-    private static List<Path> impliedRoots(
+    private static List<ImpliedRoot> impliedRoots(
             ApplicationProperties.Storage storage, RuntimePathConfig runtimePathConfig) {
-        List<Path> roots = new ArrayList<>(serverStorageRoots(storage));
-        roots.addAll(normalizeAll(runtimePathConfig.getPipelineWatchedFoldersPaths()));
+        List<ImpliedRoot> roots = new ArrayList<>();
+        for (Path path : serverStorageRoots(storage)) {
+            roots.add(new ImpliedRoot(path, IMPLIED_SERVER_STORAGE));
+        }
+        for (Path path : normalizeAll(runtimePathConfig.getPipelineWatchedFoldersPaths())) {
+            roots.add(new ImpliedRoot(path, IMPLIED_WATCHED_FOLDER));
+        }
         return List.copyOf(roots);
     }
 
-    /**
-     * The local server file-storage directory, when that storage provider is enabled.
-     */
+    /** The local server file-storage directory, when that storage provider is enabled. */
     private static List<Path> serverStorageRoots(ApplicationProperties.Storage storage) {
         if (!storage.isEnabled() || !"local".equalsIgnoreCase(storage.getProvider())) {
             return List.of();

@@ -944,6 +944,12 @@ description = "Directories that folder sources and folder outputs are allowed to
 securityNote = "Leave this empty to disable folder sources and outputs entirely. Stirling's own configuration directory is always off-limits."
 title = "Folder Access"
 
+[admin.settings.folderAccess.implied]
+description = "These Stirling-managed directories are always permitted and can't be changed here."
+serverStorage = "Server file storage"
+title = "Always allowed"
+watchedFolder = "Pipeline watched folder"
+
 [admin.settings.folderAccess.roots]
 add = "Add"
 empty = "No folders allowed. Folder sources and outputs are currently disabled."

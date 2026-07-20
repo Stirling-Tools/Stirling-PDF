@@ -21,9 +21,15 @@ import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
 import { useSettingsDirty } from "@app/hooks/useSettingsDirty";
+import apiClient from "@app/services/apiClient";
 
 interface FolderAccessSettingsData {
   allowedFolderRoots?: string[];
+}
+
+interface ImpliedFolderRoot {
+  path: string;
+  reason: string;
 }
 
 export default function AdminFolderAccessSection() {
@@ -48,6 +54,7 @@ export default function AdminFolderAccessSection() {
   } = useAdminSettings<FolderAccessSettingsData>({ sectionName: "policies" });
 
   const [newRoot, setNewRoot] = useState("");
+  const [impliedRoots, setImpliedRoots] = useState<ImpliedFolderRoot[]>([]);
 
   useEffect(() => {
     if (loginEnabled) {
@@ -55,7 +62,34 @@ export default function AdminFolderAccessSection() {
     }
   }, [loginEnabled]);
 
+  useEffect(() => {
+    if (!loginEnabled) return;
+    apiClient
+      .get<ImpliedFolderRoot[]>(
+        "/api/v1/admin/settings/policies/implied-folder-roots",
+      )
+      .then((res) => setImpliedRoots(res.data ?? []))
+      .catch(() => setImpliedRoots([]));
+  }, [loginEnabled]);
+
   const roots = settings.allowedFolderRoots ?? [];
+
+  const reasonLabel = (reason: string) => {
+    switch (reason) {
+      case "serverStorage":
+        return t(
+          "admin.settings.folderAccess.implied.serverStorage",
+          "Server file storage",
+        );
+      case "watchedFolder":
+        return t(
+          "admin.settings.folderAccess.implied.watchedFolder",
+          "Pipeline watched folder",
+        );
+      default:
+        return reason;
+    }
+  };
 
   const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(
     settings,
@@ -232,6 +266,48 @@ export default function AdminFolderAccessSection() {
               </Group>
             </Stack>
           </Paper>
+
+          {impliedRoots.length > 0 && (
+            <Paper withBorder p="sm" radius="md">
+              <Stack gap="sm">
+                <div>
+                  <Text fw={600} size="sm">
+                    {t(
+                      "admin.settings.folderAccess.implied.title",
+                      "Always allowed",
+                    )}
+                  </Text>
+                  <Text size="xs" c="dimmed">
+                    {t(
+                      "admin.settings.folderAccess.implied.description",
+                      "These Stirling-managed directories are always permitted and can't be changed here.",
+                    )}
+                  </Text>
+                </div>
+                <Stack gap="xs">
+                  {impliedRoots.map((root) => (
+                    <Group
+                      key={root.path}
+                      justify="space-between"
+                      wrap="nowrap"
+                      gap="xs"
+                      align="center"
+                    >
+                      <Code style={{ wordBreak: "break-all" }}>
+                        {root.path}
+                      </Code>
+                      <Group gap={6} wrap="nowrap" style={{ flexShrink: 0 }}>
+                        <Text size="xs" c="dimmed">
+                          {reasonLabel(root.reason)}
+                        </Text>
+                        <LocalIcon icon="lock" width="1rem" height="1rem" />
+                      </Group>
+                    </Group>
+                  ))}
+                </Stack>
+              </Stack>
+            </Paper>
+          )}
 
           <RestartConfirmationModal
             opened={restartModalOpened}
