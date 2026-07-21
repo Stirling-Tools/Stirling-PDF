@@ -169,25 +169,24 @@ class PdfUtilsMoreTest {
             when(factory.load(bytes)).thenReturn(doc);
 
             try (MockedStatic<ApplicationContextProvider> ctx =
-                    Mockito.mockStatic(ApplicationContextProvider.class)) {
+                            Mockito.mockStatic(ApplicationContextProvider.class);
+                    TempFile tempPdf = new TempFile(mock(TempFileManager.class), ".pdf")) {
                 ctx.when(() -> ApplicationContextProvider.getBean(ApplicationProperties.class))
                         .thenReturn(propsWithMaxDpi(200));
 
                 byte[] out =
                         PdfUtils.convertFromPdf(
-                                factory, bytes, "png", ImageType.RGB, true, 72, "doc", true);
+                                tempPdf.getPath(), "png", ImageType.RGB, true, 72, "doc", true);
                 assertThat(out).isNotEmpty();
             }
         }
 
         @Test
         @DisplayName("DPI above the configured limit throws using the configured maximum")
-        void aboveConfiguredLimitThrows() {
-            byte[] bytes = new byte[] {1, 2, 3};
-            CustomPDFDocumentFactory factory = mock(CustomPDFDocumentFactory.class);
-
+        void aboveConfiguredLimitThrows() throws Exception {
             try (MockedStatic<ApplicationContextProvider> ctx =
-                    Mockito.mockStatic(ApplicationContextProvider.class)) {
+                            Mockito.mockStatic(ApplicationContextProvider.class);
+                    TempFile tempPdf = new TempFile(mock(TempFileManager.class), ".pdf")) {
                 ctx.when(() -> ApplicationContextProvider.getBean(ApplicationProperties.class))
                         .thenReturn(propsWithMaxDpi(100));
 
@@ -196,8 +195,7 @@ class PdfUtilsMoreTest {
                         IllegalArgumentException.class,
                         () ->
                                 PdfUtils.convertFromPdf(
-                                        factory,
-                                        bytes,
+                                        tempPdf.getPath(),
                                         "png",
                                         ImageType.RGB,
                                         true,
@@ -210,35 +208,36 @@ class PdfUtilsMoreTest {
         @Test
         @DisplayName("combined-image mode reuses the cached size for duplicate pages")
         void combinedImageReusesDuplicatePageSize() throws Exception {
-            byte[] bytes = simplePdfBytes();
-            CustomPDFDocumentFactory factory = mock(CustomPDFDocumentFactory.class);
-            PDDocument doc = new PDDocument();
-            // Two identically-sized pages: the second hits the size cache.
-            doc.addPage(new PDPage(new PDRectangle(20f, 30f)));
-            doc.addPage(new PDPage(new PDRectangle(20f, 30f)));
-            when(factory.load(bytes)).thenReturn(doc);
+            try (TempFile tempPdf = new TempFile(mock(TempFileManager.class), ".pdf")) {
+                try (PDDocument doc = new PDDocument()) {
+                    doc.addPage(new PDPage(new PDRectangle(20f, 30f)));
+                    doc.addPage(new PDPage(new PDRectangle(20f, 30f)));
+                    doc.save(tempPdf.getFile());
+                }
 
-            byte[] out =
-                    PdfUtils.convertFromPdf(
-                            factory, bytes, "png", ImageType.RGB, true, 36, "doc", true);
-            assertThat(out).isNotEmpty();
+                byte[] out =
+                        PdfUtils.convertFromPdf(
+                                tempPdf.getPath(), "png", ImageType.RGB, true, 36, "doc", true);
+                assertThat(out).isNotEmpty();
+            }
         }
 
         @Test
         @DisplayName("combined-image mode swaps dimensions for a rotated page")
         void combinedImageRotatedPage() throws Exception {
-            byte[] bytes = simplePdfBytes();
-            CustomPDFDocumentFactory factory = mock(CustomPDFDocumentFactory.class);
-            PDDocument doc = new PDDocument();
-            PDPage rotated = new PDPage(new PDRectangle(20f, 30f));
-            rotated.setRotation(90);
-            doc.addPage(rotated);
-            when(factory.load(bytes)).thenReturn(doc);
+            try (TempFile tempPdf = new TempFile(mock(TempFileManager.class), ".pdf")) {
+                try (PDDocument doc = new PDDocument()) {
+                    PDPage rotated = new PDPage(new PDRectangle(20f, 30f));
+                    rotated.setRotation(90);
+                    doc.addPage(rotated);
+                    doc.save(tempPdf.getFile());
+                }
 
-            byte[] out =
-                    PdfUtils.convertFromPdf(
-                            factory, bytes, "png", ImageType.RGB, true, 36, "doc", true);
-            assertThat(out).isNotEmpty();
+                byte[] out =
+                        PdfUtils.convertFromPdf(
+                                tempPdf.getPath(), "png", ImageType.RGB, true, 36, "doc", true);
+                assertThat(out).isNotEmpty();
+            }
         }
     }
 
