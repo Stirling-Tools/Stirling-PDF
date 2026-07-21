@@ -155,6 +155,43 @@ class InstanceEntitlementInterceptorTest {
         verifyNoInteractions(entitlementCache);
     }
 
+    @Test
+    void gatesPolicyRunUpFrontEvenWithoutAutomationHeader() throws Exception {
+        // The policy /run call carries no automation header, but must be blocked up front (not
+        // after its first tool) when the instance is unlinked.
+        when(gate.evaluate(anyBoolean()))
+                .thenReturn(GateDecision.block(GateDecision.Reason.NOT_LINKED));
+
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        MockHttpServletRequest req =
+                new MockHttpServletRequest("POST", "/api/v1/policies/pol-1/run");
+        MockHttpServletResponse resp = new MockHttpServletResponse();
+
+        assertFalse(interceptor.preHandle(req, resp, new Object()));
+        assertEquals(HttpStatus.PAYMENT_REQUIRED.value(), resp.getStatus());
+        assertTrue(resp.getContentAsString().contains("ACCOUNT_LINK_REQUIRED"));
+        verify(gate).evaluate(true); // gated as billable despite no automation header
+    }
+
+    @Test
+    void doesNotMeterThePolicyRunEndpointItself() throws Exception {
+        // Gated up front, but metered only via its dispatched tool sub-steps (category BYPASSED
+        // here), so the /run request itself never accrues usage.
+        when(gate.evaluate(anyBoolean()))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
+        UsageMeterService meter = mock(UsageMeterService.class);
+        when(meterProvider.getIfAvailable()).thenReturn(meter);
+
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        MockHttpServletRequest req =
+                new MockHttpServletRequest("POST", "/api/v1/policies/pol-1/run");
+        MockHttpServletResponse resp = new MockHttpServletResponse();
+        interceptor.preHandle(req, resp, new Object());
+        interceptor.afterCompletion(req, resp, new Object(), null);
+
+        verifyNoInteractions(meter);
+    }
+
     private static InstanceEntitlement entitled(UnitCalcPolicy policy, LocalDateTime period) {
         return new InstanceEntitlement(
                 true, 0, 0, 100L, EntitlementState.OK, policy, period, period.plusMonths(1));

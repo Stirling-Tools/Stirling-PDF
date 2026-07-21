@@ -10,7 +10,6 @@ import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -24,7 +23,6 @@ import org.springframework.stereotype.Service;
  * table stays bounded (~one row per source per active hour, for at most 30 days).
  */
 @Service
-@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class JpaSourceDocCounter implements SourceDocCounter {
 
     private final SourceDocCountRepository countRepository;

@@ -10,8 +10,8 @@
 --                           the policy's sources, so the table stays near the set of files
 --                           currently present.
 --
--- Gated by policies.enabled like the rest of the subsystem; Hibernate ddl-auto would also create
--- this, but the migration keeps the schema explicit for the Flyway-managed deployments.
+-- Hibernate ddl-auto would also create this, but the migration keeps the schema explicit for the
+-- Flyway-managed deployments.
 
 CREATE TABLE IF NOT EXISTS policy_processed_files (
     policy_id     VARCHAR(255)  NOT NULL,

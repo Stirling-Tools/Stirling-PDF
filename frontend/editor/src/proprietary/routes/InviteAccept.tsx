@@ -16,6 +16,8 @@ import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
 import LoginHeader from "@app/routes/login/LoginHeader";
 import ErrorMessage from "@app/auth/ui/ErrorMessage";
+import { authInputStyles } from "@app/auth/ui/EmailPasswordForm";
+import "@app/auth/ui/auth.css";
 import { BASE_PATH } from "@app/constants/app";
 import apiClient from "@app/services/apiClient";
 import { Button } from "@app/ui/Button";
@@ -162,15 +164,17 @@ export default function InviteAccept() {
           title={t("invite.invalidInvitation", "Invalid Invitation")}
         />
         <ErrorMessage error={error} />
-        <div className="auth-section">
-          <Button
-            type="button"
-            onClick={() => navigate("/login")}
-            className="w-full px-4 py-[0.75rem] rounded-[0.625rem] text-base font-semibold cursor-pointer border-0 auth-cta-button"
-          >
-            {t("invite.goToLogin", "Go to Login")}
-          </Button>
-        </div>
+        <Button
+          type="button"
+          onClick={() => navigate("/login")}
+          fullWidth
+          size="lg"
+          fontSize="sm"
+          accent="brand"
+          className="auth-submit"
+        >
+          {t("invite.goToLogin", "Go to Login")}
+        </Button>
       </AuthLayout>
     );
   }
@@ -186,13 +190,7 @@ export default function InviteAccept() {
       />
 
       {inviteData && !inviteData.emailRequired && (
-        <Paper
-          withBorder
-          p="md"
-          mb="lg"
-          bg="blue.0"
-          style={{ borderColor: "var(--mantine-color-blue-3)" }}
-        >
+        <Paper withBorder p="md" mb="lg">
           <Stack gap="xs" align="center">
             <Text
               size="xs"
@@ -218,58 +216,76 @@ export default function InviteAccept() {
       <ErrorMessage error={error} />
 
       <form onSubmit={handleAccept}>
-        <Stack gap="md">
+        <div className="auth-fields">
           {inviteData?.emailRequired && (
-            <TextInput
-              label={t("invite.email", "Email address")}
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+            <div className="auth-field">
+              <TextInput
+                label={t("invite.email", "Email address")}
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={t(
+                  "invite.emailPlaceholder",
+                  "Enter your email address",
+                )}
+                disabled={submitting}
+                required
+                autoComplete="email"
+                classNames={{ label: "auth-label" }}
+                styles={authInputStyles}
+              />
+            </div>
+          )}
+
+          <div className="auth-field">
+            <PasswordInput
+              label={t("invite.choosePassword", "Choose a password")}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder={t(
-                "invite.emailPlaceholder",
-                "Enter your email address",
+                "invite.passwordPlaceholder",
+                "Enter your password",
               )}
               disabled={submitting}
               required
-              autoComplete="email"
+              autoComplete="new-password"
+              classNames={{ label: "auth-label" }}
+              styles={authInputStyles}
             />
-          )}
-
-          <PasswordInput
-            label={t("invite.choosePassword", "Choose a password")}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder={t("invite.passwordPlaceholder", "Enter your password")}
-            disabled={submitting}
-            required
-            autoComplete="new-password"
-          />
-
-          <PasswordInput
-            label={t("invite.confirmPassword", "Confirm password")}
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder={t(
-              "invite.confirmPasswordPlaceholder",
-              "Re-enter your password",
-            )}
-            disabled={submitting}
-            required
-            autoComplete="new-password"
-          />
-
-          <div className="auth-section">
-            <Button
-              type="submit"
-              disabled={submitting}
-              className="w-full px-4 py-[0.75rem] rounded-[0.625rem] text-base font-semibold cursor-pointer border-0 disabled:opacity-50 disabled:cursor-not-allowed auth-cta-button"
-            >
-              {submitting
-                ? t("invite.creating", "Creating Account...")
-                : t("invite.createAccount", "Create Account")}
-            </Button>
           </div>
-        </Stack>
+
+          <div className="auth-field">
+            <PasswordInput
+              label={t("invite.confirmPassword", "Confirm password")}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder={t(
+                "invite.confirmPasswordPlaceholder",
+                "Re-enter your password",
+              )}
+              disabled={submitting}
+              required
+              autoComplete="new-password"
+              classNames={{ label: "auth-label" }}
+              styles={authInputStyles}
+            />
+          </div>
+        </div>
+
+        <Button
+          type="submit"
+          disabled={submitting}
+          loading={submitting}
+          fullWidth
+          size="lg"
+          fontSize="sm"
+          accent="brand"
+          className="auth-submit"
+        >
+          {submitting
+            ? t("invite.creating", "Creating Account...")
+            : t("invite.createAccount", "Create Account")}
+        </Button>
       </form>
 
       <Center mt="md">
