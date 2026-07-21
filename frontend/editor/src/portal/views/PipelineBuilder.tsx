@@ -14,7 +14,6 @@ import {
   Button,
   Checkbox,
   EmptyState,
-  FormField,
   Input,
   Modal,
   RadioGroup,
@@ -293,10 +292,12 @@ export function PipelineBuilder() {
 
   const scheduleCountValid =
     triggerType !== "schedule" || Number(scheduleCount) > 0;
-  // At least one saved destination must be chosen; pipelines no longer configure output inline.
+  // A pipeline must have at least one input source and at least one output destination.
+  const sourceValid = sourceIds.length > 0;
   const outputValid = outputIds.length > 0;
   const canSave =
     name.trim() !== "" &&
+    sourceValid &&
     scheduleCountValid &&
     outputValid &&
     !hasUploadSteps &&
@@ -610,10 +611,6 @@ export function PipelineBuilder() {
               <p className="portal-pipelines__muted">
                 {t("portal.pipelines.composer.sourcesLoading")}
               </p>
-            ) : availableSources.length === 0 ? (
-              <p className="portal-pipelines__muted">
-                {t("portal.pipelines.composer.noSources")}
-              </p>
             ) : (
               <div className="portal-pipelines__source-list">
                 {availableSources.map((source) => (
@@ -681,18 +678,12 @@ export function PipelineBuilder() {
             <span className="portal-pipelines__detail-heading">
               {t("portal.pipelines.composer.output")}
             </span>
-            <FormField
-              label={t("portal.pipelines.composer.outputDestination")}
-              helperText={t("portal.pipelines.composer.outputDestinationHelp")}
-              required
-            >
-              <DestinationPicker
-                sources={writableSources}
-                value={outputIds}
-                onChange={setOutputIds}
-                onCreateNew={goToSources}
-              />
-            </FormField>
+            <DestinationPicker
+              sources={writableSources}
+              value={outputIds}
+              onChange={setOutputIds}
+              onCreateNew={goToSources}
+            />
           </div>
         </div>
       </section>

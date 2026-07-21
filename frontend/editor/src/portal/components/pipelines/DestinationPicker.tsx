@@ -38,21 +38,17 @@ export function DestinationPicker({
   }
 
   return (
-    <div className="portal-pipelines__source-list">
-      {sources.length === 0 ? (
-        <p className="portal-pipelines__muted">
-          {t("portal.pipelines.composer.noOutputs")}
-        </p>
-      ) : (
-        sources.map((source) => (
+    <>
+      <div className="portal-pipelines__source-list">
+        {sources.map((source) => (
           <Checkbox
             key={source.id}
             checked={value.includes(source.id)}
             onChange={(e) => toggle(source.id, e.target.checked)}
             label={source.name}
           />
-        ))
-      )}
+        ))}
+      </div>
       <Button
         variant="tertiary"
         size="sm"
@@ -61,6 +57,6 @@ export function DestinationPicker({
       >
         {t("portal.pipelines.composer.outputCreateNew")}
       </Button>
-    </div>
+    </>
   );
 }

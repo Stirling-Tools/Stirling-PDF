@@ -8,6 +8,7 @@ import {
 import { MantineProvider } from "@mantine/core";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import type { Policy, TriggerOutcome } from "@portal/api/pipelines";
+import type { SourceView } from "@portal/api/sources";
 import type { ToolRegistryCatalog } from "@app/contexts/ToolRegistryContext";
 import type { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
 import { PipelineBuilder } from "@portal/views/PipelineBuilder";
@@ -126,6 +127,20 @@ const POLICY: Policy = {
   sourceIds: [],
   steps: [],
   output: { type: "inline", options: {} },
+  outputIds: [],
+};
+
+const SOURCE: SourceView = {
+  id: "src-in",
+  name: "Claims intake",
+  type: "folder",
+  status: "active",
+  referenceCount: 0,
+  referencingPolicies: [],
+  config: [],
+  docsTotal: 0,
+  docs24h: 0,
+  docs30d: 0,
 };
 
 function outcome(overrides: Partial<TriggerOutcome>): TriggerOutcome {
@@ -165,7 +180,7 @@ describe("PipelineBuilder", () => {
     fetchSources.mockReset();
     fetchPipeline.mockResolvedValue(POLICY);
     fetchTriggers.mockResolvedValue([]);
-    fetchSources.mockResolvedValue({ kpis: [], sources: [] });
+    fetchSources.mockResolvedValue({ kpis: [], sources: [SOURCE] });
     savePipeline.mockResolvedValue({});
     deletePipeline.mockResolvedValue(undefined);
     triggerPipeline.mockResolvedValue(outcome({ runIds: ["run-1"] }));
@@ -188,7 +203,10 @@ describe("PipelineBuilder", () => {
     fireEvent.click(screen.getByRole("button", { name: /addTool/ }));
     fireEvent.click(await screen.findByText("Compress"));
 
-    // A pipeline must target a saved output destination; pick one.
+    // A pipeline must have at least one input source and one output destination.
+    fireEvent.click(
+      await screen.findByRole("checkbox", { name: "Claims intake" }),
+    );
     fireEvent.click(screen.getByText("pick output"));
 
     fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
@@ -198,6 +216,7 @@ describe("PipelineBuilder", () => {
       expect.objectContaining({
         name: "Nightly compress",
         trigger: null,
+        sourceIds: ["src-in"],
         outputIds: ["src-1"],
         steps: [
           expect.objectContaining({ operation: "/api/v1/misc/compress-pdf" }),
@@ -207,25 +226,30 @@ describe("PipelineBuilder", () => {
     expect(await screen.findByText("pipelines list")).toBeInTheDocument();
   });
 
-  it("requires a saved output destination before saving", async () => {
+  it("requires at least one source and one destination before saving", async () => {
     renderBuilder("/processor/pipelines/new");
 
     fireEvent.change(await screen.findByRole("textbox"), {
-      target: { value: "Needs a destination" },
+      target: { value: "Needs both" },
     });
+    const saveButton = () =>
+      screen.getByText("portal.pipelines.composer.create").closest("button");
 
-    // No output chosen yet: saving is blocked.
-    expect(
-      screen.getByText("portal.pipelines.composer.create").closest("button"),
-    ).toBeDisabled();
+    // Name only: blocked (no source, no destination).
+    expect(saveButton()).toBeDisabled();
 
+    // A source but still no destination: blocked.
+    fireEvent.click(
+      await screen.findByRole("checkbox", { name: "Claims intake" }),
+    );
+    expect(saveButton()).toBeDisabled();
+
+    // Both chosen: allowed, and both are sent.
     fireEvent.click(screen.getByText("pick output"));
-
-    // Once an output is picked, saving is allowed and sends its id.
     fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
     await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
     expect(savePipeline).toHaveBeenCalledWith(
-      expect.objectContaining({ outputIds: ["src-1"] }),
+      expect.objectContaining({ sourceIds: ["src-in"], outputIds: ["src-1"] }),
     );
   });
 
