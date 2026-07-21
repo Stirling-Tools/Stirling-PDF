@@ -107,7 +107,8 @@ public class AdminSettingsController {
         // Convert ApplicationProperties to Map
         Map<String, Object> settings =
                 objectMapper.convertValue(
-                        applicationProperties, new TypeReference<Map<String, Object>>() {});
+                        applicationProperties, new TypeReference<>() {
+                        });
 
         if (includePending && !pendingChanges.isEmpty()) {
             // Merge pending changes into the settings map

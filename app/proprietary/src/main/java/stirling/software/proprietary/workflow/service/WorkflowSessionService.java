@@ -799,7 +799,8 @@ public class WorkflowSessionService {
                 List<WetSignatureMetadata> wetSigs =
                         objectMapper.readValue(
                                 request.getWetSignaturesData(),
-                                new TypeReference<List<WetSignatureMetadata>>() {});
+                                new TypeReference<>() {
+                                });
                 if (wetSigs.size() > WetSignatureMetadata.MAX_SIGNATURES_PER_PARTICIPANT) {
                     throw new ResponseStatusException(
                             HttpStatus.BAD_REQUEST, "Too many wet signatures submitted");
@@ -943,21 +944,21 @@ public class WorkflowSessionService {
             Object pemObject = pemParser.readObject();
             JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
             PrivateKeyInfo keyInfo;
-            if (pemObject instanceof PKCS8EncryptedPrivateKeyInfo encrypted) {
-                InputDecryptorProvider decryptor =
+            switch (pemObject) {
+                case PKCS8EncryptedPrivateKeyInfo encrypted -> {
+                    InputDecryptorProvider decryptor =
                         new JceOpenSSLPKCS8DecryptorProviderBuilder().build(password);
-                keyInfo = encrypted.decryptPrivateKeyInfo(decryptor);
-            } else if (pemObject instanceof PEMEncryptedKeyPair encryptedKeyPair) {
-                PEMDecryptorProvider decryptor =
+                    keyInfo = encrypted.decryptPrivateKeyInfo(decryptor);
+                }
+                case PEMEncryptedKeyPair encryptedKeyPair -> {
+                    PEMDecryptorProvider decryptor =
                         new JcePEMDecryptorProviderBuilder().build(password);
-                keyInfo = encryptedKeyPair.decryptKeyPair(decryptor).getPrivateKeyInfo();
-            } else if (pemObject instanceof PEMKeyPair keyPair) {
-                keyInfo = keyPair.getPrivateKeyInfo();
-            } else if (pemObject instanceof PrivateKeyInfo info) {
-                keyInfo = info;
-            } else {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "Unsupported PEM private key format");
+                    keyInfo = encryptedKeyPair.decryptKeyPair(decryptor).getPrivateKeyInfo();
+                }
+                case PEMKeyPair keyPair -> keyInfo = keyPair.getPrivateKeyInfo();
+                case PrivateKeyInfo info -> keyInfo = info;
+                case null, default -> throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Unsupported PEM private key format");
             }
             return converter.getPrivateKey(keyInfo);
         }

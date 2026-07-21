@@ -132,7 +132,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
             verifyingKeyCache.put(
                     key.getKeyId(), new JwtVerificationKey(key.getKeyId(), key.getVerifyingKey()));
         }
-        activeKey = new JwtVerificationKey(keys.get(0).getKeyId(), keys.get(0).getVerifyingKey());
+        activeKey = new JwtVerificationKey(keys.getFirst().getKeyId(), keys.getFirst().getVerifyingKey());
         log.info("Loaded {} JWT key(s) from DB, active key: {}", keys.size(), activeKey.getKeyId());
     }
 

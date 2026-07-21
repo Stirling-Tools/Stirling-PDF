@@ -36,57 +36,61 @@ public class CustomOAuth2AuthenticationFailureHandler
             AuthenticationException exception)
             throws IOException, ServletException {
 
-        if (exception instanceof BadCredentialsException) {
-            log.error("BadCredentialsException", exception);
-            getRedirectStrategy().sendRedirect(request, response, "/login?error=badCredentials");
-            return;
-        }
-        if (exception instanceof DisabledException) {
-            log.error("User is deactivated: ", exception);
-            getRedirectStrategy().sendRedirect(request, response, "/logout?userIsDisabled=true");
-            return;
-        }
-        if (exception instanceof LockedException) {
-            log.error("Account locked: ", exception);
-            getRedirectStrategy().sendRedirect(request, response, "/logout?error=locked");
-            return;
-        }
-        if (exception instanceof OAuth2AuthenticationException oAuth2Exception) {
-            OAuth2Error error = oAuth2Exception.getError();
-
-            String errorCode = error.getErrorCode();
-
-            if ("Password must not be null".equals(error.getErrorCode())) {
-                errorCode = "userAlreadyExistsWeb";
+        switch (exception) {
+            case BadCredentialsException badCredentialsException -> {
+                log.error("BadCredentialsException", exception);
+                getRedirectStrategy().sendRedirect(request, response, "/login?error=badCredentials");
+                return;
             }
+            case DisabledException disabledException -> {
+                log.error("User is deactivated: ", exception);
+                getRedirectStrategy().sendRedirect(request, response, "/logout?userIsDisabled=true");
+                return;
+            }
+            case LockedException lockedException -> {
+                log.error("Account locked: ", exception);
+                getRedirectStrategy().sendRedirect(request, response, "/logout?error=locked");
+                return;
+            }
+            case OAuth2AuthenticationException oAuth2Exception -> {
+                OAuth2Error error = oAuth2Exception.getError();
 
-            log.error(
+                String errorCode = error.getErrorCode();
+
+                if ("Password must not be null".equals(error.getErrorCode())) {
+                    errorCode = "userAlreadyExistsWeb";
+                }
+
+                log.error(
                     "OAuth2 Authentication error: {}",
                     errorCode != null ? errorCode : exception.getMessage(),
                     exception);
-            String errorValue = errorCode != null ? errorCode : "oauth2AuthenticationError";
-            clearRedirectCookie(response);
-            boolean tauriState = TauriOAuthUtils.isTauriState(request);
-            String redirectUrl;
-            if (tauriState) {
-                String basePath =
+                String errorValue = errorCode != null ? errorCode : "oauth2AuthenticationError";
+                clearRedirectCookie(response);
+                boolean tauriState = TauriOAuthUtils.isTauriState(request);
+                String redirectUrl;
+                if (tauriState) {
+                    String basePath =
                         TauriOAuthUtils.defaultTauriCallbackPath(request.getContextPath());
-                redirectUrl = basePath;
-                String stateParam = request.getParameter("state");
-                if (stateParam != null && !stateParam.isBlank()) {
-                    redirectUrl = appendQueryParam(redirectUrl, "state", stateParam);
-                    // Extract and pass nonce for CSRF validation
-                    String nonce = TauriOAuthUtils.extractNonceFromState(stateParam);
-                    if (nonce != null) {
-                        redirectUrl = appendQueryParam(redirectUrl, "nonce", nonce);
+                    redirectUrl = basePath;
+                    String stateParam = request.getParameter("state");
+                    if (stateParam != null && !stateParam.isBlank()) {
+                        redirectUrl = appendQueryParam(redirectUrl, "state", stateParam);
+                        // Extract and pass nonce for CSRF validation
+                        String nonce = TauriOAuthUtils.extractNonceFromState(stateParam);
+                        if (nonce != null) {
+                            redirectUrl = appendQueryParam(redirectUrl, "nonce", nonce);
+                        }
                     }
+                    redirectUrl = appendQueryParam(redirectUrl, "errorOAuth", errorValue);
+                } else {
+                    redirectUrl = buildFailureRedirectUrl(request, errorValue);
                 }
-                redirectUrl = appendQueryParam(redirectUrl, "errorOAuth", errorValue);
-            } else {
-                redirectUrl = buildFailureRedirectUrl(request, errorValue);
+                getRedirectStrategy().sendRedirect(request, response, redirectUrl);
+                return;
             }
-            getRedirectStrategy().sendRedirect(request, response, redirectUrl);
-            return;
+            default -> {
+            }
         }
         log.error("Unhandled authentication exception", exception);
         super.onAuthenticationFailure(request, response, exception);

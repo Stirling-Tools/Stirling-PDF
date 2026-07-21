@@ -213,8 +213,11 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
         }
 
         sb.append(
-                "\nWARNING: this block contains PII. Set security.oauth2.debugLogging=false once"
-                        + " troubleshooting is complete.\n");
+            """
+
+                WARNING: this block contains PII. Set security.oauth2.debugLogging=false once\
+                 troubleshooting is complete.
+                """);
         sb.append("========== [/OAUTH2 DEBUG] ==========");
 
         if (failure) {

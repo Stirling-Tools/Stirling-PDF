@@ -703,17 +703,19 @@ public class AuthController {
     }
 
     private long extractEpochMillis(Object claimValue) {
-        if (claimValue == null) {
-            return -1L;
-        }
-
-        if (claimValue instanceof java.util.Date date) {
-            return date.getTime();
-        }
-
-        if (claimValue instanceof Number number) {
-            long epochSeconds = number.longValue();
-            return epochSeconds * 1000L;
+        switch (claimValue) {
+            case null -> {
+                return -1L;
+            }
+            case java.util.Date date -> {
+                return date.getTime();
+            }
+            case Number number -> {
+                long epochSeconds = number.longValue();
+                return epochSeconds * 1000L;
+            }
+            default -> {
+            }
         }
 
         return -1L;
