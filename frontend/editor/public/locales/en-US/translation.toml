@@ -7905,6 +7905,11 @@ linkAccount = "Link Stirling account"
 primaryNav = "Primary navigation"
 switchApp = "Switch app"
 
+[portal.shell.topbar]
+closeNav = "Close navigation"
+openNav = "Open navigation"
+search = "Search"
+
 [portal.sources]
 subtitle = "Reusable input connections that feed documents into Stirling. Configure a source once, then reference it from any number of pipelines."
 title = "Sources"

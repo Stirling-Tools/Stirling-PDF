@@ -2,9 +2,10 @@
   position: fixed;
   bottom: 5.5rem;
   right: 1.5rem;
-  width: 23.75rem;
+  /* Clamp to the viewport so small phones don't clip the panel off-screen */
+  width: min(23.75rem, calc(100vw - 2rem));
   height: 32.5rem;
-  max-height: calc(100vh - 7rem);
+  max-height: calc(100dvh - 7rem);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
