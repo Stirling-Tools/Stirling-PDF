@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
@@ -186,7 +185,10 @@ public class S3StorageProvider implements StorageProvider, AutoCloseable {
         if (filename == null || filename.isBlank()) {
             return "file";
         }
-        String stripped = CONTROL_CHARACTER_PATTERN.matcher(Paths.get(filename).getFileName().toString()).replaceAll("");
+        String stripped =
+                CONTROL_CHARACTER_PATTERN
+                        .matcher(Paths.get(filename).getFileName().toString())
+                        .replaceAll("");
         return stripped.isBlank() ? "file" : stripped;
     }
 }
