@@ -1,0 +1,592 @@
+/* Pipeline overview: one strip, two projections (spec / flow) of the same state. */
+.portal-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 1.25rem 1.125rem;
+}
+
+.portal-overview__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+/* ── Spec: runbook-style lines ── */
+.portal-overview__spec {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+/* A row is the line plus its hover-revealed actions (reorder/remove on steps). */
+.portal-overview__row {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.portal-overview__row > .sui-btn {
+  flex: 1;
+  min-width: 0;
+}
+
+.portal-overview__actions {
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity var(--motion-fast);
+}
+
+.portal-overview__row:hover .portal-overview__actions,
+.portal-overview__actions:focus-within {
+  opacity: 1;
+}
+
+/* The source list inherits its column layout from Pipelines.css in the app;
+   the builder never imported that file, so own it here where the list now lives. */
+.portal-builder__panel .portal-pipelines__source-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5625rem;
+  max-height: 12rem;
+  overflow-y: auto;
+}
+
+/* Shared Button carrying bespoke line styling; re-assert over the sui-btn base
+   the same way PipelineBuilder.css does for its step rows. */
+.portal-overview__line.sui-btn {
+  height: auto;
+  min-height: 0;
+  padding: 0.4375rem 0.625rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--color-text-2);
+}
+
+/* Runbook gutter: line numbers for real lines, "+" for ghost extend-lines. */
+.portal-overview__n {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--color-text-5);
+  width: 1.125rem;
+  flex-shrink: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.portal-overview__line--ghost .portal-overview__n {
+  color: var(--color-blue);
+}
+
+/* Inline muted annotation after the value (detail, param summary). */
+.portal-overview__small {
+  font-weight: 400;
+  color: var(--color-text-4);
+  font-size: 0.75rem;
+}
+
+/* Hover-revealed edit hint, like the runbook's. */
+.portal-overview__edit {
+  font-size: 0.6875rem;
+  color: var(--color-text-5);
+  flex-shrink: 0;
+  margin-left: auto;
+  padding-left: 0.75rem;
+  opacity: 0;
+  transition: opacity var(--motion-fast);
+}
+
+.portal-overview__line.sui-btn:hover .portal-overview__edit {
+  opacity: 1;
+}
+
+.portal-overview__line.sui-btn:hover {
+  background: var(--color-bg-hover);
+}
+
+.portal-overview__line .mantine-Button-label {
+  display: flex;
+  align-items: baseline;
+  gap: 0.875rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.portal-overview__line--active {
+  background: var(--color-blue-light);
+}
+
+.portal-overview__kw {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--color-blue);
+  min-width: 4.75rem;
+  flex-shrink: 0;
+}
+
+.portal-overview__line--ghost .portal-overview__kw {
+  color: var(--color-text-5);
+}
+
+.portal-overview__val {
+  font-weight: 600;
+  color: var(--color-text-1);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-overview__line--ghost .portal-overview__val {
+  color: var(--color-blue);
+  font-weight: 500;
+}
+
+.portal-overview__val--blank {
+  color: var(--color-amber-dark);
+  border-bottom: 1.5px dashed var(--color-amber);
+  font-weight: 600;
+}
+
+/* Inline warning annotation on a DO line (needs upload / defaults / unknown). */
+.portal-overview__note {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--color-amber-dark);
+  flex-shrink: 0;
+  margin-left: auto;
+  padding-left: 0.75rem;
+}
+
+.portal-overview__note + .portal-overview__edit {
+  margin-left: 0;
+}
+
+/* ── Flow toolbar: auto-arrange + lock, shared by both layouts ── */
+.portal-overview__flowbar {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.portal-overview__flowhint {
+  flex: 1;
+  font-size: 0.75rem;
+  color: var(--color-text-4);
+  text-align: right;
+  padding-right: 0.25rem;
+}
+
+/* ── Unlocked flow: a free canvas with draggable nodes and live wires ── */
+.portal-overview__canvaswrap {
+  position: relative;
+  overflow: auto;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-subtle);
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    var(--color-border) 1px,
+    transparent 0
+  );
+  background-size: 16px 16px;
+}
+
+.portal-overview__stage {
+  position: relative;
+  min-width: 100%;
+}
+
+.portal-overview__edges {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.portal-overview__edges path {
+  fill: none;
+  stroke: var(--color-border-hover);
+  stroke-width: 2;
+}
+
+.portal-overview__edges path.is-ghost {
+  stroke: var(--color-blue);
+  stroke-dasharray: 5 5;
+}
+
+.portal-overview__edges .portal-overview__ah {
+  fill: var(--color-border-hover);
+}
+
+.portal-overview__edges .portal-overview__ahg {
+  fill: var(--color-blue);
+}
+
+/* Draggable nodes: absolute inside the stage, grab cursor, no touch panning. */
+.portal-overview__stage .portal-overview__node.sui-btn {
+  position: absolute;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.portal-overview__stage .portal-overview__node.sui-btn:active {
+  cursor: grabbing;
+}
+
+/* Ports on the free canvas: in = hollow ring on top, out = filled dot below. */
+.portal-overview__stage .portal-overview__node::before,
+.portal-overview__stage .portal-overview__node::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  transform: translateX(-50%);
+}
+
+.portal-overview__stage .portal-overview__node::before {
+  top: -0.3125rem;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border-hover);
+}
+
+.portal-overview__stage .portal-overview__node::after {
+  bottom: -0.3125rem;
+  background: var(--color-border-hover);
+}
+
+.portal-overview__stage .portal-overview__node--output::after {
+  display: none;
+}
+
+.portal-overview__stage .portal-overview__node--output::before {
+  border-color: var(--color-green);
+}
+
+.portal-overview__stage .portal-overview__node--trigger::before,
+.portal-overview__stage .portal-overview__node--ghost::before,
+.portal-overview__stage .portal-overview__node--ghost::after {
+  display: none;
+}
+
+/* Wire "+" insert points: a small dashed circle on the step boundaries. */
+.portal-overview__inserts {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.portal-overview__inserts .portal-overview__insert {
+  position: absolute;
+  pointer-events: auto;
+}
+
+.portal-overview__insert {
+  width: 1.25rem;
+  height: 1.25rem;
+  min-width: 1.25rem;
+  min-height: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 1.5px dashed var(--color-blue);
+  color: var(--color-blue);
+  font-size: 0.8125rem;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  transition:
+    background var(--motion-fast),
+    transform var(--motion-fast);
+}
+
+.portal-overview__insert:hover {
+  background: var(--color-blue-light);
+  transform: scale(1.12);
+}
+
+.portal-overview__connector--insert {
+  height: 2rem;
+  position: relative;
+}
+
+.portal-overview__connector--insert .portal-overview__insert {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.portal-overview__connector--insert .portal-overview__insert:hover {
+  transform: translate(-50%, -50%) scale(1.12);
+}
+
+/* ── Flow: a vertical spine of nodes with arrowed connectors ── */
+.portal-overview__flow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.375rem 0;
+}
+
+.portal-overview__flowrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.portal-overview__srcrow {
+  display: flex;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.portal-overview__node.sui-btn {
+  height: auto;
+  min-height: 0;
+  width: 13.5rem;
+  max-width: 20rem;
+  padding: 0.5625rem 0.75rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+  text-align: left;
+  transition:
+    border-color var(--motion-fast),
+    box-shadow var(--motion-fast);
+}
+
+/* Demo anatomy: kind chip on top, bold title, muted one-line detail. */
+.portal-overview__node .mantine-Button-label {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.portal-overview__node-kind {
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: lowercase;
+  padding: 0.1875rem 0.4375rem;
+  border-radius: var(--radius-pill);
+  line-height: 1;
+}
+
+.portal-overview__node-kind--default {
+  background: var(--color-blue-light);
+  color: var(--color-blue);
+}
+
+.portal-overview__node-kind--neutral {
+  background: var(--color-bg-muted);
+  color: var(--color-text-3);
+}
+
+/* green/amber "light" tokens are solid hues in light mode; mix our own tints. */
+.portal-overview__node-kind--success {
+  background: color-mix(in srgb, var(--color-green) 14%, var(--color-surface));
+  color: var(--color-green-dark);
+}
+
+.portal-overview__node-kind--warning {
+  background: color-mix(in srgb, var(--color-amber) 16%, var(--color-surface));
+  color: var(--color-amber-dark);
+}
+
+/* Dark mode: the raw hues glare on dark surfaces - blend them towards text. */
+[data-theme="dark"] .portal-overview__node-kind--default {
+  color: color-mix(in srgb, var(--color-blue) 55%, var(--color-text-1));
+}
+
+[data-theme="dark"] .portal-overview__node-kind--success {
+  background: color-mix(in srgb, var(--color-green) 18%, var(--color-surface));
+  color: color-mix(in srgb, var(--color-green) 50%, var(--color-text-1));
+}
+
+[data-theme="dark"] .portal-overview__node-kind--warning {
+  background: color-mix(in srgb, var(--color-amber) 16%, var(--color-surface));
+  color: color-mix(in srgb, var(--color-amber) 50%, var(--color-text-1));
+}
+
+.portal-overview__node-title {
+  font-size: 0.875rem;
+  font-weight: 650;
+  color: var(--color-text-1);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-overview__node-sub {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--color-text-4);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-overview__node-sub--warn {
+  color: var(--color-amber-dark);
+}
+
+/* Role edges in every layout: files enter through blue, leave through green. */
+.portal-overview__node--source.sui-btn {
+  --pov-edge: var(--color-blue);
+  box-shadow:
+    inset 0 3px 0 var(--pov-edge),
+    var(--shadow-sm);
+}
+
+.portal-overview__node--output.sui-btn {
+  --pov-edge: var(--color-green);
+  box-shadow:
+    inset 0 -3px 0 var(--pov-edge),
+    var(--shadow-sm);
+}
+
+[data-theme="dark"] .portal-overview__node--source.sui-btn {
+  --pov-edge: color-mix(in srgb, var(--color-blue) 75%, var(--color-surface));
+}
+
+[data-theme="dark"] .portal-overview__node--output.sui-btn {
+  --pov-edge: color-mix(in srgb, var(--color-green) 65%, var(--color-surface));
+}
+
+.portal-overview__node--source.portal-overview__node--active.sui-btn {
+  box-shadow:
+    inset 0 3px 0 var(--pov-edge),
+    0 0 0 1px var(--color-blue),
+    var(--shadow-sm);
+}
+
+.portal-overview__node--output.portal-overview__node--active.sui-btn {
+  box-shadow:
+    inset 0 -3px 0 var(--pov-edge),
+    0 0 0 1px var(--color-blue),
+    var(--shadow-sm);
+}
+
+/* The trigger is a slim pill: chip and label on one row. */
+.portal-overview__node--trigger.sui-btn {
+  width: auto;
+  border-style: dashed;
+  border-radius: var(--radius-pill);
+  padding: 0.375rem 0.75rem;
+}
+
+.portal-overview__node--trigger .mantine-Button-label {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4375rem;
+}
+
+.portal-overview__node--trigger .portal-overview__node-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+/* The ghost add-node stays a compact single line. */
+.portal-overview__node--ghost.sui-btn {
+  width: auto;
+}
+
+.portal-overview__node.sui-btn:hover {
+  border-color: var(--color-border-hover);
+  background: var(--color-surface);
+}
+
+.portal-overview__node--active {
+  border-color: var(--color-blue);
+  box-shadow: 0 0 0 1px var(--color-blue);
+}
+
+.portal-overview__node--trigger {
+  border-style: dashed;
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  color: var(--color-text-2);
+}
+
+/* Role accents: files enter through blue, leave through green. */
+.portal-overview__node--source {
+  box-shadow:
+    inset 0 3px 0 var(--color-blue),
+    var(--shadow-sm);
+}
+
+.portal-overview__node--output {
+  box-shadow:
+    inset 0 -3px 0 var(--color-green),
+    var(--shadow-sm);
+}
+
+.portal-overview__node--ghost {
+  border-style: dashed;
+  border-color: var(--color-blue-border);
+  background: transparent;
+  color: var(--color-blue);
+  font-weight: 500;
+  box-shadow: none;
+}
+
+.portal-overview__node--blank.sui-btn {
+  border: 1.5px dashed var(--color-blue-border);
+  background: color-mix(in srgb, var(--color-blue) 5%, var(--color-surface));
+  box-shadow: none;
+}
+
+.portal-overview__node--blank .portal-overview__node-title {
+  color: var(--color-blue);
+  font-weight: 650;
+}
+
+.portal-overview__node--blank.sui-btn:hover {
+  border-color: var(--color-blue);
+  background: var(--color-blue-light);
+}
+
+.portal-overview__connector {
+  width: 2px;
+  height: 1.125rem;
+  background: var(--color-border-hover);
+  position: relative;
+  margin: 0.125rem 0;
+}
+
+.portal-overview__connector::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-top: 5px solid var(--color-border-hover);
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+}

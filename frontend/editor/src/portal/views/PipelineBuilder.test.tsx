@@ -140,6 +140,8 @@ function renderBuilder(initial: string) {
 
 describe("PipelineBuilder", () => {
   beforeEach(() => {
+    // The overview defaults to the flow projection; these flows drive the spec.
+    localStorage.setItem("stirling.portal.pipelineViewMode", "spec");
     fetchPipeline.mockReset();
     fetchTriggers.mockReset();
     savePipeline.mockReset();
@@ -169,7 +171,7 @@ describe("PipelineBuilder", () => {
       target: { value: "Nightly compress" },
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /addTool/ }));
+    fireEvent.click(screen.getByRole("button", { name: /composer.addTool/ }));
     fireEvent.click(await screen.findByText("Compress"));
 
     fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
@@ -194,6 +196,8 @@ describe("PipelineBuilder", () => {
     fireEvent.change(await screen.findByRole("textbox"), {
       target: { value: "Bucket to bucket" },
     });
+    // The output editor lives under the overview's TO line; expand it first.
+    fireEvent.click(screen.getByText("portal.pipelines.overview.to"));
     fireEvent.click(screen.getByLabelText("portal.pipelines.output.s3"));
 
     // With s3 selected but no connection chosen, saving is blocked. The
@@ -261,6 +265,34 @@ describe("PipelineBuilder", () => {
     );
   });
 
+  it("grays out design-only options and notes the current behavior", async () => {
+    renderBuilder("/processor/pipelines/new");
+    await screen.findByRole("textbox");
+
+    // Output: SharePoint + a second destination exist only in the design.
+    fireEvent.click(screen.getByText("portal.pipelines.overview.to"));
+    expect(
+      screen.getByText("portal.pipelines.composer.sharepointDest"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("portal.pipelines.composer.secondDest"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("portal.pipelines.composer.outputCurrentNote"),
+    ).toBeInTheDocument();
+
+    // Inputs: manual upload + webhook are grayed rows with no control to click.
+    fireEvent.click(screen.getByText("portal.pipelines.overview.chooseInput"));
+    expect(
+      screen.getByText("portal.pipelines.composer.manualUpload"),
+    ).toBeInTheDocument();
+    const row = screen
+      .getByText("portal.pipelines.composer.webhookSource")
+      .closest(".portal-builder__ghost-row");
+    expect(row).toHaveAttribute("aria-disabled");
+    expect(row?.querySelector("button, input")).toBeNull();
+  });
+
   it("runs an existing pipeline and reports success", async () => {
     renderBuilder("/processor/pipelines/plc-1");
 
@@ -317,7 +349,7 @@ describe("PipelineBuilder", () => {
     fireEvent.change(await screen.findByRole("textbox"), {
       target: { value: "Watermarked" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /addTool/ }));
+    fireEvent.click(screen.getByRole("button", { name: /composer.addTool/ }));
     fireEvent.click(await screen.findByText("Compress"));
     // The tool's settings upload a file, which a stored pipeline can't persist yet.
     fireEvent.click(await screen.findByText("upload logo"));

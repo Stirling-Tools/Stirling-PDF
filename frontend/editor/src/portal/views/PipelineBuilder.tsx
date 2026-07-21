@@ -1,19 +1,16 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
-import KeyboardArrowUpRoundedIcon from "@mui/icons-material/KeyboardArrowUpRounded";
-import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import {
-  ActionIcon,
   Banner,
   Button,
   Checkbox,
-  EmptyState,
   FormField,
   Input,
   Modal,
@@ -56,6 +53,12 @@ import { EDITOR_SOURCE_TYPE } from "@portal/components/sources/sourceTypes";
 import { useAsync } from "@portal/hooks/useAsync";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { humanizeOperation } from "@portal/components/pipelines/pipelineOperations";
+import {
+  PipelineOverview,
+  storedOverviewMode,
+  type OverviewExpanded,
+  type OverviewMode,
+} from "@portal/components/pipelines/PipelineOverview";
 import { PipelineStepSettings } from "@portal/components/pipelines/PipelineStepSettings";
 import { ToolPicker } from "@portal/components/pipelines/ToolPicker";
 import "@portal/views/PipelineBuilder.css";
@@ -139,10 +142,10 @@ function parseOutput(output: OutputSpec | undefined): {
 }
 
 /**
- * Full-page pipeline builder (route: /pipelines/new and /pipelines/:id). Pipeline-level settings
- * (sources, trigger, output) sit above the operation list; the operation list and the selected
- * tool's settings sit side by side below. For an existing pipeline the header also runs and
- * deletes it. Replaces the former modal composer and the list's inline detail card.
+ * Full-page pipeline builder (route: /pipelines/new and /pipelines/:id). The whole pipeline is
+ * one overview surface (spec or flow projection); clicking a line or node expands its editor
+ * inline. For an existing pipeline the header also runs and deletes it. Replaces the former
+ * modal composer and the list's inline detail card.
  */
 export function PipelineBuilder() {
   const { t } = useTranslation();
@@ -183,7 +186,6 @@ export function PipelineBuilder() {
   const [sourceIds, setSourceIds] = useState<string[]>([]);
   const [steps, setSteps] = useState<WorkingToolStep[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [pickerOpen, setPickerOpen] = useState(false);
   const [triggerType, setTriggerType] = useState<string>(MANUAL);
   const [scheduleCount, setScheduleCount] = useState("1");
   const [scheduleUnit, setScheduleUnit] = useState<ScheduleUnit>("HOURS");
@@ -272,12 +274,16 @@ export function PipelineBuilder() {
   }
 
   function addStep(tool: ExecutableTool) {
+    const at = insertAt;
+    setInsertAt(null);
     setSteps((current) => {
-      const next = [...current, newWorkingToolStep(tool, allTools)];
-      setSelectedIndex(next.length - 1);
+      const index = at === null ? current.length : Math.min(at, current.length);
+      const next = [...current];
+      next.splice(index, 0, newWorkingToolStep(tool, allTools));
+      setSelectedIndex(index);
+      setExpanded(index);
       return next;
     });
-    setPickerOpen(false);
   }
 
   function removeStep(index: number) {
@@ -308,6 +314,142 @@ export function PipelineBuilder() {
     const entry = step.toolId ? allTools[step.toolId] : undefined;
     return entry?.name ?? humanizeOperation(step.operation);
   }
+
+  // The overview is the page's single pipeline surface: clicking a line expands
+  // its editor inline, so there are no separate settings sections to focus.
+  const [expanded, setExpanded] = useState<OverviewExpanded>(null);
+  // Where the picker should insert the next tool; null appends to the end.
+  const [insertAt, setInsertAt] = useState<number | null>(null);
+
+  function toggleSection(target: "sources" | "trigger" | "output") {
+    setExpanded((prev) => (prev === target ? null : target));
+  }
+
+  function handleMoveStep(index: number, delta: number) {
+    const target = index + delta;
+    if (target < 0 || target >= steps.length) return;
+    moveStep(index, delta);
+    setExpanded((prev) =>
+      typeof prev === "number" && prev === index ? target : prev,
+    );
+  }
+
+  function handleRemoveStep(index: number) {
+    removeStep(index);
+    setExpanded((prev) => (typeof prev === "number" ? null : prev));
+  }
+
+  const overviewSources = availableSources
+    .filter((source) => sourceIds.includes(source.id))
+    .map((source) => ({
+      id: source.id,
+      name: source.name,
+      type: source.type,
+      detail: source.config[0]?.value,
+    }));
+
+  const overviewTriggerLabel =
+    triggerType === MANUAL
+      ? t("portal.pipelines.composer.triggerManual")
+      : triggerType === "schedule"
+        ? `${t("portal.pipelines.trigger.schedule", { defaultValue: "schedule" })} · ${scheduleCount} ${t(
+            `portal.pipelines.composer.unit.${scheduleUnit.toLowerCase()}`,
+          )}`
+        : t(`portal.pipelines.trigger.${triggerType}`, {
+            defaultValue: triggerType,
+          });
+
+  const overviewOutputLabel = t(`portal.pipelines.output.${outputMode}`);
+  const overviewOutputKind =
+    outputMode === "folder" ? "dir" : outputMode === "s3" ? "s3" : "api";
+  const overviewOutputDetail =
+    outputMode === "folder"
+      ? outputDirectory.trim() || undefined
+      : outputMode === "s3"
+        ? outputS3.prefix.trim() || undefined
+        : t("portal.pipelines.overview.inlineDetail");
+
+  // One-line parameter read-back for a step node (mirrors the tool's defaults).
+  function stepSummary(step: WorkingToolStep): string | undefined {
+    const bits: string[] = [];
+    for (const value of Object.values(step.params)) {
+      if (typeof value !== "string" && typeof value !== "number") continue;
+      const text = String(value).trim();
+      if (text === "") continue;
+      bits.push(text.split("\n")[0]);
+      if (bits.length === 2) break;
+    }
+    return bits.length ? bits.join(" · ") : undefined;
+  }
+
+  // Side panel: per-step warning annotation, the completion checklist, and the
+  // exact request Save would send (buildOutput/buildTrigger are hoisted).
+  function stepNote(step: WorkingToolStep): string | undefined {
+    if (stepRequiresUpload(step))
+      return t("portal.pipelines.builder.needsUpload");
+    if (step.support === "unsupported")
+      return t("portal.pipelines.builder.usesDefaults");
+    if (step.support === "unknown")
+      return t("portal.pipelines.builder.unknownStep");
+    return undefined;
+  }
+
+  const [requestShown, setRequestShown] = useState(false);
+  const [requestTab, setRequestTab] = useState<"json" | "curl" | "mcp">("json");
+  const [requestCopied, setRequestCopied] = useState(false);
+  // Mirrors the overview's Spec/Flow choice so the inspector copy matches it.
+  const [overviewMode, setOverviewMode] =
+    useState<OverviewMode>(storedOverviewMode);
+
+  /** Runbook-style syntax colour: keys blue, string values green. */
+  function renderJsonLine(line: string, key: number) {
+    const parts: ReactNode[] = [];
+    const regex = /("[^"]*")(\s*:)?/g;
+    let last = 0;
+    let match: RegExpExecArray | null;
+    while ((match = regex.exec(line)) !== null) {
+      if (match.index > last) parts.push(line.slice(last, match.index));
+      parts.push(
+        <span
+          key={`${key}-${match.index}`}
+          className={
+            match[2] ? "portal-builder__code-k" : "portal-builder__code-s"
+          }
+        >
+          {match[1]}
+        </span>,
+      );
+      if (match[2]) parts.push(match[2]);
+      last = match.index + match[0].length;
+    }
+    if (last < line.length) parts.push(line.slice(last));
+    return (
+      <span key={key}>
+        {parts}
+        {"\n"}
+      </span>
+    );
+  }
+
+  const requestCurl = [
+    "curl -X POST $HOST/api/v1/policies \\",
+    "  -H 'Content-Type: application/json' \\",
+    '  -H "Authorization: Bearer $TOKEN" \\',
+    "  -d @pipeline.json",
+  ].join("\n");
+
+  const requestPreview = JSON.stringify(
+    {
+      name: name.trim(),
+      enabled,
+      trigger: buildTrigger(),
+      sourceIds,
+      steps: steps.map((step) => serializeToolStep(step, allTools)),
+      output: buildOutput(),
+    },
+    null,
+    2,
+  );
 
   // Steps whose params carry an uploaded file can't be saved: the bytes aren't persisted with the
   // policy, so a later run would send null for that field (see stepRequiresUpload).
@@ -341,6 +483,7 @@ export function PipelineBuilder() {
     outputMode !== "s3" || outputS3.connectionId.trim() !== "";
   const outputValid =
     (outputMode !== "folder" || outputDirectory.trim() !== "") && s3OutputValid;
+
   const canSave =
     name.trim() !== "" &&
     scheduleCountValid &&
@@ -376,6 +519,179 @@ export function PipelineBuilder() {
     return { type: triggerType, options: {} };
   }
 
+  // Design-parity placeholder: an option the mock shows but the backend lacks.
+  const ghostOption = (kind: "check" | "radio", key: string) => (
+    <div key={key} className="portal-builder__ghost-row" aria-disabled>
+      <span
+        className={`portal-builder__ghost-box${kind === "radio" ? " portal-builder__ghost-box--radio" : ""}`}
+        aria-hidden
+      />
+      <span className="portal-builder__ghost-main">
+        <span className="portal-builder__ghost-name">
+          {t(`portal.pipelines.composer.${key}`)}
+        </span>
+        <span className="portal-builder__ghost-sub">
+          {t(`portal.pipelines.composer.${key}Sub`)}
+        </span>
+      </span>
+      <span className="portal-builder__soon">
+        {t("portal.pipelines.composer.designPlanned")}
+      </span>
+    </div>
+  );
+
+  const currentNote = (key: string) => (
+    <p className="portal-builder__note">
+      <InfoOutlinedIcon aria-hidden />
+      {t(`portal.pipelines.composer.${key}`)}
+    </p>
+  );
+
+  // The editing surfaces the overview expands inline. Markup unchanged from the
+  // former settings columns and inspector; only their home moved.
+  const sourcesEditor = (
+    <>
+      {sourcesState.loading ? (
+        <p className="portal-pipelines__muted">
+          {t("portal.pipelines.composer.sourcesLoading")}
+        </p>
+      ) : availableSources.length === 0 ? (
+        <p className="portal-pipelines__muted">
+          {t("portal.pipelines.composer.noSources")}
+        </p>
+      ) : (
+        <div className="portal-pipelines__source-list">
+          {availableSources.map((source) => (
+            <Checkbox
+              key={source.id}
+              checked={sourceIds.includes(source.id)}
+              onChange={(e) => toggleSource(source.id, e.target.checked)}
+              label={source.name}
+            />
+          ))}
+        </div>
+      )}
+      <div>
+        <Button
+          variant="tertiary"
+          size="sm"
+          onClick={goToSources}
+          leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
+        >
+          {t("portal.sources.actions.connectSource")}
+        </Button>
+      </div>
+      <div className="portal-builder__ghost">
+        <div className="portal-builder__ghost-label">
+          {t("portal.pipelines.composer.designOnly")}
+        </div>
+        {ghostOption("check", "manualUpload")}
+        {ghostOption("check", "webhookSource")}
+      </div>
+    </>
+  );
+
+  const triggerEditor = (
+    <>
+      <RadioGroup<string>
+        name="pipeline-trigger"
+        value={triggerType}
+        onChange={setTriggerType}
+        options={triggerOptions}
+      />
+      {triggerType === "schedule" && (
+        <div className="portal-pipelines__schedule">
+          <span className="portal-pipelines__muted">
+            {t("portal.pipelines.composer.scheduleEvery")}
+          </span>
+          <Input
+            inputSize="sm"
+            type="number"
+            min={1}
+            value={scheduleCount}
+            invalid={!scheduleCountValid}
+            onChange={(e) => setScheduleCount(e.target.value)}
+            className="portal-pipelines__schedule-count"
+          />
+          <Select
+            inputSize="sm"
+            value={scheduleUnit}
+            onChange={(value) =>
+              value && setScheduleUnit(value as ScheduleUnit)
+            }
+            options={SCHEDULE_UNITS.map((unit) => ({
+              value: unit,
+              label: t(`portal.pipelines.composer.unit.${unit.toLowerCase()}`),
+            }))}
+          />
+        </div>
+      )}
+      {currentNote("triggerCurrentNote")}
+    </>
+  );
+
+  const outputEditor = (
+    <>
+      <RadioGroup<OutputMode>
+        name="pipeline-output"
+        value={outputMode}
+        onChange={setOutputMode}
+        options={availableOutputModes().map((mode) => ({
+          value: mode,
+          label: t(`portal.pipelines.output.${mode}`),
+        }))}
+      />
+      {outputMode === "folder" && (
+        <FormField
+          label={t("portal.pipelines.composer.directory")}
+          helperText={t("portal.pipelines.composer.directoryHelp")}
+          required
+        >
+          <Input
+            value={outputDirectory}
+            placeholder="/data/processed"
+            onChange={(e) => setOutputDirectory(e.target.value)}
+          />
+        </FormField>
+      )}
+      {outputMode === "s3" && (
+        <>
+          <FormField
+            label={t("portal.sources.types.s3.fields.connection.label")}
+            required
+          >
+            <S3ConnectionPicker
+              value={outputS3.connectionId}
+              onChange={(connectionId) =>
+                setOutputS3((s) => ({ ...s, connectionId }))
+              }
+            />
+          </FormField>
+          <FormField
+            label={t("portal.sources.types.s3.fields.prefix.label")}
+            helperText={t("portal.pipelines.composer.s3PrefixHelp")}
+          >
+            <Input
+              value={outputS3.prefix}
+              placeholder="processed/"
+              onChange={(e) =>
+                setOutputS3((s) => ({ ...s, prefix: e.target.value }))
+              }
+            />
+          </FormField>
+        </>
+      )}
+      <div className="portal-builder__ghost">
+        <div className="portal-builder__ghost-label">
+          {t("portal.pipelines.composer.designOnly")}
+        </div>
+        {ghostOption("radio", "sharepointDest")}
+        {ghostOption("radio", "secondDest")}
+      </div>
+      {currentNote("outputCurrentNote")}
+    </>
+  );
+
   const listPath = toPortalPath(VIEW_PATHS.pipelines);
   const sourcesPath = `${toPortalPath(VIEW_PATHS.sources)}/new`;
 
@@ -395,16 +711,19 @@ export function PipelineBuilder() {
     attemptLeave(sourcesPath);
   }
 
+  function buildOutput(): OutputSpec {
+    return outputMode === "folder"
+      ? { type: "folder", options: { directory: outputDirectory.trim() } }
+      : outputMode === "s3"
+        ? { type: "s3", options: { ...outputS3 } }
+        : { type: "inline", options: {} };
+  }
+
   async function save(destination: string) {
     if (!canSave) return;
     setSubmitting(true);
     setError(null);
-    const output: OutputSpec =
-      outputMode === "folder"
-        ? { type: "folder", options: { directory: outputDirectory.trim() } }
-        : outputMode === "s3"
-          ? { type: "s3", options: { ...outputS3 } }
-          : { type: "inline", options: {} };
+    const output: OutputSpec = buildOutput();
     const policy: Policy = {
       id: policyState.data?.id ?? undefined,
       name: name.trim(),
@@ -645,258 +964,67 @@ export function PipelineBuilder() {
         />
       )}
 
-      {/* Pipeline-level settings, above the operation list. */}
-      <section className="portal-builder__settings">
-        <div className="portal-builder__section-label">
-          {t("portal.pipelines.builder.pipelineSettings")}
+      <div className="portal-builder__cols">
+        <div className="portal-builder__main">
+          <PipelineOverview
+            sources={overviewSources}
+            triggerLabel={overviewTriggerLabel}
+            stepLabels={steps.map(stepLabel)}
+            stepNotes={steps.map(stepNote)}
+            stepSummaries={steps.map(stepSummary)}
+            outputLabel={overviewOutputLabel}
+            outputKind={overviewOutputKind}
+            outputDetail={overviewOutputDetail}
+            outputReady={outputValid}
+            expanded={expanded}
+            onToggleSection={toggleSection}
+            onSelectStep={(index) => {
+              setSelectedIndex(index);
+              setExpanded((prev) => (prev === index ? null : index));
+            }}
+            onAddStep={(atIndex) => {
+              setInsertAt(typeof atIndex === "number" ? atIndex : null);
+              setExpanded("picker");
+            }}
+            onMoveStep={handleMoveStep}
+            onRemoveStep={handleRemoveStep}
+            onModeChange={setOverviewMode}
+          />
         </div>
-        <div className="portal-builder__settings-grid">
-          <div className="portal-builder__settings-col">
-            <span className="portal-pipelines__detail-heading">
-              {t("portal.pipelines.composer.sources")}
-            </span>
-            {sourcesState.loading ? (
-              <p className="portal-pipelines__muted">
-                {t("portal.pipelines.composer.sourcesLoading")}
-              </p>
-            ) : availableSources.length === 0 ? (
-              <p className="portal-pipelines__muted">
-                {t("portal.pipelines.composer.noSources")}
-              </p>
-            ) : (
-              <div className="portal-pipelines__source-list">
-                {availableSources.map((source) => (
-                  <Checkbox
-                    key={source.id}
-                    checked={sourceIds.includes(source.id)}
-                    onChange={(e) => toggleSource(source.id, e.target.checked)}
-                    label={source.name}
-                  />
-                ))}
-              </div>
-            )}
-            <Button
-              variant="tertiary"
-              size="sm"
-              onClick={goToSources}
-              leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
-            >
-              {t("portal.sources.actions.connectSource")}
-            </Button>
-          </div>
 
-          <div className="portal-builder__settings-col">
-            <span className="portal-pipelines__detail-heading">
-              {t("portal.pipelines.composer.trigger")}
-            </span>
-            <RadioGroup<string>
-              name="pipeline-trigger"
-              value={triggerType}
-              onChange={setTriggerType}
-              options={triggerOptions}
-            />
-            {triggerType === "schedule" && (
-              <div className="portal-pipelines__schedule">
-                <span className="portal-pipelines__muted">
-                  {t("portal.pipelines.composer.scheduleEvery")}
-                </span>
-                <Input
-                  inputSize="sm"
-                  type="number"
-                  min={1}
-                  value={scheduleCount}
-                  invalid={!scheduleCountValid}
-                  onChange={(e) => setScheduleCount(e.target.value)}
-                  className="portal-pipelines__schedule-count"
-                />
-                <Select
-                  inputSize="sm"
-                  value={scheduleUnit}
-                  onChange={(value) =>
-                    value && setScheduleUnit(value as ScheduleUnit)
-                  }
-                  options={SCHEDULE_UNITS.map((unit) => ({
-                    value: unit,
-                    label: t(
-                      `portal.pipelines.composer.unit.${unit.toLowerCase()}`,
-                    ),
-                  }))}
-                />
-              </div>
-            )}
-          </div>
-
-          <div className="portal-builder__settings-col">
-            <span className="portal-pipelines__detail-heading">
-              {t("portal.pipelines.composer.output")}
-            </span>
-            <RadioGroup<OutputMode>
-              name="pipeline-output"
-              value={outputMode}
-              onChange={setOutputMode}
-              options={availableOutputModes().map((mode) => ({
-                value: mode,
-                label: t(`portal.pipelines.output.${mode}`),
-              }))}
-            />
-            {outputMode === "folder" && (
-              <FormField
-                label={t("portal.pipelines.composer.directory")}
-                helperText={t("portal.pipelines.composer.directoryHelp")}
-                required
-              >
-                <Input
-                  value={outputDirectory}
-                  placeholder="/data/processed"
-                  onChange={(e) => setOutputDirectory(e.target.value)}
-                />
-              </FormField>
-            )}
-            {outputMode === "s3" && (
-              <>
-                <FormField
-                  label={t("portal.sources.types.s3.fields.connection.label")}
-                  required
-                >
-                  <S3ConnectionPicker
-                    value={outputS3.connectionId}
-                    onChange={(connectionId) =>
-                      setOutputS3((s) => ({ ...s, connectionId }))
-                    }
-                  />
-                </FormField>
-                <FormField
-                  label={t("portal.sources.types.s3.fields.prefix.label")}
-                  helperText={t("portal.pipelines.composer.s3PrefixHelp")}
-                >
-                  <Input
-                    value={outputS3.prefix}
-                    placeholder="processed/"
-                    onChange={(e) =>
-                      setOutputS3((s) => ({ ...s, prefix: e.target.value }))
-                    }
-                  />
-                </FormField>
-              </>
-            )}
-          </div>
-        </div>
-      </section>
-
-      <div className="portal-builder__grid">
-        <section className="portal-builder__flow">
-          <div className="portal-builder__section-label">
-            {t("portal.pipelines.composer.operations", { count: steps.length })}
-          </div>
-
-          {steps.length === 0 && !pickerOpen && (
-            <p className="portal-builder__empty">
-              {t("portal.pipelines.composer.chainEmpty")}
-            </p>
-          )}
-
-          <ol className="portal-builder__steps">
-            {steps.map((step, i) => (
-              <li key={`${step.operation}-${i}`}>
-                <div
-                  className={
-                    "portal-builder__step" +
-                    (selectedIndex === i ? " portal-builder__step--active" : "")
-                  }
-                >
-                  <Button
-                    variant="quiet"
-                    justify="start"
-                    className="portal-builder__step-main"
-                    onClick={() => setSelectedIndex(i)}
-                    leftSection={
-                      <span className="portal-builder__step-index">
-                        {i + 1}
-                      </span>
-                    }
-                  >
-                    <span className="portal-builder__step-text">
-                      <span className="portal-builder__step-name">
-                        {stepLabel(step)}
-                      </span>
-                      {stepRequiresUpload(step) ? (
-                        <span className="portal-builder__step-note">
-                          {t("portal.pipelines.builder.needsUpload")}
-                        </span>
-                      ) : step.support === "unsupported" ? (
-                        <span className="portal-builder__step-note">
-                          {t("portal.pipelines.builder.usesDefaults")}
-                        </span>
-                      ) : step.support === "unknown" ? (
-                        <span className="portal-builder__step-note">
-                          {t("portal.pipelines.builder.unknownStep")}
-                        </span>
-                      ) : null}
-                    </span>
-                  </Button>
-                  <div className="portal-builder__step-actions">
-                    <ActionIcon
-                      variant="tertiary"
-                      aria-label={t("portal.pipelines.composer.moveUp")}
-                      disabled={i === 0}
-                      onClick={() => moveStep(i, -1)}
-                    >
-                      <KeyboardArrowUpRoundedIcon
-                        style={{ fontSize: "1.125rem" }}
-                      />
-                    </ActionIcon>
-                    <ActionIcon
-                      variant="tertiary"
-                      aria-label={t("portal.pipelines.composer.moveDown")}
-                      disabled={i === steps.length - 1}
-                      onClick={() => moveStep(i, 1)}
-                    >
-                      <KeyboardArrowDownRoundedIcon
-                        style={{ fontSize: "1.125rem" }}
-                      />
-                    </ActionIcon>
-                    <ActionIcon
-                      variant="tertiary"
-                      aria-label={t("portal.pipelines.composer.removeStep")}
-                      onClick={() => removeStep(i)}
-                    >
-                      <DeleteOutlineRoundedIcon
-                        style={{ fontSize: "1.125rem" }}
-                      />
-                    </ActionIcon>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ol>
-
-          {pickerOpen ? (
-            <ToolPicker
-              tools={executableTools}
-              onPick={addStep}
-              onClose={() => setPickerOpen(false)}
-            />
-          ) : (
-            <Button
-              variant="quiet"
-              fullWidth
-              className="portal-builder__add-step"
-              onClick={() => setPickerOpen(true)}
-              leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
-            >
-              {t("portal.pipelines.composer.addTool")}
-            </Button>
-          )}
-        </section>
-
-        <aside className="portal-builder__inspector-col">
-          <div className="portal-builder__section-label">
-            {selectedStep
-              ? stepLabel(selectedStep)
-              : t("portal.pipelines.builder.toolSettings")}
-          </div>
-          <div className="portal-builder__inspector">
-            {selectedStep ? (
+        {/* The room: whatever the overview selects is edited here, beside it,
+            with the exact request underneath for the admin who would script it. */}
+        <aside className="portal-builder__side">
+          <section className="portal-builder__panel">
+            <div className="portal-builder__section-label">
+              {expanded === "sources"
+                ? t("portal.pipelines.composer.sources")
+                : expanded === "trigger"
+                  ? t("portal.pipelines.composer.trigger")
+                  : expanded === "output"
+                    ? t("portal.pipelines.composer.output")
+                    : expanded === "picker"
+                      ? t("portal.pipelines.builder.addStep")
+                      : typeof expanded === "number" && selectedStep
+                        ? stepLabel(selectedStep)
+                        : t("portal.pipelines.overview.inspector")}
+            </div>
+            {expanded === "sources" ? (
+              sourcesEditor
+            ) : expanded === "trigger" ? (
+              triggerEditor
+            ) : expanded === "output" ? (
+              outputEditor
+            ) : expanded === "picker" ? (
+              <ToolPicker
+                tools={executableTools}
+                onPick={addStep}
+                onClose={() => {
+                  setInsertAt(null);
+                  setExpanded((prev) => (prev === "picker" ? null : prev));
+                }}
+              />
+            ) : typeof expanded === "number" && selectedStep ? (
               <PipelineStepSettings
                 step={selectedStep}
                 registry={allTools}
@@ -906,12 +1034,96 @@ export function PipelineBuilder() {
                 }
               />
             ) : (
-              <EmptyState
-                title={t("portal.pipelines.builder.selectToolTitle")}
-                description={t("portal.pipelines.builder.selectToolBody")}
-              />
+              <>
+                <p className="portal-builder__intro">
+                  {t("portal.pipelines.overview.intro")}
+                </p>
+                <p className="portal-builder__side-hint">
+                  {overviewMode === "flow"
+                    ? t("portal.pipelines.overview.sideHintFlow")
+                    : t("portal.pipelines.overview.sideHintSpec")}
+                </p>
+              </>
             )}
+          </section>
+
+          <div className="portal-builder__codetoggle">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setRequestShown((prev) => !prev)}
+            >
+              {requestShown
+                ? t("portal.pipelines.overview.hideCode")
+                : t("portal.pipelines.overview.viewCode")}
+            </Button>
           </div>
+          {requestShown && (
+            <section className="portal-builder__codepanel">
+              <div className="portal-builder__codetabs">
+                {(["json", "curl", "mcp"] as const).map((tab) => (
+                  <Button
+                    key={tab}
+                    variant="quiet"
+                    size="sm"
+                    className={
+                      "portal-builder__codetab" +
+                      (requestTab === tab
+                        ? " portal-builder__codetab--active"
+                        : "")
+                    }
+                    aria-pressed={requestTab === tab}
+                    onClick={() => setRequestTab(tab)}
+                  >
+                    {tab === "json" ? "JSON" : tab === "curl" ? "cURL" : "MCP"}
+                  </Button>
+                ))}
+                <Button
+                  variant="quiet"
+                  size="sm"
+                  className="portal-builder__codecopy"
+                  onClick={() => {
+                    const text =
+                      requestTab === "curl" ? requestCurl : requestPreview;
+                    void navigator.clipboard?.writeText(text).then(() => {
+                      setRequestCopied(true);
+                      setTimeout(() => setRequestCopied(false), 1500);
+                    });
+                  }}
+                >
+                  {requestCopied
+                    ? t("portal.pipelines.overview.copied")
+                    : t("portal.pipelines.overview.copy")}
+                </Button>
+              </div>
+              {requestTab === "mcp" ? (
+                <div className="portal-builder__codenote">
+                  <Banner
+                    tone="warning"
+                    title={t("portal.pipelines.overview.mcpTitle")}
+                    description={t("portal.pipelines.overview.mcpBody")}
+                  />
+                </div>
+              ) : (
+                <pre className="portal-builder__code">
+                  {requestTab === "json" ? (
+                    <>
+                      <span className="portal-builder__code-c">
+                        {"// "}
+                        {t("portal.pipelines.overview.requestComment")}
+                        {"\n"}
+                      </span>
+                      {requestPreview
+                        .split("\n")
+                        .map((line, i) => renderJsonLine(line, i))}
+                    </>
+                  ) : (
+                    requestCurl
+                  )}
+                </pre>
+              )}
+            </section>
+          )}
         </aside>
       </div>
 
