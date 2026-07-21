@@ -5,7 +5,7 @@
 ARG TARGETPLATFORM
 
 # Stage 1: Build and strip Calibre
-FROM ubuntu:noble@sha256:c4a8d5503dfb2a3eb8ab5f807da5bc69a85730fb49b5cfca2330194ebcc41c7b AS calibre-build
+FROM ubuntu:noble@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90 AS calibre-build
 ARG TARGETPLATFORM
 ARG CALIBRE_VERSION=9.4.0
 ARG CALIBRE_STRIP_WEBENGINE=false
@@ -270,7 +270,7 @@ RUN if [ "${CALIBRE_STRIP_WEBENGINE}" = "true" ]; then \
 
 
 # Stage 2: Build Ghostscript from source
-FROM ubuntu:noble@sha256:c4a8d5503dfb2a3eb8ab5f807da5bc69a85730fb49b5cfca2330194ebcc41c7b AS gs-build
+FROM ubuntu:noble@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90 AS gs-build
 ARG TARGETPLATFORM
 ARG GS_VERSION=10.06.0
 
@@ -294,7 +294,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 
 # Stage 3: Build PDF Tools (QPDF and ImageMagick 7)
-FROM ubuntu:noble@sha256:c4a8d5503dfb2a3eb8ab5f807da5bc69a85730fb49b5cfca2330194ebcc41c7b AS pdf-tools-build
+FROM ubuntu:noble@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90 AS pdf-tools-build
 ARG TARGETPLATFORM
 ARG QPDF_VERSION=12.3.2
 ARG IM_VERSION=7.1.2-13
@@ -339,7 +339,7 @@ RUN mkdir -p /magick-export/usr/bin \
 
 
 # Stage 4: Build Python venv
-FROM ubuntu:noble@sha256:c4a8d5503dfb2a3eb8ab5f807da5bc69a85730fb49b5cfca2330194ebcc41c7b AS python-venv-build
+FROM ubuntu:noble@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90 AS python-venv-build
 ARG TARGETPLATFORM
 ARG UNOSERVER_VERSION=3.6
 

@@ -17,10 +17,10 @@
   --upm-muted: var(--text-muted);
 }
 [data-mantine-color-scheme="dark"] .upm {
-  --upm-card-bg: #313842;
-  --upm-border: #3d444e;
-  --upm-divider: #3d444e;
-  --upm-accent-soft: rgba(10, 139, 255, 0.14);
+  --upm-card-bg: #1c2340;
+  --upm-border: #2d3560;
+  --upm-divider: #2d3560;
+  --upm-accent-soft: rgba(79, 142, 245, 0.14);
 }
 
 /* Backdrop locks the page and centres the modal. z-index matches
@@ -101,26 +101,6 @@
   color: var(--upm-text);
   margin: 0;
 }
-.upm-header__close {
-  background: transparent;
-  border: none;
-  color: var(--upm-muted);
-  cursor: pointer;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition:
-    background 120ms ease,
-    color 120ms ease;
-}
-.upm-header__close:hover {
-  background: var(--upm-divider);
-  color: var(--upm-text);
-}
-
 /* Left cluster: optional back arrow + title. The back arrow only renders on the
    checkout step (cap/confirm have no parent step to return to) — it replaces the
    old footer "← Back" button. */
@@ -130,28 +110,6 @@
   gap: 6px;
   min-width: 0;
 }
-.upm-header__back {
-  background: transparent;
-  border: none;
-  color: var(--upm-muted);
-  cursor: pointer;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  margin-left: -6px;
-  transition:
-    background 120ms ease,
-    color 120ms ease;
-}
-.upm-header__back:hover {
-  background: var(--upm-divider);
-  color: var(--upm-text);
-}
-
 .upm-steps {
   display: flex;
   align-items: center;
@@ -357,41 +315,6 @@
   display: flex;
   gap: 8px;
 }
-.upm-btn {
-  padding: 10px 18px;
-  border-radius: 10px;
-  border: 1.5px solid transparent;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 120ms ease;
-  font-family: inherit;
-  white-space: nowrap;
-}
-.upm-btn[data-variant="ghost"] {
-  background: transparent;
-  border-color: var(--upm-divider);
-  color: var(--upm-text);
-}
-.upm-btn[data-variant="ghost"]:hover {
-  border-color: var(--upm-accent);
-  color: var(--upm-accent);
-}
-.upm-btn[data-variant="primary"] {
-  background: linear-gradient(135deg, var(--upm-accent), var(--upm-accent-2));
-  color: white;
-}
-.upm-btn[data-variant="primary"]:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px -6px rgba(10, 139, 255, 0.5);
-}
-.upm-btn[disabled] {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none !important;
-  box-shadow: none !important;
-}
-
 /* ── Step 3: confirmation ─────────────────────────────────────────────── */
 
 .upm-confirm {

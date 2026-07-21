@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   Anchor,
-  Button,
   Group,
   Loader,
   Paper,
@@ -14,6 +13,7 @@ import {
   Textarea,
   Tooltip,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -201,6 +201,7 @@ export default function LoginAgreementEditor({
           style={{ flex: 1, maxWidth: 340 }}
         />
         <Button
+          variant="primary"
           onClick={handleSave}
           loading={saving}
           disabled={disabled || loading || loadFailed || !dirty}

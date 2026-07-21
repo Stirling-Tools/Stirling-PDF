@@ -1,6 +1,10 @@
 package stirling.software.common.util;
 
+import java.util.regex.Pattern;
+
 public class RequestUriUtils {
+
+    private static final Pattern SHARE_LINK_PATTERN = Pattern.compile("^/share/[^/]+/?$");
 
     public static boolean isStaticResource(String requestURI) {
         return isStaticResource("", requestURI);
@@ -54,6 +58,16 @@ public class RequestUriUtils {
 
         // Mobile scanner page for QR code-based file uploads (peer-to-peer, no backend auth needed)
         if (normalizedUri.startsWith("/mobile-scanner")) {
+            return true;
+        }
+
+        // Admin portal SPA shell (mounted at /processor — must match the frontend
+        // PORTAL_BASENAME). Served publicly like the editor root so a direct nav /
+        // refresh to /processor loads the app (the JWT lives in localStorage, not a
+        // cookie, so the server can't authenticate the navigation itself). The
+        // portal gates access via its own auth gate + RequirePortalAccess, and its
+        // data APIs stay protected, so serving the shell pre-auth is safe.
+        if (normalizedUri.equals("/processor") || normalizedUri.startsWith("/processor/")) {
             return true;
         }
 
@@ -192,7 +206,7 @@ public class RequestUriUtils {
                 // Workflow participant endpoints - access controlled by share tokens, not login
                 || trimmedUri.startsWith("/api/v1/workflow/participant/")
                 // Share-link SPA bootstrap; data APIs remain protected
-                || trimmedUri.matches("^/share/[^/]+/?$");
+                || SHARE_LINK_PATTERN.matcher(trimmedUri).matches();
     }
 
     private static String stripContextPath(String contextPath, String requestURI) {

@@ -19,12 +19,12 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import stirling.software.common.model.enumeration.TeamRole;
 import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.saas.accountlink.AccountLinkController.RegisterRequest;
 import stirling.software.saas.accountlink.AccountLinkController.RegisterResponse;
-import stirling.software.saas.model.TeamMembership;
-import stirling.software.saas.repository.TeamMembershipRepository;
 import stirling.software.saas.util.AuthenticationUtils;
 
 /**

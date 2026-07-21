@@ -20,7 +20,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -29,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
+import stirling.software.proprietary.policy.engine.SweepKind;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.Policy;
@@ -49,7 +49,6 @@ import stirling.software.proprietary.policy.store.PolicyStore;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class FolderWatchTrigger implements PolicyTrigger {
 
     private static final String TYPE = "folder-watch";
@@ -202,7 +201,8 @@ public class FolderWatchTrigger implements PolicyTrigger {
             }
             if (dirs.stream().anyMatch(changedDirs::contains)) {
                 log.debug("Folder-watch policy {} ({}) saw activity", policy.id(), policy.name());
-                policyRunner.run(policy);
+                // Light: the periodic reconcile does the full sweep.
+                policyRunner.run(policy, SweepKind.LIGHT);
             }
         }
     }

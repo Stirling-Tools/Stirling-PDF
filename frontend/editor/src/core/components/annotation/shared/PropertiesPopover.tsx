@@ -1,14 +1,7 @@
-import {
-  ActionIcon,
-  Tooltip,
-  Popover,
-  Stack,
-  Slider,
-  Text,
-  Group,
-  Button,
-} from "@mantine/core";
+import { Tooltip, Popover, Stack, Slider, Text, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useState } from "react";
 import type { TrackedAnnotation } from "@embedpdf/plugin-annotation";
 import type { PdfAnnotationObject } from "@embedpdf/models";
@@ -106,21 +99,24 @@ export function PropertiesPopover({
         </Text>
         <Group gap="xs">
           <ActionIcon
-            variant={currentAlign === "left" ? "filled" : "default"}
+            aria-label={t("annotation.alignLeft", "Align left")}
+            variant={currentAlign === "left" ? "primary" : "secondary"}
             onClick={() => onUpdate({ textAlign: 0 })}
             size="md"
           >
             <FormatAlignLeftIcon style={{ fontSize: 18 }} />
           </ActionIcon>
           <ActionIcon
-            variant={currentAlign === "center" ? "filled" : "default"}
+            aria-label={t("annotation.alignCenter", "Align center")}
+            variant={currentAlign === "center" ? "primary" : "secondary"}
             onClick={() => onUpdate({ textAlign: 1 })}
             size="md"
           >
             <FormatAlignCenterIcon style={{ fontSize: 18 }} />
           </ActionIcon>
           <ActionIcon
-            variant={currentAlign === "right" ? "filled" : "default"}
+            aria-label={t("annotation.alignRight", "Align right")}
+            variant={currentAlign === "right" ? "primary" : "secondary"}
             onClick={() => onUpdate({ textAlign: 2 })}
             size="md"
           >
@@ -176,8 +172,8 @@ export function PropertiesPopover({
             />
           </div>
           <Button
-            size="xs"
-            variant={!borderVisible ? "filled" : "light"}
+            size="sm"
+            variant={!borderVisible ? "primary" : "secondary"}
             onClick={() => {
               const newValue = borderVisible ? 0 : 1;
               onUpdate({
@@ -201,24 +197,12 @@ export function PropertiesPopover({
       <Popover.Target>
         <Tooltip label={t("annotation.properties", "Properties")}>
           <ActionIcon
-            variant="subtle"
-            color="gray"
+            aria-label={t("annotation.properties", "Properties")}
+            variant="secondary"
+            accent="neutral"
             size="md"
             onClick={() => setOpened(!opened)}
             disabled={disabled}
-            styles={{
-              root: {
-                flexShrink: 0,
-                backgroundColor: "var(--bg-raised)",
-                border: "1px solid var(--border-default)",
-                color: "var(--text-secondary)",
-                "&:hover": {
-                  backgroundColor: "var(--hover-bg)",
-                  borderColor: "var(--border-strong)",
-                  color: "var(--text-primary)",
-                },
-              },
-            }}
           >
             <TuneIcon style={{ fontSize: 18 }} />
           </ActionIcon>

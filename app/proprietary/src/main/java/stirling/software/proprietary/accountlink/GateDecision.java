@@ -16,6 +16,11 @@ public record GateDecision(boolean allowed, Reason reason) {
         ENTITLED,
         /** Entitlement source unreachable — fail open, allow. */
         FAIL_OPEN,
+        /**
+         * Linked + metering, but SaaS has been unreachable past the grace window — block (the
+         * fail-open backstop expired) so unbounded free/unbilled billable work can't continue.
+         */
+        GRACE_EXPIRED,
         /** Not linked — block billable work; FE should prompt to link. */
         NOT_LINKED,
         /** Linked but over the limit / no subscription — block billable work. */

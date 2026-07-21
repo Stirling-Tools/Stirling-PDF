@@ -50,6 +50,7 @@ import stirling.software.proprietary.security.saml2.CustomSaml2AuthenticatedPrin
 import stirling.software.proprietary.security.service.EmailService;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.SaveUserRequest;
+import stirling.software.proprietary.security.service.TeamMembershipService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
@@ -69,6 +70,7 @@ public class UserController {
     private final Optional<EmailService> emailService;
     private final UserLicenseSettingsService licenseSettingsService;
     private final LoginAttemptService loginAttemptService;
+    private final TeamMembershipService teamMembershipService;
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/register")
@@ -644,6 +646,7 @@ public class UserController {
 
                 user.setTeam(team);
                 userRepository.save(user);
+                teamMembershipService.syncMembership(user);
             }
         }
 

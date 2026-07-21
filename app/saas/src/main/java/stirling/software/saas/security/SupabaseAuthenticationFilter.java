@@ -380,8 +380,10 @@ public class SupabaseAuthenticationFilter extends OncePerRequestFilter {
                                                     dup));
         }
 
-        // Only the DB-race winner runs first-time init; the losers skip it.
-        if (weCreatedThisUser) {
+        // Only the DB-race winner runs first-time init; the losers skip it. Guests (anonymous
+        // sessions) get NO team: the editor is free and needs none, and automation requires a
+        // real account.
+        if (weCreatedThisUser && !isAnonymous(jwt)) {
             try {
                 savedUser.setTeam(saasTeamService.ensurePersonalTeam(savedUser));
             } catch (Exception e) {

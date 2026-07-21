@@ -37,8 +37,15 @@ export const useCompressParameters = (): CompressParametersHook => {
     defaultParameters,
     endpointName: "compress-pdf",
     validateFn: (params) => {
-      // For compression, we only need to validate that compression level is within range
-      return params.compressionLevel >= 1 && params.compressionLevel <= 9;
+      if (params.compressionLevel < 1 || params.compressionLevel > 9) {
+        return false;
+      }
+      // Filesize mode needs a target size; without one the request omits
+      // expectedOutputSize and the backend silently does a quality compression.
+      if (params.compressionMethod === "filesize") {
+        return params.fileSizeValue.trim() !== "";
+      }
+      return true;
     },
   });
 };

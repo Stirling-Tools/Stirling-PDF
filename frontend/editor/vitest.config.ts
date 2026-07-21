@@ -1,13 +1,6 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react-swc";
 import tsconfigPaths from "vite-tsconfig-paths";
-import path from "node:path";
-
-// Global @shared alias so SUI components (and their own `@shared/*` self-imports,
-// which live outside the editor tsconfig scope) resolve under test — mirrors the
-// resolve.alias in vite.config.ts.
-const sharedDir = path.resolve(__dirname, "../shared");
-
 export default defineConfig({
   test: {
     globals: true,
@@ -48,9 +41,26 @@ export default defineConfig({
             projects: ["./tsconfig.core.vite.json"],
           }),
         ],
-        resolve: {
-          alias: { "@shared": sharedDir },
+        esbuild: {
+          target: "es2020",
         },
+      },
+      {
+        test: {
+          name: "portal",
+          include: ["src/portal/**/*.test.{ts,tsx}"],
+          environment: "jsdom",
+          globals: true,
+          setupFiles: ["./src/portal/setupTests.ts"],
+        },
+        plugins: [
+          react(),
+          tsconfigPaths({
+            // Broad project so @app/@portal resolve in every editor file the
+            // portal tests pull in (core/ui, core, ...).
+            projects: ["./tsconfig.portal.vite.json"],
+          }),
+        ],
         esbuild: {
           target: "es2020",
         },
@@ -69,9 +79,6 @@ export default defineConfig({
             projects: ["./tsconfig.proprietary.vite.json"],
           }),
         ],
-        resolve: {
-          alias: { "@shared": sharedDir },
-        },
         esbuild: {
           target: "es2020",
         },
@@ -90,9 +97,6 @@ export default defineConfig({
             projects: ["./tsconfig.desktop.vite.json"],
           }),
         ],
-        resolve: {
-          alias: { "@shared": sharedDir },
-        },
         esbuild: {
           target: "es2020",
         },
@@ -100,7 +104,13 @@ export default defineConfig({
       {
         test: {
           name: "saas",
-          include: ["src/saas/**/*.test.{ts,tsx}"],
+          // src/saas = editor-saas layer; src/portal-saas = the portal's saas
+          // overrides (sibling to src/portal). Both build under the saas flavor,
+          // so both resolve @portal via the saas cascade (tsconfig.saas.vite.json).
+          include: [
+            "src/saas/**/*.test.{ts,tsx}",
+            "src/portal-saas/**/*.test.{ts,tsx}",
+          ],
           environment: "jsdom",
           globals: true,
           setupFiles: ["./src/saas/setupTests.ts"],
@@ -111,9 +121,6 @@ export default defineConfig({
             projects: ["./tsconfig.saas.vite.json"],
           }),
         ],
-        resolve: {
-          alias: { "@shared": sharedDir },
-        },
         esbuild: {
           target: "es2020",
         },
@@ -132,9 +139,6 @@ export default defineConfig({
             projects: ["./tsconfig.prototypes.vite.json"],
           }),
         ],
-        resolve: {
-          alias: { "@shared": sharedDir },
-        },
         esbuild: {
           target: "es2020",
         },
