@@ -15,8 +15,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -37,6 +39,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.job.ResultFile;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.FileStorage.StoredFile;
 import stirling.software.common.service.InternalApiClient;
@@ -55,7 +58,9 @@ import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.output.InlineOutputSink;
+import stirling.software.proprietary.policy.output.OutputDelivery;
 import stirling.software.proprietary.policy.output.PolicyOutputResolver;
+import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
 
@@ -83,6 +88,7 @@ class PolicyEngineTest {
 
     @TempDir Path tempDir;
 
+    private final RecordingSink recordingSink = new RecordingSink();
     private PolicyRunRegistry registry;
     private PolicyEngine engine;
 
@@ -108,7 +114,7 @@ class PolicyEngineTest {
                         registry,
                         fileStorage,
                         jobOwnershipService,
-                        List.of(sink),
+                        List.of(sink, recordingSink),
                         outputResolver,
                         resourceMonitor,
                         jobQueue);
@@ -158,6 +164,36 @@ class PolicyEngineTest {
         verify(taskManager).setComplete(runId);
         // Progress notes were written for each step.
         verify(taskManager, atLeastOnce()).addNote(eq(runId), anyString());
+    }
+
+    @Test
+    void deliversTheRunsFilesToEveryDestination() throws Exception {
+        when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
+        stubEndpoint(COMPRESS, pdf("compressed", "out.pdf"));
+
+        // Two destinations of a recording sink; each fully reads the (shared) result file, so this
+        // also proves the result Resources are re-readable across more than one delivery.
+        PipelineDefinition definition =
+                new PipelineDefinition(
+                        "multi",
+                        List.of(new PipelineStep(COMPRESS, Map.of())),
+                        List.of(
+                                new OutputSpec("record", Map.of("dest", "a")),
+                                new OutputSpec("record", Map.of("dest", "b"))));
+
+        PolicyRun run =
+                engine.submit(
+                                definition,
+                                PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                                PolicyProgressListener.NOOP)
+                        .completion()
+                        .get(10, TimeUnit.SECONDS);
+
+        assertEquals(PolicyRunStatus.COMPLETED, run.getStatus());
+        // One result file per destination, and each destination read the same output content.
+        assertEquals(2, run.getOutputs().size());
+        assertEquals(List.of("a:compressed", "b:compressed"), recordingSink.deliveries());
     }
 
     @Test
@@ -388,5 +424,51 @@ class PolicyEngineTest {
                 return filename;
             }
         };
+    }
+
+    /**
+     * A test output sink (type "record") that fully reads each delivered file and records
+     * "{dest}:{content}" per file, so a test can assert the run was delivered to every destination.
+     */
+    private static final class RecordingSink implements PolicyOutputSink {
+
+        private final List<String> deliveries = new ArrayList<>();
+
+        List<String> deliveries() {
+            return deliveries;
+        }
+
+        @Override
+        public String type() {
+            return "record";
+        }
+
+        @Override
+        public boolean supports(OutputSpec spec) {
+            return spec != null && "record".equals(spec.type());
+        }
+
+        @Override
+        public List<ResultFile> deliver(
+                OutputDelivery delivery, List<Resource> outputs, OutputSpec spec)
+                throws IOException {
+            String dest = String.valueOf(spec.options().get("dest"));
+            List<ResultFile> results = new ArrayList<>();
+            for (Resource file : outputs) {
+                byte[] bytes;
+                try (InputStream is = file.getInputStream()) {
+                    bytes = is.readAllBytes();
+                }
+                deliveries.add(dest + ":" + new String(bytes));
+                results.add(
+                        ResultFile.builder()
+                                .fileId("rec-" + dest)
+                                .fileName(dest + "/" + file.getFilename())
+                                .contentType("application/pdf")
+                                .fileSize(bytes.length)
+                                .build());
+            }
+            return results;
+        }
     }
 }

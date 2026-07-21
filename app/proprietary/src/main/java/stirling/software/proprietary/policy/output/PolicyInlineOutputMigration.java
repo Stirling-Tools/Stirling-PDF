@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,6 +51,10 @@ public class PolicyInlineOutputMigration {
     private final PolicyStore policyStore;
     private final SourceStore sourceStore;
 
+    // Runs after EmbeddedS3CredentialMigration (@Order(1)) so any legacy S3 output has already had
+    // its embedded credentials extracted into a connection; the Source created here then references
+    // that connection rather than copying credentials into source_json.
+    @Order(2)
     @EventListener(ApplicationReadyEvent.class)
     @Transactional
     public void migrate() {

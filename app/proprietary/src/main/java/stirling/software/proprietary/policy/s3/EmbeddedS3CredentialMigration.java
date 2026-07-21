@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,6 +58,10 @@ public class EmbeddedS3CredentialMigration {
     private final IntegrationConfigRepository connections;
     private final TeamRepository teamRepository;
 
+    // Must run before PolicyInlineOutputMigration: that migration copies a policy's inline output
+    // options into a Source, so embedded S3 credentials have to be extracted into a connection here
+    // first, or they would be copied verbatim (plaintext) into the new source row.
+    @Order(1)
     @EventListener(ApplicationReadyEvent.class)
     @Transactional
     public void migrate() {
