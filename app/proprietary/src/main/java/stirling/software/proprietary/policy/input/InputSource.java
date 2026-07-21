@@ -24,9 +24,21 @@ public interface InputSource {
 
     /**
      * Resolve the spec into zero or more units of work, each carrying one run's files and a
-     * completion hook. Empty list means nothing to run right now.
+     * completion hook. Empty list means nothing to run right now. Discovery is read-only - files
+     * stay where the user put them; "already processed" is tracked through {@code ctx} (claim on
+     * pickup, settle on completion, report what is present so stale ledger rows can be pruned).
      */
-    List<ResolvedInput> resolve(InputSpec spec) throws IOException;
+    List<ResolvedInput> resolve(InputSpec spec, ResolveContext ctx) throws IOException;
+
+    /**
+     * Whether {@link #resolve} observes everything in the source (a complete listing) rather than
+     * e.g. only what events surfaced. Presence cleanup of the ledger is skipped for the whole
+     * policy unless every enabled source says true - wrongly pruning history would reprocess a
+     * whole folder, while keeping a few stale rows costs nothing.
+     */
+    default boolean listsExhaustively() {
+        return true;
+    }
 
     /**
      * Filesystem dirs this source draws from, for the folder-watch trigger. Advisory: resolving is

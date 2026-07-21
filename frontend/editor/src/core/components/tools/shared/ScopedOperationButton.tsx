@@ -1,7 +1,10 @@
-import { Text, Box, Button } from "@mantine/core";
+import { Text, Box } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { Button, type ButtonVariant, type ButtonAccent } from "@app/ui/Button";
 import OperationButton, {
   OperationButtonProps,
+  operationButtonVariantMap,
+  operationButtonAccentMap,
 } from "@app/components/tools/shared/OperationButton";
 import { StirlingFile } from "@app/types/fileContext";
 import { useAllFiles } from "@app/contexts/FileContext";
@@ -73,6 +76,11 @@ export function ScopedOperationButton({
     allFiles.length > 0 &&
     selectedFiles.length === 0;
 
+  const loadingVariant: ButtonVariant =
+    operationButtonVariantMap[props.variant ?? "filled"] ?? "primary";
+  const loadingAccent: ButtonAccent =
+    operationButtonAccentMap[props.color ?? "blue"] ?? "default";
+
   return (
     <>
       {isFilesHydrating ? (
@@ -81,8 +89,8 @@ export function ScopedOperationButton({
             fullWidth
             disabled
             loading={!isBulkLoading}
-            variant={props.variant ?? "filled"}
-            color={props.color ?? "blue"}
+            variant={loadingVariant}
+            accent={loadingAccent}
             style={{
               position: "relative",
               overflow: "hidden",

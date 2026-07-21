@@ -24,6 +24,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
+import stirling.software.proprietary.access.repository.ResourceGrantRepository;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.AuthorityRepository;
 import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
@@ -63,6 +64,13 @@ class UserServiceTest {
     @Mock private StorageCleanupEntryRepository storageCleanupEntryRepository;
     @Mock private FileShareRepository fileShareRepository;
     @Mock private FileShareAccessRepository fileShareAccessRepository;
+    @Mock private ResourceGrantRepository resourceGrantRepository;
+
+    @Mock
+    private stirling.software.proprietary.integration.repository.IntegrationConfigRepository
+            integrationConfigRepository;
+
+    @Mock private TeamMembershipService teamMembershipService;
 
     @Spy @InjectMocks private UserService userService;
 

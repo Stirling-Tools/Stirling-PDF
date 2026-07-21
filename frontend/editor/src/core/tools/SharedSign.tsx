@@ -2,16 +2,16 @@ import { useMemo, useState } from "react";
 import {
   Alert,
   Badge,
-  Button,
   Center,
-  Chip,
   Group,
   Loader,
   Paper,
-  SegmentedControl,
   Stack,
   Text,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { Chip } from "@app/ui/Chip";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import AddIcon from "@mui/icons-material/Add";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -164,8 +164,8 @@ const SharedSign = (_props: BaseToolProps) => {
       <Stack p="md" gap="md">
         <Group>
           <Button
-            variant="subtle"
-            size="compact-sm"
+            variant="tertiary"
+            size="sm"
             leftSection={<ArrowBackIcon sx={{ fontSize: "1rem" }} />}
             onClick={() => setShowCreate(false)}
           >
@@ -248,7 +248,7 @@ const SharedSign = (_props: BaseToolProps) => {
         fullWidth
         value={tab}
         onChange={(value) => changeTab(value as Tab)}
-        data={[
+        options={[
           { label: t("sharedSign.tab.active", "Active"), value: "active" },
           {
             label: t("sharedSign.tab.completed", "Completed"),
@@ -258,22 +258,34 @@ const SharedSign = (_props: BaseToolProps) => {
       />
 
       <Button
-        variant="light"
+        variant="tertiary"
         leftSection={<AddIcon sx={{ fontSize: "1.1rem" }} />}
         onClick={() => setShowCreate(true)}
       >
         {t("sharedSign.newRequest", "Request signatures")}
       </Button>
 
-      <Chip.Group multiple value={filters} onChange={setFilters}>
-        <Group gap="xs">
-          {filterOptions.map((f) => (
-            <Chip key={f.key} value={f.key} size="xs" radius="sm">
+      <Group gap="xs">
+        {filterOptions.map((f) => {
+          const active = filters.includes(f.key);
+          return (
+            <Chip
+              key={f.key}
+              size="xs"
+              variant={active ? "primary" : "secondary"}
+              onClick={() =>
+                setFilters((prev) =>
+                  prev.includes(f.key)
+                    ? prev.filter((k) => k !== f.key)
+                    : [...prev, f.key],
+                )
+              }
+            >
               {f.label}
             </Chip>
-          ))}
-        </Group>
-      </Chip.Group>
+          );
+        })}
+      </Group>
 
       {controller.loading && items.length === 0 ? (
         <Center py="xl">

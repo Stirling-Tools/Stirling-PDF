@@ -10,6 +10,7 @@ on:
       - "app/common/build.gradle"
       - "app/core/build.gradle"
       - "app/proprietary/build.gradle"
+      - "gradle/spotless.gradle"
       - "README.md"
       - "frontend/editor/public/locales/*/translation.toml"
       - "app/core/src/main/resources/static/3rdPartyLicenses.json"
@@ -64,6 +65,7 @@ jobs:
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
         with:
           enable-cache: true
+          cache-suffix: sync-files
 
       - name: Install Task
         uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0

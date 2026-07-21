@@ -112,3 +112,72 @@ describe("buildPolicyBadgeMap — badge follows the document onto derived files"
     expect((map.get("part") ?? [])[0].recent).toBe(false);
   });
 });
+
+describe("buildPolicyBadgeMap — enforcing spinner while a run is in flight", () => {
+  const enforcingOn = (
+    map: Map<string, { enforcing?: boolean }[]>,
+    id: string,
+  ) => (map.get(id) ?? []).some((b) => b.enforcing);
+
+  it("marks the input file enforcing while the run is RUNNING", () => {
+    const map = buildPolicyBadgeMap(
+      [run({ status: "RUNNING", outputFileIds: [] })],
+      [{ id: "in" }],
+      labels,
+      NOW,
+    );
+    expect(enforcingOn(map, "in")).toBe(true);
+  });
+
+  it("keeps enforcing after COMPLETED until the outputs are imported", () => {
+    // Status reaches COMPLETED before the async import lands — the spinner
+    // must survive that gap, then clear once imported.
+    const before = buildPolicyBadgeMap(
+      [run({ status: "COMPLETED" })],
+      [{ id: "in" }],
+      labels,
+      NOW,
+    );
+    expect(enforcingOn(before, "in")).toBe(true);
+
+    const after = buildPolicyBadgeMap(
+      [run({ status: "COMPLETED", imported: true })],
+      [{ id: "in" }],
+      labels,
+      NOW,
+    );
+    expect(enforcingOn(after, "in")).toBe(false);
+  });
+
+  it("clears enforcing when the run settles as FAILED or CANCELLED", () => {
+    for (const status of ["FAILED", "CANCELLED"] as const) {
+      const map = buildPolicyBadgeMap(
+        [run({ status, outputFileIds: [] })],
+        [{ id: "in" }],
+        labels,
+        NOW,
+      );
+      expect(enforcingOn(map, "in")).toBe(false);
+    }
+  });
+
+  it("keeps enforcing on a settled run that is auto-retrying", () => {
+    const map = buildPolicyBadgeMap(
+      [run({ status: "FAILED", retrying: true, outputFileIds: [] })],
+      [{ id: "in" }],
+      labels,
+      NOW,
+    );
+    expect(enforcingOn(map, "in")).toBe(true);
+  });
+
+  it("skips runs with no input fileId (server-reconciled orphans)", () => {
+    const map = buildPolicyBadgeMap(
+      [run({ status: "RUNNING", fileId: "", outputFileIds: [] })],
+      [{ id: "in" }],
+      labels,
+      NOW,
+    );
+    expect(enforcingOn(map, "in")).toBe(false);
+  });
+});

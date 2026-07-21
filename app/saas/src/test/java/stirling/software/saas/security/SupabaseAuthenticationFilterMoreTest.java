@@ -276,6 +276,8 @@ class SupabaseAuthenticationFilterMoreTest {
             filter.doFilter(request, response, chain);
 
             verify(userService, times(1)).saveUser(any(User.class));
+            // Guests get NO team; a home team + grant is provisioned only on signup/upgrade.
+            verify(saasTeamService, never()).ensurePersonalTeam(any());
             // Anonymous mirror row created with null email and anon flag true.
             verify(supabaseUserService).createSupabaseUser(supabaseId, null, true);
             assertThat(SecurityContextHolder.getContext().getAuthentication())

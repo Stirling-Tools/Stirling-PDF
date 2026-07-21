@@ -149,16 +149,32 @@ tasks:
       # Pin jlink to JAVA_HOME so the bundled JRE matches the JDK the build
       # uses. Bare `jlink` on PATH can resolve to an older system Java (the
       # ubuntu runner ships Java 11), producing a runtime jlink:verify rejects.
-      - |
-        JLINK="${JAVA_HOME:+$JAVA_HOME/bin/}jlink"
-        JLINK_COMPRESS="$("$JLINK" --help 2>&1 | grep -q 'zip-\[0-9\]' && echo zip-6 || echo 2)"
-        "$JLINK" \
-          --add-modules {{.JLINK_MODULES}} \
-          --strip-debug \
-          --compress="$JLINK_COMPRESS" \
-          --no-header-files \
-          --no-man-pages \
-          --output runtime/jre
+      #
+      # jdk.crypto.mscapi (the Windows certificate store / SunMSCAPI provider, used by
+      # hardware-backed cert signing) is a Windows-only module - it only exists in a Windows
+      # JDK's jmods, so it is added on Windows only or jlink fails to resolve it elsewhere.
+      - cmd: |
+          JLINK="${JAVA_HOME:+$JAVA_HOME/bin/}jlink"
+          JLINK_COMPRESS="$("$JLINK" --help 2>&1 | grep -q 'zip-\[0-9\]' && echo zip-6 || echo 2)"
+          "$JLINK" \
+            --add-modules {{.JLINK_MODULES}},jdk.crypto.mscapi \
+            --strip-debug \
+            --compress="$JLINK_COMPRESS" \
+            --no-header-files \
+            --no-man-pages \
+            --output runtime/jre
+        platforms: [windows]
+      - cmd: |
+          JLINK="${JAVA_HOME:+$JAVA_HOME/bin/}jlink"
+          JLINK_COMPRESS="$("$JLINK" --help 2>&1 | grep -q 'zip-\[0-9\]' && echo zip-6 || echo 2)"
+          "$JLINK" \
+            --add-modules {{.JLINK_MODULES}} \
+            --strip-debug \
+            --compress="$JLINK_COMPRESS" \
+            --no-header-files \
+            --no-man-pages \
+            --output runtime/jre
+        platforms: [linux, darwin]
       # jlink emits its files mode 444 (read-only). Tauri's build-script
       # resource copier preserves source permissions when staging
       # `runtime/jre/**/*` into `target/<profile>/runtime/jre/...`, so the

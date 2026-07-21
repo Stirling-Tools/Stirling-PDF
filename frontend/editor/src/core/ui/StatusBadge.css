@@ -1,0 +1,74 @@
+.sui-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  border: 1px solid transparent;
+  line-height: 1;
+  color: var(--sui-status-c, var(--color-text-3));
+  background: color-mix(
+    in srgb,
+    var(--sui-status-c, var(--color-text-3)) 12%,
+    transparent
+  );
+  border-color: color-mix(
+    in srgb,
+    var(--sui-status-c, var(--color-text-3)) 28%,
+    transparent
+  );
+}
+.sui-status--sm {
+  font-size: 0.6875rem;
+  padding: 0.125rem 0.5rem;
+}
+.sui-status--md {
+  font-size: 0.75rem;
+  padding: 0.1875rem 0.625rem;
+}
+.sui-status--lg {
+  font-size: 0.8125rem;
+  padding: 0.3125rem 0.75rem;
+}
+
+.sui-status__dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background: currentColor;
+  position: relative;
+}
+.sui-status__dot--pulse::after {
+  content: "";
+  position: absolute;
+  inset: -0.125rem;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  animation: pulseRing 1.4s ease-out infinite;
+}
+
+/* Neutral keeps the plain muted surface rather than an accent tint. */
+.sui-status--neutral {
+  color: var(--color-text-3);
+  background: var(--color-bg-muted);
+  border-color: var(--color-border-light);
+}
+/* Tones only pick the accent; the base rule builds the fill + border. `-dark`
+   is theme-adaptive, so text stays legible on the pale fill in both themes. */
+.sui-status--success {
+  --sui-status-c: var(--color-green-dark);
+}
+.sui-status--warning {
+  --sui-status-c: var(--color-amber-dark);
+}
+.sui-status--danger {
+  --sui-status-c: var(--color-red-dark);
+}
+.sui-status--info {
+  --sui-status-c: var(--color-blue-dark);
+}
+.sui-status--purple {
+  --sui-status-c: var(--color-purple-dark);
+}

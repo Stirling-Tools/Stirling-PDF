@@ -6,25 +6,25 @@ import {
   Text,
   Tooltip,
   NumberInput,
-  SegmentedControl,
   Select,
   Code,
   Group,
   Anchor,
-  ActionIcon,
-  Button,
   Badge,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useTheme } from "@app/components/shared/ThemeProvider";
 import LanguageSelector from "@app/components/shared/LanguageSelector";
-import type { ThemeMode } from "@app/constants/theme";
+import { type ThemeMode } from "@app/constants/theme";
 import type { ToolPanelMode } from "@app/constants/toolPanel";
-import type {
-  StartupView,
-  ViewerZoomSetting,
+import {
+  type StartupView,
+  type ViewerZoomSetting,
 } from "@app/services/preferencesService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -112,12 +112,14 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
   // falling back to the backend version
   const currentVersion = appVersion ?? config?.appVersion ?? null;
 
-  // Check for updates on mount
+  // Check for updates on mount — skipped when the update UI is hidden (SaaS
+  // build, managed-disabled desktop) so no external update call ever fires.
   useEffect(() => {
+    if (hideUpdateSection) return;
     if (currentVersion) {
       checkForUpdate();
     }
-  }, [currentVersion, config?.machineType]);
+  }, [currentVersion, config?.machineType, hideUpdateSection]);
 
   const checkForUpdate = async () => {
     if (!currentVersion) return;
@@ -193,8 +195,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
           }}
         >
           <ActionIcon
-            variant="subtle"
-            color="gray"
+            variant="tertiary"
             size="sm"
             style={{ position: "absolute", top: "0.5rem", right: "0.5rem" }}
             onClick={handleDismissBanner}
@@ -344,7 +345,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               <Group gap="sm">
                 <Button
                   size="sm"
-                  variant="default"
+                  variant="secondary"
                   onClick={checkForUpdate}
                   loading={checkingUpdate}
                   disabled={!currentVersion}
@@ -364,8 +365,10 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                 {updateSummary && (
                   <Button
                     size="sm"
-                    color={
-                      updateSummary.max_priority === "urgent" ? "red" : "blue"
+                    accent={
+                      updateSummary.max_priority === "urgent"
+                        ? "danger"
+                        : "default"
                     }
                     onClick={() => setUpdateModalOpened(true)}
                     leftSection={
@@ -479,14 +482,14 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               <Text size="xs" c="dimmed" mt={4}>
                 {t(
                   "settings.general.themeDescription",
-                  "Choose light, dark, or follow your system",
+                  "Choose light, dark, or follow your system so it switches automatically.",
                 )}
               </Text>
             </div>
             <SegmentedControl
               value={themeMode}
               onChange={(val) => setTheme(val as ThemeMode)}
-              data={[
+              options={[
                 {
                   label: t("settings.general.themeLight", "Light"),
                   value: "light",
@@ -502,27 +505,31 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               ]}
             />
           </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <Text fw={500} size="sm">
-                {t("settings.general.language", "Language")}
-              </Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t(
-                  "settings.general.languageDescription",
-                  "Choose the display language",
-                )}
-              </Text>
-            </div>
-            <LanguageSelector position="bottom-end" offset={6} />
-          </div>
         </Stack>
+      </Paper>
+
+      {/* Language */}
+      <Paper withBorder p="md" radius="md">
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <Text fw={500} size="sm">
+              {t("settings.general.language", "Language")}
+            </Text>
+            <Text size="xs" c="dimmed" mt={4}>
+              {t(
+                "settings.general.languageDescription",
+                "Choose the display language",
+              )}
+            </Text>
+          </div>
+          <LanguageSelector position="bottom-end" offset={6} />
+        </div>
       </Paper>
 
       <Paper withBorder p="md" radius="md">
@@ -553,7 +560,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               onChange={(val: string) =>
                 updatePreference("defaultToolPanelMode", val as ToolPanelMode)
               }
-              data={[
+              options={[
                 {
                   label: t("settings.general.mode.sidebar", "Sidebar"),
                   value: "sidebar",
@@ -591,7 +598,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               onChange={(val: string) =>
                 updatePreference("defaultStartupView", val as StartupView)
               }
-              data={[
+              options={[
                 {
                   label: t("settings.general.startupView.tools", "Tools"),
                   value: "tools",

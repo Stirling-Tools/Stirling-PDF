@@ -18,14 +18,13 @@ public interface WalletLedgerRepository extends JpaRepository<WalletLedgerEntry,
     List<WalletLedgerEntry> findTop20ByTeamIdOrderByIdDesc(Long teamId);
 
     /**
-     * Per-category debit totals over an arbitrary window, as positive units. Replaces the
-     * calendar-month {@code wallet_category_summary} view on the wallet endpoint — subscribed
-     * teams' billing windows are anchored to the Stripe subscription period, not month starts. Rows
-     * with {@code NULL} category (system entries) are excluded; BYPASSED never reaches the ledger
-     * by construction.
+     * Per-category debit totals with BOTH the size-scaled unit sum and the input-file count ({@code
+     * doc_count}) over a window. Rows: {@code [category, units, docs]}. Lets the wallet show, per
+     * category, "X PDFs · Y meter units" rather than conflating the two.
      */
     @Query(
-            "SELECT e.billingCategory AS category, COALESCE(SUM(-e.amountUnits), 0) AS units"
+            "SELECT e.billingCategory AS category, COALESCE(SUM(-e.amountUnits), 0) AS units,"
+                    + " COALESCE(SUM(e.docCount), 0) AS docs"
                     + " FROM WalletLedgerEntry e"
                     + " WHERE e.teamId = :teamId"
                     + " AND e.entryType = :entryType"
@@ -33,7 +32,36 @@ public interface WalletLedgerRepository extends JpaRepository<WalletLedgerEntry,
                     + " AND e.occurredAt >= :periodStart"
                     + " AND e.occurredAt < :periodEnd"
                     + " GROUP BY e.billingCategory")
-    List<Object[]> sumPeriodAmountByCategory(
+    List<Object[]> sumPeriodByCategoryWithDocs(
+            @Param("teamId") Long teamId,
+            @Param("entryType") LedgerEntryType entryType,
+            @Param("periodStart") LocalDateTime periodStart,
+            @Param("periodEnd") LocalDateTime periodEnd);
+
+    /**
+     * Period usage analytics in one row: {@code [docsProcessed, uniquePdfs, sizeMultiplierPdfs]}.
+     * {@code docsProcessed} sums input-file counts; {@code uniquePdfs} counts distinct input
+     * fingerprints (a file hit by N operations counts once); {@code sizeMultiplierPdfs} sums the
+     * input files on charges where the size multiplier kicked in (units billed &gt; input files).
+     * DEBIT + non-null category only.
+     *
+     * <p>Returns a single-element {@code List} (aggregate-only query → always one row). Declared as
+     * {@code List<Object[]>} rather than {@code Object[]}: Spring Data treats an {@code Object[]}
+     * return as a <em>collection</em> and hands back {@code Object[]{ row }}, so the caller would
+     * read the columns one level too deep — take {@code get(0)}.
+     */
+    @Query(
+            "SELECT COALESCE(SUM(e.docCount), 0) AS docs,"
+                    + " COUNT(DISTINCT e.documentFingerprint) AS uniquePdfs,"
+                    + " COALESCE(SUM(CASE WHEN (-e.amountUnits) > e.docCount THEN e.docCount ELSE 0"
+                    + " END), 0) AS sizeMultiplierPdfs"
+                    + " FROM WalletLedgerEntry e"
+                    + " WHERE e.teamId = :teamId"
+                    + " AND e.entryType = :entryType"
+                    + " AND e.billingCategory IS NOT NULL"
+                    + " AND e.occurredAt >= :periodStart"
+                    + " AND e.occurredAt < :periodEnd")
+    List<Object[]> periodUsageAnalytics(
             @Param("teamId") Long teamId,
             @Param("entryType") LedgerEntryType entryType,
             @Param("periodStart") LocalDateTime periodStart,

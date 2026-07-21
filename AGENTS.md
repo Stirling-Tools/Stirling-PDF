@@ -139,7 +139,8 @@ The project structure is defined in `engine/pyproject.toml`. Any new dependencie
 
 #### Environment Variables
 - All `VITE_*` variables must be declared in the appropriate committed env file:
-  - `frontend/editor/.env` — core, proprietary, and shared vars
+  - `frontend/editor/.env` — core and shared vars (base, loaded in every mode)
+  - `frontend/editor/.env.proprietary` — proprietary-only vars, e.g. the admin portal's SaaS/account-link keys (layered on top of `.env` in proprietary mode)
   - `frontend/editor/.env.saas` — SaaS-only vars (layered on top of `.env` in SaaS mode)
   - `frontend/editor/.env.desktop` — desktop (Tauri)-only vars (layered on top of `.env` in desktop mode)
 - These files are committed to Git and must not contain private keys
@@ -153,6 +154,8 @@ The project structure is defined in `engine/pyproject.toml`. Any new dependencie
 **ALWAYS use `@app/*` for imports.** Do not use `@core/*` or `@proprietary/*` unless explicitly wrapping/extending a lower layer implementation.
 
 For a broader explanation of the frontend layering and override architecture, read @frontend/editor/DeveloperGuide.md
+
+Before touching colours or theming (tokens, dark mode, accent colours), read @frontend/editor/src/core/theme/README.md — it explains the palette/`--c-*` token system and the rule that literal colours live only in `primitives.css`.
 
 ```typescript
 // ✅ CORRECT - Use @app/* for all imports
@@ -452,6 +455,7 @@ The frontend is organized with a clear separation of concerns:
 
 - **CRITICAL**: Always update translations in `en-US` only - all other languages (including `en-GB`) are handled separately
 - Translation files are located in `frontend/editor/public/locales/`
+- After changing any translation file, run `task pre-commit:fix`
 
 ## Important Notes
 

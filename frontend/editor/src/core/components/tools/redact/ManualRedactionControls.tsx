@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useCallback } from "react";
-import { Button, Stack, Text, Divider, ColorInput } from "@mantine/core";
+import { Stack, Text, Divider, ColorInput } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useRedaction, useRedactionMode } from "@app/contexts/RedactionContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useSignature } from "@app/contexts/SignatureContext";
@@ -154,10 +155,7 @@ export default function ManualRedactionControls({
         <Button
           fullWidth
           size="md"
-          radius="md"
-          mt="sm"
-          variant="filled"
-          color="blue"
+          style={{ marginTop: "0.75rem" }}
           disabled={!hasUnsavedChanges}
           onClick={handleSaveChanges}
         >

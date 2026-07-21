@@ -6,7 +6,9 @@ import React, {
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
-import { Box, Center, Text, ActionIcon, Button, Stack } from "@mantine/core";
+import { Box, Center, Text, Stack } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import CloseIcon from "@mui/icons-material/Close";
 import LockIcon from "@mui/icons-material/Lock";
 
@@ -45,6 +47,7 @@ import { useWheelZoom } from "@app/hooks/useWheelZoom";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import { FormSaveBar } from "@app/tools/formFill/FormSaveBar";
 import { useViewerKeyCommand } from "@app/hooks/useViewerKeyCommand";
+import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
 import { alert } from "@app/components/toast";
 
 // ─── Measure dictionary extraction ────────────────────────────────────────────
@@ -441,6 +444,15 @@ const EmbedPdfViewerContent = ({
 
   const viewerKeyCommand = useViewerKeyCommand();
 
+  const policyFileBadges = usePolicyFileBadges();
+  const policyEnforcing =
+    !!activeFileId &&
+    (policyFileBadges.get(activeFileId) ?? []).some((p) => p.enforcing);
+  // Use a ref so the keydown handler always reads the latest value without
+  // needing to be in the effect's dependency array.
+  const policyEnforcingRef = useRef(false);
+  policyEnforcingRef.current = policyEnforcing;
+
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -466,7 +478,9 @@ const EmbedPdfViewerContent = ({
               case "p":
               case "P":
                 event.preventDefault();
-                printActions.print();
+                if (!policyEnforcingRef.current) {
+                  printActions.print();
+                }
                 return;
               case "a":
               case "A":
@@ -1225,15 +1239,14 @@ const EmbedPdfViewerContent = ({
       {/* Close Button - Only show in preview mode */}
       {onClose && previewFile && (
         <ActionIcon
-          variant="filled"
-          color="gray"
+          variant="secondary"
           size="lg"
+          aria-label={t("common.close", "Close")}
           style={{
             position: "absolute",
             top: "1rem",
             right: "1rem",
             zIndex: 1000,
-            borderRadius: "50%",
           }}
           onClick={onClose}
         >
@@ -1261,7 +1274,6 @@ const EmbedPdfViewerContent = ({
               )}
             </Text>
             <Button
-              variant="filled"
               onClick={() => {
                 if (currentFile && isStirlingFile(currentFile)) {
                   actions.openEncryptedUnlockPrompt(currentFile.fileId);
@@ -1333,6 +1345,7 @@ const EmbedPdfViewerContent = ({
               file={currentFile ?? null}
               isFormFillToolActive={isFormFillToolActive}
               onApply={handleFormApply}
+              policyEnforcing={policyEnforcing}
             />
             <StampPlacementOverlay
               containerRef={pdfContainerRef}
