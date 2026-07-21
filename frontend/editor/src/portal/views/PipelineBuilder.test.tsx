@@ -57,17 +57,17 @@ vi.mock("@portal/api/integrations", () => ({
   createIntegration: (...args: unknown[]) => createIntegration(...args),
 }));
 
-// The output picker is a flavor seam with its own test; stub it to a button that
-// selects a fixed saved output, keeping this suite focused on the builder.
-vi.mock("@portal/components/outputs/OutputPicker", () => ({
-  OutputPicker: ({
+// The destination picker just selects a saved source; stub it to a button that
+// picks a fixed source, keeping this suite focused on the builder.
+vi.mock("@portal/components/pipelines/DestinationPicker", () => ({
+  DestinationPicker: ({
     value,
     onChange,
   }: {
     value: string;
     onChange: (id: string) => void;
   }) => (
-    <button type="button" onClick={() => onChange("out-1")}>
+    <button type="button" onClick={() => onChange("src-1")}>
       {value ? `output:${value}` : "pick output"}
     </button>
   ),
@@ -198,7 +198,7 @@ describe("PipelineBuilder", () => {
       expect.objectContaining({
         name: "Nightly compress",
         trigger: null,
-        outputId: "out-1",
+        outputId: "src-1",
         steps: [
           expect.objectContaining({ operation: "/api/v1/misc/compress-pdf" }),
         ],
@@ -225,7 +225,7 @@ describe("PipelineBuilder", () => {
     fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
     await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
     expect(savePipeline).toHaveBeenCalledWith(
-      expect.objectContaining({ outputId: "out-1" }),
+      expect.objectContaining({ outputId: "src-1" }),
     );
   });
 

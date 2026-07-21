@@ -3,8 +3,10 @@ package stirling.software.proprietary.policy.source;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.stereotype.Service;
 
@@ -114,11 +116,19 @@ public class SourceOverviewService {
         return sources instanceof List<?> list && list.contains(EditorSource.ID);
     }
 
-    /** Policies referencing each source id, across the caller's visible policies. */
+    /**
+     * Policies referencing each source id, across the caller's visible policies. A source counts
+     * whether a policy reads from it ({@code sourceIds}) or writes to it ({@code outputId}); a
+     * policy that does both counts once.
+     */
     private static Map<String, List<Policy>> referencesBySource(List<Policy> policies) {
         Map<String, List<Policy>> bySource = new HashMap<>();
         for (Policy policy : policies) {
-            for (String sourceId : policy.sourceIds()) {
+            Set<String> referenced = new LinkedHashSet<>(policy.sourceIds());
+            if (policy.outputId() != null && !policy.outputId().isBlank()) {
+                referenced.add(policy.outputId());
+            }
+            for (String sourceId : referenced) {
                 bySource.computeIfAbsent(sourceId, key -> new ArrayList<>()).add(policy);
             }
         }

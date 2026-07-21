@@ -47,7 +47,8 @@ import {
   type TriggerOutcome,
 } from "@portal/api/pipelines";
 import { clearProcessedHistory } from "@portal/api/policies";
-import { OutputPicker } from "@portal/components/outputs/OutputPicker";
+import { DestinationPicker } from "@portal/components/pipelines/DestinationPicker";
+import { availableOutputModes } from "@portal/components/pipelines/outputModes";
 import { fetchSources, type SourceView } from "@portal/api/sources";
 import { EDITOR_SOURCE_TYPE } from "@portal/components/sources/sourceTypes";
 import { useAsync } from "@portal/hooks/useAsync";
@@ -130,6 +131,11 @@ export function PipelineBuilder() {
     [],
   );
   const availableSources = sourcesState.data ?? [];
+  // A destination is a source used as a write target: only writable types (folder/S3, filtered per
+  // deployment) can be picked, and the virtual editor is already excluded from availableSources.
+  const writableSources = availableSources.filter((s) =>
+    (availableOutputModes() as string[]).includes(s.type),
+  );
   const triggers = useMemo(
     () => triggersState.data ?? [],
     [triggersState.data],
@@ -326,7 +332,6 @@ export function PipelineBuilder() {
 
   const listPath = toPortalPath(VIEW_PATHS.pipelines);
   const sourcesPath = `${toPortalPath(VIEW_PATHS.sources)}/new`;
-  const outputsPath = `${toPortalPath(VIEW_PATHS.sources)}/outputs/new`;
 
   function close() {
     navigate(listPath);
@@ -338,15 +343,10 @@ export function PipelineBuilder() {
     else navigate(destination);
   }
 
-  // Jump to the Sources page with its create wizard open, for when the source you want to run
-  // this pipeline over doesn't exist yet.
+  // Jump to the source builder, for when the source you want to read from or write to doesn't
+  // exist yet. Inputs and the output destination are both saved sources, so both create one here.
   function goToSources() {
     attemptLeave(sourcesPath);
-  }
-
-  // Same, for the output destination: leave the builder to create a saved output.
-  function goToOutputs() {
-    attemptLeave(outputsPath);
   }
 
   async function save(destination: string) {
@@ -686,10 +686,11 @@ export function PipelineBuilder() {
               helperText={t("portal.pipelines.composer.outputDestinationHelp")}
               required
             >
-              <OutputPicker
+              <DestinationPicker
+                sources={writableSources}
                 value={outputId}
                 onChange={setOutputId}
-                onCreateNew={goToOutputs}
+                onCreateNew={goToSources}
               />
             </FormField>
           </div>

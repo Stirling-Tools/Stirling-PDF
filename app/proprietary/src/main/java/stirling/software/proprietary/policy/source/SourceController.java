@@ -2,6 +2,7 @@ package stirling.software.proprietary.policy.source;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -254,10 +255,17 @@ public class SourceController {
         }
     }
 
-    /** Names of the caller's visible policies that reference the given source. */
+    /**
+     * Names of the caller's visible policies that reference the given source - as an input ({@code
+     * sourceIds}) or as their output destination ({@code outputId}), so a location in use either
+     * way is protected from deletion.
+     */
     private List<String> referencingPolicyNames(String sourceId) {
         return policyAccessGuard.visibleFrom(policyStore).stream()
-                .filter(policy -> policy.sourceIds().contains(sourceId))
+                .filter(
+                        policy ->
+                                policy.sourceIds().contains(sourceId)
+                                        || Objects.equals(policy.outputId(), sourceId))
                 .map(Policy::name)
                 .toList();
     }

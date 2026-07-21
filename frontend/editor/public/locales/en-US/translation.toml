@@ -7150,72 +7150,6 @@ users = "Users"
 platform = "PDF Platform"
 processor = "PDF Processor"
 
-[portal.outputs]
-subtitle = "Destinations processed files are delivered to. Connect one here, then pick it from a pipeline."
-
-[portal.outputs.actions]
-new = "New output"
-
-[portal.outputs.builder]
-back = "Back to outputs"
-cancel = "Cancel"
-create = "Create output"
-createTitle = "New output"
-delete = "Delete"
-editTitle = "Edit output"
-enabled = "Enabled"
-name = "Name"
-namePlaceholder = "e.g. Processed archive"
-save = "Save changes"
-type = "Type"
-
-[portal.outputs.delete]
-body = "Delete \"{{name}}\"? This can't be undone. Pipelines that reference it would need to be updated."
-cancel = "Cancel"
-confirm = "Delete"
-title = "Delete output?"
-
-[portal.outputs.empty]
-description = "Connect a destination (a folder or cloud storage) so your pipelines have somewhere to deliver processed files."
-title = "No outputs connected yet"
-
-[portal.outputs.picker]
-createNew = "New output"
-placeholder = "Choose an output"
-
-[portal.outputs.table]
-name = "Name"
-referencedBy_one = "{{count}} pipeline"
-referencedBy_other = "{{count}} pipelines"
-references = "Used by"
-type = "Type"
-unused = "Unused"
-
-[portal.outputs.types.folder]
-description = "Write processed files to a directory on the server."
-label = "Folder"
-
-[portal.outputs.types.folder.fields.directory]
-helperText = "Absolute path on the server. Must be within the configured allowed folders."
-label = "Output folder"
-placeholder = "/data/processed"
-
-[portal.outputs.types.s3]
-description = "Upload processed files to an Amazon S3 bucket."
-label = "Amazon S3"
-
-[portal.outputs.types.s3.fields.connection]
-helperText = "The stored S3 connection to upload to."
-label = "Connection"
-
-[portal.outputs.types.s3.fields.prefix]
-helperText = "Files are uploaded under this key prefix."
-label = "Prefix"
-placeholder = "processed/"
-
-[portal.outputs.types.unknown]
-label = "Output"
-
 [portal.pipelines]
 subtitle = "Every automated document pipeline on the backend: an ordered chain of operations over a set of sources, run on a trigger. Click a row for its steps and sources."
 title = "Pipelines"
@@ -7257,8 +7191,10 @@ noToolSettings = "This tool has no configurable settings."
 operations_one = "Operation ({{count}})"
 operations_other = "Operations ({{count}})"
 output = "Output"
+outputCreateNew = "New source"
 outputDestination = "Destination"
-outputDestinationHelp = "Where processed files are delivered. Pick a saved output, or create one."
+outputDestinationHelp = "Where processed files are delivered. Pick a source to write to, or create one."
+outputPlaceholder = "Choose a source"
 removeStep = "Remove operation"
 save = "Save changes"
 scheduleEvery = "Run every"
@@ -8010,7 +7946,6 @@ usedBy = "Policies"
 
 [portal.sources.tabs]
 connections = "Connections"
-outputs = "Outputs"
 sources = "Sources"
 
 [portal.sources.types.editor]

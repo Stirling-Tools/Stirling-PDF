@@ -13,33 +13,36 @@ import org.junit.jupiter.api.Test;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.source.InProcessSourceStore;
+import stirling.software.proprietary.policy.source.Source;
+import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.store.InProcessPolicyStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
  * Tests for {@link PolicyInlineOutputMigration}: policies carrying a folder/S3 destination inline
- * are rewritten to reference a created {@link Output} by id; inline (return-to-caller) policies are
- * left untouched; the pass is idempotent; and two policies sharing a destination in the same team
- * share one Output.
+ * are rewritten to reference a {@link Source} location by id; inline (return-to-caller) policies
+ * are left untouched; the pass is idempotent; two policies sharing a destination in one team share
+ * one source; and an output at a location an input source already covers reuses that source.
  */
 class PolicyInlineOutputMigrationTest {
 
     private final PolicyStore policyStore = new InProcessPolicyStore();
-    private final OutputStore outputStore = new InProcessOutputStore();
+    private final SourceStore sourceStore = new InProcessSourceStore();
     private final PolicyInlineOutputMigration migration =
-            new PolicyInlineOutputMigration(policyStore, outputStore);
+            new PolicyInlineOutputMigration(policyStore, sourceStore);
 
     @Test
-    void migratesAFolderPolicyToAStoredOutput() {
+    void migratesAFolderPolicyToAStoredSource() {
         Policy saved = policyStore.save(folderPolicy("Archive", "/out"));
 
         migration.migrate();
 
         Policy migrated = policyStore.get(saved.id()).orElseThrow();
         assertNotNull(migrated.outputId());
-        Output output = outputStore.get(migrated.outputId()).orElseThrow();
-        assertEquals("folder", output.type());
-        assertEquals("/out", output.options().get("directory"));
+        Source destination = sourceStore.get(migrated.outputId()).orElseThrow();
+        assertEquals("folder", destination.type());
+        assertEquals("/out", destination.options().get("directory"));
     }
 
     @Test
@@ -59,7 +62,7 @@ class PolicyInlineOutputMigrationTest {
         migration.migrate();
 
         assertNull(policyStore.get(saved.id()).orElseThrow().outputId());
-        assertTrue(outputStore.all().isEmpty());
+        assertTrue(sourceStore.all().isEmpty());
     }
 
     @Test
@@ -67,10 +70,10 @@ class PolicyInlineOutputMigrationTest {
         policyStore.save(folderPolicy("Archive", "/out"));
 
         migration.migrate();
-        int afterFirst = outputStore.all().size();
+        int afterFirst = sourceStore.all().size();
         migration.migrate();
 
-        assertEquals(afterFirst, outputStore.all().size());
+        assertEquals(afterFirst, sourceStore.all().size());
     }
 
     @Test
@@ -80,7 +83,29 @@ class PolicyInlineOutputMigrationTest {
 
         migration.migrate();
 
-        assertEquals(1, outputStore.all().size());
+        assertEquals(1, sourceStore.all().size());
+    }
+
+    @Test
+    void reusesAnExistingInputSourceAtTheSameLocation() {
+        // An input source already reads /shared (with consume mode); a policy that outputs there
+        // should link to that same source, not mint a duplicate.
+        Source existing =
+                sourceStore.save(
+                        new Source(
+                                null,
+                                "Shared",
+                                "folder",
+                                Map.of("directory", "/shared", "mode", "consume"),
+                                true,
+                                "owner",
+                                7L));
+        Policy saved = policyStore.save(teamFolderPolicy("Writer", "/shared", 7L));
+
+        migration.migrate();
+
+        assertEquals(1, sourceStore.all().size());
+        assertEquals(existing.id(), policyStore.get(saved.id()).orElseThrow().outputId());
     }
 
     private static Policy folderPolicy(String name, String directory) {

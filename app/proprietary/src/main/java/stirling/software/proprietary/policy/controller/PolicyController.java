@@ -61,13 +61,11 @@ import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.model.PolicyRunView;
-import stirling.software.proprietary.policy.output.Output;
-import stirling.software.proprietary.policy.output.OutputAccessGuard;
-import stirling.software.proprietary.policy.output.OutputStore;
 import stirling.software.proprietary.policy.overview.PoliciesOverviewResponse;
 import stirling.software.proprietary.policy.overview.PolicyOverviewService;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 import stirling.software.proprietary.policy.source.EditorSource;
+import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceAccessGuard;
 import stirling.software.proprietary.policy.source.SourceDocCounter;
 import stirling.software.proprietary.policy.source.SourceStore;
@@ -94,8 +92,6 @@ public class PolicyController {
     private final PolicyStore policyStore;
     private final SourceStore sourceStore;
     private final SourceAccessGuard sourceAccessGuard;
-    private final OutputStore outputStore;
-    private final OutputAccessGuard outputAccessGuard;
     private final SourceDocCounter docCounter;
     private final PolicyValidator policyValidator;
     private final PolicyAccessGuard policyAccessGuard;
@@ -268,29 +264,35 @@ public class PolicyController {
     }
 
     /**
-     * A policy's referenced output must resolve to an output in the caller's team, so a client can
-     * neither reference a non-existent output nor reach across teams to write to another team's
-     * destination. The destination config is then validated on this (request) thread so an S3
-     * output's connection is authorization-checked against the caller - the async delivery worker
-     * has no principal. A policy with no reference (inline / editor / one-off) has nothing to
-     * check.
+     * A policy's output destination is a {@link Source} used as a write target: it must resolve to
+     * a source in the caller's team, so a client can neither reference a non-existent location nor
+     * reach across teams to write to another team's. The editor is virtual and has no writable
+     * location, so it can't be a destination. The config is then validated on this (request) thread
+     * so an S3 destination's connection is authorization-checked against the caller - the async
+     * delivery worker has no principal. A policy with no reference (inline / editor / one-off) has
+     * nothing to check.
      */
     private void requireAccessibleOutput(Policy policy) {
         String outputId = policy.outputId();
         if (outputId == null || outputId.isBlank()) {
             return;
         }
-        Output output =
-                outputStore
+        Source destination =
+                sourceStore
                         .get(outputId)
-                        .filter(outputAccessGuard::canAccess)
+                        .filter(sourceAccessGuard::canAccess)
                         .orElseThrow(
                                 () ->
                                         new ResponseStatusException(
                                                 HttpStatus.BAD_REQUEST,
-                                                "Unknown or inaccessible output: " + outputId));
+                                                "Unknown or inaccessible output source: "
+                                                        + outputId));
+        if (EditorSource.TYPE.equals(destination.type())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "The editor can't be used as an output destination");
+        }
         try {
-            policyValidator.validateOutput(output.toOutputSpec());
+            policyValidator.validateOutput(destination.toOutputSpec());
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }

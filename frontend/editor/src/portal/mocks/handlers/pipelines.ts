@@ -29,12 +29,6 @@ const SOURCE_NAMES: Record<string, string> = {
   "src-archive": "Archive reprocess",
 };
 
-/** Display names for the seeded outputs, so the overview resolves ids to names. */
-const OUTPUT_NAMES: Record<string, string> = {
-  "out-archive": "Archive folder",
-  "out-processed": "Processed bucket",
-};
-
 interface StoredPolicy extends Policy {
   id: string;
 }
@@ -59,7 +53,7 @@ function seedPipelines(): StoredPolicy[] {
         { operation: "/api/v1/security/sanitize-pdf", parameters: {} },
       ],
       output: { type: "inline", options: {} },
-      outputId: "out-processed",
+      outputId: "src-archive",
     },
     {
       id: "plc-archive",
@@ -70,7 +64,7 @@ function seedPipelines(): StoredPolicy[] {
       sourceIds: ["src-contracts", "src-archive"],
       steps: [{ operation: "/api/v1/misc/compress-pdf", parameters: {} }],
       output: { type: "inline", options: {} },
-      outputId: "out-archive",
+      outputId: "src-contracts",
     },
     {
       id: "plc-onboarding",
@@ -113,7 +107,7 @@ function toView(policy: StoredPolicy): PipelineView {
     })),
     steps: policy.steps.map((s) => s.operation),
     output: policy.outputId
-      ? (OUTPUT_NAMES[policy.outputId] ?? policy.outputId)
+      ? (SOURCE_NAMES[policy.outputId] ?? policy.outputId)
       : (policy.output?.type ?? "inline"),
     owner: policy.owner ?? "you@acme.com",
   };

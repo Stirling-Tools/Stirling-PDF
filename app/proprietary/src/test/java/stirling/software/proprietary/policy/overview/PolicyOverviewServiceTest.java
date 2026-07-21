@@ -19,9 +19,6 @@ import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.TriggerConfig;
-import stirling.software.proprietary.policy.output.InProcessOutputStore;
-import stirling.software.proprietary.policy.output.OutputAccessGuard;
-import stirling.software.proprietary.policy.output.OutputStore;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
 import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceAccessGuard;
@@ -37,7 +34,6 @@ import stirling.software.proprietary.policy.store.PolicyStore;
 class PolicyOverviewServiceTest {
 
     private final SourceStore sourceStore = new InProcessSourceStore();
-    private final OutputStore outputStore = new InProcessOutputStore();
     private final PolicyStore policyStore = new InProcessPolicyStore();
     private PolicyOverviewService service;
 
@@ -48,16 +44,8 @@ class PolicyOverviewServiceTest {
         UserServiceInterface userService = mock(UserServiceInterface.class);
         PolicyManagementAuthority authority = mock(PolicyManagementAuthority.class);
         SourceAccessGuard sourceGuard = new SourceAccessGuard(userService, properties, authority);
-        OutputAccessGuard outputGuard = new OutputAccessGuard(userService, properties, authority);
         PolicyAccessGuard policyGuard = new PolicyAccessGuard(userService, properties, authority);
-        service =
-                new PolicyOverviewService(
-                        policyStore,
-                        sourceStore,
-                        outputStore,
-                        policyGuard,
-                        sourceGuard,
-                        outputGuard);
+        service = new PolicyOverviewService(policyStore, sourceStore, policyGuard, sourceGuard);
     }
 
     @Test
@@ -133,16 +121,9 @@ class PolicyOverviewServiceTest {
         PolicyManagementAuthority authority = mock(PolicyManagementAuthority.class);
         when(authority.currentUserTeamId()).thenReturn(1L);
         SourceAccessGuard sourceGuard = new SourceAccessGuard(userService, properties, authority);
-        OutputAccessGuard outputGuard = new OutputAccessGuard(userService, properties, authority);
         PolicyAccessGuard policyGuard = new PolicyAccessGuard(userService, properties, authority);
         PolicyOverviewService scoped =
-                new PolicyOverviewService(
-                        policyStore,
-                        sourceStore,
-                        outputStore,
-                        policyGuard,
-                        sourceGuard,
-                        outputGuard);
+                new PolicyOverviewService(policyStore, sourceStore, policyGuard, sourceGuard);
 
         Source ours = teamSource("Ours", "/ours", 1L);
         teamPolicy("Our policy", 1L, ours.id());

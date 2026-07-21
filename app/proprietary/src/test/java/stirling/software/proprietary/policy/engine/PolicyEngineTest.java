@@ -54,10 +54,10 @@ import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunStatus;
-import stirling.software.proprietary.policy.output.InProcessOutputStore;
 import stirling.software.proprietary.policy.output.InlineOutputSink;
 import stirling.software.proprietary.policy.output.PolicyOutputResolver;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
+import stirling.software.proprietary.policy.source.InProcessSourceStore;
 
 import tools.jackson.databind.json.JsonMapper;
 
@@ -100,7 +100,7 @@ class PolicyEngineTest {
                         JsonMapper.builder().build());
         registry = new PolicyRunRegistry(new ApplicationProperties());
         InlineOutputSink sink = new InlineOutputSink(fileStorage);
-        PolicyOutputResolver outputResolver = new PolicyOutputResolver(new InProcessOutputStore());
+        PolicyOutputResolver outputResolver = new PolicyOutputResolver(new InProcessSourceStore());
         engine =
                 new PolicyEngine(
                         executor,

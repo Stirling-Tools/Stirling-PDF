@@ -10,22 +10,25 @@ import org.junit.jupiter.api.Test;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.source.InProcessSourceStore;
+import stirling.software.proprietary.policy.source.Source;
+import stirling.software.proprietary.policy.source.SourceStore;
 
 /**
  * Tests for {@link PolicyOutputResolver}: a policy's {@code outputId} resolves live to the stored
- * destination, an unreferenced policy keeps its inline output, and a dangling reference falls back
- * to inline delivery rather than failing the run.
+ * source used as its destination, an unreferenced policy keeps its inline output, and a dangling
+ * reference falls back to inline delivery rather than failing the run.
  */
 class PolicyOutputResolverTest {
 
-    private final OutputStore outputStore = new InProcessOutputStore();
-    private final PolicyOutputResolver resolver = new PolicyOutputResolver(outputStore);
+    private final SourceStore sourceStore = new InProcessSourceStore();
+    private final PolicyOutputResolver resolver = new PolicyOutputResolver(sourceStore);
 
     @Test
-    void resolvesOutputIdToTheStoredDestination() {
-        Output archive =
-                outputStore.save(
-                        new Output(
+    void resolvesOutputIdToTheStoredSource() {
+        Source archive =
+                sourceStore.save(
+                        new Source(
                                 null,
                                 "Archive",
                                 "folder",

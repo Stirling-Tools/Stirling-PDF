@@ -13,22 +13,16 @@ import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { KpiStrip } from "@portal/components/sources/KpiStrip";
 import { SourcesTable } from "@portal/components/sources/SourcesTable";
 import { ConnectionsTab } from "@portal/components/sources/ConnectionsTab";
-import { OutputsTab } from "@portal/components/outputs/OutputsTab";
 import "@portal/views/Sources.css";
 
-type SourcesTab = "sources" | "outputs" | "connections";
+type SourcesTab = "sources" | "connections";
 
 export function Sources() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const tabParam = searchParams.get("tab");
   const activeTab: SourcesTab =
-    tabParam === "connections"
-      ? "connections"
-      : tabParam === "outputs"
-        ? "outputs"
-        : "sources";
+    searchParams.get("tab") === "connections" ? "connections" : "sources";
 
   const state = useAsync<SourcesResponse>(() => fetchSources(), []);
   const { data, loading } = state;
@@ -77,15 +71,12 @@ export function Sources() {
         onChange={selectTab}
         items={[
           { key: "sources", label: t("portal.sources.tabs.sources") },
-          { key: "outputs", label: t("portal.sources.tabs.outputs") },
           { key: "connections", label: t("portal.sources.tabs.connections") },
         ]}
       />
 
       {activeTab === "connections" ? (
         <ConnectionsTab />
-      ) : activeTab === "outputs" ? (
-        <OutputsTab />
       ) : (
         <>
           {!showEmpty && <KpiStrip data={data} loading={loading} />}

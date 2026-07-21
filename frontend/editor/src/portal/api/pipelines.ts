@@ -29,7 +29,7 @@ export interface OutputSpec {
   options: Record<string, unknown>;
 }
 
-/** The persistable output destination types (inline "return to caller" isn't one). */
+/** Source types that can be written to (used as a pipeline's output destination). */
 export type PipelineOutputMode = "folder" | "s3";
 
 /**
@@ -45,7 +45,15 @@ export interface Policy {
   trigger: TriggerConfig | null;
   sourceIds: string[];
   steps: PipelineStep[];
+  /**
+   * Inline output, used only when no destination is referenced (editor/one-off runs that return
+   * results to the caller). Portal pipelines set {@link outputId} instead.
+   */
   output: OutputSpec;
+  /**
+   * The saved Source this policy delivers its output to, resolved live at run time (a source used
+   * as a write target). `null`/absent means the inline {@link output} is used.
+   */
   outputId?: string | null;
   teamId?: number | null;
 }
