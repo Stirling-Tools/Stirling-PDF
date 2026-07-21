@@ -19,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,9 +32,10 @@ import jakarta.validation.constraints.Min;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.enumeration.TeamRole;
+import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
-import stirling.software.saas.model.TeamMembership;
+import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.saas.payg.api.WalletSnapshotResponse.ActivityRow;
 import stirling.software.saas.payg.api.WalletSnapshotResponse.CategoryBreakdown;
 import stirling.software.saas.payg.api.WalletSnapshotResponse.MemberRow;
@@ -50,7 +52,6 @@ import stirling.software.saas.payg.repository.WalletLedgerRepository;
 import stirling.software.saas.payg.repository.WalletPolicyRepository;
 import stirling.software.saas.payg.wallet.WalletLedgerEntry;
 import stirling.software.saas.payg.wallet.WalletPolicy;
-import stirling.software.saas.repository.TeamMembershipRepository;
 import stirling.software.saas.util.AuthenticationUtils;
 
 /**
@@ -172,7 +173,9 @@ public class PaygWalletController {
         int spend = clampToInt(snap.periodSpendUnits());
         Integer limit = snap.periodCapUnits() != null ? clampToInt(snap.periodCapUnits()) : null;
 
-        CategoryBreakdown breakdown = buildBreakdown(teamId, snap.periodStart(), snap.periodEnd());
+        BreakdownPair breakdowns = buildBreakdowns(teamId, snap.periodStart(), snap.periodEnd());
+        UsageAnalytics analytics =
+                buildUsageAnalytics(teamId, snap.periodStart(), snap.periodEnd());
 
         // Estimated bill = paid (Stripe-metered) docs this period × rate — the free portion was
         // already netted out at charge time, so this is the metered total, not spend − grant.
@@ -202,28 +205,61 @@ public class PaygWalletController {
                         noCap,
                         billing.subscriptionId(),
                         spend,
-                        breakdown,
+                        breakdowns.units(),
                         members,
-                        buildActivity(teamId));
+                        buildActivity(teamId),
+                        breakdowns.docs(),
+                        analytics.docsProcessed(),
+                        analytics.uniquePdfs(),
+                        analytics.sizeMultiplierPdfs());
         return ResponseEntity.ok(body);
     }
 
-    private CategoryBreakdown buildBreakdown(
+    /** Per-category size-scaled units + input-file counts for the same window. */
+    private record BreakdownPair(CategoryBreakdown units, CategoryBreakdown docs) {}
+
+    /** Period usage analytics: total input files, unique PDFs, and size-multiplier files. */
+    private record UsageAnalytics(int docsProcessed, int uniquePdfs, int sizeMultiplierPdfs) {}
+
+    private BreakdownPair buildBreakdowns(
             Long teamId, LocalDateTime periodStart, LocalDateTime periodEnd) {
-        Map<BillingCategory, Long> byCategory = new HashMap<>();
+        Map<BillingCategory, Long> units = new HashMap<>();
+        Map<BillingCategory, Long> docs = new HashMap<>();
         for (Object[] row :
-                ledgerRepo.sumPeriodAmountByCategory(
+                ledgerRepo.sumPeriodByCategoryWithDocs(
                         teamId, LedgerEntryType.DEBIT, periodStart, periodEnd)) {
-            if (row.length >= 2
-                    && row[0] instanceof BillingCategory cat
-                    && row[1] instanceof Number n) {
-                byCategory.put(cat, n.longValue());
+            if (row.length >= 3 && row[0] instanceof BillingCategory cat) {
+                if (row[1] instanceof Number u) {
+                    units.put(cat, u.longValue());
+                }
+                if (row[2] instanceof Number d) {
+                    docs.put(cat, d.longValue());
+                }
             }
         }
+        return new BreakdownPair(categoryBreakdown(units), categoryBreakdown(docs));
+    }
+
+    private static CategoryBreakdown categoryBreakdown(Map<BillingCategory, Long> byCategory) {
         return new CategoryBreakdown(
                 clampToInt(byCategory.getOrDefault(BillingCategory.API, 0L)),
                 clampToInt(byCategory.getOrDefault(BillingCategory.AI, 0L)),
                 clampToInt(byCategory.getOrDefault(BillingCategory.AUTOMATION, 0L)));
+    }
+
+    private UsageAnalytics buildUsageAnalytics(
+            Long teamId, LocalDateTime periodStart, LocalDateTime periodEnd) {
+        List<Object[]> rows =
+                ledgerRepo.periodUsageAnalytics(
+                        teamId, LedgerEntryType.DEBIT, periodStart, periodEnd);
+        Object[] row = rows.isEmpty() ? null : rows.get(0);
+        return new UsageAnalytics(analyticsInt(row, 0), analyticsInt(row, 1), analyticsInt(row, 2));
+    }
+
+    private static int analyticsInt(Object[] row, int idx) {
+        return row != null && row.length > idx && row[idx] instanceof Number n
+                ? clampToInt(n.longValue())
+                : 0;
     }
 
     /**
@@ -329,6 +365,32 @@ public class PaygWalletController {
     public record UpdateCapRequest(@Min(0) int capUsd, boolean noCap) {}
 
     // ---------------------------------------------------------------------------------------
+    // POST /wallet/refresh — drop the caller's cached snapshot so the next read is fresh
+    // ---------------------------------------------------------------------------------------
+
+    /**
+     * Drops the caller's team snapshot + billing cache so the next {@code GET /wallet} reflects a
+     * billing state that just changed out-of-band. The subscription flip is written by a Postgres
+     * function ({@code payg_link_subscription}) with no Java event to invalidate on, so a client
+     * that knows a change just happened — the portal while finalizing a checkout — pokes the cache
+     * here rather than waiting out the ~30s TTL. Team-scoped to the caller: a client can only
+     * refresh its own team, and a no-team caller is a cheap no-op.
+     */
+    @PostMapping("/wallet/refresh")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> refreshWallet(Authentication auth) {
+        User user;
+        try {
+            user = AuthenticationUtils.getCurrentUser(auth, userRepository);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        primaryMembership(user.getId())
+                .ifPresent(m -> entitlementService.invalidate(m.getTeam().getId()));
+        return ResponseEntity.noContent().build();
+    }
+
+    // ---------------------------------------------------------------------------------------
     // Helpers
     // ---------------------------------------------------------------------------------------
 
@@ -419,6 +481,10 @@ public class PaygWalletController {
                 0,
                 new CategoryBreakdown(0, 0, 0),
                 List.of(),
-                Collections.emptyList());
+                Collections.emptyList(),
+                new CategoryBreakdown(0, 0, 0),
+                0,
+                0,
+                0);
     }
 }

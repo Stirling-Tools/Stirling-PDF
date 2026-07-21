@@ -14,13 +14,19 @@ import stirling.software.saas.payg.model.ProcessType;
  * the interceptor before this context is built. Manual UI tools never reach {@code openProcess}
  * (they short-circuit on {@link BillingCategory#BYPASSED}); any context constructed here therefore
  * carries one of {@code API}, {@code AI}, or {@code AUTOMATION}.
+ *
+ * <p>{@code runId} is the automation-run correlation id ({@code X-Stirling-Run-Id}) when this call
+ * is a sub-step of a pipeline / policy / AI-workflow run, else {@code null} (a standalone tool
+ * call). Lineage joins are scoped to a single run id: a null run id never joins (each standalone
+ * call is its own charge), and two separate runs never merge even on identical bytes.
  */
 public record ChargeContext(
         Long ownerUserId,
         Long ownerTeamId,
         JobSource source,
         ProcessType processType,
-        BillingCategory billingCategory) {
+        BillingCategory billingCategory,
+        String runId) {
 
     public ChargeContext {
         if (ownerUserId == null) {
@@ -35,5 +41,18 @@ public record ChargeContext(
         if (billingCategory == null) {
             throw new IllegalArgumentException("billingCategory is required");
         }
+    }
+
+    /**
+     * Convenience for callers with no automation-run context — a standalone tool call ({@code
+     * runId} = {@code null}, so it never lineage-joins and is always its own charge).
+     */
+    public ChargeContext(
+            Long ownerUserId,
+            Long ownerTeamId,
+            JobSource source,
+            ProcessType processType,
+            BillingCategory billingCategory) {
+        this(ownerUserId, ownerTeamId, source, processType, billingCategory, null);
     }
 }

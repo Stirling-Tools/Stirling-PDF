@@ -30,7 +30,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
 
-import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.User;
@@ -155,7 +154,6 @@ class SupabaseAuthenticationFilterTest {
         when(supabaseUserService.getUser(supabaseId))
                 .thenReturn(supabaseUserMatching(supabaseId, "bob@example.com", false));
         when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.empty());
-        when(teamService.getOrCreateDefaultTeam()).thenReturn(new Team());
         when(userService.saveUser(any())).thenAnswer(inv -> inv.getArgument(0));
 
         request.setRequestURI("/api/v1/something");
@@ -166,6 +164,9 @@ class SupabaseAuthenticationFilterTest {
 
         verify(userService, times(1)).saveUser(any(User.class));
         verify(supabaseUserService).createSupabaseUser(supabaseId, "bob@example.com", false);
+        // New users get their own personal team, never the shared Default team.
+        verify(saasTeamService).ensurePersonalTeam(any(User.class));
+        verify(teamService, never()).getOrCreateDefaultTeam();
         assertThat(SecurityContextHolder.getContext().getAuthentication())
                 .isInstanceOf(EnhancedJwtAuthenticationToken.class);
     }
@@ -179,7 +180,6 @@ class SupabaseAuthenticationFilterTest {
         when(supabaseUserService.getUser(supabaseId))
                 .thenReturn(supabaseUserMatching(supabaseId, "carol@example.com", false));
         when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.empty());
-        when(teamService.getOrCreateDefaultTeam()).thenReturn(new Team());
         when(userService.saveUser(any(User.class)))
                 .thenAnswer(
                         inv -> {
@@ -208,7 +208,6 @@ class SupabaseAuthenticationFilterTest {
         when(supabaseUserService.getUser(supabaseId))
                 .thenReturn(supabaseUserMatching(supabaseId, "dave@example.com", false));
         when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.empty());
-        when(teamService.getOrCreateDefaultTeam()).thenReturn(new Team());
         when(userService.saveUser(any(User.class)))
                 .thenAnswer(
                         inv -> {
@@ -237,7 +236,6 @@ class SupabaseAuthenticationFilterTest {
         when(supabaseUserService.getUser(supabaseId))
                 .thenReturn(supabaseUserMatching(supabaseId, "eve@example.com", false));
         when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.empty());
-        when(teamService.getOrCreateDefaultTeam()).thenReturn(new Team());
         when(userService.saveUser(any(User.class)))
                 .thenAnswer(
                         inv -> {

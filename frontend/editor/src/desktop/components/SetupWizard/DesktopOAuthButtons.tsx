@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { authService, UserInfo } from "@app/services/authService";
 import { buildOAuthCallbackHtml } from "@app/utils/oauthCallbackHtml";
-import { BASE_PATH } from "@app/constants/app";
+import { oauthIconUrl } from "@app/auth/ui/oauthIcons";
 import { STIRLING_SAAS_URL } from "@app/constants/connection";
+import { Button } from "@app/ui/Button";
 import "@app/components/SetupWizard/desktopOAuth.css";
 
 type KnownProviderId =
@@ -149,7 +150,8 @@ export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
                 providerEntry.id.slice(1)
               : t("setup.login.sso", "Single Sign-On"));
           return (
-            <button
+            <Button
+              variant="secondary"
               key={providerEntry.id}
               onClick={() => handleOAuthLogin(providerEntry)}
               disabled={isDisabled || oauthLoading}
@@ -159,14 +161,16 @@ export const DesktopOAuthButtons: React.FC<DesktopOAuthButtonsProps> = ({
               <span className="oauth-button-left-desktop">
                 <span className="oauth-icon-wrapper-desktop">
                   <img
-                    src={`${BASE_PATH}/Login/${iconConfig?.file || GENERIC_PROVIDER_ICON}`}
+                    src={oauthIconUrl(
+                      iconConfig?.file || GENERIC_PROVIDER_ICON,
+                    )}
                     alt={label}
                     className="oauth-icon-tiny-desktop"
                   />
                 </span>
                 <span className="oauth-button-text-desktop">{label}</span>
               </span>
-            </button>
+            </Button>
           );
         })}
       {oauthLoading && (

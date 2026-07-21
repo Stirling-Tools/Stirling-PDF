@@ -10,29 +10,26 @@ import { renderMarkdown } from "@app/components/viewer/nonpdf/MarkdownRenderer";
 import { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import {
-  ActionIcon,
   Box,
   Collapse,
   Group,
-  Menu,
   Paper,
   ScrollArea,
   Stack,
   Text,
   Textarea,
-  UnstyledButton,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import BuildOutlinedIcon from "@mui/icons-material/BuildOutlined";
-import CloseIcon from "@mui/icons-material/Close";
 import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import {
   useChat,
   AiWorkflowPhase,
@@ -45,6 +42,7 @@ import { formatRelativeTime } from "@app/utils/timeUtils";
 import { useTranslatedToolCatalog } from "@app/data/useTranslatedToolRegistry";
 import { StirlingLogoAnimated } from "@app/components/agents/StirlingLogoAnimated";
 import { StirlingLogoOutline } from "@app/components/agents/StirlingLogoOutline";
+import { PanelHeader } from "@app/ui/PanelHeader";
 import { ChatQuickActions } from "@app/components/chat/ChatQuickActions";
 import "@app/components/chat/ChatPanel.css";
 
@@ -268,7 +266,10 @@ function CompletedProgressLogDropdown({
 
   return (
     <div className="chat-completed-log">
-      <UnstyledButton
+      <Button
+        type="button"
+        variant="tertiary"
+        hover={false}
         className="chat-completed-log__toggle"
         onClick={() => setExpanded((v) => !v)}
         aria-expanded={expanded}
@@ -283,7 +284,7 @@ function CompletedProgressLogDropdown({
             {label}
           </Text>
         </Group>
-      </UnstyledButton>
+      </Button>
       <Collapse in={expanded}>
         <ol className="chat-completed-log__tools">
           {toolSteps.map((step, i) => {
@@ -335,14 +336,16 @@ function ChatMessageBubble({
 
   const actions = (
     <div className="chat-message-actions">
-      <button
+      <ActionIcon
         type="button"
+        variant="tertiary"
         className={`chat-message-action-btn${copied ? " chat-message-action-btn--active" : ""}`}
         onClick={handleCopy}
         title={t("chat.actions.copy", "Copy message")}
+        aria-label={t("chat.actions.copy", "Copy message")}
       >
         <ContentCopyIcon sx={{ fontSize: 13 }} />
-      </button>
+      </ActionIcon>
       <span className="chat-message-timestamp">
         {formatRelativeTime(timestamp, t)}
       </span>
@@ -470,47 +473,25 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
 
   return (
     <Box className="chat-panel chat-panel--embedded">
-      <div className="chat-panel__header">
-        <Menu shadow="md" width={220} position="bottom-start" withinPortal>
-          <Menu.Target>
-            <button
-              type="button"
-              className={`chat-panel__agent-pill${isLoading ? " chat-panel__agent-pill--loading" : ""}`}
-              aria-label={t("chat.header.agentMenu", "Stirling agent options")}
-            >
-              <span className="chat-panel__agent-pill-icon">
-                <StirlingLogoOutline size={16} />
-                {isLoading && <span className="agent-status-dot" />}
-              </span>
-              <span className="chat-panel__agent-pill-label">
-                {t("agents.stirling_name", "Stirling")}
-              </span>
-              <KeyboardArrowDownIcon
-                sx={{ fontSize: 18, color: "var(--text-muted)" }}
-              />
-            </button>
-          </Menu.Target>
-          <Menu.Dropdown>
-            <Menu.Item
-              leftSection={<DeleteSweepIcon sx={{ fontSize: 18 }} />}
-              onClick={clearChat}
-              disabled={messages.length === 0 && !isLoading}
-            >
-              {t("chat.header.clearChat", "Clear chat")}
-            </Menu.Item>
-          </Menu.Dropdown>
-        </Menu>
-        <ActionIcon
-          variant="subtle"
-          color="gray"
-          size="md"
-          radius="xl"
-          onClick={onBack}
-          aria-label={backLabel}
-        >
-          <CloseIcon sx={{ fontSize: 18 }} />
-        </ActionIcon>
-      </div>
+      <PanelHeader
+        icon={<StirlingLogoOutline size={16} />}
+        title={t("agents.stirling_name", "Stirling")}
+        loading={isLoading}
+        className="chat-panel__header"
+        barClassName="chat-panel__agent-pill-vt"
+        menuLabel={t("chat.header.agentMenu", "Stirling agent options")}
+        menuItems={[
+          {
+            key: "clear-chat",
+            icon: <DeleteSweepIcon sx={{ fontSize: 18 }} />,
+            label: t("chat.header.clearChat", "Clear chat"),
+            onClick: clearChat,
+            disabled: messages.length === 0 && !isLoading,
+          },
+        ]}
+        onClose={onBack}
+        closeLabel={backLabel}
+      />
 
       {showQuickActions && (
         <div className="chat-panel-disclaimer chat-panel-disclaimer--banner">
@@ -575,9 +556,6 @@ export function ChatPanel({ onBack, backLabel }: ChatPanelProps) {
       <div className="chat-panel-input">
         <ActionIcon
           className="chat-panel-input__send"
-          variant="filled"
-          color="blue"
-          radius="xl"
           size="sm"
           onClick={() => handleSend()}
           disabled={!input.trim() || isLoading}

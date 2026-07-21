@@ -6,7 +6,7 @@ import { constants, brotliCompress, gzip } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { defineConfig, loadEnv } from "vite";
-import type { PluginOption } from "vite";
+import type { Connect, PluginOption } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
@@ -74,6 +74,93 @@ function compressStaticCopyPlugin(): PluginOption {
   };
 }
 
+// Bake per-route Open Graph / Twitter Card tags into static HTML at build time.
+//
+// The SPA sets these client-side for real browsers, but link-unfurling crawlers
+// (Slack, Facebook, X, LinkedIn, iMessage, ...) do not run JavaScript. Prerendering
+// flat per-route files (e.g. dist/compress.html) means every static host - Cloudflare
+// Pages, Docker's bundled static dir, desktop - serves correct previews with NO
+// server-side rendering. Cloudflare Pages serves `compress.html` at `/compress`
+// automatically (clean URLs), and the Spring backend serves the same file.
+//
+// Absolute URLs (best for Facebook/X) are used when a canonical base is known:
+// VITE_OG_BASE_URL (custom domain) or CF_PAGES_URL (set automatically by Cloudflare
+// Pages). Otherwise URLs stay root-relative, which still resolves against whatever
+// origin serves the page (correct for self-hosted Docker). Logic lives in
+// scripts/og-prerender.mjs so it can be unit-tested without a full build.
+function prerenderOgPlugin(): PluginOption {
+  return {
+    name: "prerender-og",
+    apply: "build" as const,
+    async closeBundle() {
+      const { prerenderOg } = await import("./scripts/og-prerender.mjs");
+      const ogBase = (
+        process.env.VITE_OG_BASE_URL ||
+        process.env.CF_PAGES_URL ||
+        ""
+      ).replace(/\/+$/, "");
+      // Absolute deploy base for nested routes' <base href> (matches vite `base`).
+      const subpath = (process.env.RUN_SUBPATH || "").replace(/^\/+|\/+$/g, "");
+      const baseHref = subpath ? `/${subpath}/` : "/";
+      let manifest;
+      try {
+        manifest = JSON.parse(
+          await fs.readFile(
+            path.resolve(__dirname, "public/og-metadata.json"),
+            "utf8",
+          ),
+        );
+      } catch {
+        console.warn(
+          "[prerender-og] public/og-metadata.json missing; skipping OG prerender. " +
+            "Run `node scripts/generate-og-metadata.mjs`.",
+        );
+        return;
+      }
+      const distDir = path.resolve(__dirname, "dist");
+      const count = await prerenderOg({ distDir, manifest, ogBase, baseHref });
+      console.log(
+        `[prerender-og] wrote ${count} prerendered route pages` +
+          (ogBase
+            ? ` (absolute URLs, base=${ogBase})`
+            : " (root-relative URLs)"),
+      );
+    },
+  };
+}
+
+/**
+ * When the app is served under a subpath (RUN_SUBPATH → base like "/app/"), Vite
+ * serves index.html at "/app/" and redirects "/" → the base, but a bare "/app"
+ * (no trailing slash) 404s. This middleware redirects "/app" → "/app/" so either
+ * form loads the app in dev and `vite preview`. Query strings are preserved.
+ */
+function subpathBareRedirectPlugin(subpath: string): PluginOption {
+  const bare = `/${subpath}`;
+  const withSlash = `${bare}/`;
+  const redirect: Connect.NextHandleFunction = (req, res, next) => {
+    const url = req.url ?? "";
+    const q = url.indexOf("?");
+    const pathname = q === -1 ? url : url.slice(0, q);
+    if (pathname === bare) {
+      res.statusCode = 301;
+      res.setHeader("Location", withSlash + (q === -1 ? "" : url.slice(q)));
+      res.end();
+      return;
+    }
+    next();
+  };
+  return {
+    name: "subpath-bare-redirect",
+    configureServer(server) {
+      server.middlewares.use(redirect);
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use(redirect);
+    },
+  };
+}
+
 // NOTE: cloud/ is a SHARED layer, not a runnable build flavor — it's compiled
 // into the saas and desktop builds. It has no entry here and no vite tsconfig;
 // it is only typechecked standalone via editor/src/cloud/tsconfig.json
@@ -95,7 +182,13 @@ const TSCONFIG_MAP: Record<BuildMode, string> = {
   prototypes: "./tsconfig.prototypes.vite.json",
 };
 
-export default defineConfig(async ({ mode }) => {
+export default defineConfig(async ({ mode, command }) => {
+  // Dev-only browser-tab label (worktree folder basename) surfaced by the
+  // top-level dev tasks so concurrent worktrees have distinguishable tabs.
+  // Only injected during `vite` (dev serve) — never baked into a production
+  // build — and carries only the folder name, no path/host/user info.
+  const devWorktreeLabel =
+    command === "serve" ? (process.env.STIRLING_DEV_LABEL ?? "") : "";
   // Load env files relative to this config (frontend/editor/), regardless of
   // where the build was invoked from. The previous `process.cwd()` worked when
   // this file lived at frontend/, but after the editor was moved under
@@ -122,6 +215,9 @@ export default defineConfig(async ({ mode }) => {
         : "proprietary");
 
   const tsconfigProject = TSCONFIG_MAP[effectiveMode];
+
+  // Subpath the app is served under (base becomes "/<runSubpath>/"). Empty = root.
+  const runSubpath = (env.RUN_SUBPATH || "").replace(/^\/+|\/+$/g, "");
 
   // Backend proxy target: default localhost:8080. Override via BACKEND_URL env var
   // so the top-level dev launcher can wire a dynamically-assigned backend port.
@@ -160,8 +256,12 @@ export default defineConfig(async ({ mode }) => {
         };
 
   return {
+    define: {
+      __DEV_WORKTREE_LABEL__: JSON.stringify(devWorktreeLabel),
+    },
     plugins: [
       react(),
+      ...(runSubpath ? [subpathBareRedirectPlugin(runSubpath)] : []),
       tsconfigPaths({
         projects: [tsconfigProject],
       }),
@@ -216,19 +316,22 @@ export default defineConfig(async ({ mode }) => {
             src: "../node_modules/pdfjs-dist/standard_fonts/*",
             dest: "pdfjs/standard_fonts",
           },
+          {
+            // Brand assets live in core; the editor serves them by URL per
+            // variant, so copy each set to the /{variant}-logo path its
+            // manifests, index.html and useLogoAssets resolve against.
+            src: "src/core/assets/brand/classic-logo/*",
+            dest: "classic-logo",
+          },
+          {
+            src: "src/core/assets/brand/modern-logo/*",
+            dest: "modern-logo",
+          },
         ],
       }),
       compressStaticCopyPlugin(),
+      prerenderOgPlugin(),
     ],
-    resolve: {
-      // Global alias so @shared resolves for ALL importers — including the
-      // shared components' own `@shared/components/X.css` self-imports, which
-      // live outside the editor tsconfig scope and so aren't rewritten by
-      // vite-tsconfig-paths. Required for the editor to consume SUI components.
-      alias: {
-        "@shared": path.resolve(__dirname, "../shared"),
-      },
-    },
     server: {
       host: true,
       allowedHosts: allowedHosts.length > 0 ? allowedHosts : undefined,
@@ -272,8 +375,8 @@ export default defineConfig(async ({ mode }) => {
     // an absolute base so deep-route asset paths resolve to /assets/...
     // Trailing slash required: it becomes `<base href>`, and browsers resolve
     // relative URLs (manifest.json, favicon) against the base's *directory*.
-    base: env.RUN_SUBPATH
-      ? `/${env.RUN_SUBPATH}/`
+    base: runSubpath
+      ? `/${runSubpath}/`
       : process.env.VITE_BUILD_FOR_PREVIEW === "1"
         ? "/"
         : "./",

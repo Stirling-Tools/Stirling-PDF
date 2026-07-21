@@ -17,6 +17,8 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.store.InProcessPolicyStore;
+import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
  * {@link PolicyAccessGuard}: policies are scoped to the caller's team. A user sees/accesses only
@@ -36,18 +38,27 @@ class PolicyAccessGuardTest {
     }
 
     @Test
-    void visibleFiltersToTheCallersTeam() {
+    void visibleFromLoadsOnlyTheCallersTeam() {
         when(policyManagementAuthority.currentUserTeamId()).thenReturn(1L);
-        List<Policy> all = List.of(inTeam(1L), inTeam(2L), inTeam(1L), inTeam(null));
-        List<Policy> visible = guard(true).visible(all);
+        PolicyStore store = new InProcessPolicyStore();
+        store.save(inTeam(1L));
+        store.save(inTeam(2L));
+        store.save(inTeam(1L));
+        store.save(inTeam(null));
+
+        List<Policy> visible = guard(true).visibleFrom(store);
+
         assertEquals(2, visible.size());
         assertTrue(visible.stream().allMatch(p -> Long.valueOf(1L).equals(p.teamId())));
     }
 
     @Test
-    void visibleReturnsEverythingWhenLoginDisabled() {
-        List<Policy> all = List.of(inTeam(1L), inTeam(2L));
-        assertEquals(all, guard(false).visible(all));
+    void visibleFromReturnsEverythingWhenLoginDisabled() {
+        PolicyStore store = new InProcessPolicyStore();
+        store.save(inTeam(1L));
+        store.save(inTeam(2L));
+
+        assertEquals(2, guard(false).visibleFrom(store).size());
     }
 
     @Test
@@ -79,6 +90,6 @@ class PolicyAccessGuardTest {
 
     private static Policy inTeam(Long teamId) {
         return new Policy(
-                "p1", "p", "owner", true, null, List.of(), List.of(), OutputSpec.inline(), teamId);
+                null, "p", "owner", true, null, List.of(), List.of(), OutputSpec.inline(), teamId);
     }
 }

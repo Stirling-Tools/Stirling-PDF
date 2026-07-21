@@ -1,0 +1,29 @@
+import type { StatusTone } from "@app/ui";
+
+/**
+ * Format a 0–1 confidence fraction as a whole-percent string. `null`/`undefined`
+ * (no extraction data) renders as an em-free dash.
+ */
+export function confidencePct(n: number | null | undefined): string {
+  if (n == null) return "-";
+  return `${Math.round(n * 100)}%`;
+}
+
+/** Tone for a confidence value: <60% danger, 60-85% warning, above success, none neutral. */
+export function confidenceTone(n: number | null | undefined): StatusTone {
+  if (n == null) return "neutral";
+  if (n < 0.6) return "danger";
+  if (n < 0.85) return "warning";
+  return "success";
+}
+
+/** Window a freshly granted elevation stays valid, in seconds. */
+export const ELEVATION_WINDOW_SECONDS = 15 * 60;
+
+/** Format remaining elevation seconds as M:SS for the countdown banner. */
+export function formatCountdown(totalSeconds: number): string {
+  const safe = Math.max(0, totalSeconds);
+  const minutes = Math.floor(safe / 60);
+  const seconds = safe % 60;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}

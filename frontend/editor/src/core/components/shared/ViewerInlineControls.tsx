@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { ActionIcon, Slider } from "@mantine/core";
+import { Slider } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useNavigationState } from "@app/contexts/NavigationContext";
@@ -37,8 +38,7 @@ export function ViewerInlineControls() {
 
       {/* Zoom controls */}
       <ActionIcon
-        variant="subtle"
-        radius="md"
+        variant="tertiary"
         className="workbench-bar-action-icon"
         onClick={() => viewer.zoomActions.zoomOut()}
         aria-label={t("viewer.zoomOut", "Zoom out")}
@@ -66,8 +66,7 @@ export function ViewerInlineControls() {
       </div>
 
       <ActionIcon
-        variant="subtle"
-        radius="md"
+        variant="tertiary"
         className="workbench-bar-action-icon"
         onClick={() => viewer.zoomActions.zoomIn()}
         aria-label={t("viewer.zoomIn", "Zoom in")}

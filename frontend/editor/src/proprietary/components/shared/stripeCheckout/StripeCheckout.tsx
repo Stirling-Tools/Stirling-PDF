@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
-import { Modal, Text, Group, ActionIcon } from "@mantine/core";
+import { Modal, Text, Group } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import licenseService from "@app/services/licenseService";
@@ -275,7 +276,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
         <Group gap="sm" wrap="nowrap">
           {canGoBack && (
             <ActionIcon
-              variant="subtle"
+              variant="tertiary"
               size="lg"
               onClick={navigation.goBack}
               aria-label={t("common.back", "Back")}

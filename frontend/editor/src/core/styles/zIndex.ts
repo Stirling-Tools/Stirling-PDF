@@ -43,7 +43,6 @@ export const Z_INDEX_SIGN_IN_MODAL = 9000;
 // Floating viewer menus rendered through document.body portals.
 export const Z_INDEX_VIEWER_FLOATING_MENU = 10000;
 
-// Toast notifications and error displays - Always on top (higher than rainbow theme at 10000)
 export const Z_INDEX_TOAST = 10001;
 
 // Signature preview overlays inside the PDF viewer

@@ -1039,17 +1039,18 @@ public class SigningFinalizationService {
                             metadataEncryptionService.decrypt(submission.getPassword()));
                 }
 
-                // Decode base64 keystore bytes
+                // Decrypt + decode keystore bytes (supports both legacy plaintext base64 and
+                // encrypted values).
                 var certNode = node.get("certificateSubmission");
                 if (certNode.has("p12Keystore")) {
                     submission.setP12Keystore(
-                            java.util.Base64.getDecoder()
-                                    .decode(certNode.get("p12Keystore").asText()));
+                            metadataEncryptionService.decryptBytes(
+                                    certNode.get("p12Keystore").asText()));
                 }
                 if (certNode.has("jksKeystore")) {
                     submission.setJksKeystore(
-                            java.util.Base64.getDecoder()
-                                    .decode(certNode.get("jksKeystore").asText()));
+                            metadataEncryptionService.decryptBytes(
+                                    certNode.get("jksKeystore").asText()));
                 }
                 return submission;
             }

@@ -2,7 +2,7 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import path from "path";
 
 const ANNOTATED_PDF = path.join(
-  __dirname,
+  import.meta.dirname,
   "../test-fixtures/annotations_out_of_order.pdf",
 );
 
