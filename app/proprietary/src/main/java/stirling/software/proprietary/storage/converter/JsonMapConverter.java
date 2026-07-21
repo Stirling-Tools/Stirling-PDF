@@ -47,8 +47,7 @@ public class JsonMapConverter implements AttributeConverter<Map<String, Object>,
 
         try {
             // Try normal parsing first
-            return objectMapper.readValue(dbData, new TypeReference<>() {
-            });
+            return objectMapper.readValue(dbData, new TypeReference<>() {});
         } catch (JsonProcessingException e) {
             // Fallback: try double-parsing for legacy double-encoded data
             // This handles data that was stored as JSON strings instead of JSON objects
@@ -67,9 +66,7 @@ public class JsonMapConverter implements AttributeConverter<Map<String, Object>,
                             dbData.length() > 100 ? dbData.substring(0, 100) + "..." : dbData);
                     log.warn(
                             "╚════════════════════════════════════════════════════════════════════╝");
-                    return objectMapper.readValue(
-                            node.asText(), new TypeReference<>() {
-                            });
+                    return objectMapper.readValue(node.asText(), new TypeReference<>() {});
                 }
             } catch (JsonProcessingException e2) {
                 log.error("Failed to parse metadata even with double-decode fallback", e2);

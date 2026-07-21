@@ -714,8 +714,7 @@ public class AuthController {
                 long epochSeconds = number.longValue();
                 return epochSeconds * 1000L;
             }
-            default -> {
-            }
+            default -> {}
         }
 
         return -1L;

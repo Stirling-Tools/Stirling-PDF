@@ -798,9 +798,7 @@ public class WorkflowSessionService {
             try {
                 List<WetSignatureMetadata> wetSigs =
                         objectMapper.readValue(
-                                request.getWetSignaturesData(),
-                                new TypeReference<>() {
-                                });
+                                request.getWetSignaturesData(), new TypeReference<>() {});
                 if (wetSigs.size() > WetSignatureMetadata.MAX_SIGNATURES_PER_PARTICIPANT) {
                     throw new ResponseStatusException(
                             HttpStatus.BAD_REQUEST, "Too many wet signatures submitted");
@@ -947,18 +945,19 @@ public class WorkflowSessionService {
             switch (pemObject) {
                 case PKCS8EncryptedPrivateKeyInfo encrypted -> {
                     InputDecryptorProvider decryptor =
-                        new JceOpenSSLPKCS8DecryptorProviderBuilder().build(password);
+                            new JceOpenSSLPKCS8DecryptorProviderBuilder().build(password);
                     keyInfo = encrypted.decryptPrivateKeyInfo(decryptor);
                 }
                 case PEMEncryptedKeyPair encryptedKeyPair -> {
                     PEMDecryptorProvider decryptor =
-                        new JcePEMDecryptorProviderBuilder().build(password);
+                            new JcePEMDecryptorProviderBuilder().build(password);
                     keyInfo = encryptedKeyPair.decryptKeyPair(decryptor).getPrivateKeyInfo();
                 }
                 case PEMKeyPair keyPair -> keyInfo = keyPair.getPrivateKeyInfo();
                 case PrivateKeyInfo info -> keyInfo = info;
-                case null, default -> throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Unsupported PEM private key format");
+                case null, default ->
+                        throw new ResponseStatusException(
+                                HttpStatus.BAD_REQUEST, "Unsupported PEM private key format");
             }
             return converter.getPrivateKey(keyInfo);
         }

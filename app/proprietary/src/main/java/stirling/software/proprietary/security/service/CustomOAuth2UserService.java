@@ -213,7 +213,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OidcUserReques
         }
 
         sb.append(
-            """
+                """
 
                 WARNING: this block contains PII. Set security.oauth2.debugLogging=false once\
                  troubleshooting is complete.

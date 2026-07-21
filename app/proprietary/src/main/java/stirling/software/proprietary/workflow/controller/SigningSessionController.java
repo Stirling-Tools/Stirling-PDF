@@ -260,7 +260,9 @@ public class SigningSessionController {
                                 + "database until manual cleanup.",
                         sessionId,
                         session.getParticipants() != null
-                                ? session.getParticipants().stream().map(WorkflowParticipant::getEmail).toList()
+                                ? session.getParticipants().stream()
+                                        .map(WorkflowParticipant::getEmail)
+                                        .toList()
                                 : "unknown",
                         e);
                 throw new ResponseStatusException(

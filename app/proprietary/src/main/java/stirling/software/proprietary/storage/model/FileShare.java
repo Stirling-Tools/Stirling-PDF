@@ -47,8 +47,7 @@ import stirling.software.proprietary.security.model.User;
 @Setter
 public class FileShare implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+    @Serial private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

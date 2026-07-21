@@ -72,19 +72,19 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
             if (authentication != null) {
                 switch (authentication) {
                     case Saml2Authentication samlAuthentication ->
-                        // Handle SAML2 logout redirection
-                        getRedirect_saml2(request, response, samlAuthentication);
+                            // Handle SAML2 logout redirection
+                            getRedirect_saml2(request, response, samlAuthentication);
                     case OAuth2AuthenticationToken oAuthToken ->
-                        // Handle OAuth2 logout redirection
-                        getRedirect_oauth2(request, response, oAuthToken);
+                            // Handle OAuth2 logout redirection
+                            getRedirect_oauth2(request, response, oAuthToken);
                     case UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken ->
-                        // Handle Username/Password logout
-                        getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
+                            // Handle Username/Password logout
+                            getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
                     default -> {
                         // Handle unknown authentication types
                         log.error(
-                            "Authentication class unknown: {}",
-                            authentication.getClass().getSimpleName());
+                                "Authentication class unknown: {}",
+                                authentication.getClass().getSimpleName());
                         getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
                     }
                 }

@@ -764,10 +764,9 @@ public class UserController {
                     case UserDetails detailsUser -> userNameP = detailsUser.getUsername();
                     case OAuth2User oAuth2User -> userNameP = oAuth2User.getName();
                     case CustomSaml2AuthenticatedPrincipal saml2User ->
-                        userNameP = saml2User.name();
+                            userNameP = saml2User.name();
                     case String stringUser -> userNameP = stringUser;
-                    default -> {
-                    }
+                    default -> {}
                 }
                 if (userNameP.equalsIgnoreCase(username)) {
                     for (SessionInformation sessionInfo : sessionsInformation) {

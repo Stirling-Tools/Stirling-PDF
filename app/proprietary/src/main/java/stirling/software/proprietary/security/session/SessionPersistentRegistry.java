@@ -52,8 +52,7 @@ public class SessionPersistentRegistry implements SessionRegistry {
             case OAuth2User oAuth2User -> principalName = oAuth2User.getName();
             case CustomSaml2AuthenticatedPrincipal saml2User -> principalName = saml2User.name();
             case String stringUser -> principalName = stringUser;
-            default -> {
-            }
+            default -> {}
         }
 
         if (principalName != null) {
@@ -82,8 +81,7 @@ public class SessionPersistentRegistry implements SessionRegistry {
             case OAuth2User oAuth2User -> principalName = oAuth2User.getName();
             case CustomSaml2AuthenticatedPrincipal saml2User -> principalName = saml2User.name();
             case String stringUser -> principalName = stringUser;
-            default -> {
-            }
+            default -> {}
         }
 
         if (principalName != null) {

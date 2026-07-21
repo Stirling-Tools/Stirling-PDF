@@ -39,12 +39,14 @@ public class CustomOAuth2AuthenticationFailureHandler
         switch (exception) {
             case BadCredentialsException badCredentialsException -> {
                 log.error("BadCredentialsException", exception);
-                getRedirectStrategy().sendRedirect(request, response, "/login?error=badCredentials");
+                getRedirectStrategy()
+                        .sendRedirect(request, response, "/login?error=badCredentials");
                 return;
             }
             case DisabledException disabledException -> {
                 log.error("User is deactivated: ", exception);
-                getRedirectStrategy().sendRedirect(request, response, "/logout?userIsDisabled=true");
+                getRedirectStrategy()
+                        .sendRedirect(request, response, "/logout?userIsDisabled=true");
                 return;
             }
             case LockedException lockedException -> {
@@ -62,16 +64,16 @@ public class CustomOAuth2AuthenticationFailureHandler
                 }
 
                 log.error(
-                    "OAuth2 Authentication error: {}",
-                    errorCode != null ? errorCode : exception.getMessage(),
-                    exception);
+                        "OAuth2 Authentication error: {}",
+                        errorCode != null ? errorCode : exception.getMessage(),
+                        exception);
                 String errorValue = errorCode != null ? errorCode : "oauth2AuthenticationError";
                 clearRedirectCookie(response);
                 boolean tauriState = TauriOAuthUtils.isTauriState(request);
                 String redirectUrl;
                 if (tauriState) {
                     String basePath =
-                        TauriOAuthUtils.defaultTauriCallbackPath(request.getContextPath());
+                            TauriOAuthUtils.defaultTauriCallbackPath(request.getContextPath());
                     redirectUrl = basePath;
                     String stateParam = request.getParameter("state");
                     if (stateParam != null && !stateParam.isBlank()) {
@@ -89,8 +91,7 @@ public class CustomOAuth2AuthenticationFailureHandler
                 getRedirectStrategy().sendRedirect(request, response, redirectUrl);
                 return;
             }
-            default -> {
-            }
+            default -> {}
         }
         log.error("Unhandled authentication exception", exception);
         super.onAuthenticationFailure(request, response, exception);

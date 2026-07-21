@@ -240,19 +240,20 @@ public class SigningFinalizationService {
 
         PDPage page = document.getPage(pageIndex);
 
-        try (PDPageContentStream contentStream = new PDPageContentStream(
-            document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
+        try (PDPageContentStream contentStream =
+                new PDPageContentStream(
+                        document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
             // Use WetSignatureMetadata.extractBase64Data() to strip data URL prefix
             String base64Data = wetSig.extractBase64Data();
             if (base64Data == null || base64Data.isBlank()) {
                 throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Wet signature image data is missing or empty for participant");
+                        HttpStatus.BAD_REQUEST,
+                        "Wet signature image data is missing or empty for participant");
             }
             byte[] imageBytes = java.util.Base64.getDecoder().decode(base64Data);
 
             PDImageXObject image =
-                PDImageXObject.createFromByteArray(document, imageBytes, "signature");
+                    PDImageXObject.createFromByteArray(document, imageBytes, "signature");
 
             // Coordinates are stored as fractions (0–1) of the page dimensions.
             // Multiply by page size to get absolute PDF points, then convert Y from
@@ -268,12 +269,12 @@ public class SigningFinalizationService {
             contentStream.drawImage(image, x, pdfY, width, height);
 
             log.info(
-                "Applied wet signature at page {} coordinates ({}, {}) size {}x{}",
-                pageIndex,
-                x,
-                pdfY,
-                width,
-                height);
+                    "Applied wet signature at page {} coordinates ({}, {}) size {}x{}",
+                    pageIndex,
+                    x,
+                    pdfY,
+                    width,
+                    height);
         }
     }
 

@@ -54,8 +54,7 @@ import stirling.software.proprietary.storage.model.StoredFile;
 @Setter
 public class WorkflowSession implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+    @Serial private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -52,8 +52,7 @@ import stirling.software.proprietary.storage.model.ShareAccessRole;
 @Setter
 public class WorkflowParticipant implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+    @Serial private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

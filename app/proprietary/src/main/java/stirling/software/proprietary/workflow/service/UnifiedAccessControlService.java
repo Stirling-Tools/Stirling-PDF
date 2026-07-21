@@ -121,11 +121,11 @@ public class UnifiedAccessControlService {
 
         return switch (status) {
             case SIGNED, DECLINED ->
-                // After action completed, downgrade to read-only
-                ShareAccessRole.VIEWER;
+                    // After action completed, downgrade to read-only
+                    ShareAccessRole.VIEWER;
             case PENDING, NOTIFIED, VIEWED ->
-                // Active participants retain their assigned role
-                participant.getAccessRole();
+                    // Active participants retain their assigned role
+                    participant.getAccessRole();
             default -> {
                 log.warn("Unknown participant status: {}", status);
                 yield ShareAccessRole.VIEWER;

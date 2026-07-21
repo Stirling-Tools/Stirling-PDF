@@ -638,10 +638,9 @@ public class UserService implements UserServiceInterface {
                     case UserDetails detailsUser -> usernameP = detailsUser.getUsername();
                     case OAuth2User oAuth2User -> usernameP = oAuth2User.getName();
                     case CustomSaml2AuthenticatedPrincipal saml2User ->
-                        usernameP = saml2User.name();
+                            usernameP = saml2User.name();
                     case String stringUser -> usernameP = stringUser;
-                    default -> {
-                    }
+                    default -> {}
                 }
                 if (usernameP.equalsIgnoreCase(username)) {
                     sessionRegistry.expireSession(sessionsInformation.getSessionId());

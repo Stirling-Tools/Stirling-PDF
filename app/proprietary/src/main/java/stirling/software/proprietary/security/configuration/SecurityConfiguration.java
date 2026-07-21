@@ -389,38 +389,40 @@ public class SecurityConfiguration {
             // Handle OAUTH2 Logins
             if (securityProperties.isOauth2Active()) {
                 http.oauth2Login(
-                        oauth2 -> oauth2.loginPage("/login")
-                                .authorizationEndpoint(
-                                        authorizationEndpoint -> {
-                                            if (clientRegistrationRepository != null) {
-                                                authorizationEndpoint
-                                                        .authorizationRequestResolver(
-                                                                new TauriAuthorizationRequestResolver(
-                                                                        clientRegistrationRepository));
-                                            }
-                                        })
-                                .successHandler(
-                                        new CustomOAuth2AuthenticationSuccessHandler(
-                                                loginAttemptService,
-                                                securityProperties.getOauth2(),
-                                                userService,
-                                                jwtService,
-                                                licenseSettingsService,
-                                                applicationProperties))
-                                .failureHandler(new CustomOAuth2AuthenticationFailureHandler())
-                                // Add existing Authorities from the database
-                                .userInfoEndpoint(
-                                        userInfoEndpoint ->
-                                                userInfoEndpoint
-                                                        .oidcUserService(
-                                                                new CustomOAuth2UserService(
-                                                                        securityProperties
-                                                                                .getOauth2(),
-                                                                        userService,
-                                                                        loginAttemptService))
-                                                        .userAuthoritiesMapper(
-                                                                oAuth2userAuthoritiesMapper))
-                                .permitAll());
+                        oauth2 ->
+                                oauth2.loginPage("/login")
+                                        .authorizationEndpoint(
+                                                authorizationEndpoint -> {
+                                                    if (clientRegistrationRepository != null) {
+                                                        authorizationEndpoint
+                                                                .authorizationRequestResolver(
+                                                                        new TauriAuthorizationRequestResolver(
+                                                                                clientRegistrationRepository));
+                                                    }
+                                                })
+                                        .successHandler(
+                                                new CustomOAuth2AuthenticationSuccessHandler(
+                                                        loginAttemptService,
+                                                        securityProperties.getOauth2(),
+                                                        userService,
+                                                        jwtService,
+                                                        licenseSettingsService,
+                                                        applicationProperties))
+                                        .failureHandler(
+                                                new CustomOAuth2AuthenticationFailureHandler())
+                                        // Add existing Authorities from the database
+                                        .userInfoEndpoint(
+                                                userInfoEndpoint ->
+                                                        userInfoEndpoint
+                                                                .oidcUserService(
+                                                                        new CustomOAuth2UserService(
+                                                                                securityProperties
+                                                                                        .getOauth2(),
+                                                                                userService,
+                                                                                loginAttemptService))
+                                                                .userAuthoritiesMapper(
+                                                                        oAuth2userAuthoritiesMapper))
+                                        .permitAll());
             }
             // Handle SAML
             if (securityProperties.isSaml2Active() && runningProOrHigher) {

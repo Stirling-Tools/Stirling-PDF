@@ -20,8 +20,7 @@ import lombok.Setter;
 @Setter
 public class StoredFileBlob implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+    @Serial private static final long serialVersionUID = 1L;
 
     @Id
     @Column(name = "storage_key", nullable = false, length = 128)

@@ -20,8 +20,7 @@ import lombok.*;
 @ToString
 public class UserLicenseSettings implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+    @Serial private static final long serialVersionUID = 1L;
 
     public static final Long SINGLETON_ID = 1L;
 
