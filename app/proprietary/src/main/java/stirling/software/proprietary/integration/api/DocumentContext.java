@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.Calendar;
 import java.util.HexFormat;
 import java.util.List;
@@ -38,7 +39,7 @@ import tools.jackson.databind.node.ObjectNode;
  * against exactly what is documented here:
  *
  * <pre>
- * document.filename | .extension | .contentType | .sizeBytes | .sha256
+ * document.filename | .extension | .contentType | .sizeBytes | .sha256 | .base64
  *         .pageCount | .encrypted | .title | .author | .subject | .keywords
  *         .creator | .producer | .created | .modified
  * classification.*         the classifier policy's verdict, when it has run
@@ -69,6 +70,9 @@ final class DocumentContext {
         document.put("contentType", file.getContentType());
         document.put("sizeBytes", content.length);
         document.put("sha256", sha256(content));
+        // The bytes themselves, for steps that carry the document inside a JSON body
+        // (an attachment field, a signing payload) rather than as multipart.
+        document.put("base64", Base64.getEncoder().encodeToString(content));
 
         if (looksLikePdf(content)) {
             addPdfFacts(document, root, content, objectMapper);

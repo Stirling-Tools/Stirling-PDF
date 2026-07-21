@@ -6,11 +6,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDMetadata;
 import org.junit.jupiter.api.Test;
 
 import stirling.software.proprietary.integration.purview.SensitivityLabel.AssignmentMethod;
@@ -35,6 +38,16 @@ class PdfSensitivityLabelsTest {
         document.save(out);
         document.close();
         return Loader.loadPDF(new ByteArrayInputStream(out.toByteArray()).readAllBytes());
+    }
+
+    private static String xmpString(PDDocument document) throws IOException {
+        PDMetadata metadata = document.getDocumentCatalog().getMetadata();
+        if (metadata == null) {
+            return "";
+        }
+        try (InputStream is = metadata.exportXMPMetadata()) {
+            return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+        }
     }
 
     private static SensitivityLabel confidential() {
@@ -159,6 +172,30 @@ class PdfSensitivityLabelsTest {
     }
 
     @Test
+    void aDifferentTenantsLabelStaysInTheXmpSurfaceToo() throws IOException {
+        String foreignLabel = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+        PDDocument document = newDocument();
+        PdfSensitivityLabels.apply(
+                document,
+                new SensitivityLabel(
+                        foreignLabel,
+                        "Foreign",
+                        "99999999-8888-7777-6666-555555555555",
+                        null,
+                        null,
+                        null));
+        PdfSensitivityLabels.apply(document, confidential());
+
+        try (PDDocument reloaded = saveAndReload(document)) {
+            // The foreign label must survive on the XMP copy, not only in the info dictionary:
+            // re-labelling replaces this tenant's labels, not everyone else's.
+            String xmp = xmpString(reloaded);
+            assertThat(xmp).contains("MSIP_Label_" + foreignLabel + "_");
+            assertThat(xmp).contains("MSIP_Label_" + LABEL_ID + "_");
+        }
+    }
+
+    @Test
     void clearRemovesEveryLabel() throws IOException {
         PDDocument document = newDocument();
         PdfSensitivityLabels.apply(document, confidential());
@@ -218,6 +255,28 @@ class PdfSensitivityLabelsTest {
         assertThatThrownBy(() -> new SensitivityLabel(null, "n", TENANT, null, null, null))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new SensitivityLabel(LABEL_ID, "n", " ", null, null, null))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void rejectsALabelIdThatIsNotAGuid() {
+        // labelId is written into XMP/info key names verbatim; a space or markup char must not
+        // pass,
+        // or it would corrupt or inject the metadata packet it lands in.
+        assertThatThrownBy(
+                        () ->
+                                new SensitivityLabel(
+                                        "not a guid", "Public", TENANT, null, null, null))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(
+                        () ->
+                                new SensitivityLabel(
+                                        "<inject>-2222-3333-4444-5555555555",
+                                        "Public",
+                                        TENANT,
+                                        null,
+                                        null,
+                                        null))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }

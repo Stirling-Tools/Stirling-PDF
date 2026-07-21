@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Base64;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -79,6 +80,17 @@ class DocumentContextTest {
         // Same bytes, same hash: external systems key on this for dedupe and chain-of-custody.
         assertThat(contextOf(content, "renamed.pdf", null, null).at("/document/sha256").asString())
                 .isEqualTo(sha);
+    }
+
+    @Test
+    void carriesTheBytesAsBase64ForBodyPayloads() throws IOException {
+        // Presets that attach or sign the document reference {{document.base64}}; without this the
+        // placeholder is unknown and the whole step fails at resolution time.
+        byte[] content = pdfBytes(document -> {});
+
+        String base64 = contextOf(content, "a.pdf", null, null).at("/document/base64").asString();
+
+        assertThat(Base64.getDecoder().decode(base64)).isEqualTo(content);
     }
 
     @Test

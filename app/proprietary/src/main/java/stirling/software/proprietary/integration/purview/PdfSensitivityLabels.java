@@ -6,9 +6,12 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -107,35 +110,40 @@ public final class PdfSensitivityLabels {
                             + " MIP SDK; Stirling can apply the label metadata but cannot protect"
                             + " the content.");
         }
-        // "An object can only have one label from the same organization."
-        removeLabelsOfTenant(document, label.siteId());
+        // "An object can only have one label from the same organization." Replace this tenant's
+        // labels on both surfaces, but leave other tenants' labels untouched on both.
+        Set<String> replaced = labelIdsOfTenant(document, label.siteId());
+        replaced.add(label.labelId());
         Map<String, String> pairs = label.toMetadata();
+        removeInfoLabels(document, replaced::contains);
         writeInfo(document, pairs);
-        writeXmp(document, pairs);
+        writeXmp(document, pairs, replaced::contains);
     }
 
     /** Strip every label, e.g. before re-labelling or when downgrading a document. */
     public static void clear(PDDocument document) throws IOException {
-        PDDocumentInformation info = document.getDocumentInformation();
-        for (String key : new ArrayList<>(info.getMetadataKeys())) {
-            if (LABEL_KEY.matcher(key).matches()) {
-                info.setCustomMetadataValue(key, null);
-            }
-        }
-        writeXmp(document, Map.of());
+        removeInfoLabels(document, labelId -> true);
+        writeXmp(document, Map.of(), labelId -> true);
     }
 
-    private static void removeLabelsOfTenant(PDDocument document, String siteId) {
-        PDDocumentInformation info = document.getDocumentInformation();
+    /** The GUIDs of labels this tenant already set, so both surfaces can drop exactly those. */
+    private static Set<String> labelIdsOfTenant(PDDocument document, String siteId) {
+        Set<String> ids = new LinkedHashSet<>();
         for (SensitivityLabel existing : readAll(document)) {
-            if (!siteId.equalsIgnoreCase(existing.siteId())) {
-                continue;
+            if (siteId.equalsIgnoreCase(existing.siteId())) {
+                ids.add(existing.labelId());
             }
-            String prefix = existing.keyPrefix();
-            for (String key : new ArrayList<>(info.getMetadataKeys())) {
-                if (key.startsWith(prefix)) {
-                    info.setCustomMetadataValue(key, null);
-                }
+        }
+        return ids;
+    }
+
+    /** Drop info-dictionary label entries whose GUID the predicate selects. */
+    private static void removeInfoLabels(PDDocument document, Predicate<String> removeLabelId) {
+        PDDocumentInformation info = document.getDocumentInformation();
+        for (String key : new ArrayList<>(info.getMetadataKeys())) {
+            Matcher matcher = LABEL_KEY.matcher(key);
+            if (matcher.matches() && removeLabelId.test(matcher.group(1))) {
+                info.setCustomMetadataValue(key, null);
             }
         }
     }
@@ -152,7 +160,8 @@ public final class PdfSensitivityLabels {
      * may carry schemas xmpbox does not model, and a round-trip through it would silently drop
      * them.
      */
-    private static void writeXmp(PDDocument document, Map<String, String> pairs)
+    private static void writeXmp(
+            PDDocument document, Map<String, String> pairs, Predicate<String> removeLabelId)
             throws IOException {
         PDDocumentCatalog catalog = document.getDocumentCatalog();
         String existing = readXmpString(catalog);
@@ -162,7 +171,7 @@ public final class PdfSensitivityLabels {
             }
             existing = emptyPacket();
         }
-        String stripped = XMP_LABEL_ENTRY.matcher(existing).replaceAll("");
+        String stripped = stripLabels(existing, removeLabelId);
         String updated = insertLabelProperties(stripped, pairs);
         if (updated == null) {
             log.debug("XMP packet has no rdf:Description to hold the label; info dictionary only");
@@ -171,6 +180,19 @@ public final class PdfSensitivityLabels {
         PDMetadata metadata = new PDMetadata(document);
         metadata.importXMPMetadata(updated.getBytes(StandardCharsets.UTF_8));
         catalog.setMetadata(metadata);
+    }
+
+    /** Remove only the XMP label entries whose GUID the predicate selects, keeping the rest. */
+    private static String stripLabels(String packet, Predicate<String> removeLabelId) {
+        Matcher matcher = XMP_LABEL_ENTRY.matcher(packet);
+        StringBuilder out = new StringBuilder();
+        while (matcher.find()) {
+            Matcher key = LABEL_KEY.matcher(matcher.group(2));
+            boolean remove = key.matches() && removeLabelId.test(key.group(1));
+            matcher.appendReplacement(out, Matcher.quoteReplacement(remove ? "" : matcher.group()));
+        }
+        matcher.appendTail(out);
+        return out.toString();
     }
 
     /** Splice the properties into the first {@code rdf:Description}; null when there is none. */

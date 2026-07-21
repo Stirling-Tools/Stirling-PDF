@@ -6,6 +6,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * One Microsoft Purview Information Protection label as it is written to a document.
@@ -73,9 +74,17 @@ public record SensitivityLabel(
      */
     static final int MAX_VALUE_LENGTH = 255;
 
+    /** The GUID shape a labelId must take, matching what the read path accepts from a document. */
+    private static final Pattern LABEL_ID = Pattern.compile("^[0-9a-fA-F-]{36}$");
+
     public SensitivityLabel {
         if (labelId == null || labelId.isBlank()) {
             throw new IllegalArgumentException("a sensitivity label needs a labelId");
+        }
+        if (!LABEL_ID.matcher(labelId).matches()) {
+            // labelId is spliced verbatim into XMP/info key names; a non-GUID would let a stray
+            // character (a space, or <, >, &) corrupt or inject the metadata it is written into.
+            throw new IllegalArgumentException("a sensitivity label needs a GUID labelId");
         }
         if (siteId == null || siteId.isBlank()) {
             throw new IllegalArgumentException("a sensitivity label needs a siteId (tenant id)");
