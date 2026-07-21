@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ActionIcon, Badge, Button, Tooltip } from "@mantine/core";
+import { Badge, Tooltip } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import CloseIcon from "@mui/icons-material/Close";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
@@ -20,10 +22,12 @@ import {
   downloadFileFromStorage,
   downloadMultipleFiles,
 } from "@app/utils/downloadUtils";
-import ToolChain from "@app/components/shared/ToolChain";
 import ShareManagementModal from "@app/components/shared/ShareManagementModal";
 import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
 import { fileStorage } from "@app/services/fileStorage";
+import { readStubClassificationLabels } from "@app/services/fileClassification";
+import { useLabelName } from "@app/data/labelDisplay";
+import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
 import {
   VersionTimeline,
   DetailField,
@@ -76,6 +80,14 @@ export function FileDetailsPanel({
   // Metadata (size/type/dates) is collapsed by default so the panel stays
   // short and the action buttons keep their pinned footer in view.
   const [fieldsOpen, setFieldsOpen] = useState(false);
+  // Version journey is collapsed by default so the panel stays short.
+  const [versionsOpen, setVersionsOpen] = useState(false);
+  // Document classification read from PDF metadata, plus its (collapsed) section.
+  // Stored as label ids; resolve to display names via the seam.
+  const [classification, setClassification] = useState<string[] | null>(null);
+  const [classificationOpen, setClassificationOpen] = useState(false);
+  const classificationEnabled = useClassificationEnabled();
+  const labelName = useLabelName();
   // Version chain for the selected file; empty for v1 or multi-select.
   const [versionChain, setVersionChain] = useState<StirlingFileStub[]>([]);
   const singleFileForChain = files.length === 1 ? files[0] : null;
@@ -100,6 +112,29 @@ export function FileDetailsPanel({
       cancelled = true;
     };
   }, [singleFileForChain]);
+
+  // Show the file's classification labels: the stub's cached copy when present
+  // (free — no byte load), else read the PDF metadata via the shared service.
+  // Gated on classification being enabled (SaaS + AI): off-feature we never read
+  // the metadata or show the section, so a PDF that happens to carry the
+  // StirlingPDFClassification key never reveals the feature in a build without it.
+  useEffect(() => {
+    setClassification(null);
+    if (!classificationEnabled) return;
+    const stub = singleFileForChain;
+    if (!stub) return;
+    if (stub.classificationLabels && stub.classificationLabels.length > 0) {
+      setClassification(stub.classificationLabels);
+      return;
+    }
+    let cancelled = false;
+    void readStubClassificationLabels(stub).then((labels) => {
+      if (!cancelled && labels) setClassification(labels);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [singleFileForChain, classificationEnabled]);
 
   if (files.length === 0) {
     return null;
@@ -143,7 +178,12 @@ export function FileDetailsPanel({
           label={t("filesPage.closeDetails", "Close details")}
           withinPortal
         >
-          <ActionIcon variant="subtle" size="sm" onClick={onClose}>
+          <ActionIcon
+            variant="tertiary"
+            size="sm"
+            onClick={onClose}
+            aria-label={t("filesPage.closeDetails", "Close details")}
+          >
             <CloseIcon fontSize="small" />
           </ActionIcon>
         </Tooltip>
@@ -181,25 +221,27 @@ export function FileDetailsPanel({
                 <span className="files-page-details-ext-tag">{ext}</span>
               )}
               {(single.versionNumber ?? 1) > 1 && (
-                <Badge size="sm" variant="filled" color="blue">
+                <Badge size="sm" color="blue">
                   v{single.versionNumber}
                 </Badge>
               )}
             </div>
-            <button
-              type="button"
+            <Button
+              variant="tertiary"
               className="files-page-details-collapse-toggle"
               onClick={() => setFieldsOpen((o) => !o)}
               aria-expanded={fieldsOpen}
+              rightSection={
+                <KeyboardArrowDownIcon
+                  className={`files-page-details-collapse-chevron${
+                    fieldsOpen ? " is-open" : ""
+                  }`}
+                  fontSize="small"
+                />
+              }
             >
               <span>{t("filesPage.fileInfo", "File info")}</span>
-              <KeyboardArrowDownIcon
-                className={`files-page-details-collapse-chevron${
-                  fieldsOpen ? " is-open" : ""
-                }`}
-                fontSize="small"
-              />
-            </button>
+            </Button>
             {fieldsOpen && (
               <div className="files-page-details-fieldlist">
                 <DetailField
@@ -232,17 +274,56 @@ export function FileDetailsPanel({
                 />
               </div>
             )}
-            {single.toolHistory && single.toolHistory.length > 0 && (
-              <div className="files-page-details-tool-history">
-                <div className="files-page-details-tool-history-label">
-                  {t("filesPage.field.toolHistory", "Tool history")}
-                </div>
-                <ToolChain
-                  toolChain={single.toolHistory}
-                  displayStyle="badges"
-                  size="xs"
-                />
-              </div>
+            {classification && (
+              <>
+                <Button
+                  variant="quiet"
+                  fullWidth
+                  justify="between"
+                  className="files-page-details-collapse-toggle"
+                  onClick={() => setClassificationOpen((o) => !o)}
+                  aria-expanded={classificationOpen}
+                  rightSection={
+                    <KeyboardArrowDownIcon
+                      className={`files-page-details-collapse-chevron${
+                        classificationOpen ? " is-open" : ""
+                      }`}
+                      fontSize="small"
+                    />
+                  }
+                >
+                  <span>{t("filesPage.classification", "Classification")}</span>
+                </Button>
+                {classificationOpen && (
+                  <div className="files-page-details-fieldlist">
+                    <div className="files-page-details-field">
+                      <span className="files-page-details-field-label">
+                        {t("filesPage.field.labels", "Labels")}
+                      </span>
+                      <span
+                        className="files-page-details-field-value"
+                        style={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: "0.25rem",
+                          justifyContent: "flex-end",
+                        }}
+                      >
+                        {classification.map((label) => (
+                          <Badge
+                            key={label}
+                            size="xs"
+                            variant="light"
+                            color="orange"
+                          >
+                            {labelName(label)}
+                          </Badge>
+                        ))}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
             {/* Version journey. Each tool run writes a new StirlingFile
                 with the same `originalFileId` and an incremented
@@ -256,7 +337,7 @@ export function FileDetailsPanel({
               (compactVersions && onOpenVersionHistory ? (
                 <Button
                   leftSection={<HistoryIcon fontSize="small" />}
-                  variant="default"
+                  variant="secondary"
                   onClick={onOpenVersionHistory}
                 >
                   {t(
@@ -266,12 +347,41 @@ export function FileDetailsPanel({
                   )}
                 </Button>
               ) : (
-                <VersionTimeline
-                  chain={versionChain}
-                  currentId={single.id}
-                  onAddToWorkspace={onAddToWorkspace}
-                  onRemove={onRemove}
-                />
+                <>
+                  <Button
+                    variant="quiet"
+                    fullWidth
+                    justify="between"
+                    className="files-page-details-collapse-toggle"
+                    onClick={() => setVersionsOpen((o) => !o)}
+                    aria-expanded={versionsOpen}
+                    rightSection={
+                      <KeyboardArrowDownIcon
+                        className={`files-page-details-collapse-chevron${
+                          versionsOpen ? " is-open" : ""
+                        }`}
+                        fontSize="small"
+                      />
+                    }
+                  >
+                    <span>
+                      {t(
+                        "filesPage.viewVersionHistory",
+                        "Version journey ({{count}})",
+                        { count: versionChain.length },
+                      )}
+                    </span>
+                  </Button>
+                  {versionsOpen && (
+                    <VersionTimeline
+                      chain={versionChain}
+                      currentId={single.id}
+                      onAddToWorkspace={onAddToWorkspace}
+                      onRemove={onRemove}
+                      hideHeader
+                    />
+                  )}
+                </>
               ))}
           </>
         ) : (
@@ -291,7 +401,6 @@ export function FileDetailsPanel({
       <div className="files-page-details-actions">
         <Button
           leftSection={<OpenInNewIcon fontSize="small" />}
-          variant="filled"
           onClick={() => onAddToWorkspace(selectedFileIds)}
         >
           {files.length === 1
@@ -302,7 +411,7 @@ export function FileDetailsPanel({
         </Button>
         <Button
           leftSection={<DownloadIcon fontSize="small" />}
-          variant="default"
+          variant="secondary"
           onClick={handleDownload}
           loading={downloading}
         >
@@ -329,14 +438,12 @@ export function FileDetailsPanel({
           >
             <Button
               leftSection={<LinkIcon fontSize="small" />}
-              variant="default"
+              variant="secondary"
               disabled={!sharingEnabled}
               onClick={() => setShareModalOpen(true)}
-              styles={{
-                root: {
-                  // Keep tooltip hoverable while button is disabled.
-                  pointerEvents: sharingEnabled ? undefined : "auto",
-                },
+              style={{
+                // Keep tooltip hoverable while button is disabled.
+                pointerEvents: sharingEnabled ? undefined : "auto",
               }}
             >
               {t("filesPage.shareManage", "Manage sharing")}
@@ -345,7 +452,7 @@ export function FileDetailsPanel({
         )}
         <Button
           leftSection={<DriveFileMoveIcon fontSize="small" />}
-          variant="default"
+          variant="secondary"
           onClick={() => onMove(selectedFileIds)}
         >
           {t("filesPage.moveTo", "Move to…")}
@@ -363,16 +470,12 @@ export function FileDetailsPanel({
           >
             <Button
               leftSection={<CloudUploadIcon fontSize="small" />}
-              variant="default"
+              variant="secondary"
               disabled={Boolean(saveToServerDisabledReason)}
               onClick={() => onSaveToServer(localOnlyFiles)}
-              styles={{
-                root: {
-                  // Keep tooltip hoverable while button is disabled.
-                  pointerEvents: saveToServerDisabledReason
-                    ? "auto"
-                    : undefined,
-                },
+              style={{
+                // Keep tooltip hoverable while button is disabled.
+                pointerEvents: saveToServerDisabledReason ? "auto" : undefined,
               }}
             >
               {t("filesPage.saveToServer", "Save to server")}
@@ -381,8 +484,7 @@ export function FileDetailsPanel({
         )}
         <Button
           leftSection={<DeleteIcon fontSize="small" />}
-          color="red"
-          variant="light"
+          accent="danger"
           onClick={() => onRemove(selectedFileIds)}
         >
           {t("filesPage.remove", "Delete")}

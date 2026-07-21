@@ -8,6 +8,8 @@ import {
   Loader,
   Group,
   Alert,
+  Switch,
+  Divider,
 } from "@mantine/core";
 import WarningIcon from "@mui/icons-material/Warning";
 import { alert } from "@app/components/toast";
@@ -19,6 +21,7 @@ import PendingBadge from "@app/components/shared/config/PendingBadge";
 import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
+import LoginAgreementEditor from "@app/components/shared/config/configSections/LoginAgreementEditor";
 
 interface LegalSettingsData {
   termsAndConditions?: string;
@@ -26,6 +29,11 @@ interface LegalSettingsData {
   accessibilityStatement?: string;
   cookiePolicy?: string;
   impressum?: string;
+  loginAgreement?: {
+    enabled?: boolean;
+    showInAnonymousMode?: boolean;
+    fallbackText?: string;
+  };
 }
 
 export default function AdminLegalSection() {
@@ -48,6 +56,23 @@ export default function AdminLegalSection() {
     isFieldPending,
   } = useAdminSettings<LegalSettingsData>({
     sectionName: "legal",
+    // The flat legal URL fields save through the section endpoint as before; the nested
+    // loginAgreement object is flattened to dotted keys sent via the global settings endpoint
+    // (updateSettingsTransactional), which merges into the existing node. Saving a partial
+    // nested object through the section endpoint would replace the whole loginAgreement node
+    // and drop the sibling keys the UI didn't touch (e.g. fallbackText). fallbackText is not
+    // edited here, so it is deliberately omitted and left untouched.
+    saveTransformer: (current: LegalSettingsData) => {
+      const { loginAgreement, ...flat } = current;
+      const deltaSettings: Record<string, unknown> = {};
+      if (loginAgreement) {
+        deltaSettings["legal.loginAgreement.enabled"] =
+          loginAgreement.enabled ?? false;
+        deltaSettings["legal.loginAgreement.showInAnonymousMode"] =
+          loginAgreement.showInAnonymousMode ?? true;
+      }
+      return { sectionData: flat, deltaSettings };
+    },
   });
 
   useEffect(() => {
@@ -262,6 +287,72 @@ export default function AdminLegalSection() {
                 disabled={!loginEnabled}
               />
             </div>
+          </Stack>
+        </Paper>
+
+        <Paper withBorder p="md" radius="md">
+          <Stack gap="md">
+            <div>
+              <Text fw={600}>
+                {t(
+                  "admin.settings.legal.loginAgreement.title",
+                  "Login Agreement",
+                )}
+              </Text>
+              <Text size="sm" c="dimmed">
+                {t(
+                  "admin.settings.legal.loginAgreement.description",
+                  "Show a disclaimer users must accept after logging in. The text follows each user's language.",
+                )}
+              </Text>
+            </div>
+
+            <Switch
+              label={t(
+                "admin.settings.legal.loginAgreement.enabled.label",
+                "Enable login agreement",
+              )}
+              checked={settings.loginAgreement?.enabled ?? false}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  loginAgreement: {
+                    ...settings.loginAgreement,
+                    enabled: e.currentTarget.checked,
+                  },
+                })
+              }
+              disabled={!loginEnabled}
+            />
+
+            <Switch
+              label={t(
+                "admin.settings.legal.loginAgreement.anonymous.label",
+                "Show in anonymous (no-login) mode",
+              )}
+              checked={settings.loginAgreement?.showInAnonymousMode ?? true}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  loginAgreement: {
+                    ...settings.loginAgreement,
+                    showInAnonymousMode: e.currentTarget.checked,
+                  },
+                })
+              }
+              disabled={!loginEnabled}
+            />
+
+            <Text size="xs" c="dimmed">
+              {t(
+                "admin.settings.legal.loginAgreement.restartNote",
+                "Enabling or disabling the agreement applies after a restart, like other settings. Text edits below apply immediately.",
+              )}
+            </Text>
+
+            <Divider />
+
+            <LoginAgreementEditor disabled={!loginEnabled} />
           </Stack>
         </Paper>
       </Stack>

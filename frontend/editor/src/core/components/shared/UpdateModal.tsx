@@ -4,7 +4,6 @@ import {
   Stack,
   Text,
   Badge,
-  Button,
   Group,
   Loader,
   Center,
@@ -13,9 +12,11 @@ import {
   Progress,
   Alert,
   Divider,
-  CloseButton,
   Anchor,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import LocalIcon from "@app/components/shared/LocalIcon";
 import { useTranslation } from "react-i18next";
 import {
   updateService,
@@ -24,6 +25,7 @@ import {
   MachineInfo,
 } from "@app/services/updateService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
+import { handleExternalLinkClick } from "@app/platform/externalLinkClick";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -129,18 +131,27 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
     new Set([0]),
   );
 
+  const { machineType, activeSecurity, licenseType } = machineInfo;
   useEffect(() => {
-    if (opened) {
-      setLoading(true);
-      setExpandedVersions(new Set([0]));
-      updateService
-        .getFullUpdateInfo(currentVersion, machineInfo)
-        .then((info) => {
-          setFullUpdateInfo(info);
-          setLoading(false);
-        });
-    }
-  }, [opened, currentVersion, machineInfo]);
+    if (!opened) return;
+    let cancelled = false;
+    setLoading(true);
+    setExpandedVersions(new Set([0]));
+    updateService
+      .getFullUpdateInfo(currentVersion, {
+        machineType,
+        activeSecurity,
+        licenseType,
+      })
+      .then((info) => {
+        if (cancelled) return;
+        setFullUpdateInfo(info);
+        setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [opened, currentVersion, machineType, activeSecurity, licenseType]);
 
   const toggleVersion = (index: number) => {
     setExpandedVersions((prev) => {
@@ -196,6 +207,12 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
     if (onRemindLater) onRemindLater();
     onClose();
   };
+
+  const handleExternalLink =
+    (url: string) => (e: React.MouseEvent<HTMLElement>) => {
+      e.stopPropagation();
+      handleExternalLinkClick(url, e);
+    };
 
   // Sort versions newest first, skip the latest (already shown in header)
   const sortedVersions = fullUpdateInfo?.new_versions
@@ -255,12 +272,14 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
             </Box>
           </Group>
           {canClose && (
-            <CloseButton
+            <ActionIcon
               onClick={onClose}
               size="lg"
-              variant="subtle"
+              variant="tertiary"
               aria-label={t("update.closeModal", "Close update modal")}
-            />
+            >
+              <LocalIcon icon="close-rounded" width={20} height={20} />
+            </ActionIcon>
           )}
         </Group>
       </Box>
@@ -323,11 +342,25 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
             </Group>
           </Box>
 
-          {/* Priority badge + recommendation — compact single line */}
+          {/* Priority badge + recommendation — compact single line. When the
+              update contains breaking changes we surface a compact inline
+              chip here rather than a separate full-width orange banner; the
+              specific per-version detail lives in Version History below. */}
           <Group gap="sm" align="center" px={4}>
             <Badge color={priorityColor} variant="filled" size="lg" radius="sm">
               {getPriorityLabel(updateSummary.max_priority)}
             </Badge>
+            {updateSummary.any_breaking && (
+              <Badge
+                color="orange"
+                variant="light"
+                size="lg"
+                radius="sm"
+                leftSection={<WarningAmberIcon style={{ fontSize: 14 }} />}
+              >
+                {t("update.breaking", "Breaking")}
+              </Badge>
+            )}
             <Text size="sm" c="dimmed" style={{ flex: 1 }}>
               {updateSummary.recommended_action ||
                 t(
@@ -362,6 +395,7 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                   href={WINDOWS_INSTALL_DOCS_URL}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={handleExternalLink(WINDOWS_INSTALL_DOCS_URL)}
                 >
                   {t(
                     "desktopUpdate.blocked.docsLink",
@@ -402,6 +436,9 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                   component="a"
                   href={`https://github.com/Stirling-Tools/Stirling-PDF/releases/tag/v${updateSummary.latest_version}`}
                   target="_blank"
+                  onClick={handleExternalLink(
+                    `https://github.com/Stirling-Tools/Stirling-PDF/releases/tag/v${updateSummary.latest_version}`,
+                  )}
                   c="blue"
                   style={{
                     textDecoration: "none",
@@ -418,6 +455,9 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                   component="a"
                   href="https://github.com/Stirling-Tools/Stirling-PDF/releases"
                   target="_blank"
+                  onClick={handleExternalLink(
+                    "https://github.com/Stirling-Tools/Stirling-PDF/releases",
+                  )}
                   c="dimmed"
                   style={{
                     textDecoration: "none",
@@ -432,25 +472,6 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
               </Group>
             </Group>
           </Box>
-
-          {/* Breaking changes */}
-          {updateSummary.any_breaking && (
-            <Alert
-              variant="light"
-              color="orange"
-              radius="md"
-              icon={<WarningAmberIcon style={{ fontSize: 18 }} />}
-              title={t(
-                "update.breakingChangesDetected",
-                "Breaking Changes Detected",
-              )}
-            >
-              {t(
-                "update.breakingChangesMessage",
-                "Some versions contain breaking changes. Please review the migration guides below before updating.",
-              )}
-            </Alert>
-          )}
 
           {/* Migration guides */}
           {updateSummary.migration_guides &&
@@ -502,11 +523,12 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                           </Text>
                         </Group>
                         <Button
-                          component="a"
+                          as="a"
                           href={guide.url}
                           target="_blank"
-                          variant="default"
-                          size="xs"
+                          onClick={handleExternalLink(guide.url)}
+                          variant="secondary"
+                          size="sm"
                           rightSection={
                             <OpenInNewIcon style={{ fontSize: 12 }} />
                           }
@@ -597,13 +619,14 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                         </Group>
                         <Group gap={4}>
                           <Button
-                            component="a"
+                            as="a"
                             href={`https://github.com/Stirling-Tools/Stirling-PDF/releases/tag/v${version.version}`}
                             target="_blank"
-                            variant="subtle"
-                            size="xs"
-                            px={6}
-                            onClick={(e) => e.stopPropagation()}
+                            variant="tertiary"
+                            size="sm"
+                            onClick={handleExternalLink(
+                              `https://github.com/Stirling-Tools/Stirling-PDF/releases/tag/v${version.version}`,
+                            )}
                             rightSection={
                               <OpenInNewIcon style={{ fontSize: 11 }} />
                             }
@@ -668,15 +691,21 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                                 </Text>
                                 {version.compatibility.migration_guide_url && (
                                   <Button
-                                    component="a"
+                                    as="a"
                                     href={
                                       version.compatibility.migration_guide_url
                                     }
                                     target="_blank"
-                                    variant="light"
-                                    color="orange"
-                                    size="xs"
-                                    mt="xs"
+                                    onClick={handleExternalLink(
+                                      version.compatibility
+                                        .migration_guide_url ?? "",
+                                    )}
+                                    variant="secondary"
+                                    accent="warning"
+                                    size="sm"
+                                    style={{
+                                      marginTop: "var(--mantine-spacing-xs)",
+                                    }}
                                     rightSection={
                                       <OpenInNewIcon style={{ fontSize: 14 }} />
                                     }
@@ -699,8 +728,8 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
               {sortedVersions.length > 10 && (
                 <Center mt="sm">
                   <Button
-                    variant="subtle"
-                    size="xs"
+                    variant="tertiary"
+                    size="sm"
                     onClick={() => setShowAllVersions(!showAllVersions)}
                   >
                     {showAllVersions
@@ -812,10 +841,9 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
       >
         <Group justify="flex-end" gap="sm">
           <Button
-            variant="default"
+            variant="secondary"
             onClick={handleLater}
             disabled={!canClose}
-            radius="md"
             size="md"
           >
             {t("update.later", "Later")}
@@ -823,8 +851,6 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
           {desktopInstall ? (
             desktopInstall.state === "ready-to-restart" ? (
               <Button
-                color="blue"
-                radius="md"
                 size="md"
                 leftSection={<RestartAltIcon style={{ fontSize: 20 }} />}
                 onClick={() => void desktopInstall.actions.restartApp()}
@@ -841,11 +867,11 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                 {(installBlocked || desktopInstall.state === "error") &&
                   downloadUrl && (
                     <Button
-                      component="a"
+                      as="a"
                       href={downloadUrl}
                       target="_blank"
-                      variant="default"
-                      radius="md"
+                      onClick={handleExternalLink(downloadUrl)}
+                      variant="secondary"
                       size="md"
                       leftSection={<DownloadIcon style={{ fontSize: 16 }} />}
                     >
@@ -853,16 +879,10 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
                     </Button>
                   )}
                 <Button
-                  color="blue"
-                  radius="md"
-                  size="lg"
+                  size="md"
                   leftSection={<DownloadIcon style={{ fontSize: 20 }} />}
                   onClick={() => void desktopInstall.actions.startInstall()}
                   disabled={installBlocked}
-                  styles={{
-                    root: { paddingLeft: 16, paddingRight: 20 },
-                    inner: { gap: 10 },
-                  }}
                 >
                   <Box>
                     <Text size="sm" fw={700} lh={1.2}>
@@ -881,12 +901,11 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
             // unreachable, the pubkey is wrong, signatures don't match, etc.
             downloadUrl && (
               <Button
-                component="a"
+                as="a"
                 href={downloadUrl}
                 target="_blank"
-                color="blue"
-                radius="md"
-                size="lg"
+                onClick={handleExternalLink(downloadUrl)}
+                size="md"
                 leftSection={<DownloadIcon style={{ fontSize: 20 }} />}
               >
                 {t("update.downloadLatest", "Download Latest")}

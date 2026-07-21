@@ -9,6 +9,7 @@ const getVersionMock = vi.fn();
 const getUpdateModeMock = vi.fn();
 const canInstallUpdatesMock = vi.fn();
 const getUpdateSummaryMock = vi.fn();
+const getCurrentModeMock = vi.fn();
 
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: (cmd: string, args?: unknown) => invokeMock(cmd, args),
@@ -33,6 +34,12 @@ vi.mock("@app/services/desktopUpdateService", () => ({
   desktopUpdateService: {
     getUpdateMode: () => getUpdateModeMock(),
     canInstallUpdates: () => canInstallUpdatesMock(),
+  },
+}));
+
+vi.mock("@app/services/connectionModeService", () => ({
+  connectionModeService: {
+    getCurrentMode: () => getCurrentModeMock(),
   },
 }));
 
@@ -74,8 +81,11 @@ describe("useDesktopUpdatePopup — auto mode", () => {
     getUpdateModeMock.mockReset();
     canInstallUpdatesMock.mockReset();
     getUpdateSummaryMock.mockReset();
+    getCurrentModeMock.mockReset();
 
-    // Defaults: auto mode, update available, install permitted.
+    // Defaults: local (non-SaaS) connection, auto mode, update available,
+    // install permitted.
+    getCurrentModeMock.mockResolvedValue("local");
     getUpdateModeMock.mockResolvedValue("auto");
     getVersionMock.mockResolvedValue("1.0.0");
     getUpdateSummaryMock.mockResolvedValue({ latest_version: "2.0.0" });
@@ -188,5 +198,19 @@ describe("useDesktopUpdatePopup — auto mode", () => {
     const invocations = invokeMock.mock.calls.map((c) => c[0]);
     expect(invocations).toContain("download_and_install_update");
     expect(invocations).toContain("restart_app");
+  });
+
+  it("skips the update check entirely in SaaS connection mode", async () => {
+    // In SaaS mode the cloud owns versioning — the self-hosted update check
+    // must never run: no mode lookup, no external summary fetch, no install.
+    getCurrentModeMock.mockResolvedValue("saas");
+
+    await runStartup();
+
+    expect(getUpdateModeMock).not.toHaveBeenCalled();
+    expect(getUpdateSummaryMock).not.toHaveBeenCalled();
+    const invocations = invokeMock.mock.calls.map((c) => c[0]);
+    expect(invocations).not.toContain("download_and_install_update");
+    expect(invocations).not.toContain("restart_app");
   });
 });

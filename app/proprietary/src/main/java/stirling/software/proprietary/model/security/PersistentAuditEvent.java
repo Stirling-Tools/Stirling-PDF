@@ -21,7 +21,15 @@ import lombok.*;
                     columnList = "principal,type"),
             @jakarta.persistence.Index(
                     name = "idx_audit_type_timestamp",
-                    columnList = "type,timestamp")
+                    columnList = "type,timestamp"),
+            @jakarta.persistence.Index(
+                    name = "idx_audit_type_source_timestamp",
+                    columnList = "type,source,timestamp"),
+            // Leads with source (equality) for the active-editors query, which filters on
+            // source then a timestamp range and counts distinct principal.
+            @jakarta.persistence.Index(
+                    name = "idx_audit_source_timestamp_principal",
+                    columnList = "source,timestamp,principal")
         })
 @Getter
 @Setter
@@ -39,6 +47,7 @@ public class PersistentAuditEvent {
     @ToString.Include private String principal;
 
     @ToString.Include private String type;
+    private String source;
 
     @Column(columnDefinition = "text")
     private String data; // JSON blob

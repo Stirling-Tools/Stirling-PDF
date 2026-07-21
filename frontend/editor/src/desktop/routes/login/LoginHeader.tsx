@@ -1,5 +1,6 @@
-import { ActionIcon } from "@mantine/core";
 import CloseIcon from "@mui/icons-material/Close";
+import { useTranslation } from "react-i18next";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useLogoAssets } from "@app/hooks/useLogoAssets";
 
 interface LoginHeaderProps {
@@ -19,6 +20,7 @@ export default function LoginHeader({
   centerOnly = false,
   onClose,
 }: LoginHeaderProps) {
+  const { t } = useTranslation();
   const { tooltipLogo } = useLogoAssets();
 
   return (
@@ -57,9 +59,8 @@ export default function LoginHeader({
         {onClose && (
           <ActionIcon
             onClick={onClose}
-            radius="md"
-            size={32}
-            variant="subtle"
+            variant="tertiary"
+            aria-label={t("common.close", "Close")}
             style={{
               flexShrink: 0,
               color: "var(--text-secondary)",

@@ -3,9 +3,12 @@ package stirling.software.SPDF.controller.api;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
+import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageTree;
@@ -261,10 +264,19 @@ public class RearrangePagesPDFController {
                 log.info("newPageOrder = {}", newPageOrder);
                 log.info("totalPages = {}", totalPages);
 
-                // Snapshot the desired pages before mutating the source document's page tree.
+                // Snapshot desired pages before mutating the tree; clone repeats (e.g. DUPLICATE)
+                // so each slot is a distinct node, not one PDPage under multiple /Kids.
                 List<PDPage> newPages = new ArrayList<>(newPageOrder.size());
+                Set<Integer> seenIndices = new HashSet<>();
                 for (Integer idx : newPageOrder) {
-                    newPages.add(document.getPage(idx));
+                    PDPage page = document.getPage(idx);
+                    if (!seenIndices.add(idx)) {
+                        // Duplicate index: distinct page node sharing content/resources.
+                        COSDictionary clonedDict = new COSDictionary();
+                        clonedDict.addAll(page.getCOSObject());
+                        page = new PDPage(clonedDict);
+                    }
+                    newPages.add(page);
                 }
 
                 // Rearrange in-place on the source document rather than copying pages into a

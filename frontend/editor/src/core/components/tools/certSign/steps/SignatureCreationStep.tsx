@@ -1,4 +1,5 @@
-import { Button, Stack } from "@mantine/core";
+import { Stack } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import {
   SignatureTypeSelector,
@@ -23,6 +24,8 @@ interface SignatureCreationStepProps {
   onFontSizeChange: (size: number) => void;
   onTextColorChange: (color: string) => void;
   onNext: () => void;
+  /** Label for the confirm button; defaults to the cert-flow "continue" text. */
+  nextLabel?: string;
   disabled?: boolean;
 }
 
@@ -40,6 +43,7 @@ export const SignatureCreationStep: React.FC<SignatureCreationStepProps> = ({
   onFontSizeChange,
   onTextColorChange,
   onNext,
+  nextLabel,
   disabled = false,
 }) => {
   const { t } = useTranslation();
@@ -89,10 +93,11 @@ export const SignatureCreationStep: React.FC<SignatureCreationStepProps> = ({
       )}
 
       <Button onClick={onNext} disabled={!hasSignature || disabled} fullWidth>
-        {t(
-          "certSign.collab.signRequest.steps.continue",
-          "Continue to Certificate Selection",
-        )}
+        {nextLabel ??
+          t(
+            "certSign.collab.signRequest.steps.continue",
+            "Continue to Certificate Selection",
+          )}
       </Button>
     </Stack>
   );

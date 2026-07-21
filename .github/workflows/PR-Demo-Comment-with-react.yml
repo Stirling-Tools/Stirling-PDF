@@ -39,7 +39,7 @@ jobs:
 
   check-comment:
     needs: pick
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    runs-on: ${{ needs.pick.outputs.use_depot == 'true' && 'depot-ubuntu-24.04-4' || 'ubuntu-latest' }}
     permissions:
       issues: write
     if: |
@@ -180,13 +180,13 @@ jobs:
 
   deploy-pr:
     needs: [pick, check-comment]
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    runs-on: ${{ needs.pick.outputs.use_depot == 'true' && 'depot-ubuntu-24.04-4' || 'ubuntu-latest' }}
     permissions:
       issues: write
       pull-requests: write
       id-token: write
     env:
-      USE_DEPOT: ${{ needs.pick.outputs.is_fork != 'true' }}
+      USE_DEPOT: ${{ needs.pick.outputs.use_depot == 'true' }}
       DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
 
     steps:
@@ -220,9 +220,9 @@ jobs:
           distribution: "temurin"
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
         with:
-          gradle-version: 9.5.1
+          gradle-version: 9.6.1
 
       - name: Install Task
         uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
@@ -270,7 +270,7 @@ jobs:
 
       - name: Build and push PR-specific image (Docker fork fallback)
         if: env.USE_DEPOT != 'true'
-        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
           file: ./docker/embedded/Dockerfile
@@ -296,7 +296,7 @@ jobs:
 
       - name: Build and push engine image (Docker fork fallback)
         if: env.USE_DEPOT != 'true' && needs.check-comment.outputs.enable_prototypes == 'true'
-        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: ./engine
           file: ./engine/Dockerfile
@@ -511,7 +511,7 @@ jobs:
   handle-label-commands:
     if: ${{ github.event.issue.pull_request != null }}
     needs: pick
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    runs-on: ${{ needs.pick.outputs.use_depot == 'true' && 'depot-ubuntu-24.04-4' || 'ubuntu-latest' }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3

@@ -67,7 +67,7 @@ export default function AdminFeaturesSection() {
       } = {
         serverCertificate: systemData.serverCertificate || {
           enabled: true,
-          organizationName: "Stirling-PDF",
+          organizationName: "Stirling PDF Inc",
           validity: 365,
           regenerateOnStartup: false,
         },
@@ -258,7 +258,8 @@ export default function AdminFeaturesSection() {
                   "Organization name for generated certificates",
                 )}
                 value={
-                  settings.serverCertificate?.organizationName || "Stirling-PDF"
+                  settings.serverCertificate?.organizationName ||
+                  "Stirling PDF Inc"
                 }
                 onChange={(e) =>
                   setSettings({

@@ -1,8 +1,11 @@
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 import CertificateTypeSettings from "@app/components/tools/certSign/CertificateTypeSettings";
 import CertificateFormatSettings from "@app/components/tools/certSign/CertificateFormatSettings";
 import CertificateFilesSettings from "@app/components/tools/certSign/CertificateFilesSettings";
+import HardwareCertificateSettings from "@app/components/tools/certSign/HardwareCertificateSettings";
 import SignatureAppearanceSettings from "@app/components/tools/certSign/SignatureAppearanceSettings";
 import { useCertSignParameters } from "@app/hooks/tools/certSign/useCertSignParameters";
 import { useCertSignOperation } from "@app/hooks/tools/certSign/useCertSignOperation";
@@ -21,6 +24,25 @@ const CertSign = (props: BaseToolProps) => {
     useCertSignOperation,
     props,
   );
+
+  const { config } = useAppConfig();
+  // "Upload" is always available; the source chooser is only meaningful when a
+  // server certificate or a hardware token gives the user an actual alternative.
+  const hasCertSourceChoice =
+    (config?.serverCertificateEnabled ?? false) ||
+    (config?.hardwareSigningAvailable ?? false);
+
+  // With Upload as the only source, keep signMode on MANUAL even if a saved
+  // automation set AUTO/DEVICE, so the hidden source step can't strand the flow.
+  useEffect(() => {
+    if (!hasCertSourceChoice && base.params.parameters.signMode !== "MANUAL") {
+      base.params.updateParameter("signMode", "MANUAL");
+    }
+  }, [
+    hasCertSourceChoice,
+    base.params.parameters.signMode,
+    base.params.updateParameter,
+  ]);
 
   const certTypeTips = useCertificateTypeTips();
   const appearanceTips = useSignatureAppearanceTips();
@@ -44,6 +66,10 @@ const CertSign = (props: BaseToolProps) => {
         return !!params.p12File;
       case "JKS":
         return !!params.jksFile;
+      case "WINDOWS_STORE":
+        return !!params.alias;
+      case "PKCS11":
+        return !!(params.pkcs11LibraryPath && params.alias);
       default:
         return false;
     }
@@ -57,7 +83,8 @@ const CertSign = (props: BaseToolProps) => {
     },
     steps: [
       {
-        title: t("certSign.signMode.stepTitle", "Sign Mode"),
+        title: t("certSign.source.stepTitle", "Certificate source"),
+        isVisible: hasCertSourceChoice,
         isCollapsed: base.settingsCollapsed,
         onCollapsedClick: base.settingsCollapsed
           ? base.handleSettingsReset
@@ -100,6 +127,24 @@ const CertSign = (props: BaseToolProps) => {
                 : undefined,
               content: (
                 <CertificateFilesSettings
+                  parameters={base.params.parameters}
+                  onParameterChange={base.params.updateParameter}
+                  disabled={base.endpointLoading}
+                />
+              ),
+            },
+          ]
+        : []),
+      ...(base.params.parameters.signMode === "DEVICE"
+        ? [
+            {
+              title: t("certSign.device.stepTitle", "This device"),
+              isCollapsed: base.settingsCollapsed,
+              onCollapsedClick: base.settingsCollapsed
+                ? base.handleSettingsReset
+                : undefined,
+              content: (
+                <HardwareCertificateSettings
                   parameters={base.params.parameters}
                   onParameterChange={base.params.updateParameter}
                   disabled={base.endpointLoading}

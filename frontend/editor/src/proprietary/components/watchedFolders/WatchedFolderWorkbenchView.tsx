@@ -10,14 +10,14 @@ import {
   Text,
   Stack,
   Group,
-  Button,
-  ActionIcon,
   Modal,
   ScrollArea,
   Loader,
   TextInput,
   Select,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
 
 import { useCardModalAnimation } from "@app/hooks/useCardModalAnimation";
@@ -860,9 +860,8 @@ export function WatchedFolderWorkbenchView({
         <Group justify="space-between" align="center">
           <Group gap="md" align="center">
             <ActionIcon
-              variant="subtle"
+              variant="tertiary"
               size="sm"
-              color="gray"
               onClick={goHome}
               aria-label={t("watchedFolders.actions.back", "Back")}
             >
@@ -977,9 +976,9 @@ export function WatchedFolderWorkbenchView({
           <Group gap="sm" align="center">
             {folder.isPaused ? (
               <Button
-                size="xs"
-                variant="light"
-                color="green"
+                size="sm"
+                variant="secondary"
+                accent="success"
                 onClick={handlePauseResume}
                 leftSection={<PlayArrowIcon style={{ fontSize: "0.875rem" }} />}
               >
@@ -987,9 +986,8 @@ export function WatchedFolderWorkbenchView({
               </Button>
             ) : (
               <Button
-                size="xs"
-                variant="subtle"
-                color="gray"
+                size="sm"
+                variant="tertiary"
                 onClick={handlePauseResume}
                 leftSection={<PauseIcon style={{ fontSize: "0.875rem" }} />}
               >
@@ -997,8 +995,8 @@ export function WatchedFolderWorkbenchView({
               </Button>
             )}
             <Button
-              size="xs"
-              variant="light"
+              size="sm"
+              variant="secondary"
               onClick={() =>
                 document
                   .getElementById(`folder-file-input-${folderId}`)
@@ -1277,8 +1275,8 @@ export function WatchedFolderWorkbenchView({
             {activityStatusFilter === "error" &&
               filteredActivityIds.length > 0 && (
                 <Button
-                  size="xs"
-                  variant="outline"
+                  size="sm"
+                  variant="secondary"
                   onClick={handleRetryAllFiltered}
                   leftSection={<ReplayIcon style={{ fontSize: "0.75rem" }} />}
                 >
@@ -1289,8 +1287,8 @@ export function WatchedFolderWorkbenchView({
               filteredActivityIds.length > 0 && (
                 <>
                   <Button
-                    size="xs"
-                    variant="outline"
+                    size="sm"
+                    variant="secondary"
                     onClick={() =>
                       void handleBatchDownload(filteredActivityIds)
                     }
@@ -1301,8 +1299,8 @@ export function WatchedFolderWorkbenchView({
                     {t("watchedFolders.workbench.exportZip", "Export zip")}
                   </Button>
                   <Button
-                    size="xs"
-                    variant="outline"
+                    size="sm"
+                    variant="secondary"
                     onClick={() =>
                       void handleBatchDownloadSeparate(filteredActivityIds)
                     }
@@ -1384,8 +1382,8 @@ export function WatchedFolderWorkbenchView({
                   </Text>
                   {selectedActivityIds.size < filteredActivityIds.length && (
                     <Button
-                      size="xs"
-                      variant="subtle"
+                      size="sm"
+                      variant="tertiary"
                       onClick={() =>
                         setSelectedActivityIds(new Set(filteredActivityIds))
                       }
@@ -1399,8 +1397,8 @@ export function WatchedFolderWorkbenchView({
                   <Box style={{ flex: 1 }} />
                   {showRetry && (
                     <Button
-                      size="xs"
-                      variant="outline"
+                      size="sm"
+                      variant="secondary"
                       onClick={handleBatchRetry}
                       leftSection={
                         <ReplayIcon style={{ fontSize: "0.75rem" }} />
@@ -1412,8 +1410,8 @@ export function WatchedFolderWorkbenchView({
                   {showExport && (
                     <>
                       <Button
-                        size="xs"
-                        variant="outline"
+                        size="sm"
+                        variant="secondary"
                         onClick={() => void handleBatchDownload()}
                         leftSection={
                           <DownloadIcon style={{ fontSize: "0.75rem" }} />
@@ -1422,8 +1420,8 @@ export function WatchedFolderWorkbenchView({
                         {t("watchedFolders.workbench.exportZip", "Export zip")}
                       </Button>
                       <Button
-                        size="xs"
-                        variant="outline"
+                        size="sm"
+                        variant="secondary"
                         onClick={() => void handleBatchDownloadSeparate()}
                         leftSection={
                           <DownloadIcon style={{ fontSize: "0.75rem" }} />
@@ -1437,9 +1435,9 @@ export function WatchedFolderWorkbenchView({
                     </>
                   )}
                   <Button
-                    size="xs"
-                    variant="outline"
-                    color="red"
+                    size="sm"
+                    variant="secondary"
+                    accent="danger"
                     onClick={() => void handleBatchDelete()}
                     leftSection={
                       <DeleteOutlineIcon style={{ fontSize: "0.75rem" }} />
@@ -1448,9 +1446,8 @@ export function WatchedFolderWorkbenchView({
                     {t("watchedFolders.workbench.delete", "Delete")}
                   </Button>
                   <ActionIcon
-                    variant="subtle"
+                    variant="tertiary"
                     size="sm"
-                    color="gray"
                     onClick={() => setSelectedActivityIds(new Set())}
                     aria-label={t(
                       "watchedFolders.workbench.clearSelection",
@@ -1536,9 +1533,8 @@ export function WatchedFolderWorkbenchView({
                           }
                         >
                           <ActionIcon
-                            variant="subtle"
+                            variant="tertiary"
                             size="sm"
-                            color="gray"
                             style={{ flexShrink: 0 }}
                             onClick={(e) => {
                               e.stopPropagation();
@@ -1666,9 +1662,8 @@ export function WatchedFolderWorkbenchView({
                             >
                               {!isExpanded && primaryFile && (
                                 <ActionIcon
-                                  variant="subtle"
+                                  variant="tertiary"
                                   size="sm"
-                                  color="gray"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleView(primaryFile);
@@ -1685,9 +1680,8 @@ export function WatchedFolderWorkbenchView({
                               )}
                               {!isExpanded && primaryFile && (
                                 <ActionIcon
-                                  variant="subtle"
+                                  variant="tertiary"
                                   size="sm"
-                                  color="gray"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     void handleDownload(
@@ -1706,9 +1700,8 @@ export function WatchedFolderWorkbenchView({
                                 </ActionIcon>
                               )}
                               <ActionIcon
-                                variant="subtle"
+                                variant="tertiary"
                                 size="sm"
-                                color="gray"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   void handleDeleteOne(fileId);
@@ -1777,9 +1770,8 @@ export function WatchedFolderWorkbenchView({
                                   {formatBytes(inputFile.size)}
                                 </Text>
                                 <ActionIcon
-                                  variant="subtle"
+                                  variant="tertiary"
                                   size="sm"
-                                  color="gray"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleView(inputFile);
@@ -1794,9 +1786,8 @@ export function WatchedFolderWorkbenchView({
                                   />
                                 </ActionIcon>
                                 <ActionIcon
-                                  variant="subtle"
+                                  variant="tertiary"
                                   size="sm"
-                                  color="gray"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleDownload(inputFile, inputFile.name);
@@ -1852,9 +1843,8 @@ export function WatchedFolderWorkbenchView({
                                   {formatBytes(out.size)}
                                 </Text>
                                 <ActionIcon
-                                  variant="subtle"
+                                  variant="tertiary"
                                   size="sm"
-                                  color="gray"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleView(out);
@@ -1869,9 +1859,8 @@ export function WatchedFolderWorkbenchView({
                                   />
                                 </ActionIcon>
                                 <ActionIcon
-                                  variant="subtle"
+                                  variant="tertiary"
                                   size="sm"
-                                  color="gray"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleDownload(out, out.name);
@@ -1915,8 +1904,8 @@ export function WatchedFolderWorkbenchView({
                                 )}
                                 {inputFile && (
                                   <Button
-                                    size="xs"
-                                    variant="light"
+                                    size="sm"
+                                    variant="secondary"
                                     style={{ flexShrink: 0 }}
                                     leftSection={
                                       <ReplayIcon
@@ -2000,9 +1989,8 @@ export function WatchedFolderWorkbenchView({
               {(["24h", "7d", "30d", "all"] as const).map((p) => (
                 <Button
                   key={p}
-                  size="xs"
-                  variant={statsPeriod === p ? "light" : "subtle"}
-                  color={statsPeriod === p ? "blue" : "gray"}
+                  size="sm"
+                  variant={statsPeriod === p ? "secondary" : "tertiary"}
                   onClick={() => setStatsPeriod(p)}
                 >
                   {p === "all"
@@ -2412,11 +2400,11 @@ export function WatchedFolderWorkbenchView({
             )}
           </Text>
           <Group justify="flex-end">
-            <Button variant="default" onClick={() => setDeleteConfirm(null)}>
+            <Button variant="secondary" onClick={() => setDeleteConfirm(null)}>
               {t("watchedFolders.workbench.cancel", "Cancel")}
             </Button>
             <Button
-              variant="default"
+              variant="secondary"
               onClick={() =>
                 deleteConfirm && void execDelete(deleteConfirm.ids, false)
               }
@@ -2427,7 +2415,8 @@ export function WatchedFolderWorkbenchView({
               )}
             </Button>
             <Button
-              color="red"
+              variant="primary"
+              accent="danger"
               onClick={() =>
                 deleteConfirm && void execDelete(deleteConfirm.ids, true)
               }

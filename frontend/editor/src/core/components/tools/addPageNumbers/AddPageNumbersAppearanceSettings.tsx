@@ -27,6 +27,7 @@ const AddPageNumbersAppearanceSettings = ({
   return (
     <Stack gap="md">
       <Tooltip
+        position="left"
         content={t(
           "marginTooltip",
           "Distance between the page number and the edge of the page.",
@@ -36,7 +37,10 @@ const AddPageNumbersAppearanceSettings = ({
           label={t("addPageNumbers.selectText.2", "Margin")}
           value={parameters.customMargin}
           onChange={(v) =>
-            onParameterChange("customMargin", (v as any) || "medium")
+            onParameterChange(
+              "customMargin",
+              (v as AddPageNumbersParameters["customMargin"]) || "medium",
+            )
           }
           data={[
             { value: "small", label: t("sizes.small", "Small") },
@@ -53,6 +57,7 @@ const AddPageNumbersAppearanceSettings = ({
       </Tooltip>
 
       <Tooltip
+        position="left"
         content={t(
           "fontSizeTooltip",
           "Size of the page number text in points. Larger numbers create bigger text.",
@@ -70,6 +75,7 @@ const AddPageNumbersAppearanceSettings = ({
       </Tooltip>
 
       <Tooltip
+        position="left"
         content={t(
           "addPageNumbers.zeroPadTooltip",
           "Zero-pad (Bates Stamp) page numbers to this width (e.g. 3 => 001). Set 0 to disable.",
@@ -87,6 +93,7 @@ const AddPageNumbersAppearanceSettings = ({
       </Tooltip>
 
       <Tooltip
+        position="left"
         content={t(
           "fontTypeTooltip",
           "Font family for the page numbers. Choose based on your document style.",
@@ -95,7 +102,12 @@ const AddPageNumbersAppearanceSettings = ({
         <Select
           label={t("addPageNumbers.fontName", "Font Type")}
           value={parameters.fontType}
-          onChange={(v) => onParameterChange("fontType", (v as any) || "Times")}
+          onChange={(v) =>
+            onParameterChange(
+              "fontType",
+              (v as AddPageNumbersParameters["fontType"]) || "Times",
+            )
+          }
           data={[
             { value: "Times", label: "Times Roman" },
             { value: "Helvetica", label: "Helvetica" },
@@ -110,6 +122,7 @@ const AddPageNumbersAppearanceSettings = ({
       </Tooltip>
 
       <Tooltip
+        position="left"
         content={t(
           "customTextTooltip",
           'Optional custom format for page numbers. Use {n} as placeholder for the number. Example: "Page {n}" will show "Page 1", "Page 2", etc.',

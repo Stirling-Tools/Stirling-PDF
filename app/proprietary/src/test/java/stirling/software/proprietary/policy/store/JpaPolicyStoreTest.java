@@ -18,7 +18,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
@@ -55,7 +54,7 @@ class JpaPolicyStoreTest {
                                 "alice",
                                 true,
                                 new TriggerConfig("schedule", Map.of()),
-                                List.of(InputSpec.folder("/in")),
+                                List.of("src-in"),
                                 List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                                 OutputSpec.inline()));
 
@@ -86,6 +85,46 @@ class JpaPolicyStoreTest {
         when(repository.findById("p1")).thenReturn(Optional.of(entityFor(policy)));
 
         assertEquals(policy, store.get("p1").orElseThrow());
+    }
+
+    @Test
+    void saveDenormalizesTeamIdForScopedQueries() {
+        store.save(
+                new Policy(
+                        "p1",
+                        "scoped",
+                        "alice",
+                        true,
+                        null,
+                        List.of(),
+                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                        OutputSpec.inline(),
+                        9L));
+
+        ArgumentCaptor<PolicyEntity> captor = ArgumentCaptor.forClass(PolicyEntity.class);
+        verify(repository).save(captor.capture());
+        assertEquals(Long.valueOf(9L), captor.getValue().getTeamId());
+    }
+
+    @Test
+    void findByTeamDelegatesToTheScopedQuery() {
+        Policy policy =
+                new Policy(
+                        "p1",
+                        "ours",
+                        "alice",
+                        true,
+                        null,
+                        List.of(),
+                        List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
+                        OutputSpec.inline(),
+                        9L);
+        when(repository.findByTeam(9L)).thenReturn(List.of(entityFor(policy)));
+
+        List<Policy> mine = store.findByTeam(9L);
+
+        assertEquals(1, mine.size());
+        assertEquals("p1", mine.get(0).id());
     }
 
     @Test
@@ -125,6 +164,7 @@ class JpaPolicyStoreTest {
         entity.setOwner(policy.owner());
         entity.setEnabled(policy.enabled());
         entity.setTriggerType(policy.trigger() == null ? null : policy.trigger().type());
+        entity.setTeamId(policy.teamId());
         entity.setPolicyJson(objectMapper.writeValueAsString(policy));
         return entity;
     }

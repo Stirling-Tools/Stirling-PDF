@@ -1,31 +1,38 @@
 import React from "react";
-import { ActionIcon } from "@mantine/core";
-import type { MantineSize } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import StarBorderRoundedIcon from "@mui/icons-material/StarBorderRounded";
-
+import { ActionIcon } from "@app/ui/ActionIcon";
+import type { ActionIconSize } from "@app/ui/ActionIcon";
+type FavoriteStarSize = "xs" | ActionIconSize;
+const SIZE_MAP: Record<FavoriteStarSize, ActionIconSize> = {
+  xs: "sm",
+  sm: "sm",
+  md: "md",
+  lg: "lg",
+  xl: "xl",
+};
 interface FavoriteStarProps {
   isFavorite: boolean;
   onToggle: () => void;
   className?: string;
-  size?: MantineSize;
+  size?: FavoriteStarSize;
 }
 
 const FavoriteStar: React.FC<FavoriteStarProps> = ({
   isFavorite,
   onToggle,
   className,
-  size = "xs",
+  size = "sm",
 }) => {
   const { t } = useTranslation();
 
   return (
     <ActionIcon
-      component="span"
-      variant="subtle"
-      radius="xl"
-      size={size}
+      as="span"
+      variant="tertiary"
+      shape="circle"
+      size={SIZE_MAP[size]}
       onClick={(e: React.MouseEvent) => {
         e.stopPropagation();
         onToggle();

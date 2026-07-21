@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { isAxiosError } from "axios";
 import DescriptionIcon from "@mui/icons-material/DescriptionOutlined";
 
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
@@ -16,6 +17,7 @@ import {
 import { useViewer } from "@app/contexts/ViewerContext";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
+import type { FileId } from "@app/types/file";
 import { getDefaultWorkbench } from "@app/types/workbench";
 import { CONVERSION_ENDPOINTS } from "@app/constants/convertConstants";
 import apiClient from "@app/services/apiClient";
@@ -294,7 +296,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
   const imagesByPageRef = useRef<PdfJsonImageElement[][]>([]);
   const lastLoadedFileRef = useRef<File | null>(null);
   const autoLoadKeyRef = useRef<string | null>(null);
-  const sourceFileIdRef = useRef<string | null>(null);
+  const sourceFileIdRef = useRef<FileId | null>(null);
   const loadRequestIdRef = useRef(0);
   const latestPdfRequestIdRef = useRef<number | null>(null);
   const loadedDocumentRef = useRef<PdfJsonDocument | null>(null);
@@ -339,8 +341,8 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
     };
   }, []);
 
-  const isCacheUnavailableError = useCallback((error: any): boolean => {
-    const status = error?.response?.status;
+  const isCacheUnavailableError = useCallback((error: unknown): boolean => {
+    const status = isAxiosError(error) ? error.response?.status : undefined;
     // Treat any 410 as cache unavailable, since responseType: 'blob' makes
     // it impossible to reliably check the JSON body
     return status === 410;
@@ -804,14 +806,20 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
               } else {
                 console.log("Job not complete yet, continuing to poll...");
               }
-            } catch (pollError: any) {
+            } catch (pollError) {
               console.error("Error polling job status:", pollError);
+              const status = isAxiosError(pollError)
+                ? pollError.response?.status
+                : undefined;
               console.error("Poll error details:", {
-                status: pollError?.response?.status,
-                data: pollError?.response?.data,
-                message: pollError?.message,
+                status,
+                data: isAxiosError(pollError)
+                  ? pollError.response?.data
+                  : undefined,
+                message:
+                  pollError instanceof Error ? pollError.message : undefined,
               });
-              if (pollError?.response?.status === 404) {
+              if (status === 404) {
                 throw new Error("Job not found on server", {
                   cause: pollError,
                 });
@@ -864,12 +872,12 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         cachedJobIdRef.current = newJobId;
         setFileName(file.name);
         setErrorMessage(null);
-      } catch (error: any) {
+      } catch (error) {
         console.error("Failed to load file", error);
         console.error("Error details:", {
-          message: error?.message,
-          response: error?.response?.data,
-          stack: error?.stack,
+          message: error instanceof Error ? error.message : undefined,
+          response: isAxiosError(error) ? error.response?.data : undefined,
+          stack: error instanceof Error ? error.stack : undefined,
         });
 
         if (loadRequestIdRef.current !== requestId) {
@@ -885,7 +893,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
 
         if (isPdf) {
           const errorMsg =
-            error?.message ||
+            (error instanceof Error ? error.message : undefined) ||
             t(
               "pdfTextEditor.conversionFailed",
               "Failed to convert PDF. Please try again.",
@@ -1406,11 +1414,11 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
           onComplete([pdfFile]);
         }
         setErrorMessage(null);
-      } catch (error: any) {
+      } catch (error) {
         console.error("Failed to convert JSON back to PDF", error);
         const message =
-          error?.response?.data ||
-          error?.message ||
+          (isAxiosError(error) ? error.response?.data : undefined) ||
+          (error instanceof Error ? error.message : undefined) ||
           t(
             "pdfTextEditor.errors.pdfConversion",
             "Unable to convert the edited JSON back into a PDF.",
@@ -1451,9 +1459,8 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
         return;
       }
 
-      const parentStub = selectors.getStirlingFileStub(
-        sourceFileIdRef.current as any,
-      );
+      const sourceFileId = sourceFileIdRef.current;
+      const parentStub = selectors.getStirlingFileStub(sourceFileId);
       if (!parentStub) {
         console.warn(
           "[PdfTextEditor] Could not find parent stub for save to workbench",
@@ -1660,11 +1667,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
       );
 
       // Replace the original file with the edited version
-      await consumeFiles(
-        [sourceFileIdRef.current as any],
-        stirlingFiles,
-        stubs,
-      );
+      await consumeFiles([sourceFileId], stirlingFiles, stubs);
 
       // Update the source file ID to point to the new file
       sourceFileIdRef.current = stubs[0].id;
@@ -1676,11 +1679,11 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
 
       // Set flag to trigger navigation after state update is processed
       setShouldNavigateAfterSave(true);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Failed to save to workbench", error);
       const message =
-        error?.response?.data ||
-        error?.message ||
+        (isAxiosError(error) ? error.response?.data : undefined) ||
+        (error instanceof Error ? error.message : undefined) ||
         t(
           "pdfTextEditor.errors.pdfConversion",
           "Unable to save changes to workbench.",
@@ -1955,7 +1958,7 @@ const PdfTextEditor = ({ onComplete, onError }: BaseToolProps) => {
 
     autoLoadKeyRef.current = fileKey;
     // Capture the source file ID for save-to-workbench functionality
-    sourceFileIdRef.current = (autoLoadFile as any).fileId ?? null;
+    sourceFileIdRef.current = autoLoadFile.fileId ?? null;
     void handleLoadFile(autoLoadFile);
   }, [autoLoadFile, navigationState.selectedTool, handleLoadFile]);
 
