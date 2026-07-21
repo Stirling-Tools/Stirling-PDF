@@ -242,6 +242,39 @@
   gap: 0.5rem;
 }
 
+/* Inputs span the full settings width so each row (source + trigger + schedule) has room. */
+.portal-builder__inputs-col {
+  grid-column: 1 / -1;
+}
+
+/* One input: a source, its trigger, optional schedule, and a remove button. */
+.portal-builder__input-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.portal-builder__input-field {
+  flex: 1 1 11rem;
+  min-width: 10rem;
+}
+
+/* The remove button trails to the end of the row. */
+.portal-builder__input-row > button:last-child {
+  margin-left: auto;
+}
+
+.portal-builder__input-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 /* Inspector: heading sits outside the card so it aligns with the operations heading. */
 .portal-builder__inspector-col {
   position: sticky;

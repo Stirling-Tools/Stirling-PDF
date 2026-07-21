@@ -62,6 +62,12 @@ type ScheduleUnit = "MINUTES" | "HOURS" | "DAYS";
 const SCHEDULE_UNITS: ScheduleUnit[] = ["MINUTES", "HOURS", "DAYS"];
 /** Empty trigger type = manual-only (no automatic trigger). */
 const MANUAL = "";
+/**
+ * Sentinel value for the manual choice in the trigger dropdown. Mantine's Select treats an empty
+ * string as "no selection" (it shows the placeholder, not the option), so the manual option needs a
+ * real value; it maps to/from the empty {@link MANUAL} trigger type at the edges.
+ */
+const MANUAL_OPTION = "manual";
 
 const TERMINAL_STATUSES = new Set(["COMPLETED", "FAILED", "CANCELLED"]);
 const POLL_INTERVAL_MS = 1500;
@@ -93,6 +99,34 @@ function parseTrigger(trigger: TriggerConfig | null): {
     return { triggerType: "schedule", count: "1", unit: "HOURS" };
   }
   return { triggerType: trigger.type, count: "1", unit: "HOURS" };
+}
+
+/** One input row in the builder: a source paired with its own trigger config. */
+interface WorkingInput {
+  /** Stable React key; a source can be blank or change while editing, so it can't be the key. */
+  key: number;
+  sourceId: string;
+  triggerType: string;
+  scheduleCount: string;
+  scheduleUnit: ScheduleUnit;
+}
+
+/** The trigger config for one input row, or null for a manual (on-demand) input. */
+function buildTriggerFor(input: WorkingInput): TriggerConfig | null {
+  if (input.triggerType === MANUAL) return null;
+  if (input.triggerType === "schedule") {
+    return {
+      type: "schedule",
+      options: {
+        schedule: {
+          type: "every",
+          count: Number(input.scheduleCount),
+          unit: input.scheduleUnit,
+        },
+      },
+    };
+  }
+  return { type: input.triggerType, options: {} };
 }
 
 /**
@@ -142,13 +176,11 @@ export function PipelineBuilder() {
 
   const [name, setName] = useState("");
   const [enabled, setEnabled] = useState(true);
-  const [sourceIds, setSourceIds] = useState<string[]>([]);
+  const [inputs, setInputs] = useState<WorkingInput[]>([]);
+  const nextInputKey = useRef(0);
   const [steps, setSteps] = useState<WorkingToolStep[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [triggerType, setTriggerType] = useState<string>(MANUAL);
-  const [scheduleCount, setScheduleCount] = useState("1");
-  const [scheduleUnit, setScheduleUnit] = useState<ScheduleUnit>("HOURS");
   const [outputIds, setOutputIds] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -173,21 +205,23 @@ export function PipelineBuilder() {
     if (seeded) return;
     if (isEdit && !policyState.data) return;
     const policy = policyState.data ?? undefined;
-    // The builder still models one trigger for the whole pipeline; take it from the first input
-    // that carries one. (The per-input rebuild will drop this single-trigger shim.)
-    const inputs = policy?.inputs ?? [];
-    const trigger = parseTrigger(
-      inputs.find((input) => input.trigger !== null)?.trigger ?? null,
-    );
     setName(policy?.name ?? "");
     setEnabled(policy?.enabled ?? true);
-    setSourceIds(inputs.map((input) => input.sourceId));
+    setInputs(
+      (policy?.inputs ?? []).map((input) => {
+        const trigger = parseTrigger(input.trigger);
+        return {
+          key: nextInputKey.current++,
+          sourceId: input.sourceId,
+          triggerType: trigger.triggerType,
+          scheduleCount: trigger.count,
+          scheduleUnit: trigger.unit,
+        };
+      }),
+    );
     setSteps(
       (policy?.steps ?? []).map((step) => deserializeToolStep(step, allTools)),
     );
-    setTriggerType(trigger.triggerType);
-    setScheduleCount(trigger.count);
-    setScheduleUnit(trigger.unit);
     setOutputIds(policy?.outputIds ?? []);
     setSeeded(true);
   }, [isEdit, policyState.data, allTools, seeded]);
@@ -200,38 +234,102 @@ export function PipelineBuilder() {
     }
   }, [seeded, selectedIndex, steps.length]);
 
-  const selectedSourceTypes = useMemo(
-    () =>
-      new Set(
-        availableSources
-          .filter((s) => sourceIds.includes(s.id))
-          .map((s) => s.type),
+  const sourceType = (sourceId: string) =>
+    availableSources.find((s) => s.id === sourceId)?.type;
+
+  // A trigger fits a source when it needs no source, or the source's type is one it supports
+  // (folder-watch → folder; schedule → any). Drives the per-input trigger dropdown.
+  const triggerFitsType = (trigger: TriggerInfo, type: string) =>
+    !trigger.requiresSource || trigger.supportedSourceTypes.includes(type);
+
+  // The sources this input row may pick: every connection not already used by another row, plus
+  // its own current pick. Prevents the same source feeding one pipeline twice.
+  function sourceOptionsFor(currentSourceId: string) {
+    const usedByOthers = new Set(
+      inputs
+        .map((input) => input.sourceId)
+        .filter((id) => id !== "" && id !== currentSourceId),
+    );
+    return availableSources
+      .filter((source) => !usedByOthers.has(source.id))
+      .map((source) => ({ value: source.id, label: source.name }));
+  }
+
+  // Manual plus every trigger compatible with this row's source. Manual only until a source is set.
+  function triggerOptionsFor(sourceId: string) {
+    const options = [
+      {
+        value: MANUAL_OPTION,
+        label: t("portal.pipelines.composer.triggerManual"),
+      },
+    ];
+    const type = sourceType(sourceId);
+    if (type) {
+      for (const trigger of triggers) {
+        if (triggerFitsType(trigger, type)) {
+          options.push({
+            value: trigger.type,
+            label: t(`portal.pipelines.trigger.${trigger.type}`, {
+              defaultValue: trigger.type,
+            }),
+          });
+        }
+      }
+    }
+    return options;
+  }
+
+  function addInput() {
+    setInputs((current) => [
+      ...current,
+      {
+        key: nextInputKey.current++,
+        sourceId: "",
+        triggerType: MANUAL,
+        scheduleCount: "1",
+        scheduleUnit: "HOURS",
+      },
+    ]);
+  }
+
+  function removeInput(key: number) {
+    setInputs((current) => current.filter((input) => input.key !== key));
+  }
+
+  function updateInput(key: number, patch: Partial<WorkingInput>) {
+    setInputs((current) =>
+      current.map((input) =>
+        input.key === key ? { ...input, ...patch } : input,
       ),
-    [availableSources, sourceIds],
-  );
-
-  const triggerAvailable = useMemo(
-    () => (trigger: TriggerInfo) =>
-      !trigger.requiresSource ||
-      trigger.supportedSourceTypes.some((type) =>
-        selectedSourceTypes.has(type),
-      ),
-    [selectedSourceTypes],
-  );
-
-  useEffect(() => {
-    if (triggerType === MANUAL) return;
-    const selected = triggers.find((trigger) => trigger.type === triggerType);
-    if (selected && !triggerAvailable(selected)) setTriggerType(MANUAL);
-  }, [triggerType, triggers, triggerAvailable]);
-
-  function toggleSource(sourceId: string, checked: boolean) {
-    setSourceIds((ids) =>
-      checked
-        ? [...ids, sourceId]
-        : ids.filter((existing) => existing !== sourceId),
     );
   }
+
+  // Changing the source may make the current trigger incompatible (folder-watch on a non-folder);
+  // drop it back to manual when that happens so the row can't hold an invalid pairing.
+  function changeInputSource(key: number, sourceId: string) {
+    setInputs((current) =>
+      current.map((input) => {
+        if (input.key !== key) return input;
+        const type = sourceType(sourceId);
+        const trigger = triggers.find((tr) => tr.type === input.triggerType);
+        const keepTrigger =
+          input.triggerType === MANUAL ||
+          (type != null && trigger != null && triggerFitsType(trigger, type));
+        return {
+          ...input,
+          sourceId,
+          triggerType: keepTrigger ? input.triggerType : MANUAL,
+        };
+      }),
+    );
+  }
+
+  const usedSourceIds = new Set(
+    inputs.map((input) => input.sourceId).filter((id) => id !== ""),
+  );
+  const canAddInput = availableSources.some(
+    (source) => !usedSourceIds.has(source.id),
+  );
 
   function addStep(tool: ExecutableTool) {
     setSteps((current) => {
@@ -281,12 +379,14 @@ export function PipelineBuilder() {
   const snapshot = JSON.stringify({
     name: name.trim(),
     enabled,
-    sourceIds: [...sourceIds].sort(),
+    inputs: inputs.map((input) => ({
+      sourceId: input.sourceId,
+      triggerType: input.triggerType,
+      scheduleCount: input.scheduleCount,
+      scheduleUnit: input.scheduleUnit,
+    })),
     steps: steps.map((step) => serializeToolStep(step, allTools)),
     uploads: steps.map(stepRequiresUpload),
-    triggerType,
-    scheduleCount,
-    scheduleUnit,
     outputIds: [...outputIds].sort(),
   });
   const baseline = useRef<string | null>(null);
@@ -295,46 +395,22 @@ export function PipelineBuilder() {
   }, [seeded, snapshot]);
   const dirty = baseline.current !== null && baseline.current !== snapshot;
 
-  const scheduleCountValid =
-    triggerType !== "schedule" || Number(scheduleCount) > 0;
+  // Every input needs a source, and a scheduled input needs a positive interval.
+  const inputsValid = inputs.every(
+    (input) =>
+      input.sourceId !== "" &&
+      (input.triggerType !== "schedule" || Number(input.scheduleCount) > 0),
+  );
   // A pipeline must have at least one input source and at least one output destination.
   const sourceValid = sourceIds.length > 0;
   const outputValid = outputIds.length > 0;
   const canSave =
     name.trim() !== "" &&
-    sourceValid &&
+    inputsValid &&
     scheduleCountValid &&
     outputValid &&
     !hasUploadSteps &&
     !submitting;
-
-  const triggerOptions = [
-    { value: MANUAL, label: t("portal.pipelines.composer.triggerManual") },
-    ...triggers.map((trigger) => ({
-      value: trigger.type,
-      label: t(`portal.pipelines.trigger.${trigger.type}`, {
-        defaultValue: trigger.type,
-      }),
-      disabled: !triggerAvailable(trigger),
-    })),
-  ];
-
-  function buildTrigger(): TriggerConfig | null {
-    if (triggerType === MANUAL) return null;
-    if (triggerType === "schedule") {
-      return {
-        type: "schedule",
-        options: {
-          schedule: {
-            type: "every",
-            count: Number(scheduleCount),
-            unit: scheduleUnit,
-          },
-        },
-      };
-    }
-    return { type: triggerType, options: {} };
-  }
 
   const listPath = toPortalPath(VIEW_PATHS.pipelines);
   const sourcesPath = `${toPortalPath(VIEW_PATHS.sources)}/new`;
@@ -359,14 +435,16 @@ export function PipelineBuilder() {
     if (!canSave) return;
     setSubmitting(true);
     setError(null);
-    // Single-trigger shim: apply the one configured trigger to every input. The per-input
-    // rebuild will let each input carry its own trigger.
-    const trigger = buildTrigger();
     const policy: Policy = {
       id: policyState.data?.id ?? undefined,
       name: name.trim(),
       enabled,
-      inputs: sourceIds.map((sourceId) => ({ sourceId, trigger })),
+      inputs: inputs
+        .filter((input) => input.sourceId !== "")
+        .map((input) => ({
+          sourceId: input.sourceId,
+          trigger: buildTriggerFor(input),
+        })),
       steps: steps.map((step) => serializeToolStep(step, allTools)),
       // Destinations are the referenced saved sources; the inline output field is
       // preserved as-is (e.g. an editor policy's membership metadata) or defaults to inline.
@@ -610,74 +688,103 @@ export function PipelineBuilder() {
           {t("portal.pipelines.builder.pipelineSettings")}
         </div>
         <div className="portal-builder__settings-grid">
-          <div className="portal-builder__settings-col">
+          <div className="portal-builder__settings-col portal-builder__inputs-col">
             <span className="portal-pipelines__detail-heading">
-              {t("portal.pipelines.composer.sources")}
+              {t("portal.pipelines.builder.inputs")}
             </span>
             {sourcesState.loading ? (
               <p className="portal-pipelines__muted">
                 {t("portal.pipelines.composer.sourcesLoading")}
               </p>
             ) : (
-              <div className="portal-pipelines__source-list">
-                {availableSources.map((source) => (
-                  <Checkbox
-                    key={source.id}
-                    checked={sourceIds.includes(source.id)}
-                    onChange={(e) => toggleSource(source.id, e.target.checked)}
-                    label={source.name}
-                  />
+              <>
+                {inputs.length === 0 && (
+                  <p className="portal-pipelines__muted">
+                    {t("portal.pipelines.builder.noInputs")}
+                  </p>
+                )}
+                {inputs.map((input) => (
+                  <div key={input.key} className="portal-builder__input-row">
+                    <div className="portal-builder__input-field">
+                      <Select
+                        inputSize="sm"
+                        aria-label={t("portal.pipelines.builder.inputSource")}
+                        placeholder={t("portal.pipelines.builder.chooseSource")}
+                        value={input.sourceId || null}
+                        invalid={input.sourceId === ""}
+                        onChange={(value) =>
+                          changeInputSource(input.key, value ?? "")
+                        }
+                        options={sourceOptionsFor(input.sourceId)}
+                      />
+                    </div>
+                    <div className="portal-builder__input-field">
+                      <Select
+                        inputSize="sm"
+                        aria-label={t("portal.pipelines.builder.inputTrigger")}
+                        value={
+                          input.triggerType === MANUAL
+                            ? MANUAL_OPTION
+                            : input.triggerType
+                        }
+                        disabled={input.sourceId === ""}
+                        onChange={(value) =>
+                          updateInput(input.key, {
+                            triggerType:
+                              value && value !== MANUAL_OPTION ? value : MANUAL,
+                          })
+                        }
+                        options={triggerOptionsFor(input.sourceId)}
+                      />
+                    </div>
+                    {input.triggerType === "schedule" && (
+                      <div className="portal-pipelines__schedule">
+                        <span className="portal-pipelines__muted">
+                          {t("portal.pipelines.composer.scheduleEvery")}
+                        </span>
+                        <Input
+                          inputSize="sm"
+                          type="number"
+                          min={1}
+                          value={input.scheduleCount}
+                          invalid={Number(input.scheduleCount) <= 0}
+                          onChange={(e) =>
+                            updateInput(input.key, {
+                              scheduleCount: e.target.value,
+                            })
+                          }
+                          className="portal-pipelines__schedule-count"
+                        />
+                        <Select
+                          inputSize="sm"
+                          value={input.scheduleUnit}
+                          onChange={(value) =>
+                            value &&
+                            updateInput(input.key, {
+                              scheduleUnit: value as ScheduleUnit,
+                            })
+                          }
+                          options={SCHEDULE_UNITS.map((unit) => ({
+                            value: unit,
+                            label: t(
+                              `portal.pipelines.composer.unit.${unit.toLowerCase()}`,
+                            ),
+                          }))}
+                        />
+                      </div>
+                    )}
+                    <ActionIcon
+                      variant="tertiary"
+                      aria-label={t("portal.pipelines.builder.removeInput")}
+                      onClick={() => removeInput(input.key)}
+                    >
+                      <DeleteOutlineRoundedIcon
+                        style={{ fontSize: "1.125rem" }}
+                      />
+                    </ActionIcon>
+                  </div>
                 ))}
-              </div>
-            )}
-            <Button
-              variant="tertiary"
-              size="sm"
-              onClick={goToSources}
-              leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
-            >
-              {t("portal.sources.actions.connectSource")}
-            </Button>
-          </div>
-
-          <div className="portal-builder__settings-col">
-            <span className="portal-pipelines__detail-heading">
-              {t("portal.pipelines.composer.trigger")}
-            </span>
-            <RadioGroup<string>
-              name="pipeline-trigger"
-              value={triggerType}
-              onChange={setTriggerType}
-              options={triggerOptions}
-            />
-            {triggerType === "schedule" && (
-              <div className="portal-pipelines__schedule">
-                <span className="portal-pipelines__muted">
-                  {t("portal.pipelines.composer.scheduleEvery")}
-                </span>
-                <Input
-                  inputSize="sm"
-                  type="number"
-                  min={1}
-                  value={scheduleCount}
-                  invalid={!scheduleCountValid}
-                  onChange={(e) => setScheduleCount(e.target.value)}
-                  className="portal-pipelines__schedule-count"
-                />
-                <Select
-                  inputSize="sm"
-                  value={scheduleUnit}
-                  onChange={(value) =>
-                    value && setScheduleUnit(value as ScheduleUnit)
-                  }
-                  options={SCHEDULE_UNITS.map((unit) => ({
-                    value: unit,
-                    label: t(
-                      `portal.pipelines.composer.unit.${unit.toLowerCase()}`,
-                    ),
-                  }))}
-                />
-              </div>
+              </>
             )}
           </div>
 
