@@ -1,5 +1,5 @@
 import { ReactNode, useEffect } from "react";
-import { RainbowThemeProvider } from "@app/components/shared/RainbowThemeProvider";
+import { ThemeProvider } from "@app/components/shared/ThemeProvider";
 import { FileContextProvider } from "@app/contexts/FileContext";
 import { NavigationProvider } from "@app/contexts/NavigationContext";
 import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
@@ -20,12 +20,14 @@ import {
 import { WorkbenchBarProvider } from "@app/contexts/WorkbenchBarContext";
 import { ViewerProvider } from "@app/contexts/ViewerContext";
 import { SignatureProvider } from "@app/contexts/SignatureContext";
+import { SigningOverlayProvider } from "@app/contexts/SigningOverlayContext";
 import { AnnotationProvider } from "@app/contexts/AnnotationContext";
 import { TourOrchestrationProvider } from "@app/contexts/TourOrchestrationContext";
 import { AdminTourOrchestrationProvider } from "@app/contexts/AdminTourOrchestrationContext";
 import { PageEditorProvider } from "@app/contexts/PageEditorContext";
 import { BannerProvider } from "@app/contexts/BannerContext";
 import ErrorBoundary from "@app/components/shared/ErrorBoundary";
+import { usePosthogTracking } from "@app/hooks/usePosthogTracking";
 import { useScarfTracking } from "@app/hooks/useScarfTracking";
 import { useAppInitialization } from "@app/hooks/useAppInitialization";
 import { useLogoAssets } from "@app/hooks/useLogoAssets";
@@ -39,6 +41,11 @@ import { FolderProvider } from "@app/contexts/FolderContext";
 // Component to initialize scarf tracking (must be inside AppConfigProvider)
 function ScarfTrackingInitializer() {
   useScarfTracking();
+  return null;
+}
+
+function PosthogTrackingInitializer() {
+  usePosthogTracking();
   return null;
 }
 
@@ -114,13 +121,14 @@ export function AppProviders({
 }: AppProvidersProps) {
   return (
     <PreferencesProvider>
-      <RainbowThemeProvider>
+      <ThemeProvider>
         <ErrorBoundary>
           <BannerProvider>
             <AppConfigProvider
               retryOptions={appConfigRetryOptions}
               {...appConfigProviderProps}
             >
+              <PosthogTrackingInitializer />
               <ScarfTrackingInitializer />
               <AppConfigLoader />
               <ServerDefaultsSync />
@@ -143,21 +151,23 @@ export function AppProviders({
                               <ViewerProvider>
                                 <PageEditorProvider>
                                   <SignatureProvider>
-                                    <RedactionProvider>
-                                      <FormFillProvider>
-                                        <AnnotationProvider>
-                                          <WorkbenchBarProvider>
-                                            <TourOrchestrationProvider>
-                                              <AdminTourOrchestrationProvider>
-                                                <FolderFileContextProvider>
-                                                  {children}
-                                                </FolderFileContextProvider>
-                                              </AdminTourOrchestrationProvider>
-                                            </TourOrchestrationProvider>
-                                          </WorkbenchBarProvider>
-                                        </AnnotationProvider>
-                                      </FormFillProvider>
-                                    </RedactionProvider>
+                                    <SigningOverlayProvider>
+                                      <RedactionProvider>
+                                        <FormFillProvider>
+                                          <AnnotationProvider>
+                                            <WorkbenchBarProvider>
+                                              <TourOrchestrationProvider>
+                                                <AdminTourOrchestrationProvider>
+                                                  <FolderFileContextProvider>
+                                                    {children}
+                                                  </FolderFileContextProvider>
+                                                </AdminTourOrchestrationProvider>
+                                              </TourOrchestrationProvider>
+                                            </WorkbenchBarProvider>
+                                          </AnnotationProvider>
+                                        </FormFillProvider>
+                                      </RedactionProvider>
+                                    </SigningOverlayProvider>
                                   </SignatureProvider>
                                 </PageEditorProvider>
                               </ViewerProvider>
@@ -172,7 +182,7 @@ export function AppProviders({
             </AppConfigProvider>
           </BannerProvider>
         </ErrorBoundary>
-      </RainbowThemeProvider>
+      </ThemeProvider>
     </PreferencesProvider>
   );
 }

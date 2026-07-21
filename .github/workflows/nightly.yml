@@ -19,7 +19,7 @@ jobs:
   playwright-all-browsers:
     name: Playwright (chromium + firefox + webkit)
     needs: pick
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    runs-on: ${{ needs.pick.outputs.use_depot == 'true' && 'depot-ubuntu-24.04-4' || 'ubuntu-latest' }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
@@ -41,6 +41,11 @@ jobs:
       - name: Install all Playwright browsers
         run: task e2e:install
 
+      - name: Build frontend (production bundle for vite preview)
+        env:
+          VITE_BUILD_FOR_PREVIEW: "1"
+        run: task frontend:build
+
       - name: Run E2E tests (all browsers)
         run: task e2e:cross-browser
 
@@ -48,6 +53,19 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: playwright-nightly-${{ github.run_id }}
-          path: frontend/editor/playwright-report/
+          name: playwright-report-nightly-${{ github.run_id }}
+          path: frontend/playwright-report/
           retention-days: 14
+
+  # Builds all desktop platforms on a schedule so the Rust dependency cache is
+  # written on main, where PR and merge-queue tauri builds can restore it.
+  warm-tauri-cache:
+    name: Warm Tauri Rust cache
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/tauri-build.yml
+    with:
+      platform: all
+      sign: false
+    secrets: inherit

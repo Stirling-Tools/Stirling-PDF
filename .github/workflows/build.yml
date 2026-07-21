@@ -41,8 +41,10 @@ jobs:
       openapi: ${{ steps.changes.outputs.openapi }}
       frontend: ${{ steps.changes.outputs.frontend }}
       docker-base: ${{ steps.changes.outputs.docker-base }}
+      dockerfiles: ${{ steps.changes.outputs.dockerfiles }}
       tauri: ${{ steps.changes.outputs.tauri }}
       engine: ${{ steps.changes.outputs.engine }}
+      generated-models: ${{ steps.changes.outputs.generated-models }}
       proprietary: ${{ steps.changes.outputs.proprietary }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
@@ -152,6 +154,7 @@ jobs:
     secrets: inherit
     with:
       docker-base-changed: ${{ needs.files-changed.outputs.docker-base }}
+      dockerfiles-changed: ${{ needs.files-changed.outputs.dockerfiles }}
 
   tauri-build:
     if: needs.files-changed.outputs.tauri == 'true'
@@ -161,6 +164,13 @@ jobs:
       pull-requests: write
     uses: ./.github/workflows/tauri-build.yml
     secrets: inherit
+    # PR smoke build: Linux only (fastest + cheapest to compile), unsigned,
+    # deb-only, no AppImage. The full signed multi-OS matrix runs on release;
+    # nightly still warms the Rust cache with all-OS defaults.
+    with:
+      platform: linux
+      sign: false
+      minimal: true
 
   ai-engine:
     if: needs.files-changed.outputs.engine == 'true'
@@ -169,6 +179,20 @@ jobs:
       contents: read
       pull-requests: write
     uses: ./.github/workflows/ai-engine.yml
+    secrets: inherit
+
+  # The generated frontend types and engine tool models are both derived from
+  # the Java OpenAPI spec. This job regenerates and diffs them; it boots the
+  # backend, so it is gated on the narrow generated-models filter (spec source,
+  # generators, generated files, generation tasks) rather than the broad
+  # frontend filter, so a CSS-only PR does not pay for a backend build.
+  generated-models:
+    if: needs.files-changed.outputs.generated-models == 'true'
+    needs: [files-changed]
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/check-generated-models.yml
     secrets: inherit
 
   pre-commit:
@@ -202,6 +226,9 @@ jobs:
       contents: read
     uses: ./.github/workflows/coverage-aggregate.yml
     secrets: inherit
+    with:
+      frontend-validation-result: ${{ needs.frontend-validation.result }}
+      playwright-e2e-live-result: ${{ needs.playwright-e2e-live.result }}
 
   # Single status check that branch protection should mark as required.
   # Succeeds when every upstream job is either `success` or `skipped` (path-
@@ -225,6 +252,7 @@ jobs:
       - test-build-docker-images
       - tauri-build
       - ai-engine
+      - generated-models
       - pre-commit
       - dependency-review
     runs-on: ubuntu-latest
@@ -250,6 +278,7 @@ jobs:
             test-build-docker-images=${{ needs.test-build-docker-images.result }}
             tauri-build=${{ needs.tauri-build.result }}
             ai-engine=${{ needs.ai-engine.result }}
+            generated-models=${{ needs.generated-models.result }}
             pre-commit=${{ needs.pre-commit.result }}
             dependency-review=${{ needs.dependency-review.result }}
         run: |

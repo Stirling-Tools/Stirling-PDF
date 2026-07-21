@@ -4,7 +4,10 @@ import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import {
+  createToolFlow,
+  type MiddleStepConfig,
+} from "@app/components/tools/shared/createToolFlow";
 import { createFilesToolStep } from "@app/components/tools/shared/FilesToolStep";
 import AutomationSelection from "@app/components/tools/automate/AutomationSelection";
 import AutomationCreation from "@app/components/tools/automate/AutomationCreation";
@@ -200,7 +203,7 @@ const Automate = ({ onPreviewFile, onComplete, onError }: BaseToolProps) => {
 
   const createStep = (
     title: string,
-    props: any,
+    props: Omit<MiddleStepConfig, "title" | "content">,
     content?: React.ReactNode,
   ) => ({
     title,

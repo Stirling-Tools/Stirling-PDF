@@ -28,6 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.constants.JwtConstants;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.access.service.ResourceAccessService;
+import stirling.software.proprietary.access.service.TeamLeadLookup;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
@@ -64,6 +66,8 @@ public class AuthController {
     private final ApplicationProperties.Security securityProperties;
     private final ApplicationProperties applicationProperties;
     private final AiUserDataService aiUserDataService;
+    private final ResourceAccessService resourceAccessService;
+    private final TeamLeadLookup teamLeadLookup;
 
     /**
      * Login endpoint - replaces Supabase signInWithPassword
@@ -263,8 +267,11 @@ public class AuthController {
                         .body(Map.of("error", "Not authenticated"));
             }
 
-            UserDetails userDetails = (UserDetails) auth.getPrincipal();
-            User user = (User) userDetails;
+            // Anonymous SaaS sessions carry a raw Jwt principal; treat them as unauthenticated
+            if (!(auth.getPrincipal() instanceof User user)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Not authenticated"));
+            }
 
             return ResponseEntity.ok(Map.of("user", buildUserResponse(user)));
 
@@ -628,6 +635,13 @@ public class AuthController {
         userMap.put("username", user.getUsername());
         userMap.put("role", user.getRolesAsString());
         userMap.put("enabled", user.isEnabled());
+        userMap.put("portalAccess", resourceAccessService.canAccessPortal(user));
+        userMap.put("teamLead", teamLeadLookup.isAnyTeamLeader(user));
+        // Expose the caller's team so non-admin team owners can scope their own team's resources.
+        if (user.getTeam() != null) {
+            userMap.put(
+                    "team", Map.of("id", user.getTeam().getId(), "name", user.getTeam().getName()));
+        }
         userMap.put(
                 "authenticationType",
                 user.getAuthenticationType()); // Expose authentication type for SSO detection

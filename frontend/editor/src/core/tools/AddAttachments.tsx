@@ -1,7 +1,10 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
-import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import {
+  createToolFlow,
+  type MiddleStepConfig,
+} from "@app/components/tools/shared/createToolFlow";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
 import { useEndpointEnabled } from "@app/hooks/useEndpointConfig";
 import { useAddAttachmentsParameters } from "@app/hooks/tools/addAttachments/useAddAttachmentsParameters";
@@ -36,9 +39,9 @@ const AddAttachments = ({
       if (operation.files && onComplete) {
         onComplete(operation.files);
       }
-    } catch (error: any) {
+    } catch (error) {
       onError?.(
-        error?.message ||
+        (error instanceof Error ? error.message : undefined) ||
           t(
             "AddAttachmentsRequest.error.failed",
             "Add attachments operation failed",
@@ -70,7 +73,7 @@ const AddAttachments = ({
   });
 
   const getSteps = () => {
-    const steps: any[] = [];
+    const steps: MiddleStepConfig[] = [];
 
     // Step 1: Attachments Selection
     steps.push({

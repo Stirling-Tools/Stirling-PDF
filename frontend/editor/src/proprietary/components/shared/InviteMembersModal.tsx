@@ -5,18 +5,18 @@ import {
   Modal,
   Stack,
   Text,
-  Button,
   TextInput,
   Select,
   Paper,
   Checkbox,
   Textarea,
-  SegmentedControl,
   Tooltip,
-  CloseButton,
   Box,
   Group,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert } from "@app/components/toast";
 import { userManagementService } from "@app/services/userManagementService";
@@ -118,11 +118,11 @@ export default function InviteMembersModal({
   const roleOptions = [
     {
       value: "ROLE_USER",
-      label: t("workspace.people.roleDescriptions.user", "User"),
+      label: t("workspace.people.user", "User"),
     },
     {
       value: "ROLE_ADMIN",
-      label: t("workspace.people.roleDescriptions.admin", "Admin"),
+      label: t("workspace.people.admin", "Admin"),
     },
   ];
 
@@ -362,7 +362,9 @@ export default function InviteMembersModal({
       withCloseButton={false}
     >
       <Box pos="relative">
-        <CloseButton
+        <ActionIcon
+          aria-label={t("common.close", "Close")}
+          variant="tertiary"
           onClick={handleClose}
           size="lg"
           style={{
@@ -371,7 +373,9 @@ export default function InviteMembersModal({
             right: -8,
             zIndex: 1,
           }}
-        />
+        >
+          <LocalIcon icon="close-rounded" />
+        </ActionIcon>
         <Stack gap="lg" pt="md">
           {/* Header with Icon */}
           <Stack gap="md" align="center">
@@ -414,19 +418,18 @@ export default function InviteMembersModal({
                       height="1rem"
                     />
                     <Text size="sm" fw={500}>
-                      {licenseInfo.availableSlots > 0
-                        ? t("workspace.people.license.slotsAvailable", {
-                            count: licenseInfo.availableSlots,
-                            defaultValue: `${licenseInfo.availableSlots} user slot(s) available`,
-                          })
-                        : t(
-                            "workspace.people.license.noSlotsAvailable",
-                            "No user slots available",
-                          )}
+                      {t("workspace.people.license.slotsAvailable", {
+                        count: licenseInfo.availableSlots,
+                        defaultValue: `${licenseInfo.availableSlots} user slot(s) available`,
+                      })}
                     </Text>
                   </Group>
                   {licenseInfo.availableSlots === 0 && (
-                    <Button size="xs" variant="light" onClick={handleGoToPlan}>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={handleGoToPlan}
+                    >
                       {t("workspace.people.actions.upgrade", "Upgrade")}
                     </Button>
                   )}
@@ -460,7 +463,7 @@ export default function InviteMembersModal({
                   setInviteMode(value as "email" | "direct" | "link");
                   setGeneratedInviteLink(null);
                 }}
-                data={[
+                options={[
                   {
                     label: t(
                       "workspace.people.inviteMode.username",
@@ -592,7 +595,7 @@ export default function InviteMembersModal({
                         style={{ flex: 1 }}
                       />
                       <Button
-                        variant="light"
+                        variant="secondary"
                         onClick={async () => {
                           try {
                             await navigator.clipboard.writeText(
@@ -855,7 +858,7 @@ export default function InviteMembersModal({
             loading={!hasNoSlots && processing}
             fullWidth
             size="md"
-            mt="md"
+            style={{ marginTop: "var(--mantine-spacing-md)" }}
           >
             {inviteMode === "email"
               ? t("workspace.people.emailInvite.submit", "Send Invites")

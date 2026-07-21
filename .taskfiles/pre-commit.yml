@@ -1,0 +1,133 @@
+version: '3'
+
+# Repo-wide lint/format/secret checks - the single source of truth that the git
+# pre-commit hook (.pre-commit-config.yaml) and CI (pre_commit.yml) both call.
+
+vars:
+  # File selections as git pathspecs: git does the include/exclude matching, so
+  # there is no grep/xargs and it behaves identically on every platform.
+  PY_FILES: >-
+    'scripts/*.py'
+    '.github/scripts/*.py'
+    'app/core/src/main/resources/static/python/*.py'
+    ':(exclude)*split_photos.py'
+  SPELL_FILES: >-
+    '*.html'
+    '*.css'
+    '*.js'
+    '*.py'
+    '*.md'
+    ':(exclude).vscode/*'
+    ':(exclude).devcontainer/*'
+    ':(exclude)app/core/src/main/resources/*'
+    ':(exclude)app/proprietary/src/main/resources/*'
+    ':(exclude)frontend/editor/public/vendor/*'
+    ':(exclude)*Dockerfile*'
+    ':(exclude)*pdfjs*'
+    ':(exclude)*thirdParty*'
+    ':(exclude)*bootstrap*'
+    ':(exclude)*.min.*'
+    ':(exclude)*diff.js'
+  WS_FILES: >-
+    '*.js'
+    '*.java'
+    '*.py'
+    '*.yml'
+    ':(exclude)*pdfjs*'
+    ':(exclude)*thirdParty*'
+    ':(exclude)*bootstrap*'
+    ':(exclude)*.min.*'
+    ':(exclude)*diff.js'
+    ':(exclude).github/workflows/*'
+  LOCALE_TOML: 'frontend/editor/public/locales/*/translation.toml'
+
+  # gitleaks is pinned + checksum-verified by scripts/pre-commit/install_gitleaks.py,
+  # which owns the version and caches the binary here.
+  GITLEAKS_BIN: '.task/bin/gitleaks{{if eq OS "windows"}}.exe{{end}}'
+
+tasks:
+  default:
+    desc: "Check formatting, spelling, and secrets across the repo"
+    cmds:
+      - task: ruff
+      - task: ruff-format
+      - task: codespell
+      - task: gitleaks
+      - task: whitespace
+      - task: toml-sort
+
+  fix:
+    desc: "Auto-fix formatting, spelling, and secrets issues across the repo"
+    cmds:
+      # Auto-fixers first, then the report-only tools (codespell, gitleaks) so a
+      # finding there does not stop the fixers from running.
+      - task: ruff
+        vars: { FIX: '1' }
+      - task: ruff-format
+        vars: { FIX: '1' }
+      - task: whitespace
+        vars: { FIX: '1' }
+      - task: toml-sort
+        vars: { FIX: '1' }
+      - task: codespell
+      - task: gitleaks
+
+  install:
+    desc: "Install the pinned pre-commit Python tools (ruff, codespell, toml-sort)"
+    run: once
+    cmds:
+      - uv sync --project scripts/pre-commit --locked
+    sources:
+      - scripts/pre-commit/uv.lock
+      - scripts/pre-commit/pyproject.toml
+    status:
+      - test -d scripts/pre-commit/.venv
+
+  clean:
+    desc: "Remove the cached gitleaks binary and the tool virtualenv"
+    cmds:
+      - cmd: rm -rf scripts/pre-commit/.venv .task/bin/gitleaks
+        platforms: [linux, darwin]
+      - cmd: cmd /c "rmdir /s /q scripts\pre-commit\.venv & del /q .task\bin\gitleaks.exe"
+        platforms: [windows]
+        ignore_error: true
+
+  # Individual checks (hidden from `task --list`, but callable, e.g.
+  # `task pre-commit:toml-sort FIX=1`). Pass FIX=1 to auto-fix where supported.
+  ruff:
+    deps: [install]
+    cmds:
+      - uv run --project scripts/pre-commit --no-sync ruff check --line-length=127 {{if .FIX}}--fix {{end}}$(git ls-files {{.PY_FILES}})
+
+  ruff-format:
+    deps: [install]
+    cmds:
+      - uv run --project scripts/pre-commit --no-sync ruff format {{if .FIX}}{{else}}--check {{end}}$(git ls-files {{.PY_FILES}})
+
+  codespell:
+    deps: [install]
+    cmds:
+      - uv run --project scripts/pre-commit --no-sync codespell --ignore-words-list=thirdParty,tabEl,tabEls,Sie,ist,fulfilment --quiet-level=2 $(git ls-files {{.SPELL_FILES}})
+
+  toml-sort:
+    deps: [install]
+    cmds:
+      - uv run --project scripts/pre-commit --no-sync toml-sort --all --ignore-case {{if .FIX}}--in-place{{else}}--check{{end}} {{.LOCALE_TOML}}
+
+  whitespace:
+    cmds:
+      - uv run --no-project python scripts/pre-commit/whitespace.py {{if .FIX}}--fix {{end}}{{.WS_FILES}}
+
+  gitleaks:
+    deps: [gitleaks-bin]
+    # Scan staged changes only, matching the old hook: the git-mode fingerprints
+    # in .gitleaksignore (file:rule:line) still apply, and with nothing staged
+    # this is a no-op. Secrets are never auto-fixed, so FIX has no effect.
+    cmds:
+      - "{{.GITLEAKS_BIN}} git --pre-commit --redact --staged --verbose"
+
+  gitleaks-bin:
+    internal: true
+    desc: "Ensure the pinned, checksum-verified gitleaks binary is cached in .task/bin"
+    cmds:
+      - uv run --no-project python scripts/pre-commit/install_gitleaks.py

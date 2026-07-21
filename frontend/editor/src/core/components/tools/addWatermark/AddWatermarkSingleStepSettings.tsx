@@ -23,6 +23,8 @@ interface AddWatermarkSingleStepSettingsProps {
   disabled?: boolean;
   /** When false, hide the "Flatten PDF pages to images" option (e.g. in policies). */
   showFlatten?: boolean;
+  /** When true, lock to text watermarks: hide the type selector and image option (e.g. in policies). */
+  textOnly?: boolean;
 }
 
 const AddWatermarkSingleStepSettings = ({
@@ -30,20 +32,24 @@ const AddWatermarkSingleStepSettings = ({
   onParameterChange,
   disabled = false,
   showFlatten = true,
+  textOnly = false,
 }: AddWatermarkSingleStepSettingsProps) => {
+  const isText = textOnly || parameters.watermarkType === "text";
+  const isImage = !textOnly && parameters.watermarkType === "image";
   return (
     <Stack gap="lg">
-      {/* Watermark Type Selection */}
-      <WatermarkTypeSettings
-        watermarkType={parameters.watermarkType}
-        onWatermarkTypeChange={(type) =>
-          onParameterChange("watermarkType", type)
-        }
-        disabled={disabled}
-      />
+      {/* Watermark type selection — hidden when locked to text. */}
+      {!textOnly && (
+        <WatermarkTypeSettings
+          watermarkType={parameters.watermarkType}
+          onWatermarkTypeChange={(type) =>
+            onParameterChange("watermarkType", type)
+          }
+          disabled={disabled}
+        />
+      )}
 
-      {/* Conditional settings based on watermark type */}
-      {parameters.watermarkType === "text" && (
+      {isText && (
         <>
           <WatermarkWording
             parameters={parameters}
@@ -58,7 +64,7 @@ const AddWatermarkSingleStepSettings = ({
         </>
       )}
 
-      {parameters.watermarkType === "image" && (
+      {isImage && (
         <WatermarkImageFile
           parameters={parameters}
           onParameterChange={onParameterChange}
@@ -67,7 +73,7 @@ const AddWatermarkSingleStepSettings = ({
       )}
 
       {/* Formatting settings for both text and image */}
-      {parameters.watermarkType && (
+      {(textOnly || parameters.watermarkType) && (
         <WatermarkFormatting
           parameters={parameters}
           onParameterChange={onParameterChange}

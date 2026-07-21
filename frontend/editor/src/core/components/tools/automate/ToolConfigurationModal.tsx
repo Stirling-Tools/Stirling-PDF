@@ -1,15 +1,7 @@
 import { Suspense, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Modal,
-  Title,
-  Button,
-  Group,
-  Stack,
-  Text,
-  Alert,
-  Loader,
-} from "@mantine/core";
+import { Modal, Title, Group, Stack, Text, Alert, Loader } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { Z_INDEX_AUTOMATE_MODAL } from "@app/styles/zIndex";
 import SettingsIcon from "@mui/icons-material/Settings";
 import CheckIcon from "@mui/icons-material/Check";
@@ -17,16 +9,16 @@ import CloseIcon from "@mui/icons-material/Close";
 import WarningIcon from "@mui/icons-material/Warning";
 import { ToolRegistry } from "@app/data/toolsTaxonomy";
 import { ToolId } from "@app/types/toolId";
-import { getAvailableToExtensions } from "@app/utils/convertUtils";
+import { ErasedToolParams } from "@app/hooks/tools/shared/toolOperationTypes";
 interface ToolConfigurationModalProps {
   opened: boolean;
   tool: {
     id: string;
     operation: string;
     name: string;
-    parameters?: any;
+    parameters?: ErasedToolParams;
   };
-  onSave: (parameters: any) => void;
+  onSave: (parameters: ErasedToolParams) => void;
   onCancel: () => void;
   toolRegistry: Partial<ToolRegistry>;
 }
@@ -40,7 +32,7 @@ export default function ToolConfigurationModal({
 }: ToolConfigurationModalProps) {
   const { t } = useTranslation();
 
-  const [parameters, setParameters] = useState<any>({});
+  const [parameters, setParameters] = useState<ErasedToolParams>({});
 
   // Get tool info from registry
   const toolInfo = toolRegistry[tool.operation as ToolId];
@@ -74,26 +66,11 @@ export default function ToolConfigurationModal({
       );
     }
 
-    // Special handling for ConvertSettings which needs additional props
-    if (tool.operation === "convert") {
-      return (
-        <SettingsComponent
-          parameters={parameters}
-          onParameterChange={(key: string, value: any) => {
-            setParameters((prev: any) => ({ ...prev, [key]: value }));
-          }}
-          getAvailableToExtensions={getAvailableToExtensions}
-          selectedFiles={[]}
-          disabled={false}
-        />
-      );
-    }
-
     return (
       <SettingsComponent
         parameters={parameters}
-        onParameterChange={(key: string, value: any) => {
-          setParameters((prev: any) => ({ ...prev, [key]: value }));
+        onParameterChange={(key, value) => {
+          setParameters((prev) => ({ ...prev, [key]: value }));
         }}
         disabled={false}
       />
@@ -140,7 +117,7 @@ export default function ToolConfigurationModal({
 
         <Group justify="flex-end" gap="sm">
           <Button
-            variant="light"
+            variant="secondary"
             leftSection={<CloseIcon />}
             onClick={onCancel}
           >

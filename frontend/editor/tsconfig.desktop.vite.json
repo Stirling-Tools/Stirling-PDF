@@ -3,15 +3,14 @@
   "compilerOptions": {
     "paths": {
       "@app/*": [
-        "src/desktop/*",
-        "src/cloud/*",
-        "src/proprietary/*",
-        "src/core/*"
+        "./src/desktop/*",
+        "./src/cloud/*",
+        "./src/proprietary/*",
+        "./src/core/*"
       ],
-      "@cloud/*": ["src/cloud/*"],
-      "@proprietary/*": ["src/proprietary/*"],
-      "@core/*": ["src/core/*"],
-      "@shared/*": ["../shared/*"]
+      "@cloud/*": ["./src/cloud/*"],
+      "@proprietary/*": ["./src/proprietary/*"],
+      "@core/*": ["./src/core/*"]
     }
   },
   "exclude": [

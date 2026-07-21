@@ -913,6 +913,52 @@ class JobChargeServiceTest {
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
+    @Test
+    void chargeStandalone_floorsUnitsAtMinChargeUnits() {
+        // Pins the per-call minChargeUnits floor that the linked-instance sync path inherits: a
+        // daily delta below the floor bills the floor (max(delta, minChargeUnits)) — applied per
+        // sync-delta here, not per underlying op (documented divergence from the in-cloud per-op
+        // floor; can only under-bill vs per-op, never over).
+        long teamId = 100L;
+        PricingPolicy policy = stubPolicy(/*minCharge*/ 5, Map.of(JobSource.WEB, 10));
+        when(policyService.getEffectivePolicy(teamId)).thenReturn(policy);
+
+        UUID jobId = UUID.randomUUID();
+        when(jobService.open(any(JobContext.class), eq(5))).thenReturn(openJob(jobId));
+        when(jobService.close(jobId)).thenReturn(openJob(jobId));
+
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(teamId);
+        ext.setStripeCustomerId("cus_x");
+        ext.setPaygSubscriptionId("sub_x");
+        ext.setFreeUnitsRemaining(0L);
+        when(teamExtRepo.findByIdForUpdate(teamId)).thenReturn(Optional.of(ext));
+        when(teamExtRepo.findById(teamId)).thenReturn(Optional.of(ext));
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId))
+                .thenReturn(
+                        Optional.of(chargedShadowRow(jobId, teamId, 5, 0, BillingCategory.API)));
+
+        ChargeContext ctx =
+                new ChargeContext(
+                        7L, teamId, JobSource.WEB, ProcessType.SINGLE_TOOL, BillingCategory.API);
+        ArgumentCaptor<WalletLedgerEntry> ledger = ArgumentCaptor.forClass(WalletLedgerEntry.class);
+
+        withTransactionSynchronization(() -> service.chargeStandalone(ctx, 2));
+
+        // Delta of 2 floored to minChargeUnits=5: the job, ledger debit, and meter all use 5.
+        verify(jobService).open(any(JobContext.class), eq(5));
+        verify(ledgerRepo).save(ledger.capture());
+        assertThat(ledger.getValue().getAmountUnits()).isEqualTo(-5);
+        verify(meterReporter)
+                .recordUsage(
+                        eq(teamId),
+                        eq("cus_x"),
+                        eq(5),
+                        eq(BillingCategory.API),
+                        eq("process:" + jobId + ":close"),
+                        eq(jobId));
+    }
+
     private static void withTransactionSynchronization(Runnable body) {
         TransactionSynchronizationManager.initSynchronization();
         try {

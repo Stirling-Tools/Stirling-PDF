@@ -16,7 +16,8 @@
  *     V1 — so it shows a real empty state, not fabricated rows
  */
 import React, { useState } from "react";
-import { Button, Group, Stack, Text } from "@mantine/core";
+import { Group, Stack, Text } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useRenderCount } from "@app/hooks/useRenderCount";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import LockIcon from "@mui/icons-material/LockOutlined";
@@ -110,16 +111,16 @@ export function DocHelp() {
   const [open, setOpen] = useState(false);
   return (
     <div className="payg-help">
-      <button
-        type="button"
+      <Button
+        variant="tertiary"
         className="payg-help__toggle"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
+        leftSection={<HelpOutlineIcon sx={{ fontSize: 15 }} />}
       >
-        <HelpOutlineIcon sx={{ fontSize: 15 }} />
         {t("payg.docHelp.toggle", "What counts as a PDF?")}
         <ExpandMoreIcon className="payg-help__chevron" sx={{ fontSize: 16 }} />
-      </button>
+      </Button>
       {open && (
         <div className="payg-help__panel">
           <ul>
@@ -446,16 +447,16 @@ function CapReachedHelp() {
   const [open, setOpen] = useState(false);
   return (
     <div className="payg-help">
-      <button
-        type="button"
+      <Button
+        variant="tertiary"
         className="payg-help__toggle"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
+        leftSection={<HelpOutlineIcon sx={{ fontSize: 15 }} />}
       >
-        <HelpOutlineIcon sx={{ fontSize: 15 }} />
         {t("payg.gates.title", "What happens when the cap is reached")}
         <ExpandMoreIcon className="payg-help__chevron" sx={{ fontSize: 16 }} />
-      </button>
+      </Button>
       {open && (
         <div className="payg-help__panel">
           <div className="payg-gates">
@@ -656,7 +657,7 @@ function StripePortalLink({
         onClick={handleClick}
         loading={loading}
         rightSection={<OpenInNewIcon sx={{ fontSize: 16 }} />}
-        variant="light"
+        variant="secondary"
       >
         {t("payg.stripe.open", "Open billing portal")}
       </Button>

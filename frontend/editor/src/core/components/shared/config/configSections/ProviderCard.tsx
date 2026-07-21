@@ -3,7 +3,6 @@ import {
   Paper,
   Group,
   Text,
-  Button,
   Collapse,
   Stack,
   TextInput,
@@ -13,6 +12,7 @@ import {
   TagsInput,
   Anchor,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import EditableSecretField from "@app/components/shared/EditableSecretField";
@@ -191,8 +191,9 @@ export default function ProviderCard({
   };
 
   const renderProviderIcon = () => {
-    // If icon starts with '/', it's a path to an SVG file
-    if (provider.icon.startsWith("/")) {
+    // Image source: an absolute/relative path, a data: URI (small bundled SVGs
+    // are inlined), or a full URL. Iconify names ("key-rounded") use LocalIcon.
+    if (/^(\/|\.\.?\/|data:|blob:|https?:)/.test(provider.icon)) {
       return (
         <img
           src={provider.icon}
@@ -224,8 +225,8 @@ export default function ProviderCard({
 
           <Group gap="xs" wrap="nowrap">
             <Button
-              variant={isConfigured ? "subtle" : "filled"}
-              size="xs"
+              variant={isConfigured ? "tertiary" : "primary"}
+              size="sm"
               onClick={
                 isConfigured
                   ? () => setExpanded(!expanded)
@@ -279,8 +280,8 @@ export default function ProviderCard({
               <Group justify="flex-end" mt="sm">
                 {onDisconnect && (
                   <Button
-                    variant="outline"
-                    color="red"
+                    variant="secondary"
+                    accent="danger"
                     size="sm"
                     onClick={onDisconnect}
                     disabled={disabled}

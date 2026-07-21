@@ -83,7 +83,10 @@ async function getIDBFolders(
         const all = tx.objectStore(storeName).getAll();
         all.onsuccess = () =>
           resolve(
-            (all.result || []).map((f: any) => ({ id: f.id, name: f.name })),
+            (all.result || []).map((f: { id: string; name: string }) => ({
+              id: f.id,
+              name: f.name,
+            })),
           );
         all.onerror = () => resolve([]);
       };
@@ -275,7 +278,7 @@ test.describe("Watched Folders — Create / Edit / Delete", () => {
           dbName: string,
           storeName: string,
           key: string,
-          value: any,
+          value: unknown,
         ) =>
           new Promise<void>((resolve) => {
             const req = indexedDB.open(dbName);
