@@ -56,15 +56,15 @@ public class PolicyInlineOutputMigration {
         Map<String, Source> byAddress = indexExistingSources();
         int migrated = 0;
         for (Policy policy : policyStore.all()) {
-            if (policy.outputId() != null && !policy.outputId().isBlank()) {
-                continue; // already references a location
+            if (!policy.outputIds().isEmpty()) {
+                continue; // already references one or more locations
             }
             OutputSpec output = policy.output();
             if (output == null || !DESTINATION_TYPES.contains(output.type())) {
                 continue; // inline / editor / no location to migrate
             }
             Source destination = destinationFor(policy, output, byAddress);
-            policyStore.save(policy.withOutputId(destination.id()));
+            policyStore.save(policy.withOutputIds(List.of(destination.id())));
             migrated++;
         }
         if (migrated > 0) {

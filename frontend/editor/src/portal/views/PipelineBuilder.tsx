@@ -150,7 +150,7 @@ export function PipelineBuilder() {
   const [triggerType, setTriggerType] = useState<string>(MANUAL);
   const [scheduleCount, setScheduleCount] = useState("1");
   const [scheduleUnit, setScheduleUnit] = useState<ScheduleUnit>("HOURS");
-  const [outputId, setOutputId] = useState("");
+  const [outputIds, setOutputIds] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [seeded, setSeeded] = useState(false);
@@ -184,7 +184,7 @@ export function PipelineBuilder() {
     setTriggerType(trigger.triggerType);
     setScheduleCount(trigger.count);
     setScheduleUnit(trigger.unit);
-    setOutputId(policy?.outputId ?? "");
+    setOutputIds(policy?.outputIds ?? []);
     setSeeded(true);
   }, [isEdit, policyState.data, allTools, seeded]);
 
@@ -283,7 +283,7 @@ export function PipelineBuilder() {
     triggerType,
     scheduleCount,
     scheduleUnit,
-    outputId,
+    outputIds: [...outputIds].sort(),
   });
   const baseline = useRef<string | null>(null);
   useEffect(() => {
@@ -293,8 +293,8 @@ export function PipelineBuilder() {
 
   const scheduleCountValid =
     triggerType !== "schedule" || Number(scheduleCount) > 0;
-  // A saved output destination must be chosen; pipelines no longer configure output inline.
-  const outputValid = outputId.trim() !== "";
+  // At least one saved destination must be chosen; pipelines no longer configure output inline.
+  const outputValid = outputIds.length > 0;
   const canSave =
     name.trim() !== "" &&
     scheduleCountValid &&
@@ -360,10 +360,10 @@ export function PipelineBuilder() {
       trigger: buildTrigger(),
       sourceIds,
       steps: steps.map((step) => serializeToolStep(step, allTools)),
-      // The destination is the referenced saved output; the inline output field is
+      // Destinations are the referenced saved sources; the inline output field is
       // preserved as-is (e.g. an editor policy's membership metadata) or defaults to inline.
       output: policyState.data?.output ?? { type: "inline", options: {} },
-      outputId,
+      outputIds,
     };
     try {
       await savePipeline(policy);
@@ -688,8 +688,8 @@ export function PipelineBuilder() {
             >
               <DestinationPicker
                 sources={writableSources}
-                value={outputId}
-                onChange={setOutputId}
+                value={outputIds}
+                onChange={setOutputIds}
                 onCreateNew={goToSources}
               />
             </FormField>

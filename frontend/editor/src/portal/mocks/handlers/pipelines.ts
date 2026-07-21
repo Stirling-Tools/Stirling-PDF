@@ -53,7 +53,7 @@ function seedPipelines(): StoredPolicy[] {
         { operation: "/api/v1/security/sanitize-pdf", parameters: {} },
       ],
       output: { type: "inline", options: {} },
-      outputId: "src-archive",
+      outputIds: ["src-archive", "src-contracts"],
     },
     {
       id: "plc-archive",
@@ -64,7 +64,7 @@ function seedPipelines(): StoredPolicy[] {
       sourceIds: ["src-contracts", "src-archive"],
       steps: [{ operation: "/api/v1/misc/compress-pdf", parameters: {} }],
       output: { type: "inline", options: {} },
-      outputId: "src-contracts",
+      outputIds: ["src-contracts"],
     },
     {
       id: "plc-onboarding",
@@ -78,6 +78,7 @@ function seedPipelines(): StoredPolicy[] {
         { operation: "/api/v1/misc/flatten", parameters: {} },
       ],
       output: { type: "inline", options: {} },
+      outputIds: [],
     },
   ];
 }
@@ -106,9 +107,10 @@ function toView(policy: StoredPolicy): PipelineView {
       name: SOURCE_NAMES[id] ?? id,
     })),
     steps: policy.steps.map((s) => s.operation),
-    output: policy.outputId
-      ? (SOURCE_NAMES[policy.outputId] ?? policy.outputId)
-      : (policy.output?.type ?? "inline"),
+    output:
+      policy.outputIds && policy.outputIds.length > 0
+        ? policy.outputIds.map((id) => SOURCE_NAMES[id] ?? id).join(", ")
+        : (policy.output?.type ?? "inline"),
     owner: policy.owner ?? "you@acme.com",
   };
 }

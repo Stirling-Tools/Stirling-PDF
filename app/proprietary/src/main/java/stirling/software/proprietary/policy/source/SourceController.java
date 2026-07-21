@@ -2,7 +2,6 @@ package stirling.software.proprietary.policy.source;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -265,7 +264,7 @@ public class SourceController {
                 .filter(
                         policy ->
                                 policy.sourceIds().contains(sourceId)
-                                        || Objects.equals(policy.outputId(), sourceId))
+                                        || policy.outputIds().contains(sourceId))
                 .map(Policy::name)
                 .toList();
     }

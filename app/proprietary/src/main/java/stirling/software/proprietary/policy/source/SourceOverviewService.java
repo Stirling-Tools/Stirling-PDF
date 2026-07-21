@@ -125,9 +125,7 @@ public class SourceOverviewService {
         Map<String, List<Policy>> bySource = new HashMap<>();
         for (Policy policy : policies) {
             Set<String> referenced = new LinkedHashSet<>(policy.sourceIds());
-            if (policy.outputId() != null && !policy.outputId().isBlank()) {
-                referenced.add(policy.outputId());
-            }
+            referenced.addAll(policy.outputIds());
             for (String sourceId : referenced) {
                 bySource.computeIfAbsent(sourceId, key -> new ArrayList<>()).add(policy);
             }

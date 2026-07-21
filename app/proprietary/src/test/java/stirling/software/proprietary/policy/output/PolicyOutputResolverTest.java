@@ -15,9 +15,9 @@ import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceStore;
 
 /**
- * Tests for {@link PolicyOutputResolver}: a policy's {@code outputId} resolves live to the stored
- * source used as its destination, an unreferenced policy keeps its inline output, and a dangling
- * reference falls back to inline delivery rather than failing the run.
+ * Tests for {@link PolicyOutputResolver}: a policy's {@code outputIds} resolve live to the stored
+ * sources used as destinations (one spec each), an unreferenced policy keeps its inline output, and
+ * a dangling reference falls back to inline delivery rather than failing the run.
  */
 class PolicyOutputResolverTest {
 
@@ -25,36 +25,38 @@ class PolicyOutputResolverTest {
     private final PolicyOutputResolver resolver = new PolicyOutputResolver(sourceStore);
 
     @Test
-    void resolvesOutputIdToTheStoredSource() {
-        Source archive =
-                sourceStore.save(
-                        new Source(
-                                null,
-                                "Archive",
-                                "folder",
-                                Map.of("directory", "/out"),
-                                true,
-                                "owner",
-                                null));
+    void resolvesEachOutputIdToItsStoredSource() {
+        Source archive = sourceStore.save(folder("Archive", "/out"));
+        Source backup = sourceStore.save(folder("Backup", "/backup"));
 
-        OutputSpec spec = resolver.resolve(policy().withOutputId(archive.id()));
+        List<OutputSpec> specs =
+                resolver.resolve(policy().withOutputIds(List.of(archive.id(), backup.id())));
 
-        assertEquals("folder", spec.type());
-        assertEquals("/out", spec.options().get("directory"));
+        assertEquals(2, specs.size());
+        assertEquals("/out", specs.get(0).options().get("directory"));
+        assertEquals("/backup", specs.get(1).options().get("directory"));
     }
 
     @Test
     void anUnreferencedPolicyKeepsItsInlineOutput() {
-        OutputSpec spec = resolver.resolve(policy());
+        List<OutputSpec> specs = resolver.resolve(policy());
 
-        assertEquals("inline", spec.type());
+        assertEquals(1, specs.size());
+        assertEquals("inline", specs.get(0).type());
     }
 
     @Test
-    void aDanglingReferenceFallsBackToInline() {
-        OutputSpec spec = resolver.resolve(policy().withOutputId("does-not-exist"));
+    void whenNoReferencesResolveItFallsBackToInline() {
+        List<OutputSpec> specs =
+                resolver.resolve(policy().withOutputIds(List.of("does-not-exist")));
 
-        assertEquals("inline", spec.type());
+        assertEquals(1, specs.size());
+        assertEquals("inline", specs.get(0).type());
+    }
+
+    private static Source folder(String name, String directory) {
+        return new Source(
+                null, name, "folder", Map.of("directory", directory), true, "owner", null);
     }
 
     private static Policy policy() {

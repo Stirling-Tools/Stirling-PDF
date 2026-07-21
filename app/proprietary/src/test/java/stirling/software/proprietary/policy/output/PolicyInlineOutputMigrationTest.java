@@ -1,8 +1,6 @@
 package stirling.software.proprietary.policy.output;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -39,8 +37,8 @@ class PolicyInlineOutputMigrationTest {
         migration.migrate();
 
         Policy migrated = policyStore.get(saved.id()).orElseThrow();
-        assertNotNull(migrated.outputId());
-        Source destination = sourceStore.get(migrated.outputId()).orElseThrow();
+        assertEquals(1, migrated.outputIds().size());
+        Source destination = sourceStore.get(migrated.outputIds().get(0)).orElseThrow();
         assertEquals("folder", destination.type());
         assertEquals("/out", destination.options().get("directory"));
     }
@@ -61,7 +59,7 @@ class PolicyInlineOutputMigrationTest {
 
         migration.migrate();
 
-        assertNull(policyStore.get(saved.id()).orElseThrow().outputId());
+        assertTrue(policyStore.get(saved.id()).orElseThrow().outputIds().isEmpty());
         assertTrue(sourceStore.all().isEmpty());
     }
 
@@ -105,7 +103,7 @@ class PolicyInlineOutputMigrationTest {
         migration.migrate();
 
         assertEquals(1, sourceStore.all().size());
-        assertEquals(existing.id(), policyStore.get(saved.id()).orElseThrow().outputId());
+        assertEquals(List.of(existing.id()), policyStore.get(saved.id()).orElseThrow().outputIds());
     }
 
     private static Policy folderPolicy(String name, String directory) {

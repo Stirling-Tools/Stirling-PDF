@@ -3,15 +3,14 @@ package stirling.software.proprietary.policy.model;
 import java.util.List;
 
 /**
- * A stored automation: ordered tool steps, input sources, and an output destination.
+ * A stored automation: ordered tool steps, input sources, and output destinations.
  *
  * <p>Always runnable on demand. An optional {@link TriggerConfig} fires it automatically; a {@code
  * null} trigger means manual-only. Trigger decides when; {@code sourceIds} reference the persisted
- * {@code Source} connections (resolved live at run time) that decide where files come from; a run
- * pulls from every referenced source. {@code outputId}, when set, references the persisted {@code
- * Output} destination (resolved live at run time) a run's files are delivered to; when {@code null}
- * the inline {@link #output} is used (results returned to the caller), which is the case for editor
- * and one-off policies.
+ * {@code Source} locations (resolved live at run time) files come from; a run pulls from every
+ * referenced source. {@code outputIds} reference the {@code Source} locations (resolved live) a
+ * run's files are delivered to - a run is delivered to every one; when empty the inline {@link
+ * #output} is used (results returned to the caller), the case for editor and one-off policies.
  */
 public record Policy(
         String id,
@@ -22,19 +21,20 @@ public record Policy(
         List<String> sourceIds,
         List<PipelineStep> steps,
         OutputSpec output,
-        String outputId,
+        List<String> outputIds,
         Long teamId) {
 
     public Policy {
         sourceIds = sourceIds == null ? List.of() : List.copyOf(sourceIds);
         steps = steps == null ? List.of() : steps;
         output = output == null ? OutputSpec.inline() : output;
+        outputIds = outputIds == null ? List.of() : List.copyOf(outputIds);
     }
 
     /**
-     * Without an output reference: the inline output is used as-is. Kept for the engine,
-     * migrations, and tests, and for editor/one-off policies that return results to the caller
-     * rather than a stored destination.
+     * Without output references: the inline output is used as-is. Kept for the engine, migrations,
+     * and tests, and for editor/one-off policies that return results to the caller rather than a
+     * stored destination.
      */
     public Policy(
             String id,
@@ -46,7 +46,7 @@ public record Policy(
             List<PipelineStep> steps,
             OutputSpec output,
             Long teamId) {
-        this(id, name, owner, enabled, trigger, sourceIds, steps, output, null, teamId);
+        this(id, name, owner, enabled, trigger, sourceIds, steps, output, List.of(), teamId);
     }
 
     /**
@@ -62,7 +62,7 @@ public record Policy(
             List<String> sourceIds,
             List<PipelineStep> steps,
             OutputSpec output) {
-        this(id, name, owner, enabled, trigger, sourceIds, steps, output, null, null);
+        this(id, name, owner, enabled, trigger, sourceIds, steps, output, List.of(), null);
     }
 
     /** A policy with no configured sources (a generator, or files supplied directly to a run). */
@@ -74,22 +74,25 @@ public record Policy(
             TriggerConfig trigger,
             List<PipelineStep> steps,
             OutputSpec output) {
-        this(id, name, owner, enabled, trigger, List.of(), steps, output, null, null);
+        this(id, name, owner, enabled, trigger, List.of(), steps, output, List.of(), null);
     }
 
-    /** A copy with the effective output resolved, for the engine to run against. */
+    /** A copy with the inline output replaced (e.g. resolved for the engine, or migrated). */
     public Policy withOutput(OutputSpec resolved) {
         return new Policy(
-                id, name, owner, enabled, trigger, sourceIds, steps, resolved, outputId, teamId);
+                id, name, owner, enabled, trigger, sourceIds, steps, resolved, outputIds, teamId);
     }
 
-    /** A copy referencing the given saved output destination. */
-    public Policy withOutputId(String newOutputId) {
+    /** A copy referencing the given saved output destinations. */
+    public Policy withOutputIds(List<String> newOutputIds) {
         return new Policy(
-                id, name, owner, enabled, trigger, sourceIds, steps, output, newOutputId, teamId);
+                id, name, owner, enabled, trigger, sourceIds, steps, output, newOutputIds, teamId);
     }
 
-    /** This policy's pipeline as the engine sees it. */
+    /**
+     * This policy's pipeline as the engine sees it (inline output; destinations resolved
+     * elsewhere).
+     */
     public PipelineDefinition toDefinition() {
         return new PipelineDefinition(name, steps, output);
     }

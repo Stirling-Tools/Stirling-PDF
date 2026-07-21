@@ -46,15 +46,16 @@ export interface Policy {
   sourceIds: string[];
   steps: PipelineStep[];
   /**
-   * Inline output, used only when no destination is referenced (editor/one-off runs that return
-   * results to the caller). Portal pipelines set {@link outputId} instead.
+   * Inline output, used only when no destinations are referenced (editor/one-off runs that return
+   * results to the caller). Portal pipelines set {@link outputIds} instead.
    */
   output: OutputSpec;
   /**
-   * The saved Source this policy delivers its output to, resolved live at run time (a source used
-   * as a write target). `null`/absent means the inline {@link output} is used.
+   * The saved Sources this policy delivers its output to (each a source used as a write target),
+   * resolved live at run time; a run is delivered to every one. Empty means the inline {@link
+   * output} is used.
    */
-  outputId?: string | null;
+  outputIds: string[];
   teamId?: number | null;
 }
 

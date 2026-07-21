@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -80,13 +81,16 @@ public class PolicyOverviewService {
     }
 
     /**
-     * A policy that delivers to a source shows that location's display name (falling back to the id
-     * if it's since been deleted or isn't visible); otherwise the inline output's type.
+     * A policy that delivers to sources shows those locations' display names, comma-joined (each
+     * falling back to its id if it's since been deleted or isn't visible); otherwise the inline
+     * output's type.
      */
     private static String outputSummary(Policy policy, Map<String, String> sourceNames) {
-        String outputId = policy.outputId();
-        if (outputId != null && !outputId.isBlank()) {
-            return sourceNames.getOrDefault(outputId, outputId);
+        List<String> outputIds = policy.outputIds();
+        if (!outputIds.isEmpty()) {
+            return outputIds.stream()
+                    .map(id -> sourceNames.getOrDefault(id, id))
+                    .collect(Collectors.joining(", "));
         }
         return outputSummary(policy.output());
     }

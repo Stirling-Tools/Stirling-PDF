@@ -44,7 +44,7 @@ public class JpaPolicyStore implements PolicyStore {
                         policy.sourceIds(),
                         policy.steps(),
                         policy.output(),
-                        policy.outputId(),
+                        policy.outputIds(),
                         policy.teamId());
 
         PolicyEntity entity = new PolicyEntity();

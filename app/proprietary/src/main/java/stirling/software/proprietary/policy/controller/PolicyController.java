@@ -273,28 +273,27 @@ public class PolicyController {
      * nothing to check.
      */
     private void requireAccessibleOutput(Policy policy) {
-        String outputId = policy.outputId();
-        if (outputId == null || outputId.isBlank()) {
-            return;
-        }
-        Source destination =
-                sourceStore
-                        .get(outputId)
-                        .filter(sourceAccessGuard::canAccess)
-                        .orElseThrow(
-                                () ->
-                                        new ResponseStatusException(
-                                                HttpStatus.BAD_REQUEST,
-                                                "Unknown or inaccessible output source: "
-                                                        + outputId));
-        if (EditorSource.TYPE.equals(destination.type())) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "The editor can't be used as an output destination");
-        }
-        try {
-            policyValidator.validateOutput(destination.toOutputSpec());
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        for (String outputId : policy.outputIds()) {
+            Source destination =
+                    sourceStore
+                            .get(outputId)
+                            .filter(sourceAccessGuard::canAccess)
+                            .orElseThrow(
+                                    () ->
+                                            new ResponseStatusException(
+                                                    HttpStatus.BAD_REQUEST,
+                                                    "Unknown or inaccessible output source: "
+                                                            + outputId));
+            if (EditorSource.TYPE.equals(destination.type())) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "The editor can't be used as an output destination");
+            }
+            try {
+                policyValidator.validateOutput(destination.toOutputSpec());
+            } catch (IllegalArgumentException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+            }
         }
     }
 
@@ -331,7 +330,7 @@ public class PolicyController {
                 policy.sourceIds(),
                 policy.steps(),
                 policy.output(),
-                policy.outputId(),
+                policy.outputIds(),
                 teamId);
     }
 
@@ -567,13 +566,12 @@ public class PolicyController {
      * policies are covered by save-time {@link PolicyValidator#validate} instead.
      */
     private void validateAdHocOutput(PipelineDefinition definition) {
-        if (definition.output() == null) {
-            return;
-        }
-        try {
-            policyValidator.validateOutput(definition.output());
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        for (OutputSpec output : definition.outputs()) {
+            try {
+                policyValidator.validateOutput(output);
+            } catch (IllegalArgumentException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+            }
         }
     }
 

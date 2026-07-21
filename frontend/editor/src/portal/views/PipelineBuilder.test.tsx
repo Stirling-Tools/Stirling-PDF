@@ -57,18 +57,18 @@ vi.mock("@portal/api/integrations", () => ({
   createIntegration: (...args: unknown[]) => createIntegration(...args),
 }));
 
-// The destination picker just selects a saved source; stub it to a button that
+// The destination picker just selects saved sources; stub it to a button that
 // picks a fixed source, keeping this suite focused on the builder.
 vi.mock("@portal/components/pipelines/DestinationPicker", () => ({
   DestinationPicker: ({
     value,
     onChange,
   }: {
-    value: string;
-    onChange: (id: string) => void;
+    value: string[];
+    onChange: (ids: string[]) => void;
   }) => (
-    <button type="button" onClick={() => onChange("src-1")}>
-      {value ? `output:${value}` : "pick output"}
+    <button type="button" onClick={() => onChange(["src-1"])}>
+      {value.length > 0 ? `output:${value.join(",")}` : "pick output"}
     </button>
   ),
 }));
@@ -198,7 +198,7 @@ describe("PipelineBuilder", () => {
       expect.objectContaining({
         name: "Nightly compress",
         trigger: null,
-        outputId: "src-1",
+        outputIds: ["src-1"],
         steps: [
           expect.objectContaining({ operation: "/api/v1/misc/compress-pdf" }),
         ],
@@ -225,7 +225,7 @@ describe("PipelineBuilder", () => {
     fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
     await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
     expect(savePipeline).toHaveBeenCalledWith(
-      expect.objectContaining({ outputId: "src-1" }),
+      expect.objectContaining({ outputIds: ["src-1"] }),
     );
   });
 
