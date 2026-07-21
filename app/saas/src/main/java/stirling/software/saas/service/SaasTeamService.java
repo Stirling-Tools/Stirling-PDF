@@ -370,6 +370,12 @@ public class SaasTeamService {
                     || oldTeam.getId().equals(team.getId())) {
                 continue; // keep the durable home; skip the team being joined
             }
+            // Keep any team the user leads that still has other members: leaving it would orphan
+            // them (members, zero leaders). Solo/empty led teams and plain memberships still leave.
+            if (existingMembership.isLeader()
+                    && membershipRepository.countByTeamId(oldTeam.getId()) > 1) {
+                continue;
+            }
             membershipRepository.delete(existingMembership);
             saasTeamExtensionsRepository.decrementSeatsUsed(oldTeam.getId());
             log.info(

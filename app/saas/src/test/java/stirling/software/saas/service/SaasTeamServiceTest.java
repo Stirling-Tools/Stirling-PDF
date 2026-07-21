@@ -799,6 +799,34 @@ class SaasTeamServiceTest {
             verify(teamRepository, never()).delete(oldTeam);
             verify(userRepository).updateUserTeamId(5L, 100L);
         }
+
+        @Test
+        @DisplayName("keeps a led team with other members (parks it) instead of orphaning it")
+        void soleLeaderOfSharedTeam_teamKeptNotOrphaned() {
+            User u = user(5L, "b@x.com", "bob");
+            Team newTeam = team(100L, "Acme");
+            Team shared = team(300L, "Bob's Org"); // u solely leads it; it has other members
+            TeamMembership sharedMembership = membership(shared, u, TeamRole.LEADER);
+            TeamInvitation inv =
+                    pendingInvitation(newTeam, user(1L, "a@x.com", "alice"), "b@x.com");
+
+            when(userRepository.findById(5L)).thenReturn(Optional.of(u));
+            when(invitationRepository.findByInvitationToken("tok-123"))
+                    .thenReturn(Optional.of(inv));
+            when(saasTeamExtensionService.hasAvailableSeats(newTeam)).thenReturn(true);
+            when(membershipRepository.findByUserId(5L)).thenReturn(List.of(sharedMembership));
+            // Shared team: sole leader, but >1 member - leaving would orphan the other member.
+            when(membershipRepository.countByTeamId(300L)).thenReturn(2L);
+            when(membershipRepository.countByTeamIdAndRole(300L, TeamRole.LEADER)).thenReturn(1L);
+            when(saasTeamExtensionsRepository.incrementSeatsUsed(100L)).thenReturn(1);
+
+            service.acceptInvitation("tok-123", u);
+
+            // The led team is parked: its membership is kept, not deleted.
+            verify(membershipRepository, never()).delete(sharedMembership);
+            verify(userRepository).updateUserTeamId(5L, 100L);
+            assertThat(inv.getStatus()).isEqualTo(InvitationStatus.ACCEPTED);
+        }
     }
 
     // =============================================================================================
