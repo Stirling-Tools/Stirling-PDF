@@ -18,9 +18,9 @@ import stirling.software.proprietary.integration.crypto.LegacyDecryptStringConve
  * JPA row for a {@link stirling.software.proprietary.policy.model.Policy}. The whole policy lives
  * as JSON in {@code policyJson} (authoritative on read); the scalar columns are denormalized copies
  * for querying, notably {@code enabled} so background triggers can scan the active policies, and
- * {@code teamId} so the caller's team can be loaded without scanning every team's rows.
- * {@code owner} and {@code teamId} are plain values, not foreign keys, to stay decoupled from the
- * security entities.
+ * {@code teamId} so the caller's team can be loaded without scanning every team's rows. {@code
+ * owner} and {@code teamId} are plain values, not foreign keys, to stay decoupled from the security
+ * entities.
  */
 @Entity
 @Table(name = "policies")
