@@ -7,8 +7,9 @@ import { useTheme } from "@portal/contexts/ThemeContext";
 import { useUI } from "@portal/contexts/UIContext";
 import { LinkAccountFooterItem } from "@portal/components/LinkAccountFooterItem";
 import { EDITOR_URL, EDITOR_IS_SAME_APP } from "@portal/auth/editorUrl";
-import wordmarkLight from "@app/assets/brand/modern-logo/StirlingProcessorLogoBlackText.svg";
-import wordmarkDark from "@app/assets/brand/modern-logo/StirlingProcessorLogoWhiteText.svg";
+import mark from "@app/assets/brand/modern-logo/StirlingProcessorLogoNoText.svg";
+import wordmarkLight from "@app/assets/brand/modern-logo/StirlingLogoBlackText.svg";
+import wordmarkDark from "@app/assets/brand/modern-logo/StirlingLogoWhiteText.svg";
 import { SettingsIcon } from "@portal/components/icons";
 import {
   GROUP_PROCESSOR,
@@ -67,9 +68,15 @@ export function Sidebar() {
     >
       <div className="portal-sidebar__logo">
         <img
+          className="portal-sidebar__mark"
+          src={mark}
+          alt=""
+          aria-hidden="true"
+        />
+        <img
           className="portal-sidebar__wordmark"
           src={theme === "dark" ? wordmarkDark : wordmarkLight}
-          alt={t("portal.shell.sidebar.brandSuffix")}
+          alt="Stirling"
         />
 
         <AppSwitch
