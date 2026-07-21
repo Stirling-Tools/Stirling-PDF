@@ -36,6 +36,7 @@ import stirling.software.proprietary.policy.ledger.InProcessProcessedLedger;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
@@ -306,7 +307,6 @@ class PolicyRunnerTest {
                         "p",
                         "owner",
                         true,
-                        null,
                         List.of(),
                         List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                         OutputSpec.inline(),
@@ -338,8 +338,7 @@ class PolicyRunnerTest {
                 "p",
                 "owner",
                 true,
-                null,
-                sourceIds,
+                sourceIds.stream().map(PipelineInput::manual).toList(),
                 List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                 OutputSpec.inline());
     }

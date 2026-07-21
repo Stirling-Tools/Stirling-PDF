@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.PolicyBinding;
 
 /** Stores {@link Policy} definitions. */
 public interface PolicyStore {
@@ -18,8 +19,11 @@ public interface PolicyStore {
     /** Policies owned by the given team, loaded scoped rather than fetched globally. */
     List<Policy> findByTeam(Long teamId);
 
-    /** Enabled policies with the given trigger type, for background triggers. */
-    List<Policy> findByTriggerType(String triggerType);
+    /**
+     * Enabled inputs with the given trigger type, as {@code (policy, input)} bindings, so a
+     * background trigger fires each input independently and pulls only its own source.
+     */
+    List<PolicyBinding> findBindingsByTriggerType(String triggerType);
 
     /**
      * Set the team's run order from {@code orderedIds} (position → sortOrder). Only policies that

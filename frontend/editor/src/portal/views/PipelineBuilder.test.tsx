@@ -123,8 +123,7 @@ const POLICY: Policy = {
   id: "plc-1",
   name: "Existing pipeline",
   enabled: true,
-  trigger: null,
-  sourceIds: [],
+  inputs: [],
   steps: [],
   output: { type: "inline", options: {} },
   outputIds: [],
@@ -215,7 +214,7 @@ describe("PipelineBuilder", () => {
     expect(savePipeline).toHaveBeenCalledWith(
       expect.objectContaining({
         name: "Nightly compress",
-        trigger: null,
+        inputs: [],
         sourceIds: ["src-in"],
         outputIds: ["src-1"],
         steps: [

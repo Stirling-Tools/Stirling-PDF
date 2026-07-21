@@ -173,10 +173,15 @@ export function PipelineBuilder() {
     if (seeded) return;
     if (isEdit && !policyState.data) return;
     const policy = policyState.data ?? undefined;
-    const trigger = parseTrigger(policy?.trigger ?? null);
+    // The builder still models one trigger for the whole pipeline; take it from the first input
+    // that carries one. (The per-input rebuild will drop this single-trigger shim.)
+    const inputs = policy?.inputs ?? [];
+    const trigger = parseTrigger(
+      inputs.find((input) => input.trigger !== null)?.trigger ?? null,
+    );
     setName(policy?.name ?? "");
     setEnabled(policy?.enabled ?? true);
-    setSourceIds(policy?.sourceIds ?? []);
+    setSourceIds(inputs.map((input) => input.sourceId));
     setSteps(
       (policy?.steps ?? []).map((step) => deserializeToolStep(step, allTools)),
     );
@@ -354,12 +359,14 @@ export function PipelineBuilder() {
     if (!canSave) return;
     setSubmitting(true);
     setError(null);
+    // Single-trigger shim: apply the one configured trigger to every input. The per-input
+    // rebuild will let each input carry its own trigger.
+    const trigger = buildTrigger();
     const policy: Policy = {
       id: policyState.data?.id ?? undefined,
       name: name.trim(),
       enabled,
-      trigger: buildTrigger(),
-      sourceIds,
+      inputs: sourceIds.map((sourceId) => ({ sourceId, trigger })),
       steps: steps.map((step) => serializeToolStep(step, allTools)),
       // Destinations are the referenced saved sources; the inline output field is
       // preserved as-is (e.g. an editor policy's membership metadata) or defaults to inline.

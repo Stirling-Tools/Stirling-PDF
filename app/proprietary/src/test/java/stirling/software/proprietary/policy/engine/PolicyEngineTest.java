@@ -262,7 +262,7 @@ class PolicyEngineTest {
                         "rotate",
                         "owner",
                         true,
-                        null,
+                        List.of(),
                         List.of(new PipelineStep(ROTATE, Map.of())),
                         OutputSpec.inline());
 
@@ -306,7 +306,7 @@ class PolicyEngineTest {
                         "rotate",
                         "alice",
                         true,
-                        null,
+                        List.of(),
                         List.of(new PipelineStep(ROTATE, Map.of())),
                         OutputSpec.inline());
 
