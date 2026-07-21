@@ -356,6 +356,7 @@ text = "These permissions control what users can do with the PDF. Most effective
 title = "Change Permissions"
 
 [addStamp]
+preview = "Preview Stamp"
 tags = "stamp,mark,seal,approved,rejected,confidential,stamp tool,rubber stamp,date stamp,approval stamp,received,void,copy,original"
 
 [AddStampRequest]
@@ -1842,6 +1843,15 @@ export = "Export"
 accessDenied = "Access Denied"
 insufficientPermissions = "You do not have permission to perform this action."
 
+[auth.callback]
+completing = "Completing authentication"
+invalidToken = "OAuth login failed - invalid token."
+missingToken = "OAuth login failed - no token received."
+oauthFailed = "OAuth login failed. Please try again."
+pleaseWait = "Please wait while we finish signing you in."
+signedOut = "You have been signed out. Please sign in again."
+windowMayClose = "You can close this window once it completes."
+
 [auth.displayName]
 guest = "Guest"
 user = "User"
@@ -2824,6 +2834,7 @@ next = "Next"
 preview = "Preview"
 previous = "Previous"
 refresh = "Refresh"
+remaining = "Remaining"
 retry = "Retry"
 save = "Save"
 
@@ -3723,20 +3734,9 @@ uploadToServer = "Upload to server"
 versionHistory = "Version history"
 
 [fileSidebar.groupsModal]
-add = "Add"
-addLabel = "Add a label…"
-categoryIconAria = "Choose an icon for {{name}}"
-createCategory = "Create category"
-delete = "Delete category"
 done = "Done"
-hide = "Hide category"
-newCategory = "New category name…"
-removeLabel = "Remove {{name}}"
-rename = "Rename"
-reset = "Reset to defaults"
-search = "Search labels…"
-show = "Show category"
-subtitle = "Group your files into parent categories. Add existing or new labels to a category, rename it, or create your own. Files in none of your categories appear under “Other”."
+reset = "Show all"
+subtitle = "Show or hide categories in the files sidebar."
 title = "Sidebar categories"
 
 [filesPage]
@@ -4072,10 +4072,17 @@ discord = "Discord"
 issues = "GitHub"
 
 [formFill]
+allSaved = "All saved"
+extractCsvError = "Failed to extract CSV"
+extractXlsxError = "Failed to extract XLSX"
 flattenAfterFilling = "Flatten after filling"
+requiredAbbreviation = "req"
+requiredFieldsError = "Please fill in all required fields"
 rescanFields = "Re-scan fields"
 rescanFormFields = "Re-scan form fields"
 save = "Save"
+saveShortcut = "Ctrl+S to save"
+unsavedChanges = "Unsaved changes"
 
 [formFill.sidebar]
 close = "Close sidebar"
@@ -4695,6 +4702,7 @@ login = "Login"
 magicLinkSent = "Magic link sent to {{email}}! Check your email and click the link to sign in."
 mfaCode = "Authentication Code"
 mfaRequired = "Two-factor code required"
+noAccount = "Don't have an account?"
 or = "Or"
 password = "Password"
 passwordChangedSuccess = "Password changed successfully! Please sign in with your new password."
@@ -4718,21 +4726,6 @@ useEmailInstead = "Login with email"
 useMagicLink = "Use magic link instead"
 username = "Username"
 youAreLoggedIn = "You are logged in!"
-
-[login.slides.edit]
-alt = "Edit PDFs"
-subtitle = "With over a dozen tools to help you redact, sign, read and manipulate PDFs, you will be sure to find what you are looking for."
-title = "Edit PDFs to display/secure the information you want"
-
-[login.slides.overview]
-alt = "Stirling PDF overview"
-subtitle = "A privacy-first cloud suite for PDFs that lets you convert, sign, redact, and manage documents, along with 50+ other powerful tools."
-title = "Your one-stop-shop for all your PDF needs."
-
-[login.slides.secure]
-alt = "Secure PDFs"
-subtitle = "Add passwords, redact content, and manage certificates with ease."
-title = "Protect sensitive information in your PDFs"
 
 [margin]
 large = "Large"
@@ -5016,7 +5009,21 @@ titleWithOs = "Download for {{osLabel}}"
 
 [onboarding.mfa]
 authenticationCode = "Authentication code"
+description = "Secure your account by linking an authenticator app. Scan the QR code or enter the setup key, then confirm the 6-digit code to finish."
+enable = "Enable MFA"
+enableError = "Unable to enable two-factor authentication. Check the code and try again."
+enterCode = "Enter the 6-digit code from your app."
+enterCodeError = "Enter the authentication code to continue."
+logout = "Logout"
+openAuthenticator = "Open Google Authenticator, Authy, or 1Password."
 qrCodeLoading = "Generating your QR code…"
+regenerateQrCode = "Regenerate QR code"
+scanQrCode = "Scan the QR code or enter the setup key below."
+setupError = "Unable to start two-factor setup. Please try again."
+setupKey = "Setup key (manual entry)"
+stepByStep = "Step-by-step"
+success = "MFA has been enabled. You can now continue."
+title = "Multi-Factor Authentication Setup"
 
 [onboarding.planOverview]
 adminBodyLoginDisabled = "Once you enable login mode, you can manage users, configure settings, and monitor server health. The first <strong>{{freeTierLimit}}</strong> people on your server get to use Stirling free of charge."
@@ -5982,31 +5989,11 @@ summaryMore = "{{first}}, {{second}} and {{more}} more"
 summaryTwo = "{{first}} and {{second}}"
 
 [policies.labels]
-add = "Add"
-addPlaceholder = "Add a label…"
-customNote = "Customized for your team."
-defaultNote = "Using the built-in default, shared with your team."
-duplicate = "\"{{name}}\" already exists."
-edit = "Edit labels"
-empty = "No labels yet."
-export = "Export JSON"
-iconAria = "Choose an icon for {{name}}"
-import = "Import JSON"
-importError = "Couldn't import that file."
-managedNote = "Team labels are managed by your team leader."
-modalSubtitle = "Shared with your whole team. The classifier picks the labels that fit each document."
-modalTitle = "Classification labels"
-pickIcon = "Use {{label}} icon"
-removeAria = "Remove {{name}}"
-resetToDefault = "Reset to default"
-saveForTeam = "Save for team"
-saving = "Saving…"
-sectionLabel = "Classification labels"
-startFromScratch = "Start from scratch"
-teamCount = "team labels"
-tooLong = "Labels can be at most {{max}} characters."
-ungrouped = "Ungrouped"
-view = "View labels"
+categoryCount = "categories"
+hideCategory = "Hide category"
+labelCount = "labels"
+sharedNote = "These labels are built in and shared across your whole team."
+showCategory = "Show category"
 
 [policies.pii]
 account = "Account numbers (labelled)"
@@ -6149,86 +6136,6 @@ free = "Editor plan"
 subscribed = "Processor plan"
 unlinked = "Not linked"
 
-[portal.agentBuilder]
-bootstrapFromDocument = "Bootstrap from document"
-sectionsAriaLabel = "Agent builder sections"
-selectorAriaLabel = "Agents"
-subtitle = "Design, test and ship the AI agents that classify, extract from and route your documents. Define scenarios, fence tool access, run a golden set, and publish a version."
-title = "Agent Builder"
-
-[portal.agentBuilder.bootstrap]
-cancel = "Cancel"
-dropzoneText = "Choose a sample document (PDF or image)"
-lead = "Drop a sample document and we'll propose scenarios and an extraction schema you can refine. Nothing is published until you review it."
-submit = "Bootstrap agent"
-subtitle = "Seed a new agent from one representative file"
-title = "Bootstrap from a document"
-
-[portal.agentBuilder.empty]
-description = "Bootstrap an agent from a sample document to seed its scenarios and extraction schema, then refine and publish."
-title = "No agents yet"
-
-[portal.agentBuilder.evals]
-casesPassing = "Cases passing"
-columnCase = "Eval case"
-columnLatency = "Latency"
-columnResult = "Result"
-fail = "fail"
-goldenSetPassRate = "Golden-set pass rate"
-latencyMs = "{{ms}} ms"
-notRun = "not run"
-pass = "pass"
-passRate = "Pass rate"
-runEvals = "Run evals"
-
-[portal.agentBuilder.evals.empty]
-description = "Evals turn your scenarios into a repeatable golden set. Upgrade to capture pass-rate over time and gate publishes on it."
-title = "No golden set yet"
-
-[portal.agentBuilder.kpi]
-acrossGoldenSets = "across golden sets"
-activeAgents = "Active agents"
-avgPassRate = "Avg eval pass rate"
-fleetWide = "fleet-wide"
-latestPublished = "Latest published"
-scenarios = "Scenarios"
-testCases = "test cases"
-totalDescription_one = "{{count}} total"
-totalDescription_other = "{{count}} total"
-
-[portal.agentBuilder.scenarios]
-add = "Add"
-addScenario = "Add scenario"
-enable = "Enable"
-expectationLabel = "Expected behaviour"
-expectationPlaceholder = "What the agent should do"
-inEval = "in eval"
-mute = "Mute"
-muted = "muted"
-nameLabel = "Name"
-namePlaceholder = "e.g. Compliance escalation"
-
-[portal.agentBuilder.tabs]
-evals = "Evals"
-scenarios = "Scenarios"
-tools = "Tools"
-versions = "Versions"
-
-[portal.agentBuilder.tools]
-broadAccess = "Broad access"
-deniedHint = "Selected tools are blocked. Everything else stays callable."
-deniedTools = "Denied tools"
-governanceGate = "Tool governance is available on the Enterprise plan."
-restricted = "Restricted"
-restrictedAccess = "Restricted tool access"
-restrictedDescription = "Allow every tool except the ones you deny below."
-
-[portal.agentBuilder.versions]
-current = "current"
-historyGate = "Full version history and rollback are available on the Enterprise plan."
-publish = "Publish"
-rollBack = "Roll back"
-
 [portal.assistant]
 close = "Close assistant"
 error = "Couldn't reach the assistant."
@@ -6359,6 +6266,8 @@ sizeMultiplier = "{{formatted}} PDFs used a size multiplier"
 summary = "{{unique}} unique · {{units}} meter units · {{avg}} avg per PDF"
 summaryNoRate = "{{unique}} unique · {{units}} meter units"
 unit = "PDFs"
+unitsPending_one = "{{units}} meter unit pending sync from linked instances"
+unitsPending_other = "{{units}} meter units pending sync from linked instances"
 
 [portal.billing.spendLimit]
 adjustLimit = "Adjust limit"
@@ -6416,63 +6325,6 @@ title_other = "Process {{allowance}} PDFs free"
 titleWithRate_one = "Process {{allowance}} PDFs free, then {{rate}}/PDF"
 titleWithRate_other = "Process {{allowance}} PDFs free, then {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Locked"
-openAriaLabel = "Open {{name}} component"
-
-[portal.catalogue.detail]
-addToProject = "Add to project"
-ariaLabel = "Component detail"
-tabsAriaLabel = "Component detail sections"
-upgradeToUnlock = "Upgrade to unlock"
-
-[portal.catalogue.detail.code]
-install = "Install"
-usage = "Usage"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} is included from the {{tier}} plan. Upgrade to embed it."
-title = "Not available on your plan"
-
-[portal.catalogue.detail.preview]
-badge = "Live preview"
-note = "Interactive sandbox renders here"
-
-[portal.catalogue.detail.pricing]
-note = "Metered per {{unit}}. Usage beyond the monthly free quota is billed to your account and itemised under Usage & Billing."
-
-[portal.catalogue.detail.stats]
-billedOn = "Billed on"
-embeds30d = "Embeds (30d)"
-freeQuota = "Free quota"
-freeQuotaValue = "{{amount}} / mo"
-maturity = "Maturity"
-none = "None"
-perAction = "Per action"
-price = "Price"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "Overview"
-pricing = "Pricing"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "optional"
-required = "required"
-
-[portal.catalogue.props.columns]
-description = "Description"
-name = "Prop"
-required = "Required"
-type = "Type"
-
-[portal.catalogue.summary]
-componentsGa = "Components GA"
-componentSpendMtd = "Component spend (MTD)"
-embedsThisMonth = "Embeds this month"
-inBeta = "In beta"
-
 [portal.components.billingUnit]
 approval = "approval"
 check = "check"
@@ -6486,17 +6338,38 @@ signature = "signature"
 beta = "Beta"
 ga = "GA"
 
-[portal.componentsView]
-subtitle = "Embeddable SDK widgets you drop into your own app — a viewer, an e-sign flow, an AI review panel. Each is metered per action. Click a card for install, usage and props."
-title = "Components"
+[portal.connections]
+createTitle = "New S3 connection"
+delete = "Delete"
+edit = "Edit"
+editTitle = "Edit S3 connection"
+subtitle = "Reusable S3 credentials that sources and pipeline outputs connect to."
 
-[portal.componentsView.empty]
-description = "The component catalogue could not be loaded. Try again shortly."
-title = "No components available"
+[portal.connections.actions]
+new = "New connection"
 
-[portal.componentsView.lockedBanner]
-description = "GA components are available on Pay-as-you-go; a few Beta components are enterprise-only. Locked cards show an upgrade nudge."
-title = "Some components need a paid plan"
+[portal.connections.empty]
+description = "Add an S3 connection to reuse the same bucket and credentials across sources and pipeline outputs."
+title = "No connections yet"
+
+[portal.connections.picker]
+cancel = "Cancel"
+createNew = "New connection..."
+placeholder = "Select a connection"
+save = "Save connection"
+
+[portal.connections.s3.fields]
+name = "Connection name"
+namePlaceholder = "e.g. Claims bucket"
+
+[portal.connections.table]
+bucket = "Bucket"
+name = "Name"
+region = "Region"
+
+[portal.docs]
+browse = "Browse docs"
+viewSource = "View source on GitHub"
 
 [portal.docs.authentication]
 codeCaption = "every request"
@@ -6583,10 +6456,18 @@ title = "Official SDKs"
 beta = "Beta"
 deprecated = "Deprecated"
 
+[portal.docs.search]
+empty = "No matching docs"
+placeholder = "Search docs"
+results = "{{count}} results"
+
 [portal.docs.skills]
 eyebrow = "SKILLS"
 lead = "Bundled, named capabilities your agent invokes as a single tool. Each skill is a deterministic op chain with evals attached."
 title = "Agent skills"
+
+[portal.docs.toc]
+title = "On this page"
 
 [portal.docs.webhooks]
 codeCaption = "document.processed"
@@ -7252,7 +7133,7 @@ storage = "Storage"
 [portal.nav]
 agent-builder = "Agent Builder"
 components = "Components"
-docs = "Developer Docs"
+docs = "Documentation"
 documents = "Documents"
 editor = "Editor"
 home = "Home"
@@ -7264,6 +7145,10 @@ settings = "Settings"
 sources = "Sources"
 usage = "Usage & Billing"
 users = "Users"
+
+[portal.nav.section]
+platform = "PDF Platform"
+processor = "PDF Processor"
 
 [portal.pipelines]
 subtitle = "Every automated document pipeline on the backend: an ordered chain of operations over a set of sources, run on a trigger. Click a row for its steps and sources."
@@ -7309,10 +7194,6 @@ operations_one = "Operation ({{count}})"
 operations_other = "Operations ({{count}})"
 output = "Output"
 removeStep = "Remove operation"
-s3Configure = "Configure"
-s3Done = "Done"
-s3ModalTitle = "Amazon S3 output"
-s3NotConfigured = "Not configured"
 s3PrefixHelp = "Outputs are uploaded under this key prefix."
 save = "Save changes"
 scheduleEvery = "Run every"
@@ -7383,12 +7264,18 @@ manual = "Manual"
 schedule = "Scheduled"
 
 [portal.policies]
+defaultName = "{{category}} Policy"
 subtitle = "Standing automations that enforce a tool pipeline on every document. Each policy fires on upload or export, runs its tool chain, and saves the enforced version alongside the original."
 title = "Policies"
 
 [portal.policies.card]
 comingSoon = "Upgrade to Enterprise"
 notSetUp = "Not set up"
+requiresAiEngine = "Requires AI engine"
+
+[portal.policies.categories.classification]
+desc = "Identify each document's type on upload and tag its metadata for filing and search."
+label = "Classification"
 
 [portal.policies.categories.compliance]
 desc = "Enforce HIPAA, GDPR, SOC 2, or FedRAMP requirements on every document."
@@ -7412,6 +7299,13 @@ label = "Security"
 
 [portal.policies.config]
 scopeAll = "All documents"
+
+[portal.policies.config.classification]
+summary = "Classifies every uploaded document against your team's labels and tags its metadata."
+
+[portal.policies.config.classification.rules]
+0 = "Classify"
+1 = "Tag metadata"
 
 [portal.policies.config.compliance]
 summary = "Validates documents against regulatory frameworks before they leave the system."
@@ -7507,6 +7401,7 @@ title = "No activity yet"
 [portal.policies.endpoints]
 addWatermark = "Watermark"
 autoRedact = "Redact PII"
+classifyAndLabel = "Classify"
 compressPdf = "Compress"
 flatten = "Flatten"
 ocrPdf = "OCR"
@@ -7542,12 +7437,23 @@ label = "Docs enforced"
 description = "Configured but not firing"
 label = "Paused"
 
+[portal.policies.table]
+appliesTo = "Applies to"
+docs = "Docs enforced"
+enforces = "Enforces"
+policy = "Policy"
+status = "Status"
+
 [portal.policies.wizard.actions]
 back = "Back"
 cancel = "Cancel"
 continue = "Continue"
 enablePolicy = "Enable policy"
 saveChanges = "Save changes"
+
+[portal.policies.wizard.capability.classify]
+desc = "Identifies the document's type from your team's labels and tags it, so it files and searches by category."
+label = "Classify the document"
 
 [portal.policies.wizard.capability.compress]
 desc = "Compresses the document to a smaller file size."
@@ -7572,6 +7478,10 @@ label = "Strip active content"
 [portal.policies.wizard.capability.watermark]
 desc = "Stamps a visible mark (e.g. “Confidential”) across every page."
 label = "Apply a watermark"
+
+[portal.policies.wizard.classification]
+description = "Every uploaded document is classified against the built-in labels and tagged with the types that fit. The label set is shared across your whole team."
+labelsHeading = "Classification labels"
 
 [portal.policies.wizard.errors]
 noTools = "Enable at least one tool in the workflow first."
@@ -7645,6 +7555,48 @@ soon = "Soon"
 [portal.processingStatus]
 managePlan = "Manage plan"
 volumeSuffix = "PDFs processed · last 30 days"
+
+[portal.processorFlow]
+footnote = "Counts are over the last 24 hours. Flow speed is illustrative."
+liveBadge = "Live"
+stats = "{{connected}} connected · {{processed}} PDFs processed"
+title = "PDF Processor"
+
+[portal.processorFlow.lens]
+ariaLabel = "View mode"
+flow = "Flow"
+sankey = "Sankey"
+
+[portal.processorFlow.outcomes]
+count = "{{n}} · 24h"
+failed = "Failed"
+heading = "Outcomes"
+success = "Delivered"
+
+[portal.processorFlow.policies]
+activeCount = "{{n}} active"
+count = "{{n}} · 24h"
+heading = "Policies"
+setUp = "Set up"
+soon = "Soon"
+
+[portal.processorFlow.sankey]
+waist = "Policies · {{n}} active"
+
+[portal.processorFlow.sankey.empty]
+description = "Connect a source and switch on a policy to watch documents flow through the processor."
+title = "No flow yet"
+
+[portal.processorFlow.sources]
+comingSoonTag = "Connect"
+editor = "Stirling PDF Editor"
+heading = "Sources"
+perDay = "{{n}} / 24h"
+
+[portal.processorFlow.sources.comingSoon]
+apiMcp = "API · MCP"
+cloud = "Drive · Box · S3"
+email = "Email intake"
 
 [portal.procurement]
 subtitle = "Get your team evaluated, contracted, and onboarded. Every document in one place."
@@ -7954,33 +7906,27 @@ primaryNav = "Primary navigation"
 switchApp = "Switch app"
 
 [portal.sources]
-subtitle = "Reusable input connections that feed documents into Stirling. Configure a connection once, then reference it from any number of policies. Click a row for its config and which policies use it."
+subtitle = "Reusable input connections that feed documents into Stirling. Configure a source once, then reference it from any number of pipelines."
 title = "Sources"
 
 [portal.sources.actions]
-agentBuilder = "Agent Builder"
 connectSource = "Connect source"
+
+[portal.sources.builder]
+back = "Back to sources"
+cancel = "Cancel"
+create = "Create source"
+createTitle = "Connect a source"
+delete = "Delete"
+editTitle = "Edit source"
+enabled = "Enabled"
+save = "Save changes"
 
 [portal.sources.delete]
 body = "Delete \"{{name}}\"? This can't be undone. Policies that reference it would need to be updated."
 cancel = "Cancel"
 confirm = "Delete"
 title = "Delete source?"
-
-[portal.sources.detail]
-closeAriaLabel = "Close detail"
-delete = "Delete source"
-docs24h = "Last 24h"
-docs30d = "Last 30 days"
-docsTotal = "Total seen"
-docsTrend = "Documents over the last 30 days"
-documents = "Documents"
-edit = "Edit"
-notReferenced = "Not referenced by any policy, so it's safe to delete."
-pause = "Pause"
-resume = "Resume"
-subtitle = "{{type}} · {{status}}"
-usedBy = "Used by"
 
 [portal.sources.empty]
 description = "Connect a folder (and, soon, cloud storage) so your policies have somewhere to pull documents from."
@@ -7997,9 +7943,14 @@ disabled = "Disabled"
 unused = "Unused"
 
 [portal.sources.table]
+documents = "Documents"
 source = "Source"
 status = "Status"
 usedBy = "Policies"
+
+[portal.sources.tabs]
+connections = "Connections"
+sources = "Sources"
 
 [portal.sources.types.editor]
 description = "Documents your team has processed in the editor, across policy and AI runs."
@@ -8048,6 +7999,10 @@ label = "Access key ID"
 label = "Bucket"
 placeholder = "my-company-inbox"
 
+[portal.sources.types.s3.fields.connection]
+helperText = "The stored connection holding the bucket and credentials. Reused by every source and pipeline output that references it."
+label = "Connection"
+
 [portal.sources.types.s3.fields.endpoint]
 helperText = "Leave blank for Amazon S3. Set to use an S3-compatible service such as MinIO."
 label = "Custom endpoint"
@@ -8077,21 +8032,14 @@ label = "Secret access key"
 label = "Source"
 
 [portal.sources.wizard]
-back = "Back"
-cancel = "Cancel"
-continue = "Continue"
-editTitle = "Edit source"
 name = "Name"
 namePlaceholder = "e.g. Claims intake"
-save = "Save changes"
-subtitle = "Step {{current}} of {{total}} · {{label}}"
-title = "Connect a source"
 type = "Type"
 
-[portal.sources.wizard.steps]
-chooseType = "Choose type"
-configure = "Configure"
-review = "Review & connect"
+[portal.tier]
+enterprise = "Enterprise plan"
+free = "Editor plan"
+pro = "Processor plan"
 
 [portal.usage]
 managePayment = "Manage Payment"
@@ -8948,9 +8896,18 @@ languageDescription = "Choose the display language"
 logout = "Log out"
 setAsDefault = "Set as Default"
 theme = "Theme"
+themeAccent = "Accent colour"
+themeAccentCustom = "Custom colour"
+themeAccentCustomHint = "Custom (defaults recommended)"
+themeAccentDark = "Dark mode accent colour"
+themeAccentDefault = "Default"
+themeAccentDefaultHint = "Default theme (recommended)"
+themeAccentDescription = "Buttons, links and highlights follow it, and it subtly tints the app. Light and dark each have their own. System uses whichever is active."
+themeAccentLight = "Light mode accent colour"
 themeDark = "Dark"
-themeDescription = "Choose light, dark, or follow your system"
+themeDescription = "Choose light, dark, or follow your system so it switches automatically."
 themeLight = "Light"
+themeReset = "Restore theme to default"
 themeSystem = "System"
 title = "General"
 user = "User"
@@ -9177,6 +9134,11 @@ connections = "Connections"
 security = "Security"
 telegram = "Telegram"
 title = "Security & Authentication"
+
+[settings.signOut]
+confirm = "Are you sure you want to sign out?"
+submit = "Sign out"
+title = "Sign out"
 
 [settings.team]
 title = "Team"
@@ -9794,6 +9756,9 @@ uploadButton = "Upload to Server"
 title = "Stirling-PDF Survey"
 
 [swagger]
+clickHere = "click here"
+fallback = "If it didn't open automatically,"
+opening = "Opening Swagger UI in a new tab..."
 tags = "api,documentation,swagger,endpoints,development"
 title = "API Documentation"
 
@@ -10099,6 +10064,19 @@ resetPw = "Reset password"
 suspend = "Suspend"
 unlock = "Unlock account"
 
+[users.activity]
+daysAgo = "{{count}}d ago"
+hoursAgo = "{{count}}h ago"
+justNow = "Just now"
+minutesAgo = "{{count}}m ago"
+monthsAgo_one = "{{count}} month ago"
+monthsAgo_other = "{{count}} months ago"
+never = "Never"
+weeksAgo_one = "{{count}} week ago"
+weeksAgo_other = "{{count}} weeks ago"
+yearsAgo_one = "{{count}} year ago"
+yearsAgo_other = "{{count}} years ago"
+
 [users.cap]
 addProcessor = "+ Processor"
 approver = "Approves policy"
@@ -10169,7 +10147,9 @@ by = "Invited by {{who}}"
 cancel = "Cancel"
 count = "{{count}} pending"
 desc = "Invited people who haven't joined yet. They hold a seat until they accept."
-expires = "Expires"
+expiresInDays_one = "Expires in {{count}} day"
+expiresInDays_other = "Expires in {{count}} days"
+expiresToday = "Expires today"
 title = "Pending invitations"
 
 [users.loadError]
@@ -10362,9 +10342,11 @@ title = "Attachments"
 
 [viewer.bookmarks]
 bookmarkTitle = "Bookmark title"
+bookmarkTitleRequired = "Bookmark title is required"
 closeSidebar = "Close bookmarks sidebar"
 collapseAll = "Collapse all bookmarks"
 expandAll = "Expand all bookmarks"
+searchPlaceholder = "Search bookmarks"
 
 [viewer.comments]
 addComment = "Add comment"

@@ -1,12 +1,18 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   consumePostLoginRedirectPath,
   springAuth,
 } from "@app/auth/spring/springAuthClient";
 import { markLoginLandingPending } from "@app/utils/loginLanding";
 import { handleAuthCallbackSuccess } from "@app/extensions/authCallback";
-import styles from "@app/routes/AuthCallback.module.css";
+import { AuthShell } from "@app/auth/ui/AuthShell";
+import { Spinner } from "@app/ui/Spinner";
+import { withBasePath } from "@app/constants/app";
+import "@app/auth/ui/auth.css";
+import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
+import i18n from "@app/i18n";
 
 /**
  * OAuth Callback Handler
@@ -16,6 +22,7 @@ import styles from "@app/routes/AuthCallback.module.css";
  * We extract it, store in localStorage, and redirect to the home page.
  */
 export default function AuthCallback() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const processingRef = useRef(false);
 
@@ -31,7 +38,12 @@ export default function AuthCallback() {
       ) {
         navigate("/login", {
           replace: true,
-          state: { error: "You have been signed out. Please sign in again." },
+          state: {
+            error: i18n.t(
+              "auth.callback.signedOut",
+              "You have been signed out. Please sign in again.",
+            ),
+          },
         });
         return;
       }
@@ -50,7 +62,12 @@ export default function AuthCallback() {
           );
           navigate("/login", {
             replace: true,
-            state: { error: "OAuth login failed - no token received." },
+            state: {
+              error: i18n.t(
+                "auth.callback.missingToken",
+                "OAuth login failed - no token received.",
+              ),
+            },
           });
           return;
         }
@@ -67,7 +84,12 @@ export default function AuthCallback() {
           localStorage.removeItem("stirling_jwt");
           navigate("/login", {
             replace: true,
-            state: { error: "OAuth login failed - invalid token." },
+            state: {
+              error: i18n.t(
+                "auth.callback.invalidToken",
+                "OAuth login failed - invalid token.",
+              ),
+            },
           });
           return;
         }
@@ -93,7 +115,12 @@ export default function AuthCallback() {
         );
         navigate("/login", {
           replace: true,
-          state: { error: "OAuth login failed. Please try again." },
+          state: {
+            error: i18n.t(
+              "auth.callback.oauthFailed",
+              "OAuth login failed. Please try again.",
+            ),
+          },
         });
       }
     };
@@ -102,17 +129,39 @@ export default function AuthCallback() {
   }, []); // Empty deps - only run once on mount. navigate is stable, processingRef prevents double execution
 
   return (
-    <div className={styles.page}>
-      <div className={styles.card}>
-        <div className={`${styles.icon} ${styles.iconNeutral}`}>...</div>
-        <div className={styles.title}>Completing authentication</div>
-        <div className={styles.message}>
-          Please wait while we finish signing you in.
-        </div>
-        <div className={styles.loadingExtra}>
-          You can close this window once it completes.
-        </div>
+    <AuthShell>
+      <div className="auth-logo-block">
+        <img
+          src={loginHeader}
+          alt="Stirling PDF"
+          className="auth-logo-header auth-logo-header--light"
+        />
+        <img
+          src={withBasePath("/modern-logo/LoginDarkModeHeader.svg")}
+          alt="Stirling PDF"
+          className="auth-logo-header auth-logo-header--dark"
+        />
       </div>
-    </div>
+      <h1 className="login-title" style={{ textAlign: "center" }}>
+        {t("auth.callback.completing", "Completing authentication")}
+      </h1>
+      <p className="login-subtitle" style={{ textAlign: "center" }}>
+        {t(
+          "auth.callback.pleaseWait",
+          "Please wait while we finish signing you in.",
+        )}
+      </p>
+      <div
+        style={{ display: "flex", justifyContent: "center", margin: "1rem 0" }}
+      >
+        <Spinner size="md" />
+      </div>
+      <p className="login-subtitle" style={{ textAlign: "center" }}>
+        {t(
+          "auth.callback.windowMayClose",
+          "You can close this window once it completes.",
+        )}
+      </p>
+    </AuthShell>
   );
 }
