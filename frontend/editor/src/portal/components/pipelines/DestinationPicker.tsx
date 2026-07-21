@@ -55,7 +55,7 @@ export function DestinationPicker({
         onClick={onCreateNew}
         leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
       >
-        {t("portal.pipelines.composer.outputCreateNew")}
+        {t("portal.sources.actions.connectSource")}
       </Button>
     </>
   );
