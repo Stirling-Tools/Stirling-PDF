@@ -8,11 +8,11 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.proprietary.policy.migration.CompletedMigrations;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.source.Source;
@@ -37,6 +37,9 @@ import stirling.software.proprietary.policy.store.PolicyStore;
 @RequiredArgsConstructor
 public class PolicyInlineOutputMigration {
 
+    /** Completion-marker id: once recorded, later boots skip the scan entirely. */
+    private static final String MIGRATION_ID = "policy-inline-output";
+
     // Destination types worth persisting as a location; "inline" has nothing to store.
     private static final List<String> DESTINATION_TYPES = List.of("folder", "s3");
     // The options that actually address a write destination, per type. Read-only options (e.g. a
@@ -50,14 +53,19 @@ public class PolicyInlineOutputMigration {
 
     private final PolicyStore policyStore;
     private final SourceStore sourceStore;
+    private final CompletedMigrations completedMigrations;
 
     // Runs after EmbeddedS3CredentialMigration (@Order(1)) so any legacy S3 output has already had
     // its embedded credentials extracted into a connection; the Source created here then references
-    // that connection rather than copying credentials into source_json.
+    // that connection rather than copying credentials into source_json. Not wrapped in a single
+    // transaction: each store write is its own (idempotent) commit, so a crash mid-run just re-runs
+    // next boot, and the marker below is written only once the whole pass succeeds.
     @Order(2)
     @EventListener(ApplicationReadyEvent.class)
-    @Transactional
     public void migrate() {
+        if (completedMigrations.isDone(MIGRATION_ID)) {
+            return;
+        }
         Map<String, Source> byAddress = indexExistingSources();
         int migrated = 0;
         for (Policy policy : policyStore.all()) {
@@ -75,6 +83,7 @@ public class PolicyInlineOutputMigration {
         if (migrated > 0) {
             log.info("Linked {} policy output(s) to stored source locations", migrated);
         }
+        completedMigrations.markDone(MIGRATION_ID);
     }
 
     /** Reuses an existing team source at the same address, else creates a minimal one. */

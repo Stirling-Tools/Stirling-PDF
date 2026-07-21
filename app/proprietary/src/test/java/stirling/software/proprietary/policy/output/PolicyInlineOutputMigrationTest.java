@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
+import stirling.software.proprietary.policy.migration.InProcessCompletedMigrations;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
@@ -28,7 +29,8 @@ class PolicyInlineOutputMigrationTest {
     private final PolicyStore policyStore = new InProcessPolicyStore();
     private final SourceStore sourceStore = new InProcessSourceStore();
     private final PolicyInlineOutputMigration migration =
-            new PolicyInlineOutputMigration(policyStore, sourceStore);
+            new PolicyInlineOutputMigration(
+                    policyStore, sourceStore, new InProcessCompletedMigrations());
 
     @Test
     void migratesAFolderPolicyToAStoredSource() {
@@ -72,6 +74,20 @@ class PolicyInlineOutputMigrationTest {
         migration.migrate();
 
         assertEquals(afterFirst, sourceStore.all().size());
+    }
+
+    @Test
+    void skipsTheScanOnceComplete() {
+        // First pass records the completion marker (even with nothing to migrate).
+        migration.migrate();
+
+        // A migratable folder policy created afterwards is left untouched: the marker means the
+        // migration never scans again, rather than re-scanning and finding it every boot.
+        Policy later = policyStore.save(folderPolicy("Late", "/late"));
+        migration.migrate();
+
+        assertTrue(policyStore.get(later.id()).orElseThrow().outputIds().isEmpty());
+        assertTrue(sourceStore.all().isEmpty());
     }
 
     @Test
