@@ -194,6 +194,14 @@ tasks:
     cmds:
       - npx storybook build {{.CLI_ARGS}}
 
+  storybook:test:
+    desc: "Scan every story in real Chromium (render + a11y) via the Vitest addon"
+    deps: [install]
+    cmds:
+      # Runs each story as a browser test. Pass a filter through, e.g.
+      #   task frontend:storybook:test -- Button
+      - npx vitest run --config .storybook/vitest.config.ts {{.CLI_ARGS}}
+
   # ============================================================
   # Code quality
   # ============================================================

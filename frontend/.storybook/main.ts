@@ -15,7 +15,11 @@ const config: StorybookConfig = {
     "../editor/src/portal/**/*.mdx",
     "../editor/src/**/*.stories.@(ts|tsx)",
   ],
-  addons: ["@storybook/addon-themes", "@storybook/addon-a11y"],
+  addons: [
+    "@storybook/addon-themes",
+    "@storybook/addon-a11y",
+    "@storybook/addon-vitest",
+  ],
   framework: {
     name: "@storybook/react-vite",
     options: {},
