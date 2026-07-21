@@ -1,5 +1,6 @@
 package stirling.software.proprietary.storage.model;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 import jakarta.persistence.Column;
@@ -19,6 +20,7 @@ import lombok.Setter;
 @Setter
 public class StoredFileBlob implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Id
