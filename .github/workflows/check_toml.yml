@@ -166,16 +166,16 @@ jobs:
 
             // Determine reference file
             let referenceFilePath;
-            if (changedFiles.includes("frontend/editor/public/locales/en-GB/translation.toml")) {
+            if (changedFiles.includes("frontend/editor/public/locales/en-US/translation.toml")) {
               console.log("Using PR branch reference file.");
               const { data: fileContent } = await github.rest.repos.getContent({
                 owner: prRepoOwner,
                 repo: prRepoName,
-                path: "frontend/editor/public/locales/en-GB/translation.toml",
+                path: "frontend/editor/public/locales/en-US/translation.toml",
                 ref: branch,
               });
 
-              referenceFilePath = "pr-branch-translation-en-GB.toml";
+              referenceFilePath = "pr-branch-translation-en-US.toml";
               const content = Buffer.from(fileContent.content, "base64").toString("utf-8");
               fs.writeFileSync(referenceFilePath, content);
             } else {
@@ -183,11 +183,11 @@ jobs:
               const { data: fileContent } = await github.rest.repos.getContent({
                 owner: repoOwner,
                 repo: repoName,
-                path: "frontend/editor/public/locales/en-GB/translation.toml",
+                path: "frontend/editor/public/locales/en-US/translation.toml",
                 ref: "main",
               });
 
-              referenceFilePath = "main-branch-translation-en-GB.toml";
+              referenceFilePath = "main-branch-translation-en-US.toml";
               const content = Buffer.from(fileContent.content, "base64").toString("utf-8");
               fs.writeFileSync(referenceFilePath, content);
             }
@@ -293,6 +293,6 @@ jobs:
         run: |
           echo "Cleaning up temporary files..."
           rm -rf pr-branch
-          rm -f pr-branch-translation-en-GB.toml main-branch-translation-en-GB.toml changed_files.txt result.txt
+          rm -f pr-branch-translation-en-US.toml main-branch-translation-en-US.toml changed_files.txt result.txt
           echo "Cleanup complete."
         continue-on-error: true # Ensure cleanup runs even if previous steps fail

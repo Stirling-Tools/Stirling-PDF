@@ -3,7 +3,6 @@ package stirling.software.proprietary.controller.api;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -183,7 +182,7 @@ public class SignatureController {
      */
     private boolean deleteFromSharedFolder(String signatureId) throws IOException {
         String signatureBasePath = InstallationPathConfig.getSignaturesPath();
-        Path sharedFolder = Paths.get(signatureBasePath, ALL_USERS_FOLDER);
+        Path sharedFolder = Path.of(signatureBasePath, ALL_USERS_FOLDER);
         boolean deleted = false;
 
         if (Files.exists(sharedFolder)) {

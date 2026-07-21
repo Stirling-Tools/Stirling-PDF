@@ -32,39 +32,52 @@ export const useSigningSessions = (
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchData = useCallback(async () => {
-    if (!enabled) return;
+  const fetchData = useCallback(
+    async (opts?: { silent?: boolean }) => {
+      if (!enabled) return;
 
-    setLoading(true);
-    setError(null);
+      // Background auto-refreshes pass { silent: true } to skip the loading spinner
+      // and failure toasts; only the initial load and explicit refetch surface errors.
+      const silent = opts?.silent ?? false;
 
-    try {
-      const [requestsResponse, sessionsResponse] = await Promise.all([
-        apiClient.get<SignRequestSummary[]>(
-          "/api/v1/security/cert-sign/sign-requests",
-        ),
-        apiClient.get<SessionSummary[]>("/api/v1/security/cert-sign/sessions"),
-      ]);
+      if (!silent) setLoading(true);
+      setError(null);
 
-      setSignRequests(requestsResponse.data);
-      setMySessions(sessionsResponse.data);
-    } catch (err) {
-      const errorObj =
-        err instanceof Error ? err : new Error("Failed to fetch signing data");
-      setError(errorObj);
-      console.error("Failed to fetch signing data:", err);
+      try {
+        const [requestsResponse, sessionsResponse] = await Promise.all([
+          apiClient.get<SignRequestSummary[]>(
+            "/api/v1/security/cert-sign/sign-requests",
+          ),
+          apiClient.get<SessionSummary[]>(
+            "/api/v1/security/cert-sign/sessions",
+          ),
+        ]);
 
-      alert({
-        alertType: "warning",
-        title: t("common.error"),
-        body: t("certSign.fetchFailed", "Failed to load signing data"),
-        expandable: false,
-        durationMs: 2500,
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [enabled, t]);
+        setSignRequests(requestsResponse.data);
+        setMySessions(sessionsResponse.data);
+      } catch (err) {
+        const errorObj =
+          err instanceof Error
+            ? err
+            : new Error("Failed to fetch signing data");
+        setError(errorObj);
+        console.error("Failed to fetch signing data:", err);
+
+        if (!silent) {
+          alert({
+            alertType: "warning",
+            title: t("common.error"),
+            body: t("certSign.fetchFailed", "Failed to load signing data"),
+            expandable: false,
+            durationMs: 2500,
+          });
+        }
+      } finally {
+        if (!silent) setLoading(false);
+      }
+    },
+    [enabled, t],
+  );
 
   // Initial fetch
   useEffect(() => {
@@ -80,7 +93,7 @@ export const useSigningSessions = (
     }
 
     const interval = setInterval(() => {
-      fetchData();
+      fetchData({ silent: true });
     }, autoRefreshInterval);
 
     return () => clearInterval(interval);

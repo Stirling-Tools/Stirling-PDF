@@ -107,12 +107,10 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
 
           if (attempt > 0) {
             const delay = initialDelay * Math.pow(2, attempt - 1);
-            console.log(
+            console.debug(
               `[AppConfig] Retry attempt ${attempt}/${maxRetries} after ${delay}ms delay...`,
             );
             await sleep(delay);
-          } else {
-            console.log("[AppConfig] Fetching app config...");
           }
 
           // apiClient automatically adds JWT header if available via interceptors
@@ -165,7 +163,7 @@ export const AppConfigProvider: React.FC<AppConfigProviderProps> = ({
             (!status || status >= 500) && attempt < maxRetries;
 
           if (shouldRetry) {
-            console.warn(
+            console.debug(
               `[AppConfig] Attempt ${attempt + 1} failed (status ${status || "network error"}):`,
               err.message,
               "- will retry...",

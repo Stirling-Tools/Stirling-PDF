@@ -5,15 +5,23 @@ import {
 } from "@app/hooks/tools/shared/useBaseParameters";
 
 export interface CertSignParameters extends BaseParameters {
-  // Sign mode selection
-  signMode: "MANUAL" | "AUTO";
-  // Certificate signing options (only for manual mode)
-  certType: "" | "PEM" | "PKCS12" | "PFX" | "JKS";
+  // Where the signing certificate comes from:
+  //  MANUAL = upload a keystore file, AUTO = server certificate,
+  //  DEVICE = a certificate held on this machine (Windows store or USB PKCS#11 token, desktop only).
+  signMode: "MANUAL" | "AUTO" | "DEVICE";
+  // For MANUAL this is the uploaded file format; for DEVICE it is the hardware kind
+  // (WINDOWS_STORE or PKCS11). Hardware kinds are only offered in the desktop app.
+  certType: "" | "PEM" | "PKCS12" | "PFX" | "JKS" | "WINDOWS_STORE" | "PKCS11";
   privateKeyFile?: File;
   certFile?: File;
   p12File?: File;
   jksFile?: File;
   password: string;
+
+  // Hardware signing (desktop only)
+  alias?: string;
+  pkcs11LibraryPath?: string;
+  pkcs11Slot?: number;
 
   // Signature appearance options
   showSignature: boolean;
@@ -62,6 +70,12 @@ export const useCertSignParameters = (): CertSignParametersHook => {
           return !!params.p12File;
         case "JKS":
           return !!params.jksFile;
+        case "WINDOWS_STORE":
+          // Need a chosen certificate from the Windows store.
+          return !!params.alias;
+        case "PKCS11":
+          // Need a driver library and a chosen certificate on the token.
+          return !!(params.pkcs11LibraryPath && params.alias);
         default:
           return false;
       }

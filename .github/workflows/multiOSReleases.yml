@@ -42,7 +42,7 @@ jobs:
   determine-matrix:
     if: ${{ vars.CI_PROFILE != 'lite' }}
     needs: pick
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    runs-on: ${{ needs.pick.outputs.use_depot == 'true' && 'depot-ubuntu-24.04-4' || 'ubuntu-latest' }}
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       version: ${{ steps.versionNumber.outputs.versionNumber }}
@@ -61,7 +61,7 @@ jobs:
           distribution: "temurin"
 
       - name: Cache Gradle dependencies
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/.gradle/caches
@@ -71,12 +71,12 @@ jobs:
             gradle-${{ runner.os }}-
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
         with:
-          gradle-version: 9.3.1
+          gradle-version: 9.6.1
 
       - name: Install Task
-        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
       - name: Get version number
         id: versionNumber
         run: |
@@ -113,7 +113,7 @@ jobs:
 
   build-jars:
     needs: [pick, determine-matrix]
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    runs-on: ${{ needs.pick.outputs.use_depot == 'true' && 'depot-ubuntu-24.04-4' || 'ubuntu-latest' }}
     env:
       DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
     strategy:
@@ -146,9 +146,9 @@ jobs:
           distribution: "temurin"
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
         with:
-          gradle-version: 9.3.1
+          gradle-version: 9.6.1
 
       - name: Setup Node.js
         if: matrix.variant.build_frontend == true
@@ -159,7 +159,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install Task
-        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
 
       - name: Build JAR
         run: ./gradlew build ${{ matrix.variant.build_frontend && '-PbuildWithFrontend=true' || '' }} -x spotlessApply -x spotlessCheck -x test -x sonarqube
@@ -250,12 +250,12 @@ jobs:
           distribution: "temurin"
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
         with:
-          gradle-version: 9.3.1
+          gradle-version: 9.6.1
 
       - name: Install Task
-        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
 
       # Build the universal JRE before desktop:prepare so the jlink:runtime
       # task short-circuits on its `test -d runtime/jre` status check.
@@ -442,10 +442,6 @@ jobs:
           echo "Generated tauri.windows.conf.json (alias masked):"
           sed "s/${KEYPAIR_ALIAS}/***/g" ./frontend/editor/src-tauri/tauri.windows.conf.json
 
-      - name: Sign JPDFium dylibs inside bootJar (macOS only)
-        if: matrix.platform == 'macos-15' && env.APPLE_CERTIFICATE != ''
-        run: bash frontend/scripts/sign-jpdfium-dylibs-in-bootjar.sh
-
       - name: Import release GPG signing key (Linux)
         if: matrix.platform == 'ubuntu-22.04' && env.RELEASE_GPG_PRIVATE_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master')
         run: |
@@ -495,6 +491,7 @@ jobs:
           projectPath: ./frontend/editor
           tauriScript: npx tauri
           args: ${{ matrix.args }}
+          updaterJsonKeepUniversal: true
 
       - name: Clear release GPG key from runner keyring (Linux)
         if: always() && matrix.platform == 'ubuntu-22.04' && env.RELEASE_GPG_PRIVATE_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master')
@@ -513,6 +510,7 @@ jobs:
       # cargo output unsigned, so checking it produces false negatives.
       - name: Verify Windows Code Signature
         if: ${{ matrix.platform == 'windows-latest' && env.SM_API_KEY != '' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sign != 'false') || github.ref == 'refs/heads/V2-master') }}
+        timeout-minutes: 15
         shell: pwsh
         run: |
           $allSigned = $true
@@ -534,11 +532,26 @@ jobs:
 
           # Extract MSI and verify the inner exe (the file that actually gets installed).
           # This is the critical check - AV flags the installed exe at runtime.
+          # Use lessmsi, not `msiexec /a`: msiexec serializes on the global
+          # _MSIExecute mutex and hangs forever on hosted runners when another
+          # installer is busy. lessmsi reads MSI tables directly - no mutex, no service.
           $msi = $msiFiles[0].FullName
           $extractDir = Join-Path $env:RUNNER_TEMP "msi-verify"
           if (Test-Path $extractDir) { Remove-Item $extractDir -Recurse -Force }
-          $proc = Start-Process msiexec.exe -ArgumentList '/a', $msi, '/qn', "TARGETDIR=$extractDir" -Wait -PassThru -NoNewWindow
-          if ($proc.ExitCode -eq 0) {
+          New-Item -ItemType Directory -Force -Path $extractDir | Out-Null
+
+          choco install lessmsi -y --no-progress --limit-output | Out-Null
+
+          # Bound the extraction and kill on hang (defence in depth over timeout-minutes).
+          $proc = Start-Process lessmsi -ArgumentList 'x', "`"$msi`"", "`"$extractDir\`"" -PassThru -NoNewWindow
+          if (-not $proc.WaitForExit(120000)) {
+            try { $proc.Kill() } catch {}
+            Write-Host "[ERROR] MSI extraction timed out after 120s"
+            $allSigned = $false
+          } elseif ($proc.ExitCode -ne 0) {
+            Write-Host "[ERROR] Failed to extract MSI for verification (exit code: $($proc.ExitCode))"
+            $allSigned = $false
+          } else {
             $innerExe = Get-ChildItem -Path $extractDir -Filter "stirling-pdf.exe" -Recurse -File | Select-Object -First 1
             if ($innerExe) {
               $sig = Get-AuthenticodeSignature -FilePath $innerExe.FullName
@@ -551,9 +564,6 @@ jobs:
               Write-Host "[ERROR] Could not find stirling-pdf.exe inside MSI"
               $allSigned = $false
             }
-          } else {
-            Write-Host "[ERROR] Failed to extract MSI for verification (exit code: $($proc.ExitCode))"
-            $allSigned = $false
           }
 
           if (-not $allSigned) {
@@ -591,18 +601,32 @@ jobs:
           mkdir -p "$DIST"
           cd ./frontend/editor/src-tauri/target
 
-          # Find and rename artifacts based on platform
+          echo "=== tauri bundle artifacts ==="
+          find . -path "*/bundle/*" \( -name "*.msi" -o -name "*.deb" \
+            -o -name "*.rpm" -o -name "*.AppImage" -o -name "*.dmg" \
+            -o -name "*.app.tar.gz" -o -name "*.sig" \) 2>/dev/null | sort || true
+          echo "=============================="
+
+          # createUpdaterArtifacts:true signs the native installers in place;
+          # each <bundle> ships with a sibling <bundle>.sig consumed by latest.json.
           if [ "${{ matrix.platform }}" = "windows-latest" ]; then
-            # Only ship the MSI installer on Windows. The loose exe and WiX toolset exes
-            # are not the user-facing installer - the MSI contains the signed inner exe.
             find . -name "*.msi" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.msi" \;
+            find . -name "*.msi.sig" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.msi.sig" \;
           elif [ "${{ matrix.platform }}" = "macos-15" ]; then
+            # DMG = manual install; .app.tar.gz (+ .sig) = updater payload.
+            # Raw .app is intentionally not shipped (hundreds of MB of uncompressed input).
             find . -name "*.dmg" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.dmg" \;
-            find . -name "*.app" -exec cp -r {} "$DIST/Stirling-PDF-${{ matrix.name }}.app" \;
+            find . -name "*.app.tar.gz" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.app.tar.gz" \;
+            find . -name "*.app.tar.gz.sig" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.app.tar.gz.sig" \;
           else
+            # The raw .AppImage IS its updater payload (signed -> .AppImage.sig),
+            # not a .tar.gz wrapper - that's only produced under v1Compatible.
             find . -name "*.deb" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.deb" \;
+            find . -name "*.deb.sig" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.deb.sig" \;
             find . -name "*.rpm" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.rpm" \;
+            find . -name "*.rpm.sig" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.rpm.sig" \;
             find . -name "*.AppImage" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.AppImage" \;
+            find . -name "*.AppImage.sig" -exec cp {} "$DIST/Stirling-PDF-${{ matrix.name }}.AppImage.sig" \;
           fi
 
       - name: Upload build artifacts
@@ -613,10 +637,9 @@ jobs:
           path: ./dist/*
           retention-days: 1
 
-  create-release:
-    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.test_mode != 'true') || github.event_name == 'release' || github.ref == 'refs/heads/V2-master'
+  collect-and-release:
     needs: [pick, determine-matrix, build, build-jars]
-    runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-4' }}
+    runs-on: ${{ needs.pick.outputs.use_depot == 'true' && 'depot-ubuntu-24.04-4' || 'ubuntu-latest' }}
     permissions:
       contents: write
     steps:
@@ -624,6 +647,16 @@ jobs:
         uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
         with:
           egress-policy: audit
+
+      # Sparse-check out the verifier + pubkey before the artifact downloads
+      # so the checkout cannot clobber ./artifacts.
+      - name: Checkout updater verifier
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          sparse-checkout: |
+            .github/scripts/verify-updater-signatures.py
+            frontend/editor/src-tauri/tauri.conf.json
+          sparse-checkout-cone-mode: false
 
       - name: Download all Tauri artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -652,17 +685,150 @@ jobs:
       - name: Display structure of downloaded files
         run: ls -R ./artifacts
 
+      # tauri-action only emits latest.json when it also publishes the release
+      # (tagName/releaseId set). We publish separately via action-gh-release,
+      # so build latest.json here from the per-platform .sig files.
+      - name: Generate updater latest.json
+        env:
+          VERSION: ${{ needs.determine-matrix.outputs.version }}
+          TAG: v${{ needs.determine-matrix.outputs.version }}
+          REPO: ${{ github.repository }}
+        run: |
+          python3 - << 'PYEOF'
+          import json, os, sys
+          from pathlib import Path
+          from datetime import datetime, timezone
+
+          VERSION = os.environ['VERSION']
+          TAG = os.environ['TAG']
+          REPO = os.environ['REPO']
+
+          ART = Path('./artifacts/tauri')
+
+          # Tauri updater looks up {os}-{arch}-{installer} (e.g. linux-x86_64-deb)
+          # before bare {os}-{arch}, so per-format Linux keys let deb/rpm/appimage
+          # each self-update from their matching file. macOS universal serves both
+          # arches from the one .app.tar.gz.
+          PLATFORM_MAP = [
+              {
+                  'bundles': ['Stirling-PDF-linux-x86_64.deb'],
+                  'targets': ['linux-x86_64-deb'],
+              },
+              {
+                  'bundles': ['Stirling-PDF-linux-x86_64.rpm'],
+                  'targets': ['linux-x86_64-rpm'],
+              },
+              {
+                  'bundles': ['Stirling-PDF-linux-x86_64.AppImage'],
+                  'targets': ['linux-x86_64-appimage'],
+              },
+              {
+                  'bundles': ['Stirling-PDF-windows-x86_64.msi'],
+                  'targets': ['windows-x86_64-msi', 'windows-x86_64'],
+              },
+              {
+                  'bundles': ['Stirling-PDF-macos-universal.app.tar.gz'],
+                  'targets': ['darwin-x86_64', 'darwin-aarch64'],
+              },
+          ]
+
+          # rglob() because download-artifact varies layout: one artifact -> flat,
+          # many -> nested under <artifact-name>/.
+          def find_signed(name):
+              for bundle_path in sorted(ART.rglob(name)):
+                  sig_path = bundle_path.with_name(bundle_path.name + '.sig')
+                  if sig_path.exists():
+                      return bundle_path, sig_path
+              return None
+
+          platforms = {}
+          skipped = []
+          for entry in PLATFORM_MAP:
+              picked = None
+              for name in entry['bundles']:
+                  picked = find_signed(name)
+                  if picked:
+                      break
+              if not picked:
+                  skipped.append(
+                      f"{entry['targets']} (no signed bundle among "
+                      f"{entry['bundles']} - TAURI_SIGNING_PRIVATE_KEY unset "
+                      f"or createUpdaterArtifacts disabled?)"
+                  )
+                  continue
+              bundle_path, sig_path = picked
+              signature = sig_path.read_text(encoding='utf-8').strip()
+              url = f"https://github.com/{REPO}/releases/download/{TAG}/{bundle_path.name}"
+              for target in entry['targets']:
+                  platforms[target] = {'signature': signature, 'url': url}
+              print(f"Added {entry['targets']} from {bundle_path.name}")
+
+          if skipped:
+              print("Skipped platforms:")
+              for s in skipped:
+                  print(f"  - {s}")
+
+          if not platforms:
+              print(
+                  "WARN: no signed updater bundles found - "
+                  "skipping latest.json generation"
+              )
+              sys.exit(0)
+
+          manifest = {
+              'version': VERSION,
+              'notes': f"See https://github.com/{REPO}/releases/tag/{TAG}",
+              'pub_date': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
+              'platforms': platforms,
+          }
+
+          out = Path('./artifacts/latest.json')
+          out.write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+          print(f"Generated {out} with platforms: {sorted(platforms.keys())}")
+          PYEOF
+
+      - name: Upload merged artifacts for review
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: release-artifacts
+          path: ./artifacts/
+          retention-days: 7
+
+      # Gate publish on valid updater sigs. Runs after the review upload (so
+      # artifacts survive for debugging) and before action-gh-release.
+      - name: Verify updater signatures
+        run: |
+          python3 -m pip install --quiet 'cryptography==44.0.0'
+          python3 .github/scripts/verify-updater-signatures.py \
+            ./artifacts/tauri frontend/editor/src-tauri/tauri.conf.json
+
+      # workflow_dispatch path requires platform=='all' so a single-platform
+      # dispatch can't overwrite an existing release's full latest.json with a
+      # partial one (action-gh-release defaults overwrite_files:true).
+      # release / V2-master always build the full matrix so no extra guard needed.
+      # fail_on_unmatched_files makes a missing latest.json or installer fail loudly
+      # instead of silently shipping a broken auto-update.
       - name: Upload binaries to Release
+        if: (github.event_name == 'workflow_dispatch' && github.event.inputs.test_mode != 'true' && github.event.inputs.platform == 'all') || github.event_name == 'release' || github.ref == 'refs/heads/V2-master'
         uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
         with:
           tag_name: v${{ needs.determine-matrix.outputs.version }}
-          generate_release_notes: true
+          # Don't regenerate/append notes on re-runs, and don't force this into the
+          # "Latest" slot - leave the release body and latest marker as they are.
+          generate_release_notes: false
+          append_body: false
+          make_latest: false
+          fail_on_unmatched_files: true
+          # Installers + updater payloads + manifest. .sig contents are embedded
+          # in latest.json so the .sig files themselves are not uploaded.
           files: |
             ./artifacts/**/*.jar
             ./artifacts/**/*.msi
             ./artifacts/**/*.dmg
+            ./artifacts/**/*.app.tar.gz
             ./artifacts/**/*.deb
             ./artifacts/**/*.rpm
             ./artifacts/**/*.AppImage
+            ./artifacts/latest.json
           draft: false
           prerelease: false

@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -115,7 +114,7 @@ public class UIDataController {
 
         if (new java.io.File(runtimePathConfig.getPipelineDefaultWebUiConfigs()).exists()) {
             try (Stream<Path> paths =
-                    Files.walk(Paths.get(runtimePathConfig.getPipelineDefaultWebUiConfigs()))) {
+                    Files.walk(Path.of(runtimePathConfig.getPipelineDefaultWebUiConfigs()))) {
                 List<Path> jsonFiles =
                         paths.filter(Files::isRegularFile)
                                 .filter(p -> p.toString().endsWith(".json"))

@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { oauthIconUrl } from "@app/auth/ui/oauthIcons";
 
 export type ProviderType = "oauth2" | "saml2" | "telegram" | "googledrive";
 
@@ -28,7 +29,7 @@ const useGoogleProvider = (): Provider => {
   return {
     id: "google",
     name: "Google",
-    icon: "/Login/google.svg",
+    icon: oauthIconUrl("google.svg"),
     type: "oauth2",
     scope: t("provider.oauth2.google.scope", "Sign-in authentication"),
     documentationUrl:
@@ -86,7 +87,7 @@ const useGitHubProvider = (): Provider => {
   return {
     id: "github",
     name: "GitHub",
-    icon: "/Login/github.svg",
+    icon: oauthIconUrl("github.svg"),
     type: "oauth2",
     scope: t("provider.oauth2.github.scope", "Sign-in authentication"),
     documentationUrl:

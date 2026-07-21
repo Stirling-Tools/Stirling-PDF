@@ -1,19 +1,20 @@
-import { Text, Button } from "@mantine/core";
+import { Text } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@app/auth/UseSession";
-import { useNavigate } from "react-router-dom";
+import { withBasePath } from "@app/constants/app";
 
 export function OverviewHeader() {
   const { t } = useTranslation();
   const { signOut, user } = useAuth();
-  const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
       await signOut();
-      navigate("/login");
     } catch (error) {
       console.error("Logout error:", error);
+    } finally {
+      window.location.assign(withBasePath("/login"));
     }
   };
 
@@ -39,13 +40,15 @@ export function OverviewHeader() {
           </Text>
           {user?.email && (
             <Text size="xs" c="dimmed" mt="0.25rem">
-              Signed in as: {user.email}
+              {t("account.overview.signedInAs", "Signed in as: {{email}}", {
+                email: user.email,
+              })}
             </Text>
           )}
         </div>
         {user && (
-          <Button color="red" variant="filled" onClick={handleLogout}>
-            Log out
+          <Button accent="danger" onClick={handleLogout}>
+            {t("account.overview.logOut", "Log out")}
           </Button>
         )}
       </div>

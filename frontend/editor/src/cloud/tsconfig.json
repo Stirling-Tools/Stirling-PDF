@@ -1,0 +1,24 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@app/*": [
+        "../../src/cloud/*",
+        "../../src/proprietary/*",
+        "../../src/core/*"
+      ],
+      "@portal/*": ["../../src/portal/*"],
+      "@cloud/*": ["../../src/cloud/*"],
+      "@proprietary/*": ["../../src/proprietary/*"],
+      "@core/*": ["../../src/core/*"]
+    }
+  },
+  "include": [
+    "../global.d.ts",
+    "../*.js",
+    "../*.ts",
+    "../*.tsx",
+    "../core/setupTests.ts",
+    "."
+  ]
+}

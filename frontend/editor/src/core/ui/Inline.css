@@ -1,0 +1,76 @@
+.sui-inline {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.sui-inline--nowrap {
+  flex-wrap: nowrap;
+}
+
+.sui-inline--gap-0 {
+  gap: var(--space-0);
+}
+.sui-inline--gap-0_5 {
+  gap: var(--space-0_5);
+}
+.sui-inline--gap-1 {
+  gap: var(--space-1);
+}
+.sui-inline--gap-1_5 {
+  gap: var(--space-1_5);
+}
+.sui-inline--gap-2 {
+  gap: var(--space-2);
+}
+.sui-inline--gap-3 {
+  gap: var(--space-3);
+}
+.sui-inline--gap-4 {
+  gap: var(--space-4);
+}
+.sui-inline--gap-5 {
+  gap: var(--space-5);
+}
+.sui-inline--gap-6 {
+  gap: var(--space-6);
+}
+.sui-inline--gap-8 {
+  gap: var(--space-8);
+}
+
+.sui-inline--align-stretch {
+  align-items: stretch;
+}
+.sui-inline--align-start {
+  align-items: flex-start;
+}
+.sui-inline--align-center {
+  align-items: center;
+}
+.sui-inline--align-end {
+  align-items: flex-end;
+}
+.sui-inline--align-baseline {
+  align-items: baseline;
+}
+
+.sui-inline--justify-start {
+  justify-content: flex-start;
+}
+.sui-inline--justify-center {
+  justify-content: center;
+}
+.sui-inline--justify-end {
+  justify-content: flex-end;
+}
+.sui-inline--justify-between {
+  justify-content: space-between;
+}
+.sui-inline--justify-around {
+  justify-content: space-around;
+}
+.sui-inline--justify-evenly {
+  justify-content: space-evenly;
+}

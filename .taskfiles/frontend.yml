@@ -40,6 +40,21 @@ tasks:
     cmds:
       - node editor/scripts/generate-icons.js
 
+  prepare:og:
+    internal: true
+    run: when_changed
+    desc: "Regenerate OG/social-preview metadata from the tool registry"
+    cmds:
+      - node editor/scripts/generate-og-metadata.mjs
+    sources:
+      - editor/src/core/types/toolId.ts
+      - editor/src/core/utils/urlMapping.ts
+      - editor/src/core/data/useTranslatedToolRegistry.tsx
+      - editor/public/og_images/*.png
+    generates:
+      - editor/src/core/data/ogImageMap.json
+      - editor/public/og-metadata.json
+
   prepare:
     desc: "Set up dev environment"
     run: when_changed
@@ -49,6 +64,7 @@ tasks:
       - task: prepare:env
         vars: { MODE: '{{.MODE}}' }
       - prepare:icons
+      - prepare:og
 
   # ============================================================
   # Development
@@ -64,6 +80,13 @@ tasks:
       OPEN: '{{.OPEN | default ""}}'
     env:
       BACKEND_URL: '{{.BACKEND_URL}}'
+      # Dev-only browser-tab label so concurrent worktrees are distinguishable.
+      # Only the worktree folder basename (e.g. "wt1") is exposed — never the
+      # full path, hostname, or user. Consumed at dev-serve time by vite.config
+      # and dropped from production builds.
+      STIRLING_DEV_LABEL:
+        sh: >-
+          {{if eq OS "windows"}}powershell -NoProfile -Command '$root = git rev-parse --show-toplevel 2>$null; if (-not $root) { $root = (Get-Location).Path }; Split-Path -Leaf $root'{{else}}basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"{{end}}
     cmds:
       - npx vite editor --mode {{.MODE}} --port {{.PORT}}{{if .OPEN}} --open{{end}}
 
@@ -131,8 +154,10 @@ tasks:
   build:proprietary:
     desc: "Build for proprietary mode"
     deps: [prepare]
+    vars:
+      PREVIEW: '{{.PREVIEW | default ""}}'
     cmds:
-      - npx vite build editor --mode proprietary
+      - '{{if .PREVIEW}}VITE_BUILD_FOR_PREVIEW=1 {{end}}npx vite build editor --mode proprietary'
 
   build:saas:
     desc: "Build for SaaS mode"
@@ -156,6 +181,19 @@ tasks:
     cmds:
       - npx vite build editor --mode prototypes
 
+
+  storybook:
+    desc: "Start Storybook dev server"
+    deps: [install]
+    cmds:
+      - npx storybook dev -p 6006 {{.CLI_ARGS}}
+
+  storybook:build:
+    desc: "Build static Storybook"
+    deps: [install]
+    cmds:
+      - npx storybook build {{.CLI_ARGS}}
+
   # ============================================================
   # Code quality
   # ============================================================
@@ -164,8 +202,35 @@ tasks:
     desc: "Run linting"
     deps: [install]
     cmds:
+      - task: lint:eslint
+      - task: lint:dpdm
+      - task: lint:colors
+
+  lint:colors:
+    desc: "Enforce theme tokens — colours in core/theme route through the palette"
+    deps: [install]
+    cmds:
+      - node editor/scripts/lint/theme-lint.mjs
+
+  contrast:
+    desc: "Report low-contrast theme token pairs (warning only, never blocks)"
+    deps: [install]
+    cmds:
+      - node editor/scripts/lint/theme-lint.mjs contrast
+
+  lint:eslint:
+    desc: "Run ESLint linting"
+    deps: [install]
+    cmds:
       - npx eslint --max-warnings=0
-      - npx dpdm editor/src --circular --no-warning --no-tree --exit-code circular:1
+
+  lint:dpdm:
+    desc: "Run circular import linting"
+    deps: [install]
+    cmds:
+      # Globs so dpdm walks the whole tree. dpdm expands the braces itself, so this is
+      # shell-agnostic. Covers the whole editor tree, including the portal layer.
+      - npx dpdm "editor/src/**/*.{ts,tsx}" --circular --no-warning --no-tree --exit-code circular:1
 
   lint:fix:
     desc: "Auto-fix lint issues"
@@ -196,17 +261,24 @@ tasks:
     cmds:
       - task: typecheck:proprietary
 
+  typecheck:_run:
+    internal: true
+    cmds:
+      - 'npx tsc --noEmit --project {{.PROJECT}}'
+
   typecheck:core:
     desc: "Typecheck core build variant"
     deps: [prepare]
     cmds:
-      - npx tsc --noEmit --project editor/src/core/tsconfig.json
+      - task: typecheck:_run
+        vars: { PROJECT: editor/src/core/tsconfig.json }
 
   typecheck:proprietary:
     desc: "Typecheck proprietary build variant"
     deps: [prepare]
     cmds:
-      - npx tsc --noEmit --project editor/src/proprietary/tsconfig.json
+      - task: typecheck:_run
+        vars: { PROJECT: editor/src/proprietary/tsconfig.json }
 
   typecheck:saas:
     desc: "Typecheck SaaS build variant"
@@ -214,7 +286,8 @@ tasks:
       - task: prepare
         vars: { MODE: saas }
     cmds:
-      - npx tsc --noEmit --project editor/src/saas/tsconfig.json
+      - task: typecheck:_run
+        vars: { PROJECT: editor/src/saas/tsconfig.json }
 
   typecheck:desktop:
     desc: "Typecheck desktop build variant"
@@ -222,19 +295,36 @@ tasks:
       - task: prepare
         vars: { MODE: desktop }
     cmds:
-      - npx tsc --noEmit --project editor/src/desktop/tsconfig.json
+      - task: typecheck:_run
+        vars: { PROJECT: editor/src/desktop/tsconfig.json }
+
+  typecheck:cloud:
+    desc: "Typecheck cloud shared layer (standalone)"
+    deps: [prepare]
+    cmds:
+      - task: typecheck:_run
+        vars: { PROJECT: editor/src/cloud/tsconfig.json }
 
   typecheck:scripts:
     desc: "Typecheck scripts"
     deps: [prepare]
     cmds:
-      - npx tsc --noEmit --project editor/scripts/tsconfig.json
+      - task: typecheck:_run
+        vars: { PROJECT: editor/scripts/tsconfig.json }
 
   typecheck:prototypes:
     desc: "Typecheck prototypes build variant"
     deps: [prepare]
     cmds:
-      - npx tsc --noEmit --project editor/src/prototypes/tsconfig.json
+      - task: typecheck:_run
+        vars: { PROJECT: editor/src/prototypes/tsconfig.json }
+
+  typecheck:portal:
+    desc: "Typecheck developer portal build variant"
+    deps: [install]
+    cmds:
+      - task: typecheck:_run
+        vars: { PROJECT: editor/src/portal/tsconfig.json }
 
   typecheck:all:
     desc: "Typecheck all build variants"
@@ -243,8 +333,10 @@ tasks:
       - task: typecheck:proprietary
       - task: typecheck:saas
       - task: typecheck:desktop
+      - task: typecheck:cloud
       - task: typecheck:scripts
       - task: typecheck:prototypes
+      - task: typecheck:portal
 
   # ============================================================
   # Quality Gate
@@ -258,14 +350,23 @@ tasks:
       - task: format:check
       - task: test
 
+  og:check:
+    desc: "Fail if committed OG/social-preview metadata is out of date"
+    cmds:
+      - node editor/scripts/generate-og-metadata.mjs --check
+
   check:all:
     desc: "Full CI quality gate"
     cmds:
+      # Runs first, before prepare regenerates: guards the committed og-metadata.json /
+      # ogImageMap.json that the Cloudflare Pages (plain `vite build`) deploy relies on.
+      - task: og:check
       - task: typecheck:all
       - task: lint
       - task: format:check
       - task: build
       - task: test
+      - task: storybook:build
 
   # ============================================================
   # Test
@@ -273,28 +374,77 @@ tasks:
 
   test:
     desc: "Run tests"
-    deps: [install]
+    cmds:
+      - task: test:editor
+
+  test:editor:
+    desc: "Run editor tests"
+    deps: [prepare]
     cmds:
       - npx vitest run --root editor
 
   test:watch:
     desc: "Run tests in watch mode"
-    deps: [install]
+    deps: [prepare]
     cmds:
       - npx vitest --watch --root editor
 
   test:coverage:
-    desc: "Run tests with coverage"
-    deps: [install]
+    desc: "Run tests with coverage (one-shot; CI-friendly)."
+    deps: [prepare]
     cmds:
-      - npx vitest --coverage --root editor
+      # `vitest run` makes this CI-safe (the bare `vitest` form enters watch
+      # mode). Explicit reporter list because v8 + json-summary is what the
+      # coverage-summary.py helper consumes; html/text are kept for humans.
+      #
+      # reportsDirectory is pinned to ./coverage relative to vitest's root
+      # (--root editor), so output lands at frontend/editor/coverage/. The
+      # CI upload step reads from that path. An earlier attempt with
+      # `./editor/coverage` double-nested into frontend/editor/editor/coverage;
+      # pinning future-proofs against vitest changing the default.
+      - >
+        npx vitest run --root editor --coverage
+        --coverage.provider=v8
+        --coverage.reporter=text-summary
+        --coverage.reporter=json-summary
+        --coverage.reporter=html
+        --coverage.reportsDirectory=./coverage
 
   # ============================================================
   # Code Generation
   # ============================================================
+
+  tool-models:
+    desc: "Generate tool API types from the Java OpenAPI spec"
+    deps: [install, ":backend:swagger"]
+    cmds:
+      - npx tsx editor/scripts/generate-tool-api-types.mts --spec ../SwaggerDoc.json --output editor/src/core/types/toolApiTypes.ts
+    sources:
+      - editor/scripts/generate-tool-api-types.mts
+      - ../SwaggerDoc.json
+    generates:
+      - editor/src/core/types/toolApiTypes.ts
+
+  tool-models:check:
+    desc: "Fail if committed tool API types are out of date"
+    deps: [install, ":backend:swagger"]
+    cmds:
+      - npx tsx editor/scripts/generate-tool-api-types.mts --spec ../SwaggerDoc.json --output editor/src/core/types/toolApiTypes.ts --check
 
   licenses:generate:
     desc: "Generate frontend license report"
     deps: [install]
     cmds:
       - node editor/scripts/generate-licenses.js
+
+  # ============================================================
+  # Clean
+  # ============================================================
+
+  clean:
+    desc: "Clean build artifacts and caches"
+    cmds:
+      - cmd: powershell rm -Recurse -Force -ErrorAction SilentlyContinue node_modules/.vite, editor/dist, dist
+        platforms: [windows]
+      - cmd: rm -rf node_modules/.vite editor/dist dist
+        platforms: [linux, darwin]

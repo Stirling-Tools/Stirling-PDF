@@ -1,0 +1,39 @@
+.sui-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.sui-stat__label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-5);
+  font-weight: 600;
+}
+
+.sui-stat__value {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.sui-stat__value--success {
+  color: var(--color-green-dark);
+}
+.sui-stat__value--warning {
+  color: var(--color-amber-dark);
+}
+.sui-stat__value--danger {
+  color: var(--color-red);
+}
+
+/* Inline code in a value (masked keys, model ids, URLs) reads as mono meta. */
+.sui-stat__value code {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-text-2);
+  word-break: break-all;
+}

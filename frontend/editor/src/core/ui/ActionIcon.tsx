@@ -1,0 +1,140 @@
+import { ActionIcon as MantineActionIcon } from "@mantine/core";
+import { forwardRef } from "react";
+import type {
+  ComponentPropsWithoutRef,
+  CSSProperties,
+  ElementType,
+  ReactNode,
+} from "react";
+import { CONTROL_HEIGHT } from "@app/ui/controlSizes";
+import "@app/ui/ActionIcon.css";
+
+/** Icon-only button (square) — same variant/accent dials as Button. */
+export type ActionIconVariant = "primary" | "secondary" | "tertiary" | "quiet";
+export type ActionIconAccent =
+  | "default"
+  | "neutral"
+  | "brand"
+  | "ai"
+  | "premium"
+  | "danger"
+  | "success"
+  | "warning";
+export type ActionIconSize = "sm" | "md" | "lg" | "xl";
+export type ActionIconShape = "default" | "circle" | "pill";
+
+type ActionIconOwnProps = {
+  variant?: ActionIconVariant;
+  accent?: ActionIconAccent;
+  size?: ActionIconSize;
+  shape?: ActionIconShape;
+  /** Required — an icon-only control must have an accessible name. */
+  "aria-label": string;
+  loading?: boolean;
+  /** false = no hover background change. */
+  hover?: boolean;
+  /** Polymorphic root element (e.g. `"a"` or a router Link). */
+  as?: ElementType;
+  style?: CSSProperties;
+  /** The icon. */
+  children?: ReactNode;
+};
+
+export type ActionIconProps = ActionIconOwnProps &
+  Omit<
+    ComponentPropsWithoutRef<"button">,
+    keyof ActionIconOwnProps | "color"
+  > & {
+    href?: string;
+    target?: string;
+    rel?: string;
+  };
+
+const MANTINE_VARIANT: Record<ActionIconVariant, string> = {
+  primary: "filled",
+  secondary: "outline",
+  tertiary: "subtle",
+  quiet: "subtle",
+};
+
+export const ActionIcon = forwardRef<HTMLButtonElement, ActionIconProps>(
+  function ActionIcon(
+    {
+      variant = "primary",
+      accent = "default",
+      size = "md",
+      shape = "default",
+      loading = false,
+      hover = true,
+      as,
+      disabled,
+      className,
+      style,
+      children,
+      ...rest
+    },
+    ref,
+  ) {
+    const classes = [
+      "sui-ai",
+      `sui-acc-${accent}`,
+      `sui-ai--${variant}`,
+      shape !== "default" ? `sui-ai--${shape}` : "",
+      !hover ? "sui-ai--no-hover" : "",
+      className ?? "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    // Accent palette → Mantine ActionIcon vars (inline to win). --ai-bd is a full `border` shorthand.
+    const accentVars =
+      variant === "primary"
+        ? {
+            "--ai-bg": "var(--_solid)",
+            "--ai-hover": "var(--_solid-hover)",
+            "--ai-color": "var(--_on)",
+            "--ai-bd": "1px solid transparent",
+          }
+        : variant === "quiet"
+          ? {
+              "--ai-bg": "transparent",
+              "--ai-hover": "transparent",
+              "--ai-color": "var(--_text)",
+              "--ai-hover-color": "var(--color-text-1)",
+              "--ai-bd": "1px solid transparent",
+            }
+          : {
+              "--ai-bg": "transparent",
+              "--ai-hover": "var(--_tint)",
+              "--ai-color": "var(--_text)",
+              "--ai-bd":
+                variant === "secondary"
+                  ? "1px solid var(--_bd)"
+                  : "1px solid transparent",
+            };
+
+    // Loosely-typed alias so the polymorphic `component={as}` doesn't fight Mantine's typing.
+    const Comp = MantineActionIcon as ElementType;
+
+    return (
+      <Comp
+        {...rest}
+        ref={ref}
+        component={as}
+        variant={MANTINE_VARIANT[variant]}
+        size={size}
+        loading={loading}
+        disabled={disabled}
+        className={classes}
+        style={{
+          ...(accentVars as CSSProperties),
+          // Match Button's height per size (inline so it beats Mantine's --ai-size).
+          ...({ "--ai-size": CONTROL_HEIGHT[size] } as CSSProperties),
+          ...style,
+        }}
+      >
+        {children}
+      </Comp>
+    );
+  },
+);

@@ -1,7 +1,10 @@
 import apiClient from "@app/services/apiClient";
 import { supabase, isSupabaseConfigured } from "@app/services/supabaseClient";
 import { getCheckoutMode } from "@app/utils/protocolDetection";
-import { PLAN_FEATURES, PLAN_HIGHLIGHTS } from "@app/constants/planConstants";
+import type {
+  PlanFeaturesMap,
+  PlanHighlightsMap,
+} from "@app/constants/planConstants";
 import type { LicenseInfo, PlanFeature } from "@app/types/license";
 
 export interface PlanTier {
@@ -102,9 +105,18 @@ const SELF_HOSTED_LOOKUP_KEYS = [
 
 const licenseService = {
   /**
-   * Get available plans with pricing for the specified currency
+   * Get available plans with pricing for the specified currency.
+   *
+   * Feature and highlight labels are passed in by the caller (a React hook /
+   * context that resolves them via `usePlanFeatures` / `usePlanHighlights`),
+   * which keeps this service free of React/i18n dependencies while still
+   * returning fully localized plan content.
    */
-  async getPlans(currency: string = "usd"): Promise<PlansResponse> {
+  async getPlans(
+    planFeatures: PlanFeaturesMap,
+    planHighlights: PlanHighlightsMap,
+    currency: string = "usd",
+  ): Promise<PlansResponse> {
     try {
       // Check if Supabase is configured
       if (!isSupabaseConfigured || !supabase) {
@@ -179,8 +191,8 @@ const licenseService = {
           currency: currencySymbol,
           period: "/month",
           popular: false,
-          features: PLAN_FEATURES.SERVER,
-          highlights: PLAN_HIGHLIGHTS.SERVER_MONTHLY,
+          features: planFeatures.SERVER,
+          highlights: planHighlights.SERVER_MONTHLY,
         },
         {
           id: "selfhosted:server:yearly",
@@ -190,8 +202,8 @@ const licenseService = {
           currency: currencySymbol,
           period: "/year",
           popular: true,
-          features: PLAN_FEATURES.SERVER,
-          highlights: PLAN_HIGHLIGHTS.SERVER_YEARLY,
+          features: planFeatures.SERVER,
+          highlights: planHighlights.SERVER_YEARLY,
         },
         {
           id: "selfhosted:enterprise:monthly",
@@ -203,8 +215,8 @@ const licenseService = {
           period: "/month",
           popular: false,
           requiresSeats: true,
-          features: PLAN_FEATURES.ENTERPRISE,
-          highlights: PLAN_HIGHLIGHTS.ENTERPRISE_MONTHLY,
+          features: planFeatures.ENTERPRISE,
+          highlights: planHighlights.ENTERPRISE_MONTHLY,
         },
         {
           id: "selfhosted:enterprise:yearly",
@@ -216,8 +228,8 @@ const licenseService = {
           period: "/year",
           popular: false,
           requiresSeats: true,
-          features: PLAN_FEATURES.ENTERPRISE,
-          highlights: PLAN_HIGHLIGHTS.ENTERPRISE_YEARLY,
+          features: planFeatures.ENTERPRISE,
+          highlights: planHighlights.ENTERPRISE_YEARLY,
         },
       ];
 
@@ -240,8 +252,8 @@ const licenseService = {
         currency: currencySymbol,
         period: "",
         popular: false,
-        features: PLAN_FEATURES.FREE,
-        highlights: PLAN_HIGHLIGHTS.FREE,
+        features: planFeatures.FREE,
+        highlights: planHighlights.FREE,
       };
 
       const allPlans = [freePlan, ...validPlans];

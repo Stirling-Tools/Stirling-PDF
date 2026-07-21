@@ -13,7 +13,16 @@ const languageDefinitions: LanguageDefinition[] = [
   {
     ocrCode: "eng",
     displayName: "English",
-    browserCodes: ["en", "en-GB", "en-AU", "en-CA", "en-IE", "en-NZ", "en-ZA"],
+    browserCodes: [
+      "en",
+      "en-US",
+      "en-GB",
+      "en-AU",
+      "en-CA",
+      "en-IE",
+      "en-NZ",
+      "en-ZA",
+    ],
   },
 
   // Spanish
@@ -908,12 +917,12 @@ languageDefinitions.forEach((lang) => {
  * Maps a browser language code to an OCR language code
  * Handles exact matches and similar language fallbacks
  *
- * @param browserLanguage - The browser language code (e.g., 'en-GB', 'fr-FR')
+ * @param browserLanguage - The browser language code (e.g., 'en-US', 'fr-FR')
  * @returns OCR language code if found, null if no match
  *
  * @example
  * mapBrowserLanguageToOcr('de-DE') // Returns 'deu'
- * mapBrowserLanguageToOcr('en-GB') // Returns 'eng'
+ * mapBrowserLanguageToOcr('en-US') // Returns 'eng'
  * mapBrowserLanguageToOcr('zh-CN') // Returns 'chi_sim'
  */
 export function mapBrowserLanguageToOcr(
@@ -940,7 +949,7 @@ export function mapBrowserLanguageToOcr(
     if (match) return match;
   }
 
-  // Try base language code (e.g., 'en' from 'en-GB')
+  // Try base language code (e.g., 'en' from 'en-US')
   const baseLanguage = normalizedInput.split("-")[0];
   const baseMatch = browserToOcrMap.get(baseLanguage);
   if (baseMatch) return baseMatch;
@@ -1002,7 +1011,7 @@ export function getBrowserLanguagesForOcr(ocrCode: string): string[] {
  *
  * @example
  * getAutoOcrLanguage('de-DE') // Returns ['deu']
- * getAutoOcrLanguage('en-GB') // Returns ['eng']
+ * getAutoOcrLanguage('en-US') // Returns ['eng']
  * getAutoOcrLanguage('unknown') // Returns []
  */
 export function getAutoOcrLanguage(currentLanguage: string): string[] {

@@ -19,6 +19,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import stirling.software.common.cluster.ClusterBackplane;
+import stirling.software.common.cluster.JobStore;
 import stirling.software.common.model.job.JobResult;
 import stirling.software.common.service.FileStorage;
 import stirling.software.common.service.JobOwnershipService;
@@ -36,6 +38,10 @@ class JobControllerTest {
     @Mock private HttpServletRequest request;
 
     @Mock private JobOwnershipService jobOwnershipService;
+
+    @Mock private ClusterBackplane clusterBackplane;
+
+    @Mock private JobStore jobStore;
 
     private MockHttpSession session;
 

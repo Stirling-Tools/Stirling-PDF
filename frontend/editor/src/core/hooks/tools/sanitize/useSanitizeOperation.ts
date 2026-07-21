@@ -1,54 +1,68 @@
 import { useTranslation } from "react-i18next";
 import {
-  ToolType,
   useToolOperation,
+  defineSingleFileTool,
 } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  objectToFormData,
+  type ToolApiParams,
+  type ToolEndpoint,
+} from "@app/hooks/tools/shared/toolApiMapping";
 import { createStandardErrorHandler } from "@app/utils/toolErrorHandler";
 import {
   SanitizeParameters,
   defaultParameters,
 } from "@app/hooks/tools/sanitize/useSanitizeParameters";
 
+const ENDPOINT = "/api/v1/security/sanitize-pdf" satisfies ToolEndpoint;
+type SanitizeApiParams = ToolApiParams[typeof ENDPOINT];
+
+// Convert the tool's UI parameters into the sanitize-pdf request body. The
+// return type is the generated backend model, so a spec change that renames or
+// drops a field breaks the build here.
+export const sanitizeToApiParams = (
+  parameters: SanitizeParameters,
+): SanitizeApiParams => ({
+  removeJavaScript: parameters.removeJavaScript ?? false,
+  removeEmbeddedFiles: parameters.removeEmbeddedFiles ?? false,
+  removeXMPMetadata: parameters.removeXMPMetadata ?? false,
+  removeMetadata: parameters.removeMetadata ?? false,
+  removeLinks: parameters.removeLinks ?? false,
+  removeFonts: parameters.removeFonts ?? false,
+});
+
+// Reconstruct the tool's UI parameters from a sanitize-pdf request body, so a
+// stored or AI-authored step can be re-rendered in the settings UI.
+export const sanitizeFromApiParams = (
+  apiParams: SanitizeApiParams,
+): Partial<SanitizeParameters> => ({
+  removeJavaScript:
+    apiParams.removeJavaScript ?? defaultParameters.removeJavaScript,
+  removeEmbeddedFiles:
+    apiParams.removeEmbeddedFiles ?? defaultParameters.removeEmbeddedFiles,
+  removeXMPMetadata:
+    apiParams.removeXMPMetadata ?? defaultParameters.removeXMPMetadata,
+  removeMetadata: apiParams.removeMetadata ?? defaultParameters.removeMetadata,
+  removeLinks: apiParams.removeLinks ?? defaultParameters.removeLinks,
+  removeFonts: apiParams.removeFonts ?? defaultParameters.removeFonts,
+});
+
 // Static function that can be used by both the hook and automation executor
 export const buildSanitizeFormData = (
   parameters: SanitizeParameters,
   file: File,
-): FormData => {
-  const formData = new FormData();
-  formData.append("fileInput", file);
-
-  // Add parameters
-  formData.append(
-    "removeJavaScript",
-    (parameters.removeJavaScript ?? false).toString(),
-  );
-  formData.append(
-    "removeEmbeddedFiles",
-    (parameters.removeEmbeddedFiles ?? false).toString(),
-  );
-  formData.append(
-    "removeXMPMetadata",
-    (parameters.removeXMPMetadata ?? false).toString(),
-  );
-  formData.append(
-    "removeMetadata",
-    (parameters.removeMetadata ?? false).toString(),
-  );
-  formData.append("removeLinks", (parameters.removeLinks ?? false).toString());
-  formData.append("removeFonts", (parameters.removeFonts ?? false).toString());
-
-  return formData;
-};
+): FormData =>
+  objectToFormData(sanitizeToApiParams(parameters), { fileInput: file });
 
 // Static configuration object
-export const sanitizeOperationConfig = {
-  toolType: ToolType.singleFile,
+export const sanitizeOperationConfig = defineSingleFileTool({
   buildFormData: buildSanitizeFormData,
+  toApiParams: sanitizeToApiParams,
+  fromApiParams: sanitizeFromApiParams,
   operationType: "sanitize",
-  endpoint: "/api/v1/security/sanitize-pdf",
-  multiFileEndpoint: false,
+  endpoint: ENDPOINT,
   defaultParameters,
-} as const;
+});
 
 export const useSanitizeOperation = () => {
   const { t } = useTranslation();

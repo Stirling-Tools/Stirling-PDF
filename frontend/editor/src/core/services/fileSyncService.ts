@@ -63,6 +63,12 @@ interface AccessedShareLinkResponse {
 export interface ReconcileOptions {
   storageEnabled: boolean;
   shareLinksEnabled: boolean;
+  /**
+   * Guests (anonymous sessions) have no cloud library; pulling it just 401s and
+   * surfaces a "sign in to load cloud files" toast. Skip the server pull for
+   * them and fall back to locally-cached files only.
+   */
+  isAnonymous?: boolean;
 }
 
 function normalizeServerFileName(fileName: string | undefined | null): string {
@@ -108,7 +114,7 @@ export async function reconcileServerFiles(
   localStubs: StirlingFileStub[],
   opts: ReconcileOptions,
 ): Promise<StirlingFileStub[]> {
-  if (!opts.storageEnabled) {
+  if (!opts.storageEnabled || opts.isAnonymous) {
     return localStubs;
   }
 
@@ -388,6 +394,7 @@ export async function materializeServerStubs(
         autoUnzip: boolean;
         skipAutoUnzip: boolean;
         allowDuplicates: boolean;
+        skipUploadTracking?: boolean;
       },
     ) => Promise<StirlingFile[]>;
     updateStub: (id: FileId, updates: Partial<StirlingFileStub>) => void;
@@ -457,6 +464,7 @@ export async function materializeServerStubs(
         autoUnzip: false,
         skipAutoUnzip: true,
         allowDuplicates: true,
+        skipUploadTracking: true,
       });
       if (ingested.length === 0) continue;
       const primary = ingested[ingested.length - 1]!;

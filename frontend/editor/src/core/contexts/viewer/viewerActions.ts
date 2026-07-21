@@ -33,6 +33,8 @@ export interface SelectionActions {
   copyToClipboard: () => void;
   getSelectedText: () => string;
   getFormattedSelection: () => any;
+  selectAll: (totalPages: number) => Promise<boolean>;
+  selectWordAt: (pageIndex: number, x: number, y: number) => boolean;
 }
 
 export interface SpreadActions {
@@ -268,6 +270,20 @@ export function createViewerActions({
         return api.getFormattedSelection();
       }
       return null;
+    },
+    selectAll: async (totalPages: number) => {
+      const api = registry.current.selection?.api;
+      if (api?.selectAll) {
+        return api.selectAll(totalPages);
+      }
+      return false;
+    },
+    selectWordAt: (pageIndex: number, x: number, y: number) => {
+      const api = registry.current.selection?.api;
+      if (api?.selectWordAt) {
+        return api.selectWordAt(pageIndex, x, y);
+      }
+      return false;
     },
   };
 

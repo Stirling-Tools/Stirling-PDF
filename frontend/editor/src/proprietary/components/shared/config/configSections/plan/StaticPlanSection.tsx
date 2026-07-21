@@ -1,17 +1,13 @@
 import React, { useState } from "react";
-import {
-  Card,
-  Text,
-  Stack,
-  Button,
-  Collapse,
-  Divider,
-  Tooltip,
-} from "@mantine/core";
+import { Card, Text, Stack, Collapse, Divider, Tooltip } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { alert } from "@app/components/toast";
 import { LicenseInfo, mapLicenseToTier } from "@app/services/licenseService";
-import { PLAN_FEATURES, PLAN_HIGHLIGHTS } from "@app/constants/planConstants";
+import {
+  usePlanFeatures,
+  usePlanHighlights,
+} from "@app/constants/planConstants";
 import FeatureComparisonTable from "@app/components/shared/config/configSections/plan/FeatureComparisonTable";
 import StaticCheckoutModal from "@app/components/shared/config/configSections/plan/StaticCheckoutModal";
 import LicenseKeySection from "@app/components/shared/config/configSections/plan/LicenseKeySection";
@@ -32,6 +28,8 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
   currentLicenseInfo,
 }) => {
   const { t } = useTranslation();
+  const planFeatures = usePlanFeatures();
+  const planHighlights = usePlanHighlights();
   const [showComparison, setShowComparison] = useState(false);
 
   // Static checkout modal state
@@ -88,8 +86,8 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
       price: 0,
       currency: "£",
       period: "",
-      highlights: PLAN_HIGHLIGHTS.FREE,
-      features: PLAN_FEATURES.FREE,
+      highlights: planHighlights.FREE,
+      features: planFeatures.FREE,
       maxUsers: 5,
     },
     {
@@ -99,8 +97,8 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
       currency: "",
       period: "",
       popular: false,
-      highlights: PLAN_HIGHLIGHTS.SERVER_MONTHLY,
-      features: PLAN_FEATURES.SERVER,
+      highlights: planHighlights.SERVER_MONTHLY,
+      features: planFeatures.SERVER,
       maxUsers: "Unlimited users",
     },
     {
@@ -109,8 +107,8 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
       price: 0,
       currency: "",
       period: "",
-      highlights: PLAN_HIGHLIGHTS.ENTERPRISE_MONTHLY,
-      features: PLAN_FEATURES.ENTERPRISE,
+      highlights: planHighlights.ENTERPRISE_MONTHLY,
+      features: planFeatures.ENTERPRISE,
       maxUsers: "Custom",
     },
   ];
@@ -217,7 +215,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
                   if (plan.id === "free") {
                     return (
                       <Button
-                        variant="filled"
+                        variant="primary"
                         disabled
                         fullWidth
                         className="plan-button"
@@ -234,7 +232,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
                     if (currentTier === "free") {
                       return (
                         <Button
-                          variant="filled"
+                          variant="primary"
                           fullWidth
                           onClick={() => handleOpenCheckout("server", false)}
                           className="plan-button"
@@ -246,7 +244,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
                     if (isCurrent) {
                       return (
                         <Button
-                          variant="filled"
+                          variant="primary"
                           fullWidth
                           onClick={handleManageBilling}
                           className="plan-button"
@@ -258,7 +256,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
                     if (isDowngradePlan) {
                       return (
                         <Button
-                          variant="filled"
+                          variant="primary"
                           disabled
                           fullWidth
                           className="plan-button"
@@ -282,7 +280,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
                           withArrow
                         >
                           <Button
-                            variant="filled"
+                            variant="primary"
                             disabled
                             fullWidth
                             className="plan-button"
@@ -299,7 +297,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
                       // TODO: Re-enable checkout flow when account syncing is ready
                       // return (
                       //   <Button
-                      //     variant="filled"
+                      //     variant="primary"
                       //     fullWidth
                       //     onClick={() => handleOpenCheckout('enterprise', true)}
                       //     className="plan-button"
@@ -309,7 +307,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
                       // );
                       return (
                         <Button
-                          variant="filled"
+                          variant="primary"
                           fullWidth
                           disabled
                           className="plan-button"
@@ -321,7 +319,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
                     if (isCurrent) {
                       return (
                         <Button
-                          variant="filled"
+                          variant="primary"
                           fullWidth
                           onClick={handleManageBilling}
                           className="plan-button"
@@ -342,7 +340,7 @@ const StaticPlanSection: React.FC<StaticPlanSectionProps> = ({
         {/* Feature Comparison Toggle */}
         <div style={{ textAlign: "center", marginTop: "1rem" }}>
           <Button
-            variant="subtle"
+            variant="tertiary"
             onClick={() => setShowComparison(!showComparison)}
           >
             {showComparison

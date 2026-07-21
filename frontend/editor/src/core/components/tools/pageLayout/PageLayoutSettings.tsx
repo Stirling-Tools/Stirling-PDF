@@ -80,7 +80,7 @@ export default function PageLayoutSettings({
         <>
           <NumberInput
             label={t("pageLayout.rows", "Rows")}
-            placeholder="Enter rows"
+            placeholder={t("pageLayout.rowsPlaceholder", "Enter rows")}
             value={parameters.rows}
             onChange={(v) => onParameterChange("rows", Number(v))}
             min={1}
@@ -90,7 +90,7 @@ export default function PageLayoutSettings({
 
           <NumberInput
             label={t("pageLayout.cols", "Columns")}
-            placeholder="Enter columns"
+            placeholder={t("pageLayout.colsPlaceholder", "Enter columns")}
             value={parameters.cols}
             onChange={(v) => onParameterChange("cols", Number(v))}
             min={1}

@@ -1,5 +1,7 @@
 import React from "react";
-import { Menu, Loader, Group, Text, ActionIcon, Tooltip } from "@mantine/core";
+import { Menu, Loader, Group, Text, Tooltip } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { useTranslation } from "react-i18next";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import CloseIcon from "@mui/icons-material/Close";
@@ -28,6 +30,7 @@ export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
   switchingTo,
   viewOptionStyle,
 }) => {
+  const { t } = useTranslation();
   return (
     <Menu trigger="click" position="bottom" width="30rem">
       <Menu.Target>
@@ -95,12 +98,19 @@ export const FileDropdownMenu: React.FC<FileDropdownMenuProps> = ({
                     </Text>
                   )}
                   {onFileRemove && (
-                    <Tooltip label="Close file" withArrow>
+                    <Tooltip
+                      label={t("fileDropdownMenu.closeFile", "Close file")}
+                      withArrow
+                    >
                       <ActionIcon
-                        component="div"
-                        size="xs"
-                        variant="subtle"
-                        color="red"
+                        as="span"
+                        size="sm"
+                        variant="tertiary"
+                        accent="danger"
+                        aria-label={t(
+                          "fileDropdownMenu.closeFile",
+                          "Close file",
+                        )}
                         onClick={(e) => {
                           e.stopPropagation();
                           onFileRemove(file.fileId as FileId);

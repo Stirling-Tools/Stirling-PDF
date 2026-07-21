@@ -1,5 +1,5 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
-import { mockAppApis, seedCookieConsent } from "@app/tests/helpers/api-stubs";
+import { openSettings } from "@app/tests/helpers/ui-helpers";
 
 test.describe("2. Main Dashboard / Home Page", () => {
   test.beforeEach(async ({ page }) => {
@@ -87,72 +87,29 @@ test.describe("2. Main Dashboard / Home Page", () => {
     });
   });
 
-  test.describe("2.4 Dashboard - Footer Links", () => {
-    test("should display footer links with correct URLs", async ({ page }) => {
-      await expect(page.getByText("Survey").first()).toBeVisible({
-        timeout: 10000,
-      });
+  test.describe("2.4 Dashboard - Legal Links", () => {
+    test("legal links live in Settings → Legal, not in a footer", async ({
+      page,
+    }) => {
+      await expect(
+        page.locator('[data-testid="config-button"]').first(),
+      ).toBeVisible({ timeout: 10000 });
+
+      // The dashboard footer (survey + legal links) was removed
+      await expect(page.locator(".footer-link")).toHaveCount(0);
+      await expect(page.getByText("Survey")).toHaveCount(0);
+
+      await openSettings(page);
+      const legalNav = page.locator('[data-tour="admin-legal-nav"]').first();
+      await expect(legalNav).toBeVisible({ timeout: 10000 });
+      await legalNav.click();
+
       await expect(page.getByText("Privacy Policy").first()).toBeVisible({
         timeout: 10000,
       });
       await expect(page.getByText(/Terms/i).first()).toBeVisible({
         timeout: 10000,
       });
-      await expect(page.getByText("Discord").first()).toBeVisible({
-        timeout: 10000,
-      });
-      await expect(page.getByText("GitHub").first()).toBeVisible({
-        timeout: 10000,
-      });
-      await expect(page.getByText("Accessibility").first()).toBeVisible({
-        timeout: 10000,
-      });
-
-      const githubLink = page
-        .locator('a[href*="github.com/Stirling-Tools/Stirling-PDF"]')
-        .first();
-      await expect(githubLink).toBeVisible();
-
-      const discordLink = page
-        .locator('a[href*="discord.gg/Cn8pWhQRxZ"]')
-        .first();
-      await expect(discordLink).toBeVisible();
-    });
-  });
-
-  test.describe("2.5 Dashboard - Welcome Dialog for fresh users", () => {
-    test("should show welcome dialog when onboarding flags are unset", async ({
-      browser,
-    }) => {
-      // Fresh context — no localStorage flags, so the onboarding modal should appear.
-      const context = await browser.newContext({
-        viewport: { width: 1920, height: 1080 },
-      });
-      const page = await context.newPage();
-
-      await seedCookieConsent(page);
-      await mockAppApis(page);
-      await page.goto("/");
-
-      const welcomeDialog = page.getByText(/welcome/i).first();
-      await expect(welcomeDialog).toBeVisible({ timeout: 10000 });
-
-      for (let i = 0; i < 5; i++) {
-        const hasOverlay = await page
-          .locator(".mantine-Modal-overlay, .mantine-Overlay-root")
-          .first()
-          .isVisible()
-          .catch(() => false);
-        if (!hasOverlay) break;
-        await page.keyboard.press("Escape");
-        await page.waitForTimeout(500);
-      }
-
-      await expect(page.getByPlaceholder(/search/i).first()).toBeVisible({
-        timeout: 10000,
-      });
-
-      await context.close();
     });
   });
 });

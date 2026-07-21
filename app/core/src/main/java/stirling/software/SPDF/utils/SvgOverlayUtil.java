@@ -10,6 +10,7 @@ import org.apache.batik.bridge.GVTBuilder;
 import org.apache.batik.bridge.UserAgent;
 import org.apache.batik.bridge.UserAgentAdapter;
 import org.apache.batik.gvt.GraphicsNode;
+import org.apache.batik.util.ParsedURL;
 import org.apache.batik.util.XMLResourceDescriptor;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -39,7 +40,20 @@ public class SvgOverlayUtil {
                 svgDoc = factory.createSVGDocument("file:///overlay.svg", inputStream);
             }
 
-            UserAgent userAgent = new UserAgentAdapter();
+            UserAgent userAgent =
+                    new UserAgentAdapter() {
+                        @Override
+                        public void checkLoadExternalResource(
+                                ParsedURL resourceURL, ParsedURL docURL) {
+                            // Inline data: URIs are self-contained (no network/file fetch).
+                            if (resourceURL != null && "data".equals(resourceURL.getProtocol())) {
+                                return;
+                            }
+                            throw new SecurityException(
+                                    "External resource loading is disabled for SVG overlays: "
+                                            + resourceURL);
+                        }
+                    };
             DocumentLoader loader = new DocumentLoader(userAgent);
             BridgeContext ctx = new BridgeContext(userAgent, loader);
             ctx.setDynamicState(BridgeContext.DYNAMIC);

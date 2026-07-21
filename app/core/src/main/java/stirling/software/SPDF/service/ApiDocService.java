@@ -63,6 +63,7 @@ public class ApiDocService implements stirling.software.common.service.ToolMetad
         return "http://localhost:" + port + contextPath + "/v1/api-docs";
     }
 
+    @Override
     public List<String> getExtensionTypes(boolean output, String operationName) {
         if (outputToFileTypes.isEmpty()) {
             outputToFileTypes.put("PDF", List.of("pdf"));

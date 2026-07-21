@@ -27,10 +27,25 @@ from opentelemetry.trace import Span
 from posthog.client import Client as PostHogClient
 
 from stirling.config import AppSettings
+from stirling.models import UserId
 
 # Per-request user ID, set by middleware from the X-User-Id header.
 # When not set, PostHog generates a random ID and marks the event as personless.
-current_user_id: ContextVar[str | None] = ContextVar("current_user_id", default=None)
+current_user_id: ContextVar[UserId | None] = ContextVar("current_user_id", default=None)
+
+
+def require_current_user_id() -> UserId:
+    """Return the request's user ID or raise if the X-User-Id header was missing.
+
+    Use at the boundary of any code path that touches per-user document
+    storage (vector chunks, page text, ACL rows). Routes prefer the FastAPI dependency form
+    (``Depends(require_user_id)``); agent internals that don't have a request
+    object in scope call this helper directly to fail closed.
+    """
+    user_id = current_user_id.get()
+    if user_id is None:
+        raise RuntimeError("X-User-Id is required for this operation but was not set on the request")
+    return user_id
 
 
 class LRUSet:

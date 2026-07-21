@@ -20,18 +20,6 @@ export interface AutomationProcessingResult {
 
 export class AutomationFileProcessor {
   /**
-   * Check if a blob is a ZIP file by examining its header
-   */
-  static isZipFile(blob: Blob): boolean {
-    // This is a simple check - in a real implementation you might want to read the first few bytes
-    // For now, we'll rely on the extraction attempt and fallback
-    return (
-      blob.type === "application/zip" ||
-      blob.type === "application/x-zip-compressed"
-    );
-  }
-
-  /**
    * Extract files from a ZIP blob during automation execution, with fallback for non-ZIP files
    * Extracts all file types (PDFs, images, etc.) except HTML files which stay zipped
    */

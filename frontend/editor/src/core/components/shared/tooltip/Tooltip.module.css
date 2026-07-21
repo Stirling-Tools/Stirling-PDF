@@ -10,7 +10,6 @@
   font-size: 0.875rem;
   line-height: 1.5;
   pointer-events: auto;
-  z-index: 9999;
   transition:
     opacity 100ms ease-out,
     transform 100ms ease-out;

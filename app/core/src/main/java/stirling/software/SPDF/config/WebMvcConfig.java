@@ -13,6 +13,7 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.resource.EncodedResourceResolver;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,6 +24,7 @@ import stirling.software.common.model.ApplicationProperties;
 public class WebMvcConfig implements WebMvcConfigurer {
 
     private final EndpointInterceptor endpointInterceptor;
+    private final PdfMetricsInterceptor pdfMetricsInterceptor;
     private final ApplicationProperties applicationProperties;
 
     private static final Logger logger = LoggerFactory.getLogger(WebMvcConfig.class);
@@ -34,6 +36,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(endpointInterceptor);
+        registry.addInterceptor(pdfMetricsInterceptor);
     }
 
     @Override
@@ -49,14 +52,16 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/sw.js", "/manifest.json", "/site.webmanifest", "/browserconfig.xml")
                 .addResourceLocations(staticPath, "classpath:/static/")
                 .setCacheControl(CacheControl.noStore())
-                .resourceChain(true);
+                .resourceChain(true)
+                .addResolver(new EncodedResourceResolver());
 
         // 2. Vite fingerprinted assets (immutable)
         // These already have content hashes in filenames (e.g. index-ChAS4tCC.js)
         registry.addResourceHandler("/assets/**")
                 .addResourceLocations(staticPath + "assets/", "classpath:/static/assets/")
                 .setCacheControl(IMMUTABLE_ONE_YEAR)
-                .resourceChain(true);
+                .resourceChain(true)
+                .addResolver(new EncodedResourceResolver());
 
         // 3. Media and fonts (immutable)
         registry.addResourceHandler("/images/**", "/fonts/**")
@@ -66,7 +71,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         staticPath + "fonts/",
                         "classpath:/static/fonts/")
                 .setCacheControl(IMMUTABLE_ONE_YEAR)
-                .resourceChain(true);
+                .resourceChain(true)
+                .addResolver(new EncodedResourceResolver());
 
         // 4. Branding and stable non-fingerprinted assets (1 day + SWR)
         // Use stale-while-revalidate to improve perceived performance.
@@ -79,7 +85,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/icons/**",
                         "/modern-logo/**",
                         "/classic-logo/**",
-                        "/robots.txt",
                         "/3rdPartyLicenses.json",
                         "/pdfjs/**",
                         "/pdfjs-legacy/**",
@@ -114,19 +119,27 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         staticPath + "og_images/",
                         "classpath:/static/og_images/",
                         staticPath + "Login/",
-                        "classpath:/static/Login/")
+                        "classpath:/static/Login/",
+                        staticPath + "icons/",
+                        "classpath:/static/icons/",
+                        staticPath + "modern-logo/",
+                        "classpath:/static/modern-logo/",
+                        staticPath + "classic-logo/",
+                        "classpath:/static/classic-logo/")
                 .setCacheControl(
                         CacheControl.maxAge(Duration.ofDays(1))
                                 .cachePublic()
                                 .staleWhileRevalidate(Duration.ofDays(7)))
-                .resourceChain(true);
+                .resourceChain(true)
+                .addResolver(new EncodedResourceResolver());
 
         // 5. Catch-all (SPA fallback)
         // Must check with server to ensure index.html is always fresh.
         registry.addResourceHandler("/**")
                 .addResourceLocations(staticPath, "classpath:/static/")
                 .setCacheControl(NO_CACHE)
-                .resourceChain(true);
+                .resourceChain(true)
+                .addResolver(new EncodedResourceResolver());
     }
 
     @Override

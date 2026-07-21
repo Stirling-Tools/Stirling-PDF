@@ -1,0 +1,66 @@
+package stirling.software.proprietary.policy.store;
+
+import java.io.Serializable;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import stirling.software.proprietary.integration.crypto.LegacyDecryptStringConverter;
+
+/**
+ * JPA row for a {@link stirling.software.proprietary.policy.model.Policy}. The whole policy lives
+ * as JSON in {@code policyJson} (authoritative on read); the scalar columns are denormalized copies
+ * for querying, notably {@code triggerType} + {@code enabled} so background triggers can fetch
+ * their policies, and {@code teamId} so the caller's team can be loaded without scanning every
+ * team's rows. {@code owner} and {@code teamId} are plain values, not foreign keys, to stay
+ * decoupled from the security entities.
+ */
+@Entity
+@Table(name = "policies")
+@NoArgsConstructor
+@Getter
+@Setter
+public class PolicyEntity implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    @Id
+    @Column(name = "id")
+    private String id;
+
+    @Column(name = "name")
+    private String name;
+
+    @Column(name = "owner")
+    private String owner;
+
+    @Column(name = "enabled")
+    private boolean enabled;
+
+    @Column(name = "trigger_type")
+    private String triggerType;
+
+    @Column(name = "team_id")
+    private Long teamId;
+
+    /**
+     * Position in the team's run order (ascending). Team-wide and admin-editable; the per-trigger
+     * order the UI shows is this single sequence filtered by trigger. New policies are appended
+     * (max + 1). Nullable for pre-existing rows; treated as 0 when sorting.
+     */
+    @Column(name = "sort_order")
+    private Integer sortOrder;
+
+    // Plaintext at rest: the S3 credentials that used to live here now sit in a referenced
+    // IntegrationConfig connection (still encrypted). Decrypts legacy ciphertext on read.
+    @Convert(converter = LegacyDecryptStringConverter.class)
+    @Column(name = "policy_json", columnDefinition = "text")
+    private String policyJson;
+}

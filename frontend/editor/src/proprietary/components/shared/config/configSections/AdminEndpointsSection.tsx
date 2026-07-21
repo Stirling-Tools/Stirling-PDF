@@ -18,6 +18,7 @@ import PendingBadge from "@app/components/shared/config/PendingBadge";
 import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 
 interface UISettingsData {
   defaultHideUnavailableTools?: boolean;
@@ -296,8 +297,14 @@ export default function AdminEndpointsSection() {
                 }))}
                 searchable
                 clearable
-                placeholder="Select endpoints to disable"
-                comboboxProps={{ zIndex: 1400 }}
+                placeholder={t(
+                  "admin.settings.endpoints.toRemove.placeholder",
+                  "Select endpoints to disable",
+                )}
+                comboboxProps={{
+                  withinPortal: true,
+                  zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                }}
                 disabled={!loginEnabled}
               />
             </div>
@@ -330,8 +337,14 @@ export default function AdminEndpointsSection() {
                 }))}
                 searchable
                 clearable
-                placeholder="Select groups to disable"
-                comboboxProps={{ zIndex: 1400 }}
+                placeholder={t(
+                  "admin.settings.endpoints.groupsToRemove.placeholder",
+                  "Select groups to disable",
+                )}
+                comboboxProps={{
+                  withinPortal: true,
+                  zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                }}
                 disabled={!loginEnabled}
               />
             </div>

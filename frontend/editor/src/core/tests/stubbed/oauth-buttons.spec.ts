@@ -28,8 +28,8 @@ test.describe("OAuth/SSO login buttons", () => {
       route.fulfill({
         json: {
           enableLogin: true,
-          languages: ["en-GB"],
-          defaultLocale: "en-GB",
+          languages: ["en-US"],
+          defaultLocale: "en-US",
           oauth2: {
             enabled: true,
             providers: [

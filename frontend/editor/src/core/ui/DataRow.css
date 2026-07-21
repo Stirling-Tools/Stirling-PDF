@@ -1,0 +1,23 @@
+.sui-datarow {
+  display: flex;
+  gap: 0.5rem;
+}
+.sui-datarow--center {
+  align-items: center;
+}
+.sui-datarow--top {
+  align-items: flex-start;
+}
+.sui-datarow__label {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-4);
+}
+.sui-datarow__value {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.75rem;
+  color: var(--color-text-1);
+  overflow-wrap: anywhere;
+}

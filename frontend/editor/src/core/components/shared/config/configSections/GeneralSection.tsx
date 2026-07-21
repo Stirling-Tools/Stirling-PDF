@@ -6,50 +6,86 @@ import {
   Text,
   Tooltip,
   NumberInput,
-  SegmentedControl,
   Select,
   Code,
   Group,
   Anchor,
-  ActionIcon,
-  Button,
   Badge,
-  Alert,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useRainbowThemeContext } from "@app/components/shared/RainbowThemeProvider";
+import { useTheme } from "@app/components/shared/ThemeProvider";
 import LanguageSelector from "@app/components/shared/LanguageSelector";
+import { type ThemeMode } from "@app/constants/theme";
 import type { ToolPanelMode } from "@app/constants/toolPanel";
-import type {
-  StartupView,
-  ViewerZoomSetting,
+import {
+  type StartupView,
+  type ViewerZoomSetting,
 } from "@app/services/preferencesService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { updateService, UpdateSummary } from "@app/services/updateService";
 import UpdateModal from "@app/components/shared/UpdateModal";
+import type {
+  DesktopInstallState,
+  DesktopInstallProgress,
+  DesktopInstallActions,
+  DesktopInstallCanInstall,
+} from "@app/components/shared/UpdateModal";
 import { useFrontendVersionInfo } from "@app/hooks/useFrontendVersionInfo";
 
 const DEFAULT_AUTO_UNZIP_FILE_LIMIT = 4;
 const BANNER_DISMISSED_KEY = "stirlingpdf_features_banner_dismissed";
 
+/**
+ * Desktop-only: user-facing update policy control, rendered inside the
+ * Software Updates section alongside the version info. Passed from the
+ * desktop GeneralSection override so this core component doesn't have to
+ * import any Tauri APIs directly.
+ */
+export interface DesktopUpdateModeControl {
+  /** Current mode. */
+  mode: "prompt" | "auto" | "disabled";
+  /** `true` when the mode was written by a provisioning file — disables the control. */
+  locked: boolean;
+  /** Called when the user picks a new mode. Async: surface errors via toast. */
+  onChange: (mode: "prompt" | "auto" | "disabled") => Promise<void> | void;
+}
+
 interface GeneralSectionProps {
   hideTitle?: boolean;
   hideUpdateSection?: boolean;
   hideAdminBanner?: boolean;
+  /** Desktop-only: Tauri updater install state, passed from the desktop override. */
+  desktopInstall?: {
+    state: DesktopInstallState;
+    progress: DesktopInstallProgress | null;
+    errorMessage: string | null;
+    tauriInstallReady: boolean;
+    /** Result of the `can_install_updates` probe, used to show an inline
+     *  warning when msiexec would need UAC elevation this user doesn't have. */
+    canInstall?: DesktopInstallCanInstall | null;
+    actions: DesktopInstallActions;
+  };
+  /** Desktop-only: update-mode toggle (prompt/auto/disabled). */
+  desktopUpdateMode?: DesktopUpdateModeControl;
 }
 
 const GeneralSection: React.FC<GeneralSectionProps> = ({
   hideTitle = false,
   hideUpdateSection = false,
   hideAdminBanner = false,
+  desktopInstall,
+  desktopUpdateMode,
 }) => {
   const { t } = useTranslation();
   const { preferences, updatePreference } = usePreferences();
   const { config } = useAppConfig();
-  const { toggleTheme, themeMode } = useRainbowThemeContext();
+  const { setTheme, themeMode } = useTheme();
   const [fileLimitInput, setFileLimitInput] = useState<number | string>(
     preferences.autoUnzipFileLimit,
   );
@@ -72,47 +108,57 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
     setFileLimitInput(preferences.autoUnzipFileLimit);
   }, [preferences.autoUnzipFileLimit]);
 
-  // Check for updates on mount
+  // The version to use for update checks — on desktop use the Tauri app version,
+  // falling back to the backend version
+  const currentVersion = appVersion ?? config?.appVersion ?? null;
+
+  // Check for updates on mount — skipped when the update UI is hidden (SaaS
+  // build, managed-disabled desktop) so no external update call ever fires.
   useEffect(() => {
-    if (config?.appVersion && config?.machineType) {
+    if (hideUpdateSection) return;
+    if (currentVersion) {
       checkForUpdate();
     }
-  }, [config?.appVersion, config?.machineType]);
+  }, [currentVersion, config?.machineType, hideUpdateSection]);
 
   const checkForUpdate = async () => {
-    if (!config?.appVersion || !config?.machineType) {
-      return;
-    }
+    if (!currentVersion) return;
 
     setCheckingUpdate(true);
+
     const machineInfo = {
-      machineType: config.machineType,
-      activeSecurity: config.activeSecurity ?? false,
-      licenseType: config.license ?? "NORMAL",
+      machineType: config?.machineType ?? "unknown",
+      activeSecurity: config?.activeSecurity ?? false,
+      licenseType: config?.license ?? "NORMAL",
     };
 
     const summary = await updateService.getUpdateSummary(
-      config.appVersion,
+      currentVersion,
       machineInfo,
     );
-    if (summary && summary.latest_version) {
-      const isNewerVersion =
-        updateService.compareVersions(
-          summary.latest_version,
-          config.appVersion,
-        ) > 0;
-      if (isNewerVersion) {
-        setUpdateSummary(summary);
-      } else {
-        // Clear any existing update summary if user is on latest version
-        setUpdateSummary(null);
-      }
+
+    if (
+      summary?.latest_version &&
+      updateService.compareVersions(summary.latest_version, currentVersion) > 0
+    ) {
+      setUpdateSummary(summary);
     } else {
-      // No update available (latest_version is null) - clear any existing update summary
       setUpdateSummary(null);
     }
+
     setCheckingUpdate(false);
   };
+
+  // Build desktop install props for the UpdateModal (only when provided by desktop override)
+  const desktopInstallProps = desktopInstall?.tauriInstallReady
+    ? {
+        state: desktopInstall.state,
+        progress: desktopInstall.progress,
+        errorMessage: desktopInstall.errorMessage,
+        canInstall: desktopInstall.canInstall,
+        actions: desktopInstall.actions,
+      }
+    : undefined;
 
   // Check if login is disabled
   const loginDisabled = !config?.enableLogin;
@@ -149,8 +195,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
           }}
         >
           <ActionIcon
-            variant="subtle"
-            color="gray"
+            variant="tertiary"
             size="sm"
             style={{ position: "absolute", top: "0.5rem", right: "0.5rem" }}
             onClick={handleDismissBanner}
@@ -215,8 +260,8 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
         </Paper>
       )}
 
-      {/* Update Check Section */}
-      {!hideUpdateSection && config?.appVersion && (
+      {/* Update Check Section — show when backend version is known OR in desktop mode (Tauri version is always available) */}
+      {!hideUpdateSection && (config?.appVersion || !!desktopInstall) && (
         <Paper withBorder p="md" radius="md">
           <Stack gap="md">
             <div>
@@ -272,16 +317,18 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
             )}
             <Group justify="space-between" align="center">
               <div>
-                <Text size="sm" c="dimmed">
-                  {t(
-                    "settings.general.updates.currentBackendVersion",
-                    "Current Backend Version",
-                  )}
-                  :{" "}
-                  <Text component="span" fw={500}>
-                    {config.appVersion}
+                {config?.appVersion && (
+                  <Text size="sm" c="dimmed">
+                    {t(
+                      "settings.general.updates.currentBackendVersion",
+                      "Current Backend Version",
+                    )}
+                    :{" "}
+                    <Text component="span" fw={500}>
+                      {config.appVersion}
+                    </Text>
                   </Text>
-                </Text>
+                )}
                 {updateSummary && (
                   <Text size="sm" c="dimmed" mt={4}>
                     {t(
@@ -298,9 +345,10 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               <Group gap="sm">
                 <Button
                   size="sm"
-                  variant="default"
+                  variant="secondary"
                   onClick={checkForUpdate}
                   loading={checkingUpdate}
+                  disabled={!currentVersion}
                   leftSection={
                     <LocalIcon
                       icon="refresh-rounded"
@@ -317,8 +365,10 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                 {updateSummary && (
                   <Button
                     size="sm"
-                    color={
-                      updateSummary.max_priority === "urgent" ? "red" : "blue"
+                    accent={
+                      updateSummary.max_priority === "urgent"
+                        ? "danger"
+                        : "default"
                     }
                     onClick={() => setUpdateModalOpened(true)}
                     leftSection={
@@ -335,24 +385,81 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               </Group>
             </Group>
 
-            {updateSummary?.any_breaking && (
-              <Alert
-                color="orange"
-                title={t(
-                  "update.breakingChangesDetected",
-                  "Breaking Changes Detected",
-                )}
-                styles={{
-                  title: { fontWeight: 600 },
-                }}
-              >
-                <Text size="sm">
-                  {t(
-                    "update.breakingChangesMessage",
-                    "Some versions contain breaking changes. Please review the migration guides before updating.",
+            {/* Desktop-only: update behaviour selector (prompt / auto / disabled).
+                Rendered disabled with a "Managed by administrator" hint when the
+                mode was pinned by a provisioning file. */}
+            {desktopUpdateMode && (
+              <Stack gap="xs">
+                <Group gap="xs" align="center">
+                  <Text fw={600} size="sm">
+                    {t(
+                      "settings.general.updates.updateBehavior",
+                      "Update behavior",
+                    )}
+                  </Text>
+                  {desktopUpdateMode.locked && (
+                    // `color="gray" variant="light"` rendered as near-invisible
+                    // light-on-dark in dark mode. `blue light` has enough
+                    // contrast in both themes to read clearly without being
+                    // shouty.
+                    <Badge color="blue" variant="light" size="sm" radius="sm">
+                      {t(
+                        "settings.general.updates.managedByAdmin",
+                        "Managed by administrator",
+                      )}
+                    </Badge>
                   )}
+                </Group>
+                <Text size="xs" c="dimmed">
+                  {desktopUpdateMode.locked
+                    ? t(
+                        "settings.general.updates.updateBehaviorLockedDescription",
+                        "Your administrator has configured how Stirling-PDF handles updates on this machine. Contact them to change this.",
+                      )
+                    : t(
+                        "settings.general.updates.updateBehaviorDescription",
+                        "Choose whether to prompt before installing updates, install them automatically, or skip update checks entirely.",
+                      )}
                 </Text>
-              </Alert>
+                <Select
+                  disabled={desktopUpdateMode.locked}
+                  value={desktopUpdateMode.mode}
+                  onChange={(value) => {
+                    if (!value) return;
+                    void desktopUpdateMode.onChange(
+                      value as "prompt" | "auto" | "disabled",
+                    );
+                  }}
+                  data={[
+                    {
+                      value: "prompt",
+                      label: t(
+                        "settings.general.updates.modePrompt",
+                        "Ask me before installing updates",
+                      ),
+                    },
+                    {
+                      value: "auto",
+                      label: t(
+                        "settings.general.updates.modeAuto",
+                        "Install updates automatically",
+                      ),
+                    },
+                    {
+                      value: "disabled",
+                      label: t(
+                        "settings.general.updates.modeDisabled",
+                        "Don't check for updates",
+                      ),
+                    },
+                  ]}
+                  maw={360}
+                  comboboxProps={{
+                    withinPortal: true,
+                    zIndex: Z_INDEX_OVER_CONFIG_MODAL,
+                  }}
+                />
+              </Stack>
             )}
           </Stack>
         </Paper>
@@ -368,23 +475,21 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               justifyContent: "space-between",
             }}
           >
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <Text fw={500} size="sm">
                 {t("settings.general.theme", "Theme")}
               </Text>
               <Text size="xs" c="dimmed" mt={4}>
                 {t(
                   "settings.general.themeDescription",
-                  "Switch between light and dark mode",
+                  "Choose light, dark, or follow your system so it switches automatically.",
                 )}
               </Text>
             </div>
             <SegmentedControl
-              value={themeMode === "rainbow" ? "dark" : themeMode}
-              onChange={(val) => {
-                if ((themeMode === "dark") !== (val === "dark")) toggleTheme();
-              }}
-              data={[
+              value={themeMode}
+              onChange={(val) => setTheme(val as ThemeMode)}
+              options={[
                 {
                   label: t("settings.general.themeLight", "Light"),
                   value: "light",
@@ -393,30 +498,38 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                   label: t("settings.general.themeDark", "Dark"),
                   value: "dark",
                 },
+                {
+                  label: t("settings.general.themeSystem", "System"),
+                  value: "system",
+                },
               ]}
             />
           </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <div>
-              <Text fw={500} size="sm">
-                {t("settings.general.language", "Language")}
-              </Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {t(
-                  "settings.general.languageDescription",
-                  "Choose the display language",
-                )}
-              </Text>
-            </div>
-            <LanguageSelector position="bottom-end" offset={6} />
-          </div>
         </Stack>
+      </Paper>
+
+      {/* Language */}
+      <Paper withBorder p="md" radius="md">
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <Text fw={500} size="sm">
+              {t("settings.general.language", "Language")}
+            </Text>
+            <Text size="xs" c="dimmed" mt={4}>
+              {t(
+                "settings.general.languageDescription",
+                "Choose the display language",
+              )}
+            </Text>
+          </div>
+          <LanguageSelector position="bottom-end" offset={6} />
+        </div>
       </Paper>
 
       <Paper withBorder p="md" radius="md">
@@ -428,7 +541,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               justifyContent: "space-between",
             }}
           >
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <Text fw={500} size="sm">
                 {t(
                   "settings.general.defaultToolPickerMode",
@@ -447,7 +560,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               onChange={(val: string) =>
                 updatePreference("defaultToolPanelMode", val as ToolPanelMode)
               }
-              data={[
+              options={[
                 {
                   label: t("settings.general.mode.sidebar", "Sidebar"),
                   value: "sidebar",
@@ -466,7 +579,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               justifyContent: "space-between",
             }}
           >
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <Text fw={500} size="sm">
                 {t(
                   "settings.general.defaultStartupView",
@@ -485,7 +598,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               onChange={(val: string) =>
                 updatePreference("defaultStartupView", val as StartupView)
               }
-              data={[
+              options={[
                 {
                   label: t("settings.general.startupView.tools", "Tools"),
                   value: "tools",
@@ -508,7 +621,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               justifyContent: "space-between",
             }}
           >
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <Text fw={500} size="sm">
                 {t("settings.general.defaultViewerZoom", "Default reader zoom")}
               </Text>
@@ -563,7 +676,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               justifyContent: "space-between",
             }}
           >
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <Text fw={500} size="sm">
                 {t(
                   "settings.general.hideUnavailableTools",
@@ -594,7 +707,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
               justifyContent: "space-between",
             }}
           >
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <Text fw={500} size="sm">
                 {t(
                   "settings.general.hideUnavailableConversions",
@@ -635,7 +748,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                 cursor: "help",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t("settings.general.autoUnzip", "Auto-unzip API responses")}
                 </Text>
@@ -672,7 +785,7 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
                 cursor: "help",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "settings.general.autoUnzipFileLimit",
@@ -713,17 +826,24 @@ const GeneralSection: React.FC<GeneralSectionProps> = ({
       </Paper>
 
       {/* Update Modal */}
-      {updateSummary && config?.appVersion && config?.machineType && (
+      {updateSummary && (config?.appVersion || !!desktopInstall) && (
         <UpdateModal
           opened={updateModalOpened}
           onClose={() => setUpdateModalOpened(false)}
-          currentVersion={config.appVersion}
+          onRemindLater={() => {
+            localStorage.setItem(
+              "stirling-pdf-updater:snoozedUntil",
+              String(Date.now() + 24 * 60 * 60 * 1000),
+            );
+          }}
+          currentVersion={appVersion ?? config?.appVersion ?? ""}
           updateSummary={updateSummary}
           machineInfo={{
-            machineType: config.machineType,
-            activeSecurity: config.activeSecurity ?? false,
-            licenseType: config.license ?? "NORMAL",
+            machineType: config?.machineType ?? "unknown",
+            activeSecurity: config?.activeSecurity ?? false,
+            licenseType: config?.license ?? "NORMAL",
           }}
+          desktopInstall={desktopInstallProps}
         />
       )}
     </Stack>

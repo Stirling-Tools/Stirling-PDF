@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="Stirling PDF Cloud API">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stirling PDF - Cloud API</title>
+
+    <!-- Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="shortcut icon" href="favicon.ico">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f3f4f6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem 1.5rem 0;
+            overflow: auto;
+        }
+
+        .auth-card {
+            width: min(45rem, 96vw);
+            background-color: #ffffff;
+            border-radius: 1.25rem;
+            box-shadow: 0 1.25rem 3.75rem rgba(0, 0, 0, 0.12);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .auth-content {
+            max-width: 26.25rem;
+            width: 100%;
+        }
+
+        .login-header {
+            margin-bottom: 1.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .login-header-logos {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .login-logo-modern {
+            height: 3rem;
+            width: auto;
+        }
+
+        .login-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #111827;
+            margin: 0 0 0.375rem;
+        }
+
+        .login-subtitle {
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin: 0;
+        }
+
+        .section {
+            margin: 1.5rem 0 0.75rem;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-text {
+            font-size: 0.875rem;
+            color: #6b7280;
+            line-height: 1.5;
+            margin-bottom: 0.75rem;
+        }
+
+        .section-list {
+            font-size: 0.875rem;
+            color: #6b7280;
+            line-height: 1.6;
+            margin-left: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .section-list li {
+            margin-bottom: 0.5rem;
+        }
+
+        .section-list a,
+        .section-text a {
+            color: #AF3434;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .section-list a:hover,
+        .section-text a:hover {
+            text-decoration: underline;
+        }
+
+        .cta-button {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background-color: #AF3434;
+            color: white;
+            border: none;
+            border-radius: 0.625rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            transition: background-color 0.2s;
+            margin: 0.75rem 0;
+        }
+
+        .cta-button:hover {
+            background-color: #9a2e2e;
+        }
+
+        .cta-button.secondary {
+            background-color: #ffffff;
+            color: #AF3434;
+            border: 1px solid #AF3434;
+        }
+
+        .cta-button.secondary:hover {
+            background-color: #fdf2f2;
+        }
+
+        .divider {
+            margin: 1.5rem 0;
+            border: 0;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            text-align: center;
+            padding: 1rem;
+            font-size: 0.875rem;
+            color: #6b7280;
+            background-color: transparent;
+            z-index: 10;
+        }
+
+        .footer a {
+            color: #AF3434;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="auth-card">
+        <div class="auth-content">
+            <div class="login-header">
+                <div class="login-header-logos">
+                    <img src="modern-logo.svg" alt="Stirling PDF" class="login-logo-modern">
+                </div>
+                <h1 class="login-title">Stirling PDF API</h1>
+                <p class="login-subtitle">REST API for PDF manipulation, in the cloud</p>
+            </div>
+
+            <div class="section">
+                <p class="section-text">
+                    You've reached the <strong>Stirling PDF Cloud API</strong>. This endpoint serves the REST API that powers our apps and your integrations.
+                </p>
+            </div>
+
+            <a href="swagger-ui/index.html" class="cta-button">Open API Documentation</a>
+            <a href="https://docs.stirlingpdf.com" target="_blank" class="cta-button secondary">Read the Developer Docs</a>
+
+            <hr class="divider">
+
+            <div class="section">
+                <h2 class="section-title">Just looking to edit a PDF?</h2>
+                <p class="section-text">
+                    This page is the API endpoint - it doesn't have an editor. If you want the full interface:
+                </p>
+                <ul class="section-list">
+                    <li><a href="https://stirling.com/app" target="_blank">Open Stirling PDF in your browser</a> - the hosted web app</li>
+                    <li><a href="https://stirling.com/download" target="_blank">Download the desktop app</a> - macOS, Windows, and Linux</li>
+                    <li><a href="https://stirling.com/pricing" target="_blank">Pricing &amp; plans</a> - free tier, paid plans, and enterprise</li>
+                </ul>
+            </div>
+
+            <hr class="divider">
+
+            <div class="section">
+                <h2 class="section-title">Want to run your own?</h2>
+                <p class="section-text">
+                    Stirling PDF is open source. You can self-host the same toolkit on your own hardware or run it inside your network:
+                </p>
+                <ul class="section-list">
+                    <li><a href="https://docs.stirlingpdf.com/Installation/Versions" target="_blank">Installation guide</a> - Docker, JAR, Windows, Mac, and Linux</li>
+                    <li><a href="https://github.com/Stirling-Tools/Stirling-PDF" target="_blank">GitHub repository</a> - source code and releases</li>
+                </ul>
+            </div>
+
+            <hr class="divider">
+
+            <div class="section">
+                <h2 class="section-title">Support</h2>
+                <ul class="section-list">
+                    <li><a href="https://docs.stirlingpdf.com" target="_blank">Documentation</a> - guides, API reference, integration tutorials</li>
+                    <li><a href="https://discord.gg/Cn8pWhQRxZ" target="_blank">Discord community</a> - chat with other developers and users</li>
+                    <li><a href="https://stirling.com" target="_blank">stirling.com</a> - company website</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <span>Powered by </span>
+        <a href="https://stirlingpdf.com">Stirling PDF</a>
+    </div>
+</body>
+</html>

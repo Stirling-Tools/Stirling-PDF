@@ -1,0 +1,66 @@
+.sui-input {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-md);
+  color: var(--color-text-1);
+  transition:
+    border-color var(--motion-fast),
+    box-shadow var(--motion-fast);
+}
+
+.sui-input:focus-within {
+  border-color: var(--color-blue);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-blue) 16%, transparent);
+}
+
+.sui-input--sm {
+  min-height: 1.75rem;
+  padding: 0 var(--space-2);
+}
+.sui-input--md {
+  min-height: 2.25rem;
+  padding: 0 var(--space-3);
+}
+
+.sui-input--invalid {
+  border-color: var(--color-red);
+}
+.sui-input--invalid:focus-within {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-red) 16%, transparent);
+}
+
+.sui-input--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sui-input__el {
+  flex: 1 1 auto;
+  min-width: 0;
+  font: inherit;
+  font-size: 0.875rem;
+  background: transparent;
+  border: none;
+  color: inherit;
+  outline: none;
+  padding: 0;
+}
+
+.sui-input--sm .sui-input__el {
+  font-size: 0.8125rem;
+}
+
+.sui-input__el::placeholder {
+  color: var(--color-text-placeholder);
+}
+
+.sui-input__icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text-4);
+  flex-shrink: 0;
+}

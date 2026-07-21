@@ -1,0 +1,35 @@
+.portal-assistant-btn {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: linear-gradient(
+    135deg,
+    var(--color-blue) 0%,
+    var(--color-purple) 100%
+  );
+  box-shadow:
+    0 0.5rem 1.25rem rgba(59, 130, 246, 0.35),
+    inset 0 0.0625rem 0 rgba(255, 255, 255, 0.2);
+  transition:
+    transform var(--motion-base),
+    box-shadow var(--motion-base);
+  z-index: 40;
+}
+
+.portal-assistant-btn:hover {
+  transform: scale(1.08);
+  box-shadow:
+    0 0.75rem 1.75rem rgba(59, 130, 246, 0.45),
+    inset 0 0.0625rem 0 rgba(255, 255, 255, 0.25);
+}
+
+.portal-assistant-btn:active {
+  transform: scale(1.02);
+}

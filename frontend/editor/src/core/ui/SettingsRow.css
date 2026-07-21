@@ -1,0 +1,30 @@
+.sui-settingsrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+}
+.sui-settingsrow__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.sui-settingsrow__label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-1);
+}
+.sui-settingsrow__desc {
+  font-size: 0.75rem;
+  color: var(--color-text-4);
+  margin-top: 0.125rem;
+}
+.sui-settingsrow__control {
+  flex: 0 0 auto;
+  min-width: 0;
+  max-width: 11rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+}

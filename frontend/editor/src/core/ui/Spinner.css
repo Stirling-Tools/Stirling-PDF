@@ -1,0 +1,27 @@
+.sui-spinner {
+  display: inline-block;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle;
+}
+
+.sui-spinner--xs {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-width: 1.5px;
+}
+.sui-spinner--sm {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+.sui-spinner--md {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.sui-spinner--lg {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-width: 2.5px;
+}

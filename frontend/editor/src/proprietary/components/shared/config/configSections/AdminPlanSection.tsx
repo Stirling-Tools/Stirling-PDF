@@ -183,8 +183,14 @@ const AdminPlanSection: React.FC = () => {
 
   if (!plans || plans.length === 0) {
     return (
-      <Alert color="yellow" title="No data available">
-        Plans data is not available at the moment.
+      <Alert
+        color="yellow"
+        title={t("admin.settings.plan.noData.title", "No data available")}
+      >
+        {t(
+          "admin.settings.plan.noData.message",
+          "Plans data is not available at the moment.",
+        )}
       </Alert>
     );
   }

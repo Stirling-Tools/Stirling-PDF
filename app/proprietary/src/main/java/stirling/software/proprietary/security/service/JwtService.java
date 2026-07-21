@@ -350,6 +350,21 @@ public class JwtService implements JwtServiceInterface {
     }
 
     @Override
+    public String extractUsernameFromRequestAllowExpired(HttpServletRequest request) {
+        try {
+            String token = extractToken(request);
+            if (token == null || token.isBlank()) {
+                return null;
+            }
+            String username = extractUsernameAllowExpired(token);
+            return (username != null && !username.isBlank()) ? username : null;
+        } catch (Exception e) {
+            log.debug("Could not extract username from request JWT: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    @Override
     public boolean isJwtEnabled() {
         return v2Enabled;
     }

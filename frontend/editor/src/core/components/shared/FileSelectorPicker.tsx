@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Box, Popover, ScrollArea, Text, Loader } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import AddIcon from "@mui/icons-material/Add";
 import { useTranslation } from "react-i18next";
 import {
@@ -19,6 +20,7 @@ import apiClient from "@app/services/apiClient";
 import {
   parseContentDispositionFilename,
   extractLatestFilesFromBundle,
+  readResponseHeader,
 } from "@app/services/shareBundleUtils";
 import { truncateCenter } from "@app/utils/textUtils";
 import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
@@ -269,14 +271,8 @@ export function FileSelectorPicker({
               skipAuthRedirect: true,
             } as any,
           );
-          const ct =
-            res.headers?.["content-type"] ||
-            res.headers?.["Content-Type"] ||
-            "";
-          const disp =
-            res.headers?.["content-disposition"] ||
-            res.headers?.["Content-Disposition"] ||
-            "";
+          const ct = readResponseHeader(res.headers, "content-type");
+          const disp = readResponseHeader(res.headers, "content-disposition");
           const files = await extractLatestFilesFromBundle(
             res.data as Blob,
             parseContentDispositionFilename(disp) || "shared-file",
@@ -293,14 +289,8 @@ export function FileSelectorPicker({
               skipAuthRedirect: true,
             } as any,
           );
-          const ct =
-            res.headers?.["content-type"] ||
-            res.headers?.["Content-Type"] ||
-            "";
-          const disp =
-            res.headers?.["content-disposition"] ||
-            res.headers?.["Content-Disposition"] ||
-            "";
+          const ct = readResponseHeader(res.headers, "content-type");
+          const disp = readResponseHeader(res.headers, "content-disposition");
           const files = await extractLatestFilesFromBundle(
             res.data as Blob,
             parseContentDispositionFilename(disp) || stub.name,
@@ -566,9 +556,10 @@ export function FileSelectorPicker({
                 const meta = buildMeta(stub);
                 const isItemLoading = loadingId === stub.id;
                 return (
-                  <button
+                  <Button
                     key={stub.id}
-                    type="button"
+                    variant="tertiary"
+                    hover={false}
                     className={styles.fileItem}
                     onClick={() => void loadAndSelect(stub)}
                     disabled={!!loadingId}
@@ -579,6 +570,9 @@ export function FileSelectorPicker({
                       })
                     }
                     onMouseLeave={() => setHoveredStub(null)}
+                    rightSection={
+                      isItemLoading ? <Loader size="xs" /> : undefined
+                    }
                   >
                     <div className={styles.fileItemContent}>
                       <span className={styles.fileName} title={stub.name}>
@@ -586,8 +580,7 @@ export function FileSelectorPicker({
                       </span>
                       {meta && <span className={styles.fileMeta}>{meta}</span>}
                     </div>
-                    {isItemLoading && <Loader size="xs" />}
-                  </button>
+                  </Button>
                 );
               })
             )}

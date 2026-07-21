@@ -1,4 +1,9 @@
-import { createTheme, MantineColorsTuple } from "@mantine/core";
+import {
+  createTheme,
+  MantineColorsTuple,
+  MantineTheme,
+  MantineThemeComponent,
+} from "@mantine/core";
 
 // Define color tuples using CSS variables
 const primary: MantineColorsTuple = [
@@ -53,6 +58,20 @@ const gray: MantineColorsTuple = [
   "var(--color-gray-900)",
 ];
 
+// Neutral dark scale (zinc, mirroring --p-zinc-*) replacing Mantine's default gray ramp; colors.css re-points dark-4..7 at the --c-* surfaces. 0..3 text, 4..7 surfaces, 8..9 deepest.
+const dark: MantineColorsTuple = [
+  "#f4f4f5", // dark-0  — primary text on dark bg (zinc-100)
+  "#a1a1aa", // dark-1  — secondary text (zinc-200)
+  "#71717a", // dark-2  — muted text / icons (zinc-300)
+  "#52525b", // dark-3  — subtle text / dividers (zinc-400)
+  "#2a2a2e", // dark-4  — elevated surface / selected bg (zinc-650)
+  "#202023", // dark-5  — card / panel surface (zinc-775)
+  "#18181b", // dark-6  — toolbar / sidebar bg (zinc-800)
+  "#0f0f10", // dark-7  — page background (zinc-950)
+  "#070708", // dark-8  — deeper than the reachable surfaces
+  "#050506", // dark-9  — deepest
+];
+
 export const mantineTheme = createTheme({
   // Primary color
   primaryColor: "primary",
@@ -63,6 +82,7 @@ export const mantineTheme = createTheme({
     green,
     yellow,
     gray,
+    dark,
   },
 
   // Spacing system - uses CSS variables
@@ -113,7 +133,7 @@ export const mantineTheme = createTheme({
       },
       variants: {
         // Custom button variant for PDF tools
-        pdfTool: (_theme: any) => ({
+        pdfTool: (_theme: MantineTheme) => ({
           root: {
             backgroundColor: "var(--bg-surface)",
             border: "1px solid var(--border-default)",
@@ -125,7 +145,7 @@ export const mantineTheme = createTheme({
           },
         }),
       },
-    } as any,
+    } as MantineThemeComponent,
 
     Paper: {
       styles: {
@@ -145,8 +165,18 @@ export const mantineTheme = createTheme({
         },
       },
     },
+
+    Code: {
+      styles: {
+        root: {
+          backgroundColor: "var(--color-gray-100)",
+          color: "var(--text-primary)",
+        },
+      },
+    },
+
     Textarea: {
-      styles: (_theme: any) => ({
+      styles: (_theme: MantineTheme) => ({
         input: {
           backgroundColor: "var(--bg-surface)",
           borderColor: "var(--border-default)",
@@ -164,7 +194,7 @@ export const mantineTheme = createTheme({
     },
 
     TextInput: {
-      styles: (_theme: any) => ({
+      styles: (_theme: MantineTheme) => ({
         input: {
           backgroundColor: "var(--bg-surface)",
           borderColor: "var(--border-default)",
@@ -182,7 +212,7 @@ export const mantineTheme = createTheme({
     },
 
     PasswordInput: {
-      styles: (_theme: any) => ({
+      styles: (_theme: MantineTheme) => ({
         input: {
           backgroundColor: "var(--bg-surface)",
           borderColor: "var(--border-default)",
@@ -223,7 +253,7 @@ export const mantineTheme = createTheme({
           color: "var(--text-primary)",
           "--combobox-option-hover": "var(--hover-bg)",
           "--combobox-option-selected": "var(--color-primary-100)",
-        } as any,
+        },
       },
     },
 
@@ -251,7 +281,7 @@ export const mantineTheme = createTheme({
           color: "var(--text-primary)",
           "--combobox-option-hover": "var(--hover-bg)",
           "--combobox-option-selected": "var(--color-primary-100)",
-        } as any,
+        },
       },
     },
     Tooltip: {
@@ -259,7 +289,7 @@ export const mantineTheme = createTheme({
         tooltip: {
           backgroundColor: "var( --tooltip-title-bg)",
           color: "var( --tooltip-title-color)",
-          border: "1px solid var(--tooltip-borderp)",
+          border: "1px solid var(--tooltip-border)",
           fontSize: "0.75rem",
           fontWeight: "500",
           boxShadow: "var(--shadow-md)",
@@ -334,23 +364,6 @@ export const mantineTheme = createTheme({
         },
         description: {
           color: "var(--text-secondary)",
-        },
-      },
-    },
-
-    SegmentedControl: {
-      styles: {
-        root: {
-          backgroundColor: "var(--bg-muted)",
-          border: "1px solid var(--border-subtle)",
-        },
-        control: {
-          color: "var(--text-secondary)",
-          "&[dataActive]": {
-            backgroundColor: "var(--bg-surface)",
-            color: "var(--text-primary)",
-            boxShadow: "var(--shadow-sm)",
-          },
         },
       },
     },

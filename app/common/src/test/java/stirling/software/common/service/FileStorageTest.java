@@ -9,6 +9,8 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -37,7 +39,10 @@ class FileStorageTest {
     void setUp() throws IOException {
         MockitoAnnotations.openMocks(this);
         fileStorage =
-                new FileStorage(fileOrUploadService, new LocalDiskFileStore(tempDir.toString()));
+                new FileStorage(
+                        fileOrUploadService,
+                        new LocalDiskFileStore(tempDir.toString()),
+                        Optional.empty());
 
         // Create a mock MultipartFile
         mockFile = mock(MultipartFile.class);
@@ -79,7 +84,7 @@ class FileStorageTest {
     void testRetrieveFile() throws IOException {
         // Arrange
         byte[] fileContent = "Test PDF content".getBytes();
-        String fileId = "test-file-1";
+        String fileId = UUID.randomUUID().toString();
         Path filePath = tempDir.resolve(fileId);
         Files.write(filePath, fileContent);
 
@@ -99,7 +104,7 @@ class FileStorageTest {
     void testRetrieveBytes() throws IOException {
         // Arrange
         byte[] fileContent = "Test PDF content".getBytes();
-        String fileId = "test-file-2";
+        String fileId = UUID.randomUUID().toString();
         Path filePath = tempDir.resolve(fileId);
         Files.write(filePath, fileContent);
 
@@ -113,7 +118,7 @@ class FileStorageTest {
     @Test
     void testRetrieveFile_FileNotFound() {
         // Arrange
-        String nonExistentFileId = "non-existent-file";
+        String nonExistentFileId = UUID.randomUUID().toString();
 
         // Act & Assert
         assertThrows(IOException.class, () -> fileStorage.retrieveFile(nonExistentFileId));
@@ -122,7 +127,7 @@ class FileStorageTest {
     @Test
     void testRetrieveBytes_FileNotFound() {
         // Arrange
-        String nonExistentFileId = "non-existent-file";
+        String nonExistentFileId = UUID.randomUUID().toString();
 
         // Act & Assert
         assertThrows(IOException.class, () -> fileStorage.retrieveBytes(nonExistentFileId));
@@ -132,7 +137,7 @@ class FileStorageTest {
     void testDeleteFile() throws IOException {
         // Arrange
         byte[] fileContent = "Test PDF content".getBytes();
-        String fileId = "test-file-3";
+        String fileId = UUID.randomUUID().toString();
         Path filePath = tempDir.resolve(fileId);
         Files.write(filePath, fileContent);
 
@@ -147,7 +152,7 @@ class FileStorageTest {
     @Test
     void testDeleteFile_FileNotFound() {
         // Arrange
-        String nonExistentFileId = "non-existent-file";
+        String nonExistentFileId = UUID.randomUUID().toString();
 
         // Act
         boolean result = fileStorage.deleteFile(nonExistentFileId);
@@ -160,7 +165,7 @@ class FileStorageTest {
     void testFileExists() throws IOException {
         // Arrange
         byte[] fileContent = "Test PDF content".getBytes();
-        String fileId = "test-file-4";
+        String fileId = UUID.randomUUID().toString();
         Path filePath = tempDir.resolve(fileId);
         Files.write(filePath, fileContent);
 
@@ -174,7 +179,7 @@ class FileStorageTest {
     @Test
     void testFileExists_FileNotFound() {
         // Arrange
-        String nonExistentFileId = "non-existent-file";
+        String nonExistentFileId = UUID.randomUUID().toString();
 
         // Act
         boolean result = fileStorage.fileExists(nonExistentFileId);

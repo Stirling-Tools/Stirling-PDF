@@ -120,4 +120,39 @@ class MetadataEncryptionServiceTest {
         assertThatThrownBy(() -> noKeyService.encrypt("anything"))
                 .isInstanceOf(IllegalStateException.class);
     }
+
+    // -------------------------------------------------------------------------
+    // Byte-array (keystore) round-trip
+    // -------------------------------------------------------------------------
+
+    @Test
+    void encryptBytes_null_returnsNull() {
+        assertThat(service.encryptBytes(null)).isNull();
+    }
+
+    @Test
+    void decryptBytes_null_returnsNull() {
+        assertThat(service.decryptBytes(null)).isNull();
+    }
+
+    @Test
+    void encryptBytes_producesEncPrefix() {
+        String encrypted = service.encryptBytes(new byte[] {1, 2, 3});
+        assertThat(encrypted).startsWith(MetadataEncryptionService.ENC_PREFIX);
+    }
+
+    @Test
+    void byteRoundTrip_restoresOriginalBytes() {
+        byte[] original = {0, 1, 2, (byte) 0xFF, 64, 65, 66};
+        assertThat(service.decryptBytes(service.encryptBytes(original))).isEqualTo(original);
+    }
+
+    @Test
+    void decryptBytes_legacyPlainBase64_stillDecodes() {
+        // Values written before keystore encryption was introduced are stored as plain Base64
+        // (no enc: prefix) and must still decode.
+        byte[] original = {10, 20, 30};
+        String legacy = java.util.Base64.getEncoder().encodeToString(original);
+        assertThat(service.decryptBytes(legacy)).isEqualTo(original);
+    }
 }

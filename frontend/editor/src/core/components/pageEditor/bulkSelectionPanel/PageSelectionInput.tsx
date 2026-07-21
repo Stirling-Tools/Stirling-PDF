@@ -1,4 +1,5 @@
-import { TextInput, Button, Text, Flex, Switch } from "@mantine/core";
+import { TextInput, Text, Flex, Switch } from "@mantine/core";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
@@ -45,7 +46,9 @@ const PageSelectionInput = ({
               height="1rem"
               style={{ color: "var(--text-instruction)" }}
             />
-            <Text>Page Selection</Text>
+            <Text>
+              {t("bulkSelection.pageSelection.title", "Page Selection")}
+            </Text>
           </Flex>
         </Tooltip>
         {typeof advancedOpened === "boolean" && (
@@ -75,20 +78,15 @@ const PageSelectionInput = ({
         placeholder="1,3,5-10"
         rightSection={
           csvInput && (
-            <Button
-              variant="subtle"
-              size="xs"
+            <ActionIcon
+              variant="tertiary"
+              accent="neutral"
+              size="sm"
               onClick={onClear}
-              style={{
-                color: "var(--text-muted)",
-                minWidth: "auto",
-                width: "24px",
-                height: "24px",
-                padding: 0,
-              }}
+              aria-label={t("clear", "Clear")}
             >
-              ×
-            </Button>
+              &times;
+            </ActionIcon>
           )
         }
         onKeyDown={(e) => e.key === "Enter" && onUpdatePagesFromCSV()}

@@ -32,16 +32,16 @@ export const usePageSelectionTips = (): TooltipContent => {
         ),
         bullets: [
           t(
-            "bulkSelection.operators.and",
-            'AND: & or "and" — require both conditions (e.g., 1-50 & even)',
+            "bulkSelection.operators.descriptions.and",
+            'AND: & or "and" - require both conditions (e.g., 1-50 & even)',
           ),
           t(
-            "bulkSelection.operators.comma",
-            "Comma: , or | — combine selections (e.g., 1-10, 20)",
+            "bulkSelection.operators.descriptions.comma",
+            "Comma: , or | - combine selections (e.g., 1-10, 20)",
           ),
           t(
-            "bulkSelection.operators.not",
-            'NOT: ! or "not" — exclude pages (e.g., 3n & not 30)',
+            "bulkSelection.operators.descriptions.not",
+            'NOT: ! or "not" - exclude pages (e.g., 3n & not 30)',
           ),
         ],
       },

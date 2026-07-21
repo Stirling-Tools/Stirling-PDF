@@ -303,6 +303,37 @@ export class ZipFileService {
     return hasValidType || hasValidExtension;
   }
 
+  // Signature-first ZIP detection for HTTP response bodies. Content-Type alone
+  // is unreliable: proxies and some backends ship merged PDFs as
+  // "application/pdf;charset=UTF-8" or "application/octet-stream", which an
+  // exact-equality check would misroute into ZIP extraction.
+  public async isZipResponse(
+    blob: Blob,
+    contentTypeHint?: string,
+  ): Promise<boolean> {
+    try {
+      const sig = new Uint8Array(await blob.slice(0, 4).arrayBuffer());
+      if (
+        sig[0] === 0x50 &&
+        sig[1] === 0x4b &&
+        (sig[2] === 0x03 || sig[2] === 0x05 || sig[2] === 0x07)
+      ) {
+        return true;
+      }
+      if (
+        sig[0] === 0x25 &&
+        sig[1] === 0x50 &&
+        sig[2] === 0x44 &&
+        sig[3] === 0x46
+      ) {
+        return false;
+      }
+    } catch {
+      // Unreadable blob - fall back to Content-Type.
+    }
+    return (contentTypeHint || blob.type || "").toLowerCase().includes("zip");
+  }
+
   /**
    * Check if a filename indicates a PDF file
    */

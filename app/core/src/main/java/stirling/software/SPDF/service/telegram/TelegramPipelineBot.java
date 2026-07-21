@@ -8,7 +8,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -411,7 +410,7 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
 
     private Path getInboxFolder(Long chatId) throws IOException {
         Path baseInbox =
-                Paths.get(
+                Path.of(
                         runtimePathConfig.getPipelineWatchedFoldersPath(),
                         telegramProperties.getPipelineInboxFolder());
 
@@ -445,7 +444,7 @@ public class TelegramPipelineBot extends TelegramLongPollingBot {
 
     private List<Path> waitForPipelineOutputs(PipelineFileInfo info) throws IOException {
 
-        Path finishedDir = Paths.get(runtimePathConfig.getPipelineFinishedFoldersPath());
+        Path finishedDir = Path.of(runtimePathConfig.getPipelineFinishedFoldersPath());
         Files.createDirectories(finishedDir);
 
         Instant start = info.savedAt();

@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -72,7 +73,8 @@ class PdfCommentAgentOrchestratorTest {
                         pdfTextChunkExtractor,
                         pdfDocumentFactory,
                         objectMapper,
-                        pdfAnnotationService);
+                        pdfAnnotationService,
+                        null);
     }
 
     @Test
@@ -96,7 +98,7 @@ class PdfCommentAgentOrchestratorTest {
                                 new PdfCommentInstruction(
                                         "p1-c0", "Comment on page 1", null, null)),
                         "reviewed");
-        when(aiEngineClient.post(anyString(), anyString()))
+        when(aiEngineClient.post(anyString(), anyString(), nullable(String.class)))
                 .thenReturn(objectMapper.writeValueAsString(engineResponse));
 
         AnnotatedPdf result = orchestrator.applyComments(input, "please comment");
@@ -130,7 +132,7 @@ class PdfCommentAgentOrchestratorTest {
                                 new PdfCommentInstruction("p0-c0", "Valid", null, null),
                                 new PdfCommentInstruction("p999-c999", "Bogus", null, null)),
                         "mixed");
-        when(aiEngineClient.post(anyString(), anyString()))
+        when(aiEngineClient.post(anyString(), anyString(), nullable(String.class)))
                 .thenReturn(objectMapper.writeValueAsString(engineResponse));
 
         AnnotatedPdf result = orchestrator.applyComments(input, "test");
@@ -156,7 +158,7 @@ class PdfCommentAgentOrchestratorTest {
 
         PdfCommentEngineResponse engineResponse =
                 new PdfCommentEngineResponse("s", List.of(), "no comments worth making");
-        when(aiEngineClient.post(anyString(), anyString()))
+        when(aiEngineClient.post(anyString(), anyString(), nullable(String.class)))
                 .thenReturn(objectMapper.writeValueAsString(engineResponse));
 
         AnnotatedPdf result = orchestrator.applyComments(input, "test");
@@ -184,7 +186,7 @@ class PdfCommentAgentOrchestratorTest {
                         ResponseStatusException.class,
                         () -> orchestrator.applyComments(input, "whatever"));
         assertEquals(400, ex.getStatusCode().value());
-        verify(aiEngineClient, never()).post(anyString(), anyString());
+        verify(aiEngineClient, never()).post(anyString(), anyString(), nullable(String.class));
     }
 
     @Test
@@ -197,7 +199,7 @@ class PdfCommentAgentOrchestratorTest {
                         ResponseStatusException.class,
                         () -> orchestrator.applyComments(input, tooLong));
         assertEquals(400, ex.getStatusCode().value());
-        verify(aiEngineClient, never()).post(anyString(), anyString());
+        verify(aiEngineClient, never()).post(anyString(), anyString(), nullable(String.class));
     }
 
     @Test
@@ -209,7 +211,7 @@ class PdfCommentAgentOrchestratorTest {
                         ResponseStatusException.class,
                         () -> orchestrator.applyComments(input, "   "));
         assertEquals(400, ex.getStatusCode().value());
-        verify(aiEngineClient, never()).post(anyString(), anyString());
+        verify(aiEngineClient, never()).post(anyString(), anyString(), nullable(String.class));
     }
 
     // ---------------------------------------------------------------------

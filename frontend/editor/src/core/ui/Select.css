@@ -1,0 +1,79 @@
+.sui-select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-md);
+  color: var(--color-text-1);
+  transition:
+    border-color var(--motion-fast),
+    box-shadow var(--motion-fast);
+}
+
+.sui-select:focus-within {
+  border-color: var(--color-blue);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-blue) 16%, transparent);
+}
+
+.sui-select--sm {
+  min-height: 1.75rem;
+}
+.sui-select--md {
+  min-height: 2.25rem;
+}
+
+.sui-select--invalid {
+  border-color: var(--color-red);
+}
+.sui-select--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sui-select__el {
+  flex: 1 1 auto;
+  font: inherit;
+  font-size: 0.875rem;
+  background: transparent;
+  border: none;
+  color: inherit;
+  outline: none;
+  padding: 0 var(--space-6) 0 var(--space-3);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+/*
+ * The native option popup is OS-rendered: without explicit colours it falls
+ * back to the UA scheme (white) while the option text inherits the themed
+ * (light) colour — i.e. white-on-white in dark mode wherever the surrounding
+ * app keeps color-scheme: light (e.g. the editor, whose dark mode is driven by
+ * Mantine, not color-scheme). Theme the options explicitly and pin the
+ * select's color-scheme to the active SUI theme so the popup is always legible.
+ */
+.sui-select__el option {
+  background-color: var(--color-surface);
+  color: var(--color-text-1);
+}
+[data-theme="dark"] .sui-select__el {
+  color-scheme: dark;
+}
+[data-theme="light"] .sui-select__el {
+  color-scheme: light;
+}
+
+.sui-select--sm .sui-select__el {
+  font-size: 0.8125rem;
+  padding-left: var(--space-2);
+  padding-right: var(--space-5);
+}
+
+.sui-select__caret {
+  position: absolute;
+  right: var(--space-2);
+  display: inline-flex;
+  align-items: center;
+  pointer-events: none;
+  color: var(--color-text-4);
+}

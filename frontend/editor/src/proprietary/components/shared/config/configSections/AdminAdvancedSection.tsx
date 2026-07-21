@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import {
   NumberInput,
   Switch,
-  Button,
   Stack,
   Paper,
   Text,
@@ -14,6 +13,7 @@ import {
   TextInput,
   MultiSelect,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { alert } from "@app/components/toast";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
 import { useRestartServer } from "@app/components/shared/config/useRestartServer";
@@ -503,7 +503,7 @@ export default function AdminAdvancedSection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.advanced.enableAlphaFunctionality.label",
@@ -543,7 +543,7 @@ export default function AdminAdvancedSection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.advanced.enableUrlToPDF.label",
@@ -581,7 +581,7 @@ export default function AdminAdvancedSection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.advanced.disableSanitize.label",
@@ -752,8 +752,8 @@ export default function AdminAdvancedSection() {
                 )}
                 <Group justify="flex-end">
                   <Button
-                    size="xs"
-                    variant="light"
+                    size="sm"
+                    variant="secondary"
                     onClick={handleDownloadTessdataLanguages}
                     loading={downloadLanguagesLoading}
                     disabled={
@@ -809,7 +809,10 @@ export default function AdminAdvancedSection() {
                     },
                   })
                 }
-                placeholder="Default: java.io.tmpdir/stirling-pdf"
+                placeholder={t(
+                  "admin.settings.advanced.tempFileManagement.baseTmpDir.placeholder",
+                  "Default: java.io.tmpdir/stirling-pdf",
+                )}
                 disabled={!loginEnabled}
               />
             </div>
@@ -834,7 +837,10 @@ export default function AdminAdvancedSection() {
                     },
                   })
                 }
-                placeholder="Default: baseTmpDir/libreoffice"
+                placeholder={t(
+                  "admin.settings.advanced.tempFileManagement.libreofficeDir.placeholder",
+                  "Default: baseTmpDir/libreoffice",
+                )}
                 disabled={!loginEnabled}
               />
             </div>
@@ -859,7 +865,10 @@ export default function AdminAdvancedSection() {
                     },
                   })
                 }
-                placeholder="System temp directory path"
+                placeholder={t(
+                  "admin.settings.advanced.tempFileManagement.systemTempDir.placeholder",
+                  "System temp directory path",
+                )}
                 disabled={!loginEnabled}
               />
             </div>
@@ -950,7 +959,7 @@ export default function AdminAdvancedSection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.advanced.tempFileManagement.startupCleanup.label",
@@ -993,7 +1002,7 @@ export default function AdminAdvancedSection() {
                 justifyContent: "space-between",
               }}
             >
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <Text fw={500} size="sm">
                   {t(
                     "admin.settings.advanced.tempFileManagement.cleanupSystemTemp.label",

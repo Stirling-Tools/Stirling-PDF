@@ -1,0 +1,92 @@
+.sui-navitem {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  padding: 0.4375rem 0.75rem;
+  margin: 0.0625rem 0.5rem;
+  border-radius: var(--radius-lg);
+  color: var(--color-nav-text);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  transition:
+    background var(--motion-fast),
+    color var(--motion-fast);
+  text-align: left;
+}
+.sui-navitem:hover {
+  background: var(--color-nav-hover);
+  color: var(--color-nav-hover-text);
+}
+.sui-navitem.is-active {
+  background: var(--color-nav-active);
+  color: var(--color-nav-active-text);
+  font-weight: 500;
+}
+.sui-navitem.is-active:hover {
+  background: var(--color-nav-active);
+}
+.sui-navitem__icon {
+  width: 1rem;
+  height: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.sui-navitem__label {
+  flex: 1;
+}
+.sui-navitem__trailing {
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
+}
+.sui-navitem:focus-visible {
+  outline: 0.125rem solid var(--color-blue);
+  outline-offset: 0.125rem;
+}
+
+/* ---- Status accent (optional) ---- */
+.sui-navitem--accent {
+  position: relative;
+}
+.sui-navitem--accent::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.3125rem;
+  bottom: 0.3125rem;
+  width: 3px;
+  border-radius: 3px;
+}
+.sui-navitem[data-accent="blue"]::before {
+  background: var(--color-blue);
+}
+.sui-navitem[data-accent="purple"]::before {
+  background: var(--color-purple);
+}
+.sui-navitem[data-accent="green"]::before {
+  background: var(--color-green);
+}
+.sui-navitem[data-accent="amber"]::before {
+  background: var(--color-amber);
+}
+.sui-navitem[data-accent="red"]::before {
+  background: var(--color-red);
+}
+.sui-navitem[data-accent="blue"] .sui-navitem__icon {
+  color: var(--color-blue);
+}
+.sui-navitem[data-accent="purple"] .sui-navitem__icon {
+  color: var(--color-purple);
+}
+.sui-navitem[data-accent="green"] .sui-navitem__icon {
+  color: var(--color-green);
+}
+.sui-navitem[data-accent="amber"] .sui-navitem__icon {
+  color: var(--color-amber);
+}
+.sui-navitem[data-accent="red"] .sui-navitem__icon {
+  color: var(--color-red);
+}

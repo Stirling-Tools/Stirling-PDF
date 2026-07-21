@@ -1,4 +1,5 @@
-import { Button, Text, Group, Divider } from "@mantine/core";
+import { Text, Group, Divider } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import classes from "@app/components/pageEditor/bulkSelectionPanel/BulkSelectionPanel.module.css";
 import { LogicalOperator } from "@app/utils/bulkselection/selectionBuilders";
@@ -22,11 +23,14 @@ const OperatorsSection = ({
       <Group gap="sm" wrap="nowrap">
         <Button
           size="sm"
-          variant="outline"
+          variant="secondary"
           className={classes.operatorChip}
           onClick={() => onInsertOperator("and")}
           disabled={!csvInput.trim()}
-          title="Combine selections (both conditions must be true)"
+          title={t(
+            "bulkSelection.operators.and.title",
+            "Combine selections (both conditions must be true)",
+          )}
         >
           <Text size="xs" fw={500}>
             and
@@ -34,11 +38,14 @@ const OperatorsSection = ({
         </Button>
         <Button
           size="sm"
-          variant="outline"
+          variant="secondary"
           className={classes.operatorChip}
           onClick={() => onInsertOperator("or")}
           disabled={!csvInput.trim()}
-          title="Add to selection (either condition can be true)"
+          title={t(
+            "bulkSelection.operators.or.title",
+            "Add to selection (either condition can be true)",
+          )}
         >
           <Text size="xs" fw={500}>
             or
@@ -46,11 +53,14 @@ const OperatorsSection = ({
         </Button>
         <Button
           size="sm"
-          variant="outline"
+          variant="secondary"
           className={classes.operatorChip}
           onClick={() => onInsertOperator("not")}
           disabled={!csvInput.trim()}
-          title="Exclude from selection"
+          title={t(
+            "bulkSelection.operators.not.title",
+            "Exclude from selection",
+          )}
         >
           <Text size="xs" fw={500}>
             not
@@ -61,10 +71,13 @@ const OperatorsSection = ({
       <Group gap="sm" wrap="nowrap">
         <Button
           size="sm"
-          variant="outline"
+          variant="secondary"
           className={classes.operatorChip}
           onClick={() => onInsertOperator("even")}
-          title="Select all even-numbered pages (2, 4, 6, 8...)"
+          title={t(
+            "bulkSelection.operators.even.title",
+            "Select all even-numbered pages (2, 4, 6, 8...)",
+          )}
         >
           <Text size="xs" fw={500}>
             even
@@ -72,10 +85,13 @@ const OperatorsSection = ({
         </Button>
         <Button
           size="sm"
-          variant="outline"
+          variant="secondary"
           className={classes.operatorChip}
           onClick={() => onInsertOperator("odd")}
-          title="Select all odd-numbered pages (1, 3, 5, 7...)"
+          title={t(
+            "bulkSelection.operators.odd.title",
+            "Select all odd-numbered pages (1, 3, 5, 7...)",
+          )}
         >
           <Text size="xs" fw={500}>
             odd

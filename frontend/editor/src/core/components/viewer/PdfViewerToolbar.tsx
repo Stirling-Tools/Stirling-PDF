@@ -1,15 +1,10 @@
 import { useState, useEffect } from "react";
-import {
-  ActionIcon,
-  Button,
-  Paper,
-  Group,
-  NumberInput,
-  Slider,
-} from "@mantine/core";
+import { Paper, Group, Menu, NumberInput, Slider } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useViewer } from "@app/contexts/ViewerContext";
+import { useIsPhone } from "@app/hooks/useIsMobile";
 import { Tooltip } from "@app/components/shared/Tooltip";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
@@ -21,6 +16,7 @@ import WbSunnyIcon from "@mui/icons-material/WbSunny";
 import WbTwilightIcon from "@mui/icons-material/WbTwilight";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import ZoomOutIcon from "@mui/icons-material/ZoomOut";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 interface PdfViewerToolbarProps {
   // Page navigation props (placeholders for now)
@@ -35,6 +31,9 @@ export function PdfViewerToolbar({
   onPageChange,
 }: PdfViewerToolbarProps) {
   const { t } = useTranslation();
+  const isPhone = useIsPhone();
+  const buttonMinWidth = isPhone ? "3rem" : "2.5rem";
+  const buttonSize = isPhone ? "lg" : "md";
   const {
     getScrollState,
     getZoomState,
@@ -141,45 +140,45 @@ export function PdfViewerToolbar({
       style={{
         display: "flex",
         alignItems: "center",
+        flexWrap: "wrap",
+        rowGap: 8,
         gap: 10,
+        justifyContent: "center",
         borderTopLeftRadius: 16,
         borderTopRightRadius: 16,
         borderBottomLeftRadius: 0,
         borderBottomRightRadius: 0,
         boxShadow: "0 -2px 8px rgba(0,0,0,0.04)",
         pointerEvents: "auto",
-        minWidth: "30rem",
       }}
     >
       {/* First Page Button */}
-      <Button
-        variant="subtle"
-        color="blue"
-        size="md"
-        px={8}
-        radius="xl"
-        onClick={handleFirstPage}
-        disabled={scrollState.currentPage === 1}
-        style={{ minWidth: "2.5rem" }}
-        title={t("viewer.firstPage", "First Page")}
-      >
-        <FirstPageIcon fontSize="small" />
-      </Button>
+      {!isPhone && (
+        <ActionIcon
+          variant="tertiary"
+          size={buttonSize}
+          onClick={handleFirstPage}
+          disabled={scrollState.currentPage === 1}
+          style={{ minWidth: buttonMinWidth }}
+          title={t("viewer.firstPage", "First Page")}
+          aria-label={t("viewer.firstPage", "First Page")}
+        >
+          <FirstPageIcon fontSize="small" />
+        </ActionIcon>
+      )}
 
       {/* Previous Page Button */}
-      <Button
-        variant="subtle"
-        color="blue"
-        size="md"
-        px={8}
-        radius="xl"
+      <ActionIcon
+        variant="tertiary"
+        size={buttonSize}
         onClick={handlePreviousPage}
         disabled={scrollState.currentPage === 1}
-        style={{ minWidth: "2.5rem" }}
+        style={{ minWidth: buttonMinWidth }}
         title={t("viewer.previousPage", "Previous Page")}
+        aria-label={t("viewer.previousPage", "Previous Page")}
       >
         <ArrowBackIosIcon fontSize="small" />
-      </Button>
+      </ActionIcon>
 
       {/* Page Input */}
       <NumberInput
@@ -209,140 +208,236 @@ export function PdfViewerToolbar({
       </span>
 
       {/* Next Page Button */}
-      <Button
-        variant="subtle"
-        color="blue"
-        size="md"
-        px={8}
-        radius="xl"
+      <ActionIcon
+        variant="tertiary"
+        size={buttonSize}
         onClick={handleNextPage}
         disabled={scrollState.currentPage === scrollState.totalPages}
-        style={{ minWidth: "2.5rem" }}
+        style={{ minWidth: buttonMinWidth }}
         title={t("viewer.nextPage", "Next Page")}
+        aria-label={t("viewer.nextPage", "Next Page")}
       >
         <ArrowForwardIosIcon fontSize="small" />
-      </Button>
+      </ActionIcon>
 
       {/* Last Page Button */}
-      <Button
-        variant="subtle"
-        color="blue"
-        size="md"
-        px={8}
-        radius="xl"
-        onClick={handleLastPage}
-        disabled={scrollState.currentPage === scrollState.totalPages}
-        style={{ minWidth: "2.5rem" }}
-        title={t("viewer.lastPage", "Last Page")}
-      >
-        <LastPageIcon fontSize="small" />
-      </Button>
+      {!isPhone && (
+        <ActionIcon
+          variant="tertiary"
+          size={buttonSize}
+          onClick={handleLastPage}
+          disabled={scrollState.currentPage === scrollState.totalPages}
+          style={{ minWidth: buttonMinWidth }}
+          title={t("viewer.lastPage", "Last Page")}
+          aria-label={t("viewer.lastPage", "Last Page")}
+        >
+          <LastPageIcon fontSize="small" />
+        </ActionIcon>
+      )}
 
       {/* Dual Page Toggle */}
-      <Tooltip
-        content={
-          isDualPageActive
-            ? t("viewer.singlePageView", "Single Page View")
-            : t("viewer.dualPageView", "Dual Page View")
-        }
-        position="top"
-        arrow
-      >
-        <Button
-          variant={isDualPageActive ? "filled" : "light"}
-          color="blue"
-          size="md"
-          radius="xl"
-          onClick={handleDualPageToggle}
-          disabled={scrollState.totalPages <= 1}
-          style={{ minWidth: "2.5rem" }}
+      {!isPhone && (
+        <Tooltip
+          content={
+            isDualPageActive
+              ? t("viewer.singlePageView", "Single Page View")
+              : t("viewer.dualPageView", "Dual Page View")
+          }
+          position="top"
+          arrow
         >
-          {isDualPageActive ? (
-            <DescriptionIcon fontSize="small" />
-          ) : (
-            <ViewWeekIcon fontSize="small" />
-          )}
-        </Button>
-      </Tooltip>
+          <ActionIcon
+            variant={isDualPageActive ? "primary" : "secondary"}
+            size={buttonSize}
+            onClick={handleDualPageToggle}
+            disabled={scrollState.totalPages <= 1}
+            style={{ minWidth: buttonMinWidth }}
+            aria-label={
+              isDualPageActive
+                ? t("viewer.singlePageView", "Single Page View")
+                : t("viewer.dualPageView", "Dual Page View")
+            }
+          >
+            {isDualPageActive ? (
+              <DescriptionIcon fontSize="small" />
+            ) : (
+              <ViewWeekIcon fontSize="small" />
+            )}
+          </ActionIcon>
+        </Tooltip>
+      )}
 
       {/* PDF Render Mode Toggle */}
-      <Tooltip
-        content={
-          pdfRenderMode === "normal"
-            ? t("viewer.enableDarkFilter", "Enable Dark Filter")
-            : pdfRenderMode === "dark"
-              ? t("viewer.enableSepiaFilter", "Enable Sepia Filter")
-              : t("viewer.disableColorFilter", "Disable Color Filter")
-        }
-        position="top"
-        arrow
-      >
-        <Button
-          variant={pdfRenderMode !== "normal" ? "filled" : "light"}
-          color="blue"
-          size="md"
-          radius="xl"
-          onClick={cyclePdfRenderMode}
-          style={{ minWidth: "2.5rem" }}
-          aria-label={
+      {!isPhone && (
+        <Tooltip
+          content={
             pdfRenderMode === "normal"
               ? t("viewer.enableDarkFilter", "Enable Dark Filter")
               : pdfRenderMode === "dark"
                 ? t("viewer.enableSepiaFilter", "Enable Sepia Filter")
                 : t("viewer.disableColorFilter", "Disable Color Filter")
           }
+          position="top"
+          arrow
         >
-          {pdfRenderMode === "normal" && <DarkModeIcon fontSize="small" />}
-          {pdfRenderMode === "dark" && <WbTwilightIcon fontSize="small" />}
-          {pdfRenderMode === "sepia" && <WbSunnyIcon fontSize="small" />}
-        </Button>
-      </Tooltip>
+          <ActionIcon
+            variant={pdfRenderMode !== "normal" ? "primary" : "secondary"}
+            size={buttonSize}
+            onClick={cyclePdfRenderMode}
+            style={{ minWidth: buttonMinWidth }}
+            aria-label={
+              pdfRenderMode === "normal"
+                ? t("viewer.enableDarkFilter", "Enable Dark Filter")
+                : pdfRenderMode === "dark"
+                  ? t("viewer.enableSepiaFilter", "Enable Sepia Filter")
+                  : t("viewer.disableColorFilter", "Disable Color Filter")
+            }
+          >
+            {pdfRenderMode === "normal" && <DarkModeIcon fontSize="small" />}
+            {pdfRenderMode === "dark" && <WbTwilightIcon fontSize="small" />}
+            {pdfRenderMode === "sepia" && <WbSunnyIcon fontSize="small" />}
+          </ActionIcon>
+        </Tooltip>
+      )}
 
-      {/* Zoom Controls */}
-      <Group gap={4} align="center" style={{ marginLeft: 16 }}>
-        <ActionIcon
-          variant="subtle"
-          color="blue"
-          radius="md"
-          onClick={handleZoomOut}
-          aria-label={t("viewer.zoomOut", "Zoom out")}
+      {/* Desktop zoom controls (slider + buttons) */}
+      {!isPhone && (
+        <Group
+          gap={4}
+          align="center"
+          wrap="nowrap"
+          style={{ marginLeft: 16, flexShrink: 0 }}
         >
-          <ZoomOutIcon fontSize="small" />
-        </ActionIcon>
-        <Slider
-          value={Math.min(Math.max(displayZoomPercent, 20), 500)}
-          min={20}
-          max={500}
-          step={5}
-          onChange={(val) => zoomActions.setZoomLevel?.(val / 100)}
-          size="xs"
-          styles={{
-            root: { width: "6rem" },
-            thumb: { width: 14, height: 14 },
-            track: { height: 3 },
-          }}
-          label={null}
-        />
-        <ActionIcon
-          variant="subtle"
-          color="blue"
-          radius="md"
-          onClick={handleZoomIn}
-          aria-label={t("viewer.zoomIn", "Zoom in")}
+          <ActionIcon
+            variant="tertiary"
+            onClick={handleZoomOut}
+            aria-label={t("viewer.zoomOut", "Zoom out")}
+          >
+            <ZoomOutIcon fontSize="small" />
+          </ActionIcon>
+          <Slider
+            value={Math.min(Math.max(displayZoomPercent, 20), 500)}
+            min={20}
+            max={500}
+            step={5}
+            onChange={(val) => zoomActions.setZoomLevel?.(val / 100)}
+            size="xs"
+            styles={{
+              root: { minWidth: "6rem", width: "6rem", flexShrink: 0 },
+              thumb: { width: 14, height: 14 },
+              track: { height: 3 },
+            }}
+            label={null}
+          />
+          <ActionIcon
+            variant="tertiary"
+            onClick={handleZoomIn}
+            aria-label={t("viewer.zoomIn", "Zoom in")}
+          >
+            <ZoomInIcon fontSize="small" />
+          </ActionIcon>
+          <span
+            style={{
+              minWidth: "2.5rem",
+              textAlign: "center",
+              fontSize: 12,
+              color: "var(--text-muted)",
+            }}
+          >
+            {displayZoomPercent}%
+          </span>
+        </Group>
+      )}
+
+      {isPhone && (
+        <Menu
+          shadow="md"
+          width={240}
+          position="top-end"
+          closeOnItemClick={false}
         >
-          <ZoomInIcon fontSize="small" />
-        </ActionIcon>
-        <span
-          style={{
-            minWidth: "2.5rem",
-            textAlign: "center",
-            fontSize: 12,
-            color: "var(--text-muted)",
-          }}
-        >
-          {displayZoomPercent}%
-        </span>
-      </Group>
+          <Menu.Target>
+            <ActionIcon
+              variant="secondary"
+              size="lg"
+              aria-label={t("viewer.moreOptions", "More")}
+              style={{ marginLeft: 4 }}
+            >
+              <MoreVertIcon fontSize="small" />
+            </ActionIcon>
+          </Menu.Target>
+          <Menu.Dropdown>
+            <Menu.Label>
+              {t("viewer.pageNavigation", "Page navigation")}
+            </Menu.Label>
+            <Menu.Item
+              leftSection={<FirstPageIcon fontSize="small" />}
+              disabled={scrollState.currentPage === 1}
+              onClick={handleFirstPage}
+            >
+              {t("viewer.firstPage", "First page")}
+            </Menu.Item>
+            <Menu.Item
+              leftSection={<LastPageIcon fontSize="small" />}
+              disabled={scrollState.currentPage === scrollState.totalPages}
+              onClick={handleLastPage}
+            >
+              {t("viewer.lastPage", "Last page")}
+            </Menu.Item>
+
+            <Menu.Divider />
+            <Menu.Label>{t("viewer.zoom", "Zoom")}</Menu.Label>
+            <Menu.Item
+              leftSection={<ZoomOutIcon fontSize="small" />}
+              onClick={handleZoomOut}
+            >
+              {t("viewer.zoomOut", "Zoom out")}
+            </Menu.Item>
+            <Menu.Item
+              leftSection={<ZoomInIcon fontSize="small" />}
+              onClick={handleZoomIn}
+            >
+              {t("viewer.zoomIn", "Zoom in")} ({displayZoomPercent}%)
+            </Menu.Item>
+
+            <Menu.Divider />
+            <Menu.Label>{t("viewer.view", "View")}</Menu.Label>
+            <Menu.Item
+              leftSection={
+                isDualPageActive ? (
+                  <DescriptionIcon fontSize="small" />
+                ) : (
+                  <ViewWeekIcon fontSize="small" />
+                )
+              }
+              disabled={scrollState.totalPages <= 1}
+              onClick={handleDualPageToggle}
+            >
+              {isDualPageActive
+                ? t("viewer.singlePageView", "Single Page View")
+                : t("viewer.dualPageView", "Dual Page View")}
+            </Menu.Item>
+            <Menu.Item
+              leftSection={
+                pdfRenderMode === "normal" ? (
+                  <DarkModeIcon fontSize="small" />
+                ) : pdfRenderMode === "dark" ? (
+                  <WbTwilightIcon fontSize="small" />
+                ) : (
+                  <WbSunnyIcon fontSize="small" />
+                )
+              }
+              onClick={cyclePdfRenderMode}
+            >
+              {pdfRenderMode === "normal"
+                ? t("viewer.enableDarkFilter", "Enable Dark Filter")
+                : pdfRenderMode === "dark"
+                  ? t("viewer.enableSepiaFilter", "Enable Sepia Filter")
+                  : t("viewer.disableColorFilter", "Disable Color Filter")}
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
+      )}
     </Paper>
   );
 }

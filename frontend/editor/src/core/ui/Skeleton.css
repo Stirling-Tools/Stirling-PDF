@@ -1,0 +1,30 @@
+.sui-skel {
+  display: inline-block;
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-muted) 0%,
+    var(--color-bg-hover) 50%,
+    var(--color-bg-muted) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+  vertical-align: middle;
+}
+
+.sui-skel--text {
+  border-radius: var(--radius-pill);
+}
+.sui-skel--rect {
+  border-radius: var(--radius-md);
+}
+.sui-skel--circle {
+  border-radius: 50%;
+  aspect-ratio: 1 / 1;
+}
+
+.sui-skel-lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: 100%;
+}

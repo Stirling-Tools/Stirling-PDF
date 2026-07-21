@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { SlideConfig } from "@app/types/types";
-import { UNIFIED_CIRCLE_CONFIG } from "@app/components/onboarding/slides/unifiedBackgroundConfig";
+import { UNIFIED_LIGHT_BACKGROUND } from "@app/components/onboarding/slides/unifiedBackgroundConfig";
 import {
   DesktopInstallTitle,
   type OSOption,
@@ -47,9 +47,6 @@ export default function DesktopInstallSlide({
     ),
     body: <DesktopInstallBody />,
     downloadUrl: osUrl,
-    background: {
-      gradientStops: ["#2563EB", "#0EA5E9"],
-      circles: UNIFIED_CIRCLE_CONFIG,
-    },
+    background: UNIFIED_LIGHT_BACKGROUND,
   };
 }

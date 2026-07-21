@@ -1,0 +1,96 @@
+.sui-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.125rem 1.25rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  transition:
+    box-shadow var(--motion-fast),
+    transform var(--motion-fast),
+    border-color var(--motion-fast);
+  min-width: 10rem;
+  /* When rendered as <button> in the interactive variant, neutralise UA chrome. */
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+/* Compact density for narrow rails / metric strips. */
+.sui-metric--sm {
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  min-width: 0;
+}
+.sui-metric--sm .sui-metric__value {
+  font-size: 1.125rem;
+}
+.sui-metric--sm .sui-metric__label {
+  white-space: nowrap;
+}
+.sui-metric--primary {
+  background: var(--color-bg-subtle);
+}
+.sui-metric--interactive {
+  cursor: pointer;
+}
+.sui-metric--interactive:hover {
+  border-color: var(--color-border-hover);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-0.0625rem);
+}
+.sui-metric--interactive:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: 2px;
+}
+
+.sui-metric__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.sui-metric__label {
+  font-size: 0.75rem;
+  color: var(--color-text-4);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+.sui-metric__icon {
+  color: var(--color-text-5);
+  display: inline-flex;
+}
+.sui-metric__value {
+  font-size: 1.625rem;
+  font-weight: 600;
+  color: var(--color-text-1);
+  line-height: 1.1;
+}
+.sui-metric__footer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+}
+.sui-metric__delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1875rem;
+  font-weight: 500;
+}
+.sui-metric__delta-arrow {
+  font-size: 0.6875rem;
+}
+.sui-metric__delta--up {
+  color: var(--color-green);
+}
+.sui-metric__delta--down {
+  color: var(--color-red);
+}
+.sui-metric__delta--flat {
+  color: var(--color-text-5);
+}
+.sui-metric__desc {
+  color: var(--color-text-4);
+}

@@ -139,7 +139,9 @@ const LanguagePicker: React.FC<LanguagePickerProps> = ({
     return (
       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
         <Loader size="xs" />
-        <Text size="sm">Loading available languages...</Text>
+        <Text size="sm">
+          {t("ocr.languagePicker.loading", "Loading available languages...")}
+        </Text>
       </div>
     );
   }

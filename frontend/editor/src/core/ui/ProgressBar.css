@@ -1,0 +1,13 @@
+.sui-progress {
+  width: 100%;
+  background: var(--color-usage-track);
+  border-radius: 62.4375rem;
+  overflow: hidden;
+}
+.sui-progress__fill {
+  height: 100%;
+  border-radius: 62.4375rem;
+  transition:
+    width 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    background var(--motion-base);
+}

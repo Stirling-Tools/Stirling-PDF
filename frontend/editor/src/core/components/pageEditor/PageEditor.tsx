@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { Text, Center, Box, LoadingOverlay, Stack } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import { useFileState, useFileActions } from "@app/contexts/FileContext";
 import {
   useNavigationGuard,
@@ -33,6 +34,7 @@ export interface PageEditorProps {
 }
 
 const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
+  const { t } = useTranslation();
   // Use split contexts to prevent re-renders
   const { state, selectors } = useFileState();
   const { actions } = useFileActions();
@@ -75,7 +77,6 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
   // Zoom state management
   const [zoomLevel, setZoomLevel] = useState(1.0);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isContainerHovered, setIsContainerHovered] = useState(false);
   const rootFontSize = useMemo(() => {
     if (typeof window === "undefined") {
       return 16;
@@ -560,23 +561,24 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
   // Handle keyboard zoom shortcuts
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (!isContainerHovered) return;
+      if (!(event.ctrlKey || event.metaKey)) return;
 
-      // Check if Ctrl (Windows/Linux) or Cmd (Mac) is pressed
-      if (event.ctrlKey || event.metaKey) {
-        if (event.key === "=" || event.key === "+") {
-          // Ctrl+= or Ctrl++ for zoom in
-          event.preventDefault();
-          zoomIn();
-        } else if (event.key === "-" || event.key === "_") {
-          // Ctrl+- for zoom out
-          event.preventDefault();
-          zoomOut();
-        } else if (event.key === "0") {
-          // Ctrl+0 for reset zoom
-          event.preventDefault();
-          setZoomLevel(1.0);
-        }
+      const target = event.target as Element | null;
+      const isInTextInput =
+        target?.tagName === "INPUT" ||
+        target?.tagName === "TEXTAREA" ||
+        (target as HTMLElement | null)?.isContentEditable === true;
+      if (isInTextInput) return;
+
+      if (event.key === "=" || event.key === "+") {
+        event.preventDefault();
+        zoomIn();
+      } else if (event.key === "-" || event.key === "_") {
+        event.preventDefault();
+        zoomOut();
+      } else if (event.key === "0") {
+        event.preventDefault();
+        setZoomLevel(1.0);
       }
     };
 
@@ -584,7 +586,7 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isContainerHovered, zoomIn, zoomOut]);
+  }, [zoomIn, zoomOut, setZoomLevel]);
 
   // Display all pages - use edited or original document
   const displayedPages = displayDocument?.pages || [];
@@ -673,8 +675,6 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
     <div
       ref={containerRef}
       data-scrolling-container="true"
-      onMouseEnter={() => setIsContainerHovered(true)}
-      onMouseLeave={() => setIsContainerHovered(false)}
       style={{
         height: "100%",
         overflow: "auto",
@@ -690,9 +690,14 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
             <Text size="lg" c="dimmed">
               📄
             </Text>
-            <Text c="dimmed">No PDF files loaded</Text>
+            <Text c="dimmed">
+              {t("pageEditor.emptyState.title", "No PDF files loaded")}
+            </Text>
             <Text size="sm" c="dimmed">
-              Add files to start editing pages
+              {t(
+                "pageEditor.emptyState.body",
+                "Add files to start editing pages",
+              )}
             </Text>
           </Stack>
         </Center>

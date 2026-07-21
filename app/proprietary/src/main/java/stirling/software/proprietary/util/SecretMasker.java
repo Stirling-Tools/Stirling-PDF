@@ -1,5 +1,6 @@
 package stirling.software.proprietary.util;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -13,10 +14,15 @@ import stirling.software.common.util.RegexPatternUtils;
 @Slf4j
 public final class SecretMasker {
 
+    /** The placeholder masked values are replaced with; reads as "a secret is set". */
+    public static final String REDACTED = "********";
+
     private static final Pattern SENSITIVE =
             RegexPatternUtils.getInstance()
                     .getPattern(
-                            "(?i)\\b(password|token|secret|api[_-]?key|authorization|auth|jwt|cred|cert)\\b");
+                            // secret[_-]?access[_-]?key precedes plain secret so camelCase keys
+                            // like secretAccessKey (no word boundary after "secret") still match.
+                            "(?i)\\b(password|token|secret[_-]?access[_-]?key|secret|api[_-]?key|authorization|auth|jwt|cred|cert)\\b");
 
     private SecretMasker() {}
 
@@ -47,8 +53,28 @@ public final class SecretMasker {
 
     private static Object deepMaskValue(String key, Object value) {
         if (key != null && SENSITIVE.matcher(key).find()) {
-            return "***REDACTED***";
+            return REDACTED;
         }
         return deepMask(value);
+    }
+
+    /**
+     * Restore top-level values the caller sent back as the {@link #REDACTED} sentinel from the
+     * stored map, so a masked read can round-trip through an edit without re-typing secrets. A
+     * sentinel with no stored counterpart is left as-is (it fails whatever validates it, rather
+     * than silently passing an unset secret).
+     */
+    public static Map<String, Object> restoreRedacted(
+            Map<String, Object> incoming, Map<String, Object> stored) {
+        if (incoming == null || stored == null) {
+            return incoming;
+        }
+        Map<String, Object> merged = new LinkedHashMap<>(incoming);
+        merged.replaceAll(
+                (key, value) ->
+                        REDACTED.equals(value) && stored.containsKey(key)
+                                ? stored.get(key)
+                                : value);
+        return merged;
     }
 }

@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.time.Duration;
 import java.util.regex.Pattern;
 
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.FileSystemResource;
@@ -49,6 +50,27 @@ public class InternalApiClient {
             Pattern.compile(
                     "^/api/v1/(general|misc|security|convert|filter)(/[A-Za-z0-9_-]+)+$"
                             + "|^/api/v1/ai/tools(/[A-Za-z0-9_-]+)+$");
+
+    /**
+     * Marker propagated on every internal sub-step dispatch so the saas PAYG interceptor classifies
+     * the call as {@code BillingCategory.AUTOMATION}. By construction every {@link
+     * InternalApiClient#post} caller is an automation surface (pipeline executor, AI workflow,
+     * policy runner) running a child tool inside a parent automation flow — see the saas {@code
+     * PaygChargeInterceptor.determineCategory} precedence chain, where this header dominates any
+     * per-tool {@code @RequiresFeature} annotation.
+     */
+    public static final String AUTOMATION_HEADER = "X-Stirling-Automation";
+
+    /**
+     * Header carrying the parent policy's name onto each sub-step dispatch, read from MDC key
+     * {@link #POLICY_NAME_MDC_KEY} (set by the policy runner on the worker thread). Lets the audit
+     * layer attribute a tool step to the policy that ran it, instead of showing it as a bare direct
+     * call.
+     */
+    public static final String POLICY_NAME_HEADER = "X-Stirling-Policy-Name";
+
+    /** MDC key the policy runner stamps with the running policy's name; forwarded as a header. */
+    public static final String POLICY_NAME_MDC_KEY = "auditPolicyName";
 
     private final ServletContext servletContext;
     private final UserServiceInterface userService;
@@ -96,7 +118,44 @@ public class InternalApiClient {
         if (apiKey != null && !apiKey.isEmpty()) {
             headers.add("X-API-KEY", apiKey);
         }
+        // Tag the sub-step as automation so PAYG bills it under AUTOMATION regardless of which
+        // tool-level @RequiresFeature annotation the dispatched controller carries (e.g. an AI-OCR
+        // step inside a policy run must bill as AUTOMATION, not AI). Set unconditionally because
+        // every caller of this dispatcher is an automation surface by design.
+        headers.add(AUTOMATION_HEADER, "true");
+        // Propagate the current automation run id (set by the orchestrator around its dispatch
+        // loop) so the PAYG interceptor groups every sub-step of this one run into a single charge,
+        // and never merges two separate runs that happen to touch identical bytes. Absent → the
+        // receiving call is treated as standalone. See AutomationRunContext.
+        String runId = AutomationRunContext.current();
+        if (runId != null && !runId.isEmpty()) {
+            headers.add(AutomationRunContext.RUN_ID_HEADER, runId);
+        }
 
+        // Forward the parent policy name (set in MDC by the policy runner) so the audited sub-step
+        // ties back to its policy. Single-line, length-capped: it becomes an HTTP header value.
+        String policyName = MDC.get(POLICY_NAME_MDC_KEY);
+        if (policyName != null && !policyName.isBlank()) {
+            String safe = policyName.replaceAll("[\\r\\n]", " ").trim();
+            if (safe.length() > 200) {
+                safe = safe.substring(0, 200);
+            }
+            if (!safe.isEmpty()) {
+                headers.add(POLICY_NAME_HEADER, safe);
+            }
+        }
+
+        // A no-file ai/tools call (e.g. create-pdf-from-html-agent) sends only string params, so
+        // without this RestTemplate would use urlencoded instead of the multipart the controller
+        // expects. File-bearing calls get the right multipart content-type from RestTemplate.
+        boolean isAiTool = endpointPath.startsWith("/api/v1/ai/tools/");
+        boolean hasFilePart =
+                body.values().stream()
+                        .flatMap(java.util.List::stream)
+                        .anyMatch(v -> v instanceof Resource);
+        if (isAiTool && !hasFilePart) {
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        }
         HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
         RequestCallback requestCallback = restTemplate.httpEntityCallback(entity, Resource.class);
 

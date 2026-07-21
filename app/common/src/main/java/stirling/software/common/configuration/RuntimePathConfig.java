@@ -3,7 +3,6 @@ package stirling.software.common.configuration;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -201,7 +200,7 @@ public class RuntimePathConfig {
 
             try {
                 // Normalize to absolute path
-                Path path = Paths.get(pathStr.trim()).toAbsolutePath().normalize();
+                Path path = Path.of(pathStr.trim()).toAbsolutePath().normalize();
                 String normalizedPath = path.toString();
 
                 // Check for duplicates
@@ -224,9 +223,9 @@ public class RuntimePathConfig {
 
     private void detectOverlappingPaths(List<String> paths) {
         for (int i = 0; i < paths.size(); i++) {
-            Path path1 = Paths.get(paths.get(i));
+            Path path1 = Path.of(paths.get(i));
             for (int j = i + 1; j < paths.size(); j++) {
-                Path path2 = Paths.get(paths.get(j));
+                Path path2 = Path.of(paths.get(j));
 
                 // Check if one path is a parent of the other
                 if (path1.startsWith(path2)) {
@@ -246,10 +245,10 @@ public class RuntimePathConfig {
 
     private void validatePipelinePaths() {
         try {
-            Path finishedPath = Paths.get(pipelineFinishedFoldersPath).toAbsolutePath().normalize();
+            Path finishedPath = Path.of(pipelineFinishedFoldersPath).toAbsolutePath().normalize();
 
             for (String watchedPathStr : pipelineWatchedFoldersPaths) {
-                Path watchedPath = Paths.get(watchedPathStr).toAbsolutePath().normalize();
+                Path watchedPath = Path.of(watchedPathStr).toAbsolutePath().normalize();
 
                 // Check if watched folder is same as finished folder
                 if (watchedPath.equals(finishedPath)) {

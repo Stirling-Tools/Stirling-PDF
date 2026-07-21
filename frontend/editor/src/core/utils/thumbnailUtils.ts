@@ -192,15 +192,16 @@ export async function generateThumbnailWithMetadata(
   }
 
   const scale = calculateScaleFromFileSize(file.size);
-  const isVeryLarge = file.size >= 100 * 1024 * 1024; // 100MB threshold
 
   try {
     const arrayBuffer = await file.arrayBuffer();
+    // Always read per-page rotation: PageEditor renders thumbnails upright and
+    // uses this as the rotation baseline, so skipping it corrupts saves.
     const result = await renderPdfThumbnailPdfium(
       arrayBuffer,
       scale,
       applyRotation,
-      !isVeryLarge,
+      true,
     );
 
     if (result.isEncrypted) {

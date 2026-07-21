@@ -8,6 +8,7 @@ import {
   Group,
   TextInput,
 } from "@mantine/core";
+import { useTranslation } from "react-i18next";
 import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
 import SearchIcon from "@mui/icons-material/Search";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
@@ -15,7 +16,7 @@ import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 export interface DropdownItem {
   value: string;
   name: string;
-  leftIcon?: ReactNode;
+  leftSection?: ReactNode;
   disabled?: boolean;
 }
 
@@ -71,6 +72,7 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
   withinPortal = true,
   zIndex = Z_INDEX_AUTOMATE_DROPDOWN,
 }) => {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState("");
 
   const isMultiValue = Array.isArray(value);
@@ -184,7 +186,7 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
                 }}
               >
                 <TextInput
-                  placeholder="Search..."
+                  placeholder={t("dropdownList.searchPlaceholder", "Search...")}
                   value={searchTerm}
                   onChange={handleSearchChange}
                   leftSection={<SearchIcon style={{ fontSize: "1rem" }} />}
@@ -230,9 +232,9 @@ const DropdownListWithFooter: React.FC<DropdownListWithFooterProps> = ({
                     }}
                   >
                     <Group gap="sm" style={{ flex: 1 }}>
-                      {item.leftIcon && (
+                      {item.leftSection && (
                         <Box style={{ display: "flex", alignItems: "center" }}>
-                          {item.leftIcon}
+                          {item.leftSection}
                         </Box>
                       )}
                       <Text size="sm">{item.name}</Text>

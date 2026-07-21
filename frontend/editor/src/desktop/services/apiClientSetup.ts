@@ -1,15 +1,11 @@
 import type { AxiosInstance, InternalAxiosRequestConfig } from "axios";
 import { alert } from "@app/components/toast";
-import {
-  setupApiInterceptors as coreSetup,
-  getAuthHeaders,
-} from "@core/services/apiClientSetup";
-
-export { getAuthHeaders };
+import { setupApiInterceptors as coreSetup } from "@core/services/apiClientSetup";
 import { tauriBackendService } from "@app/services/tauriBackendService";
 import { createBackendNotReadyError } from "@app/constants/backendErrors";
 import { operationRouter } from "@app/services/operationRouter";
 import { authService } from "@app/services/authService";
+import { getAccessToken } from "@app/auth/session";
 import { connectionModeService } from "@app/services/connectionModeService";
 import {
   STIRLING_SAAS_URL,
@@ -17,6 +13,21 @@ import {
 } from "@app/constants/connection";
 import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
 import i18n from "@app/i18n";
+
+/**
+ * Auth headers for raw fetch() calls (the AI SSE stream) — desktop variant.
+ *
+ * Core's getAuthHeaders returns {} and proprietary's reads the JWT from
+ * localStorage, but desktop keeps its JWT in the Tauri secure store. So this
+ * pulls the token via getAccessToken() (mirroring the axios request interceptor,
+ * including waiting out an in-flight refresh) — without it the orchestrate
+ * stream hits the SaaS backend with no Authorization header and 401s.
+ */
+export async function getAuthHeaders(): Promise<Record<string, string>> {
+  await authService.awaitRefreshIfInProgress();
+  const token = await getAccessToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 const BACKEND_TOAST_COOLDOWN_MS = 4000;
 let lastBackendToast = 0;
@@ -70,7 +81,17 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         // - SaaS backend: Needs auth token
         // - Self-hosted backend: Needs auth token
         const isRemote = await operationRouter.isSelfHostedMode();
-        const isSaaSBackendRequest = baseUrl === STIRLING_SAAS_BACKEND_API_URL;
+        // A request targets the SaaS backend either because operationRouter
+        // routed a relative path there, OR because the caller passed an absolute
+        // SaaS URL. The latter matters for the AI result-file download: it hits
+        // ${getAiBaseUrl()}/api/v1/general/files/..., and /api/v1/general/*
+        // normally routes local-first — so without this it would reach the cloud
+        // engine with no token and 401. Check the FINAL url (post-prefixing).
+        const saasBase = STIRLING_SAAS_BACKEND_API_URL ?? "";
+        const finalUrl = extendedConfig.url ?? "";
+        const isSaaSBackendRequest =
+          baseUrl === STIRLING_SAAS_BACKEND_API_URL ||
+          (saasBase !== "" && finalUrl.startsWith(saasBase));
         const needsAuth = isRemote || isSaaSBackendRequest;
 
         // Tag request so error handler can identify SaaS backend errors without URL matching
@@ -86,7 +107,7 @@ export function setupApiInterceptors(client: AxiosInstance): void {
 
           // If another request is already refreshing, wait before attaching token
           await authService.awaitRefreshIfInProgress();
-          const token = await authService.getAuthToken();
+          const token = await getAccessToken();
 
           if (token) {
             extendedConfig.headers.Authorization = `Bearer ${token}`;
@@ -188,10 +209,18 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         if (originalRequest.skipAuthRedirect) {
           return Promise.reject(error);
         }
-        // If no Authorization header was sent, the user was never authenticated —
-        // the 401 is expected (e.g. endpoint availability checks when not signed in).
-        // Don't attempt a refresh or open the sign-in modal in that case.
+        // No token attached: stay silent for background GETs (endpoint probes
+        // before sign-in), but surface the sign-in modal for mutations so the
+        // user isn't left with a no-op click.
         if (!originalRequest.headers.Authorization) {
+          const method = (originalRequest.method || "get").toLowerCase();
+          if (method !== "get") {
+            window.dispatchEvent(
+              new CustomEvent(OPEN_SIGN_IN_EVENT, {
+                detail: { locked: false },
+              }),
+            );
+          }
           return Promise.reject(error);
         }
         originalRequest._retry = true;
@@ -216,7 +245,7 @@ export function setupApiInterceptors(client: AxiosInstance): void {
 
         if (refreshed) {
           // Retry the original request with new token
-          const token = await authService.getAuthToken();
+          const token = await getAccessToken();
           console.debug(
             `[apiClientSetup] Token refreshed, retrying request to: ${originalRequest.url}`,
           );

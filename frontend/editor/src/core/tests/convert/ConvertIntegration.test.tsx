@@ -29,6 +29,8 @@ import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import { I18nextProvider } from "react-i18next";
 import i18n from "@app/i18n/config";
 import { createTestStirlingFile } from "@app/tests/utils/testFileHelpers";
+import { expectConsole } from "@app/tests/failOnConsole";
+import { fileStorage } from "@app/services/fileStorage";
 import { StirlingFile } from "@app/types/fileContext";
 import { MantineProvider } from "@mantine/core";
 
@@ -78,6 +80,8 @@ vi.mock("../../services/fileStorage", () => ({
         thumbnail: thumbnail,
       });
     }),
+    storeStirlingFile: vi.fn().mockResolvedValue(undefined),
+    persistVersionedOutputs: vi.fn().mockResolvedValue(undefined),
     getAllFileMetadata: vi.fn().mockResolvedValue([]),
     cleanup: vi.fn().mockResolvedValue(undefined),
   },
@@ -119,7 +123,7 @@ describe("Convert Tool Integration Tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Setup default apiClient mock
-    mockedApiClient.post = vi.fn() as any;
+    mockedApiClient.post = vi.fn() as typeof mockedApiClient.post;
   });
 
   afterEach(() => {
@@ -209,6 +213,10 @@ describe("Convert Tool Integration Tests", () => {
       expect(result.current.downloadFilename).toBe("test.png");
       expect(result.current.isLoading).toBe(false);
       expect(result.current.errorMessage).toBe(null);
+
+      // The output file must be persisted via fileStorage.persistVersionedOutputs
+      // so downstream tools see it in the registry.
+      expect(fileStorage.persistVersionedOutputs).toHaveBeenCalled();
     });
 
     test("should handle API error responses correctly", async () => {
@@ -571,6 +579,9 @@ describe("Convert Tool Integration Tests", () => {
 
   describe("File Upload Integration", () => {
     test("should handle multiple file uploads correctly", async () => {
+      // Test mocks only one apiClient.post response; the second file hits an
+      // undefined response and production warns about the conversion failure.
+      expectConsole.warn(/Failed to convert file test2\.pdf/);
       const mockBlob = new Blob(["zip-content"], { type: "application/zip" });
       (mockedApiClient.post as Mock).mockResolvedValueOnce({ data: mockBlob });
 

@@ -12,10 +12,9 @@ import stirling.software.proprietary.security.database.repository.AuthorityRepos
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
-import stirling.software.saas.config.CreditsProperties;
 import stirling.software.saas.util.LogRedactionUtils;
 
-/** Changes user roles and refreshes their credit allocation. */
+/** Changes user roles (and the matching authority grant/revoke). */
 @Service
 @Profile("saas")
 @RequiredArgsConstructor
@@ -24,8 +23,6 @@ public class UserRoleService {
 
     private final UserRepository userRepository;
     private final AuthorityRepository authorityRepository;
-    private final CreditService creditService;
-    private final CreditsProperties creditsProperties;
 
     /**
      * Change a user's role
@@ -58,7 +55,7 @@ public class UserRoleService {
     /**
      * Downgrade a user to FREE tier (ROLE_USER)
      *
-     * <p>Changes role from PRO_USER to USER and resets cycle credit allocation to FREE tier.
+     * <p>Revokes ROLE_PRO_USER by changing the role/authority from PRO_USER to USER.
      *
      * @param user the user to downgrade
      */
@@ -70,24 +67,15 @@ public class UserRoleService {
 
         changeRole(user, Role.USER.getRoleId());
 
-        // Reset credits to FREE tier allocation
-        int freeAllocation =
-                creditsProperties
-                        .getCycle()
-                        .getAllocations()
-                        .getOrDefault(Role.USER.getRoleId(), 25);
-        creditService.resetCycleAllocationForRoleChange(user.getId(), freeAllocation);
-
         log.info(
-                "Successfully downgraded user {} to FREE with {} cycle credits",
-                LogRedactionUtils.redactEmail(user.getUsername()),
-                freeAllocation);
+                "Successfully downgraded user {} to FREE",
+                LogRedactionUtils.redactEmail(user.getUsername()));
     }
 
     /**
      * Upgrade a user to PRO tier (ROLE_PRO_USER)
      *
-     * <p>Changes role from USER to PRO_USER and resets cycle credit allocation to PRO tier.
+     * <p>Grants ROLE_PRO_USER by changing the role/authority from USER to PRO_USER.
      *
      * @param user the user to upgrade
      */
@@ -98,30 +86,8 @@ public class UserRoleService {
 
         changeRole(user, Role.PRO_USER.getRoleId());
 
-        // Reset credits to PRO tier allocation
-        int proAllocation =
-                creditsProperties
-                        .getCycle()
-                        .getAllocations()
-                        .getOrDefault(Role.PRO_USER.getRoleId(), 100);
-        creditService.resetCycleAllocationForRoleChange(user.getId(), proAllocation);
-
         log.info(
-                "Successfully upgraded user {} to PRO with {} cycle credits",
-                LogRedactionUtils.redactEmail(user.getUsername()),
-                proAllocation);
-    }
-
-    /**
-     * Get credit allocation for a specific role
-     *
-     * @param roleId the role ID (e.g., "ROLE_USER", "ROLE_PRO_USER")
-     * @return the cycle credit allocation for that role
-     */
-    public int getCreditAllocationForRole(String roleId) {
-        return creditsProperties
-                .getCycle()
-                .getAllocations()
-                .getOrDefault(roleId, Role.USER.getRoleId().equals(roleId) ? 25 : 100);
+                "Successfully upgraded user {} to PRO",
+                LogRedactionUtils.redactEmail(user.getUsername()));
     }
 }

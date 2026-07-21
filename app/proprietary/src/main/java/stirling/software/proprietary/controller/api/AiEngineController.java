@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -30,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.common.model.job.ResultFile;
 import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.service.TaskManager;
+import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.model.api.ai.AiWorkflowProgressEvent;
 import stirling.software.proprietary.model.api.ai.AiWorkflowRequest;
 import stirling.software.proprietary.model.api.ai.AiWorkflowResponse;
@@ -58,6 +60,7 @@ public class AiEngineController {
     private final TaskManager taskManager;
     private final JobOwnershipService jobOwnershipService;
     private final AiEngineEndpointResolver endpointResolver;
+    private final UserServiceInterface userService;
 
     /**
      * SSE emitter timeout. Long enough to accommodate multi-gigabyte PDF workflows (OCR on a
@@ -74,7 +77,8 @@ public class AiEngineController {
             @Qualifier("aiStreamExecutor") Executor aiStreamExecutor,
             TaskManager taskManager,
             JobOwnershipService jobOwnershipService,
-            AiEngineEndpointResolver endpointResolver) {
+            AiEngineEndpointResolver endpointResolver,
+            @Autowired(required = false) UserServiceInterface userService) {
         this.aiEngineClient = aiEngineClient;
         this.aiWorkflowService = aiWorkflowService;
         this.objectMapper = objectMapper;
@@ -82,6 +86,11 @@ public class AiEngineController {
         this.taskManager = taskManager;
         this.jobOwnershipService = jobOwnershipService;
         this.endpointResolver = endpointResolver;
+        this.userService = userService;
+    }
+
+    private String currentUserId() {
+        return userService != null ? userService.getCurrentUsername() : null;
     }
 
     @GetMapping("/health")
@@ -89,7 +98,7 @@ public class AiEngineController {
             summary = "AI engine health check",
             description = "Returns the health status of the AI engine including configured models")
     public ResponseEntity<String> health() throws IOException {
-        String response = aiEngineClient.get("/health");
+        String response = aiEngineClient.get("/health", currentUserId());
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
     }
 
@@ -243,7 +252,7 @@ public class AiEngineController {
                     HttpStatus.BAD_REQUEST, "Request body must be a JSON object");
         }
         String forwardedBody = withEnabledEndpoints((ObjectNode) parsed);
-        String response = aiEngineClient.post("/api/v1/pdf/edit", forwardedBody);
+        String response = aiEngineClient.post("/api/v1/pdf/edit", forwardedBody, currentUserId());
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
     }
 

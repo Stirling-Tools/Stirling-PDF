@@ -28,7 +28,10 @@ import stirling.software.common.model.enumeration.Role;
 import stirling.software.proprietary.model.Team;
 
 @Entity
-@Table(name = "users")
+@Table(
+        name = "users",
+        // team_id backs Team.users joins, the admin roster fetch, and per-team user counts.
+        indexes = @Index(name = "idx_users_team_id", columnList = "team_id"))
 @NoArgsConstructor
 @Getter
 @Setter
@@ -87,7 +90,11 @@ public class User implements UserDetails, Serializable {
     private String email;
 
     // SaaS-only: Supabase user UUID. Null in OSS / proprietary deployments.
-    @Column(name = "supabase_id", unique = true)
+    // Column is `supabase_auth_id` (canonical name from the initial Supabase remote
+    // schema migration). An earlier Flyway V2 (PR #6384) accidentally introduced a
+    // parallel `supabase_id` column that was used by Java; V17 backfilled and dropped
+    // it. Field name is kept as `supabaseId` to avoid a wide refactor of callers.
+    @Column(name = "supabase_auth_id", unique = true)
     private UUID supabaseId;
 
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "user")
@@ -99,7 +106,6 @@ public class User implements UserDetails, Serializable {
 
     @ElementCollection
     @MapKeyColumn(name = "setting_key")
-    @Lob
     @Column(name = "setting_value", columnDefinition = "text")
     @CollectionTable(name = "user_settings", joinColumns = @JoinColumn(name = "user_id"))
     @JsonIgnore

@@ -1,0 +1,95 @@
+.sui-check {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  color: var(--color-text-2);
+}
+
+.sui-check--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sui-check__input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.sui-check__box {
+  flex: 0 0 auto;
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.0625rem;
+  border-radius: var(--radius-xs);
+  border: 1.5px solid var(--color-border-hover);
+  background: var(--color-surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background var(--motion-fast),
+    border-color var(--motion-fast);
+  position: relative;
+}
+
+.sui-check__input:focus-visible + .sui-check__box {
+  outline: 2px solid var(--color-blue);
+  outline-offset: 2px;
+}
+
+.sui-check__input:checked + .sui-check__box {
+  background: var(--color-blue);
+  border-color: var(--color-blue);
+  color: var(--color-text-on-accent);
+}
+
+.sui-check__tick {
+  opacity: 0;
+}
+.sui-check__input:checked + .sui-check__box .sui-check__tick {
+  opacity: 1;
+}
+
+.sui-check--mixed .sui-check__box {
+  background: var(--color-blue);
+  border-color: var(--color-blue);
+}
+.sui-check--mixed .sui-check__tick {
+  opacity: 0;
+}
+.sui-check--mixed .sui-check__dash {
+  position: absolute;
+  width: 0.5rem;
+  height: 2px;
+  background: var(--color-text-on-accent);
+  border-radius: 1px;
+}
+.sui-check__dash {
+  display: none;
+}
+.sui-check--mixed .sui-check__dash {
+  display: block;
+}
+
+.sui-check__icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text-4);
+  flex-shrink: 0;
+}
+.sui-check__text {
+  display: flex;
+  flex-direction: column;
+}
+.sui-check__label {
+  color: var(--color-text-1);
+  font-weight: 500;
+}
+.sui-check__desc {
+  font-size: 0.75rem;
+  color: var(--color-text-4);
+}

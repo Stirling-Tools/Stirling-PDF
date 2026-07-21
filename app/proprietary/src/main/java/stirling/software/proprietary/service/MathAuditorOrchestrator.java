@@ -8,13 +8,14 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.model.api.ai.Evidence;
 import stirling.software.proprietary.model.api.ai.Folio;
 import stirling.software.proprietary.model.api.ai.FolioManifest;
@@ -40,7 +41,6 @@ import tools.jackson.databind.ObjectMapper;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class MathAuditorOrchestrator {
 
     private static final String EXAMINE_PATH = "/api/v1/ai/math-auditor-agent/examine";
@@ -50,6 +50,24 @@ public class MathAuditorOrchestrator {
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final PdfContentExtractor pdfContentExtractor;
     private final ObjectMapper objectMapper;
+    private final UserServiceInterface userService;
+
+    public MathAuditorOrchestrator(
+            AiEngineClient aiEngineClient,
+            CustomPDFDocumentFactory pdfDocumentFactory,
+            PdfContentExtractor pdfContentExtractor,
+            ObjectMapper objectMapper,
+            @Autowired(required = false) UserServiceInterface userService) {
+        this.aiEngineClient = aiEngineClient;
+        this.pdfDocumentFactory = pdfDocumentFactory;
+        this.pdfContentExtractor = pdfContentExtractor;
+        this.objectMapper = objectMapper;
+        this.userService = userService;
+    }
+
+    private String currentUserId() {
+        return userService != null ? userService.getCurrentUsername() : null;
+    }
 
     /**
      * Run a full math audit against the supplied PDF file.
@@ -110,7 +128,7 @@ public class MathAuditorOrchestrator {
                 EXAMINE_PATH,
                 manifest.sessionId(),
                 manifest.round());
-        String responseBody = aiEngineClient.post(EXAMINE_PATH, requestBody);
+        String responseBody = aiEngineClient.post(EXAMINE_PATH, requestBody, currentUserId());
         return objectMapper.readValue(responseBody, Requisition.class);
     }
 
@@ -123,7 +141,7 @@ public class MathAuditorOrchestrator {
                 evidence.sessionId(),
                 evidence.round(),
                 evidence.finalRound());
-        String responseBody = aiEngineClient.post(path, requestBody);
+        String responseBody = aiEngineClient.post(path, requestBody, currentUserId());
         return objectMapper.readValue(responseBody, Verdict.class);
     }
 

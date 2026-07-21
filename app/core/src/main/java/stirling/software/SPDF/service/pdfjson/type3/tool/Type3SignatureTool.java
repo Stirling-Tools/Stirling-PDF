@@ -3,7 +3,6 @@ package stirling.software.SPDF.service.pdfjson.type3.tool;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -285,9 +284,9 @@ public final class Type3SignatureTool {
             for (int i = 0; i < args.length; i++) {
                 String arg = args[i];
                 if ("--pdf".equals(arg) && i + 1 < args.length) {
-                    pdf = Paths.get(args[++i]);
+                    pdf = Path.of(args[++i]);
                 } else if ("--output".equals(arg) && i + 1 < args.length) {
-                    output = Paths.get(args[++i]);
+                    output = Path.of(args[++i]);
                 } else if ("--pretty".equals(arg)) {
                     pretty = true;
                 } else if ("--help".equals(arg) || "-h".equals(arg)) {

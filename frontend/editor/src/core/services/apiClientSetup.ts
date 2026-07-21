@@ -13,7 +13,7 @@ export function setupApiInterceptors(client: AxiosInstance): void {
   );
 }
 
-/** Auth headers for raw fetch() calls (SSE streams, etc.). Proprietary overrides with JWT + XSRF. */
-export function getAuthHeaders(): Record<string, string> {
+/** Auth headers for raw fetch() calls — empty in core; proprietary/SaaS override. */
+export async function getAuthHeaders(): Promise<Record<string, string>> {
   return {};
 }

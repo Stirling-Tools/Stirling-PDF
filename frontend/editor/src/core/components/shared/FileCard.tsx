@@ -1,15 +1,7 @@
 import { useState } from "react";
-import {
-  Card,
-  Stack,
-  Text,
-  Group,
-  Badge,
-  Button,
-  Box,
-  ActionIcon,
-  Tooltip,
-} from "@mantine/core";
+import { Card, Stack, Text, Group, Badge, Box, Tooltip } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import StorageIcon from "@mui/icons-material/Storage";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -111,11 +103,11 @@ const FileCard = ({
               onClick={(e) => e.stopPropagation()}
             >
               {onView && (
-                <Tooltip label="View in Viewer">
+                <Tooltip label={t("fileCard.viewInViewer", "View in Viewer")}>
                   <ActionIcon
                     size="sm"
-                    variant="subtle"
-                    color="blue"
+                    variant="tertiary"
+                    aria-label={t("fileCard.viewInViewer", "View in Viewer")}
                     onClick={(e) => {
                       e.stopPropagation();
                       onView();
@@ -126,11 +118,17 @@ const FileCard = ({
                 </Tooltip>
               )}
               {onEdit && (
-                <Tooltip label="Open in File Editor">
+                <Tooltip
+                  label={t("fileCard.openInFileEditor", "Open in File Editor")}
+                >
                   <ActionIcon
                     size="sm"
-                    variant="subtle"
-                    color="orange"
+                    variant="tertiary"
+                    accent="warning"
+                    aria-label={t(
+                      "fileCard.openInFileEditor",
+                      "Open in File Editor",
+                    )}
                     onClick={(e) => {
                       e.stopPropagation();
                       onEdit();
@@ -180,14 +178,14 @@ const FileCard = ({
         </Group>
 
         <Button
-          color="red"
-          size="xs"
-          variant="light"
+          accent="danger"
+          size="sm"
+          variant="secondary"
           onClick={(e) => {
             e.stopPropagation();
             onRemove();
           }}
-          mt={4}
+          style={{ marginTop: 4 }}
         >
           {t("delete", "Remove")}
         </Button>

@@ -51,6 +51,27 @@
   pointer-events: auto;
 }
 
+/* A toast tied to a policy pulses a glow in that policy's accent (var set
+   inline as --toast-glow), so it's obvious which policy is being applied. */
+.toast-item--glow {
+  animation: toast-glow-pulse 1.8s ease-in-out infinite;
+}
+@keyframes toast-glow-pulse {
+  0%,
+  100% {
+    box-shadow:
+      var(--shadow-lg),
+      0 0 0 1px color-mix(in srgb, var(--toast-glow) 35%, transparent),
+      0 0 10px -2px var(--toast-glow);
+  }
+  50% {
+    box-shadow:
+      var(--shadow-lg),
+      0 0 0 1px color-mix(in srgb, var(--toast-glow) 80%, transparent),
+      0 0 20px 0 var(--toast-glow);
+  }
+}
+
 /* Toast Alert Type Colors */
 .toast-item--success {
   background: var(--color-green-100);

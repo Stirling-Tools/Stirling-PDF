@@ -7,7 +7,6 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -54,7 +53,7 @@ public class UIDataTessdataController {
         TessdataLanguagesResponse response = new TessdataLanguagesResponse();
         response.setInstalled(getAvailableTesseractLanguages());
         response.setAvailable(getRemoteTessdataLanguages());
-        response.setWritable(isWritableDirectory(Paths.get(runtimePathConfig.getTessDataPath())));
+        response.setWritable(isWritableDirectory(Path.of(runtimePathConfig.getTessDataPath())));
         return ResponseEntity.ok(response);
     }
 
@@ -68,7 +67,7 @@ public class UIDataTessdataController {
                     .body(Map.of("message", "No languages provided for download"));
         }
 
-        Path tessdataDir = Paths.get(runtimePathConfig.getTessDataPath());
+        Path tessdataDir = Path.of(runtimePathConfig.getTessDataPath());
         try {
             Files.createDirectories(tessdataDir);
         } catch (IOException e) {
