@@ -25,6 +25,12 @@ import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
+// Sizing constants for the page number input
+const MIN_PAGE_DIGITS = 2;
+const MIN_INPUT_WIDTH_PX = 48;
+const BASE_INPUT_WIDTH_PX = 32;
+const PX_PER_DIGIT = 8;
+
 interface PdfViewerToolbarProps {
   // Page navigation props (placeholders for now)
   currentPage?: number;
@@ -138,6 +144,15 @@ export function PdfViewerToolbar({
     scrollActions.scrollToLastPage();
   };
 
+  const totalPagesDigits = Math.max(
+    MIN_PAGE_DIGITS,
+    (scrollState.totalPages || 1).toString().length,
+  );
+  const inputWidth = Math.max(
+    MIN_INPUT_WIDTH_PX,
+    BASE_INPUT_WIDTH_PX + totalPagesDigits * PX_PER_DIGIT,
+  );
+
   return (
     <Paper
       radius="xl xl 0 0"
@@ -206,10 +221,13 @@ export function PdfViewerToolbar({
         hideControls
         styles={{
           input: {
-            width: 48,
+            width: inputWidth,
             textAlign: "center",
             fontWeight: 500,
             fontSize: 16,
+            paddingLeft: 4,
+            paddingRight: 4,
+            boxSizing: "border-box",
           },
         }}
       />
