@@ -49,17 +49,6 @@ public class SaasTeamService {
     private final SaasUserExtensionService saasUserExtensionService;
     private final LinkedInstanceRepository linkedInstanceRepository;
     private final stirling.software.proprietary.security.service.UserService userService;
-    private final stirling.software.proprietary.access.repository.ResourceGrantRepository
-            resourceGrantRepository;
-    private final stirling.software.proprietary.integration.repository.IntegrationConfigRepository
-            integrationConfigRepository;
-
-    // Team-owned integration configs + team grants FK the teams row; purge before deleting a team.
-    private void purgeTeamOwnedResources(Long teamId) {
-        integrationConfigRepository.deleteByOwnerTeam_Id(teamId);
-        resourceGrantRepository.deleteByPrincipalTypeAndPrincipalId(
-                stirling.software.proprietary.access.model.PrincipalType.TEAM, teamId);
-    }
 
     public static final String DEFAULT_TEAM_NAME = "Default";
     public static final String INTERNAL_TEAM_NAME = "Internal";
@@ -173,6 +162,8 @@ public class SaasTeamService {
             membership.setInvitedAt(LocalDateTime.now());
             membership.setAcceptedAt(LocalDateTime.now());
             membershipRepository.save(membership);
+            // Ignore the result: a full home returns 0, the correct end state (1 member = 1 seat) -
+            // throwing here would wrongly block the return.
             saasTeamExtensionsRepository.incrementSeatsUsed(home.getId());
         }
         userRepository.updateUserTeamId(user.getId(), home.getId());
@@ -369,7 +360,7 @@ public class SaasTeamService {
 
         // Guard: block only if joining would strand a paid/linked team the user is the last
         // leader of. Home teams are parked (kept), so a join never orphans them.
-        assertCanLeaveCurrentTeamsToJoinAnother(acceptingUser);
+        assertCanLeaveCurrentTeamsToJoinAnother(acceptingUser, homeTeamId, team.getId());
 
         // Leave any non-home team the user currently belongs to; keep the home team + membership.
         for (TeamMembership existingMembership :
@@ -485,12 +476,22 @@ public class SaasTeamService {
      * ("Mode A"). Those block the join until the plan is cancelled / leadership transferred /
      * instances revoked. An unpaid, unlinked team (personal or shared) no longer blocks.
      *
+     * <p>The home team and the team being joined are excluded: neither is left by the join (home is
+     * parked, the joined team is kept), so their live billing cannot be stranded.
+     *
      * @param user the user attempting to accept an invitation
+     * @param homeTeamId the user's durable home team, parked by the join (may be null)
+     * @param joinedTeamId the team being joined
      * @throws IllegalStateException if joining would strand a paid/linked team the user last-leads
      */
-    private void assertCanLeaveCurrentTeamsToJoinAnother(User user) {
+    private void assertCanLeaveCurrentTeamsToJoinAnother(
+            User user, Long homeTeamId, Long joinedTeamId) {
         for (TeamMembership membership : membershipRepository.findByUserId(user.getId())) {
             Team team = membership.getTeam();
+            // Home is parked and the joined team is kept, so neither can be orphaned.
+            if (team.getId().equals(joinedTeamId) || team.getId().equals(homeTeamId)) {
+                continue;
+            }
             // Only a sole leader can strand a team; a member or co-leader leaving never does.
             if (!membership.isLeader()
                     || membershipRepository.countByTeamIdAndRole(team.getId(), TeamRole.LEADER)

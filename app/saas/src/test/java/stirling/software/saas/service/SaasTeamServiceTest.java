@@ -69,14 +69,6 @@ class SaasTeamServiceTest {
     @Mock private LinkedInstanceRepository linkedInstanceRepository;
     @Mock private stirling.software.proprietary.security.service.UserService userService;
 
-    @Mock
-    private stirling.software.proprietary.access.repository.ResourceGrantRepository
-            resourceGrantRepository;
-
-    @Mock
-    private stirling.software.proprietary.integration.repository.IntegrationConfigRepository
-            integrationConfigRepository;
-
     @InjectMocks private SaasTeamService service;
 
     private static final UUID SUPABASE_ID = UUID.fromString("11111111-2222-3333-4444-555555555555");
@@ -1448,6 +1440,36 @@ class SaasTeamServiceTest {
             verify(membershipRepository).delete(oldMembership);
             verify(userRepository).updateUserTeamId(USER_ID, NEW_TEAM_ID);
             verify(invitationRepository).save(invitation);
+            assertThat(invitation.getStatus()).isEqualTo(InvitationStatus.ACCEPTED);
+        }
+
+        @Test
+        @DisplayName("does not block when the only linked instance is on the parked home team")
+        void passesGuardWhenLinkedInstanceIsOnHomeTeam() {
+            User joiner = user(USER_ID, EMAIL, EMAIL);
+            Team homeTeam = team(OLD_TEAM_ID, "home-team");
+            Team newTeam = team(NEW_TEAM_ID, "new-team");
+            TeamInvitation invitation = pendingInvitation(newTeam, joiner);
+            TeamMembership homeMembership = membership(homeTeam, joiner, TeamRole.LEADER);
+
+            when(userRepository.findById(USER_ID)).thenReturn(Optional.of(joiner));
+            when(invitationRepository.findByInvitationToken(TOKEN))
+                    .thenReturn(Optional.of(invitation));
+            when(saasTeamExtensionService.hasAvailableSeats(newTeam)).thenReturn(true);
+            // The linked team IS the durable home, so the join parks it rather than orphaning it.
+            when(saasUserExtensionService.getHomeTeamId(joiner)).thenReturn(OLD_TEAM_ID);
+            when(membershipRepository.findByUserId(USER_ID)).thenReturn(List.of(homeMembership));
+            // Home still carries a non-revoked linked instance - the old guard wrongly blocked
+            // here.
+            when(linkedInstanceRepository.countByTeamIdAndRevokedAtIsNull(OLD_TEAM_ID))
+                    .thenReturn(1L);
+            when(saasTeamExtensionsRepository.incrementSeatsUsed(NEW_TEAM_ID)).thenReturn(1);
+
+            service.acceptInvitation(TOKEN, joiner);
+
+            // Home parked (never deleted), user re-pointed to the new team, invite accepted.
+            verify(membershipRepository, never()).delete(homeMembership);
+            verify(userRepository).updateUserTeamId(USER_ID, NEW_TEAM_ID);
             assertThat(invitation.getStatus()).isEqualTo(InvitationStatus.ACCEPTED);
         }
 
