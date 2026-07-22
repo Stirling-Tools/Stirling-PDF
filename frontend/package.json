@@ -151,7 +151,7 @@
     "puppeteer": "^24.25.0",
     "rollup-plugin-visualizer": "^7.0.1",
     "storybook": "^9.1.20",
-    "tsx": "^4.21.0",
+    "tsx": "^4.22.4",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "typescript-eslint": "^8.61.1",
     "vite": "^7.3.2",
