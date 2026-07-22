@@ -323,12 +323,9 @@ export function PipelineBuilder() {
     );
   }
 
-  const usedSourceIds = new Set(
-    inputs.map((input) => input.sourceId).filter((id) => id !== ""),
-  );
-  const canAddInput = availableSources.some(
-    (source) => !usedSourceIds.has(source.id),
-  );
+  // A pipeline carries at most one input today (a product cap, not a model limit - the state
+  // stays a list so multiple inputs can come back later without a reshape).
+  const canAddInput = inputs.length === 0 && availableSources.length > 0;
 
   function addStep(tool: ExecutableTool) {
     setSteps((current) => {
@@ -400,9 +397,10 @@ export function PipelineBuilder() {
       input.sourceId !== "" &&
       (input.triggerType !== "schedule" || Number(input.scheduleCount) > 0),
   );
-  // A pipeline must have at least one input source and at least one output destination.
-  const sourceValid = inputs.length > 0;
-  const outputValid = outputIds.length > 0;
+  // A pipeline must have exactly one input source and exactly one output destination (a policy
+  // loaded with more - legacy data - must be trimmed before it can be saved).
+  const sourceValid = inputs.length === 1;
+  const outputValid = outputIds.length === 1;
   const canSave =
     name.trim() !== "" &&
     inputsValid &&

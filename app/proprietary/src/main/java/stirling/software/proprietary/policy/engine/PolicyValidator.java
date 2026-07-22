@@ -34,10 +34,20 @@ public class PolicyValidator {
     private final SourceStore sourceStore;
 
     /**
-     * @throws IllegalArgumentException if any facet's type is unknown, a referenced source does not
-     *     exist, a trigger is incompatible with its input's source, or any config is invalid
+     * @throws IllegalArgumentException if the policy has more than one input or output, any facet's
+     *     type is unknown, a referenced source does not exist, a trigger is incompatible with its
+     *     input's source, or any config is invalid
      */
     public void validate(Policy policy) {
+        // Deliberate product cap, not a model limit: the lists stay lists so multiple
+        // inputs/outputs can be supported later, but today a policy carries at most one of
+        // each (zero of either remains fine - run on demand / inline output).
+        if (policy.inputs().size() > 1) {
+            throw new IllegalArgumentException("a policy supports at most one input");
+        }
+        if (policy.outputIds().size() > 1) {
+            throw new IllegalArgumentException("a policy supports at most one output");
+        }
         for (PipelineInput input : policy.inputs()) {
             Source source =
                     sourceStore

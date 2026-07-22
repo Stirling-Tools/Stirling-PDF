@@ -202,6 +202,19 @@ describe("PipelineBuilder", () => {
     fireEvent.click(await screen.findByText(sourceName));
   }
 
+  it("caps the pipeline at one input", async () => {
+    renderBuilder("/processor/pipelines/new");
+
+    const addButton = async () =>
+      (await screen.findByText("portal.pipelines.builder.addInput")).closest(
+        "button",
+      );
+
+    expect(await addButton()).toBeEnabled();
+    await addInputSource("Claims intake");
+    expect(await addButton()).toBeDisabled();
+  });
+
   it("builds a new pipeline: name it, add a tool, an input, a destination, and save", async () => {
     renderBuilder("/processor/pipelines/new");
 
