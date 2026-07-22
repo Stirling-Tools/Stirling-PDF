@@ -13,8 +13,5 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-aspectj'
     implementation 'com.github.ben-manes.caffeine:caffeine'
 
-    runtimeOnly 'org.flywaydb:flyway-core'
-    runtimeOnly 'org.flywaydb:flyway-database-postgresql'
-
     testImplementation "com.tngtech.archunit:archunit-junit5:${rootProject.ext.archunitVersion}"
 }

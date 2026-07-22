@@ -114,6 +114,14 @@ const CAPABILITY_META: Record<
     descEn:
       "Removes hidden JavaScript so nothing can run automatically when the document is opened.",
   },
+
+  timestampPdf: {
+    labelKey: "portal.policies.wizard.capability.timestampPdf.label",
+    labelEn: "Add a trusted timestamp",
+    descKey: "portal.policies.wizard.capability.timestampPdf.desc",
+    descEn:
+      "Proves the document existed in this exact form at a point in time, using an independent timestamp authority. Only a hash is sent - the document never leaves your server.",
+  },
   watermark: {
     labelKey: "portal.policies.wizard.capability.watermark.label",
     labelEn: "Apply a watermark",
