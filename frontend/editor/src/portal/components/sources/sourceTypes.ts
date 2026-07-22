@@ -21,6 +21,9 @@ export interface SourceTypeMeta {
  */
 export const EDITOR_SOURCE_TYPE = "editor";
 
+/** The webhook source type. Its delivery URL + signing secret are minted server-side on create. */
+export const WEBHOOK_SOURCE_TYPE = "webhook";
+
 const SOURCE_TYPE_META: Record<string, SourceTypeMeta> = {
   folder: {
     labelKey: "portal.sources.types.folder.label",
@@ -33,6 +36,10 @@ const SOURCE_TYPE_META: Record<string, SourceTypeMeta> = {
   s3: {
     labelKey: "portal.sources.types.s3.label",
     accent: "brand",
+  },
+  webhook: {
+    labelKey: "portal.sources.types.webhook.label",
+    accent: "warning",
   },
 };
 
@@ -174,6 +181,12 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
         ],
       },
     ],
+  },
+  {
+    type: WEBHOOK_SOURCE_TYPE,
+    labelKey: "portal.sources.types.webhook.label",
+    descriptionKey: "portal.sources.types.webhook.description",
+    fields: [],
   },
 ];
 

@@ -20,6 +20,11 @@ const ICONS: Record<string, ReactNode> = {
       <path d="M7 17.5h10.5" />
     </>
   ),
+  webhook: (
+    <>
+      <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+    </>
+  ),
   editor: (
     <>
       <path d="M12 20h9" />

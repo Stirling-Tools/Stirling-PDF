@@ -10,6 +10,7 @@ on:
       - "app/common/build.gradle"
       - "app/core/build.gradle"
       - "app/proprietary/build.gradle"
+      - "gradle/spotless.gradle"
       - "README.md"
       - "frontend/editor/public/locales/*/translation.toml"
       - "app/core/src/main/resources/static/3rdPartyLicenses.json"

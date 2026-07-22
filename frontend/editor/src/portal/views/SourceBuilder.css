@@ -135,3 +135,32 @@
   justify-content: flex-end;
   gap: 0.5rem;
 }
+
+.portal-source-builder__copy-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.portal-source-builder__copy-row > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.portal-source-builder__reveal {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.portal-source-builder__muted {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-4);
+}
+
+.portal-source-builder__type-description {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-3);
+}
