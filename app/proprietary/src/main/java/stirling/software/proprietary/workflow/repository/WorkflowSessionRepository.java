@@ -32,6 +32,11 @@ public interface WorkflowSessionRepository extends JpaRepository<WorkflowSession
     @Query("SELECT ws FROM WorkflowSession ws WHERE ws.sessionId = :sessionId")
     Optional<WorkflowSession> findBySessionIdForUpdate(@Param("sessionId") String sessionId);
 
+    /** Lock the owning session while a participant performs a state-changing action. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT ws FROM WorkflowSession ws JOIN ws.participants p WHERE p.shareToken = :token")
+    Optional<WorkflowSession> findByParticipantShareTokenForUpdate(@Param("token") String token);
+
     /** Find all workflow sessions owned by a specific user */
     List<WorkflowSession> findByOwnerOrderByCreatedAtDesc(User owner);
 

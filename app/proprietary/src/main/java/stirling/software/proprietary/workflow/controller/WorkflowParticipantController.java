@@ -24,6 +24,7 @@ import org.springframework.web.server.ResponseStatusException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -40,6 +41,7 @@ import stirling.software.proprietary.workflow.model.ParticipantStatus;
 import stirling.software.proprietary.workflow.model.WorkflowParticipant;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
 import stirling.software.proprietary.workflow.repository.WorkflowParticipantRepository;
+import stirling.software.proprietary.workflow.repository.WorkflowSessionRepository;
 import stirling.software.proprietary.workflow.service.CertificateSubmissionValidator;
 import stirling.software.proprietary.workflow.service.MetadataEncryptionService;
 import stirling.software.proprietary.workflow.service.WorkflowSessionService;
@@ -64,6 +66,7 @@ public class WorkflowParticipantController {
 
     private final WorkflowSessionService workflowSessionService;
     private final WorkflowParticipantRepository participantRepository;
+    private final WorkflowSessionRepository sessionRepository;
     private final ObjectMapper objectMapper;
     private final MetadataEncryptionService metadataEncryptionService;
     private final CertificateSubmissionValidator certificateSubmissionValidator;
@@ -143,6 +146,7 @@ public class WorkflowParticipantController {
             value = "/submit-signature",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
+    @Transactional
     public ResponseEntity<ParticipantResponse> submitSignature(
             @ModelAttribute SignatureSubmissionRequest request) {
 
@@ -154,6 +158,22 @@ public class WorkflowParticipantController {
         }
 
         WorkflowParticipant participant =
+                participantRepository
+                        .findByShareToken(request.getParticipantToken())
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.FORBIDDEN,
+                                                "Invalid or expired participant token"));
+
+        sessionRepository
+                .findByParticipantShareTokenForUpdate(request.getParticipantToken())
+                .orElseThrow(
+                        () ->
+                                new ResponseStatusException(
+                                        HttpStatus.FORBIDDEN,
+                                        "Invalid or expired participant token"));
+        participant =
                 participantRepository
                         .findByShareToken(request.getParticipantToken())
                         .orElseThrow(
@@ -206,6 +226,7 @@ public class WorkflowParticipantController {
             summary = "Decline participation",
             description = "Participant declines to sign or participate in the workflow")
     @PostMapping(value = "/decline", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Transactional
     public ResponseEntity<ParticipantResponse> declineParticipation(
             @RequestParam("token") @NotBlank String token,
             @RequestParam(value = "reason", required = false) @Size(max = 500) String reason) {
@@ -213,6 +234,22 @@ public class WorkflowParticipantController {
         workflowSessionService.ensureSigningEnabled();
 
         WorkflowParticipant participant =
+                participantRepository
+                        .findByShareToken(token)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.FORBIDDEN,
+                                                "Invalid or expired participant token"));
+
+        sessionRepository
+                .findByParticipantShareTokenForUpdate(token)
+                .orElseThrow(
+                        () ->
+                                new ResponseStatusException(
+                                        HttpStatus.FORBIDDEN,
+                                        "Invalid or expired participant token"));
+        participant =
                 participantRepository
                         .findByShareToken(token)
                         .orElseThrow(

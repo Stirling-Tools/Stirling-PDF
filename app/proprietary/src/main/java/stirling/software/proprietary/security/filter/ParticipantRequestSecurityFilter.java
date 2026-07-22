@@ -1,6 +1,8 @@
 package stirling.software.proprietary.security.filter;
 
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
@@ -26,8 +28,10 @@ import lombok.extern.slf4j.Slf4j;
 public class ParticipantRequestSecurityFilter extends OncePerRequestFilter {
 
     static final long MAX_MULTIPART_REQUEST_SIZE_BYTES = 16L * 1024 * 1024;
+    static final long MAX_MOBILE_UPLOAD_REQUEST_SIZE_BYTES = 101L * 1024 * 1024;
 
     private static final String PARTICIPANT_PATH = "/api/v1/workflow/participant/";
+    private static final String MOBILE_SCANNER_UPLOAD_PATH = "/api/v1/mobile-scanner/upload/";
     private static final String AUTHENTICATED_CERTIFICATE_VALIDATION_PATH =
             "/api/v1/security/cert-sign/validate-certificate";
     private static final Pattern AUTHENTICATED_SIGN_PATH =
@@ -46,7 +50,9 @@ public class ParticipantRequestSecurityFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = normalizedRequestPath(request);
-        return !path.startsWith(PARTICIPANT_PATH) && !isAuthenticatedWorkflowUploadPath(path);
+        return !path.startsWith(PARTICIPANT_PATH)
+                && !path.startsWith(MOBILE_SCANNER_UPLOAD_PATH)
+                && !isAuthenticatedWorkflowUploadPath(path);
     }
 
     @Override
@@ -75,11 +81,15 @@ public class ParticipantRequestSecurityFilter extends OncePerRequestFilter {
                         "Content-Length is required for workflow uploads.");
                 return;
             }
-            if (contentLength > MAX_MULTIPART_REQUEST_SIZE_BYTES) {
+            long maxRequestSize =
+                    normalizedRequestPath(request).startsWith(MOBILE_SCANNER_UPLOAD_PATH)
+                            ? MAX_MOBILE_UPLOAD_REQUEST_SIZE_BYTES
+                            : MAX_MULTIPART_REQUEST_SIZE_BYTES;
+            if (contentLength > maxRequestSize) {
                 writeError(
                         response,
                         HttpStatus.CONTENT_TOO_LARGE,
-                        "Workflow upload exceeds the 16 MiB request limit.");
+                        "Upload exceeds the configured request limit.");
                 return;
             }
         }
@@ -105,7 +115,8 @@ public class ParticipantRequestSecurityFilter extends OncePerRequestFilter {
     private boolean isMultipartUploadEndpoint(HttpServletRequest request) {
         String path = normalizedRequestPath(request);
         return "POST".equalsIgnoreCase(request.getMethod())
-                && (MULTIPART_UPLOAD_PATHS.contains(path)
+                && (path.startsWith(MOBILE_SCANNER_UPLOAD_PATH)
+                        || MULTIPART_UPLOAD_PATHS.contains(path)
                         || AUTHENTICATED_SIGN_PATH.matcher(path).matches());
     }
 
@@ -119,6 +130,12 @@ public class ParticipantRequestSecurityFilter extends OncePerRequestFilter {
         String contextPath = request.getContextPath();
         if (!contextPath.isEmpty() && requestUri.startsWith(contextPath)) {
             requestUri = requestUri.substring(contextPath.length());
+        }
+        try {
+            requestUri = URLDecoder.decode(requestUri, StandardCharsets.UTF_8);
+        } catch (IllegalArgumentException e) {
+            // Leave malformed paths unchanged; they will not match a protected upload route.
+            log.debug("Malformed encoded request path: {}", requestUri);
         }
         return requestUri.length() > 1 && requestUri.endsWith("/")
                 ? requestUri.substring(0, requestUri.length() - 1)

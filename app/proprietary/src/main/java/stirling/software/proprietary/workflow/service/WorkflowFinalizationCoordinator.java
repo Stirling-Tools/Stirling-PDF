@@ -3,6 +3,8 @@ package stirling.software.proprietary.workflow.service;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.server.ResponseStatusException;
 
 import lombok.RequiredArgsConstructor;
@@ -35,7 +37,16 @@ public class WorkflowFinalizationCoordinator {
         workflowSessionService.storeProcessedFile(session, finalizedPdf, filename);
         workflowSessionService.finalizeSession(sessionId, owner);
         signingFinalizationService.clearSensitiveMetadata(session);
-        workflowSessionService.deleteOriginalFile(session);
+        // Deleting the source is an external storage side effect. Defer it until the DB
+        // transaction has committed so a commit failure cannot leave the workflow pointing at a
+        // deleted original document.
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        workflowSessionService.deleteOriginalFile(session);
+                    }
+                });
 
         return new FinalizedWorkflow(finalizedPdf, filename);
     }

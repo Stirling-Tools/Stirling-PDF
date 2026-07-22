@@ -179,6 +179,10 @@ public class MobileScannerService {
         if (session == null) {
             return List.of();
         }
+        if (isExpired(session)) {
+            deleteSession(sessionId);
+            return List.of();
+        }
         session.updateLastAccess();
         return new ArrayList<>(session.getFiles());
     }
@@ -195,6 +199,10 @@ public class MobileScannerService {
         SessionData session = activeSessions.get(sessionId);
         if (session == null) {
             throw new IOException("Session not found: " + sessionId);
+        }
+        if (isExpired(session)) {
+            deleteSession(sessionId);
+            throw new IOException("Session expired: " + sessionId);
         }
 
         Path filePath = getSafeFilePath(sessionId, filename);
@@ -337,6 +345,10 @@ public class MobileScannerService {
 
     private long getTotalStoredBytes() {
         return activeSessions.values().stream().mapToLong(SessionData::getStoredBytes).sum();
+    }
+
+    private boolean isExpired(SessionData session) {
+        return System.currentTimeMillis() - session.getLastAccessTime() > SESSION_TIMEOUT_MS;
     }
 
     private String sanitizeFilename(String filename) {

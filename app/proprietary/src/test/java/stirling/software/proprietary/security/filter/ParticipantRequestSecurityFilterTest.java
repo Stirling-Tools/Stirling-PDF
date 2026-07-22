@@ -87,6 +87,38 @@ class ParticipantRequestSecurityFilterTest {
     }
 
     @Test
+    void encodedParticipantUpload_isStillLimited() throws Exception {
+        MockHttpServletRequest request =
+                multipartRequest("/api/v1/workflow/participant/validate-certificat%65");
+        request.setContent(
+                new byte
+                        [(int) ParticipantRequestSecurityFilter.MAX_MULTIPART_REQUEST_SIZE_BYTES
+                                + 1]);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        FilterChain chain = org.mockito.Mockito.mock(FilterChain.class);
+
+        filter.doFilter(request, response, chain);
+
+        assertThat(response.getStatus()).isEqualTo(413);
+        verify(chain, never()).doFilter(request, response);
+    }
+
+    @Test
+    void oversizedMobileUpload_isRejectedBeforeMultipartParsing() throws Exception {
+        MockHttpServletRequest request =
+                multipartRequest("/api/v1/mobile-scanner/upload/session-1");
+        request.setContentLengthLong(
+                ParticipantRequestSecurityFilter.MAX_MOBILE_UPLOAD_REQUEST_SIZE_BYTES + 1);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        FilterChain chain = org.mockito.Mockito.mock(FilterChain.class);
+
+        filter.doFilter(request, response, chain);
+
+        assertThat(response.getStatus()).isEqualTo(413);
+        verify(chain, never()).doFilter(request, response);
+    }
+
+    @Test
     void rateLimit_isAppliedBeforeParticipantRequestHandling() throws Exception {
         FilterChain chain = org.mockito.Mockito.mock(FilterChain.class);
 
