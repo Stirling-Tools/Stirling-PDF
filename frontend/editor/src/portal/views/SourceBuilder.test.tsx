@@ -102,6 +102,39 @@ describe("SourceBuilder", () => {
     ).toBeDisabled();
   });
 
+  it("reveals the delivery URL and signing secret once after creating a webhook", async () => {
+    createSource.mockResolvedValue({
+      id: "wh-1",
+      options: { webhookId: "whk_abc123", signingSecret: "whsec_topsecret" },
+    });
+    renderBuilder("/processor/sources/new");
+
+    fireEvent.change(screen.getByLabelText(/portal\.sources\.wizard\.name/), {
+      target: { value: "Partner uploads" },
+    });
+    // Webhook's connection is optional (self-hosted local-disk), so a name is enough to create.
+    fireEvent.click(screen.getByText("portal.sources.types.webhook.label"));
+    fireEvent.click(screen.getByText("portal.sources.builder.create"));
+
+    await waitFor(() => expect(createSource).toHaveBeenCalledTimes(1));
+    expect(createSource).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "webhook", name: "Partner uploads" }),
+    );
+
+    expect(
+      await screen.findByDisplayValue("whsec_topsecret"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByDisplayValue(/\/api\/v1\/webhooks\/whk_abc123$/),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("sources list")).not.toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByText("portal.sources.types.webhook.reveal.done"),
+    );
+    expect(await screen.findByText("sources list")).toBeInTheDocument();
+  });
+
   it("blocks create until required fields are filled", async () => {
     renderBuilder("/processor/sources/new");
     // Name given but directory (required) still blank -> Create disabled.
