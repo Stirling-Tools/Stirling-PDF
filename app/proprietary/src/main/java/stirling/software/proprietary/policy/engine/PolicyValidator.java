@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.TriggerConfig;
 import stirling.software.proprietary.policy.output.PolicyOutputSink;
@@ -17,10 +18,11 @@ import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.trigger.PolicyTrigger;
 
 /**
- * Validates a policy at save time by delegating each facet (trigger, sources, output) to the bean
- * that handles its type, so a misconfiguration fails fast rather than at run time. A null trigger
- * is a manual-only policy and skips trigger validation. Each referenced {@code sourceId} must
- * resolve to a persisted {@link Source} whose config its {@link InputSource} bean accepts.
+ * Validates a policy at save time by delegating each facet (inputs, their triggers, output) to the
+ * bean that handles its type, so a misconfiguration fails fast rather than at run time. Each
+ * input's {@code sourceId} must resolve to a persisted {@link Source} whose config its {@link
+ * InputSource} bean accepts; its optional trigger must be a known type compatible with that source.
+ * A null trigger is a manual-only input and skips trigger validation.
  */
 @Service
 @RequiredArgsConstructor
@@ -32,25 +34,53 @@ public class PolicyValidator {
     private final SourceStore sourceStore;
 
     /**
-     * @throws IllegalArgumentException if any facet's type is unknown, a referenced source does not
-     *     exist, or any config is invalid
+     * @throws IllegalArgumentException if the policy has more than one input or output, any facet's
+     *     type is unknown, a referenced source does not exist, a trigger is incompatible with its
+     *     input's source, or any config is invalid
      */
     public void validate(Policy policy) {
-        if (policy.trigger() != null) {
-            triggerFor(policy.trigger()).validate(policy);
+        // Deliberate product cap, not a model limit: the lists stay lists so multiple
+        // inputs/outputs can be supported later, but today a policy carries at most one of
+        // each (zero of either remains fine - run on demand / inline output).
+        if (policy.inputs().size() > 1) {
+            throw new IllegalArgumentException("a policy supports at most one input");
         }
-        for (String sourceId : policy.sourceIds()) {
+        if (policy.outputIds().size() > 1) {
+            throw new IllegalArgumentException("a policy supports at most one output");
+        }
+        for (PipelineInput input : policy.inputs()) {
             Source source =
                     sourceStore
-                            .get(sourceId)
+                            .get(input.sourceId())
                             .orElseThrow(
                                     () ->
                                             new IllegalArgumentException(
-                                                    "unknown source: " + sourceId));
+                                                    "unknown source: " + input.sourceId()));
+            if (input.trigger() != null) {
+                validateTrigger(policy, input, source);
+            }
             InputSpec spec = source.toInputSpec();
             inputSourceFor(spec).validate(spec);
         }
         validateOutput(policy.output());
+    }
+
+    /**
+     * Check an input's trigger is a known type whose source constraints its source satisfies (e.g.
+     * folder-watch only on a folder source), then let the trigger validate its own options.
+     */
+    private void validateTrigger(Policy policy, PipelineInput input, Source source) {
+        PolicyTrigger trigger = triggerFor(input.trigger());
+        if (!trigger.supportedSourceTypes().isEmpty()
+                && !trigger.supportedSourceTypes().contains(source.type())) {
+            throw new IllegalArgumentException(
+                    "trigger '"
+                            + trigger.type()
+                            + "' is not compatible with source type '"
+                            + source.type()
+                            + "'");
+        }
+        trigger.validate(policy, input);
     }
 
     /**

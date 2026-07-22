@@ -12,8 +12,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.PolicyBinding;
 
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * Durable {@link PolicyStore} backed by JPA; the runtime store. Policies are persisted as JSON via
@@ -40,8 +44,7 @@ public class JpaPolicyStore implements PolicyStore {
                         policy.name(),
                         policy.owner(),
                         policy.enabled(),
-                        policy.trigger(),
-                        policy.sourceIds(),
+                        policy.inputs(),
                         policy.steps(),
                         policy.output(),
                         policy.outputIds(),
@@ -52,7 +55,6 @@ public class JpaPolicyStore implements PolicyStore {
         entity.setName(stored.name());
         entity.setOwner(stored.owner());
         entity.setEnabled(stored.enabled());
-        entity.setTriggerType(stored.trigger() == null ? null : stored.trigger().type());
         entity.setTeamId(stored.teamId());
         // Preserve an existing policy's run-order position; append a new one to the end of its
         // team's queue (max + 1), so setting up a policy adds it last by default.
@@ -119,11 +121,13 @@ public class JpaPolicyStore implements PolicyStore {
     }
 
     @Override
-    public List<Policy> findByTriggerType(String triggerType) {
-        return repository.findByTriggerTypeAndEnabledTrue(triggerType).stream()
-                .map(this::toPolicy)
-                .flatMap(Optional::stream)
-                .toList();
+    public List<PolicyBinding> findBindingsByTriggerType(String triggerType) {
+        List<Policy> enabled =
+                repository.findByEnabledTrue().stream()
+                        .map(this::toPolicy)
+                        .flatMap(Optional::stream)
+                        .toList();
+        return PolicyBinding.matching(enabled, triggerType);
     }
 
     @Override
@@ -139,7 +143,8 @@ public class JpaPolicyStore implements PolicyStore {
     // One unreadable row must never abort a bulk read or crash startup.
     private Optional<Policy> toPolicy(PolicyEntity entity) {
         try {
-            return Optional.of(objectMapper.readValue(entity.getPolicyJson(), Policy.class));
+            JsonNode node = upgradeLegacyShape(objectMapper.readTree(entity.getPolicyJson()));
+            return Optional.of(objectMapper.treeToValue(node, Policy.class));
         } catch (Exception e) {
             log.error(
                     "Skipping unreadable policy id={} name={}: stored JSON could not be parsed"
@@ -149,5 +154,36 @@ public class JpaPolicyStore implements PolicyStore {
                     e.getMessage());
             return Optional.empty();
         }
+    }
+
+    /**
+     * Migrate a policy JSON blob written before triggers moved onto inputs. The old shape carried a
+     * single policy-level {@code trigger} and a {@code sourceIds} list; pair each source with that
+     * trigger so an upgraded policy keeps firing. A trigger incompatible with a source
+     * (folder-watch on an S3 source) is simply inert at run time, matching the old behaviour where
+     * such a source was never watched. New-shape blobs (already carrying {@code inputs}) are
+     * returned untouched.
+     */
+    private JsonNode upgradeLegacyShape(JsonNode root) {
+        if (!(root instanceof ObjectNode obj) || obj.has("inputs")) {
+            return root;
+        }
+        JsonNode trigger = obj.get("trigger");
+        JsonNode sourceIds = obj.get("sourceIds");
+        ArrayNode inputs = objectMapper.createArrayNode();
+        if (sourceIds != null && sourceIds.isArray()) {
+            for (JsonNode sourceId : sourceIds) {
+                ObjectNode input = objectMapper.createObjectNode();
+                input.set("sourceId", sourceId);
+                if (trigger != null && !trigger.isNull()) {
+                    input.set("trigger", trigger);
+                }
+                inputs.add(input);
+            }
+        }
+        obj.set("inputs", inputs);
+        obj.remove("trigger");
+        obj.remove("sourceIds");
+        return obj;
     }
 }

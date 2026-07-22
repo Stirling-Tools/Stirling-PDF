@@ -1,14 +1,15 @@
 import { useTranslation } from "react-i18next";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import { Button, Checkbox } from "@app/ui";
+import { Button, Select } from "@app/ui";
 
 /**
- * Picks the saved sources a pipeline delivers its output to. A destination is just
- * a source used as a write target, and a pipeline may write to several, so this is
- * a checklist over the same locations the builder loaded (filtered to writable
- * types by the caller) - mirroring the input-sources checklist. Creating a new one
- * is delegated to {@code onCreateNew} (the builder navigates to the source builder,
- * prompting about unsaved edits first).
+ * Picks the saved source a pipeline delivers its output to. A destination is just a
+ * source used as a write target. The value stays a list ({@code outputIds}) because
+ * the model supports several, but the product caps a pipeline at one destination
+ * today, so this renders a single dropdown over the same locations the builder
+ * loaded (filtered to writable types by the caller). Creating a new one is delegated
+ * to {@code onCreateNew} (the builder navigates to the source builder, prompting
+ * about unsaved edits first).
  */
 interface DestinationOption {
   id: string;
@@ -31,23 +32,21 @@ export function DestinationPicker({
 }: DestinationPickerProps) {
   const { t } = useTranslation();
 
-  function toggle(id: string, checked: boolean) {
-    onChange(
-      checked ? [...value, id] : value.filter((existing) => existing !== id),
-    );
-  }
-
   return (
-    <>
-      <div className="portal-pipelines__source-list">
-        {sources.map((source) => (
-          <Checkbox
-            key={source.id}
-            checked={value.includes(source.id)}
-            onChange={(e) => toggle(source.id, e.target.checked)}
-            label={source.name}
-          />
-        ))}
+    <div className="portal-builder__input-row">
+      <div className="portal-builder__input-field">
+        <Select
+          inputSize="sm"
+          aria-label={t("portal.pipelines.composer.output")}
+          placeholder={t("portal.pipelines.builder.chooseDestination")}
+          value={value[0] ?? null}
+          invalid={value.length !== 1}
+          onChange={(id) => onChange(id ? [id] : [])}
+          options={sources.map((source) => ({
+            value: source.id,
+            label: source.name,
+          }))}
+        />
       </div>
       <Button
         variant="tertiary"
@@ -57,6 +56,6 @@ export function DestinationPicker({
       >
         {t("portal.sources.actions.connectSource")}
       </Button>
-    </>
+    </div>
   );
 }

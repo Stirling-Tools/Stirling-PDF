@@ -3,29 +3,31 @@ package stirling.software.proprietary.policy.model;
 import java.util.List;
 
 /**
- * A stored automation: ordered tool steps, input sources, and output destinations.
+ * A stored automation: ordered tool steps, input bindings, and output destinations.
  *
- * <p>Always runnable on demand. An optional {@link TriggerConfig} fires it automatically; a {@code
- * null} trigger means manual-only. Trigger decides when; {@code sourceIds} reference the persisted
- * {@code Source} locations (resolved live at run time) files come from; a run pulls from every
- * referenced source. {@code outputIds} reference the {@code Source} locations (resolved live) a
- * run's files are delivered to - a run is delivered to every one; when empty the inline {@link
- * #output} is used (results returned to the caller), the case for editor and one-off policies.
+ * <p>Always runnable on demand. Each {@link PipelineInput} references a persisted {@code Source}
+ * connection (resolved live at run time) and carries its own optional {@link TriggerConfig}: the
+ * trigger decides when that source is pulled, so one input can be watched while another polls, and
+ * a {@code null} trigger makes that input manual-only. An input with no trigger, or a policy with
+ * no triggered inputs, still runs when the policy is run on demand; a manual run pulls every input.
+ *
+ * <p>{@code outputIds} reference the {@code Source} locations (resolved live) a run's files are
+ * delivered to - a run is delivered to every one; when empty the inline {@link #output} is used
+ * (results returned to the caller), the case for editor and one-off policies.
  */
 public record Policy(
         String id,
         String name,
         String owner,
         boolean enabled,
-        TriggerConfig trigger,
-        List<String> sourceIds,
+        List<PipelineInput> inputs,
         List<PipelineStep> steps,
         OutputSpec output,
         List<String> outputIds,
         Long teamId) {
 
     public Policy {
-        sourceIds = sourceIds == null ? List.of() : List.copyOf(sourceIds);
+        inputs = inputs == null ? List.of() : List.copyOf(inputs);
         steps = steps == null ? List.of() : steps;
         output = output == null ? OutputSpec.inline() : output;
         outputIds = outputIds == null ? List.of() : List.copyOf(outputIds);
@@ -41,12 +43,11 @@ public record Policy(
             String name,
             String owner,
             boolean enabled,
-            TriggerConfig trigger,
-            List<String> sourceIds,
+            List<PipelineInput> inputs,
             List<PipelineStep> steps,
             OutputSpec output,
             Long teamId) {
-        this(id, name, owner, enabled, trigger, sourceIds, steps, output, List.of(), teamId);
+        this(id, name, owner, enabled, inputs, steps, output, List.of(), teamId);
     }
 
     /**
@@ -58,35 +59,35 @@ public record Policy(
             String name,
             String owner,
             boolean enabled,
-            TriggerConfig trigger,
-            List<String> sourceIds,
+            List<PipelineInput> inputs,
             List<PipelineStep> steps,
             OutputSpec output) {
-        this(id, name, owner, enabled, trigger, sourceIds, steps, output, List.of(), null);
+        this(id, name, owner, enabled, inputs, steps, output, List.of(), null);
     }
 
-    /** A policy with no configured sources (a generator, or files supplied directly to a run). */
-    public Policy(
-            String id,
-            String name,
-            String owner,
-            boolean enabled,
-            TriggerConfig trigger,
-            List<PipelineStep> steps,
-            OutputSpec output) {
-        this(id, name, owner, enabled, trigger, List.of(), steps, output, List.of(), null);
+    /** The source ids this policy pulls from, in input order; a derived view for reads. */
+    public List<String> sourceIds() {
+        return inputs.stream().map(PipelineInput::sourceId).toList();
+    }
+
+    /** The distinct trigger types configured across this policy's inputs (manual inputs aside). */
+    public List<String> triggerTypes() {
+        return inputs.stream()
+                .map(PipelineInput::trigger)
+                .filter(trigger -> trigger != null)
+                .map(TriggerConfig::type)
+                .distinct()
+                .toList();
     }
 
     /** A copy with the inline output replaced (e.g. resolved for the engine, or migrated). */
     public Policy withOutput(OutputSpec resolved) {
-        return new Policy(
-                id, name, owner, enabled, trigger, sourceIds, steps, resolved, outputIds, teamId);
+        return new Policy(id, name, owner, enabled, inputs, steps, resolved, outputIds, teamId);
     }
 
     /** A copy referencing the given saved output destinations. */
     public Policy withOutputIds(List<String> newOutputIds) {
-        return new Policy(
-                id, name, owner, enabled, trigger, sourceIds, steps, output, newOutputIds, teamId);
+        return new Policy(id, name, owner, enabled, inputs, steps, output, newOutputIds, teamId);
     }
 
     /**

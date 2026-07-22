@@ -16,6 +16,7 @@ import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
 import stirling.software.proprietary.policy.source.Source;
@@ -115,6 +116,13 @@ class FolderAccessGuardTest {
                                                                 null))
                                                 .id())
                         .toList();
-        return new Policy("p1", "p", "owner", true, null, sourceIds, List.of(), output);
+        return new Policy(
+                "p1",
+                "p",
+                "owner",
+                true,
+                sourceIds.stream().map(PipelineInput::manual).toList(),
+                List.of(),
+                output);
     }
 }

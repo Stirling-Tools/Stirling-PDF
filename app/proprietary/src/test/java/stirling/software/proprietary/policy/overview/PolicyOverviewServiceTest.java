@@ -16,6 +16,7 @@ import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.TriggerConfig;
@@ -57,8 +58,9 @@ class PolicyOverviewServiceTest {
                         "Redaction",
                         "owner",
                         true,
-                        new TriggerConfig("schedule", Map.of()),
-                        List.of(claims.id()),
+                        List.of(
+                                new PipelineInput(
+                                        claims.id(), new TriggerConfig("schedule", Map.of()))),
                         List.of(new PipelineStep("/api/v1/security/auto-redact", Map.of())),
                         OutputSpec.inline()));
         policyStore.save(
@@ -67,7 +69,6 @@ class PolicyOverviewServiceTest {
                         "Archive (paused)",
                         "owner",
                         false,
-                        null,
                         List.of(),
                         List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                         OutputSpec.inline()));
@@ -102,8 +103,7 @@ class PolicyOverviewServiceTest {
                         "Orphan",
                         "owner",
                         true,
-                        null,
-                        List.of("src-missing"),
+                        List.of(PipelineInput.manual("src-missing")),
                         List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                         OutputSpec.inline()));
 
@@ -170,8 +170,7 @@ class PolicyOverviewServiceTest {
                         name,
                         "owner",
                         true,
-                        null,
-                        List.of(sourceIds),
+                        List.of(sourceIds).stream().map(PipelineInput::manual).toList(),
                         List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                         OutputSpec.inline(),
                         teamId));

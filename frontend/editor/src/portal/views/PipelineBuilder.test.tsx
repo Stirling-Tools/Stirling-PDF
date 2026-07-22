@@ -123,8 +123,7 @@ const POLICY: Policy = {
   id: "plc-1",
   name: "Existing pipeline",
   enabled: true,
-  trigger: null,
-  sourceIds: [],
+  inputs: [],
   steps: [],
   output: { type: "inline", options: {} },
   outputIds: [],
@@ -192,21 +191,53 @@ describe("PipelineBuilder", () => {
     createIntegration.mockReset();
   });
 
-  it("builds a new pipeline: name it, add a tool, and save", async () => {
+  // Choose the given source in the (pre-seeded) input row's dropdown.
+  async function pickInputSource(sourceName: string) {
+    fireEvent.click(
+      await screen.findByRole("textbox", {
+        name: "portal.pipelines.builder.inputSource",
+      }),
+    );
+    fireEvent.click(await screen.findByText(sourceName));
+  }
+
+  it("always shows exactly one input row, with no add or remove controls", async () => {
     renderBuilder("/processor/pipelines/new");
 
-    // The name field is the only textbox before the picker opens.
-    fireEvent.change(await screen.findByRole("textbox"), {
-      target: { value: "Nightly compress" },
-    });
+    // The input row is a fixed part of the form: its source dropdown is present from the
+    // start, and there is nothing to add or remove.
+    expect(
+      await screen.findAllByRole("textbox", {
+        name: "portal.pipelines.builder.inputSource",
+      }),
+    ).toHaveLength(1);
+    expect(
+      screen.queryByText("portal.pipelines.builder.addInput"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", {
+        name: "portal.pipelines.builder.removeInput",
+      }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("builds a new pipeline: name it, add a tool, an input, a destination, and save", async () => {
+    renderBuilder("/processor/pipelines/new");
+
+    fireEvent.change(
+      await screen.findByRole("textbox", {
+        name: "portal.pipelines.composer.name",
+      }),
+      {
+        target: { value: "Nightly compress" },
+      },
+    );
 
     fireEvent.click(screen.getByRole("button", { name: /addTool/ }));
     fireEvent.click(await screen.findByText("Compress"));
 
     // A pipeline must have at least one input source and one output destination.
-    fireEvent.click(
-      await screen.findByRole("checkbox", { name: "Claims intake" }),
-    );
+    await pickInputSource("Claims intake");
     fireEvent.click(screen.getByText("pick output"));
 
     fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
@@ -215,8 +246,8 @@ describe("PipelineBuilder", () => {
     expect(savePipeline).toHaveBeenCalledWith(
       expect.objectContaining({
         name: "Nightly compress",
-        trigger: null,
-        sourceIds: ["src-in"],
+        // The input pairs the chosen source with its trigger (manual by default).
+        inputs: [{ sourceId: "src-in", trigger: null }],
         outputIds: ["src-1"],
         steps: [
           expect.objectContaining({ operation: "/api/v1/misc/compress-pdf" }),
@@ -229,19 +260,22 @@ describe("PipelineBuilder", () => {
   it("requires at least one source and one destination before saving", async () => {
     renderBuilder("/processor/pipelines/new");
 
-    fireEvent.change(await screen.findByRole("textbox"), {
-      target: { value: "Needs both" },
-    });
+    fireEvent.change(
+      await screen.findByRole("textbox", {
+        name: "portal.pipelines.composer.name",
+      }),
+      {
+        target: { value: "Needs both" },
+      },
+    );
     const saveButton = () =>
       screen.getByText("portal.pipelines.composer.create").closest("button");
 
     // Name only: blocked (no source, no destination).
     expect(saveButton()).toBeDisabled();
 
-    // A source but still no destination: blocked.
-    fireEvent.click(
-      await screen.findByRole("checkbox", { name: "Claims intake" }),
-    );
+    // An input with a source but still no destination: blocked.
+    await pickInputSource("Claims intake");
     expect(saveButton()).toBeDisabled();
 
     // Both chosen: allowed, and both are sent.
@@ -249,7 +283,10 @@ describe("PipelineBuilder", () => {
     fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
     await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
     expect(savePipeline).toHaveBeenCalledWith(
-      expect.objectContaining({ sourceIds: ["src-in"], outputIds: ["src-1"] }),
+      expect.objectContaining({
+        inputs: [{ sourceId: "src-in", trigger: null }],
+        outputIds: ["src-1"],
+      }),
     );
   });
 
@@ -306,9 +343,14 @@ describe("PipelineBuilder", () => {
   it("blocks saving a step that needs an uploaded file", async () => {
     renderBuilder("/processor/pipelines/new");
 
-    fireEvent.change(await screen.findByRole("textbox"), {
-      target: { value: "Watermarked" },
-    });
+    fireEvent.change(
+      await screen.findByRole("textbox", {
+        name: "portal.pipelines.composer.name",
+      }),
+      {
+        target: { value: "Watermarked" },
+      },
+    );
     fireEvent.click(screen.getByRole("button", { name: /addTool/ }));
     fireEvent.click(await screen.findByText("Compress"));
     // The tool's settings upload a file, which a stored pipeline can't persist yet.
@@ -335,9 +377,14 @@ describe("PipelineBuilder", () => {
   it("prompts to save or discard when leaving with unsaved edits", async () => {
     renderBuilder("/processor/pipelines/new");
 
-    fireEvent.change(await screen.findByRole("textbox"), {
-      target: { value: "Draft" },
-    });
+    fireEvent.change(
+      await screen.findByRole("textbox", {
+        name: "portal.pipelines.composer.name",
+      }),
+      {
+        target: { value: "Draft" },
+      },
+    );
     fireEvent.click(screen.getByText("portal.pipelines.composer.cancel"));
 
     expect(
@@ -350,7 +397,9 @@ describe("PipelineBuilder", () => {
   it("leaves immediately when there are no unsaved edits", async () => {
     renderBuilder("/processor/pipelines/new");
 
-    await screen.findByRole("textbox");
+    await screen.findByRole("textbox", {
+      name: "portal.pipelines.composer.name",
+    });
     fireEvent.click(screen.getByText("portal.pipelines.composer.cancel"));
 
     expect(await screen.findByText("pipelines list")).toBeInTheDocument();
