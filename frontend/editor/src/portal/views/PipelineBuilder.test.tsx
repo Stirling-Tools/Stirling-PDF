@@ -191,7 +191,18 @@ describe("PipelineBuilder", () => {
     createIntegration.mockReset();
   });
 
-  it("builds a new pipeline: name it, add a tool, and save", async () => {
+  // Add one input row and choose the given source in its dropdown.
+  async function addInputSource(sourceName: string) {
+    fireEvent.click(screen.getByText("portal.pipelines.builder.addInput"));
+    fireEvent.click(
+      screen.getByRole("textbox", {
+        name: "portal.pipelines.builder.inputSource",
+      }),
+    );
+    fireEvent.click(await screen.findByText(sourceName));
+  }
+
+  it("builds a new pipeline: name it, add a tool, an input, a destination, and save", async () => {
     renderBuilder("/processor/pipelines/new");
 
     // The name field is the only textbox before the picker opens.
@@ -203,9 +214,7 @@ describe("PipelineBuilder", () => {
     fireEvent.click(await screen.findByText("Compress"));
 
     // A pipeline must have at least one input source and one output destination.
-    fireEvent.click(
-      await screen.findByRole("checkbox", { name: "Claims intake" }),
-    );
+    await addInputSource("Claims intake");
     fireEvent.click(screen.getByText("pick output"));
 
     fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
@@ -214,8 +223,8 @@ describe("PipelineBuilder", () => {
     expect(savePipeline).toHaveBeenCalledWith(
       expect.objectContaining({
         name: "Nightly compress",
-        inputs: [],
-        sourceIds: ["src-in"],
+        // The input pairs the chosen source with its trigger (manual by default).
+        inputs: [{ sourceId: "src-in", trigger: null }],
         outputIds: ["src-1"],
         steps: [
           expect.objectContaining({ operation: "/api/v1/misc/compress-pdf" }),
@@ -237,10 +246,8 @@ describe("PipelineBuilder", () => {
     // Name only: blocked (no source, no destination).
     expect(saveButton()).toBeDisabled();
 
-    // A source but still no destination: blocked.
-    fireEvent.click(
-      await screen.findByRole("checkbox", { name: "Claims intake" }),
-    );
+    // An input with a source but still no destination: blocked.
+    await addInputSource("Claims intake");
     expect(saveButton()).toBeDisabled();
 
     // Both chosen: allowed, and both are sent.
@@ -248,7 +255,10 @@ describe("PipelineBuilder", () => {
     fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
     await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
     expect(savePipeline).toHaveBeenCalledWith(
-      expect.objectContaining({ sourceIds: ["src-in"], outputIds: ["src-1"] }),
+      expect.objectContaining({
+        inputs: [{ sourceId: "src-in", trigger: null }],
+        outputIds: ["src-1"],
+      }),
     );
   });
 

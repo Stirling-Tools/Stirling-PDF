@@ -54,7 +54,6 @@ class PolicyInlineOutputMigrationTest {
                                 "Editor run",
                                 "owner",
                                 true,
-                                null,
                                 List.of(),
                                 List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                                 OutputSpec.inline()));
@@ -128,7 +127,6 @@ class PolicyInlineOutputMigrationTest {
                 name,
                 "owner",
                 true,
-                null,
                 List.of(),
                 List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                 OutputSpec.folder(directory));
@@ -140,7 +138,6 @@ class PolicyInlineOutputMigrationTest {
                 name,
                 "owner",
                 true,
-                null,
                 List.of(),
                 List.of(new PipelineStep("/api/v1/misc/compress-pdf", Map.of())),
                 OutputSpec.folder(directory),

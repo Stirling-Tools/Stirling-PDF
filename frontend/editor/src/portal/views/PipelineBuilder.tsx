@@ -16,7 +16,6 @@ import {
   EmptyState,
   Input,
   Modal,
-  RadioGroup,
   Select,
   Spinner,
 } from "@app/ui";
@@ -402,12 +401,12 @@ export function PipelineBuilder() {
       (input.triggerType !== "schedule" || Number(input.scheduleCount) > 0),
   );
   // A pipeline must have at least one input source and at least one output destination.
-  const sourceValid = sourceIds.length > 0;
+  const sourceValid = inputs.length > 0;
   const outputValid = outputIds.length > 0;
   const canSave =
     name.trim() !== "" &&
     inputsValid &&
-    scheduleCountValid &&
+    sourceValid &&
     outputValid &&
     !hasUploadSteps &&
     !submitting;
@@ -784,6 +783,34 @@ export function PipelineBuilder() {
                     </ActionIcon>
                   </div>
                 ))}
+                <div className="portal-builder__input-actions">
+                  <Button
+                    variant="tertiary"
+                    size="sm"
+                    onClick={addInput}
+                    disabled={!canAddInput}
+                    leftSection={
+                      <AddRoundedIcon style={{ fontSize: "1.125rem" }} />
+                    }
+                  >
+                    {t("portal.pipelines.builder.addInput")}
+                  </Button>
+                  <Button
+                    variant="tertiary"
+                    size="sm"
+                    onClick={goToSources}
+                    leftSection={
+                      <AddRoundedIcon style={{ fontSize: "1.125rem" }} />
+                    }
+                  >
+                    {t("portal.sources.actions.connectSource")}
+                  </Button>
+                </div>
+                {availableSources.length === 0 && (
+                  <p className="portal-pipelines__muted">
+                    {t("portal.pipelines.builder.noSources")}
+                  </p>
+                )}
               </>
             )}
           </div>
