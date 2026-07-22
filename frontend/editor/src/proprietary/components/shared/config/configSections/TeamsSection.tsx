@@ -298,19 +298,13 @@ export default function TeamsSection() {
         verticalSpacing="sm"
         withRowBorders
         highlightOnHover
-        style={
-          {
-            "--table-border-color": "var(--mantine-color-gray-3)",
-          } as React.CSSProperties
-        }
       >
         <Table.Thead>
-          <Table.Tr style={{ backgroundColor: "var(--mantine-color-gray-0)" }}>
+          <Table.Tr>
             <Table.Th
               style={{
                 fontWeight: 600,
                 fontSize: "0.875rem",
-                color: "var(--mantine-color-gray-7)",
               }}
             >
               {t("workspace.teams.teamName")}
@@ -319,7 +313,6 @@ export default function TeamsSection() {
               style={{
                 fontWeight: 600,
                 fontSize: "0.875rem",
-                color: "var(--mantine-color-gray-7)",
               }}
             >
               {t("workspace.teams.totalMembers")}
