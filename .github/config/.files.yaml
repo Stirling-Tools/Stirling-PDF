@@ -9,6 +9,7 @@ ci: &ci
 build: &build
   - *ci
   - build.gradle
+  - gradle/spotless.gradle
   - app/(common|core|proprietary|saas)/build.gradle
   - Taskfile.yml
   - .taskfiles/backend.yml
@@ -155,4 +156,5 @@ proprietary: &proprietary
   - configs/settings.yml.template
   - build.gradle
   - app/proprietary/build.gradle
+  - gradle/spotless.gradle
   - .github/workflows/build-enterprise.yml

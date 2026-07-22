@@ -345,10 +345,27 @@ public class ProprietaryUIDataController {
         int licenseMaxUsers = licenseSettingsService.getSettings().getLicenseMaxUsers();
         boolean premiumEnabled = applicationProperties.getPremium().isEnabled();
 
-        // Resolve portal access for the whole roster.
-        Set<Long> leaderUserIds = leaderUserIds();
+        // Resolve portal access for the whole roster. The teamLead display flag counts a
+        // LEADER membership on any team (mirrors /me), but the portal default policy only
+        // admits leaders of their own active team, so the bulk check gets the narrower set.
+        List<TeamMembership> leaderMemberships =
+                teamMembershipRepository.findByRoleFetchingUserAndTeam(TeamRole.LEADER);
+        Set<Long> leaderUserIds =
+                leaderMemberships.stream()
+                        .map(row -> row.getUser().getId())
+                        .collect(Collectors.toSet());
+        Set<Long> activeTeamLeaderUserIds =
+                leaderMemberships.stream()
+                        .filter(
+                                row ->
+                                        row.getUser().getTeam() != null
+                                                && row.getTeam()
+                                                        .getId()
+                                                        .equals(row.getUser().getTeam().getId()))
+                        .map(row -> row.getUser().getId())
+                        .collect(Collectors.toSet());
         Set<Long> portalAccessUserIds =
-                resourceAccessService.usersWithPortalAccess(sortedUsers, leaderUserIds);
+                resourceAccessService.usersWithPortalAccess(sortedUsers, activeTeamLeaderUserIds);
         List<AdminUserSummary> userSummaries =
                 sortedUsers.stream()
                         .map(user -> convertUserToSummary(user, leaderUserIds, portalAccessUserIds))
@@ -534,13 +551,6 @@ public class ProprietaryUIDataController {
         data.setVersionUnknown(isVersionUnknown);
 
         return ResponseEntity.ok(data);
-    }
-
-    /** User ids holding a LEADER membership on any team. */
-    private Set<Long> leaderUserIds() {
-        return teamMembershipRepository.findByRoleFetchingUserAndTeam(TeamRole.LEADER).stream()
-                .map(row -> row.getUser().getId())
-                .collect(Collectors.toSet());
     }
 
     /** Whether the user holds the internal-API authority (never shown in the roster). */
