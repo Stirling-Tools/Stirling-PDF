@@ -6,7 +6,6 @@ import { useAllFiles, useFileManagement } from "@app/contexts/FileContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { fileStorage } from "@app/services/fileStorage";
-import { POLICIES_ENABLED } from "@app/constants/featureFlags";
 import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
 import { useAiEngineEnabled } from "@app/hooks/useAiEngineEnabled";
 import { scheduleIdle } from "@app/utils/scheduleIdle";
@@ -70,13 +69,7 @@ export function useClientSideClassification(): void {
   );
 
   useEffect(() => {
-    if (
-      !POLICIES_ENABLED ||
-      configLoading ||
-      !classificationEnabled ||
-      aiEnabled ||
-      !active
-    ) {
+    if (configLoading || !classificationEnabled || aiEnabled || !active) {
       return;
     }
     const claimKey = (s: StirlingFileStub) =>

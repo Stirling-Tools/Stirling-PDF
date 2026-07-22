@@ -13,9 +13,3 @@
  * Watched Folders implementation to navigate to).
  */
 export const WATCHED_FOLDERS_ENABLED: boolean = false;
-
-/**
- * Policy enforcement surface (runs the classification policy on upload).
- * On for proprietary and SaaS builds; the core build keeps it `false`.
- */
-export const POLICIES_ENABLED: boolean = true;

@@ -3,7 +3,6 @@ package stirling.software.proprietary.policy.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,7 +27,6 @@ import stirling.software.proprietary.classification.ClassificationRunBiller;
 @Hidden
 @RestController
 @RequestMapping("/api/v1/policies")
-@ConditionalOnBooleanProperty(name = "policies.enabled")
 public class ClassificationMeterController {
 
     /** Audit step label mirrors the AI classify tool so both paths read alike in the trail. */

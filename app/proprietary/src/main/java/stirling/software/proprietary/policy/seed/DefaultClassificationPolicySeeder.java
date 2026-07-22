@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -28,7 +27,6 @@ import stirling.software.proprietary.security.service.TeamService;
  */
 @Slf4j
 @Component
-@ConditionalOnBooleanProperty(name = "policies.enabled")
 @RequiredArgsConstructor
 public class DefaultClassificationPolicySeeder {
 

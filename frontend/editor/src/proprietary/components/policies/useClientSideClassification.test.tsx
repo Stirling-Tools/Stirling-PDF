@@ -33,7 +33,6 @@ const mocks = vi.hoisted(() => ({
   meter: vi.fn(),
 }));
 
-vi.mock("@app/constants/featureFlags", () => ({ POLICIES_ENABLED: true }));
 vi.mock("@app/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({ config: {}, loading: mocks.configLoading }),
 }));
