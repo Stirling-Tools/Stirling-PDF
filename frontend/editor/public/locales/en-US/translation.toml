@@ -6266,6 +6266,8 @@ sizeMultiplier = "{{formatted}} PDFs used a size multiplier"
 summary = "{{unique}} unique · {{units}} meter units · {{avg}} avg per PDF"
 summaryNoRate = "{{unique}} unique · {{units}} meter units"
 unit = "PDFs"
+unitsPending_one = "{{units}} meter unit pending sync from linked instances"
+unitsPending_other = "{{units}} meter units pending sync from linked instances"
 
 [portal.billing.spendLimit]
 adjustLimit = "Adjust limit"
@@ -7472,6 +7474,10 @@ label = "Redact sensitive information"
 [portal.policies.wizard.capability.sanitize]
 desc = "Removes hidden JavaScript so nothing can run automatically when the document is opened."
 label = "Strip active content"
+
+[portal.policies.wizard.capability.timestampPdf]
+desc = "Proves the document existed in this exact form at a point in time, using an independent timestamp authority. Only a hash is sent - the document never leaves your server."
+label = "Add a trusted timestamp"
 
 [portal.policies.wizard.capability.watermark]
 desc = "Stamps a visible mark (e.g. “Confidential”) across every page."

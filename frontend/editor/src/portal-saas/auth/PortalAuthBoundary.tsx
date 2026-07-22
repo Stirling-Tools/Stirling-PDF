@@ -22,22 +22,40 @@ function FullScreen({ children }: { children: ReactNode }) {
 }
 
 /**
- * SaaS gate: viewing your own usage is not admin-gated, so any real (signed-in,
- * non-guest) account may enter - deliberately laxer than the self-hosted
- * RequirePortalAccess admin gate. But an anonymous guest session has no account
- * to view or manage, so it is not eligible: bounce it to the editor (where a
- * guest can sign up), mirroring the self-hosted forbidden path. No session at
- * all -> the editor's Supabase login, which returns here signed in.
+ * SaaS portal gate: enter only with backend-granted portal/processor access
+ * (`portalAccess`, from /api/v1/auth/me), mirroring self-hosted RequirePortalAccess.
+ * The old "any signed-in account may enter" behaviour let team members without
+ * access into the Processor.
+ *
+ * portalAccess resolves *after* the session does (/me runs once `loading` is
+ * already false), so treat "real session, access not yet known" (raw
+ * user.portalAccess still undefined, and not admin-by-role) as still-loading
+ * rather than bouncing a legitimate user mid-load. Once settled: no session ->
+ * login; a guest or a real account without access -> the free editor.
  */
 function SaasPortalGate({ children }: { children: ReactNode }) {
-  const { session, loading, isAnonymous } = useAuth();
-  const blocked = !loading && (!session || isAnonymous);
+  const { session, loading, isAnonymous, portalAccess, user } = useAuth();
+
+  const accessPending =
+    !!session &&
+    !isAnonymous &&
+    !portalAccess &&
+    user?.portalAccess === undefined;
+  const settling = loading || accessPending;
+
+  const redirectTo = settling
+    ? null
+    : !session
+      ? withBasePath("/login")
+      : isAnonymous || !portalAccess
+        ? EDITOR_URL
+        : null;
+
   useEffect(() => {
-    if (!blocked) return;
-    // Guest (has a session but anonymous) -> editor; no session -> login.
-    window.location.href = session ? EDITOR_URL : withBasePath("/login");
-  }, [blocked, session]);
-  if (loading || blocked) {
+    if (redirectTo) window.location.href = redirectTo;
+  }, [redirectTo]);
+
+  if (settling || redirectTo) {
     return (
       <FullScreen>
         <Spinner size="lg" />

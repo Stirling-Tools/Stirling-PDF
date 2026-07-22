@@ -11,16 +11,8 @@ import {
   type Rect,
 } from "@portal/components/processor-flow/flowTypes";
 
-/**
- * Owns the measured-geometry seam for the flow visualiser: refs for the source,
- * outcome and core cards (plus the per-policy lane lines), a `measure()` that
- * projects their edges into a wrapper-relative {@link Geo}, and the SVG wires
- * drawn between them. The particle loop reads the same `geoRef` live.
- *
- * Callers spread the returned refs onto the cards and render `wires` inside the
- * underlay `<svg>`; geometry re-measures on every layout + on resize, and the
- * wires re-render only when the measured signature actually changes.
- */
+/** Measures card edges into a wrapper-relative {@link Geo} and builds the SVG
+ *  wires; returns the refs + wires. The particle loop reads the same `geoRef`. */
 export function useFlowGeometry() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const srcRefs = useRef<(HTMLElement | null)[]>([]);
