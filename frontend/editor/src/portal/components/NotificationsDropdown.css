@@ -6,7 +6,8 @@
   position: absolute;
   top: calc(100% + 0.25rem);
   right: 0;
-  width: 22.5rem;
+  /* Clamp to the viewport so a right-anchored panel fits small phones */
+  width: min(22.5rem, calc(100vw - 1rem));
   background: var(--color-notif-bg, var(--color-surface));
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);

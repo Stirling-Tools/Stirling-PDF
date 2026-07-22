@@ -12,6 +12,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap; /* actions drop below the title on narrow screens */
   gap: 1rem;
 }
 
@@ -69,31 +70,38 @@
   flex-shrink: 0;
   border-radius: var(--radius-md);
   font-size: 0.875rem;
+  color: var(--dot-c, var(--color-text-3));
+  background: color-mix(
+    in srgb,
+    var(--dot-c, var(--color-text-3)) 14%,
+    transparent
+  );
 }
 
+/* Neutral keeps a plain muted surface rather than an accent tint. */
 .portal-sources__type-dot--neutral {
-  background: var(--color-bg-subtle);
+  background: var(--color-bg-muted);
   color: var(--color-text-3);
 }
 .portal-sources__type-dot--default {
-  background: var(--color-blue-light);
-  color: var(--color-blue);
+  --dot-c: var(--color-blue-dark);
 }
 .portal-sources__type-dot--premium {
-  background: var(--color-purple-light);
-  color: var(--color-purple);
+  --dot-c: var(--color-purple-dark);
 }
 .portal-sources__type-dot--success {
-  background: var(--color-green-light);
-  color: var(--color-green-dark);
+  --dot-c: var(--color-green-dark);
 }
 .portal-sources__type-dot--warning {
-  background: var(--color-amber-light);
-  color: var(--color-amber-dark);
+  --dot-c: var(--color-amber-dark);
+}
+/* Dark: subtle tint + bright icon; amber-light/amber-dark are too close to read. */
+[data-theme="dark"] .portal-sources__type-dot--warning {
+  background: color-mix(in srgb, var(--color-amber) 20%, transparent);
+  color: var(--color-amber);
 }
 .portal-sources__type-dot--danger {
-  background: var(--color-red-light);
-  color: var(--color-red);
+  --dot-c: var(--color-red-dark);
 }
 
 .portal-sources__muted {
@@ -191,6 +199,12 @@
 @media (max-width: 56rem) {
   .portal-sources__stat-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 30rem) {
+  .portal-sources__stat-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -315,6 +329,14 @@
   padding: 0;
 }
 
+/* Phones: labelled step pills don't fit side by side — stack them */
+@media (max-width: 30rem) {
+  .portal-sources__steps {
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+}
+
 .portal-sources__step {
   display: flex;
   align-items: center;
@@ -377,9 +399,8 @@
   }
 }
 
-/* The shared Button lays its children out in a flex-row label; force the type
-   tile back to a centred icon-over-label column so the SVG sits above the name
-   with real spacing (not jammed against it). */
+/* Override the shared Button's flex-row label to a centred icon-over-label
+   column so the SVG sits above the name with real spacing. */
 .portal-sources__type-card .mantine-Button-label {
   display: flex;
   flex-direction: column;

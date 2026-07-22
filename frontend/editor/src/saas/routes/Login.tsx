@@ -83,7 +83,7 @@ export default function Login() {
       "app.description",
       "The Free Adobe Acrobat alternative (10M+ Downloads)",
     ),
-    ogImage: `${baseUrl}/og_images/home.png`,
+    ogImage: `${baseUrl}/og_images/saas/app.png`,
     ogUrl: `${window.location.origin}${window.location.pathname}`,
   });
 
@@ -269,7 +269,7 @@ export default function Login() {
   };
 
   return (
-    <AuthLayout isEmailFormExpanded={showEmailForm || showMagicLinkForm}>
+    <AuthLayout>
       {/* Centered logo */}
       <div className="auth-logo-block">
         <img

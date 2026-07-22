@@ -86,7 +86,10 @@ jobs:
 
             Regenerates `frontend/editor/src/portal/generated/docsManifest.json`
             from the Stirling docs repo via `npm run docs:sync`.
-          labels: documentation,github-actions,frontend
+          labels: |
+            Documentation
+            github-actions
+            Front End
           add-paths: frontend/editor/src/portal/generated/docsManifest.json
           delete-branch: true
           sign-commits: true
