@@ -4,11 +4,7 @@
   box-shadow: 0 32px 64px
     color-mix(
       in srgb,
-      var(
-          --shadow-color,
-          color-mix(in srgb, black 55%, transparent)
-        )
-        20%,
+      var(--shadow-color, color-mix(in srgb, black 55%, transparent)) 20%,
       transparent
     );
   max-width: min(46rem, 100%);

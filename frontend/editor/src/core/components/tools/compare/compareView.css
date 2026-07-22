@@ -252,10 +252,8 @@
     ) !important;
   }
   25% {
-    outline: 4px solid
-      color-mix(in srgb, var(--c-highlight) 100%, transparent);
-    box-shadow: 0 0 20px
-      color-mix(in srgb, var(--c-highlight) 80%, transparent);
+    outline: 4px solid color-mix(in srgb, var(--c-highlight) 100%, transparent);
+    box-shadow: 0 0 20px color-mix(in srgb, var(--c-highlight) 80%, transparent);
     background-color: color-mix(
       in srgb,
       var(--c-highlight) 40%,
@@ -263,10 +261,8 @@
     ) !important;
   }
   50% {
-    outline: 4px solid
-      color-mix(in srgb, var(--c-highlight) 100%, transparent);
-    box-shadow: 0 0 30px
-      color-mix(in srgb, var(--c-highlight) 90%, transparent);
+    outline: 4px solid color-mix(in srgb, var(--c-highlight) 100%, transparent);
+    box-shadow: 0 0 30px color-mix(in srgb, var(--c-highlight) 90%, transparent);
     background-color: color-mix(
       in srgb,
       var(--c-highlight) 50%,
@@ -274,10 +270,8 @@
     ) !important;
   }
   75% {
-    outline: 4px solid
-      color-mix(in srgb, var(--c-highlight) 80%, transparent);
-    box-shadow: 0 0 15px
-      color-mix(in srgb, var(--c-highlight) 60%, transparent);
+    outline: 4px solid color-mix(in srgb, var(--c-highlight) 80%, transparent);
+    box-shadow: 0 0 15px color-mix(in srgb, var(--c-highlight) 60%, transparent);
     background-color: color-mix(
       in srgb,
       var(--c-highlight) 30%,

@@ -48,7 +48,9 @@
 }
 
 .headerResting {
-  background: var(--c-file-header-resting); /* branded navy for unselected files */
+  background: var(
+    --c-file-header-resting
+  ); /* branded navy for unselected files */
   color: var(--c-text-on-primary);
   border-bottom: 1px solid var(--c-border);
 }

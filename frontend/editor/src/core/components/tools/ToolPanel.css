@@ -78,20 +78,17 @@
   );
   --fullscreen-shadow-primary: color-mix(
     in srgb,
-    var(--shadow-color, color-mix(in srgb, black 55%, transparent))
-      25%,
+    var(--shadow-color, color-mix(in srgb, black 55%, transparent)) 25%,
     transparent
   );
   --fullscreen-shadow-secondary: color-mix(
     in srgb,
-    var(--shadow-color, color-mix(in srgb, black 35%, transparent))
-      30%,
+    var(--shadow-color, color-mix(in srgb, black 35%, transparent)) 30%,
     transparent
   );
   --fullscreen-shadow-group: color-mix(
     in srgb,
-    var(--shadow-color, color-mix(in srgb, black 45%, transparent))
-      18%,
+    var(--shadow-color, color-mix(in srgb, black 45%, transparent)) 18%,
     transparent
   );
   --fullscreen-accent-hover: color-mix(

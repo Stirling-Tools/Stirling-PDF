@@ -39,7 +39,9 @@ function QuickActionCard({ action }: { action: QuickAction }) {
       onClick={action.onClick}
       aria-label={action.title}
       leftSection={
-        <Box className="chat-quick-action__icon" style={{marginRight:"5px"}}>{action.icon}</Box>
+        <Box className="chat-quick-action__icon" style={{ marginRight: "5px" }}>
+          {action.icon}
+        </Box>
       }
       rightSection={
         <KeyboardArrowDownIcon
