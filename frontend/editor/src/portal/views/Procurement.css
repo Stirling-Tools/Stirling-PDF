@@ -1396,9 +1396,25 @@
 /* Calendly scheduler embed (Schedule a call). The widget is always light (Calendly renders inputs on
    white), so give it a white surface — it reads as a clean card even inside the dark-mode modal. */
 .portal-calendly {
+  position: relative;
   border-radius: 10px;
   overflow: hidden;
   background: #ffffff;
+}
+
+/* Fills the surface; Calendly injects its iframe in here. */
+.portal-calendly__embed {
+  height: 100%;
+}
+
+/* Centred spinner shown over the white surface until the widget initialises. */
+.portal-calendly__loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
 }
 
 /* ── Agreement (security) step ────────────────────────────────────────────── */
