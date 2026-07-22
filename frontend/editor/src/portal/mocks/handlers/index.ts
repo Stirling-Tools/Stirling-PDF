@@ -10,7 +10,6 @@ import { procurementSaasHandlers } from "@portal/mocks/handlers/procurementSaas"
 import { docsHandlers } from "@portal/mocks/handlers/docs";
 import { usersHandlers } from "@portal/mocks/handlers/users";
 import { teamSaasHandlers } from "@portal/mocks/handlers/teamSaas";
-import { agentsHandlers } from "@portal/mocks/handlers/agents";
 import { policiesHandlers } from "@portal/mocks/handlers/policies";
 import { classificationHandlers } from "@portal/mocks/handlers/classification";
 import { documentsHandlers } from "@portal/mocks/handlers/documents";
@@ -30,7 +29,6 @@ export const handlers = [
   ...procurementSaasHandlers,
   ...usersHandlers,
   ...teamSaasHandlers,
-  ...agentsHandlers,
   ...policiesHandlers,
   ...classificationHandlers,
   ...documentsHandlers,

@@ -46,19 +46,9 @@ public class SaasTeamService {
     private final UserRoleService userRoleService;
     private final SaasTeamExtensionService saasTeamExtensionService;
     private final SaasTeamExtensionsRepository saasTeamExtensionsRepository;
+    private final SaasUserExtensionService saasUserExtensionService;
     private final LinkedInstanceRepository linkedInstanceRepository;
     private final stirling.software.proprietary.security.service.UserService userService;
-    private final stirling.software.proprietary.access.repository.ResourceGrantRepository
-            resourceGrantRepository;
-    private final stirling.software.proprietary.integration.repository.IntegrationConfigRepository
-            integrationConfigRepository;
-
-    // Team-owned integration configs + team grants FK the teams row; purge before deleting a team.
-    private void purgeTeamOwnedResources(Long teamId) {
-        integrationConfigRepository.deleteByOwnerTeam_Id(teamId);
-        resourceGrantRepository.deleteByPrincipalTypeAndPrincipalId(
-                stirling.software.proprietary.access.model.PrincipalType.TEAM, teamId);
-    }
 
     public static final String DEFAULT_TEAM_NAME = "Default";
     public static final String INTERNAL_TEAM_NAME = "Internal";
@@ -114,6 +104,9 @@ public class SaasTeamService {
         user.setTeam(savedTeam);
         userRepository.save(user);
 
+        // A freshly-created personal team is the user's durable home team.
+        saasUserExtensionService.setHomeTeamId(user, savedTeam.getId());
+
         // Clean up old Default/Internal team membership
         if (oldTeam != null
                 && (DEFAULT_TEAM_NAME.equals(oldTeam.getName())
@@ -127,6 +120,54 @@ public class SaasTeamService {
 
         log.debug("Created personal team {} for user {}", savedTeam.getId(), user.getId());
         return savedTeam;
+    }
+
+    /**
+     * The user's durable home team id (the team they fall back to when leaving a joined team). Uses
+     * the stored pointer; if unset (e.g. an existing user before the backfill), derives it from a
+     * solo team they lead and persists it. Returns null when the user has no such team (e.g. they
+     * joined under the old delete-on-join flow); callers mint a fresh home in that case.
+     */
+    private Long resolveHomeTeamId(User user) {
+        Long homeId = saasUserExtensionService.getHomeTeamId(user);
+        if (homeId != null) {
+            return homeId;
+        }
+        for (TeamMembership m : membershipRepository.findByUserId(user.getId())) {
+            if (m.isLeader() && membershipRepository.countByTeamId(m.getTeam().getId()) == 1) {
+                saasUserExtensionService.setHomeTeamId(user, m.getTeam().getId());
+                return m.getTeam().getId();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Move the user back to their durable home team. Reuses the existing home membership when
+     * present (the durable model keeps it across joins); mints a fresh personal home team only when
+     * the user has none.
+     */
+    private void returnUserToHome(User user) {
+        Long homeId = resolveHomeTeamId(user);
+        Team home = homeId == null ? null : teamRepository.findById(homeId).orElse(null);
+        if (home == null) {
+            createPersonalTeam(user);
+            return;
+        }
+        if (membershipRepository.findByTeamIdAndUserId(home.getId(), user.getId()).isEmpty()) {
+            TeamMembership membership = new TeamMembership();
+            membership.setTeam(home);
+            membership.setUser(user);
+            membership.setRole(TeamRole.LEADER);
+            membership.setInvitedAt(LocalDateTime.now());
+            membership.setAcceptedAt(LocalDateTime.now());
+            membershipRepository.save(membership);
+            // Ignore the result: a full home returns 0, the correct end state (1 member = 1 seat) -
+            // throwing here would wrongly block the return.
+            saasTeamExtensionsRepository.incrementSeatsUsed(home.getId());
+        }
+        userRepository.updateUserTeamId(user.getId(), home.getId());
+        user.setTeam(home);
     }
 
     /**
@@ -314,29 +355,29 @@ public class SaasTeamService {
             throw new IllegalStateException("Team has no available seats");
         }
 
-        // Validate: accepting won't orphan a team the user leads or that has a paid plan.
-        // Accepting moves the user off their current team; leaveTeam already blocks the
-        // last leader of a team from walking away, so accept must enforce the same rule.
-        assertCanLeaveCurrentTeamsToJoinAnother(acceptingUser);
+        // Establish/park the durable home team: joining never deletes it.
+        Long homeTeamId = resolveHomeTeamId(acceptingUser);
 
-        // User can only be in one team . leave existing teams before joining new one
-        List<TeamMembership> existingMemberships =
-                membershipRepository.findByUserId(acceptingUser.getId());
-        List<Team> teamsToDelete = new java.util.ArrayList<>();
+        // Guard: block only if joining would strand a paid/linked team the user is the last
+        // leader of. Home teams are parked (kept), so a join never orphans them.
+        assertCanLeaveCurrentTeamsToJoinAnother(acceptingUser, homeTeamId, team.getId());
 
-        for (TeamMembership existingMembership : existingMemberships) {
+        // Leave any non-home team the user currently belongs to; keep the home team + membership.
+        for (TeamMembership existingMembership :
+                membershipRepository.findByUserId(acceptingUser.getId())) {
             Team oldTeam = existingMembership.getTeam();
-
-            membershipRepository.delete(existingMembership);
-
-            saasTeamExtensionsRepository.decrementSeatsUsed(oldTeam.getId());
-
-            // Mark personal team for deletion if it's now empty (user was the only member)
-            if (saasTeamExtensionService.isPersonal(oldTeam)
-                    && membershipRepository.countByTeamId(oldTeam.getId()) == 0) {
-                teamsToDelete.add(oldTeam);
+            if ((homeTeamId != null && homeTeamId.equals(oldTeam.getId()))
+                    || oldTeam.getId().equals(team.getId())) {
+                continue; // keep the durable home; skip the team being joined
             }
-
+            // Keep any team the user leads that still has other members: leaving it would orphan
+            // them (members, zero leaders). Solo/empty led teams and plain memberships still leave.
+            if (existingMembership.isLeader()
+                    && membershipRepository.countByTeamId(oldTeam.getId()) > 1) {
+                continue;
+            }
+            membershipRepository.delete(existingMembership);
+            saasTeamExtensionsRepository.decrementSeatsUsed(oldTeam.getId());
             log.info(
                     "User {} left team {} to join team {}",
                     acceptingUser.getUsername(),
@@ -347,42 +388,26 @@ public class SaasTeamService {
         // Native query: avoids Hibernate touching the read-only supabase_auth_id column.
         userRepository.updateUserTeamId(acceptingUser.getId(), team.getId());
         acceptingUser.setTeam(team);
-        log.info(
-                "User {} team reference updated to team {}",
-                acceptingUser.getUsername(),
-                team.getName());
 
-        // Now safe to delete empty personal teams
-        for (Team teamToDelete : teamsToDelete) {
-            log.info(
-                    "Deleting empty personal team {} after user {} joined another team",
-                    teamToDelete.getId(),
-                    acceptingUser.getUsername());
-            purgeTeamOwnedResources(teamToDelete.getId());
-            teamRepository.delete(teamToDelete);
+        // Add the MEMBER membership on the joined team (unless already present).
+        if (membershipRepository
+                .findByTeamIdAndUserId(team.getId(), acceptingUser.getId())
+                .isEmpty()) {
+            TeamMembership membership = new TeamMembership();
+            membership.setTeam(team);
+            membership.setUser(acceptingUser);
+            membership.setRole(TeamRole.MEMBER);
+            membership.setInvitedBy(inviter);
+            membership.setInvitedAt(invitation.getCreatedAt());
+            membership.setAcceptedAt(LocalDateTime.now());
+            membershipRepository.save(membership);
+
+            // incrementSeatsUsed enforces the cap atomically; rowsUpdated==0 means at capacity.
+            int rowsUpdated = saasTeamExtensionsRepository.incrementSeatsUsed(team.getId());
+            if (rowsUpdated == 0) {
+                throw new IllegalStateException("Team has no available seats");
+            }
         }
-
-        // Create team membership
-        TeamMembership membership = new TeamMembership();
-        membership.setTeam(team);
-        membership.setUser(acceptingUser);
-        membership.setRole(TeamRole.MEMBER);
-        membership.setInvitedBy(inviter);
-        membership.setInvitedAt(invitation.getCreatedAt());
-        membership.setAcceptedAt(LocalDateTime.now());
-        membershipRepository.save(membership);
-
-        log.info(
-                "User {} added to team {} with role MEMBER",
-                acceptingUser.getUsername(),
-                team.getName());
-
-        // incrementSeatsUsed enforces the seat cap atomically; rowsUpdated==0 means at capacity.
-        int rowsUpdated = saasTeamExtensionsRepository.incrementSeatsUsed(team.getId());
-        if (rowsUpdated == 0) {
-            throw new IllegalStateException("Team has no available seats");
-        }
-        log.info("Team {} seats_used incremented", team.getName());
 
         // Don't set inviteeUser; acceptance is recorded via status + TeamMembership row.
         invitation.setStatus(InvitationStatus.ACCEPTED);
@@ -434,89 +459,61 @@ public class SaasTeamService {
         // Atomically decrement team seats_used (prevents race condition)
         saasTeamExtensionsRepository.decrementSeatsUsed(teamId);
 
-        // Fetch team for downstream checks
-        Team team = teamRepository.findById(teamId).orElseThrow();
+        // Return the removed user to their durable home team (mints one only if they have none).
+        returnUserToHome(userToRemove);
 
-        // Create new personal team for removed user
-        createPersonalTeam(userToRemove);
-
-        // Downgrade user to FREE tier after leaving team
-        // They either had a trial (which was cancelled) or had an existing subscription
-        // Either way, they should be FREE after leaving
+        // Downgrade to FREE after leaving the team.
         downgradeUserToFree(userToRemove);
 
-        // Delete non-personal team if it's now empty
-        if (!saasTeamExtensionService.isPersonal(team)
-                && membershipRepository.countByTeamId(teamId) == 0) {
-            log.info("Deleting empty non-personal team {} after last member removed", teamId);
-            purgeTeamOwnedResources(team.getId());
-            teamRepository.delete(team);
-        }
-
         log.info(
-                "User {} removed user {} from team {} and created new personal team",
+                "User {} removed user {} from team {}; returned them to their home team",
                 remover.getId(),
                 memberUserId,
                 teamId);
     }
 
     /**
-     * Guard against silently orphaning a team when a user accepts an invite to another one.
+     * Guard against orphaning a still-billing team when a user joins another.
      *
-     * <p>{@link #acceptInvitation} moves a user to the inviting team by first leaving their current
-     * team(s). Personal teams are disposable (they get deleted on accept), but a non-personal team
-     * must not be left memberless while still billing. {@link #leaveTeam} already refuses to let
-     * the last leader walk away; accept took a shortcut around that check, which let a paid team's
-     * leader join another team and orphan their old team together with its live subscription.
+     * <p>In the durable-home model a join parks the user's home team (keeps the team, its
+     * membership and its wallet) rather than deleting it, so a plain team is never orphaned. The
+     * only real hazard is a team the user is the <em>last</em> leader of that still carries live
+     * billing: an active paid/PAYG subscription, or a non-revoked linked self-hosted instance
+     * ("Mode A"). Those block the join until the plan is cancelled / leadership transferred /
+     * instances revoked. An unpaid, unlinked team (personal or shared) no longer blocks.
      *
-     * <p>So: for each non-personal team the user leads as its <em>last</em> leader, block the
-     * accept. The message points them at the right remedy — cancel the plan if the team is paid,
-     * otherwise transfer leadership first.
-     *
-     * <p>Linked self-hosted instances (combined-billing "Mode A") bind to a team via {@code
-     * linked_instance.team_id}, so they too orphan a team that is left memberless — a personal team
-     * that accept deletes, or a non-personal team left by its last leader. They're checked in that
-     * same orphaning branch (not for a non-leader leaving a team that lives on); the remedy is to
-     * revoke them.
+     * <p>The home team and the team being joined are excluded: neither is left by the join (home is
+     * parked, the joined team is kept), so their live billing cannot be stranded.
      *
      * @param user the user attempting to accept an invitation
-     * @throws IllegalStateException if accepting would orphan a team the user leads or its
-     *     instances
+     * @param homeTeamId the user's durable home team, parked by the join (may be null)
+     * @param joinedTeamId the team being joined
+     * @throws IllegalStateException if joining would strand a paid/linked team the user last-leads
      */
-    private void assertCanLeaveCurrentTeamsToJoinAnother(User user) {
+    private void assertCanLeaveCurrentTeamsToJoinAnother(
+            User user, Long homeTeamId, Long joinedTeamId) {
         for (TeamMembership membership : membershipRepository.findByUserId(user.getId())) {
             Team team = membership.getTeam();
-            boolean personal = saasTeamExtensionService.isPersonal(team);
-            if (!personal && !membership.isLeader()) {
-                // A non-leader leaving a shared team never orphans it.
+            // Home is parked and the joined team is kept, so neither can be orphaned.
+            if (team.getId().equals(joinedTeamId) || team.getId().equals(homeTeamId)) {
                 continue;
             }
-            if (!personal
-                    && membershipRepository.countByTeamIdAndRole(team.getId(), TeamRole.LEADER)
+            // Only a sole leader can strand a team; a member or co-leader leaving never does.
+            if (!membership.isLeader()
+                    || membershipRepository.countByTeamIdAndRole(team.getId(), TeamRole.LEADER)
                             > 1) {
-                // Another leader remains, so the team keeps an owner.
                 continue;
             }
-            // Leaving here orphans the team: a personal team is deleted on accept; a non-personal
-            // team is being left by its last leader. Either way its linked self-hosted instances
-            // lose their billing team, so block until they're revoked.
             if (linkedInstanceRepository.countByTeamIdAndRevokedAtIsNull(team.getId()) > 0) {
                 throw new IllegalStateException(
                         "Revoke linked self-hosted instances on this team before joining another"
                                 + " team.");
-            }
-            if (personal) {
-                // Personal teams are disposable (deleted on accept) and never billed/shared.
-                continue;
             }
             if (hasActivePaidSubscription(team)) {
                 throw new IllegalStateException(
                         "Your team has an active plan and you are its last leader. Cancel the plan"
                                 + " or transfer leadership before joining another team.");
             }
-            throw new IllegalStateException(
-                    "You are the last leader of your team. Transfer leadership before joining"
-                            + " another team.");
         }
     }
 
@@ -549,26 +546,13 @@ public class SaasTeamService {
         // Atomically decrement team seats_used (prevents race condition)
         saasTeamExtensionsRepository.decrementSeatsUsed(teamId);
 
-        // Fetch team for downstream checks
-        Team team = teamRepository.findById(teamId).orElseThrow();
+        // Return the user to their durable home team (mints one only if they have none).
+        returnUserToHome(user);
 
-        // Create new personal team for user who left
-        createPersonalTeam(user);
-
-        // Check if user should be downgraded after leaving team
-        // If user has an active subscription (including trial), they keep PRO access
-        // Otherwise, downgrade to FREE tier
+        // Downgrade to FREE unless they still hold their own active subscription.
         downgradeUserToFree(user);
 
-        // Delete non-personal team if it's now empty
-        if (!saasTeamExtensionService.isPersonal(team)
-                && membershipRepository.countByTeamId(teamId) == 0) {
-            log.info("Deleting empty non-personal team {} after last member left", teamId);
-            purgeTeamOwnedResources(team.getId());
-            teamRepository.delete(team);
-        }
-
-        log.info("User {} left team {} and created new personal team", user.getId(), teamId);
+        log.info("User {} left team {} and returned to their home team", user.getId(), teamId);
     }
 
     /**
@@ -780,8 +764,8 @@ public class SaasTeamService {
                 // Atomically decrement seats_used count (prevents race condition)
                 saasTeamExtensionsRepository.decrementSeatsUsed(teamId);
 
-                // Create new personal team for removed user
-                createPersonalTeam(userToRemove);
+                // Return the evicted user to their durable home team.
+                returnUserToHome(userToRemove);
 
                 // Downgrade user to FREE tier
                 downgradeUserToFree(userToRemove);

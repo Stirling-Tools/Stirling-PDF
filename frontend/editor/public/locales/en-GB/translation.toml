@@ -7202,6 +7202,10 @@ sources = "Sources"
 usage = "Usage & Billing"
 users = "Users"
 
+[portal.nav.section]
+platform = "PDF Platform"
+processor = "PDF Processor"
+
 [portal.notifications]
 markAllRead = "Mark all read"
 title = "Notifications"

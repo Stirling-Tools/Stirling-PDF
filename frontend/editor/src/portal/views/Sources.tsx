@@ -10,7 +10,6 @@ import {
   type SourceView,
 } from "@portal/api/sources";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
-import { AgentBuilderAction } from "@portal/components/sources/AgentBuilderAction";
 import { KpiStrip } from "@portal/components/sources/KpiStrip";
 import { SourcesTable } from "@portal/components/sources/SourcesTable";
 import { ConnectionsTab } from "@portal/components/sources/ConnectionsTab";
@@ -55,7 +54,6 @@ export function Sources() {
         </div>
         {activeTab === "sources" && (
           <div className="portal-sources__actions">
-            <AgentBuilderAction />
             <Button
               onClick={openCreate}
               leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}

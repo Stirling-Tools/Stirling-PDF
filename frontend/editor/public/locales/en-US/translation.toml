@@ -6136,90 +6136,6 @@ free = "Editor plan"
 subscribed = "Processor plan"
 unlinked = "Not linked"
 
-[portal.agentBuilder]
-bootstrapFromDocument = "Bootstrap from document"
-sectionsAriaLabel = "Agent builder sections"
-selectorAriaLabel = "Agents"
-subtitle = "Design, test and ship the AI agents that classify, extract from and route your documents. Define scenarios, fence tool access, run a golden set, and publish a version."
-title = "Agent Builder"
-
-[portal.agentBuilder.bootstrap]
-cancel = "Cancel"
-dropzoneText = "Choose a sample document (PDF or image)"
-lead = "Drop a sample document and we'll propose scenarios and an extraction schema you can refine. Nothing is published until you review it."
-submit = "Bootstrap agent"
-subtitle = "Seed a new agent from one representative file"
-title = "Bootstrap from a document"
-
-[portal.agentBuilder.empty]
-description = "Bootstrap an agent from a sample document to seed its scenarios and extraction schema, then refine and publish."
-title = "No agents yet"
-
-[portal.agentBuilder.evals]
-casesPassing = "Cases passing"
-columnCase = "Eval case"
-columnLatency = "Latency"
-columnResult = "Result"
-fail = "fail"
-goldenSetPassRate = "Golden-set pass rate"
-latencyMs = "{{ms}} ms"
-notRun = "not run"
-pass = "pass"
-passRate = "Pass rate"
-runEvals = "Run evals"
-
-[portal.agentBuilder.evals.empty]
-description = "Evals turn your scenarios into a repeatable golden set. Upgrade to capture pass-rate over time and gate publishes on it."
-title = "No golden set yet"
-
-[portal.agentBuilder.kpi]
-acrossGoldenSets = "across golden sets"
-activeAgents = "Active agents"
-avgPassRate = "Avg eval pass rate"
-fleetWide = "fleet-wide"
-latestPublished = "Latest published"
-scenarios = "Scenarios"
-testCases = "test cases"
-totalDescription_one = "{{count}} total"
-totalDescription_other = "{{count}} total"
-
-[portal.agentBuilder.scenarios]
-add = "Add"
-addScenario = "Add scenario"
-enable = "Enable"
-expectationLabel = "Expected behaviour"
-expectationPlaceholder = "What the agent should do"
-inEval = "in eval"
-mute = "Mute"
-muted = "muted"
-nameLabel = "Name"
-namePlaceholder = "e.g. Compliance escalation"
-
-[portal.agentBuilder.status]
-draft = "Draft"
-published = "Published"
-
-[portal.agentBuilder.tabs]
-evals = "Evals"
-scenarios = "Scenarios"
-tools = "Tools"
-versions = "Versions"
-
-[portal.agentBuilder.tools]
-broadAccess = "Broad access"
-deniedHint = "Selected tools are blocked. Everything else stays callable."
-deniedTools = "Denied tools"
-governanceGate = "Tool governance is available on the Enterprise plan."
-restricted = "Restricted"
-restrictedAccess = "Restricted tool access"
-restrictedDescription = "Allow every tool except the ones you deny below."
-
-[portal.agentBuilder.versions]
-current = "current"
-historyGate = "Full version history and rollback are available on the Enterprise plan."
-publish = "Publish"
-rollBack = "Roll back"
-
 [portal.assistant]
 close = "Close assistant"
 error = "Couldn't reach the assistant."
@@ -6350,6 +6266,8 @@ sizeMultiplier = "{{formatted}} PDFs used a size multiplier"
 summary = "{{unique}} unique · {{units}} meter units · {{avg}} avg per PDF"
 summaryNoRate = "{{unique}} unique · {{units}} meter units"
 unit = "PDFs"
+unitsPending_one = "{{units}} meter unit pending sync from linked instances"
+unitsPending_other = "{{units}} meter units pending sync from linked instances"
 
 [portal.billing.spendLimit]
 adjustLimit = "Adjust limit"
@@ -7228,6 +7146,10 @@ sources = "Sources"
 usage = "Usage & Billing"
 users = "Users"
 
+[portal.nav.section]
+platform = "PDF Platform"
+processor = "PDF Processor"
+
 [portal.pipelines]
 subtitle = "Every automated document pipeline on the backend: an ordered chain of operations over a set of sources, run on a trigger. Click a row for its steps and sources."
 title = "Pipelines"
@@ -7552,6 +7474,10 @@ label = "Redact sensitive information"
 [portal.policies.wizard.capability.sanitize]
 desc = "Removes hidden JavaScript so nothing can run automatically when the document is opened."
 label = "Strip active content"
+
+[portal.policies.wizard.capability.timestampPdf]
+desc = "Proves the document existed in this exact form at a point in time, using an independent timestamp authority. Only a hash is sent - the document never leaves your server."
+label = "Add a trusted timestamp"
 
 [portal.policies.wizard.capability.watermark]
 desc = "Stamps a visible mark (e.g. “Confidential”) across every page."
@@ -7988,7 +7914,6 @@ subtitle = "Reusable input connections that feed documents into Stirling. Config
 title = "Sources"
 
 [portal.sources.actions]
-agentBuilder = "Agent Builder"
 connectSource = "Connect source"
 
 [portal.sources.builder]
