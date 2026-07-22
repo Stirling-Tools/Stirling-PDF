@@ -126,10 +126,6 @@
 
 .tool-panel {
   position: relative;
-  transition:
-    width 0.3s ease,
-    max-width 0.3s ease;
-  view-transition-name: tool-rail;
   user-select: none;
 }
 
@@ -293,36 +289,6 @@
 /* Slightly recessed search field so it reads as distinct from the panel. */
 .tool-panel__between-search input {
   background-color: var(--bg-muted);
-}
-
-::view-transition-old(tool-rail) {
-  animation: vt-rail-fade-out 180ms ease-out forwards;
-}
-
-::view-transition-new(tool-rail) {
-  animation: vt-rail-fade-in 220ms ease-in forwards;
-}
-
-@keyframes vt-rail-fade-out {
-  to {
-    opacity: 0;
-  }
-}
-
-@keyframes vt-rail-fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(tool-rail),
-  ::view-transition-new(tool-rail) {
-    animation-duration: 1ms !important;
-  }
 }
 
 .tool-panel__mode-toggle {
