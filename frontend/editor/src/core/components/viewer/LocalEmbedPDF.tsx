@@ -465,6 +465,68 @@ export function LocalEmbedPDF({
             const annotationApi = annotationPlugin.provides();
             if (!annotationApi) return;
 
+            // ── EmbedPDF 2.14.4 callout-drag crash guard ─────────────────────
+            // The library's AnnotationPlugin.updateAnnotation reads
+            // `docState.byUid[id].object` WITHOUT the null-guard its sibling
+            // deleteAnnotation applies (`docState.byUid[id]?.object` + early
+            // return). During a callout-annotation drag the library invokes
+            // updateAnnotation with a uid that is no longer in the store,
+            // throwing "Cannot read properties of undefined (reading 'object')"
+            // and taking down the whole viewer. Every caller — including the
+            // library's own callout drag/free-text layer — routes through this
+            // single instance method, so we wrap it here to skip the update when
+            // the annotation no longer exists, mirroring deleteAnnotation's guard.
+            // Remove once upstream fixes the missing guard (>2.14.4).
+            type GuardableAnnotationPlugin = {
+              updateAnnotation?: (
+                pageIndex: number,
+                id: string,
+                patch: unknown,
+                documentId?: string,
+              ) => unknown;
+            };
+            type AnnotationLookup = {
+              getAnnotationById?: (id: string) => unknown;
+              forDocument?: (documentId: string) => {
+                getAnnotationById?: (id: string) => unknown;
+              };
+            };
+            const guardablePlugin =
+              annotationPlugin as unknown as GuardableAnnotationPlugin;
+            const annotationLookup =
+              annotationApi as unknown as AnnotationLookup;
+            const originalUpdateAnnotation = guardablePlugin.updateAnnotation;
+            if (typeof originalUpdateAnnotation === "function") {
+              guardablePlugin.updateAnnotation = (
+                pageIndex,
+                id,
+                patch,
+                documentId,
+              ) => {
+                try {
+                  const scope =
+                    documentId && annotationLookup.forDocument
+                      ? annotationLookup.forDocument(documentId)
+                      : annotationLookup;
+                  if (scope.getAnnotationById && !scope.getAnnotationById(id)) {
+                    // Stale/removed annotation (e.g. mid callout-drag) — skip
+                    // instead of crashing the viewer.
+                    return undefined;
+                  }
+                } catch {
+                  // If the existence check itself fails, fall through to the
+                  // original behaviour rather than swallowing a real update.
+                }
+                return originalUpdateAnnotation.call(
+                  guardablePlugin,
+                  pageIndex,
+                  id,
+                  patch,
+                  documentId,
+                );
+              };
+            }
+
             if (enableAnnotations) {
               // LooseAnnotationTool bypasses strict Partial<T> defaults typing from the library —
               // EmbedPDF accepts extra runtime properties (borderWidth, textColor, finishOnDoubleClick,
