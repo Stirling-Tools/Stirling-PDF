@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import {
@@ -12,9 +13,10 @@ import {
 import { errorMessage } from "@portal/api/http";
 import {
   deleteIntegration,
-  fetchS3Connections,
   type IntegrationConfig,
 } from "@portal/api/integrations";
+import { useS3Connections } from "@portal/queries/sources";
+import { qk } from "@portal/queries/keys";
 import { SourcesIcon } from "@portal/components/icons";
 import { S3ConnectionModal } from "@portal/components/sources/S3ConnectionModal";
 
@@ -26,25 +28,20 @@ import { S3ConnectionModal } from "@portal/components/sources/S3ConnectionModal"
  */
 export function ConnectionsTab() {
   const { t } = useTranslation();
-  const [connections, setConnections] = useState<IntegrationConfig[] | null>(
-    null,
-  );
+  const queryClient = useQueryClient();
+  const state = useS3Connections();
+  const connections = state.data;
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<IntegrationConfig | null>(null);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  // Surface a mutation failure first, else a fetch failure from the query.
+  const error = actionError ?? (state.error ? errorMessage(state.error) : null);
 
-  const refresh = useCallback(async () => {
-    try {
-      setConnections(await fetchS3Connections());
-    } catch (e) {
-      setError(errorMessage(e));
-    }
-  }, []);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
+  const refresh = useCallback(
+    () => queryClient.invalidateQueries({ queryKey: qk.s3Connections() }),
+    [queryClient],
+  );
 
   function openCreate() {
     setEditing(null);
@@ -59,12 +56,12 @@ export function ConnectionsTab() {
   async function remove(connection: IntegrationConfig) {
     if (busy) return;
     setBusy(true);
-    setError(null);
+    setActionError(null);
     try {
       await deleteIntegration(connection.id);
       await refresh();
     } catch (e) {
-      setError(errorMessage(e));
+      setActionError(errorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -123,8 +120,8 @@ export function ConnectionsTab() {
     [t, busy],
   );
 
-  const isLoading = connections === null;
-  const isEmpty = connections !== null && connections.length === 0;
+  const isLoading = state.loading && connections === null;
+  const isEmpty = !isLoading && (connections?.length ?? 0) === 0;
 
   return (
     <section className="portal-sources__connections">

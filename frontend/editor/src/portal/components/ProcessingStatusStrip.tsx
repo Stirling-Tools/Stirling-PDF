@@ -2,8 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Button, Skeleton } from "@app/ui";
 import { TIER_INFO, useTier } from "@portal/contexts/TierContext";
 import { useView } from "@portal/contexts/ViewContext";
-import { useAsync } from "@portal/hooks/useAsync";
-import { fetchFleetStats, type FleetStats } from "@portal/api/fleetStats";
+import { useFleetStats } from "@portal/queries/infrastructure";
 import "@portal/components/ProcessingStatusStrip.css";
 
 /**
@@ -16,7 +15,7 @@ export function ProcessingStatusStrip() {
   const { t } = useTranslation();
   const { tier } = useTier();
   const { setActiveView } = useView();
-  const { data, loading } = useAsync<FleetStats>(() => fetchFleetStats(), []);
+  const { data, loading } = useFleetStats();
 
   return (
     <div className="portal-statusstrip portal-statusstrip--paid">

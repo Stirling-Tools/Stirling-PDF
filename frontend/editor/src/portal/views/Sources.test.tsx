@@ -4,13 +4,13 @@ import {
   render as baseRender,
   screen,
 } from "@testing-library/react";
-import { MantineProvider } from "@mantine/core";
+import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import type { SourcesResponse } from "@portal/api/sources";
 import { Sources } from "@portal/views/Sources";
 
 const render = (ui: Parameters<typeof baseRender>[0]) =>
-  baseRender(ui, { wrapper: MantineProvider });
+  baseRender(ui, { wrapper: PortalTestProviders });
 
 // Deterministic i18n: keys returned verbatim.
 vi.mock("react-i18next", () => ({

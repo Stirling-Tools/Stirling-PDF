@@ -21,6 +21,8 @@ import {
   type Source,
 } from "@portal/api/sources";
 import { useAsync } from "@portal/hooks/useAsync";
+import { useQueryClient } from "@tanstack/react-query";
+import { qk } from "@portal/queries/keys";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { creatableSourceTypes } from "@portal/components/sources/creatableSourceTypes";
 import {
@@ -64,9 +66,15 @@ function optionsFor(
 export function SourceBuilder() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { id } = useParams();
   const isEdit = Boolean(id);
   const listPath = toPortalPath(VIEW_PATHS.sources);
+
+  // The list is a shared cache entry (Sources view + Home's ProcessorFlow), so
+  // a create/delete here must invalidate it before we navigate back to it.
+  const invalidateSources = () =>
+    queryClient.invalidateQueries({ queryKey: qk.sources() });
 
   const sourceState = useAsync<Source | null>(
     async () => (id ? await fetchSource(id) : null),
@@ -124,6 +132,7 @@ export function SourceBuilder() {
         options,
         enabled,
       });
+      await invalidateSources();
       navigate(listPath);
     } catch (e) {
       setError(errorMessage(e));
@@ -136,6 +145,7 @@ export function SourceBuilder() {
     setDeleting(true);
     try {
       await deleteSource(id);
+      await invalidateSources();
       navigate(listPath);
     } catch (e) {
       setError(errorMessage(e));

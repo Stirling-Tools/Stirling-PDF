@@ -54,6 +54,8 @@ import { S3ConnectionPicker } from "@portal/components/sources/S3ConnectionPicke
 import { fetchSources, type SourceView } from "@portal/api/sources";
 import { EDITOR_SOURCE_TYPE } from "@portal/components/sources/sourceTypes";
 import { useAsync } from "@portal/hooks/useAsync";
+import { useQueryClient } from "@tanstack/react-query";
+import { qk } from "@portal/queries/keys";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { humanizeOperation } from "@portal/components/pipelines/pipelineOperations";
 import { PipelineStepSettings } from "@portal/components/pipelines/PipelineStepSettings";
@@ -147,6 +149,16 @@ function parseOutput(output: OutputSpec | undefined): {
 export function PipelineBuilder() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  // Pipelines are stored as policies, so a save/delete must invalidate both the
+  // pipelines overview and the policies caches (Policies page + Home) before
+  // navigating back to the list.
+  const invalidatePipelines = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: qk.pipelines() }),
+      queryClient.invalidateQueries({ queryKey: qk.policiesList() }),
+      queryClient.invalidateQueries({ queryKey: qk.policyRuns() }),
+    ]);
   const { id } = useParams();
   const isEdit = Boolean(id);
   const { allTools } = useToolRegistry();
@@ -416,6 +428,7 @@ export function PipelineBuilder() {
     };
     try {
       await savePipeline(policy);
+      await invalidatePipelines();
       navigate(destination);
     } catch (e) {
       setError(errorMessage(e));
@@ -526,6 +539,7 @@ export function PipelineBuilder() {
     setDeleting(true);
     try {
       await deletePipeline(id);
+      await invalidatePipelines();
       close();
     } catch (e) {
       setError(errorMessage(e));

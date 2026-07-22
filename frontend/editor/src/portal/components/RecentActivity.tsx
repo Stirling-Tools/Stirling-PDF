@@ -2,12 +2,8 @@ import { useTranslation } from "react-i18next";
 import { Button, Card, EmptyState, Skeleton, StatusBadge } from "@app/ui";
 import { useTier } from "@portal/contexts/TierContext";
 import { useView } from "@portal/contexts/ViewContext";
-import { useAsync } from "@portal/hooks/useAsync";
-import {
-  fetchAuditLog,
-  type AuditLogResponse,
-  type AuditStatus,
-} from "@portal/api/infrastructure";
+import { useAuditLog } from "@portal/queries/infrastructure";
+import { type AuditStatus } from "@portal/api/infrastructure";
 import {
   AUDIT_CAT_LABEL,
   AUDIT_STATUS_LABEL,
@@ -36,10 +32,7 @@ export function RecentActivity() {
   const { t } = useTranslation();
   const { tier } = useTier();
   const { setActiveView } = useView();
-  const { data, loading } = useAsync<AuditLogResponse>(
-    () => fetchAuditLog(tier),
-    [tier],
-  );
+  const { data, loading } = useAuditLog(tier);
 
   const events = data?.events.slice(0, MAX_EVENTS) ?? [];
   const isLoading = loading && data === null;

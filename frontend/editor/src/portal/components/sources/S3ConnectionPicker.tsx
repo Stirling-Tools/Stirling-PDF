@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, Select } from "@app/ui";
 import { errorMessage } from "@portal/api/http";
-import {
-  fetchS3Connections,
-  type IntegrationConfig,
-} from "@portal/api/integrations";
+import { useS3Connections } from "@portal/queries/sources";
+import { qk } from "@portal/queries/keys";
 import { S3ConnectionModal } from "@portal/components/sources/S3ConnectionModal";
 
 /**
@@ -23,25 +22,10 @@ export function S3ConnectionPicker({
   onChange,
 }: S3ConnectionPickerProps) {
   const { t } = useTranslation();
-  const [connections, setConnections] = useState<IntegrationConfig[] | null>(
-    null,
-  );
+  const queryClient = useQueryClient();
+  const { data: connections, error: fetchError } = useS3Connections();
   const [modalOpen, setModalOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-    fetchS3Connections()
-      .then((list) => {
-        if (mounted) setConnections(list);
-      })
-      .catch((e) => {
-        if (mounted) setError(errorMessage(e));
-      });
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  const error = fetchError ? errorMessage(fetchError) : null;
 
   return (
     <div className="portal-sources__connection-picker">
@@ -62,7 +46,9 @@ export function S3ConnectionPicker({
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         onSaved={(created) => {
-          setConnections((list) => [...(list ?? []), created]);
+          // Refetch the shared connections cache (also refreshes the
+          // Connections tab), then select the newly created one.
+          queryClient.invalidateQueries({ queryKey: qk.s3Connections() });
           onChange(String(created.id));
         }}
       />

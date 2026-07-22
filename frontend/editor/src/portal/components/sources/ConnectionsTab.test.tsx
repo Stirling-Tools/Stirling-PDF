@@ -5,13 +5,13 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { MantineProvider } from "@mantine/core";
+import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 import { HttpError } from "@portal/api/http";
 import { ConnectionsTab } from "@portal/components/sources/ConnectionsTab";
 import type { IntegrationConfig } from "@portal/api/integrations";
 
 const render = (ui: Parameters<typeof baseRender>[0]) =>
-  baseRender(ui, { wrapper: MantineProvider });
+  baseRender(ui, { wrapper: PortalTestProviders });
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({

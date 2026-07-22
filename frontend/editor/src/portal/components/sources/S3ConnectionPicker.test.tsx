@@ -5,11 +5,11 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { MantineProvider } from "@mantine/core";
+import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 import { S3ConnectionPicker } from "@portal/components/sources/S3ConnectionPicker";
 
 const render = (ui: Parameters<typeof baseRender>[0]) =>
-  baseRender(ui, { wrapper: MantineProvider });
+  baseRender(ui, { wrapper: PortalTestProviders });
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({

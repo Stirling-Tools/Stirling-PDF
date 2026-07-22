@@ -4,7 +4,7 @@ import {
   render as baseRender,
   screen,
 } from "@testing-library/react";
-import { MantineProvider } from "@mantine/core";
+import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import type { PipelinesOverviewResponse } from "@portal/api/pipelines";
 import { Pipelines } from "@portal/views/Pipelines";
@@ -12,7 +12,7 @@ import { Pipelines } from "@portal/views/Pipelines";
 const render = (
   ui: Parameters<typeof baseRender>[0],
   options?: Parameters<typeof baseRender>[1],
-) => baseRender(ui, { wrapper: MantineProvider, ...options });
+) => baseRender(ui, { wrapper: PortalTestProviders, ...options });
 
 // Deterministic i18n: keys returned verbatim.
 vi.mock("react-i18next", () => ({

@@ -9,12 +9,9 @@ import {
   type TableColumn,
 } from "@app/ui";
 import { useView } from "@portal/contexts/ViewContext";
-import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
-import {
-  fetchPolicies,
-  type CatalogueEntry,
-  type PoliciesResponse,
-} from "@portal/api/policies";
+import { useSectionFlags } from "@portal/hooks/useAsync";
+import { usePoliciesOverview } from "@portal/queries/policies";
+import { type CatalogueEntry } from "@portal/api/policies";
 import { PolicyCategoryBadge } from "@portal/components/policies/PolicyCategoryIcon";
 import "@portal/components/PolicySummary.css";
 
@@ -51,7 +48,7 @@ function toRow(entry: CatalogueEntry): PolicyRow {
 export function PolicySummary() {
   const { t } = useTranslation();
   const { setActiveView } = useView();
-  const state = useAsync<PoliciesResponse>(() => fetchPolicies(), []);
+  const state = usePoliciesOverview();
   const { data } = state;
   const { isLoading, isEmpty } = useSectionFlags(state);
 

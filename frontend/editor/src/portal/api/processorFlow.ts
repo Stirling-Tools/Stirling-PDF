@@ -2,7 +2,7 @@
  *  sources/policies/runs APIs. Counts are real; the flow motion is illustrative. */
 
 import { apiClient } from "@portal/api/http";
-import { fetchSources } from "@portal/api/sources";
+import { fetchSources, type SourcesResponse } from "@portal/api/sources";
 import { POLICY_CATEGORIES } from "@portal/api/policies";
 import { fromWirePolicy } from "@app/policies/codec";
 import type { PolicyRunView, WirePolicy } from "@app/policies/types";
@@ -123,16 +123,16 @@ function buildOutcomes(runs: PolicyRunView[]): FlowOutcome[] {
   ];
 }
 
-/** Assemble the full flow model from the three live portal surfaces. */
-export async function fetchProcessorFlow(): Promise<ProcessorFlow> {
-  const [sourcesResp, wirePolicies, runs] = await Promise.all([
-    fetchSources(),
-    apiClient.local.json<WirePolicy[]>("/api/v1/policies"),
-    apiClient.local
-      .json<PolicyRunView[]>("/api/v1/policies/runs")
-      .catch(() => [] as PolicyRunView[]),
-  ]);
-
+/**
+ * Pure assembly of the flow model from the three raw responses. Split out so
+ * the React Query layer composes it from the shared sources/policies/runs
+ * cache entries instead of re-fetching them (see useProcessorFlow).
+ */
+export function assembleProcessorFlow(
+  sourcesResp: SourcesResponse,
+  wirePolicies: WirePolicy[],
+  runs: PolicyRunView[],
+): ProcessorFlow {
   const sources: FlowSource[] = sourcesResp.sources.map((s) => ({
     id: s.id,
     name: s.name,
@@ -146,4 +146,16 @@ export async function fetchProcessorFlow(): Promise<ProcessorFlow> {
     policies: buildPolicies(wirePolicies, runs),
     outcomes: buildOutcomes(runs),
   };
+}
+
+/** Assemble the full flow model from the three live portal surfaces. */
+export async function fetchProcessorFlow(): Promise<ProcessorFlow> {
+  const [sourcesResp, wirePolicies, runs] = await Promise.all([
+    fetchSources(),
+    apiClient.local.json<WirePolicy[]>("/api/v1/policies"),
+    apiClient.local
+      .json<PolicyRunView[]>("/api/v1/policies/runs")
+      .catch(() => [] as PolicyRunView[]),
+  ]);
+  return assembleProcessorFlow(sourcesResp, wirePolicies, runs);
 }
