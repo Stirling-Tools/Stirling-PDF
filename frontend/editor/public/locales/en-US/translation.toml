@@ -7900,7 +7900,6 @@ account-link = "Account link"
 [portal.shell.sidebar]
 appEditor = "Editor"
 appProcessor = "Processor"
-brandSuffix = "Stirling Processor"
 linkAccount = "Link Stirling account"
 primaryNav = "Primary navigation"
 switchApp = "Switch app"
