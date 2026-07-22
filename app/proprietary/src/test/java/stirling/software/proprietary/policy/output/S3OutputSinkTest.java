@@ -32,6 +32,7 @@ import stirling.software.proprietary.policy.ledger.InProcessProcessedLedger;
 import stirling.software.proprietary.policy.ledger.ProcessedFileStatus;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.s3.S3ConnectionPool;
+import stirling.software.proprietary.policy.s3.S3TestConnections;
 
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.core.exception.SdkClientException;
@@ -66,6 +67,7 @@ class S3OutputSinkTest {
         sink =
                 new S3OutputSink(
                         new S3ConnectionPool(new ApplicationProperties(), config -> s3Client),
+                        S3TestConnections.legacyResolver(),
                         ledger);
     }
 

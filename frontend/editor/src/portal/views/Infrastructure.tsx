@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button, Tabs, type TabItem } from "@app/ui";
 import { useView } from "@portal/contexts/ViewContext";
@@ -18,10 +19,33 @@ type InfraTab =
   | "storage"
   | "audit";
 
+const INFRA_TABS: InfraTab[] = [
+  "deployments",
+  "api-keys",
+  "security",
+  "models",
+  "storage",
+  "audit",
+];
+
 export function Infrastructure() {
   const { t } = useTranslation();
   const [tab, setTab] = useState<InfraTab>("deployments");
   const { setActiveView } = useView();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Deep-link (?tab=<key>) from elsewhere (e.g. the home visualiser's outcome
+  // cards → audit log): open that tab, then drop the param.
+  useEffect(() => {
+    const requested = searchParams.get("tab");
+    if (!requested) return;
+    if ((INFRA_TABS as string[]).includes(requested)) {
+      setTab(requested as InfraTab);
+    }
+    const next = new URLSearchParams(searchParams);
+    next.delete("tab");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const tabs: TabItem<InfraTab>[] = [
     { key: "deployments", label: t("portal.infrastructure.tabs.deployments") },

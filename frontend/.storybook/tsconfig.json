@@ -12,7 +12,8 @@
       ],
       "@core/*": ["../editor/src/core/*"],
       "@proprietary/*": ["../editor/src/proprietary/*"],
-      "@portal/*": ["../editor/src/portal/*"]
+      "@portal/*": ["../editor/src/portal/*"],
+      "@public/*": ["../editor/public/*"]
     },
     "resolveJsonModule": true,
     "esModuleInterop": true,

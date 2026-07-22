@@ -1,5 +1,6 @@
 package stirling.software.proprietary.access.service;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -40,6 +41,52 @@ public class ResourceAccessService {
     /** Whether the user may use the portal / processor. */
     public boolean canAccessPortal(User user) {
         return canUseResource(ResourceType.PORTAL, "", null, portalDefaultPolicy, user);
+    }
+
+    /**
+     * Portal access for a roster (admin, grant, or default policy). {@code activeTeamLeaderUserIds}
+     * must hold ids of users who lead their own active team — the set the ADMINS_AND_TEAM_LEADS
+     * default admits, matching {@link #canAccessPortal}.
+     */
+    public Set<Long> usersWithPortalAccess(
+            Collection<User> users, Set<Long> activeTeamLeaderUserIds) {
+        Set<PrincipalRef> grantedPrincipals = new HashSet<>();
+        for (ResourceGrant g :
+                grantRepository.findByResourceTypeAndResourceId(ResourceType.PORTAL, "")) {
+            if (permissionSatisfies(g.getPermission(), AccessPermission.USE)) {
+                grantedPrincipals.add(new PrincipalRef(g.getPrincipalType(), g.getPrincipalId()));
+            }
+        }
+        Set<Long> leaderIds = activeTeamLeaderUserIds == null ? Set.of() : activeTeamLeaderUserIds;
+        Set<Long> allowed = new HashSet<>();
+        for (User user : users) {
+            if (user != null
+                    && user.getId() != null
+                    && hasPortalAccess(user, grantedPrincipals, leaderIds)) {
+                allowed.add(user.getId());
+            }
+        }
+        return allowed;
+    }
+
+    private boolean hasPortalAccess(
+            User user, Set<PrincipalRef> grantedPrincipals, Set<Long> leaderIds) {
+        if (isAdmin(user)) {
+            return true;
+        }
+        for (PrincipalRef principal : principalResolver.principalsOf(user)) {
+            if (grantedPrincipals.contains(principal)) {
+                return true;
+            }
+        }
+        if (portalDefaultPolicy == null) {
+            return false;
+        }
+        return switch (portalDefaultPolicy) {
+            case ORG_ALL -> principalResolver.allowsDeploymentWideAccess();
+            case ADMINS_AND_TEAM_LEADS -> leaderIds.contains(user.getId());
+            case EXPLICIT_ONLY -> false;
+        };
     }
 
     /** Whether the user may use a resource, falling back to its default policy. */
@@ -172,11 +219,13 @@ public class ResourceAccessService {
         };
     }
 
-    // Portal (no owner) admits any team lead; a team-owned resource admits only that team's
-    // leads; a user-owned resource admits no extra leads.
+    // Portal (no owner) admits the leader of the user's active team; a team-owned resource
+    // admits only that team's leads; a user-owned resource admits no extra leads.
     private boolean matchesTeamLeadDefault(PrincipalRef owner, User user) {
         if (owner == null) {
-            return teamLeadLookup.isAnyTeamLeader(user);
+            return user.getTeam() != null
+                    && user.getTeam().getId() != null
+                    && teamLeadLookup.isLeaderOfTeam(user, user.getTeam().getId());
         }
         return owner.type() == PrincipalType.TEAM
                 && owner.id() != null
