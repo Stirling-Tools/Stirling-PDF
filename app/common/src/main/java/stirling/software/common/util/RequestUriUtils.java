@@ -207,7 +207,7 @@ public class RequestUriUtils {
                 // Workflow participant endpoints - access controlled by share tokens, not login
                 || trimmedUri.startsWith("/api/v1/workflow/participant/")
                 // Share-link SPA bootstrap; data APIs remain protected
-                || trimmedUri.matches("^/share/[^/]+/?$");
+                || SHARE_LINK_PATTERN.matcher(trimmedUri).matches();
     }
 
     private static String stripContextPath(String contextPath, String requestURI) {
