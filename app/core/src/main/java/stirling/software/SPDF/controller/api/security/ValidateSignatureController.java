@@ -23,6 +23,9 @@ import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.cms.SignerInformation;
 import org.bouncycastle.cms.SignerInformationStore;
 import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder;
+import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
+import org.bouncycastle.tsp.TimeStampToken;
+import org.bouncycastle.tsp.TimeStampTokenInfo;
 import org.bouncycastle.util.Store;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -53,6 +56,9 @@ public class ValidateSignatureController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final CertificateValidationService certValidationService;
+
+    /** PDF sub-filter identifying an RFC 3161 document timestamp (PAdES-LTV). */
+    private static final String SUBFILTER_RFC3161 = "ETSI.RFC3161";
 
     @InitBinder
     public void initBinder(WebDataBinder binder) {
@@ -128,8 +134,35 @@ public class ValidateSignatureController {
                     byte[] signedContent = sig.getSignedContent(file.getInputStream());
                     byte[] signatureBytes = sig.getContents(file.getInputStream());
 
-                    CMSProcessable content = new CMSProcessableByteArray(signedContent);
-                    CMSSignedData signedData = new CMSSignedData(content, signatureBytes);
+                    // An RFC 3161 document timestamp (PAdES-LTV) carries its signed content
+                    // *inside* the CMS - a TSTInfo - rather than being detached over the document.
+                    // Building it as detached digests the ByteRange against an attribute that
+                    // covers the TSTInfo, which can never match.
+                    boolean isDocTimeStamp = SUBFILTER_RFC3161.equals(sig.getSubFilter());
+                    CMSSignedData signedData;
+                    if (isDocTimeStamp) {
+                        signedData = new CMSSignedData(signatureBytes);
+                    } else {
+                        CMSProcessable content = new CMSProcessableByteArray(signedContent);
+                        signedData = new CMSSignedData(content, signatureBytes);
+                    }
+
+                    // What actually binds a timestamp to this document: the TSTInfo's message
+                    // imprint must equal the digest of the signed byte range. Without this check a
+                    // valid timestamp token for some *other* document would verify happily here.
+                    Date timeStampGenTime = null;
+                    if (isDocTimeStamp) {
+                        TimeStampToken token = new TimeStampToken(signedData);
+                        TimeStampTokenInfo info = token.getTimeStampInfo();
+                        timeStampGenTime = info.getGenTime();
+                        if (!timestampCoversContent(info, signedContent)) {
+                            result.setValid(false);
+                            result.setErrorMessage(
+                                    "Timestamp message imprint does not match the document");
+                            results.add(result);
+                            continue;
+                        }
+                    }
 
                     Store<X509CertificateHolder> certStore = signedData.getCertificates();
                     SignerInformationStore signerStore = signedData.getSignerInfos();
@@ -162,7 +195,15 @@ public class ValidateSignatureController {
                         CertificateValidationService.ValidationTime validationTimeResult =
                                 certValidationService.extractValidationTime(signerInfo);
                         Date validationTime;
-                        if (validationTimeResult == null) {
+                        if (timeStampGenTime != null) {
+                            // The TSA's own asserted time is the authoritative one here, and is
+                            // exactly what makes the signature verifiable after the cert expires.
+                            validationTime = timeStampGenTime;
+                            // Distinct from "timestamp", which CertificateValidationService already
+                            // uses for a signature countersigned by a TSA. Both are RFC 3161, but
+                            // one attests a signature and the other attests the whole document.
+                            result.setValidationTimeSource("document-timestamp");
+                        } else if (validationTimeResult == null) {
                             validationTime = new Date();
                             result.setValidationTimeSource("current");
                         } else {
@@ -235,10 +276,13 @@ public class ValidateSignatureController {
 
                         // Set basic signature info
                         result.setSignerName(sig.getName());
+                        // A DocTimeStamp has no /M entry; its date is the TSA's genTime.
                         result.setSignatureDate(
-                                sig.getSignDate() != null
-                                        ? sig.getSignDate().getTime().toString()
-                                        : null);
+                                timeStampGenTime != null
+                                        ? timeStampGenTime.toString()
+                                        : sig.getSignDate() != null
+                                                ? sig.getSignDate().getTime().toString()
+                                                : null);
                         result.setReason(sig.getReason());
                         result.setLocation(sig.getLocation());
 
@@ -300,5 +344,21 @@ public class ValidateSignatureController {
         }
 
         return ResponseEntity.ok(results);
+    }
+
+    /**
+     * True when the timestamp token was issued over exactly these bytes.
+     *
+     * <p>The digest algorithm is taken from the token rather than assumed, because a TSA chooses it
+     * - assuming SHA-256 would silently fail against any TSA that uses something else.
+     */
+    private static boolean timestampCoversContent(TimeStampTokenInfo info, byte[] signedContent)
+            throws Exception {
+        org.bouncycastle.operator.DigestCalculator digest =
+                new JcaDigestCalculatorProviderBuilder().build().get(info.getHashAlgorithm());
+        try (java.io.OutputStream out = digest.getOutputStream()) {
+            out.write(signedContent);
+        }
+        return java.util.Arrays.equals(digest.getDigest(), info.getMessageImprintDigest());
     }
 }

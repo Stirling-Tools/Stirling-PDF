@@ -235,7 +235,7 @@ class ProprietaryUIDataControllerMoreTest {
 
             CustomSaml2AuthenticatedPrincipal principal =
                     new CustomSaml2AuthenticatedPrincipal(
-                            "samluser", Map.of(), "nameId", List.of());
+                            "samluser", Map.of(), "nameId", List.of(), "response");
             Authentication auth =
                     new UsernamePasswordAuthenticationToken(principal, null, List.of());
 
