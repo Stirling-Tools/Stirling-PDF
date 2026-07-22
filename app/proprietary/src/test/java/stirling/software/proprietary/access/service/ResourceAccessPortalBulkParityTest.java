@@ -62,8 +62,9 @@ class ResourceAccessPortalBulkParityTest {
                                 grant(PrincipalType.USER, 3L, AccessPermission.USE),
                                 grant(PrincipalType.TEAM, 20L, AccessPermission.USE)));
 
-        // Only #2 leads a team; leaderUserIds is what the controller passes to the bulk method.
-        lenient().when(teamLeadLookup.isAnyTeamLeader(leader)).thenReturn(true);
+        // Only #2 leads their active team; leaderUserIds is what the controller passes to the
+        // bulk method (the active-team-leader set).
+        lenient().when(teamLeadLookup.isLeaderOfTeam(leader, 10L)).thenReturn(true);
         leaderUserIds = Set.of(2L);
     }
 

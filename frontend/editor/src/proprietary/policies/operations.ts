@@ -7,6 +7,7 @@
 import { describeToolOperation } from "@app/hooks/tools/shared/toolOperationDescriptor";
 import { redactOperationConfig } from "@app/hooks/tools/redact/useRedactOperation";
 import { sanitizeOperationConfig } from "@app/hooks/tools/sanitize/useSanitizeOperation";
+import { timestampPdfOperationConfig } from "@app/hooks/tools/timestampPdf/useTimestampPdfOperation";
 import { addWatermarkOperationConfig } from "@app/hooks/tools/addWatermark/useAddWatermarkOperation";
 import { ocrOperationConfig } from "@app/hooks/tools/ocr/useOCROperation";
 import { flattenOperationConfig } from "@app/hooks/tools/flatten/useFlattenOperation";
@@ -96,6 +97,12 @@ export const POLICY_OPERATIONS = {
   sanitize: describeToolOperation(
     "/api/v1/security/sanitize-pdf",
     sanitizeOperationConfig,
+  ),
+  // RFC 3161 timestamp. Already a SISO tool; surfacing it here is what makes a signature durable
+  // in a pipeline (PAdES-LTV), and only a SHA-256 hash reaches the TSA - never the document.
+  timestampPdf: describeToolOperation(
+    "/api/v1/security/timestamp-pdf",
+    timestampPdfOperationConfig,
   ),
   watermark: describeToolOperation(
     "/api/v1/security/add-watermark",

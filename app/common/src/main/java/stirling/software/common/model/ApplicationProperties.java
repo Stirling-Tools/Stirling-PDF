@@ -270,6 +270,8 @@ public class ApplicationProperties {
          * worse surprise than one that keeps working; disable the connection itself to stop it.
          */
         private boolean allowCustomApiIntegrations = true;
+
+        private long webhookMaxBytes = 104857600L;
     }
 
     @Data
