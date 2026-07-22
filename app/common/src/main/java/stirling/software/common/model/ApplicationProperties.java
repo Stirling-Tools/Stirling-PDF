@@ -249,6 +249,8 @@ public class ApplicationProperties {
          * in-network object store.
          */
         private boolean allowPrivateS3Endpoints = false;
+
+        private long webhookMaxBytes = 104857600L;
     }
 
     @Data

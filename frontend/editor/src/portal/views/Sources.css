@@ -95,6 +95,11 @@
 .portal-sources__type-dot--warning {
   --dot-c: var(--color-amber-dark);
 }
+/* Dark: subtle tint + bright icon; amber-light/amber-dark are too close to read. */
+[data-theme="dark"] .portal-sources__type-dot--warning {
+  background: color-mix(in srgb, var(--color-amber) 20%, transparent);
+  color: var(--color-amber);
+}
 .portal-sources__type-dot--danger {
   --dot-c: var(--color-red-dark);
 }
