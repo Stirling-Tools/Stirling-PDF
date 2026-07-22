@@ -21,6 +21,7 @@ describe("POLICY_OPERATIONS", () => {
       "ocr",
       "redact",
       "sanitize",
+      "timestampPdf",
       "watermark",
     ]);
     for (const id of ALL_TOOL_IDS) {

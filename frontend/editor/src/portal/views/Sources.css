@@ -12,6 +12,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap; /* actions drop below the title on narrow screens */
   gap: 1rem;
 }
 
@@ -93,6 +94,11 @@
 }
 .portal-sources__type-dot--warning {
   --dot-c: var(--color-amber-dark);
+}
+/* Dark: subtle tint + bright icon; amber-light/amber-dark are too close to read. */
+[data-theme="dark"] .portal-sources__type-dot--warning {
+  background: color-mix(in srgb, var(--color-amber) 20%, transparent);
+  color: var(--color-amber);
 }
 .portal-sources__type-dot--danger {
   --dot-c: var(--color-red-dark);
@@ -193,6 +199,12 @@
 @media (max-width: 56rem) {
   .portal-sources__stat-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 30rem) {
+  .portal-sources__stat-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -317,6 +329,14 @@
   padding: 0;
 }
 
+/* Phones: labelled step pills don't fit side by side — stack them */
+@media (max-width: 30rem) {
+  .portal-sources__steps {
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+}
+
 .portal-sources__step {
   display: flex;
   align-items: center;
@@ -379,9 +399,8 @@
   }
 }
 
-/* The shared Button lays its children out in a flex-row label; force the type
-   tile back to a centred icon-over-label column so the SVG sits above the name
-   with real spacing (not jammed against it). */
+/* Override the shared Button's flex-row label to a centred icon-over-label
+   column so the SVG sits above the name with real spacing. */
 .portal-sources__type-card .mantine-Button-label {
   display: flex;
   flex-direction: column;

@@ -57,6 +57,11 @@ public class SaasUserExtensions implements Serializable {
     @Column(name = "api_key_first_used_at")
     private LocalDateTime apiKeyFirstUsedAt;
 
+    // Durable "home team" the user returns to when leaving a joined team; distinct from the
+    // active users.team_id. Plain id (not a @ManyToOne) to avoid an eager Team load. Nullable.
+    @Column(name = "home_team_id")
+    private Long homeTeamId;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
