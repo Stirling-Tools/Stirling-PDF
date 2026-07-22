@@ -33,19 +33,21 @@ export function DestinationPicker({
   const { t } = useTranslation();
 
   return (
-    <>
-      <Select
-        inputSize="sm"
-        aria-label={t("portal.pipelines.composer.output")}
-        placeholder={t("portal.pipelines.builder.chooseDestination")}
-        value={value[0] ?? null}
-        invalid={value.length !== 1}
-        onChange={(id) => onChange(id ? [id] : [])}
-        options={sources.map((source) => ({
-          value: source.id,
-          label: source.name,
-        }))}
-      />
+    <div className="portal-builder__input-row">
+      <div className="portal-builder__input-field">
+        <Select
+          inputSize="sm"
+          aria-label={t("portal.pipelines.composer.output")}
+          placeholder={t("portal.pipelines.builder.chooseDestination")}
+          value={value[0] ?? null}
+          invalid={value.length !== 1}
+          onChange={(id) => onChange(id ? [id] : [])}
+          options={sources.map((source) => ({
+            value: source.id,
+            label: source.name,
+          }))}
+        />
+      </div>
       <Button
         variant="tertiary"
         size="sm"
@@ -54,6 +56,6 @@ export function DestinationPicker({
       >
         {t("portal.sources.actions.connectSource")}
       </Button>
-    </>
+    </div>
   );
 }
