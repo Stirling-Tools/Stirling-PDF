@@ -3,18 +3,17 @@ import type { FlowOutcomeKey } from "@portal/api/processorFlow";
 /** Which lens the visualiser is showing. */
 export type Lens = "flow" | "sankey";
 
-/**
- * DEV ONLY: force the flow animation on even when nothing is set up / no
- * activity has taken place, using synthetic rates. Off by design — an idle
- * machine shows no animated dots; flip to true only to preview the motion
- * while iterating on an empty workspace.
- */
+/** DEV ONLY: force the flow on (synthetic rates) even when idle. Off by design;
+ *  flip to true only to preview the motion on an empty workspace. */
 export const DEV_KEEP_FLOWING = false;
 
 export const EDITOR_TYPE = "editor";
 
-/** Emission tuning: particles/sec for a source ≈ rate / 86400 × SPEED. */
-export const SPEED = 300;
+/** Emission tuning: dots/sec ≈ rate / EMIT_DIVISOR (2× volume ≈ 2× dots), capped
+ *  at MAX_EMIT_PER_SEC (250ms) and bounded to ≤EMIT_SPREAD_CAP× across sources. */
+export const EMIT_DIVISOR = 200;
+export const MAX_EMIT_PER_SEC = 4;
+export const EMIT_SPREAD_CAP = 5;
 /** Synthetic per-source rate used only while DEV_KEEP_FLOWING forces the flow. */
 export const DEV_SYNTH_RATE = 320;
 /** Hard cap on live particles (matches the reference). */
