@@ -17,6 +17,7 @@ import org.mockito.Mockito;
 
 import stirling.software.saas.payg.billing.TeamBillingContext;
 import stirling.software.saas.payg.billing.TeamBillingService;
+import stirling.software.saas.payg.bundle.PrepaidBundleService;
 import stirling.software.saas.payg.model.EntitlementState;
 import stirling.software.saas.payg.model.FeatureGate;
 import stirling.software.saas.payg.model.FeatureSet;
@@ -47,6 +48,7 @@ class EntitlementServiceTest {
     private TeamBillingService billingService;
     private WalletPolicyRepository walletPolicyRepo;
     private WalletLedgerRepository ledgerRepo;
+    private PrepaidBundleService prepaidBundleService;
     private EntitlementService service;
 
     @BeforeEach
@@ -54,7 +56,10 @@ class EntitlementServiceTest {
         billingService = Mockito.mock(TeamBillingService.class);
         walletPolicyRepo = Mockito.mock(WalletPolicyRepository.class);
         ledgerRepo = Mockito.mock(WalletLedgerRepository.class);
-        service = new EntitlementService(billingService, walletPolicyRepo, ledgerRepo);
+        prepaidBundleService = Mockito.mock(PrepaidBundleService.class);
+        service =
+                new EntitlementService(
+                        billingService, walletPolicyRepo, ledgerRepo, prepaidBundleService);
     }
 
     @Test
@@ -122,10 +127,13 @@ class EntitlementServiceTest {
     }
 
     @Test
-    void exhaustedGrant_returnsDegradedWithMinimalGates() {
-        // Grant fully consumed (remaining 0) → billable categories hard-stop for an unsubscribed
-        // team. The displayed cap stays the grant size; spend reads as the full grant.
+    void exhaustedGrantAndNoPrepaid_returnsDegradedWithMinimalGates() {
+        // Grant fully consumed (remaining 0) AND no prepaid pool → billable categories hard-stop
+        // for
+        // an unsubscribed team. The displayed cap stays the grant size; spend reads as the full
+        // grant.
         stubBilling(42L, freeContext(100L, 0L));
+        when(prepaidBundleService.prepaidRemainingUnits(42L)).thenReturn(0L);
         when(walletPolicyRepo.findByTeamId(42L))
                 .thenReturn(Optional.of(walletPolicyThresholds(FeatureSet.MINIMAL)));
 
@@ -140,6 +148,45 @@ class EntitlementServiceTest {
                 .containsExactlyInAnyOrder(FeatureGate.OFFSITE_PROCESSING, FeatureGate.CLIENT_SIDE);
         assertThat(snap.enabledGates())
                 .doesNotContain(FeatureGate.AUTOMATION, FeatureGate.AI_SUPPORT);
+    }
+
+    @Test
+    void exhaustedGrantButLivePrepaidPool_staysFullyEntitled() {
+        // Free grant spent (remaining 0) but the team holds a paid prepaid pool → fully entitled,
+        // NOT degraded, even with no metered subscription. All gates (incl. AUTOMATION + AI) are
+        // on;
+        // the pool is drawn in the charge pipeline. This is the Phase-1 fix: paid-for usage is
+        // usable
+        // on its own merit rather than gated behind a subscription that may not have provisioned.
+        stubBilling(42L, freeContext(100L, 0L));
+        when(prepaidBundleService.prepaidRemainingUnits(42L)).thenReturn(480_000L);
+        when(walletPolicyRepo.findByTeamId(42L))
+                .thenReturn(Optional.of(walletPolicyThresholds(FeatureSet.MINIMAL)));
+
+        EntitlementSnapshot snap = service.getSnapshot(42L);
+
+        assertThat(snap.state()).isEqualTo(EntitlementState.FULL);
+        assertThat(snap.featureSet()).isEqualTo(FeatureSet.FULL);
+        assertThat(snap.enabledGates())
+                .containsExactlyInAnyOrder(
+                        FeatureGate.OFFSITE_PROCESSING,
+                        FeatureGate.AUTOMATION,
+                        FeatureGate.AI_SUPPORT,
+                        FeatureGate.CLIENT_SIDE);
+        assertThat(snap.subscribed()).isFalse();
+    }
+
+    @Test
+    void grantStillHasBalance_prepaidNotConsulted() {
+        // While the free grant has balance, the gate never queries prepaid (lazy — only checked
+        // when
+        // the grant is exhausted). Keeps the common free-tier path off the prepaid table.
+        stubBilling(42L, freeContext(500L, 400L));
+        when(walletPolicyRepo.findByTeamId(42L)).thenReturn(Optional.empty());
+
+        service.getSnapshot(42L);
+
+        Mockito.verifyNoInteractions(prepaidBundleService);
     }
 
     @Test

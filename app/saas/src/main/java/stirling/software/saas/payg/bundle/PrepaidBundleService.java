@@ -132,6 +132,17 @@ public class PrepaidBundleService {
         return new PrepaidSummary(remaining, total, soonest);
     }
 
+    /**
+     * Total prepaid units a team can still draw right now (in-term pools only); 0 when it has none.
+     * The entitlement gate uses this so a team with a live prepaid pool stays entitled even without
+     * a metered subscription — paid-for capacity is usable on its own merit.
+     */
+    @Transactional(readOnly = true)
+    public long prepaidRemainingUnits(Long teamId) {
+        PrepaidSummary summary = summarize(teamId);
+        return summary == null ? 0L : summary.unitsRemaining();
+    }
+
     /** Aggregated prepaid balance for a team's in-term pools. */
     public record PrepaidSummary(long unitsRemaining, long unitsTotal, LocalDateTime expiresAt) {}
 }

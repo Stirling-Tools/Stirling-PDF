@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.saas.payg.billing.TeamBillingContext;
 import stirling.software.saas.payg.billing.TeamBillingService;
+import stirling.software.saas.payg.bundle.PrepaidBundleService;
 import stirling.software.saas.payg.cap.CapEvaluator;
 import stirling.software.saas.payg.cap.CapEvaluator.Evaluation;
 import stirling.software.saas.payg.model.EntitlementState;
@@ -51,17 +52,21 @@ public class EntitlementService {
     private final TeamBillingService teamBillingService;
     private final WalletPolicyRepository walletPolicyRepository;
     private final WalletLedgerRepository ledgerRepository;
+    private final PrepaidBundleService prepaidBundleService;
 
     private final Cache<Long, EntitlementSnapshot> snapshotCache;
 
     public EntitlementService(
             TeamBillingService teamBillingService,
             WalletPolicyRepository walletPolicyRepository,
-            WalletLedgerRepository ledgerRepository) {
+            WalletLedgerRepository ledgerRepository,
+            PrepaidBundleService prepaidBundleService) {
         this.teamBillingService = Objects.requireNonNull(teamBillingService, "teamBillingService");
         this.walletPolicyRepository =
                 Objects.requireNonNull(walletPolicyRepository, "walletPolicyRepository");
         this.ledgerRepository = Objects.requireNonNull(ledgerRepository, "ledgerRepository");
+        this.prepaidBundleService =
+                Objects.requireNonNull(prepaidBundleService, "prepaidBundleService");
         this.snapshotCache =
                 Caffeine.newBuilder()
                         .maximumSize(CACHE_MAX_SIZE)
@@ -138,18 +143,32 @@ public class EntitlementService {
             snapshotSpend = periodSpend;
             snapshotCap = cap;
         } else {
-            // Unsubscribed: gate on the one-time lifetime free grant. Exhausted (remaining ≤ 0, or
-            // no grant configured) → DEGRADED so billable categories hard-stop; otherwise evaluate
-            // the warn/degrade band on used-of-grant.
+            // Unsubscribed: gate on the one-time lifetime free grant, then on a prepaid pool. While
+            // the free grant has balance, evaluate the warn/degrade band on used-of-grant. Once the
+            // free grant is spent, a live prepaid pool keeps the team fully entitled — paid-for
+            // capacity is usable on its own merit, independent of any metered subscription (the
+            // pool
+            // is drawn in JobChargeService; only the metered remainder stays gated on the sub).
+            // Only
+            // when BOTH the free grant and prepaid are exhausted do billable categories hard-stop.
             long grant = billing.freeGrantUnits();
             long remaining = billing.freeRemainingUnits();
             long used = Math.max(0L, grant - remaining);
             if (remaining <= 0L) {
-                eval =
-                        new Evaluation(
-                                EntitlementState.DEGRADED,
-                                degradedSet,
-                                CapEvaluator.gatesFor(degradedSet));
+                long prepaidRemaining = prepaidBundleService.prepaidRemainingUnits(teamId);
+                if (prepaidRemaining > 0L) {
+                    eval =
+                            new Evaluation(
+                                    EntitlementState.FULL,
+                                    FeatureSet.FULL,
+                                    CapEvaluator.gatesFor(FeatureSet.FULL));
+                } else {
+                    eval =
+                            new Evaluation(
+                                    EntitlementState.DEGRADED,
+                                    degradedSet,
+                                    CapEvaluator.gatesFor(degradedSet));
+                }
             } else {
                 eval = CapEvaluator.evaluate(used, grant, warnAtPct, degradeAtPct, degradedSet);
             }

@@ -279,7 +279,8 @@ public class JobChargeService {
         // meter don't charge again for capacity already bought up front. (Free-grant units are NOT
         // netted here — they still count toward CYCLE/cap; only the bundle split is removed.)
         // doc_count stays the full count so the PDF is still counted once by usage analytics (which
-        // sum doc_count over DEBIT rows, bucket-agnostic). A fully-prepaid charge therefore writes a
+        // sum doc_count over DEBIT rows, bucket-agnostic). A fully-prepaid charge therefore writes
+        // a
         // 0-unit DEBIT that still counts toward "PDFs processed".
         int meteredUnits = units - bundleUnitsConsumed;
         WalletLedgerEntry entry = new WalletLedgerEntry();
