@@ -131,8 +131,8 @@ export default function AdminFolderAccessSection() {
       return;
     }
     try {
-      markSaved();
       await saveSettings();
+      markSaved();
       showRestartModal();
     } catch (_error) {
       alert({
