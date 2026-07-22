@@ -34,7 +34,7 @@ import {
 import { fetchSources } from "@portal/api/sources";
 import { useAsync } from "@portal/hooks/useAsync";
 import { PolicyFieldRow } from "@portal/components/policies/PolicyFieldRow";
-import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
+import { PolicyCategoryBadge } from "@portal/components/policies/PolicyCategoryIcon";
 import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig";
 import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
 import { ClassificationLabelsSection } from "@portal/components/policies/ClassificationLabelsSection";
@@ -113,6 +113,14 @@ const CAPABILITY_META: Record<
     descKey: "portal.policies.wizard.capability.sanitize.desc",
     descEn:
       "Removes hidden JavaScript so nothing can run automatically when the document is opened.",
+  },
+
+  timestampPdf: {
+    labelKey: "portal.policies.wizard.capability.timestampPdf.label",
+    labelEn: "Add a trusted timestamp",
+    descKey: "portal.policies.wizard.capability.timestampPdf.desc",
+    descEn:
+      "Proves the document existed in this exact form at a point in time, using an independent timestamp authority. Only a hash is sent - the document never leaves your server.",
   },
   watermark: {
     labelKey: "portal.policies.wizard.capability.watermark.label",
@@ -334,9 +342,7 @@ function PolicySetupWizardBody({
       width="lg"
       title={
         <span className="portal-policies__wizard-title">
-          <span className="portal-policies__cat-icon" aria-hidden>
-            {policyCategoryIcon(category.id)}
-          </span>
+          <PolicyCategoryBadge category={category} />
           {isEdit
             ? t("portal.policies.wizard.title.edit", {
                 category: t(category.label),

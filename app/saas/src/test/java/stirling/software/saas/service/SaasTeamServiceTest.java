@@ -65,16 +65,9 @@ class SaasTeamServiceTest {
     @Mock private UserRoleService userRoleService;
     @Mock private SaasTeamExtensionService saasTeamExtensionService;
     @Mock private SaasTeamExtensionsRepository saasTeamExtensionsRepository;
+    @Mock private SaasUserExtensionService saasUserExtensionService;
     @Mock private LinkedInstanceRepository linkedInstanceRepository;
     @Mock private stirling.software.proprietary.security.service.UserService userService;
-
-    @Mock
-    private stirling.software.proprietary.access.repository.ResourceGrantRepository
-            resourceGrantRepository;
-
-    @Mock
-    private stirling.software.proprietary.integration.repository.IntegrationConfigRepository
-            integrationConfigRepository;
 
     @InjectMocks private SaasTeamService service;
 
@@ -694,7 +687,6 @@ class SaasTeamServiceTest {
             when(saasTeamExtensionService.hasAvailableSeats(newTeam)).thenReturn(true);
             when(membershipRepository.findByUserId(5L))
                     .thenReturn(List.of(membership(ownTeam, u, TeamRole.LEADER)));
-            when(saasTeamExtensionService.isPersonal(ownTeam)).thenReturn(false);
             when(membershipRepository.countByTeamIdAndRole(200L, TeamRole.LEADER)).thenReturn(1L);
             when(billingSubscriptionRepository.existsActiveSubscriptionForTeam(200L))
                     .thenReturn(true);
@@ -705,9 +697,10 @@ class SaasTeamServiceTest {
         }
 
         @Test
-        @DisplayName(
-                "blocks accept when the user is the last leader of an unpaid non-personal team")
-        void lastLeaderOfUnpaidTeam_blocksAccept() {
+        @DisplayName("allows accept for the last leader of an unpaid non-personal team")
+        void lastLeaderOfUnpaidTeam_allowsAccept() {
+            // The old over-broad "transfer leadership" block is gone: an unpaid, unlinked team is
+            // never orphaned in the durable model, so the join proceeds.
             User u = user(5L, "b@x.com", "bob");
             Team newTeam = team(100L, "Acme");
             Team ownTeam = team(200L, "Bob Co");
@@ -719,44 +712,40 @@ class SaasTeamServiceTest {
             when(saasTeamExtensionService.hasAvailableSeats(newTeam)).thenReturn(true);
             when(membershipRepository.findByUserId(5L))
                     .thenReturn(List.of(membership(ownTeam, u, TeamRole.LEADER)));
-            when(saasTeamExtensionService.isPersonal(ownTeam)).thenReturn(false);
             when(membershipRepository.countByTeamIdAndRole(200L, TeamRole.LEADER)).thenReturn(1L);
             when(billingSubscriptionRepository.existsActiveSubscriptionForTeam(200L))
                     .thenReturn(false);
+            when(saasTeamExtensionsRepository.incrementSeatsUsed(100L)).thenReturn(1);
 
-            assertThatThrownBy(() -> service.acceptInvitation("tok-123", u))
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("Transfer leadership");
+            service.acceptInvitation("tok-123", u);
+
+            assertThat(inv.getStatus()).isEqualTo(InvitationStatus.ACCEPTED);
+            verify(userRepository).updateUserTeamId(5L, 100L);
         }
 
         @Test
-        @DisplayName(
-                "happy path: leaves personal team, deletes it, joins new team, increments seats")
-        void success_migratesFromPersonalTeam() {
+        @DisplayName("parks the home team (keeps it) and joins the new team, incrementing seats")
+        void success_parksHomeTeamAndJoins() {
             User u = user(5L, "b@x.com", "bob");
             Team newTeam = team(100L, "Acme");
-            Team personal = team(200L, "My Team");
+            Team home = team(200L, "My Team");
             User inviter = user(1L, "a@x.com", "alice");
             TeamInvitation inv = pendingInvitation(newTeam, inviter, "b@x.com");
-            TeamMembership personalMembership = membership(personal, u, TeamRole.LEADER);
+            TeamMembership homeMembership = membership(home, u, TeamRole.LEADER);
 
             when(userRepository.findById(5L)).thenReturn(Optional.of(u));
             when(invitationRepository.findByInvitationToken("tok-123"))
                     .thenReturn(Optional.of(inv));
             when(saasTeamExtensionService.hasAvailableSeats(newTeam)).thenReturn(true);
-            // assertCanLeave... iterates memberships; personal team is skipped.
-            when(membershipRepository.findByUserId(5L))
-                    .thenReturn(List.of(personalMembership))
-                    .thenReturn(List.of(personalMembership));
-            when(saasTeamExtensionService.isPersonal(personal)).thenReturn(true);
-            when(membershipRepository.countByTeamId(200L)).thenReturn(0L);
+            when(saasUserExtensionService.getHomeTeamId(u)).thenReturn(200L);
+            when(membershipRepository.findByUserId(5L)).thenReturn(List.of(homeMembership));
             when(saasTeamExtensionsRepository.incrementSeatsUsed(100L)).thenReturn(1);
 
             service.acceptInvitation("tok-123", u);
 
-            verify(membershipRepository).delete(personalMembership);
-            verify(saasTeamExtensionsRepository).decrementSeatsUsed(200L);
-            verify(teamRepository).delete(personal);
+            // Home team + its membership are kept (parked), never deleted.
+            verify(membershipRepository, never()).delete(homeMembership);
+            verify(teamRepository, never()).delete(home);
             verify(userRepository).updateUserTeamId(5L, 100L);
             assertThat(inv.getStatus()).isEqualTo(InvitationStatus.ACCEPTED);
             ArgumentCaptor<TeamMembership> mcap = ArgumentCaptor.forClass(TeamMembership.class);
@@ -803,13 +792,40 @@ class SaasTeamServiceTest {
             when(membershipRepository.findByUserId(5L))
                     .thenReturn(List.of(oldMembership))
                     .thenReturn(List.of(oldMembership));
-            when(saasTeamExtensionService.isPersonal(oldTeam)).thenReturn(false);
             when(saasTeamExtensionsRepository.incrementSeatsUsed(100L)).thenReturn(1);
 
             service.acceptInvitation("tok-123", u);
 
             verify(teamRepository, never()).delete(oldTeam);
             verify(userRepository).updateUserTeamId(5L, 100L);
+        }
+
+        @Test
+        @DisplayName("keeps a led team with other members (parks it) instead of orphaning it")
+        void soleLeaderOfSharedTeam_teamKeptNotOrphaned() {
+            User u = user(5L, "b@x.com", "bob");
+            Team newTeam = team(100L, "Acme");
+            Team shared = team(300L, "Bob's Org"); // u solely leads it; it has other members
+            TeamMembership sharedMembership = membership(shared, u, TeamRole.LEADER);
+            TeamInvitation inv =
+                    pendingInvitation(newTeam, user(1L, "a@x.com", "alice"), "b@x.com");
+
+            when(userRepository.findById(5L)).thenReturn(Optional.of(u));
+            when(invitationRepository.findByInvitationToken("tok-123"))
+                    .thenReturn(Optional.of(inv));
+            when(saasTeamExtensionService.hasAvailableSeats(newTeam)).thenReturn(true);
+            when(membershipRepository.findByUserId(5L)).thenReturn(List.of(sharedMembership));
+            // Shared team: sole leader, but >1 member - leaving would orphan the other member.
+            when(membershipRepository.countByTeamId(300L)).thenReturn(2L);
+            when(membershipRepository.countByTeamIdAndRole(300L, TeamRole.LEADER)).thenReturn(1L);
+            when(saasTeamExtensionsRepository.incrementSeatsUsed(100L)).thenReturn(1);
+
+            service.acceptInvitation("tok-123", u);
+
+            // The led team is parked: its membership is kept, not deleted.
+            verify(membershipRepository, never()).delete(sharedMembership);
+            verify(userRepository).updateUserTeamId(5L, 100L);
+            assertThat(inv.getStatus()).isEqualTo(InvitationStatus.ACCEPTED);
         }
     }
 
@@ -987,8 +1003,8 @@ class SaasTeamServiceTest {
         }
 
         @Test
-        @DisplayName("removes the member, decrements seats, makes a personal team, downgrades")
-        void success_removesMemberAndDeletesEmptyTeam() {
+        @DisplayName("removes the member, decrements seats, returns them home; no team deletion")
+        void success_removesMemberReturnsHome() {
             User remover = user(1L, "a@x.com", "alice");
             User target = user(2L, "b@x.com", "bob");
             Team t = team(teamId, "Acme");
@@ -1001,19 +1017,16 @@ class SaasTeamServiceTest {
                     .thenReturn(List.of(leaderM));
             when(membershipRepository.findByTeamIdAndUserId(teamId, 2L))
                     .thenReturn(Optional.of(targetM));
-            when(teamRepository.findById(teamId)).thenReturn(Optional.of(t));
-            // createPersonalTeam + downgradeUserToFree both refetch the removed user by id.
+            // No home stubbed for the removed user -> returnUserToHome mints a fresh personal home.
             // target has no PRO authority, so downgrade hits the early return.
             stubCreatePersonalTeam(target, 500L);
-            // team becomes empty + non-personal -> deleted
-            when(saasTeamExtensionService.isPersonal(t)).thenReturn(false);
-            when(membershipRepository.countByTeamId(teamId)).thenReturn(0L);
 
             service.removeTeamMember(teamId, 2L, remover);
 
             verify(membershipRepository).delete(targetM);
             verify(saasTeamExtensionsRepository).decrementSeatsUsed(teamId);
-            verify(teamRepository).delete(t);
+            // Teams are durable now - the emptied team is not deleted.
+            verify(teamRepository, never()).delete(any());
         }
 
         @Test
@@ -1031,10 +1044,7 @@ class SaasTeamServiceTest {
                     .thenReturn(List.of(leaderM));
             when(membershipRepository.findByTeamIdAndUserId(teamId, 2L))
                     .thenReturn(Optional.of(targetM));
-            when(teamRepository.findById(teamId)).thenReturn(Optional.of(t));
             stubCreatePersonalTeam(target, 500L);
-            when(saasTeamExtensionService.isPersonal(t)).thenReturn(false);
-            when(membershipRepository.countByTeamId(teamId)).thenReturn(2L);
 
             service.removeTeamMember(teamId, 2L, remover);
 
@@ -1078,28 +1088,27 @@ class SaasTeamServiceTest {
         }
 
         @Test
-        @DisplayName("member leaves: deletes membership, decrements, makes personal team")
+        @DisplayName("member leaves: deletes membership, decrements, returns them home")
         void memberLeaves_success() {
             User u = user(1L, "a@x.com", "alice");
             Team t = team(teamId, "Acme");
             TeamMembership memberM = membership(t, u, TeamRole.MEMBER);
             when(membershipRepository.findByTeamIdAndUserId(teamId, 1L))
                     .thenReturn(Optional.of(memberM));
-            when(teamRepository.findById(teamId)).thenReturn(Optional.of(t));
+            // No home stubbed -> returnUserToHome mints a fresh personal home team.
             stubCreatePersonalTeam(u, 500L);
-            when(saasTeamExtensionService.isPersonal(t)).thenReturn(true);
 
             service.leaveTeam(teamId, u);
 
             verify(membershipRepository).delete(memberM);
             verify(saasTeamExtensionsRepository).decrementSeatsUsed(teamId);
-            // Personal team is never deleted on leave.
+            // Teams are durable now; none is deleted on leave.
             verify(teamRepository, never()).delete(any());
         }
 
         @Test
-        @DisplayName("leader leaves when another leader remains: deletes empty non-personal team")
-        void leaderLeavesWithCoLeader_deletesEmptyTeam() {
+        @DisplayName("co-leader leaves and returns home; the team is durable (not deleted)")
+        void leaderLeavesWithCoLeader_returnsHome() {
             User u = user(1L, "a@x.com", "alice");
             Team t = team(teamId, "Acme");
             TeamMembership leaderM = membership(t, u, TeamRole.LEADER);
@@ -1108,14 +1117,12 @@ class SaasTeamServiceTest {
                     .thenReturn(Optional.of(leaderM));
             when(membershipRepository.findByTeamIdAndRole(teamId, TeamRole.LEADER))
                     .thenReturn(List.of(leaderM, coLeaderM));
-            when(teamRepository.findById(teamId)).thenReturn(Optional.of(t));
             stubCreatePersonalTeam(u, 500L);
-            when(saasTeamExtensionService.isPersonal(t)).thenReturn(false);
-            when(membershipRepository.countByTeamId(teamId)).thenReturn(0L);
 
             service.leaveTeam(teamId, u);
 
-            verify(teamRepository).delete(t);
+            verify(membershipRepository).delete(leaderM);
+            verify(teamRepository, never()).delete(any());
         }
 
         @Test
@@ -1126,9 +1133,7 @@ class SaasTeamServiceTest {
             TeamMembership memberM = membership(t, u, TeamRole.MEMBER);
             when(membershipRepository.findByTeamIdAndUserId(teamId, 1L))
                     .thenReturn(Optional.of(memberM));
-            when(teamRepository.findById(teamId)).thenReturn(Optional.of(t));
             stubTeamSave(500L);
-            when(saasTeamExtensionService.isPersonal(t)).thenReturn(true);
             // Both createPersonalTeam and downgradeUserToFree refetch by id; return the PRO user
             // with an active sub -> keep PRO.
             User proRefetch = proUser(1L, "a@x.com", "alice");
@@ -1150,9 +1155,7 @@ class SaasTeamServiceTest {
             TeamMembership memberM = membership(t, u, TeamRole.MEMBER);
             when(membershipRepository.findByTeamIdAndUserId(teamId, 1L))
                     .thenReturn(Optional.of(memberM));
-            when(teamRepository.findById(teamId)).thenReturn(Optional.of(t));
             stubTeamSave(500L);
-            when(saasTeamExtensionService.isPersonal(t)).thenReturn(true);
             User proRefetch = proUser(1L, "a@x.com", "alice");
             proRefetch.setSupabaseId(SUPABASE_ID);
             when(userRepository.findById(1L)).thenReturn(Optional.of(proRefetch));
@@ -1172,9 +1175,7 @@ class SaasTeamServiceTest {
             TeamMembership memberM = membership(t, u, TeamRole.MEMBER);
             when(membershipRepository.findByTeamIdAndUserId(teamId, 1L))
                     .thenReturn(Optional.of(memberM));
-            when(teamRepository.findById(teamId)).thenReturn(Optional.of(t));
             stubTeamSave(500L);
-            when(saasTeamExtensionService.isPersonal(t)).thenReturn(true);
             // PRO user without supabaseId skips the subscription check and downgrades.
             User proRefetch = proUser(1L, "a@x.com", "alice");
             when(userRepository.findById(1L)).thenReturn(Optional.of(proRefetch));
@@ -1192,9 +1193,7 @@ class SaasTeamServiceTest {
             TeamMembership memberM = membership(t, u, TeamRole.MEMBER);
             when(membershipRepository.findByTeamIdAndUserId(teamId, 1L))
                     .thenReturn(Optional.of(memberM));
-            when(teamRepository.findById(teamId)).thenReturn(Optional.of(t));
             stubTeamSave(500L);
-            when(saasTeamExtensionService.isPersonal(t)).thenReturn(true);
             User proRefetch = proUser(1L, "a@x.com", "alice");
             proRefetch.setSupabaseId(SUPABASE_ID);
             when(userRepository.findById(1L)).thenReturn(Optional.of(proRefetch));
@@ -1469,6 +1468,36 @@ class SaasTeamServiceTest {
             verify(membershipRepository).delete(oldMembership);
             verify(userRepository).updateUserTeamId(USER_ID, NEW_TEAM_ID);
             verify(invitationRepository).save(invitation);
+            assertThat(invitation.getStatus()).isEqualTo(InvitationStatus.ACCEPTED);
+        }
+
+        @Test
+        @DisplayName("does not block when the only linked instance is on the parked home team")
+        void passesGuardWhenLinkedInstanceIsOnHomeTeam() {
+            User joiner = user(USER_ID, EMAIL, EMAIL);
+            Team homeTeam = team(OLD_TEAM_ID, "home-team");
+            Team newTeam = team(NEW_TEAM_ID, "new-team");
+            TeamInvitation invitation = pendingInvitation(newTeam, joiner);
+            TeamMembership homeMembership = membership(homeTeam, joiner, TeamRole.LEADER);
+
+            when(userRepository.findById(USER_ID)).thenReturn(Optional.of(joiner));
+            when(invitationRepository.findByInvitationToken(TOKEN))
+                    .thenReturn(Optional.of(invitation));
+            when(saasTeamExtensionService.hasAvailableSeats(newTeam)).thenReturn(true);
+            // The linked team IS the durable home, so the join parks it rather than orphaning it.
+            when(saasUserExtensionService.getHomeTeamId(joiner)).thenReturn(OLD_TEAM_ID);
+            when(membershipRepository.findByUserId(USER_ID)).thenReturn(List.of(homeMembership));
+            // Home still carries a non-revoked linked instance - the old guard wrongly blocked
+            // here.
+            when(linkedInstanceRepository.countByTeamIdAndRevokedAtIsNull(OLD_TEAM_ID))
+                    .thenReturn(1L);
+            when(saasTeamExtensionsRepository.incrementSeatsUsed(NEW_TEAM_ID)).thenReturn(1);
+
+            service.acceptInvitation(TOKEN, joiner);
+
+            // Home parked (never deleted), user re-pointed to the new team, invite accepted.
+            verify(membershipRepository, never()).delete(homeMembership);
+            verify(userRepository).updateUserTeamId(USER_ID, NEW_TEAM_ID);
             assertThat(invitation.getStatus()).isEqualTo(InvitationStatus.ACCEPTED);
         }
 
