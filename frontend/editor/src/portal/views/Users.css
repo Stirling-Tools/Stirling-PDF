@@ -226,6 +226,12 @@
   margin: 0.75rem 0 0.875rem;
 }
 
+@media (max-width: 30rem) {
+  .portal-users__access-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
 .portal-users__toggle-rows {
   display: flex;
   flex-direction: column;

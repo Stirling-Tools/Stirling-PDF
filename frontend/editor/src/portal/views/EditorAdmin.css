@@ -340,6 +340,12 @@
   gap: 0.875rem;
 }
 
+@media (max-width: 30rem) {
+  .portal-editor__token-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 .portal-editor__panel-actions {
   display: flex;
   gap: 0.5rem;

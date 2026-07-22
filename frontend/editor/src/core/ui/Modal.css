@@ -25,8 +25,20 @@
   flex-direction: column;
   width: 100%;
   max-height: calc(100vh - 6.5rem);
+  max-height: calc(100dvh - 6.5rem); /* mobile browser chrome shrinks 100vh */
   overflow: hidden;
   animation: scaleIn 0.2s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* Phones: drop the tall top inset so the modal gets the vertical space */
+@media (max-width: 30rem) {
+  .sui-modal__backdrop {
+    padding: 1rem 0.75rem;
+    align-items: center;
+  }
+  .sui-modal {
+    max-height: calc(100dvh - 2rem);
+  }
 }
 
 .sui-modal--sm {

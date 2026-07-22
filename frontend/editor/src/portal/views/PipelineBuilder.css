@@ -251,6 +251,13 @@
   gap: 0.625rem;
 }
 
+/* Once the grid stacks (60rem), a sticky inspector would ride over content */
+@media (max-width: 60rem) {
+  .portal-builder__inspector-col {
+    position: static;
+  }
+}
+
 .portal-builder__inspector {
   background: var(--c-surface);
   border: 1px solid var(--c-border);

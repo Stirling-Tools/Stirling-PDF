@@ -183,6 +183,12 @@
   border-top: 1px solid var(--c-border-subtle);
 }
 
+@media (max-width: 30rem) {
+  .portal-policies__card-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Wizard + detail shared chrome */
 .portal-policies__wizard-title {
   display: inline-flex;

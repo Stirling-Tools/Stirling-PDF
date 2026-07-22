@@ -1,6 +1,7 @@
 .portal-sidebar {
   width: 15rem;
   height: 100vh;
+  height: 100dvh; /* track mobile browser chrome */
   background: var(--c-bg-raised);
   border-right: 1px solid var(--c-border);
   display: flex;
@@ -8,6 +9,43 @@
   flex-shrink: 0;
   position: sticky;
   top: 0;
+}
+
+/* Mobile close button (shared ActionIcon) — only shown inside the drawer. */
+.portal-sidebar__close {
+  display: none;
+  flex-shrink: 0;
+}
+
+/* Off-canvas drawer under the shell breakpoint (keep in sync with
+   AppShell.css and Sidebar.tsx). Slides from the inline-start edge so RTL
+   locales get the mirrored behavior for free. */
+@media (max-width: 48rem) {
+  .portal-sidebar {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: 0;
+    z-index: 80; /* above the scrim (75), below SUI modals (100) */
+    width: min(17rem, 85vw);
+    border-right: none;
+    border-inline-end: 1px solid var(--color-sidebar-border);
+    transform: translateX(calc(var(--sui-dir, 1) * -100%));
+    visibility: hidden;
+    transition:
+      transform var(--motion-fast),
+      visibility var(--motion-fast);
+  }
+  [dir="rtl"] .portal-sidebar {
+    --sui-dir: -1;
+  }
+  .portal-sidebar--open {
+    transform: translateX(0);
+    visibility: visible;
+    box-shadow: 0 0.5rem 2rem rgba(0, 0, 0, 0.35);
+  }
+  .portal-sidebar__close {
+    display: inline-flex;
+  }
 }
 
 /* Logo block */
