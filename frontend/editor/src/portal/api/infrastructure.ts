@@ -290,32 +290,28 @@ export async function fetchDeployments(
 
 const API_KEYS_PATH = "/api/v1/proprietary/ui-data/infrastructure/api-keys";
 
-/** GET the caller's personal API keys; SaaS or local, scoped server-side per user. */
+// Always this instance's own backend: a key authenticates the instance that issued it, so a
+// self-hosted instance manages its own keys even when SaaS-linked (.local is the SaaS backend on SaaS).
+
+/** GET the caller's personal API keys; scoped server-side per user. */
 export async function fetchApiKeys(): Promise<ApiKeysResponse> {
-  return apiClient.saas.isConfigured()
-    ? apiClient.saas.json<ApiKeysResponse>(API_KEYS_PATH)
-    : apiClient.local.json<ApiKeysResponse>(API_KEYS_PATH);
+  return apiClient.local.json<ApiKeysResponse>(API_KEYS_PATH);
 }
 
 /** POST a new key; the response carries the one-time secret. */
 export async function createApiKey(body: {
   name: string;
 }): Promise<CreatedApiKey> {
-  const opts = { method: "POST" as const, body };
-  return apiClient.saas.isConfigured()
-    ? apiClient.saas.json<CreatedApiKey>(API_KEYS_PATH, opts)
-    : apiClient.local.json<CreatedApiKey>(API_KEYS_PATH, opts);
+  return apiClient.local.json<CreatedApiKey>(API_KEYS_PATH, {
+    method: "POST",
+    body,
+  });
 }
 
 /** DELETE (revoke) a key the caller owns. */
 export async function revokeApiKey(id: string): Promise<void> {
   const path = `${API_KEYS_PATH}/${encodeURIComponent(id)}`;
-  const opts = { method: "DELETE" as const };
-  if (apiClient.saas.isConfigured()) {
-    await apiClient.saas.json<void>(path, opts);
-  } else {
-    await apiClient.local.json<void>(path, opts);
-  }
+  await apiClient.local.json<void>(path, { method: "DELETE" });
 }
 
 /** GET /v1/infrastructure/security?tier=… */
