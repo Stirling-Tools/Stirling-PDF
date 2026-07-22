@@ -50,17 +50,16 @@
 }
 
 .file-sidebar-file-item:hover .file-sidebar-file-actions,
-.file-sidebar-file-item.viewed .file-sidebar-file-actions {
+.file-sidebar-file-item:focus-within .file-sidebar-file-actions,
+.file-sidebar-file-item.viewed .file-sidebar-file-actions,
+.file-sidebar-file-item.selected .file-sidebar-file-actions {
   pointer-events: auto;
 }
 
-/* Only shrink the name to clear the buttons while they're visible. */
+/* Always reserve space for action buttons so file name truncation dots (...)
+   never bleed under action buttons or overlap their outline/focus box. */
 .file-sidebar-file-info {
-  transition: padding-right 0.12s ease;
-}
-.file-sidebar-file-item:hover .file-sidebar-file-info,
-.file-sidebar-file-item.viewed .file-sidebar-file-info {
-  padding-right: 3.5rem;
+  padding-right: 3.75rem;
 }
 
 .file-sidebar-file-item:hover:not(.selected) {
@@ -368,8 +367,10 @@
     color 0.12s ease;
 }
 
-/* Reveal on row hover, and keep it shown while its menu is open. */
+/* Reveal on row hover/focus/selected, and keep it shown while its menu is open. */
 .file-sidebar-file-item:hover .file-sidebar-kebab-btn,
+.file-sidebar-file-item:focus-within .file-sidebar-kebab-btn,
+.file-sidebar-file-item.selected .file-sidebar-kebab-btn,
 .file-sidebar-kebab-btn[aria-expanded="true"] {
   opacity: 1;
 }
