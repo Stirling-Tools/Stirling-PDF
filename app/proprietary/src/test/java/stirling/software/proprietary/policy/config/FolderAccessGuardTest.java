@@ -81,8 +81,9 @@ class FolderAccessGuardTest {
     @Test
     void rejectsADirectoryOutsideEveryAllowedRoot() {
         FolderAccessGuard guard = guard(List.of(tempDir.toString()));
+        // FolderAccessDeniedException (not the base type): the admin can fix this in settings.
         assertThrows(
-                IllegalArgumentException.class,
+                FolderAccessDeniedException.class,
                 () -> guard.requirePermitted(tempDir.resolveSibling("elsewhere")));
     }
 
@@ -90,14 +91,14 @@ class FolderAccessGuardTest {
     void rejectsTraversalThatWalksOutOfAnAllowedRoot() {
         FolderAccessGuard guard = guard(List.of(tempDir.toString()));
         assertThrows(
-                IllegalArgumentException.class,
+                FolderAccessDeniedException.class,
                 () -> guard.requirePermitted(tempDir.resolve("..").resolve("escaped")));
     }
 
     @Test
     void rejectsEverythingWhenNoRootsAreConfigured() {
         FolderAccessGuard guard = guard(List.of());
-        assertThrows(IllegalArgumentException.class, () -> guard.requirePermitted(tempDir));
+        assertThrows(FolderAccessDeniedException.class, () -> guard.requirePermitted(tempDir));
     }
 
     @Test
@@ -143,15 +144,21 @@ class FolderAccessGuardTest {
         // Allow the config dir's parent, so only the protected-path rule can reject it.
         FolderAccessGuard guard = guard(List.of(configDir.getParent().toString()));
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> guard.requirePermitted(configDir.resolve("settings.yml")));
+        // Not a FolderAccessDeniedException: editing the allowlist can't unprotect the config dir.
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> guard.requirePermitted(configDir.resolve("settings.yml")));
+        assertFalse(ex instanceof FolderAccessDeniedException);
     }
 
     @Test
     void refusesAllFolderAccessUnderTheSaasProfile() {
         FolderAccessGuard guard = guard(List.of(tempDir.toString()), "saas");
-        assertThrows(IllegalArgumentException.class, () -> guard.requirePermitted(tempDir));
+        // Not a FolderAccessDeniedException: SaaS has no folder allowlist to point the admin at.
+        IllegalArgumentException ex =
+                assertThrows(IllegalArgumentException.class, () -> guard.requirePermitted(tempDir));
+        assertFalse(ex instanceof FolderAccessDeniedException);
     }
 
     @Test

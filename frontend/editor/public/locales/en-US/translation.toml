@@ -7951,6 +7951,11 @@ editTitle = "Edit source"
 enabled = "Enabled"
 save = "Save changes"
 
+[portal.sources.builder.folderAccess]
+description = "Folder automations can only use folders an administrator has allowed. Add it under Folder Access settings, then try again."
+openSettings = "Folder Access settings"
+title = "This folder isn't allowed"
+
 [portal.sources.delete]
 body = "Delete \"{{name}}\"? This can't be undone. Policies that reference it would need to be updated."
 cancel = "Cancel"

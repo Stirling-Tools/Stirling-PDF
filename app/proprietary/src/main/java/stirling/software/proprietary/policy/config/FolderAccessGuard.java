@@ -83,12 +83,12 @@ public class FolderAccessGuard {
             return normalized;
         }
         if (allowedRoots.isEmpty()) {
-            throw new IllegalArgumentException(
+            throw new FolderAccessDeniedException(
                     "folder access is disabled; set policies.allowedFolderRoots to permit it");
         }
         boolean within = allowedRoots.stream().anyMatch(normalized::startsWith);
         if (!within) {
-            throw new IllegalArgumentException(
+            throw new FolderAccessDeniedException(
                     "folder '" + normalized + "' is outside the allowed folder roots");
         }
         return normalized;
