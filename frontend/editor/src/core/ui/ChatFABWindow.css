@@ -5,12 +5,12 @@
   width: 100%;
   height: 100%;
   /* Use Mantine variables in the editor; fall back to shared tokens in storybook */
-  background: var(--mantine-color-body, var(--c-surface, #ffffff));
+  background: var(--mantine-color-body, var(--c-surface));
   border-radius: 16px;
-  border: 1px solid var(--c-border-subtle, var(--c-border, var(--p-gray-250)));
+  border: 1px solid var(--c-border-subtle, var(--c-border));
   box-shadow:
-    0 8px 32px color-mix(in srgb, var(--p-gray-900) 14%, transparent),
-    0 2px 8px color-mix(in srgb, var(--p-gray-900) 6%, transparent);
+    0 8px 32px rgba(0, 0, 0, 0.14),
+    0 2px 8px rgba(0, 0, 0, 0.06);
   overflow: hidden;
 
   /* Closed state: collapsed toward bottom-right origin */

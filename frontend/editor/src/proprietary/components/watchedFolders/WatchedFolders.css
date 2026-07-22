@@ -63,9 +63,9 @@
 
 /* Dragging a file the folder already contains — signal it's a no-op, not an add. */
 .wf-card.is-already-member {
-  background: color-mix(in srgb, var(--p-amber-500) 8%, var(--c-surface));
-  box-shadow: 0 0 0 2px var(--p-amber-500);
-  border-color: var(--p-amber-500);
+  background: color-mix(in srgb, var(--c-warning) 8%, var(--c-surface));
+  box-shadow: 0 0 0 2px var(--c-warning);
+  border-color: var(--c-warning);
 }
 
 .wf-card-drag-message {

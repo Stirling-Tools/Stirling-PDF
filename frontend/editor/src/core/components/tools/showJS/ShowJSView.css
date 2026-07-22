@@ -74,7 +74,7 @@
 .search-hit {
   background: color-mix(
     in srgb,
-    var(--p-flash-yellow) 40%,
+    var(--c-highlight) 40%,
     transparent
   ); /* yellow highlight */
   border-radius: 2px;
@@ -82,7 +82,7 @@
 .search-hit-active {
   background: color-mix(
     in srgb,
-    var(--p-blue-500) 40%,
+    var(--c-primary) 40%,
     transparent
   ); /* active blue */
 }

@@ -183,7 +183,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, var(--p-red-600) 12%, transparent);
+  background: color-mix(in srgb, var(--c-danger) 12%, transparent);
   border-radius: 12px;
   z-index: 2;
   pointer-events: none;
@@ -191,7 +191,7 @@
 
 .errorPill {
   background: var(--mantine-color-red-6);
-  color: white;
+  color: var(--c-text-on-primary);
   border-radius: 12px;
   padding: 4px 12px;
   font-size: 12px;
@@ -233,7 +233,7 @@
 
 .ownershipBadge {
   background: var(--mantine-color-blue-6);
-  color: white;
+  color: var(--c-text-on-primary);
   border-radius: 6px;
   padding: 2px 7px;
   font-size: 10px;
@@ -247,14 +247,14 @@
   padding: 1px 5px;
   font-size: 10px;
   font-weight: 700;
-  color: white;
+  color: var(--c-text-on-primary);
   line-height: 16px;
   white-space: nowrap;
 }
 
 .pinnedBadge {
   background: var(--mantine-color-yellow-6);
-  color: white;
+  color: var(--c-text-on-primary);
   border-radius: 4px;
   padding: 2px 4px;
   display: flex;

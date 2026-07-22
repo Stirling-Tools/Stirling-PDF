@@ -86,7 +86,7 @@
 
 .unsupportedPill {
   margin-left: 1.75rem;
-  background: var(--p-gray-500);
+  background: var(--c-text-subtle);
   color: white;
   padding: 4px 8px;
   border-radius: 12px;

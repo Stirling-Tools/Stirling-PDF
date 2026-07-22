@@ -60,12 +60,12 @@ interface PaygProps {
 
 // Stable-ish avatar colour from a string.
 const AVATAR_COLORS = [
-  "var(--p-azure-500)",
-  "var(--p-violet-500)",
-  "var(--p-pink-500)",
-  "var(--p-emerald-500)",
-  "var(--p-amber-500)",
-  "var(--p-cyan-500)",
+  "var(--c-avatar-1)",
+  "var(--c-avatar-2)",
+  "var(--c-avatar-3)",
+  "var(--c-avatar-4)",
+  "var(--c-avatar-5)",
+  "var(--c-avatar-6)",
 ];
 function avatarColor(seed: string): string {
   let h = 0;

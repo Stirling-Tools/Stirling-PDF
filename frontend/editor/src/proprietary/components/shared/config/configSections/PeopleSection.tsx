@@ -642,7 +642,7 @@ export default function PeopleSection() {
                   isCurrentUser(user)
                     ? {
                         backgroundColor:
-                          "color-mix(in srgb, var(--p-blue-500) 8%, transparent)",
+                          "color-mix(in srgb, var(--c-primary) 8%, transparent)",
                       }
                     : undefined
                 }

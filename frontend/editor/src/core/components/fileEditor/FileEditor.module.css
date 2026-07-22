@@ -48,8 +48,8 @@
 }
 
 .headerResting {
-  background: var(--p-navy-500); /* dark blue for unselected in light mode */
-  color: #ffffff;
+  background: var(--c-file-header-resting); /* branded navy for unselected files */
+  color: var(--c-text-on-primary);
   border-bottom: 1px solid var(--c-border);
 }
 
@@ -69,7 +69,7 @@
 /* Unsupported (but not errored) header appearance */
 .headerUnsupported {
   background: var(--c-bg-raised); /* neutral gray */
-  color: #ffffff;
+  color: var(--c-text-on-primary);
   border-bottom: 1px solid var(--c-border);
 }
 
@@ -106,7 +106,7 @@
 }
 
 .headerIconButton {
-  color: #ffffff !important;
+  color: var(--c-text-on-primary) !important;
 }
 
 /* Menu dropdown */
@@ -229,13 +229,13 @@
 }
 
 .pinned {
-  color: var(--p-c-ffc107) !important;
+  color: var(--c-warning) !important;
 }
 
 /* Unsupported file indicator */
 .unsupportedPill {
   margin-left: 1.75rem;
-  background: var(--p-gray-500);
+  background: var(--c-neutral-fill);
   color: white;
   padding: 4px 8px;
   border-radius: 12px;
@@ -252,7 +252,7 @@
 .errorPill {
   margin-left: 1.75rem;
   background: var(--color-red-500);
-  color: #ffffff;
+  color: var(--c-text-on-primary);
   padding: 4px 8px;
   border-radius: 12px;
   font-size: 10px;
@@ -291,15 +291,15 @@
    DARK MODE OVERRIDES
    ========================= */
 :global([data-mantine-color-scheme="dark"]) .card {
-  outline-color: var(--p-c-1c2340); /* deselected stroke */
+  outline-color: var(--c-border); /* deselected stroke */
 }
 
 :global([data-mantine-color-scheme="dark"]) .card[data-selected="true"] {
-  outline-color: var(--p-c-2d3560); /* selected stroke (subtle navy) */
+  outline-color: var(--c-primary); /* selected stroke (subtle navy) */
 }
 
 :global([data-mantine-color-scheme="dark"]) .headerResting {
-  background: var(--p-navy-950); /* requested default unselected color */
+  /* Background flips via the themed --c-file-header-resting token. */
   color: var(--c-accent-fg, var(--c-primary));
   border-bottom-color: var(--c-border);
 }
@@ -311,16 +311,16 @@
 }
 
 :global([data-mantine-color-scheme="dark"]) .title {
-  color: var(--p-c-d0d6dc); /* title text */
+  color: var(--c-text); /* title text */
 }
 
 :global([data-mantine-color-scheme="dark"]) .meta {
-  color: var(--p-gray-500); /* subtitle text */
+  color: var(--c-text-muted); /* subtitle text */
 }
 
 /* Light mode selected header stroke override */
 :global([data-mantine-color-scheme="light"]) .card[data-selected="true"] {
-  outline-color: var(--p-navy-500);
+  outline-color: var(--c-primary);
 }
 
 /* =========================

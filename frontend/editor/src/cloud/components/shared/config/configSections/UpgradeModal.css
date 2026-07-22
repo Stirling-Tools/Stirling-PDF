@@ -5,10 +5,10 @@
    user feels like they're filling out one form, not navigating pages. */
 
 .upm {
-  --upm-accent: var(--p-azure-500);
-  --upm-accent-2: var(--p-purple-500);
-  --upm-accent-soft: color-mix(in srgb, var(--p-azure-500) 8%, transparent);
-  --upm-success: var(--p-emerald-500);
+  --upm-accent: var(--c-primary);
+  --upm-accent-2: var(--c-hue-purple);
+  --upm-accent-soft: color-mix(in srgb, var(--c-primary) 8%, transparent);
+  --upm-success: var(--c-success);
   --upm-radius: 18px;
   --upm-card-bg: var(--c-surface);
   --upm-border: var(--c-border);
@@ -19,7 +19,7 @@
 [data-mantine-color-scheme="dark"] .upm {
   /* Card/border/divider track the neutral --c-* tokens (base rule); only the
      brand-azure accent tint is tuned for dark. */
-  --upm-accent-soft: color-mix(in srgb, var(--p-azure-550) 14%, transparent);
+  --upm-accent-soft: color-mix(in srgb, var(--c-primary) 14%, transparent);
 }
 
 /* Backdrop locks the page and centres the modal. z-index matches
@@ -149,7 +149,7 @@
 .upm-step[data-state="active"] .upm-step__dot {
   background: linear-gradient(135deg, var(--upm-accent), var(--upm-accent-2));
   border-color: transparent;
-  color: white;
+  color: var(--c-text-on-primary);
 }
 .upm-step[data-state="done"] {
   color: var(--upm-success);
@@ -157,7 +157,7 @@
 .upm-step[data-state="done"] .upm-step__dot {
   background: var(--upm-success);
   border-color: transparent;
-  color: white;
+  color: var(--c-text-on-primary);
 }
 .upm-step__connector {
   flex: 1 1 auto;
@@ -253,7 +253,7 @@
   border-radius: 6px;
 }
 .upm-step__edit:hover {
-  background: color-mix(in srgb, var(--p-azure-500) 12%, transparent);
+  background: color-mix(in srgb, var(--c-primary) 12%, transparent);
 }
 
 /* Placeholder card for the loading / error / mock states — a dashed, centered
@@ -328,7 +328,7 @@
   font-size: 64px !important;
   color: var(--upm-success);
   filter: drop-shadow(
-    0 6px 18px color-mix(in srgb, var(--p-emerald-500) 35%, transparent)
+    0 6px 18px color-mix(in srgb, var(--c-success) 35%, transparent)
   );
 }
 .upm-confirm__title {

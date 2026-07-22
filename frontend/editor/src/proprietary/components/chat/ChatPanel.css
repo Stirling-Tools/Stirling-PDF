@@ -310,6 +310,14 @@
   flex-shrink: 0;
 }
 
+/* Let the label fill the row and align left so the badge sits flush left and
+   the chevron (rightSection) is pushed to the far right. */
+.chat-quick-action .mantine-Button-label {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
 /* Input area: send button on the left, textarea fills the rest — one compact
    row so the composer stays short when the welcome screen is fully populated. */
 .chat-panel-input {
@@ -325,7 +333,7 @@
   flex-shrink: 0;
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.04),
-    0 4px 14px color-mix(in srgb, var(--p-gray-900) 8%, transparent);
+    0 4px 14px rgba(0, 0, 0, 0.08);
   transition: box-shadow 160ms ease-out;
 }
 

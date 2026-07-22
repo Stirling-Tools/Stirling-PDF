@@ -6,7 +6,7 @@
       in srgb,
       var(
           --shadow-color,
-          color-mix(in srgb, var(--p-gray-900) 55%, transparent)
+          color-mix(in srgb, black 55%, transparent)
         )
         20%,
       transparent

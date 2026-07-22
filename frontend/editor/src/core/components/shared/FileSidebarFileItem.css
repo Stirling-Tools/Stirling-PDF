@@ -300,32 +300,32 @@
   /* solid base + green tint overlay so content behind doesn't bleed through */
   background-color: var(--c-bg-raised);
   background-image: linear-gradient(
-    color-mix(in srgb, var(--p-green-500) 10%, transparent),
-    color-mix(in srgb, var(--p-green-500) 10%, transparent)
+    color-mix(in srgb, var(--c-success) 10%, transparent),
+    color-mix(in srgb, var(--c-success) 10%, transparent)
   );
 }
 
 .file-sidebar-file-item.viewed .file-sidebar-file-name {
-  color: var(--p-green-500);
+  color: var(--c-success);
 }
 
 .file-sidebar-file-item.viewed .file-sidebar-file-check {
-  background-color: var(--p-green-500);
+  background-color: var(--c-success);
 }
 
 /* viewed takes precedence over selected */
 .file-sidebar-file-item.viewed.selected {
   background-color: var(--c-bg-raised);
   background-image: linear-gradient(
-    color-mix(in srgb, var(--p-green-500) 10%, transparent),
-    color-mix(in srgb, var(--p-green-500) 10%, transparent)
+    color-mix(in srgb, var(--c-success) 10%, transparent),
+    color-mix(in srgb, var(--c-success) 10%, transparent)
   );
 }
 
 /* Always show eye for the currently viewed file */
 .file-sidebar-file-item.viewed .file-sidebar-eye-btn {
   opacity: 1;
-  color: var(--p-green-500);
+  color: var(--c-success);
 }
 
 .file-sidebar-eye-btn:hover {

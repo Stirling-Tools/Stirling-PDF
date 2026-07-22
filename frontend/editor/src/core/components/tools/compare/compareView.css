@@ -243,53 +243,53 @@
 /* Flash/pulse highlight for navigated change */
 @keyframes compare-flash {
   0% {
-    outline: 4px solid color-mix(in srgb, var(--p-flash-yellow) 0%, transparent);
-    box-shadow: 0 0 0 color-mix(in srgb, var(--p-flash-yellow) 0%, transparent);
+    outline: 4px solid color-mix(in srgb, var(--c-highlight) 0%, transparent);
+    box-shadow: 0 0 0 color-mix(in srgb, var(--c-highlight) 0%, transparent);
     background-color: color-mix(
       in srgb,
-      var(--p-flash-yellow) 20%,
+      var(--c-highlight) 20%,
       transparent
     ) !important;
   }
   25% {
     outline: 4px solid
-      color-mix(in srgb, var(--p-flash-yellow) 100%, transparent);
+      color-mix(in srgb, var(--c-highlight) 100%, transparent);
     box-shadow: 0 0 20px
-      color-mix(in srgb, var(--p-flash-yellow) 80%, transparent);
+      color-mix(in srgb, var(--c-highlight) 80%, transparent);
     background-color: color-mix(
       in srgb,
-      var(--p-flash-yellow) 40%,
+      var(--c-highlight) 40%,
       transparent
     ) !important;
   }
   50% {
     outline: 4px solid
-      color-mix(in srgb, var(--p-flash-yellow) 100%, transparent);
+      color-mix(in srgb, var(--c-highlight) 100%, transparent);
     box-shadow: 0 0 30px
-      color-mix(in srgb, var(--p-flash-yellow) 90%, transparent);
+      color-mix(in srgb, var(--c-highlight) 90%, transparent);
     background-color: color-mix(
       in srgb,
-      var(--p-flash-yellow) 50%,
+      var(--c-highlight) 50%,
       transparent
     ) !important;
   }
   75% {
     outline: 4px solid
-      color-mix(in srgb, var(--p-flash-yellow) 80%, transparent);
+      color-mix(in srgb, var(--c-highlight) 80%, transparent);
     box-shadow: 0 0 15px
-      color-mix(in srgb, var(--p-flash-yellow) 60%, transparent);
+      color-mix(in srgb, var(--c-highlight) 60%, transparent);
     background-color: color-mix(
       in srgb,
-      var(--p-flash-yellow) 30%,
+      var(--c-highlight) 30%,
       transparent
     ) !important;
   }
   100% {
-    outline: 4px solid color-mix(in srgb, var(--p-flash-yellow) 0%, transparent);
-    box-shadow: 0 0 0 color-mix(in srgb, var(--p-flash-yellow) 0%, transparent);
+    outline: 4px solid color-mix(in srgb, var(--c-highlight) 0%, transparent);
+    box-shadow: 0 0 0 color-mix(in srgb, var(--c-highlight) 0%, transparent);
     background-color: color-mix(
       in srgb,
-      var(--p-flash-yellow) 0%,
+      var(--c-highlight) 0%,
       transparent
     ) !important;
   }
@@ -302,7 +302,7 @@
   /* Bonus: temporarily override red/green to yellow during flash for clarity */
   background-color: color-mix(
     in srgb,
-    var(--p-flash-yellow) 50%,
+    var(--c-highlight) 50%,
     transparent
   ) !important;
 }
@@ -311,7 +311,7 @@
 .compare-diff-flash-overlay {
   animation: compare-flash 1.5s ease-in-out 1;
   z-index: 999;
-  background-color: color-mix(in srgb, var(--p-flash-yellow) 40%, transparent);
+  background-color: color-mix(in srgb, var(--c-highlight) 40%, transparent);
   pointer-events: none;
   border-radius: 2px;
 }
@@ -544,7 +544,7 @@
   padding-bottom: 32px;
 }
 .compare-pixel-page {
-  border: 1px solid var(--mantine-color-default-border, var(--p-gray-200));
+  border: 1px solid var(--mantine-color-default-border, var(--c-border));
   border-radius: 8px;
   padding: 12px;
   background: var(--mantine-color-body, #fff);
@@ -562,13 +562,13 @@
 }
 .compare-pixel-triptych figure img {
   display: block;
-  border: 1px solid var(--mantine-color-default-border, var(--p-gray-200));
+  border: 1px solid var(--mantine-color-default-border, var(--c-border));
   background: #fff;
 }
 .compare-pixel-triptych figcaption {
   font-size: 11px;
   text-align: center;
-  color: var(--mantine-color-dimmed, var(--p-gray-450));
+  color: var(--mantine-color-dimmed, var(--c-text-muted));
 }
 .compare-pixel-overlay {
   position: relative;
@@ -577,7 +577,7 @@
 .compare-pixel-overlay-img {
   display: block;
   width: 100%;
-  border: 1px solid var(--mantine-color-default-border, var(--p-gray-200));
+  border: 1px solid var(--mantine-color-default-border, var(--c-border));
 }
 .compare-pixel-overlay-top {
   position: absolute;

@@ -220,7 +220,7 @@
 
 .portal-billing__meter-track {
   height: 0.5rem;
-  background: var(--color-bg-subtle, var(--p-gray-200));
+  background: var(--color-bg-subtle, var(--c-surface-sunken));
   border-radius: 999px;
   overflow: hidden;
   margin-bottom: 0.75rem;
@@ -333,7 +333,7 @@
   margin-top: 18px;
   height: 10px;
   border-radius: 999px;
-  background: var(--color-bg-subtle, var(--p-gray-200));
+  background: var(--color-bg-subtle, var(--c-surface-sunken));
   overflow: hidden;
   position: relative;
 }
@@ -441,7 +441,7 @@
 
 .portal-billing__breakdown-track {
   height: 0.5rem;
-  background: var(--color-bg-subtle, var(--p-gray-200));
+  background: var(--color-bg-subtle, var(--c-surface-sunken));
   border-radius: 999px;
   overflow: hidden;
 }
@@ -1045,7 +1045,7 @@
   color: var(--c-text-subtle);
 }
 .portal-billing__projection strong {
-  color: var(--color-amber, var(--p-amber-600));
+  color: var(--color-amber, var(--c-warning));
 }
 
 /* ── Checkout modal: 2-step (spend limit → payment) ──────────────────── */

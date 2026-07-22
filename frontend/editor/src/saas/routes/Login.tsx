@@ -334,7 +334,7 @@ export default function Login() {
                   <p
                     style={{
                       fontSize: "0.875rem",
-                      color: "var(--p-emerald-600)",
+                      color: "var(--c-success)",
                       margin: 0,
                     }}
                   >
@@ -454,7 +454,7 @@ export default function Login() {
             border: "none",
             cursor: "pointer",
             fontSize: "0.875rem",
-            color: "var(--p-gray-400)",
+            color: "var(--c-text-subtle)",
           }}
         >
           {t("login.createAccount", "Create an account")}

@@ -2,8 +2,8 @@
    Uses the app's semantic theme tokens (theme.css) so it tracks light/dark. */
 
 .payg {
-  --payg-accent: var(--p-azure-500);
-  --payg-accent-soft: color-mix(in srgb, var(--p-azure-500) 10%, transparent);
+  --payg-accent: var(--c-primary);
+  --payg-accent-soft: color-mix(in srgb, var(--c-primary) 10%, transparent);
   --payg-radius: 14px;
   --payg-gap: 20px;
   /* Cards sit ON the modal content bg; in light that's white-on-white so we
@@ -17,7 +17,7 @@
 /* Dark mode: surfaces/borders track the neutral --c-* tokens (set on the base
    rule); only the brand-azure accent tint is tuned brighter for dark. */
 [data-mantine-color-scheme="dark"] .payg {
-  --payg-accent-soft: color-mix(in srgb, var(--p-azure-550) 16%, transparent);
+  --payg-accent-soft: color-mix(in srgb, var(--c-primary) 16%, transparent);
 }
 
 /* ── Header ─────────────────────────────────────────────────────────── */
@@ -46,7 +46,7 @@
 .payg-role-pill[data-leader="true"] {
   background: var(--payg-accent-soft);
   color: var(--payg-accent);
-  border: 1px solid color-mix(in srgb, var(--p-azure-500) 25%, transparent);
+  border: 1px solid color-mix(in srgb, var(--c-primary) 25%, transparent);
 }
 .payg-role-pill[data-leader="false"] {
   background: var(--c-surface-sunken);
@@ -95,7 +95,7 @@
   margin-bottom: 8px;
 }
 .payg-planhead__lbl--free {
-  color: var(--p-emerald-500);
+  color: var(--c-success);
 }
 .payg-planhead__lbl--meter {
   color: var(--payg-accent);
@@ -172,22 +172,22 @@
 .payg-hero[data-state="FULL"]::before {
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--p-azure-500) 12%, transparent) 0%,
-    color-mix(in srgb, var(--p-azure-500) 0%, transparent) 55%
+    color-mix(in srgb, var(--c-primary) 12%, transparent) 0%,
+    color-mix(in srgb, var(--c-primary) 0%, transparent) 55%
   );
 }
 .payg-hero[data-state="WARNED"]::before {
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--p-amber-400) 16%, transparent) 0%,
-    color-mix(in srgb, var(--p-amber-400) 0%, transparent) 55%
+    color-mix(in srgb, var(--c-warning) 16%, transparent) 0%,
+    color-mix(in srgb, var(--c-warning) 0%, transparent) 55%
   );
 }
 .payg-hero[data-state="DEGRADED"]::before {
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--p-red-500) 16%, transparent) 0%,
-    color-mix(in srgb, var(--p-red-500) 0%, transparent) 55%
+    color-mix(in srgb, var(--c-danger) 16%, transparent) 0%,
+    color-mix(in srgb, var(--c-danger) 0%, transparent) 55%
   );
 }
 .payg-hero__inner {
@@ -239,11 +239,11 @@
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--color-green-700);
-  background: color-mix(in srgb, var(--p-green-500) 14%, transparent);
+  background: color-mix(in srgb, var(--c-success) 14%, transparent);
 }
 [data-mantine-color-scheme="dark"] .payg-hero__credit {
-  color: var(--p-green-400);
-  background: color-mix(in srgb, var(--p-green-500) 18%, transparent);
+  color: var(--c-success);
+  background: color-mix(in srgb, var(--c-success) 18%, transparent);
 }
 
 /* Make Mantine default-variant buttons read clearly on the lifted cards in
@@ -312,7 +312,7 @@
 }
 .payg-status[data-state="FULL"] .payg-status__dot {
   background: var(--color-green-500);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--p-green-500) 18%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-success) 18%, transparent);
 }
 .payg-status[data-state="WARNED"] {
   background: var(--color-yellow-100);
@@ -320,7 +320,7 @@
 }
 .payg-status[data-state="WARNED"] .payg-status__dot {
   background: var(--color-yellow-500);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--p-amber-400) 20%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-warning) 20%, transparent);
 }
 .payg-status[data-state="DEGRADED"] {
   background: var(--color-red-100);
@@ -328,7 +328,7 @@
 }
 .payg-status[data-state="DEGRADED"] .payg-status__dot {
   background: var(--color-red-500);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--p-red-500) 20%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-danger) 20%, transparent);
 }
 
 /* Segmented usage bar */
@@ -346,13 +346,13 @@
   transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .payg-bar__fill[data-state="FULL"] {
-  background: linear-gradient(90deg, var(--p-azure-500), var(--p-azure-400));
+  background: var(--c-primary);
 }
 .payg-bar__fill[data-state="WARNED"] {
-  background: linear-gradient(90deg, var(--p-amber-500), var(--p-amber-400));
+  background: var(--c-warning);
 }
 .payg-bar__fill[data-state="DEGRADED"] {
-  background: linear-gradient(90deg, var(--p-red-600), var(--p-red-400));
+  background: var(--c-danger);
 }
 
 /* ── "What counts as a document?" expandable help ───────────────────── */
@@ -406,7 +406,7 @@
   padding: 13px 16px;
   border-radius: 10px;
   background: var(--payg-accent-soft);
-  border: 1px solid color-mix(in srgb, var(--p-azure-500) 20%, transparent);
+  border: 1px solid color-mix(in srgb, var(--c-primary) 20%, transparent);
 }
 .payg-preview__icon {
   color: var(--payg-accent);
@@ -458,12 +458,12 @@
   flex-shrink: 0;
 }
 .payg-gate[data-enabled="true"] .payg-gate__chip {
-  background: color-mix(in srgb, var(--p-green-500) 16%, transparent);
-  color: var(--p-green-500);
+  background: color-mix(in srgb, var(--c-success) 16%, transparent);
+  color: var(--c-success);
 }
 .payg-gate[data-enabled="false"] .payg-gate__chip {
-  background: color-mix(in srgb, var(--p-red-500) 16%, transparent);
-  color: var(--p-red-400);
+  background: color-mix(in srgb, var(--c-danger) 16%, transparent);
+  color: var(--c-danger);
 }
 .payg-gate__label {
   font-size: 0.8125rem;
@@ -487,11 +487,11 @@
 }
 .payg-gate__tag[data-variant="pause"] {
   color: var(--c-danger);
-  background: color-mix(in srgb, var(--p-red-500) 12%, transparent);
+  background: color-mix(in srgb, var(--c-danger) 12%, transparent);
 }
 [data-mantine-color-scheme="dark"] .payg-gate__tag[data-variant="pause"] {
   color: var(--c-danger);
-  background: color-mix(in srgb, var(--p-red-500) 18%, transparent);
+  background: color-mix(in srgb, var(--c-danger) 18%, transparent);
 }
 
 /* ── Member rows ────────────────────────────────────────────────────── */
@@ -514,7 +514,7 @@
   justify-content: center;
   font-size: 0.8125rem;
   font-weight: 650;
-  color: #fff;
+  color: var(--c-text-on-primary);
   flex-shrink: 0;
 }
 .payg-member__name {
@@ -609,11 +609,11 @@
   gap: 16px;
   padding: 20px 24px;
   border-radius: var(--payg-radius);
-  border: 1px solid color-mix(in srgb, var(--p-periwinkle-500) 28%, transparent);
+  border: 1px solid color-mix(in srgb, var(--c-accent-stripe) 28%, transparent);
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--p-periwinkle-500) 10%, transparent) 0%,
-    color-mix(in srgb, var(--p-periwinkle-500) 2%, transparent) 100%
+    color-mix(in srgb, var(--c-accent-stripe) 10%, transparent) 0%,
+    color-mix(in srgb, var(--c-accent-stripe) 2%, transparent) 100%
   );
 }
 .payg-stripe__title {

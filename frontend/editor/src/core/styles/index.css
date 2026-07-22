@@ -79,5 +79,5 @@ code {
 }
 
 .viewer-file-tab[data-active] {
-  background-color: color-mix(in srgb, var(--p-blue-200) 50%, transparent);
+  background-color: color-mix(in srgb, var(--c-tab-active-tint) 50%, transparent);
 }

@@ -16,8 +16,8 @@ import { connectionModeService } from "@app/services/connectionModeService";
 const ONBOARDING_KEY = "stirling-desktop-onboarding-seen";
 
 const SIGN_IN_GRADIENT: [string, string] = [
-  "var(--p-blue-500)",
-  "var(--p-violet-600)",
+  "var(--c-hue-blue)",
+  "var(--c-hue-violet)",
 ];
 
 /**

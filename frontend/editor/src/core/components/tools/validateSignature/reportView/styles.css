@@ -111,29 +111,29 @@
 /* Flash highlight animation for section navigation */
 @keyframes section-flash {
   0% {
-    background-color: color-mix(in srgb, var(--p-flash-yellow) 0%, transparent);
+    background-color: color-mix(in srgb, var(--c-highlight) 0%, transparent);
     box-shadow: none;
   }
   20% {
     background-color: color-mix(
       in srgb,
-      var(--p-flash-yellow) 35%,
+      var(--c-highlight) 35%,
       transparent
     );
     box-shadow: 0 0 20px
-      color-mix(in srgb, var(--p-flash-yellow) 50%, transparent);
+      color-mix(in srgb, var(--c-highlight) 50%, transparent);
   }
   50% {
     background-color: color-mix(
       in srgb,
-      var(--p-flash-yellow) 25%,
+      var(--c-highlight) 25%,
       transparent
     );
     box-shadow: 0 0 15px
-      color-mix(in srgb, var(--p-flash-yellow) 40%, transparent);
+      color-mix(in srgb, var(--c-highlight) 40%, transparent);
   }
   100% {
-    background-color: color-mix(in srgb, var(--p-flash-yellow) 0%, transparent);
+    background-color: color-mix(in srgb, var(--c-highlight) 0%, transparent);
     box-shadow: none;
   }
 }

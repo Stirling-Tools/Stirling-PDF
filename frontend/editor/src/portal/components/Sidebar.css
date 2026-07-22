@@ -29,6 +29,19 @@
   flex-shrink: 0;
 }
 
+/* Show the wordmark that matches the rendered scheme (black text on light,
+   white text on dark). Keyed on data-mantine-color-scheme so it follows the
+   actual theme, not the portal's separate (and sometimes stale) theme state. */
+.portal-sidebar__wordmark--dark {
+  display: none;
+}
+[data-mantine-color-scheme="dark"] .portal-sidebar__wordmark--light {
+  display: none;
+}
+[data-mantine-color-scheme="dark"] .portal-sidebar__wordmark--dark {
+  display: block;
+}
+
 /* App switcher (down-arrow → Portal / Editor); button and menu styling live
    with the shared AppSwitch element. */
 .portal-sidebar__app-switch {

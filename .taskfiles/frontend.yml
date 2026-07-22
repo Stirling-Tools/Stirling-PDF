@@ -207,11 +207,14 @@ tasks:
       - task: lint:colors
 
   lint:colors:
-    desc: "Enforce theme tokens — colours in core/theme route through the palette"
+    desc: "Enforce theme tokens — no hardcoded colours or raw primitives in components"
     aliases: [lint:colours]
     deps: [install]
     cmds:
       - node editor/scripts/lint/theme-lint.mjs
+      - node editor/scripts/lint/theme-lint.mjs css-colors
+      - node editor/scripts/lint/theme-lint.mjs code-colors
+      - node editor/scripts/lint/theme-lint.mjs no-primitives
 
   contrast:
     desc: "Report low-contrast theme token pairs (warning only, never blocks)"

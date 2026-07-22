@@ -22,7 +22,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 16px 32px color-mix(in srgb, var(--p-gray-900) 18%, transparent);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.18);
   animation: heroLogoScale 0.25s ease forwards;
 }
 
@@ -49,10 +49,10 @@
 .securityCard {
   width: 100%;
   max-width: 480px;
-  background: var(--c-surface, #ffffff);
+  background: var(--c-surface);
   border-radius: 16px;
   padding: 20px;
-  box-shadow: 0 12px 32px color-mix(in srgb, var(--p-gray-900) 12%, transparent);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -65,7 +65,7 @@
   font-weight: 500;
   font-size: 15px;
   line-height: 1.5;
-  color: var(--c-text-muted, var(--p-gray-800));
+  color: var(--c-text-muted);
 }
 
 .mfaSlideContent {
@@ -77,10 +77,10 @@
 .mfaCard {
   width: 100%;
   max-width: 560px;
-  background: var(--c-surface, #ffffff);
+  background: var(--c-surface);
   border-radius: 16px;
   padding: 20px;
-  box-shadow: 0 12px 32px color-mix(in srgb, var(--p-gray-900) 12%, transparent);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
 }
 
 .mfaSetupGrid {
@@ -94,7 +94,7 @@
   padding: 12px;
   background: #ffffff;
   border-radius: 12px;
-  box-shadow: 0 8px 16px color-mix(in srgb, var(--p-gray-900) 12%, transparent);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
   display: flex;
   justify-content: center;
 }
@@ -102,7 +102,7 @@
 .mfaSteps {
   margin: 0;
   padding-left: 18px;
-  color: var(--c-text-muted, var(--p-gray-800));
+  color: var(--c-text-muted);
   font-size: 14px;
   line-height: 1.5;
 }
@@ -262,7 +262,7 @@
   opacity: 1;
   border: 1px solid rgba(255, 255, 255, 0.9);
   background: rgba(255, 255, 255, 0.9);
-  color: var(--p-gray-800);
+  color: var(--c-text);
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
 }
 
@@ -334,7 +334,7 @@
 
 /* Icon styles */
 .heroIcon {
-  color: var(--c-text, var(--p-gray-900));
+  color: var(--c-text);
 }
 
 /* ===================================================================== */
@@ -372,7 +372,7 @@
   font-size: 17px;
   font-weight: 700;
   letter-spacing: -0.01em;
-  color: var(--c-text, var(--p-gray-900));
+  color: var(--c-text);
 }
 
 .headerRight {
@@ -384,8 +384,8 @@
 .stepPill {
   font-size: 12px;
   font-weight: 600;
-  color: var(--c-text-muted, var(--p-gray-500));
-  background: var(--c-surface-sunken, var(--p-gray-100));
+  color: var(--c-text-muted);
+  background: var(--c-surface-sunken);
   padding: 5px 11px;
   border-radius: 9999px;
   white-space: nowrap;
@@ -402,20 +402,17 @@
   flex: 1;
   height: 5px;
   border-radius: 9999px;
-  background: var(--onboarding-step-inactive, var(--p-gray-250));
+  background: var(--onboarding-step-inactive, var(--c-border));
   transition: background 0.2s ease;
 }
 
 .progressSegDone {
-  background: var(--c-primary, var(--p-blue-500));
+  background: var(--c-primary);
 }
 
 .divider {
   height: 1px;
-  background: var(
-    --c-border-subtle,
-    color-mix(in srgb, var(--p-gray-900) 8%, transparent)
-  );
+  background: var(--c-border-subtle);
 }
 
 /* ---- content ---- */
@@ -437,12 +434,7 @@
   min-height: 128px;
   border-radius: 14px;
   overflow: hidden;
-  background: linear-gradient(
-    155deg,
-    var(--p-tint-blue) 0%,
-    var(--p-tint-violet) 55%,
-    var(--p-tint-pink) 100%
-  );
+  background: var(--c-onboarding-hero);
 }
 
 .heroArt {
@@ -456,20 +448,18 @@
   height: 62px;
   border-radius: 15px;
   object-fit: contain;
-  filter: drop-shadow(
-    0 10px 20px color-mix(in srgb, var(--p-gray-900) 16%, transparent)
-  );
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.16));
 }
 
 .heroTile {
   width: 62px;
   height: 62px;
   border-radius: 15px;
-  background: #ffffff;
+  background: var(--c-onboarding-hero-tile);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10px 22px color-mix(in srgb, var(--p-gray-900) 14%, transparent);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.14);
 }
 
 /* ---- title + body (left-aligned, clean) ---- */
@@ -478,14 +468,14 @@
   font-weight: 600;
   letter-spacing: -0.01em;
   line-height: 1.3;
-  color: var(--c-text, var(--p-gray-900));
+  color: var(--c-text);
   text-align: left;
 }
 
 .bodyNew {
   font-size: 14px;
   line-height: 1.5;
-  color: var(--c-text-muted, var(--p-gray-600));
+  color: var(--c-text-muted);
   text-align: left;
 }
 
@@ -512,17 +502,9 @@
   gap: 12px;
 }
 
-/* ---- dark theme surface tuning ---- */
-:global([data-mantine-color-scheme="dark"]) .heroPanel {
-  background: linear-gradient(
-    155deg,
-    var(--p-navy-850) 0%,
-    var(--p-navy-880) 55%,
-    var(--p-plum-900) 100%
-  );
-}
-
+/* ---- dark theme surface tuning ----
+   Hero panel + tile colours flip via the themed --c-onboarding-hero* tokens;
+   only the tile's heavier dark shadow needs a per-scheme override. */
 :global([data-mantine-color-scheme="dark"]) .heroTile {
-  background: var(--p-navy-900);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
 }

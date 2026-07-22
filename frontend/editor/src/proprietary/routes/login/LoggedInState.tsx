@@ -24,7 +24,7 @@ export default function LoggedInState() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "var(--p-gray-100)",
+        backgroundColor: "var(--c-bg)",
         padding: "16px",
       }}
     >
@@ -32,7 +32,7 @@ export default function LoggedInState() {
         style={{
           maxWidth: "400px",
           width: "100%",
-          backgroundColor: "var(--p-white)",
+          backgroundColor: "var(--c-surface)",
           borderRadius: "16px",
           boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
           padding: "32px",
@@ -55,19 +55,19 @@ export default function LoggedInState() {
             style={{
               fontSize: "24px",
               fontWeight: "bold",
-              color: "var(--p-emerald-600)",
+              color: "var(--c-success)",
               marginBottom: "8px",
             }}
           >
             {t("login.youAreLoggedIn")}
           </h1>
-          <p style={{ color: "var(--p-gray-500)", fontSize: "14px" }}>
+          <p style={{ color: "var(--c-text-subtle)", fontSize: "14px" }}>
             {t("login.email")}: {user?.email}
           </p>
         </div>
 
         <div style={{ textAlign: "center", marginTop: "16px" }}>
-          <p style={{ color: "var(--p-gray-500)", fontSize: "14px" }}>
+          <p style={{ color: "var(--c-text-subtle)", fontSize: "14px" }}>
             Redirecting to home...
           </p>
         </div>

@@ -63,7 +63,7 @@
 }
 
 .modal-nav-scroll:hover {
-  scrollbar-color: color-mix(in srgb, var(--p-gray-mid) 50%, transparent)
+  scrollbar-color: color-mix(in srgb, var(--c-border-strong) 50%, transparent)
     transparent;
 }
 
@@ -82,11 +82,11 @@
 }
 
 .modal-nav-scroll:hover::-webkit-scrollbar-thumb {
-  background-color: color-mix(in srgb, var(--p-gray-mid) 50%, transparent);
+  background-color: color-mix(in srgb, var(--c-border-strong) 50%, transparent);
 }
 
 .modal-nav-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: color-mix(in srgb, var(--p-gray-mid) 70%, transparent);
+  background-color: color-mix(in srgb, var(--c-border-strong) 70%, transparent);
 }
 
 .modal-nav-section {
@@ -132,7 +132,7 @@
 }
 
 .modal-content-scroll:hover {
-  scrollbar-color: color-mix(in srgb, var(--p-gray-mid) 50%, transparent)
+  scrollbar-color: color-mix(in srgb, var(--c-border-strong) 50%, transparent)
     transparent;
 }
 
@@ -151,11 +151,11 @@
 }
 
 .modal-content-scroll:hover::-webkit-scrollbar-thumb {
-  background-color: color-mix(in srgb, var(--p-gray-mid) 50%, transparent);
+  background-color: color-mix(in srgb, var(--c-border-strong) 50%, transparent);
 }
 
 .modal-content-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: color-mix(in srgb, var(--p-gray-mid) 70%, transparent);
+  background-color: color-mix(in srgb, var(--c-border-strong) 70%, transparent);
 }
 
 .modal-header {

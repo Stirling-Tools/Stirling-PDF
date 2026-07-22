@@ -440,8 +440,10 @@ export default function Login() {
             padding: "1.5rem",
             marginTop: "1rem",
             borderRadius: "0.75rem",
-            backgroundColor: "rgba(37, 99, 235, 0.08)",
-            border: "1px solid rgba(37, 99, 235, 0.2)",
+            backgroundColor:
+              "color-mix(in srgb, var(--c-primary) 8%, transparent)",
+            border:
+              "1px solid color-mix(in srgb, var(--c-primary) 20%, transparent)",
           }}
         >
           <p style={{ margin: "0 0 0.75rem 0", color: "var(--c-text)" }}>
@@ -480,10 +482,12 @@ export default function Login() {
               style={{
                 padding: "1rem",
                 marginBottom: "1rem",
-                backgroundColor: "rgba(34, 197, 94, 0.1)",
-                border: "1px solid rgba(34, 197, 94, 0.3)",
+                backgroundColor:
+                  "color-mix(in srgb, var(--c-success) 10%, transparent)",
+                border:
+                  "1px solid color-mix(in srgb, var(--c-success) 30%, transparent)",
                 borderRadius: "0.5rem",
-                color: "#16a34a",
+                color: "var(--c-success)",
               }}
             >
               <p

@@ -8,7 +8,7 @@
 }
 
 .freeHighlight {
-  background: linear-gradient(135deg, var(--p-indigo-500), var(--p-pink-500));
+  background: linear-gradient(135deg, var(--c-hue-indigo), var(--c-hue-pink));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

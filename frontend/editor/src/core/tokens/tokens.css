@@ -92,7 +92,7 @@
   --color-cat-extraction: var(--p-blue-500);
 
   /* Surfaces */
-  --color-bg-subtle: var(--p-gray-50);
+  --color-bg-subtle: var(--c-surface-sunken);
   --color-bg-code: var(--p-gray-100);
 
   /* Dropdowns / tooltips */
@@ -196,7 +196,7 @@
   --color-orange-border: var(--p-red-600);
   --color-orange-dark: var(--p-amber-400);
 
-  --color-bg-subtle: var(--p-gray-900);
+  --color-bg-subtle: var(--c-surface-sunken);
   --color-bg-code: var(--p-zinc-900);
 
   --color-tooltip-bg: var(--p-gray-250);

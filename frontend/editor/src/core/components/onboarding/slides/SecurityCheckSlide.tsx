@@ -26,7 +26,7 @@ export default function SecurityCheckSlide({
               icon="error"
               width={20}
               height={20}
-              style={{ color: "var(--p-red-500)", flexShrink: 0 }}
+              style={{ color: "var(--c-danger)", flexShrink: 0 }}
             />
             <span>
               {i18n.t(
