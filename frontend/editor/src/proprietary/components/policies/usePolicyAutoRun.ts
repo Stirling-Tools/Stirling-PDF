@@ -357,14 +357,15 @@ export function usePolicyAutoRun(): void {
       // Classification is metadata-only: stamp labels onto the current leaf of
       // the file it ran on (no version fork). See importClassificationLabels.
       if (classification) {
-        const targetIds = classificationLabelTargets(
-          run.fileId,
-          fileStubsRef.current,
-        );
-        void importClassificationLabels(run, targetIds, {
-          updateStirlingFileStub,
-          bumpRevision,
-        }).finally(() => importing.current.delete(run.runId));
+        // Targets are resolved by importClassificationLabels AT WRITE TIME (not
+        // snapshotted here): its download/parse is an async window during which
+        // a manual tool run can consume the input and fork a new leaf, and a
+        // stale snapshot would no-op on the dead id and lose the labels.
+        void importClassificationLabels(
+          run,
+          () => classificationLabelTargets(run.fileId, fileStubsRef.current),
+          { updateStirlingFileStub, bumpRevision },
+        ).finally(() => importing.current.delete(run.runId));
         continue;
       }
       // Honour the policy's output mode: a new file, or a new version of the
@@ -558,13 +559,19 @@ export function classificationLabelTargets(
 /**
  * Stamp a classification run's labels onto the target stubs in place (workspace
  * + storage) — no versioned child, no history entry, only tags.
+ *
+ * `resolveTargets` is called twice: once up front (is there anything to tag at
+ * all?) and again right before stamping. The download/parse between the two is
+ * an async window during which a manual tool run can consume the input file and
+ * fork a new leaf; resolving again at write time tags the live descendants
+ * instead of no-oping on the consumed id and silently losing the labels.
  */
 async function importClassificationLabels(
   run: PolicyRunRecord,
-  targetIds: FileId[],
+  resolveTargets: () => FileId[],
   ctx: ClassificationImportContext,
 ): Promise<void> {
-  if (targetIds.length === 0) {
+  if (resolveTargets().length === 0) {
     // Server-reconciled run with no local input link — nothing to tag.
     updateRun(run.runId, { imported: true });
     return;
@@ -585,11 +592,17 @@ async function importClassificationLabels(
       if (!isNotFoundError(err)) return; // transient — retry on a later tick.
     }
   }
+  let targetIds: FileId[] = [];
   if (labels && labels.length > 0) {
+    // Resolve NOW, and stamp the store for every target in this same synchronous
+    // block — no await between resolution and the store writes, so the targets
+    // can't be consumed in between. A consume AFTER the stamp is also safe: the
+    // CONSUME_FILES reducer carries classificationLabels onto the new leaf.
+    targetIds = resolveTargets();
     const updates = { classificationLabels: labels };
+    for (const id of targetIds) ctx.updateStirlingFileStub(id, updates);
     let mutated = false;
     for (const id of targetIds) {
-      ctx.updateStirlingFileStub(id, updates);
       if (await fileStorage.updateFileMetadata(id, updates)) mutated = true;
     }
     if (mutated) ctx.bumpRevision();
@@ -600,7 +613,7 @@ async function importClassificationLabels(
   updateRun(run.runId, {
     imported: true,
     importedFileIds: run.outputs.map((o) => o.fileId),
-    outputFileIds: labels && labels.length > 0 ? targetIds : [],
+    outputFileIds: targetIds,
   });
 }
 

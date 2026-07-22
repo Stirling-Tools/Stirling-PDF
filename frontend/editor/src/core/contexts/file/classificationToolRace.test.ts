@@ -15,8 +15,9 @@ import type { FileId } from "@app/types/file";
  * tests drive the REAL reducer through every interleaving (classification lands
  * before / during / after the tool run) and prove the invariant the design
  * relies on: the tool's output document is byte-for-byte what the tool produced,
- * regardless of when classification lands. The only thing that varies is the
- * label CACHE (which can be lost in the mid-run race — documented below).
+ * regardless of when classification lands. (Label PLACEMENT in the mid-run race
+ * is the orchestration's job — usePolicyAutoRun resolves targets at write time;
+ * see usePolicyAutoRun.race.test.tsx. Here we lock the reducer backstop.)
  */
 
 const stub = (
@@ -109,11 +110,14 @@ describe("classification landing vs a manually-run tool", () => {
     expect(after.versionNumber).toBe(2);
   });
 
-  it("MID (the race): tool swaps the file between classification's target snapshot and its write — output document is CORRECT; only the label cache is lost", () => {
+  it("MID (the race): a label write aimed at an already-consumed id no-ops — output document is CORRECT, nothing is resurrected", () => {
+    // In production this stale-id write no longer happens: usePolicyAutoRun
+    // resolves the label targets AT WRITE TIME, so the labels land on the live
+    // leaf instead (see usePolicyAutoRun.race.test.tsx). This test locks the
+    // reducer-level BACKSTOP behind that: even if a stale id does get written,
+    // it cannot corrupt or resurrect anything.
     let s = stateWith(stub("orig"));
 
-    // Classification snapshotted its target as ["orig"] at run-completion time,
-    // BEFORE downloading/parsing the classified PDF (the async window).
     const staleTargetId = "orig";
 
     // During that window the user runs a tool: orig -> out. orig had no labels
@@ -136,9 +140,9 @@ describe("classification landing vs a manually-run tool", () => {
     const finalOut = s.files.byId["out" as FileId];
     expect(finalOut.versionNumber).toBe(2);
     expect(finalOut.sourceFileIds).toContain("orig" as FileId);
-    // The label is LOST from the cache in this interleaving (documented gap):
-    // it neither inherited (orig was unlabelled at consume) nor landed (write
-    // no-oped on the stale id). The DOCUMENT is unaffected.
+    // At the reducer level the stale write leaves the leaf unlabelled — which
+    // is why the orchestration resolves targets at write time instead. The
+    // DOCUMENT is unaffected either way.
     expect(finalOut.classificationLabels).toBeUndefined();
   });
 
