@@ -80,12 +80,9 @@ function isExpired(iso: string | undefined): boolean {
 async function resolveTeam(): Promise<TeamDetailsDTO | null> {
   const fetchMy = () =>
     apiClient.local.json<TeamDetailsDTO[]>("/api/v1/team/my");
-  // fetchUsers and fetchTeams both resolve the team, so read /team/my through
-  // the shared query cache: the first caller populates qk.teamMy(), the second
-  // gets the cached list — one network call per mount instead of two. Refresh
-  // invalidates qk.teamMy() (see useUsersDataQuery) to force a real re-resolve.
-  // Falls back to a direct fetch when no portal client is mounted (e.g. a unit
-  // test exercising this adapter directly).
+  // fetchUsers and fetchTeams both resolve the team; share one /team/my via the
+  // query cache (two callers, one fetch). Falls back to a direct fetch when no
+  // portal client is mounted (e.g. a unit test exercising this adapter).
   const client = tryGetPortalQueryClient();
   const teams = client
     ? await client.ensureQueryData({ queryKey: qk.teamMy(), queryFn: fetchMy })

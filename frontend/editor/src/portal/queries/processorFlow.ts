@@ -8,11 +8,8 @@ import {
 } from "@portal/api/processorFlow";
 
 /**
- * Derived: Home's sources → policies → outcomes visualiser. Composes the shared
- * sources + policies-list + policy-runs base queries and assembles client-side,
- * so it reuses the same cache entries as the rest of Home (killing the
- * duplicate /sources, /policies, /policies/runs fetches) rather than issuing
- * its own.
+ * Home's sources → policies → outcomes visualiser, composed from the shared
+ * base queries so it reuses Home's cache entries instead of refetching them.
  */
 export function useProcessorFlow(): AsyncState<ProcessorFlow> {
   const sources = useSources();

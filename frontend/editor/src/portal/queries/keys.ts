@@ -1,17 +1,12 @@
 import type { Tier } from "@portal/contexts/TierContext";
 
 /**
- * Single source of truth for the portal's TanStack Query keys.
+ * The portal's TanStack Query keys, in one place. Convention:
+ * ["portal", <resource>, ...params].
  *
- * Convention: ["portal", <resource>, ...params]. Keys are **flavor-agnostic** —
- * the self-hosted-vs-SaaS routing lives inside the api functions / apiClient,
- * never in the key, so the same key correctly addresses whichever backend the
- * flavor build resolves. Do NOT encode `local`/`saas` here.
- *
- * Tier is part of the key ONLY for resources whose response actually varies by
- * tier (documents, audit log, editor deployment, and the users cluster).
- * Tier-independent resources (policies, sources, pipelines, fleet stats,
- * app-config) get a single shared cache entry across all tiers.
+ * Keep keys flavor-agnostic — self-hosted-vs-SaaS routing lives in the api
+ * functions, not the key, so one key addresses whichever backend the build
+ * resolves. Include tier only for resources whose response varies by tier.
  */
 export const qk = {
   // Tier-independent
@@ -29,7 +24,7 @@ export const qk = {
   editorDeployment: (tier: Tier) =>
     ["portal", "editorDeployment", tier] as const,
 
-  // Users cluster (keys preserved from the Users POC in usersData.ts)
+  // Users cluster (consumed by usersData.ts + Home onboarding)
   usersRoster: (tier: Tier) => ["portal", "users", "roster", tier] as const,
   usersGrants: (tier: Tier) => ["portal", "users", "grants", tier] as const,
   usersTeams: (tier: Tier) => ["portal", "users", "teams", tier] as const,

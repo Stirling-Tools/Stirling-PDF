@@ -1,17 +1,11 @@
 import { QueryClient } from "@tanstack/react-query";
 
 /**
- * The portal's TanStack Query client. Mounted once at the portal root
- * (PortalApp) so its cache lives ABOVE the view router — data fetched on one
- * view survives navigating away and back.
- *
- * Defaults chosen for the portal's admin workloads:
- *   - staleTime 30s   — returning to a view within 30s serves cache with NO
- *                       network call; after that it revalidates in the
- *                       background while showing the cached data.
- *   - gcTime 5m       — unused view data is dropped after 5 minutes idle.
- *   - retry 1         — one retry on failure.
- *   - no refetch on window focus — admin screens don't need focus polling.
+ * The portal's TanStack Query client, mounted once at the portal root
+ * (PortalApp) so its cache lives above the router — data survives navigating
+ * away and back. staleTime 30s: a return visit within 30s serves cache with no
+ * network call, then revalidates in the background. Focus refetch is off — admin
+ * screens don't need polling.
  */
 let current: QueryClient | null = null;
 

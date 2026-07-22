@@ -5,17 +5,13 @@ import { usePoliciesOverview } from "@portal/queries/policies";
 import { useUsersRoster } from "@portal/queries/users";
 
 /**
- * Getting-started completion, derived live from the org's real state. Drives
- * both the per-step checks on the home hero's setup steps and the collapse to
- * the deployed-status header once every step is done.
+ * Getting-started completion, derived live from the org's real state, composed
+ * from the shared editor-deployment / policies / users queries.
  *
- * Composed from the shared editor-deployment / policies / users base queries,
- * so Home reuses the same cache entries as its other cards and the Policies /
- * Users views (no duplicate fetches). Each source stays independently
- * best-effort: an endpoint that isn't served yet (e.g. editor-deployment on a
- * bare backend) simply leaves its step incomplete — we read `data ?? fallback`
- * and never fold these queries' errors into `loading`, so one missing endpoint
- * can't break the card.
+ * Best-effort per source: a step reads `data ?? fallback` and query errors are
+ * never folded into `loading`, so an endpoint that isn't served yet (e.g.
+ * editor-deployment on a bare backend) leaves its step incomplete instead of
+ * breaking the card.
  */
 export interface OnboardingProgress {
   loading: boolean;

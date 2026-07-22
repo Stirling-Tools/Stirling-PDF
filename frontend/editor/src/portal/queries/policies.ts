@@ -27,10 +27,9 @@ export function usePolicyRuns(): AsyncState<PolicyRunView[]> {
 }
 
 /**
- * Derived: the decorated catalogue Policies + Home both render. Composes the
- * two shared base queries and assembles client-side, so `/policies` and
- * `/policies/runs` are each fetched once across all consumers (Policies view,
- * PolicySummary, ProcessorFlow, onboarding) rather than per bundle.
+ * The decorated catalogue Policies and Home both render, composed from the two
+ * shared base queries so /policies and /policies/runs are fetched once across
+ * all consumers.
  */
 export function usePoliciesOverview(): AsyncState<PoliciesResponse> {
   const list = usePoliciesList();

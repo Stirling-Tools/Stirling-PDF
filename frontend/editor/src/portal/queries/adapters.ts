@@ -2,13 +2,10 @@ import type { UseQueryResult } from "@tanstack/react-query";
 import type { AsyncState } from "@portal/hooks/useAsync";
 
 /**
- * Adapt a TanStack query result to the portal's {@link AsyncState} shape, so
- * views built against useAsync (data/loading/error + useSectionFlags) consume a
- * query hook with no render changes.
- *
- * `isPending` is true only while there's no cached data — a cached remount
- * renders instantly and a background revalidation keeps the stale data on
- * screen (matching the legacy `loading && data === null`).
+ * Adapt a query result to the {@link AsyncState} shape the views already use
+ * (data/loading/error + useSectionFlags), so a hook swaps in with no render
+ * changes. `isPending` is false once data is cached, so a remount renders from
+ * cache instead of flashing a skeleton.
  */
 export function toAsyncState<T>(query: UseQueryResult<T>): AsyncState<T> {
   return {

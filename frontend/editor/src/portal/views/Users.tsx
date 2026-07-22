@@ -30,13 +30,7 @@ import { MoveToTeamModal } from "@portal/components/users/MoveToTeamModal";
 import { RenameTeamModal } from "@portal/components/users/RenameTeamModal";
 import { ConfirmModal } from "@portal/components/users/ConfirmModal";
 import type { TeamGroup } from "@portal/components/users/directory";
-import {
-  useUsersDataLegacy,
-  useUsersDataQuery,
-  type UsersData,
-} from "@portal/views/usersData";
-import { useFeatureFlag } from "@portal/dev/featureFlags";
-import { ReactQueryDevToggle } from "@portal/dev/ReactQueryDevToggle";
+import { useUsersData } from "@portal/views/usersData";
 
 interface Confirm {
   title: string;
@@ -47,19 +41,13 @@ interface Confirm {
 }
 
 /**
- * Presentational Users page. Fully agnostic about how its data arrives — it
- * takes the four resource states plus a `refresh` callback ({@link UsersData})
- * and renders identically whether that data came from the legacy useAsync path
- * or from TanStack Query. All mutation handlers call the injected `refresh`.
+ * Users page: the org roster, teams, and portal-access management. Mutation
+ * handlers call `refresh` to invalidate the shared caches (see useUsersData).
  */
-function UsersView({
-  usersState,
-  grantsState,
-  teamsState,
-  authState,
-  refresh,
-}: UsersData) {
+export function Users() {
   const { t } = useTranslation();
+  const { usersState, grantsState, teamsState, authState, refresh } =
+    useUsersData();
 
   const [actionError, setActionError] = useState<string | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -407,31 +395,5 @@ function UsersView({
         onCancel={() => setConfirm(null)}
       />
     </div>
-  );
-}
-
-// Each container hard-wires ONE data source and calls its hooks unconditionally,
-// so flipping the flag swaps the mounted container (a clean remount) rather than
-// changing hook order within a component — Rules of Hooks stay satisfied.
-function UsersViewLegacy() {
-  return <UsersView {...useUsersDataLegacy()} />;
-}
-function UsersViewQuery() {
-  return <UsersView {...useUsersDataQuery()} />;
-}
-
-/**
- * Users page entry. Picks the data layer from the `reactQuery` dev flag and
- * mounts the matching container, plus the on-page toggle. This view is kept as
- * the reference example of the legacy-vs-query split; every other view uses the
- * query path directly (see usersData.ts).
- */
-export function Users() {
-  const useReactQuery = useFeatureFlag("reactQuery");
-  return (
-    <>
-      {useReactQuery ? <UsersViewQuery /> : <UsersViewLegacy />}
-      <ReactQueryDevToggle />
-    </>
   );
 }
