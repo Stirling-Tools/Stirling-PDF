@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Card, Modal } from "@app/ui";
+import { Button, Card, Modal } from "@app/ui";
+import { PrepayModalHeader } from "@portal/components/billing/PrepayModalHeader";
 
 /** A clickable door-card (Card-as-button, matching ComponentCard's a11y pattern). */
 function DoorCard({
@@ -71,19 +72,24 @@ export function ActivationChoiceModal({
     <Modal
       open={open}
       onClose={onClose}
-      width="lg"
-      title={t("portal.billing.activation.title", "How do you want to pay?")}
-      subtitle={t(
-        "portal.billing.activation.subtitle",
-        "Same per-PDF rate either way — prepaying just gets you two months free.",
+      width="md"
+      className="portal-billing__bundle-modal"
+      ariaLabel={t(
+        "portal.billing.activation.title",
+        "Switch on the Processor",
       )}
     >
+      <PrepayModalHeader
+        step={1}
+        title={t("portal.billing.activation.title", "Switch on the Processor")}
+        onClose={onClose}
+      />
       <div className="portal-billing__door-grid">
         <DoorCard
           title={t("portal.billing.activation.payg.title", "Pay as you go")}
           sub={t(
             "portal.billing.activation.payg.sub",
-            "Set a monthly limit and pay for what you use.",
+            "Set a monthly limit. Pay for what you run.",
           )}
           ariaLabel={t("portal.billing.activation.payg.title", "Pay as you go")}
           onClick={onChoosePayg}
@@ -94,7 +100,7 @@ export function ActivationChoiceModal({
           badge={t("portal.billing.activation.prepay.badge", "2 months free")}
           sub={t(
             "portal.billing.activation.prepay.sub",
-            "One upfront payment. Used before metered billing; unused capacity expires after 12 months.",
+            "One invoice, card or bank transfer.",
           )}
           ariaLabel={t(
             "portal.billing.activation.prepay.title",
@@ -102,6 +108,11 @@ export function ActivationChoiceModal({
           )}
           onClick={onChoosePrepay}
         />
+      </div>
+      <div className="portal-billing__door-later">
+        <Button variant="quiet" onClick={onClose}>
+          {t("portal.billing.activation.maybeLater", "Maybe later")}
+        </Button>
       </div>
     </Modal>
   );

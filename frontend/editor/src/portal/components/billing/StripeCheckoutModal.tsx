@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, Modal, Skeleton, Spinner } from "@app/ui";
-import { SpendCapControl } from "@app/billing";
+import {
+  currencySymbol,
+  docCapForMoney,
+  formatMinor,
+} from "@app/billing/format";
 import {
   EmbeddedCheckout,
   EmbeddedCheckoutProvider,
@@ -14,6 +18,7 @@ import {
   type SaasCurrency,
 } from "@portal/billing/stripe";
 import { CardPlaceholder } from "@portal/components/billing/CardPlaceholder";
+import { PrepayModalHeader } from "@portal/components/billing/PrepayModalHeader";
 
 interface Props {
   open: boolean;
@@ -51,22 +56,6 @@ const DEFAULT_CAP_USD = 100;
  * If the team is already subscribed the edge function short-circuits to a Stripe
  * Customer Portal URL; we open it in a new tab and close.
  */
-
-/** Two-segment progress header: step 1 = spend limit, step 2 = payment. */
-function StepProgress({ step }: { step: 1 | 2 }) {
-  const { t } = useTranslation();
-  return (
-    <div className="portal-billing__checkout-progress">
-      <div className="portal-billing__checkout-steps" aria-hidden>
-        <span className="is-done" />
-        <span className={step >= 2 ? "is-done" : ""} />
-      </div>
-      <span className="portal-billing__checkout-stepcount">
-        {t("portal.billing.checkout.stepCount", "Step {{step}} of 2", { step })}
-      </span>
-    </div>
-  );
-}
 
 /** Payment done, waiting for the subscription webhook to activate the plan. */
 function CheckoutFinalizing() {
@@ -113,6 +102,119 @@ function CheckoutActivationSlow({ onClose }: { onClose: () => void }) {
       <Button variant="secondary" onClick={onClose}>
         {t("portal.billing.checkout.activationSlow.close", "Close")}
       </Button>
+    </div>
+  );
+}
+
+/**
+ * Spend-limit picker for step 1: a primary editable amount ({@code $ 100 / mo}) with quick-pick chips
+ * below. The amount field is the main entry — always visible, defaulted, and typeable — and clicking a
+ * chip (or "No cap") just writes into it. Controlled via {@code capUsd}/{@code onChange}
+ * (null = no cap, a number = a monthly ceiling).
+ */
+function SpendLimitPicker({
+  capUsd,
+  onChange,
+  currency,
+  pricePerDocMinor,
+  presets,
+  disabled,
+}: {
+  capUsd: number | null;
+  onChange: (v: number | null) => void;
+  currency: SaasCurrency;
+  pricePerDocMinor?: number | null;
+  presets: readonly number[];
+  disabled?: boolean;
+}) {
+  const { t } = useTranslation();
+  const sym = currencySymbol(currency);
+  const isNoCap = capUsd === null;
+  // Local mirror so partial typing isn't clobbered by the controlled value; resync when not focused
+  // (e.g. a chip sets the amount, or an initial cap loads in).
+  const [text, setText] = useState(capUsd != null ? String(capUsd) : "");
+  const [focused, setFocused] = useState(false);
+  useEffect(() => {
+    if (!focused) setText(capUsd != null ? String(capUsd) : "");
+  }, [capUsd, focused]);
+
+  const docs = docCapForMoney(capUsd, pricePerDocMinor);
+
+  const onInput = (raw: string) => {
+    const cleaned = raw.replace(/[^0-9]/g, "");
+    setText(cleaned);
+    onChange(cleaned === "" ? 0 : parseInt(cleaned, 10));
+  };
+
+  return (
+    <div className="portal-billing__caplimit">
+      <div
+        className="portal-billing__caplimit-field"
+        data-nocap={isNoCap ? "true" : "false"}
+      >
+        <span className="portal-billing__caplimit-sym">{sym}</span>
+        <input
+          className="portal-billing__caplimit-input"
+          inputMode="numeric"
+          value={isNoCap ? "" : text}
+          placeholder={
+            isNoCap ? t("portal.billing.checkout.cap.noLimit", "No limit") : ""
+          }
+          aria-label={t(
+            "portal.billing.checkout.cap.amountAria",
+            "Monthly spend limit",
+          )}
+          onChange={(e) => onInput(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          disabled={disabled}
+        />
+        <span className="portal-billing__caplimit-suffix">
+          {t("portal.billing.checkout.cap.perMonth", "/ mo")}
+        </span>
+      </div>
+
+      <div className="portal-billing__caplimit-chips">
+        {presets.map((p) => (
+          <Button
+            key={p}
+            type="button"
+            variant="quiet"
+            className="portal-billing__caplimit-chip"
+            data-selected={capUsd === p ? "true" : "false"}
+            onClick={() => onChange(p)}
+            disabled={disabled}
+          >
+            {sym}
+            {p.toLocaleString()}
+          </Button>
+        ))}
+        <Button
+          type="button"
+          variant="quiet"
+          className="portal-billing__caplimit-chip"
+          data-selected={isNoCap ? "true" : "false"}
+          onClick={() => onChange(null)}
+          disabled={disabled}
+        >
+          {t("payg.cap.noCapLabel", "No cap")}
+        </Button>
+      </div>
+
+      {docs != null && (
+        <div className="portal-billing__caplimit-estimate">
+          <span className="portal-billing__caplimit-estimate-main">
+            {t("payg.cap.docsEstimate", "≈ {{docs}} credits / month", {
+              docs: docs.toLocaleString(),
+            })}
+          </span>
+          <span className="portal-billing__caplimit-estimate-sub">
+            {t("payg.cap.docsRate", "at {{rate}} / credit", {
+              rate: formatMinor(pricePerDocMinor ?? 0, currency),
+            })}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -255,30 +357,36 @@ export function StripeCheckoutModal({
     if (dismissable) onClose();
   };
 
-  const onCapStep = phase === "cap";
-  const title = onCapStep
-    ? t("portal.billing.checkout.cap.title", "Set your spend limit")
-    : t("portal.billing.checkout.title", "Add a payment method");
-  const subtitle = onCapStep
-    ? t(
-        "portal.billing.checkout.cap.subtitle",
-        "You're billed only for PDFs you process past your first 500 free, never for seats — so your ceiling is yours from day one.",
-      )
-    : t(
-        "portal.billing.checkout.subtitle",
-        "Add a card to keep going past your free Editor-plan grant. Stripe handles the rest.",
-      );
+  // The chosen cap, formatted for the payment-step recap (null = "No cap" was picked on step 1).
+  const capLabel =
+    capUsd != null
+      ? new Intl.NumberFormat(undefined, {
+          style: "currency",
+          currency: currency.toUpperCase(),
+          maximumFractionDigits: 0,
+        }).format(capUsd)
+      : null;
 
   return (
     <Modal
       open={open}
       onClose={handleClose}
-      width="xl"
-      className="portal-billing__checkout-modal"
+      /* Only the Stripe checkout step needs the room; every other step stays narrow. The checkout
+         step also gets a wider-than-xl cap so the embedded Stripe iframe clears its ~1000px
+         two-column threshold (below it, Stripe falls back to the single-column "portrait" layout). */
+      width={phase === "checkout" ? "xl" : "md"}
+      className={[
+        "portal-billing__checkout-modal",
+        phase === "cap" || phase === "checkout"
+          ? "portal-billing__checkout-modal--framed"
+          : "",
+        phase === "checkout" ? "portal-billing__checkout-modal--wide" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
       disableBackdropClose={!dismissable}
       disableEscapeClose={!dismissable}
-      title={title}
-      subtitle={subtitle}
+      ariaLabel={t("portal.billing.checkout.cap.title", "Set your spend limit")}
     >
       {phase === "finalizing" && <CheckoutFinalizing />}
       {phase === "activationSlow" && (
@@ -287,80 +395,117 @@ export function StripeCheckoutModal({
 
       {phase === "cap" && (
         <div className="portal-billing__checkout-cap">
-          <StepProgress step={1} />
-          <SpendCapControl
-            capUsd={capUsd}
-            onChange={setCapUsd}
-            pricePerDocMinor={pricePerDocMinor}
-            currency={currency}
-            presets={CAP_PRESETS}
-            note={t(
-              "portal.billing.checkout.cap.note",
-              "Processing pauses if you reach it. You're never billed past this, and you can change it any time.",
+          <PrepayModalHeader
+            step={2}
+            total={3}
+            title={t(
+              "portal.billing.checkout.cap.title",
+              "Set your spend limit",
             )}
+            onClose={handleClose}
           />
-          <p className="portal-billing__checkout-finePrint">
-            {t(
-              "portal.billing.checkout.cap.finePrint",
-              "Invoices post on the 1st. Cancel anytime and revert to the Editor plan; your policies and history stay intact.",
-            )}
-          </p>
-          {capError && (
-            <Banner
-              tone="danger"
-              title={t(
-                "portal.billing.checkout.cap.error",
-                "Couldn't set your spend limit",
+          <div className="portal-billing__checkout-scroll">
+            <SpendLimitPicker
+              capUsd={capUsd}
+              onChange={setCapUsd}
+              pricePerDocMinor={pricePerDocMinor}
+              currency={currency}
+              presets={CAP_PRESETS}
+              disabled={capBusy}
+            />
+            <p className="portal-billing__checkout-finePrint">
+              {t(
+                "portal.billing.checkout.cap.note",
+                "You're never billed past your limit. Processing just pauses.",
               )}
-            >
-              {capError}
-            </Banner>
-          )}
-          <div className="portal-billing__checkout-cap-actions">
-            <Button variant="quiet" onClick={onClose} disabled={capBusy}>
-              {t("portal.billing.checkout.cap.back", "Back")}
-            </Button>
-            <Button
-              accent="premium"
-              loading={capBusy}
-              onClick={handleContinue}
-              rightSection={<span aria-hidden>›</span>}
-            >
-              {t("portal.billing.checkout.cap.continue", "Continue to payment")}
-            </Button>
+            </p>
+            <p className="portal-billing__checkout-finePrint">
+              {t(
+                "portal.billing.checkout.cap.finePrint",
+                "Invoices post monthly. Cancel anytime.",
+              )}
+            </p>
+            {capError && (
+              <Banner
+                tone="danger"
+                title={t(
+                  "portal.billing.checkout.cap.error",
+                  "Couldn't set your spend limit",
+                )}
+              >
+                {capError}
+              </Banner>
+            )}
+            <div className="portal-billing__checkout-cap-actions">
+              <Button variant="quiet" onClick={onClose} disabled={capBusy}>
+                {t("portal.billing.checkout.cap.back", "Back")}
+              </Button>
+              <Button
+                accent="premium"
+                loading={capBusy}
+                onClick={handleContinue}
+                rightSection={<span aria-hidden>›</span>}
+              >
+                {t(
+                  "portal.billing.checkout.cap.continue",
+                  "Continue to payment",
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       )}
 
       {phase === "checkout" && (
         <div className="portal-billing__checkout-pay">
-          <StepProgress step={2} />
-          {!publishableKey && <CardPlaceholder />}
-          {publishableKey && error && (
-            <Banner
-              tone="danger"
-              title={t(
-                "portal.billing.checkout.error.title",
-                "Couldn't start checkout",
-              )}
-            >
-              {error}
-            </Banner>
-          )}
-          {publishableKey && loading && !error && (
-            <div className="portal-billing__skeleton" aria-hidden>
-              <Skeleton height="3rem" />
-              <Skeleton height="18rem" />
-            </div>
-          )}
-          {publishableKey && canRender && stripe && clientSecret && (
-            <EmbeddedCheckoutProvider
-              stripe={stripe}
-              options={{ clientSecret, onComplete: handleStripeComplete }}
-            >
-              <EmbeddedCheckout />
-            </EmbeddedCheckoutProvider>
-          )}
+          <PrepayModalHeader
+            step={3}
+            total={3}
+            title={t("portal.billing.checkout.title", "Add a payment method")}
+            onClose={handleClose}
+          />
+          <div className="portal-billing__checkout-scroll">
+            <p className="portal-billing__checkout-limit">
+              {capLabel
+                ? t(
+                    "portal.billing.checkout.pay.limit",
+                    "Monthly spend limit {{amount}}/mo. Processing pauses at the limit.",
+                    { amount: capLabel },
+                  )
+                : t(
+                    "portal.billing.checkout.pay.limitNoCap",
+                    "No spend limit. Processing won't pause. Invoices post monthly.",
+                  )}
+            </p>
+            {!publishableKey && <CardPlaceholder />}
+            {publishableKey && error && (
+              <Banner
+                tone="danger"
+                title={t(
+                  "portal.billing.checkout.error.title",
+                  "Couldn't start checkout",
+                )}
+              >
+                {error}
+              </Banner>
+            )}
+            {publishableKey && loading && !error && (
+              <div className="portal-billing__skeleton" aria-hidden>
+                <Skeleton height="3rem" />
+                <Skeleton height="18rem" />
+              </div>
+            )}
+            {publishableKey && canRender && stripe && clientSecret && (
+              <div className="portal-billing__checkout-embed">
+                <EmbeddedCheckoutProvider
+                  stripe={stripe}
+                  options={{ clientSecret, onComplete: handleStripeComplete }}
+                >
+                  <EmbeddedCheckout />
+                </EmbeddedCheckoutProvider>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </Modal>

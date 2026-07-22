@@ -5357,8 +5357,8 @@ title = "Recent billable activity"
 [payg.cap]
 amount = "Cap amount"
 custom = "Custom"
-docsEstimate = "≈ {{docs}} processed PDFs / month"
-docsRate = "at {{rate}} / PDF"
+docsEstimate = "≈ {{docs}} credits / month"
+docsRate = "at {{rate}} / credit"
 noCapDesc = "Usage is billed without an upper limit. You can re-enable a cap at any time."
 noCapLabel = "No cap"
 noneShort = "No cap"
@@ -5462,7 +5462,7 @@ title = "Team member usage"
 chip = "Prepaid year"
 
 [payg.prepaid.banner]
-exhausted = "Your prepaid capacity is used up — metered billing has resumed. Top up to keep the discount."
+exhausted = "Your prepaid capacity is used up; metered billing has resumed. Top up to keep the discount."
 expiring = "Your prepaid year ends in {{days}} days. Unused capacity expires — top up to start a fresh year."
 low = "You're down to {{pct}}% of your prepaid capacity. Top up any time to keep processing uninterrupted."
 
@@ -6303,22 +6303,20 @@ loading = "Loading"
 redirectingToEditor = "Redirecting to the editor..."
 
 [portal.billing.activation]
-subtitle = "Same per-PDF rate either way — prepaying just gets you two months free."
-title = "How do you want to pay?"
+maybeLater = "Maybe later"
+title = "Switch on the Processor"
 
 [portal.billing.activation.payg]
-sub = "Set a monthly limit and pay for what you use."
+sub = "Set a monthly limit. Pay for what you run."
 title = "Pay as you go"
 
 [portal.billing.activation.prepay]
 badge = "2 months free"
-sub = "One upfront payment. Used before metered billing; unused capacity expires after 12 months."
+sub = "One invoice, card or bank transfer."
 title = "Prepay a year"
 
 [portal.billing.checkout]
 noClientSecret = "Edge function returned no client_secret."
-stepCount = "Step {{step}} of 2"
-subtitle = "Add a card to keep going past your free Editor-plan grant. Stripe handles the rest."
 title = "Add a payment method"
 
 [portal.billing.checkout.activationSlow]
@@ -6327,12 +6325,14 @@ close = "Close"
 title = "Almost there"
 
 [portal.billing.checkout.cap]
+amountAria = "Monthly spend limit"
 back = "Back"
 continue = "Continue to payment"
 error = "Couldn't set your spend limit"
-finePrint = "Invoices post on the 1st. Cancel anytime and revert to the Editor plan; your policies and history stay intact."
-note = "Processing pauses if you reach it. You're never billed past this, and you can change it any time."
-subtitle = "You're billed only for PDFs you process past your first 500 free, never for seats — so your ceiling is yours from day one."
+finePrint = "Invoices post monthly. Cancel anytime."
+noLimit = "No limit"
+note = "You're never billed past your limit. Processing just pauses."
+perMonth = "/ mo"
 title = "Set your spend limit"
 
 [portal.billing.checkout.card]
@@ -6347,6 +6347,10 @@ title = "Couldn't start checkout"
 body = "Your payment went through. We're switching on metered processing across your linked instances - this usually takes a few seconds."
 hint = "Please keep this window open."
 title = "Activating your Processor plan..."
+
+[portal.billing.checkout.pay]
+limit = "Monthly spend limit {{amount}}/mo. Processing pauses at the limit."
+limitNoCap = "No spend limit. Processing won't pause. Invoices post monthly."
 
 [portal.billing.enterpriseUpsell]
 cta = "Explore Enterprise"
@@ -6369,10 +6373,12 @@ currentPlan = "Current plan"
 freeForever = "Free forever"
 noTeamResolved = "No team is resolved on your wallet yet — refresh and try again."
 ownerOnly = "Only the team owner can switch on the Processor plan."
+payInvoice = "Pay invoice to complete"
 planName = "Editor"
 ssoIncluded = "SSO included"
 switchOnProcessor = "Switch on the Processor →"
 unlimitedUsers = "Unlimited users"
+viewQuote = "View quote"
 
 [portal.billing.invoices]
 columnAmount = "Amount"
@@ -6438,44 +6444,35 @@ note = "Used before metered billing and outside your spend limit."
 topUp = "Top up"
 
 [portal.billing.prepaid.buy]
+back = "Back"
+calcTitle = "Calculate your annual payment"
 cancel = "Cancel"
-continue = "Continue to payment"
-doneBody = "{{credits}} credits of prepaid capacity are ready. They're used before metered billing and expire 12 months from today."
-doneTitle = "Your prepaid year is active"
-finish = "Done"
+cancelPurchase = "Cancel purchase"
+close = "Close"
+continueToPayment = "Continue to payment"
+finalise = "Finalise"
 invoiceErrorTitle = "Couldn't generate the invoice"
-invoiceSentBody = "Your invoice is on its way. Your prepaid year activates as soon as payment clears — no need to keep this open."
-invoiceSentTitle = "Invoice sent"
-mockPay = "Complete purchase"
-paidLabel = "Paid today"
-payErrorTitle = "Couldn't start checkout"
-quoteErrorTitle = "Couldn't save your quote"
-subtitle = "Pre-buy a year of processing up front at a discount. Prepaid capacity is used before metered billing and doesn't count toward your spend limit; unused capacity expires after 12 months."
-title = "Get 12 months for the price of 10"
-topUpTitle = "Top up prepaid capacity"
-viewInvoice = "View invoice"
+loadingTitle = "Loading your quote"
+payTitle = "Pay for your year"
+step = "Step {{current}} of {{total}}"
 
 [portal.billing.prepaid.calc]
 change = "Change"
 deployRow = "Deployment"
 done = "Done"
-downloadPreparing = "Preparing quote…"
-downloadQuote = "Download quote (PDF)"
-downloadShare = "share for approval"
-enterpriseHint = "This is enterprise scale — at this volume, enterprise rates beat any self-serve discount. Rate lock, terms, and a quote in minutes."
+enterpriseHint = "This is enterprise scale. At this volume, enterprise rates beat any self-serve discount. Rate lock, terms, and a quote in minutes."
 governanceRow = "Governance"
 governanceValue = "{{label}} · {{count}} policies"
 handlesLabel = "Your Processor"
-handlesValue = "handles {{volume}} PDFs / mo"
+handlesValue = "handles {{volume}} credits / mo"
 pipelinesLabel = "Pipelines"
 policiesMeta = "{{count}} policies"
 poolCaption = "One pool of {{credits}} credits for the year. Heavy months borrow from light ones."
 priceLabel = "Your year · 12 months for the price of 10"
 rateUnknown = "We'll show the exact price at checkout."
-savings = "You save {{amount}} — 2 months free."
+savings = "You save {{amount}} · 2 months free."
 sizingRow = "Sizing"
 sizingValue = "{{label}} · {{desc}}"
-usersHint = "Estimated at ≈ 80 PDFs per user a month of people-driven traffic. Edit the finer settings if you know better."
 usersLabel = "Total users"
 
 [portal.billing.prepaid.consent]
@@ -6491,15 +6488,18 @@ selfhostValue = "Self-hosted · Private infrastructure"
 
 [portal.billing.prepaid.offer]
 cta = "Review offer"
-subtitle = "Prepay a year of PDF processing and get two months free — used before metered billing, outside your spend limit."
+subtitle = "Prepay a year of PDF processing and get two months free, used before metered billing, outside your spend limit."
 title = "Get 12 months for the price of 10"
 
 [portal.billing.prepaid.pay]
-bank = "Bank transfer"
-bankHint = "We'll email a Stripe invoice (net 30). Your prepaid year activates as soon as payment clears."
-card = "Card"
-generateInvoice = "Generate invoice"
-method = "Payment method"
+accountName = "Account holder name"
+accountNamePlaceholder = "e.g. Jane Smith"
+companyName = "Company name (optional)"
+companyNamePlaceholder = "e.g. Acme Inc."
+downloadInvoice = "Download invoice"
+payOnline = "Pay online"
+poNumber = "PO number (optional)"
+poNumberPlaceholder = "e.g. PO-2026-0142"
 
 [portal.billing.prepaid.pipelines]
 advanced = "Advanced"
@@ -6517,12 +6517,10 @@ governedDesc = "Adds Security and Routing"
 regulated = "Regulated"
 regulatedDesc = "Every category, incl. Compliance, Retention, Ingestion"
 
-[portal.billing.prepaid.proforma]
-footer = "Proforma for purchase approval. Capacity is billed only once payment is received; valid 30 days."
-heading = "Prepaid processing quote"
-poolLabel = "Prepaid pool"
-poolValue = "{{credits}} credits"
-subheading = "12 months of prepaid PDF processing capacity"
+[portal.billing.prepaid.review]
+download = "Download quote (PDF)"
+downloading = "Preparing…"
+share = "share for approval"
 
 [portal.billing.prepaid.size]
 compact = "Compact"
@@ -6546,7 +6544,7 @@ capSuffixWithDocs = "/ month · ≈ {{documents}} documents"
 displaySub = "You're only billed for what you process automatically — never past the ceiling."
 editTitle = "Set your monthly ceiling"
 eyebrow = "Spend limit"
-guardrailBody = "a hard ceiling — you're never billed past it. At the cap, metered processing pauses (unlimited PDF editing keeps working) until you raise it or the cycle resets. Nothing is lost."
+guardrailBody = "a hard ceiling; you're never billed past it. At the cap, metered processing pauses (unlimited PDF editing keeps working) until you raise it or the cycle resets. Nothing is lost."
 guardrailLabel = "Your guardrail:"
 noCap = "no cap"
 pctUsed = "{{pct}}% used"

@@ -18,23 +18,19 @@ vi.mock("@app/auth/supabase/supabaseClient", () => ({
 }));
 
 import {
-  createBundleCheckoutSession,
-  createBundleInvoice,
+  acceptBundleStripeQuote,
+  cancelBundleQuote,
+  createBundleStripeQuote,
   createCheckoutSession,
   createPortalSession,
+  fetchBundleQuotePdf,
+  finalizeBundleInvoice,
+  getLatestBundleQuote,
   StripeFunctionError,
   upsertBundleQuote,
 } from "@portal/billing/stripe";
 
 const req = { teamId: 1, successUrl: "s", cancelUrl: "c" } as const;
-const bundleReq = {
-  teamId: 1,
-  units: 60000,
-  consented: true,
-  eulaVersion: "2026-07-draft",
-  successUrl: "s",
-  cancelUrl: "c",
-} as const;
 
 beforeEach(() => {
   invoke.mockReset();
@@ -104,69 +100,44 @@ describe("createCheckoutSession", () => {
   });
 });
 
-describe("createBundleCheckoutSession", () => {
-  it("direct path: sends units + consent inline (no quote id) and maps client_secret", async () => {
+describe("createBundleStripeQuote", () => {
+  it("sends team_id + quote_id (+ po_number) and maps the Stripe quote handles", async () => {
     invoke.mockResolvedValue({
-      data: { client_secret: "cs_bundle" },
+      data: {
+        success: true,
+        stripe_quote_id: "qt_1",
+        stripe_quote_number: "QT-0007",
+      },
       error: null,
     });
-    const s = await createBundleCheckoutSession(bundleReq);
-    expect(s.clientSecret).toBe("cs_bundle");
-    expect(s.alreadySubscribed).toBe(false);
-
-    const [name, opts] = invoke.mock.calls[0];
-    expect(name).toBe("create-payg-bundle-checkout");
-    expect(opts.body).toMatchObject({
-      team_id: 1,
-      units: 60000,
-      consented: true,
-      eula_version: "2026-07-draft",
-      redirect_on_completion: "never",
-    });
-    // Direct path carries no quote id.
-    expect(opts.body).not.toHaveProperty("quote_id");
-  });
-
-  it("quote path: sends quote_id (no units/consent) when given a quoteId", async () => {
-    invoke.mockResolvedValue({ data: { client_secret: "cs_q" }, error: null });
-    await createBundleCheckoutSession({
+    const q = await createBundleStripeQuote({
       teamId: 1,
       quoteId: 7,
-      successUrl: "s",
-      cancelUrl: "c",
+      poNumber: "PO-9",
     });
-    const [, opts] = invoke.mock.calls[0];
+    expect(q).toEqual({ stripeQuoteId: "qt_1", stripeQuoteNumber: "QT-0007" });
+    const [name, opts] = invoke.mock.calls[0];
+    expect(name).toBe("create-payg-bundle-quote");
     expect(opts.body).toMatchObject({
       team_id: 1,
       quote_id: 7,
-      redirect_on_completion: "never",
+      po_number: "PO-9",
     });
-    // The quote carries pool + consent — they must not also ride inline.
-    expect(opts.body).not.toHaveProperty("units");
-    expect(opts.body).not.toHaveProperty("consented");
   });
 
-  it("flags a mock client secret", async () => {
-    invoke.mockResolvedValue({
-      data: { client_secret: "cs_mock_bundle" },
-      error: null,
-    });
-    expect((await createBundleCheckoutSession(bundleReq)).mock).toBe(true);
-  });
-
-  it("throws the edge fn error when neither client_secret nor url is returned", async () => {
+  it("throws when the edge fn reports failure", async () => {
     invoke.mockResolvedValue({
       data: { success: false, error: "bundle_pricing_not_configured" },
       error: null,
     });
-    await expect(createBundleCheckoutSession(bundleReq)).rejects.toThrow(
-      /bundle_pricing_not_configured/,
-    );
+    await expect(
+      createBundleStripeQuote({ teamId: 1, quoteId: 7 }),
+    ).rejects.toThrow(/bundle_pricing_not_configured/);
   });
 });
 
-describe("createBundleInvoice", () => {
-  it("maps the invoice response and sends quote_id (+ optional po_number)", async () => {
+describe("acceptBundleStripeQuote", () => {
+  it("maps the invoice response and sends quote_id", async () => {
     invoke.mockResolvedValue({
       data: {
         success: true,
@@ -177,11 +148,7 @@ describe("createBundleInvoice", () => {
       },
       error: null,
     });
-    const inv = await createBundleInvoice({
-      teamId: 1,
-      quoteId: 7,
-      poNumber: "PO-9",
-    });
+    const inv = await acceptBundleStripeQuote({ teamId: 1, quoteId: 7 });
     expect(inv).toEqual({
       invoiceId: "in_1",
       hostedInvoiceUrl: "https://pay/in_1",
@@ -189,22 +156,57 @@ describe("createBundleInvoice", () => {
       status: "open",
     });
     const [name, opts] = invoke.mock.calls[0];
-    expect(name).toBe("create-payg-bundle-invoice");
-    expect(opts.body).toMatchObject({
-      team_id: 1,
-      quote_id: 7,
-      po_number: "PO-9",
-    });
+    expect(name).toBe("accept-payg-bundle-quote");
+    expect(opts.body).toMatchObject({ team_id: 1, quote_id: 7 });
   });
 
   it("throws when the edge fn reports failure", async () => {
     invoke.mockResolvedValue({
-      data: { success: false, error: "bundle_invoice_needs_customer" },
+      data: { success: false, error: "quote_not_issued" },
       error: null,
     });
     await expect(
-      createBundleInvoice({ teamId: 1, quoteId: 7 }),
-    ).rejects.toThrow(/bundle_invoice_needs_customer/);
+      acceptBundleStripeQuote({ teamId: 1, quoteId: 7 }),
+    ).rejects.toThrow(/quote_not_issued/);
+  });
+});
+
+describe("cancelBundleQuote", () => {
+  it("sends team_id + quote_id and resolves on success", async () => {
+    invoke.mockResolvedValue({ data: { success: true }, error: null });
+    await cancelBundleQuote({ teamId: 1, quoteId: 7 });
+    const [name, opts] = invoke.mock.calls[0];
+    expect(name).toBe("cancel-payg-bundle-quote");
+    expect(opts.body).toMatchObject({ team_id: 1, quote_id: 7 });
+  });
+
+  it("throws when the edge fn reports failure (e.g. already paid)", async () => {
+    invoke.mockResolvedValue({
+      data: { success: false, error: "invoice_already_paid" },
+      error: null,
+    });
+    await expect(cancelBundleQuote({ teamId: 1, quoteId: 7 })).rejects.toThrow(
+      /invoice_already_paid/,
+    );
+  });
+});
+
+describe("fetchBundleQuotePdf", () => {
+  it("returns the PDF blob from the GET route", async () => {
+    const blob = new Blob(["%PDF"], { type: "application/pdf" });
+    invoke.mockResolvedValue({ data: blob, error: null });
+    const out = await fetchBundleQuotePdf(7);
+    expect(out).toBe(blob);
+    const [name, opts] = invoke.mock.calls[0];
+    expect(name).toBe("create-payg-bundle-quote?quote_id=7");
+    expect(opts.method).toBe("GET");
+  });
+
+  it("throws when the response is not a file", async () => {
+    invoke.mockResolvedValue({ data: { success: false }, error: null });
+    await expect(fetchBundleQuotePdf(7)).rejects.toBeInstanceOf(
+      StripeFunctionError,
+    );
   });
 });
 
@@ -228,7 +230,6 @@ describe("upsertBundleQuote", () => {
       data: [
         {
           quote_id: 7,
-          quote_number: "PB-2026-000007",
           status: "issued",
           valid_until: "2026-08-16T00:00:00Z",
         },
@@ -238,7 +239,6 @@ describe("upsertBundleQuote", () => {
     const q = await upsertBundleQuote(quoteInput);
     expect(q).toEqual({
       quoteId: 7,
-      quoteNumber: "PB-2026-000007",
       status: "issued",
       validUntil: "2026-08-16T00:00:00Z",
     });
@@ -261,14 +261,7 @@ describe("upsertBundleQuote", () => {
 
   it("passes p_quote_id when editing an existing quote", async () => {
     rpc.mockResolvedValue({
-      data: [
-        {
-          quote_id: 7,
-          quote_number: "PB-2026-000007",
-          status: "issued",
-          valid_until: "x",
-        },
-      ],
+      data: [{ quote_id: 7, status: "issued", valid_until: "x" }],
       error: null,
     });
     await upsertBundleQuote({ ...quoteInput, quoteId: 7 });
@@ -283,6 +276,97 @@ describe("upsertBundleQuote", () => {
     const err = await upsertBundleQuote(quoteInput).catch((e: unknown) => e);
     expect(err).toBeInstanceOf(StripeFunctionError);
     expect((err as StripeFunctionError).code).toBe("42501");
+  });
+});
+
+describe("finalizeBundleInvoice", () => {
+  it("maps the invoice response and sends quote_id (+ optional po_number)", async () => {
+    invoke.mockResolvedValue({
+      data: {
+        success: true,
+        invoice_id: "in_1",
+        hosted_invoice_url: "https://pay/in_1",
+        invoice_pdf: "https://pdf/in_1",
+        status: "open",
+      },
+      error: null,
+    });
+    const inv = await finalizeBundleInvoice({
+      teamId: 1,
+      quoteId: 7,
+      poNumber: "PO-9",
+    });
+    expect(inv).toEqual({
+      invoiceId: "in_1",
+      hostedInvoiceUrl: "https://pay/in_1",
+      invoicePdf: "https://pdf/in_1",
+      status: "open",
+    });
+    const [name, opts] = invoke.mock.calls[0];
+    expect(name).toBe("finalize-payg-bundle-invoice");
+    expect(opts.body).toMatchObject({
+      team_id: 1,
+      quote_id: 7,
+      po_number: "PO-9",
+    });
+  });
+
+  it("throws when the edge fn reports failure", async () => {
+    invoke.mockResolvedValue({
+      data: { success: false, error: "quote_not_accepted" },
+      error: null,
+    });
+    await expect(
+      finalizeBundleInvoice({ teamId: 1, quoteId: 7 }),
+    ).rejects.toThrow(/quote_not_accepted/);
+  });
+});
+
+describe("getLatestBundleQuote", () => {
+  it("maps the latest open quote row (numeric size_mult coerced)", async () => {
+    rpc.mockResolvedValue({
+      data: [
+        {
+          quote_id: 7,
+          users: 25,
+          posture_policies: 4,
+          size_mult: "1.2",
+          pipeline_mult: 1,
+          pool_credits: 576000,
+          price_minor: 480000,
+          currency: "usd",
+          consented_at: "2026-07-17T00:00:00Z",
+          stripe_quote_id: "qt_1",
+          stripe_quote_number: "QT-0007",
+          stripe_ref: "in_1",
+          valid_until: "2026-08-16T00:00:00Z",
+        },
+      ],
+      error: null,
+    });
+    const q = await getLatestBundleQuote(1);
+    expect(q).toEqual({
+      quoteId: 7,
+      users: 25,
+      posturePolicies: 4,
+      sizeMult: 1.2,
+      pipelineMult: 1,
+      poolCredits: 576000,
+      priceMinor: 480000,
+      currency: "usd",
+      consentedAt: "2026-07-17T00:00:00Z",
+      stripeQuoteId: "qt_1",
+      stripeQuoteNumber: "QT-0007",
+      stripeRef: "in_1",
+      validUntil: "2026-08-16T00:00:00Z",
+    });
+    expect(rpc.mock.calls[0][0]).toBe("payg_get_latest_bundle_quote");
+    expect(rpc.mock.calls[0][1]).toEqual({ p_team_id: 1 });
+  });
+
+  it("returns null when the team has no open quote", async () => {
+    rpc.mockResolvedValue({ data: [], error: null });
+    expect(await getLatestBundleQuote(1)).toBeNull();
   });
 });
 
