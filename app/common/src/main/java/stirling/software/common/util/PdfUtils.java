@@ -9,11 +9,17 @@ import java.lang.foreign.Arena;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
+
+import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -21,6 +27,8 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.graphics.PDXObject;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -128,7 +136,7 @@ public class PdfUtils {
                             }
                         }
                         return RenderingUtils.vImageToBytes(combined, imageType);
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         log.warn(
                                 "Native libvips path-based pdfload failed, falling back to JPDFium",
                                 e);
@@ -213,7 +221,6 @@ public class PdfUtils {
             for (int page = 0; page < pageCount; ++page) {
                 final int pageIndex = page;
 
-                // Native rendering from disk to PNG bytes then to PDF object
                 byte[] pngBytes;
                 try (Arena arena = Arena.ofConfined()) {
                     VImage vimg =
@@ -224,8 +231,10 @@ public class PdfUtils {
 
                 PDImageXObject pdImage =
                         PDImageXObject.createFromByteArray(imageDocument, pngBytes, "img");
+                PDRectangle originalBox = document.getPage(page).getMediaBox();
                 PDPage pdPage =
-                        new PDPage(new PDRectangle(pdImage.getWidth(), pdImage.getHeight()));
+                        new PDPage(
+                                new PDRectangle(originalBox.getWidth(), originalBox.getHeight()));
                 imageDocument.addPage(pdPage);
 
                 try (PDPageContentStream contentStream =
@@ -235,7 +244,8 @@ public class PdfUtils {
                                 PDPageContentStream.AppendMode.APPEND,
                                 true,
                                 true)) {
-                    contentStream.drawImage(pdImage, 0, 0, pdImage.getWidth(), pdImage.getHeight());
+                    contentStream.drawImage(
+                            pdImage, 0, 0, originalBox.getWidth(), originalBox.getHeight());
                 }
             }
             PDDocument result = imageDocument;
@@ -262,11 +272,56 @@ public class PdfUtils {
             String colorType,
             CustomPDFDocumentFactory pdfDocumentFactory)
             throws IOException {
-        try (PDDocument doc = new PDDocument()) {
+        try (PDDocument doc = pdfDocumentFactory.createNewDocument()) {
             for (MultipartFile file : files) {
+                String ext = FilenameUtils.getExtension(file.getOriginalFilename());
+                if ("tiff".equalsIgnoreCase(ext) || "tif".equalsIgnoreCase(ext)) {
+                    try (InputStream is = file.getInputStream();
+                            ImageInputStream iis = ImageIO.createImageInputStream(is)) {
+                        Iterator<ImageReader> readers = ImageIO.getImageReaders(iis);
+                        if (readers.hasNext()) {
+                            ImageReader reader = readers.next();
+                            reader.setInput(iis);
+                            int count = reader.getNumImages(true);
+                            for (int i = 0; i < count; i++) {
+                                BufferedImage frame = reader.read(i);
+                                try (Arena arena = Arena.ofConfined()) {
+                                    VImage vimg =
+                                            RenderingUtils.bufferedImageToVImage(arena, frame);
+                                    if (!"fullcolor".equalsIgnoreCase(colorType)) {
+                                        if ("greyscale".equalsIgnoreCase(colorType)) {
+                                            vimg =
+                                                    vimg.colourspace(
+                                                            VipsInterpretation.INTERPRETATION_B_W);
+                                        } else if ("blackwhite".equalsIgnoreCase(colorType)) {
+                                            vimg =
+                                                    vimg.colourspace(
+                                                                    VipsInterpretation
+                                                                            .INTERPRETATION_B_W)
+                                                            .relationalConst(
+                                                                    VipsOperationRelational
+                                                                            .OPERATION_RELATIONAL_MORE,
+                                                                    List.of(128.0))
+                                                            .cast(VipsBandFormat.FORMAT_UCHAR);
+                                        }
+                                    }
+                                    byte[] pngBytes = RenderingUtils.vImageToBytes(vimg, "png");
+                                    PDImageXObject pdImage =
+                                            PDImageXObject.createFromByteArray(
+                                                    doc, pngBytes, "img");
+                                    addImageToDocument(doc, pdImage, fitOption, autoRotate);
+                                }
+                            }
+                            continue;
+                        }
+                    } catch (Exception e) {
+                        log.warn("Error reading multi-frame TIFF", e);
+                    }
+                }
+
+                byte[] pngBytes;
                 try (InputStream inputStream = file.getInputStream();
                         Arena arena = Arena.ofConfined()) {
-                    // High-fidelity load via libvips/ImageMagick
                     VImage vimg = RenderingUtils.loadAnyImage(arena, inputStream);
 
                     if (!"fullcolor".equalsIgnoreCase(colorType)) {
@@ -283,11 +338,10 @@ public class PdfUtils {
                         }
                     }
 
-                    byte[] pngBytes = RenderingUtils.vImageToBytes(vimg, "png");
-                    PDImageXObject pdImage =
-                            PDImageXObject.createFromByteArray(doc, pngBytes, "img");
-                    addImageToDocument(doc, pdImage, fitOption, autoRotate);
+                    pngBytes = RenderingUtils.vImageToBytes(vimg, "png");
                 }
+                PDImageXObject pdImage = PDImageXObject.createFromByteArray(doc, pngBytes, "img");
+                addImageToDocument(doc, pdImage, fitOption, autoRotate);
             }
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             doc.save(baos);
@@ -352,7 +406,6 @@ public class PdfUtils {
         try (PDDocument document = Loader.loadPDF(pdfPath.toFile())) {
             byte[] pngBytes;
             try (Arena arena = Arena.ofConfined()) {
-                // High-fidelity load
                 VImage vimg = RenderingUtils.loadAnyImage(arena, imageStream);
                 pngBytes = RenderingUtils.vImageToBytes(vimg, "png");
             }
@@ -463,10 +516,12 @@ public class PdfUtils {
         if (resources == null) return images;
         for (COSName name : resources.getXObjectNames()) {
             if (resources.isImageXObject(name)) {
-                images.add(
-                        ((org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject)
-                                        resources.getXObject(name))
-                                .getImage());
+                images.add(((PDImageXObject) resources.getXObject(name)).getImage());
+            } else {
+                PDXObject xobj = resources.getXObject(name);
+                if (xobj instanceof PDFormXObject form) {
+                    images.addAll(getAllImages(form.getResources()));
+                }
             }
         }
         return images;

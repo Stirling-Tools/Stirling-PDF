@@ -19,7 +19,20 @@ public class TempFile implements AutoCloseable {
 
     public TempFile(TempFileManager manager, String suffix) throws IOException {
         this.manager = manager;
-        this.file = manager.createTempFile(suffix);
+        File created = null;
+        if (manager != null) {
+            try {
+                created = manager.createTempFile(suffix);
+            } catch (Exception e) {
+                log.warn(
+                        "TempFileManager failed to create temp file, falling back to File.createTempFile",
+                        e);
+            }
+        }
+        if (created == null) {
+            created = File.createTempFile("stirling-pdf-temp", suffix);
+        }
+        this.file = created;
     }
 
     public Path getPath() {
@@ -36,7 +49,18 @@ public class TempFile implements AutoCloseable {
 
     @Override
     public void close() {
-        manager.deleteTempFile(file);
+        if (manager != null) {
+            try {
+                manager.deleteTempFile(file);
+            } catch (Exception e) {
+                if (file != null && file.exists()) {
+                    file.delete();
+                }
+            }
+        }
+        if (file != null && file.exists()) {
+            file.delete();
+        }
     }
 
     @Override

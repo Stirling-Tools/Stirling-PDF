@@ -171,6 +171,10 @@ class PdfUtilsMoreTest {
             try (MockedStatic<ApplicationContextProvider> ctx =
                             Mockito.mockStatic(ApplicationContextProvider.class);
                     TempFile tempPdf = new TempFile(mock(TempFileManager.class), ".pdf")) {
+                try (PDDocument d = new PDDocument()) {
+                    d.addPage(new PDPage(PDRectangle.A4));
+                    d.save(tempPdf.getFile());
+                }
                 ctx.when(() -> ApplicationContextProvider.getBean(ApplicationProperties.class))
                         .thenReturn(propsWithMaxDpi(200));
 
