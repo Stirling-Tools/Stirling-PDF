@@ -12,7 +12,7 @@ import {
  * sources + policies-list + policy-runs base queries and assembles client-side,
  * so it reuses the same cache entries as the rest of Home (killing the
  * duplicate /sources, /policies, /policies/runs fetches) rather than issuing
- * its own via fetchProcessorFlow.
+ * its own.
  */
 export function useProcessorFlow(): AsyncState<ProcessorFlow> {
   const sources = useSources();

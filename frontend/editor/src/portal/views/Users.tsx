@@ -422,9 +422,9 @@ function UsersViewQuery() {
 
 /**
  * Users page entry. Picks the data layer from the `reactQuery` dev flag and
- * mounts the matching container, plus the on-page toggle for before/after
- * evaluation. Once the evaluation lands, delete the flag branch and keep one
- * container (see usersData.ts).
+ * mounts the matching container, plus the on-page toggle. This view is kept as
+ * the reference example of the legacy-vs-query split; every other view uses the
+ * query path directly (see usersData.ts).
  */
 export function Users() {
   const useReactQuery = useFeatureFlag("reactQuery");

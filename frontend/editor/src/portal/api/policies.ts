@@ -4,8 +4,8 @@
  * The portal calls the real Stirling policy API (`/api/v1/policies`);
  * Storybook and tests intercept the same calls with MSW handlers.
  *
- * `fetchPolicies()` assembles the decorated catalogue client-side from the
- * backend's flat `WirePolicy[]` + `PolicyRunView[]`, mirroring the same
+ * The flat `WirePolicy[]` + `PolicyRunView[]` responses are assembled into the
+ * decorated catalogue client-side by `assemblePolicies()`, mirroring the same
  * approach the editor uses for its own catalogue view.
  */
 
@@ -459,15 +459,6 @@ export function fetchPolicyRuns(): Promise<PolicyRunView[]> {
   return apiClient.local
     .json<PolicyRunView[]>("/api/v1/policies/runs")
     .catch(() => [] as PolicyRunView[]);
-}
-
-/** GET /api/v1/policies + GET /api/v1/policies/runs → assembled catalogue. */
-export async function fetchPolicies(): Promise<PoliciesResponse> {
-  const [wirePolicies, runs] = await Promise.all([
-    fetchPoliciesList(),
-    fetchPolicyRuns(),
-  ]);
-  return assemblePolicies(wirePolicies, runs);
 }
 
 /**

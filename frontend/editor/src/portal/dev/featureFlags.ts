@@ -11,8 +11,8 @@ import { useSyncExternalStore } from "react";
  * {@link useFeatureFlag}; toggling re-renders every reader (and every open tab)
  * with no page reload.
  *
- * These are a dev harness for before/after evaluation, NOT a product feature —
- * there is no server component and no persistence beyond the tab.
+ * These are a dev-only harness, NOT a product feature — there is no server
+ * component and no persistence beyond the tab.
  */
 export type PortalFlag = "reactQuery";
 

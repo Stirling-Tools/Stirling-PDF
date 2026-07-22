@@ -17,14 +17,3 @@ export function toAsyncState<T>(query: UseQueryResult<T>): AsyncState<T> {
     error: (query.error as Error | null) ?? null,
   };
 }
-
-/**
- * Combined loading for a derived hook that composes several base queries:
- * loading while any base query is still pending with no data. Callers assemble
- * `data` themselves from each query's `data ?? fallback`.
- */
-export function combineLoading(
-  ...queries: Array<Pick<UseQueryResult<unknown>, "isPending">>
-): boolean {
-  return queries.some((q) => q.isPending);
-}

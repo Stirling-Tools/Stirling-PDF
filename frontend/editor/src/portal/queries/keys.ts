@@ -21,7 +21,6 @@ export const qk = {
   pipelines: () => ["portal", "pipelines"] as const,
   fleetStats: () => ["portal", "fleetStats"] as const,
   appConfig: () => ["portal", "appConfig"] as const,
-  wallet: () => ["portal", "wallet"] as const,
   s3Connections: () => ["portal", "integrations", "s3"] as const,
 
   // Tier-dependent

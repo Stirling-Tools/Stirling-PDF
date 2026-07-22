@@ -1,8 +1,7 @@
 /** Assembles the home visualiser's sources → policies → outcomes from the real
  *  sources/policies/runs APIs. Counts are real; the flow motion is illustrative. */
 
-import { apiClient } from "@portal/api/http";
-import { fetchSources, type SourcesResponse } from "@portal/api/sources";
+import type { SourcesResponse } from "@portal/api/sources";
 import { POLICY_CATEGORIES } from "@portal/api/policies";
 import { fromWirePolicy } from "@app/policies/codec";
 import type { PolicyRunView, WirePolicy } from "@app/policies/types";
@@ -146,16 +145,4 @@ export function assembleProcessorFlow(
     policies: buildPolicies(wirePolicies, runs),
     outcomes: buildOutcomes(runs),
   };
-}
-
-/** Assemble the full flow model from the three live portal surfaces. */
-export async function fetchProcessorFlow(): Promise<ProcessorFlow> {
-  const [sourcesResp, wirePolicies, runs] = await Promise.all([
-    fetchSources(),
-    apiClient.local.json<WirePolicy[]>("/api/v1/policies"),
-    apiClient.local
-      .json<PolicyRunView[]>("/api/v1/policies/runs")
-      .catch(() => [] as PolicyRunView[]),
-  ]);
-  return assembleProcessorFlow(sourcesResp, wirePolicies, runs);
 }

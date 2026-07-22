@@ -6,8 +6,6 @@ import { setFlag, useFeatureFlag } from "@portal/dev/featureFlags";
  * layer can be flipped between the legacy fetch-on-mount path and TanStack
  * Query without a reload or a rebuild. Fixed to the bottom-right; intentionally
  * unstyled by the design system so it reads as scaffolding, not product UI.
- *
- * Remove this (and the flag) once the evaluation is done.
  */
 export function ReactQueryDevToggle() {
   const enabled = useFeatureFlag("reactQuery");

@@ -60,6 +60,11 @@ describe("ConnectionsTab", () => {
     expect(await screen.findByText("Claims bucket")).toBeInTheDocument();
     fireEvent.click(screen.getByText("portal.connections.delete"));
     await waitFor(() => expect(deleteIntegration).toHaveBeenCalledWith(5));
+    // The delete invalidates qk.s3Connections(), which refetches (2nd mock → [])
+    // and drops the row — proving the invalidation path, not just the API call.
+    expect(
+      await screen.findByText("portal.connections.empty.title"),
+    ).toBeInTheDocument();
   });
 
   it("surfaces the 409 when deleting a connection still in use", async () => {

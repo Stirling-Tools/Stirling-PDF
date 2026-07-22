@@ -31,8 +31,7 @@ function ThemedSuiProvider({ children }: { children: ReactNode }) {
  */
 export function PortalApp() {
   // One client for the portal's lifetime. Sits above the router so its cache
-  // survives view navigation (the `reactQuery` dev flag relies on this). Cheap
-  // and inert when no query hooks are mounted.
+  // survives view navigation. Cheap and inert when no query hooks are mounted.
   const [queryClient] = useState(createPortalQueryClient);
   return (
     <QueryClientProvider client={queryClient}>
