@@ -136,7 +136,7 @@ class OrchestratorAgent:
             ),
             model_settings=runtime.fast_model_settings,
         )
-        # Local models can't drive the zero-arg tool delegates; route by name instead.
+        # Local models can't drive the zero-arg tool delegates; route by name instead (#6163: unify these paths).
         self._route_via_enum = uses_tool_output(runtime.settings.chat_provider)
         # The router has no tools, so NativeOutput works on Ollama here; a lone output tool
         # would tempt a local model to answer in plain text and never call it.

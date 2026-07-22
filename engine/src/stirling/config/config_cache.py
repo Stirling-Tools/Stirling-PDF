@@ -1,4 +1,5 @@
-"""Persistent, Fernet-encrypted cache of the last-applied config-push, reloaded on boot so it survives restarts."""
+"""Persistent, Fernet-encrypted cache of the last-applied config-push. Boot restores it so an
+engine-only restart keeps admin config; sibling uvicorn workers poll it to adopt a push."""
 
 from __future__ import annotations
 

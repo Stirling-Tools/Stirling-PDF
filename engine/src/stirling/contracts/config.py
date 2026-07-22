@@ -4,15 +4,16 @@ from pydantic import ConfigDict, Field
 
 from stirling.models import ApiModel
 
-# Tolerate unknown fields so a newer processor pushing an unknown field is ignored rather
-# than rejecting the whole push. Overrides only the extra policy; camelCase aliasing is inherited.
-_TOLERANT = ConfigDict(extra="ignore")
+
+class TolerantApiModel(ApiModel):
+    """Push-contract base: unknown fields from a newer processor are ignored rather than
+    rejecting the whole push. Overrides only the extra policy; camelCase aliasing is inherited."""
+
+    model_config = ConfigDict(extra="ignore")
 
 
-class ConfigModelsSection(ApiModel):
+class ConfigModelsSection(TolerantApiModel):
     """Model provider + credentials pushed by the Java processor; empty fields mean "keep the engine's env value"."""
-
-    model_config = _TOLERANT
 
     provider: str = ""
     smart_model: str = ""
@@ -23,9 +24,7 @@ class ConfigModelsSection(ApiModel):
     base_url: str = ""
 
 
-class ConfigRagSection(ApiModel):
-    model_config = _TOLERANT
-
+class ConfigRagSection(TolerantApiModel):
     embedding_provider: str = ""
     embedding_model: str = ""
     embedding_api_key: str = ""
@@ -36,9 +35,7 @@ class ConfigRagSection(ApiModel):
     max_searches: int | None = Field(default=None, ge=0)
 
 
-class ConfigLimitsSection(ApiModel):
-    model_config = _TOLERANT
-
+class ConfigLimitsSection(TolerantApiModel):
     max_pages: int | None = Field(default=None, ge=1)
     max_characters: int | None = Field(default=None, ge=1)
     # Must be >= 1: it becomes an asyncio.Semaphore bound, and 0 constructs a permanently locked
@@ -46,10 +43,8 @@ class ConfigLimitsSection(ApiModel):
     model_max_concurrency: int | None = Field(default=None, ge=1)
 
 
-class ConfigPushRequest(ApiModel):
+class ConfigPushRequest(TolerantApiModel):
     """Admin-configured AI settings pushed at processor startup."""
-
-    model_config = _TOLERANT
 
     models: ConfigModelsSection = Field(default_factory=ConfigModelsSection)
     rag: ConfigRagSection = Field(default_factory=ConfigRagSection)

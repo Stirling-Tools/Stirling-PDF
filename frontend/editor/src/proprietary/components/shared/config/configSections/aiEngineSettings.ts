@@ -86,7 +86,7 @@ export type AiEngineApiResponse = AiEngineSettingsData &
 
 /** Free-text model suggestions per provider (hints only). */
 export const MODEL_SUGGESTIONS: Record<string, string[]> = {
-  anthropic: ["claude-haiku-4-5", "claude-sonnet-4-5", "claude-opus-4-1"],
+  anthropic: ["claude-haiku-4-5", "claude-sonnet-5", "claude-opus-4-8"],
   openai: ["gpt-4o", "gpt-4o-mini", "o3-mini"],
   ollama: ["llama3.1", "qwen2.5", "mistral"],
   custom: ["llama3.1", "qwen2.5", "mistral"],

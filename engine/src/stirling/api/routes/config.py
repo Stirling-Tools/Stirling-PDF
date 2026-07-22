@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import ipaddress
 import logging
-from typing import Any
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, FastAPI, HTTPException, Request, status
 from openai import OpenAIError
 from pydantic_ai.exceptions import UserError
 from pydantic_ai.models import Model
@@ -160,7 +159,7 @@ def resolve_and_apply(
     return effective, smart_model, fast_model, new_embedder, notes
 
 
-def apply_to_app(app: Any, request: ConfigPushRequest) -> tuple[AppSettings, list[str]]:
+def apply_to_app(app: FastAPI, request: ConfigPushRequest) -> tuple[AppSettings, list[str]]:
     """Resolve ``request`` and swap the bundle onto app.state; no await, so the swap is atomic wrt the event loop."""
     current: AppSettings = app.state.settings
     runtime: AppRuntime = app.state.runtime
