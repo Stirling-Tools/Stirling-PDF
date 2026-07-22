@@ -7,6 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -61,7 +62,7 @@ import tools.jackson.databind.ObjectMapper;
 @RestController
 @RequestMapping("/api/v1/workflow/participant")
 @Tag(name = "Workflow Participant", description = "Participant Action APIs")
-@RequiredArgsConstructor
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class WorkflowParticipantController {
 
     private final WorkflowSessionService workflowSessionService;

@@ -40,13 +40,19 @@ public class WorkflowFinalizationCoordinator {
         // Deleting the source is an external storage side effect. Defer it until the DB
         // transaction has committed so a commit failure cannot leave the workflow pointing at a
         // deleted original document.
-        TransactionSynchronizationManager.registerSynchronization(
-                new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        workflowSessionService.deleteOriginalFile(session);
-                    }
-                });
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            workflowSessionService.deleteOriginalFile(session);
+                        }
+                    });
+        } else {
+            // Direct unit-test/in-process calls without a transaction retain the original cleanup
+            // behavior; Spring-managed requests always take the after-commit branch above.
+            workflowSessionService.deleteOriginalFile(session);
+        }
 
         return new FinalizedWorkflow(finalizedPdf, filename);
     }

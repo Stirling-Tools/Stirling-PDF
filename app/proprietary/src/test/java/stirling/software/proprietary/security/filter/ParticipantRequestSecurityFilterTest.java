@@ -106,11 +106,15 @@ class ParticipantRequestSecurityFilterTest {
     @Test
     void oversizedMobileUpload_isRejectedBeforeMultipartParsing() throws Exception {
         MockHttpServletRequest request =
-                multipartRequest("/api/v1/mobile-scanner/upload/session-1");
-        request.addHeader(
-                "Content-Length",
-                String.valueOf(
-                        ParticipantRequestSecurityFilter.MAX_MOBILE_UPLOAD_REQUEST_SIZE_BYTES + 1));
+                new MockHttpServletRequest("POST", "/api/v1/mobile-scanner/upload/session-1") {
+                    @Override
+                    public long getContentLengthLong() {
+                        return ParticipantRequestSecurityFilter.MAX_MOBILE_UPLOAD_REQUEST_SIZE_BYTES
+                                + 1;
+                    }
+                };
+        request.setContentType("multipart/form-data; boundary=test");
+        request.setRemoteAddr("192.0.2.1");
         MockHttpServletResponse response = new MockHttpServletResponse();
         FilterChain chain = org.mockito.Mockito.mock(FilterChain.class);
 
