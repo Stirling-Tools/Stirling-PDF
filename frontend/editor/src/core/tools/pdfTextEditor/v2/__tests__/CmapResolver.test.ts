@@ -21,8 +21,10 @@ import {
   CmapResolver,
   parseTrueTypeCmap,
   primeFontGlyphMap,
+  getCachedFontProgramSha256,
   _clearCmapCacheForTests,
 } from "@app/tools/pdfTextEditor/v2/charcode/CmapResolver";
+import { sha256Hex } from "@app/tools/pdfTextEditor/v2/util/sha256";
 import type { ResolverContext } from "@app/tools/pdfTextEditor/v2/charcode/CharcodeStrategy";
 
 /**
@@ -220,6 +222,42 @@ describe("CmapResolver.resolve()", () => {
     expect(result?.coverage).toBe(0);
     expect(result?.missing).toEqual(["A", "B"]);
     expect(result?.note).toBe("cmap unavailable for this font");
+  });
+});
+
+describe("font program hash (cross-subset identity)", () => {
+  const FONT = 21;
+
+  it("caches the program bytes' SHA-256 at prime time", () => {
+    // PDFium reports every "ABCDEF+Family" subset as bare "Family", so the
+    // program hash is the only identity the backend can trust to pick the
+    // exact subset. It must be the digest of the same bytes GetFontData
+    // returns - i.e. of the decoded FontFile stream.
+    const bytes = buildSfntWithFormat4([[65, 3]]);
+    const module = makeFontDataModule(bytes);
+    primeFontGlyphMap(FONT, module);
+    expect(getCachedFontProgramSha256(FONT)).toBe(sha256Hex(bytes));
+  });
+
+  it("hashes fonts whose cmap is unparseable (CFF/Type1 programs)", () => {
+    // A non-sfnt program yields no glyph map but is still a valid identity.
+    const bytes = new Uint8Array(64).fill(0xab);
+    const module = makeFontDataModule(bytes);
+    primeFontGlyphMap(FONT, module);
+    expect(getCachedFontProgramSha256(FONT)).toBe(sha256Hex(bytes));
+  });
+
+  it("returns null for fonts with no readable data and after reset", () => {
+    const module = makeFontDataModule(null);
+    primeFontGlyphMap(FONT, module);
+    expect(getCachedFontProgramSha256(FONT)).toBeNull();
+
+    const bytes = buildSfntWithFormat4([[65, 3]]);
+    primeFontGlyphMap(31, makeFontDataModule(bytes));
+    expect(getCachedFontProgramSha256(31)).toBe(sha256Hex(bytes));
+    // Doc switch clears the cache - PDFium reuses pointers across documents.
+    _clearCmapCacheForTests();
+    expect(getCachedFontProgramSha256(31)).toBeNull();
   });
 });
 

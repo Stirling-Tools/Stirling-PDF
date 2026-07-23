@@ -77,4 +77,21 @@ test("editor sends the run's font name to encode-charcodes", async ({
       bodies.map((b) => b.fontName),
     )}`,
   ).toBeGreaterThan(0);
+
+  // The program-bytes hash must ride along too: PDFium reports every
+  // "ABCDEF+Family" subset as bare "Family", so the name alone cannot pick
+  // between sibling subsets (the Mangum-CV "RUSSELL" → "US EEL" corruption).
+  // The hash is read from the REAL embedded font via FPDFFont_GetFontData
+  // during document load, so this asserts the whole prime→prewarm wiring.
+  const hashed = bodies.filter(
+    (b) =>
+      typeof b.fontSha256 === "string" &&
+      /^[0-9a-f]{64}$/.test(b.fontSha256 as string),
+  );
+  expect(
+    hashed.length,
+    `at least one request carries a 64-hex fontSha256; bodies=${JSON.stringify(
+      bodies.map((b) => b.fontSha256),
+    )}`,
+  ).toBeGreaterThan(0);
 });

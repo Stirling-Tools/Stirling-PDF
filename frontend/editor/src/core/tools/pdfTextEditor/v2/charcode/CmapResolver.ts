@@ -3,6 +3,7 @@ import type {
   CharcodeResolveResult,
   ResolverContext,
 } from "@app/tools/pdfTextEditor/v2/charcode/CharcodeStrategy";
+import { sha256Hex } from "@app/tools/pdfTextEditor/v2/util/sha256";
 
 /**
  * Strategy 1: parse the embedded font's cmap table.
@@ -40,6 +41,26 @@ interface FontDataModule {
 
 /** Per-font cmap cache. Keyed by font pointer (stable per document). */
 const cmapCache = new Map<number, Map<number, number> | null>();
+
+/**
+ * Per-font SHA-256 (hex) of the embedded font PROGRAM bytes, computed from the
+ * same FPDFFont_GetFontData read that feeds the cmap parse. This is the ONLY
+ * unambiguous cross-side font identity: PDFium's FPDFFont_GetBaseFontName
+ * strips the "ABCDEF+" subset tag, so every subset of one family reports the
+ * SAME name ("Garamond") and the backend's name-based lookup can pick the
+ * WRONG subset - whose charcode space differs - producing valid-but-wrong
+ * glyphs ("RUSSELL" → "US EEL"). The backend matches this hash against each
+ * candidate's decoded FontFile/FontFile2/FontFile3 stream instead.
+ * `null` = font has no readable data (not embedded / API missing).
+ */
+const fontShaCache = new Map<number, string | null>();
+
+/**
+ * Don't hash font programs above this size. Hashing is a one-time sync cost in
+ * the load phase; per-glyph subset fonts (the case the hash exists for) are
+ * tiny, while a multi-MB pan-CJK font would add noticeable load latency.
+ */
+const MAX_HASH_BYTES = 8 * 1024 * 1024;
 
 export class CmapResolver implements CharcodeResolver {
   readonly name = "cmap" as const;
@@ -117,11 +138,44 @@ export function getCachedFontGlyphMap(
   return cmapCache.get(font) ?? null;
 }
 
+/**
+ * SHA-256 hex of the font's embedded program bytes, cached by
+ * {@link primeFontGlyphMap} during the load phase. Safe to call any time
+ * (never touches PDFium). Null when the font wasn't primed, has no readable
+ * data, or exceeded the hashing size cap.
+ */
+export function getCachedFontProgramSha256(font: number): string | null {
+  return fontShaCache.get(font) ?? null;
+}
+
 function buildCmap(
   font: number,
   ctx: ResolverContext,
 ): Map<number, number> | null {
-  const m = ctx.module;
+  const bytes = readFontData(font, ctx.module);
+  // Hash alongside the cmap parse - same single PDFium read serves both. The
+  // hash is cached even when the cmap is unparseable (CFF/Type1 scalers): the
+  // backend font-identity lookup works for any embedded program.
+  if (!fontShaCache.has(font)) {
+    let sha: string | null = null;
+    if (bytes && bytes.length > 0 && bytes.length <= MAX_HASH_BYTES) {
+      try {
+        sha = sha256Hex(bytes);
+      } catch {
+        sha = null;
+      }
+    }
+    fontShaCache.set(font, sha);
+  }
+  if (!bytes) return null;
+  return parseTrueTypeCmap(bytes);
+}
+
+/** Copy a font's embedded program bytes out of the WASM heap (null = none). */
+function readFontData(
+  font: number,
+  m: import("@embedpdf/pdfium").WrappedPdfiumModule,
+): Uint8Array | null {
   const fontMod = m as unknown as FontDataModule;
   if (!fontMod.FPDFFont_GetFontData) return null;
 
@@ -138,8 +192,7 @@ function buildCmap(
       if (!ok2) return null;
       // Slice() copies out of the WASM heap so we own the bytes.
       const heapU8 = (m.pdfium as unknown as { HEAPU8: Uint8Array }).HEAPU8;
-      const bytes = new Uint8Array(heapU8.buffer, dataPtr, size).slice();
-      return parseTrueTypeCmap(bytes);
+      return new Uint8Array(heapU8.buffer, dataPtr, size).slice();
     } finally {
       m.pdfium.wasmExports.free(dataPtr);
     }
@@ -340,13 +393,15 @@ function parseFormat12(dv: DataView, offset: number): Map<number, number> {
 }
 
 /**
- * Clear the per-font cmap cache. MUST be called on document switch: the cache
- * is keyed by raw PDFium font pointers, which PDFium reuses across documents -
- * a stale entry would serve the previous document's glyph map (wrong coverage /
- * wrong subset charcodes) for a reused pointer.
+ * Clear the per-font cmap + program-hash caches. MUST be called on document
+ * switch: both are keyed by raw PDFium font pointers, which PDFium reuses
+ * across documents - a stale entry would serve the previous document's glyph
+ * map / font identity (wrong coverage / wrong subset charcodes) for a reused
+ * pointer.
  */
 export function resetCmapCache(): void {
   cmapCache.clear();
+  fontShaCache.clear();
 }
 
 /** Test-only alias for {@link resetCmapCache}. */

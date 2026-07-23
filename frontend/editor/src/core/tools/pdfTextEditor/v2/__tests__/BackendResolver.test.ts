@@ -41,6 +41,11 @@ import {
   _clearBackendCacheForTests,
   _clearPrewarmGuardForTests,
 } from "@app/tools/pdfTextEditor/v2/charcode/BackendResolver";
+import {
+  primeFontGlyphMap,
+  _clearCmapCacheForTests,
+} from "@app/tools/pdfTextEditor/v2/charcode/CmapResolver";
+import { sha256Hex } from "@app/tools/pdfTextEditor/v2/util/sha256";
 import type { ResolverContext } from "@app/tools/pdfTextEditor/v2/charcode/CharcodeStrategy";
 
 const post = apiClient.post as unknown as ReturnType<typeof vi.fn>;
@@ -127,6 +132,7 @@ beforeEach(() => {
   resetBackendResolverCaches();
   _clearBackendCacheForTests();
   _clearPrewarmGuardForTests();
+  _clearCmapCacheForTests();
   delete (window as unknown as { __v2_editor_store?: unknown })
     .__v2_editor_store;
 });
@@ -249,6 +255,65 @@ describe("BackendResolver", () => {
       const b = r.resolve(7, "B", ctx);
       expect(b?.charcodes).toEqual([]);
       expect(b?.missing).toEqual(["B"]);
+    });
+
+    it("includes the primed font-program hash so the backend can pick the exact subset", async () => {
+      // The Mangum-CV corruption: PDFium names every "ABCDEF+Garamond"
+      // subset just "Garamond", so the backend matched a SIBLING subset
+      // whose charcodes hit different glyphs ("RUSSELL" → "US EEL"). The
+      // program-bytes hash is the disambiguator - once the font was primed
+      // (load phase), every prewarm probe must carry it.
+      const fontBytes = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]);
+      // Prime the sha cache for font 7 via the CmapResolver's safe-phase read.
+      const heap = new Uint8Array(1 << 12);
+      const primeModule = {
+        FPDFFont_GetFontData: (
+          _f: number,
+          bufferPtr: number,
+          length: number,
+          outSizePtr: number,
+        ) => {
+          new DataView(heap.buffer).setInt32(
+            outSizePtr,
+            fontBytes.length,
+            true,
+          );
+          if (bufferPtr !== 0 && length > 0) heap.set(fontBytes, bufferPtr);
+          return true;
+        },
+        pdfium: {
+          wasmExports: {
+            malloc: (() => {
+              let bump = 8;
+              return (n: number) => {
+                const p = bump;
+                bump += n;
+                return p;
+              };
+            })(),
+            free: () => {},
+          },
+          getValue: (ptr: number) =>
+            new DataView(heap.buffer).getInt32(ptr, true),
+          HEAPU8: heap,
+        },
+      } as unknown as ResolverContext["module"];
+      primeFontGlyphMap(7, primeModule);
+
+      const module = makeFakeModule("M", 7);
+      installEditorDocument(module, 9050, 4242);
+      post.mockResolvedValueOnce({ data: { charcodes: [33] } });
+
+      await prewarmBackendCacheForPage(0);
+
+      expect(post).toHaveBeenCalledWith(
+        "/api/v1/general/pdf-text-editor-v2/encode-charcodes",
+        expect.objectContaining({
+          text: "M",
+          fontSha256: sha256Hex(fontBytes),
+        }),
+        { headers: { suppressErrorToast: "true" } },
+      );
     });
 
     it("does not re-POST every keystroke when the queried font differs from the rendering font (H2)", async () => {

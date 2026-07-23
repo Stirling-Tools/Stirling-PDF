@@ -5,6 +5,7 @@ import type {
   ResolverContext,
 } from "@app/tools/pdfTextEditor/v2/charcode/CharcodeStrategy";
 import { getActiveCharcodeStrategy } from "@app/tools/pdfTextEditor/v2/charcode/CharcodeStrategy";
+import { getCachedFontProgramSha256 } from "@app/tools/pdfTextEditor/v2/charcode/CmapResolver";
 
 /**
  * Strategy 3: ask the Spring backend (PDFBox) to encode chars.
@@ -215,6 +216,12 @@ function maybeAutoPrefetch(
             pageIndex: pageIdx >= 0 ? pageIdx : 0,
             locatorChar: ch,
             fontName: readFontName(ctx.module, perCharFont),
+            // Program-bytes hash: the only identity that survives PDFium's
+            // subset-tag stripping (every "ABCDEF+Garamond" subset names
+            // itself just "Garamond"). Lets the backend encode against the
+            // EXACT subset instead of a same-name sibling with a different
+            // charcode space.
+            fontSha256: getCachedFontProgramSha256(perCharFont) ?? undefined,
             text: ch,
           });
           const code =
@@ -563,6 +570,11 @@ export async function prewarmBackendCacheForPage(
                 // same char encodes against THIS one, not whichever appears first.
                 locatorChar: chars[0],
                 fontName: readFontName(m, font),
+                // Program-bytes hash beats the name: PDFium strips subset tags,
+                // so all subsets of one family share a name and a name-only
+                // match can hit a sibling subset with a different charcode
+                // space (the "RUSSELL" → "US EEL" corruption).
+                fontSha256: getCachedFontProgramSha256(font) ?? undefined,
                 text: chars.join(""),
               });
               if (!json || json.error) continue;

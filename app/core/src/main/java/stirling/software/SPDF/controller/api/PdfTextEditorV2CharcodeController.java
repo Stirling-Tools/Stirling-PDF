@@ -123,6 +123,17 @@ public class PdfTextEditorV2CharcodeController {
          */
         private String fontName;
 
+        /**
+         * Optional SHA-256 (lowercase hex) of the target font's embedded program bytes (what
+         * PDFium's FPDFFont_GetFontData returns = the decoded FontFile/FontFile2/FontFile3 stream).
+         * This is the ONLY unambiguous font identity: PDFium strips the "ABCDEF+" subset tag from
+         * font names, so every subset of one family reports the same {@code fontName} and a
+         * name-based lookup can land on a SIBLING subset whose charcode space is different -
+         * returning valid-but-wrong charcodes that scramble the edited text. When present and a
+         * font on the page matches, it wins over name matching.
+         */
+        private String fontSha256;
+
         /** Unicode text the frontend wants to encode. */
         private String text;
     }
@@ -199,12 +210,17 @@ public class PdfTextEditorV2CharcodeController {
             PDPage page = doc.getPage(request.getPageIndex());
             // Skip walking the page's content stream (it crashes on Type3 fonts with
             // UnsupportedOperationException("Not implemented: Type3") before we can do anything
-            // useful). Instead enumerate the page's font resources and pick the first one whose
-            // ToUnicode CMap maps SOME charcode to the locator char.
+            // useful). Instead enumerate the page's font resources and pick the one identified by
+            // the request's font-program hash (definitive), falling back to name matching.
             // For Chrome/Skia-printed PDFs that emit one Type3 font per glyph, this lands on
             // the exact font that renders the locator char.
             PDFont font =
-                    findFontByToUnicode(page, request.getLocatorChar(), request.getFontName(), doc);
+                    findFontByToUnicode(
+                            page,
+                            request.getLocatorChar(),
+                            request.getFontName(),
+                            request.getFontSha256(),
+                            doc);
             if (font == null) {
                 resp.setError(
                         "no font on page "
@@ -285,36 +301,62 @@ public class PdfTextEditorV2CharcodeController {
     }
 
     /**
-     * Walk every font resource on the page (and on any nested Form XObjects we can reach) and
-     * return the FIRST font whose ToUnicode CMap includes the requested char. This avoids running
-     * PDFStreamEngine.processPage, which throws UnsupportedOperationException on Type3 font glyph
-     * rendering. The PDFont lookup itself is purely metadata-driven and works on all subtypes.
+     * Locate the font the request targets. Identity sources, strongest first:
+     *
+     * <ol>
+     *   <li><b>Program hash</b>: SHA-256 of the embedded font program bytes. Definitive - two
+     *       different subsets NEVER share program bytes, and PDFium's FPDFFont_GetFontData returns
+     *       exactly the decoded FontFile stream, so frontend and backend hash the same bytes.
+     *   <li><b>Exact /BaseFont name</b> (subset tag included), then <b>tag-stripped name</b>. Name
+     *       matches are only accepted when UNAMBIGUOUS: PDFium reports subset fonts WITHOUT their
+     *       "ABCDEF+" tag, so a page with several subsets of one family ("AAAAAC+Garamond",
+     *       "AAAAAG+Garamond", ...) has them ALL match the stripped name - and encoding against the
+     *       wrong sibling returns valid-but-wrong charcodes that scramble the edited text ("RUSSELL
+     *       W. MANGUM" rendered "US EEL W. MANGS M"). With 2+ candidates we return null so the
+     *       frontend takes its safe fallback instead of a coin flip.
+     * </ol>
+     *
+     * <p>This avoids running PDFStreamEngine.processPage, which throws
+     * UnsupportedOperationException on Type3 font glyph rendering. The PDFont lookup itself is
+     * purely metadata-driven and works on all subtypes.
      */
-    /** How strictly {@code scanResources} compares a candidate font's name to the requested one. */
-    private enum NameMatch {
-        /** Full /BaseFont equality, subset tag included. */
-        EXACT,
-        /** Equality after stripping the "ABCDEF+" subset tag from both names. */
-        STRIPPED,
-        /** No name constraint: first font that renders the char wins. */
-        ANY
-    }
-
     private static PDFont findFontByToUnicode(
-            PDPage page, String wantChar, String fontName, PDDocument doc) {
+            PDPage page, String wantChar, String fontName, String fontSha256, PDDocument doc) {
         try {
-            PDResources resources = page.getResources();
-            // When a target font name is supplied, prefer an EXACT /BaseFont match (tag included)
-            // BEFORE a tag-stripped one. Two distinct subsets of the same base font ("ABCDEF+Arial"
-            // and "GHIJKL+Arial", common after a merge) share different charcode spaces but compare
-            // equal once the tag is stripped, so an exact match must win first or we could encode
-            // against the wrong subset. Only when no exact match exists do we fall back to the
-            // tag-stripped comparison (a re-saved subset whose tag changed).
+            List<PDFont> fonts = collectResourceTreeFonts(page.getResources());
+
+            // 1) Program-hash identity. When several dicts share one program (identical bytes
+            // re-embedded), any of them renders the same glyphs for the same codes; prefer the
+            // one whose ToUnicode covers the locator char so the reverse map is usable.
+            if (fontSha256 != null && !fontSha256.isEmpty()) {
+                List<PDFont> hashMatches = new ArrayList<>();
+                for (PDFont f : fonts) {
+                    String sha = fontProgramSha256(f);
+                    if (fontSha256.equalsIgnoreCase(sha)) hashMatches.add(f);
+                }
+                for (PDFont f : hashMatches) {
+                    if (probesToUnicode(f, wantChar)) return f;
+                }
+                if (!hashMatches.isEmpty()) return hashMatches.get(0);
+                // No program on this page hashes to what the frontend is editing (e.g. PDFium
+                // returned a substitute font's bytes for a non-embedded font). Fall through to
+                // name matching rather than failing outright.
+            }
+
+            // 2) Name identity - exact tag-included first, then tag-stripped - each accepted
+            // only when it selects a single font.
             if (fontName != null && !fontName.isEmpty()) {
-                PDFont exact = scanResourceTree(resources, wantChar, fontName, NameMatch.EXACT);
+                PDFont exact =
+                        selectUnambiguous(
+                                fonts, wantChar, f -> fontName.equals(f.getName()), "exact");
                 if (exact != null) return exact;
+                String wantStripped = stripSubsetTag(fontName);
                 PDFont stripped =
-                        scanResourceTree(resources, wantChar, fontName, NameMatch.STRIPPED);
+                        selectUnambiguous(
+                                fonts,
+                                wantChar,
+                                f -> wantStripped.equals(stripSubsetTag(f.getName())),
+                                "stripped");
                 if (stripped != null) return stripped;
                 // The frontend NAMED the font it is editing. Falling back to "any font that
                 // renders the char" would hand back a DIFFERENT font's charcodes, which the
@@ -323,7 +365,11 @@ public class PdfTextEditorV2CharcodeController {
                 // instead so the caller takes its own fallback path.
                 return null;
             }
-            return scanResourceTree(resources, wantChar, null, NameMatch.ANY);
+
+            // 3) Legacy locator-only behaviour: first font whose ToUnicode renders the char.
+            for (PDFont f : fonts) {
+                if (probesToUnicode(f, wantChar)) return f;
+            }
         } catch (RuntimeException ignore) {
             // Be defensive: any single bad font shouldn't sink the whole request.
         }
@@ -331,27 +377,91 @@ public class PdfTextEditorV2CharcodeController {
     }
 
     /**
-     * Breadth-first {@link #scanResources} over the page's resources AND every nested form
-     * XObject's resources (bounded by {@link #MAX_RESOURCE_DICTS}, cycle-safe). The v2 reader
-     * surfaces form-XObject text as editable, so its fonts must be findable too - previously only
-     * page-level resources were scanned and XObject text degraded to a wrong page font or
-     * Helvetica.
+     * Apply {@code nameFilter}, then decide: exactly one candidate whose ToUnicode covers {@code
+     * wantChar} wins; two+ probe-hits are AMBIGUOUS (null). With zero probe-hits, a single
+     * name-matching font is still returned (font.encode() may handle chars without a ToUnicode -
+     * common for Type0/Identity-H), but two+ name matches are again ambiguous.
      */
-    private static PDFont scanResourceTree(
-            PDResources resources, String wantChar, String wantName, NameMatch mode) {
+    private static PDFont selectUnambiguous(
+            List<PDFont> fonts,
+            String wantChar,
+            java.util.function.Predicate<PDFont> nameFilter,
+            String modeLabel) {
+        List<PDFont> named = new ArrayList<>();
+        for (PDFont f : fonts) {
+            try {
+                if (f.getName() != null && nameFilter.test(f)) named.add(f);
+            } catch (RuntimeException ignore) {
+            }
+        }
+        if (named.isEmpty()) return null;
+        List<PDFont> probed = new ArrayList<>();
+        for (PDFont f : named) {
+            if (probesToUnicode(f, wantChar)) probed.add(f);
+        }
+        if (probed.size() == 1) return probed.get(0);
+        if (probed.size() > 1) {
+            log.debug(
+                    "encodeCharcodes: {} name match ambiguous ({} fonts render locator '{}') -"
+                            + " refusing cross-subset guess",
+                    modeLabel,
+                    probed.size(),
+                    wantChar);
+            return null;
+        }
+        return named.size() == 1 ? named.get(0) : null;
+    }
+
+    /** True when some charcode in the font's ToUnicode CMap maps to {@code wantChar}. */
+    private static boolean probesToUnicode(PDFont font, String wantChar) {
+        // Cheap inverse-CMap probe: iterate codes until we hit one whose toUnicode is wantChar.
+        // For Type3 with at most ~16 glyphs, this is microseconds. For full Type0 subsets
+        // it's a few-thousand-iteration scan.
+        int upper = font.isStandard14() ? 256 : 0x10000;
+        for (int cc = 0; cc < upper; cc++) {
+            String u;
+            try {
+                u = font.toUnicode(cc);
+            } catch (Exception ignore) {
+                continue;
+            }
+            if (u != null && u.equals(wantChar)) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Breadth-first collection of every distinct font reachable from the page's resources AND every
+     * nested form XObject's resources (bounded by {@link #MAX_RESOURCE_DICTS}, cycle-safe, deduped
+     * by COS dictionary identity). The v2 reader surfaces form-XObject text as editable, so its
+     * fonts must be findable too.
+     */
+    private static List<PDFont> collectResourceTreeFonts(PDResources resources) {
+        List<PDFont> out = new ArrayList<>();
         java.util.ArrayDeque<PDResources> queue = new java.util.ArrayDeque<>();
-        java.util.Set<org.apache.pdfbox.cos.COSDictionary> seen =
+        java.util.Set<org.apache.pdfbox.cos.COSDictionary> seenDicts =
+                java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+        java.util.Set<org.apache.pdfbox.cos.COSDictionary> seenFonts =
                 java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
         if (resources != null) queue.add(resources);
-        PDFont nameOnly = null;
         int visited = 0;
+        // Bound a crafted page declaring many fonts none of which match (CPU-DoS guard).
+        final int MAX_FONTS = 64;
         while (!queue.isEmpty() && visited < MAX_RESOURCE_DICTS) {
             PDResources res = queue.poll();
-            if (!seen.add(res.getCOSObject())) continue;
+            if (!seenDicts.add(res.getCOSObject())) continue;
             visited++;
-            ScanResult r = scanResources(res, wantChar, wantName, mode);
-            if (r.probed() != null) return r.probed();
-            if (nameOnly == null) nameOnly = r.nameOnly();
+            for (org.apache.pdfbox.cos.COSName name : res.getFontNames()) {
+                if (out.size() >= MAX_FONTS) break;
+                PDFont font;
+                try {
+                    font = res.getFont(name);
+                } catch (IOException | RuntimeException e) {
+                    continue;
+                }
+                if (font == null || !seenFonts.add(font.getCOSObject())) continue;
+                out.add(font);
+            }
             try {
                 for (org.apache.pdfbox.cos.COSName xn : res.getXObjectNames()) {
                     try {
@@ -368,68 +478,29 @@ public class PdfTextEditorV2CharcodeController {
             } catch (RuntimeException ignore) {
             }
         }
-        // A name-matching font whose ToUnicode probe missed (or that has no ToUnicode at all):
-        // font.encode() may still succeed, so return it rather than degrading a correctly-named
-        // font. Never used in ANY mode (no name constraint -> an unprobed font is arbitrary).
-        return nameOnly;
+        return out;
     }
 
-    /** One probed match (ToUnicode hit) plus, for named modes, a name-only candidate. */
-    private record ScanResult(PDFont probed, PDFont nameOnly) {}
-
     /**
-     * Return a font on the page that renders {@code wantChar}, subject to {@code mode}: {@code
-     * EXACT} requires the /BaseFont to equal {@code wantName} verbatim, {@code STRIPPED} compares
-     * with subset tags removed, {@code ANY} ignores the name entirely (first font with the char
-     * wins).
+     * SHA-256 (lowercase hex) of a font's embedded program bytes - the decoded
+     * FontFile/FontFile2/FontFile3 stream, which is byte-identical to what PDFium's
+     * FPDFFont_GetFontData hands the frontend. Null when the font embeds no program.
      */
-    private static ScanResult scanResources(
-            PDResources resources, String wantChar, String wantName, NameMatch mode) {
-        if (resources == null) return new ScanResult(null, null);
-        String wantStripped = stripSubsetTag(wantName);
-        // Bound a crafted page declaring many fonts none of which match (CPU-DoS guard).
-        int scanned = 0;
-        final int MAX_FONTS = 64;
-        PDFont nameOnly = null;
-        for (org.apache.pdfbox.cos.COSName name : resources.getFontNames()) {
-            if (++scanned > MAX_FONTS) break;
-            PDFont font;
-            try {
-                font = resources.getFont(name);
-            } catch (IOException | RuntimeException e) {
-                continue;
+    private static String fontProgramSha256(PDFont font) {
+        try {
+            org.apache.pdfbox.pdmodel.font.PDFontDescriptor fd = font.getFontDescriptor();
+            if (fd == null && font instanceof org.apache.pdfbox.pdmodel.font.PDType0Font type0) {
+                fd = type0.getDescendantFont().getFontDescriptor();
             }
-            if (font == null) continue;
-            if (mode == NameMatch.EXACT) {
-                if (wantName == null || !wantName.equals(font.getName())) continue;
-            } else if (mode == NameMatch.STRIPPED) {
-                if (wantStripped == null || !wantStripped.equals(stripSubsetTag(font.getName()))) {
-                    continue;
-                }
-            }
-            // Cheap inverse-CMap probe: iterate codes until we hit one whose toUnicode is wantChar.
-            // For Type3 with at most ~16 glyphs, this is microseconds. For full Type0 subsets
-            // it's a few-thousand-iteration scan.
-            int upper = font.isStandard14() ? 256 : 0x10000;
-            boolean probeHit = false;
-            for (int cc = 0; cc < upper; cc++) {
-                String u;
-                try {
-                    u = font.toUnicode(cc);
-                } catch (Exception ignore) {
-                    continue;
-                }
-                if (u != null && u.equals(wantChar)) {
-                    probeHit = true;
-                    break;
-                }
-            }
-            if (probeHit) return new ScanResult(font, nameOnly);
-            // Name matched but the probe missed (e.g. no ToUnicode CMap at all - common for
-            // Type0/Identity-H). Remember it: font.encode() may still handle the chars.
-            if (mode != NameMatch.ANY && nameOnly == null) nameOnly = font;
+            if (fd == null) return null;
+            org.apache.pdfbox.pdmodel.common.PDStream stream = fd.getFontFile2();
+            if (stream == null) stream = fd.getFontFile3();
+            if (stream == null) stream = fd.getFontFile();
+            if (stream == null) return null;
+            return sha256Hex(stream.toByteArray());
+        } catch (IOException | RuntimeException e) {
+            return null;
         }
-        return new ScanResult(null, nameOnly);
     }
 
     /** Drop the 6-letter "ABCDEF+" subset prefix PDF puts on subset /BaseFont names. */
@@ -461,21 +532,28 @@ public class PdfTextEditorV2CharcodeController {
      */
     private static java.util.Map<String, Long> buildReverseUnicodeMap(
             byte[] pdfBytes, PDFont font, int pageIndex, String locatorChar) {
-        // Cache by (PDF content hash | font name) so repeated edits on the SAME document reuse the
-        // 0..0xFFFF probe instead of rebuilding it on every keystroke's request. Two fonts sharing
-        // a name within one PDF (rare) would collide, but that is no worse than the previous
-        // no-cross-request-cache behaviour, and the hash isolates different documents.
+        // Cache across requests so repeated edits on the SAME document reuse the 0..0xFFFF probe
+        // instead of rebuilding it on every keystroke's request. Key preference:
         //
-        // NAME-LESS fonts (Skia/Chrome Type3 output has no /BaseFont, so getName() is null) must
-        // NOT share one "hash|null" entry - every name-less font in the doc would be served the
-        // FIRST one's map (wrong glyphs, trusted by the frontend). Key those by the lookup inputs
-        // (page + locator char) instead: for identical bytes the font located from those inputs is
-        // deterministic, so the cached map always belongs to the font that will consume it.
+        //   1. (PDF content hash | font PROGRAM hash): fully font-specific. Two same-family
+        //      subsets - or even two fonts sharing a /BaseFont after a merge - never collide,
+        //      because distinct subsets embed distinct program bytes.
+        //   2. (PDF content hash | font name): fonts with a name but no embedded program.
+        //   3. (PDF content hash | page + locator char) for NAME-LESS fonts (Skia/Chrome Type3
+        //      output has no /BaseFont): sharing one "hash|null" entry would serve every name-less
+        //      font the FIRST one's map (wrong glyphs, trusted by the frontend). For identical
+        //      bytes the font located from those inputs is deterministic, so the cached map always
+        //      belongs to the font that will consume it.
+        String programSha = fontProgramSha256(font);
         String fname = font.getName();
-        String key =
-                fname != null
-                        ? sha256Hex(pdfBytes) + "|n|" + fname
-                        : sha256Hex(pdfBytes) + "|p" + pageIndex + "|c|" + locatorChar;
+        String key;
+        if (programSha != null || fname != null) {
+            // Program hash AND name together: strictly more precise than either alone (covers
+            // same-name sibling subsets AND one shared program stream under two names).
+            key = sha256Hex(pdfBytes) + "|f|" + programSha + "|n|" + fname;
+        } else {
+            key = sha256Hex(pdfBytes) + "|p" + pageIndex + "|c|" + locatorChar;
+        }
         return REVERSE_MAP_CACHE.computeIfAbsent(key, k -> computeReverseUnicodeMap(font));
     }
 

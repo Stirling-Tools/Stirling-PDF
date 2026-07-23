@@ -313,4 +313,253 @@ class PdfTextEditorV2CharcodeControllerTest {
         assertThat(body.getError()).isNotNull();
         assertThat(body.getCharcodes()).isNull();
     }
+
+    // ------------------------------------------------------------------
+    // Same-family sibling subsets (the Mangum-CV corruption).
+    //
+    // A Word/Quartz-printed CV embedded FOUR subsets of Garamond, each
+    // re-encoded by order of first glyph use, so the same letter has a
+    // DIFFERENT charcode in each subset ("R" = 0x21 in one, 0x22 in its
+    // sibling). PDFium reports every one of them as plain "Garamond"
+    // (FPDFFont_GetBaseFontName strips the "ABCDEF+" tag), so a
+    // name-based lookup picked whichever sibling scanned first and its
+    // charcodes - written into the OTHER subset's text object - rendered
+    // "RUSSELL W. MANGUM III" as "US EEL W. MANGS M III".
+    //
+    // The synthetic doc below mirrors that: two TrueType subsets whose
+    // /BaseFont differs only by subset tag, with ToUnicode maps assigning
+    // DIFFERENT codes to the same char. PUA code points keep the test
+    // deterministic: font.encode() cannot resolve them via glyph names,
+    // so the returned charcode always comes from the selected font's
+    // ToUnicode reverse map - i.e. it proves WHICH font was selected.
+    // ------------------------------------------------------------------
+
+    private static final String PUA = "";
+
+    /** ToUnicode CMap mapping each supplied charcode to a BMP code point. */
+    private static byte[] toUnicodeCmap(int[][] codeToUnicode) {
+        StringBuilder sb =
+                new StringBuilder(
+                        """
+                        /CIDInit /ProcSet findresource begin
+                        12 dict begin
+                        begincmap
+                        /CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def
+                        /CMapName /Adobe-Identity-UCS def
+                        /CMapType 2 def
+                        1 begincodespacerange
+                        <00><FF>
+                        endcodespacerange
+                        """);
+        sb.append(codeToUnicode.length).append(" beginbfchar\n");
+        for (int[] pair : codeToUnicode) {
+            sb.append(String.format("<%02X><%04X>%n", pair[0], pair[1]));
+        }
+        sb.append(
+                """
+                endbfchar
+                endcmap
+                CMapName currentdict /CMap defineresource pop
+                end
+                end
+                """);
+        return sb.toString().getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+    }
+
+    /** One TrueType subset font dict with an embedded (fake) program + ToUnicode. */
+    private static org.apache.pdfbox.cos.COSDictionary subsetFontDict(
+            PDDocument doc, String baseName, byte[] fontProgram, byte[] toUnicode)
+            throws Exception {
+        org.apache.pdfbox.cos.COSDictionary font = new org.apache.pdfbox.cos.COSDictionary();
+        font.setItem(org.apache.pdfbox.cos.COSName.TYPE, org.apache.pdfbox.cos.COSName.FONT);
+        font.setItem(
+                org.apache.pdfbox.cos.COSName.SUBTYPE, org.apache.pdfbox.cos.COSName.TRUE_TYPE);
+        font.setName(org.apache.pdfbox.cos.COSName.BASE_FONT, baseName);
+        font.setInt(org.apache.pdfbox.cos.COSName.FIRST_CHAR, 0x21);
+        font.setInt(org.apache.pdfbox.cos.COSName.LAST_CHAR, 0x22);
+        org.apache.pdfbox.cos.COSArray widths = new org.apache.pdfbox.cos.COSArray();
+        widths.add(org.apache.pdfbox.cos.COSInteger.get(500));
+        widths.add(org.apache.pdfbox.cos.COSInteger.get(500));
+        font.setItem(org.apache.pdfbox.cos.COSName.WIDTHS, widths);
+
+        org.apache.pdfbox.cos.COSDictionary fd = new org.apache.pdfbox.cos.COSDictionary();
+        fd.setItem(org.apache.pdfbox.cos.COSName.TYPE, org.apache.pdfbox.cos.COSName.FONT_DESC);
+        fd.setName(org.apache.pdfbox.cos.COSName.FONT_NAME, baseName);
+        fd.setInt(org.apache.pdfbox.cos.COSName.FLAGS, 4);
+        fd.setItem(
+                org.apache.pdfbox.cos.COSName.FONT_BBOX,
+                new org.apache.pdfbox.pdmodel.common.PDRectangle(0, 0, 1000, 1000).getCOSArray());
+        fd.setInt(org.apache.pdfbox.cos.COSName.ITALIC_ANGLE, 0);
+        fd.setInt(org.apache.pdfbox.cos.COSName.ASCENT, 800);
+        fd.setInt(org.apache.pdfbox.cos.COSName.DESCENT, -200);
+        fd.setInt(org.apache.pdfbox.cos.COSName.CAP_HEIGHT, 700);
+        fd.setInt(org.apache.pdfbox.cos.COSName.STEM_V, 80);
+        org.apache.pdfbox.pdmodel.common.PDStream ff2 =
+                new org.apache.pdfbox.pdmodel.common.PDStream(
+                        doc, new java.io.ByteArrayInputStream(fontProgram));
+        ff2.getCOSObject().setInt(org.apache.pdfbox.cos.COSName.LENGTH1, fontProgram.length);
+        fd.setItem(org.apache.pdfbox.cos.COSName.FONT_FILE2, ff2.getCOSObject());
+        font.setItem(org.apache.pdfbox.cos.COSName.FONT_DESC, fd);
+
+        org.apache.pdfbox.pdmodel.common.PDStream tu =
+                new org.apache.pdfbox.pdmodel.common.PDStream(
+                        doc, new java.io.ByteArrayInputStream(toUnicode));
+        font.setItem(org.apache.pdfbox.cos.COSName.getPDFName("ToUnicode"), tu.getCOSObject());
+        return font;
+    }
+
+    // Distinct fake font programs - hashing distinguishes the subsets by these bytes.
+    private static final byte[] PROGRAM_A =
+            "fake-ttf-program-A".getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+    private static final byte[] PROGRAM_B =
+            "fake-ttf-program-B".getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+
+    /**
+     * Two sibling subsets of "FakeGaramond" whose ToUnicode maps give U+E000 DIFFERENT charcodes:
+     * 0x22 in subset A (AAAAAC+), 0x21 in subset B (AAAAAG+) - exactly the CV's shifted-code
+     * layout. {@code includeSecond=false} keeps only subset A for the unambiguous-fallback case.
+     */
+    private static String siblingSubsetsBase64(boolean includeSecond) throws Exception {
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage();
+            doc.addPage(page);
+            org.apache.pdfbox.cos.COSDictionary fonts = new org.apache.pdfbox.cos.COSDictionary();
+            fonts.setItem(
+                    org.apache.pdfbox.cos.COSName.getPDFName("TTA"),
+                    subsetFontDict(
+                            doc,
+                            "AAAAAC+FakeGaramond",
+                            PROGRAM_A,
+                            toUnicodeCmap(new int[][] {{0x21, 0xE001}, {0x22, 0xE000}})));
+            if (includeSecond) {
+                fonts.setItem(
+                        org.apache.pdfbox.cos.COSName.getPDFName("TTB"),
+                        subsetFontDict(
+                                doc,
+                                "AAAAAG+FakeGaramond",
+                                PROGRAM_B,
+                                toUnicodeCmap(new int[][] {{0x21, 0xE000}, {0x22, 0xE002}})));
+            }
+            org.apache.pdfbox.pdmodel.PDResources resources =
+                    new org.apache.pdfbox.pdmodel.PDResources();
+            resources.getCOSObject().setItem(org.apache.pdfbox.cos.COSName.FONT, fonts);
+            page.setResources(resources);
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            doc.save(bos);
+            return Base64.getEncoder().encodeToString(bos.toByteArray());
+        }
+    }
+
+    private static String sha256Hex(byte[] bytes) throws Exception {
+        byte[] digest = java.security.MessageDigest.getInstance("SHA-256").digest(bytes);
+        StringBuilder sb = new StringBuilder();
+        for (byte b : digest) sb.append(String.format("%02x", b));
+        return sb.toString();
+    }
+
+    private static EncodeCharcodesRequest siblingRequest(
+            String base64, String fontName, String fontSha256) {
+        EncodeCharcodesRequest req = new EncodeCharcodesRequest();
+        req.setPdfBase64(base64);
+        req.setPageIndex(0);
+        req.setLocatorChar(PUA);
+        req.setFontName(fontName);
+        req.setFontSha256(fontSha256);
+        req.setText(PUA);
+        return req;
+    }
+
+    @Test
+    void fontProgramHashSelectsTheExactSubset() throws Exception {
+        String base64 = siblingSubsetsBase64(true);
+        PdfTextEditorV2CharcodeController controller = controller();
+
+        // Both requests carry the SAME tag-stripped name PDFium reports ("FakeGaramond"),
+        // so only the program hash can tell the subsets apart.
+        EncodeCharcodesResponse viaA =
+                controller
+                        .encodeCharcodes(
+                                siblingRequest(base64, "FakeGaramond", sha256Hex(PROGRAM_A)))
+                        .getBody();
+        assertThat(viaA).isNotNull();
+        assertThat(viaA.getError()).isNull();
+        assertThat(viaA.getNote()).contains("AAAAAC+FakeGaramond");
+        assertThat(viaA.getCharcodes()).containsExactly(0x22L);
+
+        EncodeCharcodesResponse viaB =
+                controller
+                        .encodeCharcodes(
+                                siblingRequest(base64, "FakeGaramond", sha256Hex(PROGRAM_B)))
+                        .getBody();
+        assertThat(viaB).isNotNull();
+        assertThat(viaB.getError()).isNull();
+        assertThat(viaB.getNote()).contains("AAAAAG+FakeGaramond");
+        assertThat(viaB.getCharcodes()).containsExactly(0x21L);
+    }
+
+    @Test
+    void ambiguousStrippedNameRefusesToGuessBetweenSiblingSubsets() throws Exception {
+        // No hash, and the tag-stripped name matches BOTH subsets which both render the
+        // locator char. Guessing here is what scrambled "RUSSELL W. MANGUM III" into
+        // "US EEL W. MANGS M III" - the sibling's codes hit different glyphs. The
+        // backend must refuse so the frontend takes its safe fallback.
+        EncodeCharcodesResponse body =
+                controller()
+                        .encodeCharcodes(
+                                siblingRequest(siblingSubsetsBase64(true), "FakeGaramond", null))
+                        .getBody();
+        assertThat(body).isNotNull();
+        assertThat(body.getError()).contains("no font");
+        assertThat(body.getCharcodes()).isNull();
+    }
+
+    @Test
+    void exactTaggedNameStillSelectsItsSubset() throws Exception {
+        // A caller that DOES know the full tagged /BaseFont name keeps working.
+        EncodeCharcodesResponse body =
+                controller()
+                        .encodeCharcodes(
+                                siblingRequest(
+                                        siblingSubsetsBase64(true), "AAAAAG+FakeGaramond", null))
+                        .getBody();
+        assertThat(body).isNotNull();
+        assertThat(body.getError()).isNull();
+        assertThat(body.getNote()).contains("AAAAAG+FakeGaramond");
+        assertThat(body.getCharcodes()).containsExactly(0x21L);
+    }
+
+    @Test
+    void strippedNameStillWorksWhenUnambiguous() throws Exception {
+        // With a SINGLE subset on the page, the tag-stripped name (what PDFium
+        // reports) must keep resolving - the ambiguity guard only bites when
+        // two+ siblings could answer.
+        EncodeCharcodesResponse body =
+                controller()
+                        .encodeCharcodes(
+                                siblingRequest(siblingSubsetsBase64(false), "FakeGaramond", null))
+                        .getBody();
+        assertThat(body).isNotNull();
+        assertThat(body.getError()).isNull();
+        assertThat(body.getNote()).contains("AAAAAC+FakeGaramond");
+        assertThat(body.getCharcodes()).containsExactly(0x22L);
+    }
+
+    @Test
+    void staleHashFallsBackToNameMatching() throws Exception {
+        // A hash matching NO font on the page (e.g. PDFium handed back a substitute
+        // font's bytes) must not brick the request: name matching still runs, and an
+        // exact tagged name resolves.
+        EncodeCharcodesResponse body =
+                controller()
+                        .encodeCharcodes(
+                                siblingRequest(
+                                        siblingSubsetsBase64(true),
+                                        "AAAAAC+FakeGaramond",
+                                        "0000000000000000000000000000000000000000000000000000000000000000"))
+                        .getBody();
+        assertThat(body).isNotNull();
+        assertThat(body.getError()).isNull();
+        assertThat(body.getNote()).contains("AAAAAC+FakeGaramond");
+        assertThat(body.getCharcodes()).containsExactly(0x22L);
+    }
 }
