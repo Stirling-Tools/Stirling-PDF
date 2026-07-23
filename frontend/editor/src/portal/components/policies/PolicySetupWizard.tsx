@@ -31,8 +31,7 @@ import {
   type PolicyToolId,
   type PolicyToolStep,
 } from "@app/policies/operations";
-import { fetchSources } from "@portal/api/sources";
-import { useAsync } from "@portal/hooks/useAsync";
+import { useSources } from "@portal/queries/sources";
 import { PolicyFieldRow } from "@portal/components/policies/PolicyFieldRow";
 import { PolicyCategoryBadge } from "@portal/components/policies/PolicyCategoryIcon";
 import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig";
@@ -233,7 +232,7 @@ function PolicySetupWizardBody({
     policy?.state.sources ?? ["editor"],
   );
 
-  const sourcesAsync = useAsync(() => fetchSources(), []);
+  const sourcesAsync = useSources();
   const availableSources = useMemo(() => {
     const backendSources = (sourcesAsync.data?.sources ?? []).filter(
       (s) => s.status !== "disabled",
