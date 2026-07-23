@@ -5598,7 +5598,8 @@ chip = "Prepaid year"
 
 [payg.prepaid.banner]
 exhausted = "Your prepaid capacity is used up; metered billing has resumed. Top up to keep the discount."
-expiring = "Your prepaid year ends in {{days}} days. Unused capacity expires — top up to start a fresh year."
+expiring_one = "Your prepaid year ends in {{count}} day. Unused capacity expires — top up to start a fresh year."
+expiring_other = "Your prepaid year ends in {{count}} days. Unused capacity expires — top up to start a fresh year."
 low = "You're down to {{pct}}% of your prepaid capacity. Top up any time to keep processing uninterrupted."
 
 [payg.prepaid.card]

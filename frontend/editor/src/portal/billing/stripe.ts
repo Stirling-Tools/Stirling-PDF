@@ -372,8 +372,9 @@ interface BundleInvoiceResponse {
 
 /**
  * Accept the Stripe quote for a persisted quote row, via {@code accept-payg-bundle-quote}. Acceptance
- * generates the net-terms invoice (payable by card on the hosted page, or by bank transfer / PO); the
- * server tags + finalizes it and returns the hosted URL. Capacity is credited only on invoice.paid.
+ * generates the net-terms invoice as a DRAFT (auto_advance off) and returns the hosted URL; the
+ * payment step ({@link finalizeBundleInvoice}) stamps the recipient + PO and finalizes it. Payable by
+ * card on the hosted page, or by bank transfer / PO. Capacity is credited only on invoice.paid.
  */
 export async function acceptBundleStripeQuote(req: {
   teamId: number;

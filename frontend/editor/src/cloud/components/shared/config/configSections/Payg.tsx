@@ -709,8 +709,10 @@ function PrepaidBanner({
         )
       : t(
           "payg.prepaid.banner.expiring",
-          "Your prepaid year ends in {{days}} days. Unused capacity expires — top up to start a fresh year.",
-          { days },
+          "Your prepaid year ends in {{count}} days. Unused capacity expires — top up to start a fresh year.",
+          // This arm only renders when expiringSoon (days is a valid number); ?? 0 satisfies the
+          // count option's number type.
+          { count: days ?? 0 },
         );
 
   return (
