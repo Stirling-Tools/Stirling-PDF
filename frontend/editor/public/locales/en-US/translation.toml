@@ -10987,10 +10987,10 @@ unsavedBadge = "Unsaved"
 unsavedDesc = "You have unsaved changes"
 
 [viewer.layers]
-title = "Layers"
 closeSidebar = "Close layers sidebar"
 hideAll = "Hide all layers"
 showAll = "Show all layers"
+title = "Layers"
 
 [viewer.link]
 delete = "Delete link"
