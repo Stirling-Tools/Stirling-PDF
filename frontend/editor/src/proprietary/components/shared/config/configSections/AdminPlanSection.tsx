@@ -1,22 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  Card,
-  Center,
-  Divider,
-  Group,
-  Loader,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Center, Divider, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@app/ui/Button";
 import { useLicense } from "@app/contexts/LicenseContext";
 import { useAuth } from "@app/auth/context";
 import WorkspacePlanSnapshot from "@app/components/shared/config/WorkspacePlanSnapshot";
 import { buildPlanSnapshotRows } from "@app/components/shared/config/planSnapshotRows";
+import PlanLinkPrompt from "@app/components/shared/config/PlanLinkPrompt";
 import { useSourcesCount } from "@app/hooks/useSourcesCount";
-import { LocalIcon } from "@app/components/shared/LocalIcon";
 import LicenseKeySection from "@app/components/shared/config/configSections/plan/LicenseKeySection";
 import { InfoBanner } from "@app/components/shared/InfoBanner";
 import { useLicenseAlert } from "@app/hooks/useLicenseAlert";
@@ -156,47 +147,15 @@ const AdminPlanSection: React.FC<AdminPlanSectionProps> = ({
       )}
 
       {walletState.status === "unlinked" && (
-        <Card withBorder radius="md" padding="lg">
-          <Stack gap="sm" align="flex-start">
-            <Group gap="sm" align="center" wrap="nowrap">
-              <div
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 8,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: "var(--mantine-primary-color-light)",
-                  flexShrink: 0,
-                }}
-              >
-                <LocalIcon
-                  icon="link"
-                  width="1.1rem"
-                  height="1.1rem"
-                  style={{ color: "var(--mantine-primary-color-filled)" }}
-                />
-              </div>
-              <Text size="md" fw={600}>
-                {t("plan.link.title", "Link your Stirling account")}
-              </Text>
-            </Group>
-            <Text size="sm" c="dimmed">
-              {t(
-                "plan.link.body",
-                "Manual PDF editing is always free. Link this instance to a Stirling account to see metered usage and billing, and to claim your free processing allowance.",
-              )}
-            </Text>
-            <Button
-              variant="primary"
-              onClick={handleManage}
-              leftSection={<LocalIcon icon="link" width="1rem" height="1rem" />}
-            >
-              {t("plan.link.cta", "Link Stirling account")}
-            </Button>
-          </Stack>
-        </Card>
+        <PlanLinkPrompt
+          title={t("plan.link.title", "Link your Stirling account")}
+          body={t(
+            "plan.link.body",
+            "Manual PDF editing is always free. Link this instance to a Stirling account to see metered usage and billing, and to claim your free processing allowance.",
+          )}
+          ctaLabel={t("plan.link.cta", "Link Stirling account")}
+          onLink={handleManage}
+        />
       )}
 
       <Divider />

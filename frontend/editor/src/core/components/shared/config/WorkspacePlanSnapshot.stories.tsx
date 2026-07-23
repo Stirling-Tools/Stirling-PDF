@@ -1,6 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import WorkspacePlanSnapshot from "@app/components/shared/config/WorkspacePlanSnapshot";
 
+/**
+ * The "Plan & Usage" card. One wallet-driven card is shared across editions:
+ * Free (Editor) and subscribed (Processor). The optional context banner is
+ * omitted on the shipped page, so these stories mirror that.
+ */
 const meta: Meta<typeof WorkspacePlanSnapshot> = {
   title: "Config/WorkspacePlanSnapshot",
   component: WorkspacePlanSnapshot,
@@ -14,9 +19,6 @@ const meta: Meta<typeof WorkspacePlanSnapshot> = {
     ),
   ],
   args: {
-    bannerTitle: "Read-only snapshot",
-    bannerMessage:
-      "Plan and usage are governed in the PDF Processor. This mirrors the workspace's current state.",
     currentPlanLabel: "Current plan",
     statusLabel: "Active",
     ctaLabel: "Manage in Usage & Billing",
@@ -29,7 +31,7 @@ const meta: Meta<typeof WorkspacePlanSnapshot> = {
 export default meta;
 type Story = StoryObj<typeof WorkspacePlanSnapshot>;
 
-/** Free/self-hosted editor: hard free cap, no card on file. */
+/** Free "Editor" tier: hard free cap, no card on file, connected sources. */
 export const EditorTier: Story = {
   args: {
     tierLabel: "Editor",
@@ -45,7 +47,11 @@ export const EditorTier: Story = {
         value: "1¢ / PDF",
         sub: "From here, scales with file size and policies · first 500 free",
       },
-      { label: "Sources", value: "1", sub: "Free limit" },
+      {
+        label: "Sources",
+        value: "1",
+        sub: "Connected for policies + pipelines",
+      },
     ],
   },
 };
@@ -71,31 +77,6 @@ export const ProcessorTier: Story = {
         sub: "Floor; scales with size + policies",
       },
       { label: "Audit retention", value: "7 days" },
-    ],
-  },
-};
-
-/** Enterprise: committed volume pricing. */
-export const EnterpriseTier: Story = {
-  args: {
-    tierLabel: "Enterprise",
-    rows: [
-      {
-        label: "Documents this month",
-        value: "7.4M",
-        sub: "247,280 in last 24h",
-      },
-      {
-        label: "Billing",
-        value: "Committed rate",
-        sub: "Annual · volume-priced",
-      },
-      {
-        label: "Per-PDF rate",
-        value: "$0.0200",
-        sub: "Governed posture · committed",
-      },
-      { label: "Audit retention", value: "90 days", sub: "Immutable" },
     ],
   },
 };
