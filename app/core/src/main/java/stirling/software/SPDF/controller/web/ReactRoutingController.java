@@ -5,9 +5,11 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -16,6 +18,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.servlet.function.RouterFunction;
+import org.springframework.web.servlet.function.RouterFunctions;
+import org.springframework.web.servlet.function.ServerResponse;
 import org.springframework.web.util.HtmlUtils;
 import org.springframework.web.util.JavaScriptUtils;
 
@@ -31,6 +36,29 @@ public class ReactRoutingController {
             org.slf4j.LoggerFactory.getLogger(ReactRoutingController.class);
     private static final Pattern BASE_HREF_PATTERN =
             Pattern.compile("<base href=\\\"[^\\\"]*\\\"\\s*/?>");
+
+    // First path segments owned by the backend or static assets, never SPA routes.
+    // Mirrors the exclusion regexes on forwardRootPaths/forwardNestedPaths below.
+    private static final Set<String> NON_SPA_FIRST_SEGMENTS =
+            Set.of(
+                    "api",
+                    "static",
+                    "pipeline",
+                    "pdfjs",
+                    "pdfjs-legacy",
+                    "pdfium",
+                    "vendor",
+                    "fonts",
+                    "images",
+                    "css",
+                    "js",
+                    "assets",
+                    "locales",
+                    "modern-logo",
+                    "classic-logo",
+                    "Login",
+                    "og_images",
+                    "samples");
 
     @Value("${server.servlet.context-path:/}")
     private String contextPath;
@@ -254,6 +282,45 @@ public class ReactRoutingController {
     public ResponseEntity<String> forwardNestedPaths(HttpServletRequest request)
             throws IOException {
         return serveIndexHtml(request);
+    }
+
+    // The regex mappings above only cover 1- and 2-segment paths (Spring path variables cannot
+    // span '/'), so deep SPA links like /processor/pipelines/new 404d on direct navigation.
+    @Bean
+    public RouterFunction<ServerResponse> spaDeepLinkFallback() {
+        return RouterFunctions.route(
+                request -> {
+                    HttpServletRequest servletRequest = request.servletRequest();
+                    return "GET".equals(servletRequest.getMethod())
+                            && isSpaFallbackRoute(
+                                    stripContextPath(
+                                            servletRequest.getContextPath(),
+                                            servletRequest.getRequestURI()));
+                },
+                request ->
+                        ServerResponse.ok()
+                                .cacheControl(CacheControl.noCache().mustRevalidate())
+                                .contentType(MediaType.TEXT_HTML)
+                                .body(serveIndexHtml(request.servletRequest()).getBody()));
+    }
+
+    // Runs after annotated controllers but before the static-resource chain. Dot-free paths
+    // only, so requests for real files still fall through to the resource handlers.
+    static boolean isSpaFallbackRoute(String path) {
+        if (path == null || path.isEmpty() || "/".equals(path) || path.indexOf('.') >= 0) {
+            return false;
+        }
+        String[] segments = (path.startsWith("/") ? path.substring(1) : path).split("/");
+        return segments.length > 0
+                && !segments[0].isEmpty()
+                && !NON_SPA_FIRST_SEGMENTS.contains(segments[0]);
+    }
+
+    private static String stripContextPath(String contextPath, String uri) {
+        if (contextPath != null && !contextPath.isBlank() && uri.startsWith(contextPath)) {
+            return uri.substring(contextPath.length());
+        }
+        return uri;
     }
 
     private String buildFallbackHtml() {
