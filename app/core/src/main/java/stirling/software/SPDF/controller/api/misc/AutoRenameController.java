@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -34,7 +36,6 @@ import stirling.software.common.util.WebResponseUtils;
 @RequiredArgsConstructor
 public class AutoRenameController {
 
-    // private static final float TITLE_FONT_SIZE_THRESHOLD = 20.0f;
     private static final int LINE_LIMIT = 200;
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
@@ -53,6 +54,9 @@ public class AutoRenameController {
             throws Exception {
         MultipartFile file = request.getFileInput();
         boolean useFirstTextAsFallback = Boolean.TRUE.equals(request.getUseFirstTextAsFallback());
+        String keyword = request.getKeyword();
+        boolean useRegex = Boolean.TRUE.equals(request.getUseRegex());
+        boolean useTextAfterKeyword = Boolean.TRUE.equals(request.getUseTextAfterKeyword());
 
         try (PDDocument document = pdfDocumentFactory.load(file)) {
             PDFTextStripper reader =
@@ -94,9 +98,8 @@ public class AutoRenameController {
                             this.maxFontSizeInLine = 0.0f;
                             this.lineCount = 0;
                             super.getText(doc);
-                            processLine(); // Process the last line
+                            processLine();
 
-                            // Merge lines with same font size
                             List<LineInfo> mergedLineInfos = new ArrayList<>();
                             for (int i = 0; i < lineInfos.size(); i++) {
                                 StringBuilder mergedText = new StringBuilder(lineInfos.get(i).text);
@@ -109,7 +112,35 @@ public class AutoRenameController {
                                 mergedLineInfos.add(new LineInfo(mergedText.toString(), fontSize));
                             }
 
-                            // Sort lines by font size in descending order and get the first one
+                            // Keyword or regex based renaming
+                            if (keyword != null && !keyword.isBlank()) {
+                                for (LineInfo lineInfo : mergedLineInfos) {
+                                    String line = lineInfo.text;
+                                    if (useRegex) {
+                                        try {
+                                            Pattern pattern = Pattern.compile(keyword);
+                                            Matcher matcher = pattern.matcher(line);
+                                            if (matcher.find()) {
+                                                return matcher.groupCount() > 0
+                                                        ? matcher.group(1)
+                                                        : matcher.group();
+                                            }
+                                        } catch (Exception e) {
+                                            log.warn("Invalid regex pattern: {}", keyword);
+                                        }
+                                    } else if (line.contains(keyword)) {
+                                        if (useTextAfterKeyword) {
+                                            int idx = line.indexOf(keyword) + keyword.length();
+                                            String after = line.substring(idx).trim();
+                                            if (!after.isBlank()) return after;
+                                        } else {
+                                            return line;
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Fallback: largest font
                             mergedLineInfos.sort(
                                     Comparator.comparing((LineInfo li) -> li.fontSize).reversed());
                             String title =
@@ -139,7 +170,6 @@ public class AutoRenameController {
 
             String header = reader.getText(document);
 
-            // Sanitize the header string by removing characters not allowed in a filename.
             if (header != null && header.length() < 255) {
                 header =
                         RegexPatternUtils.getInstance()

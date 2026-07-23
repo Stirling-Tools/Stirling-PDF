@@ -6,10 +6,16 @@ import {
 
 export interface AutoRenameParameters extends BaseParameters {
   useFirstTextAsFallback: boolean;
+  keyword: string;
+  useRegex: boolean;
+  useTextAfterKeyword: boolean;
 }
 
 export const defaultParameters: AutoRenameParameters = {
   useFirstTextAsFallback: false,
+  keyword: "",
+  useRegex: false,
+  useTextAfterKeyword: false,
 };
 
 export type AutoRenameParametersHook = BaseParametersHook<AutoRenameParameters>;
