@@ -55,19 +55,22 @@ function renderOverview(overrides: Record<string, unknown> = {}) {
 describe("PipelineOverview", () => {
   beforeEach(() => localStorage.clear());
 
-  it("defaults to the flow view: an unlocked canvas with kind chips and details", () => {
+  it("defaults to the flow view: the locked spine with kind chips and details", () => {
     renderOverview();
     expect(screen.getAllByText("stepOf")).toHaveLength(2);
     expect(screen.getByText("kindStart · s3")).toBeInTheDocument();
     expect(screen.getByText("Production S3 · incoming/")).toBeInTheDocument();
     expect(screen.getByText(/kindEnd/)).toBeInTheDocument();
     expect(screen.getByText("kindTrigger")).toBeInTheDocument();
-    // Unlocked by default: the drag canvas is mounted with its toolbar.
+    // Locked by default: the tidy spine, no drag canvas or arrange button.
     expect(
       document.querySelector(".portal-overview__stage"),
+    ).not.toBeInTheDocument();
+    expect(
+      document.querySelector(".portal-overview__flow"),
     ).toBeInTheDocument();
-    expect(screen.getByText("autoArrange")).toBeInTheDocument();
-    expect(screen.getByText("lockLayout")).toBeInTheDocument();
+    expect(screen.queryByText("autoArrange")).not.toBeInTheDocument();
+    expect(screen.getByText("unlockLayout")).toBeInTheDocument();
   });
 
   it("puts a wire insert on every step boundary and reports the position", () => {
@@ -78,15 +81,14 @@ describe("PipelineOverview", () => {
     expect(handlers.onAddStep).toHaveBeenCalledWith(1);
   });
 
-  it("locking collapses to the tidy spine and persists the choice", () => {
+  it("unlocking opens the drag canvas and persists the choice", () => {
     renderOverview();
-    fireEvent.click(screen.getByText("lockLayout"));
-    expect(
-      document.querySelector(".portal-overview__stage"),
-    ).not.toBeInTheDocument();
-    expect(screen.getByText("unlockLayout")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("unlockLayout"));
+    expect(document.querySelector(".portal-overview__stage")).toBeInTheDocument();
+    expect(screen.getByText("autoArrange")).toBeInTheDocument();
+    expect(screen.getByText("lockLayout")).toBeInTheDocument();
     expect(localStorage.getItem("stirling.portal.pipelineFlowLock")).toBe(
-      "true",
+      "false",
     );
   });
 

@@ -68,7 +68,8 @@
 [data-theme="dark"]
   .sui-btn.mantine-Button-root[data-disabled]:not([data-loading]) {
   background: var(--color-bg-muted);
-  color: var(--color-text-5);
+  /* text-5 maps to bright zinc-300 in dark, which reads enabled; dim it for real. */
+  color: color-mix(in srgb, var(--color-text-1) 38%, var(--color-surface));
   border-color: transparent;
   opacity: 1;
 }

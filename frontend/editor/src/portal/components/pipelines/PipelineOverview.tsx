@@ -88,26 +88,26 @@ interface NodePos {
   y: number;
 }
 
-/** Vertical-spine default layout for the free canvas. */
+/** Vertical-spine default layout for the free canvas, centred on `spine`. */
 function defaultFlowLayout(
   sourceIds: string[],
   stepCount: number,
+  spine = 240,
 ): Record<string, NodePos> {
-  const SPINE = 240;
   const pos: Record<string, NodePos> = {};
-  pos.trig = { x: SPINE + 14, y: 16 };
+  pos.trig = { x: spine + 14, y: 16 };
   const n = sourceIds.length;
   sourceIds.forEach((id, i) => {
     pos[`src:${id}`] = {
-      x: Math.max(12, SPINE + (i - (n - 1) / 2) * 190),
-      y: 66,
+      x: Math.max(12, spine + (i - (n - 1) / 2) * 190),
+      y: 92,
     };
   });
-  pos.srcghost = { x: SPINE, y: 66 };
+  pos.srcghost = { x: spine, y: 92 };
   for (let i = 0; i < stepCount; i++) {
-    pos[`step:${i}`] = { x: SPINE, y: 168 + i * 104 };
+    pos[`step:${i}`] = { x: spine, y: 208 + i * 112 };
   }
-  pos.out = { x: SPINE, y: 168 + stepCount * 104 };
+  pos.out = { x: spine, y: 208 + stepCount * 112 };
   return pos;
 }
 
@@ -138,7 +138,7 @@ export function PipelineOverview({
   const { t } = useTranslation();
   const [mode, setMode] = useState<OverviewMode>(storedOverviewMode);
   const [locked, setLocked] = useState(
-    () => stored(LOCK_KEY, "false") === "true",
+    () => stored(LOCK_KEY, "true") === "true",
   );
   // User-dragged node positions; anything absent flows to the default layout.
   const [posOverrides, setPosOverrides] = useState<Record<string, NodePos>>({});
@@ -187,9 +187,23 @@ export function PipelineOverview({
     });
   }, [stepsSignature]);
 
+  // Centre the default spine in the visible canvas (node width 13.5rem = 216px).
+  const [stageW, setStageW] = useState(0);
+  useLayoutEffect(() => {
+    const el = stageRef.current;
+    if (!el) return;
+    const measure = () => setStageW(el.clientWidth);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [mode, locked]);
+  const spineLeft = stageW > 0 ? Math.max(12, Math.round(stageW / 2) - 108) : 240;
+
   const defaults = defaultFlowLayout(
     sources.map((s) => s.id),
     stepLabels.length,
+    spineLeft,
   );
   const nodePos = (id: string): NodePos =>
     posOverrides[id] ?? defaults[id] ?? { x: 12, y: 12 };
@@ -682,7 +696,10 @@ export function PipelineOverview({
                 }),
                 tone: "neutral",
               },
-              subtitle: stepNotes?.[i] ?? stepSummaries?.[i],
+              subtitle:
+                stepNotes?.[i] ??
+                stepSummaries?.[i] ??
+                t("portal.pipelines.overview.defaultSettings"),
               subtitleWarn: Boolean(stepNotes?.[i]),
             },
           )}

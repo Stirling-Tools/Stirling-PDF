@@ -191,6 +191,8 @@
 /* ── Unlocked flow: a free canvas with draggable nodes and live wires ── */
 .portal-overview__canvaswrap {
   position: relative;
+  flex: 1;
+  min-height: 18rem;
   overflow: auto;
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-lg);
@@ -201,6 +203,11 @@
     transparent 0
   );
   background-size: 16px 16px;
+}
+
+/* Dark bg-subtle is the theme's navy; the canvas stays neutral zinc instead. */
+[data-theme="dark"] .portal-overview__canvaswrap {
+  background-color: var(--color-bg);
 }
 
 .portal-overview__stage {
@@ -324,7 +331,7 @@
 }
 
 .portal-overview__connector--insert {
-  height: 2rem;
+  height: 2.75rem;
   position: relative;
 }
 
@@ -340,11 +347,26 @@
 }
 
 /* ── Flow: a vertical spine of nodes with arrowed connectors ── */
+/* Locked spine: same workspace canvas as the free layout, tidy and centred. */
 .portal-overview__flow {
   display: flex;
+  flex: 1;
   flex-direction: column;
   align-items: center;
-  padding: 0.375rem 0;
+  padding: 2.5rem 1rem 3rem;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-subtle);
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    var(--color-border) 1px,
+    transparent 0
+  );
+  background-size: 16px 16px;
+}
+
+[data-theme="dark"] .portal-overview__flow {
+  background-color: var(--color-bg);
 }
 
 .portal-overview__flowrow {
@@ -355,7 +377,7 @@
 
 .portal-overview__srcrow {
   display: flex;
-  gap: 0.625rem;
+  gap: 1rem;
   flex-wrap: wrap;
   justify-content: center;
 }
@@ -574,7 +596,7 @@
 
 .portal-overview__connector {
   width: 2px;
-  height: 1.125rem;
+  height: 2rem;
   background: var(--color-border-hover);
   position: relative;
   margin: 0.125rem 0;

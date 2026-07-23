@@ -408,6 +408,11 @@
   }
 }
 
+/* The surface is a workspace: fill the viewport instead of ending mid-page. */
+.portal-builder__main .portal-overview {
+  min-height: max(30rem, calc(100dvh - 10rem));
+}
+
 .portal-builder__side {
   display: flex;
   flex-direction: column;
