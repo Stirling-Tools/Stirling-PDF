@@ -4,12 +4,22 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
 import java.lang.reflect.Field;
+import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.servlet.function.EntityResponse;
+import org.springframework.web.servlet.function.HandlerFunction;
+import org.springframework.web.servlet.function.RouterFunction;
+import org.springframework.web.servlet.function.ServerRequest;
+import org.springframework.web.servlet.function.ServerResponse;
+import org.springframework.web.util.ServletRequestPathUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -173,6 +183,63 @@ class ReactRoutingControllerTest {
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
+    }
+
+    // --- deep-link SPA fallback (router function) ---
+
+    @Test
+    void isSpaFallbackRoute_acceptsDeepSpaPaths() {
+        assertTrue(ReactRoutingController.isSpaFallbackRoute("/processor/pipelines/new"));
+        assertTrue(ReactRoutingController.isSpaFallbackRoute("/processor/pipelines/123/runs/456"));
+        assertTrue(ReactRoutingController.isSpaFallbackRoute("/workflow/sign/some-token"));
+        assertTrue(ReactRoutingController.isSpaFallbackRoute("/processor/pipelines/new/"));
+        // "pipelines" must not be swallowed by the "pipeline" exclusion
+        assertTrue(ReactRoutingController.isSpaFallbackRoute("/pipelines"));
+    }
+
+    @Test
+    void isSpaFallbackRoute_rejectsBackendStaticAndFilePaths() {
+        assertFalse(ReactRoutingController.isSpaFallbackRoute("/api/v1/some/endpoint"));
+        assertFalse(ReactRoutingController.isSpaFallbackRoute("/pipeline"));
+        assertFalse(ReactRoutingController.isSpaFallbackRoute("/pipeline/anything"));
+        assertFalse(ReactRoutingController.isSpaFallbackRoute("/assets/deep/path"));
+        assertFalse(ReactRoutingController.isSpaFallbackRoute("/processor/pipelines/file.js"));
+        assertFalse(ReactRoutingController.isSpaFallbackRoute("/branding/sub/logo.png"));
+        assertFalse(ReactRoutingController.isSpaFallbackRoute("/"));
+        assertFalse(ReactRoutingController.isSpaFallbackRoute(""));
+        assertFalse(ReactRoutingController.isSpaFallbackRoute(null));
+    }
+
+    @Test
+    void spaDeepLinkFallback_servesIndexForDeepRoute() throws Exception {
+        controller.init();
+        RouterFunction<ServerResponse> router = controller.spaDeepLinkFallback();
+
+        ServerRequest deepRequest = serverRequest("GET", "/processor/pipelines/new");
+        Optional<HandlerFunction<ServerResponse>> handler = router.route(deepRequest);
+        assertTrue(handler.isPresent());
+
+        ServerResponse response = handler.get().handle(deepRequest);
+        assertEquals(HttpStatus.OK, response.statusCode());
+        assertInstanceOf(EntityResponse.class, response);
+        Object body = ((EntityResponse<?>) response).entity();
+        assertTrue(body.toString().contains("Stirling PDF"));
+    }
+
+    @Test
+    void spaDeepLinkFallback_ignoresApiFilesAndNonGet() {
+        controller.init();
+        RouterFunction<ServerResponse> router = controller.spaDeepLinkFallback();
+
+        assertTrue(router.route(serverRequest("GET", "/api/v1/policies/run")).isEmpty());
+        assertTrue(router.route(serverRequest("GET", "/branding/sub/logo.png")).isEmpty());
+        assertTrue(router.route(serverRequest("POST", "/processor/pipelines/new")).isEmpty());
+    }
+
+    private static ServerRequest serverRequest(String method, String uri) {
+        MockHttpServletRequest servletRequest = new MockHttpServletRequest(method, uri);
+        ServletRequestPathUtils.parseAndCache(servletRequest);
+        return ServerRequest.create(servletRequest, List.of(new StringHttpMessageConverter()));
     }
 
     // --- context path handling ---
