@@ -190,6 +190,71 @@ class EntitlementServiceTest {
     }
 
     @Test
+    void subscribedOverCapButLivePrepaidPool_staysFullyEntitled() {
+        // Subscribed team at/over its metered cap but holding a live prepaid pool → fully entitled,
+        // NOT degraded. Prepaid sits outside the cap (its draws are netted out of metered spend in
+        // JobChargeService), so the job draws from the pool and the cap is irrelevant while it
+        // lasts.
+        stubBilling(42L, subscribedContext(1000L));
+        when(walletPolicyRepo.findByTeamId(42L))
+                .thenReturn(Optional.of(walletPolicyThresholds(FeatureSet.MINIMAL)));
+        // 1000 spent of a 1000 cap → 100% → cap gate degrades, but the pool overrides it.
+        when(ledgerRepo.sumPeriodNetBillable(eq(42L), any(), any())).thenReturn(-1000L);
+        when(prepaidBundleService.prepaidRemainingUnits(42L)).thenReturn(5000L);
+
+        EntitlementSnapshot snap = service.getSnapshot(42L);
+
+        assertThat(snap.state()).isEqualTo(EntitlementState.FULL);
+        assertThat(snap.featureSet()).isEqualTo(FeatureSet.FULL);
+        assertThat(snap.enabledGates())
+                .containsExactlyInAnyOrder(
+                        FeatureGate.OFFSITE_PROCESSING,
+                        FeatureGate.AUTOMATION,
+                        FeatureGate.AI_SUPPORT,
+                        FeatureGate.CLIENT_SIDE);
+        // Still a subscribed team; the cap figures are unchanged, only the entitlement is
+        // overridden.
+        assertThat(snap.subscribed()).isTrue();
+        assertThat(snap.periodCapUnits()).isEqualTo(1000L);
+        assertThat(snap.periodSpendUnits()).isEqualTo(1000L);
+    }
+
+    @Test
+    void subscribedOverCapNoPrepaid_returnsDegraded() {
+        // Subscribed, over cap, no pool → degraded as before (regression guard: the pool override
+        // must
+        // not open the gate for a team that has none).
+        stubBilling(42L, subscribedContext(1000L));
+        when(walletPolicyRepo.findByTeamId(42L))
+                .thenReturn(Optional.of(walletPolicyThresholds(FeatureSet.MINIMAL)));
+        when(ledgerRepo.sumPeriodNetBillable(eq(42L), any(), any())).thenReturn(-1000L);
+        when(prepaidBundleService.prepaidRemainingUnits(42L)).thenReturn(0L);
+
+        EntitlementSnapshot snap = service.getSnapshot(42L);
+
+        assertThat(snap.state()).isEqualTo(EntitlementState.DEGRADED);
+        assertThat(snap.featureSet()).isEqualTo(FeatureSet.MINIMAL);
+        assertThat(snap.enabledGates())
+                .containsExactlyInAnyOrder(FeatureGate.OFFSITE_PROCESSING, FeatureGate.CLIENT_SIDE);
+    }
+
+    @Test
+    void subscribedUnderCap_prepaidNotConsulted() {
+        // Under cap → FULL, so the prepaid pool is never queried (lazy — only when the cap gate
+        // would
+        // otherwise degrade). Keeps the common subscribed path off the prepaid table.
+        stubBilling(42L, subscribedContext(1000L));
+        when(walletPolicyRepo.findByTeamId(42L))
+                .thenReturn(Optional.of(walletPolicyThresholds(FeatureSet.MINIMAL)));
+        when(ledgerRepo.sumPeriodNetBillable(eq(42L), any(), any())).thenReturn(-250L);
+
+        EntitlementSnapshot snap = service.getSnapshot(42L);
+
+        assertThat(snap.state()).isEqualTo(EntitlementState.FULL);
+        Mockito.verifyNoInteractions(prepaidBundleService);
+    }
+
+    @Test
     void grantInWarnBand_returnsWarnedButFullFeatureSet() {
         // grant 100, remaining 15 → used 85 = 85% (between warn 80 and degrade 100).
         stubBilling(42L, freeContext(100L, 15L));

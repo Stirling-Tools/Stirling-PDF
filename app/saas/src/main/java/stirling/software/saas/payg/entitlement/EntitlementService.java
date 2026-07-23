@@ -140,6 +140,20 @@ public class EntitlementService {
             long periodSpend = signedNet < 0 ? -signedNet : 0L;
             Long cap = billing.monthlyCapDocUnits();
             eval = CapEvaluator.evaluate(periodSpend, cap, warnAtPct, degradeAtPct, degradedSet);
+            // A live prepaid pool sits OUTSIDE the metered cap: bundle draws are netted out of
+            // period
+            // spend in JobChargeService, so they never count toward it. So a subscribed team that
+            // has
+            // hit its cap but still holds prepaid capacity stays fully entitled — the job draws
+            // from
+            // the pool, not the meter, and the cap is irrelevant while the pool has balance.
+            // Queried
+            // lazily (only when the cap would otherwise degrade) to keep the under-cap path off the
+            // prepaid table.
+            if (eval.state() == EntitlementState.DEGRADED
+                    && prepaidBundleService.prepaidRemainingUnits(teamId) > 0L) {
+                eval = fullyEntitledOnPrepaid();
+            }
             snapshotSpend = periodSpend;
             snapshotCap = cap;
         } else {
@@ -157,11 +171,7 @@ public class EntitlementService {
             if (remaining <= 0L) {
                 long prepaidRemaining = prepaidBundleService.prepaidRemainingUnits(teamId);
                 if (prepaidRemaining > 0L) {
-                    eval =
-                            new Evaluation(
-                                    EntitlementState.FULL,
-                                    FeatureSet.FULL,
-                                    CapEvaluator.gatesFor(FeatureSet.FULL));
+                    eval = fullyEntitledOnPrepaid();
                 } else {
                     eval =
                             new Evaluation(
@@ -185,6 +195,17 @@ public class EntitlementService {
                 periodStart,
                 periodEnd,
                 billing.subscribed());
+    }
+
+    /**
+     * A team holding a live prepaid pool is fully entitled regardless of the free-grant or the
+     * monthly-cap gate: the pool is drawn in the charge pipeline and its units are netted out of
+     * metered spend, so it sits OUTSIDE both gates. All feature gates are on. Shared by the
+     * unsubscribed (grant-exhausted) and subscribed (over-cap) branches.
+     */
+    private static Evaluation fullyEntitledOnPrepaid() {
+        return new Evaluation(
+                EntitlementState.FULL, FeatureSet.FULL, CapEvaluator.gatesFor(FeatureSet.FULL));
     }
 
     /**
