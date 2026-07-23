@@ -203,6 +203,7 @@ public class RequestUriUtils {
                 // Mobile scanner sessions are intentionally public so desktop and phone clients
                 // can exchange files without a login round-trip.
                 || trimmedUri.startsWith("/api/v1/mobile-scanner/")
+                || trimmedUri.startsWith("/api/v1/webhooks/")
                 || matchesPathOrChild(trimmedUri, "/v1/api-docs")
                 // Workflow participant endpoints - access controlled by share tokens, not login
                 || trimmedUri.startsWith("/api/v1/workflow/participant/")
