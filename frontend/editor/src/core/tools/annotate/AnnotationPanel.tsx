@@ -277,6 +277,16 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
     },
     { id: "line", label: t("annotation.line", "Line"), icon: "show-chart" },
     {
+      id: "lineArrow",
+      label: t("annotation.lineArrow", "Arrow"),
+      icon: "arrow-right-alt",
+    },
+    {
+      id: "polyline",
+      label: t("annotation.polyline", "Polyline"),
+      icon: "polyline",
+    },
+    {
       id: "polygon",
       label: t("annotation.polygon", "Polygon"),
       icon: "change-history",
@@ -514,6 +524,8 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                                     "square",
                                     "circle",
                                     "line",
+                                    "lineArrow",
+                                    "polyline",
                                     "polygon",
                                   ].includes(activeTool)
                                 ? shapeStrokeColor
@@ -537,6 +549,8 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                                       "square",
                                       "circle",
                                       "line",
+                                      "lineArrow",
+                                      "polyline",
                                       "polygon",
                                     ].includes(activeTool)
                                   ? "shapeStroke"
@@ -775,7 +789,14 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
               </Box>
             )}
 
-            {["square", "circle", "line", "polygon"].includes(activeTool) && (
+            {[
+              "square",
+              "circle",
+              "line",
+              "lineArrow",
+              "polyline",
+              "polygon",
+            ].includes(activeTool) && (
               <>
                 <Box>
                   <Text size="xs" c="dimmed" mb={4}>
@@ -793,7 +814,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                   />
                 </Box>
                 <Box>
-                  {activeTool === "line" ? (
+                  {["line", "lineArrow", "polyline"].includes(activeTool) ? (
                     <>
                       <Text size="xs" c="dimmed" mb={4}>
                         {t("annotation.strokeWidth", "Width")}
