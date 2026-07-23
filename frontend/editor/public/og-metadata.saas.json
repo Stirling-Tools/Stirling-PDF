@@ -476,6 +476,26 @@
       "title": "Admin Mcp Settings - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     },
+    "/settings/adminAiGeneral": {
+      "image": "/og_images/home.png",
+      "title": "Admin Ai General Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/adminAiModels": {
+      "image": "/og_images/home.png",
+      "title": "Admin Ai Models Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/adminAiDocuments": {
+      "image": "/og_images/home.png",
+      "title": "Admin Ai Documents Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/adminAiLimits": {
+      "image": "/og_images/home.png",
+      "title": "Admin Ai Limits Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
     "/settings/help": {
       "image": "/og_images/home.png",
       "title": "Help Settings - Stirling PDF",
@@ -667,6 +687,10 @@
     "/settings/adminEndpoints": "/settings/adminEndpoints",
     "/settings/adminStorageSharing": "/settings/adminStorageSharing",
     "/settings/adminMcp": "/settings/adminMcp",
+    "/settings/adminAiGeneral": "/settings/adminAiGeneral",
+    "/settings/adminAiModels": "/settings/adminAiModels",
+    "/settings/adminAiDocuments": "/settings/adminAiDocuments",
+    "/settings/adminAiLimits": "/settings/adminAiLimits",
     "/settings/help": "/settings/help",
     "/settings/legal": "/settings/legal",
     "/settings/backendThirdPartyLicenses": "/settings/backendThirdPartyLicenses",
