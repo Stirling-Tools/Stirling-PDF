@@ -218,6 +218,11 @@ public class ConfigController {
 
             // User preference defaults
             configData.put(
+                    "defaultToolPanelMode",
+                    applicationProperties.getUi().getDefaultToolPanelMode());
+            configData.put(
+                    "defaultStartupView", applicationProperties.getUi().getDefaultStartupView());
+            configData.put(
                     "defaultHideUnavailableTools",
                     applicationProperties.getUi().isDefaultHideUnavailableTools());
             configData.put(
