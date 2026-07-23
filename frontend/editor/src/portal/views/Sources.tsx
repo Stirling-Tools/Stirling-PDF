@@ -3,13 +3,10 @@ import { useTranslation } from "react-i18next";
 import { Navigate, useSearchParams } from "react-router-dom";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { Button, EmptyState, Skeleton } from "@app/ui";
-import { useAsync, useSectionFlags } from "@portal/hooks/useAsync";
+import { useSectionFlags } from "@portal/hooks/useAsync";
+import { useSources } from "@portal/queries/sources";
 import { SourcesIcon } from "@portal/components/icons";
-import {
-  fetchSources,
-  type SourcesResponse,
-  type SourceView,
-} from "@portal/api/sources";
+import { type SourceView } from "@portal/api/sources";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { KpiStrip } from "@portal/components/sources/KpiStrip";
 import { SourcesTable } from "@portal/components/sources/SourcesTable";
@@ -20,9 +17,7 @@ export function Sources() {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Bumping the tick refetches after a modal save/delete.
-  const [refreshTick, setRefreshTick] = useState(0);
-  const state = useAsync<SourcesResponse>(() => fetchSources(), [refreshTick]);
+  const state = useSources();
   const { data, loading } = state;
   const { isLoading } = useSectionFlags(state);
 
@@ -108,7 +103,6 @@ export function Sources() {
         open={modal.open}
         sourceId={modal.sourceId}
         onClose={() => setModal({ open: false, sourceId: null })}
-        onSaved={() => setRefreshTick((tick) => tick + 1)}
       />
     </div>
   );

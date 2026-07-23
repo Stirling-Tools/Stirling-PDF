@@ -7,11 +7,8 @@ import {
   VIEW_PATHS,
   toPortalPath,
 } from "@portal/contexts/ViewContext";
-import { useAsync } from "@portal/hooks/useAsync";
-import {
-  fetchProcessorFlow,
-  type ProcessorFlow as ProcessorFlowModel,
-} from "@portal/api/processorFlow";
+import { useProcessorFlow } from "@portal/queries/processorFlow";
+import { type ProcessorFlow as ProcessorFlowModel } from "@portal/api/processorFlow";
 import {
   DEV_KEEP_FLOWING,
   DEV_SYNTH_RATE,
@@ -37,7 +34,7 @@ export function ProcessorFlow({ dataOverride }: ProcessorFlowProps = {}) {
   const { t } = useTranslation();
   const { setActiveView } = useView();
   const navigate = useNavigate();
-  const fetched = useAsync<ProcessorFlowModel>(() => fetchProcessorFlow(), []);
+  const fetched = useProcessorFlow();
   const data = dataOverride ?? fetched.data;
   const loading = dataOverride ? false : fetched.loading;
 

@@ -4,18 +4,19 @@ import {
   render as baseRender,
   screen,
 } from "@testing-library/react";
-import { MantineProvider } from "@mantine/core";
+import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import type { ReactNode } from "react";
 import type { SourcesResponse } from "@portal/api/sources";
 import { Sources } from "@portal/views/Sources";
 import { UIProvider } from "@portal/contexts/UIContext";
 
-// The embedded SourceModal reads useUI() to open settings, so wrap its provider.
+// The view uses the shared query hooks and the embedded SourceModal reads
+// useUI(), so wrap the query client + Mantine + the UI context.
 const Providers = ({ children }: { children: ReactNode }) => (
-  <MantineProvider>
+  <PortalTestProviders>
     <UIProvider>{children}</UIProvider>
-  </MantineProvider>
+  </PortalTestProviders>
 );
 
 const render = (ui: Parameters<typeof baseRender>[0]) =>

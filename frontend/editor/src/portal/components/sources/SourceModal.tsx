@@ -20,6 +20,8 @@ import {
   type Source,
 } from "@portal/api/sources";
 import { useUI } from "@portal/contexts/UIContext";
+import { useQueryClient } from "@tanstack/react-query";
+import { qk } from "@portal/queries/keys";
 import { creatableSourceTypes } from "@portal/components/sources/creatableSourceTypes";
 import {
   COMING_SOON_SOURCE_TYPES,
@@ -79,8 +81,11 @@ interface SourceModalProps {
   /** When set, edit this source; otherwise create a new one. */
   sourceId?: string | null;
   onClose: () => void;
-  /** Fired after a save or delete so the list refreshes. */
-  onSaved: () => void;
+  /**
+   * Fired after a save or delete. The shared sources query is invalidated here
+   * regardless, so hosts on the query layer need no handler.
+   */
+  onSaved?: () => void;
 }
 
 /**
@@ -97,7 +102,13 @@ export function SourceModal({
 }: SourceModalProps) {
   const { t } = useTranslation();
   const { openSettings } = useUI();
+  const queryClient = useQueryClient();
   const isEdit = Boolean(sourceId);
+
+  // The list is a shared cache entry (Sources view + Home's ProcessorFlow), so
+  // a create/delete here must invalidate it before the host re-renders it.
+  const invalidateSources = () =>
+    queryClient.invalidateQueries({ queryKey: qk.sources() });
 
   const [stage, setStage] = useState<Stage>("type");
   const [type, setType] = useState<CreatableSourceType>(OFFERED_TYPES[0]);
@@ -177,7 +188,7 @@ export function SourceModal({
       : "";
 
   function finish() {
-    onSaved();
+    onSaved?.();
     onClose();
   }
 
@@ -224,6 +235,7 @@ export function SourceModal({
         options,
         enabled,
       });
+      await invalidateSources();
       if (!isEdit && type.type === WEBHOOK_SOURCE_TYPE) {
         const webhookId = String(saved.options?.webhookId ?? "");
         const secret = String(saved.options?.signingSecret ?? "");
@@ -248,6 +260,7 @@ export function SourceModal({
     setError(null);
     try {
       await deleteSource(sourceId);
+      await invalidateSources();
       finish();
     } catch (e) {
       setError(errorMessage(e));
