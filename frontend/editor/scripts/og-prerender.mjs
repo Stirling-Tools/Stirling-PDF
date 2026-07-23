@@ -15,12 +15,13 @@ export const escapeHtml = (value) =>
 const absolute = (urlPath, ogBase) => (ogBase ? ogBase + urlPath : urlPath);
 
 /**
- * Build the OG/Twitter <meta> block for one route.
- * @param {{image:string,title:string,description:string}} entry
+ * Build the OG/Twitter <meta> block for one route. `ogTitle` lets the social
+ * card show a punchier headline than the (SEO) <title>; falls back to `title`.
+ * @param {{image:string,title:string,description:string,ogTitle?:string}} entry
  * @param {{ogBase?:string, pageUrlPath?:string|null}} opts
  */
 export function buildOgTags(entry, { ogBase = "", pageUrlPath = null } = {}) {
-  const title = escapeHtml(entry.title);
+  const title = escapeHtml(entry.ogTitle ?? entry.title);
   const description = escapeHtml(entry.description);
   const imageUrl = absolute(entry.image, ogBase);
   const image = escapeHtml(imageUrl);

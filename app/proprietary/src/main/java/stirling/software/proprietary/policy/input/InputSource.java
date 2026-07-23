@@ -3,6 +3,7 @@ package stirling.software.proprietary.policy.input;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 import stirling.software.proprietary.policy.model.InputSpec;
 
@@ -21,6 +22,11 @@ public interface InputSource {
 
     /** Throws {@link IllegalArgumentException} on bad config. Called on save to fail fast. */
     default void validate(InputSpec spec) {}
+
+    default Map<String, Object> prepareOptionsForSave(
+            Map<String, Object> options, boolean isCreate) {
+        return options;
+    }
 
     /**
      * Resolve the spec into zero or more units of work, each carrying one run's files and a
