@@ -45,6 +45,7 @@ import { usePrototypeToolRegistry } from "@app/data/usePrototypeToolRegistry";
 import { flattenOperationConfig } from "@app/hooks/tools/flatten/useFlattenOperation";
 import { redactOperationConfig } from "@app/hooks/tools/redact/useRedactOperation";
 import { rotateOperationConfig } from "@app/hooks/tools/rotate/useRotateOperation";
+import { autoRotateOperationConfig } from "@app/hooks/tools/autoRotate/useAutoRotateOperation";
 import { changeMetadataOperationConfig } from "@app/hooks/tools/changeMetadata/useChangeMetadataOperation";
 import { signOperationConfig } from "@app/hooks/tools/sign/useSignOperation";
 import { cropOperationConfig } from "@app/hooks/tools/crop/useCropOperation";
@@ -633,6 +634,33 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
           () => import("@app/components/tools/rotate/RotateAutomationSettings"),
         ),
         synonyms: getSynonyms(t, "rotate"),
+      },
+      autoRotate: {
+        icon: (
+          <LocalIcon
+            icon="screen-rotation-alt-rounded"
+            width="1.5rem"
+            height="1.5rem"
+          />
+        ),
+        name: t("home.autoRotate.title", "Auto Rotate"),
+        component: lazy(() => import("@app/tools/AutoRotate")),
+        description: t(
+          "home.autoRotate.desc",
+          "Detect each page's orientation and rotate it upright automatically.",
+        ),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.PAGE_FORMATTING,
+        maxFiles: -1,
+        endpoints: ["auto-rotate-pdf"],
+        operationConfig: asRegistryConfig(autoRotateOperationConfig),
+        automationSettings: lazySettings(
+          () =>
+            import(
+              "@app/components/tools/autoRotate/AutoRotateAutomationSettings"
+            ),
+        ),
+        synonyms: getSynonyms(t, "autoRotate"),
       },
       split: {
         icon: (

@@ -2176,6 +2176,53 @@ secureWorkflowDesc = "Secures PDF documents by removing potentially malicious co
 description = "This tool will automatically rename PDF files based on their content. It analyzes the document to find the most suitable title from the text."
 tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
 
+[autoRotate]
+submit = "Auto Rotate"
+tags = "auto rotate,fix orientation,upside down,sideways,straighten,orient,detect orientation,correct rotation,auto orient,scanned,OSD"
+
+[autoRotate.confidenceThreshold]
+desc = "Pages below this orientation confidence are left unchanged. Lower it to rotate more aggressively."
+title = "OCR confidence threshold"
+
+[autoRotate.detectionMode]
+auto = "Auto"
+desc = "Auto reads embedded text direction first and falls back to Tesseract orientation detection (OCR) for scanned pages."
+osd = "OCR only"
+text = "Text only"
+title = "Detection method"
+
+[autoRotate.error]
+failed = "An error occurred while auto-rotating the PDF."
+
+[autoRotate.report]
+applied = "{{degrees}}° CW"
+confidence = "Confidence"
+methodHeader = "Method"
+noteHeader = "Note"
+page = "Page"
+rotation = "Rotation"
+summary = "{{rotated}} of {{total}} pages rotated ({{text}} by text, {{osd}} by OCR, {{undetected}} undetected)"
+title = "Detection report"
+
+[autoRotate.report.method]
+none = "Skipped"
+osd = "OCR"
+text = "Text"
+
+[autoRotate.report.note]
+belowThreshold = "Below confidence threshold"
+noDominantDirection = "Mixed text directions"
+osdFailed = "No readable text found"
+osdNoVerdict = "OCR gave no verdict"
+tesseractUnavailable = "OCR not installed"
+tooFewGlyphs = "Too little text"
+
+[autoRotate.results]
+title = "Auto Rotate Results"
+
+[autoRotate.settings]
+title = "Settings"
+
 [autoSizeSplitPDF]
 tags = "pdf,split,document,organization"
 
@@ -4494,6 +4541,11 @@ title = "Automate"
 desc = "Auto renames a PDF file based on its detected header"
 tags = "auto-detect,header-based,organize,relabel,auto rename,automatic rename,smart rename,rename by content,filename,file naming,detect title"
 title = "Auto Rename PDF File"
+
+[home.autoRotate]
+desc = "Detect each page's orientation and rotate it upright automatically."
+tags = "auto rotate,fix orientation,upside down,sideways,straighten,orient,detect orientation,correct rotation,auto orient,scanned,OSD"
+title = "Auto Rotate"
 
 [home.autoSizeSplitPDF]
 tags = "auto,split,size"
