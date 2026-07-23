@@ -4,10 +4,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Pattern;
 
 import org.springframework.scheduling.annotation.Scheduled;
@@ -199,14 +200,20 @@ public class MobileScannerService {
     public void deleteFileAfterDownload(String sessionId, String filename) {
         try {
             Path filePath = getSafeFilePath(sessionId, filename);
-            Files.deleteIfExists(filePath);
-            log.info("Deleted file after download: {}/{}", sessionId, filename);
+            boolean deleted = Files.deleteIfExists(filePath);
+            if (deleted) {
+                log.info("Deleted file after download: {}/{}", sessionId, filename);
+            }
 
-            // Check if all files have been downloaded - if so, delete the entire session
             SessionData session = activeSessions.get(sessionId);
-            if (session != null && session.allFilesDownloaded()) {
+            if (session != null && deleted) {
+                session.markFileAsDeleted(filename);
+            }
+
+            // Check if all files have been served and deleted - if so, delete the entire session
+            if (session != null && session.allFilesServedAndDeleted()) {
                 deleteSession(sessionId);
-                log.info("All files downloaded - deleted session: {}", sessionId);
+                log.info("All files served and deleted - deleted session: {}", sessionId);
             }
         } catch (IOException | IllegalArgumentException e) {
             log.warn("Failed to delete file after download: {}/{}", sessionId, filename, e);
@@ -402,10 +409,11 @@ public class MobileScannerService {
     /** Session data tracking */
     private static class SessionData {
         private final String sessionId;
-        private final List<FileMetadata> files = new ArrayList<>();
-        private final Map<String, Boolean> downloadedFiles = new HashMap<>();
+        private final List<FileMetadata> files = new CopyOnWriteArrayList<>();
+        private final Map<String, Boolean> downloadedFiles = new ConcurrentHashMap<>();
+        private final Set<String> deletedFiles = ConcurrentHashMap.newKeySet();
         private final long createdAt;
-        private long lastAccessTime;
+        private volatile long lastAccessTime;
 
         public SessionData(String sessionId) {
             this.sessionId = sessionId;
@@ -416,19 +424,28 @@ public class MobileScannerService {
         public void addFile(FileMetadata file) {
             files.add(file);
             downloadedFiles.put(file.getFilename(), false);
+            deletedFiles.remove(file.getFilename());
         }
 
         public List<FileMetadata> getFiles() {
-            return files;
+            return List.copyOf(files);
         }
 
         public void markFileAsDownloaded(String filename) {
             downloadedFiles.put(filename, true);
         }
 
-        public boolean allFilesDownloaded() {
+        public void markFileAsDeleted(String filename) {
+            deletedFiles.add(filename);
+        }
+
+        public boolean allFilesServedAndDeleted() {
             return !downloadedFiles.isEmpty()
-                    && downloadedFiles.values().stream().allMatch(downloaded -> downloaded);
+                    && downloadedFiles.entrySet().stream()
+                            .allMatch(
+                                    entry ->
+                                            Boolean.TRUE.equals(entry.getValue())
+                                                    && deletedFiles.contains(entry.getKey()));
         }
 
         public void updateLastAccess() {
