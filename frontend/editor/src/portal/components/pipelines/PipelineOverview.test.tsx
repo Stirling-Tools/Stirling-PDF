@@ -84,7 +84,9 @@ describe("PipelineOverview", () => {
   it("unlocking opens the drag canvas and persists the choice", () => {
     renderOverview();
     fireEvent.click(screen.getByText("unlockLayout"));
-    expect(document.querySelector(".portal-overview__stage")).toBeInTheDocument();
+    expect(
+      document.querySelector(".portal-overview__stage"),
+    ).toBeInTheDocument();
     expect(screen.getByText("autoArrange")).toBeInTheDocument();
     expect(screen.getByText("lockLayout")).toBeInTheDocument();
     expect(localStorage.getItem("stirling.portal.pipelineFlowLock")).toBe(

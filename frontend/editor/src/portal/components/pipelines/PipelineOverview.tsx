@@ -198,7 +198,8 @@ export function PipelineOverview({
     ro.observe(el);
     return () => ro.disconnect();
   }, [mode, locked]);
-  const spineLeft = stageW > 0 ? Math.max(12, Math.round(stageW / 2) - 108) : 240;
+  const spineLeft =
+    stageW > 0 ? Math.max(12, Math.round(stageW / 2) - 108) : 240;
 
   const defaults = defaultFlowLayout(
     sources.map((s) => s.id),
