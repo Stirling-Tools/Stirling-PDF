@@ -845,9 +845,10 @@ export const BookmarkSidebar = ({
               p="sm"
               data-testid="bookmark-add-form"
               style={{
-                border: "1px solid var(--border-subtle)",
+                border: "1px solid var(--c-border-subtle)",
                 borderRadius: 6,
-                background: "var(--bg-raised, var(--mantine-color-gray-0))",
+                background:
+                  "var(--c-surface-raised, var(--mantine-color-gray-0))",
               }}
             >
               <Stack gap="xs">
@@ -945,8 +946,8 @@ export const BookmarkSidebar = ({
           px="sm"
           py="xs"
           style={{
-            borderTop: "1px solid var(--border-subtle)",
-            backgroundColor: "var(--bg-toolbar)",
+            borderTop: "1px solid var(--c-border-subtle)",
+            backgroundColor: "var(--c-bg-raised)",
             flexShrink: 0,
           }}
         >

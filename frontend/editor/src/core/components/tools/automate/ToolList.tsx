@@ -148,7 +148,7 @@ export default function ToolList({
                   borderTop: "none",
                   borderRadius:
                     "0 0 var(--mantine-radius-lg) var(--mantine-radius-lg)",
-                  backgroundColor: "var(--active-bg)",
+                  backgroundColor: "var(--c-active)",
                   padding: "var(--mantine-spacing-xs)",
                 }}
               >

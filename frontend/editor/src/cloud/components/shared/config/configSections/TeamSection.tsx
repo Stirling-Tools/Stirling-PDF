@@ -11,6 +11,7 @@ import {
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
+import { StatusBadge } from "@app/ui/StatusBadge";
 import { useTranslation } from "react-i18next";
 import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -265,12 +266,14 @@ const TeamSection: React.FC = () => {
                   </ActionIcon>
                 )}
                 {isTeamLeader && (
-                  <Badge color="blue">{t("team.leader", "LEADER")}</Badge>
+                  <StatusBadge tone="info" showDot={false}>
+                    {t("team.leader", "LEADER")}
+                  </StatusBadge>
                 )}
                 {isPersonalTeam && (
-                  <Badge color="gray" variant="light" size="xs">
+                  <StatusBadge tone="neutral" showDot={false}>
                     {t("team.personal", "Personal")}
-                  </Badge>
+                  </StatusBadge>
                 )}
               </Group>
             )}
@@ -430,8 +433,8 @@ const TeamSection: React.FC = () => {
                         style={
                           member.role !== "LEADER"
                             ? {
-                                backgroundColor: "var(--tool-header-badge-bg)",
-                                color: "var(--tool-header-badge-text)",
+                                backgroundColor: "var(--c-surface-raised)",
+                                color: "var(--c-accent-fg)",
                               }
                             : undefined
                         }

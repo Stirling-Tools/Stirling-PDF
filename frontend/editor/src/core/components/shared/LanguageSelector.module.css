@@ -6,7 +6,7 @@
 }
 
 .languageItem {
-  border-right: 2px solid var(--mantine-color-gray-3);
+  border-right: 2px solid var(--c-border);
 }
 
 .languageItem:nth-child(4n) {
@@ -20,7 +20,7 @@
   }
 
   .languageItem:nth-child(4n) {
-    border-right: 2px solid var(--mantine-color-gray-3);
+    border-right: 2px solid var(--c-border);
   }
 
   .languageItem:nth-child(2n) {
@@ -34,7 +34,7 @@
   }
 
   .languageItem:nth-child(4n) {
-    border-right: 2px solid var(--mantine-color-gray-3);
+    border-right: 2px solid var(--c-border);
   }
 
   .languageItem:nth-child(3n) {
@@ -42,21 +42,10 @@
   }
 }
 
-/* Dark theme support */
-[data-mantine-color-scheme="dark"] .languageItem {
-  border-right-color: var(--mantine-color-dark-3);
-}
-
+/* Dark theme: divider colour comes from the adaptive --c-border token on the
+   base rules; only the layout quirk (no right border on 4n) differs. */
 [data-mantine-color-scheme="dark"] .languageItem:nth-child(4n) {
   border-right: none;
-}
-
-[data-mantine-color-scheme="dark"] .languageItem:nth-child(2n) {
-  border-right-color: var(--mantine-color-dark-3);
-}
-
-[data-mantine-color-scheme="dark"] .languageItem:nth-child(3n) {
-  border-right-color: var(--mantine-color-dark-3);
 }
 
 /* Responsive text visibility */
