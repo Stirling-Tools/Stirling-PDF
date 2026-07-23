@@ -692,6 +692,166 @@ manualLinks = "Manual downloads: click the links and place the files into the te
 noLanguages = "No tessdata languages found in the configured directory."
 permissionNotice = "The tessdata path is not writable. Downloads will be opened in the browser; please save the .traineddata files manually into the tessdata folder."
 
+# AI engine admin settings (AI nav group)
+[admin.settings.ai.documents]
+description = "Configure the embedding model and retrieval settings used to answer questions over documents. Applied to the AI engine when saved."
+title = "Documents & RAG"
+
+[admin.settings.ai.documents.embeddingApiKey]
+description = "Leave blank to use the engine's own environment credential. Applies to self-hosted single-engine deployments."
+generic = "Embedding API key"
+openai = "OpenAI API key"
+setPlaceholder = "Saved - leave blank to keep the current key"
+voyageai = "VoyageAI API key"
+
+[admin.settings.ai.documents.embeddingBaseUrl]
+description = "Base URL of the OpenAI-compatible / Ollama embeddings endpoint, e.g. http://ollama:11434/v1. Must point at a trusted internal endpoint (SSRF-sensitive)."
+label = "Embedding base URL"
+
+[admin.settings.ai.documents.embeddingModel]
+description = "Embedding model name. Free text; suggestions are hints only."
+label = "Embedding model"
+
+[admin.settings.ai.documents.embeddingProvider]
+description = "Provider used to turn document text into vector embeddings."
+label = "Embedding provider"
+
+[admin.settings.ai.documents.maxSearches]
+description = "Maximum number of retrieval searches the agent may run per request."
+label = "Max searches"
+
+[admin.settings.ai.documents.reindexNote]
+body = "Changing the embedding model takes effect immediately, but documents indexed with the previous model must be re-indexed for search to return correct results."
+title = "Re-index required"
+
+[admin.settings.ai.documents.saved]
+reindexNote = "If you changed the embedding model, re-index existing documents so search uses the new model."
+
+[admin.settings.ai.documents.topK]
+description = "Number of most-relevant chunks retrieved per search."
+label = "Top K"
+
+[admin.settings.ai.general]
+description = "Connect Stirling to the Python AI engine and choose which AI capabilities are exposed. Changes apply on restart."
+title = "AI Engine"
+
+[admin.settings.ai.general.capabilities]
+description = "Turn individual AI features on or off. Disabled features are hidden in the app."
+title = "Capabilities"
+
+[admin.settings.ai.general.enabled]
+description = "Master switch. When off, no AI tools, agents, or engine calls are available."
+label = "Enable AI"
+
+[admin.settings.ai.general.features.chat]
+description = "Conversational assistant for working with PDFs."
+label = "Chat assistant"
+
+[admin.settings.ai.general.features.classify]
+description = "Automatically categorise documents by type or content."
+label = "Document classification"
+
+[admin.settings.ai.general.features.createPdf]
+description = "Generate a new PDF (e.g. from HTML) via an AI agent."
+label = "Create PDF from prompt"
+
+[admin.settings.ai.general.features.documentQuestions]
+description = "Ask questions and get answers grounded in an uploaded document."
+label = "Document questions"
+
+[admin.settings.ai.general.features.mathAuditor]
+description = "Review documents for mathematical and numerical errors."
+label = "Math auditor"
+
+[admin.settings.ai.general.features.pdfComment]
+description = "Add AI-authored review comments and annotations to a PDF."
+label = "PDF comment agent"
+
+[admin.settings.ai.general.longRunningTimeoutSeconds]
+description = "Timeout for heavier agent operations such as document generation."
+label = "Long-running timeout (seconds)"
+
+[admin.settings.ai.general.note]
+body = "The AI engine runs as a separate service. Its shared secret"
+body2 = "is set via a container environment variable. Provider API keys can be entered on these pages or supplied as engine environment variables; keys entered here are pushed to the engine when saved."
+title = "About the AI engine"
+
+[admin.settings.ai.general.streamTimeoutSeconds]
+description = "Timeout for streamed (token-by-token) chat responses."
+label = "Stream timeout (seconds)"
+
+[admin.settings.ai.general.test]
+button = "Test connection"
+failBody = "The AI engine did not respond. Check the URL, that the engine container is running, and that AI is enabled (a restart is needed after enabling)."
+failTitle = "AI engine unreachable"
+okBody = "The AI engine responded to a health check."
+okTitle = "AI engine reachable"
+
+[admin.settings.ai.general.timeoutSeconds]
+description = "Timeout for standard AI requests to the engine."
+label = "Request timeout (seconds)"
+
+[admin.settings.ai.general.url]
+description = "Internal URL of the Python AI engine, e.g. http://stirling-pdf-engine:5001."
+label = "AI engine URL"
+
+[admin.settings.ai.limits]
+description = "Guardrails for how much work AI requests may do and how many run concurrently. Applied to the AI engine when saved."
+title = "Limits & Performance"
+
+[admin.settings.ai.limits.maxCharacters]
+description = "Guardrail: reject AI requests whose extracted text exceeds this length."
+label = "Max characters per request"
+
+[admin.settings.ai.limits.maxPages]
+description = "Guardrail: reject AI requests over this many PDF pages."
+label = "Max pages per request"
+
+[admin.settings.ai.limits.modelMaxConcurrency]
+description = "Maximum simultaneous in-flight model calls across the whole engine."
+label = "Model max concurrency"
+
+[admin.settings.ai.models]
+description = "Choose the LLM provider and the smart/fast models the AI engine uses. Applied to the AI engine when saved."
+title = "Models & Providers"
+
+[admin.settings.ai.models.apiKey]
+anthropic = "Anthropic API key"
+description = "Leave blank to use the engine's own environment credential. Applies to self-hosted single-engine deployments."
+generic = "API key"
+openai = "OpenAI API key"
+setPlaceholder = "Saved - leave blank to keep the current key"
+
+[admin.settings.ai.models.baseUrl]
+description = "Base URL of the OpenAI-compatible / Ollama endpoint, e.g. http://ollama:11434/v1."
+label = "Provider base URL"
+warning = "The base URL must point at a trusted internal endpoint. The engine will make server-side requests to it, so an untrusted value is SSRF-sensitive."
+
+[admin.settings.ai.models.fastMaxTokens]
+description = "Maximum output tokens for the fast model."
+label = "Fast model max tokens"
+
+[admin.settings.ai.models.fastModel]
+description = "Cheaper, faster model for lightweight tasks. Free text; suggestions are hints only."
+label = "Fast model"
+
+[admin.settings.ai.models.provider]
+description = "Which LLM provider the engine talks to."
+label = "Provider"
+
+[admin.settings.ai.models.smartMaxTokens]
+description = "Maximum output tokens for the smart model."
+label = "Smart model max tokens"
+
+[admin.settings.ai.models.smartModel]
+description = "High-capability model for complex reasoning. Free text; suggestions are hints only."
+label = "Smart model"
+
+[admin.settings.ai.saved]
+body = "Changes are pushed to the AI engine automatically."
+bodyNoPush = "Settings saved. They will apply the next time the AI engine picks up its configuration."
+title = "AI settings saved"
+
 [admin.settings.badge]
 clickToUpgrade = "Click to view plan details"
 
@@ -6744,22 +6904,6 @@ title = "Invite teammates"
 blurb = "{{active}} active · {{recommended}} recommended"
 title = "Confirm your policies"
 
-[portal.home.quickActions]
-subtitle = "Top tasks for today"
-title = "Quick actions"
-
-[portal.home.quickActions.buildPipeline]
-blurb = "3-step composer over the typed op library"
-title = "Build a pipeline"
-
-[portal.home.quickActions.connectSource]
-blurb = "S3, agents, webhooks, watched folders"
-title = "Connect a source"
-
-[portal.home.quickActions.issueApiKey]
-blurb = "Scoped key with rate limits and IP allowlist"
-title = "Issue an API key"
-
 [portal.infrastructure]
 manageEditorDeployment = "Manage Editor deployment"
 sectionsAriaLabel = "Infrastructure sections"
@@ -6767,30 +6911,30 @@ subtitle = "Deployments, credentials, security posture, storage, and the audit t
 title = "Infrastructure"
 
 # Fixed-enum label maps rendered via t(MAP[value]) in the infrastructure tabs.
-[portal.infrastructure.apiKeyPermission]
-admin = "Admin"
-read = "Read"
-write = "Write"
-
 [portal.infrastructure.apiKeys]
 createKey = "Create key"
 heading = "API keys"
-subheading = "Scoped credentials with per-key rate limits, permissions, and IP allowlists."
+subheading = "Personal credentials, each with its own usage tracking."
 
 [portal.infrastructure.apiKeys.card]
-allowedIps = "Allowed IPs"
-anyIp = "Any IP (no allowlist)"
 created = "Created"
 lastUsed = "Last used"
-permissions = "Permissions"
-rateLimit = "Rate limit"
-rateLimitValue = "{{value}} req/min"
+revoke = "Revoke key"
 usageMonth = "Usage this month"
 usageToday = "Usage today"
 
 [portal.infrastructure.apiKeys.empty]
-description = "Create a scoped key to start calling the Stirling API."
+description = "Create a key to start calling the Stirling API."
 title = "No API keys yet"
+
+[portal.infrastructure.apiKeys.error]
+load = "Couldn't load your API keys. Please try again."
+
+[portal.infrastructure.apiKeys.revoke]
+body = "Revoke \"{{name}}\"? Any integration still using this key will immediately start receiving 401 errors. This can't be undone."
+cancel = "Cancel"
+confirm = "Revoke key"
+title = "Revoke API key"
 
 [portal.infrastructure.attestationLabel]
 attested = "Attested"
@@ -6877,14 +7021,11 @@ notStarted = "Not started"
 cancel = "Cancel"
 createKey = "Create key"
 done = "Done"
-ipAllowlistHelper = "Comma-separated CIDR ranges. Leave blank to allow any IP."
-ipAllowlistLabel = "IP allowlist"
 keyNameLabel = "Key name"
-keyNamePlaceholder = "e.g. Production · ingest"
-permissionsLabel = "Permissions"
+keyNamePlaceholder = "e.g. Production ingest"
 secretKeyCaption = "Secret key"
-secretWarning = "Store this in a secrets manager. Stirling only ever stores a hash — there is no way to recover it later."
-subtitle = "Scope the key to the minimum it needs. You can rotate or revoke at any time."
+secretWarning = "Store this in a secrets manager. Stirling only ever stores a hash, so there is no way to recover it later."
+subtitle = "Give the key a name so you can recognise it later. You can revoke it at any time."
 subtitleCreated = "Copy this secret now — it won't be shown again."
 title = "Create API key"
 titleCreated = "Key created"
@@ -6933,7 +7074,6 @@ title = "No regions deployed"
 [portal.infrastructure.keyLabel]
 active = "Active"
 revoked = "Revoked"
-rotateSoon = "Rotate soon"
 
 [portal.infrastructure.modelLabel]
 active = "Active"
@@ -7531,34 +7671,8 @@ setUp = "Set up {{category}} policy"
 [portal.policies.wizard.workflow]
 description = "Choose what this policy does to every document it processes."
 
-[portal.policySummary]
-activeSummary = "{{active}} / {{total}} active"
-noRule = "No rule enforced yet"
-subtitle = "Standing automations every document passes through, regardless of which pipeline handles it."
-title = "What runs on your PDFs"
-
 [portal.policySummary.action]
-comingSoon = "Upgrade to Enterprise"
-configure = "Configure"
 setUp = "Set up"
-
-[portal.policySummary.column]
-activeRule = "Active rule"
-policy = "Policy"
-status = "Status"
-
-[portal.policySummary.empty]
-description = "Once policies are configured, the categories appear here."
-title = "No policies yet"
-
-[portal.policySummary.state]
-active = "Active"
-off = "Off"
-soon = "Soon"
-
-[portal.processingStatus]
-managePlan = "Manage plan"
-volumeSuffix = "PDFs processed · last 30 days"
 
 [portal.processorFlow]
 footnote = "Counts are over the last 24 hours. Flow speed is illustrative."
@@ -7877,14 +7991,6 @@ homeBadge = "Enterprise"
 homeBody = "Committed volume pricing, org-wide SSO + SCIM + RBAC, 90-day immutable audit, and a dedicated SE."
 homeCta = "Start Trial →"
 homeHeadline = "Process millions of PDFs."
-
-[portal.recentActivity]
-title = "Recent activity"
-viewAll = "View all"
-
-[portal.recentActivity.empty]
-description = "Pipeline runs, deploys and agent events will appear here."
-title = "Nothing here yet"
 
 [portal.search]
 ariaLabel = "Search"
@@ -8868,6 +8974,13 @@ title = "Signature Order"
 
 [settings]
 close = "Close"
+
+[settings.ai]
+documents = "Documents & RAG"
+general = "General"
+limits = "Limits & Performance"
+models = "Models & Providers"
+title = "AI"
 
 [settings.configuration]
 advanced = "Advanced"

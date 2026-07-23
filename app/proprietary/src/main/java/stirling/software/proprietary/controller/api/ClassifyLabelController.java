@@ -35,6 +35,7 @@ import stirling.software.proprietary.classification.ClassificationLabelProvider;
 import stirling.software.proprietary.classification.model.ClassificationLabel;
 import stirling.software.proprietary.model.api.ai.AiPageText;
 import stirling.software.proprietary.service.AiEngineClient;
+import stirling.software.proprietary.service.AiFeatureGate;
 import stirling.software.proprietary.service.PdfContentExtractor;
 
 import tools.jackson.databind.JsonNode;
@@ -67,6 +68,7 @@ public class ClassifyLabelController {
     private final PdfContentExtractor pdfContentExtractor;
     private final PdfMetadataService pdfMetadataService;
     private final AiEngineClient aiEngineClient;
+    private final AiFeatureGate aiFeatureGate;
     private final ObjectMapper objectMapper;
     private final UserServiceInterface userService;
 
@@ -81,6 +83,7 @@ public class ClassifyLabelController {
             PdfContentExtractor pdfContentExtractor,
             PdfMetadataService pdfMetadataService,
             AiEngineClient aiEngineClient,
+            AiFeatureGate aiFeatureGate,
             ObjectMapper objectMapper,
             ClassificationLabelProvider labelProvider,
             @Autowired(required = false) UserServiceInterface userService) {
@@ -89,6 +92,7 @@ public class ClassifyLabelController {
         this.pdfContentExtractor = pdfContentExtractor;
         this.pdfMetadataService = pdfMetadataService;
         this.aiEngineClient = aiEngineClient;
+        this.aiFeatureGate = aiFeatureGate;
         this.objectMapper = objectMapper;
         this.labelProvider = labelProvider;
         this.userService = userService;
@@ -104,6 +108,7 @@ public class ClassifyLabelController {
                             + " intended for direct client use.")
     public ResponseEntity<Resource> classifyAndLabel(
             @RequestParam("fileInput") MultipartFile fileInput) throws IOException {
+        aiFeatureGate.requireClassify();
         try (PDDocument document = pdfDocumentFactory.load(fileInput, true)) {
             String fileName = safeFileName(fileInput.getOriginalFilename());
 
