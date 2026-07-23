@@ -640,14 +640,13 @@ public class UserService implements UserServiceInterface {
         for (Object principal : sessionRegistry.getAllPrincipals()) {
             for (SessionInformation sessionsInformation :
                     sessionRegistry.getAllSessions(principal, false)) {
-                if (principal instanceof UserDetails detailsUser) {
-                    usernameP = detailsUser.getUsername();
-                } else if (principal instanceof OAuth2User oAuth2User) {
-                    usernameP = oAuth2User.getName();
-                } else if (principal instanceof CustomSaml2AuthenticatedPrincipal saml2User) {
-                    usernameP = saml2User.name();
-                } else if (principal instanceof String stringUser) {
-                    usernameP = stringUser;
+                switch (principal) {
+                    case UserDetails detailsUser -> usernameP = detailsUser.getUsername();
+                    case OAuth2User oAuth2User -> usernameP = oAuth2User.getName();
+                    case CustomSaml2AuthenticatedPrincipal saml2User ->
+                            usernameP = saml2User.name();
+                    case String stringUser -> usernameP = stringUser;
+                    default -> {}
                 }
                 if (usernameP.equalsIgnoreCase(username)) {
                     sessionRegistry.expireSession(sessionsInformation.getSessionId());
