@@ -9,6 +9,7 @@ import {
   CONNECTION_CATEGORIES,
   type ConnectionCategory,
 } from "@portal/components/sources/connectionTypes";
+import { BrandMark } from "@portal/components/BrandMarks";
 import {
   STEP_OPERATIONS,
   buildStepParameters,
@@ -262,11 +263,11 @@ function OperationGrid({
             }
             onClick={() => onPick(op)}
           >
-            <span
-              className={`portal-conn-picker__mark portal-conn-picker__mark--${op.category}`}
-              aria-hidden
-            >
-              {label.slice(0, 1)}
+            <span className="portal-conn-picker__mark" aria-hidden>
+              <BrandMark
+                id={op.custom ? "api" : op.connectionTypeId}
+                size={20}
+              />
             </span>
             <span className="portal-conn-picker__card-text">
               <span className="portal-conn-picker__card-name">{label}</span>

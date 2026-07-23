@@ -11,6 +11,7 @@ import {
   searchOperations,
   type StepOperation,
 } from "@portal/components/policies/stepOperations";
+import { BrandMark } from "@portal/components/BrandMarks";
 
 interface ToolPickerProps {
   tools: ExecutableTool[];
@@ -137,7 +138,10 @@ export function ToolPicker({
                     className="portal-pipelines__picker-icon"
                     aria-hidden="true"
                   >
-                    {t(op.labelKey).slice(0, 1)}
+                    <BrandMark
+                      id={op.custom ? "api" : op.connectionTypeId}
+                      size={17}
+                    />
                   </span>
                 }
               >

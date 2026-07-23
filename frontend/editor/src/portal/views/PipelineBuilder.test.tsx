@@ -211,10 +211,9 @@ describe("PipelineBuilder", () => {
     fireEvent.click(
       await screen.findByText("portal.connections.picker.createNew"),
     );
-    fireEvent.change(
-      screen.getByLabelText(/portal\.connections\.fields\.name/),
-      { target: { value: "Claims bucket" } },
-    );
+    fireEvent.change(screen.getByLabelText(/portal\.integrations\.typedName/), {
+      target: { value: "Claims bucket" },
+    });
     fireEvent.change(
       screen.getByLabelText(
         /portal\.connections\.types\.s3\.fields\.bucket\.label/,

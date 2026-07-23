@@ -21,8 +21,12 @@ vi.mock("react-i18next", () => ({
 }));
 
 const fetchSources = vi.fn();
+const fetchSource = vi.fn();
 vi.mock("@portal/api/sources", () => ({
   fetchSources: () => fetchSources(),
+  fetchSource: (id: string) => fetchSource(id),
+  createSource: vi.fn(),
+  deleteSource: vi.fn(),
 }));
 
 const fetchS3Connections = vi.fn();
@@ -74,12 +78,8 @@ function renderView(initial = "/processor/sources") {
       <Routes>
         <Route path="/processor/sources" element={<Sources />} />
         <Route
-          path="/processor/sources/new"
-          element={<div>source builder: new</div>}
-        />
-        <Route
-          path="/processor/sources/:id"
-          element={<div>source builder: edit</div>}
+          path="/processor/integrations"
+          element={<div>integrations view</div>}
         />
       </Routes>
     </MemoryRouter>,
@@ -90,42 +90,61 @@ describe("Sources view", () => {
   beforeEach(() => {
     fetchSources.mockReset();
     fetchSources.mockResolvedValue(RESPONSE);
+    fetchSource.mockReset();
+    fetchSource.mockResolvedValue({
+      id: "src-1",
+      name: "Claims intake",
+      type: "folder",
+      options: { directory: "/in" },
+      enabled: true,
+    });
     fetchS3Connections.mockReset();
     fetchS3Connections.mockResolvedValue([]);
   });
 
-  it("opens a source's own page on row click", async () => {
+  it("opens the edit modal on row click", async () => {
     renderView();
     fireEvent.click(await screen.findByText("Claims intake"));
-    expect(await screen.findByText("source builder: edit")).toBeInTheDocument();
+    // The modal fetches the record and shows the configure form.
+    expect(
+      await screen.findByText("portal.sources.builder.save"),
+    ).toBeInTheDocument();
+    expect(fetchSource).toHaveBeenCalledWith("src-1");
   });
 
-  it("navigates to the create page from the connect button", async () => {
+  it("opens the create modal from the connect button", async () => {
     renderView();
     await screen.findByText("Claims intake");
-    fireEvent.click(screen.getByText("portal.sources.actions.connectSource"));
-    expect(await screen.findByText("source builder: new")).toBeInTheDocument();
+    fireEvent.click(
+      screen.getAllByText("portal.sources.actions.connectSource")[0],
+    );
+    // Stage 1 of the modal: the connector catalogue with coming-soon entries.
+    expect(
+      await screen.findByText("portal.sources.types.sharepoint.label"),
+    ).toBeInTheDocument();
   });
 
-  it("does not navigate when the virtual editor row is clicked", async () => {
+  it("opens the create modal on arrival with ?new=1", async () => {
+    renderView("/processor/sources?new=1");
+    expect(
+      await screen.findByText("portal.sources.types.sharepoint.label"),
+    ).toBeInTheDocument();
+  });
+
+  it("does not open the modal when the virtual editor row is clicked", async () => {
     renderView();
     fireEvent.click(
       await screen.findByText("portal.sources.types.editor.label"),
     );
-    // Still on the list: the builder stub never rendered.
-    expect(screen.queryByText("source builder: edit")).not.toBeInTheDocument();
-    expect(screen.getByText("Claims intake")).toBeInTheDocument();
+    expect(fetchSource).not.toHaveBeenCalled();
+    expect(
+      screen.queryByText("portal.sources.builder.save"),
+    ).not.toBeInTheDocument();
   });
 
-  it("shows the connections surface on the Connections tab", async () => {
-    renderView();
-    await screen.findByText("Claims intake");
-    fireEvent.click(screen.getByText("portal.sources.tabs.connections"));
-    // Empty connections list -> the connections empty state.
-    expect(
-      await screen.findByText("portal.connections.empty.title"),
-    ).toBeInTheDocument();
-    expect(fetchS3Connections).toHaveBeenCalled();
+  it("redirects the old connections tab to the integrations view", async () => {
+    renderView("/processor/sources?tab=connections");
+    expect(await screen.findByText("integrations view")).toBeInTheDocument();
   });
 
   it("hides the KPI strip and shows the empty state when only the editor exists", async () => {
@@ -137,8 +156,6 @@ describe("Sources view", () => {
     expect(
       await screen.findByText("portal.sources.empty.title"),
     ).toBeInTheDocument();
-    expect(
-      screen.queryByText("portal.sources.kpi.total"),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("portal.sources.kpi.total")).toBeNull();
   });
 });

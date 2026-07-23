@@ -328,6 +328,10 @@
   font-size: 1.125rem;
 }
 
+.portal-pipelines__picker-icon svg {
+  display: block;
+}
+
 .portal-pipelines__picker-name {
   font-size: 0.8125rem;
 }

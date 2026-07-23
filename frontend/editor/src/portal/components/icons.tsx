@@ -289,3 +289,14 @@ export function ExternalLinkIcon(props: IconProps) {
     </Svg>
   );
 }
+
+export function IntegrationsIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M9 7V2.5" />
+      <path d="M15 7V2.5" />
+      <path d="M6.5 7h11v3.5a5.5 5.5 0 0 1-11 0z" />
+      <path d="M12 16v2a3 3 0 0 1-3 3H7" />
+    </Svg>
+  );
+}

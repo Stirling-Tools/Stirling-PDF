@@ -61,6 +61,8 @@
   color: var(--c-text);
 }
 
+/* The connector's real mark, no tinted plate: the box only reserves space so
+   rows align; neutral (currentColor) marks read in the muted text tone. */
 .portal-sources__type-dot {
   display: inline-flex;
   align-items: center;
@@ -68,40 +70,7 @@
   width: 1.875rem;
   height: 1.875rem;
   flex-shrink: 0;
-  border-radius: var(--radius-md);
-  font-size: 0.875rem;
-  color: var(--dot-c, var(--c-text-subtle));
-  background: color-mix(
-    in srgb,
-    var(--dot-c, var(--c-text-subtle)) 14%,
-    transparent
-  );
-}
-
-/* Neutral keeps a plain muted surface rather than an accent tint. */
-.portal-sources__type-dot--neutral {
-  background: var(--c-surface-sunken);
   color: var(--c-text-subtle);
-}
-.portal-sources__type-dot--default {
-  --dot-c: var(--c-primary-hover);
-}
-.portal-sources__type-dot--premium {
-  --dot-c: var(--color-purple-dark);
-}
-.portal-sources__type-dot--success {
-  --dot-c: var(--color-green-dark);
-}
-.portal-sources__type-dot--warning {
-  --dot-c: var(--color-amber-dark);
-}
-/* Dark: subtle tint + bright icon; amber-light/amber-dark are too close to read. */
-[data-theme="dark"] .portal-sources__type-dot--warning {
-  background: color-mix(in srgb, var(--color-amber) 20%, transparent);
-  color: var(--color-amber);
-}
-.portal-sources__type-dot--danger {
-  --dot-c: var(--color-red-dark);
 }
 
 .portal-sources__muted {
@@ -453,10 +422,10 @@
   height: 1.6rem;
 }
 
-/* Sized to sit centred inside the 1.875rem table badge / picker dot. */
+/* Sized to sit centred inside the 1.875rem table cell / picker dot. */
 .portal-sources__type-svg {
-  width: 1.05rem;
-  height: 1.05rem;
+  width: 1.25rem;
+  height: 1.25rem;
   display: block;
 }
 
@@ -750,44 +719,19 @@
   border-style: dashed;
 }
 
+/* The vendor's real mark: full colour, no tinted plate behind it. Neutral
+   (currentColor) marks pick up the muted text tone instead. */
 .portal-conn-picker__mark {
   flex: none;
   display: grid;
   place-items: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: var(--radius-sm, 0.375rem);
-  background: color-mix(in srgb, var(--c-conn-accent) 14%, transparent);
-  color: var(--c-conn-accent);
-  font-size: 0.875rem;
-  font-weight: 600;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--c-text-subtle);
 }
 
-/* One hue per category. Muted on purpose - these sit 60-odd to a page, and saturated marks would
-   turn the grid into confetti. */
-.portal-conn-picker__mark--storage {
-  background: color-mix(in srgb, var(--c-conn-storage) 16%, transparent);
-  color: var(--c-conn-storage);
-}
-
-.portal-conn-picker__mark--signing {
-  background: color-mix(in srgb, var(--c-conn-signing) 18%, transparent);
-  color: var(--c-conn-signing);
-}
-
-.portal-conn-picker__mark--security {
-  background: color-mix(in srgb, var(--c-conn-accent) 16%, transparent);
-  color: var(--c-conn-accent);
-}
-
-.portal-conn-picker__mark--notify {
-  background: color-mix(in srgb, var(--c-conn-notify) 18%, transparent);
-  color: var(--c-conn-notify);
-}
-
-.portal-conn-picker__mark--advanced {
-  background: color-mix(in srgb, var(--c-conn-neutral) 16%, transparent);
-  color: var(--c-text-muted);
+.portal-conn-picker__mark svg {
+  display: block;
 }
 
 .portal-conn-picker__card-text {
