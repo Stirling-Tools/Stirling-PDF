@@ -139,7 +139,6 @@ jobs:
           tags: |
             type=raw,value=${{ steps.versionNumber.outputs.versionNumber }},enable=${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master' }}
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/V2-master' }}
-            type=raw,value=alpha,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/testMain' }}
 
       - name: Build and push Unified Dockerfile (latest variant)
         id: build-push-latest
