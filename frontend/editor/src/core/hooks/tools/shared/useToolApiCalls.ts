@@ -1,6 +1,6 @@
 import { useCallback, useRef } from "react";
 import axios, { type CancelTokenSource } from "axios"; // Real axios for static methods (CancelToken, isCancel)
-import apiClient from "@app/services/apiClient"; // Our configured instance
+import { postWithNetworkRetry } from "@app/services/networkRetry";
 import {
   processResponse,
   ResponseHandler,
@@ -65,7 +65,7 @@ export const useToolApiCalls = <TParams = void>() => {
         try {
           const formData = config.buildFormData(params, file);
           console.debug("[processFiles] POST", { endpoint, name: file.name });
-          const response = await apiClient.post(endpoint, formData, {
+          const response = await postWithNetworkRetry(endpoint, formData, {
             responseType: "blob",
             cancelToken: cancelTokenRef.current?.token,
           });

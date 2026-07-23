@@ -49,37 +49,16 @@ export default function Landing() {
     session,
   ]);
 
-  // Periodically probe while backend isn't up so the screen can auto-advance when it comes online
-  useEffect(() => {
-    if (backendProbe.status === "up" || backendProbe.loginDisabled) {
-      return;
-    }
-    const tick = async () => {
-      const result = await backendProbe.probe();
-      if (result.status === "up") {
-        await refetch();
-        if (result.loginDisabled) {
-          navigate("/", { replace: true });
-        }
-      }
-    };
-    const intervalId = window.setInterval(() => {
-      void tick();
-    }, 5000);
-    return () => window.clearInterval(intervalId);
-  }, [
-    backendProbe.status,
-    backendProbe.loginDisabled,
-    backendProbe.probe,
-    navigate,
-    refetch,
-  ]);
-
+  // useBackendProbe auto-polls with backoff, so the screen advances on its own
+  // when the backend comes online; just refetch config once it's up.
   useEffect(() => {
     if (backendProbe.status === "up") {
       void refetch();
+      if (backendProbe.loginDisabled) {
+        navigate("/", { replace: true });
+      }
     }
-  }, [backendProbe.status, refetch]);
+  }, [backendProbe.status, backendProbe.loginDisabled, refetch, navigate]);
 
   console.log("[Landing] ════════════════════════════════════");
   console.log("[Landing] Render state:", {
@@ -123,9 +102,23 @@ export default function Landing() {
     return <HomePage />;
   }
 
-  // If backend is not up yet and user is not authenticated, show a branded status screen
+  // If backend is not up yet and user is not authenticated, show a branded status screen.
+  // A backend that is still booting shows a reassuring "starting up" state (the probe
+  // auto-refreshes); a genuinely unreachable backend shows the error with a Retry button.
   if (!session && backendProbe.status !== "up") {
-    const backendTitle = t("backendStartup.notFoundTitle", "Backend not found");
+    const isStarting = backendProbe.status === "starting";
+    const backendTitle = isStarting
+      ? t("backendStartup.startingTitle", "Starting up…")
+      : t("backendStartup.notFoundTitle", "Backend not found");
+    const message = isStarting
+      ? t(
+          "backendStartup.startingMessage",
+          "The backend is still starting up. This can take a moment on first launch — this screen will refresh automatically.",
+        )
+      : t(
+          "backendStartup.unreachable",
+          "The application cannot currently connect to the backend. Verify the backend status and network connectivity, then try again.",
+        );
     const handleRetry = async () => {
       const result = await backendProbe.probe();
       if (result.status === "up") {
@@ -147,19 +140,23 @@ export default function Landing() {
           }}
         >
           <p style={{ margin: "0 0 0.75rem 0", color: "var(--text-primary)" }}>
-            {t(
-              "backendStartup.unreachable",
-              "The application cannot currently connect to the backend. Verify the backend status and network connectivity, then try again.",
-            )}
+            {message}
           </p>
-          <Button
-            type="button"
-            onClick={handleRetry}
-            className="auth-cta-button px-4 py-[0.75rem] rounded-[0.625rem] text-base font-semibold mt-5 border-0 cursor-pointer"
-            style={{ width: "fit-content" }}
-          >
-            {t("backendStartup.retry", "Retry")}
-          </Button>
+          {isStarting ? (
+            <div
+              className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mt-4"
+              aria-hidden="true"
+            />
+          ) : (
+            <Button
+              type="button"
+              onClick={handleRetry}
+              className="auth-cta-button px-4 py-[0.75rem] rounded-[0.625rem] text-base font-semibold mt-5 border-0 cursor-pointer"
+              style={{ width: "fit-content" }}
+            >
+              {t("backendStartup.retry", "Retry")}
+            </Button>
+          )}
         </div>
       </AuthLayout>
     );

@@ -2016,6 +2016,8 @@ wait = "Please wait for the backend to finish launching and try again."
 [backendStartup]
 notFoundTitle = "Backend not found"
 retry = "Retry"
+startingMessage = "The backend is still starting up. This can take a moment on first launch — this screen will refresh automatically."
+startingTitle = "Starting up…"
 unreachable = "The application cannot currently connect to the backend. Verify the backend status and network connectivity, then try again."
 
 [billing]
