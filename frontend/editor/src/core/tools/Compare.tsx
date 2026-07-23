@@ -357,10 +357,10 @@ const Compare = (props: BaseToolProps) => {
             data-slot-state="filled"
             data-slot-filename={stub?.name}
             style={{
-              border: "1px solid var(--border-default)",
+              border: "1px solid var(--c-border)",
               borderRadius: "var(--radius-md)",
               padding: "0.75rem 1rem",
-              background: "var(--bg-surface)",
+              background: "var(--c-surface)",
               width: "100%",
               minHeight: "9rem",
               position: "relative",

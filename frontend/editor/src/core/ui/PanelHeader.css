@@ -18,7 +18,7 @@
   flex: 1;
   min-width: 0;
   padding: 0.4rem 0.75rem 0.4rem 0.4rem;
-  border: 1px solid var(--border-subtle, var(--mantine-color-default-border));
+  border: 1px solid var(--c-border-subtle, var(--mantine-color-default-border));
   border-radius: 9999px;
   background: var(--mantine-color-body);
   text-align: left;
@@ -125,7 +125,7 @@ button.sui-panelhdr__bar:hover {
   border-color: color-mix(
     in srgb,
     var(--mantine-color-blue-5) 60%,
-    var(--border-subtle, var(--mantine-color-default-border))
+    var(--c-border-subtle, var(--mantine-color-default-border))
   );
 }
 
@@ -133,7 +133,7 @@ button.sui-panelhdr__bar:hover {
    so it doesn't read as a clashing lighter card on the dark toolbar. */
 [data-mantine-color-scheme="dark"] .sui-panelhdr__bar {
   background: transparent;
-  border-color: var(--border-subtle, var(--mantine-color-default-border));
+  border-color: var(--c-border-subtle, var(--mantine-color-default-border));
 }
 
 [data-mantine-color-scheme="dark"] button.sui-panelhdr__bar:hover {
@@ -144,7 +144,7 @@ button.sui-panelhdr__bar:hover {
   border-color: color-mix(
     in srgb,
     var(--mantine-color-blue-4) 55%,
-    var(--border-subtle, var(--mantine-color-default-border))
+    var(--c-border-subtle, var(--mantine-color-default-border))
   );
 }
 

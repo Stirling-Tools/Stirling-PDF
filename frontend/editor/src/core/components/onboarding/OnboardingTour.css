@@ -13,7 +13,7 @@
   box-shadow:
     0 0 0 2px var(--mantine-primary-color-filled),
     0 0 15px var(--mantine-primary-color-filled),
-    inset 0 0 15px rgba(59, 130, 246, 0.1);
+    inset 0 0 15px color-mix(in srgb, var(--c-primary) 10%, transparent);
   border-radius: 8px;
 }
 
@@ -23,13 +23,13 @@
     box-shadow:
       0 0 0 3px var(--mantine-primary-color-filled),
       0 0 20px var(--mantine-primary-color-filled),
-      inset 0 0 20px rgba(59, 130, 246, 0.1);
+      inset 0 0 20px color-mix(in srgb, var(--c-primary) 10%, transparent);
   }
   50% {
     box-shadow:
       0 0 0 3px var(--mantine-primary-color-filled),
       0 0 30px var(--mantine-primary-color-filled),
-      inset 0 0 30px rgba(59, 130, 246, 0.2);
+      inset 0 0 30px color-mix(in srgb, var(--c-primary) 20%, transparent);
   }
 }
 

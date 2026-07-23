@@ -67,8 +67,8 @@ export function FlowSankey({ sources, outcomes, policies }: FlowSankeyProps) {
   const y0R = padY + (H - (midH + (outcomes.length - 1) * gap)) / 2;
 
   const outFill = (key: FlowOutcomeKey) => OUTCOME_FILL[key];
-  const srcFill = "var(--color-blue)";
-  const waistFill = "var(--color-text-4)";
+  const srcFill = "var(--c-primary)";
+  const waistFill = "var(--c-text-subtle)";
 
   const ribbon = (
     x0: number,
