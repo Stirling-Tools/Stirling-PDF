@@ -1310,7 +1310,7 @@ public class ApplicationProperties {
 
     @Data
     public static class Metrics {
-        private boolean enabled = true;
+        private boolean enabled = false;
     }
 
     @Data

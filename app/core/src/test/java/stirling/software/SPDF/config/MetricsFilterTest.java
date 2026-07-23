@@ -1,5 +1,6 @@
 package stirling.software.SPDF.config;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -15,7 +16,6 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 
 class MetricsFilterTest {
 
@@ -28,10 +28,44 @@ class MetricsFilterTest {
     @BeforeEach
     void setUp() {
         registry = new SimpleMeterRegistry();
+        MetricsConfig metricsConfig = new MetricsConfig();
+        registry.config().meterFilter(metricsConfig.meterFilter());
+        registry.config().meterFilter(metricsConfig.uriCardinalityLimit());
         filter = new MetricsFilter(registry);
         request = mock(HttpServletRequest.class);
         response = mock(HttpServletResponse.class);
         chain = mock(FilterChain.class);
+    }
+
+    @Test
+    @DisplayName("bounds counters created from unique URIs")
+    void boundsUniqueUriCounters() {
+        for (int index = 0; index <= MetricsConfig.MAX_URI_TAG_VALUES; index++) {
+            registry.counter(
+                            "http.requests",
+                            "method",
+                            "POST",
+                            "uri",
+                            "/api/v1/general/tool-" + index)
+                    .increment();
+        }
+
+        assertEquals(MetricsConfig.MAX_URI_TAG_VALUES, registry.getMeters().size());
+    }
+
+    @Test
+    @DisplayName("does not multiply counters across sessions and URIs")
+    void boundsSessionAndUriCombinations() throws Exception {
+        when(request.getContextPath()).thenReturn("");
+        when(request.getMethod()).thenReturn("POST");
+
+        for (int index = 0; index <= MetricsConfig.MAX_URI_TAG_VALUES; index++) {
+            when(request.getRequestURI()).thenReturn("/api/v1/general/tool-" + index);
+            filter.doFilterInternal(request, response, chain);
+        }
+
+        assertEquals(MetricsConfig.MAX_URI_TAG_VALUES, registry.getMeters().size());
+        verify(request, never()).getSession(false);
     }
 
     @Nested
@@ -39,31 +73,22 @@ class MetricsFilterTest {
     class Trackable {
 
         @Test
-        @DisplayName("increments a counter for a trackable URI with session")
-        void countsWithSession() throws Exception {
-            HttpSession session = mock(HttpSession.class);
-            when(session.getId()).thenReturn("sess-1");
+        @DisplayName("increments a counter for a trackable URI")
+        void countsTrackableRequest() throws Exception {
             when(request.getRequestURI()).thenReturn("/api/v1/general/rotate-pdf");
             when(request.getContextPath()).thenReturn("");
             when(request.getMethod()).thenReturn("POST");
-            when(request.getSession(false)).thenReturn(session);
 
             filter.doFilterInternal(request, response, chain);
 
             verify(chain).doFilter(request, response);
-        }
-
-        @Test
-        @DisplayName("uses no-session tag when session is absent")
-        void countsWithoutSession() throws Exception {
-            when(request.getRequestURI()).thenReturn("/api/v1/general/merge-pdfs");
-            when(request.getContextPath()).thenReturn("");
-            when(request.getMethod()).thenReturn("POST");
-            when(request.getSession(false)).thenReturn(null);
-
-            filter.doFilterInternal(request, response, chain);
-
-            verify(chain).doFilter(request, response);
+            assertEquals(
+                    1.0,
+                    registry.get("http.requests")
+                            .tags("method", "POST", "uri", "/api/v1/general/rotate-pdf")
+                            .counter()
+                            .count());
+            verify(request, never()).getSession(false);
         }
     }
 

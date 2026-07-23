@@ -316,7 +316,7 @@ endpoints:
   groupsToRemove: [] # list groups to disable (e.g. ['LibreOffice', 'DeveloperTools', 'DeveloperDocs', 'Automation'])
 
 metrics:
-  enabled: true # 'true' to enable Info APIs (`/api/*`) endpoints, 'false' to disable
+  enabled: false # 'true' to enable Info APIs (`/api/*`) endpoints, 'false' to disable
 
 # Automatically Generated Settings (Do Not Edit Directly)
 AutomaticallyGenerated:

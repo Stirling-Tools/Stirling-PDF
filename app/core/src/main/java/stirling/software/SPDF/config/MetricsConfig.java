@@ -10,6 +10,8 @@ import io.micrometer.core.instrument.config.MeterFilterReply;
 @Configuration
 public class MetricsConfig {
 
+    static final int MAX_URI_TAG_VALUES = 500;
+
     @Bean
     public MeterFilter meterFilter() {
         return new MeterFilter() {
@@ -21,5 +23,11 @@ public class MetricsConfig {
                 return MeterFilterReply.DENY;
             }
         };
+    }
+
+    @Bean
+    public MeterFilter uriCardinalityLimit() {
+        return MeterFilter.maximumAllowableTags(
+                "http.requests", "uri", MAX_URI_TAG_VALUES, MeterFilter.deny());
     }
 }
