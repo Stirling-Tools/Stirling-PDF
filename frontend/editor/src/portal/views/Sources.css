@@ -526,6 +526,71 @@
   gap: 0.75rem;
 }
 
+/* Back to the grid from the form. Sits above the fields, where the type dropdown used to be. */
+.portal-sources__connection-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--c-text-muted);
+}
+
+.portal-sources__connection-back:hover {
+  color: var(--text-default, inherit);
+}
+
+/* The "request an integration" / "advanced" affordances, set below the form so presets read as
+   the primary path and these as the way out of it. */
+.portal-sources__connection-secondary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+.portal-sources__connection-link {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--c-conn-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.portal-sources__connection-link:hover {
+  opacity: 0.8;
+}
+
+/* Free-text fields (result-host list, body template) that outgrow a single-line input. */
+.portal-sources__connection-textarea {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm, 0.375rem);
+  background: var(--surface-input, transparent);
+  color: inherit;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.portal-sources__connection-textarea:focus-visible {
+  outline: 2px solid var(--c-conn-accent);
+  outline-offset: -1px;
+}
+
 .portal-sources__connections {
   margin-top: 1.5rem;
 }
@@ -588,4 +653,183 @@
   display: inline-flex;
   gap: 0.25rem;
   justify-content: flex-end;
+}
+
+/* ---- Integration picker ---------------------------------------------------------------------
+   A searchable grid of what we can connect to. Sized so a full category is visible without
+   scrolling on a laptop, and so the search box is the first thing focus lands on. */
+.portal-conn-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  /* Bounded rather than free-growing: the modal should not become the page. */
+  max-height: min(60vh, 32rem);
+  overflow-y: auto;
+}
+
+.portal-conn-picker__search {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm, 0.375rem);
+  /* Real theme token with a transparent fallback so it never falls back to opaque white in dark;
+     the border alone is enough to read as an input. */
+  background: var(--color-bg-subtle, transparent);
+}
+
+.portal-conn-picker__search-icon {
+  flex: none;
+  font-size: 1.125rem;
+  color: var(--c-text-muted);
+}
+
+.portal-conn-picker__search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  outline: none;
+  font: inherit;
+  color: inherit;
+}
+
+.portal-conn-picker__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.portal-conn-picker__section-title {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--c-text-muted);
+}
+
+.portal-conn-picker__section-desc {
+  margin: 0 0 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--c-text-muted);
+}
+
+.portal-conn-picker__grid {
+  display: grid;
+  /* auto-fill so the grid reflows to the modal rather than to a fixed column count. */
+  grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
+  gap: 0.5rem;
+}
+
+.portal-conn-picker__card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.625rem 0.75rem;
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-sm, 0.375rem);
+  background: var(--surface-subtle, transparent);
+  font: inherit;
+  color: inherit;
+}
+
+.portal-conn-picker__card:hover {
+  border-color: var(--c-conn-accent);
+  background: color-mix(in srgb, var(--c-conn-neutral) 6%, transparent);
+}
+
+/* The custom-API card is an escape hatch, not a vendor: dashed, so it reads as "something else". */
+.portal-conn-picker__card--advanced {
+  border-style: dashed;
+}
+
+.portal-conn-picker__mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-sm, 0.375rem);
+  background: color-mix(in srgb, var(--c-conn-accent) 14%, transparent);
+  color: var(--c-conn-accent);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* One hue per category. Muted on purpose - these sit 60-odd to a page, and saturated marks would
+   turn the grid into confetti. */
+.portal-conn-picker__mark--storage {
+  background: color-mix(in srgb, var(--c-conn-storage) 16%, transparent);
+  color: var(--c-conn-storage);
+}
+
+.portal-conn-picker__mark--signing {
+  background: color-mix(in srgb, var(--c-conn-signing) 18%, transparent);
+  color: var(--c-conn-signing);
+}
+
+.portal-conn-picker__mark--security {
+  background: color-mix(in srgb, var(--c-conn-accent) 16%, transparent);
+  color: var(--c-conn-accent);
+}
+
+.portal-conn-picker__mark--notify {
+  background: color-mix(in srgb, var(--c-conn-notify) 18%, transparent);
+  color: var(--c-conn-notify);
+}
+
+.portal-conn-picker__mark--advanced {
+  background: color-mix(in srgb, var(--c-conn-neutral) 16%, transparent);
+  color: var(--c-text-muted);
+}
+
+.portal-conn-picker__card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.portal-conn-picker__card-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.portal-conn-picker__card-desc {
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--c-text-muted);
+  /* Two lines keeps every card the same height without truncating most descriptions. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.portal-conn-picker__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
+.portal-conn-picker__empty-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.portal-conn-picker__empty-body {
+  margin: 0 0 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--c-text-muted);
 }
