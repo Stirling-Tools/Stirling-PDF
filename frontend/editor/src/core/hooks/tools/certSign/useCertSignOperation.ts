@@ -62,11 +62,27 @@ const withSignatureAppearance = (
 ): CertSignApiParams => {
   if (parameters.showSignature) {
     apiParams.showSignature = true;
-    apiParams.reason = parameters.reason;
-    apiParams.location = parameters.location;
-    apiParams.name = parameters.name;
-    apiParams.pageNumber = parameters.pageNumber;
+    // Always send strings (never omit) — a missing reason binds as null on the
+    // server and PDFBox showText(null) NPEs, which used to return an empty body
+    // that the desktop HTTP client surfaces as a vague "Network Error".
+    apiParams.reason = parameters.reason ?? "";
+    apiParams.location = parameters.location ?? "";
+    apiParams.name = parameters.name ?? "";
     apiParams.showLogo = parameters.showLogo;
+
+    // Custom placement: send all four signatureRect* fractions together (all-or-none
+    // on the backend) and derive pageNumber from the placed box.
+    const rect = parameters.certAppearanceRect;
+    if (rect) {
+      apiParams.pageNumber = rect.pageIndex + 1;
+      apiParams.signatureRectX = rect.x;
+      apiParams.signatureRectY = rect.y;
+      apiParams.signatureRectWidth = rect.width;
+      apiParams.signatureRectHeight = rect.height;
+    } else {
+      // Legacy path: page only → backend uses the default corner 200×50 widget.
+      apiParams.pageNumber = parameters.pageNumber;
+    }
   }
   return apiParams;
 };
@@ -121,6 +137,28 @@ export const certSignFromApiParams = (
     result.pageNumber = apiParams.pageNumber;
   }
   if (apiParams.showLogo !== undefined) result.showLogo = apiParams.showLogo;
+
+  // Restore placement only when all four rect fields are present (backend contract).
+  const {
+    signatureRectX,
+    signatureRectY,
+    signatureRectWidth,
+    signatureRectHeight,
+  } = apiParams;
+  if (
+    signatureRectX != null &&
+    signatureRectY != null &&
+    signatureRectWidth != null &&
+    signatureRectHeight != null
+  ) {
+    result.certAppearanceRect = {
+      pageIndex: Math.max(0, (apiParams.pageNumber ?? 1) - 1),
+      x: signatureRectX,
+      y: signatureRectY,
+      width: signatureRectWidth,
+      height: signatureRectHeight,
+    };
+  }
 
   return result;
 };

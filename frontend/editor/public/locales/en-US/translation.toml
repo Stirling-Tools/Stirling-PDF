@@ -2444,6 +2444,12 @@ visible = "Visible"
 [certSign.appearance.options]
 title = "Signature Details"
 
+[certSign.appearance.placement]
+clear = "Clear placement (use page number only)"
+hint = "Click on the PDF to place the visible signature box. After placing, drag or resize it, or use the × on the box to place again. Without a box, only the page number below is used (default corner position)."
+pageOnly = "Used when no signature box is placed — places the default widget at the page corner."
+placed = "Signature box placed on page {{page}}. Drag or resize it on the PDF, or clear / delete it (×) to place again."
+
 [certSign.appearance.tooltip.header]
 title = "About Signature Appearance"
 
@@ -2457,7 +2463,7 @@ title = "Invisible Signatures"
 [certSign.appearance.tooltip.visible]
 bullet1 = "Shows signer name and date on the document"
 bullet2 = "Can include reason and location for signing"
-bullet3 = "Choose which page to place the signature"
+bullet3 = "Click on the PDF to place and resize the signature box"
 bullet4 = "Optional logo can be included"
 text = "Shows a signature block on the PDF with your name, date, and optional details. Useful when you want readers to clearly see the document is signed."
 title = "Visible Signatures"

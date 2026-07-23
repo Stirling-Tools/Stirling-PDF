@@ -3,6 +3,7 @@ package stirling.software.SPDF.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 
@@ -63,7 +64,11 @@ class PdfSigningServiceImplTest {
                                                 eq("Alice"),
                                                 eq("London"),
                                                 eq("approval"),
-                                                eq(false)))
+                                                eq(false),
+                                                isNull(),
+                                                isNull(),
+                                                isNull(),
+                                                isNull()))
                         .thenAnswer(
                                 inv -> {
                                     ByteArrayOutputStream out = inv.getArgument(2);
@@ -81,7 +86,11 @@ class PdfSigningServiceImplTest {
                                 "Alice",
                                 "London",
                                 "approval",
-                                false);
+                                false,
+                                null,
+                                null,
+                                null,
+                                null);
 
                 assertThat(new String(result)).isEqualTo("signed");
 
@@ -97,7 +106,11 @@ class PdfSigningServiceImplTest {
                                         eq("Alice"),
                                         eq("London"),
                                         eq("approval"),
-                                        eq(false)));
+                                        eq(false),
+                                        isNull(),
+                                        isNull(),
+                                        isNull(),
+                                        isNull()));
 
                 // Exercise the private ByteArrayMultipartFile wrapper passed to sign().
                 MultipartFile wrapper = fileCaptor.getValue();
@@ -138,7 +151,11 @@ class PdfSigningServiceImplTest {
                                                 any(),
                                                 any(),
                                                 any(),
-                                                org.mockito.ArgumentMatchers.anyBoolean()))
+                                                org.mockito.ArgumentMatchers.anyBoolean(),
+                                                isNull(),
+                                                isNull(),
+                                                isNull(),
+                                                isNull()))
                         .thenAnswer(inv -> null);
 
                 service.signWithKeystore(
@@ -150,7 +167,11 @@ class PdfSigningServiceImplTest {
                         null,
                         null,
                         null,
-                        false);
+                        false,
+                        null,
+                        null,
+                        null,
+                        null);
 
                 signer.verify(
                         () ->
@@ -164,7 +185,11 @@ class PdfSigningServiceImplTest {
                                         any(),
                                         any(),
                                         any(),
-                                        org.mockito.ArgumentMatchers.anyBoolean()));
+                                        org.mockito.ArgumentMatchers.anyBoolean(),
+                                        isNull(),
+                                        isNull(),
+                                        isNull(),
+                                        isNull()));
                 assertThat(fileCaptor.getValue().isEmpty()).isTrue();
                 assertThat(fileCaptor.getValue().getSize()).isZero();
             }

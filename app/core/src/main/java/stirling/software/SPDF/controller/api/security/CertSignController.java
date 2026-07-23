@@ -9,6 +9,7 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
@@ -35,7 +36,6 @@ import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureOptions;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
-import org.apache.pdfbox.util.Matrix;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -135,7 +135,11 @@ public class CertSignController {
             String name,
             String location,
             String reason,
-            Boolean showLogo) {
+            Boolean showLogo,
+            Double signatureRectX,
+            Double signatureRectY,
+            Double signatureRectWidth,
+            Double signatureRectHeight) {
         try (PDDocument doc = pdfDocumentFactory.load(input)) {
             PDSignature signature = new PDSignature();
             signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
@@ -146,8 +150,23 @@ public class CertSignController {
             signature.setSignDate(Calendar.getInstance()); // PDFBox requires Calendar
             if (Boolean.TRUE.equals(showSignature)) {
                 try (SignatureOptions signatureOptions = new SignatureOptions()) {
+                    if (pageNumber == null) {
+                        throw ExceptionUtils.createIllegalArgumentException(
+                                "error.invalidArgument",
+                                "Invalid argument: {0}",
+                                "pageNumber is required when showSignature is true");
+                    }
+                    PDPage page = doc.getPage(pageNumber);
+                    PDRectangle widgetRect =
+                            resolveVisibleSignatureRectangle(
+                                    page,
+                                    signatureRectX,
+                                    signatureRectY,
+                                    signatureRectWidth,
+                                    signatureRectHeight);
                     signatureOptions.setVisualSignature(
-                            instance.createVisibleSignature(doc, signature, pageNumber, showLogo));
+                            instance.createVisibleSignature(
+                                    doc, signature, pageNumber, showLogo, widgetRect));
                     signatureOptions.setPage(pageNumber);
 
                     doc.addSignature(signature, instance, signatureOptions);
@@ -157,9 +176,60 @@ public class CertSignController {
                 doc.addSignature(signature, instance);
                 doc.saveIncremental(output);
             }
+        } catch (RuntimeException e) {
+            ExceptionUtils.logException("PDF signing", e);
+            throw e;
         } catch (Exception e) {
             ExceptionUtils.logException("PDF signing", e);
+            throw new RuntimeException("PDF signing failed: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * Builds the signature widget rectangle in PDF user space (bottom-left origin), or returns the
+     * legacy default (200×50 pt at the page origin) when rect fractions are not provided.
+     *
+     * <p>When provided, x/y/width/height are fractions of the page media box with a top-left origin
+     * for x/y, matching wet-signature metadata in this project. All four must be set together;
+     * partial input is rejected.
+     */
+    static PDRectangle resolveVisibleSignatureRectangle(
+            PDPage page, Double fracX, Double fracY, Double fracW, Double fracH) {
+        int setCount = 0;
+        if (fracX != null) setCount++;
+        if (fracY != null) setCount++;
+        if (fracW != null) setCount++;
+        if (fracH != null) setCount++;
+        if (setCount == 0) {
+            return new PDRectangle(0, 0, 200, 50);
+        }
+        if (setCount != 4) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.invalidArgument",
+                    "Invalid argument: {0}",
+                    "signature rectangle: all of signatureRectX, signatureRectY,"
+                            + " signatureRectWidth, signatureRectHeight must be provided together");
+        }
+        float pageWidth = page.getMediaBox().getWidth();
+        float pageHeight = page.getMediaBox().getHeight();
+        float w = (float) (clampSizeFraction(fracW) * pageWidth);
+        float h = (float) (clampSizeFraction(fracH) * pageHeight);
+        // Clamp so the widget stays fully on-page (drag can push fractions past the edge).
+        float llx = (float) (clampFraction(fracX) * pageWidth);
+        float yTop = (float) (clampFraction(fracY) * pageHeight);
+        llx = Math.max(0f, Math.min(llx, pageWidth - w));
+        float lly = pageHeight - yTop - h;
+        lly = Math.max(0f, Math.min(lly, pageHeight - h));
+        // PDFBox PDRectangle is (llx, lly, width, height) — not upper-right corners.
+        return new PDRectangle(llx, lly, w, h);
+    }
+
+    private static double clampFraction(Double v) {
+        return Math.max(0.0, Math.min(1.0, v));
+    }
+
+    private static double clampSizeFraction(Double v) {
+        return Math.max(0.01, Math.min(1.0, v));
     }
 
     @AutoJobPostMapping(
@@ -193,6 +263,10 @@ public class CertSignController {
         // Convert 1-indexed page number (user input) to 0-indexed page number (API requirement)
         Integer pageNumber = request.getPageNumber() != null ? (request.getPageNumber() - 1) : null;
         Boolean showLogo = request.getShowLogo();
+        Double signatureRectX = request.getSignatureRectX();
+        Double signatureRectY = request.getSignatureRectY();
+        Double signatureRectWidth = request.getSignatureRectWidth();
+        Double signatureRectHeight = request.getSignatureRectHeight();
 
         if (StringUtils.isBlank(certType)) {
             throw ExceptionUtils.createIllegalArgumentException(
@@ -301,7 +375,11 @@ public class CertSignController {
                     name,
                     location,
                     reason,
-                    showLogo);
+                    showLogo,
+                    signatureRectX,
+                    signatureRectY,
+                    signatureRectWidth,
+                    signatureRectHeight);
         } catch (IOException e) {
             signedOut.close();
             throw e;
@@ -395,7 +473,11 @@ public class CertSignController {
         }
 
         public InputStream createVisibleSignature(
-                PDDocument srcDoc, PDSignature signature, Integer pageNumber, Boolean showLogo)
+                PDDocument srcDoc,
+                PDSignature signature,
+                Integer pageNumber,
+                Boolean showLogo,
+                PDRectangle widgetRect)
                 throws IOException {
             // modified from org.apache.pdfbox.examples.signature.CreateVisibleSignature2
             try (PDDocument doc = new PDDocument()) {
@@ -411,7 +493,7 @@ public class CertSignController {
                 acroForm.getCOSObject().setDirect(true);
                 acroFormFields.add(signatureField);
 
-                PDRectangle rect = new PDRectangle(0, 0, 200, 50);
+                PDRectangle rect = widgetRect;
 
                 widget.setRectangle(rect);
 
@@ -421,8 +503,9 @@ public class CertSignController {
                 PDResources res = new PDResources();
                 form.setResources(res);
                 form.setFormType(1);
-                PDRectangle bbox = new PDRectangle(rect.getWidth(), rect.getHeight());
-                float height = bbox.getHeight();
+                float boxW = rect.getWidth();
+                float boxH = rect.getHeight();
+                PDRectangle bbox = new PDRectangle(boxW, boxH);
                 form.setBBox(bbox);
                 PDFont font = new PDType1Font(FontName.TIMES_BOLD);
 
@@ -433,45 +516,66 @@ public class CertSignController {
                 appearance.setNormalAppearance(appearanceStream);
                 widget.setAppearance(appearance);
 
+                // Draw directly in widget user space (no anisotropic scale). Non-uniform
+                // scaleX/scaleY made text look horizontally squeezed when the placed box
+                // aspect ratio differed from the old 200×50 logical design.
                 try (PDPageContentStream cs = new PDPageContentStream(doc, appearanceStream)) {
+                    float pad = Math.max(2f, Math.min(boxW, boxH) * 0.06f);
+                    float textMaxW = boxW - 2f * pad;
+                    float textMaxH = boxH - 2f * pad;
+
                     if (Boolean.TRUE.equals(showLogo)) {
                         cs.saveGraphicsState();
                         PDExtendedGraphicsState extState = new PDExtendedGraphicsState();
                         extState.setBlendMode(BlendMode.MULTIPLY);
-                        extState.setNonStrokingAlphaConstant(0.5f);
+                        extState.setNonStrokingAlphaConstant(0.45f);
                         cs.setGraphicsStateParameters(extState);
-                        cs.transform(Matrix.getScaleInstance(0.08f, 0.08f));
                         PDImageXObject img =
                                 PDImageXObject.createFromFileByExtension(logoFile, doc);
-                        cs.drawImage(img, 100, 0);
+                        // Uniform logo scale — occupy ~28% of the shorter box edge.
+                        float logoTarget = Math.min(boxW, boxH) * 0.28f;
+                        float logoScale = logoTarget / Math.max(img.getWidth(), img.getHeight());
+                        float logoW = img.getWidth() * logoScale;
+                        float logoH = img.getHeight() * logoScale;
+                        cs.drawImage(img, boxW - pad - logoW, pad, logoW, logoH);
                         cs.restoreGraphicsState();
                     }
-
-                    // show text
-                    float fontSize = 10;
-                    float leading = fontSize * 1.5f;
-                    cs.beginText();
-                    cs.setFont(font, fontSize);
-                    cs.setNonStrokingColor(Color.black);
-                    cs.newLineAtOffset(fontSize, height - leading);
-                    cs.setLeading(leading);
 
                     X509Certificate cert = (X509Certificate) getCertificateChain()[0];
 
                     // https://stackoverflow.com/questions/2914521/
                     X500Name x500Name = new X500Name(cert.getSubjectX500Principal().getName());
-                    RDN cn = x500Name.getRDNs(BCStyle.CN)[0];
-                    String name = IETFUtils.valueToString(cn.getFirst().getValue());
+                    RDN[] cns = x500Name.getRDNs(BCStyle.CN);
+                    String certificateCn =
+                            cns.length > 0
+                                    ? IETFUtils.valueToString(cns[0].getFirst().getValue())
+                                    : null;
+                    // Prefer the form "Name" field; fall back to the certificate CN.
+                    String signerName =
+                            resolveDisplaySignerName(signature.getName(), certificateCn);
 
                     String date = signature.getSignDate().getTime().toString();
-                    String reason = signature.getReason();
+                    List<String> lines =
+                            buildVisibleAppearanceLines(
+                                    signerName,
+                                    date,
+                                    signature.getReason(),
+                                    signature.getLocation());
 
-                    cs.showText("Signed by " + name);
-                    cs.newLine();
-                    cs.showText(date);
-                    cs.newLine();
-                    cs.showText(reason);
+                    float fontSize = fitAppearanceFontSize(lines, font, textMaxW, textMaxH);
+                    float leading = fontSize * APPEARANCE_LEADING_FACTOR;
 
+                    cs.beginText();
+                    cs.setFont(font, fontSize);
+                    cs.setNonStrokingColor(Color.black);
+                    cs.newLineAtOffset(pad, boxH - pad - fontSize);
+                    cs.setLeading(leading);
+                    for (int i = 0; i < lines.size(); i++) {
+                        if (i > 0) {
+                            cs.newLine();
+                        }
+                        cs.showText(truncateForAppearance(lines.get(i), font, fontSize, textMaxW));
+                    }
                     cs.endText();
                 }
 
@@ -480,5 +584,98 @@ public class CertSignController {
                 return new ByteArrayInputStream(baos.toByteArray());
             }
         }
+
+        /**
+         * Trim text so it fits the available width in the appearance stream. Keeps glyphs from
+         * overflowing the widget when the placed box is narrow. Used only after font size has
+         * already been shrunk to the minimum.
+         */
+        private static String truncateForAppearance(
+                String text, PDFont font, float fontSize, float maxWidth) throws IOException {
+            if (text == null || text.isEmpty() || maxWidth <= 0) {
+                return "";
+            }
+            if (font.getStringWidth(text) / 1000f * fontSize <= maxWidth) {
+                return text;
+            }
+            final String ellipsis = "...";
+            String truncated = text;
+            while (truncated.length() > 1) {
+                truncated = truncated.substring(0, truncated.length() - 1);
+                String candidate = truncated + ellipsis;
+                if (font.getStringWidth(candidate) / 1000f * fontSize <= maxWidth) {
+                    return candidate;
+                }
+            }
+            return ellipsis;
+        }
+    }
+
+    private static final float MIN_APPEARANCE_FONT = 6f;
+    private static final float MAX_APPEARANCE_FONT = 14f;
+    private static final float APPEARANCE_LEADING_FACTOR = 1.25f;
+
+    /** Prefer the form Name field when present; otherwise use the certificate CN. */
+    static String resolveDisplaySignerName(String formName, String certificateCn) {
+        if (formName != null && !formName.isBlank()) {
+            return formName.trim();
+        }
+        if (certificateCn != null && !certificateCn.isBlank()) {
+            return certificateCn.trim();
+        }
+        return "Unknown";
+    }
+
+    /**
+     * Visible appearance lines: Signed by, date, then optional reason and location from the form.
+     */
+    static List<String> buildVisibleAppearanceLines(
+            String displayName, String date, String reason, String location) {
+        List<String> lines = new ArrayList<>(4);
+        String name = displayName == null || displayName.isBlank() ? "Unknown" : displayName.trim();
+        lines.add("Signed by " + name);
+        if (date != null && !date.isBlank()) {
+            lines.add(date);
+        }
+        if (reason != null && !reason.isBlank()) {
+            lines.add(reason.trim());
+        }
+        if (location != null && !location.isBlank()) {
+            lines.add(location.trim());
+        }
+        return lines;
+    }
+
+    /**
+     * Shrink font so all lines fit in width and height, down to {@link #MIN_APPEARANCE_FONT}.
+     * Truncation is applied separately only when still too wide at the minimum size.
+     */
+    static float fitAppearanceFontSize(
+            List<String> lines, PDFont font, float maxWidth, float maxHeight) throws IOException {
+        if (lines == null || lines.isEmpty() || maxWidth <= 0f || maxHeight <= 0f) {
+            return MIN_APPEARANCE_FONT;
+        }
+        float fromHeight = maxHeight / (lines.size() * APPEARANCE_LEADING_FACTOR);
+        float fontSize = Math.min(MAX_APPEARANCE_FONT, Math.max(MIN_APPEARANCE_FONT, fromHeight));
+        while (fontSize > MIN_APPEARANCE_FONT) {
+            float leading = fontSize * APPEARANCE_LEADING_FACTOR;
+            float contentH = fontSize + (lines.size() - 1) * leading;
+            if (contentH > maxHeight) {
+                fontSize -= 0.5f;
+                continue;
+            }
+            boolean allFit = true;
+            for (String line : lines) {
+                if (font.getStringWidth(line) / 1000f * fontSize > maxWidth) {
+                    allFit = false;
+                    break;
+                }
+            }
+            if (allFit) {
+                break;
+            }
+            fontSize -= 0.5f;
+        }
+        return Math.max(MIN_APPEARANCE_FONT, fontSize);
     }
 }

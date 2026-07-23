@@ -60,7 +60,16 @@ export function extractAxiosErrorMessage(error: any): {
       if (!data) return typeof raw === "string" ? raw : "";
       const ids = extractIds();
       if (ids && ids.length > 0) return `Failed files: ${ids.join(", ")}`;
-      if (data?.message) return data.message as string;
+      // Spring problem+json uses `detail`; some handlers use `message` / `error`.
+      if (typeof data?.detail === "string" && data.detail.trim()) {
+        return data.detail as string;
+      }
+      if (typeof data?.message === "string" && data.message.trim()) {
+        return data.message as string;
+      }
+      if (typeof data?.error === "string" && data.error.trim()) {
+        return data.error as string;
+      }
       if (typeof raw === "string") return raw;
       try {
         return JSON.stringify(data);
