@@ -39,6 +39,7 @@ export const VALID_NAV_KEYS = [
   "adminAiLimits",
   "help",
   "legal",
+  "privacy",
   "backendThirdPartyLicenses",
   "frontendThirdPartyLicenses",
   "payg",
