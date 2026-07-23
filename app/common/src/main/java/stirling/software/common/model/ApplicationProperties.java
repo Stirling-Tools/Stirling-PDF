@@ -305,6 +305,102 @@ public class ApplicationProperties {
          * explicitly requests it via {@code AiEngineClient.postWithTimeout}.
          */
         private int longRunningTimeoutSeconds = 600;
+
+        /** Timeout (seconds) for the SSE stream held open by long-running orchestrator runs. */
+        private int streamTimeoutSeconds = 1800;
+
+        /**
+         * Whether the processor pushes settings-derived AI config to the engine on startup/save.
+         * Pin false for env-driven deployments (SaaS) to keep the engine env-controlled.
+         */
+        private boolean pushConfigToEngine = true;
+
+        /** Model + provider selection, forwarded to the engine per-request. */
+        private Models models = new Models();
+
+        /** Retrieval-augmented-generation (RAG) knobs, forwarded to the engine per-request. */
+        private Rag rag = new Rag();
+
+        /** Request size / cost guardrails. */
+        private Limits limits = new Limits();
+
+        /** Per-capability on/off switches so an admin can disable individual AI tools. */
+        private Features features = new Features();
+
+        @Data
+        public static class Models {
+            /** Provider driving the model strings: 'anthropic', 'openai', 'ollama', or 'custom'. */
+            private String provider = "anthropic";
+
+            /** High-quality tier model name (without provider prefix), e.g. 'claude-haiku-4-5'. */
+            private String smartModel = "claude-haiku-4-5";
+
+            /** Cheap/fast tier model name (without provider prefix). */
+            private String fastModel = "claude-haiku-4-5";
+
+            private int smartMaxTokens = 8192;
+            private int fastMaxTokens = 2048;
+
+            /**
+             * API key for the selected provider (secret; masked). Empty means the engine uses its
+             * own env credential (e.g. ANTHROPIC_API_KEY).
+             */
+            private String apiKey = "";
+
+            /**
+             * OpenAI-compatible base URL for 'ollama' / 'custom' providers (e.g.
+             * http://ollama:11434/v1). Ignored for anthropic/openai. SSRF-sensitive - admin only.
+             */
+            private String baseUrl = "";
+        }
+
+        @Data
+        public static class Rag {
+            /**
+             * Embedding provider: 'voyageai', 'openai', 'ollama', or 'custom' (OpenAI-compatible).
+             */
+            private String embeddingProvider = "voyageai";
+
+            /** Embedding model name (without provider prefix), e.g. 'voyage-4'. */
+            private String embeddingModel = "voyage-4";
+
+            /**
+             * Secret API key for the embedding provider; masked + env-overridable like
+             * models.apiKey.
+             */
+            private String embeddingApiKey = "";
+
+            /**
+             * OpenAI-compatible base URL for 'ollama' / 'custom' embedding providers (e.g.
+             * http://ollama:11434/v1). Ignored for voyageai/openai. SSRF-sensitive - admin only.
+             */
+            private String embeddingBaseUrl = "";
+
+            /** How many chunks retrieval returns per search. */
+            private int topK = 20;
+
+            /** Per-run cap on knowledge-search tool calls before the agent must answer. */
+            private int maxSearches = 5;
+        }
+
+        @Data
+        public static class Limits {
+            private int maxPages = 200;
+            private int maxCharacters = 200000;
+
+            /** Process-wide cap on concurrent model API calls (engine restart to apply). */
+            private int modelMaxConcurrency = 32;
+        }
+
+        @Data
+        public static class Features {
+            private boolean chat = true;
+            private boolean documentQuestions = true;
+            private boolean createPdf = true;
+            private boolean mathAuditor = true;
+            private boolean pdfComment = true;
+            private boolean classify = true;
+        }
     }
 
     /**

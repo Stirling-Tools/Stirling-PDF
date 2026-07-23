@@ -13,8 +13,7 @@ import {
 } from "@portal/api/editorDeploy";
 import type { Tier } from "@portal/contexts/TierContext";
 
-/** Base query: fleet processing stats (GET /api/v1/usage/fleet-stats). Shared
- *  by Home's status strip and the Usage view's free-editors card. */
+/** Base query: fleet processing stats (GET /api/v1/usage/fleet-stats). */
 export function useFleetStats(): AsyncState<FleetStats> {
   return toAsyncState(
     useQuery({
@@ -24,8 +23,7 @@ export function useFleetStats(): AsyncState<FleetStats> {
   );
 }
 
-/** Base query: recent audit-log activity (tier-scoped). Shared by Home's
- *  RecentActivity and the Infrastructure Audit tab. */
+/** Base query: recent audit-log activity (tier-scoped). */
 export function useAuditLog(tier: Tier): AsyncState<AuditLogResponse> {
   return toAsyncState(
     useQuery({

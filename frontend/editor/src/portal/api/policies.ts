@@ -194,7 +194,6 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
     tone: "blue",
     desc: "portal.policies.categories.classification.desc",
     providesClassification: true,
-    requiresAiEngine: true,
   },
   {
     id: "compliance",

@@ -47,6 +47,11 @@ const mocks = vi.hoisted(() => ({
   consumeFiles: vi.fn(),
 }));
 
+// Classification chains server-side only when the AI engine is on (else it runs
+// client-side); this batch exercises the server chain, so force the engine on.
+vi.mock("@app/hooks/useAiEngineEnabled", () => ({
+  useAiEngineEnabled: () => true,
+}));
 vi.mock("@app/contexts/FileContext", () => ({
   useAllFiles: () => ({ fileStubs: mocks.workspace }),
   useFileManagement: () => ({

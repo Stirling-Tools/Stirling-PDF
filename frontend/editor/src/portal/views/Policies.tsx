@@ -64,8 +64,8 @@ export function Policies() {
   );
 
   const catalogue = data?.catalogue ?? [];
-  // Invalidate the shared policies caches; because PolicySummary, ProcessorFlow
-  // and onboarding read the SAME entries, this also live-refreshes Home.
+  // Invalidate the shared policies caches; because ProcessorFlow and onboarding
+  // read the SAME entries, this also live-refreshes Home.
   const refetch = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: qk.policiesList() });
     queryClient.invalidateQueries({ queryKey: qk.policyRuns() });

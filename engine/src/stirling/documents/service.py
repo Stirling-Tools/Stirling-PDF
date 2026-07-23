@@ -43,6 +43,24 @@ class DocumentService:
         self._store = store
         self._default_top_k = default_top_k
 
+    @property
+    def default_top_k(self) -> int:
+        return self._default_top_k
+
+    @default_top_k.setter
+    def default_top_k(self, value: int) -> None:
+        # Lets a config-push retune retrieval breadth without rebuilding the store.
+        self._default_top_k = value
+
+    @property
+    def embedder(self) -> EmbeddingService:
+        return self._embedder
+
+    @embedder.setter
+    def embedder(self, value: EmbeddingService) -> None:
+        # Lets a config-push swap the embedding model while keeping the live store; existing vectors need re-indexing.
+        self._embedder = value
+
     async def ingest(
         self,
         collection: FileId,

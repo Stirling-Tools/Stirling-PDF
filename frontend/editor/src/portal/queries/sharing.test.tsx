@@ -60,8 +60,8 @@ beforeEach(() => {
 
 // Two Home consumers of the same base queries, rendered together.
 function HomeConsumers() {
-  usePoliciesOverview(); // e.g. PolicySummary
-  useProcessorFlow(); // e.g. the processor visualiser (also needs /sources)
+  usePoliciesOverview(); // e.g. onboarding progress
+  useProcessorFlow(); // the processor visualiser (also needs /sources)
   return null;
 }
 // A Policies-view-style consumer of the same policies caches.
