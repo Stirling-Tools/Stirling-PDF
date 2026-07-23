@@ -28,7 +28,7 @@ export function createCloudPlanNavItem(
 ): ConfigNavItem {
   return {
     key: "plan",
-    label: t("config.plan", "Plan"),
+    label: t("config.plan", "Plan & Usage"),
     icon: "credit-card",
     component: <Plan onRequestClose={onRequestClose} />,
   };

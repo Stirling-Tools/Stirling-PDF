@@ -1,31 +1,49 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Divider } from "@mantine/core";
+import {
+  Card,
+  Center,
+  Divider,
+  Group,
+  Loader,
+  Stack,
+  Text,
+} from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { mapLicenseToTier } from "@app/services/licenseService";
-import usageAnalyticsService from "@app/services/usageAnalyticsService";
+import { Button } from "@app/ui/Button";
 import { useLicense } from "@app/contexts/LicenseContext";
 import { useAuth } from "@app/auth/context";
-import WorkspacePlanSnapshot, {
-  type WorkspacePlanSnapshotRow,
-} from "@app/components/shared/config/WorkspacePlanSnapshot";
+import WorkspacePlanSnapshot from "@app/components/shared/config/WorkspacePlanSnapshot";
+import { buildPlanSnapshotRows } from "@app/components/shared/config/planSnapshotRows";
+import { useSourcesCount } from "@app/hooks/useSourcesCount";
+import { LocalIcon } from "@app/components/shared/LocalIcon";
 import LicenseKeySection from "@app/components/shared/config/configSections/plan/LicenseKeySection";
 import { InfoBanner } from "@app/components/shared/InfoBanner";
 import { useLicenseAlert } from "@app/hooks/useLicenseAlert";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 import LoginRequiredBanner from "@core/components/shared/config/LoginRequiredBanner";
 import { PORTAL_USAGE_PATH } from "@app/routes/portalBasename";
+import { fetchWallet } from "@portal/api/billing";
+import type { Wallet } from "@app/billing";
 
 interface AdminPlanSectionProps {
   /** Closes the settings modal before deep-linking to the portal. */
   onRequestClose?: () => void;
 }
 
+/** Wallet load outcome: showing the card, or prompting the admin to link. */
+type WalletState =
+  | { status: "loading" }
+  | { status: "linked"; wallet: Wallet }
+  | { status: "unlinked" };
+
 /**
- * "Plan" settings page. Plan management and billing now live in the PDF
- * Processor (portal); this page is a read-only mirror of the workspace's plan
- * and usage that deep-links out to the portal's Usage & Billing view. The
- * self-hosted license key still lives here so admins can activate/rotate keys.
+ * "Plan & Usage" settings page. Plan management and billing live in the PDF
+ * Processor (portal); this page mirrors the linked account's plan and usage and
+ * deep-links out to the portal's Usage & Billing view. When the instance isn't
+ * linked to a Stirling account yet, it shows a link CTA instead (metered usage
+ * and billing only exist once linked). The self-hosted license key still lives
+ * here so admins can activate/rotate keys.
  */
 const AdminPlanSection: React.FC<AdminPlanSectionProps> = ({
   onRequestClose,
@@ -36,76 +54,30 @@ const AdminPlanSection: React.FC<AdminPlanSectionProps> = ({
   const { licenseInfo } = useLicense();
   const { portalAccess } = useAuth();
   const licenseAlert = useLicenseAlert();
+  const { count: sourcesCount } = useSourcesCount();
 
-  const [operations, setOperations] = useState<number | null>(null);
-  const [statsLoading, setStatsLoading] = useState(true);
+  // The wallet lives on the linked SaaS account; apiClient.saas throws when the
+  // instance isn't linked (or SaaS isn't configured), which we treat as unlinked.
+  const [walletState, setWalletState] = useState<WalletState>({
+    status: "loading",
+  });
 
   useEffect(() => {
     let cancelled = false;
-    setStatsLoading(true);
-    usageAnalyticsService
-      .getEndpointStatistics()
-      .then((res) => {
-        if (!cancelled) setOperations(res.totalVisits);
+    setWalletState({ status: "loading" });
+    fetchWallet()
+      .then((wallet) => {
+        if (!cancelled) setWalletState({ status: "linked", wallet });
       })
       .catch(() => {
-        if (!cancelled) setOperations(null);
-      })
-      .finally(() => {
-        if (!cancelled) setStatsLoading(false);
+        // SaasNotLinkedError / SaasUnconfiguredError / transient — all resolve to
+        // "no billing to show here yet", so prompt the admin to link.
+        if (!cancelled) setWalletState({ status: "unlinked" });
       });
     return () => {
       cancelled = true;
     };
   }, []);
-
-  const tier = mapLicenseToTier(licenseInfo);
-  const tierLabel =
-    tier === "enterprise"
-      ? t("plan.enterprise.name", "Enterprise")
-      : tier === "server"
-        ? t("plan.server.name", "Server")
-        : t("plan.free.name", "Free");
-
-  // Fall back to the free-tier limit only on the free tier — server/enterprise
-  // are unlimited unless the licence pins an explicit seat count, so we must not
-  // show them the free cap of 5.
-  const seatLimit =
-    licenseInfo?.maxUsers ??
-    (tier === "free" ? (licenseAlert.freeTierLimit ?? null) : null);
-  const totalUsers = licenseAlert.totalUsers;
-
-  const rows: WorkspacePlanSnapshotRow[] = useMemo(
-    () => [
-      {
-        label: t("plan.snapshot.users", "Users"),
-        value: totalUsers != null ? totalUsers.toLocaleString() : "—",
-        sub:
-          seatLimit != null
-            ? t("plan.snapshot.ofSeats", "of {{count}} seats", {
-                count: seatLimit,
-              })
-            : t("plan.snapshot.unlimitedSeats", "Unlimited seats"),
-      },
-      {
-        label: t("plan.snapshot.operations", "Operations run"),
-        value: operations != null ? operations.toLocaleString() : "—",
-        sub: t("plan.snapshot.acrossTools", "Across all tools"),
-      },
-      {
-        label: t("plan.snapshot.deployment", "Deployment"),
-        value: t("plan.snapshot.selfHosted", "Self-hosted"),
-        sub: t("plan.snapshot.yourInfrastructure", "Your infrastructure"),
-      },
-      {
-        label: t("plan.snapshot.audit", "Audit logging"),
-        value:
-          tier === "enterprise" ? t("plan.snapshot.enabled", "Enabled") : "—",
-        sub: t("plan.snapshot.enterpriseFeature", "Enterprise feature"),
-      },
-    ],
-    [t, totalUsers, seatLimit, operations, tier],
-  );
 
   const handleManage = useCallback(() => {
     onRequestClose?.();
@@ -157,25 +129,75 @@ const AdminPlanSection: React.FC<AdminPlanSectionProps> = ({
         />
       )}
 
-      <WorkspacePlanSnapshot
-        bannerTitle={t("plan.snapshot.readOnly.title", "Read-only snapshot")}
-        bannerMessage={t(
-          "plan.snapshot.readOnly.body",
-          "Plan and usage are governed in the PDF Processor. This mirrors the workspace's current state.",
-        )}
-        currentPlanLabel={t("plan.snapshot.currentPlan", "Current plan")}
-        tierLabel={tierLabel}
-        statusLabel={t("plan.snapshot.active", "Active")}
-        rows={rows}
-        ctaLabel={t("plan.snapshot.manageCta", "Manage in Usage & Billing")}
-        canManage={portalAccess}
-        onManage={handleManage}
-        cannotManageHint={t(
-          "plan.snapshot.readOnlyHint",
-          "This is read-only, ask a workspace admin to make changes.",
-        )}
-        loading={statsLoading}
-      />
+      {walletState.status === "loading" && (
+        <Center mih={160}>
+          <Loader />
+        </Center>
+      )}
+
+      {walletState.status === "linked" && (
+        <WorkspacePlanSnapshot
+          currentPlanLabel={t("plan.snapshot.currentPlan", "Current plan")}
+          tierLabel={
+            walletState.wallet.status === "subscribed"
+              ? t("plan.tier.processor", "Processor")
+              : t("plan.tier.editor", "Editor")
+          }
+          statusLabel={t("plan.snapshot.active", "Active")}
+          rows={buildPlanSnapshotRows(walletState.wallet, t, { sourcesCount })}
+          ctaLabel={t("plan.snapshot.manageCta", "Manage in Usage & Billing")}
+          canManage={portalAccess}
+          onManage={handleManage}
+          cannotManageHint={t(
+            "plan.snapshot.readOnlyHint",
+            "This is read-only, ask a workspace admin to make changes.",
+          )}
+        />
+      )}
+
+      {walletState.status === "unlinked" && (
+        <Card withBorder radius="md" padding="lg">
+          <Stack gap="sm" align="flex-start">
+            <Group gap="sm" align="center" wrap="nowrap">
+              <div
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 8,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "var(--mantine-primary-color-light)",
+                  flexShrink: 0,
+                }}
+              >
+                <LocalIcon
+                  icon="link"
+                  width="1.1rem"
+                  height="1.1rem"
+                  style={{ color: "var(--mantine-primary-color-filled)" }}
+                />
+              </div>
+              <Text size="md" fw={600}>
+                {t("plan.link.title", "Link your Stirling account")}
+              </Text>
+            </Group>
+            <Text size="sm" c="dimmed">
+              {t(
+                "plan.link.body",
+                "Manual PDF editing is always free. Link this instance to a Stirling account to see metered usage and billing, and to claim your free processing allowance.",
+              )}
+            </Text>
+            <Button
+              variant="primary"
+              onClick={handleManage}
+              leftSection={<LocalIcon icon="link" width="1rem" height="1rem" />}
+            >
+              {t("plan.link.cta", "Link Stirling account")}
+            </Button>
+          </Stack>
+        </Card>
+      )}
 
       <Divider />
 

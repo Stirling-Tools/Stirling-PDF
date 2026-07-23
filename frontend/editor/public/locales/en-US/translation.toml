@@ -3185,7 +3185,7 @@ title = "Quality Adjustment"
 tags = "squish,small,tiny"
 
 [config]
-plan = "Plan"
+plan = "Plan & Usage"
 team = "Team"
 
 [config.account.overview]
@@ -5840,9 +5840,6 @@ title = "Pipeline"
 
 [plan]
 
-[plan.enterprise]
-name = "Enterprise"
-
 [plan.features]
 allPdfOperations = "All PDF operations"
 auditing = "Auditing"
@@ -5862,9 +5859,6 @@ upToFiveUsers = "Up to 5 users"
 upToFiveUsersLowercase = "up to 5 users"
 usageTracking = "Usage tracking"
 usersLimitedToSeats = "Users limited to seats"
-
-[plan.free]
-name = "Free"
 
 [plan.freeLimit]
 cta = "View Processor Plan"
@@ -5894,43 +5888,31 @@ cta = "See plans"
 overLimit = "more than {{limit}}"
 title = "Free self-hosted limit reached"
 
-[plan.server]
-name = "Server"
+[plan.link]
+body = "Manual PDF editing is always free. Link this instance to a Stirling account to see metered usage and billing, and to claim your free processing allowance."
+cta = "Link Stirling account"
+title = "Link your Stirling account"
 
 [plan.snapshot]
-acrossTools = "Across all tools"
 active = "Active"
-audit = "Audit logging"
+auditRetention = "Audit retention"
 currentPlan = "Current plan"
-deployment = "Deployment"
 documentsMetered = "From {{rate}} · scales with size + policies"
 documentsMonth = "Documents this month"
-enabled = "Enabled"
-enterpriseFeature = "Enterprise feature"
 floorScales = "Floor; scales with size + policies"
-freeRemaining = "Free remaining"
 hardCapFree = "Hard cap on Free"
 manageCta = "Manage in Usage & Billing"
 noCardOnFile = "No card on file"
 noSpendLimit = "No spend limit"
-ofAllowance = "of {{count}}"
-ofSeats = "of {{count}} seats"
-operations = "Operations run"
 pctOfLimit = "{{pct}}% of {{cap}} limit"
 perPdf = "{{amount}} / PDF"
 readOnlyHint = "This is read-only, ask a workspace admin to make changes."
-renews = "Renews"
-selfHosted = "Self-hosted"
+retentionDays = "{{count}} days"
+sources = "Sources"
+sourcesSub = "Connected for policies + pipelines"
 spendMonth = "Spend this month"
 startingRate = "Starting rate"
 startingRateFree = "From here, scales with file size and policies · first {{count}} free"
-unlimitedSeats = "Unlimited seats"
-users = "Users"
-yourInfrastructure = "Your infrastructure"
-
-[plan.snapshot.readOnly]
-body = "Plan and usage are governed in the PDF Processor. This mirrors the workspace's current state."
-title = "Read-only snapshot"
 
 [plan.spendCap]
 cta = "View Spending Limit"
@@ -8984,7 +8966,7 @@ version = "Version"
 
 [settings.licensingAnalytics]
 audit = "Audit"
-plan = "Plan"
+plan = "Plan & Usage"
 title = "Licensing & Analytics"
 usageAnalytics = "Usage Analytics"
 

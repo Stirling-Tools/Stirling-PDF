@@ -15,104 +15,14 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useWallet } from "@app/hooks/useWallet";
 import { useRenderCount } from "@app/hooks/useRenderCount";
-import { formatMinor, formatMoneyMajor, formatPeriodDate } from "@app/billing";
-import WorkspacePlanSnapshot, {
-  type WorkspacePlanSnapshotRow,
-} from "@app/components/shared/config/WorkspacePlanSnapshot";
+import WorkspacePlanSnapshot from "@app/components/shared/config/WorkspacePlanSnapshot";
+import { buildPlanSnapshotRows } from "@app/components/shared/config/planSnapshotRows";
+import { useSourcesCount } from "@app/hooks/useSourcesCount";
 import { PORTAL_USAGE_PATH } from "@app/routes/portalBasename";
-import type { Wallet } from "@app/hooks/useWallet";
-import type { TFunction } from "i18next";
 
 interface PlanProps {
   /** Closes the settings modal before deep-linking to the portal. */
   onRequestClose?: () => void;
-}
-
-/** Build the four snapshot figures from the wallet, branching on plan state. */
-function buildRows(wallet: Wallet, t: TFunction): WorkspacePlanSnapshotRow[] {
-  const currency = wallet.currency;
-  const rate =
-    wallet.pricePerDocMinor != null
-      ? t("plan.snapshot.perPdf", "{{amount}} / PDF", {
-          amount: formatMinor(wallet.pricePerDocMinor, currency),
-        })
-      : "—";
-
-  if (wallet.status === "subscribed") {
-    // Matches the demo's "Processor" mirror card, wired to live wallet figures.
-    const spendSub =
-      wallet.capUsd != null && wallet.capUsd > 0
-        ? t("plan.snapshot.pctOfLimit", "{{pct}}% of {{cap}} limit", {
-            pct: Math.round((wallet.estimatedBillMinor ?? 0) / wallet.capUsd),
-            cap: formatMoneyMajor(wallet.capUsd, currency),
-          })
-        : t("plan.snapshot.noSpendLimit", "No spend limit");
-    return [
-      {
-        label: t("plan.snapshot.documentsMonth", "Documents this month"),
-        value: wallet.billableUsed.toLocaleString(),
-        sub: t(
-          "plan.snapshot.documentsMetered",
-          "From {{rate}} · scales with size + policies",
-          { rate },
-        ),
-      },
-      {
-        label: t("plan.snapshot.spendMonth", "Spend this month"),
-        value:
-          wallet.estimatedBillMinor != null
-            ? formatMinor(wallet.estimatedBillMinor, currency)
-            : "—",
-        sub: spendSub,
-      },
-      {
-        label: t("plan.snapshot.startingRate", "Starting rate"),
-        value: rate,
-        sub: t(
-          "plan.snapshot.floorScales",
-          "Floor; scales with size + policies",
-        ),
-      },
-      {
-        label: t("plan.snapshot.renews", "Renews"),
-        value: formatPeriodDate(wallet.billingPeriodEnd),
-      },
-    ];
-  }
-
-  // Free tier — matches the demo's "Editor" mirror card. "Sources" from the demo
-  // isn't in the wallet, so the fourth cell shows the free grant remaining.
-  return [
-    {
-      label: t("plan.snapshot.documentsMonth", "Documents this month"),
-      value:
-        wallet.billableLimit != null
-          ? `${wallet.billableUsed.toLocaleString()} / ${wallet.billableLimit.toLocaleString()}`
-          : wallet.billableUsed.toLocaleString(),
-      sub: t("plan.snapshot.hardCapFree", "Hard cap on Free"),
-    },
-    {
-      label: t("plan.snapshot.spendMonth", "Spend this month"),
-      value: formatMinor(wallet.estimatedBillMinor ?? 0, wallet.currency),
-      sub: t("plan.snapshot.noCardOnFile", "No card on file"),
-    },
-    {
-      label: t("plan.snapshot.startingRate", "Starting rate"),
-      value: rate,
-      sub: t(
-        "plan.snapshot.startingRateFree",
-        "From here, scales with file size and policies · first {{count}} free",
-        { count: wallet.freeAllowance },
-      ),
-    },
-    {
-      label: t("plan.snapshot.freeRemaining", "Free remaining"),
-      value: wallet.freeRemaining.toLocaleString(),
-      sub: t("plan.snapshot.ofAllowance", "of {{count}}", {
-        count: wallet.freeAllowance,
-      }),
-    },
-  ];
 }
 
 const Plan: React.FC<PlanProps> = ({ onRequestClose }) => {
@@ -120,6 +30,7 @@ const Plan: React.FC<PlanProps> = ({ onRequestClose }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { wallet, loading, error } = useWallet();
+  const { count: sourcesCount } = useSourcesCount();
 
   const handleManage = useCallback(() => {
     onRequestClose?.();
@@ -156,15 +67,10 @@ const Plan: React.FC<PlanProps> = ({ onRequestClose }) => {
 
   return (
     <WorkspacePlanSnapshot
-      bannerTitle={t("plan.snapshot.readOnly.title", "Read-only snapshot")}
-      bannerMessage={t(
-        "plan.snapshot.readOnly.body",
-        "Plan and usage are governed in the PDF Processor. This mirrors the workspace's current state.",
-      )}
       currentPlanLabel={t("plan.snapshot.currentPlan", "Current plan")}
       tierLabel={tierLabel}
       statusLabel={t("plan.snapshot.active", "Active")}
-      rows={buildRows(wallet, t)}
+      rows={buildPlanSnapshotRows(wallet, t, { sourcesCount })}
       ctaLabel={t("plan.snapshot.manageCta", "Manage in Usage & Billing")}
       canManage={wallet.role === "leader"}
       onManage={handleManage}

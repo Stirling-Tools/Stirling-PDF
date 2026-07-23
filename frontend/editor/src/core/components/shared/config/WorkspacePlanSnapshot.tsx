@@ -19,10 +19,10 @@ export interface WorkspacePlanSnapshotRow {
 }
 
 export interface WorkspacePlanSnapshotProps {
-  /** Read-only banner heading, e.g. "Read-only snapshot". */
-  bannerTitle: string;
-  /** Read-only banner body explaining where plan/usage is governed. */
-  bannerMessage: string;
+  /** Optional banner heading; the banner renders only when both title and message are set. */
+  bannerTitle?: string;
+  /** Optional banner body explaining where plan/usage is governed. */
+  bannerMessage?: string;
   /** Small caps label above the tier name, e.g. "Current plan". */
   currentPlanLabel: string;
   /** Human tier name, e.g. "Editor" / "Processor" / "Enterprise". */
@@ -65,36 +65,38 @@ const WorkspacePlanSnapshot: React.FC<WorkspacePlanSnapshotProps> = ({
 }) => {
   return (
     <Stack gap="md">
-      {/* Read-only snapshot banner */}
-      <Paper
-        radius="md"
-        p="sm"
-        style={{
-          background: "var(--mantine-color-default-hover)",
-          border: "1px solid var(--mantine-color-default-border)",
-        }}
-      >
-        <Group gap="sm" align="flex-start" wrap="nowrap">
-          <LocalIcon
-            icon="lock"
-            width="1rem"
-            height="1rem"
-            style={{
-              color: "var(--mantine-color-dimmed)",
-              flexShrink: 0,
-              marginTop: 2,
-            }}
-          />
-          <Stack gap={2}>
-            <Text size="sm" fw={600}>
-              {bannerTitle}
-            </Text>
-            <Text size="xs" c="dimmed">
-              {bannerMessage}
-            </Text>
-          </Stack>
-        </Group>
-      </Paper>
+      {/* Optional context banner (omitted on the plan/usage page). */}
+      {bannerTitle && bannerMessage && (
+        <Paper
+          radius="md"
+          p="sm"
+          style={{
+            background: "var(--mantine-color-default-hover)",
+            border: "1px solid var(--mantine-color-default-border)",
+          }}
+        >
+          <Group gap="sm" align="flex-start" wrap="nowrap">
+            <LocalIcon
+              icon="lock"
+              width="1rem"
+              height="1rem"
+              style={{
+                color: "var(--mantine-color-dimmed)",
+                flexShrink: 0,
+                marginTop: 2,
+              }}
+            />
+            <Stack gap={2}>
+              <Text size="sm" fw={600}>
+                {bannerTitle}
+              </Text>
+              <Text size="xs" c="dimmed">
+                {bannerMessage}
+              </Text>
+            </Stack>
+          </Group>
+        </Paper>
+      )}
 
       {/* Snapshot card */}
       <Card withBorder radius="md" padding="md">
