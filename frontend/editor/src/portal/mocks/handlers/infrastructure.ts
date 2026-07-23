@@ -25,10 +25,48 @@ export const infrastructureHandlers = [
     });
   }),
 
-  http.get("/v1/infrastructure/api-keys", async ({ request }) => {
-    await delay(120);
-    return HttpResponse.json(apiKeysFor(tierFrom(request)));
-  }),
+  // Real backend route; wildcard prefix intercepts both local (same-origin) and
+  // SaaS (absolute) callers.
+  http.get(
+    "*/api/v1/proprietary/ui-data/infrastructure/api-keys",
+    async ({ request }) => {
+      await delay(120);
+      return HttpResponse.json(apiKeysFor(tierFrom(request)));
+    },
+  ),
+
+  // Create returns a one-time secret; the mock is non-persistent (dev/Storybook only).
+  http.post(
+    "*/api/v1/proprietary/ui-data/infrastructure/api-keys",
+    async ({ request }) => {
+      await delay(120);
+      const body = (await request.json().catch(() => ({}))) as {
+        name?: string;
+      };
+      return HttpResponse.json({
+        key: {
+          id: `key-${Date.now()}`,
+          name: body.name ?? "New key",
+          prefix: "sk_demo0000",
+          created: "2026-07-10",
+          lastUsed: "Never",
+          status: "active",
+          usageToday: 0,
+          usageMonth: 0,
+          usageTotal: 0,
+        },
+        secret: "sk_live_demo_key_rotate_in_prod",
+      });
+    },
+  ),
+
+  http.delete(
+    "*/api/v1/proprietary/ui-data/infrastructure/api-keys/:id",
+    async () => {
+      await delay(120);
+      return new HttpResponse(null, { status: 204 });
+    },
+  ),
 
   http.get("/v1/infrastructure/security", async ({ request }) => {
     await delay(120);

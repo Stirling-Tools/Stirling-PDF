@@ -79,8 +79,8 @@ const Badge: React.FC<BadgeProps> = ({
 
     // Default styling
     return {
-      background: "var(--tool-header-badge-bg)",
-      color: "var(--tool-header-badge-text)",
+      background: "var(--c-surface-raised)",
+      color: "var(--c-accent-fg)",
     };
   };
 

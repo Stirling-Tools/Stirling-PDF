@@ -85,7 +85,8 @@ tasks:
       # full path, hostname, or user. Consumed at dev-serve time by vite.config
       # and dropped from production builds.
       STIRLING_DEV_LABEL:
-        sh: basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+        sh: >-
+          {{if eq OS "windows"}}powershell -NoProfile -Command '$root = git rev-parse --show-toplevel 2>$null; if (-not $root) { $root = (Get-Location).Path }; Split-Path -Leaf $root'{{else}}basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"{{end}}
     cmds:
       - npx vite editor --mode {{.MODE}} --port {{.PORT}}{{if .OPEN}} --open{{end}}
 
@@ -203,6 +204,23 @@ tasks:
     cmds:
       - task: lint:eslint
       - task: lint:dpdm
+      - task: lint:colors
+
+  lint:colors:
+    desc: "Enforce theme tokens — no hardcoded colours or raw primitives in components"
+    aliases: [lint:colours]
+    deps: [install]
+    cmds:
+      - node editor/scripts/lint/theme-lint.mjs
+      - node editor/scripts/lint/theme-lint.mjs css-colors
+      - node editor/scripts/lint/theme-lint.mjs code-colors
+      - node editor/scripts/lint/theme-lint.mjs no-primitives
+
+  contrast:
+    desc: "Report low-contrast theme token pairs (warning only, never blocks)"
+    deps: [install]
+    cmds:
+      - node editor/scripts/lint/theme-lint.mjs contrast
 
   lint:eslint:
     desc: "Run ESLint linting"
@@ -249,10 +267,8 @@ tasks:
 
   typecheck:_run:
     internal: true
-    env:
-      CI: '{{ .CI | default "false" }}'
     cmds:
-      - '{{ if eq .CI "true" }}npx tsc{{ else }}npx tsgo{{ end }} --noEmit --project {{.PROJECT}}'
+      - 'npx tsc --noEmit --project {{.PROJECT}}'
 
   typecheck:core:
     desc: "Typecheck core build variant"

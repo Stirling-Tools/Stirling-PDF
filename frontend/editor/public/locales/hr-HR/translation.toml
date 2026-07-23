@@ -6521,63 +6521,6 @@ title_other = "Obradite {{allowance}} PDF-ova besplatno"
 titleWithRate_one = "Obradite {{allowance}} PDF-ova besplatno, zatim {{rate}}/PDF"
 titleWithRate_other = "Obradite {{allowance}} PDF-ova besplatno, zatim {{rate}}/PDF"
 
-[portal.catalogue.card]
-lockedAriaLabel = "Zaključano"
-openAriaLabel = "Otvori komponentu {{name}}"
-
-[portal.catalogue.detail]
-addToProject = "Dodaj u projekt"
-ariaLabel = "Detalji komponente"
-tabsAriaLabel = "Odjeljci detalja komponente"
-upgradeToUnlock = "Nadogradite za otključavanje"
-
-[portal.catalogue.detail.code]
-install = "Instalacija"
-usage = "Upotreba"
-
-[portal.catalogue.detail.locked]
-description = "{{name}} je uključeno od plana {{tier}}. Nadogradite da biste ga ugradili."
-title = "Nije dostupno na vašem planu"
-
-[portal.catalogue.detail.preview]
-badge = "Pregled uživo"
-note = "Interaktivni sandbox prikazuje se ovdje"
-
-[portal.catalogue.detail.pricing]
-note = "Mjereno po {{unit}}. Upotreba iznad mjesečne besplatne kvote naplaćuje se vašem računu i prikazuje po stavkama u odjeljku Upotreba i naplata."
-
-[portal.catalogue.detail.stats]
-billedOn = "Naplaćuje se po"
-embeds30d = "Ugradnje (30 d)"
-freeQuota = "Besplatna kvota"
-freeQuotaValue = "{{amount}} / mj."
-maturity = "Zrelost"
-none = "Ništa"
-perAction = "Po radnji"
-price = "Cijena"
-
-[portal.catalogue.detail.tabs]
-code = "Code"
-overview = "Pregled"
-pricing = "Cijene"
-props = "Props / API"
-
-[portal.catalogue.props]
-optional = "neobavezno"
-required = "obavezno"
-
-[portal.catalogue.props.columns]
-description = "Opis"
-name = "Prop"
-required = "Obavezno"
-type = "Vrsta"
-
-[portal.catalogue.summary]
-componentsGa = "Komponente GA"
-componentSpendMtd = "Potrošnja komponenti (MTD)"
-embedsThisMonth = "Ugradnje ovog mjeseca"
-inBeta = "U beta verziji"
-
 [portal.components.billingUnit]
 approval = "odobrenje"
 check = "provjera"
@@ -6590,18 +6533,6 @@ signature = "potpis"
 [portal.components.maturity]
 beta = "Beta"
 ga = "GA"
-
-[portal.componentsView]
-subtitle = "Ugradivi SDK widgeti koje ubacujete u vlastitu aplikaciju — preglednik, tijek e-potpisa, AI panel za pregled. Svaki se mjeri po radnji. Kliknite karticu za instalaciju, upotrebu i props."
-title = "Komponente"
-
-[portal.componentsView.empty]
-description = "Katalog komponenti nije moguće učitati. Pokušajte ponovno uskoro."
-title = "Nema dostupnih komponenti"
-
-[portal.componentsView.lockedBanner]
-description = "GA komponente dostupne su na planu Pay-as-you-go; nekoliko Beta komponenti dostupno je samo za Enterprise. Zaključane kartice prikazuju poticaj za nadogradnju."
-title = "Neke komponente zahtijevaju plaćeni plan"
 
 [portal.docs.authentication]
 codeCaption = "svaki zahtjev"

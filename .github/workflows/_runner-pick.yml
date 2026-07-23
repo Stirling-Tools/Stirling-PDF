@@ -5,6 +5,11 @@ name: _runner-pick
 # can pick a runner class without each one duplicating the 200-char gate
 # expression in their own `runs-on:`.
 #
+# It also owns the single Depot kill-switch (use_depot). Depot is currently
+# disabled repo-wide; downstream jobs gate their Depot runner/build usage on
+# use_depot so nothing has to be deleted to turn Depot off. Flip DEPOT_ENABLED
+# in the decide step to switch Depot back on.
+#
 # Caller pattern:
 #
 #   jobs:
@@ -13,12 +18,15 @@ name: _runner-pick
 #
 #     real-work:
 #       needs: pick
-#       runs-on: ${{ needs.pick.outputs.is_fork == 'true' && 'ubuntu-latest' || 'depot-ubuntu-24.04-8' }}
+#       runs-on: ${{ needs.pick.outputs.use_depot == 'true' && 'depot-ubuntu-24.04-8' || 'ubuntu-latest' }}
 #       steps: [...]
 #
-# Output:
-#   is_fork: "true" when the trigger is a pull_request from a fork or an
-#            untrusted author_association, "false" otherwise.
+# Outputs:
+#   is_fork:   "true" when the trigger is a pull_request from a fork or an
+#              untrusted author_association, "false" otherwise. Use this for
+#              trust gating (skipping secret-dependent jobs on forks).
+#   use_depot: "true" when downstream jobs should use Depot runners/builders.
+#              Currently forced "false" (Depot disabled repo-wide).
 
 on:
   workflow_call:
@@ -26,6 +34,9 @@ on:
       is_fork:
         description: '"true" if the trigger is an untrusted fork PR.'
         value: ${{ jobs.pick.outputs.is_fork }}
+      use_depot:
+        description: '"true" when downstream jobs should use Depot. Currently forced off.'
+        value: ${{ jobs.pick.outputs.use_depot }}
 
 permissions:
   contents: read
@@ -36,6 +47,7 @@ jobs:
     timeout-minutes: 1
     outputs:
       is_fork: ${{ steps.decide.outputs.is_fork }}
+      use_depot: ${{ steps.decide.outputs.use_depot }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
@@ -50,21 +62,33 @@ jobs:
           AUTHOR_ASSOC: ${{ github.event.pull_request.author_association }}
         run: |
           set -eu
+
+          # Depot kill-switch. Depot is disabled repo-wide: no job uses Depot
+          # runners or the Depot build actions while this is false. All the
+          # Depot wiring is left in place - set DEPOT_ENABLED=true to switch it
+          # back on (it then activates on trusted, non-fork triggers as before).
+          DEPOT_ENABLED=false
+
           if [ -z "${PR_NUMBER:-}" ]; then
             # Not a pull_request event at all (push, schedule, workflow_dispatch,
             # workflow_call from a non-PR trigger) -> trusted by default.
-            echo "is_fork=false" >> "$GITHUB_OUTPUT"
-            exit 0
+            is_fork=false
+          elif [ "${HEAD_REPO_FORK}" = "true" ]; then
+            is_fork=true
+          else
+            case "${AUTHOR_ASSOC}" in
+              OWNER|MEMBER|COLLABORATOR) is_fork=false ;;
+              *) is_fork=true ;;
+            esac
           fi
-          if [ "${HEAD_REPO_FORK}" = "true" ]; then
-            echo "is_fork=true" >> "$GITHUB_OUTPUT"
-            exit 0
+
+          # Depot only ever ran on trusted triggers, so gate it on both the
+          # kill-switch and is_fork.
+          if [ "${DEPOT_ENABLED}" = "true" ] && [ "${is_fork}" = "false" ]; then
+            use_depot=true
+          else
+            use_depot=false
           fi
-          case "${AUTHOR_ASSOC}" in
-            OWNER|MEMBER|COLLABORATOR)
-              echo "is_fork=false" >> "$GITHUB_OUTPUT"
-              ;;
-            *)
-              echo "is_fork=true" >> "$GITHUB_OUTPUT"
-              ;;
-          esac
+
+          echo "is_fork=${is_fork}" >> "$GITHUB_OUTPUT"
+          echo "use_depot=${use_depot}" >> "$GITHUB_OUTPUT"

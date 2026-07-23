@@ -14,9 +14,9 @@
   z-index: 40;
   margin-top: 0.5rem;
   min-width: 16rem;
-  background-color: #ffffff;
-  color: #000000;
-  border: 1px solid #e5e7eb;
+  background-color: var(--c-surface);
+  color: var(--c-text);
+  border: 1px solid var(--c-border);
   border-radius: 0.5rem;
   box-shadow:
     0 10px 15px -3px rgba(0, 0, 0, 0.1),
@@ -25,9 +25,6 @@
 }
 
 [data-mantine-color-scheme="dark"] .auth-dropdown {
-  background-color: var(--bg-surface);
-  color: var(--text-primary);
-  border-color: var(--border-default);
   box-shadow: var(--shadow-md);
 }
 
@@ -39,17 +36,13 @@
   border: none;
   padding: 0.5rem 0.75rem;
   border-radius: 0.375rem;
-  color: #000;
+  color: var(--c-text);
   cursor: pointer;
 }
 
-[data-mantine-color-scheme="dark"] .auth-dropdown-item {
-  color: var(--text-primary);
-}
-
 .auth-guest-button {
-  background-color: #ffffff;
-  color: #9c2f30;
+  background-color: var(--c-surface);
+  color: var(--c-brand);
   border: 2px solid currentColor;
 }
 
@@ -93,8 +86,8 @@
 }
 
 .auth-expandable-trigger--active {
-  border-color: #af3434 !important;
-  box-shadow: 0 0 0 3px rgba(175, 52, 52, 0.12);
+  border-color: var(--c-brand) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-brand) 12%, transparent);
 }
 
 /* ── Animated expand/collapse via grid-template-rows ───────────────── */
