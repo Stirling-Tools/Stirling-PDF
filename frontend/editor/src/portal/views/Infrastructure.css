@@ -104,6 +104,12 @@
   gap: 0.5rem 1rem;
 }
 
+@media (max-width: 30rem) {
+  .portal-infra__export-fields {
+    grid-template-columns: 1fr;
+  }
+}
+
 .portal-infra__export-error {
   margin: 0;
   font-size: 0.8125rem;
@@ -189,6 +195,12 @@
 @media (max-width: 50rem) {
   .portal-infra__metrics {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 30rem) {
+  .portal-infra__metrics {
+    grid-template-columns: 1fr;
   }
 }
 

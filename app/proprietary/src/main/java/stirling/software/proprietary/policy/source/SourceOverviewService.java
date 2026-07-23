@@ -100,7 +100,8 @@ public class SourceOverviewService {
                 List.of(),
                 docs.total(),
                 docs.last24h(),
-                docs.last30d());
+                docs.last30d(),
+                null);
     }
 
     /**
@@ -141,7 +142,16 @@ public class SourceOverviewService {
                 configRows(source),
                 docs.total(),
                 docs.last24h(),
-                docs.last30d());
+                docs.last30d(),
+                webhookPath(source));
+    }
+
+    private static String webhookPath(Source source) {
+        if (!"webhook".equals(source.type())) {
+            return null;
+        }
+        Object webhookId = source.options().get("webhookId");
+        return webhookId == null ? null : "/api/v1/webhooks/" + webhookId;
     }
 
     /** A disabled (paused) source reads as "disabled"; an unreferenced one reads as "unused". */

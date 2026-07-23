@@ -12,6 +12,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap; /* actions drop below the title on narrow screens */
   gap: 1rem;
 }
 

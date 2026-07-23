@@ -2,6 +2,7 @@ package stirling.software.proprietary.policy.source;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -43,6 +44,8 @@ import stirling.software.proprietary.util.SecretMasker;
 @RequiredArgsConstructor
 @Tag(name = "Sources", description = "Reusable policy input connections")
 public class SourceController {
+
+    private static final String WEBHOOK_TYPE = "webhook";
 
     private final SourceStore sourceStore;
     private final SourceAccessGuard sourceAccessGuard;
@@ -107,7 +110,8 @@ public class SourceController {
     public ResponseEntity<Source> save(@RequestBody Source source) {
         requireSourceEditingAllowed();
         requireNotEditor(source.id(), source.type());
-        Source owned = withStoredSecrets(resolveOwnership(source));
+        boolean isCreate = source.id() == null || source.id().isBlank();
+        Source owned = withPreparedOptions(withStoredSecrets(resolveOwnership(source)), isCreate);
         try {
             validateConfig(owned);
         } catch (IllegalArgumentException e) {
@@ -117,7 +121,7 @@ public class SourceController {
         // An edited folder source can change which directory needs watching, so re-sync trigger
         // registrations now instead of waiting for the next reconcile.
         policyTriggerManager.notifyPoliciesChanged();
-        return ResponseEntity.ok(withMaskedSecrets(saved));
+        return ResponseEntity.ok(revealOnCreate(saved, isCreate));
     }
 
     @DeleteMapping("/{sourceId}")
@@ -219,12 +223,31 @@ public class SourceController {
     /** Validate the config against the bean that handles the source's type, as the engine will. */
     private void validateConfig(Source source) {
         InputSpec spec = source.toInputSpec();
-        inputSources.stream()
-                .filter(inputSource -> inputSource.supports(spec))
-                .findFirst()
+        inputSourceFor(spec)
                 .orElseThrow(
                         () -> new IllegalArgumentException("unknown source type: " + source.type()))
                 .validate(spec);
+    }
+
+    private Source withPreparedOptions(Source source, boolean isCreate) {
+        InputSpec spec = source.toInputSpec();
+        InputSource input = inputSourceFor(spec).orElse(null);
+        if (input == null) {
+            return source;
+        }
+        Map<String, Object> prepared = input.prepareOptionsForSave(source.options(), isCreate);
+        return prepared == null ? source : withOptions(source, prepared);
+    }
+
+    private static Source revealOnCreate(Source saved, boolean isCreate) {
+        if (isCreate && WEBHOOK_TYPE.equals(saved.type())) {
+            return saved;
+        }
+        return withMaskedSecrets(saved);
+    }
+
+    private Optional<InputSource> inputSourceFor(InputSpec spec) {
+        return inputSources.stream().filter(input -> input.supports(spec)).findFirst();
     }
 
     /**

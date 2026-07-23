@@ -6744,22 +6744,6 @@ title = "Invite teammates"
 blurb = "{{active}} active · {{recommended}} recommended"
 title = "Confirm your policies"
 
-[portal.home.quickActions]
-subtitle = "Top tasks for today"
-title = "Quick actions"
-
-[portal.home.quickActions.buildPipeline]
-blurb = "3-step composer over the typed op library"
-title = "Build a pipeline"
-
-[portal.home.quickActions.connectSource]
-blurb = "S3, agents, webhooks, watched folders"
-title = "Connect a source"
-
-[portal.home.quickActions.issueApiKey]
-blurb = "Scoped key with rate limits and IP allowlist"
-title = "Issue an API key"
-
 [portal.infrastructure]
 manageEditorDeployment = "Manage Editor deployment"
 sectionsAriaLabel = "Infrastructure sections"
@@ -7531,34 +7515,8 @@ setUp = "Set up {{category}} policy"
 [portal.policies.wizard.workflow]
 description = "Choose what this policy does to every document it processes."
 
-[portal.policySummary]
-activeSummary = "{{active}} / {{total}} active"
-noRule = "No rule enforced yet"
-subtitle = "Standing automations every document passes through, regardless of which pipeline handles it."
-title = "What runs on your PDFs"
-
 [portal.policySummary.action]
-comingSoon = "Upgrade to Enterprise"
-configure = "Configure"
 setUp = "Set up"
-
-[portal.policySummary.column]
-activeRule = "Active rule"
-policy = "Policy"
-status = "Status"
-
-[portal.policySummary.empty]
-description = "Once policies are configured, the categories appear here."
-title = "No policies yet"
-
-[portal.policySummary.state]
-active = "Active"
-off = "Off"
-soon = "Soon"
-
-[portal.processingStatus]
-managePlan = "Manage plan"
-volumeSuffix = "PDFs processed · last 30 days"
 
 [portal.processorFlow]
 footnote = "Counts are over the last 24 hours. Flow speed is illustrative."
@@ -7878,14 +7836,6 @@ homeBody = "Committed volume pricing, org-wide SSO + SCIM + RBAC, 90-day immutab
 homeCta = "Start Trial →"
 homeHeadline = "Process millions of PDFs."
 
-[portal.recentActivity]
-title = "Recent activity"
-viewAll = "View all"
-
-[portal.recentActivity.empty]
-description = "Pipeline runs, deploys and agent events will appear here."
-title = "Nothing here yet"
-
 [portal.search]
 ariaLabel = "Search"
 placeholder = "Search Stirling — endpoints, pipelines, docs…"
@@ -7909,6 +7859,11 @@ brandSuffix = "Stirling Processor"
 linkAccount = "Link Stirling account"
 primaryNav = "Primary navigation"
 switchApp = "Switch app"
+
+[portal.shell.topbar]
+closeNav = "Close navigation"
+openNav = "Open navigation"
+search = "Search"
 
 [portal.sources]
 subtitle = "Reusable input connections that feed documents into Stirling. Configure a source once, then reference it from any number of pipelines."
@@ -8035,6 +7990,25 @@ label = "Secret access key"
 
 [portal.sources.types.unknown]
 label = "Source"
+
+[portal.sources.types.webhook]
+createNote = "A delivery URL and signing secret are generated when you create this webhook. Senders POST documents to that URL and the referencing policies run on arrival."
+description = "Receive documents by signed HTTP POST from any external system."
+label = "Webhook"
+
+[portal.sources.types.webhook.detail]
+deliveryUrl = "Delivery URL"
+secretNote = "The signing secret is shown once, when the webhook is created. Recreate the source to roll it."
+
+[portal.sources.types.webhook.reveal]
+copy = "Copy"
+done = "Done"
+secret = "Signing secret"
+secretHelp = "Sign each delivery's raw body with this key (HMAC-SHA256) and send it as the X-Stirling-Signature header."
+secretWarning = "Copy the signing secret now. For your security it is shown only once and cannot be retrieved later."
+title = "Webhook created"
+url = "Delivery URL"
+usage = "POST each document as the raw request body to the delivery URL with a binary content type (application/pdf or application/octet-stream). Referencing policies run automatically on arrival."
 
 [portal.sources.wizard]
 name = "Name"
