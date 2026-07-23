@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
+import stirling.software.proprietary.policy.asset.PolicyAsset;
+import stirling.software.proprietary.policy.asset.PolicyAssetStore;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
@@ -52,6 +54,22 @@ public class PolicyAccessGuard {
      * disabled (single-user) returns everything.
      */
     public List<Policy> visibleFrom(PolicyStore store) {
+        if (!enforced()) {
+            return store.all();
+        }
+        return store.findByTeam(policyManagementAuthority.currentUserTeamId());
+    }
+
+    /** Whether the stored asset belongs to the current user's team (same rule as policies). */
+    public boolean canAccess(PolicyAsset asset) {
+        if (!enforced()) {
+            return true;
+        }
+        return Objects.equals(asset.teamId(), policyManagementAuthority.currentUserTeamId());
+    }
+
+    /** The stored assets visible to the caller, scoped exactly like {@link #visibleFrom}. */
+    public List<PolicyAsset> visibleFrom(PolicyAssetStore store) {
         if (!enforced()) {
             return store.all();
         }

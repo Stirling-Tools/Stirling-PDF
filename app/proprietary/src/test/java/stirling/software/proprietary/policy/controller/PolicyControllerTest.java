@@ -74,6 +74,8 @@ class PolicyControllerTest {
     private stirling.software.proprietary.policy.overview.PolicyOverviewService
             policyOverviewService;
 
+    @Mock private stirling.software.proprietary.policy.asset.PolicyAssetCleaner assetCleaner;
+
     @Mock private ProcessedLedger processedLedger;
 
     @Mock private TempFileManager tempFileManager;
@@ -105,6 +107,7 @@ class PolicyControllerTest {
                         policyManagementAuthority,
                         policyTriggerManager,
                         policyOverviewService,
+                        assetCleaner,
                         processedLedger,
                         policyTriggers,
                         applicationProperties,

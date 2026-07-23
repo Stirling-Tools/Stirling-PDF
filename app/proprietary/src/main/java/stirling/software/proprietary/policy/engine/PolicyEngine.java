@@ -30,6 +30,7 @@ import stirling.software.common.service.ResourceMonitor;
 import stirling.software.common.service.TaskManager;
 import stirling.software.common.util.ExecutorFactory;
 import stirling.software.common.util.JobContext;
+import stirling.software.proprietary.policy.asset.PolicyAssetResolver;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.Policy;
@@ -74,6 +75,7 @@ public class PolicyEngine {
     private final List<PolicyOutputSink> outputSinks;
     private final ResourceMonitor resourceMonitor;
     private final JobQueue jobQueue;
+    private final PolicyAssetResolver assetResolver;
 
     private final ExecutorService asyncExecutor = ExecutorFactory.newVirtualThreadExecutor();
 
@@ -119,8 +121,11 @@ public class PolicyEngine {
         // the owner owns those outputs.
         String triggeringUser = currentActingPrincipal();
         String fileOwner = triggeringUser != null ? triggeringUser : policy.owner();
+        // Stored supporting files (certificates, watermark images, ...) load here, before the
+        // async hop: worker threads have no principal, so assets bind by the policy's own team.
+        PolicyInputs resolved = assetResolver.resolve(policy, inputs);
         return submitForPrincipal(
-                policy.owner(), fileOwner, policy.id(), policy.toDefinition(), inputs, listener);
+                policy.owner(), fileOwner, policy.id(), policy.toDefinition(), resolved, listener);
     }
 
     private PolicyRunHandle submitForPrincipal(
