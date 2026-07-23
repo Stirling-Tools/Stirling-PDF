@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.TriggerConfig;
 import stirling.software.proprietary.policy.output.PolicyOutputSink;
@@ -17,10 +18,10 @@ import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.trigger.PolicyTrigger;
 
 /**
- * Validates a policy at save time by delegating each facet (trigger, sources, output) to the bean
- * that handles its type, so a misconfiguration fails fast rather than at run time. A null trigger
- * is a manual-only policy and skips trigger validation. Each referenced {@code sourceId} must
- * resolve to a persisted {@link Source} whose config its {@link InputSource} bean accepts.
+ * Validates a policy at save time by delegating each facet (trigger, sources, output, steps) to the
+ * bean that handles its type, so a misconfiguration fails fast rather than at run time. A null
+ * trigger is a manual-only policy and skips trigger validation. Each referenced {@code sourceId}
+ * must resolve to a persisted {@link Source} whose config its {@link InputSource} bean accepts.
  */
 @Service
 @RequiredArgsConstructor
@@ -29,6 +30,7 @@ public class PolicyValidator {
     private final List<PolicyTrigger> triggers;
     private final List<InputSource> inputSources;
     private final List<PolicyOutputSink> outputSinks;
+    private final List<PolicyStepValidator> stepValidators;
     private final SourceStore sourceStore;
 
     /**
@@ -51,6 +53,11 @@ public class PolicyValidator {
             inputSourceFor(spec).validate(spec);
         }
         validateOutput(policy.output());
+        for (PipelineStep step : policy.steps()) {
+            stepValidators.stream()
+                    .filter(validator -> validator.supports(step.operation()))
+                    .forEach(validator -> validator.validate(step));
+        }
     }
 
     /**

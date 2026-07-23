@@ -17,9 +17,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import stirling.software.proprietary.policy.engine.steps.RedactStepValidator;
+import stirling.software.proprietary.policy.engine.steps.WatermarkStepValidator;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.TriggerConfig;
 import stirling.software.proprietary.policy.output.PolicyOutputSink;
@@ -43,7 +46,11 @@ class PolicyValidatorTest {
     void setUp() {
         validator =
                 new PolicyValidator(
-                        List.of(trigger), List.of(inputSource), List.of(outputSink), sourceStore);
+                        List.of(trigger),
+                        List.of(inputSource),
+                        List.of(outputSink),
+                        List.of(new WatermarkStepValidator(), new RedactStepValidator()),
+                        sourceStore);
     }
 
     @Test
@@ -113,6 +120,69 @@ class PolicyValidatorTest {
                         IllegalArgumentException.class,
                         () -> validator.validate(policy("mystery")));
         assertTrue(ex.getMessage().contains("unknown trigger type"));
+    }
+
+    @Test
+    void rejectsATextWatermarkStepWithNoText() {
+        when(trigger.type()).thenReturn("schedule");
+        when(inputSource.supports(any())).thenReturn(true);
+        when(outputSink.supports(any())).thenReturn(true);
+        Policy policy =
+                withSteps(
+                        new PipelineStep(
+                                "/api/v1/security/add-watermark",
+                                Map.of("watermarkType", "text", "watermarkText", "  "),
+                                Map.of()));
+
+        assertThrows(IllegalArgumentException.class, () -> validator.validate(policy));
+    }
+
+    @Test
+    void rejectsAnAutomaticRedactStepWithNoPatterns() {
+        when(trigger.type()).thenReturn("schedule");
+        when(inputSource.supports(any())).thenReturn(true);
+        when(outputSink.supports(any())).thenReturn(true);
+        Policy policy =
+                withSteps(
+                        new PipelineStep(
+                                "/api/v1/security/auto-redact",
+                                Map.of("useRegex", true, "listOfText", "  "),
+                                Map.of()));
+
+        assertThrows(IllegalArgumentException.class, () -> validator.validate(policy));
+    }
+
+    @Test
+    void acceptsConfiguredSecuritySteps() {
+        when(trigger.type()).thenReturn("schedule");
+        when(inputSource.supports(any())).thenReturn(true);
+        when(outputSink.supports(any())).thenReturn(true);
+        Policy policy =
+                withSteps(
+                        new PipelineStep(
+                                "/api/v1/security/add-watermark",
+                                Map.of("watermarkType", "text", "watermarkText", "Confidential"),
+                                Map.of()),
+                        new PipelineStep(
+                                "/api/v1/security/auto-redact",
+                                Map.of("useRegex", true, "listOfText", "\\d{3}-\\d{2}-\\d{4}"),
+                                Map.of()));
+
+        validator.validate(policy);
+    }
+
+    /** A valid schedule-triggered policy carrying the given steps. */
+    private Policy withSteps(PipelineStep... steps) {
+        Policy base = policy("schedule");
+        return new Policy(
+                base.id(),
+                base.name(),
+                base.owner(),
+                base.enabled(),
+                base.trigger(),
+                base.sourceIds(),
+                List.of(steps),
+                base.output());
     }
 
     private Policy policy(String triggerType) {
