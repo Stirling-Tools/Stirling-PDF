@@ -1,11 +1,15 @@
 package stirling.software.proprietary.policy.engine;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 
+import stirling.software.proprietary.policy.asset.PolicyAssetRefs;
+import stirling.software.proprietary.policy.asset.PolicyAssetStore;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
@@ -32,6 +36,7 @@ public class PolicyValidator {
     private final List<PolicyOutputSink> outputSinks;
     private final List<PipelineStepValidator> stepValidators;
     private final SourceStore sourceStore;
+    private final PolicyAssetStore assetStore;
 
     /**
      * @throws IllegalArgumentException if any facet's type is unknown, a referenced source does not
@@ -53,7 +58,40 @@ public class PolicyValidator {
             inputSourceFor(spec).validate(spec);
         }
         validateSteps(policy.steps());
+        validateAssetReferences(policy);
         validateOutput(policy.output());
+    }
+
+    /**
+     * A stored policy's step file bindings must reference stored assets in the policy's own team,
+     * so a saved pipeline can't fail its later (principal-less) runs on a missing file, and a
+     * client can't bind another team's asset by id. Only for stored policies: an ad-hoc run's
+     * {@code fileParameters} keys name the multipart assets supplied with that run instead.
+     */
+    private void validateAssetReferences(Policy policy) {
+        for (PipelineStep step : policy.steps()) {
+            for (Map.Entry<String, String> binding : step.fileParameters().entrySet()) {
+                List<String> ids = PolicyAssetRefs.assetIds(binding.getValue());
+                if (ids.isEmpty()) {
+                    throw new IllegalArgumentException(
+                            "step "
+                                    + step.operation()
+                                    + " has an empty file binding for field '"
+                                    + binding.getKey()
+                                    + "'");
+                }
+                for (String id : ids) {
+                    // One message for absent and other-team: existence must not leak across teams.
+                    assetStore
+                            .get(id)
+                            .filter(asset -> Objects.equals(asset.teamId(), policy.teamId()))
+                            .orElseThrow(
+                                    () ->
+                                            new IllegalArgumentException(
+                                                    "unknown stored file: " + id));
+                }
+            }
+        }
     }
 
     /**

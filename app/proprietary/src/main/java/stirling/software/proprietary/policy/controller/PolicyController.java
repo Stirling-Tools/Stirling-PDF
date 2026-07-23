@@ -48,6 +48,7 @@ import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.audit.AuditContext;
+import stirling.software.proprietary.policy.asset.PolicyAssetCleaner;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.engine.PolicyRunHandle;
@@ -100,6 +101,7 @@ public class PolicyController {
     private final PolicyManagementAuthority policyManagementAuthority;
     private final PolicyTriggerManager policyTriggerManager;
     private final PolicyOverviewService policyOverviewService;
+    private final PolicyAssetCleaner assetCleaner;
     private final ProcessedLedger processedLedger;
     private final List<PolicyTrigger> policyTriggers;
     private final ApplicationProperties applicationProperties;
@@ -253,7 +255,14 @@ public class PolicyController {
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
+        // Snapshot the previous version before saving so supporting files this edit dropped can
+        // be cleaned up once nothing references them.
+        Policy previous =
+                owned.id() == null || owned.id().isBlank()
+                        ? null
+                        : policyStore.get(owned.id()).orElse(null);
         Policy saved = policyStore.save(owned);
+        assetCleaner.cleanupAfterSave(previous, saved);
         // Re-sync trigger registrations now so a new/changed folder-watch policy starts being
         // watched immediately instead of after the next reconcile sweep.
         policyTriggerManager.notifyPoliciesChanged();
@@ -450,10 +459,10 @@ public class PolicyController {
     public ResponseEntity<Void> deletePolicy(@PathVariable String policyId) {
         requirePolicyEditingAllowed();
         // Scope to the caller's team: a policy in another team reads as not-found.
-        boolean accessible =
-                policyStore.get(policyId).filter(policyAccessGuard::canAccess).isPresent();
-        if (accessible && policyStore.delete(policyId)) {
+        Policy policy = policyStore.get(policyId).filter(policyAccessGuard::canAccess).orElse(null);
+        if (policy != null && policyStore.delete(policyId)) {
             processedLedger.clearPolicy(policyId);
+            assetCleaner.cleanupAfterDelete(policy);
             // Cancel any now-orphaned folder watch promptly rather than leaving the WatchKey open
             // until the next reconcile sweep.
             policyTriggerManager.notifyPoliciesChanged();

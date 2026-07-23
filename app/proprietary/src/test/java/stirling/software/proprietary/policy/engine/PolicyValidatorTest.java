@@ -17,9 +17,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import stirling.software.proprietary.policy.asset.InProcessPolicyAssetStore;
+import stirling.software.proprietary.policy.asset.PolicyAsset;
+import stirling.software.proprietary.policy.asset.PolicyAssetStore;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
+import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.TriggerConfig;
 import stirling.software.proprietary.policy.output.PolicyOutputSink;
@@ -38,6 +42,7 @@ class PolicyValidatorTest {
     @Mock private PipelineStepValidator stepValidator;
 
     private final SourceStore sourceStore = new InProcessSourceStore();
+    private final PolicyAssetStore assetStore = new InProcessPolicyAssetStore();
     private PolicyValidator validator;
 
     @BeforeEach
@@ -48,7 +53,8 @@ class PolicyValidatorTest {
                         List.of(inputSource),
                         List.of(outputSink),
                         List.of(stepValidator),
-                        sourceStore);
+                        sourceStore,
+                        assetStore);
     }
 
     @Test
@@ -107,6 +113,64 @@ class PolicyValidatorTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> validator.validateOutput(new OutputSpec("s3", Map.of("connectionId", 1))));
+    }
+
+    @Test
+    void acceptsAStepBindingThatReferencesATeamAsset() {
+        when(inputSource.supports(any())).thenReturn(true);
+        when(outputSink.supports(any())).thenReturn(true);
+        PolicyAsset asset =
+                assetStore.save(
+                        new PolicyAsset(null, "logo.png", null, 0, "owner", null, 1L),
+                        new byte[] {1});
+
+        validator.validate(withFileBinding(asset.id(), null));
+    }
+
+    @Test
+    void rejectsAStepBindingToAnUnknownAsset() {
+        when(inputSource.supports(any())).thenReturn(true);
+
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> validator.validate(withFileBinding("missing-asset", null)));
+        assertTrue(ex.getMessage().contains("unknown stored file"));
+    }
+
+    @Test
+    void rejectsAStepBindingToAnotherTeamsAsset() {
+        when(inputSource.supports(any())).thenReturn(true);
+        PolicyAsset foreign =
+                assetStore.save(
+                        new PolicyAsset(null, "secret.p12", null, 0, "owner", 99L, 1L),
+                        new byte[] {1});
+
+        // Policy has no team; the asset belongs to team 99 — must read as unknown, not leak.
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> validator.validate(withFileBinding(foreign.id(), null)));
+        assertTrue(ex.getMessage().contains("unknown stored file"));
+    }
+
+    /** A manual-only policy whose single step binds a file field to the given asset id. */
+    private Policy withFileBinding(String assetId, Long teamId) {
+        PipelineStep step =
+                new PipelineStep(
+                        "/api/v1/security/add-watermark",
+                        Map.of(),
+                        Map.of("watermarkImage", assetId));
+        return new Policy(
+                "p1",
+                "p",
+                "owner",
+                true,
+                null,
+                List.of(folderSourceId()),
+                List.of(step),
+                OutputSpec.inline(),
+                teamId);
     }
 
     @Test
