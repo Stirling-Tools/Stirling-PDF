@@ -37,8 +37,6 @@ import LocalIcon from "@app/components/shared/LocalIcon";
 import { compareEntriesByVisualOrder } from "@app/components/viewer/commentsSidebarOrder";
 import { SidebarBase } from "@app/components/viewer/SidebarBase";
 
-
-
 /** PDF subtypes that are inherently standalone comment annotations (not linked to other annotations). */
 const STANDALONE_COMMENT_SUBTYPES = new Set([
   PdfAnnotationSubtype.TEXT,

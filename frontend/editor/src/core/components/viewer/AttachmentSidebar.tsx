@@ -20,7 +20,6 @@ interface AttachmentSidebarProps {
   preloadCacheKeys?: string[];
 }
 
-
 interface AttachmentCacheEntry {
   status: "idle" | "loading" | "success" | "error";
   attachments: PdfAttachmentObject[] | null;

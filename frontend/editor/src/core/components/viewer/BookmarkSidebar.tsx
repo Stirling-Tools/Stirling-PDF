@@ -30,8 +30,6 @@ interface BookmarkSidebarProps {
   preloadCacheKeys?: string[];
 }
 
-
-
 type BookmarkNode = PdfBookmarkObject & { id: string };
 
 type BookmarkCacheStatus = "idle" | "loading" | "success" | "error";

@@ -1,11 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import {
-  Text,
-  Checkbox,
-  Stack,
-  Loader,
-  Tooltip,
-} from "@mantine/core";
+import { Text, Checkbox, Stack, Loader, Tooltip } from "@mantine/core";
 import LayersIcon from "@mui/icons-material/Layers";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -36,8 +30,6 @@ interface LayerSidebarProps {
   /** Called when layer detection completes, reporting whether the PDF has layers. */
   onLayersDetected?: (hasLayers: boolean) => void;
 }
-
-
 
 type LoadStatus = "idle" | "loading" | "ready" | "no-layers" | "error";
 
