@@ -54,6 +54,18 @@ fn check_backend_status() -> Result<(), String> {
     Ok(())
 }
 
+/// Allow desktop launches to opt into the normal login flow when either the
+/// new desktop-specific flag or the existing SECURITY_ENABLELOGIN flag is set.
+fn desktop_login_enabled_from_env() -> bool {
+    matches!(
+        std::env::var("STIRLING_PDF_DESKTOP_ENABLE_LOGIN")
+            .or_else(|_| std::env::var("SECURITY_ENABLELOGIN"))
+            .ok()
+            .as_deref(),
+        Some("true" | "TRUE" | "True" | "1" | "yes" | "YES" | "on" | "ON")
+    )
+}
+
 // Find the bundled JRE and return the java executable path
 fn find_bundled_jre(resource_dir: &PathBuf) -> Result<PathBuf, String> {
     let jre_dir = resource_dir.join("runtime").join("jre");
@@ -213,7 +225,11 @@ fn run_stirling_pdf_jar(app: &tauri::AppHandle, java_path: &PathBuf, jar_path: &
         // No reverse proxy in front of the local sidecar, so don't trust forwarded headers.
         // Stops a LAN caller spoofing X-Forwarded-For to defeat the desktop-only signing gate.
         "-Dserver.forward-headers-strategy=none",
-        "-Dsecurity.enableLogin=false",  // Disable login for desktop mode
+        if desktop_login_enabled_from_env() {
+            "-Dsecurity.enableLogin=true"
+        } else {
+            "-Dsecurity.enableLogin=false"
+        },
         "-Dsecurity.csrfDisabled=true",  // Disable CSRF for desktop mode
     ];
 

@@ -26,6 +26,14 @@ vars:
           esac
       fi
 
+env:
+  # Desktop builds default to the smallest useful backend surface unless a task
+  # explicitly opts into extra features or login.
+  DISABLE_ADDITIONAL_FEATURES: '{{.DISABLE_ADDITIONAL_FEATURES | default "true"}}'
+  SECURITY_ENABLELOGIN: '{{.SECURITY_ENABLELOGIN | default "false"}}'
+  # Reuse the previously built backend JAR unless a clean rebuild is requested.
+  JLINK_REUSE_CACHE: '{{.JLINK_REUSE_CACHE | default "true"}}'
+
 tasks:
   prepare:
     desc: "Prepare desktop build dependencies"
@@ -47,6 +55,19 @@ tasks:
     deps: [prepare]
     ignore_error: true
     dir: editor
+    cmds:
+      - npx tauri dev --no-watch
+
+  dev:login:
+    desc: "Start Tauri desktop dev mode with login enabled and cache reuse"
+    deps:
+      - task: prepare
+        vars:
+          SECURITY_ENABLELOGIN: "true"
+    ignore_error: true
+    dir: editor
+    env:
+      SECURITY_ENABLELOGIN: "true"
     cmds:
       - npx tauri dev --no-watch
 
@@ -106,7 +127,7 @@ tasks:
 
   jlink:
     desc: "Build backend JAR and create JLink runtime for Tauri"
-    deps: [jlink:jar, jlink:runtime]
+    deps: [jlink:cacheremove, jlink:jar, jlink:runtime]
     # Runs after the runtime is in place. Lives here (not in jlink:runtime's
     # cmds) so it still fires when jlink:runtime short-circuits on its `status:`
     # check and reuses an existing runtime/jre - that reuse path is exactly how
@@ -115,27 +136,40 @@ tasks:
       - task: jlink:verify
 
   jlink:verify:
-    desc: "Fail the build if the bundled JRE is older than the app JAR requires"
+    desc: "Verify the bundled JRE exists and matches the app JAR's required Java version"
     dir: editor
     env:
       REQUIRED_JAVA: "{{.REQUIRED_JAVA}}"
     cmds:
-      - node scripts/verify-bundled-jre.mjs src-tauri/runtime/jre/release
+      - node scripts/verify-bundled-jre.mjs
+
+  jlink:cacheremove:
+    desc: "Remove cached backend JARs before a clean desktop rebuild"
+    dir: ..
+    if: '{{eq .JLINK_REUSE_CACHE "false"}}'
+    cmds:
+      - cmd: rm -rf app/core/build/libs
+      - 'echo "rm -rf app/core/build/libs"'
+      - task: jlink:clean
 
   jlink:jar:
     desc: "Build backend JAR for Tauri bundling (host-OS natives only by default)"
     run: once
     dir: ..
     env:
-      DISABLE_ADDITIONAL_FEATURES: "true"
+      DISABLE_ADDITIONAL_FEATURES: '{{.DISABLE_ADDITIONAL_FEATURES}}'
+      SECURITY_ENABLELOGIN: '{{.SECURITY_ENABLELOGIN}}'
     cmds:
-      - echo "Building bootJar with JPDFium natives for {{.JPDFIUM_PLATFORMS}}"
-      - cmd: cmd /c gradlew.bat bootJar --no-daemon -PjpdfiumPlatforms={{.JPDFIUM_PLATFORMS}}
+      - 'echo "Building bootJar with JPDFium natives for {{.JPDFIUM_PLATFORMS}}"'
+      - cmd: 'cmd /c "gradlew.bat bootJar --no-daemon -PjpdfiumPlatforms={{.JPDFIUM_PLATFORMS}}"'
         platforms: [windows]
-      - cmd: ./gradlew bootJar --no-daemon -PjpdfiumPlatforms={{.JPDFIUM_PLATFORMS}}
+      - cmd: './gradlew bootJar --no-daemon -PjpdfiumPlatforms={{.JPDFIUM_PLATFORMS}}'
         platforms: [linux, darwin]
       - mkdir -p frontend/editor/src-tauri/libs
-      - cp app/core/build/libs/stirling-pdf-*.jar frontend/editor/src-tauri/libs/
+      - cmd: cp app/core/build/libs/stirling-pdf-*.jar frontend/editor/src-tauri/libs/
+        platforms: [linux, darwin]
+      - cmd: powershell -NoProfile -ExecutionPolicy Bypass -Command "New-Item -ItemType Directory -Force -Path 'frontend/editor/src-tauri/libs' | Out-Null; Copy-Item -Force (Get-ChildItem 'app/core/build/libs/stirling-pdf-*.jar' | Select-Object -First 1) 'frontend/editor/src-tauri/libs'"
+        platforms: [windows]
     status:
       - test -f frontend/editor/src-tauri/libs/stirling-pdf-*.jar
 
@@ -153,16 +187,7 @@ tasks:
       # jdk.crypto.mscapi (the Windows certificate store / SunMSCAPI provider, used by
       # hardware-backed cert signing) is a Windows-only module - it only exists in a Windows
       # JDK's jmods, so it is added on Windows only or jlink fails to resolve it elsewhere.
-      - cmd: |
-          JLINK="${JAVA_HOME:+$JAVA_HOME/bin/}jlink"
-          JLINK_COMPRESS="$("$JLINK" --help 2>&1 | grep -q 'zip-\[0-9\]' && echo zip-6 || echo 2)"
-          "$JLINK" \
-            --add-modules {{.JLINK_MODULES}},jdk.crypto.mscapi \
-            --strip-debug \
-            --compress="$JLINK_COMPRESS" \
-            --no-header-files \
-            --no-man-pages \
-            --output runtime/jre
+      - cmd: powershell -NoProfile -ExecutionPolicy Bypass -File ../../../scripts/build-jlink-runtime.ps1 -Modules "{{.JLINK_MODULES}}"
         platforms: [windows]
       - cmd: |
           JLINK="${JAVA_HOME:+$JAVA_HOME/bin/}jlink"
@@ -194,8 +219,6 @@ tasks:
       # `desktop:build` run `jlink:clean` first to force a fresh build.
       - cmd: chmod -R u+w runtime/jre
         platforms: [linux, darwin]
-      - cmd: powershell -NoProfile -Command "Get-ChildItem -Recurse runtime/jre | ForEach-Object { $_.IsReadOnly = $false }"
-        platforms: [windows]
     status:
       - test -f runtime/jre/release
 
