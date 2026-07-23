@@ -43,19 +43,7 @@
   gap: 1.25rem;
 }
 
-/* Toolbar: filter pills left, filename search right */
-.portal-documents__toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.portal-documents__search {
-  width: 18rem;
-  max-width: 100%;
-}
+/* Toolbar now uses the shared <TableToolbar>. */
 
 .portal-documents__table-skeleton {
   display: flex;

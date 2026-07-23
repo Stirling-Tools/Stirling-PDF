@@ -7208,6 +7208,11 @@ connectSource = "Connect a source"
 description = "Create your first pipeline: pick the sources it runs over, chain the operations, and choose where output goes."
 title = "No pipelines yet"
 
+[portal.pipelines.filters]
+all = "All"
+ariaLabel = "Filter pipelines by status"
+search = "Search pipelines"
+
 [portal.pipelines.kpi]
 active = "Active"
 paused = "Paused"
@@ -7238,6 +7243,7 @@ paused = "Paused"
 
 [portal.pipelines.table]
 name = "Pipeline"
+noMatch = "No pipelines match."
 sources = "Sources"
 status = "Status"
 steps = "Steps"
@@ -7892,6 +7898,11 @@ title = "Delete source?"
 description = "Connect a folder (and, soon, cloud storage) so your policies have somewhere to pull documents from."
 title = "No sources connected yet"
 
+[portal.sources.filters]
+all = "All"
+ariaLabel = "Filter sources by status"
+search = "Search sources"
+
 [portal.sources.kpi]
 inUse = "In use"
 total = "Connections"
@@ -7904,6 +7915,7 @@ unused = "Unused"
 
 [portal.sources.table]
 documents = "Documents"
+noMatch = "No sources match."
 source = "Source"
 status = "Status"
 usedBy = "Policies"

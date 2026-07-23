@@ -1,0 +1,60 @@
+.sui-statbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1) var(--space-5);
+  flex-wrap: wrap;
+  padding: 0.625rem var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+}
+
+.sui-statbar__item {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-4);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+.sui-statbar__item--emphasis {
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+/* Attention facts pick a semantic tone; `-dark` variants stay legible in both themes. */
+.sui-statbar__item--success {
+  color: var(--color-green-dark);
+}
+.sui-statbar__item--warning {
+  color: var(--color-amber-dark);
+  font-weight: 600;
+}
+.sui-statbar__item--danger {
+  color: var(--color-red-dark);
+  font-weight: 600;
+}
+.sui-statbar__item--info {
+  color: var(--color-blue-dark);
+}
+
+/* Clickable facts are real buttons wearing the fact's own type. */
+button.sui-statbar__item {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+.sui-statbar__item--link:hover {
+  text-decoration: underline;
+}
+.sui-statbar__item--link:focus-visible {
+  outline: 0.125rem solid var(--color-blue);
+  outline-offset: 0.125rem;
+  border-radius: var(--radius-sm);
+}
+
+/* Facts with a `title` explanation hint at it. */
+span.sui-statbar__item[title] {
+  cursor: help;
+}

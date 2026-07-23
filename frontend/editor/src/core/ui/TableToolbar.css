@@ -1,0 +1,28 @@
+.sui-table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+/* Search-only toolbars keep the input on the right. */
+.sui-table-toolbar > .sui-table-toolbar__search:only-child {
+  margin-left: auto;
+}
+.sui-table-toolbar__search {
+  width: 15rem;
+}
+
+/* Attached: the toolbar is the table card's own top row. The card border is
+   the toolbar's; the joined table's top border is the dividing hairline. */
+.sui-table-toolbar--attached {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-bottom: none;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  padding: var(--space-2) var(--space-3);
+}
+.sui-table-toolbar--attached + .sui-table-wrap {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}

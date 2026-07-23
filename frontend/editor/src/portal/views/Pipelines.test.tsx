@@ -3,6 +3,7 @@ import {
   fireEvent,
   render as baseRender,
   screen,
+  within,
 } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
@@ -85,13 +86,16 @@ describe("Pipelines view", () => {
     expect(await screen.findByText("pipeline page")).toBeInTheDocument();
   });
 
-  it("shows the KPI stat boxes when pipelines exist", async () => {
+  it("shows the stats bar when pipelines exist", async () => {
     renderView();
     await screen.findByText("Redaction sweep");
-    expect(screen.getByText("portal.pipelines.kpi.total")).toBeInTheDocument();
+    // The facts bar renders "value label" in one node, so match on substring.
+    expect(
+      screen.getByText(/portal\.pipelines\.kpi\.total/),
+    ).toBeInTheDocument();
   });
 
-  it("hides the stat boxes and shows create + connect-source CTAs when empty", async () => {
+  it("hides the stats bar and shows create + connect-source CTAs when empty", async () => {
     fetchPipelines.mockResolvedValue({
       kpis: [
         { value: 0, description: "" },
@@ -107,9 +111,48 @@ describe("Pipelines view", () => {
     expect(
       screen.getByText("portal.pipelines.empty.connectSource"),
     ).toBeInTheDocument();
-    // The KPI strip is gone: no stat-box labels over an empty page.
+    // The stats bar is gone: no fact labels over an empty page.
     expect(
-      screen.queryByText("portal.pipelines.kpi.total"),
+      screen.queryByText(/portal\.pipelines\.kpi\.total/),
     ).not.toBeInTheDocument();
+  });
+
+  it("filters rows by status chip and by search", async () => {
+    fetchPipelines.mockResolvedValue({
+      kpis: RESPONSE.kpis,
+      pipelines: [
+        ...RESPONSE.pipelines,
+        {
+          id: "plc-archive",
+          name: "Nightly archive",
+          enabled: false,
+          status: "paused",
+          trigger: "manual",
+          sources: [],
+          steps: [],
+          output: "inline",
+          owner: "ops@acme.com",
+        },
+      ],
+    });
+    renderView();
+    await screen.findByText("Redaction sweep");
+
+    // The paused chip narrows to the paused pipeline. Scope the click to the
+    // filter group: the same status key also renders in row badges.
+    const chips = within(
+      screen.getByRole("group", { name: "portal.pipelines.filters.ariaLabel" }),
+    );
+    fireEvent.click(chips.getByText("portal.pipelines.status.paused"));
+    expect(screen.queryByText("Redaction sweep")).not.toBeInTheDocument();
+    expect(screen.getByText("Nightly archive")).toBeInTheDocument();
+
+    // Back to all, then search by name.
+    fireEvent.click(chips.getByText("portal.pipelines.filters.all"));
+    fireEvent.change(screen.getByLabelText("portal.pipelines.filters.search"), {
+      target: { value: "redaction" },
+    });
+    expect(screen.getByText("Redaction sweep")).toBeInTheDocument();
+    expect(screen.queryByText("Nightly archive")).not.toBeInTheDocument();
   });
 });

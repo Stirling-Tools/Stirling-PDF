@@ -3,6 +3,7 @@ import {
   fireEvent,
   render as baseRender,
   screen,
+  within,
 } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
@@ -134,8 +135,49 @@ describe("Sources view", () => {
     expect(
       await screen.findByText("portal.sources.empty.title"),
     ).toBeInTheDocument();
+    // The facts bar renders "value label" in one node, so match on substring.
     expect(
-      screen.queryByText("portal.sources.kpi.total"),
+      screen.queryByText(/portal\.sources\.kpi\.total/),
     ).not.toBeInTheDocument();
+  });
+
+  it("filters rows by status chip and by search", async () => {
+    fetchSources.mockResolvedValue({
+      kpis: RESPONSE.kpis,
+      sources: [
+        ...RESPONSE.sources,
+        {
+          id: "src-2",
+          name: "Archive drop",
+          type: "folder",
+          status: "unused",
+          referenceCount: 0,
+          referencingPolicies: [],
+          config: [],
+          docsTotal: 0,
+          docs24h: 0,
+          docs30d: 0,
+        },
+      ],
+    });
+    renderView();
+    await screen.findByText("Claims intake");
+
+    // The unused chip narrows to the unused source. Scope the click to the
+    // filter group: the same status key also renders in row badges.
+    const chips = within(
+      screen.getByRole("group", { name: "portal.sources.filters.ariaLabel" }),
+    );
+    fireEvent.click(chips.getByText("portal.sources.status.unused"));
+    expect(screen.queryByText("Claims intake")).not.toBeInTheDocument();
+    expect(screen.getByText("Archive drop")).toBeInTheDocument();
+
+    // Back to all, then search by name.
+    fireEvent.click(chips.getByText("portal.sources.filters.all"));
+    fireEvent.change(screen.getByLabelText("portal.sources.filters.search"), {
+      target: { value: "claims" },
+    });
+    expect(screen.getByText("Claims intake")).toBeInTheDocument();
+    expect(screen.queryByText("Archive drop")).not.toBeInTheDocument();
   });
 });

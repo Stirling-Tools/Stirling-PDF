@@ -12,6 +12,7 @@ const meta: Meta<typeof StatusBadge> = {
       options: ["neutral", "success", "warning", "danger", "info", "purple"],
     },
     size: { control: "inline-radio", options: ["sm", "md", "lg"] },
+    variant: { control: "inline-radio", options: ["pill", "subtle"] },
   },
 };
 export default meta;
@@ -34,6 +35,23 @@ export const AllTones: Story = {
 
 export const Live: Story = {
   args: { tone: "success", pulse: true, children: "Live" },
+};
+
+/** Toned-down table-cell treatment: the dot carries the tone, the label stays quiet. */
+export const Subtle: Story = {
+  render: () => (
+    <div style={{ display: "flex", gap: 16 }}>
+      <StatusBadge variant="subtle" tone="success" size="sm">
+        Active
+      </StatusBadge>
+      <StatusBadge variant="subtle" tone="warning" size="sm">
+        Needs review
+      </StatusBadge>
+      <StatusBadge variant="subtle" tone="neutral" size="sm">
+        Idle
+      </StatusBadge>
+    </div>
+  ),
 };
 
 export const Sizes: Story = {

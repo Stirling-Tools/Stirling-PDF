@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { MetricCard, MetricStrip } from "@app/ui";
+import { StatBar, StatBarItem } from "@app/ui";
 import type { SourcesResponse } from "@portal/api/sources";
 
 /**
@@ -19,21 +19,23 @@ interface KpiStripProps {
   loading: boolean;
 }
 
+/** The toned-down facts bar above the sources table (was a row of metric boxes). */
 export function KpiStrip({ data, loading }: KpiStripProps) {
   const { t } = useTranslation();
   return (
-    <MetricStrip>
+    <StatBar>
       {KPI_LABEL_KEYS.map((labelKey, i) => {
         const k = loading ? undefined : data?.kpis[i];
         return (
-          <MetricCard
+          <StatBarItem
             key={labelKey}
-            label={t(labelKey)}
-            value={k?.value ?? "—"}
-            description={k?.description}
-          />
+            emphasis={i === 0}
+            title={k?.description || undefined}
+          >
+            {k?.value ?? "—"} {t(labelKey)}
+          </StatBarItem>
         );
       })}
-    </MetricStrip>
+    </StatBar>
   );
 }

@@ -120,7 +120,11 @@ export function ReviewQueueTable({
         header: t("portal.documents.table.columns.status"),
         width: "10rem",
         render: (d) => (
-          <StatusBadge tone={DOCUMENT_STATUS_TONE[d.status]} size="sm">
+          <StatusBadge
+            variant="subtle"
+            tone={DOCUMENT_STATUS_TONE[d.status]}
+            size="sm"
+          >
             {t(DOCUMENT_STATUS_LABEL[d.status])}
             {d.status === "in-review" && d.reviewer ? ` · ${d.reviewer}` : ""}
           </StatusBadge>
