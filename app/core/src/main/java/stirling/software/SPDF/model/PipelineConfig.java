@@ -15,6 +15,8 @@ public class PipelineConfig {
 
     private String outputDir;
 
+    private List<String> inputExtensions;
+
     @JsonProperty("outputFileName")
     private String outputPattern;
 }
