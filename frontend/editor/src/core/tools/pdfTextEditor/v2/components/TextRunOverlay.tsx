@@ -546,6 +546,13 @@ export function TextRunOverlay({
         fontWeight,
         fontStyle,
         fontSize: fontSizePx,
+        // Mirror the run's letter-spacing (Tc) so the editing view tracks
+        // the wide-set glyphs underneath - the caret lands on the glyph
+        // being edited instead of drifting left of it. Unset for normal
+        // runs (charSpacingPt 0), keeping their layout untouched.
+        letterSpacing: run.charSpacingPt
+          ? `${run.charSpacingPt * scale}px`
+          : undefined,
         // Same line-height used in the baseline math above, so the CSS
         // baselines land exactly where we computed `top`.
         lineHeight: `${lineHeightPx}px`,

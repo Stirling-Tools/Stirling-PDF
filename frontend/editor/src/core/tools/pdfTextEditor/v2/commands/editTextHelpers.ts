@@ -264,6 +264,16 @@ interface CreatedTextOptions {
    * Omit (or undefined) for axis-aligned text - then emit is unchanged.
    */
   rotation?: { cos: number; sin: number };
+  /**
+   * Extra advance per glyph in PDF points - the source run's rendered
+   * letter-spacing (Tc), inferred at read time. The per-char emit adds it
+   * between glyphs and word gaps widen by it per whitespace char, so an
+   * edited spaced-caps heading keeps its tracking. PDFium exposes no Tc
+   * setter, so single-object (SetText) emits can't reproduce it internally -
+   * they keep natural tracking (the pre-existing behaviour). 0/undefined =
+   * no change to any emit path.
+   */
+  charSpacingPt?: number;
 }
 
 interface CreateTextObjModule {
@@ -469,6 +479,12 @@ export function _clearOnPageAdvCacheForTests(): void {
 export interface WordChunk {
   text: string;
   gapAfterPt: number;
+  /**
+   * How many whitespace chars the gap after this chunk represents. Lets the
+   * emit widen each gap by the run's letter-spacing per whitespace char (a
+   * Tc applies to space glyphs too), keeping word gaps proportional.
+   */
+  gapCharCount: number;
 }
 export function splitIntoWordChunks(
   line: string,
@@ -483,6 +499,7 @@ export function splitIntoWordChunks(
   // [ \t]) so non-breaking / unicode spaces also become gaps, never glyphs.
   const gapRe = /\s+/g;
   let leadingGapPt = 0;
+  let leadingGapChars = 0;
   let lastIdx = 0;
   let m: RegExpExecArray | null;
   while ((m = gapRe.exec(line)) !== null) {
@@ -495,19 +512,28 @@ export function splitIntoWordChunks(
       // the next chunk's leading offset rather than emitting an empty
       // text object PDFium would reject.
       leadingGapPt += gapPt;
+      leadingGapChars += gapText.length;
     } else {
-      chunks.push({ text: before, gapAfterPt: gapPt });
+      chunks.push({
+        text: before,
+        gapAfterPt: gapPt,
+        gapCharCount: gapText.length,
+      });
     }
     lastIdx = gapRe.lastIndex;
   }
   // Trailing non-whitespace tail.
   if (lastIdx < line.length) {
-    chunks.push({ text: line.slice(lastIdx), gapAfterPt: 0 });
+    chunks.push({ text: line.slice(lastIdx), gapAfterPt: 0, gapCharCount: 0 });
   }
   // Leading whitespace is exposed as a side field the caller folds into
   // the initial cursor (it can't live in any chunk's gapAfterPt).
-  (chunks as WordChunk[] & { leadingGapPt?: number }).leadingGapPt =
-    leadingGapPt;
+  const side = chunks as WordChunk[] & {
+    leadingGapPt?: number;
+    leadingGapChars?: number;
+  };
+  side.leadingGapPt = leadingGapPt;
+  side.leadingGapChars = leadingGapChars;
   return chunks;
 }
 
@@ -1051,6 +1077,10 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
               ? measured
               : cursor + measureAdvancePt(pc.ch, family, size);
         }
+        // Reproduce the source run's letter-spacing (Tc): the glyph advance
+        // above is the font's natural width, so a spaced-caps heading would
+        // otherwise collapse to normal tracking on edit.
+        cursor += opts.charSpacingPt ?? 0;
         emitCharcodeEvent({
           timestamp: 0,
           strategy: "backend",
@@ -1084,8 +1114,40 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     // fall through to the normal path if per-char attempt didn't work
   }
 
-  // Fast path: no whitespace at all → one text object holds the whole word.
+  // Letter-spaced runs: a single text object cannot carry Tc (PDFium exposes
+  // no setter), so when the per-char backend branch above didn't run (cold
+  // cache, backend down) a whole-word emit would collapse the tracking. Emit
+  // one object per char instead, spacing the cursor manually - each char
+  // still goes through emitWord's full resolve/validate/fallback chain.
+  // Unspaced runs (spacing 0) never enter this branch, keeping the normal
+  // single-object fast path byte-for-byte unchanged.
   const hasAnyWhitespace = /\s/.test(opts.text);
+  const spacingPt = opts.charSpacingPt ?? 0;
+  if (
+    !hasAnyWhitespace &&
+    Math.abs(spacingPt) > 0.05 &&
+    [...opts.text].length > 1
+  ) {
+    const ptrs: number[] = [];
+    let cursor = opts.x;
+    for (const ch of opts.text) {
+      const ptr = emitWord(ch, cursor);
+      if (ptr) ptrs.push(ptr);
+      // Advance by the char's true advance width: the on-page advance of the
+      // same char+font when it is still measurable, else canvas font metrics.
+      // NOT the emitted object's ink bounds - those exclude side bearings
+      // (and can over-read), which would warp the reproduced tracking.
+      const advEm = opts.originalFontPtr
+        ? onPageAdvanceEm(m, opts.page.pagePtr, opts.originalFontPtr, ch)
+        : null;
+      cursor +=
+        (advEm != null ? advEm * size : measureAdvancePt(ch, family, size)) +
+        spacingPt;
+    }
+    return withRotation(ptrs);
+  }
+
+  // Fast path: no whitespace at all → one text object holds the whole word.
   if (!hasAnyWhitespace) {
     const ptr = emitWord(opts.text, opts.x);
     return withRotation(ptr ? [ptr] : []);
@@ -1097,9 +1159,14 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
   // no-ink fallback.
   const chunks = splitIntoWordChunks(opts.text, family, size) as WordChunk[] & {
     leadingGapPt?: number;
+    leadingGapChars?: number;
   };
+  const spacing = opts.charSpacingPt ?? 0;
   const ptrs: number[] = [];
-  let cursor = opts.x + (chunks.leadingGapPt ?? 0);
+  let cursor =
+    opts.x +
+    (chunks.leadingGapPt ?? 0) +
+    spacing * (chunks.leadingGapChars ?? 0);
   for (const chunk of chunks) {
     if (chunk.text.length > 0) {
       // Recurse per word (a chunk has no whitespace, so this hits the
@@ -1124,7 +1191,12 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
           : cursor + measureAdvancePt(chunk.text, family, size);
       ptrs.push(...wordPtrs);
     }
-    cursor += chunk.gapAfterPt;
+    // Word gaps stretch with the run's letter-spacing too: the source layout
+    // applies Tc after the glyph preceding the gap AND after each space, so
+    // an N-space gap carries N+1 spacing contributions.
+    cursor +=
+      chunk.gapAfterPt +
+      (chunk.gapCharCount > 0 ? spacing * (chunk.gapCharCount + 1) : 0);
   }
   return withRotation(ptrs);
 }

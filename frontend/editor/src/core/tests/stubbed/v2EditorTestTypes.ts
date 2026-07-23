@@ -44,6 +44,8 @@ export interface V2Run {
   paragraphLeafPtrs: number[];
   mergedFromPtrs: number[];
   paragraphLineSlots?: V2LineSlot[];
+  /** Inferred letter-spacing (Tc footprint) in PDF points. */
+  charSpacingPt: number;
 }
 
 export interface V2Image {

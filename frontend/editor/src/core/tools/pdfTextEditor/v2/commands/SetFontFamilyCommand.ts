@@ -122,6 +122,7 @@ export class SetFontFamilyCommand implements Command {
         fill: run.fill,
         renderMode: run.renderMode,
         originalFontPtr: 0, // base-14: never reuse the source font
+        charSpacingPt: run.charSpacingPt,
         fallbackFamily: this.nextFamily,
         // Keep the run's rotation on re-emit (no-op for upright text).
         rotation: rot,

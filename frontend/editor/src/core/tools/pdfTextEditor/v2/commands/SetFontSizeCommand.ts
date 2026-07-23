@@ -55,6 +55,9 @@ export class SetFontSizeCommand implements Command {
       this.nextSize / Math.max(0.01, this.prevSize),
     );
     rescaleRunModel(run, ratio, run.matrix.e, run.matrix.f);
+    // The glyph gaps scale with the glyphs, so the tracked letter-spacing
+    // must scale too or a later edit re-emits with the stale pt value.
+    run.charSpacingPt *= ratio;
     run.dirty = true;
     page.markDirty();
     page.markNeedsGenerate();
@@ -76,6 +79,7 @@ export class SetFontSizeCommand implements Command {
     run.fontSize = this.prevSize;
     run.matrix = scaleMatrix(run.matrix, ratio);
     rescaleRunModel(run, ratio, run.matrix.e, run.matrix.f);
+    run.charSpacingPt *= ratio;
     run.dirty = true;
     page.markDirty();
     page.markNeedsGenerate();

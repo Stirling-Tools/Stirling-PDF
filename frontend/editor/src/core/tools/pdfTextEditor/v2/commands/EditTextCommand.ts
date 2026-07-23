@@ -34,6 +34,8 @@ interface RevertLine {
   y: number;
   fill: { r: number; g: number; b: number; a: number };
   fontSize: number;
+  /** Source run's letter-spacing so an undo re-emit keeps the tracking. */
+  charSpacingPt: number;
 }
 
 /** One rebuilt line for {@link EditTextCommand.rebuildAsOverlayModel}. */
@@ -457,6 +459,7 @@ export class EditTextCommand implements Command {
         renderMode: run.renderMode,
         originalFontPtr,
         originalFontSubset: run.fontSubset,
+        charSpacingPt: run.charSpacingPt,
         fallbackFamily,
         // Keep the run's rotation on re-emit (no-op for upright text).
         rotation: rot,
@@ -594,6 +597,7 @@ export class EditTextCommand implements Command {
             fill: run.fill,
             renderMode: run.renderMode,
             originalFontPtr: 0,
+            charSpacingPt: run.charSpacingPt,
             fallbackFamily,
           });
           patchSlotPtrsByBaseline(m, run, rem.y, ptrs, rem.text);
@@ -796,6 +800,7 @@ export class EditTextCommand implements Command {
         fontSize: line.fontSize,
         fill: line.fill,
         originalFontPtr: 0,
+        charSpacingPt: line.charSpacingPt,
         fallbackFamily: revertFallback,
         // Keep the run's original orientation - without this, undoing an
         // edit on a rotated run scattered its text axis-aligned.
@@ -909,6 +914,7 @@ export class EditTextCommand implements Command {
           fill: run.fill,
           renderMode: run.renderMode,
           originalFontPtr: 0,
+          charSpacingPt: run.charSpacingPt,
           fallbackFamily,
         });
         this.lineEdit.createdPtrs.push(...ptrs);
@@ -1050,6 +1056,7 @@ export class EditTextCommand implements Command {
           fill: run.fill,
           renderMode: run.renderMode,
           originalFontPtr: 0,
+          charSpacingPt: run.charSpacingPt,
           fallbackFamily,
         });
         this.lineEdit.createdPtrs.push(...ptrs);
@@ -1128,6 +1135,7 @@ export class EditTextCommand implements Command {
             fill: run.fill,
             renderMode: run.renderMode,
             originalFontPtr: 0,
+            charSpacingPt: run.charSpacingPt,
             fallbackFamily,
           });
           slotLive.push(...ptrs);
@@ -1210,6 +1218,7 @@ function snapshotRevertLines(
     y: run.matrix.f - idx * lineHeight,
     fill: { ...run.fill },
     fontSize: Math.max(4, run.fontSize),
+    charSpacingPt: run.charSpacingPt,
   }));
 }
 

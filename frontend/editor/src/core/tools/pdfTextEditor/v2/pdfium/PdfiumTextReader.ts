@@ -76,18 +76,149 @@ export class PdfiumTextReader {
         IDENTITY,
         textPagePtr,
       );
+
+      page.setRuns(runs);
+      page.setImages(images);
+      // LineGrouper always runs (merges per-glyph/per-word source objects
+      // into one line). ParagraphGrouper only runs in "auto" mode, where
+      // vertically-adjacent equal-spaced lines fold into one paragraph.
+      LineGrouper.apply(page);
+      if (mode === "auto") ParagraphGrouper.apply(page);
+      // Grouping is done, the text page is still open: infer each run's
+      // effective letter-spacing from its rendered char geometry so edits
+      // can reproduce the tracking (PDFium exposes no Tc getter).
+      inferRunCharSpacing(m, page, textPagePtr);
     } finally {
       m.FPDFText_ClosePage(textPagePtr);
     }
-
-    page.setRuns(runs);
-    page.setImages(images);
-    // LineGrouper always runs (merges per-glyph/per-word source objects
-    // into one line). ParagraphGrouper only runs in "auto" mode, where
-    // vertically-adjacent equal-spaced lines fold into one paragraph.
-    LineGrouper.apply(page);
-    if (mode === "auto") ParagraphGrouper.apply(page);
     page.loaded = true;
+  }
+}
+
+/**
+ * Infer each run's effective character spacing (the rendered footprint of the
+ * PDF's Tc operator) from on-page char geometry: for consecutive text-page
+ * chars inside one run, `extra = nextOrigin.x - origin.x - glyphAdvance`. The
+ * loose char box excludes Tc while origin deltas include it, so the median
+ * `extra` over the run's letter pairs recovers Tc in page points regardless
+ * of how the producer split size between Tf and the text matrix.
+ *
+ * Median (not mean) so kerning-pair adjustments and the odd outlier don't
+ * skew the estimate. Whitespace-adjacent pairs are excluded (word spacing Tw
+ * would contaminate them), as are pairs spanning different runs. Rotated runs
+ * are skipped - the axis-aligned box math doesn't apply. Runs with fewer than
+ * two usable pairs, or a sub-noise median, keep spacing 0 (status quo).
+ */
+function inferRunCharSpacing(
+  m: WrappedPdfiumModule,
+  page: Page,
+  textPagePtr: number,
+): void {
+  const runs = page.runs;
+  if (runs.length === 0) return;
+  // Map every backing object ptr to its (post-grouping) rep run.
+  const ptrToRun = new Map<number, TextRun>();
+  for (const run of runs) {
+    const members =
+      run.paragraphLeafPtrs.length > 0
+        ? run.paragraphLeafPtrs
+        : run.mergedFromPtrs.length > 0
+          ? run.mergedFromPtrs
+          : [run.pdfiumObjPtr];
+    for (const ptr of members) if (ptr) ptrToRun.set(ptr, run);
+  }
+
+  const charCount = m.FPDFText_CountChars(textPagePtr);
+  if (charCount <= 1) return;
+  const wasm = m.pdfium.wasmExports;
+  const rectBuf = wasm.malloc(16); // FS_RECT: 4 floats {l, t, r, b}
+  const samples = new Map<TextRun, number[]>();
+  try {
+    const looseMod = m as unknown as {
+      FPDFText_GetLooseCharBox?: (
+        tp: number,
+        i: number,
+        rect: number,
+      ) => boolean;
+    };
+    if (!looseMod.FPDFText_GetLooseCharBox) return;
+    const heap = (m.pdfium as unknown as { HEAPU8: Uint8Array }).HEAPU8;
+    let prev: {
+      run: TextRun;
+      left: number;
+      right: number;
+      bottom: number;
+    } | null = null;
+    for (let i = 0; i < charCount; i++) {
+      const cp = m.FPDFText_GetUnicode(textPagePtr, i);
+      const isWs = !cp || cp <= 0x20 || cp === 0xa0;
+      const objPtr = m.FPDFText_GetTextObject(textPagePtr, i);
+      const run = objPtr ? ptrToRun.get(objPtr) : undefined;
+      if (isWs) {
+        // A REAL space glyph (belongs to a text object) ends the pair chain -
+        // pairs across it would fold word spacing (Tw) into the estimate. A
+        // SYNTHESIZED space (no backing object in any run - PDFium inserts
+        // these between per-glyph objects whose letter-spaced gaps look
+        // space-like) is transparent: the letters on either side still form
+        // a pair, with the word-gap guard below rejecting genuine gaps. This
+        // keeps inference working on documents whose spaced runs are built
+        // from one object per char - including our own re-emits.
+        if (run) prev = null;
+        continue;
+      }
+      if (!run) {
+        prev = null;
+        continue;
+      }
+      if (!looseMod.FPDFText_GetLooseCharBox(textPagePtr, i, rectBuf)) {
+        prev = null;
+        continue;
+      }
+      const f = new Float32Array(heap.buffer, rectBuf, 4);
+      const cur = { run, left: f[0], right: f[2], bottom: f[3] };
+      if (prev && prev.run === run) {
+        const advance = prev.right - prev.left;
+        const delta = cur.left - prev.left;
+        const extra = delta - advance;
+        // Same visual line, forward advance only, and NOT a word gap: real
+        // letter-spacing stays well under ~0.6em, while an inter-word gap
+        // (space advance + spacing) lands above it.
+        if (
+          delta > 0 &&
+          advance > 0 &&
+          extra < run.fontSize * 0.6 &&
+          Math.abs(cur.bottom - prev.bottom) < Math.max(1, run.fontSize * 0.25)
+        ) {
+          let arr = samples.get(run);
+          if (!arr) {
+            arr = [];
+            samples.set(run, arr);
+          }
+          arr.push(extra);
+        }
+      }
+      prev = cur;
+    }
+  } finally {
+    wasm.free(rectBuf);
+  }
+
+  for (const [run, extras] of samples) {
+    if (extras.length < 2) continue;
+    // Upright runs only - the box math above is axis-aligned.
+    const scale = Math.hypot(run.matrix.a, run.matrix.b);
+    if (!scale || Math.abs(run.matrix.b) / scale > 0.02 || run.matrix.a <= 0) {
+      continue;
+    }
+    const sorted = [...extras].sort((a, b) => a - b);
+    const median = sorted[Math.floor(sorted.length / 2)];
+    // Noise floor: kerning tweaks and float fuzz stay well under 2% of the
+    // font size; a real Tc (like a spaced-caps heading) is far above it.
+    const noise = Math.max(0.25, run.fontSize * 0.02);
+    if (Math.abs(median) < noise) continue;
+    // Sanity cap - a broken measurement must not explode the layout.
+    if (Math.abs(median) > run.fontSize * 2) continue;
+    run.charSpacingPt = median;
   }
 }
 

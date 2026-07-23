@@ -73,6 +73,15 @@ export class TextRun {
    * editing invisible text never stamps visible glyphs onto a scan.
    */
   renderMode: number;
+  /**
+   * Effective extra advance per glyph in PDF points (the rendered footprint
+   * of the PDF's character-spacing Tc, inferred from the run's on-page char
+   * geometry at read time - PDFium exposes no Tc getter). Re-emits add it
+   * between glyphs so an edited letter-spaced heading keeps its tracking
+   * instead of snapping to the font's natural advances. 0 = no extra
+   * spacing (the overwhelmingly common case; emit paths are unchanged).
+   */
+  charSpacingPt: number;
   /** True when the run has uncommitted mutation. */
   dirty: boolean;
   /**
@@ -204,6 +213,7 @@ export class TextRun {
     this.fill = init.fill;
     this.fontSubset = init.fontSubset;
     this.renderMode = init.renderMode ?? 0;
+    this.charSpacingPt = 0;
     this.dirty = false;
     this.mergedFromPtrs = [];
     this.mergedFromTexts = [];
@@ -237,6 +247,7 @@ export class TextRun {
       fill: { ...this.fill },
       fontSubset: this.fontSubset,
       renderMode: this.renderMode || undefined,
+      charSpacingPt: this.charSpacingPt || undefined,
       paragraphLineHeight: this.paragraphLineHeight,
       paragraphLineCount: this.paragraphMemberPtrs.length || undefined,
       locked: this.locked || undefined,

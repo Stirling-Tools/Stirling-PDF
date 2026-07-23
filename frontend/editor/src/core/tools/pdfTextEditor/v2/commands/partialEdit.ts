@@ -826,6 +826,7 @@ export function applyPartialEditPlan(
           renderMode: run.renderMode,
           originalFontPtr: modFontPtr,
           originalFontSubset: run.fontSubset,
+          charSpacingPt: run.charSpacingPt,
           fallbackFamily,
         });
         let reRight = newX;
@@ -932,6 +933,7 @@ export function applyPartialEditPlan(
         renderMode: run.renderMode,
         originalFontPtr: borrowedFontPtr,
         originalFontSubset: run.fontSubset,
+        charSpacingPt: run.charSpacingPt,
         fallbackFamily,
       });
       let realRightEdge = anchorX;
@@ -990,6 +992,7 @@ export function applyPartialEditPlan(
           fill: run.fill,
           renderMode: run.renderMode,
           originalFontPtr: 0,
+          charSpacingPt: run.charSpacingPt,
           fallbackFamily,
         });
         realRightEdge = anchorX;
@@ -1010,7 +1013,9 @@ export function applyPartialEditPlan(
           fallbackFamily,
           run.fontSize,
         );
-        measuredWidth += wsWidth;
+        // Letter-spaced runs stretch inserted spaces too (Tc applies to
+        // space glyphs), matching the widened gaps emitTextLine produced.
+        measuredWidth += wsWidth + run.charSpacingPt * whitespaceLen;
       }
       // Map emitted ptrs back to text. emitTextLine emits one ptr per
       // whitespace-separated WORD on the normal path, but one ptr per CHAR on
@@ -1392,6 +1397,7 @@ export function applyParagraphEditPlan(
           renderMode: run.renderMode,
           originalFontPtr: reuseFontPtr,
           originalFontSubset: slot.fontSubset,
+          charSpacingPt: run.charSpacingPt,
           fallbackFamily,
         });
         const built = buildSlotMerged(m, ptrs, lineText, leftX);

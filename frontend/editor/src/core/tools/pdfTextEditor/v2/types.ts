@@ -73,6 +73,8 @@ export interface TextRunSnapshot {
   fontSubset: boolean;
   /** PDF text render mode (Tr). 0/absent = normal fill; 3 = invisible. */
   renderMode?: number;
+  /** Inferred letter-spacing (Tc footprint) in PDF points; 0/absent = none. */
+  charSpacingPt?: number;
   /** > 0 when this run represents a multi-line paragraph. */
   paragraphLineHeight?: number;
   /** Member-line count when paragraph (== 1 implies a single line). */
