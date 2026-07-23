@@ -25,6 +25,11 @@ public class ProcessPdfWithOcrRequest extends PDFFile {
     @Schema(description = "Deskew the input file if set to true")
     private boolean deskew;
 
+    @Schema(
+            description =
+                    "Auto-correct page orientation (90/180/270) using Tesseract OSD if set to true")
+    private boolean rotatePages;
+
     @Schema(description = "Clean the input file if set to true")
     private boolean clean;
 
