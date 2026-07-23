@@ -61,6 +61,13 @@ import {
 } from "@portal/components/pipelines/PipelineOverview";
 import { PipelineStepSettings } from "@portal/components/pipelines/PipelineStepSettings";
 import { ToolPicker } from "@portal/components/pipelines/ToolPicker";
+import { STEP_OPERATIONS } from "@portal/components/policies/stepOperations";
+import {
+  integrationStepConfigured,
+  isIntegrationStep,
+  newIntegrationStep,
+  stepOperation,
+} from "@portal/components/pipelines/integrationStep";
 import "@portal/views/PipelineBuilder.css";
 
 type OutputMode = PipelineOutputMode;
@@ -273,6 +280,19 @@ export function PipelineBuilder() {
     );
   }
 
+  function addOperationStep(op: (typeof STEP_OPERATIONS)[number]) {
+    const at = insertAt;
+    setInsertAt(null);
+    setSteps((current) => {
+      const index = at === null ? current.length : Math.min(at, current.length);
+      const next = [...current];
+      next.splice(index, 0, newIntegrationStep(op));
+      setSelectedIndex(index);
+      setExpanded(index);
+      return next;
+    });
+  }
+
   function addStep(tool: ExecutableTool) {
     const at = insertAt;
     setInsertAt(null);
@@ -305,12 +325,22 @@ export function PipelineBuilder() {
   function updateStepParams(index: number, params: ErasedToolParams) {
     setSteps((current) =>
       current.map((step, i) =>
-        i === index && step.toolId !== null ? { ...step, params } : step,
+        // Integration steps are deliberately toolId-less, so they must be editable too; only a
+        // genuinely unrecognised step has no editor to send changes from.
+        i === index && (step.toolId !== null || isIntegrationStep(step))
+          ? { ...step, params }
+          : step,
       ),
     );
   }
 
   function stepLabel(step: WorkingToolStep): string {
+    // An integration step's endpoint is the same for every vendor, so the raw path would read
+    // "External api call" for all of them. Name it by the operation instead.
+    const op = stepOperation(step);
+    if (op) return t(op.labelKey);
+    if (isIntegrationStep(step))
+      return t("portal.pipelines.builder.sendToSystem");
     const entry = step.toolId ? allTools[step.toolId] : undefined;
     return entry?.name ?? humanizeOperation(step.operation);
   }
@@ -371,6 +401,8 @@ export function PipelineBuilder() {
 
   // One-line parameter read-back for a step node (mirrors the tool's defaults).
   function stepSummary(step: WorkingToolStep): string | undefined {
+    // Integration params are ids (operation/connection); raw values would read as noise.
+    if (isIntegrationStep(step)) return undefined;
     const bits: string[] = [];
     for (const value of Object.values(step.params)) {
       if (typeof value !== "string" && typeof value !== "number") continue;
@@ -385,6 +417,14 @@ export function PipelineBuilder() {
   // Side panel: per-step warning annotation, the completion checklist, and the
   // exact request Save would send (buildOutput/buildTrigger are hoisted).
   function stepNote(step: WorkingToolStep): string | undefined {
+    // Integration steps carry support "unknown" by design; their notes are setup prompts.
+    if (isIntegrationStep(step)) {
+      if (!stepOperation(step))
+        return t("portal.pipelines.builder.chooseOperation");
+      if (!integrationStepConfigured(step))
+        return t("portal.pipelines.builder.chooseAccount");
+      return undefined;
+    }
     if (stepRequiresUpload(step))
       return t("portal.pipelines.builder.needsUpload");
     if (step.support === "unsupported")
@@ -456,6 +496,13 @@ export function PipelineBuilder() {
   const uploadStepLabels = steps.filter(stepRequiresUpload).map(stepLabel);
   const hasUploadSteps = uploadStepLabels.length > 0;
 
+  // An integration step with no operation or no account chosen would fail at run time with a raw
+  // backend rejection, so block saving on it here where the fix is one click away.
+  const unconfiguredStepLabels = steps
+    .filter((step) => !integrationStepConfigured(step))
+    .map(stepLabel);
+  const hasUnconfiguredSteps = unconfiguredStepLabels.length > 0;
+
   // Track unsaved edits: snapshot the form and compare against the state captured just after
   // seeding, so leaving the builder can prompt to save or discard.
   const snapshot = JSON.stringify({
@@ -489,6 +536,7 @@ export function PipelineBuilder() {
     scheduleCountValid &&
     outputValid &&
     !hasUploadSteps &&
+    !hasUnconfiguredSteps &&
     !submitting;
 
   const triggerOptions = [
@@ -963,6 +1011,14 @@ export function PipelineBuilder() {
           })}
         />
       )}
+      {hasUnconfiguredSteps && (
+        <Banner
+          tone="warning"
+          description={t("portal.pipelines.builder.stepsNeedSetup", {
+            tools: unconfiguredStepLabels.join(", "),
+          })}
+        />
+      )}
 
       <div className="portal-builder__cols">
         <div className="portal-builder__main">
@@ -1019,6 +1075,8 @@ export function PipelineBuilder() {
               <ToolPicker
                 tools={executableTools}
                 onPick={addStep}
+                operations={STEP_OPERATIONS}
+                onPickOperation={addOperationStep}
                 onClose={() => {
                   setInsertAt(null);
                   setExpanded((prev) => (prev === "picker" ? null : prev));

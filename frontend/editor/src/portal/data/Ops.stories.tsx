@@ -26,7 +26,7 @@ const STAGE_ORDER: OpKind[] = [
 ];
 const STAGE_COLOUR: Record<OpKind, string> = {
   ingest: "var(--color-green)",
-  validate: "var(--color-blue)",
+  validate: "var(--c-primary)",
   modify: "#F97316",
   secure: "var(--color-red)",
   store: "var(--color-purple)",
@@ -60,12 +60,12 @@ export const PipelineOps: Story = {
                 fontSize: 13,
                 textTransform: "uppercase",
                 letterSpacing: 0.6,
-                color: "var(--color-text-3)",
+                color: "var(--c-text-subtle)",
               }}
             >
               {stage}
             </h3>
-            <span style={{ fontSize: 12, color: "var(--color-text-5)" }}>
+            <span style={{ fontSize: 12, color: "var(--c-text-subtle)" }}>
               {PIPELINE_OPS[stage].length} ops
             </span>
           </div>
@@ -109,7 +109,7 @@ export const PipelineOps: Story = {
 export const LibraryByCategory: Story = {
   render: () => (
     <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-      <div style={{ fontSize: 12, color: "var(--color-text-4)" }}>
+      <div style={{ fontSize: 12, color: "var(--c-text-subtle)" }}>
         {LIBRARY_OPS.length} library ops across {OP_CATEGORIES.length}{" "}
         categories
       </div>
@@ -137,18 +137,18 @@ export const LibraryByCategory: Story = {
                 style={{
                   margin: 0,
                   fontSize: 13,
-                  color: "var(--color-text-1)",
+                  color: "var(--c-text)",
                 }}
               >
                 {cat.name}
               </h3>
-              <span style={{ fontSize: 12, color: "var(--color-text-5)" }}>
+              <span style={{ fontSize: 12, color: "var(--c-text-subtle)" }}>
                 {cat.blurb}
               </span>
               <span
                 style={{
                   fontSize: 12,
-                  color: "var(--color-text-5)",
+                  color: "var(--c-text-subtle)",
                   marginLeft: "auto",
                 }}
               >
@@ -207,8 +207,8 @@ export const Agents: Story = {
           key={a.id}
           style={{
             padding: 14,
-            background: "var(--color-surface)",
-            border: "1px solid var(--color-border)",
+            background: "var(--c-surface)",
+            border: "1px solid var(--c-border)",
             borderRadius: 8,
           }}
         >
@@ -220,14 +220,14 @@ export const Agents: Story = {
               marginBottom: 4,
             }}
           >
-            <strong style={{ fontSize: 13, color: "var(--color-text-1)" }}>
+            <strong style={{ fontSize: 13, color: "var(--c-text)" }}>
               {a.label}
             </strong>
           </div>
           <div
             style={{
               fontSize: 12,
-              color: "var(--color-text-4)",
+              color: "var(--c-text-subtle)",
               marginBottom: 8,
             }}
           >
@@ -241,8 +241,8 @@ export const Agents: Story = {
                   fontSize: 11,
                   padding: "0.125rem 0.375rem",
                   borderRadius: 4,
-                  background: "var(--color-bg-muted)",
-                  color: "var(--color-text-3)",
+                  background: "var(--c-surface-sunken)",
+                  color: "var(--c-text-subtle)",
                   fontFamily: "var(--font-mono)",
                 }}
               >
@@ -267,13 +267,13 @@ export const SourcesAndDestinations: Story = {
               key={s.id}
               style={{
                 padding: "0.625rem 0.75rem",
-                border: "1px solid var(--color-border)",
+                border: "1px solid var(--c-border)",
                 borderRadius: 6,
-                background: "var(--color-surface)",
+                background: "var(--c-surface)",
               }}
             >
               <div style={{ fontSize: 13, fontWeight: 500 }}>{s.label}</div>
-              <div style={{ fontSize: 12, color: "var(--color-text-4)" }}>
+              <div style={{ fontSize: 12, color: "var(--c-text-subtle)" }}>
                 {s.desc}
               </div>
             </div>
@@ -288,13 +288,13 @@ export const SourcesAndDestinations: Story = {
               key={d.id}
               style={{
                 padding: "0.625rem 0.75rem",
-                border: "1px solid var(--color-border)",
+                border: "1px solid var(--c-border)",
                 borderRadius: 6,
-                background: "var(--color-surface)",
+                background: "var(--c-surface)",
               }}
             >
               <div style={{ fontSize: 13, fontWeight: 500 }}>{d.label}</div>
-              <div style={{ fontSize: 12, color: "var(--color-text-4)" }}>
+              <div style={{ fontSize: 12, color: "var(--c-text-subtle)" }}>
                 {d.desc}
               </div>
             </div>

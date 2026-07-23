@@ -18,8 +18,10 @@ import {
   createSource,
   deleteSource,
   fetchSource,
+  isFolderAccessDeniedError,
   type Source,
 } from "@portal/api/sources";
+import { useUI } from "@portal/contexts/UIContext";
 import { useAsync } from "@portal/hooks/useAsync";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { creatableSourceTypes } from "@portal/components/sources/creatableSourceTypes";
@@ -27,10 +29,15 @@ import {
   CREATABLE_SOURCE_TYPES,
   defaultOptions,
   sourceTypeMeta,
+  WEBHOOK_SOURCE_TYPE,
   type CreatableSourceType,
 } from "@portal/components/sources/sourceTypes";
 import { S3ConnectionPicker } from "@portal/components/sources/S3ConnectionPicker";
 import "@portal/views/SourceBuilder.css";
+
+function webhookUrl(webhookId: string): string {
+  return `${window.location.origin}/api/v1/webhooks/${webhookId}`;
+}
 
 const OFFERED_TYPES = creatableSourceTypes();
 
@@ -64,6 +71,7 @@ function optionsFor(
 export function SourceBuilder() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { openSettings } = useUI();
   const { id } = useParams();
   const isEdit = Boolean(id);
   const listPath = toPortalPath(VIEW_PATHS.sources);
@@ -82,8 +90,15 @@ export function SourceBuilder() {
   const [seeded, setSeeded] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // A folder-outside-allowed-roots failure: the error banner offers a link to
+  // the Folder Access settings instead of leaving the admin at a dead end.
+  const [folderAccessDenied, setFolderAccessDenied] = useState(false);
   const [pendingDelete, setPendingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [reveal, setReveal] = useState<{
+    webhookId: string;
+    secret: string;
+  } | null>(null);
 
   // Seed once: immediately for a new source, or after the record loads for edit.
   useEffect(() => {
@@ -112,23 +127,49 @@ export function SourceBuilder() {
   );
   const canSave = name.trim() !== "" && requiredComplete && !submitting;
 
+  const editingWebhookId =
+    isEdit && sourceState.data?.type === WEBHOOK_SOURCE_TYPE
+      ? String(sourceState.data.options?.webhookId ?? "")
+      : "";
+  const revealUrl = reveal ? webhookUrl(reveal.webhookId) : "";
+  const revealSecret = reveal ? reveal.secret : "";
+
+  function dismissReveal() {
+    setReveal(null);
+    navigate(listPath);
+  }
+
   async function save() {
     if (!canSave) return;
     setSubmitting(true);
     setError(null);
+    setFolderAccessDenied(false);
     try {
-      await createSource({
+      const saved = await createSource({
         id: isEdit ? id : undefined,
         name: name.trim(),
         type: type.type,
         options,
         enabled,
       });
+      if (!isEdit && type.type === WEBHOOK_SOURCE_TYPE) {
+        const webhookId = String(saved.options?.webhookId ?? "");
+        const secret = String(saved.options?.signingSecret ?? "");
+        if (webhookId && secret) {
+          setReveal({ webhookId, secret });
+          return;
+        }
+      }
       navigate(listPath);
     } catch (e) {
       setError(errorMessage(e));
+      setFolderAccessDenied(isFolderAccessDeniedError(e));
       setSubmitting(false);
     }
+  }
+
+  function copy(text: string) {
+    void navigator.clipboard?.writeText(text);
   }
 
   async function confirmDelete() {
@@ -254,6 +295,18 @@ export function SourceBuilder() {
           </FormField>
         )}
 
+        {!isEdit && (
+          <p className="portal-source-builder__type-description">
+            {t(type.descriptionKey)}
+          </p>
+        )}
+
+        {!isEdit && type.type === WEBHOOK_SOURCE_TYPE && (
+          <p className="portal-source-builder__muted">
+            {t("portal.sources.types.webhook.createNote")}
+          </p>
+        )}
+
         {type.fields.map((field) => (
           <FormField
             key={field.key}
@@ -290,7 +343,56 @@ export function SourceBuilder() {
           </FormField>
         ))}
 
-        {error && <Banner tone="danger" description={error} />}
+        {editingWebhookId && (
+          <FormField
+            label={t("portal.sources.types.webhook.detail.deliveryUrl")}
+            helperText={t("portal.sources.types.webhook.detail.secretNote")}
+          >
+            <div className="portal-source-builder__copy-row">
+              <Input
+                value={webhookUrl(editingWebhookId)}
+                readOnly
+                onFocus={(e) => e.currentTarget.select()}
+              />
+              <Button
+                variant="tertiary"
+                size="sm"
+                onClick={() => copy(webhookUrl(editingWebhookId))}
+              >
+                {t("portal.sources.types.webhook.reveal.copy")}
+              </Button>
+            </div>
+          </FormField>
+        )}
+
+        {error &&
+          (folderAccessDenied ? (
+            <Banner
+              tone="danger"
+              title={t(
+                "portal.sources.builder.folderAccess.title",
+                "This folder isn't allowed",
+              )}
+              description={t(
+                "portal.sources.builder.folderAccess.description",
+                "Folder automations can only use folders an administrator has allowed. Add it under Folder Access settings, then try again.",
+              )}
+              action={
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => openSettings("adminFolderAccess")}
+                >
+                  {t(
+                    "portal.sources.builder.folderAccess.openSettings",
+                    "Folder Access settings",
+                  )}
+                </Button>
+              }
+            />
+          ) : (
+            <Banner tone="danger" description={error} />
+          ))}
       </div>
 
       <Modal
@@ -320,6 +422,69 @@ export function SourceBuilder() {
         }
       >
         <p>{t("portal.sources.delete.body", { name })}</p>
+      </Modal>
+
+      <Modal
+        open={reveal !== null}
+        onClose={dismissReveal}
+        width="md"
+        title={t("portal.sources.types.webhook.reveal.title")}
+        footer={
+          <div className="portal-source-builder__delete-actions">
+            <Button size="sm" onClick={dismissReveal}>
+              {t("portal.sources.types.webhook.reveal.done")}
+            </Button>
+          </div>
+        }
+      >
+        {reveal && (
+          <div className="portal-source-builder__reveal">
+            <Banner
+              tone="warning"
+              description={t(
+                "portal.sources.types.webhook.reveal.secretWarning",
+              )}
+            />
+            <FormField label={t("portal.sources.types.webhook.reveal.url")}>
+              <div className="portal-source-builder__copy-row">
+                <Input
+                  value={revealUrl}
+                  readOnly
+                  onFocus={(e) => e.currentTarget.select()}
+                />
+                <Button
+                  variant="tertiary"
+                  size="sm"
+                  onClick={() => copy(revealUrl)}
+                >
+                  {t("portal.sources.types.webhook.reveal.copy")}
+                </Button>
+              </div>
+            </FormField>
+            <FormField
+              label={t("portal.sources.types.webhook.reveal.secret")}
+              helperText={t("portal.sources.types.webhook.reveal.secretHelp")}
+            >
+              <div className="portal-source-builder__copy-row">
+                <Input
+                  value={revealSecret}
+                  readOnly
+                  onFocus={(e) => e.currentTarget.select()}
+                />
+                <Button
+                  variant="tertiary"
+                  size="sm"
+                  onClick={() => copy(revealSecret)}
+                >
+                  {t("portal.sources.types.webhook.reveal.copy")}
+                </Button>
+              </div>
+            </FormField>
+            <p className="portal-source-builder__muted">
+              {t("portal.sources.types.webhook.reveal.usage")}
+            </p>
+          </div>
+        )}
       </Modal>
     </div>
   );

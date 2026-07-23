@@ -12,7 +12,7 @@
   padding: 16px;
   color: #ffffff;
   font-weight: 600;
-  background: rgba(16, 18, 27, 0.55);
+  background: rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   border: 1px solid rgba(255, 255, 255, 0.06);

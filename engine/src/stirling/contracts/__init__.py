@@ -29,6 +29,13 @@ from .common import (
     format_conversation_history,
     format_file_names,
 )
+from .config import (
+    ConfigApplyResponse,
+    ConfigLimitsSection,
+    ConfigModelsSection,
+    ConfigPushRequest,
+    ConfigRagSection,
+)
 from .contradiction import (
     Claim,
     Contradiction,
@@ -139,6 +146,11 @@ __all__ = [
     "Claim",
     "CommentSpec",
     "CompletedExecutionAction",
+    "ConfigApplyResponse",
+    "ConfigLimitsSection",
+    "ConfigModelsSection",
+    "ConfigPushRequest",
+    "ConfigRagSection",
     "Contradiction",
     "ContradictionReport",
     "ContradictionSeverity",
