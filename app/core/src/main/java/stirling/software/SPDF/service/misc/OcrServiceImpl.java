@@ -1,0 +1,438 @@
+package stirling.software.SPDF.service.misc;
+
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import javax.imageio.ImageIO;
+
+import org.apache.pdfbox.io.IOUtils;
+import org.apache.pdfbox.multipdf.PDFMergerUtility;
+import org.apache.pdfbox.pdfwriter.compress.CompressParameters;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.rendering.PDFRenderer;
+import org.apache.pdfbox.text.PDFTextStripper;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import io.github.pixee.security.Filenames;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.SPDF.config.EndpointConfiguration;
+import stirling.software.SPDF.model.api.misc.FileResponseData;
+import stirling.software.SPDF.model.api.misc.ProcessPdfWithOcrRequest;
+import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.*;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class OcrServiceImpl implements OcrService {
+
+    private final RuntimePathConfig runtimePathConfig;
+    private final TempFileManager tempFileManager;
+    private final EndpointConfiguration endpointConfiguration;
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final ApplicationProperties applicationProperties;
+
+    /** Gets the list of available Tesseract languages from the tessdata directory */
+    public List<String> getAvailableTesseractLanguages() {
+        String tessdataDir = runtimePathConfig.getTessDataPath();
+        File[] files = new File(tessdataDir).listFiles();
+        if (files == null) {
+            return Collections.emptyList();
+        }
+        return Arrays.stream(files)
+                .filter(file -> file.getName().endsWith(".traineddata"))
+                .map(file -> file.getName().replace(".traineddata", ""))
+                .filter(lang -> !"osd".equalsIgnoreCase(lang))
+                .toList();
+    }
+
+    private boolean isOcrMyPdfEnabled() {
+        return endpointConfiguration.isGroupEnabled("OCRmyPDF");
+    }
+
+    private boolean isTesseractEnabled() {
+        return endpointConfiguration.isGroupEnabled("tesseract");
+    }
+
+    @Override
+    public FileResponseData processPdfWithOCR(ProcessPdfWithOcrRequest request)
+            throws IOException, InterruptedException {
+
+        MultipartFile inputFile = request.getFileInput();
+        List<String> selectedLanguages = request.getLanguages();
+        boolean sidecar = request.isSidecar();
+        Boolean deskew = request.isDeskew();
+        Boolean clean = request.isClean();
+        Boolean cleanFinal = request.isCleanFinal();
+        String ocrType = request.getOcrType();
+        String ocrRenderType = request.getOcrRenderType();
+        Boolean removeImagesAfter = request.isRemoveImagesAfter();
+
+        if (selectedLanguages == null || selectedLanguages.isEmpty()) {
+            throw ExceptionUtils.createOcrLanguageRequiredException();
+        }
+
+        if (!"hocr".equals(ocrRenderType) && !"sandwich".equals(ocrRenderType)) {
+            throw ExceptionUtils.createOcrInvalidRenderTypeException();
+        }
+
+        // Get available Tesseract languages
+        List<String> availableLanguages = getAvailableTesseractLanguages();
+
+        // Validate selected languages
+        selectedLanguages =
+                selectedLanguages.stream().filter(availableLanguages::contains).toList();
+
+        if (selectedLanguages.isEmpty()) {
+            throw ExceptionUtils.createOcrInvalidLanguagesException();
+        }
+
+        TempFile tempOutputFile = new TempFile(tempFileManager, ".pdf");
+        TempFile tempZipFile = null;
+        boolean pdfOwnershipTransferred = false;
+        boolean zipOwnershipTransferred = false;
+        try (TempFile tempInputFile = new TempFile(tempFileManager, ".pdf");
+                TempFile sidecarTextFile = sidecar ? new TempFile(tempFileManager, ".txt") : null) {
+
+            inputFile.transferTo(tempInputFile.getFile());
+
+            // Use OCRmyPDF if available (no fallback - error if it fails)
+            if (isOcrMyPdfEnabled()) {
+                processWithOcrMyPdf(
+                        selectedLanguages,
+                        sidecar,
+                        deskew,
+                        clean,
+                        cleanFinal,
+                        ocrType,
+                        ocrRenderType,
+                        removeImagesAfter,
+                        tempInputFile.getPath(),
+                        tempOutputFile.getPath(),
+                        sidecarTextFile != null ? sidecarTextFile.getPath() : null);
+                log.info("OCRmyPDF processing completed successfully");
+            }
+            // Use Tesseract only if OCRmyPDF is not available
+            else if (isTesseractEnabled()) {
+                processWithTesseract(
+                        selectedLanguages,
+                        ocrType,
+                        tempInputFile.getPath(),
+                        tempOutputFile.getPath());
+                log.info("Tesseract processing completed successfully");
+            } else {
+                throw ExceptionUtils.createOcrToolsUnavailableException();
+            }
+
+            // Return the OCR processed PDF as a response
+            String outputFilename =
+                    GeneralUtils.removeExtension(
+                                    Filenames.toSimpleFileName(inputFile.getOriginalFilename()))
+                            + "_OCR.pdf";
+
+            if (sidecar) {
+                // Create a zip file containing both the PDF and the text file
+                String outputZipFilename =
+                        GeneralUtils.removeExtension(
+                                        Filenames.toSimpleFileName(inputFile.getOriginalFilename()))
+                                + "_OCR.zip";
+
+                tempZipFile = new TempFile(tempFileManager, ".zip");
+                try (ZipOutputStream zipOut =
+                        new ZipOutputStream(Files.newOutputStream(tempZipFile.getPath()))) {
+
+                    // Add PDF file to the zip
+                    ZipEntry pdfEntry = new ZipEntry(outputFilename);
+                    zipOut.putNextEntry(pdfEntry);
+                    Files.copy(tempOutputFile.getPath(), zipOut);
+                    zipOut.closeEntry();
+
+                    // Add text file to the zip
+                    ZipEntry txtEntry = new ZipEntry(outputFilename.replace(".pdf", ".txt"));
+                    zipOut.putNextEntry(txtEntry);
+                    Files.copy(sidecarTextFile.getPath(), zipOut);
+                    zipOut.closeEntry();
+
+                    zipOut.finish();
+                }
+
+                tempOutputFile.close();
+
+                pdfOwnershipTransferred = true;
+                zipOwnershipTransferred = true;
+
+                return new FileResponseData(
+                        tempZipFile, outputZipFilename, MediaType.APPLICATION_OCTET_STREAM);
+            } else {
+                pdfOwnershipTransferred = true;
+
+                return new FileResponseData(
+                        tempOutputFile, outputFilename, MediaType.APPLICATION_PDF);
+            }
+        } finally {
+            if (!pdfOwnershipTransferred) {
+                tempOutputFile.close();
+            }
+            if (tempZipFile != null && !zipOwnershipTransferred) {
+                tempZipFile.close();
+            }
+        }
+    }
+
+    private void processWithOcrMyPdf(
+            List<String> selectedLanguages,
+            Boolean sidecar,
+            Boolean deskew,
+            Boolean clean,
+            Boolean cleanFinal,
+            String ocrType,
+            String ocrRenderType,
+            Boolean removeImagesAfter,
+            Path tempInputFile,
+            Path tempOutputFile,
+            Path sidecarTextPath)
+            throws IOException, InterruptedException {
+
+        // Build OCRmyPDF command
+        String languageOption = String.join("+", selectedLanguages);
+
+        List<String> command =
+                new ArrayList<>(
+                        Arrays.asList(
+                                runtimePathConfig.getOcrMyPdfPath(),
+                                "--verbose",
+                                "2",
+                                "--output-type",
+                                "pdf",
+                                "--pdf-renderer",
+                                ocrRenderType));
+
+        if (sidecar != null && sidecar && sidecarTextPath != null) {
+            command.add("--sidecar");
+            command.add(sidecarTextPath.toString());
+        }
+
+        if (deskew != null && deskew) {
+            command.add("--deskew");
+        }
+        if (clean != null && clean) {
+            command.add("--clean");
+        }
+        if (cleanFinal != null && cleanFinal) {
+            command.add("--clean-final");
+        }
+        if (ocrType != null && !ocrType.isEmpty()) {
+            if ("force-ocr".equals(ocrType)) {
+                command.add("--force-ocr");
+            } else {
+                // Default for 'Normal' and 'skip-text': use --skip-text
+                // ocrmypdf 17+ requires explicit flag when PDF already contains text
+                command.add("--skip-text");
+            }
+        }
+        command.add("--invalidate-digital-signatures");
+
+        command.addAll(
+                Arrays.asList(
+                        "--language",
+                        languageOption,
+                        tempInputFile.toString(),
+                        tempOutputFile.toString()));
+
+        // Run CLI command
+        ProcessExecutor.ProcessExecutorResult result =
+                ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF)
+                        .runCommandWithOutputHandling(command);
+
+        if (result.getRc() != 0
+                && result.getMessages().contains("multiprocessing/synchronize.py")
+                && result.getMessages().contains("OSError: [Errno 38] Function not implemented")) {
+            command.add("--jobs");
+            command.add("1");
+            result =
+                    ProcessExecutor.getInstance(ProcessExecutor.Processes.OCR_MY_PDF)
+                            .runCommandWithOutputHandling(command);
+        }
+
+        if (result.getRc() != 0) {
+            throw ExceptionUtils.createOcrProcessingFailedException(result.getRc());
+        }
+
+        // Remove images from the OCR processed PDF if the flag is set to true
+        if (removeImagesAfter != null && removeImagesAfter) {
+            try (TempFile tempPdfWithoutImages = new TempFile(tempFileManager, "_no_images.pdf")) {
+                List<String> gsCommand =
+                        Arrays.asList(
+                                "gs",
+                                "-sDEVICE=pdfwrite",
+                                "-dFILTERIMAGE",
+                                "-o",
+                                tempPdfWithoutImages.getPath().toString(),
+                                tempOutputFile.toString());
+
+                ProcessExecutor.getInstance(ProcessExecutor.Processes.GHOSTSCRIPT)
+                        .runCommandWithOutputHandling(gsCommand);
+
+                // Replace output file with version without images
+                Files.copy(
+                        tempPdfWithoutImages.getPath(),
+                        tempOutputFile,
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            }
+        }
+    }
+
+    private void processWithTesseract(
+            List<String> selectedLanguages, String ocrType, Path tempInputFile, Path tempOutputFile)
+            throws IOException, InterruptedException {
+
+        // Create temp directory for Tesseract processing
+        try (TempDirectory tempDir = new TempDirectory(tempFileManager)) {
+            File tempOutputDir = new File(tempDir.getPath().toFile(), "output");
+            File tempImagesDir = new File(tempDir.getPath().toFile(), "images");
+            File finalOutputFile = new File(tempDir.getPath().toFile(), "final_output.pdf");
+
+            // Create directories
+            tempOutputDir.mkdirs();
+            tempImagesDir.mkdirs();
+
+            PDFMergerUtility merger = new PDFMergerUtility();
+            merger.setDestinationFileName(finalOutputFile.toString());
+
+            try (PDDocument document = pdfDocumentFactory.load(tempInputFile.toFile())) {
+                PDFRenderer pdfRenderer = new PDFRenderer(document);
+                pdfRenderer.setSubsamplingAllowed(
+                        true); // Enable subsampling to reduce memory usage
+                int pageCount = document.getNumberOfPages();
+
+                for (int pageNum = 0; pageNum < pageCount; pageNum++) {
+                    PDPage page = document.getPage(pageNum);
+                    boolean hasText;
+
+                    // Check for existing text
+                    try (PDDocument tempDoc = new PDDocument()) {
+                        tempDoc.addPage(page);
+                        PDFTextStripper stripper = new PDFTextStripper();
+                        hasText = !stripper.getText(tempDoc).trim().isEmpty();
+                    }
+
+                    boolean shouldOcr =
+                            switch (ocrType) {
+                                case "skip-text" -> !hasText;
+                                case "force-ocr" -> true;
+                                default -> true;
+                            };
+
+                    File pageOutputPath =
+                            new File(
+                                    tempOutputDir,
+                                    String.format(Locale.ROOT, "page_%d.pdf", pageNum));
+
+                    if (shouldOcr) {
+                        // Convert page to image
+                        BufferedImage image;
+
+                        // Use global maximum DPI setting, fallback to 300 if not set
+                        int renderDpi = 300; // Default fallback
+                        if (applicationProperties != null
+                                && applicationProperties.getSystem() != null) {
+                            renderDpi = applicationProperties.getSystem().getMaxDPI();
+                        }
+                        final int dpi = renderDpi;
+                        final int currentPageNum = pageNum;
+
+                        image =
+                                ExceptionUtils.handleOomRendering(
+                                        currentPageNum + 1,
+                                        dpi,
+                                        () -> pdfRenderer.renderImageWithDPI(currentPageNum, dpi));
+                        File imagePath =
+                                new File(
+                                        tempImagesDir,
+                                        String.format(Locale.ROOT, "page_%d.png", pageNum));
+                        ImageIO.write(image, "png", imagePath);
+
+                        // Build OCR command
+                        List<String> command = new ArrayList<>();
+                        command.add("tesseract");
+                        command.add(imagePath.toString());
+                        String outputBase =
+                                new File(
+                                                tempOutputDir,
+                                                String.format(Locale.ROOT, "page_%d", pageNum))
+                                        .toString();
+                        command.add(outputBase);
+                        command.add("-l");
+                        command.add(String.join("+", selectedLanguages));
+                        command.add("pdf"); // Always output PDF
+
+                        ProcessExecutor.ProcessExecutorResult result =
+                                ProcessExecutor.getInstance(ProcessExecutor.Processes.TESSERACT)
+                                        .runCommandWithOutputHandling(command);
+
+                        if (result.getRc() != 0) {
+                            throw ExceptionUtils.createRuntimeException(
+                                    "error.commandFailed",
+                                    "{0} command failed with exit code: {1}",
+                                    null,
+                                    "Tesseract",
+                                    result.getRc());
+                        }
+
+                        // Verify the OCR'd PDF was created
+                        if (!pageOutputPath.exists()) {
+                            log.warn(
+                                    "Tesseract did not create expected output file: {}. "
+                                            + "Page may be blank or unreadable.",
+                                    pageOutputPath.getAbsolutePath());
+                            // Save original page without OCR as fallback
+                            try (PDDocument pageDoc = new PDDocument()) {
+                                pageDoc.addPage(page);
+                                // NO_COMPRESSION: page is copied from another document;
+                                // PDFBox 3.0.7 compressed writer (PDFBOX-6203) drops shared
+                                // resources, corrupting fonts. Revert once on 3.0.8.
+                                pageDoc.save(pageOutputPath, CompressParameters.NO_COMPRESSION);
+                            }
+                        }
+
+                        // Add OCR'd PDF to merger
+                        merger.addSource(pageOutputPath);
+                    } else {
+                        // Save original page without OCR
+                        try (PDDocument pageDoc = new PDDocument()) {
+                            pageDoc.addPage(page);
+                            // NO_COMPRESSION: page is copied from another document; PDFBox 3.0.7
+                            // compressed writer (PDFBOX-6203) drops shared resources, corrupting
+                            // fonts on retained text pages. Revert once on 3.0.8.
+                            pageDoc.save(pageOutputPath, CompressParameters.NO_COMPRESSION);
+                            merger.addSource(pageOutputPath);
+                        }
+                    }
+                }
+            }
+
+            // Merge all pages into final PDF
+            merger.mergeDocuments(IOUtils.createTempFileOnlyStreamCache());
+
+            // Copy final output to the expected location
+            Files.copy(
+                    finalOutputFile.toPath(),
+                    tempOutputFile,
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+}
