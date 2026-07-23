@@ -3,8 +3,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.625rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   padding: 1.25rem 1.125rem;
@@ -68,14 +68,14 @@
   border-radius: var(--radius-md);
   font-size: 0.875rem;
   font-weight: 400;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
 }
 
 /* Runbook gutter: line numbers for real lines, "+" for ghost extend-lines. */
 .portal-overview__n {
   font-family: var(--font-mono);
   font-size: 0.6875rem;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
   width: 1.125rem;
   flex-shrink: 0;
   text-align: right;
@@ -83,20 +83,20 @@
 }
 
 .portal-overview__line--ghost .portal-overview__n {
-  color: var(--color-blue);
+  color: var(--c-primary);
 }
 
 /* Inline muted annotation after the value (detail, param summary). */
 .portal-overview__small {
   font-weight: 400;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   font-size: 0.75rem;
 }
 
 /* Hover-revealed edit hint, like the runbook's. */
 .portal-overview__edit {
   font-size: 0.6875rem;
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
   flex-shrink: 0;
   margin-left: auto;
   padding-left: 0.75rem;
@@ -109,7 +109,7 @@
 }
 
 .portal-overview__line.sui-btn:hover {
-  background: var(--color-bg-hover);
+  background: var(--c-hover);
 }
 
 .portal-overview__line .mantine-Button-label {
@@ -121,7 +121,7 @@
 }
 
 .portal-overview__line--active {
-  background: var(--color-blue-light);
+  background: var(--c-primary-tint);
 }
 
 .portal-overview__kw {
@@ -130,18 +130,18 @@
   font-weight: 700;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: var(--color-blue);
+  color: var(--c-primary);
   min-width: 4.75rem;
   flex-shrink: 0;
 }
 
 .portal-overview__line--ghost .portal-overview__kw {
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
 }
 
 .portal-overview__val {
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -149,7 +149,7 @@
 }
 
 .portal-overview__line--ghost .portal-overview__val {
-  color: var(--color-blue);
+  color: var(--c-primary);
   font-weight: 500;
 }
 
@@ -183,7 +183,7 @@
 .portal-overview__flowhint {
   flex: 1;
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   text-align: right;
   padding-right: 0.25rem;
 }
@@ -194,12 +194,12 @@
   flex: 1;
   min-height: 18rem;
   overflow: auto;
-  border: 1px solid var(--color-border-light);
+  border: 1px solid var(--c-border-subtle);
   border-radius: var(--radius-lg);
   background: var(--color-bg-subtle);
   background-image: radial-gradient(
     circle at 1px 1px,
-    var(--color-border) 1px,
+    var(--c-border) 1px,
     transparent 0
   );
   background-size: 16px 16px;
@@ -207,7 +207,7 @@
 
 /* Dark bg-subtle is the theme's navy; the canvas stays neutral zinc instead. */
 [data-theme="dark"] .portal-overview__canvaswrap {
-  background-color: var(--color-bg);
+  background-color: var(--c-bg);
 }
 
 .portal-overview__stage {
@@ -226,21 +226,21 @@
 
 .portal-overview__edges path {
   fill: none;
-  stroke: var(--color-border-hover);
+  stroke: var(--c-border-strong);
   stroke-width: 2;
 }
 
 .portal-overview__edges path.is-ghost {
-  stroke: var(--color-blue);
+  stroke: var(--c-primary);
   stroke-dasharray: 5 5;
 }
 
 .portal-overview__edges .portal-overview__ah {
-  fill: var(--color-border-hover);
+  fill: var(--c-border-strong);
 }
 
 .portal-overview__edges .portal-overview__ahg {
-  fill: var(--color-blue);
+  fill: var(--c-primary);
 }
 
 /* Draggable nodes: absolute inside the stage, grab cursor, no touch panning. */
@@ -269,13 +269,13 @@
 
 .portal-overview__stage .portal-overview__node::before {
   top: -0.3125rem;
-  background: var(--color-surface);
-  border: 1.5px solid var(--color-border-hover);
+  background: var(--c-surface);
+  border: 1.5px solid var(--c-border-strong);
 }
 
 .portal-overview__stage .portal-overview__node::after {
   bottom: -0.3125rem;
-  background: var(--color-border-hover);
+  background: var(--c-border-strong);
 }
 
 .portal-overview__stage .portal-overview__node--output::after {
@@ -313,9 +313,9 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: var(--color-surface);
-  border: 1.5px dashed var(--color-blue);
-  color: var(--color-blue);
+  background: var(--c-surface);
+  border: 1.5px dashed var(--c-primary);
+  color: var(--c-primary);
   font-size: 0.8125rem;
   line-height: 1;
   padding: 0;
@@ -326,7 +326,7 @@
 }
 
 .portal-overview__insert:hover {
-  background: var(--color-blue-light);
+  background: var(--c-primary-tint);
   transform: scale(1.12);
 }
 
@@ -354,19 +354,19 @@
   flex-direction: column;
   align-items: center;
   padding: 2.5rem 1rem 3rem;
-  border: 1px solid var(--color-border-light);
+  border: 1px solid var(--c-border-subtle);
   border-radius: var(--radius-lg);
   background: var(--color-bg-subtle);
   background-image: radial-gradient(
     circle at 1px 1px,
-    var(--color-border) 1px,
+    var(--c-border) 1px,
     transparent 0
   );
   background-size: 16px 16px;
 }
 
 [data-theme="dark"] .portal-overview__flow {
-  background-color: var(--color-bg);
+  background-color: var(--c-bg);
 }
 
 .portal-overview__flowrow {
@@ -388,13 +388,13 @@
   width: 13.5rem;
   max-width: 20rem;
   padding: 0.5625rem 0.75rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--color-text-1);
+  color: var(--c-text);
   text-align: left;
   transition:
     border-color var(--motion-fast),
@@ -419,45 +419,45 @@
 }
 
 .portal-overview__node-kind--default {
-  background: var(--color-blue-light);
-  color: var(--color-blue);
+  background: var(--c-primary-tint);
+  color: var(--c-primary);
 }
 
 .portal-overview__node-kind--neutral {
-  background: var(--color-bg-muted);
-  color: var(--color-text-3);
+  background: var(--c-surface-sunken);
+  color: var(--c-text-subtle);
 }
 
 /* green/amber "light" tokens are solid hues in light mode; mix our own tints. */
 .portal-overview__node-kind--success {
-  background: color-mix(in srgb, var(--color-green) 14%, var(--color-surface));
+  background: color-mix(in srgb, var(--color-green) 14%, var(--c-surface));
   color: var(--color-green-dark);
 }
 
 .portal-overview__node-kind--warning {
-  background: color-mix(in srgb, var(--color-amber) 16%, var(--color-surface));
+  background: color-mix(in srgb, var(--color-amber) 16%, var(--c-surface));
   color: var(--color-amber-dark);
 }
 
 /* Dark mode: the raw hues glare on dark surfaces - blend them towards text. */
 [data-theme="dark"] .portal-overview__node-kind--default {
-  color: color-mix(in srgb, var(--color-blue) 55%, var(--color-text-1));
+  color: color-mix(in srgb, var(--c-primary) 55%, var(--c-text));
 }
 
 [data-theme="dark"] .portal-overview__node-kind--success {
-  background: color-mix(in srgb, var(--color-green) 18%, var(--color-surface));
-  color: color-mix(in srgb, var(--color-green) 50%, var(--color-text-1));
+  background: color-mix(in srgb, var(--color-green) 18%, var(--c-surface));
+  color: color-mix(in srgb, var(--color-green) 50%, var(--c-text));
 }
 
 [data-theme="dark"] .portal-overview__node-kind--warning {
-  background: color-mix(in srgb, var(--color-amber) 16%, var(--color-surface));
-  color: color-mix(in srgb, var(--color-amber) 50%, var(--color-text-1));
+  background: color-mix(in srgb, var(--color-amber) 16%, var(--c-surface));
+  color: color-mix(in srgb, var(--color-amber) 50%, var(--c-text));
 }
 
 .portal-overview__node-title {
   font-size: 0.875rem;
   font-weight: 650;
-  color: var(--color-text-1);
+  color: var(--c-text);
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -467,7 +467,7 @@
 .portal-overview__node-sub {
   font-size: 0.75rem;
   font-weight: 400;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -480,7 +480,7 @@
 
 /* Role edges in every layout: files enter through blue, leave through green. */
 .portal-overview__node--source.sui-btn {
-  --pov-edge: var(--color-blue);
+  --pov-edge: var(--c-primary);
   box-shadow:
     inset 0 3px 0 var(--pov-edge),
     var(--shadow-sm);
@@ -494,24 +494,24 @@
 }
 
 [data-theme="dark"] .portal-overview__node--source.sui-btn {
-  --pov-edge: color-mix(in srgb, var(--color-blue) 75%, var(--color-surface));
+  --pov-edge: color-mix(in srgb, var(--c-primary) 75%, var(--c-surface));
 }
 
 [data-theme="dark"] .portal-overview__node--output.sui-btn {
-  --pov-edge: color-mix(in srgb, var(--color-green) 65%, var(--color-surface));
+  --pov-edge: color-mix(in srgb, var(--color-green) 65%, var(--c-surface));
 }
 
 .portal-overview__node--source.portal-overview__node--active.sui-btn {
   box-shadow:
     inset 0 3px 0 var(--pov-edge),
-    0 0 0 1px var(--color-blue),
+    0 0 0 1px var(--c-primary),
     var(--shadow-sm);
 }
 
 .portal-overview__node--output.portal-overview__node--active.sui-btn {
   box-shadow:
     inset 0 -3px 0 var(--pov-edge),
-    0 0 0 1px var(--color-blue),
+    0 0 0 1px var(--c-primary),
     var(--shadow-sm);
 }
 
@@ -540,26 +540,26 @@
 }
 
 .portal-overview__node.sui-btn:hover {
-  border-color: var(--color-border-hover);
-  background: var(--color-surface);
+  border-color: var(--c-border-strong);
+  background: var(--c-surface);
 }
 
 .portal-overview__node--active {
-  border-color: var(--color-blue);
-  box-shadow: 0 0 0 1px var(--color-blue);
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 1px var(--c-primary);
 }
 
 .portal-overview__node--trigger {
   border-style: dashed;
   border-radius: var(--radius-pill);
   font-size: 0.75rem;
-  color: var(--color-text-2);
+  color: var(--c-text-muted);
 }
 
 /* Role accents: files enter through blue, leave through green. */
 .portal-overview__node--source {
   box-shadow:
-    inset 0 3px 0 var(--color-blue),
+    inset 0 3px 0 var(--c-primary),
     var(--shadow-sm);
 }
 
@@ -571,33 +571,33 @@
 
 .portal-overview__node--ghost {
   border-style: dashed;
-  border-color: var(--color-blue-border);
+  border-color: color-mix(in srgb, var(--c-primary) 45%, transparent);
   background: transparent;
-  color: var(--color-blue);
+  color: var(--c-primary);
   font-weight: 500;
   box-shadow: none;
 }
 
 .portal-overview__node--blank.sui-btn {
-  border: 1.5px dashed var(--color-blue-border);
-  background: color-mix(in srgb, var(--color-blue) 5%, var(--color-surface));
+  border: 1.5px dashed color-mix(in srgb, var(--c-primary) 45%, transparent);
+  background: color-mix(in srgb, var(--c-primary) 5%, var(--c-surface));
   box-shadow: none;
 }
 
 .portal-overview__node--blank .portal-overview__node-title {
-  color: var(--color-blue);
+  color: var(--c-primary);
   font-weight: 650;
 }
 
 .portal-overview__node--blank.sui-btn:hover {
-  border-color: var(--color-blue);
-  background: var(--color-blue-light);
+  border-color: var(--c-primary);
+  background: var(--c-primary-tint);
 }
 
 .portal-overview__connector {
   width: 2px;
   height: 2rem;
-  background: var(--color-border-hover);
+  background: var(--c-border-strong);
   position: relative;
   margin: 0.125rem 0;
 }
@@ -608,7 +608,7 @@
   bottom: -1px;
   left: 50%;
   transform: translateX(-50%);
-  border-top: 5px solid var(--color-border-hover);
+  border-top: 5px solid var(--c-border-strong);
   border-left: 4px solid transparent;
   border-right: 4px solid transparent;
 }

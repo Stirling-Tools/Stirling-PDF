@@ -439,8 +439,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-light);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
   border-radius: var(--radius-lg);
   padding: 1rem 1.125rem;
 }
@@ -448,27 +448,27 @@
 .portal-builder__side-hint {
   margin: 0;
   font-size: 0.75rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .portal-builder__intro {
   margin: 0;
   font-size: 0.8125rem;
   line-height: 1.55;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .portal-builder__request-help {
   margin: 0 0 0.625rem;
   font-size: 0.75rem;
   line-height: 1.5;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 /* ── The runbook code panel: JSON / cURL / MCP tabs with Copy, 1:1 with the mock. ── */
 .portal-builder__codepanel {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
@@ -481,7 +481,7 @@
   align-items: center;
   gap: 0.25rem;
   padding: 0.5rem 0.625rem 0;
-  border-bottom: 1px solid var(--color-border-light);
+  border-bottom: 1px solid var(--c-border-subtle);
 }
 
 .portal-builder__codetab.sui-btn {
@@ -490,19 +490,19 @@
   font-family: var(--font-mono);
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   border-radius: 0;
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
 }
 
 .portal-builder__codetab.sui-btn:hover {
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-builder__codetab--active.sui-btn {
-  color: var(--color-blue);
-  border-bottom-color: var(--color-blue);
+  color: var(--c-primary);
+  border-bottom-color: var(--c-primary);
 }
 
 .portal-builder__codecopy.sui-btn {
@@ -519,14 +519,14 @@
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   line-height: 1.65;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
   overflow: auto;
   background: var(--color-bg-code);
   max-height: 30rem;
 }
 
 .portal-builder__code-k {
-  color: var(--color-blue);
+  color: var(--c-primary);
 }
 
 .portal-builder__code-s {
@@ -534,7 +534,7 @@
 }
 
 .portal-builder__code-c {
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
   font-style: italic;
 }
 
@@ -544,8 +544,8 @@
 
 /* ── The runbook code panel: JSON / cURL / MCP tabs with Copy, 1:1 with the mock. ── */
 .portal-builder__codepanel {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
@@ -558,7 +558,7 @@
   align-items: center;
   gap: 0.25rem;
   padding: 0.5rem 0.625rem 0;
-  border-bottom: 1px solid var(--color-border-light);
+  border-bottom: 1px solid var(--c-border-subtle);
 }
 
 .portal-builder__codetab.sui-btn {
@@ -567,19 +567,19 @@
   font-family: var(--font-mono);
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
   border-radius: 0;
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
 }
 
 .portal-builder__codetab.sui-btn:hover {
-  color: var(--color-text-1);
+  color: var(--c-text);
 }
 
 .portal-builder__codetab--active.sui-btn {
-  color: var(--color-blue);
-  border-bottom-color: var(--color-blue);
+  color: var(--c-primary);
+  border-bottom-color: var(--c-primary);
 }
 
 .portal-builder__codecopy.sui-btn {
@@ -596,14 +596,14 @@
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   line-height: 1.65;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
   overflow: auto;
   background: var(--color-bg-code);
   max-height: 30rem;
 }
 
 .portal-builder__code-k {
-  color: var(--color-blue);
+  color: var(--c-primary);
 }
 
 .portal-builder__code-s {
@@ -611,7 +611,7 @@
 }
 
 .portal-builder__code-c {
-  color: var(--color-text-5);
+  color: var(--c-text-subtle);
   font-style: italic;
 }
 
@@ -630,7 +630,7 @@
   gap: 0.5rem;
   margin-top: 0.25rem;
   padding-top: 0.75rem;
-  border-top: 1px dashed var(--color-border);
+  border-top: 1px dashed var(--c-border);
 }
 
 .portal-builder__ghost-label {
@@ -638,7 +638,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .portal-builder__ghost-row {
@@ -654,7 +654,7 @@
   width: 0.875rem;
   height: 0.875rem;
   margin-top: 0.1875rem;
-  border: 1.5px dashed var(--color-border-hover);
+  border: 1.5px dashed var(--c-border-strong);
   border-radius: 0.25rem;
 }
 
@@ -672,12 +672,12 @@
 .portal-builder__ghost-name {
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .portal-builder__ghost-sub {
   font-size: 0.6875rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }
 
 .portal-builder__soon {
@@ -689,8 +689,8 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  background: var(--color-bg-muted);
-  color: var(--color-text-3);
+  background: var(--c-surface-sunken);
+  color: var(--c-text-subtle);
 }
 
 .portal-builder__note {
@@ -700,12 +700,12 @@
   margin: 0.25rem 0 0;
   font-size: 0.6875rem;
   line-height: 1.5;
-  color: var(--color-text-3);
+  color: var(--c-text-subtle);
 }
 
 .portal-builder__note svg {
   flex: none;
   margin-top: 0.0625rem;
   font-size: 0.875rem;
-  color: var(--color-text-4);
+  color: var(--c-text-subtle);
 }

@@ -69,7 +69,7 @@
   .sui-btn.mantine-Button-root[data-disabled]:not([data-loading]) {
   background: var(--c-surface-sunken);
   /* c-text-subtle maps to bright zinc-300 in dark and reads enabled; dim it for real. */
-  color: color-mix(in srgb, var(--color-text-1) 38%, var(--color-surface));
+  color: color-mix(in srgb, var(--c-text) 38%, var(--c-surface));
   border-color: transparent;
   opacity: 1;
 }
