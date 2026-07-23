@@ -54,7 +54,6 @@ interface CheckoutResponse {
   url?: string;
   portal_url?: string;
   already_subscribed?: boolean;
-  mock?: boolean;
   error?: string;
 }
 
@@ -250,7 +249,6 @@ export interface CheckoutSession {
   clientSecret: string | null;
   redirectUrl: string | null;
   alreadySubscribed: boolean;
-  mock: boolean;
 }
 
 /**
@@ -297,7 +295,6 @@ export async function createCheckoutSession(
     clientSecret,
     redirectUrl,
     alreadySubscribed,
-    mock: Boolean(res.mock) || clientSecret?.startsWith("cs_mock_") === true,
   };
 }
 

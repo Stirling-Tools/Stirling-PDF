@@ -14,6 +14,7 @@ import {
   BUNDLE_PIPELINE_TIERS,
   BUNDLE_POLICY_POSTURES,
   BUNDLE_SIZE_TIERS,
+  type BundleQuoteBreakdown,
   computeBundleQuote,
   formatMinor,
 } from "@app/billing";
@@ -120,7 +121,22 @@ function calcStorageKey(teamId: number): string {
 function readCalcSettings(teamId: number): CalcSettings | null {
   try {
     const raw = sessionStorage.getItem(calcStorageKey(teamId));
-    return raw ? (JSON.parse(raw) as CalcSettings) : null;
+    if (!raw) return null;
+    // Untrusted sessionStorage — coerce rather than assert, so a stale or schema-drifted blob can't
+    // inject a wrong-typed `users` into the pricing arithmetic (the id fields are additionally
+    // laundered by the ...IdFor() lookups downstream, but we default them here too).
+    const p = JSON.parse(raw) as Partial<Record<keyof CalcSettings, unknown>>;
+    const users = Number(p.users);
+    return {
+      users: Number.isFinite(users) && users > 0 ? users : DEFAULT_USERS,
+      postureId: typeof p.postureId === "string" ? p.postureId : "governed",
+      sizeId: typeof p.sizeId === "string" ? p.sizeId : "standard",
+      pipelineId: typeof p.pipelineId === "string" ? p.pipelineId : "none",
+      poNumber: typeof p.poNumber === "string" ? p.poNumber : "",
+      companyName: typeof p.companyName === "string" ? p.companyName : "",
+      accountName: typeof p.accountName === "string" ? p.accountName : "",
+      consented: p.consented === true,
+    };
   } catch {
     return null;
   }
@@ -138,6 +154,19 @@ function clearCalcSettings(teamId: number): void {
   } catch {
     // ignore
   }
+}
+
+/**
+ * Open a URL in a new tab, falling back to same-tab navigation. A popup blocker can null the
+ * {@code window.open} even from a click, and reliably does when the open follows an await (as the
+ * invoice-PDF download does) — the fallback guarantees the buyer still reaches the invoice / PDF.
+ * Returns true if a new tab opened, false if it fell back to navigating this tab away.
+ */
+function openUrl(url: string): boolean {
+  const win = window.open(url, "_blank", "noopener,noreferrer");
+  if (win) return true;
+  window.location.assign(url);
+  return false;
 }
 
 interface Props {
@@ -496,7 +525,7 @@ export function BundleCheckoutModal({
     try {
       const inv = await acceptAndFinalize();
       if (inv?.invoicePdf) {
-        window.open(inv.invoicePdf, "_blank", "noopener,noreferrer");
+        openUrl(inv.invoicePdf);
       }
     } catch (e) {
       if (e instanceof StripeFunctionError && e.code === "unconfigured") return;
@@ -535,10 +564,10 @@ export function BundleCheckoutModal({
   // Payment clears out of band (the invoice.paid webhook), so there's no in-modal confirmation step.
   function payOnline() {
     if (busy || pdfBusy) return;
-    if (invoice?.hostedInvoiceUrl) {
-      window.open(invoice.hostedInvoiceUrl, "_blank", "noopener,noreferrer");
-    }
     if (teamId != null) clearCalcSettings(teamId);
+    // If the hosted invoice opened in a new tab, close the modal and let the parent poll; if a popup
+    // blocker forced same-tab navigation, openUrl is already taking us to Stripe — nothing left to do.
+    if (invoice?.hostedInvoiceUrl && !openUrl(invoice.hostedInvoiceUrl)) return;
     onClose();
     onComplete?.();
   }
@@ -734,7 +763,7 @@ function QuoteReceipt({
   onDownload,
   downloading,
 }: {
-  quote: ReturnType<typeof computeBundleQuote>;
+  quote: BundleQuoteBreakdown;
   currency: string;
   /** Mint-if-needed + stream the Stripe quote PDF. */
   onDownload: () => void;
@@ -850,7 +879,7 @@ interface CalcProps {
   setSizeId: (v: string) => void;
   pipelineId: string;
   setPipelineId: (v: string) => void;
-  quote: ReturnType<typeof computeBundleQuote>;
+  quote: BundleQuoteBreakdown;
   currency: string;
   /** Mint-if-needed + stream the Stripe quote PDF. */
   onDownload: () => void;
@@ -1228,7 +1257,7 @@ function PaymentStep({
   downloading,
   actionError,
 }: {
-  quote: ReturnType<typeof computeBundleQuote>;
+  quote: BundleQuoteBreakdown;
   currency: string;
   /** Mint-if-needed + stream the Stripe quote PDF (the receipt card's download link). */
   onDownloadQuote: () => void;

@@ -2,7 +2,6 @@ package stirling.software.saas.payg.bundle;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -53,7 +52,4 @@ public interface PrepaidBundleRepository extends JpaRepository<PrepaidBundle, Lo
                     + " ORDER BY b.expiresAt ASC")
     List<PrepaidBundle> findInTermForUpdate(
             @Param("teamId") Long teamId, @Param("now") LocalDateTime now);
-
-    /** Idempotency guard for the webhook credit — one pool per Stripe payment. */
-    Optional<PrepaidBundle> findByStripeRef(String stripeRef);
 }

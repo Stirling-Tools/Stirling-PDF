@@ -50,7 +50,6 @@ describe("createCheckoutSession", () => {
       clientSecret: "cs_123",
       redirectUrl: null,
       alreadySubscribed: false,
-      mock: false,
     });
   });
 
@@ -67,14 +66,6 @@ describe("createCheckoutSession", () => {
     expect(s.alreadySubscribed).toBe(true);
     expect(s.redirectUrl).toBe("https://portal");
     expect(s.clientSecret).toBeNull();
-  });
-
-  it("flags a mock client secret", async () => {
-    invoke.mockResolvedValue({
-      data: { success: true, client_secret: "cs_mock_abc" },
-      error: null,
-    });
-    expect((await createCheckoutSession(req)).mock).toBe(true);
   });
 
   it("throws when success is false", async () => {
