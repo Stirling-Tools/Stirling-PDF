@@ -12,6 +12,7 @@ import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.encryption.PDEncryption;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,11 +22,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.config.swagger.JsonDataResponse;
+import stirling.software.SPDF.model.api.analysis.WordCountRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.AnalysisApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.RegexPatternUtils;
 
 @AnalysisApi
 @RequiredArgsConstructor
@@ -243,5 +246,57 @@ public class AnalysisController {
 
             return ResponseEntity.ok(securityInfo);
         }
+    }
+
+    @AutoJobPostMapping(
+            value = "/word-count",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            resourceWeight = ResourceWeight.SMALL_WEIGHT)
+    @JsonDataResponse
+    @Operation(
+            summary = "Get word, character, and line counts",
+            description =
+                    "Extracts text from the PDF and returns word count, character count, and line"
+                            + " count. Optionally includes a per-page breakdown."
+                            + " Input:PDF Output:JSON Type:SISO")
+    public ResponseEntity<?> getWordCount(@ModelAttribute WordCountRequest request)
+            throws IOException {
+        try (PDDocument document = pdfDocumentFactory.load(request.getFileInput(), true)) {
+            RegexPatternUtils patterns = RegexPatternUtils.getInstance();
+
+            PDFTextStripper stripper = new PDFTextStripper();
+            String fullText = stripper.getText(document);
+            Map<String, Object> result = buildCounts(fullText, patterns);
+
+            if (request.isIncludePerPage()) {
+                int pageCount = document.getNumberOfPages();
+                List<Map<String, Object>> pages = new ArrayList<>(pageCount);
+                for (int i = 1; i <= pageCount; i++) {
+                    PDFTextStripper pageStripper = new PDFTextStripper();
+                    pageStripper.setStartPage(i);
+                    pageStripper.setEndPage(i);
+                    pages.add(buildCounts(pageStripper.getText(document), patterns));
+                }
+                result.put("pages", pages);
+            }
+
+            return ResponseEntity.ok(result);
+        }
+    }
+
+    private static Map<String, Object> buildCounts(String text, RegexPatternUtils patterns) {
+        String trimmed = text.trim();
+        int wordCount =
+                trimmed.isEmpty() ? 0 : patterns.getWhitespacePattern().split(trimmed).length;
+        int lineCount =
+                trimmed.isEmpty()
+                        ? 0
+                        : patterns.getMultiFormatNewlinePattern().split(trimmed).length;
+        Map<String, Object> counts = new HashMap<>();
+        counts.put("wordCount", wordCount);
+        counts.put("characterCount", text.length());
+        counts.put("characterCountNoSpaces", text.replaceAll("\\s", "").length());
+        counts.put("lineCount", lineCount);
+        return counts;
     }
 }
