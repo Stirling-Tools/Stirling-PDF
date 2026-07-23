@@ -9917,7 +9917,7 @@ canvas = "After drawing your signature in the canvas, close the modal then click
 image = "After uploading your signature image above, click anywhere on the PDF to place it."
 noSignature = "Create a signature above to enable placement tools."
 paused = "Placement paused"
-resumeHint = "Resume placement to click and add your signature."
+resumeHint = "Placement is paused — clicking the PDF won't add your signature. Click \"Resume placement\" below (or press Esc) to continue."
 saved = "Select a saved signature above, then click anywhere on the PDF to place it."
 text = "After entering your name above, click anywhere on the PDF to place your signature."
 title = "How to add signature"
@@ -9925,8 +9925,10 @@ title = "How to add signature"
 [sign.mode]
 move = "Move Signature"
 pause = "Pause placement"
+pauseHint = "Stop placing signatures so you can scroll and click the PDF without adding one."
 place = "Place Signature"
 resume = "Resume placement"
+resumeHint = "Turn placement back on so clicking the PDF adds your signature."
 
 [sign.results]
 title = "Signature Results"
@@ -9959,6 +9961,7 @@ sharedHeading = "Shared Signatures"
 tempStorageDescription = "Signatures are stored in your browser only. They will be lost if you clear browser data or switch browsers."
 tempStorageTitle = "Temporary browser storage"
 use = "Use signature"
+used = "Selected — click the PDF to place it"
 
 [sign.saved.status]
 saved = "Saved"
