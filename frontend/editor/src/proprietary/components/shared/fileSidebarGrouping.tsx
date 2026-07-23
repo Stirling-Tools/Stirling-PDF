@@ -1,4 +1,5 @@
-// Classification override of the Files-sidebar grouping seam: Recent, one group per VISIBLE category (the fixed, shared label families; each can be hidden device-local), then Other for files in none of those. Labels are cached on the stub via a lazy metadata backfill so grouping stays cheap.
+// Classification override of the Files-sidebar grouping seam: Recent, one group
+// per visible category, then Other. Labels cache onto stubs via a lazy backfill.
 
 import {
   useEffect,
@@ -18,6 +19,7 @@ import {
   subscribeSidebarCategories,
 } from "@app/services/fileSidebarCategories";
 import { buildLabelGroups } from "@app/components/shared/fileSidebarGroupingLogic";
+import { scheduleIdle } from "@app/utils/scheduleIdle";
 import type { FileId } from "@app/types/file";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { FileSidebarGroup } from "@core/components/shared/fileSidebarGrouping";
@@ -36,33 +38,22 @@ const BACKFILL_BATCH = 3;
 /** Recheck delay when the backfill yields to an active policy wave. */
 const BACKFILL_BUSY_RETRY_MS = 4000;
 
-/** Schedule work for the browser's idle time (or soon after, as a fallback). */
-function scheduleIdle(task: () => void): () => void {
-  if (typeof requestIdleCallback === "function") {
-    const handle = requestIdleCallback(task, { timeout: 2000 });
-    return () => cancelIdleCallback(handle);
-  }
-  const timer = window.setTimeout(task, 200);
-  return () => window.clearTimeout(timer);
-}
-
 export function useFileSidebarGroups(
   stubs: StirlingFileStub[],
 ): FileSidebarGroup[] | null {
   const { t } = useTranslation();
-  // Classification off (AI disabled) → no grouping at all: return the flat list
-  // like core, and don't fetch team labels or backfill from metadata. Gates the
-  // whole feature so an AI-off SaaS tenant sees no Recent/Other/category chrome.
+  // Classification off (core): flat list, no category fetch or backfill.
   const enabled = useClassificationEnabled();
   const { bumpRevision } = useIndexedDB();
-  // Attempted reads keyed by id+lastModified: a re-classified file (new version bumps lastModified) is re-read and leaves "Other" on its own, while a truly-unlabelled file keeps a stable key and is read once.
+  // Reads keyed by id+lastModified, so a new file version is re-read exactly once.
   const attempted = useRef<Set<string>>(new Set());
   const attemptKey = (s: StirlingFileStub) =>
     `${s.id as string}:${s.lastModified ?? 0}`;
   // Bumped to re-attempt a backfill pass that yielded to an active policy wave.
   const [retryTick, setRetryTick] = useState(0);
 
-  // Fallback for files that arrive with labels already in metadata but no policy delivery (imports/shares): read+cache a few per idle pass, yielding while a policy wave is in flight since those stubs get stamped on delivery anyway.
+  // Backfill labels from file metadata onto stubs, a few per idle pass; yields
+  // while a policy wave is in flight. The heuristic path stamps stubs directly.
   useEffect(() => {
     if (!enabled) return;
     const pending = stubs
@@ -75,7 +66,8 @@ export function useFileSidebarGroups(
     let retryTimer: number | undefined;
     const cancelIdle = scheduleIdle(() => {
       if (cancelled) return;
-      // Deliveries stamp labels during a wave, so reading now is wasted parsing; recheck after it (a timer self-heals when a wave ends without a stubs change).
+      // Reading during a wave is wasted parsing; recheck after it. The timer
+      // self-heals when a wave ends without a stubs change.
       if (hasInFlightPolicyRuns()) {
         retryTimer = window.setTimeout(() => {
           if (!cancelled) setRetryTick((n) => n + 1);
@@ -85,9 +77,9 @@ export function useFileSidebarGroups(
       void (async () => {
         let wrote = false;
         for (const stub of pending) {
-          attempted.current.add(attemptKey(stub));
           const labels = await readStubClassificationLabels(stub);
           if (cancelled) return;
+          attempted.current.add(attemptKey(stub));
           if (labels) {
             const ok = await fileStorage.updateFileMetadata(stub.id as FileId, {
               classificationLabels: labels,
