@@ -1,4 +1,5 @@
-import { NavItem } from "@app/ui";
+import { useMediaQuery } from "@mantine/hooks";
+import { ActionIcon, NavItem } from "@app/ui";
 import { AppSwitch } from "@app/components/shared/AppSwitch";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -9,7 +10,7 @@ import { LinkAccountFooterItem } from "@portal/components/LinkAccountFooterItem"
 import { EDITOR_URL, EDITOR_IS_SAME_APP } from "@portal/auth/editorUrl";
 import wordmarkLight from "@app/assets/brand/modern-logo/StirlingProcessorLogoBlackText.svg";
 import wordmarkDark from "@app/assets/brand/modern-logo/StirlingProcessorLogoWhiteText.svg";
-import { SettingsIcon } from "@portal/components/icons";
+import { CloseIcon, SettingsIcon } from "@portal/components/icons";
 import {
   GROUP_PROCESSOR,
   GROUP_PLATFORM,
@@ -23,12 +24,18 @@ const NAV_SECTIONS: NavGroup[] = [
   { labelKey: "portal.nav.section.platform", entries: GROUP_PLATFORM },
 ];
 
+/** Must match the shell breakpoint in AppShell.css / Sidebar.css. */
+const MOBILE_QUERY = "(max-width: 48rem)";
+
 export function Sidebar() {
   const { activeView, setActiveView } = useView();
   const { theme } = useTheme();
-  const { openSettings } = useUI();
+  const { openSettings, mobileNavOpen, closeMobileNav } = useUI();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const isMobile = useMediaQuery(MOBILE_QUERY, false, {
+    getInitialValueInEffect: false,
+  });
 
   // Editor and portal are one SPA when the editor serves this origin's root, so
   // the switch stays client-side; an absolute EDITOR_URL (dev cross-app setup)
@@ -50,6 +57,9 @@ export function Sidebar() {
         icon={entry.icon}
         isActive={activeView === entry.id}
         onClick={(id) => {
+          // Route changes also close the drawer (AppShell), but re-selecting the
+          // active view or opening an external tab changes no route — close here.
+          closeMobileNav();
           if (entry.externalUrl) {
             window.open(entry.externalUrl, "_blank", "noopener,noreferrer");
           } else {
@@ -62,13 +72,25 @@ export function Sidebar() {
 
   return (
     <aside
-      className="portal-sidebar"
+      className={
+        mobileNavOpen ? "portal-sidebar portal-sidebar--open" : "portal-sidebar"
+      }
       aria-label={t("portal.shell.sidebar.primaryNav")}
+      // Off-canvas on mobile: remove from the tab order and accessibility tree.
+      inert={isMobile && !mobileNavOpen}
     >
       <div className="portal-sidebar__logo">
+        {/* Both wordmarks render; CSS shows the right one per the actual color
+            scheme (data-mantine-color-scheme), so it tracks the rendered theme
+            rather than the portal's separate theme state. */}
         <img
-          className="portal-sidebar__wordmark"
-          src={theme === "dark" ? wordmarkDark : wordmarkLight}
+          className="portal-sidebar__wordmark portal-sidebar__wordmark--light"
+          src={wordmarkLight}
+          alt={t("portal.shell.sidebar.brandSuffix")}
+        />
+        <img
+          className="portal-sidebar__wordmark portal-sidebar__wordmark--dark"
+          src={wordmarkDark}
           alt={t("portal.shell.sidebar.brandSuffix")}
         />
 
@@ -78,6 +100,15 @@ export function Sidebar() {
           theme={theme}
           onSwitch={goToEditor}
         />
+
+        <ActionIcon
+          variant="tertiary"
+          className="portal-sidebar__close"
+          aria-label={t("portal.shell.topbar.closeNav")}
+          onClick={closeMobileNav}
+        >
+          <CloseIcon size={18} />
+        </ActionIcon>
       </div>
 
       <nav className="portal-sidebar__nav">

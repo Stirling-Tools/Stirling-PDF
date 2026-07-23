@@ -1,33 +1,41 @@
 package stirling.software.proprietary.policy.source;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
+import stirling.software.common.util.FileReadinessChecker;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.input.InputSource;
+import stirling.software.proprietary.policy.input.WebhookInputSource;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.store.InProcessPolicyStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
+import stirling.software.proprietary.policy.webhook.WebhookSpool;
 import stirling.software.proprietary.util.SecretMasker;
 
 /**
@@ -41,6 +49,9 @@ class SourceControllerTest {
     private final PolicyStore policyStore = new InProcessPolicyStore();
     private PolicyTriggerManager triggerManager;
     private SourceController controller;
+    private SourceController webhookController;
+
+    @TempDir Path tempDir;
 
     @BeforeEach
     void setUp() {
@@ -61,6 +72,8 @@ class SourceControllerTest {
         // A permissive input source so config validation passes and save can be exercised.
         InputSource folderInput = mock(InputSource.class);
         when(folderInput.supports(any())).thenReturn(true);
+        when(folderInput.prepareOptionsForSave(any(), anyBoolean()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
         controller =
                 new SourceController(
                         sourceStore,
@@ -72,6 +85,45 @@ class SourceControllerTest {
                         triggerManager,
                         properties,
                         List.of(folderInput));
+        WebhookInputSource webhookInput =
+                new WebhookInputSource(new WebhookSpool(tempDir), mock(FileReadinessChecker.class));
+        webhookController =
+                new SourceController(
+                        sourceStore,
+                        sourceGuard,
+                        overviewService,
+                        policyStore,
+                        policyGuard,
+                        authority,
+                        triggerManager,
+                        properties,
+                        List.of(webhookInput));
+    }
+
+    @Test
+    void creatingAWebhookRevealsItsSecretOnceThenMasks() {
+        Source created =
+                webhookController
+                        .save(
+                                new Source(
+                                        null,
+                                        "Partner uploads",
+                                        "webhook",
+                                        Map.of("mode", "consume"),
+                                        true,
+                                        null,
+                                        null))
+                        .getBody();
+
+        String secret = String.valueOf(created.options().get("signingSecret"));
+        String webhookId = String.valueOf(created.options().get("webhookId"));
+        assertNotEquals(SecretMasker.REDACTED, secret);
+        assertFalse(secret.isBlank());
+        assertFalse(webhookId.isBlank());
+
+        Source read = webhookController.get(created.id()).getBody();
+        assertEquals(SecretMasker.REDACTED, read.options().get("signingSecret"));
+        assertEquals(webhookId, read.options().get("webhookId"));
     }
 
     @Test

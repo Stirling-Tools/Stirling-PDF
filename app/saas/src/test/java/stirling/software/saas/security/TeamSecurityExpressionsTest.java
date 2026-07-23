@@ -21,6 +21,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import stirling.software.common.model.enumeration.TeamRole;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.model.TeamMembership;
+import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.security.service.UserService;
@@ -105,6 +106,27 @@ class TeamSecurityExpressionsTest {
     void currentUserTeamIdIsNullWithoutTeam() {
         authenticateAsUserWithTeam(false);
         assertNull(expressions().currentUserTeamId());
+    }
+
+    private User leaderUser() {
+        User leader = new User();
+        leader.setId(USER_ID);
+        Team team = new Team();
+        team.setId(TEAM_ID);
+        leader.setTeam(team);
+        return leader;
+    }
+
+    @Test
+    void apiKeyOfALeaderStillLeads() {
+        // A key acts as the owner; if they lead the team, the key leads.
+        SecurityContextHolder.getContext()
+                .setAuthentication(
+                        new ApiKeyAuthenticationToken(leaderUser(), "sk_personal", List.of()));
+        when(membershipRepository.findByTeamIdAndUserId(TEAM_ID, USER_ID))
+                .thenReturn(Optional.of(membershipWithRole(TeamRole.LEADER)));
+
+        assertTrue(expressions().isCurrentUserTeamLeader());
     }
 
     @Test

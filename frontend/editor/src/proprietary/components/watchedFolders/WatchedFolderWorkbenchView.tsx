@@ -852,8 +852,8 @@ export function WatchedFolderWorkbenchView({
         px="xl"
         py="md"
         style={{
-          borderBottom: "0.0625rem solid var(--border-subtle)",
-          backgroundColor: "var(--bg-toolbar)",
+          borderBottom: "0.0625rem solid var(--c-border-subtle)",
+          backgroundColor: "var(--c-bg-raised)",
           flexShrink: 0,
         }}
       >
@@ -893,7 +893,7 @@ export function WatchedFolderWorkbenchView({
                   width: "0.75rem",
                   height: "0.75rem",
                   borderRadius: "50%",
-                  backgroundColor: "var(--bg-toolbar)",
+                  backgroundColor: "var(--c-bg-raised)",
                   textAlign: "center",
                   display: "flex",
                   alignItems: "center",
@@ -1221,7 +1221,7 @@ export function WatchedFolderWorkbenchView({
                     style={{
                       height: "0.1875rem",
                       borderRadius: "999px",
-                      backgroundColor: "var(--border-subtle)",
+                      backgroundColor: "var(--c-border-subtle)",
                       overflow: "hidden",
                     }}
                   >
@@ -1263,7 +1263,7 @@ export function WatchedFolderWorkbenchView({
                 flex: 1,
                 color: isDragOver
                   ? "var(--mantine-color-blue-filled)"
-                  : "var(--tool-subcategory-text-color)",
+                  : "var(--c-text-subtle)",
                 textTransform: "uppercase",
                 letterSpacing: "0.05em",
               }}
@@ -1361,8 +1361,8 @@ export function WatchedFolderWorkbenchView({
                 <Box
                   style={{
                     padding: "0.375rem 0.75rem",
-                    borderTop: "0.0625rem solid var(--border-subtle)",
-                    borderBottom: "0.0625rem solid var(--border-subtle)",
+                    borderTop: "0.0625rem solid var(--c-border-subtle)",
+                    borderBottom: "0.0625rem solid var(--c-border-subtle)",
                     backgroundColor: "var(--mantine-color-blue-light)",
                     display: "flex",
                     alignItems: "center",
@@ -1502,10 +1502,10 @@ export function WatchedFolderWorkbenchView({
                         key={fileId}
                         style={{
                           borderRadius: "var(--mantine-radius-sm)",
-                          border: `0.0625rem solid ${isFocused ? "var(--mantine-color-blue-4)" : isSelected ? "var(--mantine-color-blue-filled)" : status === "error" ? "var(--mantine-color-red-light)" : "var(--border-subtle)"}`,
+                          border: `0.0625rem solid ${isFocused ? "var(--mantine-color-blue-4)" : isSelected ? "var(--mantine-color-blue-filled)" : status === "error" ? "var(--mantine-color-red-light)" : "var(--c-border-subtle)"}`,
                           backgroundColor: isSelected
                             ? "var(--mantine-color-blue-light)"
-                            : "var(--bg-toolbar)",
+                            : "var(--c-bg-raised)",
                           overflow: "hidden",
                           outline: "none",
                         }}
@@ -1722,7 +1722,7 @@ export function WatchedFolderWorkbenchView({
                         {isExpanded && (
                           <Box
                             style={{
-                              borderTop: `0.0625rem solid ${status === "error" ? "var(--mantine-color-red-light)" : "var(--border-subtle)"}`,
+                              borderTop: `0.0625rem solid ${status === "error" ? "var(--mantine-color-red-light)" : "var(--c-border-subtle)"}`,
                               padding: "0.375rem 0.625rem 0.375rem 2rem",
                               backgroundColor: "var(--bg-app)",
                             }}
@@ -2194,7 +2194,7 @@ export function WatchedFolderWorkbenchView({
                     style={{
                       flex: 1,
                       position: "relative",
-                      borderBottom: "0.0625rem solid var(--border-subtle)",
+                      borderBottom: "0.0625rem solid var(--c-border-subtle)",
                     }}
                   >
                     {[0, 25, 50, 75].map((pct) => (
@@ -2205,7 +2205,7 @@ export function WatchedFolderWorkbenchView({
                           top: `${pct}%`,
                           left: 0,
                           right: 0,
-                          borderTop: "0.0625rem dashed var(--border-subtle)",
+                          borderTop: "0.0625rem dashed var(--c-border-subtle)",
                           pointerEvents: "none",
                         }}
                       />
@@ -2245,8 +2245,9 @@ export function WatchedFolderWorkbenchView({
                                   ? `calc(100% - ${chartHover.relX}px + 12px)`
                                   : undefined,
                                 top: Math.max(chartHover.relY - 36, 4),
-                                backgroundColor: "var(--bg-toolbar)",
-                                border: "0.0625rem solid var(--border-subtle)",
+                                backgroundColor: "var(--c-bg-raised)",
+                                border:
+                                  "0.0625rem solid var(--c-border-subtle)",
                                 borderRadius: "var(--mantine-radius-sm)",
                                 padding: "0.3rem 0.5rem",
                                 pointerEvents: "none",
