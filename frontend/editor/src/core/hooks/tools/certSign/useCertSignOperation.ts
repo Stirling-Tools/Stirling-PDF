@@ -38,6 +38,7 @@ export const certSignToApiParams = (
   // Non-file identifiers depend on the chosen certificate type.
   switch (parameters.certType) {
     case "WINDOWS_STORE":
+    case "MACOS_KEYCHAIN":
       if (parameters.alias) apiParams.alias = parameters.alias;
       break;
     case "PKCS11":
@@ -99,7 +100,14 @@ export const certSignFromApiParams = (
   apiParams: CertSignApiParams,
 ): Partial<CertSignParameters> => {
   const result: Partial<CertSignParameters> = {
-    signMode: apiParams.certType === "SERVER" ? "AUTO" : "MANUAL",
+    signMode:
+      apiParams.certType === "SERVER"
+        ? "AUTO"
+        : apiParams.certType === "WINDOWS_STORE" ||
+            apiParams.certType === "PKCS11" ||
+            apiParams.certType === "MACOS_KEYCHAIN"
+          ? "DEVICE"
+          : "MANUAL",
     showSignature: apiParams.showSignature ?? defaultParameters.showSignature,
   };
 

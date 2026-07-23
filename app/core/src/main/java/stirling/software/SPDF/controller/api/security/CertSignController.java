@@ -279,6 +279,31 @@ public class CertSignController {
                 signingProvider = pkcs11Session.provider();
                 keystorePassword = password;
                 break;
+            case "MACOS_KEYCHAIN":
+                hardwareKeyStoreService.assertMacosKeychainAvailable(httpRequest);
+                if (StringUtils.isBlank(request.getAlias())) {
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.missingCertificateAlias",
+                            "A keychain certificate must be selected before signing");
+                }
+                java.util.List<Certificate> macChain =
+                        stirling.software.SPDF.service.keychain.MacKeychainHelper
+                                .loadCertificateChain(request.getAlias());
+                Certificate[] macChainArray = macChain.toArray(new Certificate[0]);
+                X509Certificate macLeaf = (X509Certificate) macChainArray[0];
+                stirling.software.SPDF.service.keychain.MacKeychainPrivateKey macPrivateKey =
+                        new stirling.software.SPDF.service.keychain.MacKeychainPrivateKey(
+                                request.getAlias(), macLeaf);
+                ks =
+                        stirling.software.SPDF.service.keychain.MacKeychainKeyStore.create(
+                                request.getAlias(), macChainArray, macPrivateKey);
+                if (Security.getProvider("MacKeychain") == null) {
+                    Security.addProvider(
+                            stirling.software.SPDF.service.keychain.MacKeychainKeyStore.provider());
+                }
+                signingProvider = hardwareKeyStoreService.macosKeychainProvider();
+                keystorePassword = null;
+                break;
             default:
                 throw ExceptionUtils.createIllegalArgumentException(
                         "error.invalidArgument",

@@ -25,6 +25,7 @@ async function mockHardwareEndpoints(page: Page) {
           osName: "Windows 11",
           windowsStoreSupported: true,
           pkcs11Supported: true,
+          macosKeychainSupported: false,
           detectedLibraries: [
             {
               name: "OpenSC",

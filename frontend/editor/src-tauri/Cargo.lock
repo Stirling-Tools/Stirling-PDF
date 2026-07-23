@@ -4494,6 +4494,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ce2be8dc25455e1f91df71bfa12ad37d7af1092ae736f3a6cd0e37bc7810596"
 
 [[package]]
+name = "stirling-keychain"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "cc",
+ "core-foundation 0.10.1",
+ "security-framework 3.7.0",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "stirling-pdf"
 version = "0.1.0"
 dependencies = [
@@ -4511,6 +4525,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.11.0",
+ "stirling-keychain",
  "tauri",
  "tauri-build",
  "tauri-plugin-deep-link",

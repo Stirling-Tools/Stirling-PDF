@@ -1,0 +1,5 @@
+{
+  "bundle": {
+    "resources": ["libs/*.jar", "runtime/jre/**/*", "sidecar/keychain-helper"]
+  }
+}

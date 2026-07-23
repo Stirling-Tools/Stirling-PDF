@@ -59,7 +59,7 @@ class HardwareKeyStoreServiceTest {
         assertFalse(caps.desktop());
         assertFalse(caps.windowsStoreSupported());
         assertFalse(caps.pkcs11Supported());
-        assertTrue(caps.detectedLibraries().isEmpty());
+        assertFalse(caps.macosKeychainSupported());
     }
 
     @Test
