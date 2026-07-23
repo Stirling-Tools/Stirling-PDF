@@ -370,8 +370,10 @@ test.describe("PDF text editor v2 - save", () => {
     // The boundary between original and appended may collapse to a
     // single or double space depending on per-word emit / LineGrouper
     // reconstruction. Either is acceptable as long as both pieces are
-    // present and not visually glued.
-    expect(allText).not.toContain(`${original}(Hello!)`);
+    // present and not visually glued. Trim the original's own trailing
+    // whitespace first - with it, the banned string equalled the CORRECT
+    // single-space rendering and the assertion rejected valid output.
+    expect(allText).not.toContain(`${original.trimEnd()}(Hello!)`);
     // Quiet the unused-var lint - `edited` documents the intent above.
     void edited;
   });

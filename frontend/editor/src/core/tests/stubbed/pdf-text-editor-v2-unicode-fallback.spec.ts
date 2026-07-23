@@ -98,6 +98,14 @@ async function appendSaveReopen(
   // Save, then reopen the produced bytes.
   const downloadPromise = page.waitForEvent("download");
   await page.getByTestId("v2-save").click();
+  // Edits that drop unrepresentable chars raise the save-risk modal - the
+  // download only fires once the user (this test) acknowledges it.
+  {
+    const risk = page.getByTestId("v2-save-risk-confirm");
+    if (await risk.isVisible({ timeout: 2500 }).catch(() => false)) {
+      await risk.click();
+    }
+  }
   const dl = await downloadPromise;
   const stream = await dl.createReadStream();
   const chunks: Buffer[] = [];
@@ -241,6 +249,14 @@ for (const { name, text } of RTL_SAMPLES) {
     // (c) save+reopen preserves the text.
     const downloadPromise = page.waitForEvent("download");
     await page.getByTestId("v2-save").click();
+    // Edits that drop unrepresentable chars raise the save-risk modal - the
+    // download only fires once the user (this test) acknowledges it.
+    {
+      const risk = page.getByTestId("v2-save-risk-confirm");
+      if (await risk.isVisible({ timeout: 2500 }).catch(() => false)) {
+        await risk.click();
+      }
+    }
     const dl = await downloadPromise;
     const stream = await dl.createReadStream();
     const chunks: Buffer[] = [];
