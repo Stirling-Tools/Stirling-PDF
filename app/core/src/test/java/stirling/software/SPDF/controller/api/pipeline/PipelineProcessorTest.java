@@ -12,6 +12,7 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ByteArrayResource;
@@ -19,6 +20,7 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 
 import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
@@ -111,6 +113,89 @@ class PipelineProcessorTest {
         verify(internalApiClient).post(anyString(), any());
 
         assertFalse(result.isHasErrors());
+
+        Files.deleteIfExists(tempPath);
+    }
+
+    @Test
+    void skipsBlankAllRequestParamsForMultipartBinding() throws Exception {
+        PipelineOperation op = new PipelineOperation();
+        op.setOperation("/api/v1/misc/update-metadata");
+        op.setParameters(Map.of("title", "Updated title", "allRequestParams", ""));
+        PipelineConfig config = new PipelineConfig();
+        config.setOperations(List.of(op));
+
+        Path tempPath = Files.createTempFile("test-output", ".pdf");
+        Files.write(tempPath, "processed_data".getBytes());
+        Resource outputResource =
+                new FileSystemResource(tempPath.toFile()) {
+                    @Override
+                    public String getFilename() {
+                        return "processed.pdf";
+                    }
+                };
+
+        when(apiDocService.isMultiInput("/api/v1/misc/update-metadata")).thenReturn(false);
+        when(apiDocService.getExtensionTypes(false, "/api/v1/misc/update-metadata"))
+                .thenReturn(List.of("pdf"));
+        when(apiDocService.isValidOperation(eq("/api/v1/misc/update-metadata"), anyMap()))
+                .thenReturn(true);
+        when(internalApiClient.post(eq("/api/v1/misc/update-metadata"), any()))
+                .thenReturn(new ResponseEntity<>(outputResource, HttpStatus.OK));
+
+        pipelineProcessor.runPipelineAgainstFiles(List.of(new MyFileByteArrayResource()), config);
+
+        ArgumentCaptor<MultiValueMap> bodyCaptor = ArgumentCaptor.forClass(MultiValueMap.class);
+        verify(internalApiClient).post(eq("/api/v1/misc/update-metadata"), bodyCaptor.capture());
+        MultiValueMap<String, Object> body = bodyCaptor.getValue();
+
+        assertEquals("Updated title", body.getFirst("title"));
+        assertFalse(body.containsKey("allRequestParams"));
+
+        Files.deleteIfExists(tempPath);
+    }
+
+    @Test
+    void expandsAllRequestParamsMapForMultipartBinding() throws Exception {
+        PipelineOperation op = new PipelineOperation();
+        op.setOperation("/api/v1/misc/update-metadata");
+        op.setParameters(
+                Map.of(
+                        "title",
+                        "Updated title",
+                        "allRequestParams",
+                        Map.of("customKey1", "Department", "customValue1", "Engineering")));
+        PipelineConfig config = new PipelineConfig();
+        config.setOperations(List.of(op));
+
+        Path tempPath = Files.createTempFile("test-output", ".pdf");
+        Files.write(tempPath, "processed_data".getBytes());
+        Resource outputResource =
+                new FileSystemResource(tempPath.toFile()) {
+                    @Override
+                    public String getFilename() {
+                        return "processed.pdf";
+                    }
+                };
+
+        when(apiDocService.isMultiInput("/api/v1/misc/update-metadata")).thenReturn(false);
+        when(apiDocService.getExtensionTypes(false, "/api/v1/misc/update-metadata"))
+                .thenReturn(List.of("pdf"));
+        when(apiDocService.isValidOperation(eq("/api/v1/misc/update-metadata"), anyMap()))
+                .thenReturn(true);
+        when(internalApiClient.post(eq("/api/v1/misc/update-metadata"), any()))
+                .thenReturn(new ResponseEntity<>(outputResource, HttpStatus.OK));
+
+        pipelineProcessor.runPipelineAgainstFiles(List.of(new MyFileByteArrayResource()), config);
+
+        ArgumentCaptor<MultiValueMap> bodyCaptor = ArgumentCaptor.forClass(MultiValueMap.class);
+        verify(internalApiClient).post(eq("/api/v1/misc/update-metadata"), bodyCaptor.capture());
+        MultiValueMap<String, Object> body = bodyCaptor.getValue();
+
+        assertEquals("Updated title", body.getFirst("title"));
+        assertEquals("Department", body.getFirst("allRequestParams[customKey1]"));
+        assertEquals("Engineering", body.getFirst("allRequestParams[customValue1]"));
+        assertFalse(body.containsKey("allRequestParams"));
 
         Files.deleteIfExists(tempPath);
     }
