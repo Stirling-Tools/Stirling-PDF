@@ -87,9 +87,17 @@ export function Sidebar() {
           alt=""
           aria-hidden="true"
         />
+        {/* Both wordmarks render; CSS shows the right one per the actual color
+            scheme (data-mantine-color-scheme), so it tracks the rendered theme
+            rather than the portal's separate theme state. */}
         <img
-          className="portal-sidebar__wordmark"
-          src={theme === "dark" ? wordmarkDark : wordmarkLight}
+          className="portal-sidebar__wordmark portal-sidebar__wordmark--light"
+          src={wordmarkLight}
+          alt="Stirling"
+        />
+        <img
+          className="portal-sidebar__wordmark portal-sidebar__wordmark--dark"
+          src={wordmarkDark}
           alt="Stirling"
         />
 

@@ -100,7 +100,7 @@ export const ActionIcon = forwardRef<HTMLButtonElement, ActionIconProps>(
               "--ai-bg": "transparent",
               "--ai-hover": "transparent",
               "--ai-color": "var(--_text)",
-              "--ai-hover-color": "var(--color-text-1)",
+              "--ai-hover-color": "var(--c-text)",
               "--ai-bd": "1px solid transparent",
             }
           : {

@@ -425,7 +425,7 @@ export const OP_CATEGORIES: readonly OpCategoryMeta[] = [
   },
   {
     name: "Validation",
-    color: "var(--color-blue)",
+    color: "var(--c-primary)",
     blurb: "Schema checks, trust gates, filters",
   },
   {
@@ -470,7 +470,7 @@ export const OP_CATEGORIES: readonly OpCategoryMeta[] = [
   },
   {
     name: "Developer Tools",
-    color: "var(--color-text-5)",
+    color: "var(--c-text-subtle)",
     blurb: "Repair, compress, metadata",
   },
 ];

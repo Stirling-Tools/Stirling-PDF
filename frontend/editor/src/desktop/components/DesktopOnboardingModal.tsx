@@ -15,7 +15,10 @@ import { connectionModeService } from "@app/services/connectionModeService";
 
 const ONBOARDING_KEY = "stirling-desktop-onboarding-seen";
 
-const SIGN_IN_GRADIENT: [string, string] = ["#3B82F6", "#7C3AED"];
+const SIGN_IN_GRADIENT: [string, string] = [
+  "var(--c-hue-blue)",
+  "var(--c-hue-violet)",
+];
 
 /**
  * Desktop-specific onboarding modal.
@@ -76,7 +79,7 @@ export function DesktopOnboardingModal() {
         content: {
           overflow: "hidden",
           border: "none",
-          background: "var(--bg-surface)",
+          background: "var(--c-surface)",
           maxHeight: "90vh",
           display: "flex",
           flexDirection: "column",
@@ -158,7 +161,7 @@ export function DesktopOnboardingModal() {
                 <div className={`${styles.bodyCopy} ${styles.bodyCopyInner}`}>
                   {welcomeSlide.body}
                 </div>
-                <style>{`.${styles.bodyCopyInner} strong { color: var(--onboarding-title); font-weight: 600; }`}</style>
+                <style>{`.${styles.bodyCopyInner} strong { color: var(--c-text); font-weight: 600; }`}</style>
               </div>
               <OnboardingStepper totalSteps={totalSteps} activeStep={step} />
               <div className={styles.buttonContainer}>
