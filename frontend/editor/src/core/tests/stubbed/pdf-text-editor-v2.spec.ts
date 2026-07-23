@@ -2921,7 +2921,7 @@ test.describe("PDF text editor v2 - colour", () => {
     // type=text under the hood.
     const colourInput = page.getByLabel("Font colour").first();
     await expect(colourInput).toBeEnabled();
-    await colourInput.fill("#ff0000");
+    await colourInput.fill("#ff0000"); // theme-allow-color test input value
     await colourInput.press("Enter");
     await expect(page.getByTestId("v2-undo")).toBeEnabled();
 
@@ -2992,7 +2992,7 @@ test.describe("PDF text editor v2 - delete + multi-select", () => {
     // edits land in history via canRedo after one undo.
     const colourInput = page.getByLabel("Font colour").first();
     await expect(colourInput).toBeEnabled();
-    await colourInput.fill("#00aa00");
+    await colourInput.fill("#00aa00"); // theme-allow-color test input value
     await colourInput.press("Enter");
     // One edit per selected run = >=2 entries on the undo stack.
     await expect(page.getByTestId("v2-undo")).toBeEnabled();

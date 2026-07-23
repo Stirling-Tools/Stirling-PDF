@@ -433,6 +433,7 @@ export interface EmlToPdfRequest {
 }
 export interface EncodeCharcodesRequest {
   fontName?: string;
+  fontSha256?: string;
   locatorChar?: string;
   pageIndex?: number;
   pdfBase64?: string;
