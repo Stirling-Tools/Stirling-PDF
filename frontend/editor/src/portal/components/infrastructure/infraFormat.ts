@@ -55,13 +55,11 @@ export const DEPLOY_LABEL: Record<DeploymentStatus, string> = {
 export const KEY_TONE: Record<ApiKeyStatus, StatusTone> = {
   active: "success",
   revoked: "danger",
-  "rotate-soon": "warning",
 };
 
 export const KEY_LABEL: Record<ApiKeyStatus, string> = {
   active: "portal.infrastructure.keyLabel.active",
   revoked: "portal.infrastructure.keyLabel.revoked",
-  "rotate-soon": "portal.infrastructure.keyLabel.rotateSoon",
 };
 
 export const CERT_TONE: Record<CertStatus, StatusTone> = {
