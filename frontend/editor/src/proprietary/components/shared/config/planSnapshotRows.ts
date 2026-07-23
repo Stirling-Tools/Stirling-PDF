@@ -31,7 +31,7 @@ export function buildPlanSnapshotRows(
   const currency = wallet.currency;
   const rate =
     wallet.pricePerDocMinor != null
-      ? t("plan.snapshot.perPdf", "{{amount}} / PDF", {
+      ? t("plan.snapshot.perCredit", "{{amount}} / credit", {
           amount: formatMinor(wallet.pricePerDocMinor, currency),
         })
       : "—";
@@ -99,7 +99,7 @@ export function buildPlanSnapshotRows(
       value: rate,
       sub: t(
         "plan.snapshot.startingRateFree",
-        "From here, scales with file size and policies · first {{count}} free",
+        "A credit is one processor run · first {{count}} free",
         { count: wallet.freeAllowance },
       ),
     },

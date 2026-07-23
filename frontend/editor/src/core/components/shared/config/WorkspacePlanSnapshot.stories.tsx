@@ -44,8 +44,8 @@ export const EditorTier: Story = {
       { label: "Spend this month", value: "$0.00", sub: "No card on file" },
       {
         label: "Starting rate",
-        value: "1¢ / PDF",
-        sub: "From here, scales with file size and policies · first 500 free",
+        value: "1¢ / credit",
+        sub: "A credit is one processor run · first 500 free",
       },
       {
         label: "Sources",
@@ -64,7 +64,7 @@ export const ProcessorTier: Story = {
       {
         label: "Documents this month",
         value: "142,847",
-        sub: "From 1¢ / PDF · scales with size + policies",
+        sub: "From 1¢ / credit · scales with size + policies",
       },
       {
         label: "Spend this month",
@@ -73,7 +73,7 @@ export const ProcessorTier: Story = {
       },
       {
         label: "Starting rate",
-        value: "1¢ / PDF",
+        value: "1¢ / credit",
         sub: "Floor; scales with size + policies",
       },
       { label: "Audit retention", value: "7 days" },
