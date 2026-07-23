@@ -6,11 +6,20 @@ import {
 } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
+import type { ReactNode } from "react";
 import type { SourcesResponse } from "@portal/api/sources";
 import { Sources } from "@portal/views/Sources";
+import { UIProvider } from "@portal/contexts/UIContext";
+
+// The embedded SourceModal reads useUI() to open settings, so wrap its provider.
+const Providers = ({ children }: { children: ReactNode }) => (
+  <MantineProvider>
+    <UIProvider>{children}</UIProvider>
+  </MantineProvider>
+);
 
 const render = (ui: Parameters<typeof baseRender>[0]) =>
-  baseRender(ui, { wrapper: MantineProvider });
+  baseRender(ui, { wrapper: Providers });
 
 // Deterministic i18n: keys returned verbatim.
 vi.mock("react-i18next", () => ({
@@ -27,6 +36,7 @@ vi.mock("@portal/api/sources", () => ({
   fetchSource: (id: string) => fetchSource(id),
   createSource: vi.fn(),
   deleteSource: vi.fn(),
+  isFolderAccessDeniedError: () => false,
 }));
 
 const fetchS3Connections = vi.fn();
