@@ -483,7 +483,8 @@ public class StampController {
         PDRectangle pageSize = page.getMediaBox();
         float x, y;
 
-        if (overrideX >= 0 && overrideY >= 0) {
+        boolean hasOverrideCoordinates = overrideX >= 0 && overrideY >= 0;
+        if (hasOverrideCoordinates) {
             // Use override values if provided
             x = overrideX;
             y = overrideY;
@@ -493,20 +494,102 @@ public class StampController {
             y = calculateImagePositionY(pageSize, position, desiredPhysicalHeight, margin);
         }
 
-        float llx = pageSize.getLowerLeftX();
-        float lly = pageSize.getLowerLeftY();
-        float urx = pageSize.getUpperRightX();
-        float ury = pageSize.getUpperRightY();
-        float xMax = Math.max(llx, urx - desiredPhysicalWidth);
-        float yMax = Math.max(lly, ury - desiredPhysicalHeight);
-        x = Math.min(xMax, Math.max(llx, x));
-        y = Math.min(yMax, Math.max(lly, y));
+        float[] clampedCoordinates =
+                clampImageStampCoordinates(
+                        pageSize,
+                        page.getRotation(),
+                        rotation,
+                        desiredPhysicalWidth,
+                        desiredPhysicalHeight,
+                        x,
+                        y,
+                        hasOverrideCoordinates);
+        x = clampedCoordinates[0];
+        y = clampedCoordinates[1];
 
         contentStream.saveGraphicsState();
         contentStream.transform(Matrix.getTranslateInstance(x, y));
         contentStream.transform(Matrix.getRotateInstance(Math.toRadians(rotation), 0, 0));
         contentStream.drawImage(xobject, 0, 0, desiredPhysicalWidth, desiredPhysicalHeight);
         contentStream.restoreGraphicsState();
+    }
+
+    private float[] clampImageStampCoordinates(
+            PDRectangle pageSize,
+            int pageRotation,
+            float stampRotation,
+            float imageWidth,
+            float imageHeight,
+            float x,
+            float y,
+            boolean hasOverrideCoordinates) {
+        if (!hasOverrideCoordinates || Math.floorMod(pageRotation, 360) == 0) {
+            return clampUnrotatedImageStampCoordinates(pageSize, imageWidth, imageHeight, x, y);
+        }
+
+        return clampRotatedImageStampCoordinates(
+                pageSize, stampRotation, imageWidth, imageHeight, x, y);
+    }
+
+    private float[] clampUnrotatedImageStampCoordinates(
+            PDRectangle pageSize, float imageWidth, float imageHeight, float x, float y) {
+        float llx = pageSize.getLowerLeftX();
+        float lly = pageSize.getLowerLeftY();
+        float urx = pageSize.getUpperRightX();
+        float ury = pageSize.getUpperRightY();
+        float xMax = Math.max(llx, urx - imageWidth);
+        float yMax = Math.max(lly, ury - imageHeight);
+        return new float[] {clamp(x, llx, xMax), clamp(y, lly, yMax)};
+    }
+
+    private float[] clampRotatedImageStampCoordinates(
+            PDRectangle pageSize,
+            float stampRotation,
+            float imageWidth,
+            float imageHeight,
+            float x,
+            float y) {
+        double radians = Math.toRadians(stampRotation);
+        float cos = (float) Math.cos(radians);
+        float sin = (float) Math.sin(radians);
+
+        float[] xOffsets = {
+            0, cos * imageWidth, -sin * imageHeight, cos * imageWidth - sin * imageHeight
+        };
+        float[] yOffsets = {
+            0, sin * imageWidth, cos * imageHeight, sin * imageWidth + cos * imageHeight
+        };
+
+        float minXOffset = min(xOffsets);
+        float maxXOffset = max(xOffsets);
+        float minYOffset = min(yOffsets);
+        float maxYOffset = max(yOffsets);
+
+        float minX = pageSize.getLowerLeftX() - minXOffset;
+        float maxX = Math.max(minX, pageSize.getUpperRightX() - maxXOffset);
+        float minY = pageSize.getLowerLeftY() - minYOffset;
+        float maxY = Math.max(minY, pageSize.getUpperRightY() - maxYOffset);
+        return new float[] {clamp(x, minX, maxX), clamp(y, minY, maxY)};
+    }
+
+    private float clamp(float value, float min, float max) {
+        return Math.min(max, Math.max(min, value));
+    }
+
+    private float min(float[] values) {
+        float result = Float.MAX_VALUE;
+        for (float value : values) {
+            result = Math.min(result, value);
+        }
+        return result;
+    }
+
+    private float max(float[] values) {
+        float result = -Float.MAX_VALUE;
+        for (float value : values) {
+            result = Math.max(result, value);
+        }
+        return result;
     }
 
     private float calculatePositionX(
