@@ -34,10 +34,10 @@ interface Props {
   /** Optional billing email prefill (Stripe locks the field when set). */
   billingOwnerEmail?: string;
   /**
-   * Fired when Stripe (or the mock continue button) signals payment success.
-   * Runs the caller's activation flow (poll the wallet until the subscription
-   * webhook lands) and resolves {@code true} once subscribed, {@code false} if
-   * it's taking longer than the poll window.
+   * Fired when Stripe signals payment success. Runs the caller's activation flow
+   * (poll the wallet until the subscription webhook lands) and resolves {@code
+   * true} once subscribed, {@code false} if it's taking longer than the poll
+   * window.
    */
   onComplete: () => Promise<boolean>;
 }

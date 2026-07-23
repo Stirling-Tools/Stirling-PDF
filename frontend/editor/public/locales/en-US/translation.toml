@@ -5607,7 +5607,7 @@ subtitle = "Used before metered billing and outside your spend cap."
 title = "Prepaid capacity"
 
 [payg.prepaid.meter]
-capSuffix = "of {{total}} prepaid PDFs"
+capSuffix = "of {{total}} prepaid credits"
 expires = "Expires {{date}}"
 
 [payg.prepaid.state]
@@ -6471,7 +6471,7 @@ unitsPending_one = "{{units}} meter unit pending sync from linked instances"
 unitsPending_other = "{{units}} meter units pending sync from linked instances"
 
 [portal.billing.prepaid]
-capSuffix = "of {{total}} prepaid PDFs"
+capSuffix = "of {{total}} prepaid credits"
 expires = "Expires {{date}}"
 eyebrow = "Prepaid capacity"
 note = "Used before metered billing and outside your spend limit."

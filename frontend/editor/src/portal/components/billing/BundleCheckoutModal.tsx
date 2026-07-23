@@ -189,6 +189,16 @@ export function BundleCheckoutModal({
   const [stripeQuoteSig, setStripeQuoteSig] = useState<string | null>(null);
   // The invoice generated when the quote is accepted (awaiting payment); null when simulated.
   const [invoice, setInvoice] = useState<BundleInvoice | null>(null);
+  // On resume, the total the quote was persisted at (server value), frozen so the receipt shows what
+  // the buyer actually quoted rather than a figure recomputed from a since-changed rate. Paired with
+  // the pool size it was persisted at — once the buyer edits the sizing (pool changes) we drop back to
+  // the live estimate, since editing re-mints and re-persists anyway.
+  const [persistedPriceMinor, setPersistedPriceMinor] = useState<number | null>(
+    null,
+  );
+  const [persistedPoolCredits, setPersistedPoolCredits] = useState<
+    number | null
+  >(null);
   // Accept / Download in-flight + last error, surfaced on the calculator (the quote page).
   const [busy, setBusy] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
@@ -221,6 +231,8 @@ export function BundleCheckoutModal({
       setStripeQuote(null);
       setStripeQuoteSig(null);
       setInvoice(null);
+      setPersistedPriceMinor(null);
+      setPersistedPoolCredits(null);
       setBusy(false);
       setPdfBusy(false);
       setActionError(null);
@@ -249,6 +261,8 @@ export function BundleCheckoutModal({
         setPipelineId(pipelineIdFor(latest.pipelineMult));
         setConsented(latest.consentedAt != null);
         setQuoteId(latest.quoteId);
+        setPersistedPriceMinor(latest.priceMinor);
+        setPersistedPoolCredits(latest.poolCredits);
         if (saved?.poNumber) setPoNumber(saved.poNumber);
         if (saved?.companyName) setCompanyName(saved.companyName);
         if (saved?.accountName) setAccountName(saved.accountName);
@@ -335,6 +349,27 @@ export function BundleCheckoutModal({
       }),
     [users, postureId, sizeId, pipelineId, pricePerDocMinor],
   );
+
+  // The receipt shows the persisted (server) total on resume so it matches the quote the buyer
+  // created, not a figure recomputed from a since-changed rate — but only while the sizing is
+  // unchanged (same pool). Editing the calculator changes the pool and reverts to the live estimate.
+  // savings tracks whichever total is shown so the receipt stays internally consistent.
+  const receiptQuote = useMemo(() => {
+    if (
+      persistedPriceMinor == null ||
+      persistedPoolCredits !== quote.poolCredits
+    ) {
+      return quote;
+    }
+    return {
+      ...quote,
+      priceMinor: persistedPriceMinor,
+      savingsMinor:
+        quote.listMinor != null
+          ? quote.listMinor - persistedPriceMinor
+          : quote.savingsMinor,
+    };
+  }, [quote, persistedPriceMinor, persistedPoolCredits]);
 
   // Flip the loader on synchronously the moment the modal opens (React's "adjust state during render"),
   // so the resume runs behind a loader from the very first frame — the calculator never shows en route to
@@ -657,7 +692,7 @@ export function BundleCheckoutModal({
             setSizeId={setSizeId}
             pipelineId={pipelineId}
             setPipelineId={setPipelineId}
-            quote={quote}
+            quote={receiptQuote}
             currency={currency}
             onDownload={downloadPdf}
             downloading={pdfBusy}
@@ -666,7 +701,7 @@ export function BundleCheckoutModal({
         )}
         {!resolving && phase === "pay" && (
           <PaymentStep
-            quote={quote}
+            quote={receiptQuote}
             currency={currency}
             onDownloadQuote={downloadPdf}
             poNumber={poNumber}
