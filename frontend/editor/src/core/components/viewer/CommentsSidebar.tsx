@@ -769,6 +769,7 @@ export function CommentsSidebar({
           "Search comments",
         )}
         onSearchChange={setSearchTerm}
+        viewportRef={scrollViewportRef}
       >
         {totalCount === 0 ? (
           <Stack align="center" gap="sm" py="lg">

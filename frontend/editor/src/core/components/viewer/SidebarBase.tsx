@@ -29,6 +29,8 @@ export interface SidebarBaseProps {
   searchPlaceholder?: string;
   /** Callback fired when search query changes. */
   onSearchChange?: (value: string) => void;
+  /** Optional ref for the ScrollArea viewport element. */
+  viewportRef?: React.Ref<HTMLDivElement>;
   /** Sidebar content children. */
   children: ReactNode;
 }
@@ -45,6 +47,7 @@ export function SidebarBase({
   searchTerm,
   searchPlaceholder,
   onSearchChange,
+  viewportRef,
   children,
 }: SidebarBaseProps) {
   if (!visible) {
@@ -108,7 +111,7 @@ export function SidebarBase({
         </Box>
       )}
 
-      <ScrollArea style={{ flex: 1 }}>
+      <ScrollArea style={{ flex: 1 }} viewportRef={viewportRef}>
         <Box p="sm" className="sidebar-base__content">
           {children}
         </Box>
