@@ -23,6 +23,9 @@ vi.mock("react-i18next", () => ({
 const fetchS3Connections = vi.fn();
 const deleteIntegration = vi.fn();
 vi.mock("@portal/api/integrations", () => ({
+  fetchIntegrations: () => fetchS3Connections(),
+  // Custom-API authoring is a server decision; these tests assert the default view.
+  fetchIntegrationCapabilities: () => Promise.resolve({ customApi: false }),
   fetchS3Connections: () => fetchS3Connections(),
   deleteIntegration: (id: number) => deleteIntegration(id),
   createIntegration: vi.fn(),

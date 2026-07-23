@@ -250,6 +250,27 @@ public class ApplicationProperties {
          */
         private boolean allowPrivateS3Endpoints = false;
 
+        /**
+         * Whether an API/Purview/ConsignO integration's base URL may resolve to a loopback,
+         * link-local, or private address. Off by default: unlike S3 connections, any user may
+         * create one of these, so without this gate a user could point a connection at the cloud
+         * metadata address and have the server fetch it for them. Enable only when integrations
+         * genuinely live inside the network (e.g. an on-prem ConsignO or an internal API gateway).
+         */
+        private boolean allowPrivateApiEndpoints = false;
+
+        /**
+         * Whether administrators may define their own API integrations - a free-form base URL,
+         * path, body and headers - as opposed to only using the built-in vendor presets (Purview,
+         * ConsignO, S3). On by default, and admin-only regardless: a custom integration can point
+         * the server at any host, so it is authoring power, not self-serve.
+         *
+         * <p>Turning this off stops new custom integrations being created or edited. Ones that
+         * already exist keep running, because a policy that silently stopped calling out would be a
+         * worse surprise than one that keeps working; disable the connection itself to stop it.
+         */
+        private boolean allowCustomApiIntegrations = true;
+
         private long webhookMaxBytes = 104857600L;
     }
 

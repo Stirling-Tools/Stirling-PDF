@@ -73,6 +73,13 @@ html[data-app-theme="light"] {
   --c-avatar-5: var(--p-amber-500);
   --c-avatar-6: var(--p-cyan-500);
 
+  /* Connection picker: muted categorical marks + brand-red accent. */
+  --c-conn-accent: var(--p-art-red-muted);
+  --c-conn-storage: var(--p-art-blue-muted);
+  --c-conn-signing: var(--p-art-green-muted);
+  --c-conn-notify: var(--p-art-amber-muted);
+  --c-conn-neutral: var(--p-gray-mid);
+
   /* Always-dark marketing/product hero strip (portal). Same in both themes. */
   --c-hero-dark: var(--p-zinc-950);
   --c-hero-dark-cta-text: var(--p-navy-700);

@@ -1,12 +1,12 @@
 /**
- * Integrations service layer: stored connections (S3 today; MCP/API later) that
- * policy sources and pipeline outputs reference by id instead of embedding
+ * Integrations service layer: stored connections (S3, Purview, ConsignO, and free-form API) that
+ * policy sources, pipeline outputs and integration steps reference by id instead of embedding
  * credentials. Secrets are write-only - reads return them masked, and sending
  * the mask back on update keeps the stored value.
  */
 import { apiClient } from "@portal/api/http";
 
-export type IntegrationType = "S3" | "MCP" | "API";
+export type IntegrationType = "S3" | "MCP" | "API" | "PURVIEW" | "CONSIGNO";
 export type OwnerScope = "USER" | "TEAM" | "SERVER";
 
 /** Mirrors the backend IntegrationConfigResponse; `config` values are masked. */
@@ -44,6 +44,20 @@ export async function fetchIntegrations(): Promise<IntegrationConfig[]> {
 export async function fetchS3Connections(): Promise<IntegrationConfig[]> {
   return (await fetchIntegrations()).filter(
     (integration) => integration.integrationType === "S3",
+  );
+}
+
+/**
+ * What this caller may set up. Answered by the server because the custom-API gate is an
+ * authorization decision, not a presentation one - the create call is refused regardless.
+ */
+export interface IntegrationCapabilities {
+  customApi: boolean;
+}
+
+export async function fetchIntegrationCapabilities(): Promise<IntegrationCapabilities> {
+  return apiClient.local.json<IntegrationCapabilities>(
+    "/api/v1/integrations/capabilities",
   );
 }
 

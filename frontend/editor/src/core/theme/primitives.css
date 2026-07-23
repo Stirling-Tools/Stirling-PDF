@@ -147,6 +147,10 @@
   --p-c-acacac: #acacac;
   --p-c-c084fc: #c084fc;
   --p-art-red-muted: #c56565;
+  /* Muted category hues for connection-picker marks. */
+  --p-art-blue-muted: #4a7ab5;
+  --p-art-green-muted: #5d8348;
+  --p-art-amber-muted: #ac7a2c;
   --p-c-cf222e: #cf222e;
   --p-c-d0d6dc: #d0d6dc;
   --p-c-d0d7de: #d0d7de;
