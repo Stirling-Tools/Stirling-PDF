@@ -493,20 +493,72 @@ public class StampController {
             y = calculateImagePositionY(pageSize, position, desiredPhysicalHeight, margin);
         }
 
-        float llx = pageSize.getLowerLeftX();
-        float lly = pageSize.getLowerLeftY();
-        float urx = pageSize.getUpperRightX();
-        float ury = pageSize.getUpperRightY();
-        float xMax = Math.max(llx, urx - desiredPhysicalWidth);
-        float yMax = Math.max(lly, ury - desiredPhysicalHeight);
-        x = Math.min(xMax, Math.max(llx, x));
-        y = Math.min(yMax, Math.max(lly, y));
+        // Clamp against the image's actual rotated footprint. The stamp is drawn as
+        // translate(x, y) -> rotate(rotation) -> drawImage(0, 0, w, h), so the bitmap does not
+        // occupy an axis-aligned w x h box when a stamp rotation is applied. Clamping with the raw
+        // w/h (as if rotation were 0) snapped explicit overrideX/overrideY coordinates on rotated
+        // stamps to the wrong corner (issue #6784). For rotation == 0 this reduces to the previous
+        // clamp.
+        float[] clamped =
+                clampImagePosition(
+                        pageSize, x, y, desiredPhysicalWidth, desiredPhysicalHeight, rotation);
+        x = clamped[0];
+        y = clamped[1];
 
         contentStream.saveGraphicsState();
         contentStream.transform(Matrix.getTranslateInstance(x, y));
         contentStream.transform(Matrix.getRotateInstance(Math.toRadians(rotation), 0, 0));
         contentStream.drawImage(xobject, 0, 0, desiredPhysicalWidth, desiredPhysicalHeight);
         contentStream.restoreGraphicsState();
+    }
+
+    /**
+     * Clamp the lower-left stamp anchor so the image stays inside the page bounds, accounting for
+     * the stamp rotation that is applied at draw time.
+     *
+     * <p>The image is rendered as {@code translate(x, y) -> rotate(rotation) -> drawImage(0, 0, w,
+     * h)}, so its footprint in page space is the rotated rectangle, not an axis-aligned {@code w x
+     * h} box. The clamp bounds are derived from the rotated footprint relative to the anchor, then
+     * the anchor is constrained so the whole footprint fits between the media-box edges. When
+     * {@code rotation} is 0 this reduces to clamping {@code [llx, urx - w] x [lly, ury - h]},
+     * matching the previous behaviour.
+     */
+    private float[] clampImagePosition(
+            PDRectangle pageSize, float x, float y, float width, float height, float rotation) {
+        double radians = Math.toRadians(rotation);
+        double cos = Math.cos(radians);
+        double sin = Math.sin(radians);
+
+        float[] cornerX = {0f, width, width, 0f};
+        float[] cornerY = {0f, 0f, height, height};
+        float minX = Float.MAX_VALUE;
+        float maxX = -Float.MAX_VALUE;
+        float minY = Float.MAX_VALUE;
+        float maxY = -Float.MAX_VALUE;
+        for (int i = 0; i < cornerX.length; i++) {
+            float rx = (float) (cornerX[i] * cos - cornerY[i] * sin);
+            float ry = (float) (cornerX[i] * sin + cornerY[i] * cos);
+            minX = Math.min(minX, rx);
+            maxX = Math.max(maxX, rx);
+            minY = Math.min(minY, ry);
+            maxY = Math.max(maxY, ry);
+        }
+
+        float llx = pageSize.getLowerLeftX();
+        float lly = pageSize.getLowerLeftY();
+        float urx = pageSize.getUpperRightX();
+        float ury = pageSize.getUpperRightY();
+
+        // Anchor range that keeps the rotated footprint inside the page. xLo/yLo dominate when the
+        // footprint is wider/taller than the page so the stamp is not pushed off the opposite edge.
+        float xLo = llx - minX;
+        float xHi = urx - maxX;
+        float yLo = lly - minY;
+        float yHi = ury - maxY;
+
+        float clampedX = Math.min(Math.max(x, xLo), Math.max(xLo, xHi));
+        float clampedY = Math.min(Math.max(y, yLo), Math.max(yLo, yHi));
+        return new float[] {clampedX, clampedY};
     }
 
     private float calculatePositionX(
