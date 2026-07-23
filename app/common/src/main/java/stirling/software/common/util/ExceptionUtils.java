@@ -646,6 +646,21 @@ public class ExceptionUtils {
         return new IllegalArgumentException(message);
     }
 
+    /**
+     * Create a "file must be a PDF" exception that names the offending files, so the client can
+     * tell the user which inputs were rejected (e.g. images passed to a PDF-only operation).
+     *
+     * @param filenames the names of the files that are not valid PDFs
+     * @return IllegalArgumentException with a user-friendly, file-specific message
+     */
+    public static IllegalArgumentException createPdfFileRequiredException(List<String> filenames) {
+        String message = getMessage(ErrorCode.PDF_NOT_PDF);
+        if (filenames != null && !filenames.isEmpty()) {
+            message = message + " (" + String.join(", ", filenames) + ")";
+        }
+        return new IllegalArgumentException(message);
+    }
+
     public static IllegalArgumentException createInvalidPageSizeException(String size) {
         requireNonNull(size, "size");
         String message =

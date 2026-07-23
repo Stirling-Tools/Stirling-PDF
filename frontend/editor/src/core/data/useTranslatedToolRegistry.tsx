@@ -148,6 +148,10 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         subcategoryId: SubcategoryId.GENERAL,
         maxFiles: -1,
         endpoints: ["merge-pdfs"],
+        // Merge only accepts PDFs; declaring this filters non-PDF files out of
+        // the file picker / editor so images can't be routed into a merge (the
+        // backend also rejects them, but this keeps them out of the UI).
+        supportedFormats: ["pdf"],
         operationConfig: asRegistryConfig(mergeOperationConfig),
         automationSettings: lazySettings(
           () => import("@app/components/tools/merge/MergeSettings"),
