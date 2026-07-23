@@ -155,7 +155,7 @@
     "tsx": "^4.22.4",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "typescript-eslint": "^8.61.1",
-    "vite": "^7.3.2",
+    "vite": "^8.1.5",
     "vite-plugin-compression2": "^2.5.3",
     "vite-plugin-static-copy": "^3.1.4",
     "vite-tsconfig-paths": "^5.1.4",
