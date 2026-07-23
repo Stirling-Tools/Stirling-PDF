@@ -60,31 +60,77 @@ public class CustomPDFDocumentFactory {
         this(pdfMetadataService, null);
     }
 
+    // Thresholds are derived from JVM max heap at class init so a tight pod
+    // (e.g. 1 GiB) doesn't inherit defaults that were tuned for ~4 GiB+.
+    // Previous static defaults (10 MB / 50 MB / 30% / 256 MB floor / max(4,cores))
+    // let MAX_CONCURRENT_OPS reach the host's processor count (24 on rog),
+    // putting 24 PDFs in flight on a 2 GiB pod and exhausting heap under batch.
+    // Values logged once at startup so the active deployment can be verified.
+
     /** Documents ≤ this size are loaded entirely into heap — no temp files needed. */
-    public static final long SMALL_FILE_THRESHOLD = 10L * 1024 * 1024; // 10 MB
+    public static final long SMALL_FILE_THRESHOLD;
 
     /** Upper boundary of the "mixed" memory+file zone; above this always file-backed. */
-    private static final long LARGE_FILE_THRESHOLD = 50L * 1024 * 1024; // 50 MB
+    private static final long LARGE_FILE_THRESHOLD;
 
     /** Heap budget reserved for a document loaded in mixed mode. */
-    private static final long MIXED_MODE_MEMORY_LIMIT = 10L * 1024 * 1024; // 10 MB
+    private static final long MIXED_MODE_MEMORY_LIMIT;
 
     /** Minimum free-heap fraction before falling back to file-backed caching. */
-    private static final double MIN_FREE_MEMORY_PERCENTAGE = 30.0;
+    private static final double MIN_FREE_MEMORY_PERCENTAGE;
 
     /**
-     * Absolute free-heap floor. Kept well below typical JVM heap sizes (256 MB) so that the
-     * percentage gate above remains the primary trigger. The previous value of 4 GB caused
-     * file-backed caching to fire on every request against any JVM with a heap smaller than 4 GB,
-     * defeating the purpose of the threshold hierarchy entirely.
+     * Absolute free-heap floor. Sized as min(1/8 of heap, 512 MiB) with a 128 MiB floor so the
+     * percentage gate above remains the primary trigger on both tight (1 GiB) and generous (16
+     * GiB+) deployments.
      */
-    private static final long MIN_FREE_MEMORY_FLOOR = 256L * 1024 * 1024; // 256 MB
+    private static final long MIN_FREE_MEMORY_FLOOR;
 
     /** Maximum number of concurrent PDF operations in batch methods. */
-    private static final int MAX_CONCURRENT_OPS =
-            Math.max(4, Runtime.getRuntime().availableProcessors());
+    private static final int MAX_CONCURRENT_OPS;
 
-    private static final Semaphore CONCURRENT_GATE = new Semaphore(MAX_CONCURRENT_OPS);
+    private static final Semaphore CONCURRENT_GATE;
+
+    static {
+        // Runtime.maxMemory() returns Long.MAX_VALUE when -Xmx is unset; clamp to 32 GiB
+        // so the formulas below stay sane on a JVM without an explicit heap cap.
+        long maxHeapBytes = Math.min(Runtime.getRuntime().maxMemory(), 32L * 1024 * 1024 * 1024);
+        long maxHeapMB = maxHeapBytes / (1024 * 1024);
+        int processors = Runtime.getRuntime().availableProcessors();
+
+        // One concurrent PDF op per ~512 MiB of heap, clamped to [2, processors].
+        // Resulting values for typical deployments:
+        //   1 GiB heap  → 2   (was max(4,cores) = 4-24)
+        //   2 GiB heap  → 4   (was 4-24)
+        //   4 GiB heap  → 8   (or cores, whichever is smaller)
+        //   8 GiB+ heap → cores, capped at 16
+        MAX_CONCURRENT_OPS =
+                Math.max(2, Math.min(Math.min(processors, 16), (int) (maxHeapMB / 512)));
+
+        // Size thresholds shrink on tight heaps. Caps at historical 10 MB / 50 MB on ≥ 4 GiB.
+        SMALL_FILE_THRESHOLD = Math.min(10L * 1024 * 1024, maxHeapBytes / 256);
+        LARGE_FILE_THRESHOLD = Math.min(50L * 1024 * 1024, maxHeapBytes / 64);
+        MIXED_MODE_MEMORY_LIMIT = SMALL_FILE_THRESHOLD;
+
+        // Demand more free-heap headroom on smaller pods (< 4 GiB heap).
+        MIN_FREE_MEMORY_PERCENTAGE = maxHeapBytes < 4L * 1024 * 1024 * 1024 ? 40.0 : 30.0;
+
+        MIN_FREE_MEMORY_FLOOR =
+                Math.max(128L * 1024 * 1024, Math.min(512L * 1024 * 1024, maxHeapBytes / 8));
+
+        CONCURRENT_GATE = new Semaphore(MAX_CONCURRENT_OPS);
+
+        log.info(
+                "CustomPDFDocumentFactory thresholds: heap={} MiB, MAX_CONCURRENT_OPS={},"
+                        + " SMALL_FILE_THRESHOLD={} MiB, LARGE_FILE_THRESHOLD={} MiB,"
+                        + " MIN_FREE_MEMORY_PERCENTAGE={}, MIN_FREE_MEMORY_FLOOR={} MiB",
+                maxHeapMB,
+                MAX_CONCURRENT_OPS,
+                SMALL_FILE_THRESHOLD / (1024 * 1024),
+                LARGE_FILE_THRESHOLD / (1024 * 1024),
+                MIN_FREE_MEMORY_PERCENTAGE,
+                MIN_FREE_MEMORY_FLOOR / (1024 * 1024));
+    }
 
     /**
      * Immutable point-in-time snapshot of JVM heap metrics. Capturing all three {@code

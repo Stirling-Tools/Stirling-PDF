@@ -29,6 +29,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ApplicationContextProvider;
 import stirling.software.common.util.ExceptionUtils;
+import stirling.software.common.util.RenderGate;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 
@@ -177,12 +178,16 @@ public class ConvertPdfToVideoController {
                         document.getPage(currentPageIndex), currentPageIndex + 1, dpi);
 
                 BufferedImage image =
-                        ExceptionUtils.handleOomRendering(
-                                currentPageIndex + 1,
-                                dpi,
+                        RenderGate.acquireAnd(
                                 () ->
-                                        renderer.renderImageWithDPI(
-                                                currentPageIndex, dpi, ImageType.RGB));
+                                        ExceptionUtils.handleOomRendering(
+                                                currentPageIndex + 1,
+                                                dpi,
+                                                () ->
+                                                        renderer.renderImageWithDPI(
+                                                                currentPageIndex,
+                                                                dpi,
+                                                                ImageType.RGB)));
                 if (isWatermarkEnabled) {
                     applyWatermark(image, opacity, watermarkText);
                 }
