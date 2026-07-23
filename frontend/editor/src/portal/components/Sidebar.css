@@ -54,12 +54,20 @@
   padding: 0 0.875rem;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4375rem;
   border-bottom: 1px solid var(--c-border-subtle);
 }
 
-/* Stirling Processor wordmark (theme-switched in Sidebar.tsx); matches the
-   editor's 22px wordmark so the two apps read as one brand. */
+/* Brand mark (parallelogram icon) leading the wordmark; same in both themes. */
+.portal-sidebar__mark {
+  height: 1.5rem;
+  width: auto;
+  display: block;
+  flex-shrink: 0;
+}
+
+/* Stirling wordmark (theme-switched in Sidebar.tsx); matches the editor's
+   22px wordmark so the two apps read as one brand. */
 .portal-sidebar__wordmark {
   height: 1.375rem;
   width: auto;
