@@ -12,7 +12,7 @@ import { setupServer } from "msw/node";
 import { http, HttpResponse } from "msw";
 import { createPortalQueryClient } from "@portal/queryClient";
 import { qk } from "@portal/queries/keys";
-import { usersBackend } from "../../saas/portal/usersBackend";
+import { usersBackend } from "@app/portal/usersBackend";
 
 /**
  * The SaaS team resolution (/team/my) is read through the shared query cache so
@@ -31,6 +31,11 @@ vi.mock("@app/auth", () => ({
 vi.mock("@app/auth/supabase/supabaseClient", () => ({
   getSupabaseClient: () => null,
   configureSupabase: vi.fn(),
+}));
+// The portal test project's @app points at proprietary; resolve the flavor seam
+// to the real SaaS backend (same approach as Users.saas.test).
+vi.mock("@app/portal/usersBackend", async () => ({
+  usersBackend: (await import("../../saas/portal/usersBackend")).usersBackend,
 }));
 
 let teamMyFetches = 0;
