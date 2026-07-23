@@ -6,10 +6,19 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
+import type { ReactNode } from "react";
 import { SourceModal } from "@portal/components/sources/SourceModal";
+import { UIProvider } from "@portal/contexts/UIContext";
+
+// SourceModal reads useUI() to open settings, so wrap in its provider.
+const Providers = ({ children }: { children: ReactNode }) => (
+  <MantineProvider>
+    <UIProvider>{children}</UIProvider>
+  </MantineProvider>
+);
 
 const render = (ui: Parameters<typeof baseRender>[0]) =>
-  baseRender(ui, { wrapper: MantineProvider });
+  baseRender(ui, { wrapper: Providers });
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -21,10 +30,12 @@ vi.mock("react-i18next", () => ({
 const createSource = vi.fn();
 const fetchSource = vi.fn();
 const deleteSource = vi.fn();
+const isFolderAccessDeniedError = vi.fn();
 vi.mock("@portal/api/sources", () => ({
   createSource: (s: unknown) => createSource(s),
   fetchSource: (id: string) => fetchSource(id),
   deleteSource: (id: string) => deleteSource(id),
+  isFolderAccessDeniedError: (e: unknown) => isFolderAccessDeniedError(e),
 }));
 
 const fetchS3Connections = vi.fn();
@@ -57,6 +68,8 @@ describe("SourceModal", () => {
     fetchSource.mockReset();
     deleteSource.mockReset();
     deleteSource.mockResolvedValue(undefined);
+    isFolderAccessDeniedError.mockReset();
+    isFolderAccessDeniedError.mockReturnValue(false);
     fetchS3Connections.mockReset();
     fetchS3Connections.mockResolvedValue([]);
     createIntegration.mockReset();
@@ -90,6 +103,56 @@ describe("SourceModal", () => {
     );
     await waitFor(() => expect(onSaved).toHaveBeenCalled());
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it("offers a Folder Access settings link when the folder is outside allowed roots", async () => {
+    createSource.mockRejectedValue(
+      new Error("outside the allowed folder roots"),
+    );
+    isFolderAccessDeniedError.mockReturnValue(true);
+    renderModal();
+
+    fireEvent.click(screen.getByText("portal.sources.types.folder.label"));
+    fireEvent.change(screen.getByLabelText(/portal\.integrations\.typedName/), {
+      target: { value: "Claims intake" },
+    });
+    fireEvent.change(
+      screen.getByLabelText(
+        /portal\.sources\.types\.folder\.fields\.directory\.label/,
+      ),
+      { target: { value: "/etc" } },
+    );
+    fireEvent.click(screen.getByText("portal.sources.builder.create"));
+
+    expect(
+      await screen.findByText("portal.sources.builder.folderAccess.title"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("portal.sources.builder.folderAccess.openSettings"),
+    ).toBeInTheDocument();
+  });
+
+  it("shows a plain error banner (no settings link) for other save failures", async () => {
+    createSource.mockRejectedValue(new Error("boom"));
+    isFolderAccessDeniedError.mockReturnValue(false);
+    renderModal();
+
+    fireEvent.click(screen.getByText("portal.sources.types.folder.label"));
+    fireEvent.change(screen.getByLabelText(/portal\.integrations\.typedName/), {
+      target: { value: "Claims intake" },
+    });
+    fireEvent.change(
+      screen.getByLabelText(
+        /portal\.sources\.types\.folder\.fields\.directory\.label/,
+      ),
+      { target: { value: "/data/incoming" } },
+    );
+    fireEvent.click(screen.getByText("portal.sources.builder.create"));
+
+    expect(await screen.findByText("boom")).toBeInTheDocument();
+    expect(
+      screen.queryByText("portal.sources.builder.folderAccess.openSettings"),
+    ).not.toBeInTheDocument();
   });
 
   it("gates the s3 type on a chosen connection", async () => {

@@ -16,8 +16,10 @@ import {
   createSource,
   deleteSource,
   fetchSource,
+  isFolderAccessDeniedError,
   type Source,
 } from "@portal/api/sources";
+import { useUI } from "@portal/contexts/UIContext";
 import { creatableSourceTypes } from "@portal/components/sources/creatableSourceTypes";
 import {
   COMING_SOON_SOURCE_TYPES,
@@ -94,6 +96,7 @@ export function SourceModal({
   onSaved,
 }: SourceModalProps) {
   const { t } = useTranslation();
+  const { openSettings } = useUI();
   const isEdit = Boolean(sourceId);
 
   const [stage, setStage] = useState<Stage>("type");
@@ -108,6 +111,9 @@ export function SourceModal({
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // A folder-outside-allowed-roots failure: the error banner offers a link to
+  // the Folder Access settings instead of leaving the admin at a dead end.
+  const [folderAccessDenied, setFolderAccessDenied] = useState(false);
   const [reveal, setReveal] = useState<{
     webhookId: string;
     secret: string;
@@ -209,6 +215,7 @@ export function SourceModal({
     if (!canSave) return;
     setSubmitting(true);
     setError(null);
+    setFolderAccessDenied(false);
     try {
       const saved = await createSource({
         id: isEdit ? (sourceId ?? undefined) : undefined,
@@ -230,6 +237,7 @@ export function SourceModal({
       finish();
     } catch (e) {
       setError(errorMessage(e));
+      setFolderAccessDenied(isFolderAccessDeniedError(e));
       setSubmitting(false);
     }
   }
@@ -543,7 +551,27 @@ export function SourceModal({
                 </FormField>
               )}
 
-              {error && <Banner tone="danger" description={error} />}
+              {error &&
+                (folderAccessDenied ? (
+                  <Banner
+                    tone="danger"
+                    title={t("portal.sources.builder.folderAccess.title")}
+                    description={t(
+                      "portal.sources.builder.folderAccess.description",
+                    )}
+                    action={
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => openSettings("adminFolderAccess")}
+                      >
+                        {t("portal.sources.builder.folderAccess.openSettings")}
+                      </Button>
+                    }
+                  />
+                ) : (
+                  <Banner tone="danger" description={error} />
+                ))}
             </>
           )}
         </div>
